@@ -8,9 +8,9 @@
 // runtime failure exits nonzero with a named stderr line and prints nothing on
 // stdout. Device and toolchain identity are recorded on stderr.
 //
-// GPU isolation: before the first OpenCL call the host requires OCL_ICD_VENDORS
-// to name one absolute PoCL .icd file, removes the loader's other search knobs,
-// and pins POCL_DEVICES=cpu. Only CL_DEVICE_TYPE_CPU devices are enumerated.
+// GPU isolation: the build pins one absolute PoCL shared-library path. Inherited
+// vendor/layer discovery settings are overwritten before the first OpenCL call.
+// Only CL_DEVICE_TYPE_CPU devices are enumerated; POCL_DEVICES is forced to cpu.
 
 #define _POSIX_C_SOURCE 200809L
 #define CL_TARGET_OPENCL_VERSION 300
@@ -36,6 +36,9 @@ enum {
 #define MAX_ARGS 6
 #define INFO_MAX 1024
 #define POISON UINT64_C(0xa5a5a5a5a5a5a5a5)
+#ifndef IRSPIRV_POCL_LIBRARY
+#define IRSPIRV_POCL_LIBRARY ""
+#endif
 
 static int fail(int code, const char *what, cl_int err)
 {
@@ -67,37 +70,24 @@ static int parse_u64(const char *text, cl_ulong *out)
 	return 0;
 }
 
-// Pin the ICD loader to exactly one PoCL vendor file before any CL call.
+// ocl-icd 2.3.2 accepts an absolute shared-library path in OCL_ICD_VENDORS.
+// A fixed library avoids both untrusted manifest paths and manifest re-open races.
+// The configured library and its dependency directories must be trusted installs.
 static int pin_loader(void)
 {
-	const char *vendor = getenv("OCL_ICD_VENDORS");
-	if (vendor == NULL || vendor[0] != '/')
-		return refuse(EXIT_ENVIRONMENT, "OCL_ICD_VENDORS must be the absolute path of the PoCL .icd file");
-	size_t length = strlen(vendor);
-	if (length < 5 || strcmp(vendor + length - 4, ".icd") != 0)
-		return refuse(EXIT_ENVIRONMENT, "OCL_ICD_VENDORS must name a single .icd file, not a directory or library");
-	struct stat info;
-	if (stat(vendor, &info) != 0 || !S_ISREG(info.st_mode))
-		return refuse(EXIT_ENVIRONMENT, "OCL_ICD_VENDORS is not a regular file");
-	FILE *file = fopen(vendor, "r");
-	if (file == NULL)
-		return refuse(EXIT_ENVIRONMENT, "cannot read OCL_ICD_VENDORS");
-	char library[INFO_MAX];
-	size_t got = fread(library, 1, sizeof library - 1, file);
-	int unread = ferror(file) || !feof(file);
-	fclose(file);
-	if (unread)
-		return refuse(EXIT_ENVIRONMENT, "OCL_ICD_VENDORS file is unreadable or too long");
-	library[got] = '\0';
-	library[strcspn(library, "\r\n")] = '\0';
+	const char *library = IRSPIRV_POCL_LIBRARY;
+	if (library[0] != '/')
+		return refuse(EXIT_ENVIRONMENT, "build requires an absolute IRSPIRV_POCL_LIBRARY");
 	const char *base = strrchr(library, '/');
-	base = base ? base + 1 : library;
-	if (strncmp(base, "libpocl.so", 10) != 0)
-		return refuse(EXIT_ENVIRONMENT, "OCL_ICD_VENDORS does not name a libpocl ICD");
-	if (unsetenv("OCL_ICD_FILENAMES") != 0 || unsetenv("OPENCL_LAYERS") != 0 ||
-	    unsetenv("OPENCL_VENDOR_PATH") != 0 || setenv("POCL_DEVICES", "cpu", 1) != 0)
+	if (base == NULL || strncmp(base + 1, "libpocl.so", 10) != 0)
+		return refuse(EXIT_ENVIRONMENT, "configured library is not libpocl.so");
+	if (setenv("OCL_ICD_VENDORS", library, 1) != 0 ||
+	    unsetenv("OCL_ICD_FILENAMES") != 0 || unsetenv("OPENCL_LAYERS") != 0 ||
+	    unsetenv("OPENCL_VENDOR_PATH") != 0 ||
+	    setenv("OPENCL_LAYER_PATH", "/dev/null", 1) != 0 ||
+	    setenv("POCL_DEVICES", "cpu", 1) != 0)
 		return refuse(EXIT_ENVIRONMENT, "cannot pin loader environment");
-	fprintf(stderr, "opencl-host: icd=%s library=%s POCL_DEVICES=cpu\n", vendor, library);
+	fprintf(stderr, "opencl-host: library=%s POCL_DEVICES=cpu layers=disabled\n", library);
 	return 0;
 }
 

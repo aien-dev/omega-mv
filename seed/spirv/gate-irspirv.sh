@@ -1,9 +1,9 @@
 #!/bin/sh
 # Host-only CPU verification of seed/spirv/irspirv.om. spirv-val, the OpenCL CPU
 # host and parity.py are read-only oracles, never generators of IR or SPIR-V.
-# Inputs (all optional): OMC (pinned compiler), SPIRV_VAL, OPENCL_HOST, PYTHON,
-# CC, OPENCL_CFLAGS, OPENCL_LIBS, plus the OpenCL runtime environment
-# (OCL_ICD_VENDORS, OCL_ICD_FILENAMES, POCL_*) supplied by the caller.
+# POCL_LIBRARY is a required build-time absolute PoCL .so path. Optional: OMC,
+# SPIRV_VAL, OPENCL_HOST, PYTHON, CC, OPENCL_CFLAGS and OPENCL_LIBS.
+# Runtime vendor/layer environment variables cannot override the compiled oracle.
 # Exit 0 PASS, 1 FAIL, 3 NOT_RUN. Every artifact stays under build/seed/spirv.
 set -eu
 cd "$(dirname "$0")/../.."
@@ -24,13 +24,16 @@ command -v "$PYTHON" >/dev/null || notrun "requires Python parity oracle ($PYTHO
 pin=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
 [ -f "$OMC" ] || fail "compiler $OMC missing"
 [ "$(sha256sum "$OMC" | cut -d ' ' -f 1)" = "$pin" ] || fail 'compiler pin differs'
+case "${POCL_LIBRARY:-}" in /*/libpocl.so*) ;; *) notrun 'POCL_LIBRARY must name the absolute trusted PoCL shared library' ;; esac
+CC=${CC:-cc}
+command -v "$CC" >/dev/null || notrun "requires a C compiler ($CC) for the OpenCL host controls"
 if [ -z "${OPENCL_HOST:-}" ]; then
     # Demo/verification host only; the translator never links or calls it.
-    CC=${CC:-cc}
-    command -v "$CC" >/dev/null || notrun "requires a C compiler ($CC) for the OpenCL demo host"
+    # The build configuration, not inherited runtime discovery, selects the oracle.
     [ -f seed/spirv/opencl-host.c ] || fail 'seed/spirv/opencl-host.c missing'
     # shellcheck disable=SC2086 # flag lists are intentionally word-split
-    "$CC" -std=c11 -O2 -Wall -Wextra ${OPENCL_CFLAGS:-} seed/spirv/opencl-host.c \
+    "$CC" -std=c11 -O2 -Wall -Wextra ${OPENCL_CFLAGS:-} \
+        "-DIRSPIRV_POCL_LIBRARY=\"$POCL_LIBRARY\"" seed/spirv/opencl-host.c \
         -o "$B/opencl-host" ${OPENCL_LIBS:--lOpenCL} > "$B/opencl-host.build.log" 2>&1 ||
         { cat "$B/opencl-host.build.log"; fail 'OpenCL host build failed'; }
     OPENCL_HOST=$B/opencl-host
@@ -42,7 +45,7 @@ say "COMPILER $OMC sha256=$pin"
 say "VALIDATOR $(command -v "$SPIRV_VAL") $("$SPIRV_VAL" --version 2>&1 | tr '\n' ' ')"
 say "OPENCL_HOST $OPENCL_HOST sha256=$(sha256sum "$OPENCL_HOST" | cut -d ' ' -f 1)"
 say "ORACLE $("$PYTHON" --version 2>&1) parity.py sha256=$(sha256sum seed/spirv/parity.py | cut -d ' ' -f 1)"
-say "RUNTIME_ENV OCL_ICD_VENDORS=${OCL_ICD_VENDORS:-} OCL_ICD_FILENAMES=${OCL_ICD_FILENAMES:-} POCL_DEVICES=${POCL_DEVICES:-}"
+say "RUNTIME_CONFIG POCL_LIBRARY=$POCL_LIBRARY inherited_vendor_and_layer_discovery=overridden"
 say "PLATFORM $(uname -srm)"
 nice -n 19 "$OMC" < seed/spirv/irspirv.om > "$B/irspirv" 2> "$B/compile.err"
 [ ! -s "$B/compile.err" ] || fail 'translator compiler stderr'
@@ -72,6 +75,37 @@ for source in tests/one_layer/omegese/dev/*.omegese seed/wasm/*.unit.om seed/spi
     printf '%s\n' "$source" > "$B/$id.source"
     say "PASS $id deterministic spirv-val=opencl2.1"
 done
+# The former environment-selected manifest had a check/open/re-open race.
+# Inherited discovery must not select any driver or layer, even before enumeration.
+env OCL_ICD_VENDORS=/nonexistent/irspirv-vendors \
+    OCL_ICD_FILENAMES=/nonexistent/irspirv-icd OPENCL_VENDOR_PATH=/nonexistent/irspirv-vendor \
+    OPENCL_LAYERS=/nonexistent/irspirv-layer OPENCL_LAYER_PATH=/nonexistent/irspirv-layers \
+    POCL_DEVICES=untrusted-device "$OPENCL_HOST" "$B/demo.spv" avgu32 7 10 \
+    > "$B/host-environment.out" 2> "$B/host-environment.err" ||
+    fail 'inherited discovery changed the configured CPU oracle'
+printf '8 0\n' > "$B/host-environment.expected"
+cmp "$B/host-environment.out" "$B/host-environment.expected" || fail 'environment control changed result'
+for control in unconfigured missing-library; do
+    definition='-DIRSPIRV_POCL_LIBRARY=""'
+    if [ "$control" = missing-library ]; then
+        definition='-DIRSPIRV_POCL_LIBRARY="/nonexistent/irspirv/libpocl.so"'
+    fi
+    # shellcheck disable=SC2086
+    "$CC" -std=c11 -O2 -Wall -Wextra ${OPENCL_CFLAGS:-} "$definition" \
+        seed/spirv/opencl-host.c -o "$B/host-$control" ${OPENCL_LIBS:--lOpenCL} \
+        > "$B/host-$control.build.log" 2>&1 || fail "host $control control build failed"
+    set +e
+    (ulimit -c 0; "$B/host-$control" "$B/demo.spv" avgu32 7 10) \
+        > "$B/host-$control.out" 2> "$B/host-$control.err"
+    rc=$?
+    set -e
+    [ "$rc" -ne 0 ] || fail "$control silently fell back to a working ICD"
+    [ ! -s "$B/host-$control.out" ] || fail "$control printed a result"
+    if [ "$control" = unconfigured ]; then
+        [ "$rc" = 3 ] || fail "unconfigured host exited $rc rather than 3"
+    fi
+done
+say 'PASS host controls: inherited discovery ignored; unconfigured and missing fixed library fail closed'
 # Each table row gets a real native program calling the same function and inputs.
 # The dumper preserves every result bit, rather than comparing process-status bytes.
 tab=$(printf '\t')

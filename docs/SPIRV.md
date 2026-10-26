@@ -21,17 +21,20 @@ seed/out/omc < build/seed/spirv/demo.input > build/seed/spirv/demo.ir
 build/seed/spirv/irspirv < build/seed/spirv/demo.ir > build/seed/spirv/demo.spv
 spirv-val --target-env opencl2.1 build/seed/spirv/demo.spv
 spirv-dis build/seed/spirv/demo.spv -o build/seed/spirv/demo.spvasm
-cc -std=c11 -O2 -Wall -Wextra seed/spirv/opencl-host.c \
+export POCL_LIBRARY=/absolute/path/to/libpocl.so.2.16.0
+cc -std=c11 -O2 -Wall -Wextra \
+  "-DIRSPIRV_POCL_LIBRARY=\"$POCL_LIBRARY\"" seed/spirv/opencl-host.c \
   -o build/seed/spirv/opencl-host -lOpenCL
-export OCL_ICD_VENDORS=/absolute/path/to/pocl.icd
 build/seed/spirv/opencl-host build/seed/spirv/demo.spv avgu32 4294967295 4294967293
 ```
 
 Stop immediately if any command fails; never execute a compiler's partial output.
 For user-space OpenCL headers/libraries, add `-I`, `-L` and the corresponding
-linker rpath to the host build. `OCL_ICD_VENDORS` must name a single PoCL `.icd`
-file, not a vendor directory. The host refuses other platforms, overrides
-`POCL_DEVICES=cpu`, and enumerates CPU devices only. No GPU is used.
+linker rpath to the host build. The build-time `IRSPIRV_POCL_LIBRARY` pins one
+absolute PoCL shared-library path. The host overwrites inherited vendor discovery,
+disables OpenCL layer discovery, forces `POCL_DEVICES=cpu`, and enumerates CPU
+devices only. No GPU is used. Trust the installed library and its dependency
+directories; this is not a sandbox for attacker-controlled shared libraries.
 
 The demo's complete function is:
 
@@ -111,7 +114,7 @@ consumers must check the exit status. Runtime/compiler failures also are not mod
 
 ```sh
 export SPIRV_VAL=/absolute/path/to/spirv-val
-export OCL_ICD_VENDORS=/absolute/path/to/pocl.icd
+export POCL_LIBRARY=/absolute/path/to/libpocl.so.2.16.0
 # Optional for user-space headers and libraries:
 # export OPENCL_CFLAGS='-I/absolute/path/include'
 # export OPENCL_LIBS='-L/absolute/path/lib -Wl,-rpath,/absolute/path/lib -lOpenCL'
@@ -141,6 +144,14 @@ Observed on AArch64 Linux with the toolchain below:
 | Validator negative control | Missing final OpFunctionEnd rejected |
 | Named refusal cases | 16 exact error/status matches, empty stdout |
 
+
+Host isolation regressions also require inherited vendor/layer settings to be
+ignored and both an unconfigured host and a nonexistent fixed library to fail
+without a result or fallback discovery. There is no environment-selected manifest
+to inspect and then reopen: [ocl-icd 2.3.2](https://github.com/OCL-dev/ocl-icd/blob/v2.3.2/ocl_icd_loader.c)
+supports loading the build-time selected library directly. `OPENCL_LAYER_PATH`
+is forced to `/dev/null` so clearing `OPENCL_LAYERS` cannot leave system-layer
+discovery enabled.
 The mutant is not a crash control: the gate requires successful OpenCL execution
 and exactly one result mismatch when substituted into the baseline corpus.
 The checker uses exit 2 for API/setup faults, distinct from mismatch exit 1.
@@ -224,7 +235,7 @@ cmake -S "$T/src/pocl" -B "$T/build/pocl" -G Ninja \
 nice -n 19 ionice -c3 ninja -C "$T/build/pocl" -j2
 nice -n 19 ionice -c3 ninja -C "$T/build/pocl" install
 export SPIRV_VAL=$R/usr/bin/spirv-val
-export OCL_ICD_VENDORS=$T/pocl/etc/OpenCL/vendors/pocl.icd
+export POCL_LIBRARY=$T/pocl/lib/libpocl.so.2.16.0
 export POCL_DEVICES=cpu
 export OPENCL_CFLAGS="-I$R/usr/include"
 export OPENCL_LIBS="-L$R/usr/lib/aarch64-linux-gnu -Wl,-rpath,$R/usr/lib/aarch64-linux-gnu -lOpenCL"
