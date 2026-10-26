@@ -127,7 +127,7 @@ sed 's/"regs_free":11/"regs_free":12/' $C/stmt_loop.json > "$B/corrupt.json"
 if cmp -s "$B/stmt_loop.json" "$B/corrupt.json"; then bad "corrupted golden still matches"; else ok "corrupted golden is detected"; fi
 
 # 8. Mutant: an omq whose statement witnesses accept any compiler verdict must be caught.
-awk '/^fn trys / { m = 1 } m && $0 == "ret eq run 0" { print "ret ne run 255"; m = 0; next } { print }' \
+awk '/^fn tryc / { m = 1 } m && $0 == "ret run" { print "ret mul run 0"; m = 0; next } { print }' \
     seed/query/omq.om > "$B/mutant.om"
 "$OMC" < "$B/mutant.om" > "$B/mutant" 2> /dev/null && chmod +x "$B/mutant"
 "$B/mutant" "$OMC" < $C/stmt_effects.om > "$B/mutant.json"

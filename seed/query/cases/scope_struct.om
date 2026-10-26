@@ -1,0 +1,9 @@
+om2
+struct H x uint y ulong end
+struct G v uint 2 t uchar end
+fn main to int
+h = new H 7 9
+p = new G 1 1
+??
+ret int get h x
+end

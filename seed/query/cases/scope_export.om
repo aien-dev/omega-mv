@@ -1,0 +1,9 @@
+fn n2 to ulong
+export = ulong 11
+big = ulong 9
+??
+ret add export big
+end
+fn main to int
+ret int n2
+end

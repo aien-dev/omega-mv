@@ -40,6 +40,7 @@ const GDB ulong 31
 const GSK ulong 32
 const GSA ulong 33
 const GNT ulong 34
+const GNOI ulong 35
 
 global src uchar 1048576
 global lsa ulong 65536
@@ -78,6 +79,7 @@ text tkend "end"
 text tglobal "global"
 text tconst "const"
 text ttext "text"
+text tstruct "struct"
 text teq "="
 text tto "to"
 text tvoid "void"
@@ -152,6 +154,8 @@ text texito "exit <int>"
 text texit0 "exit 0"
 text tretw "ret"
 text texitw "exit"
+text tputw "put"
+text ttrapw "trap"
 text treqt "requires true"
 text tenst "ensures true"
 text tinvt "invariant true"
@@ -363,11 +367,19 @@ end
 ret sweq a sub wde a a t
 end
 
+fn isfn i ulong to bool
+note a function line: fn NAME ..., or export fn NAME ... (a variable named export is not one)
+if lwis i 0 tfn
+ret true
+end
+ret and lwis i 0 texport lwis i 1 tfn
+end
+
 fn opener i ulong to bool
 if or lwis i 0 tif or lwis i 0 twhile lwis i 0 tfor
 ret true
 end
-ret or lwis i 0 tfn lwis i 0 texport
+ret isfn i
 end
 
 note ---------------------------------------------------------------- witness buffer
@@ -394,8 +406,34 @@ end
 
 fn wln i ulong to void
 a = get lsa i
-wsr a sub get lea i a
+e = get lea i
+if and ne get g GNOI 0 eq i get g GFL
+e = noinl a e
+end
+wsr a sub e a
 w1 10
+end
+
+fn noinl a ulong e ulong to ulong
+note the fn line without its last word when that word is inline
+q = e
+while gt q a
+if not isb get src sub q 1
+break
+end
+q = sub q 1
+end
+s = q
+while gt s a
+if isb get src sub s 1
+break
+end
+s = sub s 1
+end
+if sweq s sub q s tinline
+ret s
+end
+ret e
 end
 
 fn wlns i ulong j ulong to void
@@ -597,14 +635,18 @@ end
 note ---------------------------------------------------------------- witnesses at the hole
 
 fn trys ended bool to bool
-note statement witness: prefix, scratch lines, closers, rest
+ret eq tryc ended 0
+end
+
+fn tryc ended bool to ulong
+note statement witness: prefix, scratch lines, closers, rest; the compiler's exit code
 put g GWN 0
 wlns 0 get g GHL
 wcb
 w1 10
 wcl get g GD0 ended
 wrest
-ret eq run 0
+ret run
 end
 
 fn tryv to bool
@@ -732,10 +774,7 @@ note enclosing function, open blocks before the hole, the line that closes the f
 h = get g GHL
 f = h
 while true
-if lwis f 0 tfn
-break
-end
-if lwis f 0 texport
+if isfn f
 break
 end
 if eq f 0
@@ -912,7 +951,7 @@ fn gloc to void
 note names bound before the hole in the enclosing function
 i = add get g GFL 1
 while lt i get g GHL
-if or lwis i 1 teq nmtyped i
+if or or lwis i 1 teq nmtyped i barenv i
 a = lnw i 0
 addc a sub wde a a
 end
@@ -931,6 +970,24 @@ ret false
 end
 t = tyof lnw i 1
 ret and gt t 0 lt t 12
+end
+
+fn barenv i ulong to bool
+note NAME VALUE: a first binding without = or a type word, which omc accepts at the pin (pu s); the
+note probes decide, so this only skips lines whose first word is a block, clause or statement word
+if le get lea i lnw i 1
+ret false
+end
+if opener i
+ret false
+end
+if or or lwis i 0 tnote lwis i 0 tkend lwis i 0 telse
+ret false
+end
+if or or lwis i 0 tretw lwis i 0 texitw or lwis i 0 tputw lwis i 0 ttrapw
+ret false
+end
+ret not or or lwis i 0 treq lwis i 0 tens lwis i 0 tinv
 end
 
 note ---------------------------------------------------------------- probes
@@ -967,6 +1024,7 @@ cbt tq
 cbt tlen
 cbname c
 if not trys false
+pstru c
 ret
 end
 for k ulong 11
@@ -987,7 +1045,65 @@ pwrit c
 ret
 end
 end
+pfresh c
+end
+
+fn pfresh c ulong to void
+note an array whose elements are not written yet (fresh): get before a put is omc error 27, so write
+note element 0 first and then read it back at each type
+for k ulong 11
+cbc
+cbt tput
+cbname c
+cb1 32
+cb1 48
+cb1 32
+cbz add k 1
+cb1 10
+cbt tq
+cb1 101
+cb1 113
+cb1 32
+cbt tget
+cbname c
+cb1 32
+cb1 48
+cb1 32
+cbz add k 1
+if trys false
+put ct c or ulong 112 add k 1
+ret
+end
+end
 put ct c 80
+end
+
+fn pstru c ulong to void
+note a struct value (ct bit 7): get c F, or get c F 0 for an array field, F the first field of a
+note struct declared in the unit
+for i ulong get g GNL
+if lwis i 0 tstruct
+a = lnw i 2
+if lt a get lea i
+cbc
+cbt tq
+cbt tget
+cbname c
+cb1 32
+cbs a sub wde a a
+if trys false
+put ct c 192
+ret
+end
+cb1 32
+cb1 48
+if trys false
+put ct c 192
+ret
+end
+end
+end
+end
 end
 
 fn pwrit c ulong to void
@@ -1048,6 +1164,9 @@ if ne and v 16 0
 ob1 91
 ob1 93
 end
+if ne and v 128 0
+obt tstruct
+end
 ob1 34
 put g GSEP 1
 if ne and v 32 0
@@ -1065,7 +1184,7 @@ fn ansfns to void
 obkey jfns
 obopen 91
 for i ulong get g GNL
-if or lwis i 0 tfn lwis i 0 texport
+if isfn i
 a = lnw i 0
 obsep
 obstr a sub get lea i a
@@ -1455,7 +1574,7 @@ end
 
 fn ncalls to void
 for i ulong get g GNL
-if or lwis i 0 tfn lwis i 0 texport
+if isfn i
 if eq fnret i 12
 put g GSK 0
 put g GSA 0
@@ -1648,7 +1767,7 @@ end
 
 fn vcalls to void
 for i ulong get g GNL
-if or lwis i 0 tfn lwis i 0 texport
+if isfn i
 r = fnret i
 if and gt r 0 lt r 12
 if ne and get g GEXP shl ulong 1 sub r 1 0
@@ -1675,6 +1794,8 @@ note ---------------------------------------------------------------- obligation
 
 fn regs to ulong
 note how many more ulong names fit at the hole before the register pool is exhausted
+note an inline function is probed as a plain one: its body's registers, not a call site's expansion
+put g GNOI 1
 lo = ulong 0
 hi = ulong 17
 while lt add lo 1 hi
@@ -1689,12 +1810,15 @@ cbz 5
 cb1 10
 end
 put g GCB sub get g GCB 1
-if trys false
+note error 14 (capacity, e.g. unroll fuel) is not the register pool: only error 12 bounds the count
+r = tryc false
+if or eq r 0 eq r 14
 lo = mid
 else
 hi = mid
 end
 end
+put g GNOI 0
 ret lo
 end
 
@@ -2305,7 +2429,7 @@ end
 
 fn firstfn to ulong
 for i ulong get g GNL
-if or lwis i 0 tfn lwis i 0 texport
+if isfn i
 ret i
 end
 end

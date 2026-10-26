@@ -1,0 +1,9 @@
+om2
+fn inner x int to int inline
+y = add x 1
+??
+ret y
+end
+fn main to int
+ret sub inner 3 4
+end

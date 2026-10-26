@@ -1,0 +1,10 @@
+om2
+fn f s edit uchar 8 fresh to ulong
+??
+put s 0 1
+ret ulong get s 0
+end
+fn main to int
+a = new uchar 8 0
+ret int f a
+end
