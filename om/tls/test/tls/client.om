@@ -4,6 +4,8 @@ note   MODE get  : HTTPS GET / (path from env-free arg 6 when given) with "Conne
 note               writes the decrypted response bytes to stdout
 note   MODE smtp : implicit-TLS SMTP: reads the banner, sends EHLO and QUIT, writes the dialogue
 note   MODE hs   : handshake only, then close_notify
+note   MODE tsmtp: SMTP STARTTLS (RFC 3207): plaintext banner, EHLO, STARTTLS, then the TLS
+note               handshake on the same connection, EHLO and QUIT inside TLS
 note CONNECTHOST (default HOST) is the name resolved for TCP; HOST is the TLS name (SNI and
 note certificate check), so a local server can be checked against a chosen name.
 note STOREFILE (default, or "-", the system bundle) is a PEM bundle of trust anchors.
@@ -20,6 +22,7 @@ text cget2 " HTTP/1.1\nHost: "
 text cget3 "\nUser-Agent: omega-tls/1\nAccept: */*\nConnection: close\n\n"
 text cehlo "EHLO omega-tls.invalid\n"
 text cquit "QUIT\n"
+text cstls "STARTTLS\n"
 text cslash "/"
 
 fn cl_arg i ulong arg edit uchar * to ulong
@@ -136,10 +139,13 @@ end
 ret eq get b add s 3 32
 end
 
-fn cl_smtp c edit uchar * b edit uchar * to ulong
+note implicit TLS (mode 115) starts with the banner; after STARTTLS (116) the client speaks first
+fn cl_smtp c edit uchar * b edit uchar * mode ulong to ulong
+if eq mode 115
 e = cl_reply c b
 if ne e 0
 ret e
+end
 end
 r = cl_say c cehlo
 if lt r 0
@@ -193,6 +199,61 @@ n = cl_crlf m 0 t
 ret tls_write c part m 0 n
 end
 
+note plaintext SMTP reply on fd (10 s limit), echoed to stdout; 0 when it is final and starts
+note with the digit d, else TLS_ERR_IO
+fn cl_preply fd int b edit uchar * d ulong to ulong
+n = ulong 0
+while lt n len b bound 1000
+x = waitio fd 1 10000000000
+if le x 0
+ret 2
+end
+r = recv fd b n sub len b n 0
+if le r 0
+ret 2
+end
+w = write 1 b n ulong r
+n = add n ulong r
+if cl_lastln part b 0 n
+if ne ulong get b 0 d
+ret 2
+end
+ret 0
+end
+end
+ret 2
+end
+
+note send text t (LF ends become CR LF) on the plain socket
+fn cl_psay fd int t view uchar * to ulong
+m = new uchar 64 0
+n = cl_crlf m 0 t
+r = send fd m 0 n 0
+if ne r long n
+ret 2
+end
+ret 0
+end
+
+note RFC 3207 upgrade: 220 banner, EHLO (250), STARTTLS (220); nothing may follow in the buffer
+fn cl_starttls fd int to ulong
+b = new uchar 4096 0
+e = cl_preply fd b 50
+if eq e 0
+e = cl_psay fd cehlo
+end
+if eq e 0
+e = cl_preply fd b 50
+end
+if eq e 0
+e = cl_psay fd cstls
+end
+if eq e 0
+e = cl_preply fd b 50
+end
+ret e
+end
+
 note after the handshake: hs closes, smtp talks, get sends m and copies the response
 fn cl_after cs edit uchar * m view uchar * mode ulong to ulong
 io = new uchar 16384 0
@@ -200,8 +261,8 @@ if eq mode 104
 tls_close cs
 ret 0
 end
-if eq mode 115
-ret cl_smtp cs io
+if or eq mode 115 eq mode 116
+ret cl_smtp cs io mode
 end
 r = tls_write cs m
 if lt r 0
@@ -296,7 +357,13 @@ if lt fd 0
 ret 3
 end
 tls_deadline cs add monons 30000000000
+e = ulong 0
+if eq get v 4 116
+e = cl_starttls int fd
+end
+if eq e 0
 e = tls_connect cs st int fd
+end
 ret cl_go cs int fd part w 8192 get v 6 add get v 4 shl e 8
 end
 

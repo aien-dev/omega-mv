@@ -5,6 +5,8 @@
 # compare the decoded response bodies byte for byte (headers carry per-request values such as Date
 # and rate-limit counters, so only status line and body are compared).
 # usage: parity.py CLIENT HOST PATH...   prints one PARITY line per path; exit 0 only if all match.
+#        parity.py CLIENT --smtp HOST PORT smtp|tsmtp   compares the SMTP dialogue (banner, EHLO
+#        reply, QUIT reply) over implicit TLS (smtp) or STARTTLS (tsmtp) with the same via ssl.
 import hashlib, socket, ssl, subprocess, sys
 
 def request(host, path):
@@ -41,7 +43,43 @@ def split(resp):
         body = out
     return lines[0], body
 
+def py_smtp(host, port, mode):
+    ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_3
+    raw = socket.create_connection((host, port), timeout=30)
+    f = raw.makefile("rb")
+    out = b""
+    def reply(fh):
+        nonlocal out
+        while True:
+            l = fh.readline()
+            out += l
+            if len(l) < 4 or l[3:4] == b" ":
+                return
+    if mode == "tsmtp":
+        reply(f); raw.sendall(b"EHLO omega-tls.invalid\r\n"); reply(f)
+        raw.sendall(b"STARTTLS\r\n"); reply(f)
+    s = ctx.wrap_socket(raw, server_hostname=host)
+    g = s.makefile("rb")
+    if mode == "smtp":
+        reply(g)
+    s.sendall(b"EHLO omega-tls.invalid\r\n"); reply(g)
+    s.sendall(b"QUIT\r\n"); reply(g)
+    s.close()
+    return out
+
+def smtp_main(client, host, port, mode):
+    r = subprocess.run([client, host, port, mode], capture_output=True, timeout=60)
+    o = r.stdout
+    p = py_smtp(host, int(port), mode)
+    ok = r.returncode == 0 and o == p
+    print(f"PARITY {'PASS' if ok else 'FAIL'} {mode}://{host}:{port} exit={r.returncode} bytes={len(o)}/{len(p)} "
+          f"sha256={hashlib.sha256(o).hexdigest()[:16]}/{hashlib.sha256(p).hexdigest()[:16]}")
+    sys.exit(0 if ok else 1)
+
 def main():
+    if sys.argv[2] == "--smtp":
+        smtp_main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5])
     client, host, paths = sys.argv[1], sys.argv[2], sys.argv[3:]
     bad = 0
     for path in paths:

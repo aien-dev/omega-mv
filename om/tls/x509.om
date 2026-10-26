@@ -1262,7 +1262,8 @@ ret 0
 end
 
 note pem_decode: decode the PEM text st[0 .. n) in place into the store format (repeated 3-byte length
-note || certificate DER; a zero length or the array end terminates), zero the rest of st, return the
+note || certificate DER; a zero length or the array end terminates; 3 zero bytes are written after
+note the last entry when they fit), return the
 note bytes used. In place is safe: the write position stays below the read position (each block
 note consumes its 28-byte BEGIN line before 3 header bytes are written, then 4 characters per <= 3
 note bytes). Codes: -4098 bad base64 or framing, -4099 a block that is not one DER SEQUENCE, -4100
@@ -1297,8 +1298,10 @@ if ne get s 1 0
 ret -4098
 end
 w = get s 0
-for i ulong sub len st w
-put st add w i 0
+if le add w 3 len st
+put st w 0
+put st add w 1 0
+put st add w 2 0
 end
 ret long w
 end
@@ -1693,8 +1696,10 @@ ret res
 end
 
 note chain_pres: try the presented certificates of cl not yet in the path as issuer of the current
-note one (the first that verifies is taken; its index goes to w[X5WSEL]). 0, or the code of the last
-note failed candidate (a signature failure ranks above a parse failure), X5EUNK when none fits.
+note one (the first that verifies is taken; its index goes to w[X5WSEL]). 0, or the code of the
+note first failed candidate, replaced by any later code other than X5EUNK and X5EMAL. A presented
+note certificate that does not parse (X5EMAL, X5ECRIT) fails the chain when no candidate verifies
+note (fail closed: its subject cannot be known). X5EUNK when nothing is left to try.
 fn chain_pres cl view uchar * w edit ulong * to ulong
 kb = new uchar 16384 0
 res = X5EUNK
@@ -1728,7 +1733,7 @@ put kb i get cl add o i
 end
 v = x509_parse view part kb 0 l part w X5RSZ X5RSZ
 if ne v 0
-ret X5EMAL
+ret v
 end
 j = get w X5WCUR
 o = get w add X5WIX mul j 2
