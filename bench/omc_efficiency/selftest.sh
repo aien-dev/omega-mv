@@ -59,6 +59,17 @@ printf '#!/bin/sh\nprintf "39088169\\n"\nprintf "123\\n" >&2\n' > bin/cO2/fib
 v=$(awk '$1=="T" && $5=="cO2" {print $10}' ok2.raw)
 expect runtime_read_exactly 0 $rc "S rows=7 ok=6 fail=0 ctl_detected=1 ctl_missed=0 runtime=123" "$(tail -n 1 ok2.raw) runtime=$v"
 cp cO2.keep bin/cO2/fib
+# PROTOCOL-3: an om2 case is named om2/CASE on every row and runs the committed kernels/om2 source
+mkdir -p src/om2 want/om2 bin/omc/om2 bin/cO2/om2 bin/cO0/om2 bin/neg/om2 || exit 70
+cp "$HERE/kernels/om2/fib.om" src/om2/ && cp "$HERE/kernels/fib.c" src/om2/ && cp "$HERE/want/fib.out" want/om2/ || exit 70
+"$OMC" < src/om2/fib.om > bin/omc/om2/fib || exit 70
+chmod +x bin/omc/om2/fib
+cp bin/cO2/fib bin/cO2/om2/fib && cp bin/cO0/fib bin/cO0/om2/fib && cp bin/omc/sieve bin/neg/om2/fib || exit 70
+./conductor run 1 0 7 1 4 omc cO2 cO0 neg om2/fib > om2.raw; rc=$?
+n=$(awk '($1=="T" || $1=="P") && $4!="om2/fib"' om2.raw | wc -l)
+expect om2_profile_rows 0 $rc "S rows=7 ok=6 fail=0 ctl_detected=1 ctl_missed=0 unlabelled=0" "$(tail -n 1 om2.raw) unlabelled=$n"
+cmp -s bin/omc/om2/fib bin/omc/fib && d=same || d=differs
+expect om2_source_compiled 0 0 "om2_bytes=differs" "om2_bytes=$d"
 ./conductor run 1 0 > /dev/null; rc=$?
 expect usage 2 $rc "" ""
 ./conductor run 1 0 0 1 4 omc cO2 cO0 neg fib > /dev/null; rc=$?

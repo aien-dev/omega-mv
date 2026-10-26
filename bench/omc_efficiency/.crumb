@@ -3,22 +3,23 @@
     "generated": {
       "children": [],
       "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "compiled_at": "2026-10-26T16:04:38Z",
+      "compiled_at": "2026-10-26T16:29:42Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:61396e779a9a1ffefe26884a6344d4a45746183437a04113510c0ef41edcec08",
+      "digest": "sha256:092889c47919f58e302e565c2079cac546ad6a6a1ca72490f622cce329929e2b",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 26,
-      "generated_at_commit": "322a5257e36b02840dce86cf3bba571b5f7c9b7e",
-      "source_tree": "sha256:daa6cae60a6f07bf3f4c4debfe473eb3acaa71594e512e12b2d2ff62eeaaa397"
+      "files": 34,
+      "generated_at_commit": "7f61c06ac2ee7526be5270f226b5d430a4ad8f18",
+      "source_tree": "sha256:9ff55658e729934f35692c9fe97790abc0912c08ddbb1e0587caa365b16e3061"
     }
   },
   "invariants": [
-    "PROTOCOL.md and PROTOCOL-2.md are frozen at their commits; any change to cases, arms, rounds, seeds, metrics or rules is a new protocol version, never an edit",
+    "PROTOCOL.md, PROTOCOL-2.md and PROTOCOL-3.md are frozen at their commits; any change to cases, arms, rounds, seeds, metrics or rules is a new protocol version, never an edit",
     "want/*.out values are computed by Wolfram independently of both compilers; never regenerate them from a compiler's output",
-    "the conductor computes no statistics and never reruns a case to select a result"
+    "the conductor computes no statistics and never reruns a case to select a result",
+    "kernels/om2/CASE.om is kernels/CASE.om plus one om2 line and out spelled obuf, checked by run.sh and never generated at run time"
   ],
   "name": "bench/omc_efficiency",
-  "purpose": "OMC-EFF fixed efficiency protocol for the seeded Omega compiler (PROTOCOL.md, corrected by PROTOCOL-2.md to an in-process runtime metric): seven scalar kernels with C twins, Wolfram-computed expected outputs, the Omega measurement conductor and its self-test",
+  "purpose": "OMC-EFF fixed efficiency protocol for the seeded Omega compiler (PROTOCOL.md; PROTOCOL-2.md in-process runtime metric; PROTOCOL-3.md OM-2 source profile): seven scalar kernels with C twins and committed OM-2 variants, Wolfram-computed expected outputs, the Omega measurement conductor and its self-test",
   "schema_version": "1.0.0"
 }
