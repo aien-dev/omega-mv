@@ -37,7 +37,7 @@ never QUALIFIED (no third-party or hardware qualification exists).
 | hostile DNS | flags, owner names, label and pointer caps; no trap | `dnsunit.om` 23 cases, 4 mutants; EXERCISED |
 | memory exhaustion | fixed `TLCSZ` state, `TLSTSZ` trust store, 16 KiB bounce in `https.om`, element caps in x509 | x509 `leaf_too_big`, mutants read/handshake record cap; EXERCISED |
 | secrets left in memory | units zero their secret locals; `tls_close`/`tls_abort` run `tls_wipe` (keys, ephemeral key, handshake secrets, record buffers); `tls_hskeys` zeroes the shared secret, `tls_cfin` the handshake secrets | `test/tls/residue.py` (`/proc/PID/mem` scan: 12 handshake-only secrets absent after the handshake, 18 absent after close; app keys present after the handshake as the positive control); mutants close keeps the traffic secrets, handshake secrets kept, shared secret kept; MEASURED `RESIDUE PASS secrets=18 hs_only=12` |
-| timing | constant-time units (README table) | dudect-style Welch t-test, `test/tls/timing.om`: all 16 |t| values < 2.5 on two cores, v2 run 2026-10-27; MEASURED host-only (see "Timing measurement") |
+| timing | constant-time units (README table) | dudect-style Welch t-test, `test/tls/timing.om` v3, 2026-10-26, cores 17 (X925) and 2 (A725): x25519, ChaCha20-Poly1305, AES-128-GCM, HKDF-SHA256 max \|t\| 3.52 (no flag); `tls_cteq` LEAK SUSPECT on core 17 only (5/15 runs, \|t\| up to 27.97, both signs), not root-caused; MEASURED host-only, a screen (see "Timing measurement") |
 | HTTPS misuse | `seed/net/https.om` refuses plaintext fall-back on a TLS port, maps EOF without close_notify to -604, wipes keys in `htlsend` | `seed/net/tests/check.py` stage 5: 9 rows, 5 mutants; `TLS_NET=1` live GETs; EXERCISED |
 
 ## Known limits (not mitigated)
@@ -64,12 +64,27 @@ never QUALIFIED (no third-party or hardware qualification exists).
 
 ## Timing measurement
 
-`om/tls/test/tls/timing.om` times one operation per sample with `monons` after preparing an input
-whose class (fixed pattern or `getrandom` bytes) is drawn per sample; both classes call `getrandom`
-before the timed window so the cache and TLB state does not differ by class (the first driver did
-not, and its cropped ChaCha20 rows produced |t| of 10.4 and 5.1, which vanished once the classes
-were equalized; recorded in the evidence). Welch's t statistic was computed in Wolfram from per-class
-counts and sums (full data and cropped at the pooled 90th percentile). Raw samples, sums, the binary
-and the queries: `/home/drakestapleton/handoffs/TlsAudit/evidence/timing/` (`welch.md`). Reproduce:
-`sh build/tls/tls/client/build.sh seed/out/omc om/tls/test/tls/timing.om build/tls/tls/timing` then
-`nice -n 19 taskset -c 5 build/tls/tls/timing chacha 50000`.
+`om/tls/test/tls/timing.om` (v3) times one operation per sample with `monons`. The two classes
+(fixed pattern, `getrandom` bytes) are balanced (N/2 each) and randomly interleaved by selection
+sampling; both classes call `getrandom` and rewrite every input byte through the same mask
+expression, so the instructions before the timed window do not depend on the class. Operations:
+x25519, ChaCha20-Poly1305 seal, AES-128-GCM seal, `tls_cteq`, HKDF-SHA256. Welch's t and df were
+computed in Wolfram from per-class counts and sums: full data, the pooled 90th-percentile crop and
+the eleven dudect crops; |t| > 4.5 is a suspect, > 10 definite.
+
+The first driver called `getrandom` only for the random class; its cropped ChaCha20 rows gave |t| of
+10.4. Rebuilding that driver and the second one with the pinned omc (byte-identical binaries) and
+alternating them 8 times per core: the first driver flags 16/16 runs on A725 cores 0 and 2, the
+second 0/16, so the flag was the driver's asymmetric syscall (root-caused on A725; weaker and of
+mixed sign on X925). Results, Wolfram queries, load per run and the A/A control are in
+`evidence/om-tls-review-2026-10-26/timing-v3/README.md`; the first two runs in
+`evidence/om-tls-review-2026-10-26/timing/welch.md`.
+
+Open: `tls_cteq` on X925 core 17 flagged in 5 of 15 runs with both signs, inside a timing mode
+about 5 % slower than the main one, never in the full-data test, never on cores 2 or 9. Its machine
+code (`timing-v3/tls_cteq.dis`) has no secret-dependent branch or address; a frequency or power
+effect (not covered by DIT) is not ruled out. Not root-caused.
+
+Reproduce: `sh om/tls/build.sh seed/out/omc om/tls/test/tls/timing.om build/tls/timing` then
+`nice -n 19 ionice -c3 taskset -c 17 build/tls/timing cteq 100000 > s.txt` and
+`python3 evidence/om-tls-review-2026-10-26/timing-v3/sums.py s.txt` for the sums.
