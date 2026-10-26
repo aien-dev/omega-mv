@@ -6,7 +6,7 @@ cd "$(dirname "$0")/../../.."
 B=${JSON_BUILD:-build/seed/json}
 OMC=${OMC:-seed/out/omc}
 # Compiler pin recorded independently before any reseed; update together with seed/out/omc.
-PIN=${JSON_OMC_PIN:-189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54}
+PIN=${JSON_OMC_PIN:-2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f}
 J=seed/json
 fail() { printf 'JSONGATE FAIL %s\n' "$*"; exit 1; }
 notrun() { printf 'JSONGATE NOT_RUN %s\n' "$*"; exit 3; }
@@ -26,7 +26,8 @@ for f in "$J/json.om" "$J/jsonw.om" "$J/jsonf.om" "$J/tests/jsdrv.om"; do
 done
 
 # 1. The library units declare no globals, texts or om2 line, use no host or I/O word, and compile
-# alone (with an empty main: omc at this pin refuses any `const` in function mode with error 9).
+# alone (with an empty main: omc before 2c824805 refused any `const` in function mode with error 9;
+# #806 lifted that, and the empty main keeps this check identical across pins).
 HOST='read|write|pread|pwrite|exit|fclose|fsync|fchmod|fseek|socknew|listen|accept|fork|dupfd|monons|fopen|unlink|makedir|getdnts|connect|bind|waitpid|fstat|recv|send|sleepns|argcnt|argread|waitio|execprog|renames|rmdir|killpid|pipefds|getpid|realns|sockname|cwd|readlnk|sockopt|random|envcnt|envread|chdir|ftrunc|stat|link|symlnk|chmod|faccess|lstat|truncate|chown|fchdir|umask|fdsync|memfd|shutdown|devctl|mapnew|mapread|mapwrite'
 for f in "$J/json.om" "$J/jsonw.om" "$J/jsonf.om"; do
     if grep -Eq '^(global|text|om2)( |$)' "$f"; then fail "$f declares a global, text or om2 line"; fi
