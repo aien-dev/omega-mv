@@ -13,7 +13,8 @@ note                                    area, or, for an empty IV, seal and open
 note   X CTL KIALEN BUFLEN WANT         seal and open with ctl on zero arrays both return WANT
 note   Y KNLEN AADLEN BUFLEN WANT       aead_aes128gcm_seal/open on zero arrays both return WANT
 note   T N                              seal then open N zero bytes (N <= 1048576, key/IV fixed);
-note                                    prints "aesgcm speed bytes=N seal_ns=S open_ns=O"
+note                                    prints "aesgcm speed bytes=N seal_ns=S open_ns=O seal_MBps=A
+note                                    open_MBps=B" (MB = 10^6 bytes)
 note Every E, D and W vector whose shape is AES-128, 12-byte IV, 16-byte tag also runs through
 note aead_aes128gcm_seal/open (same expectations, tamper control included).
 note Lines that are empty or start with # are skipped; a trailing carriage return is allowed.
@@ -35,6 +36,8 @@ text tio "aesgcm driver: cannot read input or input over 16 MiB\n"
 text tspd "aesgcm speed bytes="
 text tsns " seal_ns="
 text tons " open_ns="
+text tsmb " seal_MBps="
+text tomb " open_MBps="
 
 note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start,
 note 5 key bytes, 6 iv bytes, 7 aad bytes, 8 plaintext bytes, 9 ciphertext bytes, 10 tag bytes,
@@ -646,9 +649,24 @@ put st 14 28
 ret f
 end
 
+note the speed line: n bytes, seal and open nanoseconds, and n * 1000 / ns (decimal MB/s, 10^6 bytes)
+fn dspd n ulong a ulong b ulong to void
+w = write 1 tspd 0 len tspd
+dprn n
+w = write 1 tsns 0 len tsns
+dprn a
+w = write 1 tons 0 len tons
+dprn b
+w = write 1 tsmb 0 len tsmb
+dprn div mul n 1000 or a 1
+w = write 1 tomb 0 len tomb
+dprn div mul n 1000 or b 1
+w = write 1 tnl 0 1
+end
+
 note T record: seal then open n bytes in place with a fixed key and 12-byte IV, timed
 fn drect kia edit uchar 65536 to ulong
-big = new uchar 1048592 0
+mbuf = new uchar 1048592 0
 dspace
 n = dnum
 deor
@@ -665,21 +683,31 @@ end
 ctl = ulong 0xc1010
 t0 = monons
 m = add n 16
-r = aes_gcm_seal ctl part kia 0 28 part big 0 m
+r = aes_gcm_seal ctl part kia 0 28 part mbuf 0 m
 t1 = monons
-r = or r aes_gcm_open ctl part kia 0 28 part big 0 m
+r = or r aes_gcm_open ctl part kia 0 28 part mbuf 0 m
 t2 = monons
-w = write 1 tspd 0 len tspd
-dprn n
-w = write 1 tsns 0 len tsns
-dprn ulong sub t1 t0
-w = write 1 tons 0 len tons
-dprn ulong sub t2 t1
-w = write 1 tnl 0 1
+dspd n ulong sub t1 t0 ulong sub t2 t1
 if ne r 0
 ret 1
 end
-ret dzero big n
+ret dzbig part mbuf 0 n
+end
+
+note 0 when a is all zero (two loop levels: one rolled loop traps past 1000000 passes)
+fn dzbig a view uchar * to ulong
+n = len a
+d = ulong 0
+o = ulong 0
+for h ulong add shr n 16 1
+for l ulong 65536
+if lt o n
+d = or d ulong get a o
+end
+o = add o 1
+end
+end
+ret d
 end
 
 note one record at the cursor; adds to st 12 (checks) and st 13 (failures)

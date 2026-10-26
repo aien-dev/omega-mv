@@ -978,7 +978,7 @@ end
 note ServerHello extensions: exactly supported_versions = 0x0304 and an x25519 key_share
 fn tls_shext c edit uchar * to ulong
 ln = tls_gn c add TLHB 1 3
-q = add TLHB 78
+q = add TLHB 76
 z = add add TLHB 4 ln
 seen = ulong 0
 while lt q z bound 64
@@ -1559,6 +1559,15 @@ end
 ret 0
 end
 
+note load trust anchors from the PEM bundle at path instead (tests with a private CA)
+fn tls_storef st edit uchar * path view uchar * to ulong
+r = x509_store_loadf st path
+if le r 0
+ret TLESTOR
+end
+ret 0
+end
+
 note full handshake on the connected socket fd; 0 or a named error code (tls_errname)
 fn tls_connect c edit uchar * st view uchar * fd int to ulong
 if or ne get c TLPH 0 eq get c TLHL 0
@@ -2102,11 +2111,14 @@ ret fd
 end
 
 note tls_dial: DNS A lookup of hn and a TCP connection to port; fd or minus a code
+note (a dotted IPv4 literal is used as it is, without DNS; the TLS name is set separately)
 fn tls_dial hn view uchar * port ulong to long
 ip = new uchar 4 0
+if eq dns_ip4 hn ip 0
 e = dns_a4 hn ip
 if ne e 0
 ret neg long e
+end
 end
 ret tcp_open4 ip port
 end

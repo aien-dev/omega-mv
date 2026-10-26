@@ -1,0 +1,311 @@
+note client.om: test program for om/tls (program mode, composed after every om/tls unit).
+note usage: client HOST PORT MODE [CONNECTHOST [STOREFILE]]
+note   MODE get  : HTTPS GET / (path from env-free arg 6 when given) with "Connection: close",
+note               writes the decrypted response bytes to stdout
+note   MODE smtp : implicit-TLS SMTP: reads the banner, sends EHLO and QUIT, writes the dialogue
+note   MODE hs   : handshake only, then close_notify
+note CONNECTHOST (default HOST) is the name resolved for TCP; HOST is the TLS name (SNI and
+note certificate check), so a local server can be checked against a chosen name.
+note STOREFILE (default the system bundle) is a PEM bundle of trust anchors.
+note Exit 0 on success; on a TLS failure exit 10 + code and print "TLSERR <name> detail <n>".
+note Exit 2 for a usage error, 3 for a DNS/connect failure.
+
+text cusage "usage: client HOST PORT get|smtp|hs [CONNECTHOST [STOREFILE [PATH]]]\n"
+text cterr "TLSERR "
+text cdet " detail "
+text cnl "\n"
+text cget1 "GET "
+text cget2 " HTTP/1.1\nHost: "
+text cget3 "\nUser-Agent: omega-tls/1\nAccept: */*\nConnection: close\n\n"
+text cehlo "EHLO omega-tls.invalid\n"
+text cquit "QUIT\n"
+text cslash "/"
+
+fn cl_arg i ulong arg edit uchar * to ulong
+n = argread i arg 0 len arg
+if lt n 0
+ret 0
+end
+ret ulong n
+end
+
+fn cl_num a view uchar * to ulong
+v = ulong 0
+for i ulong len a
+d = ulong get a i
+if or lt d 48 gt d 57
+ret 0
+end
+v = add mul v 10 sub d 48
+if gt v 65535
+ret 0
+end
+end
+ret v
+end
+
+fn cl_dec v ulong o edit uchar * to ulong
+t = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put t n uchar add 48 rem x 10
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for i ulong n
+put o i get t sub sub n 1 i
+end
+ret n
+end
+
+fn cl_fail c view uchar * e ulong to int
+m = new uchar 256 0
+w = write 2 cterr 0 len cterr
+n = tls_errname e m
+w = write 2 m 0 n
+w = write 2 cdet 0 len cdet
+n = cl_dec tls_detail c m
+w = write 2 m 0 n
+w = write 2 cnl 0 1
+ret int add 10 e
+end
+
+note read until the peer closes (or the buffer stops filling) and copy to stdout
+fn cl_drain c edit uchar * b edit uchar * to ulong
+while true bound 999999
+r = tls_read c b
+if eq r 0
+ret 0
+end
+if lt r 0
+ret ulong neg r
+end
+w = write 1 b 0 ulong r
+end
+ret 0
+end
+
+note SMTP: read one reply (lines until "ddd " ), echo it to stdout; 0 or a TLS code
+fn cl_reply c edit uchar * b edit uchar * to ulong
+while true bound 1000
+r = tls_read c b
+if le r 0
+if eq r 0
+ret 4
+end
+ret ulong neg r
+end
+w = write 1 b 0 ulong r
+if cl_lastln part b 0 ulong r
+ret 0
+end
+end
+ret 4
+end
+
+note true when the chunk ends with a final reply line "ddd text\r\n"
+fn cl_lastln b view uchar * to bool
+n = len b
+if lt n 2
+ret false
+end
+if ne get b sub n 1 10
+ret false
+end
+s = sub n 2
+while gt s 0 bound 4096
+if eq get b sub s 1 10
+break
+end
+s = sub s 1
+end
+if lt sub n s 5
+ret false
+end
+ret eq get b add s 3 32
+end
+
+fn cl_smtp c edit uchar * b edit uchar * to ulong
+e = cl_reply c b
+if ne e 0
+ret e
+end
+r = cl_say c cehlo
+if lt r 0
+ret ulong neg r
+end
+e = cl_reply c b
+if ne e 0
+ret e
+end
+r = cl_say c cquit
+if lt r 0
+ret ulong neg r
+end
+e = cl_reply c b
+if ne e 0
+ret e
+end
+tls_close c
+ret 0
+end
+
+note copy t to m[o..) with every LF written as CR LF (texts have no CR escape); returns the end
+fn cl_crlf m edit uchar * o ulong t view uchar * to ulong
+p = o
+for i ulong len t
+if eq get t i 10
+put m p 13
+p = add p 1
+end
+put m p get t i
+p = add p 1
+end
+ret p
+end
+
+note build the GET request at w[8192..) from the TLS name w[0..hl) and the path w[512..512+pl);
+note returns its length (the name and path hold no LF)
+fn cl_req w edit uchar * hl ulong pl ulong to ulong
+o = cl_crlf w 8192 cget1
+tls_mov w o 512 pl
+o = cl_crlf w add o pl cget2
+tls_mov w o 0 hl
+o = cl_crlf w add o hl cget3
+ret sub o 8192
+end
+
+note send text t with CR LF line ends
+fn cl_say c edit uchar * t view uchar * to long
+m = new uchar 64 0
+n = cl_crlf m 0 t
+ret tls_write c part m 0 n
+end
+
+note after the handshake: hs closes, smtp talks, get sends m and copies the response
+fn cl_after cs edit uchar * m view uchar * mode ulong to ulong
+io = new uchar 16384 0
+if eq mode 104
+tls_close cs
+ret 0
+end
+if eq mode 115
+ret cl_smtp cs io
+end
+r = tls_write cs m
+if lt r 0
+ret ulong neg r
+end
+ret cl_drain cs io
+end
+
+note w regions: TLS name 0..256, connect name 256..512, path 512..1536, argument 1536..5632,
+note request 8192..16384. v: 0 name length, 1 connect length, 2 path length, 3 port, 4 mode,
+note 5 store argument length (0 = system store)
+fn cl_parse w edit uchar * v edit ulong * to ulong
+na = argcnt
+if lt na 4
+ret 2
+end
+hl = cl_arg 1 part w 1536 4096
+if or eq hl 0 gt hl 255
+ret 2
+end
+tls_mov w 0 1536 hl
+put v 0 hl
+put v 3 cl_num part w 1536 cl_arg 2 part w 1536 4096
+if eq get v 3 0
+ret 2
+end
+m = cl_arg 3 part w 1536 4096
+put v 4 ulong get w 1536
+put v 1 hl
+tls_mov w 256 0 hl
+if ge na 5
+cl = cl_arg 4 part w 1536 4096
+if gt cl 255
+ret 2
+end
+tls_mov w 256 1536 cl
+put v 1 cl
+end
+put v 2 1
+put w 512 47
+if ge na 7
+pl = cl_arg 6 part w 1536 1024
+tls_mov w 512 1536 pl
+put v 2 pl
+end
+put v 5 0
+if ge na 6
+put v 5 cl_arg 5 part w 1536 4096
+end
+ret 0
+end
+
+fn cl_trust st edit uchar * w view uchar * sl ulong to ulong
+if eq sl 0
+ret tls_store st
+end
+ret tls_storef st part w 1536 sl
+end
+
+note TLS name and request; v[6] = request length; 0 or a TLS code
+fn cl_prep cs edit uchar * w edit uchar * v edit ulong * to ulong
+fl = ulong 0
+if eq get v 4 103
+fl = 1
+end
+e = tls_init cs part w 0 get v 0 fl
+put v 6 0
+if eq fl 1
+put v 6 cl_req w get v 0 get v 2
+end
+ret e
+end
+
+fn cl_main cs edit uchar * st edit uchar * w edit uchar * to int
+v = new ulong 8 0
+if ne cl_parse w v 0
+x = write 2 cusage 0 len cusage
+ret 2
+end
+e = cl_trust st w get v 5
+if eq e 0
+e = cl_prep cs w v
+end
+if ne e 0
+ret cl_fail cs e
+end
+fd = tls_dial part w 256 get v 1 get v 3
+if lt fd 0
+ret 3
+end
+tls_deadline cs add monons 30000000000
+e = tls_connect cs st int fd
+ret cl_go cs int fd part w 8192 get v 6 add get v 4 shl e 8
+end
+
+note mode in bits 0..7, the handshake result above
+fn cl_go cs edit uchar * fd int m view uchar * me ulong to int
+e = shr me 8
+if eq e 0
+e = cl_after cs m and me 255
+end
+x = fclose fd
+if ne e 0
+ret cl_fail cs e
+end
+ret 0
+end
+
+fn main to int
+cs = new uchar 119296 0
+st = new uchar 262144 0
+w = new uchar 16384 0
+ret cl_main cs st w
+end
