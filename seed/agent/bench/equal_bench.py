@@ -34,7 +34,7 @@ json.dump({
     "agents": {"defaults": {"workspace": H + "/nb/workspace", "model": "mock-1", "provider": "custom",
                             "timezone": "UTC", "maxToolIterations": 8,
                             "disabledSkills": ["clawhub", "cron", "github", "memory", "skill-creator", "summarize",
-                                               "tmux", "weather", "my", "image-generation", "cli-apps"]}},
+                                               "tmux", "weather", "my", "image-generation", "update-setup"]}},
     "providers": {"custom": {"apiKey": "sk-test", "apiBase": URL}},
     "tools": {"restrictToWorkspace": True, "mcpServers": {},
               "exec": {"enable": True, "timeout": 10},
