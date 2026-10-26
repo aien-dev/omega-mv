@@ -1782,14 +1782,16 @@ static bool test_m19_gate15_zero_libcuda(void) {
  * environment value, and stdout+stderr sent to log_path. No shell is involved,
  * so a path, a commit id or a directory name passed here stays an argument and
  * can never become command text. Returns the exit status, or -1 if it did not run. */
-static int m19_run(char *const argv[], const char *dir, const char *env_name,
-                   const char *env_value, const char *log_path) {
+static int m19_run(char *const argv[], const char *dir, const char *log_path,
+                   const char *e1_name, const char *e1_value,
+                   const char *e2_name, const char *e2_value) {
     if (!argv || !argv[0]) return -1;
     pid_t pid = fork();
     if (pid < 0) return -1;
     if (pid == 0) {
         if (dir && chdir(dir) != 0) _exit(127);
-        if (env_name && env_value && setenv(env_name, env_value, 1) != 0) _exit(127);
+        if (e1_name && e1_value && setenv(e1_name, e1_value, 1) != 0) _exit(127);
+        if (e2_name && e2_value && setenv(e2_name, e2_value, 1) != 0) _exit(127);
         if (log_path) {
             int fd = open(log_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd < 0) _exit(127);
@@ -1873,22 +1875,23 @@ static bool test_m19_gate16_clean_clone(void) {
     char log_path[PATH_MAX];
     int lp = snprintf(log_path, sizeof(log_path), "%s/qualification.log", clone);
     if (lp < 0 || (size_t)lp >= sizeof(log_path)) return false;
-    char physics_arg[PATH_MAX + 16];
-    int pa = snprintf(physics_arg, sizeof(physics_arg), "PHYSICS_DIR=%s", physics_dir_resolved);
-    if (pa < 0 || (size_t)pa >= sizeof(physics_arg)) return false;
 
     char *clone_argv[] = { (char *)"git", (char *)"clone", (char *)"--quiet",
                            (char *)"--no-hardlinks", (char *)".", checkout, NULL };
-    char *checkout_argv[] = { (char *)"git", (char *)"checkout", (char *)"--quiet", src_sha, NULL };
     char *clean_argv[] = { (char *)"make", (char *)"OUT_DIR=build", (char *)"clean", NULL };
-    char *build_argv[] = { (char *)"make", (char *)"-j", (char *)"OUT_DIR=build", physics_arg, NULL };
+    char *build_argv[] = { (char *)"make", (char *)"-j", (char *)"OUT_DIR=build", NULL };
     char *gates_argv[] = { (char *)"./build/omegatool", (char *)"--run-m19-gates", NULL };
 
-    bool nested_ok = m19_run(clone_argv, ".", NULL, NULL, "/dev/null") == 0 &&
-                     m19_run(checkout_argv, checkout, NULL, NULL, "/dev/null") == 0 &&
-                     m19_run(clean_argv, checkout, NULL, NULL, "/dev/null") == 0 &&
-                     m19_run(build_argv, checkout, NULL, NULL, "/dev/null") == 0 &&
-                     m19_run(gates_argv, checkout, "OMEGA_IN_CLEAN_CLONE", "1", log_path) == 0;
+    /* No value read from a file goes on a command line. The clone carries the source's own
+     * head, so the commit id is never passed as an argument; the check further down still
+     * refuses a clone whose head is not src_sha. The physics path travels in the environment,
+     * which the Makefile's `PHYSICS_DIR ?= ../physics` picks up. */
+    bool nested_ok = m19_run(clone_argv, ".", "/dev/null", NULL, NULL, NULL, NULL) == 0 &&
+                     m19_run(clean_argv, checkout, "/dev/null", NULL, NULL, NULL, NULL) == 0 &&
+                     m19_run(build_argv, checkout, "/dev/null",
+                             "PHYSICS_DIR", physics_dir_resolved, NULL, NULL) == 0 &&
+                     m19_run(gates_argv, checkout, log_path,
+                             "OMEGA_IN_CLEAN_CLONE", "1", NULL, NULL) == 0;
     if (!nested_ok) {
         /* The nested clone builds and runs into qualification.log. A failure here used to report
          * only "[FAIL]" with no reason while the log stayed inside the runner's temp directory.
