@@ -1818,7 +1818,7 @@ $(RX_COMPOSE_ATTACH_TEST): $(RX_COMPOSE_DEPS) tests/runtime/rx_compose_attach_te
 		tests/runtime/rx_compose_attach_test.c $(RX_COMPOSE_LINK)
 
 $(RX_COMPOSE_ATTACH_ASAN): $(RX_COMPOSE_DEPS) tests/runtime/rx_compose_attach_test.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all $(AIEN_TEST_FLAGS) \
+	$(CC) $(CFLAGS) -DROUNDS=200 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all $(AIEN_TEST_FLAGS) \
 		-pthread -o $@ $(RX_COMPOSE_SRCS) tests/runtime/rx_compose_attach_test.c $(RX_COMPOSE_LINK)
 
 test-composition: $(RX_COMPOSE_TEST) $(RX_COMPOSE_ATTACH_TEST)
