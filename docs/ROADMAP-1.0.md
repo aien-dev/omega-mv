@@ -359,6 +359,44 @@ parallel on disjoint paths. RM11 is last and freezes only what passed.
 | RM10 Compiler trust and C retirement | [#799](https://github.com/aien-dev/omega-mv/issues/799) |
 | RM11 Stability guarantee | [#800](https://github.com/aien-dev/omega-mv/issues/800) |
 
+## 4a. Networking and TLS follow-on
+
+The bounded HTTP/JSON work tracked by [#788](https://github.com/aien-dev/omega-mv/issues/788)
+uses existing Linux-arm64 socket words, with additional bounded host operations proposed in
+[PR #808](https://github.com/aien-dev/omega-mv/pull/808) (pending). It does not add TLS.
+Public traffic terminates TLS at the hub's nginx; authorized internal services use plain HTTP
+on loopback or over the WireGuard tailnet. This transport arrangement is not a claim that
+Omega implements certificate verification or that plaintext is suitable on arbitrary networks.
+
+**TLS 1.3 client: PROPOSED, separate OmegaTLS lane.** Implement record framing, handshake,
+transcript hashes, key schedule, authenticated encryption, signature verification, and bounded
+X.509 verification in `.om`. The minimum contract verifies a chain to an explicitly configured
+trust store, hostname, validity interval and certificate constraints, and fails closed on every
+unsupported or invalid input. There is no insecure verification toggle, implicit trust-on-first-use,
+or silent downgrade. Trust-store provenance and trusted wall-clock requirements are explicit inputs.
+No TLS 1.2, 0-RTT, or session-resumption claim is included without a separate replay/security contract.
+
+Acceptance gates, all required before a consumer cutover:
+
+- Published cryptographic known-answer vectors and differential tests against a pinned independent
+  TLS implementation; document exact versions and oracle-only roles.
+- Positive and negative certificate chains: hostname mismatch, expired/not-yet-valid certificates,
+  unknown issuer, invalid signature, wrong key usage/EKU, path constraints, malformed DER, and
+  unsupported critical extensions all refuse without sending application data.
+- Fragmented/coalesced records, partial I/O, handshake and read deadlines, authenticated close,
+  truncation, corrupt tags, altered handshake transcript, replay and sequence exhaustion tests.
+- Deterministically seeded malformed-record/certificate fuzz corpus, retained failures, and a
+  verification-bypass mutant that the gate demonstrably catches.
+- Descriptor/memory lifecycle checks and a read-only end-to-end HTTPS GET with status, headers,
+  bounded body, and an independently verified certificate identity.
+- Independent protocol/cryptographic review plus seeded compiler/referee and consumer parity
+  evidence at exact source and compiler pins. Host tests do not qualify hardware or deployment.
+
+The GitHub API pusher and catalog remain recorded host dependencies until this separate TLS
+implementation passes these gates and each consumer completes its own exercised port. nginx
+termination does not replace outbound GitHub certificate verification. This item does not
+silently add a new RM milestone or declare Omega 1.0 ready.
+
 ## 5. Keeping this file honest
 
 Update a row only with a link to the evidence that changed it (commit, receipt, gate log). Do not

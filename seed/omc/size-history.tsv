@@ -6,3 +6,4 @@ R6-unified-eol	unified omc (lang/all merged into the native line): lenval takes 
 RM2-contracts	executable pure contracts, debug checks and release erasure	11505	389	76931	378652893d0475a41ec5d48ce43754e3886d606f5a6fb1e41172d998d729b48a
 RM2-contract-diagnostics	explicit proof and release decisions, contract obligation and source sites	11555	390	77279	3d2b7411b8a2ba1a3e770e70fd7c9be22100357c51206f2e90a80df826c30fa3
 RM2-capacity-f32	batch: 4096 functions, 8192 names, 524288 call sites per unit (#768); void return code 12 so to f32 returns values (#812); contracts (#807)	11555	390	77512	189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54
+RM-batch2	batch 2: function-mode const (#806), flock 197 (#805), peercred/pollfds/sendmsg 220-222 and getppid 173 (#808), IR v1 validation (#810), saturating float-to-int casts and const order (#815)	12040	405	81337	2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f

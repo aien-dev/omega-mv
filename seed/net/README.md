@@ -239,3 +239,5 @@ Every socket in the checks is 127.0.0.1 with a port chosen by the kernel. Nothin
 18091 or any outside host.
 
 Re-verified 2026-10-26 after refresh onto main `c5d981041` with reseeded `seed/out/omc` `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`: `HTTP-CHECK PASS` (same counts).
+
+Re-verified 2026-10-26 on `integ/omc-batch2` with the batch 2 `seed/out/omc` `2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f`: `HTTP-CHECK PASS` (same counts; `HTTP-LIVE-MUTANTS PASS killed=7/7`).
