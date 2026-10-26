@@ -3,10 +3,12 @@
 # and their *.omq.json goldens are copied from the black-box oracle seed/query/omq.om (aien-dev/omega-mv
 # #838, feat/omc-query at df23dc7b1). For every statement hole, om2 query must print one JSON line whose
 # hole, scope, fns and obligations equal omq's (omq's check, next and compiles come from witness compiles
-# and are not part of the white-box answer). The two error objects must carry omq's error text. A
-# deliberately wrong answer (a name dropped from scope) must fail the comparison (negative control).
-# Without the lead line, ?? stays the refusal it was before om2 query (same code and line), and om2 query
-# on a program without a hole writes the same program as the program alone.
+# and are not part of the white-box answer). The two error objects must carry omq's error text. An omc
+# error under om2 query is one JSON check line (code and line as omq's, status INVALID), exit 1; a value
+# hole is refused with status UNKNOWN (value holes are omq's, stage 1), exit 1. Neither writes stderr or
+# a program. A deliberately wrong answer (a name dropped from scope) must fail the comparison (negative
+# control). Without the lead line, ?? stays the refusal it was before om2 query (same code and line), and
+# om2 query on a program without a hole writes only its check (VALID-UNPROVEN), no program.
 set -eu
 R=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
 cd "$R"
@@ -85,6 +87,39 @@ for c in outside twoholes; do
 done
 printf 'PASS gate19 error objects: hole outside a function, more than one hole\n'
 
+# answer: run om2 query on case C; exit WANT, nothing on stderr, exactly one line on stdout
+answer() {
+    { printf 'om2 query\n'; cat "$D/$1.om"; } > "$T/$1.in"
+    set +e; "$O" < "$T/$1.in" > "$T/$1.out" 2> "$T/$1.err"; rc=$?; set -e
+    [ "$rc" = "$2" ] || bad "$1: om2 query exit $rc, wanted $2"
+    [ -s "$T/$1.err" ] && bad "$1: om2 query wrote stderr"
+    [ "$(wc -l < "$T/$1.out")" = 1 ] && [ "$(wc -c < "$T/$1.out")" = "$(head -n 1 "$T/$1.out" | wc -c)" ] ||
+        bad "$1: om2 query output is not exactly one line"
+}
+
+# INVALID: the omc error is the answer; check.code, check.line and check.status equal omq's
+for c in err3 err13 err15; do
+    answer "$c" 1
+    field "$T/$c.out" check > "$T/$c.wc"
+    field "$D/$c.omq.json" check > "$T/$c.oc"
+    for k in code line status; do
+        a=$(field "$T/$c.wc" "$k"); b=$(field "$T/$c.oc" "$k")
+        [ -n "$a" ] && [ "$a" = "$b" ] || bad "$c: check.$k $a, omq $b"
+    done
+done
+printf 'PASS gate19 INVALID: errors 3, 13 and 15 answer omq'"'"'s check code, line and status (3 rows)\n'
+
+# value holes: refused with the exact UNKNOWN line at omq's hole line, and nothing else on stdout
+for c in ret_value value_om2; do
+    answer "$c" 1
+    field "$D/$c.omq.json" hole > "$T/$c.oh"
+    [ "$(field "$T/$c.oh" kind)" = '"value"' ] || bad "$c: omq does not see a value hole"
+    printf '{"check":{"code":3,"line":%s,"status":"UNKNOWN","why":"value holes: use omq (stage 1)"}}\n' \
+        "$(field "$T/$c.oh" line)" > "$T/$c.want"
+    cmp -s "$T/$c.want" "$T/$c.out" || bad "$c: $(cat "$T/$c.out")"
+done
+printf 'PASS gate19 value holes: refused as UNKNOWN at omq'"'"'s hole line, exit 1, no program (2 rows)\n'
+
 # off: ?? without the lead line is refused exactly as before om2 query (base omc 2c824805 at 0b77e6ea)
 while read -r c want code; do
     set +e; "$O" < "$D/$c.om" > /dev/null 2> "$T/off.err"; rc=$?; set -e
@@ -98,16 +133,23 @@ stmt_loop omc:_line_6:_error_4 4
 stmt_om2 omc:_line_11:_error_4 4
 outside omc:_line_2:_error_16 16
 twoholes omc:_line_3:_error_4 4
+err3 omc:_line_2:_error_3 3
+err13 omc:_line_2:_error_13 13
+err15 omc:_line_5:_error_15 15
+ret_value omc:_line_3:_error_3 3
+value_om2 omc:_line_10:_error_3 3
 ROWS
-printf 'PASS gate19 off: ?? without om2 query keeps the refusal code and line (7 rows)\n'
+printf 'PASS gate19 off: ?? without om2 query keeps the refusal code and line (12 rows)\n'
 
-# no hole: om2 query writes the same program as the rest alone
+# no hole: om2 query writes only the check, never a program; the program alone still compiles
 sed '/^ *??$/d' "$D/stmt_loop.om" > "$T/nohole.om"
 { printf 'om2 query\n'; cat "$T/nohole.om"; } > "$T/nohole.in"
 "$O" < "$T/nohole.om" > "$T/nohole.a"
-"$O" < "$T/nohole.in" > "$T/nohole.b"
-[ -s "$T/nohole.a" ] && cmp -s "$T/nohole.a" "$T/nohole.b" || bad "no hole: om2 query output differs from the program alone"
-printf 'PASS gate19 no hole: om2 query output equals the program alone\n'
+set +e; "$O" < "$T/nohole.in" > "$T/nohole.b" 2> "$T/nohole.err"; rc=$?; set -e
+printf '{"check":{"code":0,"status":"VALID-UNPROVEN"}}\n' > "$T/nohole.want"
+[ -s "$T/nohole.a" ] && [ "$rc" = 0 ] && [ ! -s "$T/nohole.err" ] && cmp -s "$T/nohole.want" "$T/nohole.b" ||
+    bad "no hole: om2 query exit $rc, output $(head -c 60 "$T/nohole.b" | od -An -c | head -n 1)"
+printf 'PASS gate19 no hole: om2 query writes only VALID-UNPROVEN, exit 0, no program\n'
 
 # lead placement: om2 query only at byte 0, never inside an om2 fmt or om2 query rest (error 16, line 2)
 for lead in 'note x\nom2 query\n' 'om2 query\nom2 query\n' 'om2 query\nom2 fmt\n' 'om2 fmt\nom2 query\n'; do

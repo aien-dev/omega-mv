@@ -301,8 +301,12 @@ mputb get d j
 end
 end
 
-note fail: write "omc: line N: error E" to stderr (fd 2) and exit with the code
+note fail: write "omc: line N: error E" to stderr (fd 2) and exit with the code; in query mode the error
+note is the answer instead (qfail)
 fn fail code ulong to void
+if ne get qmode 0 0
+qfail code
+end
 put mc 0 0
 mputb 111
 mputb 109
@@ -8171,8 +8175,21 @@ eol
 end
 
 note ======== the end of the input: the output ========
-note writeout: the output from byte st to the end, to stdout (error 2), then exit 0. om4 WRITEOUT.
+note writeout: the output from byte st to the end, to stdout (error 2), then exit 0. om4 WRITEOUT. In query
+note mode a program without a hole that compiles writes no program, only its check (VALID-UNPROVEN).
 fn writeout st ulong to void
+if ne get qmode 0 0
+put oc 0 0
+qs 2480185306991764091 8
+qs 2478497599504677690 8
+qs 8386112018983956538 8
+qs 5494767725372928885 8
+qs 5715719174453281865 8
+qs 137976399938902 6
+qb 10
+put qmode 0 0
+qout 0
+end
 if ne get fmtm 0 0
 fmtout
 end
@@ -12056,7 +12073,6 @@ put inlen 0 n
 put om2 0 0
 put om2m 0 0
 put om2ln 0 0
-put qmode 0 1
 om2lead
 if or eq get om2m 0 2 eq get om2m 0 3
 put line 0 get om2ln 0
@@ -12064,6 +12080,7 @@ put tka 0 get om2pos 0
 put tkb 0 get om2pos 0
 fail 16
 end
+put qmode 0 1
 qclinit
 if gt qholes 1
 put oc 0 0
@@ -12503,6 +12520,49 @@ p = add p ulong n
 end
 end
 exit int code
+end
+
+note qfail: in query mode an omc error is the answer: one JSON line {"check":{"code","line","status"}} on
+note stdout, nothing on stderr, exit 1. The line is the line in the unit after the om2 query line (as omq
+note reports it). Error 3 at a ?? token is a value hole, which this interface does not answer: status
+note UNKNOWN and a pointer to seed/query/omq.om. Any other error is INVALID: without a hole the program
+note is rejected, and with a hole the error lies before it (the hole's answer is written when it is read).
+fn qfail code ulong to void
+put qmode 0 0
+vh = false
+if eq code 3
+if eq get tl 0 2
+s = get ts 0
+if eq get inp s 63
+if eq get inp add s 1 63
+vh = true
+end
+end
+end
+end
+put oc 0 0
+qs 2480185306991764091 8
+qs 2478497599504677690 8
+qs 58 1
+qnum code
+qs 4189022128297484844 8
+qnum get line 0
+if vh
+qs 8319683848551211564 8
+qs 5714587776987576866 8
+qs 8748373264820227671 8
+qs 7310868735955450402 8
+qs 2322295437311043616 8
+qs 2337770005634315125 8
+qs 3539940801804268328 8
+qs 2105352745 4
+else
+qs 8319683848551211564 8
+qs 5494767914603133474 8
+qs 538970309705 5
+end
+qb 10
+qout 1
 end
 
 note qhole: in query mode, at a statement hole (?? the only word on its line) write the held state as one

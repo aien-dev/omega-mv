@@ -958,28 +958,32 @@ keep their error 9 at the line that uses them.
 
 ## Rung R52: om2 query, the white-box hole interface
 
-A unit whose first line, at byte 0, is `om2 query` is compiled like an `om2 fmt` rest. When one line of
-the rest is only `??` and the compiler reaches it as a statement, omc writes one JSON line instead of
-a program: the visible names with types and writability, the function lines, the open blocks
-innermost first, the free registers, the contracts in force and the host-word effects used so far
-(`docs/one_layer/OMEGESE.md` 9.13). The key names and shapes are those of the black-box oracle
+A unit whose first line, at byte 0, is `om2 query` is compiled like an `om2 fmt` rest and never writes
+a program. When one line of the rest is only `??` and the compiler reaches it as a statement, omc
+writes one JSON line: the visible names with types and writability, the function lines, the open
+blocks innermost first, the free registers, the contracts in force and the host-word effects used so
+far (`docs/one_layer/OMEGESE.md` 9.13). Without a hole the answer is the check alone
+(`VALID-UNPROVEN`, exit 0); an omc error is `{"check":{"code","line","status":"INVALID"}}`, exit 1,
+with the line counted in the rest as omq counts it; a `??` read as a value is refused with status
+`UNKNOWN` (value holes stay with the black-box oracle). The key names and shapes are those of
 `seed/query/omq.om` (#838), so an agent can switch from the oracle to the compiler without a new
 parser. Names are read only through `nm_name`/`findname`, so the 63-byte name change (#837) needs no
 edit here.
 
-- `gate19` compares five statement holes with omq's goldens (hole, scope, fns, obligations), runs a
-  negative control (a dropped scope name must fail), the two error objects, seven rows proving `??`
-  without the lead keeps its old refusal code and line, a no-hole unit whose output equals the program
-  alone, and four lead-placement refusals. Against the previous compiler (`2c824805…`) it fails at
-  `arr_call` with error 16.
-- Off the query path the output is unchanged on what was checked: the 811 tracked `.om` files give the
+- `gate19` runs all 12 cases of omq at `df23dc7b1`: five statement holes compared with omq's goldens
+  (hole, scope, fns, obligations), a negative control (a dropped scope name must fail), the two error
+  objects, three INVALID lines (errors 3, 13, 15: code, line and status equal omq's), two value-hole
+  refusals (exact line, exit 1), twelve rows proving `??` without the lead keeps its old refusal code
+  and line, a no-hole unit that writes only `VALID-UNPROVEN`, and four lead-placement refusals.
+  Against the previous compiler (`2c824805…`) it fails at `arr_call` with error 16.
+- Off the query path the output is unchanged on what was checked: the 823 tracked `.om` files give the
   same bytes, stderr and exit under both compilers, and the frozen C2 manifest gives the same verdict
   and output digest on all 5,876 cases (the six declared failures included).
-- Where the two disagree on other holes, the compiler is the reference: omq leaves out names declared
-  by a first assignment to a non-function word and struct names, prints an empty type for some arrays,
-  takes a variable named `export` for a function line, counts effects over the whole function with
-  repeats, and probes free registers of an inline function at its call site.
-- `seed/omc/omc.om`, 12,676 lines and 424 functions. The committed `seed/out/omc` is not refreshed in
+- Where the two disagree on other holes, the compiler is the reference. omq at `f1e4c6170` matches the
+  statement-hole answers of the previous stage (`2c3124f6…`) on 625 of 827 sampled holes; the rest
+  are omq's effects (whole function, with repeats), an empty type for abstract names, first-mention
+  scope order, and one inline function with a fresh caller (`seed/query/README.md`).
+- `seed/omc/omc.om`, 12,736 lines and 425 functions. The committed `seed/out/omc` is not refreshed in
   this change; the integration owner reseeds once per batch.
 
 ## How the checks stay honest

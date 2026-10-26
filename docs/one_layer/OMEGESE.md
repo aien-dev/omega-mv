@@ -668,8 +668,11 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   and compile(fmt(x)) is byte-identical to compile(x).
 - **`om2 query`.** Only when the input's first line, at byte 0, is `om2 query` (error 16 elsewhere, in
   an `om2 fmt` rest included, and when the rest starts with `om2 fmt` or `om2 query`). The rest is compiled as a unit of its own
-  as for `om2 fmt`; errors are reported against the whole input. A rest with no `??` line compiles and
-  writes exactly the program the rest alone writes. When one line of the rest is only `??` (blanks
+  as for `om2 fmt`; a lead-placement error 16 goes to stderr against the whole input. Under the lead no
+  program is ever written. A rest with no `??` line that compiles writes the one line
+  `{"check":{"code":0,"status":"VALID-UNPROVEN"}}` (well formed only, nothing proven), exit 0. Any omc
+  error in the rest writes `{"check":{"code":C,"line":L,"status":"INVALID"}}` to stdout, nothing to
+  stderr, exit 1; with a hole the error lies before it. When one line of the rest is only `??` (blanks
   around it allowed) and the compiler reaches it in statement position, nothing else is compiled: stdout
   gets one JSON line and the exit is 0:
   `{"hole":{"line":L,"kind":"statement","fn_line":F,"depth":D},"scope":[...],"fns":[...],"obligations":
@@ -685,9 +688,14 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   the function used before the hole as `word:class` (`io fs net proc env clock random device`), once, in
   first-use order, host words in inlined callees included. Two `??` lines write
   `{"error":"more than one ?? hole"}` and a `??` outside a function writes
-  `{"error":"the hole is not inside a function"}`, both with exit 1. A `??` in value position is the
-  usual compile error. The key names and shapes are those of the black-box oracle `seed/query/omq.om`;
-  `seed/omc/gate19.sh` compares them on its statement-hole cases. Without the lead line `??` is refused
+  `{"error":"the hole is not inside a function"}`, both with exit 1. A `??` in value position is not
+  answered (value holes are the black-box oracle's, stage 1): where omc reads it as an unknown name it
+  writes `{"check":{"code":3,"line":L,"status":"UNKNOWN","why":"value holes: use omq (stage 1)"}}`,
+  exit 1. Not covered: a `??` in a position that raises another error is that error's INVALID line, and
+  the INVALID line carries only code, line and status, none of omq's diagnostic fields or repairs (the
+  `fix_move_up` of error 3, `fix_rename` of 13, `fix_append_end` of 15). The key names and shapes are
+  those of the black-box oracle `seed/query/omq.om`; `seed/omc/gate19.sh` compares them on its 12 cases
+  (statement holes, error objects, INVALID lines, value-hole refusals). Without the lead line `??` is refused
   as before (error 4 in a statement, error 3 as a value, error 16 at the top level).
 - **Rotate.** `rotr x n` and `rotl x n`: x and n of one unsigned type (uchar, ushort, uint, ulong; else
   error 7), the result x's type. n outside 0..w-1 traps 7 at run time, a number n included. uint/ulong
