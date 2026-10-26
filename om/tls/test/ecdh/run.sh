@@ -26,8 +26,8 @@ if [ "$sum" != "$pin" ]; then
 	exit 1
 fi
 
-build() { # build SRC_ECDH OUT_BINARY
-	{ echo om2; cat "$root/om/tls/ec.om" "$1" "$here/driver.om"; } > "$2.unit.om"
+build() { # build SRC_ECDH OUT_BINARY [SRC_EC]
+	{ echo om2; cat "${3:-$root/om/tls/ec.om}" "$1" "$here/driver.om"; } > "$2.unit.om"
 	if ! $nice "$omc" < "$2.unit.om" > "$2" 2> "$2.err" || [ -s "$2.err" ]; then
 		echo "FAIL build $2: $(cat "$2.err")"
 		return 1
@@ -79,6 +79,22 @@ libmut() {
 	fi
 }
 
+# ecmut LABEL SED_SCRIPT VECTORFILE: a source mutant of ec.om (the P-256 p2_* path that ecd_mult
+# uses) built with the unchanged ecdh.om; the vectors must detect it
+ecmut() {
+	sed "$2" "$root/om/tls/ec.om" > "$out/$1.ec.om"
+	if cmp -s "$root/om/tls/ec.om" "$out/$1.ec.om"; then
+		mutants=$((mutants + 1))
+		echo "FAIL $1: sed did not change the source"
+		fail=1
+	elif build "$root/om/tls/ecdh.om" "$out/$1" "$out/$1.ec.om"; then
+		mutant "$out/$1" "$here/vectors/$3" "$1"
+	else
+		mutants=$((mutants + 1))
+		fail=1
+	fi
+}
+
 build "$root/om/tls/ecdh.om" "$out/driver"
 echo "ecdh.om $(sha256sum "$root/om/tls/ecdh.om" | cut -d' ' -f1) functions $(grep -c '^fn ' "$root/om/tls/ecdh.om")"
 echo "ec.om $(sha256sum "$root/om/tls/ec.om" | cut -d' ' -f1)"
@@ -120,6 +136,16 @@ libmut mutant-formula '0,/^ecd_sub w ECCP EDT3 EDT3 EDT4$/s//ecd_add w ECCP EDT3
 libmut mutant-csub 's/^mk = sub shr x 63 1$/mk = ulong 0/' cavp_cdh.txt
 libmut mutant-range 's/^ret and br shr or z sub 0 z 63$/ret 1/' edge.txt
 libmut mutant-pct 's/^if or ne rc 0 ne acc 0$/if ne rc 0/' edge.txt
+
+# P-256 mutants (ecd_mult routes P-256 through p2_smul of ec.om):
+#   p2-out: ecd_mult copies the result's Y limbs into X
+#   p2-sel: (ec.om) table-select mask from (j xor v) without the - 1 (always 0, wrong entry)
+#   p2-dig: (ec.om) window digits of 3 bits instead of 4
+#   p2-red: (ec.om) one Solinas term dropped from word 0 of the reduction
+libmut mutant-p2-out 's/^put w add EDR0 j get v add P2O j$/put w add EDR0 j get v add add P2O 8 j/' cavp_cdh.txt
+ecmut mutant-p2-sel 's/^m = sub 0 shr sub xor j v 1 63$/m = sub 0 shr xor j v 63/' cavp_cdh.txt
+ecmut mutant-p2-dig 's/^ret and shr get w add k shr i 3 mul and i 7 4 15$/ret and shr get w add k shr i 3 mul and i 7 4 7/' cavp_cdh.txt
+ecmut mutant-p2-red 's/^put r 0 sub sub sub sub s get t 11 get t 12 get t 13 get t 14$/put r 0 sub sub sub s get t 11 get t 12 get t 13/' cavp_cdh.txt
 
 # timing: the first CAVP P-256 and P-384 shared-secret lines, ECDH_BENCH_N calls each
 bn=${ECDH_BENCH_N:-100}
