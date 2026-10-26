@@ -75,7 +75,7 @@ Gates whose manifest lists `gb10` under `requires:` (for example the `*-silicon`
 - Preserve the native GPU work and its recorded OS and driver dependencies. Do not infer hardware or OS independence from removing a userspace library.
 - GB10 work happens only on the DGX Spark in an authorized window. Ask before running anything that opens the GPU.
 - A head that changes `.aien/`, `tests/gates/`, `.github/workflows/`, `.forgejo/` or `tools/aien-test/` is `BLOCKED_OPERATOR` and needs an operator run on the Spark. Ask before touching those paths.
-- GitHub workflows (`aien-verification.yml`, `om-units-arm64.yml`) are advisory and build only pinned verifier tools; Alpha qualification happens on the Spark. External review is expected before merge. Open a pull request with the exact command you ran and its output.
+- GitHub workflows (`aien-verification.yml`, `om-units-arm64.yml`) are advisory; verifier source commits are pinned, but action tags and the stable Rust toolchain track upstream. This is not an immutable execution/toolchain claim. Alpha qualification happens on the Spark. External review is expected before merge. Open a pull request with the exact command you ran and its output.
 
 ## Further reading
 

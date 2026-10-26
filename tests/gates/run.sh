@@ -133,7 +133,7 @@ case "$step" in
   seed)               make OUT_DIR=build build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
                       sh seed/omega-from-seed.sh
                       sh seed/host/check.sh 2>&1 | tee "$OUT_DIR.seed-check.log"
-                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi ;;
+                      grep -q "^PASS native-host qualification" "$OUT_DIR.seed-check.log" ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -300,7 +300,24 @@ case "$step" in
     ;;
   zero-disk-secrets)
     echo "Auditing repository for prohibited plaintext secret files..."
-    if find . -maxdepth 4 -name ".env*" -not -path "*/.git/*" -not -path "*/build/*" | grep -q .; then
+    # Inspect every tracked path, including forced additions under generated dirs.
+    # NUL records preserve whitespace/newlines; producer failures are not "no hits".
+    if ! git ls-files -z > "$OUT_DIR/secret-tracked"; then
+      echo "::error::Cannot enumerate tracked paths." >&2; exit 1
+    fi
+    while IFS= read -r -d '' path; do
+      case "${path##*/}" in
+        .env*) echo "::error::Tracked plaintext .env path found."
+               obs env_files_found true; exit 1 ;;
+      esac
+    done < "$OUT_DIR/secret-tracked"
+    # Also catch untracked working-tree secrets. Only root build output and git
+    # metadata are excluded; tracked files in build were already checked above.
+    if ! find . \( -path './.git' -o -path './build' \) -prune -o \
+        -name '.env*' -print -quit > "$OUT_DIR/secret-untracked"; then
+      echo "::error::Cannot complete plaintext secret search." >&2; exit 1
+    fi
+    if [ -s "$OUT_DIR/secret-untracked" ]; then
       echo "::error::Prohibited plaintext .env file found. Use an approved AIEN SecretProvider."
       obs env_files_found true; exit 1
     fi

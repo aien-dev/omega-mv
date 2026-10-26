@@ -306,6 +306,9 @@ both islands with no id shared (struct 85; host words 100 to 131).
 - `seed/host/check.sh` passes every host case and the 70 original corpus fixtures. The om4/omc
   corpus leaves out `seed/omc/tests/struct/`: om4's refusal there is the documented om4-only limit
   (decision 32), and gate6 owns that check.
+  Correction (2026-10-26): the selector at `ec07d25d` actually retains 62 cases;
+  `seed/host/original-fixtures.tsv` now fixes their paths and expected parent
+  statuses. The former content filters must not silently shrink qualification.
 - `seed/host/tests/structfile.om` is one program that builds a struct, creates and writes a file
   through the native host words, closes and unlinks it, and returns a struct field; `gate.sh` runs it.
 
