@@ -57,7 +57,17 @@ if [ $# = 0 ]; then
   }
   mut "EE unknown extension accepted"   "ee_unsol ee_mfl"        's/^if or eq bit 0 ne and seen bit 0$/if ne and seen bit 0/'
   mut "SH extension type not checked"   "sh_ext_unsol sh_ext_ksalias" 's/^if or ne t 51 ne and seen 2 0$/if ne and seen 2 0/'
-  mut "post-handshake non-KeyUpdate accepted" "post_cr post_unknown_hs" '/^if ne t 24$/{n;s/^ret TLEUNEX$/ret 0/;}'
+  mut "post-handshake type not checked (parsed as KeyUpdate)" "post_cr post_unknown_hs" '/^fn tls_post /,/^fn /{s/^if ne t 24$/if eq t 99999/}'
+  # the F1-F7 fixes (TlsProto): each mutant restores one pre-fix behaviour
+  mut "supported_versions value is protocol_version" "sh_sv0303 sh_sv7f" '/^fn tls_shext /,/^fn /{/^if ne tls_gn c q 2 772$/{n;s/^ret TLEILL$/ret TLEVER/}}'
+  mut "illegal_parameter unmapped"            "sh_ext_sni ee_ks" 's/^if or eq e TLEHRR or eq e TLETKT eq e TLEILL$/if or eq e TLEHRR eq e TLETKT/'
+  mut "SH recognised extension is unsupported" "sh_ext_sni sh_ext_cookie" 's/^if and ne t 51 and ne tls_kext t 0 ne t 41$/if eq t 99999/'
+  mut "EE recognised extension is unsupported" "ee_ks ee_sv" 's/^if ne tls_eebad t 0$/if eq t 99999/'
+  mut "supported_versions length is extension" "sh_svlen" '/^fn tls_shext /,/^fn /{/^if ne l 2$/{n;s/^ret TLEDEC$/ret TLEEXT/}}'
+  mut "empty Certificate is bad_certificate"   "cert_empty" '/^if lt cl 5$/{n;s/^ret TLEDEC$/ret TLECERT/}'
+  mut "short record is record error"           "rec_short" '/^if lt ln 17$/{n;s/^ret TLEMAC$/ret TLEREC/}'
+  mut "inner plaintext unbounded"              "rec_overflow_inner" 's/^if gt ln 16401$/if gt ln 99999/'
+  mut "application data interleaved"           "post_interleave" '/^fn tls_rdapp /,/^fn /{/^if ne tls_gn c TLHF 4 0$/{n;s/^ret TLEUNEX$/ret 0/}}'
 fi
 
 if [ $trc = 0 ] && [ $polfail = 0 ] && [ $mfail = 0 ]; then echo "$final"; exit 0; fi
