@@ -1775,6 +1775,30 @@ static bool test_m19_gate15_zero_libcuda(void) {
     return true;
 }
 
+/* Echo the tail of the nested clean-clone log to stderr. The file is read
+ * directly: building a shell command out of a path is both flagged by static
+ * analysis and a way for a crafted path to run something unintended. */
+static void m19_echo_log_tail(const char *dir) {
+    char path[PATH_MAX];
+    int n = snprintf(path, sizeof(path), "%s/qualification.log", dir);
+    if (n < 0 || (size_t)n >= sizeof(path)) return;
+    FILE *f = fopen(path, "rb");
+    if (!f) return;
+    char buf[2048];
+    size_t want = sizeof(buf) - 1;
+    if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return; }
+    long end = ftell(f);
+    if (end < 0) { fclose(f); return; }
+    long start = end > (long)want ? end - (long)want : 0;
+    if (fseek(f, start, SEEK_SET) != 0) { fclose(f); return; }
+    size_t got = fread(buf, 1, want, f);
+    fclose(f);
+    if (got == 0) return;
+    buf[got] = '\0';
+    fputs(buf, stderr);
+    if (buf[got - 1] != '\n') fputc('\n', stderr);
+}
+
 /* Gate 16: OMEGA_ACCEL_RESIDENT_CLEAN_CLONE_PASS */
 static bool test_m19_gate16_clean_clone(void) {
     char src_sha[41] = {0};
@@ -1827,12 +1851,7 @@ static bool test_m19_gate16_clean_clone(void) {
          * only "[FAIL]" with no reason while the log stayed inside the runner's temp directory.
          * Echo the tail to stderr, which the gate runner captures into the evidence record. */
         fprintf(stderr, "M19 gate 16: nested build or nested run failed; tail of %s/qualification.log:\n", clone);
-        char tail[1200];
-        int tl = snprintf(tail, sizeof(tail), "tail -n 40 %s/qualification.log 2>/dev/null >&2", clone);
-        if (tl > 0 && (size_t)tl < sizeof(tail)) {
-            int tr = system(tail);
-            (void)tr;
-        }
+        m19_echo_log_tail(clone);
         return false;
     }
 
