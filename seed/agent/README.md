@@ -192,26 +192,6 @@ Exit 0 means PASS, 1 FAIL, and 3 NOT_RUN (no compiler).
 | Linux ARM64 kernel | host | system calls through compiled host words | none (platform) |
 | Python 3 | 3.12 on the Spark | test referee and mock server only, not on the product path | a `.om` mock server on `seed/net` (proposed) |
 
-## Measured against nanobot
-
-MEASURED on 2026-10-26 with the omc 189ada82 build (188,084 bytes, sha256 6c9b744f...), before main
-moved to omc 2c824805; not re-measured on the new build. N=30 paired, interleaved runs per arm and core class on a DGX Spark under
-load (loadavg about 13). The comparison is nanobot-ai 0.3.5 on Python 3.12.3. The client was
-pinned with `taskset` to X925 cpu 5 or A725 cpu 1, and each turn was one streamed reply from a
-test-only mock. Medians:
-
-| | omagent | nanobot | ratio (Wolfram) |
-|---|---|---|---|
-| `--version` wall, X925 / A725 | 3.87 / 4.55 ms | 369.7 / 704.5 ms | 95.5x / 154.9x |
-| one turn wall, X925 / A725 | 4.86 / 6.17 ms | 1005.2 / 1953.8 ms | 207.0x / 316.8x |
-| max RSS, `--version` / turn | 1624 / 2584 KiB | 69684 / 142792 KiB | 42.9x / 55.3x |
-| installed size | 188,084 bytes | 336,116,353 bytes of site-packages plus the interpreter | 1787x |
-
-Wall times include a launcher that costs 3.15 ms (X925) for `/bin/true`. The harness is in
-`bench/` (`bench.sh`, the test-only `mock_pong.py`, and `stats.wl` with the raw data). The raw rows
-and the Wolfram output are filed in the operator handoff `OmegaBot/bench/`. nanobot does more per
-turn (skills, templates, more tools), so this is not an equal-feature comparison.
-
 ## Limits and NOT_RUN
 
 - TLS model endpoints and fetches: NOT_RUN (refused by design in this build).
