@@ -93,7 +93,7 @@ static int ombr_overlap(const ombr_span *sp, unsigned ns)
     return 0;
 }
 /* One read-only runtime table for every call and thread: the code only reads it (a write would fault). */
-static const ombr_rt ombr_rt_table = {{ [0 ... 1] = ombr_no_entry, [2] = ombr_trap, [3 ... 31] = ombr_no_entry }};
+static const ombr_rt ombr_rt_table = {{ ombr_no_entry, ombr_no_entry, ombr_trap, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry, ombr_no_entry }};
 static uint32_t ombr_run(const void *code, const uint64_t *args, uint64_t *result, int has_value)
 {
     if (ombr_active)

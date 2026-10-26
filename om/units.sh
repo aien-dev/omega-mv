@@ -17,7 +17,7 @@
 # A unit, compiler or profile that changes without regenerating these files fails --check.
 set -eu
 OMC_PIN=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec
-NATIVE_PIN=24f252b922016047355400caa55139980999ebde614256d9d9c0a68a4b511fac
+NATIVE_PIN=c77a5922f91d53d4a0bbd4e7b1c4703f7098263abc843be2918db1ece7496782
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # One generated library for all units: the bindings share one ABI runtime (ombr_enter).
 UNITS="om/sha256/sha256-om2.om om/blake3/b3unit.om"
