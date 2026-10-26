@@ -1,0 +1,20 @@
+om2
+fn sq x uint to ulong
+ret mul ulong x ulong x
+end
+fn sum a view uint 8 n ulong to ulong
+requires le n 8
+s = ulong 0
+for i ulong n
+invariant le i n
+??
+end
+ret s
+end
+fn main to int
+b = new uint 8 1
+c = new uchar 2 65
+t = sum b 8
+r = write 1 c 0 2
+ret int t
+end

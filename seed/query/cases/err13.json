@@ -1,0 +1,1 @@
+{"check":{"code":13,"line":2,"sev":"unknown","col":1,"expect":"name","found":"abcdefghijk","obligation":"-","span":[15,26],"why":"name longer than 8 characters: shorten it","fix_rename":"abcdefg0","rc_after_fix":0},"compiles":5}

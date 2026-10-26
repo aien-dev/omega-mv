@@ -1,0 +1,10 @@
+fn choose a int to int
+if lt a 0
+ret neg a
+else
+??
+end
+end
+fn main to int
+ret choose int 3
+end

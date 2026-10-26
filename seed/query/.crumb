@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T21:23:05Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:6c8374f522c3cdb9a658f8c7fd5dba5810b13788e903e66a2546430c6fa87534",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 25,
+      "generated_at_commit": "0b77e6ea294aa3d69ccbdb86b9c14d133abea689",
+      "source_tree": "sha256:411d48a4a3cc15e5291bc8a7d1dc0b491c4668fe93435dd2ea6d9d74f7246c1c"
+    }
+  },
+  "layer": "seed",
+  "name": "query",
+  "purpose": "omq: hole oracle for agents writing seeded Omega; answers scope, valid next forms, obligations and repaired diagnostics by running the pinned omc on witness programs, plus a prefix-viability server",
+  "schema_version": "1.0.0"
+}

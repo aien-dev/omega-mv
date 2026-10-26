@@ -1,0 +1,2563 @@
+om2
+note omq: exact hole oracle over the pinned omc. Usage: omq OMC < program > answer.json
+note The program holds at most one hole, the word ??. A line that is only ?? is a statement hole;
+note ?? inside a line is a value hole. Every scope entry, expected type and next form in the answer
+note is a witness program the real compiler accepted: omq builds the witness, runs OMC on it and
+note reports what passed. It does not reimplement any Omega rule. See seed/query/README.md.
+
+const GON ulong 0
+const GWN ulong 1
+const GSL ulong 2
+const GNL ulong 3
+const GHL ulong 4
+const GHA ulong 5
+const GHK ulong 6
+const GFL ulong 7
+const GD0 ulong 8
+const GD1 ulong 9
+const GEND ulong 10
+const GMI ulong 11
+const GME ulong 12
+const GDN ulong 13
+const GPN ulong 14
+const GRUN ulong 15
+const GEN ulong 16
+const GNC ulong 17
+const GLOOP ulong 18
+const GIF ulong 19
+const GOK ulong 20
+const GSEP ulong 21
+const GCB ulong 22
+const GNB ulong 23
+const GEXP ulong 24
+const GNH ulong 25
+const GOM2 ulong 26
+const GRC ulong 27
+const GDL ulong 28
+const GDC ulong 29
+const GDA ulong 30
+const GDB ulong 31
+const GSK ulong 32
+const GSA ulong 33
+const GNT ulong 34
+
+global src uchar 1048576
+global lsa ulong 65536
+global lea ulong 65536
+global wit uchar 2097152
+global ob uchar 1048576
+global eb uchar 8192
+global pk uchar 4200
+global cb uchar 4096
+global g ulong 64
+global ca ulong 512
+global cl ulong 512
+global ct ulong 512
+global bk ulong 1024
+global bln ulong 1024
+
+text tys "bool uchar ushort uint ulong byte short int long f32 f64 "
+text bops "add sub mul div rem and or xor shl shr "
+text cops "eq ne lt le gt ge "
+text hostw "read:io write:io exit:io fopen:fs fclose:fs fsync:fs fdsync:fs memfd:fs fchmod:fs chmod:fs chown:fs faccess:fs fchdir:fs syncfs:fs flock:fs umask:fs fseek:fs ftrunc:fs truncate:fs unlink:fs makedir:fs rmdir:fs cwd:fs chdir:fs readlnk:fs getdnts:fs fstat:fs stat:fs lstat:fs renames:fs link:fs symlnk:fs pread:fs pwrite:fs socknew:net bind:net connect:net listen:net accept:net sockname:net sockopt:net recv:net send:net shutdown:net peercred:net sendmsg:net waitio:proc pollfds:proc fork:proc getpid:proc getppid:proc killpid:proc waitpid:proc pipefds:proc dupfd:proc execprog:proc setsid:proc getpgid:proc setpgid:proc getsid:proc getuid:proc geteuid:proc getgid:proc getegid:proc argcnt:env argread:env envcnt:env envread:env monons:clock realns:clock sleepns:clock random:random devctl:device mapnew:device mapdrop:device mapread:device mapwrite:device devcall:device uvmctl:device mapaddr:device mapget:device mapset:device maphold:device mapbind:device "
+text tnl "\n"
+text ttrap "trap 1\n"
+text tend "end\n"
+text tq "_q = "
+text tdevnull "/dev/null"
+text tmfd "omq"
+text tusage "usage: omq OMC < program > answer.json\n"
+text tbad "omq: cannot run the compiler\n"
+text tfn "fn"
+text texport "export"
+text tif "if"
+text twhile "while"
+text tfor "for"
+text telse "else"
+text tkend "end"
+text tglobal "global"
+text tconst "const"
+text ttext "text"
+text teq "="
+text tto "to"
+text tvoid "void"
+text treq "requires"
+text tens "ensures"
+text tinv "invariant"
+text tnote "note"
+text tom2 "om2"
+text tdiag "diag"
+text tfmt "fmt"
+text tview "view"
+text tedit "edit"
+text tout "out"
+text tfresh "fresh"
+text tinline "inline"
+text ttrue "true"
+text tlen "len "
+text tget "get "
+text tput "put "
+text tdiagr "omc-diag 1 "
+text r3 "unknown name: define it before this line (globals, consts and texts above their first use; locals in an enclosing block that is still open)"
+text r4 "the line ends too early: an operation or call is missing an operand"
+text r5 "extra words: an operation or call got more operands than it takes"
+text r6 "malformed number"
+text r7 "type mismatch: convert with TYPE value (checked), or use a name of the expected type; a name keeps its first type"
+text r8 "number out of range for the type"
+text r9 "word not allowed here (e.g. break outside a loop, more than six parameter slots, an inline cycle)"
+text r10 "duplicate name: pick a new name"
+text r11 "ambiguous bare number: write a typed number, e.g. uint 5"
+text r12 "register pool exhausted: split the function into helpers, or end blocks so names die"
+text r13 "name longer than 8 characters: shorten it"
+text r14 "capacity exceeded"
+text r15 "missing end: close every fn/if/while/for with end"
+text r16 "syntax: unknown word or wrong form"
+text r17 "line after ret/break/continue/trap/exit in the same block: delete it or move it above"
+text r18 "missing ret: the function's end is reachable; add ret VALUE or trap N before end"
+text r19 "a global passed as an argument, or one array twice in a call: name the global inside the callee"
+text r20 "write to a view or text: make the parameter edit"
+text r21 "constant index out of range"
+text r22 "bad text literal"
+text r27 "uninitialised fresh element read"
+text r30 "contract syntax or a forbidden predicate operation"
+text kwhy "why"
+text kafter "rc_after_fix"
+text kfixr "fix_rename"
+text kfixm "fix_move_up"
+text kfixe "fix_append_end"
+text kcode "code"
+text kline "line"
+text kcol "col"
+text kspan "span"
+text kexpect "expect"
+text kfound "found"
+text kobl "obligation"
+text ksev "sev"
+text teqsp " = "
+text tifb "if true"
+text twhb "while false"
+text tforb "for _q ulong 1"
+text tbrk "break"
+text tcont "continue"
+text tifo "if <bool>"
+text twho "while <bool>"
+text tforo "for NAME T COUNT"
+text ttrapo "trap <1..255>"
+text texito "exit <int>"
+text texit0 "exit 0"
+text treqt "requires true"
+text tenst "ensures true"
+text tinvt "invariant true"
+text treqo "requires <bool>"
+text tenso "ensures <bool>"
+text tinvo "invariant <bool>"
+text jhole "hole"
+text jline "line"
+text jkind "kind"
+text jstmt "statement"
+text jvalue "value"
+text jfnl "fn_line"
+text jdepth "depth"
+text jscope "scope"
+text jname "name"
+text jtype "type"
+text jwr "writable"
+text jfns "fns"
+text jexp "expect"
+text jobl "obligations"
+text jfunc "function"
+text jopen "open"
+text jregs "regs_free"
+text jcon "contracts"
+text jeff "effects"
+text jcheck "check"
+text jnext "next"
+text jruns "compiles"
+text jerr "error"
+text jmany "more than one ?? hole"
+text jout "the hole is not inside a function"
+text jwhile "while"
+text tgood "fn main to int\nret 0\nend\n"
+text tbadp "fn main to int\nret 0\n"
+text tomcl "omc: line "
+text tprefix "prefix"
+text thdr "om2 diag\n"
+global lb uchar 4
+
+note ---------------------------------------------------------------- output buffer (JSON)
+
+fn ob1 b uchar to void
+n = get g GON
+if lt n 1048000
+put ob n b
+put g GON add n 1
+end
+end
+
+fn obt t view uchar * to void
+for i ulong len t
+ob1 get t i
+end
+end
+
+fn obe b uchar to void
+if or eq b 34 eq b 92
+ob1 92
+ob1 b
+ret
+end
+if eq b 9
+ob1 92
+ob1 116
+ret
+end
+if lt b 32
+ob1 32
+ret
+end
+ob1 b
+end
+
+fn obs a ulong n ulong to void
+for i ulong n
+obe get src add a i
+end
+end
+
+fn obcb to void
+for i ulong get g GCB
+obe get cb i
+end
+end
+
+fn obn v ulong to void
+d = new uchar 24 0
+k = ulong 0
+x = v
+while true
+put d k uchar add ulong 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt k 0
+k = sub k 1
+ob1 get d k
+end
+end
+
+fn obsep to void
+if ne get g GSEP 0
+ob1 44
+end
+put g GSEP 1
+end
+
+fn obkey t view uchar * to void
+obsep
+ob1 34
+obt t
+ob1 34
+ob1 58
+put g GSEP 0
+end
+
+fn obstr a ulong n ulong to void
+ob1 34
+obs a n
+ob1 34
+put g GSEP 1
+end
+
+fn obtstr t view uchar * to void
+ob1 34
+obt t
+ob1 34
+put g GSEP 1
+end
+
+fn obnum v ulong to void
+obn v
+put g GSEP 1
+end
+
+fn obopen b uchar to void
+ob1 b
+put g GSEP 0
+end
+
+fn obclose b uchar to void
+ob1 b
+put g GSEP 1
+end
+
+note ---------------------------------------------------------------- source words and lines
+
+fn isb c uchar to bool
+ret or eq c 32 eq c 9
+end
+
+fn skb p ulong to ulong
+q = p
+while and lt q get g GSL isb get src q
+q = add q 1
+end
+ret q
+end
+
+fn wde p ulong to ulong
+q = p
+n = get g GSL
+while lt q n
+c = get src q
+if or isb c eq c 10
+ret q
+end
+q = add q 1
+end
+ret q
+end
+
+fn sweq a ulong n ulong t view uchar * to bool
+if ne n len t
+ret false
+end
+for i ulong n
+if ne get src add a i get t i
+ret false
+end
+end
+ret true
+end
+
+fn lnw i ulong k ulong to ulong
+note start offset of word k (0-based) of line i, or the line end when it has fewer words
+p = skb get lsa i
+e = get lea i
+for j ulong k
+if ge p e
+ret e
+end
+p = skb wde p
+end
+if gt p e
+ret e
+end
+ret p
+end
+
+fn lwis i ulong k ulong t view uchar * to bool
+a = lnw i k
+if ge a get lea i
+ret false
+end
+ret sweq a sub wde a a t
+end
+
+fn opener i ulong to bool
+if or lwis i 0 tif or lwis i 0 twhile lwis i 0 tfor
+ret true
+end
+ret or lwis i 0 tfn lwis i 0 texport
+end
+
+note ---------------------------------------------------------------- witness buffer
+
+fn w1 b uchar to void
+n = get g GWN
+if lt n 2097000
+put wit n b
+put g GWN add n 1
+end
+end
+
+fn wt t view uchar * to void
+for i ulong len t
+w1 get t i
+end
+end
+
+fn wsr a ulong n ulong to void
+for i ulong n
+w1 get src add a i
+end
+end
+
+fn wln i ulong to void
+a = get lsa i
+wsr a sub get lea i a
+w1 10
+end
+
+fn wlns i ulong j ulong to void
+k = i
+while lt k j
+wln k
+k = add k 1
+end
+end
+
+fn wcb to void
+for i ulong get g GCB
+w1 get cb i
+end
+end
+
+fn wcl d ulong ended bool to void
+note close d open blocks, a trap before each end; with GNT set only the innermost gets one, for
+note a hole whose outer block already terminates (an else after a then branch that returns)
+for k ulong d
+if not and eq k 0 ended
+if or eq k 0 eq get g GNT 0
+wt ttrap
+end
+end
+wt tend
+end
+end
+
+fn clmode to void
+note choose the closers: when the base witness says line after ret (17), drop the outer traps
+put g GNT 0
+put g GWN 0
+wbody
+if eq run 17
+put g GNT 1
+end
+end
+
+fn wrest to void
+wlns add get g GEND 1 get g GNL
+end
+
+fn wholev to void
+note the hole line with ?? replaced by the scratch text
+i = get g GHL
+a = get lsa i
+h = get g GHA
+wsr a sub h a
+wcb
+e = add h 2
+wsr e sub get lea i e
+w1 10
+end
+
+note ---------------------------------------------------------------- scratch text
+
+fn cbc to void
+put g GCB 0
+end
+
+fn cb1 b uchar to void
+n = get g GCB
+if lt n 4000
+put cb n b
+put g GCB add n 1
+end
+end
+
+fn cbt t view uchar * to void
+for i ulong len t
+cb1 get t i
+end
+end
+
+fn cbs a ulong n ulong to void
+for i ulong n
+cb1 get src add a i
+end
+end
+
+fn cbn v ulong to void
+if ge v 10
+cbn div v 10
+end
+cb1 uchar add ulong 48 rem v 10
+end
+
+fn cbtw t view uchar * a ulong to ulong
+note copy the word of t that starts at a; return the offset after its blank
+p = a
+while and lt p len t ne get t p 32
+cb1 get t p
+p = add p 1
+end
+ret add p 1
+end
+
+fn tyat k ulong to ulong
+note start offset in tys of type k (1-based)
+p = ulong 0
+j = ulong 1
+while lt j k
+while ne get tys p 32
+p = add p 1
+end
+p = add p 1
+j = add j 1
+end
+ret p
+end
+
+fn cbty k ulong to void
+r = cbtw tys tyat k
+end
+
+fn cbz k ulong to void
+note a literal of type k: true for bool, else TYPE 1 (1.0 for floats)
+if eq k 1
+cbt ttrue
+ret
+end
+cbty k
+cb1 32
+cb1 49
+if ge k 10
+cb1 46
+cb1 48
+end
+end
+
+fn cbname c ulong to void
+cbs get ca c get cl c
+end
+
+fn obty k ulong to void
+p = tyat k
+while ne get tys p 32
+ob1 get tys p
+p = add p 1
+end
+end
+
+note ---------------------------------------------------------------- running the compiler
+
+fn wflush fd int to bool
+p = ulong 0
+n = get g GWN
+while lt p n
+w = pwrite fd wit p sub n p long p
+if le w 0
+ret false
+end
+p = add p ulong w
+end
+ret true
+end
+
+fn run to ulong
+note compile the witness buffer; return the exit code (256 + signal when killed)
+fi = int get g GMI
+fe = int get g GME
+r = ftrunc fi 0
+if not wflush fi
+ret 255
+end
+r = fseek fi 0 0
+r = ftrunc fe 0
+r = fseek fe 0 0
+put g GRUN add get g GRUN 1
+pid = fork
+if eq pid 0
+r = dupfd fi 0 0
+r = dupfd int get g GDN 1 0
+r = dupfd fe 2 0
+r = execprog pk 0 get g GPN
+exit 127
+end
+ret reap pid
+end
+
+fn reap pid long to ulong
+ws = new uchar 4 0
+if lt pid 0
+ret 255
+end
+r = waitpid int pid ws 0 4 0
+k = pread int get g GME eb 0 8000 0
+if lt k 0
+k = 0
+end
+put g GEN ulong k
+if ne and get ws 0 127 0
+ret add ulong 256 ulong and get ws 0 127
+end
+ret ulong get ws 1
+end
+
+note ---------------------------------------------------------------- witnesses at the hole
+
+fn trys ended bool to bool
+note statement witness: prefix, scratch lines, closers, rest
+put g GWN 0
+wlns 0 get g GHL
+wcb
+w1 10
+wcl get g GD0 ended
+wrest
+ret eq run 0
+end
+
+fn tryv to bool
+note value witness: the hole line with ?? replaced by the scratch text
+put g GWN 0
+wlns 0 get g GHL
+wholev
+wcl get g GD1 false
+wrest
+ret eq run 0
+end
+
+fn tryblk ended bool to bool
+note a block opener in scratch: the witness closes it with its own end
+put g GWN 0
+wlns 0 get g GHL
+wcb
+w1 10
+if not ended
+wt ttrap
+end
+wt tend
+wcl get g GD0 false
+wrest
+ret eq run 0
+end
+
+fn tryend to bool
+put g GWN 0
+wlns 0 get g GHL
+wt tend
+d = get g GD0
+if gt d 1
+wcl sub d 1 false
+end
+wrest
+ret eq run 0
+end
+
+fn tryelse to bool
+put g GWN 0
+wlns 0 get g GHL
+cbc
+cbt telse
+wcb
+w1 10
+wcl get g GD0 false
+wrest
+ret eq run 0
+end
+
+note ---------------------------------------------------------------- input and the hole
+
+fn rdin to void
+n = ulong 0
+while lt n 1048000
+k = read 0 src n sub ulong 1048000 n
+if le k 0
+put g GSL n
+ret
+end
+n = add n ulong k
+end
+put g GSL n
+end
+
+fn mklines to void
+n = get g GSL
+k = ulong 0
+s = ulong 0
+for p ulong n
+if and eq get src p 10 lt k 65535
+put lsa k s
+put lea k p
+k = add k 1
+s = add p 1
+end
+end
+if and lt s n lt k 65535
+put lsa k s
+put lea k n
+k = add k 1
+end
+put g GNL k
+end
+
+fn isqq p ulong q ulong to bool
+if ne sub q p 2
+ret false
+end
+ret and eq get src p 63 eq get src add p 1 63
+end
+
+fn fhole to ulong
+note find ?? words; return their count; the first is the hole
+c = ulong 0
+for i ulong get g GNL
+p = skb get lsa i
+e = get lea i
+while lt p e
+q = wde p
+if isqq p q
+if eq c 0
+put g GHL i
+put g GHA p
+put g GHK 2
+if eq skb q e
+if eq p skb get lsa i
+put g GHK 1
+end
+end
+end
+c = add c 1
+end
+p = skb q
+end
+end
+ret c
+end
+
+fn ctx to bool
+note enclosing function, open blocks before the hole, the line that closes the function
+h = get g GHL
+f = h
+while true
+if lwis f 0 tfn
+break
+end
+if lwis f 0 texport
+break
+end
+if eq f 0
+ret false
+end
+f = sub f 1
+end
+put g GFL f
+put bk 0 1
+put bln 0 f
+d = ulong 1
+i = add f 1
+while lt i h
+d = ctxl i d
+i = add i 1
+end
+put g GD0 d
+put g GD1 d
+if and eq get g GHK 2 opener h
+put g GD1 add d 1
+end
+ctxflag d
+ret ctxend
+end
+
+fn ctxl i ulong d ulong to ulong
+note one line of the block scan; return the new depth
+if lwis i 0 tkend
+if gt d 0
+ret sub d 1
+end
+ret 0
+end
+if lwis i 0 telse
+if gt d 0
+put bk sub d 1 3
+end
+ret d
+end
+if and opener i lt d 1000
+k = ulong 4
+if lwis i 0 tif
+k = 2
+end
+if lwis i 0 twhile
+k = 5
+end
+put bk d k
+put bln d i
+ret add d 1
+end
+ret d
+end
+
+fn ctxflag d ulong to void
+put g GLOOP 0
+put g GIF 0
+for k ulong d
+if ge get bk k 4
+put g GLOOP 1
+end
+end
+if eq get bk sub d 1 2
+put g GIF 1
+end
+end
+
+fn ctxend to bool
+d = get g GD1
+i = add get g GHL 1
+n = get g GNL
+while lt i n
+if lwis i 0 tkend
+d = sub d 1
+if eq d 0
+put g GEND i
+ret true
+end
+else
+if and opener i ne d 0
+d = add d 1
+end
+end
+i = add i 1
+end
+put g GEND n
+ret true
+end
+
+note ---------------------------------------------------------------- candidate names
+
+fn addc a ulong n ulong to void
+if or eq n 0 gt n 8
+ret
+end
+c = get src a
+if not or eq c 95 or and ge c 97 le c 122 and ge c 65 le c 90
+ret
+end
+k = get g GNC
+for j ulong k
+if eq get cl j n
+if seqs get ca j a n
+ret
+end
+end
+end
+if lt k 500
+put ca k a
+put cl k n
+put ct k 0
+put g GNC add k 1
+end
+end
+
+fn seqs a ulong b ulong n ulong to bool
+for i ulong n
+if ne get src add a i get src add b i
+ret false
+end
+end
+ret true
+end
+
+fn gtop to void
+note top-level global, const and text names
+d = ulong 0
+for i ulong get g GNL
+if eq d 0
+if or lwis i 0 tglobal or lwis i 0 tconst lwis i 0 ttext
+a = lnw i 1
+addc a sub wde a a
+end
+end
+d = dstep i d
+end
+end
+
+fn dstep i ulong d ulong to ulong
+note block depth after line i, without touching the block stack
+if lwis i 0 tkend
+if gt d 0
+ret sub d 1
+end
+ret 0
+end
+if opener i
+ret add d 1
+end
+ret d
+end
+
+fn gfn to void
+note parameter names of the enclosing fn line (words before `to`)
+f = get g GFL
+k = ulong 2
+if lwis f 0 texport
+k = 3
+end
+while true
+a = lnw f k
+if ge a get lea f
+ret
+end
+if lwis f k tto
+ret
+end
+addc a sub wde a a
+k = add k 1
+end
+end
+
+fn gloc to void
+note names bound before the hole in the enclosing function
+i = add get g GFL 1
+while lt i get g GHL
+if or lwis i 1 teq nmtyped i
+a = lnw i 0
+addc a sub wde a a
+end
+if lwis i 0 tfor
+a = lnw i 1
+addc a sub wde a a
+end
+i = add i 1
+end
+end
+
+fn nmtyped i ulong to bool
+note NAME TYPE VALUE: the binding without = that omc accepts at the pin; the probes decide
+if le get lea i lnw i 2
+ret false
+end
+t = tyof lnw i 1
+ret and gt t 0 lt t 12
+end
+
+note ---------------------------------------------------------------- probes
+
+fn pscal c ulong to void
+note ct: bit 6 visible, low 4 bits the scalar type, bit 4 array, bit 5 writable array
+cbc
+cbt tq
+cbname c
+if trys false
+for k ulong 11
+cbc
+cbt tq
+cb1 101
+cb1 113
+cb1 32
+cbname c
+cb1 32
+cbz add k 1
+if trys false
+put ct c or ulong 64 add k 1
+ret
+end
+end
+put ct c 64
+ret
+end
+parr c
+end
+
+fn parr c ulong to void
+cbc
+cbt tq
+cbt tlen
+cbname c
+if not trys false
+ret
+end
+for k ulong 11
+cbc
+cbt tq
+cb1 101
+cb1 113
+cb1 32
+cbt tget
+cbname c
+cb1 32
+cb1 48
+cb1 32
+cbz add k 1
+if trys false
+put ct c or ulong 80 add k 1
+pwrit c
+ret
+end
+end
+put ct c 80
+end
+
+fn pwrit c ulong to void
+cbc
+cbt tput
+cbname c
+cb1 32
+cb1 48
+cb1 32
+cbt tget
+cbname c
+cb1 32
+cb1 48
+if trys false
+put ct c or get ct c 32
+end
+end
+
+note ---------------------------------------------------------------- answer sections
+
+fn ansctx to void
+obkey jhole
+obopen 123
+okv jline get g GHL
+obkey jkind
+if eq get g GHK 1
+obtstr jstmt
+else
+obtstr jvalue
+end
+okv jfnl get g GFL
+obkey jdepth
+obnum get g GD0
+obclose 125
+end
+
+fn okv t view uchar * v ulong to void
+obkey t
+obnum add v 1
+end
+
+fn ansscope to void
+obkey jscope
+obopen 91
+for c ulong get g GNC
+v = get ct c
+if ne and v 64 0
+obsep
+obopen 123
+obkey jname
+obstr get ca c get cl c
+obkey jtype
+ob1 34
+if ne and v 15 0
+obty and v 15
+end
+if ne and v 16 0
+ob1 91
+ob1 93
+end
+ob1 34
+put g GSEP 1
+if ne and v 32 0
+obkey jwr
+obt ttrue
+put g GSEP 1
+end
+obclose 125
+end
+end
+obclose 93
+end
+
+fn ansfns to void
+obkey jfns
+obopen 91
+for i ulong get g GNL
+if or lwis i 0 tfn lwis i 0 texport
+a = lnw i 0
+obsep
+obstr a sub get lea i a
+end
+end
+obclose 93
+end
+
+fn emitf to void
+note output the scratch text as one checked next form
+obsep
+obopen 34
+obcb
+obclose 34
+end
+
+fn nstmt to void
+note statement hole: every form below is listed only if its witness compiled
+cbc
+cb1 114
+cb1 101
+cb1 116
+if trys true
+cbc
+cbt tnote
+cbc
+cb1 114
+cb1 101
+cb1 116
+emitf
+end
+for k ulong 11
+cbc
+cb1 114
+cb1 101
+cb1 116
+cb1 32
+cbz add k 1
+if trys true
+cbc
+cbt tglobal
+cbc
+cbt tnote
+cbc
+cb1 114
+cb1 101
+cb1 116
+cb1 32
+cb1 60
+cbty add k 1
+cb1 62
+emitf
+end
+end
+nassign
+nblocks
+nputs
+ncalls
+end
+
+fn nassign to void
+for c ulong get g GNC
+v = get ct c
+if and ne and v 64 0 eq and v 16 0
+if ne and v 15 0
+cbc
+cbname c
+cb1 32
+cb1 61
+cb1 32
+cbname c
+if trys false
+cbc
+cbname c
+cb1 32
+cb1 61
+cb1 32
+cb1 60
+cbty and v 15
+cb1 62
+emitf
+end
+end
+end
+end
+cbc
+cbt tq
+cbt tq
+cb1 48
+nnew
+end
+
+fn nnew to void
+cbc
+cbt tq
+cbz 5
+if trys false
+cbc
+cbt tnote
+cbc
+cbt tvoid
+cbc
+cb1 78
+cb1 69
+cb1 87
+cbt teqsp
+cb1 60
+cb1 118
+cb1 97
+cb1 108
+cb1 117
+cb1 101
+cb1 62
+emitf
+end
+end
+
+
+fn nblocks to void
+cbc
+cbt tifb
+if tryblk false
+cbc
+cbt tifo
+emitf
+end
+cbc
+cbt twhb
+if tryblk false
+cbc
+cbt twho
+emitf
+end
+cbc
+cbt tforb
+if tryblk false
+cbc
+cbt tforo
+emitf
+end
+nends
+end
+
+fn nends to void
+cbc
+cbt tbrk
+if trys true
+emitf
+end
+cbc
+cbt tcont
+if trys true
+emitf
+end
+cbc
+cbt ttrap
+put g GCB sub get g GCB 1
+if trys true
+cbc
+cbt ttrapo
+emitf
+end
+cbc
+cbt texit0
+if trys true
+cbc
+cbt texito
+emitf
+end
+if tryend
+cbc
+cbt tkend
+emitf
+end
+if eq get g GIF 1
+cbc
+if tryelse
+cbc
+cbt telse
+emitf
+end
+end
+ncontr
+end
+
+fn firstln to ulong
+note first line that is not blank or a note
+i = ulong 0
+while and lt i get g GNL or eq skb get lsa i get lea i lwis i 0 tnote
+i = add i 1
+end
+ret i
+end
+
+fn ncontr to void
+note contracts are OM-2 words; in an OM-1 unit `requires true` would bind a name instead
+if eq get g GOM2 0
+ret
+end
+cbc
+cbt treqt
+if trys false
+cbc
+cbt treqo
+emitf
+end
+cbc
+cbt tenst
+if trys false
+cbc
+cbt tenso
+emitf
+end
+cbc
+cbt tinvt
+if trys false
+cbc
+cbt tinvo
+emitf
+end
+end
+
+fn nputs to void
+for c ulong get g GNC
+v = get ct c
+if eq and v 96 96
+cbc
+cbt tput
+cbname c
+cb1 32
+cb1 60
+cb1 117
+cb1 108
+cb1 111
+cb1 110
+cb1 103
+cb1 62
+cb1 32
+cb1 60
+cbty and v 15
+cb1 62
+emitf
+end
+end
+end
+
+note ---------------------------------------------------------------- calls
+
+fn fnret i ulong to ulong
+note type index of the return of fn line i: 0 unknown or non-scalar, 12 void
+k = ulong 1
+while true
+a = lnw i k
+if ge a get lea i
+ret 0
+end
+if lwis i k tto
+ret tyof lnw i add k 1
+end
+k = add k 1
+end
+ret 0
+end
+
+fn tyof a ulong to ulong
+e = wde a
+if sweq a sub e a tvoid
+ret 12
+end
+for k ulong 11
+p = tyat add k 1
+q = p
+while ne get tys q 32
+q = add q 1
+end
+if tyeq a sub e a p sub q p
+ret add k 1
+end
+end
+ret 0
+end
+
+fn tyeq a ulong n ulong p ulong m ulong to bool
+if ne n m
+ret false
+end
+for i ulong n
+if ne get src add a i get tys add p i
+ret false
+end
+end
+ret true
+end
+
+fn cbcall i ulong to bool
+note scratch: the call of fn line i, a typed literal per scalar parameter and the first visible
+note array of the element type per array parameter; false when no argument fits a parameter
+k = ulong 2
+if lwis i 0 texport
+k = 3
+end
+a = lnw i sub k 1
+cbc
+cbs a sub wde a a
+while true
+a = lnw i add k 1
+if ge a get lea i
+ret false
+end
+if lwis i k tto
+ret true
+end
+m = cbarg i k
+if eq m 0
+ret false
+end
+k = add k m
+end
+ret false
+end
+
+fn ismode i ulong k ulong to bool
+ret or or lwis i k tview lwis i k tout or lwis i k tedit lwis i k tfresh
+end
+
+fn cbarg i ulong k ulong to ulong
+note append the argument for the parameter at word k of fn line i; return the words the
+note parameter spans (name TYPE, name TYPE LEN, name MODE TYPE LEN), 0 when nothing fits
+m = ulong 0
+if ismode i add k 1
+m = 1
+end
+t = tyof lnw i add add k 1 m
+if or eq t 0 eq t 12
+ret 0
+end
+n = lnw i add add k 2 m
+arr = ne m 0
+if and lt n get lea i not lwis i add add k 2 m tto
+if isarrw n
+arr = true
+end
+end
+cb1 32
+if not arr
+cbz t
+ret 2
+end
+if not cbarr t
+ret 0
+end
+ret add 3 m
+end
+
+fn isarrw n ulong to bool
+note the word after a parameter's type is a length (digits) or *
+c = get src n
+ret or eq c 42 and ge c 48 le c 57
+end
+
+fn cbarr t ulong to bool
+note the GSK-th visible array of element type t (each array parameter takes the same rank)
+put g GSA 1
+s = get g GSK
+for c ulong get g GNC
+v = get ct c
+if and eq and v 80 80 eq and v 15 t
+if eq s 0
+cbname c
+ret true
+end
+s = sub s 1
+end
+end
+ret false
+end
+
+fn callrk to bool
+note step to the next array rank; false when the call has no array parameter or ranks are spent
+if eq get g GSA 0
+ret false
+end
+put g GSA 0
+put g GSK add get g GSK 1
+ret lt get g GSK 4
+end
+
+fn ncalls to void
+for i ulong get g GNL
+if or lwis i 0 tfn lwis i 0 texport
+if eq fnret i 12
+put g GSK 0
+put g GSA 0
+while true
+if cbcall i
+if trys false
+emitf
+break
+end
+end
+if not callrk
+break
+end
+end
+end
+end
+end
+end
+
+note ---------------------------------------------------------------- value holes
+
+fn vexpect to void
+note expected types: the scalar literals and array names the hole position accepts
+m = ulong 0
+obkey jexp
+obopen 91
+for k ulong 11
+cbc
+cbz add k 1
+if tryv
+m = or m shl ulong 1 k
+obsep
+obopen 34
+obty add k 1
+obclose 34
+end
+end
+for c ulong get g GNC
+if ne and get ct c 16 0
+cbc
+cbname c
+if tryv
+obsep
+obopen 34
+cbc
+cbname c
+obcb
+obclose 34
+end
+end
+end
+obclose 93
+put g GEXP m
+end
+
+fn vnext to void
+m = get g GEXP
+for c ulong get g GNC
+v = get ct c
+if and ne and v 64 0 eq and v 16 0
+if ne and m shl ulong 1 sub and v 15 1 0
+cbc
+cbname c
+if tryv
+emitf
+end
+end
+end
+end
+for k ulong 11
+if ne and m shl ulong 1 k 0
+vops add k 1
+end
+end
+vcalls
+end
+
+fn vops t ulong to void
+note operations with result type t
+if eq t 1
+vcmp
+ret
+end
+p = ulong 0
+while lt p len bops
+cbc
+q = cbtw bops p
+cb1 32
+cbz t
+cb1 32
+cbz t
+if tryv
+cbc
+r = cbtw bops p
+cbtyh t
+cbtyh t
+emitf
+end
+p = q
+end
+vconv t
+end
+
+fn cbtyh t ulong to void
+cb1 32
+cb1 60
+cbty t
+cb1 62
+end
+
+fn vcmp to void
+p = ulong 0
+while lt p len cops
+cbc
+q = cbtw cops p
+cb1 32
+cbz 4
+cb1 32
+cbz 4
+if tryv
+cbc
+r = cbtw cops p
+cb1 32
+cb1 60
+cb1 84
+cb1 62
+cb1 32
+cb1 60
+cb1 84
+cb1 62
+emitf
+end
+p = q
+end
+end
+
+fn vconv t ulong to void
+note a checked conversion from another type
+cbc
+cbty t
+cb1 32
+cbz 5
+if eq t 5
+cbc
+cbty t
+cb1 32
+cbz 4
+end
+if tryv
+cbc
+cbty t
+cb1 32
+cb1 60
+cb1 97
+cb1 110
+cb1 121
+cb1 62
+emitf
+end
+vgets t
+end
+
+fn vgets t ulong to void
+for c ulong get g GNC
+v = get ct c
+if eq v or ulong 80 or and v 32 t
+cbc
+cbt tget
+cbname c
+cb1 32
+cb1 48
+if tryv
+cbc
+cbt tget
+cbname c
+cbtyh 5
+emitf
+end
+end
+if and eq t 5 ne and v 16 0
+cbc
+cbt tlen
+cbname c
+if tryv
+emitf
+end
+end
+end
+end
+
+fn vcalls to void
+for i ulong get g GNL
+if or lwis i 0 tfn lwis i 0 texport
+r = fnret i
+if and gt r 0 lt r 12
+if ne and get g GEXP shl ulong 1 sub r 1 0
+put g GSK 0
+put g GSA 0
+while true
+if cbcall i
+if tryv
+emitf
+break
+end
+end
+if not callrk
+break
+end
+end
+end
+end
+end
+end
+end
+
+note ---------------------------------------------------------------- obligations
+
+fn regs to ulong
+note how many more ulong names fit at the hole before the register pool is exhausted
+lo = ulong 0
+hi = ulong 17
+while lt add lo 1 hi
+mid = div add lo hi 2
+cbc
+for j ulong mid
+cb1 95
+cb1 113
+cbn j
+cbt teqsp
+cbz 5
+cb1 10
+end
+put g GCB sub get g GCB 1
+if trys false
+lo = mid
+else
+hi = mid
+end
+end
+ret lo
+end
+
+fn ansobl to void
+obkey jobl
+obopen 123
+obkey jfunc
+f = get g GFL
+a = lnw f 0
+obsep
+obstr a sub get lea f a
+obkey jopen
+obopen 91
+d = get g GD0
+while gt d 0
+d = sub d 1
+obsep
+obopen 34
+k = get bk d
+if eq k 1
+obt tfn
+end
+if eq k 2
+obt tif
+end
+if eq k 3
+obt telse
+end
+if eq k 4
+obt tfor
+end
+if eq k 5
+obt twhile
+end
+obclose 34
+end
+obclose 93
+obkey jregs
+obnum regs
+anscon
+anseff
+obclose 125
+end
+
+fn anscon to void
+note contract clauses in force: the function prefix and the invariants of open loops
+obkey jcon
+obopen 91
+i = add get g GFL 1
+while lt i get g GHL
+if or lwis i 0 treq lwis i 0 tens
+obcl i
+end
+if lwis i 0 tinv
+if invopen i
+obcl i
+end
+end
+i = add i 1
+end
+obclose 93
+end
+
+fn obcl i ulong to void
+a = lnw i 0
+obsep
+obstr a sub get lea i a
+end
+
+fn invopen i ulong to bool
+note is the loop that owns invariant line i still open at the hole
+o = i
+while gt o 0
+o = sub o 1
+if not or lwis o 0 tinv lwis o 0 tnote
+break
+end
+end
+for k ulong get g GD0
+if eq get bln k o
+ret true
+end
+end
+ret false
+end
+
+fn anseff to void
+note host operations used by the enclosing function, with their effect class
+obkey jeff
+obopen 91
+i = get g GFL
+while lt i get g GEND
+p = skb get lsa i
+while lt p get lea i
+q = wde p
+effw p sub q p
+p = skb q
+end
+i = add i 1
+end
+obclose 93
+end
+
+fn effw a ulong n ulong to void
+p = ulong 0
+m = len hostw
+while lt p m
+q = p
+while ne get hostw q 58
+q = add q 1
+end
+if hweq a n p sub q p
+e = q
+while ne get hostw e 32
+e = add e 1
+end
+obsep
+ob1 34
+obs a n
+ob1 58
+r = add q 1
+while lt r e
+ob1 get hostw r
+r = add r 1
+end
+obclose 34
+ret
+end
+while ne get hostw q 32
+q = add q 1
+end
+p = add q 1
+end
+end
+
+fn hweq a ulong n ulong p ulong m ulong to bool
+if ne n m
+ret false
+end
+for i ulong n
+if ne get src add a i get hostw add p i
+ret false
+end
+end
+ret true
+end
+
+note ---------------------------------------------------------------- check and repair
+
+fn wdiag to ulong
+note the program (hole removed) with an om2 diag line; return the byte shift it adds
+put g GWN 0
+i = ulong 0
+while and lt i get g GNL or eq skb get lsa i get lea i lwis i 0 tnote
+i = add i 1
+end
+if lwis i 0 tom2
+if lwis i 1 tdiag
+wbody
+ret 0
+end
+if lwis i 1 tfmt
+wbody
+ret 0
+end
+wlns 0 i
+cbc
+cbt tom2
+cb1 32
+cbt tdiag
+a = lnw i 1
+if lt a get lea i
+cb1 32
+cbs a sub get lea i a
+end
+wcb
+w1 10
+wbodyf add i 1
+ret 0
+end
+cbc
+cbt tom2
+cb1 32
+cbt tdiag
+wcb
+w1 10
+wbody
+ret 9
+end
+
+fn wbody to void
+wbodyf 0
+end
+
+fn wbodyf i ulong to void
+note lines from i, with the hole closed off as in the base witness
+if eq get g GHK 0
+wlns i get g GNL
+ret
+end
+wlns i get g GHL
+wcl get g GD0 false
+wrest
+end
+
+fn dfield k view uchar * to ulong
+note offset in eb of the value of field k= on the omc-diag line, or 8192 when absent
+n = get g GEN
+p = ulong 0
+while lt add p len tdiagr n
+if ebeq p tdiagr
+break
+end
+p = add p 1
+end
+while lt add p len k n
+if ebeq p k
+if eq get eb add p len k 61
+ret add add p len k 1
+end
+end
+p = add p 1
+end
+ret 8192
+end
+
+fn ebeq p ulong t view uchar * to bool
+for i ulong len t
+if ne get eb add p i get t i
+ret false
+end
+end
+ret true
+end
+
+fn ebnum p ulong to ulong
+v = ulong 0
+q = p
+while lt q get g GEN
+c = get eb q
+if or lt c 48 gt c 57
+ret v
+end
+v = add mul v 10 ulong sub c 48
+q = add q 1
+end
+ret v
+end
+
+
+fn ebword k view uchar * to void
+p = dfield k
+if ge p 8192
+obtstr tvoid
+ret
+end
+ob1 34
+while lt p get g GEN
+c = get eb p
+if or eq c 32 eq c 10
+break
+end
+ob1 c
+p = add p 1
+end
+ob1 34
+put g GSEP 1
+end
+
+fn hexv c uchar to ulong
+if ge c 97
+ret ulong sub c 87
+end
+ret ulong sub c 48
+end
+
+fn ebfound to void
+note found= is hex; decode it to text, keeping the found bytes in scratch
+cbc
+p = dfield kfound
+if lt p 8192
+while lt add p 1 get g GEN
+c = get eb p
+if or eq c 32 or eq c 10 eq c 45
+break
+end
+cb1 uchar or shl hexv c 4 hexv get eb add p 1
+p = add p 2
+end
+end
+ob1 34
+obcb
+ob1 34
+put g GSEP 1
+end
+
+fn anscheck to void
+obkey jcheck
+obopen 123
+put g GWN 0
+wbody
+rc = run
+put g GRC rc
+put g GOK 0
+if eq rc 0
+put g GOK 1
+end
+obkey kcode
+obnum rc
+if ne rc 0
+put g GDL ebline
+okn kline get g GDL
+sh = wdiag
+rd = run
+if eq rd rc
+diagrec sh
+end
+end
+obclose 125
+end
+
+fn okn t view uchar * v ulong to void
+obkey t
+obnum v
+end
+
+fn ebline to ulong
+note line N of the human record omc: line N: error E
+p = ulong 0
+n = get g GEN
+while lt p n
+c = get eb p
+if and ge c 48 le c 57
+ret ebnum p
+end
+p = add p 1
+end
+ret 0
+end
+
+fn diagrec sh ulong to void
+obkey ksev
+ebword ksev
+obkey kcol
+obnum ebnum dfield kcol
+obkey kexpect
+ebword kexpect
+obkey kfound
+ebfound
+obkey kobl
+ebword kobl
+p = dfield kspan
+a = ebnum p
+put g GDA sub a sh
+obkey kspan
+obopen 91
+obnum sub a sh
+while and lt p get g GEN ne get eb p 45
+p = add p 1
+end
+obsep
+obnum sub ebnum add p 1 sh
+obclose 93
+repair
+end
+
+note ---------------------------------------------------------------- repairs
+
+
+fn rtext e ulong to void
+if eq e 3
+obtstr r3
+end
+if eq e 4
+obtstr r4
+end
+if eq e 5
+obtstr r5
+end
+if eq e 6
+obtstr r6
+end
+if eq e 7
+obtstr r7
+end
+if eq e 8
+obtstr r8
+end
+if eq e 9
+obtstr r9
+end
+rtext2 e
+end
+
+fn rtext2 e ulong to void
+if eq e 10
+obtstr r10
+end
+if eq e 11
+obtstr r11
+end
+if eq e 12
+obtstr r12
+end
+if eq e 13
+obtstr r13
+end
+if eq e 14
+obtstr r14
+end
+if eq e 15
+obtstr r15
+end
+if eq e 16
+obtstr r16
+end
+rtext3 e
+end
+
+fn rtext3 e ulong to void
+if eq e 17
+obtstr r17
+end
+if eq e 18
+obtstr r18
+end
+if eq e 19
+obtstr r19
+end
+if eq e 20
+obtstr r20
+end
+if eq e 21
+obtstr r21
+end
+if eq e 22
+obtstr r22
+end
+if eq e 27
+obtstr r27
+end
+if eq e 30
+obtstr r30
+end
+if or lt e 3 or eq e 23 or gt e 30 and gt e 23 lt e 27
+obtstr tvoid
+end
+end
+
+fn repair to void
+e = get g GRC
+obkey kwhy
+rtext e
+if eq e 13
+rlong
+end
+if eq e 3
+rmove
+end
+if eq e 15
+rend
+end
+end
+
+fn rlong to void
+note rename the long name (in scratch) to an unused 8-character name, everywhere; recompile
+n = get g GCB
+if or le n 8 gt n 64
+ret
+end
+put g GDC ulong get cb 7
+for d ulong 10
+put cb 7 uchar add ulong 48 d
+if not inuse
+rdorename n
+ret
+end
+end
+end
+
+fn inuse to bool
+note is the first 8 bytes of scratch already a word in the source
+for i ulong get g GNL
+p = skb get lsa i
+while lt p get lea i
+q = wde p
+if eq sub q p 8
+if cbeqsrc p 8
+ret true
+end
+end
+p = skb q
+end
+end
+ret false
+end
+
+fn cbeqsrc p ulong n ulong to bool
+for i ulong n
+if ne get cb i get src add p i
+ret false
+end
+end
+ret true
+end
+
+fn rdorename n ulong to void
+note n is the long name's length; cb holds the long name with byte 7 replaced
+put g GWN 0
+p = ulong 0
+m = get g GSL
+while lt p m
+if wordat p n
+for j ulong 8
+w1 get cb j
+end
+p = add p n
+else
+w1 get src p
+p = add p 1
+end
+end
+rafter
+end
+
+fn wordat p ulong n ulong to bool
+note whole-word match of the original long name (scratch, byte 7 differs) at p
+if gt add p n get g GSL
+ret false
+end
+if gt p 0
+if not wsep get src sub p 1
+ret false
+end
+end
+if lt add p n get g GSL
+if not wsep get src add p n
+ret false
+end
+end
+for i ulong n
+if ne i 7
+if ne get cb i get src add p i
+ret false
+end
+end
+end
+ret eq ulong get src add p 7 get g GDC
+end
+
+fn wsep c uchar to bool
+ret or isb c or eq c 10 or eq c 40 eq c 41
+end
+
+fn rafter to void
+obkey kfixr
+ob1 34
+for j ulong 8
+obe get cb j
+end
+ob1 34
+put g GSEP 1
+r = run
+obkey kafter
+obnum r
+end
+
+fn rmove to void
+note an unknown global/const/text defined later at top level: move that line above the first fn
+n = get g GCB
+k = get g GNL
+for i ulong k
+if or lwis i 0 tglobal or lwis i 0 tconst lwis i 0 ttext
+a = lnw i 1
+if eq sub wde a a n
+if cbeqsrc a n
+if gt i firstfn
+rdomove i
+ret
+end
+end
+end
+end
+end
+end
+
+fn firstfn to ulong
+for i ulong get g GNL
+if or lwis i 0 tfn lwis i 0 texport
+ret i
+end
+end
+ret get g GNL
+end
+
+fn rdomove m ulong to void
+f = firstfn
+put g GWN 0
+wlns 0 f
+wln m
+wlns f m
+wlns add m 1 get g GNL
+obkey kfixm
+obstr get lsa m sub get lea m get lsa m
+r = run
+obkey kafter
+obnum r
+end
+
+fn rend to void
+note append the missing end lines and recompile
+put g GWN 0
+wlns 0 get g GNL
+for k ulong 8
+wt tend
+r = run
+if ne r 15
+obkey kfixe
+obnum add k 1
+obkey kafter
+obnum r
+ret
+end
+end
+end
+
+note ---------------------------------------------------------------- main
+
+fn setup to bool
+if lt argcnt 2
+r = write 2 tusage 0 len tusage
+ret false
+end
+n = argread 1 pk 4 4000
+if le n 0
+ret false
+end
+put pk 0 1
+put pk 1 0
+put pk 2 uchar and ulong n 255
+put pk 3 uchar shr ulong n 8
+put g GPN add ulong n 4
+fi = memfd tmfd 0 len tmfd 1
+fe = memfd tmfd 0 len tmfd 1
+dn = fopen tdevnull 0 len tdevnull 524289 0
+if or lt fi 0 or lt fe 0 lt dn 0
+ret false
+end
+put g GMI ulong fi
+put g GME ulong fe
+put g GDN ulong dn
+ret true
+end
+
+fn selftest to bool
+note the given OMC must accept a minimal unit and reject a truncated one with error 15
+put g GWN 0
+wt tgood
+if ne run 0
+ret false
+end
+put g GWN 0
+wt tbadp
+if ne run 15
+ret false
+end
+ret and ge get g GEN len tomcl ebeq 0 tomcl
+end
+
+note ---------------------------------------------------------------- prefix mode
+note omq OMC prefix: the prefix-viability server first written by OmegaMind as omviable.om
+note (handoffs/OmegaMind/omviable, 2026-10-26), absorbed here so one implementation exists.
+note request on fd 0: 4-byte little-endian length L, then L bytes of program prefix.
+note the prefix is compiled as "om2 diag" LF prefix. reply on fd 1: one line "V CODE" where
+note V 0 = a whole unit omc accepts, 1 = a prefix omc can still complete (first diag
+note sev=incomplete, or sev=unknown whose span ends at the prefix end on a word byte),
+note 2 = dead (any other refusal), 3 = the compiler did not run; CODE = omc exit status.
+
+fn pmode to bool
+if lt argcnt 3
+ret false
+end
+k = argread 2 cb 0 64
+if ne k long len tprefix
+ret false
+end
+for i ulong len tprefix
+if ne get cb i get tprefix i
+ret false
+end
+end
+ret true
+end
+
+fn rdlen to long
+got = ulong 0
+while lt got 4
+r = read 0 lb got sub 4 got
+if le r 0
+ret neg long 1
+end
+got = add got ulong r
+end
+v = ulong 0
+for i ulong 4
+v = or v shl ulong get lb i mul i 8
+end
+ret long v
+end
+
+fn rdn n ulong to bool
+got = ulong 0
+while lt got n
+r = read 0 src got sub n got
+if le r 0
+ret false
+end
+got = add got ulong r
+end
+ret true
+end
+
+fn wordch c uchar to bool
+a = or and ge c 97 le c 122 and ge c 65 le c 90
+ret or a or and ge c 48 le c 57 eq c 95
+end
+
+fn pspan to ulong
+p = dfield kspan
+while and lt p get g GEN ne get eb p 45
+p = add p 1
+end
+ret ebnum add p 1
+end
+
+fn pverd rc ulong n ulong to ulong
+if eq rc 0
+ret 0
+end
+if ge rc 250
+ret 3
+end
+s = dfield ksev
+if ge s get g GEN
+ret 2
+end
+c = get eb s
+if eq c 105
+ret 1
+end
+if ne c 117
+ret 2
+end
+if eq n 0
+ret 2
+end
+if and eq pspan get g GWN wordch get src sub n 1
+ret 1
+end
+ret 2
+end
+
+fn pserve to int
+while true
+m = rdlen
+if lt m 0
+ret 0
+end
+n = ulong m
+if gt n 1048000
+ret 92
+end
+if not rdn n
+ret 93
+end
+put g GWN 0
+wt thdr
+wsr 0 n
+rc = run
+v = pverd rc n
+cbc
+cb1 uchar add v 48
+cb1 32
+cbn rc
+cb1 10
+r = write 1 cb 0 get g GCB
+end
+ret 0
+end
+
+fn main to int
+if not setup
+r = write 2 tbad 0 len tbad
+ret 2
+end
+if not selftest
+r = write 2 tbad 0 len tbad
+ret 2
+end
+if pmode
+ret pserve
+end
+rdin
+mklines
+put g GOM2 0
+if lwis firstln 0 tom2
+put g GOM2 1
+end
+nh = fhole
+put g GNH nh
+obopen 123
+if gt nh 1
+obkey jerr
+obtstr jmany
+ansdone
+ret 1
+end
+if eq nh 0
+anscheck
+ansdone
+ret 0
+end
+if not ctx
+obkey jerr
+obtstr jout
+ansdone
+ret 1
+end
+ansctx
+clmode
+anscheck
+put g GNC 0
+gtop
+gfn
+gloc
+for c ulong get g GNC
+pscal c
+end
+ansscope
+ansfns
+ansnext
+ansobl
+ansdone
+ret 0
+end
+
+fn ansnext to void
+if eq get g GHK 2
+vexpect
+end
+obkey jnext
+obopen 91
+if eq get g GHK 1
+nstmt
+else
+vnext
+end
+obclose 93
+end
+
+fn ansdone to void
+obkey jruns
+obnum get g GRUN
+obclose 125
+ob1 10
+p = ulong 0
+n = get g GON
+while lt p n
+w = write 1 ob p sub n p
+if le w 0
+ret
+end
+p = add p ulong w
+end
+end
