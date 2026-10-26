@@ -767,7 +767,7 @@ These operations do not form a sandbox: they operate with the process's
 existing permissions. They expose no pointer values and no arbitrary syscall.
 
 In signatures, `fd`, `flags`, `mode`, `pid`, `signal`, `events`, `domain`,
-`kind`, `protocol`, `backlog`, `target`, `options`, `level`, `option` and `whence` are `int`.
+`kind`, `protocol`, `backlog`, `target`, `options`, `level`, `option`, `whence` and `op` are `int`.
 Offsets, byte counts, capacities and argument indices are `ulong`. File offsets
 and time intervals are `long`. `A` is a `uchar` array. Every slice checks
 `n <= len A` and `off <= len A - n` before kernel access, otherwise trap 3
@@ -793,6 +793,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `getsid pid` | Session id of `pid` (0 = self). |
 | `syncfs fd` | Sync the filesystem containing an open descriptor. |
 | `shutdown fd how` | Shut down part of a connected socket. |
+| `flock fd op` | Advisory whole-file lock (Linux `flock`, ARM64 syscall 32; keyword id 197). `op` is passed unchanged: 1 `LOCK_SH`, 2 `LOCK_EX`, 8 `LOCK_UN`, plus 4 `LOCK_NB` for no wait. Returns 0 or -errno: -11 when a `LOCK_NB` request is held by another open file, -22 for any other op, -9 for a closed fd. The lock belongs to the open file, so it is released when the last descriptor sharing that open file is closed. Fixture `seed/host/tests/flock.om`. |
 | `setpgid pid pgid` | Set a process's group (0 = self/own pid). |
 | `umask mask` | Set the file-mode mask; return the previous mask. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |

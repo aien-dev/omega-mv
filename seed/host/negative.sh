@@ -339,4 +339,33 @@ fn probe buf view uchar 4 to long
 ret sockopt 0 1 2 buf 0 4
 end
 OM
-printf 'PASS %s total host negative controls, including cwd, readlnk and sockopt\n' "$count"
+compile_error flock-fd-type 7 <<'OM'
+fn main to int
+r = flock long 0 2
+ret 0
+end
+OM
+compile_error flock-op-type 7 <<'OM'
+fn main to int
+r = flock 0 ulong 2
+ret 0
+end
+OM
+compile_error flock-arity 4 <<'OM'
+fn main to int
+r = flock 0
+ret 0
+end
+OM
+compile_error flock-name 16 <<'OM'
+fn main to int
+flock = int 1
+ret 0
+end
+OM
+compile_error flock-function-mode 9 <<'OM'
+fn probe fd int to long
+ret flock fd 2
+end
+OM
+printf 'PASS %s total host negative controls, including cwd, readlnk, sockopt and flock\n' "$count"
