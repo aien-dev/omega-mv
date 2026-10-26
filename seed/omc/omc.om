@@ -109,7 +109,18 @@ global nm_type uchar 8192
 global nm_len ulong 8192
 global nm_kind uchar 8192
 global nm_addr ulong 8192
+global nm_fv uchar 8192
 global nn ulong 1
+note ---- floats in v registers: kind 9 is a float held in v(16 + pool index of x register rv), the twin of
+note pool register rv; vsl marks each pool slot whose value lives in its twin (an f32/f64 local name, a
+note kind 9 value), saved and loaded as D around a call. fpw asks the next value read for kind 9 (1: a new
+note twin, 2 + r: the twin of r); fpo hands that request to the part that makes the value. A float local
+note name (nm_fv 1) lives in its twin; its x register holds a copy only while a reader needs one. ----
+global vsl uchar 16
+global fpw ulong 1
+global fpo ulong 1
+note fwv: rdval's fpw request at each nesting depth (kept here, not in a register of rdval)
+global fwv ulong 1026
 
 note ---- function table (4096): name, address (byte offset in out), return type, parameter count,
 note per-parameter type/length/kind (6 each), name length, name offset in the input ----
@@ -2396,6 +2407,7 @@ put nm_type n uchar t
 put nm_len n ln
 put nm_kind n uchar k
 put nm_addr n a
+put nm_fv n 0
 put nm_lay n 0
 put nm_fr n 0
 put nm_lr n 0
@@ -2409,6 +2421,7 @@ i = add get npar 0 get nslot 0
 if ge i 16
 fail 12
 end
+put vsl i 0
 put nslot 0 add get nslot 0 1
 ret poolc i
 end
@@ -2590,7 +2603,8 @@ fn cset r ulong cc ulong to void
 emit or or 2594113504 r shl xor cc 1 12
 end
 
-note force: put a value (kind 1 register, 3 number, 4 flags) in register r; a bare number is error 11
+note force: put a value (kind 1 register, 3 number, 4 flags, 9 float in a twin: FMOV Xr, Dn) in register
+note r; a bare number is error 11
 fn force k ulong v ulong t ulong r ulong to void
 if eq k 1
 if ne v r
@@ -2606,12 +2620,20 @@ if eq k 4
 cset r v
 ret
 end
+if eq k 9
+fv2x t vtw v r
+ret
+end
 fail 11
 end
 
 note matreg: a register holding the value
 fn matreg k ulong v ulong t ulong to ulong
 if eq k 1
+ret v
+end
+if eq k 9
+fv2x t vtw v v
 ret v
 end
 r = alloc
@@ -3035,8 +3057,10 @@ put rv 0 conds i
 put rt 0 1
 end
 
-note ---- floating point. A float value is its IEEE bit pattern in an x register; arithmetic moves it to
-note v0/v1, runs one scalar FP instruction (round to nearest even, no fused op), and moves it back.
+note ---- floating point. A float value is its IEEE bit pattern: in an x register (kind 1, 7 a constant),
+note or in a v register (kind 9, the twin of a pool register; float local names live there). Arithmetic
+note runs one scalar FP instruction (round to nearest even, no fused op) on v registers: an x operand moves
+note to v0/v1 first; a result wanted in x moves back from v1/v2, one wanted as kind 9 stays in its twin.
 note f32 uses the S form (low 32 bits), f64 the D form.
 fn f2v ty ulong xr ulong vr ulong to void
 if eq ty 10
@@ -3054,9 +3078,120 @@ emit or or 2657484800 shl vr 5 xr
 end
 end
 
-fn fp_binop op ulong ty ulong ra ulong rb ulong rd ulong to void
-f2v ty ra 0
-f2v ty rb 1
+note vtw: the twin of pool register r, v(16 + its pool index): v16..v31, caller-saved in AAPCS64
+fn vtw r ulong to ulong
+ret add 16 regidx r
+end
+
+note fv8d / fv8s: the FMOV (scalar, immediate) imm8 of f64 / f32 bits b, or 256 when there is none. imm8 is
+note the sign, then bits 54..48 (f64) / 25..19 (f32). Encodable only when the fraction bits below those are
+note zero and exponent bits 61..54 (f64) / 29..25 (f32) all equal NOT bit 62 / 30 (VFPExpandImm).
+fn fv8d b ulong to ulong
+if ne and b 281474976710655 0
+ret 256
+end
+e = and shr b 54 255
+if and ne e 0 ne e 255
+ret 256
+end
+if eq and shr b 62 1 and e 1
+ret 256
+end
+s = shl shr b 63 7
+s = or s shl and e 1 6
+ret or s and shr b 48 63
+end
+
+fn fv8s b ulong to ulong
+if ne and b 524287 0
+ret 256
+end
+e = and shr b 25 31
+if and ne e 0 ne e 31
+ret 256
+end
+if eq and shr b 30 1 and e 1
+ret 256
+end
+s = shl and shr b 31 1 7
+s = or s shl and e 1 6
+ret or s and shr b 19 63
+end
+
+note fvk: float bits b of type ty into v register vr: 0 FMOV from XZR (C7.2.131); a value with an 8-bit
+note form FMOV (scalar, immediate, C7.2.132); any other MOVZ/MOVK into X16, then FMOV from X16.
+fn fvk ty ulong b ulong vr ulong to void
+if eq b 0
+f2v ty 31 vr
+ret
+end
+if eq ty 10
+im = fv8s b
+if lt im 256
+emit or or 505417728 shl im 13 vr
+ret
+end
+else
+im = fv8d b
+if lt im 256
+emit or or 509612032 shl im 13 vr
+ret
+end
+end
+matconst 16 b
+f2v ty 16 vr
+end
+
+note fvop: the v register holding float operand (kind k, value v, type t): its twin for kind 9, else v
+note register s, filled from the constant or from the operand's x register.
+fn fvop k ulong v ulong t ulong s ulong to ulong
+if eq k 9
+ret vtw v
+end
+if eq k 7
+fvk t v s
+ret s
+end
+r = matreg k v t
+f2v t r s
+ret s
+end
+
+note fvdst: the pool register whose twin takes a kind 9 result for request o (fpw): 1 a new one, its slot
+note marked as living in v; 2 + r the twin of r (a float local name).
+fn fvdst o ulong to ulong
+if eq o 1
+r = alloc
+put vsl regidx r uchar 1
+ret r
+end
+ret sub o 2
+end
+
+note fvset: float value (kind k, value v, type t) into the twin of r: FMOV Dd, Dn (C7.2.130), the constant,
+note or FMOV from its x register. Nothing when it is already there.
+fn fvset k ulong v ulong t ulong r ulong to void
+d = vtw r
+if eq k 9
+if ne v r
+if eq t 10
+emit or or 505430016 shl vtw v 5 d
+else
+emit or or 509624320 shl vtw v 5 d
+end
+end
+ret
+end
+if eq k 7
+fvk t v d
+ret
+end
+x = matreg k v t
+f2v t x d
+end
+
+note fp_binop: one FP add / sub / mul / div of v registers va, vb into vd
+fn fp_binop op ulong ty ulong va ulong vb ulong vd ulong to void
 base = ulong 509609984
 if eq ty 10
 base = ulong 505415680
@@ -3084,45 +3219,37 @@ end
 end
 end
 end
-emit or or or base shl ulong 1 16 ulong 0 2
-fv2x ty 2 rd
+emit or or or base shl vb 16 shl va 5 vd
 end
 
-fn fp_neg ty ulong ra ulong rd ulong to void
-f2v ty ra 0
+fn fp_neg ty ulong va ulong vd ulong to void
 if eq ty 10
-emit or ulong 505495552 1
+emit or or ulong 505495552 shl va 5 vd
 else
-emit or ulong 509689856 1
+emit or or ulong 509689856 shl va 5 vd
 end
-fv2x ty 1 rd
 end
 
-fn fp_sqrt ty ulong ra ulong rd ulong to void
-f2v ty ra 0
+note fp_un1: sqrt (c 91) or abs of v register va into vd
+fn fp_un1 c ulong ty ulong va ulong vd ulong to void
+if eq c 91
 if eq ty 10
-emit or ulong 505528320 1
+emit or or ulong 505528320 shl va 5 vd
 else
-emit or ulong 509722624 1
+emit or or ulong 509722624 shl va 5 vd
 end
-fv2x ty 1 rd
-end
-
-fn fp_abs ty ulong ra ulong rd ulong to void
-f2v ty ra 0
+else
 if eq ty 10
-emit or ulong 505462784 1
+emit or or ulong 505462784 shl va 5 vd
 else
-emit or ulong 509657088 1
+emit or or ulong 509657088 shl va 5 vd
 end
-fv2x ty 1 rd
+end
 end
 
 note fp_minmax: FMINNM/FMAXNM, the IEEE minNum/maxNum rule: one quiet NaN returns the other operand,
 note and -0.0 orders below +0.0.
-fn fp_minmax c ulong ty ulong ra ulong rb ulong rd ulong to void
-f2v ty ra 0
-f2v ty rb 1
+fn fp_minmax c ulong ty ulong va ulong vb ulong vd ulong to void
 base = ulong 509638656
 if eq c 94
 base = ulong 509634560
@@ -3133,16 +3260,19 @@ if eq c 94
 base = ulong 505440256
 end
 end
-emit or or or base shl ulong 1 16 ulong 0 2
-fv2x ty 2 rd
+emit or or or base shl vb 16 shl va 5 vd
 end
 
 note fintr: sqrt or abs of one float value; fminmax: min or max of two values of one float type.
-note Both refuse a bare integer operand and an unresolved literal, as everywhere else.
+note Both refuse a bare integer operand and an unresolved literal, as everywhere else. A request o (fpo)
+note makes the result in a twin (kind 9); otherwise it moves to x register destreg dst (kind 1).
 fn fintr c ulong dst ulong to void
+o = get fpo 0
+put fpo 0 0
 if ne get irmode 0 0
 fail 9
 end
+put fpw 0 1
 rdval 0 0 255 0
 if eq get rk 0 2
 fail 7
@@ -3154,23 +3284,30 @@ t = get rt 0
 if lt t 10
 fail 7
 end
-ra = matreg get rk 0 get rv 0 t
+va = fvop get rk 0 get rv 0 t 0
+if eq o 0
 rd = destreg dst
-if eq c 91
-fp_sqrt t ra rd
-else
-fp_abs t ra rd
-end
+fp_un1 c t va 1
+fv2x t 1 rd
 put rk 0 1
 put rv 0 rd
+else
+r = fvdst o
+fp_un1 c t va vtw r
+put rk 0 9
+put rv 0 r
+end
 put rt 0 t
 vdec
 end
 
 fn fminmax c ulong dst ulong to void
+o = get fpo 0
+put fpo 0 0
 if ne get irmode 0 0
 fail 9
 end
+put fpw 0 1
 rdval 0 0 255 0
 if or eq get rk 0 2 eq get rk 0 6
 fail 11
@@ -3178,6 +3315,7 @@ end
 at = get rt 0
 ak = get rk 0
 av = get rv 0
+put fpw 0 1
 rdval 0 0 255 0
 if or eq get rk 0 2 eq get rk 0 6
 fail 11
@@ -3188,12 +3326,20 @@ end
 if ne at get rt 0
 fail 7
 end
-ra = matreg ak av at
-rb = matreg get rk 0 get rv 0 at
+va = fvop ak av at 0
+vb = fvop get rk 0 get rv 0 at 1
+if eq o 0
 rd = destreg dst
-fp_minmax c at ra rb rd
+fp_minmax c at va vb 2
+fv2x at 2 rd
 put rk 0 1
 put rv 0 rd
+else
+r = fvdst o
+fp_minmax c at va vb vtw r
+put rk 0 9
+put rv 0 r
+end
 put rt 0 at
 vdec
 end
@@ -3220,20 +3366,19 @@ end
 ret 10
 end
 
-fn fp_cmp op ulong ty ulong ra ulong rb ulong to void
-f2v ty ra 0
-f2v ty rb 1
+fn fp_cmp op ulong ty ulong va ulong vb ulong to void
 if eq ty 10
-emit or or 505487360 shl ulong 1 16 ulong 0
+emit or or 505487360 shl vb 16 shl va 5
 else
-emit or or 509616128 shl ulong 1 16 ulong 0
+emit or or 509616128 shl vb 16 shl va 5
 end
 put rk 0 4
 put rv 0 fcond op
 put rt 0 1
 end
 
-note fp_conv: one scalar conversion (int<->float, f32<->f64). Same type is a copy. Returns the register.
+note fp_conv: one scalar conversion (int<->float, f32<->f64) into a new x register. Same type is a copy.
+note Returns the register. A float result is made in v(rd), or in v0 when rd is x17 (v17 is a twin).
 fn fp_conv ft ulong tt ulong ra ulong to ulong
 if eq ft tt
 ret ra
@@ -3245,19 +3390,32 @@ if eq tt 1
 fail 9
 end
 rd = alloc
+if lt tt 10
+f2v ft ra 0
+fp_toint ft tt rd
+ret rd
+end
+vs = rd
+if ge rd 16
+vs = ulong 0
+end
+fp_tov ft tt ra vs
+fv2x tt vs rd
+ret rd
+end
+
+note fp_tov: x register ra of type ft (an integer, or the other float type, moved to v0 first) converted
+note to float type tt in v register vd: SCVTF/UCVTF (C7.2.236/C7.2.355) by signedness, FCVT (C7.2.69).
+fn fp_tov ft ulong tt ulong ra ulong vd ulong to void
 if ge ft 10
 f2v ft ra 0
-ra = ulong 0
-if ge tt 10
 if eq ft 10
-emit or or 505593856 shl ra 5 rd
+emit or 505593856 vd
 else
-emit or or 509755392 shl ra 5 rd
+emit or 509755392 vd
 end
-else
-fp_toint ft tt rd
+ret
 end
-else
 sgn = false
 if ge ft 6
 sgn = true
@@ -3265,37 +3423,32 @@ end
 if eq tt 10
 if eq twid ft 32
 if sgn
-emit or or 505544704 shl ra 5 rd
+emit or or 505544704 shl ra 5 vd
 else
-emit or or 505610240 shl ra 5 rd
+emit or or 505610240 shl ra 5 vd
 end
 else
 if sgn
-emit or or 2653028352 shl ra 5 rd
+emit or or 2653028352 shl ra 5 vd
 else
-emit or or 2653093888 shl ra 5 rd
+emit or or 2653093888 shl ra 5 vd
 end
 end
 else
 if eq twid ft 32
 if sgn
-emit or or 509739008 shl ra 5 rd
+emit or or 509739008 shl ra 5 vd
 else
-emit or or 509804544 shl ra 5 rd
+emit or or 509804544 shl ra 5 vd
 end
 else
 if sgn
-emit or or 2657222656 shl ra 5 rd
+emit or or 2657222656 shl ra 5 vd
 else
-emit or or 2657288192 shl ra 5 rd
+emit or or 2657288192 shl ra 5 vd
 end
 end
 end
-end
-if ge tt 10
-fv2x tt rd rd
-end
-ret rd
 end
 
 note fp_toint: float (v0) to integer rd: truncate toward zero, saturate to the destination's own range, NaN
@@ -3460,7 +3613,8 @@ put rt 0 ty
 end
 
 note binop: op 33..48, destination (255 none), ix the fr slot of a (kind, number/register, type) then b.
-note Result in rk/rv/rt. om4 BINOP.
+note Result in rk/rv/rt. om4 BINOP. A float op reads its operands as v registers; with a request (fpo)
+note the result stays in a twin (kind 9), else it moves to x (kind 1).
 fn binop op ulong dst ulong ix ulong to void
 if ne get fzone 0 0
 if and eq get fr ix 3 eq get fr add ix 3 3
@@ -3478,23 +3632,34 @@ binrot op dst ix
 ret
 end
 ty = get fr add ix 2
-ra = matreg get fr ix get fr add ix 1 ty
 if ge ty 10
-rb = matreg get fr add ix 3 get fr add ix 4 ty
+o = get fpo 0
+put fpo 0 0
+va = fvop get fr ix get fr add ix 1 ty 0
+vb = fvop get fr add ix 3 get fr add ix 4 ty 1
 if ge op 43
-fp_cmp op ty ra rb
+fp_cmp op ty va vb
 ret
 end
 if or or lt op 33 gt op 36 ge op 41
 fail 7
 end
+if eq o 0
 rd = destreg dst
-fp_binop op ty ra rb rd
+fp_binop op ty va vb 2
+fv2x ty 2 rd
 put rk 0 1
 put rv 0 rd
+else
+r = fvdst o
+fp_binop op ty va vb vtw r
+put rk 0 9
+put rv 0 r
+end
 put rt 0 ty
 ret
 end
+ra = matreg get fr ix get fr add ix 1 ty
 imm = ulong 0
 bk = get fr add ix 3
 bn = get fr add ix 4
@@ -3566,8 +3731,8 @@ note ======== calls: registers saved around a call and loaded back ========
 global svn ulong 1
 global sva ulong 1
 note save: n = registers in use (parameters + pool slots), A = 8 (n + 1) rounded up to 16: SUB SP, SP, #A
-note (C6.2.457); the stack check; STR Xr, [SP, #8j] for each (C6.2.415); STR X30, [SP, #8n]. Out: svn n,
-note sva A. om4 SAVE.
+note (C6.2.457); the stack check; STR Xr, [SP, #8j] for each (C6.2.415), or STR Dj+16 (SIMD&FP, C7.2.331)
+note for a slot living in its twin (vsl); STR X30, [SP, #8n]. Out: svn n, sva A. om4 SAVE.
 fn save to void
 n = add get npar 0 get nslot 0
 a = shl shr add n 2 1 4
@@ -3577,14 +3742,19 @@ spsub a
 stkchk
 j = ulong 0
 while lt j n
+if ne get vsl j 0
+emit or or 4244636640 add j 16 shl j 10
+else
 emit or or 4177527776 poolc j shl j 10
+end
 j = add j 1
 end
 emit or 4177527806 shl n 10
 end
 
-note loadarg: register t from an argument: kind 1 or 5 a register v, read back from its save slot (LDR Xt,
-note [SP, #8 slot], C6.2.216); kind 3, 6 or 7 the number, address or float bits v. om4 LOADARG.
+note loadarg: register t from an argument: kind 1, 5 or 9 a register v, read back from its save slot (LDR
+note Xt, [SP, #8 slot], C6.2.216; a kind 9 slot holds the twin's D bits, the same bit pattern); kind 3, 6
+note or 7 the number, address or float bits v. om4 LOADARG.
 fn loadarg t ulong k ulong v ulong to void
 if or or eq k 3 eq k 6 eq k 7
 matconst t v
@@ -3606,8 +3776,9 @@ end
 
 note restore: d destination (255: a new temporary at pool slot `slot`), slot the pool slot before the
 note arguments, n saved count, a save bytes, res 1 if there is a result in X0. MOV Xd, X0 (C6.2.282); LDR
-note each register in use before the arguments except Xd (C6.2.216); LDR X30; ADD SP, SP, #A (C6.2.5).
-note Returns Xd (255 when no result). om4 RESTORE.
+note each register in use before the arguments except Xd (C6.2.216), or LDR Dj+16 (C7.2.191) instead for a
+note slot living in its twin; LDR X30; ADD SP, SP, #A (C6.2.5). Returns Xd (255 when no result). om4
+note RESTORE.
 fn restore d ulong slot ulong n ulong a ulong res ulong to ulong
 put nslot 0 slot
 rd = ulong 255
@@ -3624,8 +3795,12 @@ m = add get npar 0 slot
 j = ulong 0
 while lt j m
 r = poolc j
+if ne get vsl j 0
+emit or or 4248830944 add j 16 shl j 10
+else
 if ne r rd
 emit or or 4181722080 r shl j 10
+end
 end
 j = add j 1
 end
@@ -3654,12 +3829,13 @@ global ea_i ulong 1
 global ea_k ulong 1
 
 note eaem: the load or store word base (LDOP / STOP register-offset form) of register rt at ea_b / ea_i.
-note ea_i 255 (OM-2, a number index k = ea_k up to 4095): the unsigned-offset form instead, same size and
-note opc bits, imm12 = k scaled by the element size (LDR/STR (immediate), C6.2.216 and its family).
+note ea_i 255 (OM-2, a number index k = ea_k up to 4095): the unsigned-offset form instead, same size, V
+note (bit 26, the SIMD&FP forms) and opc bits, imm12 = k scaled by the element size (LDR/STR (immediate),
+note C6.2.216 and its family; C7.2.191/C7.2.331).
 fn eaem wd ulong rg ulong to void
 b = get ea_b 0
 if eq get ea_i 0 255
-emit or or or or and wd 3233808384 956301312 shl get ea_k 0 10 shl b 5 rg
+emit or or or or and wd 3300917248 956301312 shl get ea_k 0 10 shl b 5 rg
 ret
 end
 emit or or or wd rg shl b 5 shl get ea_i 0 16
@@ -3904,11 +4080,19 @@ put rt 0 t
 vdec
 end
 
+note fwreq: hand this depth's fpw request to the part that makes the value (fpo)
+fn fwreq to void
+put fpo 0 get fwv get depth 0
+end
+
 note vt_un: neg / not of the value in rk/rv/rt (a bare number already refused). neg: NEG Xd, Xm (SUB from
 note XZR, C6.2.458; the 32-bit form for u32), i64 NEGS + B.VS trap 1 (C6.2.465), then the wrap or the
 note sign check; not: bool EOR Xd, Xn, #1 (C6.2.155), else MVN (ORN from XZR, C6.2.300), then the wrap.
-note om4 VU1 .. VU_E.
+note om4 VU1 .. VU_E. Float neg: FNEG (C7.2.144) of the operand's v register; with a request (fpo) the
+note result stays in a twin (kind 9).
 fn vt_un c ulong dst ulong to void
+o = get fpo 0
+put fpo 0 0
 if ne get fzone 0 0
 if eq get rk 0 3
 foldun c get rt 0 get rv 0
@@ -3923,11 +4107,19 @@ if ge ty 10
 if eq c 50
 fail 7
 end
-ra = matreg get rk 0 get rv 0 ty
+va = fvop get rk 0 get rv 0 ty 0
+if eq o 0
 rd = destreg dst
-fp_neg ty ra rd
+fp_neg ty va 1
+fv2x ty 1 rd
 put rk 0 1
 put rv 0 rd
+else
+r = fvdst o
+fp_neg ty va vtw r
+put rk 0 9
+put rv 0 r
+end
 put rt 0 ty
 ret
 end
@@ -3973,8 +4165,11 @@ end
 
 note vt_conv: the value in rk/rv/rt converted to type tt (neither bool, error 9). Out of range when any bit
 note at or above s is set: LSR Xt, Xa, #s (UBFM, C6.2.487); CBNZ Xt trap 5 (C6.2.77); signed to a narrower
-note signed type: the sign-extension check, trap 5. om4 VTT1 .. VC_OK.
+note signed type: the sign-extension check, trap 5. om4 VTT1 .. VC_OK. To a float with a request (fpo): the
+note conversion is made in a twin (kind 9); the same float type is left as it is.
 fn vt_conv tt ulong to void
+o = get fpo 0
+put fpo 0 0
 ft = get rt 0
 if or ge ft 10 ge tt 10
 if eq ft 1
@@ -3982,6 +4177,18 @@ fail 9
 end
 if eq tt 1
 fail 9
+end
+if and ne o 0 ge tt 10
+if eq ft tt
+ret
+end
+ra = matreg get rk 0 get rv 0 ft
+r = fvdst o
+fp_tov ft tt ra vtw r
+put rk 0 9
+put rv 0 r
+put rt 0 tt
+ret
 end
 ra = matreg get rk 0 get rv 0 ft
 rd = fp_conv ft tt ra
@@ -4033,11 +4240,22 @@ put rt 0 tt
 end
 
 note vt_get: get A i with the index value in rk/rv/rt: the element address, then the load of the element
-note type, register offset (LDOP table). om4 VT_GET.
+note type, register offset (LDOP table). om4 VT_GET. A float element with a request (fpo) loads straight
+note into a twin: the same word with V (bit 26), LDR St/Dt (C7.2.192) (kind 9).
 fn vt_get e ulong dst ulong to void
+o = get fpo 0
+put fpo 0 0
 elemaddr e get rk 0 get rv 0 get rt 0
-rd = destreg dst
 ty = ulong get nm_type sub e 1
+if and ne o 0 ge ty 10
+r = fvdst o
+eaem or ldop ty 67108864 vtw r
+put rk 0 9
+put rv 0 r
+put rt 0 ty
+ret
+end
+rd = destreg dst
 eaem ldop ty rd
 put rk 0 1
 put rv 0 rd
@@ -5917,10 +6135,13 @@ note ======== rdval: read one value (om4 VAL, VALTOK, CALL and the VT_ parts, on
 note function because a function calls only earlier functions or itself) ========
 note mode 0: read the first word; 1: the first word is the current token; 2: a call of function fe (index
 note + 1), its arguments still to read. exp the expected type (0 none), dst the destination register (255
-note none). Out: rk kind (1 register, 2 bare number, 3 typed number, 4 flags), rv register / number /
-note condition, rt type (for a bare number: 1 when written as 2^63 or more). Only the outermost op writes the
-note destination. Every value nests one level deeper (at most 1024, error 14); a call does not.
+note none). Out: rk kind (1 register, 2 bare number, 3 typed number, 4 flags, 9 a float in a twin, only when
+note asked for by fpw), rv register / number / condition, rt type (for a bare number: 1 when written as 2^63
+note or more). Only the outermost op writes the destination. Every value nests one level deeper (at most
+note 1024, error 14); a call does not.
 fn rdval mode ulong exp ulong dst ulong fe ulong to void
+put fwv add get depth 0 1 get fpw 0
+put fpw 0 0
 put dexp 0 1
 if eq mode 2
 if ne get cpure 0 0
@@ -5944,6 +6165,9 @@ i = ulong 0
 while lt i get fr add cb 18
 p = add mul sub fe 1 6 i
 if eq get fn_pk p 0
+if ge get fn_pt p 10
+put fpw 0 1
+end
 rdval 0 ulong get fn_pt p 255 0
 ca_scal p add cb mul i 3
 else
@@ -6056,7 +6280,18 @@ end
 if ne get nm_kind sub e 1 0
 fail 7
 end
-vdone 1 ulong get nm_reg sub e 1 ulong get nm_type sub e 1
+e1 = sub e 1
+if ne get nm_fv e1 0
+nr = ulong get nm_reg e1
+if ne get fwv get depth 0 0
+vdone 9 nr ulong get nm_type e1
+else
+fv2x ulong get nm_type e1 vtw nr nr
+vdone 1 nr ulong get nm_type e1
+end
+else
+vdone 1 ulong get nm_reg e1 ulong get nm_type e1
+end
 if ne get cpure 0 0
 if ge get rt 0 10
 fail 30
@@ -6098,6 +6333,7 @@ end
 if eq get rt 0 1
 fail 7
 end
+fwreq
 vt_conv t
 vdec
 ret
@@ -6129,6 +6365,7 @@ vdec
 ret
 end
 if or or or eq c 91 eq c 92 eq c 93 eq c 94
+fwreq
 if or eq c 91 eq c 92
 fintr c dst
 else
@@ -6163,6 +6400,7 @@ vdec
 ret
 end
 if eq c 74
+put fpw 0 get fwv get depth 0
 rdval 0 exp dst 0
 tok
 if ne get tk 0 1
@@ -6208,6 +6446,7 @@ ret
 end
 rdval 0 5 255 0
 fz_get e
+fwreq
 vt_get e dst
 vdec
 ret
@@ -6249,6 +6488,7 @@ if and gt sub c 33 17 gt sub c 59 1
 fail 16
 end
 if and ge c 49 le c 50
+put fpw 0 1
 rdval 0 exp 255 0
 if ge get rt 0 64
 fail 7
@@ -6261,10 +6501,12 @@ end
 if eq get rk 0 2
 fail 11
 end
+fwreq
 vt_un c dst
 vdec
 ret
 end
+put fpw 0 1
 rdval 0 0 255 0
 ak = get rk 0
 av = get rv 0
@@ -6274,6 +6516,7 @@ av = matreg 4 av at
 ak = ulong 1
 at = ulong 1
 end
+put fpw 0 1
 rdval 0 0 255 0
 bk = get rk 0
 bv = get rv 0
@@ -6353,6 +6596,9 @@ put fr add x 2 at
 put fr add x 3 bk
 put fr add x 4 bv
 put fr add x 5 bt
+if ge at 10
+fwreq
+end
 binop c dst x
 vdec
 end
@@ -6468,7 +6714,8 @@ blo lp
 addname w r t n 1 0
 end
 
-note s_assign: name [=] value (an existing scalar, or a new one), or name = new T N v. om4 S_ASSIGN.
+note s_assign: name [=] value (an existing scalar, or a new one), or name = new T N v. om4 S_ASSIGN. A new
+note f32/f64 name lives in the twin of its register (nm_fv, vsl): the value is made there when it can be.
 fn s_assign w ulong to void
 tok
 if eq get tk 0 1
@@ -6486,6 +6733,16 @@ fail 7
 end
 r = ulong get nm_reg i
 t = ulong get nm_type i
+if ne get nm_fv i 0
+put fpw 0 add r 2
+rdval 1 t 255 0
+if ne get rt 0 t
+fail 7
+end
+fvset get rk 0 get rv 0 t r
+eol
+ret
+end
 rdval 1 t r 0
 if ne get rt 0 t
 fail 7
@@ -6508,13 +6765,21 @@ end
 end
 r = alloc
 put held 0 get nslot 0
+put fpw 0 add r 2
 rdval 1 0 r 0
 if eq get rk 0 2
 fail 11
 end
 t = get rt 0
+if ge t 10
+fvset get rk 0 get rv 0 t r
+put vsl regidx r uchar 1
+addname w r t 0 0 0
+put nm_fv sub get nn 0 1 uchar 1
+else
 force get rk 0 get rv 0 t r
 addname w r t 0 0 0
+end
 eol
 end
 
@@ -6659,6 +6924,9 @@ put stkbytes 0 0
 put dead 0 0
 put npar 0 get psl 0
 put nslot 0 0
+for j ulong 16
+put vsl j 0
+end
 put held 0 0
 put nb 0 0
 put nt 0 0
@@ -6907,9 +7175,20 @@ ik = get rk 0
 iv = get rv 0
 it = get rt 0
 t = ulong get nm_type sub e 1
+if ge t 10
+put fpw 0 1
+end
 rdval 0 t 255 0
 if ne get rt 0 t
 fail 7
+end
+if eq get rk 0 9
+vv = vtw get rv 0
+fz_put e ik iv
+elemaddr e ik iv it
+eaem or stop t 67108864 vv
+eol
+ret
 end
 v = matreg get rk 0 get rv 0 get rt 0
 fz_put e ik iv
@@ -8704,6 +8983,9 @@ put curfn 0 0
 put curret 0 0
 put npar 0 0
 put nslot 0 0
+for j ulong 16
+put vsl j 0
+end
 put held 0 0
 end
 
