@@ -150,6 +150,8 @@ text tforo "for NAME T COUNT"
 text ttrapo "trap <1..255>"
 text texito "exit <int>"
 text texit0 "exit 0"
+text tretw "ret"
+text texitw "exit"
 text treqt "requires true"
 text tenst "ensures true"
 text tinvt "invariant true"
@@ -606,11 +608,13 @@ ret eq run 0
 end
 
 fn tryv to bool
-note value witness: the hole line with ?? replaced by the scratch text
+note value witness: the hole line with ?? replaced by the scratch text; a hole line that is a ret or
+note exit already ends its block, so the innermost closer gets no trap (else omc error 17)
 put g GWN 0
 wlns 0 get g GHL
 wholev
-wcl get g GD1 false
+h = get g GHL
+wcl get g GD1 or lwis h 0 tretw lwis h 0 texitw
 wrest
 ret eq run 0
 end

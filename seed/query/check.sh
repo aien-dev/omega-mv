@@ -46,6 +46,8 @@ if has arr_call '"fill k ulong 1"' && ! has arr_call '"fill [sb] '; then ok "arr
 if has arr_call '"name":"v","type":"ulong"'; then ok "binding without = (v ulong 5) in scope"; else bad "binding without = missing from scope"; fi
 sed 's/^??$/fill k ulong 1/' $C/arr_call.om | "$OMC" > /dev/null 2>&1 && ok "offered call fill k ulong 1 compiles" || bad "offered call fill k ulong 1 rejected"
 sed 's/^??$/fill s ulong 1/' $C/arr_call.om | "$OMC" > /dev/null 2>&1 && bad "control: fill s (uint 8 for uint 64) accepted" || ok "control: fill s (uint 8 for uint 64) rejected by omc"
+if has ret_value '"expect":\["uint"\]' && has ret_value '"next":\["n",'; then ok "value hole inside a ret line: uint expected, n offered"; else bad "value hole inside a ret line answered empty"; fi
+sed 's/??/n/' $C/ret_value.om | "$OMC" > /dev/null 2>&1 && ok "offered ret int add n n compiles" || bad "offered ret value rejected"
 # Outcome: three values, never a plain VALID. A hole with a compiling base is INCOMPLETE, an
 # error before the hole is INVALID, a whole accepted program is VALID-UNPROVEN.
 if has err3 '"status":"INVALID"' && has stmt_loop '"status":"INCOMPLETE"'; then ok "status INVALID / INCOMPLETE"; else bad "status INVALID / INCOMPLETE"; fi

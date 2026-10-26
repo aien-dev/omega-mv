@@ -14,7 +14,7 @@ needs editing.
 
 Status: EXERCISED on the host (Linux AArch64, DGX Spark, 2026-10-26) against compiler
 `2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f` (omega-mv `0b77e6ea`).
-`check.sh` printed `SEED QUERY PASS 36 checks`. This is host evidence only. It is not a merge, and
+`check.sh` printed `SEED QUERY PASS 39 checks`. This is host evidence only. It is not a merge, and
 no agent-loop result is claimed here.
 
 | File | Contents |
@@ -99,8 +99,8 @@ against it.
 
 ## Evidence
 
-`check.sh` on 2026-10-26: `SEED QUERY PASS 36 checks`, `omq` sha256
-`6d5db676adb0ee3776097b9430f703e0f94d20246e37b810df44c7b2756e1ce8`. The checks are byte-identical
+`check.sh` on 2026-10-26: `SEED QUERY PASS 39 checks`, `omq` sha256
+`4cca33bce462d83354975ad8dcb0f6b7c18fb5edf72b4a6442aedc1cce3f0a4d`. The checks are byte-identical
 goldens for every case; negative controls (closed-block name absent, no `break` outside a loop, a
 wrong-type array excluded, no contract forms in OM-1, a length-mismatched array not offered and
 rejected by `omc`); every `next` form at the loop hole substituted and recompiled; the omitted
@@ -109,10 +109,11 @@ corrupted golden detected; a mutant `omq` that accepts every witness caught.
 
 Real programs (harness `trial.py`, handoffs `OmegaIntent/realprog/`, pinned to cpu 17, X925): a
 hole placed at a seeded random statement line of standalone repo programs (BLAKE3, SHA-256, the
-WASM and SPIR-V emitters, the OM-2 gate, host tests). With the `omq` above (sha `6d5db676…`), on
+WASM and SPIR-V emitters, the OM-2 gate, host tests). With the `omq` above (sha `4cca33bc…`), on
 a sample drawn after the last scope change (seed 4242, 112 holes in 28 programs), every base
 witness compiled and the removed statement's form was in `next` for 112 of 112; the 95%
 Clopper-Pearson lower bound is 0.968
 (`WolframLanguageEvaluator: InverseBetaRegularized[0.025, 112, 1] -> 0.9676`). Median wall time
-per answer 0.031 s, 90th percentile 0.24 s, maximum 0.68 s
-(`WolframLanguageEvaluator: {Median[w], Quantile[w,0.9], Max[w]} -> {0.031195, 0.2397, 0.68448}`).
+per answer 0.030 s, 90th percentile 0.25 s, maximum 0.72 s, all on cpu 17 (X925)
+(`WolframLanguageEvaluator: {Median[w], Quantile[w,0.9], Max[w]} -> {0.02994, 0.2472, 0.71724}`;
+data `realprog/fresh3.jsonl`).
