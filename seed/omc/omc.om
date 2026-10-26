@@ -228,6 +228,7 @@ note registers x0..x5 by slots: an unsized array two (pointer, then count), ever
 note (pwid, pslot); psl counts the slots of the fn line being read (6 at most, error 9). ul_k / ul_v: the
 note count (kind 1 register / 3 number) of argument i of the call at value depth d, at d * 6 + i ----
 global nm_lr uchar 8192
+global nm_bk ulong 8192
 global psl ulong 1
 global ul_k ulong 6156
 global ul_v ulong 6156
@@ -2411,6 +2412,7 @@ put nm_fv n 0
 put nm_lay n 0
 put nm_fr n 0
 put nm_lr n 0
+put nm_bk n 0
 put nn 0 add n 1
 end
 
@@ -3828,6 +3830,146 @@ global ea_b ulong 1
 global ea_i ulong 1
 global ea_k ulong 1
 
+note ---- implied index checks. nm_bk: for the counter of `for i T K` with K a number, K when no line of the
+note rest of the function starts with i (so the body never assigns it: scalars change only by an assignment
+note line; inlined parameters are copies), else 0. In the body 0 <= i < K holds, implied by the loop-head
+note CMP + B.HS/B.GE exit that dominates it. ea_nb: B when the index about to reach elemaddr is in 0 .. B-1
+note (ixbound); B <= the array's fixed length drops the CMP + B.HS trap 3. pk_l / pk_e / pk_ok: pkword
+note and pknum results ----
+global ea_nb ulong 1
+global pk_l ulong 1
+global pk_e ulong 1
+global pk_ok ulong 1
+
+note pkword: the word starting at q in the input (bytes up to blank, tab, CR, newline, a paren or the
+note end, as tok2 splits): its first 8 bytes packed as tw is; pk_l its length, pk_e the place after it
+fn pkword q ulong to ulong
+e = get inlen 0
+p = q
+w = ulong 0
+sh = ulong 0
+n = ulong 0
+go = true
+while and go lt n 4096
+if ge p e
+go = false
+else
+b = get inp p
+dl = or or eq b 32 eq b 9 eq b 13
+if or dl or or eq b 10 eq b 40 eq b 41
+go = false
+else
+if lt n 8
+w = or w shl ulong b sh
+sh = add sh 8
+end
+n = add n 1
+p = add p 1
+end
+end
+end
+put pk_l 0 n
+put pk_e 0 p
+ret w
+end
+
+note pknum: the word at q as a plain decimal number (1 .. 18 digits, no sign, no leading zero unless it is
+note 0): pk_ok 1 and its value, else pk_ok 0
+fn pknum q ulong to ulong
+x = pkword q
+n = get pk_l 0
+put pk_ok 0 0
+if or eq n 0 gt n 18
+ret 0
+end
+if and gt n 1 eq get inp q 48
+ret 0
+end
+v = ulong 0
+j = ulong 0
+while lt j n
+b = ulong get inp add q j
+if or lt b 48 gt b 57
+ret 0
+end
+v = add mul v 10 sub b 48
+j = add j 1
+end
+put pk_ok 0 1
+ret v
+end
+
+note nmbound: nm_bk of the name packed as x (pk_l n bytes), 0 when x is no bounded loop counter
+fn nmbound x ulong n ulong to ulong
+if or eq n 0 gt n 8
+ret 0
+end
+b = and x 255
+if or eq b 45 and ge b 48 le b 57
+ret 0
+end
+if ne kw x 0
+ret 0
+end
+e = findname x
+if eq e 0
+ret 0
+end
+ret get nm_bk sub e 1
+end
+
+note ixbound: read ahead (nothing consumed) the index value that rdval is about to read: a bounded loop
+note counter i gives nm_bk(i); `sub C i` with C a plain number and C >= nm_bk(i) - 1 gives C + 1 (the
+note value is C - i, in C - nm_bk(i) + 1 .. C, so it never wraps); anything else 0 (keep the check).
+fn ixbound to ulong
+x = pkword skipbl get cur 0
+n = get pk_l 0
+if and eq n 3 eq x 6452595
+c = pknum skipbl get pk_e 0
+if eq get pk_ok 0 0
+ret 0
+end
+y = pkword skipbl get pk_e 0
+k = nmbound y get pk_l 0
+if eq k 0
+ret 0
+end
+if lt c sub k 1
+ret 0
+end
+ret add c 1
+end
+ret nmbound x n
+end
+
+note fwscan: 1 when a line from here to the next `fn` line (or the end) starts with the word packed as w
+fn fwscan w ulong to ulong
+p = get cur 0
+r = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p get inlen 0
+go = false
+else
+p = skipbl p
+x = pkword p
+if eq x w
+r = ulong 1
+go = false
+end
+if eq x 28262
+go = false
+end
+p = skipln p
+end
+m = add m 1
+end
+end
+ret r
+end
+
 note eaem: the load or store word base (LDOP / STOP register-offset form) of register rt at ea_b / ea_i.
 note ea_i 255 (OM-2, a number index k = ea_k up to 4095): the unsigned-offset form instead, same size, V
 note (bit 26, the SIMD&FP forms) and opc bits, imm12 = k scaled by the element size (LDR/STR (immediate),
@@ -3845,8 +3987,12 @@ note be inside the array (error 21) and needs no check; a register index: CMP Xi
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
 note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
-note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6).
+note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6). A sized array's register index whose range
+note ixbound proved (ea_nb, 1 .. len) has no check: the dominating loop-head check already implies it.
+note A length above 4095 that is a multiple of 4096 up to 4095 * 4096 is CMP Xi, #len >> 12, LSL #12.
 fn elemaddr e ulong k ulong v ulong t ulong to void
+ixb = get ea_nb 0
+put ea_nb 0 0
 if or eq t 1 ge t 10
 fail 7
 end
@@ -3870,14 +4016,20 @@ x = alloc
 matconst x v
 end
 else
+if or eq ixb 0 gt ixb ln
 if le ln 4095
 emit or or 4043309087 shl ln 10 shl v 5
+else
+if and eq and ln 4095 0 le shr ln 12 4095
+emit or or 4047503391 shl shr ln 12 10 shl v 5
 else
 y = alloc
 matconst y ln
 emit or or 3942645791 shl y 16 shl v 5
 end
+end
 trapc 2 3
+end
 end
 end
 put ea_i 0 x
@@ -6444,9 +6596,11 @@ if ne ly_get e dst 0
 vdec
 ret
 end
+ixb = ixbound
 rdval 0 5 255 0
 fz_get e
 fwreq
+put ea_nb 0 ixb
 vt_get e dst
 vdec
 ret
@@ -7159,7 +7313,7 @@ end
 note s_put: put A i v: index, then value, then the checked store (STOP table). om4 S_PUT.
 fn s_put to void
 e = arrname
-k = get nm_kind sub e 1
+k = ulong get nm_kind sub e 1
 if ge k 6
 s_putf e
 ret
@@ -7170,6 +7324,8 @@ end
 if ne ly_put e 0
 ret
 end
+note k (no longer the kind) is the index bound from ixbound: its own register stays free (error 12)
+k = ixbound
 rdval 0 5 255 0
 ik = get rk 0
 iv = get rv 0
@@ -7185,6 +7341,7 @@ end
 if eq get rk 0 9
 vv = vtw get rv 0
 fz_put e ik iv
+put ea_nb 0 k
 elemaddr e ik iv it
 eaem or stop t 67108864 vv
 eol
@@ -7192,6 +7349,7 @@ ret
 end
 v = matreg get rk 0 get rv 0 get rt 0
 fz_put e ik iv
+put ea_nb 0 k
 elemaddr e ik iv it
 stel t v
 eol
@@ -7409,22 +7567,30 @@ end
 ret at
 end
 
-note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K or Xk; B.HS/B.GE exit.
-note om4 SF_NUM .. SF_PUSH.
+note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K, #K >> 12 LSL #12 (K a multiple
+note of 4096 up to 4095 * 4096) or Xk; B.HS/B.GE exit. om4 SF_NUM .. SF_PUSH. nm_bk(i) = K unless fwscan
+note finds a line that could assign i.
 fn sf_num w ulong t ulong kk ulong sn ulong sh ulong to void
 eol
 i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
+if eq fwscan w 0
+put nm_bk sub get nn 0 1 kk
+end
 emit or 3531603968 i
 hd = get oc 0
 cp_head get cur 0 get line 0
 if le kk 4095
 emit or or 4043309087 shl kk 10 shl i 5
 else
+if and eq and kk 4095 0 le shr kk 12 4095
+emit or or 4047503391 shl shr kk 12 10 shl i 5
+else
 k = alloc
 matconst k kk
 emit or or 3942645791 shl i 5 shl k 16
+end
 end
 br = sf_br t
 pushb br 4 hd i t
