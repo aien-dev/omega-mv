@@ -58,6 +58,7 @@
 #include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
+#include "sha256.h"
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -494,10 +495,20 @@ static int run_probe(int argc, char **argv)
     return OLA_EXIT_USAGE;
 }
 
+/* The Omega-native hash binding (src/omega_om_units.c) reserves its thread stack and its pthread key on
+ * first use, and glibc reaches a futex on that path; the sandbox allow-list below does not admit futex, so
+ * a first use inside the sandbox is judged a sandbox violation (receipt detail=syscall_98). Warm the
+ * binding once, before any sandbox is entered. */
+static void warm_native_binding(void)
+{
+    uint8_t d[32];
+    sha256_hash((const uint8_t *)"", 0, d);
+}
 int main(int argc, char **argv)
 {
     if (argc < 4) { fprintf(stderr, "usage: ola_runner osc|omegaprog|probe <nonce> <scratch> ...\n"); return OLA_EXIT_USAGE; }
     g_nonce = argv[2];
+    warm_native_binding();
     if (!strcmp(argv[1], "osc")) return run_osc(argc, argv, 0);
     if (!strcmp(argv[1], "oscir")) return run_osc(argc, argv, 1); /* v2 */
     if (!strcmp(argv[1], "omegaprog")) return run_omegaprog(argc, argv);

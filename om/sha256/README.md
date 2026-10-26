@@ -37,3 +37,14 @@ Qualified by L836 (om2/qualification 478bdecd, candidates/sha/RESULTS.txt): 158 
 receipts, 17/17 unit mutants killed, dynamic traces 28/28 identical. The static leakage scan of
 update/final is NOT_RUN; no constant-time claim is made. Throughput against the replaced C is in the
 cutover PR, measured with `parity/bench.c` and `parity/small.c`.
+
+## Building the generated binding
+
+`src/omega_om_units.c` embeds each unit's machine code exactly as the pinned compiler wrote it, and its
+runtime entry table is declared with GNU range designators, which ISO C forbids. The four suites that
+compile it with `-pedantic` and `-Werror` (ANS, estimation, Brownian active and the physics baseline;
+`mk/estimation.mk`, `mk/ans.mk`, `mk/brownian_active.mk`, `mk/physics0.mk`) therefore append `-Wno-pedantic`
+to their flags: only that one diagnostic is waived, and the handwritten sources in the same commands are
+pedantic-clean today, so the rest of the strict set still applies to every file they compile.
+The generator fix is omega-bridge #17 on the ABI-v2 line; when it lands, regenerate the binding
+with it and drop those flags.
