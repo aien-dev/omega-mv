@@ -699,7 +699,7 @@ def compile_unit(omc, out, lib_src, unit):
         raise Fail("compile %s rc=%d %s" % (unit, p.returncode, p.stderr.decode(errors="replace").strip()))
     with open(out, "wb") as f:
         f.write(p.stdout)
-    os.chmod(out, 0o755)
+    os.chmod(out, 0o700)
     return sha(src), sha(p.stdout)
 
 
