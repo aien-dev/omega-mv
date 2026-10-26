@@ -87,6 +87,27 @@ ir_fold() { # name const-source literal-source
 ir_fold trap_const 'ir\nconst T uint 2\nfn f to uint\ntrap T\nend' 'ir\nfn f to uint\ntrap 2\nend'
 ir_fold bound_const 'ir\nconst B ulong 3\nfn f to uint\nx = uint 0\nwhile lt x uint 2 bound B\nx = add x uint 1\nend\nret x\nend' 'ir\nfn f to uint\nx = uint 0\nwhile lt x uint 2 bound 3\nx = add x uint 1\nend\nret x\nend'
 ir_fold for_const 'ir\nconst K ulong 4\nfn f to uint\nx = uint 0\nfor i ulong K\nx = add x uint 1\nend\nret x\nend' 'ir\nfn f to uint\nx = uint 0\nfor i ulong 4\nx = add x uint 1\nend\nret x\nend'
+# for ... bound N: a constant N folds to its literal; an explicit bound 1000000 is the unbounded default.
+ir_fold for_bound_const 'ir\nconst B ulong 3\nfn f a uint to uint\nx = uint 0\nfor i uint a bound B\nx = add x uint 1\nend\nret x\nend' 'ir\nfn f a uint to uint\nx = uint 0\nfor i uint a bound 3\nx = add x uint 1\nend\nret x\nend'
+ir_fold for_bound_default 'ir\nfn f a uint to uint\nx = uint 0\nfor i uint a bound 1000000\nx = add x uint 1\nend\nret x\nend' 'ir\nfn f a uint to uint\nx = uint 0\nfor i uint a\nx = add x uint 1\nend\nret x\nend'
+ir_refuse for_bound_zero 8 'ir
+fn f a uint to uint
+for i uint a bound 0
+end
+ret a
+end'
+ir_refuse for_bound_over 8 'ir
+fn f a uint to uint
+for i uint 3 bound 9223372036854775808
+end
+ret a
+end'
+# A number count with a bound gets the counter guard, which checker2 proves terminating.
+printf 'ir\nfn f a uint to uint\ns = uint 0\nfor i uint 7 bound 5\ns = add s a\nend\nret s\nend\n' > "$B/forbn.om"
+timeout 5 "$B/stage2" < "$B/forbn.om" > "$B/forbn.ir"
+build/checker2/checker2 check "$B/forbn.ir" > "$B/forbn.check"
+grep -q '^checker2=ACCEPT ' "$B/forbn.check" || fail 'for_num_bound checker refusal'
+echo 'PASS for_num_bound guarded; checker2 ACCEPT'
 ir_refuse float_const 9 'ir
 const H f64 0.1
 fn f to f64
@@ -425,6 +446,8 @@ ir_multi bool_or 'fn f a bool b bool to bool\nret or a b\nend'
 ir_multi bool_xor 'fn f a bool b bool to bool\nret xor a b\nend'
 ir_multi void_fall 'fn sink a uint to void\nend\nfn f to uint\nsink uint 1\nret uint 2\nend'
 ir_multi for_reuse 'fn f to uint\ns = uint 0\nfor i uint 3\ns = add s i\nend\nfor i uint 2\ns = add s i\nend\nret s\nend'
+ir_multi for_value 'fn f n uint to uint\ns = uint 0\nfor i uint n\ns = add s i\nend\nret s\nend'
+ir_multi for_value_expr 'fn f n uchar to uint\ns = uint 0\nfor i uchar add n uchar 1\nif eq i uchar 3\nbreak\nend\ns = add s uint 1\nend\nret s\nend'
 ir_multi scope_reuse 'fn f a uint to uint\nif gt a 1\ny = add a 1\nret y\nend\ny = add a 2\nret y\nend'
 ir_multi call_long_prefix 'fn increment_one a uint to uint\nret add a uint 1\nend\nfn increment_two a uint to uint\nret add a uint 2\nend\nfn f to uint\nret increment_two uint 4\nend'
 # Random two-function programs with a call: differential against the oracle.
@@ -478,5 +501,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 28 refusals + 9 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units + 1 guarded for-bound unit; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'

@@ -7130,14 +7130,35 @@ end
 ret at
 end
 
+note forbnd: the optional `bound N` of a for line, before its end: N (a number or an integer constant, 1 ..
+note 9223372036854775807, error 8, as s_while; 4 when N is missing), or 0 when no bound is written.
+fn forbnd to ulong
+if ne peekw 70
+ret 0
+end
+tok
+v = lenval 4
+if ge sub v 1 9223372036854775807
+fail 8
+end
+ret v
+end
+
 note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K or Xk; B.HS/B.GE exit.
-note om4 SF_NUM .. SF_PUSH.
+note With `bound N` a hidden counter c = 0 is checked after the exit test, as in s_while. om4 SF_NUM .. SF_PUSH.
 fn sf_num w ulong t ulong kk ulong sn ulong sh ulong to void
+bn = forbnd
 eol
 i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
 emit or 3531603968 i
+c = ulong 0
+if ne bn 0
+c = alloc
+put held 0 get nslot 0
+emit or 3531603968 c
+end
 hd = get oc 0
 cp_head get cur 0 get line 0
 if le kk 4095
@@ -7148,14 +7169,21 @@ matconst k kk
 emit or or 3942645791 shl i 5 shl k 16
 end
 br = sf_br t
+if ne bn 0
+lpcnt c bn
+end
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
 end
 
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
-note Xi, Xk; B.HS/B.GE exit; the counter guard of a while with no bound. om4 SF_VAL.
+note Xi, Xk; B.HS/B.GE exit; the counter guard of a while: `bound N`, else 1000000. om4 SF_VAL.
 fn sf_val w ulong t ulong kr ulong sn ulong sh ulong to void
+n = forbnd
+if eq n 0
+n = ulong 1000000
+end
 eol
 i = alloc
 put held 0 get nslot 0
@@ -7168,18 +7196,15 @@ hd = get oc 0
 cp_head get cur 0 get line 0
 emit or or 3942645791 shl kr 16 shl i 5
 br = sf_br t
-m = alloc
-matconst m 1000000
-emit or or 3942645791 shl c 5 shl m 16
-trapc 2 4
-emit or or 2432697344 c shl c 5
+lpcnt c n
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
 end
 
-note s_for: for i T K: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number, or a
-note value of type T: a name is read at every pass, another value once before the loop. om4 S_FOR.
+note s_for: for i T K [bound N]: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number,
+note or a value of type T: a name is read at every pass, another value once before the loop. More than N
+note passes (default 1000000 for a value K, no limit for a number K) trap 4. om4 S_FOR.
 fn s_for to void
 sn = get nn 0
 sh = get held 0
@@ -11218,10 +11243,12 @@ put ir_fc n 1
 ir_start get ir_fb n
 end
 
+note ir_bound: the rest of a while or for line: `bound N` (1 .. 9223372036854775807, error 8) -> N, or 0
+note when the line ends there.
 fn ir_bound to ulong
 tok
 if or eq get tk 0 0 eq get tk 0 3
-ret 1000000
+ret 0
 end
 if or ne get tk 0 1 ne ir_kwt 70
 fail 5
@@ -11251,7 +11278,11 @@ ir_val 65534 1
 if ne get ir_vt 0 1
 fail 7
 end
-lim = ir_lit ir_bound 5
+lim = ir_bound
+if eq lim 0
+lim = ulong 1000000
+end
+lim = ir_lit lim 5
 ir_op 14 get ir_rr 0 g ex 0
 ir_start g
 ger = ir_newreg 1
@@ -11266,8 +11297,37 @@ ir_op 3 1 cnt cnt one
 ir_push 2 h ex cnt 0
 end
 
-note ir_for: for name type count. The counter is bound after the count is read, so the count cannot
-note name it; ir_forb opens the loop, and the counter leaves scope at its end.
+note ir_cntnum: 1 when the next token is a number or an integer constant name (not a local), without reading it
+fn ir_cntnum to ulong
+c0 = get cur 0
+l0 = get line 0
+a0 = get tka 0
+b0 = get tkb 0
+tok
+r = ulong 0
+if eq get tk 0 2
+r = ulong 1
+end
+if and eq get tk 0 1 le get tl 0 8
+if eq ir_find get tw 0 get tl 0 0
+e = findname get tw 0
+if ne e 0
+if eq get nm_kind sub e 1 9
+r = ulong 1
+end
+end
+end
+end
+put cur 0 c0
+put line 0 l0
+put tka 0 a0
+put tkb 0 b0
+ret r
+end
+
+note ir_for: for name type count [bound N]. The counter is bound after the count is read, so the count cannot
+note name it. A number count with no bound opens the plain loop (ir_forb); any other count, and any count
+note with a bound, opens the guarded loop (ir_forg) with N, default 1000000. The counter leaves scope at its end.
 fn ir_for to void
 tok
 if or eq get tk 0 0 eq get tk 0 3
@@ -11282,18 +11342,84 @@ ty = ir_type 0
 if eq ty 1
 fail 7
 end
+if eq ir_cntnum 1
 z = ir_lit 0 ty
 ir_val 65534 ty
 if ne get ir_vt 0 ty
 fail 7
 end
-eol
 bnd = get ir_rr 0
+bn = ir_bound
+if ne bn 0
+ir_forg w ty bnd bn
+ret
+end
 uu = ir_lit 1 ty
 ctr = ir_newreg ty
 ir_bind w ctr
 ir_op 2 ctr z 0 0
 ir_forb ctr bnd
+ret
+end
+ir_val 65534 ty
+if ne get ir_vt 0 ty
+fail 7
+end
+kr = get ir_rr 0
+bn = ir_bound
+if eq bn 0
+bn = ulong 1000000
+end
+ir_forg w ty kr bn
+end
+
+note ir_forg: the guarded for loop, the C oracle's shape (omegese.c guarded_loop): ulong counter cnt and the
+note for counter ctr = 0, then ir_forl. The literals are made in the oracle's order (they are shared).
+fn ir_forg w ulong ty ulong kr ulong bn ulong to void
+z0 = ir_lit 0 5
+uu = ir_lit 1 5
+cnt = ir_newreg 5
+z = ir_lit 0 ty
+uu = ir_lit 1 ty
+ctr = ir_newreg ty
+ir_op 2 ctr z 0 0
+ir_op 2 cnt z0 0 0
+ir_bind w ctr
+ir_forl ctr cnt kr bn
+end
+
+note ir_forl: head: lt ctr kr -> guard | exit; guard: ge cnt N -> trap 4 | body; body starts with
+note cnt = add cnt 1; the latch adds 1 to ctr (ir_end kind 3); the counter leaves scope at the end.
+fn ir_forl ctr ulong cnt ulong kr ulong bn ulong to void
+h = ir_block
+g = ir_block
+tb = ir_block
+body = ir_block
+ex = ir_block
+ir_op 13 h 0 0 0
+put ir_dead 0 1
+ir_start h
+c = ir_newreg 1
+ir_op 5 3 c ctr kr
+bn = ir_lit bn 5
+ir_op 14 c g ex 0
+ir_start g
+c = ir_newreg 1
+ir_op 5 6 c cnt bn
+ir_op 14 c tb body 0
+ir_start tb
+ir_op 12 4 0 0 0
+ir_op 13 ex 0 0 0
+put ir_dead 0 1
+ir_start body
+ir_op 3 1 cnt cnt ir_lit 1 5
+ir_forp h ex ctr
+end
+
+note ir_forp: the for frame (kind 3: head h, exit ex, counter ctr); the counter, bound last, leaves scope at end
+fn ir_forp h ulong ex ulong ctr ulong to void
+ir_push 3 h ex ctr 0
+put ir_fnn sub get ir_nf 0 1 sub get ir_nn 0 1
 end
 
 fn ir_forb ctr ulong bnd ulong to void
@@ -11306,8 +11432,7 @@ ir_start h
 c = ir_newreg 1
 ir_op 5 3 c ctr bnd
 ir_op 14 c body ex 0
-ir_push 3 h ex ctr 0
-put ir_fnn sub get ir_nf 0 1 sub get ir_nn 0 1
+ir_forp h ex ctr
 ir_start body
 end
 
