@@ -576,9 +576,10 @@ conversion is error 7.
   (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
   FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
   changing its bits; any other width or a bool is error 7. (gate8 convert)
-- Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields; the same
-  8-byte cell rule as for structs applies (an f32 field or array element still occupies an 8-byte
-  cell, with the 32-bit pattern in its low half). A float cannot index an array or be a `for` count
+- Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields.
+  Arrays are packed by element type: f32 occupies four bytes and f64 eight (`tlog` and `sa_arr`
+  in `seed/omc/omc.om`). Struct fields retain eight-byte cells, including f32 in the low half.
+  A float cannot index an array or be a `for` count
   (error 7), `read`/`write` still need a uchar array (error 7), and IR mode refuses float words
   (error 3). (gate8 arrays, globals, params, structs, neg_*)
 
@@ -1001,6 +1002,50 @@ Numeric bounds were checked with WolframLanguageEvaluator:
 the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
+
+### 11.2 Memory profile contract (IR v2 milestone)
+
+This is a specification for the next seeded producer/backend extension, not
+an assertion that the binaries above implement it. The authoritative wire
+allocation and validation rules are in `spec/one-layer-format.md` section 10.
+The milestone name does not repurpose OSC wire version 2.
+
+The source spelling reuses native arrays:
+
+```
+global pixels uint 4096
+text palette "RGBX"
+fn frame phase uint to uint
+scratch = new uint 4 phase
+put pixels 0 get scratch 0
+ret get pixels 0
+end
+```
+
+`global` creates mutable per-instance storage; `text` creates a read-only
+byte table; `new` creates a function-local fixed-size array whose initializer
+is evaluated once at its declaration and copied to every element on each
+invocation. `len` is a compile-time element count. A one-element global is
+the scalar-state spelling. Mutable globals start at zero and persist
+between exported calls. Local storage never exposes a previous call.
+
+`get` and `put` retain exact element typing and bounds behavior: a constant
+out-of-range index is error 21, a dynamic negative or high index is trap 3,
+and writing text is error 20. All accesses are checked before address
+arithmetic; there is no unchecked form. Integer indices do not become valid
+by wrapping to a wasm32 address. Elements are naturally aligned and packed
+at their scalar width; struct-cell layout is a separate contract.
+Type/context/capacity refusals remain errors 7/9/14/23 respectively.
+
+The first memory profile names globals directly from functions. It does not
+add array parameters, raw pointers, dynamic allocation or GPU synchronization.
+Function/Workgroup storage distinctions are wire contracts, not permission
+to lower persistent state to per-work-item temporary storage.
+The wasm ABI exports `memory`, original scalar function names, and immutable
+`region.NAME` offset globals for module regions. JavaScript can form a typed
+framebuffer view and invoke `frame` explicitly; Omega does not install a
+browser loop or import JavaScript services. A read-only source table is not
+protected from a JavaScript caller that holds the exported memory.
 
 ## 12. Executable native contracts, version 1 (OM-2 extension)
 
