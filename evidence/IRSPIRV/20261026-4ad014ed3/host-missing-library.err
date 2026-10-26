@@ -1,0 +1,2 @@
+opencl-host: library=/nonexistent/irspirv/libpocl.so POCL_DEVICES=cpu layers=disabled
+opencl-host: clGetPlatformIDs failed (cl error -1001)
