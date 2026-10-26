@@ -1,0 +1,16 @@
+note Scalar functions lifted elementwise by irstablehlo: out[i] = f(a[i], b[i]).
+fn vaddi32 a int b int to int
+ret add a b
+end
+fn vaddu32 a uint b uint to uint
+ret add a b
+end
+fn vaddi64 a long b long to long
+ret add a b
+end
+fn madi32 a int b int c int to int
+ret add mul a b c
+end
+fn biasi32 a int to int
+ret add a -3
+end
