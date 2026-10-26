@@ -68,7 +68,7 @@ iree_check() {
     nice -n 19 "$IREE_RUN" --device=local-task --module="$vm" --function=main $args \
         --expected_output="8x$ty=$ex" --equality_mode=exact
 }
-pjrt() { JAX_PLATFORMS=cpu nice -n 19 "$PYTHON" "$D/pjrt-oracle.py" "$@" 2>> "$B/pjrt.stderr"; }
+pjrt() { PJRT_ORACLE_PLATFORM=cpu nice -n 19 "$PYTHON" "$D/pjrt-oracle.py" "$@" 2>> "$B/pjrt.stderr"; }
 otype() { case "$1" in i32) echo int ;; ui32) echo uint ;; i64) echo long ;; *) echo - ;; esac; }
 
 i=0

@@ -13,7 +13,10 @@
 import os
 import sys
 
-os.environ["JAX_PLATFORMS"] = "cpu"
+# PJRT_ORACLE_PLATFORM selects the PJRT client: cpu (default, this gate) or tpu
+# (a Cloud TPU VM with libtpu; the TPU receipt path, NOT_RUN so far).
+PLATFORM = os.environ.get("PJRT_ORACLE_PLATFORM", "cpu")
+os.environ["JAX_PLATFORMS"] = PLATFORM
 
 TYPES = {
     "i8": "int8", "i16": "int16", "i32": "int32", "i64": "int64",
@@ -55,7 +58,7 @@ def main(argv):
     except ValueError as exc:
         print(f"BAD_ARGUMENT {exc}", file=sys.stderr)
         return 4
-    devices = jax.devices("cpu")
+    devices = jax.devices(PLATFORM)
     client = devices[0].client
     print(f"PJRT jax={jax.__version__} jaxlib={jaxlib.__version__} "
           f"platform={client.platform} platform_version={client.platform_version}")

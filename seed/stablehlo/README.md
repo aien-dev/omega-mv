@@ -95,8 +95,8 @@ which only libtpu can lower). Everything below that is inside libtpu.
    Google Cloud account and acceptance of Google's terms; libtpu ships on the VM.
 2. Copy `build/seed/stablehlo/case-*.mlir` (made here, sha256 values from the gate output) to the VM.
    Do not regenerate them there.
-3. Run `pjrt-oracle.py` unchanged except for the platform: the same `client.compile_and_load` on the
-   TPU PJRT client (`JAX_PLATFORMS=tpu`), with the `cases.tsv` inputs and expected vectors.
+3. Run `pjrt-oracle.py` unchanged with `PJRT_ORACLE_PLATFORM=tpu`: the same `client.compile_and_load` on the
+   TPU PJRT client, with the `cases.tsv` inputs and expected vectors.
 4. Record the libtpu version, TPU generation, module sha256 values and output. Even then the label is
    "EXERCISED on TPU via closed libtpu": the kernel code below StableHLO is Google's, not Omega's.
 
