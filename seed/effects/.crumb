@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T20:09:56Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:6daab092ce88654e33ea0596ff6dac29af248ccf2fe8029b18577838727d7f3b",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 8,
+      "generated_at_commit": "d6a2afa8774695dc713c52285b28d9fe51ce5822",
+      "source_tree": "sha256:1669150a820f50c19595dd21f36ddb55c815354827eb89d8c86d38e71ad77a65"
+    }
+  },
+  "layer": "seed",
+  "name": "effects",
+  "purpose": "Effect-derived capability manifest in seeded Omega: host-word manifest, ELF syscall check, seccomp cBPF, with probe-parity, strace and bwrap oracle gate",
+  "schema_version": "1.0.0"
+}
