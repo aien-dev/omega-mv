@@ -499,7 +499,7 @@ kl = dhexf kia 0
 dspace
 pl = dhexf pt 0
 dspace
-cl = dhexf ex 0
+if ne gcm_chk or kl 0x11000 add kl 1 16 0
 deor
 if eq get st 3 1
 ret 2

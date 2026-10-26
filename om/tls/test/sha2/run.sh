@@ -74,7 +74,7 @@ detected() {
 		fi
 	fi
 	if [ "$ok" -eq 1 ]; then
-		say "PASS $1: detected ($(grep -c '^FAIL\|^BAD' "$out/$1.out") failure lines; $last)"
+		say "PASS $1: detected ($(grep -c '^MISMATCH\|^BAD' "$out/$1.out") failure lines; $last)"
 		return 0
 	fi
 	fail "$1: not detected: exit $rc: $last"

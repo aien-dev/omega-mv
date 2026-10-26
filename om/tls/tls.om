@@ -1768,15 +1768,13 @@ end
 note ---- DNS A lookup (RFC 1035) over UDP to the first IPv4 nameserver in /etc/resolv.conf ----
 note Only A records (IPv4). The first A record of class IN in the answer section is used.
 note Response checks: id, QR, opcode 0, RCODE 0, TC clear, one question equal to ours.
-const DNBUF ulong 4096
 
-note parse dotted IPv4 at b[o..z) into ip[0..4); 1 on success
-fn dns_ip4 b view uchar * o ulong z ulong ip edit uchar * to ulong
+note parse a dotted IPv4 address (all of b) into ip[0..4); 1 on success
+fn dns_ip4 b view uchar * ip edit uchar * to ulong
 k = ulong 0
 v = ulong 0
 dg = ulong 0
-p = o
-while lt p z bound 64
+for p ulong len b
 ch = ulong get b p
 if and ge ch 48 le ch 57
 v = add mul v 10 sub ch 48
@@ -1793,7 +1791,6 @@ k = add k 1
 v = 0
 dg = 0
 end
-p = add p 1
 end
 if or ne k 3 eq dg 0
 ret 0
@@ -1848,7 +1845,7 @@ q = p
 while and lt q e and ne get b q 32 and ne get b q 9 ne get b q 13 bound 4096
 q = add q 1
 end
-ret dns_ip4 b p q ip
+ret dns_ip4 part b p sub q p ip
 end
 
 note query for hn type A at q[0..); returns its length (0 when hn is not a valid name)

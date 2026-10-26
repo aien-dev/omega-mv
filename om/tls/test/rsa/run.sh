@@ -109,6 +109,7 @@ for f in "$vec"/wycheproof/*.txt; do
 done
 run "$out/driver" "$vec/edge.txt" edge
 run "$out/driver" "$vec/pyca_gen.txt" pyca_gen
+run "$out/driver" "$vec/fuzz.txt" fuzz
 
 while IFS= read -r l; do
 	case "$l" in '#'*) ;; *) echo "NOT_RUN $l" ;; esac
@@ -155,4 +156,5 @@ if [ "$fail" -ne 0 ] || [ "$detected" -ne "$mutants" ]; then
 	echo "RSA FAIL vectors=$cases (wycheproof=$wcases) mutants=$detected/$mutants"
 	exit 1
 fi
-echo "RSA PASS vectors=$cases (wycheproof=$wcases $split controls=$ctrls) mutants=$detected/$mutants"
+echo "CONTROLS flipped-signature-byte controls=$ctrls (all refused)"
+echo "RSA PASS vectors=$cases (wycheproof=$wcases) mutants=$detected/$mutants"

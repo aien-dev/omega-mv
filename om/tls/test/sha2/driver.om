@@ -14,7 +14,7 @@ note   P alg SALT IKM PRK        hkdf_extract (1 check)
 note   X alg SALT IKM INFO L OKM V   hkdf_extract then hkdf_expand to L bytes; V 1 = returns 0 and
 note                             OKM matches, then one OKM byte flipped must not match (2 checks);
 note                             V 0 = hkdf_expand must refuse (nonzero, 1 check)
-note Lines that are empty or start with # are skipped. Prints "FAIL line L" (wrong result) or
+note Lines that are empty or start with # are skipped. Prints "MISMATCH line L" (wrong result) or
 note "BAD line L" (malformed record), then "sha2 driver: C checks, F failed". Exit 0 only when F is 0
 note and C > 0; 1 otherwise; 2 when the input cannot be read or exceeds 8 MiB.
 
@@ -22,7 +22,7 @@ global inp uchar 8388608
 global st ulong 8
 global ob uchar 32
 global one uchar 1
-text tfail "FAIL line "
+text tfail "MISMATCH line "
 text tbad "BAD line "
 text tsum "sha2 driver: "
 text tchk " checks, "
