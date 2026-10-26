@@ -1,0 +1,66 @@
+HOST_BUILD cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 flags=-std=c11 -O2 -Wall -Wextra -Werror -I/tmp/spirv-tools-root/root/usr/include libs=-L/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu -Wl,-rpath,/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu -lOpenCL
+SOURCE 4ad014ed3342e202e4fdb1d31b38b8e6f2e0a117
+COMPILER seed/out/omc sha256=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+VALIDATOR /tmp/spirv-tools-root/root/usr/bin/spirv-val SPIRV-Tools v2025.1 unknown hash, 2026-05-13T06:03:38+00:00 Targets:   SPIR-V 1.0   SPIR-V 1.1   SPIR-V 1.2   SPIR-V 1.3   SPIR-V 1.4   SPIR-V 1.5   SPIR-V 1.6   SPIR-V 1.2 (under OpenCL 2.2 Full Profile semantics)   SPIR-V 1.0 (under Vulkan 1.0 semantics)   SPIR-V 1.3 (under Vulkan 1.1 semantics)   SPIR-V 1.4 (under Vulkan 1.1 semantics)   SPIR-V 1.5 (under Vulkan 1.2 semantics)   SPIR-V 1.6 (under Vulkan 1.3 semantics) SPIR-V 1.6 (under Vulkan 1.4 semantics) 
+OPENCL_HOST build/seed/spirv/opencl-host sha256=7937e90217b8fc2f3604539fc686138caf82f9aca0b9dd3eff06f7f0940f72b9
+ORACLE Python 3.12.3 parity.py sha256=50fd9259189906d8a5e89a4fc457fee46d82de30778b886cfcacde50e2754417
+RUNTIME_CONFIG POCL_LIBRARY=/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0 inherited_vendor_and_layer_discovery=overridden
+PLATFORM Linux 7.0.0-1019-nvidia aarch64
+PASS dev01 deterministic spirv-val=opencl2.1
+PASS dev02 deterministic spirv-val=opencl2.1
+PASS dev03 deterministic spirv-val=opencl2.1
+PASS dev04 deterministic spirv-val=opencl2.1
+PASS dev05 deterministic spirv-val=opencl2.1
+PASS dev06 deterministic spirv-val=opencl2.1
+PASS dev07 deterministic spirv-val=opencl2.1
+PASS dev08 deterministic spirv-val=opencl2.1
+PASS dev09 deterministic spirv-val=opencl2.1
+PASS dev10 deterministic spirv-val=opencl2.1
+PASS control deterministic spirv-val=opencl2.1
+PASS integers deterministic spirv-val=opencl2.1
+PASS mutant deterministic spirv-val=opencl2.1
+PASS demo deterministic spirv-val=opencl2.1
+PASS traps deterministic spirv-val=opencl2.1
+PASS host controls: inherited discovery ignored; unconfigured and missing fixed library fail closed
+PASS native dumps cases=129 traps=29 demo=3
+PASS add-to-sub mutant module emitted and accepted by spirv-val
+PASS spirv-val rejects truncated module (negative control)
+PASS parity cases=129 units=13 traps=29 matches=129; every kernel exercised; table build/seed/spirv/case-spirv-parity.tsv
+PASS add-to-sub IR-byte mutant executes successfully and computes 19-7=12
+RUNTIME opencl-host: library=/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0 POCL_DEVICES=cpu layers=disabled opencl-host: platform=Portable Computing Language version="OpenCL 3.0 PoCL 7.2  Linux, Release, RELOC, SPIR-V, LLVM 18.1.3, SLEEF, POCL_DEBUG" opencl-host: il="SPIR-V_1.4 SPIR-V_1.3 SPIR-V_1.2 SPIR-V_1.1 SPIR-V_1.0" device=cpu-cortex-a720-0xd87 device-version="OpenCL 3.0 PoCL HSTR: cpu-aarch64-unknown-linux-gnu-cortex-a720" driver=7.2 cpu-devices=1 host-cc="13.3.0" 
+PASS parity cases=3 units=1 traps=0 matches=3; every kernel exercised; table build/seed/spirv/demo-case-spirv-parity.tsv
+PASS parity cases=8 units=1 traps=4 matches=8; every kernel exercised; table build/seed/spirv/regression-case-spirv-parity.tsv
+result mismatch at case 127 mutant.mutadd: native 26/0 spirv 12/0
+FAIL parity mismatches=1 of cases=129; table build/seed/spirv/case-mutant-parity.tsv
+PASS parity checker rejects successfully executed mutant substituted as baseline (exit 1)
+PASS bad-magic MAGIC exit=20 stdout=empty
+PASS version2 VERSION exit=21 stdout=empty
+PASS version6 VERSION exit=21 stdout=empty
+PASS unsupported-op UNSUPPORTED_OP exit=24 stdout=empty
+PASS unknown-op UNSUPPORTED_OP exit=24 stdout=empty
+PASS unsupported-tag UNSUPPORTED_TAG exit=25 stdout=empty
+PASS unknown-tag UNSUPPORTED_TAG exit=25 stdout=empty
+PASS bad-register INVALID exit=26 stdout=empty
+PASS undefined-register INVALID exit=26 stdout=empty
+PASS nonascii-name INVALID exit=26 stdout=empty
+PASS oversized-count CAPACITY exit=23 stdout=empty
+PASS truncated TRUNCATED exit=22 stdout=empty
+PASS empty TRUNCATED exit=22 stdout=empty
+PASS trailing TRAILING exit=27 stdout=empty
+PASS oversized CAPACITY exit=23 stdout=empty
+PASS zero-functions INVALID exit=26 stdout=empty
+PASS reordered CFG 0->2->1 deterministic validated CPU result=0 status=0
+SUPPLEMENTAL nested_trap_cases=8 reordered_cfg=1
+SUMMARY cases=129 matched=129 traps=29 modules=16 deterministic=16 validated=17 validator_negative=rejected mutant=rejected refusals=16 demo=3
+PASS IRSPIRV CPU OpenCL parity cases=129 deterministic=16 validated=17 refusals=16
+8bbb2a7add58710a6ea7d73801cfe2b05d132c1d5f5048f01c46a1471869cabd  seed/spirv/irspirv.om
+66d2067848244e5a2cebc37941d9d5ebc2ae30f5641068afe39e35026163573b  build/seed/spirv/irspirv
+2dd4e85a29dae5bc058f6746da94f2a2ab72d7cbe2445a893852b4f24bfe0337  seed/spirv/gate-irspirv.sh
+f184e32f7bd6bbf3e5284861a337f178f2bdb8ee4662473cc0f1ad4fac1be6e3  seed/wasm/cases.tsv
+aaf6a0e6bc6e1b5b4119fb0f9b8b9a31ee61c41e4adf68aa12e57b42db6a76c0  seed/spirv/demo.tsv
+d0985b6466d2b0a0d9b6bb2187606335fdecba28973d9ac24be4f0167e9d0de0  seed/spirv/regression.tsv
+e90ac20ccef2c24e7e0c912a7c768610fb2791c393c9ef239b0108d2cee470c0  seed/spirv/demo.unit.om
+0419a9380955e1199e9927412cdbde107b081243da2345f0cc77900ce641554e  seed/spirv/traps.unit.om
+50fd9259189906d8a5e89a4fc457fee46d82de30778b886cfcacde50e2754417  seed/spirv/parity.py
+3ed2b4f16964e100b6cdec6011df02b80a7b78313bde13c72643a729133178f1  seed/spirv/opencl-host.c
+7937e90217b8fc2f3604539fc686138caf82f9aca0b9dd3eff06f7f0940f72b9  build/seed/spirv/opencl-host
