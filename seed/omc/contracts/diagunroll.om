@@ -1,0 +1,7 @@
+om2 diag
+fn main to int
+for i uint 1 unroll
+invariant eq i 0
+end
+ret 0
+end
