@@ -314,6 +314,7 @@ The following instructions are appended; every operand below is u16:
 | 30 | RLOAD | destination register, region ID, index register |
 | 31 | RSTORE | region ID, index register, source register |
 | 32 | BITCAST | destination register, source register |
+| 33 | RINIT | region ID, initializer register |
 
 RLOAD's destination and RSTORE's source have exactly the region element type.
 Indices have an integer tag 2..9, never bool or float. Signed negative indices
@@ -339,6 +340,17 @@ existing layout. Loads/stores preserve little-endian scalar bits.
 BITCAST requires equal scalar widths, excludes bool and references, and
 reinterprets bits without numeric conversion. Unsupported combinations are
 invalid IR.
+
+RINIT is valid only for a function-local region owned by the current
+function; its initializer register has exactly the element type and must
+be definitely assigned. It fills every element with that scalar value.
+An initialization bit for each local region starts false at function entry;
+RINIT sets it true. Control-flow joins intersect these bits, and both
+RLOAD and RSTORE require the target local region's bit to be true.
+Thus declaration-time initialization is explicit, and the validator need
+not prove that an arbitrary loop of stores fills the entire region.
+Repeating RINIT is well-defined and resets the whole region; it does not
+allocate a second region or expose previous contents.
 
 ### 10.3 Floating-point types and canonical version selection
 
@@ -374,6 +386,9 @@ byte offset; local arrays have no exported address. Source names cannot
 contain the dot separator. Consumers use a typed view of exported memory
 and call exported scalar functions once per frame. There are no imports,
 WASI calls, implicit rendering loop, or allocation through JavaScript.
+All computed export names must be unique, including `memory`, function
+names and `region.NAME`; a collision is INVALID rather than an invalid wasm
+module emitted for a JavaScript engine to diagnose later.
 
 Wasm traps are `WebAssembly.RuntimeError`; MVP does not preserve numeric
 Omega trap codes. A producer reports ordinary source errors: 7 type
