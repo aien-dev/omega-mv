@@ -2,7 +2,7 @@ note seed/net/https.om -- HTTPS transport for http.om: the TLS 1.3 client of om/
 note the transport boundary (hrecvio, hrecvd, hsendio dispatch here when HXPORT is 1).
 note Library unit: no `om2` line, no `fn main`, no globals. Compose the om/tls units, http.om and
 note this file (in that order) in front of the application:
-note   { printf 'om2\n'; for u in sha2 hkdf x25519 chacha aesgcm ec rsa x509 tls; do cat om/tls/$u.om; done
+note   { printf 'om2\n'; for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do cat om/tls/$u.om; done
 note     cat seed/net/http.om seed/net/https.om app.om; } | seed/out/omc > app
 note A program without TLS composes seed/net/notls.om instead (same three function names, HENOSUP).
 note
@@ -18,7 +18,7 @@ note   r  = htlsinit cs io host          lay out the transport region, SNI and c
 note   r  = htlsconn cs io st            handshake (tls_connect) under the handshake budget
 note   ... hreqst / hhend / hwfin / hrsprd / hbodyrd as over TCP ...
 note   htlsend cs io                     close_notify, wipe the keys, close fd
-note Results: TLS error code e (tls_errname) is returned as HETLS - e (-601 .. -631);
+note Results: TLS error code e (tls_errname) is returned as HETLS - e (-601 .. -632);
 note TLS_ERR_TIMEOUT is HETIME. A TCP end of stream without close_notify is an error (HETLS - 4,
 note truncation), never a clean end; only close_notify gives 0 from the reads.
 note

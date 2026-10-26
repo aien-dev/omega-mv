@@ -38,7 +38,7 @@ A program that speaks HTTPS composes the om/tls units and `https.om` instead of 
 
 ```sh
 { printf 'om2\n'
-  for u in sha2 hkdf x25519 chacha aesgcm ec rsa x509 tls; do cat om/tls/$u.om; done
+  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do cat om/tls/$u.om; done
   cat seed/net/http.om seed/net/https.om app.om; } | seed/out/omc > app
 ```
 
@@ -178,7 +178,7 @@ ALPN `http/1.1`; `htlsconn cs io st` runs the handshake against the trust store 
 (`TLSTSZ` bytes filled by `tls_store` or `tls_storef`); the request and response functions
 then work unchanged; `htlsend cs io` sends close_notify, wipes the keys and closes the
 descriptor (`hclose` alone closes the socket without either). A TLS result `e` comes back as
-`HETLS - e` (-601 .. -631, names in `tls_errname`), a TLS deadline as `HETIME`. A TCP end of
+`HETLS - e` (-601 .. -632, names in `tls_errname`), a TLS deadline as `HETIME`. A TCP end of
 stream without close_notify is `HETLS - 4` (truncation), never a clean end of a body.
 `tests/https.om` is the reference caller.
 

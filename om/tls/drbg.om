@@ -1,0 +1,239 @@
+note SPDX-License-Identifier: Apache-2.0
+note drbg.om: HMAC_DRBG with HMAC-SHA-256 (NIST SP 800-90A Rev. 1 section 10.1.2), security
+note strength 256 bits. Library unit: no main, no mutable globals, no I/O and no entropy access of its
+note own; the caller (fips.om) gathers entropy input and nonce from getrandom, runs the SP 800-90B
+note health tests on them and passes the concatenated seed material in. Needs sha2.om and hkdf.om
+note composed before it (om/tls/build.sh). Tested against the ACVP/CAVP HMAC_DRBG test methods
+note (test/drbg/run.sh); not NIST-validated.
+note
+note State st (a caller-owned uchar array of DRSZ bytes, zeroed = not instantiated):
+note   st[0..32)   K                  st[32..64)  V
+note   st[64..72)  reseed_counter (little-endian)
+note   st[72..80)  reseed_interval (little-endian; 0 = DRRSMX = 2^48, SP 800-90A Table 2)
+note   st[80]      1 instantiated     st[81] 1 error state (stuck output seen; only drbg_wipe clears)
+note   st[82]      1 a previous output fingerprint is held
+note   st[88..104) fingerprint of the previous output block: the first 16 bytes of SHA-256(block),
+note               so the continuous check holds no output bytes (a 2^-128 false-alarm chance)
+note Every function runs the same instructions for every value of K and V: the only branches are on
+note lengths, flags and the counter, all public. HMAC contexts and temporaries are wiped before return.
+note
+note Return codes: 0 ok; 1 reseed required (reseed_counter > reseed_interval; generate refused, no
+note output); 2 not instantiated; 3 bad length (seed material under DRMINSM / DRMINRS bytes, a request
+note over DRMAXRQ bytes, or a reseed interval outside 1..DRRSMX); 4 error state (a generated block
+note equalled the previous one; output zeroed; state stays refused until drbg_wipe).
+
+const DRSZ ulong 128
+const DRCTR ulong 64
+const DRLIM ulong 72
+const DRFL ulong 80
+const DRERR ulong 81
+const DRHAVE ulong 82
+const DRFP ulong 88
+const DRRSMX ulong 281474976710656
+const DRMAXRQ ulong 65536
+const DRMINSM ulong 48
+const DRMINRS ulong 32
+
+fn drbg_rd st view uchar * o ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get st add o i mul i 8
+end
+ret v
+end
+
+fn drbg_wr st edit uchar * o ulong v ulong to void
+for i ulong 8
+put st add o i uchar and shr v mul i 8 255
+end
+end
+
+fn drbg_zx x edit ulong * to void
+for i ulong len x
+put x i 0
+end
+end
+
+fn drbg_zb x edit uchar * to void
+for i ulong len x
+put x i 0
+end
+end
+
+note V = HMAC(K, V) using the scratch context x
+fn drbg_next st edit uchar * x edit ulong * to void
+hmac_init 256 x part st 0 32
+hmac_update x part st 32 32
+n = hmac_final x part st 32 32
+end
+
+note HMAC_DRBG_Update (10.1.2.2): K = HMAC(K, V || 0x00 || pd), V = HMAC(K, V); when pd is not empty
+note again with 0x01. Empty pd is the standard's Null input.
+fn drbg_upd st edit uchar * pd view uchar * to void
+x = new ulong 96 0
+b = new uchar 1 0
+for r ulong 2
+if eq r 1
+if eq len pd 0
+break
+end
+end
+put b 0 uchar r
+hmac_init 256 x part st 0 32
+hmac_update x part st 32 32
+hmac_update x b
+hmac_update x pd
+n = hmac_final x part st 0 32
+drbg_next st x
+end
+drbg_zx x
+end
+
+note Instantiate (10.1.2.3): sm = entropy_input || nonce || personalization_string. K = 0x00..,
+note V = 0x01.., Update(sm), reseed_counter = 1. The reseed interval and error state are reset.
+fn drbg_inst st edit uchar * sm view uchar * to ulong
+if lt len st DRSZ
+ret 3
+end
+if lt len sm DRMINSM
+ret 3
+end
+drbg_zb part st 0 DRSZ
+for i ulong 32
+put st add 32 i 1
+end
+drbg_upd st sm
+drbg_wr st DRCTR 1
+put st DRFL 1
+ret 0
+end
+
+note Reseed (10.1.2.4): sm = entropy_input || additional_input. Update(sm), reseed_counter = 1.
+fn drbg_reseed st edit uchar * sm view uchar * to ulong
+if lt len st DRSZ
+ret 3
+end
+if ne get st DRFL 1
+ret 2
+end
+if eq get st DRERR 1
+ret 4
+end
+if lt len sm DRMINRS
+ret 3
+end
+drbg_upd st sm
+drbg_wr st DRCTR 1
+ret 0
+end
+
+note Lower the reseed interval (tests use it to reach the limit); 1 <= n <= DRRSMX.
+fn drbg_limit st edit uchar * n ulong to ulong
+if lt len st DRSZ
+ret 3
+end
+if eq n 0
+ret 3
+end
+if gt n DRRSMX
+ret 3
+end
+drbg_wr st DRLIM n
+ret 0
+end
+
+note continuous check on one fresh block V: 0 when it differs from the previous block, 4 when
+note equal (the error state is latched). Only the first 16 bytes of SHA-256(V) are kept.
+fn drbg_cont st edit uchar * to ulong
+c = new ulong 40 0
+f = new uchar 32 0
+sha256_init c
+sha256_update c part st 32 32
+sha256_final c f
+d = ulong 0
+for i ulong 16
+d = or d ulong xor get f i get st add DRFP i
+end
+h = ulong get st DRHAVE
+for i ulong 16
+put st add DRFP i get f i
+end
+put st DRHAVE 1
+drbg_zx c
+drbg_zb f
+if eq h 1
+if eq d 0
+put st DRERR 1
+ret 4
+end
+end
+ret 0
+end
+
+note dst[o..) gets V, at most 32 bytes; returns the next o
+fn drbg_cp st view uchar * dst edit uchar * o ulong to ulong
+k = sub len dst o
+if gt k 32
+k = 32
+end
+for i ulong k
+put dst add o i get st add 32 i
+end
+ret add o k
+end
+
+note fills dst with V = HMAC(K, V) blocks (10.1.2.5 step 4), running the continuous check on each;
+note returns 0, or 4 when a block repeated (the whole loop still runs)
+fn drbg_fill st edit uchar * dst edit uchar * to ulong
+x = new ulong 96 0
+o = ulong 0
+e = ulong 0
+while lt o len dst bound 2049
+drbg_next st x
+e = or e drbg_cont st
+o = drbg_cp st dst o
+end
+drbg_zx x
+ret e
+end
+
+note Generate (10.1.2.5): dst gets len dst bytes; ad = additional_input (empty = Null).
+fn drbg_gen st edit uchar * dst edit uchar * ad view uchar * to ulong
+if lt len st DRSZ
+ret 3
+end
+if ne get st DRFL 1
+ret 2
+end
+if eq get st DRERR 1
+drbg_zb dst
+ret 4
+end
+if gt len dst DRMAXRQ
+ret 3
+end
+lim = drbg_rd st DRLIM
+if eq lim 0
+lim = DRRSMX
+end
+ctr = drbg_rd st DRCTR
+if gt ctr lim
+ret 1
+end
+if gt len ad 0
+drbg_upd st ad
+end
+e = drbg_fill st dst
+if ne e 0
+drbg_zb dst
+ret 4
+end
+drbg_upd st ad
+drbg_wr st DRCTR add ctr 1
+ret 0
+end
+
+note Uninstantiate (10.1.2 / 9.4): zero the whole state, including the error state.
+fn drbg_wipe st edit uchar * to void
+drbg_zb st
+end

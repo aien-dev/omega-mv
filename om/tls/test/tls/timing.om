@@ -1,21 +1,29 @@
 note dudect-style timing driver (Reparaz, Balasch, Verbauwhede 2016): usage: timing WHAT N
-note WHAT: x25519 (scalar fixed vs random, base point fixed), chacha / aesgcm (key and nonce fixed
+note WHAT: x25519 (scalar fixed vs random, base point fixed), ecdh (P-256 ecdh_shared: scalar fixed
+note vs random, peer point fixed), chacha / aesgcm (key and nonce fixed
 note vs random, 1024-byte plaintext fixed), cteq (32-byte compare: equal vs random second input,
 note 2000 compares per measurement; exit 3 unless class 0 compares equal and class 1 does not),
 note hkdf (HKDF-SHA256 extract with a fixed 32-byte salt and a fixed vs random 32-byte IKM, then
-note expand of the PRK to 32 bytes).
+note expand of the PRK to 32 bytes), and from fips.om: health (256 samples through the RCT/APT
+note fips_ht), drbg (HMAC_DRBG instantiated from fixed vs random 48-byte seed material outside the
+note window, one 64-byte drbg_gen timed), pct (X25519 pairwise consistency test fips_pctx with a
+note fixed vs random private key, its public key computed outside the window).
 note Classes are balanced and randomly interleaved: exactly N/2 fixed (class 0) and N - N/2 random
 note (class 1) measurements, the order a uniformly random arrangement drawn sample by sample
 note (selection sampling: class 1 with probability ones-left / total-left, from 8 getrandom bytes).
 note Each measurement prepares its input, times one operation with monons and prints
 note "CLASS NANOSECONDS". Statistics (Welch's t-test) are computed outside the driver.
 note Exit 0; 2 on a usage error; 3 when an operation reports an error.
-text tusage "usage: timing x25519|chacha|aesgcm|cteq|hkdf N\n"
+text tusage "usage: timing x25519|ecdh|chacha|aesgcm|cteq|hkdf|health|drbg|pct N\n"
 text tx "x25519"
+text te "ecdh"
 text tc "chacha"
 text ta "aesgcm"
 text tq "cteq"
 text th "hkdf"
+text tl "health"
+text td "drbg"
+text tp "pct"
 
 fn tm_arg i ulong a edit uchar * to ulong
 n = argread i a 0 len a
@@ -154,6 +162,45 @@ end
 ret 0
 end
 
+note P-256 ECDH: the peer point is 7*G (ecdh_pub of the scalar 7, public); a random-class scalar
+note outside [1, n-1] (probability below 2^-31) is code 4 and still a valid sample
+note one timed P-256 ecdh_shared with the scalar in k; returns nanoseconds + 1, 0 on an error
+fn tm_ec1 k view uchar * p view uchar * to ulong
+z = new uchar 32 0
+t0 = monons
+e = ecdh_shared k p z
+t1 = monons
+if and ne e 0 ne e 4
+ret 0
+end
+ret add ulong sub t1 t0 1
+end
+
+fn tm_ecdh n ulong o edit uchar * to ulong
+k = new uchar 32 0
+p = new uchar 65 0
+c = new uchar 8 0
+cs = new ulong 2 0
+tm_init cs n
+put k 31 7
+if ne ecdh_pub k p 0
+ret 3
+end
+for i ulong n
+cls = tm_pick c cs
+if ne tm_fill k 32 cls 0
+ret 3
+end
+d = tm_ec1 k p
+if eq d 0
+ret 3
+end
+m = tm_line cls sub d 1 o
+w = write 1 o 0 m
+end
+ret 0
+end
+
 fn tm_pt buf edit uchar * to void
 for j ulong len buf
 put buf j uchar rem j 251
@@ -261,6 +308,78 @@ end
 ret 0
 end
 
+fn tm_health n ulong o edit uchar * to ulong
+b = new uchar 256 0
+c = new uchar 8 0
+cs = new ulong 2 0
+tm_init cs n
+for i ulong n
+cls = tm_pick c cs
+if ne tm_fill b 256 cls 0
+ret 3
+end
+t0 = monons
+for j ulong 256
+fips_ht ulong get b j
+end
+t1 = monons
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn tm_drbg n ulong o edit uchar * to ulong
+st = new uchar 128 0
+sm = new uchar 48 0
+b = new uchar 64 0
+c = new uchar 8 0
+cs = new ulong 2 0
+tm_init cs n
+for i ulong n
+cls = tm_pick c cs
+if ne tm_fill sm 48 cls 0
+ret 3
+end
+if ne drbg_inst st sm 0
+ret 3
+end
+t0 = monons
+e = drbg_gen st b part c 0 0
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+drbg_wipe st
+ret 0
+end
+
+fn tm_pct n ulong o edit uchar * to ulong
+k = new uchar 32 0
+q = new uchar 32 0
+c = new uchar 8 0
+cs = new ulong 2 0
+tm_init cs n
+for i ulong n
+cls = tm_pick c cs
+if ne tm_fill k 32 cls 0
+ret 3
+end
+if ne x25519_base q k 0
+ret 3
+end
+t0 = monons
+e = fips_pctx k q
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
 fn main to int
 a = new uchar 64 0
 o = new uchar 64 0
@@ -288,6 +407,18 @@ ret int tm_cteq n o
 end
 if eq tm_is a wl th 1
 ret int tm_hkdf n o
+end
+if eq tm_is a wl tl 1
+ret int tm_health n o
+end
+if eq tm_is a wl td 1
+ret int tm_drbg n o
+end
+if eq tm_is a wl tp 1
+ret int tm_pct n o
+end
+if eq tm_is a wl te 1
+ret int tm_ecdh n o
 end
 w = write 2 tusage 0 len tusage
 ret 2
