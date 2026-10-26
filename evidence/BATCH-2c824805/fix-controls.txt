@@ -1,0 +1,36 @@
+Observed 2026-10-26 on the arm64 host, in this order, during #815 development. This is tool output transcribed from the session; the source text was the committed fixture.
+
+Encoding oracle: GNU as + objdump -d. Each line is the observed word and its disassembly:
+1e380003 fcvtzs w3, s0
+93407c63 sxtw x3, w3
+9e380003 fcvtzs x3, s0
+1e390003 fcvtzu w3, s0
+1e790003 fcvtzu w3, d0
+9e390003 fcvtzu x3, s0
+9e790003 fcvtzu x3, d0
+7ea1b800 fcvtzu s0, s0
+7ee1b800 fcvtzu d0, d0
+5ea1b800 fcvtzs s0, s0
+5ee1b800 fcvtzs d0, d0
+7ea14800 uqxtn s0, d0
+7e614800 uqxtn h0, s0
+7e214800 uqxtn b0, h0
+5ea14800 sqxtn s0, d0
+5e614800 sqxtn h0, s0
+5e214800 sqxtn b0, h0
+1e260003 fmov w3, s0
+93401c63 sxtb x3, w3
+93403c63 sxth x3, w3
+Decimal values (register fields zeroed), from WolframLanguageEvaluator FromDigits[#,16]:
+507052032 511246336 2654535680 2658729984 2124527616 2128721920 1587656704 1591851008 2124498944 2120304640 2116110336 1587628032 1583433728 1579239424 505806848 2470452224 2470460416 506986496 2470476800
+
+convert_sat.om (gate8 fixture):
+  pre-fix compiler (integ/omc-batch2 seed before #815): compile rc 0, run exit 1 (check 1: uchar 300.0 != 255)
+  post-fix candidate 2c824805: compile rc 0, run exit 0
+
+const_order (gate16 row):
+  189ada82 / pre-fix seed: "omc: line 6: error 16", rc 16
+  post-fix candidate 2c824805: compile rc 0; gate16 reports 19 constant programs PASS (expected exit 12)
+  The OmegaNet.Json repro (om2; const kk; fn a; const k2; fn b naming kk): pre-fix "line 7: error 16"; post-fix rc 0.
+
+Known coverage gap: convert_sat runs f32 sources only for uchar, uint, byte and short. f32 to ushort/int/ulong/long uses encodings that were checked by the oracle above but were not executed.
