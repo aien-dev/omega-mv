@@ -640,7 +640,7 @@ section lists what omc implements of it. Fixtures, expected results and compiled
 meaning and, for the C2 manifest, its exact output bytes or error.
 
 - **Opt-in.** Leading blank lines and `note` lines are skipped; when the next line is exactly `om2`,
-  `om2 diag` or `om2 fmt` (no other bytes on it) the unit is OM-2. Any other line leaves the unit OM-1,
+  `om2 diag`, `om2 fmt` or `om2 query` (no other bytes on it) the unit is OM-2. Any other line leaves the unit OM-1,
   where the `om2` line itself is error 16 as before. The words of this section are reserved only in an
   OM-2 unit: `rotr rotl unroll inline fresh abstract seal open holds layout field at little big part out
   export ops`. Using one as a name there is error 16; an OM-1 unit keeps them as ordinary names.
@@ -666,6 +666,29 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   where it is kept; no blanks at a line end; a whitespace-only line empty; one LF after the last line. A
   CR anywhere and blank lines at the end are error 6. fmt never adds or removes a line, is idempotent,
   and compile(fmt(x)) is byte-identical to compile(x).
+- **`om2 query`.** Only when the input's first line, at byte 0, is `om2 query` (error 16 elsewhere, in
+  an `om2 fmt` rest included, and when the rest starts with `om2 fmt` or `om2 query`). The rest is compiled as a unit of its own
+  as for `om2 fmt`; errors are reported against the whole input. A rest with no `??` line compiles and
+  writes exactly the program the rest alone writes. When one line of the rest is only `??` (blanks
+  around it allowed) and the compiler reaches it in statement position, nothing else is compiled: stdout
+  gets one JSON line and the exit is 0:
+  `{"hole":{"line":L,"kind":"statement","fn_line":F,"depth":D},"scope":[...],"fns":[...],"obligations":
+  {"function":"...","open":[...],"regs_free":R,"contracts":[...],"effects":[...]}}`. Lines count from 1
+  at the first line of the rest. `scope` is every visible name (a shadowed one is left out) in name-table
+  (declaration) order, as `{"name","type"}` plus `"writable":true` for a global pool, a `new` array or an
+  `edit`/`out` parameter; `type` is the base type with `[]` for an array, `struct` or `abstract` for
+  those names. `fns` is every function line of the unit in source order (omc reads the function lines
+  before the bodies). `open` lists the open blocks
+  innermost first (`if`, `else`, `while`, `for`, `inline`) and ends with `fn`; `depth` is their count.
+  `regs_free` is 16 minus parameter and held registers. `contracts` are the function's `requires`/
+  `ensures` lines and the `invariant` lines of open loops, outermost first. `effects` lists each host word
+  the function used before the hole as `word:class` (`io fs net proc env clock random device`), once, in
+  first-use order, host words in inlined callees included. Two `??` lines write
+  `{"error":"more than one ?? hole"}` and a `??` outside a function writes
+  `{"error":"the hole is not inside a function"}`, both with exit 1. A `??` in value position is the
+  usual compile error. The key names and shapes are those of the black-box oracle `seed/query/omq.om`;
+  `seed/omc/gate19.sh` compares them on its statement-hole cases. Without the lead line `??` is refused
+  as before (error 4 in a statement, error 3 as a value, error 16 at the top level).
 - **Rotate.** `rotr x n` and `rotl x n`: x and n of one unsigned type (uchar, ushort, uint, ulong; else
   error 7), the result x's type. n outside 0..w-1 traps 7 at run time, a number n included. uint/ulong
   with a number n give one `ROR` (immediate, EXTR); otherwise the amount check, then `RORV` (rotl through

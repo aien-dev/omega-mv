@@ -956,6 +956,32 @@ keep their error 9 at the line that uses them.
 - `seed/omc/omc.om`, 11,131 lines and 379 functions. The committed `seed/out/omc` is not refreshed in
   this change; the integration owner reseeds once per batch.
 
+## Rung R52: om2 query, the white-box hole interface
+
+A unit whose first line, at byte 0, is `om2 query` is compiled like an `om2 fmt` rest. When one line of
+the rest is only `??` and the compiler reaches it as a statement, omc writes one JSON line instead of
+a program: the visible names with types and writability, the function lines, the open blocks
+innermost first, the free registers, the contracts in force and the host-word effects used so far
+(`docs/one_layer/OMEGESE.md` 9.13). The key names and shapes are those of the black-box oracle
+`seed/query/omq.om` (#838), so an agent can switch from the oracle to the compiler without a new
+parser. Names are read only through `nm_name`/`findname`, so the 63-byte name change (#837) needs no
+edit here.
+
+- `gate19` compares five statement holes with omq's goldens (hole, scope, fns, obligations), runs a
+  negative control (a dropped scope name must fail), the two error objects, seven rows proving `??`
+  without the lead keeps its old refusal code and line, a no-hole unit whose output equals the program
+  alone, and four lead-placement refusals. Against the previous compiler (`2c824805…`) it fails at
+  `arr_call` with error 16.
+- Off the query path the output is unchanged on what was checked: the 811 tracked `.om` files give the
+  same bytes, stderr and exit under both compilers, and the frozen C2 manifest gives the same verdict
+  and output digest on all 5,876 cases (the six declared failures included).
+- Where the two disagree on other holes, the compiler is the reference: omq leaves out names declared
+  by a first assignment to a non-function word and struct names, prints an empty type for some arrays,
+  takes a variable named `export` for a function line, counts effects over the whole function with
+  repeats, and probes free registers of an inline function at its call site.
+- `seed/omc/omc.om`, 12,676 lines and 424 functions. The committed `seed/out/omc` is not refreshed in
+  this change; the integration owner reseeds once per batch.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

@@ -1,0 +1,13 @@
+global cnt ulong 4
+fn sum a view uint 8 n ulong to ulong
+s = ulong 0
+for i ulong n
+??
+end
+ret s
+end
+fn main to int
+b = new uint 8 1
+t = sum b 8
+ret int t
+end

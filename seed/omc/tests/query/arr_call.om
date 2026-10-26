@@ -1,0 +1,11 @@
+fn fill a edit uint 64 n ulong to void
+put a 0 uint n
+end
+fn main to int
+b = new uchar 64 0
+s = new uint 8 0
+k = new uint 64 0
+v ulong 5
+??
+ret int v
+end

@@ -20,9 +20,10 @@ global out uchar 8388608
 global oc ulong 1
 
 note ---- OM-2 profile (spec/omegese-om2.md, OMEGESE.md 9.13). om2 is 1 in an OM-2 unit (its first line
-note that is not a note or blank is exactly om2, om2 diag or om2 fmt); om2m 0 compile, 1 diag, 2 fmt;
-note om2ln/om2pos the line number and offset of that line; fmtm 1 while a unit is formatted; lbase and
-note sbase shift reported lines and bytes back to the original input in fmt mode; tka/tkb the byte span of
+note that is not a note or blank is exactly om2, om2 diag, om2 fmt or om2 query); om2m 0 compile, 1 diag,
+note 2 fmt, 3 query; om2ln/om2pos the line number and offset of that line; fmtm 1 while a unit is
+note formatted; lbase and sbase shift reported lines and bytes back to the original input in fmt and query
+note mode; tka/tkb the byte span of
 note the last token; dexp what was being read (0 word 1 value 2 type 3 name 4 number 5 end 6 newline);
 note dsev 0 derived, 2 unknown (an undeclared function or struct), 3 error ----
 global om2 ulong 1
@@ -36,6 +37,17 @@ global tka ulong 1
 global tkb ulong 1
 global dexp ulong 1
 global dsev ulong 1
+note ---- om2 query: qmode 1 while the unit after an om2 query line is compiled; qel/qelp/qell the host
+note word codes function qefl used (qen of them, first use first) with the span of that first use; qcl
+note host word code -> effect class; qfst 1 before the first element of the open JSON list ----
+global qmode ulong 1
+global qefl ulong 1
+global qen ulong 1
+global qel ulong 256
+global qelp ulong 256
+global qell ulong 256
+global qcl uchar 256
+global qfst ulong 1
 
 note ---- executable contracts: OM-2 debug by default, release erases only validated pure predicates.
 note Function prefixes are replayed at returns with their declaration scope, including inline frames.
@@ -1413,6 +1425,11 @@ if ne lineis q 32771382692703599 7 0
 r = ulong 3
 end
 if eq r 0
+if ne qlead q 0
+r = ulong 4
+end
+end
+if eq r 0
 r = cp_mode q
 end
 end
@@ -1562,7 +1579,7 @@ put om2m 0 0
 put om2ln 0 0
 put fmtm 0 1
 om2lead
-if eq get om2m 0 2
+if ge get om2m 0 2
 put line 0 get om2ln 0
 put tka 0 get om2pos 0
 put tkb 0 get om2pos 0
@@ -2294,6 +2311,8 @@ global bnames ulong 512
 global bheld ulong 512
 global bdead ulong 512
 global nb ulong 1
+note bsrc: the input place where each block's body starts (after its head line), for om2 query
+global bsrc ulong 512
 global curfn ulong 1
 note ---- break fixups (1024): output offset of the branch, block index of the loop it leaves ----
 global brkpos ulong 1024
@@ -2670,6 +2689,7 @@ put bhead n head
 put breg n reg
 put btyp n ty
 put bdead n 0
+put bsrc n get cur 0
 put nb 0 add n 1
 fz_push n
 end
@@ -6181,6 +6201,7 @@ if or eq c 77 eq c 193
 fail 9
 end
 if or or and ge c 100 le c 177 eq c 197 and ge c 220 le c 222
+qefx c
 hostval c dst
 ret
 end
@@ -6225,6 +6246,7 @@ vdone 3 get nm_len sub e 1 5
 ret
 end
 if or eq c 53 eq c 54
+qefx c
 x = mul get depth 0 32
 put fr add x 8 get nslot 0
 rdval 0 8 255 0
@@ -6796,6 +6818,7 @@ end
 note s_exit: exit value (int): Linux exit (system call 93: MOVZ X8, #93, C6.2.285; SVC #0, C6.2.466); the
 note path ends. om4 S_EXIT.
 fn s_exit to void
+qefx 82
 rdval 0 8 255 0
 if ne get rt 0 8
 fail 7
@@ -8421,6 +8444,9 @@ ret 1
 end
 if ne k 1
 fail 16
+end
+if ne get qmode 0 0
+qhole
 end
 if ne get om2 0 0
 if eq get line 0 get om2ln 0
@@ -11985,6 +12011,613 @@ put cur 0 p
 put line 0 l
 end
 
+note ======== om2 query: the state held at a statement hole (OMEGESE.md 9.13) ========
+note qlead: 1 when the line at q is exactly om2 query (9 bytes, so om2 and the space are read byte by byte)
+fn qlead q ulong to ulong
+if gt add q 9 get inlen 0
+ret 0
+end
+if ne get inp q 111
+ret 0
+end
+if ne get inp add q 1 109
+ret 0
+end
+if ne get inp add q 2 50
+ret 0
+end
+if ne get inp add q 3 32
+ret 0
+end
+ret lineis add q 4 521610294641 5
+end
+
+note qprep: as fmtprep, the rest after the om2 query line is a unit of its own (OM-1 or OM-2 by its own
+note first line; om2 fmt or a second om2 query there is error 16); lines are reported against the whole
+note input. More than one line that is only ?? writes the error object and exits 1 before compiling.
+fn qprep to void
+if ne get om2pos 0 0
+put line 0 get om2ln 0
+put tka 0 get om2pos 0
+put tkb 0 get om2pos 0
+fail 16
+end
+e = get inlen 0
+r = skipln get om2pos 0
+put lbase 0 get om2ln 0
+put sbase 0 r
+n = sub e r
+j = ulong 0
+while lt j n
+put inp j get inp add r j
+j = add j 1
+end
+put inlen 0 n
+put om2 0 0
+put om2m 0 0
+put om2ln 0 0
+put qmode 0 1
+om2lead
+if or eq get om2m 0 2 eq get om2m 0 3
+put line 0 get om2ln 0
+put tka 0 get om2pos 0
+put tkb 0 get om2pos 0
+fail 16
+end
+qclinit
+if gt qholes 1
+put oc 0 0
+qs 2482168881970750075 8
+qs 8367799649824481850 8
+qs 2334393405426000232 8
+qs 2478506395681439551 8
+qs 125 1
+qb 10
+qout 1
+end
+end
+
+note qholes: the number of lines whose only word is ??
+fn qholes to ulong
+e = get inlen 0
+p = ulong 0
+c = ulong 0
+while lt p e
+q = skipbl p
+if lt add q 1 e
+if and eq get inp q 63 eq get inp add q 1 63
+s = skipbl add q 2
+if ge s e
+c = add c 1
+else
+if eq get inp s 10
+c = add c 1
+end
+end
+end
+end
+p = skipln q
+end
+ret c
+end
+
+note qclinit: host-word code -> effect class, the classes of seed/query/omq.om (hostw): 1 io 2 fs 3 net
+note 4 proc 5 env 6 clock 7 random 8 device
+fn qclinit to void
+put qcl 53 1
+put qcl 54 1
+put qcl 82 1
+put qcl 100 2
+put qcl 101 2
+put qcl 102 2
+put qcl 103 2
+put qcl 104 3
+put qcl 105 3
+put qcl 106 3
+put qcl 107 4
+put qcl 108 4
+put qcl 109 6
+put qcl 110 2
+put qcl 111 2
+put qcl 112 2
+put qcl 113 2
+put qcl 114 3
+put qcl 115 3
+put qcl 116 4
+put qcl 117 2
+put qcl 118 3
+put qcl 119 3
+put qcl 120 6
+put qcl 121 5
+put qcl 122 5
+put qcl 123 4
+put qcl 124 4
+put qcl 125 2
+put qcl 126 2
+put qcl 127 4
+put qcl 128 4
+put qcl 129 4
+put qcl 130 6
+put qcl 131 3
+put qcl 132 2
+put qcl 133 2
+put qcl 134 3
+put qcl 135 7
+put qcl 136 5
+put qcl 137 5
+put qcl 138 2
+put qcl 139 2
+put qcl 140 2
+put qcl 141 2
+put qcl 142 2
+put qcl 143 2
+put qcl 144 2
+put qcl 145 4
+put qcl 146 4
+put qcl 147 4
+put qcl 148 4
+put qcl 149 2
+put qcl 150 2
+put qcl 151 2
+put qcl 153 2
+put qcl 154 4
+put qcl 155 2
+put qcl 156 2
+put qcl 157 2
+put qcl 158 4
+put qcl 159 4
+put qcl 160 4
+put qcl 161 2
+put qcl 162 2
+put qcl 163 4
+put qcl 164 2
+put qcl 165 3
+put qcl 166 8
+put qcl 167 8
+put qcl 168 8
+put qcl 169 8
+put qcl 170 8
+put qcl 171 8
+put qcl 172 8
+put qcl 173 8
+put qcl 174 8
+put qcl 175 8
+put qcl 176 8
+put qcl 177 8
+put qcl 197 2
+put qcl 220 3
+put qcl 221 4
+put qcl 222 3
+end
+
+note qefx: in query mode, record the first use of host word c (its input span ts/tl) in function curfn
+fn qefx c ulong to void
+if eq get qmode 0 0
+ret
+end
+f = get curfn 0
+if ne get qefl 0 f
+put qefl 0 f
+put qen 0 0
+end
+n = get qen 0
+i = ulong 0
+while lt i n
+if eq get qel i c
+ret
+end
+i = add i 1
+end
+if ge n 256
+ret
+end
+put qel n c
+put qelp n get ts 0
+put qell n get tl 0
+put qen 0 add n 1
+end
+
+fn qb b uchar to void
+emitb b
+end
+
+note qs: the low n bytes of the packed word w
+fn qs w ulong n ulong to void
+x = w
+i = ulong 0
+while lt i n
+qb uchar and x 255
+x = shr x 8
+i = add i 1
+end
+end
+
+note qsep: a comma before every element of a list but its first (qfst 1 at the list's opening bracket)
+fn qsep to void
+if eq get qfst 0 0
+qb 44
+end
+put qfst 0 0
+end
+
+fn qnum v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+j = i
+while gt j 0
+j = sub j 1
+qb get d j
+end
+end
+
+note qtxt: a JSON string of the input bytes from a to the end of its line (as omq: quote and backslash
+note escaped, tab as \t, another byte below 32 as a space)
+fn qtxt a ulong to void
+qb 34
+e = get inlen 0
+p = a
+go = true
+while go
+if ge p e
+go = false
+else
+b = get inp p
+if eq b 10
+go = false
+else
+if or eq b 34 eq b 92
+qb 92
+qb b
+else
+if eq b 9
+qb 92
+qb 116
+else
+if lt b 32
+qb 32
+else
+qb b
+end
+end
+end
+p = add p 1
+end
+end
+end
+qb 34
+end
+
+note qline: the line holding input place p, from its first word
+fn qline p ulong to void
+a = p
+go = true
+while go
+if eq a 0
+go = false
+else
+if eq get inp sub a 1 10
+go = false
+else
+a = sub a 1
+end
+end
+end
+qtxt skipbl a
+end
+
+note qlnof: the line number of input place p
+fn qlnof p ulong to ulong
+n = ulong 1
+i = ulong 0
+while lt i p
+if eq get inp i 10
+n = add n 1
+end
+i = add i 1
+end
+ret n
+end
+
+note qname: the bytes of name i. The one place that reads the packing of the name store (nm_name): a
+note change to name storage changes this function only.
+fn qname i ulong to void
+x = get nm_name i
+n = ulong 0
+while and lt n 8 ne and x 255 0
+qb uchar and x 255
+x = shr x 8
+n = add n 1
+end
+end
+
+note qtype: the type of name i as omq prints it; an array (kinds 1..5) gets []; struct and abstract types
+note are printed by class only
+fn qtype i ulong to void
+t = ulong get nm_type i
+if eq t 1
+qs 1819242338 4
+end
+if eq t 2
+qs 491260502901 5
+end
+if eq t 3
+qs 128034844210037 6
+end
+if eq t 4
+qs 1953393013 4
+end
+if eq t 5
+qs 444234427509 5
+end
+if eq t 6
+qs 1702132066 4
+end
+if eq t 7
+qs 500136110195 5
+end
+if eq t 8
+qs 7630441 3
+end
+if eq t 9
+qs 1735290732 4
+end
+if eq t 10
+qs 3289958 3
+end
+if eq t 11
+qs 3421798 3
+end
+if and ge t 16 lt t 64
+qs 127970521019507 6
+end
+if ge t 64
+qs 8386654075301880417 8
+end
+k = ulong get nm_kind i
+if and ge k 1 le k 5
+qs 23899 2
+end
+end
+
+note qbk: an open block's word (bkind 1 if, 2 else, 3 while, 4 for, 5 unrolled for, 6 inline frame)
+fn qbk k ulong to void
+if eq k 1
+qs 577136930 4
+end
+if eq k 2
+qs 37819123524898 6
+end
+if eq k 3
+qs 9681665507489570 7
+end
+if or eq k 4 eq k 5
+qs 147948791330 5
+end
+if eq k 6
+qs 2478508569007122722 8
+end
+end
+
+note qcon: the clauses in force (OM-2): the function's prefix clauses, then the invariants of the open
+note loops, outermost first (bsrc: the input place after each loop's head line)
+fn qcon to void
+if eq get om2 0 0
+ret
+end
+put cur 0 get cfpos 0
+put line 0 get cfline 0
+k = cp_next
+while ne k 0
+qsep
+qtxt get ts 0
+skipnl
+k = cp_next
+end
+n = get nb 0
+i = ulong 0
+while lt i n
+b = get bkind i
+if and ge b 3 le b 5
+put cur 0 get bsrc i
+k = cp_next
+while eq k 3
+qsep
+qtxt get ts 0
+skipnl
+k = cp_next
+end
+end
+i = add i 1
+end
+end
+
+note qeff: the host words the current function used up to the hole, first use first, as word:class
+fn qeff to void
+if ne get qefl 0 get curfn 0
+ret
+end
+n = get qen 0
+i = ulong 0
+while lt i n
+qsep
+qb 34
+a = get qelp i
+j = ulong 0
+while lt j get qell i
+qb get inp add a j
+j = add j 1
+end
+qb 58
+c = ulong get qcl get qel i
+if eq c 1
+qs 28521 2
+end
+if eq c 2
+qs 29542 2
+end
+if eq c 3
+qs 7628142 3
+end
+if eq c 4
+qs 1668248176 4
+end
+if eq c 5
+qs 7761509 3
+end
+if eq c 6
+qs 461229747299 5
+end
+if eq c 7
+qs 120325193752946 6
+end
+if eq c 8
+qs 111477645534564 6
+end
+qb 34
+i = add i 1
+end
+end
+
+note qout: the JSON line in out to stdout, then exit with code
+fn qout code ulong to void
+p = ulong 0
+go = true
+while go
+if ge p get oc 0
+go = false
+else
+n = write 1 out p sub get oc 0 p
+if le n 0
+fail 2
+end
+p = add p ulong n
+end
+end
+exit int code
+end
+
+note qhole: in query mode, at a statement hole (?? the only word on its line) write the held state as one
+note JSON line (the scope, fns and obligations of seed/query/omq.om) and exit 0 with no program; a hole
+note outside a function writes the error object and exits 1. Any other word returns.
+fn qhole to void
+if ne get tl 0 2
+ret
+end
+s = get ts 0
+if ne get inp s 63
+ret
+end
+if ne get inp add s 1 63
+ret
+end
+p = skipbl get cur 0
+if lt p get inlen 0
+if ne get inp p 10
+ret
+end
+end
+put oc 0 0
+if eq get curret 0 0
+qs 2482168881970750075 8
+qs 8027701955704136250 8
+qs 8029390865705231724 8
+qs 7306080439996326004 8
+qs 8386668381597622560 8
+qs 537448574825 5
+qb 10
+qout 1
+end
+qs 4189022119807951483 8
+qs 4189022128297484923 8
+qnum get line 0
+qs 4189021028785791532 8
+qs 7308609320817816354 8
+qs 6876545977996702830 8
+qs 63919405033836 6
+f = sub get curfn 0 1
+qnum qlnof get fn_off f
+qs 2479359620953678380 8
+qs 58 1
+qnum add get nb 0 1
+qs 7309464668146379901 8
+qs 5978658 3
+put qfst 0 1
+n = get nn 0
+i = ulong 0
+while lt i n
+if eq findname get nm_name i add i 1
+qsep
+qs 4189022123868430971 8
+qs 34 1
+qname i
+qs 2478510836879076386 8
+qs 8762 2
+qtype i
+qb 34
+k = ulong get nm_kind i
+if or or eq k 1 eq k 3 eq k 4
+qs 7089075284698669612 8
+qs 7310875413622973804 8
+end
+qb 125
+end
+i = add i 1
+end
+qs 4189037521405095005 8
+qs 91 1
+put qfst 0 1
+j = ulong 0
+while lt j get nf 0
+qsep
+qline get fn_off j
+j = add j 1
+end
+qs 7451606228488301661 8
+qs 4189037521560761441 8
+qs 7598807797348049531 8
+qs 975335023 4
+qline get fn_off f
+qs 4189031985365066284 8
+qs 91 1
+put qfst 0 1
+i = get nb 0
+while gt i 0
+i = sub i 1
+qsep
+qbk get bkind i
+end
+qsep
+qs 577660450 4
+r = add get npar 0 get held 0
+v = ulong 0
+if lt r 16
+v = sub 16 r
+end
+qs 6877954741329079389 8
+qs 63919404446310 6
+qnum v
+qs 7021802786688016940 8
+qs 100305244222563 6
+put qfst 0 1
+qcon
+qs 7162243372372077661 8
+qs 391817360244 5
+put qfst 0 1
+qeff
+qs 8224093 3
+qb 10
+qout 0
+end
+
 note main: read all of stdin
 note (8 MiB at most, error 14; a read error is 1), find the mode, then one
 note statement per line from output byte 180 (om4 START .. STMT)
@@ -12013,6 +12646,9 @@ put inlen 0 off
 om2lead
 if eq get om2m 0 2
 fmtprep
+end
+if eq get om2m 0 3
+qprep
 end
 if ne ir_lead 0
 put irmode 0 1
