@@ -75,25 +75,44 @@ q openssl req -new -key good.key -subj /CN=localhost -addext subjectAltName=DNS:
 q openssl x509 -req -in stray.csr -CA other.pem -CAkey other.key -CAcreateserial -days 10 -copy_extensions copy -out stray.pem
 cp good.key stray.key
 
-# INTEROP_PORT moves the range when several runs share the host (two runs can pick the same free
-# port in the 0.4 s before either server binds it)
-port=${INTEROP_PORT:-15400}
-# nextport: the next port above $port with no listener on 127.0.0.1 (another process may hold one;
-# connecting to it would test that process instead of this row's server)
+# Ports: concurrent runs on one host (other worktrees, mutant runs) must not test each other's
+# servers. The default base differs per run (15400 + 100 * (pid mod 170), below the ephemeral
+# range); INTEROP_PORT fixes it. Every server must be seen listening on its port under its own
+# pid (owns) before the client connects; otherwise the next free port is tried.
+port=${INTEROP_PORT:-$((15400 + 100 * ($$ % 170)))}
+# nextport: the next port above $port with no listener on 127.0.0.1
 nextport() {
   port=$((port + 1))
   while ss -Hltn "sport = :$port" | grep -q .; do port=$((port + 1)); done
 }
+# owns PID PORT: PID listens on 127.0.0.1:PORT within 5 s (0), else 1 (it died, e.g. the port was
+# taken between nextport and bind, or another process holds the port)
+owns() {
+  i=0
+  while [ $i -lt 50 ]; do
+    if ss -Hltnp "sport = :$2" | grep -q "pid=$1,"; then return 0; fi
+    kill -0 "$1" 2> /dev/null || return 1
+    sleep 0.1; i=$((i + 1))
+  done
+  return 1
+}
+# drop PID: stop a server that did not get its port
+drop() { kill "$1" 2> /dev/null; wait "$1" 2> /dev/null; }
 fail=0; rows=0
 # row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name)
 row() {
   label=$1; expect=$2; cert=$3; chain=$4; shift 4
-  nextport; rows=$((rows + 1))
+  rows=$((rows + 1))
   if [ "$chain" = - ]; then ch=""; else ch="-cert_chain $chain"; fi
-  # shellcheck disable=SC2086
-  openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
-  sp=$!
-  sleep 0.4
+  n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    # shellcheck disable=SC2086
+    openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
+    sp=$!
+    owns "$sp" "$port" && break
+    drop "$sp"; n=$((n + 1))
+  done
   timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${ROWOPTS:-0}" > "c$port.out" 2> "c$port.err"
   rc=$?
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
@@ -124,10 +143,14 @@ ROWOPTS=0,0,0,0,2 row "openssl HelloRetryRequest" OK                            
 
 # crafted ServerHellos (fakesh.py): the client's own refusals
 fake() {
-  nextport; rows=$((rows + 1))
-  python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
-  fp=$!
-  sleep 0.4
+  rows=$((rows + 1)); n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
+    fp=$!
+    owns "$fp" "$port" && break
+    drop "$fp"; n=$((n + 1))
+  done
   timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   got="$(tr -d '\n' < "c$port.err") (exit $rc)"
@@ -147,10 +170,14 @@ fake trail  "TLSERR TLS_ERR_DECODE"
 # CertificateVerify refusals, close_notify during the handshake. EXPECT OK needs exit 0 and the reply.
 # fsrv MODE EXPECT [OPTS]: OPTS is the client's "REC,HSMS,SPLIT" (record limit, handshake ms, split)
 fsrv() {
-  nextport; rows=$((rows + 1))
-  ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
-  fp=$!
-  sleep 0.6
+  rows=$((rows + 1)); n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
+    fp=$!
+    owns "$fp" "$port" && break
+    drop "$fp"; n=$((n + 1))
+  done
   timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${3:-0}" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
@@ -205,10 +232,14 @@ fsrv ok          OK                                                      0,0,0,0
 # past the end of io is HEINVAL, not a trap; then one send of the whole io below the TLS state,
 # which fakesrv.py sink checks byte for byte
 if [ -n "$big" ]; then
-  nextport; rows=$((rows + 1))
-  ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" sink > "f$port.log" 2>&1 &
-  fp=$!
-  sleep 0.6
+  rows=$((rows + 1)); n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" sink > "f$port.log" 2>&1 &
+    fp=$!
+    owns "$fp" "$port" && break
+    drop "$fp"; n=$((n + 1))
+  done
   timeout 120 "$big" "$port" "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   got="$(tr -d '\n' < "c$port.out") (exit $rc)"
@@ -218,12 +249,20 @@ fi
 
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac
-nextport; rows=$((rows + 1)); lp=$port; nextport; bp=$port; port=$lp
-openssl s_server -accept "127.0.0.1:$bp" -naccept 1 -cert good.pem -key good.key -cert_chain int.pem -www -tls1_3 > "s$bp.log" 2>&1 &
-sp=$!
-python3 "$here/tamper.py" "$port" "$bp" > "p$port.log" 2>&1 &
-pp=$!
-sleep 0.6
+rows=$((rows + 1)); n=0
+while [ $n -lt 5 ]; do
+  nextport; bp=$port
+  openssl s_server -accept "127.0.0.1:$bp" -naccept 1 -cert good.pem -key good.key -cert_chain int.pem -www -tls1_3 > "s$bp.log" 2>&1 &
+  sp=$!
+  if owns "$sp" "$bp"; then
+    nextport
+    python3 "$here/tamper.py" "$port" "$bp" > "p$port.log" 2>&1 &
+    pp=$!
+    owns "$pp" "$port" && break
+    drop "$pp"
+  fi
+  drop "$sp"; n=$((n + 1))
+done
 timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
 kill "$sp" "$pp" 2> /dev/null; wait "$sp" "$pp" 2> /dev/null
 got="$(tr -d '\n' < "c$port.err") (exit $rc)"
