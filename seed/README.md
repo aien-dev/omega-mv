@@ -236,7 +236,7 @@ it came from.
   - every working number is kept as a plain 64-bit value, because the language refuses mixed types;
   - every loop over the input is two loops inside each other. A single loop stops itself after a
     million passes, and om4 has no such limit on input size.
-- Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 177 cases, all pass:
+- Historical R5 checks (`omc/gate5.sh`, retained results in `evidence/SEED-0/omc/`), 177 cases, all pass:
   - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 191b776e...98e9), so omc translates
     itself the same way om4 translates it;
   - (b) a second route: the C path (the older compiler written in C) cannot read `omc.om`. It lacks
@@ -267,8 +267,8 @@ it came from.
     comparison catches it. The same wrong word put into both om4 and omc fools both of those checks,
     and only the C path catches it (fm1, fm2: -7 / 2). A broken program is refused with error 3;
   - the output does not change with the run: same bytes under another environment and a second later.
-- Size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`;
-  `size-history.tsv` gets one row per self-rewrite, and the gate fails if the current omc has no row):
+- Historical R5 size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv`
+  in `evidence/SEED-0/omc/`; these receipts are immutable):
   - omc is 19,143 machine words; the largest functions are the value reader (2,073 words) and local
     arrays (695);
   - on the programs the C path can also translate, omc makes the same words as om4. The 10 practice
@@ -277,6 +277,15 @@ it came from.
   - time to translate one program (10 practice tasks and 9 others), 200 runs each, including starting it:
     omc 0.4 to 0.6 ms, the C path 5.9 to 6.7 ms (it runs two programs and writes a file in between).
     omc translates itself in 2.6 ms. These are not compared against the machine's limit (not measured).
+- Current `omc/gate5.sh` writes disposable results to `build/seed/r5/evidence/`, never over historical
+  receipts. `seed/omc/size-history.tsv` is the living measured-size ledger, initially copied byte for
+  byte from the historical ledger. Before qualifying a compiler change, append its observed source
+  line/function counts, emitted word count and compiler SHA-256. The gate checks that the **last**
+  row names its independently rebuilt stage2; missing, empty or stale ledgers fail. It never updates
+  its own prerequisite. Keep durable runs under a new evidence directory.
+- Current size reporting measures the complete compiler only. Compiling incomplete source prefixes
+  is not a valid per-function measurement in a compiler with forward references; that old diagnostic
+  was removed. All parent, C-referee, wrong-word-mutant, fuzz and refusal checks remain mandatory.
 - Limits, said plainly: omc has om4's limits, because it copies om4 (names up to 8 characters, 16
   registers per function, values nested up to 1,024 deep, 8 MiB of input).
 

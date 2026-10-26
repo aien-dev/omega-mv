@@ -1,0 +1,45 @@
+# Executable contracts: run with the pinned OM-2 conductor. No rows may be dropped.
+ok run seed/omc/contracts/ok.om - - - 0
+requires run seed/omc/contracts/requires.om - - - 109
+ensures run seed/omc/contracts/ensures.om - - - 110
+zero run seed/omc/contracts/zero.om - - - 110
+continue run seed/omc/contracts/continue.om - - - 110
+forfinal run seed/omc/contracts/forfinal.om - - - 110
+unroll run seed/omc/contracts/unroll.om - - - 110
+break run seed/omc/contracts/break.om - - - 0
+inline run seed/omc/contracts/inline.om - - - 0
+void run seed/omc/contracts/void.om - - - 110
+fallthrough run seed/omc/contracts/fallthrough.om - - - 110
+inlinevoid run seed/omc/contracts/inlinevoid.om - - - 110
+returnonce run seed/omc/contracts/returnonce.om - - - 0
+fresh run seed/omc/contracts/fresh.om - - - 0
+release run seed/omc/contracts/release.om - - - 0
+erased run seed/omc/contracts/erased.om - - - 0
+proved run seed/omc/contracts/proved.om - - - 0
+plain run seed/omc/contracts/plain.om - - - 0
+paramscope run seed/omc/contracts/paramscope.om - - - 0
+forcontinue run seed/omc/contracts/forcontinue.om - - - 110
+nestedinline run seed/omc/contracts/nestedinline.om - - - 0
+branchret run seed/omc/contracts/branchret.om - - - 110
+arithmetictrap run seed/omc/contracts/arithmetictrap.om - - - 102
+diag run seed/omc/contracts/diag.om - - - 109
+diagunroll run seed/omc/contracts/diagunroll.om - - - 110
+call refuse seed/omc/contracts/call.om 30
+host refuse seed/omc/contracts/host.om 30
+misplaced refuse seed/omc/contracts/misplaced.om 30
+wrongtype refuse seed/omc/contracts/wrongtype.om 7
+bodyname refuse seed/omc/contracts/bodyname.om 3
+resultpre refuse seed/omc/contracts/resultpre.om 30
+voidresult refuse seed/omc/contracts/voidresult.om 30
+float refuse seed/omc/contracts/float.om 30
+freshbad refuse seed/omc/contracts/freshbad.om 27
+constfloat refuse seed/omc/contracts/constfloat.om 30
+arrayfloat refuse seed/omc/contracts/arrayfloat.om 30
+lateinvariant refuse seed/omc/contracts/lateinvariant.om 30
+release-bytes same seed/omc/contracts/release.om seed/omc/contracts/erased.om
+proved-bytes same seed/omc/contracts/proved.om seed/omc/contracts/plain.om
+diag-line emit seed/omc/contracts/diag.om any has:seed/omc/contracts/diag.want 0
+diag-final-head emit seed/omc/contracts/diagunroll.om any has:seed/omc/contracts/diagunroll.want 0
+diag-proof emit seed/omc/contracts/diagproof.om any has:seed/omc/contracts/diagproof.want 0
+diag-release emit seed/omc/contracts/diagrelease.om any has:seed/omc/contracts/diagrelease.want 0
+false-check run seed/omc/contracts/false.om - - - 109

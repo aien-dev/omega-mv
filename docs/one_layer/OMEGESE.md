@@ -1001,3 +1001,103 @@ Numeric bounds were checked with WolframLanguageEvaluator:
 the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
+
+## 12. Executable native contracts, version 1 (OM-2 extension)
+
+This section extends the seeded native compiler, not the OSC v1 metadata in
+section 11.1. `om2` and `om2 debug` check contracts. `om2 release` erases their
+runtime evaluation after the same syntax, scope, type and purity checks.
+`om2 diag debug` and `om2 diag release` combine the policy with diagnostic
+records. `om2 fmt` keeps its existing canonical profile and checks contracts.
+OM-1 does not reserve any new words. No environment variable selects policy.
+
+```
+om2
+fn step x uint to uint
+requires lt x 10
+ensures eq result add x 1
+ret add x 1
+end
+fn main to int
+i = uint 0
+while lt i 3
+invariant le i 3
+i = step i
+end
+ret int sub i 3
+end
+```
+
+### Declaration and observation points
+
+`requires BOOL` and `ensures BOOL` form a function's prefix, before its first
+executable statement. Blanks and `note` lines may separate clauses. A function
+has at most 64 prefix clauses. Preconditions execute in declaration order on
+entry, after parameter binding, including inline calls.
+
+Postconditions execute in declaration order on **every normal return**:
+explicit value/void `ret`, implicit void fallthrough, and inline returns.
+They do not execute on `exit`, a trap or abnormal process termination. The
+return expression is evaluated exactly once and preserved while checks run.
+The read-only name `result` is available only in value postconditions. It has
+the declared return type. The caller receives that same value after the checks.
+
+Function predicates bind globals and parameters visible at their declaration,
+not names introduced later in the body. A parameter in a postcondition means
+its **current value at return**; array reads likewise observe current contents.
+There is no implicit entry snapshot and no `old` operator. Reads of `fresh`
+output arrays are checked for definite initialization at every return.
+
+`invariant BOOL` forms the prefix of a `while` or `for` body, before any body
+statement. There are at most 64 clauses per loop. It sees loop-entry names and,
+for `for`, its counter. Clauses run at the **loop head**, before the condition:
+on entry even for zero trips, on every backedge, and before the final false
+condition. `continue` reaches that head; `for` increments first. `break`
+bypasses the next check and makes no promise about the break-exit state. A
+return from inside a loop runs function postconditions, not an extra invariant.
+Unrolled loops preserve these observation points, including their final
+counter value. Their diagnostic `iter` can therefore equal the loop limit.
+
+### Purity, proofs and failure
+
+Predicates have type `bool`. Their bounded, recursive expression grammar
+permits integer/bool literals and names, integer/bool operations and checked
+conversions, grouping, `len`, and ordinary checked array/struct/layout reads.
+It excludes user calls (including inline calls), floats and abstract values,
+host operations, mapped-device operations, allocation, writes and ownership
+operations. The exclusion is recursive, including in release and under a
+constant expression. `and` and `or` remain eager, never short-circuit bounds
+guards.
+
+The checker proves literal `true` and safely folded constant predicates using
+the existing checked integer folder. A proof erases evaluation only when the
+whole predicate is known to return true without trapping. It does not assume
+that arbitrary reflexive expressions are safe. Constant false remains a
+runtime failure in debug; release erases it by policy, not by proof.
+
+False `requires` uses existing trap **9** (program exit **109**); false
+`ensures` or `invariant` uses existing trap **10** (exit **110**).
+Function-mode callers receive those same trap codes through `OscRt.trap`.
+An arithmetic, conversion or bounds failure while evaluating a predicate
+retains its original trap code. Compiler error **30** means misplaced
+contract syntax, unavailable `result`, or a forbidden predicate operation.
+Existing type, unknown-name, initialization and capacity errors retain their
+codes. Diagnostic trap sites name the predicate's source line.
+Error 30 has diagnostic obligation `contract`. Each emitted contract site also
+has an `omc-check 1 kept|erased line=N rule=RULE kind=KIND` record in diagnostic
+mode: `runtime` for kept checks, `constant-true` for a proof, or `release` for
+policy erasure; KIND is `requires`, `ensures` or `invariant`. Deferred
+postconditions are reported at their actual return sites, not during entry
+validation.
+
+Release erasure removes predicate instructions, trap records and diagnostic
+sites, and restores temporary allocation and branch bookkeeping. It never
+uses the predicate as an optimizer assumption and never erases the body's
+arithmetic, bounds, initialization, stack or loop-fuel protection. Contract
+sources still must fit the compiler's validation capacities in release.
+
+Fixtures and exact expected outcomes are in
+`seed/omc/contracts/contracts.cases`, using the existing pinned
+`seed/qualification/om2/gate.om` conductor. The example above is exercised by
+`seed/omc/contracts/ok.om`; release/erased and proved/plain pairs require
+byte-identical output, not just equal exit statuses.
