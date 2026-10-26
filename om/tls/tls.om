@@ -1,11 +1,15 @@
 note SPDX-License-Identifier: Apache-2.0
 note tls.om: TLS 1.3 client (RFC 8446), DNS A lookup and TCP connect. Library unit: functions,
 note consts and texts only; no main, no mutable globals. Needs sha2.om, hkdf.om, x25519.om,
-note chacha.om, aesgcm.om, ec.om, rsa.om and x509.om composed before it (om/tls/build.sh).
+note chacha.om, aesgcm.om, ec.om, ecdh.om, rsa.om and x509.om composed before it (om/tls/build.sh).
 note
 note TLS 1.3 only: supported_versions offers 0x0304 alone and a ServerHello without it is refused
 note (no TLS 1.2 fallback, no insecure switch). Suites TLS_CHACHA20_POLY1305_SHA256 (preferred)
 note and TLS_AES_128_GCM_SHA256; group x25519 only; SNI always; ALPN http/1.1 when flag 1 is set.
+note Approved-only mode (flag 4): TLS_AES_128_GCM_SHA256 only, groups secp256r1 and secp384r1 only
+note (ecdh.om, a share for each), signature schemes ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384
+note and rsa_pss_rsae_* only; a ServerHello choosing ChaCha20-Poly1305 is TLS_ERR_CIPHER_SUITE and
+note one choosing x25519 is TLS_ERR_KEY_SHARE. See README.md "Approved-only mode".
 note Server authentication is mandatory: x509_chain_verify (chain, dates, name, constraints) then
 note x509_cv_verify (CertificateVerify) then the Finished HMAC. Any failure: a fatal alert is sent
 note (best effort) and a named error is returned; the connection is unusable afterwards.
@@ -51,6 +55,16 @@ const TLSHS ulong 672
 const TLMS ulong 704
 const TLSS ulong 736
 const TLCRX ulong 832
+note approved mode (flag 4), c[1088..1536): secp256r1 private (32) and public (65), secp384r1
+note private (48) and public (97), the server's point (up to 97), the shared secret (up to 48) and
+note the group the server chose
+const TLECD2 ulong 1088
+const TLECD3 ulong 1120
+const TLECQ2 ulong 1168
+const TLECQ3 ulong 1233
+const TLECP ulong 1330
+const TLECZ ulong 1427
+const TLGRP ulong 1475
 const TLRB ulong 2048
 const TLWB ulong 19456
 const TLLF ulong 36864
@@ -814,29 +828,33 @@ fn tls_sel dst ulong src ulong ln ulong lid ulong to ulong
 ret or or dst shl src 16 or shl ln 32 shl lid 48
 end
 
-note c[dst..+32) = HKDF-Extract(salt, ikm); sel = dst | salt << 16 | ikm << 32, where offset 0
-note stands for 32 zero bytes (RFC 8446 "0" input)
+note c[dst..+32) = HKDF-Extract(salt, ikm); sel = dst | salt << 16 | ikm << 32 | ikm length << 48
+note (length 0 means 32, at most 48), where offset 0 stands for 32 zero bytes (RFC 8446 "0" input)
 fn tls_xtr c edit uchar * sel ulong to ulong
-s = new uchar 64 0
+s = new uchar 80 0
 k = new uchar 32 0
 so = and shr sel 16 65535
-io = shr sel 32
+io = and shr sel 32 65535
+il = shr sel 48
+if eq il 0
+il = 32
+end
 if ne so 0
 for i ulong 32
 put s i get c add so i
 end
 end
 if ne io 0
-for i ulong 32
+for i ulong il
 put s add 32 i get c add io i
 end
 end
-r = hkdf_extract 256 s 32 k
+r = hkdf_extract 256 part s 0 add 32 il 32 k
 dst = and sel 65535
 for i ulong 32
 put c add dst i get k i
 end
-tls_zero s 0 64
+tls_zero s 0 80
 tls_zero k 0 32
 if ne r 32
 ret 1
@@ -881,6 +899,65 @@ e = new uchar 1 0
 n = sha2_digest 256 part e 0 0 o
 end
 
+note 1 in approved-only mode (tls_init flag 4), else 0
+fn tls_apm c view uchar * to ulong
+if eq and get c TLFL 4 0
+ret 0
+end
+ret 1
+end
+
+note cipher_suites and legacy_compression_methods at c[p]; returns the next offset. Approved
+note mode offers TLS_AES_128_GCM_SHA256 (SP 800-38D, FIPS 197) alone.
+fn tls_suites c edit uchar * p ulong to ulong
+if eq tls_apm c 1
+tls_pn c p 2 2
+tls_pn c add p 2 4865 2
+put c add p 4 1
+put c add p 5 0
+ret add p 6
+end
+tls_pn c p 4 2
+tls_pn c add p 2 4867 2
+tls_pn c add p 4 4865 2
+put c add p 6 1
+put c add p 7 0
+ret add p 8
+end
+
+note approved mode: supported_groups secp256r1, secp384r1 and signature_algorithms
+note ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384, rsa_pss_rsae_sha256/384/512 at c[q]
+fn tls_apgs c edit uchar * q ulong to ulong
+tls_pn c q 10 2
+tls_pn c add q 2 6 2
+tls_pn c add q 4 4 2
+tls_pn c add q 6 23 2
+tls_pn c add q 8 24 2
+tls_pn c add q 10 13 2
+tls_pn c add q 12 12 2
+tls_pn c add q 14 10 2
+tls_pn c add q 16 1027 2
+tls_pn c add q 18 1283 2
+tls_pn c add q 20 2052 2
+tls_pn c add q 22 2053 2
+tls_pn c add q 24 2054 2
+ret add q 26
+end
+
+note approved mode: key_share with a secp256r1 (65-byte) and a secp384r1 (97-byte) share at c[q]
+fn tls_apks c edit uchar * q ulong to ulong
+tls_pn c q 51 2
+tls_pn c add q 2 172 2
+tls_pn c add q 4 170 2
+tls_pn c add q 6 23 2
+tls_pn c add q 8 65 2
+tls_mov c add q 10 TLECQ2 65
+tls_pn c add q 75 24 2
+tls_pn c add q 77 97 2
+tls_mov c add q 79 TLECQ3 97
+ret add q 176
+end
+
 note ---- ClientHello (RFC 8446 section 4.1.2) built at c[TLWB+5] ----
 note server_name, supported_groups (x25519), signature_algorithms; returns the next offset
 fn tls_chex1 c edit uchar * p ulong to ulong
@@ -892,6 +969,9 @@ put c add p 6 0
 tls_pn c add p 7 hl 2
 tls_mov c add p 9 TLHOST hl
 q = add add p 9 hl
+if eq tls_apm c 1
+ret tls_apgs c q
+end
 tls_pn c q 10 2
 tls_pn c add q 2 4 2
 tls_pn c add q 4 2 2
@@ -918,6 +998,9 @@ tls_pn c add p 2 3 2
 put c add p 4 2
 tls_pn c add p 5 772 2
 q = add p 7
+if eq tls_apm c 1
+q = tls_apks c q
+else
 tls_pn c q 51 2
 tls_pn c add q 2 38 2
 tls_pn c add q 4 36 2
@@ -925,6 +1008,7 @@ tls_pn c add q 6 29 2
 tls_pn c add q 8 32 2
 tls_mov c add q 10 TLEPU 32
 q = add q 42
+end
 if eq and get c TLFL 1 0
 ret q
 end
@@ -990,9 +1074,68 @@ end
 ret 0
 end
 
+note approved mode: an ECDH key pair on the curve with nb-byte scalars (32 secp256r1, 48 secp384r1)
+note into c[TLECD2]/c[TLECQ2] or c[TLECD3]/c[TLECQ3]. Private key by rejection sampling (FIPS 186-5
+note A.2.2: draw nb bytes from the approved DRBG (tls_rand), redraw while not in [1, n-1], at most 16
+note draws), then the pair-wise consistency test of SP 800-56A Rev. 3 5.6.2.1.4 (ecdh_pct). A failed
+note test or 16 rejected draws latch the module error state (fips_fail 21) and return
+note TLS_ERR_SELFTEST; a failed DRBG call returns tls_rand's code.
+fn tls_ecgen c edit uchar * nb ulong to ulong
+d = new uchar 48 0
+q = new uchar 97 0
+ql = add 1 mul nb 2
+rc = ulong 4
+for t ulong 16
+r = tls_rand c part d 0 nb
+if ne r 0
+tls_zero d 0 48
+ret r
+end
+rc = ecdh_pub part d 0 nb part q 0 ql
+if ne rc 4
+break
+end
+end
+if eq rc 0
+rc = ecdh_pct part d 0 nb part q 0 ql
+end
+do = TLECD2
+qo = TLECQ2
+if eq nb 48
+do = TLECD3
+qo = TLECQ3
+end
+for i ulong nb
+put c add do i get d i
+end
+for i ulong ql
+put c add qo i get q i
+end
+tls_zero d 0 48
+if ne rc 0
+tls_zero c TLECD2 145
+tls_zero c TLECQ3 97
+r = fips_fail 21
+ret TLESELF
+end
+ret 0
+end
+
+note the ephemeral key pairs for the offered groups: x25519 (default) or secp256r1 and secp384r1
+fn tls_ephall c edit uchar * to ulong
+if eq tls_apm c 0
+ret tls_ephem c
+end
+e = tls_ecgen c 32
+if ne e 0
+ret e
+end
+ret tls_ecgen c 48
+end
+
 note writes the ClientHello handshake message at c[TLWB+5]; 0 or an error code
 fn tls_mkch c edit uchar * to ulong
-e = tls_ephem c
+e = tls_ephall c
 if ne e 0
 ret e
 end
@@ -1009,13 +1152,7 @@ if ne r 0
 ret r
 end
 tls_mov c TLSID add b 39 32
-p = add b 71
-tls_pn c p 4 2
-tls_pn c add p 2 4867 2
-tls_pn c add p 4 4865 2
-put c add p 6 1
-put c add p 7 0
-x = add p 8
+x = tls_suites c add b 71
 q = tls_chex1 c add x 2
 q = tls_chex2 c q
 tls_pn c x sub sub q x 2 2
@@ -1075,6 +1212,9 @@ end
 if eq get c TLSU 0
 ret TLECIPH
 end
+if and eq get c TLSU 1 eq tls_apm c 1
+ret TLECIPH
+end
 if ne get c add b 69 0
 ret TLEDEC
 end
@@ -1085,7 +1225,93 @@ end
 ret 0
 end
 
-note ServerHello extensions: exactly supported_versions = 0x0304 and an x25519 key_share
+note ServerHello key_share entry at c[q..q+l): default mode x25519 (29, 32 bytes) into c[TLSPUB];
+note approved mode secp256r1 (23, 65 bytes) or secp384r1 (24, 97 bytes) into c[TLECP], the group
+note into c[TLGRP]. Anything else, x25519 in approved mode included, is TLS_ERR_KEY_SHARE.
+fn tls_shks c edit uchar * q ulong l ulong to ulong
+if lt l 4
+ret TLEKEYS
+end
+g = tls_gn c q 2
+kl = tls_gn c add q 2 2
+if ne add kl 4 l
+ret TLEKEYS
+end
+if eq tls_apm c 0
+if or ne g 29 ne kl 32
+ret TLEKEYS
+end
+tls_mov c TLSPUB add q 4 32
+ret 0
+end
+ok = ulong 0
+if and eq g 23 eq kl 65
+ok = 1
+end
+if and eq g 24 eq kl 97
+ok = 1
+end
+if eq ok 0
+ret TLEKEYS
+end
+put c TLGRP uchar g
+tls_mov c TLECP add q 4 kl
+ret 0
+end
+
+note approved mode: copy the private key for len d (32 secp256r1 at TLECD2, 48 secp384r1 at TLECD3)
+note and the server point into d and p, then Z = x(d*Q) straight into c[TLECZ]; returns ecdh_shared's code
+fn tls_ecs c edit uchar * d edit uchar * p edit uchar * to ulong
+nb = len d
+for i ulong nb
+put d i get c sub add add TLECD2 mul 2 nb i 64
+end
+for i ulong len p
+put p i get c add TLECP i
+end
+r = ecdh_shared d p part c TLECZ nb
+tls_zero d 0 nb
+ret r
+end
+
+note approved mode: Z = x(d*Q) (ecdh_shared: SP 800-56A Rev. 3 5.7.1.2 after the partial public-key
+note validation of 5.6.2.3.4) for the server's group into c[TLECZ]; both private keys are wiped.
+note An invalid server point is TLS_ERR_KEY_SHARE, an infinity result TLS_ERR_ZERO_SECRET.
+fn tls_ecdhp c edit uchar * to ulong
+d2 = new uchar 32 0
+p2 = new uchar 65 0
+d3 = new uchar 48 0
+p3 = new uchar 97 0
+r = ulong 0
+if eq get c TLGRP 24
+r = tls_ecs c d3 p3
+else
+r = tls_ecs c d2 p2
+end
+tls_zero c TLECD2 80
+if eq r 1
+ret TLEZERO
+end
+if ne r 0
+ret TLEKEYS
+end
+ret 0
+end
+
+note HKDF-Extract selector for the handshake secret: salt c[TLHS], ikm the (EC)DHE shared secret
+fn tls_ikm c view uchar * to ulong
+s = or TLHS shl TLHS 16
+if eq tls_apm c 0
+ret or s shl TLSS 32
+end
+l = ulong 32
+if eq get c TLGRP 24
+l = 48
+end
+ret or s or shl TLECZ 32 shl l 48
+end
+
+note ServerHello extensions: exactly supported_versions = 0x0304 and a key_share (tls_shks)
 fn tls_shext c edit uchar * to ulong
 ln = tls_gn c add TLHB 1 3
 q = add TLHB 76
@@ -1113,13 +1339,10 @@ else
 if or ne t 51 ne and seen 2 0
 ret TLEEXT
 end
-if ne l 36
-ret TLEKEYS
+e = tls_shks c q l
+if ne e 0
+ret e
 end
-if or ne tls_gn c q 2 29 ne tls_gn c add q 2 2 32
-ret TLEKEYS
-end
-tls_mov c TLSPUB add q 4 32
 seen = or seen 2
 end
 q = add q l
@@ -1135,6 +1358,9 @@ end
 
 note shared secret into c[TLSS]; the private key is wiped
 fn tls_ecdh c edit uchar * to ulong
+if eq tls_apm c 1
+ret tls_ecdhp c
+end
 k = new uchar 32 0
 u = new uchar 32 0
 o = new uchar 32 0
@@ -1162,13 +1388,14 @@ z = new uchar 32 0
 tls_h0 z
 r = tls_xtr c TLHS
 r = or r tls_drv c tls_sel TLHS TLHS 32 TLIDER z
-r = or r tls_xtr c or TLHS or shl TLHS 16 shl TLSS 32
+r = or r tls_xtr c tls_ikm c
 tls_th th h
 r = or r tls_drv c tls_sel TLCHS TLHS 32 TLICHS h
 r = or r tls_drv c tls_sel TLSHS TLHS 32 TLISHS h
 r = or r tls_drv c tls_sel TLMS TLHS 32 TLIDER z
 r = or r tls_xtr c or TLMS shl TLMS 16
 tls_zero c TLSS 32
+tls_zero c TLECZ 48
 r = or r tls_keys c TLSHS 1
 r = or r tls_keys c TLCHS 0
 if ne r 0
@@ -1627,7 +1854,8 @@ end
 
 note ---- public API ----
 note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1,
-note 4 = approved mode (fips.om: HMAC_DRBG with its self-test and health-tested entropy).
+note 4 = approved-only mode (fips.om: HMAC_DRBG with its self-test and health-tested entropy; see the
+note header and README.md).
 note Hostnames are 1..253 bytes of letters, digits, '-' and '.', and not an IPv4 literal.
 fn tls_init c edit uchar * hn view uchar * fl ulong to ulong
 if lt len c TLCSZ
@@ -1967,6 +2195,7 @@ tls_zero c TLWKEY 96
 tls_zero c TLCAP 64
 tls_zero c TLEPK 320
 tls_zero c TLDRBG DRSZ
+tls_zero c TLECD2 448
 tls_zero c TLRB sub TLCSZ TLRB
 end
 

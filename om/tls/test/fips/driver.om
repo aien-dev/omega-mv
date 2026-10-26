@@ -32,6 +32,7 @@ text fdhost "fips.example"
 note "TLS_ERR_SELFTEST" and "drbgerr" as hex (fips_cmp compares against hex texts)
 text fdhexn "544c535f4552525f53454c4654455354"
 text fdhexm "64726267657272"
+text fdhexe "656367656e657272"
 
 fn fdprn v ulong to void
 x = v
@@ -131,6 +132,26 @@ fdt 65 tls_seal c 0 TLESELF
 fdt 66 tls_open c 0 TLESELF
 end
 
+note approved-mode ECDH key generation draws from the DRBG at c[TLDRBG]: its state must change
+fn fdecg c edit uchar * b edit uchar * to void
+for i ulong DRSZ
+put b i get c add TLDRBG i
+end
+fdt 44 tls_ecgen c 32 0
+fdt 45 fddiff part c TLDRBG DRSZ part b 0 DRSZ 1
+fdt 46 tls_ecgen c 48 0
+fdt 47 fdnz part c TLECQ3 97 1
+end
+
+note ecgenerr: a key generation that cannot succeed (nb 40) latches the error state with detail 21
+fn fdecx c edit uchar * to void
+fdt 76 tls_init c fdhost 4 0
+fdt 77 fips_drbgnew part c TLDRBG DRSZ 0
+fdt 70 tls_ecgen c 40 TLESELF
+fdt 71 fips_detail 21
+fdt 72 fdnz part c TLECD2 145 0
+end
+
 note steps 2-5 (id base 10)
 fn fdpos c edit uchar 119296 st edit uchar 128 b edit uchar 4096 k edit uchar 32 q edit uchar 32 to void
 fdt 10 fips_entropy b 0
@@ -160,6 +181,7 @@ fdt 50 tls_init c fdhost 4 0
 fdt 51 fips_drbgnew part c TLDRBG DRSZ 0
 fdt 52 tls_rand c k 0
 fdt 53 fdnz k 1
+fdecg c b
 fdt 57 drbg_rd part c TLDRBG DRSZ DRCTR 2
 tls_wipe c
 fdt 58 fdnz part c TLDRBG DRSZ 0
@@ -168,22 +190,33 @@ fdt 55 tls_rand c k 0
 fdt 56 fdnz k 1
 end
 
+note the driver mode from argv[1]: 0 none, 1 drbgerr, 2 ecgenerr
+fn fdmode to ulong
+a = new uchar 16 0
+if lt argcnt 2
+ret 0
+end
+l = argread 1 a 0 16
+if eq l 7
+if eq fips_cmp part a 0 7 fdhexm 0
+ret 1
+end
+end
+if eq l 8
+if eq fips_cmp part a 0 8 fdhexe 0
+ret 2
+end
+end
+ret 0
+end
+
 fn main to int
 c = new uchar TLCSZ 0
 st = new uchar 128 0
 b = new uchar 4096 0
 k = new uchar 32 0
 q = new uchar 32 0
-a = new uchar 16 0
-mode = ulong 0
-if ge argcnt 2
-l = argread 1 a 0 16
-if eq l 7
-if eq fips_cmp part a 0 7 fdhexm 0
-mode = 1
-end
-end
-end
+mode = fdmode
 d = fips_check 0
 if eq d 0
 d = fips_check 1
@@ -205,7 +238,11 @@ if eq mode 0
 put q 0 uchar xor ulong get q 0 1
 fdt 70 fips_pctx k q 1
 fdt 71 fips_detail 21
-else
+end
+if eq mode 2
+fdecx c
+end
+if eq mode 1
 put st DRERR 1
 fdt 70 fips_drbgget st part b 0 32 1
 fdt 71 fips_detail 20

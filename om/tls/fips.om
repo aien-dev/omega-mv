@@ -2,12 +2,13 @@ note SPDX-License-Identifier: Apache-2.0
 note fips.om: FIPS 140-3 style self-tests and health tests for om/tls (FIPS 140-3 section 7.10,
 note SP 800-140C/D, IG 10.3.A, SP 800-90B section 4.4). Tested against the FIPS 140-3 / CAVP test
 note methods, not NIST-validated; nothing here is a certificate. Needs sha2, hkdf, drbg, x25519,
-note chacha, aesgcm, ec, rsa and x509 composed before it and tls.om after it (om/tls/build.sh).
+note chacha, aesgcm, ec, ecdh, rsa and x509 composed before it and tls.om after it (om/tls/build.sh).
 note
 note One process-wide mutable global, FPST, holds the module state (the only global in om/tls):
 note   FPST[0] 0 self-tests not run, 1 passed, 2 error state (latched; only a new process clears it)
 note   FPST[1] the first failure: 1..15 a pre-operational self-test (fips_selftest), 14 the DRBG
-note           self-test, 20 the DRBG continuous test, 21 the X25519 pairwise consistency test,
+note           self-test, 20 the DRBG continuous test, 21 a pairwise consistency test (X25519 here, or
+note           the approved-mode P-256/P-384 key generation in tls.om: failed PCT or 16 rejected draws),
 note           22 the repetition count test, 23 the adaptive proportion test, 24 getrandom failed,
 note           25 a DRBG call failed, 30.. reserved for callers (fips_fail)
 note   FPST[2] 1 when the DRBG self-test (approved mode only) has passed

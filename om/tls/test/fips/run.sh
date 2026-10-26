@@ -6,13 +6,15 @@
 # usage: sh om/tls/test/fips/run.sh OMC
 #   1. driver.om on the real library: every self-test passes, health-test boundaries hold, the DRBG
 #      and PCT work, and the PCT failure latches the error state (tls_connect, tls_seal, tls_open
-#      refuse with TLS_ERR_SELFTEST); `driver drbgerr` latches through a DRBG in its error state.
+#      refuse with TLS_ERR_SELFTEST); `driver drbgerr` latches through a DRBG in its error state;
+#      `driver ecgenerr` latches through a failed approved-mode ECDH key generation (tls_ecgen).
 #   2. KAT mutants: one hex digit of each known answer changed; the driver must print
 #      "REFUSED detail N" for that self-test, pass the refusal checks and exit 3.
 #   3. Code mutants in sha2.om, drbg.om (stuck V), x25519.om and aesgcm.om: the self-tests refuse.
-#   4. Code mutants in fips.om and tls.om (health cut-offs, PCT compare, entropy draw, refusal lines):
+#   4. Code mutants in fips.om and tls.om (health cut-offs, PCT compare, entropy draw, refusal lines,
+#      ECDH key draw and latch):
 #      the driver reports FAIL check lines and exits 1.
-# Final line: FIPS PASS checks=C drbgerr=D kat-mutants=K/K code-mutants=M/M, or FIPS FAIL.
+# Final line: FIPS PASS checks=C drbgerr=D ecgenerr=E kat-mutants=K/K code-mutants=M/M, or FIPS FAIL.
 set -eu
 omc=${1:?usage: run.sh OMC}
 here=$(cd "$(dirname "$0")" && pwd)
@@ -21,8 +23,8 @@ root=$(cd "$lib/../.." && pwd)
 out="$root/build/tls/fips"
 rm -rf "$out"; mkdir -p "$out"
 nice="nice -n 19 ionice -c3"
-units="sha2 hkdf drbg x25519 chacha aesgcm ec rsa x509 fips tls"
-bad=0; kmut=0; kok=0; cmut=0; cok=0; checks=0; derr=0
+units="sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls"
+bad=0; kmut=0; kok=0; cmut=0; cok=0; checks=0; derr=0; eerr=0
 
 say() { printf '%s\n' "$*"; }
 fail() { say "FAIL $*"; bad=1; }
@@ -60,6 +62,11 @@ cp "$out/real.out" "$out/drbgerr.out"
 s=$(summary "$out/drbgerr.out")
 if [ "$rc" -eq 0 ] && [ "${s#* }" = 0 ]; then derr=${s% *}; say "PASS driver drbgerr: $(tail -n 1 "$out/drbgerr.out")"
 else fail "driver drbgerr: exit $rc: $(tr '\n' ' ' < "$out/drbgerr.out")"; fi
+run real ecgenerr
+cp "$out/real.out" "$out/ecgenerr.out"
+s=$(summary "$out/ecgenerr.out")
+if [ "$rc" -eq 0 ] && [ "${s#* }" = 0 ]; then eerr=${s% *}; say "PASS driver ecgenerr: $(tail -n 1 "$out/ecgenerr.out")"
+else fail "driver ecgenerr: exit $rc: $(tr '\n' ' ' < "$out/ecgenerr.out")"; fi
 
 # refused NAME DETAIL: the self-tests refused with that detail and every refusal check held
 refused() {
@@ -128,10 +135,12 @@ codemut seal-refuse tls '/^fn tls_seal /,/^for i ulong 5$/ s/^if eq fips_bad 1$/
 codemut open-refuse tls '/^fn tls_open /,/^for i ulong 5$/ s/^if eq fips_bad 1$/if eq fips_bad 2/' "check 66"
 codemut wipe-drbg tls '/^fn tls_wipe /,/^end$/ {/^tls_zero c TLDRBG DRSZ$/d}' "check 58"
 codemut rand-approved tls '/^fn tls_rand /,/^end$/ s/^if eq and get c TLFL 4 0$/if eq and get c TLFL 0 0/' "check 57"
+codemut ecgen-getrandom tls '/^fn tls_ecgen /,/^ret 0$/ s/^r = tls_rand c part d 0 nb$/r = ulong 0\nif ne random d 0 nb 0 long nb\nr = TLERAND\nend/' "check 45"
+codemut ecgen-nolatch tls '/^fn tls_ecgen /,/^ret 0$/ {/^r = fips_fail 21$/d}' "check 71" ecgenerr
 
 if [ "$bad" -eq 0 ] && [ "$kok" -eq "$kmut" ] && [ "$cok" -eq "$cmut" ]; then
-	say "FIPS PASS checks=$checks drbgerr=$derr kat-mutants=$kok/$kmut code-mutants=$cok/$cmut"
+	say "FIPS PASS checks=$checks drbgerr=$derr ecgenerr=$eerr kat-mutants=$kok/$kmut code-mutants=$cok/$cmut"
 	exit 0
 fi
-say "FIPS FAIL checks=$checks drbgerr=$derr kat-mutants=$kok/$kmut code-mutants=$cok/$cmut"
+say "FIPS FAIL checks=$checks drbgerr=$derr ecgenerr=$eerr kat-mutants=$kok/$kmut code-mutants=$cok/$cmut"
 exit 1

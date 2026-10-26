@@ -34,9 +34,15 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM, ChaCha20Poly1305
 
 port, d, mode = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+# MODE prefix "ap-" (the client in approved-only mode): secp256r1 key share and
+# TLS_AES_128_GCM_SHA256 instead of x25519 and ChaCha20-Poly1305, e.g. ap-ok, ap-hold:4
+ap = mode.startswith("ap-")
+if ap:
+    mode = mode[3:]
+KL = 16 if ap else 32
 u = lambda n, k: n.to_bytes(k, "big")
 H = lambda b: hashlib.sha256(b).digest()
 
@@ -55,7 +61,8 @@ extract = lambda salt, ikm: hmac.new(salt, ikm, hashlib.sha256).digest()
 
 class Keys:
     def __init__(self, secret):
-        self.aead = ChaCha20Poly1305(expand_label(secret, b"key", b"", 32))
+        k = expand_label(secret, b"key", b"", KL)
+        self.aead = AESGCM(k) if ap else ChaCha20Poly1305(k)
         self.iv = expand_label(secret, b"iv", b"", 12)
         self.seq = 0
 
@@ -103,7 +110,7 @@ while p < end:
         q = p + 6
         while q < p + 4 + n:
             g, kn = int.from_bytes(ch[q:q + 2], "big"), int.from_bytes(ch[q + 2:q + 4], "big")
-            if g == 0x1d:
+            if g == (0x17 if ap else 0x1d):
                 cpub = ch[q + 4:q + 4 + kn]
             q += 4 + kn
     p += 4 + n
@@ -125,11 +132,15 @@ if mode == "closepre":
 else:
     if mode == "ccspre":
         c.sendall(CCS)
-    sk = X25519PrivateKey.generate()
-    spub = sk.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    if ap:
+        sk = ec.generate_private_key(ec.SECP256R1())
+        spub = sk.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    else:
+        sk = X25519PrivateKey.generate()
+        spub = sk.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
     ext = lambda t, b: u(t, 2) + u(len(b), 2) + b
-    exts = ext(43, b"\x03\x04") + ext(51, b"\x00\x1d\x00\x20" + spub)
-    body = b"\x03\x03" + os.urandom(32) + bytes([len(sid)]) + sid + b"\x13\x03\x00" + u(len(exts), 2) + exts
+    exts = ext(43, b"\x03\x04") + ext(51, (b"\x00\x17" if ap else b"\x00\x1d") + u(len(spub), 2) + spub)
+    body = b"\x03\x03" + os.urandom(32) + bytes([len(sid)]) + sid + (b"\x13\x01\x00" if ap else b"\x13\x03\x00") + u(len(exts), 2) + exts
     sh = b"\x02" + u(len(body), 3) + body
     shrec = b"\x16\x03\x03" + u(len(sh), 2) + sh
     if mode == "loris":
@@ -153,7 +164,10 @@ else:
     if mode == "ccsflood":
         c.sendall(CCS * 5000)
     tr = ch + sh
-    shared = sk.exchange(X25519PublicKey.from_public_bytes(cpub))
+    if ap:
+        shared = sk.exchange(ec.ECDH(), ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), cpub))
+    else:
+        shared = sk.exchange(X25519PublicKey.from_public_bytes(cpub))
     early = extract(bytes(32), bytes(32))
     hs = extract(expand_label(early, b"derived", H(b""), 32), shared)
     s_hs = expand_label(hs, b"s hs traffic", H(tr), 32)
@@ -202,7 +216,7 @@ else:
                 keys = {"shared": shared, "early": early, "hs": hs, "c_hs": c_hs, "s_hs": s_hs,
                         "ms": ms, "c_ap": c_ap, "s_ap": s_ap}
                 for nm, sec in (("c_hs", c_hs), ("s_hs", s_hs), ("c_ap", c_ap), ("s_ap", s_ap)):
-                    keys[nm + "_key"] = expand_label(sec, b"key", b"", 32)
+                    keys[nm + "_key"] = expand_label(sec, b"key", b"", KL)
                     keys[nm + "_iv"] = expand_label(sec, b"iv", b"", 12)
                 keys["c_fin"] = expand_label(c_hs, b"finished", b"", 32)
                 keys["s_fin"] = expand_label(s_hs, b"finished", b"", 32)

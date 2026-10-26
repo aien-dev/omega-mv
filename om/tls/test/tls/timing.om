@@ -1,5 +1,6 @@
 note dudect-style timing driver (Reparaz, Balasch, Verbauwhede 2016): usage: timing WHAT N
-note WHAT: x25519 (scalar fixed vs random, base point fixed), chacha / aesgcm (key and nonce fixed
+note WHAT: x25519 (scalar fixed vs random, base point fixed), ecdh (P-256 ecdh_shared: scalar fixed
+note vs random, peer point fixed), chacha / aesgcm (key and nonce fixed
 note vs random, 1024-byte plaintext fixed), cteq (32-byte compare: equal vs random second input,
 note 2000 compares per measurement), and from fips.om: health (256 samples through the RCT/APT
 note fips_ht), drbg (HMAC_DRBG instantiated from fixed vs random 48-byte seed material outside the
@@ -9,8 +10,9 @@ note Each of the N measurements draws its class from getrandom,
 note prepares the input, then times one operation with monons and prints "CLASS NANOSECONDS".
 note The statistics (Welch's t-test between the classes) are computed outside: timing.py.
 note Exit 0; 2 on a usage error; 3 when an operation reports an error.
-text tusage "usage: timing x25519|chacha|aesgcm|cteq|health|drbg|pct N\n"
+text tusage "usage: timing x25519|ecdh|chacha|aesgcm|cteq|health|drbg|pct N\n"
 text tx "x25519"
+text te "ecdh"
 text tc "chacha"
 text ta "aesgcm"
 text tq "cteq"
@@ -115,6 +117,43 @@ if ne e 0
 ret 3
 end
 tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+note P-256 ECDH: the peer point is 7*G (ecdh_pub of the scalar 7, public); a random-class scalar
+note outside [1, n-1] (probability below 2^-31) is code 4 and still a valid sample
+note one timed P-256 ecdh_shared with the scalar in k; returns nanoseconds + 1, 0 on an error
+fn tm_ec1 k view uchar * p view uchar * to ulong
+z = new uchar 32 0
+t0 = monons
+e = ecdh_shared k p z
+t1 = monons
+if and ne e 0 ne e 4
+ret 0
+end
+ret add ulong sub t1 t0 1
+end
+
+fn tm_ecdh n ulong o edit uchar * to ulong
+k = new uchar 32 0
+p = new uchar 65 0
+c = new uchar 1 0
+put k 31 7
+if ne ecdh_pub k p 0
+ret 3
+end
+for i ulong n
+cls = tm_cls c
+if ne tm_fill k 32 cls 0
+ret 3
+end
+d = tm_ec1 k p
+if eq d 0
+ret 3
+end
+m = tm_line cls sub d 1 o
+w = write 1 o 0 m
 end
 ret 0
 end
@@ -286,6 +325,9 @@ ret int tm_drbg n o
 end
 if eq tm_is a wl tp 1
 ret int tm_pct n o
+end
+if eq tm_is a wl te 1
+ret int tm_ecdh n o
 end
 w = write 2 tusage 0 len tusage
 ret 2
