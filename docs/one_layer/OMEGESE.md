@@ -900,6 +900,10 @@ randomized two-function call units byte-for-byte with the C-built `omegese` + `o
 a mul-to-add mutant to differ, and pins 14 refusal cases. Those C tools are referees only; they
 never write omc's bytes.
 
+Boolean `and`, `or` and `xor` lower to the IR bitwise sub-operations, just as on the
+native path. `gate-ir.sh` checks all three against the C encoder and checker2.
+Arithmetic (`add` through `rem`) and shifts of booleans remain error 7.
+
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
 parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
 float word, a host word, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
