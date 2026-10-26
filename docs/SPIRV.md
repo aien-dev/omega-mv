@@ -122,7 +122,9 @@ sh seed/spirv/gate-irspirv.sh
 ```
 
 The gate pins omc sha256
-`befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d`.
+`2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f` (the batch 2
+`seed/out/omc`; `IRSPIRV_OMC_PIN` overrides it, and the wasm gate reads `IRWASM_OMC_PIN`).
+Before 2026-10-27 both gates pinned `befb8199…8a1d` and failed `compiler pin differs` on main.
 It compiles the same units as irwasm, preserves the entire original 129-row
 `seed/wasm/cases.tsv`, and builds a native Omega caller for every row. Comparison
 uses all eight result bytes and exact native trap statuses, never just process
