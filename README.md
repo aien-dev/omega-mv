@@ -63,7 +63,7 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-numeric-cpu      # E1 CP
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
 ```
 
-The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
+The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. The M19 clean-clone gate rebuilds the tree in a temporary directory and runs the milestone gates there; when that nested build or nested run fails, it now prints the tail of its own log to stderr, so a failure names its cause instead of reporting a bare FAIL. CI definitions in `.github/workflows/` list the suites that run on every push.
 
 ## Repository layout
 
