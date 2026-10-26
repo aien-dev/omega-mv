@@ -4,8 +4,8 @@ Status, kept separate:
 
 | Item | Status |
 |---|---|
-| `glow.om`, the `ck_glow` port, with `background.om`, `native-runner.om`, `glow-cases.tsv`, `oracle-glow.c`, `compare-glow.js` and `gate-glow.sh` | IMPLEMENTED (written). Not compiled or run yet: builds were prohibited while the backend was being integrated. |
-| Native parity (`gate-glow.sh` sections 1-3) | NOT_RUN |
+| `glow.om` and its fixture/oracle harness | IMPLEMENTED; register-heavy expressions split into bounded helpers |
+| Native parity (`gate-glow.sh` sections 1-3) | EXERCISED on Linux AArch64 with pinned `befb8199…8a1d`: full buffers identical (55,628 bytes, pixel difference 0), deterministic output, three mutants differ |
 | Wasm parity (`GLOW_WASM=1`, section 4) | NOT_RUN. It needs the IR memory backend. At this source, IR mode refuses `global` (OMEGESE 11, error 9). |
 | The rest of the scene | PROPOSED: only the mapping below exists |
 | Memory wire format and JS ABI | PENDING: the parent's spec PR. Section 6 lists what it must define. |
@@ -52,7 +52,7 @@ byte-compares the files with the aienux commit.
 `compare-glow.js` reads pixels through the scalar export `fbget`, so it does not assume where the
 backend places `fb`. Once the ABI is agreed, a direct linear-memory comparison can be added beside it.
 
-Commands for the parent, after backend integration (nice, ionice idle, at most -j2):
+Commands (nice, ionice idle, at most -j2; the full command requires backend integration):
 
 ```sh
 ALLEN_NATIVE_DIR=/path/to/pinned/native nice -n 19 ionice -c3 sh seed/wasm/renderer/gate-glow.sh            # native; exits 3 (wasm NOT_RUN)
@@ -117,12 +117,14 @@ solved here.
 - **`chirp.c`** (audio): table setup plus `int16_t` output fills an output buffer global.
 - **`adapter.c`**: the web entry and lifecycle. Its scalar exports (`scene_init`, `scene_step`,
   `scene_draw` and so on) map directly to scalar Omega exports. `scene_pixels()` returns an address,
-  which Omega cannot produce, so the JS side must find `fb` through the ABI in section 6.
+  which has no raw-address source spelling; the JS side obtains the region offset through the ABI in section 6.
 
-Capacity facts at this source: IR v1 allows at most 32 functions per unit and 4,096 instructions per
-function, and omc allows 16 registers. `night.c` and `mind.c` therefore need several units, or helpers
-split further. Whether globals can be shared across separately translated units is a section 6
-question.
+Capacity facts at this source: the IR wire allows at most 32 functions per unit and
+4,096 instructions per function, but the current omc IR producer has a smaller
+per-function instruction table; the native register allocator has 16 registers.
+Do not infer that a wire-format limit is the producer's implemented capacity.
+The full scene needs explicit capacity qualification; globals shared across
+separately translated units are not part of this memory profile.
 
 ## 5. Recipe for each further primitive
 
