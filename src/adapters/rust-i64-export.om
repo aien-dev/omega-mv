@@ -1,0 +1,571 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten S2 upper-to-Rust 2021 exporter (spec/universal/translation-s2-v1.md sections 2 and 4).
+note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core-v3.om (decode n).
+note Input: one OMSB envelope to EOF, a source-aware v3 unit of profile 10..15. Output is generated from the
+note OMSA operation records only; the OMSP sidecar is validated by the v3 decoder, never read for output.
+note u64 arithmetic and i64 attribute 5 use wrapping_add/sub/mul; i64 attribute 6 uses plain + - *, which
+note panics on overflow in a debug build; select is `if c { x } else { y }`, evaluated lazily like op 16.
+global Yone uchar 1
+global Yo uchar 4096
+global Yl ulong 1
+global Yni ulong 1
+global Ypt ulong 6
+global Yln ulong 64
+global Ynm uchar 64
+global Ynl ulong 1
+global Ylb uchar 1
+text Yhead "pub fn "
+text Ydflt "calc"
+text Ykw "_ as break const continue crate else enum extern false fn for if impl in let loop match mod move mut pub ref return self Self static struct super trait true type unsafe use where while async await dyn abstract become box do final macro override priv typeof unsized virtual yield try gen"
+text Yu ": u64"
+text Yi ": i64"
+text Yru ") -> u64 { "
+text Yri ") -> i64 { "
+text Yrb ") -> bool { "
+text Ytail " }\n"
+text Ymeth ".wrapping_add(.wrapping_sub(.wrapping_mul("
+text Yops " + - * "
+text Ycmp " ==  !=  <   <=  >   >= "
+text Ysel1 "if "
+text Ysel2 " { "
+text Ysel3 " } else { "
+text Ysel4 " }"
+text Ytrue "true"
+text Yfalse "false"
+text YMal "RUST_EXPORT_MALFORMED\n"
+text YLim "RUST_EXPORT_LIMIT\n"
+text YProf "RUST_EXPORT_PROFILE_MISMATCH\n"
+text YIO "RUST_EXPORT_IO\n"
+text YName "RUST_EXPORT_BAD_NAME\n"
+
+fn ydie code ulong to void
+if eq code 65
+w = write 2 YMal 0 len YMal
+end
+if eq code 67
+w = write 2 YLim 0 len YLim
+end
+if eq code 64
+w = write 2 YName 0 len YName
+end
+if eq code 68
+w = write 2 YProf 0 len YProf
+end
+if eq code 77
+w = write 2 YIO 0 len YIO
+end
+exit int code
+end
+
+fn yalnum c ulong to bool
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 97 le c 122
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+ret eq c 95
+end
+
+fn ykwchar p ulong to bool
+if ge p len Ykw
+ret false
+end
+ret ne get Ykw p 32
+end
+
+fn ykwsame b ulong e ulong to bool
+if ne sub e b get Ynl 0
+ret false
+end
+for i ulong get Ynl 0
+if ne get Ykw add b i get Ynm i
+ret false
+end
+end
+ret true
+end
+
+note ykeyword: NAME is a Rust 2021 strict or reserved keyword (or the lone `_`), so not a function name.
+fn ykeyword to bool
+p = ulong 0
+while lt p len Ykw
+b = p
+while ykwchar p
+p = add p 1
+end
+if ykwsame b p
+ret true
+end
+p = add p 1
+end
+ret false
+end
+
+note ytakename (amendment A8): input frame as c-export: one byte name length L (0 = calc), L name bytes, then
+note the envelope. NAME is a C identifier of at most 63 bytes and not a Rust keyword; otherwise 64.
+fn ytakename to void
+r = read 0 Ylb 0 1
+if lt r 0
+ydie 77
+end
+if eq r 0
+ydie 64
+end
+n = ulong get Ylb 0
+if eq n 0
+for i ulong len Ydflt
+put Ynm i get Ydflt i
+end
+put Ynl 0 len Ydflt
+ret
+end
+if gt n 63
+ydie 64
+end
+got = ulong 0
+while lt got n
+r = read 0 Ynm got sub n got
+if lt r 0
+ydie 77
+end
+if eq r 0
+ydie 64
+end
+got = add got ulong r
+end
+put Ynl 0 n
+f = ulong get Ynm 0
+if and ge f 48 le f 57
+ydie 64
+end
+for i ulong n
+if not yalnum ulong get Ynm i
+ydie 64
+end
+end
+if ykeyword
+ydie 64
+end
+end
+
+fn ybyte c ulong to void
+put Yo get Yl 0 uchar c
+put Yl 0 add get Yl 0 1
+end
+
+fn ydigits v ulong to ulong
+d = ulong 1
+x = div v 10
+while gt x 0
+d = add d 1
+x = div x 10
+end
+ret d
+end
+
+fn ydec v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+while gt i 0
+i = sub i 1
+ybyte ulong get d i
+end
+end
+
+note ys2: a profile 10..15 unit (already fully validated by decode); records each input slot's type.
+fn ys2 to ulong
+p = get M 1
+if or lt p 10 gt p 15
+ret 68
+end
+put Yni 0 0
+for i ulong get M 4
+if eq get Oc i 9
+put Yni 0 add get Yni 0 1
+end
+end
+for j ulong get M 4
+if eq get Oc j 9
+if ge get Oi j get Yni 0
+ret 68
+end
+put Ypt get Oi j get Ot j
+end
+end
+ret 0
+end
+
+fn ysat v ulong to ulong
+if gt v 1048576
+ret 1048576
+end
+ret v
+end
+
+note ywrapped: the record is printed inside one pair of parentheses (dropped at the root).
+fn ywrapped k ulong to bool
+c = get Oc k
+if ge c 10
+ret true
+end
+if and ge c 2 le c 4
+ret and eq get Ot k 5 eq get Oat k 6
+end
+if eq c 1
+ret and eq get Ot k 5 ge get Oi k 9223372036854775808
+end
+ret false
+end
+
+fn ytrim k ulong to ulong
+if ywrapped k
+ret 2
+end
+ret 0
+end
+
+fn yclen c ulong to ulong
+if or eq c 12 eq c 14
+ret 3
+end
+ret 4
+end
+
+note Length of each result's expression as printed inside a larger expression.
+fn ymetric k ulong to void
+c = get Oc k
+t = get Ot k
+if eq c 9
+put Yln k 2
+ret
+end
+if eq c 1
+v = get Oi k
+if eq t 6
+put Yln k sub 5 v
+ret
+end
+if and eq t 5 ge v 9223372036854775808
+put Yln k add ydigits sub 0 v 6
+ret
+end
+put Yln k add ydigits v 3
+ret
+end
+a = get Oa k
+if eq c 17
+put Yln k ysat add get Yln a 3
+ret
+end
+b = get Ob k
+if eq c 16
+s = add add get Yln a get Yln b get Yln get Oi k
+s = sub s add add ytrim a ytrim b ytrim get Oi k
+put Yln k ysat add s 20
+ret
+end
+if ge c 10
+put Yln k ysat add add add get Yln a get Yln b yclen c 2
+ret
+end
+if ywrapped k
+put Yln k ysat add add get Yln a get Yln b 5
+ret
+end
+put Yln k ysat add add get Yln a get Yln b 15
+end
+
+fn ytext off ulong n ulong to void
+for i ulong n
+ybyte ulong get Ycmp add off i
+end
+end
+
+fn yemit k ulong top ulong to void
+c = get Oc k
+t = get Ot k
+if eq c 9
+ybyte 105
+ybyte add 48 get Oi k
+ret
+end
+if eq c 1
+v = get Oi k
+if eq t 6
+if eq v 1
+for i ulong len Ytrue
+ybyte ulong get Ytrue i
+end
+else
+for i ulong len Yfalse
+ybyte ulong get Yfalse i
+end
+end
+ret
+end
+if and eq t 5 ge v 9223372036854775808
+if eq top 0
+ybyte 40
+end
+ybyte 45
+ydec sub 0 v
+ybyte 105
+ybyte 54
+ybyte 52
+if eq top 0
+ybyte 41
+end
+ret
+end
+ydec v
+if eq t 5
+ybyte 105
+else
+ybyte 117
+end
+ybyte 54
+ybyte 52
+ret
+end
+if eq c 16
+if eq top 0
+ybyte 40
+end
+for i ulong len Ysel1
+ybyte ulong get Ysel1 i
+end
+yemit get Oa k 1
+for i ulong len Ysel2
+ybyte ulong get Ysel2 i
+end
+yemit get Ob k 1
+for i ulong len Ysel3
+ybyte ulong get Ysel3 i
+end
+yemit get Oi k 1
+for i ulong len Ysel4
+ybyte ulong get Ysel4 i
+end
+if eq top 0
+ybyte 41
+end
+ret
+end
+if eq c 17
+if eq top 0
+ybyte 40
+end
+ybyte 33
+yemit get Oa k 0
+if eq top 0
+ybyte 41
+end
+ret
+end
+if ge c 10
+if eq top 0
+ybyte 40
+end
+yemit get Oa k 0
+off = mul sub c 10 4
+ytext off yclen c
+yemit get Ob k 0
+if eq top 0
+ybyte 41
+end
+ret
+end
+if ywrapped k
+if eq top 0
+ybyte 40
+end
+yemit get Oa k 0
+off = mul sub c 2 2
+for i ulong 3
+ybyte ulong get Yops add off i
+end
+yemit get Ob k 0
+if eq top 0
+ybyte 41
+end
+ret
+end
+yemit get Oa k 0
+off = mul sub c 2 14
+for i ulong 14
+ybyte ulong get Ymeth add off i
+end
+yemit get Ob k 0
+ybyte 41
+end
+
+note translation-v1 section 4 on S2 (translation-s2-v1 amendment A3): the pre-normalization root of a
+note NORMALIZED unit (const 0 then add attribute 5 of an i64 root, or the S1 u64 pair), else the last result.
+fn yroot to ulong
+n = get M 4
+if lt n 3
+ret sub n 1
+end
+z = sub n 2
+y = sub n 1
+if or ne get Oc z 1 ne get Oi z 0
+ret y
+end
+if or ne get Oc y 2 ne get Ob y z
+ret y
+end
+if ge get Oa y z
+ret y
+end
+if eq get Ot y 5
+if ne get Oat y 5
+ret y
+end
+end
+ret get Oa y
+end
+
+fn yparams to ulong
+ni = get Yni 0
+if eq ni 0
+ret 0
+end
+ret sub mul ni 9 2
+end
+
+fn yrettext t ulong to void
+if eq t 1
+for u ulong len Yru
+ybyte ulong get Yru u
+end
+end
+if eq t 5
+for u ulong len Yri
+ybyte ulong get Yri u
+end
+end
+if eq t 6
+for u ulong len Yrb
+ybyte ulong get Yrb u
+end
+end
+end
+
+fn ysignature t ulong to void
+for i ulong len Yhead
+ybyte ulong get Yhead i
+end
+for i ulong get Ynl 0
+ybyte ulong get Ynm i
+end
+ybyte 40
+for s ulong get Yni 0
+if gt s 0
+ybyte 44
+ybyte 32
+end
+ybyte 105
+ybyte add 48 s
+if eq get Ypt s 5
+for q ulong len Yi
+ybyte ulong get Yi q
+end
+else
+for q ulong len Yu
+ybyte ulong get Yu q
+end
+end
+end
+yrettext t
+end
+
+fn yreadunit to ulong
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+ydie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Yone 0 1
+if lt r 0
+ydie 77
+end
+if gt r 0
+ydie 65
+end
+end
+ret n
+end
+
+fn main to int
+constants
+ytakename
+n = yreadunit
+code = decode n
+if eq code 68
+ydie 68
+end
+if ne code 0
+ydie 65
+end
+if ne ys2 0
+ydie 68
+end
+for k ulong get M 4
+ymetric k
+end
+root = yroot
+t = get Ot root
+total = add add len Yhead len Yru len Ytail
+total = add total add get Ynl 0 1
+if eq t 6
+total = add total 1
+end
+total = add total yparams
+total = add total get Yln root
+if ywrapped root
+total = sub total 2
+end
+if gt total 4096
+ydie 67
+end
+put Yl 0 0
+ysignature t
+yemit root 1
+for i ulong len Ytail
+ybyte ulong get Ytail i
+end
+if ne get Yl 0 total
+ydie 65
+end
+sent = ulong 0
+while lt sent total
+r = write 1 Yo sent sub total sent
+if le r 0
+ydie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end

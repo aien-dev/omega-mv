@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Transparent host dispatch; validation, hashing and S2 lowering run in seeded native Omega (spec/universal/translation-s2-v1.md)."""
+from pathlib import Path
+import hashlib,json,os,sys
+root=Path(__file__).resolve().parents[2]
+NAME='lower-s2'
+PIN='734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61'
+CLOSURE={'src/source-aware/vendor/sha256.om','src/source-aware/core-v3.om','src/adapters/upper-lower-s2.om'}
+# The optional NAME is passed through; the native tool validates it (64 on refusal).
+try:
+    build=root/'build/S2';m=json.loads((build/'build.json').read_text());exe=build/NAME;a=m['artifacts'][NAME]
+    if a['compiler_sha256']!=PIN:raise ValueError('compiler identity')
+    if set(a['inputs'])!=CLOSURE:raise ValueError('source closure')
+    for rel,digest in a['inputs'].items():
+        if hashlib.sha256((root/rel).read_bytes()).hexdigest()!=digest:raise ValueError('changed source '+rel)
+    if hashlib.sha256(exe.read_bytes()).hexdigest()!=a['binary_sha256']:raise ValueError('changed artifact')
+except (OSError,ValueError,KeyError,TypeError) as exc:
+    print('LOWER_STALE_OR_MISSING_BUILD: '+str(exc),file=sys.stderr);raise SystemExit(78)
+os.execv(exe,[str(exe)]+sys.argv[1:])
