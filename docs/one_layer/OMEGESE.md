@@ -824,10 +824,13 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `listen fd backlog` | Listen for connections. |
 | `accept fd flags` | Accept a connection with `accept4`; return descriptor, without peer-address output. |
 | `sockname fd A off n` | Write socket address bytes; return the full address length, which may exceed capacity when truncated. |
-| `sockopt fd level option A off n` | Set a socket option from a readonly byte slice. Option values and layouts follow the Linux ARM64 interface. |
+| `sockopt fd level option A off n` | Set one allowlisted scalar transport option from a readonly four-byte slice; see the allowlist below. |
 | `recv fd A off n flags` | Receive into a writable slice. |
 | `send fd A off n flags` | Send a slice with `MSG_NOSIGNAL` added, so a closed peer returns an error. |
 | `waitio fd events interval` | Poll one descriptor. Return readiness bits, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. Events outside 0..65535 trap 3. |
+| `peercred fd A off capacity` | Read Linux `SO_PEERCRED` into a writable slice of at least 12 bytes: little-endian 32-bit PID, UID, GID; return zero or negative errno. |
+| `pollfds A off n interval` | Poll a writable slice of packed eight-byte Linux `pollfd` records. `n` is bytes, a multiple of eight, at most 8192. Return ready-entry count, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. |
+| `sendmsg fd A off n flags` | Send one checked payload using a private `msghdr` and single `iovec`, without ancillary data or destination-address override. Adds `MSG_NOSIGNAL`; returns a possibly partial byte count or negative errno. |
 | `fork` | Copy the current process: zero in the child, child PID in the parent, negative errno on failure. |
 | `getpid` | Return the current process ID. |
 | `killpid pid signal` | Send a signal; zero signal checks existence/permission. |
@@ -855,8 +858,32 @@ the kernel writes the output, so overlapping path and output slices are safe.
 `cwd` requires writable bytes. It preserves the kernel's count convention:
 the returned count includes its trailing zero byte. `readlnk` never appends a
 zero byte. These operations are Linux `getcwd` and `readlinkat(AT_FDCWD)`.
-`sockopt` is Linux `setsockopt`; it accepts readonly option bytes and does not
-provide pointer values or arbitrary system-call access.
+`sockopt` is Linux `setsockopt`, restricted to `SOL_SOCKET` (level 1)
+`SO_REUSEADDR` (2), `SO_REUSEPORT` (15), `SO_KEEPALIVE` (9), `SO_SNDBUF` (7),
+`SO_RCVBUF` (8), and `IPPROTO_TCP` (level 6) `TCP_NODELAY` (1).
+Each value is exactly four little-endian bytes. An unlisted level/option returns
+`-92` (`ENOPROTOOPT`) without invoking the kernel; an allowed option with a
+different length returns `-22` (`EINVAL`). Kernel errors for listed operations
+are preserved, including `-9` (`EBADF`) and `-95` (`EOPNOTSUPP`) when a socket
+family does not support a listed option. No pointer-bearing option is exposed.
+
+`peercred` is kernel-attested local peer identity, not application authorization.
+Use it only on a connected Unix socket and compare the returned identity with
+the service's explicit policy. Unavailable or unexpected credentials must fail
+closed. Capacity below 12 traps 3 before the syscall; extra capacity is untouched.
+
+Each `pollfds` record is `fd:int32`, `events:uint16`, `revents:uint16`, in
+little-endian byte order. The kernel updates `revents` in place. Misaligned byte
+lengths and lengths above 8192 trap 3. A zero-length slice is a timed sleep.
+Applications must inspect error/hangup bits and every syscall result.
+
+Networking errors use the existing stable Linux-arm64 negative-errno contract:
+`-4` interrupted, `-11` would block, `-32` broken pipe, `-110` timeout,
+`-111` refused, and `-115` connect in progress. `read`, `write`, `send`, `recv`,
+and `sendmsg` may complete partially. The library must advance by the actual
+count, distinguish EOF from errors, retry interruptions within a monotonic
+deadline, and wait for readiness on nonblocking sockets rather than spin.
+Never retry `fclose` after an error: the descriptor may already be released.
 
 A packed list is a little-endian `u16` count followed by that many records,
 each a little-endian `u16` byte length and those bytes. There is no padding or

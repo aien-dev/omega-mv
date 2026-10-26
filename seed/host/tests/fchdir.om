@@ -4,7 +4,7 @@ text inside "inside"
 text p "mode2.tmp"
 fn main to int
 pp = getppid
-if eq pp long 0
+if le pp long 0
 ret 1
 end
 me = getpid
