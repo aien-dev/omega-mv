@@ -1,0 +1,87 @@
+# tls-fuzz-chunk: one chunk (<= 5 h of fuzzing, inside the 6 h hosted-job limit) of the om/tls AFL++
+# qemu_mode campaign for one target on a GitHub-hosted ubuntu-24.04-arm runner (4 vCPU: one -M and
+# three -S instances). The corpus is carried between chunks as an artifact. Scratch branch only.
+name: tls-fuzz-chunk
+on:
+  workflow_call:
+    inputs:
+      chunk: {type: number, required: true}
+      seconds: {type: number, required: true}
+permissions:
+  contents: read
+jobs:
+  fuzz:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [fz_flight, fz_hs, fz_x509, fz_pem, fz_dns, fz_http, fz_https]
+    env:
+      T: ${{ matrix.target }}
+      C: ${{ inputs.chunk }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: aflpp-v4.40c-exitrange, path: aflpp}
+      - name: previous corpus
+        if: inputs.chunk > 1
+        uses: actions/download-artifact@v4
+        with: {name: "corpus-${{ matrix.target }}-c${{ inputs.chunk - 1 }}", path: prev}
+      - name: build target and replay seeds
+        run: |
+          set -eu
+          chmod +x aflpp/afl-*; mkdir -p rep
+          h=$(sha256sum seed/out/omc | cut -c1-64); echo "omc $h" | tee rep/env.txt
+          test "$h" = 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+          { echo "source $(git rev-parse HEAD) chunk $C target $T"; nproc; grep -m1 Features /proc/cpuinfo; cat /proc/loadavg; } | tee -a rep/env.txt
+          FUZZ_TARGETS=$T OUT=$PWD/fz AFLPP=$PWD/aflpp sh om/tls/test/fuzz/run.sh build replay | tee rep/build-replay.log
+          sha256sum fz/bin/$T | tee -a rep/env.txt
+      - name: fuzz
+        run: |
+          set -u
+          export AFL_PATH=$PWD/aflpp AFL_CRASH_EXITCODE=101-114 AFL_NO_UI=1 AFL_SKIP_CPUFREQ=1 \
+            AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_AUTORESUME=1
+          S=om/tls/test/fuzz/seeds
+          case $T in fz_flight|fz_hs|fz_x509) A=$S/fzstore.pem;; fz_pem) A=$S/chain.bin;; *) A=;; esac
+          mkdir -p out
+          if [ -f prev/out.tar ]; then tar -xf prev/out.tar; IN=-; else IN=$S/$T; fi
+          for i in 0 1 2 3; do
+            if [ $i = 0 ]; then role="-M m"; else role="-S s$i"; fi
+            nice -n 19 aflpp/afl-fuzz -Q -c 0 -b $i $role -V ${{ inputs.seconds }} -i "$IN" -o out -t 5000 -- \
+              fz/bin/$T $A > rep/afl-$i.log 2>&1 &
+          done
+          wait
+          cat /proc/loadavg | tee rep/loadavg-end.txt
+      - name: stats and crash triage
+        if: always()
+        run: |
+          set -u
+          S=om/tls/test/fuzz/seeds
+          case $T in fz_flight|fz_hs|fz_x509) A=$S/fzstore.pem;; fz_pem) A=$S/chain.bin;; *) A=;; esac
+          printf 'target\tinstance\trun_time\texecs\texecs_per_sec\tcrashes\thangs\tedges\tbitmap\tcorpus\n' > rep/stats.tsv
+          for d in out/*/; do f=$d/fuzzer_stats; [ -f "$f" ] || continue; g() { sed -n "s/^$1 *: //p" "$f"; }
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$T" "$(basename $d)" "$(g run_time)" "$(g execs_done)" \
+              "$(g execs_per_sec)" "$(g saved_crashes)" "$(g saved_hangs)" "$(g edges_found)" "$(g bitmap_cvg)" "$(g corpus_count)" >> rep/stats.tsv
+          done
+          cat rep/stats.tsv
+          mkdir -p rep/crashes; : > rep/triage.txt
+          for f in out/*/crashes/id* out/*/hangs/id*; do
+            [ -f "$f" ] || continue
+            timeout 20 fz/bin/$T $A < "$f" > /dev/null 2>&1; ex=$?
+            h=$(sha256sum "$f" | cut -c1-12)
+            echo "$f exit $ex sha $h" | tee -a rep/triage.txt
+            if [ "$ex" -ge 100 ] && [ "$ex" -ne 124 ]; then
+              cp "$f" rep/crashes/$T-exit$ex-$h
+              AFL_PATH=$PWD/aflpp AFL_CRASH_EXITCODE=101-114 timeout 600 aflpp/afl-tmin -Q -t 5000 -i "$f" -o rep/crashes/$T-exit$ex-$h.min -- fz/bin/$T $A >> rep/tmin.log 2>&1 || true
+            fi
+          done
+          echo "triaged $(wc -l < rep/triage.txt) saved inputs, reproduced natively: $(ls rep/crashes | grep -vc '\.min$')" | tee -a rep/triage.txt
+          mkdir -p next; rm -f out/*/.cur_input; tar -cf next/out.tar out
+          du -sh next/out.tar out | tee -a rep/env.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "corpus-${{ matrix.target }}-c${{ inputs.chunk }}", path: next/, retention-days: 30}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "report-${{ matrix.target }}-c${{ inputs.chunk }}", path: rep/, retention-days: 90}
