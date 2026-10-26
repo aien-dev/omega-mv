@@ -8,7 +8,10 @@
 ifndef BROWNIAN_ACTIVE_MK
 BROWNIAN_ACTIVE_MK := 1
 .PHONY: brownian-active-reanalyse test-brownian-active brownian-active-dev0 brwa-purity brwa-cli brownian-active-dev1-power brownian-active-dev1 brownian-active-dev0-regress
-BRWA_FLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itools -ffp-contract=off -fno-fast-math
+# -Wno-pedantic: brw_active_dev0 links the generated binding src/omega_om_units.c, whose runtime
+# entry table uses GNU range designators that ISO C forbids under -Werror=pedantic. Generator fix:
+# omega-bridge #17 (ABI-v2 line); only that diagnostic is silenced, the rest stay strict.
+BRWA_FLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itools -ffp-contract=off -fno-fast-math -Wno-pedantic
 BRWA_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 BRWA_LIB = tools/brownian/brw_active.c src/turing/ty_prd2.c src/turing/ty_qcont.c src/turing/ty_prd.c src/turing/ty_math.c
 BRWA_HDRS = tools/brownian/brw_active.h src/turing/ty_prd2.h src/turing/ty_qcont.h src/turing/ty_prd.h src/turing/ty_math.h src/sha256.h

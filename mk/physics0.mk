@@ -14,7 +14,9 @@ ifndef PHYSICS0_MK
 PHYSICS0_MK := 1
 .PHONY: physics0-test physics0-evidence pd0-world
 P0_DIR = $(OUT_DIR)/physics0
-P0_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itests/physics0
+# -Wno-pedantic: P0_SRCS links the generated binding src/omega_om_units.c, whose runtime entry
+# table uses GNU range designators; omega-bridge #17 removes the need. See mk/estimation.mk.
+P0_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itests/physics0 -Wno-pedantic
 P0_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 # learner-side (no generator, no file I/O): the G5 isolation check runs on these objects
 P0_LEARNER_SRCS = src/physics0/pd0_chan.c src/physics0/pd0_wire.c src/physics0/pd0_rng.c src/physics0/pd0_relation.c
