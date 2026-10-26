@@ -1,0 +1,6 @@
+call set 1 0xfff8000000000123
+call set 0 0x3ff0000000000000
+call get 1
+call get 0
+call get -1
+region g

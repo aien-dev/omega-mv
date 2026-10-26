@@ -1,0 +1,8 @@
+set = void
+set = void
+get = 255
+get = 7
+get TRAP code=3
+set TRAP code=3
+get = 0
+region g ff000007

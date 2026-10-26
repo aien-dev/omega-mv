@@ -1,0 +1,6 @@
+set = void
+set = void
+get = 0xfff8000000000123
+get = 0x3ff0000000000000
+get TRAP code=3
+region g 000000000000f03f230100000000f8ff

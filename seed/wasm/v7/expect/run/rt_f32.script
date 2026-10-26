@@ -1,0 +1,7 @@
+# signaling-NaN payload and -0 survive RSTORE/RLOAD bit-exactly
+call set 0 0x7fa00001
+call set 1 0x80000000
+call get 0
+call get 1
+call get 2
+region g

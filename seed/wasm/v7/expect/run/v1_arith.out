@@ -1,0 +1,14 @@
+addi TRAP code=1
+addi = -2
+addu = 44
+divi TRAP code=1
+remi = 0
+divi TRAP code=2
+remi = -1
+shl8 TRAP code=1
+shl8 = -128
+shl8 TRAP code=7
+shr8 = -1
+negu = 65535
+memory = 1
+stop TRAP code=9

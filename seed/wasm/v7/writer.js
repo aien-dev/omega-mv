@@ -384,7 +384,7 @@ const twoFuncLocal = (body1) => ({
     { name: 'b', params: ['u32'], ret: 'u32', regs: ['u32', 'u32'], blocks: [body1] },
   ],
 });
-fx.ok_own_local = twoFuncLocal([['const', 1, 0], ['rload', 2, 1, 1], ['ret', 2]]);
+fx.ok_own_local = twoFuncLocal([['rload', 2, 1, 0], ['ret', 2]]);
 fx.inv_foreign_load = twoFuncLocal([['const', 1, 0], ['rload', 2, 0, 1], ['ret', 2]]);
 fx.inv_foreign_init = twoFuncLocal([['rinit', 0, 0], ['ret', 0]]);
 fx.inv_foreign_store = twoFuncLocal([['const', 1, 0], ['rstore', 0, 1, 0], ['ret', 0]]);

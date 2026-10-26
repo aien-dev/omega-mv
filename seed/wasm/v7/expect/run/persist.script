@@ -1,0 +1,12 @@
+call bump
+call bump
+# writes 3 then traps reading index 1: the write persists
+call partial
+call bump
+region c
+# overflow trap before the store: nothing written
+call ovf 2147483647
+region c
+call ovf 1
+region c
+call bump

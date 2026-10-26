@@ -504,7 +504,7 @@ function bigToF32Bits(v) {
 
 function castValue(dt, st, v) {
   if (isInt(st) && isInt(dt)) {
-    if (v < intMin(dt) || v > intMax(dt)) trap(5);
+    if (v < intMin(dt) || v > intMax(dt)) trap(5); // M:cast5
     return v;
   }
   if (isFloat(st) && isInt(dt)) {
@@ -752,7 +752,7 @@ function main(argv) {
           return v;
         });
         try {
-          const r = inst.call(fi, vals);
+          const r = inst.call(fi, vals); // M:callsite
           out.push(f.name + ' = ' + formatValue(f.ret, r) + '\n');
         } catch (e) {
           if (!(e instanceof Trap)) { flush(); process.stderr.write('oracle: ' + e.message + '\n'); return 3; }
