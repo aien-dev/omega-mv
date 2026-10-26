@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-R=/home/drakestapleton/.claude/jobs/9d0b86f6/tmp/bench-scratch/runs
+R="${1:-$HOME/.claude/jobs/9d0b86f6/tmp/bench-scratch/runs}"
 cd $R || exit 1
 sec() { awk -F: '{ if (NF==3) print $1*3600+$2*60+$3; else print $1*60+$2 }'; }
 stat3() { sort -n | awk '{a[NR]=$1} END{printf "%s / %s / %s", a[int((NR+1)/2)], a[1], a[NR]}'; }
