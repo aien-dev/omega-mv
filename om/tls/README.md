@@ -254,9 +254,9 @@ Not covered, or covered only partly:
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
 | `sh om/tls/test/drbg/run.sh OMC` | `DRBG PASS vectors=810 (acvp=90, cavp=720) api=23 mutants=13/13` (observed 2026-10-26, omc `2c824805`) |
-| `sh om/tls/test/fips/run.sh OMC` | `FIPS PASS checks=45 drbgerr=46 kat-mutants=14/14 code-mutants=16/16` (observed 2026-10-26, omc `2c824805`) |
+| `sh om/tls/test/fips/run.sh OMC` | `FIPS PASS checks=49 drbgerr=50 ecgenerr=52 kat-mutants=14/14 code-mutants=18/18` (observed 2026-10-26, omc `2c824805`, with the approved-only ECDH key generation) |
 | `sh om/tls/test/fips/entropy.sh OMC EA_CPP_DIR` | `ENTROPY PASS ...` with the min-entropy estimates; needs the NIST SP800-90B_EntropyAssessment tool built separately |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-27) |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=57 residue=PASS net=PASS mutants=34/34` (omc `2c824805`, with the approved-only mode and the FIPS module integrated; `net=NOT_RUN` without `TLS_NET`). Earlier, before the approved-only mode: `interop=44 ... mutants=27/27`, observed on both compilers 2026-10-27 |
 | `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
 
 How the suites are built:
