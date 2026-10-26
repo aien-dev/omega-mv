@@ -1592,9 +1592,9 @@ put p 1 hb
 put p 2 get rr add X5RSZ X5RKO
 put p 3 get rr add X5RSZ X5RKL
 put p 4 kt
-to = get rr X5RTBO
+tbo = get rr X5RTBO
 tl = get rr X5RTBL
-put p 5 sha2_digest hb part cd to tl edit hs
+put p 5 sha2_digest hb part cd tbo tl edit hs
 dl = get p 5
 so = get rr X5RSGO
 for i ulong sl
