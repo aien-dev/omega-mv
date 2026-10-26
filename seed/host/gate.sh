@@ -55,6 +55,9 @@ for case in 1 2 3; do
     [ "$rc" = 103 ] || { printf 'FAIL: netdata case %s exit %s, wanted 103\n' "$case" "$rc" >&2; exit 1; }
 done
 printf 'PASS native network slice bounds and poll record-size refusal\n'
+compile netpeer
+(cd "$stage"; timeout 10 ./netpeer)
+test ! -e "$stage/netpeer.sock"
 compile device
 "$stage/device"
 printf 'PASS native checked device ioctl composed with host files and pipes\n'
@@ -71,7 +74,7 @@ compile reserve
 (cd "$stage"; ./reserve)
 test ! -e "$stage/reserve.bin"
 compile memcheck
-(cd "$stage"; ./memcheck "$root/seed/out/omc")
+(cd "$stage"; ./memcheck "$OMC")
 compile structfile
 (cd "$stage"; ./structfile)
 test ! -e "$stage/structfile.tmp"
@@ -125,7 +128,7 @@ for pair in "getuid:$uid" "geteuid:$uid" "getgid:$gid" "getegid:$gid"; do
     val=${pair#*:}
     want=$((val % 256))
     printf 'fn main to int\nret int %s\nend\n' "$word" > "$stage/id.om"
-    "$root/seed/out/omc" < "$stage/id.om" > "$stage/id.bin" 2> "$stage/id.err" || {
+    "$OMC" < "$stage/id.om" > "$stage/id.bin" 2> "$stage/id.err" || {
         printf 'FAIL: %s did not compile: %s\n' "$word" "$(cat "$stage/id.err")" >&2
         exit 1
     }
