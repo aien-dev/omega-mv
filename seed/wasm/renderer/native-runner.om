@@ -1,0 +1,35 @@
+note native-runner.om: AArch64 program-mode fixture only. It follows glow.om and background.om; the gate
+note appends a generated fn main from glow-cases.tsv. fbdump writes the canvas as little-endian uint32
+note pixels, row-major, w*h*4 bytes, to stdout. Exit 90 on a failed write (below the trap range).
+global outb uchar 4096
+fn outall k ulong to void
+p = ulong 0
+note every pass writes at least one byte of at most 4096
+while lt p k bound 4096
+m = write 1 outb p sub k p
+if le m 0
+exit 90
+end
+p = add p ulong m
+end
+end
+note at most w*h <= 65536 pixels; outb flushes every 1024 pixels
+fn fbdump to void
+n = mul ulong get cf 0 ulong get cf 1
+i = ulong 0
+k = ulong 0
+while lt i n bound 65536
+v = get fb i
+put outb k uchar and v 255
+put outb add k 1 uchar and shr v 8 255
+put outb add k 2 uchar and shr v 16 255
+put outb add k 3 uchar shr v 24
+k = add k 4
+if eq k 4096
+outall k
+k = ulong 0
+end
+i = add i 1
+end
+outall k
+end

@@ -1,0 +1,37 @@
+# Glow parity cases: one source for the C oracle, the native Omega runner and the wasm harness.
+# frame NAME W H        new canvas, every pixel 0, clip = whole canvas; the previous frame is dumped
+# clip X Y W H          clip rectangle in pixels (C ck_rect)
+# grad                  fixture gradient inside clip and canvas (background.om)
+# glow CX CY R RED GREEN BLUE A   ck_glow; CX CY R in 16ths of a pixel; colour CK_RGB(RED, GREEN, BLUE)
+# Output: every frame's whole canvas, little-endian uint32 pixels, row-major, frames in order.
+# Colours are copied from the pinned callers (adapter.c lines 174-175, mind.c lines 228-265).
+frame	background	64	48
+clip	8	6	40	30
+grad
+frame	flash	64	48
+grad
+glow	520	392	300	200	210	255	85
+glow	520	392	100	255	240	224	256
+frame	clipped	64	48
+clip	8	6	40	30
+grad
+glow	700	500	420	255	210	170	230
+glow	40	40	50	255	236	214	256
+frame	edges	64	48
+grad
+glow	-100	-60	600	112	92	255	200
+glow	1100	800	500	60	74	210	52
+frame	saturate	32	24
+clip	4	4	20	12
+grad
+glow	256	192	320	255	250	240	4294967295
+glow	250	190	5	255	236	214	256
+glow	250	190	0	255	236	214	256
+glow	250	190	-3	255	236	214	256
+glow	250	190	200	255	236	214	0
+frame	stride	37	23
+clip	3	2	30	19
+grad
+glow	300	180	260	206	222	255	300
+glow	127	129	37	255	214	160	180
+glow	590	360	90	255	222	176	128

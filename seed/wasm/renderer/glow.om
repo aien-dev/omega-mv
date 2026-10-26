@@ -1,0 +1,142 @@
+note glow.om: ck_glow, the soft round light of Allen's scene, ported from the pinned C drawing kit
+note aien-dev/aienux da55660ea7337f2b6a42095fcd1fb6ddebe1cc7c native/kernel/ui/paint.c lines 158-185
+note with paint.h ck_clip ck_add ck_ch ck_max ck_min and allen_font.c ck_af_isqrt lines 135-150.
+note Every helper precedes its callers (IR mode calls earlier functions only); no continue; no host
+note word. State lives in fixed globals; every export takes and returns scalars only.
+note fb  framebuffer: 0x00RRGGBB pixels, row-major, rows cf0 apart (C ck_canvas.px).
+note cf  int cells: 0 canvas w, 1 canvas h, 2 clip x, 3 clip y, 4 clip w, 5 clip h.
+note gl  long cells of one ckglow call: 0 r*r, 1 2^40 div r*r, 2 color, 3 a, 4 fitted x, 5 fitted last x.
+global fb uint 65536
+global cf int 6
+global gl long 6
+fn imax a int b int to int
+if gt a b
+ret a
+end
+ret b
+end
+fn imin a int b int to int
+if lt a b
+ret a
+end
+ret b
+end
+note C CK_RGB(r, g, b) = r << 16 | g << 8 | b
+fn ckrgb r uint g uint b uint to uint
+ret or or shl r 16 shl g 8 b
+end
+note One channel of C ck_add: ck_ch(d, s) + (ck_ch(c, s) * a >> 8), held at 255; uint wraps as in C.
+fn chadd d uint c uint s uint a uint to uint
+v = add and shr d s 255 shr mul and shr c s 255 a 8
+if gt v 255
+ret uint 255
+end
+ret v
+end
+fn ckadd d uint c uint a uint to uint
+ret or or shl chadd d c 16 a 16 shl chadd d c 8 a 8 chadd d c 0 a
+end
+note C ck_af_isqrt. bit starts at 4^31 and drops by a factor 4 per pass, so each loop ends within 32.
+fn isqrt v ulong to ulong
+n = v
+r = ulong 0
+b = shl ulong 1 62
+while gt b n bound 32
+b = shr b 2
+end
+while ne b 0 bound 32
+if ge n add r b
+n = sub n add r b
+r = add shr r 1 b
+else
+r = shr r 1
+end
+b = shr b 2
+end
+ret r
+end
+note C ck_canvas {px, w, h}: a w*h canvas inside fb, cleared to 0, clip reset to the whole canvas.
+note Trap 9 refuses a non-positive side or a canvas larger than fb (the C caller owns that check).
+fn fbsize w int h int to void
+if or le w 0 le h 0
+trap 9
+end
+n = mul ulong w ulong h
+if gt n len fb
+trap 9
+end
+put cf 0 w
+put cf 1 h
+put cf 2 0
+put cf 3 0
+put cf 4 w
+put cf 5 h
+i = ulong 0
+while lt i n bound 65536
+put fb i 0
+i = add i 1
+end
+end
+note C ck_rect clip {x, y, w, h}, copied as given; ckglow intersects it with the canvas.
+fn fbclip x int y int w int h int to void
+put cf 2 x
+put cf 3 y
+put cf 4 w
+put cf 5 h
+end
+fn fbget i uint to uint
+ret get fb ulong i
+end
+note A pixel or row centre offset in 16ths of a pixel, squared: C int64 dx * dx and dy * dy.
+fn sq v long to long
+ret mul v v
+end
+note C ck_glow inner body for pixel x of row y: d2, the falloff f, w = f^3 / 65536, then ck_add.
+fn glpix x int y int cx int dy2 long to void
+d2 = add sq sub add mul long x 16 8 long cx dy2
+if lt d2 get gl 0
+f = sub uint 256 uint shr mul ulong d2 ulong get gl 1 32
+w = shr mul shr mul f f 8 f 8
+p = add mul ulong y ulong get cf 0 ulong x
+put fb p ckadd get fb p uint get gl 2 shr mul w uint get gl 3 8
+end
+end
+note C ck_glow row y: rows with dy^2 >= r^2 draw nothing; the span is cut to the fitted x range.
+note At most canvas w <= 65536 pixels per row.
+fn glrow y int cx int cy int to void
+dy2 = sq sub add mul long y 16 8 long cy
+if lt dy2 get gl 0
+half = int isqrt ulong sub get gl 0 dy2
+x0 = imax int get gl 4 shr sub cx half 4
+x1 = imin int get gl 5 shr add cx half 4
+x = x0
+while le x x1 bound 65536
+glpix x y cx dy2
+x = add x 1
+end
+end
+end
+note C ck_glow(cv, clip, cx, cy, r, color, a): centre and radius in 16ths of a pixel, colour added with
+note weight a * (1 - d^2/r^2)^3, only inside clip and canvas (C fit: clip, then canvas; the same set).
+note At most canvas h <= 65536 rows.
+fn ckglow cx int cy int r int color uint a uint to void
+if and gt r 0 ne a 0
+x0 = imax imax shr sub cx r 4 get cf 2 0
+y0 = imax imax shr sub cy r 4 get cf 3 0
+x1 = imin imin add shr add cx r 4 1 add get cf 2 get cf 4 get cf 0
+y1 = imin imin add shr add cy r 4 1 add get cf 3 get cf 5 get cf 1
+if and lt x0 x1 lt y0 y1
+put gl 0 mul long r long r
+put gl 1 long div shl ulong 1 40 ulong get gl 0
+put gl 2 long color
+put gl 3 long a
+put gl 4 long x0
+put gl 5 long sub x1 1
+y = y0
+while lt y y1 bound 65536
+glrow y cx cy
+y = add y 1
+end
+end
+end
+end

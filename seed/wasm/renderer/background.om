@@ -1,0 +1,23 @@
+note background.om: fixture-only gradient background for the glow parity cases; not a scene primitive.
+note It is concatenated after glow.om. It paints only the clip rectangle intersected with the canvas,
+note so pixels outside the clip stay 0 and every later glow lands on known non-zero light.
+note Law (repeated in oracle-glow.c): r = (x*7) and 255, g = (y*11) and 255, b = ((x+y)*3) and 255.
+fn bgpix x int y int to uint
+ret ckrgb and uint mul x 7 255 and uint mul y 11 255 and uint mul add x y 3 255
+end
+note Row and column counts are at most canvas h and w, each <= 65536.
+fn fbgrad to void
+x0 = imax get cf 2 0
+y0 = imax get cf 3 0
+x1 = imin add get cf 2 get cf 4 get cf 0
+y1 = imin add get cf 3 get cf 5 get cf 1
+y = y0
+while lt y y1 bound 65536
+x = x0
+while lt x x1 bound 65536
+put fb add mul ulong y ulong get cf 0 ulong x bgpix x y
+x = add x 1
+end
+y = add y 1
+end
+end
