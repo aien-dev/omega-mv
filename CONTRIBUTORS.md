@@ -7,6 +7,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 |---|---|
 | Codex (GPT-6.1 Sol) | Fail-closed secret and host-qualification gates, fixed original-fixture/status baseline, offline negative controls and current pipeline documentation |
 | Codex (GPT-6.1 Sol) | Corrected boolean bitwise typing in seeded OSC IR output, with C-referee regression cases |
+| Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
 | Codex | Current .om front-page status and source-backed C migration inventory |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
