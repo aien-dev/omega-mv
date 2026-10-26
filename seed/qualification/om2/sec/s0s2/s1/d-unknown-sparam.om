@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 1 lines 36-49, errata E4: parameter of a struct type that is not declared: sev=unknown, span = Pt.
+om2 diag
+fn f p view Pt to void
+end
+fn main to int
+ret 0
+end

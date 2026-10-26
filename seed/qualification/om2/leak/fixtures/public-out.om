@@ -1,0 +1,8 @@
+note Contract section 8, E11/E12: half-open public range excludes byte offset 40.
+note pub:0:32:8 must leave this load DATA and the branch MANUAL, overall NOT_RUN.
+fn f c view uchar 64 to ulong
+if eq get c 40 0
+ret 1
+end
+ret 0
+end

@@ -10499,7 +10499,7 @@ end
 if and eq isb2 0 ne ty2 lty
 fail 7
 end
-if and and ge c 33 le c 40 eq lty 1
+if and and ge c 33 le c 37 eq lty 1
 fail 7
 end
 end

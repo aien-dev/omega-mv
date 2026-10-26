@@ -1,0 +1,5 @@
+finish s w kt p k cnt
+for i ulong 8 unroll
+v = ulong get s i
+for j ulong 4 unroll
+put o add mul i 4 j uchar and shr v mul j 8 0xff

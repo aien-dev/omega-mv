@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 140-143: `and` is a preserving operation but is not listed on the
+note abstract line (ops rotr xor), so it needs open first. Erratum E8: error 7.
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 5
+e = and d d
+puth open e
+ret 0
+end

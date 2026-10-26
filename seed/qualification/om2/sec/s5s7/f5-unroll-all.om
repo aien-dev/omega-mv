@@ -1,0 +1,21 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, lines 124-126 and 4 line 87: an unrolled loop writes elements 0..7 at constant
+note indexes, so all N bits are definitely written and a non-constant get is accepted.
+note stdout: s[5] = 6, then the sum 1+..+8 = 36 (oracle exp/f5-unroll-all.out).
+om2
+fn f s edit uchar 8 fresh k ulong to ulong
+for i ulong 8 unroll
+put s i uchar add i 1
+end
+t = ulong 0
+for j ulong 8
+t = add t ulong get s j
+end
+putd ulong get s k
+ret t
+end
+fn main to int
+a = new uchar 8 0
+putd f a 5
+ret 0
+end

@@ -1,0 +1,16 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of inline-rec-direct-plain.om for the pinned compiler 734f0a39: same stdout.
+note Contract section 4 line 94: an inline function must not be recursive (error 9). f calls itself.
+note Without inline (inline-rec-direct-plain.om) program-mode recursion is allowed (OMEGESE 9.2) and
+note prints 55.
+note OM-1 unit: this line replaces the om2 line
+fn f n ulong to ulong
+if eq n 0
+ret 0
+end
+ret add n f sub n 1
+end
+fn main to int
+pu f 10
+ret 0
+end

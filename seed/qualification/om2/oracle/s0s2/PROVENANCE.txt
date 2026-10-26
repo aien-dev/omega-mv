@@ -1,0 +1,37 @@
+SPDX-License-Identifier: Apache-2.0
+Oracle for seed/qualification/om2/sec/s0s2 (L836 Phase B, lane FixLex, 2026-10-25).
+
+Tool: Python 3.12.3 (/usr/bin/python3). No compiler is run by the oracle.
+Command (worktree root):  python3 seed/qualification/om2/oracle/s0s2/oracle.py
+Writes: seed/qualification/om2/sec/s0s2/exp/*
+
+Inputs: contract spec/omegese-om2.md sha256 245bb74e940c811ab325e6fabb33f0599ad46aaf6b9064fd2750c43980040881;
+errata spec/omegese-om2-errata.md on aien-dev om2/contract at fd9e05a29ef8ee1f670a2e802e9dcd805c97c9b8
+(E4 col/span/found and the fmt "rest"; E6 Q2 expect classes and spans, E6 Q4 formatter edge cases);
+OMEGESE.md 9.3/9.4 (number range, text escapes).
+
+What it computes and how:
+- names-fn.out, names-var.out: Python re-implementation of the user functions/variables in
+  s0/names-*.om (64-bit unsigned wrap, 32-bit for uint).
+- hex-max.out, hex-places.out: int(digits, 16) of each literal, asserted equal to the stated maxima
+  (2^8-1 .. 2^64-1, 2^7-1 .. 2^63-1); hex-places exit status 10 from the put of 0xa.
+- x1..x5.fmt: the canonical formatter of contract 2 lines 63-72 + E4 + E6 Q4, applied to the bytes
+  of s2fmt/x*.om (the rest after "om2 fmt\n"): a line whose first token is note is unchanged;
+  a whitespace-only line becomes empty; otherwise leading spaces/tabs kept, tokens (a text literal
+  "..." is one token, escapes skipped) joined by one space except that a whitespace run next to
+  ( or ) is kept as written, trailing whitespace dropped, LF only, one final LF; asserts no CR, no
+  trailing blank line, idempotence and unchanged line count.
+- x1.out, x5.out: the bytes of the program's text literal decoded per OMEGESE 9.4 escapes;
+  exits 42 = 2 * 0x15 and 9.
+- d-*.err / d-mid-short.tok: human line "omc: line N: error E" and omc-diag record; span A-B located
+  in the exact fixture bytes (offending token as a whole space-separated word, or the LF for
+  d-mid-short), col = A - line start + 1, found = hex of the first <= 32 span bytes, '-' and
+  len-len at end of input (E4); expect per E6 Q2 (number, end, name) or the class wanted next
+  (newline after a complete expression, value inside one).
+
+Not from the oracle: OM-1 error codes and lines (and the C2 sha256 values in c2-extra.txt) are the
+definition of OM-1 itself (contract 0 line 11: the pinned omc 734f0a39), observed with
+  seed/out/omc < FILE   (exit status, stderr), sha256 of stdout for accepted units,
+and re-verified by sec/s0s2/pinned.cases (evidence/phaseB/s0s2-pinned.log). The OM-1 decimal twins
+s2hex/dec-*.om were made from the hex fixtures by replacing each 0x literal with Python's
+str(int(lit, 16)); their pinned runs reproduce the oracle's expected stdout.

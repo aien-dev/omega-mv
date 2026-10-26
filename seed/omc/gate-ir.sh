@@ -233,6 +233,9 @@ ir_multi break_nested 'fn f to uint\nx = uint 0\nwhile lt x uint 5 bound 20\ny =
 ir_multi shift_mixed 'fn f to ulong\nret shl ulong 1 uint 3\nend'
 ir_multi cmp_assign 'fn f to bool\nx = lt uint 1 uint 2\nx = eq uint 1 uint 1\nret x\nend'
 ir_multi cast_ret 'fn f to uchar\nret uchar uint 1\nend'
+ir_multi bool_and 'fn f a bool b bool to bool\nret and a b\nend'
+ir_multi bool_or 'fn f a bool b bool to bool\nret or a b\nend'
+ir_multi bool_xor 'fn f a bool b bool to bool\nret xor a b\nend'
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -284,5 +287,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 1 bool unit + 1 cast unit + 30 fuzz units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; structs IR spec-blocked'
 echo 'RC=0'

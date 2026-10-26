@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 154: the layout must come before the first fn; after it: error 29 on the layout line (errata E8, E9).
+om2
+fn first to int
+ret 0
+end
+layout la 8
+field a ulong 1 at 0 little
+end
+fn main to int
+ret 0
+end

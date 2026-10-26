@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 173: len 10, o = len, k = 0 passes both checks; the empty part is accepted
+note and the callee sees len 0. stdout 0 (exp/v6-part-empty.out).
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = ulong 10
+putd plen part a o 0
+ret 0
+end

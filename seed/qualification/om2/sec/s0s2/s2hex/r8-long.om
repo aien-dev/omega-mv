@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 line 55-55: long max is 2^63-1; refused with error 8 on the literal's line.
+om2
+fn main to int
+x = long 0x8000000000000000
+ret 0
+end

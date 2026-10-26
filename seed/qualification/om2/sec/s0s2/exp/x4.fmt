@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 line 65 + errata E6 (e): whitespace next to ( and ) is kept as written,
+note other runs between tokens become one space.
+om2
+fn main to int
+x = int 5
+y = add  (x)  2
+z = (  add y x )
+ret z
+end

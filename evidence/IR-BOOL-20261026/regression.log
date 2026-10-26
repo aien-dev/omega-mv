@@ -1,0 +1,40 @@
+Source baseline: ec07d25d5506d33567adbd4d9b518177b7933bad
+Before compiler SHA256: 499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec
+After compiler source SHA256: bd64bb6f20952818e155328f429ab6cd36bba213e3e00b60d796336f9d0c9343
+After compiler SHA256: befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+Platform: Linux aarch64, host only. No GPU, merge, or deployment.
+
+Regression command:
+  git show origin/main:seed/out/omc > build/seed/wasm/omc-before
+  chmod +x build/seed/wasm/omc-before
+  for op in and or xor; do
+    printf 'ir\nfn f a bool b bool to bool\nret %s a b\nend\n' "$op" > build/seed/wasm/bool-$op.om
+    build/seed/wasm/omc-before < build/seed/wasm/bool-$op.om > build/seed/wasm/bool-$op.before.ir
+    seed/out/omc < build/seed/wasm/bool-$op.om > build/seed/wasm/bool-$op.after.ir
+  done
+Observed process statuses:
+and before=7 after=0
+or before=7 after=0
+xor before=7 after=0
+
+Commands with retained full logs:
+  nice -n 19 sh seed/omega-from-seed.sh
+    seed-rebuild.log final verdict: RC=0
+  nice -n 19 make -j2 PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
+    build exited 0; C binaries are independent verification oracles only.
+  nice -n 19 sh seed/omc/gate-ir.sh
+    gate-ir.log final verdict: RC=0
+    bool_and, bool_or, bool_xor each byte-identical to C omega_emit and checker2 ACCEPT.
+    Existing bin_bool and bin_shift_bool refusals remain error 7; mul-to-add mutant differs.
+  nice -n 19 sh build/seed/wasm/gate5-scratch.sh
+    gate5.log final verdict: GATE5 PASS
+    gate5-scratch.sh is seed/omc/gate5.sh with ONLY E redirected from
+    evidence/SEED-0/omc to build/seed/wasm/gate5-evidence, preserving historical receipts.
+    Scratch size-history.tsv contains the freshly measured build row (retained alongside this log).
+    First run lacked that scratch history prerequisite and ended GATE5 FAIL;
+    retained unmodified as gate5-missing-scratch-history.log. Repeated with the measured row.
+    Wrong-word mutants A, B, and C were caught. Corpus/referee and every-error checks passed.
+    Existing prefix-only size diagnostics print errors while measuring partial compiler prefixes;
+    these are present in the retained full log and are not represented as successful compiles.
+
+NOT_RUN: GPU, full Alpha qualification, merge, deployment.

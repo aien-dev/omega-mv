@@ -1,0 +1,9 @@
+LEAKSCAN 1 words=51 entry=@13 data=none
+BRANCH @4 b.cs ->@11 len trap=3
+MEM @5 ldrb reg base=x0 index=x3 public-index
+MEM @9 ldr imm base=x7 index=- const trap-tail
+BRANCH @17 b.cs ->@44 len
+BRANCH @21 b.cs ->@49 len trap=4
+MEM @47 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=3 len=3 trap-check=0 data-branch=0 branch-unreached=0 mem=3 const=2 public-index=1 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC PASS

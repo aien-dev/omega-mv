@@ -1,0 +1,10 @@
+note E13 unknown-base/address control. Public runtime i is not an exact constant, so the secret
+note store's address may hit the count range and must revoke it. The bounds check itself stays len.
+fn f c edit uchar 104 a view uchar 1 i ulong to ulong
+put c i get a 0
+if eq get c 32 0
+ret 0
+else
+ret 1
+end
+end

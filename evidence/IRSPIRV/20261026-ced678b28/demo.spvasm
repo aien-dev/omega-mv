@@ -1,0 +1,93 @@
+; SPIR-V
+; Version: 1.0
+; Generator: Khronos; 0
+; Bound: 84
+; Schema: 0
+               OpCapability Addresses
+               OpCapability Kernel
+               OpCapability Int64
+               OpMemoryModel Physical64 OpenCL
+               OpEntryPoint Kernel %33 "avgu32"
+       %void = OpTypeVoid
+       %bool = OpTypeBool
+      %ulong = OpTypeInt 64 0
+%_ptr_Function_ulong = OpTypePointer Function %ulong
+%_ptr_CrossWorkgroup_ulong = OpTypePointer CrossWorkgroup %ulong
+          %6 = OpTypeFunction %void %_ptr_CrossWorkgroup_ulong %_ptr_CrossWorkgroup_ulong
+          %7 = OpTypeFunction %ulong %_ptr_Function_ulong
+          %8 = OpTypeFunction %ulong %_ptr_Function_ulong %ulong
+          %9 = OpTypeFunction %ulong %_ptr_Function_ulong %ulong %ulong
+         %10 = OpTypeFunction %ulong %_ptr_Function_ulong %ulong %ulong %ulong
+         %11 = OpTypeFunction %ulong %_ptr_Function_ulong %ulong %ulong %ulong %ulong
+         %12 = OpTypeFunction %ulong %_ptr_Function_ulong %ulong %ulong %ulong %ulong %ulong
+         %13 = OpTypeFunction %ulong %_ptr_Function_ulong %ulong %ulong %ulong %ulong %ulong %ulong
+%ulong_4294967295 = OpConstant %ulong 4294967295
+    %ulong_1 = OpConstant %ulong 1
+   %ulong_32 = OpConstant %ulong 32
+  %ulong_107 = OpConstant %ulong 107
+    %ulong_0 = OpConstant %ulong 0
+         %32 = OpFunction %ulong None %9
+         %34 = OpFunctionParameter %_ptr_Function_ulong
+         %35 = OpFunctionParameter %ulong
+         %36 = OpFunctionParameter %ulong
+         %37 = OpLabel
+         %38 = OpVariable %_ptr_Function_ulong Function
+         %39 = OpVariable %_ptr_Function_ulong Function
+         %40 = OpVariable %_ptr_Function_ulong Function
+         %41 = OpVariable %_ptr_Function_ulong Function
+         %42 = OpVariable %_ptr_Function_ulong Function
+         %43 = OpVariable %_ptr_Function_ulong Function
+         %44 = OpVariable %_ptr_Function_ulong Function
+         %46 = OpBitwiseAnd %ulong %35 %ulong_4294967295
+               OpStore %38 %46
+         %47 = OpBitwiseAnd %ulong %36 %ulong_4294967295
+               OpStore %39 %47
+               OpBranch %48
+         %48 = OpLabel
+               OpStore %42 %ulong_1
+         %50 = OpLoad %ulong %38
+         %51 = OpLoad %ulong %39
+         %52 = OpBitwiseAnd %ulong %50 %51
+         %53 = OpBitwiseAnd %ulong %52 %ulong_4294967295
+               OpStore %40 %53
+         %54 = OpLoad %ulong %38
+         %55 = OpLoad %ulong %39
+         %56 = OpBitwiseXor %ulong %54 %55
+         %57 = OpBitwiseAnd %ulong %56 %ulong_4294967295
+               OpStore %41 %57
+         %58 = OpLoad %ulong %41
+         %59 = OpLoad %ulong %42
+         %61 = OpUGreaterThanEqual %bool %59 %ulong_32
+               OpBranchConditional %61 %62 %63
+         %62 = OpLabel
+               OpStore %34 %ulong_107
+               OpReturnValue %ulong_0
+         %63 = OpLabel
+         %66 = OpShiftRightLogical %ulong %58 %59
+         %67 = OpBitwiseAnd %ulong %66 %ulong_4294967295
+               OpStore %43 %67
+         %68 = OpLoad %ulong %40
+         %69 = OpLoad %ulong %43
+         %70 = OpIAdd %ulong %68 %69
+         %71 = OpBitwiseAnd %ulong %70 %ulong_4294967295
+               OpStore %44 %71
+         %72 = OpLoad %ulong %44
+               OpReturnValue %72
+               OpFunctionEnd
+         %33 = OpFunction %void None %6
+         %73 = OpFunctionParameter %_ptr_CrossWorkgroup_ulong
+         %74 = OpFunctionParameter %_ptr_CrossWorkgroup_ulong
+         %75 = OpLabel
+         %76 = OpVariable %_ptr_Function_ulong Function
+               OpStore %76 %ulong_0
+         %77 = OpPtrAccessChain %_ptr_CrossWorkgroup_ulong %73 %ulong_0
+         %78 = OpLoad %ulong %77
+         %79 = OpPtrAccessChain %_ptr_CrossWorkgroup_ulong %73 %ulong_1
+         %80 = OpLoad %ulong %79
+         %81 = OpFunctionCall %ulong %32 %76 %78 %80
+               OpStore %74 %81
+         %82 = OpPtrAccessChain %_ptr_CrossWorkgroup_ulong %74 %ulong_1
+         %83 = OpLoad %ulong %76
+               OpStore %82 %83
+               OpReturn
+               OpFunctionEnd

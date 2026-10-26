@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 145-149: the body must be EXACTLY `or shl ulong x 32 ulong x`; the
+note commuted body is a different body, so the check is kept, but it holds for every x: exit 0,
+note stdout deadbeefdeadbeef (exp/a5-swap.out).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or ulong x shl ulong x 32
+end
+fn main to int
+d = dup32mk 0xdeadbeef
+puth open d
+ret 0
+end

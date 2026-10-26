@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note unroll-k65.om under om2 diag (section 1 lines 36-46, errata E4, E6 Q2, E7): error 8 at the token 65
+note on line 8, expect=number, obligation=-. Exact stderr exp/unroll-k65-diag.err.
+om2 diag
+fn main to int
+s = ulong 0
+c = ulong 0
+for i ulong 65 unroll
+s = add s i
+c = add c 1
+end
+ret int c
+end

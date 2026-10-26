@@ -1,0 +1,73 @@
+OM2GATE START cases=seed/qualification/om2/selftest/controls.cases scratch=build/om2-qual/selftest-controls
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE trap-103 line=4
+  $ seed/out/omc < build/om2-qual/selftest-controls/4.src > build/om2-qual/selftest-controls/4.elf 2> build/om2-qual/selftest-controls/4.cerr
+  $ build/om2-qual/selftest-controls/4.elf < /dev/null > build/om2-qual/selftest-controls/4.out 2> build/om2-qual/selftest-controls/4.err
+VERDICT trap-103 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE refuse-11 line=5
+  $ seed/out/omc < build/om2-qual/selftest-controls/5.src > build/om2-qual/selftest-controls/5.elf 2> build/om2-qual/selftest-controls/5.cerr
+VERDICT refuse-11 PASS compile exit=11 expected=11 refused with the expected error
+CASE killed-at-5 line=6
+  $ seed/out/omc < build/om2-qual/selftest-controls/6.src > build/om2-qual/selftest-controls/6.elf 2> build/om2-qual/selftest-controls/6.cerr
+  $ build/om2-qual/selftest-controls/6.elf < build/om2-qual/selftest-controls/6.in > build/om2-qual/selftest-controls/6.out 2> build/om2-qual/selftest-controls/6.err
+VERDICT killed-at-5 PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 5 stderr=match
+SUBST seed/qualification/om2/selftest/exit-from.txt seed/qualification/om2/selftest/exit-to.txt
+CASE subst-exit-3 line=8
+  MUTATE exact-once substitution at byte 267
+  $ seed/out/omc < build/om2-qual/selftest-controls/8.src > build/om2-qual/selftest-controls/8.elf 2> build/om2-qual/selftest-controls/8.cerr
+  $ build/om2-qual/selftest-controls/8.elf < /dev/null > build/om2-qual/selftest-controls/8.out 2> build/om2-qual/selftest-controls/8.err
+VERDICT subst-exit-3 PASS run exit=3 expected=3 stdout=match stderr=match
+  $ seed/out/omc < build/om2-qual/selftest-controls/9.src > build/om2-qual/selftest-controls/9.elf 2> build/om2-qual/selftest-controls/9.cerr
+COMPILER build/om2-qual/selftest-controls/9.elf sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 source line=9
+CASE cat-rebuilt-omc line=10
+  $ build/om2-qual/selftest-controls/9.elf < build/om2-qual/selftest-controls/10.src > build/om2-qual/selftest-controls/10.elf 2> build/om2-qual/selftest-controls/10.cerr
+  $ build/om2-qual/selftest-controls/10.elf < build/om2-qual/selftest-controls/10.in > build/om2-qual/selftest-controls/10.out 2> build/om2-qual/selftest-controls/10.err
+VERDICT cat-rebuilt-omc PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER seed/out/omc
+CASE survivor line=13
+  $ seed/out/omc < build/om2-qual/selftest-controls/13.src > build/om2-qual/selftest-controls/13.elf 2> build/om2-qual/selftest-controls/13.cerr
+  $ build/om2-qual/selftest-controls/13.elf < build/om2-qual/selftest-controls/13.in > build/om2-qual/selftest-controls/13.out 2> build/om2-qual/selftest-controls/13.err
+VERDICT survivor FAIL run exit=0 expected=0 mutant survived: stdout equals the oracle stderr=match
+CASE exit-mismatch line=14
+  $ seed/out/omc < build/om2-qual/selftest-controls/14.src > build/om2-qual/selftest-controls/14.elf 2> build/om2-qual/selftest-controls/14.cerr
+  $ build/om2-qual/selftest-controls/14.elf < /dev/null > build/om2-qual/selftest-controls/14.out 2> build/om2-qual/selftest-controls/14.err
+VERDICT exit-mismatch FAIL run exit=0 expected=1 stdout=match stderr=match
+CASE refuse-wrong-code line=15
+  $ seed/out/omc < build/om2-qual/selftest-controls/15.src > build/om2-qual/selftest-controls/15.elf 2> build/om2-qual/selftest-controls/15.cerr
+VERDICT refuse-wrong-code FAIL compile exit=11 expected=12 diagnostic does not name the expected error
+CASE refuse-accepted line=16
+  $ seed/out/omc < build/om2-qual/selftest-controls/16.src > build/om2-qual/selftest-controls/16.elf 2> build/om2-qual/selftest-controls/16.cerr
+VERDICT refuse-accepted FAIL compile exit=0 expected=11 refusal wrote compiler output diagnostic does not name the expected error
+CASE stderr-mismatch line=17
+  $ seed/out/omc < build/om2-qual/selftest-controls/17.src > build/om2-qual/selftest-controls/17.elf 2> build/om2-qual/selftest-controls/17.cerr
+  $ build/om2-qual/selftest-controls/17.elf < /dev/null > build/om2-qual/selftest-controls/17.out 2> build/om2-qual/selftest-controls/17.err
+VERDICT stderr-mismatch FAIL run exit=0 expected=0 stdout=match stderr differs at byte 0
+CASE planned line=19
+VERDICT planned NOT_RUN not run: OM-2 contract not frozen
+CASE malformed line=21
+VERDICT malformed INVALID malformed case line
+CASE signal line=22
+  $ seed/out/omc < build/om2-qual/selftest-controls/22.src > build/om2-qual/selftest-controls/22.elf 2> build/om2-qual/selftest-controls/22.cerr
+  $ build/om2-qual/selftest-controls/22.elf < /dev/null > build/om2-qual/selftest-controls/22.out 2> build/om2-qual/selftest-controls/22.err
+VERDICT signal INVALID child signal; wait low byte=9
+DEADLINE 1
+CASE timeout line=24
+  $ seed/out/omc < build/om2-qual/selftest-controls/24.src > build/om2-qual/selftest-controls/24.elf 2> build/om2-qual/selftest-controls/24.cerr
+  $ build/om2-qual/selftest-controls/24.elf < /dev/null > build/om2-qual/selftest-controls/24.out 2> build/om2-qual/selftest-controls/24.err
+VERDICT timeout INVALID child deadline exceeded, sent SIGKILL; wait low byte=9
+DEADLINE 30
+SUBST seed/qualification/om2/selftest/none-from.txt seed/qualification/om2/selftest/exit-to.txt
+CASE subst-no-match line=27
+  $ seed/out/omc < build/om2-qual/selftest-controls/27.src > build/om2-qual/selftest-controls/27.elf 2> build/om2-qual/selftest-controls/27.cerr
+VERDICT subst-no-match INVALID substitution must match exactly once; matches=0
+CASE missing-input line=28
+  $ seed/out/omc < build/om2-qual/selftest-controls/28.src > build/om2-qual/selftest-controls/28.elf 2> build/om2-qual/selftest-controls/28.cerr
+VERDICT missing-input INVALID input, source or fixture unreadable or too large
+CASE missing-source line=29
+  $ seed/out/omc < build/om2-qual/selftest-controls/29.src > build/om2-qual/selftest-controls/29.elf 2> build/om2-qual/selftest-controls/29.cerr
+VERDICT missing-source INVALID input, source or fixture unreadable or too large
+CASE exit-127 line=30
+VERDICT exit-127 INVALID malformed case line
+SUBST seed/qualification/om2/selftest/exit-from.txt seed/qualification/om2/selftest/exit-to.txt
+VERDICT subst INVALID a substitution was not followed by a source-building line
+OM2GATE INVALID cases=19 pass=5 fail=5 invalid=8 not_run=1

@@ -49,7 +49,7 @@ fi
 # Strict JSON line checker (tools/json_canon.c: Python json.loads rules, strict
 # UTF-8) for the --json scriptability checks; C + jq, no Python.
 JSONC=$WORK/json_canon
-if ! ${CC:-gcc} -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o "$JSONC" tools/json_canon.c src/sha256.c -lm; then
+if ! ${CC:-gcc} -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o "$JSONC" tools/json_canon.c src/omega_om_units.c -lm; then
     echo "QUAL setup json_canon FAIL build"
     exit 1
 fi

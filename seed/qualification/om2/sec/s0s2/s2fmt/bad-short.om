@@ -1,0 +1,6 @@
+note omegese-om2.md 2 line 70: malformed rest (line ends before an operand, OM-1 code 4) is refused.
+om2
+fn main to int
+x = int 5
+ret add  x
+end

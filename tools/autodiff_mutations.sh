@@ -27,7 +27,7 @@ trap 'rm -rf "$SCRATCH"' EXIT INT TERM
 TENSOR="src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c src/tensor/omega_tensor_reduce_seam.c \
 src/omega_numeric_reduce.c src/omega_numeric_transc.c"
 DEPS="src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c \
-src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c"
+src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
 FLAGS="-std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -O2 -DOMEGA_NUMERIC_CPU_ONLY"
 
 # name|file|sed expression (applied only to the line carrying MUT:<name>)

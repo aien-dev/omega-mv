@@ -127,7 +127,7 @@ system_prompt() {
 }
 # TOOL_PATHS: the files a run's results depend on. meta.txt records the commit (plus -dirty when any of these
 # differ from it); score.sh requires them unchanged between the generation commit and the scoring commit.
-TOOL_PATHS=(tools tests/one_layer docs/one_layer src/compiler src/sha256.c mk/omega-emit.mk mk/omegese.mk Makefile)
+TOOL_PATHS=(tools tests/one_layer docs/one_layer src/compiler src/omega_om_units.c mk/omega-emit.mk mk/omegese.mk Makefile)
 # meta_resume <repo root> <run's meta.txt> <meta.txt this invocation would write>: may this run resume?
 # Yes when the two are identical, or when only commit= differs, neither side is -dirty and TOOL_PATHS are the
 # same at both commits: a commit that adds evidence only (the G0 ledger, the Stage 1 interim scores) lands

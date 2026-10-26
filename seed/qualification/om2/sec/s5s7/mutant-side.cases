@@ -1,0 +1,43 @@
+# OM-2 qualification lane s5s7 (#748, ledger L836): MUTANT-SIDE cases. Each row is the predicted
+# behaviour of one compiler mutant; the paired correct-side row is in candidate.cases. A mutant is
+# KILLED when its row here PASSES (the mutant shows the predicted wrong behaviour) AND the candidate
+# compiler passes the paired candidate.cases row. Run with the mutant compiler as OMC:
+#   build/om2-qual/gate-b MUTANT_OMC MUTANT_SHA256 seed/qualification/om2/sec/s5s7/mutant-side.cases SCRATCH
+# (QualPhaseB builds each mutant from candidate source; one mutant per run, the rows of the other
+# mutants are then expected to FAIL, so read the rows of the mutant under test only.)
+# Controls: a mutant must still compile correct programs correctly (MUTANTS.md "What counts as a kill").
+ctl-a5-exact run seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+ctl-f5-ifelse run seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-ifelse.out - 0
+ctl-v6-sum run seed/qualification/om2/sec/s5s7/v6-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+ctl-v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+
+# (a) part check weakened to the wrapped `o + k <= len` (contract 173-174). Correct: v6-part-wrap
+# exits 103, no stdout. Mutant: (2^64-2)+4 = 2 <= 10, the part is formed, the callee prints its len.
+mut-a-part-wrap run seed/qualification/om2/sec/s5s7/v6-part-wrap.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-wrap.mutant - 0
+# (a2) second check `k <= len - o` dropped: v6-part-tail (o = 8, k = 4) prints 4 instead of trap 3.
+mut-a2-part-tail run seed/qualification/om2/sec/s5s7/v6-part-tail.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-tail.mutant - 0
+# (a3) first check `o <= len` dropped: v6-part-o (o = 11, k = 0) prints 0 instead of trap 3.
+mut-a3-part-o run seed/qualification/om2/sec/s5s7/v6-part-o.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-o.mutant - 0
+# (a4) k evaluated before o: v6-part-order exits 105 instead of 102.
+mut-a4-part-order run seed/qualification/om2/sec/s5s7/v6-part-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 105
+
+# (b) fresh analysis joins with UNION instead of intersection (contract 122). Correct: refuse 27.
+# Mutant: f5-join-diff compiles; c = 2 takes the else arm, element 0 keeps main's 99: prints 99.
+mut-b-join-diff run seed/qualification/om2/sec/s5s7/f5-join-diff.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-join-diff.mutant - 0
+# f5-branch: the then arm's {0} survives a union join; main passes c = 1: prints 7.
+mut-b-branch run seed/qualification/om2/sec/s5s7/f5-branch.om+seed/qualification/om2/sec/s5s7/pr.om - line:7 - 0
+
+# (c) constructor bypass (contract 133-135). Correct: refuse 28. Mutant: compiles (exit 0).
+mut-c-seal-main emit seed/qualification/om2/sec/s5s7/a5-seal-main.om+seed/qualification/om2/sec/s5s7/pr.om any any 0
+mut-c-seal-other emit seed/qualification/om2/sec/s5s7/a5-seal-other.om+seed/qualification/om2/sec/s5s7/pr.om any any 0
+
+# (d) dup32 check erased for a NON-exact body (contract 148-149). Correct: a5-kept exits 110, no
+# stdout. Mutant: no check, prints dup32mk 5 = 0000000500000006 and exits 0.
+mut-d-kept run seed/qualification/om2/sec/s5s7/a5-kept.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-kept.mutant - 0
+# with om2 diag the mutant reports the non-exact body as erased (correct: kept rule=-).
+mut-d-kept-diag emit seed/qualification/om2/sec/s5s7/a5-kept-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-kept-diag.mutant.has 0
+
+# (e) stale generation/profile identity accepted (contract 207-209, erratum E1): ABI level.
+mut-e-ident notrun needs the ABI v2 generator; kill described in README section Mutant kill specs (e)
+# (f) bad ABI length accepted (contract 187-193): ABI level, driver abi-null-len1 / abi-golden-wrap.
+mut-f-abi-len notrun needs the ABI v2 generator; kill described in README section Mutant kill specs (f)

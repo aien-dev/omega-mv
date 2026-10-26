@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of unroll-continue-rolled.om for the pinned compiler 734f0a39: exit 3.
+note Contract section 4 line 90: continue in an unrolled body is error 9 (line 9, the continue). The
+note same text without unroll (unroll-continue-rolled.om) is accepted and exits 3.
+note OM-1 unit: this line replaces the om2 line
+fn main to int
+s = ulong 0
+for i ulong 4
+if eq i 2
+continue
+end
+s = add s 1
+end
+ret int s
+end

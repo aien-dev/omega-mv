@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 lines 59-62 (both profiles): { is not grouping.
+note The OM-1 code and line are pinned by the pinned compiler; the OM-2 unit keeps the same code, its line one later.
+om2
+fn main to int
+x = int 5
+ret add x {2}
+end

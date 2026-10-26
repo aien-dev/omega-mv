@@ -903,9 +903,101 @@ randomized two-function call units byte-for-byte with the C-built `omegese` + `o
 a mul-to-add mutant to differ, and pins 14 refusal cases. Those C tools are referees only; they
 never write omc's bytes.
 
+Boolean `and`, `or` and `xor` lower to the IR bitwise sub-operations, just as on the
+native path. `gate-ir.sh` checks all three against the C encoder and checker2.
+Arithmetic (`add` through `rem`) and shifts of booleans remain error 7.
+
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
 parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
 float word, a host word, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
 declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
 C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
 `build/omega_emit/omega_emit` and `build/checker2/checker2` exist, and says `SKIP` otherwise.
+
+### 11.1 WebAssembly MVP from seeded Omega
+
+`seed/wasm/irwasm.om` reads OSC IR v1 from stdin and emits a deterministic,
+import-free WebAssembly MVP module to stdout. The implementation and binary writer
+are seeded Omega; neither C nor Node participates in generation:
+
+```sh
+seed/out/omc < seed/wasm/irwasm.om > irwasm
+chmod +x irwasm
+{ printf 'ir\n'; cat functions.om; } | seed/out/omc > functions.ir
+./irwasm < functions.ir > functions.wasm
+nice -n 19 sh seed/wasm/gate-irwasm.sh
+```
+
+The path is a backend for the existing OSC scalar wire format, not a universal
+source converter. Every IR function is exported under its original, unique
+ASCII name. No memory, table, start function, imports, WASI or JavaScript
+runtime is required. Sections are type, function, export and code, in that order.
+Fixed-width five-byte unsigned LEB section/body lengths are valid MVP encodings;
+all other LEB fields use minimal encodings.
+
+| IR scalar tag | Wasm parameter/result | Internal representation and operations |
+|---|---|---|
+| 0 void | no result | no value register may have tag 0 |
+| 1 bool | i32 | canonical 0/1 in an i64 local; logical not and bitwise AND/OR/XOR |
+| 2 u8, 3 u16, 4 u32 | i32 | zero-extended i64; unsigned operations, mask after wrapping arithmetic |
+| 5 u64 | i64 | all bits preserved; unsigned compare/div/rem/right shift |
+| 6 i8, 7 i16, 8 i32 | i32 | sign-extended i64; signed compare/div/rem/right shift, checked arithmetic |
+| 9 i64 | i64 | signed compare/div/rem/right shift; checked arithmetic |
+
+CONST/MOV preserve canonical bits. BIN subcodes 1..10 map to
+add/sub/mul/div/rem/and/or/xor/shl/shr; UN 1..3 map to negation,
+bitwise not and logical not; CMP 1..6 map to eq/ne/lt/le/gt/ge with the
+operand's signedness. Signed add/sub/mul/neg/left-shift overflow traps rather
+than wrapping; unsigned results wrap at their declared width. Shift counts
+are checked before wasm can mask them. Division by zero traps; signed
+MIN/-1 division traps, while MIN%-1 is zero. CAST checks the destination range
+before changing width/signedness. CALLs name earlier functions and preserve
+each declared ABI type, including void. RET converts the internal local to
+the declared ABI. TRAP and every failed numeric check become wasm traps
+(`WebAssembly.RuntimeError`); MVP does not preserve the numeric Omega trap code.
+
+BR/CBR lower through an i32 block-dispatch local inside `block`/`loop`,
+with per-block `if`, `br` and `br_if`. This handles loops, joins, nested
+conditionals and `break` without assuming reducible input. The original
+lowered loop-bound instructions remain in the stream. Arbitrary IR cycles
+are not independently proven bounded here: this is a backend, not checker2.
+
+Limits are OSC v1 only: at most 32 functions, 6 parameters, 480 registers,
+512 blocks and 4096 instructions per function; names at most 63 ASCII bytes;
+contract texts at most 255 bytes; input at most 2,620,251 bytes, buffered
+output at most 8,388,608 bytes. Tags 10..12, versions 2..5, allocation,
+memory/arena/pool/slice operations and all unknown opcodes are refused.
+Blocks must partition instructions and end in BR/CBR/RET; scalar types,
+call signatures, constant canonicality and definite assignment are checked.
+Contract text is retained only as input metadata: its executable checks
+must already be present as IR instructions.
+
+| Exit | Named stderr refusal |
+|---|---|
+| 20 | MAGIC |
+| 21 | VERSION (anything except v1) |
+| 22 | TRUNCATED |
+| 23 | CAPACITY |
+| 24 | UNSUPPORTED_OP |
+| 25 | UNSUPPORTED_TAG |
+| 26 | INVALID (typing, register, block, text, or definite assignment) |
+| 27 | TRAILING |
+| 28 | IO |
+
+Every parse/type/capacity refusal writes no stdout: the module is buffered
+until the complete unit and code generation succeed. As with any stream
+writer, a later stdout I/O failure cannot retract bytes already written.
+The gate pins the compiler digest and compares every export on a fixed
+input table with full-width results from real AArch64 Omega drivers. Node
+v24.21.0 is solely the read-only validation/execution oracle and is not in
+the build path; it can be replaced by another conforming wasm validator.
+The gate also compares two translations byte-for-byte, substitutes an
+add-to-sub IR-byte mutant into the parity check (must fail), and pins
+named refusal exits with empty stdout. This is host evidence, not browser
+integration, hardware qualification or a deployment.
+
+Numeric bounds were checked with WolframLanguageEvaluator:
+`Table[{w,2^w-1,-2^(w-1),2^(w-1)-1},{w,{1,8,16,32,64}}]`;
+the unsigned masks are 1, 255, 65535, 4294967295 and
+18446744073709551615. The definite-assignment iteration bound was checked
+with `512*480+1 -> 245761` (a monotone bit-removal fixed point).

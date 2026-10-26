@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract line 143: add is not in the preserving table; it needs open first.
+note Erratum E8: error 7.
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 5
+e = add d d
+puth open e
+ret 0
+end

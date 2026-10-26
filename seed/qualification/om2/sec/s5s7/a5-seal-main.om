@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 133-135: seal outside the function dup32mk is error 28 (ctor).
+note Constructor-bypass mutant: compiles (exit 0).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = seal dup32 21474836485
+puth open d
+ret 0
+end

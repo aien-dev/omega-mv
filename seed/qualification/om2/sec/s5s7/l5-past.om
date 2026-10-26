@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 160: a field past SIZE (two ulongs = 16 bytes in SIZE 8) is error 29.
+om2
+layout ps 8
+field a ulong 2 at 0 little
+end
+fn main to int
+ret 0
+end

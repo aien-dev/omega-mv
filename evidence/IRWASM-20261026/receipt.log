@@ -1,0 +1,44 @@
+Source revision exercised: 8e083692ae1f597966c8d2eb6a92292bb278eb41
+Base prerequisite: af6a398bb902b7b04510cc3f4b12a444468107eb (separate boolean IR correction).
+Platform: Linux aarch64. Node v24.21.0 is a read-only wasm validation/execution oracle.
+Command: nice -n 19 sh seed/wasm/gate-irwasm.sh
+Observed exit: 0
+Full output: gate.log
+Observed gate verdict: PASS IRWASM native parity cases=129 deterministic mutant refusals
+Observed oracle verdict: PASS parity cases=129 units=13 traps=29; every export exercised
+
+All ten gate-ir dev programs are reused. Three additional scalar units cover each export,
+signed/unsigned widths, arithmetic wrap/overflow, compare/div/rem/right-shift signedness,
+casts, boolean logic, nested calls, six arguments, void calls, loops, break and traps.
+Native drivers write full 64-bit result patterns; wasm results are compared against these
+bytes, never merely an exit-status byte. Native trap code statuses are pinned in cases.tsv;
+wasm traps are checked as WebAssembly.RuntimeError (MVP does not expose Omega trap numbers).
+Two translations of every unit were byte-identical.
+
+Negative control: mutate the BIN subcode in the simple mutant IR from ADD to SUB.
+Mutated wasm validates and returns a different result. Substituting it into the baseline
+parity checker exits 1 with 'result mismatch'. negative.log is retained in the archive.
+
+Refusals: bad magic 20; version 2/6 21; truncated/empty 22; count/input capacity 23;
+unsupported/unknown opcode 24; unsupported/unknown tag 25; bad/undefined register or
+non-ASCII name 26; trailing bytes 27. Every exercised refusal has empty stdout and
+an exact named stderr message. Full observed lines are in gate.log.
+
+SHA256 irwasm.om: 8dc7bf602eb882e26a18b9e2dc4cacdd3ad68827215e71874b14c4acb237ccf8
+SHA256 irwasm executable: 2d235a70c39ac1461a09c41e10e058d962b767ae83893cdcfc693ef6c47182e6
+SHA256 compiler: befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+SHA256 cases.tsv: f184e32f7bd6bbf3e5284861a337f178f2bdb8ee4662473cc0f1ad4fac1be6e3
+Retained IR/wasm, native result/status, refusals, and negative-control artifacts:
+artifacts-complete.tar.gz
+SHA256 archive: f9b85c19530dcfbaa3503b6c544148db4d28e81bfa7a8602819ab456670b2696
+
+Guide examples exercised against the same compiler:
+seed/out/omc < omega-harness/skills/omega-encoding/examples/fnv1a32.om > fnv-example
+printf abc | ./fnv-example | od -An -tx1 -> 0b e9 47 1a; compile exit 0, run exit 0.
+seed/out/omc < omega-harness/skills/omega-encoding/examples/trap_narrow.om > trap-example
+./trap-example -> exit 105; compile exit 0.
+Negative control: remove only the unmasked 'put b 1 uchar x' statement;
+compile exit 0; run exit 44.
+
+NOT_RUN: browser integration, WebAssembly in a deployed site, GPU, Alpha qualification,
+merge, deployment. No live model service was touched.

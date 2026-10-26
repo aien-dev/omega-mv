@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of ce-sized-oob.om (unroll removed, om2 line made a note) for the pinned compiler 734f0a39.
+note Contract section 4 lines 105-106: after unrolling, get a4 i with i = 4 is a constant index outside
+note the 4-element SIZED array a4: error 21 at compile time (line 10, the get). Without unroll
+note (ce-sized-oob-rolled.om) the index is a run-time value and OM-1 traps 3 at run time instead.
+note OM-1 unit: this line replaces the om2 line
+fn main to int
+a4 = new ulong 4 7
+s = ulong 0
+for i ulong 5
+s = add s get a4 i
+end
+ret int s
+end

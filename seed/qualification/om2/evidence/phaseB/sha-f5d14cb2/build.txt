@@ -1,0 +1,7 @@
+$ /tmp/zl/omc-f6a6492f < /tmp/zl/qsha/om/sha256/sha256-om2.om > sha.bin   (twice)
+exit 0 0; deterministic=yes
+artifact sha256 27775fb2106dc0695d32417b1545af0027c136fe05bcdc4abd12cb473460570b bytes 21340 words 5335
+       0:	14001060 	b	0x4180
+       4:	140011b6 	b	0x46dc
+       8:	140011ef 	b	0x47c4
+       c:	1400134a 	b	0x4d34

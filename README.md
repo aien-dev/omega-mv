@@ -2,10 +2,10 @@
 
 **Omega is a systems language and compute platform being implemented in handwritten, seeded `.om`.** Its goal is one inspectable path from a small seed through compiler, runtime and applications to machine execution. Pure computation and authorized effects have distinct contracts; semantic identities identify declared computations, while validation and receipts record what was actually checked.
 
-**Migration is not finished.** This repository's default branch still contains substantial C implementation and build/test tooling. The current seeded `.om` compiler and native-host/device work are in reviewed candidate branches, not all merged into `main`. An existing C implementation is an outstanding replacement task, not the final language of Omega.
+**Migration is not finished.** This repository's default branch still contains substantial C implementation and build/test tooling. The seeded `.om` compiler, its native host and device/mapping words, the OM-2 profile and the WebAssembly back end are on `main`; an existing C implementation is an outstanding replacement task, not the final language of Omega.
 
 - [The Omega programme: seed to model](https://github.com/aien-dev/omega-mv/issues/599)
-- [Seeded compiler/native-host candidate](https://github.com/aien-dev/omega-mv/pull/678) and [checked device/mapping candidate](https://github.com/aien-dev/omega-mv/pull/676)
+- [Omega 1.0 roadmap: readiness audit, milestones and acceptance gates](docs/ROADMAP-1.0.md)
 - [Remaining C source/header inventory](docs/migration/C-TO-OM-INVENTORY.md)
 - [Experimental `.om` deterministic-stream successor](seed/physics0/README.md): source/host checks passed; native compilation and execution NOT_RUN.
 - [Alpha model/platform qualification](https://github.com/aien-dev/aien-architecture-mv/issues/305)
@@ -63,7 +63,7 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-numeric-cpu      # E1 CP
 make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
 ```
 
-The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. CI definitions in `.github/workflows/` list the suites that run on every push.
+The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. The M19 clean-clone gate rebuilds the tree in a temporary directory and runs the milestone gates there; when that nested build or nested run fails, it now prints the tail of its own log to stderr, so a failure names its cause instead of reporting a bare FAIL. CI definitions in `.github/workflows/` list the suites that run on every push.
 
 ## Repository layout
 

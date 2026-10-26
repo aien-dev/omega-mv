@@ -1,0 +1,42 @@
+/* SHA-256 constants by exact integer arithmetic: K[i] = floor(cbrt(p_i) * 2^32) mod 2^32
+   = icbrt(p_i * 2^96) mod 2^32 and H[i] = isqrt(p_i * 2^64) mod 2^32, p_i the i-th prime. */
+define icbrt(n) {
+  auto x, y
+  x = n
+  y = (2*x + n/(x*x))/3
+  while (y < x) {
+    x = y
+    y = (2*x + n/(x*x))/3
+  }
+  return (x)
+}
+define isqrt(n) {
+  auto x, y
+  x = n
+  y = (x + n/x)/2
+  while (y < x) {
+    x = y
+    y = (x + n/x)/2
+  }
+  return (x)
+}
+define isprime(n) {
+  auto d
+  if (n < 2) return (0)
+  for (d = 2; d*d <= n; d++) {
+    if (n % d == 0) return (0)
+  }
+  return (1)
+}
+scale = 0
+c = 0
+for (p = 2; c < 64; p++) {
+  if (isprime(p)) {
+    k[c] = icbrt(p * 2^96) % 2^32
+    if (c < 8) h[c] = isqrt(p * 2^64) % 2^32
+    q[c] = p
+    c = c + 1
+  }
+}
+for (i = 0; i < 64; i++) print "K ", i, " ", q[i], " ", k[i], "\n"
+for (i = 0; i < 8; i++) print "H ", i, " ", q[i], " ", h[i], "\n"

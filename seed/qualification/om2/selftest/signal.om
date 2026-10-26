@@ -1,0 +1,5 @@
+note Harness negative control: the child kills itself with SIGKILL. The gate must say INVALID.
+fn main to int
+r = killpid int getpid 9
+ret 0
+end

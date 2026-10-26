@@ -1,0 +1,127 @@
+OM-2 qualification fixtures: provenance (#748, ledger L836), recorded 2026-10-25
+=================================================================================
+
+Every constant in this directory was computed by an external tool. No value was typed from memory
+or written by a language model. The tools below are independent of the Omega seed lineage. They run
+outside the delivered closure; nothing first-party depends on them at run time. The files in
+oracle/ are the exact recipes that were run. They are disclosed oracle inputs, not first-party
+automation, and are not part of any gate.
+
+Host: Linux 7.0.0-1019-nvidia aarch64 (DGX Spark), Ubuntu packages as listed.
+
+Tool identities (absolute paths were used; note that the session shell has a *builtin* named
+sha256sum, version string "0.8.0", which was deliberately NOT used):
+  /usr/bin/bc          bc 1.07.1                          (dpkg bc 1.07.1-3ubuntu4)
+  /usr/bin/sha256sum   sha256sum (GNU coreutils) 9.4      (dpkg coreutils 9.4-3ubuntu6.3)
+  /usr/bin/python3     Python 3.12.3, hashlib on OpenSSL 3.0.13 30 Jan 2024
+                                                          (dpkg python3.12 3.12.3-1ubuntu0.17)
+  /usr/bin/pdftotext   pdftotext 24.02.0                  (dpkg poppler-utils 24.02.0-1ubuntu9.9)
+  /usr/bin/objdump     GNU objdump 2.42                   (dpkg binutils 2.42-4ubuntu2.10)
+  curl 8.5.0 (aarch64-unknown-linux-gnu), used only to download the NIST documents
+
+NIST documents (downloaded 2026-10-25, not committed; sha256 by /usr/bin/sha256sum):
+  0455b406d89648d20cbde375561e19c245b9815e894164c2670772e3d54deb82  NIST.FIPS.180-4.pdf
+      https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+  1ac8c64a78c0b1e2fdb4c346da117fdf6bea713220a3b6d932080f1834d517c1  fips180-2.pdf
+      https://csrc.nist.gov/files/pubs/fips/180-2/final/docs/fips180-2.pdf
+  7006b6549dad2fc8c6f29417a921f2e48208157ef496a7e1e1d7d17c5cc1e7db  SHA256.pdf
+  84ce867c99bad5a7b05abc74bb1dfc9de8486f49a160653cc8b15272cc532115  SHA512.pdf
+      https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/
+  pdftotext -layout outputs (the line numbers in the recipes refer to these exact texts):
+  15cacf3dc1ff75c71baef4fc35345a650d58f7396bc5c44361ad7cf2ddfd1401  fips.txt       (from 180-4)
+  36f92cc81cfd00ab04ca856fd613a9a662a6835778d4b49f2829dd1feea24e68  fips180-2.txt
+  09248bca83c3fd7c4057c1a2f3d5dd8c51697778718c5dd9d66c3c0b8d42d418  SHA256.txt
+  c58f6695e5aab4f338895cf83f050649e60b054a05d6c798b94c24cc8948d0a2  SHA512.txt
+
+1. SHA-256 constants: sha256-k.dec (K[0..63]) and sha256-iv.dec (H(0)[0..7]), decimal, one per line
+   Derivation (exact integers, no floating point): K[i] = icbrt(p_i * 2^96) mod 2^32 and
+   H[i] = isqrt(p_i * 2^64) mod 2^32. Here p_i is the i-th prime, found by trial division inside bc,
+   and icbrt/isqrt are floor roots by integer Newton iteration. This equals the first 32 bits of the
+   fractional parts of the cube and square roots, because floor(r * 2^32) = floor(root(p * 2^(32k))).
+     BC_LINE_LENGTH=0 /usr/bin/bc -q oracle/kiv.bc </dev/null > kiv.out
+     05db15f5bb52fd72b5629b48dd6747a0aa74311636af08b72a4153e8cce31559  kiv.out
+     awk '$1=="K"{print $4}' kiv.out > sha256-k.dec ; awk '$1=="H"{print $4}' kiv.out > sha256-iv.dec
+   Cross-check 1, an independent method: integer Newton roots in Python, and a Decimal computation
+   at 120 digits of the fractional parts.
+     /usr/bin/python3 oracle/kiv.py kiv.out
+     -> PASS bc K/H equal python exact-integer and decimal(120) derivations
+   Cross-check 2, the published standard: the hex tables of FIPS 180-4 section 4.2.2 (K) and
+   section 5.3.3 (H(0)), extracted by pdftotext.
+     pdftotext -layout NIST.FIPS.180-4.pdf fips.txt ; /usr/bin/python3 oracle/fipschk.py fips.txt kiv.out
+     -> PASS bc K[0..63] and H(0)[0..7] equal FIPS 180-4 sections 4.2.2 and 5.3.3
+   gate.om reads these two files to hash the compiler under test, so its pinned-digest comparison
+   exercises them against /usr/bin/sha256sum on every run.
+
+2. SHA-256 vectors: sha256-vectors.txt (NAME STDIN-SPEC LENGTH DIGEST), msg/*.bin, gen/*.bin
+     for f in SHA256 SHA512 fips180-2; do pdftotext -layout $f.pdf $f.txt; done
+     /usr/bin/python3 oracle/vectors.py SHA256.txt SHA512.txt fips180-2.txt <this directory>
+     -> PASS 158 vectors; FIPS 180-2 B.1, B.2, B.3 published digests matched
+   The messages are extracted from the NIST texts, never typed: "abc" and the 448-bit message come
+   from SHA256.txt, and the 896-bit message (two lines, joined) from SHA512.txt. Their lengths are
+   asserted as 3, 56 and 112 bytes. The one-million-'a' message is b"a" * 1000000 (FIPS 180-2 B.3).
+   Each digest is produced by /usr/bin/sha256sum and must equal Python hashlib (OpenSSL). The abc,
+   448-bit and million-a digests must also equal the values NIST printed in FIPS 180-2 Appendix B
+   (B.1, B.2, B.3). The 896-bit and empty-message digests have no published SHA-256 value in these
+   documents; for them the two independent implementations agreeing is the only check.
+   Rows: 5 FIPS messages; seq:N for N = 0..130, 1000, 4095, 4096, 4097, 8191, 8192, 8193, 65536;
+   rep:97:N for N = 55, 56, 63, 64, 65, 4096; and 8 random messages rnd:SEED:N with
+   (SEED, N) = (1,3) (2,55) (3,56) (4,64) (5,111) (6,4097) (7,12345) (8,100003).
+   Generators, implemented identically in oracle/vectors.py and gate.om:
+     seq:N        byte i = i mod 251. The period 251 is prime and not a multiple of 64, so swapped
+                  or repeated blocks change the message.
+     rep:B:N      N copies of byte B
+     rnd:SEED:N   splitmix64: s += 0x9E3779B97F4A7C15; z = s; z = (z ^ z>>30) * 0xBF58476D1CE4E5B9;
+                  z = (z ^ z>>27) * 0x94D049BB133111EB; z ^= z>>31; each z gives 8 bytes, little endian.
+                  gate.om holds these multipliers in decimal: 11400714819323198485,
+                  13787848793156543929, 10723151780598845931. The decimals were converted with
+                  python3 int(hex, 16).
+   gen/seq-300.bin, gen/rnd-7-64.bin and gen/rep-0-5.bin are Python's output for those generators.
+   The harness self-test compares gate.om's generated bytes with them. They match (selftest/pass.cases).
+
+3. Obligations: obligations.txt
+     /usr/bin/python3 oracle/obligations.py xs | BC_LINE_LENGTH=0 /usr/bin/bc -q oracle/obligations.bc > obligations.txt
+     /usr/bin/python3 oracle/obligations.py check obligations.txt
+     -> PASS 12 dup32 rows, 16 slice rows; issue witness wrapped=1 exact=0
+   dup32 x d low32 high32 ok: d = (2^32+1)*x for x in {0, 1, 2^31, 2^32-1} plus 8 seeded values
+     (splitmix64 seed 748, high 32 bits). Every row has d < 2^64 and low32(d) = high32(d) = x.
+   slice n o k wrapped exact: wrapped = ((o+k) mod 2^64 <= n), exact = (o <= n and k <= n-o).
+     Row 1 is the issue's witness n = 2^64-1, o = 2^64-2, k = 4: wrapped 1, exact 0. Also covered:
+     k = n-o and k = n-o+1 at the top of the range (o+k = 2^64 wraps to 0), o = n, o > n with and
+     without wrap, k = 0, n = 0, and small cases.
+   bc computes the rows; Python recomputes every field independently. The big constants
+   (2^64-1, 2^64-2) are written as bc/python expressions, never as typed digits.
+
+4. Case lists derived from sha256-vectors.txt (mechanical transforms, run in seed/qualification/om2):
+   baseline/sha256.cases (comment lines omitted here; they are in the file):
+     D=seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om
+     M=seed/qualification/om2/baseline/mutants
+     awk -v D="$D" '{print $1, "run", D, $2, "line:" $4, "-", 0}' fixtures/sha256-vectors.txt
+     for c in 1 32 63 64 65 4095; do awk -v D="$D" -v c=$c '$1 ~ /^(seq-(55|56|63|64|65|119|120|128|129|130|1000|4097|8193|65536)|fips-896|rnd-8-100003)$/ {print $1 "-p" c, "run", D, $2, "line:" $4, "-", 0, c}' fixtures/sha256-vectors.txt; done
+     v() { awk -v n="$1" '$1==n {print $2, "line:" $4}' fixtures/sha256-vectors.txt; }
+     for m in "k0 fips-abc" "rot fips-abc" "order fips-abc" "iv fips-empty" "nowrite fips-abc"; do set -- $m
+       echo "subst $M/$1.from $M/$1.to"; echo "mut-$1-$2 kill $D $(v $2) - 0"; done
+     echo "subst $M/split.from $M/split.to"; echo "mut-split-seq-1000-p32 kill $D $(v seq-1000) - 0 32"
+   baseline/adequacy.cases, baseline/guard.cases, baseline/transform.cases: the same v() lookup
+   inserts digests into hand-written lines.
+   Mutant substitution files: the .from files are exact byte extracts of the baseline sources
+   (printf for single-line fragments; sed -n 92,95p, 92,104p and 964p of om/sha256/sha256.om;
+   sed -n 2807,2813p and 2058p of seed/omc/omc.om). Each .to file is its .from with one edit:
+   a one-digit change, a swap of two constants, deletion of one line, or the replacement shown in
+   MUTANTS.md.
+
+5. Encodings used by compiler-mutants/guard-wrapped.to: 0x8B000000 = 2332033024 (ADD Xd, Xn, Xm);
+   0xCB000000 = 3405774848 (SUB, already in omc.om); 0xEB00001F = 3942645791 (CMP, already in omc.om).
+   Each was decoded by /usr/bin/objdump -D -b binary -m aarch64: add x0, x0, x0 / sub x0, x0, x0 /
+   cmp x0, x0 / add x0, x1, x2 for 0x8B020020.
+
+File digests (/usr/bin/sha256sum):
+  66e0d9b40b2605fb5984b25fb10e1ea162dcb7ad9bb593ec8aaf1056a85c5b4e  sha256-k.dec
+  b831ee5e6e1ed07aeb8654d0dbd962f76a3078a89b091453f059ac26f3fea103  sha256-iv.dec
+  b154d7508da03b09445ff0322eb17528bd3e1bcf991502575c0497bc08270c34  sha256-vectors.txt
+  e7c9017c7ea256121c84ec301f5d4e0d9df5513438b0b6b8a0daa50a4dac70bc  obligations.txt
+  ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  msg/abc.bin
+  248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1  msg/m448.bin
+  cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1  msg/m896.bin
+  43f9b5d59eb108817176c6f65c2c6203a22f2ae8bc28b7a1dde45947678c5042  gen/seq-300.bin
+  47a8c8a33e5576b929664df2e1bec6aae0158d3dee0210185a975de8a9a04c39  gen/rnd-7-64.bin
+  8855508aade16ec573d21e6a485dfd0a7624085c1a14b5ecdd6485de0c6839a4  gen/rep-0-5.bin

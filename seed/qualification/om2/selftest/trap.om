@@ -1,0 +1,7 @@
+note Harness control: an out-of-bounds index traps 3, so the program exits 103 (OMEGESE 9.1, 9.4).
+fn main to int
+a = new uchar 4 0
+i = ulong 4
+put a i 1
+ret 0
+end

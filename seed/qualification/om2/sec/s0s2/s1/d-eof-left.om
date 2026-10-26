@@ -1,0 +1,6 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 1 lines 36-49, errata E4: tokens left and the input ends there (no final LF): no continuation is accepted, so sev=error.
+om2 diag
+fn main to int
+x = int 5
+ret add x 2 3

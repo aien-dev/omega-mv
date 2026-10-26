@@ -1,0 +1,24 @@
+note SPDX-License-Identifier: Apache-2.0
+note TWIN of ce-sized.om with unroll removed (OM-2 unit).
+note Contract section 4 lines 105-106: an index into a SIZED array that is a constant after unrolling
+note or folding is checked at compile time; inside the array it is accepted (no error 21) and runs.
+note a = 1 11 21 31 written with put a i, read back with get a i and the folded get a sub 3 i.
+note Twin ce-sized-rolled.om has the same stdout: oracle/s3s4/exp/ce-sized.out (python3).
+om2
+fn main to int
+a = new ulong 4 0
+for i ulong 4
+put a i add mul i 10 1
+end
+s = ulong 0
+for i ulong 4
+s = add mul s 100 get a i
+end
+pu s
+t = ulong 0
+for i ulong 4
+t = add mul t 100 get a sub 3 i
+end
+pu t
+ret 0
+end

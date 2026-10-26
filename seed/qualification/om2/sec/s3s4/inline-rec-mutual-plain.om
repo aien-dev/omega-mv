@@ -1,0 +1,21 @@
+note SPDX-License-Identifier: Apache-2.0
+note Control for inline-rec-mutual.om with every inline removed: accepted, runs (section 4 line 97).
+note Contract section 4 line 94: an inline function must not be recursive (error 9). f and g are both
+note inline and call each other. Without inline (inline-rec-mutual-plain.om) it runs and prints 55.
+om2
+fn f n ulong to ulong
+if eq n 0
+ret 0
+end
+ret add n g sub n 1
+end
+fn g n ulong to ulong
+if eq n 0
+ret 0
+end
+ret add n f sub n 1
+end
+fn main to int
+pu f 10
+ret 0
+end

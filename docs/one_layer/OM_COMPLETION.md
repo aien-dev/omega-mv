@@ -2,7 +2,9 @@
 
 Status: 2026-10-23. This file is the audit trail for the objective "complete and evolve the `.om`
 language". It separates work that is implemented and gated from work that is blocked on a decision or
-on an external store. It is not a claim that the language is complete.
+on an external store. It is not a claim that the language is complete. Its counts and pins are those of
+2026-10-23 and are not refreshed here; OM-2 (section 9.13 of OMEGESE.md) has landed since, and the 1.0
+gaps and acceptance gates are planned in `docs/ROADMAP-1.0.md`.
 
 Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/check.sh`, and
 `evidence/SEED-0/`.

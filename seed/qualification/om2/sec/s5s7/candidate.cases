@@ -1,0 +1,319 @@
+# OM-2 qualification lane s5s7 (#748, ledger L836): candidate OM-2 compiler cases for contract
+# spec/omegese-om2.md (sha256 245bb74e...0881) sections 5, 6, 7 and errata E1-E5 (om2/contract).
+# Run from the worktree root:  build/om2-qual/gate-b OMC OMC_SHA256 seed/qualification/om2/sec/s5s7/candidate.cases SCRATCH
+# Every expectation cites its contract line. Expected stdout files: oracle/s5s7/exp (python3, gcc).
+# Refusals 27/28/29 are exact (`emit SRC - err:LINE:CODE CODE`, lines per erratum E8); other codes use
+# `refuse` (code only: E8 fixes lines for 27/28/29 only).
+# ASSUMPTION tags refer to README.txt. NOT_RUN rows are planned cases, never PASS.
+
+
+## Section 5: fresh scratch (contract lines 120-130)
+# contract 122-124: one-branch write intersected with fall-through; constant get not definitely written -> 27; erratum E8: 27 names the get/call line = line 10
+f5-branch emit seed/qualification/om2/sec/s5s7/f5-branch.om+seed/qualification/om2/sec/s5s7/pr.om - err:10:27 27
+# contract 123-124: rolled loop contributes nothing -> 27; erratum E8: 27 names the get/call line = line 9
+f5-loop emit seed/qualification/om2/sec/s5s7/f5-loop.om+seed/qualification/om2/sec/s5s7/pr.om - err:9:27 27
+# contract 122-124: straight-line write then read accepted
+f5-line run seed/qualification/om2/sec/s5s7/f5-line.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-line.out - 0
+# contract 125-126, 87-88: all N bits written by unroll -> non-constant get accepted
+f5-unroll-all run seed/qualification/om2/sec/s5s7/f5-unroll-all.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-unroll-all.out - 0
+# contract 120: N = 64 accepted (upper bound)
+f5-n64 run seed/qualification/om2/sec/s5s7/f5-n64.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-n64.out - 0
+# contract 120 + erratum E8: fresh N = 65 > 64 -> error 14 (obligation=init)
+f5-n65 refuse seed/qualification/om2/sec/s5s7/f5-n65.om+seed/qualification/om2/sec/s5s7/pr.om 14
+# contract 125-126: non-constant get with element 7 unwritten -> 27; erratum E8: 27 names the get/call line = line 9
+f5-partial emit seed/qualification/om2/sec/s5s7/f5-partial.om+seed/qualification/om2/sec/s5s7/pr.om - err:9:27 27
+# contract 127: fresh array passed to a non-inline call -> 27; erratum E8: 27 names the get/call line = line 12
+f5-call emit seed/qualification/om2/sec/s5s7/f5-call.om+seed/qualification/om2/sec/s5s7/pr.om - err:12:27 27
+# contract 127: fresh array passed to write -> 27; erratum E8: 27 names the get/call line = line 9
+f5-write emit seed/qualification/om2/sec/s5s7/f5-write.om+seed/qualification/om2/sec/s5s7/pr.om - err:9:27 27
+# contract 127: fresh array passed to read -> 27; erratum E8: 27 names the get/call line = line 5
+f5-read emit seed/qualification/om2/sec/s5s7/f5-read.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:27 27
+# contract 127: fresh array passed to part -> 27; erratum E8: 27 names the get/call line = line 12
+f5-part emit seed/qualification/om2/sec/s5s7/f5-part.om+seed/qualification/om2/sec/s5s7/pr.om - err:12:27 27
+# contract 122: written in both arms -> in the intersection at the join, accepted
+f5-ifelse run seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-ifelse.out - 0
+# contract 122: arms write different elements; empty intersection -> 27 (union mutant accepts); erratum E8: 27 names the get/call line = line 12
+f5-join-diff emit seed/qualification/om2/sec/s5s7/f5-join-diff.om+seed/qualification/om2/sec/s5s7/pr.om - err:12:27 27
+# contract 124, 127, 93-98: inline callee writes all at constant indexes -> accepted (README A3)
+f5-inline run seed/qualification/om2/sec/s5s7/f5-inline.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-inline.out - 0
+
+## Section 5: abstract types and the dup32 invariant (contract lines 131-152)
+# contract 136, 140-148: exact ctor, open, rotr = dup of 32-bit rotation, xor
+a5-exact run seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+# contract 140-143: rotr rotl and or xor all listed
+a5-allops run seed/qualification/om2/sec/s5s7/a5-allops.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-allops.out - 0
+# contract 140 + 79-81: rotr n = 64 on a 64-bit representation traps 7 (E8); n has type T = ulong (E9)
+a5-rot64 run seed/qualification/om2/sec/s5s7/a5-rot64.om+seed/qualification/om2/sec/s5s7/pr.om - - - 107
+# contract 148-150, 36-38: exact body -> omc-check erased rule=dup32 (confirmed by erratum E8)
+a5-exact-diag emit seed/qualification/om2/sec/s5s7/a5-exact-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-exact-diag.has 0
+# contract 148-149: non-exact body keeps the check; false for every x -> trap 10, exit 110
+a5-kept run seed/qualification/om2/sec/s5s7/a5-kept.om+seed/qualification/om2/sec/s5s7/pr.om - - - 110
+# contract 148-150, 114-116: kept rule=- and the trap-10 site (confirmed by erratum E8)
+a5-kept-diag emit seed/qualification/om2/sec/s5s7/a5-kept-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-kept-diag.has 0
+# contract 145-149: commuted body is not exact; check kept but holds -> exit 0
+a5-swap run seed/qualification/om2/sec/s5s7/a5-swap.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-swap.out - 0
+# contract 145-150: commuted body reported kept rule=- (confirmed by erratum E8)
+a5-swap-diag emit seed/qualification/om2/sec/s5s7/a5-swap-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-swap-diag.has 0
+# contract 133-135: seal outside dup32mk -> 28; erratum E8: 28 names the seal line (holds line for a predicate) = line 11
+a5-seal-main emit seed/qualification/om2/sec/s5s7/a5-seal-main.om+seed/qualification/om2/sec/s5s7/pr.om - err:11:28 28
+# contract 133-135: exact body in a function not named dup32mk -> 28; erratum E8: 28 names the seal line (holds line for a predicate) = line 11
+a5-seal-other emit seed/qualification/om2/sec/s5s7/a5-seal-other.om+seed/qualification/om2/sec/s5s7/pr.om - err:11:28 28
+# contract 136: bare number where dup32 is required -> 7
+a5-raw-num refuse seed/qualification/om2/sec/s5s7/a5-raw-num.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 136: ulong value passed to a dup32 parameter -> 7
+a5-raw-arg refuse seed/qualification/om2/sec/s5s7/a5-raw-arg.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 136: ulong value returned as dup32 -> 7
+a5-raw-ret refuse seed/qualification/om2/sec/s5s7/a5-raw-ret.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 136 + OMEGESE 9.3: ulong assigned to a dup32 name -> 7
+a5-raw-assign refuse seed/qualification/om2/sec/s5s7/a5-raw-assign.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 142-143: and not listed -> 7 (erratum E8)
+a5-op-and refuse seed/qualification/om2/sec/s5s7/a5-op-and.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 142-143: rotl not listed -> 7 (erratum E8)
+a5-op-rotl refuse seed/qualification/om2/sec/s5s7/a5-op-rotl.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 143: add is not preserving -> 7 (erratum E8)
+a5-op-add refuse seed/qualification/om2/sec/s5s7/a5-op-add.om+seed/qualification/om2/sec/s5s7/pr.om 7
+# contract 149: any other predicate -> 28; erratum E8: 28 names the seal line (holds line for a predicate) = line 5
+a5-pred emit seed/qualification/om2/sec/s5s7/a5-pred.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:28 28
+# erratum E6 Q1: reserved word seal declared as a name in an OM-2 unit -> 16 on the declaring line 6 (as OM-1 for fn break); distinct from the pinned om2-line refusal
+a5-name-seal emit seed/qualification/om2/sec/s5s7/a5-name-seal.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+# contract 137 + erratum E8: abstract type as entry parameter -> 7
+a5-entry-param refuse seed/qualification/om2/sec/s5s7/a5-entry-param.om 7
+# contract 137 + erratum E8: abstract type as entry return -> 7
+a5-entry-ret refuse seed/qualification/om2/sec/s5s7/a5-entry-ret.om 7
+# contract 137-138 + erratum E8: array of an abstract type -> 7
+a5-array refuse seed/qualification/om2/sec/s5s7/a5-array.om+seed/qualification/om2/sec/s5s7/pr.om 7
+
+## Section 5: external layout (contract lines 153-165, erratum E5)
+# contract 163-165 + E5: shactx image equals sha256.h (offsetof oracle) 
+l5-shactx run seed/qualification/om2/sec/s5s7/l5-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out - 0
+# contract 158: big-endian MSB first, little LSB first, get reads back; E5 COUNT 1 is an array
+l5-endian run seed/qualification/om2/sec/s5s7/l5-endian.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-endian.out - 0
+# contract 154, 158 + E5: COUNT omitted -> scalar, no index
+l5-scalar run seed/qualification/om2/sec/s5s7/l5-scalar.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-scalar.out - 0
+# contract 158 + errata E5/E8: extra index on a scalar field -> 5
+l5-scalar-idx refuse seed/qualification/om2/sec/s5s7/l5-scalar-idx.om+seed/qualification/om2/sec/s5s7/pr.om 5
+# contract 158 + errata E5/E8: missing index on a COUNT 1 array field -> 4
+l5-count1-noidx refuse seed/qualification/om2/sec/s5s7/l5-count1-noidx.om+seed/qualification/om2/sec/s5s7/pr.om 4
+# contract 159: run-time field index 64 of COUNT 64 -> trap 3
+l5-trap run seed/qualification/om2/sec/s5s7/l5-trap.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# contract 159 + OMEGESE 9.4: constant field index outside -> 21 (confirmed by erratum E8)
+l5-const-idx refuse seed/qualification/om2/sec/s5s7/l5-const-idx.om+seed/qualification/om2/sec/s5s7/pr.om 21
+# contract 154-161: field ending exactly at SIZE, adjacent fields -> accepted
+l5-fit emit seed/qualification/om2/sec/s5s7/l5-fit.om+seed/qualification/om2/sec/s5s7/pr.om any - 0
+# contract 155: SIZE 4096, COUNT 4096 -> accepted
+l5-max emit seed/qualification/om2/sec/s5s7/l5-max.om+seed/qualification/om2/sec/s5s7/pr.om any - 0
+# contract 160: overlapping fields -> 29; erratum E8: 29 names the field line (layout line for SIZE) = line 6
+l5-overlap emit seed/qualification/om2/sec/s5s7/l5-overlap.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:29 29
+# contract 160: field past SIZE -> 29; erratum E8: 29 names the field line (layout line for SIZE) = line 5
+l5-past emit seed/qualification/om2/sec/s5s7/l5-past.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+# contract 160: field one byte past SIZE -> 29; erratum E8: 29 names the field line (layout line for SIZE) = line 5
+l5-past1 emit seed/qualification/om2/sec/s5s7/l5-past1.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+# contract 155, 160: COUNT 0 out of range -> 29; erratum E8: 29 names the field line (layout line for SIZE) = line 5
+l5-count0 emit seed/qualification/om2/sec/s5s7/l5-count0.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+# contract 155, 160: COUNT 4097 out of range -> 29; erratum E8: 29 names the field line (layout line for SIZE) = line 5
+l5-count4097 emit seed/qualification/om2/sec/s5s7/l5-count4097.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+# contract 160: OFF 5000 out of range -> 29; erratum E8: 29 names the field line (layout line for SIZE) = line 5
+l5-off emit seed/qualification/om2/sec/s5s7/l5-off.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+# contract 155 + erratum E8: SIZE outside 1..4096 -> 29 on the layout line 4
+l5-size0 emit seed/qualification/om2/sec/s5s7/l5-size0.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:29 29
+# contract 155 + erratum E8: SIZE outside 1..4096 -> 29 on the layout line 4
+l5-size4097 emit seed/qualification/om2/sec/s5s7/l5-size4097.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:29 29
+# contract 154 + errata E8/E9: layout after the first fn -> 29 naming the layout line 7
+l5-after-fn emit seed/qualification/om2/sec/s5s7/l5-after-fn.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:29 29
+# contract 156 + OMEGESE 9.4: put through a view layout -> 20 (confirmed by erratum E8)
+l5-view-put refuse seed/qualification/om2/sec/s5s7/l5-view-put.om+seed/qualification/om2/sec/s5s7/pr.om 20
+# contract 156 + OMEGESE 9.4: 103-byte array for a 104-byte layout -> 7 (confirmed by erratum E8)
+l5-wrong-size refuse seed/qualification/om2/sec/s5s7/l5-wrong-size.om+seed/qualification/om2/sec/s5s7/pr.om 7
+
+## Section 6: unsized views and part (contract lines 169-179, erratum E2)
+# contract 169-170 + E2: sized arrays to view uchar *, len is the run-time length
+v6-sum run seed/qualification/om2/sec/s5s7/v6-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+# contract 172-176: part of a local to edit; view part of an edit is a view
+v6-edit run seed/qualification/om2/sec/s5s7/v6-edit.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-edit.out - 0
+# contract 170, 106-108: constant index into an unsized view is checked at run time -> trap 3
+v6-idx run seed/qualification/om2/sec/s5s7/v6-idx.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# contract 170: put at index len into an unsized edit -> trap 3
+v6-idx-edit run seed/qualification/om2/sec/s5s7/v6-idx-edit.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# contract 173-174, coordinator golden: len 10, o = 2^64-2, k = 4 -> trap 3 (wrapped mutant prints 4)
+v6-part-wrap run seed/qualification/om2/sec/s5s7/v6-part-wrap.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# contract 173: o = len-2, k = 4 -> k <= len - o fails -> trap 3
+v6-part-tail run seed/qualification/om2/sec/s5s7/v6-part-tail.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# coordinator decision: the literal #748 golden (len 2^64-1, o 2^64-2, k 4) in a unit
+v6-part-golden-literal notrun unreachable without a 2^64-1-element view; bridge side is abi-golden-wrap (status 32)
+# contract 173: o = len, k = 0 -> empty part, callee len 0
+v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+# contract 173: o = len+1, k = 0 -> o <= len fails -> trap 3
+v6-part-o run seed/qualification/om2/sec/s5s7/v6-part-o.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# contract 175: o evaluated before k: o traps 2 before k traps 5
+v6-part-order run seed/qualification/om2/sec/s5s7/v6-part-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 102
+# contract 175 + erratum E8: part outside a call argument -> 9
+v6-part-local refuse seed/qualification/om2/sec/s5s7/v6-part-local.om+seed/qualification/om2/sec/s5s7/pr.om 9
+# contract 176 + OMEGESE 9.4: part of a view is a view; passed to edit -> 20
+v6-part-view-edit refuse seed/qualification/om2/sec/s5s7/v6-part-view-edit.om+seed/qualification/om2/sec/s5s7/pr.om 20
+# contract 177-178: two parts of one array in one call -> 19
+v6-part-two refuse seed/qualification/om2/sec/s5s7/v6-part-two.om+seed/qualification/om2/sec/s5s7/pr.om 19
+# contract 177-178: an array and a part of it in one call -> 19
+v6-part-base refuse seed/qualification/om2/sec/s5s7/v6-part-base.om+seed/qualification/om2/sec/s5s7/pr.om 19
+# erratum E6 Q1: reserved word part declared as a function name in an OM-2 unit -> 16 on the fn line 5; distinct from the pinned om2-line refusal
+v6-name-part emit seed/qualification/om2/sec/s5s7/v6-name-part.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:16 16
+
+# contract line 179 (a part lives only for its call) has no observable fixture: no word stores a view (README Q4)
+# contract 171 + OMEGESE 9.5: write slice check on an unsized view -> trap 3 before the call
+v6-write run seed/qualification/om2/sec/s5s7/v6-write.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# contract 99-101: three unsized views + one scalar = 7 slots -> 9
+v6-slots7 refuse seed/qualification/om2/sec/s5s7/v6-slots7.om 9
+# contract 99-101: three unsized views = 6 slots -> accepted
+v6-slots6 emit seed/qualification/om2/sec/s5s7/v6-slots6.om any - 0
+# erratum E2: sized array to an internal unsized parameter in function mode -> accepted
+v6-fm-e2 emit seed/qualification/om2/sec/s5s7/v6-fm-e2.om any - 0
+# contract 196 + E1: sized out parameter on an export -> accepted
+v6-out emit seed/qualification/om2/sec/s5s7/v6-out.om any - 0
+
+## Section 6: multi-entry units (contract lines 204-206)
+# contract 204-205: two exports and a private helper -> accepted
+m6-export2 emit seed/qualification/om2/sec/s5s7/m6-export2.om any - 0
+# contract 206: no export, v1 last-fn rule -> accepted
+m6-noexport emit seed/qualification/om2/sec/s5s7/m6-noexport.om any - 0
+# contract 182-185, 204, 156: export with layout and unsized view -> accepted
+m6-export-layout emit seed/qualification/om2/sec/s5s7/m6-export-layout.om any - 0
+
+## ABI units compile under the candidate (contract 204-206, E1)
+abiv-compiles emit seed/qualification/om2/sec/s5s7/abi/abiv.om any - 0
+abiw-compiles emit seed/qualification/om2/sec/s5s7/abi/abiw.om any - 0
+
+## Section 6 ABI v2 boundary (contract lines 180-210, erratum E1). Oracle driver: oracle/s5s7/abi/driver.c
+# contract 185: unsized ulong view (ptr, len) baseline: status 0, sum 6
+abi-vsum-ok notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 185: uchar view len 64: status 0, result 64
+abi-bcnt-ok notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 188: len > 0 with NULL -> status 32, result untouched
+abi-null-len1 notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 189: ulong view not aligned to 8 -> 32
+abi-misaligned notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 190: len * 8 overflows 64 bits (len 2^61) -> 32
+abi-size-overflow notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 191 + coordinator golden: uchar len 2^64-1 -> ptr + len wraps -> 32
+abi-golden-wrap notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 191: ptr 2^64-8, len 16 wraps -> 32
+abi-wrap-high notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 194: len 0 with NULL is an empty view -> status 0, result 0
+abi-null-len0 notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 194: ulong view len 0 NULL -> sum 0
+abi-null-len0-ulong notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 194: len 0 with any pointer (1) -> empty view
+abi-bogus-len0 notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 192: edit [0,8) overlaps view [4,12) -> 32, nothing written
+abi-edit-overlap notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 192-193: half-open adjacent ranges do not overlap -> status 0
+abi-edit-adjacent notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 193: an empty edit range overlaps nothing -> status 0
+abi-edit-empty notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 192: edit range overlapping the result buffer -> 32
+abi-edit-result notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 196-198: out overlapping its input gets memmove semantics (4,3,2,1)
+abi-out-overlap notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 197-198: nothing written to out (or result) on a trap; status 9
+abi-out-trap notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 170, 198: trap 3 inside -> status 3, out untouched
+abi-out-bounds notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 156-158: layout = one pointer; lo little-endian, hi big-endian bytes
+abi-layout notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 181 (v1 checks kept): NULL layout pointer -> 32 (README A12)
+abi-layout-null notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 181 (v1 checks kept): NULL result pointer -> 32
+abi-null-result notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 195: call from a signal handler during a call -> 33
+abi-reentry notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 207-210: two OM-2 units and one OM-1 unit linked into one binary, called interleaved
+abi-two-units notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# erratum E1: omega2_ident_abiv() holds sha256(abiv.om), the omc pin, OM-2 (README A11)
+abi-ident-abiv notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# erratum E1: omega2_ident_abiw() holds sha256(abiw.om), the omc pin, OM-2
+abi-ident-abiw notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# erratum E1: identities are per unit
+abi-ident-distinct notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 182-184 + E1: no omega_vsum symbol (nm -D), v1link.c fails to link
+abi-v1-absent notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# erratum E1: the OM-1 unit abi1 exports omega_madd1 and no omega2_ident_abi1
+abi-v1-kept notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 209 + E1: units.sh --check after a one-byte change to a unit source refuses (exit 1)
+abi-units-stale-source notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 209: units.sh --check with a different omc pin refuses
+abi-units-stale-omc notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 209 + E1: units.sh --check with the profile recorded OM-1 for an OM-2 unit refuses
+abi-units-stale-profile notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+# contract 189 vs 194 conflict: ulong view, len 0, ptr 1 (README Q5); expectation not asserted
+abi-misaligned-len0 notrun needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+
+## Section 7 SHA consumer semantics (contract lines 212-223, erratum E3). Oracle: oracle/s5s7/sha/sha_driver.c
+# contract 214: init, final = python sha256("")
+sha-empty notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214: abc
+sha-abc notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214-215: every two-way split of seq:1000
+sha-split2 notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214: length-0 updates between three-way splits
+sha-split3-zero notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214-215: one-byte updates
+sha-bytewise notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214, 194: update(NULL, 0)
+sha-update-null0 notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 215 + E3: sha256_hash(buf, 64, buf)
+sha-hash-overlap0 notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 215 + E3: digest at buf+16 overlapping data
+sha-hash-overlap16 notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 215 + E3: digest before and overlapping data
+sha-hash-overlap-before notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 219-222: init, update, final after a final == fresh
+sha-post-final notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 219-220: update/final without init returns (memory safety only)
+sha-no-init-safe notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 223: hash(n) == init, update(n), final == python
+sha-hash-eq-stream notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# erratum E3: byte copy of a context after k updates is equivalent
+sha-ctx-copy notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214: one update of 2^32+3 bytes
+sha-big-1 notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214: updates of 2^32-1 and 4 bytes
+sha-big-split notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+# contract 214, 223: hash of 2^32+3 bytes
+sha-big-hash notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+
+# ---- OM-1 controls and twins (C1, contract lines 17-18; expected values from oracle/s5s7) ----
+# twin of a5-exact (python oracle values, OM-1 shifts)
+t-dup run seed/qualification/om2/sec/s5s7/om1/t-dup.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+# twin of a5-allops
+t-allops run seed/qualification/om2/sec/s5s7/om1/t-allops.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-allops.out - 0
+# twin of l5-shactx (byte stores; offsetof oracle image)
+t-shactx run seed/qualification/om2/sec/s5s7/om1/t-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out - 0
+# twin of l5-endian
+t-endian run seed/qualification/om2/sec/s5s7/om1/t-endian.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-endian.out - 0
+# twin of v6-sum (sized views)
+t-sum run seed/qualification/om2/sec/s5s7/om1/t-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+# twin of v6-edit (offset loop)
+t-edit run seed/qualification/om2/sec/s5s7/om1/t-edit.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-edit.out - 0
+# twin of v6-part-empty: write slice off = len, n = 0
+t-sle run seed/qualification/om2/sec/s5s7/om1/t-sle.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+# C1 contract 13-18: OM-2 words stay ordinary names in OM-1
+t-names run seed/qualification/om2/sec/s5s7/om1/t-names.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/t-names.out - 0
+# twin of v6-part-wrap: OM-1 write slice check, o = 2^64-2, n = 4 -> trap 3 (OMEGESE 9.5)
+t-slw run seed/qualification/om2/sec/s5s7/om1/t-slw.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# twin of v6-part-tail: off 8, n 4 on len 10 -> trap 3
+t-slt run seed/qualification/om2/sec/s5s7/om1/t-slt.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# twin of v6-part-o: off 11, n 0 on len 10 -> trap 3
+t-slo run seed/qualification/om2/sec/s5s7/om1/t-slo.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+# twin of v6-part-order: arguments left to right (OMEGESE 9.2) -> trap 2 first
+t-order run seed/qualification/om2/sec/s5s7/om1/t-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 102
+# trap 10 exit status (OMEGESE 9.8; contract 151)
+t-trap10 run seed/qualification/om2/sec/s5s7/om1/t-trap10.om+seed/qualification/om2/sec/s5s7/pr.om - - - 110
+# constant shift 64 is the runtime trap 7 (contract 79-81)
+t-shl64 run seed/qualification/om2/sec/s5s7/om1/t-shl64.om+seed/qualification/om2/sec/s5s7/pr.om - - - 107
+# C1 boundary: OMEGESE 9.4, an array parameter without its length is error 16, on the fn line (5)
+t-unsized16 emit seed/qualification/om2/sec/s5s7/om1/t-unsized16.om - err:5:16 16
+# erratum E1: the OM-1 ABI unit stays OM-1 and compiles
+abi1-om1 emit seed/qualification/om2/sec/s5s7/abi/abi1.om any - 0
+# E17 (2): 32 exports compile (function mode); the 33rd export is error 14 at its line (line 100)
+m6-export32 emit seed/qualification/om2/sec/s5s7/m6-export32.om any - 0
+m6-export33 emit seed/qualification/om2/sec/s5s7/m6-export33.om - err:100:14 14
+# E17 (1): export with fn main is error 9 (code only: E17 does not name the line)
+m6-export-main refuse seed/qualification/om2/sec/s5s7/m6-export-main.om 9

@@ -1,0 +1,1391 @@
+$ leakscan pub:0:32:8 < entry0.bin
+LEAKSCAN 1 words=5335 entry=@4192 data=none
+PUBLIC-DECL 0+32:8
+MEM @6 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @6 public-mem 0+32:8
+MEM @9 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @9 public-mem 0+32:8
+MEM @12 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @12 public-mem 0+32:8
+MEM @15 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @15 public-mem 0+32:8
+MEM @18 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @18 public-mem 0+32:8
+MEM @21 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @21 public-mem 0+32:8
+MEM @24 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @24 public-mem 0+32:8
+MEM @27 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @27 public-mem 0+32:8
+MEM @30 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @30 public-mem 0+32:8
+MEM @33 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @33 public-mem 0+32:8
+MEM @36 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @36 public-mem 0+32:8
+MEM @39 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @39 public-mem 0+32:8
+MEM @42 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @42 public-mem 0+32:8
+MEM @45 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @45 public-mem 0+32:8
+MEM @48 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @48 public-mem 0+32:8
+MEM @51 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @51 public-mem 0+32:8
+MEM @54 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @54 public-mem 0+32:8
+MEM @57 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @57 public-mem 0+32:8
+MEM @60 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @60 public-mem 0+32:8
+MEM @63 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @63 public-mem 0+32:8
+MEM @66 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @66 public-mem 0+32:8
+MEM @69 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @69 public-mem 0+32:8
+MEM @72 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @72 public-mem 0+32:8
+MEM @75 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @75 public-mem 0+32:8
+MEM @78 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @78 public-mem 0+32:8
+MEM @81 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @81 public-mem 0+32:8
+MEM @84 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @84 public-mem 0+32:8
+MEM @87 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @87 public-mem 0+32:8
+MEM @90 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @90 public-mem 0+32:8
+MEM @93 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @93 public-mem 0+32:8
+MEM @96 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @96 public-mem 0+32:8
+MEM @99 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @99 public-mem 0+32:8
+MEM @102 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @102 public-mem 0+32:8
+MEM @105 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @105 public-mem 0+32:8
+MEM @108 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @108 public-mem 0+32:8
+MEM @111 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @111 public-mem 0+32:8
+MEM @114 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @114 public-mem 0+32:8
+MEM @117 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @117 public-mem 0+32:8
+MEM @120 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @120 public-mem 0+32:8
+MEM @123 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @123 public-mem 0+32:8
+MEM @126 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @126 public-mem 0+32:8
+MEM @129 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @129 public-mem 0+32:8
+MEM @132 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @132 public-mem 0+32:8
+MEM @135 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @135 public-mem 0+32:8
+MEM @138 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @138 public-mem 0+32:8
+MEM @141 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @141 public-mem 0+32:8
+MEM @144 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @144 public-mem 0+32:8
+MEM @147 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @147 public-mem 0+32:8
+MEM @150 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @150 public-mem 0+32:8
+MEM @153 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @153 public-mem 0+32:8
+MEM @156 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @156 public-mem 0+32:8
+MEM @159 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @159 public-mem 0+32:8
+MEM @162 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @162 public-mem 0+32:8
+MEM @165 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @165 public-mem 0+32:8
+MEM @168 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @168 public-mem 0+32:8
+MEM @171 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @171 public-mem 0+32:8
+MEM @174 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @174 public-mem 0+32:8
+MEM @177 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @177 public-mem 0+32:8
+MEM @180 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @180 public-mem 0+32:8
+MEM @183 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @183 public-mem 0+32:8
+MEM @186 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @186 public-mem 0+32:8
+MEM @189 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @189 public-mem 0+32:8
+MEM @192 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @192 public-mem 0+32:8
+MEM @195 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @195 public-mem 0+32:8
+MEM @199 str imm base=x0 index=- const
+MEM @202 str imm base=x0 index=- const
+MEM @205 str imm base=x0 index=- const
+MEM @208 str imm base=x0 index=- const
+MEM @211 str imm base=x0 index=- const
+MEM @214 str imm base=x0 index=- const
+MEM @217 str imm base=x0 index=- const
+MEM @220 str imm base=x0 index=- const
+BRANCH @227 b.cs ->@1525 unreached
+MEM @228 ldrb reg base=x1 index=x4 unreached
+BRANCH @234 b.cs ->@1525 unreached
+MEM @235 ldrb reg base=x1 index=x9 unreached
+BRANCH @241 b.cs ->@1525 unreached
+MEM @242 ldrb reg base=x1 index=x9 unreached
+BRANCH @248 b.cs ->@1525 unreached
+MEM @249 ldrb reg base=x1 index=x9 unreached
+MEM @251 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @251 public-mem 0+32:8
+BRANCH @254 b.cs ->@1525 unreached
+MEM @255 ldrb reg base=x1 index=x4 unreached
+BRANCH @261 b.cs ->@1525 unreached
+MEM @262 ldrb reg base=x1 index=x9 unreached
+BRANCH @268 b.cs ->@1525 unreached
+MEM @269 ldrb reg base=x1 index=x9 unreached
+BRANCH @275 b.cs ->@1525 unreached
+MEM @276 ldrb reg base=x1 index=x9 unreached
+MEM @278 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @278 public-mem 0+32:8
+BRANCH @281 b.cs ->@1525 unreached
+MEM @282 ldrb reg base=x1 index=x4 unreached
+BRANCH @288 b.cs ->@1525 unreached
+MEM @289 ldrb reg base=x1 index=x9 unreached
+BRANCH @295 b.cs ->@1525 unreached
+MEM @296 ldrb reg base=x1 index=x9 unreached
+BRANCH @302 b.cs ->@1525 unreached
+MEM @303 ldrb reg base=x1 index=x9 unreached
+MEM @305 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @305 public-mem 0+32:8
+BRANCH @308 b.cs ->@1525 unreached
+MEM @309 ldrb reg base=x1 index=x4 unreached
+BRANCH @315 b.cs ->@1525 unreached
+MEM @316 ldrb reg base=x1 index=x9 unreached
+BRANCH @322 b.cs ->@1525 unreached
+MEM @323 ldrb reg base=x1 index=x9 unreached
+BRANCH @329 b.cs ->@1525 unreached
+MEM @330 ldrb reg base=x1 index=x9 unreached
+MEM @332 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @332 public-mem 0+32:8
+BRANCH @335 b.cs ->@1525 unreached
+MEM @336 ldrb reg base=x1 index=x4 unreached
+BRANCH @342 b.cs ->@1525 unreached
+MEM @343 ldrb reg base=x1 index=x9 unreached
+BRANCH @349 b.cs ->@1525 unreached
+MEM @350 ldrb reg base=x1 index=x9 unreached
+BRANCH @356 b.cs ->@1525 unreached
+MEM @357 ldrb reg base=x1 index=x9 unreached
+MEM @359 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @359 public-mem 0+32:8
+BRANCH @362 b.cs ->@1525 unreached
+MEM @363 ldrb reg base=x1 index=x4 unreached
+BRANCH @369 b.cs ->@1525 unreached
+MEM @370 ldrb reg base=x1 index=x9 unreached
+BRANCH @376 b.cs ->@1525 unreached
+MEM @377 ldrb reg base=x1 index=x9 unreached
+BRANCH @383 b.cs ->@1525 unreached
+MEM @384 ldrb reg base=x1 index=x9 unreached
+MEM @386 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @386 public-mem 0+32:8
+BRANCH @389 b.cs ->@1525 unreached
+MEM @390 ldrb reg base=x1 index=x4 unreached
+BRANCH @396 b.cs ->@1525 unreached
+MEM @397 ldrb reg base=x1 index=x9 unreached
+BRANCH @403 b.cs ->@1525 unreached
+MEM @404 ldrb reg base=x1 index=x9 unreached
+BRANCH @410 b.cs ->@1525 unreached
+MEM @411 ldrb reg base=x1 index=x9 unreached
+MEM @413 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @413 public-mem 0+32:8
+BRANCH @416 b.cs ->@1525 unreached
+MEM @417 ldrb reg base=x1 index=x4 unreached
+BRANCH @423 b.cs ->@1525 unreached
+MEM @424 ldrb reg base=x1 index=x9 unreached
+BRANCH @430 b.cs ->@1525 unreached
+MEM @431 ldrb reg base=x1 index=x9 unreached
+BRANCH @437 b.cs ->@1525 unreached
+MEM @438 ldrb reg base=x1 index=x9 unreached
+MEM @440 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @440 public-mem 0+32:8
+BRANCH @443 b.cs ->@1525 unreached
+MEM @444 ldrb reg base=x1 index=x4 unreached
+BRANCH @450 b.cs ->@1525 unreached
+MEM @451 ldrb reg base=x1 index=x9 unreached
+BRANCH @457 b.cs ->@1525 unreached
+MEM @458 ldrb reg base=x1 index=x9 unreached
+BRANCH @464 b.cs ->@1525 unreached
+MEM @465 ldrb reg base=x1 index=x9 unreached
+MEM @467 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @467 public-mem 0+32:8
+BRANCH @470 b.cs ->@1525 unreached
+MEM @471 ldrb reg base=x1 index=x4 unreached
+BRANCH @477 b.cs ->@1525 unreached
+MEM @478 ldrb reg base=x1 index=x9 unreached
+BRANCH @484 b.cs ->@1525 unreached
+MEM @485 ldrb reg base=x1 index=x9 unreached
+BRANCH @491 b.cs ->@1525 unreached
+MEM @492 ldrb reg base=x1 index=x9 unreached
+MEM @494 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @494 public-mem 0+32:8
+BRANCH @497 b.cs ->@1525 unreached
+MEM @498 ldrb reg base=x1 index=x4 unreached
+BRANCH @504 b.cs ->@1525 unreached
+MEM @505 ldrb reg base=x1 index=x9 unreached
+BRANCH @511 b.cs ->@1525 unreached
+MEM @512 ldrb reg base=x1 index=x9 unreached
+BRANCH @518 b.cs ->@1525 unreached
+MEM @519 ldrb reg base=x1 index=x9 unreached
+MEM @521 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @521 public-mem 0+32:8
+BRANCH @524 b.cs ->@1525 unreached
+MEM @525 ldrb reg base=x1 index=x4 unreached
+BRANCH @531 b.cs ->@1525 unreached
+MEM @532 ldrb reg base=x1 index=x9 unreached
+BRANCH @538 b.cs ->@1525 unreached
+MEM @539 ldrb reg base=x1 index=x9 unreached
+BRANCH @545 b.cs ->@1525 unreached
+MEM @546 ldrb reg base=x1 index=x9 unreached
+MEM @548 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @548 public-mem 0+32:8
+BRANCH @551 b.cs ->@1525 unreached
+MEM @552 ldrb reg base=x1 index=x4 unreached
+BRANCH @558 b.cs ->@1525 unreached
+MEM @559 ldrb reg base=x1 index=x9 unreached
+BRANCH @565 b.cs ->@1525 unreached
+MEM @566 ldrb reg base=x1 index=x9 unreached
+BRANCH @572 b.cs ->@1525 unreached
+MEM @573 ldrb reg base=x1 index=x9 unreached
+MEM @575 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @575 public-mem 0+32:8
+BRANCH @578 b.cs ->@1525 unreached
+MEM @579 ldrb reg base=x1 index=x4 unreached
+BRANCH @585 b.cs ->@1525 unreached
+MEM @586 ldrb reg base=x1 index=x9 unreached
+BRANCH @592 b.cs ->@1525 unreached
+MEM @593 ldrb reg base=x1 index=x9 unreached
+BRANCH @599 b.cs ->@1525 unreached
+MEM @600 ldrb reg base=x1 index=x9 unreached
+MEM @602 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @602 public-mem 0+32:8
+BRANCH @605 b.cs ->@1525 unreached
+MEM @606 ldrb reg base=x1 index=x4 unreached
+BRANCH @612 b.cs ->@1525 unreached
+MEM @613 ldrb reg base=x1 index=x9 unreached
+BRANCH @619 b.cs ->@1525 unreached
+MEM @620 ldrb reg base=x1 index=x9 unreached
+BRANCH @626 b.cs ->@1525 unreached
+MEM @627 ldrb reg base=x1 index=x9 unreached
+MEM @629 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @629 public-mem 0+32:8
+BRANCH @632 b.cs ->@1525 unreached
+MEM @633 ldrb reg base=x1 index=x4 unreached
+BRANCH @639 b.cs ->@1525 unreached
+MEM @640 ldrb reg base=x1 index=x9 unreached
+BRANCH @646 b.cs ->@1525 unreached
+MEM @647 ldrb reg base=x1 index=x9 unreached
+BRANCH @653 b.cs ->@1525 unreached
+MEM @654 ldrb reg base=x1 index=x9 unreached
+MEM @656 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @656 public-mem 0+32:8
+MEM @657 ldr imm base=x0 index=- unreached
+MEM @658 ldr imm base=x0 index=- unreached
+MEM @659 ldr imm base=x0 index=- unreached
+MEM @660 ldr imm base=x0 index=- unreached
+MEM @674 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @674 public-mem 0+32:8
+MEM @675 ldr imm base=x0 index=- unreached
+MEM @676 ldr imm base=x0 index=- unreached
+MEM @677 ldr imm base=x0 index=- unreached
+MEM @678 ldr imm base=x0 index=- unreached
+MEM @692 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @692 public-mem 0+32:8
+MEM @693 ldr imm base=x0 index=- unreached
+MEM @694 ldr imm base=x0 index=- unreached
+MEM @695 ldr imm base=x0 index=- unreached
+MEM @696 ldr imm base=x0 index=- unreached
+MEM @710 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @710 public-mem 0+32:8
+MEM @711 ldr imm base=x0 index=- unreached
+MEM @712 ldr imm base=x0 index=- unreached
+MEM @713 ldr imm base=x0 index=- unreached
+MEM @714 ldr imm base=x0 index=- unreached
+MEM @728 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @728 public-mem 0+32:8
+MEM @729 ldr imm base=x0 index=- unreached
+MEM @730 ldr imm base=x0 index=- unreached
+MEM @731 ldr imm base=x0 index=- unreached
+MEM @732 ldr imm base=x0 index=- unreached
+MEM @746 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @746 public-mem 0+32:8
+MEM @747 ldr imm base=x0 index=- unreached
+MEM @748 ldr imm base=x0 index=- unreached
+MEM @749 ldr imm base=x0 index=- unreached
+MEM @750 ldr imm base=x0 index=- unreached
+MEM @764 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @764 public-mem 0+32:8
+MEM @765 ldr imm base=x0 index=- unreached
+MEM @766 ldr imm base=x0 index=- unreached
+MEM @767 ldr imm base=x0 index=- unreached
+MEM @768 ldr imm base=x0 index=- unreached
+MEM @782 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @782 public-mem 0+32:8
+MEM @783 ldr imm base=x0 index=- unreached
+MEM @784 ldr imm base=x0 index=- unreached
+MEM @785 ldr imm base=x0 index=- unreached
+MEM @786 ldr imm base=x0 index=- unreached
+MEM @800 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @800 public-mem 0+32:8
+MEM @801 ldr imm base=x0 index=- unreached
+MEM @802 ldr imm base=x0 index=- unreached
+MEM @803 ldr imm base=x0 index=- unreached
+MEM @804 ldr imm base=x0 index=- unreached
+MEM @818 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @818 public-mem 0+32:8
+MEM @819 ldr imm base=x0 index=- unreached
+MEM @820 ldr imm base=x0 index=- unreached
+MEM @821 ldr imm base=x0 index=- unreached
+MEM @822 ldr imm base=x0 index=- unreached
+MEM @836 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @836 public-mem 0+32:8
+MEM @837 ldr imm base=x0 index=- unreached
+MEM @838 ldr imm base=x0 index=- unreached
+MEM @839 ldr imm base=x0 index=- unreached
+MEM @840 ldr imm base=x0 index=- unreached
+MEM @854 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @854 public-mem 0+32:8
+MEM @855 ldr imm base=x0 index=- unreached
+MEM @856 ldr imm base=x0 index=- unreached
+MEM @857 ldr imm base=x0 index=- unreached
+MEM @858 ldr imm base=x0 index=- unreached
+MEM @872 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @872 public-mem 0+32:8
+MEM @873 ldr imm base=x0 index=- unreached
+MEM @874 ldr imm base=x0 index=- unreached
+MEM @875 ldr imm base=x0 index=- unreached
+MEM @876 ldr imm base=x0 index=- unreached
+MEM @890 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @890 public-mem 0+32:8
+MEM @891 ldr imm base=x0 index=- unreached
+MEM @892 ldr imm base=x0 index=- unreached
+MEM @893 ldr imm base=x0 index=- unreached
+MEM @894 ldr imm base=x0 index=- unreached
+MEM @908 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @908 public-mem 0+32:8
+MEM @909 ldr imm base=x0 index=- unreached
+MEM @910 ldr imm base=x0 index=- unreached
+MEM @911 ldr imm base=x0 index=- unreached
+MEM @912 ldr imm base=x0 index=- unreached
+MEM @926 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @926 public-mem 0+32:8
+MEM @927 ldr imm base=x0 index=- unreached
+MEM @928 ldr imm base=x0 index=- unreached
+MEM @929 ldr imm base=x0 index=- unreached
+MEM @930 ldr imm base=x0 index=- unreached
+MEM @944 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @944 public-mem 0+32:8
+MEM @945 ldr imm base=x0 index=- unreached
+MEM @946 ldr imm base=x0 index=- unreached
+MEM @947 ldr imm base=x0 index=- unreached
+MEM @948 ldr imm base=x0 index=- unreached
+MEM @962 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @962 public-mem 0+32:8
+MEM @963 ldr imm base=x0 index=- unreached
+MEM @964 ldr imm base=x0 index=- unreached
+MEM @965 ldr imm base=x0 index=- unreached
+MEM @966 ldr imm base=x0 index=- unreached
+MEM @980 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @980 public-mem 0+32:8
+MEM @981 ldr imm base=x0 index=- unreached
+MEM @982 ldr imm base=x0 index=- unreached
+MEM @983 ldr imm base=x0 index=- unreached
+MEM @984 ldr imm base=x0 index=- unreached
+MEM @998 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @998 public-mem 0+32:8
+MEM @999 ldr imm base=x0 index=- unreached
+MEM @1000 ldr imm base=x0 index=- unreached
+MEM @1001 ldr imm base=x0 index=- unreached
+MEM @1002 ldr imm base=x0 index=- unreached
+MEM @1016 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1016 public-mem 0+32:8
+MEM @1017 ldr imm base=x0 index=- unreached
+MEM @1018 ldr imm base=x0 index=- unreached
+MEM @1019 ldr imm base=x0 index=- unreached
+MEM @1020 ldr imm base=x0 index=- unreached
+MEM @1034 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1034 public-mem 0+32:8
+MEM @1035 ldr imm base=x0 index=- unreached
+MEM @1036 ldr imm base=x0 index=- unreached
+MEM @1037 ldr imm base=x0 index=- unreached
+MEM @1038 ldr imm base=x0 index=- unreached
+MEM @1052 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1052 public-mem 0+32:8
+MEM @1053 ldr imm base=x0 index=- unreached
+MEM @1054 ldr imm base=x0 index=- unreached
+MEM @1055 ldr imm base=x0 index=- unreached
+MEM @1056 ldr imm base=x0 index=- unreached
+MEM @1070 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1070 public-mem 0+32:8
+MEM @1071 ldr imm base=x0 index=- unreached
+MEM @1072 ldr imm base=x0 index=- unreached
+MEM @1073 ldr imm base=x0 index=- unreached
+MEM @1074 ldr imm base=x0 index=- unreached
+MEM @1088 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1088 public-mem 0+32:8
+MEM @1089 ldr imm base=x0 index=- unreached
+MEM @1090 ldr imm base=x0 index=- unreached
+MEM @1091 ldr imm base=x0 index=- unreached
+MEM @1092 ldr imm base=x0 index=- unreached
+MEM @1106 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1106 public-mem 0+32:8
+MEM @1107 ldr imm base=x0 index=- unreached
+MEM @1108 ldr imm base=x0 index=- unreached
+MEM @1109 ldr imm base=x0 index=- unreached
+MEM @1110 ldr imm base=x0 index=- unreached
+MEM @1124 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1124 public-mem 0+32:8
+MEM @1125 ldr imm base=x0 index=- unreached
+MEM @1126 ldr imm base=x0 index=- unreached
+MEM @1127 ldr imm base=x0 index=- unreached
+MEM @1128 ldr imm base=x0 index=- unreached
+MEM @1142 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1142 public-mem 0+32:8
+MEM @1143 ldr imm base=x0 index=- unreached
+MEM @1144 ldr imm base=x0 index=- unreached
+MEM @1145 ldr imm base=x0 index=- unreached
+MEM @1146 ldr imm base=x0 index=- unreached
+MEM @1160 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1160 public-mem 0+32:8
+MEM @1161 ldr imm base=x0 index=- unreached
+MEM @1162 ldr imm base=x0 index=- unreached
+MEM @1163 ldr imm base=x0 index=- unreached
+MEM @1164 ldr imm base=x0 index=- unreached
+MEM @1178 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1178 public-mem 0+32:8
+MEM @1179 ldr imm base=x0 index=- unreached
+MEM @1180 ldr imm base=x0 index=- unreached
+MEM @1181 ldr imm base=x0 index=- unreached
+MEM @1182 ldr imm base=x0 index=- unreached
+MEM @1196 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1196 public-mem 0+32:8
+MEM @1197 ldr imm base=x0 index=- unreached
+MEM @1198 ldr imm base=x0 index=- unreached
+MEM @1199 ldr imm base=x0 index=- unreached
+MEM @1200 ldr imm base=x0 index=- unreached
+MEM @1214 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1214 public-mem 0+32:8
+MEM @1215 ldr imm base=x0 index=- unreached
+MEM @1216 ldr imm base=x0 index=- unreached
+MEM @1217 ldr imm base=x0 index=- unreached
+MEM @1218 ldr imm base=x0 index=- unreached
+MEM @1232 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1232 public-mem 0+32:8
+MEM @1233 ldr imm base=x0 index=- unreached
+MEM @1234 ldr imm base=x0 index=- unreached
+MEM @1235 ldr imm base=x0 index=- unreached
+MEM @1236 ldr imm base=x0 index=- unreached
+MEM @1250 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1250 public-mem 0+32:8
+MEM @1251 ldr imm base=x0 index=- unreached
+MEM @1252 ldr imm base=x0 index=- unreached
+MEM @1253 ldr imm base=x0 index=- unreached
+MEM @1254 ldr imm base=x0 index=- unreached
+MEM @1268 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1268 public-mem 0+32:8
+MEM @1269 ldr imm base=x0 index=- unreached
+MEM @1270 ldr imm base=x0 index=- unreached
+MEM @1271 ldr imm base=x0 index=- unreached
+MEM @1272 ldr imm base=x0 index=- unreached
+MEM @1286 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1286 public-mem 0+32:8
+MEM @1287 ldr imm base=x0 index=- unreached
+MEM @1288 ldr imm base=x0 index=- unreached
+MEM @1289 ldr imm base=x0 index=- unreached
+MEM @1290 ldr imm base=x0 index=- unreached
+MEM @1304 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1304 public-mem 0+32:8
+MEM @1305 ldr imm base=x0 index=- unreached
+MEM @1306 ldr imm base=x0 index=- unreached
+MEM @1307 ldr imm base=x0 index=- unreached
+MEM @1308 ldr imm base=x0 index=- unreached
+MEM @1322 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1322 public-mem 0+32:8
+MEM @1323 ldr imm base=x0 index=- unreached
+MEM @1324 ldr imm base=x0 index=- unreached
+MEM @1325 ldr imm base=x0 index=- unreached
+MEM @1326 ldr imm base=x0 index=- unreached
+MEM @1340 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1340 public-mem 0+32:8
+MEM @1341 ldr imm base=x0 index=- unreached
+MEM @1342 ldr imm base=x0 index=- unreached
+MEM @1343 ldr imm base=x0 index=- unreached
+MEM @1344 ldr imm base=x0 index=- unreached
+MEM @1358 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1358 public-mem 0+32:8
+MEM @1359 ldr imm base=x0 index=- unreached
+MEM @1360 ldr imm base=x0 index=- unreached
+MEM @1361 ldr imm base=x0 index=- unreached
+MEM @1362 ldr imm base=x0 index=- unreached
+MEM @1376 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1376 public-mem 0+32:8
+MEM @1377 ldr imm base=x0 index=- unreached
+MEM @1378 ldr imm base=x0 index=- unreached
+MEM @1379 ldr imm base=x0 index=- unreached
+MEM @1380 ldr imm base=x0 index=- unreached
+MEM @1394 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1394 public-mem 0+32:8
+MEM @1395 ldr imm base=x0 index=- unreached
+MEM @1396 ldr imm base=x0 index=- unreached
+MEM @1397 ldr imm base=x0 index=- unreached
+MEM @1398 ldr imm base=x0 index=- unreached
+MEM @1412 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1412 public-mem 0+32:8
+MEM @1413 ldr imm base=x0 index=- unreached
+MEM @1414 ldr imm base=x0 index=- unreached
+MEM @1415 ldr imm base=x0 index=- unreached
+MEM @1416 ldr imm base=x0 index=- unreached
+MEM @1430 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1430 public-mem 0+32:8
+MEM @1431 ldr imm base=x0 index=- unreached
+MEM @1432 ldr imm base=x0 index=- unreached
+MEM @1433 ldr imm base=x0 index=- unreached
+MEM @1434 ldr imm base=x0 index=- unreached
+MEM @1448 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1448 public-mem 0+32:8
+MEM @1449 ldr imm base=x0 index=- unreached
+MEM @1450 ldr imm base=x0 index=- unreached
+MEM @1451 ldr imm base=x0 index=- unreached
+MEM @1452 ldr imm base=x0 index=- unreached
+MEM @1466 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1466 public-mem 0+32:8
+MEM @1467 ldr imm base=x0 index=- unreached
+MEM @1468 ldr imm base=x0 index=- unreached
+MEM @1469 ldr imm base=x0 index=- unreached
+MEM @1470 ldr imm base=x0 index=- unreached
+MEM @1484 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1484 public-mem 0+32:8
+MEM @1485 ldr imm base=x0 index=- unreached
+MEM @1486 ldr imm base=x0 index=- unreached
+MEM @1487 ldr imm base=x0 index=- unreached
+MEM @1488 ldr imm base=x0 index=- unreached
+MEM @1502 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1502 public-mem 0+32:8
+MEM @1503 ldr imm base=x0 index=- unreached
+MEM @1504 ldr imm base=x0 index=- unreached
+MEM @1505 ldr imm base=x0 index=- unreached
+MEM @1506 ldr imm base=x0 index=- unreached
+MEM @1520 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @1520 public-mem 0+32:8
+MEM @1523 ldr imm base=x7 index=- const trap-tail
+MEM @1527 ldr imm base=x0 index=- unreached
+MEM @1528 ldr imm base=x0 index=- unreached
+MEM @1529 ldr imm base=x0 index=- unreached
+MEM @1530 ldr imm base=x0 index=- unreached
+MEM @1531 ldr imm base=x0 index=- unreached
+MEM @1532 ldr imm base=x0 index=- unreached
+MEM @1533 ldr imm base=x0 index=- unreached
+MEM @1534 ldr imm base=x0 index=- unreached
+MEM @1536 ldr imm base=x2 index=- unreached
+MEM @1538 ldr imm base=x1 index=- unreached
+MEM @1571 ldr imm base=x2 index=- unreached
+MEM @1573 ldr imm base=x1 index=- unreached
+MEM @1606 ldr imm base=x2 index=- unreached
+MEM @1608 ldr imm base=x1 index=- unreached
+MEM @1641 ldr imm base=x2 index=- unreached
+MEM @1643 ldr imm base=x1 index=- unreached
+MEM @1676 ldr imm base=x2 index=- unreached
+MEM @1678 ldr imm base=x1 index=- unreached
+MEM @1711 ldr imm base=x2 index=- unreached
+MEM @1713 ldr imm base=x1 index=- unreached
+MEM @1746 ldr imm base=x2 index=- unreached
+MEM @1748 ldr imm base=x1 index=- unreached
+MEM @1781 ldr imm base=x2 index=- unreached
+MEM @1783 ldr imm base=x1 index=- unreached
+MEM @1816 ldr imm base=x2 index=- unreached
+MEM @1818 ldr imm base=x1 index=- unreached
+MEM @1851 ldr imm base=x2 index=- unreached
+MEM @1853 ldr imm base=x1 index=- unreached
+MEM @1886 ldr imm base=x2 index=- unreached
+MEM @1888 ldr imm base=x1 index=- unreached
+MEM @1921 ldr imm base=x2 index=- unreached
+MEM @1923 ldr imm base=x1 index=- unreached
+MEM @1956 ldr imm base=x2 index=- unreached
+MEM @1958 ldr imm base=x1 index=- unreached
+MEM @1991 ldr imm base=x2 index=- unreached
+MEM @1993 ldr imm base=x1 index=- unreached
+MEM @2026 ldr imm base=x2 index=- unreached
+MEM @2028 ldr imm base=x1 index=- unreached
+MEM @2061 ldr imm base=x2 index=- unreached
+MEM @2063 ldr imm base=x1 index=- unreached
+MEM @2096 ldr imm base=x2 index=- unreached
+MEM @2098 ldr imm base=x1 index=- unreached
+MEM @2131 ldr imm base=x2 index=- unreached
+MEM @2133 ldr imm base=x1 index=- unreached
+MEM @2166 ldr imm base=x2 index=- unreached
+MEM @2168 ldr imm base=x1 index=- unreached
+MEM @2201 ldr imm base=x2 index=- unreached
+MEM @2203 ldr imm base=x1 index=- unreached
+MEM @2236 ldr imm base=x2 index=- unreached
+MEM @2238 ldr imm base=x1 index=- unreached
+MEM @2271 ldr imm base=x2 index=- unreached
+MEM @2273 ldr imm base=x1 index=- unreached
+MEM @2306 ldr imm base=x2 index=- unreached
+MEM @2308 ldr imm base=x1 index=- unreached
+MEM @2341 ldr imm base=x2 index=- unreached
+MEM @2343 ldr imm base=x1 index=- unreached
+MEM @2376 ldr imm base=x2 index=- unreached
+MEM @2378 ldr imm base=x1 index=- unreached
+MEM @2411 ldr imm base=x2 index=- unreached
+MEM @2413 ldr imm base=x1 index=- unreached
+MEM @2446 ldr imm base=x2 index=- unreached
+MEM @2448 ldr imm base=x1 index=- unreached
+MEM @2481 ldr imm base=x2 index=- unreached
+MEM @2483 ldr imm base=x1 index=- unreached
+MEM @2516 ldr imm base=x2 index=- unreached
+MEM @2518 ldr imm base=x1 index=- unreached
+MEM @2551 ldr imm base=x2 index=- unreached
+MEM @2553 ldr imm base=x1 index=- unreached
+MEM @2586 ldr imm base=x2 index=- unreached
+MEM @2588 ldr imm base=x1 index=- unreached
+MEM @2621 ldr imm base=x2 index=- unreached
+MEM @2623 ldr imm base=x1 index=- unreached
+MEM @2656 ldr imm base=x2 index=- unreached
+MEM @2658 ldr imm base=x1 index=- unreached
+MEM @2691 ldr imm base=x2 index=- unreached
+MEM @2693 ldr imm base=x1 index=- unreached
+MEM @2726 ldr imm base=x2 index=- unreached
+MEM @2728 ldr imm base=x1 index=- unreached
+MEM @2761 ldr imm base=x2 index=- unreached
+MEM @2763 ldr imm base=x1 index=- unreached
+MEM @2796 ldr imm base=x2 index=- unreached
+MEM @2798 ldr imm base=x1 index=- unreached
+MEM @2831 ldr imm base=x2 index=- unreached
+MEM @2833 ldr imm base=x1 index=- unreached
+MEM @2866 ldr imm base=x2 index=- unreached
+MEM @2868 ldr imm base=x1 index=- unreached
+MEM @2901 ldr imm base=x2 index=- unreached
+MEM @2903 ldr imm base=x1 index=- unreached
+MEM @2936 ldr imm base=x2 index=- unreached
+MEM @2938 ldr imm base=x1 index=- unreached
+MEM @2971 ldr imm base=x2 index=- unreached
+MEM @2973 ldr imm base=x1 index=- unreached
+MEM @3006 ldr imm base=x2 index=- unreached
+MEM @3008 ldr imm base=x1 index=- unreached
+MEM @3041 ldr imm base=x2 index=- unreached
+MEM @3043 ldr imm base=x1 index=- unreached
+MEM @3076 ldr imm base=x2 index=- unreached
+MEM @3078 ldr imm base=x1 index=- unreached
+MEM @3111 ldr imm base=x2 index=- unreached
+MEM @3113 ldr imm base=x1 index=- unreached
+MEM @3146 ldr imm base=x2 index=- unreached
+MEM @3148 ldr imm base=x1 index=- unreached
+MEM @3181 ldr imm base=x2 index=- unreached
+MEM @3183 ldr imm base=x1 index=- unreached
+MEM @3216 ldr imm base=x2 index=- unreached
+MEM @3218 ldr imm base=x1 index=- unreached
+MEM @3251 ldr imm base=x2 index=- unreached
+MEM @3253 ldr imm base=x1 index=- unreached
+MEM @3286 ldr imm base=x2 index=- unreached
+MEM @3288 ldr imm base=x1 index=- unreached
+MEM @3321 ldr imm base=x2 index=- unreached
+MEM @3323 ldr imm base=x1 index=- unreached
+MEM @3356 ldr imm base=x2 index=- unreached
+MEM @3358 ldr imm base=x1 index=- unreached
+MEM @3391 ldr imm base=x2 index=- unreached
+MEM @3393 ldr imm base=x1 index=- unreached
+MEM @3426 ldr imm base=x2 index=- unreached
+MEM @3428 ldr imm base=x1 index=- unreached
+MEM @3461 ldr imm base=x2 index=- unreached
+MEM @3463 ldr imm base=x1 index=- unreached
+MEM @3496 ldr imm base=x2 index=- unreached
+MEM @3498 ldr imm base=x1 index=- unreached
+MEM @3531 ldr imm base=x2 index=- unreached
+MEM @3533 ldr imm base=x1 index=- unreached
+MEM @3566 ldr imm base=x2 index=- unreached
+MEM @3568 ldr imm base=x1 index=- unreached
+MEM @3601 ldr imm base=x2 index=- unreached
+MEM @3603 ldr imm base=x1 index=- unreached
+MEM @3636 ldr imm base=x2 index=- unreached
+MEM @3638 ldr imm base=x1 index=- unreached
+MEM @3671 ldr imm base=x2 index=- unreached
+MEM @3673 ldr imm base=x1 index=- unreached
+MEM @3706 ldr imm base=x2 index=- unreached
+MEM @3708 ldr imm base=x1 index=- unreached
+MEM @3741 ldr imm base=x2 index=- unreached
+MEM @3743 ldr imm base=x1 index=- unreached
+MEM @3776 ldr imm base=x0 index=- unreached
+MEM @3778 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3778 public-mem 0+32:8
+MEM @3779 ldr imm base=x0 index=- unreached
+MEM @3781 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3781 public-mem 0+32:8
+MEM @3782 ldr imm base=x0 index=- unreached
+MEM @3784 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3784 public-mem 0+32:8
+MEM @3785 ldr imm base=x0 index=- unreached
+MEM @3787 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3787 public-mem 0+32:8
+MEM @3788 ldr imm base=x0 index=- unreached
+MEM @3790 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3790 public-mem 0+32:8
+MEM @3791 ldr imm base=x0 index=- unreached
+MEM @3793 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3793 public-mem 0+32:8
+MEM @3794 ldr imm base=x0 index=- unreached
+MEM @3796 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3796 public-mem 0+32:8
+MEM @3797 ldr imm base=x0 index=- unreached
+MEM @3799 str imm base=x0 index=- unreached
+PUBLIC-MEM-REVOKED @3799 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3802 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3803 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3804 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3805 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3806 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3807 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3808 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3823 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3824 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3825 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3826 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3827 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3828 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3829 public-mem 0+32:8
+BRANCH @3847 b.cs ->@3884 unreached
+BRANCH @3851 b.cs ->@3888 unreached
+PUBLIC-MEM-REVOKED @3855 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3856 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3857 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3858 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3859 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3860 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3861 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3862 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3863 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3864 public-mem 0+32:8
+MEM @3886 ldr imm base=x7 index=- const trap-tail
+BRANCH @3895 b.cs ->@3950 unreached
+BRANCH @3899 b.cs ->@4045 unreached
+BRANCH @3904 b.cs ->@3948 unreached
+BRANCH @3907 b.hi ->@4043 unreached
+BRANCH @3910 b.hi ->@4043 unreached
+PUBLIC-MEM-REVOKED @3913 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3914 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3915 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3916 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3917 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3918 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3919 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3920 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3921 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3922 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3923 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3924 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3925 public-mem 0+32:8
+BRANCH @3957 b.cs ->@4008 unreached
+BRANCH @3961 b.cs ->@4045 unreached
+BRANCH @3965 b.hi ->@4043 unreached
+BRANCH @3968 b.hi ->@4043 unreached
+PUBLIC-MEM-REVOKED @3971 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3972 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3973 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3974 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3975 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3976 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3977 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3978 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3979 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3980 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3981 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3982 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3983 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @3984 public-mem 0+32:8
+BRANCH @4010 b.hi ->@4043 unreached
+BRANCH @4013 b.hi ->@4043 unreached
+PUBLIC-MEM-REVOKED @4016 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4017 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4018 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4019 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4020 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4021 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4022 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4023 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4024 public-mem 0+32:8
+MEM @4041 ldr imm base=x7 index=- const trap-tail
+BRANCH @4049 b.cs ->@4188 unreached
+MEM @4050 strb reg base=x3 index=x4 unreached
+PUBLIC-MEM-REVOKED @4050 public-mem 0+32:8
+BRANCH @4053 b.cc ->@4055 unreached
+BRANCH @4061 cbnz ->@4190 unreached
+BRANCH @4063 b.cs ->@4188 unreached
+MEM @4064 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4064 public-mem 0+32:8
+BRANCH @4070 cbnz ->@4190 unreached
+BRANCH @4072 b.cs ->@4188 unreached
+MEM @4073 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4073 public-mem 0+32:8
+BRANCH @4079 cbnz ->@4190 unreached
+BRANCH @4081 b.cs ->@4188 unreached
+MEM @4082 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4082 public-mem 0+32:8
+BRANCH @4088 cbnz ->@4190 unreached
+BRANCH @4090 b.cs ->@4188 unreached
+MEM @4091 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4091 public-mem 0+32:8
+BRANCH @4097 cbnz ->@4190 unreached
+BRANCH @4099 b.cs ->@4188 unreached
+MEM @4100 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4100 public-mem 0+32:8
+BRANCH @4106 cbnz ->@4190 unreached
+BRANCH @4108 b.cs ->@4188 unreached
+MEM @4109 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4109 public-mem 0+32:8
+BRANCH @4115 cbnz ->@4190 unreached
+BRANCH @4117 b.cs ->@4188 unreached
+MEM @4118 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4118 public-mem 0+32:8
+BRANCH @4124 cbnz ->@4190 unreached
+BRANCH @4126 b.cs ->@4188 unreached
+MEM @4127 strb reg base=x3 index=x9 unreached
+PUBLIC-MEM-REVOKED @4127 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4129 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4130 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4131 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4132 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4133 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4134 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4135 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4136 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4137 public-mem 0+32:8
+BRANCH @4156 b.ne ->@4184 unreached
+PUBLIC-MEM-REVOKED @4158 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4159 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4160 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4161 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4162 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4163 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4164 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4165 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4166 public-mem 0+32:8
+MEM @4186 ldr imm base=x7 index=- const trap-tail
+MEM @4196 str reg base=x1 index=x3 public-index
+BRANCH @4199 b.cc ->@4196 len
+MEM @4210 ldr imm base=x1 index=- const
+MEM @4212 str reg base=x0 index=x3 public-index
+MEM @4213 ldr imm base=x1 index=- const
+MEM @4215 str reg base=x0 index=x3 public-index
+MEM @4216 ldr imm base=x1 index=- const
+MEM @4218 str reg base=x0 index=x3 public-index
+MEM @4219 ldr imm base=x1 index=- const
+MEM @4221 str reg base=x0 index=x3 public-index
+MEM @4222 ldr imm base=x1 index=- const
+MEM @4224 str reg base=x0 index=x3 public-index
+MEM @4225 ldr imm base=x1 index=- const
+MEM @4227 str reg base=x0 index=x3 public-index
+MEM @4228 ldr imm base=x1 index=- const
+MEM @4230 str reg base=x0 index=x3 public-index
+MEM @4231 ldr imm base=x1 index=- const
+MEM @4233 str reg base=x0 index=x3 public-index
+MEM @4236 str reg base=x0 index=x3 public-index
+BRANCH @4242 b.cs ->@4260 unreached
+BRANCH @4246 b.cs ->@4266 unreached
+BRANCH @4251 b.cs ->@4264 unreached
+MEM @4252 ldrb reg base=x2 index=x10 unreached
+BRANCH @4254 b.cs ->@4264 unreached
+MEM @4257 strb reg base=x0 index=x12 unreached
+PUBLIC-MEM-REVOKED @4257 public-mem 0+32:8
+MEM @4262 ldr imm base=x7 index=- const trap-tail
+MEM @4273 str reg base=x5 index=x8 unreached
+PUBLIC-MEM-REVOKED @4273 public-mem 0+32:8
+BRANCH @4276 b.cc ->@4273 unreached
+MEM @4281 str reg base=x6 index=x9 unreached
+PUBLIC-MEM-REVOKED @4281 public-mem 0+32:8
+BRANCH @4284 b.cc ->@4281 unreached
+MEM @4289 str reg base=x8 index=x10 unreached
+PUBLIC-MEM-REVOKED @4289 public-mem 0+32:8
+BRANCH @4292 b.cc ->@4289 unreached
+MEM @4297 strb reg base=x9 index=x11 unreached
+PUBLIC-MEM-REVOKED @4297 public-mem 0+32:8
+BRANCH @4300 b.cc ->@4297 unreached
+PUBLIC-MEM-REVOKED @4302 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4303 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4304 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4305 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4306 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4307 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4308 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4309 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4310 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4311 public-mem 0+32:8
+MEM @4326 ldr reg base=x0 index=x10 unreached
+MEM @4327 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4327 public-mem 0+32:8
+MEM @4329 ldr reg base=x0 index=x10 unreached
+MEM @4330 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4330 public-mem 0+32:8
+MEM @4332 ldr reg base=x0 index=x10 unreached
+MEM @4333 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4333 public-mem 0+32:8
+MEM @4335 ldr reg base=x0 index=x10 unreached
+MEM @4336 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4336 public-mem 0+32:8
+MEM @4338 ldr reg base=x0 index=x10 unreached
+MEM @4339 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4339 public-mem 0+32:8
+MEM @4341 ldr reg base=x0 index=x10 unreached
+MEM @4342 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4342 public-mem 0+32:8
+MEM @4344 ldr reg base=x0 index=x10 unreached
+MEM @4345 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4345 public-mem 0+32:8
+MEM @4347 ldr reg base=x0 index=x10 unreached
+MEM @4348 str imm base=x5 index=- unreached
+PUBLIC-MEM-REVOKED @4348 public-mem 0+32:8
+BRANCH @4351 b.ls ->@4422 unreached
+BRANCH @4357 b.cs ->@4373 unreached
+BRANCH @4361 b.cs ->@4533 unreached
+BRANCH @4364 b.cs ->@4531 unreached
+MEM @4367 ldrb reg base=x0 index=x13 unreached
+BRANCH @4369 b.cs ->@4531 unreached
+MEM @4370 strb reg base=x9 index=x11 unreached
+PUBLIC-MEM-REVOKED @4370 public-mem 0+32:8
+BRANCH @4376 b.cs ->@4391 unreached
+BRANCH @4380 b.cs ->@4533 unreached
+BRANCH @4384 b.cs ->@4531 unreached
+MEM @4385 ldrb reg base=x1 index=x11 unreached
+BRANCH @4387 b.cs ->@4531 unreached
+MEM @4388 strb reg base=x9 index=x13 unreached
+PUBLIC-MEM-REVOKED @4388 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4392 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4393 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4394 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4395 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4396 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4397 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4398 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4399 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4400 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4401 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4402 public-mem 0+32:8
+BRANCH @4426 b.hi ->@4531 unreached
+BRANCH @4429 b.hi ->@4531 unreached
+PUBLIC-MEM-REVOKED @4432 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4433 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4434 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4435 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4436 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4437 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4438 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4439 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4440 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4441 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4442 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4443 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4444 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4445 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4469 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4470 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4471 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4472 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4473 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4474 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4475 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4476 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4477 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4478 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4479 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4480 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4481 public-mem 0+32:8
+MEM @4502 ldr imm base=x5 index=- unreached
+MEM @4504 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4504 public-mem 0+32:8
+MEM @4505 ldr imm base=x5 index=- unreached
+MEM @4507 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4507 public-mem 0+32:8
+MEM @4508 ldr imm base=x5 index=- unreached
+MEM @4510 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4510 public-mem 0+32:8
+MEM @4511 ldr imm base=x5 index=- unreached
+MEM @4513 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4513 public-mem 0+32:8
+MEM @4514 ldr imm base=x5 index=- unreached
+MEM @4516 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4516 public-mem 0+32:8
+MEM @4517 ldr imm base=x5 index=- unreached
+MEM @4519 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4519 public-mem 0+32:8
+MEM @4520 ldr imm base=x5 index=- unreached
+MEM @4522 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4522 public-mem 0+32:8
+MEM @4523 ldr imm base=x5 index=- unreached
+MEM @4525 str reg base=x0 index=x13 unreached
+PUBLIC-MEM-REVOKED @4525 public-mem 0+32:8
+MEM @4529 ldr imm base=x7 index=- const trap-tail
+MEM @4537 ldr reg base=x0 index=x5 unreached
+MEM @4542 str reg base=x0 index=x8 unreached
+PUBLIC-MEM-REVOKED @4542 public-mem 0+32:8
+BRANCH @4546 b.cs ->@4571 unreached
+PUBLIC-MEM-REVOKED @4548 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4549 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4550 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4551 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4552 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4553 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4554 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4572 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4573 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4574 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4575 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4576 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4577 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4578 public-mem 0+32:8
+MEM @4597 str reg base=x2 index=x4 unreached
+PUBLIC-MEM-REVOKED @4597 public-mem 0+32:8
+BRANCH @4600 b.cc ->@4597 unreached
+MEM @4605 str reg base=x3 index=x5 unreached
+PUBLIC-MEM-REVOKED @4605 public-mem 0+32:8
+BRANCH @4608 b.cc ->@4605 unreached
+MEM @4613 str reg base=x4 index=x6 unreached
+PUBLIC-MEM-REVOKED @4613 public-mem 0+32:8
+BRANCH @4616 b.cc ->@4613 unreached
+MEM @4621 strb reg base=x5 index=x8 unreached
+PUBLIC-MEM-REVOKED @4621 public-mem 0+32:8
+BRANCH @4624 b.cc ->@4621 unreached
+PUBLIC-MEM-REVOKED @4627 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4628 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4629 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4630 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4631 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4632 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4633 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4634 public-mem 0+32:8
+MEM @4647 ldr reg base=x0 index=x8 unreached
+MEM @4648 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4648 public-mem 0+32:8
+MEM @4650 ldr reg base=x0 index=x8 unreached
+MEM @4651 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4651 public-mem 0+32:8
+MEM @4653 ldr reg base=x0 index=x8 unreached
+MEM @4654 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4654 public-mem 0+32:8
+MEM @4656 ldr reg base=x0 index=x8 unreached
+MEM @4657 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4657 public-mem 0+32:8
+MEM @4659 ldr reg base=x0 index=x8 unreached
+MEM @4660 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4660 public-mem 0+32:8
+MEM @4662 ldr reg base=x0 index=x8 unreached
+MEM @4663 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4663 public-mem 0+32:8
+MEM @4665 ldr reg base=x0 index=x8 unreached
+MEM @4666 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4666 public-mem 0+32:8
+MEM @4668 ldr reg base=x0 index=x8 unreached
+MEM @4669 str imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @4669 public-mem 0+32:8
+MEM @4671 ldr reg base=x0 index=x9 unreached
+BRANCH @4677 b.cs ->@4693 unreached
+BRANCH @4681 b.cs ->@4937 unreached
+BRANCH @4684 b.cs ->@4935 unreached
+MEM @4687 ldrb reg base=x0 index=x12 unreached
+BRANCH @4689 b.cs ->@4935 unreached
+MEM @4690 strb reg base=x5 index=x10 unreached
+PUBLIC-MEM-REVOKED @4690 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4694 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4695 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4696 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4697 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4698 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4699 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4700 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4701 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4702 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4703 public-mem 0+32:8
+MEM @4722 ldr imm base=x2 index=- unreached
+BRANCH @4728 cbnz ->@4939 unreached
+MEM @4729 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4729 public-mem 0+32:8
+BRANCH @4734 cbnz ->@4939 unreached
+MEM @4735 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4735 public-mem 0+32:8
+BRANCH @4740 cbnz ->@4939 unreached
+MEM @4741 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4741 public-mem 0+32:8
+BRANCH @4746 cbnz ->@4939 unreached
+MEM @4747 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4747 public-mem 0+32:8
+MEM @4748 ldr imm base=x2 index=- unreached
+BRANCH @4754 cbnz ->@4939 unreached
+MEM @4755 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4755 public-mem 0+32:8
+BRANCH @4760 cbnz ->@4939 unreached
+MEM @4761 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4761 public-mem 0+32:8
+BRANCH @4766 cbnz ->@4939 unreached
+MEM @4767 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4767 public-mem 0+32:8
+BRANCH @4772 cbnz ->@4939 unreached
+MEM @4773 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4773 public-mem 0+32:8
+MEM @4774 ldr imm base=x2 index=- unreached
+BRANCH @4780 cbnz ->@4939 unreached
+MEM @4781 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4781 public-mem 0+32:8
+BRANCH @4786 cbnz ->@4939 unreached
+MEM @4787 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4787 public-mem 0+32:8
+BRANCH @4792 cbnz ->@4939 unreached
+MEM @4793 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4793 public-mem 0+32:8
+BRANCH @4798 cbnz ->@4939 unreached
+MEM @4799 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4799 public-mem 0+32:8
+MEM @4800 ldr imm base=x2 index=- unreached
+BRANCH @4806 cbnz ->@4939 unreached
+MEM @4807 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4807 public-mem 0+32:8
+BRANCH @4812 cbnz ->@4939 unreached
+MEM @4813 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4813 public-mem 0+32:8
+BRANCH @4818 cbnz ->@4939 unreached
+MEM @4819 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4819 public-mem 0+32:8
+BRANCH @4824 cbnz ->@4939 unreached
+MEM @4825 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4825 public-mem 0+32:8
+MEM @4826 ldr imm base=x2 index=- unreached
+BRANCH @4832 cbnz ->@4939 unreached
+MEM @4833 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4833 public-mem 0+32:8
+BRANCH @4838 cbnz ->@4939 unreached
+MEM @4839 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4839 public-mem 0+32:8
+BRANCH @4844 cbnz ->@4939 unreached
+MEM @4845 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4845 public-mem 0+32:8
+BRANCH @4850 cbnz ->@4939 unreached
+MEM @4851 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4851 public-mem 0+32:8
+MEM @4852 ldr imm base=x2 index=- unreached
+BRANCH @4858 cbnz ->@4939 unreached
+MEM @4859 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4859 public-mem 0+32:8
+BRANCH @4864 cbnz ->@4939 unreached
+MEM @4865 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4865 public-mem 0+32:8
+BRANCH @4870 cbnz ->@4939 unreached
+MEM @4871 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4871 public-mem 0+32:8
+BRANCH @4876 cbnz ->@4939 unreached
+MEM @4877 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4877 public-mem 0+32:8
+MEM @4878 ldr imm base=x2 index=- unreached
+BRANCH @4884 cbnz ->@4939 unreached
+MEM @4885 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4885 public-mem 0+32:8
+BRANCH @4890 cbnz ->@4939 unreached
+MEM @4891 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4891 public-mem 0+32:8
+BRANCH @4896 cbnz ->@4939 unreached
+MEM @4897 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4897 public-mem 0+32:8
+BRANCH @4902 cbnz ->@4939 unreached
+MEM @4903 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4903 public-mem 0+32:8
+MEM @4904 ldr imm base=x2 index=- unreached
+BRANCH @4910 cbnz ->@4939 unreached
+MEM @4911 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4911 public-mem 0+32:8
+BRANCH @4916 cbnz ->@4939 unreached
+MEM @4917 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4917 public-mem 0+32:8
+BRANCH @4922 cbnz ->@4939 unreached
+MEM @4923 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4923 public-mem 0+32:8
+BRANCH @4928 cbnz ->@4939 unreached
+MEM @4929 strb imm base=x1 index=- unreached
+PUBLIC-MEM-REVOKED @4929 public-mem 0+32:8
+MEM @4933 ldr imm base=x7 index=- const trap-tail
+MEM @4945 str reg base=x3 index=x5 unreached
+PUBLIC-MEM-REVOKED @4945 public-mem 0+32:8
+BRANCH @4948 b.cc ->@4945 unreached
+MEM @4953 str reg base=x4 index=x6 unreached
+PUBLIC-MEM-REVOKED @4953 public-mem 0+32:8
+BRANCH @4956 b.cc ->@4953 unreached
+MEM @4961 str reg base=x5 index=x8 unreached
+PUBLIC-MEM-REVOKED @4961 public-mem 0+32:8
+BRANCH @4964 b.cc ->@4961 unreached
+MEM @4969 strb reg base=x6 index=x9 unreached
+PUBLIC-MEM-REVOKED @4969 public-mem 0+32:8
+BRANCH @4972 b.cc ->@4969 unreached
+PUBLIC-MEM-REVOKED @4975 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4976 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4977 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4978 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4979 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4980 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4981 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4982 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4983 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4997 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4998 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @4999 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5000 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5001 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5002 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5003 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5004 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5005 public-mem 0+32:8
+BRANCH @5023 b.hi ->@5329 unreached
+BRANCH @5026 b.hi ->@5329 unreached
+PUBLIC-MEM-REVOKED @5029 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5030 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5031 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5032 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5033 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5034 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5035 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5036 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5037 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5038 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5039 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5040 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5041 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5042 public-mem 0+32:8
+BRANCH @5066 b.cs ->@5081 unreached
+BRANCH @5070 b.cs ->@5331 unreached
+BRANCH @5074 b.cs ->@5329 unreached
+MEM @5075 ldrb reg base=x0 index=x15 unreached
+BRANCH @5077 b.cs ->@5329 unreached
+MEM @5078 strb reg base=x6 index=x13 unreached
+PUBLIC-MEM-REVOKED @5078 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5082 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5083 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5084 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5085 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5086 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5087 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5088 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5089 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5090 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5091 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5092 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5093 public-mem 0+32:8
+PUBLIC-MEM-REVOKED @5094 public-mem 0+32:8
+MEM @5116 ldr imm base=x3 index=- unreached
+BRANCH @5122 cbnz ->@5333 unreached
+MEM @5123 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5123 public-mem 0+32:8
+BRANCH @5128 cbnz ->@5333 unreached
+MEM @5129 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5129 public-mem 0+32:8
+BRANCH @5134 cbnz ->@5333 unreached
+MEM @5135 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5135 public-mem 0+32:8
+BRANCH @5140 cbnz ->@5333 unreached
+MEM @5141 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5141 public-mem 0+32:8
+MEM @5142 ldr imm base=x3 index=- unreached
+BRANCH @5148 cbnz ->@5333 unreached
+MEM @5149 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5149 public-mem 0+32:8
+BRANCH @5154 cbnz ->@5333 unreached
+MEM @5155 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5155 public-mem 0+32:8
+BRANCH @5160 cbnz ->@5333 unreached
+MEM @5161 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5161 public-mem 0+32:8
+BRANCH @5166 cbnz ->@5333 unreached
+MEM @5167 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5167 public-mem 0+32:8
+MEM @5168 ldr imm base=x3 index=- unreached
+BRANCH @5174 cbnz ->@5333 unreached
+MEM @5175 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5175 public-mem 0+32:8
+BRANCH @5180 cbnz ->@5333 unreached
+MEM @5181 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5181 public-mem 0+32:8
+BRANCH @5186 cbnz ->@5333 unreached
+MEM @5187 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5187 public-mem 0+32:8
+BRANCH @5192 cbnz ->@5333 unreached
+MEM @5193 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5193 public-mem 0+32:8
+MEM @5194 ldr imm base=x3 index=- unreached
+BRANCH @5200 cbnz ->@5333 unreached
+MEM @5201 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5201 public-mem 0+32:8
+BRANCH @5206 cbnz ->@5333 unreached
+MEM @5207 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5207 public-mem 0+32:8
+BRANCH @5212 cbnz ->@5333 unreached
+MEM @5213 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5213 public-mem 0+32:8
+BRANCH @5218 cbnz ->@5333 unreached
+MEM @5219 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5219 public-mem 0+32:8
+MEM @5220 ldr imm base=x3 index=- unreached
+BRANCH @5226 cbnz ->@5333 unreached
+MEM @5227 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5227 public-mem 0+32:8
+BRANCH @5232 cbnz ->@5333 unreached
+MEM @5233 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5233 public-mem 0+32:8
+BRANCH @5238 cbnz ->@5333 unreached
+MEM @5239 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5239 public-mem 0+32:8
+BRANCH @5244 cbnz ->@5333 unreached
+MEM @5245 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5245 public-mem 0+32:8
+MEM @5246 ldr imm base=x3 index=- unreached
+BRANCH @5252 cbnz ->@5333 unreached
+MEM @5253 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5253 public-mem 0+32:8
+BRANCH @5258 cbnz ->@5333 unreached
+MEM @5259 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5259 public-mem 0+32:8
+BRANCH @5264 cbnz ->@5333 unreached
+MEM @5265 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5265 public-mem 0+32:8
+BRANCH @5270 cbnz ->@5333 unreached
+MEM @5271 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5271 public-mem 0+32:8
+MEM @5272 ldr imm base=x3 index=- unreached
+BRANCH @5278 cbnz ->@5333 unreached
+MEM @5279 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5279 public-mem 0+32:8
+BRANCH @5284 cbnz ->@5333 unreached
+MEM @5285 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5285 public-mem 0+32:8
+BRANCH @5290 cbnz ->@5333 unreached
+MEM @5291 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5291 public-mem 0+32:8
+BRANCH @5296 cbnz ->@5333 unreached
+MEM @5297 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5297 public-mem 0+32:8
+MEM @5298 ldr imm base=x3 index=- unreached
+BRANCH @5304 cbnz ->@5333 unreached
+MEM @5305 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5305 public-mem 0+32:8
+BRANCH @5310 cbnz ->@5333 unreached
+MEM @5311 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5311 public-mem 0+32:8
+BRANCH @5316 cbnz ->@5333 unreached
+MEM @5317 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5317 public-mem 0+32:8
+BRANCH @5322 cbnz ->@5333 unreached
+MEM @5323 strb imm base=x2 index=- unreached
+PUBLIC-MEM-REVOKED @5323 public-mem 0+32:8
+MEM @5327 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=199 len=1 trap-check=0 data-branch=0 branch-unreached=198 mem=732 const=24 public-index=10 data-index=0 mem-unreached=698 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC PASS
+EXIT 0

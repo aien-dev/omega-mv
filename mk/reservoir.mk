@@ -30,7 +30,7 @@ RES_SRCS = src/reservoir/omega_reservoir.c src/reservoir/omega_reservoir_readout
 RES_HDRS = src/reservoir/omega_reservoir.h src/reservoir/omega_reservoir_readout.h src/omega_numeric.h src/sha256.h
 # omega_numeric.c pulls in the provenance and encoder objects at link time.
 RES_DEPS = src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c
+	src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c
 RES_TEST_SRCS = tests/reservoir/test_reservoir.c tests/reservoir/res_oracle64.c
 RES_TEST_HDRS = tests/reservoir/res_fixtures.h tests/reservoir/res_oracle64.h
 RES_DIR = $(OUT_DIR)/tests-reservoir
@@ -39,7 +39,7 @@ RES_TOOL_SRCS = tools/reservoir/res_qualify.c tools/reservoir/res_bench.c tools/
 	tools/reservoir/res_mat.c tools/reservoir/res_inflate.c
 RES_TOOL_HDRS = tools/reservoir/res_common.h tools/reservoir/res_mat.h tools/reservoir/res_inflate.h
 RES_TOOL_CFLAGS = $(RES_CFLAGS) -Itools/reservoir -pthread
-RES_MAT_SRCS = tools/reservoir/res_mat.c tools/reservoir/res_inflate.c src/sha256.c
+RES_MAT_SRCS = tools/reservoir/res_mat.c tools/reservoir/res_inflate.c src/omega_om_units.c
 RES_MAT_TEST = tests/reservoir/test_res_mat.c
 
 $(RES_DIR)/%.o: src/reservoir/%.c $(RES_HDRS)

@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note Control for unroll-break.om with unroll removed: a rolled loop accepts it (OMEGESE 9.8); exit 2.
+note Contract section 4 line 90: break in an unrolled body is error 9 (line 9, the break). The same
+note text without unroll (unroll-break-rolled.om) is accepted and exits 2.
+om2
+fn main to int
+s = ulong 0
+for i ulong 4
+if eq i 2
+break
+end
+s = add s 1
+end
+ret int s
+end

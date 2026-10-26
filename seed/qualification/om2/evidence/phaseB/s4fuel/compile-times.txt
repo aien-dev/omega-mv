@@ -1,0 +1,9 @@
+# GNU time 1.9: wall seconds and compiler stderr, one run each, Linux AArch64 host (GB10 CPU). Not a benchmark.
+fuel-d2  omc-s2  (c23b3376) 0.00 s  no error (accepted; largest accepted E14 case)
+fuel-d2  omc-s3a (20d00b6e) 0.00 s  no error (accepted)
+fuel-d3  omc-s2  (c23b3376) 0.04 s  no error (S2 baseline defect: error 14 expected)
+fuel-d3  omc-s3a (20d00b6e) 0.02 s  no error (still missing at 9a92f3c4)
+fuel-d4  omc-s2  (c23b3376) 1.56 s  no error (S2 baseline defect)
+fuel-d4  omc-s3a (20d00b6e) 1.58 s  no error (still missing at 9a92f3c4)
+fuel-inl omc-s2  (c23b3376) 0.10 s  no error (S2 baseline defect)
+fuel-inl omc-s3a (20d00b6e) 0.00 s  omc: line 8: error 14

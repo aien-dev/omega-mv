@@ -1,0 +1,182 @@
+# SPDX-License-Identifier: Apache-2.0
+# L836 Phase B lane FixLex: omegese-om2.md sections 0, 1, 2 (contract sha256 245bb74e..0881,
+# errata E1/E2/E4/E6 on aien-dev om2/contract fd9e05a2). Paths relative to the worktree root.
+# Expected stdout/stderr files under sec/s0s2/exp come from oracle/s0s2/oracle.py (python3 3.12.3),
+# never from a compiler. OM-1 codes/lines come from the OM-1 definition: the pinned omc 734f0a39
+# (contract 0 line 11) and C1 (line 17); they are cross-checked in pinned.cases.
+# Run NOW against the pinned OM-1 compiler 734f0a39. An OM-2 fixture is refused with error 16 at
+# its opt-in line when all its fn signatures are OM-1-clean (contract 0 line 14); otherwise at the
+# first non-clean signature (OMEGESE 9.2 names pass; README O1). OM-1 controls/twins give the
+# result the candidate must keep (C1, line 17).
+# ======== section 0
+# line 14: OM-1 refuses the opt-in line, error 16 at that line
+s0-optin-min-pinned emit seed/qualification/om2/sec/s0s2/s0/optin-min.om - err:5:16 16
+# line 14: OM-1 refuses the opt-in line, error 16 at that line
+s0-optin-diag-pinned emit seed/qualification/om2/sec/s0s2/s0/optin-diag.om - err:4:16 16
+s0-notfirst emit seed/qualification/om2/sec/s0s2/s0/notfirst.om - err:7:16 16
+s0-trail-space emit seed/qualification/om2/sec/s0s2/s0/trail-space.om - err:4:16 16
+s0-trail-word emit seed/qualification/om2/sec/s0s2/s0/trail-word.om - err:4:16 16
+s0-trail-diagx emit seed/qualification/om2/sec/s0s2/s0/trail-diagx.om - err:4:16 16
+s0-double-space emit seed/qualification/om2/sec/s0s2/s0/double-space.om - err:4:16 16
+s0-indent emit seed/qualification/om2/sec/s0s2/s0/indent.om - err:4:16 16
+s0-upper emit seed/qualification/om2/sec/s0s2/s0/upper.om - err:4:16 16
+s0-blank-first emit seed/qualification/om2/sec/s0s2/s0/blank-first.om - err:5:16 16
+s0-blank-spaces-first emit seed/qualification/om2/sec/s0s2/s0/blank-spaces-first.om - err:5:16 16
+s0-names-fn run seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-fn.out - 0
+s0-names-var run seed/qualification/om2/sec/s0s2/s0/names-var.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/names-var.out - 0
+s0-om1-crlf run seed/qualification/om2/sec/s0s2/s0/om1-crlf.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/om1-crlf.out - 5
+s0-w-unroll emit seed/qualification/om2/sec/s0s2/s0/w-unroll.om - err:5:5 5
+s0-w-inline emit seed/qualification/om2/sec/s0s2/s0/w-inline.om - err:4:5 5
+s0-w-fresh emit seed/qualification/om2/sec/s0s2/s0/w-fresh.om - err:4:16 16
+s0-w-rotr emit seed/qualification/om2/sec/s0s2/s0/w-rotr.om - err:6:3 3
+s0-w-abstract emit seed/qualification/om2/sec/s0s2/s0/w-abstract.om - err:4:16 16
+s0-w-layout emit seed/qualification/om2/sec/s0s2/s0/w-layout.om - err:4:16 16
+s0-w-export emit seed/qualification/om2/sec/s0s2/s0/w-export.om - err:4:16 16
+s0-w-part emit seed/qualification/om2/sec/s0s2/s0/w-part.om - err:8:3 3
+s0-w-viewstar emit seed/qualification/om2/sec/s0s2/s0/w-viewstar.om - err:4:16 16
+s0-w-out emit seed/qualification/om2/sec/s0s2/s0/w-out.om - err:4:16 16
+s0-w-hex emit seed/qualification/om2/sec/s0s2/s0/w-hex.om - err:5:6 6
+# signatures are OM-1-clean, so OM-1 refuses the om2 line
+s0-q1-fn-rotr-pinned emit seed/qualification/om2/sec/s0s2/s0/q1-fn-rotr.om - err:4:16 16
+# signatures are OM-1-clean, so OM-1 refuses the om2 line
+s0-q1-param-part-pinned emit seed/qualification/om2/sec/s0s2/s0/q1-param-part.om - err:4:16 16
+# signatures are OM-1-clean, so OM-1 refuses the om2 line
+s0-q1-var-fresh-pinned emit seed/qualification/om2/sec/s0s2/s0/q1-var-fresh.om - err:4:16 16
+# signatures are OM-1-clean, so OM-1 refuses the om2 line
+s0-q1-var-at-pinned emit seed/qualification/om2/sec/s0s2/s0/q1-var-at.om - err:4:16 16
+# signatures are OM-1-clean, so OM-1 refuses the om2 line
+s0-q1-fn-layout-pinned emit seed/qualification/om2/sec/s0s2/s0/q1-fn-layout.om - err:4:16 16
+# ======== section 1
+s1-d-left emit seed/qualification/om2/sec/s0s2/s1/d-left.om - err:3:16 16
+s1-d-left-plain emit seed/qualification/om2/sec/s0s2/s1/d-left-plain.om - err:3:16 16
+s1-d-eof-left emit seed/qualification/om2/sec/s0s2/s1/d-eof-left.om - err:3:16 16
+s1-d-eof-mid emit seed/qualification/om2/sec/s0s2/s1/d-eof-mid.om - err:3:16 16
+s1-d-eof-noend emit seed/qualification/om2/sec/s0s2/s1/d-eof-noend.om - err:3:16 16
+s1-d-mid-short emit seed/qualification/om2/sec/s0s2/s1/d-mid-short.om - err:3:16 16
+s1-d-hexupper emit seed/qualification/om2/sec/s0s2/s1/d-hexupper.om - err:3:16 16
+s1-d-hexupper-plain emit seed/qualification/om2/sec/s0s2/s1/d-hexupper-plain.om - err:3:16 16
+s1-d-hexrange emit seed/qualification/om2/sec/s0s2/s1/d-hexrange.om - err:3:16 16
+s1-d-longtok emit seed/qualification/om2/sec/s0s2/s1/d-longtok.om - err:3:16 16
+s1-d-unknown-fn emit seed/qualification/om2/sec/s0s2/s1/d-unknown-fn.om - err:3:16 16
+s1-d-unknown-struct emit seed/qualification/om2/sec/s0s2/s1/d-unknown-struct.om - err:3:16 16
+# OMEGESE 9.2: the names pass refuses the undeclared struct in the line-4 signature before the line-3 opt-in line (README O1)
+s1-d-unknown-sparam emit seed/qualification/om2/sec/s0s2/s1/d-unknown-sparam.om - err:4:16 16
+s1-d-unknown-args emit seed/qualification/om2/sec/s0s2/s1/d-unknown-args.om - err:3:16 16
+# ======== section 2: hex literals
+s2-hex-max-pinned emit seed/qualification/om2/sec/s0s2/s2hex/hex-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om - err:5:16 16
+# decimal twin checks the oracle values under the pinned compiler
+s2-dec-max run seed/qualification/om2/sec/s0s2/s2hex/dec-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/hex-max.out - 0
+# decimal twin checks the oracle values under the pinned compiler
+s2-dec-places run seed/qualification/om2/sec/s0s2/s2hex/dec-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/qualification/om2/sec/s0s2/exp/hex-places.out - 10
+s2-hex-places-pinned emit seed/qualification/om2/sec/s0s2/s2hex/hex-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om - err:5:16 16
+s2-same-hex42-pinned emit seed/qualification/om2/sec/s0s2/s2hex/same-hex42.om - err:3:16 16
+s2-same-dec42-pinned emit seed/qualification/om2/sec/s0s2/s2hex/same-dec42.om - err:3:16 16
+s2-same-hexmax-pinned emit seed/qualification/om2/sec/s0s2/s2hex/same-hexmax.om - err:3:16 16
+s2-same-decmax-pinned emit seed/qualification/om2/sec/s0s2/s2hex/same-decmax.om - err:3:16 16
+s2-r8-uchar-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-uchar.om - err:3:16 16
+s2-r8-ushort-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-ushort.om - err:3:16 16
+s2-r8-uint-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-uint.om - err:3:16 16
+s2-r8-byte-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-byte.om - err:3:16 16
+s2-r8-short-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-short.om - err:3:16 16
+s2-r8-int-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-int.om - err:3:16 16
+s2-r8-long-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-long.om - err:3:16 16
+s2-r8-intffff-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r8-intffff.om - err:3:16 16
+s2-r6-upper-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-upper.om - err:3:16 16
+s2-r6-mixed-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-mixed.om - err:3:16 16
+s2-r6-upperX-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-upperX.om - err:3:16 16
+s2-r6-minus-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-minus.om - err:3:16 16
+s2-r6-empty-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-empty.om - err:3:16 16
+s2-r6-17small-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-17small.om - err:3:16 16
+s2-r6-17big-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-17big.om - err:3:16 16
+s2-r6-under1-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-under1.om - err:3:16 16
+s2-r6-under2-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-under2.om - err:3:16 16
+s2-r6-g-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-g.om - err:3:16 16
+s2-r6-z-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-z.om - err:3:16 16
+s2-r6-upper-ulong-pinned emit seed/qualification/om2/sec/s0s2/s2hex/r6-upper-ulong.om - err:3:16 16
+s2-d8-uchar emit seed/qualification/om2/sec/s0s2/s2hex/d8-uchar.om - err:5:8 8
+s2-d8-ushort emit seed/qualification/om2/sec/s0s2/s2hex/d8-ushort.om - err:5:8 8
+s2-d8-uint emit seed/qualification/om2/sec/s0s2/s2hex/d8-uint.om - err:5:8 8
+s2-d8-byte emit seed/qualification/om2/sec/s0s2/s2hex/d8-byte.om - err:5:8 8
+s2-d8-short emit seed/qualification/om2/sec/s0s2/s2hex/d8-short.om - err:5:8 8
+s2-d8-int emit seed/qualification/om2/sec/s0s2/s2hex/d8-int.om - err:5:8 8
+s2-d8-long emit seed/qualification/om2/sec/s0s2/s2hex/d8-long.om - err:5:8 8
+s2-d8-intffff emit seed/qualification/om2/sec/s0s2/s2hex/d8-intffff.om - err:5:8 8
+# ======== section 2: expression boundaries
+s2-om1-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-typed.om - err:6:5 5
+s2-om2-left-typed-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-typed.om - err:4:16 16
+s2-om1-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-assign.om - err:6:5 5
+s2-om2-left-assign-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-assign.om - err:4:16 16
+s2-om1-left-paren emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-paren.om - err:6:5 5
+s2-om2-left-paren-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-paren.om - err:4:16 16
+s2-om1-left-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-bare.om - err:5:11 11
+s2-om2-left-bare-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-bare.om - err:4:16 16
+s2-om1-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-next.om - err:7:4 4
+s2-om2-short-next-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-next.om - err:4:16 16
+s2-om1-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-bare.om - err:6:4 4
+s2-om2-short-bare-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-bare.om - err:4:16 16
+s2-om1-short-eof emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-eof.om - err:6:4 4
+s2-om2-short-eof-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-eof.om - err:4:16 16
+s2-om1-group-open emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-open.om - err:6:16 16
+s2-om2-group-open-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-open.om - err:4:16 16
+s2-om1-group-short emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-short.om - err:6:16 16
+s2-om2-group-short-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-short.om - err:4:16 16
+s2-om1-group-wide emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-wide.om - err:6:16 16
+s2-om2-group-wide-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-wide.om - err:4:16 16
+s2-om1-bracket emit seed/qualification/om2/sec/s0s2/s2bnd/om1-bracket.om - err:6:3 3
+s2-om2-bracket-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-bracket.om - err:4:16 16
+s2-om1-brace emit seed/qualification/om2/sec/s0s2/s2bnd/om1-brace.om - err:6:3 3
+s2-om2-brace-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-brace.om - err:4:16 16
+s2-om1-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om - - - 7
+s2-om1-g1-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om - - - 7
+# OMEGESE 9.10: group adds no code (pinned)
+s2-om1-g1-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om
+s2-om1-g2-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om - - - 7
+# OMEGESE 9.10: group adds no code (pinned)
+s2-om1-g2-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om
+s2-om1-g3-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om - - - 7
+# OMEGESE 9.10: group adds no code (pinned)
+s2-om1-g3-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om
+s2-om1-g4-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om - - - 7
+# OMEGESE 9.10: group adds no code (pinned)
+s2-om1-g4-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om
+s2-om2-g0-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om - err:4:16 16
+s2-om2-g1-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-g1.om - err:4:16 16
+s2-om2-g2-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-g2.om - err:4:16 16
+s2-om2-g3-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-g3.om - err:4:16 16
+s2-om2-g4-pinned emit seed/qualification/om2/sec/s0s2/s2bnd/om2-g4.om - err:4:16 16
+# ======== section 2: formatter
+# line 14: om2 fmt is refused by OM-1 at line 1
+s2-fmt-x1-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x1.om - err:1:16 16
+# line 14: om2 fmt is refused by OM-1 at line 1
+s2-fmt-x2-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x2.om - err:1:16 16
+# line 14: om2 fmt is refused by OM-1 at line 1
+s2-fmt-x3-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x3.om - err:1:16 16
+# line 14: om2 fmt is refused by OM-1 at line 1
+s2-fmt-x4-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x4.om - err:1:16 16
+# line 14: om2 fmt is refused by OM-1 at line 1
+s2-fmt-x5-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x5.om - err:1:16 16
+# E6 (h): x5 is OM-1, so compile(fmt(x5)) == compile(x5) is checkable under the pinned compiler now
+s2-fmt-x5-same same seed/qualification/om2/sec/s0s2/s2fmt/x5.om seed/qualification/om2/sec/s0s2/exp/x5.fmt
+s2-fmt-x5-run run seed/qualification/om2/sec/s0s2/exp/x5.fmt - file:seed/qualification/om2/sec/s0s2/exp/x5.out - 9
+s2-fmt-bad-left-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-left.om - err:1:16 16
+s2-fmt-bad-hex-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-hex.om - err:1:16 16
+s2-fmt-bad-short-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-short.om - err:1:16 16
+s2-fmt-bad-cr-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-cr.om - err:1:16 16
+s2-fmt-bad-cr1-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-cr1.om - err:1:16 16
+s2-fmt-bad-crtext-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-crtext.om - err:1:16 16
+s2-fmt-bad-fmtlater-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-fmtlater.om - err:1:16 16
+s2-fmt-bad-trailblank-pinned emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/bad-trailblank.om - err:1:16 16
+# OM-1 refuses the om2 fmt / om2 line (signature-clean unit)
+s2-fmt-notes-before emit seed/qualification/om2/sec/s0s2/s2fmt/notes-before.om - err:3:16 16
+s2-fmt-om2-then-fmt emit seed/qualification/om2/sec/s0s2/s2fmt/om2-then-fmt.om - err:3:16 16
+# ======== C2 (contract 0 lines 19-22): these OM-1 units compile to the pinned 734f0a39 bytes (c2-extra.txt)
+c2-s0-names-fn emit seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:8c1e625abb265e5ec2bb1d70bcf70e16f494d5f2d69d21b84d4010f02a4597cd - 0
+c2-s0-names-var emit seed/qualification/om2/sec/s0s2/s0/names-var.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:8f809f5336881a5a9a2bc8a47c7577d4d607729bfb0b94d169b072d6acd57a50 - 0
+c2-s0-om1-crlf emit seed/qualification/om2/sec/s0s2/s0/om1-crlf.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:38921391cc3b9bfdd733c61f6078165678d1290d0917715a92097e31b7fb33de - 0
+c2-s2-dec-max emit seed/qualification/om2/sec/s0s2/s2hex/dec-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:6921d6a044ea452a5b3a1231d8b86fc1a7afd204b26ac3c6b6a68f93dea61de3 - 0
+c2-s2-dec-places emit seed/qualification/om2/sec/s0s2/s2hex/dec-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om sha:2e3ab50c6637eb326d446d9940957d98be64e2934193289716ec2c8df0e7f2c4 - 0
+c2-s2-om1-g0 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g1 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g2 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g3 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g4 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0

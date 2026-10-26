@@ -1,0 +1,11 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout lines 154-161: boundary accepted: a uint at 4 ends exactly at SIZE 8, adjacent
+note fields do not overlap (half-open ranges).
+om2
+layout fit 8
+field a uint 1 at 0 little
+field b uint 1 at 4 big
+end
+fn main to int
+ret 0
+end

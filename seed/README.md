@@ -8,6 +8,10 @@ as a builder.
 The current completeness audit (implemented areas, open compiler work, and what is blocked on a
 decision or an external store) is `docs/one_layer/OM_COMPLETION.md`.
 
+The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
+`spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
+See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
+
 Think of it as a ladder. Each rung is a small program, written in the language the rung below understands,
 and built by the rung below. Every rung must rebuild itself to the exact same bytes, which proves it reads
 its own language the same way the rung below does.

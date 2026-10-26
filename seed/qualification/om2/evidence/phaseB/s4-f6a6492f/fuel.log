@@ -1,0 +1,11 @@
+OM2GATE START cases=seed/qualification/om2/sec/s4fuel/candidate.cases scratch=build/om2-qual/qf6a6492f-fuel
+IDENTITY omc /tmp/zl/omc-f6a6492f sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+VERDICT fuel-d2 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fuel-d3 PASS compile exit=14 expected=14 stdout=match stderr=match
+VERDICT fuel-d3-code PASS compile exit=14 expected=14 refused with the expected error
+VERDICT fuel-d4 PASS compile exit=14 expected=14 stdout=match stderr=match
+VERDICT fuel-d4-code PASS compile exit=14 expected=14 refused with the expected error
+VERDICT fuel-inl PASS compile exit=14 expected=14 stdout=match stderr=match
+VERDICT fuel-inl-code PASS compile exit=14 expected=14 refused with the expected error
+VERDICT fuel-inl-mainfirst PASS compile exit=14 expected=14 stdout=match stderr=match
+OM2GATE PASS cases=8 pass=8 fail=0 invalid=0 not_run=0

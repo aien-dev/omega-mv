@@ -1,0 +1,70 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-2 qualification driver for the CURRENT consumer om/sha256/sha256.om (baseline acb3f15).
+note The gate concatenates this file with om/sha256/sha256.om into one program-mode unit. It is
+note test scaffolding, not a SHA implementation: every hash operation is the consumer's omsha.
+note   stdin   the message, read to end of file
+note   arg 1   optional piece size 1..4096 (default 4096): each read asks for at most that many bytes
+note           and every byte read is absorbed with op 1, so the split points are exercised
+note   stdout  the digest as 64 lowercase hex digits and a newline; exit 0
+note Exit 90: bad argument; 91: read error; 92: short stdout write.
+note digest byte j: the consumer packs the 32 digest bytes little endian into w[0..4)
+fn dbyte w view ulong 64 j ulong to ulong
+v = get w div j 8
+ret and shr v mul rem j 8 8 255
+end
+text hexdig "0123456789abcdef"
+fn piece to ulong
+if eq argcnt 1
+ret 4096
+end
+a = new uchar 8 0
+r = argread 1 a 0 8
+if or lt r 1 gt r 4
+exit 90
+end
+v = ulong 0
+for i ulong ulong r
+d = get a i
+if or lt d 48 gt d 57
+exit 90
+end
+v = add mul v 10 ulong sub d 48
+end
+if or eq v 0 gt v 4096
+exit 90
+end
+ret v
+end
+fn main to int
+c = new uchar 104 0
+b = new uchar 4096 0
+w = new ulong 64 0
+b8 = new ulong 512 0
+o = new uchar 65 10
+k = piece
+omsha c b 0 0 w b8
+go = true
+while go
+r = read 0 b 0 k
+if lt r 0
+ret 91
+end
+if eq r 0
+go = false
+else
+omsha c b ulong r 1 w b8
+end
+end
+omsha c b 0 2 w b8
+for j ulong 32
+x = dbyte w j
+p = mul j 2
+put o p get hexdig shr x 4
+put o add p 1 get hexdig and x 15
+end
+r = write 1 o 0 65
+if ne r 65
+ret 92
+end
+ret 0
+end

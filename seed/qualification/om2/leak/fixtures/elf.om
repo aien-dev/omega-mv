@@ -1,0 +1,4 @@
+note leak fixture: a program-mode unit; its ELF output is not a function-mode artifact (exit 91).
+fn main to int
+ret 0
+end

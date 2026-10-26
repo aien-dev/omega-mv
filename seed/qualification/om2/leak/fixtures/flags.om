@@ -1,0 +1,16 @@
+note leak fixture (flags rule, README.txt; contract spec/omegese-om2.md section 8 lines 234-236): a
+note comparison of a loaded byte is materialized with CSET into b, then a comparison of the public n
+note sets the flags again. The second compare replaces the flags' taint (last flag-setting op), so the
+note branch on c is len, while the branch on b (CSET of data flags) is data MANUAL under E12.
+note Expected: TRACE-EQUIV-STATIC NOT_RUN with exactly one data branch.
+fn f a view uchar 16 n ulong to ulong
+b = lt ulong get a 0 5
+c = lt n 9
+if c
+ret 1
+end
+if b
+ret 2
+end
+ret 0
+end
