@@ -1,0 +1,6 @@
+om2 release
+global b uchar 1
+fn main to int
+requires eq write 1 b 0 1 1
+ret 0
+end

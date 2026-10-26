@@ -139,13 +139,18 @@ Acceptance:
 
 ### RM2. Executable contracts
 
-Current: MISSING_IMPLEMENTATION in omc. OM-2 has one built-in invariant (`holds NAME dup32`) with
-kept/erased reporting, `fresh` initialization tracking and `layout` checks. The legacy C front end parses
-`requires`/`ensures`; IR v6 structured contracts are draft PR #525. Owners: #625 (semantics), #623
-(per-lowering validation), #656 (contract-to-.om synthesis), #746.
+Audited baseline (`3364a1dfd`): MISSING_IMPLEMENTATION in omc. OM-2 had one built-in invariant
+(`holds NAME dup32`) with kept/erased reporting, `fresh` initialization tracking and `layout` checks.
+The legacy C front end parses `requires`/`ensures`; IR v6 structured contracts remain draft PR #525.
+Owners: #625 (semantics), #623 (per-lowering validation), #656 (contract-to-.om synthesis), #746.
 
-Gap: a programmer cannot state a pre/postcondition or loop invariant in `.om` and have the compiler
-enforce it.
+Native implementation: PR #807 adds the versioned OMEGESE section 12 extension, default debug
+checks, checked release erasure, constant-true proof, diagnostics and error 30. Source
+`00031d2456b2fe1e6ecdee6a0245d4c27b6749d2` is EXERCISED; see
+`evidence/CONTRACTS/20261026-00031d24/README.md` for the complete manifest, C parity, bridge status,
+mutants and historical-receipt controls. IR refuses these contracts rather than dropping them.
+The pending guide update is omega-harness #27. This does not claim the remaining roadmap or
+the separate structured-contract IR proposal is complete.
 
 Acceptance:
 - A versioned profile section (OMEGESE or `spec/omegese-om3.md`, since OM-2 is frozen) defines contract

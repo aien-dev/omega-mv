@@ -1,0 +1,12 @@
+OM2GATE START cases=seed/qualification/om2/manifest-c2-capacity.txt scratch=build/c2-cap
+IDENTITY omc seed/out/omc sha256=189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54 pinned=189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54 match
+CASE c2-00304 line=8
+  $ seed/out/omc < build/c2-cap/8.src > build/c2-cap/8.elf 2> build/c2-cap/8.cerr
+VERDICT c2-00304 PASS compile exit=0 expected=0 sha256=4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d stderr=match
+CASE c2-00306 line=9
+  $ seed/out/omc < build/c2-cap/9.src > build/c2-cap/9.elf 2> build/c2-cap/9.cerr
+VERDICT c2-00306 PASS compile exit=0 expected=0 sha256=554b483494b4f77079ebe6a0ce10f046e82cbff7276e6b60b0a4127d3c582c4d stderr=match
+CASE c2-00675 line=10
+  $ seed/out/omc < build/c2-cap/10.src > build/c2-cap/10.elf 2> build/c2-cap/10.cerr
+VERDICT c2-00675 PASS compile exit=0 expected=0 sha256=4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d stderr=match
+OM2GATE PASS cases=3 pass=3 fail=0 invalid=0 not_run=0
