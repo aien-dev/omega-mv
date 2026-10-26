@@ -1,0 +1,10 @@
+om2
+note the bound n is a variable, not a number: no implied range; i = 16 traps
+global a uchar 16
+fn main to int
+n = ulong 17
+for i ulong n
+put a i uchar 1
+end
+ret 0
+end
