@@ -34,6 +34,7 @@ LIB = os.path.join(NET, "http.om")
 HEADMX = 2048      # parse.om: put cs HHEADMX 2048
 HHMAX = 16         # parse.om: put cs HHMAX 16
 BCAP = 4096        # parse.om: put cs HBCAP 4096
+FRMAX = 1024       # parse.om: put cs HFRMAX 1024
 FNV_OFF = 14695981039346656037
 FNV_PRIME = 1099511628211
 M64 = (1 << 64) - 1
@@ -303,10 +304,19 @@ def body(m, rest):
         if len(rest) > BCAP:
             raise Err(413)
         return rest
-    out, pos, trn = bytearray(), 0, 0
+    out, pos, trn, frm = bytearray(), 0, 0, 0
+
+    def framing(k):
+        # http.om hfrchk: chunk framing bytes over HFRMAX + 8 * decoded bytes is 413
+        nonlocal frm
+        frm += k
+        if frm > FRMAX + 8 * len(out):
+            raise Err(413)
+
     while True:
         x = body_line(rest, pos)
         v = chunk_size(rest[pos:x])
+        framing(x + 2 - pos)
         pos = x + 2
         if v == 0:
             break
@@ -320,9 +330,11 @@ def body(m, rest):
             raise Err(499)
         if rest[pos:pos + 2] != b"\r\n":
             raise Err(400)
+        framing(2)
         pos += 2
     while True:
         x = body_line(rest, pos)
+        framing(x + 2 - pos)
         if x == pos:
             return bytes(out)
         field_line(rest[pos:x])
@@ -437,6 +449,9 @@ def hand_cases():
     big17 = b"".join(b"X%d: v\n" % i for i in range(16))
     long_head = b"GET / HTTP/1.1\nHost: a\nX: " + b"a" * 2100 + b"\n\n"
     c4097 = b"1000\n" + b"a" * 4096 + b"\n1\nb\n0\n\n"
+    extbomb = (b"1;" + b"a" * 1000 + b"\nX\n") * 3 + b"0\n\n"
+    onebyte = b"1\nX\n" * 300 + b"0\n\n"
+    trbomb = b"0\n" + (b"X-T: " + b"t" * 400 + b"\n") * 3 + b"\n"
     cases = [
         (q, crlf(b"GET / HTTP/1.1\nHost: a\n\n"), "ok 0 1 1 0 1"),
         (q, b"GET / HTTP/1.1\nHost: a\n\n", "err 400"),
@@ -484,6 +499,10 @@ def hand_cases():
         (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n3\nabcX\n0\n\n"), "err 400"),
         (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n3\nab"), "err 499"),
         (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n" + c4097), "err 413"),
+        (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n" + extbomb), "err 413"),
+        (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n" + onebyte), "ok 0 1 1 2 2"),
+        (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n" + trbomb), "err 413"),
+        (s, crlf(b"HTTP/1.1 200 OK\nTransfer-Encoding: chunked\n\n" + extbomb), "err 413"),
         (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n0\nX-T: 1\n\n"), "ok"),
         (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n0\nX-T: 1\n x\n\n"), "err 400"),
         (q, crlf(b"POST / HTTP/1.1\nHost: a\nTransfer-Encoding: chunked\n\n0\nX-T 1\n\n"), "err 400"),
@@ -561,6 +580,8 @@ def gen_body(rnd, framing, data):
         while p < len(data):
             k = rnd.randint(1, max(1, min(700, len(data) - p)))
             ext = b";e=%d" % k if rnd.random() < 0.2 else b""
+            if rnd.random() < 0.05:
+                ext = b";x=" + b"y" * rnd.randint(100, 1500)
             wire += b"%x%s\r\n%s\r\n" % (k, ext, data[p:p + k])
             p += k
         wire += b"0\r\n"
@@ -742,6 +763,7 @@ MUTANTS = [
     ("HTTP/1.0 read as 1.1", "if eq mn 48", "if eq mn 49"),
     ("close body cap", "if gt add got n cap", "if ge add got n cap"),
     ("bare LF accepted", "if ne get io sub i 1 13", "if eq get io sub i 1 10"),
+    ("F4 chunk framing uncapped", "if gt f add get cs HFRMAX mul get cs HBGOT 8", "if eq f 0"),
 ]
 
 
@@ -781,6 +803,10 @@ LIVE_MUTANTS = [
     ("hclose leaks the descriptor", "ret fclose int get cs HFD", "ret 0"),
     ("SSE data CR not a line break", "if eq get v q 13", "if eq get v q 14"),
     ("chunk-size digit mask", "put io add b i hhexd and x 15", "put io add b i hhexd and x 7"),
+    ("F1 no body deadline after the head", "put cs HDL hbdl cs", "put cs HDL 0"),
+    ("F2 Content-Length overrun buffered", "ret gt add get cs HWOUT n get cs HWCL", "ret false"),
+    ("F3 100 Continue keyed on HWLEN", "if or ne get cs HFINAL 0 ne get cs HMEM 0",
+     "if or ne get cs HWLEN 0 ne get cs HMEM 0"),
 ]
 
 

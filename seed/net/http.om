@@ -65,6 +65,11 @@ const HOMODE ulong 45
 const HSCODE ulong 46
 const HTRN ulong 47
 const HHOSTN ulong 48
+const HBDLV ulong 49
+const HFINAL ulong 50
+const HFRM ulong 51
+const HFRMAX ulong 52
+const HBSC ulong 53
 note header i (0 <= i < HHN): cs[HHX+4i] name offset, +1 name length, +2 value offset, +3 value length
 const HHX ulong 64
 const HHSLOTS ulong 64
@@ -484,6 +489,8 @@ put cs HHMAX HHSLOTS
 put cs HMAXMSG 1000
 put cs HIDLE 30000000000
 put cs HHDLV 30000000000
+put cs HBDLV 60000000000
+put cs HFRMAX 65536
 put cs HKEEP 1
 w = hmin div len io 4 65536
 if lt w 256
@@ -525,6 +532,21 @@ put cs HHDLV 0
 if gt hdl 0
 put cs HHDLV ulong hdl
 end
+end
+note hsetbdl: interval armed as the deadline (HDL) for a message's body reads and the response
+note writes when its head has been read, and for a request's writes when hreqst starts it
+note (0 = none). The default is 60 s; a long-lived stream (SSE) sets its own with hsetdl.
+fn hsetbdl cs edit ulong * iv long to void
+put cs HBDLV 0
+if gt iv 0
+put cs HBDLV ulong iv
+end
+end
+fn hbdl cs edit ulong * to ulong
+if eq get cs HBDLV 0
+ret 0
+end
+ret add ulong monons get cs HBDLV
 end
 note hsetdl: absolute deadline now + iv for the following body reads and writes (0 clears)
 fn hsetdl cs edit ulong * iv long to void
@@ -694,6 +716,9 @@ put cs HMLEN 0
 put cs HTOFF 0
 put cs HTLEN 0
 put cs HKEEP 1
+put cs HFINAL 0
+put cs HFRM 0
+put cs HBSC 0
 put cs HDL 0
 if ne get cs HHDLV 0
 put cs HDL add ulong monons get cs HHDLV
@@ -829,7 +854,7 @@ ret r
 end
 put cs HHEND e
 put cs HRPOS e
-put cs HDL 0
+put cs HDL hbdl cs
 ret 1
 end
 note hreqm: method = 1..32 tchar then SP; returns its length
@@ -1366,7 +1391,7 @@ end
 ret hbdchk cs io d
 end
 fn hsend100 cs edit ulong * io edit uchar * to long
-if or ne get cs HWLEN 0 ne get cs HMEM 0
+if or ne get cs HFINAL 0 ne get cs HMEM 0
 ret 0
 end
 b = get cs HWB
@@ -1485,6 +1510,17 @@ put cs HCST 2
 end
 ret long n
 end
+note hfrchk: count n framing bytes (chunk-size lines, CRLF after chunk data, trailer lines and
+note the final empty line); more than HFRMAX + 8 * decoded bytes is HEBIG
+fn hfrchk cs edit ulong * n ulong to long
+f = add get cs HFRM n
+put cs HFRM f
+if gt f add get cs HFRMAX mul get cs HBGOT 8
+put cs HKEEP 0
+ret HEBIG
+end
+ret 0
+end
 fn hbdcsz cs edit ulong * io edit uchar * to long
 x = hbline cs io
 if lt x 0
@@ -1496,6 +1532,10 @@ if lt v 0
 ret v
 end
 put cs HRPOS add ulong x 2
+r = hfrchk cs sub add ulong x 2 p
+if lt r 0
+ret r
+end
 if eq v 0
 put cs HCST 3
 ret 0
@@ -1517,6 +1557,10 @@ p = get cs HRPOS
 if or ne get io p 13 ne get io add p 1 10
 ret HEBAD
 end
+r = hfrchk cs 2
+if lt r 0
+ret r
+end
 put cs HRPOS add p 2
 put cs HCST 0
 ret 0
@@ -1527,6 +1571,10 @@ if lt x 0
 ret x
 end
 p = get cs HRPOS
+r = hfrchk cs sub add ulong x 2 p
+if lt r 0
+ret r
+end
 if eq ulong x p
 put cs HRPOS add p 2
 put cs HCST 4
@@ -1580,7 +1628,7 @@ for it ulong 1000000
 p = get cs HRPOS
 n = get cs HRLEN
 lim = hmin n add p get cs HHEADMX
-i = p
+i = add p get cs HBSC
 while lt i lim bound 999999
 c = get io i
 if eq c 10
@@ -1588,15 +1636,18 @@ ret HEBAD
 end
 if eq c 13
 if ge add i 1 n
+put cs HBSC sub i p
 break
 end
 if ne get io add i 1 10
 ret HEBAD
 end
+put cs HBSC 0
 ret long i
 end
 i = add i 1
 end
+put cs HBSC sub i p
 if ge sub n p get cs HHEADMX
 ret HEHEAD
 end
@@ -1726,9 +1777,21 @@ end
 put cs HWLEN 0
 ret hsendio cs io b n
 end
-note hput: append s (body bytes after hhend are framed and counted; dropped for HEAD/204/304)
+note hovercl: n more body bytes would pass the declared Content-Length (mode 0 after hhend)
+fn hovercl cs edit ulong * n ulong to bool
+if or ne get cs HWBODY 1 ne get cs HOMODE 0
+ret false
+end
+ret gt add get cs HWOUT n get cs HWCL
+end
+note hput: append s (body bytes after hhend are framed and counted; dropped for HEAD/204/304).
+note A Content-Length body refuses bytes past clen before any is buffered (HEINVAL, closing).
 fn hput cs edit ulong * io edit uchar * s view uchar * to long
 if eq get cs HWBODY 1
+if hovercl cs len s
+put cs HKEEP 0
+ret HEINVAL
+end
 put cs HWOUT add get cs HWOUT len s
 if eq get cs HWDROP 1
 ret 0
@@ -1757,6 +1820,10 @@ ret HEINVAL
 end
 fn hputb cs edit ulong * io edit uchar * c uchar to long
 if eq get cs HWBODY 1
+if hovercl cs 1
+put cs HKEEP 0
+ret HEINVAL
+end
 put cs HWOUT add get cs HWOUT 1
 if eq get cs HWDROP 1
 ret 0
@@ -1798,6 +1865,9 @@ ret HEINVAL
 end
 hwreset cs
 put cs HSCODE code
+if ge code 200
+put cs HFINAL 1
+end
 r = hput cs io hv11
 r = hfe r hputb cs io 32
 r = hfe r hdec cs io code
@@ -1922,6 +1992,7 @@ if not htok m
 ret HEINVAL
 end
 hwreset cs
+hsetdl cs long get cs HBDLV
 put cs HISHEAD 0
 if heq m hmhead
 put cs HISHEAD 1

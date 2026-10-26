@@ -97,6 +97,8 @@ x = hclose cs
 ret 0
 end
 hsettmo cs 10000000000 10000000000
+note at most 20 s for one request body plus its response (a 1 MiB echo needs far less)
+hsetbdl cs 20000000000
 for k ulong 100
 r = hreqrd cs io
 if le r 0

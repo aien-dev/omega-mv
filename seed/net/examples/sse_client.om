@@ -144,6 +144,8 @@ ret 3
 end
 r = hinit cs io int fd 0
 hsettmo cs 10000000000 10000000000
+note a stream may run for long: no body deadline, only the 10 s idle limit per read
+hsetbdl cs 0
 r = hsseinit ss
 st = request cs io pa ulong pl
 if ne st 200

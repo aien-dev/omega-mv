@@ -35,6 +35,12 @@ text tm5 "GET / HTTP/1.1\n\n"
 text tm6 "GET / HTTP/1.1\nHost: a\nX: 1\n folded\n\n"
 text tm7 "POST / HTTP/1.1\nHost: a\nContent-Length: 5\nContent-Length: 5\n\n"
 text tm8 "GET / HTTP/1.1\nHost: a\nExpect: something\n\n"
+text tearly "/early"
+text tone "x"
+text thello "hello"
+text tbodyp "POST /sum HTTP/1.1\nHost: a\nContent-Length: 10\n\n"
+text tearlyq "POST /early HTTP/1.1\nHost: a\nExpect: 100-continue\nContent-Length: 5\n\nhello"
+text tsmug "helloGET /admin HTTP/1.1\nHost: x\n\n"
 note ======== helpers
 fn pval j ulong to uchar
 ret uchar rem add mul j 7 3 251
@@ -267,6 +273,19 @@ end
 end
 ret hwfin cs io
 end
+fn rearly cs edit ulong 320 io edit uchar 131072 to long
+d = new uchar 16 0
+put cs HKEEP 0
+r = hrspst cs io 200
+r = hfe r hhend cs io 0 5
+r = hfe r hput cs io thello
+r = hfe r hflush cs io
+b = hbodyall cs io d
+if ne b 5
+ret -1
+end
+ret hfe r hwfin cs io
+end
 note route: 0 = served, 1 = quit, negative = I/O failure
 fn route cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to long
 if and hismeth cs io tpost hispath cs io tsum
@@ -280,6 +299,9 @@ ret rblobc cs io bg
 end
 if hispath cs io tevts
 ret revts cs io
+end
+if hispath cs io tearly
+ret rearly cs io
 end
 if hispath cs io tquit
 r = hrsperr cs io 200
@@ -654,6 +676,37 @@ ret 34
 end
 ret 0
 end
+note cearly (F3): the handler sends its whole Content-Length response before reading a body sent
+note with Expect: 100-continue; no 100 Continue may follow the final response on the wire
+fn cearly cs edit ulong 320 io edit uchar 131072 a view uchar 16 to int
+d = new uchar 16 0
+if lt cdial cs io a 0
+ret 16
+end
+if lt rawsend cs io tearlyq 0
+ret 16
+end
+st = hrsprd cs io
+if ne st 200
+ret 17
+end
+g = hbodyall cs io d
+if or ne g 5 ne get cs HKEEP 0
+ret 18
+end
+n = get cs HRLEN
+k = long 0
+if gt n get cs HRPOS
+k = long sub n get cs HRPOS
+else
+k = hrecvio cs io n 1
+end
+r = hclose cs
+if ne k 0
+ret 19
+end
+ret 0
+end
 fn cquit cs edit ulong 320 io edit uchar 131072 a view uchar 16 to int
 if lt cdial cs io a 0
 ret 35
@@ -686,6 +739,9 @@ end
 if eq e 0
 e = cmals cs io a
 end
+if eq e 0
+e = cearly cs io a
+end
 q = cquit cs io a
 w = waitok pid
 if ne e 0
@@ -697,6 +753,90 @@ end
 ret w
 end
 note ======== deadlines
+note tbody (F1): after a complete head, a client trickles the body one byte per 100 ms, each
+note well inside the 5 s idle limit; the server's 300 ms body deadline must end the read
+fn tbody cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to int
+a = new uchar 16 0
+lf = mklisten a
+if lt lf 0
+ret 46
+end
+pid = fork
+if lt pid 0
+ret 47
+end
+if eq pid 0
+c = fclose lf
+if lt cdial cs io a 0
+exit 1
+end
+r = rawsend cs io tbodyp
+for i ulong 10
+s = sleepns 100000000
+r = send int get cs HFD tone 0 1 0
+end
+r = hclose cs
+exit 0
+end
+c = haccept lf 2000000000
+if lt c 0
+ret 48
+end
+r = hinit cs io int c 1
+hsettmo cs 5000000000 5000000000
+hsetbdl cs 300000000
+r = hreqrd cs io
+t0 = monons
+if eq r 1
+r = hbodyall cs io bg
+end
+dt = sub monons t0
+x = hclose cs
+x = fclose lf
+w = waitok pid
+if ne r HETIME
+ret 49
+end
+if gt dt 1500000000
+ret 98
+end
+ret w
+end
+note tover (F2): a Content-Length body refuses bytes past clen before buffering any of them,
+note in the client role (no smuggled request) and in the server role (memory mode, no I/O)
+fn tover cs edit ulong 320 io edit uchar 131072 to int
+r = hinit cs io -1 0
+r = hreqst cs io tpost
+r = hfe r hreqtg cs io tslash
+r = hfe r hhname cs io thost
+r = hfe r hhval cs io thval
+r = hfe r hhend cs io 0 5
+if lt r 0
+ret 37
+end
+w0 = get cs HWLEN
+if ne hput cs io tsmug HEINVAL
+ret 38
+end
+if or ne get cs HWLEN w0 ne get cs HWOUT 0
+ret 39
+end
+r = hinit cs io -1 1
+r = hrspst cs io 200
+r = hfe r hhend cs io 0 5
+r = hfe r hput cs io thello
+if lt r 0
+ret 97
+end
+w0 = get cs HWLEN
+if ne hputb cs io 33 HEINVAL
+ret 97
+end
+if or ne get cs HWLEN w0 ne get cs HKEEP 0
+ret 97
+end
+ret 0
+end
 note tslow: a client that sends half a head and stalls; the server's 200 ms head deadline fires
 fn tslow cs edit ulong 320 io edit uchar 131072 to int
 a = new uchar 16 0
@@ -818,6 +958,14 @@ if ne e 0
 ret e
 end
 e = tidle cs io
+if ne e 0
+ret e
+end
+e = tbody cs io bg
+if ne e 0
+ret e
+end
+e = tover cs io
 if ne e 0
 ret e
 end

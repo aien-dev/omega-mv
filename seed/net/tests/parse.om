@@ -2,7 +2,7 @@ note seed/net/tests/parse.om -- memory-mode parser driver for the corpus run by 
 note Compose: { printf 'om2\n'; cat seed/net/http.om seed/net/tests/parse.om; } | omc
 note stdin: records `C <mode> <len>` LF, then len message bytes, then LF. mode q = request,
 note s = response, h = response to a HEAD request. Caps used here: head 2048 bytes, 16 header
-note fields, body 4096 bytes (README "Parser corpus").
+note fields, body 4096 bytes, chunk framing allowance 1024 bytes (README "Checks").
 note stdout, one line per record, idx counting from 0:
 note   idx ok status version keep bodymode fields headhash bodylen bodyhash
 note   idx err CODE      (CODE = minus the result, e.g. 400, 431, 499)
@@ -134,6 +134,7 @@ fn docase cs edit ulong 320 io edit uchar 65536 aux edit uchar 65792 md uchar id
 put cs HHEADMX 2048
 put cs HHMAX 16
 put cs HBCAP 4096
+put cs HFRMAX 1024
 r = long 0
 if eq md 113
 r = hreqrd cs io
