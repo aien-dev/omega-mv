@@ -1,0 +1,12 @@
+OM2GATE START cases=seed/qualification/om2/manifest-c2-batch2.txt scratch=build/c2b2d
+IDENTITY omc seed/out/omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f pinned=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f match
+CASE c2-00015 line=6
+  $ seed/out/omc < build/c2b2d/6.src > build/c2b2d/6.elf 2> build/c2b2d/6.cerr
+VERDICT c2-00015 PASS compile exit=0 expected=0 sha256=782229d287f562e1201e2ba00b3642fa0ca22cdd24bd41be801d0a622d22d4c7 stderr=match
+CASE c2-00033 line=7
+  $ seed/out/omc < build/c2b2d/7.src > build/c2b2d/7.elf 2> build/c2b2d/7.cerr
+VERDICT c2-00033 PASS compile exit=0 expected=0 sha256=6b8c1c709e8904234c4737dfc9df5cbfbaba7d5034a66b2975252d8f99433835 stderr=match
+CASE c2-00728 line=8
+  $ seed/out/omc < build/c2b2d/8.src > build/c2b2d/8.elf 2> build/c2b2d/8.cerr
+VERDICT c2-00728 PASS compile exit=3 expected=3 stdout=match stderr=match
+OM2GATE PASS cases=3 pass=3 fail=0 invalid=0 not_run=0

@@ -1,0 +1,12 @@
+OM2GATE START cases=seed/qualification/om2/manifest-c2-batch2.txt scratch=build/c2b2neg
+IDENTITY omc /tmp/omc-main1 sha256=189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54 pinned=189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54 match
+CASE c2-00015 line=6
+  $ /tmp/omc-main1 < build/c2b2neg/6.src > build/c2b2neg/6.elf 2> build/c2b2neg/6.cerr
+VERDICT c2-00015 FAIL compile exit=0 expected=0 sha256=ac7a50e3b4a708c1c8802a86202970c54968f13f8cee1f3d5328fa4d4ad0a89f stdout sha256 differs; expected 782229d287f562e1201e2ba00b3642fa0ca22cdd24bd41be801d0a622d22d4c7 stderr=match
+CASE c2-00033 line=7
+  $ /tmp/omc-main1 < build/c2b2neg/7.src > build/c2b2neg/7.elf 2> build/c2b2neg/7.cerr
+VERDICT c2-00033 FAIL compile exit=0 expected=0 sha256=d5b8dc69a5f038d47bc92b570ca3b72c5bafc1ca0f79a312998f84d4d948acf8 stdout sha256 differs; expected 6b8c1c709e8904234c4737dfc9df5cbfbaba7d5034a66b2975252d8f99433835 stderr=match
+CASE c2-00728 line=8
+  $ /tmp/omc-main1 < build/c2b2neg/8.src > build/c2b2neg/8.elf 2> build/c2b2neg/8.cerr
+VERDICT c2-00728 FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 10
+OM2GATE FAIL cases=3 pass=0 fail=3 invalid=0 not_run=0
