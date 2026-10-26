@@ -1,0 +1,33 @@
+{
+  "above": {
+    "name": "agent",
+    "path": ".."
+  },
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T20:10:29Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:2115d2024fc5a681d581ea0b08791cf5805c48bfeadbb68377f56577b874d520",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "705c0f010e782408c270f66d67462bb46170e5b5",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "bench.sh",
+        "mock_pong.py",
+        "stats.wl"
+      ],
+      "purpose_auto": "Directory bench. Purpose not yet described by a human."
+    }
+  },
+  "layer": "bench",
+  "name": "bench",
+  "purpose": "Directory bench. Purpose not yet described by a human.",
+  "schema_version": "1.0.0"
+}

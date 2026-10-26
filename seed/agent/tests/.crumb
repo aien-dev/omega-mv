@@ -1,0 +1,31 @@
+{
+  "above": {
+    "name": "agent",
+    "path": ".."
+  },
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T20:10:29Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:b33d4a3a71873b01ac72e6763cde610bf6d4e769d2c091a763ca8ec3035d1f29",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "705c0f010e782408c270f66d67462bb46170e5b5",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "check.py"
+      ],
+      "purpose_auto": "Directory tests. Purpose not yet described by a human."
+    }
+  },
+  "layer": "tests",
+  "name": "tests",
+  "purpose": "Directory tests. Purpose not yet described by a human.",
+  "schema_version": "1.0.0"
+}
