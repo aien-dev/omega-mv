@@ -1,0 +1,793 @@
+note SPDX-License-Identifier: Apache-2.0
+note acvp.om: ACVP response engine for the om/tls library. Build (run.sh does this): the program is
+note acvpio.om || acvp.om || acvpmain.om, composed after the library by sh om/tls/build.sh OMC PROG OUT.
+note It computes, it does not grade: every record is answered with the library's own result and the
+note comparison against NIST's expectedResults.json happens afterwards (om2acvp.py). Exception: the
+note KDA validation (VAL) records, where the IUT itself must say whether a supplied DKM is right, and
+note the AES-GCM decrypt records, where the library's tag check decides; both decisions are made here.
+note Input on stdin (at most 16 MiB), one record per line, fields separated by one space, byte strings
+note in hex ("-" = empty), ID a decimal record number echoed as the first output field:
+note   H ID alg MSG                    sha2_digest -> ID MD
+note   M ID alg ver SEED               SHA-2 Monte Carlo, ver 0 standard, 1 alternate (ACVP SHA
+note                                   spec / ACVP-Server StandardSizeShaMct, AlternateSizeShaMct),
+note                                   100 outer rounds of 1000 -> ID MD1 .. MD100
+note   L ID alg CONTENT NBYTES         large-data test: CONTENT repeated to NBYTES bytes, streamed
+note                                   through sha2_update in slices of whole CONTENT copies of at
+note                                   most 512 KiB -> ID MD
+note   T ID alg KEY MSG MACBYTES       hmac_init/update/final, first MACBYTES bytes -> ID MAC
+note   G ID KEY IV AAD PT TAGBYTES     aes_gcm_seal -> ID RC CT TAG
+note   D ID KEY IV AAD CT TAG          aes_gcm_open -> ID RC PT (PT "-" unless RC 0)
+note   E ID crv alg MSG PUB SIG        hash MSG with alg, ecdsa_verify_raw crv (PUB = 04||X||Y,
+note                                   SIG = r||s) -> ID RC
+note   R ID alg KEY MSG SIG            hash MSG, rsa_verify_pkcs1 (KEY = DER RSAPublicKey) -> ID RC
+note   K ID alg SALT IKM N FI1 L1 .. FIN LN   hkdf_extract once, hkdf_expand per (FI, L bytes)
+note                                   -> ID DKM1 .. DKMN OK (1 when every hkdf_expand returned 0)
+note   V ID alg SALT IKM N FI1 L1 DKM1 ..     as K, then the DKMs are compared here -> ID OK (1/0)
+note   S ID alg PSK DHE CH SH SF CF    RFC 8446 7.1 key schedule from hkdf_extract/hkdf_expand and
+note                                   sha2_digest ("-" PSK or DHE = Hash.length zero bytes)
+note                                   -> ID CETS EEMS CHTS SHTS CATS SATS EMS RMS
+note   N ID PSK DHE CH SH SF           the same through tls.om's own tls_xtr/tls_drv (SHA-256, 32-byte
+note                                   PSK and DHE only) -> ID RC CHTS SHTS CATS SATS
+note   X ID PRIV PEER                  x25519_base, x25519_scalarmult -> ID RC1 PUB RC2 Z
+note   B ID KEY PT                     AES ECB encryption (aes_setkey, aes_enc4) -> ID CT
+note   C ID KEY PT                     AES ECB encrypt Monte Carlo (ACVP AES MCT)
+note                                   -> ID (KEY PT CT) x 100
+note A malformed record prints "ID BAD" (or "0 BAD" before the ID is read). Exit 0 when no record
+note was malformed, 1 otherwise, 2 when stdin cannot be read or exceeds 16 MiB.
+
+text S13CET "c e traffic"
+text S13EEM "e exp master"
+text S13EXP "exp master"
+text S13RES "res master"
+
+note digest length of alg, 0 (and the record malformed) when alg is not 256, 384 or 512
+fn drdl alg ulong to ulong
+if eq alg 256
+ret 32
+end
+if eq alg 384
+ret 48
+end
+if eq alg 512
+ret 64
+end
+drbad
+ret 0
+end
+
+note ---- SHA-2 ----
+
+fn rech a edit uchar * to void
+dg = new uchar 64 0
+drid
+alg = drnum
+dl = drdl alg
+n = drhex a
+dreor
+if isbad
+ret
+end
+k = sha2_digest alg part a 0 n dg
+ohex part dg 0 k
+end
+
+note m = x0 || x1 || x2 (x slot j at 1024 j, length q[j]); ver q[4] 1: m cut or zero-padded to q[3]
+fn mcmsg m edit uchar * x view uchar 3072 q view ulong 8 to ulong
+n = ulong 0
+for j ulong 3
+for i ulong get q j
+put m n get x add mul j 1024 i
+n = add n 1
+end
+end
+if eq get q 4 1
+sl = get q 3
+while lt n sl bound 4096
+put m n 0
+n = add n 1
+end
+n = sl
+end
+ret n
+end
+
+note x0 = x1, x1 = x2, x2 = dg[0..dl)
+fn mcshift x edit uchar 3072 q edit ulong 8 dg view uchar 64 dl ulong to void
+for j ulong 2
+put q j get q add j 1
+for i ulong get q j
+put x add mul j 1024 i get x add mul add j 1 1024 i
+end
+end
+put q 2 dl
+for i ulong dl
+put x add 2048 i get dg i
+end
+end
+
+note x1 = x2 = x0, all of length n
+fn mcseed x edit uchar 3072 q edit ulong 8 n ulong to void
+for i ulong n
+put x add 1024 i get x i
+put x add 2048 i get x i
+end
+put q 0 n
+put q 1 n
+put q 2 n
+end
+
+fn recm a edit uchar * to void
+x = new uchar 3072 0
+q = new ulong 8 0
+dg = new uchar 64 0
+drid
+alg = drnum
+dl = drdl alg
+ver = drnum
+sl = drhex part x 0 1024
+dreor
+if gt ver 1
+drbad
+end
+if eq ver 0
+if ne sl dl
+drbad
+end
+end
+if isbad
+ret
+end
+put q 3 sl
+put q 4 ver
+mcseed x q sl
+for j ulong 100
+for c ulong 1000
+n = mcmsg a x q
+k = sha2_digest alg part a 0 n dg
+mcshift x q dg dl
+end
+ohex part dg 0 dl
+for i ulong dl
+put x i get dg i
+end
+mcseed x q dl
+end
+end
+
+fn recl a edit uchar * to void
+c = new ulong 40 0
+dg = new uchar 64 0
+drid
+alg = drnum
+dl = drdl alg
+cl = drhex part a 0 4096
+full = drnum
+dreor
+if eq cl 0
+drbad
+end
+if isbad
+ret
+end
+bn = mul div 524288 cl cl
+for i ulong sub bn cl
+put a add cl i get a i
+end
+sha2_init c alg
+q = ulong 0
+while lt q full bound 999999
+k = bn
+if gt k sub full q
+k = sub full q
+end
+sha2_update c part a 0 k
+q = add q k
+end
+k = sha2_fin c dg
+ohex part dg 0 k
+end
+
+note ---- HMAC ----
+
+fn rect a edit uchar * b edit uchar * to void
+c = new ulong 96 0
+dg = new uchar 64 0
+drid
+alg = drnum
+dl = drdl alg
+kl = drhex a
+ml = drhex b
+tl = drnum
+dreor
+if gt tl dl
+drbad
+end
+if isbad
+ret
+end
+hmac_init alg c part a 0 kl
+hmac_update c part b 0 ml
+k = hmac_final c dg
+ohex part dg 0 tl
+end
+
+note ---- AES-GCM ----
+
+note kia = KEY || IV || AAD into a; lengths into q[0..3)
+fn gckia a edit uchar * q edit ulong 8 to void
+put q 0 drhex a
+k = get q 0
+put q 1 drhex part a k sub len a k
+k = add k get q 1
+put q 2 drhex part a k sub len a k
+end
+
+fn recg a edit uchar * b edit uchar * to void
+q = new ulong 8 0
+drid
+gckia a q
+pl = drhex b
+tl = drnum
+dreor
+if gt tl 255
+drbad
+end
+if isbad
+ret
+end
+kia = add add get q 0 get q 1 get q 2
+ctl = add add get q 0 shl tl 8 shl get q 1 16
+rc = aes_gcm_seal ctl part a 0 kia part b 0 add pl tl
+ofld rc
+if ne rc 0
+ohex part b 0 0
+ohex part b 0 0
+ret
+end
+ohex part b 0 pl
+ohex part b pl tl
+end
+
+fn recd a edit uchar * b edit uchar * to void
+q = new ulong 8 0
+drid
+gckia a q
+cl = drhex b
+tl = drhex part b cl sub len b cl
+dreor
+if gt tl 255
+drbad
+end
+if isbad
+ret
+end
+kia = add add get q 0 get q 1 get q 2
+ctl = add add get q 0 shl tl 8 shl get q 1 16
+rc = aes_gcm_open ctl part a 0 kia part b 0 add cl tl
+ofld rc
+if ne rc 0
+ohex part b 0 0
+ret
+end
+ohex part b 0 cl
+end
+
+note ---- signatures ----
+
+fn rece a edit uchar * b edit uchar * to void
+drid
+crv = drnum
+alg = drnum
+dl = drdl alg
+ml = drhex a
+pl = drhex part a ml sub len a ml
+sl = drhex part b dl sub len b dl
+dreor
+if isbad
+ret
+end
+k = sha2_digest alg part a 0 ml part b 0 dl
+rc = ecdsa_verify_raw crv part a ml pl part b 0 add dl sl dl
+ofld rc
+end
+
+fn recr a edit uchar * b edit uchar * to void
+drid
+alg = drnum
+dl = drdl alg
+kl = drhex a
+ml = drhex part a kl sub len a kl
+sl = drhex part b dl sub len b dl
+dreor
+if isbad
+ret
+end
+k = sha2_digest alg part a kl ml part b 0 dl
+rc = rsa_verify_pkcs1 alg part a 0 kl part b 0 add dl sl dl
+ofld rc
+end
+
+note ---- KDA HKDF ----
+
+note b = PRK || FI: reads FI into b[dl..) and L, expands into c[0..L); returns rc, L in q[0]
+fn kdaexp alg ulong b edit uchar * c edit uchar * q edit ulong 8 to ulong
+dl = shr alg 3
+fl = drhex part b dl sub len b dl
+l = drnum
+put q 0 l
+if gt l len c
+drbad
+ret 9
+end
+if isbad
+ret 9
+end
+ret hkdf_expand alg part b 0 add dl fl dl part c 0 l
+end
+
+note 1 when a[0..n) equals b[0..n), else 0 (or-accumulated)
+fn dreq a view uchar * b view uchar * n ulong to ulong
+if gt n len a
+ret 0
+end
+if gt n len b
+ret 0
+end
+d = uchar 0
+for i ulong n
+d = or d xor get a i get b i
+end
+if eq d 0
+ret 1
+end
+ret 0
+end
+
+note per expansion: K prints the DKM, V reads the expected DKM and folds the comparison into ok;
+note both end with ok (1 when every expansion returned 0 and, for V, every DKM matched)
+fn kdaloop b edit uchar * c edit uchar * q edit ulong 8 to void
+e = new uchar 65536 0
+ok = ulong 1
+for j ulong get q 2
+rc = kdaexp get q 1 b c q
+if isbad
+ret
+end
+if eq get st 9 0
+ohex part c 0 get q 0
+else
+el = drhex e
+if ne el get q 0
+ok = 0
+end
+ok = and ok dreq c e get q 0
+end
+if ne rc 0
+ok = 0
+end
+end
+dreor
+if isbad
+ret
+end
+ofld ok
+end
+
+fn reck a edit uchar * b edit uchar * c edit uchar * to void
+q = new ulong 8 0
+drid
+alg = drnum
+dl = drdl alg
+sl = drhex a
+il = drhex part a sl sub len a sl
+n = drnum
+if isbad
+ret
+end
+k = hkdf_extract alg part a 0 add sl il sl b
+if ne k dl
+drbad
+ret
+end
+put q 1 alg
+put q 2 n
+kdaloop b c q
+end
+
+note ---- TLS 1.3 key schedule (ACVP TLS-v1.3-KDF-RFC8446) ----
+
+note w[0..dl) = HKDF-Extract(salt w[0..dl), ikm)
+fn s13x w edit uchar 256 dl ulong ikm view uchar * to void
+si = new uchar 4096 0
+p = new uchar 64 0
+for i ulong dl
+put si i get w i
+end
+for i ulong len ikm
+put si add dl i get ikm i
+end
+k = hkdf_extract shl dl 3 part si 0 add dl len ikm dl p
+for i ulong dl
+put w i get p i
+end
+end
+
+note p[dl..) = uint16 dl || uint8 len || "tls13 " || lab (HkdfLabel up to the context); returns its end
+fn s13lab p edit uchar 256 dl ulong lab view uchar * to ulong
+put p dl uchar shr dl 8
+put p add dl 1 uchar and dl 255
+ll = add 6 len lab
+put p add dl 2 uchar ll
+for i ulong 6
+put p add add dl 3 i get TLL13 i
+end
+for i ulong len lab
+put p add add dl 9 i get lab i
+end
+ret add add dl 3 ll
+end
+
+note o[0..dl) = HKDF-Expand(PRK p[0..dl), info p[dl..n), dl)
+fn s13e p view uchar 256 n ulong dl ulong o edit uchar 64 to ulong
+ret hkdf_expand shl dl 3 part p 0 n dl part o 0 dl
+end
+
+note o = HKDF-Expand-Label(w[0..dl), lab, w[64..64+dl), dl) (RFC 8446 7.1)
+fn s13d w view uchar 256 dl ulong lab view uchar * o edit uchar 64 to void
+p = new uchar 256 0
+for i ulong dl
+put p i get w i
+end
+c = s13lab p dl lab
+put p c uchar dl
+for i ulong dl
+put p add add c 1 i get w add 64 i
+end
+r = s13e p add add c 1 dl dl o
+end
+
+note w[64..) = transcript hash j (slot 64 j of h)
+fn s13c w edit uchar 256 h view uchar 320 j ulong dl ulong to void
+for i ulong dl
+put w add 64 i get h add mul j 64 i
+end
+end
+
+note w[0..dl) = o[0..dl)
+fn s13s w edit uchar 256 o view uchar 64 dl ulong to void
+for i ulong dl
+put w i get o i
+end
+end
+
+note h slot j = Hash(a[0..e_j)), e = 0, CH, CH||SH, CH||SH||SF, CH||SH||SF||CF
+fn s13h a view uchar * q view ulong 16 h edit uchar 320 to void
+d = new uchar 64 0
+alg = get q 1
+for j ulong 5
+k = sha2_digest alg part a 0 get q add 4 j d
+for i ulong k
+put h add mul j 64 i get d i
+end
+end
+end
+
+fn s13run a view uchar * b view uchar * q view ulong 16 to void
+w = new uchar 256 0
+h = new uchar 320 0
+o = new uchar 64 0
+z = new uchar 64 0
+dl = get q 2
+s13h a q h
+if eq get q 9 0
+s13x w dl part z 0 dl
+else
+s13x w dl part b 0 get q 9
+end
+s13c w h 1 dl
+s13d w dl S13CET o
+ohex part o 0 dl
+s13d w dl S13EEM o
+ohex part o 0 dl
+s13c w h 0 dl
+s13d w dl TLLDER o
+s13s w o dl
+if eq get q 10 0
+s13x w dl part z 0 dl
+else
+s13x w dl part b 1024 get q 10
+end
+s13c w h 2 dl
+s13d w dl TLLCHS o
+ohex part o 0 dl
+s13d w dl TLLSHS o
+ohex part o 0 dl
+s13c w h 0 dl
+s13d w dl TLLDER o
+s13s w o dl
+s13x w dl part z 0 dl
+s13c w h 3 dl
+s13d w dl TLLCAP o
+ohex part o 0 dl
+s13d w dl TLLSAP o
+ohex part o 0 dl
+s13d w dl S13EXP o
+ohex part o 0 dl
+s13c w h 4 dl
+s13d w dl S13RES o
+ohex part o 0 dl
+end
+
+note PSK into b[0..), DHE into b[1024..), CH SH SF CF back to back in a; q: 1 alg, 2 dl, 4..8 ends
+note (q 4 = 0), 9 PSK length, 10 DHE length
+fn s13in a edit uchar * b edit uchar * q edit ulong 16 nm ulong to void
+put q 9 drhex part b 0 1024
+put q 10 drhex part b 1024 1024
+put q 4 0
+e = ulong 0
+for j ulong nm
+k = drhex part a e sub len a e
+e = add e k
+put q add 5 j e
+end
+dreor
+end
+
+fn recs a edit uchar * b edit uchar * to void
+q = new ulong 16 0
+drid
+put q 1 drnum
+put q 2 drdl get q 1
+s13in a b q 4
+if isbad
+ret
+end
+s13run a b q
+end
+
+note ---- the same schedule through tls.om's tls_xtr / tls_drv (SHA-256 only) ----
+
+fn s13tls a view uchar * b view uchar * q view ulong 16 to void
+c = new uchar TLCSZ 0
+h = new uchar 32 0
+z = new uchar 32 0
+tls_h0 z
+for i ulong 32
+put c add TLTMP i get b i
+put c add TLSS i get b add 1024 i
+end
+r = tls_xtr c or TLHS shl TLTMP 32
+r = or r tls_drv c tls_sel TLHS TLHS 32 TLIDER z
+r = or r tls_xtr c or TLHS or shl TLHS 16 shl TLSS 32
+k = sha2_digest 256 part a 0 get q 6 h
+r = or r tls_drv c tls_sel TLCHS TLHS 32 TLICHS h
+r = or r tls_drv c tls_sel TLSHS TLHS 32 TLISHS h
+r = or r tls_drv c tls_sel TLMS TLHS 32 TLIDER z
+r = or r tls_xtr c or TLMS shl TLMS 16
+k = sha2_digest 256 part a 0 get q 7 h
+r = or r tls_drv c tls_sel TLCAP TLMS 32 TLICAP h
+r = or r tls_drv c tls_sel TLSAP TLMS 32 TLISAP h
+ofld r
+ohex part c TLCHS 32
+ohex part c TLSHS 32
+ohex part c TLCAP 32
+ohex part c TLSAP 32
+end
+
+fn recn a edit uchar * b edit uchar * to void
+q = new ulong 16 0
+drid
+put q 1 256
+put q 2 32
+s13in a b q 3
+if ne get q 9 32
+drbad
+end
+if ne get q 10 32
+drbad
+end
+if isbad
+ret
+end
+s13tls a b q
+end
+
+note ---- X25519 ----
+
+fn recx to void
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+drid
+kl = drhex k
+ul = drhex u
+dreor
+if ne kl 32
+drbad
+end
+if ne ul 32
+drbad
+end
+if isbad
+ret
+end
+r = x25519_base o k
+ofld r
+ohex o
+r = x25519_scalarmult o k u
+ofld r
+ohex o
+end
+
+note ---- AES block cipher (aesgcm.om's aes_setkey / aes_enc4, encrypt direction only) ----
+
+note block b[o..o+16) into lane 0 of s (s[150] bytes 0..7, s[151] bytes 8..15, big-endian)
+fn aesld s edit ulong AGSN b view uchar * o ulong to void
+x = ulong 0
+y = ulong 0
+for i ulong 8
+x = or shl x 8 ulong get b add o i
+y = or shl y 8 ulong get b add add o 8 i
+end
+put s 150 x
+put s 151 y
+end
+
+fn aesst s view ulong AGSN b edit uchar * o ulong to void
+for i ulong 16
+v = get s add 150 shr i 3
+put b add o i uchar and shr v shl sub 7 and i 7 3 255
+end
+end
+
+note b[o..o+16) = AES-Encrypt(k, b[o..o+16))
+fn aesenc k view ulong AGKN s edit ulong AGSN b edit uchar * o ulong to void
+aesld s b o
+aes_enc4 k s
+aesst s b o
+end
+
+fn aeskl kl ulong to void
+if eq kl 16
+ret
+end
+if eq kl 24
+ret
+end
+if eq kl 32
+ret
+end
+drbad
+end
+
+note B ID KEY PT: ECB encryption of every 16-byte block -> ID CT
+fn recb a edit uchar * b edit uchar * to void
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+drid
+kl = drhex a
+pl = drhex b
+dreor
+aeskl kl
+if ne and pl 15 0
+drbad
+end
+if isbad
+ret
+end
+aes_setkey k s part a 0 kl
+for i ulong shr pl 4
+aesenc k s b shl i 4
+end
+ohex part b 0 pl
+end
+
+note MCT key update (ACVP AES MCT, ECB): key ^= the last kl bytes of ct998 || ct999 (u = 32 bytes:
+note ct998 at 0, ct999 at 16)
+fn aesmku key edit uchar 32 kl ulong u view uchar 32 to void
+o = sub 32 kl
+for i ulong kl
+put key i xor get key i get u add o i
+end
+end
+
+note C ID KEY PT: ECB encrypt Monte Carlo, 100 rounds of 1000 -> ID (KEY PT CT) x 100
+fn recc a edit uchar * to void
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+key = new uchar 32 0
+u = new uchar 32 0
+drid
+kl = drhex key
+pl = drhex part u 16 16
+dreor
+aeskl kl
+if ne pl 16
+drbad
+end
+if isbad
+ret
+end
+for r ulong 100
+ohex part key 0 kl
+ohex part u 16 16
+aes_setkey k s part key 0 kl
+for j ulong 1000
+for i ulong 16
+put u i get u add 16 i
+end
+aesenc k s u 16
+end
+ohex part u 16 16
+aesmku key kl u
+end
+end
+
+fn drrec a edit uchar * b edit uchar * c edit uchar * to void
+op = drpeek
+dradv
+if eq op 72
+rech a
+ret
+end
+if eq op 77
+recm a
+ret
+end
+if eq op 76
+recl a
+ret
+end
+if eq op 84
+rect a b
+ret
+end
+if eq op 71
+recg a b
+ret
+end
+if eq op 68
+recd a b
+ret
+end
+if eq op 69
+rece a b
+ret
+end
+if eq op 82
+recr a b
+ret
+end
+if eq op 75
+put st 9 0
+reck a b c
+ret
+end
+if eq op 86
+put st 9 1
+reck a b c
+ret
+end
+if eq op 83
+recs a b
+ret
+end
+if eq op 78
+recn a b
+ret
+end
+if eq op 66
+recb a b
+ret
+end
+if eq op 67
+recc a
+ret
+end
+if eq op 88
+recx
+ret
+end
+drbad
+end
+

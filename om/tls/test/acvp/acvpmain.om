@@ -1,0 +1,50 @@
+note SPDX-License-Identifier: Apache-2.0
+note acvpmain.om: main for the ACVP drivers; composed last, after acvpio.om and the driver's drrec.
+note Reads stdin (at most 16 MiB), answers every record line, skips "#" comments and blank lines.
+note Exit 0 when every record was well-formed, 1 when any was malformed or there were none, 2 when
+note stdin cannot be read or exceeds 16 MiB.
+
+fn main to int
+a = new uchar 1048576 0
+b = new uchar 1048576 0
+c = new uchar 1048576 0
+if ne drslurp 0
+r = write 2 tio 0 len tio
+ret 2
+end
+put st 1 0
+while lt get st 1 get st 0 bound 999999
+put st 2 add get st 2 1
+put st 3 0
+put st 4 get st 1
+put st 8 0
+p = drpeek
+if eq p 35
+drskip
+else
+if eq p 10
+dradv
+else
+put st 5 add get st 5 1
+drrec a b c
+if isbad
+put st 6 add get st 6 1
+obyte 32
+for i ulong len tbad
+obyte ulong get tbad i
+end
+drskip
+end
+obyte 10
+end
+end
+end
+oflush
+if ne get st 6 0
+ret 1
+end
+if eq get st 5 0
+ret 1
+end
+ret 0
+end
