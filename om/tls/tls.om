@@ -713,16 +713,25 @@ src = and shr sel 16 65535
 for i ulong 32
 put p i get c add src i
 end
-ln = and shr sel 32 65535
-n = tls_info p shr sel 48 hv ln
-r = hkdf_expand 256 part p 0 n 32 part k 0 ln
-dst = and sel 65535
-for i ulong ln
-put c add dst i get k i
-end
+n = tls_info p shr sel 48 hv and shr sel 32 65535
+r = tls_hexp p n k
+tls_drvout c k sel
 tls_zero p 0 160
 tls_zero k 0 32
 ret r
+end
+
+note HKDF-Expand of p[32..n) under the PRK p[0..32) into all 32 bytes of k; a shorter label
+note length L takes the first L bytes (T(1) does not depend on the output length)
+fn tls_hexp p view uchar * n ulong k edit uchar * to ulong
+ret hkdf_expand 256 part p 0 n 32 k
+end
+
+fn tls_drvout c edit uchar * k view uchar * sel ulong to void
+dst = and sel 65535
+for i ulong and shr sel 32 65535
+put c add dst i get k i
+end
 end
 
 fn tls_sel dst ulong src ulong ln ulong lid ulong to ulong
@@ -791,4 +800,302 @@ note SHA-256 of the empty string (the Derive-Secret context for "derived")
 fn tls_h0 o edit uchar * to void
 e = new uchar 1 0
 n = sha2_digest 256 part e 0 0 o
+end
+
+note ---- ClientHello (RFC 8446 section 4.1.2) built at c[TLWB+5] ----
+note server_name, supported_groups (x25519), signature_algorithms; returns the next offset
+fn tls_chex1 c edit uchar * p ulong to ulong
+hl = ulong get c TLHL
+tls_pn c p 0 2
+tls_pn c add p 2 add hl 5 2
+tls_pn c add p 4 add hl 3 2
+put c add p 6 0
+tls_pn c add p 7 hl 2
+tls_mov c add p 9 TLHOST hl
+q = add add p 9 hl
+tls_pn c q 10 2
+tls_pn c add q 2 4 2
+tls_pn c add q 4 2 2
+tls_pn c add q 6 29 2
+q = add q 8
+tls_pn c q 13 2
+tls_pn c add q 2 18 2
+tls_pn c add q 4 16 2
+tls_pn c add q 6 1027 2
+tls_pn c add q 8 1283 2
+tls_pn c add q 10 2052 2
+tls_pn c add q 12 2053 2
+tls_pn c add q 14 2054 2
+tls_pn c add q 16 1025 2
+tls_pn c add q 18 1281 2
+tls_pn c add q 20 1537 2
+ret add q 22
+end
+
+note supported_versions (TLS 1.3 only), key_share (x25519), ALPN http/1.1 when flag 1
+fn tls_chex2 c edit uchar * p ulong to ulong
+tls_pn c p 43 2
+tls_pn c add p 2 3 2
+put c add p 4 2
+tls_pn c add p 5 772 2
+q = add p 7
+tls_pn c q 51 2
+tls_pn c add q 2 38 2
+tls_pn c add q 4 36 2
+tls_pn c add q 6 29 2
+tls_pn c add q 8 32 2
+tls_mov c add q 10 TLEPU 32
+q = add q 42
+if eq and get c TLFL 1 0
+ret q
+end
+tls_pn c q 16 2
+tls_pn c add q 2 11 2
+tls_pn c add q 4 9 2
+put c add q 6 8
+tls_cpy c add q 7 TLALPN
+ret add q 15
+end
+
+note ephemeral x25519 key pair: private at c[TLEPK], public at c[TLEPU]
+fn tls_ephem c edit uchar * to ulong
+k = new uchar 32 0
+o = new uchar 32 0
+r = random k 0 32 0
+if ne r 32
+ret TLERAND
+end
+e = x25519_base o k
+for i ulong 32
+put c add TLEPK i get k i
+put c add TLEPU i get o i
+end
+tls_zero k 0 32
+if ne e 0
+ret TLERAND
+end
+ret 0
+end
+
+note writes the ClientHello handshake message at c[TLWB+5]; 0 or an error code
+fn tls_mkch c edit uchar * to ulong
+e = tls_ephem c
+if ne e 0
+ret e
+end
+b = add TLWB 5
+put c b 1
+tls_pn c add b 4 771 2
+r = random c add b 6 32 0
+if ne r 32
+ret TLERAND
+end
+put c add b 38 32
+r = random c add b 39 32 0
+if ne r 32
+ret TLERAND
+end
+tls_mov c TLSID add b 39 32
+p = add b 71
+tls_pn c p 4 2
+tls_pn c add p 2 4867 2
+tls_pn c add p 4 4865 2
+put c add p 6 1
+put c add p 7 0
+x = add p 8
+q = tls_chex1 c add x 2
+q = tls_chex2 c q
+tls_pn c x sub sub q x 2 2
+tls_pn c add b 1 sub sub q b 4 3
+ret 0
+end
+
+note ---- ServerHello (RFC 8446 section 4.1.3) at c[TLHB] ----
+note HRR random = SHA-256("HelloRetryRequest"), computed rather than tabled
+text TLHRR "HelloRetryRequest"
+
+note 0 when the 32 bytes at c[o] equal our legacy_session_id
+fn tls_sidok c view uchar * o ulong to ulong
+s = new uchar 32 0
+for i ulong 32
+put s i get c add TLSID i
+end
+ret tls_cteq s c o 32
+end
+
+fn tls_ishrr c view uchar * o ulong to ulong
+h = new uchar 32 0
+n = sha2_digest 256 TLHRR h
+ret xor tls_cteq h c o 32 1
+end
+
+note fixed part: version, random, session id echo, suite, compression; 0 or error
+fn tls_shhead c edit uchar * to ulong
+if ne get c TLHB 2
+ret TLEUNEX
+end
+ln = tls_gn c add TLHB 1 3
+if lt ln 76
+ret TLEDEC
+end
+b = add TLHB 4
+if ne tls_gn c b 2 771
+ret TLEVER
+end
+if eq tls_ishrr c add b 2 1
+ret TLEHRR
+end
+if ne get c add b 34 32
+ret TLESID
+end
+if ne tls_sidok c add b 35 0
+ret TLESID
+end
+s = tls_gn c add b 67 2
+put c TLSU 0
+if eq s 4867
+put c TLSU 1
+end
+if eq s 4865
+put c TLSU 2
+end
+if eq get c TLSU 0
+ret TLECIPH
+end
+if ne get c add b 69 0
+ret TLEDEC
+end
+x = tls_gn c add b 70 2
+if ne add x 72 ln
+ret TLEDEC
+end
+ret 0
+end
+
+note ServerHello extensions: exactly supported_versions = 0x0304 and an x25519 key_share
+fn tls_shext c edit uchar * to ulong
+ln = tls_gn c add TLHB 1 3
+q = add TLHB 78
+z = add add TLHB 4 ln
+seen = ulong 0
+while lt q z bound 64
+if gt add q 4 z
+ret TLEDEC
+end
+t = tls_gn c q 2
+l = tls_gn c add q 2 2
+q = add q 4
+if gt add q l z
+ret TLEDEC
+end
+if eq t 43
+if or ne l 2 ne and seen 1 0
+ret TLEEXT
+end
+if ne tls_gn c q 2 772
+ret TLEVER
+end
+seen = or seen 1
+else
+if or ne t 51 ne and seen 2 0
+ret TLEEXT
+end
+if ne l 36
+ret TLEKEYS
+end
+if or ne tls_gn c q 2 29 ne tls_gn c add q 2 2 32
+ret TLEKEYS
+end
+tls_mov c TLSPUB add q 4 32
+seen = or seen 2
+end
+q = add q l
+end
+if eq and seen 1 0
+ret TLEVER
+end
+if eq and seen 2 0
+ret TLEKEYS
+end
+ret 0
+end
+
+note shared secret into c[TLSS]; the private key is wiped
+fn tls_ecdh c edit uchar * to ulong
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+for i ulong 32
+put k i get c add TLEPK i
+put u i get c add TLSPUB i
+end
+r = x25519_scalarmult o k u
+for i ulong 32
+put c add TLSS i get o i
+end
+tls_zero k 0 32
+tls_zero o 0 32
+tls_zero c TLEPK 32
+if ne r 0
+ret TLEZERO
+end
+ret 0
+end
+
+note handshake secrets after ServerHello; installs the handshake write and read keys
+fn tls_hskeys c edit uchar * th view ulong * to ulong
+h = new uchar 32 0
+z = new uchar 32 0
+tls_h0 z
+r = tls_xtr c TLHS
+r = or r tls_drv c tls_sel TLHS TLHS 32 TLIDER z
+r = or r tls_xtr c or TLHS or shl TLHS 16 shl TLSS 32
+tls_th th h
+r = or r tls_drv c tls_sel TLCHS TLHS 32 TLICHS h
+r = or r tls_drv c tls_sel TLSHS TLHS 32 TLISHS h
+r = or r tls_drv c tls_sel TLMS TLHS 32 TLIDER z
+r = or r tls_xtr c or TLMS shl TLMS 16
+tls_zero c TLSS 32
+r = or r tls_keys c TLSHS 1
+r = or r tls_keys c TLCHS 0
+if ne r 0
+ret TLEARG
+end
+put c TLRK 1
+ret 0
+end
+
+note read and check ServerHello, send the compatibility change_cipher_spec, derive keys
+fn tls_rdsh c edit uchar * th edit ulong * to ulong
+e = tls_hsmsg c
+if ne e 0
+ret e
+end
+e = tls_shhead c
+if ne e 0
+ret e
+end
+e = tls_shext c
+if ne e 0
+ret e
+end
+tls_hsdone c th
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
+e = tls_ecdh c
+if ne e 0
+ret e
+end
+put c add TLWB 5 1
+e = tls_wrbuf c 20 1
+if ne e 0
+ret e
+end
+e = tls_hskeys c th
+if ne e 0
+ret e
+end
+put c TLWK 1
+ret 0
 end

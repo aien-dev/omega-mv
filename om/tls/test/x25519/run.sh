@@ -4,7 +4,8 @@
 # Builds om2 + x25519.om + driver.om into build/tls/x25519/, runs the RFC 7748 and Wycheproof vector
 # files, a negative control, an expectation mutant and five library mutants (each must be detected:
 # exit 1 with MISMATCH lines), and a low/high Hamming weight timing pair (informational).
-# Environment: X25519_ITER1M=1 also runs the RFC 7748 1,000,000-iteration test (about 25 min);
+# Environment: X25519_ITER1M=1 also runs the RFC 7748 1,000,000-iteration test (177 s measured on
+# the DGX Spark GB10 host, 2026-10-26, under nice 19);
 # X25519_BENCH_N (default 200) calls per timing scalar.
 # Exit 0 only when every check passes; the final line is
 #   X25519 PASS vectors=N (wycheproof=W) mutants=M/M     or     X25519 FAIL ...
@@ -126,21 +127,18 @@ libmut mut-zero 's/^z = xor shr or z sub 0 z 63 1$/z = shr or z sub 0 z 63/' "$h
 libmut mut-canon 's/^c = ulong 19$/c = ulong 0/' "$here/vectors/wycheproof.txt"
 
 # timing sanity (informational, not a proof of constant time): clamped low and high Hamming weight
+# scalars, interleaved low high high low so warm-up and drift fall on both; sums per weight
 n=${X25519_BENCH_N:-200}
 u=e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c
 lo=0000000000000000000000000000000000000000000000000000000000000040
 hi=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-printf 'T %s %s %s\nT %s %s %s\n' "$n" "$lo" "$u" "$n" "$hi" "$u" > "$out/timing.txt"
-if $nice "$out/driver" < "$out/timing.txt" > "$out/timing.log" 2>&1 || grep -q '^TIME ' "$out/timing.log"; then
-	tlo=$(awk '/^TIME line 1 / { print $7 }' "$out/timing.log")
-	thi=$(awk '/^TIME line 2 / { print $7 }' "$out/timing.log")
-	if [ -n "$tlo" ] && [ -n "$thi" ]; then
-		echo "TIME low-weight scalar (clamped weight 1): $n calls, $tlo ns, $((tlo / n)) ns per call"
-		echo "TIME high-weight scalar (clamped weight 252): $n calls, $thi ns, $((thi / n)) ns per call"
-	else
-		echo "FAIL timing: $(cat "$out/timing.log")"
-		fail=1
-	fi
+printf 'T %s %s %s\n' "$n" "$lo" "$u" "$n" "$hi" "$u" "$n" "$hi" "$u" "$n" "$lo" "$u" > "$out/timing.txt"
+$nice "$out/driver" < "$out/timing.txt" > "$out/timing.log" 2>&1 || true
+tlo=$(awk '/^TIME line [14] / { s += $7; c++ } END { if (c == 2) print s }' "$out/timing.log")
+thi=$(awk '/^TIME line [23] / { s += $7; c++ } END { if (c == 2) print s }' "$out/timing.log")
+if [ -n "$tlo" ] && [ -n "$thi" ]; then
+	echo "TIME low-weight scalar (clamped weight 1): $((2 * n)) calls, $tlo ns, $((tlo / (2 * n))) ns per call"
+	echo "TIME high-weight scalar (clamped weight 252): $((2 * n)) calls, $thi ns, $((thi / (2 * n))) ns per call"
 else
 	echo "FAIL timing: $(cat "$out/timing.log")"
 	fail=1

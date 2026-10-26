@@ -258,7 +258,7 @@ y = and or y shr y 8 0x0000ffff0000ffff
 ret and or y shr y 16 0xffffffff
 end
 
-fn aes_bswap x ulong to ulong inline
+fn aes_bswap x ulong to ulong
 y = or and shr x 8 0x00ff00ff00ff00ff shl and x 0x00ff00ff00ff00ff 8
 y = or and shr y 16 0x0000ffff0000ffff shl and y 0x0000ffff0000ffff 16
 ret rotr y 32
@@ -366,23 +366,31 @@ x = or x shl ulong get key add q 2 16
 put w i or x shl ulong get key add q 3 24
 end
 aes_expand w s nk
-for r ulong add nr 1
+aes_rkeys k s w
+for i ulong 60
+put w i 0
+end
+end
+
+note round key r (words w[4r .. 4r + 4)) as bit planes in k[8r .. 8r + 8): the same block in all
+note four lanes, through aes_inblk
+fn aes_rkeys k edit ulong AGKN s edit ulong AGSN w view ulong 60 to void
+q = ulong 0
+x = ulong 0
+for r ulong add get k 120 1
 q = shl r 2
-put s 150 aes_bswap or get w q shl get w add q 1 32
-put s 151 aes_bswap or get w add q 2 shl get w add q 3 32
-put s 152 get s 150
-put s 153 get s 151
-put s 154 get s 150
-put s 155 get s 151
-put s 156 get s 150
-put s 157 get s 151
+x = or get w q shl get w add q 1 32
+put s 150 aes_bswap x
+x = or get w add q 2 shl get w add q 3 32
+put s 151 aes_bswap x
+for b ulong 3 unroll
+put s add 152 mul b 2 get s 150
+put s add 153 mul b 2 get s 151
+end
 aes_inblk s
 for i ulong 8 unroll
 put k add shl r 3 i get s i
 end
-end
-for i ulong 60
-put w i 0
 end
 end
 
@@ -501,12 +509,18 @@ r = and n 63
 if gt r 0
 gcm_cblk k s
 aes_enc4 k s
-o = sub n r
-x = ulong 0
-for i ulong r
-x = get s add 150 shr i 3
-put d add o i xor get d add o i uchar and shr x sub 56 shl and i 7 3 0xff
+gcm_xorn s part d sub n r r
 end
+end
+
+note d[0 .. len d) ^= the first len d (below 64) key stream bytes in s[150..158)
+fn gcm_xorn s view ulong AGSN d edit uchar * to void
+x = ulong 0
+z = ulong 0
+for i ulong len d
+x = get s add 150 shr i 3
+z = sub 56 shl and i 7 3
+put d i xor get d i uchar and shr x z 0xff
 end
 end
 
@@ -579,7 +593,8 @@ x = get k 123
 if ge i 8
 x = get k 124
 end
-ret uchar and shr x sub 56 shl and i 7 3 0xff
+z = sub 56 shl and i 7 3
+ret uchar and shr x z 0xff
 end
 
 fn gcm_seal1 k edit ulong AGKN s edit ulong AGSN aad view uchar * buf edit uchar * to void

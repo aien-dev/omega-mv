@@ -51,7 +51,10 @@ note chain; the all-zero test is ((a | -a) >> 63) ^ 1. Secret arrays (clamped sc
 note multiplication scratch) are overwritten with 0 before return. Caveats: omc emits plain AArch64
 note and we rely on MUL, ADD, SUB, EOR, AND, ORR, LSL/LSR with register amounts being data-independent
 note (no DIT bit is set); register and spill contents are not scrubbed; the length check (return 2)
-note branches on public lengths; bounds checks on indices branch on public offsets only.
+note branches on public lengths; bounds checks on indices branch on public offsets only. Conversions
+note of secret values (ulong of a scalar byte in x25519_ladder, uchar of an output byte masked to
+note 0..255 in x25519_fenc) can never fail; any range check omc emits for them is a never-taken trap
+note branch whose direction does not depend on data.
 
 note workspace slots (ulong offsets into w, 10 limbs each); the inversion reuses the step temporaries
 const XCWN ulong 140

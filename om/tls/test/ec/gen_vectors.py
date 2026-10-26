@@ -146,14 +146,17 @@ N = {256: int("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551"
 
 
 def edge(wdir, out):
-    # Hand-made encoding cases with an exact expected code (EXP "=K"), each derived from the first
-    # valid DER test of a Wycheproof file. Constants p, n: FIPS 186-4 D.1.2.3 / D.1.2.4.
+    # Hand-made encoding cases with an exact expected code (EXP "=K"), each derived from a valid
+    # DER test of a Wycheproof file. Constants p, n: FIPS 186-4 D.1.2.3 / D.1.2.4.
     lines = ["# edge cases derived from Wycheproof (Apache-2.0, see LICENSE.wycheproof); EXP =K means",
              "# the exact return code K is required (0 valid, 2 encoding, 3 key, 4 range, 5 curve)"]
     for crv, name in ((256, "ecdsa_secp256r1_sha256_test.json"), (384, "ecdsa_secp384r1_sha384_test.json")):
         d = json.load(open(os.path.join(wdir, "testvectors_v1", name)))
         g = d["testGroups"][0]
-        t = next(t for t in g["tests"] if t["result"] == "valid")
+        # first valid test whose r INTEGER is exactly crv/8 bytes with top byte < 0x80, so that a
+        # single 0x00 pad (der-int-pad) is a non-minimal encoding of a value that would verify
+        t = next(t for t in g["tests"] if t["result"] == "valid" and
+                 int(t["sig"][6:8], 16) == crv // 8 and int(t["sig"][8:10], 16) < 0x80)
         alg = SHAS[g["sha"]]
         pub = g["publicKey"]["uncompressed"]
         sig = t["sig"]
@@ -185,7 +188,7 @@ def edge(wdir, out):
             ("der-trailing", crv, "d", "=2", pub, sig + "00"),
             ("der-empty", crv, "d", "=2", pub, ""),
             ("der-long-len", crv, "d", "=2", pub, "3081" + sig[2:]),
-            ("der-int-pad", crv, "d", "=2", pub, der_raw(b"\x00\x00" + r.to_bytes((r.bit_length() + 7) // 8, "big"), s)),
+            ("der-int-pad", crv, "d", "=2", pub, der_raw(b"\x00" + r.to_bytes(crv // 8, "big"), s)),
             ("der-neg-r", crv, "d", "=2", pub, der_raw(b"\x80" + bytes(crv // 8 - 1), s)),
             ("der-tag", crv, "d", "=2", pub, "31" + sig[2:]),
             ("raw-short", crv, "r", "=2", pub, raw[:-2]),

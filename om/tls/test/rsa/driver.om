@@ -1,0 +1,322 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/rsa.om (program mode). Built as: om2 line, sha2.om, rsa.om,
+note this file. Reads a vector file on stdin, one case per line (see gen_vectors.py):
+note   EXP MODE CTL KEY MSG DIG SIG ID
+note EXP 0..5 exact return code or n (any nonzero); MODE p (pkcs1, CTL = hash) or s (pss, CTL = ctl);
+note KEY / MSG / DIG / SIG hex ('-' empty; MSG '*' = use DIG verbatim, no hashing).
+note For every MSG the driver computes sha2_digest with the CTL hash and requires it to equal DIG
+note (the converter's hashlib digest); hs = that digest || SIG goes to the verify call.
+note Negative control: every case expected 0 that verifies is run again with one signature byte
+note flipped (bit 0 of the middle byte) and must be refused.
+note Optional argument: repeat count R (each verify runs R times; for timing).
+note Output: one MISMATCH line per wrong result, then
+note   cases C verifies V mismatches X controls K ns T
+note Exit 0 only when at least one verify ran and nothing mismatched; 1 otherwise; 65 bad input.
+
+text rvtmis "MISMATCH line "
+text rvtgot " got "
+text rvtexp " want "
+text rvtdig " digest"
+text rvtctl " control"
+text rvtcase "cases "
+text rvtver " verifies "
+text rvtmm " mismatches "
+text rvtcon " controls "
+text rvtns " ns "
+text rvtnl "\n"
+text rvtbad "driver: bad input\n"
+
+global rvin uchar 16777216
+global rvout uchar 32
+global rvarg uchar 32
+global rvcnt ulong 16
+
+fn rv_bad to void
+r = write 2 rvtbad 0 len rvtbad
+exit 65
+end
+
+fn rv_num v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put rvout sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 rvout sub 32 k k
+end
+
+fn rv_nib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+rv_bad
+ret 0
+end
+
+note end of the token starting at p (the next space or newline)
+fn rv_tok p ulong to ulong
+e = p
+while and ne get rvin e 32 ne get rvin e 10 bound 999999
+e = add e 1
+end
+ret e
+end
+
+note hex rvin[p..q) into d; '-' is empty; returns the byte count
+fn rv_hex d edit uchar * p ulong q ulong to ulong
+if and eq sub q p 1 eq get rvin p 45
+ret 0
+end
+h = sub q p
+if ne and h 1 0
+rv_bad
+end
+c = div h 2
+if gt c len d
+rv_bad
+end
+for i ulong c
+o = add p mul i 2
+hi = rv_nib ulong get rvin o
+lo = rv_nib ulong get rvin add o 1
+put d i uchar or shl hi 4 lo
+end
+ret c
+end
+
+fn rv_dec p ulong q ulong to ulong
+v = ulong 0
+for i ulong sub q p
+c = ulong get rvin add p i
+if or lt c 48 gt c 57
+rv_bad
+end
+v = add mul v 10 sub c 48
+end
+ret v
+end
+
+fn rv_slurp to void
+t = ulong 0
+while true bound 999999
+room = sub len rvin t
+if eq room 0
+rv_bad
+end
+r = read 0 rvin t room
+if lt r 0
+rv_bad
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put rvcnt 6 t
+end
+
+fn rv_reps to ulong
+if lt argcnt 2
+ret 1
+end
+l = argread 1 rvarg 0 20
+v = ulong 0
+for i ulong ulong l
+v = add mul v 10 sub ulong get rvarg i 48
+end
+ret v
+end
+
+note counters in rvcnt: 0 line, 1 cases, 2 verifies, 3 mismatches, 4 ns, 5 repeats, 6 input length,
+note 7 controls
+fn rv_bump i ulong v ulong to void
+put rvcnt i add get rvcnt i v
+end
+
+fn rv_mis tag view uchar * got ulong want ulong to void
+rv_bump 3 1
+r = write 1 rvtmis 0 len rvtmis
+rv_num get rvcnt 0
+r = write 1 tag 0 len tag
+r = write 1 rvtgot 0 len rvtgot
+rv_num got
+r = write 1 rvtexp 0 len rvtexp
+rv_num want
+r = write 1 rvtnl 0 1
+end
+
+note one verify call: mode (rvcnt cell 8) 112 'p' or 115 's'
+fn rv_call c ulong key view uchar * hs view uchar * hl ulong to ulong
+if eq get rvcnt 8 112
+ret rsa_verify_pkcs1 c key hs hl
+end
+ret rsa_verify_pss c key hs hl
+end
+
+note run the verify R times; returns the last result
+fn rv_run c ulong key view uchar * hs view uchar * hl ulong to ulong
+got = ulong 0
+for k ulong get rvcnt 5
+t0 = monons
+got = rv_call c key hs hl
+rv_bump 4 ulong sub monons t0
+rv_bump 2 1
+end
+ret got
+end
+
+note judge result got against expectation x (99 = any nonzero); 0 ok, 1 mismatch
+fn rv_judge got ulong x ulong to ulong
+if eq x 99
+if eq got 0
+ret 1
+end
+ret 0
+end
+if ne got x
+ret 1
+end
+ret 0
+end
+
+note digest of msg with alg into dc; must equal the converter digest dg (length dl); returns the
+note digest length to use (dl when alg is not a sha2 hash: dg is used as given)
+fn rv_digest alg ulong m view uchar * dg edit uchar 128 dl ulong to ulong
+dc = new uchar 64 0
+n = sha2_digest alg m dc
+if eq n 0
+ret dl
+end
+d = ulong 0
+if ne n dl
+d = 1
+end
+if eq n dl
+for i ulong n
+d = or d ulong xor get dc i get dg i
+end
+end
+if ne d 0
+rv_mis rvtdig n dl
+end
+ret dl
+end
+
+note token bounds of the 8 fields of the line at p into rvf (start, end pairs)
+fn rv_split p ulong to void
+for t ulong 8
+q = rv_tok p
+put rvf mul t 2 p
+put rvf add mul t 2 1 q
+p = add q 1
+end
+end
+
+note MSG field (unless '*'): hash it, cross-check DIG; returns the digest length for hs
+fn rv_msgdig msg edit uchar 4096 dg edit uchar 128 dl ulong to ulong
+p = get rvf 8
+q = get rvf 9
+if and eq sub q p 1 eq get rvin p 42
+ret dl
+end
+ml = rv_hex part msg 0 4096 p q
+alg = get rvcnt 10
+if eq get rvcnt 8 115
+alg = and alg 0xffff
+end
+ret rv_digest alg part msg 0 ml dg dl
+end
+
+note parse the split line: rvcnt 8 mode, 9 expectation, 10 ctl, 11 key length, 12 digest
+note length, 13 signature length; hs = digest || signature
+fn rv_parse key edit uchar 2048 msg edit uchar 4096 dg edit uchar 128 hs edit uchar 2200 to void
+x = rv_dec get rvf 0 get rvf 1
+if eq get rvin get rvf 0 110
+x = 99
+end
+put rvcnt 9 x
+put rvcnt 8 ulong get rvin get rvf 2
+put rvcnt 10 rv_dec get rvf 4 get rvf 5
+put rvcnt 11 rv_hex part key 0 2048 get rvf 6 get rvf 7
+dl = rv_hex part dg 0 128 get rvf 10 get rvf 11
+dl = rv_msgdig msg dg dl
+for i ulong dl
+put hs i get dg i
+end
+put rvcnt 12 dl
+put rvcnt 13 rv_hex part hs dl sub 2200 dl get rvf 12 get rvf 13
+end
+
+note run the parsed case, judge it, and the flipped-byte control for cases expected valid
+fn rv_check key view uchar 2048 hs edit uchar 2200 to void
+c = get rvcnt 10
+kl = get rvcnt 11
+dl = get rvcnt 12
+sl = get rvcnt 13
+x = get rvcnt 9
+got = rv_run c part key 0 kl part hs 0 add dl sl dl
+if ne rv_judge got x 0
+rv_mis rvtnl got x
+end
+if and eq x 0 and eq got 0 gt sl 0
+fx = add dl div sl 2
+put hs fx xor get hs fx 1
+rv_bump 7 1
+cg = rv_call c part key 0 kl part hs 0 add dl sl dl
+if eq cg 0
+rv_mis rvtctl cg 99
+end
+end
+end
+
+fn rv_line key edit uchar 2048 msg edit uchar 4096 dg edit uchar 128 hs edit uchar 2200 p ulong to void
+rv_bump 1 1
+rv_split p
+rv_parse key msg dg hs
+rv_check key hs
+end
+
+fn main to int
+key = new uchar 2048 0
+msg = new uchar 4096 0
+dg = new uchar 128 0
+hs = new uchar 2200 0
+rv_slurp
+put rvcnt 5 rv_reps
+tot = get rvcnt 6
+p = ulong 0
+while lt p tot bound 999999
+rv_bump 0 1
+e = p
+while ne get rvin e 10 bound 999999
+e = add e 1
+end
+if ne get rvin p 35
+rv_line key msg dg hs p
+end
+p = add e 1
+end
+r = write 1 rvtcase 0 len rvtcase
+rv_num get rvcnt 1
+r = write 1 rvtver 0 len rvtver
+rv_num get rvcnt 2
+r = write 1 rvtmm 0 len rvtmm
+rv_num get rvcnt 3
+r = write 1 rvtcon 0 len rvtcon
+rv_num get rvcnt 7
+r = write 1 rvtns 0 len rvtns
+rv_num get rvcnt 4
+r = write 1 rvtnl 0 1
+if or gt get rvcnt 3 0 eq get rvcnt 2 0
+ret 1
+end
+ret 0
+end

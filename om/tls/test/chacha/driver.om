@@ -451,7 +451,7 @@ end
 if eq get st 9 0
 ret drecav kn a b e w
 end
-if lt get st 8 16
+if and eq get st 9 1 lt get st 8 16
 ret 2
 end
 ret drecai kn a b e w

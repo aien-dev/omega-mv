@@ -7,12 +7,14 @@
 #           "invalid" (counter would wrap past 2^32 - 1) 2. XChaCha20 groups are not implemented
 #           here and are counted as NOT_RUN on stderr.
 # The file has no "acceptable" results; one would abort the conversion.
-# Usage: python3 gen_wycheproof.py aead|counter FILE > OUT
+# Usage: python3 gen_wycheproof.py aead|counter FILE COMMIT > OUT
+import hashlib
 import json
 import sys
 
-mode, path = sys.argv[1], sys.argv[2]
-d = json.load(open(path))
+mode, path, commit = sys.argv[1], sys.argv[2], sys.argv[3]
+raw = open(path, "rb").read()
+d = json.loads(raw)
 out = []
 counts = {}
 notrun = 0
@@ -41,7 +43,9 @@ for g in d["testGroups"]:
             out.append("C %s %d %s %s %d" % (t["key"] + t["iv"], ctr, t["msg"] or "-",
                                              t.get("ct") or t["msg"] or "-", code))
         counts[code] = counts.get(code, 0) + 1
-print("# Converted by gen_wycheproof.py %s from Wycheproof %s" % (mode, path.split("/")[-1]))
+name = path.split("/")[-1]
+print("# Converted by gen_wycheproof.py %s from https://github.com/C2SP/wycheproof testvectors_v1/%s" % (mode, name))
+print("# source commit %s sha256 %s; license Apache-2.0 (vectors/WYCHEPROOF.LICENSE)" % (commit, hashlib.sha256(raw).hexdigest()))
 print("# expected codes %s; NOT_RUN %d" % (" ".join("%d:%d" % kv for kv in sorted(counts.items())), notrun))
 print("\n".join(out))
 sys.stderr.write("%s: records %d codes %s NOT_RUN %d\n" % (path.split("/")[-1], sum(counts.values()),

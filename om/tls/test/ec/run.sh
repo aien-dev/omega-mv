@@ -108,7 +108,7 @@ mutant "$out/driver" "$out/mut-expect.txt" mutant-expectation
 libmut mutant-b256 's/^put w 120 0x27d2604b$/put w 120 0x27d2604c/' wycheproof_secp256r1_sha256.txt
 libmut mutant-padd 's/^ec_sub w ECCP p p ECA7$/ec_add w ECCP p p ECA7/' wycheproof_secp384r1_sha384.txt
 libmut mutant-n0 's/^for k ulong 5$/for k ulong 2/' cavp_sigver.txt
-libmut mutant-der 's/^if lt get hs add v 1 128$/if lt get hs add v 1 0/' wycheproof_secp256r1_sha256.txt
+libmut mutant-der 's/^if lt get hs add v 1 128$/if lt get hs add v 1 0/' edge.txt
 
 # timing: the first valid DER line of the P-256/SHA-256 and P-384/SHA-384 Wycheproof files
 bn=${EC_BENCH_N:-200}
