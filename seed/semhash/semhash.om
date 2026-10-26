@@ -1,0 +1,2111 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/semhash/semhash.om: per-function meaning hash, canonical form and semantic diff for
+note Omega units, written in seeded Omega. Built on top of om/sha256/sha256-om2.om (see README.md
+note for the build line); this file has no om2 line of its own and reuses none of that file's names.
+note Modes: hash (default), canon, diff A B, keywords. Exit 0 ok, 1 diff found a difference,
+note 2 usage, 3 refusal (CR, capacity, malformed), 90+ internal.
+note Keyword tables. tkw1 is genkw.awk lines 16-18 (OM-1 and host words), tkw2 the OM-2-only words of
+note omc.om fn kw2, tctx the contextual OM-2 names, tspc the profile and special words this tool needs.
+text tkw1 "bool 1\nuchar 2\nu8 2\nushort 3\nu16 3\nuint 4\nu32 4\nulong 5\nu64 5\nbyte 6\ni8 6\nshort 7\ni16 7\nint 8\ni32 8\nlong 9\ni64 9\nadd 33\nsub 34\nmul 35\ndiv 36\nrem 37\nand 38\nor 39\nxor 40\nshl 41\nshr 42\neq 43\nne 44\nlt 45\nle 46\ngt 47\nge 48\nneg 49\nnot 50\nget 51\nlen 52\nread 53\nwrite 54\ntrue 55\nfalse 56\nview 57\nedit 58\nfn 64\nto 65\nend 66\nif 67\nelse 68\nwhile 69\nbound 70\nfor 71\nret 72\n= 73\n( 74\n) 75\nvoid 76\nglobal 78\ntext 79\nput 80\nfree 81\nexit 82\nnote 83\nnew 84\nstruct 85\nbreak 86\ntrap 87\nown 77\nf32 88\nf64 89\nbitcast 90\nfsqrt 91\nfabs 92\nfmin 93\nfmax 94\nsizeof 95\noffsetof 96\ncontinue 97\nfclose 100\nfsync 101\nfchmod 102\nfseek 103\nsocknew 104\nlisten 105\naccept 106\nfork 107\ndupfd 108\nmonons 109\nfopen 110\nunlink 111\nmakedir 112\ngetdnts 113\nconnect 114\nbind 115\nwaitpid 116\nfstat 117\nrecv 118\nsend 119\nsleepns 120\nargcnt 121\nargread 122\nwaitio 123\nexecprog 124\nrenames 125\nrmdir 126\nkillpid 127\npipefds 128\ngetpid 129\nrealns 130\nsockname 131\ncwd 132\nreadlnk 133\nsockopt 134\nrandom 135\nenvcnt 136\nenvread 137\nchdir 138\nftrunc 139\nstat 140\nlink 141\nsymlnk 142\nchmod 143\nfaccess 144\ngetuid 145\ngeteuid 146\ngetgid 147\ngetegid 148\nlstat 149\ntruncate 150\nchown 151\nconst 152\nfchdir 153\ngetppid 154\numask 155\nfdsync 156\nmemfd 157\nsetsid 158\ngetpgid 159\nsetpgid 160\npread 161\npwrite 162\ngetsid 163\nsyncfs 164\nshutdown 165\ndevctl 166\nmapnew 167\nmapdrop 168\nmapread 169\nmapwrite 170\ndevcall 171\nuvmctl 172\nmapaddr 173\nmapget 174\nmapset 175\nmaphold 176\nmapbind 177\nflock 197\npeercred 220\npollfds 221\nsendmsg 222\n"
+text tkw2 "rotr 59\nrotl 60\nunroll 181\ninline 182\nfresh 183\nabstract 184\nseal 185\nopen 186\nholds 187\nlayout 188\nfield 189\nat 190\nlittle 191\nbig 192\npart 193\nout 194\nexport 195\nops 196\n"
+text tctx "requires 1\nensures 1\ninvariant 1\nresult 1\n"
+text tspc "om2 1\nir 2\ndiag 3\nfmt 4\ndebug 5\nrelease 6\n* 7\nmain 8\n"
+text tom1 "P om1"
+text tself "@self"
+text tfn "FN "
+text tline " line="
+text tverb " verbatim"
+text tcyc " cycle"
+text tunit "UNIT "
+text tfns " fns="
+text tsame "SAME "
+text tchg "CHANGED "
+text tadd "ADDED "
+text trem "REMOVED "
+text tren "RENAMED "
+text tarr "->"
+text tent "ENTRY CHANGED "
+text texp "EXPORTS CHANGED\n"
+text tdsame "DIFF SAME\n"
+text tdchg "DIFF CHANGED n="
+text mhash "hash"
+text mcanon "canon"
+text mdiff "diff"
+text mkw "keywords"
+text eusage "usage: semhash [hash|canon|keywords] < unit.om | semhash diff A.om B.om\n"
+text ecr "semhash: refused: CR byte in input\n"
+text ebig "semhash: refused: input over 8388608 bytes\n"
+text ecap "semhash: refused: capacity exceeded\n"
+text ectl "semhash: refused: control byte in input\n"
+text etxt "semhash: refused: unterminated text literal\n"
+text eblk "semhash: refused: unterminated fn or layout block\n"
+text ersv "semhash: refused: token starts with a reserved byte ($ # @)\n"
+text edup "semhash: refused: duplicate function name\n"
+text eopen "semhash: cannot open input file\n"
+text eread "semhash: read failed\n"
+text eletr "semhash: refused: no free canon letter\n"
+text efmt "semhash: refused: canon of an om2 fmt unit (its output is source text, not code)\n"
+note input
+global gin uchar 8388616
+global ginn ulong 1
+note output buffer
+global gob uchar 1048576
+global gobn ulong 1
+note symbols: bytes pool, offsets, lengths, open-addressing table
+global gsb uchar 16777216
+global gsbn ulong 1
+global gso ulong 1048576
+global gsl ulong 1048576
+global gsn ulong 1
+global ght ulong 2097152
+note symbol attributes
+global gkw ulong 1048576
+global gk2 ulong 1048576
+global gcx uchar 1048576
+global gfm ulong 1048576
+global gdh ulong 1048576
+global gfd uchar 1048576
+global gls ulong 1048576
+global gns ulong 1048576
+global gnu ulong 1048576
+note tokens and kept lines
+global gts ulong 4194304
+global gtn ulong 1
+global glf ulong 2097152
+global glc ulong 2097152
+global gll ulong 2097152
+global glr ulong 2097152
+global glw ulong 2097152
+global gln ulong 1
+note top-level items: kind 1 fn, 2 decl, 3 other, 4 profile lead
+global gik uchar 65536
+global gia ulong 65536
+global gib ulong 65536
+global gix ulong 65536
+global gis ulong 65536
+global gitn ulong 1
+note functions
+global gfi ulong 8192
+global gfs ulong 8192
+global gfp ulong 8192
+global gfv uchar 8192
+global gfx uchar 8192
+global gfh uchar 262144
+global gfg uchar 262144
+global gfo ulong 8192
+global gfk uchar 8192
+global gfc ulong 8192
+global gfz ulong 8192
+global gfcs ulong 8192
+global gfcn ulong 8192
+global gfrs ulong 8192
+global gfrn ulong 8192
+global gcur ulong 8192
+global gm1 ulong 8192
+global gm2 ulong 8192
+global gcst ulong 8192
+global gce ulong 524288
+global gre ulong 524288
+global gcen ulong 1
+global gfnn ulong 1
+global gq ulong 8192
+note stream buffer and hash result
+global gsf uchar 16777216
+global gsfn ulong 1
+global ghr uchar 32
+global ggr uchar 32
+note state: gpf 0 om2 flag, 1 lead line + 1, 2 canon letter; gsp special symbols
+global gpf ulong 4
+global gsp ulong 16
+global gep ulong 1
+global gkn ulong 1
+global gdl ulong 65536
+global gdln ulong 1
+global gbad uchar 8
+note diff sides: names, hashes, flags (side 1 starts at 8192)
+global gwb uchar 1048576
+global gwp ulong 1
+global gwo ulong 16384
+global gwl ulong 16384
+global gwh uchar 524288
+global gwm uchar 16384
+global gwx uchar 16384
+global gwc ulong 2
+
+note ---------------------------------------------------------------- output and exits
+fn ob_flush to void
+n = get gobn 0
+o = ulong 0
+for a ulong 1000000
+if ge o n
+break
+end
+r = write 1 gob o sub n o
+if le r 0
+exit 93
+end
+o = add o ulong r
+end
+put gobn 0 0
+end
+
+fn ob_byte b uchar to void
+n = get gobn 0
+if ge n 1048000
+ob_flush
+n = ulong 0
+end
+put gob n b
+put gobn 0 add n 1
+end
+
+fn ob_str t view uchar * to void
+for i ulong len t
+ob_byte get t i
+end
+end
+
+fn ob_dec v ulong to void
+d = new uchar 24 0
+k = ulong 0
+x = v
+for i ulong 24
+put d k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for j ulong k
+ob_byte get d sub sub k j 1
+end
+end
+
+fn ob_sym s ulong to void
+o = get gso s
+for i ulong get gsl s
+ob_byte get gsb add o i
+end
+end
+
+fn hx_dig v ulong to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+
+fn ob_fhash f ulong to void
+o = mul f 32
+for i ulong 32
+v = ulong get gfh add o i
+ob_byte hx_dig shr v 4
+ob_byte hx_dig and v 15
+end
+end
+
+fn die_msg t view uchar * c int to void
+ob_flush
+r = write 2 t 0 len t
+exit c
+end
+
+fn rf_die t view uchar * to void
+die_msg t 3
+end
+
+note ---------------------------------------------------------------- stream buffer
+fn sf_byte b uchar to void
+n = get gsfn 0
+if ge n 16777000
+rf_die ecap
+end
+put gsf n b
+put gsfn 0 add n 1
+end
+
+fn sf_str t view uchar * to void
+for i ulong len t
+sf_byte get t i
+end
+end
+
+fn sf_sym s ulong to void
+o = get gso s
+for i ulong get gsl s
+sf_byte get gsb add o i
+end
+end
+
+fn sf_dec v ulong to void
+d = new uchar 24 0
+k = ulong 0
+x = v
+for i ulong 24
+put d k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for j ulong k
+sf_byte get d sub sub k j 1
+end
+end
+
+fn sf_fhash f ulong to void
+o = mul f 32
+for i ulong 32
+v = ulong get gfh add o i
+sf_byte hx_dig shr v 4
+sf_byte hx_dig and v 15
+end
+end
+
+note sha256 of gsf[0..gsfn) into ghr, 4096 bytes at a time through a local chunk
+fn sh_stream to void
+c = new uchar 104 0
+sha256_init c
+k = new uchar 4096 0
+n = get gsfn 0
+p = ulong 0
+for a ulong 1000000
+if ge p n
+break
+end
+m = sub n p
+if gt m 4096
+m = ulong 4096
+end
+for j ulong m
+put k j get gsf add p j
+end
+sha256_update c part k 0 m
+p = add p m
+end
+h = new uchar 32 0
+sha256_final c h
+for i ulong 32
+put ghr i get h i
+end
+end
+
+fn hr_tofn f ulong to void
+o = mul f 32
+for i ulong 32
+put gfh add o i get ghr i
+end
+end
+
+note ---------------------------------------------------------------- symbols
+fn sy_eq s ulong b ulong n ulong to bool
+if ne get gsl s n
+ret false
+end
+o = get gso s
+for i ulong n
+if ne get gsb add o i get gsb add b i
+ret false
+end
+end
+ret true
+end
+
+fn sy_new b ulong n ulong to ulong
+s = get gsn 0
+if ge s 1048576
+rf_die ecap
+end
+put gso s b
+put gsl s n
+put gsbn 0 add b n
+put gsn 0 add s 1
+put gkw s 0
+put gk2 s 0
+put gcx s 0
+put gfm s 0
+put gdh s 0
+put gfd s 0
+put gls s 0
+put gns s 0
+put gnu s 0
+ret s
+end
+
+note intern the n bytes staged at gsb[gsbn..]; returns the symbol
+fn sy_intern n ulong to ulong
+b = get gsbn 0
+h = ulong 14695981039346656037
+for i ulong n
+h = mul xor h ulong get gsb add b i 1099511628211
+end
+p = and h 2097151
+for t ulong 2097152
+e = get ght p
+if eq e 0
+s = sy_new b n
+put ght p add s 1
+ret s
+end
+if sy_eq sub e 1 b n
+ret sub e 1
+end
+p = and add p 1 2097151
+end
+exit 94
+end
+
+fn kw_eff s ulong to ulong
+c = get gkw s
+if ne c 0
+ret c
+end
+if ne get gpf 0 0
+ret get gk2 s
+end
+ret 0
+end
+
+fn is_num s ulong to bool
+c = get gsb get gso s
+if eq c 45
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+ret false
+end
+
+fn is_txt s ulong to bool
+ret eq get gsb get gso s 34
+end
+
+note load "word code\n" lines; k 1 OM-1 code, 2 OM-2 code, 3 contextual, 4 special slot
+fn kw_load t view uchar * k ulong to void
+i = ulong 0
+n = len t
+for z ulong 100000
+if ge i n
+break
+end
+b = get gsbn 0
+m = ulong 0
+for y ulong 64
+if eq get t i 32
+break
+end
+put gsb add b m get t i
+m = add m 1
+i = add i 1
+end
+i = add i 1
+v = ulong 0
+for w ulong 64
+if eq get t i 10
+break
+end
+v = add mul v 10 sub ulong get t i 48
+i = add i 1
+end
+i = add i 1
+s = sy_intern m
+kw_set s k v
+end
+end
+
+fn kw_set s ulong k ulong v ulong to void
+if eq k 1
+put gkw s v
+end
+if eq k 2
+put gk2 s v
+end
+if eq k 3
+put gcx s 1
+end
+if eq k 4
+put gsp v s
+end
+end
+
+fn st_reset to void
+for i ulong 2097152
+put ght i 0
+end
+put gsn 0 0
+put gsbn 0 0
+put gtn 0 0
+put gln 0 0
+put gitn 0 0
+put gfnn 0 0
+put gcen 0 0
+put gsfn 0 0
+put gpf 0 0
+put gpf 1 0
+put ginn 0 0
+kw_load tkw1 1
+kw_load tkw2 2
+kw_load tctx 3
+kw_load tspc 4
+end
+
+note ---------------------------------------------------------------- input
+fn in_stdin to void
+n = ulong 0
+for a ulong 1000000
+if ge n 8388609
+break
+end
+r = read 0 gin n sub 8388609 n
+if lt r 0
+die_msg eread 93
+end
+if eq r 0
+break
+end
+n = add n ulong r
+end
+put ginn 0 n
+end
+
+fn in_file ai ulong to void
+pb = new uchar 4096 0
+r = argread ai pb 0 4095
+if le r 0
+die_msg eopen 2
+end
+fl = fopen pb 0 ulong r 0 0
+if lt fl 0
+die_msg eopen 2
+end
+fd = int fl
+n = ulong 0
+for a ulong 1000000
+if ge n 8388609
+break
+end
+q = read fd gin n sub 8388609 n
+if lt q 0
+die_msg eread 93
+end
+if eq q 0
+break
+end
+n = add n ulong q
+end
+c = fclose fd
+put ginn 0 n
+end
+
+fn in_check to void
+n = get ginn 0
+if gt n 8388608
+rf_die ebig
+end
+for i ulong 8388609
+if ge i n
+break
+end
+if eq get gin i 13
+rf_die ecr
+end
+end
+end
+
+note ---------------------------------------------------------------- tokenizer
+fn tk_push s ulong to void
+t = get gtn 0
+if ge t 4194304
+rf_die ecap
+end
+c = get gsb get gso s
+if or or eq c 36 eq c 35 eq c 64
+rf_die ersv
+end
+put gts t s
+put gtn 0 add t 1
+end
+
+fn tk_text q ulong to ulong
+b = get gsbn 0
+n = get ginn 0
+put gsb b 34
+m = ulong 1
+p = add q 1
+for a ulong 8388609
+if ge p n
+rf_die etxt
+end
+c = get gin p
+if eq c 10
+rf_die etxt
+end
+if ge m 65536
+rf_die ecap
+end
+put gsb add b m c
+m = add m 1
+p = add p 1
+if eq c 34
+break
+end
+if eq c 92
+if ge p n
+rf_die etxt
+end
+if eq get gin p 10
+rf_die etxt
+end
+put gsb add b m get gin p
+m = add m 1
+p = add p 1
+end
+end
+tk_push sy_intern m
+ret p
+end
+
+fn tk_word q ulong to ulong
+b = get gsbn 0
+if gt b 16000000
+rf_die ecap
+end
+c = get gin q
+if or eq c 40 eq c 41
+put gsb b c
+tk_push sy_intern 1
+ret add q 1
+end
+if eq c 34
+ret tk_text q
+end
+n = get ginn 0
+m = ulong 0
+p = q
+for a ulong 8388609
+if ge p n
+break
+end
+c = get gin p
+if le c 32
+break
+end
+if or eq c 40 eq c 41
+break
+end
+if ge m 65536
+rf_die ecap
+end
+put gsb add b m c
+m = add m 1
+p = add p 1
+end
+tk_push sy_intern m
+ret p
+end
+
+note one source line from q; returns the offset after its LF
+fn tk_line q ulong ln ulong to ulong
+n = get ginn 0
+l = get gln 0
+if ge l 2097152
+rf_die ecap
+end
+t0 = get gtn 0
+put glf l t0
+put gll l ln
+put glr l q
+p = q
+dn = false
+for a ulong 8388609
+if ge p n
+break
+end
+c = get gin p
+if eq c 10
+break
+end
+if or eq c 32 eq c 9
+p = add p 1
+continue
+end
+if dn
+p = add p 1
+continue
+end
+if lt c 32
+rf_die ectl
+end
+p = tk_word p
+if eq get gtn 0 add t0 1
+if eq get gkw get gts t0 83
+dn = true
+end
+end
+end
+put glw l p
+if dn
+put gtn 0 t0
+end
+c2 = sub get gtn 0 t0
+if gt c2 0
+put glc l c2
+put gln 0 add l 1
+end
+ret add p 1
+end
+
+fn tk_all to void
+n = get ginn 0
+p = ulong 0
+ln = ulong 1
+for a ulong 8388609
+if ge p n
+break
+end
+p = tk_line p ln
+ln = add ln 1
+end
+end
+
+note ---------------------------------------------------------------- items
+fn it_new k ulong a ulong b ulong to ulong
+i = get gitn 0
+if ge i 65536
+rf_die ecap
+end
+put gik i uchar k
+put gia i a
+put gib i b
+put gix i 0
+put gis i 0
+put gitn 0 add i 1
+ret i
+end
+
+note chain decl item i under key symbol s
+fn it_key i ulong s ulong to void
+h = get gdh s
+if eq h 0
+put gdh s add i 1
+ret
+end
+j = sub h 1
+for a ulong 65536
+x = get gix j
+if eq x 0
+break
+end
+j = sub x 1
+end
+put gix j add i 1
+end
+
+fn ln_tok l ulong k ulong to ulong
+ret get gts add get glf l k
+end
+
+note exact raw line: no leading, trailing or doubled blanks
+fn ln_exact l ulong to bool
+c = get glc l
+w = sub c 1
+for k ulong c
+w = add w get gsl ln_tok l k
+end
+ret eq sub get glw l get glr l w
+end
+
+fn pf_lead to void
+if eq get gln 0 0
+ret
+end
+c = get glc 0
+s = ln_tok 0 0
+if not ln_exact 0
+ret
+end
+if and eq s get gsp 2 eq c 1
+put gpf 1 1
+ret
+end
+if ne s get gsp 1
+ret
+end
+if eq c 1
+pf_om2
+ret
+end
+t = ln_tok 0 1
+if eq c 2
+if pf_word t
+pf_om2
+end
+ret
+end
+if eq c 3
+u = ln_tok 0 2
+if and eq t get gsp 3 or eq u get gsp 5 eq u get gsp 6
+pf_om2
+end
+end
+end
+
+note second word of an om2 lead: diag, fmt, debug or release
+fn pf_word t ulong to bool
+for k ulong 4
+if eq t get gsp add k 3
+ret true
+end
+end
+ret false
+end
+
+fn pf_om2 to void
+put gpf 0 1
+put gpf 1 1
+end
+
+note register a fn starting at line l; returns its last line
+fn it_fn l ulong k ulong to ulong
+nl = get gln 0
+d = ulong 0
+e = l
+for a ulong 2097152
+if ge e nl
+rf_die eblk
+end
+c = kw_eff ln_tok e 0
+if or or or or eq c 64 eq c 67 eq c 69 eq c 71 eq c 195
+d = add d 1
+end
+if eq c 66
+d = sub d 1
+if eq d 0
+break
+end
+end
+e = add e 1
+end
+i = it_new 1 l e
+fn_reg i l k
+ret e
+end
+
+fn fn_reg i ulong l ulong k ulong to void
+f = get gfnn 0
+if ge f 8192
+rf_die ecap
+end
+if le get glc l add k 1
+rf_die eblk
+end
+t = add add get glf l k 1
+s = get gts t
+if ne get gfm s 0
+rf_die edup
+end
+put gfm s add f 1
+put gfi f i
+put gfs f s
+put gfp f t
+put gfv f 0
+put gfx f uchar k
+put gfk f 0
+put gfc f 0
+put gfz f 0
+put gfcn f 0
+put gfrn f 0
+put gcst f 0
+put gm1 f 0
+put gm2 f 0
+put gfnn 0 add f 1
+end
+
+fn it_layout l ulong to ulong
+nl = get gln 0
+e = l
+for a ulong 2097152
+if ge e nl
+rf_die eblk
+end
+if eq kw_eff ln_tok e 0 66
+break
+end
+if and eq kw_eff ln_tok e 0 189 gt get glc e 1
+put gfd ln_tok e 1 1
+end
+e = add e 1
+end
+i = it_new 2 l e
+if gt get glc l 1
+it_key i ln_tok l 1
+end
+ret e
+end
+
+fn it_struct l ulong to void
+i = it_new 2 l l
+c = get glc l
+if gt c 1
+it_key i ln_tok l 1
+end
+for k ulong c
+if gt k 1
+fd_mark ln_tok l k
+end
+end
+end
+
+fn fd_mark s ulong to void
+if ne kw_eff s 0
+ret
+end
+if is_num s
+ret
+end
+put gfd s 1
+end
+
+fn it_line l ulong to ulong
+c = kw_eff ln_tok l 0
+if eq c 64
+ret it_fn l 0
+end
+if and eq c 195 gt get glc l 1
+if eq kw_eff ln_tok l 1 64
+ret it_fn l 1
+end
+end
+if eq c 188
+ret it_layout l
+end
+if eq c 85
+it_struct l
+ret l
+end
+if or or or or eq c 78 eq c 79 eq c 152 eq c 184 eq c 187
+i = it_new 2 l l
+if gt get glc l 1
+it_key i ln_tok l 1
+end
+ret l
+end
+j = it_new 3 l l
+ret l
+end
+
+fn it_all to void
+pf_lead
+l = get gpf 1
+if ne l 0
+i = it_new 4 0 0
+end
+nl = get gln 0
+for a ulong 2097152
+if ge l nl
+break
+end
+l = add it_line l 1
+end
+end
+
+note ---------------------------------------------------------------- functions: locals
+fn is_scal c ulong to bool
+if and ge c 1 le c 9
+ret true
+end
+ret or eq c 88 eq c 89
+end
+
+fn lc_cand s ulong to bool
+if ne kw_eff s 0
+ret false
+end
+if or ne get gfm s 0 ne get gdh s 0
+ret false
+end
+if ne get gcx s 0
+ret false
+end
+if or is_num s is_txt s
+ret false
+end
+ret true
+end
+
+note one parameter type starting at token q (e = end of line); next token or 0 when unparseable
+fn pa_type q ulong e ulong to ulong
+s = get gts q
+c = kw_eff s
+if is_scal c
+ret add q 1
+end
+if and eq c 0 ne get gdh s 0
+ret add q 1
+end
+if not or or or eq c 57 eq c 58 eq c 77 eq c 194
+ret 0
+end
+if ge add q 1 e
+ret 0
+end
+s = get gts add q 1
+c = kw_eff s
+if and eq c 0 ne get gdh s 0
+ret add q 2
+end
+if not is_scal c
+ret 0
+end
+ret pa_len add q 2 e
+end
+
+fn pa_len q ulong e ulong to ulong
+if ge q e
+ret 0
+end
+s = get gts q
+if not or or is_num s ne get gdh s 0 eq s get gsp 7
+ret 0
+end
+r = add q 1
+if lt r e
+if eq kw_eff get gts r 183
+r = add r 1
+end
+end
+ret r
+end
+
+fn fn_params f ulong to void
+ep = get gep 0
+l = get gia get gfi f
+e = add get glf l get glc l
+q = add get gfp f 1
+for k ulong 64
+if ge q e
+ret
+end
+s = get gts q
+if eq kw_eff s 65
+ret
+end
+note a contextual name as a parameter is parsed but never renamed
+if eq get gcx s 0
+if not lc_cand s
+put gfv f 1
+ret
+end
+put gls s ep
+end
+q = pa_type add q 1 e
+if eq q 0
+put gfv f 1
+ret
+end
+end
+put gfv f 1
+end
+
+fn fn_prep f ulong to void
+ep = add get gep 0 1
+put gep 0 ep
+put gkn 0 0
+fn_params f
+it = get gfi f
+b = get gib it
+l = add get gia it 1
+for a ulong 2097152
+if ge l b
+break
+end
+t = get glf l
+s = get gts t
+if eq kw_eff s 71
+if gt get glc l 1
+s = get gts add t 1
+end
+end
+if lc_cand s
+put gls s ep
+end
+l = add l 1
+end
+end
+
+fn rn_ok f ulong s ulong to bool
+if ne get gls s get gep 0
+ret false
+end
+if ne get gfv f 0
+ret false
+end
+if ne get gfd s 0
+ret false
+end
+ret le get gsl s 8
+end
+
+note ---------------------------------------------------------------- emission
+fn dl_add s ulong to void
+h = get gdh s
+ep = get gep 0
+for a ulong 65536
+if eq h 0
+break
+end
+i = sub h 1
+if ne get gis i ep
+put gis i ep
+n = get gdln 0
+if ge n 65536
+rf_die ecap
+end
+put gdl n i
+put gdln 0 add n 1
+end
+h = get gix i
+end
+end
+
+fn em_line l ulong to void
+t = get glf l
+c = get glc l
+for i ulong c
+if gt i 0
+sf_byte 32
+end
+s = get gts add t i
+sf_sym s
+if ne get gdh s 0
+dl_add s
+end
+end
+sf_byte 10
+end
+
+fn em_item i ulong to void
+l = get gia i
+b = get gib i
+for a ulong 2097152
+if gt l b
+break
+end
+em_line l
+l = add l 1
+end
+end
+
+fn em_hdr to void
+if eq get gpf 1 0
+sf_str tom1
+sf_byte 10
+ret
+end
+sf_byte 80
+sf_byte 32
+em_line 0
+end
+
+fn em_local s ulong md ulong to void
+ep = get gep 0
+if ne get gns s ep
+put gns s ep
+k = get gkn 0
+put gnu s k
+put gkn 0 add k 1
+end
+if eq md 1
+sf_byte uchar get gpf 2
+else
+sf_byte 36
+end
+sf_dec get gnu s
+end
+
+fn em_tok f ulong t ulong md ulong to void
+s = get gts t
+if rn_ok f s
+em_local s md
+ret
+end
+g = get gfm s
+if and ne g 0 ne md 1
+em_call f sub g 1 s md
+ret
+end
+sf_sym s
+if ne get gdh s 0
+dl_add s
+end
+end
+
+fn em_call f ulong g ulong s ulong md ulong to void
+if eq g f
+sf_str tself
+ret
+end
+if eq md 2
+if eq get gfc g get gfc f
+sf_sym s
+ret
+end
+end
+sf_byte 35
+sf_fhash g
+if ne get gfd s 0
+sf_byte 58
+sf_sym s
+end
+end
+
+note emit fn f: md 0 hash, 1 canon, 2 hash inside a call cycle (own name and member names kept)
+fn em_fn f ulong md ulong to void
+it = get gfi f
+a = get gia it
+b = get gib it
+t0 = get gfp f
+put gdln 0 0
+if ne md 1
+em_hdr
+em_other
+end
+for x ulong 2097152
+if gt a b
+break
+end
+em_fl f a t0 md
+a = add a 1
+end
+if ne md 1
+em_decls
+end
+end
+
+fn em_fl f ulong l ulong t0 ulong md ulong to void
+t = get glf l
+c = get glc l
+w = false
+for i ulong c
+tt = add t i
+if eq tt t0
+if ne md 0
+if w
+sf_byte 32
+end
+sf_sym get gts tt
+w = true
+end
+continue
+end
+if w
+sf_byte 32
+end
+w = true
+em_tok f tt md
+end
+sf_byte 10
+end
+
+fn em_other to void
+n = get gitn 0
+ep = get gep 0
+for i ulong 65536
+if ge i n
+break
+end
+if eq get gik i 3
+if ne get gis i ep
+put gis i ep
+k = get gdln 0
+put gdl k i
+put gdln 0 add k 1
+end
+end
+end
+end
+
+fn em_decls to void
+i = ulong 0
+for a ulong 65536
+if ge i get gdln 0
+break
+end
+sf_byte 68
+sf_byte 10
+em_item get gdl i
+i = add i 1
+end
+end
+
+note ---------------------------------------------------------------- call graph and hashes
+fn cg_edges f ulong to void
+it = get gfi f
+l = get gia it
+b = get gib it
+t0 = get gfp f
+put gfcs f get gcen 0
+for a ulong 2097152
+if gt l b
+break
+end
+t = get glf l
+for i ulong get glc l
+cg_tok f add t i t0
+end
+l = add l 1
+end
+put gfo f get gfcn f
+end
+
+fn cg_tok f ulong t ulong t0 ulong to void
+if eq t t0
+ret
+end
+g = get gfm get gts t
+if eq g 0
+ret
+end
+g = sub g 1
+if eq g f
+ret
+end
+if eq get gcst g add f 1
+ret
+end
+put gcst g add f 1
+n = get gcen 0
+if ge n 524288
+rf_die ecap
+end
+put gce n g
+put gcen 0 add n 1
+put gfcn f add get gfcn f 1
+put gfrn g add get gfrn g 1
+end
+
+fn cg_build to void
+nf = get gfnn 0
+for f ulong nf
+cg_edges f
+end
+s = ulong 0
+for g ulong nf
+put gfrs g s
+put gcur g s
+s = add s get gfrn g
+end
+for h ulong nf
+cg_rev h
+end
+end
+
+fn cg_rev f ulong to void
+o = get gfcs f
+for i ulong get gfcn f
+g = get gce add o i
+c = get gcur g
+put gre c f
+put gcur g add c 1
+end
+end
+
+fn hs_one f ulong to void
+fn_prep f
+put gsfn 0 0
+em_fn f 0
+sh_stream
+hr_tofn f
+put gfk f 1
+end
+
+note Kahn order over the call graph: a fn is hashed once all its callees are
+fn hs_dag to void
+nf = get gfnn 0
+qh = ulong 0
+qt = ulong 0
+for f ulong nf
+if eq get gfo f 0
+put gq qt f
+qt = add qt 1
+end
+end
+for a ulong 8192
+if ge qh qt
+break
+end
+g = get gq qh
+qh = add qh 1
+hs_one g
+qt = hs_rel g qt
+end
+end
+
+fn hs_rel g ulong qt ulong to ulong
+o = get gfrs g
+n = qt
+for i ulong get gfrn g
+c = get gre add o i
+d = sub get gfo c 1
+put gfo c d
+if eq d 0
+put gq n c
+n = add n 1
+end
+end
+ret n
+end
+
+note reachability from r among unhashed fns; dir 0 callees into gm1, 1 callers into gm2
+fn sc_reach r ulong dir ulong to void
+st = add r 1
+qh = ulong 0
+qt = ulong 1
+put gq 0 r
+sc_mark r dir st
+for a ulong 8192
+if ge qh qt
+break
+end
+f = get gq qh
+qh = add qh 1
+qt = sc_step f dir st qt
+end
+end
+
+fn sc_mark f ulong dir ulong st ulong to void
+if eq dir 0
+put gm1 f st
+else
+put gm2 f st
+end
+end
+
+fn sc_seen f ulong dir ulong st ulong to bool
+if eq dir 0
+ret eq get gm1 f st
+end
+ret eq get gm2 f st
+end
+
+fn sc_step f ulong dir ulong st ulong qt ulong to ulong
+n = qt
+o = get gfcs f
+c = get gfcn f
+if eq dir 1
+o = get gfrs f
+c = get gfrn f
+end
+for i ulong c
+g = sc_nb o i dir
+if eq get gfk g 0
+if not sc_seen g dir st
+sc_mark g dir st
+put gq n g
+n = add n 1
+end
+end
+end
+ret n
+end
+
+fn sc_nb o ulong i ulong dir ulong to ulong
+if eq dir 0
+ret get gce add o i
+end
+ret get gre add o i
+end
+
+fn sc_all to void
+nf = get gfnn 0
+for r ulong nf
+if and eq get gfk r 0 eq get gfc r 0
+sc_one r
+end
+end
+end
+
+fn sc_one r ulong to void
+sc_reach r 0
+sc_reach r 1
+st = add r 1
+nf = get gfnn 0
+z = ulong 0
+for f ulong nf
+if and eq get gm1 f st eq get gm2 f st
+put gfc f st
+z = add z 1
+end
+end
+put gfz r z
+end
+
+fn sc_ready r ulong to bool
+st = add r 1
+nf = get gfnn 0
+for f ulong nf
+if eq get gfc f st
+if not sc_fnok f st
+ret false
+end
+end
+end
+ret true
+end
+
+fn sc_fnok f ulong st ulong to bool
+o = get gfcs f
+for i ulong get gfcn f
+g = get gce add o i
+if ne get gfc g st
+if eq get gfk g 0
+ret false
+end
+end
+end
+ret true
+end
+
+fn sc_hash r ulong to void
+if eq get gfz r 1
+hs_one r
+ret
+end
+st = add r 1
+nf = get gfnn 0
+k = ulong 0
+for f ulong nf
+if eq get gfc f st
+fn_prep f
+put gsfn 0 0
+em_fn f 2
+sh_stream
+dg_put f
+put gq k f
+k = add k 1
+end
+end
+dg_sort k
+put gsfn 0 0
+for i ulong k
+dg_emit get gq i
+end
+sh_stream
+for j ulong 32
+put ggr j get ghr j
+end
+for m ulong k
+sc_final get gq m
+end
+end
+
+fn dg_put f ulong to void
+o = mul f 32
+for i ulong 32
+put gfg add o i get ghr i
+end
+end
+
+fn dg_emit f ulong to void
+o = mul f 32
+for i ulong 32
+sf_byte get gfg add o i
+end
+end
+
+fn sc_final f ulong to void
+put gsfn 0 0
+sf_byte 83
+dg_emit f
+for i ulong 32
+sf_byte get ggr i
+end
+sh_stream
+hr_tofn f
+put gfk f 1
+end
+
+note true when digest of fn a sorts before digest of fn b
+fn dg_lt a ulong b ulong to bool
+x = mul a 32
+y = mul b 32
+for i ulong 32
+u = get gfg add x i
+v = get gfg add y i
+if ne u v
+ret lt u v
+end
+end
+ret false
+end
+
+fn dg_sort k ulong to void
+for i ulong k
+m = i
+for j ulong k
+if gt j i
+if dg_lt get gq j get gq m
+m = j
+end
+end
+end
+t = get gq i
+put gq i get gq m
+put gq m t
+end
+end
+
+fn hs_all to void
+cg_build
+hs_dag
+sc_all
+nf = get gfnn 0
+for p ulong 8192
+if not hs_pass nf
+break
+end
+end
+for f ulong nf
+if eq get gfk f 0
+exit 91
+end
+end
+end
+
+fn hs_pass nf ulong to bool
+pr = false
+for r ulong nf
+if and eq get gfk r 0 eq get gfc r add r 1
+if sc_ready r
+sc_hash r
+pr = true
+end
+end
+end
+ret pr
+end
+
+fn un_hash to void
+put gsfn 0 0
+em_hdr
+n = get gitn 0
+for i ulong n
+un_item i
+end
+sh_stream
+end
+
+fn un_item i ulong to void
+k = get gik i
+if eq k 4
+ret
+end
+if ne k 1
+em_item i
+ret
+end
+f = sub get gfm get gts get gfp un_fnof i 1
+sf_str tfn
+sf_sym get gfs f
+sf_byte 32
+sf_fhash f
+sf_byte 10
+end
+
+fn un_fnof i ulong to ulong
+nf = get gfnn 0
+for f ulong nf
+if eq get gfi f i
+ret f
+end
+end
+exit 92
+end
+
+fn hp_run to void
+in_check
+tk_all
+it_all
+hs_all
+end
+
+note ---------------------------------------------------------------- modes
+fn md_hash to void
+hp_run
+nf = get gfnn 0
+for f ulong nf
+ob_str tfn
+ob_sym get gfs f
+ob_byte 32
+ob_fhash f
+ob_str tline
+ob_dec get gll get gia get gfi f
+if ne get gfv f 0
+ob_str tverb
+end
+if ne get gfc f 0
+if gt get gfz sub get gfc f 1 1
+ob_str tcyc
+end
+end
+ob_byte 10
+end
+un_hash
+ob_str tunit
+for i ulong 32
+v = ulong get ghr i
+ob_byte hx_dig shr v 4
+ob_byte hx_dig and v 15
+end
+ob_str tfns
+ob_dec nf
+ob_byte 10
+end
+
+note canon letter: first of v w y z q that no kept token uses as letter+digits
+fn cn_letidx s ulong to ulong
+n = get gsl s
+if lt n 2
+ret 9
+end
+o = get gso s
+for i ulong n
+if gt i 0
+c = get gsb add o i
+if or lt c 48 gt c 57
+ret 9
+end
+end
+end
+c = get gsb o
+if eq c 118
+ret 0
+end
+if eq c 119
+ret 1
+end
+if eq c 121
+ret 2
+end
+if eq c 122
+ret 3
+end
+if eq c 113
+ret 4
+end
+ret 9
+end
+
+fn cn_mark s ulong to void
+k = cn_letidx s
+if lt k 5
+put gbad k 1
+end
+end
+
+fn cn_scanfn f ulong to void
+fn_prep f
+it = get gfi f
+l = get gia it
+b = get gib it
+for a ulong 2097152
+if gt l b
+break
+end
+t = get glf l
+for i ulong get glc l
+s = get gts add t i
+if not rn_ok f s
+cn_mark s
+end
+end
+l = add l 1
+end
+end
+
+fn cn_letter to void
+for k ulong 5
+put gbad k 0
+end
+nf = get gfnn 0
+for f ulong nf
+cn_scanfn f
+end
+nl = get gln 0
+for l ulong nl
+t = get glf l
+for i ulong get glc l
+cn_mark get gts add t i
+end
+end
+put gpf 2 cn_pick
+end
+
+fn cn_pick to ulong
+if eq get gbad 0 0
+ret 118
+end
+if eq get gbad 1 0
+ret 119
+end
+if eq get gbad 2 0
+ret 121
+end
+if eq get gbad 3 0
+ret 122
+end
+if eq get gbad 4 0
+ret 113
+end
+rf_die eletr
+ret 0
+end
+
+fn cn_raw0 to void
+a = get glr 0
+b = get glw 0
+for i ulong 8388609
+if ge add a i b
+break
+end
+sf_byte get gin add a i
+end
+sf_byte 10
+end
+
+fn md_canon to void
+in_check
+tk_all
+it_all
+if ne get gpf 1 0
+if gt get glc 0 1
+if eq ln_tok 0 1 get gsp 4
+rf_die efmt
+end
+end
+end
+cn_letter
+n = get gitn 0
+for i ulong n
+cn_item i
+end
+end
+
+note a first line that is not an exact profile lead (om2 with a trailing blank, say) is copied raw,
+note so canon never turns it into a lead omc would accept
+fn cn_item i ulong to void
+put gsfn 0 0
+k = get gik i
+if eq k 1
+f = un_fnof i
+fn_prep f
+em_fn f 1
+end
+if and eq k 3 eq get gia i 0
+cn_raw0
+end
+if or eq k 2 eq k 4
+em_item i
+end
+if and eq k 3 ne get gia i 0
+em_item i
+end
+n = get gsfn 0
+for j ulong 16777216
+if ge j n
+break
+end
+ob_byte get gsf j
+end
+end
+
+note ---------------------------------------------------------------- diff
+fn df_save sd ulong to void
+nf = get gfnn 0
+base = mul sd 8192
+put gwc sd nf
+for f ulong nf
+df_one add base f f
+end
+end
+
+fn df_one w ulong f ulong to void
+s = get gfs f
+p = get gwp 0
+n = get gsl s
+if gt add p n 1048576
+rf_die ecap
+end
+o = get gso s
+for i ulong n
+put gwb add p i get gsb add o i
+end
+put gwo w p
+put gwl w n
+put gwp 0 add p n
+put gwm w 0
+put gwx w get gfx f
+x = mul w 32
+y = mul f 32
+for j ulong 32
+put gwh add x j get gfh add y j
+end
+end
+
+fn df_neq a ulong b ulong to bool
+n = get gwl a
+if ne n get gwl b
+ret false
+end
+x = get gwo a
+y = get gwo b
+for i ulong n
+if ne get gwb add x i get gwb add y i
+ret false
+end
+end
+ret true
+end
+
+fn df_heq a ulong b ulong to bool
+x = mul a 32
+y = mul b 32
+for i ulong 32
+if ne get gwh add x i get gwh add y i
+ret false
+end
+end
+ret true
+end
+
+note index of the fn named like w on side sd, or 16384
+fn df_find w ulong sd ulong to ulong
+base = mul sd 8192
+for i ulong get gwc sd
+if df_neq w add base i
+ret add base i
+end
+end
+ret 16384
+end
+
+fn df_name w ulong to void
+o = get gwo w
+for i ulong get gwl w
+ob_byte get gwb add o i
+end
+end
+
+fn df_line t view uchar * w ulong to void
+ob_str t
+df_name w
+ob_byte 10
+end
+
+fn df_left a ulong to ulong
+j = df_find a 1
+if ne j 16384
+put gwm j 1
+if df_heq a j
+df_line tsame a
+ret 0
+end
+df_line tchg a
+ret 1
+end
+for i ulong get gwc 1
+j = add 8192 i
+if eq get gwm j 0
+if df_heq a j
+if eq df_find j 0 16384
+put gwm j 1
+ob_str tren
+df_name a
+ob_str tarr
+df_name j
+ob_byte 10
+ret 1
+end
+end
+end
+end
+df_line trem a
+ret 1
+end
+
+fn df_main sd ulong to bool
+base = mul sd 8192
+for i ulong get gwc sd
+if df_ismain add base i
+ret true
+end
+end
+ret false
+end
+
+fn df_ismain w ulong to bool
+s = get gsp 8
+if ne get gwl w get gsl s
+ret false
+end
+o = get gwo w
+q = get gso s
+for i ulong get gwl w
+u = get gwb add o i
+if ne u get gsb add q i
+ret false
+end
+end
+ret true
+end
+
+fn df_nexp sd ulong k ulong to ulong
+base = mul sd 8192
+for i ulong get gwc sd
+w = add base i
+if ne get gwx w 0
+if eq k 0
+ret w
+end
+k = sub k 1
+end
+end
+ret 16384
+end
+
+fn df_exports to ulong
+for k ulong 8193
+a = df_nexp 0 k
+b = df_nexp 1 k
+if and eq a 16384 eq b 16384
+ret 0
+end
+if or eq a 16384 eq b 16384
+ob_str texp
+ret 1
+end
+if not df_neq a b
+ob_str texp
+ret 1
+end
+end
+ret 0
+end
+
+fn df_entry to ulong
+if or df_main 0 df_main 1
+ret 0
+end
+if or ne df_nexp 0 0 16384 ne df_nexp 1 0 16384
+ret 0
+end
+na = get gwc 0
+nb = get gwc 1
+if or eq na 0 eq nb 0
+ret 0
+end
+a = sub na 1
+b = add 8192 sub nb 1
+if df_neq a b
+ret 0
+end
+ob_str tent
+df_name a
+ob_str tarr
+df_name b
+ob_byte 10
+ret 1
+end
+
+fn md_diff to int
+put gwp 0 0
+for sd ulong 2
+if gt sd 0
+st_reset
+end
+in_file add sd 2
+hp_run
+df_save sd
+end
+nd = ulong 0
+for i ulong get gwc 0
+nd = add nd df_left i
+end
+for j ulong get gwc 1
+w = add 8192 j
+if eq get gwm w 0
+df_line tadd w
+nd = add nd 1
+end
+end
+nd = add nd df_exports
+nd = add nd df_entry
+if eq nd 0
+ob_str tdsame
+ret 0
+end
+ob_str tdchg
+ob_dec nd
+ob_byte 10
+ret 1
+end
+
+fn ar_eq a view uchar * n ulong t view uchar * to bool
+if ne n len t
+ret false
+end
+for i ulong n
+if ne get a i get t i
+ret false
+end
+end
+ret true
+end
+
+fn main to int
+st_reset
+c = argcnt
+if lt c 2
+in_stdin
+md_hash
+ob_flush
+ret 0
+end
+pb = new uchar 64 0
+r = argread 1 pb 0 64
+if le r 0
+die_msg eusage 2
+end
+n = ulong r
+if and ar_eq pb n mdiff eq c 4
+x = md_diff
+ob_flush
+ret x
+end
+if ne c 2
+die_msg eusage 2
+end
+if ar_eq pb n mhash
+in_stdin
+md_hash
+ob_flush
+ret 0
+end
+if ar_eq pb n mcanon
+in_stdin
+md_canon
+ob_flush
+ret 0
+end
+if ar_eq pb n mkw
+ob_str tkw1
+ob_str tkw2
+ob_flush
+ret 0
+end
+die_msg eusage 2
+ret 2
+end
