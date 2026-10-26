@@ -229,6 +229,9 @@ note (pwid, pslot); psl counts the slots of the fn line being read (6 at most, e
 note count (kind 1 register / 3 number) of argument i of the call at value depth d, at d * 6 + i ----
 global nm_lr uchar 8192
 global nm_bk ulong 8192
+global hz_n ulong 1
+global hz_v ulong 8
+global bhz ulong 512
 global psl ulong 1
 global ul_k ulong 6156
 global ul_v ulong 6156
@@ -2694,6 +2697,7 @@ put bhead n head
 put breg n reg
 put btyp n ty
 put bdead n 0
+put bhz n get hz_n 0
 put nb 0 add n 1
 fz_push n
 end
@@ -3661,7 +3665,7 @@ end
 put rt 0 ty
 ret
 end
-ra = matreg get fr ix get fr add ix 1 ty
+ra = hzmat get fr ix get fr add ix 1 ty
 imm = ulong 0
 bk = get fr add ix 3
 bn = get fr add ix 4
@@ -3684,7 +3688,7 @@ if useimm
 rb = bn
 imm = ulong 1
 else
-rb = matreg bk bn get fr add ix 5
+rb = hzmat bk bn get fr add ix 5
 end
 if ge op 43
 bo_cmp op ty ra rb imm
@@ -3823,6 +3827,7 @@ put callto n f
 put ncalls 0 add n 1
 
 emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
+hzrem
 end
 
 note ======== element addresses and array arguments ========
@@ -3970,6 +3975,150 @@ end
 ret r
 end
 
+note ---- loop-invariant hoisting. A constant-count for (sf_num) loads, before its head, the constants its
+note body uses into x20 + j (j < 8, hz_v j the value, hz_n active): the address of a global array named
+note after get or put, a plain number after sub, any plain number above 4095. Uses take the register
+note holding the same value, so a register is right whatever line chose it: the base and number index of
+note elemaddr, the operands of binop (read only there) and the value of put. The callee of a BL may load
+note its own: hzrem reloads every active one after each BL. The block's close restores hz_n (bhz).
+note x20..x27 are callee-saved (AAPCS64): the native bridge trampoline saves and restores them.
+
+note hzfind: the register holding v (an active entry), 0 when none
+fn hzfind v ulong to ulong
+j = ulong 0
+while lt j get hz_n 0
+if eq get hz_v j v
+ret add j 20
+end
+j = add j 1
+end
+ret 0
+end
+
+note hzmat: matreg, except that a number held by an active entry is its register
+fn hzmat k ulong v ulong t ulong to ulong
+if eq k 3
+h = hzfind v
+if ne h 0
+ret h
+end
+end
+ret matreg k v t
+end
+
+note hzadd: load v into the next register (MOVZ/MOVN/MOVK), unless it is held or all 8 are active
+fn hzadd v ulong to void
+if eq hzfind v 0
+n = get hz_n 0
+if lt n 8
+put hz_v n v
+put hz_n 0 add n 1
+matconst add n 20 v
+end
+end
+end
+
+note hzrem: after a BL, load every active entry again
+fn hzrem to void
+j = ulong 0
+while lt j get hz_n 0
+matconst add j 20 get hz_v j
+j = add j 1
+end
+end
+
+note hzline: the candidates of the line at q (see above)
+fn hzline q ulong to void
+p = q
+pv = ulong 0
+go = true
+m = ulong 0
+while and go lt m 4096
+p = skipbl p
+if ge p get inlen 0
+go = false
+else
+b = get inp p
+if eq b 10
+go = false
+else
+x = pkword p
+e = get pk_e 0
+if eq get pk_l 0 0
+e = add p 1
+else
+if or eq pv 7628135 eq pv 7632240
+hzarr x get pk_l 0
+end
+v = pknum p
+if ne get pk_ok 0 0
+if or eq pv 6452595 gt v 4095
+hzadd v
+end
+end
+end
+pv = x
+p = e
+end
+end
+m = add m 1
+end
+end
+
+note hzarr: hoist the address of the global array (kind 4) or text (kind 5) packed as x (n bytes)
+fn hzarr x ulong n ulong to void
+if or eq n 0 gt n 8
+ret
+end
+if ne kw x 0
+ret
+end
+e = findname x
+if eq e 0
+ret
+end
+k = get nm_kind sub e 1
+if or eq k 4 eq k 5
+hzadd get nm_addr sub e 1
+end
+end
+
+note hzopen: the candidates of the lines from here to the matching end (if, while and for open, end
+note closes; a fn line or the end of the input stops; note lines are skipped)
+fn hzopen to void
+p = get cur 0
+d = ulong 1
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p get inlen 0
+go = false
+else
+p = skipbl p
+x = pkword p
+if or or eq x 26217 eq x 435610544247 eq x 7499622
+d = add d 1
+end
+if eq x 6581861
+d = sub d 1
+if eq d 0
+go = false
+end
+end
+if eq x 28262
+go = false
+end
+if and go ne x 1702129518
+hzline p
+end
+p = skipln p
+end
+m = add m 1
+end
+end
+end
+
 note eaem: the load or store word base (LDOP / STOP register-offset form) of register rt at ea_b / ea_i.
 note ea_i 255 (OM-2, a number index k = ea_k up to 4095): the unsigned-offset form instead, same size, V
 note (bit 26, the SIMD&FP forms) and opc bits, imm12 = k scaled by the element size (LDR/STR (immediate),
@@ -3987,9 +4136,10 @@ note be inside the array (error 21) and needs no check; a register index: CMP Xi
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
 note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
-note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6). A sized array's register index whose range
-note ixbound proved (ea_nb, 1 .. len) has no check: the dominating loop-head check already implies it.
-note A length above 4095 that is a multiple of 4096 up to 4095 * 4096 is CMP Xi, #len >> 12, LSL #12.
+note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6). OM-2: a sized array's register index whose
+note range ixbound proved (ea_nb, 1 .. len; only OM-2 sets nm_bk) has no check: the dominating loop-head
+note check already implies it; a length above 4095 that is a multiple of 4096 up to 4095 * 4096 is
+note CMP Xi, #len >> 12, LSL #12.
 fn elemaddr e ulong k ulong v ulong t ulong to void
 ixb = get ea_nb 0
 put ea_nb 0 0
@@ -4012,15 +4162,19 @@ if and ne get om2 0 0 le v 4095
 x = ulong 255
 put ea_k 0 v
 else
+x = hzfind v
+if eq x 0
 x = alloc
 matconst x v
+end
 end
 else
 if or eq ixb 0 gt ixb ln
 if le ln 4095
 emit or or 4043309087 shl ln 10 shl v 5
 else
-if and eq and ln 4095 0 le shr ln 12 4095
+lz = and ne get om2 0 0 eq and ln 4095 0
+if and lz le shr ln 12 4095
 emit or or 4047503391 shl shr ln 12 10 shl v 5
 else
 y = alloc
@@ -4034,8 +4188,11 @@ end
 end
 put ea_i 0 x
 if ge get nm_kind i 4
+b = hzfind get nm_addr i
+if eq b 0
 b = alloc
 matconst b get nm_addr i
+end
 put ea_b 0 b
 else
 put ea_b 0 ulong get nm_reg i
@@ -7347,7 +7504,7 @@ eaem or stop t 67108864 vv
 eol
 ret
 end
-v = matreg get rk 0 get rv 0 get rt 0
+v = hzmat get rk 0 get rv 0 get rt 0
 fz_put e ik iv
 put ea_nb 0 k
 elemaddr e ik iv it
@@ -7567,24 +7724,32 @@ end
 ret at
 end
 
-note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K, #K >> 12 LSL #12 (K a multiple
-note of 4096 up to 4095 * 4096) or Xk; B.HS/B.GE exit. om4 SF_NUM .. SF_PUSH. nm_bk(i) = K unless fwscan
-note finds a line that could assign i.
+note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K or Xk; B.HS/B.GE exit.
+note om4 SF_NUM .. SF_PUSH. OM-2 only (OM-1 code stays om4's, byte for byte): nm_bk(i) = K unless fwscan
+note finds a line that could assign i; the body's constants are hoisted (hzopen); K a multiple of 4096
+note up to 4095 * 4096 is CMP Xi, #K >> 12, LSL #12.
 fn sf_num w ulong t ulong kk ulong sn ulong sh ulong to void
 eol
 i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
+o2 = ne get om2 0 0
+if o2
 if eq fwscan w 0
 put nm_bk sub get nn 0 1 kk
 end
+end
 emit or 3531603968 i
+ho = get hz_n 0
+if o2
+hzopen
+end
 hd = get oc 0
 cp_head get cur 0 get line 0
 if le kk 4095
 emit or or 4043309087 shl kk 10 shl i 5
 else
-if and eq and kk 4095 0 le shr kk 12 4095
+if and o2 and eq and kk 4095 0 le shr kk 12 4095
 emit or or 4047503391 shl shr kk 12 10 shl i 5
 else
 k = alloc
@@ -7594,6 +7759,7 @@ end
 end
 br = sf_br t
 pushb br 4 hd i t
+put bhz sub get nb 0 1 ho
 pushnh sn sh
 cp_skip
 end
@@ -8526,6 +8692,7 @@ finish
 ret
 end
 i = sub n 1
+put hz_n 0 get bhz i
 if eq get bkind i 5
 s_unr i
 ret
