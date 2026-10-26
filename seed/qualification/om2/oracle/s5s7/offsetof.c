@@ -7,9 +7,14 @@
  *   build/om2-qual/s5s7-offsetof build/om2-qual/s5s7-shactx.bin
  * stdout: the offsets and sizes the layout line must equal; argv[1]: the 104-byte image of a
  * sha256_ctx with state[i] = 0x10203040 + i, count = 0x0123456789abcdef, buffer[j] = 3j+1. */
+/* fdopen/open are POSIX, and the documented build uses -std=c11 (strict ISO). */
+#define _POSIX_C_SOURCE 200809L
+
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "sha256.h"
 
@@ -47,8 +52,17 @@ int main(int argc, char **argv)
     for (i = 0; i < 64; i++)
         c.buffer[i] = (unsigned char)(3 * i + 1);
     if (argc > 1) {
-        f = fopen(argv[1], "wb");
-        if (!f || fwrite(&c, 1, sizeof c, f) != sizeof c || fclose(f) != 0)
+        /* 0600, never the 0666 fopen would leave under a permissive umask: the image is
+         * oracle output, not something other users should write to. */
+        int fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        if (fd < 0)
+            return 2;
+        f = fdopen(fd, "wb");
+        if (!f) {
+            close(fd);
+            return 2;
+        }
+        if (fwrite(&c, 1, sizeof c, f) != sizeof c || fclose(f) != 0)
             return 2;
     }
     return bad;

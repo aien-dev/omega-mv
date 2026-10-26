@@ -200,6 +200,25 @@ static uint32_t stream(const uint8_t *m, size_t n, const size_t *plan, size_t np
     return s;
 }
 
+/* A file: fixture name must be one plain component: letters, digits, dot, underscore, dash. It is
+ * joined to ROOT below, so anything that could leave ROOT is refused (no slash, no leading dot,
+ * therefore no ".."). */
+static int safe_name(const char *s)
+{
+    size_t i, n = strlen(s);
+    if (n == 0 || n > 200)
+        return 0;
+    if (s[0] == '.')
+        return 0;
+    for (i = 0; i < n; i++) {
+        char ch = s[i];
+        if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
+              || ch == '.' || ch == '_' || ch == '-'))
+            return 0;
+    }
+    return 1;
+}
+
 /* ---- vec ---------------------------------------------------------------------------------------- */
 static uint8_t *genmsg(const char *spec, const char *root, size_t n)
 {
@@ -218,7 +237,16 @@ static uint8_t *genmsg(const char *spec, const char *root, size_t n)
         rndfill(m, n, strtoull(spec + 4, NULL, 10));
     } else if (strncmp(spec, "file:", 5) == 0) {
         char path[4096];
-        snprintf(path, sizeof path, "%s/%s", root, spec + 5);
+        int len;
+        if (!safe_name(spec + 5)) {
+            fprintf(stderr, "refused file name %s\n", spec + 5);
+            exit(3);
+        }
+        len = snprintf(path, sizeof path, "%s/%s", root, spec + 5);
+        if (len < 0 || (size_t)len >= sizeof path) {
+            fprintf(stderr, "path too long for %s\n", spec + 5);
+            exit(3);
+        }
         FILE *f = fopen(path, "rb");
         if (!f || fread(m, 1, n, f) != n) {
             fprintf(stderr, "cannot read %s\n", path);

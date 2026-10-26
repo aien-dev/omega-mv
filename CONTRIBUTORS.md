@@ -16,6 +16,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Codex | C5 kernel-dump private exclusive creation, failure handling, and source-bound host safety checks |
 | Codex | C6 private kernel dumps and temporary listings, bounded dump filenames, descriptor-safe readback, and source-bound host safety checks |
 | Claude Opus 5.5 | Ionic-droplet reservoir (#440): pinned reference, CPU simulator and readout, `.mat` reader, Gate 2 comparison, benchmarks, timing and receipt |
+| Claude Fable 5.1 | CodeQL high-severity fixes in the OM-2 oracles: 0600 image creation in offsetof.c, fixture-name allowlist and truncation check in sha_qual.c |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
