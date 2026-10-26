@@ -71,7 +71,7 @@ duplicate|10|const N uint 5\nconst N uint 6\nfn main to int\nret 0\nend
 out_of_range|8|const N uchar 300\nfn main to int\nret 0\nend
 ir_float_const|9|ir\nconst H f64 0.1\nfn f to f64\nret H\nend
 extra_word|5|const N uint 5 6\nfn main to int\nret 0\nend
-long_name|13|const abcdefghi uint 5\nfn main to int\nret 0\nend
+long_name|13|const abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd uint 5\nfn main to int\nret 0\nend
 reserved|16|const while uint 5\nfn main to int\nret 0\nend
 missing_value|4|const N uint\nfn main to int\nret 0\nend
 inside_fn|16|fn main to int\nconst N uint 5\nret 0\nend

@@ -133,7 +133,7 @@ t 23 'global g uchar 9223372036854775808\nfn main to int\nret 0\nend\n' '24: a p
 t 9  'fn main to int\nx = new uint 4 0\nfree x\nret 0\nend\n' '24: free is not a word (no heap, nothing given back by hand)'
 t 9  'fn f a int b int to int\nret 0\nend\nfn g to int\nx = own a\nret 0\nend\n' 'own is not in the subset'
 t 10 'fn f a uint to uint\nret a\nend\nfn g f uint to uint\nret f\nend\n' 'a name equal to a function'
-t 13 'fn f a uint to uint\nabcdefghi = a\nret a\nend\n' 'a variable over 8 characters'
+t 13 'fn f a uint to uint\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd = a\nret a\nend\n' 'a 64-character variable (om4 refuses over 8, omc over 63)'
 t 15 'fn f a uint to uint\nret a\n' 'a function without end'
 t 14 "fn f a ulong to ulong\nx = $(printf 'neg %.0s' $(seq 1025))a\nret x\nend\n" '23: values nested over 1024 deep (a capacity, refused not overrun)'
 t 16 'end\n' 'end outside a function'

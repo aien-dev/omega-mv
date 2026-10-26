@@ -1,0 +1,58 @@
+# Declared C2 delta for the long-names change (omega-mv #837): names of 9..63 bytes are compared in full; error 13 now means over 63. manifest-c2.txt stays frozen.
+# Each row below expected error 13 for a 9- or 10-byte name. Under the candidate each gives exactly the exit, stdout and stderr that the pinned compiler 2c824805 gives on the same program with the long name shortened to 8 bytes (the program the old limit implied).
+# c2-00665: the long name is now accepted; the program compiles.
+c2-00665 emit pack:seed/qualification/om2/c2/corpus.pack:490126:40 sha:878d1ef08bd1640cfe8730c9ec0289bffdc61a98257dd6dcaf299117448efa91 - 0
+# c2-00700: the long name is now accepted; the program compiles.
+c2-00700 emit pack:seed/qualification/om2/c2/corpus.pack:516076:48 sha:4caebbb143d76413098649f9569eadc495aad8ca744a91ba7b29fe1bad4c7471 - 0
+# c2-00836: the long name is now accepted; the program compiles.
+c2-00836 emit pack:seed/qualification/om2/c2/corpus.pack:540709:44 sha:c4edf24cc46e9bbeec77592b398d9e48588e4711fefd5e4b96b1707145351d85 - 0
+# c2-00996: the long name is now accepted; the program compiles.
+c2-00996 emit pack:seed/qualification/om2/c2/corpus.pack:597947:369 sha:4d41925da444e49399ff48ae6ee756fb50c7ef28915a01c74d23ab5a09ab5eec - 0
+# c2-01255: was error 13 at line 18; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 18).
+c2-01255 emit pack:seed/qualification/om2/c2/corpus.pack:711213:478 - err:18:3 3
+# c2-01411: was error 13 at line 15; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 15).
+c2-01411 emit pack:seed/qualification/om2/c2/corpus.pack:765792:275 - err:15:3 3
+# c2-01738: was error 13 at line 23; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 23).
+c2-01738 emit pack:seed/qualification/om2/c2/corpus.pack:885194:496 - err:23:3 3
+# c2-01801: was error 13 at line 14; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 14).
+c2-01801 emit pack:seed/qualification/om2/c2/corpus.pack:922076:497 - err:14:3 3
+# c2-02180: was error 13 at line 30; the long name is read in full as a statement word; the next line is then incomplete (error 4), as for an 8-byte name (line 31).
+c2-02180 emit pack:seed/qualification/om2/c2/corpus.pack:1208556:1209 - err:31:4 4
+# c2-02327: was error 13 at line 64; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 64).
+c2-02327 emit pack:seed/qualification/om2/c2/corpus.pack:1399508:1206 - err:64:3 3
+# c2-02372: was error 13 at line 7; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 7).
+c2-02372 emit pack:seed/qualification/om2/c2/corpus.pack:1457964:1209 - err:7:3 3
+# c2-02393: was error 13 at line 9; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 9).
+c2-02393 emit pack:seed/qualification/om2/c2/corpus.pack:1485224:1209 - err:9:3 3
+# c2-02435: was error 13 at line 18; the long name is read in full as a statement word; the next line is then incomplete (error 4), as for an 8-byte name (line 19).
+c2-02435 emit pack:seed/qualification/om2/c2/corpus.pack:1539765:1208 - err:19:4 4
+# c2-02742: was error 13 at line 21; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 21).
+c2-02742 emit pack:seed/qualification/om2/c2/corpus.pack:1660512:689 - err:21:3 3
+# c2-02768: was error 13 at line 27; the long name is read in full as a statement word; the next line is then incomplete (error 4), as for an 8-byte name (line 28).
+c2-02768 emit pack:seed/qualification/om2/c2/corpus.pack:1680741:689 - err:28:4 4
+# c2-02779: was error 13 at line 29; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 29).
+c2-02779 emit pack:seed/qualification/om2/c2/corpus.pack:1689302:691 - err:29:3 3
+# c2-02804: was error 13 at line 34; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 34).
+c2-02804 emit pack:seed/qualification/om2/c2/corpus.pack:1708747:691 - err:34:3 3
+# c2-02809: was error 13 at line 34; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 34).
+c2-02809 emit pack:seed/qualification/om2/c2/corpus.pack:1712642:689 - err:34:3 3
+# c2-03322: was error 13 at line 5; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 5).
+c2-03322 emit pack:seed/qualification/om2/c2/corpus.pack:1976147:650 - err:5:3 3
+# c2-03880: was error 13 at line 19; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 19).
+c2-03880 emit pack:seed/qualification/om2/c2/corpus.pack:2216748:478 - err:19:3 3
+# c2-03951: was error 13 at line 11; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 11).
+c2-03951 emit pack:seed/qualification/om2/c2/corpus.pack:2257066:480 - err:11:3 3
+# c2-03968: was error 13 at line 13; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 13).
+c2-03968 emit pack:seed/qualification/om2/c2/corpus.pack:2266721:477 - err:13:3 3
+# c2-04446: the long name is now accepted; the program compiles.
+c2-04446 emit pack:seed/qualification/om2/c2/corpus.pack:2504251:576 sha:c3d73e6ff3d33c57a9c7f5e13057aca628996fe43da2cd7a049ce238653c4529 - 0
+# c2-04475: was error 13 at line 30; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 30).
+c2-04475 emit pack:seed/qualification/om2/c2/corpus.pack:2523540:574 - err:30:3 3
+# c2-04567: was error 13 at line 1; the long name is read in full as a statement word; the next line is then incomplete (error 4), as for an 8-byte name (line 2).
+c2-04567 emit pack:seed/qualification/om2/c2/corpus.pack:2584649:576 - err:2:4 4
+# c2-04962: was error 13 at line 1; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 3).
+c2-04962 emit pack:seed/qualification/om2/c2/corpus.pack:2759587:216 - err:3:3 3
+# c2-05116: was error 13 at line 11; the long name is read in full and is not declared: error 3 (unknown name), as for an 8-byte name (line 11).
+c2-05116 emit pack:seed/qualification/om2/c2/corpus.pack:2812741:357 - err:11:3 3
+# c2-05700: the long name is now accepted; the program compiles.
+c2-05700 emit pack:seed/qualification/om2/c2/corpus.pack:3120761:42 sha:878d1ef08bd1640cfe8730c9ec0289bffdc61a98257dd6dcaf299117448efa91 - 0
