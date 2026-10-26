@@ -1,0 +1,724 @@
+note seed/json/tests/jsdrv.om: test driver for the JSON units (program mode). Composed after json.om, jsonw.om
+note and jsonf.om under one `om2` line by tests/gate-json.sh. Usage: jsdrv MODE [A2 [A3]] < input
+note   t SLIM DLIM  token stream (one line per token, then OK) plus span/match/length self-checks
+note   w SLIM DLIM  the same stream produced by walking the tape with js_first/js_mnext/js_enext/js_match
+note   f SLIM DLIM  per number token: shortest f64 text, f64 bits in hex, integer class, integer value or -
+note   r SLIM DLIM  the parsed tokens re-written through js_wtok (exact bytes, no newline)
+note   a CAP        writer script (README section Writer tests) into an output array of CAP bytes
+note A refused parse prints `ERR code pos`; a refused js_init prints `INIT -code`. Exit 0 after printing;
+note 90 output or input error, 91 a self-check failed, 92 usage, 93 input larger than the driver's array.
+
+note Array sizes are literals, not consts: at omc befb8199 a `const` defined after any `fn` makes a later
+note signature that names an earlier const (here jsfs) fail with error 16. Sizes: source 524288 bytes,
+note tape 262144 cells, writer 1048576 bytes, small decode buffer 4096 bytes (tests/gen.py mirrors them).
+
+note ======== output ========
+
+note dv_w1: write all of b[o .. o + m), m <= 65536; each pass writes at least one byte
+fn dv_w1 b view uchar * o ulong m ulong to void
+q = ulong 0
+while lt q m bound 65537
+s = add o q
+k = write 1 b s sub m q
+if le k 0
+exit 90
+end
+q = add q ulong k
+end
+end
+
+fn dv_w b view uchar * o ulong n ulong to void
+if or gt n len b gt o sub len b n
+exit 90
+end
+p = ulong 0
+for i ulong add div n 65536 1
+m = sub n p
+if gt m 65536
+m = 65536
+end
+dv_w1 b add o p m
+p = add p m
+end
+end
+
+fn dv_c c uchar to void
+b = new uchar 1 0
+put b 0 c
+dv_w b 0 1
+end
+
+fn dv_nl to void
+dv_c 10
+end
+
+fn dv_dec v ulong to void
+b = new uchar 20 0
+k = ulong 20
+x = v
+for i ulong 20
+k = sub k 1
+put b k uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+dv_w b k sub 20 k
+end
+
+fn dv_hexd v ulong to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+
+fn dv_hexc b view uchar * p ulong m ulong to void
+h = new uchar 8192 0
+for j ulong m
+c = ulong get b add p j
+k = mul j 2
+put h k dv_hexd shr c 4
+put h add k 1 dv_hexd and c 15
+end
+dv_w h 0 mul m 2
+end
+
+fn dv_hex b view uchar * n ulong to void
+p = ulong 0
+for i ulong add div n 4096 1
+m = sub n p
+if gt m 4096
+m = 4096
+end
+dv_hexc b p m
+p = add p m
+end
+end
+
+fn dv_hex16 v ulong to void
+h = new uchar 16 0
+for i ulong 16
+put h i dv_hexd and shr v mul sub 15 i 4 15
+end
+dv_w h 0 16
+end
+
+fn dv_ok to void
+dv_c 79
+dv_c 75
+dv_nl
+end
+
+fn dv_err c ulong p ulong to void
+dv_c 69
+dv_c 82
+dv_c 82
+dv_c 32
+dv_dec c
+dv_c 32
+dv_dec p
+dv_nl
+end
+
+note ======== input and arguments ========
+
+fn dv_read src edit uchar * to ulong
+p = ulong 0
+while lt p len src bound 524289
+k = read 0 src p sub len src p
+if lt k 0
+exit 90
+end
+if eq k 0
+ret p
+end
+p = add p ulong k
+end
+x = new uchar 1 0
+k = read 0 x 0 1
+if ne k 0
+exit 93
+end
+ret p
+end
+
+fn dv_arg i ulong d ulong to ulong
+b = new uchar 32 0
+if le argcnt long i
+ret d
+end
+k = argread i b 0 32
+if le k 0
+exit 92
+end
+v = ulong 0
+for j ulong ulong k
+c = get b j
+if or lt c 48 gt c 57
+exit 92
+end
+if gt v 100000000000
+exit 92
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+
+fn dv_mode to uchar
+b = new uchar 2 0
+if lt argcnt 2
+exit 92
+end
+k = argread 1 b 0 2
+if ne k 1
+exit 92
+end
+ret get b 0
+end
+
+note ======== token stream ========
+
+fn dv_strbig src view uchar * off ulong to long
+db = new uchar 524288 0
+k = js_sget src off db
+if ge k 0
+dv_hex db ulong k
+end
+ret k
+end
+
+fn dv_strsm src view uchar * off ulong to long
+db = new uchar 4096 0
+k = js_sget src off db
+if ge k 0
+dv_hex db ulong k
+end
+ret k
+end
+
+note dv_str: letter c, a space, the decoded bytes in hex; the decoded length must equal js_slen
+fn dv_str src view uchar * tape view uint * t ulong c uchar to void
+dv_c c
+dv_c 32
+l = js_slen tape t
+k = long 0
+if le l 4096
+k = dv_strsm src js_off tape t
+else
+k = dv_strbig src js_off tape t
+end
+if lt k 0
+exit 91
+end
+if ne ulong k l
+exit 91
+end
+dv_nl
+end
+
+fn dv_tok src view uchar * tape view uint * t ulong to void
+ty = js_type tape t
+if or eq ty jsobj eq ty jsarr
+if eq ty jsobj
+dv_c 123
+else
+dv_c 91
+end
+dv_dec js_nkids tape t
+dv_nl
+ret
+end
+if eq ty jsobje
+dv_c 125
+dv_nl
+ret
+end
+if eq ty jsarre
+dv_c 93
+dv_nl
+ret
+end
+if eq ty jskey
+dv_str src tape t 75
+ret
+end
+if eq ty jsstr
+dv_str src tape t 83
+ret
+end
+if eq ty jsnum
+dv_c 78
+dv_c 32
+dv_w src js_off tape t js_span tape t
+dv_nl
+ret
+end
+if eq ty jstrue
+dv_c 84
+dv_nl
+ret
+end
+if eq ty jsfalse
+dv_c 70
+dv_nl
+ret
+end
+if eq ty jsnull
+dv_c 90
+dv_nl
+ret
+end
+exit 91
+end
+
+note ======== self-checks of spans, matches and flags ========
+
+fn dv_chkc src view uchar * tape view uint * t ulong to void
+ty = js_type tape t
+o = js_off tape t
+m = js_match tape t
+if ne js_match tape m t
+exit 91
+end
+if ne js_type tape m add ty 1
+exit 91
+end
+if ne js_last tape t m
+exit 91
+end
+if ne add js_off tape m 1 add o js_span tape t
+exit 91
+end
+c = uchar 91
+if eq ty jsobj
+c = uchar 123
+end
+if ne get src o c
+exit 91
+end
+if ne get src js_off tape m add c 2
+exit 91
+end
+end
+
+fn dv_chkn src view uchar * tape view uint * t ulong to void
+o = js_off tape t
+e = add o js_span tape t
+if ne js_numend src o e e
+exit 91
+end
+f = js_nflags tape t
+g = ulong 0
+if eq get src o 45
+g = jsfneg
+end
+for i ulong js_span tape t
+c = get src add o i
+if eq c 46
+g = or g jsffrac
+end
+if or eq c 101 eq c 69
+g = or g jsfexp
+end
+end
+if ne f g
+exit 91
+end
+end
+
+fn dv_chk src view uchar * tape view uint * t ulong to void
+ty = js_type tape t
+o = js_off tape t
+s = js_span tape t
+if eq s 0
+exit 91
+end
+if gt add o s len src
+exit 91
+end
+if or eq ty jsobj eq ty jsarr
+dv_chkc src tape t
+ret
+end
+if or eq ty jsobje eq ty jsarre
+if ne s 1
+exit 91
+end
+ret
+end
+if or eq ty jskey eq ty jsstr
+if or ne get src o 34 ne get src sub add o s 1 34
+exit 91
+end
+ret
+end
+if eq ty jsnum
+dv_chkn src tape t
+ret
+end
+if ne s js_litn sub ty 8
+exit 91
+end
+end
+
+fn dv_toks src view uchar * tape view uint * to void
+for t ulong js_ntok tape
+dv_chk src tape t
+dv_tok src tape t
+end
+dv_ok
+end
+
+note dv_walk: recursion depth is the nesting depth, at most the depth limit given to js_init
+fn dv_walk src view uchar * tape view uint * t ulong to void
+ty = js_type tape t
+dv_tok src tape t
+if eq ty jsobj
+k = js_first tape t
+while ne k jsnone bound 999999
+dv_tok src tape k
+dv_walk src tape add k 1
+k = js_mnext tape k
+end
+dv_tok src tape js_match tape t
+ret
+end
+if eq ty jsarr
+e = js_first tape t
+while ne e jsnone bound 999999
+dv_walk src tape e
+e = js_enext tape e
+end
+dv_tok src tape js_match tape t
+end
+end
+
+note ======== numbers ========
+
+fn dv_ival src view uchar * off ulong to void
+c = js_ilex src off
+dv_dec c
+dv_c 32
+if ne c 1
+dv_c 45
+ret
+end
+if not js_atv src off 45
+dv_dec js_tou src off
+ret
+end
+if not js_isl src off
+dv_c 45
+ret
+end
+v = js_tol src off
+if eq v 0
+dv_c 48
+ret
+end
+dv_c 45
+dv_dec add ulong neg add v 1 1
+end
+
+fn dv_num src view uchar * off ulong fs edit long jsfs to void
+x = js_f64 src off fs
+if ne js_f64st fs 0
+if ne js_f64st fs 1
+exit 91
+end
+end
+bits = bitcast ulong x
+k = js_fmt64 fs x
+if lt k 0
+if ne shr bits 63 0
+dv_c 45
+end
+dv_c 105
+dv_c 110
+dv_c 102
+else
+for i ulong ulong k
+dv_c js_fmtch fs i
+end
+end
+dv_c 32
+dv_hex16 bits
+dv_c 32
+dv_ival src off
+dv_nl
+end
+
+fn dv_nums src view uchar * tape view uint * fs edit long jsfs to void
+for t ulong js_ntok tape
+if eq js_type tape t jsnum
+dv_num src js_off tape t fs
+end
+end
+dv_ok
+end
+
+note ======== rewrite ========
+
+fn dv_rw src view uchar * tape view uint * ob edit uchar * to void
+r = js_winit ob
+if lt r 0
+exit 91
+end
+for t ulong js_ntok tape
+js_wtok ob src js_type tape t js_off tape t
+end
+r = js_wdone ob
+if lt r 0
+dv_c 87
+dv_err ulong neg r 0
+ret
+end
+dv_w ob jswh ulong r
+end
+
+note ======== writer scripts: one operation per line ========
+
+fn dv_hexv src view uchar * p ulong e ulong to ulong
+v = ulong 0
+if or eq p e gt sub e p 16
+exit 92
+end
+for i ulong sub e p
+h = js_hexv get src add p i
+if eq h 16
+exit 92
+end
+v = or shl v 4 h
+end
+ret v
+end
+
+fn dv_hex2b src view uchar * p ulong e ulong hb edit uchar * to ulong
+if ne rem sub e p 2 0
+exit 92
+end
+k = div sub e p 2
+if gt k len hb
+exit 92
+end
+for i ulong k
+q = add p mul i 2
+put hb i uchar dv_hexv src q add q 2
+end
+ret k
+end
+
+fn dv_decv src view uchar * p ulong e ulong to ulong
+v = ulong 0
+if or eq p e gt sub e p 20
+exit 92
+end
+for i ulong sub e p
+c = get src add p i
+if or lt c 48 gt c 57
+exit 92
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+
+fn dv_ops src view uchar * ob edit uchar * p ulong e ulong to void
+hb = new uchar 524288 0
+k = dv_hex2b src p e hb
+js_wsbuf ob hb 0 k
+end
+
+fn dv_opd src view uchar * ob edit uchar * p ulong e ulong to void
+fs = new long jsfs 0
+v = dv_hexv src p e
+js_wf64 ob bitcast f64 v fs
+end
+
+fn dv_opl src view uchar * ob edit uchar * p ulong e ulong to void
+if and lt p e eq get src p 45
+m = dv_decv src add p 1 e
+if eq m 9223372036854775808
+js_wlong ob long -9223372036854775808
+ret
+end
+if gt m 9223372036854775807
+exit 92
+end
+js_wlong ob neg long m
+ret
+end
+m = dv_decv src p e
+if gt m 9223372036854775807
+exit 92
+end
+js_wlong ob long m
+end
+
+fn dv_op src view uchar * ob edit uchar * p ulong e ulong to void
+c = get src p
+q = add p 1
+if eq c 111
+js_wobj ob
+ret
+end
+if eq c 79
+js_wobje ob
+ret
+end
+if eq c 97
+js_warr ob
+ret
+end
+if eq c 65
+js_warre ob
+ret
+end
+if eq c 115
+dv_ops src ob q e
+ret
+end
+if eq c 83
+js_wsbeg ob
+ret
+end
+if eq c 98
+js_wsb ob uchar dv_hexv src q e
+ret
+end
+if eq c 69
+js_wsend ob
+ret
+end
+if eq c 110
+js_wnumb ob src q sub e q
+ret
+end
+if eq c 117
+js_wulong ob dv_decv src q e
+ret
+end
+if eq c 108
+dv_opl src ob q e
+ret
+end
+if eq c 116
+js_wbool ob true
+ret
+end
+if eq c 102
+js_wbool ob false
+ret
+end
+if eq c 122
+js_wnull ob
+ret
+end
+if eq c 100
+dv_opd src ob q e
+ret
+end
+exit 92
+end
+
+fn dv_eol src view uchar * p ulong n ulong to ulong
+q = p
+while lt q n bound 999999
+if eq get src q 10
+ret q
+end
+q = add q 1
+end
+ret q
+end
+
+fn dv_api src view uchar * ob edit uchar * n ulong to void
+r = js_winit ob
+if lt r 0
+dv_err ulong neg r 0
+ret
+end
+p = ulong 0
+while lt p n bound 999999
+e = dv_eol src p n
+if gt e p
+dv_op src ob p e
+end
+p = add e 1
+end
+r = js_wdone ob
+if lt r 0
+dv_err ulong neg r 0
+ret
+end
+dv_c 79
+dv_c 75
+dv_c 32
+dv_w ob jswh ulong r
+dv_nl
+end
+
+note ======== entry ========
+
+fn dv_parse src view uchar * tape edit uint * n ulong to bool
+sl = dv_arg 2 jsmaxn
+dl = dv_arg 3 512
+r = js_init tape sl dl
+if lt r 0
+dv_c 73
+dv_c 78
+dv_c 73
+dv_c 84
+dv_c 32
+dv_c 45
+dv_dec ulong neg r
+dv_nl
+ret false
+end
+r = js_parse src tape n
+if lt r 0
+dv_err js_err tape js_epos tape
+ret false
+end
+ret true
+end
+
+fn main to int
+src = new uchar 524288 0
+tape = new uint 262144 0
+ob = new uchar 1048576 0
+fs = new long jsfs 0
+m = dv_mode
+n = dv_read src
+if eq m 97
+cap = dv_arg 2 1048576
+if or eq cap 0 gt cap 1048576
+exit 92
+end
+dv_api src part ob 0 cap n
+ret 0
+end
+if and ne m 116 and ne m 119 and ne m 102 ne m 114
+exit 92
+end
+if not dv_parse src tape n
+ret 0
+end
+if eq m 116
+dv_toks src tape
+end
+if eq m 119
+dv_walk src tape 0
+dv_ok
+end
+if eq m 102
+dv_nums src tape fs
+end
+if eq m 114
+dv_rw src tape ob
+end
+ret 0
+end

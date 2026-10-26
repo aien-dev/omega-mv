@@ -1,0 +1,283 @@
+note seed/net/tests/parse.om -- memory-mode parser driver for the corpus run by check.py.
+note Compose: { printf 'om2\n'; cat seed/net/http.om seed/net/tests/parse.om; } | omc
+note stdin: records `C <mode> <len>` LF, then len message bytes, then LF. mode q = request,
+note s = response, h = response to a HEAD request. Caps used here: head 2048 bytes, 16 header
+note fields, body 4096 bytes, chunk framing allowance 1024 bytes (README "Checks").
+note stdout, one line per record, idx counting from 0:
+note   idx ok status version keep bodymode fields headhash bodylen bodyhash
+note   idx err CODE      (CODE = minus the result, e.g. 400, 431, 499)
+note   idx eof           (a request stream that ended before any byte)
+note headhash = FNV-1a 64 over [method SP target LF for requests] then, per field,
+note lowercase(name) ':' value LF; bodyhash = FNV-1a 64 of the decoded body. Both 16 hex digits.
+note Exit 0 after the last record; 2..8 = malformed corpus or I/O failure.
+fn fnvb h ulong b uchar to ulong
+ret mul xor h ulong b 1099511628211
+end
+fn fnvs h ulong a view uchar * to ulong
+x = h
+for i ulong len a
+x = fnvb x get a i
+end
+ret x
+end
+fn fnvl h ulong a view uchar * to ulong
+x = h
+for i ulong len a
+x = fnvb x hlow get a i
+end
+ret x
+end
+fn hdhash cs edit ulong 320 io edit uchar 65536 to ulong
+h = ulong 14695981039346656037
+if eq get cs HSERVER 1
+h = fnvs h view part io get cs HMOFF get cs HMLEN
+h = fnvb h 32
+h = fnvs h view part io get cs HTOFF get cs HTLEN
+h = fnvb h 10
+end
+for i ulong get cs HHN
+h = fnvl h view part io hhnoff cs i hhnlen cs i
+h = fnvb h 58
+h = fnvs h view part io hhvoff cs i hhvlen cs i
+h = fnvb h 10
+end
+ret h
+end
+note the output line is built in aux[65536, 65792)
+fn obch aux edit uchar 65792 p ulong c uchar to ulong
+put aux p c
+ret add p 1
+end
+fn obdec aux edit uchar 65792 p ulong v ulong to ulong
+d = new uchar 20 0
+i = ulong 20
+x = v
+for it ulong 20
+i = sub i 1
+put d i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+q = p
+for k ulong sub 20 i
+put aux q get d add i k
+q = add q 1
+end
+ret q
+end
+fn obhex aux edit uchar 65792 p ulong v ulong to ulong
+for k ulong 16
+put aux add p k hhexd and shr v mul sub 15 k 4 15
+end
+ret add p 16
+end
+fn wrall aux edit uchar 65792 s ulong e ulong to long
+p = s
+for it ulong 4096
+if ge p e
+ret 0
+end
+w = write 1 aux p sub e p
+if le w 0
+ret 7
+end
+p = add p ulong w
+end
+ret 7
+end
+fn prerr aux edit uchar 65792 idx ulong r long to long
+p = obdec aux 65536 idx
+p = obch aux p 32
+if eq r 0
+p = obch aux p 101
+p = obch aux p 111
+p = obch aux p 102
+else
+p = obch aux p 101
+p = obch aux p 114
+p = obch aux p 114
+p = obch aux p 32
+p = obdec aux p ulong neg r
+end
+p = obch aux p 10
+ret wrall aux 65536 p
+end
+fn prok cs edit ulong 320 io edit uchar 65536 aux edit uchar 65792 idx ulong bl ulong to long
+hh = hdhash cs io
+bh = fnvs 14695981039346656037 view part aux 0 bl
+p = obdec aux 65536 idx
+p = obch aux p 32
+p = obch aux p 111
+p = obch aux p 107
+p = obch aux p 32
+p = obdec aux p get cs HSTAT
+p = obch aux p 32
+p = obdec aux p get cs HVER
+p = obch aux p 32
+p = obdec aux p get cs HKEEP
+p = obch aux p 32
+p = obdec aux p get cs HBMODE
+p = obch aux p 32
+p = obdec aux p get cs HHN
+p = obch aux p 32
+p = obhex aux p hh
+p = obch aux p 32
+p = obdec aux p bl
+p = obch aux p 32
+p = obhex aux p bh
+p = obch aux p 10
+ret wrall aux 65536 p
+end
+fn docase cs edit ulong 320 io edit uchar 65536 aux edit uchar 65792 md uchar idx ulong to long
+put cs HHEADMX 2048
+put cs HHMAX 16
+put cs HBCAP 4096
+put cs HFRMAX 1024
+r = long 0
+if eq md 113
+r = hreqrd cs io
+else
+if eq md 104
+put cs HISHEAD 1
+end
+r = hrsprd cs io
+end
+if le r 0
+ret prerr aux idx r
+end
+b = hbodyall cs io part aux 0 65536
+if lt b 0
+ret prerr aux idx b
+end
+ret prok cs io aux idx ulong b
+end
+note hdrq: index after the LF of the record header at p, 0 when malformed
+fn hdrq inb view uchar 1048576 p ulong n ulong to ulong
+if gt add p 6 n
+ret 0
+end
+if or ne get inb p 67 ne get inb add p 1 32
+ret 0
+end
+if ne get inb add p 3 32
+ret 0
+end
+q = add p 4
+for k ulong 30
+if ge q n
+ret 0
+end
+c = get inb q
+if eq c 10
+break
+end
+if or lt c 48 gt c 57
+ret 0
+end
+q = add q 1
+end
+if ge q n
+ret 0
+end
+ret add q 1
+end
+fn hdrlen inb view uchar 1048576 p ulong q ulong to ulong
+v = ulong 0
+k = add p 4
+while lt k sub q 1 bound 30
+v = add mul v 10 ulong sub get inb k 48
+k = add k 1
+end
+ret v
+end
+fn rolei md uchar to ulong
+if eq md 113
+ret 1
+end
+ret 0
+end
+note onerec: the record at sb[0] (input end sb[1]); the index after it, or 0 on a failure
+fn onerec inb view uchar 1048576 sb edit ulong 4 io edit uchar 65536 cs edit ulong 320 aux edit uchar 65792 idx ulong to ulong
+p = get sb 0
+n = get sb 1
+q = hdrq inb p n
+if eq q 0
+ret 0
+end
+ln = hdrlen inb p q
+if gt add q add ln 1 n
+ret 0
+end
+r = hinit cs io -1 rolei get inb add p 2
+if lt r 0
+ret 0
+end
+r = hmemld cs io view part inb q ln
+if lt r 0
+ret 0
+end
+r = docase cs io aux get inb add p 2 idx
+if ne r 0
+ret 0
+end
+ret add add q ln 1
+end
+note refill: keep inb[p, n) and read until the buffer is full or stdin ends.
+note sb: 0 = p, 1 = n, 2 = end of input seen
+fn refill inb edit uchar 1048576 sb edit ulong 4 to long
+p = get sb 0
+n = get sb 1
+for i ulong sub n p
+put inb i get inb add p i
+end
+n = sub n p
+put sb 0 0
+for it ulong 1048576
+if ge n len inb
+break
+end
+r = read 0 inb n sub len inb n
+if lt r 0
+ret r
+end
+if eq r 0
+put sb 2 1
+break
+end
+n = add n ulong r
+end
+put sb 1 n
+ret 0
+end
+note runall: records stream through a 1 MiB buffer that always holds at least 65536 + 32 bytes
+note ahead (or the rest of the input), more than one record (hmemld caps a message at 49152)
+fn runall inb edit uchar 1048576 sb edit ulong 4 io edit uchar 65536 cs edit ulong 320 aux edit uchar 65792 to int
+idx = ulong 0
+for it ulong 1000000
+if and eq get sb 2 0 lt sub get sb 1 get sb 0 65568
+if lt refill inb sb 0
+ret 2
+end
+end
+if ge get sb 0 get sb 1
+ret 0
+end
+np = onerec inb sb io cs aux idx
+if eq np 0
+ret 3
+end
+put sb 0 np
+idx = add idx 1
+end
+ret 8
+end
+fn main to int
+inb = new uchar 1048576 0
+io = new uchar 65536 0
+cs = new ulong 320 0
+aux = new uchar 65792 0
+sb = new ulong 4 0
+ret runall inb sb io cs aux
+end
