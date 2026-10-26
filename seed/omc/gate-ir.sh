@@ -205,6 +205,193 @@ fn f to uint
 x = neg true
 ret uint 0
 end'
+# Validation: every word of a line is read, names follow scope, and what IR v1 cannot lower is refused.
+ir_refuse trailing_value 5 'ir
+fn f a uint to uint
+x = add a 1 7
+ret x
+end'
+ir_refuse untyped_new 11 'ir
+fn f a uint to uint
+foo 1 a 0 1
+ret a
+end'
+ir_refuse missing_operand 4 'ir
+fn f a uint to uint
+x = add a
+ret x
+end'
+ir_refuse bare_neg 11 'ir
+fn f to ulong
+ret neg 5
+end'
+ir_refuse end_trailing 5 'ir
+fn f a uint to uint
+if eq a 0
+ret 1
+end a
+ret a
+end'
+ir_refuse while_trailing 5 'ir
+fn f to uint
+x = uint 0
+while lt x uint 3 x
+x = add x uint 1
+end
+ret x
+end'
+ir_refuse ret_missing 4 'ir
+fn f to uint
+ret
+end'
+ir_refuse ret_void_value 5 'ir
+fn f to void
+ret uint 1
+end'
+ir_refuse keyword_name 16 'ir
+fn f to uint
+add = uint 1
+ret uint 0
+end'
+ir_refuse stmt_number 16 'ir
+fn f to uint
+5
+ret uint 0
+end'
+ir_refuse shadow_param_for 10 'ir
+fn f n uint to uint
+for n uint 3
+end
+ret n
+end'
+ir_refuse shadow_nested_for 10 'ir
+fn f n uint to uint
+s = uint 0
+for i uint n
+for i uint 2
+s = add s i
+end
+end
+ret s
+end'
+ir_refuse param_dup 10 'ir
+fn f a uint a uint to uint
+ret a
+end'
+ir_refuse param_fn_name 10 'ir
+fn g to uint
+ret uint 1
+end
+fn f g uint to uint
+ret g
+end'
+ir_refuse param_self_name 10 'ir
+fn f f uint to uint
+ret f
+end'
+ir_refuse scope_if 3 'ir
+fn f n uint to uint
+if gt n 0
+y = uint 3
+end
+ret y
+end'
+ir_refuse scope_else 3 'ir
+fn f n uint to uint
+if gt n 0
+y = uint 3
+ret y
+else
+ret y
+end
+ret n
+end'
+ir_refuse scope_for 3 'ir
+fn f to uint
+for i uint 3
+end
+ret i
+end'
+ir_refuse fallthrough 18 'ir
+fn f a uint to uint
+if eq a 0
+ret 1
+end
+end'
+ir_refuse float_param 9 'ir
+fn f a f64 to f64
+ret a
+end'
+ir_refuse float_ret 9 'ir
+fn f a uint to f64
+ret a
+end'
+ir_refuse else_twice 15 'ir
+fn f a uint to uint
+if eq a 0
+ret 1
+else
+ret 2
+else
+ret 3
+end
+end'
+ir_refuse else_outside 15 'ir
+fn f to uint
+else
+ret uint 0
+end'
+ir_refuse eof_in_fn 15 'ir
+fn f to uint
+ret uint 0'
+ir_refuse range_typed 8 'ir
+fn f to uchar
+ret 300
+end'
+ir_refuse range_bare 8 'ir
+fn f a uchar to uchar
+ret add a 300
+end'
+ir_refuse range_bare_left 8 'ir
+fn f a uchar to uchar
+ret sub 256 a
+end'
+ir_refuse range_negative 8 'ir
+fn f to uint
+ret uint -1
+end'
+# Locals, parameters and for counters are at most 8 bytes (13, as native); a word over 8 bytes is never a
+# local, even when its first 8 bytes spell one. Function names up to 63 bytes compare in full.
+ir_refuse long_local 13 'ir
+fn f n uint to uint
+counterxy = add n uint 1
+ret counterxy
+end'
+ir_refuse long_param 13 'ir
+fn f counterxy uint to uint
+ret counterxy
+end'
+ir_refuse long_for 13 'ir
+fn f to uint
+for counterxy uint 3
+end
+ret uint 0
+end'
+ir_refuse long_prefix_ref 3 'ir
+fn f n uint to uint
+counterx = add n uint 1
+ret counterxy
+end'
+# Same IR from two spellings: a note after the path ended is skipped like any note.
+ir_same() { # name source-a source-b
+    printf '%b\n' "$2" > "$B/$1a.om"
+    printf '%b\n' "$3" > "$B/$1b.om"
+    timeout 5 "$B/stage2" < "$B/$1a.om" > "$B/$1a.ir"
+    timeout 5 "$B/stage2" < "$B/$1b.om" > "$B/$1b.ir"
+    cmp -s "$B/$1a.ir" "$B/$1b.ir" || fail "$1 IR differs between the two spellings"
+    echo "PASS $1 same IR"
+}
+ir_same note_dead 'ir\nfn f to uint\nret uint 1\nnote after the path ended\nend' 'ir\nfn f to uint\nret uint 1\nend'
 
 # Multi-function units with calls: byte-identical to the C oracle and checker2 ACCEPT.
 ir_multi() { # name source
@@ -236,6 +423,10 @@ ir_multi cast_ret 'fn f to uchar\nret uchar uint 1\nend'
 ir_multi bool_and 'fn f a bool b bool to bool\nret and a b\nend'
 ir_multi bool_or 'fn f a bool b bool to bool\nret or a b\nend'
 ir_multi bool_xor 'fn f a bool b bool to bool\nret xor a b\nend'
+ir_multi void_fall 'fn sink a uint to void\nend\nfn f to uint\nsink uint 1\nret uint 2\nend'
+ir_multi for_reuse 'fn f to uint\ns = uint 0\nfor i uint 3\ns = add s i\nend\nfor i uint 2\ns = add s i\nend\nret s\nend'
+ir_multi scope_reuse 'fn f a uint to uint\nif gt a 1\ny = add a 1\nret y\nend\ny = add a 2\nret y\nend'
+ir_multi call_long_prefix 'fn increment_one a uint to uint\nret add a uint 1\nend\nfn increment_two a uint to uint\nret add a uint 2\nend\nfn f to uint\nret increment_two uint 4\nend'
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -287,5 +478,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'

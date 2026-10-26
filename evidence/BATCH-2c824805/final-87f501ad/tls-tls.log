@@ -1,0 +1,40 @@
+omc 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+sha2.om 5cf0f98116def6917d3a373f2bd4c3932d46e3ff84d9567bbae9e720366fdb33
+hkdf.om 5c3ce5f67627f89ce42961c3076c556d16a2eb6c72d704ff68e13b2819333778
+x25519.om c2a3a01d6cffff95cbaa130a586ca8f7365fb56c67ec1b2f4920eceebfed23f5
+chacha.om 8431257bc8e83474983c572cfdfa7f8f4b62a1b867748868e88fbc9c1b37d3af
+aesgcm.om b19d8ce88fc65eb0e69e51f52f3af70b9c46c4bfbbc84004d43e536bf4ced17f
+ec.om 909f37c797e187bd0663bde9f57c75d6ce41eb2c9726a6b50d6fc714e424c060
+rsa.om 07414c1104f73f3f0d815ce8a7af9e736233c633f4a2ea080e20307ea1919c11
+x509.om 193a8cd93638d85e4256d4d298ea00bb1c60d9e154efe81dd2f88827f093f8be
+tls.om 72ca585b4e55413a8a67c7743f8e8c00fb50da334231739ec590864a12e68545
+PASS rfc8448: tls kat: 24 checks, 0 failed
+PASS expectation mutant detected: 2 mismatches
+PASS mutant label c hs traffic detected: 5 mismatches
+PASS mutant nonce ignores seq detected: 1 mismatches
+PASS mutant label length detected: 21 mismatches
+PASS mutant finished key detected: 2 mismatches
+PASS dns: dns unit: 23 checks, 0 failed
+PASS mutant dns flags only QR detected: 4 mismatches
+PASS mutant dns owner ignored detected: 6 mismatches
+PASS mutant dns label cap gone detected: trap (exit 104)
+PASS mutant dns_a4 name length unchecked detected: trap (exit 103)
+PASS interop: INTEROP PASS rows=38
+PASS mutant chain result ignored detected: 8 rows fail
+PASS mutant CertificateVerify ignored detected: 2 rows fail
+PASS mutant CCS count not checked detected: 4 rows fail
+PASS mutant close revives failed detected: 33 rows fail
+PASS mutant read record cap gone detected: 2 rows fail
+PASS mutant handshake record cap gone detected: 1 rows fail
+PASS mutant handshake close_notify unmapped detected: 2 rows fail
+PASS mutant version not checked detected: 1 rows fail
+PASS mutant record MAC ignored detected: 1 rows fail
+PASS mutant session id not checked detected: 1 rows fail
+PARITY PASS https://api.github.com/licenses/mit status='HTTP/1.1 200 OK' bytes=1956/1956 sha256=15b2a5994e7c6e3d/15b2a5994e7c6e3d
+PARITY PASS https://api.github.com/licenses/apache-2.0 status='HTTP/1.1 200 OK' bytes=12478/12478 sha256=c9fb7d13de08da3c/c9fb7d13de08da3c
+PARITY PASS https://api.github.com/repos/torvalds/linux/license status='HTTP/1.1 200 OK' bytes=1528/1528 sha256=afc6dbc05fb592ec/afc6dbc05fb592ec
+PARITY PASS https://raw.githubusercontent.com/torvalds/linux/v6.0/README status='HTTP/1.1 200 OK' bytes=727/727 sha256=bad58d396f62102b/bad58d396f62102b
+PARITY PASS https://raw.githubusercontent.com/torvalds/linux/v6.0/MAINTAINERS status='HTTP/1.1 200 OK' bytes=680548/680548 sha256=2e65a67b1f2ecd4e/2e65a67b1f2ecd4e
+PARITY PASS smtp://mail.gandi.net:465 exit=0 bytes=194/194 sha256=d5fbda7743efc6b0/d5fbda7743efc6b0
+PARITY PASS tsmtp://mail.gandi.net:587 exit=0 bytes=383/383 sha256=b618c769ed2c6b81/b618c769ed2c6b81
+TLS PASS vectors=24 (rfc8448) dns=23 interop=38 net=PASS mutants=19/19

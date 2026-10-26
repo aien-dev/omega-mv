@@ -1,0 +1,31 @@
+omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f http.om sha256=aff258ecd3858454056811a5e6fe1f660f9d650a7207d6c41885105110e046a7
+corpus sha256=549987508fdf312b67c29a2f0147948e266bca976347a942fe09dadb7eeabcae cases=1605 hand=105 fuzz=1500 parse.src=382d3c4e9002dbe5ff8a457a9a97b09e1406b00b513dcf547517b7b90132225c parse.bin=a474af139c08866c7cfff0c82145ab9ce10bd6277a85ca5a291904c066a5b86b
+http.client parity on responses: agree=275 both_reject=104 reference_stricter=327 skipped=77
+outcomes: eof=2 err 400=757 err 413=58 err 417=97 err 431=34 err 499=62 err 501=23 err 505=34 ok=538
+HTTP-CORPUS PASS cases=1605
+mutant killed: CL+TE accepted (line 1201)
+mutant killed: chunk size decimal (line 1609)
+mutant killed: field cap off by one (line 1068)
+mutant killed: 304 has a body (line 1250)
+mutant killed: status range (line 1020)
+mutant killed: Expect value ignored (line 1191)
+mutant killed: duplicate TE flag (line 1142)
+mutant killed: HTTP/1.0 read as 1.1 (line 909)
+mutant killed: close body cap (line 1458)
+mutant killed: bare LF accepted (line 758)
+mutant killed: F4 chunk framing uncapped (line 1518)
+HTTP-MUTANTS PASS killed=11/11
+live.src=a9032712bc16fa960c6b6c71097b930cf8391d7b17145de4eaa8f1dc1d7121a9 live.bin=472686a65fa0575837b5e84d3a1992ade24112c31687efd726c5a28263d462a0 rc=0
+HTTP-LIVE PASS
+live mutant killed: head deadline never armed (line 724, exit 53)
+live mutant killed: hclose leaks the descriptor (line 562, exit 19)
+live mutant killed: SSE data CR not a line break (line 2284, exit 70)
+live mutant killed: chunk-size digit mask (line 1753, exit 12)
+live mutant killed: F1 no body deadline after the head (line 857, exit 49)
+live mutant killed: F2 Content-Length overrun buffered (line 1785, exit 38)
+live mutant killed: F3 100 Continue keyed on HWLEN (line 1394, exit 19)
+HTTP-LIVE-MUTANTS PASS killed=7/7
+sse_server src=d20dca860e0b833940d9daf19af7b05d38487d89724f66dc93776c3fdf741fe2 bin=17b4ff6582fae1d71406511800104e88752cf017a3ced73c2e905fdfc7fba83d; sse_client src=3d3487af1d65778ff4c7b257f9d268231f2d3413c6d36d721d8af4caaa6d47f8 bin=8f07506d25195c48e2ccb2b9604f748cda3f1391fdfc7e3474d4b500ca7c1044
+HTTP-E2E PASS connections=9 (curl, http.client, raw, sse_client)
+HTTP-CHECK PASS
+NET_RC=0
