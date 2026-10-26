@@ -55,7 +55,8 @@ fn <name> (<param> <type>)* to <type> | void      a function; `end` closes it
 <name> = <value>          write a value (a new name, or an existing one of the same type);
 <name> <value>            the same, with `=` left out
 if <cond> / else / end
-while <cond> [bound N] / end      N 1..999999, default 1000000; past N iterations: trap 4
+while <cond> [bound N] / end      N 1..9223372036854775807 (a number or a ulong const), default
+                          1000000; past N iterations: trap 4
 for <name> <type> <count> / end   name = 0 .. count-1 (count a number, or a value of that type)
                           (any other count: trap 4 after 1000000 passes, as a while with no bound)
 break                     leave the innermost loop; outside a loop: error 9. Like ret, it ends the
