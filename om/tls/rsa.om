@@ -18,12 +18,19 @@ note       of n. A minimum such as 2048 bits is caller policy (X.509/TLS layer).
 note Return codes: 0 valid, 1 mismatch (signature does not verify), 2 bad key encoding,
 note   3 unsupported size or exponent, 4 signature length != modulus length or s >= n, 5 unsupported
 note   hash (or hlen != digest length of the hash). Checked in the order 5, 2/3, 4, 1.
-note Untrusted inputs (key, hs, ctl) never trap: every index is range-checked before use.
-note Timing: all inputs are public (signature verification); the code is variable time on purpose
-note   (early exits, data-dependent loop counts and the exponent's bits). It handles no secrets.
+note   hs shorter than the digest length is code 4. All workspace is local (the caller passes no
+note   buffer sizes), so these entry points have no caller-contract traps.
+note Untrusted inputs (key, hs, ctl) never trap: every index is range-checked before use (tested by
+note   test/rsa/vectors/fuzz.txt: key truncations, header substitutions, signature lengths, ctl values).
+note Timing: all inputs are public (signature verification), so the code is variable time on purpose:
+note   early exits, length-dependent loop counts, a square-and-multiply driven by the bits of e, and
+note   value-dependent final subtractions in Montgomery reduction. It handles no secrets; nothing is
+note   constant time and nothing needs to be. Cost grows with bits(e) * s^2: an e as long as n
+note   (allowed, see above) is a CPU cost the caller accepts by passing such a key.
 note Arithmetic: 32-bit limbs in ulong cells, little-endian limb order; Montgomery multiplication
-note   (CIOS) with n0' = -n^-1 mod 2^32 (Newton iteration) and R^2 mod n (64*s modular doublings of 1),
-note   both computed at run time from the key. Workspace is a caller-free local of RSWN cells.
+note   (CIOS) with n0' = -n^-1 mod 2^32 (Newton iteration from x = n, 3 -> 48 correct bits in 5 steps)
+note   and R^2 mod n (64*s modular doublings of 1), both computed at run time from the key. The
+note   workspace is a local array of RSWN cells (12.2 KiB) plus a RSEM-byte block per call.
 
 const RSWN ulong 1564
 const RSEM ulong 1024

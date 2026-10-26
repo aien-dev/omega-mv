@@ -762,7 +762,10 @@ put c add dst i get k i
 end
 tls_zero s 0 64
 tls_zero k 0 32
-ret r
+if ne r 32
+ret 1
+end
+ret 0
 end
 
 note traffic key and iv from the secret at c[so]; d 0 installs the write side, 1 the read side
@@ -1811,41 +1814,62 @@ x = fclose int fd
 if le n 0
 ret TLEDNS
 end
-z = ulong n
-s = ulong 0
-while lt s z bound 4096
-e = s
-while and lt e z ne get b e 10 bound 4096
-e = add e 1
+ret dns_lines part b 0 ulong n ip
 end
-if eq dns_nsline b s e ip 1
+
+note try each line of b (split at LF) as a nameserver line
+fn dns_lines b view uchar * ip edit uchar * to ulong
+s = ulong 0
+for e ulong add len b 1
+if or eq e len b eq tls_at b e 10
+if eq dns_nsline part b s sub e s ip 1
 ret 0
 end
 s = add e 1
 end
+end
 ret TLEDNS
 end
 
-note 1 when b[s..e) is "nameserver" whitespace IPv4 (parsed into ip)
-fn dns_nsline b view uchar * s ulong e ulong ip edit uchar * to ulong
-if lt sub e s 12
+note b[i] as a ulong, or 256 past the end (never traps)
+fn tls_at b view uchar * i ulong to ulong
+if ge i len b
+ret 256
+end
+ret ulong get b i
+end
+
+note 1 when the line l is "nameserver", blanks, an IPv4 address, optional trailing blanks
+fn dns_nsline l view uchar * ip edit uchar * to ulong
+if lt len l 12
 ret 0
 end
-if ne tls_cteq TLNS b s 10 0
+if ne tls_cteq TLNS l 0 10 0
 ret 0
 end
-p = add s 10
-if and ne get b p 32 ne get b p 9
+p = ulong 10
+if eq dns_blank tls_at l p 0
 ret 0
 end
-while and lt p e or eq get b p 32 eq get b p 9 bound 4096
+while eq dns_blank tls_at l p 1 bound 4096
 p = add p 1
 end
 q = p
-while and lt q e and ne get b q 32 and ne get b q 9 ne get b q 13 bound 4096
+while lt tls_at l q 256 bound 4096
+if eq dns_blank tls_at l q 1
+break
+end
 q = add q 1
 end
-ret dns_ip4 part b p sub q p ip
+ret dns_ip4 part l p sub q p ip
+end
+
+note 1 for space, tab or CR
+fn dns_blank ch ulong to ulong
+if or eq ch 32 or eq ch 9 eq ch 13
+ret 1
+end
+ret 0
 end
 
 note query for hn type A at q[0..); returns its length (0 when hn is not a valid name)
@@ -1854,27 +1878,35 @@ tls_pn q 0 id 2
 tls_pn q 2 256 2
 tls_pn q 4 1 2
 tls_zero q 6 6
-p = ulong 12
-s = ulong 0
 hl = len hn
-for i ulong add hl 1
-if or eq i hl eq get hn i 46
-l = sub i s
-if or eq l 0 gt l 63
+put q 12 46
+tls_cpy q 13 hn
+if eq dns_labels part q 12 add hl 1 0
 ret 0
 end
-put q p uchar l
-for j ulong l
-put q add add p 1 j get hn add s j
-end
-p = add add p 1 l
-s = add i 1
-end
-end
+p = add 13 hl
 put q p 0
 tls_pn q add p 1 1 2
 tls_pn q add p 3 1 2
 ret add p 5
+end
+
+note "." + name in b becomes length-prefixed labels, back to front; 1 when every label is 1..63
+fn dns_labels b edit uchar * to ulong
+n = ulong 0
+for i ulong len b
+k = sub sub len b 1 i
+if eq get b k 46
+if or eq n 0 gt n 63
+ret 0
+end
+put b k uchar n
+n = 0
+else
+n = add n 1
+end
+end
+ret 1
 end
 
 note skip a (possibly compressed) name at r[p..z); returns the offset after it or 0
@@ -1942,28 +1974,37 @@ end
 
 fn dns_ans r view uchar * p0 ulong an ulong ip edit uchar * to ulong
 p = p0
-z = len r
 for k ulong an
-p = dns_skip r p z
-if or eq p 0 gt add p 10 z
-ret TLEDNS
-end
-t = tls_gn r p 2
-cl = tls_gn r add p 2 2
-dl = tls_gn r add p 8 2
-p = add p 10
-if gt add p dl z
-ret TLEDNS
-end
-if and eq t 1 and eq cl 1 eq dl 4
-for i ulong 4
-put ip i get r add p i
-end
+p = dns_rr r p ip
+if eq p 1
 ret 0
 end
-p = add p dl
+if eq p 0
+ret TLEDNS
+end
 end
 ret TLEDNS
+end
+
+note one resource record at r[p0]: 1 when it is an IN A record (copied to ip), 0 when malformed,
+note else the offset of the next record
+fn dns_rr r view uchar * p0 ulong ip edit uchar * to ulong
+z = len r
+p = dns_skip r p0 z
+if or eq p 0 gt add p 10 z
+ret 0
+end
+dl = tls_gn r add p 8 2
+if gt add add p 10 dl z
+ret 0
+end
+if and eq tls_gn r p 4 65537 eq dl 4
+for i ulong 4
+put ip i get r add add p 10 i
+end
+ret 1
+end
+ret add add p 10 dl
 end
 
 note sockaddr_in for ip:port into sa[0..16)
@@ -2001,7 +2042,6 @@ end
 
 fn dns_try ns view uchar * q view uchar * ip edit uchar * to ulong
 sa = new uchar 16 0
-r = new uchar 4096 0
 tcp_sa sa ns 53
 fd = socknew 2 524290 0
 if lt fd 0
@@ -2010,18 +2050,27 @@ end
 f = int fd
 e = ulong TLEDNS
 if eq connect f sa 0 16 0
-if eq send f q 0 len q 0 long len q
-w = waitio f 1 3000000000
-if gt w 0
-n = recv f r 0 4096 0
-if gt n 0
-e = dns_parse part r 0 ulong n q ip
-end
-end
-end
+e = dns_xchg f q ip
 end
 x = fclose f
 ret e
+end
+
+note send the query on the connected UDP socket f and parse one reply (3 s limit)
+fn dns_xchg f int q view uchar * ip edit uchar * to ulong
+r = new uchar 4096 0
+if ne send f q 0 len q 0 long len q
+ret TLEDNS
+end
+w = waitio f 1 3000000000
+if le w 0
+ret TLEDNS
+end
+n = recv f r 0 4096 0
+if le n 0
+ret TLEDNS
+end
+ret dns_parse part r 0 ulong n q ip
 end
 
 note TCP connect to ip:port, non-blocking with a 10 s limit; returns fd (>= 0) or minus a code

@@ -18,6 +18,7 @@ text rvtgot " got "
 text rvtexp " want "
 text rvtdig " digest"
 text rvtctl " control"
+text rvtvfy " verify"
 text rvtcase "cases "
 text rvtver " verifies "
 text rvtmm " mismatches "
@@ -276,7 +277,7 @@ n = add dl get rvcnt 13
 x = get rvcnt 9
 got = rv_run get rvcnt 10 part key 0 get rvcnt 11 part hs 0 n dl
 if ne rv_judge got x 0
-rv_mis rvtnl got x
+rv_mis rvtvfy got x
 end
 if and eq x 0 and eq got 0 gt get rvcnt 13 0
 rv_ctrl key hs

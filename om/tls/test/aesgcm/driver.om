@@ -22,7 +22,7 @@ note "aesgcm driver: C checks, F failed". Exit 0 only when F is 0 and C is above
 note exit 2 when the input cannot be read or exceeds 16 MiB.
 
 global inp uchar 16777216
-global st ulong 16
+global st ulong 20
 global ob uchar 32
 global one uchar 1
 text tfail "MISMATCH line "
@@ -38,7 +38,7 @@ text tons " open_ns="
 
 note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start,
 note 5 key bytes, 6 iv bytes, 7 aad bytes, 8 plaintext bytes, 9 ciphertext bytes, 10 tag bytes,
-note 11 expected-failure flag (D FAIL, W I)
+note 11 expected-failure flag (D FAIL, W I), 12 checks, 13 failures, 14 key||nonce bytes for dacall
 
 fn dslurp to int
 t = ulong 0
@@ -276,7 +276,9 @@ note seal pt into buf; 0 when it returns 0 and buf = ex (data || tag)
 fn dseal kia view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
 n = dbn
 dcopy buf pt get st 8
-r = aes_gcm_seal dctl part kia 0 dka part buf 0 n
+c = dctl
+a = dka
+r = aes_gcm_seal c part kia 0 a part buf 0 n
 if ne r 0
 ret 1
 end
@@ -285,7 +287,10 @@ end
 
 note open buf (data || tag); 0 when it returns 0 and buf[0..pl) = pt
 fn dopen kia view uchar 65536 pt view uchar 65536 buf edit uchar 65536 to ulong
-r = aes_gcm_open dctl part kia 0 dka part buf 0 dbn
+c = dctl
+a = dka
+n = dbn
+r = aes_gcm_open c part kia 0 a part buf 0 n
 if ne r 0
 ret 1
 end
@@ -294,7 +299,10 @@ end
 
 note open buf; 0 when it returns want and, for want 1, the data area is zero
 fn dfail kia view uchar 65536 buf edit uchar 65536 want ulong to ulong
-r = aes_gcm_open dctl part kia 0 dka part buf 0 dbn
+c = dctl
+a = dka
+n = dbn
+r = aes_gcm_open c part kia 0 a part buf 0 n
 if ne r want
 ret 1
 end
@@ -320,9 +328,21 @@ put aa i get kia add o i
 end
 end
 
+note aead_aes128gcm_open (o 1) or _seal (o 0) on buf[0 .. dbn) with kn = kia[0 .. st 14) and aad
+note aa[0 .. st 7)
+fn dacall kia view uchar 65536 aa view uchar 65536 buf edit uchar 65536 o ulong to ulong
+kn = get st 14
+al = get st 7
+bl = dbn
+if eq o 0
+ret aead_aes128gcm_seal part kia 0 kn part aa 0 al part buf 0 bl
+end
+ret aead_aes128gcm_open part kia 0 kn part aa 0 al part buf 0 bl
+end
+
 note aead_aes128gcm_open on buf; 0 when it returns want and, for 0, buf = pt, for 1, zero data
 fn daopen kia view uchar 65536 pt view uchar 65536 buf edit uchar 65536 aa view uchar 65536 want ulong to ulong
-r = aead_aes128gcm_open part kia 0 28 part aa 0 get st 7 part buf 0 dbn
+r = dacall kia aa buf 1
 if ne r want
 ret 1
 end
@@ -338,7 +358,7 @@ daad kia aa
 n = dbn
 dcopy buf pt get st 8
 f = ulong 0
-if ne aead_aes128gcm_seal part kia 0 28 part aa 0 get st 7 part buf 0 n 0
+if ne dacall kia aa buf 0 0
 f = 1
 end
 f = or f dcmp buf ex n
@@ -372,7 +392,9 @@ dcopy buf ex n
 if eq get st 6 0
 f = dfail kia buf 2
 dcopy buf ex n
-if ne aes_gcm_seal dctl part kia 0 dka part buf 0 n 2
+c = dctl
+a = dka
+if ne aes_gcm_seal c part kia 0 a part buf 0 n 2
 f = 1
 end
 ret f
@@ -490,32 +512,10 @@ end
 ret dvalid kia pt ex buf aa
 end
 
-note B record after the tag: one FIPS 197 block through aes_setkey and aes_enc4 (lane 0)
-fn drecb kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 to ulong
+note one block pt through aes_setkey (key kia[0..kl)) and aes_enc4 (lane 0); 0 when it equals ex
+fn dblk kia view uchar 65536 pt edit uchar 65536 ex view uchar 65536 kl ulong to ulong
 k = new ulong AGKN 0
 s = new ulong AGSN 0
-dspace
-kl = dhexf kia 0
-dspace
-pl = dhexf pt 0
-dspace
-if ne gcm_chk or kl 0x11000 add kl 1 16 0
-deor
-if eq get st 3 1
-ret 2
-end
-if ne pl 16
-dbad
-ret 2
-end
-if ne cl 16
-dbad
-ret 2
-end
-if ne gcm_chk or kl 0x11000 kl 16 0
-dbad
-ret 2
-end
 aes_setkey k s part kia 0 kl
 h = ulong 0
 l = ulong 0
@@ -535,6 +535,33 @@ h = shr h 8
 l = shr l 8
 end
 ret dcmp pt ex 16
+end
+
+note B record after the tag
+fn drecb kia edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 to ulong
+dspace
+kl = dhexf kia 0
+dspace
+pl = dhexf pt 0
+dspace
+cl = dhexf ex 0
+deor
+if eq get st 3 1
+ret 2
+end
+if ne pl 16
+dbad
+ret 2
+end
+if ne cl 16
+dbad
+ret 2
+end
+if ne gcm_chk or kl 0x11000 add kl 1 16 0
+dbad
+ret 2
+end
+ret dblk kia pt ex kl
 end
 
 note X record: seal and open with ctl on zero arrays of the given lengths must both return want
@@ -604,13 +631,18 @@ put kia i 0
 put aa i 0
 put buf i 0
 end
+put st 14 kn
+put st 7 al
+put st 8 bl
+put st 10 0
 f = ulong 0
-if ne aead_aes128gcm_seal part kia 0 kn part aa 0 al part buf 0 bl want
+if ne dacall kia aa buf 0 want
 f = 1
 end
-if ne aead_aes128gcm_open part kia 0 kn part aa 0 al part buf 0 bl want
+if ne dacall kia aa buf 1 want
 f = 1
 end
+put st 14 28
 ret f
 end
 
@@ -632,9 +664,10 @@ put kia i uchar i
 end
 ctl = ulong 0xc1010
 t0 = monons
-r = aes_gcm_seal ctl part kia 0 28 part big 0 add n 16
+m = add n 16
+r = aes_gcm_seal ctl part kia 0 28 part big 0 m
 t1 = monons
-r = or r aes_gcm_open ctl part kia 0 28 part big 0 add n 16
+r = or r aes_gcm_open ctl part kia 0 28 part big 0 m
 t2 = monons
 w = write 1 tspd 0 len tspd
 dprn n
@@ -720,6 +753,7 @@ put st 1 0
 put st 2 0
 put st 12 0
 put st 13 0
+put st 14 28
 while lt get st 1 get st 0 bound 999999
 put st 2 add get st 2 1
 put st 3 0

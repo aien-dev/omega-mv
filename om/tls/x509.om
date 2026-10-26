@@ -1563,16 +1563,11 @@ note chain_sig: verify the signature of the certificate cd (record rr[0 .. 32)) 
 note certificate kd (record rr[32 .. 64)). Allowed: sigalg 1-6 with an rsaEncryption key of >= 2048
 note bits, sigalg 7-9 with a P-256 or P-384 key. 0, X5EALG, X5EWEAK or X5ESIG.
 fn chain_sig cd view uchar * kd view uchar * rr view ulong * to ulong
-hs = new uchar 1100 0
+p = new ulong 10 0
 a = get rr X5RALG
 kt = get rr add X5RSZ X5RKT
 if or eq a 0 gt a 9
 ret X5EALG
-end
-hb = chain_hash a
-sl = get rr X5RSGL
-if gt sl 1024
-ret X5ESIG
 end
 if le a 6
 if ne kt 1
@@ -1586,36 +1581,53 @@ if or lt kt 2 gt kt 3
 ret X5EALG
 end
 end
-p = new ulong 6 0
 put p 0 add div sub a 1 3 1
-put p 1 hb
+put p 1 chain_hash a
 put p 2 get rr add X5RSZ X5RKO
 put p 3 get rr add X5RSZ X5RKL
 put p 4 kt
-tbo = get rr X5RTBO
-tl = get rr X5RTBL
-put p 5 sha2_digest hb part cd tbo tl edit hs
+put p 6 get rr X5RTBO
+put p 7 get rr X5RTBL
+put p 8 get rr X5RSGO
+put p 9 get rr X5RSGL
+ret chain_hsig cd kd edit p
+end
+
+note chain_hsig: digest of cd[p[6] .. +p[7]) with hash p[1], then chain_vfy of digest || signature
+note cd[p[8] .. +p[9]) (at most 1024 bytes, else X5ESIG) with the key in kd
+fn chain_hsig cd view uchar * kd view uchar * p edit ulong * to ulong
+hs = new uchar 1100 0
+sl = get p 9
+if gt sl 1024
+ret X5ESIG
+end
+put p 5 sha2_digest get p 1 part cd get p 6 get p 7 edit hs
 dl = get p 5
-so = get rr X5RSGO
+so = get p 8
 for i ulong sl
 put hs add dl i get cd add so i
 end
-ret chain_vfy kd view part hs 0 add dl sl p
+dl = add dl sl
+so = get p 2
+sl = get p 3
+ret chain_vfy part kd so sl view part hs 0 dl view p
 end
 
-note chain_vfy: hs = digest (p[5] bytes) || signature, key in kd[p[2] .. +p[3]); p[0] 1 PKCS#1 v1.5,
-note 2 PSS, 3 ECDSA; p[1] hash, p[4] key type. 0 or X5ESIG.
-fn chain_vfy kd view uchar * hs view uchar * p view ulong * to ulong
+note chain_vfy: hs = digest (p[5] bytes) || signature, key ky (RSAPublicKey DER or SEC1 point);
+note p[0] 1 PKCS#1 v1.5, 2 PSS, 3 ECDSA; p[1] hash, p[4] key type. 0 or X5ESIG.
+fn chain_vfy ky view uchar * hs view uchar * p view ulong * to ulong
 k = get p 0
+hb = get p 1
+dl = get p 5
 v = ulong 1
 if eq k 1
-v = rsa_verify_pkcs1 get p 1 part kd get p 2 get p 3 hs get p 5
+v = rsa_verify_pkcs1 hb ky hs dl
 end
 if eq k 2
-v = rsa_verify_pss chain_ctl get p 1 part kd get p 2 get p 3 hs get p 5
+v = rsa_verify_pss chain_ctl hb ky hs dl
 end
 if eq k 3
-v = ecdsa_verify chain_crv get p 4 part kd get p 2 get p 3 hs get p 5
+v = ecdsa_verify chain_crv get p 4 ky hs dl
 end
 if ne v 0
 ret X5ESIG
@@ -1686,38 +1698,42 @@ note failed candidate (a signature failure ranks above a parse failure), X5EUNK 
 fn chain_pres cl view uchar * w edit ulong * to ulong
 kb = new uchar 16384 0
 res = X5EUNK
-cu = get w X5WCUR
-co = get w add X5WIX mul cu 2
-cn = get w add X5WIX add mul cu 2 1
 for j ulong get w X5WN
 if ne and get w X5WUSED shl ulong 1 j 0
 continue
 end
+put w X5WSEL j
+v = chain_try cl w kb
+if eq v 0
+ret 0
+end
+if or eq res X5EUNK and ne v X5EUNK ne v X5EMAL
+res = v
+end
+end
+ret res
+end
+
+note chain_try: candidate issuer w[X5WSEL] of cl for the current certificate w[X5WCUR]; the
+note candidate is copied into kb (the two certificates of one call must be distinct arrays)
+fn chain_try cl view uchar * w edit ulong * kb edit uchar * to ulong
+j = get w X5WSEL
 o = get w add X5WIX mul j 2
 l = get w add X5WIX add mul j 2 1
-if gt l X5KBUF
-continue
+if gt l len kb
+ret X5EMAL
 end
 for i ulong l
 put kb i get cl add o i
 end
 v = x509_parse view part kb 0 l part w X5RSZ X5RSZ
 if ne v 0
-if eq res X5EUNK
-res = v
+ret X5EMAL
 end
-continue
-end
-v = chain_link part cl co cn view part kb 0 l view w
-if eq v 0
-put w X5WSEL j
-ret 0
-end
-if ne v X5EUNK
-res = v
-end
-end
-ret res
+j = get w X5WCUR
+o = get w add X5WIX mul j 2
+i = get w add X5WIX add mul j 2 1
+ret chain_link part cl o i view part kb 0 l view w
 end
 
 note chain_ca: constraints of the chosen issuer (record w[32 .. 64)), a non-anchor CA certificate:
@@ -1807,12 +1823,12 @@ a = chain_anchor part cl co cn st w
 if eq a 0
 ret 0
 end
-p = chain_pres cl w
-if ne p 0
-if eq p X5EUNK
+v = chain_pres cl w
+if ne v 0
+if eq v X5EUNK
 ret a
 end
-ret p
+ret v
 end
 if ge get w X5WDEP X5MAXD
 ret X5EDEEP
@@ -1821,6 +1837,13 @@ v = chain_ca w
 if ne v 0
 ret v
 end
+chain_up w
+end
+ret X5EDEEP
+end
+
+note chain_up: the chosen presented issuer becomes the current certificate
+fn chain_up w edit ulong * to void
 for i ulong X5RSZ
 put w i get w add X5RSZ i
 end
@@ -1828,8 +1851,6 @@ j = get w X5WSEL
 put w X5WCUR j
 put w X5WUSED or get w X5WUSED shl ulong 1 j
 put w X5WDEP add get w X5WDEP 1
-end
-ret X5EDEEP
 end
 
 note x509_chain_verify: validate the server chain. cl = TLS 1.3 certificate_list contents, leaf
@@ -1861,32 +1882,22 @@ ret chain_path cl st w
 end
 
 note chain_cvsig: CertificateVerify check with the leaf kd (record r; r[30] hash, r[31] content
-note length): ms = content || signature
-fn chain_cvsig kd view uchar * r edit ulong * ms view uchar * to ulong
-hs = new uchar 1100 0
-hb = get r 30
-ml = get r 31
-sl = sub len ms ml
-if or eq sl 0 gt sl 1024
-ret X5ESIG
-end
-dl = sha2_digest hb part ms 0 ml edit hs
-for i ulong sl
-put hs add dl i get ms add ml i
-end
-ko = get r X5RKO
-kl = get r X5RKL
+note length): ms = content || signature; RSA keys use PSS, EC keys ECDSA (chain_hsig)
+fn chain_cvsig kd view uchar * r view ulong * ms view uchar * to ulong
+p = new ulong 10 0
 kt = get r X5RKT
-v = ulong 1
+put p 0 3
 if eq kt 1
-v = rsa_verify_pss chain_ctl hb part kd ko kl view part hs 0 add dl sl dl
-else
-v = ecdsa_verify chain_crv kt part kd ko kl view part hs 0 add dl sl dl
+put p 0 2
 end
-if ne v 0
-ret X5ESIG
-end
-ret 0
+put p 1 get r 30
+put p 2 get r X5RKO
+put p 3 get r X5RKL
+put p 4 kt
+put p 7 get r 31
+put p 8 get r 31
+put p 9 sub len ms get r 31
+ret chain_hsig ms kd edit p
 end
 
 note x509_cv_verify: TLS 1.3 CertificateVerify (RFC 8446 4.4.3) against the leaf of cl. ms = signed
