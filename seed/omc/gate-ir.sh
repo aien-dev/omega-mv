@@ -49,19 +49,21 @@ struct S a uchar end
 fn main to int
 ret 0
 end'
-ir_refuse global_decl 9 'ir
-global g uchar 4
+# global, text and floats lower to v7 since gate-ir-v7.sh; these keep the refusals v7 still owes.
+ir_refuse global_bool 9 'ir
+global g bool 4
 fn main to int
 ret 0
 end'
-ir_refuse text_decl 9 'ir
+ir_refuse text_put 20 'ir
 text t "x"
 fn main to int
+put t 0 uchar 1
 ret 0
 end'
-ir_refuse float_use 3 'ir
+ir_refuse float_intrinsic 3 'ir
 fn main to int
-x = f64 1.0
+x = fsqrt 1.0f64
 ret 0
 end'
 ir_refuse continue_use 3 'ir
@@ -318,11 +320,11 @@ if eq a 0
 ret 1
 end
 end'
-ir_refuse float_param 9 'ir
-fn f a f64 to f64
-ret a
+ir_refuse float_bool 9 'ir
+fn f a f64 to bool
+ret bool a
 end'
-ir_refuse float_ret 9 'ir
+ir_refuse float_ret 7 'ir
 fn f a uint to f64
 ret a
 end'

@@ -891,9 +891,12 @@ fixed pools. GPU launch and model execution are separate, still-unqualified gate
 
 ## 11. OSC IR output (omc only, experimental checkpoint)
 
-A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC IR version 1
+A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC IR
 (`spec/one-layer-format.md`) for a unit of up to 32 functions instead of AArch64 machine words, and
-the AArch64 path is not taken. Every function is encoded in source order. A function may call an
+the AArch64 path is not taken. A unit that uses no region and no float is written as version 1,
+byte-identical to the scalar checkpoint; a unit with a `global`, `text` or `new` region, or an
+`f32`/`f64` value, is written as version 7 (section 11.2).
+Every function is encoded in source order. A function may call an
 **earlier** function (self and forward calls are error 3) with at most six arguments; a
 value-returning call composes as a value, a void call is a statement, and using one where the other
 is needed is error 7. Argument types are checked at compile time (error 7). `break` lowers to a
@@ -906,8 +909,8 @@ the `else` boundary; redeclaring an in-scope name is error 10, and reading
 an out-of-scope name is error 3. Locals and parameters retain the native
 eight-byte name limit (13), while function names retain full matching up
 to 63 bytes. A reachable non-void function end is error 18; a void end
-emits an implicit return. Missing function `end` is error 15. Unsupported
-float parameter/result types are refused with error 9 before serialization.
+emits an implicit return. Missing function `end` is error 15. A conversion
+between `bool` and a float is error 9.
 Typed literals are range-checked (8). Parentheses remain unsupported in
 this scalar IR checkpoint, rather than being silently discarded.
 
@@ -924,9 +927,9 @@ native path. `gate-ir.sh` checks all three against the C encoder and checker2.
 Arithmetic (`add` through `rem`) and shifts of booleans remain error 7.
 
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
-parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
-float word, a host word, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
-declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
+parameters. IR mode refuses a `struct` declaration with error 9 and refuses a float intrinsic
+(`fsqrt`, `fabs`, `fmin`, `fmax`), a host word, `continue`, `sizeof` or `offsetof` with error 3;
+it never skips a declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
 C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
 `build/omega_emit/omega_emit` and `build/checker2/checker2` exist, and says `SKIP` otherwise.
 
@@ -1020,10 +1023,26 @@ with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
 
 ### 11.2 Memory profile contract (IR v2 milestone)
 
-This is a specification for the next seeded producer/backend extension, not
-an assertion that the binaries above implement it. The authoritative wire
-allocation and validation rules are in `spec/one-layer-format.md` section 10.
-The milestone name does not repurpose OSC wire version 2.
+omc's IR mode implements the producer half of this contract (OSC IR wire
+version 7): `global`, `text`, `new` at a function's top level, `get`, `put`,
+`len`, `f32`/`f64` values with `add`/`sub`/`mul`/`div`, comparisons and
+conversions, and `bitcast` between equal-width integer and float types.
+`seed/omc/gate-ir-v7.sh` checks hand-derived bytes, an independent oracle's
+`check` and `run`, refusal codes and producer mutants. The wasm backend half
+is separate work. The authoritative wire allocation and validation rules are
+in `spec/one-layer-format.md` section 10. The milestone name does not
+repurpose OSC wire version 2.
+
+Producer rules beyond the wire contract: `new` inside an `if`, `while` or
+`for` body is error 9, so its `RINIT` dominates every access; a `bool`
+region element is error 9; a `bool` conversion in a version 7 unit is error
+9; a region name reused or shadowed is error 10 (a new local named like a
+module region is error 7, as for any constant name); an array used as a
+scalar, an integer literal mixed with a float, `rem`/shifts/`not` on floats
+and a width-changing `bitcast` are error 7; more than 1024 regions is error
+14. A conversion word converts its operand at the operand's own type, as on
+the native path: `uint div x 2` with a `long` x divides in `long`, then
+casts.
 
 The source spelling reuses native arrays:
 

@@ -10064,7 +10064,8 @@ put fr q 5
 put fr add q 1 ulong get nm_reg sub e 1
 put fr add q 2 e
 end
-note ---- R6 IR. A leading line `ir` writes OSC IR version 1. The AArch64 path is not taken.
+note ---- R6 IR. A leading line `ir` writes OSC IR: version 1, or version 7 (spec section 10) exactly when the
+note unit has a region, a float type or an opcode 30..33. The AArch64 path is not taken.
 note Worksheet ir_match.py matched omega_emit on the 10 dev programs; this is that algorithm.
 
 global ir_rty uchar 64
@@ -10124,6 +10125,28 @@ note per open block frame, the local count when it opened (names bound inside go
 global ir_fnn ulong 8
 note ir_bbig: tbig of the bare number in ir_bare, for the range check once its type is known (error 8).
 global ir_bbig ulong 1
+note v7 regions in source order (spec 10.1): name (input start, length, packed word), element (internal
+note type 2..11), class (0 global, 1 local array, 2 text), owner, count, and a text's raw source span.
+global rg_ns ulong 1024
+global rg_nl ulong 1024
+global rg_w ulong 1024
+global rg_ty uchar 1024
+global rg_cl uchar 1024
+global rg_ow ulong 1024
+global rg_n ulong 1024
+global rg_tp ulong 1024
+global rg_tl ulong 1024
+global ir_nrg ulong 1
+note ir_v7: the unit needs version 7. ir_bcst: a CAST from or to bool was written (excluded from v7 CAST).
+global ir_v7 ulong 1
+global ir_bcst ulong 1
+note pool bytes so far: module globals (1 GiB) and the current function's local arrays (4 MiB)
+global ir_gby ulong 1
+global ir_lby ulong 1
+note per local: its region when the local is an array (its ir_nrr is then 255, never a register)
+global ir_nar ulong 32
+note ir_cx: the next ir_val reads the operand of a conversion word (see ir_vchk); ir_val clears it.
+global ir_cx ulong 1
 
 fn ir_lead to ulong
 p = ulong 0
@@ -10179,6 +10202,9 @@ fail 14
 end
 put ir_rty r uchar ty
 put ir_nreg 0 add r 1
+if and ge ty 10 le ty 11
+put ir_v7 0 1
+end
 ret r
 end
 
@@ -10213,6 +10239,9 @@ put ir_ob n b
 put ir_oc n c
 put ir_od n d
 put ir_obl n get ir_cur 0
+if ge k 30
+put ir_v7 0 1
+end
 put ir_no 0 add n 1
 end
 
@@ -10306,8 +10335,8 @@ end
 ir_newname w s l
 end
 
-note ir_type: a type word IR v1 lowers: 1 .. 9, or void (76) when isret is 1. A float, a view / edit array or
-note void elsewhere is error 9 (as typeword in IR mode); no word is 4; another word 16.
+note ir_type: a scalar type word: 1 .. 9, f32 / f64 as internal 10 / 11 (v7), or void (76) when isret is 1.
+note A view / edit array or void elsewhere is error 9 (as typeword in IR mode); no word is 4; another word 16.
 fn ir_type isret ulong to ulong
 tok
 if or eq get tk 0 0 eq get tk 0 3
@@ -10323,7 +10352,10 @@ end
 if and eq c 76 eq isret 1
 ret c
 end
-if or or eq c 76 eq c 88 eq c 89
+if or eq c 88 eq c 89
+ret sub c 78
+end
+if eq c 76
 fail 9
 end
 if or eq c 57 eq c 58
@@ -10467,8 +10499,91 @@ end
 if eq op 15
 ir_w16 get ir_oa i
 end
+if or eq op 30 eq op 31
+ir_w16 get ir_oa i
+ir_w16 get ir_ob i
+ir_w16 get ir_oc i
+end
+if or eq op 32 eq op 33
+ir_w16 get ir_oa i
+ir_w16 get ir_ob i
+end
 end
 i = add i 1
+end
+end
+
+note ir_wt: an internal type as its wire tag: f32 10 -> 13, f64 11 -> 14 (spec 10.3); 1 .. 9 unchanged.
+fn ir_wt t ulong to ulong
+if eq t 10
+ret 13
+end
+if eq t 11
+ret 14
+end
+ret t
+end
+
+note ir_tdec: decode the text literal bytes p .. e (escapes \n \t \\ \", any other is error 22, as s_text)
+note -> the byte count; em 1 also writes the bytes.
+fn ir_tdec p ulong e ulong em ulong to ulong
+q = p
+n = ulong 0
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge q e
+go = false
+else
+b = get inp q
+q = add q 1
+if eq b 92
+b = get inp q
+q = add q 1
+if eq b 110
+b = uchar 10
+else
+if eq b 116
+b = uchar 9
+else
+if and ne b 92 ne b 34
+fail 22
+end
+end
+end
+end
+if eq em 1
+emitb b
+end
+n = add n 1
+end
+m = add m 1
+end
+end
+ret n
+end
+
+note ir_wreg: region g's record: name, element tag, class, owner, count, initial length and data (spec 10.1).
+fn ir_wreg g ulong to void
+l = get rg_nl g
+emitb uchar l
+p = get rg_ns g
+i = ulong 0
+while lt i l
+emitb get inp add p i
+i = add i 1
+end
+emitb uchar ir_wt ulong get rg_ty g
+emitb get rg_cl g
+ir_w16 get rg_ow g
+ir_w32 get rg_n g
+if eq get rg_cl g 2
+ir_w32 get rg_n g
+q = get rg_tp g
+n = ir_tdec q add q get rg_tl g 1
+else
+ir_w32 0
 end
 end
 
@@ -10484,12 +10599,12 @@ emitb uchar get ir_npar 0
 if eq get ir_ret 0 76
 emitb 0
 else
-emitb uchar get ir_ret 0
+emitb uchar ir_wt get ir_ret 0
 end
 ir_w16 get ir_nreg 0
 i = ulong 0
 while lt i get ir_nreg 0
-emitb get ir_rty i
+emitb uchar ir_wt ulong get ir_rty i
 i = add i 1
 end
 ir_layout
@@ -10535,7 +10650,8 @@ put irrlen 0 add base n
 put irnf 0 add get irnf 0 1
 end
 
-note ir_encode: header (magic, version 1, nfuncs) followed by every collected function record.
+note ir_encode: header (magic, version, [v7: nstructs 0, the region table], nfuncs) followed by every
+note collected function record. A v7 unit with a bool CAST is refused (error 9, spec 10.3).
 fn ir_encode to void
 put oc 0 0
 emitb 79
@@ -10545,7 +10661,24 @@ emitb 49
 emitb 73
 emitb 82
 emitb 0
+if ne get ir_nrg 0 0
+put ir_v7 0 1
+end
+if eq get ir_v7 0 0
 emitb 1
+else
+if ne get ir_bcst 0 0
+fail 9
+end
+emitb 7
+emitb 0
+ir_w16 get ir_nrg 0
+g = ulong 0
+while lt g get ir_nrg 0
+ir_wreg g
+g = add g 1
+end
+end
 ir_w16 get irnf 0
 i = ulong 0
 while lt i get irrlen 0
@@ -10636,11 +10769,15 @@ r = ir_lit get nm_addr sub e 1 t
 ir_set 65534 r t
 ret
 end
+fail 7
 end
 put ir_miss 0 1
 ret
 end
 r = ulong get ir_nrr sub e 1
+if eq r 255
+fail 7
+end
 ir_set 65534 r ulong get ir_rty r
 end
 
@@ -10651,6 +10788,9 @@ fail 11
 end
 ty = get ir_vt 0
 if and eq c 49 eq ty 1
+fail 7
+end
+if and eq c 50 ge ty 10
 fail 7
 end
 d = dst
@@ -10692,7 +10832,7 @@ fail 7
 end
 end
 else
-if ge lty 10
+if and ge lty 10 and ge c 37 le c 40
 fail 7
 end
 if and eq isb2 0 ne ty2 lty
@@ -10704,8 +10844,7 @@ end
 end
 right = get ir_rr 0
 if ne isb2 0
-range get ir_bare 0 lty get ir_bbig 0
-right = ir_lit get ir_bare 0 lty
+right = ir_bres lty
 end
 if ge c 43
 d = dst
@@ -10727,18 +10866,38 @@ put ir_vt 0 lty
 put ir_isb 0 0
 end
 
+note ir_bres: the deferred bare number as a constant of type ty: an integer (range, error 8) or a float
+note literal (float types only); an integer in a float context or a float in an integer one is error 7.
+fn ir_bres ty ulong to ulong
+if eq get ir_isb 0 2
+if lt ty 10
+fail 7
+end
+ret ir_lit fspan ty get ir_bare 0 ty
+end
+if ge ty 10
+fail 7
+end
+range get ir_bare 0 ty get ir_bbig 0
+ret ir_lit get ir_bare 0 ty
+end
+
 fn ir_bin c ulong dst ulong to void
 ir_val 65534 0
 if ne get ir_isb 0 0
 mag = get ir_bare 0
 bg = get ir_bbig 0
+kb = get ir_isb 0
 ir_val 65534 0
 if ne get ir_isb 0 0
 fail 11
 end
 ty = get ir_vt 0
-range mag ty bg
-left = ir_lit mag ty
+put ir_bare 0 mag
+put ir_bbig 0 bg
+put ir_isb 0 kb
+left = ir_bres ty
+put ir_isb 0 0
 ir_bin_done left ty c dst
 ret
 end
@@ -10747,15 +10906,40 @@ lty = get ir_vt 0
 ir_bin_r left lty c dst
 end
 
+note ir_cast: a type word as a typed literal or a conversion (MOV for the same type, else CAST). An operation
+note operand keeps its own type and is converted (as native; bool still needs its exact type). A float word
+note reads its operand untyped: a bare float literal becomes that float constant, a bare integer a long
+note constant converted (as native). A conversion between bool and a float is error 9.
 fn ir_cast c ulong dst ulong to void
-ir_val 65534 c
-if ne get ir_isb 0 0
-r = ir_lit get ir_bare 0 c
+e = c
+if ge c 10
+e = ulong 0
+end
+put ir_cx 0 1
+ir_val 65534 e
+if eq get ir_isb 0 2
+r = ir_lit fspan c get ir_bare 0 c
 ir_set dst r c
 ret
 end
 src = get ir_rr 0
 sty = get ir_vt 0
+if ne get ir_isb 0 0
+k = c
+if ge c 10
+k = ulong 9
+range get ir_bare 0 9 get ir_bbig 0
+end
+src = ir_lit get ir_bare 0 k
+sty = k
+if lt c 10
+ir_set dst src c
+ret
+end
+end
+if or and eq sty 1 ge c 10 and ge sty 10 eq c 1
+fail 9
+end
 if and eq sty c eq dst 65534
 put ir_rr 0 src
 put ir_vt 0 c
@@ -10770,21 +10954,349 @@ if eq sty c
 ir_op 2 d src 0 0
 else
 ir_op 6 d src 0 0
+if or eq sty 1 eq c 1
+put ir_bcst 0 1
+end
 end
 put ir_rr 0 d
 put ir_vt 0 c
 put ir_isb 0 0
 end
 
+note ---- v7 memory (spec 10, OMEGESE 11.2): regions, RLOAD / RSTORE / RINIT / BITCAST ----
+note ir_rname: a region name is ASCII without a dot (spec 10.1), else error 16.
+fn ir_rname p ulong l ulong to void
+i = ulong 0
+while lt i l
+b = get inp add p i
+if or eq b 46 ge b 127
+fail 16
+end
+i = add i 1
+end
+end
+
+note ir_addrg: append region (packed name w, input p / l, element ty, class cl, count n) -> its ID. The
+note owner is the current function for a local array, else 65535. At most 1024 regions (error 14).
+fn ir_addrg w ulong p ulong l ulong ty ulong cl ulong n ulong to ulong
+g = get ir_nrg 0
+if ge g 1024
+fail 14
+end
+ir_rname p l
+put rg_w g w
+put rg_ns g p
+put rg_nl g l
+put rg_ty g uchar ty
+put rg_cl g uchar cl
+ow = ulong 65535
+if eq cl 1
+ow = sub get irf_n 0 1
+end
+put rg_ow g ow
+put rg_n g n
+put rg_tp g 0
+put rg_tl g 0
+put ir_nrg 0 add g 1
+ret g
+end
+
+note ir_topnm: the name of a global or a text (16 not a word or a keyword, 13 over 8 bytes, 10 in use). A
+note module region may not take the name of an earlier function's local array either (spec 10.1, 10).
+fn ir_topnm to ulong
+tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+put ir_nn 0 0
+ir_newname w get ts 0 get tl 0
+g = ulong 0
+while lt g get ir_nrg 0
+if and eq get rg_cl g 1 eq get rg_w g w
+fail 10
+end
+g = add g 1
+end
+ret w
+end
+
+note ir_glob: global NAME T N, a module region (class 0) of N zeroed elements; T is not bool (9); pools
+note total at most 1 GiB (23, as s_global).
+fn ir_glob to void
+w = ir_topnm
+p = get ts 0
+l = get tl 0
+ty = ir_type 0
+if eq ty 1
+fail 9
+end
+n = lenval 16
+arrlen n
+by = shl shr add shl n tlog ty 15 4 4
+s = add get ir_gby 0 by
+if gt s 1073741824
+fail 23
+end
+put ir_gby 0 s
+g = ir_addrg w p l ty 0 n
+addname w 0 ty n 4 g
+put nglob 0 get nn 0
+eol
+end
+
+note ir_text: text NAME "...", a read-only u8 region (class 2) holding the decoded bytes, no NUL.
+fn ir_text to void
+w = ir_topnm
+p = get ts 0
+l = get tl 0
+tok
+if ne get tk 0 4
+fail 16
+end
+q = get tw 0
+ql = get tl 0
+n = ir_tdec q add q ql 0
+g = ir_addrg w p l 2 2 n
+put rg_tp g q
+put rg_tl g ql
+addname w 0 2 n 5 g
+put nglob 0 get nn 0
+eol
+end
+
+note ir_arr: an array name (as arrname: 4 missing, 16 not a word, 13 over 8 bytes, 3 unknown, 7 a scalar
+note or constant) -> its region: a local array, a global or a text.
+fn ir_arr to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 8
+fail 13
+end
+w = get tw 0
+if eq kw w 193
+fail 9
+end
+e = ir_find w get tl 0
+if ne e 0
+if ne get ir_nrr sub e 1 255
+fail 7
+end
+ret get ir_nar sub e 1
+end
+e = findname w
+if eq e 0
+fail 3
+end
+k = ulong get nm_kind sub e 1
+if or eq k 4 eq k 5
+ret get nm_addr sub e 1
+end
+fail 7
+ret 0
+end
+
+note ir_idx: an index (a bare number is a ulong) -> its register; bool or float is error 7 (spec 10.2).
+fn ir_idx to ulong
+ir_val 65534 5
+t = get ir_vt 0
+if or eq t 1 ge t 10
+fail 7
+end
+ret get ir_rr 0
+end
+
+note ir_ixk: a constant index (register r is a constant) must be below region g's count (error 21).
+fn ir_ixk r ulong g ulong to void
+i = ulong 0
+while lt i get ir_nc 0
+if eq ulong get ir_cr i r
+if ge get ir_cm i get rg_n g
+fail 21
+end
+end
+i = add i 1
+end
+end
+
+note ir_get: get A i -> RLOAD into a register of A's element type.
+fn ir_get dst ulong to void
+g = ir_arr
+x = ir_idx
+ir_ixk x g
+ty = ulong get rg_ty g
+d = dst
+if or eq dst 65534 eq dst 65535
+d = ir_newreg ty
+end
+ir_op 30 d g x 0
+put ir_rr 0 d
+put ir_vt 0 ty
+put ir_isb 0 0
+end
+
+note ir_put: put A i v -> RSTORE; a text is error 20, v must have A's element type (7).
+fn ir_put to void
+g = ir_arr
+if eq get rg_cl g 2
+fail 20
+end
+x = ir_idx
+ty = ulong get rg_ty g
+ir_val 65534 ty
+if ne get ir_vt 0 ty
+fail 7
+end
+v = get ir_rr 0
+ir_ixk x g
+eol
+ir_op 31 g x v 0
+end
+
+note ir_bitc: bitcast T v -> BITCAST: v typed (a bare number is 11), neither bool nor of another width (7).
+fn ir_bitc dst ulong to void
+tt = ir_type 0
+ir_val 65534 0
+if ne get ir_isb 0 0
+fail 11
+end
+ft = get ir_vt 0
+if or eq ft 1 ne twid ft twid tt
+fail 7
+end
+d = dst
+if or eq dst 65534 eq dst 65535
+d = ir_newreg tt
+end
+ir_op 32 d get ir_rr 0 0 0
+put ir_rr 0 d
+put ir_vt 0 tt
+put ir_isb 0 0
+end
+
+note ir_isnew: the next word is new (then consumed), else the position is restored.
+fn ir_isnew to ulong
+c0 = get cur 0
+tok
+if and eq get tk 0 1 eq ir_kwt 84
+ret 1
+end
+put cur 0 c0
+if eq get tk 0 0
+put line 0 sub get line 0 1
+end
+ret 0
+end
+
+note ir_new: x = new T N v, a local array (class 1) in the function's outermost block only (9); T not bool
+note (9); local arrays total at most 4 MiB per function (23, as sa_arr); v has type T (7). RINIT fills it.
+fn ir_new w ulong p ulong l ulong to void
+if gt get ir_nf 0 1
+fail 9
+end
+ty = ir_type 0
+if eq ty 1
+fail 9
+end
+n = lenval 16
+arrlen n
+by = shl shr add shl n tlog ty 15 4 4
+s = add get ir_lby 0 by
+if gt s 4194304
+fail 23
+end
+put ir_lby 0 s
+ir_val 65534 ty
+if ne get ir_vt 0 ty
+fail 7
+end
+v = get ir_rr 0
+eol
+g = ir_addrg w p l ty 1 n
+ir_op 33 g v 0 0
+ir_bind w 255
+put ir_nar sub get ir_nn 0 1 g
+end
+
+note ir_flt: a float literal (native rules): no suffix and no context is deferred as a bare float (ir_isb 2,
+note its packed span in ir_bare); a non-float context or a suffix other than the context is error 7.
+fn ir_flt dst ulong exp ulong to void
+fparse get ts 0 get tl 0
+t = ulong 0
+if eq get fsuf 0 0
+if eq exp 0
+put ir_bare 0 add mul get ts 0 64 get tl 0
+put ir_isb 0 2
+ret
+end
+if lt exp 10
+fail 7
+end
+t = exp
+else
+t = ulong 10
+if eq get fsuf 0 2
+t = ulong 11
+end
+if and ne exp 0 ne exp t
+fail 7
+end
+end
+r = ir_lit fbits t t
+ir_set dst r t
+end
+
+note ir_mem: get A i (RLOAD), len A (its count as a ulong constant) or bitcast T v (BITCAST).
+fn ir_mem c ulong dst ulong to void
+if eq c 51
+ir_get dst
+end
+if eq c 52
+g = ir_arr
+r = ir_lit get rg_n g 5
+ir_set dst r 5
+end
+if eq c 90
+ir_bitc dst
+end
+end
+
+note ir_vchk: an operation's result type must be the context type exp (7), unless cx: the operation is the
+note operand of a conversion word, which converts it (native) between non-bool types.
+fn ir_vchk exp ulong cx ulong to void
+t = get ir_vt 0
+if or eq exp 0 eq t exp
+ret
+end
+if and eq cx 1 and ne t 1 ne exp 1
+ret
+end
+fail 7
+end
+
 fn ir_val dst ulong exp ulong to void
+cx = get ir_cx 0
+put ir_cx 0 0
 put ir_isb 0 0
 put ir_miss 0 0
 tok
 if or eq get tk 0 0 eq get tk 0 3
 fail 4
 end
-if or eq get tk 0 4 eq get tk 0 5
+if eq get tk 0 4
 fail 9
+end
+if eq get tk 0 5
+ir_flt dst exp
+ret
 end
 if eq get tk 0 2
 if eq exp 0
@@ -10792,6 +11304,9 @@ put ir_bare 0 get tw 0
 put ir_bbig 0 get tbig 0
 put ir_isb 0 1
 ret
+end
+if ge exp 10
+fail 7
 end
 range get tw 0 exp get tbig 0
 r = ir_lit get tw 0 exp
@@ -10803,18 +11318,23 @@ if and ge c 1 le c 9
 ir_cast c dst
 ret
 end
+if or eq c 88 eq c 89
+ir_cast sub c 78 dst
+ret
+end
+if or or eq c 51 eq c 52 eq c 90
+ir_mem c dst
+ir_vchk exp cx
+ret
+end
 if and ge c 33 le c 48
 ir_bin c dst
-if and ne exp 0 ne get ir_vt 0 exp
-fail 7
-end
+ir_vchk exp cx
 ret
 end
 if or eq c 49 eq c 50
 ir_un c dst
-if and ne exp 0 ne get ir_vt 0 exp
-fail 7
-end
+ir_vchk exp cx
 ret
 end
 if eq c 55
@@ -11019,7 +11539,7 @@ end
 w = get tw 0
 ir_newloc w get ts 0 get tl 0
 ty = ir_type 0
-if eq ty 1
+if or eq ty 1 ge ty 10
 fail 7
 end
 z = ir_lit 0 ty
@@ -11097,8 +11617,9 @@ ir_callop 65535 j np
 eol
 end
 
-note ir_assign: name [=] value for a local in scope, a void call, or a new typed local (a new name that is
-note a keyword, constant, local or function is refused; a bare number has no type, error 11).
+note ir_assign: name [=] value for a local in scope, a void call, a new typed local, or name = new T N v (a
+note new name that is a keyword, constant, local or function is refused; a bare number has no type, error
+note 11; an array name is not a scalar, error 7).
 fn ir_assign w ulong to void
 p = get ts 0
 l = get tl 0
@@ -11116,6 +11637,9 @@ end
 e = ir_find w l
 if ne e 0
 r = ulong get ir_nrr sub e 1
+if eq r 255
+fail 7
+end
 ir_val r ulong get ir_rty r
 if ne get ir_vt 0 ulong get ir_rty r
 fail 7
@@ -11139,6 +11663,10 @@ fail 7
 end
 end
 ir_newloc w p l
+if ne ir_isnew 0
+ir_new w p l
+ret
+end
 ir_val 65535 0
 if ne get ir_isb 0 0
 fail 11
@@ -11194,7 +11722,7 @@ put ir_dead 0 1
 end
 
 note ir_stmt: one line. The end of the input inside a function is error 15; a line starting with a number
-note is 16; a note is skipped even after the path ended; a statement IR v1 does not lower is 9.
+note is 16; a note is skipped even after the path ended; a statement the IR does not lower is 9.
 fn ir_stmt to ulong
 tok
 if eq get tk 0 0
@@ -11259,7 +11787,11 @@ if eq c 97
 note continue keeps its documented IR refusal, error 3 (gate-ir.sh continue_use)
 fail 3
 end
-if or eq c 80 eq c 82
+if eq c 80
+ir_put
+ret 0
+end
+if eq c 82
 fail 9
 end
 if or or or eq c 78 eq c 79 eq c 81 eq c 85
@@ -11315,6 +11847,7 @@ put irf_n 0 add fcur 1
 put ir_ns 0 get ts 0
 put ir_nl 0 get tl 0
 put ir_nreg 0 0
+put ir_lby 0 0
 put ir_nc 0 0
 put ir_nb 0 0
 put ir_nord 0 0
@@ -11339,6 +11872,9 @@ end
 put ir_ret 0 ir_type 1
 eol
 put irf_ret fcur uchar get ir_ret 0
+if and ge get ir_ret 0 10 le get ir_ret 0 11
+put ir_v7 0 1
+end
 put ir_npar 0 get ir_nreg 0
 b = ir_block
 ir_start b
@@ -11373,10 +11909,18 @@ else
 if eq c 152
 s_const
 else
-if or or eq c 85 eq c 78 eq c 79
+if eq c 78
+ir_glob
+else
+if eq c 79
+ir_text
+else
+if eq c 85
 fail 9
 end
 fail 16
+end
+end
 end
 end
 end
