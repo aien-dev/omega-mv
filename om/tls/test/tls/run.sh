@@ -85,18 +85,18 @@ dmut "mutant dns owner ignored"    's/^if eq dns_neq r o cur 0$/if lt dns_neq r 
 dmut "mutant dns label cap gone"   's/^if gt k 127$/if gt k 9999/'
 dmut "mutant dns_a4 name length unchecked" 's/^if gt len hn 253$/if gt len hn 9999/'
 
-# DIT: tls_hwdit must agree with the kernel's cpuinfo flag; a mutant reading the wrong auxv key
-# must not (it prints -1 or 0 where 1 is expected, or is caught by the cpuinfo compare)
+# DIT: tls_hwdit must agree with the kernel's cpuinfo flag (1 on a GB10, 0 on hosted runners); a
+# mutant looking for an auxv key that no kernel emits (60) must report -1 on every host
 if grep -qw dit /proc/cpuinfo; then dexp=1; else dexp=0; fi
 build dit "$tls/tls.om" "$here/dit.om" || exit 1
 dgot=$("$out/dit/bin" | sed -n 's/^hwdit //p')
 if [ "$dgot" = "$dexp" ]; then echo "PASS dit: hwdit=$dgot cpuinfo=$dexp"; else echo "FAIL dit: hwdit=$dgot cpuinfo=$dexp"; fail=1; fi
-sed 's/^if eq k 16$/if eq k 17/' "$tls/tls.om" > "$out/m.om"
+sed 's/^if eq k 16$/if eq k 60/' "$tls/tls.om" > "$out/m.om"
 if cmp -s "$out/m.om" "$tls/tls.om"; then echo "FAIL mutant auxv key: the mutation did not apply"; fail=1
 else
   rm -rf "$out/dm"; build dm "$out/m.om" "$here/dit.om" || fail=1
   mut=$((mut + 1)); mgot=$("$out/dm/bin" | sed -n 's/^hwdit //p')
-  if [ "$mgot" != "$dexp" ]; then mutok=$((mutok + 1)); echo "PASS mutant auxv key detected: hwdit=$mgot"; else echo "FAIL mutant auxv key not detected"; fail=1; fi
+  if [ "$mgot" = "-1" ]; then mutok=$((mutok + 1)); echo "PASS mutant auxv key detected: hwdit=$mgot"; else echo "FAIL mutant auxv key not detected: hwdit=$mgot"; fail=1; fi
 fi
 
 # interop with the real tls.om

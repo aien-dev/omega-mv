@@ -5,6 +5,10 @@ text dmsg "hwdit "
 fn main to int
 o = new uchar 16 0
 v = tls_hwdit
+bad = ulong 0
+if or lt v 0 gt v 1
+bad = 1
+end
 k = ulong 0
 if lt v 0
 put o 0 45
@@ -15,7 +19,7 @@ put o k add 48 uchar v
 put o add k 1 10
 w = write 1 dmsg 0 len dmsg
 w = write 1 o 0 add k 2
-if or lt v 0 gt v 1
+if eq bad 1
 ret 1
 end
 ret 0
