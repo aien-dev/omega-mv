@@ -1,0 +1,2261 @@
+note SPDX-License-Identifier: Apache-2.0
+note tls.om: TLS 1.3 client (RFC 8446), DNS A lookup and TCP connect. Library unit: functions,
+note consts and texts only; no main, no mutable globals. Needs sha2.om, hkdf.om, x25519.om,
+note chacha.om, aesgcm.om, ec.om, rsa.om and x509.om composed before it (om/tls/build.sh).
+note
+note TLS 1.3 only: supported_versions offers 0x0304 alone and a ServerHello without it is refused
+note (no TLS 1.2 fallback, no insecure switch). Suites TLS_CHACHA20_POLY1305_SHA256 (preferred)
+note and TLS_AES_128_GCM_SHA256; group x25519 only; SNI always; ALPN http/1.1 when flag 1 is set.
+note Server authentication is mandatory: x509_chain_verify (chain, dates, name, constraints) then
+note x509_cv_verify (CertificateVerify) then the Finished HMAC. Any failure: a fatal alert is sent
+note (best effort) and a named error is returned; the connection is unusable afterwards.
+note
+note Connection state c is one caller-owned uchar array of TLCSZ bytes; the trust store st is a
+note separate array filled once by tls_store (x509_store_load). Integers in c are big-endian.
+
+const TLCSZ ulong 119296
+const TLSTSZ ulong 262144
+const TLPH ulong 0
+const TLSU ulong 1
+const TLFL ulong 2
+const TLHL ulong 3
+const TLRK ulong 5
+const TLWK ulong 6
+const TLCR ulong 7
+const TLFD ulong 8
+const TLDL ulong 16
+const TLRS ulong 24
+const TLWS ulong 32
+const TLWKEY ulong 64
+const TLWIV ulong 96
+const TLRKEY ulong 112
+const TLRIV ulong 144
+const TLCAP ulong 160
+const TLSAP ulong 192
+const TLHOST ulong 224
+const TLPO ulong 480
+const TLPN ulong 484
+const TLHF ulong 488
+const TLDET ulong 492
+note change_cipher_spec state: 0 none allowed yet, 1 one allowed (after ServerHello), 2 no more
+const TLCCS ulong 496
+const TLEPK ulong 512
+const TLEPU ulong 544
+const TLSID ulong 576
+const TLHS ulong 608
+const TLCHS ulong 640
+const TLSHS ulong 672
+const TLMS ulong 704
+const TLSS ulong 736
+const TLCRX ulong 832
+const TLRB ulong 2048
+const TLWB ulong 19456
+const TLLF ulong 36864
+const TLLFSZ ulong 16896
+const TLHB ulong 53760
+const TLHBSZ ulong 65536
+
+note error codes (tls_errname gives the names)
+const TLEARG ulong 1
+const TLEIO ulong 2
+const TLETIME ulong 3
+const TLEEOF ulong 4
+const TLEREC ulong 5
+const TLEMAC ulong 6
+const TLEUNEX ulong 7
+const TLEDEC ulong 8
+const TLEVER ulong 9
+const TLECIPH ulong 10
+const TLEKEYS ulong 11
+const TLEEXT ulong 12
+const TLEHRR ulong 13
+const TLESID ulong 14
+const TLEZERO ulong 15
+const TLEALPN ulong 16
+const TLECERT ulong 17
+const TLESCH ulong 18
+const TLECV ulong 19
+const TLEFIN ulong 20
+const TLEALRT ulong 21
+const TLEBIG ulong 22
+const TLESTAT ulong 23
+const TLERAND ulong 24
+const TLEDNS ulong 25
+const TLECONN ulong 26
+const TLEKUPD ulong 27
+const TLESEQ ulong 28
+const TLESTOR ulong 29
+
+text TLN00 "TLS_OK"
+text TLN01 "TLS_ERR_ARGUMENT"
+text TLN02 "TLS_ERR_IO"
+text TLN03 "TLS_ERR_TIMEOUT"
+text TLN04 "TLS_ERR_EOF"
+text TLN05 "TLS_ERR_RECORD"
+text TLN06 "TLS_ERR_BAD_RECORD_MAC"
+text TLN07 "TLS_ERR_UNEXPECTED_MESSAGE"
+text TLN08 "TLS_ERR_DECODE"
+text TLN09 "TLS_ERR_PROTOCOL_VERSION"
+text TLN10 "TLS_ERR_CIPHER_SUITE"
+text TLN11 "TLS_ERR_KEY_SHARE"
+text TLN12 "TLS_ERR_EXTENSION"
+text TLN13 "TLS_ERR_HELLO_RETRY_UNSUPPORTED"
+text TLN14 "TLS_ERR_SESSION_ID_ECHO"
+text TLN15 "TLS_ERR_ZERO_SHARED_SECRET"
+text TLN16 "TLS_ERR_ALPN"
+text TLN17 "TLS_ERR_CERTIFICATE"
+text TLN18 "TLS_ERR_SIGNATURE_SCHEME"
+text TLN19 "TLS_ERR_CERTIFICATE_VERIFY"
+text TLN20 "TLS_ERR_FINISHED"
+text TLN21 "TLS_ERR_ALERT_RECEIVED"
+text TLN22 "TLS_ERR_MESSAGE_TOO_BIG"
+text TLN23 "TLS_ERR_STATE"
+text TLN24 "TLS_ERR_RANDOM"
+text TLN25 "TLS_ERR_DNS"
+text TLN26 "TLS_ERR_CONNECT"
+text TLN27 "TLS_ERR_KEY_UPDATE"
+text TLN28 "TLS_ERR_SEQUENCE_LIMIT"
+text TLN29 "TLS_ERR_TRUST_STORE"
+text TLNUNK "TLS_ERR_UNKNOWN"
+
+note HKDF labels (RFC 8446 section 7.1, 7.2, 7.3); "tls13 " is prepended by tls_info
+text TLL13 "tls13 "
+text TLLKEY "key"
+text TLLIV "iv"
+text TLLFIN "finished"
+text TLLDER "derived"
+text TLLCHS "c hs traffic"
+text TLLSHS "s hs traffic"
+text TLLCAP "c ap traffic"
+text TLLSAP "s ap traffic"
+text TLLUPD "traffic upd"
+text TLCVC "TLS 1.3, server CertificateVerify"
+text TLALPN "http/1.1"
+text TLRESOLV "/etc/resolv.conf"
+text TLNS "nameserver"
+
+note ---- byte helpers (big-endian, n <= 8) ----
+fn tls_gn b view uchar * o ulong n ulong to ulong
+v = ulong 0
+for i ulong n
+v = or shl v 8 ulong get b add o i
+end
+ret v
+end
+
+fn tls_pn b edit uchar * o ulong v ulong n ulong to void
+x = v
+for i ulong n
+put b sub add o sub n 1 i uchar and x 255
+x = shr x 8
+end
+end
+
+fn tls_cpy d edit uchar * o ulong s view uchar * to void
+for i ulong len s
+put d add o i get s i
+end
+end
+
+note move n bytes inside one array from s to d (d <= s or non-overlapping)
+fn tls_mov b edit uchar * d ulong s ulong n ulong to void
+for i ulong n
+put b add d i get b add s i
+end
+end
+
+fn tls_zero b edit uchar * o ulong n ulong to void
+for i ulong n
+put b add o i 0
+end
+end
+
+note constant-time equality of a[0..n) and b[o..o+n): 0 when equal, 1 otherwise
+fn tls_cteq a view uchar * b view uchar * o ulong n ulong to ulong
+d = ulong 0
+for i ulong n
+d = or d ulong xor get a i get b add o i
+end
+ret shr add d 255 8
+end
+
+note ---- error bookkeeping ----
+fn tls_fail c edit uchar * e ulong dt ulong to ulong
+put c TLPH 3
+tls_pn c TLDET dt 4
+ret e
+end
+
+fn tls_detail c view uchar * to ulong
+ret tls_gn c TLDET 4
+end
+
+fn tls_errname e ulong o edit uchar * to ulong
+n = ulong 0
+if eq e 0
+n = tls_namecp o TLN00
+end
+if eq e 1
+n = tls_namecp o TLN01
+end
+if eq e 2
+n = tls_namecp o TLN02
+end
+if eq e 3
+n = tls_namecp o TLN03
+end
+if eq e 4
+n = tls_namecp o TLN04
+end
+if eq e 5
+n = tls_namecp o TLN05
+end
+if eq e 6
+n = tls_namecp o TLN06
+end
+if eq e 7
+n = tls_namecp o TLN07
+end
+if eq e 8
+n = tls_namecp o TLN08
+end
+if eq e 9
+n = tls_namecp o TLN09
+end
+if eq e 10
+n = tls_namecp o TLN10
+end
+if eq e 11
+n = tls_namecp o TLN11
+end
+if eq e 12
+n = tls_namecp o TLN12
+end
+if eq e 13
+n = tls_namecp o TLN13
+end
+if eq e 14
+n = tls_namecp o TLN14
+end
+if eq e 15
+n = tls_namecp o TLN15
+end
+ret tls_errnm2 e o n
+end
+
+fn tls_errnm2 e ulong o edit uchar * n0 ulong to ulong
+n = n0
+if eq e 16
+n = tls_namecp o TLN16
+end
+if eq e 17
+n = tls_namecp o TLN17
+end
+if eq e 18
+n = tls_namecp o TLN18
+end
+if eq e 19
+n = tls_namecp o TLN19
+end
+if eq e 20
+n = tls_namecp o TLN20
+end
+if eq e 21
+n = tls_namecp o TLN21
+end
+if eq e 22
+n = tls_namecp o TLN22
+end
+if eq e 23
+n = tls_namecp o TLN23
+end
+if eq e 24
+n = tls_namecp o TLN24
+end
+if eq e 25
+n = tls_namecp o TLN25
+end
+if eq e 26
+n = tls_namecp o TLN26
+end
+if eq e 27
+n = tls_namecp o TLN27
+end
+if eq e 28
+n = tls_namecp o TLN28
+end
+if eq e 29
+n = tls_namecp o TLN29
+end
+if eq n 0
+n = tls_namecp o TLNUNK
+end
+ret n
+end
+
+fn tls_namecp o edit uchar * t view uchar * to ulong
+n = len t
+if gt n len o
+n = len o
+end
+for i ulong n
+put o i get t i
+end
+ret n
+end
+
+note internal: a received close_notify alert (tls_read turns it into a clean end of data)
+const TLCLOSE ulong 100
+
+note ---- socket I/O with deadline (c holds the fd and an absolute monotonic deadline, 0 = none;
+note with no deadline every wait is bounded by 30 s of silence) ----
+fn tls_fd c view uchar * to int
+ret int tls_gn c TLFD 4
+end
+
+fn tls_deadline c edit uchar * dl long to void
+if lt dl 0
+tls_pn c TLDL 0 8
+ret
+end
+tls_pn c TLDL ulong dl 8
+end
+
+note wait for ev (1 readable, 4 writable): 0 ready, else an error code
+fn tls_wait c view uchar * ev int to ulong
+dl = tls_gn c TLDL 8
+iv = long 30000000000
+if ne dl 0
+now = monons
+if ge now long dl
+ret TLETIME
+end
+iv = sub long dl now
+end
+r = waitio tls_fd c ev iv
+if eq r 0
+ret TLETIME
+end
+if lt r 0
+if eq r -4
+ret 0
+end
+ret TLEIO
+end
+ret 0
+end
+
+note read exactly n bytes into c[o..o+n)
+fn tls_rdn c edit uchar * o ulong n ulong to ulong
+fd = tls_fd c
+got = ulong 0
+while lt got n bound 999999
+e = tls_wait c 1
+if ne e 0
+ret e
+end
+r = recv fd c add o got sub n got 0
+if eq r 0
+ret TLEEOF
+end
+if lt r 0
+if and ne r -11 ne r -4
+ret TLEIO
+end
+else
+got = add got ulong r
+end
+end
+ret 0
+end
+
+note send c[o..o+n) completely
+fn tls_sendall c edit uchar * o ulong n ulong to ulong
+fd = tls_fd c
+done = ulong 0
+while lt done n bound 999999
+e = tls_wait c 4
+if ne e 0
+ret e
+end
+r = send fd c add o done sub n done 0
+if lt r 0
+if and ne r -11 ne r -4
+ret TLEIO
+end
+else
+done = add done ulong r
+end
+end
+ret 0
+end
+
+note ---- record protection (RFC 8446 section 5.2, 5.3) ----
+note per-record nonce: the 12-byte iv at c[ivo] XOR the 64-bit sequence number at c[sqo],
+note left-padded; key at c[ko]; written as key || nonce into kn
+fn tls_kn c view uchar * kn edit uchar * sel ulong to ulong
+kl = ulong 16
+if eq get c TLSU 1
+kl = 32
+end
+ko = and sel 65535
+for i ulong kl
+put kn i get c add ko i
+end
+tls_nonce c kn or and shr sel 16 4294967295 shl kl 32
+ret add kl 12
+end
+
+note nonce bytes into kn[kl..kl+12): sel = ivo | sqo << 16 | kl << 32
+fn tls_nonce c view uchar * kn edit uchar * sel ulong to void
+kl = shr sel 32
+ivo = and sel 65535
+for i ulong 12
+put kn add kl i get c add ivo i
+end
+sq = tls_gn c and shr sel 16 65535 8
+for i ulong 8
+p = add kl add 4 i
+s = mul 8 sub 7 i
+b = and shr sq s 255
+put kn p uchar xor ulong get kn p b
+end
+end
+
+note bump the 64-bit sequence number at c[o]; 1 when it would wrap (the key must not be reused)
+fn tls_seqinc c edit uchar * o ulong to ulong
+sq = tls_gn c o 8
+if eq sq 18446744073709551615
+ret 1
+end
+tls_pn c o add sq 1 8
+ret 0
+end
+
+note decrypt the record at c[TLRB] whose body is ln bytes; 0 or TLEMAC
+fn tls_open c edit uchar * ln ulong to ulong
+kn = new uchar 44 0
+ad = new uchar 5 0
+for i ulong 5
+put ad i get c add TLRB i
+end
+kl = tls_kn c kn or TLRKEY or shl TLRIV 16 shl TLRS 32
+r = ulong 1
+if eq get c TLSU 1
+r = aead_chacha_open kn ad part c add TLRB 5 ln
+else
+r = aead_aes128gcm_open part kn 0 kl ad part c add TLRB 5 ln
+end
+tls_zero kn 0 44
+if ne r 0
+ret TLEMAC
+end
+if ne tls_seqinc c TLRS 0
+ret TLESEQ
+end
+ret 0
+end
+
+note encrypt c[TLWB+5 .. +n) (inner plaintext incl. type byte), header already at c[TLWB]
+fn tls_seal c edit uchar * n ulong to ulong
+kn = new uchar 44 0
+ad = new uchar 5 0
+for i ulong 5
+put ad i get c add TLWB i
+end
+kl = tls_kn c kn or TLWKEY or shl TLWIV 16 shl TLWS 32
+r = ulong 1
+if eq get c TLSU 1
+r = aead_chacha_seal kn ad part c add TLWB 5 add n 16
+else
+r = aead_aes128gcm_seal part kn 0 kl ad part c add TLWB 5 add n 16
+end
+tls_zero kn 0 44
+if ne r 0
+ret TLEARG
+end
+if ne tls_seqinc c TLWS 0
+ret TLESEQ
+end
+ret 0
+end
+
+note send one record of content type ty whose n plaintext bytes are at c[TLWB+5]
+fn tls_wrbuf c edit uchar * ty ulong n ulong to ulong
+if gt n 16384
+ret TLEARG
+end
+if eq get c TLWK 0
+put c TLWB uchar ty
+tls_pn c add TLWB 1 771 2
+tls_pn c add TLWB 3 n 2
+ret tls_sendall c TLWB add n 5
+end
+put c add add TLWB 5 n uchar ty
+ln = add n 17
+put c TLWB 23
+tls_pn c add TLWB 1 771 2
+tls_pn c add TLWB 3 ln 2
+e = tls_seal c add n 1
+if ne e 0
+ret e
+end
+ret tls_sendall c TLWB add ln 5
+end
+
+note best-effort fatal alert (RFC 8446 section 6)
+fn tls_alert c edit uchar * desc ulong to void
+put c add TLWB 5 2
+put c add TLWB 6 uchar desc
+e = tls_wrbuf c 21 2
+put c TLPH 3
+end
+
+note read one record into c[TLRB]; on 0 the content type is at c[TLRB] and the plaintext length
+note at c[TLRB+3..+5), plaintext from c[TLRB+5]
+fn tls_rdrec c edit uchar * to ulong
+e = tls_rdn c TLRB 5
+if ne e 0
+ret e
+end
+ty = ulong get c TLRB
+ln = tls_gn c add TLRB 3 2
+if gt ln 16640
+ret TLEREC
+end
+e = tls_rdn c add TLRB 5 ln
+if ne e 0
+ret e
+end
+if eq ty 20
+if or ne ln 1 ne get c add TLRB 5 1
+ret TLEUNEX
+end
+if ne get c TLCCS 1
+ret TLEUNEX
+end
+put c TLCCS 2
+ret 0
+end
+if eq get c TLRK 0
+if and ne ty 22 ne ty 21
+ret TLEUNEX
+end
+if or eq ln 0 gt ln 16384
+ret TLEREC
+end
+ret 0
+end
+if ne ty 23
+ret TLEUNEX
+end
+put c TLCCS 2
+if lt ln 17
+ret TLEREC
+end
+e = tls_open c ln
+if ne e 0
+ret e
+end
+n = sub ln 16
+while gt n 0 bound 20000
+if ne get c add add TLRB 4 n 0
+break
+end
+n = sub n 1
+end
+if eq n 0
+ret TLEUNEX
+end
+n = sub n 1
+if gt n 16384
+ret TLEREC
+end
+put c TLRB get c add add TLRB 5 n
+tls_pn c add TLRB 3 n 2
+if eq get c TLRB 20
+ret TLEUNEX
+end
+ret 0
+end
+
+note a received alert record: close_notify gives TLCLOSE, any other alert TLEALRT (detail = desc)
+fn tls_ralert c edit uchar * to ulong
+if ne tls_gn c add TLRB 3 2 2
+ret TLEDEC
+end
+d = ulong get c add TLRB 6
+tls_pn c TLDET d 4
+if eq d 0
+ret TLCLOSE
+end
+ret TLEALRT
+end
+
+note ---- handshake message buffer (c[TLHB], fill count at c[TLHF]) ----
+note make sure one whole handshake message is at c[TLHB]; 0 or an error code. A message spread
+note over more than 4000 records is refused (TLEBIG); close_notify here is TLEALRT, detail 0
+fn tls_hsmsg c edit uchar * to ulong
+k = ulong 0
+while true bound 4096
+k = add k 1
+if gt k 4000
+ret TLEBIG
+end
+f = tls_gn c TLHF 4
+if ge f 4
+ml = add tls_gn c add TLHB 1 3 4
+if gt ml TLHBSZ
+ret TLEBIG
+end
+if ge f ml
+ret 0
+end
+end
+e = tls_rdrec c
+if ne e 0
+ret e
+end
+ty = ulong get c TLRB
+n = tls_gn c add TLRB 3 2
+if eq ty 21
+e = tls_ralert c
+if eq e TLCLOSE
+ret TLEALRT
+end
+ret e
+end
+if ne ty 20
+if ne ty 22
+ret TLEUNEX
+end
+if eq n 0
+ret TLEUNEX
+end
+if gt add f n TLHBSZ
+ret TLEBIG
+end
+tls_mov c add TLHB f add TLRB 5 n
+tls_pn c TLHF add f n 4
+end
+end
+ret TLEUNEX
+end
+
+note drop the message at c[TLHB] (after hashing it when h is 1)
+fn tls_hsdrop c edit uchar * to void
+f = tls_gn c TLHF 4
+ml = add tls_gn c add TLHB 1 3 4
+tls_mov c TLHB add TLHB ml sub f ml
+tls_pn c TLHF sub f ml 4
+end
+
+fn tls_hsdone c edit uchar * th edit ulong * to void
+ml = add tls_gn c add TLHB 1 3 4
+sha256_update th part c TLHB ml
+tls_hsdrop c
+end
+
+note ---- key schedule (RFC 8446 section 7.1), SHA-256 for both suites ----
+const TLSPUB ulong 800
+const TLTMP ulong 768
+note label ids for tls_drv
+const TLIKEY ulong 0
+const TLIIV ulong 1
+const TLIFIN ulong 2
+const TLIDER ulong 3
+const TLICHS ulong 4
+const TLISHS ulong 5
+const TLICAP ulong 6
+const TLISAP ulong 7
+const TLIUPD ulong 8
+
+fn tls_labcp p edit uchar * o ulong lid ulong to ulong
+t = ulong 0
+if eq lid TLIKEY
+tls_cpy p o TLLKEY
+t = len TLLKEY
+end
+if eq lid TLIIV
+tls_cpy p o TLLIV
+t = len TLLIV
+end
+if eq lid TLIFIN
+tls_cpy p o TLLFIN
+t = len TLLFIN
+end
+if eq lid TLIDER
+tls_cpy p o TLLDER
+t = len TLLDER
+end
+if eq lid TLICHS
+tls_cpy p o TLLCHS
+t = len TLLCHS
+end
+if eq lid TLISHS
+tls_cpy p o TLLSHS
+t = len TLLSHS
+end
+if eq lid TLICAP
+tls_cpy p o TLLCAP
+t = len TLLCAP
+end
+if eq lid TLISAP
+tls_cpy p o TLLSAP
+t = len TLLSAP
+end
+if eq lid TLIUPD
+tls_cpy p o TLLUPD
+t = len TLLUPD
+end
+ret t
+end
+
+note HkdfLabel after the 32-byte secret in p: uint16 ln, opaque label<7..255> = "tls13 " + label,
+note opaque context<0..255> = hv. Returns 32 + the HkdfLabel length.
+fn tls_info p edit uchar * lid ulong hv view uchar * ln ulong to ulong
+tls_pn p 32 ln 2
+tls_cpy p 35 TLL13
+t = tls_labcp p 41 lid
+put p 34 uchar add t 6
+o = add 41 t
+put p o uchar len hv
+tls_cpy p add o 1 hv
+ret add add o 1 len hv
+end
+
+note c[dst..dst+ln) = HKDF-Expand-Label(c[src..src+32), label lid, hv, ln);
+note sel = dst | src << 16 | ln << 32 | lid << 48
+fn tls_drv c edit uchar * sel ulong hv view uchar * to ulong
+p = new uchar 160 0
+k = new uchar 32 0
+src = and shr sel 16 65535
+for i ulong 32
+put p i get c add src i
+end
+n = tls_info p shr sel 48 hv and shr sel 32 65535
+r = tls_hexp p n k
+tls_drvout c k sel
+tls_zero p 0 160
+tls_zero k 0 32
+ret r
+end
+
+note HKDF-Expand of p[32..n) under the PRK p[0..32) into all 32 bytes of k; a shorter label
+note length L takes the first L bytes (T(1) does not depend on the output length)
+fn tls_hexp p view uchar * n ulong k edit uchar * to ulong
+ret hkdf_expand 256 part p 0 n 32 k
+end
+
+fn tls_drvout c edit uchar * k view uchar * sel ulong to void
+dst = and sel 65535
+for i ulong and shr sel 32 65535
+put c add dst i get k i
+end
+end
+
+fn tls_sel dst ulong src ulong ln ulong lid ulong to ulong
+ret or or dst shl src 16 or shl ln 32 shl lid 48
+end
+
+note c[dst..+32) = HKDF-Extract(salt, ikm); sel = dst | salt << 16 | ikm << 32, where offset 0
+note stands for 32 zero bytes (RFC 8446 "0" input)
+fn tls_xtr c edit uchar * sel ulong to ulong
+s = new uchar 64 0
+k = new uchar 32 0
+so = and shr sel 16 65535
+io = shr sel 32
+if ne so 0
+for i ulong 32
+put s i get c add so i
+end
+end
+if ne io 0
+for i ulong 32
+put s add 32 i get c add io i
+end
+end
+r = hkdf_extract 256 s 32 k
+dst = and sel 65535
+for i ulong 32
+put c add dst i get k i
+end
+tls_zero s 0 64
+tls_zero k 0 32
+if ne r 32
+ret 1
+end
+ret 0
+end
+
+note traffic key and iv from the secret at c[so]; d 0 installs the write side, 1 the read side
+fn tls_keys c edit uchar * so ulong d ulong to ulong
+e = new uchar 1 0
+kl = ulong 16
+if eq get c TLSU 1
+kl = 32
+end
+ko = TLWKEY
+io = TLWIV
+sq = TLWS
+if eq d 1
+ko = TLRKEY
+io = TLRIV
+sq = TLRS
+end
+r = tls_drv c tls_sel ko so kl TLIKEY part e 0 0
+r = or r tls_drv c tls_sel io so 12 TLIIV part e 0 0
+tls_pn c sq 0 8
+ret r
+end
+
+note transcript hash so far into o (32 bytes), leaving th running
+fn tls_th th view ulong * o edit uchar * to void
+t = new ulong 40 0
+sha2_copy t th
+sha256_final t o
+for i ulong 40
+put t i 0
+end
+end
+
+note SHA-256 of the empty string (the Derive-Secret context for "derived")
+fn tls_h0 o edit uchar * to void
+e = new uchar 1 0
+n = sha2_digest 256 part e 0 0 o
+end
+
+note ---- ClientHello (RFC 8446 section 4.1.2) built at c[TLWB+5] ----
+note server_name, supported_groups (x25519), signature_algorithms; returns the next offset
+fn tls_chex1 c edit uchar * p ulong to ulong
+hl = ulong get c TLHL
+tls_pn c p 0 2
+tls_pn c add p 2 add hl 5 2
+tls_pn c add p 4 add hl 3 2
+put c add p 6 0
+tls_pn c add p 7 hl 2
+tls_mov c add p 9 TLHOST hl
+q = add add p 9 hl
+tls_pn c q 10 2
+tls_pn c add q 2 4 2
+tls_pn c add q 4 2 2
+tls_pn c add q 6 29 2
+q = add q 8
+tls_pn c q 13 2
+tls_pn c add q 2 18 2
+tls_pn c add q 4 16 2
+tls_pn c add q 6 1027 2
+tls_pn c add q 8 1283 2
+tls_pn c add q 10 2052 2
+tls_pn c add q 12 2053 2
+tls_pn c add q 14 2054 2
+tls_pn c add q 16 1025 2
+tls_pn c add q 18 1281 2
+tls_pn c add q 20 1537 2
+ret add q 22
+end
+
+note supported_versions (TLS 1.3 only), key_share (x25519), ALPN http/1.1 when flag 1
+fn tls_chex2 c edit uchar * p ulong to ulong
+tls_pn c p 43 2
+tls_pn c add p 2 3 2
+put c add p 4 2
+tls_pn c add p 5 772 2
+q = add p 7
+tls_pn c q 51 2
+tls_pn c add q 2 38 2
+tls_pn c add q 4 36 2
+tls_pn c add q 6 29 2
+tls_pn c add q 8 32 2
+tls_mov c add q 10 TLEPU 32
+q = add q 42
+if eq and get c TLFL 1 0
+ret q
+end
+tls_pn c q 16 2
+tls_pn c add q 2 11 2
+tls_pn c add q 4 9 2
+put c add q 6 8
+tls_cpy c add q 7 TLALPN
+ret add q 15
+end
+
+note ephemeral x25519 key pair: private at c[TLEPK], public at c[TLEPU]
+fn tls_ephem c edit uchar * to ulong
+k = new uchar 32 0
+o = new uchar 32 0
+r = random k 0 32 0
+if ne r 32
+ret TLERAND
+end
+e = x25519_base o k
+for i ulong 32
+put c add TLEPK i get k i
+put c add TLEPU i get o i
+end
+tls_zero k 0 32
+if ne e 0
+ret TLERAND
+end
+ret 0
+end
+
+note writes the ClientHello handshake message at c[TLWB+5]; 0 or an error code
+fn tls_mkch c edit uchar * to ulong
+e = tls_ephem c
+if ne e 0
+ret e
+end
+b = add TLWB 5
+put c b 1
+tls_pn c add b 4 771 2
+r = random c add b 6 32 0
+if ne r 32
+ret TLERAND
+end
+put c add b 38 32
+r = random c add b 39 32 0
+if ne r 32
+ret TLERAND
+end
+tls_mov c TLSID add b 39 32
+p = add b 71
+tls_pn c p 4 2
+tls_pn c add p 2 4867 2
+tls_pn c add p 4 4865 2
+put c add p 6 1
+put c add p 7 0
+x = add p 8
+q = tls_chex1 c add x 2
+q = tls_chex2 c q
+tls_pn c x sub sub q x 2 2
+tls_pn c add b 1 sub sub q b 4 3
+ret 0
+end
+
+note ---- ServerHello (RFC 8446 section 4.1.3) at c[TLHB] ----
+note HRR random = SHA-256("HelloRetryRequest"), computed rather than tabled
+text TLHRR "HelloRetryRequest"
+
+note 0 when the 32 bytes at c[o] equal our legacy_session_id
+fn tls_sidok c view uchar * o ulong to ulong
+s = new uchar 32 0
+for i ulong 32
+put s i get c add TLSID i
+end
+ret tls_cteq s c o 32
+end
+
+fn tls_ishrr c view uchar * o ulong to ulong
+h = new uchar 32 0
+n = sha2_digest 256 TLHRR h
+ret xor tls_cteq h c o 32 1
+end
+
+note fixed part: version, random, session id echo, suite, compression; 0 or error
+fn tls_shhead c edit uchar * to ulong
+if ne get c TLHB 2
+ret TLEUNEX
+end
+ln = tls_gn c add TLHB 1 3
+if lt ln 76
+ret TLEDEC
+end
+b = add TLHB 4
+if ne tls_gn c b 2 771
+ret TLEVER
+end
+if eq tls_ishrr c add b 2 1
+ret TLEHRR
+end
+if ne get c add b 34 32
+ret TLESID
+end
+if ne tls_sidok c add b 35 0
+ret TLESID
+end
+s = tls_gn c add b 67 2
+put c TLSU 0
+if eq s 4867
+put c TLSU 1
+end
+if eq s 4865
+put c TLSU 2
+end
+if eq get c TLSU 0
+ret TLECIPH
+end
+if ne get c add b 69 0
+ret TLEDEC
+end
+x = tls_gn c add b 70 2
+if ne add x 72 ln
+ret TLEDEC
+end
+ret 0
+end
+
+note ServerHello extensions: exactly supported_versions = 0x0304 and an x25519 key_share
+fn tls_shext c edit uchar * to ulong
+ln = tls_gn c add TLHB 1 3
+q = add TLHB 76
+z = add add TLHB 4 ln
+seen = ulong 0
+while lt q z bound 64
+if gt add q 4 z
+ret TLEDEC
+end
+t = tls_gn c q 2
+l = tls_gn c add q 2 2
+q = add q 4
+if gt add q l z
+ret TLEDEC
+end
+if eq t 43
+if or ne l 2 ne and seen 1 0
+ret TLEEXT
+end
+if ne tls_gn c q 2 772
+ret TLEVER
+end
+seen = or seen 1
+else
+if or ne t 51 ne and seen 2 0
+ret TLEEXT
+end
+if ne l 36
+ret TLEKEYS
+end
+if or ne tls_gn c q 2 29 ne tls_gn c add q 2 2 32
+ret TLEKEYS
+end
+tls_mov c TLSPUB add q 4 32
+seen = or seen 2
+end
+q = add q l
+end
+if eq and seen 1 0
+ret TLEVER
+end
+if eq and seen 2 0
+ret TLEKEYS
+end
+ret 0
+end
+
+note shared secret into c[TLSS]; the private key is wiped
+fn tls_ecdh c edit uchar * to ulong
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+for i ulong 32
+put k i get c add TLEPK i
+put u i get c add TLSPUB i
+end
+r = x25519_scalarmult o k u
+for i ulong 32
+put c add TLSS i get o i
+end
+tls_zero k 0 32
+tls_zero o 0 32
+tls_zero c TLEPK 32
+if ne r 0
+ret TLEZERO
+end
+ret 0
+end
+
+note handshake secrets after ServerHello; installs the handshake write and read keys
+fn tls_hskeys c edit uchar * th view ulong * to ulong
+h = new uchar 32 0
+z = new uchar 32 0
+tls_h0 z
+r = tls_xtr c TLHS
+r = or r tls_drv c tls_sel TLHS TLHS 32 TLIDER z
+r = or r tls_xtr c or TLHS or shl TLHS 16 shl TLSS 32
+tls_th th h
+r = or r tls_drv c tls_sel TLCHS TLHS 32 TLICHS h
+r = or r tls_drv c tls_sel TLSHS TLHS 32 TLISHS h
+r = or r tls_drv c tls_sel TLMS TLHS 32 TLIDER z
+r = or r tls_xtr c or TLMS shl TLMS 16
+tls_zero c TLSS 32
+r = or r tls_keys c TLSHS 1
+r = or r tls_keys c TLCHS 0
+if ne r 0
+ret TLEARG
+end
+put c TLRK 1
+put c TLCCS 1
+ret 0
+end
+
+note read and check ServerHello, send the compatibility change_cipher_spec, derive keys
+fn tls_rdsh c edit uchar * th edit ulong * to ulong
+e = tls_hsmsg c
+if ne e 0
+ret e
+end
+e = tls_shhead c
+if ne e 0
+ret e
+end
+e = tls_shext c
+if ne e 0
+ret e
+end
+tls_hsdone c th
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
+e = tls_ecdh c
+if ne e 0
+ret e
+end
+put c add TLWB 5 1
+e = tls_wrbuf c 20 1
+if ne e 0
+ret e
+end
+e = tls_hskeys c th
+if ne e 0
+ret e
+end
+put c TLWK 1
+ret 0
+end
+
+note ---- server's encrypted flight (RFC 8446 sections 4.3, 4.4) ----
+note EncryptedExtensions: only server_name (empty), supported_groups and ALPN (offered, http/1.1)
+fn tls_ee c edit uchar * to ulong
+if ne get c TLHB 8
+ret TLEUNEX
+end
+ln = tls_gn c add TLHB 1 3
+if lt ln 2
+ret TLEDEC
+end
+z = add add TLHB 4 ln
+if ne add tls_gn c add TLHB 4 2 2 ln
+ret TLEDEC
+end
+q = add TLHB 6
+seen = ulong 0
+while lt q z bound 64
+if gt add q 4 z
+ret TLEDEC
+end
+t = tls_gn c q 2
+l = tls_gn c add q 2 2
+q = add q 4
+if gt add q l z
+ret TLEDEC
+end
+bit = ulong 0
+if eq t 0
+if ne l 0
+ret TLEDEC
+end
+bit = 1
+end
+if eq t 10
+bit = 2
+end
+if eq t 16
+e = tls_alpnok c q l
+if ne e 0
+ret e
+end
+bit = 4
+end
+if or eq bit 0 ne and seen bit 0
+ret TLEEXT
+end
+seen = or seen bit
+q = add q l
+end
+ret 0
+end
+
+note the server's ALPN choice must be exactly the one protocol we offered
+fn tls_alpnok c view uchar * q ulong l ulong to ulong
+if eq and get c TLFL 1 0
+ret TLEEXT
+end
+if or ne l 11 ne tls_gn c q 2 9
+ret TLEALPN
+end
+if ne get c add q 2 8
+ret TLEALPN
+end
+if ne tls_cteq TLALPN c add q 3 8 0
+ret TLEALPN
+end
+ret 0
+end
+
+note CertificateRequest: remember its context (we answer with an empty Certificate)
+fn tls_cr c edit uchar * to ulong
+ln = tls_gn c add TLHB 1 3
+if lt ln 3
+ret TLEDEC
+end
+cl = ulong get c add TLHB 4
+if gt add cl 3 ln
+ret TLEDEC
+end
+if ne add add cl 3 tls_gn c add add TLHB 5 cl 2 ln
+ret TLEDEC
+end
+put c TLCRX uchar cl
+tls_mov c add TLCRX 1 add TLHB 5 cl
+put c TLCR 1
+ret 0
+end
+
+note Certificate: empty context, then the certificate_list (validated by x509_chain_verify);
+note the leaf entry is kept at c[TLLF] (extensions stripped) for CertificateVerify
+fn tls_cert c edit uchar * st view uchar * to ulong
+if ne get c TLHB 11
+ret TLEUNEX
+end
+ln = tls_gn c add TLHB 1 3
+if lt ln 4
+ret TLEDEC
+end
+if ne get c add TLHB 4 0
+ret TLEDEC
+end
+cl = tls_gn c add TLHB 5 3
+if ne add cl 4 ln
+ret TLEDEC
+end
+if lt cl 5
+ret TLECERT
+end
+ret tls_chain c st cl
+end
+
+note hq = now (8 bytes, unix seconds) || hostname; returns its length
+fn tls_hq c view uchar * hq edit uchar * to ulong
+now = div realns 1000000000
+tls_pn hq 0 ulong now 8
+hl = ulong get c TLHL
+for i ulong hl
+put hq add 8 i get c add TLHOST i
+end
+ret add 8 hl
+end
+
+fn tls_chain c edit uchar * st view uchar * cl ulong to ulong
+hq = new uchar 264 0
+n = tls_hq c hq
+r = x509_chain_verify part c add TLHB 8 cl st part hq 0 n
+if ne r 0
+tls_pn c TLDET r 4
+ret TLECERT
+end
+ret tls_leaf c cl
+end
+
+fn tls_leaf c edit uchar * cl ulong to ulong
+l1 = tls_gn c add TLHB 8 3
+if gt add l1 5 cl
+ret TLEDEC
+end
+if gt add l1 5 TLLFSZ
+ret TLEBIG
+end
+tls_mov c TLLF add TLHB 8 add l1 3
+put c add add TLLF l1 3 0
+put c add add TLLF l1 4 0
+ret 0
+end
+
+note CertificateVerify over the transcript hash h (through Certificate)
+fn tls_cv c edit uchar * h view uchar * to ulong
+if ne get c TLHB 15
+ret TLEUNEX
+end
+ln = tls_gn c add TLHB 1 3
+if lt ln 4
+ret TLEDEC
+end
+sch = tls_gn c add TLHB 4 2
+sl = tls_gn c add TLHB 6 2
+if ne add sl 4 ln
+ret TLEDEC
+end
+if gt sl 1024
+ret TLEDEC
+end
+if eq tls_schok sch 0
+ret TLESCH
+end
+m = new uchar 1154 0
+tls_cvmsg c h m
+r = tls_cvcall c m sch
+if ne r 0
+tls_pn c TLDET r 4
+ret TLECV
+end
+ret 0
+end
+
+note m = 64 spaces || context string || 0 || h || signature (from the message at c[TLHB])
+fn tls_cvmsg c view uchar * h view uchar * m edit uchar * to void
+for i ulong 64
+put m i 32
+end
+tls_cpy m 64 TLCVC
+put m 97 0
+tls_cpy m 98 h
+sl = tls_gn c add TLHB 6 2
+for i ulong sl
+put m add 130 i get c add add TLHB 8 i
+end
+end
+
+fn tls_cvcall c edit uchar * m view uchar * sch ulong to ulong
+sl = tls_gn c add TLHB 6 2
+l1 = add tls_gn c TLLF 3 5
+ret x509_cv_verify part c TLLF l1 sch part m 0 add 130 sl 130
+end
+
+note 1 for the CertificateVerify schemes we offered (never rsa_pkcs1_*, RFC 8446 section 4.4.3)
+fn tls_schok s ulong to ulong
+if or eq s 1027 eq s 1283
+ret 1
+end
+if or eq s 2052 or eq s 2053 eq s 2054
+ret 1
+end
+ret 0
+end
+
+note hv = HMAC(finished_key(secret at c[so]), hv): the transcript hash in, verify_data out
+note (RFC 8446 section 4.4.4)
+fn tls_vd c edit uchar * so ulong hv edit uchar * to ulong
+e = new uchar 1 0
+k = new uchar 32 0
+x = new ulong 96 0
+r = tls_drv c tls_sel TLTMP so 32 TLIFIN part e 0 0
+for i ulong 32
+put k i get c add TLTMP i
+end
+tls_zero c TLTMP 32
+hmac_init 256 x k
+hmac_update x hv
+n = hmac_final x hv
+tls_zero k 0 32
+for i ulong 96
+put x i 0
+end
+ret r
+end
+
+note server Finished
+fn tls_sfin c edit uchar * h view uchar * to ulong
+if ne get c TLHB 20
+ret TLEUNEX
+end
+if ne tls_gn c add TLHB 1 3 32
+ret TLEDEC
+end
+v = new uchar 32 0
+tls_cpy v 0 h
+r = tls_vd c TLSHS v
+if ne r 0
+ret TLEARG
+end
+if ne tls_cteq v c add TLHB 4 32 0
+ret TLEFIN
+end
+ret 0
+end
+
+note EE, optional CertificateRequest, Certificate, CertificateVerify, Finished
+fn tls_rdenc c edit uchar * st view uchar * th edit ulong * to ulong
+e = tls_hsmsg c
+if eq e 0
+e = tls_ee c
+end
+if ne e 0
+ret e
+end
+tls_hsdone c th
+e = tls_hsmsg c
+if ne e 0
+ret e
+end
+if eq get c TLHB 13
+e = tls_cr c
+if ne e 0
+ret e
+end
+tls_hsdone c th
+e = tls_hsmsg c
+if ne e 0
+ret e
+end
+end
+e = tls_cert c st
+if ne e 0
+ret e
+end
+tls_hsdone c th
+ret tls_rdfin c th
+end
+
+fn tls_rdfin c edit uchar * th edit ulong * to ulong
+h = new uchar 32 0
+tls_th th h
+e = tls_hsmsg c
+if eq e 0
+e = tls_cv c h
+end
+if ne e 0
+ret e
+end
+tls_hsdone c th
+tls_th th h
+e = tls_hsmsg c
+if eq e 0
+e = tls_sfin c h
+end
+if ne e 0
+ret e
+end
+tls_hsdone c th
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
+ret tls_apkeys c th
+end
+
+note application traffic secrets from the transcript through server Finished; installs the read key
+fn tls_apkeys c edit uchar * th view ulong * to ulong
+h = new uchar 32 0
+tls_th th h
+r = tls_drv c tls_sel TLCAP TLMS 32 TLICAP h
+r = or r tls_drv c tls_sel TLSAP TLMS 32 TLISAP h
+r = or r tls_keys c TLSAP 1
+if ne r 0
+ret TLEARG
+end
+ret 0
+end
+
+note client flight: [empty Certificate], Finished; then the application write key
+fn tls_cfin c edit uchar * th edit ulong * to ulong
+b = add TLWB 5
+if eq get c TLCR 1
+cl = ulong get c TLCRX
+put c b 11
+tls_pn c add b 1 add cl 4 3
+put c add b 4 uchar cl
+tls_mov c add b 5 add TLCRX 1 cl
+tls_pn c add add b 5 cl 0 3
+n = add cl 8
+sha256_update th part c b n
+e = tls_wrbuf c 22 n
+if ne e 0
+ret e
+end
+end
+v = new uchar 32 0
+tls_th th v
+r = tls_vd c TLCHS v
+put c b 20
+tls_pn c add b 1 32 3
+for i ulong 32
+put c add add b 4 i get v i
+end
+sha256_update th part c b 36
+e = tls_wrbuf c 22 36
+if ne e 0
+ret e
+end
+r = or r tls_keys c TLCAP 0
+tls_zero c TLHS 128
+if ne r 0
+ret TLEARG
+end
+ret 0
+end
+
+note alert description for a failure (0: none, the peer is gone or already alerted)
+fn tls_alertfor e ulong to ulong
+if or eq e TLEIO or eq e TLETIME or eq e TLEEOF eq e TLEALRT
+ret 0
+end
+if eq e TLEMAC
+ret 20
+end
+if or eq e TLEREC eq e TLEBIG
+ret 22
+end
+if eq e TLEUNEX
+ret 10
+end
+if eq e TLEDEC
+ret 50
+end
+if eq e TLEVER
+ret 70
+end
+if eq e TLEHRR
+ret 40
+end
+if eq e TLEEXT
+ret 110
+end
+if eq e TLECERT
+ret 42
+end
+if or eq e TLECV eq e TLEFIN
+ret 51
+end
+if eq e TLEALPN
+ret 120
+end
+if or eq e TLECIPH or eq e TLEKEYS or eq e TLESID or eq e TLEZERO or eq e TLESCH eq e TLEKUPD
+ret 47
+end
+ret 80
+end
+
+note fail: alert (if any), mark the connection failed, wipe key material, return e
+fn tls_abort c edit uchar * e ulong to ulong
+d = tls_alertfor e
+if ne d 0
+tls_alert c d
+end
+put c TLPH 3
+tls_zero c TLWKEY 96
+tls_zero c TLCAP 64
+tls_zero c TLEPK 320
+ret e
+end
+
+note ---- public API ----
+note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1.
+note Hostnames are 1..253 bytes of letters, digits, '-' and '.', and not an IPv4 literal.
+fn tls_init c edit uchar * hn view uchar * fl ulong to ulong
+if lt len c TLCSZ
+ret TLEARG
+end
+tls_zero c 0 TLRB
+hl = len hn
+if or eq hl 0 gt hl 253
+ret TLEARG
+end
+alpha = ulong 0
+for i ulong hl
+k = tls_hch ulong get hn i
+if eq k 0
+ret TLEARG
+end
+alpha = or alpha and k 1
+put c add TLHOST i get hn i
+end
+if eq alpha 0
+ret TLEARG
+end
+put c TLHL uchar hl
+put c TLFL uchar and fl 1
+ret 0
+end
+
+note hostname byte class: 1 letter, 2 digit, '-' or '.', 0 anything else
+fn tls_hch ch ulong to ulong
+if or and ge ch 97 le ch 122 and ge ch 65 le ch 90
+ret 1
+end
+if or and ge ch 48 le ch 57 or eq ch 45 eq ch 46
+ret 2
+end
+ret 0
+end
+
+note load the system trust store /etc/ssl/certs/ca-certificates.crt into st (TLSTSZ bytes)
+fn tls_store st edit uchar * to ulong
+r = x509_store_load st
+if le r 0
+ret TLESTOR
+end
+ret 0
+end
+
+note load trust anchors from the PEM bundle at path instead (tests with a private CA)
+fn tls_storef st edit uchar * path view uchar * to ulong
+r = x509_store_loadf st path
+if le r 0
+ret TLESTOR
+end
+ret 0
+end
+
+note full handshake on the connected socket fd; 0 or a named error code (tls_errname)
+fn tls_connect c edit uchar * st view uchar * fd int to ulong
+if or ne get c TLPH 0 eq get c TLHL 0
+ret TLESTAT
+end
+if lt fd 0
+ret TLEARG
+end
+tls_pn c TLFD ulong fd 4
+th = new ulong 40 0
+sha256_init th
+e = tls_mkch c
+if ne e 0
+ret tls_abort c e
+end
+n = add tls_gn c add TLWB 6 3 4
+sha256_update th part c add TLWB 5 n
+e = tls_wrbuf c 22 n
+if eq e 0
+e = tls_rdsh c th
+end
+if eq e 0
+e = tls_rdenc c st th
+end
+if eq e 0
+e = tls_cfin c th
+end
+for i ulong 40
+put th i 0
+end
+if ne e 0
+ret tls_abort c e
+end
+put c TLPH 1
+ret 0
+end
+
+note ---- application data ----
+note KeyUpdate (RFC 8446 section 4.6.3): new read key; answer update_requested once
+fn tls_kupd c edit uchar * to ulong
+if ne tls_gn c add TLHB 1 3 1
+ret TLEDEC
+end
+v = ulong get c add TLHB 4
+if gt v 1
+ret TLEKUPD
+end
+tls_hsdrop c
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
+e = new uchar 1 0
+r = tls_drv c tls_sel TLSAP TLSAP 32 TLIUPD part e 0 0
+r = or r tls_keys c TLSAP 1
+if eq v 1
+b = add TLWB 5
+put c b 24
+tls_pn c add b 1 1 3
+put c add b 4 0
+x = tls_wrbuf c 22 5
+if ne x 0
+ret x
+end
+r = or r tls_drv c tls_sel TLCAP TLCAP 32 TLIUPD part e 0 0
+r = or r tls_keys c TLCAP 0
+end
+if ne r 0
+ret TLEARG
+end
+ret 0
+end
+
+note post-handshake handshake records: NewSessionTicket is ignored (no resumption), KeyUpdate
+note handled, anything else refused
+fn tls_post c edit uchar * to ulong
+f = tls_gn c TLHF 4
+n = tls_gn c add TLRB 3 2
+if or eq n 0 gt add f n TLHBSZ
+ret TLEUNEX
+end
+tls_mov c add TLHB f add TLRB 5 n
+f = add f n
+tls_pn c TLHF f 4
+while ge f 4 bound 4096
+ml = add tls_gn c add TLHB 1 3 4
+if gt ml TLHBSZ
+ret TLEBIG
+end
+if lt f ml
+ret 0
+end
+t = ulong get c TLHB
+if eq t 4
+tls_hsdrop c
+else
+if ne t 24
+ret TLEUNEX
+end
+e = tls_kupd c
+if ne e 0
+ret e
+end
+end
+f = tls_gn c TLHF 4
+end
+ret 0
+end
+
+note copy pending application bytes into o; returns the count
+fn tls_take c edit uchar * o edit uchar * to ulong
+po = tls_gn c TLPO 4
+pn = tls_gn c TLPN 4
+n = pn
+if gt n len o
+n = len o
+end
+for i ulong n
+put o i get c add add add TLRB 5 po i
+end
+tls_pn c TLPO add po n 4
+tls_pn c TLPN sub pn n 4
+ret n
+end
+
+note tls_read: decrypted application bytes into o. Returns the count (> 0), 0 at the peer's
+note close_notify, or minus an error code (a TCP end without close_notify is -TLS_ERR_EOF).
+note More than 1000 consecutive records without application bytes (empty records, tickets,
+note KeyUpdates) are refused with -TLS_ERR_UNEXPECTED_MESSAGE.
+fn tls_read c edit uchar * o edit uchar * to long
+ph = get c TLPH
+if eq ph 2
+ret 0
+end
+if ne ph 1
+ret neg long TLESTAT
+end
+if eq len o 0
+ret 0
+end
+k = ulong 0
+while true bound 999999
+k = add k 1
+if gt k 1001
+ret neg long tls_abort c TLEUNEX
+end
+if gt tls_gn c TLPN 4 0
+ret long tls_take c o
+end
+e = tls_rdrec c
+if eq e 0
+e = tls_rdapp c
+end
+if eq e TLCLOSE
+put c TLPH 2
+ret 0
+end
+if ne e 0
+ret neg long tls_abort c e
+end
+end
+ret neg long tls_abort c TLEUNEX
+end
+
+note dispatch one received record after the handshake
+fn tls_rdapp c edit uchar * to ulong
+ty = ulong get c TLRB
+if eq ty 23
+tls_pn c TLPO 0 4
+tls_pn c TLPN tls_gn c add TLRB 3 2 4
+ret 0
+end
+if eq ty 21
+ret tls_ralert c
+end
+if eq ty 22
+ret tls_post c
+end
+ret TLEUNEX
+end
+
+note tls_write: send all of m as application data; returns len m or minus an error code
+fn tls_write c edit uchar * m view uchar * to long
+if ne get c TLPH 1
+ret neg long TLESTAT
+end
+off = ulong 0
+while lt off len m bound 999999
+k = sub len m off
+if gt k 16384
+k = 16384
+end
+for i ulong k
+put c add add TLWB 5 i get m add off i
+end
+e = tls_wrbuf c 23 k
+if ne e 0
+ret neg long tls_abort c e
+end
+off = add off k
+end
+ret long len m
+end
+
+note tls_close: send close_notify (when connected) and wipe the key material. The caller closes fd.
+note A failed connection stays failed (later calls give TLS_ERR_STATE).
+fn tls_close c edit uchar * to void
+if eq get c TLPH 1
+put c add TLWB 5 1
+put c add TLWB 6 0
+e = tls_wrbuf c 21 2
+end
+if ne get c TLPH 3
+put c TLPH 2
+end
+tls_zero c TLWKEY 96
+tls_zero c TLCAP 64
+tls_zero c TLEPK 320
+end
+
+note ---- DNS A lookup (RFC 1035) over UDP to the first IPv4 nameserver in /etc/resolv.conf ----
+note Only A records (IPv4). The answer section is walked in order: a CNAME record owned by the
+note current name (first the question name) makes its target the current name, and the first
+note IN A record owned by the current name is used; records for any other owner are skipped.
+note Owner names are compared label by label, ASCII case-insensitive, following compression.
+note Response checks: id, QR set, opcode 0, TC clear, RCODE 0, one question equal to ours.
+
+note parse a dotted IPv4 address (all of b) into ip[0..4); 1 on success
+fn dns_ip4 b view uchar * ip edit uchar * to ulong
+k = ulong 0
+v = ulong 0
+dg = ulong 0
+for p ulong len b
+ch = ulong get b p
+if and ge ch 48 le ch 57
+v = add mul v 10 sub ch 48
+dg = add dg 1
+if or gt v 255 gt dg 3
+ret 0
+end
+else
+if or ne ch 46 or eq dg 0 ge k 3
+ret 0
+end
+put ip k uchar v
+k = add k 1
+v = 0
+dg = 0
+end
+end
+if or ne k 3 eq dg 0
+ret 0
+end
+put ip 3 uchar v
+ret 1
+end
+
+note first "nameserver a.b.c.d" line of /etc/resolv.conf into ip; 0 or TLEDNS
+fn dns_conf ip edit uchar * to ulong
+b = new uchar 4096 0
+fd = fopen TLRESOLV 0 len TLRESOLV 524288 0
+if lt fd 0
+ret TLEDNS
+end
+n = read int fd b 0 4096
+x = fclose int fd
+if le n 0
+ret TLEDNS
+end
+ret dns_lines part b 0 ulong n ip
+end
+
+note try each line of b (split at LF) as a nameserver line
+fn dns_lines b view uchar * ip edit uchar * to ulong
+s = ulong 0
+for e ulong add len b 1
+if or eq e len b eq tls_at b e 10
+if eq dns_nsline part b s sub e s ip 1
+ret 0
+end
+s = add e 1
+end
+end
+ret TLEDNS
+end
+
+note b[i] as a ulong, or 256 past the end (never traps)
+fn tls_at b view uchar * i ulong to ulong
+if ge i len b
+ret 256
+end
+ret ulong get b i
+end
+
+note 1 when the line l is "nameserver", blanks, an IPv4 address, optional trailing blanks
+fn dns_nsline l view uchar * ip edit uchar * to ulong
+if lt len l 12
+ret 0
+end
+if ne tls_cteq TLNS l 0 10 0
+ret 0
+end
+p = ulong 10
+if eq dns_blank tls_at l p 0
+ret 0
+end
+while eq dns_blank tls_at l p 1 bound 4096
+p = add p 1
+end
+q = p
+while lt tls_at l q 256 bound 4096
+if eq dns_blank tls_at l q 1
+break
+end
+q = add q 1
+end
+ret dns_ip4 part l p sub q p ip
+end
+
+note 1 for space, tab or CR
+fn dns_blank ch ulong to ulong
+if or eq ch 32 or eq ch 9 eq ch 13
+ret 1
+end
+ret 0
+end
+
+note query for hn type A at q[0..); returns its length (0 when hn is not a valid name)
+fn dns_query q edit uchar * hn view uchar * id ulong to ulong
+tls_pn q 0 id 2
+tls_pn q 2 256 2
+tls_pn q 4 1 2
+tls_zero q 6 6
+hl = len hn
+put q 12 46
+tls_cpy q 13 hn
+if eq dns_labels part q 12 add hl 1 0
+ret 0
+end
+p = add 13 hl
+put q p 0
+tls_pn q add p 1 1 2
+tls_pn q add p 3 1 2
+ret add p 5
+end
+
+note "." + name in b becomes length-prefixed labels, back to front; 1 when every label is 1..63
+fn dns_labels b edit uchar * to ulong
+n = ulong 0
+for i ulong len b
+k = sub sub len b 1 i
+if eq get b k 46
+if or eq n 0 gt n 63
+ret 0
+end
+put b k uchar n
+n = 0
+else
+n = add n 1
+end
+end
+ret 1
+end
+
+note skip a (possibly compressed) name at r[p..z); returns the offset after it, or 0 when it is
+note malformed or has more than 127 labels (never traps)
+fn dns_skip r view uchar * p0 ulong z ulong to ulong
+p = p0
+k = ulong 0
+while lt p z bound 128
+k = add k 1
+if gt k 127
+ret 0
+end
+l = ulong get r p
+if eq l 0
+ret add p 1
+end
+if eq and l 192 192
+if gt add p 2 z
+ret 0
+end
+ret add p 2
+end
+if ne and l 192 0
+ret 0
+end
+p = add add p 1 l
+end
+ret 0
+end
+
+note answer check and first A record into ip; q is our whole query; 0 or TLEDNS
+fn dns_parse r view uchar * q view uchar * ip edit uchar * to ulong
+ql = len q
+if lt len r ql
+ret TLEDNS
+end
+if ne tls_cteq q r 0 2 0
+ret TLEDNS
+end
+note flags: QR 0x8000 set; opcode 0x7800, TC 0x0200 and RCODE 0x000F clear (mask 0xFA0F)
+fl = tls_gn r 2 2
+if ne and fl 64015 32768
+ret TLEDNS
+end
+if ne tls_gn r 4 2 1
+ret TLEDNS
+end
+if ne dns_qeq q r ql 0
+ret TLEDNS
+end
+an = tls_gn r 6 2
+ret dns_ans r ql an ip
+end
+
+note 0 when the question of r equals ours (ASCII case-insensitive), q[12..ql)
+fn dns_qeq q view uchar * r view uchar * ql ulong to ulong
+for i ulong sub ql 12
+a = ulong get q add 12 i
+b = ulong get r add 12 i
+if and ge a 65 le a 90
+a = add a 32
+end
+if and ge b 65 le b 90
+b = add b 32
+end
+if ne a b
+ret 1
+end
+end
+ret 0
+end
+
+note answer records from r[p0]; the current name starts as the question name at offset 12
+fn dns_ans r view uchar * p0 ulong an ulong ip edit uchar * to ulong
+p = p0
+cur = ulong 12
+for k ulong an
+o = p
+p = dns_rr r o
+if eq p 0
+ret TLEDNS
+end
+if eq dns_neq r o cur 0
+t = dns_rrty r o
+if eq t 1
+dns_rrip r o ip
+ret 0
+end
+if eq t 5
+cur = add dns_skip r o len r 10
+end
+end
+end
+ret TLEDNS
+end
+
+note one resource record at r[p0]: the offset of the next record, or 0 when it is malformed
+fn dns_rr r view uchar * p0 ulong to ulong
+z = len r
+p = dns_skip r p0 z
+if or eq p 0 gt add p 10 z
+ret 0
+end
+dl = tls_gn r add p 8 2
+if gt add add p 10 dl z
+ret 0
+end
+ret add add p 10 dl
+end
+
+note copy the 4 data bytes of the (well-formed) A record at r[o] into ip
+fn dns_rrip r view uchar * o ulong ip edit uchar * to void
+p = add dns_skip r o len r 10
+for i ulong 4
+put ip i get r add p i
+end
+end
+
+note kind of the (well-formed) record at r[o]: 1 IN A with 4 data bytes, 5 IN CNAME, else 0
+fn dns_rrty r view uchar * o ulong to ulong
+p = dns_skip r o len r
+ty = tls_gn r p 4
+dl = tls_gn r add p 8 2
+if and eq ty 65537 eq dl 4
+ret 1
+end
+if eq ty 327681
+ret 5
+end
+ret 0
+end
+
+note the target of a compression pointer at r[a]; a itself when r[a] is no pointer; len r when
+note the pointer is cut off
+fn dns_ptr r view uchar * a ulong to ulong
+x = tls_at r a
+if ne and x 192 192
+ret a
+end
+if ge add a 1 len r
+ret len r
+end
+ret or shl and x 63 8 ulong get r add a 1
+end
+
+note 0 when the names at r[a0] and r[b0] are equal (ASCII case-insensitive, compression
+note followed); 1 when they differ or either is malformed (at most 400 steps, never traps)
+fn dns_neq r view uchar * a0 ulong b0 ulong to ulong
+a = a0
+b = b0
+for k ulong 400
+na = dns_ptr r a
+nb = dns_ptr r b
+if or ne na a ne nb b
+a = na
+b = nb
+else
+la = tls_at r a
+if or ne la tls_at r b gt la 63
+ret 1
+end
+if eq la 0
+ret 0
+end
+if ne dns_lbeq r a b la 0
+ret 1
+end
+a = add a add la 1
+b = add b add la 1
+end
+end
+ret 1
+end
+
+note 0 when the l label bytes after r[a] and r[b] are equal (ASCII case-insensitive, in range)
+fn dns_lbeq r view uchar * a ulong b ulong l ulong to ulong
+for i ulong l
+x = dns_low tls_at r add add a 1 i
+y = dns_low tls_at r add add b 1 i
+if or ne x y eq x 256
+ret 1
+end
+end
+ret 0
+end
+
+fn dns_low x ulong to ulong
+if and ge x 65 le x 90
+ret add x 32
+end
+ret x
+end
+
+note sockaddr_in for ip:port into sa[0..16)
+fn tcp_sa sa edit uchar * ip view uchar * port ulong to void
+tls_zero sa 0 16
+put sa 0 2
+tls_pn sa 2 port 2
+for i ulong 4
+put sa add 4 i get ip i
+end
+end
+
+note resolve hn to an IPv4 address in ip[0..4) (two attempts, 3 s each); 0 or TLEDNS. A name
+note longer than 253 bytes (RFC 1035 2.3.4) is TLEDNS before the 300-byte query is built.
+fn dns_a4 hn view uchar * ip edit uchar * to ulong
+if gt len hn 253
+ret TLEDNS
+end
+ns = new uchar 4 0
+if ne dns_conf ns 0
+ret TLEDNS
+end
+q = new uchar 300 0
+idb = new uchar 2 0
+if ne random idb 0 2 0 2
+ret TLERAND
+end
+ql = dns_query q hn tls_gn idb 0 2
+if eq ql 0
+ret TLEDNS
+end
+for t ulong 2
+if eq dns_try ns part q 0 ql ip 0
+ret 0
+end
+end
+ret TLEDNS
+end
+
+fn dns_try ns view uchar * q view uchar * ip edit uchar * to ulong
+sa = new uchar 16 0
+tcp_sa sa ns 53
+fd = socknew 2 524290 0
+if lt fd 0
+ret TLEDNS
+end
+f = int fd
+e = ulong TLEDNS
+if eq connect f sa 0 16 0
+e = dns_xchg f q ip
+end
+x = fclose f
+ret e
+end
+
+note send the query on the connected UDP socket f and parse one reply (3 s limit)
+fn dns_xchg f int q view uchar * ip edit uchar * to ulong
+r = new uchar 4096 0
+if ne send f q 0 len q 0 long len q
+ret TLEDNS
+end
+w = waitio f 1 3000000000
+if le w 0
+ret TLEDNS
+end
+n = recv f r 0 4096 0
+if le n 0
+ret TLEDNS
+end
+ret dns_parse part r 0 ulong n q ip
+end
+
+note TCP connect to ip:port, non-blocking with a 10 s limit; returns fd (>= 0) or minus a code
+fn tcp_open4 ip view uchar * port ulong to long
+sa = new uchar 16 0
+tcp_sa sa ip port
+fd = socknew 2 526337 0
+if lt fd 0
+ret neg long TLECONN
+end
+f = int fd
+r = connect f sa 0 16
+if eq r -115
+w = waitio f 4 10000000000
+if le w 0
+x = fclose f
+ret neg long TLECONN
+end
+r = connect f sa 0 16
+if eq r -106
+r = 0
+end
+end
+if ne r 0
+x = fclose f
+ret neg long TLECONN
+end
+ret fd
+end
+
+note tls_dial: DNS A lookup of hn and a TCP connection to port; fd or minus a code
+note (a dotted IPv4 literal is used as it is, without DNS; the TLS name is set separately)
+fn tls_dial hn view uchar * port ulong to long
+ip = new uchar 4 0
+if eq dns_ip4 hn ip 0
+e = dns_a4 hn ip
+if ne e 0
+ret neg long e
+end
+end
+ret tcp_open4 ip port
+end

@@ -1,0 +1,15 @@
+Curve parameter check for om/tls/ec.om (2026-10-26, Wolfram MCP tool WolframLanguageEvaluator).
+p, n, b, Gx, Gy are taken verbatim from FIPS 186-4 Appendix D.1.2.3 (P-256) and D.1.2.4 (P-384),
+equal to SEC 2 v2 sections 2.4.2 (secp256r1) and 2.5.1 (secp384r1), and to
+`openssl ecparam -name prime256v1|secp384r1 -param_enc explicit -text`. Montgomery constants
+(n0' = -m^-1 mod 2^32, R mod m, R^2 mod m) are not stored: ec_ctx computes them at run time.
+
+Query (exact code sent):
+chk[p_,b_,gx_,gy_,n_]:=Module[{add,mul},add[P_,Q_]:=Which[P===0,Q,Q===0,P,Mod[P[[1]]-Q[[1]],p]==0&&Mod[P[[2]]+Q[[2]],p]==0,0,True,Module[{l=If[P===Q,Mod[(3P[[1]]^2-3)PowerMod[2P[[2]],-1,p],p],Mod[(Q[[2]]-P[[2]])PowerMod[Q[[1]]-P[[1]],-1,p],p]],x3},x3=Mod[l^2-P[[1]]-Q[[1]],p];{x3,Mod[l(P[[1]]-x3)-P[[2]],p]}]];mul[k_,P_]:=Module[{R=0,A=P,kk=k},While[kk>0,If[OddQ[kk],R=add[R,A]];A=add[A,A];kk=Quotient[kk,2]];R];{PrimeQ[p],PrimeQ[n],Mod[gy^2-(gx^3-3gx+b),p]==0,mul[n,{gx,gy}]===0,BitLength[p],BitLength[n],n<p<2n}];{chk[16^^ffffffff00000001000000000000000000000000ffffffffffffffffffffffff,16^^5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b,16^^6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296,16^^4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5,16^^ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551],chk[16^^fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,16^^b3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef,16^^aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7,16^^3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f,16^^ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973]}
+
+Result:
+Out[1]= {{True, True, True, True, 256, 256, True}, {True, True, True, True, 384, 384, True}}
+
+Meaning, per curve: p prime, n prime, G on y^2 = x^3 - 3x + b mod p, n*G = point at infinity,
+bit length of p and n (256 / 384, so bits2int truncation is byte aligned), n < p < 2n (so
+x(R) mod n is one conditional subtraction, and e < 2^bitlen(n) < 2n likewise).

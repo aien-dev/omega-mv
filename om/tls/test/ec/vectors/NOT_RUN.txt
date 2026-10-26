@@ -1,0 +1,68 @@
+# Wycheproof d17cc89f testvectors_v1 ecdsa_* files and NIST CAVP sections not run by run.sh, with the reason
+NOT_RUN wycheproof ecdsa_brainpoolP224r1_sha224_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP224r1_sha224_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP224r1_sha3_224_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP256r1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP256r1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP256r1_sha3_256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP320r1_sha384_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP320r1_sha384_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP320r1_sha3_384_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP384r1_sha384_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP384r1_sha384_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP384r1_sha3_384_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP512r1_sha3_512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP512r1_sha512_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_brainpoolP512r1_sha512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp160k1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp160k1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp160r1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp160r1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp160r2_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp160r2_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp192k1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp192k1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp192r1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp192r1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224k1_sha224_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224k1_sha224_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224k1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224k1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha224_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha224_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha3_224_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha3_256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha3_512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha512_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_sha512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_shake128_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp224r1_shake128_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha256_bitcoin_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha3_256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha3_512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha512_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_sha512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_shake128_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_shake128_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_shake256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256k1_shake256_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp256r1_sha3_256_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp256r1_sha3_512_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp256r1_shake128_p1363_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp256r1_shake128_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp384r1_sha3_384_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp384r1_sha3_512_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp384r1_shake256_p1363_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp384r1_shake256_test.json: hash not SHA-256/384/512 (om/tls/sha2.om)
+NOT_RUN wycheproof ecdsa_secp521r1_sha3_512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp521r1_sha512_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp521r1_sha512_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp521r1_shake256_p1363_test.json: curve not P-256/P-384
+NOT_RUN wycheproof ecdsa_secp521r1_shake256_test.json: curve not P-256/P-384
+NOT_RUN cavp SigVer.rsp P-256/P-384 with SHA-1, SHA-224: hash not in om/tls/sha2.om
+NOT_RUN cavp SigVer.rsp P-192, P-224, P-521, K-*, B-* sections: curve not P-256/P-384
+NOT_RUN cavp SigVer_TruncatedSHAs.rsp (SHA-512/224, SHA-512/256): hash not in om/tls/sha2.om
