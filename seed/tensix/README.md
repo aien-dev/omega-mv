@@ -4,17 +4,26 @@ Each Tensix tile on Tenstorrent Wormhole (n150, n300) and Blackhole (p100, p150)
 small RISC-V cores: RISCV B, NC, T0, T1 and T2. This directory writes a 32-bit integer vector add for
 these cores, `out[i] = a[i] + b[i]` modulo 2^32, and checks the result with outside tools.
 
-The route is the same as `seed/sm121` (rung 6):
+There are two producers of the kernel words, and the gate requires them to agree byte for byte.
 
-- the unchanged rung-2 assembler `seed/rung2/asm2.bin`;
-- a plain-text instruction table, `rv32im.tbl` (all 48 RV32I + M instructions);
-- hand-written listings.
+1. **Seeded Omega (`irrv32.om`).** `seed/out/omc` builds `irrv32.om` into an AArch64 program. That program reads the OSC IR v1 of a scalar unit (`fn addu a uint b uint to uint`, in `vecadd.unit.om`) and lifts it into the elementwise loop `out[i] = f(a[i], b[i])`. The words are built from instruction fields inside Omega.
+2. **Rung 6, as in `seed/sm121`.** The unchanged rung-2 assembler `seed/rung2/asm2.bin` reads a plain-text instruction table, `rv32im.tbl` (all 48 RV32I + M instructions), and hand-written listings.
 
 No C, Rust or Python program produces any instruction word.
+
+```sh
+seed/out/omc < seed/tensix/irrv32.om > irrv32 && chmod +x irrv32
+{ printf 'ir\n'; cat seed/tensix/vecadd.unit.om; } | seed/out/omc | ./irrv32 > vecadd.bin   # 44 bytes
+```
+
+`irrv32` accepts exactly one function that takes two `uint` parameters and returns `uint`. The function must be a single block that uses only CONST (emitted as lui+addi), MOV (addi), BIN add/sub/mul/and/or/xor, and RET. It may use at most 7 vregs, which map to x5-x7 and then x14-x17. `div`, `rem`, `shl` and `shr` are refused, because Omega traps on a zero divisor or an out-of-range shift and this kernel has no trap path. Other types, control flow and calls are also refused. Every refusal sets a nonzero exit code (20-28) and writes no bytes.
 
 | File | What it is |
 |---|---|
 | `rv32im.tbl` | RV32IM encodings as asm2 table lines. Registers are written as numbers 0-31, because asm2's register parser uses ARM names. |
+| `irrv32.om` | Seeded Omega emitter: OSC IR v1 scalar uint unit → RV32IM elementwise kernel. |
+| `vecadd.unit.om` | The scalar unit `ret add a b`. Its emitted kernel must equal `vecadd.bin`. |
+| `mix.unit.om`, `mix.expect`, `mix-expect.hex` | A second unit, `((a+b)*3000000000) xor a`, which exercises CONST, MOV, mul and xor. It comes with its hand-written disassembly and 64 expected words. |
 | `vecadd.s2` | The kernel: 11 instructions, 44 bytes. a0 = a, a1 = b, a2 = out, a3 = n; it returns through ra. |
 | `vecadd.bin` | The committed kernel bytes. The gate rebuilds them twice and requires the same bytes both times. |
 | `boot-tt.s2` | 9 instructions placed at L1 0x0, where RISCV B starts after reset. It loads the arguments from 0x1000, calls vecadd, then writes the done mark 0x0600d000 to 0x1010 and spins. |
@@ -28,6 +37,7 @@ No C, Rust or Python program produces any instruction word.
 Expected values were computed in Wolfram with this query:
 `WolframLanguageEvaluator: a=Join[{0,2^32-1,2^31,2^31-1,2^32-1,16^^12345678}, Table[Mod[2654435761(i+1),2^32],{i,6,63}]]; b=Join[{0,1,2^31,1,2^32-1,16^^87654321}, Table[Mod[2^32-1-40503 i^2+977 i,2^32],{i,6,63}]]; Mod[a+b,2^32]`.
 It reported 64 words, of which 61 have a+b ≥ 2^32.
+`mix-expect.hex` uses the same `a` and `b` with `BitXor[Mod[Mod[a+b,2^32]*3000000000,2^32],a]`. The CONST split for 3000000000 is lui 0xb2d06, addi -512, also from Wolfram.
 
 ## Run
 
@@ -51,7 +61,7 @@ If any of these, or a ttsim library, is missing, the gate prints NOT_RUN and exi
 
 All of these checks are interop oracles, not Omega-native.
 
-1. **Same bytes every build.** Each image is assembled twice and both builds must match byte for byte. The kernel must also equal the committed `vecadd.bin`, and both start images must end with exactly those bytes.
+1. **Same bytes every build.** Each image is assembled twice and both builds must match byte for byte. The kernel must also equal the committed `vecadd.bin`, and both start images must end with exactly those bytes. omc (pinned sha256) builds `irrv32.om` twice; both builds must be identical. `irrv32` emits each unit twice. Its vecadd output must be byte-identical to asm2's `vecadd.bin`. GNU objdump must print exactly `mix.expect` for the mix kernel.
 2. **Two independent disassemblers.**
    - GNU objdump must print exactly `vecadd.expect` and `edges.expect`. These cover all 48 table names: 51 words in total.
    - LLVM objdump must agree with GNU on every mnemonic and register.
@@ -60,13 +70,16 @@ All of these checks are interop oracles, not Omega-native.
    - ttsim Blackhole (Tensix tile (1,2));
    - qemu-riscv32.
 
-   Each run must give all 64 sums equal to `expect.hex`. On ttsim, the output buffer is first filled with 0xee bytes, so a kernel that never ran cannot pass.
+   Each run must give all 64 sums equal to `expect.hex`. On ttsim, the output buffer is first filled with 0xee bytes, so a kernel that never ran cannot pass. The Omega-emitted vecadd and mix kernels then run on the same three oracles, behind the same start code, against `expect.hex` and `mix-expect.hex`.
 4. **Negative controls.** Every one of these must be caught:
    - C1: one bit flipped in the table (add becomes sub). Caught by GNU objdump and by ttsim.
    - C2: one wrong expected value.
    - C3: the wrong register in the listing. Caught by qemu.
    - C4: one wrong branch-offset bit. ttsim stops with "invalid pc".
    - C5: an out-of-range immediate. asm2 refuses it.
+   - C6: the unit mutated from add to sub. The emitted bytes change, and ttsim's output differs.
+   - C7: the emitter mutated (a0 stride 8). Caught by qemu.
+   - C8: a `div` unit. `irrv32` refuses it with exit 24 and emits 0 bytes.
 
 ## What is established, and what is NOT
 
@@ -74,13 +87,14 @@ All of these checks are interop oracles, not Omega-native.
 
 - The table encodes RV32IM the way two independent disassemblers read it.
 - The kernel computes the right sums on ttsim's models of Wormhole B0 and Blackhole A0 RISCV B, and on qemu.
+- Seeded Omega (`irrv32.om`) emits the same vecadd bytes from the scalar unit's OSC IR, and a second kernel (mix) that is correct on the same three oracles.
 
 **NOT established:**
 
 - **Nothing has run on a Tenstorrent card** (NOT_RUN on hardware).
 - ttsim is Tenstorrent's software model, not silicon.
 - The fp32 SFPU path and the Tensix coprocessor (matrix unit) are not used.
-- No `.om` program emits these words yet; they come from a hand-written listing through the table. The next step is an `.om` IR → RV32 emitter like `seed/spirv/irspirv.om`.
+- `irrv32.om` covers straight-line u32 scalar bodies only. Signed types, traps, control flow, loops inside the body and Tensix coprocessor instructions are not lowered.
 - Only RISCV B is used, on a single tile.
 - There is no NoC traffic, no DRAM, and no tt-metal runtime.
 

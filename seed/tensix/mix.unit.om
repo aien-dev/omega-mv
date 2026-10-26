@@ -1,0 +1,7 @@
+note Exercises CONST (lui+addi), MOV, mul and xor in irrv32.om: out[i] = ((a[i]+b[i])*3000000000) xor a[i].
+fn mix a uint b uint to uint
+x = add a b
+y = mul x uint 3000000000
+z = y
+ret xor z a
+end
