@@ -611,6 +611,13 @@ be assigned (error 7). In IR mode an integer constant is folded to its literal, 
 struct/global/text declarations. Definitions are sequential, so a
 constant defined after a function is not visible to that function.
 
+A constant needs no program image, so it is also accepted in function mode (a unit without
+`fn main`): every read folds to the typed number, and the function words are byte for byte those of
+the same unit written with the literal (gate16 `fm_*`: value, negative value, parameter and `new`
+length, `while` bound, `trap` code, `for` count, two functions, f64). A `global` or `text` in a
+function-mode unit is still error 9 at the end of the input, with or without constants beside it,
+and a host word is still error 9 at its line (gate16 `fm_global`, `fm_text`, `fm_host_word`).
+
 An integer constant is also accepted as an array length in `new`, `global`, a parameter declaration
 (`view T N` / `edit T N`) and a struct field length (1..64, error 14); a float constant used as a
 length is error 16. A length token that is a name other than an integer constant is error 16, and

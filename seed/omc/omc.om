@@ -7890,7 +7890,8 @@ writeout 0
 end
 
 note s_eof: end of input: no open function (error 15), some function (16); function mode: no globals or
-note texts (9); one function: its bare words; more: the entry word, a B to the last function. om4 S_EOF.
+note texts (9, fnstore; consts fold and are allowed); one function: its bare words; more: the entry word, a
+note B to the last function. om4 S_EOF.
 note Resolve every call after all addresses are known. In function mode remove leaves of the call
 note graph; any functions left after nf rounds form or reach a cycle (error 9).
 fn resolve to void
@@ -8021,8 +8022,8 @@ resolve
 if ne get progmode 0 0
 eof_prog
 end
-if ne get nglob 0 0
-fail 9
+if eq get progmode 0 0
+fnstore
 end
 if ne get nexp 0 0
 expwords
@@ -8034,6 +8035,18 @@ end
 a = get fn_addr sub get lastfn 0 1
 wrword 176 or 335544320 and shr sub a 176 2 67108863
 writeout 176
+end
+
+note fnstore: function mode. A top-level global pool (kind 4) or text (kind 5) needs the program image and
+note is error 9; a const (kind 9) is folded to a typed number wherever it is read, so it composes here too.
+fn fnstore to void
+i = ulong 0
+while lt i get nglob 0
+if ne get nm_kind i 9
+fail 9
+end
+i = add i 1
+end
 end
 
 note expwords (OM-2, spec 6): words 0 .. E-1 of a multi-entry unit, B to each export in source order
