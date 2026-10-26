@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T17:45:33Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:a54bc6f79fb21881c1253fac5077c292fcba7a179bdc3fd847a818a7631f698f",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 7,
+      "generated_at_commit": "c76b65ee88b7fc8d80398e9e174d3c931a125d0e",
+      "source_tree": "sha256:b826fafcc456aa5aeae4832fcfc59bf46e888fef42d5e63df32001a1a464c5eb"
+    }
+  },
+  "layer": "seed",
+  "name": "json",
+  "purpose": "Strict RFC 8259 JSON reader, writer and optional exact binary64 conversion in seeded Omega, with CPython-oracle parity gate (omega-mv #788)",
+  "schema_version": "1.0.0"
+}
