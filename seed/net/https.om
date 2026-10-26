@@ -1,0 +1,174 @@
+note seed/net/https.om -- HTTPS transport for http.om: the TLS 1.3 client of om/tls plugged into
+note the transport boundary (hrecvio, hrecvd, hsendio dispatch here when HXPORT is 1).
+note Library unit: no `om2` line, no `fn main`, no globals. Compose the om/tls units, http.om and
+note this file (in that order) in front of the application:
+note   { printf 'om2\n'; for u in sha2 hkdf x25519 chacha aesgcm ec rsa x509 tls; do cat om/tls/$u.om; done
+note     cat seed/net/http.om seed/net/https.om app.om; } | seed/out/omc > app
+note A program without TLS composes seed/net/notls.om instead (same three function names, HENOSUP).
+note
+note The TLS connection state lives in the transport region io[HTB, HTB + TLCSZ) that htlsinit
+note reserves at the end of io; the trust store is a caller-owned array of TLSTSZ bytes filled by
+note tls_store / tls_storef. Because Omega passes an array to one call once, bytes between the
+note TLS state and the read / write regions of the same io cross a 16 KiB bounce array (one copy).
+note
+note Client use (hinit first, no I/O before htlsinit):
+note   fd = hdial a tmo                  TCP
+note   r  = hinit cs io int fd 0
+note   r  = htlsinit cs io host          lay out the transport region, SNI and certificate name
+note   r  = htlsconn cs io st            handshake (tls_connect) under the handshake budget
+note   ... hreqst / hhend / hwfin / hrsprd / hbodyrd as over TCP ...
+note   htlsend cs io                     close_notify, wipe the keys, close fd
+note Results: TLS error code e (tls_errname) is returned as HETLS - e (-601 .. -629);
+note TLS_ERR_TIMEOUT is HETIME. A TCP end of stream without close_notify is an error (HETLS - 4,
+note truncation), never a clean end; only close_notify gives 0 from the reads.
+note
+note Timeouts: before each TLS read or write the http.om wait policy (HIDLE single-wait limit and
+note the HDL deadline) is given to tls_deadline, so the bounds of seed/net/README.md hold over TLS.
+
+const HETLS long -600
+const HTLBUF ulong 16384
+
+note htlsinit: reserve io[HTB, HTB + TLCSZ) for the TLS state (io must hold it plus the read and
+note write regions: at least TLCSZ + 512 bytes) and start the client for TLS name host with ALPN
+note http/1.1. HEINVAL when I/O already happened on cs or io is too small.
+fn htlsinit cs edit ulong * io edit uchar * host view uchar * to long
+if or ne get cs HRLEN 0 ne get cs HWLEN 0
+ret HEINVAL
+end
+if or ne get cs HMEM 0 ne get cs HOPEN 1
+ret HEINVAL
+end
+if lt len io add TLCSZ 512
+ret HEINVAL
+end
+n = sub len io TLCSZ
+w = get cs HWCAP
+if gt w sub n 256
+w = sub n 256
+end
+r = hlayout cs n w
+if lt r 0
+ret r
+end
+put cs HTL TLCSZ
+e = tls_init part io n TLCSZ host 1
+if ne e 0
+ret sub HETLS long e
+end
+put cs HXPORT 1
+ret 0
+end
+
+note htlsconn: the TLS handshake on the connection's fd with trust store st (tls_store or
+note tls_storef); 0, HETIME or HETLS - e
+fn htlsconn cs edit ulong * io edit uchar * st view uchar * to long
+if ne get cs HXPORT 1
+ret HEINVAL
+end
+b = get cs HTB
+e = tls_connect part io b TLCSZ st int get cs HFD
+ret htlsmap long e
+end
+
+note htlsmap: a TLS code as an http.om result
+fn htlsmap e long to long
+if eq e 0
+ret 0
+end
+if eq e long TLETIME
+ret HETIME
+end
+ret sub HETLS e
+end
+
+note htlsarm: give the TLS state the wait policy of cs (min of idle and the deadline), 0 = none
+fn htlsarm cs edit ulong * io edit uchar * to void
+b = get cs HTB
+dl = get cs HDL
+iv = get cs HIDLE
+if ne iv 0
+t = add ulong monons iv
+if or eq dl 0 lt t dl
+dl = t
+end
+end
+tls_deadline part io b TLCSZ long dl
+end
+
+note htlsrecv: at most n bytes into io[off, off+n) through TLS; count, 0 at close_notify, or
+note negative (HETIME, HETLS - e)
+fn htlsrecv cs edit ulong * io edit uchar * off ulong n ulong to long
+bb = new uchar 16384 0
+k = n
+if gt k HTLBUF
+k = HTLBUF
+end
+htlsarm cs io
+r = tls_read part io get cs HTB TLCSZ part bb 0 k
+if lt r 0
+ret htlsmap neg r
+end
+for i ulong ulong r
+put io add off i get bb i
+end
+ret r
+end
+
+note htlsrecvd: at most len d bytes straight into the caller's array d
+fn htlsrecvd cs edit ulong * io edit uchar * d edit uchar * to long
+k = len d
+if gt k HTLBUF
+k = HTLBUF
+end
+htlsarm cs io
+r = tls_read part io get cs HTB TLCSZ part d 0 k
+if lt r 0
+ret htlsmap neg r
+end
+ret r
+end
+
+note htlscp: io[s, s+n) into bb (at most 16 KiB); the count copied
+fn htlscp bb edit uchar 16384 io view uchar * s ulong n ulong to ulong
+k = n
+if gt k HTLBUF
+k = HTLBUF
+end
+for i ulong k
+put bb i get io add s i
+end
+ret k
+end
+
+note htlswr: one TLS write of bb[0, k)
+fn htlswr cs edit ulong * io edit uchar * bb view uchar 16384 k ulong to long
+htlsarm cs io
+r = tls_write part io get cs HTB TLCSZ part bb 0 k
+if lt r 0
+ret htlsmap neg r
+end
+ret 0
+end
+
+note htlssend: all of io[off, off+n) through TLS in records of at most 16 KiB; 0 or negative
+fn htlssend cs edit ulong * io edit uchar * off ulong n ulong to long
+bb = new uchar 16384 0
+p = ulong 0
+while lt p n bound 1024
+k = htlscp bb io add off p sub n p
+r = htlswr cs io bb k
+if lt r 0
+ret r
+end
+p = add p k
+end
+ret 0
+end
+
+note htlsend: close_notify when still connected, wipe the TLS keys and buffers, close the fd
+fn htlsend cs edit ulong * io edit uchar * to long
+if eq get cs HXPORT 1
+tls_close part io get cs HTB TLCSZ
+end
+ret hclose cs
+end

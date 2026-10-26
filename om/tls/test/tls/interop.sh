@@ -139,16 +139,17 @@ fake trail  "TLSERR TLS_ERR_DECODE"
 
 # full handshakes from fakesrv.py (security review of omega-mv #813): CCS policy, record-count caps,
 # CertificateVerify refusals, close_notify during the handshake. EXPECT OK needs exit 0 and the reply.
+# fsrv MODE EXPECT [OPTS]: OPTS is the client's "REC,HSMS,SPLIT" (record limit, handshake ms, split)
 fsrv() {
   nextport; rows=$((rows + 1))
   python3 "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
   fp=$!
   sleep 0.6
-  timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${3:-0}" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
   case "$got" in "$2"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
-  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: $1" "$2" "$got"
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: $1${3:+ [$3]}" "$2" "$got"
 }
 fsrv ok          OK
 fsrv empty50     OK
@@ -165,6 +166,13 @@ fsrv empty1500   "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
 fsrv tickets1500 "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
 fsrv closehs     "TLSERR TLS_ERR_ALERT_RECEIVED detail 0 (exit 31)"
 fsrv closepre    "TLSERR TLS_ERR_ALERT_RECEIVED detail 0 (exit 31)"
+# key lifetime (RFC 8446 section 5.5) with the test-only record limit, and the handshake budget
+fsrv kuexact     OK                                                      5,0,0
+fsrv kuover      "TLSERR TLS_ERR_SEQUENCE_LIMIT detail 0 (exit 38)"      5,0,0
+fsrv kurot       OK                                                      5,0,0
+fsrv kuw:8       OK                                                      8,0,1
+fsrv loris       "TLSERR TLS_ERR_TIMEOUT detail 0 (exit 13)"             0,2000,0
+fsrv slowsh      OK                                                      0,10000,0
 
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac

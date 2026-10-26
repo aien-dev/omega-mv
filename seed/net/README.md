@@ -14,10 +14,14 @@ only: no hardware or deployment claim.
 | Path | What it is |
 |---|---|
 | `http.om` | The library unit. No `om2` line, no `fn main`, no globals. |
+| `notls.om` | The three transport hooks for a program without TLS (every one returns `HENOSUP`). Composed after `http.om`. |
+| `https.om` | The same three hooks implemented with the om/tls TLS 1.3 client, plus `htlsinit` / `htlsconn` / `htlsend`. Composed after the om/tls units and `http.om`. |
 | `examples/sse_server.om` | An embeddable server: `/health`, `/events` (SSE), `/echo` (body up to 1 MiB). |
 | `examples/sse_client.om` | An incremental SSE client that prints one line per event. |
 | `tests/parse.om` | Memory-mode parser driver for the corpus. |
 | `tests/live.om` | Loopback socket tests: bodies, keep-alive, pipelining, SSE, malformed requests, deadlines, descriptor leaks. |
+| `tests/https.om` | HTTPS GET through `https.om`: `https HOST PORT STOREFILE PATH [CONNECTHOST [IDLEMS]]`, body to stdout, `status N` / `HTTPSERR r` to stderr. |
+| `tests/nosup.om` | A program without TLS must refuse every byte on a non-TCP transport. |
 | `tests/check.py` | Host referee: builds everything, runs the corpus, the mutants, `live.om` and the curl / http.client end-to-end check. |
 
 ## Building a program
@@ -26,7 +30,16 @@ The library has no `om2` line, so the application build adds one line in front o
 concatenated units:
 
 ```sh
-{ printf 'om2\n'; cat seed/net/http.om app.om; } | seed/out/omc > app
+{ printf 'om2\n'; cat seed/net/http.om seed/net/notls.om app.om; } | seed/out/omc > app
+```
+
+A program that speaks HTTPS composes the om/tls units and `https.om` instead of `notls.om`
+(exactly one of the two, after `http.om`):
+
+```sh
+{ printf 'om2\n'
+  for u in sha2 hkdf x25519 chacha aesgcm ec rsa x509 tls; do cat om/tls/$u.om; done
+  cat seed/net/http.om seed/net/https.om app.om; } | seed/out/omc > app
 ```
 
 A program that also parses JSON adds `seed/json/json.om` in the same `cat`. Names in
@@ -158,6 +171,17 @@ st = hrsprd cs io                  final status (put cs HISHEAD 1 first after a 
 n  = hbodyrd cs io d               Content-Length, chunked or close-delimited
 ```
 
+HTTPS (`https.om`): after `hinit` and before any I/O, `htlsinit cs io host` reserves the
+transport region `io[HTB, HTB + TLCSZ)` (119296 bytes; `io` must hold it plus at least 512
+bytes of read and write regions) and starts the om/tls client for the TLS name `host` with
+ALPN `http/1.1`; `htlsconn cs io st` runs the handshake against the trust store `st`
+(`TLSTSZ` bytes filled by `tls_store` or `tls_storef`); the request and response functions
+then work unchanged; `htlsend cs io` sends close_notify, wipes the keys and closes the
+descriptor (`hclose` alone closes the socket without either). A TLS result `e` comes back as
+`HETLS - e` (-601 .. -629, names in `tls_errname`), a TLS deadline as `HETIME`. A TCP end of
+stream without close_notify is `HETLS - 4` (truncation), never a clean end of a body.
+`tests/https.om` is the reference caller.
+
 ## Server-sent events
 
 Writing: `hrspsse` sends the 200 head (`text/event-stream`, `Cache-Control: no-cache`, chunked),
@@ -186,10 +210,13 @@ Every byte crosses three functions only: `hrecvio` (into the read region), `hrec
 caller's body array) and `hsendio` (from the write region), plus `hwait`. Sockets are
 O_NONBLOCK; a call that would block waits with `waitio` for at most min(idle, deadline - now),
 so there is no busy wait and no unbounded block. `get cs HXPORT` selects the transport: 0 is
-plain TCP or Unix sockets; any other value returns `HENOSUP` today. The TLS lane (OmegaTLS,
-`tls_read`/`tls_write` with their own monotonic deadline and whole-slice writes) plugs in by
-keeping its connection state in the transport region `io[HTB, HTB + HTL)` and calling it from
-those three functions; no other function changes.
+plain TCP or Unix sockets; 1 calls the hooks `htlsrecv`, `htlsrecvd` and `htlssend`, which
+`https.om` implements over om/tls (`tls_read` / `tls_write`, connection state in the transport
+region `io[HTB, HTB + HTL)`; before each call the http.om wait policy, min(idle, deadline), is
+handed to `tls_deadline`) and `notls.om` refuses with `HENOSUP`. Because Omega passes one
+array to a call once, bytes between the TLS state and the read / write regions of the same `io`
+cross a 16 KiB bounce array (one extra copy per record). No other function of `http.om`
+touches the transport.
 
 ## Host words used
 
@@ -234,8 +261,21 @@ Stages:
    (six requests on one keep-alive connection, the last with `Connection: close`), raw sockets (obs-fold 400, empty connection,
    HTTP/1.0) and `examples/sse_client.om`; the server's descriptor count must return to its
    start value after every connection, and the server must exit 0.
+5. HTTPS (needs `openssl`): a throwaway PKI (root, leaf for `localhost`, leaf for another
+   name, leaf of an unrelated root), three Python `ssl` TLS 1.3 servers and one
+   `openssl s_server -www`, all on 127.0.0.1 ephemeral ports. `tests/nosup.om` (built with
+   `notls.om`) must refuse every byte on `HXPORT 1`, and its stub mutated to return 0 must
+   fail. `tests/https.om` (built with om/tls and `https.om`) runs nine rows: 6-byte,
+   300 KiB Content-Length, chunked (chunk sizes 1 .. 60000) and close-delimited bodies
+   compared byte for byte, a server that closes TCP without close_notify (`HETLS - 4`), a
+   silent server under a 500 ms idle limit (`HETIME`), a wrong-name certificate and an
+   untrusted issuer (`HETLS - 17`), and the openssl page. Five mutants (read dispatch gone,
+   head read error or body truncation taken as end of stream, wait policy not handed to
+   TLS, records not written) must each fail a row. With `TLS_NET=1` two live read-only GETs
+   (`www.example.com/`, `api.github.com/licenses/mit`) must return 200 with the expected
+   text; without it that part is `NOT_RUN`.
 
 Every socket in the checks is 127.0.0.1 with a port chosen by the kernel. Nothing contacts port
-18091 or any outside host.
+18091; outside hosts are contacted only by the two `TLS_NET=1` rows.
 
 Re-verified 2026-10-26 after refresh onto main `c5d981041` with reseeded `seed/out/omc` `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`: `HTTP-CHECK PASS` (same counts).

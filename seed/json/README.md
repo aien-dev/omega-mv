@@ -25,7 +25,7 @@ The units contain no `om2` line, no `global`, no `text` and no host word. The ca
 them into one OM-2 program unit:
 
 ```sh
-{ printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om [seed/json/jsonf.om] seed/net/http.om app.om; } > app.full.om
+{ printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om [seed/json/jsonf.om] seed/net/http.om seed/net/notls.om app.om; } > app.full.om
 nice -n 19 seed/out/omc < app.full.om > app
 ```
 

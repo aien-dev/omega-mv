@@ -43,15 +43,41 @@ All buffers are owned by the caller. `c` is the connection state, at least `TLCS
 e  = tls_store st                        load /etc/ssl/certs/ca-certificates.crt
 e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; the name is SNI and the checked name
 fd = tls_dial hostname port              DNS A + TCP (IPv4; a dotted literal skips DNS); fd or -code
-tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait,
-                                         with no cap on the whole handshake (a slow server can stretch
-                                         it; CPU time is never covered)
+tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait
+                                         and, for the handshake, the whole-handshake budget below
+                                         (CPU time is never covered)
+e  = tls_hslimit c ns                    whole-handshake budget when no deadline is set (default 30 s;
+                                         before tls_connect only)
+e  = tls_reclimit c n                    tests only: lower the per-key record limit (1 .. 23726565;
+                                         before tls_connect only; it can never be raised)
 e  = tls_connect c st int fd             full handshake; any failure sends an alert and is final
 n  = tls_read c out                      > 0 bytes; 0 = close_notify received; -code on error
-n  = tls_write c bytes                   all bytes or -code
+n  = tls_write c bytes                   all bytes or -code; sends KeyUpdate before the write key's
+                                         record limit (section "Key lifetime")
 tls_close c                              send close_notify, wipe keys (the caller closes fd); a failed
                                          connection stays failed, so a later tls_read is -code, never 0
 ```
+
+Handshake budget: when the caller has set no deadline, `tls_connect` arms one of now + 30 s
+(`TLHSNS`, or the value given to `tls_hslimit`) over the whole handshake and clears it when the
+handshake succeeds, so a server that trickles its ServerHello one byte at a time (interop rows
+`loris` and `slowsh`) cannot hold the client past the budget; the usual 30 s per wait then applies
+to application data. A caller deadline replaces the budget.
+
+Key lifetime (RFC 8446 section 5.5): at most `TLKUREC` = 23726566 = floor(2^24.5) records are
+protected under one key in each direction (the AES-GCM bound; ChaCha20-Poly1305 would allow more
+and gets the same conservative value). `tls_write` sends KeyUpdate(update_not_requested) and
+rotates its own key before the record that would be number `TLKUREC` - 1 under the current key;
+`tls_seal` and `tls_open` refuse with `TLS_ERR_SEQUENCE_LIMIT` (fail closed, the connection is
+failed) when a sequence number reaches the limit, which happens on the read side when the peer
+never updates its key. `tls_reclimit` lowers the limit for the tests (interop rows `kuexact`,
+`kuover`, `kurot`, `kuw:8`); the limit cannot be raised.
+
+Secret wiping: `tls_close` and `tls_abort` zero the traffic keys and IVs, the application
+secrets, the handshake secrets and ephemeral key, and the record, write and line buffers of `c`
+(`tls_wipe`). Secrets held in function locals (the Omega compiler keeps small values in registers
+and `new` arrays on the stack) are not scrubbed after a function returns; see
+`THREAT_MODEL.md`.
 
 For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls_connect`. See
 `test/tls/client.om`, mode `tsmtp`.
@@ -93,7 +119,8 @@ For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls
 - ChangeCipherSpec (stricter than RFC 8446 section 5): at most one, exactly the single byte 1, only
   after the ServerHello and before the first protected record. A second, early, late, protected
   or malformed CCS is `TLS_ERR_UNEXPECTED_MESSAGE`.
-- Records: 64-bit sequence numbers, never wrapped (`TLS_ERR_SEQUENCE_LIMIT`). A record over
+- Records: 64-bit sequence numbers, capped at 23726566 records per key (`TLS_ERR_SEQUENCE_LIMIT`,
+  see "Key lifetime" above; the client updates its own key before that). A record over
   2^14 + 256 is refused. Plaintext is released only after its tag verifies. An end of TCP without
   close_notify is `TLS_ERR_EOF`, never a clean 0. A handshake message spread over more than 4000
   records is `TLS_ERR_MESSAGE_TOO_BIG`; more than 1000 consecutive records without application
@@ -130,7 +157,9 @@ Constant time here means that no branch, loop count or memory index depends on a
 Not covered, or covered only partly:
 
 - **CPU timing.** omc emits plain AArch64. The constant-time claims rely on MUL, ADD, EOR, AND,
-  ORR and the shifts having data-independent timing. The DIT bit is not set.
+  ORR and the shifts having data-independent timing. PSTATE.DIT is not set: `tls_hwdit` reports
+  whether the kernel advertises FEAT_DIT (HWCAP bit 24), and `msr DIT, #1` needs a compiler word
+  that omc does not have yet (proposal in `THREAT_MODEL.md`).
 - **Record padding.** The inner-plaintext padding is stripped by a backward scan, so its time
   reveals the padding length. RFC 8446 section 5.4 accepts this.
 - **Lengths and outcomes.** Message lengths, record counts and whether a tag check failed are
@@ -140,8 +169,11 @@ Not covered, or covered only partly:
   zero the keys in `c`.
 - **Conversions.** A `uchar` conversion of a secret value compiles to a range check whose branch
   is never taken.
-- **No measurement proof.** No dudect-style statistical timing test has been run. The x25519
-  timing figures in its test output are informational and were noisy on a shared host.
+- **Measurement.** A dudect-style fixed-vs-random Welch t-test (`test/tls/timing.om`, 20000 to 50000
+  samples per operation on two cores) found every |t| below 2.5 (flag threshold 4.5) for x25519,
+  ChaCha20-Poly1305, AES-128-GCM and `tls_cteq` on one Spark host, 2026-10-27. That is MEASURED on
+  one host, not a proof; the raw samples and the Wolfram queries are in the audit evidence bundle
+  (`THREAT_MODEL.md` says where). The x25519 figures in its test output are informational.
 
 ## Tests (run from the repository root)
 
@@ -154,7 +186,8 @@ Not covered, or covered only partly:
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 interop=38 net=PASS mutants=19/19` |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` |
+| `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
 
 How the suites are built:
 
@@ -170,7 +203,7 @@ How the suites are built:
 - **`test/tls`.**
   - The RFC 8448 section 3 KAT checks ECDHE, every secret, the keys and IVs, both Finished values,
     and record seal and open byte for byte.
-  - `interop.sh` runs 38 rows against `openssl s_server`, crafted ServerHellos and `fakesrv.py`
+  - `interop.sh` runs 44 rows against `openssl s_server`, crafted ServerHellos and `fakesrv.py`
     (a full TLS 1.3 server in Python that misbehaves after a valid handshake), all on 127.0.0.1.
     Ports already in use are skipped. Every failure row also checks that `tls_close` leaves the
     connection failed.
@@ -200,6 +233,11 @@ The interop refusal table (`build/tls/tls/interop-table.txt`):
 | Certificate then Finished, no CertificateVerify | `TLS_ERR_UNEXPECTED_MESSAGE` |
 | 1500 empty application records; 1500 NewSessionTickets | `TLS_ERR_UNEXPECTED_MESSAGE` |
 | close_notify before the ServerHello and after it | `TLS_ERR_ALERT_RECEIVED` detail 0 |
+| record limit lowered to 5: server sends exactly 4 records per key then KeyUpdate (`kuexact`), rotates twice (`kurot`) | accepted |
+| record limit lowered to 5: server sends a 5th record under one key (`kuover`) | `TLS_ERR_SEQUENCE_LIMIT` |
+| record limit lowered to 8, client writes 8 single-byte records: the server (`kuw:8`) alerts unless a KeyUpdate arrives in time | accepted (13 updates seen) |
+| ServerHello one byte per 250 ms for 8 s, handshake budget 2 s (`loris`) | `TLS_ERR_TIMEOUT` |
+| ServerHello one byte per 20 ms, budget 10 s (`slowsh`) | accepted |
 
 ### Differences from `openssl verify`
 
@@ -250,6 +288,35 @@ had 11 findings. Each one is fixed and has a test that fails on the code before 
 | F9 no CertificateVerify negative control | fake server with a flipped signature and with a foreign key | interop `cvbad`, `cvkey`, mutant CertificateVerify ignored |
 | F10 F1-F4 and F7 not exercised | crafted x509 fixtures (`gen_crafted.py`), fake-server rows, DNS unit; a trap is a FAIL in interop | all rows above |
 | F11 info items | `tls_close` keeps a failed connection failed; close_notify in the handshake is `TLS_ERR_ALERT_RECEIVED`; deadline, clock, public-suffix, caller-contract, CertificateRequest and path-building limits documented above | interop `CLOSE_NOT_FAILED` check on every failure row, `closehs`, `closepre`, mutants close revives failed and handshake close_notify unmapped |
+
+Outside review (2026-10-27, `audit/tls-outside-review`): six gaps, each fixed here or stated as a
+limit in `THREAT_MODEL.md`; the audit boundary is `AUDIT_SCOPE.md`. In short: key lifetime
+(KeyUpdate at the record limit, `TLS_ERR_SEQUENCE_LIMIT` fail-closed), HTTPS transport for
+`seed/net/http.om`, a hosted arm64 CI job (`.github/workflows/om-tls-arm64.yml`), the handshake
+budget, secret wiping checked by `test/tls/residue.py` (a `/proc/PID/mem` scan after the handshake and
+after `tls_close`, with three mutants), the DIT probe, the timing measurement, and the review bundle
+retained under `evidence/om-tls-review-2026-10-26/` with SHA-256 sums.
+
+## Policy
+
+- **Timeouts.** A caller deadline (`tls_deadline`) bounds every call; without one the handshake is
+  bounded by `tls_hslimit` (default 30 s) and reads block as the socket does. `seed/net/https.om`
+  maps a TLS timeout to `HETIME`.
+- **Key lifetime.** 23726566 records per direction and key (RFC 8446 section 5.5, the stricter
+  ChaCha20-Poly1305 figure for both suites); the client sends KeyUpdate one record before and refuses
+  with `TLS_ERR_SEQUENCE_LIMIT` at the limit on both directions.
+- **Secret handling.** Every unit zeroes its own secret locals; `tls_close` and every failure zero
+  the keys, the ephemeral key, the handshake secrets and the record buffers in `c`. Registers and
+  compiler-spilled stack slots are not scrubbed (a compiler limit). `test/tls/residue.py` is the
+  check: after the handshake none of the twelve handshake-only secrets is in the process memory,
+  after `tls_close` none of the eighteen.
+- **Revocation.** Not checked. There is no OCSP, no OCSP stapling (the client sends no
+  `status_request` extension) and no CRL. A revoked but otherwise valid chain verifies. Callers that
+  need revocation must enforce it outside this library (pinning in the trust store, short-lived
+  certificates). OCSP stapling needs a DER OCSP response parser, a second signature check and a
+  freshness policy; it was judged out of this lane's scope rather than built half-way.
+- **Trust.** Only the caller's trust store (`tls_storef`); no system store, no name constraints,
+  no CT, as `What it does and refuses` says.
 
 The read-only re-review of the fix (`~/handoffs/omega-tls/security-rereview.md`, `38c80a85`) found
 every finding fixed (VERDICT: PASS) and two residual items, both fixed here: N1, a caller host name

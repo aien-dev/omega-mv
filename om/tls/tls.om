@@ -39,6 +39,9 @@ const TLHF ulong 488
 const TLDET ulong 492
 note change_cipher_spec state: 0 none allowed yet, 1 one allowed (after ServerHello), 2 no more
 const TLCCS ulong 496
+note record limit override (4 bytes, 0 = TLKUREC) and handshake budget in ns (8 bytes, 0 = TLHSNS)
+const TLKUL ulong 500
+const TLHSL ulong 504
 const TLEPK ulong 512
 const TLEPU ulong 544
 const TLSID ulong 576
@@ -54,6 +57,10 @@ const TLLF ulong 36864
 const TLLFSZ ulong 16896
 const TLHB ulong 53760
 const TLHBSZ ulong 65536
+note RFC 8446 section 5.5: at most 2^24.5 = 23726566 records under one AES-GCM key (applied to both
+note suites); the whole handshake must finish within TLHSNS (30 s) unless the caller set a deadline
+const TLKUREC ulong 23726566
+const TLHSNS ulong 30000000000
 
 note error codes (tls_errname gives the names)
 const TLEARG ulong 1
@@ -132,6 +139,7 @@ text TLLUPD "traffic upd"
 text TLCVC "TLS 1.3, server CertificateVerify"
 text TLALPN "http/1.1"
 text TLRESOLV "/etc/resolv.conf"
+text TLAUXV "/proc/self/auxv"
 text TLNS "nameserver"
 
 note ---- byte helpers (big-endian, n <= 8) ----
@@ -432,10 +440,41 @@ tls_pn c o add sq 1 8
 ret 0
 end
 
-note decrypt the record at c[TLRB] whose body is ln bytes; 0 or TLEMAC
+note the record limit in force: TLKUREC or the lower test-only value set by tls_reclimit
+fn tls_reclim c view uchar * to ulong
+v = tls_gn c TLKUL 4
+if eq v 0
+ret TLKUREC
+end
+ret v
+end
+
+note tls_reclimit: lower the per-key record limit before tls_connect (tests); it cannot be raised
+fn tls_reclimit c edit uchar * n ulong to ulong
+if or ne get c TLPH 0 or eq n 0 ge n TLKUREC
+ret TLEARG
+end
+tls_pn c TLKUL n 4
+ret 0
+end
+
+note tls_hslimit: the whole-handshake budget in ns used when no deadline is set (0 = TLHSNS)
+fn tls_hslimit c edit uchar * ns ulong to ulong
+if ne get c TLPH 0
+ret TLEARG
+end
+tls_pn c TLHSL ns 8
+ret 0
+end
+
+note decrypt the record at c[TLRB] whose body is ln bytes; 0, TLEMAC, or TLESEQ when the peer sent
+note more records under this key than the limit allows without a KeyUpdate (fail closed)
 fn tls_open c edit uchar * ln ulong to ulong
 kn = new uchar 44 0
 ad = new uchar 5 0
+if ge tls_gn c TLRS 8 tls_reclim c
+ret TLESEQ
+end
 for i ulong 5
 put ad i get c add TLRB i
 end
@@ -456,10 +495,14 @@ end
 ret 0
 end
 
-note encrypt c[TLWB+5 .. +n) (inner plaintext incl. type byte), header already at c[TLWB]
+note encrypt c[TLWB+5 .. +n) (inner plaintext incl. type byte), header already at c[TLWB];
+note TLESEQ when the write key reached its record limit (tls_write rekeys before that)
 fn tls_seal c edit uchar * n ulong to ulong
 kn = new uchar 44 0
 ad = new uchar 5 0
+if ge tls_gn c TLWS 8 tls_reclim c
+ret TLESEQ
+end
 for i ulong 5
 put ad i get c add TLWB i
 end
@@ -1531,9 +1574,7 @@ if ne d 0
 tls_alert c d
 end
 put c TLPH 3
-tls_zero c TLWKEY 96
-tls_zero c TLCAP 64
-tls_zero c TLEPK 320
+tls_wipe c
 ret e
 end
 
@@ -1595,7 +1636,9 @@ end
 ret 0
 end
 
-note full handshake on the connected socket fd; 0 or a named error code (tls_errname)
+note full handshake on the connected socket fd; 0 or a named error code (tls_errname).
+note Without a caller deadline (tls_deadline) the whole handshake is bounded by the budget of
+note tls_hslimit (default TLHSNS, 30 s); that deadline is cleared again once connected.
 fn tls_connect c edit uchar * st view uchar * fd int to ulong
 if or ne get c TLPH 0 eq get c TLHL 0
 ret TLESTAT
@@ -1604,6 +1647,15 @@ if lt fd 0
 ret TLEARG
 end
 tls_pn c TLFD ulong fd 4
+mine = ulong 0
+if eq tls_gn c TLDL 8 0
+mine = 1
+b = tls_gn c TLHSL 8
+if eq b 0
+b = TLHSNS
+end
+tls_pn c TLDL add ulong monons b 8
+end
 th = new ulong 40 0
 sha256_init th
 e = tls_mkch c
@@ -1628,6 +1680,9 @@ end
 if ne e 0
 ret tls_abort c e
 end
+if eq mine 1
+tls_pn c TLDL 0 8
+end
 put c TLPH 1
 ret 0
 end
@@ -1650,6 +1705,21 @@ e = new uchar 1 0
 r = tls_drv c tls_sel TLSAP TLSAP 32 TLIUPD part e 0 0
 r = or r tls_keys c TLSAP 1
 if eq v 1
+x = tls_kusend c
+if ne x 0
+ret x
+end
+end
+if ne r 0
+ret TLEARG
+end
+ret 0
+end
+
+note send KeyUpdate(update_not_requested) under the current write key, then switch to the next
+note write key (RFC 8446 section 4.6.3 and 7.2); 0 or an error code
+fn tls_kusend c edit uchar * to ulong
+e = new uchar 1 0
 b = add TLWB 5
 put c b 24
 tls_pn c add b 1 1 3
@@ -1658,9 +1728,8 @@ x = tls_wrbuf c 22 5
 if ne x 0
 ret x
 end
-r = or r tls_drv c tls_sel TLCAP TLCAP 32 TLIUPD part e 0 0
+r = tls_drv c tls_sel TLCAP TLCAP 32 TLIUPD part e 0 0
 r = or r tls_keys c TLCAP 0
-end
 if ne r 0
 ret TLEARG
 end
@@ -1775,13 +1844,21 @@ end
 ret TLEUNEX
 end
 
-note tls_write: send all of m as application data; returns len m or minus an error code
+note tls_write: send all of m as application data; returns len m or minus an error code.
+note Before the write key's last allowed record a KeyUpdate is sent and the key rotated
+note (RFC 8446 section 5.5), so application data never exhausts the record limit.
 fn tls_write c edit uchar * m view uchar * to long
 if ne get c TLPH 1
 ret neg long TLESTAT
 end
 off = ulong 0
 while lt off len m bound 999999
+if ge tls_gn c TLWS 8 sub tls_reclim c 1
+e = tls_kusend c
+if ne e 0
+ret neg long tls_abort c e
+end
+end
 k = sub len m off
 if gt k 16384
 k = 16384
@@ -1798,7 +1875,8 @@ end
 ret long len m
 end
 
-note tls_close: send close_notify (when connected) and wipe the key material. The caller closes fd.
+note tls_close: send close_notify (when connected), wipe the key material and every buffer that
+note held plaintext, records or certificates. The caller closes fd.
 note A failed connection stays failed (later calls give TLS_ERR_STATE).
 fn tls_close c edit uchar * to void
 if eq get c TLPH 1
@@ -1809,9 +1887,62 @@ end
 if ne get c TLPH 3
 put c TLPH 2
 end
+tls_wipe c
+end
+
+note zero the secrets (keys, IVs, traffic secrets, ephemeral key, shared secret, transcript
+note secrets) and the record, write, leaf and handshake buffers; the state words stay
+fn tls_wipe c edit uchar * to void
 tls_zero c TLWKEY 96
 tls_zero c TLCAP 64
 tls_zero c TLEPK 320
+tls_zero c TLRB sub TLCSZ TLRB
+end
+
+note ---- data-independent timing (Arm DIT, DDI0487 C5.2.4) ----
+note tls_hwdit: 1 when the kernel advertises FEAT_DIT in AT_HWCAP (/proc/self/auxv entry 16,
+note bit 24 = HWCAP_DIT), 0 when it does not, -1 when auxv cannot be read. Whether the bit is
+note advertised says nothing about PSTATE.DIT, which Linux starts at 0 for every process and
+note this library cannot set: an `msr DIT, #1` needs a compiler word (see THREAT_MODEL.md).
+fn tls_hwdit to long
+b = new uchar 1024 0
+fd = fopen TLAUXV 0 len TLAUXV 0 0
+if lt fd 0
+ret -1
+end
+n = long 0
+r = long 0
+while lt n 1024 bound 64
+r = read int fd b ulong n sub 1024 ulong n
+if le r 0
+break
+end
+n = add n r
+end
+r = fclose int fd
+if lt n 16
+ret -1
+end
+for i ulong div ulong n 16
+o = mul i 16
+k = tls_gl b o
+if eq k 16
+ret long and shr tls_gl b add o 8 24 1
+end
+if eq k 0
+break
+end
+end
+ret -1
+end
+
+note little-endian 64-bit word at b[o..o+8)
+fn tls_gl b view uchar * o ulong to ulong
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get b add o j mul j 8
+end
+ret v
 end
 
 note ---- DNS A lookup (RFC 1035) over UDP to the first IPv4 nameserver in /etc/resolv.conf ----

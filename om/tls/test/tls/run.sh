@@ -85,6 +85,20 @@ dmut "mutant dns owner ignored"    's/^if eq dns_neq r o cur 0$/if lt dns_neq r 
 dmut "mutant dns label cap gone"   's/^if gt k 127$/if gt k 9999/'
 dmut "mutant dns_a4 name length unchecked" 's/^if gt len hn 253$/if gt len hn 9999/'
 
+# DIT: tls_hwdit must agree with the kernel's cpuinfo flag; a mutant reading the wrong auxv key
+# must not (it prints -1 or 0 where 1 is expected, or is caught by the cpuinfo compare)
+if grep -qw dit /proc/cpuinfo; then dexp=1; else dexp=0; fi
+build dit "$tls/tls.om" "$here/dit.om" || exit 1
+dgot=$("$out/dit/bin" | sed -n 's/^hwdit //p')
+if [ "$dgot" = "$dexp" ]; then echo "PASS dit: hwdit=$dgot cpuinfo=$dexp"; else echo "FAIL dit: hwdit=$dgot cpuinfo=$dexp"; fail=1; fi
+sed 's/^if eq k 16$/if eq k 17/' "$tls/tls.om" > "$out/m.om"
+if cmp -s "$out/m.om" "$tls/tls.om"; then echo "FAIL mutant auxv key: the mutation did not apply"; fail=1
+else
+  rm -rf "$out/dm"; build dm "$out/m.om" "$here/dit.om" || fail=1
+  mut=$((mut + 1)); mgot=$("$out/dm/bin" | sed -n 's/^hwdit //p')
+  if [ "$mgot" != "$dexp" ]; then mutok=$((mutok + 1)); echo "PASS mutant auxv key detected: hwdit=$mgot"; else echo "FAIL mutant auxv key not detected"; fail=1; fi
+fi
+
 # interop with the real tls.om
 build client "$tls/tls.om" "$here/client.om" || exit 1
 if sh "$here/interop.sh" "$out/client/bin" > "$out/interop.log" 2>&1; then
@@ -114,6 +128,34 @@ imut "mutant handshake close_notify unmapped" '/^if eq e TLCLOSE$/{n;s/^ret TLEA
 imut "mutant version not checked"  's/^ret TLEVER$/ret 0/'
 imut "mutant record MAC ignored"   's/^ret TLEMAC$/ret 0/'
 imut "mutant session id not checked" 's/^ret TLESID$/ret 0/'
+# outside-review fixes: record limit on read and write, proactive KeyUpdate, handshake budget.
+# "KeyUpdate not sent" is caught by the client's own seal limit (SEQUENCE_LIMIT); with both gone
+# the kuw:8 server sees too many records under one key and answers with a fatal alert.
+imut "mutant read record limit gone"   '/^fn tls_open /,/^end$/s/^if ge tls_gn c TLRS 8 tls_reclim c$/if ge tls_gn c TLRS 8 99999999/'
+imut "mutant write KeyUpdate not sent" 's/^if ge tls_gn c TLWS 8 sub tls_reclim c 1$/if ge tls_gn c TLWS 8 99999999/'
+imut "mutant write limit and KeyUpdate gone" 's/^if ge tls_gn c TLWS 8 sub tls_reclim c 1$/if ge tls_gn c TLWS 8 99999999/; s/^if ge tls_gn c TLWS 8 tls_reclim c$/if ge tls_gn c TLWS 8 99999999/'
+imut "mutant handshake budget not armed" 's/^tls_pn c TLDL add ulong monons b 8$/tls_pn c TLDL 0 8/'
+
+# secret residue (outside review, item 4b): after the handshake no handshake secret may remain in
+# the client's memory; after tls_close no secret at all. The interop PKI must exist (built above).
+res="NOT_RUN"
+rc=0; python3 "$here/residue.py" "$out/client/bin" "$root/build/tls/interop" > "$out/residue.log" 2>&1 || rc=$?
+if [ "$rc" = 0 ]; then res="PASS"; echo "PASS residue: $(tail -n 1 "$out/residue.log")"
+elif [ "$rc" = 3 ]; then echo "NOT_RUN residue: $(tail -n 1 "$out/residue.log")"
+else res="FAIL"; echo "FAIL residue:"; cat "$out/residue.log"; fail=1; fi
+rmut() { # LABEL SED-EXPR: the residue check must fail on the mutant
+  [ "$res" = PASS ] || return
+  sed "$2" "$tls/tls.om" > "$out/m.om"
+  if cmp -s "$out/m.om" "$tls/tls.om"; then echo "FAIL $1: the mutation did not apply"; fail=1; return; fi
+  rm -rf "$out/rm"; build rm "$out/m.om" "$here/client.om" || { fail=1; return; }
+  mut=$((mut + 1))
+  rc=0; python3 "$here/residue.py" "$out/rm/bin" "$root/build/tls/interop" > "$out/rm.log" 2>&1 || rc=$?
+  if [ "$rc" = 1 ]; then mutok=$((mutok + 1)); echo "PASS $1 detected: $(grep -c '^  after' "$out/rm.log") residues"
+  else echo "FAIL $1 not detected (exit $rc)"; fail=1; fi
+}
+rmut "mutant close keeps the traffic secrets" '/^fn tls_wipe /,/^end$/s/^tls_zero c TLCAP 64$/tls_zero c TLCAP 0/'
+rmut "mutant handshake secrets kept after Finished" 's/^tls_zero c TLHS 128$/tls_zero c TLHS 0/'
+rmut "mutant shared secret kept" 's/^tls_zero c TLSS 32$/tls_zero c TLSS 0/'
 
 if [ "${TLS_NET:-0}" = 1 ]; then
   if python3 "$here/parity.py" "$out/client/bin" api.github.com /licenses/mit /licenses/apache-2.0 /repos/torvalds/linux/license > "$out/net.log" 2>&1 \
@@ -128,6 +170,6 @@ else
 fi
 
 if [ $fail = 0 ]; then
-  echo "TLS PASS vectors=$kcount (rfc8448) dns=$dcount interop=$irows net=$net mutants=$mutok/$mut"; exit 0
+  echo "TLS PASS vectors=$kcount (rfc8448) dns=$dcount dit=$dgot interop=$irows residue=$res net=$net mutants=$mutok/$mut"; exit 0
 fi
-echo "TLS FAIL vectors=${kcount:-0} dns=${dcount:-0} interop=${irows:-0} net=$net mutants=$mutok/$mut"; exit 1
+echo "TLS FAIL vectors=${kcount:-0} dns=${dcount:-0} dit=${dgot:-?} interop=${irows:-0} residue=$res net=$net mutants=$mutok/$mut"; exit 1
