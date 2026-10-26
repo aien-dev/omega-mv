@@ -20,6 +20,7 @@
  *   bigzero              2^32+3 zero bytes from a NORESERVE mapping (no resident memory)
  * Line format of a failure: FAIL <id> first-diff-byte=<i> got=<hex> want=<hex> [detail] */
 #define _GNU_SOURCE
+#include <dirent.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -237,22 +238,47 @@ static uint8_t *genmsg(const char *spec, const char *root, size_t n)
         rndfill(m, n, strtoull(spec + 4, NULL, 10));
     } else if (strncmp(spec, "file:", 5) == 0) {
         char path[4096];
-        int len;
-        if (!safe_name(spec + 5)) {
-            fprintf(stderr, "refused file name %s\n", spec + 5);
+        const char *want = spec + 5;
+        struct dirent *ent;
+        DIR *d;
+        int len, found = 0;
+        if (!safe_name(want)) {
+            fprintf(stderr, "refused file name %s\n", want);
             exit(3);
         }
-        len = snprintf(path, sizeof path, "%s/%s", root, spec + 5);
+        /* Resolve the name against the directory itself: only a name present in
+         * root can be opened, and the opened path is built from the directory
+         * entry, never from the vector text. */
+        d = opendir(root);
+        if (!d) {
+            fprintf(stderr, "cannot open directory %s\n", root);
+            exit(3);
+        }
+        while ((ent = readdir(d)) != NULL) {
+            if (strcmp(ent->d_name, want) == 0) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            closedir(d);
+            fprintf(stderr, "no fixture named %s\n", want);
+            exit(3);
+        }
+        len = snprintf(path, sizeof path, "%s/%s", root, ent->d_name);
+        closedir(d);
         if (len < 0 || (size_t)len >= sizeof path) {
-            fprintf(stderr, "path too long for %s\n", spec + 5);
+            fprintf(stderr, "path too long for %s\n", want);
             exit(3);
         }
-        FILE *f = fopen(path, "rb");
-        if (!f || fread(m, 1, n, f) != n) {
-            fprintf(stderr, "cannot read %s\n", path);
-            exit(3);
+        {
+            FILE *f = fopen(path, "rb");
+            if (!f || fread(m, 1, n, f) != n) {
+                fprintf(stderr, "cannot read %s\n", path);
+                exit(3);
+            }
+            fclose(f);
         }
-        fclose(f);
     } else {
         fprintf(stderr, "bad spec %s\n", spec);
         exit(3);
