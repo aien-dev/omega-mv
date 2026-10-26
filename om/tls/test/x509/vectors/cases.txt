@@ -2,7 +2,7 @@
 # Generated PKI: pki/ (gen_pki.sh, openssl CLI). Real chains: real/ (openssl s_client -showcerts,
 # captured 2026-10-26T11:59Z; anchors.pem = the three issuing roots copied from the Ubuntu
 # ca-certificates bundle, Mozilla CA list, MPL-2.0). NOW = 1792972800 = 2026-10-26T00:00:00Z.
-# Test PKI leaves are valid 2026-01-01 (1767225600) .. 2027-01-01 (1798761600) inclusive.
+# Test PKI leaves are valid from 2026-01-01 (1767225600) up to, not including, 2027-01-01 (1798761600).
 #
 # --- good chains
 C rsa_good X509_OK 1792972800 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
