@@ -37,7 +37,8 @@ else
     [ "$status" = 1 ] || { cat "$run/mutant.log"; exit 1; }
 fi
 grep -qx 'VERDICT mutant-requires FAIL run exit=0 expected=109 stdout=match stderr=match' "$run/mutant.log"
-grep -qx 'OM2GATE FAIL cases=1 pass=0 fail=1 invalid=0 not_run=0' "$run/mutant.log"
+grep -qx 'VERDICT mutant-proof FAIL run exit=0 expected=109 stdout=match stderr=match' "$run/mutant.log"
+grep -qx 'OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0' "$run/mutant.log"
 echo 'PASS contract-enforcement mutant detected by exact runtime-status mismatch'
 # Same function-mode contract behavior through the unchanged C referee and OscRt.
 if [ ! -x build/omegese/omegese ] || [ ! -x build/omega_emit/omega_emit ]; then

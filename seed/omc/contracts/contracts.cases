@@ -40,3 +40,6 @@ release-bytes same seed/omc/contracts/release.om seed/omc/contracts/erased.om
 proved-bytes same seed/omc/contracts/proved.om seed/omc/contracts/plain.om
 diag-line emit seed/omc/contracts/diag.om any has:seed/omc/contracts/diag.want 0
 diag-final-head emit seed/omc/contracts/diagunroll.om any has:seed/omc/contracts/diagunroll.want 0
+diag-proof emit seed/omc/contracts/diagproof.om any has:seed/omc/contracts/diagproof.want 0
+diag-release emit seed/omc/contracts/diagrelease.om any has:seed/omc/contracts/diagrelease.want 0
+false-check run seed/omc/contracts/false.om - - - 109

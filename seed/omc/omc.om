@@ -51,6 +51,7 @@ global cfline ulong 8
 global cflim ulong 8
 global cfhas ulong 8
 global csnap ulong 8
+global ckind ulong 1
 
 note ---- OM-2 section 4 (unroll, inline, folding, bounds, sites). fn_inl/fn_body/fn_bln/fn_pn: a function's
 note inline mark, its body offset and line, its parameter names. fstart: where the function being compiled
@@ -416,6 +417,10 @@ end
 
 note dobl_w: obligation= from the code: 27 init, 28 ctor, 29 layout, 21 bounds, 14 growth, 12 regs, else -
 fn dobl_w code ulong to void
+if eq code 30
+mputw 8386654075301556067 8
+ret
+end
 if eq code 27
 mputw 1953066601 4
 ret
@@ -11304,6 +11309,7 @@ end
 
 fn cp_eval code ulong erase ulong to void
 ln = get line 0
+rule = ulong 0
 cp_save
 put cpure 0 1
 put fzone 0 1
@@ -11315,9 +11321,11 @@ eol
 nextln = get line 0
 put line 0 ln
 if and eq get rk 0 3 ne get rv 0 0
+rule = ulong 1
 cp_erase
 else
 if or ne erase 0 ne get crel 0 0
+rule = ulong 2
 cp_erase
 else
 if eq get rk 0 3
@@ -11332,11 +11340,50 @@ end
 end
 end
 end
+if and eq get om2m 0 1 eq erase 0
+cp_rec rule
+end
 put line 0 nextln
 put cpure 0 0
 put cvalid 0 0
 put fzone 0 get csnap 4
 put nslot 0 get csnap 3
+end
+
+note omc-check distinguishes a proof from release policy; initial deferred validation is silent.
+fn cp_rec rule ulong to void
+sitew 7162245557575183727 8
+sitew 540090475 4
+if eq rule 0
+sitew 1953523051 4
+else
+sitew 110386890240613 6
+end
+sitew 67505853393952 6
+siten add get line 0 get lbase 0
+sitew 67505820627488 6
+if eq rule 0
+sitew 28549272340166002 7
+end
+if eq rule 1
+sitew 8389750308618530659 8
+sitew 435762132013 5
+end
+if eq rule 2
+sitew 28555834798400882 7
+end
+sitew 67501558426400 6
+if eq get ckind 0 1
+sitew 8315178084276987250 8
+end
+if eq get ckind 0 2
+sitew 32481164592901733 7
+end
+if eq get ckind 0 3
+sitew 7953754356895346281 8
+siteb 116
+end
+siteb 10
 end
 
 note Function prefix predicates bind only globals and parameters visible on entry.
@@ -11353,6 +11400,7 @@ put clim 0 get nn 0
 k = cp_next
 n = ulong 0
 while ne k 0
+put ckind 0 k
 if ge n 64
 fail 14
 end
@@ -11396,6 +11444,7 @@ put crtype 0 ty
 k = cp_next
 while ne k 0
 if eq k 2
+put ckind 0 2
 cp_eval 10 0
 else
 skipnl
@@ -11421,6 +11470,7 @@ put crkind 0 0
 k = cp_next
 n = ulong 0
 while eq k 3
+put ckind 0 3
 if ge n 64
 fail 14
 end

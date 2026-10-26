@@ -999,7 +999,7 @@ the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
 
-## 12. Executable native contracts (OM-2)
+## 12. Executable native contracts, version 1 (OM-2 extension)
 
 This section extends the seeded native compiler, not the OSC v1 metadata in
 section 11.1. `om2` and `om2 debug` check contracts. `om2 release` erases their
@@ -1010,7 +1010,7 @@ OM-1 does not reserve any new words. No environment variable selects policy.
 
 ```
 om2
-fn successor x uint to uint
+fn step x uint to uint
 requires lt x 10
 ensures eq result add x 1
 ret add x 1
@@ -1019,7 +1019,7 @@ fn main to int
 i = uint 0
 while lt i 3
 invariant le i 3
-i = successor i
+i = step i
 end
 ret int sub i 3
 end
@@ -1080,6 +1080,12 @@ retains its original trap code. Compiler error **30** means misplaced
 contract syntax, unavailable `result`, or a forbidden predicate operation.
 Existing type, unknown-name, initialization and capacity errors retain their
 codes. Diagnostic trap sites name the predicate's source line.
+Error 30 has diagnostic obligation `contract`. Each emitted contract site also
+has an `omc-check 1 kept|erased line=N rule=RULE kind=KIND` record in diagnostic
+mode: `runtime` for kept checks, `constant-true` for a proof, or `release` for
+policy erasure; KIND is `requires`, `ensures` or `invariant`. Deferred
+postconditions are reported at their actual return sites, not during entry
+validation.
 
 Release erasure removes predicate instructions, trap records and diagnostic
 sites, and restores temporary allocation and branch bookkeeping. It never
