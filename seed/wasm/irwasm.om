@@ -1,0 +1,1016 @@
+note SPDX-License-Identifier: Apache-2.0
+note OSC IR v1 scalar to WebAssembly MVP; no host or foreign generator dependency.
+note Wire authority spec/one-layer-format.md; semantic referee src/compiler/osc_interp.c.
+note Wasm opcodes https://webassembly.github.io/spec/core/binary/instructions.html
+note Buffered output: every parse/type/capacity refusal occurs before stdout writes.
+global input uchar 2620252
+global output uchar 8388608
+note state slots: 0 input cursor, 1 input size, 2 output size, 3 nparams,
+note 4 nvregs, 5 nblocks, 6 ninsns, 7 nfuncs. Current function arrays are reused.
+note Wasm params retain ABI types. Internal vregs are canonical i64 bit patterns.
+note Locals after params: nvregs i64, dispatcher i32, arithmetic scratch i64.
+global state ulong 16
+global starts ulong 32
+global names ulong 32
+global namelen ulong 32
+global params ulong 32
+global returns ulong 32
+global sigs ulong 192
+global types ulong 480
+global first ulong 512
+global counts ulong 512
+global ops ulong 4096
+global subs ulong 4096
+global dest ulong 4096
+global arg0 ulong 4096
+global arg1 ulong 4096
+global immed ulong 4096
+global nargs ulong 4096
+global args ulong 24576
+global cover uchar 4096
+global dins ulong 4096
+global douts ulong 4096
+global work ulong 8
+text emagic "irwasm: MAGIC\n"
+text ever "irwasm: VERSION\n"
+text etrunc "irwasm: TRUNCATED\n"
+text ecap "irwasm: CAPACITY\n"
+text eop "irwasm: UNSUPPORTED_OP\n"
+text etype "irwasm: UNSUPPORTED_TAG\n"
+text einval "irwasm: INVALID\n"
+text etrail "irwasm: TRAILING\n"
+text eio "irwasm: IO\n"
+fn refuse code int to void
+k = long 0
+if eq code 20
+k = write 2 emagic 0 len emagic
+end
+if eq code 21
+k = write 2 ever 0 len ever
+end
+if eq code 22
+k = write 2 etrunc 0 len etrunc
+end
+if eq code 23
+k = write 2 ecap 0 len ecap
+end
+if eq code 24
+k = write 2 eop 0 len eop
+end
+if eq code 25
+k = write 2 etype 0 len etype
+end
+if eq code 26
+k = write 2 einval 0 len einval
+end
+if eq code 27
+k = write 2 etrail 0 len etrail
+end
+if eq code 28
+k = write 2 eio 0 len eio
+end
+exit code
+end
+fn need ok bool to void
+if not ok
+refuse 26
+end
+end
+fn rd n ulong to ulong
+p = get state 0
+if gt n sub get state 1 p
+refuse 22
+end
+v = ulong 0
+for j ulong n
+v = or v shl ulong get input add p j mul j 8
+end
+put state 0 add p n
+ret v
+end
+fn cap n ulong maxv ulong to ulong
+if gt n maxv
+refuse 23
+end
+ret n
+end
+fn typ to ulong
+t = rd 1
+if gt t 9
+refuse 25
+end
+ret t
+end
+fn vr to ulong
+v = rd 2
+need lt v get state 4
+ret v
+end
+fn width t ulong to ulong
+if eq t 1
+ret 1
+end
+if or eq t 2 eq t 6
+ret 8
+end
+if or eq t 3 eq t 7
+ret 16
+end
+if or eq t 4 eq t 8
+ret 32
+end
+ret 64
+end
+fn mask t ulong to ulong
+w = width t
+if eq w 64
+ret 18446744073709551615
+end
+ret sub shl ulong 1 w 1
+end
+fn canon v ulong t ulong to ulong
+w = width t
+if eq w 64
+ret v
+end
+v = and v mask t
+if ge t 6
+m = shl ulong 1 sub w 1
+v = sub xor v m m
+end
+ret v
+end
+fn txt n ulong to void
+for j ulong n
+v = rd 1
+need ne v 0
+end
+end
+fn nametxt n ulong to void
+for j ulong n
+v = rd 1
+need and ne v 0 lt v 128
+end
+end
+fn same a ulong b ulong to bool
+if ne get namelen a get namelen b
+ret false
+end
+for j ulong get namelen a
+x = get input add get names a j
+y = get input add get names b j
+if ne x y
+ret false
+end
+end
+ret true
+end
+fn insn i ulong fi ulong to void
+o = rd 1
+put ops i o
+put dest i 65535
+put arg0 i 65535
+put arg1 i 65535
+put nargs i 0
+if eq o 1
+d = vr
+put dest i d
+v = rd 8
+need eq v canon v get types d
+put immed i v
+ret
+end
+if or eq o 2 eq o 6
+put dest i vr
+put arg0 i vr
+ret
+end
+if or or eq o 3 eq o 4 eq o 5
+put subs i rd 1
+put dest i vr
+put arg0 i vr
+if ne o 4
+put arg1 i vr
+end
+ret
+end
+if eq o 11
+d = rd 2
+if ne d 65535
+need lt d get state 4
+end
+put dest i d
+c = rd 2
+need lt c fi
+put immed i c
+n = cap rd 1 6
+put nargs i n
+need eq n get params c
+for j ulong n
+put args add mul i 6 j vr
+end
+ret
+end
+if eq o 12
+t = rd 1
+need and ge t 1 le t 14
+put immed i t
+ret
+end
+if eq o 13
+v = rd 2
+need lt v get state 5
+put immed i v
+ret
+end
+if eq o 14
+put arg0 i vr
+v = rd 2
+need lt v get state 5
+put immed i v
+v = rd 2
+need lt v get state 5
+put arg1 i v
+ret
+end
+if eq o 15
+v = rd 2
+if ne v 65535
+need lt v get state 4
+end
+put arg0 i v
+ret
+end
+refuse 24
+end
+fn callchk i ulong to void
+c = get immed i
+d = get dest i
+if eq get returns c 0
+need eq d 65535
+else
+need ne d 65535
+need eq get types d get returns c
+end
+for j ulong get nargs i
+v = get args add mul i 6 j
+t = get types v
+u = get sigs add mul c 6 j
+need eq t u
+end
+end
+fn check i ulong fi ulong to void
+o = get ops i
+d = get dest i
+a = get arg0 i
+b = get arg1 i
+s = get subs i
+t = ulong 0
+u = ulong 0
+if ne a 65535
+t = get types a
+end
+if ne d 65535
+u = get types d
+end
+if eq o 2
+need eq t u
+end
+if eq o 3
+need and ge s 1 le s 10
+need eq t u
+if ge s 9
+need and ge t 2 ge get types b 2
+else
+need eq t get types b
+if le s 5
+need ge t 2
+end
+end
+end
+if eq o 4
+need and ge s 1 le s 3
+need eq t u
+if eq s 3
+need eq t 1
+else
+need ge t 2
+end
+end
+if eq o 5
+need and ge s 1 le s 6
+need eq u 1
+need eq t get types b
+end
+if eq o 6
+need and ge t 2 ge u 2
+end
+if eq o 11
+callchk i
+end
+if eq o 14
+need eq t 1
+end
+if eq o 15
+if eq get returns fi 0
+need eq a 65535
+else
+need eq t get returns fi
+end
+end
+end
+fn blocks to void
+ni = get state 6
+for j ulong get state 5
+f = get first j
+n = get counts j
+need and ne n 0 le f ni
+need le n sub ni f
+for k ulong n
+ix = add f k
+need eq get cover ix 0
+put cover ix 1
+o = get ops ix
+term = ge o 13
+need eq term eq k sub n 1
+end
+end
+for j ulong ni
+need eq get cover j 1
+end
+end
+fn loadfn fi ulong to void
+put state 0 get starts fi
+n = cap rd 1 63
+put namelen fi n
+put names fi get state 0
+nametxt n
+for j ulong fi
+need not same fi j
+end
+np = cap rd 1 6
+put params fi np
+put returns fi typ
+nv = cap rd 2 480
+need ge nv np
+put state 3 np
+put state 4 nv
+for j ulong nv
+t = typ
+need ne t 0
+put types j t
+if lt j np
+put sigs add mul fi 6 j t
+end
+end
+nb = cap rd 2 512
+need ne nb 0
+put state 5 nb
+for j ulong nb
+put first j rd 4
+put counts j rd 4
+end
+ni = cap rd 4 4096
+need ne ni 0
+put state 6 ni
+for j ulong ni
+insn j fi
+check j fi
+put cover j 0
+end
+blocks
+n = cap rd 2 255
+txt n
+n = cap rd 2 255
+txt n
+end
+fn bitset v ulong to void
+k = div v 64
+put work k or get work k shl ulong 1 rem v 64
+end
+fn use v ulong to void
+if eq v 65535
+ret
+end
+need ne and get work div v 64 shl ulong 1 rem v 64 0
+end
+fn calluse i ulong to void
+for k ulong get nargs i
+v = get args add mul i 6 k
+use v
+end
+end
+fn transfer b ulong verify bool to void
+for k ulong 8
+put work k get dins add mul b 8 k
+end
+for j ulong get counts b
+i = add get first b j
+o = get ops i
+if verify
+if and ge o 2 le o 6
+use get arg0 i
+end
+if or eq o 3 eq o 5
+use get arg1 i
+end
+if or eq o 14 eq o 15
+use get arg0 i
+end
+if eq o 11
+calluse i
+end
+end
+d = get dest i
+if ne d 65535
+bitset d
+end
+end
+end
+fn merge b ulong pred ulong to void
+i = add get first pred sub get counts pred 1
+o = get ops i
+target = false
+if or eq o 13 eq o 14
+target = eq get immed i b
+if eq o 14
+target = or target eq get arg1 i b
+end
+end
+if target
+for k ulong 8
+ix = add mul b 8 k
+v = get douts add mul pred 8 k
+v = and v get dins ix
+put dins ix v
+end
+end
+end
+fn entrydef to void
+for k ulong 8
+put dins k 0
+end
+for v ulong get state 3
+k = div v 64
+m = shl ulong 1 rem v 64
+put dins k or get dins k m
+end
+end
+fn defined to void
+nb = get state 5
+for b ulong nb
+for k ulong 8
+put dins add mul b 8 k 18446744073709551615
+put douts add mul b 8 k 18446744073709551615
+end
+end
+changed = true
+note At most one bit per (block,register) is removed per changing round.
+while changed bound 245761
+changed = false
+for b ulong nb
+if eq b 0
+entrydef
+else
+for k ulong 8
+put dins add mul b 8 k 18446744073709551615
+end
+for p ulong nb
+merge b p
+end
+end
+transfer b false
+for k ulong 8
+ix = add mul b 8 k
+v = get work k
+if ne v get douts ix
+changed = true
+put douts ix v
+end
+end
+end
+end
+for b ulong nb
+transfer b true
+end
+end
+fn emit v ulong to void
+p = get state 2
+if ge p len output
+refuse 23
+end
+put output p uchar v
+put state 2 add p 1
+end
+fn leb v ulong to void
+while ge v 128 bound 10
+emit or and v 127 128
+v = shr v 7
+end
+emit v
+end
+fn sleb v ulong to void
+x = bitcast long v
+while true bound 10
+b = and bitcast ulong x 127
+x = shr x 7
+if or and eq x 0 eq and b 64 0 and eq x -1 ne and b 64 0
+emit b
+break
+end
+emit or b 128
+end
+end
+fn hole to ulong
+p = get state 2
+for j ulong 5
+emit 0
+end
+ret p
+end
+fn patch p ulong to void
+n = sub sub get state 2 p 5
+for j ulong 5
+b = and n 127
+if lt j 4
+b = or b 128
+end
+put output add p j uchar b
+n = shr n 7
+end
+end
+fn inst op ulong ix ulong to void
+emit op
+leb ix
+end
+fn con v ulong to void
+emit 66
+sleb v
+end
+fn local v ulong to void
+inst 32 add get state 3 v
+end
+fn store v ulong to void
+inst 33 add get state 3 v
+end
+fn scratch to ulong
+ret add add get state 3 get state 4 1
+end
+fn condtrap to void
+emit 4
+emit 64
+emit 0
+emit 11
+end
+fn norm t ulong to void
+w = width t
+if lt w 64
+if ge t 6
+con sub 64 w
+emit 134
+con sub 64 w
+emit 135
+else
+con mask t
+emit 131
+end
+end
+end
+fn range t ulong signed bool to void
+note Stack value saved once; check destination range without truncation.
+inst 34 scratch
+if lt width t 64
+if ge t 6
+con sub shl ulong 1 sub width t 1 1
+else
+con mask t
+end
+if signed
+emit 85
+else
+emit 86
+end
+condtrap
+inst 32 scratch
+if ge t 6
+con sub ulong 0 shl ulong 1 sub width t 1
+emit 83
+else
+con 0
+emit 83
+end
+condtrap
+else
+if ne signed ge t 6
+con 0
+emit 83
+condtrap
+end
+end
+inst 32 scratch
+end
+fn binop s ulong signed bool to ulong
+if le s 3
+ret add 123 s
+end
+if eq s 4
+if signed
+ret 127
+end
+ret 128
+end
+if eq s 5
+if signed
+ret 129
+end
+ret 130
+end
+if le s 8
+ret add 125 s
+end
+if eq s 9
+ret 134
+end
+if signed
+ret 135
+end
+ret 136
+end
+fn overflow i ulong to void
+s = get subs i
+a = get arg0 i
+b = get arg1 i
+r = scratch
+if or eq s 1 eq s 2
+local a
+inst 32 r
+emit 133
+if eq s 1
+local b
+inst 32 r
+else
+local a
+local b
+end
+emit 133
+emit 131
+con 0
+emit 83
+condtrap
+end
+if eq s 3
+note Check division only when a != 0. MIN/-1 is itself an overflow.
+local a
+emit 80
+emit 69
+emit 4
+emit 64
+inst 32 r
+local a
+emit 127
+local b
+emit 82
+condtrap
+emit 11
+end
+if eq s 9
+inst 32 r
+local b
+emit 135
+local a
+emit 82
+condtrap
+end
+end
+fn binary i ulong to void
+s = get subs i
+a = get arg0 i
+b = get arg1 i
+t = get types a
+signed = ge t 6
+if ge s 9
+local b
+con width t
+emit 90
+condtrap
+end
+local a
+local b
+emit binop s signed
+inst 33 scratch
+if signed
+if or or le s 3 eq s 4 eq s 9
+if or le s 3 eq s 9
+overflow i
+end
+inst 32 scratch
+range t true
+else
+inst 32 scratch
+end
+else
+inst 32 scratch
+norm t
+end
+store get dest i
+end
+fn compare i ulong to void
+s = get subs i
+a = get arg0 i
+t = get types a
+op = ulong 81
+if eq s 2
+op = 82
+end
+if eq s 3
+op = 84
+end
+if eq s 4
+op = 88
+end
+if eq s 5
+op = 86
+end
+if eq s 6
+op = 90
+end
+if and ge s 3 ge t 6
+op = sub op 1
+end
+local a
+local get arg1 i
+emit op
+emit 173
+store get dest i
+end
+fn unary i ulong to void
+s = get subs i
+a = get arg0 i
+t = get types a
+if eq s 1
+con 0
+local a
+emit 125
+if ge t 6
+inst 34 scratch
+con sub ulong 0 shl ulong 1 sub width t 1
+emit 81
+condtrap
+inst 32 scratch
+range t true
+else
+norm t
+end
+else
+local a
+if eq s 2
+con 18446744073709551615
+emit 133
+norm t
+else
+emit 80
+emit 173
+end
+end
+store get dest i
+end
+fn wasmtype t ulong to ulong
+if or eq t 5 eq t 9
+ret 126
+end
+ret 127
+end
+fn extend t ulong to void
+if eq wasmtype t 127
+if ge t 6
+emit 172
+else
+emit 173
+end
+end
+end
+fn callins i ulong to void
+c = get immed i
+for j ulong get nargs i
+v = get args add mul i 6 j
+local v
+if eq wasmtype get types v 127
+emit 167
+end
+end
+inst 16 c
+if ne get returns c 0
+extend get returns c
+store get dest i
+end
+end
+fn emitins i ulong fi ulong to void
+o = get ops i
+if eq o 1
+con get immed i
+store get dest i
+end
+if eq o 2
+local get arg0 i
+store get dest i
+end
+if eq o 3
+binary i
+end
+if eq o 4
+unary i
+end
+if eq o 5
+compare i
+end
+if eq o 6
+local get arg0 i
+range get types get dest i ge get types get arg0 i 6
+store get dest i
+end
+if eq o 11
+callins i
+end
+if eq o 12
+emit 0
+end
+if eq o 13
+emit 65
+sleb get immed i
+inst 33 add get state 3 get state 4
+inst 12 1
+end
+if eq o 14
+emit 65
+sleb get arg1 i
+inst 33 add get state 3 get state 4
+local get arg0 i
+emit 167
+emit 69
+inst 13 1
+emit 65
+sleb get immed i
+inst 33 add get state 3 get state 4
+inst 12 1
+end
+if eq o 15
+if ne get returns fi 0
+local get arg0 i
+if eq wasmtype get returns fi 127
+emit 167
+end
+end
+emit 15
+end
+end
+fn body fi ulong to void
+loadfn fi
+defined
+h = hole
+emit 3
+leb get state 4
+emit 126
+leb 1
+emit 127
+leb 1
+emit 126
+for j ulong get state 3
+inst 32 j
+extend get types j
+norm get types j
+store j
+end
+emit 2
+emit 64
+emit 3
+emit 64
+for b ulong get state 5
+inst 32 add get state 3 get state 4
+emit 65
+sleb b
+emit 70
+emit 4
+emit 64
+for j ulong get counts b
+emitins add get first b j fi
+end
+emit 11
+end
+emit 0
+emit 11
+emit 11
+emit 0
+emit 11
+patch h
+end
+fn module to void
+emit 0
+emit 97
+emit 115
+emit 109
+emit 1
+emit 0
+emit 0
+emit 0
+emit 1
+h = hole
+leb get state 7
+for f ulong get state 7
+emit 96
+leb get params f
+for j ulong get params f
+emit wasmtype get sigs add mul f 6 j
+end
+if eq get returns f 0
+leb 0
+else
+leb 1
+emit wasmtype get returns f
+end
+end
+patch h
+emit 3
+h = hole
+leb get state 7
+for f ulong get state 7
+leb f
+end
+patch h
+emit 7
+h = hole
+leb get state 7
+for f ulong get state 7
+leb get namelen f
+for j ulong get namelen f
+emit ulong get input add get names f j
+end
+emit 0
+leb f
+end
+patch h
+emit 10
+h = hole
+leb get state 7
+for f ulong get state 7
+body f
+end
+patch h
+end
+fn main to int
+n = ulong 0
+for attempt ulong 2620252
+if eq n len input
+refuse 23
+end
+k = read 0 input n sub len input n
+if lt k 0
+refuse 28
+end
+if eq k 0
+break
+end
+n = add n ulong k
+end
+if eq n len input
+refuse 23
+end
+put state 1 n
+magic = new uchar 7 0
+put magic 0 79
+put magic 1 83
+put magic 2 67
+put magic 3 49
+put magic 4 73
+put magic 5 82
+for j ulong 7
+v = rd 1
+if ne v ulong get magic j
+refuse 20
+end
+end
+if ne rd 1 1
+refuse 21
+end
+nf = cap rd 2 32
+put state 7 nf
+for f ulong nf
+put starts f get state 0
+loadfn f
+end
+if ne get state 0 n
+refuse 27
+end
+module
+p = ulong 0
+for attempt ulong 8388608
+if eq p get state 2
+break
+end
+k = write 1 output p sub get state 2 p
+if le k 0
+refuse 28
+end
+p = add p ulong k
+end
+ret 0
+end
