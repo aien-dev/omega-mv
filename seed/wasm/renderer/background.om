@@ -3,7 +3,14 @@ note It is concatenated after glow.om. It paints only the clip rectangle interse
 note so pixels outside the clip stay 0 and every later glow lands on known non-zero light.
 note Law (repeated in oracle-glow.c): r = (x*7) and 255, g = (y*11) and 255, b = ((x+y)*3) and 255.
 fn bgpix x int y int to uint
-ret ckrgb and uint mul x 7 255 and uint mul y 11 255 and uint mul add x y 3 255
+r = and uint mul x 7 255
+g = and uint mul y 11 255
+b = and uint mul add x y 3 255
+ret ckrgb r g b
+end
+fn bgstore x int y int to void
+p = add mul ulong y ulong get cf 0 ulong x
+put fb p bgpix x y
 end
 note Row and column counts are at most canvas h and w, each <= 65536.
 fn fbgrad to void
@@ -15,7 +22,7 @@ y = y0
 while lt y y1 bound 65536
 x = x0
 while lt x x1 bound 65536
-put fb add mul ulong y ulong get cf 0 ulong x bgpix x y
+bgstore x y
 x = add x 1
 end
 y = add y 1

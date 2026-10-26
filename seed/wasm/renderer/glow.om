@@ -91,6 +91,11 @@ note A pixel or row centre offset in 16ths of a pixel, squared: C int64 dx * dx 
 fn sq v long to long
 ret mul v v
 end
+fn glblend p ulong w uint to void
+color = uint get gl 2
+alpha = shr mul w uint get gl 3 8
+put fb p ckadd get fb p color alpha
+end
 note C ck_glow inner body for pixel x of row y: d2, the falloff f, w = f^3 / 65536, then ck_add.
 fn glpix x int y int cx int dy2 long to void
 d2 = add sq sub add mul long x 16 8 long cx dy2
@@ -98,7 +103,7 @@ if lt d2 get gl 0
 f = sub uint 256 uint shr mul ulong d2 ulong get gl 1 32
 w = shr mul shr mul f f 8 f 8
 p = add mul ulong y ulong get cf 0 ulong x
-put fb p ckadd get fb p uint get gl 2 shr mul w uint get gl 3 8
+glblend p w
 end
 end
 note C ck_glow row y: rows with dy^2 >= r^2 draw nothing; the span is cut to the fitted x range.
@@ -116,6 +121,27 @@ x = add x 1
 end
 end
 end
+fn glright cx int r int to int
+x1 = imin imin add shr add cx r 4 1 add get cf 2 get cf 4 get cf 0
+ret x1
+end
+fn glbottom cy int r int to int
+y1 = imin imin add shr add cy r 4 1 add get cf 3 get cf 5 get cf 1
+ret y1
+end
+fn glsetup r int color uint a uint to void
+put gl 0 mul long r long r
+put gl 1 long div shl ulong 1 40 ulong get gl 0
+put gl 2 long color
+put gl 3 long a
+end
+fn glrows cx int cy int y0 int y1 int to void
+y = y0
+while lt y y1 bound 65536
+glrow y cx cy
+y = add y 1
+end
+end
 note C ck_glow(cv, clip, cx, cy, r, color, a): centre and radius in 16ths of a pixel, colour added with
 note weight a * (1 - d^2/r^2)^3, only inside clip and canvas (C fit: clip, then canvas; the same set).
 note At most canvas h <= 65536 rows.
@@ -123,20 +149,13 @@ fn ckglow cx int cy int r int color uint a uint to void
 if and gt r 0 ne a 0
 x0 = imax imax shr sub cx r 4 get cf 2 0
 y0 = imax imax shr sub cy r 4 get cf 3 0
-x1 = imin imin add shr add cx r 4 1 add get cf 2 get cf 4 get cf 0
-y1 = imin imin add shr add cy r 4 1 add get cf 3 get cf 5 get cf 1
+x1 = glright cx r
+y1 = glbottom cy r
 if and lt x0 x1 lt y0 y1
-put gl 0 mul long r long r
-put gl 1 long div shl ulong 1 40 ulong get gl 0
-put gl 2 long color
-put gl 3 long a
+glsetup r color a
 put gl 4 long x0
 put gl 5 long sub x1 1
-y = y0
-while lt y y1 bound 65536
-glrow y cx cy
-y = add y 1
-end
+glrows cx cy y0 y1
 end
 end
 end
