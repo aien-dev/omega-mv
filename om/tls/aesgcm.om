@@ -1,0 +1,744 @@
+note SPDX-License-Identifier: Apache-2.0
+note aesgcm.om: AES (FIPS 197) and AES-GCM (NIST SP 800-38D) for om/tls, module code AG.
+note Library unit: no om2 line, no fn main, no mutable globals. The build writes `om2`, the om/tls
+note library files, then a program.
+note
+note API (return codes: 0 ok, 1 authentication failure (open only), 2 bad parameters):
+note   aes_gcm_seal ctl kia buf / aes_gcm_open ctl kia buf
+note     kia = key || iv || aad. ctl = klen + 256 * tlen + 65536 * ivlen:
+note       bits 0..7 klen (16, 24 or 32 bytes), bits 8..15 tlen (tag bytes, 1..16),
+note       bits 16..63 ivlen (IV bytes, >= 1). aad is the rest of kia (len kia - klen - ivlen bytes).
+note     seal: buf = plaintext || tlen bytes of room; becomes ciphertext || tag.
+note     open: buf = ciphertext || tag; on success buf[0..n) becomes the plaintext; on a tag
+note     mismatch buf[0..n) is zeroed and 1 is returned. The tag is checked before any plaintext
+note     is produced, with an or-accumulated comparison over all tlen bytes.
+note     2 (nothing written) when klen is not 16/24/32, tlen is 0 or above 16, ivlen is 0,
+note     klen + ivlen > len kia, len buf < tlen, or the data part exceeds 2^36 - 32 bytes
+note     ((2^32 - 2) counter blocks, SP 800-38D 5.2.1.1).
+note   aead_aes128gcm_seal kn aad buf / aead_aes128gcm_open kn aad buf
+note     TLS 1.3 AEAD_AES_128_GCM (RFC 5116 5.1): kn = key(16) || nonce(12), 16-byte tag, the same
+note     in-place buffer and return codes as aead_chacha_*; 2 when len kn is not 28 or len buf < 16.
+note
+note Constant time. AES is bitsliced (BearSSL aes_ct64 layout by T. Pornin, MIT licence: four
+note blocks in eight 64-bit planes, plane j holding bit j of every state byte). SubBytes is the
+note Boyar-Peralta depth-16 straight-line program for the AES S-box (J. Boyar, R. Peralta, "A small
+note depth-16 circuit for the AES S-box", IFIP SEC 2012, LNCS 376, pp. 287-298; eprint 2011/332),
+note transcribed from the authors' file https://www.cs.yale.edu/homes/peralta/CircuitStuff/
+note AESDEPTH16SIZE125 (125 gates: 34 AND, 91 XOR/XNOR; sha256 b72f635d5a58e06b44d4040b95901da2
+note 7418ec5a037f9123392155e96966f162). The key schedule's SubWord uses the same circuit. GHASH is
+note the bit-serial multiply of SP 800-38D Algorithm 1 with every conditional replaced by an
+note all-ones/all-zeros mask. No array is indexed by key, data, H or any other secret; every
+note branch and loop count depends only on lengths, the key size and the tag-check outcome.
+note Caveat: omc emits plain AArch64; this relies on LDR/STR/EOR/AND/ORR/shift/ROR/SUB being
+note data-independent in time. No DIT bit is set. Secret workspaces (round keys, H, state) are
+note zeroed before the entry points return.
+note
+note Workspace k (ulong AGKN) cells: 0..119 round keys (round r, plane j at 8r + j); 120 number of
+note rounds; 121,122 H; 123,124 GHASH accumulator Y; 125,126 E(K, J0); 127,128 J0; 129 next counter
+note (32 bits); 130 tag length. 128-bit values are two big-endian halves (hi = bytes 0..7).
+note Workspace s (ulong AGSN) cells: 0..7 bit planes; 8..147 S-box gates (gate Ti in cell 7 + i);
+note 150..157 the four blocks of aes_enc4 (block b: hi at 150 + 2b, lo at 151 + 2b).
+
+const AGKN ulong 136
+const AGSN ulong 160
+note GHASH reduction R = 11100001 || 0^120 (SP 800-38D 6.3), high half
+const AGR ulong 0xe100000000000000
+
+note 8 x 8 bit transpose of s[0..8) inside every byte position (BearSSL br_aes_ct64_ortho);
+note its own inverse
+fn aes_ortho s edit ulong AGSN to void
+a = ulong 0
+b = ulong 0
+for i ulong 4 unroll
+a = get s mul i 2
+b = get s add mul i 2 1
+put s mul i 2 or and a 0x5555555555555555 shl and b 0x5555555555555555 1
+put s add mul i 2 1 or and shr a 1 0x5555555555555555 and b 0xaaaaaaaaaaaaaaaa
+end
+for i ulong 4 unroll
+a = get s add and i 1 mul shr i 1 4
+b = get s add add and i 1 mul shr i 1 4 2
+put s add and i 1 mul shr i 1 4 or and a 0x3333333333333333 shl and b 0x3333333333333333 2
+put s add add and i 1 mul shr i 1 4 2 or and shr a 2 0x3333333333333333 and b 0xcccccccccccccccc
+end
+for i ulong 4 unroll
+a = get s i
+b = get s add i 4
+put s i or and a 0x0f0f0f0f0f0f0f0f shl and b 0x0f0f0f0f0f0f0f0f 4
+put s add i 4 or and shr a 4 0x0f0f0f0f0f0f0f0f and b 0xf0f0f0f0f0f0f0f0
+end
+end
+
+note SubBytes on all 64 bytes of the planes: the Boyar-Peralta depth-16 circuit, one gate a line.
+note Inputs U0 (most significant bit) .. U7 are planes s[7] .. s[0]; gate Ti is s[7 + i]; outputs
+note S0 .. S7 go to s[7] .. s[0]. "+" is xor, "x" is and, "#" (xnor) is not xor. Every input is
+note read before the first output is written.
+fn aes_sbox s edit ulong AGSN to void
+put s 8 xor get s 1 get s 3
+put s 9 xor get s 4 get s 7
+put s 10 xor get s 6 get s 5
+put s 11 xor get s 0 get s 10
+put s 12 xor get s 8 get s 9
+put s 13 xor get s 6 get s 2
+put s 14 xor get s 7 get s 1
+put s 15 xor get s 8 get s 13
+put s 16 xor get s 1 get s 11
+put s 17 xor get s 4 get s 11
+put s 18 xor get s 0 get s 12
+put s 19 xor get s 12 get s 13
+put s 20 xor get s 5 get s 2
+put s 21 xor get s 10 get s 12
+put s 22 xor get s 2 get s 14
+put s 23 xor get s 7 get s 2
+put s 24 xor get s 0 get s 15
+put s 25 xor get s 1 get s 2
+put s 26 xor get s 9 get s 25
+put s 27 xor get s 11 get s 22
+put s 28 xor get s 8 get s 20
+put s 29 xor get s 7 get s 11
+put s 46 xor get s 28 get s 12
+put s 47 xor get s 28 get s 14
+put s 48 xor get s 14 get s 26
+put s 49 xor get s 23 get s 21
+put s 50 xor get s 29 get s 24
+put s 51 and get s 26 get s 12
+put s 52 and get s 27 get s 18
+put s 53 xor get s 19 get s 51
+put s 54 and get s 17 get s 0
+put s 55 xor get s 54 get s 51
+put s 56 and get s 14 get s 28
+put s 57 and get s 16 get s 11
+put s 58 xor get s 47 get s 56
+put s 59 and get s 29 get s 24
+put s 60 xor get s 59 get s 56
+put s 61 and get s 9 get s 15
+put s 62 and get s 48 get s 46
+put s 63 xor get s 62 get s 61
+put s 64 and get s 23 get s 21
+put s 65 xor get s 64 get s 61
+put s 66 xor get s 53 get s 52
+put s 67 xor get s 55 get s 49
+put s 68 xor get s 58 get s 57
+put s 69 xor get s 60 get s 65
+put s 70 xor get s 66 get s 63
+put s 71 xor get s 67 get s 65
+put s 72 xor get s 68 get s 63
+put s 73 xor get s 69 get s 50
+put s 74 xor get s 72 get s 73
+put s 75 and get s 72 get s 70
+put s 76 xor get s 71 get s 75
+put s 77 xor get s 70 get s 71
+put s 78 xor get s 73 get s 75
+put s 79 and get s 78 get s 77
+put s 80 and get s 76 get s 74
+put s 81 and get s 70 get s 73
+put s 82 and get s 77 get s 81
+put s 83 xor get s 77 get s 75
+put s 84 and get s 71 get s 72
+put s 85 and get s 74 get s 84
+put s 86 xor get s 74 get s 75
+put s 87 xor get s 71 get s 79
+put s 88 xor get s 82 get s 83
+put s 89 xor get s 73 get s 80
+put s 90 xor get s 85 get s 86
+put s 91 xor get s 88 get s 90
+put s 92 xor get s 87 get s 89
+put s 93 xor get s 87 get s 88
+put s 94 xor get s 89 get s 90
+put s 95 xor get s 92 get s 91
+put s 96 and get s 94 get s 12
+put s 97 and get s 90 get s 18
+put s 98 and get s 89 get s 0
+put s 99 and get s 93 get s 28
+put s 100 and get s 88 get s 11
+put s 101 and get s 87 get s 24
+put s 102 and get s 92 get s 15
+put s 103 and get s 95 get s 46
+put s 104 and get s 91 get s 21
+put s 105 and get s 94 get s 26
+put s 106 and get s 90 get s 27
+put s 107 and get s 89 get s 17
+put s 108 and get s 93 get s 14
+put s 109 and get s 88 get s 16
+put s 110 and get s 87 get s 29
+put s 111 and get s 92 get s 9
+put s 112 and get s 95 get s 48
+put s 113 and get s 91 get s 23
+put s 114 xor get s 111 get s 112
+put s 115 xor get s 100 get s 106
+put s 116 xor get s 103 get s 114
+put s 117 xor get s 105 get s 115
+put s 118 xor get s 98 get s 108
+put s 119 xor get s 96 get s 99
+put s 120 xor get s 114 get s 119
+put s 121 xor get s 97 get s 117
+put s 122 xor get s 96 get s 102
+put s 123 xor get s 101 get s 109
+put s 124 xor get s 104 get s 110
+put s 125 xor get s 98 get s 121
+put s 126 xor get s 118 get s 124
+put s 127 xor get s 107 get s 115
+put s 128 xor get s 99 get s 102
+put s 129 xor get s 117 get s 128
+put s 130 xor get s 113 get s 126
+put s 131 xor get s 111 get s 122
+put s 132 xor get s 118 get s 123
+put s 7 xor get s 116 get s 129
+put s 5 not xor get s 130 get s 131
+put s 135 xor get s 101 get s 114
+put s 4 xor get s 120 get s 121
+put s 3 xor get s 125 get s 135
+put s 138 xor get s 100 get s 108
+put s 139 xor get s 119 get s 127
+put s 0 not xor get s 120 get s 132
+put s 141 xor get s 104 get s 123
+put s 142 xor get s 138 get s 141
+put s 143 xor get s 100 get s 122
+put s 1 not xor get s 116 get s 142
+put s 145 xor get s 126 get s 139
+put s 2 xor get s 116 get s 145
+put s 147 xor get s 121 get s 143
+put s 6 not xor get s 116 get s 147
+end
+
+note ShiftRows: row r of every plane is the 16 bits at 16r (column c at 16r + 4c, block in the low
+note two bits); row r rotates left by r columns
+fn aes_shrows s edit ulong AGSN to void
+x = ulong 0
+y = ulong 0
+for j ulong 8 unroll
+x = get s j
+y = and x 0xffff
+y = or y shr and x 0xfff00000 4
+y = or y shl and x 0xf0000 12
+y = or y shr and x 0xff0000000000 8
+y = or y shl and x 0xff00000000 8
+y = or y shr and x 0xf000000000000000 12
+y = or y shl and x 0xfff000000000000 4
+put s j y
+end
+end
+
+note MixColumns: with r = q rotated right 16 (the next row) and u = q xor r, out = xtime(u) xor r
+note xor rotr32(u); xtime moves plane 7 into planes 0, 1, 3, 4. u goes to s[8..16).
+fn aes_mixcol s edit ulong AGSN to void
+x = ulong 0
+for j ulong 8 unroll
+x = get s j
+put s add 8 j xor x rotr x 16
+end
+put s 0 xor xor get s 15 rotr get s 0 16 rotr get s 8 32
+put s 1 xor xor xor get s 8 get s 15 rotr get s 1 16 rotr get s 9 32
+put s 2 xor xor get s 9 rotr get s 2 16 rotr get s 10 32
+put s 3 xor xor xor get s 10 get s 15 rotr get s 3 16 rotr get s 11 32
+put s 4 xor xor xor get s 11 get s 15 rotr get s 4 16 rotr get s 12 32
+put s 5 xor xor get s 12 rotr get s 5 16 rotr get s 13 32
+put s 6 xor xor get s 13 rotr get s 6 16 rotr get s 14 32
+put s 7 xor xor get s 14 rotr get s 7 16 rotr get s 15 32
+end
+
+note AddRoundKey with round r
+fn aes_ark k view ulong AGKN s edit ulong AGSN r ulong to void
+o = shl r 3
+for j ulong 8 unroll
+put s j xor get s j get k add o j
+end
+end
+
+note bytes 0..3 of x to bytes 0, 2, 4, 6 (br_aes_ct64_interleave_in)
+fn aes_spread x ulong to ulong inline
+y = and or x shl x 16 0x0000ffff0000ffff
+ret and or y shl y 8 0x00ff00ff00ff00ff
+end
+
+note the inverse of aes_spread on bytes 0, 2, 4, 6 of x
+fn aes_unspr x ulong to ulong inline
+y = and x 0x00ff00ff00ff00ff
+y = and or y shr y 8 0x0000ffff0000ffff
+ret and or y shr y 16 0xffffffff
+end
+
+fn aes_bswap x ulong to ulong inline
+y = or and shr x 8 0x00ff00ff00ff00ff shl and x 0x00ff00ff00ff00ff 8
+y = or and shr y 16 0x0000ffff0000ffff shl and y 0x0000ffff0000ffff 16
+ret rotr y 32
+end
+
+note the four big-endian blocks s[150..158) into bit planes s[0..8): block b's little-endian words
+note w0..w3 give s[b] = spread(w0) | spread(w2) << 8 and s[b + 4] = spread(w1) | spread(w3) << 8
+fn aes_inblk s edit ulong AGSN to void
+x = ulong 0
+y = ulong 0
+for b ulong 4 unroll
+x = aes_bswap get s add 150 mul b 2
+y = aes_bswap get s add 151 mul b 2
+put s b or aes_spread and x 0xffffffff shl aes_spread and y 0xffffffff 8
+put s add b 4 or aes_spread shr x 32 shl aes_spread shr y 32 8
+end
+aes_ortho s
+end
+
+note bit planes s[0..8) back to the four big-endian blocks s[150..158)
+fn aes_outblk s edit ulong AGSN to void
+aes_ortho s
+x = ulong 0
+y = ulong 0
+for b ulong 4 unroll
+x = get s b
+y = get s add b 4
+put s add 150 mul b 2 aes_bswap or aes_unspr x shl aes_unspr y 32
+put s add 151 mul b 2 aes_bswap or aes_unspr shr x 8 shl aes_unspr shr y 8 32
+end
+end
+
+note encrypt the four blocks s[150..158) in place with the round keys in k
+fn aes_enc4 k view ulong AGKN s edit ulong AGSN to void
+aes_inblk s
+nr = get k 120
+aes_ark k s 0
+for r ulong sub nr 1
+aes_sbox s
+aes_shrows s
+aes_mixcol s
+aes_ark k s add r 1
+end
+aes_sbox s
+aes_shrows s
+aes_ark k s nr
+aes_outblk s
+end
+
+note SubWord of the 32-bit little-endian word x through the bitsliced S-box
+fn aes_subw s edit ulong AGSN x ulong to ulong
+for j ulong 8 unroll
+put s j 0
+end
+put s 0 x
+aes_ortho s
+aes_sbox s
+aes_ortho s
+ret and get s 0 0xffffffff
+end
+
+note FIPS 197 5.2 key expansion of w[0 .. nk) into w[nk .. 4 (nk + 7)); words are little-endian as
+note loaded from the key bytes, so RotWord is a right rotation by 8 and Rcon is in the low byte.
+note The branches depend on the word index and the key size only.
+fn aes_expand w edit ulong 60 s edit ulong AGSN nk ulong to void
+rc = ulong 1
+j = ulong 0
+t = get w sub nk 1
+for c ulong sub shl add nk 7 2 nk
+if eq j 0
+t = xor aes_subw s or shr t 8 and shl t 24 0xff000000 rc
+rc = shl rc 1
+if gt rc 255
+rc = xor rc 0x11b
+end
+else
+if gt nk 6
+if eq j 4
+t = aes_subw s t
+end
+end
+end
+t = xor t get w c
+put w add c nk t
+j = add j 1
+if eq j nk
+j = 0
+end
+end
+end
+
+note the key schedule into k: number of rounds, then each round key as bit planes in
+note k[8r .. 8r + 8). len key is 16, 24 or 32 (checked by the caller).
+fn aes_setkey k edit ulong AGKN s edit ulong AGSN key view uchar * to void
+w = new ulong 60 0
+nk = shr len key 2
+nr = add nk 6
+put k 120 nr
+x = ulong 0
+q = ulong 0
+for i ulong nk
+q = shl i 2
+x = or ulong get key q shl ulong get key add q 1 8
+x = or x shl ulong get key add q 2 16
+put w i or x shl ulong get key add q 3 24
+end
+aes_expand w s nk
+for r ulong add nr 1
+q = shl r 2
+put s 150 aes_bswap or get w q shl get w add q 1 32
+put s 151 aes_bswap or get w add q 2 shl get w add q 3 32
+put s 152 get s 150
+put s 153 get s 151
+put s 154 get s 150
+put s 155 get s 151
+put s 156 get s 150
+put s 157 get s 151
+aes_inblk s
+for i ulong 8 unroll
+put k add shl r 3 i get s i
+end
+end
+for i ulong 60
+put w i 0
+end
+end
+
+note Y = Y * H in GF(2^128) (SP 800-38D 6.3 Algorithm 1): Z ^= V where bit i of Y is set,
+note V = V >> 1, xor R where V's last bit was set; both conditions are masks
+fn gcm_mul k edit ulong AGKN to void
+x = get k 123
+vh = get k 121
+vl = get k 122
+zh = ulong 0
+zl = ulong 0
+m = ulong 0
+for i ulong 64 unroll
+m = sub 0 and shr x sub 63 i 1
+zh = xor zh and vh m
+zl = xor zl and vl m
+m = sub 0 and vl 1
+vl = or shr vl 1 shl vh 63
+vh = xor shr vh 1 and m AGR
+end
+x = get k 124
+for i ulong 64 unroll
+m = sub 0 and shr x sub 63 i 1
+zh = xor zh and vh m
+zl = xor zl and vl m
+m = sub 0 and vl 1
+vl = or shr vl 1 shl vh 63
+vh = xor shr vh 1 and m AGR
+end
+put k 123 zh
+put k 124 zl
+end
+
+note absorb the 16 bytes of d at o into Y
+fn gcm_ablk k edit ulong AGKN d view uchar * o ulong to void
+h = ulong 0
+l = ulong 0
+for i ulong 8 unroll
+h = or shl h 8 ulong get d add o i
+l = or shl l 8 ulong get d add o add i 8
+end
+put k 123 xor get k 123 h
+put k 124 xor get k 124 l
+gcm_mul k
+end
+
+note the whole blocks of d (fewer than 2^20)
+fn gcm_absrun k edit ulong AGKN d view uchar * to void
+for i ulong shr len d 4
+gcm_ablk k d shl i 4
+end
+end
+
+note GHASH update with d, the last partial block padded with zeros (runs of 8 MiB keep every
+note rolled loop under its 1000000 passes)
+fn gcm_absorb k edit ulong AGKN d view uchar * to void
+p = new uchar 16 0
+n = len d
+q = ulong 0
+for a ulong shr n 23
+gcm_absrun k part d q 0x800000
+q = add q 0x800000
+end
+m = sub n and n 15
+gcm_absrun k part d q sub m q
+r = sub n m
+if gt r 0
+for i ulong r
+put p i get d add m i
+end
+gcm_ablk k p 0
+end
+end
+
+note the length block [8a]_64 || [8c]_64
+fn gcm_lens k edit ulong AGKN a ulong c ulong to void
+put k 123 xor get k 123 shl a 3
+put k 124 xor get k 124 shl c 3
+gcm_mul k
+end
+
+note the next four counter blocks J0[0..12) || inc32 into s[150..158)
+fn gcm_cblk k edit ulong AGKN s edit ulong AGSN to void
+c = get k 129
+h = get k 127
+l = and get k 128 0xffffffff00000000
+for b ulong 4 unroll
+put s add 150 mul b 2 h
+put s add 151 mul b 2 or l and add c b 0xffffffff
+end
+put k 129 and add c 4 0xffffffff
+end
+
+note d[o .. o + 64) ^= the 64 key stream bytes in s[150..158)
+fn gcm_xor64 s view ulong AGSN d edit uchar * o ulong to void
+x = ulong 0
+q = ulong 0
+for w ulong 8 unroll
+x = get s add 150 w
+for p ulong 8 unroll
+q = add o add shl w 3 p
+put d q xor get d q uchar and shr x sub 56 shl p 3 0xff
+end
+end
+end
+
+note GCTR over d from the stored counter (len d below 2^25 + 64)
+fn gcm_ctrrun k edit ulong AGKN s edit ulong AGSN d edit uchar * to void
+n = len d
+for j ulong shr n 6
+gcm_cblk k s
+aes_enc4 k s
+gcm_xor64 s d shl j 6
+end
+r = and n 63
+if gt r 0
+gcm_cblk k s
+aes_enc4 k s
+o = sub n r
+x = ulong 0
+for i ulong r
+x = get s add 150 shr i 3
+put d add o i xor get d add o i uchar and shr x sub 56 shl and i 7 3 0xff
+end
+end
+end
+
+fn gcm_ctr k edit ulong AGKN s edit ulong AGSN d edit uchar * to void
+n = len d
+q = ulong 0
+for a ulong shr n 25
+gcm_ctrrun k s part d q 0x2000000
+q = add q 0x2000000
+end
+gcm_ctrrun k s part d q sub n q
+end
+
+note key schedule, H = E(K, 0^128), J0 (SP 800-38D 7.1 step 2), E(K, J0) and the first counter.
+note key = kia[0 .. kl), iv = kia[kl .. kl + il).
+fn gcm_init k edit ulong AGKN s edit ulong AGSN kia view uchar * kl ulong il ulong to void
+aes_setkey k s part kia 0 kl
+h = ulong 0
+l = ulong 1
+if eq il 12
+for i ulong 8 unroll
+h = or shl h 8 ulong get kia add kl i
+end
+l = ulong 0
+for i ulong 4 unroll
+l = or shl l 8 ulong get kia add add kl 8 i
+end
+l = or shl l 32 1
+end
+for i ulong 8 unroll
+put s add 150 i 0
+end
+put s 152 h
+put s 153 l
+aes_enc4 k s
+put k 121 get s 150
+put k 122 get s 151
+put k 125 get s 152
+put k 126 get s 153
+if ne il 12
+put k 123 0
+put k 124 0
+gcm_absorb k part kia kl il
+gcm_lens k 0 il
+h = get k 123
+l = get k 124
+put s 150 h
+put s 151 l
+aes_enc4 k s
+put k 125 get s 150
+put k 126 get s 151
+end
+put k 123 0
+put k 124 0
+put k 127 h
+put k 128 l
+put k 129 and add l 1 0xffffffff
+end
+
+note the tag Y ^ E(K, J0) into k[123], k[124] after the length block of a aad bytes and c data bytes
+fn gcm_tag k edit ulong AGKN a ulong c ulong to void
+gcm_lens k a c
+put k 123 xor get k 123 get k 125
+put k 124 xor get k 124 get k 126
+end
+
+note byte i (0..15) of the tag in k[123], k[124]
+fn gcm_tbyte k view ulong AGKN i ulong to uchar
+x = get k 123
+if ge i 8
+x = get k 124
+end
+ret uchar and shr x sub 56 shl and i 7 3 0xff
+end
+
+fn gcm_seal1 k edit ulong AGKN s edit ulong AGSN aad view uchar * buf edit uchar * to void
+t = get k 130
+n = sub len buf t
+gcm_ctr k s part buf 0 n
+gcm_absorb k aad
+gcm_absorb k view part buf 0 n
+gcm_tag k len aad n
+for i ulong t
+put buf add n i gcm_tbyte k i
+end
+end
+
+fn gcm_open1 k edit ulong AGKN s edit ulong AGSN aad view uchar * buf edit uchar * to ulong
+t = get k 130
+n = sub len buf t
+gcm_absorb k aad
+gcm_absorb k view part buf 0 n
+gcm_tag k len aad n
+d = uchar 0
+for i ulong t
+d = or d xor get buf add n i gcm_tbyte k i
+end
+if ne d 0
+gcm_wipe part buf 0 n
+ret 1
+end
+gcm_ctr k s part buf 0 n
+ret 0
+end
+
+note zero d, any length (two loop levels keep each under 1000000 passes)
+fn gcm_wipe d edit uchar * to void
+n = len d
+for a ulong shr n 19
+for b ulong 0x80000
+put d add shl a 19 b 0
+end
+end
+m = and n 0x7ffff
+o = sub n m
+for b ulong m
+put d add o b 0
+end
+end
+
+fn gcm_clear k edit ulong AGKN s edit ulong AGSN to void
+for i ulong AGKN
+put k i 0
+end
+for i ulong AGSN
+put s i 0
+end
+end
+
+note 0 when ctl and the lengths are acceptable (see the API note), else 2
+fn gcm_chk ctl ulong ka ulong bl ulong to ulong
+kl = and ctl 0xff
+tl = and shr ctl 8 0xff
+il = shr ctl 16
+ok = ulong 0
+if eq kl 16
+ok = 1
+end
+if eq kl 24
+ok = 1
+end
+if eq kl 32
+ok = 1
+end
+if eq ok 0
+ret 2
+end
+if eq tl 0
+ret 2
+end
+if gt tl 16
+ret 2
+end
+if eq il 0
+ret 2
+end
+if gt kl ka
+ret 2
+end
+if gt il sub ka kl
+ret 2
+end
+if gt tl bl
+ret 2
+end
+if gt sub bl tl 0xfffffffe0
+ret 2
+end
+ret 0
+end
+
+fn aes_gcm_seal ctl ulong kia view uchar * buf edit uchar * to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+if ne gcm_chk ctl len kia len buf 0
+ret 2
+end
+kl = and ctl 0xff
+il = shr ctl 16
+put k 130 and shr ctl 8 0xff
+gcm_init k s kia kl il
+q = add kl il
+gcm_seal1 k s part kia q sub len kia q buf
+gcm_clear k s
+ret 0
+end
+
+fn aes_gcm_open ctl ulong kia view uchar * buf edit uchar * to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+if ne gcm_chk ctl len kia len buf 0
+ret 2
+end
+kl = and ctl 0xff
+il = shr ctl 16
+put k 130 and shr ctl 8 0xff
+gcm_init k s kia kl il
+q = add kl il
+r = gcm_open1 k s part kia q sub len kia q buf
+gcm_clear k s
+ret r
+end
+
+note TLS 1.3 AEAD_AES_128_GCM: kn = key(16) || nonce(12), 16-byte tag
+fn aead_aes128gcm_seal kn view uchar * aad view uchar * buf edit uchar * to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+if ne gcm_chk 0xc1010 28 len buf 0
+ret 2
+end
+if ne len kn 28
+ret 2
+end
+put k 130 16
+gcm_init k s kn 16 12
+gcm_seal1 k s aad buf
+gcm_clear k s
+ret 0
+end
+
+fn aead_aes128gcm_open kn view uchar * aad view uchar * buf edit uchar * to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+if ne gcm_chk 0xc1010 28 len buf 0
+ret 2
+end
+if ne len kn 28
+ret 2
+end
+put k 130 16
+gcm_init k s kn 16 12
+r = gcm_open1 k s aad buf
+gcm_clear k s
+ret r
+end

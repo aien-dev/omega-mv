@@ -1,0 +1,329 @@
+note SPDX-License-Identifier: Apache-2.0
+note x25519.om: X25519 (RFC 7748 section 5) for the om/tls TLS 1.3 client (RFC 8446 section 7.4.2).
+note Library unit (module code XC): functions and consts only, no om2 line, no main, no globals.
+note
+note API
+note   x25519_scalarmult o edit uchar * k view uchar * u view uchar * to ulong
+note     o = X25519(k, u). o, k, u must each be exactly 32 bytes. Returns 0 ok, 1 when the output is
+note     all zero (RFC 7748 section 6.1, RFC 8446 section 7.4.2: the caller must abort), 2 when a
+note     length is not 32 (nothing is written then). The zero test is computed without branches.
+note   x25519_base o edit uchar * k view uchar * to ulong
+note     o = X25519(k, 9), same return codes.
+note
+note Field GF(p), p = 2^255 - 19: ten limbs h0..h9 in ulong cells, radix 2^25.5 (ref10 layout):
+note limb i has weight 2^e(i), e(i) = ceil(51 i / 2) = 0 26 51 77 102 128 153 179 204 230, and width
+note w(i) = 26 for even i, 25 for odd i (e(10) = 255). A product h_i g_j lands at weight
+note e(i) + e(j) = e(i + j) + [i and j odd], and weight 2^255 folds as 19, so column k of a product
+note collects coef(i, j) h_i g_j over i + j = k (mod 10) with coef = (1 + [i, j odd]) (19 if i + j >= 10).
+note
+note Limb bounds (no ulong ever wraps). "Carried" means every limb < 2^26 and limbs 2..9 within their
+note width; only limb 1 may exceed 2^25, by at most 91314 (below).
+note   decode (fload): limbs within width (top bit of u masked), so carried.
+note   mul / mul24 / canonical outputs: carried (fcarry, below).
+note   fadd of two carried values: limbs < 2^27.
+note   fsub a b = a + 2p - b limbwise, b carried: 2p limbs are 134217690 (i = 0), 67108862 (odd),
+note     134217726 (even) and every carried b limb is at or below them (limb 1 <= 33645746 <= 67108862),
+note     so no limb wraps; result limbs < 2^26 + 2^27 = 3 * 2^26 = L.
+note   fmul inputs: every call site passes carried, fadd or fsub values, so all limbs < L. The largest
+note     column coefficient sum is 267 (column 0), so a column is < 267 L^2 < 2^63.24; a carry into the
+note     next column is < 2^38.24, so the sum stays below 2^64.
+note   fcarry: limbs 0..8 carry into the next limb (shift by the width), limb 9 carries (times 19) into
+note     limb 0, then limb 0 carries once more into limb 1: the folded carry is < 19 * 2^38.24, so the
+note     second carry out of limb 0 is <= 91315 and limb 1 ends <= 2^25 - 1 + 91315 = 33645746 < 2^26.
+note   fmul24: limbs < L times 121665 < 2^44.48, then fcarry.
+note   canonical (fstore): the value h < 2^255 - 1 + 91315 * 2^26 < 2p, so q = floor((h + 19) / 2^255)
+note     is 0 or 1 and h - q p is the canonical residue (computed with masks only).
+note Checked with the Wolfram Language evaluator (2026-10-26):
+note   e[i_]:=Ceiling[51 i/2]; coef[i_,j_]:=(1+BitAnd[i,j,1]) If[i+j>=10,19,1];
+note   colsum=Table[Total[Flatten@Table[If[Mod[i+j,10]==k,coef[i,j],0],{i,0,9},{j,0,9}]],{k,0,9}];
+note   L=3*2^26; col=Max[colsum] L^2; cin=Floor[(col+2^40)/2^25]; c9=Floor[(col+cin)/2^25];
+note   c0=Floor[(2^26-1+19 c9)/2^26]; ... ->
+note   e[10]=255; widths {26,25,...}; weight identity e[i]+e[j]==e[Mod[i+j,10]]+255[i+j>=10]+[i,j odd]
+note   True for all i,j; colsum={267,154,213,118,159,82,105,46,51,10}; Log2[col]=63.2306;
+note   col+cin<2^64 True; Log2[c9]=38.2306; c0=91315; t1=33645746 <= 2(2^25-1) True;
+note   Sum[pl_i 2^e[i]]==2^255-19 True; 2p limbs {134217690,67108862,134217726,...};
+note   hmax<2p True; Log2[3 2^26 121665]=44.4775; (486662-2)/4=121665; PrimeQ[2^255-19] True.
+note
+note Constant time: no branch, loop count or array index depends on k, u or any intermediate value.
+note Every loop has a fixed count; indices depend only on loop counters and slot offsets. The ladder
+note swap is an xor with a mask m = 0 - bit; the final reduction subtracts q p with q from a carry
+note chain; the all-zero test is ((a | -a) >> 63) ^ 1. Secret arrays (clamped scalar, workspace,
+note multiplication scratch) are overwritten with 0 before return. Caveats: omc emits plain AArch64
+note and we rely on MUL, ADD, SUB, EOR, AND, ORR, LSL/LSR with register amounts being data-independent
+note (no DIT bit is set); register and spill contents are not scrubbed; the length check (return 2)
+note branches on public lengths; bounds checks on indices branch on public offsets only.
+
+note workspace slots (ulong offsets into w, 10 limbs each); the inversion reuses the step temporaries
+const XCWN ulong 140
+const XCX1 ulong 0
+const XCX2 ulong 10
+const XCZ2 ulong 20
+const XCX3 ulong 30
+const XCZ3 ulong 40
+const XCTA ulong 50
+const XCAA ulong 60
+const XCTB ulong 70
+const XCBB ulong 80
+const XCTE ulong 90
+const XCTC ulong 100
+const XCTD ulong 110
+const XCDA ulong 120
+const XCCB ulong 130
+note a24 = (486662 - 2) / 4 (RFC 7748 section 5)
+const XCA24 ulong 121665
+
+note one carry pass: limbs 0..8 into the next limb, limb 9 (times 19) into limb 0, limb 0 into limb 1
+fn x25519_fcarry t edit ulong 10 to void
+for i ulong 9 unroll
+put t add i 1 add get t add i 1 shr get t i sub 26 and i 1
+put t i and get t i sub 67108863 mul 33554432 and i 1
+end
+c = shr get t 9 25
+put t 9 and get t 9 33554431
+put t 0 add get t 0 mul c 19
+c = shr get t 0 26
+put t 0 and get t 0 67108863
+put t 1 add get t 1 c
+end
+
+note slot o = slot a * slot b mod p, carried (o may equal a or b)
+fn x25519_fmul w edit ulong XCWN o ulong a ulong b ulong to void
+x = new ulong 10 0
+y = new ulong 10 0
+t = new ulong 10 0
+for i ulong 10 unroll
+put x i get w add a i
+put y i get w add b i
+end
+for i ulong 10 unroll
+for j ulong 10 unroll
+put t rem add i j 10 add get t rem add i j 10 mul mul get x i get y j mul add 1 and and i j 1 add 1 mul 18 div add i j 10
+end
+end
+x25519_fcarry t
+for i ulong 10 unroll
+put w add o i get t i
+put x i 0
+put y i 0
+put t i 0
+end
+end
+
+note slot o = slot a + slot b limbwise, no carry
+fn x25519_fadd w edit ulong XCWN o ulong a ulong b ulong to void
+for i ulong 10 unroll
+put w add o i add get w add a i get w add b i
+end
+end
+
+note slot o = slot a + 2p - slot b limbwise, no carry (b must be carried)
+fn x25519_fsub w edit ulong XCWN o ulong a ulong b ulong to void
+for i ulong 10 unroll
+put w add o i sub add get w add a i sub sub 134217726 mul 67108864 and i 1 mul 36 div sub 10 i 10 get w add b i
+end
+end
+
+note slot o = a24 * slot a, carried
+fn x25519_fmul24 w edit ulong XCWN o ulong a ulong to void
+t = new ulong 10 0
+for i ulong 10 unroll
+put t i mul get w add a i XCA24
+end
+x25519_fcarry t
+for i ulong 10 unroll
+put w add o i get t i
+put t i 0
+end
+end
+
+note slot o = slot a ^ (2^n), n >= 1 (n public)
+fn x25519_fsqn w edit ulong XCWN o ulong a ulong n ulong to void
+x25519_fmul w o a a
+for i ulong sub n 1
+x25519_fmul w o o o
+end
+end
+
+note slot o = slot a ^ (p - 2) = 1 / a (0 for a = 0), p - 2 = 2^255 - 21: the fixed ref10 chain
+note z^11, z^(2^250 - 1), then (2^250 - 1) * 2^5 + 11 = 2^255 - 21. Uses XCTA XCAA XCTB XCBB XCTE;
+note o and a must be other slots.
+fn x25519_finv w edit ulong XCWN o ulong a ulong to void
+x25519_fmul w XCTA a a
+x25519_fmul w XCAA XCTA XCTA
+x25519_fmul w XCAA XCAA XCAA
+x25519_fmul w XCAA a XCAA
+x25519_fmul w XCBB XCTA XCAA
+x25519_fmul w XCTA XCBB XCBB
+x25519_fmul w XCTA XCAA XCTA
+x25519_fsqn w XCAA XCTA 5
+x25519_fmul w XCTA XCAA XCTA
+x25519_fsqn w XCAA XCTA 10
+x25519_fmul w XCAA XCAA XCTA
+x25519_fsqn w XCTB XCAA 20
+x25519_fmul w XCAA XCTB XCAA
+x25519_fsqn w XCAA XCAA 10
+x25519_fmul w XCTA XCAA XCTA
+x25519_fsqn w XCAA XCTA 50
+x25519_fmul w XCAA XCAA XCTA
+x25519_fsqn w XCTB XCAA 100
+x25519_fmul w XCAA XCTB XCAA
+x25519_fsqn w XCAA XCAA 50
+x25519_fmul w XCTE XCAA XCTA
+x25519_fsqn w XCTE XCTE 5
+x25519_fmul w o XCTE XCBB
+end
+
+note swap slots a and b when m is all ones, keep them when m is 0 (m = 0 - bit, no branch)
+fn x25519_fcswap w edit ulong XCWN a ulong b ulong m ulong to void
+for i ulong 10 unroll
+x = get w add a i
+y = get w add b i
+d = and m xor x y
+put w add a i xor x d
+put w add b i xor y d
+end
+end
+
+note slot o = the 32 little-endian bytes of u with bit 255 masked (RFC 7748 decodeUCoordinate);
+note values p..2^255-1 are kept and reduced by the arithmetic. len u = 32 is checked by the caller.
+fn x25519_fload w edit ulong XCWN o ulong u view uchar * to void
+for i ulong 10
+e = div add mul i 51 1 2
+b = shr e 3
+v = ulong get u b
+v = or v shl ulong get u add b 1 8
+v = or v shl ulong get u add b 2 16
+v = or v shl ulong get u add b 3 24
+m = sub shl ulong 1 sub 26 and i 1 1
+put w add o i and shr v and e 7 m
+end
+end
+
+note o = the 32-byte little-endian encoding of the canonical limbs t; returns 1 when o is all zero,
+note else 0 (no branch on the value: z = ((a | -a) >> 63) ^ 1 over the OR of the four words)
+fn x25519_fenc t view ulong 10 o edit uchar * to ulong
+q = new ulong 4 0
+for i ulong 10
+e = div add mul i 51 1 2
+d = shr e 6
+s = and e 63
+v = get t i
+put q d or get q d shl v s
+if gt add s sub 26 and i 1 64
+d = add d 1
+put q d or get q d shr v sub 64 s
+end
+end
+for j ulong 32
+v = shr get q shr j 3 mul and j 7 8
+put o j uchar and v 255
+end
+z = or or get q 0 get q 1 or get q 2 get q 3
+z = xor shr or z sub 0 z 63 1
+for i ulong 4 unroll
+put q i 0
+end
+ret z
+end
+
+note o = the canonical 32-byte encoding of slot a (carried input): q = floor((h + 19) / 2^255) by a
+note carry chain, then h + 19 q with the carry out of bit 255 dropped = h - q p. Returns x25519_fenc.
+fn x25519_fstore w edit ulong XCWN a ulong o edit uchar * to ulong
+t = new ulong 10 0
+for i ulong 10 unroll
+put t i get w add a i
+end
+c = ulong 19
+for i ulong 10 unroll
+c = shr add get t i c sub 26 and i 1
+end
+put t 0 add get t 0 mul c 19
+for i ulong 9 unroll
+put t add i 1 add get t add i 1 shr get t i sub 26 and i 1
+put t i and get t i sub 67108863 mul 33554432 and i 1
+end
+put t 9 and get t 9 33554431
+z = x25519_fenc t o
+for i ulong 10 unroll
+put t i 0
+end
+ret z
+end
+
+note one Montgomery ladder step (RFC 7748 section 5):
+note A = x2 + z2, AA = A^2, B = x2 - z2, BB = B^2, E = AA - BB, C = x3 + z3, D = x3 - z3,
+note DA = D A, CB = C B, x3 = (DA + CB)^2, z3 = x1 (DA - CB)^2, x2 = AA BB, z2 = E (AA + a24 E)
+fn x25519_step w edit ulong XCWN to void
+x25519_fadd w XCTA XCX2 XCZ2
+x25519_fmul w XCAA XCTA XCTA
+x25519_fsub w XCTB XCX2 XCZ2
+x25519_fmul w XCBB XCTB XCTB
+x25519_fsub w XCTE XCAA XCBB
+x25519_fadd w XCTC XCX3 XCZ3
+x25519_fsub w XCTD XCX3 XCZ3
+x25519_fmul w XCDA XCTD XCTA
+x25519_fmul w XCCB XCTC XCTB
+x25519_fadd w XCTA XCDA XCCB
+x25519_fmul w XCX3 XCTA XCTA
+x25519_fsub w XCTB XCDA XCCB
+x25519_fmul w XCTB XCTB XCTB
+x25519_fmul w XCZ3 XCX1 XCTB
+x25519_fmul w XCX2 XCAA XCBB
+x25519_fmul24 w XCTC XCTE
+x25519_fadd w XCTC XCAA XCTC
+x25519_fmul w XCZ2 XCTE XCTC
+end
+
+note the ladder over bits 254..0 of the clamped scalar e, conditional swaps by masks
+fn x25519_ladder w edit ulong XCWN e view uchar 32 to void
+sw = ulong 0
+for i ulong 255
+t = sub 254 i
+b = and shr ulong get e shr t 3 and t 7 1
+sw = xor sw b
+m = sub 0 sw
+x25519_fcswap w XCX2 XCX3 m
+x25519_fcswap w XCZ2 XCZ3 m
+sw = b
+x25519_step w
+end
+m = sub 0 sw
+x25519_fcswap w XCX2 XCX3 m
+x25519_fcswap w XCZ2 XCZ3 m
+end
+
+fn x25519_scalarmult o edit uchar * k view uchar * u view uchar * to ulong
+if or or ne len o 32 ne len k 32 ne len u 32
+ret 2
+end
+w = new ulong XCWN 0
+e = new uchar 32 0
+for i ulong 32
+put e i get k i
+end
+put e 0 and get e 0 248
+put e 31 or and get e 31 127 64
+x25519_fload w XCX1 u
+for i ulong 10 unroll
+put w add XCX3 i get w add XCX1 i
+end
+put w XCX2 1
+put w XCZ3 1
+x25519_ladder w e
+x25519_finv w XCTC XCZ2
+x25519_fmul w XCX2 XCX2 XCTC
+r = x25519_fstore w XCX2 o
+for i ulong XCWN
+put w i 0
+end
+for i ulong 32
+put e i 0
+end
+ret r
+end
+
+fn x25519_base o edit uchar * k view uchar * to ulong
+b = new uchar 32 0
+put b 0 9
+ret x25519_scalarmult o k b
+end

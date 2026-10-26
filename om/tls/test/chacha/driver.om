@@ -1,0 +1,527 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: program-mode test driver for om/tls/chacha.om, built as `om2`, chacha.om, driver.om.
+note Reads vector records from stdin (at most 16 MiB), one per line, fields separated by one space;
+note hex fields are lowercase or uppercase hex, "-" for empty:
+note   Q IA IB IC ID STATE WANT   chacha20_qr on 16 words (each 8 hex digits, big-endian as RFC prints)
+note   C KN CTR IN OUT CODE       chacha20_xor KN CTR on a copy of IN; CODE 0: result == OUT;
+note                              CODE 2: refused with 2 and the buffer untouched
+note   P KEY MSG TAG CODE         poly1305_mac; CODE 0: tag == TAG; CODE 2: refused with 2
+note   A KN AAD PT CTTAG CODE     CODE 0: seal(PT) == CTTAG and open(CTTAG) == 0 with PT;
+note                              CODE 1: open(CTTAG) == 1 and the ciphertext part zeroed;
+note                              CODE 2: seal and open both refuse with 2 and leave the buffer alone
+note Lines that are empty or start with # are skipped. Prints "MISMATCH line L" (wrong result) or
+note "BAD line L" (malformed record) per failure, then "chacha driver: C checks, F failed".
+note Exit 0 only when F is 0 and C is above 0; exit 1 otherwise; 2 when stdin cannot be read.
+
+global inp uchar 16777216
+global st ulong 12
+global ob uchar 32
+global one uchar 1
+text tfail "MISMATCH line "
+text tbad "BAD line "
+text tsum "chacha driver: "
+text tchk " checks, "
+text tfld " failed\n"
+text tnl "\n"
+text tio "chacha driver: cannot read input or input over 16 MiB\n"
+
+note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start
+
+fn dslurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn dpeek to ulong
+c = get st 1
+if ge c get st 0
+ret 256
+end
+ret ulong get inp c
+end
+
+fn dadv to void
+put st 1 add get st 1 1
+end
+
+fn dbad to void
+put st 3 1
+end
+
+fn dhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+if ge c 65
+if le c 70
+ret sub c 55
+end
+end
+ret 16
+end
+
+fn dbyte to uchar
+hi = dhexv dpeek
+dadv
+lo = dhexv dpeek
+dadv
+if gt hi 15
+dbad
+ret 0
+end
+if gt lo 15
+dbad
+ret 0
+end
+ret uchar or shl hi 4 lo
+end
+
+fn dspace to void
+if ne dpeek 32
+dbad
+ret
+end
+dadv
+end
+
+note decimal number at the cursor (1 to 19 digits)
+fn dnum to ulong
+v = ulong 0
+k = ulong 0
+while true bound 21
+c = dpeek
+if lt c 48
+break
+end
+if gt c 57
+break
+end
+v = add mul v 10 sub c 48
+k = add k 1
+dadv
+end
+if eq k 0
+dbad
+end
+if gt k 19
+dbad
+end
+ret v
+end
+
+note hex field into a; returns the byte count ("-" is 0 bytes)
+fn dhexf a edit uchar * to ulong
+if eq dpeek 45
+dadv
+ret 0
+end
+n = ulong 0
+while true bound 999999
+c = dpeek
+if eq c 32
+break
+end
+if eq c 10
+break
+end
+if eq c 13
+break
+end
+if eq c 256
+break
+end
+if ge n len a
+dbad
+ret n
+end
+put a n dbyte
+n = add n 1
+if eq get st 3 1
+ret n
+end
+end
+ret n
+end
+
+fn deor to void
+if eq dpeek 13
+dadv
+end
+c = dpeek
+if eq c 10
+dadv
+ret
+end
+if ne c 256
+dbad
+end
+end
+
+fn dskip to void
+while true bound 999999
+c = dpeek
+if eq c 256
+ret
+end
+dadv
+if eq c 10
+ret
+end
+end
+end
+
+note 0 when a and b have the same length and bytes
+fn dsame a view uchar * b view uchar * to ulong
+if ne len a len b
+ret 1
+end
+d = ulong 0
+for i ulong len a
+if ne get a i get b i
+d = 1
+end
+end
+ret d
+end
+
+note 0 when every byte of a is 0
+fn dzero a view uchar * to ulong
+d = ulong 0
+for i ulong len a
+if ne get a i 0
+d = 1
+end
+end
+ret d
+end
+
+fn dcopy d edit uchar * s view uchar * to void
+for i ulong len s
+put d i get s i
+end
+end
+
+fn dprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+fn dmsg bad ulong ln ulong to void
+if eq bad 1
+r = write 1 tbad 0 len tbad
+else
+r = write 1 tfail 0 len tfail
+end
+dprn ln
+r = write 1 tnl 0 1
+end
+
+note 16 big-endian words from 64 bytes
+fn dwords w edit uint 16 b view uchar * to void
+for i ulong 16
+q = mul i 4
+x = uint get b q
+x = or shl x 8 uint get b add q 1
+x = or shl x 8 uint get b add q 2
+put w i or shl x 8 uint get b add q 3
+end
+end
+
+note the library quarter round, called (not inlined) so drecq keeps its names in registers
+fn dqr x edit uint 16 q ulong to void
+chacha20_qr x q
+end
+
+note Q record; 0 pass, 1 mismatch, 2 malformed
+fn drecq b edit uchar 65552 e edit uchar 65552 to ulong
+x = new uint 16 0
+y = new uint 16 0
+dspace
+ia = dnum
+dspace
+ib = dnum
+dspace
+ic = dnum
+dspace
+id = dnum
+dspace
+nb = dhexf b
+dspace
+nx = dhexf e
+deor
+if eq get st 3 1
+ret 2
+end
+if ne nb 64
+ret 2
+end
+if ne nx 64
+ret 2
+end
+if gt or or or ia ib ic id 15
+ret 2
+end
+dwords x b
+dwords y e
+dqr x or or or ia shl ib 8 shl ic 16 shl id 24
+d = ulong 0
+for i ulong 16
+if ne get x i get y i
+d = 1
+end
+end
+ret d
+end
+
+note C record
+fn drecc kn edit uchar 64 b edit uchar 65552 e edit uchar 65552 w edit uchar 65552 to ulong
+dspace
+put st 5 dhexf kn
+dspace
+ctr = dnum
+dspace
+nb = dhexf b
+dspace
+put st 8 dhexf e
+dspace
+put st 9 dnum
+deor
+if eq get st 3 1
+ret 2
+end
+dcopy w part b 0 nb
+r = chacha20_xor part kn 0 get st 5 ctr part w 0 nb
+if ne r get st 9
+ret 1
+end
+if eq r 0
+ret dsame part w 0 nb part e 0 get st 8
+end
+ret dsame part w 0 nb part b 0 nb
+end
+
+note poly1305_mac on the parsed key (st 5 bytes) and message (st 7 bytes) into w[0..16)
+fn dpmac kn edit uchar 64 b edit uchar 65552 w edit uchar 65552 to ulong
+nk = get st 5
+nb = get st 7
+ret poly1305_mac part kn 0 nk part b 0 nb part w 0 16
+end
+
+note P record
+fn drecp kn edit uchar 64 b edit uchar 65552 e edit uchar 65552 w edit uchar 65552 to ulong
+dspace
+put st 5 dhexf kn
+dspace
+put st 7 dhexf b
+dspace
+put st 8 dhexf e
+dspace
+put st 9 dnum
+deor
+if eq get st 3 1
+ret 2
+end
+r = dpmac kn b w
+if ne r get st 9
+ret 1
+end
+if eq r 0
+ret dsame part w 0 16 part e 0 get st 8
+end
+ret 0
+end
+
+note aead_chacha_seal / open on the parsed key (st 5 bytes), aad (st 6 bytes) and w[0..n)
+fn dseal kn edit uchar 64 a edit uchar 65552 w edit uchar 65552 n ulong to ulong
+nk = get st 5
+na = get st 6
+ret aead_chacha_seal part kn 0 nk part a 0 na part w 0 n
+end
+
+fn dopen kn edit uchar 64 a edit uchar 65552 w edit uchar 65552 n ulong to ulong
+nk = get st 5
+na = get st 6
+ret aead_chacha_open part kn 0 nk part a 0 na part w 0 n
+end
+
+note A record, CODE 0; lengths in st 5 key, 6 aad, 7 plaintext, 8 ciphertext with tag
+fn drecav kn edit uchar 64 a edit uchar 65552 b edit uchar 65552 e edit uchar 65552 w edit uchar 65552 to ulong
+np = get st 7
+nc = get st 8
+if ne nc add np 16
+ret 1
+end
+dcopy w part b 0 np
+r = dseal kn a w nc
+if ne r 0
+ret 1
+end
+if ne dsame part w 0 nc part e 0 nc 0
+ret 1
+end
+dcopy w part e 0 nc
+r = dopen kn a w nc
+if ne r 0
+ret 1
+end
+ret dsame part w 0 np part b 0 np
+end
+
+note A record, CODE 1 or 2 (st 9)
+fn drecai kn edit uchar 64 a edit uchar 65552 b edit uchar 65552 e edit uchar 65552 w edit uchar 65552 to ulong
+code = get st 9
+nc = get st 8
+dcopy w part e 0 nc
+r = dopen kn a w nc
+if ne r code
+ret 1
+end
+if eq code 1
+ret dzero part w 0 sub nc 16
+end
+if ne dsame part w 0 nc part e 0 nc 0
+ret 1
+end
+np = get st 7
+dcopy w part b 0 np
+r = dseal kn a w add np 16
+if ne r 2
+ret 1
+end
+ret dsame part w 0 np part b 0 np
+end
+
+note A record
+fn dreca kn edit uchar 64 a edit uchar 65552 b edit uchar 65552 e edit uchar 65552 w edit uchar 65552 to ulong
+dspace
+put st 5 dhexf kn
+dspace
+put st 6 dhexf a
+dspace
+put st 7 dhexf b
+dspace
+put st 8 dhexf e
+dspace
+put st 9 dnum
+deor
+if eq get st 3 1
+ret 2
+end
+if gt get st 9 2
+ret 2
+end
+if gt get st 7 65536
+ret 2
+end
+if eq get st 9 0
+ret drecav kn a b e w
+end
+if lt get st 8 16
+ret 2
+end
+ret drecai kn a b e w
+end
+
+fn main to int
+kn = new uchar 64 0
+a = new uchar 65552 0
+b = new uchar 65552 0
+e = new uchar 65552 0
+w = new uchar 65552 0
+if ne dslurp 0
+r = write 2 tio 0 len tio
+ret 2
+end
+put st 1 0
+put st 2 0
+chk = ulong 0
+fl = ulong 0
+res = ulong 0
+while lt get st 1 get st 0 bound 999999
+put st 2 add get st 2 1
+ln = get st 2
+put st 3 0
+put st 4 get st 1
+c = dpeek
+if eq c 35
+dskip
+continue
+end
+if eq c 10
+dadv
+continue
+end
+dadv
+res = 2
+if eq c 81
+res = drecq b e
+end
+if eq c 67
+res = drecc kn b e w
+end
+if eq c 80
+res = drecp kn b e w
+end
+if eq c 65
+res = dreca kn a b e w
+end
+chk = add chk 1
+if ne res 0
+fl = add fl 1
+if eq res 2
+dmsg 1 ln
+put st 1 get st 4
+dskip
+else
+dmsg 0 ln
+end
+end
+end
+r = write 1 tsum 0 len tsum
+dprn chk
+r = write 1 tchk 0 len tchk
+dprn fl
+r = write 1 tfld 0 len tfld
+if ne fl 0
+ret 1
+end
+if eq chk 0
+ret 1
+end
+ret 0
+end
