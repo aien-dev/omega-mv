@@ -6987,7 +6987,9 @@ eol
 end
 
 note s_text: text NAME "...": read-only bytes in the program image (escapes \n \t \\ \", any other is error
-note 22), padded to a word, with their length; address 0x400000 + its place. om4 S_TEXT.
+note 22), padded to a word, with their length; address 0x400000 + its place. om4 S_TEXT. An empty text is
+note error 8, like a zero-length array: nm_len 0 marks an unsized view, so its count would be read from a
+note register it never set (a view argument got a stray length, indexing checked against garbage).
 fn s_text to void
 w = topname
 tok
@@ -7027,6 +7029,9 @@ n = add n 1
 end
 m = add m 1
 end
+end
+if eq n 0
+fail 8
 end
 while ne and get oc 0 3 0
 emitb 0

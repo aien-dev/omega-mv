@@ -54,3 +54,8 @@ s1-bad-fmt-compile emit seed/omc/om2/s1/bad-fmt-compile.om - err:3:5 5
 s1-diag-newpt emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16
 s1-diag-viewpt emit seed/omc/om2/s1/diag-viewpt.om - file:seed/omc/om2/s1/diag-viewpt.err 16
 s1-bad-fmt-crtext emit seed/omc/om2/s1/bad-fmt-crtext.om - err:4:6 6
+# regression (BabelCLI 2026-10-26): an empty text has nm_len 0, the unsized-view marker, so a view argument
+# got a stray count and `get` was checked against a register never set. Now error 8, as a zero-length array.
+s1-bad-text-empty refuse seed/omc/om2/s1/bad-text-empty.om 8
+s1-bad-text-empty-get refuse seed/omc/om2/s1/bad-text-empty-get.om 8
+s1-text-one-view run seed/omc/om2/s1/text-one-view.om - - - 1

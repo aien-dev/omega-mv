@@ -1,0 +1,8 @@
+om2
+text One "a"
+fn f s view uchar * to ulong
+ret len s
+end
+fn main to int
+ret int f One
+end

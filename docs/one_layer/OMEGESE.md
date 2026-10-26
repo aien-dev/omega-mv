@@ -456,7 +456,8 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   Program mode only (error 9). (s.6 echo, bytecopy, s.7)
 - `text NAME "bytes"`: a read-only array of uchar holding the bytes between the quotes, with its
   length; `\n` is 10, `\t` is 9, `\\` is 92, `\"` is 34; any other escape, or a quote missing its end,
-  is error 22. Program mode only. (s.7)
+  is error 22. At least one byte: an empty text `""` is error 8, like an array of length 0. Program mode
+  only. (s.7)
 - `NAME = new T N v`: a local array of N elements, each v, on the stack, given back when the function
   returns. Only in a function's outermost block (error 9); at most 4 MiB of local arrays (error 23).
   There is no `free`: nothing is given back by hand (decision 24), and the word is refused (error 9).
