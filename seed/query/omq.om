@@ -126,6 +126,11 @@ text kfixr "fix_rename"
 text kfixm "fix_move_up"
 text kfixe "fix_append_end"
 text kcode "code"
+text kstat "status"
+text sinval "INVALID"
+text sincom "INCOMPLETE"
+text svalun "VALID-UNPROVEN"
+text sunk "UNKNOWN"
 text kline "line"
 text kcol "col"
 text kspan "span"
@@ -2004,7 +2009,29 @@ if eq rd rc
 diagrec sh
 end
 end
+ostat rc
 obclose 125
+end
+
+fn ostat rc ulong to void
+note the outcome. No hole: VALID-UNPROVEN when omc accepts (nothing here proves behaviour), else
+note INVALID. A hole: INCOMPLETE when the base witness compiles (a valid completion exists),
+note INVALID when the error sits before the hole (no text at the hole can reach back), else
+note UNKNOWN (the error may depend on what the hole holds). Never a plain VALID.
+obkey kstat
+if eq rc 0
+if eq get g GHK 0
+obtstr svalun
+else
+obtstr sincom
+end
+ret
+end
+if or eq get g GHK 0 le get g GDL get g GHL
+obtstr sinval
+ret
+end
+obtstr sunk
 end
 
 fn okn t view uchar * v ulong to void

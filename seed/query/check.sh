@@ -41,11 +41,17 @@ if has value_om2 '"next":\[[^]]*"a"[,\]]'; then bad "uint[] name a offered for a
 if has stmt_loop '"requires <bool>"'; then bad "contract word offered in an OM-1 unit"; else ok "no contract forms in an OM-1 unit"; fi
 if has stmt_om2 '"invariant <bool>"'; then ok "invariant offered in an OM-2 loop"; else bad "invariant missing in an OM-2 loop"; fi
 if has stmt_effects '"effects":\["write:io"\]'; then ok "effect write:io reported"; else bad "effect write:io missing"; fi
-if has else_ret '"check":{"code":0}'; then ok "hole in an else after a returning then: base witness compiles"; else bad "else_ret base witness rejected"; fi
+if has else_ret '"check":{"code":0,"status":"INCOMPLETE"}'; then ok "hole in an else after a returning then: base witness compiles"; else bad "else_ret base witness rejected"; fi
 if has arr_call '"fill k ulong 1"' && ! has arr_call '"fill [sb] '; then ok "array argument: the length-matching array k, not s or b"; else bad "array argument choice"; fi
 if has arr_call '"name":"v","type":"ulong"'; then ok "binding without = (v ulong 5) in scope"; else bad "binding without = missing from scope"; fi
 sed 's/^??$/fill k ulong 1/' $C/arr_call.om | "$OMC" > /dev/null 2>&1 && ok "offered call fill k ulong 1 compiles" || bad "offered call fill k ulong 1 rejected"
 sed 's/^??$/fill s ulong 1/' $C/arr_call.om | "$OMC" > /dev/null 2>&1 && bad "control: fill s (uint 8 for uint 64) accepted" || ok "control: fill s (uint 8 for uint 64) rejected by omc"
+# Outcome: three values, never a plain VALID. A hole with a compiling base is INCOMPLETE, an
+# error before the hole is INVALID, a whole accepted program is VALID-UNPROVEN.
+if has err3 '"status":"INVALID"' && has stmt_loop '"status":"INCOMPLETE"'; then ok "status INVALID / INCOMPLETE"; else bad "status INVALID / INCOMPLETE"; fi
+printf 'fn main to int\nret int 0\nend\n' | "$Q" "$OMC" > "$B/whole.json"
+grep -q '"status":"VALID-UNPROVEN"' "$B/whole.json" && ok "status VALID-UNPROVEN for an accepted whole program" || bad "status for an accepted whole program"
+if grep -h -o '"status":"VALID"' "$B"/*.json | grep -q .; then bad "plain VALID emitted"; else ok "no answer claims plain VALID"; fi
 
 # 3. Every next form at the loop hole really compiles: substitute a concrete instance
 #    for each listed shape and recompile. This checks omq's claims with omc directly.

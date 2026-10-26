@@ -1,1 +1,1 @@
-{"check":{"code":15,"line":5,"sev":"incomplete","col":1,"expect":"end","found":"","obligation":"-","span":[47,47],"why":"missing end: close every fn/if/while/for with end","fix_append_end":2,"rc_after_fix":18},"compiles":6}
+{"check":{"code":15,"line":5,"sev":"incomplete","col":1,"expect":"end","found":"","obligation":"-","span":[47,47],"why":"missing end: close every fn/if/while/for with end","fix_append_end":2,"rc_after_fix":18,"status":"INVALID"},"compiles":6}
