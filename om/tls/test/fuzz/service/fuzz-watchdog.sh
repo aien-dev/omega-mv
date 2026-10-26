@@ -77,10 +77,13 @@ run() {
   while :; do
     r=$(check); rc=$?
     if [ $rc -eq 2 ]; then
-      systemctl --user stop "$UNIT"; note "STOP $r"; printf 'off %s %s\n' "$(date -u +%FT%TZ)" "$r" > "$STATUS"; exit 0
-    elif [ $rc -eq 1 ] && [ $st = on ]; then
-      systemctl --user kill --signal=SIGSTOP "$UNIT" 2>/dev/null; st=off; note "PAUSE $r"
-    elif [ $rc -eq 0 ] && [ $st = off ]; then
+      # cap reached: stop the workers (they stay stopped until someone restarts the unit)
+      [ $st = stopped ] || { systemctl --user stop "$UNIT"; note "STOP $r"; }; st=stopped
+    elif [ $rc -eq 1 ]; then
+      # re-sent every tick so workers started or restarted while paused are paused too
+      systemctl --user kill --signal=SIGSTOP "$UNIT" 2>/dev/null
+      [ $st = on ] && note "PAUSE $r"; st=off
+    elif [ $st = off ]; then
       systemctl --user kill --signal=SIGCONT "$UNIT" 2>/dev/null; st=on; note "RESUME"
     fi
     printf '%s %s %s\n' "$st" "$(date -u +%FT%TZ)" "$r" > "$STATUS.tmp" && mv -f "$STATUS.tmp" "$STATUS"
