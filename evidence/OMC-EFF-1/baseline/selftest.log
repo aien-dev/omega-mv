@@ -1,0 +1,10 @@
+PASS clean_run rc=0 S rows=14 ok=12 fail=0 ctl_detected=2 ctl_missed=0
+PASS counters_nonzero rc=0 zero_rows=0
+PASS wrong_want rc=1 S rows=7 ok=0 fail=6 ctl_detected=1 ctl_missed=0
+PASS control_matches rc=1 S rows=7 ok=6 fail=0 ctl_detected=0 ctl_missed=1
+PASS wrong_reference rc=1 S rows=3 ok=2 fail=1 ctl_detected=0 ctl_missed=0
+PASS clean_build rc=0 S rows=3 ok=3 fail=0 ctl_detected=0 ctl_missed=0
+PASS usage rc=2 
+PASS seed_zero rc=2 
+SELFTEST fails=0
+selftest_rc=0
