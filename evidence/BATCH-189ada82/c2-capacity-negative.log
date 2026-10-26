@@ -1,0 +1,12 @@
+OM2GATE START cases=seed/qualification/om2/manifest-c2-capacity.txt scratch=build/c2-cap-neg2
+IDENTITY omc /tmp/omc-befb sha256=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d pinned=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d match
+CASE c2-00304 line=8
+  $ /tmp/omc-befb < build/c2-cap-neg2/8.src > build/c2-cap-neg2/8.elf 2> build/c2-cap-neg2/8.cerr
+VERDICT c2-00304 FAIL compile exit=14 expected=0 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stdout sha256 differs; expected 4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d stderr differs at byte 0
+CASE c2-00306 line=9
+  $ /tmp/omc-befb < build/c2-cap-neg2/9.src > build/c2-cap-neg2/9.elf 2> build/c2-cap-neg2/9.cerr
+VERDICT c2-00306 FAIL compile exit=14 expected=0 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stdout sha256 differs; expected 554b483494b4f77079ebe6a0ce10f046e82cbff7276e6b60b0a4127d3c582c4d stderr differs at byte 0
+CASE c2-00675 line=10
+  $ /tmp/omc-befb < build/c2-cap-neg2/10.src > build/c2-cap-neg2/10.elf 2> build/c2-cap-neg2/10.cerr
+VERDICT c2-00675 FAIL compile exit=14 expected=0 sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stdout sha256 differs; expected 4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d stderr differs at byte 0
+OM2GATE FAIL cases=3 pass=0 fail=3 invalid=0 not_run=0

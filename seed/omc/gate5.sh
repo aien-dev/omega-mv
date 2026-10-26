@@ -2,9 +2,9 @@
 # gate5.sh -- the checks of rung 5, omc (seed/README.md). Run from the repo root:  sh seed/omc/gate5.sh
 # Needs seed/rung4/om4.bin (rung 4) and what gate4 needs: build/omegese/omegese and build/omega_emit/omega_emit
 # (the C path), cc for the reference runner, gcc for the C twins. Oracles only, named where used: none of them
-# writes a byte of seed/; omc is built by om4 and then by itself. Results: evidence/SEED-0/omc/.
+# writes a byte of seed/; omc is built by om4 and then by itself. Results: build/seed/r5/evidence/.
 set -eu
-R=seed/omc; R4=seed/rung4; B=build/seed/r5; E=evidence/SEED-0/omc
+R=seed/omc; R4=seed/rung4; B=build/seed/r5; E=build/seed/r5/evidence
 TAB="seed/rung2/table.s2 seed/rung3/table3.s2 $R4/table4.s2"
 mkdir -p "$B" "$E"
 fail=0; cases=0
@@ -131,7 +131,7 @@ if [ $g4ok = 0 ] || grep -q "^FAIL" $B/g4omc.out; then bad "(c) gate4 with stage
 else say "PASS (c) gate4 with stage2 in om4's place: $(grep -c '^PASS' $B/g4omc.out) checks, 0 FAIL"; fi
 cp $B/g4omce/words.tsv $E/corpus-words.tsv
 sed 's/om4_words/omc_words/' $E/corpus-words.tsv > $B/t && mv $B/t $E/corpus-words.tsv
-say "(c) table: evidence/SEED-0/omc/corpus-words.tsv"; cat $E/corpus-words.tsv >> "$E/gate5.log"
+say "(c) table: $E/corpus-words.tsv"; cat $E/corpus-words.tsv >> "$E/gate5.log"
 cases=$((cases + 1))
 
 # 5. (d) negative controls
@@ -187,27 +187,16 @@ for e in $(seq 1 23); do case "$all" in *" $e "*) ;; *) miss="$miss $e";; esac; 
 [ -z "$miss" ] && say "PASS every error number 1..23 is reached, om4 = stage2 on each" || bad "error numbers never reached:$miss"
 cases=$((cases + 1))
 
-# 7. sizes and speed. omc's size at this self-rewrite; words per function of omc (from compiling each prefix
-#    of omc.om with a 2-word main appended); compile time of stage2 against the C path on the dev tasks
+# 7. sizes and speed. Whole-compiler size and compile time against the C path on the dev tasks.
+# Incomplete source prefixes cannot measure function size when signatures reference later functions.
 lines=$(wc -l < $R/omc.om); nfn=$(grep -c '^fn ' $R/omc.om); bytes=$(stat -c %s $S)
 printf 'rewrite\tbuilt_by\tsource_lines\tfunctions\tbytes\twords\tsha256\n' > $E/size.tsv
 for st in 1 2 3; do by=om4; [ $st -gt 1 ] && by=stage$((st - 1))
   printf 'stage%s\t%s\t%s\t%s\t%s\t%s\t%s\n' $st $by $lines $nfn $(stat -c %s $B/fix/stage$st) $(( ($(stat -c %s $B/fix/stage$st) - 176) / 4 )) $(sha $B/fix/stage$st) >> $E/size.tsv
 done
-say "omc: $lines lines, $nfn functions, $bytes bytes = 176-byte header + $(( (bytes - 176) / 4 )) words (evidence/SEED-0/omc/size.tsv)"
-#     size-history.tsv is kept by hand, one row per self-rewrite; its last row must be this build
-tail -1 $E/size-history.tsv | grep -q "	$(sha $S)\$" && say "PASS size history: its last row is this omc ($(tail -1 $E/size-history.tsv | cut -f1))" || bad "size-history.tsv has no row for this omc: add one"
-printf 'fn main to int\nret 0\nend\n' > $B/m.om; printf 'fn zz to int\nret 0\nend\nfn main to int\nret 0\nend\n' > $B/zm.om
-dm=$(( ($(./$S < $B/zm.om | wc -c) - $(./$S < $B/m.om | wc -c)) / 4 ))
-awk '/^fn /{d=1; name=$2; next} d>0 && /^(if|while|for) /{d++} d>0 && /^end$/{d--; if(d==0) print NR, name}' $R/omc.om > $B/fnends
-printf 'function\twords\n' > $E/omc-words.tsv; prev=$(./$S < $B/m.om | wc -c); start=1
-while read end name; do
-  if [ "$name" = main ]; then sz=$(./$S < $R/omc.om | wc -c); w=$(( (sz - prev) / 4 + dm ))
-  else sz=$(sed -n "1,${end}p" $R/omc.om | cat - $B/m.om | ./$S | wc -c); w=$(( (sz - prev) / 4 )); fi
-  printf '%s\t%s\n' $name $w >> $E/omc-words.tsv; prev=$sz
-done < $B/fnends
-tw=$(awk 'NR>1{s+=$2} END{print s}' $E/omc-words.tsv)
-say "omc words per function: evidence/SEED-0/omc/omc-words.tsv ($nfn functions, $tw words in all, mean $((tw / nfn)))"
+say "omc: $lines lines, $nfn functions, $bytes bytes = 176-byte header + $(( (bytes - 176) / 4 )) words ($E/size.tsv)"
+# The living ledger is maintained before qualification; historical evidence is never rewritten.
+tail -1 "$R/size-history.tsv" | grep -q "	$(sha $S)\$" && say "PASS size history: its last row is this omc ($(tail -1 "$R/size-history.tsv" | cut -f1))" || bad "size-history.tsv has no row for this omc: add one"
 ns() { date +%s%N; }
 N=200; printf 'program\tomc_us\tc_path_us\n' > $E/compile-time.tsv
 for d in $(ls tests/one_layer/omegese/dev/dev*.omegese $R4/tests/fm*.omegese); do p=$(basename $d .omegese)
@@ -218,7 +207,7 @@ for d in $(ls tests/one_layer/omegese/dev/dev*.omegese $R4/tests/fm*.omegese); d
   printf '%s\t%s\t%s\n' $p $(( (t1 - t0) / N / 1000 )) $(( (t2 - t1) / N / 1000 )) >> $E/compile-time.tsv
 done
 N=20; t0=$(ns); i=0; while [ $i -lt $N ]; do $S < $R/omc.om > /dev/null; i=$((i + 1)); done; t1=$(ns)
-say "compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: $(( (t1 - t0) / N / 1000 )) us"
+say "compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included ($E/compile-time.tsv); omc compiling itself: $(( (t1 - t0) / N / 1000 )) us"
 cat $E/compile-time.tsv $E/size.tsv >> "$E/gate5.log"
 
 cp $S $E/omc.elf; sha $S > $E/omc.sha256
