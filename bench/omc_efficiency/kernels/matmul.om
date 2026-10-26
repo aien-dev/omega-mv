@@ -1,0 +1,58 @@
+note matmul: C = A B for 300 x 300 ulong matrices in global arrays, A[i][j] = (i + 2j) rem 13,
+note B[i][j] = (3i + j) rem 11; prints the sum of all elements of C and its trace.
+global out uchar 32
+global ma ulong 90000
+global mb ulong 90000
+global mc ulong 90000
+fn putnum v ulong to void
+put out 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+end
+fn fill to void
+for i ulong 300
+for j ulong 300
+put ma add mul i 300 j rem add i mul j 2 13
+put mb add mul i 300 j rem add mul i 3 j 11
+end
+end
+end
+note mm: the row offset r and the column walk q are kept in names; the direct form
+note add s mul get ma add mul i 300 k get mb add mul k 300 j needs more than the 16 registers (error 12)
+fn mm to void
+for i ulong 300
+r = mul i 300
+for j ulong 300
+s = ulong 0
+q = j
+for k ulong 300
+s = add s mul get ma add r k get mb q
+q = add q 300
+end
+put mc add r j s
+end
+end
+end
+fn main to int
+fill
+mm
+tot = ulong 0
+tr = ulong 0
+for i ulong 300
+for j ulong 300
+tot = add tot get mc add mul i 300 j
+end
+tr = add tr get mc add mul i 301 0
+end
+putnum tot
+putnum tr
+ret 0
+end

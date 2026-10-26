@@ -1,0 +1,39 @@
+note branch: Collatz steps to reach 1 for every start 1 .. 1000000; prints the total steps and the
+note largest step count. Data-dependent branch in a bounded while.
+global out uchar 32
+fn putnum v ulong to void
+put out 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+end
+fn main to int
+tot = ulong 0
+mx = ulong 0
+for n ulong 1000000
+x = add n 1
+k = ulong 0
+while ne x 1
+if eq and x 1 0
+x = shr x 1
+else
+x = add mul x 3 1
+end
+k = add k 1
+end
+tot = add tot k
+if gt k mx
+mx = k
+end
+end
+putnum tot
+putnum mx
+ret 0
+end

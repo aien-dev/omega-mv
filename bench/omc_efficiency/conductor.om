@@ -1,0 +1,761 @@
+note OMC-EFF-1 measurement conductor (bench/omc_efficiency/PROTOCOL.md). It runs every arm of every case
+note as its own process, in a seeded random arm order per case and round, times each run with monons
+note around fork .. waitpid, checks every output byte against want/CASE.out, reads perf stat counters,
+note and writes one raw row per run on stdout. It computes no statistics.
+note
+note run mode:   conductor run ROUNDS WARM SEED NCTL A ARM1 .. ARMA CASE ..
+note             binary bin/ARM/CASE, expected output want/CASE.out; the last NCTL arms are negative
+note             controls (their output must NOT match). Rows:
+note             T round warm case arm pos wall_ns status ok
+note             P round warm case arm pos instructions cycles status ok   (controls get no P row)
+note build mode: conductor build ROUNDS WARM SEED OMC A ARM1 .. ARMA CASE ..
+note             arm omc: OMC < src/CASE.om > build.out; arm cOx: /usr/bin/gcc -B/usr/bin/ -Ox -static
+note             -o build.out src/CASE.c. build.out must equal bin/ARM/CASE. Row:
+note             B round warm case arm pos wall_ns status same
+note Last row: S rows=N ok=N fail=N ctl_detected=N ctl_missed=N. Exit 0 only when fail and ctl_missed
+note are 0 (and, with NCTL above 0, at least one control was detected); 1 otherwise; 2 for bad usage.
+om2
+text tbin "bin/"
+text tslash "/"
+text twant "want/"
+text tdotout ".out"
+text tsrc "src/"
+text tdotom ".om"
+text tdotc ".c"
+text trunout "run.out"
+text tbuild "build.out"
+text tchild "child.log"
+text tperfc "perf.csv"
+text tperf "/usr/bin/perf"
+text tstat "stat"
+text tx "-x"
+text tcomma ","
+text te "-e"
+text tev "instructions:u,cycles:u"
+text tdo "-o"
+text tdd "--"
+text tgcc "/usr/bin/gcc"
+text tbdir "-B/usr/bin/"
+text tdash "-"
+text tstatic "-static"
+text tsp " "
+text tnl "\n"
+text tT "T "
+text tP "P "
+text tB "B "
+text tS "S rows="
+text tok " ok="
+text tfail " fail="
+text tdet " ctl_detected="
+text tmiss " ctl_missed="
+text tH "H omc-eff-1 conductor mode="
+text tseed " seed="
+text trounds " rounds="
+text twarm " warm="
+note pb: the path or argument being assembled; ip: the second path (stdin file or want file)
+global pb uchar 512
+global pbn ulong 1
+global ip uchar 512
+global ipn ulong 1
+global pk uchar 4096
+global pkn ulong 1
+global pkc ulong 1
+global lb uchar 1024
+global lbn ulong 1
+global ob uchar 1048576
+global wb uchar 1048576
+global ab uchar 256
+global st uchar 4
+global gst ulong 1
+global rng ulong 1
+global ord ulong 64
+global cfg ulong 16
+global cnt ulong 8
+note cfg: 0 mode (0 run, 1 build), 1 rounds, 2 warm, 3 nctl, 4 arm count, 5 first arm arg, 6 first case
+note arg, 7 case count, 8 omc arg index. cnt: 0 rows, 1 ok, 2 fail, 3 detected, 4 missed
+
+fn pbclr to void
+put pbn 0 0
+end
+fn pbtext t view uchar * to void
+n = get pbn 0
+if gt add n len t 512
+trap 9
+end
+for i ulong len t
+put pb add n i get t i
+end
+put pbn 0 add n len t
+end
+fn pbarg idx ulong to void
+n = get pbn 0
+r = argread idx pb n sub 512 n
+if lt r 0
+trap 9
+end
+put pbn 0 add n ulong r
+end
+fn ipclr to void
+put ipn 0 0
+end
+fn iptext t view uchar * to void
+n = get ipn 0
+if gt add n len t 512
+trap 9
+end
+for i ulong len t
+put ip add n i get t i
+end
+put ipn 0 add n len t
+end
+fn iparg idx ulong to void
+n = get ipn 0
+r = argread idx ip n sub 512 n
+if lt r 0
+trap 9
+end
+put ipn 0 add n ulong r
+end
+
+note ---- exec packet: u16 count, then records (u16 length, bytes); pkpush adds pb as one record
+fn pkreset to void
+put pk 0 0
+put pk 1 0
+put pkn 0 2
+put pkc 0 0
+end
+fn pkpush to void
+n = get pkn 0
+m = get pbn 0
+if gt add add n m 2 4096
+trap 9
+end
+put pk n uchar and m 255
+put pk add n 1 uchar shr m 8
+for i ulong m
+put pk add add n 2 i get pb i
+end
+put pkn 0 add add n m 2
+c = add get pkc 0 1
+put pkc 0 c
+put pk 0 uchar and c 255
+put pk 1 uchar shr c 8
+end
+fn pkt t view uchar * to void
+pbclr
+pbtext t
+pkpush
+end
+
+note ---- the output line
+fn lbtext t view uchar * to void
+n = get lbn 0
+if gt add n len t 1024
+trap 9
+end
+for i ulong len t
+put lb add n i get t i
+end
+put lbn 0 add n len t
+end
+fn lbnum v ulong to void
+d = new uchar 24 0
+p = ulong 24
+x = v
+while gt x 9
+p = sub p 1
+put d p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put d p uchar add x 48
+n = get lbn 0
+for i ulong sub 24 p
+put lb add n i get d add p i
+end
+put lbn 0 add n sub 24 p
+end
+fn lbarg idx ulong to void
+n = get lbn 0
+r = argread idx lb n sub 1024 n
+if lt r 0
+trap 9
+end
+put lbn 0 add n ulong r
+end
+fn lbsp to void
+lbtext tsp
+end
+fn lbflush to void
+lbtext tnl
+w = write 1 lb 0 get lbn 0
+put lbn 0 0
+end
+
+note ---- numbers and the shuffle
+fn argnum idx ulong to ulong
+r = argread idx ab 0 len ab
+if le r 0
+exit 2
+end
+v = ulong 0
+for i ulong ulong r
+c = get ab i
+if or lt c 48 gt c 57
+exit 2
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+fn rnext to ulong
+x = get rng 0
+x = xor x shl x 13
+x = xor x shr x 7
+x = xor x shl x 17
+put rng 0 x
+ret x
+end
+fn shuffle na ulong to void
+for i ulong na
+put ord i i
+end
+for s ulong sub na 1
+i = sub sub na 1 s
+j = rem rnext add i 1
+t = get ord i
+put ord i get ord j
+put ord j t
+end
+end
+
+note ---- run one child: fork, redirect, exec pk; the parent times fork .. waitpid
+note how: 0 stdout to run.out; 1 stdin from ip, stdout to build.out; 2 stdout to child.log
+fn child how ulong to void
+fd = long -1
+if eq how 0
+fd = fopen trunout 0 len trunout 577 420
+else
+if eq how 1
+fd = fopen tbuild 0 len tbuild 577 420
+else
+fd = fopen tchild 0 len tchild 577 420
+end
+end
+if lt fd 0
+exit 120
+end
+r = dupfd int fd 1 0
+if ne r 1
+exit 121
+end
+if eq how 1
+fi = fopen ip 0 get ipn 0 0 0
+if lt fi 0
+exit 122
+end
+r = dupfd int fi 0 0
+if ne r 0
+exit 123
+end
+end
+r = execprog pk 0 get pkn 0
+exit 124
+end
+fn runone how ulong to ulong
+t0 = monons
+pid = fork
+if lt pid 0
+trap 9
+end
+if eq pid 0
+child how
+exit 125
+end
+r = waitpid int pid st 0 4 0
+t1 = monons
+if ne r pid
+trap 9
+end
+s0 = ulong get st 0
+if ne and s0 127 0
+put gst 0 add 1000 and s0 127
+else
+put gst 0 ulong get st 1
+end
+ret ulong sub t1 t0
+end
+
+note ---- files into ob / wb; a file that fills the buffer is reported as 1048577 bytes (never equal)
+fn slurpob how ulong to ulong
+fd = long -1
+if eq how 0
+fd = fopen trunout 0 len trunout 0 0
+else
+if eq how 1
+fd = fopen tbuild 0 len tbuild 0 0
+else
+fd = fopen tperfc 0 len tperfc 0 0
+end
+end
+if lt fd 0
+ret 1048578
+end
+n = ulong 0
+going = true
+while going
+r = read int fd ob n sub 1048576 n
+if le r 0
+going = false
+else
+n = add n ulong r
+if eq n 1048576
+going = false
+end
+end
+end
+c = fclose int fd
+if eq n 1048576
+ret 1048577
+end
+ret n
+end
+fn slurpwb to ulong
+fd = fopen ip 0 get ipn 0 0 0
+if lt fd 0
+ret 1048579
+end
+n = ulong 0
+going = true
+while going
+r = read int fd wb n sub 1048576 n
+if le r 0
+going = false
+else
+n = add n ulong r
+if eq n 1048576
+going = false
+end
+end
+end
+c = fclose int fd
+if eq n 1048576
+ret 1048580
+end
+ret n
+end
+fn same no ulong nw ulong to ulong
+if ne no nw
+ret 0
+end
+for i ulong no
+if ne get ob i get wb i
+ret 0
+end
+end
+ret 1
+end
+
+note ---- perf stat -x , lines: value,unit,event,... ; sum values whose event's first byte after '/'
+note is 'i' (instructions) or 'c' (cycles); lines that do not start with a digit are skipped
+fn pnum st0 ulong n ulong to ulong
+v = ulong 0
+i = st0
+going = true
+while going
+if ge i n
+going = false
+else
+c = get ob i
+if or lt c 48 gt c 57
+going = false
+else
+v = add mul v 10 ulong sub c 48
+i = add i 1
+end
+end
+end
+ret v
+end
+fn pkind st0 ulong n ulong to ulong
+note returns 1 instructions, 2 cycles, 0 other: third field, byte after its first '/'
+i = st0
+commas = ulong 0
+k = ulong 0
+going = true
+while going
+if ge i n
+going = false
+else
+c = get ob i
+if eq c 10
+going = false
+else
+if eq c 44
+commas = add commas 1
+else
+if and eq commas 2 eq c 47
+if eq k 0
+k = add i 1
+end
+end
+end
+i = add i 1
+end
+end
+end
+if or eq k 0 ge k n
+ret 0
+end
+c = get ob k
+if eq c 105
+ret 1
+end
+if eq c 99
+ret 2
+end
+ret 0
+end
+fn perfrd n ulong to void
+put cfg 10 0
+put cfg 11 0
+i = ulong 0
+while lt i n
+c = get ob i
+if and ge c 48 le c 57
+v = pnum i n
+k = pkind i n
+if eq k 1
+put cfg 10 add get cfg 10 v
+end
+if eq k 2
+put cfg 11 add get cfg 11 v
+end
+end
+going = true
+while and going lt i n
+if eq get ob i 10
+going = false
+end
+i = add i 1
+end
+end
+end
+
+note ---- packets for one (arm, case)
+fn binpath ai ulong ci ulong to void
+pbclr
+pbtext tbin
+pbarg ai
+pbtext tslash
+pbarg ci
+end
+fn pkrun ai ulong ci ulong perf ulong to void
+pkreset
+if eq perf 1
+pkt tperf
+pkt tstat
+pkt tx
+pkt tcomma
+pkt te
+pkt tev
+pkt tdo
+pkt tperfc
+pkt tdd
+end
+binpath ai ci
+pkpush
+end
+fn pkomc ci ulong to void
+pkreset
+pbclr
+pbarg get cfg 8
+pkpush
+ipclr
+iptext tsrc
+iparg ci
+iptext tdotom
+end
+fn pkgcc ai ulong ci ulong to void
+pkreset
+pkt tgcc
+pkt tbdir
+r = argread ai ab 0 len ab
+if lt r 2
+exit 2
+end
+pbclr
+pbtext tdash
+n = ulong r
+for i ulong sub n 1
+put pb add 1 i get ab add i 1
+end
+put pbn 0 n
+pkpush
+pkt tstatic
+pkt tdo
+pkt tbuild
+pbclr
+pbtext tsrc
+pbarg ci
+pbtext tdotc
+pkpush
+end
+
+note ---- rows
+fn rowhead tag ulong r ulong ci ulong ai ulong pos ulong to void
+if eq tag 0
+lbtext tT
+else
+if eq tag 1
+lbtext tP
+else
+lbtext tB
+end
+end
+w = get cfg 2
+lbnum r
+lbsp
+if lt r w
+lbnum 1
+else
+lbnum 0
+end
+lbsp
+lbarg ci
+lbsp
+lbarg ai
+lbsp
+lbnum pos
+lbsp
+end
+fn tally ok ulong ctl ulong to void
+put cnt 0 add get cnt 0 1
+if eq ctl 1
+if eq ok 1
+put cnt 4 add get cnt 4 1
+else
+put cnt 3 add get cnt 3 1
+end
+else
+if eq ok 1
+put cnt 1 add get cnt 1 1
+else
+put cnt 2 add get cnt 2 1
+end
+end
+end
+
+note ---- one timed run and one counted run of arm slot p
+fn dotime r ulong ci ulong p ulong nw ulong to void
+ax = get ord p
+ai = add get cfg 5 ax
+ctl = ulong 0
+if ge ax sub get cfg 4 get cfg 3
+ctl = 1
+end
+pkrun ai ci 0
+wall = runone 0
+sc = get gst 0
+no = slurpob 0
+ok = same no nw
+if ne sc 0
+ok = 0
+end
+rowhead 0 r ci ai p
+lbnum wall
+lbsp
+lbnum sc
+lbsp
+lbnum ok
+lbflush
+tally ok ctl
+end
+fn docount r ulong ci ulong p ulong nw ulong to void
+ax = get ord p
+if lt ax sub get cfg 4 get cfg 3
+ai = add get cfg 5 ax
+pkrun ai ci 1
+wall = runone 0
+sc = get gst 0
+no = slurpob 0
+ok = same no nw
+if ne sc 0
+ok = 0
+end
+np = slurpob 2
+if lt np 1048576
+perfrd np
+else
+put cfg 10 0
+put cfg 11 0
+ok = 0
+end
+rowhead 1 r ci ai p
+lbnum get cfg 10
+lbsp
+lbnum get cfg 11
+lbsp
+lbnum sc
+lbsp
+lbnum ok
+lbflush
+tally ok 0
+end
+end
+fn dobuild r ulong ci ulong p ulong to void
+ax = get ord p
+ai = add get cfg 5 ax
+r2 = argread ai ab 0 len ab
+if le r2 0
+exit 2
+end
+how = ulong 2
+if eq get ab 0 111
+pkomc ci
+how = 1
+else
+pkgcc ai ci
+end
+wall = runone how
+sc = get gst 0
+no = slurpob 1
+ipclr
+iptext tbin
+iparg ai
+iptext tslash
+iparg ci
+nw = slurpwb
+ok = same no nw
+if ne sc 0
+ok = 0
+end
+rowhead 2 r ci ai p
+lbnum wall
+lbsp
+lbnum sc
+lbsp
+lbnum ok
+lbflush
+tally ok 0
+end
+
+fn wantload ci ulong to ulong
+ipclr
+iptext twant
+iparg ci
+iptext tdotout
+ret slurpwb
+end
+fn oneround r ulong to void
+na = get cfg 4
+for c ulong get cfg 7
+ci = add get cfg 6 c
+shuffle na
+if eq get cfg 0 0
+nw = wantload ci
+for p ulong na
+dotime r ci p nw
+end
+for p ulong na
+docount r ci p nw
+end
+else
+for p ulong na
+dobuild r ci p
+end
+end
+end
+end
+
+fn setup to void
+if lt argcnt 8
+exit 2
+end
+r = argread 1 ab 0 len ab
+if lt r 1
+exit 2
+end
+if eq get ab 0 98
+put cfg 0 1
+else
+if ne get ab 0 114
+exit 2
+end
+put cfg 0 0
+end
+put cfg 1 argnum 2
+put cfg 2 argnum 3
+s = argnum 4
+if eq s 0
+exit 2
+end
+put rng 0 s
+if eq get cfg 0 0
+put cfg 3 argnum 5
+else
+put cfg 3 0
+put cfg 8 5
+end
+na = argnum 6
+if or eq na 0 gt na 64
+exit 2
+end
+put cfg 4 na
+put cfg 5 7
+put cfg 6 add 7 na
+ac = ulong argcnt
+if le ac add 7 na
+exit 2
+end
+put cfg 7 sub ac add 7 na
+if ge get cfg 3 na
+exit 2
+end
+end
+fn header to void
+lbtext tH
+if eq get cfg 0 0
+lbarg 1
+else
+lbarg 1
+end
+lbtext tseed
+lbarg 4
+lbtext trounds
+lbnum get cfg 1
+lbtext twarm
+lbnum get cfg 2
+lbflush
+end
+fn summary to int
+lbtext tS
+lbnum get cnt 0
+lbtext tok
+lbnum get cnt 1
+lbtext tfail
+lbnum get cnt 2
+lbtext tdet
+lbnum get cnt 3
+lbtext tmiss
+lbnum get cnt 4
+lbflush
+if or ne get cnt 2 0 ne get cnt 4 0
+ret 1
+end
+if and gt get cfg 3 0 eq get cnt 3 0
+ret 1
+end
+if eq get cnt 1 0
+ret 1
+end
+ret 0
+end
+fn main to int
+setup
+header
+for r ulong add get cfg 2 get cfg 1
+oneround r
+end
+ret summary
+end
