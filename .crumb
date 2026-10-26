@@ -60,7 +60,7 @@
         },
         {
           "digest": "4947c0eb38550826cdfaba5d08384f3ebd284b82ab456ecf276617ce2ef998fd",
-          "last_commit": "a50c3bd41",
+          "last_commit": "43f25831b",
           "name": "mk",
           "purpose": "Directory mk. Purpose not yet described by a human."
         },
@@ -77,14 +77,14 @@
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "048e516b279329e7ed8b84cd3505e55250e8892af1a90a81cb12f966c3c327c1",
+          "digest": "d1e785f39771d9f82da6bd196781e8aff566812f80e2d0c78099b9400dc2e75e",
           "last_commit": "450bbefd4",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
           "digest": "58a5b9d099a9fd790c35790b8ea679f5609e41f297ba7b8ce928dfd71fbc1f90",
-          "last_commit": "a50c3bd41",
+          "last_commit": "43f25831b",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
@@ -95,15 +95,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:574bb4cff4fbd929872923fe52fb42ecbb1f85a476d78b7100a47063a0d13847",
-      "compiled_at": "2026-10-26T06:50:20Z",
+      "children_root": "sha256:87d82a5414fb2b9ba2a52fca3ffa122907a943f23a050c4e66e3ac486854bd41",
+      "compiled_at": "2026-10-26T06:59:52Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:3f158e2868856da3e039a874b9b61a7a535467a00c45f066e172115fec2a8543",
+      "digest": "sha256:b0b48da79e97a7b961cc549041ae182d2563ae6e29e1992cd630fac5efab57db",
       "evidence_files": 12393,
       "evidence_root": "sha256:4b2988be5512f8a2b1f03b8b30c5d50ae0241f233eba6c76dac3aef9ccddb51e",
       "files": 16855,
-      "generated_at_commit": "dc1dc1e20ffa7a4df9679d1e6bfdc9382017ebbc",
-      "source_tree": "sha256:9c9eef789b1d67a3a0d466fb30267767360afcb7235677e469f2256f4b264c31"
+      "generated_at_commit": "0728cb0ae32f82110d86c310ebea0771024d316d",
+      "source_tree": "sha256:42444a387ccc98e54d3a3bed519543cd847506b5669389e67f379a5341e3dcbf"
     },
     "owner_lane": "",
     "provenance": {

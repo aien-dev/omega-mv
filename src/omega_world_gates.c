@@ -1822,7 +1822,19 @@ static bool test_m19_gate16_clean_clone(void) {
                        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
                        checkout, checkout, src_sha, physics_dir_resolved, clone);
     if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    if (system(command) != 0) return false;
+    if (system(command) != 0) {
+        /* The nested clone builds and runs into qualification.log. A failure here used to report
+         * only "[FAIL]" with no reason while the log stayed inside the runner's temp directory.
+         * Echo the tail to stderr, which the gate runner captures into the evidence record. */
+        fprintf(stderr, "M19 gate 16: nested build or nested run failed; tail of %s/qualification.log:\n", clone);
+        char tail[1200];
+        int tl = snprintf(tail, sizeof(tail), "tail -n 40 %s/qualification.log 2>/dev/null >&2", clone);
+        if (tl > 0 && (size_t)tl < sizeof(tail)) {
+            int tr = system(tail);
+            (void)tr;
+        }
+        return false;
+    }
 
     /* The built checkout must be exactly the named candidate revision. */
     char clone_sha[41] = {0};
