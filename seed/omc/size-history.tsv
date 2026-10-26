@@ -7,3 +7,4 @@ RM2-contracts	executable pure contracts, debug checks and release erasure	11505	
 RM2-contract-diagnostics	explicit proof and release decisions, contract obligation and source sites	11555	390	77279	3d2b7411b8a2ba1a3e770e70fd7c9be22100357c51206f2e90a80df826c30fa3
 RM2-capacity-f32	batch: 4096 functions, 8192 names, 524288 call sites per unit (#768); void return code 12 so to f32 returns values (#812); contracts (#807)	11555	390	77512	189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54
 RM-batch2	batch 2: function-mode const (#806), flock 197 (#805), peercred/pollfds/sendmsg 220-222 and getppid 173 (#808), IR v1 validation (#810), saturating float-to-int casts and const order (#815)	12040	405	81337	2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+RM-fpvreg	f64/f32 names in V registers (v16+j twins), FMOV immediates, STR/LDR D across calls (#853)	12322	413	83490	0d0062075f6e25f94bd8e82dc24688191fdd2e8cba232fb360594213e4bb2553

@@ -27,8 +27,8 @@ units before it. The composed unit is OM-2 (a leading `om2` line), and the libra
 | `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
 | `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 105 |
 
-The total is 340 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
-the ec, rsa and x509 suites check) allows 4095 functions per unit, as `189ada82` did.
+The total is 340 functions. omc at `0d006207` (the #853 float-register pin, `OMC_PIN` in `om/units.sh`,
+which the ec, rsa and x509 suites check) allows 4095 functions per unit, as `2c824805` and `189ada82` did.
 
 ## Client API (`tls.om`)
 
