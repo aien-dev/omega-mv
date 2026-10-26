@@ -1,0 +1,157 @@
+# free-compute-probe: records the CPU of each free GitHub-hosted runner and runs Omega's existing
+# CPU suites where the pinned omc has a target (AArch64 Linux only; x86-64 is OM_COMPLETION FR-9,
+# absent). Scratch branch only, never merged. Every result is labelled PASS/FAIL/NOT_RUN/EMULATED.
+name: free-compute-probe
+on:
+  push:
+    branches: ["freecompute/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  OMC_PIN: 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+  PR821_HEAD: 44a5ca0a73da318f057a854b0f5f98d8f08eb8e0
+jobs:
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: machine
+        run: |
+          mkdir -p probe
+          { echo "runner=ubuntu-24.04-arm source=$(git rev-parse HEAD)"; uname -a; nproc; lscpu; free -h
+            grep -m1 -E 'Features' /proc/cpuinfo; sed -n 1,12p /proc/cpuinfo; } | tee probe/machine.txt
+      - name: omc pin
+        run: |
+          file seed/out/omc | tee probe/omc.txt
+          h=$(sha256sum seed/out/omc | cut -d' ' -f1); echo "omc sha256=$h expected=$OMC_PIN" | tee -a probe/omc.txt
+          test "$h" = "$OMC_PIN"
+      - name: oracle packages (spirv-val, PoCL)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq spirv-tools pocl-opencl-icd ocl-icd-opencl-dev opencl-headers > /dev/null
+          find /usr/lib -name 'libpocl.so*' | tee probe/pocl.txt
+          dpkg -l pocl-opencl-icd spirv-tools | tail -2 | tee -a probe/pocl.txt
+      - name: irspirv gate, main's script (CPU via PoCL)
+        run: |
+          set +e
+          POCL_LIBRARY=$(find /usr/lib -name 'libpocl.so*' -type f | sort | head -1) sh seed/spirv/gate-irspirv.sh > probe/irspirv-main.log 2>&1
+          echo "RC=$?" | tee -a probe/irspirv-main.log; tail -5 probe/irspirv-main.log
+      - name: irspirv gate, PR 821 script (pin 2c824805)
+        run: |
+          set +e
+          git fetch -q --depth 1 origin "$PR821_HEAD"
+          git show "$PR821_HEAD:seed/spirv/gate-irspirv.sh" > seed/spirv/gate-irspirv-pr821.sh
+          POCL_LIBRARY=$(find /usr/lib -name 'libpocl.so*' -type f | sort | head -1) sh seed/spirv/gate-irspirv-pr821.sh > probe/irspirv-pr821.log 2>&1
+          echo "RC=$?" | tee -a probe/irspirv-pr821.log; tail -12 probe/irspirv-pr821.log
+          cp build/seed/spirv/gate.log probe/irspirv-pr821.gate.log 2>/dev/null || true
+      - name: seed suite (tests/gates/run.sh seed)
+        run: |
+          set +e
+          start=$(date +%s)
+          bash tests/gates/run.sh seed > probe/seed.log 2>&1
+          rc=$?; echo "RC=$rc seconds=$(( $(date +%s) - start ))" | tee -a probe/seed.log
+          grep -cE '^PASS' probe/seed.log | sed 's/^/PASS_lines=/' | tee -a probe/seed.log
+          grep -E '^(FAIL|SKIP|NOT_RUN)' probe/seed.log | head -20
+          tail -15 probe/seed.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: linux-arm64, path: probe/}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: spirv-arm64-build, path: build/seed/spirv/, if-no-files-found: ignore}
+
+  linux-x64:
+    runs-on: ubuntu-24.04
+    needs: linux-arm64
+    if: always()
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: machine
+        run: |
+          mkdir -p probe
+          { echo "runner=ubuntu-24.04 source=$(git rev-parse HEAD)"; uname -a; nproc; lscpu; free -h; } | tee probe/machine.txt
+          { file seed/out/omc; echo "native target: NOT_RUN (omc emits AArch64 Linux ELF only; x86-64 backend absent, docs/one_layer/OM_COMPLETION.md FR-9)"; } | tee probe/omc.txt
+      - name: packages (PoCL, spirv-val, qemu-user)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq spirv-tools pocl-opencl-icd ocl-icd-opencl-dev opencl-headers qemu-user-static binfmt-support > /dev/null
+          find /usr/lib -name 'libpocl.so*' | tee probe/pocl.txt
+          dpkg -l pocl-opencl-icd qemu-user-static | tail -2 | tee -a probe/pocl.txt
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: {name: spirv-arm64-build, path: build/seed/spirv/}
+      - name: cross-ISA SPIR-V parity (arm64-built modules + arm64 native dumps vs x86-64 PoCL)
+        run: |
+          set +e
+          B=build/seed/spirv; L=probe/spirv-x64.log; : > $L
+          if ! ls $B/*.spv > /dev/null 2>&1; then echo "NOT_RUN no arm64 SPIR-V artifact" | tee -a $L; exit 0; fi
+          lib=$(find /usr/lib -name 'libpocl.so*' -type f | sort | head -1)
+          cc -std=c11 -O2 -Wall -Wextra "-DIRSPIRV_POCL_LIBRARY=\"$lib\"" seed/spirv/opencl-host.c -o /tmp/opencl-host-x64 -lOpenCL || { echo "FAIL host build" | tee -a $L; exit 1; }
+          n=0; bad=0
+          for m in $B/*.spv; do n=$((n+1)); spirv-val --target-env opencl2.1 "$m" > /dev/null 2>&1 || { bad=$((bad+1)); echo "spirv-val rejected $m" | tee -a $L; }; done
+          echo "spirv-val x64 modules=$n rejected=$bad" | tee -a $L
+          rm -f $B/*-spirv-parity.tsv $B/*.spirv.out $B/*.spirv.err
+          for t in "seed/wasm/cases.tsv case" "seed/spirv/demo.tsv demo-case" "seed/spirv/regression.tsv regression-case"; do
+            set -- $t
+            python3 seed/spirv/parity.py $B $1 /tmp/opencl-host-x64 $2 > probe/parity-$2.log 2>&1; rc=$?
+            m=$(grep -c "$(printf '\t')match\$" $B/$2-spirv-parity.tsv 2>/dev/null)
+            echo "PARITY table=$1 rc=$rc matched=$m" | tee -a $L
+          done
+          python3 seed/spirv/parity.py $B seed/wasm/cases.tsv /tmp/opencl-host-x64 case --mutant-baseline > probe/parity-negative.log 2>&1; rc=$?
+          echo "NEGATIVE_CONTROL mutant-baseline rc=$rc (expect 1) mismatches=$(grep -c '^result mismatch' probe/parity-negative.log)" | tee -a $L
+          sed -n 1p $B/case-1.spirv.err | sed 's/^/RUNTIME /' | tee -a $L
+      - name: EMULATED seed birth under qemu-aarch64 (not a native x86-64 result)
+        timeout-minutes: 25
+        run: |
+          set +e
+          start=$(date +%s)
+          sh seed/omega-from-seed.sh > probe/seed-birth-qemu.log 2>&1
+          echo "EMULATED RC=$? seconds=$(( $(date +%s) - start ))" | tee -a probe/seed-birth-qemu.log
+          tail -12 probe/seed-birth-qemu.log
+          sha256sum seed/out/omc | tee -a probe/seed-birth-qemu.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: linux-x64, path: probe/}
+
+  macos-arm64:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: machine and target
+        run: |
+          mkdir -p probe
+          { echo "runner=macos-latest source=$(git rev-parse HEAD)"; uname -a; sw_vers
+            sysctl -n machdep.cpu.brand_string hw.model hw.ncpu hw.memsize hw.optional.arm64 2>&1
+            system_profiler SPDisplaysDataType 2>/dev/null | sed -n 1,15p
+            file seed/out/omc
+            set +e; ./seed/out/omc < /dev/null > /dev/null 2> /tmp/exec.err; echo "exec rc=$? $(cat /tmp/exec.err)"
+            echo "native target: NOT_RUN (omc emits Linux AArch64 ELF; no Mach-O backend)"; } 2>&1 | tee probe/machine.txt
+      - uses: actions/upload-artifact@v4
+        with: {name: macos-arm64, path: probe/}
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix: {os: [windows-latest, windows-11-arm]}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: machine and target
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force probe | Out-Null
+          & {
+            "runner=${{ matrix.os }} source=$(git rev-parse HEAD)"
+            Get-CimInstance Win32_Processor | Format-List Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed | Out-String
+            Get-CimInstance Win32_OperatingSystem | Format-List Caption,Version,OSArchitecture | Out-String
+            Get-CimInstance Win32_VideoController | Format-List Name,DriverVersion | Out-String
+            "omc header: " + ((Get-Content seed/out/omc -AsByteStream -TotalCount 20 | ForEach-Object { $_.ToString('x2') }) -join ' ')
+            "native target: NOT_RUN (omc emits Linux AArch64 ELF; no PE/COFF backend)"
+          } | Tee-Object probe/machine.txt
+      - uses: actions/upload-artifact@v4
+        with: {name: "${{ matrix.os }}", path: probe/}
