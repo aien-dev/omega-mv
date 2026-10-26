@@ -8,7 +8,8 @@
 ifndef TURING_QRECORD_MK
 TURING_QRECORD_MK := 1
 .PHONY: test-turing-qrecord
-TYQR_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+TYQR_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Wno-pedantic
 TYQR_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TYQR_SRCS = src/turing/ty_qrecord.c src/turing/ty_record.c src/turing/ty_math.c src/turing/ty_ctr1.c \
 	src/turing/ty_model.c src/turing/ty_profile.c src/omega_canonical.c src/omega_om_units.c

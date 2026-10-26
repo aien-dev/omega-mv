@@ -5,14 +5,16 @@ PHYSICS0_PLANNER_MK := 1
 .PHONY: test-physics0-planner p0p-purity physics0-planner-eff physics0-planner-eff2
 
 P0P_COMMIT := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
 P0P_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -ffp-contract=off -fno-fast-math \
-  -Isrc -Isrc/physics0/ladder -Isrc/physics0/planner -Itests/physics0/planner
+  -Isrc -Isrc/physics0/ladder -Isrc/physics0/planner -Itests/physics0/planner -Wno-pedantic
 P0P_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 # planner objects: verifier formats only, no generator, no world
 P0P_SRCS = src/physics0/planner/pd0_planner.c src/physics0/ladder/pd0_fmt.c src/omega_om_units.c
 P0P_HDRS = src/physics0/planner/pd0_planner.h src/physics0/ladder/pd0_fmt.h src/physics0/ladder/pd0_rng.h
 # bridge object: substrate formats, links the generator on purpose (harness side)
-P0P_BRIDGE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itests/physics0/planner
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+P0P_BRIDGE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itests/physics0/planner -Wno-pedantic
 P0P_BRIDGE_SRCS = tests/physics0/planner/pd0p_bridge.c src/physics0/pd0_gen.c src/physics0/pd0_world.c src/physics0/pd0_guard.c \
   src/physics0/pd0_wire.c src/physics0/pd0_rng.c src/physics0/pd0_relation.c src/physics0/pd0_chan.c
 P0P_DIR = $(OUT_DIR)/tests-physics0-planner

@@ -9,7 +9,8 @@
 # turing-exp001-envelope TC_DATA=<dir with seed-N/control/trace.ctr>: overhead
 # measurement on dev seeds 1-7 (not part of the test target; ~10 GB RAM peak).
 .PHONY: test-turing-exp001-coders turing-exp001-envelope turing-coder
-TC_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+TC_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Wno-pedantic
 TC_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TC_CODER_SRCS = src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/turing/ty_math.c src/omega_om_units.c
 TC_CODER_HDRS = src/turing/tc_pstream.h src/turing/tc_range.h src/turing/tc_rans.h src/turing/ty_math.h src/sha256.h

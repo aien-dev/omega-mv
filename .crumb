@@ -59,7 +59,7 @@
           "purpose": "Directory doctrine. Purpose not yet described by a human."
         },
         {
-          "digest": "f8a91cb4d4d56a11bd6505a855e425e98c70baa0a331fd4106336d56eda1a957",
+          "digest": "4947c0eb38550826cdfaba5d08384f3ebd284b82ab456ecf276617ce2ef998fd",
           "last_commit": "a50c3bd41",
           "name": "mk",
           "purpose": "Directory mk. Purpose not yet described by a human."
@@ -83,7 +83,7 @@
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "04f66215c874f43e25936ecbf410e63b239f16b504a58d9374170c05c7fecbf4",
+          "digest": "58a5b9d099a9fd790c35790b8ea679f5609e41f297ba7b8ce928dfd71fbc1f90",
           "last_commit": "a50c3bd41",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
@@ -95,15 +95,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:dc56150921d3d14e0ce550d8ed96379fc641d15d8fb1e681f79d44af174c74d0",
-      "compiled_at": "2026-10-26T06:11:55Z",
+      "children_root": "sha256:574bb4cff4fbd929872923fe52fb42ecbb1f85a476d78b7100a47063a0d13847",
+      "compiled_at": "2026-10-26T06:50:20Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:ebb26047fa6816b496f0b16c3b943a12153a8baa647df6132cdbe640d5c5c724",
+      "digest": "sha256:3f158e2868856da3e039a874b9b61a7a535467a00c45f066e172115fec2a8543",
       "evidence_files": 12393,
       "evidence_root": "sha256:4b2988be5512f8a2b1f03b8b30c5d50ae0241f233eba6c76dac3aef9ccddb51e",
       "files": 16855,
-      "generated_at_commit": "a50c3bd4153679981e943f1354a1ccf1a4977bbf",
-      "source_tree": "sha256:71def36f1afc027fad4c614bd3ed39783c183a0fd17b0a79fa8a79b9db7032a8"
+      "generated_at_commit": "dc1dc1e20ffa7a4df9679d1e6bfdc9382017ebbc",
+      "source_tree": "sha256:9c9eef789b1d67a3a0d466fb30267767360afcb7235677e469f2256f4b264c31"
     },
     "owner_lane": "",
     "provenance": {
