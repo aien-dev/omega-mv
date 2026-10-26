@@ -1,0 +1,364 @@
+Derived trace: operator home paths redacted; raw sha256 c37da361961b77f438fabe005d3c238fc11fbfe15817254cb597f3863a9e10fb
+863353 execve("build/seed/spirv/opencl-host", ["build/seed/spirv/opencl-host", "build/seed/spirv/demo.spv", "avgu32", "7", "10"], 0xffffe3cd6c48 /* 78 vars */) = 0
+863353 faccessat(AT_FDCWD, "/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libOpenCL.so.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+863353 openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "build/seed/spirv/demo.spv", O_RDONLY) = 3
+863353 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0", {st_mode=S_IFREG|0644, st_size=1769480, ...}, 0) = 0
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libLLVMSPIRVLib.so.18.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libclang-cpp.so.18.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libLLVM.so.18.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libstdc++.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/lib/libstdc++.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+863353 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/lib/", {st_mode=S_IFDIR|0755, st_size=20480, ...}, 0) = 0
+863353 openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libstdc++.so.6", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/libgcc_s.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/lib/libgcc_s.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libgcc_s.so.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/../lib/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+863353 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/aarch64-linux-gnu/../lib/", 0xffffc040f0c0, 0) = -1 ENOENT (No such file or directory)
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libffi.so.8", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libedit.so.2", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libzstd.so.1", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libtinfo.so.6", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libxml2.so.2", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libbsd.so.0", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libicuuc.so.74", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/liblzma.so.5", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libmd.so.0", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libicudata.so.74", O_RDONLY|O_CLOEXEC) = 3
+863353 newfstatat(AT_FDCWD, "/dev/null", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1, 0x3), ...}, 0) = 0
+863353 mkdirat(AT_FDCWD, "/home", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache", 0700) = -1 EEXIST (File exists)
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/pocl/libpocl-devices-basic.so", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/pocl/libpocl-devices-pthread.so", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/proc/cpuinfo", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "/sys/devices/system/cpu/cpu0/cache/index3/size", O_RDONLY) = 3
+863353 openat(AT_FDCWD, "/proc/meminfo", O_RDONLY) = 3
+863353 openat(AT_FDCWD, "/sys/devices/system/cpu/possible", O_RDONLY) = 3
+863353 faccessat(AT_FDCWD, "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", R_OK) = 0
+863353 openat(AT_FDCWD, "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", O_RDONLY) = 3
+863353 faccessat(AT_FDCWD, "/proc/cpuinfo", R_OK) = 0
+863353 openat(AT_FDCWD, "/proc/cpuinfo", O_RDONLY) = 3
+863377 openat(AT_FDCWD, "/sys/devices/system/cpu/online", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_dX14EL.spirv", O_RDWR|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+863353 unlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_dX14EL.spirv", 0) = 0
+863353 mkdirat(AT_FDCWD, "/home", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache", 0700) = -1 EEXIST (File exists)
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ", 0700) = 0
+863353 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM", 0700) = 0
+863353 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/program.bc", R_OK) = -1 ENOENT (No such file or directory)
+863353 faccessat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/../share/pocl/kernel-aarch64-unknown-linux-gnu-cortex-a720.bc", R_OK) = 0
+863353 openat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/../share/pocl/kernel-aarch64-unknown-linux-gnu-cortex-a720.bc", O_RDONLY|O_CLOEXEC) = 3
+863353 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/program.bc_6zxxeN.temp", O_RDWR|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+863353 renameat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/program.bc_6zxxeN.temp", AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/program.bc") = 0
+863353 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/last_accessed", O_WRONLY|O_CREAT|O_TRUNC, 0666) = 3
+863353 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/build.log", R_OK) = -1 ENOENT (No such file or directory)
+863353 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/build.log", R_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so", R_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so", R_OK) = -1 ENOENT (No such file or directory)
+863384 mkdirat(AT_FDCWD, "/home", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM", 0700) = -1 EEXIST (File exists)
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32", 0700) = 0
+863384 mkdirat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid", 0700) = 0
+863384 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so", R_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so", R_OK) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_QhZLp2.so.o", O_RDWR|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+863384 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", O_RDWR|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = 3
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/aarch64-unknown-linux-gnu-clang.cfg", 0xf8a4abff7ad0, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/clang.cfg", 0xf8a4abff7ad0, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/aarch64-unknown-linux-gnu.cfg", 0xf8a4abff7ad0, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/lib/clang/18/lib/aarch64-unknown-linux-gnu", 0xf8a4abff7760, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib/aarch64-unknown-linux-gnu", 0xf8a4abff7760, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/lib/clang/18/lib/aarch64-unknown-linux-gnu", 0xf8a4abff7b40, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/lib/clang/18/lib/linux/aarch64", 0xf8a4abff7b40, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/opt/rh", 0xf8a4abff6f40, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/etc/env.d/gcc", 0xf8a4abff7620, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/..", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib64", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib", {st_mode=S_IFDIR|0755, st_size=20480, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib/gcc", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib/gcc-cross", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib64", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib", {st_mode=S_IFDIR|0755, st_size=20480, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib/gcc", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib/gcc-cross", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib64", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc-cross", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-unknown-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-unknown-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/64/crtbegin.o", 0xf8a4abff6460, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/sparcv8plus/crtbegin.o", 0xf8a4abff6460, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/crtbegin.o", {st_mode=S_IFREG|0644, st_size=3280, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/64/crtbegin.o", 0xf8a4abff6380, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/32/crtbegin.o", 0xf8a4abff6380, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/x32/crtbegin.o", 0xf8a4abff6380, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/sparcv8plus/crtbegin.o", 0xf8a4abff6380, 0) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-none-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-none-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-redhat-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-redhat-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-suse-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-suse-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib64", 0xf8a4abff7770, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc-cross", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-none-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-none-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-redhat-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-redhat-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-suse-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/aarch64-suse-linux", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc/arm-unknown-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/usr/lib/gcc-cross/arm-unknown-linux-gnu", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+863384 openat(AT_FDCWD, "/etc/os-release", O_RDONLY|O_CLOEXEC) = 3
+863384 faccessat(AT_FDCWD, "/proc/self/fd", R_OK) = 0
+863384 readlinkat(AT_FDCWD, "/proc/self/fd/3", "/usr/lib/os-release", 4096) = 19
+863384 openat(AT_FDCWD, "/etc/lsb-release", O_RDONLY|O_CLOEXEC) = 3
+863384 readlinkat(AT_FDCWD, "/proc/self/fd/3", "/etc/lsb-release", 4096) = 16
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/../lib64", 0xf8a4abff7c70, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/../../../../aarch64-linux-gnu/lib/../lib64", 0xf8a4abff7c70, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/../../../../lib64", 0xf8a4abff7c70, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/lib/aarch64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=131072, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/lib/../lib64", 0xf8a4abff7df0, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/aarch64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=131072, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib/../lib64", 0xf8a4abff7df0, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/../../../../aarch64-linux-gnu/lib", 0xf8a4abff7cb0, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/../lib/libc++.so", 0xf8a4abff7e50, 0) = -1 ENOENT (No such file or directory)
+863384 newfstatat(AT_FDCWD, "/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_QhZLp2.so.o", {st_mode=S_IFREG|0600, st_size=15120, ...}, 0) = 0
+863384 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0", {st_mode=S_IFREG|0644, st_size=1769480, ...}, 0) = 0
+863384 faccessat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/../../../../aarch64-linux-gnu/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cargo/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.npm-global/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.opencode/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.kimi-code/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.opencode/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/max-env/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.grok/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cargo/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.npm-global/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.npm-global/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/cuda/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/opt/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/sbin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/sbin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/sbin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/games/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/games/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/snap/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.lmstudio/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.radicle/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.lmstudio/bin/aarch64-unknown-linux-gnu-ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/tmp/spirv-tools-root/root/usr/lib/llvm-18/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/../../../../aarch64-linux-gnu/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cargo/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.npm-global/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.opencode/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.kimi-code/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.opencode/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/max-env/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.grok/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.cargo/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.npm-global/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "[operator-home]/.npm-global/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/cuda/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/opt/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/sbin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/local/bin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/sbin/ld", R_OK|X_OK) = -1 ENOENT (No such file or directory)
+863384 faccessat(AT_FDCWD, "/usr/bin/ld", R_OK|X_OK) = 0
+863384 newfstatat(AT_FDCWD, "/usr/bin/ld", {st_mode=S_IFREG|0755, st_size=1710520, ...}, 0) = 0
+863384 faccessat(AT_FDCWD, "/usr/bin/ld", F_OK) = 0
+863761 execve("/usr/bin/ld", ["/usr/bin/ld", "-EL", "-z", "relro", "--hash-style=gnu", "--build-id", "--eh-frame-hdr", "-m", "aarch64linux", "-shared", "-o", "[operator-home]/.cache/pocl"..., "-L/usr/lib/gcc/aarch64-linux-gnu"..., "-L/lib/aarch64-linux-gnu", "-L/usr/lib/aarch64-linux-gnu", "-L/lib", "-L/usr/lib", "[operator-home]/.cache/pocl"..., "/tmp/spirv-tools-root/pocl/lib/l"..., "-lgcc", "--as-needed", "-lgcc_s", "--no-as-needed", "-lc", "-lgcc", "--as-needed", "-lgcc_s", "--no-as-needed"], 0xffffc0410d88 /* 75 vars */) = 0
+863761 faccessat(AT_FDCWD, "/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libbfd-2.42-system.so", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libctf.so.0", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libjansson.so.4", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libzstd.so.1", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libsframe.so.1", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/usr/lib/aarch64-linux-gnu/gconv/gconv-modules.cache", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/usr/share/locale/locale.alias", O_RDONLY|O_CLOEXEC) = 3
+863761 openat(AT_FDCWD, "/usr/share/locale/en_US.utf8/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale/en_US/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale/en.utf8/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale/en/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale-langpack/en_US.utf8/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale-langpack/en_US/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale-langpack/en.utf8/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/share/locale-langpack/en/LC_MESSAGES/ld.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 readlinkat(AT_FDCWD, "/home", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "/home", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_QhZLp2.so.o", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "/tmp", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "/tmp/spirv-tools-root", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "/tmp/spirv-tools-root/pocl", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 readlinkat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0", 0xfffff315b830, 1023) = -1 EINVAL (Invalid argument)
+863761 getcwd("/tmp/omega-spirv", 1024) = 17
+863761 readlinkat(AT_FDCWD, "/tmp/omega-spirv/-lgcc", 0xfffff315b830, 1023) = -1 ENOENT (No such file or directory)
+863761 getcwd("/tmp/omega-spirv", 1024) = 17
+863761 readlinkat(AT_FDCWD, "/tmp/omega-spirv/-lgcc_s", 0xfffff315b830, 1023) = -1 ENOENT (No such file or directory)
+863761 getcwd("/tmp/omega-spirv", 1024) = 17
+863761 readlinkat(AT_FDCWD, "/tmp/omega-spirv/-lc", 0xfffff315b830, 1023) = -1 ENOENT (No such file or directory)
+863761 getcwd("/tmp/omega-spirv", 1024) = 17
+863761 readlinkat(AT_FDCWD, "/tmp/omega-spirv/-lgcc", 0xfffff315b830, 1023) = -1 ENOENT (No such file or directory)
+863761 getcwd("/tmp/omega-spirv", 1024) = 17
+863761 readlinkat(AT_FDCWD, "/tmp/omega-spirv/-lgcc_s", 0xfffff315b830, 1023) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", {st_mode=S_IFREG|0600, st_size=0, ...}, 0) = 0
+863761 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", O_RDWR|O_CREAT|O_TRUNC, 0666) = 3
+863761 newfstatat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_QhZLp2.so.o", {st_mode=S_IFREG|0600, st_size=15120, ...}, 0) = 0
+863761 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_QhZLp2.so.o", O_RDONLY) = 4
+863761 newfstatat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0", {st_mode=S_IFREG|0644, st_size=1769480, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0", O_RDONLY) = 5
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", 0xfffff315ca38, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", {st_mode=S_IFREG|0644, st_size=3099922, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", O_RDONLY) = 6
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", {st_mode=S_IFREG|0644, st_size=132, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", O_RDONLY) = 7
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", O_RDONLY) = 8
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", O_RDONLY) = 7
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", 0xfffff315ca48, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "libgcc_s.so.1", 0xfffff315c9f8, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "libgcc_s.so.1", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", 0xfffff315c9f8, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/lib/aarch64-linux-gnu/libgcc_s.so.1", {st_mode=S_IFREG|0644, st_size=133696, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libgcc_s.so.1", O_RDONLY) = 7
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", 0xfffff315c9b8, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", {st_mode=S_IFREG|0644, st_size=3099922, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", O_RDONLY) = 8
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libc.so", 0xfffff315ca38, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libc.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libc.a", 0xfffff315ca78, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libc.a", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so", {st_mode=S_IFREG|0644, st_size=291, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so", O_RDONLY) = 9
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so", O_RDONLY) = 10
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so", O_RDONLY) = 9
+863761 newfstatat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so.6", {st_mode=S_IFREG|0755, st_size=1722920, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libc.so.6", O_RDONLY) = 9
+863761 newfstatat(AT_FDCWD, "/usr/lib/aarch64-linux-gnu/libc_nonshared.a", {st_mode=S_IFREG|0644, st_size=5426, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/aarch64-linux-gnu/libc_nonshared.a", O_RDONLY) = 10
+863761 newfstatat(AT_FDCWD, "/lib/ld-linux-aarch64.so.1", {st_mode=S_IFREG|0755, st_size=203968, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/lib/ld-linux-aarch64.so.1", O_RDONLY) = 11
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", 0xfffff315ca38, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", {st_mode=S_IFREG|0644, st_size=3099922, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", O_RDONLY) = 12
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", {st_mode=S_IFREG|0644, st_size=132, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", O_RDONLY) = 13
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", O_RDONLY) = 14
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so", O_RDONLY) = 13
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", 0xfffff315ca48, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "libgcc_s.so.1", 0xfffff315c9f8, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "libgcc_s.so.1", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", 0xfffff315c9f8, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc_s.so.1", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/lib/aarch64-linux-gnu/libgcc_s.so.1", {st_mode=S_IFREG|0644, st_size=133696, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/lib/aarch64-linux-gnu/libgcc_s.so.1", O_RDONLY) = 13
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", 0xfffff315c9b8, 0) = -1 ENOENT (No such file or directory)
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+863761 newfstatat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", {st_mode=S_IFREG|0644, st_size=3099922, ...}, 0) = 0
+863761 openat(AT_FDCWD, "/usr/lib/gcc/aarch64-linux-gnu/13/libgcc.a", O_RDONLY) = 14
+863761 newfstatat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", {st_mode=S_IFREG|0600, st_size=73448, ...}, 0) = 0
+863761 fchmodat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", 0711) = 0
+863761 +++ exited with 0 +++
+863384 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=863761, si_uid=1000, si_status=0, si_utime=0, si_stime=1 /* 0.01 s */} ---
+863384 renameat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so_ehIYdn.so", AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so") = 0
+863384 unlinkat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/tempfile_QhZLp2.so.o", 0) = 0
+863384 openat(AT_FDCWD, "[operator-home]/.cache/pocl/kcache/IJ/CCMIHKKKMNAJCMGJPEFKMDLEKHAJJICIOMMFM/avgu32/1-1-1-goffs0-smallgrid/avgu32.so", O_RDONLY|O_CLOEXEC) = 3
+863388 +++ exited with 0 +++
+863387 +++ exited with 0 +++
+863385 +++ exited with 0 +++
+863384 +++ exited with 0 +++
+863382 +++ exited with 0 +++
+863381 +++ exited with 0 +++
+863376 +++ exited with 0 +++
+863374 +++ exited with 0 +++
+863373 +++ exited with 0 +++
+863371 +++ exited with 0 +++
+863370 +++ exited with 0 +++
+863369 +++ exited with 0 +++
+863368 +++ exited with 0 +++
+863389 +++ exited with 0 +++
+863383 +++ exited with 0 +++
+863379 +++ exited with 0 +++
+863372 +++ exited with 0 +++
+863380 +++ exited with 0 +++
+863378 +++ exited with 0 +++
+863375 +++ exited with 0 +++
+863377 +++ exited with 0 +++
+863353 +++ exited with 0 +++

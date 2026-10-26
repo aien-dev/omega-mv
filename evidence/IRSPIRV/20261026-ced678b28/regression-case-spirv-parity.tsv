@@ -1,0 +1,9 @@
+case	unit	function	canonical_args	native_status	native_bits	spirv_status	spirv_bits	verdict
+1	traps	failval	0	105	0	105	0	match
+2	traps	failval	7	0	7	0	7	match
+3	traps	nestedfail	0	105	0	105	0	match
+4	traps	nestedfail	7	0	7	0	7	match
+5	traps	failvoid	0	106	0	106	0	match
+6	traps	failvoid	7	0	0	0	0	match
+7	traps	nestedvoid	0	106	0	106	0	match
+8	traps	nestedvoid	7	0	7	0	7	match

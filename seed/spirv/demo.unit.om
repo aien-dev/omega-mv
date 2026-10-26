@@ -1,0 +1,4 @@
+note Demo kernel for the OpenCL host: floor average of two uint values without overflow.
+fn avgu32 a uint b uint to uint
+ret add and a b shr xor a b uint 1
+end

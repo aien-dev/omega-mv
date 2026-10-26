@@ -278,6 +278,26 @@ pools retain the native 1 GiB aggregate limit and local arrays the native
 4 MiB aggregate limit. Backend input/output limits remain independently
 enforced; an unsupported size is a capacity refusal, never truncation.
 
+Sections 3 through 7 remain the complete rules for versions 1..5. For
+version 7, this section extends them: tags 13/14 and opcodes 30..33 are
+admitted only in v7. In a v1..5 unit those bytes remain RANGE, exactly as
+before. Version 7 carries the historical tag/opcode set unchanged, but this
+profile's seeded backends refuse references, slices, allocation, arena,
+pool and struct operations (opcodes 7, 8, 16..29 and tags 10..12) with
+UNSUPPORTED_OP or UNSUPPORTED_TAG. A complete v7 input is at most
+8,388,608 bytes, checked before parsing; a backend may set a smaller
+documented input capacity and refuse beyond it.
+
+Reader classes are applied in byte order. An unknown storage class or an
+element tag outside 2..9/13/14 is INVALID; class 3 is UNSUPPORTED_OP. A
+name that is empty, over 63 bytes, contains NUL, is non-ASCII or contains
+a dot is INVALID. Initial data for classes 0/1, a mismatched text length,
+count 0 for a mutable region, a count over 16,777,216, or more than 1024
+regions is INVALID. Owner validity and duplicate/shadowing names are
+checked after the function table is read and are INVALID. Every region or
+register operand outside its table, including 0x8000..0xFFFF, is INVALID.
+An f32 constant or initializer with a nonzero upper half is INVALID.
+
 | Class | Meaning | Owner and initialization |
 |---|---|---|
 | 0 | Module-private mutable global | owner 65535; no initial data; zero-filled once per module instance |
@@ -329,7 +349,8 @@ Indices have an integer tag 2..9, never bool or float. Signed negative indices
 and indices greater than or equal to count trap with Omega bounds trap 3
 (native exit 103). Bounds are checked before multiplication, addition,
 pointer formation or narrowing to a wasm32 address. An invalid operation
-does not read or write its target element. Earlier side effects remain.
+does not read or write its target element. Earlier side effects remain,
+including partial writes to module memory before a trap.
 RSTORE into read-only storage is invalid IR, not a silently ignored store.
 Index and source registers participate in definite-assignment validation.
 
@@ -337,7 +358,8 @@ There is no unchecked access mode in this profile. An explicit source bounds
 test can select a nontrapping path, but it does not disable checks on the
 access. The backend may eliminate a check only when it proves the same
 in-bounds condition. Whole-linear-memory wasm bounds checks alone are
-insufficient: crossing into the next region must still trap.
+insufficient: crossing into the next region must still trap. Module,
+text and per-function local backing ranges are pairwise disjoint.
 
 Arrays use packed element widths: u8/i8 one byte, u16/i16 two, u32/i32/f32
 four, u64/i64/f64 eight. Each region starts at an address aligned to its
@@ -360,7 +382,9 @@ function; its initializer register has exactly the element type and must
 be definitely assigned. It fills every element with that scalar's bits,
 without conversion. An initialization bit for each local region starts
 false at function entry; RINIT sets it true only after the complete fill.
-Control-flow joins intersect predecessor states, and both
+A local region is initialized at a block exactly when every path from the
+function entry to that block passes RINIT for it. Unreachable blocks are
+still validated, starting with all local-region bits false. Both
 RLOAD and RSTORE require the target local region's bit to be true.
 Thus declaration-time initialization is explicit, and the validator need
 not prove that an arbitrary loop of stores fills the entire region.
@@ -374,6 +398,10 @@ reference/bytes/cells meanings. The producer must explicitly map its
 internal float tags rather than serialize them as wire tags.
 CONST keeps its eight-byte immediate: f32 occupies the low half with a zero
 upper half; f64 occupies the complete immediate.
+Floats may appear as value registers, region elements, constants, call
+arguments, returns and float-aware BIN/UN/CMP/CAST/BITCAST operands. They
+are not admitted as reference elements or struct fields in this profile.
+Float BIN subcodes 5..10 and UN subcodes 2..3 are invalid.
 
 Existing BIN add/sub/mul/div, UN negation, and CMP eq/ne/lt/le/gt/ge accept
 matching float operands. Float bitwise operations, shifts and remainder
@@ -430,6 +458,11 @@ unsigned before indexing memory. Region bases remain stable for the module
 instance; local arrays have no exported address. Source names cannot
 contain the dot separator. Float parameters and results use wasm f32/f64
 for wire tags 13/14; the existing integer/bool ABI remains unchanged.
+The memory is exported, has the exact page count needed for every
+region's backing, rounded up to whole 64 KiB pages, has the same maximum,
+and is never grown. Its zero-filled class-0 storage persists while the
+instance lives. Region parity compares module regions only through their
+`region.NAME` offsets; local backing is not part of a portable comparison.
 Consumers use a typed view of exported memory and call exported scalar
 functions once per frame. There are no imports, WASI calls, implicit
 rendering loop, or allocation through JavaScript.
