@@ -221,8 +221,8 @@ cmake -S "$T/src/pocl" -B "$T/build/pocl" -G Ninja \
   -DHOST_LLVM_SPIRV="$R/usr/bin/llvm-spirv-18" \
   -DHOST_SPIRV_LINK="$R/usr/bin/spirv-link" \
   -DCMAKE_INSTALL_RPATH="$R/usr/lib/aarch64-linux-gnu;$R/usr/lib/llvm-18/lib"
-nice -n 10 ninja -C "$T/build/pocl" -j8
-ninja -C "$T/build/pocl" install
+nice -n 19 ionice -c3 ninja -C "$T/build/pocl" -j2
+nice -n 19 ionice -c3 ninja -C "$T/build/pocl" install
 export SPIRV_VAL=$R/usr/bin/spirv-val
 export OCL_ICD_VENDORS=$T/pocl/etc/OpenCL/vendors/pocl.icd
 export POCL_DEVICES=cpu

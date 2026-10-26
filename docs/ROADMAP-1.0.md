@@ -287,6 +287,7 @@ Acceptance:
 |---|---|---|
 | AArch64 Linux static ELF (program and function mode) | MERGED; host EXERCISED by `OMEGA-SEED` | QUALIFIED by RM1's full gate at the release commit |
 | WebAssembly MVP via OSC IR v1 (`irwasm`) | MERGED, scalar subset; host EXERCISED by authors | Gate wired (RM1); scope decision: stay scalar-only for 1.0, or add linear memory, text and globals with IR v2+ |
+| SPIR-V 1.0 OpenCL Kernel via OSC IR v1 (`irspirv`) | IMPLEMENTED and CPU EXERCISED in [#804](https://github.com/aien-dev/omega-mv/pull/804); [ABI, parity and toolchain](SPIRV.md) | Standalone `seed/spirv/gate-irspirv.sh`: full irwasm scalar corpus, exact trap/result parity on PoCL CPU, validator, determinism, mutant and refusals. Manifest wiring needs operator authorization; GPU and DPC++ integration NOT_RUN. |
 | x86-64 Linux ELF and x86-64 UEFI PE32+ | Reported IMPLEMENTED in omega-harness#9 on unpublished commit `7eca2ac3f`; not independently verified here | Published PR; default AArch64 output byte-identical (C2 manifest); differential against AArch64 on the full fixture set; trap codes equal; QEMU run labelled EMULATED; physical x86 hardware NOT_RUN unless tested |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
 | GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR; host and simulator results are never cited as GPU qualification |
