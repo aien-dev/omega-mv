@@ -252,6 +252,60 @@ def edge(wdir):
     return len(cases)
 
 
+def fuzz(wdir):
+    """No-trap corpus (every case must be refused, any nonzero code, never a trap): every
+    truncation of a valid key, header-byte substitutions, every signature length 0..k+2 around the
+    valid one, and seeded random PSS ctl values. Deterministic (random.Random(8017))."""
+    import random
+    rnd = random.Random(8017)
+    src = "rsa_pss_2048_sha256_mgf1_32_test.json"
+    d = json.load(open(os.path.join(wdir, "testvectors_v1", src)))
+    g = d["testGroups"][0]
+    key = bytes.fromhex(g["publicKeyAsn"])
+    t = g["tests"][0]
+    msg = bytes.fromhex(t["msg"])
+    sig = bytes.fromhex(t["sig"])
+    k = len(sig)
+    c32 = ctl(256, 256, 32)
+    dg = dig(256, msg)
+    out = []
+
+    def add(mode, c, kk, s, ident):
+        out.append(line("n", mode, c, hx(kk), hx(msg), dig(c & 0xffff, msg), hx(s), "fuzz#" + ident))
+
+    for i in range(len(key)):
+        add("s", c32, key[:i], sig, f"key-trunc-{i}")
+    heads = list(range(0, 12)) + list(range(len(key) - 8, len(key)))
+    for i in heads:
+        for v in (0x00, 0x01, 0x02, 0x30, 0x7f, 0x80, 0x81, 0x82, 0x83, 0x84, 0xff):
+            if key[i] == v:
+                continue
+            kk = key[:i] + bytes([v]) + key[i + 1:]
+            add("s" if v & 1 else "p", c32 if v & 1 else 256, kk, sig, f"key-byte-{i}-{v:02x}")
+    for n in range(0, k + 3):
+        if n == k:
+            continue
+        s = (sig + sig)[:n]
+        add("s", c32, key, s, f"sig-len-{n}")
+    for i in range(64):
+        h = rnd.choice((256, 384, 512))
+        m = rnd.choice((256, 384, 512))
+        sl = rnd.choice((rnd.randrange(0, 300), rnd.randrange(0, 1 << 32)))
+        if (h, m, sl) == (256, 256, 32):
+            continue
+        add("s", ctl(h, m, sl), key, sig, f"ctl-{h}-{m}-{sl}")
+    for i in range(64):
+        kk = bytearray(key)
+        for _ in range(rnd.randrange(1, 4)):
+            kk[rnd.randrange(len(kk))] = rnd.randrange(256)
+        add("s", c32, bytes(kk), sig, f"key-rand-{i}")
+    with open(os.path.join(vdir, "fuzz.txt"), "w") as o:
+        o.write("# no-trap corpus built by gen_vectors.py (random.Random(8017)) from Wycheproof "
+                f"testvectors_v1/{src} group 1 test 1 (commit {COMMIT}, Apache-2.0)\n")
+        o.writelines(out)
+    return len(out)
+
+
 def pyca():
     """Odd modulus sizes and a large public exponent, signed by pyca/cryptography (test oracle)."""
     import cryptography
@@ -312,5 +366,6 @@ if __name__ == "__main__":
     st = wycheproof(wdir)
     print("wycheproof", sum(st.values()), "cases in", len(st), "files")
     print("edge", edge(wdir))
+    print("fuzz", fuzz(wdir))
     if "--pyca" in sys.argv:
         print("pyca", pyca())

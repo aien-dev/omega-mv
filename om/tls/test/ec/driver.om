@@ -2,7 +2,8 @@ note SPDX-License-Identifier: Apache-2.0
 note driver.om: test driver for om/tls/ec.om (program mode), concatenated after sha2.om and ec.om.
 note Reads a vector file on stdin, one case per line (see gen_vectors.py):
 note   ID CRV MODE EXP ALG PUBHEX SIGHEX MSGHEX DIGESTHEX   ('-' = empty hex field, '#' comment)
-note For each case: digest = sha2_digest ALG MSG, cross-checked against DIGESTHEX (hashlib); then
+note For each case: digest = sha2_digest ALG MSG (om/tls/sha2.om), cross-checked against DIGESTHEX
+note (hashlib; a difference is a MISMATCH ... hash line); then
 note ecdsa_verify (MODE d) or ecdsa_verify_raw (MODE r) on digest || sig; EXP 0 needs 0, EXP 1
 note needs a nonzero code, EXP =K needs exactly code K. Negative controls for every EXP 0 case:
 note digest[0] flipped must give exactly 1; hlen = len hs + 1 must give exactly 2 (both modes). Optional argument: repeat count R (timing; each verify runs R
@@ -228,7 +229,8 @@ dvdie
 end
 end
 
-note digest cross-check: sha2_digest of the message must equal the file's digest at hs[0..)
+note digest = sha2_digest ALG of the message, written over hs[0..); cross-check: it must equal the
+note file's (hashlib) digest that was parsed there
 fn dvhash hs edit uchar * m view uchar * dg edit uchar * to void
 n = sha2_digest get dvc 19 m dg
 if ne n get dvc 23
@@ -238,8 +240,8 @@ end
 for i ulong n
 if ne get dg i get hs i
 dvmis thash i
-ret
 end
+put hs i get dg i
 end
 end
 

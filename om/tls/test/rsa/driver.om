@@ -256,25 +256,30 @@ put rvcnt 12 dl
 put rvcnt 13 rv_hex part hs dl sub 2200 dl get rvf 12 get rvf 13
 end
 
-note run the parsed case, judge it, and the flipped-byte control for cases expected valid
-fn rv_check key view uchar 2048 hs edit uchar 2200 to void
-c = get rvcnt 10
-kl = get rvcnt 11
+note flipped-byte control: bit 0 of the middle signature byte flipped must be refused
+fn rv_ctrl key view uchar 2048 hs edit uchar 2200 to void
 dl = get rvcnt 12
-sl = get rvcnt 13
-x = get rvcnt 9
-got = rv_run c part key 0 kl part hs 0 add dl sl dl
-if ne rv_judge got x 0
-rv_mis rvtnl got x
-end
-if and eq x 0 and eq got 0 gt sl 0
-fx = add dl div sl 2
+n = add dl get rvcnt 13
+fx = add dl div get rvcnt 13 2
 put hs fx xor get hs fx 1
 rv_bump 7 1
-cg = rv_call c part key 0 kl part hs 0 add dl sl dl
+cg = rv_call get rvcnt 10 part key 0 get rvcnt 11 part hs 0 n dl
 if eq cg 0
 rv_mis rvtctl cg 99
 end
+end
+
+note run the parsed case and judge it; cases expected valid that verify get the control
+fn rv_check key view uchar 2048 hs edit uchar 2200 to void
+dl = get rvcnt 12
+n = add dl get rvcnt 13
+x = get rvcnt 9
+got = rv_run get rvcnt 10 part key 0 get rvcnt 11 part hs 0 n dl
+if ne rv_judge got x 0
+rv_mis rvtnl got x
+end
+if and eq x 0 and eq got 0 gt get rvcnt 13 0
+rv_ctrl key hs
 end
 end
 

@@ -3,9 +3,11 @@
 # Test suite for om/tls/ec.om (ECDSA P-256/P-384 verification).
 # Usage: sh om/tls/test/ec/run.sh PATH_TO_PINNED_OMC
 # Builds om2 + sha2.om + ec.om + test/ec/driver.om into build/tls/ec/, runs every vector file
-# (Wycheproof, NIST CAVP SigVer, edge cases), library mutants and one expectation mutant (each must
-# be detected: exit 1 with MISMATCH lines), and one timing series per curve.
-# Exit 0 only when every check passes. Environment: EC_BENCH_N (default 200 verifies per curve).
+# (Wycheproof, NIST CAVP SigVer, edge cases), library mutants plus an expectation mutant and a
+# digest-column mutant (each must be detected: exit 1 with MISMATCH lines), a malformed-input
+# corpus (gen_fuzz.py, when python3 is present) and one timing series per curve.
+# Exit 0 only when every check passes. Environment: EC_BENCH_N (default 200 verifies per curve),
+# EC_FUZZ_N (default 3000 malformed cases), EC_FUZZ_SEED (default 1).
 set -eu
 omc=${1:?usage: run.sh OMC}
 here=$(cd "$(dirname "$0")" && pwd)
@@ -109,6 +111,21 @@ libmut mutant-b256 's/^put w 120 0x27d2604b$/put w 120 0x27d2604c/' wycheproof_s
 libmut mutant-padd 's/^ec_sub w ECCP p p ECA7$/ec_add w ECCP p p ECA7/' wycheproof_secp384r1_sha384.txt
 libmut mutant-n0 's/^for k ulong 5$/for k ulong 2/' cavp_sigver.txt
 libmut mutant-der 's/^if lt get hs add v 1 128$/if lt get hs add v 1 0/' edge.txt
+
+# digest cross-check control: the hashlib digest column of the first case damaged; the driver's
+# sha2_digest comparison must report it
+awk 'BEGIN { done = 0 } !done && !/^#/ { $9 = (substr($9, 1, 1) == "0" ? "1" : "0") substr($9, 2); done = 1 } { print }' \
+	"$here/vectors/wycheproof_secp384r1_sha384.txt" > "$out/mut-digest.txt"
+mutant "$out/driver" "$out/mut-digest.txt" mutant-digest-column
+
+# malformed-input corpus (python test tooling; skipped when python3 is absent): every case must be
+# refused without a trap
+if command -v python3 > /dev/null 2>&1; then
+	python3 "$here/gen_fuzz.py" "$here/vectors" "$out/fuzz.txt" "${EC_FUZZ_N:-3000}" "${EC_FUZZ_SEED:-1}"
+	run "$out/driver" "$out/fuzz.txt" fuzz
+else
+	echo "NOTE fuzz corpus skipped: python3 not found"
+fi
 
 # timing: the first valid DER line of the P-256/SHA-256 and P-384/SHA-384 Wycheproof files
 bn=${EC_BENCH_N:-200}

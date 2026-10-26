@@ -521,7 +521,9 @@ x = shl cnt 3
 for i ulong 8 unroll
 put p sub e add i 1 uchar and shr x mul i 8 0xff
 end
+if eq ls 16
 put p sub e 9 uchar shr cnt 61
+end
 sha2_run c part p 0 e
 for i ulong 256
 put p i 0

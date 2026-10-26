@@ -2,7 +2,7 @@ note SPDX-License-Identifier: Apache-2.0
 note om/tls/ec.om: ECDSA signature verification on NIST P-256 and P-384 (FIPS 186-4 section 6.4.2).
 note Library unit (no om2 line, no main). Module code EC: functions ec_* and ecdsa_*, consts EC*.
 note
-note API (all inputs are public; this module is variable time by design, see README in test/ec):
+note API (all inputs are public; this module is variable time by design, see "Timing" below):
 note   ecdsa_verify crv pub hs hlen      crv 256 or 384; pub = 0x04 || X || Y (SEC1 uncompressed);
 note                                     hs = digest (hlen bytes) || DER Ecdsa-Sig-Value
 note   ecdsa_verify_raw crv pub hs hlen  same, signature r || s, each 32 (P-256) or 48 (P-384) bytes
@@ -17,6 +17,16 @@ note Generic Montgomery multiplication (CIOS) for p and for n; n0' = -m^-1 mod 2
 note iteration), R mod m and R^2 mod m (R = 2^(32L), by repeated doubling) are computed at run
 note time. Points in Jacobian coordinates (a = -3), Z = 0 is the point at infinity. Shamir's
 note joint double-scalar multiplication u1*G + u2*Q with the table G, Q, G+Q.
+note
+note Timing: signature verification handles only public values (key, digest, signature), so this
+note module is NOT constant time and does not try to be: DER parsing, range checks, the Shamir
+note loop (branches on the bits of u1 and u2), point addition (branches on Z = 0, H = 0, r = 0),
+note ec_csub (branch on the borrow), ec_cmp (early exit) and the Fermat inversions (branch on the
+note exponent bits of the public moduli) all take data-dependent time. Do not reuse these helpers
+note on secret data (e.g. ECDH or signing) without a constant-time rewrite. Compiler caveat: omc
+note emits plain AArch64 and no DIT bit is set. No secret is held, so nothing is wiped.
+note Untrusted input never traps: every length and offset is checked before indexing (fuzzed by
+note test/ec/gen_fuzz.py).
 note
 note Workspace w (ECWN ulong cells) layout, slot stride 12 cells:
 note   0 L; 2..15 Montgomery accumulator T (L+2 cells)
@@ -54,9 +64,9 @@ const ECAC ulong 468
 
 note Curve constants, verbatim from FIPS 186-4 Appendix D.1.2.3 (P-256) and D.1.2.4 (P-384)
 note (same values as SEC 2 v2 sections 2.4.2 secp256r1 and 2.5.1 secp384r1). a = -3 for both.
-note Checked with Wolfram (WolframLanguageEvaluator, 2026-10-26): PrimeQ[p], PrimeQ[n],
-note Mod[Gy^2-(Gx^3-3Gx+b),p]==0, n*G == O (affine double-and-add mod p), BitLength[p]==BitLength[n],
-note n<p<2n: all True for both curves.
+note Checked with Wolfram (WolframLanguageEvaluator, 2026-10-26; exact query and output in
+note test/ec/wolfram.txt): PrimeQ[p], PrimeQ[n], Mod[Gy^2-(Gx^3-3Gx+b),p]==0, n*G == O (affine
+note double-and-add mod p), BitLength[p]==BitLength[n] (256, 384), n<p<2n: all True for both curves.
 fn ec_p256 w edit ulong ECWN to void
 put w 0 8
 note p = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff (limbs little-endian)
