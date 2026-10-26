@@ -1,0 +1,6 @@
+note errata E6 (g): a CR byte inside a text literal is error 6 (line counted from the om2 fmt line, E6 Q3).
+om2
+text t "ab"
+fn main to int
+ret 0
+end

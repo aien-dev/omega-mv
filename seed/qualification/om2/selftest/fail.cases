@@ -1,0 +1,6 @@
+# Harness self-test, deliberately wrong program (cat-bad.om changes the byte at offset 5).
+# Expected: cat-bad-seq FAIL "stdout differs at byte 5"; the gate ends OM2GATE FAIL (exit 1).
+cat-bad-seq run seed/qualification/om2/selftest/cat-bad.om seq:300 file:seed/qualification/om2/fixtures/gen/seq-300.bin - 0
+# Adequacy control, expected PASS: a 5-byte input (offsets 0..4) never reaches the fault, so the
+# wrong program is indistinguishable here. A vector only kills what it reaches.
+cat-bad-short run seed/qualification/om2/selftest/cat-bad.om rep:0:5 file:seed/qualification/om2/fixtures/gen/rep-0-5.bin - 0

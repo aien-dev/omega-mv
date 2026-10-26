@@ -1,0 +1,32 @@
+HISTORICAL PRE-E12 decoder differential. Not evidence for the added provenance/known-bits analysis.
+Decoder differential of leakscan.om against GNU objdump 2.42 (oracle/leak/fuzz.py, xcheck.py --subset).
+Lane QualPhaseB.LeakScan (L836), 2026-10-25, Linux 7.0.0-1019-nvidia aarch64, Python 3.12.3.
+Scanner: seed/qualification/om2/leak/leakscan.om sha256 deb5b82bf1b9b36ec607c45e055ecf05b59fc2a889d4188493b47f7f4950f5ec
+built by seed/out/omc 734f0a39 into build/om2-qual/leakscan (sha256 0d6eae99ec735a49e4a44b27ee60a450cb83786a9a4a370d12a2e67cbe92c8f7).
+Bases: the 222 32-bit constants of /tmp/zl/main/seed/omc/omc.om (main acb3f15) that objdump decodes.
+
+Commands, for S in 1 2 (worktree root):
+  python3 seed/qualification/om2/oracle/leak/fuzz.py /tmp/zl/main/seed/omc/omc.om S 100000 /tmp/leakw/fz/fzS.bin
+  build/om2-qual/leakscan < /tmp/leakw/fz/fzS.bin > /tmp/leakw/fz/fzS.rep        (exit 2, MANUAL: expected, UNKNOWN words)
+  python3 seed/qualification/om2/oracle/leak/xcheck.py --subset /tmp/leakw/fz/fzS.bin /tmp/leakw/fz/fzS.rep
+
+Seed 1: FUZZ bases=222 words=99985   fz1.bin sha256 fdb8b12284c492ad862ff4b3c675f97e7fc9c8bdcce65fb4ec6b4f4ab5f7e1d0
+  XCHECK branches objdump=3362 leakscan=3362
+  XCHECK mem-non-sp objdump=15701 leakscan=14009 (sp/x29-only accesses not listed: 1030)
+  XCHECK undecodable objdump=38649 leakscan-unknown=50332
+  XCHECK tolerated=13375 (words leakscan lists as UNKNOWN that objdump decodes)
+  XCHECK AGREE
+Seed 2: FUZZ bases=222 words=99979   fz2.bin sha256 442c54e4da64ed76781c1bebea0f163255cbe01782358a3e01a25476e265b958
+  XCHECK branches objdump=3438 leakscan=3438
+  XCHECK mem-non-sp objdump=15790 leakscan=14126 (sp/x29-only accesses not listed: 1099)
+  XCHECK undecodable objdump=38330 leakscan-unknown=50026
+  XCHECK tolerated=13360 (words leakscan lists as UNKNOWN that objdump decodes)
+  XCHECK AGREE
+Meaning: every conditional branch objdump sees, with its target, is listed by leakscan; every access
+leakscan lists is one objdump shows with a non-SP/x29 base or an index register, and vice versa except
+for words leakscan calls UNKNOWN (the tolerated ones: SIMD, SVE, pointer-auth loads, RCpc, MTE,
+exclusives, CRC32, FRINT, half precision, ...); no word objdump calls undefined is decoded by leakscan.
+Earlier runs during development (same method, seed 11) found and fixed: UNKNOWN words that kept a
+partial load/store decode (listed as MEM), register-offset forms with a reserved option field, and
+unallocated ALU/FP encodings accepted as valid. What this does not check: the register source and
+destination fields that feed the taint rules (covered only by the fixtures and the SHA cross-check).

@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 145-150: the commuted body is not exact, so diag reports
+note `omc-check 1 kept line=N rule=-` (confirmed by erratum E8). Function mode.
+om2 diag
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or ulong x shl ulong x 32
+end
+fn entry x uint to ulong
+ret open dup32mk x
+end

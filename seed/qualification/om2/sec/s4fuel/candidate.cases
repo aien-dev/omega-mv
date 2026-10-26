@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+# Erratum E14 (expansion fuel 65536 per function; each unrolled copy and each inline expansion costs 1).
+# Expected lines come from oracle/s4fuel/fuel_e16.py (erratum E16: an unrolled loop is charged K at its line
+# when it starts, an inline expansion 1 at its call line; error 14 names the construct whose charge exceeds
+# the fuel). fuel.py (pre-order per-copy charge) is the superseded pre-E16 model, kept for the record.
+# A line mismatch with code 14 is a compiler defect against E16 (coordinator ruling).
+# Deadline: 10 s per compile. Runaway compile work is INVALID (deadline) or FAIL (no error), never PASS.
+deadline 10
+# E14 control 1: depth 2 (64 + 4096 = 4160 units) compiles; the program exits 0
+fuel-d2 run seed/qualification/om2/sec/s4fuel/fuel-d2.om - - - 0
+# E14 control 2: depth 3 (262144 innermost copies) is error 14; E16 oracle (fuel_e16.py): exhausted at the c loop, line 7 (used 65600)
+fuel-d3 emit seed/qualification/om2/sec/s4fuel/fuel-d3.om - err:7:14 14
+fuel-d3-code refuse seed/qualification/om2/sec/s4fuel/fuel-d3.om 14
+# depth 4 (E14's 1.58 s case under c23b3376): must be refused as quickly; oracle: line 8
+deadline 2
+fuel-d4 emit seed/qualification/om2/sec/s4fuel/fuel-d4.om - err:8:14 14
+fuel-d4-code refuse seed/qualification/om2/sec/s4fuel/fuel-d4.om 14
+# inline variant (fuel-inl: f4, f3, f2, f1, main in source order). fuel_e16f.py: every function, inline ones too, is
+# compiled in source order with its own fuel; f1 standalone exhausts first: 56th f3 loop reaches 65536, the next f4
+# call (line 8) makes 65537
+deadline 10
+fuel-inl emit seed/qualification/om2/sec/s4fuel/fuel-inl.om - err:8:14 14
+fuel-inl-code refuse seed/qualification/om2/sec/s4fuel/fuel-inl.om 14
+# main first (fuel-inl-mainfirst): main compiled before the inline functions exhausts at the f3 unroll (line 11)
+fuel-inl-mainfirst emit seed/qualification/om2/sec/s4fuel/fuel-inl-mainfirst.om - err:11:14 14
+deadline 30

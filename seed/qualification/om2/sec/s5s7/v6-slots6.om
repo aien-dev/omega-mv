@@ -1,0 +1,6 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 4 lines 99-101: three unsized views take exactly six slots: accepted. Function mode.
+om2
+fn f a view uchar * b view uchar * c edit ulong * to ulong
+ret add len a add len b len c
+end

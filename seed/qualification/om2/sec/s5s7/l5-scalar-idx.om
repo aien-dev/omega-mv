@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 158 with errata E5/E8: an extra index on a scalar field (COUNT omitted)
+note is error 5.
+om2
+layout one 4
+field v uint at 0 big
+end
+fn fill x edit one to void
+put x v 0 0x01020304
+end
+fn main to int
+c = new uchar 4 0
+fill c
+ret 0
+end

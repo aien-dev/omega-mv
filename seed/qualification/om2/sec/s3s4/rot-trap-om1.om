@@ -1,0 +1,137 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of rot-trap.om (contract section 3 lines 79-81) for the pinned compiler 734f0a39: the
+note rotations are the OM-1 shift helpers tr*/tl* (n = 0 returns x, else shr/shl by n first), so
+note every selector A-O reaches an OM-1 shift by n >= w, which traps 7 (OMEGESE 9.3): exit 107, no
+note stdout. P prints rotr uint 4041331395 by 31. Same expectations as the OM-2 unit.
+note (this line replaces the om2 line, so the line numbers equal those of rot-trap.om)
+note OM-1 unit
+fn rr8 x uchar n uchar to uchar
+ret tr8 x n
+end
+fn rl8 x uchar n uchar to uchar
+ret tl8 x n
+end
+fn rr16 x ushort n ushort to ushort
+ret tr16 x n
+end
+fn rl16 x ushort n ushort to ushort
+ret tl16 x n
+end
+fn rr32 x uint n uint to uint
+ret tr32 x n
+end
+fn rl32 x uint n uint to uint
+ret tl32 x n
+end
+fn rr64 x ulong n ulong to ulong
+ret tr64 x n
+end
+fn rl64 x ulong n ulong to ulong
+ret tl64 x n
+end
+fn main to int
+s = new uchar 1 0
+r = read 0 s 0 1
+k = get s 0
+a = uchar 177
+b = ushort 45508
+c = uint 4041331395
+d = ulong 9305357566071262703
+if eq k 65
+pu ulong tr8 a 8
+end
+if eq k 66
+pu ulong tl16 b 16
+end
+if eq k 67
+pu ulong tr32 c 32
+end
+if eq k 68
+pu tl64 d 64
+end
+if eq k 69
+pu ulong rl8 a 8
+end
+if eq k 70
+pu ulong rr16 b 16
+end
+if eq k 71
+pu ulong rl32 c 32
+end
+if eq k 72
+pu rr64 d 64
+end
+if eq k 73
+pu ulong rr8 a 9
+end
+if eq k 74
+pu ulong rl16 b 65535
+end
+if eq k 75
+pu ulong rr32 c 4294967295
+end
+if eq k 76
+pu rl64 d 18446744073709551615
+end
+if eq k 77
+pu ulong tr32 c 33
+end
+if eq k 78
+pu tl64 d 65
+end
+if eq k 79
+pu ulong tl8 a 255
+end
+if eq k 80
+pu ulong tr32 c 31
+end
+ret 0
+end
+fn tr8 x uchar n uchar to uchar
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 8 n
+end
+fn tl8 x uchar n uchar to uchar
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 8 n
+end
+fn tr16 x ushort n ushort to ushort
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 16 n
+end
+fn tl16 x ushort n ushort to ushort
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 16 n
+end
+fn tr32 x uint n uint to uint
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 32 n
+end
+fn tl32 x uint n uint to uint
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 32 n
+end
+fn tr64 x ulong n ulong to ulong
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 64 n
+end
+fn tl64 x ulong n ulong to ulong
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 64 n
+end

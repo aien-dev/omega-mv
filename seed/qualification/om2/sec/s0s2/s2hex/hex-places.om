@@ -1,0 +1,31 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 line 54: a hex literal takes the type the place needs: array length, fill
+note value, index, put value, for count, call argument, comparison operand, operand of sub, fd and
+note offset of write. Expected stdout/exit: oracle/s0s2/oracle.py (hex_places). Used with lib/putu.om.
+om2
+text msg "hex\n"
+fn twice a ulong to ulong
+ret mul a 2
+end
+fn main to int
+a = new uchar 0x4 0x0
+put a 0x1 0x68
+put a 0x3 0xa
+s = ulong 0x0
+for i ulong 0x5
+s = add s i
+end
+putu s
+putu twice 0x15
+putu ulong get a 0x1
+if eq s 0xa
+putu 0xabc
+end
+x = int 0x10
+y = sub x 0x20
+if lt y 0x0
+putu ulong neg y
+end
+r = write 0x1 msg 0x0 len msg
+ret int get a 0x3
+end

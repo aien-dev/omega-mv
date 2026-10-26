@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/qualification/om2/sec/s3s4/mutant-kills.cases: kill specifications for faulty OM-2 compilers
+# (#748, L836, lane QualPhaseB.FixRotUnroll). The mutant compilers are written by QualPhaseB against the
+# candidate source; before each block insert that mutant's "subst FROM TO" and "cc <candidate omc.om>" lines
+# (gate.om header) and end with "cc pinned". A kill = mutant compiles the fixture (exit 0), the program exits
+# EXIT and its stdout DIFFERS from the correct oracle file. Predicted mutant stdout (python model, oracle.py):
+# oracle/s3s4/exp/mut/<model>.out; first differing byte (0-based) in oracle/s3s4/exp/mutants.txt, quoted below.
+# The same fixtures must PASS their run cases in candidate.cases under the unmutated candidate.
+
+# (a) unroll emits K-1 or K+1 copies (every unrolled loop). Killed by unroll-sum (K = 1, 4, 64; distinct
+#     weights; a K+1 copy writes a[64] of a 65-element array, read back, so no refusal and no crash).
+#     K-1: exit 0, first diff byte 1 (line 1, h = 7). K+1: exit 0, first diff byte 5 (line 1).
+kill-unroll-sum kill seed/qualification/om2/sec/s3s4/unroll-sum.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-sum.out - 0
+kill-unroll-nest kill seed/qualification/om2/sec/s3s4/unroll-nest.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-nest.out - 0
+
+# (b) faulty rotate lowering, on the constant-n (ROR immediate) path, the run-time (RORV) path, or both.
+#     Every operand has w distinct rotations (oracle asserts it), so each fault changes a line:
+#     amount n+1: both -> first diff byte 0, const -> first diff byte 0, runtime -> first diff byte 29
+#     amount w-n (rotr becomes rotl): both -> first diff byte 4, const -> first diff byte 4, runtime -> first diff byte 33
+#     ROR used for ROL: both -> first diff byte 18, const -> first diff byte 18, runtime -> first diff byte 47
+kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+#     range check dropped (n taken mod w, no trap 7): each selector prints a value and exits 0 (diff at byte 0)
+kill-rot-trap-A kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-A.out - 0
+kill-rot-trap-B kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-B.out - 0
+kill-rot-trap-C kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-C.out - 0
+kill-rot-trap-D kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-D.out - 0
+kill-rot-trap-E kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-E.out - 0
+kill-rot-trap-F kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-F.out - 0
+kill-rot-trap-G kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-G.out - 0
+kill-rot-trap-H kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-H.out - 0
+kill-rot-trap-I kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-I.out - 0
+kill-rot-trap-J kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:74:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-J.out - 0
+kill-rot-trap-K kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:75:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-K.out - 0
+kill-rot-trap-L kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:76:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-L.out - 0
+kill-rot-trap-M kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:77:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-M.out - 0
+kill-rot-trap-N kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:78:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-N.out - 0
+kill-rot-trap-O kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:79:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-O.out - 0
+
+# (c) check elimination applied to an UNSIZED view (constant index after unrolling/inlining or a plain
+#     constant). The view is a part of the caller's 8-element b (1, 10, ..., 10^7), so the unchecked read is
+#     the defined neighbour b[4] (A, C), b[6] (D), b[7] (F): clean output, exit 0, no crash.
+#     A: exit 0, first diff byte 14
+kill-ce-view-A kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-A.out - 0
+#     C: exit 0, first diff byte 14
+kill-ce-view-C kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-C.out - 0
+#     D: exit 0, first diff byte 0
+kill-ce-view-D kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-D.out - 0
+#     F: exit 0, first diff byte 26
+kill-ce-view-F kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-F.out - 0
+#     B (sized a4 passed to view ulong *, E2) is NOT a clean witness: the unchecked read is outside a4 (stack
+#     neighbour). A mutant that instead refuses the unsized constant index with error 21 fails the candidate
+#     run cases ce-view-A/C/D with "compile exit=21 expected=0".
+
+# (d) a trapping all-constant operation is folded (AArch64 result: /0 -> 0, rem by 0 -> dividend, signed
+#     wrap, conversion truncation, shift mod 64) instead of staying the run-time trap. Each selector then
+#     prints more lines and exits 0 (ps prints 7777 for a wrapped negative int).
+#     A: exit 0, first diff byte 4
+kill-fold-trap-A kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-A.out - 0
+#     B: exit 0, first diff byte 22
+kill-fold-trap-B kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-B.out - 0
+#     C: exit 0, first diff byte 8
+kill-fold-trap-C kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-C.out - 0
+#     D: exit 0, first diff byte 40
+kill-fold-trap-D kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-D.out - 0
+#     E: exit 0, first diff byte 11
+kill-fold-trap-E kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-E.out - 0
+#     F: exit 0, first diff byte 0
+kill-fold-trap-F kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-F.out - 0
+#     G: exit 0, first diff byte 4
+kill-fold-trap-G kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-G.out - 0
+#     H: exit 0, first diff byte 4
+kill-fold-trap-H kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-H.out - 0
+#     I: exit 0, first diff byte 3
+kill-fold-trap-I kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-I.out - 0
+#     A mutant that REFUSES the trapping constant at compile time (or the guarded one) is killed by the
+#     candidate run cases fold-trap-A..I and fold-guard: "compile exit=<code> expected=0" (verdict FAIL).

@@ -1,0 +1,38 @@
+$ nice -n 19 /usr/bin/python3 /home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/oracle/sha/trace.py /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/trace_ctl2 /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/bind/libomega_native.so /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha.bin
+INFO code at 0xf486e1e01628..0xf486e1e06984 (21340 bytes); live bytes == artifact: True
+INFO child exit status 0; segments with OM-2 code: 56
+PASS pair 0: om2-instructions=5408/5408 data-addresses=1035/1035 process-pcs=5763/5763 equal(insn,data,pcs)=(True, True, True)
+PASS pair 1: om2-instructions=5408/5408 data-addresses=1035/1035 process-pcs=5767/5767 equal(insn,data,pcs)=(True, True, True)
+PASS pair 2: om2-instructions=5424/5424 data-addresses=1037/1037 process-pcs=5817/5817 equal(insn,data,pcs)=(True, True, True)
+PASS pair 3: om2-instructions=5424/5424 data-addresses=1037/1037 process-pcs=5821/5821 equal(insn,data,pcs)=(True, True, True)
+PASS pair 4: om2-instructions=6288/6288 data-addresses=1145/1145 process-pcs=6681/6681 equal(insn,data,pcs)=(True, True, True)
+PASS pair 5: om2-instructions=6288/6288 data-addresses=1145/1145 process-pcs=6685/6685 equal(insn,data,pcs)=(True, True, True)
+PASS pair 6: om2-instructions=9948/9948 data-addresses=1676/1676 process-pcs=10341/10341 equal(insn,data,pcs)=(True, True, True)
+  first difference at OM-2 step 1445: [(20300, 200626522816704)] vs [(20300, 200626522816768)]
+FAIL pair 7: om2-instructions=9948/9948 data-addresses=1676/1676 process-pcs=10345/10345 equal(insn,data,pcs)=(True, False, True)
+PASS pair 8: om2-instructions=10060/10060 data-addresses=1690/1690 process-pcs=10453/10453 equal(insn,data,pcs)=(True, True, True)
+PASS pair 9: om2-instructions=10060/10060 data-addresses=1690/1690 process-pcs=10457/10457 equal(insn,data,pcs)=(True, True, True)
+PASS pair 10: om2-instructions=9062/9062 data-addresses=1567/1567 process-pcs=9455/9455 equal(insn,data,pcs)=(True, True, True)
+PASS pair 11: om2-instructions=9062/9062 data-addresses=1567/1567 process-pcs=9459/9459 equal(insn,data,pcs)=(True, True, True)
+PASS pair 12: om2-instructions=9078/9078 data-addresses=1569/1569 process-pcs=9471/9471 equal(insn,data,pcs)=(True, True, True)
+PASS pair 13: om2-instructions=9078/9078 data-addresses=1569/1569 process-pcs=9475/9475 equal(insn,data,pcs)=(True, True, True)
+PASS pair 14: om2-instructions=9942/9942 data-addresses=1677/1677 process-pcs=10335/10335 equal(insn,data,pcs)=(True, True, True)
+PASS pair 15: om2-instructions=9942/9942 data-addresses=1677/1677 process-pcs=10339/10339 equal(insn,data,pcs)=(True, True, True)
+PASS pair 16: om2-instructions=13602/13602 data-addresses=2208/2208 process-pcs=13995/13995 equal(insn,data,pcs)=(True, True, True)
+PASS pair 17: om2-instructions=13602/13602 data-addresses=2208/2208 process-pcs=13999/13999 equal(insn,data,pcs)=(True, True, True)
+PASS pair 18: om2-instructions=16498/16498 data-addresses=2647/2647 process-pcs=16891/16891 equal(insn,data,pcs)=(True, True, True)
+PASS pair 19: om2-instructions=16498/16498 data-addresses=2647/2647 process-pcs=16895/16895 equal(insn,data,pcs)=(True, True, True)
+PASS pair 20: om2-instructions=60858/60858 data-addresses=9095/9095 process-pcs=61251/61251 equal(insn,data,pcs)=(True, True, True)
+PASS pair 21: om2-instructions=60858/60858 data-addresses=9095/9095 process-pcs=61255/61255 equal(insn,data,pcs)=(True, True, True)
+PASS pair 22: om2-instructions=11381/11381 data-addresses=1829/1829 process-pcs=12512/12512 equal(insn,data,pcs)=(True, True, True)
+PASS pair 23: om2-instructions=13223/13223 data-addresses=2311/2311 process-pcs=14354/14354 equal(insn,data,pcs)=(True, True, True)
+PASS pair 24: om2-instructions=12627/12627 data-addresses=2233/2233 process-pcs=13758/13758 equal(insn,data,pcs)=(True, True, True)
+PASS pair 25: om2-instructions=15211/15211 data-addresses=2908/2908 process-pcs=16342/16342 equal(insn,data,pcs)=(True, True, True)
+PASS pair 26: om2-instructions=25850/25850 data-addresses=4349/4349 process-pcs=26981/26981 equal(insn,data,pcs)=(True, True, True)
+PASS pair 27: om2-instructions=5505/5505 data-addresses=1052/1052 process-pcs=6596/6596 equal(insn,data,pcs)=(True, True, True)
+INFO observed max stack depth below entry SP, export sha256_init: 64 bytes
+INFO observed max stack depth below entry SP, export sha256_update: 1008 bytes
+INFO observed max stack depth below entry SP, export sha256_final: 896 bytes
+INFO observed max stack depth below entry SP, export sha256_hash: 1008 bytes
+FAIL trace pairs=28 differing=1
+EXIT 1

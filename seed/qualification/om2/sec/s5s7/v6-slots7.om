@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 4 lines 99-101: an unsized view takes two parameter slots; three views and a scalar
+note need seven slots: error 9. Function mode.
+om2
+fn f a view uchar * b view uchar * c view uchar * d ulong to ulong
+ret add d len a
+end

@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 196-198 and erratum E1: a sized `out` parameter on an exported entry, written
+note element by element: accepted (function mode). Behaviour is ABI-level (abi cases).
+om2
+export fn rev s view uchar * r out uchar 4 to void
+for i ulong 4
+put r i get s sub 3 i
+end
+end

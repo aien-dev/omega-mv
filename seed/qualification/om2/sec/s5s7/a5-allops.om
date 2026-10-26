@@ -1,0 +1,20 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract, lines 140-143: the full preserving table rotr rotl and or xor when listed.
+note stdout oracle exp/a5-allops.out (python3).
+om2
+abstract dup32 ulong ops rotr rotl and or xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 0x89abcdef
+e = dup32mk 0x0f0f00ff
+puth open rotl d 8
+puth open rotl d 40
+puth open and d e
+puth open or d e
+puth open xor d e
+puth open rotr d 5
+ret 0
+end

@@ -1,0 +1,18 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of unroll-continue-nested.om for the pinned compiler 734f0a39: same expectation.
+note Contract section 4 line 90 and erratum E7: a continue whose innermost loop is a ROLLED loop nested in an
+note unrolled body is allowed. Each of the 4 copies adds 1 for j = 0 and j = 2: exit 8.
+note Twins unroll-continue-nested-rolled.om / -om1.om, same expectation (oracle/s3s4/exp).
+note OM-1 unit: this line replaces the om2 line
+fn main to int
+s = ulong 0
+for i ulong 4
+for j ulong 3
+if eq j 1
+continue
+end
+s = add s 1
+end
+end
+ret int s
+end

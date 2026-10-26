@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 lines 59-62 (both profiles): ret add 1 then end.
+note The OM-1 code and line are pinned by the pinned compiler; the OM-2 unit keeps the same code, its line one later.
+om2
+fn main to int
+ret add 1
+end

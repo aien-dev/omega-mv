@@ -1,0 +1,18 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, line 122: the then arm writes element 0, the else arm element 1; the
+note intersection at the join is empty, so get s 0 is error 27. Union-join mutant: {0,1} accepts;
+note main passes c = 2 and a filled with 99, so the mutant prints 99 (exp/f5-join-diff.mutant).
+om2
+fn f s edit uchar 8 fresh c ulong to ulong
+if eq c 1
+put s 0 11
+else
+put s 1 22
+end
+ret ulong get s 0
+end
+fn main to int
+a = new uchar 8 99
+putd f a 2
+ret 0
+end

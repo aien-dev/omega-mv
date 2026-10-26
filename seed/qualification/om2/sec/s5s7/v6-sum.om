@@ -1,0 +1,26 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 169-170 and erratum E2: unsized `view uchar *` parameters receive sized arrays of
+note length 10 and 3; `len v` is the run-time length. stdout 10, 315, 3, 15 (exp/v6-sum.out, python3).
+om2
+fn vsum v view uchar * to ulong
+x = ulong 0
+for i ulong len v
+x = add x ulong get v i
+end
+ret x
+end
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+for i ulong 10
+put a i uchar mul i 7
+end
+b = new uchar 3 5
+putd plen a
+putd vsum a
+putd plen b
+putd vsum b
+ret 0
+end

@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note E14 fuel: 4 nested 64-copy unrolls of an empty body; expected per oracle/s4fuel/fuel.py (pre-order charge).
+om2
+fn main to int
+for a ulong 64 unroll
+for b ulong 64 unroll
+for c ulong 64 unroll
+for d ulong 64 unroll
+note empty
+end
+end
+end
+end
+ret 0
+end

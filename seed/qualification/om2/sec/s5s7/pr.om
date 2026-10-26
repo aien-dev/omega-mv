@@ -1,0 +1,28 @@
+note SPDX-License-Identifier: Apache-2.0
+note sec/s5s7/pr.om: output helpers, appended after a program-mode fixture (case SRC a+b).
+note OM-1 words only, so the same file serves OM-2 fixtures and their OM-1 twins.
+note putd v: v in decimal and a newline on stdout.  puth v: 16 lowercase hex digits and a newline.
+text prhex "0123456789abcdef"
+fn putd v ulong to void
+b = new uchar 21 10
+p = ulong 20
+x = v
+go = true
+while go
+p = sub p 1
+put b p add uchar rem x 10 48
+x = div x 10
+if eq x 0
+go = false
+end
+end
+w = write 1 b p sub 21 p
+end
+fn puth v ulong to void
+b = new uchar 17 10
+for i ulong 16
+s = mul sub 15 i 4
+put b i get prhex and shr v s 15
+end
+w = write 1 b 0 17
+end

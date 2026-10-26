@@ -1,0 +1,4 @@
+$ nice -n 19 /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha_qual part
+PASS part lengths 2^25-64 .. 3*2^25+4095 (one update, hash, chunked) == sha256sum
+TOTAL part pass=1 fail=0 trap=0
+EXIT 0

@@ -1,0 +1,11 @@
+$ /home/drakestapleton/workspace/om2-qualification/seed/out/omc < seed/qualification/om2/leak/leakscan.om > leakscan
+leakscan.om sha256 6b14fd9bb6f174de4a87e14b5ae38c9984de48c91a0b18c468bb1197adb2c82c; leakscan binary sha256 aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633
+build/om2-qual/leakscan-e13 sha256 aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633
+export 0: word 0 = 0x14001060 -> target byte 0x4180; word 0 = 0x14001060
+entry0.bin sha256 27775fb2106dc0695d32417b1545af0027c136fe05bcdc4abd12cb473460570b
+export 1: word 1 = 0x140011b6 -> target byte 0x46dc; word 0 = 0x140011b7
+entry1.bin sha256 a927b0b2c6444a593db325796975048edd65e8f7db612617d6ce04e50f01151f
+export 2: word 2 = 0x140011ef -> target byte 0x47c4; word 0 = 0x140011f1
+entry2.bin sha256 d83a27adb5328bf5b0941d86254091b6167c84981d530ae57f706c20c72775f2
+export 3: word 3 = 0x1400134a -> target byte 0x4d34; word 0 = 0x1400134d
+entry3.bin sha256 9a8246633a8e0628559a7e718ea3690c9f874ed713a5269457ea6ed86187c4ae

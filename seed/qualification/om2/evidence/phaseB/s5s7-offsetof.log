@@ -1,0 +1,18 @@
+# s5s7 offsetof ORACLE run, 2026-10-25T16:49:34Z, host Linux 7.0.0-1019-nvidia aarch64
+# gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+# offsetof.c: 3059b7489df355c9ee590bf3c4c097e8b8a2e48a780b34d74b46dfa66b178b69  seed/qualification/om2/oracle/s5s7/offsetof.c
+# sha256.h: 2e6d473170f4d2d2ce90c64a2c930648f2e12cceda0af676c98528bd64b4879f  /tmp/zl/main/src/sha256.h (main acb3f15 read-only checkout)
+$ gcc -std=c11 -Wall -Wextra -Werror -I/tmp/zl/main/src -o build/om2-qual/s5s7-offsetof seed/qualification/om2/oracle/s5s7/offsetof.c
+exit=0
+$ build/om2-qual/s5s7-offsetof build/om2-qual/s5s7-shactx.bin
+sizeof sha256_ctx 104
+state offset 0 size 32 count 8 elem 4
+count offset 32 size 8
+buffer offset 40 size 64 count 64 elem 1
+alignof 8
+little endian 1
+layout matches contract YES
+exit=0
+$ cmp build/om2-qual/s5s7-shactx.bin seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out
+exit=0 (0 = gcc image == python3 struct image)
+8179f0b70205946fd625e73850d89bc96ba5f3bc14df21f2d7685dffc79575d5  seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out

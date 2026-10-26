@@ -1,0 +1,8 @@
+LEAKSCAN 1 words=29 entry=@0 data=none
+BRANCH @4 b.hi ->@27 len trap=3
+BRANCH @7 b.hi ->@27 len trap=3
+UNHANDLED @20 svc-syscall
+MEM @25 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=2 len=2 trap-check=0 data-branch=0 branch-unreached=0 mem=1 const=1 public-index=0 data-index=0 mem-unreached=0 unknown=0 unhandled=1
+MANUAL-ITEMS 1 listed above as UNKNOWN and UNHANDLED lines
+VERDICT TRACE-EQUIV-STATIC NOT_RUN

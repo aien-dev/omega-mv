@@ -1,0 +1,6 @@
+note E12 native reachability: same loaded ulong-to-uint conversion as reachable-trap.om.
+note 2^32 does not fit: trap 5, native Linux process exit 105.
+fn main to uint
+a = new ulong 4 4294967296
+ret uint get a 0
+end

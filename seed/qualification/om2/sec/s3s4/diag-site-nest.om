@@ -1,0 +1,18 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 114-116 and erratum E7: omc-site records in emission order, iter = the 0-based
+note counters of the enclosing UNROLLED loops, outer to inner, joined by ".", or "-". Function mode; the only
+note trap sites are the unsigned divs by the run-time divisor a (OMEGESE 9.3 trap 2): line 8 (-), line 11
+note (copies 0.0 0.1 1.0 1.1), line 14 in a rolled loop inside unroll i (copies 0 1). Exact stderr exp/diag-site-nest.err.
+om2 diag
+fn f a ulong to ulong
+s = div 7 a
+for i ulong 2 unroll
+for j ulong 2 unroll
+s = add s div add i j a
+end
+for k ulong 2
+s = add s div k a
+end
+end
+ret s
+end

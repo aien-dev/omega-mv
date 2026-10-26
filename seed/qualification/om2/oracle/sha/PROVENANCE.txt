@@ -1,0 +1,68 @@
+ORACLES for the independent qualification of the OM-2 SHA unit (#748, ledger L836, phaseB/sha-f5d14cb2)
+=========================================================================================================
+Everything in this directory is an ORACLE or harness tool, outside the delivered closure. Nothing here
+computes SHA-256 itself: expected digests come from /usr/bin/sha256sum (child process, stdin pipe),
+Python hashlib (OpenSSL), the Phase A fixture file (fixtures/PROVENANCE.txt, external oracles), or a
+self-consistency relation (copy == original, hash == stream). Written 2026-10-25 by the L836 SHA
+qualification worker, before any ShaLane (L838) evidence, PR text or notes were read; only the unit
+source, the bridge generator/docs and the contract/errata were read.
+
+Host: Linux 7.0.0-1019-nvidia aarch64 (DGX Spark host CPU; no GPU used).
+Tools (absolute paths; the session shell's builtin sha256sum was NOT used):
+  /usr/bin/sha256sum  sha256sum (GNU coreutils) 9.4        dpkg coreutils 9.4-3ubuntu6.3
+  /usr/bin/python3    Python 3.12.3, hashlib on OpenSSL 3.0.13 30 Jan 2024   dpkg python3.12 3.12.3-1ubuntu0.17
+  gcc                 gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0             dpkg gcc-13 13.3.0-6ubuntu2~24.04.1
+  objdump             GNU objdump (GNU Binutils for Ubuntu) 2.42              dpkg binutils 2.42-4ubuntu2.10
+  ptrace(2)           PTRACE_SINGLESTEP / PTRACE_GETREGSET(NT_PRSTATUS), via Python ctypes
+
+Objects under test (read-only):
+  unit      /tmp/zl/qsha/om/sha256/sha256-om2.om  (aien-dev/om2/sha-compact @ f5d14cb23c832362ff31d3c08b95efee996f43e7)
+            sha256 dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb
+  omc S4    /tmp/zl/omc-f6a6492f  sha256 499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec
+  omc OM-1  seed/out/omc          sha256 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+            (compiles the bridge generator src/native.om, as tools/native requires, and leakscan.om)
+  bridge    /tmp/zl/qbridge (omega-bridge feat/slice-abi @ 3bb8b8a9df5bd0419360c7a2bb1b9f31aee856ad)
+
+Files (sha256 at the time of the recorded run):
+  2d3eb380307e78c6ea0d5cbe2a97e74e75c362dcf2d92a1ea3f5341dd747b7e7  sha_qual.c     C driver: vectors, receipts,
+                                                                                   random, 2^25 parts, >= 2^32
+  ef8829970103ee6437b3fa34396e89786f0a7495b81228a367b538fb264de114  vecoracle.py   re-derives all 158 fixture rows
+                                                                                   with hashlib and sha256sum
+  192dc0bb4e028d81f1df6e4d3f11c413ea5ff2fe445fd80c245bd44c955de7a7  randcheck.py   hashlib re-check of RAND lines
+  fa6f55993dfcb6a36eb5763c48d4df8c1d6cc48adcf63ecedb581daa957aa73c  trace_child.c  traced call pairs (section 8 b)
+  e6f68a32504ddfdbfff4477bca7e42c4a5e3a84193c853ad2c84c43801d60664  trace.py       single-step trace comparison
+  a75f75e50679b301c42e00a64ef5083c418a8a25a5c7f0d1d2fbfa66d381f598  entry.py       per-export entry copy for leakscan
+  3bd8afc4d732e3ffb5c1f1c56d0c116b4037b0889f54d44b636d65e4b44db5e4  final_unchanged.c  informational: final leaves
+                                                                                   the context unchanged
+  39c6edee574c777054a1afed777f6c98da55aa82b5cd0f6e528702655f149299  stack.py       size, rotate count, stack bound
+Reused (unchanged): ../s5s7/sha/sha_driver.c (50ac882a...) + expected.h (26771c6e...), ../leak/xcheck.py
+(50e05515...), ../../fixtures/sha256-vectors.txt (b154d750...).
+
+Exact commands: candidates/sha/run-qual.sh (tasks 1, 2, 4, 5) and candidates/sha/mutants/run-mutants.sh
+(task 3), both run from the repository root; their logs are evidence/phaseB/sha-f5d14cb2/*. Builds:
+  OMEGA_NATIVE_OMC=seed/out/omc OMEGA_NATIVE_OMC2=/tmp/zl/omc-f6a6492f sh /tmp/zl/qbridge/tools/native BIND UNIT
+  gcc -std=gnu11 -O2 -Wall -Wextra -Werror -IBIND sha_qual.c -LBIND -lomega_native -Wl,-rpath,BIND -o sha_qual
+  gcc ... -DGENHDR='"omega_api.h"' -IBIND -I../s5s7/sha ../s5s7/sha/sha_driver.c ... -o sha_driver
+  gcc ... -IBIND trace_child.c ... -o trace_child   (and -DCONTROL=1 / -DCONTROL=2 negative controls)
+
+Method notes
+- sha_qual.c calls the raw omega2_* symbols so a nonzero status is printed (TRAP), never aborted on; the
+  generated omega_api.h supplies sha256_ctx. sha_driver.c uses the generated sha256_* names (abort on
+  nonzero status) and is the s5s7 driver the 16 sha-* rows of sec/s5s7/candidate.cases name.
+- Random messages: splitmix64 (fixtures/PROVENANCE.txt). Message i of seed S has bytes
+  rnd(S ^ (i << 20) ^ 0x5eed, len); len and the chunk plan come from splitmix64 seeded S*1000003+i.
+  randcheck.py needs only the printed (S, i, len) to regenerate the bytes.
+- big: 2^32+1000003 random bytes in one malloc (56 GiB available at run time, free -g in t2-big.txt);
+  the oracle digest is sha256sum fed the same buffer through a pipe. bigzero reads 2^32+3 bytes of a
+  PROT_READ MAP_NORESERVE anonymous mapping (zero page).
+- entry.py: leakscan seeds only at word 0 (or its direct B). For export k the copy's word 0 is the B
+  of word k re-based to byte 0; all other bytes are unchanged, so the scan starts where the binding
+  enters export k (NATIVE-ABI.md "Multi-entry code": the binding branches to byte 4k).
+- trace.py: data addresses are base(+offset or +index<<shift, with uxtw/sxtw) from the register file
+  before the instruction and objdump's operand text for that word; post-index uses the base. Message
+  fills run outside the traced segments; an untraced warm-up call (first call per thread maps the
+  binding stack) and a priming stop make segment boundaries uniform. Negative controls: CONTROL=1
+  (message B one byte longer) must differ in instructions and data; CONTROL=2 (message B at buf+64)
+  must differ in data addresses only.
+- stack.py: SP depth over each function's CFG from `sub/add sp, sp, #imm` (the only SP writes found;
+  any other SP write, SP writeback, depth conflict, nonzero RET depth or call cycle aborts).

@@ -1,0 +1,30 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 lines 53-55: 0x then 1..16 digits 0-9a-f, value unsigned, typed by the place
+note under the decimal range rule. Maxima of every integer type, 0x0, 16 digits with leading zeros,
+note and all sixteen digits. Expected stdout: oracle/s0s2/oracle.py (hex_max). Used with lib/putu.om.
+om2
+fn main to int
+a = uchar 0xff
+putu ulong a
+b = ushort 0xffff
+putu ulong b
+c = uint 0xffffffff
+putu ulong c
+d = ulong 0xffffffffffffffff
+putu d
+e = byte 0x7f
+putu ulong e
+f = short 0x7fff
+putu ulong f
+g = int 0x7fffffff
+putu ulong g
+h = long 0x7fffffffffffffff
+putu ulong h
+z = ulong 0x0
+putu z
+y = uchar 0x00000000000000ff
+putu ulong y
+w = ulong 0x0123456789abcdef
+putu w
+ret 0
+end
