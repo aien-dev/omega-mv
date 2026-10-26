@@ -1,0 +1,9 @@
+om2
+fn f x int to int
+ret x
+end
+fn main to int
+while false
+end
+ret f 0
+end

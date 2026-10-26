@@ -54,6 +54,51 @@ network test connects only to its own local server. Process tests reap their
 children. No service is installed or changed. `timeout` only bounds test
 processes; timed operations inside the tests use the emitted native code.
 
+### Bounded networking additions (#788)
+
+The source adds `peercred` (keyword 220), `pollfds` (221), and `sendmsg` (222).
+`sockopt` now accepts only the scalar transport allowlist in OMEGESE section 10.
+The existing `socknew`, `bind`, `listen`, `accept` (`accept4`), `connect`,
+`read`/`write`, `recv`/`send`, `waitio`, and `fclose` remain the base transport API.
+No host HTTP or JSON implementation is introduced.
+
+`tests/netdata.om` exercises Unix peer PID/UID/GID at a nonzero output offset,
+two-descriptor polling and timeout, private single-iovec `sendmsg`, deliberate
+short nonblocking sends, closed-peer `EPIPE` without SIGPIPE, descriptor reuse
+after repeated close, option allowlisting, and slice/record-size refusals.
+`tests/netpeer.om` creates distinct parent/child endpoints, compares peer PIDs
+independently, and checks nonzero offsets, untouched surrounding bytes,
+negative-timeout readiness and nested expression preservation. It exposed an
+older `getppid` lowering error: syscall 110 is `timer_settime` on Linux ARM64,
+not `getppid` (173). The old fixture only rejected zero, silently accepting a
+negative error. The lowering and positive-PID assertion are corrected here.
+Run the candidate host gate without replacing the committed compiler:
+
+```sh
+OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/gate.sh
+OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/negative.sh
+nice -n 19 ionice -c3 python3 seed/host/net-mutant.py
+nice -n 19 ionice -c3 sh seed/omc/gate18.sh
+```
+
+This is candidate host evidence, not a reseed, compiler fixpoint, release pin,
+or hardware qualification. Compiler integration owns the batch reseed.
+`net-mutant.py` is a verifier-only Python runner. It compiles each original and
+wrong-word source through the committed seed (or `OMC` override), then requires
+the real fixture to pass the original and exit 1 for the mutant. Its controls
+restore the wrong `getppid` syscall and turn an option refusal into success.
+The host gate's `OMC` selector applies to every compilation, including nested
+device/mapping refusal programs and generated identity fixtures; early
+candidate-only logs from before that correction contain mixed-compiler evidence.
+The Linux interface authorities are `asm-generic/unistd.h` (`ppoll` 73,
+`getsockopt` 209, `sendmsg` 211), `asm-generic/socket.h`, and `linux/tcp.h`.
+Instruction emission uses the existing Arm ARM forms; `STR` unsigned-offset
+stores private stack records, with `imm12` scaled by eight for 64-bit cells.
+Keyword pack verification used WolframLanguageEvaluator:
+`Table[{s,FromDigits[Reverse[ToCharacterCode[s]],256]},{s,{"peercred","pollfds","sendmsg"}}]`
+returned `{{"peercred",7234314147887146352},{"pollfds",32480013390212976},{"sendmsg",29118836274783603}}`.
+
+
 ## Source authority and limits
 
 Instruction forms come from the existing hand-audited instruction table in

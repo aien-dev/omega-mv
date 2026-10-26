@@ -1,0 +1,14 @@
+om2
+fn step x uint to uint
+requires lt x 10
+ensures eq result add x 1
+ret add x 1
+end
+fn main to int
+i = uint 0
+while lt i 3
+invariant le i 3
+i = step i
+end
+ret int sub i 3
+end

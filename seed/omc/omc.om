@@ -37,6 +37,22 @@ global tkb ulong 1
 global dexp ulong 1
 global dsev ulong 1
 
+note ---- executable contracts: OM-2 debug by default, release erases only validated pure predicates.
+note Function prefixes are replayed at returns with their declaration scope, including inline frames.
+global crel ulong 1
+global cpure ulong 1
+global cvalid ulong 1
+global clim ulong 1
+global crkind ulong 1
+global crval ulong 1
+global crtype ulong 1
+global cfpos ulong 8
+global cfline ulong 8
+global cflim ulong 8
+global cfhas ulong 8
+global csnap ulong 8
+global ckind ulong 1
+
 note ---- OM-2 section 4 (unroll, inline, folding, bounds, sites). fn_inl/fn_body/fn_bln/fn_pn: a function's
 note inline mark, its body offset and line, its parameter names. fstart: where the function being compiled
 note starts (65536 words at most in OM-2). nmlo: names below it and at or above nglob are hidden while an
@@ -45,10 +61,10 @@ note done only when it is above 0). inl and il_*: the inline frames (at most 4).
 note an inlined ret, patched at its end. lastb/tgoc: the word after the last inlined ret's B and the last
 note place a branch was patched to. u_*: the unrolled loop of each block. fok/fval/fty: a fold result.
 note sitebuf/nsite: the omc-site records of om2 diag.
-global fn_inl uchar 512
-global fn_body ulong 512
-global fn_bln ulong 512
-global fn_pn ulong 3072
+global fn_inl uchar 4096
+global fn_body ulong 4096
+global fn_bln ulong 4096
+global fn_pn ulong 24576
 global fstart ulong 1
 global nmlo ulong 1
 global fzone ulong 1
@@ -84,36 +100,36 @@ global nsite ulong 1
 global ie_from ulong 16384
 global ie_to ulong 16384
 global nie ulong 1
-global reach uchar 512
+global reach uchar 4096
 
-note ---- name table (1024 names in scope): packed name, register, type, length, kind, address ----
-global nm_name ulong 1024
-global nm_reg uchar 1024
-global nm_type uchar 1024
-global nm_len ulong 1024
-global nm_kind uchar 1024
-global nm_addr ulong 1024
+note ---- name table (8192 names in scope): packed name, register, type, length, kind, address ----
+global nm_name ulong 8192
+global nm_reg uchar 8192
+global nm_type uchar 8192
+global nm_len ulong 8192
+global nm_kind uchar 8192
+global nm_addr ulong 8192
 global nn ulong 1
 
-note ---- function table (512): name, address (byte offset in out), return type, parameter count,
+note ---- function table (4096): name, address (byte offset in out), return type, parameter count,
 note per-parameter type/length/kind (6 each), name length, name offset in the input ----
-global fn_name ulong 512
-global fn_addr ulong 512
-global fn_ret uchar 512
-global fn_np uchar 512
-global fn_pt uchar 3072
-global fn_pl ulong 3072
-global fn_pk uchar 3072
-global fn_nmlen ulong 512
-global fn_off ulong 512
+global fn_name ulong 4096
+global fn_addr ulong 4096
+global fn_ret uchar 4096
+global fn_np uchar 4096
+global fn_pt uchar 24576
+global fn_pl ulong 24576
+global fn_pk uchar 24576
+global fn_nmlen ulong 4096
+global fn_off ulong 4096
 global nf ulong 1
 global lastfn ulong 1
 global scanning ulong 1
 global ncalls ulong 1
-global callsite ulong 65536
-global callfrom ulong 65536
-global callto ulong 65536
-global settled uchar 512
+global callsite ulong 524288
+global callfrom ulong 524288
+global callto ulong 524288
+global settled uchar 4096
 
 
 note ---- compiler state ----
@@ -162,16 +178,16 @@ global lf_off ulong 256
 global lf_big uchar 256
 global nlf ulong 1
 global lymap uchar 4096
-global nm_lay uchar 1024
-global fn_play uchar 3072
+global nm_lay uchar 8192
+global fn_play uchar 24576
 
 note ---- OM-2 section 5 fresh scratch (erratum E8). fn_pfr: 1 for a `fresh` parameter slot. nm_fr: the
 note written-set slot (index + 1) a name's elements are tracked in, else 0. fz_n slots in use by the
 note function being compiled (16), fz_len their N, fz_cur the elements definitely written on the path
 note being compiled (bit i for element i); fz_ent / fz_thn (16 per block): the sets when the block opened
 note and at its else. il_fz: fz_n when an inline frame opened. dobx 1: error 14 reports obligation=init ----
-global fn_pfr uchar 3072
-global nm_fr uchar 1024
+global fn_pfr uchar 24576
+global nm_fr uchar 8192
 global fz_n ulong 1
 global fz_len ulong 16
 global fz_cur ulong 16
@@ -200,7 +216,7 @@ note name has length 0 in nm_len and its run-time element count in register nm_l
 note registers x0..x5 by slots: an unsized array two (pointer, then count), every other parameter one
 note (pwid, pslot); psl counts the slots of the fn line being read (6 at most, error 9). ul_k / ul_v: the
 note count (kind 1 register / 3 number) of argument i of the call at value depth d, at d * 6 + i ----
-global nm_lr uchar 1024
+global nm_lr uchar 8192
 global psl ulong 1
 global ul_k ulong 6156
 global ul_v ulong 6156
@@ -209,7 +225,7 @@ note for an exported function, expf 1 while an `export fn` line is read. With an
 note of the code are B to each export in source order and the code starts at byte 176 + 4E ----
 global nexp ulong 1
 global expf ulong 1
-global fn_exp uchar 512
+global fn_exp uchar 4096
 
 note ======== leaf helpers ========
 
@@ -401,6 +417,10 @@ end
 
 note dobl_w: obligation= from the code: 27 init, 28 ctor, 29 layout, 21 bounds, 14 growth, 12 regs, else -
 fn dobl_w code ulong to void
+if eq code 30
+mputw 8386654075301556067 8
+ret
+end
 if eq code 27
 mputw 1953066601 4
 ret
@@ -1220,6 +1240,15 @@ end
 if eq w 7310870969309884259
 ret 97
 end
+if eq w 7234314147887146352
+ret 220
+end
+if eq w 32480013390212976
+ret 221
+end
+if eq w 29118836274783603
+ret 222
+end
 if eq get om2 0 0
 ret 0
 end
@@ -1379,6 +1408,9 @@ r = ulong 2
 end
 if ne lineis q 32771382692703599 7 0
 r = ulong 3
+end
+if eq r 0
+r = cp_mode q
 end
 end
 if ne r 0
@@ -2272,6 +2304,9 @@ note findname: packed name -> its index + 1 among the names in scope (0 none). o
 fn findname w ulong to ulong
 i = ulong 0
 n = get nn 0
+if ne get cpure 0 0
+n = get clim 0
+end
 if eq i get nglob 0
 if gt get nmlo 0 i
 i = get nmlo 0
@@ -2349,7 +2384,7 @@ end
 note addname: packed name, register, type, length, kind, address. om4 ADDNAME.
 fn addname w ulong r ulong t ulong ln ulong k ulong a ulong to void
 n = get nn 0
-if ge n 1024
+if ge n 8192
 fail 14
 end
 put nm_name n w
@@ -3536,7 +3571,7 @@ end
 note ca_bl: BL to function f (index + 1), C6.2.43
 fn ca_bl f ulong to void
 n = get ncalls 0
-if ge n 65536
+if ge n 524288
 fail 14
 end
 put callsite n get oc 0
@@ -3789,6 +3824,9 @@ end
 
 note ======== the parts of the value reader that read no further value ========
 fn vdec to void
+if and ne get cpure 0 0 ge get rt 0 10
+fail 30
+end
 put depth 0 sub get depth 0 1
 end
 
@@ -4023,7 +4061,7 @@ i = add i 1
 end
 ca_bl f
 hr = ulong 1
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 hr = ulong 0
 end
 n = get svn 0
@@ -4205,7 +4243,7 @@ if eq c 153
 ret 50
 end
 if eq c 154
-ret 110
+ret 173
 end
 if eq c 155
 ret 166
@@ -4963,7 +5001,156 @@ basearg 3 e
 loadarg 16 1 get fr add x 21
 e3 2332033024 3 3 16
 loadarg 4 1 get fr add x 22
+note Only scalar transport options; no filters, devices, credentials or pointer-bearing options.
+hoptgate
+hreturn dst x
+end
+
+note Socket option allowlist. Linux asm-generic/socket.h and linux/tcp.h own these IDs.
+note Unknown options retain ENOPROTOOPT (-92); malformed scalar sizes return EINVAL (-22).
+fn hoptgate to void
+ok = new ulong 6 0
+mimmed 4043309056 31 1 1
+tcp = get oc 0
+emit 1409286145
+for j ulong 5
+v = add j 5
+if eq j 0
+v = ulong 2
+end
+if eq j 1
+v = ulong 15
+end
+mimmed 4043309056 31 2 v
+put ok j get oc 0
+emit 1409286144
+end
+badso = get oc 0
+emit 335544320
+patch19 tcp get oc 0
+mimmed 4043309056 31 1 6
+badtcp = get oc 0
+emit 1409286145
+mimmed 4043309056 31 2 1
+put ok 5 get oc 0
+emit 1409286144
+patch26 badso get oc 0
+patch19 badtcp get oc 0
+matconst 0 sub ulong 0 92
+done = get oc 0
+emit 335544320
+for j ulong 6
+patch19 get ok j get oc 0
+end
+mimmed 4043309056 31 4 4
+sizeok = get oc 0
+emit 1409286144
+matconst 0 sub ulong 0 22
+badsize = get oc 0
+emit 335544320
+patch19 sizeok get oc 0
 hsys 208
+patch26 done get oc 0
+patch26 badsize get oc 0
+end
+
+note SO_PEERCRED: fixed 12-byte ucred result, never a caller-chosen getsockopt operation.
+fn hpeercr dst ulong x ulong to void
+harg x 4 8
+e = harray x 1
+save
+hload x 4 0
+basearg 3 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 3 3 16
+loadarg 4 1 get fr add x 22
+matconst 16 12
+e3 3942645760 31 4 16
+trapc 3 3
+matconst 1 1
+matconst 2 17
+spsub 16
+stkchk
+matconst 4 12
+emit or ulong 3103785952 4
+emit or ulong 2432697312 4
+hsys 209
+spadd 16
+hreturn dst x
+end
+
+note pollfds uses packed Linux pollfd records; length is bytes, each record is 8 bytes.
+note Maximum 1024 records, checked before ppoll. Kernel writes only revents in the checked slice.
+fn hpollfds dst ulong x ulong to void
+e = harray x 1
+harg x 2 9
+save
+basearg 0 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 0 0 16
+loadarg 1 1 get fr add x 22
+matconst 16 7
+e3 2315255808 17 1 16
+mimmed 4043309056 31 17 0
+trapc 1 3
+matconst 16 8192
+e3 3942645760 31 1 16
+trapc 8 3
+matconst 16 8
+e3 2596276224 1 1 16
+hload x 2 2
+spsub 16
+stkchk
+matconst 3 1000000000
+emit 4043309151
+forever = get oc 0
+emit 1409286155
+e3 2596276224 4 2 3
+emit 2600700037
+emit 4177527780
+emit 4177528805
+emit or ulong 2432697312 2
+jump = get oc 0
+emit 335544320
+patch19 forever get oc 0
+matconst 2 0
+patch26 jump get oc 0
+matconst 3 0
+matconst 4 8
+hsys 73
+spadd 16
+hreturn dst x
+end
+
+note sendmsg has one checked iovec and no ancillary data or exposed kernel pointers.
+note Arm ARM STR unsigned offset: imm12 scaled by 8, Rn=SP; private msghdr then iovec.
+fn hsendmsg dst ulong x ulong to void
+harg x 4 8
+e = harray x 0
+harg x 2 8
+save
+hload x 4 0
+hload x 2 2
+matconst 16 16384
+e3 2852126720 2 2 16
+basearg 3 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 3 3 16
+loadarg 4 1 get fr add x 22
+spsub 80
+stkchk
+for j ulong 10
+emit or or ulong 4177527776 31 shl j 10
+end
+emit or or ulong 4177527776 3 shl ulong 8 10
+emit or or ulong 4177527776 4 shl ulong 9 10
+emit or or ulong 2432697312 3 shl ulong 64 10
+emit or or ulong 4177527776 3 shl ulong 2 10
+matconst 3 1
+emit or or ulong 4177527776 3 shl ulong 3 10
+emit or ulong 2432697312 1
+hsys 211
+spadd 80
 hreturn dst x
 end
 
@@ -5510,6 +5697,18 @@ fail 9
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
+if eq c 220
+hpeercr dst x
+ret
+end
+if eq c 221
+hpollfds dst x
+ret
+end
+if eq c 222
+hsendmsg dst x
+ret
+end
 if eq c 176
 mtinit
 mnew c dst x
@@ -5648,6 +5847,9 @@ note destination. Every value nests one level deeper (at most 1024, error 14); a
 fn rdval mode ulong exp ulong dst ulong fe ulong to void
 put dexp 0 1
 if eq mode 2
+if ne get cpure 0 0
+fail 30
+end
 if ne get om2 0 0
 if ne get fn_inl sub fe 1 0
 inl_call fe dst
@@ -5683,6 +5885,9 @@ ret
 end
 if eq mode 0
 tok
+end
+if ne get cpure 0 0
+cp_token
 end
 put depth 0 add get depth 0 1
 if gt get depth 0 1024
@@ -5742,7 +5947,7 @@ f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
 unkfail 13
 end
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 dst f
@@ -5751,6 +5956,15 @@ ret
 end
 c = kw get tw 0
 if eq c 0
+if ne get cpure 0 0
+if eq get tw 0 128009175786866
+if eq get crkind 0 0
+fail 30
+end
+vdone get crkind 0 get crval 0 get crtype 0
+ret
+end
+end
 e = findname get tw 0
 if ne e 0
 if eq get nm_kind sub e 1 9
@@ -5767,13 +5981,18 @@ if ne get nm_kind sub e 1 0
 fail 7
 end
 vdone 1 ulong get nm_reg sub e 1 ulong get nm_type sub e 1
+if ne get cpure 0 0
+if ge get rt 0 10
+fail 30
+end
+end
 ret
 end
 f = findfn get tw 0 0 0
 if eq f 0
 unkfail 3
 end
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 dst f
@@ -5885,7 +6104,7 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
-if and ge c 100 le c 177
+if or and ge c 100 le c 177 and ge c 220 le c 222
 hostval c dst
 ret
 end
@@ -6113,7 +6332,7 @@ f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
 unkfail 13
 end
-if ne get fn_ret sub f 1 10
+if ne get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 255 f
@@ -6234,7 +6453,7 @@ if eq f 0
 s_assign w
 ret
 end
-if ne get fn_ret sub f 1 10
+if ne get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 255 f
@@ -6343,7 +6562,7 @@ end
 c = kw get tw 0
 r = c
 if eq c 76
-r = ulong 10
+r = ulong 12
 else
 if eq c 88
 r = ulong 10
@@ -6392,7 +6611,7 @@ f = ulong 0
 if eq get scanning 0 1
 newname w l s
 f = get nf 0
-if ge f 512
+if ge f 4096
 fail 14
 end
 put nf 0 add f 1
@@ -6452,6 +6671,9 @@ end
 end
 fn_to f np
 ab_entry f
+if eq get scanning 0 0
+cp_entry
+end
 if eq get scanning 0 1
 put curret 0 0
 put nn 0 0
@@ -6465,20 +6687,33 @@ s_iret
 ret
 end
 r = get curret 0
-if eq r 10
+if eq r 12
 eol
+cp_post 0 0 r
 epi
 dead1
 ret
 end
-rdval 0 r 0 0
+dst = ulong 0
+if and ne get cfhas 0 0 eq get crel 0 0
+dst = ulong 255
+end
+rdval 0 r dst 0
 if ne get rt 0 r
 fail 7
 end
+if and ne get cfhas 0 0 eq get crel 0 0
+rr = matreg get rk 0 get rv 0 r
+eol
+cp_post 1 rr r
+force 1 rr r 0
+else
 force get rk 0 get rv 0 get rt 0 0
+eol
+cp_post 1 0 r
+end
 epi
 dead1
-eol
 end
 
 note s_exit: exit value (int): Linux exit (system call 93: MOVZ X8, #93, C6.2.285; SVC #0, C6.2.466); the
@@ -6778,6 +7013,7 @@ c = alloc
 put held 0 get nslot 0
 emit or 3531603968 c
 hd = get oc 0
+cp_head skipln get cur 0 add get line 0 1
 br = cond
 n = ulong 1000000
 tok
@@ -6802,6 +7038,7 @@ end
 lpcnt c n
 pushb br 3 hd c 0
 pushnh sn sh
+cp_skip
 end
 
 note sf_br: B.HS (unsigned) or B.GE (signed) to the loop exit, C6.2.34 (distance filled at end); returns
@@ -6825,6 +7062,7 @@ put held 0 get nslot 0
 addname w i t 0 0 0
 emit or 3531603968 i
 hd = get oc 0
+cp_head get cur 0 get line 0
 if le kk 4095
 emit or or 4043309087 shl kk 10 shl i 5
 else
@@ -6835,6 +7073,7 @@ end
 br = sf_br t
 pushb br 4 hd i t
 pushnh sn sh
+cp_skip
 end
 
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
@@ -6849,6 +7088,7 @@ c = alloc
 put held 0 get nslot 0
 emit or 3531603968 c
 hd = get oc 0
+cp_head get cur 0 get line 0
 emit or or 3942645791 shl kr 16 shl i 5
 br = sf_br t
 m = alloc
@@ -6858,6 +7098,7 @@ trapc 2 4
 emit or or 2432697344 c shl c 5
 pushb br 4 hd i t
 pushnh sn sh
+cp_skip
 end
 
 note s_for: for i T K: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number, or a
@@ -6979,6 +7220,8 @@ put u_k n kk
 put u_nn n get nn 0
 put u_held n get held 0
 put fzone 0 add get fzone 0 1
+cp_head get cur 0 get line 0
+cp_skip
 end
 
 note fuelc: charge n to the function's fuel at the construct on line ln, before anything of it expands; a
@@ -7000,11 +7243,19 @@ put u_it i it
 put nm_addr get breg i it
 put nn 0 get u_nn i
 put held 0 get u_held i
+put nslot 0 get u_held i
 put dead 0 0
 put cur 0 get u_cur i
 put line 0 get u_line i
+cp_head get cur 0 get line 0
+cp_skip
 ret
 end
+put u_it i it
+put nm_addr get breg i it
+put nn 0 get u_nn i
+put nslot 0 get u_held i
+cp_head get u_cur i get u_line i
 put nb 0 i
 put nn 0 get bnames i
 put held 0 get bheld i
@@ -7043,7 +7294,7 @@ fn inl_call fe ulong dst ulong to void
 s0 = get nslot 0
 rres = ulong 255
 ns = s0
-if ne get fn_ret sub fe 1 10
+if ne get fn_ret sub fe 1 12
 if eq dst 255
 rres = alloc
 ns = add s0 1
@@ -7190,6 +7441,7 @@ put curret 0 ulong get fn_ret sub fe 1
 put dead 0 0
 put cur 0 get fn_body sub fe 1
 put line 0 get fn_bln sub fe 1
+cp_entry
 inl_run lv
 end
 
@@ -7239,20 +7491,33 @@ note s_iret: ret inside an inlined body: the value into the frame's result regis
 fn s_iret to void
 lv = sub get inl 0 1
 r = get curret 0
-if eq r 10
+if eq r 12
 eol
+cp_post 0 0 r
 inlb
 dead1
 ret
 end
+if and ne get cfhas get inl 0 0 eq get crel 0 0
+rdval 0 r 255 0
+if ne get rt 0 r
+fail 7
+end
+rr = matreg get rk 0 get rv 0 r
+eol
+cp_post 1 rr r
+force 1 rr r get il_res lv
+else
 rdval 0 r get il_res lv 0
 if ne get rt 0 r
 fail 7
 end
 force get rk 0 get rv 0 get rt 0 get il_res lv
+eol
+cp_post 1 get il_res lv r
+end
 inlb
 dead1
-eol
 end
 
 note s_inlx: the end of an inlined body: a value function must not reach it (error 18). A last ret's B
@@ -7263,9 +7528,10 @@ eol
 lv = sub get inl 0 1
 fe = get il_fn lv
 if eq get dead 0 0
-if ne get fn_ret sub fe 1 10
+if ne get fn_ret sub fe 1 12
 fail 18
 end
+cp_post 0 0 12
 end
 inl_pat get il_p0 lv
 put nb 0 i
@@ -7686,9 +7952,10 @@ note 100 + code). Per trap code used: MOVZ X1, #code (C6.2.285); B tail. om4 FIN
 fn finish to void
 eol
 if eq get dead 0 0
-if ne get curret 0 10
+if ne get curret 0 12
 fail 18
 end
+cp_post 0 0 12
 epi
 end
 nt0 = get nt 0
@@ -7877,7 +8144,7 @@ emit 3533832220
 emit 3533836304
 emit 2432696863
 emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
-if eq get fn_ret sub f 1 10
+if eq get fn_ret sub f 1 12
 emit 3531603968
 end
 emit 3531606952
@@ -8083,6 +8350,9 @@ if eq get line 0 get om2ln 0
 skipnl
 ret 0
 end
+end
+if ne cp_kind 0
+fail 30
 end
 if gt get tl 0 8
 s_long
@@ -9259,6 +9529,9 @@ end
 
 note fz_get: get e i with the index in rk/rv/rt
 fn fz_get e ulong to void
+if ne get cvalid 0 0
+ret
+end
 s = ulong get nm_fr sub e 1
 if eq s 0
 ret
@@ -10030,6 +10303,10 @@ global ir_oarg ulong 1536
 global ir_miss ulong 1
 global ir_cl ulong 1
 global ir_cs ulong 1
+note per open block frame, the local count when it opened (names bound inside go out of scope at else / end)
+global ir_fnn ulong 8
+note ir_bbig: tbig of the bare number in ir_bare, for the range check once its type is known (error 8).
+global ir_bbig ulong 1
 
 fn ir_lead to ulong
 p = ulong 0
@@ -10142,7 +10419,12 @@ put ir_nc 0 add n 1
 ret r
 end
 
-fn ir_find w ulong to ulong
+note ir_find: the local in scope named w (packed) -> its index + 1, or 0. Locals are at most 8 bytes, so a
+note word of length l over 8 is never one (its packed first 8 bytes may equal a local's name).
+fn ir_find w ulong l ulong to ulong
+if gt l 8
+ret 0
+end
 i = ulong 0
 while lt i get ir_nn 0
 if eq get ir_nm i w
@@ -10155,18 +10437,96 @@ end
 
 fn ir_bind w ulong r ulong to void
 n = get ir_nn 0
+if ge n 32
+fail 14
+end
 put ir_nm n w
 put ir_nrr n uchar r
 put ir_nn 0 add n 1
 end
 
+note ir_kwt: the keyword number of the current word, or 0 for a word over 8 bytes (only 8 are packed).
+fn ir_kwt to ulong
+if gt get tl 0 8
+ret 0
+end
+ret kw get tw 0
+end
+
+note ir_newname: a new local, parameter or function name must not be a keyword (16), a local in scope, a
+note constant, or a function of the unit so far, the current one included (10, as newname). Function
+note names compare in full (up to 63 bytes).
+fn ir_newname w ulong s ulong l ulong to void
+if le l 8
+if ne kw w 0
+fail 16
+end
+if ne findname w 0
+fail 10
+end
+end
+if ne ir_find w l 0
+fail 10
+end
+put ir_cl 0 l
+put ir_cs 0 s
+j = ulong 0
+while lt j get irf_n 0
+if eq get irf_nm j w
+if ne ir_nameeq j 0
+fail 10
+end
+end
+j = add j 1
+end
+end
+
+note ir_newloc: a new local, parameter or for counter: at most 8 bytes (13, as native), then ir_newname.
+fn ir_newloc w ulong s ulong l ulong to void
+if gt l 8
+fail 13
+end
+ir_newname w s l
+end
+
+note ir_type: a type word IR v1 lowers: 1 .. 9, or void (76) when isret is 1. A float, a view / edit array or
+note void elsewhere is error 9 (as typeword in IR mode); no word is 4; another word 16.
+fn ir_type isret ulong to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+c = ir_kwt
+if and ge c 1 le c 9
+ret c
+end
+if and eq c 76 eq isret 1
+ret c
+end
+if or or eq c 76 eq c 88 eq c 89
+fail 9
+end
+if or eq c 57 eq c 58
+fail 9
+end
+fail 16
+ret 0
+end
+
 fn ir_push k ulong a ulong b ulong c ulong d ulong to void
 n = get ir_nf 0
+if ge n 8
+fail 14
+end
 put ir_fk n uchar k
 put ir_fa n a
 put ir_fb n b
 put ir_fc n c
 put ir_fd n d
+put ir_fnn n get ir_nn 0
 put ir_nf 0 add n 1
 end
 
@@ -10444,9 +10804,11 @@ put ir_no 0 add n 1
 end
 
 fn ir_name to void
-e = ir_find get tw 0
+e = ir_find get tw 0 get tl 0
 if eq e 0
+if le get tl 0 8
 e = findname get tw 0
+end
 if ne e 0
 if eq get nm_kind sub e 1 9
 t = ulong get nm_type sub e 1
@@ -10467,6 +10829,9 @@ end
 
 fn ir_un c ulong dst ulong to void
 ir_val 65534 0
+if ne get ir_isb 0 0
+fail 11
+end
 ty = get ir_vt 0
 if and eq c 49 eq ty 1
 fail 7
@@ -10494,6 +10859,10 @@ if or eq c 41 eq c 42
 exp2 = ulong 0
 end
 ir_val 65534 exp2
+ir_bin_done left lty c dst
+end
+
+fn ir_bin_done left ulong lty ulong c ulong dst ulong to void
 isb2 = get ir_isb 0
 ty2 = get ir_vt 0
 if or eq c 41 eq c 42
@@ -10518,6 +10887,7 @@ end
 end
 right = get ir_rr 0
 if ne isb2 0
+range get ir_bare 0 lty get ir_bbig 0
 right = ir_lit get ir_bare 0 lty
 end
 if ge c 43
@@ -10544,10 +10914,15 @@ fn ir_bin c ulong dst ulong to void
 ir_val 65534 0
 if ne get ir_isb 0 0
 mag = get ir_bare 0
+bg = get ir_bbig 0
 ir_val 65534 0
+if ne get ir_isb 0 0
+fail 11
+end
 ty = get ir_vt 0
+range mag ty bg
 left = ir_lit mag ty
-ir_bin_r left ty c dst
+ir_bin_done left ty c dst
 ret
 end
 left = get ir_rr 0
@@ -10588,17 +10963,25 @@ fn ir_val dst ulong exp ulong to void
 put ir_isb 0 0
 put ir_miss 0 0
 tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if or eq get tk 0 4 eq get tk 0 5
+fail 9
+end
 if eq get tk 0 2
 if eq exp 0
 put ir_bare 0 get tw 0
+put ir_bbig 0 get tbig 0
 put ir_isb 0 1
 ret
 end
+range get tw 0 exp get tbig 0
 r = ir_lit get tw 0 exp
 ir_set dst r exp
 ret
 end
-c = kw get tw 0
+c = ir_kwt
 if and ge c 1 le c 9
 ir_cast c dst
 ret
@@ -10675,6 +11058,7 @@ fn ir_end to void
 n = sub get ir_nf 0 1
 put ir_nf 0 n
 k = ulong get ir_fk n
+put ir_nn 0 get ir_fnn n
 if eq k 1
 if eq get ir_fc n 0
 if eq get ir_dead 0 0
@@ -10713,8 +11097,16 @@ end
 ir_start get ir_fb n
 end
 if eq k 4
+if eq get ir_dead 0 0
+if ne get ir_ret 0 76
+fail 18
+end
+ir_op 15 65535 0 0 0
+put ir_dead 0 1
+end
 put ir_have 0 1
 end
+eol
 end
 
 fn ir_if to void
@@ -10722,6 +11114,7 @@ ir_val 65534 1
 if ne get ir_vt 0 1
 fail 7
 end
+eol
 th = ir_block
 el = ir_block
 ir_op 14 get ir_rr 0 th el 0
@@ -10731,6 +11124,11 @@ end
 
 fn ir_else to void
 n = sub get ir_nf 0 1
+if or ne get ir_fk n 1 ne get ir_fc n 0
+fail 15
+end
+eol
+put ir_nn 0 get ir_fnn n
 if eq get ir_dead 0 0
 j = ir_block
 ir_op 13 j 0 0 0
@@ -10741,6 +11139,22 @@ put ir_fd n 65535
 end
 put ir_fc n 1
 ir_start get ir_fb n
+end
+
+fn ir_bound to ulong
+tok
+if or eq get tk 0 0 eq get tk 0 3
+ret 1000000
+end
+if or ne get tk 0 1 ne ir_kwt 70
+fail 5
+end
+bnd = lenval 4
+if ge sub bnd 1 999999
+fail 8
+end
+eol
+ret bnd
 end
 
 fn ir_while to void
@@ -10760,15 +11174,7 @@ ir_val 65534 1
 if ne get ir_vt 0 1
 fail 7
 end
-bnd = ulong 1000000
-tok
-if and eq get tk 0 1 eq kw get tw 0 70
-bnd = lenval 4
-if ge sub bnd 1 999999
-fail 8
-end
-end
-lim = ir_lit bnd 5
+lim = ir_lit ir_bound 5
 ir_op 14 get ir_rr 0 g ex 0
 ir_start g
 ger = ir_newreg 1
@@ -10783,21 +11189,37 @@ ir_op 3 1 cnt cnt one
 ir_push 2 h ex cnt 0
 end
 
+note ir_for: for name type count. The counter is bound after the count is read, so the count cannot
+note name it; ir_forb opens the loop, and the counter leaves scope at its end.
 fn ir_for to void
 tok
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
 w = get tw 0
-tok
-ty = kw get tw 0
+ir_newloc w get ts 0 get tl 0
+ty = ir_type 0
+if eq ty 1
+fail 7
+end
 z = ir_lit 0 ty
 ir_val 65534 ty
 if ne get ir_vt 0 ty
 fail 7
 end
+eol
 bnd = get ir_rr 0
 uu = ir_lit 1 ty
 ctr = ir_newreg ty
 ir_bind w ctr
 ir_op 2 ctr z 0 0
+ir_forb ctr bnd
+end
+
+fn ir_forb ctr ulong bnd ulong to void
 h = ir_block
 body = ir_block
 ex = ir_block
@@ -10808,19 +11230,30 @@ c = ir_newreg 1
 ir_op 5 3 c ctr bnd
 ir_op 14 c body ex 0
 ir_push 3 h ex ctr 0
+put ir_fnn sub get ir_nf 0 1 sub get ir_nn 0 1
 ir_start body
 end
 
+note ir_doret: ret alone in a void function, ret value otherwise (4 when the value is missing, 5 for a
+note value or any other word after it); the value is read from just after ret.
 fn ir_doret to void
+c0 = get cur 0
 tok
 if or eq get tk 0 0 eq get tk 0 3
+if ne get ir_ret 0 76
+fail 4
+end
 ir_op 15 65535 0 0 0
 else
-put cur 0 get ts 0
+if eq get ir_ret 0 76
+fail 5
+end
+put cur 0 c0
 ir_val 65534 get ir_ret 0
 if ne get ir_vt 0 get ir_ret 0
 fail 7
 end
+eol
 ir_op 15 get ir_rr 0 0 0 0
 end
 put ir_dead 0 1
@@ -10844,25 +11277,33 @@ put ir_args i get ir_rr 0
 i = add i 1
 end
 ir_callop 65535 j np
+eol
 end
 
+note ir_assign: name [=] value for a local in scope, a void call, or a new typed local (a new name that is
+note a keyword, constant, local or function is refused; a bare number has no type, error 11).
 fn ir_assign w ulong to void
 p = get ts 0
 l = get tl 0
+c0 = get cur 0
 tok
 eqs = false
-if eq kw get tw 0 73
+if and eq get tk 0 1 eq ir_kwt 73
 eqs = true
 else
-put cur 0 get ts 0
+put cur 0 c0
+if eq get tk 0 0
+put line 0 sub get line 0 1
 end
-e = ir_find w
+end
+e = ir_find w l
 if ne e 0
 r = ulong get ir_nrr sub e 1
 ir_val r ulong get ir_rty r
 if ne get ir_vt 0 ulong get ir_rty r
 fail 7
 end
+eol
 ret
 end
 put ir_cl 0 l
@@ -10875,7 +11316,17 @@ end
 ir_stmtcall f
 ret
 end
+if le l 8
+if ne findname w 0
+fail 7
+end
+end
+ir_newloc w p l
 ir_val 65535 0
+if ne get ir_isb 0 0
+fail 11
+end
+eol
 ir_bind w get ir_rr 0
 end
 
@@ -10901,6 +11352,7 @@ fail 9
 end
 ir_op 13 sub ex 1 0 0 0
 put ir_dead 0 1
+eol
 end
 
 note ir_trap: OMEGESE section 4. A trap ends the path but the IR still
@@ -10924,20 +11376,28 @@ ir_op 15 z 0 0 0
 put ir_dead 0 1
 end
 
+note ir_stmt: one line. The end of the input inside a function is error 15; a line starting with a number
+note is 16; a note is skipped even after the path ended; a statement IR v1 does not lower is 9.
 fn ir_stmt to ulong
 tok
-if or eq get tk 0 0 eq get tk 0 3
+if eq get tk 0 0
 ret 0
 end
-c = kw get tw 0
+if eq get tk 0 3
+fail 15
+end
+if ne get tk 0 1
+fail 16
+end
+c = ir_kwt
+if eq c 83
+skipnl
+ret 0
+end
 if and ne c 66 ne c 68
 if ne get ir_dead 0 0
 fail 17
 end
-end
-if eq c 83
-skipnl
-ret 0
 end
 if eq c 77
 fail 9
@@ -10977,24 +11437,67 @@ end
 if eq c 64
 fail 15
 end
+if ne c 0
+if eq c 97
+note continue keeps its documented IR refusal, error 3 (gate-ir.sh continue_use)
+fail 3
+end
+if or eq c 80 eq c 82
+fail 9
+end
+if or or or eq c 78 eq c 79 eq c 81 eq c 85
+fail 9
+end
+if eq c 193
+fail 9
+end
+fail 16
+end
 ir_assign get tw 0
 ret 0
 end
 
+note ir_param: parameter np of function f, named by the current word: a new name and an IR v1 type.
+fn ir_param f ulong to void
+w = get tw 0
+s = get ts 0
+l = get tl 0
+ir_newloc w s l
+np = get irf_np f
+if ge np 6
+fail 9
+end
+ty = ir_type 0
+put irf_pt add mul f 6 np uchar ty
+put irf_np f add np 1
+r = ir_newreg ty
+ir_bind w r
+end
+
+note ir_fn: fn name (param type)* to type | void, then the body. The name is checked (16, 13 over 63
+note bytes, 10 when in use) and entered before the parameters, so a parameter cannot reuse it.
 fn ir_fn to void
 tok
+if ne get tk 0 1
+fail 16
+end
+if gt get tl 0 63
+fail 13
+end
 fcur = get irf_n 0
 if ge fcur 32
 fail 14
 end
+put ir_nn 0 0
+ir_newname get tw 0 get ts 0 get tl 0
 put irf_nm fcur get tw 0
 put irf_ns fcur get ts 0
 put irf_nl fcur get tl 0
 put irf_np fcur 0
+put irf_n 0 add fcur 1
 put ir_ns 0 get ts 0
 put ir_nl 0 get tl 0
 put ir_nreg 0 0
-put ir_nn 0 0
 put ir_nc 0 0
 put ir_nb 0 0
 put ir_nord 0 0
@@ -11004,26 +11507,21 @@ put ir_dead 0 0
 go = true
 while go
 tok
-if eq kw get tw 0 65
+if or eq get tk 0 0 eq get tk 0 3
+fail 4
+end
+if ne get tk 0 1
+fail 16
+end
+if eq ir_kwt 65
 go = false
 else
-w = get tw 0
-tok
-ty = kw get tw 0
-np = get irf_np fcur
-if ge np 6
-fail 9
-end
-put irf_pt add mul fcur 6 np uchar ty
-put irf_np fcur add np 1
-r = ir_newreg ty
-ir_bind w r
+ir_param fcur
 end
 end
-tok
-put ir_ret 0 kw get tw 0
+put ir_ret 0 ir_type 1
+eol
 put irf_ret fcur uchar get ir_ret 0
-put irf_n 0 add fcur 1
 put ir_npar 0 get ir_nreg 0
 b = ir_block
 ir_start b
@@ -11074,6 +11572,340 @@ fmtout
 end
 n = write 1 out 0 get oc 0
 exit 0
+end
+
+note ======== executable contract predicates (OM-2, native targets) ========
+note Token packs below: Wolfram FromDigits[Reverse[ToCharacterCode[word]],256].
+note Contract words are contextual: OM-1 name meanings and keyword-table bytes do not change.
+note Explicit native build policy, with syntax and purity checked in both policies.
+note om2 debug / om2 release and om2 diag debug / om2 diag release; fmt stays canonical.
+fn cp_mode q ulong to ulong
+if gt add q 4 get inlen 0
+ret 0
+end
+if ne get inp q 111
+ret 0
+end
+if ne get inp add q 1 109
+ret 0
+end
+if ne get inp add q 2 50
+ret 0
+end
+if ne get inp add q 3 32
+ret 0
+end
+p = add q 4
+m = ulong 1
+if le add p 5 get inlen 0
+if and eq get inp p 100 eq get inp add p 1 105
+if and eq get inp add p 2 97 eq get inp add p 3 103
+if eq get inp add p 4 32
+p = add p 5
+m = ulong 2
+end
+end
+end
+end
+if ne lineis p 28555834798400882 7 0
+put crel 0 1
+ret m
+end
+if ne lineis p 444351014244 5 0
+ret m
+end
+ret 0
+end
+
+fn cp_kind to ulong
+if eq get om2 0 0
+ret 0
+end
+if ne get tk 0 1
+ret 0
+end
+if and eq get tl 0 8 eq get tw 0 8315178084276987250
+ret 1
+end
+if and eq get tl 0 7 eq get tw 0 32481164592901733
+ret 2
+end
+if and eq get tl 0 9 eq get tw 0 7953754356895346281
+if eq get inp add get ts 0 8 116
+ret 3
+end
+end
+ret 0
+end
+
+note cp_next reads the next prefix clause, ignoring comments and blanks; a nonclause is unread.
+fn cp_next to ulong
+p = get cur 0
+l = get line 0
+go = true
+while go
+tok
+if eq get tk 0 1
+if and eq get tl 0 4 eq get tw 0 1702129518
+skipnl
+else
+go = false
+end
+else
+if ne get tk 0 0
+go = false
+end
+end
+end
+k = cp_kind
+if eq k 0
+put cur 0 p
+put line 0 l
+end
+ret k
+end
+
+note Recursive purity allowlist, before rdval dispatch. No calls, floats, host or mapped operations.
+fn cp_token to void
+if eq get tk 0 2
+ret
+end
+if ne get tk 0 1
+fail 30
+end
+if gt get tl 0 8
+fail 30
+end
+c = kw get tw 0
+if eq c 0
+ret
+end
+if le sub c 1 8
+ret
+end
+if le sub c 33 19
+ret
+end
+if or eq c 55 eq c 56
+ret
+end
+if or or eq c 59 eq c 60 eq c 74
+ret
+end
+fail 30
+end
+
+note Pure evaluation changes no names, calls, inline frames or writes.
+note Snapshot emission effects, including trap records, diagnostic sites and branch targets.
+fn cp_save to void
+put csnap 0 get oc 0
+put csnap 1 get nt 0
+put csnap 2 get nsite 0
+put csnap 3 get nslot 0
+put csnap 4 get fzone 0
+put csnap 5 get tgoc 0
+put csnap 6 get lastb 0
+end
+
+fn cp_erase to void
+put oc 0 get csnap 0
+put nt 0 get csnap 1
+put nsite 0 get csnap 2
+put tgoc 0 get csnap 5
+put lastb 0 get csnap 6
+end
+
+fn cp_eval code ulong erase ulong to void
+ln = get line 0
+rule = ulong 0
+cp_save
+put cpure 0 1
+put fzone 0 1
+rdval 0 1 255 0
+if ne get rt 0 1
+fail 7
+end
+eol
+nextln = get line 0
+put line 0 ln
+if and eq get rk 0 3 ne get rv 0 0
+rule = ulong 1
+cp_erase
+else
+if or ne erase 0 ne get crel 0 0
+rule = ulong 2
+cp_erase
+else
+if eq get rk 0 3
+trapc 14 code
+else
+if eq get rk 0 4
+trapc xor get rv 0 1 code
+else
+r = matreg get rk 0 get rv 0 get rt 0
+trapsite or 3019898880 r code
+end
+end
+end
+end
+if and eq get om2m 0 1 eq erase 0
+cp_rec rule
+end
+put line 0 nextln
+put cpure 0 0
+put cvalid 0 0
+put fzone 0 get csnap 4
+put nslot 0 get csnap 3
+end
+
+note omc-check distinguishes a proof from release policy; initial deferred validation is silent.
+fn cp_rec rule ulong to void
+sitew 7162245557575183727 8
+sitew 540090475 4
+if eq rule 0
+sitew 1953523051 4
+else
+sitew 110386890240613 6
+end
+sitew 67505853393952 6
+siten add get line 0 get lbase 0
+sitew 67505820627488 6
+if eq rule 0
+sitew 28549272340166002 7
+end
+if eq rule 1
+sitew 8389750308618530659 8
+sitew 435762132013 5
+end
+if eq rule 2
+sitew 28555834798400882 7
+end
+sitew 67501558426400 6
+if eq get ckind 0 1
+sitew 8315178084276987250 8
+end
+if eq get ckind 0 2
+sitew 32481164592901733 7
+end
+if eq get ckind 0 3
+sitew 7953754356895346281 8
+siteb 116
+end
+siteb 10
+end
+
+note Function prefix predicates bind only globals and parameters visible on entry.
+fn cp_entry to void
+lv = get inl 0
+put cfhas lv 0
+if eq get om2 0 0
+ret
+end
+put cfpos lv get cur 0
+put cfline lv get line 0
+put cflim lv get nn 0
+put clim 0 get nn 0
+k = cp_next
+n = ulong 0
+while ne k 0
+put ckind 0 k
+if ge n 64
+fail 14
+end
+if eq k 3
+fail 30
+end
+put crkind 0 0
+if eq k 1
+cp_eval 9 0
+else
+put cfhas lv 1
+ns = get nslot 0
+put crtype 0 get curret 0
+if ne get curret 0 12
+put crkind 0 1
+put crval 0 alloc
+end
+put cvalid 0 1
+cp_eval 10 1
+put nslot 0 ns
+end
+n = add n 1
+k = cp_next
+end
+end
+
+note Return expressions are evaluated once, before postconditions, without overwriting argument X0.
+fn cp_post kind ulong value ulong ty ulong to void
+lv = get inl 0
+if eq get cfhas lv 0
+ret
+end
+p = get cur 0
+l = get line 0
+put cur 0 get cfpos lv
+put line 0 get cfline lv
+put clim 0 get cflim lv
+put crkind 0 kind
+put crval 0 value
+put crtype 0 ty
+k = cp_next
+while ne k 0
+if eq k 2
+put ckind 0 2
+cp_eval 10 0
+else
+skipnl
+end
+k = cp_next
+end
+put cur 0 p
+put line 0 l
+end
+
+note Loop invariants execute at the head, including zero trips and final false condition.
+note Continue reaches the checked head (for increments first); break bypasses it.
+fn cp_head pos ulong ln ulong to void
+if eq get om2 0 0
+ret
+end
+p = get cur 0
+l = get line 0
+put cur 0 pos
+put line 0 ln
+put clim 0 get nn 0
+put crkind 0 0
+k = cp_next
+n = ulong 0
+while eq k 3
+put ckind 0 3
+if ge n 64
+fail 14
+end
+cp_eval 10 0
+n = add n 1
+k = cp_next
+end
+put cur 0 p
+put line 0 l
+end
+
+note Head clauses have already been checked and emitted before the condition, never at body entry.
+fn cp_skip to void
+if eq get om2 0 0
+ret
+end
+p = get cur 0
+l = get line 0
+k = cp_next
+while eq k 3
+skipnl
+p = get cur 0
+l = get line 0
+k = cp_next
+end
+put cur 0 p
+put line 0 l
 end
 
 note main: read all of stdin
