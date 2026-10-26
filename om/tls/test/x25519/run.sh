@@ -127,15 +127,17 @@ libmut mut-zero 's/^z = xor shr or z sub 0 z 63 1$/z = shr or z sub 0 z 63/' "$h
 libmut mut-canon 's/^c = ulong 19$/c = ulong 0/' "$here/vectors/wycheproof.txt"
 
 # timing sanity (informational, not a proof of constant time): clamped low and high Hamming weight
-# scalars, interleaved low high high low so warm-up and drift fall on both; sums per weight
+# scalars, after one discarded warm-up series (CPU clock ramp), interleaved low high high low so
+# drift falls on both; sums per weight
 n=${X25519_BENCH_N:-200}
 u=e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c
 lo=0000000000000000000000000000000000000000000000000000000000000040
 hi=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-printf 'T %s %s %s\n' "$n" "$lo" "$u" "$n" "$hi" "$u" "$n" "$hi" "$u" "$n" "$lo" "$u" > "$out/timing.txt"
+printf 'T %s %s %s\n' "$n" "$hi" "$u" "$n" "$lo" "$u" "$n" "$hi" "$u" "$n" "$hi" "$u" "$n" "$lo" "$u" \
+	> "$out/timing.txt"
 $nice "$out/driver" < "$out/timing.txt" > "$out/timing.log" 2>&1 || true
-tlo=$(awk '/^TIME line [14] / { s += $7; c++ } END { if (c == 2) print s }' "$out/timing.log")
-thi=$(awk '/^TIME line [23] / { s += $7; c++ } END { if (c == 2) print s }' "$out/timing.log")
+tlo=$(awk '/^TIME line [25] / { s += $7; c++ } END { if (c == 2) print s }' "$out/timing.log")
+thi=$(awk '/^TIME line [34] / { s += $7; c++ } END { if (c == 2) print s }' "$out/timing.log")
 if [ -n "$tlo" ] && [ -n "$thi" ]; then
 	echo "TIME low-weight scalar (clamped weight 1): $((2 * n)) calls, $tlo ns, $((tlo / (2 * n))) ns per call"
 	echo "TIME high-weight scalar (clamped weight 252): $((2 * n)) calls, $thi ns, $((thi / (2 * n))) ns per call"

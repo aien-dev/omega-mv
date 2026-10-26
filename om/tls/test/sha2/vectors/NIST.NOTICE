@@ -1,20 +1,16 @@
 Notice for the NIST material in this directory:
-  SHA512ShortMsg.rsp, SHA512LongMsg.rsp, SHA512Monte.rsp (copied unmodified from
-  https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/shs/shabytetestvectors.zip)
-  nist-examples.txt (message and digest values transcribed from
-  https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/SHA512.pdf
-  and
-  https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/SHA2_Additional.pdf).
-Source: National Institute of Standards and Technology (NIST). All files fetched 2026-10-25.
-
-Change notice: on 2026-10-25, nist-examples.txt was made by transcribing the digests printed in the
-two PDFs into this unit's one-record-per-line test format. The messages were written out in hex,
-the PDF layout and the intermediate values were dropped, and comment lines were added. The values
-themselves were not changed. The three .rsp files are byte-for-byte copies.
+  SHA256ShortMsg.rsp, SHA256LongMsg.rsp, SHA256Monte.rsp, SHA384ShortMsg.rsp, SHA384LongMsg.rsp,
+  SHA384Monte.rsp, SHA512ShortMsg.rsp, SHA512LongMsg.rsp, SHA512Monte.rsp, copied unmodified from
+  https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/shs/shabytetestvectors.zip
+  (zip sha256 929ef80b7b3418aca026643f6f248815913b60e01741a44bba9e118067f4c9b8, fetched 2026-10-26;
+  the SHA512 files are byte-identical to the omnet om/sha512/test/vectors copies).
+Source: National Institute of Standards and Technology (NIST). run.sh converts the .rsp files to
+driver records at test time; the files themselves are byte-for-byte copies.
 
 The statement below is NIST's recommended statement for non-SRD data/works, quoted verbatim from
 "Copyright, Fair Use, and Licensing Statements for SRD, Data, Software, and Technical Series
-Publications", https://www.nist.gov/open/license (fetched 2026-10-25):
+Publications", https://www.nist.gov/open/license (as quoted in omnet om/sha512/test/vectors/NIST.NOTICE,
+fetched 2026-10-25):
 
 This data/work was created by employees of the National Institute of Standards and Technology
 (NIST), an agency of the Federal Government. Pursuant to title 17 United States Code Section 105,

@@ -30,6 +30,7 @@ global rvin uchar 16777216
 global rvout uchar 32
 global rvarg uchar 32
 global rvcnt ulong 16
+global rvf ulong 16
 
 fn rv_bad to void
 r = write 2 rvtbad 0 len rvtbad
@@ -238,9 +239,9 @@ end
 note parse the split line: rvcnt 8 mode, 9 expectation, 10 ctl, 11 key length, 12 digest
 note length, 13 signature length; hs = digest || signature
 fn rv_parse key edit uchar 2048 msg edit uchar 4096 dg edit uchar 128 hs edit uchar 2200 to void
+x = ulong 99
+if ne get rvin get rvf 0 110
 x = rv_dec get rvf 0 get rvf 1
-if eq get rvin get rvf 0 110
-x = 99
 end
 put rvcnt 9 x
 put rvcnt 8 ulong get rvin get rvf 2
