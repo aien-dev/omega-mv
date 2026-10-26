@@ -81,7 +81,8 @@ nextport() {
   while ss -Hltn "sport = :$port" | grep -q .; do port=$((port + 1)); done
 }
 fail=0; rows=0
-# row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name)
+# row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name).
+# When $ropts is set the client gets PATH / and OPTS $ropts (0,0,0,0,1 = approved-only mode).
 row() {
   label=$1; expect=$2; cert=$3; chain=$4; shift 4
   nextport; rows=$((rows + 1))
@@ -90,7 +91,8 @@ row() {
   openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
   sp=$!
   sleep 0.4
-  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"
+  # shellcheck disable=SC2086
+  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" ${ropts:+/ $ropts} > "c$port.out" 2> "c$port.err"
   rc=$?
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
@@ -116,17 +118,29 @@ row "TLS 1.2 only server"       "TLSERR TLS_ERR_ALERT_RECEIVED detail 70"       
 row "AES-256 suite only"        "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"              good int.pem -tls1_3 -ciphersuites TLS_AES_256_GCM_SHA384
 row "P-256 group only"          "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"              good int.pem -tls1_3 -groups P-256
 
+# approved-only mode (tls_init flag 4): the client offers TLS_AES_128_GCM_SHA256 only, key shares for
+# secp256r1 and secp384r1 only, and ECDSA P-256/P-384 and RSA-PSS signatures only
+ropts=0,0,0,0,1
+row "approved: P-256, aes128gcm"  OK                                                   good int.pem -tls1_3 -groups P-256 -ciphersuites TLS_AES_128_GCM_SHA256
+row "approved: P-384, aes128gcm"  OK                                                   good int.pem -tls1_3 -groups P-384 -ciphersuites TLS_AES_128_GCM_SHA256
+row "approved: RSA leaf (rsa_pss)" OK                                                  rsa  int.pem -tls1_3 -groups P-256
+row "approved: unrestricted srv"  OK                                                   good int.pem -tls1_3
+row "approved: chacha-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -ciphersuites TLS_CHACHA20_POLY1305_SHA256
+row "approved: X25519-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups X25519
+ropts=
+
 # crafted ServerHellos (fakesh.py): the client's own refusals
 fake() {
   nextport; rows=$((rows + 1))
   python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
   fp=$!
   sleep 0.4
-  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  # shellcheck disable=SC2086
+  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" ${3:+/ $3} > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   got="$(tr -d '\n' < "c$port.err") (exit $rc)"
   case "$got" in "$2"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
-  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fake ServerHello: $1" "$2" "$got"
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fake ServerHello: $1${3:+ [$3]}" "$2" "$got"
 }
 fake tls12  "TLSERR TLS_ERR_PROTOCOL_VERSION"
 fake hrr    "TLSERR TLS_ERR_HELLO_RETRY_UNSUPPORTED"
@@ -136,10 +150,18 @@ fake group  "TLSERR TLS_ERR_KEY_SHARE"
 fake zero   "TLSERR TLS_ERR_ZERO_SHARED_SECRET"
 fake dupext "TLSERR TLS_ERR_EXTENSION"
 fake trail  "TLSERR TLS_ERR_DECODE"
+# approved-only mode: a server choosing ChaCha or X25519 anyway, or sending an off-curve point
+fake apchacha "TLSERR TLS_ERR_CIPHER_SUITE"  0,0,0,0,1
+fake apx25519 "TLSERR TLS_ERR_KEY_SHARE"     0,0,0,0,1
+fake apbad256 "TLSERR TLS_ERR_KEY_SHARE"     0,0,0,0,1
+fake apbad384 "TLSERR TLS_ERR_KEY_SHARE"     0,0,0,0,1
+# control: default mode takes the ChaCha suite and refuses only the secp256r1 share it never offered
+fake apchacha "TLSERR TLS_ERR_KEY_SHARE"
 
 # full handshakes from fakesrv.py (security review of omega-mv #813): CCS policy, record-count caps,
 # CertificateVerify refusals, close_notify during the handshake. EXPECT OK needs exit 0 and the reply.
-# fsrv MODE EXPECT [OPTS]: OPTS is the client's "REC,HSMS,SPLIT" (record limit, handshake ms, split)
+# fsrv MODE EXPECT [OPTS]: OPTS is the client's "REC,HSMS,SPLIT,PAUSEMS,APPROVED" (record limit,
+# handshake ms, split, pause ms, approved-only mode)
 fsrv() {
   nextport; rows=$((rows + 1))
   python3 "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
@@ -173,6 +195,10 @@ fsrv kurot       OK                                                      5,0,0
 fsrv kuw:8       OK                                                      8,0,1
 fsrv loris       "TLSERR TLS_ERR_TIMEOUT detail 0 (exit 13)"             0,2000,0
 fsrv slowsh      OK                                                      0,10000,0
+# approved-only mode against python cryptography (secp256r1 ECDH, TLS_AES_128_GCM_SHA256): an
+# oracle independent of openssl for the P-256 shared secret, and a CertificateVerify refusal
+fsrv ap-ok       OK                                                      0,0,0,0,1
+fsrv ap-cvbad    "TLSERR TLS_ERR_CERTIFICATE_VERIFY"                     0,0,0,0,1
 
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac

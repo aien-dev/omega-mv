@@ -23,11 +23,12 @@ units before it. The composed unit is OM-2 (a leading `om2` line), and the libra
 | `chacha.om` | ChaCha20, Poly1305, ChaCha20-Poly1305 AEAD (RFC 8439) | 19 |
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
 | `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
+| `ecdh.om` | constant-time P-256/P-384 ECDH (SP 800-56A Rev. 3): key generation, partial public-key validation, Z, pair-wise consistency test | 17 |
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
 | `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
-| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 105 |
+| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect, approved-only mode | 122 |
 
-The total is 340 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
+The total is 374 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
 the ec, rsa and x509 suites check) allows 4095 functions per unit, as `189ada82` did.
 
 ## Client API (`tls.om`)
@@ -78,6 +79,27 @@ secrets, the handshake secrets and ephemeral key, and the record, write and line
 (`tls_wipe`). Secrets held in function locals (the Omega compiler keeps small values in registers
 and `new` arrays on the stack) are not scrubbed after a function returns; see
 `THREAT_MODEL.md`.
+
+Approved-only mode (`tls_init` flag 4, opt-in; the default mode is unchanged). The client then
+offers and accepts only NIST-approved algorithms:
+
+- cipher suite `TLS_AES_128_GCM_SHA256` alone (AES, FIPS 197; GCM, SP 800-38D; SHA-256, FIPS
+  180-4; HMAC, FIPS 198-1; the TLS 1.3 key schedule, SP 800-135 Rev. 1 / SP 800-56C Rev. 2);
+- groups secp256r1 and secp384r1 with a key share for each (`ecdh.om`, ECC CDH of SP 800-56A
+  Rev. 3 section 5.7.1.2 with the partial public-key validation of section 5.6.2.3.4);
+- signature_algorithms `ecdsa_secp256r1_sha256`, `ecdsa_secp384r1_sha384`, `rsa_pss_rsae_sha256`,
+  `rsa_pss_rsae_sha384`, `rsa_pss_rsae_sha512` (FIPS 186-5).
+
+A ServerHello choosing ChaCha20-Poly1305 is `TLS_ERR_CIPHER_SUITE`; one choosing x25519 or any
+other group, or carrying an invalid point, is `TLS_ERR_KEY_SHARE`; HelloRetryRequest stays
+refused. Each ephemeral private key is drawn by rejection sampling (FIPS 186-5 A.2.2, SP 800-56A
+Rev. 3 5.6.1.2.2) from `getrandom` and checked with the pair-wise consistency test of section
+5.6.2.1.4; a failure is `TLS_ERR_RANDOM`. Both private keys and Z are zeroed once the handshake
+secret is derived. Not approved yet, so this mode is not a FIPS 140-3 module boundary: the random
+source is the Linux `getrandom` syscall, not an SP 800-90A DRBG; certificate chains may still be
+signed with RSASSA-PKCS1-v1_5 (`x509.om`); there is no self-test at start-up. The units are
+tested against the FIPS 140-3 / CAVP test methods (CAVP vectors in each suite), not
+NIST-validated. Test: `test/tls/client.om` OPTS field APPROVED, interop rows marked `0,0,0,0,1`.
 
 For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls_connect`. See
 `test/tls/client.om`, mode `tsmtp`.
@@ -152,6 +174,7 @@ Constant time here means that no branch, loop count or memory index depends on a
 | `aesgcm.om` | key, round keys, H, data | yes: bitsliced AES (BearSSL `aes_ct64` layout, MIT, T. Pornin; `NOTICE.bearssl`), Boyar-Peralta depth-16 S-box circuit, masked GHASH; no table lookups |
 | `sha2.om`, `hkdf.om` | HMAC keys, PRKs, secrets | yes: branches only on lengths and the algorithm |
 | `tls.om` | traffic secrets, keys, Finished | the key schedule, nonce and Finished compare (`tls_cteq`) are constant time. Branches depend on public values (suite, lengths, content type) |
+| `ecdh.om` | private scalar, Z | yes: fixed-count Montgomery ladder (Renes-Costello-Batina complete formulas, masked swap), masked range check and final reduction; peer-point validation branches only on the public point |
 | `ec.om`, `rsa.om`, `x509.om` | none (verification of public data) | no, by design. Do not reuse them for signing or ECDH |
 
 Not covered, or covered only partly:
@@ -174,6 +197,9 @@ Not covered, or covered only partly:
   ChaCha20-Poly1305, AES-128-GCM and `tls_cteq` on one Spark host, 2026-10-27. That is MEASURED on
   one host, not a proof; the raw samples and the Wolfram queries are in the audit evidence bundle
   (`THREAT_MODEL.md` says where). The x25519 figures in its test output are informational.
+  P-256 `ecdh_shared` (`timing ecdh`, 20000 samples on cpu0 and cpu5, scalar fixed vs random):
+  every |t| below 0.8, full and cropped at the pooled 90th percentile, 2026-10-26, MEASURED on one
+  loaded host (`/home/drakestapleton/handoffs/TlsProof/ApprovedMode/timing/welch.md`); P-384 NOT_RUN.
 
 ## Tests (run from the repository root)
 
@@ -184,9 +210,10 @@ Not covered, or covered only partly:
 | `sh om/tls/test/chacha/run.sh OMC` | `CHACHA PASS vectors=3087 (wycheproof=339) mutants=5/5` |
 | `sh om/tls/test/aesgcm/run.sh OMC` | `AESGCM PASS vectors=47570 (fips197=4, nist=47250, wycheproof=316) mutants=5/5` |
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
+| `sh om/tls/test/ecdh/run.sh OMC` | `ECDH PASS vectors=2458 (cavp=100 wycheproof=2284 edge=74) mutants=9/9` (omc `2c824805`, 2026-10-26) |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-27) |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-27). With the approved-only mode (omc `2c824805`, 2026-10-26, without `TLS_NET`): `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=57 residue=PASS net=NOT_RUN mutants=34/34`; `net` NOT_RUN on this change |
 | `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
 
 How the suites are built:

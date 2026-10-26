@@ -9,15 +9,15 @@ note               handshake on the same connection, EHLO and QUIT inside TLS
 note CONNECTHOST (default HOST) is the name resolved for TCP; HOST is the TLS name (SNI and
 note certificate check), so a local server can be checked against a chosen name.
 note STOREFILE (default, or "-", the system bundle) is a PEM bundle of trust anchors.
-note OPTS (tests) is "REC,HSMS,SPLIT,PAUSEMS": REC > 0 lowers the per-key record limit (tls_reclimit),
+note OPTS (tests) is "REC,HSMS,SPLIT,PAUSEMS,APPROVED": REC > 0 lowers the per-key record limit (tls_reclimit),
 note HSMS > 0 sets the whole-handshake budget in ms (tls_hslimit), SPLIT = 1 sends the GET request
 note one byte per record, PAUSEMS > 0 sleeps that long after tls_close before exiting (the stack
 note residue check reads the process then). No deadline is set by the client: the library's
-note handshake budget applies.
+note handshake budget applies. APPROVED = 1 sets tls_init flag 4 (approved-only mode).
 note Exit 0 on success; on a TLS failure exit 10 + code and print "TLSERR <name> detail <n>".
 note Exit 2 for a usage error, 3 for a DNS/connect failure.
 
-text cusage "usage: client HOST PORT get|smtp|hs|tsmtp [CONNECTHOST [STOREFILE [PATH [REC,HSMS,SPLIT,PAUSEMS]]]]\n"
+text cusage "usage: client HOST PORT get|smtp|hs|tsmtp [CONNECTHOST [STOREFILE [PATH [REC,HSMS,SPLIT,PAUSEMS,APPROVED]]]]\n"
 text cterr "TLSERR "
 text cdet " detail "
 text cnl "\n"
@@ -288,7 +288,7 @@ end
 ret cl_drain cs io
 end
 
-note OPTS "REC,HSMS,SPLIT,PAUSEMS" from w[1536..1536+n): v[7..10]; 1 on a bad option
+note OPTS "REC,HSMS,SPLIT,PAUSEMS,APPROVED" from w[1536..1536+n): v[7..11]; 1 on a bad option
 fn cl_opts w view uchar * n ulong v edit ulong * to ulong
 k = ulong 7
 x = ulong 0
@@ -298,7 +298,7 @@ if eq ch 44
 put v k x
 k = add k 1
 x = 0
-if gt k 10
+if gt k 11
 ret 1
 end
 continue
@@ -382,6 +382,9 @@ fl = ulong 0
 if eq get v 4 103
 fl = 1
 end
+if ne get v 11 0
+fl = or fl 4
+end
 e = tls_init cs part w 0 get v 0 fl
 if and eq e 0 ne get v 7 0
 e = tls_reclimit cs get v 7
@@ -390,7 +393,7 @@ if and eq e 0 ne get v 8 0
 e = tls_hslimit cs mul get v 8 1000000
 end
 put v 6 0
-if eq fl 1
+if eq and fl 1 1
 put v 6 cl_req w get v 0 get v 2
 end
 ret e

@@ -1,5 +1,7 @@
-# om-tls-arm64: independent ARM64 rerun of the om/tls suite (RFC 8448 vectors, DNS unit, DIT probe,
-# interop against openssl s_server and the Python fake server, secret-residue scan, 26 mutants) and
+# om-tls-arm64: independent ARM64 rerun of the om/tls ECDH unit suite (CAVP KAS ECC CDH, Wycheproof,
+# edge cases, mutants) and the om/tls suite (RFC 8448 vectors, DNS unit, DIT probe, interop against
+# openssl s_server and the Python fake server, secret-residue scan in default and approved-only mode,
+# mutants) and
 # of the seed/net HTTP/HTTPS check on a GitHub-hosted ubuntu-24.04-arm machine, with the pinned omc
 # (om/units.sh OMC_PIN). Network stages stay NOT_RUN (TLS_NET unset). Logs are uploaded as artifacts.
 # Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
@@ -29,6 +31,8 @@ jobs:
           echo "pin $pin"; echo "got $got"
           [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
           chmod +x seed/out/omc
+      - name: om/tls ECDH unit suite
+        run: mkdir -p build && sh om/tls/test/ecdh/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-ecdh.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls suite
         run: mkdir -p build && sh om/tls/test/tls/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-run.log; test "${PIPESTATUS[0]}" = 0
       - name: seed/net HTTP and HTTPS check
@@ -40,6 +44,7 @@ jobs:
           name: om-tls-arm64-logs
           path: |
             build/om-tls-run.log
+            build/om-tls-ecdh.log
             build/net-check.log
             build/tls/tls/*.log
             build/tls/tls/interop-table.txt

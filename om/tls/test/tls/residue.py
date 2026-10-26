@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Secret residue check: do handshake secrets survive in the client's memory after the
-# handshake, and do any keys survive tls_close?  usage: residue.py CLIENT PKIDIR [--keep]
+# handshake, and do any keys survive tls_close?  usage: residue.py CLIENT PKIDIR [--keep] [--approved]
+# --approved runs the client in approved-only mode (OPTS APPROVED=1) against fakesrv.py ap-hold:S
+# (secp256r1 ECDH, TLS_AES_128_GCM_SHA256): "shared" is then the P-256 Z kept at c[TLECZ].
 #
 # fakesrv.py (mode hold:S) completes a handshake, writes every secret it derived to a file,
 # waits S seconds and then answers. During the wait the client is blocked in tls_read with the
@@ -56,16 +58,18 @@ def scan(pid, secrets):
 def main():
     client, pki = sys.argv[1], sys.argv[2]
     keep = "--keep" in sys.argv
+    approved = "--approved" in sys.argv
     work = tempfile.mkdtemp(prefix="residue-")
     port = free_port()
     keyfile = os.path.join(work, "keys.txt")
     here = os.path.dirname(os.path.abspath(__file__))
     env = dict(os.environ, FAKESRV_KEYS=keyfile)
-    srv = subprocess.Popen([sys.executable, os.path.join(here, "fakesrv.py"), str(port), pki, "hold:4"],
+    srv = subprocess.Popen([sys.executable, os.path.join(here, "fakesrv.py"), str(port), pki,
+                            "ap-hold:4" if approved else "hold:4"],
                            stdout=open(os.path.join(work, "srv.log"), "w"), stderr=subprocess.STDOUT, env=env)
     time.sleep(0.6)
     cl = subprocess.Popen([client, "localhost", str(port), "get", "127.0.0.1",
-                           os.path.join(pki, "root.pem"), "/", "0,0,0,4000"],
+                           os.path.join(pki, "root.pem"), "/", "0,0,0,4000,1" if approved else "0,0,0,4000"],
                           stdout=open(os.path.join(work, "client.out"), "w"),
                           stderr=open(os.path.join(work, "client.err"), "w"))
     t0 = time.time()

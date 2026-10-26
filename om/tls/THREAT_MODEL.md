@@ -30,14 +30,14 @@ never QUALIFIED (no third-party or hardware qualification exists).
 | threat | mitigation | evidence |
 |---|---|---|
 | forged server | chain verification to the caller's roots, name check, CertificateVerify over the transcript, Finished over the transcript (`x509.om`, `tls.om`) | interop rows `cvbad`, `cvkey`, `cvskip`, `badchain*`; mutants chain result ignored, CertificateVerify ignored; EXERCISED |
-| downgrade | TLS 1.3 only (`supported_versions` checked, `TLS_ERR_VERSION`); suites x25519 + ChaCha20-Poly1305 / AES-128-GCM only | mutant version not checked; EXERCISED |
+| downgrade | TLS 1.3 only (`supported_versions` checked, `TLS_ERR_VERSION`); suites x25519 + ChaCha20-Poly1305 / AES-128-GCM only; approved-only mode (flag 4): AES-128-GCM with secp256r1/secp384r1 only, a ChaCha20 or x25519 ServerHello is refused | mutant version not checked; approved interop rows (openssl P-256/P-384, ChaCha-only and X25519-only servers, fakesh `apchacha`, `apx25519`, `apbad256`, `apbad384`, fakesrv `ap-ok`, `ap-cvbad`) and mutants approved accepts/offers ChaCha, offers x25519, invalid share accepted, ecdh peer validation skipped, ecdh ladder step; EXERCISED |
 | tampered records | AEAD with the TLS 1.3 nonce; tag failure is fatal (`TLS_ERR_BAD_RECORD_MAC`) | RFC 8448 KAT, mutant record MAC ignored; EXERCISED |
 | key overuse | 23726566 records per key and direction: proactive KeyUpdate at limit-1 on write, `TLS_ERR_SEQUENCE_LIMIT` at the limit on both directions (`tls_open`, `tls_seal`, `tls_kusend`) | interop `kuexact`, `kurot`, `kuover`, `kuw:8` (test-only `tls_reclimit`); three mutants; EXERCISED |
 | slow or stalled peer | caller deadline on every call; whole-handshake budget 30 s (`tls_hslimit`); record and message caps | interop `loris`, `slowsh`; mutant handshake budget not armed; EXERCISED |
 | hostile DNS | flags, owner names, label and pointer caps; no trap | `dnsunit.om` 23 cases, 4 mutants; EXERCISED |
 | memory exhaustion | fixed `TLCSZ` state, `TLSTSZ` trust store, 16 KiB bounce in `https.om`, element caps in x509 | x509 `leaf_too_big`, mutants read/handshake record cap; EXERCISED |
-| secrets left in memory | units zero their secret locals; `tls_close`/`tls_abort` run `tls_wipe` (keys, ephemeral key, handshake secrets, record buffers); `tls_hskeys` zeroes the shared secret, `tls_cfin` the handshake secrets | `test/tls/residue.py` (`/proc/PID/mem` scan: 12 handshake-only secrets absent after the handshake, 18 absent after close; app keys present after the handshake as the positive control); mutants close keeps the traffic secrets, handshake secrets kept, shared secret kept; MEASURED `RESIDUE PASS secrets=18 hs_only=12` |
-| timing | constant-time units (README table) | dudect-style Welch t-test, `test/tls/timing.om`: all 16 |t| values < 2.5 on two cores, v2 run 2026-10-27; MEASURED host-only (see "Timing measurement") |
+| secrets left in memory | units zero their secret locals; `tls_close`/`tls_abort` run `tls_wipe` (keys, ephemeral key, handshake secrets, record buffers); `tls_hskeys` zeroes the shared secret, `tls_cfin` the handshake secrets; approved mode zeroes both EC private keys once Z is computed | `test/tls/residue.py` (`/proc/PID/mem` scan: 12 handshake-only secrets absent after the handshake, 18 absent after close; app keys present after the handshake as the positive control), run in the default mode and with `--approved` (P-256 Z, AES-128 keys); mutants close keeps the traffic secrets, handshake secrets kept, shared secret kept, approved P-256 shared secret kept; MEASURED `RESIDUE PASS secrets=18 hs_only=12` in both modes. The client EC private keys are not in the scan (the server never learns them): NOT_RUN |
+| timing | constant-time units (README table) | dudect-style Welch t-test, `test/tls/timing.om`: all 16 |t| values < 2.5 on two cores, v2 run 2026-10-27; P-256 `ecdh_shared` all 4 |t| < 0.8 on two cores, 2026-10-26; MEASURED host-only (see "Timing measurement") |
 | HTTPS misuse | `seed/net/https.om` refuses plaintext fall-back on a TLS port, maps EOF without close_notify to -604, wipes keys in `htlsend` | `seed/net/tests/check.py` stage 5: 9 rows, 5 mutants; `TLS_NET=1` live GETs; EXERCISED |
 
 ## Known limits (not mitigated)
@@ -57,7 +57,9 @@ never QUALIFIED (no third-party or hardware qualification exists).
 3. **Revocation is not checked**: no OCSP, no stapling, no CRL (README `Policy`).
 4. **Padding length and record lengths** are visible (RFC 8446 section 5.4).
 5. **Caller buffers**: plaintext the caller receives from `tls_read` is the caller's to wipe.
-6. **The random source** is Linux `getrandom` (blocking flag 0); no further entropy check.
+6. **The random source** is Linux `getrandom` (blocking flag 0); no further entropy check, and no
+   SP 800-90A DRBG in this module, also not in approved-only mode (approved-mode key generation
+   draws from `getrandom` directly).
 7. **Single host, single toolchain**: every result above was produced on one DGX Spark (arm64,
    GB10) with the pinned omc; the hosted arm64 CI job reruns the suites on a second machine, but the
    compiler binary is the same pinned one.
@@ -73,3 +75,6 @@ counts and sums (full data and cropped at the pooled 90th percentile). Raw sampl
 and the queries: `/home/drakestapleton/handoffs/TlsAudit/evidence/timing/` (`welch.md`). Reproduce:
 `sh build/tls/tls/client/build.sh seed/out/omc om/tls/test/tls/timing.om build/tls/tls/timing` then
 `nice -n 19 taskset -c 5 build/tls/tls/timing chacha 50000`.
+P-256 ECDH (`timing ecdh`, peer point fixed, scalar fixed vs random): raw samples, sums, binary and
+queries in `/home/drakestapleton/handoffs/TlsProof/ApprovedMode/timing/` (`welch.md`); reproduce with
+`nice -n 19 taskset -c 5 build/tls/tls/timing ecdh 20000`.

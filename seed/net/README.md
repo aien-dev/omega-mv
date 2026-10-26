@@ -38,7 +38,7 @@ A program that speaks HTTPS composes the om/tls units and `https.om` instead of 
 
 ```sh
 { printf 'om2\n'
-  for u in sha2 hkdf x25519 chacha aesgcm ec rsa x509 tls; do cat om/tls/$u.om; done
+  for u in sha2 hkdf x25519 chacha aesgcm ec ecdh rsa x509 tls; do cat om/tls/$u.om; done
   cat seed/net/http.om seed/net/https.om app.om; } | seed/out/omc > app
 ```
 
