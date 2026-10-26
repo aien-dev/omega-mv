@@ -1,0 +1,6 @@
+fn bad x f32 to f32
+x = add x f32 1.0
+end
+fn main to int
+ret 0
+end

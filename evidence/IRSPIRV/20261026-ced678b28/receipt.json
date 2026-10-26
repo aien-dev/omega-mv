@@ -1,0 +1,39 @@
+{
+  "schema": "irspirv-cpu-acceptance-v1",
+  "source_commit": "ced678b28a72ce5fc9945eafedaa4cf020020b18",
+  "date": "2026-10-26",
+  "command": "nice -n 19 ionice -c3 sh seed/spirv/gate-irspirv.sh",
+  "exit_status": 0,
+  "compiler_sha256": "befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d",
+  "translator_sha256": "66d2067848244e5a2cebc37941d9d5ebc2ae30f5641068afe39e35026163573b",
+  "host_sha256": "6dea5ed601911e23b0ee0c62c753cae0801f70c7d15f2dbb99c8939bcaf3c244",
+  "platform": "Linux AArch64 CPU; PoCL 7.2; no GPU",
+  "baseline_cases": 129,
+  "baseline_exact_matches": 129,
+  "baseline_traps": 29,
+  "supplemental_nested_call_cases": 8,
+  "demo_cases": 3,
+  "reordered_cfg_cases": 1,
+  "deterministic_modules": 16,
+  "validator_accepts": 17,
+  "named_refusals": 16,
+  "negative_controls": {
+    "arithmetic_mutant": "successful API execution, exactly one mismatch, checker exit 1",
+    "validator": "truncated module rejected"
+  },
+  "files": {
+    "log": "gate.log",
+    "parity": "case-spirv-parity.tsv",
+    "nested_calls": "regression-case-spirv-parity.tsv",
+    "demo": "demo-case-spirv-parity.tsv",
+    "mutant": "case-mutant-parity.tsv",
+    "raw_artifacts": "artifacts.tar.gz",
+    "toolchain": "toolchain.txt"
+  },
+  "summary": "PASS IRSPIRV CPU OpenCL parity cases=129 deterministic=16 validated=17 refusals=16",
+  "limits": [
+    "CPU-only author-run acceptance, not GPU or Alpha qualification",
+    "No DPC++ or Level Zero integration claimed",
+    "No gate manifest or trust policy changed"
+  ]
+}
