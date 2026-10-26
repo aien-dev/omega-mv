@@ -56,7 +56,7 @@ kmut() { # LABEL SED-EXPR
   mutant "$1" "$rc" "$out/km.log"
 }
 kmut "mutant label c hs traffic" 's/^text TLLCHS "c hs traffic"/text TLLCHS "c hs traffie"/'
-kmut "mutant nonce xor"          's/^put kn p uchar xor ulong get kn p b/put kn p uchar or ulong get kn p b/'
+kmut "mutant nonce ignores seq" 's/^b = and shr sq s 255/b = and shr sq s 0/'
 kmut "mutant label length"       's/^put p 34 uchar add t 6/put p 34 uchar add t 5/'
 kmut "mutant finished key"       's/^r = tls_drv c tls_sel TLTMP so 32 TLIFIN part e 0 0/r = tls_drv c tls_sel TLTMP so 32 TLIDER part e 0 0/'
 
@@ -85,7 +85,7 @@ imut "mutant record MAC ignored"   's/^ret TLEMAC$/ret 0/'
 imut "mutant session id not checked" 's/^ret TLESID$/ret 0/'
 
 if [ "${TLS_NET:-0}" = 1 ]; then
-  if python3 "$here/parity.py" "$out/client/bin" api.github.com /licenses/mit /repos/torvalds/linux/license /octocat > "$out/net.log" 2>&1 \
+  if python3 "$here/parity.py" "$out/client/bin" api.github.com /licenses/mit /licenses/apache-2.0 /repos/torvalds/linux/license > "$out/net.log" 2>&1 \
     && python3 "$here/parity.py" "$out/client/bin" raw.githubusercontent.com /torvalds/linux/v6.0/README /torvalds/linux/v6.0/MAINTAINERS >> "$out/net.log" 2>&1 \
     && python3 "$here/parity.py" "$out/client/bin" --smtp mail.gandi.net 465 smtp >> "$out/net.log" 2>&1 \
     && python3 "$here/parity.py" "$out/client/bin" --smtp mail.gandi.net 587 tsmtp >> "$out/net.log" 2>&1; then
