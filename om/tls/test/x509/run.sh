@@ -7,10 +7,10 @@
 # Exit 0 only when everything passes; final line "X509 PASS cases=N (openssl-parity=P/N) mutants=M/M".
 set -eu
 omc=${1:?usage: run.sh OMC}
-pin=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
 here=$(cd "$(dirname "$0")" && pwd)
 tls=$(cd "$here/../.." && pwd)
 root=$(cd "$tls/../.." && pwd)
+pin=$(sed -n 's/^OMC_PIN=//p' "$root/om/units.sh")
 out="$root/build/tls/x509"
 vec="$here/vectors"
 sys=/etc/ssl/certs/ca-certificates.crt
@@ -126,7 +126,11 @@ mutant() {
 # name matching: a wildcard with only one further label ("*.test") is accepted
 mutant 's/^if or eq lab 0 eq dots 0$/if eq lab 0/' name-wildcard-labels
 # date comparison: notAfter compared the wrong way round
-mutant 's/^if lt get r X5RNA nw$/if gt get r X5RNA nw/' date-not-after
+mutant 's/^if le get r X5RNA nw$/if gt get r X5RNA nw/' date-not-after
+# date boundary: now == notAfter accepted again (RFC-inclusive bound that OpenSSL refuses)
+mutant 's/^if le get r X5RNA nw$/if lt get r X5RNA nw/' date-at-not-after
+# trust anchors: a store entry that is not self-issued accepted as an anchor
+mutant 's/^if eq chain_self kd w 0$/if eq chain_self kd w 9/' anchor-self-issued
 # basicConstraints: cA FALSE accepted for an issuer
 mutant 's/^if eq get w add X5RSZ X5RCA 0$/if eq get w add X5RSZ X5RCA 2/' bc-ca-flag
 # security review finding 1: unique IDs repeated or out of order accepted

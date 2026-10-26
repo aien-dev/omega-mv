@@ -14,6 +14,7 @@
 #   frag        a 6000-byte Certificate sent one byte per record               -> MESSAGE_TOO_BIG
 #   cvbad       CertificateVerify signature with one byte flipped              -> CERTIFICATE_VERIFY
 #   cvkey       CertificateVerify signed with another key (other.key)          -> CERTIFICATE_VERIFY
+#   cvskip      Certificate then Finished, no CertificateVerify                -> UNEXPECTED_MESSAGE
 #   empty1500   1500 empty application_data records after the handshake        -> UNEXPECTED_MESSAGE
 #   empty50     50 empty application_data records, then the reply              -> OK
 #   tickets1500 1500 NewSessionTicket messages after the handshake             -> UNEXPECTED_MESSAGE
@@ -128,7 +129,7 @@ else:
                 c.sendall(sw.seal(22, big[i:i + 1]))
             except OSError:
                 break
-    if mode in ("ok", "cvbad", "cvkey", "empty1500", "empty50", "tickets1500"):
+    if mode in ("ok", "cvbad", "cvkey", "cvskip", "empty1500", "empty50", "tickets1500"):
         der = lambda f: x509.load_pem_x509_certificate(open(f"{d}/{f}", "rb").read()).public_bytes(serialization.Encoding.DER)
         cl = b"".join(u(len(x), 3) + x + b"\x00\x00" for x in (der("good.pem"), der("int.pem")))
         cert = hmsg(11, b"\x00" + u(len(cl), 3) + cl)
@@ -139,10 +140,12 @@ else:
         if mode == "cvbad":
             sig[-1] ^= 1
         cv = hmsg(15, b"\x04\x03" + u(len(sig), 2) + bytes(sig))
+        if mode == "cvskip":
+            cv = b""
         tr += cv
         fin = hmsg(20, hmac.new(expand_label(s_hs, b"finished", b"", 32), H(tr), hashlib.sha256).digest())
         tr += fin
-        c.sendall(sw.seal(22, cert) + sw.seal(22, cv) + sw.seal(22, fin))
+        c.sendall(sw.seal(22, cert) + (sw.seal(22, cv) if cv else b"") + sw.seal(22, fin))
         if mode in ("ok", "empty1500", "empty50", "tickets1500"):
             ms = extract(expand_label(hs, b"derived", H(b""), 32), bytes(32))
             aw = Keys(expand_label(ms, b"s ap traffic", H(tr), 32))

@@ -2159,8 +2159,12 @@ put sa add 4 i get ip i
 end
 end
 
-note resolve hn to an IPv4 address in ip[0..4) (two attempts, 3 s each); 0 or TLEDNS
+note resolve hn to an IPv4 address in ip[0..4) (two attempts, 3 s each); 0 or TLEDNS. A name
+note longer than 253 bytes (RFC 1035 2.3.4) is TLEDNS before the 300-byte query is built.
 fn dns_a4 hn view uchar * ip edit uchar * to ulong
+if gt len hn 253
+ret TLEDNS
+end
 ns = new uchar 4 0
 if ne dns_conf ns 0
 ret TLEDNS

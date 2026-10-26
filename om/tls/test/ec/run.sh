@@ -13,7 +13,7 @@ omc=${1:?usage: run.sh OMC}
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../../../.." && pwd)
 out="$root/build/tls/ec"
-pin=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+pin=$(sed -n 's/^OMC_PIN=//p' "$root/om/units.sh")
 rm -rf "$out"
 mkdir -p "$out"
 fail=0

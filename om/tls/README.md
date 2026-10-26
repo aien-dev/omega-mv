@@ -24,10 +24,11 @@ units before it. The composed unit is OM-2 (a leading `om2` line), and the libra
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
 | `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
-| `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 68 |
+| `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
 | `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 105 |
 
-The total is 338 functions. omc at `befb8199` allows 512 per unit, so a program has about 170 left.
+The total is 340 functions. omc at `189ada82` (the main pin, `OMC_PIN` in `om/units.sh`, which the
+ec, rsa and x509 suites check) allows 4095 functions per unit.
 
 ## Client API (`tls.om`)
 
@@ -65,7 +66,10 @@ For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls
 - The server is always authenticated, in this order:
   1. `x509_chain_verify`: path to a trust anchor, signatures, validity at the current realtime
      second (the host clock decides), basicConstraints and pathLen, keyUsage, EKU serverAuth,
-     critical extensions, RSA key policy (below).
+     critical extensions, RSA key policy (below). Only self-issued store entries (subject DER =
+     issuer DER) are trust anchors; an intermediate placed in the store is ignored, as OpenSSL
+     does without `-partial_chain`. A certificate is valid for notBefore <= now < notAfter: at
+     notAfter itself it is already expired, as OpenSSL (RFC 5280 4.1.2.5 includes notAfter).
   2. Hostname: SAN dNSName only, no CN fallback; a wildcard covers only the whole leftmost label.
      There is no public-suffix check (`*.co.uk` relies on CA policy).
   3. CertificateVerify over the transcript hash: ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384,
@@ -141,7 +145,7 @@ Not covered, or covered only partly:
 
 ## Tests (run from the repository root)
 
-| command | final line observed 2026-10-26 (omc `befb8199`) |
+| command | final line observed 2026-10-26 (omc `189ada82`) |
 |---|---|
 | `sh om/tls/test/sha2/run.sh OMC` | `SHA2 PASS vectors=1777 (wycheproof=774) mutants=5/5` |
 | `sh om/tls/test/x25519/run.sh OMC` | `X25519 PASS vectors=531 (wycheproof=518) mutants=7/7` |
@@ -149,8 +153,8 @@ Not covered, or covered only partly:
 | `sh om/tls/test/aesgcm/run.sh OMC` | `AESGCM PASS vectors=47570 (fips197=4, nist=47250, wycheproof=316) mutants=5/5` |
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
-| `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=90 (openssl-parity=70/90) mutants=10/10` |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=21 interop=37 net=PASS mutants=18/18` |
+| `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 interop=38 net=PASS mutants=19/19` |
 
 How the suites are built:
 
@@ -166,11 +170,12 @@ How the suites are built:
 - **`test/tls`.**
   - The RFC 8448 section 3 KAT checks ECDHE, every secret, the keys and IVs, both Finished values,
     and record seal and open byte for byte.
-  - `interop.sh` runs 37 rows against `openssl s_server`, crafted ServerHellos and `fakesrv.py`
+  - `interop.sh` runs 38 rows against `openssl s_server`, crafted ServerHellos and `fakesrv.py`
     (a full TLS 1.3 server in Python that misbehaves after a valid handshake), all on 127.0.0.1.
     Ports already in use are skipped. Every failure row also checks that `tls_close` leaves the
     connection failed.
-  - `dnsunit.om` runs the 21 DNS answer cases of `vectors/dns.txt` (`gen_dns.py`).
+  - `dnsunit.om` runs the 23 cases of `vectors/dns.txt` (`gen_dns.py`): 21 DNS answers and two
+    host names over 253 bytes that `dns_a4` must refuse before building its query.
   - `TLS_NET=1` adds the live checks. The handshakes reach api.github.com (ECDSA P-256 chain),
     raw.githubusercontent.com (RSA, rsa_pss_rsae) and mail.gandi.net on 465 and on 587 with
     STARTTLS. Parity means the fetched bytes are compared with Python `ssl` for read-only GETs
@@ -192,8 +197,40 @@ The interop refusal table (`build/tls/tls/interop-table.txt`):
 | second CCS, 5000 CCS, CCS before ServerHello, CCS after the first protected record, CCS inside a protected record | `TLS_ERR_UNEXPECTED_MESSAGE` |
 | a 6000-byte Certificate sent one byte per record | `TLS_ERR_MESSAGE_TOO_BIG` |
 | CertificateVerify signature flipped; signed with a key that is not the leaf's | `TLS_ERR_CERTIFICATE_VERIFY` with `X509_ERR_BAD_SIGNATURE` |
+| Certificate then Finished, no CertificateVerify | `TLS_ERR_UNEXPECTED_MESSAGE` |
 | 1500 empty application records; 1500 NewSessionTickets | `TLS_ERR_UNEXPECTED_MESSAGE` |
 | close_notify before the ServerHello and after it | `TLS_ERR_ALERT_RECEIVED` detail 0 |
+
+### Differences from `openssl verify`
+
+The x509 suite runs `openssl verify -x509_strict -purpose sslserver -verify_hostname HOST -attime
+NOW` (OpenSSL 3.0) on every chain case and fails on any difference that
+`test/x509/vectors/openssl-diff.txt` does not list, and on any listed case where OpenSSL agrees.
+18 of the 91 cases differ. In every one this client refuses and OpenSSL accepts: there is no case
+where this client accepts a chain OpenSSL refuses. The two such cases the review found
+(`store_intermediate_anchor`, `at_not_after`) were closed by making this client stricter (above);
+mutants anchor-self-issued and date-at-not-after reopen them and are caught.
+
+| case | this client | why it refuses |
+|---|---|---|
+| `wildcard_partial` | `NAME_MISMATCH` | partial-label wildcard `f*.wild.test` (RFC 6125 6.4.3 SHOULD NOT) |
+| `no_san` | `NO_SAN` | no subject CN fallback (RFC 6125 6.4.4, CA/B BR require SAN) |
+| `name_constraints_critical` | `NAME_CONSTRAINTS` | nameConstraints not implemented, so it is refused (finding 5) |
+| `name_constraints_noncritical` | `NAME_CONSTRAINTS` | same, also when not critical: ignoring it would accept names the CA was constrained against (finding 5) |
+| `depth_8_intermediates` | `TOO_DEEP` | at most 8 non-anchor certificates; OpenSSL allows depth 100 |
+| `leaf_is_ca` | `LEAF_IS_CA` | a cA TRUE certificate is not a server leaf |
+| `leaf_ku_no_digsig` | `KEY_USAGE` | TLS 1.3 signs with the leaf key, so keyUsage must include digitalSignature |
+| `rsa_1024_leaf` | `WEAK_KEY` | RSA below 2048 bits; OpenSSL security level 1 accepts 1024 |
+| `sha1_signed` | `UNSUPPORTED_ALG` | only SHA-256/384/512 signatures |
+| `rsassa_pss_key` | `UNSUPPORTED_ALG` | only rsaEncryption and P-256/P-384 keys; id-RSASSA-PSS keys refused |
+| `ed25519_key` | `UNSUPPORTED_ALG` | no Ed25519 in om/tls |
+| `leaf_too_big` | `MALFORMED` | leaf over 16896 bytes refused before parsing (finding 2) |
+| `rsa_6144_leaf` | `WEAK_KEY` | presented RSA moduli above 4096 bits (finding 6, bounds verification cost) |
+| `rsa_6144_intermediate` | `WEAK_KEY` | same policy for presented intermediates |
+| `rsa_e_2_32_plus_1_leaf` | `WEAK_KEY` | presented exponent outside 3 .. 2^32-1 (finding 6) |
+| `rsa_e_2_32_plus_1_intermediate` | `WEAK_KEY` | same policy for presented intermediates |
+| `rsa_e_even_leaf` | `WEAK_KEY` | even exponent 65536; OpenSSL verify does not check the leaf exponent |
+| `rsa_e_1_leaf` | `WEAK_KEY` | exponent 1; OpenSSL verify does not check the leaf exponent |
 
 ## Security review
 
@@ -213,6 +250,12 @@ had 11 findings. Each one is fixed and has a test that fails on the code before 
 | F9 no CertificateVerify negative control | fake server with a flipped signature and with a foreign key | interop `cvbad`, `cvkey`, mutant CertificateVerify ignored |
 | F10 F1-F4 and F7 not exercised | crafted x509 fixtures (`gen_crafted.py`), fake-server rows, DNS unit; a trap is a FAIL in interop | all rows above |
 | F11 info items | `tls_close` keeps a failed connection failed; close_notify in the handshake is `TLS_ERR_ALERT_RECEIVED`; deadline, clock, public-suffix, caller-contract, CertificateRequest and path-building limits documented above | interop `CLOSE_NOT_FAILED` check on every failure row, `closehs`, `closepre`, mutants close revives failed and handshake close_notify unmapped |
+
+The read-only re-review of the fix (`~/handoffs/omega-tls/security-rereview.md`, `38c80a85`) found
+every finding fixed (VERDICT: PASS) and two residual items, both fixed here: N1, a caller host name
+of 288 bytes or more trapped `dns_a4` (now refused above 253 bytes; `dnsunit` L cases, mutant
+dns_a4 name length unchecked), and N2, no row for a server that omits CertificateVerify (interop
+`cvskip`).
 
 ## Writing another unit for this set
 

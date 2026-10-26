@@ -4,7 +4,8 @@ note Program mode, composed after tls.om. stdin: vectors/dns.txt from gen_dns.py
 note "R IIIIIIII HOST HEX" (# comments): R 0 = dns_parse returns 0 and the address IIIIIIII,
 note R E = it returns TLS_ERR_DNS; HEX is the response to dns_query HOST with id 0x4f4d.
 note Prints "MISMATCH line N" per failure and "dns unit: C checks, F failed"; exit 0 only when F
-note is 0 and C is not 0, 1 on a mismatch, 2 on empty input.
+note is 0 and C is not 0, 1 on a mismatch, 2 on empty input. "L HOST": dns_a4 HOST must return
+note TLS_ERR_DNS without a query (a name over 253 bytes, security re-review N1).
 
 text dfail "MISMATCH line "
 text dsum "dns unit: "
@@ -34,10 +35,22 @@ end
 ret n
 end
 
+note 0 when dns_a4 refuses the host name of line l (from byte 2)
+fn du_long l view uchar * to ulong
+ip = new uchar 4 0
+if eq dns_a4 part l 2 sub len l 2 ip TLEDNS
+ret 0
+end
+ret 1
+end
+
 note 0 when one case line l matches
 fn du_case l view uchar * to ulong
 q = new uchar 300 0
 r = new uchar 65536 0
+if eq get l 0 76
+ret du_long l
+end
 p = ulong 11
 while and lt p len l ne tls_at l p 32 bound 300
 p = add p 1

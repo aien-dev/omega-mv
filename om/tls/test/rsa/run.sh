@@ -8,9 +8,9 @@
 # Exit 0 only when every check passes. Environment: RSA_BENCH_N (default 100 verifies per key size).
 set -eu
 omc=${1:?usage: run.sh OMC}
-pin=befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../../../.." && pwd)
+pin=$(sed -n 's/^OMC_PIN=//p' "$root/om/units.sh")
 lib="$root/om/tls"
 vec="$here/vectors"
 out="$root/build/tls/rsa"

@@ -5,10 +5,12 @@ note OM-2 TLS client; compose after sha2.om, hkdf.om, ec.om, rsa.om. No mutable 
 note
 note Reject codes (ulong, 0 = valid; x509_errname gives the ASCII name):
 note   1 MALFORMED      DER/structure/framing error (any input that does not parse)
-note   2 EXPIRED        now > notAfter of a non-anchor certificate in the path
+note   2 EXPIRED        now >= notAfter of a non-anchor certificate in the path (at notAfter
+note                    itself already expired, as OpenSSL; stricter than RFC 5280 4.1.2.5)
 note   3 NOT_YET_VALID  now < notBefore of a non-anchor certificate in the path
 note   4 NAME_MISMATCH  no SAN dNSName matches the host, or the host is not a valid LDH name
-note   5 UNKNOWN_ISSUER no trust anchor or presented certificate has the issuer's name
+note   5 UNKNOWN_ISSUER no trust anchor or presented certificate has the issuer's name (only
+note                    self-issued store entries are trust anchors, see chain_anchor)
 note   6 BAD_SIGNATURE  issuer found by name but no candidate key verifies the signature
 note   7 NOT_CA         issuer lacks basicConstraints cA TRUE
 note   8 PATH_LENGTH    pathLenConstraint of an issuer exceeded
@@ -1619,13 +1621,14 @@ end
 ret X5ENAME
 end
 
-note chain_time: validity of record r at nw (seconds since 0000-03-01, as der_time). Inclusive bounds:
-note valid iff notBefore <= nw <= notAfter (RFC 5280 4.1.2.5).
+note chain_time: validity of record r at nw (seconds since 0000-03-01, as der_time): valid iff
+note notBefore <= nw < notAfter. RFC 5280 4.1.2.5 includes notAfter; OpenSSL does not, and the
+note stricter bound is kept so that this client never accepts what OpenSSL refuses.
 fn chain_time r view ulong * nw ulong to ulong
 if gt get r X5RNB nw
 ret X5ENYV
 end
-if lt get r X5RNA nw
+if le get r X5RNA nw
 ret X5EEXP
 end
 ret 0
@@ -1739,10 +1742,38 @@ end
 ret chain_sig cd kd part w 0 mul X5RSZ 2
 end
 
+note chain_self: 1 when the certificate c (record w[32 .. 64)) is self-issued: its issuer and subject
+note are the same DER bytes; else 0
+fn chain_self c view uchar * w view ulong * to ulong
+io = get w add X5RSZ X5RISO
+il = get w add X5RSZ X5RISL
+so = get w add X5RSZ X5RSBO
+if ne il get w add X5RSZ X5RSBL
+ret 0
+end
+for i ulong il
+if ne get c add io i get c add so i
+ret 0
+end
+end
+ret 1
+end
+
+note chain_alink: chain_link for a store entry kd, which must be self-issued (chain_self) to be an
+note anchor; X5EUNK otherwise
+fn chain_alink cd view uchar * kd view uchar * w view ulong * to ulong
+if eq chain_self kd w 0
+ret X5EUNK
+end
+ret chain_link cd kd w
+end
+
 note chain_anchor: try every trust anchor in st (store format) whose subject is the issuer of the
 note current certificate cd. 0 when one verifies it; else the code of the last failed candidate,
-note X5EUNK when none has the name. Anchors that do not parse are skipped. Anchors are not checked
-note for validity period or CA constraints (RFC 5280 6.1: the trust anchor is a name and a key).
+note X5EUNK when none has the name. Anchors that do not parse are skipped, and so are store entries
+note that are not self-issued (subject DER == issuer DER, chain_self): an intermediate placed in the
+note store is not a trust anchor (OpenSSL without -partial_chain; stricter than RFC 5280 6.1.1 d).
+note Anchors are not checked for validity period or CA constraints (RFC 5280 6.1: a name and a key).
 fn chain_anchor cd view uchar * st view uchar * w edit ulong * to ulong
 p = ulong 0
 res = X5EUNK
@@ -1756,7 +1787,7 @@ if or eq l 0 gt l sub len st p
 break
 end
 if eq x509_parse part st p l part w X5RSZ X5RSZ 0
-v = chain_link cd part st p l view w
+v = chain_alink cd part st p l view w
 if eq v 0
 ret 0
 end
@@ -1950,7 +1981,8 @@ note 0 valid, else a reject code (see the table at the top). Limits (X5EMAL beyo
 note X5MAXC (16) entries in cl, presented issuer certificates at most X5KBUF (16384) bytes, signatures
 note at most 1024 bytes (X5ESIG), now at most 253402300799 (9999-12-31T23:59:59Z).
 note Rules, all fail closed: leaf = entry 0 (chain_leaf); issuers by path building (chain_path);
-note trust anchors are name + key only (no validity, CA or usage checks on anchors, RFC 5280 6.1.1 d);
+note trust anchors are the self-issued store entries, name + key only (no validity, CA or usage
+note checks on anchors, RFC 5280 6.1.1 d);
 note names are compared as DER bytes, not with the RFC 5280 7.1 / 4.1.2.4 matching rules (case and
 note whitespace folding of PrintableString/UTF8String are NOT applied: an issuer whose encoding of
 note the same name differs from the subject encoding is reported X5EUNK).

@@ -23,15 +23,16 @@ C noncritical_unknown_ext X509_OK 1792972800 www.example.test pki/storeR.pem pki
 C store_same_name_two_keys X509_OK 1792972800 www.example.test pki/storeDup.pem pki/lR.der pki/intR.der
 C store_three_roots X509_OK 1792972800 www.example.test pki/storeAll.pem pki/lR.der pki/intR.der
 C store_three_roots_ec X509_OK 1792972800 www.example.test pki/storeAll.pem pki/lE256.der pki/intE.der
-C store_intermediate_anchor X509_OK 1792972800 www.example.test pki/storeInt.pem pki/lR.der
+C store_intermediate_anchor X509_ERR_UNKNOWN_ISSUER 1792972800 www.example.test pki/storeInt.pem pki/lR.der
 C root_presented X509_OK 1792972800 www.example.test pki/storeR.pem pki/lR.der pki/intR.der pki/rootR.der
 C extra_unrelated_cert X509_OK 1792972800 www.example.test pki/storeR.pem pki/lR.der pki/lE256.der pki/intR.der
 C duplicate_intermediate X509_OK 1792972800 www.example.test pki/storeR.pem pki/lR.der pki/intR.der pki/intR.der
 C depth_7_intermediates X509_OK 1792972800 www.example.test pki/storeR.pem pki/lD7.der pki/d7.der pki/d6.der pki/d5.der pki/d4.der pki/d3.der pki/d2.der pki/d1.der
-# --- validity (RFC 5280 4.1.2.5: both bounds inclusive)
+# --- validity (notBefore <= now < notAfter: at notAfter already expired, as OpenSSL)
 C at_not_before X509_OK 1767225600 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
 C before_not_before X509_ERR_NOT_YET_VALID 1767225599 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
-C at_not_after X509_OK 1798761600 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
+C before_not_after X509_OK 1798761599 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
+C at_not_after X509_ERR_EXPIRED 1798761600 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
 C after_not_after X509_ERR_EXPIRED 1798761601 www.example.test pki/storeR.pem pki/lR.der pki/intR.der
 C expired_leaf X509_ERR_EXPIRED 1792972800 www.example.test pki/storeR.pem pki/lExp.der pki/intR.der
 C not_yet_valid_leaf X509_ERR_NOT_YET_VALID 1792972800 www.example.test pki/storeR.pem pki/lNyv.der pki/intR.der

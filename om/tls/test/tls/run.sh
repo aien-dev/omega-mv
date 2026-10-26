@@ -83,6 +83,7 @@ dmut() { # LABEL SED-EXPR: detected = exit 1 with a MISMATCH line, or a runtime 
 dmut "mutant dns flags only QR"    's/^if ne and fl 64015 32768$/if ne and fl 32768 32768/'
 dmut "mutant dns owner ignored"    's/^if eq dns_neq r o cur 0$/if lt dns_neq r o cur 2/'
 dmut "mutant dns label cap gone"   's/^if gt k 127$/if gt k 9999/'
+dmut "mutant dns_a4 name length unchecked" 's/^if gt len hn 253$/if gt len hn 9999/'
 
 # interop with the real tls.om
 build client "$tls/tls.om" "$here/client.om" || exit 1
