@@ -1,0 +1,3 @@
+opencl-host: icd=/tmp/spirv-tools-root/pocl/etc/OpenCL/vendors/pocl.icd library=/tmp/spirv-tools-root/pocl/lib/libpocl.so.2.16.0 POCL_DEVICES=cpu
+opencl-host: platform=Portable Computing Language version="OpenCL 3.0 PoCL 7.2  Linux, Release, RELOC, SPIR-V, LLVM 18.1.3, SLEEF, POCL_DEBUG"
+opencl-host: il="SPIR-V_1.4 SPIR-V_1.3 SPIR-V_1.2 SPIR-V_1.1 SPIR-V_1.0" device=cpu-cortex-a720-0xd87 device-version="OpenCL 3.0 PoCL HSTR: cpu-aarch64-unknown-linux-gnu-cortex-a720" driver=7.2 cpu-devices=1 host-cc="13.3.0"

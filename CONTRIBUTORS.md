@@ -5,6 +5,11 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
+| Codex (GPT-6 Astra) | Seeded IR statement/type/scope validation repairs, bootstrap-safe helper splits, and independent C-oracle regression qualification |
+| Codex (GPT-6 Astra) | Seeded memory-profile wire specification, preserving historical OSC versions and explicit backend qualification boundaries |
+| Codex (GPT-6 Astra) | Seeded Omega OSC IR v1 to OpenCL Kernel SPIR-V backend, CPU differential gate, demo and CFG/trap review fixes |
+| Codex (GPT-6 Astra) | Seeded executable contracts, loop-head invariants, release erasure, purity and runtime refusal controls |
 | Codex (GPT-6.1 Sol) | Corrected boolean bitwise typing in seeded OSC IR output, with C-referee regression cases |
 | Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
@@ -20,6 +25,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Claude Opus 5.5 | Ionic-droplet reservoir (#440): pinned reference, CPU simulator and readout, `.mat` reader, Gate 2 comparison, benchmarks, timing and receipt |
 | Claude Fable 5.1 | CodeQL high-severity fixes in the OM-2 oracles: 0600 image creation in offsetof.c, fixture-name allowlist and truncation check in sha_qual.c |
 | Claude Opus 5.5 | Omega 1.0 roadmap: source-pinned readiness audit of the seeded compiler, IR, WebAssembly and bridge paths, milestone acceptance gates, tracking issues #790-#800, OM-2 contract files brought to main byte-identical, and stale status text corrected |
+| Claude Opus 5.5 | Function-mode constants in the seeded compiler (`fnstore`): consts accepted without `fn main`, globals/texts/host words still error 9, gate16 byte-identity fixtures and old-compiler/mutant negative controls |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 

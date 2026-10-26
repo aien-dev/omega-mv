@@ -139,13 +139,18 @@ Acceptance:
 
 ### RM2. Executable contracts
 
-Current: MISSING_IMPLEMENTATION in omc. OM-2 has one built-in invariant (`holds NAME dup32`) with
-kept/erased reporting, `fresh` initialization tracking and `layout` checks. The legacy C front end parses
-`requires`/`ensures`; IR v6 structured contracts are draft PR #525. Owners: #625 (semantics), #623
-(per-lowering validation), #656 (contract-to-.om synthesis), #746.
+Audited baseline (`3364a1dfd`): MISSING_IMPLEMENTATION in omc. OM-2 had one built-in invariant
+(`holds NAME dup32`) with kept/erased reporting, `fresh` initialization tracking and `layout` checks.
+The legacy C front end parses `requires`/`ensures`; IR v6 structured contracts remain draft PR #525.
+Owners: #625 (semantics), #623 (per-lowering validation), #656 (contract-to-.om synthesis), #746.
 
-Gap: a programmer cannot state a pre/postcondition or loop invariant in `.om` and have the compiler
-enforce it.
+Native implementation: PR #807 adds the versioned OMEGESE section 12 extension, default debug
+checks, checked release erasure, constant-true proof, diagnostics and error 30. Source
+`00031d2456b2fe1e6ecdee6a0245d4c27b6749d2` is EXERCISED; see
+`evidence/CONTRACTS/20261026-00031d24/README.md` for the complete manifest, C parity, bridge status,
+mutants and historical-receipt controls. IR refuses these contracts rather than dropping them.
+The pending guide update is omega-harness #27. This does not claim the remaining roadmap or
+the separate structured-contract IR proposal is complete.
 
 Acceptance:
 - A versioned profile section (OMEGESE or `spec/omegese-om3.md`, since OM-2 is frozen) defines contract
@@ -287,6 +292,7 @@ Acceptance:
 |---|---|---|
 | AArch64 Linux static ELF (program and function mode) | MERGED; host EXERCISED by `OMEGA-SEED` | QUALIFIED by RM1's full gate at the release commit |
 | WebAssembly MVP via OSC IR v1 (`irwasm`) | MERGED, scalar subset; host EXERCISED by authors | Gate wired (RM1); scope decision: stay scalar-only for 1.0, or add linear memory, text and globals with IR v2+ |
+| SPIR-V 1.0 OpenCL Kernel via OSC IR v1 (`irspirv`) | IMPLEMENTED and CPU EXERCISED in [#804](https://github.com/aien-dev/omega-mv/pull/804); [ABI, parity and toolchain](SPIRV.md) | Standalone `seed/spirv/gate-irspirv.sh`: full irwasm scalar corpus, exact trap/result parity on PoCL CPU, validator, determinism, mutant and refusals. Manifest wiring needs operator authorization; GPU and DPC++ integration NOT_RUN. |
 | x86-64 Linux ELF and x86-64 UEFI PE32+ | Reported IMPLEMENTED in omega-harness#9 on unpublished commit `7eca2ac3f`; not independently verified here | Published PR; default AArch64 output byte-identical (C2 manifest); differential against AArch64 on the full fixture set; trap codes equal; QEMU run labelled EMULATED; physical x86 hardware NOT_RUN unless tested |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
 | GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR; host and simulator results are never cited as GPU qualification |
@@ -352,6 +358,44 @@ parallel on disjoint paths. RM11 is last and freezes only what passed.
 | RM9 Targets | [#798](https://github.com/aien-dev/omega-mv/issues/798) |
 | RM10 Compiler trust and C retirement | [#799](https://github.com/aien-dev/omega-mv/issues/799) |
 | RM11 Stability guarantee | [#800](https://github.com/aien-dev/omega-mv/issues/800) |
+
+## 4a. Networking and TLS follow-on
+
+The bounded HTTP/JSON work tracked by [#788](https://github.com/aien-dev/omega-mv/issues/788)
+uses existing Linux-arm64 socket words, with additional bounded host operations proposed in
+[PR #808](https://github.com/aien-dev/omega-mv/pull/808) (pending). It does not add TLS.
+Public traffic terminates TLS at the hub's nginx; authorized internal services use plain HTTP
+on loopback or over the WireGuard tailnet. This transport arrangement is not a claim that
+Omega implements certificate verification or that plaintext is suitable on arbitrary networks.
+
+**TLS 1.3 client: PROPOSED, separate OmegaTLS lane.** Implement record framing, handshake,
+transcript hashes, key schedule, authenticated encryption, signature verification, and bounded
+X.509 verification in `.om`. The minimum contract verifies a chain to an explicitly configured
+trust store, hostname, validity interval and certificate constraints, and fails closed on every
+unsupported or invalid input. There is no insecure verification toggle, implicit trust-on-first-use,
+or silent downgrade. Trust-store provenance and trusted wall-clock requirements are explicit inputs.
+No TLS 1.2, 0-RTT, or session-resumption claim is included without a separate replay/security contract.
+
+Acceptance gates, all required before a consumer cutover:
+
+- Published cryptographic known-answer vectors and differential tests against a pinned independent
+  TLS implementation; document exact versions and oracle-only roles.
+- Positive and negative certificate chains: hostname mismatch, expired/not-yet-valid certificates,
+  unknown issuer, invalid signature, wrong key usage/EKU, path constraints, malformed DER, and
+  unsupported critical extensions all refuse without sending application data.
+- Fragmented/coalesced records, partial I/O, handshake and read deadlines, authenticated close,
+  truncation, corrupt tags, altered handshake transcript, replay and sequence exhaustion tests.
+- Deterministically seeded malformed-record/certificate fuzz corpus, retained failures, and a
+  verification-bypass mutant that the gate demonstrably catches.
+- Descriptor/memory lifecycle checks and a read-only end-to-end HTTPS GET with status, headers,
+  bounded body, and an independently verified certificate identity.
+- Independent protocol/cryptographic review plus seeded compiler/referee and consumer parity
+  evidence at exact source and compiler pins. Host tests do not qualify hardware or deployment.
+
+The GitHub API pusher and catalog remain recorded host dependencies until this separate TLS
+implementation passes these gates and each consumer completes its own exercised port. nginx
+termination does not replace outbound GitHub certificate verification. This item does not
+silently add a new RM milestone or declare Omega 1.0 ready.
 
 ## 5. Keeping this file honest
 

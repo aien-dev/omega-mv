@@ -8,6 +8,10 @@ as a builder.
 The current completeness audit (implemented areas, open compiler work, and what is blocked on a
 decision or an external store) is `docs/one_layer/OM_COMPLETION.md`.
 
+The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
+`spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
+See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
+
 Think of it as a ladder. Each rung is a small program, written in the language the rung below understands,
 and built by the rung below. Every rung must rebuild itself to the exact same bytes, which proves it reads
 its own language the same way the rung below does.
@@ -232,7 +236,7 @@ it came from.
   - every working number is kept as a plain 64-bit value, because the language refuses mixed types;
   - every loop over the input is two loops inside each other. A single loop stops itself after a
     million passes, and om4 has no such limit on input size.
-- Checks (`omc/gate5.sh`, results in `evidence/SEED-0/omc/`), 177 cases, all pass:
+- Historical R5 checks (`omc/gate5.sh`, retained results in `evidence/SEED-0/omc/`), 177 cases, all pass:
   - (a) self-rebuild: stages 1, 2 and 3 are the same file (sha256 191b776e...98e9), so omc translates
     itself the same way om4 translates it;
   - (b) a second route: the C path (the older compiler written in C) cannot read `omc.om`. It lacks
@@ -263,8 +267,8 @@ it came from.
     comparison catches it. The same wrong word put into both om4 and omc fools both of those checks,
     and only the C path catches it (fm1, fm2: -7 / 2). A broken program is refused with error 3;
   - the output does not change with the run: same bytes under another environment and a second later.
-- Size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv` in `evidence/SEED-0/omc/`;
-  `size-history.tsv` gets one row per self-rewrite, and the gate fails if the current omc has no row):
+- Historical R5 size and speed (`size.tsv`, `size-history.tsv`, `omc-words.tsv`, `compile-time.tsv`
+  in `evidence/SEED-0/omc/`; these receipts are immutable):
   - omc is 19,143 machine words; the largest functions are the value reader (2,073 words) and local
     arrays (695);
   - on the programs the C path can also translate, omc makes the same words as om4. The 10 practice
@@ -273,6 +277,15 @@ it came from.
   - time to translate one program (10 practice tasks and 9 others), 200 runs each, including starting it:
     omc 0.4 to 0.6 ms, the C path 5.9 to 6.7 ms (it runs two programs and writes a file in between).
     omc translates itself in 2.6 ms. These are not compared against the machine's limit (not measured).
+- Current `omc/gate5.sh` writes disposable results to `build/seed/r5/evidence/`, never over historical
+  receipts. `seed/omc/size-history.tsv` is the living measured-size ledger, initially copied byte for
+  byte from the historical ledger. Before qualifying a compiler change, append its observed source
+  line/function counts, emitted word count and compiler SHA-256. The gate checks that the **last**
+  row names its independently rebuilt stage2; missing, empty or stale ledgers fail. It never updates
+  its own prerequisite. Keep durable runs under a new evidence directory.
+- Current size reporting measures the complete compiler only. Compiling incomplete source prefixes
+  is not a valid per-function measurement in a compiler with forward references; that old diagnostic
+  was removed. All parent, C-referee, wrong-word-mutant, fuzz and refusal checks remain mandatory.
 - Limits, said plainly: omc has om4's limits, because it copies om4 (names up to 8 characters, 16
   registers per function, values nested up to 1,024 deep, 8 MiB of input).
 
@@ -926,6 +939,22 @@ pairs with `fn kw` scoped to that function; it also checks the two computed entr
 `sockopt` 134) and that the generator lists them. The generator now includes every host word
 100-177 (the device and mapping words devctl..mapbind are 166-177) and packs 64-bit words with decimal string arithmetic, so values above 2^53 print exactly.
 0 mismatches; `seed/host/check.sh` runs the gate.
+
+## Rung R51: constants in function mode (done)
+
+A function-mode unit (no `fn main`) used to refuse any top-level name with error 9 at the end of the
+input, because `s_eof` tested the count of top-level names, and that count includes constants. The
+new `fnstore` scans those names and refuses only a `global` pool (kind 4) or a `text` (kind 5); a
+constant (kind 9) folds to its typed number at every read and needs no program image. Host words
+keep their error 9 at the line that uses them.
+
+- `gate16` now runs 18 accepted programs, 27 refusals (adding function-mode `global`, `text`, a
+  global or text beside a constant, a host word, a trap code out of range, a float length and an
+  assignment) and 9 function-mode units whose words must equal the literal-only unit byte for byte.
+- Negative controls: the same gate16 against the previous compiler (`befb8199…`) fails at `fm_value`
+  with error 9; a compiled mutant whose `fnstore` never refuses fails at `fm_global`.
+- `seed/omc/omc.om`, 11,131 lines and 379 functions. The committed `seed/out/omc` is not refreshed in
+  this change; the integration owner reseeds once per batch.
 
 ## How the checks stay honest
 
