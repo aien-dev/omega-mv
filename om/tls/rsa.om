@@ -14,7 +14,9 @@ note   ctl (PSS): bits 0..15 message hash (256|384|512), bits 16..31 MGF1 hash (
 note       bits 32..63 salt length in bytes (exact). TLS 1.3 rsa_pss_rsae_sha256 =
 note       256 | 256 << 16 | 32 << 32 = 0x0000002001000100.
 note   Accepted keys: modulus 1024..8192 bits and odd; e odd, e >= 3, bit length of e <= bit length
-note       of n. A minimum such as 2048 bits is caller policy (X.509/TLS layer).
+note       of n. A minimum such as 2048 bits is caller policy (X.509/TLS layer): x509.om accepts
+note       server-presented RSA keys (leaf and chain) only with 2048..4096 bits and e odd in
+note       3..2^32-1 (x509_rsaok), and anchors with >= 2048 bits.
 note Return codes: 0 valid, 1 mismatch (signature does not verify), 2 bad key encoding,
 note   3 unsupported size or exponent, 4 signature length != modulus length or s >= n, 5 unsupported
 note   hash (or hlen != digest length of the hash). Checked in the order 5, 2/3, 4, 1.
@@ -26,7 +28,8 @@ note Timing: all inputs are public (signature verification), so the code is vari
 note   early exits, length-dependent loop counts, a square-and-multiply driven by the bits of e, and
 note   value-dependent final subtractions in Montgomery reduction. It handles no secrets; nothing is
 note   constant time and nothing needs to be. Cost grows with bits(e) * s^2: an e as long as n
-note   (allowed, see above) is a CPU cost the caller accepts by passing such a key.
+note   (allowed, see above) is a CPU cost the caller accepts by passing such a key; x509.om bounds
+note   e to 32 bits for server-presented keys, so only a trust anchor can carry a longer e.
 note Arithmetic: 32-bit limbs in ulong cells, little-endian limb order; Montgomery multiplication
 note   (CIOS) with n0' = -n^-1 mod 2^32 (Newton iteration from x = n, 3 -> 48 correct bits in 5 steps)
 note   and R^2 mod n (64*s modular doublings of 1), both computed at run time from the key. The

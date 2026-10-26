@@ -104,7 +104,8 @@ fi
 # mutants: each must make the driver finish normally with exit 1 and MISMATCH lines
 mut=0
 mutok=0
-# mutant SED NAME: library mutant
+# mutant SED NAME: library mutant. Detected when the driver finishes with exit 1 and MISMATCH lines,
+# or dies on a runtime trap (exit >= 100: the main run fails on any trap, so the mutant is caught)
 mutant() {
 	mut=$((mut + 1))
 	sed "$1" "$tls/x509.om" > "$out/mut-$2-lib.om"
@@ -115,6 +116,9 @@ mutant() {
 	if [ "$rc" -eq 1 ] && [ "$n" -gt 0 ] && printf '%s\n' "$last" | grep -q "^x509 driver: [0-9]* checks, $n failed$"; then
 		mutok=$((mutok + 1))
 		say "PASS mutant $2 detected ($n MISMATCH: $(grep '^MISMATCH ' "$out/mut-$2.out" | head -n 2 | cut -d' ' -f4 | tr '\n' ' '))"
+	elif [ "$rc" -ge 100 ]; then
+		mutok=$((mutok + 1))
+		say "PASS mutant $2 detected (driver trapped, exit $rc, after $n MISMATCH)"
 	else
 		fail "mutant $2 not detected: exit $rc: $last"
 	fi
@@ -125,6 +129,18 @@ mutant 's/^if or eq lab 0 eq dots 0$/if eq lab 0/' name-wildcard-labels
 mutant 's/^if lt get r X5RNA nw$/if gt get r X5RNA nw/' date-not-after
 # basicConstraints: cA FALSE accepted for an issuer
 mutant 's/^if eq get w add X5RSZ X5RCA 0$/if eq get w add X5RSZ X5RCA 2/' bc-ca-flag
+# security review finding 1: unique IDs repeated or out of order accepted
+mutant 's/^if or eq v 0 le g k$/if eq v 0/' unique-id-order
+# finding 5: nameConstraints refused only when critical (the pre-review behaviour)
+mutant 's/^if eq o 20$/if eq o 99/' name-constraints-noncritical
+# finding 6: modulus above 4096 bits accepted for presented keys
+mutant 's/^if or lt b 2048 gt b 4096$/if lt b 2048/' rsa-modulus-max
+# finding 6: exponent policy dropped (only e >= 1)
+mutant 's/^if or lt v 3 eq and v 1 0$/if lt v 1/' rsa-exponent
+# finding 2: no leaf size limit
+mutant 's/^if gt get w add X5WIX 1 X5LMAX$/if gt get w add X5WIX 1 X5BIG/' leaf-size
+# finding 2: element caps removed: a 10001-element list hits the loop bound (trap)
+mutant 's/^if gt n X5NMAX$/if gt n 99999/' elemcap
 # expectation mutant: one expected code changed
 mut=$((mut + 1))
 sed 's/^C rsa_good X509_OK /C rsa_good X509_ERR_EXPIRED /' "$out/cases.txt" > "$out/mut-expect.txt"

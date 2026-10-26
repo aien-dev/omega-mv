@@ -24,6 +24,7 @@ text cehlo "EHLO omega-tls.invalid\n"
 text cquit "QUIT\n"
 text cstls "STARTTLS\n"
 text cslash "/"
+text cnf "CLOSE_NOT_FAILED "
 
 fn cl_arg i ulong arg edit uchar * to ulong
 n = argread i arg 0 len arg
@@ -367,14 +368,23 @@ end
 ret cl_go cs int fd part w 8192 get v 6 add get v 4 shl e 8
 end
 
-note mode in bits 0..7, the handshake result above
+note mode in bits 0..7, the handshake result above. After a failure the connection must stay
+note failed through tls_close (security review finding 11): tls_read then gives -TLS_ERR_STATE;
+note anything else prints CLOSE_NOT_FAILED before the TLSERR line
 fn cl_go cs edit uchar * fd int m view uchar * me ulong to int
+io = new uchar 16 0
 e = shr me 8
 if eq e 0
 e = cl_after cs m and me 255
 end
 x = fclose fd
 if ne e 0
+if eq get cs 0 3
+tls_close cs
+if ne tls_read cs io neg long 23
+w = write 2 cnf 0 len cnf
+end
+end
 ret cl_fail cs e
 end
 ret 0

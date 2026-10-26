@@ -37,6 +37,8 @@ const TLPO ulong 480
 const TLPN ulong 484
 const TLHF ulong 488
 const TLDET ulong 492
+note change_cipher_spec state: 0 none allowed yet, 1 one allowed (after ServerHello), 2 no more
+const TLCCS ulong 496
 const TLEPK ulong 512
 const TLEPU ulong 544
 const TLSID ulong 576
@@ -529,6 +531,10 @@ if eq ty 20
 if or ne ln 1 ne get c add TLRB 5 1
 ret TLEUNEX
 end
+if ne get c TLCCS 1
+ret TLEUNEX
+end
+put c TLCCS 2
 ret 0
 end
 if eq get c TLRK 0
@@ -543,6 +549,7 @@ end
 if ne ty 23
 ret TLEUNEX
 end
+put c TLCCS 2
 if lt ln 17
 ret TLEREC
 end
@@ -566,6 +573,9 @@ ret TLEREC
 end
 put c TLRB get c add add TLRB 5 n
 tls_pn c add TLRB 3 n 2
+if eq get c TLRB 20
+ret TLEUNEX
+end
 ret 0
 end
 
@@ -583,9 +593,15 @@ ret TLEALRT
 end
 
 note ---- handshake message buffer (c[TLHB], fill count at c[TLHF]) ----
-note make sure one whole handshake message is at c[TLHB]; 0 or an error code
+note make sure one whole handshake message is at c[TLHB]; 0 or an error code. A message spread
+note over more than 4000 records is refused (TLEBIG); close_notify here is TLEALRT, detail 0
 fn tls_hsmsg c edit uchar * to ulong
+k = ulong 0
 while true bound 4096
+k = add k 1
+if gt k 4000
+ret TLEBIG
+end
 f = tls_gn c TLHF 4
 if ge f 4
 ml = add tls_gn c add TLHB 1 3 4
@@ -603,7 +619,11 @@ end
 ty = ulong get c TLRB
 n = tls_gn c add TLRB 3 2
 if eq ty 21
-ret tls_ralert c
+e = tls_ralert c
+if eq e TLCLOSE
+ret TLEALRT
+end
+ret e
 end
 if ne ty 20
 if ne ty 22
@@ -1065,6 +1085,7 @@ if ne r 0
 ret TLEARG
 end
 put c TLRK 1
+put c TLCCS 1
 ret 0
 end
 
@@ -1699,7 +1720,9 @@ ret n
 end
 
 note tls_read: decrypted application bytes into o. Returns the count (> 0), 0 at the peer's
-note close_notify, or minus an error code (a TCP end without close_notify is -TLS_ERR_EOF)
+note close_notify, or minus an error code (a TCP end without close_notify is -TLS_ERR_EOF).
+note More than 1000 consecutive records without application bytes (empty records, tickets,
+note KeyUpdates) are refused with -TLS_ERR_UNEXPECTED_MESSAGE.
 fn tls_read c edit uchar * o edit uchar * to long
 ph = get c TLPH
 if eq ph 2
@@ -1711,7 +1734,12 @@ end
 if eq len o 0
 ret 0
 end
+k = ulong 0
 while true bound 999999
+k = add k 1
+if gt k 1001
+ret neg long tls_abort c TLEUNEX
+end
 if gt tls_gn c TLPN 4 0
 ret long tls_take c o
 end
@@ -1771,21 +1799,27 @@ ret long len m
 end
 
 note tls_close: send close_notify (when connected) and wipe the key material. The caller closes fd.
+note A failed connection stays failed (later calls give TLS_ERR_STATE).
 fn tls_close c edit uchar * to void
 if eq get c TLPH 1
 put c add TLWB 5 1
 put c add TLWB 6 0
 e = tls_wrbuf c 21 2
 end
+if ne get c TLPH 3
 put c TLPH 2
+end
 tls_zero c TLWKEY 96
 tls_zero c TLCAP 64
 tls_zero c TLEPK 320
 end
 
 note ---- DNS A lookup (RFC 1035) over UDP to the first IPv4 nameserver in /etc/resolv.conf ----
-note Only A records (IPv4). The first A record of class IN in the answer section is used.
-note Response checks: id, QR, opcode 0, RCODE 0, TC clear, one question equal to ours.
+note Only A records (IPv4). The answer section is walked in order: a CNAME record owned by the
+note current name (first the question name) makes its target the current name, and the first
+note IN A record owned by the current name is used; records for any other owner are skipped.
+note Owner names are compared label by label, ASCII case-insensitive, following compression.
+note Response checks: id, QR set, opcode 0, TC clear, RCODE 0, one question equal to ours.
 
 note parse a dotted IPv4 address (all of b) into ip[0..4); 1 on success
 fn dns_ip4 b view uchar * ip edit uchar * to ulong
@@ -1924,10 +1958,16 @@ end
 ret 1
 end
 
-note skip a (possibly compressed) name at r[p..z); returns the offset after it or 0
+note skip a (possibly compressed) name at r[p..z); returns the offset after it, or 0 when it is
+note malformed or has more than 127 labels (never traps)
 fn dns_skip r view uchar * p0 ulong z ulong to ulong
 p = p0
+k = ulong 0
 while lt p z bound 128
+k = add k 1
+if gt k 127
+ret 0
+end
 l = ulong get r p
 if eq l 0
 ret add p 1
@@ -1955,8 +1995,9 @@ end
 if ne tls_cteq q r 0 2 0
 ret TLEDNS
 end
+note flags: QR 0x8000 set; opcode 0x7800, TC 0x0200 and RCODE 0x000F clear (mask 0xFA0F)
 fl = tls_gn r 2 2
-if ne and fl 33295 32768
+if ne and fl 64015 32768
 ret TLEDNS
 end
 if ne tls_gn r 4 2 1
@@ -1987,23 +2028,32 @@ end
 ret 0
 end
 
+note answer records from r[p0]; the current name starts as the question name at offset 12
 fn dns_ans r view uchar * p0 ulong an ulong ip edit uchar * to ulong
 p = p0
+cur = ulong 12
 for k ulong an
-p = dns_rr r p ip
-if eq p 1
-ret 0
-end
+o = p
+p = dns_rr r o
 if eq p 0
 ret TLEDNS
+end
+if eq dns_neq r o cur 0
+t = dns_rrty r o
+if eq t 1
+dns_rrip r o ip
+ret 0
+end
+if eq t 5
+cur = add dns_skip r o len r 10
+end
 end
 end
 ret TLEDNS
 end
 
-note one resource record at r[p0]: 1 when it is an IN A record (copied to ip), 0 when malformed,
-note else the offset of the next record
-fn dns_rr r view uchar * p0 ulong ip edit uchar * to ulong
+note one resource record at r[p0]: the offset of the next record, or 0 when it is malformed
+fn dns_rr r view uchar * p0 ulong to ulong
 z = len r
 p = dns_skip r p0 z
 if or eq p 0 gt add p 10 z
@@ -2013,13 +2063,90 @@ dl = tls_gn r add p 8 2
 if gt add add p 10 dl z
 ret 0
 end
-if and eq tls_gn r p 4 65537 eq dl 4
+ret add add p 10 dl
+end
+
+note copy the 4 data bytes of the (well-formed) A record at r[o] into ip
+fn dns_rrip r view uchar * o ulong ip edit uchar * to void
+p = add dns_skip r o len r 10
 for i ulong 4
-put ip i get r add add p 10 i
+put ip i get r add p i
+end
+end
+
+note kind of the (well-formed) record at r[o]: 1 IN A with 4 data bytes, 5 IN CNAME, else 0
+fn dns_rrty r view uchar * o ulong to ulong
+p = dns_skip r o len r
+ty = tls_gn r p 4
+dl = tls_gn r add p 8 2
+if and eq ty 65537 eq dl 4
+ret 1
+end
+if eq ty 327681
+ret 5
+end
+ret 0
+end
+
+note the target of a compression pointer at r[a]; a itself when r[a] is no pointer; len r when
+note the pointer is cut off
+fn dns_ptr r view uchar * a ulong to ulong
+x = tls_at r a
+if ne and x 192 192
+ret a
+end
+if ge add a 1 len r
+ret len r
+end
+ret or shl and x 63 8 ulong get r add a 1
+end
+
+note 0 when the names at r[a0] and r[b0] are equal (ASCII case-insensitive, compression
+note followed); 1 when they differ or either is malformed (at most 400 steps, never traps)
+fn dns_neq r view uchar * a0 ulong b0 ulong to ulong
+a = a0
+b = b0
+for k ulong 400
+na = dns_ptr r a
+nb = dns_ptr r b
+if or ne na a ne nb b
+a = na
+b = nb
+else
+la = tls_at r a
+if or ne la tls_at r b gt la 63
+ret 1
+end
+if eq la 0
+ret 0
+end
+if ne dns_lbeq r a b la 0
+ret 1
+end
+a = add a add la 1
+b = add b add la 1
+end
 end
 ret 1
 end
-ret add add p 10 dl
+
+note 0 when the l label bytes after r[a] and r[b] are equal (ASCII case-insensitive, in range)
+fn dns_lbeq r view uchar * a ulong b ulong l ulong to ulong
+for i ulong l
+x = dns_low tls_at r add add a 1 i
+y = dns_low tls_at r add add b 1 i
+if or ne x y eq x 256
+ret 1
+end
+end
+ret 0
+end
+
+fn dns_low x ulong to ulong
+if and ge x 65 le x 90
+ret add x 32
+end
+ret x
 end
 
 note sockaddr_in for ip:port into sa[0..16)

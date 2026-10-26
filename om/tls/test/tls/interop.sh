@@ -74,11 +74,17 @@ q openssl x509 -req -in stray.csr -CA other.pem -CAkey other.key -CAcreateserial
 cp good.key stray.key
 
 port=15400
+# nextport: the next port above $port with no listener on 127.0.0.1 (another process may hold one;
+# connecting to it would test that process instead of this row's server)
+nextport() {
+  port=$((port + 1))
+  while ss -Hltn "sport = :$port" | grep -q .; do port=$((port + 1)); done
+}
 fail=0; rows=0
 # row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name)
 row() {
   label=$1; expect=$2; cert=$3; chain=$4; shift 4
-  port=$((port + 1)); rows=$((rows + 1))
+  nextport; rows=$((rows + 1))
   if [ "$chain" = - ]; then ch=""; else ch="-cert_chain $chain"; fi
   # shellcheck disable=SC2086
   openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
@@ -112,7 +118,7 @@ row "P-256 group only"          "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"       
 
 # crafted ServerHellos (fakesh.py): the client's own refusals
 fake() {
-  port=$((port + 1)); rows=$((rows + 1))
+  nextport; rows=$((rows + 1))
   python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
   fp=$!
   sleep 0.4
@@ -131,9 +137,37 @@ fake zero   "TLSERR TLS_ERR_ZERO_SHARED_SECRET"
 fake dupext "TLSERR TLS_ERR_EXTENSION"
 fake trail  "TLSERR TLS_ERR_DECODE"
 
+# full handshakes from fakesrv.py (security review of omega-mv #813): CCS policy, record-count caps,
+# CertificateVerify refusals, close_notify during the handshake. EXPECT OK needs exit 0 and the reply.
+fsrv() {
+  nextport; rows=$((rows + 1))
+  python3 "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
+  fp=$!
+  sleep 0.6
+  timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
+  if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
+  case "$got" in "$2"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: $1" "$2" "$got"
+}
+fsrv ok          OK
+fsrv empty50     OK
+fsrv ccs2        "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv ccsflood    "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv ccspre      "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv ccslate     "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv encccs      "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv frag        "TLSERR TLS_ERR_MESSAGE_TOO_BIG detail 0 (exit 32)"
+fsrv cvbad       "TLSERR TLS_ERR_CERTIFICATE_VERIFY"
+fsrv cvkey       "TLSERR TLS_ERR_CERTIFICATE_VERIFY"
+fsrv empty1500   "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv tickets1500 "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
+fsrv closehs     "TLSERR TLS_ERR_ALERT_RECEIVED detail 0 (exit 31)"
+fsrv closepre    "TLSERR TLS_ERR_ALERT_RECEIVED detail 0 (exit 31)"
+
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac
-port=$((port + 1)); rows=$((rows + 1)); bp=$((port + 1))
+nextport; rows=$((rows + 1)); lp=$port; nextport; bp=$port; port=$lp
 openssl s_server -accept "127.0.0.1:$bp" -naccept 1 -cert good.pem -key good.key -cert_chain int.pem -www -tls1_3 > "s$bp.log" 2>&1 &
 sp=$!
 python3 "$here/tamper.py" "$port" "$bp" > "p$port.log" 2>&1 &

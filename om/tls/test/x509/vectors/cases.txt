@@ -60,7 +60,7 @@ C bad_signature X509_ERR_BAD_SIGNATURE 1792972800 www.example.test pki/storeR.pe
 C intermediate_not_ca X509_ERR_NOT_CA 1792972800 www.example.test pki/storeR.pem pki/lViaNoCA.der pki/intNoCA.der
 C intermediate_ku_no_certsign X509_ERR_KEY_USAGE 1792972800 www.example.test pki/storeR.pem pki/lViaNoKU.der pki/intNoKU.der
 C path_length_violated X509_ERR_PATH_LENGTH 1792972800 www.example.test pki/storeR.pem pki/lViaP0.der pki/intP0b.der pki/intP0.der
-C name_constraints_critical X509_ERR_CRITICAL_EXT 1792972800 www.example.test pki/storeR.pem pki/lViaNC.der pki/intNC.der
+C name_constraints_critical X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test pki/storeR.pem pki/lViaNC.der pki/intNC.der
 C intermediate_eku_client X509_ERR_EKU 1792972800 www.example.test pki/storeR.pem pki/lViaEKUc.der pki/intEKUc.der
 C depth_8_intermediates X509_ERR_TOO_DEEP 1792972800 www.example.test pki/storeR.pem pki/lD8.der pki/d8.der pki/d7.der pki/d6.der pki/d5.der pki/d4.der pki/d3.der pki/d2.der pki/d1.der
 # --- leaf rules
@@ -108,6 +108,38 @@ V cv_rsa_1024 X509_ERR_WEAK_KEY 2052 pki/lR1024.der pki/cv.msg pki/cv_r1024.sig
 V cv_rsae_scheme_pss_key X509_ERR_SCHEME 2052 pki/lRpss.der pki/cv.msg pki/cv_r256.sig
 V cv_ed25519_scheme X509_ERR_SCHEME 2055 pki/lEd.der pki/cv.msg pki/cv_r256.sig
 V cv_truncated_cert X509_ERR_MALFORMED 2052 pki/lRtrunc.der pki/cv.msg pki/cv_r256.sig
+#
+# --- security review of omega-mv #813 (crafted/: gen_crafted.py, root crafted/rootX.der, P-256)
+# finding 1: issuerUniqueID [1] at most once, then subjectUniqueID [2] at most once
+P uid_ok X509_OK crafted/uid_ok.der
+P uid_subject_only X509_OK crafted/uid_one2.der
+P uid_issuer_twice X509_ERR_MALFORMED crafted/uid_two1.der
+P uid_subject_twice X509_ERR_MALFORMED crafted/uid_two2.der
+P uid_subject_before_issuer X509_ERR_MALFORMED crafted/uid_21.der
+P uid_five_empty X509_ERR_MALFORMED crafted/uid_five.der
+P uid_issuer_twice_then_subject X509_ERR_MALFORMED crafted/uid_112.der
+# finding 2: SEQUENCE OF lists capped at 9999 elements (MALFORMED, never a loop-bound trap)
+P eku_9999 X509_OK crafted/eku9999.der
+P eku_10001 X509_ERR_MALFORMED crafted/eku10001.der
+P san_9999 X509_OK crafted/san9999.der
+P san_10001 X509_ERR_MALFORMED crafted/san10001.der
+P extensions_10001 X509_ERR_MALFORMED crafted/ext10001.der
+C crafted_base X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXbase.der
+C leaf_too_big X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXbig.der
+# finding 5: nameConstraints refused whether critical or not
+C name_constraints_noncritical X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test crafted/storeX.pem crafted/lViaXnc.der crafted/intXnc.der
+C name_constraints_noncritical_violated X509_ERR_NAME_CONSTRAINTS 1792972800 www.other.test crafted/storeX.pem crafted/lViaXncOut.der crafted/intXnc.der
+# finding 6: server-presented RSA keys: 2048..4096 bits, e odd in 3..2^32-1
+C rsa_4096_leaf X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lX4096.der
+C rsa_e3_leaf X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXe3.der
+C rsa_6144_leaf X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lX6144.der
+C rsa_e_2_32_plus_1_leaf X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lXe32.der
+C rsa_e_even_leaf X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lXeven.der
+C rsa_e_1_leaf X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lXe1.der
+C rsa_6144_intermediate X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lViaX6144.der crafted/intX6144.der
+C rsa_e_2_32_plus_1_intermediate X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lViaXe32.der crafted/intXe32.der
+V cv_rsa_6144 X509_ERR_WEAK_KEY 2052 crafted/lX6144.der pki/cv.msg crafted/cv_x6144.sig
+V cv_rsa_e_2_32_plus_1 X509_ERR_WEAK_KEY 2052 crafted/lXe32.der pki/cv.msg crafted/cv_x6144.sig
 #
 # --- name matching (chain_match: 1 match, 0 no match)
 M exact_case 1 example.test EXAMPLE.test
@@ -175,7 +207,8 @@ S store_missing_file 0 pki/nonexistent.pem
 E name_ok X509_OK 0
 E name_expired X509_ERR_EXPIRED 2
 E name_scheme X509_ERR_SCHEME 19
-E name_past_end - 20
+E name_constraints X509_ERR_NAME_CONSTRAINTS 20
+E name_past_end - 21
 E name_far - 99
 #
 # --- fuzz: deterministic mutations of a valid certificate_list; every run must return a code

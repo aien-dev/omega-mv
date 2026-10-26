@@ -24,10 +24,10 @@ units before it. The composed unit is OM-2 (a leading `om2` line), and the libra
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
 | `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
-| `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 65 |
-| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 99 |
+| `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 68 |
+| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 105 |
 
-The total is 329 functions. omc at `befb8199` allows 512 per unit, so a program has about 180 left.
+The total is 338 functions. omc at `befb8199` allows 512 per unit, so a program has about 170 left.
 
 ## Client API (`tls.om`)
 
@@ -42,11 +42,14 @@ All buffers are owned by the caller. `c` is the connection state, at least `TLCS
 e  = tls_store st                        load /etc/ssl/certs/ca-certificates.crt
 e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; the name is SNI and the checked name
 fd = tls_dial hostname port              DNS A + TCP (IPv4; a dotted literal skips DNS); fd or -code
-tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait
+tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait,
+                                         with no cap on the whole handshake (a slow server can stretch
+                                         it; CPU time is never covered)
 e  = tls_connect c st int fd             full handshake; any failure sends an alert and is final
 n  = tls_read c out                      > 0 bytes; 0 = close_notify received; -code on error
 n  = tls_write c bytes                   all bytes or -code
-tls_close c                              send close_notify, wipe keys (the caller closes fd)
+tls_close c                              send close_notify, wipe keys (the caller closes fd); a failed
+                                         connection stays failed, so a later tls_read is -code, never 0
 ```
 
 For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls_connect`. See
@@ -61,26 +64,51 @@ For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls
   HelloRetryRequest, which the client refuses (`TLS_ERR_HELLO_RETRY_UNSUPPORTED`).
 - The server is always authenticated, in this order:
   1. `x509_chain_verify`: path to a trust anchor, signatures, validity at the current realtime
-     second, basicConstraints and pathLen, keyUsage, EKU serverAuth, critical extensions, RSA keys
-     of at least 2048 bits.
+     second (the host clock decides), basicConstraints and pathLen, keyUsage, EKU serverAuth,
+     critical extensions, RSA key policy (below).
   2. Hostname: SAN dNSName only, no CN fallback; a wildcard covers only the whole leftmost label.
+     There is no public-suffix check (`*.co.uk` relies on CA policy).
   3. CertificateVerify over the transcript hash: ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384,
      or rsa_pss_rsae_sha256/384/512. rsa_pkcs1 is never accepted here.
   4. The server Finished HMAC, compared in constant time.
+- RSA key policy. A key the server presents (leaf, intermediate, and the CertificateVerify key)
+  must have a 2048-4096-bit modulus and an odd public exponent in 3 .. 2^32-1, else
+  `X509_ERR_WEAK_KEY`. This bounds the verification cost per certificate. Trust anchors need only
+  2048 bits or more.
+- Certificate size limits: a leaf larger than 16896 bytes, or a certificate with more than 9999
+  elements in any list (extensions, names, SAN, EKU, RDNs), is refused (`X509_ERR_MALFORMED`)
+  instead of trapping. issuerUniqueID and subjectUniqueID may each appear once, in that order.
+- nameConstraints is not implemented, so a certificate carrying it, critical or not, is refused
+  with `X509_ERR_NAME_CONSTRAINTS` (reject code 20).
 - Session IDs, extension sets and lengths are checked exactly, and duplicate or unexpected
   extensions are refused. ALPN must be the one protocol offered.
 - A CertificateRequest is answered with an empty Certificate; there are no client certificates.
+  Its extensions are not validated (the empty Certificate makes them irrelevant).
   NewSessionTicket is ignored (no resumption, PSK or 0-RTT). KeyUpdate is honoured, including
   update_requested.
+- ChangeCipherSpec (stricter than RFC 8446 section 5): at most one, exactly the single byte 1, only
+  after the ServerHello and before the first protected record. A second, early, late, protected
+  or malformed CCS is `TLS_ERR_UNEXPECTED_MESSAGE`.
 - Records: 64-bit sequence numbers, never wrapped (`TLS_ERR_SEQUENCE_LIMIT`). A record over
   2^14 + 256 is refused. Plaintext is released only after its tag verifies. An end of TCP without
-  close_notify is `TLS_ERR_EOF`, never a clean 0.
+  close_notify is `TLS_ERR_EOF`, never a clean 0. A handshake message spread over more than 4000
+  records is `TLS_ERR_MESSAGE_TOO_BIG`; more than 1000 consecutive records without application
+  data in one `tls_read` (empty records, tickets, KeyUpdates) is `TLS_ERR_UNEXPECTED_MESSAGE`.
+- A close_notify received during the handshake is `TLS_ERR_ALERT_RECEIVED` with detail 0.
 - Not implemented: revocation (OCSP, CRL), Certificate Transparency, IPv6, DNSSEC, DNS over TCP,
   RFC 5280 name canonicalisation (issuer names are matched as exact DER bytes), and nameConstraints
-  (a critical one is refused).
+  (always refused, see above). Path building commits to the first presented issuer whose
+  signature verifies, without backtracking; this fails closed (availability only).
 - DNS is unauthenticated (UDP to the first IPv4 nameserver in `/etc/resolv.conf`, random 16-bit
   ID, question echo checked). A spoofed answer can redirect the TCP connection but cannot pass
-  server authentication.
+  server authentication. The answer must be a standard response (QR set, opcode 0, TC clear,
+  RCODE 0); only A records whose owner is the queried name, or the target of a CNAME chain from
+  it (case-insensitive compare), are used; a name over 127 labels or a looping pointer is
+  `TLS_ERR_DNS`, never a trap.
+- Caller-contract traps (not reachable by a peer): `tls_dial` with a hostname longer than the
+  query buffer (validate it with `tls_init` first), `tls_write` of more than 16 GB at once,
+  `/etc/resolv.conf` with more than 4096 consecutive blanks. A trust bundle larger than `TLSTSZ`
+  fails closed.
 
 ## Side channels: what is and is not constant time
 
@@ -121,8 +149,8 @@ Not covered, or covered only partly:
 | `sh om/tls/test/aesgcm/run.sh OMC` | `AESGCM PASS vectors=47570 (fips197=4, nist=47250, wycheproof=316) mutants=5/5` |
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
-| `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=78 (openssl-parity=66/78) mutants=4/4` |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) interop=23 net=PASS mutants=9/9` |
+| `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=90 (openssl-parity=70/90) mutants=10/10` |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=21 interop=37 net=PASS mutants=18/18` |
 
 How the suites are built:
 
@@ -131,12 +159,18 @@ How the suites are built:
   why, as NOT_RUN: SHA-1, SHA-224, SHA-3, SHAKE, other curves, XChaCha20, AES-GCM-SIV, RSA
   encryption. Wycheproof has no X.509 path vectors.
 - **Other vectors.** NIST CAVP SHAVS, GCM and ECDSA SigVer; RFC 7748, 8439, 4231, 5869 and 8448.
-- **Mutants.** Each suite has library mutants that must be caught as MISMATCH (exit 1; a trap does
-  not count), plus an expectation mutant and flip-a-byte negative controls.
+- **Mutants.** Each suite has library mutants that must be caught as MISMATCH (exit 1), plus an
+  expectation mutant and flip-a-byte negative controls. In the x509 and DNS mutants a runtime trap
+  (exit >= 100) also counts as detected, because those mutants remove a bound that keeps hostile
+  input from trapping.
 - **`test/tls`.**
   - The RFC 8448 section 3 KAT checks ECDHE, every secret, the keys and IVs, both Finished values,
     and record seal and open byte for byte.
-  - `interop.sh` runs 23 rows against `openssl s_server` and crafted servers, all on 127.0.0.1.
+  - `interop.sh` runs 37 rows against `openssl s_server`, crafted ServerHellos and `fakesrv.py`
+    (a full TLS 1.3 server in Python that misbehaves after a valid handshake), all on 127.0.0.1.
+    Ports already in use are skipped. Every failure row also checks that `tls_close` leaves the
+    connection failed.
+  - `dnsunit.om` runs the 21 DNS answer cases of `vectors/dns.txt` (`gen_dns.py`).
   - `TLS_NET=1` adds the live checks. The handshakes reach api.github.com (ECDSA P-256 chain),
     raw.githubusercontent.com (RSA, rsa_pss_rsae) and mail.gandi.net on 465 and on 587 with
     STARTTLS. Parity means the fetched bytes are compared with Python `ssl` for read-only GETs
@@ -154,6 +188,31 @@ The interop refusal table (`build/tls/tls/interop-table.txt`):
 | TLS 1.2-only, AES-256-only, P-256-only server | the server's own alert 70 / 40 / 40 (`TLS_ERR_ALERT_RECEIVED`) |
 | crafted ServerHello: TLS 1.2, HRR, AES-256 suite, session id, P-256 share, zero share, duplicate extension, trailing byte | `PROTOCOL_VERSION`, `HELLO_RETRY_UNSUPPORTED`, `CIPHER_SUITE`, `SESSION_ID_ECHO`, `KEY_SHARE`, `ZERO_SHARED_SECRET`, `EXTENSION`, `DECODE` |
 | one bit flipped in a server record by a proxy | `TLS_ERR_BAD_RECORD_MAC` |
+| fake server (`fakesrv.py`), valid handshake; 50 empty application records before the data | accepted |
+| second CCS, 5000 CCS, CCS before ServerHello, CCS after the first protected record, CCS inside a protected record | `TLS_ERR_UNEXPECTED_MESSAGE` |
+| a 6000-byte Certificate sent one byte per record | `TLS_ERR_MESSAGE_TOO_BIG` |
+| CertificateVerify signature flipped; signed with a key that is not the leaf's | `TLS_ERR_CERTIFICATE_VERIFY` with `X509_ERR_BAD_SIGNATURE` |
+| 1500 empty application records; 1500 NewSessionTickets | `TLS_ERR_UNEXPECTED_MESSAGE` |
+| close_notify before the ServerHello and after it | `TLS_ERR_ALERT_RECEIVED` detail 0 |
+
+## Security review
+
+The security review of omega-mv #813 (`~/handoffs/omega-tls/security-review.md`, head `de2d884b`)
+had 11 findings. Each one is fixed and has a test that fails on the code before the fix.
+
+| finding | fix | test |
+|---|---|---|
+| F1 repeated uniqueIDs trap `x509_tbs2` | issuerUniqueID then subjectUniqueID, each at most once, else `X509_ERR_MALFORMED` (`x509.om` `x509_tbs2`) | x509 P `uid_*` cases, mutant unique-id-order |
+| F2 element bounds reachable | each element loop stops at 9999 (`X5NMAX`) with `X509_ERR_MALFORMED`; a leaf over 16896 bytes (`X5LMAX`) is refused in `x509_chain_verify` | x509 P eku/san/ext cases, C `leaf_too_big`, mutants leaf-size and elemcap |
+| F3 `tls_hsmsg` traps on empty records | more than 4000 records for one message is `TLS_ERR_MESSAGE_TOO_BIG` | interop `frag`, mutant handshake record cap |
+| F4 `tls_read` traps on empty records | more than 1000 records without data is `TLS_ERR_UNEXPECTED_MESSAGE` (`tls_abort`) | interop `empty1500`, `tickets1500`, `empty50` (accepted), mutant read record cap |
+| F5 non-critical nameConstraints ignored | any nameConstraints is `X509_ERR_NAME_CONSTRAINTS` (code 20) in `x509_ext` | x509 C `name_constraints_*`, E row 20, mutant name-constraints-noncritical |
+| F6 attacker-chosen RSA keys cost CPU | presented keys need 2048-4096 bits and an odd exponent in 3 .. 2^32-1 (`x509_rsaok`, `chain_rsapol`, `chain_leaf`, `x509_cv_verify`) | x509 C `rsa_*`, V `cv_rsa_6144`, `cv_rsa_e_2_32_plus_1`, mutants rsa-modulus-max, rsa-exponent |
+| F7 protected and repeated CCS accepted | CCS policy above (`TLCCS` state in `tls_rdrec`; inner type 20 refused) | interop `ccs2`, `ccsflood`, `ccspre`, `ccslate`, `encccs`, mutant CCS count |
+| F8 DNS answer handling | header flags checked, owner names compared case-insensitively along the CNAME chain, label count and pointer steps capped, no trap (`dns_parse`, `dns_ans`, `dns_skip`, `dns_neq`) | `dnsunit.om` (21 cases), DNS mutants |
+| F9 no CertificateVerify negative control | fake server with a flipped signature and with a foreign key | interop `cvbad`, `cvkey`, mutant CertificateVerify ignored |
+| F10 F1-F4 and F7 not exercised | crafted x509 fixtures (`gen_crafted.py`), fake-server rows, DNS unit; a trap is a FAIL in interop | all rows above |
+| F11 info items | `tls_close` keeps a failed connection failed; close_notify in the handshake is `TLS_ERR_ALERT_RECEIVED`; deadline, clock, public-suffix, caller-contract, CertificateRequest and path-building limits documented above | interop `CLOSE_NOT_FAILED` check on every failure row, `closehs`, `closepre`, mutants close revives failed and handshake close_notify unmapped |
 
 ## Writing another unit for this set
 

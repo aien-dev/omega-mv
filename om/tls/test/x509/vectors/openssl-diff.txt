@@ -2,7 +2,7 @@ store_intermediate_anchor x509=accept openssl=reject: every certificate in the s
 at_not_after x509=accept openssl=reject: RFC 5280 4.1.2.5 validity is inclusive of notAfter; OpenSSL 3.0 treats now == notAfter as expired
 wildcard_partial x509=reject openssl=accept: partial-label wildcards (f*.wild.test) refused per task rule and RFC 6125 6.4.3 SHOULD NOT; openssl allows them by default
 no_san x509=reject openssl=accept: no subject CN fallback (RFC 6125 6.4.4 / CA/B BR require SAN); openssl falls back to the CN (CN equals the host only by test construction: host lNoSAN)
-name_constraints_critical x509=reject openssl=accept: nameConstraints not implemented, so a critical one is refused (RFC 5280 4.2: unrecognized critical extension); openssl implements it and the name is permitted
+name_constraints_critical x509=reject openssl=accept: nameConstraints not implemented, so any certificate carrying it is refused (X509_ERR_NAME_CONSTRAINTS, security review finding 5); openssl implements it and the name is permitted
 depth_8_intermediates x509=reject openssl=accept: at most 8 non-anchor certificates (leaf + 7 intermediates); openssl default depth is 100
 leaf_is_ca x509=reject openssl=accept: a CA certificate (cA TRUE) is not accepted as the server leaf; openssl sslserver purpose allows it
 leaf_ku_no_digsig x509=reject openssl=accept: TLS 1.3 signs with the leaf key (CertificateVerify) so keyUsage must include digitalSignature; openssl sslserver also accepts keyEncipherment
@@ -10,3 +10,11 @@ rsa_1024_leaf x509=reject openssl=accept: RSA moduli below 2048 bits refused; Op
 sha1_signed x509=reject openssl=accept: only SHA-256/384/512 signatures allowed; OpenSSL 3.0 verify at the default level accepts sha1WithRSAEncryption
 rsassa_pss_key x509=reject openssl=accept: only rsaEncryption and id-ecPublicKey P-256/P-384 keys supported (TLS 1.3 rsa_pss_rsae_* schemes); id-RSASSA-PSS keys refused
 ed25519_key x509=reject openssl=accept: Ed25519 keys not supported by this client (no ed25519 module in om/tls)
+name_constraints_noncritical x509=reject openssl=accept: nameConstraints not implemented, so it is refused even when not critical (security review finding 5: ignoring it would accept names the CA was constrained against); openssl implements it and the name is permitted
+leaf_too_big x509=reject openssl=accept: a presented leaf larger than 16896 bytes (TLLFSZ, the TLS client leaf buffer) is refused before parsing (security review finding 2); openssl has no such limit
+rsa_6144_leaf x509=reject openssl=accept: server-presented RSA moduli above 4096 bits refused (security review finding 6: bounds the CertificateVerify / chain signature cost); openssl accepts any size
+rsa_e_2_32_plus_1_leaf x509=reject openssl=accept: server-presented RSA public exponents must be odd and in 3..2^32-1 (security review finding 6); openssl accepts e = 2^32+1
+rsa_e_even_leaf x509=reject openssl=accept: an even public exponent (65536) is refused for server-presented keys; openssl verify does not check the leaf exponent
+rsa_e_1_leaf x509=reject openssl=accept: public exponent 1 is refused for server-presented keys; openssl verify does not check the leaf exponent
+rsa_6144_intermediate x509=reject openssl=accept: the RSA policy (2048..4096 bits) applies to presented intermediates too; openssl accepts the 6144-bit issuer
+rsa_e_2_32_plus_1_intermediate x509=reject openssl=accept: the exponent policy (odd, 3..2^32-1) applies to presented intermediates too; openssl accepts e = 2^32+1

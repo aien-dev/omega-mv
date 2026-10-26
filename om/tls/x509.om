@@ -15,14 +15,18 @@ note   8 PATH_LENGTH    pathLenConstraint of an issuer exceeded
 note   9 KEY_USAGE      issuer keyUsage lacks keyCertSign, or leaf keyUsage lacks digitalSignature
 note  10 EKU            leaf EKU lacks serverAuth, or issuer EKU lacks serverAuth and anyExtendedKeyUsage
 note  11 UNSUPPORTED_ALG signature algorithm or key type not on the allowed list, or key/alg mismatch
-note  12 WEAK_KEY       RSA modulus below 2048 bits (leaf key or any key that verifies a signature)
-note  13 CRITICAL_EXT   critical extension we do not implement (nameConstraints included)
+note  12 WEAK_KEY       RSA key out of policy: modulus below 2048 bits (leaf key or any key that
+note                    verifies a signature); for presented keys (leaf and chain) also a modulus
+note                    above 4096 bits or a public exponent that is even, below 3 or above 2^32-1
+note  13 CRITICAL_EXT   critical extension we do not implement
 note  14 TOO_DEEP       more than 8 non-anchor certificates would be needed
 note  15 LEAF_IS_CA     leaf has basicConstraints cA TRUE
 note  16 NO_SAN         leaf has no subjectAltName (no CN fallback)
 note  17 IP_HOST        host is an IP literal (refused)
 note  18 ALG_MISMATCH   tbsCertificate.signature differs from signatureAlgorithm
 note  19 SCHEME         CertificateVerify scheme refused or does not match the leaf key
+note  20 NAME_CONSTRAINTS a nameConstraints extension (critical or not) on any certificate: name
+note                    constraints are not implemented, so such a certificate is always refused
 note
 note Constant time: nothing here handles secrets. Certificates, names, signatures and keys are public;
 note every function is variable time by design (branches on public data). Hashing and signature checks
@@ -73,6 +77,12 @@ const X5WSZ ulong 128
 const X5MAXC ulong 16
 const X5MAXD ulong 8
 const X5KBUF ulong 16384
+note largest presented leaf (bytes, DER), equal to TLLFSZ in tls.om; a larger one is X5EMAL
+const X5LMAX ulong 16896
+note element cap of the SEQUENCE OF loops (EKU, SAN, Extensions, SAN host walk): X5EMAL beyond it
+const X5NMAX ulong 9999
+note added to the RSA bit count in X5RBITS when the public exponent is out of policy (x509_rsaexp)
+const X5RBADE ulong 4294967296
 const X5BIG ulong 0xffffffffffffffff
 
 const X5EMAL ulong 1
@@ -94,6 +104,7 @@ const X5ENSAN ulong 16
 const X5EIP ulong 17
 const X5EAMIS ulong 18
 const X5ESCH ulong 19
+const X5ENC ulong 20
 
 note OID content bytes (hex), space separated; der_oidix returns the 1-based position.
 note 1-3 sha256/384/512WithRSAEncryption (RFC 4055), 4 RSASSA-PSS, 5-7 ecdsa-with-SHA256/384/512
@@ -101,7 +112,7 @@ note (RFC 5758), 8 rsaEncryption, 9 id-ecPublicKey, 10 prime256v1, 11 secp384r1 
 note 12-14 sha256/384/512 (NIST CSOR), 15 id-mgf1, 16 basicConstraints, 17 keyUsage, 18 extKeyUsage,
 note 19 subjectAltName, 20 nameConstraints (RFC 5280 4.2.1), 21 id-kp-serverAuth, 22 anyExtendedKeyUsage
 text X5OIDS "2a864886f70d01010b 2a864886f70d01010c 2a864886f70d01010d 2a864886f70d01010a 2a8648ce3d040302 2a8648ce3d040303 2a8648ce3d040304 2a864886f70d010101 2a8648ce3d0201 2a8648ce3d030107 2b81040022 608648016503040201 608648016503040202 608648016503040203 2a864886f70d010108 551d13 551d0f 551d25 551d11 551d1e 2b06010505070301 551d2500 "
-text X5NAMES "X509_OK X509_ERR_MALFORMED X509_ERR_EXPIRED X509_ERR_NOT_YET_VALID X509_ERR_NAME_MISMATCH X509_ERR_UNKNOWN_ISSUER X509_ERR_BAD_SIGNATURE X509_ERR_NOT_CA X509_ERR_PATH_LENGTH X509_ERR_KEY_USAGE X509_ERR_EKU X509_ERR_UNSUPPORTED_ALG X509_ERR_WEAK_KEY X509_ERR_CRITICAL_EXT X509_ERR_TOO_DEEP X509_ERR_LEAF_IS_CA X509_ERR_NO_SAN X509_ERR_IP_HOST X509_ERR_ALG_MISMATCH X509_ERR_SCHEME "
+text X5NAMES "X509_OK X509_ERR_MALFORMED X509_ERR_EXPIRED X509_ERR_NOT_YET_VALID X509_ERR_NAME_MISMATCH X509_ERR_UNKNOWN_ISSUER X509_ERR_BAD_SIGNATURE X509_ERR_NOT_CA X509_ERR_PATH_LENGTH X509_ERR_KEY_USAGE X509_ERR_EKU X509_ERR_UNSUPPORTED_ALG X509_ERR_WEAK_KEY X509_ERR_CRITICAL_EXT X509_ERR_TOO_DEEP X509_ERR_LEAF_IS_CA X509_ERR_NO_SAN X509_ERR_IP_HOST X509_ERR_ALG_MISMATCH X509_ERR_SCHEME X509_ERR_NAME_CONSTRAINTS "
 text X5PATH "/etc/ssl/certs/ca-certificates.crt"
 text X5BEG "-----BEGIN CERTIFICATE-----"
 text X5END "-----END CERTIFICATE-----"
@@ -547,8 +558,9 @@ end
 
 note ---------------------------------------------------------------- certificate parser
 
-note x509_rsabits: RSAPublicKey TLV that is exactly k (RFC 8017 A.1.1): modulus bit count, 0 when
-note malformed (non-minimal or non-positive integers, trailing bytes)
+note x509_rsabits: RSAPublicKey TLV that is exactly k (RFC 8017 A.1.1): modulus bit count, plus
+note X5RBADE when the public exponent is out of policy (x509_rsaexp); 0 when malformed
+note (non-minimal or non-positive integers, trailing bytes)
 fn x509_rsabits k view uchar * to ulong
 h = new ulong 3 0
 if ne der_hdr k 0 len k h 0
@@ -578,6 +590,7 @@ end
 if ne x509_posint part k get h 1 sub e get h 1 0
 ret 0
 end
+x = x509_rsaexp part k get h 1 sub e get h 1
 if eq get k s 0
 s = add s 1
 n = sub n 1
@@ -588,7 +601,42 @@ while ne b 0 bound 9
 bits = add bits 1
 b = shr b 1
 end
+if eq x 0
+bits = add bits X5RBADE
+end
 ret bits
+end
+
+note x509_rsaexp: 1 when the public exponent content x (minimal, positive) is odd and in 3 .. 2^32-1
+fn x509_rsaexp x view uchar * to ulong
+n = len x
+if eq n 0
+ret 0
+end
+s = ulong 0
+if eq get x 0 0
+s = 1
+end
+if gt sub n s 4
+ret 0
+end
+v = ulong 0
+for i ulong sub n s
+v = or shl v 8 ulong get x add s i
+end
+if or lt v 3 eq and v 1 0
+ret 0
+end
+ret 1
+end
+
+note x509_rsaok: 1 when the RSA bit count b (X5RBITS) is in 2048 .. 4096 and the exponent passed
+note (policy for keys presented by the server; anchors only need >= 2048 bits, chain_sig)
+fn x509_rsaok b ulong to ulong
+if or lt b 2048 gt b 4096
+ret 0
+end
+ret 1
 end
 
 note x509_posint: INTEGER content c is minimal and positive (0 ok, 1 not)
@@ -806,7 +854,12 @@ s = get h 1
 if eq s b
 ret X5EMAL
 end
+n = ulong 0
 while lt s b bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
 if ne der_hdr c s b h 0
 ret X5EMAL
 end
@@ -842,7 +895,12 @@ ret X5EMAL
 end
 put r X5RSNO s
 put r X5RSNL sub b s
+n = ulong 0
 while lt s b bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
 if ne der_hdr c s b h 0
 ret X5EMAL
 end
@@ -856,8 +914,8 @@ ret 0
 end
 
 note x509_ext: one Extension, content c[a .. b): {extnID, critical BOOLEAN DEFAULT FALSE, extnValue}.
-note Known: basicConstraints, keyUsage, extKeyUsage, subjectAltName (each at most once). Any other
-note extension marked critical, nameConstraints included, is X5ECRIT.
+note Known: basicConstraints, keyUsage, extKeyUsage, subjectAltName (each at most once). A
+note nameConstraints extension, critical or not, is X5ENC; any other unknown critical one X5ECRIT.
 fn x509_ext c view uchar * a ulong b ulong r edit ulong * to ulong
 h = new ulong 3 0
 if ne der_hdr c a b h 0
@@ -889,6 +947,9 @@ end
 end
 if or ne get h 0 4 ne get h 2 b
 ret X5EMAL
+end
+if eq o 20
+ret X5ENC
 end
 if or lt o 16 gt o 19
 if ne cr 0
@@ -927,7 +988,12 @@ s = get h 1
 if eq s b
 ret X5EMAL
 end
+n = ulong 0
 while lt s b bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
 if ne der_hdr c s b h 0
 ret X5EMAL
 end
@@ -974,7 +1040,8 @@ ret 0
 end
 
 note x509_tbs2: tbsCertificate from validity on, c[s .. b): validity, subject, SPKI, optional unique
-note IDs (v2, v3) and extensions (v3 only)
+note IDs (v2, v3: at most one issuerUniqueID [1], then at most one subjectUniqueID [2]) and
+note extensions (v3 only)
 fn x509_tbs2 c view uchar * s ulong b ulong r edit ulong * to ulong
 h = new ulong 3 0
 if ne der_hdr c s b h 0
@@ -1001,15 +1068,17 @@ ret X5EMAL
 end
 s = get h 2
 v = get r X5RVER
+k = ulong 0x80
 while lt s b bound 4
 if ne der_hdr c s b h 0
 ret X5EMAL
 end
 g = get h 0
 if or eq g 0x81 eq g 0x82
-if eq v 0
+if or eq v 0 le g k
 ret X5EMAL
 end
+k = g
 s = get h 2
 continue
 end
@@ -1531,7 +1600,12 @@ ret X5ENSAN
 end
 s = get r X5RSNO
 e = add s get r X5RSNL
+n = ulong 0
 while lt s e bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
 if ne der_hdr c s e hd 0
 ret X5EMAL
 end
@@ -1735,6 +1809,9 @@ v = x509_parse view part kb 0 l part w X5RSZ X5RSZ
 if ne v 0
 ret v
 end
+if ne chain_rsapol part w X5RSZ X5RSZ 0
+ret X5EWEAK
+end
 j = get w X5WCUR
 o = get w add X5WIX mul j 2
 i = get w add X5WIX add mul j 2 1
@@ -1769,8 +1846,17 @@ end
 ret 0
 end
 
+note chain_rsapol: X5EWEAK when the certificate record r has an RSA key outside x509_rsaok, else 0
+fn chain_rsapol r view ulong * to ulong
+if and eq get r X5RKT 1 eq x509_rsaok get r X5RBITS 0
+ret X5EWEAK
+end
+ret 0
+end
+
 note chain_leaf: the leaf (entry 0): parse, validity at now, host name, not a CA, keyUsage (if
-note present) digitalSignature, EKU (if present) serverAuth, key type supported, RSA >= 2048 bits
+note present) digitalSignature, EKU (if present) serverAuth, key type supported, RSA key policy
+note (x509_rsaok: 2048 .. 4096 bits, exponent odd in 3 .. 2^32-1)
 fn chain_leaf cl view uchar * hq view uchar * w edit ulong * to ulong
 lo = get w X5WIX
 ll = get w add X5WIX 1
@@ -1807,7 +1893,7 @@ kt = get w X5RKT
 if or eq kt 0 gt kt 3
 ret X5EALG
 end
-if and eq kt 1 lt get w X5RBITS 2048
+if and eq kt 1 eq x509_rsaok get w X5RBITS 0
 ret X5EWEAK
 end
 ret 0
@@ -1885,6 +1971,9 @@ n = chain_index cl part w X5WIX mul X5MAXC 2
 if eq n 0
 ret X5EMAL
 end
+if gt get w add X5WIX 1 X5LMAX
+ret X5EMAL
+end
 put w X5WN n
 v = chain_leaf cl hq w
 if ne v 0
@@ -1915,7 +2004,8 @@ end
 note x509_cv_verify: TLS 1.3 CertificateVerify (RFC 8446 4.4.3) against the leaf of cl. ms = signed
 note content (mlen bytes) || signature. Schemes: 0x0403 ecdsa_secp256r1_sha256 (P-256 key),
 note 0x0503 ecdsa_secp384r1_sha384 (P-384 key), 0x0804/0x0805/0x0806 rsa_pss_rsae_sha256/384/512
-note (rsaEncryption key >= 2048 bits). Anything else, rsa_pkcs1_* included, is X5ESCH.
+note (rsaEncryption key within x509_rsaok, else X5EWEAK). Anything else, rsa_pkcs1_* included, is
+note X5ESCH.
 fn x509_cv_verify cl view uchar * scheme ulong ms view uchar * mlen ulong to ulong
 r = new ulong 32 0
 if lt len cl 3
@@ -1942,7 +2032,7 @@ hb = 384
 end
 if and and ge scheme 0x0804 le scheme 0x0806 eq kt 1
 hb = add 256 mul sub scheme 0x0804 128
-if lt get r X5RBITS 2048
+if eq x509_rsaok get r X5RBITS 0
 ret X5EWEAK
 end
 end

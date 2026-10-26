@@ -14,6 +14,8 @@ note   S NAME EXPECT STORE                   store entries loaded from STORE (or
 note   E NAME EXPECT CODE                    x509_errname(CODE) equals EXPECT (- for empty)
 note   F NAME COUNT NOW HOST STORE CERT...   COUNT deterministic mutations of the certificate_list;
 note                                          each must return (any code); counts rejections
+note   P NAME EXPECT CERT                    x509_parse of the single DER file CERT (any size up to
+note                                          the 262144-byte list buffer; no chain, no policy)
 note EXPECT for C/V/H is a code name (X509_OK, X509_ERR_...). Prints "MISMATCH line L NAME got G want
 note W" per failure, "fuzz NAME n=N rejected=R" per F record, then "x509 driver: C checks, F failed".
 note Exit 0 when F is 0 and C > 0, 1 otherwise, 2 when input cannot be read.
@@ -288,6 +290,22 @@ end
 put ds 11 hn
 put ds 12 k
 c = drv_crun cl st hq
+drv_code c view part w 0 wn
+end
+
+note P record
+fn drv_p cl edit uchar * tk edit uchar * to void
+r = new ulong 32 0
+drv_name
+w = new uchar 64 0
+wn = drv_tok edit w
+n = drv_tok tk
+k = drv_file view part tk 0 n cl
+if lt k 1
+drv_code 98 view part w 0 wn
+ret
+end
+c = x509_parse part cl 0 ulong k edit r
 drv_code c view part w 0 wn
 end
 
@@ -571,6 +589,9 @@ drv_e tk hb
 end
 if eq c 70
 drv_f st cl tk
+end
+if eq c 80
+drv_p cl tk
 end
 if ne c 10
 drv_eol
