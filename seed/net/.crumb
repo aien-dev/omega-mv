@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T17:16:48Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:f2f978816101704cad7e804a6967497b43d859bbf08f28971e4e48e1a30b7cac",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 7,
+      "generated_at_commit": "3a10bd29fb7debdcf2c8f5cb58680cc74cb5b1f3",
+      "source_tree": "sha256:5342cd077e74e3a16add2e62e5a4e1fcd76e10798dc11199ed3beeb5d289555a"
+    }
+  },
+  "invariants": [
+    "Every implementation byte is seeded .om compiled by seed/out/omc; Python under tests/ is a read-only referee",
+    "No globals in http.om: connection state and buffers are caller-owned arrays (cs ulong HCSLEN, io uchar)",
+    "Strict framing per RFC 9112: CRLF only, no obs-fold, Content-Length with Transfer-Encoding refused, only chunked transfer coding",
+    "Every read, write and wait is bounded by a cap, a loop bound or a monotonic deadline; no busy wait",
+    "Tests bind 127.0.0.1 with kernel-chosen ephemeral ports only and never contact port 18091"
+  ],
+  "layer": "seed",
+  "name": "net",
+  "purpose": "Seeded Omega network protocol libraries: bounded HTTP/1.1 server and client (http.om) with chunked bodies, keep-alive and server-sent events, embeddable examples and a host referee (omega-mv #788)",
+  "schema_version": "1.0.0"
+}

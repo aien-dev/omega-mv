@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Codex (GPT-6 Astra) | Strict seeded-Omega HTTP/1.1 server/client with SSE and strict RFC 8259 JSON reader/writer, with oracle parity, seeded fuzz, mutants, fd-leak/timeout and curl SSE demo (#788) |
 | Codex (GPT-6 Astra) | Seeded Omega OSC IR v1 to OpenCL Kernel SPIR-V backend, CPU differential gate, demo and CFG/trap review fixes |
 | Codex (GPT-6.1 Sol) | Corrected boolean bitwise typing in seeded OSC IR output, with C-referee regression cases |
 | Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |

@@ -1,0 +1,2392 @@
+note seed/net/http.om -- bounded HTTP/1.1 server and client in seeded Omega (omega-mv #788).
+note Library unit: it has no `om2` line, no `fn main` and no globals. An application composes
+note   { printf 'om2\n'; cat seed/net/http.om app.om; } | omc
+note (JSON users add seed/json/json.om in the same cat). Names: functions h*, consts H*, texts h*.
+note Contract, framing rules, error values and ownership: seed/net/README.md.
+note
+note A connection is two caller-owned arrays:
+note   cs = new ulong HCSLEN 0   state (fd, buffer cursors, deadlines, framing, header index)
+note   io = new uchar N 0        one byte array split by hinit into a read region io[0, HRCAP),
+note                             a write region io[HWB, HWB+HWCAP) and a transport region
+note                             io[HTB, HTB+HTL) (empty for plain TCP; reserved for TLS)
+note Header and target offsets stored in cs are absolute offsets into io and stay valid until the
+note next hreqrd / hrsprd on the same cs.
+note
+note Results: a long. Nonnegative is success. Negative is minus a Linux errno (-11, -104, ...),
+note or one of the HE* protocol values below (-400 .. -505), or HETIME (-110) at a deadline.
+note
+note ---- state slots of cs
+const HFD ulong 0
+const HRLEN ulong 1
+const HRPOS ulong 2
+const HDL ulong 3
+const HIDLE ulong 4
+const HKEEP ulong 5
+const HBMODE ulong 6
+const HBREM ulong 7
+const HCST ulong 8
+const HMEM ulong 9
+const HBCAP ulong 10
+const HBGOT ulong 11
+const HVER ulong 12
+const HSTAT ulong 13
+const HMOFF ulong 14
+const HMLEN ulong 15
+const HTOFF ulong 16
+const HTLEN ulong 17
+const HHN ulong 18
+const HHMAX ulong 19
+const HHEADMX ulong 20
+const HWLEN ulong 21
+const HNMSG ulong 22
+const HMAXMSG ulong 23
+const HHEND ulong 24
+const HISHEAD ulong 25
+const HWMODE ulong 26
+const HEXPECT ulong 27
+const HFLAGS ulong 28
+const HCLV ulong 29
+const HOPEN ulong 30
+const HHDLV ulong 31
+const HSERVER ulong 32
+const HSTART ulong 33
+const HSCAN ulong 34
+const HRCAP ulong 35
+const HWB ulong 36
+const HWCAP ulong 37
+const HTB ulong 38
+const HTL ulong 39
+const HXPORT ulong 40
+const HWBODY ulong 41
+const HWDROP ulong 42
+const HWOUT ulong 43
+const HWCL ulong 44
+const HOMODE ulong 45
+const HSCODE ulong 46
+const HTRN ulong 47
+const HHOSTN ulong 48
+note header i (0 <= i < HHN): cs[HHX+4i] name offset, +1 name length, +2 value offset, +3 value length
+const HHX ulong 64
+const HHSLOTS ulong 64
+const HCSLEN ulong 320
+note ---- results
+const HEINVAL long -22
+const HENOSUP long -95
+const HETIME long -110
+const HEBAD long -400
+const HEEXP long -417
+const HEBIG long -413
+const HEHEAD long -431
+const HETRUNC long -499
+const HETE long -501
+const HEVER long -505
+note ---- SSE reader: ss = new ulong HSSLEN 0, lb = new uchar N 0 (N >= 256)
+note lb[0, 64) event type, lb[64, 128) last event id, lb[128, ...) data and the line being read
+const HSLINE ulong 0
+const HSDLEN ulong 1
+const HSELEN ulong 2
+const HSILEN ulong 3
+const HSRETRY ulong 4
+const HSRDY ulong 5
+const HSCR ulong 6
+const HSBOM ulong 7
+const HSNEV ulong 8
+note HSVO / HSVL: value offset and length of the field line being applied (scratch)
+const HSVO ulong 9
+const HSVL ulong 10
+const HSSLEN ulong 16
+const HSIDB ulong 64
+const HSDB ulong 128
+const HSFCAP ulong 64
+note ---- byte strings (lowercase ones are compared case-insensitively)
+text hvhttp "HTTP/"
+text hv11 "HTTP/1.1"
+text hnclen "content-length"
+text hnte "transfer-encoding"
+text hnconn "connection"
+text hnhost "host"
+text hnexp "expect"
+text hvchunk "chunked"
+text hvclose "close"
+text hvkeep "keep-alive"
+text hv100c "100-continue"
+text hmhead "HEAD"
+text hmconn "CONNECT"
+text hoclen "Content-Length: "
+text hote "Transfer-Encoding: chunked"
+text hocls "Connection: close"
+text ho100 "HTTP/1.1 100 Continue"
+text hoctype "Content-Type"
+text hocache "Cache-Control"
+text hvnoca "no-cache"
+text hvevst "text/event-stream"
+text hsdata "data: "
+text hsevent "event: "
+text hsid "id: "
+text hsretry "retry: "
+text hfdata "data"
+text hfevent "event"
+text hfid "id"
+text hfretry "retry"
+text hr100 "Continue"
+text hr101 "Switching Protocols"
+text hr200 "OK"
+text hr201 "Created"
+text hr202 "Accepted"
+text hr204 "No Content"
+text hr206 "Partial Content"
+text hr301 "Moved Permanently"
+text hr302 "Found"
+text hr304 "Not Modified"
+text hr400 "Bad Request"
+text hr401 "Unauthorized"
+text hr403 "Forbidden"
+text hr404 "Not Found"
+text hr405 "Method Not Allowed"
+text hr408 "Request Timeout"
+text hr409 "Conflict"
+text hr411 "Length Required"
+text hr413 "Content Too Large"
+text hr414 "URI Too Long"
+text hr415 "Unsupported Media Type"
+text hr417 "Expectation Failed"
+text hr422 "Unprocessable Content"
+text hr429 "Too Many Requests"
+text hr431 "Request Header Fields Too Large"
+text hr500 "Internal Server Error"
+text hr501 "Not Implemented"
+text hr502 "Bad Gateway"
+text hr503 "Service Unavailable"
+text hr504 "Gateway Timeout"
+text hr505 "HTTP Version Not Supported"
+note ======== small helpers
+fn hmin a ulong b ulong to ulong
+if lt a b
+ret a
+end
+ret b
+end
+fn hfe a long b long to long
+note first error: a when a is negative, else b
+if lt a 0
+ret a
+end
+ret b
+end
+fn hlow c uchar to uchar
+if and ge c 65 le c 90
+ret add c 32
+end
+ret c
+end
+fn hws c uchar to bool
+ret or eq c 32 eq c 9
+end
+note htchar: RFC 9110 tchar
+fn htchar c uchar to bool
+if and ge c 97 le c 122
+ret true
+end
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+if or or or eq c 33 eq c 35 eq c 36 eq c 37
+ret true
+end
+if or or or eq c 38 eq c 39 eq c 42 eq c 43
+ret true
+end
+if or or or eq c 45 eq c 46 eq c 94 eq c 95
+ret true
+end
+ret or or eq c 96 eq c 124 eq c 126
+end
+note hvch: a field-value byte: HTAB, SP, VCHAR or obs-text (0x80-0xff); never CR, LF, NUL, DEL
+fn hvch c uchar to bool
+if eq c 9
+ret true
+end
+ret and ge c 32 ne c 127
+end
+fn hvall a view uchar * to bool
+for b ulong 65536
+s = mul b 65536
+if ge s len a
+ret true
+end
+m = hmin sub len a s 65536
+for i ulong m
+if not hvch get a add s i
+ret false
+end
+end
+end
+ret true
+end
+fn htok a view uchar * to bool
+n = len a
+if or eq n 0 gt n 64
+ret false
+end
+for i ulong n
+if not htchar get a i
+ret false
+end
+end
+ret true
+end
+fn htarg a view uchar * to bool
+n = len a
+if or eq n 0 gt n 8192
+ret false
+end
+for i ulong n
+c = get a i
+if or lt c 33 gt c 126
+ret false
+end
+end
+ret true
+end
+fn hdigits a view uchar * to bool
+n = len a
+if or eq n 0 gt n 19
+ret false
+end
+for i ulong n
+c = get a i
+if or lt c 48 gt c 57
+ret false
+end
+end
+ret true
+end
+fn hdecv a view uchar * to ulong
+note the value of 1..19 checked decimal digits (hdigits first)
+v = ulong 0
+for i ulong len a
+v = add mul v 10 ulong sub get a i 48
+end
+ret v
+end
+fn hieq a view uchar * t view uchar * to bool
+note ASCII case-insensitive equality; t is lowercase
+n = len a
+if ne n len t
+ret false
+end
+for i ulong n
+if ne hlow get a i get t i
+ret false
+end
+end
+ret true
+end
+fn heq a view uchar * t view uchar * to bool
+n = len a
+if ne n len t
+ret false
+end
+for i ulong n
+if ne get a i get t i
+ret false
+end
+end
+ret true
+end
+note hcopy: d[0, len s) = s; blocks of 65536 keep every loop under the 1000000-pass guard
+fn hcopy d edit uchar * s view uchar * to void
+n = len s
+for b ulong 65536
+st = mul b 65536
+if ge st n
+break
+end
+m = hmin sub n st 65536
+for i ulong m
+put d add st i get s add st i
+end
+end
+end
+note hmove: a[dt, dt+n) = a[sr, sr+n) with dt <= sr (forward copy)
+fn hmove a edit uchar * dt ulong sr ulong n ulong to void
+for b ulong 65536
+st = mul b 65536
+if ge st n
+break
+end
+m = hmin sub n st 65536
+for i ulong m
+put a add dt add st i get a add sr add st i
+end
+end
+end
+fn hhexv c uchar to ulong
+if and ge c 48 le c 57
+ret ulong sub c 48
+end
+if and ge c 97 le c 102
+ret ulong sub c 87
+end
+if and ge c 65 le c 70
+ret ulong sub c 55
+end
+ret 16
+end
+fn hhexd v ulong to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+note ======== transport boundary: the only functions that call recv, send and waitio on a connection
+note hwait: wait for events ev on the connection; interval = min(idle, deadline - now)
+fn hwait cs edit ulong * ev int to long
+fd = int get cs HFD
+for it ulong 4096
+iv = long -1
+if ne get cs HIDLE 0
+iv = long get cs HIDLE
+end
+dl = get cs HDL
+if ne dl 0
+now = ulong monons
+if ge now dl
+ret HETIME
+end
+rm = long sub dl now
+if or lt iv 0 lt rm iv
+iv = rm
+end
+end
+r = waitio fd ev iv
+if eq r 0
+ret HETIME
+end
+if ne r -4
+ret r
+end
+end
+ret HETIME
+end
+note hrecvio: at most n bytes into io[off, off+n); count, 0 at end of stream, or negative
+fn hrecvio cs edit ulong * io edit uchar * off ulong n ulong to long
+if ne get cs HMEM 0
+ret 0
+end
+if ne get cs HXPORT 0
+ret HENOSUP
+end
+fd = int get cs HFD
+for it ulong 4096
+r = recv fd io off n 64
+if eq r -11
+w = hwait cs 1
+if lt w 0
+ret w
+end
+continue
+end
+if ne r -4
+ret r
+end
+end
+ret HETIME
+end
+note hrecvd: at most len d bytes straight into the caller's array d
+fn hrecvd cs edit ulong * io edit uchar * d edit uchar * to long
+if ne get cs HMEM 0
+ret 0
+end
+if ne get cs HXPORT 0
+ret HENOSUP
+end
+fd = int get cs HFD
+for it ulong 4096
+r = recv fd d 0 len d 64
+if eq r -11
+w = hwait cs 1
+if lt w 0
+ret w
+end
+continue
+end
+if ne r -4
+ret r
+end
+end
+ret HETIME
+end
+note hsendio: send all of io[off, off+n); 0 or negative
+fn hsendio cs edit ulong * io edit uchar * off ulong n ulong to long
+if ne get cs HMEM 0
+ret -9
+end
+if ne get cs HXPORT 0
+ret HENOSUP
+end
+fd = int get cs HFD
+e = add off n
+p = off
+for it ulong 4194304
+if ge p e
+ret 0
+end
+r = send fd io p sub e p 64
+if gt r 0
+p = add p ulong r
+continue
+end
+if eq r -11
+w = hwait cs 4
+if lt w 0
+ret w
+end
+continue
+end
+if eq r 0
+ret -32
+end
+if ne r -4
+ret r
+end
+end
+ret HETIME
+end
+note ======== connection setup
+note hinit: take ownership of fd (hclose closes it); fd < 0 selects memory mode (no I/O; tests).
+note role 1 = server (reads requests, writes responses), 0 = client.
+fn hinit cs edit ulong * io edit uchar * fd int role ulong to long
+if lt len cs HCSLEN
+ret HEINVAL
+end
+if or lt len io 512 gt len io 16777216
+ret HEINVAL
+end
+if gt role 1
+ret HEINVAL
+end
+for i ulong HCSLEN
+put cs i 0
+end
+if lt fd 0
+put cs HMEM 1
+else
+put cs HFD ulong fd
+put cs HOPEN 1
+end
+put cs HSERVER role
+put cs HBCAP 1048576
+put cs HHMAX HHSLOTS
+put cs HMAXMSG 1000
+put cs HIDLE 30000000000
+put cs HHDLV 30000000000
+put cs HKEEP 1
+w = hmin div len io 4 65536
+if lt w 256
+w = 256
+end
+ret hlayout cs len io w
+end
+fn hlayout cs edit ulong * n ulong w ulong to long
+r = sub n w
+put cs HRCAP r
+put cs HWB r
+put cs HWCAP w
+put cs HTB n
+put cs HTL 0
+put cs HHEADMX hmin 16384 div r 2
+ret 0
+end
+note hsetw: change the write region capacity (256 .. 65536) before any I/O on cs
+fn hsetw cs edit ulong * io edit uchar * w ulong to long
+if or ne get cs HRLEN 0 ne get cs HWLEN 0
+ret HEINVAL
+end
+if or lt w 256 gt w 65536
+ret HEINVAL
+end
+if lt len io add w 512
+ret HEINVAL
+end
+ret hlayout cs len io w
+end
+note hsettmo: idle = longest single wait in ns (0 = none); hdl = deadline for reading one
+note message head, counted from the start of hreqrd / hrsprd (0 = none). Negative means 0.
+fn hsettmo cs edit ulong * idle long hdl long to void
+put cs HIDLE 0
+if gt idle 0
+put cs HIDLE ulong idle
+end
+put cs HHDLV 0
+if gt hdl 0
+put cs HHDLV ulong hdl
+end
+end
+note hsetdl: absolute deadline now + iv for the following body reads and writes (0 clears)
+fn hsetdl cs edit ulong * iv long to void
+put cs HDL 0
+if gt iv 0
+put cs HDL add ulong monons ulong iv
+end
+end
+fn hclose cs edit ulong * to long
+if eq get cs HOPEN 1
+put cs HOPEN 0
+put cs HKEEP 0
+ret fclose int get cs HFD
+end
+ret 0
+end
+note hmemld: memory mode only; the read region holds exactly src (a whole test message)
+fn hmemld cs edit ulong * io edit uchar * src view uchar * to long
+if eq get cs HMEM 0
+ret HEINVAL
+end
+if gt len src get cs HRCAP
+ret HEBIG
+end
+hcopy part io 0 len src src
+put cs HRLEN len src
+put cs HRPOS 0
+ret 0
+end
+note ======== sockets (IPv4 or Unix); every descriptor is O_NONBLOCK and close-on-exec
+fn haddr4 a edit uchar * ip uint port ulong to long
+if lt len a 16
+ret HEINVAL
+end
+if gt port 65535
+ret HEINVAL
+end
+for i ulong 16
+put a i 0
+end
+put a 0 2
+put a 2 uchar shr port 8
+put a 3 uchar and port 255
+put a 4 uchar shr ip 24
+put a 5 uchar and shr ip 16 255
+put a 6 uchar and shr ip 8 255
+put a 7 uchar and ip 255
+ret 0
+end
+fn hport a view uchar * to ulong
+ret or shl ulong get a 2 8 ulong get a 3
+end
+fn hfam a view uchar * to int
+ret int or ulong get a 0 shl ulong get a 1 8
+end
+fn hnodel fd int to long
+one = new uchar 4 0
+put one 0 1
+ret sockopt fd 6 1 one 0 4
+end
+note hlisten: socket, SO_REUSEADDR, bind a (exactly the sockaddr bytes), listen, and write the
+note bound address back into a (so port 0 reports the ephemeral port). Returns the listening fd.
+fn hlisten a edit uchar * backlog int to long
+one = new uchar 4 0
+put one 0 1
+fd = socknew hfam a 526337 0
+if lt fd 0
+ret fd
+end
+r = sockopt int fd 1 2 one 0 4
+if eq r 0
+r = bind int fd a 0 len a
+end
+if eq r 0
+r = listen int fd backlog
+end
+if eq r 0
+k = sockname int fd a 0 len a
+if lt k 0
+r = k
+end
+end
+if ne r 0
+c = fclose int fd
+ret r
+end
+ret fd
+end
+note haccept: wait at most tmo ns (negative = forever) for a connection; returns its fd
+fn haccept lfd int tmo long to long
+w = waitio lfd 1 tmo
+if eq w 0
+ret HETIME
+end
+if lt w 0
+ret w
+end
+c = accept lfd 526336
+if lt c 0
+ret c
+end
+q = hnodel int c
+ret c
+end
+note hdial: nonblocking connect bounded by tmo ns; returns the connected fd or closes it
+fn hdial a view uchar * tmo long to long
+fd = socknew hfam a 526337 0
+if lt fd 0
+ret fd
+end
+r = connect int fd a 0 len a
+if eq r -115
+w = waitio int fd 4 tmo
+if le w 0
+c = fclose int fd
+if eq w 0
+ret HETIME
+end
+ret w
+end
+r = connect int fd a 0 len a
+if eq r -106
+r = 0
+end
+end
+if ne r 0
+c = fclose int fd
+ret r
+end
+q = hnodel int fd
+ret fd
+end
+note ======== reading a message head
+note hbegin: drop the consumed bytes of the previous message, reset per-message state, arm the
+note head deadline
+fn hbegin cs edit ulong * io edit uchar * to void
+p = get cs HRPOS
+n = get cs HRLEN
+if gt p 0
+hmove io 0 p sub n p
+put cs HRLEN sub n p
+put cs HRPOS 0
+end
+if gt get cs HHEADMX hmin 65536 div get cs HRCAP 2
+put cs HHEADMX hmin 65536 div get cs HRCAP 2
+end
+if gt get cs HHMAX HHSLOTS
+put cs HHMAX HHSLOTS
+end
+put cs HSTART 0
+put cs HSCAN 0
+put cs HHN 0
+put cs HFLAGS 0
+put cs HCLV 0
+put cs HBMODE 0
+put cs HBREM 0
+put cs HCST 0
+put cs HBGOT 0
+put cs HEXPECT 0
+put cs HHEND 0
+put cs HSTAT 0
+put cs HVER 0
+put cs HTRN 0
+put cs HHOSTN 0
+put cs HMOFF 0
+put cs HMLEN 0
+put cs HTOFF 0
+put cs HTLEN 0
+put cs HKEEP 1
+put cs HDL 0
+if ne get cs HHDLV 0
+put cs HDL add ulong monons get cs HHDLV
+end
+end
+note hskipcr: a server ignores empty lines (CRLF) before a request line (RFC 9112 2.2)
+fn hskipcr cs edit ulong * io edit uchar * to void
+for it ulong 999999
+st = get cs HSTART
+if gt add st 2 get cs HRLEN
+break
+end
+if ne get io st 13
+break
+end
+if ne get io add st 1 10
+break
+end
+put cs HSTART add st 2
+end
+end
+note hscan: look for CRLF CRLF in io[HSTART, min(HRLEN, HHEADMX)); end offset, 0 = need more,
+note HEBAD for a bare LF or a CR not followed by LF
+fn hscan cs edit ulong * io edit uchar * to long
+st = get cs HSTART
+lim = hmin get cs HRLEN get cs HHEADMX
+i = get cs HSCAN
+if lt i st
+i = st
+end
+while lt i lim bound 999999
+c = get io i
+if eq c 10
+if eq i st
+ret HEBAD
+end
+if ne get io sub i 1 13
+ret HEBAD
+end
+if ge i add st 3
+if and eq get io sub i 2 10 eq get io sub i 3 13
+put cs HSCAN add i 1
+ret long add i 1
+end
+end
+end
+if eq c 13
+if ge add i 1 get cs HRLEN
+put cs HSCAN i
+ret 0
+end
+if ne get io add i 1 10
+ret HEBAD
+end
+end
+i = add i 1
+end
+put cs HSCAN i
+ret 0
+end
+fn hhead cs edit ulong * io edit uchar * to long
+for it ulong 1000000
+if eq get cs HSERVER 1
+hskipcr cs io
+end
+e = hscan cs io
+if lt e 0
+ret e
+end
+if gt e 0
+ret hparse cs io ulong e
+end
+n = get cs HRLEN
+if ge n get cs HHEADMX
+ret HEHEAD
+end
+if ge n get cs HRCAP
+ret HEHEAD
+end
+k = hrecvio cs io n sub get cs HRCAP n
+if lt k 0
+ret k
+end
+if eq k 0
+if eq n get cs HSTART
+ret 0
+end
+ret HETRUNC
+end
+put cs HRLEN add n ulong k
+end
+ret HEHEAD
+end
+note hcr: the first CR in a[p, e) (the head scan guarantees CR LF pairs), or e
+fn hcr a view uchar * p ulong e ulong to ulong
+i = p
+while lt i e bound 999999
+if eq get a i 13
+ret i
+end
+i = add i 1
+end
+ret e
+end
+fn hparse cs edit ulong * io edit uchar * e ulong to long
+p = get cs HSTART
+x = hcr io p e
+r = long 0
+if eq get cs HSERVER 1
+r = hreql cs io p x
+else
+r = hstatl cs io p x
+end
+if lt r 0
+ret r
+end
+p = add x 2
+lim = sub e 2
+for it ulong 65536
+if ge p lim
+break
+end
+x = hcr io p lim
+r = hfield cs io p x
+if lt r 0
+ret r
+end
+p = add x 2
+end
+r = hsem cs io
+if lt r 0
+ret r
+end
+put cs HHEND e
+put cs HRPOS e
+put cs HDL 0
+ret 1
+end
+note hreqm: method = 1..32 tchar then SP; returns its length
+fn hreqm a view uchar * p ulong x ulong to long
+i = p
+while and lt i x htchar get a i bound 999999
+i = add i 1
+end
+ml = sub i p
+if or eq ml 0 gt ml 32
+ret HEBAD
+end
+if ne get a i 32
+ret HEBAD
+end
+ret long ml
+end
+note hreqt: request-target = 1..8192 bytes 0x21-0x7e then SP; returns its length
+fn hreqt a view uchar * t ulong x ulong to long
+j = t
+while and lt j x and ge get a j 33 le get a j 126 bound 999999
+j = add j 1
+end
+tl = sub j t
+if or eq tl 0 gt tl 8192
+ret HEBAD
+end
+if ne get a j 32
+ret HEBAD
+end
+ret long tl
+end
+note hver: exactly HTTP/1.1 (1) or HTTP/1.0 (0); another HTTP/d.d is HEVER, anything else HEBAD
+fn hver a view uchar * k ulong to long
+for i ulong 5
+if ne get a add k i get hvhttp i
+ret HEBAD
+end
+end
+mj = get a add k 5
+dt = get a add k 6
+mn = get a add k 7
+if or or lt mj 48 gt mj 57 ne dt 46
+ret HEBAD
+end
+if or lt mn 48 gt mn 57
+ret HEBAD
+end
+if ne mj 49
+ret HEVER
+end
+if eq mn 48
+ret 0
+end
+if eq mn 49
+ret 1
+end
+ret HEVER
+end
+fn hreql cs edit ulong * io edit uchar * p ulong x ulong to long
+ml = hreqm io p x
+if lt ml 0
+ret ml
+end
+t = add p add ulong ml 1
+tl = hreqt io t x
+if lt tl 0
+ret tl
+end
+k = add t add ulong tl 1
+if ne sub x k 8
+ret HEBAD
+end
+v = hver io k
+if lt v 0
+ret v
+end
+put cs HVER ulong v
+put cs HMOFF p
+put cs HMLEN ulong ml
+put cs HTOFF t
+put cs HTLEN ulong tl
+ret htform cs io
+end
+note htform: origin-form (/...), asterisk-form (*), authority-form (CONNECT only) or
+note absolute-form (scheme://...)
+fn htform cs edit ulong * io edit uchar * to long
+t = get cs HTOFF
+tl = get cs HTLEN
+c = get io t
+if eq c 47
+ret 0
+end
+if and eq tl 1 eq c 42
+ret 0
+end
+if heq view part io get cs HMOFF get cs HMLEN hmconn
+ret 0
+end
+ret hscheme view part io t tl
+end
+fn hscheme a view uchar * to long
+n = len a
+if lt n 4
+ret HEBAD
+end
+c = hlow get a 0
+if or lt c 97 gt c 122
+ret HEBAD
+end
+for i ulong n
+if gt i 0
+c = hlow get a i
+if eq c 58
+if gt add i 3 n
+ret HEBAD
+end
+if and eq get a add i 1 47 eq get a add i 2 47
+ret 0
+end
+ret HEBAD
+end
+if not hschc c
+ret HEBAD
+end
+end
+end
+ret HEBAD
+end
+note hschc: a scheme byte after the first (lowercased): ALPHA, DIGIT, + - .
+fn hschc c uchar to bool
+if and ge c 97 le c 122
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+ret or or eq c 43 eq c 45 eq c 46
+end
+note hstatl: HTTP/1.x SP 3DIGIT SP reason; status 100..599
+fn hstatl cs edit ulong * io edit uchar * p ulong x ulong to long
+if lt sub x p 8
+ret HEBAD
+end
+v = hver io p
+if lt v 0
+ret v
+end
+if lt sub x p 13
+ret HEBAD
+end
+if or ne get io add p 8 32 ne get io add p 12 32
+ret HEBAD
+end
+c = ulong 0
+for i ulong 3
+d = get io add p add 9 i
+if or lt d 48 gt d 57
+ret HEBAD
+end
+c = add mul c 10 ulong sub d 48
+end
+if or lt c 100 gt c 599
+ret HEBAD
+end
+r = add p 13
+if not hvall view part io r sub x r
+ret HEBAD
+end
+put cs HVER ulong v
+put cs HSTAT c
+put cs HMOFF r
+put cs HMLEN sub x r
+ret 0
+end
+note hfvalid: a field line: tchar name, ':' with no space before it, field-value bytes;
+note returns the colon index. A leading SP or HTAB (obs-fold) is HEBAD.
+fn hfvalid a view uchar * to long
+n = len a
+if eq n 0
+ret HEBAD
+end
+if hws get a 0
+ret HEBAD
+end
+c = n
+for i ulong n
+if not htchar get a i
+c = i
+break
+end
+end
+if or eq c 0 eq c n
+ret HEBAD
+end
+if ne get a c 58
+ret HEBAD
+end
+k = add c 1
+if not hvall view part a k sub n k
+ret HEBAD
+end
+ret long c
+end
+fn hfield cs edit ulong * io edit uchar * p ulong x ulong to long
+co = hfvalid view part io p sub x p
+if lt co 0
+ret co
+end
+n = get cs HHN
+if or ge n get cs HHMAX ge n HHSLOTS
+ret HEHEAD
+end
+b = add HHX mul n 4
+put cs b p
+put cs add b 1 ulong co
+put cs HHN add n 1
+put cs add b 2 add add p ulong co 1
+ret hftrim cs io b x
+end
+note hftrim: header slot b's value starts at get cs b+2 and ends before x; drop leading and
+note trailing SP / HTAB
+fn hftrim cs edit ulong * io edit uchar * b ulong x ulong to long
+s = get cs add b 2
+while and lt s x hws get io s bound 999999
+s = add s 1
+end
+ve = x
+while and gt ve s hws get io sub ve 1 bound 999999
+ve = sub ve 1
+end
+put cs add b 2 s
+put cs add b 3 sub ve s
+ret 0
+end
+note ======== header semantics and message framing (RFC 9112 6.1-6.3)
+fn hsem cs edit ulong * io edit uchar * to long
+n = get cs HHN
+for i ulong n
+r = hsem1 cs io i
+if lt r 0
+ret r
+end
+end
+ret hframe cs
+end
+fn hsem1 cs edit ulong * io edit uchar * i ulong to long
+b = add HHX mul i 4
+no = get cs b
+nl = get cs add b 1
+vo = get cs add b 2
+vl = get cs add b 3
+if hieq view part io no nl hnclen
+ret hsemcl cs io vo vl
+end
+if hieq view part io no nl hnte
+ret hsemte cs io vo vl
+end
+if hieq view part io no nl hnconn
+ret hsemco cs io vo vl
+end
+if hieq view part io no nl hnhost
+put cs HHOSTN add get cs HHOSTN 1
+ret 0
+end
+if hieq view part io no nl hnexp
+ret hsemex cs io vo vl
+end
+ret 0
+end
+note Content-Length: 1..19 digits, exactly one field line (a repeated or list value is ambiguous)
+fn hsemcl cs edit ulong * io edit uchar * vo ulong vl ulong to long
+if ne and get cs HFLAGS 1 0
+ret HEBAD
+end
+put cs HFLAGS or get cs HFLAGS 1
+if not hdigits view part io vo vl
+ret HEBAD
+end
+put cs HCLV hdecv view part io vo vl
+ret 0
+end
+note Transfer-Encoding: exactly one field line whose value is chunked; any other coding is HETE
+fn hsemte cs edit ulong * io edit uchar * vo ulong vl ulong to long
+if ne and get cs HFLAGS 2 0
+ret HEBAD
+end
+put cs HFLAGS or get cs HFLAGS 2
+if not hieq view part io vo vl hvchunk
+ret HETE
+end
+ret 0
+end
+note Connection: comma list; close (flag 4) and keep-alive (flag 8) are recognised
+fn hsemco cs edit ulong * io edit uchar * vo ulong vl ulong to long
+p = vo
+e = add vo vl
+for it ulong 999999
+if gt p e
+break
+end
+q = p
+while and lt q e ne get io q 44 bound 999999
+q = add q 1
+end
+r = hcotok cs io p q
+p = add q 1
+end
+ret 0
+end
+note hcotok: the list element io[a, q) without SP / HTAB; sets flag 4 (close) or 8 (keep-alive)
+fn hcotok cs edit ulong * io edit uchar * a ulong q ulong to long
+s = a
+while and lt s q hws get io s bound 999999
+s = add s 1
+end
+z = q
+while and gt z s hws get io sub z 1 bound 999999
+z = sub z 1
+end
+if hieq view part io s sub z s hvclose
+put cs HFLAGS or get cs HFLAGS 4
+end
+if hieq view part io s sub z s hvkeep
+put cs HFLAGS or get cs HFLAGS 8
+end
+ret 0
+end
+note Expect (server, HTTP/1.1 only): 100-continue is honoured on the first body read; others HEEXP
+fn hsemex cs edit ulong * io edit uchar * vo ulong vl ulong to long
+if or ne get cs HSERVER 1 ne get cs HVER 1
+ret 0
+end
+if not hieq view part io vo vl hv100c
+ret HEEXP
+end
+put cs HEXPECT 1
+ret 0
+end
+fn hframe cs edit ulong * to long
+f = get cs HFLAGS
+cl = ne and f 1 0
+te = ne and f 2 0
+if and cl te
+ret HEBAD
+end
+if and te eq get cs HVER 0
+ret HEBAD
+end
+srv = eq get cs HSERVER 1
+if and srv eq get cs HVER 1
+if ne get cs HHOSTN 1
+ret HEBAD
+end
+end
+put cs HKEEP 0
+if and eq get cs HVER 1 eq and f 4 0
+put cs HKEEP 1
+end
+if srv
+if ge add get cs HNMSG 1 get cs HMAXMSG
+put cs HKEEP 0
+end
+ret hfrsrv cs
+end
+ret hfrcli cs
+end
+fn hfrsrv cs edit ulong * to long
+f = get cs HFLAGS
+if ne and f 2 0
+put cs HBMODE 2
+ret 0
+end
+if ne and f 1 0
+v = get cs HCLV
+if gt v get cs HBCAP
+put cs HKEEP 0
+ret HEBIG
+end
+if gt v 0
+put cs HBMODE 1
+put cs HBREM v
+end
+end
+ret 0
+end
+fn hfrcli cs edit ulong * to long
+s = get cs HSTAT
+f = get cs HFLAGS
+if eq s 101
+put cs HKEEP 0
+end
+if or or eq get cs HISHEAD 1 lt s 200 or eq s 204 eq s 304
+ret 0
+end
+if ne and f 2 0
+put cs HBMODE 2
+ret 0
+end
+if ne and f 1 0
+v = get cs HCLV
+if gt v get cs HBCAP
+put cs HKEEP 0
+ret HEBIG
+end
+if gt v 0
+put cs HBMODE 1
+put cs HBREM v
+end
+ret 0
+end
+put cs HBMODE 3
+put cs HKEEP 0
+ret 0
+end
+note ======== public head readers
+note hreqrd (server): 1 = a request head was read, 0 = the peer closed between requests, negative =
+note error (a value <= -400 is the status to answer with hrsperr before closing)
+fn hreqrd cs edit ulong * io edit uchar * to long
+if and eq get cs HOPEN 0 eq get cs HMEM 0
+ret -9
+end
+hbegin cs io
+put cs HISHEAD 0
+r = hhead cs io
+if le r 0
+ret r
+end
+if heq view part io get cs HMOFF get cs HMLEN hmhead
+put cs HISHEAD 1
+end
+ret 1
+end
+note hrsprd (client): the final status (101, or 200..599; 1xx interim responses are skipped)
+fn hrsprd cs edit ulong * io edit uchar * to long
+if and eq get cs HOPEN 0 eq get cs HMEM 0
+ret -9
+end
+for it ulong 16
+hbegin cs io
+r = hhead cs io
+if eq r 0
+ret HETRUNC
+end
+if lt r 0
+ret r
+end
+s = get cs HSTAT
+if or ge s 200 eq s 101
+ret long s
+end
+put cs HRPOS get cs HHEND
+end
+ret HEBAD
+end
+note header accessors: hhfind returns the index of the first field named nm (any case), or -1
+fn hhfind cs edit ulong * io edit uchar * nm view uchar * to long
+n = get cs HHN
+for i ulong n
+b = add HHX mul i 4
+if hieqm view part io get cs b get cs add b 1 nm
+ret long i
+end
+end
+ret -1
+end
+note hieqm: case-insensitive equality of two arbitrary byte strings
+fn hieqm a view uchar * t view uchar * to bool
+n = len a
+if ne n len t
+ret false
+end
+for i ulong n
+if ne hlow get a i hlow get t i
+ret false
+end
+end
+ret true
+end
+fn hhvoff cs edit ulong * i ulong to ulong
+ret get cs add HHX add mul i 4 2
+end
+fn hhvlen cs edit ulong * i ulong to ulong
+ret get cs add HHX add mul i 4 3
+end
+fn hhnoff cs edit ulong * i ulong to ulong
+ret get cs add HHX mul i 4
+end
+fn hhnlen cs edit ulong * i ulong to ulong
+ret get cs add HHX add mul i 4 1
+end
+note hismeth: the request method equals m exactly; hispath: the target before '?' equals pa
+fn hismeth cs edit ulong * io edit uchar * m view uchar * to bool
+ret heq view part io get cs HMOFF get cs HMLEN m
+end
+fn hplen cs edit ulong * io edit uchar * to ulong
+t = get cs HTOFF
+n = get cs HTLEN
+for i ulong n
+if eq get io add t i 63
+ret i
+end
+end
+ret n
+end
+fn hispath cs edit ulong * io edit uchar * pa view uchar * to bool
+n = hplen cs io
+ret heq view part io get cs HTOFF n pa
+end
+note ======== body reading
+note hbodyrd: next decoded body bytes into d[0, r); 0 = end of body; negative = error.
+note Content-Length, chunked and (client) close-delimited framing; HBCAP bounds the total.
+fn hbodyrd cs edit ulong * io edit uchar * d edit uchar * to long
+m = get cs HBMODE
+if eq m 0
+ret 0
+end
+if eq len d 0
+ret HEINVAL
+end
+if eq get cs HEXPECT 1
+put cs HEXPECT 2
+r = hsend100 cs io
+if lt r 0
+ret r
+end
+end
+if eq m 1
+ret hbdlen cs io d
+end
+if eq m 3
+ret hbdcls cs io d
+end
+ret hbdchk cs io d
+end
+fn hsend100 cs edit ulong * io edit uchar * to long
+if or ne get cs HWLEN 0 ne get cs HMEM 0
+ret 0
+end
+b = get cs HWB
+n = len ho100
+hcopy part io b n ho100
+put io add b n 13
+put io add b add n 1 10
+put io add b add n 2 13
+put io add b add n 3 10
+ret hsendio cs io b add n 4
+end
+note hbcopy: move buffered bytes io[HRPOS, ...) into d (at most len d)
+fn hbcopy cs edit ulong * io edit uchar * d edit uchar * to ulong
+p = get cs HRPOS
+n = hmin sub get cs HRLEN p len d
+hcopy part d 0 n view part io p n
+put cs HRPOS add p n
+ret n
+end
+fn hbdlen cs edit ulong * io edit uchar * d edit uchar * to long
+rm = get cs HBREM
+if eq rm 0
+ret 0
+end
+k = hmin rm len d
+n = ulong 0
+if gt get cs HRLEN get cs HRPOS
+n = hbcopy cs io part d 0 k
+else
+r = hrecvd cs io part d 0 k
+if lt r 0
+ret r
+end
+if eq r 0
+ret HETRUNC
+end
+n = ulong r
+end
+put cs HBREM sub rm n
+put cs HBGOT add get cs HBGOT n
+ret long n
+end
+fn hbdcls cs edit ulong * io edit uchar * d edit uchar * to long
+if eq get cs HCST 4
+ret 0
+end
+got = get cs HBGOT
+cap = get cs HBCAP
+k = hmin len d add sub cap got 1
+n = ulong 0
+if gt get cs HRLEN get cs HRPOS
+n = hbcopy cs io part d 0 k
+else
+r = hrecvd cs io part d 0 k
+if lt r 0
+ret r
+end
+if eq r 0
+put cs HCST 4
+ret 0
+end
+n = ulong r
+end
+if gt add got n cap
+ret HEBIG
+end
+put cs HBGOT add got n
+ret long n
+end
+note chunked states (HCST): 0 size line, 1 data, 2 CRLF after data, 3 trailer lines, 4 done
+fn hbdchk cs edit ulong * io edit uchar * d edit uchar * to long
+for it ulong 1000000
+st = get cs HCST
+if eq st 4
+ret 0
+end
+if eq st 1
+ret hbdcdat cs io d
+end
+r = long 0
+if eq st 0
+r = hbdcsz cs io
+end
+if eq st 2
+r = hbdccr cs io
+end
+if eq st 3
+r = hbdctr cs io
+end
+if lt r 0
+ret r
+end
+end
+ret HEBAD
+end
+fn hbdcdat cs edit ulong * io edit uchar * d edit uchar * to long
+rm = get cs HBREM
+k = hmin rm len d
+n = ulong 0
+if gt get cs HRLEN get cs HRPOS
+n = hbcopy cs io part d 0 k
+else
+r = hrecvd cs io part d 0 k
+if lt r 0
+ret r
+end
+if eq r 0
+ret HETRUNC
+end
+n = ulong r
+end
+put cs HBREM sub rm n
+put cs HBGOT add get cs HBGOT n
+if eq rm n
+put cs HCST 2
+end
+ret long n
+end
+fn hbdcsz cs edit ulong * io edit uchar * to long
+x = hbline cs io
+if lt x 0
+ret x
+end
+p = get cs HRPOS
+v = hchsz view part io p sub ulong x p
+if lt v 0
+ret v
+end
+put cs HRPOS add ulong x 2
+if eq v 0
+put cs HCST 3
+ret 0
+end
+if gt add get cs HBGOT ulong v get cs HBCAP
+put cs HKEEP 0
+ret HEBIG
+end
+put cs HBREM ulong v
+put cs HCST 1
+ret 0
+end
+fn hbdccr cs edit ulong * io edit uchar * to long
+r = hneed cs io 2
+if lt r 0
+ret r
+end
+p = get cs HRPOS
+if or ne get io p 13 ne get io add p 1 10
+ret HEBAD
+end
+put cs HRPOS add p 2
+put cs HCST 0
+ret 0
+end
+fn hbdctr cs edit ulong * io edit uchar * to long
+x = hbline cs io
+if lt x 0
+ret x
+end
+p = get cs HRPOS
+if eq ulong x p
+put cs HRPOS add p 2
+put cs HCST 4
+ret 0
+end
+co = hfvalid view part io p sub ulong x p
+if lt co 0
+ret co
+end
+put cs HTRN add get cs HTRN 1
+if gt get cs HTRN get cs HHMAX
+ret HEHEAD
+end
+put cs HRPOS add ulong x 2
+ret 0
+end
+note hchsz: chunk-size = 1..15 hex digits, then nothing or ';' and field-value bytes (extensions,
+note ignored); no whitespace before ';'
+fn hchsz a view uchar * to long
+n = len a
+v = ulong 0
+c = n
+for i ulong n
+h = hhexv get a i
+if eq h 16
+c = i
+break
+end
+if ge i 15
+ret HEBAD
+end
+v = add mul v 16 h
+end
+if eq c 0
+ret HEBAD
+end
+if lt c n
+if ne get a c 59
+ret HEBAD
+end
+if not hvall view part a c sub n c
+ret HEBAD
+end
+end
+ret long v
+end
+note hbline: the CR index of the CRLF line starting at HRPOS (at most HHEADMX bytes), reading more
+note as needed
+fn hbline cs edit ulong * io edit uchar * to long
+for it ulong 1000000
+p = get cs HRPOS
+n = get cs HRLEN
+lim = hmin n add p get cs HHEADMX
+i = p
+while lt i lim bound 999999
+c = get io i
+if eq c 10
+ret HEBAD
+end
+if eq c 13
+if ge add i 1 n
+break
+end
+if ne get io add i 1 10
+ret HEBAD
+end
+ret long i
+end
+i = add i 1
+end
+if ge sub n p get cs HHEADMX
+ret HEHEAD
+end
+r = hmore cs io
+if lt r 0
+ret r
+end
+end
+ret HEHEAD
+end
+note hcompact: move unread body bytes down to HHEND (the head stays in place)
+fn hcompact cs edit ulong * io edit uchar * to void
+b = get cs HHEND
+p = get cs HRPOS
+if gt p b
+n = get cs HRLEN
+hmove io b p sub n p
+put cs HRLEN sub n sub p b
+put cs HRPOS b
+end
+end
+fn hmore cs edit ulong * io edit uchar * to long
+hcompact cs io
+n = get cs HRLEN
+cap = get cs HRCAP
+if ge n cap
+ret HEHEAD
+end
+k = hrecvio cs io n sub cap n
+if lt k 0
+ret k
+end
+if eq k 0
+ret HETRUNC
+end
+put cs HRLEN add n ulong k
+ret k
+end
+fn hneed cs edit ulong * io edit uchar * k ulong to long
+for it ulong 1000000
+if ge sub get cs HRLEN get cs HRPOS k
+ret 0
+end
+r = hmore cs io
+if lt r 0
+ret r
+end
+end
+ret HETRUNC
+end
+note hbodyall: the whole body into d; the length, or HEBIG when it does not fit in d
+fn hbodyall cs edit ulong * io edit uchar * d edit uchar * to long
+pb = new uchar 1 0
+got = ulong 0
+for it ulong 16777216
+if ge got len d
+r = hbodyrd cs io pb
+if gt r 0
+put cs HKEEP 0
+ret HEBIG
+end
+if lt r 0
+ret r
+end
+ret long got
+end
+r = hbodyrd cs io part d got sub len d got
+if lt r 0
+ret r
+end
+if eq r 0
+ret long got
+end
+got = add got ulong r
+end
+ret HEBIG
+end
+note ======== writing (one write region, flushed to the transport when full or on demand)
+note HWMODE 0: raw bytes from HWB. HWMODE 1: chunked body; io[HWB, HWB+10) is reserved for the
+note chunk-size line, so a flush sends one chunk without copying.
+fn hwreset cs edit ulong * to void
+put cs HWLEN 0
+put cs HWMODE 0
+put cs HWBODY 0
+put cs HWDROP 0
+put cs HWOUT 0
+put cs HWCL 0
+put cs HOMODE 0
+end
+fn hwcap cs edit ulong * to ulong
+if eq get cs HWMODE 1
+ret sub get cs HWCAP 2
+end
+ret get cs HWCAP
+end
+fn hhexpre io edit uchar * b ulong v ulong to ulong
+put io add b 8 13
+put io add b 9 10
+i = ulong 8
+x = v
+for it ulong 8
+i = sub i 1
+put io add b i hhexd and x 15
+x = shr x 4
+if eq x 0
+ret i
+end
+end
+ret i
+end
+fn hflush cs edit ulong * io edit uchar * to long
+n = get cs HWLEN
+b = get cs HWB
+if eq get cs HWMODE 1
+if le n 10
+ret 0
+end
+s = hhexpre io b sub n 10
+put io add b n 13
+put io add b add n 1 10
+put cs HWLEN 10
+ret hsendio cs io add b s sub add n 2 s
+end
+if eq n 0
+ret 0
+end
+put cs HWLEN 0
+ret hsendio cs io b n
+end
+note hput: append s (body bytes after hhend are framed and counted; dropped for HEAD/204/304)
+fn hput cs edit ulong * io edit uchar * s view uchar * to long
+if eq get cs HWBODY 1
+put cs HWOUT add get cs HWOUT len s
+if eq get cs HWDROP 1
+ret 0
+end
+end
+off = ulong 0
+for it ulong 16777216
+if ge off len s
+ret 0
+end
+w = get cs HWLEN
+if ge w hwcap cs
+r = hflush cs io
+if lt r 0
+ret r
+end
+continue
+end
+k = hmin sub hwcap cs w sub len s off
+w = add get cs HWB w
+hcopy part io w k view part s off k
+put cs HWLEN add get cs HWLEN k
+off = add off k
+end
+ret HEINVAL
+end
+fn hputb cs edit ulong * io edit uchar * c uchar to long
+if eq get cs HWBODY 1
+put cs HWOUT add get cs HWOUT 1
+if eq get cs HWDROP 1
+ret 0
+end
+end
+if ge get cs HWLEN hwcap cs
+r = hflush cs io
+if lt r 0
+ret r
+end
+end
+w = get cs HWLEN
+put io add get cs HWB w c
+put cs HWLEN add w 1
+ret 0
+end
+fn hcrlf cs edit ulong * io edit uchar * to long
+r = hputb cs io 13
+ret hfe r hputb cs io 10
+end
+fn hdec cs edit ulong * io edit uchar * v ulong to long
+d = new uchar 20 0
+i = ulong 20
+x = v
+for it ulong 20
+i = sub i 1
+put d i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+ret hput cs io view part d i sub 20 i
+end
+note hrspst (server): start a response: status line with the standard reason phrase
+fn hrspst cs edit ulong * io edit uchar * code ulong to long
+if or lt code 100 gt code 599
+ret HEINVAL
+end
+hwreset cs
+put cs HSCODE code
+r = hput cs io hv11
+r = hfe r hputb cs io 32
+r = hfe r hdec cs io code
+r = hfe r hputb cs io 32
+r = hfe r hreason cs io code
+ret hfe r hcrlf cs io
+end
+fn hreason cs edit ulong * io edit uchar * code ulong to long
+if lt code 300
+ret hreas2 cs io code
+end
+if lt code 420
+ret hreas4 cs io code
+end
+ret hreas5 cs io code
+end
+fn hreas2 cs edit ulong * io edit uchar * code ulong to long
+if eq code 100
+ret hput cs io hr100
+end
+if eq code 101
+ret hput cs io hr101
+end
+if eq code 200
+ret hput cs io hr200
+end
+if eq code 201
+ret hput cs io hr201
+end
+if eq code 202
+ret hput cs io hr202
+end
+if eq code 204
+ret hput cs io hr204
+end
+if eq code 206
+ret hput cs io hr206
+end
+ret 0
+end
+fn hreas4 cs edit ulong * io edit uchar * code ulong to long
+if eq code 301
+ret hput cs io hr301
+end
+if eq code 302
+ret hput cs io hr302
+end
+if eq code 304
+ret hput cs io hr304
+end
+if eq code 400
+ret hput cs io hr400
+end
+if eq code 401
+ret hput cs io hr401
+end
+if eq code 403
+ret hput cs io hr403
+end
+if eq code 404
+ret hput cs io hr404
+end
+if eq code 405
+ret hput cs io hr405
+end
+if eq code 408
+ret hput cs io hr408
+end
+if eq code 409
+ret hput cs io hr409
+end
+if eq code 411
+ret hput cs io hr411
+end
+if eq code 413
+ret hput cs io hr413
+end
+if eq code 414
+ret hput cs io hr414
+end
+if eq code 415
+ret hput cs io hr415
+end
+if eq code 417
+ret hput cs io hr417
+end
+ret 0
+end
+fn hreas5 cs edit ulong * io edit uchar * code ulong to long
+if eq code 422
+ret hput cs io hr422
+end
+if eq code 429
+ret hput cs io hr429
+end
+if eq code 431
+ret hput cs io hr431
+end
+if eq code 500
+ret hput cs io hr500
+end
+if eq code 501
+ret hput cs io hr501
+end
+if eq code 502
+ret hput cs io hr502
+end
+if eq code 503
+ret hput cs io hr503
+end
+if eq code 504
+ret hput cs io hr504
+end
+if eq code 505
+ret hput cs io hr505
+end
+ret 0
+end
+note hreqst + hreqtg (client): request line `m SP t SP HTTP/1.1`; HEAD is remembered for framing
+fn hreqst cs edit ulong * io edit uchar * m view uchar * to long
+if not htok m
+ret HEINVAL
+end
+hwreset cs
+put cs HISHEAD 0
+if heq m hmhead
+put cs HISHEAD 1
+end
+put cs HNMSG add get cs HNMSG 1
+r = hput cs io m
+ret hfe r hputb cs io 32
+end
+fn hreqtg cs edit ulong * io edit uchar * t view uchar * to long
+if not htarg t
+ret HEINVAL
+end
+r = hput cs io t
+r = hfe r hputb cs io 32
+r = hfe r hput cs io hv11
+ret hfe r hcrlf cs io
+end
+note hhname + hhval / hhnum: one header field. Framing fields (Content-Length,
+note Transfer-Encoding, Connection) are refused: hhend writes them. Values must be field-value
+note bytes without leading or trailing whitespace (no CR, LF or NUL: no header injection).
+fn hhname cs edit ulong * io edit uchar * nm view uchar * to long
+if not htok nm
+ret HEINVAL
+end
+if or or hieqm nm hnclen hieqm nm hnte hieqm nm hnconn
+ret HEINVAL
+end
+r = hput cs io nm
+r = hfe r hputb cs io 58
+ret hfe r hputb cs io 32
+end
+fn hhval cs edit ulong * io edit uchar * v view uchar * to long
+n = len v
+if not hvall v
+ret HEINVAL
+end
+if gt n 0
+if or hws get v 0 hws get v sub n 1
+ret HEINVAL
+end
+end
+r = hput cs io v
+ret hfe r hcrlf cs io
+end
+fn hhnum cs edit ulong * io edit uchar * v ulong to long
+r = hdec cs io v
+ret hfe r hcrlf cs io
+end
+note hhend: framing and the end of the head. mode 0 = Content-Length clen, 1 = chunked,
+note 2 = close-delimited (server only). A server answering HTTP/1.0 turns chunked into 2; 1xx,
+note 204 and 304 get no framing field and no body; a HEAD response keeps its framing fields and
+note drops the body bytes. put cs HKEEP 0 before hhend to close after this message.
+fn hhend cs edit ulong * io edit uchar * mode ulong clen ulong to long
+if gt mode 2
+ret HEINVAL
+end
+srv = eq get cs HSERVER 1
+m = mode
+nob = false
+if srv
+s = get cs HSCODE
+if or or lt s 200 eq s 204 eq s 304
+nob = true
+end
+if and eq m 1 eq get cs HVER 0
+m = 2
+end
+else
+if eq m 2
+ret HEINVAL
+end
+end
+r = long 0
+if nob
+m = 0
+else
+r = hhfram cs io m clen
+end
+if eq m 2
+put cs HKEEP 0
+end
+if eq get cs HKEEP 0
+r = hfe r hput cs io hocls
+r = hfe r hcrlf cs io
+end
+r = hfe r hcrlf cs io
+if lt r 0
+ret r
+end
+put cs HOMODE m
+put cs HWCL clen
+put cs HWBODY 1
+put cs HWOUT 0
+if or nob and srv eq get cs HISHEAD 1
+put cs HWDROP 1
+end
+if and eq m 1 eq get cs HWDROP 0
+r = hflush cs io
+put cs HWMODE 1
+put cs HWLEN 10
+end
+ret r
+end
+fn hhfram cs edit ulong * io edit uchar * m ulong clen ulong to long
+if eq m 1
+r = hput cs io hote
+ret hfe r hcrlf cs io
+end
+if eq m 0
+if or gt clen 0 eq get cs HSERVER 1
+r = hput cs io hoclen
+r = hfe r hdec cs io clen
+ret hfe r hcrlf cs io
+end
+end
+ret 0
+end
+note hwfin: flush, end the chunked body, check a Content-Length body was exactly clen bytes
+fn hwfin cs edit ulong * io edit uchar * to long
+r = hflush cs io
+if lt r 0
+put cs HKEEP 0
+ret r
+end
+drop = eq get cs HWDROP 1
+m = get cs HOMODE
+put cs HWBODY 0
+put cs HWMODE 0
+put cs HWLEN 0
+if and eq m 1 not drop
+b = get cs HWB
+put io b 48
+put io add b 1 13
+put io add b 2 10
+put io add b 3 13
+put io add b 4 10
+r = hsendio cs io b 5
+end
+if and eq m 0 not drop
+if ne get cs HWOUT get cs HWCL
+put cs HKEEP 0
+ret HEINVAL
+end
+end
+if eq get cs HSERVER 1
+put cs HNMSG add get cs HNMSG 1
+end
+if lt r 0
+put cs HKEEP 0
+end
+ret r
+end
+note hreject: answer a failed hreqrd result r. HEBAD .. HEVER answer with that status, HETIME
+note with 408; any other value (peer gone, socket error) sends nothing. The connection must
+note then be closed (HKEEP is 0). Returns the send result or 0.
+fn hreject cs edit ulong * io edit uchar * r long to long
+put cs HKEEP 0
+if eq r HETIME
+ret hrsperr cs io 408
+end
+if or eq r HEBAD eq r HEBIG
+ret hrsperr cs io ulong neg r
+end
+if or or eq r HEHEAD eq r HEEXP or eq r HETE eq r HEVER
+ret hrsperr cs io ulong neg r
+end
+ret 0
+end
+note hrsperr: a complete empty error response that closes the connection
+fn hrsperr cs edit ulong * io edit uchar * code ulong to long
+put cs HKEEP 0
+ret hrspempty cs io code
+end
+note hrspempty: a complete response with an empty body; the connection stays reusable when
+note the request allowed it (hnext still closes when the request body was left unread)
+fn hrspempty cs edit ulong * io edit uchar * code ulong to long
+r = hrspst cs io code
+r = hfe r hhend cs io 0 0
+ret hfe r hwfin cs io
+end
+note hnext: 1 when the connection may carry another message (keep-alive, body fully read,
+note response finished, under HMAXMSG), else 0: the caller closes it
+fn hnext cs edit ulong * io edit uchar * to long
+if eq get cs HKEEP 0
+ret 0
+end
+if eq get cs HWBODY 1
+ret 0
+end
+m = get cs HBMODE
+if and eq m 1 ne get cs HBREM 0
+ret 0
+end
+if and eq m 2 ne get cs HCST 4
+ret 0
+end
+if eq m 3
+ret 0
+end
+if ge get cs HNMSG get cs HMAXMSG
+ret 0
+end
+ret 1
+end
+note ======== server-sent events: writing (one event per chunk)
+fn hrspsse cs edit ulong * io edit uchar * to long
+r = hrspst cs io 200
+r = hfe r hhname cs io hoctype
+r = hfe r hhval cs io hvevst
+r = hfe r hhname cs io hocache
+r = hfe r hhval cs io hvnoca
+ret hfe r hhend cs io 1 0
+end
+fn hsseok a view uchar * to bool
+n = len a
+for i ulong n
+c = get a i
+if or or eq c 10 eq c 13 eq c 0
+ret false
+end
+end
+ret true
+end
+fn hsseln1 cs edit ulong * io edit uchar * v view uchar * to long
+r = hput cs io v
+ret hfe r hputb cs io 10
+end
+fn hsseevt cs edit ulong * io edit uchar * v view uchar * to long
+if not hsseok v
+ret HEINVAL
+end
+r = hput cs io hsevent
+ret hfe r hsseln1 cs io v
+end
+fn hsseid cs edit ulong * io edit uchar * v view uchar * to long
+if not hsseok v
+ret HEINVAL
+end
+r = hput cs io hsid
+ret hfe r hsseln1 cs io v
+end
+fn hsseret cs edit ulong * io edit uchar * v view uchar * to long
+if not hdigits v
+ret HEINVAL
+end
+r = hput cs io hsretry
+ret hfe r hsseln1 cs io v
+end
+fn hssecmt cs edit ulong * io edit uchar * v view uchar * to long
+if not hsseok v
+ret HEINVAL
+end
+r = hputb cs io 58
+r = hfe r hputb cs io 32
+ret hfe r hsseln1 cs io v
+end
+note hlnend: index of the first CR or LF in a at or after p, or len a
+fn hlnend a view uchar * p ulong to ulong
+n = len a
+for b ulong 65536
+s = add p mul b 65536
+if ge s n
+ret n
+end
+m = hmin sub n s 65536
+for i ulong m
+c = get a add s i
+if or eq c 10 eq c 13
+ret add s i
+end
+end
+end
+ret n
+end
+note hssedat: one `data: ` line per line of v (CR, LF and CRLF all end a line)
+fn hssedat cs edit ulong * io edit uchar * v view uchar * to long
+n = len v
+p = ulong 0
+r = long 0
+for it ulong 16777216
+q = hlnend v p
+r = hfe r hput cs io hsdata
+r = hfe r hput cs io view part v p sub q p
+r = hfe r hputb cs io 10
+if ge q n
+ret r
+end
+p = add q 1
+if eq get v q 13
+if lt p n
+if eq get v p 10
+p = add p 1
+end
+end
+end
+end
+ret r
+end
+fn hsseend cs edit ulong * io edit uchar * to long
+r = hputb cs io 10
+ret hfe r hflush cs io
+end
+note ======== server-sent events: incremental reader (WHATWG HTML 9.2.6)
+fn hsseinit ss edit ulong * to long
+if lt len ss HSSLEN
+ret HEINVAL
+end
+for i ulong HSSLEN
+put ss i 0
+end
+ret 0
+end
+note hssefeed: consume src; returns the bytes consumed. When an event completes it stops right
+note after the dispatching line with get ss HSRDY = 1: type lb[0, HSELEN) (empty = message),
+note id lb[64, 64+HSILEN), data lb[128, 128+HSDLEN). Call hssenext, then feed the rest.
+fn hssefeed ss edit ulong * lb edit uchar * src view uchar * to long
+if ne get ss HSRDY 0
+ret HEINVAL
+end
+if lt len lb 256
+ret HEINVAL
+end
+n = len src
+i = ulong 0
+for it ulong 4194304
+if ge i n
+ret long n
+end
+r = hssebyte ss lb get src i
+i = add i 1
+if lt r 0
+ret r
+end
+if gt r 0
+ret long i
+end
+end
+ret long i
+end
+note hssebyte: one stream byte; 1 = an event is ready, 0 = continue, negative = error
+fn hssebyte ss edit ulong * lb edit uchar * c uchar to long
+if eq c 10
+if eq get ss HSCR 1
+put ss HSCR 0
+ret 0
+end
+ret hssleol ss lb
+end
+put ss HSCR 0
+if eq c 13
+put ss HSCR 1
+ret hssleol ss lb
+end
+w = add add HSDB get ss HSDLEN get ss HSLINE
+if ge w len lb
+ret HEBIG
+end
+put lb w c
+put ss HSLINE add get ss HSLINE 1
+ret 0
+end
+fn hssleol ss edit ulong * lb edit uchar * to long
+r = hsseline ss lb
+if lt r 0
+ret r
+end
+if ne get ss HSRDY 0
+ret 1
+end
+ret 0
+end
+fn hssenext ss edit ulong * to void
+put ss HSRDY 0
+put ss HSDLEN 0
+put ss HSELEN 0
+end
+fn hssedis ss edit ulong * to long
+n = get ss HSDLEN
+if eq n 0
+put ss HSELEN 0
+ret 0
+end
+put ss HSDLEN sub n 1
+put ss HSRDY 1
+put ss HSNEV add get ss HSNEV 1
+ret 0
+end
+note hssebom: strip one U+FEFF (EF BB BF) from the first line of the stream; the new length
+fn hssebom ss edit ulong * lb edit uchar * s ulong l ulong to ulong
+if ne get ss HSBOM 0
+ret l
+end
+put ss HSBOM 1
+if lt l 3
+ret l
+end
+if and and eq get lb s 239 eq get lb add s 1 187 eq get lb add s 2 191
+hmove lb s add s 3 sub l 3
+ret sub l 3
+end
+ret l
+end
+fn hsseline ss edit ulong * lb edit uchar * to long
+s = add HSDB get ss HSDLEN
+l = hssebom ss lb s get ss HSLINE
+put ss HSLINE 0
+if eq l 0
+ret hssedis ss
+end
+c = l
+for i ulong l
+if eq get lb add s i 58
+c = i
+break
+end
+end
+if eq c 0
+ret 0
+end
+vo = c
+if lt c l
+vo = add c 1
+if lt vo l
+if eq get lb add s vo 32
+vo = add vo 1
+end
+end
+end
+put ss HSVO vo
+put ss HSVL sub l vo
+ret hssefv ss lb s c
+end
+note hssefv: apply field lb[s, s+c) with value lb[s+vo, s+vo+vl), vo and vl from ss
+fn hssefv ss edit ulong * lb edit uchar * s ulong c ulong to long
+vo = get ss HSVO
+vl = get ss HSVL
+if heq view part lb s c hfdata
+hmove lb s add s vo vl
+put lb add s vl 10
+put ss HSDLEN add get ss HSDLEN add vl 1
+ret 0
+end
+if heq view part lb s c hfevent
+if gt vl HSFCAP
+ret HEHEAD
+end
+hmove lb 0 add s vo vl
+put ss HSELEN vl
+ret 0
+end
+if heq view part lb s c hfid
+if not hsseok view part lb add s vo vl
+ret 0
+end
+if gt vl HSFCAP
+ret HEHEAD
+end
+hmove lb HSIDB add s vo vl
+put ss HSILEN vl
+ret 0
+end
+if heq view part lb s c hfretry
+if hdigits view part lb add s vo vl
+put ss HSRETRY hdecv view part lb add s vo vl
+end
+end
+ret 0
+end
