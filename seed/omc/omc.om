@@ -8506,16 +8506,13 @@ s_fn
 ret 0
 end
 if eq get curret 0 0
-if eq c 78
-s_global
+if or eq c 78 eq c 152
+note declared by globscan before the body pass
+skipnl
 ret 0
 end
 if eq c 79
 s_text
-ret 0
-end
-if eq c 152
-s_const
 ret 0
 end
 if eq c 85
@@ -8765,6 +8762,45 @@ put curret 0 0
 put npar 0 0
 put nslot 0 0
 put held 0 0
+end
+
+note globscan: after namescan (every function name known), declare each top-level const and global in
+note source order, so a function may read a global or const defined further down the file. The body pass
+note skips those lines (stmt). Texts still need their line first: their address is where they are emitted.
+fn globscan to void
+put line 0 1
+go = true
+while go
+n = ulong 0
+while and go lt n 999999
+tok
+k = get tk 0
+if eq k 3
+go = false
+else
+if eq k 1
+c = kw get tw 0
+if eq c 152
+s_const
+else
+if eq c 78
+s_global
+else
+skipnl
+end
+end
+else
+if ne k 0
+skipnl
+end
+end
+end
+n = add n 1
+end
+end
+put cur 0 0
+put line 0 1
+put nn 0 get nglob 0
 end
 
 note ======== R6 structs (omc only; om4 stays the parent that rebuilds this file) ========
@@ -12080,6 +12116,7 @@ ir_run
 end
 prescan
 namescan
+globscan
 if eq get nexp 0 0
 put oc 0 180
 else
