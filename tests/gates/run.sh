@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # tests/gates/run.sh: the one entry point for the local verification gates of omega.
 # Every step runs the SAME command as the hosted job it mirrors (.github/workflows/pr-smoke.yml,
 # host-suites.yml, host-suites-2.yml, host-suites-3.yml, rx-host.yml, turing-yield.yml,
@@ -6,7 +21,7 @@
 # step word, so no manifest needs shell expansion (ADR 0028 P6).
 #
 # Pinned sibling sources. The hosted jobs check out aien-spark/physics at physics.lock (rx-host
-# at its own hard-coded commit), aien-spark/aienos at aienos.lock and aien-spark/aienos at
+# at its own hard-coded commit), aien-dev/aienux at aienos.lock and aien-dev/aienux at
 # argus.lock, as physics-src/, aienos-src/ and aienos-argus/ next to the Makefile, and exclude
 # them from git status. Here the same commits are materialised under build/pins/ (build/ is
 # gitignored) from the sibling local clones ../physics and ../aienos, offline.
@@ -114,6 +129,11 @@ case "$step" in
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
   physics0)           make $NOPHYS physics0-test ;;
   chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
+  # seed compiler (no hosted mirror; Spark only): rebuild from the loader, full qualification, IR oracles required
+  seed)               make OUT_DIR=build build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
+                      sh seed/omega-from-seed.sh
+                      sh seed/host/check.sh 2>&1 | tee "$OUT_DIR.seed-check.log"
+                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -154,6 +174,31 @@ case "$step" in
     n=$(grep -c 'matches frozen digest' build/digest.log); obs frozen_digests_matched "$n"
     test "$n" -ge 1
     ;;
+  gpu-attention)      # host-suites-3.yml gpu-attention (omega#470): physics-src at physics.lock, lock check on;
+                      # host-only, sim and sweep tiers, nothing touches a GPU (the Spark has nvdisasm, so the
+                      # listing check runs here where the hosted runner printed "skipped")
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-attention | tee build/attn.log
+    test "$(grep -cE '^PASS: [0-9]+ checks, 0 failed$' build/attn.log)" -eq 6
+    ! grep -qE '^FAIL' build/attn.log
+    ;;
+  sm121dis)           # L386 bar C6 (docs/OMEGA.md): Omega's own sm_121 disassembler. Host only. Every kernel the
+                      # library builds, decoded by build/sm121dis and compared word for word with nvdisasm (the
+                      # offline oracle the Spark has), plus the faulty-decoder red check; then ZERO-NVDISASM: the
+                      # listing and provenance checks under a decoy nvdisasm and strace, plus its planted-call red check.
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-sm121dis | tee build/sm121dis.log
+    grep -qE '^kernels: [0-9]+, words: [0-9]+, failed kernels: 0$' build/sm121dis.log
+    grep -qE '^red check: the faulty decoder FAILS the comparison' build/sm121dis.log
+    make test-zero-nvdisasm | tee build/zero-nvdisasm.log
+    grep -qE '^ZERO-NVDISASM: PASS' build/zero-nvdisasm.log
+    grep -qE '^red check: the planted nvdisasm calls FAIL the gate' build/zero-nvdisasm.log
+    ;;
+  gpu-libm-free)      # omega-mv#471: no libm symbol left undefined in libomega_gpu.a (physics-src at physics.lock)
+    physics_pin; set -o pipefail; mkdir -p build
+    make -j"$(nproc)" test-gpu-libm-free | tee build/libm-free.log
+    grep -q '^PASS: libomega_gpu.a is libm-free$' build/libm-free.log
+    ;;
   numeric-transc-full) make $NOPHYS test-numeric-transc-full ;;
   m6|m7|m8|m9|m10|m11|m12|m13|m14|m15|m17|m5|m19|m19r-qualify|gate14-combine)
     physics_pin; set -o pipefail; mkdir -p build
@@ -165,8 +210,8 @@ case "$step" in
     pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
     export PHYSICS_COMMIT=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
     aienos_pin; set -o pipefail; mkdir -p build
-    make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living
-    make test-machine-identity
+    make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living | tee build/rx-host-reference.log
+    make test-machine-identity | tee -a build/rx-host-reference.log
     make test-effect-cap64 | tee build/effect-cap64.log
     grep -q '^OMEGA_EFFECT_CAP64_PASS$' build/effect-cap64.log
     receipt omega_state_projection_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_STATE_PROJECTION_PASS": "PASS"'
@@ -226,8 +271,13 @@ case "$step" in
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    # Chip and spark steps follow physics.lock like every other step. Makefile check-physics-lock
+    # (a prerequisite of omegatool, rx_composition_gate_gpu and libomega_gpu.a) refuses any other
+    # physics commit, and omegatool itself now needs the physics API of the lock (nvrm_channel_n,
+    # L136 via #614). The former hard-coded 6d7cf0d4 failed every such chip gate on the judge once
+    # #614 moved the lock to 048e5f5 (main 18c653b3, 2026-10-25). faculty-arm and rx-host-reference
+    # keep their own pin: they mirror the hosted rx-host job, which checks out that commit itself.
+    physics_pin
     aienos_pin; argus_pin
     make "$t"
     ;;
@@ -256,6 +306,17 @@ case "$step" in
     fi
     obs env_files_found false
     echo "Zero plaintext .env files verified."
+    ;;
+  om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
+                      # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
+                      # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.
+    pin omega-bridge omega-bridge "$(lock om/omega-bridge.lock)"
+    sh seed/omega-from-seed.sh > build/om-units-seed.log 2>&1 || { tail -3 build/om-units-seed.log; exit 1; }
+    export OMEGA_OMC="$ROOT/seed/out/omc" OMEGA_BRIDGE="$PINS/omega-bridge"
+    obs omc_sha256 "\"$(sha256sum < "$OMEGA_OMC" | cut -c1-64)\""
+    sh om/units.sh --check
+    sh om/sha256/parity/run.sh
+    sh om/blake3/parity/run.sh
     ;;
   *) echo "run.sh: unknown step '$step'" >&2; exit 2 ;;
 esac

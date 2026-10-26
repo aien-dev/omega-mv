@@ -1,0 +1,102 @@
+note SPDX-License-Identifier: Apache-2.0
+note E17 (2): 33 exported entries; at most 32, a 33rd export is error 14.
+om2
+export fn e1 a ulong to ulong
+ret add a 1
+end
+export fn e2 a ulong to ulong
+ret add a 2
+end
+export fn e3 a ulong to ulong
+ret add a 3
+end
+export fn e4 a ulong to ulong
+ret add a 4
+end
+export fn e5 a ulong to ulong
+ret add a 5
+end
+export fn e6 a ulong to ulong
+ret add a 6
+end
+export fn e7 a ulong to ulong
+ret add a 7
+end
+export fn e8 a ulong to ulong
+ret add a 8
+end
+export fn e9 a ulong to ulong
+ret add a 9
+end
+export fn e10 a ulong to ulong
+ret add a 10
+end
+export fn e11 a ulong to ulong
+ret add a 11
+end
+export fn e12 a ulong to ulong
+ret add a 12
+end
+export fn e13 a ulong to ulong
+ret add a 13
+end
+export fn e14 a ulong to ulong
+ret add a 14
+end
+export fn e15 a ulong to ulong
+ret add a 15
+end
+export fn e16 a ulong to ulong
+ret add a 16
+end
+export fn e17 a ulong to ulong
+ret add a 17
+end
+export fn e18 a ulong to ulong
+ret add a 18
+end
+export fn e19 a ulong to ulong
+ret add a 19
+end
+export fn e20 a ulong to ulong
+ret add a 20
+end
+export fn e21 a ulong to ulong
+ret add a 21
+end
+export fn e22 a ulong to ulong
+ret add a 22
+end
+export fn e23 a ulong to ulong
+ret add a 23
+end
+export fn e24 a ulong to ulong
+ret add a 24
+end
+export fn e25 a ulong to ulong
+ret add a 25
+end
+export fn e26 a ulong to ulong
+ret add a 26
+end
+export fn e27 a ulong to ulong
+ret add a 27
+end
+export fn e28 a ulong to ulong
+ret add a 28
+end
+export fn e29 a ulong to ulong
+ret add a 29
+end
+export fn e30 a ulong to ulong
+ret add a 30
+end
+export fn e31 a ulong to ulong
+ret add a 31
+end
+export fn e32 a ulong to ulong
+ret add a 32
+end
+export fn e33 a ulong to ulong
+ret add a 33
+end

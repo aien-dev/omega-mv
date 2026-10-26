@@ -1,0 +1,89 @@
+# S3 compiled mutants of omc.om. Expected verdicts fixed in advance: ctl-* PASS, m-* FAIL (detected).
+deadline 60
+cc seed/omc/omc.om
+ctl-l-rw run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
+ctl-l-trap run seed/omc/om2/s3/l-trap.om - - - 103
+ctl-l-overlap emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
+ctl-l-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+ctl-fuel emit seed/omc/om2/s3/fuel-d3.om - err:8:14 14
+ctl-fuel-inl emit seed/omc/om2/s3/fuel-e16-inl.om - err:13:14 14
+ctl-f-ok run seed/omc/om2/s3/f-ok.om - - - 0
+ctl-f-join emit seed/omc/om2/s3/f-bad-join.om - err:9:27 27
+ctl-f-loop emit seed/omc/om2/s3/f-bad-loop.om - err:7:27 27
+ctl-f-loopc emit seed/omc/om2/s3/f-bad-loopc.om - err:7:27 27
+ctl-f-call emit seed/omc/om2/s3/f-bad-call.om - err:10:27 27
+ctl-f-partial emit seed/omc/om2/s3/f-bad-partial.om - err:7:27 27
+ctl-f-n65 refuse seed/omc/om2/s3/f-bad-n65.om 14
+ctl-a-ok run seed/omc/om2/s3/a-ok.om - - - 0
+ctl-a-kept run seed/omc/om2/s3/a-kept.om - - - 110
+ctl-a-kept-diag emit seed/omc/om2/s3/a-kept-diag.om any file:seed/omc/om2/s3/a-kept-diag.err 0
+ctl-a-sealinl emit seed/omc/om2/s3/a-bad-sealinl.om - err:9:28 28
+ctl-a-op refuse seed/omc/om2/s3/a-bad-op.om 7
+ctl-a-rawnum refuse seed/omc/om2/s3/a-bad-rawnum.om 7
+# layout: the overlap check removed
+subst seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
+cc seed/omc/omc.om
+m-l-ovl emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
+# layout: a big-endian field read without the byte reversal
+subst seed/omc/om2/s3/mut/rev.from seed/omc/om2/s3/mut/rev.to
+cc seed/omc/omc.om
+m-l-rev run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
+# layout: the run-time field index check off by one
+subst seed/omc/om2/s3/mut/lix.from seed/omc/om2/s3/mut/lix.to
+cc seed/omc/omc.om
+m-l-lix run seed/omc/om2/s3/l-trap.om - - - 103
+# layout: a field ending one byte past SIZE accepted
+subst seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to
+cc seed/omc/omc.om
+m-l-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+# E14: the expansion fuel check removed (depth 3 compiles)
+subst seed/omc/om2/s3/mut/fuel.from seed/omc/om2/s3/mut/fuel.to
+cc seed/omc/omc.om
+m-fuel emit seed/omc/om2/s3/fuel-d3.om - err:8:14 14
+# E16: the pre-E16 charging (1 per copy, at the loop line before each copy) instead of K at the start
+subst seed/omc/om2/s3/mut/e16.from seed/omc/om2/s3/mut/e16.to
+cc seed/omc/omc.om
+m-e16-d3 emit seed/omc/om2/s3/fuel-d3.om - err:8:14 14
+subst seed/omc/om2/s3/mut/e16.from seed/omc/om2/s3/mut/e16.to
+cc seed/omc/omc.om
+m-e16-inl emit seed/omc/om2/s3/fuel-e16-inl.om - err:13:14 14
+# fresh: union instead of intersection at an if/else join
+subst seed/omc/om2/s3/mut/fzu.from seed/omc/om2/s3/mut/fzu.to
+cc seed/omc/omc.om
+m-fzu emit seed/omc/om2/s3/f-bad-join.om - err:9:27 27
+# fresh: a rolled loop contributes its writes
+subst seed/omc/om2/s3/mut/fzl.from seed/omc/om2/s3/mut/fzl.to
+cc seed/omc/omc.om
+m-fzl emit seed/omc/om2/s3/f-bad-loopc.om - err:7:27 27
+# fresh: a tracked array passed to a non-inline call accepted
+subst seed/omc/om2/s3/mut/fzc.from seed/omc/om2/s3/mut/fzc.to
+cc seed/omc/omc.om
+m-fzc emit seed/omc/om2/s3/f-bad-call.om - err:10:27 27
+# fresh: a run-time get accepted with an element unwritten
+subst seed/omc/om2/s3/mut/fzr.from seed/omc/om2/s3/mut/fzr.to
+cc seed/omc/omc.om
+m-fzr emit seed/omc/om2/s3/f-bad-partial.om - err:7:27 27
+# fresh: N = 65 accepted
+subst seed/omc/om2/s3/mut/fzn.from seed/omc/om2/s3/mut/fzn.to
+cc seed/omc/omc.om
+m-fzn refuse seed/omc/om2/s3/f-bad-n65.om 14
+# abstract: the kept dup32 check not emitted
+subst seed/omc/om2/s3/mut/aer.from seed/omc/om2/s3/mut/aer.to
+cc seed/omc/omc.om
+m-aer run seed/omc/om2/s3/a-kept.om - - - 110
+# abstract: every constructor body taken as exact (check erased)
+subst seed/omc/om2/s3/mut/aex.from seed/omc/om2/s3/mut/aex.to
+cc seed/omc/omc.om
+m-aex emit seed/omc/om2/s3/a-kept-diag.om any file:seed/omc/om2/s3/a-kept-diag.err 0
+# abstract: seal allowed outside NAMEmk
+subst seed/omc/om2/s3/mut/act.from seed/omc/om2/s3/mut/act.to
+cc seed/omc/omc.om
+m-act emit seed/omc/om2/s3/a-bad-sealinl.om - err:9:28 28
+# abstract: the ops list ignored
+subst seed/omc/om2/s3/mut/aop.from seed/omc/om2/s3/mut/aop.to
+cc seed/omc/omc.om
+m-aop refuse seed/omc/om2/s3/a-bad-op.om 7
+# abstract: a number taken where NAME is required
+subst seed/omc/om2/s3/mut/araw.from seed/omc/om2/s3/mut/araw.to
+cc seed/omc/omc.om
+m-araw refuse seed/omc/om2/s3/a-bad-rawnum.om 7

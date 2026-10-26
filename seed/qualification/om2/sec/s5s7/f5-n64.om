@@ -1,0 +1,20 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, line 120: N = 64 is the upper bound and is accepted; 4 line 87: unroll 64.
+note stdout: len 64, then 1+..+64 = 2080 (oracle exp/f5-n64.out).
+om2
+fn f s edit uchar 64 fresh to ulong
+for i ulong 64 unroll
+put s i uchar add i 1
+end
+t = ulong 0
+for j ulong 64
+t = add t ulong get s j
+end
+putd len s
+ret t
+end
+fn main to int
+a = new uchar 64 0
+putd f a
+ret 0
+end

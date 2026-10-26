@@ -1,0 +1,25 @@
+# Live 35B server: which shared libraries are mapped (taken 2026-10-21T21:50:23Z on spark-b87b)
+# command: p=$(ss -ltnp | grep :18091 | grep -oP pid=\K[0-9]+); grep -oE /[^ ]*\.so[^ ]* /proc/$p/maps | sort -u
+pid=2587647
+exe=/home/drakestapleton/.local/state/aien-q36/bin-16b0e6f8/aien-serve-http
+cmdline=./aien-serve-http --engine omega --model-dir /home/drakestapleton/models/qwen3.6-35b-a3b-fp8-95a723d0 --port 18091 --max-context 49152 --max-tokens-cap 16384 --thinking off --batch-slots 8 
+exe_sha256=f4677d87750adbdcbe894e70d692d1b011bcc30296a5f550438b5ed5e442361b
+--- mapped .so files
+/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+/usr/lib/aarch64-linux-gnu/libc.so.6
+/usr/lib/aarch64-linux-gnu/libgcc_s.so.1
+/usr/lib/aarch64-linux-gnu/libm.so.6
+--- count of maps lines matching libcuda|libcudart|cublas|cudnn|nvrtc|libnvidia-ptxjitcompiler
+0
+--- ldd of the binary
+	linux-vdso.so.1 (0x0000f31bcb74c000)
+	libm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x0000f31bcaee0000)
+	libgcc_s.so.1 => /lib/aarch64-linux-gnu/libgcc_s.so.1 (0x0000f31bcaea0000)
+	libc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x0000f31bcace0000)
+	/lib/ld-linux-aarch64.so.1 (0x0000f31bcb710000)
+--- kernel driver in use
+NVRM version: NVIDIA UNIX Open Kernel Module for aarch64  580.173.02  Release Build  (dvs-builder@U22-A24-5-4)  Tue Jun 23 08:34:19 UTC 2026
+--- device files the server holds open
+      1 /dev/nvidia0
+      1 /dev/nvidiactl
+      2 /dev/nvidia-uvm

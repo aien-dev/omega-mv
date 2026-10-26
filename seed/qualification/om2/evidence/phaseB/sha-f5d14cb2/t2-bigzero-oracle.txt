@@ -1,0 +1,4 @@
+$ sh -c head -c 4294967299 /dev/zero | /usr/bin/sha256sum; grep EXP_BIG_ZERO '/home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/oracle/s5s7/sha/expected.h'
+930fa067940ff8d9f427e3a116b7598503c70ce7380d66ff65f8de33d558f7f3  -
+#define EXP_BIG_ZERO "930fa067940ff8d9f427e3a116b7598503c70ce7380d66ff65f8de33d558f7f3"
+EXIT 0

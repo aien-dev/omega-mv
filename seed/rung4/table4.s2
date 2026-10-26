@@ -1,0 +1,5 @@
+; table4.s2 -- extra table lines for om4's own code (read after rung2/table.s2 and rung3/table3.s2).
+; Same format; Arm DDI 0487 M.d.
+= cmn.x.i  0xb100001f r5 i10.12     ; C6.2.93 CMN (immediate) = ADDS XZR, Xn, #imm (C6.2.10)
+= ldr.x.r  0xf8607800 r0 r5 r16     ; C6.2.218 LDR (register), 64-bit, LSL #3 (index scaled by 8)
+= str.x.r  0xf8207800 r0 r5 r16     ; C6.2.416 STR (register), 64-bit, LSL #3

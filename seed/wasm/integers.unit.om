@@ -1,0 +1,99 @@
+note Every function is exercised by cases.tsv; canonical boundary arguments only.
+fn addu8 a uchar b uchar to uchar
+ret add a b
+end
+fn subu16 a ushort b ushort to ushort
+ret sub a b
+end
+fn mulu32 a uint b uint to uint
+ret mul a b
+end
+fn addu64 a ulong b ulong to ulong
+ret add a b
+end
+fn subi8 a byte b byte to byte
+ret sub a b
+end
+fn muli16 a short b short to short
+ret mul a b
+end
+fn addi32 a int b int to int
+ret add a b
+end
+fn addi64 a long b long to long
+ret add a b
+end
+fn subi64 a long b long to long
+ret sub a b
+end
+fn muli64 a long b long to long
+ret mul a b
+end
+fn divu64 a ulong b ulong to ulong
+ret div a b
+end
+fn divi64 a long b long to long
+ret div a b
+end
+fn remi64 a long b long to long
+ret rem a b
+end
+fn remu64 a ulong b ulong to ulong
+ret rem a b
+end
+fn shli64 a long b uint to long
+ret shl a b
+end
+fn shri64 a long b byte to long
+ret shr a b
+end
+fn shru64 a ulong b uint to ulong
+ret shr a b
+end
+fn shlu8 a uchar b uint to uchar
+ret shl a b
+end
+fn andi64 a long b long to long
+ret and a b
+end
+fn oru32 a uint b uint to uint
+ret or a b
+end
+fn xoru64 a ulong b ulong to ulong
+ret xor a b
+end
+fn negi64 a long to long
+ret neg a
+end
+fn negu8 a uchar to uchar
+ret neg a
+end
+fn noti8 a byte to byte
+ret not a
+end
+fn notbool a bool to bool
+ret not a
+end
+fn castsu a long to ulong
+ret ulong a
+end
+fn castus a ulong to long
+ret long a
+end
+fn casti8 a long to byte
+ret byte a
+end
+fn castu8 a ulong to uchar
+ret uchar a
+end
+fn voidfn a uint to void
+ret
+end
+fn voidcall a uint to void
+voidfn a
+ret
+end
+fn voidthen a uint to uint
+voidcall a
+ret a
+end

@@ -3,10 +3,10 @@
 AIEN_MID_TEST = $(OUT_DIR)/aien_machine_id_test
 
 $(AIEN_MID_TEST): tests/runtime/aien_machine_id_test.c src/runtime/aien_machine_id.c \
-		src/runtime/aien_machine_id.h src/sha256.c src/sha256.h
+		src/runtime/aien_machine_id.h src/omega_om_units.c src/sha256.h
 	mkdir -p $(dir $@)
 	$(CC) -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -o $@ \
-		tests/runtime/aien_machine_id_test.c src/runtime/aien_machine_id.c src/sha256.c
+		tests/runtime/aien_machine_id_test.c src/runtime/aien_machine_id.c src/omega_om_units.c
 
 .PHONY: test-machine-identity
 test-machine-identity: $(AIEN_MID_TEST)

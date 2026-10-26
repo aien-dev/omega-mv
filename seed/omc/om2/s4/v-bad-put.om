@@ -1,0 +1,10 @@
+note S4: put through an unsized view is error 20.
+om2
+fn g v view uchar * to void
+put v 0 1
+end
+fn main to int
+a = new uchar 4 0
+g a
+ret 0
+end

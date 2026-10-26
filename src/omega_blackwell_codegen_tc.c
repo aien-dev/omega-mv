@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* omega_blackwell_codegen_tc.c: tensor-core kernels for the OWN-30B one-pass prefill (T3). See the header.
  * The emitter helpers below are copied from omega_blackwell_codegen_gemm.c (same chip-learned scheduling rules: every load
  * sets the read barrier SB1 and the next load waits on it; prefetch loads hold scoreboards 3/4 until consumed).
@@ -40,7 +56,7 @@ int omega_blackwell_codegen_tc_probe_prog(int mutant, BlackwellIRProgram *prog) 
 
 int omega_tcgemm_spec_ok(const OmegaTcGemmSpec *s) {
     if (!s) return 0;
-    if (s->k < 128u || s->k > 16384u || s->k % 128u) return 0;
+    if (s->k < 128u || s->k > OMEGA_TCGEMM_MAX_K || s->k % 128u) return 0;
     if (s->rt != 1 && s->rt != 2 && s->rt != 4) return 0;
     if (s->ct != 1 && s->ct != 2 && s->ct != 4) return 0;
     if (s->rt * s->ct < 4u) return 0; /* >= 4 independent HMMAs between dependent ones (8 cycles each, nvcc's 29-cycle rule) */
@@ -244,6 +260,7 @@ int omega_tc_patch_code(const BlackwellIRProgram *prog, uint8_t *code, size_t le
             wr32(w, (w0 & 0xffff0000u) | 0x723eu); wr32(w + 8, 0x000010ffu); n++;
         }
     }
+    if (n > 0) { size_t b = omega_bw_program_code_bytes(prog); omega_kernel_dump(code, b && b <= len ? b : prog->count * 16u); } /* the patched body is a different kernel */
     return n;
 }
 

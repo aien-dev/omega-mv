@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * Simulated GB10 driver. See tests/fake_m16_native.h for what it models.
  * NOT_RUN: written in cut A3b2, never compiled or executed by its author.
@@ -455,4 +471,29 @@ int m16_native_close(M16NativeContext *ctx)
     fk.device_open = 0;
     if (fk.close_fail) rc = inject(&ctx->rm, -1);
     return rc;
+}
+
+/* L136: the simulated driver has one channel. Extra channels (AIEN_OMEGA_GPU_CHANNELS > 1) are refused here, so the
+ * platform's device_open refuses with stage "nvrm_channel_n"; the multi-channel path is proven on the chip only. */
+int nvrm_channel_n(Nvrm *rm, uint32_t extra)
+{
+    (void)rm; (void)extra;
+    return -1;
+}
+
+int nvrm_chan_submit(Nvrm *rm, uint32_t ch, const NvrmMem *pb, uint32_t off_bytes, uint32_t nwords)
+{
+    (void)rm; (void)ch; (void)pb; (void)off_bytes; (void)nwords;
+    return -1;
+}
+
+void nvrm_chan_retire(Nvrm *rm, uint32_t ch, uint32_t upto)
+{
+    (void)rm; (void)ch; (void)upto;
+}
+
+uint32_t nvrm_chan_put(const Nvrm *rm, uint32_t ch)
+{
+    (void)rm; (void)ch;
+    return 0;
 }

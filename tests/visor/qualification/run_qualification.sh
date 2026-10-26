@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Omega Visor V1 -- lane 8 qualification runner (user-perspective / adversarial).
 #
 # usage: tests/visor/qualification/run_qualification.sh [OMEGA_BINARY]
@@ -34,7 +49,7 @@ fi
 # Strict JSON line checker (tools/json_canon.c: Python json.loads rules, strict
 # UTF-8) for the --json scriptability checks; C + jq, no Python.
 JSONC=$WORK/json_canon
-if ! ${CC:-gcc} -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o "$JSONC" tools/json_canon.c src/sha256.c -lm; then
+if ! ${CC:-gcc} -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o "$JSONC" tools/json_canon.c src/omega_om_units.c -lm; then
     echo "QUAL setup json_canon FAIL build"
     exit 1
 fi

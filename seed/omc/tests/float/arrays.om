@@ -1,0 +1,15 @@
+note f64 and f32 elements in local arrays keep their exact bits.
+fn main to int
+a = new f64 4 1.5
+put a 2 2.5
+b = bitcast ulong get a 2
+if ne b 4612811918334230528
+ret 1
+end
+c = new f32 4 1.5
+d = bitcast uint get c 1
+if ne d 1069547520
+ret 2
+end
+ret 0
+end

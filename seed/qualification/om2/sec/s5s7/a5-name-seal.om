@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note erratum E6 Q1: an OM-2 reserved word of section 5 (seal) declared as a name inside an OM-2 unit
+note is error 16 (in OM-1 units it stays a name: om1/t-names.om).
+om2
+fn main to int
+seal = ulong 3
+putd seal
+ret 0
+end

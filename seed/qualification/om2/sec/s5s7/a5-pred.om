@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 144, 149: any predicate other than dup32 is error 28.
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup16
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 5
+puth open d
+ret 0
+end

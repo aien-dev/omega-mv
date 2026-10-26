@@ -1,0 +1,20 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout lines 154, 158 with erratum E5: a field with COUNT omitted is a scalar,
+note written `put c F v` and read `get c F` without an index. stdout: 01 02 03 04, then 0000000001020304 (exp/l5-scalar.out).
+om2
+layout one 4
+field v uint at 0 big
+end
+fn fill x edit one to void
+put x v 0x01020304
+end
+fn show x view one to void
+puth ulong get x v
+end
+fn main to int
+c = new uchar 4 0
+fill c
+w = write 1 c 0 4
+show c
+ret 0
+end

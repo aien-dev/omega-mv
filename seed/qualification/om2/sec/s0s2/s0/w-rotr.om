@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 14: the OM-2 words are recognised only in OM-2 units. This OM-1 unit uses
+note built-in rotr (3 line 76); no user rotr here; it keeps its OM-1 verdict (C1, line 17), the pinned error and line.
+fn main to int
+x = uint 5
+y = rotr x 3
+ret 0
+end

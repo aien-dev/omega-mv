@@ -1,0 +1,11 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -2951,7 +2951,7 @@
+ fail 9
+ end
+ q = get fr add x 13
+-if and ne q 3223340586 ne q 3223340587
++if eq q 0
+ fail 9
+ end
+ e = harray x 1

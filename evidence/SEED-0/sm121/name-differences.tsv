@@ -1,0 +1,9 @@
+imad.0+imad.1+imad.2	IMAD	IMAD IMAD.MOV
+imad.i.0+imad.i.1+imad.i.2	IMAD	IMAD IMAD.IADD IMAD.MOV
+isetp.ge.u.0+isetp.ge.u.1+isetp.ge.u.2	ISETP.GE.AND	ISETP.GE.U32.AND
+ldg.0+ldg.1+ldg.mmio.2	LDG.E.MMIO.GPU	LDG.E.EF
+stg.0+stg.ef.1+stg.ef.2	STG.E.EF	STG.E.MMIO.GPU
+atomg.0+atomg.1+atomg.add.2	ATOMG.ADD.STRONG.SYS	ATOMG.E.ADD.STRONG.SYS
+atomg.0+atomg.1+atomg.exch.2	ATOMG.EXCH.STRONG.SYS	ATOMG.E.EXCH.STRONG.SYS
+lds.0+z.1+lds.u8.2	LDS.U8	LDS.???7 LDS.S16 LDS.U8
+sts.u8.0+r.1+sts.u8.2	STS.U8	STS.INVALID7 STS.S16 STS.U8

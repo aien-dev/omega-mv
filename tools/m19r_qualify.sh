@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # m19r_qualify.sh -- M19R Gate 1/2 qualification. Permanent receipts are
 # written only on success.
 #
@@ -53,7 +68,7 @@ m19r_build_canon() {
     M19R_TMP=$(mktemp -d "${TMPDIR:-/tmp}/m19r-qualify.XXXXXX") || return 1
     JSON_CANON=$M19R_TMP/json_canon
     gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$M19R_OMEGA/src" -o "$JSON_CANON" \
-        "$M19R_OMEGA/tools/json_canon.c" "$M19R_OMEGA/src/sha256.c" -lm
+        "$M19R_OMEGA/tools/json_canon.c" "$M19R_OMEGA/src/omega_om_units.c" -lm
 }
 
 # JSON string literal for arbitrary text.

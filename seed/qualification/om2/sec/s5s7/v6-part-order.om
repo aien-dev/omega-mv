@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 175: o is evaluated before k. o = div 10 z (z = 0) traps 2, k = ulong m (m = -1)
+note traps 5: exit 102. A k-first mutant exits 105.
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+z = ulong 0
+m = long -1
+putd plen part a div 10 z ulong m
+ret 0
+end

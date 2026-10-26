@@ -1,0 +1,642 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/rsa.om (module RS): RSA signature verification, RFC 8017.
+note Library unit for OM-2: no om2 line, no fn main; needs om/tls/sha2.om (sha2_digest) in the unit.
+note
+note API
+note   rsa_verify_pkcs1 hsh key hs hlen   RSASSA-PKCS1-v1_5 verify (8.2.2), EMSA-PKCS1-v1_5 (9.2):
+note       the whole k-byte block 00 01 FF..FF 00 DigestInfo H is built and compared byte for byte;
+note       the block is never parsed. DigestInfo prefixes verbatim from RFC 8017 9.2 note 1.
+note   rsa_verify_pss ctl key hs hlen     RSASSA-PSS verify (8.1.2), EMSA-PSS-VERIFY (9.1.2), MGF1 (B.2.1).
+note   hsh: 256, 384 or 512 (SHA-256/384/512). hs = digest (hlen bytes) || signature (the rest).
+note   key: DER RSAPublicKey SEQUENCE { INTEGER n, INTEGER e }, strict DER (definite minimal lengths
+note       of 1..3 octets, minimal positive INTEGERs, no trailing bytes). Not an SPKI.
+note   ctl (PSS): bits 0..15 message hash (256|384|512), bits 16..31 MGF1 hash (256|384|512),
+note       bits 32..63 salt length in bytes (exact). TLS 1.3 rsa_pss_rsae_sha256 =
+note       256 | 256 << 16 | 32 << 32 = 0x0000002001000100.
+note   Accepted keys: modulus 1024..8192 bits and odd; e odd, e >= 3, bit length of e <= bit length
+note       of n. A minimum such as 2048 bits is caller policy (X.509/TLS layer): x509.om accepts
+note       server-presented RSA keys (leaf and chain) only with 2048..4096 bits and e odd in
+note       3..2^32-1 (x509_rsaok), and anchors with >= 2048 bits.
+note Return codes: 0 valid, 1 mismatch (signature does not verify), 2 bad key encoding,
+note   3 unsupported size or exponent, 4 signature length != modulus length or s >= n, 5 unsupported
+note   hash (or hlen != digest length of the hash). Checked in the order 5, 2/3, 4, 1.
+note   hs shorter than the digest length is code 4. All workspace is local (the caller passes no
+note   buffer sizes), so these entry points have no caller-contract traps.
+note Untrusted inputs (key, hs, ctl) never trap: every index is range-checked before use (tested by
+note   test/rsa/vectors/fuzz.txt: key truncations, header substitutions, signature lengths, ctl values).
+note Timing: all inputs are public (signature verification), so the code is variable time on purpose:
+note   early exits, length-dependent loop counts, a square-and-multiply driven by the bits of e, and
+note   value-dependent final subtractions in Montgomery reduction. It handles no secrets; nothing is
+note   constant time and nothing needs to be. Cost grows with bits(e) * s^2: an e as long as n
+note   (allowed, see above) is a CPU cost the caller accepts by passing such a key; x509.om bounds
+note   e to 32 bits for server-presented keys, so only a trust anchor can carry a longer e.
+note Arithmetic: 32-bit limbs in ulong cells, little-endian limb order; Montgomery multiplication
+note   (CIOS) with n0' = -n^-1 mod 2^32 (Newton iteration from x = n, 3 -> 48 correct bits in 5 steps)
+note   and R^2 mod n (64*s modular doublings of 1), both computed at run time from the key. The
+note   workspace is a local array of RSWN cells (12.2 KiB) plus a RSEM-byte block per call.
+
+const RSWN ulong 1564
+const RSEM ulong 1024
+const RSMASK ulong 0xffffffff
+note limb regions of the workspace, 258 cells each (256 limbs of an 8192-bit number + 2)
+const RSON ulong 0
+const RSOT ulong 258
+const RSOX ulong 516
+const RSOA ulong 774
+const RSOR ulong 1032
+const RSOG ulong 1290
+note scalar cells of the workspace
+const RSCI ulong 1548
+const RSCS ulong 1549
+const RSCK ulong 1550
+const RSCB ulong 1551
+const RSCNO ulong 1552
+const RSCNL ulong 1553
+const RSCEO ulong 1554
+const RSCEL ulong 1555
+const RSCP ulong 1556
+const RSCL ulong 1557
+const RSCH ulong 1558
+const RSCM ulong 1559
+const RSCSL ulong 1560
+note DigestInfo DER prefixes, RFC 8017 section 9.2 note 1, bytes 0..7, 8..15, 16..18
+note SHA-256: 30 31 30 0d 06 09 60 86 48 01 65 03 04 02 01 05 00 04 20
+const RSD2A ulong 0x3031300d06096086
+const RSD2B ulong 0x4801650304020105
+const RSD2C ulong 0x000420
+note SHA-384: 30 41 30 0d 06 09 60 86 48 01 65 03 04 02 02 05 00 04 30
+const RSD3A ulong 0x3041300d06096086
+const RSD3B ulong 0x4801650304020205
+const RSD3C ulong 0x000430
+note SHA-512: 30 51 30 0d 06 09 60 86 48 01 65 03 04 02 03 05 00 04 40
+const RSD5A ulong 0x3051300d06096086
+const RSD5B ulong 0x4801650304020305
+const RSD5C ulong 0x000440
+
+note T[0..s+1] += A[ao..] * bi (one CIOS multiply row)
+fn bn_mac w edit ulong RSWN s ulong ao ulong bi ulong to void
+cy = ulong 0
+x = ulong 0
+for j ulong s
+x = add add get w add RSOT j mul get w add ao j bi cy
+put w add RSOT j and x RSMASK
+cy = shr x 32
+end
+x = add get w add RSOT s cy
+put w add RSOT s and x RSMASK
+put w add RSOT add s 1 add get w add RSOT add s 1 shr x 32
+end
+
+note T = (T + m * N) / 2^32 with m = T[0] * n0' mod 2^32 (one CIOS reduction row)
+fn bn_red w edit ulong RSWN s ulong to void
+m = and mul get w RSOT get w RSCI RSMASK
+x = add get w RSOT mul m get w RSON
+c = shr x 32
+for j ulong sub s 1
+q = add j 1
+u = mul m get w add RSON q
+x = add add get w add RSOT q u c
+put w add RSOT j and x RSMASK
+c = shr x 32
+end
+x = add get w add RSOT s c
+put w add RSOT sub s 1 and x RSMASK
+put w add RSOT s add get w add RSOT add s 1 shr x 32
+put w add RSOT add s 1 0
+end
+
+note 1 when A >= B (s limbs each), else 0
+fn bn_cmp w view ulong RSWN s ulong ao ulong bo ulong to ulong
+j = s
+while gt j 0 bound 999
+j = sub j 1
+a = get w add ao j
+b = get w add bo j
+if gt a b
+ret 1
+end
+if lt a b
+ret 0
+end
+end
+ret 1
+end
+
+note R = A - B over s limbs (final borrow dropped)
+fn bn_sub w edit ulong RSWN s ulong ao ulong bo ulong ro ulong to void
+bw = ulong 0
+for j ulong s
+x = sub sub get w add ao j get w add bo j bw
+put w add ro j and x RSMASK
+bw = shr x 63
+end
+end
+
+note R = T mod N given T < 2N (T has s + 1 limbs)
+fn bn_fin w edit ulong RSWN s ulong ro ulong to void
+hi = get w add RSOT s
+if eq hi 0
+hi = bn_cmp w s RSOT RSON
+end
+if ne hi 0
+bn_sub w s RSOT RSON ro
+ret
+end
+for j ulong s
+put w add ro j get w add RSOT j
+end
+end
+
+note R = A * B / 2^(32 s) mod N; R may be A or B
+fn bn_mont w edit ulong RSWN s ulong ao ulong bo ulong ro ulong to void
+for j ulong add s 2
+put w add RSOT j 0
+end
+for i ulong s
+bn_mac w s ao get w add bo i
+bn_red w s
+end
+bn_fin w s ro
+end
+
+note region ro = big-endian bytes src (len src <= 4 s), upper limbs zero
+fn bn_load w edit ulong RSWN ro ulong s ulong src view uchar * to void
+for j ulong add s 2
+put w add ro j 0
+end
+n = len src
+for j ulong n
+b = ulong get src sub sub n 1 j
+q = add ro shr j 2
+v = shl b mul and j 3 8
+put w q or get w q v
+end
+end
+
+note em[0..k) = region ro as k big-endian bytes
+fn bn_store w view ulong RSWN ro ulong em edit uchar RSEM k ulong to void
+for j ulong k
+v = shr get w add ro shr j 2 mul and j 3 8
+put em sub sub k 1 j uchar and v 255
+end
+end
+
+note region ro = 2 * region ro over s limbs; returns the carry out
+fn bn_dbl w edit ulong RSWN s ulong ro ulong to ulong
+c = ulong 0
+for j ulong s
+x = or shl get w add ro j 1 c
+put w add ro j and x RSMASK
+c = shr x 32
+end
+ret c
+end
+
+note n0' = -N[0]^-1 mod 2^32: Newton x = x (2 - n x), from x = n (correct to 3 bits; 5 steps > 32 bits)
+fn bn_n0 w edit ulong RSWN to void
+n = get w RSON
+x = n
+for i ulong 5
+x = and mul x sub 2 and mul n x RSMASK RSMASK
+end
+put w RSCI and sub 0 x RSMASK
+end
+
+note region R = R^2 mod N = 2^(64 s) mod N, by 64 s modular doublings of 1
+fn bn_r2 w edit ulong RSWN s ulong to void
+for j ulong add s 2
+put w add RSOR j 0
+end
+put w RSOR 1
+for i ulong mul s 64
+c = bn_dbl w s RSOR
+if eq c 0
+c = bn_cmp w s RSOR RSON
+end
+if ne c 0
+bn_sub w s RSOR RSON RSOR
+end
+end
+end
+
+note region A = G^e mod N (G the signature, e from key bytes), left-to-right binary
+fn rsa_pow w edit ulong RSWN key view uchar * to void
+s = get w RSCS
+bn_n0 w
+bn_r2 w s
+bn_mont w s RSOG RSOR RSOX
+for j ulong s
+put w add RSOA j get w add RSOX j
+end
+eo = get w RSCEO
+el = get w RSCEL
+st = ulong 0
+for i ulong el
+b = ulong get key add eo i
+for t ulong 8
+bit = and shr b sub 7 t 1
+if ne st 0
+bn_mont w s RSOA RSOA RSOA
+if ne bit 0
+bn_mont w s RSOA RSOX RSOA
+end
+end
+if ne bit 0
+st = 1
+end
+end
+end
+for j ulong add s 2
+put w add RSOR j 0
+end
+put w RSOR 1
+bn_mont w s RSOA RSOR RSOA
+end
+
+note DER tag and length at key[p]; content offset and length to RSCP / RSCL; 0 or 2
+fn rsa_tlv w edit ulong RSWN key view uchar * p ulong tag ulong to ulong
+n = len key
+if gt add p 2 n
+ret 2
+end
+if ne ulong get key p tag
+ret 2
+end
+b = ulong get key add p 1
+h = ulong 2
+l = b
+if eq b 0x81
+if gt add p 3 n
+ret 2
+end
+l = ulong get key add p 2
+if lt l 0x80
+ret 2
+end
+h = 3
+end
+if eq b 0x82
+if gt add p 4 n
+ret 2
+end
+l = or shl ulong get key add p 2 8 ulong get key add p 3
+if lt l 0x100
+ret 2
+end
+h = 4
+end
+if and ge b 0x80 eq h 2
+ret 2
+end
+c = add p h
+if gt l sub n c
+ret 2
+end
+put w RSCP c
+put w RSCL l
+ret 0
+end
+
+note DER INTEGER at key[p], minimal and nonnegative; RSCP / RSCL = magnitude without the sign octet
+fn rsa_int w edit ulong RSWN key view uchar * p ulong to ulong
+r = rsa_tlv w key p 2
+if ne r 0
+ret r
+end
+c = get w RSCP
+l = get w RSCL
+if eq l 0
+ret 2
+end
+b = get key c
+if ge b 0x80
+ret 2
+end
+if and eq b 0 gt l 1
+if lt get key add c 1 0x80
+ret 2
+end
+put w RSCP add c 1
+put w RSCL sub l 1
+end
+ret 0
+end
+
+note bit length of the big-endian magnitude key[o..o+l) (first byte nonzero unless the value is 0)
+fn rsa_bits key view uchar * o ulong l ulong to ulong
+if eq l 0
+ret 0
+end
+b = ulong get key o
+nb = ulong 0
+while ne b 0 bound 9
+nb = add nb 1
+b = shr b 1
+end
+if eq nb 0
+ret 0
+end
+ret add mul sub l 1 8 nb
+end
+
+note parse and check the RSAPublicKey; fills RSCNO RSCNL RSCEO RSCEL RSCB RSCK RSCS
+fn rsa_key w edit ulong RSWN key view uchar * to ulong
+r = rsa_tlv w key 0 0x30
+if ne r 0
+ret r
+end
+if ne add get w RSCP get w RSCL len key
+ret 2
+end
+r = rsa_int w key get w RSCP
+if ne r 0
+ret r
+end
+no = get w RSCP
+nl = get w RSCL
+r = rsa_int w key add no nl
+if ne r 0
+ret r
+end
+eo = get w RSCP
+el = get w RSCL
+if ne add eo el len key
+ret 2
+end
+mb = rsa_bits key no nl
+if or lt mb 1024 gt mb 8192
+ret 3
+end
+if eq and get key sub add no nl 1 1 0
+ret 3
+end
+eb = rsa_bits key eo el
+if lt eb 2
+ret 3
+end
+if eq and get key sub add eo el 1 1 0
+ret 3
+end
+if gt eb mb
+ret 3
+end
+put w RSCNO no
+put w RSCNL nl
+put w RSCEO eo
+put w RSCEL el
+put w RSCB mb
+put w RSCK div add mb 7 8
+put w RSCS div add mb 31 32
+ret 0
+end
+
+note RSAVP1: key checks, length and range checks, em[0..k) = sg^e mod n as k bytes
+fn rsa_core w edit ulong RSWN key view uchar * sg view uchar * em edit uchar RSEM to ulong
+r = rsa_key w key
+if ne r 0
+ret r
+end
+k = get w RSCK
+if ne len sg k
+ret 4
+end
+s = get w RSCS
+bn_load w RSON s part key get w RSCNO get w RSCNL
+bn_load w RSOG s sg
+if ne bn_cmp w s RSOG RSON 0
+ret 4
+end
+rsa_pow w key
+bn_store w RSOA em k
+ret 0
+end
+
+note digest length of SHA-256/384/512, 0 for anything else
+fn rsa_hlen h ulong to ulong
+if eq h 256
+ret 32
+end
+if eq h 384
+ret 48
+end
+if eq h 512
+ret 64
+end
+ret 0
+end
+
+note DigestInfo prefix byte i (0..18) for hash h
+fn rsa_dibyte h ulong i ulong to ulong
+x = RSD2A
+y = RSD2B
+z = RSD2C
+if eq h 384
+x = RSD3A
+y = RSD3B
+z = RSD3C
+end
+if eq h 512
+x = RSD5A
+y = RSD5B
+z = RSD5C
+end
+if lt i 8
+ret and shr x mul sub 7 i 8 255
+end
+if lt i 16
+ret and shr y mul sub 15 i 8 255
+end
+ret and shr z mul sub 18 i 8 255
+end
+
+note EMSA-PKCS1-v1_5 comparison of the whole block em[0..k) against 00 01 FF.. 00 DigestInfo dg
+fn rsa_pkcs1_chk em view uchar RSEM k ulong h ulong dg view uchar * to ulong
+hl = len dg
+t = add 19 hl
+if lt k add t 11
+ret 1
+end
+d = ulong get em 0
+d = or d xor ulong get em 1 1
+ps = sub sub k t 3
+for i ulong ps
+d = or d xor ulong get em add 2 i 255
+end
+d = or d ulong get em add 2 ps
+for i ulong 19
+d = or d xor ulong get em add add 3 ps i rsa_dibyte h i
+end
+for i ulong hl
+d = or d xor ulong get em add sub k hl i ulong get dg i
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+fn rsa_verify_pkcs1 hsh ulong key view uchar * hs view uchar * hlen ulong to ulong
+hl = rsa_hlen hsh
+if or eq hl 0 ne hl hlen
+ret 5
+end
+if lt len hs hl
+ret 4
+end
+w = new ulong RSWN 0
+em = new uchar RSEM 0
+r = rsa_core w key part hs hl sub len hs hl em
+if ne r 0
+ret r
+end
+ret rsa_pkcs1_chk em get w RSCK hsh part hs 0 hl
+end
+
+note MGF1 counter C as 4 big-endian bytes after the seed (RFC 8017 B.2.1 step 3.A, I2OSP(counter, 4))
+fn rsa_ctr sd edit uchar 68 hl ulong ct ulong to void
+put sd hl uchar and shr ct 24 255
+put sd add hl 1 uchar and shr ct 16 255
+put sd add hl 2 uchar and shr ct 8 255
+put sd add hl 3 uchar and ct 255
+end
+
+note em[p..min(p+n, e)) ^= hb[0..); returns p + n
+fn rsa_xor em edit uchar RSEM hb view uchar 64 p ulong e ulong n ulong to ulong
+for i ulong n
+if lt p e
+put em p xor get em p get hb i
+end
+p = add p 1
+end
+ret p
+end
+
+note MGF1 seed: sd[0..hl) = em[p..p+hl) for the digest length hl of hash h; returns hl
+fn rsa_seed sd edit uchar 68 em view uchar RSEM p ulong h ulong to ulong
+hl = rsa_hlen h
+for i ulong hl
+put sd i get em add p i
+end
+ret hl
+end
+
+note MGF1 (RFC 8017 B.2.1): em[o..o+db) ^= MGF1(seed = em[o+db..o+db+hl), db) with the RSCM hash
+fn rsa_mgf1 w view ulong RSWN em edit uchar RSEM o ulong db ulong to void
+sd = new uchar 68 0
+hb = new uchar 64 0
+db = add o db
+hl = rsa_seed sd em db get w RSCH
+ct = ulong 0
+while lt o db bound 999
+rsa_ctr sd hl ct
+n = sha2_digest get w RSCM part sd 0 add hl 4 hb
+o = rsa_xor em hb o db n
+ct = add ct 1
+end
+end
+
+note d[0..len s) = s
+fn rsa_cpy d edit uchar * s view uchar * to void
+for i ulong len s
+put d i get s i
+end
+end
+
+note 0 when a and b (same length) are equal, else 1
+fn rsa_neq a view uchar * b view uchar * to ulong
+d = ulong 0
+for i ulong len a
+d = or d ulong xor get a i get b i
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+note M' = 0^8 || mHash || salt into mp (zero on entry); salt = the sl bytes before H at the end of em
+fn rsa_mprime w view ulong RSWN em view uchar RSEM mh view uchar * mp edit uchar 1096 to ulong
+hl = len mh
+sl = get w RSCSL
+hp = sub sub get w RSCK 1 hl
+rsa_cpy part mp 8 hl mh
+rsa_cpy part mp add 8 hl sl part em sub hp sl sl
+ret add add 8 hl sl
+end
+
+note EMSA-PSS-VERIFY steps 12-14: H' = Hash(M') compared with H = em[k-1-hl..k-1)
+fn rsa_pss_hash w view ulong RSWN em view uchar RSEM mh view uchar * to ulong
+mp = new uchar 1096 0
+hb = new uchar 64 0
+n = rsa_mprime w em mh mp
+r = sha2_digest get w RSCH part mp 0 n hb
+hl = len mh
+hp = sub sub get w RSCK 1 hl
+ret rsa_neq part hb 0 hl part em hp hl
+end
+
+note DB prefix p = PS || 0x01 (len p >= 1): 0 when PS is all zero and the last byte is 1, else 1
+fn rsa_ps p view uchar * to ulong
+n = sub len p 1
+d = xor ulong get p n 1
+for i ulong n
+d = or d ulong get p i
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+note EMSA-PSS-VERIFY (RFC 8017 9.1.2) on em[0..k), emBits = modBits - 1
+fn rsa_pss_chk w edit ulong RSWN em edit uchar RSEM mh view uchar * to ulong
+k = get w RSCK
+eb = sub get w RSCB 1
+el = div add eb 7 8
+hl = len mh
+sl = get w RSCSL
+if lt el add add hl sl 2
+ret 1
+end
+o = sub k el
+if and eq o 1 ne get em 0 0
+ret 1
+end
+if ne get em sub k 1 0xbc
+ret 1
+end
+db = sub sub el hl 1
+tm = shr ulong 255 sub mul el 8 eb
+if ne and ulong get em o xor tm 255 0
+ret 1
+end
+rsa_mgf1 w em o db
+put em o uchar and ulong get em o tm
+if ne rsa_ps part em o sub db sl 0
+ret 1
+end
+ret rsa_pss_hash w em mh
+end
+
+fn rsa_verify_pss ctl ulong key view uchar * hs view uchar * hlen ulong to ulong
+hsh = and ctl 0xffff
+mg = and shr ctl 16 0xffff
+sl = shr ctl 32
+hl = rsa_hlen hsh
+if or or eq hl 0 eq rsa_hlen mg 0 ne hl hlen
+ret 5
+end
+if lt len hs hl
+ret 4
+end
+w = new ulong RSWN 0
+em = new uchar RSEM 0
+r = rsa_core w key part hs hl sub len hs hl em
+if ne r 0
+ret r
+end
+put w RSCH hsh
+put w RSCM mg
+put w RSCSL sl
+ret rsa_pss_chk w em part hs 0 hl
+end

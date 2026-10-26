@@ -1,0 +1,7 @@
+note S4 C1: part is an ordinary name in OM-1 (a function here); exit 7.
+fn part a ulong to ulong
+ret add a 4
+end
+fn main to int
+ret int part 3
+end

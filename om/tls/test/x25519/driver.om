@@ -1,0 +1,315 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/x25519.om (program mode). run.sh writes the line om2, then
+note x25519.om, then this file. Reads a vector file on stdin, one case per line:
+note   X R KHEX UHEX OHEX   x25519_scalarmult(k, u) must return R (0 or 1) and write OHEX
+note   B KHEX OHEX          x25519_base(k) must return 0 and write OHEX
+note   I N OHEX             RFC 7748 section 5.2 iteration from k = u = 9, N >= 1 steps
+note   L                    length checks: five calls with a 31- or 33-byte o, k or u must return 2
+note   T N KHEX UHEX        timing: N calls of x25519_scalarmult, prints TIME line L n N ns T
+note Lines starting with # and empty lines are skipped. Prints one MISMATCH line per wrong result
+note and the summary line: cases C calls V mismatches X ns T (T = ns spent in checked calls).
+note Exit 0 only when at least one checked call ran and none mismatched; 1 otherwise; 65 bad input.
+
+text XCTMIS "MISMATCH line "
+text XCTGOT " got rc "
+text XCTWANT " want rc "
+text XCTCASE "cases "
+text XCTCALL " calls "
+text XCTMM " mismatches "
+text XCTNS " ns "
+text XCTTIME "TIME line "
+text XCTN " n "
+text XCTNL "\n"
+text XCTBAD "driver: bad input\n"
+
+global XCIN uchar 16777216
+global XCLEN ulong 1
+global XCOUT uchar 32
+global XCCNT ulong 8
+
+fn x25519t_num v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put XCOUT sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 XCOUT sub 32 k k
+end
+
+fn x25519t_bad to void
+r = write 2 XCTBAD 0 len XCTBAD
+exit 65
+end
+
+fn x25519t_nib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+x25519t_bad
+ret 0
+end
+
+note 32 bytes from 64 hex digits at XCIN[o..], followed by a space or the newline
+fn x25519t_hex a edit uchar 32 o ulong to void
+for i ulong 32
+hi = x25519t_nib ulong get XCIN add o mul i 2
+lo = x25519t_nib ulong get XCIN add add o mul i 2 1
+put a i uchar or shl hi 4 lo
+end
+c = get XCIN add o 64
+if and ne c 32 ne c 10
+x25519t_bad
+end
+end
+
+note decimal number at XCIN[o..] up to a space or newline
+fn x25519t_dec o ulong to ulong
+v = ulong 0
+p = o
+while and ge get XCIN p 48 le get XCIN p 57 bound 20
+v = add mul v 10 sub ulong get XCIN p 48
+p = add p 1
+end
+if or eq p o and ne get XCIN p 32 ne get XCIN p 10
+x25519t_bad
+end
+ret v
+end
+
+note position after the next space at or after o (before e)
+fn x25519t_fld o ulong e ulong to ulong
+p = o
+while ne get XCIN p 32 bound 30
+if ge p e
+x25519t_bad
+end
+p = add p 1
+end
+ret add p 1
+end
+
+fn x25519t_bump i ulong v ulong to void
+put XCCNT i add get XCCNT i v
+end
+
+note counters in XCCNT: 0 line, 1 cases, 2 calls, 3 mismatches, 4 ns
+fn x25519t_mis got ulong want ulong to void
+x25519t_bump 3 1
+r = write 1 XCTMIS 0 len XCTMIS
+x25519t_num get XCCNT 0
+r = write 1 XCTGOT 0 len XCTGOT
+x25519t_num got
+r = write 1 XCTWANT 0 len XCTWANT
+x25519t_num want
+r = write 1 XCTNL 0 1
+end
+
+note one checked result: rc got against want, bytes o against x
+fn x25519t_check got ulong want ulong o view uchar * x view uchar 32 to void
+x25519t_bump 2 1
+d = ulong 0
+for i ulong 32
+d = or d ulong xor get o i get x i
+end
+if or ne got want ne d 0
+x25519t_mis got want
+end
+end
+
+fn x25519t_x p ulong e ulong to void
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+x = new uchar 32 0
+if ne sub e p 198
+x25519t_bad
+end
+want = x25519t_nib ulong get XCIN add p 2
+x25519t_hex k add p 4
+x25519t_hex u add p 69
+x25519t_hex x add p 134
+t0 = monons
+got = x25519_scalarmult o k u
+x25519t_bump 4 ulong sub monons t0
+x25519t_check got want o x
+end
+
+fn x25519t_b p ulong e ulong to void
+k = new uchar 32 0
+o = new uchar 32 0
+x = new uchar 32 0
+if ne sub e p 131
+x25519t_bad
+end
+x25519t_hex k add p 2
+x25519t_hex x add p 67
+t0 = monons
+got = x25519_base o k
+x25519t_bump 4 ulong sub monons t0
+x25519t_check got 0 o x
+end
+
+note one iteration step: o = X25519(k, u), u = k, k = o; returns the rc
+fn x25519t_step k edit uchar 32 u edit uchar 32 o edit uchar 32 to ulong
+r = x25519_scalarmult o k u
+for i ulong 32
+put u i get k i
+put k i get o i
+end
+ret r
+end
+
+fn x25519t_i p ulong e ulong to void
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+x = new uchar 32 0
+put k 0 9
+put u 0 9
+n = x25519t_dec add p 2
+q = x25519t_fld add p 2 e
+if or eq n 0 ne sub e q 64
+x25519t_bad
+end
+x25519t_hex x q
+bad = ulong 0
+t0 = monons
+for a ulong div n 1000
+for b ulong 1000
+bad = or bad x25519t_step k u o
+end
+end
+for b ulong rem n 1000
+bad = or bad x25519t_step k u o
+end
+x25519t_bump 4 ulong sub monons t0
+x25519t_check bad 0 k x
+end
+
+fn x25519t_l to void
+o = new uchar 32 0
+k = new uchar 32 7
+u = new uchar 32 9
+s = new uchar 31 7
+g = new uchar 33 7
+x = new uchar 32 0
+x25519t_check x25519_scalarmult s k u 2 o x
+x25519t_check x25519_scalarmult o s u 2 o x
+x25519t_check x25519_scalarmult o k g 2 o x
+x25519t_check x25519_base g k 2 o x
+x25519t_check x25519_base o s 2 o x
+end
+
+fn x25519t_t p ulong e ulong to void
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+n = x25519t_dec add p 2
+q = x25519t_fld add p 2 e
+if ne sub e q 129
+x25519t_bad
+end
+x25519t_hex k q
+x25519t_hex u add q 65
+t0 = monons
+for i ulong n
+r = x25519_scalarmult o k u
+end
+dt = ulong sub monons t0
+r = write 1 XCTTIME 0 len XCTTIME
+x25519t_num get XCCNT 0
+r = write 1 XCTN 0 len XCTN
+x25519t_num n
+r = write 1 XCTNS 0 len XCTNS
+x25519t_num dt
+r = write 1 XCTNL 0 1
+end
+
+fn x25519t_slurp to void
+t = ulong 0
+while true bound 999999
+room = sub len XCIN t
+if eq room 0
+x25519t_bad
+end
+r = read 0 XCIN t room
+if lt r 0
+x25519t_bad
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put XCLEN 0 t
+end
+
+note the case on XCIN[p..e), e at its newline
+fn x25519t_line p ulong e ulong to void
+c = get XCIN p
+if or eq e p eq c 35
+ret
+end
+x25519t_bump 1 1
+if eq c 88
+x25519t_x p e
+ret
+end
+if eq c 66
+x25519t_b p e
+ret
+end
+if eq c 73
+x25519t_i p e
+ret
+end
+if and eq c 76 eq sub e p 1
+x25519t_l
+ret
+end
+if eq c 84
+x25519t_bump 1 0
+x25519t_t p e
+ret
+end
+x25519t_bad
+end
+
+fn main to int
+x25519t_slurp
+tot = get XCLEN 0
+if or eq tot 0 ne get XCIN sub tot 1 10
+x25519t_bad
+end
+p = ulong 0
+while lt p tot bound 999999
+x25519t_bump 0 1
+e = p
+while ne get XCIN e 10 bound 999999
+e = add e 1
+end
+x25519t_line p e
+p = add e 1
+end
+r = write 1 XCTCASE 0 len XCTCASE
+x25519t_num get XCCNT 1
+r = write 1 XCTCALL 0 len XCTCALL
+x25519t_num get XCCNT 2
+r = write 1 XCTMM 0 len XCTMM
+x25519t_num get XCCNT 3
+r = write 1 XCTNS 0 len XCTNS
+x25519t_num get XCCNT 4
+r = write 1 XCTNL 0 1
+if or gt get XCCNT 3 0 eq get XCCNT 2 0
+ret 1
+end
+ret 0
+end

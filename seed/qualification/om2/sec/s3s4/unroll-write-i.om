@@ -1,0 +1,11 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 line 89: a write to i in an unrolled body is error 7 (line 7, the i = 2).
+om2
+fn main to int
+s = ulong 0
+for i ulong 4 unroll
+i = 2
+s = add s i
+end
+ret int s
+end

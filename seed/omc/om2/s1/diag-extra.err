@@ -1,0 +1,2 @@
+omc: line 3: error 5
+omc-diag 1 code=5 sev=error line=3 col=7 span=30-31 expect=newline found=31 obligation=- profile=OM-2

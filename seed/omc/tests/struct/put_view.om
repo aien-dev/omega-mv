@@ -1,0 +1,9 @@
+struct P x uint end
+fn bad v view P to void
+put v x 1
+end
+fn main to uint
+p = new P 1
+bad p
+ret 1
+end

@@ -1,0 +1,26 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 93-98 and 109-111: inlining at most 4 levels deep. main calls the
+note inline chain f1 -> f2 -> f3 -> f4 (4 nested inlined bodies), which is within the bound and runs.
+note f1 a = f2(3a)+1, f2 a = f3(5a)+2, f3 a = f4(7a)+3, f4 a = 11a+4; id is an ordinary call.
+note Expected stdout: oracle/s3s4/exp/inline-depth4.out (python3, oracle/s3s4/oracle.py).
+om2
+fn f1 a ulong to ulong inline
+ret add f2 mul a 3 1
+end
+fn f2 a ulong to ulong inline
+ret add f3 mul a 5 2
+end
+fn f3 a ulong to ulong inline
+ret add f4 mul a 7 3
+end
+fn f4 a ulong to ulong inline
+ret add mul a 11 4
+end
+fn id v ulong to ulong
+ret v
+end
+fn main to int
+pu f1 2
+pu f1 id 1000
+ret 0
+end

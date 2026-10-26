@@ -1,4 +1,19 @@
 #!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # AT-1 Agent 5: clean-checkout integration runner (AT1_CHARTER.md sections 3, 6; gates G1 to G6).
 #
 #   sh run.sh [--out DIR | --evidence] [--keep-work]
@@ -135,7 +150,7 @@ git -c core.hooksPath=/dev/null clone -q --no-hardlinks "$ROOT" "$S" >> "$LOG" 2
 [ -d "$INT" ] || { say "FATAL HEAD has no research/atemporal/at1/integration (commit the runner first)"; exit 1; }
 # source_tree_clean describes what is built: the fresh clone of HEAD (the starting checkout is in summary.txt)
 CLEAN=YES; [ -n "$(git -C "$S" status --porcelain)" ] && CLEAN=NO
-COMPS="research/atemporal/at1/model research/atemporal/at1/oracle research/atemporal/at1/evaluator src/sha256.c src/sha256.h"
+COMPS="research/atemporal/at1/model research/atemporal/at1/oracle research/atemporal/at1/evaluator src/omega_om_units.c src/omega_api_decl.h src/omega_native.h src/sha256.h"
 if [ -n "${AT1_QUALIFY_COMMIT:-}" ]; then
     QC=$(git -C "$S" rev-parse "$AT1_QUALIFY_COMMIT^{commit}" 2>/dev/null)
     if [ -n "$QC" ] && git -C "$S" diff --quiet "$QC" "$HEAD" -- $COMPS; then
@@ -192,7 +207,7 @@ ctrl C1-EVALUATOR-TESTS "$( [ $erc -eq 0 ] && echo PASS || echo FAIL )" "(cd eva
 cp "$AT1/evaluator/build/ISOLATION_RECEIPT.txt" "$R/evaluator-isolation-controls.txt" 2>/dev/null
 
 # ---------- 3. receipts: sources and binaries ----------
-( cd "$S" && git ls-files research/atemporal/at1 src/sha256.c src/sha256.h mk/at1.mk | LC_ALL=C sort | while read -r f; do printf '%s  %s\n' "$(sha "$f")" "$f"; done ) > "$R/sources.sha256"
+( cd "$S" && git ls-files research/atemporal/at1 src/omega_om_units.c src/omega_api_decl.h src/omega_native.h src/sha256.h mk/at1.mk | LC_ALL=C sort | while read -r f; do printf '%s  %s\n' "$(sha "$f")" "$f"; done ) > "$R/sources.sha256"
 { for b in "$MODEL" "$ORACLE" "$EVAL" "$AT1/model/build/test_model" "$AT1/oracle/target/at1-oracle-test"; do
     [ -f "$b" ] && printf '%s  %s\n' "$(sha "$b")" "${b#"$WORK"/}"; done; } > "$R/binaries.sha256"
 ENGINE_SHA=$(sha "$MODEL"); ORACLE_SHA=$(sha "$ORACLE")
@@ -309,7 +324,7 @@ mutant_model() { # name sed-script file -> $WORK/mut/<name>/at1-model
     cp "$AT1"/model/*.c "$AT1"/model/*.h "$md/"
     sed "$ms" "$AT1/model/$mf" > "$md/$mf"
     if cmp -s "$AT1/model/$mf" "$md/$mf"; then echo "mutation $mn did not change $mf" >> "$LOG"; return 1; fi
-    ( cd "$md" && $CCBIN $MCFLAGS -I"$S/src" -o at1-model $MLIB "$S/src/sha256.c" at1_main.c -lm ) > "$md/build.log" 2>&1
+    ( cd "$md" && $CCBIN $MCFLAGS -I"$S/src" -o at1-model $MLIB "$S/src/omega_om_units.c" at1_main.c -lm ) > "$md/build.log" 2>&1
 }
 MR="$AT1/evaluator/results/MUTANT_RECEIPT.tsv"
 for mn in drop_v wrong_level flip_v phase_sign y_sign axis_swap ideal_marginal; do
@@ -350,7 +365,7 @@ done
 # ---------- 10. isolation (G2): Agent 4's gate on the candidates' compute objects, plus mutants ----------
 ISO="$WORK/iso"; mkdir -p "$ISO/clean" "$ISO/mut"
 ISOOK=1
-for f in "$AT1"/model/at1_*.c "$S/src/sha256.c"; do
+for f in "$AT1"/model/at1_*.c "$S/src/omega_om_units.c"; do
     b=$(basename "$f" .c)
     $CCBIN $MCFLAGS -I"$AT1/model" -I"$S/src" -c "$f" -o "$ISO/clean/$b.o" >> "$LOG" 2>&1 || ISOOK=0
 done
@@ -374,7 +389,7 @@ allowed() {
     [ $alrc -eq 0 ] || grep -q '^FAIL: .* references ' "$WORK/al.out" || return 1
     [ -z "$bad" ]
 }
-STRICT="$ISO/clean/at1_bn.o $ISO/clean/at1_case.o $ISO/clean/at1_exact.o $ISO/clean/at1_numeric.o $ISO/clean/at1_result.o $ISO/clean/sha256.o"
+STRICT="$ISO/clean/at1_bn.o $ISO/clean/at1_case.o $ISO/clean/at1_exact.o $ISO/clean/at1_numeric.o $ISO/clean/at1_result.o $ISO/clean/omega_om_units.o"
 sh "$GATE" "$EVAL" $STRICT > "$R/isolation-engine-strict.log" 2>&1; i1=$?
 i2=0 # at1_bn is strict since omega D2 follow-up: its fatal exit moved to at1_io.c (at1_fatal)
 allowed "$ISO/clean/at1_io.o" "fopen fread" > "$R/isolation-engine-io.log" 2>&1; i3=$?

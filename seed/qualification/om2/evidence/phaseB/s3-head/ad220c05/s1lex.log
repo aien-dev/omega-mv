@@ -1,0 +1,44 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s1/s1-lexmutants.cases scratch=build/om2-qual/qad-s1lex
+IDENTITY omc /tmp/zl/omc-ad220c05 sha256=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 pinned=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 match
+SUBST seed/qualification/om2/candidates/s1/mutants/hex-upper.from seed/qualification/om2/candidates/s1/mutants/hex-upper.to
+  MUTATE exact-once substitution at byte 28070
+COMPILER build/om2-qual/qad-s1lex/7.elf sha256=3dea94e797996f3ac21727309b4f0507d7859ec358c17d82987f754f97628641 source line=7
+VERDICT ctl-hex-upper-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT hex-upper-s1-d-hexupper FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s1-d-hexupper-plain FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-upper FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-mixed FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-upper-ulong FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+COMPILER /tmp/zl/omc-ad220c05
+SUBST seed/qualification/om2/candidates/s1/mutants/hex-17.from seed/qualification/om2/candidates/s1/mutants/hex-17.to
+  MUTATE exact-once substitution at byte 27938
+COMPILER build/om2-qual/qad-s1lex/17.elf sha256=50520d456545500db2840acd2bf6c3fa7ffe7b95c5f1f6343385c5418703bf0f source line=17
+VERDICT ctl-hex-17-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT hex-17-s1-d-longtok PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT hex-17-s2-r6-17small FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-17-s2-r6-17big FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+COMPILER /tmp/zl/omc-ad220c05
+SUBST seed/qualification/om2/candidates/s1/mutants/diag-col0.from seed/qualification/om2/candidates/s1/mutants/diag-col0.to
+  MUTATE exact-once substitution at byte 8697
+COMPILER build/om2-qual/qad-s1lex/25.elf sha256=d23552eeebefd7feeac8b48602c46f9b462f49f12b9caab76976ad47d84da8d8 source line=25
+VERDICT ctl-diag-col0-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT diag-col0-s1-d-left FAIL compile exit=5 expected=5 stdout=match stderr differs at byte 61
+VERDICT diag-col0-s1-d-eof-left FAIL compile exit=5 expected=5 stdout=match stderr differs at byte 61
+VERDICT diag-col0-s1-d-hexrange FAIL compile exit=8 expected=8 stdout=match stderr differs at byte 60
+VERDICT diag-col0-s1-d-unknown-fn FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 62
+COMPILER /tmp/zl/omc-ad220c05
+SUBST seed/qualification/om2/candidates/s1/mutants/fmt-note.from seed/qualification/om2/candidates/s1/mutants/fmt-note.to
+  MUTATE exact-once substitution at byte 26524
+COMPILER build/om2-qual/qad-s1lex/34.elf sha256=deb42353cd7095b075fc04151fb46d65011edd222142cf3dd4a41587abdda969 source line=34
+VERDICT ctl-fmt-note-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fmt-note-s2-fmt-x1 FAIL compile exit=0 expected=0 stdout differs at byte 46 stderr=match
+VERDICT fmt-note-s2-fmt-x3 FAIL compile exit=0 expected=0 stdout differs at byte 135 stderr=match
+COMPILER /tmp/zl/omc-ad220c05
+SUBST seed/qualification/om2/candidates/s1/mutants/fmt-text.from seed/qualification/om2/candidates/s1/mutants/fmt-text.to
+  MUTATE exact-once substitution at byte 26879
+COMPILER build/om2-qual/qad-s1lex/41.elf sha256=f444645609ad27d64458f4c73a72882e7a990c2d5f0de6e359305bac8a447003 source line=41
+VERDICT ctl-fmt-text-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fmt-text-s2-fmt-x1 FAIL compile exit=0 expected=0 stdout differs at byte 239 stderr=match
+VERDICT fmt-text-s2-fmt-x5 FAIL compile exit=0 expected=0 stdout differs at byte 143 stderr=match
+COMPILER /tmp/zl/omc-ad220c05
+OM2GATE FAIL cases=21 pass=6 fail=15 invalid=0 not_run=0

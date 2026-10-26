@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 182-185, 204 and 5 line 156: an exported entry with an unsized view and a
+note layout parameter: accepted (function mode).
+om2
+layout shactx 104
+field state uint 8 at 0 little
+field count ulong at 32 little
+field buf uchar 64 at 40 little
+end
+export fn first c view shactx d view uchar * to ulong
+ret add get c count len d
+end

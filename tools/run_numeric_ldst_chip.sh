@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # run_numeric_ldst_chip.sh -- E1 row 2 chip run: every spec of the load/store table
 # (tests/test_omega_ldst_gb10.c) executed on the GB10 and compared byte for byte with the host model.
 # Meant to run only from the heavy forge lane (which serializes chip work); it also takes
@@ -37,7 +52,7 @@ BIN=$RUN/test_omega_ldst_gb10
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
     -o "$BIN" tests/test_omega_ldst_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
     src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c \
+    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c \
     "$PHYSICS/nvrm/nvrm.c" "$PHYSICS/m16/m16_native.c") > "$RUN/chip-build.log" 2>&1 || { cat "$RUN/chip-build.log"; refuse "chip build failed"; }
 echo "== chip run (not killed, not timed out)"
 # LDST_CHIP_ARGS (optional) e.g. "--spec 129 --repeats 500" reruns one spec; default is the whole table.

@@ -25,51 +25,51 @@
     "generated": {
       "children": [
         {
-          "digest": "9cd3943087595dd868914a23a9fef7bebda3d78b773762c287ac4b7a6c2e2f40",
+          "digest": "9f82d33852a7cdcedb210ee1525f42c4d963c18940cae1df7f69d1210de71985",
           "last_commit": "05ed1a10c",
           "name": "argus",
           "purpose": "Directory tools/argus. Purpose not yet described by a human."
         },
         {
-          "digest": "870928d3974d2e90f8bd2999a69a0e81e8d6026feecc2bd133988da61d8b4bba",
+          "digest": "4b3a030252eaa6f1c693105a76092e8a5fccfd340658a982f5bb1130ce9aba33",
           "last_commit": "7683eaaa6",
           "name": "brownian",
           "purpose": "Directory tools/brownian. Purpose not yet described by a human."
         },
         {
-          "digest": "64fe22fe57fab7e61e65cb7652e73dbde613c260cb8677b05d8b98a067231e83",
+          "digest": "1d21e7e466d0fd96abf30d11b2d7e45718bc42ada1784bc8bc2a749f541b3ab7",
           "last_commit": "00f54b6b1",
           "name": "dual_experiment",
           "purpose": "Runner for the DUAL applicability experiment: runs the pre-registered campaign and writes result"
         },
         {
-          "digest": "11eb4960ad04fe5bd01ee9d2bbb6900712176c0991ecc0b02b3204ac60248eeb",
+          "digest": "2a1bd46e9c9502d02144e3f76c784863001323c564a22bdae2905c0660a5f7a4",
           "last_commit": "38a6a569b",
           "name": "estimation",
           "purpose": "Directory tools/estimation. Purpose not yet described by a human."
         },
         {
-          "digest": "b91acbb0b29060651bc17dc79406adeb9376748f4d4a3005175cd307aa52b9c8",
+          "digest": "b3241d8cdc884bbfcca5cf9d5f4ed0aac8f7e2df43d9ab47ca2789432dd49a75",
           "last_commit": "dd67f6bd7",
           "name": "reservoir",
           "purpose": "Gate 2 tooling for the reservoir (omega#440): in-house zlib inflate and MAT v5 reader, the archi"
         },
         {
-          "digest": "98d1f4d802b90006977d73b14acb92971927f2cf5bdf05d8dc5653a1b10fcf1b",
+          "digest": "f1a1a7f24d51a52f01171d01edbd59e8b15c53b15eeffb97e3c0ffc553e639af",
           "last_commit": "ae1dd00a2",
           "name": "turing_verify_indep",
           "purpose": "Directory tools/turing_verify_indep. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:e1f826c2beb8604bb0dcba49575f7c6b48cf5488c40b616b212fda2ed70c62ee",
-      "compiled_at": "2026-10-25T16:45:03Z",
+      "children_root": "sha256:8d3d3b952374b3b72e667521f07bf028c4c02bcefff772ad1a71cfff3e5266f2",
+      "compiled_at": "2026-10-26T19:41:49Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:3e1de05498373406de23ce14e907e80558db61ed13f9249c52f1cf7d617f244d",
+      "digest": "sha256:7f66e10dfdec7da1e5409f2637a5393b7a3245b75ab8cb518cd6150c7faaad98",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 313,
-      "generated_at_commit": "e736232031aa84db8aebd9629111e4da492d840a",
-      "source_tree": "sha256:175a0019a6ea65c039971de069f5953d38ab25440794d209602f7e3ad3a9778a"
+      "files": 324,
+      "generated_at_commit": "2d4c640702c82b8deb8a296407aadf660dac7fc7",
+      "source_tree": "sha256:c0644e5422767592b13feb5d6b0e635800e5516a622e77e6cb849d130cc2da55"
     },
     "owner_lane": "",
     "provenance": {

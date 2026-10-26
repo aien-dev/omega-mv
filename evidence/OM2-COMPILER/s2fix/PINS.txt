@@ -1,0 +1,4 @@
+fix S2 D-S2-1 (L834), evidence class HOST. omc 20d00b6e5309b90e5de48c3d40c1439610844348aaa49f86436b04182ca4bf87 (birth stage1 == stage2 == stage3). Runner gate-c 6c8691c2...acefa.
+C2 5876/5876; s1 48/48; s2 21/21 (bad-recur-g refused 9); s2 mutants 7 controls PASS, 7 detected (m-cyc new);
+birth, seed/host/check.sh, tests/gates/run.sh seed (0 SKIP), om-units (OMC_PIN moved), qualify-ir-trap (67/0, 5/5, gate5 177/0): RC=0.
+NOT_RUN: gate5 section 7 timing.

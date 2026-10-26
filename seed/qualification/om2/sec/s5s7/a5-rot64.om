@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract line 140 with 3 lines 79-81: rotr of a dup32 is a 64-bit rotation, so
+note n = 64 is outside 0..63 and traps 7 at run time even when constant: exit 107, no stdout.
+note Confirmed by erratum E8; n has the representation type ulong (erratum E9).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 5
+puth open rotr d 64
+ret 0
+end

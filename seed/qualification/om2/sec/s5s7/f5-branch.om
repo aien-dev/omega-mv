@@ -1,0 +1,16 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, lines 122-124: a write in one branch only is intersected with the fall-through
+note path at the join, so the constant get of element 0 is error 27 (obligation=init).
+note Union-join mutant: accepts and prints 7 (main passes 1, the write runs).
+om2
+fn f s edit uchar 8 fresh c ulong to ulong
+if eq c 1
+put s 0 7
+end
+ret ulong get s 0
+end
+fn main to int
+a = new uchar 8 0
+putd f a 1
+ret 0
+end

@@ -1,0 +1,8 @@
+om2 debug
+fn f x int to int
+requires gt x 0
+ret x
+end
+fn main to int
+ret f 0
+end

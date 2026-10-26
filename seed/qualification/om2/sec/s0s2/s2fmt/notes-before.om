@@ -1,0 +1,6 @@
+note SPDX-License-Identifier: Apache-2.0
+note errata E6 (f): om2 fmt after note lines is not formatter mode; it is error 16 at its line.
+om2 fmt
+fn main to int
+ret 0
+end

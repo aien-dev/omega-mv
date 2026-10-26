@@ -1,0 +1,36 @@
+# HISTORICAL PRE-E12 decoder cross-check, not the current SHA verdict. Current E12 receipts:
+# leak-fixture-xcheck.txt and leak-sha256-om1-pub.txt. No provenance/known-bits coverage claimed here.
+# leakscan + xcheck.py over every unit under /tmp/zl/main (main acb3f15) seed/ om/ tests/ (*.om, *.omegese, *.osc)
+# that the pinned omc 734f0a39 compiles to a non-empty non-ELF (function-mode) artifact. Columns:
+# leakscan-exit (0 PASS 1 FAIL 2 MANUAL)  VERDICT  xcheck  UNKNOWN-lines UNHANDLED-lines  source (repo-relative)
+1 FAIL XCHECK AGREE 0 0 om/blake3/b3unit.om
+1 FAIL XCHECK AGREE 0 0 om/sha256/sha256.om
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm1.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm2.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm3.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm4.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm5.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm6.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/fm9.omegese
+0 PASS XCHECK AGREE 0 0 seed/rung4/tests/r5b_fwd_fm.om
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev01.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev02.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev03.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev04.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev05.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev06.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev07.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev08.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev09.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/dev/dev10.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/nested/dev02.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/nested/dev03.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/nested/dev05.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/nested/dev07.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/nested/dev08.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/nested/dev09.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/trial2/dev02.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/trial2/dev03.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/trial2/dev05.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/trial2/dev08.omegese
+0 PASS XCHECK AGREE 0 0 tests/one_layer/omegese/trial2/dev09.omegese

@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # divsqrt_check_sweep.sh -- proves each pre-submission check in
 # src/omega_numeric_divsqrt_gb10.c is load-bearing. Every check is one line
 # ending in a /* CHECK:<name> */ marker. For each marker this script deletes
@@ -15,7 +30,7 @@ SRC=$HERE/src/omega_numeric_divsqrt_gb10.c
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 OTHER="tests/test_omega_divsqrt_gb10.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c
-       src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c"
+       src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
 names=$(grep -o '/\* CHECK:[a-z0-9_]* \*/' "$SRC" | sed 's|/\* CHECK:\([a-z0-9_]*\) \*/|\1|')
 total=0 killed=0 survived=0 broken=0
 for name in $names; do

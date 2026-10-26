@@ -5,7 +5,7 @@ CFLAGS = -std=c11 -O2 -ffp-contract=off -Wall -Wextra -Werror -pedantic
 SANFLAGS = -std=c11 -O1 -g -ffp-contract=off -Wall -Wextra -Werror -pedantic -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all
 LDLIBS = -lm
 SHA = ../../../../src
-LIB = at1_bn.c at1_case.c at1_exact.c at1_numeric.c at1_result.c at1_io.c $(SHA)/sha256.c
+LIB = at1_bn.c at1_case.c at1_exact.c at1_numeric.c at1_result.c at1_io.c $(SHA)/omega_om_units.c
 HDR = at1_model.h $(SHA)/sha256.h
 
 all: build/at1-model build/test_model

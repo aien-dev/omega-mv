@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout lines 155, 160: COUNT 4097 is outside 1..4096: error 29.
+om2
+layout c4k 4096
+field a uchar 4097 at 0 little
+end
+fn main to int
+ret 0
+end

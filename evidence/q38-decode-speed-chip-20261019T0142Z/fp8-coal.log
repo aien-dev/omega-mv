@@ -1,0 +1,4 @@
+coal default 0: gate_up 8 x 1536 x 2048 warps 32 rows 1 depth 0 -> spec.coal 0, STG 1, BAR.SYNC 0
+coal default 0: down 8 x 2048 x 768 warps 32 rows 1 depth 0 -> spec.coal 0, STG 1, BAR.SYNC 0
+coal default 0: o_proj 2048 x 4096 warps 8 rows 1 depth 0 -> spec.coal 0, STG 1, BAR.SYNC 0
+gpu_fp8_api_test: 10 checks, 0 failed: PASS

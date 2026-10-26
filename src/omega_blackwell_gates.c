@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "omega_blackwell_gates.h"
 #include "omega_blackwell_matmul.h"
 #include "omega_blackwell_codegen.h"
@@ -994,8 +1010,8 @@ static bool test_m18_gate16_clean_clone(void) {
                        "rm -rf /tmp/omega_clean_m18 && "
                        "cp -r \"$root\" /tmp/omega_clean_m18 && "
                        "cd /tmp/omega_clean_m18 && "
-                       "make clean >/dev/null 2>&1 && "
-                       "make -j PHYSICS_DIR='%s' >/dev/null 2>&1 && "
+                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
+                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
                        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
                        physics_dir_resolved);
     if (len < 0 || (size_t)len >= sizeof(command)) return false;
@@ -1136,10 +1152,13 @@ static bool test_m18_gate18_receipt(void) {
         snprintf(target_hardware, sizeof(target_hardware), "UNOBSERVED (world init failed)");
     }
 
-    /* 4. Binary SHA-256 */
+    /* 4. Binary SHA-256 of the omegatool under test, wherever make put it
+     * (build/step-<step>/omegatool under tests/gates/run.sh, omega#511). */
+    char self_path[PATH_MAX];
+    if (!omega_evidence_self_binary(self_path, sizeof(self_path))) return false;
     uint8_t bin_digest[32];
     char bin_hex[65] = {0};
-    compute_file_sha256("build/omegatool", bin_digest, bin_hex);
+    if (!compute_file_sha256(self_path, bin_digest, bin_hex)) return false;
 
     /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area. */
     const char *manifest_files[] = {
@@ -1156,7 +1175,7 @@ static bool test_m18_gate18_receipt(void) {
         "src/omega_blackwell_gates.h",
         "src/omega_blackwell_gates.c",
         "tools/omegatool.c",
-        "build/omegatool"
+        self_path
     };
     size_t num_files = sizeof(manifest_files) / sizeof(manifest_files[0]);
 

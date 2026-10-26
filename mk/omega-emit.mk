@@ -12,7 +12,7 @@ OMEGA_EMIT_MK := 1
 .PHONY: omega-emit test-omega-emit test-exp445
 OME_DIR = $(OUT_DIR)/omega_emit
 OME_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler
-OME_OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/sha256.c
+OME_OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/omega_om_units.c
 
 $(OME_DIR)/omega_emit: tools/omega_emit/omega_emit.c $(OME_OSC_LIB) $(wildcard src/compiler/*.h)
 	@mkdir -p $(OME_DIR)

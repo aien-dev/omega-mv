@@ -1,0 +1,7 @@
+CAUGHT wrong-code: compiled ELF sha256=20d5278164f776a837cbeca59c253ebd30960f16256d7a6bd7a470fbd70653ed; FAIL trap03 Wolfram boundary outputs
+CAUGHT void-tag: compiled ELF sha256=ec0fdb03cc0ae909f8cac438c5fbe6606e5f9f52ccc935c5d0c2840867e9c3cd; FAIL void exact C-oracle IR
+CAUGHT unchecked-code: compiled ELF sha256=6b6ffdc09b10c852e6a620d9cfbcf90b2ff772af16d37c3972e1e6114940d1b8; FAIL too_large refused error 8
+CAUGHT eol-code: compiled ELF sha256=7125bfa6eff0b6185b62b3d4635e8c21d965b634dd610918f145ba3702dd1adf; FAIL missing refused error 4
+CAUGHT name-code: compiled ELF sha256=d1d3e5810abb5814c4d9521ecdc30c4879b577cb50dcbbb60c38a8bc4e218ac8; FAIL named refused error 16
+COMPILED_MUTANTS=5 CAUGHT=5 RC=0
+RC=0

@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * gpu_decode_attn_test: the one-launch decode attention (OWN-30B cut 8, omega_gpu_decode_attn_api.h).
  *   --host-only   host pieces: bf16 rounding, RoPE row, reference sanity (context 1 returns v_new, a one-hot
@@ -138,6 +154,13 @@ static void host_math_vs_libm(void) {
     printf("hostmath vs libm: sincos max abs %.3g, pow/exp/log max rel %.3g\n", maxd, maxr);
     CHECK(omega_hostmath_exp(0.0) == 1.0 && omega_hostmath_log(1.0) == 0.0 && omega_hostmath_pow(THETA, 0.0) == 1.0, "hostmath identities");
     CHECK(omega_hostmath_log(-1.0) != omega_hostmath_log(-1.0) && omega_hostmath_exp(-800.0) == 0.0, "hostmath log(-1) is NaN, exp(-800) is 0");
+    /* omega-mv#471: pow2f replaces ldexpf(1.0f, e) in libomega_gpu.a; bit-identical over the whole f32 range and past both ends */
+    unsigned pow2_bad = 0;
+    for (int e = -170; e <= 150; e++) {
+        float h = omega_hostmath_pow2f(e), l = ldexpf(1.0f, e);
+        if (memcmp(&h, &l, sizeof h) != 0) { pow2_bad++; printf("  pow2f(%d) = %a, ldexpf = %a\n", e, (double)h, (double)l); }
+    }
+    CHECK(pow2_bad == 0, "hostmath pow2f vs ldexpf(1, e) for e in [-170, 150]: %u differ", pow2_bad);
 }
 
 /* compares out (f32 [4096]) against the reference; returns the number of elements outside the tolerance and the worst ratio */

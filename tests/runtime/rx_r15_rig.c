@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* rx_r15_rig.c -- see rx_r15_rig.h. The body is built exactly as
  * tests/runtime/rx_r13_living.c builds its POSITIVE case. */
 #include "rx_r15_rig.h"
@@ -35,6 +51,14 @@ static void spin_us(unsigned us) {
 static void pause_us(int us) {
     struct timespec ts = {0, (long)us * 1000L};
     nanosleep(&ts, NULL);
+}
+
+static RxAienConfig g_aien_cfg;
+static int g_aien_cfg_set;
+
+void r15_set_aien_config(const RxAienConfig *cfg) {
+    g_aien_cfg_set = cfg != NULL;
+    if (cfg) g_aien_cfg = *cfg;
 }
 
 const char *r15_config_name(R15Config c) {
@@ -316,7 +340,8 @@ int r15_start_with(R15Rig *r, R15Config config, const uint32_t *fixture_subjects
     if (rx_omega_create_objects(&r->omega, &r->w, &oc) != RX_OK) return -1;
     r->omega.keys = &r->keys_omega;
     RxAienConfig ac;
-    rx_aien_default_config(&ac);
+    if (g_aien_cfg_set) ac = g_aien_cfg;
+    else rx_aien_default_config(&ac);
     RxAienInputs ai = {r->omega.o.demand, r->omega.o.selection};
     if (rx_aien_create_objects(&r->aien, &r->w, &ac, &ai) != RX_OK) return -1;
     r->aien.keys = &r->keys_aien;
@@ -628,6 +653,7 @@ static int orchestration_error(R15Rig *r) {
 /* ---- the episode ---------------------------------------------------------- */
 
 #define EFAIL(...) do { snprintf(out->why, sizeof out->why, __VA_ARGS__); return -1; } while (0)
+#define ULL(x) ((unsigned long long)(x))
 
 static void slot_snapshot(R15Rig *r, R15Outcome *out) {
     for (uint32_t k = 0; k < r->omega.cfg.n_slots && k < RX_OMEGA_SLOTS; k++) {
@@ -674,7 +700,12 @@ int r15_episode(R15Rig *r, uint64_t target_ns, R15Outcome *out) {
     while (field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED && now_ns() < limit)
         if (serve(r) != 0 || orchestration_error(r)) EFAIL("serve before confirmation: %s", r->serve_why);
     if (field(r, r->aien.o.prediction, 6) != RX_AIEN_PRED_CONFIRMED)
-        EFAIL("AIEN never confirmed the incumbent cost");
+        EFAIL("AIEN never confirmed the incumbent cost (belief: baseline mean %llu ns, last "
+              "interval %llu ns, intervals %llu, miss streak %llu; prediction state %llu, hits "
+              "%llu; %llu requests served)", ULL(field(r, r->aien.o.belief, 4)),
+              ULL(field(r, r->aien.o.belief, 6)), ULL(field(r, r->aien.o.belief, 5)),
+              ULL(field(r, r->aien.o.belief, 7)), ULL(field(r, r->aien.o.prediction, 6)),
+              ULL(field(r, r->aien.o.prediction, 3)), ULL(r->request_seq));
     out->incumbent_ns = field(r, r->aien.o.prediction, 5);
     out->target_ns = target_ns ? target_ns : out->incumbent_ns * TARGET_PCT / 100u;
     rx_gen_active(r->gen, &out->gen_before, &out->lineage_before);

@@ -1,0 +1,11 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -3008,7 +3008,7 @@
+ emit 2432697314
+ hsys 29
+ for i ulong 4
+-if ne i 2
++if ge i 0
+ mload 13 31 i
+ mstore 13 10 i
+ end

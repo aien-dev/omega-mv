@@ -1,0 +1,11 @@
+note S4: a run-time index equal to the count into an unsized edit traps 3 (exit 103).
+om2
+fn g e edit uchar * k ulong to void
+put e k 1
+end
+fn main to int
+a = new uchar 4 0
+g a 3
+g a 4
+ret 0
+end

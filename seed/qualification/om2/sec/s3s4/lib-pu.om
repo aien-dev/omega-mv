@@ -1,0 +1,19 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/qualification/om2/sec/s3s4/lib-pu.om: test scaffolding, OM-1 words only. Every program-mode
+note fixture of this directory is compiled as FIXTURE+lib-pu.om (the gate's a+b concatenation), so
+note the fixture's own line numbers are unchanged. pu v writes v in decimal and one LF to stdout.
+fn pu v ulong to void
+b = new uchar 21 10
+x = v
+p = ulong 20
+go = true
+while go
+p = sub p 1
+put b p uchar add 48 rem x 10
+x = div x 10
+if eq x 0
+go = false
+end
+end
+r = write 1 b p sub 21 p
+end

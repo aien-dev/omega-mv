@@ -1,0 +1,6 @@
+note S4: export inside a function body is error 16.
+om2
+fn f a ulong to ulong
+export fn g to void
+ret a
+end

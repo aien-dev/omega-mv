@@ -1,0 +1,57 @@
+# om/sha256: SHA-256 in Omega (OM-2), linked into the product
+
+The SHA-256 API of `src/sha256.h` (`sha256_ctx`, `sha256_init/update/final/hash`) is the OM-2 unit
+`sha256-om2.om`, compiled by the seed-born `omc` and called in-process through the omega-bridge
+native call ABI v2 (`docs/NATIVE-ABI.md`, aien-dev/omega-bridge feat/slice-abi a8959fb1). No C computes or
+adapts it: `src/sha256.c` and the OM-1 unit with its 4096-byte adapter are gone (#747). The 894
+call sites are unchanged (`om2-evidence/AUDIT-L838.txt`).
+
+| file | role |
+|---|---|
+| `om/sha256/sha256-om2.om` | the implementation: `export fn sha256_init/update/final/hash`; `layout shactx 104`, `fresh` schedule scratch, `for ... unroll` rounds and schedule, `rotr`, hex K/IV from the L836 fixtures, unsized `view uchar *` input, `out uchar 32` digest |
+| `src/omega_om_units.c` | generated: the unit's machine code byte for byte as omc wrote it, its ABI v2 binding (`omega2_sha256_*`, `omega2_ident_sha256_om2`), the BLAKE3 unit's v1 binding, and the C API `sha256_init/update/final/hash`, each calling `omega2_sha256_*` and `abort()` on a nonzero status |
+| `src/omega_native.h`, `src/omega_api_decl.h` | generated: declarations only; `sha256_ctx` from the layout (offsets static-asserted), `SHA256_*` defines, the `sha256_*` prototypes. Including them references no C library function, so a freestanding caller (rx_cortex) still needs only `sha256_*` |
+| `src/omega_om_units.ident` | generated: each unit's source sha256, compiler pin, ABI and profile |
+| `src/sha256.h` | includes `omega_api_decl.h`; no logic |
+| `om/units.sh` | regenerates the four generated files; `--check` proves they are what the pinned tools produce (a stale unit, compiler or profile fails) |
+| `om/sha256/parity/` | parity against the replaced C retrieved from git history (`run.sh`), section 7 receipts (`receipts.c`), throughput probes (`bench.c`, `small.c`) |
+| `om/sha256/om2-evidence/` | caller audit, compile log per compiler slice, baseline at acb3f15c, cutover plan, desk check, S4 run |
+
+Pins: omc `befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d`
+(IR boolean typing correction #786, rebuilt by `seed/omega-from-seed.sh`);
+generator `src/native.om` of omega-bridge `431fff0a95f84c0a8bf9d3383f94d7e1f02d913e`
+(`om/omega-bridge.lock`; sha256 `c77a5922f91d53d4a0bbd4e7b1c4703f7098263abc843be2918db1ece7496782`).
+
+## Behaviour (spec/omegese-om2.md section 7, errata E3)
+
+- Updates of any length, including 0 (any pointer) and at least 2^32 bytes; any split points.
+- `sha256_hash` may write its digest over its input: the digest is copied out after the call.
+- A byte copy of a live context is an equivalent context.
+- After `sha256_final` the context's contents are unspecified (this unit leaves it unchanged);
+  `sha256_init` makes it fresh again. No whole-context equality with the old C is claimed.
+- A nonzero bridge status (a NULL pointer with a nonzero length, a context overlapping the data,
+  a trap) aborts the process, as the old adapter did.
+- Rolled loops trap after 1,000,000 passes, so whole blocks are hashed in runs of 2^25 bytes.
+
+## Evidence
+
+Qualified by L836 (om2/qualification 478bdecd, candidates/sha/RESULTS.txt): 158 vectors, E3/section 7
+receipts, 17/17 unit mutants killed, dynamic traces 28/28 identical. The static leakage scan of
+update/final is NOT_RUN; no constant-time claim is made. Throughput against the replaced C is in the
+cutover PR, measured with `parity/bench.c` and `parity/small.c`.
+
+## Building the generated binding
+
+`src/omega_om_units.c` embeds each unit's machine code exactly as the pinned compiler wrote it, and its
+runtime entry table is declared with GNU range designators, which ISO C forbids. Every suite that compiles
+it with `-pedantic` and `-Werror` therefore appends `-Wno-pedantic` to its flags: only that one diagnostic
+is waived, and the handwritten sources in the same commands are pedantic-clean today, so the rest of the
+strict set still applies to every file they compile. The waived suites are ANS, estimation and Brownian
+active (`mk/ans.mk`, `mk/estimation.mk`, `mk/brownian_active.mk`); the physics baseline, verifier, planner
+and both learner builds (`mk/physics0.mk`, `mk/physics0-verify.mk`, `mk/physics0-planner.mk`,
+`mk/physics0-learner.mk`, `mk/physics0-learner-v2.mk`); and the TURING family, where `TURING_CFLAGS` in
+the Makefile covers `test_turing`, `turing-field` and the mixed-algebra gate binary, and
+`mk/turing_exp001_a.mk`, `mk/turing_exp001_b.mk`, `mk/turing_exp001_c.mk`, `mk/turing_exp001_eval.mk`,
+`mk/turing_qrecord.mk`, `mk/turing_yield_energy.mk` and `mk/turing_yield_math.mk` carry the same waiver
+for their own builds. The generator fix is omega-bridge #17 on the ABI-v2 line; when it lands, regenerate
+the binding with it and drop those flags.

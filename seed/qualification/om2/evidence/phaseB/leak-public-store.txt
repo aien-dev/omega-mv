@@ -1,0 +1,42 @@
+E13 public-memory store preservation, whole-artifact fallback. SOURCE static scan; native twins in leak-reachability.txt.
+Scanner source sha256 6b14fd9bb6f174de4a87e14b5ae38c9984de48c91a0b18c468bb1197adb2c82c
+Scanner binary sha256 aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633
+Compiler seed/out/omc sha256 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61.
+
+build/om2-qual/leakscan-e13 pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-secret.bin (exit 2)
+00780e1f17e8229ffff3c093b8ef26905b56cfe5a03b9c19f8c6699ac228221e  seed/qualification/om2/leak/fixtures/pub-secret.bin
+LEAKSCAN 1 words=13 entry=@0 data=none
+PUBLIC-DECL 0+32:8
+MEM @1 ldrb reg base=x1 index=x2 public-index
+MEM @3 strb reg base=x0 index=x4 public-index
+PUBLIC-MEM-REVOKED @3 public-mem 0+32:8
+MEM @5 ldrb reg base=x0 index=x2 public-index
+BRANCH @7 b.ne ->@11 data MANUAL
+SUMMARY branches=1 len=0 trap-check=0 data-branch=1 branch-unreached=0 mem=3 const=0 public-index=3 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC NOT_RUN
+
+build/om2-qual/leakscan-e13 pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-unknown.bin (exit 2)
+4d31acd40061380d4dc161c7f09668bd5c055161f562d2687f1babff827f17ea  seed/qualification/om2/leak/fixtures/pub-unknown.bin
+LEAKSCAN 1 words=19 entry=@0 data=none
+PUBLIC-DECL 0+32:8
+MEM @1 ldrb reg base=x1 index=x3 public-index
+BRANCH @3 b.cs ->@17 len trap=3
+MEM @4 strb reg base=x0 index=x2 public-index
+PUBLIC-MEM-REVOKED @4 public-mem 0+32:8
+MEM @6 ldrb reg base=x0 index=x3 public-index
+BRANCH @8 b.ne ->@12 data MANUAL
+MEM @15 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=2 len=1 trap-check=0 data-branch=1 branch-unreached=0 mem=4 const=1 public-index=3 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC NOT_RUN
+
+build/om2-qual/leakscan-e13 pub:0:32:8 < seed/qualification/om2/leak/fixtures/pub-outside-store.bin (exit 0)
+9caab7022a8521feddad502528dd451f31ab3c9b6af6f8c3c098e8fa0c61c6ce  seed/qualification/om2/leak/fixtures/pub-outside-store.bin
+LEAKSCAN 1 words=13 entry=@0 data=none
+PUBLIC-DECL 0+32:8
+MEM @1 ldrb reg base=x1 index=x2 public-index
+MEM @3 strb reg base=x0 index=x4 public-index
+MEM @5 ldrb reg base=x0 index=x2 public-index
+PUBLIC-MEM @5 public-mem 0+32
+BRANCH @7 b.ne ->@11 len
+SUMMARY branches=1 len=1 trap-check=0 data-branch=0 branch-unreached=0 mem=3 const=0 public-index=3 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC PASS

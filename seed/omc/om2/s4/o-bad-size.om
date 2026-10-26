@@ -1,0 +1,10 @@
+note S4: an out has its exact length: a 3-element array for out uchar 4 is error 7.
+om2
+fn f r out uchar 4 to void
+put r 0 1
+end
+fn main to int
+a = new uchar 3 0
+f a
+ret 0
+end

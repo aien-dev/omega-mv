@@ -1,0 +1,29 @@
+   0:	aa0003e1 	orr	x1, xzr, x0
+   4:	d2800002 	movz	x2, #0x0
+   8:	d2800003 	movz	x3, #0x0
+   c:	f100407f 	subs	xzr, x3, #0x10
+  10:	540001c2 	b.cs	0x48  // b.hs, b.nlast
+  14:	d28001e5 	movz	x5, #0xf
+  18:	cb0300a4 	sub	x4, x5, x3
+  1c:	d2800026 	movz	x6, #0x1
+  20:	f101009f 	subs	xzr, x4, #0x40
+  24:	54000242 	b.cs	0x6c  // b.hs, b.nlast
+  28:	9ac420c5 	lslv	x5, x6, x4
+  2c:	aa050046 	orr	x6, x2, x5
+  30:	9b067cc8 	madd	x8, x6, x6, xzr
+  34:	eb01011f 	subs	xzr, x8, x1
+  38:	54000048 	b.hi	0x40  // b.pmore
+  3c:	aa0603e2 	orr	x2, xzr, x6
+  40:	91000463 	add	x3, x3, #0x1
+  44:	17fffff2 	b	0xc
+  48:	d360fc43 	ubfm	x3, x2, #32, #63
+  4c:	b50000c3 	cbnz	x3, 0x64
+  50:	aa0203e0 	orr	x0, xzr, x2
+  54:	d65f03c0 	ret
+  58:	aa0703e0 	orr	x0, xzr, x7
+  5c:	f94008f0 	ldr	x16, [x7, #16]
+  60:	d61f0200 	br	x16
+  64:	d28000a1 	movz	x1, #0x5
+  68:	17fffffc 	b	0x58
+  6c:	d28000e1 	movz	x1, #0x7
+  70:	17fffffa 	b	0x58

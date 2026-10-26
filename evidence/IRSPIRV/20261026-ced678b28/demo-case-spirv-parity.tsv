@@ -1,0 +1,4 @@
+case	unit	function	canonical_args	native_status	native_bits	spirv_status	spirv_bits	verdict
+1	demo	avgu32	4294967295,4294967293	0	4294967294	0	4294967294	match
+2	demo	avgu32	0,1	0	0	0	0	match
+3	demo	avgu32	7,10	0	8	0	8	match

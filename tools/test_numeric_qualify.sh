@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # test_numeric_qualify.sh -- host-only tests of the Gate 5 (OMEGA-NUMERIC-0)
 # qualifier in tests/run_numeric_gates.sh: physics pin checks, gate log
 # checks and the immutable digest-named receipt writer. No GPU, no device.
@@ -278,7 +293,7 @@ export STUB_LOG=$TMP/stub_body.log
 fresh_run() {
     NUM_RUN_ID=unit-$1-$RANDOM NUM_RUN_DIR=$TMP/run-$NUM_RUN_ID
     mkdir -p "$NUM_RUN_DIR"
-    gcc -std=gnu11 -O2 -I"$HERE/src" -o "$NUM_RUN_DIR/test_omega_numeric" "$TMP/stub.c" "$HERE/src/sha256.c" || return 1
+    gcc -std=gnu11 -O2 -I"$HERE/src" -o "$NUM_RUN_DIR/test_omega_numeric" "$TMP/stub.c" "$HERE/src/omega_om_units.c" || return 1
     NUM_BINARY_SHA=$(m19r_sha_file "$NUM_RUN_DIR/test_omega_numeric")
     NUM_RUN_COMMIT=$NUM_OMEGA_CAND
     STUB_RC=$1 num_execute "$omega" "$NUM_RUN_DIR/test_omega_numeric"

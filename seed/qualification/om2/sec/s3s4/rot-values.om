@@ -1,0 +1,119 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 3 lines 76-83 (rotr/rotl). Property: for x of uchar, ushort, uint and ulong,
+note rotr x n and rotl x n give the rotation of the w-bit pattern, n = 0 is the identity. Constant n
+note (line 82: one ROR immediate for uint/ulong) and run-time n through rr*/rl* (range check, RORV)
+note for n = 0, 1, a middle value, w-1; then a run-time sweep of every n in 0..w-1. Each x has w
+note distinct rotations, so n+1, w-n and ROR-for-ROL lowerings change some line.
+note Expected stdout: oracle/s3s4/exp/rot-values.out (python3, oracle/s3s4/oracle.py).
+om2
+fn rr8 x uchar n uchar to uchar
+ret rotr x n
+end
+fn rl8 x uchar n uchar to uchar
+ret rotl x n
+end
+fn rr16 x ushort n ushort to ushort
+ret rotr x n
+end
+fn rl16 x ushort n ushort to ushort
+ret rotl x n
+end
+fn rr32 x uint n uint to uint
+ret rotr x n
+end
+fn rl32 x uint n uint to uint
+ret rotl x n
+end
+fn rr64 x ulong n ulong to ulong
+ret rotr x n
+end
+fn rl64 x ulong n ulong to ulong
+ret rotl x n
+end
+fn main to int
+a = uchar 177
+pu ulong rotr a 0
+pu ulong rotr a 1
+pu ulong rotr a 3
+pu ulong rotr a 7
+pu ulong rotl a 0
+pu ulong rotl a 1
+pu ulong rotl a 3
+pu ulong rotl a 7
+pu ulong rr8 a 0
+pu ulong rr8 a 1
+pu ulong rr8 a 3
+pu ulong rr8 a 7
+pu ulong rl8 a 0
+pu ulong rl8 a 1
+pu ulong rl8 a 3
+pu ulong rl8 a 7
+for n uchar 8
+pu ulong rr8 a n
+pu ulong rl8 a n
+end
+b = ushort 45508
+pu ulong rotr b 0
+pu ulong rotr b 1
+pu ulong rotr b 5
+pu ulong rotr b 15
+pu ulong rotl b 0
+pu ulong rotl b 1
+pu ulong rotl b 5
+pu ulong rotl b 15
+pu ulong rr16 b 0
+pu ulong rr16 b 1
+pu ulong rr16 b 5
+pu ulong rr16 b 15
+pu ulong rl16 b 0
+pu ulong rl16 b 1
+pu ulong rl16 b 5
+pu ulong rl16 b 15
+for n ushort 16
+pu ulong rr16 b n
+pu ulong rl16 b n
+end
+c = uint 4041331395
+pu ulong rotr c 0
+pu ulong rotr c 1
+pu ulong rotr c 13
+pu ulong rotr c 31
+pu ulong rotl c 0
+pu ulong rotl c 1
+pu ulong rotl c 13
+pu ulong rotl c 31
+pu ulong rr32 c 0
+pu ulong rr32 c 1
+pu ulong rr32 c 13
+pu ulong rr32 c 31
+pu ulong rl32 c 0
+pu ulong rl32 c 1
+pu ulong rl32 c 13
+pu ulong rl32 c 31
+for n uint 32
+pu ulong rr32 c n
+pu ulong rl32 c n
+end
+d = ulong 9305357566071262703
+pu rotr d 0
+pu rotr d 1
+pu rotr d 29
+pu rotr d 63
+pu rotl d 0
+pu rotl d 1
+pu rotl d 29
+pu rotl d 63
+pu rr64 d 0
+pu rr64 d 1
+pu rr64 d 29
+pu rr64 d 63
+pu rl64 d 0
+pu rl64 d 1
+pu rl64 d 29
+pu rl64 d 63
+for n ulong 64
+pu rr64 d n
+pu rl64 d n
+end
+ret 0
+end

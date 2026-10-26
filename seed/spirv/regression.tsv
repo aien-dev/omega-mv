@@ -1,0 +1,9 @@
+# Supplemental trap propagation, separate from the unchanged 129-row baseline.
+traps	failval	uint	uint:0	105
+traps	failval	uint	uint:7	0
+traps	nestedfail	uint	uint:0	105
+traps	nestedfail	uint	uint:7	0
+traps	failvoid	void	uint:0	106
+traps	failvoid	void	uint:7	0
+traps	nestedvoid	uint	uint:0	106
+traps	nestedvoid	uint	uint:7	0

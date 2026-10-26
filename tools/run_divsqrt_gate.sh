@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # run_divsqrt_gate.sh -- E1 row 7 chip gate: correctly rounded FP32 DIV and
 # SQRT on the GB10, bit-identical to the CPU semantic (omega_math_div/sqrt and
 # the AArch64 FDIV/FSQRT, NaN results canonical 0x7fc00000).
@@ -6,7 +21,7 @@
 # Order: refuse a dirty omega tree or a physics checkout that is dirty or not
 # at the physics.lock pin; refuse while ~/workspace/.spark-quiet exists, an
 # est_load process runs or /tmp/aien-gb10.lock is held; run the host tier and
-# the offline nvdisasm provenance check; raise the quiet flag; take the GPU
+# the offline provenance check (Omega's own disassembler); raise the quiet flag; take the GPU
 # lock; build the chip binary (no libm math, no CUDA symbols); run it to the
 # end (never killed, never timed out); write a content-addressed receipt
 # <evidence-dir>/<sha256>.json (mode 0444, created exclusively, outside the
@@ -14,7 +29,7 @@
 #
 # Run it detached so a closed terminal cannot cut the chip run:
 #   setsid nohup tools/run_divsqrt_gate.sh > /tmp/divsqrt-gate.out 2>&1 < /dev/null &
-# Shell + coreutils + git + jq + gcc + nvdisasm. No Python.
+# Shell + coreutils + git + jq + gcc. No Python.
 set -u
 HERE=$(cd -P "$(dirname "$0")/.." && pwd)
 PHYSICS=${PHYSICS_DIR:-$HOME/workspace/hive-worktrees/physics-gate14-e95e3ed}
@@ -45,7 +60,7 @@ make -s -C "$HERE" build/test_omega_divsqrt_gb10_cpu > "$RUN/host-build.log" 2>&
 tail -1 "$RUN/host.log"
 echo "== nvdisasm provenance"
 "$HERE/tools/divsqrt_nvdisasm_check.sh" > "$RUN/nvdisasm.log" 2>&1; NVD_RC=$?
-grep -E '^\[|^VERDICT|^nvdisasm' "$RUN/nvdisasm.log"
+grep -E '^\[|^VERDICT|^disassembler' "$RUN/nvdisasm.log"
 [ "$HOST_RC" = 0 ] && [ "$NVD_RC" = 0 ] || refuse "host tier ($HOST_RC) or nvdisasm check ($NVD_RC) failed; no chip run"
 KDIG=$("$HERE/build/test_omega_divsqrt_gb10_cpu" --digest)
 
@@ -66,7 +81,7 @@ BIN=$RUN/test_omega_divsqrt_gb10
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
     -o "$BIN" tests/test_omega_divsqrt_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
     src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c \
+    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c \
     "$PHYSICS/nvrm/nvrm.c" "$PHYSICS/m16/m16_native.c") > "$RUN/chip-build.log" 2>&1 || { cat "$RUN/chip-build.log"; refuse "chip build failed"; }
 if nm -u "$BIN" | grep -Eq '\b(sqrtf?|expf?|logf?|powf?|fmaf?|sinf?|cosf?|fdiv|divf)\b'; then refuse "libm math symbols in $BIN"; fi
 if nm -u "$BIN" | grep -Eiq 'cuda|cuInit|cuLaunch|nvrtc|cublas'; then refuse "CUDA symbols in $BIN"; fi
@@ -96,7 +111,7 @@ BODY=$(jq -n --arg gate "E1-DIVSQRT" --arg omega "$OMEGA_COMMIT" --arg phys "$PH
     --argjson oclean true --argjson pclean true --argjson oafter "$OMEGA_CLEAN_AFTER" --argjson pafter "$PHYS_CLEAN_AFTER" \
     --argjson osame "$OMEGA_SAME_AFTER" --argjson psame "$PHYS_SAME_AFTER" \
     --arg bin "$BIN_SHA" --arg log "$LOG_SHA" --arg kd "$KDIG" --arg start "$START" --arg end "$END" \
-    --arg nvd "$(grep '^nvdisasm' "$RUN/nvdisasm.log")" --arg host "$(tail -1 "$RUN/host.log")" \
+    --arg nvd "$(grep '^disassembler' "$RUN/nvdisasm.log")" --arg host "$(tail -1 "$RUN/host.log")" \
     --argjson dchk "$(num DIV checked)" --argjson dedge "$(num DIV edge_and_corpus)" \
     --argjson dbad "$(num DIV mismatches)" --argjson dmath "$(num DIV mismatches_vs_omega_math)" --argjson dfill "$(num DIV unwritten)" \
     --arg dver "$(field DIV verdict)" --arg seed "$(field DIV seed)" \

@@ -1,0 +1,12 @@
+om2 release
+fn f x int to int
+requires gt x 0
+ensures eq result add x 1
+ret x
+end
+fn main to int
+while false
+invariant false
+end
+ret f 0
+end

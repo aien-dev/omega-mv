@@ -1,0 +1,79 @@
+# S3 (#746) fixtures for the OM-2 compiler: external layouts, fresh scratch, abstract types (spec 5,
+# errata E5, E8, E9, E14). Run by seed/qualification/om2/gate.om (L836) from the repository root:
+#   gate OMC OMC_SHA256 seed/omc/om2/s3/s3.cases SCRATCH
+# 27/28/29 refusals are exact (err:LINE:CODE, lines per E8); other codes are refuse (code only).
+## layout
+s3-l-rw run seed/omc/om2/s3/l-rw.om - file:seed/omc/om2/s3/l-rw.out - 0
+s3-l-trap run seed/omc/om2/s3/l-trap.om - - - 103
+s3-l-om1 run seed/omc/om2/s3/l-om1.om - - - 10
+s3-l-bad-size emit seed/omc/om2/s3/l-bad-size.om - err:3:29 29
+s3-l-bad-late emit seed/omc/om2/s3/l-bad-late.om - err:6:29 29
+s3-l-bad-overlap emit seed/omc/om2/s3/l-bad-overlap.om - err:6:29 29
+s3-l-bad-past emit seed/omc/om2/s3/l-bad-past.om - err:4:29 29
+s3-l-bad-count emit seed/omc/om2/s3/l-bad-count.om - err:4:29 29
+s3-l-bad-off emit seed/omc/om2/s3/l-bad-off.om - err:4:29 29
+s3-l-bad-dup refuse seed/omc/om2/s3/l-bad-dup.om 10
+s3-l-bad-bool refuse seed/omc/om2/s3/l-bad-bool.om 7
+s3-l-bad-noat refuse seed/omc/om2/s3/l-bad-noat.om 16
+s3-l-bad-order refuse seed/omc/om2/s3/l-bad-order.om 16
+s3-l-bad-kwname refuse seed/omc/om2/s3/l-bad-kwname.om 16
+s3-l-bad-clash refuse seed/omc/om2/s3/l-bad-clash.om 10
+s3-l-bad-noend refuse seed/omc/om2/s3/l-bad-noend.om 4
+s3-l-bad-const refuse seed/omc/om2/s3/l-bad-const.om 21
+s3-l-bad-view refuse seed/omc/om2/s3/l-bad-view.om 20
+s3-l-bad-size7 refuse seed/omc/om2/s3/l-bad-size7.om 7
+s3-l-bad-noidx refuse seed/omc/om2/s3/l-bad-noidx.om 4
+s3-l-bad-extra refuse seed/omc/om2/s3/l-bad-extra.om 5
+s3-l-bad-type refuse seed/omc/om2/s3/l-bad-type.om 7
+## E14 expansion fuel (S2 fix), lines per E16
+s3-fuel-d2 run seed/omc/om2/s3/fuel-d2.om - - - 0
+s3-fuel-d3 emit seed/omc/om2/s3/fuel-d3.om - err:8:14 14
+s3-fuel-inl14 run seed/omc/om2/s3/fuel-inl14.om - - - 0
+s3-fuel-inl16 emit seed/omc/om2/s3/fuel-inl16.om - err:10:14 14
+## E16 fuel charge order (fix D-S3-1): a loop is charged K at its line before any copy, an inline call 1
+s3-fuel-e16-inl emit seed/omc/om2/s3/fuel-e16-inl.om - err:13:14 14
+s3-fuel-e16-inlsa emit seed/omc/om2/s3/fuel-e16-inlsa.om - err:11:14 14
+## fresh
+s3-f-ok run seed/omc/om2/s3/f-ok.om - - - 0
+s3-f-om1 run seed/omc/om2/s3/f-om1.om - - - 5
+s3-f-bad-ifonly emit seed/omc/om2/s3/f-bad-ifonly.om - err:7:27 27
+s3-f-bad-join emit seed/omc/om2/s3/f-bad-join.om - err:9:27 27
+s3-f-bad-loop emit seed/omc/om2/s3/f-bad-loop.om - err:7:27 27
+s3-f-bad-loopc emit seed/omc/om2/s3/f-bad-loopc.om - err:7:27 27
+s3-f-bad-partial emit seed/omc/om2/s3/f-bad-partial.om - err:7:27 27
+s3-f-bad-self emit seed/omc/om2/s3/f-bad-self.om - err:4:27 27
+s3-f-bad-call emit seed/omc/om2/s3/f-bad-call.om - err:10:27 27
+s3-f-bad-write emit seed/omc/om2/s3/f-bad-write.om - err:7:27 27
+s3-f-bad-read emit seed/omc/om2/s3/f-bad-read.om - err:4:27 27
+s3-f-bad-inl emit seed/omc/om2/s3/f-bad-inl.om - err:4:27 27
+s3-f-bad-inlfresh emit seed/omc/om2/s3/f-bad-inlfresh.om - err:4:27 27
+s3-f-bad-n65 refuse seed/omc/om2/s3/f-bad-n65.om 14
+s3-f-bad-view refuse seed/omc/om2/s3/f-bad-view.om 16
+s3-f-bad-idx refuse seed/omc/om2/s3/f-bad-idx.om 21
+## abstract
+s3-a-ok run seed/omc/om2/s3/a-ok.om - - - 0
+s3-a-om1 run seed/omc/om2/s3/a-om1.om - - - 5
+s3-a-kept run seed/omc/om2/s3/a-kept.om - - - 110
+s3-a-kept-diag emit seed/omc/om2/s3/a-kept-diag.om any file:seed/omc/om2/s3/a-kept-diag.err 0
+s3-a-exact-diag emit seed/omc/om2/s3/a-exact-diag.om any file:seed/omc/om2/s3/a-exact-diag.err 0
+s3-a-bad-sealinl emit seed/omc/om2/s3/a-bad-sealinl.om - err:9:28 28
+s3-a-bad-holdsuint emit seed/omc/om2/s3/a-bad-holdsuint.om - err:4:28 28
+s3-a-bad-ctorname emit seed/omc/om2/s3/a-bad-ctorname.om - err:9:28 28
+s3-a-bad-ctorret emit seed/omc/om2/s3/a-bad-ctorret.om - err:5:28 28
+s3-a-bad-base refuse seed/omc/om2/s3/a-bad-base.om 7
+s3-a-bad-bitcast refuse seed/omc/om2/s3/a-bad-bitcast.om 7
+s3-a-bad-cmp refuse seed/omc/om2/s3/a-bad-cmp.om 7
+s3-a-bad-const refuse seed/omc/om2/s3/a-bad-const.om 7
+s3-a-bad-conv refuse seed/omc/om2/s3/a-bad-conv.om 7
+s3-a-bad-holds2 refuse seed/omc/om2/s3/a-bad-holds2.om 10
+s3-a-bad-holdsname refuse seed/omc/om2/s3/a-bad-holdsname.om 16
+s3-a-bad-late refuse seed/omc/om2/s3/a-bad-late.om 9
+s3-a-bad-lateabs refuse seed/omc/om2/s3/a-bad-lateabs.om 9
+s3-a-bad-open refuse seed/omc/om2/s3/a-bad-open.om 7
+s3-a-bad-opword refuse seed/omc/om2/s3/a-bad-opword.om 16
+s3-a-bad-rawleft refuse seed/omc/om2/s3/a-bad-rawleft.om 7
+s3-a-bad-rotcnt refuse seed/omc/om2/s3/a-bad-rotcnt.om 7
+s3-a-bad-sizeof refuse seed/omc/om2/s3/a-bad-sizeof.om 7
+s3-a-bad-struct refuse seed/omc/om2/s3/a-bad-struct.om 7
+s3-a-bad-op refuse seed/omc/om2/s3/a-bad-op.om 7
+s3-a-bad-rawnum refuse seed/omc/om2/s3/a-bad-rawnum.om 7

@@ -1,0 +1,94 @@
+L838 audit of sha256_init/update/final/hash callers (contract spec/omegese-om2.md section 7)
+=========================================================================================
+Tree: omega-mv main acb3f15cdc691b1b046b48b0dad0f9255a12ba4b. Evidence class: SOURCE (static text
+analysis plus a hand review of every flagged site). Recorded 2026-10-25.
+
+Method. The recipes in audit/ are oracle tooling (python3 3.12.3) outside the delivered closure.
+They expect to run from a copy in /tmp/zl/sha-audit:
+  python3 audit.py  <repo>   inventory over git-tracked *.c *.h *.cc *.cpp *.inc; strips comments and
+                             string bodies; splits arguments with balanced parentheses -> callsites.tsv
+  python3 audit2.py <repo>   (A) hash with digest and data sharing a base, (B) final whose digest
+                             names the ctx, (C) update whose data names the ctx, (D) per function and
+                             per ctx expression: update/final after final without init, final inside
+                             a loop whose body has no init, final in a function with no init;
+                             (E) copy-initialised ctx, assignments, memcpy/memmove/memcmp/memset on
+                             ctx objects, struct members of type sha256_ctx, .state/.count/.buffer
+                             access; (F) by-value ctx parameters and returns       -> audit2.out
+  python3 audit3.py <repo>   one level of wrappers that forward (data, digest) parameters into
+                             sha256_hash; their calls with a shared base           -> audit3.out
+Scope limit: static. Aliasing through pointers that arrive as distinct parameters is not decidable
+from text; the wrapper pass covers one level. Lengths >= 2^32 cannot be found statically (every
+caller passes size_t).
+
+1. Count (non-declaration call sites)
+   built tree (src tools tests research om): 894 sites in 165 files
+     init 163, update 353, final 167, hash 211
+     src 572 (init 102, update 250, final 105, hash 115)   tools 56 (11, 13, 12, 20)
+     tests 217 (40, 69, 40, 68)                            research 29 (6, 15, 6, 2)
+     src/sha256.c internal 3 (sha256_hash's streamed path), om/sha256/parity harness 17
+   consumers (excluding src/sha256.c and the parity harness): 874; src/ + tools/: 628
+   also: C embedded in tools/test_numeric_qualify.sh:269-276 (init, update, final: 3 sites);
+     Makefile:2017,2057,2059,2061 are mutant replacement strings of existing source lines.
+   not built: evidence/ snapshots, 25 hash sites in 21 files.
+   No call through a function pointer, no NULL or literal-0 pointer argument.
+
+2. Digest overlapping data (all sha256_hash; final's digest never names its ctx; no update reads
+   from its own ctx)
+   OVERLAP  src/omega_program.c:777  sha256_hash(task, sizeof(SynthesisTask) - OMEGA_ID_BYTES,
+            task->task_id.bytes); task_id is the first field (src/omega_program.h:83), so the digest
+            [0,32) lies inside the hashed range [0, sizeof - 32).
+   OVERLAP  tests/runtime/rx_sem_incremental.c:183  sha256_hash(d, 32, d), iterated.
+   Adjacent, not overlapping (half-open ranges): src/physics0/ladder/pd0_fmt.c:54,336;
+     src/runtime/rx_costmodel.c:487; src/runtime/rx_jspace.c:1663; src/tensor/omega_tensor_store.c:307,322;
+     tests/runtime/rx_c4_requal.c:788,789; tests/runtime/rx_costmodel_unit.c:434;
+     tests/runtime/rx_jspace_prod.c:828,885,886; tests/test_omega_tensor_store.c:534,551;
+     via wrapper checksum(): src/runtime/rx_generation.c:297,339,364,562.
+   Distinct fields of one struct (code pointer vs digest array, no overlap):
+     src/omega_blackwell_codegen.c:1286, src/omega_blackwell_gates.c:824,
+     src/omega_gpu_attention_api.c:739, src/omega_gpu_elementwise_api.c:869, tests/vc_fixture.h:55.
+   Contract: covered by section 6 `out` (copy after status 0, memmove). Receipt required: hash(d,32,d)
+   (erratum E3 (2)).
+
+3. Context used after final without init: none.
+   No update or final follows a final on the same ctx without an init between them, and no final sits
+   in a loop whose body lacks the init. Six finals are in functions without a local init: the four in
+   src/reservoir/omega_reservoir.c (217, 613, 631, 653) init through h_domain() (line 191 calls
+   sha256_init first); src/fabric/fab_loopback.c:108 and src/fabric/fabric.c:498 finalize a copy
+   (item 4).
+
+4. Whole-context copies (no compare)
+   COPY  src/fabric/fab_loopback.c:107   sha256_ctx c = l->transcript; sha256_final(&c, out);
+         (FabLoop.transcript, fab_loopback.h:62; init at fab_loopback.c:77, updates at :56-57)
+   COPY  src/fabric/fabric.c:496         ev = n->event_hash; sha256_final(&ev, evd);
+         (FabNode.event_hash, fabric.h:277; init at :192, update at :78)
+   COPY  src/osh/host/osh_journal.c:81,104  sha256_ctx h = *hp; ...updates...; *hp = h;
+   All three copy a LIVE context (between init and final) and continue or finalize the copy; the
+   original keeps being used. They need: a byte copy of a live context is an equivalent context. This
+   was reported to the coordinator and became erratum E3 (1); receipt required: copy after k updates.
+   No memcmp/bcmp of a ctx. No memset of a ctx (every memset hit in audit2.out is another object
+   with a reused short name; reviewed). FabLoop and FabNode, which embed a ctx, are memset to zero
+   before their init and are never copied whole.
+
+5. Dependence on the post-final state: none. No code reads a ctx after final; no access to
+   .state/.count/.buffer anywhere outside src/sha256.c; no by-value ctx parameter or return.
+
+6. Build facts for the cutover (not section 7 semantics)
+   - src/sha256.c is the only translation unit that includes src/omega_om_units.inc, and
+     src/omega_blake3.c links against omega_omb3 defined there (omega_blake3.c:29). Deleting
+     sha256.c without a new home for the generated units breaks every BLAKE3 link.
+   - src/sha256.c is named in about 280 build lines: Makefile 61, mk/*.mk (37 files), and shell
+     recipes under tests/, tools/, seed/rung3, seed/rung4, research/atemporal, om/*/parity.
+   - Makefile:657 RX_CX_FS_ALLOWED lists sha256_* as the only allowed undefined symbols of the
+     freestanding rx_cortex object; erratum E3 (3) changes that rule to omega2_sha256_*.
+
+
+7. Unit changes made after this audit that touch caller-visible behaviour (none change the API)
+   - S4 (2026-10-25): absorb exceeded the 16-register limit (error 12, line 268 @ 4c8aa0ff7). The
+     buffer copy is now fn tobuf (c, bi, d, o, k), used by absorb's tail and by sha256_update's short
+     path; absorb takes (c, d, bi) and reads n = len d. Same bytes copied in the same order.
+   - Rolled loops trap 4 after 1000000 passes: whole blocks go through blocks/run in runs of 2^25
+     bytes (part), so updates of >= 2^32 bytes stay supported (receipt: s4/README.txt, ./t big).
+   - The generated header names the buffer field `buf` (src/sha256.h: `buffer`); item 5: no caller
+     reads ctx fields, so no caller changes.
+
+Section 7 is consistent with the callers, given E3.

@@ -1,0 +1,15 @@
+AIEN-OBS pin_omega_bridge "012860dbf26ee62a9838594b9dfd1e3e94a540a9"
+AIEN-OBS omc_sha256 "ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019"
+PASS src/omega_om_units.inc regenerates byte for byte
+lengths 0..9000: diff=0
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0
+cases=2000 diff=0
+SHA256-PARITY PASS
+vectors=35 vecfail=0 cases=1000 diff=0
+mutant b3-merge killed (exit 1, 16 of 35 vectors differ)
+mutant b3-root killed (exit 1, 35 of 35 vectors differ)
+BLAKE3-PARITY PASS
+RC=0

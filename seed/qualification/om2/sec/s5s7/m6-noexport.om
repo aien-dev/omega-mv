@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 206: without export the v1 rule holds (last fn is the entry); an OM-2 unit with
+note two functions and no export is accepted (function mode).
+om2
+fn helper a ulong to ulong
+ret add a 1
+end
+fn entry a ulong to ulong
+ret helper a
+end

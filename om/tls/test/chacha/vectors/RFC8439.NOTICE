@@ -1,0 +1,19 @@
+Notice for the RFC material in this directory:
+  rfc8439.txt is a byte-for-byte copy of https://www.rfc-editor.org/rfc/rfc8439.txt
+  (RFC 8439, "ChaCha20 and Poly1305 for IETF Protocols", Y. Nir and A. Langley, June 2018),
+  fetched 2026-10-26, sha256 25bef70fbf7a07ff45c2fe4cb7c6ce954eac687413d8610603268b4e4415324c.
+  rfc8439-vectors.txt is derived from it by ../gen_rfc.py (hex dumps read mechanically; inline
+  values checked to occur in the cited section). Its records restate the RFC's test vectors in the
+  driver's one-record-per-line format; the values themselves are not changed.
+
+RFC 8439 carries this copyright notice (quoted from the document):
+  Copyright (c) 2018 IETF Trust and the persons identified as the document authors. All rights
+  reserved. This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to
+  IETF Documents (https://trustee.ietf.org/license-info) in effect on the date of publication of
+  this document.
+The IETF Trust Legal Provisions permit copying and distributing RFCs in full without modification.
+
+Wycheproof material: wycheproof-chacha20-poly1305.txt and wycheproof-chacha20-counter.txt are
+converted by ../gen_wycheproof.py from https://github.com/C2SP/wycheproof testvectors_v1 at commit
+d17cc89fa5c8f4f4d378b5385ebf75da5d0926c9 (source sha256 in each file's header), Apache License 2.0,
+copied as WYCHEPROOF.LICENSE.

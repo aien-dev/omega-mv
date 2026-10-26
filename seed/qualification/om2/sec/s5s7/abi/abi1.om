@@ -1,0 +1,6 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 unit for the ABI driver (erratum E1): stays ABI v1, symbol omega_madd1, byte-identical
+note binding, no embedded identity.
+fn madd1 a ulong b ulong to ulong
+ret add mul a 3 b
+end

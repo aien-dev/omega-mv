@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 114-116: a rolled loop is not unrolled, so its one trap site (the run-time
+note divisor a, trap 2) is recorded once with iter=-, at line 10. Function mode. Expected exp/diag-site-rolled.err.
+note
+note
+om2 diag
+fn f a ulong to ulong
+s = ulong 0
+for i ulong 3
+s = add s div i a
+end
+ret s
+end

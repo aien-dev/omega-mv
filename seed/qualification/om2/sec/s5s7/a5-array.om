@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 137-138: there are no arrays of dup32. Erratum E8: error 7.
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 5
+a = new dup32 4 d
+ret 0
+end

@@ -1,0 +1,16 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract line 136: returning a ulong value from a function that returns dup32 is
+note error 7.
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn g x ulong to dup32
+ret x
+end
+fn main to int
+puth open g 21474836485
+ret 0
+end

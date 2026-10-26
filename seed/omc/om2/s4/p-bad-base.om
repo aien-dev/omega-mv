@@ -1,0 +1,9 @@
+note S4: an array and a part of it in one call are error 19 (the part counts as its base).
+om2
+fn two x view uchar * y view uchar * to ulong
+ret add len x len y
+end
+fn main to int
+a = new uchar 10 0
+ret int two part a 5 2 a
+end

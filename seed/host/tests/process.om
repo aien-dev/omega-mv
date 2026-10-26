@@ -1,0 +1,143 @@
+text child "./exec-child"
+text words "two words"
+text data "Omega pipe"
+global packet uchar 4096
+global status uchar 4
+global fds uchar 8
+global buf uchar 32
+fn fdword off ulong to int
+x = ulong 0
+for i ulong 4
+v = ulong get fds add off i
+x = or x shl v mul i 8
+end
+ret int x
+end
+fn exectest to int
+put packet 0 4
+put packet 2 uchar len child
+for i ulong len child
+put packet add i 4 get child i
+end
+n = add len child 6
+put packet n uchar len words
+n = add n 2
+for i ulong len words
+put packet add n i get words i
+end
+n = add n len words
+put packet n 2
+put packet add n 2 207
+put packet add n 3 128
+n = add n 4
+pid = fork
+if lt pid 0
+ret 1
+end
+if eq pid 0
+r = execprog packet 0 n
+ret 2
+end
+r = waitpid int pid status 0 len status 0
+if ne r pid
+ret 3
+end
+if or ne get status 0 0 ne get status 1 0
+ret 4
+end
+put packet 0 1
+put packet 2 4
+put packet 4 103
+put packet 5 111
+put packet 6 110
+put packet 7 101
+r = execprog packet 0 8
+if ne r neg long 2
+ret 5
+end
+ret 0
+end
+fn pipetest to int
+r = pipefds fds 0 len fds 524288
+if ne r 0
+ret 11
+end
+rd = fdword 0
+wr = fdword 4
+r = dupfd wr 96 524288
+if ne r 96
+ret 12
+end
+r = write 96 data 0 len data
+if ne r long len data
+ret 13
+end
+r = waitio rd 1 1000000000
+if or lt r 0 eq and r 1 0
+ret 14
+end
+r = read rd buf 0 len buf
+if ne r long len data
+ret 15
+end
+for i ulong len data
+if ne get data i get buf i
+ret 16
+end
+end
+r = fclose 96
+r = fclose wr
+r = fclose rd
+ret 0
+end
+fn stoptest to int
+if le getpid 0
+ret 21
+end
+start = monons
+r = sleepns 1000000
+if ne r 0
+ret 22
+end
+elapsed = sub monons start
+if lt elapsed 1000000
+ret 23
+end
+pid = fork
+if lt pid 0
+ret 24
+end
+if eq pid 0
+r = sleepns 5000000000
+ret 25
+end
+r = killpid int pid 15
+if ne r 0
+ret 26
+end
+r = waitpid int pid status 0 len status 0
+if ne r pid
+ret 27
+end
+if ne get status 0 15
+ret 28
+end
+ret 0
+end
+fn main to int
+if ne add getpid getpid mul getpid 2
+ret 41
+end
+if ne fclose int socknew 1 1 0 0
+ret 42
+end
+r = exectest
+if ne r 0
+ret r
+end
+r = pipetest
+if ne r 0
+ret r
+end
+ret stoptest
+end

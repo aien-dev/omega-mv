@@ -1,0 +1,32 @@
+OM2GATE START cases=seed/qualification/om2/baseline/transform.cases scratch=build/om2-qual/baseline-transform
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE sha-abc-pinned line=5
+  $ seed/out/omc < build/om2-qual/baseline-transform/5.src > build/om2-qual/baseline-transform/5.elf 2> build/om2-qual/baseline-transform/5.cerr
+  $ build/om2-qual/baseline-transform/5.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-transform/5.out 2> build/om2-qual/baseline-transform/5.err
+VERDICT sha-abc-pinned PASS run exit=0 expected=0 stdout=match stderr=match
+SUBST seed/qualification/om2/compiler-mutants/shr-imm-plus1.from seed/qualification/om2/compiler-mutants/shr-imm-plus1.to
+  MUTATE exact-once substitution at byte 35465
+  $ seed/out/omc < build/om2-qual/baseline-transform/7.src > build/om2-qual/baseline-transform/7.elf 2> build/om2-qual/baseline-transform/7.cerr
+COMPILER build/om2-qual/baseline-transform/7.elf sha256=06f000e5694d5058d80c87468cb8ea1d8c02f7a1480ab5cd906c6fda3475d6de source line=7
+CASE sha-abc-shr-mutant line=8
+  $ build/om2-qual/baseline-transform/7.elf < build/om2-qual/baseline-transform/8.src > build/om2-qual/baseline-transform/8.elf 2> build/om2-qual/baseline-transform/8.cerr
+  $ build/om2-qual/baseline-transform/8.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-transform/8.out 2> build/om2-qual/baseline-transform/8.err
+VERDICT sha-abc-shr-mutant PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+CASE sha-empty-shr-mutant line=9
+  $ build/om2-qual/baseline-transform/7.elf < build/om2-qual/baseline-transform/9.src > build/om2-qual/baseline-transform/9.elf 2> build/om2-qual/baseline-transform/9.cerr
+  $ build/om2-qual/baseline-transform/9.elf < /dev/null > build/om2-qual/baseline-transform/9.out 2> build/om2-qual/baseline-transform/9.err
+VERDICT sha-empty-shr-mutant PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+CASE sha-448-shr-mutant line=10
+  $ build/om2-qual/baseline-transform/7.elf < build/om2-qual/baseline-transform/10.src > build/om2-qual/baseline-transform/10.elf 2> build/om2-qual/baseline-transform/10.cerr
+  $ build/om2-qual/baseline-transform/10.elf < seed/qualification/om2/fixtures/msg/m448.bin > build/om2-qual/baseline-transform/10.out 2> build/om2-qual/baseline-transform/10.err
+VERDICT sha-448-shr-mutant PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+CASE sha-million-shr-mutant line=11
+  $ build/om2-qual/baseline-transform/7.elf < build/om2-qual/baseline-transform/11.src > build/om2-qual/baseline-transform/11.elf 2> build/om2-qual/baseline-transform/11.cerr
+  $ build/om2-qual/baseline-transform/11.elf < build/om2-qual/baseline-transform/11.in > build/om2-qual/baseline-transform/11.out 2> build/om2-qual/baseline-transform/11.err
+VERDICT sha-million-shr-mutant PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+COMPILER seed/out/omc
+CASE sha-abc-pinned-again line=13
+  $ seed/out/omc < build/om2-qual/baseline-transform/13.src > build/om2-qual/baseline-transform/13.elf 2> build/om2-qual/baseline-transform/13.cerr
+  $ build/om2-qual/baseline-transform/13.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-transform/13.out 2> build/om2-qual/baseline-transform/13.err
+VERDICT sha-abc-pinned-again PASS run exit=0 expected=0 stdout=match stderr=match
+OM2GATE PASS cases=6 pass=6 fail=0 invalid=0 not_run=0

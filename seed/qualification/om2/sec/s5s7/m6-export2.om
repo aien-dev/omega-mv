@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 204-206: two `export fn` entries and a private helper: accepted (function mode).
+note Symbol visibility (helper private, one omega2_ symbol per export) is checked at the ABI level.
+om2
+fn helper a ulong to ulong
+ret add a 1
+end
+export fn inc a ulong to ulong
+ret helper a
+end
+export fn dbl a ulong to ulong
+ret mul a 2
+end

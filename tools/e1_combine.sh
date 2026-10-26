@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # e1_combine.sh -- E1 numerical closure receipt (one deterministic, content-addressed aggregate).
 #
 #   tools/e1_combine.sh --candidate SHA --main SHA --physics SHA --manifest FILE \
@@ -57,7 +72,7 @@ e1_build_canon() {
     E1_TMP=$(mktemp -d "${TMPDIR:-/tmp}/e1combine.XXXXXX") || return 1
     JSON_CANON=$E1_TMP/json_canon
     gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$E1_OMEGA/src" -o "$JSON_CANON" \
-        "$E1_OMEGA/tools/json_canon.c" "$E1_OMEGA/src/sha256.c" -lm
+        "$E1_OMEGA/tools/json_canon.c" "$E1_OMEGA/src/omega_om_units.c" -lm
 }
 
 e1_sha() { sha256sum -- "$1" | cut -c1-64; }

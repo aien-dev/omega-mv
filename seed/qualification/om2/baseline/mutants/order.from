@@ -1,0 +1,13 @@
+t = add x add get w 0 1116352408
+u = shl e 32
+u = or u shr u 32
+u = xor xor shr u 6 shr u 11 shr u 25
+t = add t u
+t = add t xor g and e xor f g
+u = shl a 32
+u = or u shr u 32
+u = xor xor shr u 2 shr u 13 shr u 22
+u = add u xor b and xor a b xor b c
+d = add d t
+x = add t u
+t = add g add get w 1 1899447441

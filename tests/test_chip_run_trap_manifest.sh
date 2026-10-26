@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Host-only check of tools/manifests/unwritten_trap.chiprun and its wrapper. No GPU, no build.
 #   tests/test_chip_run_trap_manifest.sh
 # Checks: (1) manifest sets every required variable and names only existing sources;
@@ -36,7 +51,7 @@ src/omega_blackwell_encoder.c
 src/omega_blackwell_codegen.c
 src/omega_blackwell_matmul.c
 src/omega_blackwell_qmd.c
-src/sha256.c
+src/omega_om_units.c
 /nonexistent-physics-for-test/nvrm/nvrm.c
 /nonexistent-physics-for-test/m16/m16_native.c'
 # gcc flags and include paths of the old script, in order (the -o and its sources excluded).
@@ -74,7 +89,7 @@ check_wrapper_exit() {
 
 # Mutants of the manifest.
 sed 's#^SOURCES="src/omega_unwritten_trap.c #SOURCES="#' "$MAN" > "$T/m_dropsrc"
-sed 's#src/sha256.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
+sed 's#src/omega_om_units.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
 sed '/^PASS_LINE=/d' "$MAN" > "$T/m_novar"
 sed 's#^REFUSE_EXIT=2#REFUSE_EXIT=1#' "$MAN" > "$T/m_exit"
 sed "s#evidence-out/OMEGA-UNWRITTEN-TRAP#evidence/unwritten_trap#" "$MAN" > "$T/m_evid"

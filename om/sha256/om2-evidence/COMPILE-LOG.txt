@@ -1,0 +1,91 @@
+L838 compile log: om/sha256/sha256-om2.om against each OM-2 compiler slice
+=======================================================================
+One entry per compiler build. "compiles" means omc exit 0. A run of the code is a separate entry.
+
+Constructs used by the unit, and the slice that is expected to provide each
+  S1  rotr (uint, constant n), hex literals (K, IV, masks)
+  S2  for i ulong K unroll (16 loads, 48 schedule steps, 64 rounds, 8/4 digest bytes)
+  S3  w edit uint 64 fresh (sched); layout shactx 104 with fields state/count/buf; get/put c F i
+  S4  view uchar * (len, checked get); export fn; o out uchar 32; sized arrays passed to unsized
+      views (erratum E2)
+  Not used: inline (sched and rounds stay calls: 16 registers, no spilling), part, abstract/dup32.
+  Erratum E5 (1): a field without COUNT is a scalar. The unit declares `field count ulong at 32 little`
+  and reads and writes it as `get c count` / `put c count v` (commit after 57272e65).
+  Errata E6-E8 reviewed against the unit (SOURCE, by grep): no declared name is an OM-2 reserved word
+  (functions kinit iv sched rounds compress finish absorb + 4 exports; locals a-h t k kt n nb off p q
+  s v w x y bi bits blk cnt); every rotr operand is uint with a constant uint amount (E7 same-type
+  rule); unroll counts 16, 48, 64, 8 and 8x4 nested (E7: 1..64 per loop); no fresh over 64 (64), no
+  abstract, no part; layout before the first fn, SIZE 104; field arity: state i, buf i, count scalar
+  (E8). No change needed.
+
+2026-10-25T16:40Z  omc 734f0a39 (OM-1, main acb3f15c, /tmp/zl/main/seed/out/omc)
+  result: refused, "omc: line 114: error 16", exit 16, nothing on stdout.
+  Line 114 is the first signature with `view uchar *`: the names pass reads every signature before
+  any body, so OM-1 stops there and not at the `om2` line (20). A minimal unit "om2 / fn main to int
+  / ret 0 / end" is refused at line 1 with error 16.
+  Expected: OM-1 does not accept OM-2 units.
+
+2026-10-25T16:40Z  compiler-s1..s4: no branch on aien-dev yet (git fetch aien-dev; only om2/contract,
+  om2/coverage-matrix, om2/qualification). NOT_RUN.
+
+2026-10-25T17:10Z  compiler-s1 @ a5927895 (PR #750), omc 31342447…f049f
+  Delivered unit: refused, "omc: line 114: error 16" (om2 diag: code=16 line=114 col=25 expect=type
+  found=6672657368 "fresh"). Expected: fresh is S3; the names pass stops at the first signature it
+  cannot read.
+  Constructs compiled under S1, in the reduced test unit s1/sha256-s1.om (see s1/README.txt):
+    om2 line ..................... compiles
+    hex literals (64 K, 8 IV, 0x80, 0xff masks) ... compile; K/IV correct (158/158 vectors)
+    rotr on uint, constant n ..... compiles to ROR immediate (10 of 10)
+  Result: sha-s1.bin passes all 158 fixture vectors; a rotr-amount mutant fails 158/158. HOST.
+  Change to the delivered unit from this: load and round body split a term per line (error 12 seen
+  under S1 for the one-line forms).
+  Not yet compilable: unroll (S2); layout, fresh (S3); view uchar *, part, out, export (S4).
+
+2026-10-25T17:40Z  compiler-s2 @ 7fb62f3a (PR #753), omc c23b3376…b533
+  Delivered unit: refused, "omc: line 114: error 16" (fresh, S3), as under S1.
+  Reduced test unit s2/sha256-s2.om (delivered sched and rounds bodies verbatim, see s2/README.txt):
+    for i ulong 16|48|64 unroll ... compiles; one round body, one schedule step
+    rotr in unrolled bodies ........ 576 ROR immediate (64x6 + 48x4), no RORV
+    constant-index gets ............ 336 LDR immediate, no run-time check
+  Result: 158/158 fixture vectors; unroll removed: 158/158; rotr-amount mutant: 0/158. HOST.
+  Code: S1 test unit 4904 bytes / 1213 insns; S2 17648 / 4399; S2 with unroll removed 3988 / 984.
+  Change to the delivered unit: each Sigma in two lines through t, the schedule step in two lines
+  through x (error 12 under S2 for the one-line forms). Unit now 339 lines.
+  Not yet compilable: layout, fresh (S3); view uchar *, part, out, export (S4).
+
+2026-10-25T18:00Z  re-run against CompilerLane's current heads (HOST)
+  S1 head om2/compiler-s1 @ 874fec3b, omc ce4facbe…f019, born here by sh seed/omega-from-seed.sh
+    (nice -n 19, rc 0, s1/birth-874fec3b.log). s1/sha256-s1.om compiles to a binary byte-identical
+    to the one from omc 31342447 (sha 70e1a6e6…); 158/158 vectors. Delivered unit: line 114 error 16.
+  S2 fix D-S2-1 om2/compiler-s3 @ 9a92f3c4, omc 20d00b6e…bf87 (CompilerLane's build; current
+    unroll/inline head). s2/sha256-s2.om compiles byte-identical to the c23b3376 output
+    (sha 0b0c074d…); 158/158. s1/sha256-s1.om compiles (binary differs from S1's; 158/158).
+    Delivered unit: line 114 error 16 (fresh).
+  S3 (fresh, layout) and S4 (views, part, out, export) not implemented yet (CompilerLane): NOT_RUN.
+  Note (CompilerLane, 2026-10-25): the S1 test unit's binary changes from S2 on by design: a
+  constant index (<= 4095) into a sized array is an LDR/STR unsigned-offset immediate instead of
+  MOV + register offset; folding in unrolled/inlined bodies does the same. Behaviour unchanged
+  (158/158 here); OM-1 units byte-identical under S2 (CompilerLane's C2 run, 5876/5876; not re-run
+  by L838).
+
+2026-10-25T18:40Z  compiler-s3 @ ad220c05 (PR #754), omc 98cd1621…4b16
+  Delivered unit: refused, "omc: line 114: error 16", om2 diag col=44 found=2a (`*`): fresh is
+  accepted; the unsized view is S4.
+  Reduced test unit s3/sha256-s3.om (see s3/README.txt):
+    layout shactx 104, count scalar (E5), get/put c state i, c buf i, c count ... compiles
+    w edit uint 64 fresh in sched ................ compiles; w[15] left unwritten -> error 27 line 109
+    layout overlap / field past SIZE ............. error 29 at the field line
+  Result: 158/158 vectors with the E3 copy receipt and the section 7 reuse receipt holding on every
+  message (program mode, exit 3 otherwise); receipt mutants caught (156 and 158 exit 3). HOST.
+  Not yet compilable: view uchar *, part, out, export (S4). NOT_RUN: hash(d,32,d) receipt (needs out).
+
+2026-10-25T20:10Z  compiler-s4 @ f6a6492fd (PR #764), omc 49923639…803ec (born here, rc 0)
+  @ 4c8aa0ff7 the delivered unit stopped at "omc: line 268: error 12" (absorb; CompilerS4's report).
+  absorb restructured (fn tobuf); no grammar change.
+  Delivered unit om/sha256/sha256-om2.om (344 lines, src dbf002dd…): COMPILES, exit 0, 21340 bytes,
+  576 ROR immediate, 0 RORV, 0 SVC. Every construct in the unit compiles: om2, hex, rotr (S1); unroll
+  (S2); layout with scalar count, fresh (S3); view uchar *, len, part, out, export (S4).
+  Bridge feat/slice-abi @ 3bb8b8a: omega2_sha256_init/update/final/hash, omega2_ident_sha256_om2,
+  omega_api.h. 158/158 vectors; all section 7 / E3 receipts PASS incl. a 2^32+4094-byte update. HOST.
+  Details: s4/README.txt. The s1-s3 test units are removed (their READMEs keep hashes and results;
+  the sources are in git history at 4c8aa0ff7).

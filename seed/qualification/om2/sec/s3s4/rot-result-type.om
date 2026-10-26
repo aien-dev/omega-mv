@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 3 line 77: the result has x's type. A uint rotation written to a ulong name is
+note error 7 (OMEGESE 9.3: a value and the name it is written to have the same type) at line 8.
+om2
+fn main to int
+w = ulong 0
+x = uint 5
+w = rotr x 1
+ret 0
+end

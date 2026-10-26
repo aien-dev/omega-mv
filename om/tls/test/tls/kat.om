@@ -1,0 +1,326 @@
+note kat.om: RFC 8448 section 3 known-answer test of the om/tls key schedule, Finished values and
+note record protection (TLS_AES_128_GCM_SHA256, x25519). Program mode, composed after tls.om.
+note stdin: vectors/rfc8448-1rtt.txt ("NAME HEX" lines in the generator's fixed order, # comments).
+note Prints "MISMATCH <check>" per failure and "tls kat: C checks, F failed"; exit 0 only when F is 0,
+note 1 on a mismatch, 2 on unreadable or malformed input.
+
+text kfail "MISMATCH "
+text ksum "tls kat: "
+text kchk " checks, "
+text kfld " failed\n"
+text knl "\n"
+text kbad "tls kat: malformed input\n"
+text khost "server"
+text n00 "ecdhe"
+text n01 "handshake_secret"
+text n02 "c_hs_traffic"
+text n03 "s_hs_traffic"
+text n04 "master_secret"
+text n05 "server_hs_key"
+text n06 "server_hs_iv"
+text n07 "client_hs_key"
+text n08 "client_hs_iv"
+text n09 "server_flight_decrypt"
+text n10 "server_flight_type"
+text n11 "server_finished_accept"
+text n12 "server_finished_tamper_refused"
+text n13 "c_ap_traffic"
+text n14 "s_ap_traffic"
+text n15 "server_ap_key"
+text n16 "server_ap_iv"
+text n17 "client_finished"
+text n18 "client_finished_record"
+text n19 "client_ap_key"
+text n20 "client_ap_iv"
+text n21 "server_data_decrypt"
+text n22 "client_data_record"
+text n23 "flight_tamper_refused"
+
+note field numbers in the input order
+const KCPRIV ulong 0
+const KSPUB ulong 1
+const KCH ulong 2
+const KSH ulong 3
+const KECDHE ulong 4
+const KHS ulong 5
+const KCHTS ulong 6
+const KSHTS ulong 7
+const KMS ulong 8
+const KSHKEY ulong 9
+const KSHIV ulong 10
+const KCHKEY ulong 11
+const KCHIV ulong 12
+const KEE ulong 13
+const KCERT ulong 14
+const KCV ulong 15
+const KSFIN ulong 16
+const KSFL ulong 17
+const KSFLREC ulong 18
+const KCATS ulong 19
+const KSATS ulong 20
+const KSAKEY ulong 21
+const KSAIV ulong 22
+const KCFIN ulong 23
+const KCFINREC ulong 24
+const KCAKEY ulong 25
+const KCAIV ulong 26
+const KNST ulong 27
+const KCDATA ulong 28
+const KCDATREC ulong 29
+const KSDATA ulong 30
+const KSDATREC ulong 31
+const KNF ulong 32
+
+fn kt_hex ch ulong to ulong
+if and ge ch 48 le ch 57
+ret sub ch 48
+end
+if and ge ch 97 le ch 102
+ret sub ch 87
+end
+ret 16
+end
+
+note parse the input in into vb: field k's offset at vb[8k..8k+4), its length at vb[8k+4..8k+8)
+note (big-endian), the bytes from vb[512]; 0 ok, 2 malformed
+fn kt_parse in view uchar * vb edit uchar * to ulong
+p = ulong 0
+k = ulong 0
+o = ulong 512
+while lt p len in bound 999999
+if eq get in p 35
+while and lt p len in ne tls_at in p 10 bound 999999
+p = add p 1
+end
+p = add p 1
+continue
+end
+while and lt p len in ne tls_at in p 32 bound 999999
+p = add p 1
+end
+p = add p 1
+if ge k KNF
+ret 2
+end
+tls_pn vb mul k 8 o 4
+s = o
+while lt kt_hex tls_at in p 16 bound 999999
+put vb o uchar or shl kt_hex tls_at in p 4 kt_hex tls_at in add p 1
+o = add o 1
+p = add p 2
+end
+tls_pn vb add mul k 8 4 sub o s 4
+k = add k 1
+p = add p 1
+end
+if ne k KNF
+ret 2
+end
+ret 0
+end
+
+fn kt_off vb view uchar * k ulong to ulong
+ret tls_gn vb mul k 8 4
+end
+
+fn kt_len vb view uchar * k ulong to ulong
+ret tls_gn vb add mul k 8 4 4
+end
+
+note copy field k of vb into c at d
+fn kt_put c edit uchar * d ulong vb view uchar * k ulong to void
+o = kt_off vb k
+for i ulong kt_len vb k
+put c add d i get vb add o i
+end
+end
+
+note compare c[d..) with field k (from byte s of the field, n bytes; n 0 = to its end)
+fn kt_eq c view uchar * d ulong vb view uchar * ks ulong to ulong
+k = and ks 255
+s = shr ks 8
+o = add kt_off vb k s
+ret kt_cmp part c d sub kt_len vb k s vb o
+end
+
+note 0 when a equals b[o..o+len a)
+fn kt_cmp a view uchar * b view uchar * o ulong to ulong
+x = ulong 0
+for i ulong len a
+x = or x ulong xor get a i get b add o i
+end
+ret x
+end
+
+note count one check; print its name on failure
+note st: the work array; st[40] checks, st[41] failures (st[0..40) is the transcript hash)
+fn kt_ck st edit ulong * bad ulong nm view uchar * to void
+put st 40 add get st 40 1
+if ne bad 0
+put st 41 add get st 41 1
+w = write 1 kfail 0 len kfail
+w = write 1 nm 0 len nm
+w = write 1 knl 0 1
+end
+end
+
+fn kt_dec v ulong o edit uchar * to ulong
+t = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put t n uchar add 48 rem x 10
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for i ulong n
+put o i get t sub sub n 1 i
+end
+ret n
+end
+
+note add field k to the transcript hash in st[0..40)
+fn kt_hash st edit ulong * vb view uchar * k ulong to void
+o = kt_off vb k
+n = kt_len vb k
+sha256_update part st 0 40 part vb o n
+end
+
+note handshake part: ECDHE, handshake secrets and keys, the server flight record
+fn kt_hs c edit uchar * vb view uchar * st edit ulong * to void
+kt_put c TLEPK vb KCPRIV
+kt_put c TLSPUB vb KSPUB
+e = tls_ecdh c
+kt_ck st or e kt_eq c TLSS vb KECDHE n00
+kt_hash st vb KCH
+kt_hash st vb KSH
+e = tls_hskeys c part st 0 40
+kt_ck st or e kt_eq c TLHS vb KHS n01
+kt_ck st kt_eq c TLCHS vb KCHTS n02
+kt_ck st kt_eq c TLSHS vb KSHTS n03
+kt_ck st kt_eq c TLMS vb KMS n04
+kt_ck st kt_eq c TLRKEY vb KSHKEY n05
+kt_ck st kt_eq c TLRIV vb KSHIV n06
+kt_ck st kt_eq c TLWKEY vb KCHKEY n07
+kt_ck st kt_eq c TLWIV vb KCHIV n08
+end
+
+note the server's encrypted flight: a tampered copy is refused, the real one decrypts
+fn kt_flight c edit uchar * vb view uchar * st edit ulong * to void
+kt_put c TLRB vb KSFLREC
+put c add TLRB 300 uchar xor ulong get c add TLRB 300 1
+e = tls_open c 674
+ok = ulong 1
+if eq e TLEMAC
+ok = 0
+end
+kt_ck st ok n23
+tls_pn c TLRS 0 8
+kt_put c TLRB vb KSFLREC
+e = tls_open c 674
+kt_ck st or e kt_eq c add TLRB 5 vb KSFL n09
+kt_ck st xor ulong get c add TLRB 662 22 n10
+end
+
+note server Finished: accepted as is, refused with one byte changed; then the application secrets
+fn kt_fin c edit uchar * vb view uchar * st edit ulong * to void
+h = new uchar 32 0
+kt_hash st vb KEE
+kt_hash st vb KCERT
+kt_hash st vb KCV
+tls_th part st 0 40 h
+kt_put c TLHB vb KSFIN
+kt_ck st tls_sfin c h n11
+put c add TLHB 9 uchar xor ulong get c add TLHB 9 128
+ok = ulong 1
+if eq tls_sfin c h TLEFIN
+ok = 0
+end
+kt_ck st ok n12
+kt_hash st vb KSFIN
+e = tls_apkeys c part st 0 40
+kt_ck st or e kt_eq c TLCAP vb KCATS n13
+kt_ck st kt_eq c TLSAP vb KSATS n14
+kt_ck st kt_eq c TLRKEY vb KSAKEY n15
+kt_ck st kt_eq c TLRIV vb KSAIV n16
+end
+
+note client Finished value and its record under the client handshake key (sequence 0)
+fn kt_cfin c edit uchar * vb view uchar * st edit ulong * to void
+v = new uchar 32 0
+tls_th part st 0 40 v
+e = tls_vd c TLCHS v
+tls_cpy c TLTMP v
+kt_ck st or e kt_eq c TLTMP vb or KCFIN shl ulong 4 8 n17
+kt_put c add TLWB 5 vb KCFIN
+put c add TLWB 41 22
+put c TLWB 23
+tls_pn c add TLWB 1 771 2
+tls_pn c add TLWB 3 53 2
+e = tls_seal c 37
+kt_ck st or e kt_eq c TLWB vb KCFINREC n18
+end
+
+note application keys, the server's second application record (sequence 1) and the client's first
+fn kt_app c edit uchar * vb view uchar * st edit ulong * to void
+e = tls_keys c TLCAP 0
+kt_ck st or e kt_eq c TLWKEY vb KCAKEY n19
+kt_ck st kt_eq c TLWIV vb KCAIV n20
+kt_put c TLRB vb KSDATREC
+tls_pn c TLRS 1 8
+e = tls_open c 67
+kt_ck st or e kt_eq c add TLRB 5 vb KSDATA n21
+kt_put c add TLWB 5 vb KCDATA
+put c add TLWB 55 23
+put c TLWB 23
+tls_pn c add TLWB 1 771 2
+tls_pn c add TLWB 3 67 2
+e = tls_seal c 51
+kt_ck st or e kt_eq c TLWB vb KCDATREC n22
+end
+
+fn kt_run in view uchar * c edit uchar * to int
+vb = new uchar 16384 0
+st = new ulong 48 0
+if ne kt_parse in vb 0
+w = write 2 kbad 0 len kbad
+ret 2
+end
+e = tls_init c khost 0
+put c TLSU 2
+sha256_init part st 0 40
+kt_hs c vb st
+kt_flight c vb st
+kt_fin c vb st
+kt_cfin c vb st
+kt_app c vb st
+ret kt_report st
+end
+
+fn kt_report st view ulong * to int
+m = new uchar 32 0
+w = write 1 ksum 0 len ksum
+n = kt_dec get st 40 m
+w = write 1 m 0 n
+w = write 1 kchk 0 len kchk
+n = kt_dec get st 41 m
+w = write 1 m 0 n
+w = write 1 kfld 0 len kfld
+if or ne get st 41 0 eq get st 40 0
+ret 1
+end
+ret 0
+end
+
+fn main to int
+in = new uchar 65536 0
+c = new uchar 119296 0
+n = read 0 in 0 65536
+if le n 0
+ret 2
+end
+ret kt_run part in 0 ulong n c
+end

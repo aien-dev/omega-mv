@@ -1,0 +1,34 @@
+L836 independent qualification of candidate S2 (#748), 2026-10-25.
+Candidate: aien-dev/om2/compiler-s2 @ 7fb62f3a87104f48bb1317ab05333c5805ce5340 (draft PR #753). This is §4: unroll,
+inline, folding, constant-index checks on sized arrays, growth bounds, omc-site. The fixtures were committed
+before the S2 diff was read (sec/s3s4 at 23162b24; E7 conversions at c2007014).
+Birth (scratch worktree /tmp/zl/qs2): "PASS omc fixpoint c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533".
+Gate: build/om2-qual/gate-p (6c8691c2…acefa). Evidence is in evidence/phaseB/s2-7fb62f3a/.
+
+| section | result |
+|---|---|
+| C2 (5876) | PASS 5876/5876 |
+| §0-§3 (regression) | s0s2 161 PASS, 0 FAIL, 2 NOT_RUN (open under E4/E6); rot 42/42 |
+| §4 unroll/inline/fold/ce-sized/diag/regs rows | 129 PASS, 1 FAIL, 1 NOT_RUN |
+| removing unroll/inline | every -rolled/-plain twin in scope gives the same oracle output as its OM-2 form (36 PASS) |
+| out of S2 scope | ce-view-* and slots-* need unsized views/out (S4): 21 FAIL, refused as error 16. Not a verdict on S2 |
+
+Defect:
+- D-S2-1 (FAIL): inline-rec-mutual1. `fn f ... inline` is recursive through the non-inline g (f → g → f). S2
+  compiles it (exit 0); the contract (spec:94) requires error 9: "The function must not be recursive". Direct
+  recursion (inline-rec-direct) and inline-to-inline mutual recursion (inline-rec-mutual) are refused 9 correctly.
+NOT_RUN: inline-calls-stay-calls (not observable through run/emit), slots-order (bridge), program-site-table
+(not fixed by the errata).
+
+Mutants (candidates/s2/s2-mutants.cases; scratch copies of the S2 omc.om, built with subst + cc by the S2 omc).
+Every mutant compiler still hashes abc correctly. An unmutated rebuild reproduces c23b3376.
+- unroll-kminus1 (one copy fewer): killed. unroll-sum differs at byte 8 (predicted byte 1; the model dropped a
+  different copy, but it is still a clean kill); unroll-nest at byte 0.
+- unroll-kplus1 (one copy more): killed. unroll-sum differs at byte 5, as predicted. unroll-nest is refused 21,
+  because the extra copy's constant index is outside the sized array.
+- fold-div0 (division by a constant 0 folded to 0): killed by fold-trap-A and fold-trap-G (byte 4, as predicted).
+  The other fold-trap selectors exercise other traps (overflow 101, conversion 105, shift 107, and 102), which
+  this mutant does not touch, so they survive as expected.
+- Faulty check elimination on an unsized view: NOT_RUN. It needs unsized views (S4); the kill rows
+  kill-ce-view-* are ready.
+Verdict for S2: §4 PASS except D-S2-1. C2 PASS. Mutants 3/3 killed.

@@ -1,0 +1,6 @@
+struct H v uint 2 t uchar end
+fn main to uint
+p = new H 1 1
+put p t 9
+ret get p v 0
+end

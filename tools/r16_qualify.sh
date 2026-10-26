@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # r16_qualify.sh -- R16 Orchestrator Retirement qualification harness (schema revision 2).
 #
 # Runs the R16 gate targets on the current checkout and writes the
@@ -612,7 +627,7 @@ if [ "$DRY" = 1 ]; then
 else
     # Canonical writer built into the untracked output dir. The receipt goes beside the
     # raw dir, untracked; a later human/agent step copies it under evidence/R16/ and commits.
-    ${CC:-cc} -std=gnu11 -O2 -Isrc -o "$RAW_DIR/json_canon" tools/json_canon.c src/sha256.c -lm
+    ${CC:-cc} -std=gnu11 -O2 -Isrc -o "$RAW_DIR/json_canon" tools/json_canon.c src/omega_om_units.c -lm
     "$RAW_DIR/json_canon" --pretty < "$OUT_RECEIPT_TMP" > "$RAW_DIR/receipt.pretty.json"
     RECEIPT_SHA=$(sha256sum "$RAW_DIR/receipt.pretty.json" | cut -d' ' -f1)
     mkdir -p "$OUT_ROOT/receipts"

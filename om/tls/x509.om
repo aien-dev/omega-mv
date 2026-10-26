@@ -1,0 +1,2077 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/x509.om (module X5): strict DER reader, X.509 v3 certificate parser, PEM trust store,
+note TLS 1.3 server chain validation and the CertificateVerify signature check. Library unit for the
+note OM-2 TLS client; compose after sha2.om, hkdf.om, ec.om, rsa.om. No mutable globals.
+note
+note Reject codes (ulong, 0 = valid; x509_errname gives the ASCII name):
+note   1 MALFORMED      DER/structure/framing error (any input that does not parse)
+note   2 EXPIRED        now >= notAfter of a non-anchor certificate in the path (at notAfter
+note                    itself already expired, as OpenSSL; stricter than RFC 5280 4.1.2.5)
+note   3 NOT_YET_VALID  now < notBefore of a non-anchor certificate in the path
+note   4 NAME_MISMATCH  no SAN dNSName matches the host, or the host is not a valid LDH name
+note   5 UNKNOWN_ISSUER no trust anchor or presented certificate has the issuer's name (only
+note                    self-issued store entries are trust anchors, see chain_anchor)
+note   6 BAD_SIGNATURE  issuer found by name but no candidate key verifies the signature
+note   7 NOT_CA         issuer lacks basicConstraints cA TRUE
+note   8 PATH_LENGTH    pathLenConstraint of an issuer exceeded
+note   9 KEY_USAGE      issuer keyUsage lacks keyCertSign, or leaf keyUsage lacks digitalSignature
+note  10 EKU            leaf EKU lacks serverAuth, or issuer EKU lacks serverAuth and anyExtendedKeyUsage
+note  11 UNSUPPORTED_ALG signature algorithm or key type not on the allowed list, or key/alg mismatch
+note  12 WEAK_KEY       RSA key out of policy: modulus below 2048 bits (leaf key or any key that
+note                    verifies a signature); for presented keys (leaf and chain) also a modulus
+note                    above 4096 bits or a public exponent that is even, below 3 or above 2^32-1
+note  13 CRITICAL_EXT   critical extension we do not implement
+note  14 TOO_DEEP       more than 8 non-anchor certificates would be needed
+note  15 LEAF_IS_CA     leaf has basicConstraints cA TRUE
+note  16 NO_SAN         leaf has no subjectAltName (no CN fallback)
+note  17 IP_HOST        host is an IP literal (refused)
+note  18 ALG_MISMATCH   tbsCertificate.signature differs from signatureAlgorithm
+note  19 SCHEME         CertificateVerify scheme refused or does not match the leaf key
+note  20 NAME_CONSTRAINTS a nameConstraints extension (critical or not) on any certificate: name
+note                    constraints are not implemented, so such a certificate is always refused
+note
+note Constant time: nothing here handles secrets. Certificates, names, signatures and keys are public;
+note every function is variable time by design (branches on public data). Hashing and signature checks
+note are done by sha2.om, ec.om and rsa.om (see their notes).
+
+const X5RSZ ulong 32
+const X5RTBO ulong 0
+const X5RTBL ulong 1
+const X5RALG ulong 2
+const X5RSGO ulong 3
+const X5RSGL ulong 4
+const X5RISO ulong 5
+const X5RISL ulong 6
+const X5RSBO ulong 7
+const X5RSBL ulong 8
+const X5RNB ulong 9
+const X5RNA ulong 10
+const X5RKT ulong 11
+const X5RKO ulong 12
+const X5RKL ulong 13
+const X5RBITS ulong 14
+const X5RBC ulong 15
+const X5RCA ulong 16
+const X5RPL ulong 17
+const X5RKU ulong 18
+const X5RKUB ulong 19
+const X5REKU ulong 20
+const X5RSRV ulong 21
+const X5RANY ulong 22
+const X5RSNO ulong 23
+const X5RSNL ulong 24
+const X5RSAN ulong 25
+const X5RVER ulong 26
+const X5RSEEN ulong 27
+const X5RAO ulong 28
+const X5RAL ulong 29
+const X5RTAO ulong 30
+const X5RTAL ulong 31
+
+const X5WNOW ulong 64
+const X5WN ulong 65
+const X5WUSED ulong 66
+const X5WDEP ulong 67
+const X5WCUR ulong 68
+const X5WSEL ulong 69
+const X5WIX ulong 96
+const X5WSZ ulong 128
+const X5MAXC ulong 16
+const X5MAXD ulong 8
+const X5KBUF ulong 16384
+note largest presented leaf (bytes, DER), equal to TLLFSZ in tls.om; a larger one is X5EMAL
+const X5LMAX ulong 16896
+note element cap of the SEQUENCE OF loops (EKU, SAN, Extensions, SAN host walk): X5EMAL beyond it
+const X5NMAX ulong 9999
+note added to the RSA bit count in X5RBITS when the public exponent is out of policy (x509_rsaexp)
+const X5RBADE ulong 4294967296
+const X5BIG ulong 0xffffffffffffffff
+
+const X5EMAL ulong 1
+const X5EEXP ulong 2
+const X5ENYV ulong 3
+const X5ENAME ulong 4
+const X5EUNK ulong 5
+const X5ESIG ulong 6
+const X5ENCA ulong 7
+const X5EPATH ulong 8
+const X5EKU ulong 9
+const X5EEKU ulong 10
+const X5EALG ulong 11
+const X5EWEAK ulong 12
+const X5ECRIT ulong 13
+const X5EDEEP ulong 14
+const X5ELCA ulong 15
+const X5ENSAN ulong 16
+const X5EIP ulong 17
+const X5EAMIS ulong 18
+const X5ESCH ulong 19
+const X5ENC ulong 20
+
+note OID content bytes (hex), space separated; der_oidix returns the 1-based position.
+note 1-3 sha256/384/512WithRSAEncryption (RFC 4055), 4 RSASSA-PSS, 5-7 ecdsa-with-SHA256/384/512
+note (RFC 5758), 8 rsaEncryption, 9 id-ecPublicKey, 10 prime256v1, 11 secp384r1 (RFC 5480),
+note 12-14 sha256/384/512 (NIST CSOR), 15 id-mgf1, 16 basicConstraints, 17 keyUsage, 18 extKeyUsage,
+note 19 subjectAltName, 20 nameConstraints (RFC 5280 4.2.1), 21 id-kp-serverAuth, 22 anyExtendedKeyUsage
+text X5OIDS "2a864886f70d01010b 2a864886f70d01010c 2a864886f70d01010d 2a864886f70d01010a 2a8648ce3d040302 2a8648ce3d040303 2a8648ce3d040304 2a864886f70d010101 2a8648ce3d0201 2a8648ce3d030107 2b81040022 608648016503040201 608648016503040202 608648016503040203 2a864886f70d010108 551d13 551d0f 551d25 551d11 551d1e 2b06010505070301 551d2500 "
+text X5NAMES "X509_OK X509_ERR_MALFORMED X509_ERR_EXPIRED X509_ERR_NOT_YET_VALID X509_ERR_NAME_MISMATCH X509_ERR_UNKNOWN_ISSUER X509_ERR_BAD_SIGNATURE X509_ERR_NOT_CA X509_ERR_PATH_LENGTH X509_ERR_KEY_USAGE X509_ERR_EKU X509_ERR_UNSUPPORTED_ALG X509_ERR_WEAK_KEY X509_ERR_CRITICAL_EXT X509_ERR_TOO_DEEP X509_ERR_LEAF_IS_CA X509_ERR_NO_SAN X509_ERR_IP_HOST X509_ERR_ALG_MISMATCH X509_ERR_SCHEME X509_ERR_NAME_CONSTRAINTS "
+text X5PATH "/etc/ssl/certs/ca-certificates.crt"
+text X5BEG "-----BEGIN CERTIFICATE-----"
+text X5END "-----END CERTIFICATE-----"
+
+note ---------------------------------------------------------------- DER reader
+
+note der_hdr: the TLV header at d[p], whose content must end by e (e <= len d). Single-byte tags
+note only; definite lengths of at most 3 length bytes, minimal (short form below 128, no leading 0).
+note h[0] tag, h[1] content start, h[2] content end. 0 ok, 1 malformed. Never traps for len h >= 3.
+fn der_hdr d view uchar * p ulong e ulong h edit ulong * to ulong
+if gt e len d
+ret 1
+end
+if ge p e
+ret 1
+end
+if lt sub e p 2
+ret 1
+end
+t = ulong get d p
+if eq and t 31 31
+ret 1
+end
+b = ulong get d add p 1
+q = add p 2
+n = b
+if ge b 128
+k = and b 127
+if or eq k 0 gt k 3
+ret 1
+end
+if gt k sub e q
+ret 1
+end
+if eq get d q 0
+ret 1
+end
+n = 0
+for i ulong k
+n = or shl n 8 ulong get d add q i
+end
+q = add q k
+if lt n 128
+ret 1
+end
+end
+if gt n sub e q
+ret 1
+end
+put h 0 t
+put h 1 q
+put h 2 add q n
+ret 0
+end
+
+note der_same: byte equality of two spans (lengths must match)
+fn der_same a view uchar * b view uchar * to bool
+if ne len a len b
+ret false
+end
+for i ulong len a
+if ne get a i get b i
+ret false
+end
+end
+ret true
+end
+
+note der_eqat: d[a .. a+n) equals d[b .. b+n); false when either span leaves d
+fn der_eqat d view uchar * a ulong b ulong n ulong to bool
+if gt n len d
+ret false
+end
+if or gt a sub len d n gt b sub len d n
+ret false
+end
+for i ulong n
+if ne get d add a i get d add b i
+ret false
+end
+end
+ret true
+end
+
+note der_hexv: value of a lowercase hex digit (16 when not one)
+fn der_hexv c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+ret 16
+end
+
+note der_hexeq: d equals the bytes written in hex by t (len t = 2 len d)
+fn der_hexeq d view uchar * t view uchar * to bool
+if ne len t mul len d 2
+ret false
+end
+for i ulong len d
+hi = der_hexv ulong get t mul i 2
+lo = der_hexv ulong get t add mul i 2 1
+if ne ulong get d i or shl hi 4 lo
+ret false
+end
+end
+ret true
+end
+
+note der_oidix: position (1-based) of the OID content d in X5OIDS, 0 when absent
+fn der_oidix d view uchar * to ulong
+s = ulong 0
+k = ulong 1
+n = len X5OIDS
+while lt s n bound 1000
+j = s
+while lt j n bound 1000
+if eq get X5OIDS j 32
+break
+end
+j = add j 1
+end
+if der_hexeq d part X5OIDS s sub j s
+ret k
+end
+s = add j 1
+k = add k 1
+end
+ret 0
+end
+
+note der_small: value of the INTEGER TLV that is exactly a; nonnegative, minimal, at most 7 content
+note bytes. X5BIG when it is not one.
+fn der_small a view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr a 0 len a h 0
+ret X5BIG
+end
+if or ne get h 0 2 ne get h 2 len a
+ret X5BIG
+end
+s = get h 1
+n = sub len a s
+if or eq n 0 gt n 7
+ret X5BIG
+end
+b = ulong get a s
+if ge b 128
+ret X5BIG
+end
+if and gt n 1 eq b 0
+if lt ulong get a add s 1 128
+ret X5BIG
+end
+end
+v = ulong 0
+for i ulong n
+v = or shl v 8 ulong get a add s i
+end
+ret v
+end
+
+note der_null: c[q .. e) is exactly a NULL (05 00)
+fn der_null c view uchar * q ulong e ulong to bool
+if ne sub e q 2
+ret false
+end
+if or ne get c q 5 ne get c add q 1 0
+ret false
+end
+ret true
+end
+
+note der_u24: big-endian 24-bit value at a[p] (caller checks p + 3 <= len a)
+fn der_u24 a view uchar * p ulong to ulong
+v = shl ulong get a p 16
+v = or v shl ulong get a add p 1 8
+ret or v ulong get a add p 2
+end
+
+note der_d2: two decimal digits at t[i], 100 when either is not a digit
+fn der_d2 t view uchar * i ulong to ulong
+a = ulong get t i
+b = ulong get t add i 1
+if or lt a 48 gt a 57
+ret 100
+end
+if or lt b 48 gt b 57
+ret 100
+end
+ret add mul sub a 48 10 sub b 48
+end
+
+note x509_days: days from 0000-03-01 to y-m-d (proleptic Gregorian, H. Hinnant's days_from_civil
+note without the 1970 shift; y >= 1, m 1..12)
+fn x509_days y ulong m ulong d ulong to ulong
+yy = y
+if le m 2
+yy = sub y 1
+end
+era = div yy 400
+yoe = sub yy mul era 400
+mp = add m 9
+if gt m 2
+mp = sub m 3
+end
+doy = div add mul mp 153 2 5
+doy = add doy sub d 1
+doe = add mul yoe 365 div yoe 4
+doe = add sub doe div yoe 100 doy
+ret add mul era 146097 doe
+end
+
+note x509_dim: days in month m of year y
+fn x509_dim y ulong m ulong to ulong
+if eq m 2
+if and eq rem y 4 0 or ne rem y 100 0 eq rem y 400 0
+ret 29
+end
+ret 28
+end
+if or or eq m 4 eq m 6 or eq m 9 eq m 11
+ret 30
+end
+ret 31
+end
+
+note der_time: the Time TLV that is exactly t, as seconds since 0000-03-01T00:00:00Z, X5BIG when bad.
+note UTCTime YYMMDDHHMMSSZ (RFC 5280 4.1.2.5.1: YY >= 50 is 19YY, else 20YY);
+note GeneralizedTime YYYYMMDDHHMMSSZ (4.1.2.5.2). No fractions, no offsets, seconds 00..59.
+fn der_time t view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr t 0 len t h 0
+ret X5BIG
+end
+g = get h 0
+s = get h 1
+n = sub get h 2 s
+if ne get h 2 len t
+ret X5BIG
+end
+y = ulong 0
+if eq g 23
+if ne n 13
+ret X5BIG
+end
+y = der_d2 t s
+if gt y 99
+ret X5BIG
+end
+y = add y 1900
+if lt y 1950
+y = add y 100
+end
+s = add s 2
+else
+if or ne g 24 ne n 15
+ret X5BIG
+end
+a = der_d2 t s
+b = der_d2 t add s 2
+if or gt a 99 gt b 99
+ret X5BIG
+end
+y = add mul a 100 b
+if eq y 0
+ret X5BIG
+end
+s = add s 4
+end
+if ne get t add s 10 90
+ret X5BIG
+end
+ret x509_hms t s y
+end
+
+note x509_hms: MMDDHHMMSS at t[s] of year y, as seconds (see der_time)
+fn x509_hms t view uchar * s ulong y ulong to ulong
+hh = der_d2 t add s 4
+mi = der_d2 t add s 6
+se = der_d2 t add s 8
+if or gt hh 23 or gt mi 59 gt se 59
+ret X5BIG
+end
+sec = add add mul hh 3600 mul mi 60 se
+mo = der_d2 t s
+dd = der_d2 t add s 2
+if or lt mo 1 gt mo 12
+ret X5BIG
+end
+if or lt dd 1 gt dd x509_dim y mo
+ret X5BIG
+end
+dy = x509_days y mo dd
+ret add mul dy 86400 sec
+end
+
+note ---------------------------------------------------------------- algorithm identifiers
+
+note x509_hashix: the AlgorithmIdentifier TLV that is exactly a, for sha256/384/512 with absent or NULL
+note parameters: 256, 384 or 512; else 0
+fn x509_hashix a view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr a 0 len a h 0
+ret 0
+end
+if or ne get h 0 0x30 ne get h 2 len a
+ret 0
+end
+e = get h 2
+if ne der_hdr a get h 1 e h 0
+ret 0
+end
+if ne get h 0 6
+ret 0
+end
+o = der_oidix part a get h 1 sub get h 2 get h 1
+q = get h 2
+if ne q e
+if not der_null a q e
+ret 0
+end
+end
+if or lt o 12 gt o 14
+ret 0
+end
+ret add 256 mul sub o 12 128
+end
+
+note x509_mgf: the [1] content of RSASSA-PSS-params: AlgorithmIdentifier {id-mgf1, hash}; the hash
+note (256/384/512) or 0
+fn x509_mgf a view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr a 0 len a h 0
+ret 0
+end
+if or ne get h 0 0x30 ne get h 2 len a
+ret 0
+end
+e = get h 2
+if ne der_hdr a get h 1 e h 0
+ret 0
+end
+if ne get h 0 6
+ret 0
+end
+if ne der_oidix part a get h 1 sub get h 2 get h 1 15
+ret 0
+end
+q = get h 2
+ret x509_hashix part a q sub e q
+end
+
+note x509_pss: RSASSA-PSS-params TLV that is exactly p (RFC 4055 3.1). Allowed: hashAlgorithm
+note sha256/384/512 present, maskGenAlgorithm MGF1 with the same hash, saltLength = hash length,
+note trailerField absent. Returns sigalg 4/5/6, else 0 (unsupported).
+fn x509_pss p view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr p 0 len p h 0
+ret 0
+end
+if or ne get h 0 0x30 ne get h 2 len p
+ret 0
+end
+e = get h 2
+if ne der_hdr p get h 1 e h 0
+ret 0
+end
+if ne get h 0 0xa0
+ret 0
+end
+hb = x509_hashix part p get h 1 sub get h 2 get h 1
+if ne der_hdr p get h 2 e h 0
+ret 0
+end
+if ne get h 0 0xa1
+ret 0
+end
+mg = x509_mgf part p get h 1 sub get h 2 get h 1
+if ne der_hdr p get h 2 e h 0
+ret 0
+end
+if ne get h 0 0xa2
+ret 0
+end
+sl = der_small part p get h 1 sub get h 2 get h 1
+if ne get h 2 e
+ret 0
+end
+if or eq hb 0 ne mg hb
+ret 0
+end
+if ne sl div hb 8
+ret 0
+end
+ret add 4 div sub hb 256 128
+end
+
+note x509_algid: signature AlgorithmIdentifier TLV that is exactly a -> sigalg code:
+note 1-3 sha256/384/512WithRSAEncryption (parameters NULL or absent, RFC 4055 5), 4-6 RSASSA-PSS
+note SHA-256/384/512 (x509_pss), 7-9 ecdsa-with-SHA256/384/512 (parameters absent, RFC 5758 3.2);
+note 0 for anything else (SHA-1, MD5, Ed25519, malformed parameters...)
+fn x509_algid a view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr a 0 len a h 0
+ret 0
+end
+if or ne get h 0 0x30 ne get h 2 len a
+ret 0
+end
+e = get h 2
+if ne der_hdr a get h 1 e h 0
+ret 0
+end
+if ne get h 0 6
+ret 0
+end
+o = der_oidix part a get h 1 sub get h 2 get h 1
+q = get h 2
+if and ge o 1 le o 3
+if eq q e
+ret o
+end
+if der_null a q e
+ret o
+end
+ret 0
+end
+if eq o 4
+if eq q e
+ret 0
+end
+ret x509_pss part a q sub e q
+end
+if and ge o 5 le o 7
+if eq q e
+ret add o 2
+end
+end
+ret 0
+end
+
+note ---------------------------------------------------------------- certificate parser
+
+note x509_rsabits: RSAPublicKey TLV that is exactly k (RFC 8017 A.1.1): modulus bit count, plus
+note X5RBADE when the public exponent is out of policy (x509_rsaexp); 0 when malformed
+note (non-minimal or non-positive integers, trailing bytes)
+fn x509_rsabits k view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr k 0 len k h 0
+ret 0
+end
+if or ne get h 0 0x30 ne get h 2 len k
+ret 0
+end
+e = get h 2
+if ne der_hdr k get h 1 e h 0
+ret 0
+end
+if ne get h 0 2
+ret 0
+end
+s = get h 1
+n = sub get h 2 s
+if ne x509_posint part k s n 0
+ret 0
+end
+if ne der_hdr k get h 2 e h 0
+ret 0
+end
+if or ne get h 0 2 ne get h 2 e
+ret 0
+end
+if ne x509_posint part k get h 1 sub e get h 1 0
+ret 0
+end
+x = x509_rsaexp part k get h 1 sub e get h 1
+if eq get k s 0
+s = add s 1
+n = sub n 1
+end
+b = ulong get k s
+bits = mul sub n 1 8
+while ne b 0 bound 9
+bits = add bits 1
+b = shr b 1
+end
+if eq x 0
+bits = add bits X5RBADE
+end
+ret bits
+end
+
+note x509_rsaexp: 1 when the public exponent content x (minimal, positive) is odd and in 3 .. 2^32-1
+fn x509_rsaexp x view uchar * to ulong
+n = len x
+if eq n 0
+ret 0
+end
+s = ulong 0
+if eq get x 0 0
+s = 1
+end
+if gt sub n s 4
+ret 0
+end
+v = ulong 0
+for i ulong sub n s
+v = or shl v 8 ulong get x add s i
+end
+if or lt v 3 eq and v 1 0
+ret 0
+end
+ret 1
+end
+
+note x509_rsaok: 1 when the RSA bit count b (X5RBITS) is in 2048 .. 4096 and the exponent passed
+note (policy for keys presented by the server; anchors only need >= 2048 bits, chain_sig)
+fn x509_rsaok b ulong to ulong
+if or lt b 2048 gt b 4096
+ret 0
+end
+ret 1
+end
+
+note x509_posint: INTEGER content c is minimal and positive (0 ok, 1 not)
+fn x509_posint c view uchar * to ulong
+n = len c
+if eq n 0
+ret 1
+end
+b = ulong get c 0
+if ge b 128
+ret 1
+end
+if eq b 0
+if eq n 1
+ret 1
+end
+if lt ulong get c 1 128
+ret 1
+end
+end
+ret 0
+end
+
+note x509_spki: SubjectPublicKeyInfo TLV that is exactly c[a .. b). Key types: 1 rsaEncryption
+note (parameters NULL; key = RSAPublicKey DER, bits recorded), 2 id-ecPublicKey namedCurve
+note prime256v1 (uncompressed point, 65 bytes), 3 secp384r1 (97 bytes); 0 = any other key (refused
+note when used). 0 ok, 1 malformed.
+fn x509_spki c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret 1
+end
+if or ne get h 0 0x30 ne get h 2 b
+ret 1
+end
+if ne der_hdr c get h 1 b h 0
+ret 1
+end
+if ne get h 0 0x30
+ret 1
+end
+s = get h 2
+kt = x509_keyalg part c get h 1 sub get h 2 get h 1
+if eq kt 9
+ret 1
+end
+if ne der_hdr c s b h 0
+ret 1
+end
+if or ne get h 0 3 ne get h 2 b
+ret 1
+end
+q = get h 1
+if or ge q b ne get c q 0
+ret 1
+end
+q = add q 1
+put r X5RKO q
+put r X5RKL sub b q
+put r X5RKT kt
+ret x509_keyset c q b r
+end
+
+note x509_keyalg: SPKI AlgorithmIdentifier content a -> key type 1 (rsaEncryption, NULL), 2 (EC
+note prime256v1), 3 (EC secp384r1), 0 other, 9 malformed
+fn x509_keyalg a view uchar * to ulong
+h = new ulong 3 0
+e = len a
+if ne der_hdr a 0 e h 0
+ret 9
+end
+if ne get h 0 6
+ret 9
+end
+o = der_oidix part a get h 1 sub get h 2 get h 1
+q = get h 2
+if eq o 8
+if der_null a q e
+ret 1
+end
+ret 0
+end
+if ne o 9
+ret 0
+end
+if ne der_hdr a q e h 0
+ret 9
+end
+if or ne get h 0 6 ne get h 2 e
+ret 0
+end
+p = der_oidix part a get h 1 sub get h 2 get h 1
+if eq p 10
+ret 2
+end
+if eq p 11
+ret 3
+end
+ret 0
+end
+
+note x509_keyset: check the key bytes c[q .. b) for the key type in r[X5RKT] (see x509_spki); a
+note bad EC point becomes key type 0; 0 ok, 1 malformed RSAPublicKey
+fn x509_keyset c view uchar * q ulong b ulong r edit ulong * to ulong
+kt = get r X5RKT
+n = sub b q
+if eq kt 1
+bits = x509_rsabits part c q n
+if eq bits 0
+ret 1
+end
+put r X5RBITS bits
+end
+if eq kt 2
+if or ne n 65 ne get c q 4
+put r X5RKT 0
+ret 0
+end
+end
+if eq kt 3
+if or ne n 97 ne get c q 4
+put r X5RKT 0
+ret 0
+end
+end
+put r X5RKT kt
+ret 0
+end
+
+note x509_bc: basicConstraints extnValue content c[a .. b): SEQUENCE {cA BOOLEAN DEFAULT FALSE,
+note pathLenConstraint INTEGER (0..MAX) OPTIONAL}. An explicit FALSE is tolerated (BER default).
+fn x509_bc c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+if or ne get h 0 0x30 ne get h 2 b
+ret X5EMAL
+end
+s = get h 1
+put r X5RBC 1
+if lt s b
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if eq get h 0 1
+if ne sub get h 2 get h 1 1
+ret X5EMAL
+end
+v = ulong get c get h 1
+if eq v 255
+put r X5RCA 1
+else
+if ne v 0
+ret X5EMAL
+end
+end
+s = get h 2
+end
+end
+if lt s b
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+pl = der_small part c s sub get h 2 s
+if eq pl X5BIG
+ret X5EMAL
+end
+put r X5RPL pl
+s = get h 2
+end
+if ne s b
+ret X5EMAL
+end
+ret 0
+end
+
+note x509_ku: keyUsage extnValue content c[a .. b): BIT STRING, at least one content byte, unused
+note bits 0..7 and zero. The first content byte is recorded (0x80 digitalSignature, 0x04 keyCertSign).
+fn x509_ku c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+if or ne get h 0 3 ne get h 2 b
+ret X5EMAL
+end
+s = get h 1
+if lt sub b s 2
+ret X5EMAL
+end
+u = ulong get c s
+if gt u 7
+ret X5EMAL
+end
+z = ulong get c sub b 1
+if ne and z sub shl ulong 1 u 1 0
+ret X5EMAL
+end
+put r X5RKU 1
+put r X5RKUB ulong get c add s 1
+ret 0
+end
+
+note x509_eku: extKeyUsage extnValue content c[a .. b): SEQUENCE SIZE (1..MAX) OF OBJECT IDENTIFIER
+fn x509_eku c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+if or ne get h 0 0x30 ne get h 2 b
+ret X5EMAL
+end
+s = get h 1
+if eq s b
+ret X5EMAL
+end
+n = ulong 0
+while lt s b bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne get h 0 6
+ret X5EMAL
+end
+o = der_oidix part c get h 1 sub get h 2 get h 1
+if eq o 21
+put r X5RSRV 1
+end
+if eq o 22
+put r X5RANY 1
+end
+s = get h 2
+end
+put r X5REKU 1
+ret 0
+end
+
+note x509_san: subjectAltName extnValue content c[a .. b): SEQUENCE SIZE (1..MAX) OF GeneralName,
+note each a context-specific TLV; the GeneralNames content span is recorded
+fn x509_san c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+if or ne get h 0 0x30 ne get h 2 b
+ret X5EMAL
+end
+s = get h 1
+if eq s b
+ret X5EMAL
+end
+put r X5RSNO s
+put r X5RSNL sub b s
+n = ulong 0
+while lt s b bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne and get h 0 0xc0 0x80
+ret X5EMAL
+end
+s = get h 2
+end
+put r X5RSAN 1
+ret 0
+end
+
+note x509_ext: one Extension, content c[a .. b): {extnID, critical BOOLEAN DEFAULT FALSE, extnValue}.
+note Known: basicConstraints, keyUsage, extKeyUsage, subjectAltName (each at most once). A
+note nameConstraints extension, critical or not, is X5ENC; any other unknown critical one X5ECRIT.
+fn x509_ext c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+if ne get h 0 6
+ret X5EMAL
+end
+o = der_oidix part c get h 1 sub get h 2 get h 1
+if ne der_hdr c get h 2 b h 0
+ret X5EMAL
+end
+cr = ulong 0
+if eq get h 0 1
+if ne sub get h 2 get h 1 1
+ret X5EMAL
+end
+v = ulong get c get h 1
+if eq v 255
+cr = 1
+else
+if ne v 0
+ret X5EMAL
+end
+end
+if ne der_hdr c get h 2 b h 0
+ret X5EMAL
+end
+end
+if or ne get h 0 4 ne get h 2 b
+ret X5EMAL
+end
+if eq o 20
+ret X5ENC
+end
+if or lt o 16 gt o 19
+if ne cr 0
+ret X5ECRIT
+end
+ret 0
+end
+m = shl ulong 1 sub o 16
+if ne and get r X5RSEEN m 0
+ret X5EMAL
+end
+put r X5RSEEN or get r X5RSEEN m
+s = get h 1
+if eq o 16
+ret x509_bc c s b r
+end
+if eq o 17
+ret x509_ku c s b r
+end
+if eq o 18
+ret x509_eku c s b r
+end
+ret x509_san c s b r
+end
+
+note x509_exts: [3] content c[a .. b): Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
+fn x509_exts c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+if or ne get h 0 0x30 ne get h 2 b
+ret X5EMAL
+end
+s = get h 1
+if eq s b
+ret X5EMAL
+end
+n = ulong 0
+while lt s b bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne get h 0 0x30
+ret X5EMAL
+end
+v = x509_ext c get h 1 get h 2 r
+if ne v 0
+ret v
+end
+s = get h 2
+end
+ret 0
+end
+
+note x509_valid: Validity TLV that is exactly c[a .. b): notBefore, notAfter
+fn x509_valid c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret 1
+end
+if or ne get h 0 0x30 ne get h 2 b
+ret 1
+end
+s = get h 1
+if ne der_hdr c s b h 0
+ret 1
+end
+nb = der_time part c s sub get h 2 s
+s = get h 2
+if ne der_hdr c s b h 0
+ret 1
+end
+if ne get h 2 b
+ret 1
+end
+na = der_time part c s sub b s
+if or eq nb X5BIG eq na X5BIG
+ret 1
+end
+put r X5RNB nb
+put r X5RNA na
+ret 0
+end
+
+note x509_tbs2: tbsCertificate from validity on, c[s .. b): validity, subject, SPKI, optional unique
+note IDs (v2, v3: at most one issuerUniqueID [1], then at most one subjectUniqueID [2]) and
+note extensions (v3 only)
+fn x509_tbs2 c view uchar * s ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne x509_valid c s get h 2 r 0
+ret X5EMAL
+end
+s = get h 2
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne get h 0 0x30
+ret X5EMAL
+end
+put r X5RSBO s
+put r X5RSBL sub get h 2 s
+s = get h 2
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne x509_spki c s get h 2 r 0
+ret X5EMAL
+end
+s = get h 2
+v = get r X5RVER
+k = ulong 0x80
+while lt s b bound 4
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+g = get h 0
+if or eq g 0x81 eq g 0x82
+if or eq v 0 le g k
+ret X5EMAL
+end
+k = g
+s = get h 2
+continue
+end
+if or ne g 0xa3 ne v 2
+ret X5EMAL
+end
+if ne get h 2 b
+ret X5EMAL
+end
+ret x509_exts c get h 1 b r
+end
+if ne s b
+ret X5EMAL
+end
+ret 0
+end
+
+note x509_tbs: tbsCertificate content c[a .. b): version (explicit [0], 1 or 2 when present),
+note serialNumber (1..21 content bytes), signature AlgorithmIdentifier, issuer Name, then x509_tbs2
+fn x509_tbs c view uchar * a ulong b ulong r edit ulong * to ulong
+h = new ulong 3 0
+s = a
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if eq get h 0 0xa0
+v = der_small part c get h 1 sub get h 2 get h 1
+if or eq v 0 gt v 2
+ret X5EMAL
+end
+put r X5RVER v
+s = get h 2
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+end
+n = sub get h 2 get h 1
+if or ne get h 0 2 or eq n 0 gt n 21
+ret X5EMAL
+end
+s = get h 2
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne get h 0 0x30
+ret X5EMAL
+end
+put r X5RTAO s
+put r X5RTAL sub get h 2 s
+s = get h 2
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if ne get h 0 0x30
+ret X5EMAL
+end
+put r X5RISO s
+put r X5RISL sub get h 2 s
+ret x509_tbs2 c get h 2 b r
+end
+
+note x509_parse: the Certificate that is exactly c (RFC 5280 4.1) into the record r (len r >= X5RSZ,
+note offsets relative to c). 0 ok, else X5EMAL, X5ECRIT or X5EAMIS. An unsupported signature
+note algorithm or key type is recorded (sigalg 0, key type 0), not refused here.
+fn x509_parse c view uchar * r edit ulong * to ulong
+h = new ulong 3 0
+for i ulong X5RSZ
+put r i 0
+end
+put r X5RPL X5BIG
+if ne der_hdr c 0 len c h 0
+ret X5EMAL
+end
+if or ne get h 0 0x30 ne get h 2 len c
+ret X5EMAL
+end
+e = len c
+s = get h 1
+if ne der_hdr c s e h 0
+ret X5EMAL
+end
+if ne get h 0 0x30
+ret X5EMAL
+end
+put r X5RTBO s
+put r X5RTBL sub get h 2 s
+tc = get h 1
+s = get h 2
+if ne der_hdr c s e h 0
+ret X5EMAL
+end
+if ne get h 0 0x30
+ret X5EMAL
+end
+put r X5RAO s
+put r X5RAL sub get h 2 s
+put r X5RALG x509_algid part c s sub get h 2 s
+s = get h 2
+if ne der_hdr c s e h 0
+ret X5EMAL
+end
+if or ne get h 0 3 ne get h 2 e
+ret X5EMAL
+end
+q = get h 1
+if or ge q e ne get c q 0
+ret X5EMAL
+end
+put r X5RSGO add q 1
+put r X5RSGL sub sub e q 1
+v = x509_tbs c tc add get r X5RTBO get r X5RTBL r
+if ne v 0
+ret v
+end
+if ne get r X5RAL get r X5RTAL
+ret X5EAMIS
+end
+if not der_eqat c get r X5RAO get r X5RTAO get r X5RAL
+ret X5EAMIS
+end
+ret 0
+end
+
+note ---------------------------------------------------------------- PEM trust store
+
+note b64_val: value of a base64 character (RFC 4648 4), 64 for '=', 99 for anything else
+fn b64_val c ulong to ulong
+if and ge c 65 le c 90
+ret sub c 65
+end
+if and ge c 97 le c 122
+ret sub c 71
+end
+if and ge c 48 le c 57
+ret add c 4
+end
+if eq c 43
+ret 62
+end
+if eq c 47
+ret 63
+end
+if eq c 61
+ret 64
+end
+ret 99
+end
+
+note b64_push: one base64 character c of a certificate block. s: 0 write position, 3 accumulator,
+note 4 characters in the quartet, 5 '=' seen, 6 block finished by padding. Strict: no character
+note after padding, '=' only as the last one or two of a quartet, unused bits zero. 0 or -4098.
+fn b64_push st edit uchar * c ulong s edit ulong * to long
+v = b64_val c
+if or eq v 99 eq get s 6 1
+ret -4098
+end
+acc = get s 3
+if eq v 64
+if lt get s 4 2
+ret -4098
+end
+put s 5 add get s 5 1
+acc = shl acc 6
+else
+if gt get s 5 0
+ret -4098
+end
+acc = or shl acc 6 v
+end
+put s 3 acc
+put s 4 add get s 4 1
+if lt get s 4 4
+ret 0
+end
+pad = get s 5
+w = get s 0
+if and eq pad 1 ne and acc 255 0
+ret -4098
+end
+if and eq pad 2 ne and acc 65535 0
+ret -4098
+end
+put st w uchar shr acc 16
+if lt pad 2
+put st add w 1 uchar and shr acc 8 255
+end
+if lt pad 1
+put st add w 2 uchar and acc 255
+end
+put s 0 add w sub 3 pad
+put s 3 0
+put s 4 0
+if gt pad 0
+put s 6 1
+end
+ret 0
+end
+
+note pem_end: close the block: complete quartets, one SEQUENCE TLV of exactly the decoded length,
+note then the 3-byte big-endian length is written in front of it
+fn pem_end st edit uchar * s edit ulong * to long
+h = new ulong 3 0
+if ne get s 4 0
+ret -4098
+end
+o = add get s 2 3
+n = sub get s 0 o
+if or eq n 0 ge n 16777216
+ret -4099
+end
+if ne der_hdr view part st o n 0 n h 0
+ret -4099
+end
+if or ne get h 0 0x30 ne get h 2 n
+ret -4099
+end
+w = get s 2
+put st w uchar shr n 16
+put st add w 1 uchar and shr n 8 255
+put st add w 2 uchar and n 255
+put s 1 0
+ret 0
+end
+
+note pem_line: one line st[a .. b) (no line end). Outside a block only the exact BEGIN CERTIFICATE
+note line matters (other lines are ignored); inside, the exact END line or base64 characters only.
+fn pem_line st edit uchar * a ulong b ulong s edit ulong * to long
+if eq get s 1 0
+if der_same view part st a sub b a X5BEG
+put s 1 1
+put s 2 get s 0
+put s 0 add get s 0 3
+put s 3 0
+put s 4 0
+put s 5 0
+put s 6 0
+end
+ret 0
+end
+if der_same view part st a sub b a X5END
+ret pem_end st s
+end
+for i ulong sub b a
+r = b64_push st ulong get st add a i s
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note pem_decode: decode the PEM text st[0 .. n) in place into the store format (repeated 3-byte length
+note || certificate DER; a zero length or the array end terminates; 3 zero bytes are written after
+note the last entry when they fit), return the
+note bytes used. In place is safe: the write position stays below the read position (each block
+note consumes its 28-byte BEGIN line before 3 header bytes are written, then 4 characters per <= 3
+note bytes). Codes: -4098 bad base64 or framing, -4099 a block that is not one DER SEQUENCE, -4100
+note n > len st. Lines end with LF; one CR before the LF is dropped.
+fn pem_decode st edit uchar * n ulong to long
+s = new ulong 8 0
+if gt n len st
+ret -4100
+end
+a = ulong 0
+while lt a n bound 999999
+e = a
+while lt e n bound 999999
+if eq get st e 10
+break
+end
+e = add e 1
+end
+b = e
+if gt b a
+if eq get st sub b 1 13
+b = sub b 1
+end
+end
+r = pem_line st a b s
+if ne r 0
+ret r
+end
+a = add e 1
+end
+if ne get s 1 0
+ret -4098
+end
+w = get s 0
+if le add w 3 len st
+put st w 0
+put st add w 1 0
+put st add w 2 0
+end
+ret long w
+end
+
+note x509_store_loadf: read the PEM bundle at path into st and decode it (pem_decode). Returns the
+note bytes used, -errno for open/read errors, -4097 when the file does not fit in st, or a
+note pem_decode code.
+fn x509_store_loadf st edit uchar * path view uchar * to long
+one = new uchar 1 0
+fd = fopen path 0 len path 524288 0
+if lt fd 0
+ret fd
+end
+n = ulong 0
+z = long 0
+while lt n len st bound 999999
+r = read int fd st n sub len st n
+if lt r 0
+z = fclose int fd
+ret r
+end
+if eq r 0
+break
+end
+n = add n ulong r
+end
+if eq n len st
+r = read int fd one 0 1
+if ne r 0
+z = fclose int fd
+ret -4097
+end
+end
+z = fclose int fd
+ret pem_decode st n
+end
+
+note x509_store_load: the system bundle /etc/ssl/certs/ca-certificates.crt (see x509_store_loadf)
+fn x509_store_load st edit uchar * to long
+ret x509_store_loadf st X5PATH
+end
+
+note x509_errname: ASCII name of a reject code into o (truncated to len o); its length, 0 if unknown
+fn x509_errname code ulong o edit uchar * to ulong
+s = ulong 0
+k = ulong 0
+n = len X5NAMES
+while lt s n bound 100
+j = s
+while lt j n bound 100
+if eq get X5NAMES j 32
+break
+end
+j = add j 1
+end
+if eq k code
+m = sub j s
+for i ulong m
+if lt i len o
+put o i get X5NAMES add s i
+end
+end
+ret m
+end
+s = add j 1
+k = add k 1
+end
+ret 0
+end
+
+note ---------------------------------------------------------------- chain validation
+
+note chain_index: the TLS 1.3 certificate_list contents cl (RFC 8446 4.4.2: uint24 length, DER,
+note uint16 extensions length, extensions) into ix (offset, length pairs). Entry count, or 0 when the
+note framing is bad, an entry is empty, or there are more than len ix / 2 entries.
+fn chain_index cl view uchar * ix edit ulong * to ulong
+p = ulong 0
+n = ulong 0
+e = len cl
+while lt p e bound 100000
+if lt sub e p 3
+ret 0
+end
+l = der_u24 cl p
+p = add p 3
+if or eq l 0 gt l sub e p
+ret 0
+end
+if ge n div len ix 2
+ret 0
+end
+put ix mul n 2 p
+put ix add mul n 2 1 l
+p = add p l
+if lt sub e p 2
+ret 0
+end
+x = or shl ulong get cl p 8 ulong get cl add p 1
+p = add p 2
+if gt x sub e p
+ret 0
+end
+p = add p x
+n = add n 1
+end
+ret n
+end
+
+note chain_hostok: host must be an LDH name: 1..253 bytes, labels 1..63 of letters, digits and '-',
+note no empty label, no trailing dot. All digits and dots, or any ':', is an IP literal (X5EIP).
+fn chain_hostok h view uchar * to ulong
+n = len h
+if or eq n 0 gt n 253
+ret X5ENAME
+end
+dig = ulong 1
+lab = ulong 0
+for i ulong n
+c = ulong get h i
+if eq c 58
+ret X5EIP
+end
+if eq c 46
+if eq lab 0
+ret X5ENAME
+end
+lab = 0
+continue
+end
+if or lt c 48 gt c 57
+dig = 0
+lc = chain_low c
+if and or lt lc 97 gt lc 122 ne c 45
+ret X5ENAME
+end
+end
+lab = add lab 1
+if gt lab 63
+ret X5ENAME
+end
+end
+if eq dig 1
+ret X5EIP
+end
+if eq lab 0
+ret X5ENAME
+end
+ret 0
+end
+
+note chain_low: ASCII lower case
+fn chain_low c ulong to ulong
+if and ge c 65 le c 90
+ret add c 32
+end
+ret c
+end
+
+note chain_ieq: equal spans under ASCII case folding
+fn chain_ieq a view uchar * b view uchar * to bool
+if ne len a len b
+ret false
+end
+for i ulong len a
+if ne chain_low ulong get a i chain_low ulong get b i
+ret false
+end
+end
+ret true
+end
+
+note chain_match: SAN dNSName pattern p against host h (RFC 6125 6.4). Exact match ignoring ASCII
+note case; or p = "*." rest where rest has >= 2 non-empty labels and no '*': the '*' stands for the
+note whole leftmost label of h (one non-empty label, never several, never the bare parent).
+note Partial wildcards ("f*.example.com") never match.
+fn chain_match p view uchar * h view uchar * to bool
+np = len p
+nh = len h
+if eq np 0
+ret false
+end
+if ne get p 0 42
+ret chain_ieq p h
+end
+if or lt np 5 ne get p 1 46
+ret false
+end
+dots = ulong 0
+lab = ulong 0
+for i ulong sub np 2
+c = get p add i 2
+if eq c 42
+ret false
+end
+if eq c 46
+if eq lab 0
+ret false
+end
+dots = add dots 1
+lab = 0
+else
+lab = add lab 1
+end
+end
+if or eq lab 0 eq dots 0
+ret false
+end
+k = ulong 0
+while lt k nh bound 300
+if eq get h k 46
+break
+end
+k = add k 1
+end
+if or eq k 0 ge k nh
+ret false
+end
+ret chain_ieq part p 1 sub np 1 part h k sub nh k
+end
+
+note chain_host: host h against the SAN dNSNames of the certificate c (record r). No SAN: X5ENSAN
+note (no subject CN fallback); no matching dNSName: X5ENAME.
+fn chain_host c view uchar * r view ulong * h view uchar * to ulong
+hd = new ulong 3 0
+if eq get r X5RSAN 0
+ret X5ENSAN
+end
+s = get r X5RSNO
+e = add s get r X5RSNL
+n = ulong 0
+while lt s e bound 10000
+n = add n 1
+if gt n X5NMAX
+ret X5EMAL
+end
+if ne der_hdr c s e hd 0
+ret X5EMAL
+end
+if eq get hd 0 0x82
+if chain_match part c get hd 1 sub get hd 2 get hd 1 h
+ret 0
+end
+end
+s = get hd 2
+end
+ret X5ENAME
+end
+
+note chain_time: validity of record r at nw (seconds since 0000-03-01, as der_time): valid iff
+note notBefore <= nw < notAfter. RFC 5280 4.1.2.5 includes notAfter; OpenSSL does not, and the
+note stricter bound is kept so that this client never accepts what OpenSSL refuses.
+fn chain_time r view ulong * nw ulong to ulong
+if gt get r X5RNB nw
+ret X5ENYV
+end
+if le get r X5RNA nw
+ret X5EEXP
+end
+ret 0
+end
+
+note chain_hash: the hash (256/384/512) of sigalg a (1..9)
+fn chain_hash a ulong to ulong
+ret add 256 mul rem sub a 1 3 128
+end
+
+note chain_sig: verify the signature of the certificate cd (record rr[0 .. 32)) with the key of the
+note certificate kd (record rr[32 .. 64)). Allowed: sigalg 1-6 with an rsaEncryption key of >= 2048
+note bits, sigalg 7-9 with a P-256 or P-384 key. 0, X5EALG, X5EWEAK or X5ESIG.
+fn chain_sig cd view uchar * kd view uchar * rr view ulong * to ulong
+p = new ulong 10 0
+a = get rr X5RALG
+kt = get rr add X5RSZ X5RKT
+if or eq a 0 gt a 9
+ret X5EALG
+end
+if le a 6
+if ne kt 1
+ret X5EALG
+end
+if lt get rr add X5RSZ X5RBITS 2048
+ret X5EWEAK
+end
+else
+if or lt kt 2 gt kt 3
+ret X5EALG
+end
+end
+put p 0 add div sub a 1 3 1
+put p 1 chain_hash a
+put p 2 get rr add X5RSZ X5RKO
+put p 3 get rr add X5RSZ X5RKL
+put p 4 kt
+put p 6 get rr X5RTBO
+put p 7 get rr X5RTBL
+put p 8 get rr X5RSGO
+put p 9 get rr X5RSGL
+ret chain_hsig cd kd edit p
+end
+
+note chain_hsig: digest of cd[p[6] .. +p[7]) with hash p[1], then chain_vfy of digest || signature
+note cd[p[8] .. +p[9]) (at most 1024 bytes, else X5ESIG) with the key in kd
+fn chain_hsig cd view uchar * kd view uchar * p edit ulong * to ulong
+hs = new uchar 1100 0
+sl = get p 9
+if or eq sl 0 gt sl 1024
+ret X5ESIG
+end
+put p 5 sha2_digest get p 1 part cd get p 6 get p 7 edit hs
+dl = get p 5
+so = get p 8
+for i ulong sl
+put hs add dl i get cd add so i
+end
+dl = add dl sl
+so = get p 2
+sl = get p 3
+ret chain_vfy part kd so sl view part hs 0 dl view p
+end
+
+note chain_vfy: hs = digest (p[5] bytes) || signature, key ky (RSAPublicKey DER or SEC1 point);
+note p[0] 1 PKCS#1 v1.5, 2 PSS, 3 ECDSA; p[1] hash, p[4] key type. 0 or X5ESIG.
+fn chain_vfy ky view uchar * hs view uchar * p view ulong * to ulong
+k = get p 0
+hb = get p 1
+dl = get p 5
+v = ulong 1
+if eq k 1
+v = rsa_verify_pkcs1 hb ky hs dl
+end
+if eq k 2
+v = rsa_verify_pss chain_ctl hb ky hs dl
+end
+if eq k 3
+v = ecdsa_verify chain_crv get p 4 ky hs dl
+end
+if ne v 0
+ret X5ESIG
+end
+ret 0
+end
+
+note chain_ctl: rsa.om PSS control word for hash hb: hash | MGF1 hash << 16 | salt (= hash bytes) << 32
+fn chain_ctl hb ulong to ulong
+ret or or hb shl hb 16 shl div hb 8 32
+end
+
+note chain_crv: ec.om curve for key type kt (2 P-256, 3 P-384)
+fn chain_crv kt ulong to ulong
+if eq kt 2
+ret 256
+end
+ret 384
+end
+
+note chain_link: is kd (record w[32 .. 64), already parsed) the issuer of cd (record w[0 .. 32))?
+note subject(kd) must equal issuer(cd) byte for byte (DER equality instead of the RFC 5280 7.1
+note comparison rules), then chain_sig. X5EUNK when the names differ.
+fn chain_link cd view uchar * kd view uchar * w view ulong * to ulong
+io = get w X5RISO
+il = get w X5RISL
+so = get w add X5RSZ X5RSBO
+sn = get w add X5RSZ X5RSBL
+if not der_same part cd io il part kd so sn
+ret X5EUNK
+end
+ret chain_sig cd kd part w 0 mul X5RSZ 2
+end
+
+note chain_self: 1 when the certificate c (record w[32 .. 64)) is self-issued: its issuer and subject
+note are the same DER bytes; else 0
+fn chain_self c view uchar * w view ulong * to ulong
+io = get w add X5RSZ X5RISO
+il = get w add X5RSZ X5RISL
+so = get w add X5RSZ X5RSBO
+if ne il get w add X5RSZ X5RSBL
+ret 0
+end
+for i ulong il
+if ne get c add io i get c add so i
+ret 0
+end
+end
+ret 1
+end
+
+note chain_alink: chain_link for a store entry kd, which must be self-issued (chain_self) to be an
+note anchor; X5EUNK otherwise
+fn chain_alink cd view uchar * kd view uchar * w view ulong * to ulong
+if eq chain_self kd w 0
+ret X5EUNK
+end
+ret chain_link cd kd w
+end
+
+note chain_anchor: try every trust anchor in st (store format) whose subject is the issuer of the
+note current certificate cd. 0 when one verifies it; else the code of the last failed candidate,
+note X5EUNK when none has the name. Anchors that do not parse are skipped, and so are store entries
+note that are not self-issued (subject DER == issuer DER, chain_self): an intermediate placed in the
+note store is not a trust anchor (OpenSSL without -partial_chain; stricter than RFC 5280 6.1.1 d).
+note Anchors are not checked for validity period or CA constraints (RFC 5280 6.1: a name and a key).
+fn chain_anchor cd view uchar * st view uchar * w edit ulong * to ulong
+p = ulong 0
+res = X5EUNK
+while lt p len st bound 100000
+if lt sub len st p 3
+break
+end
+l = der_u24 st p
+p = add p 3
+if or eq l 0 gt l sub len st p
+break
+end
+if eq x509_parse part st p l part w X5RSZ X5RSZ 0
+v = chain_alink cd part st p l view w
+if eq v 0
+ret 0
+end
+if ne v X5EUNK
+res = v
+end
+end
+p = add p l
+end
+ret res
+end
+
+note chain_pres: try the presented certificates of cl not yet in the path as issuer of the current
+note one (the first that verifies is taken; its index goes to w[X5WSEL]). 0, or the code of the
+note first failed candidate, replaced by any later code other than X5EUNK and X5EMAL. A presented
+note certificate that does not parse (X5EMAL, X5ECRIT) fails the chain when no candidate verifies
+note (fail closed: its subject cannot be known). X5EUNK when nothing is left to try.
+fn chain_pres cl view uchar * w edit ulong * to ulong
+kb = new uchar 16384 0
+res = X5EUNK
+for j ulong get w X5WN
+if ne and get w X5WUSED shl ulong 1 j 0
+continue
+end
+put w X5WSEL j
+v = chain_try cl w kb
+if eq v 0
+ret 0
+end
+if or eq res X5EUNK and ne v X5EUNK ne v X5EMAL
+res = v
+end
+end
+ret res
+end
+
+note chain_try: candidate issuer w[X5WSEL] of cl for the current certificate w[X5WCUR]; the
+note candidate is copied into kb (the two certificates of one call must be distinct arrays)
+fn chain_try cl view uchar * w edit ulong * kb edit uchar * to ulong
+j = get w X5WSEL
+o = get w add X5WIX mul j 2
+l = get w add X5WIX add mul j 2 1
+if gt l len kb
+ret X5EMAL
+end
+for i ulong l
+put kb i get cl add o i
+end
+v = x509_parse view part kb 0 l part w X5RSZ X5RSZ
+if ne v 0
+ret v
+end
+if ne chain_rsapol part w X5RSZ X5RSZ 0
+ret X5EWEAK
+end
+j = get w X5WCUR
+o = get w add X5WIX mul j 2
+i = get w add X5WIX add mul j 2 1
+ret chain_link part cl o i view part kb 0 l view w
+end
+
+note chain_ca: constraints of the chosen issuer (record w[32 .. 64)), a non-anchor CA certificate:
+note validity at now, basicConstraints cA TRUE, pathLenConstraint >= the number of intermediates
+note below it (w[X5WDEP] - 1), keyUsage (if present) keyCertSign, EKU (if present) serverAuth or
+note anyExtendedKeyUsage
+fn chain_ca w view ulong * to ulong
+v = chain_time part w X5RSZ X5RSZ get w X5WNOW
+if ne v 0
+ret v
+end
+if eq get w add X5RSZ X5RCA 0
+ret X5ENCA
+end
+if gt sub get w X5WDEP 1 get w add X5RSZ X5RPL
+ret X5EPATH
+end
+if eq get w add X5RSZ X5RKU 1
+if eq and get w add X5RSZ X5RKUB 4 0
+ret X5EKU
+end
+end
+if eq get w add X5RSZ X5REKU 1
+if and eq get w add X5RSZ X5RSRV 0 eq get w add X5RSZ X5RANY 0
+ret X5EEKU
+end
+end
+ret 0
+end
+
+note chain_rsapol: X5EWEAK when the certificate record r has an RSA key outside x509_rsaok, else 0
+fn chain_rsapol r view ulong * to ulong
+if and eq get r X5RKT 1 eq x509_rsaok get r X5RBITS 0
+ret X5EWEAK
+end
+ret 0
+end
+
+note chain_leaf: the leaf (entry 0): parse, validity at now, host name, not a CA, keyUsage (if
+note present) digitalSignature, EKU (if present) serverAuth, key type supported, RSA key policy
+note (x509_rsaok: 2048 .. 4096 bits, exponent odd in 3 .. 2^32-1)
+fn chain_leaf cl view uchar * hq view uchar * w edit ulong * to ulong
+lo = get w X5WIX
+ll = get w add X5WIX 1
+v = x509_parse part cl lo ll part w 0 X5RSZ
+if ne v 0
+ret v
+end
+v = chain_time part w 0 X5RSZ get w X5WNOW
+if ne v 0
+ret v
+end
+v = chain_hostok part hq 8 sub len hq 8
+if ne v 0
+ret v
+end
+v = chain_host part cl lo ll view part w 0 X5RSZ part hq 8 sub len hq 8
+if ne v 0
+ret v
+end
+if eq get w X5RCA 1
+ret X5ELCA
+end
+if eq get w X5RKU 1
+if eq and get w X5RKUB 128 0
+ret X5EKU
+end
+end
+if eq get w X5REKU 1
+if eq get w X5RSRV 0
+ret X5EEKU
+end
+end
+kt = get w X5RKT
+if or eq kt 0 gt kt 3
+ret X5EALG
+end
+if and eq kt 1 eq x509_rsaok get w X5RBITS 0
+ret X5EWEAK
+end
+ret 0
+end
+
+note chain_path: build the path upward from the leaf. At each step a trust anchor is preferred
+note (chain_anchor); else a presented certificate (chain_pres), which must then pass chain_ca. Each
+note presented certificate is used at most once (no loops); at most X5MAXD non-anchor certificates.
+fn chain_path cl view uchar * st view uchar * w edit ulong * to ulong
+put w X5WUSED 1
+put w X5WDEP 1
+put w X5WCUR 0
+for k ulong X5MAXD
+cu = get w X5WCUR
+co = get w add X5WIX mul cu 2
+cn = get w add X5WIX add mul cu 2 1
+a = chain_anchor part cl co cn st w
+if eq a 0
+ret 0
+end
+v = chain_pres cl w
+if ne v 0
+if eq v X5EUNK
+ret a
+end
+ret v
+end
+if ge get w X5WDEP X5MAXD
+ret X5EDEEP
+end
+v = chain_ca w
+if ne v 0
+ret v
+end
+chain_up w
+end
+ret X5EDEEP
+end
+
+note chain_up: the chosen presented issuer becomes the current certificate
+fn chain_up w edit ulong * to void
+for i ulong X5RSZ
+put w i get w add X5RSZ i
+end
+j = get w X5WSEL
+put w X5WCUR j
+put w X5WUSED or get w X5WUSED shl ulong 1 j
+put w X5WDEP add get w X5WDEP 1
+end
+
+note x509_chain_verify: validate the server chain. cl = TLS 1.3 certificate_list contents, leaf
+note first; st = store from x509_store_load(f); hq = 8-byte big-endian unix time || host name.
+note 0 valid, else a reject code (see the table at the top). Limits (X5EMAL beyond them): at most
+note X5MAXC (16) entries in cl, presented issuer certificates at most X5KBUF (16384) bytes, signatures
+note at most 1024 bytes (X5ESIG), now at most 253402300799 (9999-12-31T23:59:59Z).
+note Rules, all fail closed: leaf = entry 0 (chain_leaf); issuers by path building (chain_path);
+note trust anchors are the self-issued store entries, name + key only (no validity, CA or usage
+note checks on anchors, RFC 5280 6.1.1 d);
+note names are compared as DER bytes, not with the RFC 5280 7.1 / 4.1.2.4 matching rules (case and
+note whitespace folding of PrintableString/UTF8String are NOT applied: an issuer whose encoding of
+note the same name differs from the subject encoding is reported X5EUNK).
+fn x509_chain_verify cl view uchar * st view uchar * hq view uchar * to ulong
+w = new ulong 128 0
+if lt len hq 8
+ret X5EMAL
+end
+nw = ulong 0
+for i ulong 8
+nw = or shl nw 8 ulong get hq i
+end
+if gt nw 253402300799
+ret X5EMAL
+end
+put w X5WNOW add nw mul x509_days 1970 1 1 86400
+n = chain_index cl part w X5WIX mul X5MAXC 2
+if eq n 0
+ret X5EMAL
+end
+if gt get w add X5WIX 1 X5LMAX
+ret X5EMAL
+end
+put w X5WN n
+v = chain_leaf cl hq w
+if ne v 0
+ret v
+end
+ret chain_path cl st w
+end
+
+note chain_cvsig: CertificateVerify check with the leaf kd (record r; r[30] hash, r[31] content
+note length): ms = content || signature; RSA keys use PSS, EC keys ECDSA (chain_hsig)
+fn chain_cvsig kd view uchar * r view ulong * ms view uchar * to ulong
+p = new ulong 10 0
+kt = get r X5RKT
+put p 0 3
+if eq kt 1
+put p 0 2
+end
+put p 1 get r 30
+put p 2 get r X5RKO
+put p 3 get r X5RKL
+put p 4 kt
+put p 7 get r 31
+put p 8 get r 31
+put p 9 sub len ms get r 31
+ret chain_hsig ms kd edit p
+end
+
+note x509_cv_verify: TLS 1.3 CertificateVerify (RFC 8446 4.4.3) against the leaf of cl. ms = signed
+note content (mlen bytes) || signature. Schemes: 0x0403 ecdsa_secp256r1_sha256 (P-256 key),
+note 0x0503 ecdsa_secp384r1_sha384 (P-384 key), 0x0804/0x0805/0x0806 rsa_pss_rsae_sha256/384/512
+note (rsaEncryption key within x509_rsaok, else X5EWEAK). Anything else, rsa_pkcs1_* included, is
+note X5ESCH.
+fn x509_cv_verify cl view uchar * scheme ulong ms view uchar * mlen ulong to ulong
+r = new ulong 32 0
+if lt len cl 3
+ret X5EMAL
+end
+l = der_u24 cl 0
+if or eq l 0 gt l sub len cl 3
+ret X5EMAL
+end
+v = x509_parse part cl ulong 3 l edit r
+if ne v 0
+ret v
+end
+if gt mlen len ms
+ret X5EMAL
+end
+kt = get r X5RKT
+hb = ulong 0
+if and eq scheme 0x0403 eq kt 2
+hb = 256
+end
+if and eq scheme 0x0503 eq kt 3
+hb = 384
+end
+if and and ge scheme 0x0804 le scheme 0x0806 eq kt 1
+hb = add 256 mul sub scheme 0x0804 128
+if eq x509_rsaok get r X5RBITS 0
+ret X5EWEAK
+end
+end
+if eq hb 0
+ret X5ESCH
+end
+put r 30 hb
+put r 31 mlen
+ret chain_cvsig part cl ulong 3 l r ms
+end

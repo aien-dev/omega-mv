@@ -1,0 +1,6 @@
+note leak fixture (MANUAL path, README.txt): a function-mode write is an SVC, a construct the scan
+note does not classify (contract section 8: the SHA unit makes no system calls). It is listed as
+note UNHANDLED svc-syscall. Expected: TRACE-EQUIV-STATIC NOT_RUN under E12.
+fn f a edit uchar 4 to long
+ret write 1 a 0 1
+end

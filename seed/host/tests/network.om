@@ -1,0 +1,131 @@
+note An isolated local socket. The server and client are both native Omega in this program.
+text path "native.sock"
+text msg "native ping"
+global addr uchar 110
+global buf uchar 32
+global status uchar 4
+global family int 1
+global alen ulong 1
+fn client to int
+fd = socknew get family 0 1 0
+if lt fd 0
+ret 21
+end
+r = connect int fd addr 0 get alen 0
+if ne r 0
+ret 22
+end
+r = send int fd msg 0 len msg 0
+if ne r long len msg
+ret 23
+end
+r = waitio int fd 1 1000000000
+if or lt r 0 eq and r 1 0
+ret 24
+end
+r = recv int fd buf 0 len buf 0
+if ne r long len msg
+ret 25
+end
+for i ulong len msg
+if ne get buf i get msg i
+ret 26
+end
+end
+r = fclose int fd
+ret int r
+end
+fn serve fd int to int
+r = waitio fd 1 1000000000
+if or lt r 0 eq and r 1 0
+ret 31
+end
+conn = accept fd 0
+if lt conn 0
+ret 32
+end
+r = waitio int conn 1 1000000000
+if or lt r 0 eq and r 1 0
+ret 33
+end
+r = recv int conn buf 0 len buf 0
+if ne r long len msg
+ret 34
+end
+for i ulong len msg
+if ne get buf i get msg i
+ret 35
+end
+end
+r = send int conn buf 0 len msg 0
+if ne r long len msg
+ret 36
+end
+r = fclose int conn
+ret int r
+end
+fn main to int
+put family 0 1
+put alen 0 110
+if eq argcnt 2
+put family 0 2
+put alen 0 16
+put addr 0 2
+put addr 4 127
+put addr 7 1
+else
+put addr 0 1
+for i ulong len path
+put addr add i 2 get path i
+end
+end
+fd = socknew get family 0 1 0
+if lt fd 0
+ret 1
+end
+r = bind int fd addr 0 get alen 0
+if ne r 0
+ret 2
+end
+if eq get family 0 2
+r = sockname int fd addr 0 get alen 0
+if ne r 16
+ret 8
+end
+if and eq get addr 2 0 eq get addr 3 0
+ret 9
+end
+end
+r = listen int fd 1
+if ne r 0
+ret 3
+end
+r = waitio int fd 1 1000000
+if ne r 0
+ret 4
+end
+pid = fork
+if lt pid 0
+ret 5
+end
+if eq pid 0
+r = fclose int fd
+ret client
+end
+result = serve int fd
+r = waitpid int pid status 0 len status 0
+if ne r pid
+ret 6
+end
+if ne get status 0 0
+ret 7
+end
+if ne get status 1 0
+ret int get status 1
+end
+r = fclose int fd
+if eq get family 0 1
+r = unlink path 0 len path
+end
+ret result
+end
