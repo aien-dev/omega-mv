@@ -39,6 +39,7 @@ never QUALIFIED (no third-party or hardware qualification exists).
 | secrets left in memory | units zero their secret locals; `tls_close`/`tls_abort` run `tls_wipe` (keys, ephemeral key, handshake secrets, record buffers); `tls_hskeys` zeroes the shared secret, `tls_cfin` the handshake secrets | `test/tls/residue.py` (`/proc/PID/mem` scan: 12 handshake-only secrets absent after the handshake, 18 absent after close; app keys present after the handshake as the positive control); mutants close keeps the traffic secrets, handshake secrets kept, shared secret kept; MEASURED `RESIDUE PASS secrets=18 hs_only=12` |
 | timing | constant-time units (README table) | dudect-style Welch t-test, `test/tls/timing.om`: all 16 |t| values < 2.5 on two cores, v2 run 2026-10-27; MEASURED host-only (see "Timing measurement") |
 | HTTPS misuse | `seed/net/https.om` refuses plaintext fall-back on a TLS port, maps EOF without close_notify to -604, wipes keys in `htlsend` | `seed/net/tests/check.py` stage 5: 9 rows, 5 mutants; `TLS_NET=1` live GETs; EXERCISED |
+| broken primitive or bad entropy | self-tests on first `tls_connect` (KATs), X25519 pairwise consistency test, SP 800-90B RCT/APT on the bytes feeding the approved-mode HMAC_DRBG, latched module error state (`TLS_ERR_SELFTEST`) (`fips.om`, `drbg.om`) | `test/fips/run.sh` 45 checks, 14 KAT mutants and 16 code mutants each FAIL as expected; `test/drbg/run.sh` 810 ACVP/CAVP vectors, 13 mutants; MEASURED 2026-10-26 host-only, tested against the FIPS 140-3 / CAVP test methods, not NIST-validated |
 
 ## Known limits (not mitigated)
 
@@ -57,7 +58,13 @@ never QUALIFIED (no third-party or hardware qualification exists).
 3. **Revocation is not checked**: no OCSP, no stapling, no CRL (README `Policy`).
 4. **Padding length and record lengths** are visible (RFC 8446 section 5.4).
 5. **Caller buffers**: plaintext the caller receives from `tls_read` is the caller's to wipe.
-6. **The random source** is Linux `getrandom` (blocking flag 0); no further entropy check.
+6. **The random source** is Linux `getrandom` (blocking flag 0). Without flag 4 its bytes are used
+   directly, with no further check. With flag 4 (approved mode) they pass the SP 800-90B health
+   tests and seed an HMAC_DRBG with prediction resistance. The SP 800-90B assessment
+   (`test/fips/entropy.sh`) grades the kernel's already-conditioned getrandom output, not a raw
+   noise source; an Entropy Source Validation would need a kernel/platform certificate. The
+   health-test cut-offs claim H = 6 bits per byte (MODELED), below every estimate measured on two
+   collections (lowest 6.638, a non-IID restart test; evidence in the handoff, `TlsProof/FipsModule/`).
 7. **Single host, single toolchain**: every result above was produced on one DGX Spark (arm64,
    GB10) with the pinned omc; the hosted arm64 CI job reruns the suites on a second machine, but the
    compiler binary is the same pinned one.
@@ -73,3 +80,10 @@ counts and sums (full data and cropped at the pooled 90th percentile). Raw sampl
 and the queries: `/home/drakestapleton/handoffs/TlsAudit/evidence/timing/` (`welch.md`). Reproduce:
 `sh build/tls/tls/client/build.sh seed/out/omc om/tls/test/tls/timing.om build/tls/tls/timing` then
 `nice -n 19 taskset -c 5 build/tls/tls/timing chacha 50000`.
+
+The `fips.om` additions (modes `health`, `drbg`, `pct`; the RCT/APT update, an HMAC_DRBG generate
+with prediction-resistance reseed, the X25519 pairwise consistency test) were measured the same
+way on cpu0 (A725) and cpu5 (X925), 20000-50000 samples: every |t| < 4.5, MEASURED, raw samples
+and `welch.md` in `/home/drakestapleton/handoffs/TlsProof/FipsModule/timing/`. The cropped
+`health` rows on cpu0 gave t = 3.97 and 3.41 in two runs, both positive (under 1 ns of about
+1700 ns): below the threshold but not explained.

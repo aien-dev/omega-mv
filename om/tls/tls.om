@@ -92,6 +92,9 @@ const TLECONN ulong 26
 const TLEKUPD ulong 27
 const TLESEQ ulong 28
 const TLESTOR ulong 29
+const TLESELF ulong 30
+note approved mode (flag 4): HMAC_DRBG state (fips.om, DRSZ bytes) at c[TLDRBG]
+const TLDRBG ulong 1536
 
 text TLN00 "TLS_OK"
 text TLN01 "TLS_ERR_ARGUMENT"
@@ -123,6 +126,7 @@ text TLN26 "TLS_ERR_CONNECT"
 text TLN27 "TLS_ERR_KEY_UPDATE"
 text TLN28 "TLS_ERR_SEQUENCE_LIMIT"
 text TLN29 "TLS_ERR_TRUST_STORE"
+text TLN30 "TLS_ERR_SELFTEST"
 text TLNUNK "TLS_ERR_UNKNOWN"
 
 note HKDF labels (RFC 8446 section 7.1, 7.2, 7.3); "tls13 " is prepended by tls_info
@@ -294,6 +298,9 @@ n = tls_namecp o TLN28
 end
 if eq e 29
 n = tls_namecp o TLN29
+end
+if eq e 30
+n = tls_namecp o TLN30
 end
 if eq n 0
 n = tls_namecp o TLNUNK
@@ -475,6 +482,9 @@ ad = new uchar 5 0
 if ge tls_gn c TLRS 8 tls_reclim c
 ret TLESEQ
 end
+if eq fips_bad 1
+ret TLESELF
+end
 for i ulong 5
 put ad i get c add TLRB i
 end
@@ -502,6 +512,9 @@ kn = new uchar 44 0
 ad = new uchar 5 0
 if ge tls_gn c TLWS 8 tls_reclim c
 ret TLESEQ
+end
+if eq fips_bad 1
+ret TLESELF
 end
 for i ulong 5
 put ad i get c add TLWB i
@@ -923,20 +936,54 @@ tls_cpy c add q 7 TLALPN
 ret add q 15
 end
 
+note random bytes into k: getrandom, or in approved mode (flag 4) the HMAC_DRBG at c[TLDRBG]
+note with prediction resistance (fips.om); 0, TLERAND, or TLESELF (module error state)
+fn tls_rand c edit uchar * k edit uchar * to ulong
+if eq and get c TLFL 4 0
+r = random k 0 len k 0
+if ne ulong r len k
+ret TLERAND
+end
+ret 0
+end
+if ne fips_drbgget part c TLDRBG DRSZ k 0
+ret TLESELF
+end
+ret 0
+end
+
+note 32 random bytes (tls_rand) at c[o]
+fn tls_randc c edit uchar * o ulong to ulong
+t = new uchar 32 0
+r = tls_rand c t
+for i ulong 32
+put c add o i get t i
+end
+tls_zero t 0 32
+ret r
+end
+
 note ephemeral x25519 key pair: private at c[TLEPK], public at c[TLEPU]
 fn tls_ephem c edit uchar * to ulong
 k = new uchar 32 0
 o = new uchar 32 0
-r = random k 0 32 0
-if ne r 32
-ret TLERAND
+r = tls_rand c k
+if ne r 0
+ret r
 end
 e = x25519_base o k
+p = ulong 0
+if eq e 0
+p = fips_pctx k o
+end
 for i ulong 32
 put c add TLEPK i get k i
 put c add TLEPU i get o i
 end
 tls_zero k 0 32
+if ne p 0
+ret TLESELF
+end
 if ne e 0
 ret TLERAND
 end
@@ -952,14 +999,14 @@ end
 b = add TLWB 5
 put c b 1
 tls_pn c add b 4 771 2
-r = random c add b 6 32 0
-if ne r 32
-ret TLERAND
+r = tls_randc c add b 6
+if ne r 0
+ret r
 end
 put c add b 38 32
-r = random c add b 39 32 0
-if ne r 32
-ret TLERAND
+r = tls_randc c add b 39
+if ne r 0
+ret r
 end
 tls_mov c TLSID add b 39 32
 p = add b 71
@@ -1579,7 +1626,8 @@ ret e
 end
 
 note ---- public API ----
-note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1.
+note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1,
+note 4 = approved mode (fips.om: HMAC_DRBG with its self-test and health-tested entropy).
 note Hostnames are 1..253 bytes of letters, digits, '-' and '.', and not an IPv4 literal.
 fn tls_init c edit uchar * hn view uchar * fl ulong to ulong
 if lt len c TLCSZ
@@ -1603,7 +1651,7 @@ if eq alpha 0
 ret TLEARG
 end
 put c TLHL uchar hl
-put c TLFL uchar and fl 1
+put c TLFL uchar and fl 5
 ret 0
 end
 
@@ -1636,6 +1684,24 @@ end
 ret 0
 end
 
+note FIPS 140-3 style self-tests (fips.om): the known-answer tests run once per process at first
+note use in every mode; approved mode (flag 4) adds the DRBG self-test and a fresh DRBG at
+note c[TLDRBG]. 0, or TLESELF with the failing test in tls_detail.
+fn tls_fips c edit uchar * to ulong
+ap = ulong and get c TLFL 4
+d = fips_check ap
+if ne d 0
+ret tls_fail c TLESELF d
+end
+if eq ap 0
+ret 0
+end
+if ne fips_drbgnew part c TLDRBG DRSZ 0
+ret tls_fail c TLESELF fips_detail
+end
+ret 0
+end
+
 note full handshake on the connected socket fd; 0 or a named error code (tls_errname).
 note Without a caller deadline (tls_deadline) the whole handshake is bounded by the budget of
 note tls_hslimit (default TLHSNS, 30 s); that deadline is cleared again once connected.
@@ -1645,6 +1711,10 @@ ret TLESTAT
 end
 if lt fd 0
 ret TLEARG
+end
+e = tls_fips c
+if ne e 0
+ret e
 end
 tls_pn c TLFD ulong fd 4
 mine = ulong 0
@@ -1896,6 +1966,7 @@ fn tls_wipe c edit uchar * to void
 tls_zero c TLWKEY 96
 tls_zero c TLCAP 64
 tls_zero c TLEPK 320
+tls_zero c TLDRBG DRSZ
 tls_zero c TLRB sub TLCSZ TLRB
 end
 

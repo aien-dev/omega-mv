@@ -1,15 +1,22 @@
 note dudect-style timing driver (Reparaz, Balasch, Verbauwhede 2016): usage: timing WHAT N
 note WHAT: x25519 (scalar fixed vs random, base point fixed), chacha / aesgcm (key and nonce fixed
 note vs random, 1024-byte plaintext fixed), cteq (32-byte compare: equal vs random second input,
-note 2000 compares per measurement). Each of the N measurements draws its class from getrandom,
+note 2000 compares per measurement), and from fips.om: health (256 samples through the RCT/APT
+note fips_ht), drbg (HMAC_DRBG instantiated from fixed vs random 48-byte seed material outside the
+note window, one 64-byte drbg_gen timed), pct (X25519 pairwise consistency test fips_pctx with a
+note fixed vs random private key, its public key computed outside the window).
+note Each of the N measurements draws its class from getrandom,
 note prepares the input, then times one operation with monons and prints "CLASS NANOSECONDS".
 note The statistics (Welch's t-test between the classes) are computed outside: timing.py.
 note Exit 0; 2 on a usage error; 3 when an operation reports an error.
-text tusage "usage: timing x25519|chacha|aesgcm|cteq N\n"
+text tusage "usage: timing x25519|chacha|aesgcm|cteq|health|drbg|pct N\n"
 text tx "x25519"
 text tc "chacha"
 text ta "aesgcm"
 text tq "cteq"
+text th "health"
+text td "drbg"
+text tp "pct"
 
 fn tm_arg i ulong a edit uchar * to ulong
 n = argread i a 0 len a
@@ -180,6 +187,72 @@ end
 ret 0
 end
 
+fn tm_health n ulong o edit uchar * to ulong
+b = new uchar 256 0
+c = new uchar 1 0
+for i ulong n
+cls = tm_cls c
+if ne tm_fill b 256 cls 0
+ret 3
+end
+t0 = monons
+for j ulong 256
+fips_ht ulong get b j
+end
+t1 = monons
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn tm_drbg n ulong o edit uchar * to ulong
+st = new uchar 128 0
+sm = new uchar 48 0
+b = new uchar 64 0
+c = new uchar 1 0
+for i ulong n
+cls = tm_cls c
+if ne tm_fill sm 48 cls 0
+ret 3
+end
+if ne drbg_inst st sm 0
+ret 3
+end
+t0 = monons
+e = drbg_gen st b part c 0 0
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+drbg_wipe st
+ret 0
+end
+
+fn tm_pct n ulong o edit uchar * to ulong
+k = new uchar 32 0
+q = new uchar 32 0
+c = new uchar 1 0
+for i ulong n
+cls = tm_cls c
+if ne tm_fill k 32 cls 0
+ret 3
+end
+if ne x25519_base q k 0
+ret 3
+end
+t0 = monons
+e = fips_pctx k q
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
 fn main to int
 a = new uchar 64 0
 o = new uchar 64 0
@@ -204,6 +277,15 @@ ret int tm_aead n o 1
 end
 if eq tm_is a wl tq 1
 ret int tm_cteq n o
+end
+if eq tm_is a wl th 1
+ret int tm_health n o
+end
+if eq tm_is a wl td 1
+ret int tm_drbg n o
+end
+if eq tm_is a wl tp 1
+ret int tm_pct n o
 end
 w = write 2 tusage 0 len tusage
 ret 2

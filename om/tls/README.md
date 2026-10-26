@@ -13,21 +13,24 @@ nothing is deployed.
 
 Compose them in this order with `sh om/tls/build.sh OMC PROGRAM.om OUT`. Each unit calls only the
 units before it. The composed unit is OM-2 (a leading `om2` line), and the library files have no
-`fn main` and no mutable globals.
+`fn main`. The one mutable global is `FPST` in `fips.om`, the process-wide self-test and error
+state (a FIPS 140-3 module error state must cover every connection of the process).
 
 | unit | contents | fns |
 |---|---|---|
 | `sha2.om` | SHA-256/384/512 (FIPS 180-4), streaming; contexts are 40 `ulong` cells | 27 |
 | `hkdf.om` | HMAC-SHA-256/384/512 (RFC 2104), HKDF extract/expand (RFC 5869) | 8 |
+| `drbg.om` | HMAC_DRBG with SHA-256 (SP 800-90A Rev. 1 section 10.1.2), reseed counter, continuous test | 14 |
 | `x25519.om` | X25519 (RFC 7748), constant-time Montgomery ladder, radix 2^25.5 | 15 |
 | `chacha.om` | ChaCha20, Poly1305, ChaCha20-Poly1305 AEAD (RFC 8439) | 19 |
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
 | `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
 | `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
-| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 105 |
+| `fips.om` | self-tests (KATs), SP 800-90B health tests on getrandom, approved-mode DRBG wiring, X25519 pairwise consistency test, module error state | 27 |
+| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 115 |
 
-The total is 340 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
+The total is 391 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
 the ec, rsa and x509 suites check) allows 4095 functions per unit, as `189ada82` did.
 
 ## Client API (`tls.om`)
@@ -37,11 +40,13 @@ All buffers are owned by the caller. `c` is the connection state, at least `TLCS
 `tls_errname code out` writes the code's name, such as `TLS_ERR_CERTIFICATE`.
 `tls_detail c` gives the detail of the last failure: the `x509.om` reject code for
 `TLS_ERR_CERTIFICATE` and `TLS_ERR_CERTIFICATE_VERIFY`, or the received alert number for
-`TLS_ERR_ALERT_RECEIVED`.
+`TLS_ERR_ALERT_RECEIVED`, or the number of the failed self-test for `TLS_ERR_SELFTEST`
+(section "Self-tests and approved mode").
 
 ```
 e  = tls_store st                        load /etc/ssl/certs/ca-certificates.crt
-e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; the name is SNI and the checked name
+e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; 4: approved mode (HMAC_DRBG);
+                                         the name is SNI and the checked name
 fd = tls_dial hostname port              DNS A + TCP (IPv4; a dotted literal skips DNS); fd or -code
 tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait
                                          and, for the handshake, the whole-handshake budget below
@@ -81,6 +86,37 @@ and `new` arrays on the stack) are not scrubbed after a function returns; see
 
 For STARTTLS (RFC 3207), do the plaintext exchange on `fd` first, then call `tls_connect`. See
 `test/tls/client.om`, mode `tsmtp`.
+
+## Self-tests and approved mode (`drbg.om`, `fips.om`)
+
+Tested against the FIPS 140-3 / CAVP test methods, not NIST-validated: no module boundary has
+been submitted to a laboratory, there is no CMVP certificate, and nothing here is an ESV.
+
+- **Pre-operational and first-use self-tests.** The first `tls_connect` of the process runs
+  known-answer tests (`fips_selftest`): SHA-256/384/512, HMAC-SHA-256/384, HKDF-SHA-256, the TLS 1.3
+  key derivation (RFC 8448), AES-128-GCM seal and open (CAVP gcmEncryptExtIV128), ECDSA P-256
+  verify with a must-fail case, RSA PKCS#1 v1.5 and PSS verify, ChaCha20-Poly1305 and X25519. In
+  approved mode the HMAC_DRBG KAT (CAVP HMAC_DRBG SHA-256, no prediction resistance) runs too.
+  A failure latches the module error state: `tls_connect` returns `TLS_ERR_SELFTEST` (code 30)
+  before any I/O, `tls_detail` names the test (1-3 SHA, 4-5 HMAC, 6 HKDF, 7/8 GCM seal/open,
+  9 ECDSA, 10 PKCS#1, 11 PSS, 12 ChaCha20-Poly1305, 13 X25519, 14 DRBG, 15 TLS key derivation),
+  and `tls_seal` and `tls_open` refuse with the same code for every connection of the process.
+- **Conditional tests.** X25519 pairwise consistency (the ephemeral public key is recomputed and
+  compared in constant time; detail 21), the DRBG continuous test and error state (detail 20),
+  and the SP 800-90B section 4.4 repetition count and adaptive proportion tests on every getrandom
+  byte that feeds the DRBG (detail 22 RCT, 23 APT, 24 getrandom error, 25 DRBG call error), with a
+  1024-sample start-up test. Cut-offs for a claimed H = 6 bits per sample (below every SP 800-90B
+  estimate measured on getrandom; the lowest was 6.638) and alpha = 2^-40: RCT 8, APT window 512,
+  cut-off 35 (MODELED: the Wolfram query is in the `fips.om` notes above `FHRCT1`).
+- **Approved mode (flag 4).** `tls_init` flag 4 draws the client random, session id and ephemeral
+  key from an HMAC_DRBG (SHA-256, 48-byte entropy input + 32-byte nonce, personalization string,
+  prediction resistance: a 48-byte health-tested reseed before every request) held at
+  `c[TLDRBG]` and wiped by `tls_close`. Without flag 4 the bytes come straight from getrandom, as
+  before. The DNS query id is not security relevant and always uses getrandom.
+- **Entropy.** `test/fips/entropy.sh` runs the NIST SP 800-90B reference tool on 1,000,000
+  getrandom bytes and on 1000 restarts of 1000 bytes. It grades the Linux kernel's getrandom
+  output, which the kernel has already conditioned; it is not an Omega noise source, and an ESV
+  would need a kernel/platform entropy certificate.
 
 ## What it does and refuses
 
@@ -186,6 +222,9 @@ Not covered, or covered only partly:
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
+| `sh om/tls/test/drbg/run.sh OMC` | `DRBG PASS vectors=810 (acvp=90, cavp=720) api=23 mutants=13/13` (observed 2026-10-26, omc `2c824805`) |
+| `sh om/tls/test/fips/run.sh OMC` | `FIPS PASS checks=45 drbgerr=46 kat-mutants=14/14 code-mutants=16/16` (observed 2026-10-26, omc `2c824805`) |
+| `sh om/tls/test/fips/entropy.sh OMC EA_CPP_DIR` | `ENTROPY PASS ...` with the min-entropy estimates; needs the NIST SP800-90B_EntropyAssessment tool built separately |
 | `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-27) |
 | `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
 
