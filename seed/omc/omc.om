@@ -1220,6 +1220,15 @@ end
 if eq w 7310870969309884259
 ret 97
 end
+if eq w 7234314147887146352
+ret 220
+end
+if eq w 32480013390212976
+ret 221
+end
+if eq w 29118836274783603
+ret 222
+end
 if eq get om2 0 0
 ret 0
 end
@@ -4963,7 +4972,156 @@ basearg 3 e
 loadarg 16 1 get fr add x 21
 e3 2332033024 3 3 16
 loadarg 4 1 get fr add x 22
+note Only scalar transport options; no filters, devices, credentials or pointer-bearing options.
+hoptgate
+hreturn dst x
+end
+
+note Socket option allowlist. Linux asm-generic/socket.h and linux/tcp.h own these IDs.
+note Unknown options retain ENOPROTOOPT (-92); malformed scalar sizes return EINVAL (-22).
+fn hoptgate to void
+ok = new ulong 6 0
+mimmed 4043309056 31 1 1
+tcp = get oc 0
+emit 1409286145
+for j ulong 5
+v = add j 5
+if eq j 0
+v = ulong 2
+end
+if eq j 1
+v = ulong 15
+end
+mimmed 4043309056 31 2 v
+put ok j get oc 0
+emit 1409286144
+end
+badso = get oc 0
+emit 335544320
+patch19 tcp get oc 0
+mimmed 4043309056 31 1 6
+badtcp = get oc 0
+emit 1409286145
+mimmed 4043309056 31 2 1
+put ok 5 get oc 0
+emit 1409286144
+patch26 badso get oc 0
+patch19 badtcp get oc 0
+matconst 0 sub ulong 0 92
+done = get oc 0
+emit 335544320
+for j ulong 6
+patch19 get ok j get oc 0
+end
+mimmed 4043309056 31 4 4
+sizeok = get oc 0
+emit 1409286144
+matconst 0 sub ulong 0 22
+badsize = get oc 0
+emit 335544320
+patch19 sizeok get oc 0
 hsys 208
+patch26 done get oc 0
+patch26 badsize get oc 0
+end
+
+note SO_PEERCRED: fixed 12-byte ucred result, never a caller-chosen getsockopt operation.
+fn hpeercr dst ulong x ulong to void
+harg x 4 8
+e = harray x 1
+save
+hload x 4 0
+basearg 3 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 3 3 16
+loadarg 4 1 get fr add x 22
+matconst 16 12
+e3 3942645760 31 4 16
+trapc 3 3
+matconst 1 1
+matconst 2 17
+spsub 16
+stkchk
+matconst 4 12
+emit or ulong 3103785952 4
+emit or ulong 2432697312 4
+hsys 209
+spadd 16
+hreturn dst x
+end
+
+note pollfds uses packed Linux pollfd records; length is bytes, each record is 8 bytes.
+note Maximum 1024 records, checked before ppoll. Kernel writes only revents in the checked slice.
+fn hpollfds dst ulong x ulong to void
+e = harray x 1
+harg x 2 9
+save
+basearg 0 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 0 0 16
+loadarg 1 1 get fr add x 22
+matconst 16 7
+e3 2315255808 17 1 16
+mimmed 4043309056 31 17 0
+trapc 1 3
+matconst 16 8192
+e3 3942645760 31 1 16
+trapc 8 3
+matconst 16 8
+e3 2596276224 1 1 16
+hload x 2 2
+spsub 16
+stkchk
+matconst 3 1000000000
+emit 4043309151
+forever = get oc 0
+emit 1409286155
+e3 2596276224 4 2 3
+emit 2600700037
+emit 4177527780
+emit 4177528805
+emit or ulong 2432697312 2
+jump = get oc 0
+emit 335544320
+patch19 forever get oc 0
+matconst 2 0
+patch26 jump get oc 0
+matconst 3 0
+matconst 4 8
+hsys 73
+spadd 16
+hreturn dst x
+end
+
+note sendmsg has one checked iovec and no ancillary data or exposed kernel pointers.
+note Arm ARM STR unsigned offset: imm12 scaled by 8, Rn=SP; private msghdr then iovec.
+fn hsendmsg dst ulong x ulong to void
+harg x 4 8
+e = harray x 0
+harg x 2 8
+save
+hload x 4 0
+hload x 2 2
+matconst 16 16384
+e3 2852126720 2 2 16
+basearg 3 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 3 3 16
+loadarg 4 1 get fr add x 22
+spsub 80
+stkchk
+for j ulong 10
+emit or or ulong 4177527776 31 shl j 10
+end
+emit or or ulong 4177527776 3 shl ulong 8 10
+emit or or ulong 4177527776 4 shl ulong 9 10
+emit or or ulong 2432697312 3 shl ulong 64 10
+emit or or ulong 4177527776 3 shl ulong 2 10
+matconst 3 1
+emit or or ulong 4177527776 3 shl ulong 3 10
+emit or ulong 2432697312 1
+hsys 211
+spadd 80
 hreturn dst x
 end
 
@@ -5510,6 +5668,18 @@ fail 9
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
+if eq c 220
+hpeercr dst x
+ret
+end
+if eq c 221
+hpollfds dst x
+ret
+end
+if eq c 222
+hsendmsg dst x
+ret
+end
 if eq c 176
 mtinit
 mnew c dst x
@@ -5885,7 +6055,7 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
-if and ge c 100 le c 177
+if or and ge c 100 le c 177 and ge c 220 le c 222
 hostval c dst
 ret
 end
