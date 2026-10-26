@@ -26,7 +26,7 @@ under `AGENTS.md`, so every "wire into the gate" step below needs that operator 
 
 Omega 1.0 is a release of one named language profile and its toolchain with a written compatibility
 promise. It is reached when every RM gate below records PASS at one commit, or when a gate is removed
-from the 1.0 scope by an explicit decision recorded in its tracking issue. It does not mean "every
+from the 1.0 scope by Drake's explicit decision recorded in its tracking issue. It does not mean "every
 feature anyone may want", and it never means hardware qualification beyond the targets RM9 lists.
 
 | 1.0 includes | 1.0 explicitly excludes unless a recorded decision adds it |
@@ -101,7 +101,8 @@ feature anyone may want", and it never means hardware qualification beyond the t
    rules, and each needs a decision before 1.0 freezes them.
 7. **A second target exists only off GitHub.** omega-harness#9 cites commit `7eca2ac3f` ("x86-64 Linux and
    UEFI back ends", 2,043 lines added to `omc.om`) on branch `feat/allen-imac-competition`; that commit is
-   not on `aien-dev/omega-mv` (GitHub returns 422 for it). It is IMPLEMENTED, unreviewed, unpublished.
+   not on `aien-dev/omega-mv` (GitHub returns 422 for it). Reported IMPLEMENTED in omega-harness#9;
+   not independently verified by this audit, unreviewed and unpublished.
 8. **No contracts in the forward compiler.** omc has no `requires`, `ensures` or `assert`; the only
    contract syntax is in the legacy C front end, and OSC IR carries contract text as metadata.
 9. **Efficiency is not measured against an optimizing baseline.** The only filed comparison
@@ -286,7 +287,7 @@ Acceptance:
 |---|---|---|
 | AArch64 Linux static ELF (program and function mode) | MERGED; host EXERCISED by `OMEGA-SEED` | QUALIFIED by RM1's full gate at the release commit |
 | WebAssembly MVP via OSC IR v1 (`irwasm`) | MERGED, scalar subset; host EXERCISED by authors | Gate wired (RM1); scope decision: stay scalar-only for 1.0, or add linear memory, text and globals with IR v2+ |
-| x86-64 Linux ELF and x86-64 UEFI PE32+ | IMPLEMENTED on unpublished commit `7eca2ac3f`; OVMF render by its author | Published PR; default AArch64 output byte-identical (C2 manifest); differential against AArch64 on the full fixture set; trap codes equal; QEMU run labelled EMULATED; physical x86 hardware NOT_RUN unless tested |
+| x86-64 Linux ELF and x86-64 UEFI PE32+ | Reported IMPLEMENTED in omega-harness#9 on unpublished commit `7eca2ac3f`; not independently verified here | Published PR; default AArch64 output byte-identical (C2 manifest); differential against AArch64 on the full fixture set; trap codes equal; QEMU run labelled EMULATED; physical x86 hardware NOT_RUN unless tested |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
 | GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR; host and simulator results are never cited as GPU qualification |
 
