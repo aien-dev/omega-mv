@@ -1671,10 +1671,10 @@ end
 emit 0
 leb f
 end
-patch h
 if eq get state 8 7
 expmore
 end
+patch h
 emit 10
 h = hole
 leb get state 7

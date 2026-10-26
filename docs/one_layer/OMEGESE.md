@@ -946,8 +946,9 @@ nice -n 19 sh seed/wasm/gate-irwasm.sh
 
 The path is a backend for the existing OSC scalar wire format, not a universal
 source converter. Every IR function is exported under its original, unique
-ASCII name. No memory, table, start function, imports, WASI or JavaScript
-runtime is required. Sections are type, function, export and code, in that order.
+ASCII name. For a v1 unit no memory, table, start function, imports, WASI or
+JavaScript runtime is required, and the sections are type, function, export
+and code, in that order (v7 additions below).
 Fixed-width five-byte unsigned LEB section/body lengths are valid MVP encodings;
 all other LEB fields use minimal encodings.
 
@@ -991,7 +992,7 @@ must already be present as IR instructions.
 | Exit | Named stderr refusal |
 |---|---|
 | 20 | MAGIC |
-| 21 | VERSION (anything except v1) |
+| 21 | VERSION (anything except v1 and v7; v7 with no v7 feature) |
 | 22 | TRUNCATED |
 | 23 | CAPACITY |
 | 24 | UNSUPPORTED_OP |
@@ -1018,10 +1019,73 @@ the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
 
-### 11.2 Memory profile contract (IR v2 milestone)
+**OSC IR v7 (spec section 10).** irwasm also accepts wire version 7: module,
+local and text regions, tags 13 f32 and 14 f64, and opcodes 30 RLOAD, 31
+RSTORE, 32 BITCAST and 33 RINIT. A v1 unit translates to exactly the bytes it
+did before (the gate checks every v1 fixture). A v7 module adds, in order:
+a memory section after the function section (limits flag 1, min = max = the
+exact page count, no growth); immutable i32 globals holding the byte offset
+of each module and text region; exports for the functions, then `memory`,
+then `region.NAME` for each module and text region; one active data segment
+per non-empty text region after the code section; and a final custom section
+`osc.v7.abi` (function count; per function its name, parameter tags and
+result tag; module-region count; per region its name, tag, class and count;
+all unsigned LEB) so a host can tell `u8` from `i32` behind an i32. No imports.
 
-This is a specification for the next seeded producer/backend extension, not
-an assertion that the binaries above implement it. The authoritative wire
+| v7 element | Lowering |
+|---|---|
+| 13 f32, 14 f64 | wasm f32/f64 at the ABI; inside, the bit pattern in an i64 local (wrap/reinterpret on use, so NaN payloads move exactly through CONST, MOV, regions and BITCAST) |
+| BIN add/sub/mul/div, UN neg, CMP 1..6 on floats | IEEE f32/f64 operations; CMP gives canonical 0/1 |
+| CAST int to float, f32 to f64, f64 to f32 | convert_s/u, promote, demote |
+| CAST float to int | saturating: NaN gives 0, values beyond the range give its nearest end, others truncate toward zero; written without the non-MVP trunc_sat opcodes |
+| BITCAST | same width class: no code beyond renormalizing integer signedness |
+| RLOAD/RSTORE | full-width index compared unsigned against the region count before any address arithmetic (a negative index is a huge unsigned value), trap if not below it; then i64 to i32 wrap, shift by the element width, static region offset in the memarg |
+| RINIT | a bounded loop storing the value into every element of the function's local region |
+
+Every region, local ones included, gets static storage in table order,
+aligned to its element width. A text region's bytes come from its data
+segment and are read-only to Omega code (RSTORE and RINIT to text are
+refused), though not to a host holding `memory`. Local regions are owned by
+one function and only ever seen after that call's RINIT; the validator
+computes definite initialization of local regions on every path (unreachable
+blocks start with no region initialized), like registers. The memory is at
+most 2^31 bytes: `2^31 -> 2147483648` bytes `= 32768` pages of 65536
+(WolframLanguageEvaluator); a larger layout is CAPACITY. At most 1024
+regions, 16777216 elements each; a v7 input may be up to 8,388,608 bytes
+(the v1 limit of 2,620,251 bytes stays for v1 headers). The region-bit
+fixed point is bounded by `512*1024+1 -> 524289` iterations.
+
+Refusals keep the table above. v7 adds: a nonempty struct table is
+UNSUPPORTED_TAG (more than 16 structs CAPACITY); region class 3 and opcodes
+9/10 are UNSUPPORTED_OP; tags 13/14 or opcodes 30..33 in a v1 unit are
+UNSUPPORTED_TAG/UNSUPPORTED_OP; a v7 header on a unit that uses no v7
+feature is VERSION, reported after a complete parse; duplicate function
+names, duplicate or shadowing region names and an export collision with
+`memory` or `region.NAME` are INVALID.
+
+The float-to-int boundaries were computed with WolframLanguageEvaluator as
+IEEE bit patterns: f32 2^63 `5f000000` (1593835520), -2^63 `df000000`, 2^64
+`5f800000` (1602224128); f64 2^63 `43e0000000000000` (4890909195324358656),
+-2^63 `c3e0000000000000`, 2^64 `43f0000000000000` (4895412794951729152).
+
+The gate's v7 section takes its units from the independent hand writer
+`seed/wasm/v7/writer.js` plus `seed/wasm/v7cases.js`, and its verdicts and
+expected outputs from the independent oracle `seed/wasm/v7/oracle.js`.
+Every accepted unit must translate twice to identical, valid wasm; every
+refused unit must exit with the oracle's class and empty stdout. For each
+run case, `node seed/wasm/v7run.js MODULE SCRIPT` (a read-only executor that
+reads `osc.v7.abi`) must print exactly what `oracle.js run` prints. The RGBX
+case fills a 16x8 `uint` framebuffer whose byte lanes follow a `text "RGBX"`
+table; its sha256 must agree, and a one-channel mutant and a `BGRX` mutant
+must hash differently. The out-of-bounds case (index = count, count + 1,
+negative i8/i32/i64, u64 with an in-range low 32 bits, all-ones u64) must
+trap in both, and an irwasm compiled with its two bounds-check calls
+deleted must be caught.
+
+### 11.2 Memory profile contract (IR v7)
+
+The backend half of this contract is implemented by `seed/wasm/irwasm.om`
+(section 11.1); the producer half is the omc IR mode. The authoritative wire
 allocation and validation rules are in `spec/one-layer-format.md` section 10.
 The milestone name does not repurpose OSC wire version 2.
 
