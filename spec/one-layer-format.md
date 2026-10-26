@@ -289,14 +289,17 @@ No other class is admitted. Function-local regions are accessible only by
 their owning function. Calls remain restricted to earlier functions, so
 there is no recursive or reentrant invocation within a module call.
 An implementation may reuse physical storage for a function-local region
-between calls, but no previous invocation's values may be observed.
+between calls, but valid Omega execution cannot observe a previous
+invocation's values. Exported linear memory is not a JavaScript isolation
+or zeroization boundary; a JavaScript holder can inspect physical storage.
 The source initializer is evaluated once, at the `new` declaration, and fills
 every element before the array is accessible. Its value is not a module data
 segment. Input validation must establish that every local-region access is
 dominated by initialization of that region on the current invocation.
 
-Global and local scalar storage use a one-element region. This does not
-introduce a new source spelling for scalar globals.
+Memory-backed scalar state uses a one-element region. Ordinary scalar
+locals remain value registers; this profile does not allocate regions for
+them or introduce a new source spelling for scalar globals.
 
 For a future SPIR-V backend, class 1 maps to Function storage and class 2 to
 read-only constant storage. Class 0 requires an explicitly persistent
@@ -315,6 +318,11 @@ The following instructions are appended; every operand below is u16:
 | 31 | RSTORE | region ID, index register, source register |
 | 32 | BITCAST | destination register, source register |
 | 33 | RINIT | region ID, initializer register |
+
+Every operand must designate an existing region or register of the stated
+kind. None of these instructions admits a sentinel operand. BITCAST and
+RINIT source registers are definite-assignment uses; RLOAD and BITCAST
+destinations are definitions.
 
 RLOAD's destination and RSTORE's source have exactly the region element type.
 Indices have an integer tag 2..9, never bool or float. Signed negative indices
@@ -337,15 +345,18 @@ element width; no padding exists between elements. Region base addresses
 are backend layout, not IR identity. Struct cells retain their separate
 existing layout. Loads/stores preserve little-endian scalar bits.
 
-BITCAST requires equal scalar widths, excludes bool and references, and
-reinterprets bits without numeric conversion. Unsupported combinations are
-invalid IR.
+BITCAST admits any source/destination pair within exactly one of these
+wire-tag sets: {2 u8, 6 i8}, {3 u16, 7 i16},
+{4 u32, 8 i32, 13 f32}, {5 u64, 9 i64, 14 f64}. Same-type pairs are allowed.
+It reinterprets bits without numeric conversion. Bool, void, references,
+and pairs crossing sets are invalid IR.
 
 RINIT is valid only for a function-local region owned by the current
 function; its initializer register has exactly the element type and must
-be definitely assigned. It fills every element with that scalar value.
-An initialization bit for each local region starts false at function entry;
-RINIT sets it true. Control-flow joins intersect these bits, and both
+be definitely assigned. It fills every element with that scalar's bits,
+without conversion. An initialization bit for each local region starts
+false at function entry; RINIT sets it true only after the complete fill.
+Control-flow joins intersect predecessor states, and both
 RLOAD and RSTORE require the target local region's bit to be true.
 Thus declaration-time initialization is explicit, and the validator need
 not prove that an arbitrary loop of stores fills the entire region.
@@ -363,11 +374,39 @@ upper half; f64 occupies the complete immediate.
 Existing BIN add/sub/mul/div, UN negation, and CMP eq/ne/lt/le/gt/ge accept
 matching float operands. Float bitwise operations, shifts and remainder
 are invalid. NaN comparisons follow IEEE semantics: only ne is true.
-CAST follows the native conversion contract, including truncating,
-saturating float-to-integer conversion and NaN to zero; ordinary trapping
-wasm float conversion is not an equivalent lowering. Floating-point
-intrinsics need their own specified subcodes and are not silently lowered
-as ordinary calls.
+Arithmetic rounds to nearest, ties to even, retains subnormals, and does
+not contract separate operators into fused operations. Finite arithmetic,
+infinities and signed zeros follow IEEE-754 at the declared width.
+
+CONST, MOV, RLOAD, RSTORE, RINIT and BITCAST preserve all float bits,
+including signed zero and NaN payloads. Float negation toggles only the
+sign bit. A NaN produced by arithmetic or a float-width conversion may
+have any quiet-NaN payload/sign; exact-byte parity does not apply to those
+new NaN bits. This latitude never permits changing a transported NaN's
+bits. Tests compare such arithmetic results by NaN classification while
+separately checking exact payload transport.
+
+CAST has the following complete rules:
+
+- Integer-to-integer conversions retain the existing checked conversion
+  contract: an unrepresentable destination value traps 5.
+- Float-to-integer first truncates toward zero, then saturates to the
+  destination type's own signed or unsigned range, including narrow
+  destinations. Negative-to-unsigned saturates to zero; infinities saturate
+  to the appropriate endpoint; NaN converts to zero. Stored/reloaded and
+  directly returned results have the same canonical integer value.
+- Integer-to-float interprets the source according to its signedness and
+  rounds to the destination width using nearest, ties to even.
+- f64-to-f32 rounds nearest, ties to even, preserves signed zero and
+  subnormals, and overflows to signed infinity. f32-to-f64 is exact for
+  finite values and preserves infinity and signed zero. NaNs follow the
+  quiet-NaN latitude above. Same-type float CAST is a bit-preserving MOV.
+- Bool, void and reference types are excluded from CAST in this profile.
+
+Ordinary trapping wasm float-to-integer conversion alone is not an
+equivalent lowering. Native/backend conversion defects are implementation
+bugs, not alternate definitions of these rules. Floating-point intrinsics
+need separately specified subcodes and are not silently lowered as calls.
 
 Select wire v7 if and only if the unit has a region, a float type, or an
 opcode introduced by this profile. Otherwise retain the existing v1..5
@@ -382,10 +421,14 @@ collision. Read-only initial bytes become active data segments; the source
 read-only property is enforced for generated Omega instructions, not a
 security barrier against a JavaScript holder of exported memory.
 An immutable i32 global named `region.NAME` exports each module region's
-byte offset; local arrays have no exported address. Source names cannot
-contain the dot separator. Consumers use a typed view of exported memory
-and call exported scalar functions once per frame. There are no imports,
-WASI calls, implicit rendering loop, or allocation through JavaScript.
+unsigned wasm32 byte offset. JavaScript interprets the i32 global value as
+unsigned before indexing memory. Region bases remain stable for the module
+instance; local arrays have no exported address. Source names cannot
+contain the dot separator. Float parameters and results use wasm f32/f64
+for wire tags 13/14; the existing integer/bool ABI remains unchanged.
+Consumers use a typed view of exported memory and call exported scalar
+functions once per frame. There are no imports, WASI calls, implicit
+rendering loop, or allocation through JavaScript.
 All computed export names must be unique, including `memory`, function
 names and `region.NAME`; a collision is INVALID rather than an invalid wasm
 module emitted for a JavaScript engine to diagnose later.
@@ -413,3 +456,8 @@ instructions. Native/wasm agreement alone is not sufficient if both share a
 producer bug. Hand-encoded valid and malformed units challenge that oracle
 and both backends; the original pinned C renderer remains an independent
 pixel reference rather than a translation of the Omega implementation.
+Required malformed-wire controls include missing or loop-carried local
+initialization, foreign-local access, invalid/sentinel operands and export
+collisions. Repeated-call checks include calls after a trapped invocation.
+Conversion fixtures cover signed, unsigned and narrow destination
+boundaries, float widths, infinities, NaNs and signed zeros.
