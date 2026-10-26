@@ -63,6 +63,7 @@ run_ok params
 run_ok structs
 run_ok intrinsics
 run_ok f32_return
+run_ok convert_sat
 refuse neg_intr_int 7
 refuse neg_intr_mixed 7
 refuse neg_intr_ambig 11
