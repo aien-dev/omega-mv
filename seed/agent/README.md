@@ -191,6 +191,97 @@ Exit 0 means PASS, 1 FAIL, and 3 NOT_RUN (no compiler).
 | `seed/out/omc` | pin sha256 2c824805... (omega-mv main) | compiler | itself (seeded) |
 | Linux ARM64 kernel | host | system calls through compiled host words | none (platform) |
 | Python 3 | 3.12 on the Spark | test referee and mock server only, not on the product path | a `.om` mock server on `seed/net` (proposed) |
+| nanobot-ai | 0.3.5 on Python 3.12.3, in a separate venv | comparison arm of `bench/` only | none needed (not a dependency of omagent) |
+
+## Compared with nanobot
+
+### Feature matrix
+
+nanobot-ai 0.3.5 (paths relative to its installed `nanobot/` package) against omagent (`agent.om`
+lines at this commit). Status: HAS (equivalent), PARTIAL (narrower), MISSING (absent).
+
+| feature | nanobot evidence | omagent | omagent evidence |
+|---|---|---|---|
+| model/tool loop with an iteration cap | `agent/runner.py`, `maxToolIterations` `config/schema.py:129` | HAS | `agturn` :2237, `--max-rounds` :82, :161 |
+| streamed replies (SSE) | `providers/openai_compat_provider.py:2124` | HAS | `agsse` :1498; non-stream JSON too, `agjsonbody` :1527 |
+| read and write a file | `read_file`/`write_file` `agent/tools/filesystem.py:281,546` | HAS (no offset/limit/pages on read) | `agtread` :1762, `agtwrite` :1804 |
+| edit_file, list_dir, find_files, grep, apply_patch | `filesystem.py:869,1111`, `search.py:215,514`, `apply_patch.py:84` | MISSING | |
+| shell command | `exec` `agent/tools/shell.py:248` (through a shell) | PARTIAL: argv exec of allowlisted programs, no shell | `agtrun` :1965, `agallowed` :1849 |
+| persistent exec sessions | `exec_session`, `list_exec_sessions` `exec_session.py:565,722` | MISSING | |
+| web fetch | `web_fetch` `agent/tools/web.py:1114` (https, redirects, extraction) | PARTIAL: plain `http://` to allowlisted HOST:PORT, raw body | `agtfetch` :2039 |
+| web search | `web_search` `web.py:367` | MISSING | |
+| workspace confinement | `restrictToWorkspace` `schema.py:401` (default off) | HAS (always on: no `..`, absolute paths or symlinks) | `agpathok` :1735 |
+| command deny-list / timeouts | built-in deny-list `shell.py` ~213-232, timeout `:97` | PARTIAL: allowlist instead of deny-list; timeout kills the child only | `agexec` :1926, `--cmd-timeout` :81 |
+| MCP client (stdio, SSE, streamable HTTP) | `agent/tools/mcp.py:1365,1412`, `schema.py:362` | MISSING | |
+| session history | `session/manager.py`, sessions dir | HAS (one JSONL file per `--session`) | `agsload` :1032, `agappend` :917 |
+| history compaction / consolidation | Consolidator and AutoCompact `agent/loop.py:433,443`, summaries `agent/memory.py:803-824` | PARTIAL: drops the oldest whole turns, no summaries | `agcompact` :896 |
+| long-term memory and Dream | `memory/MEMORY.md`, `DreamConfig` `schema.py:53` (gateway only) | PARTIAL: read-only `--memory` file, nothing written back | `agmemload` :755 |
+| system prompt from workspace templates and skills | `cli/agent.py:154`, `skills/` (11 built-in) | MISSING (fixed system prompt plus memory file) | `agsysmsg` :1093 |
+| skills | `skills/`, `disabledSkills` `schema.py:146` | MISSING | |
+| providers, presets, fallback models | about 46 providers `schema.py:240`, `fallbackModels` `:128` | PARTIAL: one OpenAI-compatible endpoint, plain HTTP only, Bearer key | `agurl` :420, `agkeyload` :720 |
+| subagents | `spawn` `agent/tools/spawn.py:63`, `agent/subagent.py:100` | MISSING | |
+| messages and session tools, goals | `message.py:117`, `session_messages.py:81,153`, `sessions.py:88,165`, `long_task.py:159,290` | MISSING | |
+| chat channels | 17 channels in `channels/` (Telegram, Slack, Discord, ...) | MISSING (CLI only: `-p` or stdin lines) | `agline` :2289 |
+| WebUI, gateway, OpenAI-compatible API server | `webui/`, `GatewayConfig` `schema.py:353`, `ApiConfig` `:333` | MISSING | |
+| cron and heartbeat | `cron` tool `agent/tools/cron.py:118`, heartbeat `schema.py:326` | MISSING | |
+| image generation, CLI apps, `my` | `image_generation.py:121`, `cli_apps.py:99`, `self.py:149` | MISSING | |
+| transcription | `TranscriptionConfig` `schema.py:42` | MISSING | |
+| API key kept out of logs and child environments | | HAS (checked by every test case) | `tests/check.py` |
+
+omagent lacks MCP, subagents, skills, web search, the editing and search tools, exec sessions,
+summarizing memory, multiple providers, TLS, chat channels, the WebUI and API server, cron and
+heartbeat, image generation and transcription. What it has is the four-tool coding loop above.
+
+### Equal-work benchmark
+
+`bench/equal_bench.py` runs both programs through the same session:
+- the same prompt and the same scripted mock, `bench/equal_mock.py`;
+- streamed replies, four model requests per session: `read_file`, then `write_file`, then one
+  echo through the shell tool, then the final answer;
+- the same advertised tools: nanobot is reduced to `read_file`, `write_file`, `exec` and
+  `web_fetch` by `bench/nb_minimal.py`, because its config cannot drop the rest. It also has no
+  MCP, no channels, every skill disabled, `restrictToWorkspace`, and a fresh session each run;
+- the mock checks every tool result, and the driver checks the written file and the final answer.
+
+Remaining differences:
+- nanobot's system prompt is larger: 44,698 request bytes per session against 7,480.
+- nanobot's command runs as `env echo gamma-789` through `sh`, because its workspace guard
+  refuses `/bin/echo`. omagent runs `/bin/echo` directly.
+
+A negative control (omagent without `--allow-write`) is graded BAD.
+
+MEASURED on 2026-10-26 with omc 2c824805 (binary sha256 3eb8e93e..., 188,268 bytes):
+- N=30 paired runs per core class and model delay, arm order alternating;
+- client pinned with `taskset` to X925 cpu 5 or A725 cpu 1;
+- all 240 runs graded ok;
+- warm page cache, Spark under its usual background load.
+
+Wall times include the same Python launcher and `/usr/bin/time` for both arms. Medians, with ratios
+from Wolfram:
+
+| measure | omagent | nanobot | nanobot/omagent |
+|---|---|---|---|
+| launch to first model request, X925 / A725 | 5.7 / 6.5 ms | 897 / 1845 ms | 169x / 290x |
+| full session, instant mock, X925 / A725 | 13.4 / 19.5 ms | 1294 / 2439 ms | 101x / 136x |
+| full session, mock at 50 ms per chunk, X925 / A725 | 1834 / 1846 ms | 3340 / 4456 ms | 1.82x / 2.34x |
+| peak RSS | 2,584 KiB | 142,940 KiB | 55.3x |
+
+On-disk footprint:
+- omagent is the 188,268-byte static binary and nothing else.
+- During the session, nanobot loaded 1,894 module files totaling 51,602,687 bytes: 3.06 MB of its
+  own package, 41.65 MB of third-party packages and 6.90 MB of the standard library. On top of that
+  comes the 7,845,048-byte interpreter, which makes 316x.
+- nanobot's full installation is 336,116,353 bytes of site-packages, plus the standard library and
+  the interpreter.
+
+Once the model is slow, the harness matters much less. With the mock spending about 1.8 s per
+session, omagent's advantage falls from 101x to 1.82x (X925) and from 136x to 2.34x (A725). The
+absolute gap stays at 1.3 to 2.5 s per session, mostly nanobot's 0.9 to 1.8 s startup, and
+amounts to 45% (X925) and 57% (A725) of nanobot's session time. Against a real model that takes
+seconds per reply, the share is smaller again. NOT_RUN: a real model server.
+
+Raw rows, machine state, the Wolfram input and output, and the footprint lists are filed in the
+operator handoff `OmegaBot/eqbench/`.
 
 ## Limits and NOT_RUN
 

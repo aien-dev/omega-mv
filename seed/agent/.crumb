@@ -13,21 +13,27 @@
     "generated": {
       "children": [
         {
+          "digest": "ccf5758232d657cb5905074f7f2eda0ad261b15dc13618d965fe9baac0b6b4a5",
+          "last_commit": "7baf2024",
+          "name": "bench",
+          "purpose": "Test-only equal-work benchmark of omagent against nanobot reduced to the same four tools: script"
+        },
+        {
           "digest": "d83674abfa647020999dde6f2a4fded1d42576c32fa06a398621d62f72e46f8a",
           "last_commit": "116c3237",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:935cce568693499ddd0d12a194cca7f2a55bb6b9f5963daf91fa660499344155",
-      "compiled_at": "2026-10-26T20:30:14Z",
+      "children_root": "sha256:100b8b8f4d4301e8dd6588402036d0492a81f3675088f7b471f659b6b541292c",
+      "compiled_at": "2026-10-26T20:52:57Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:e46eb99bd85b4656057dbf4d763de6c8399fa72190238927d9ae845c2596ebce",
+      "digest": "sha256:852e638f6199fec757ee48e65cba85c7b1e844096a1afb5f1511daedd3cfd2ba",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 3,
-      "generated_at_commit": "09535bd0344f44e140d3ce3215e459c3805bdfcb",
-      "source_tree": "sha256:200f7ba127485c43d4ab2ac2e8fc27fcdeb00f9795997063ed732302291d3b87"
+      "generated_at_commit": "7baf20248326cb0d9966f2379386f34112f8f4d8",
+      "source_tree": "sha256:1d362aade5bad9671957ca4883d3eb9e301e8b5775430be416e603e988c77866"
     },
     "owner_lane": "",
     "seed": {

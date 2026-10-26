@@ -1,0 +1,33 @@
+{
+  "above": {
+    "name": "agent",
+    "path": ".."
+  },
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T20:52:57Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:ccf5758232d657cb5905074f7f2eda0ad261b15dc13618d965fe9baac0b6b4a5",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "7baf20248326cb0d9966f2379386f34112f8f4d8",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "equal_bench.py",
+        "equal_mock.py",
+        "nb_minimal.py"
+      ],
+      "purpose_auto": "Directory bench. Purpose not yet described by a human."
+    }
+  },
+  "layer": "bench",
+  "name": "bench",
+  "purpose": "Test-only equal-work benchmark of omagent against nanobot reduced to the same four tools: scripted streaming mock, paired interleaved driver, nanobot launcher.",
+  "schema_version": "1.0.0"
+}
