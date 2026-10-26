@@ -134,17 +134,45 @@ separately translated units are not part of this memory profile.
    twice, and add at least one one-line mutant that must differ.
 4. Run native parity first, then wasm parity, and report each result by its status word.
 
-## 6. Memory ABI: for the parent to fill once the spec PR merges
+## 6. Memory ABI and JavaScript integration
 
-This section is not written yet on purpose. It must state the agreed values, citing the merged spec:
+The contract is OSC wire **v7**, specified in
+[`spec/one-layer-format.md` section 10](../../../../spec/one-layer-format.md),
+merged in c5d981041bcca3f4c145431ae7e2864f401cb2e1. "IR v2" was the milestone
+name, not its wire version. Backend qualification remains separate from this
+merged specification.
 
-- how an IR v2 unit declares `global NAME T N`, and the wire encoding of loads and stores;
-- the wasm memory: whether it is exported and under what name, the initial and maximum pages, and the
-  placement and alignment of each global;
-- how JS locates `fb` (by an export, a fixed offset or a descriptor), and the byte order (wasm memory is
-  little-endian);
-- zero initialization, and how read-only data (font, tables, sky catalogue) enters memory;
-- whether globals can be shared between units, and the limit on total memory size.
+`global NAME T N` declares a class-0 region with no initial data. Its packed,
+naturally aligned elements start at zero once per module instance and persist
+between calls. `get` and `put` lower to RLOAD and RSTORE, with an element-count
+bounds check before address arithmetic. A negative or wide out-of-range index
+traps rather than wrapping to a wasm32 address. `len` is the element count.
 
-Until then, the wasm harness relies only on the scalar exports `fbsize`, `fbclip`, `fbgrad`, `ckglow`
-and `fbget`.
+`text NAME "bytes"` declares a class-2 u8 region initialized by an active data
+segment, with no implicit terminator. Generated Omega cannot write it.
+JavaScript holding exported memory can write it: source read-only storage is
+not an isolation boundary. Local `new` arrays use class 1 and RINIT on each
+invocation; they have no exported address and cannot expose prior-call contents
+through valid Omega instructions.
+
+The import-free module exports `memory`, each scalar function, and an immutable
+i32 global `region.NAME` for each module region. Treat the global value as an
+unsigned byte offset; never hardcode layout offsets or assume regions are
+adjacent. Memory has exactly the whole 64 KiB pages required for all backing,
+with maximum equal to initial size. It never grows. Instances do not share
+globals, and separately translated units have no shared-global linking ABI.
+Source global pools retain the 1 GiB aggregate limit; local arrays retain
+the 4 MiB aggregate limit. Backend capacity refusals are independent limits,
+not permission to truncate an oversized region.
+
+For the framebuffer, JavaScript obtains `region.fb`, invokes `fbsize`, then
+calls `fbgrad` and `ckglow` explicitly. Read pixels using a `DataView` on
+`exports.memory.buffer` and `getUint32(byteOffset, true)` for little-endian
+access; the region base is `exports["region.fb"].value >>> 0`.
+The renderer stores packed `0x00RRGGBB` words, not browser RGBA bytes: a canvas
+consumer must extract the color channels and supply its own alpha before
+passing bytes to `ImageData`. Omega installs no animation loop or JS services.
+
+The full-buffer oracle uses `fbget` independently of region placement.
+Memory-ABI qualification additionally compares module-region bytes through
+the exported offsets; scalar-only agreement does not establish that ABI.
