@@ -895,10 +895,25 @@ value-returning call composes as a value, a void call is a statement, and using 
 is needed is error 7. Argument types are checked at compile time (error 7). `break` lowers to a
 `BR` to the innermost loop's exit and marks the path dead; `continue` is still refused (error 3).
 
+The producer validates complete statement lines rather than discarding
+trailing words (error 5); missing operands are error 4 and untyped bare
+expressions error 11. Locals and loop counters obey block scope, including
+the `else` boundary; redeclaring an in-scope name is error 10, and reading
+an out-of-scope name is error 3. Locals and parameters retain the native
+eight-byte name limit (13), while function names retain full matching up
+to 63 bytes. A reachable non-void function end is error 18; a void end
+emits an implicit return. Missing function `end` is error 15. Unsupported
+float parameter/result types are refused with error 9 before serialization.
+Typed literals are range-checked (8). Parentheses remain unsupported in
+this scalar IR checkpoint, rather than being silently discarded.
+
 `seed/omc/gate-ir.sh` compares 10 dev programs, nine hand-written multi-function call units and 30
 randomized two-function call units byte-for-byte with the C-built `omegese` + `omega_emit` oracle, requires `checker2` to ACCEPT every unit, requires
-a mul-to-add mutant to differ, and pins 14 refusal cases. Those C tools are referees only; they
-never write omc's bytes.
+a mul-to-add mutant to differ, and pins refusal cases. Its validation regressions
+cover trailing/missing words, scopes, scalar types, literal bounds and name
+limits; positive controls include implicit void returns, sequential `for`
+counters, scope reuse and functions sharing a name prefix. Those C tools
+are referees only; they never write omc's bytes.
 
 Boolean `and`, `or` and `xor` lower to the IR bitwise sub-operations, just as on the
 native path. `gate-ir.sh` checks all three against the C encoder and checker2.
