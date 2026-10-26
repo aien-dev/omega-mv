@@ -47,3 +47,28 @@ Negative controls for the fixes:
 - #775, the length of an empty text passed to a `view`: batch 3.
 - The v7 memory producer, irwasm and oracle: OmegaMemory2 is building them on this branch for a later reseed.
 - #789 stays BLOCKED_OPERATOR.
+
+## Final run on the promotion head (added 2026-10-26)
+
+After main `705c0f01` (#813 om/tls, #814 seed/json and seed/net) was merged into the branch and the
+seed/json gate pin was moved from `189ada82` to this compiler, a fresh clone of `integ/omc-batch2` at
+`87f501ad980ca7406f8186612db30945a0bfd907` ran every check below under nice -n 19 ionice -c3, -j2,
+with siblings physics `048e5f5e` and omega-bridge `431fff0a`. Logs are in `final-87f501ad/`
+(`SHA256SUMS` lists them). Compiler bytes are unchanged from the rows above.
+
+| Check | Result | Log |
+|---|---|---|
+| C oracles; `seed/host/check.sh`; `seed/omc/gate5.sh` | HOSTGATE5_RC=0, GATE5 PASS (gate8 27, gate16 19, gate18 157, 53 host negative controls) | qualification.log |
+| Frozen `manifest-c2.txt` | 5870/5876; the 6 failures are exactly c2-00304/00306/00675 (capacity) and c2-00015/00033/00728 (batch 2) | c2.log |
+| `manifest-c2-capacity.txt`; `manifest-c2-batch2.txt` | 3/3; 3/3 | c2.log |
+| Negative control: 189ada82 on `manifest-c2-batch2.txt` | 0/3 | c2-batch2-negative.log |
+| `gate-ir-trap.py`; `mutants-ir-trap.py` | RC=0; RC=0 | ir-trap.log |
+| `tests/gates/run.sh om-units` | SHA256-PARITY PASS, BLAKE3-PARITY PASS, rc 0, work tree clean | om-units.log |
+| `seed/json/tests/gate-json.sh` (pin now 2c824805) | JSONGATE PASS rows=8758 mutants=5 | json.log |
+| `seed/net/tests/check.py` | HTTP-CHECK PASS | net.log |
+| `om/tls/test/*/run.sh`, eight suites, `TLS_NET=1` | all PASS; final lines identical to 189ada82; net=PASS (read-only GETs to api.github.com and raw.githubusercontent.com, EHLO/QUIT to mail.gandi.net) | tls-*.log |
+| `crumb verify .`; history diff of SEED-0, CONTRACTS, BATCH-189ada82 against `326b4a63` | 164 current; no diff | crumb-history.log |
+
+Pin negative controls on the working clone (not in this directory): the 189ada82 compiler and the
+old `JSON_OMC_PIN` both end the JSON gate with `JSONGATE FAIL ... differs from pin`, and the x509
+suite refuses 189ada82 with `FAIL omc is not the pinned compiler`.

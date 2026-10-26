@@ -1,0 +1,19 @@
+SOURCE 87f501ad980ca7406f8186612db30945a0bfd907
+COMPILER 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+Python 3.12.3
+SRC 456254fc754ea35103ced480407b24fc1a3896d094b90ae0e9623e7b6594e2d2 seed/json/json.om
+SRC 464f649e8207495f5d67fe8795d31e42ea3ccebd9ed547274dab802d4f7c5f21 seed/json/jsonw.om
+SRC bade33cef4b7edcc834c436d8499810aa573e02a97fb0dafded3736744e67a29 seed/json/jsonf.om
+SRC 2f2f8ac522db876db55bca464060ab6e1071447180f51c4e53051d4ce3ddd710 seed/json/tests/jsdrv.om
+PASS library compiles standalone (no globals, texts, host words)
+DRIVER 15e928704eb5be7f078712c77e536940053541e245018472d58d9f9259c13778
+GEN cases=2764 rows=8758
+PASS parity rows=8758 (tokens, walk, f64, rewrite, writer scripts)
+PASS oversized driver input refused (93)
+PASS mutant overlong-e0 caught
+PASS mutant raw-control caught
+PASS mutant depth-off-by-one caught
+PASS mutant writer-escape caught
+PASS mutant ties-to-even caught
+JSONGATE PASS rows=8758 mutants=5
+JSON_RC=0
