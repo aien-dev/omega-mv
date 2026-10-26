@@ -16,7 +16,8 @@ TURING_YIELD_ENERGY_MK := 1
 
 TYE_DIR = $(OUT_DIR)/ty
 TYE_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Itests/runtime
-TYE_LIB_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -Isrc
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+TYE_LIB_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -Isrc -Wno-pedantic
 TYE_ARCH = -march=armv8.6-a+dotprod+i8mm+sve
 TYE_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TYE_ALG_SRCS = src/algebra/realize_common.c src/algebra/realize_binary.c src/algebra/realize_bitplane.c \

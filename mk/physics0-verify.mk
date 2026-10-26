@@ -9,8 +9,9 @@ ifndef PHYSICS0_VERIFY_MK
 PHYSICS0_VERIFY_MK := 1
 .PHONY: test-physics0-verify p0v-purity
 P0V_COMMIT := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
 P0V_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -Wno-misleading-indentation -O2 -D_POSIX_C_SOURCE=200809L -ffp-contract=off -fno-fast-math \
-  -Isrc -Isrc/physics0/ladder -Isrc/physics0/score -Isrc/physics0/controls -Itests/physics0/verify -DPD0_VERIFIER_COMMIT=\"$(P0V_COMMIT)\" -DGOLDEN_PATH=\"tests/physics0/verify/golden_pd0rec1_pr243.bin\"
+  -Isrc -Isrc/physics0/ladder -Isrc/physics0/score -Isrc/physics0/controls -Itests/physics0/verify -DPD0_VERIFIER_COMMIT=\"$(P0V_COMMIT)\" -DGOLDEN_PATH=\"tests/physics0/verify/golden_pd0rec1_pr243.bin\" -Wno-pedantic
 P0V_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 P0V_SRCS = src/physics0/ladder/pd0_fmt.c src/physics0/ladder/pd0_codes.c src/physics0/ladder/pd0_ladder.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c src/physics0/controls/pd0_receipt.c src/omega_om_units.c
 P0V_HDRS = src/physics0/ladder/pd0_fmt.h src/physics0/ladder/pd0_codes.h src/physics0/ladder/pd0_rng.h src/physics0/ladder/pd0_ladder.h src/physics0/score/pd0_score.h src/physics0/controls/pd0_controls.h src/physics0/controls/pd0_receipt.h tests/physics0/verify/truth.h tests/physics0/verify/bundle.h

@@ -8,7 +8,8 @@
 #   all 7 candidates, ~few GB RAM, writes only under build/turing-exp001-eval/dry, or dry_EXP-001R). EXP_ID (default
 #   EXP-001) selects the experiment and profile version for the evaluator, the independent scorer and the scripts.
 .PHONY: turing-cal-eval test-turing-exp001-eval turing-exp001-eval-dry
-TE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -Wno-format-truncation -Isrc
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+TE_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -Wno-format-truncation -Isrc -Wno-pedantic
 TE_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TE_SRCS = src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/turing/ty_math.c src/omega_om_units.c \
 	src/turing/tc_produce.c src/turing/ty_model.c src/turing/ty_ctr1.c

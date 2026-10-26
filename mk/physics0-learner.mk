@@ -12,8 +12,9 @@ ifndef PHYSICS0_LEARNER_MK
 PHYSICS0_LEARNER_MK := 1
 .PHONY: test-physics0-learner physics0-learner-dev physics0-learner-evidence p0l-isolation
 P0L_DIR = $(OUT_DIR)/physics0-learner
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
 P0L_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -Wno-misleading-indentation -O2 -D_POSIX_C_SOURCE=200809L -ffp-contract=off -fno-fast-math \
-  -Isrc -Isrc/physics0/ladder -Isrc/physics0/score -Isrc/physics0/controls -Isrc/physics0/learner
+  -Isrc -Isrc/physics0/ladder -Isrc/physics0/score -Isrc/physics0/controls -Isrc/physics0/learner -Wno-pedantic
 P0L_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 P0L_LEARNER_SRCS = src/physics0/learner/pd0_learner.c src/physics0/ladder/pd0_fmt.c
 P0L_VERIFIER_SRCS = src/physics0/ladder/pd0_codes.c src/physics0/ladder/pd0_ladder.c src/physics0/score/pd0_score.c src/physics0/controls/pd0_controls.c
@@ -53,11 +54,11 @@ $(P0L_DIR)/pd0-harness: tests/physics0/learner/pd0_harness.c $(P0L_LEARNER_SRCS)
 	$(CC) $(P0L_CFLAGS) -o $@ $< $(P0L_LEARNER_SRCS) $(P0L_VERIFIER_SRCS) src/omega_om_units.c -lm
 $(P0L_DIR)/pd0-truth: tests/physics0/learner/pd0_truth_main.c $(P0L_TRUTH_SRCS) $(wildcard src/physics0/*.h)
 	@mkdir -p $(P0L_DIR)
-	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -o $@ $< $(P0L_TRUTH_SRCS) -lm
+	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -o $@ $< $(P0L_TRUTH_SRCS) -lm -Wno-pedantic
 
 $(P0L_DIR)/test_pd0_protocol_v2: tests/physics0/learner/test_pd0_protocol_v2.c $(P0L_TRUTH_SRCS) $(wildcard src/physics0/*.h)
 	@mkdir -p $(P0L_DIR)
-	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -o $@ $< $(P0L_TRUTH_SRCS) -lm
+	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -o $@ $< $(P0L_TRUTH_SRCS) -lm -Wno-pedantic
 
 test-physics0-learner: p0l-isolation $(P0L_DIR)/test_pd0_learner $(P0L_DIR)/test_pd0_learner_asan $(P0L_DIR)/pd0-learner $(P0L_DIR)/test_pd0_protocol_v2
 	./$(P0L_DIR)/test_pd0_learner

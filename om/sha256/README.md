@@ -41,10 +41,15 @@ cutover PR, measured with `parity/bench.c` and `parity/small.c`.
 ## Building the generated binding
 
 `src/omega_om_units.c` embeds each unit's machine code exactly as the pinned compiler wrote it, and its
-runtime entry table is declared with GNU range designators, which ISO C forbids. The four suites that
-compile it with `-pedantic` and `-Werror` (ANS, estimation, Brownian active and the physics baseline;
-`mk/estimation.mk`, `mk/ans.mk`, `mk/brownian_active.mk`, `mk/physics0.mk`) therefore append `-Wno-pedantic`
-to their flags: only that one diagnostic is waived, and the handwritten sources in the same commands are
-pedantic-clean today, so the rest of the strict set still applies to every file they compile.
-The generator fix is omega-bridge #17 on the ABI-v2 line; when it lands, regenerate the binding
-with it and drop those flags.
+runtime entry table is declared with GNU range designators, which ISO C forbids. Every suite that compiles
+it with `-pedantic` and `-Werror` therefore appends `-Wno-pedantic` to its flags: only that one diagnostic
+is waived, and the handwritten sources in the same commands are pedantic-clean today, so the rest of the
+strict set still applies to every file they compile. The waived suites are ANS, estimation and Brownian
+active (`mk/ans.mk`, `mk/estimation.mk`, `mk/brownian_active.mk`); the physics baseline, verifier, planner
+and both learner builds (`mk/physics0.mk`, `mk/physics0-verify.mk`, `mk/physics0-planner.mk`,
+`mk/physics0-learner.mk`, `mk/physics0-learner-v2.mk`); and the TURING family, where `TURING_CFLAGS` in
+the Makefile covers `test_turing`, `turing-field` and the mixed-algebra gate binary, and
+`mk/turing_exp001_a.mk`, `mk/turing_exp001_b.mk`, `mk/turing_exp001_c.mk`, `mk/turing_exp001_eval.mk`,
+`mk/turing_qrecord.mk`, `mk/turing_yield_energy.mk` and `mk/turing_yield_math.mk` carry the same waiver
+for their own builds. The generator fix is omega-bridge #17 on the ABI-v2 line; when it lands, regenerate
+the binding with it and drop those flags.

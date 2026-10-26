@@ -7,7 +7,8 @@
 # test-turing-yield: plain + ASan/UBSan suites, then the fixture printout from
 # both builds must be byte-identical (fixed-point determinism).
 .PHONY: test-turing-yield turing-yield
-TY_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+TY_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Wno-pedantic
 TY_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 TY_SRCS = src/turing/ty_math.c src/turing/ty_ctr1.c src/turing/ty_model.c src/turing/ty_record.c \
 	src/turing/ty_profile.c src/omega_canonical.c src/omega_om_units.c

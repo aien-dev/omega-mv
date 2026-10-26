@@ -8,7 +8,8 @@
 #   root and the evaluator jail cannot write candidate artifacts or reach the
 #   network (bubblewrap; no sudo).
 .PHONY: turing-cal-overlap test-turing-cal-blinding
-TCO_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc
+# -Wno-pedantic: generated binding src/omega_om_units.c uses GNU range designators; see mk/estimation.mk.
+TCO_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Wno-pedantic
 TCO_DIR = $(OUT_DIR)/turing-cal
 TCO_TOOL = $(TCO_DIR)/turing-cal-overlap
 TCO_SRCS = tools/turing_cal_overlap.c src/omega_om_units.c
