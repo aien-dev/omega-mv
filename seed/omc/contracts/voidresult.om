@@ -1,0 +1,8 @@
+om2
+fn f to void
+ensures eq result 0
+end
+fn main to int
+f
+ret 0
+end

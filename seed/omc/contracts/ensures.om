@@ -1,0 +1,8 @@
+om2
+fn f x int to int
+ensures eq result add x 1
+ret x
+end
+fn main to int
+ret f 0
+end

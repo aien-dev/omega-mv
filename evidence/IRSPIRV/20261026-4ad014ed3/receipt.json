@@ -1,0 +1,41 @@
+{
+  "schema": "irspirv-cpu-acceptance-v1",
+  "source_commit": "4ad014ed3342e202e4fdb1d31b38b8e6f2e0a117",
+  "date": "2026-10-26",
+  "command": "nice -n 19 ionice -c3 sh seed/spirv/gate-irspirv.sh",
+  "exit_status": 0,
+  "compiler_sha256": "befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d",
+  "translator_sha256": "66d2067848244e5a2cebc37941d9d5ebc2ae30f5641068afe39e35026163573b",
+  "host_sha256": "7937e90217b8fc2f3604539fc686138caf82f9aca0b9dd3eff06f7f0940f72b9",
+  "platform": "Linux AArch64 CPU; PoCL 7.2; no GPU",
+  "baseline_cases": 129,
+  "baseline_exact_matches": 129,
+  "baseline_traps": 29,
+  "supplemental_nested_call_cases": 8,
+  "demo_cases": 3,
+  "reordered_cfg_cases": 1,
+  "deterministic_modules": 16,
+  "validator_accepts": 17,
+  "named_refusals": 16,
+  "negative_controls": {
+    "arithmetic_mutant": "successful API execution, exactly one mismatch, checker exit 1",
+    "validator": "truncated module rejected",
+    "host_discovery": "inherited vendor/layer/device settings ignored; unconfigured and nonexistent fixed library fail with empty stdout"
+  },
+  "files": {
+    "log": "gate.log",
+    "parity": "case-spirv-parity.tsv",
+    "nested_calls": "regression-case-spirv-parity.tsv",
+    "demo": "demo-case-spirv-parity.tsv",
+    "mutant": "case-mutant-parity.tsv",
+    "raw_artifacts": "artifacts.tar.gz",
+    "toolchain": "toolchain.txt"
+  },
+  "summary": "PASS IRSPIRV CPU OpenCL parity cases=129 deterministic=16 validated=17 refusals=16",
+  "limits": [
+    "CPU-only author-run acceptance, not GPU or Alpha qualification",
+    "No DPC++ or Level Zero integration claimed",
+    "No gate manifest or trust policy changed"
+  ],
+  "supersedes_for_current_host": "../20261026-ced678b28/receipt.json"
+}
