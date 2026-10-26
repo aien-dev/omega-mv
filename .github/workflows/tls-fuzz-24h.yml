@@ -1,0 +1,63 @@
+# tls-fuzz-24h: the long om/tls AFL++ qemu_mode campaign on GitHub-hosted ubuntu-24.04-arm runners
+# instead of the Spark. One job builds the pinned AFL++ (v4.40c e5a8ba39 + aflpp-exitrange.patch,
+# qemu_mode CPU_TARGET=aarch64) natively on the runner; then CHUNKS sequential chunks of SECONDS each
+# run tls-fuzz-chunk.yml (7 targets in parallel, 4 instances per target), carrying each target's
+# corpus between chunks as an artifact. Full campaign: 5 chunks x 18000 s = 25 h per target.
+# SMOKE PLAN: 2 chunks x 300 s. Scratch branch only, never merged. The plan below is edited per push (smoke vs full campaign).
+name: tls-fuzz-24h
+on:
+  push:
+    branches: ["scratch/tls-harden-fuzz"]
+    paths: [".github/workflows/tls-fuzz-24h.yml", ".github/workflows/tls-fuzz-chunk.yml", "om/tls/**"]
+permissions:
+  contents: read
+concurrency:
+  group: tls-fuzz-24h
+  cancel-in-progress: false
+jobs:
+  aflpp:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: build pinned AFL++ with qemu_mode
+        run: |
+          set -eu
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq build-essential git python3 python3-venv \
+            ninja-build pkg-config libglib2.0-dev libpixman-1-dev flex bison wget ca-certificates meson > /dev/null
+          git clone --branch v4.40c https://github.com/AFLplusplus/AFLplusplus.git a
+          cd a
+          test "$(git rev-parse HEAD)" = e5a8ba39ecf97d05e286fdd4e01da96554dbf64f
+          git apply ../om/tls/test/fuzz/aflpp-exitrange.patch
+          make -j"$(nproc)" afl-fuzz afl-showmap afl-tmin > ../make.log 2>&1 || { tail -50 ../make.log; exit 1; }
+          (cd qemu_mode && CPU_TARGET=aarch64 ./build_qemu_support.sh > ../../qemu.log 2>&1) || { tail -80 ../qemu.log; exit 1; }
+          mkdir -p ../aflpp-out
+          cp afl-fuzz afl-showmap afl-tmin afl-qemu-trace ../aflpp-out/
+          cd ../aflpp-out; sha256sum afl-* | tee SHA256SUMS; ./afl-fuzz -h 2>&1 | head -3 || true
+      - uses: actions/upload-artifact@v4
+        with: {name: aflpp-v4.40c-exitrange, path: aflpp-out/, retention-days: 30}
+  c1:
+    needs: aflpp
+    uses: ./.github/workflows/tls-fuzz-chunk.yml
+    with: {chunk: 1, prev: 0, seconds: 300}
+  c2:
+    needs: c1
+    if: ${{ !cancelled() }}
+    uses: ./.github/workflows/tls-fuzz-chunk.yml
+    with: {chunk: 2, prev: 1, seconds: 300}
+  c3:
+    needs: c2
+    if: false
+    uses: ./.github/workflows/tls-fuzz-chunk.yml
+    with: {chunk: 3, prev: 2, seconds: 300}
+  c4:
+    needs: c3
+    if: false
+    uses: ./.github/workflows/tls-fuzz-chunk.yml
+    with: {chunk: 4, prev: 3, seconds: 300}
+  c5:
+    needs: c4
+    if: false
+    uses: ./.github/workflows/tls-fuzz-chunk.yml
+    with: {chunk: 5, prev: 4, seconds: 300}

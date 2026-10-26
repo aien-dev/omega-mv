@@ -6,6 +6,7 @@ on:
   workflow_call:
     inputs:
       chunk: {type: number, required: true}
+      prev: {type: number, required: true}
       seconds: {type: number, required: true}
 permissions:
   contents: read
@@ -26,8 +27,9 @@ jobs:
         with: {name: aflpp-v4.40c-exitrange, path: aflpp}
       - name: previous corpus
         if: inputs.chunk > 1
+        continue-on-error: true
         uses: actions/download-artifact@v4
-        with: {name: "corpus-${{ matrix.target }}-c${{ inputs.chunk - 1 }}", path: prev}
+        with: {name: "corpus-${{ matrix.target }}-c${{ inputs.prev }}", path: prev}
       - name: build target and replay seeds
         run: |
           set -eu
@@ -65,20 +67,24 @@ jobs:
               "$(g execs_per_sec)" "$(g saved_crashes)" "$(g saved_hangs)" "$(g edges_found)" "$(g bitmap_cvg)" "$(g corpus_count)" >> rep/stats.tsv
           done
           cat rep/stats.tsv
-          mkdir -p rep/crashes; : > rep/triage.txt
+          mkdir -p next; rm -f out/*/.cur_input; tar -cf next/out.tar out
+          du -sh next/out.tar out | tee -a rep/env.txt
+          mkdir -p rep/crashes; : > rep/triage.txt; n=0; m=0
           for f in out/*/crashes/id* out/*/hangs/id*; do
             [ -f "$f" ] || continue
+            n=$((n+1)); [ $n -le 200 ] || { echo "triage cap 200 reached" >> rep/triage.txt; break; }
             timeout 20 fz/bin/$T $A < "$f" > /dev/null 2>&1; ex=$?
             h=$(sha256sum "$f" | cut -c1-12)
             echo "$f exit $ex sha $h" | tee -a rep/triage.txt
             if [ "$ex" -ge 100 ] && [ "$ex" -ne 124 ]; then
               cp "$f" rep/crashes/$T-exit$ex-$h
-              AFL_PATH=$PWD/aflpp AFL_CRASH_EXITCODE=101-114 timeout 600 aflpp/afl-tmin -Q -t 5000 -i "$f" -o rep/crashes/$T-exit$ex-$h.min -- fz/bin/$T $A >> rep/tmin.log 2>&1 || true
+              # minimize at most one input per trap exit code (bounded inside the job time limit)
+              if ! ls rep/crashes/$T-exit$ex-*.min > /dev/null 2>&1 && [ $m -lt 4 ]; then m=$((m+1))
+                AFL_PATH=$PWD/aflpp AFL_CRASH_EXITCODE=101-114 timeout 600 aflpp/afl-tmin -Q -t 5000 -i "$f" -o rep/crashes/$T-exit$ex-$h.min -- fz/bin/$T $A >> rep/tmin.log 2>&1 || true
+              fi
             fi
           done
-          echo "triaged $(wc -l < rep/triage.txt) saved inputs, reproduced natively: $(ls rep/crashes | grep -vc '\.min$')" | tee -a rep/triage.txt
-          mkdir -p next; rm -f out/*/.cur_input; tar -cf next/out.tar out
-          du -sh next/out.tar out | tee -a rep/env.txt
+          echo "triaged $(grep -c ' exit ' rep/triage.txt) saved inputs, reproduced natively: $(ls rep/crashes | grep -vc '\.min$')" | tee -a rep/triage.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: "corpus-${{ matrix.target }}-c${{ inputs.chunk }}", path: next/, retention-days: 30}
