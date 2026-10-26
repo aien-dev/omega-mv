@@ -6,7 +6,7 @@
 # with OTHER given, OTHER must give the same bytes, exit status and error number (prefix om4/omc aside).
 set -eu
 N=$1; REF=$2; OTH=${3:-}; D=$(dirname "$0"); W=${NFW:-/tmp/nextfuzz.$$}; mkdir -p $W
-V="fn to end if else while bound for ret exit put get len read write new global text view edit true false note neg not add sub mul div rem and or xor shl shr eq ne lt le gt ge ( ) = bool uchar ushort uint ulong byte short int long void main 0 1 -1 255 18446744073709551615 9223372036854775808 x zz abcdefghij 123456789012345678901 1x \"s\" \"q\\\\x\""
+V="fn to end if else while bound for ret exit put get len read write new global text view edit true false note neg not add sub mul div rem and or xor shl shr eq ne lt le gt ge ( ) = bool uchar ushort uint ulong byte short int long void main 0 1 -1 255 18446744073709551615 9223372036854775808 x zz abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd 123456789012345678901 1x \"s\" \"q\\\\x\""
 acc=0; inputs=0; bad=0; codes=""
 one() { # file -> checks it
   inputs=$((inputs + 1))

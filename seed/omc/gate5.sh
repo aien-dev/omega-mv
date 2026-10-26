@@ -119,7 +119,7 @@ printf 'fn f a uint to uint\nret a\nend\n' > $B/ok.om; ecase 1 / $B/e.out; ecase
 printf 'fn f to uint\nret add\nend\n' > $B/e4.om; ecase 4 $B/e4.om $B/e.out
 printf 'fn f to uint\nret add 1 2\nend\n' > $B/e11.om; ecase 11 $B/e11.om $B/e.out
 { echo 'fn f to uint'; for i in $(seq 1 17); do echo "v$i = uint $i"; done; echo 'ret 0'; echo 'end'; } > $B/e12.om; ecase 12 $B/e12.om $B/e.out
-printf 'fn f to uint\nabcdefghi = uint 1\nret 0\nend\n' > $B/e13.om; ecase 13 $B/e13.om $B/e.out
+printf 'fn f to uint\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd = uint 1\nret 0\nend\n' > $B/e13.om; ecase 13 $B/e13.om $B/e.out
 yes 'note filler' | head -c 9000000 > $B/e14.om; ecase 14 $B/e14.om $B/e.out
 cases=$((cases + 10))
 

@@ -15,6 +15,7 @@ global tk ulong 1
 global tw ulong 1
 global tl ulong 1
 global ts ulong 1
+global tp ulong 1
 global tbig ulong 1
 global out uchar 8388608
 global oc ulong 1
@@ -110,6 +111,12 @@ global nm_len ulong 8192
 global nm_kind uchar 8192
 global nm_addr ulong 8192
 global nn ulong 1
+
+note ---- long-word table (8192 spellings of 9..63 bytes, see lnid): packed first 8 bytes, length, offset ----
+global ln_w ulong 8192
+global ln_l ulong 8192
+global ln_s ulong 8192
+global nln ulong 1
 
 note ---- function table (4096): name, address (byte offset in out), return type, parameter count,
 note per-parameter type/length/kind (6 each), name length, name offset in the input ----
@@ -657,8 +664,48 @@ end
 end
 end
 
+note lnsame: 1 when the n input bytes at a and at b agree from byte 8 on (the first 8 already matched).
+fn lnsame a ulong b ulong n ulong to ulong
+k = ulong 8
+while lt k n
+if ne get inp add a k get inp add b k
+ret 0
+end
+k = add k 1
+end
+ret 1
+end
+
+note lnid: a word of 9..63 bytes at [s, s+n) whose first 8 bytes are packed in w -> its interned id. Byte 0
+note of an id is 1, so an id never equals a packed word of 8 bytes or fewer (every word byte is above 32)
+note and never a keyword; two spellings share an id only when every byte is equal. The table lives for
+note the whole compile (the signature scan and the compile pass see the same ids). At most 8192 long
+note spellings (error 14).
+fn lnid s ulong n ulong w ulong to ulong
+i = ulong 0
+while lt i get nln 0
+if eq get ln_w i w
+if eq get ln_l i n
+if eq lnsame get ln_s i s n 1
+ret or 1 shl add i 1 8
+end
+end
+end
+i = add i 1
+end
+if ge i 8192
+fail 14
+end
+put ln_w i w
+put ln_l i n
+put ln_s i s
+put nln 0 add i 1
+ret or 1 shl add i 1 8
+end
+
 note tok2: a word at cur with first byte c; packs 8 bytes into tw, sets tl and ts. A '"' is a text; a
-note first byte '-' or a digit is a number.
+note first byte '-' or a digit is a number. A word of 9..63 bytes gets its interned id (lnid) in tw, so
+note every name up to 63 bytes is compared exactly.
 fn tok2 c uchar to void
 if eq c 34
 tok_text
@@ -702,6 +749,7 @@ m = add m 1
 end
 end
 put tw 0 w
+put tp 0 w
 put tl 0 n
 f = get inp get ts 0
 isnum = false
@@ -715,6 +763,11 @@ if isnum
 tok_num
 else
 put tk 0 1
+if gt n 8
+if le n 63
+put tw 0 lnid get ts 0 n w
+end
+end
 end
 end
 
@@ -2085,7 +2138,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 sid = findstruct get tw 0
@@ -2096,7 +2149,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 f = findfield sub sid 1 get tw 0
@@ -2368,7 +2421,7 @@ fn newname w ulong l ulong s ulong to void
 if ne findstruct w 0
 fail 10
 end
-if le l 8
+if le l 63
 if ne findname w 0
 fail 10
 end
@@ -2716,7 +2769,7 @@ if eq k 2
 ret get tw 0
 end
 if eq k 1
-if le get tl 0 8
+if le get tl 0 63
 e = findname get tw 0
 if ne e 0
 if eq get nm_kind sub e 1 9
@@ -2800,7 +2853,7 @@ end
 if ne k 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 if eq kw get tw 0 193
@@ -2822,7 +2875,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 w = get tw 0
@@ -3724,7 +3777,7 @@ end
 if ne k 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 end
@@ -6020,15 +6073,17 @@ ret
 end
 if gt get tl 0 8
 f = findfn get tw 0 get tl 0 get ts 0
-if eq f 0
-unkfail 13
-end
+if ne f 0
 if eq get fn_ret sub f 1 12
 fail 7
 end
 rdval 2 0 dst f
 vdec
 ret
+end
+if gt get tl 0 63
+unkfail 13
+end
 end
 c = kw get tw 0
 if eq c 0
@@ -6396,7 +6451,8 @@ end
 end
 end
 
-note s_long: a word over 8 characters at the start of a line: only a call of a void function. om4 S_LONG.
+note s_long: a word over 8 characters at the start of a line: a call of a void function, or (up to 63
+note bytes, interned by lnid) a name as s_name. om4 S_LONG.
 fn s_long to void
 if eq get curret 0 0
 fail 13
@@ -6406,7 +6462,11 @@ fail 17
 end
 f = findfn get tw 0 get tl 0 get ts 0
 if eq f 0
+if gt get tl 0 63
 unkfail 13
+end
+s_name get tw 0
+ret
 end
 if ne get fn_ret sub f 1 12
 fail 7
@@ -6721,7 +6781,7 @@ end
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 pw = get tw 0
@@ -6925,7 +6985,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 w = get tw 0
@@ -7190,7 +7250,7 @@ end
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 w = get tw 0
@@ -8758,7 +8818,7 @@ fn s_field w ulong fo ulong cells ulong to ulong
 if ne kw get tw 0 0
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 fw = get tw 0
@@ -8838,7 +8898,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 if ne kw get tw 0 0
@@ -10171,7 +10231,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 si = sub ulong get nm_type i 16
@@ -10227,7 +10287,7 @@ tok
 if ne get tk 0 1
 fail 16
 end
-if gt get tl 0 8
+if gt get tl 0 63
 fail 13
 end
 si = sub ulong get nm_type i 16
@@ -11707,7 +11767,7 @@ end
 if and eq get tl 0 7 eq get tw 0 32481164592901733
 ret 2
 end
-if and eq get tl 0 9 eq get tw 0 7953754356895346281
+if and eq get tl 0 9 eq get tp 0 7953754356895346281
 if eq get inp add get ts 0 8 116
 ret 3
 end

@@ -35,7 +35,7 @@ e8_out_of_range|8|fn f to int\nx = int 2147483648\nret 0\nend
 e9_break_outside|9|fn f to int\nbreak\nret 0\nend
 e10_duplicate_param|10|fn f x int x int to int\nret 0\nend
 e11_ambiguous|11|fn f to int\nx = 5\nret 0\nend
-e13_long_variable|13|fn f to int\nabcdefghi = int 1\nret 0\nend
+e13_long_variable|13|fn f to int\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd = int 1\nret 0\nend
 e15_missing_end|15|fn f to int\nret 0
 e16_syntax|16|wat
 e17_after_path|17|fn f to int\nret 0\nret 1\nend
@@ -82,5 +82,20 @@ rc=$?
 set -e
 [ "$rc" = 0 ] || bad "valid control: exit $rc ($(cat "$T/ok.err"))"
 
-say "PASS gate15 21 refusal cases (codes 3..23; 1 and 2 are compiler I/O) plus a valid control"
+# Names of 9..63 bytes compare in full: two names sharing their first 8 bytes stay distinct, and a
+# 63-byte name is accepted (64 bytes is e13 above). The program must compile and exit 21.
+printf 'fn add_numbers counter_a int counter_b int to int\nret add counter_a mul counter_b int 10\nend\nfn main to int\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabc = int 1\ncounter_x = int 2\nret add_numbers abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabc counter_x\nend\n' > "$T/long.om"
+set +e
+"$S" < "$T/long.om" > "$T/long.bin" 2> "$T/long.err"
+rc=$?
+set -e
+[ "$rc" = 0 ] || bad "long names: compile exit $rc ($(cat "$T/long.err"))"
+chmod +x "$T/long.bin"
+set +e
+"$T/long.bin" > /dev/null 2>&1
+rc=$?
+set -e
+[ "$rc" = 21 ] || bad "long names: exit $rc, wanted 21"
+
+say "PASS gate15 21 refusal cases (codes 3..23; 1 and 2 are compiler I/O) plus a valid control and long names"
 exit 0
