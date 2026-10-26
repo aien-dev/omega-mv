@@ -172,13 +172,13 @@ n  = hbodyrd cs io d               Content-Length, chunked or close-delimited
 ```
 
 HTTPS (`https.om`): after `hinit` and before any I/O, `htlsinit cs io host` reserves the
-transport region `io[HTB, HTB + TLCSZ)` (119296 bytes; `io` must hold it plus at least 512
+transport region `io[HTB, HTB + TLCSZ)` (121696 bytes; `io` must hold it plus at least 512
 bytes of read and write regions) and starts the om/tls client for the TLS name `host` with
 ALPN `http/1.1`; `htlsconn cs io st` runs the handshake against the trust store `st`
 (`TLSTSZ` bytes filled by `tls_store` or `tls_storef`); the request and response functions
 then work unchanged; `htlsend cs io` sends close_notify, wipes the keys and closes the
 descriptor (`hclose` alone closes the socket without either). A TLS result `e` comes back as
-`HETLS - e` (-601 .. -629, names in `tls_errname`), a TLS deadline as `HETIME`. A TCP end of
+`HETLS - e` (-601 .. -631, names in `tls_errname`), a TLS deadline as `HETIME`. A TCP end of
 stream without close_notify is `HETLS - 4` (truncation), never a clean end of a body.
 `tests/https.om` is the reference caller.
 
@@ -215,8 +215,9 @@ plain TCP or Unix sockets; 1 calls the hooks `htlsrecv`, `htlsrecvd` and `htlsse
 region `io[HTB, HTB + HTL)`; before each call the http.om wait policy, min(idle, deadline), is
 handed to `tls_deadline`) and `notls.om` refuses with `HENOSUP`. Because Omega passes one
 array to a call once, bytes between the TLS state and the read / write regions of the same `io`
-cross a 16 KiB bounce array (one extra copy per record). No other function of `http.om`
-touches the transport.
+cross a 16 KiB bounce array (one extra copy per record). `htlssend` refuses an `off` / `n` outside
+`io` with `HEINVAL` instead of trapping (om/tls interop row `sink`, `test/tls/bigsend.om`). No
+other function of `http.om` touches the transport.
 
 ## Host words used
 

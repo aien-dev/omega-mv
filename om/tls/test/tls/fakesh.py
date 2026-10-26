@@ -5,7 +5,7 @@
 # client's ServerHello refusal paths that a conforming server never reaches.
 # usage: fakesh.py PORT MODE
 #   tls12    legacy TLS 1.2 ServerHello, no supported_versions        -> PROTOCOL_VERSION
-#   hrr      HelloRetryRequest random                                 -> HELLO_RETRY_UNSUPPORTED
+#   hrr      HelloRetryRequest random with a ServerHello-shaped key_share -> DECODE
 #   suite    TLS_AES_256_GCM_SHA384 (not offered)                     -> CIPHER_SUITE
 #   sid      session id not echoed                                    -> SESSION_ID_ECHO
 #   group    key_share for secp256r1 (not offered)                    -> KEY_SHARE

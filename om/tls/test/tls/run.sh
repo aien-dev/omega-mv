@@ -11,9 +11,11 @@
 #   4. Local interop and refusal table (interop.sh): openssl s_server with good and bad
 #      certificates, protocol refusals, crafted ServerHellos, full fake-server handshakes
 #      (fakesrv.py: CCS policy, record-count caps, CertificateVerify, close_notify during the
-#      handshake) and a record-tampering proxy. Every failed row also checks that tls_close keeps
-#      the connection failed (client.om prints CLOSE_NOT_FAILED otherwise).
-#   5. Mutants of tls.om that the interop table must catch.
+#      handshake, HelloRetryRequest, NewSessionTicket, CertificateEntry extensions, zero-length
+#      tls_read, htlssend of seed/net/https.om via bigsend.om) and a record-tampering proxy. Every
+#      failed row also checks that tls_close keeps the connection failed (client.om prints
+#      CLOSE_NOT_FAILED otherwise).
+#   5. Mutants of tls.om (and of https.om htlssend) that the interop table must catch.
 #   6. With TLS_NET=1 only (needs the Internet): real handshakes and Python-ssl parity of fetched
 #      bytes for api.github.com and raw.githubusercontent.com (read-only GETs), and the SMTP relay
 #      mail.gandi.net on 465 (implicit TLS) and 587 (STARTTLS), EHLO and QUIT only.
@@ -101,7 +103,10 @@ fi
 
 # interop with the real tls.om
 build client "$tls/tls.om" "$here/client.om" || exit 1
-if sh "$here/interop.sh" "$out/client/bin" > "$out/interop.log" 2>&1; then
+# bigsend.om runs on http.om + https.om (seed/net) after the om/tls units
+cat "$root/seed/net/http.om" "$root/seed/net/https.om" "$here/bigsend.om" > "$out/bigsend.om"
+build big "$tls/tls.om" "$out/bigsend.om" || exit 1
+if sh "$here/interop.sh" "$out/client/bin" "$out/big/bin" > "$out/interop.log" 2>&1; then
   echo "PASS interop: $(tail -n 1 "$out/interop.log")"
 else
   echo "FAIL interop:"; grep -v '^PASS' "$out/interop.log"; fail=1
@@ -118,7 +123,7 @@ imut() { # LABEL SED-EXPR
   if sh "$here/interop.sh" "$out/im/bin" > "$out/im.log" 2>&1; then echo "FAIL $1 not detected"; fail=1
   else mutok=$((mutok + 1)); echo "PASS $1 detected: $(grep -c '^FAIL' "$out/im.log") rows fail"; fi
 }
-imut "mutant chain result ignored" '/^r = x509_chain_verify/{n;s/^if ne r 0/if eq r 99/}'
+imut "mutant chain result ignored" '/^r = x509_chain_verify/,/^ret TLECERT$/s/^if ne r 0$/if eq r 99/'
 imut "mutant CertificateVerify ignored" 's/^ret TLECV$/ret 0/'
 imut "mutant CCS count not checked"  's/^if ne get c TLCCS 1$/if eq get c TLCCS 9/'
 imut "mutant close revives failed"   's/^if ne get c TLPH 3$/if ne get c TLPH 99/'
@@ -128,15 +133,45 @@ imut "mutant handshake close_notify unmapped" '/^if eq e TLCLOSE$/{n;s/^ret TLEA
 imut "mutant version not checked"  's/^ret TLEVER$/ret 0/'
 imut "mutant record MAC ignored"   's/^ret TLEMAC$/ret 0/'
 imut "mutant session id not checked" 's/^ret TLESID$/ret 0/'
-# outside-review fixes: record limit on read and write, proactive KeyUpdate, handshake budget.
+# MODEL-REVIEWED fixes: record limit on read and write, proactive KeyUpdate, handshake budget.
 # "KeyUpdate not sent" is caught by the client's own seal limit (SEQUENCE_LIMIT); with both gone
 # the kuw:8 server sees too many records under one key and answers with a fatal alert.
 imut "mutant read record limit gone"   '/^fn tls_open /,/^end$/s/^if ge tls_gn c TLRS 8 tls_reclim c$/if ge tls_gn c TLRS 8 99999999/'
 imut "mutant write KeyUpdate not sent" 's/^if ge tls_gn c TLWS 8 sub tls_reclim c 1$/if ge tls_gn c TLWS 8 99999999/'
 imut "mutant write limit and KeyUpdate gone" 's/^if ge tls_gn c TLWS 8 sub tls_reclim c 1$/if ge tls_gn c TLWS 8 99999999/; s/^if ge tls_gn c TLWS 8 tls_reclim c$/if ge tls_gn c TLWS 8 99999999/'
 imut "mutant handshake budget not armed" 's/^tls_pn c TLDL add ulong monons b 8$/tls_pn c TLDL 0 8/'
+# HelloRetryRequest (RFC 8446 4.1.4)
+imut "mutant HRR cookie not echoed"       's/^cl = tls_gn c TLCKL 2$/cl = ulong 0/'
+imut "mutant ClientHello2 random changed" 's/^tls_mov c add b 6 TLRND 32$/put c add b 6 0/'
+imut "mutant ClientHello2 session id changed" 's/^tls_mov c add b 39 TLSID 32$/put c add b 39 0/'
+imut "mutant HRR group already shared"   '/^if ne and ulong get c TLGS g 0$/{n;s/^ret TLEKEYS$/ret 0/}'
+imut "mutant HRR group never offered"    '/^if or eq g 0 eq and ulong get c TLGO g 0$/{n;s/^ret TLEKEYS$/ret 0/}'
+imut "mutant second HRR accepted"        '/^fn tls_sh2 /,/^fn /{/^if eq e TLEHRR$/{n;s/^ret TLEUNEX$/ret 0/}}'
+imut "mutant HRR suite not compared"     '/^if ne get c TLSU get c TLHSU$/{n;s/^ret TLECIPH$/ret 0/}'
+imut "mutant HRR without change"         '/^fn tls_hrrext /,/^fn /s/^ret TLEHRR$/ret 0/'
+imut "mutant HRR unknown extension"      's/^if or eq b 0 ne and seen b 0$/if ne and seen b 0/'
+imut "mutant HRR recognised extension"   's/^if and eq b 0 ne tls_kext t 0$/if eq t 99999/'
+imut "mutant HRR supported_versions optional" '/^fn tls_hrrext /,/^fn /s/^ret TLEVER$/ret 0/'
+imut "mutant HRR cookie size unbounded"  's/^if gt n 12000$/if gt n 99999/'
+# NewSessionTicket (RFC 8446 4.6.1), CertificateEntry extension, zero-length tls_read
+imut "mutant ticket lifetime unchecked"  '/^if gt tls_gn c add TLHB 4 4 604800$/{n;s/^ret TLETKT$/ret 0/}'
+imut "mutant empty ticket accepted"      '/^if eq tl 0$/{n;s/^ret TLEDEC$/ret 0/}'
+imut "mutant ticket trailing bytes"      '/^if ne add p el z$/{n;s/^ret TLEDEC$/ret 0/}'
+imut "mutant ticket extension overrun"   '/^fn tls_nst /,/^fn /{/^if ne p z$/{n;s/^ret TLEDEC$/ret 0/}}'
+imut "mutant zero-length read is close"  '/^if eq len o 0$/{n;s/^ret neg long TLEARG$/ret 0/}'
+imut "mutant entry extension unmapped"   's/^if eq r X5EEXT$/if eq r 9999/'
+# htlssend (seed/net/https.om): without the range check a send past the end of io traps
+sed '/^fn htlssend /,/^fn /s/^ret HEINVAL$/ret 0/' "$root/seed/net/https.om" > "$out/mhttps.om"
+if cmp -s "$out/mhttps.om" "$root/seed/net/https.om"; then echo "FAIL mutant htlssend range: the mutation did not apply"; fail=1
+else
+  cat "$root/seed/net/http.om" "$out/mhttps.om" "$here/bigsend.om" > "$out/mbig.om"
+  rm -rf "$out/mb"; build mb "$tls/tls.om" "$out/mbig.om" || exit 1
+  mut=$((mut + 1))
+  if sh "$here/interop.sh" "$out/client/bin" "$out/mb/bin" > "$out/mb.log" 2>&1; then echo "FAIL mutant htlssend range not detected"; fail=1
+  else mutok=$((mutok + 1)); echo "PASS mutant htlssend range detected: $(grep -c '^FAIL' "$out/mb.log") rows fail"; fi
+fi
 
-# secret residue (outside review, item 4b): after the handshake no handshake secret may remain in
+# secret residue (MODEL-REVIEWED, item 4b): after the handshake no handshake secret may remain in
 # the client's memory; after tls_close no secret at all. The interop PKI must exist (built above).
 res="NOT_RUN"
 rc=0; python3 "$here/residue.py" "$out/client/bin" "$root/build/tls/interop" > "$out/residue.log" 2>&1 || rc=$?

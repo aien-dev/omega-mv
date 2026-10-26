@@ -18,7 +18,7 @@ note   r  = htlsinit cs io host          lay out the transport region, SNI and c
 note   r  = htlsconn cs io st            handshake (tls_connect) under the handshake budget
 note   ... hreqst / hhend / hwfin / hrsprd / hbodyrd as over TCP ...
 note   htlsend cs io                     close_notify, wipe the keys, close fd
-note Results: TLS error code e (tls_errname) is returned as HETLS - e (-601 .. -629);
+note Results: TLS error code e (tls_errname) is returned as HETLS - e (-601 .. -631);
 note TLS_ERR_TIMEOUT is HETIME. A TCP end of stream without close_notify is an error (HETLS - 4,
 note truncation), never a clean end; only close_notify gives 0 from the reads.
 note
@@ -150,8 +150,16 @@ end
 ret 0
 end
 
-note htlssend: all of io[off, off+n) through TLS in records of at most 16 KiB; 0 or negative
+note htlssend: all of io[off, off+n) through TLS in records of at most 16 KiB; 0 or negative.
+note HEINVAL (nothing sent) when the range is not inside io. io is a local array of at most 4 MiB
+note (omc error 23 above), so at most 256 records; the loop bound 1024 is not reachable.
 fn htlssend cs edit ulong * io edit uchar * off ulong n ulong to long
+if gt off len io
+ret HEINVAL
+end
+if gt n sub len io off
+ret HEINVAL
+end
 bb = new uchar 16384 0
 p = ulong 0
 while lt p n bound 1024

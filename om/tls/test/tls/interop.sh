@@ -1,12 +1,14 @@
 #!/bin/sh
 # SPDX-License-Identifier: Apache-2.0
 # Interop and refusal table for the om/tls client against local `openssl s_server` instances.
-# usage: sh om/tls/test/tls/interop.sh CLIENT    (CLIENT = a build of test/tls/client.om)
+# usage: sh om/tls/test/tls/interop.sh CLIENT [BIGSEND]   (CLIENT = a build of test/tls/client.om,
+#        BIGSEND = a build of test/tls/bigsend.om after seed/net/http.om and https.om)
 # A throwaway PKI is generated with the openssl CLI (test tooling) under build/tls/interop/.
 # Every server listens on 127.0.0.1 only. Each row prints the expected and observed outcome;
 # exit 0 only when every row matches. Needs openssl (3.x) and python3 (the tamper proxy).
 set -u
 client=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+big=; [ -z "${2:-}" ] || big=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../../../.." && pwd)
 d="$root/build/tls/interop"
@@ -73,7 +75,9 @@ q openssl req -new -key good.key -subj /CN=localhost -addext subjectAltName=DNS:
 q openssl x509 -req -in stray.csr -CA other.pem -CAkey other.key -CAcreateserial -days 10 -copy_extensions copy -out stray.pem
 cp good.key stray.key
 
-port=15400
+# INTEROP_PORT moves the range when several runs share the host (two runs can pick the same free
+# port in the 0.4 s before either server binds it)
+port=${INTEROP_PORT:-15400}
 # nextport: the next port above $port with no listener on 127.0.0.1 (another process may hold one;
 # connecting to it would test that process instead of this row's server)
 nextport() {
@@ -90,7 +94,7 @@ row() {
   openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
   sp=$!
   sleep 0.4
-  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"
+  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${ROWOPTS:-0}" > "c$port.out" 2> "c$port.err"
   rc=$?
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
@@ -115,6 +119,8 @@ row "missing intermediate"      "TLSERR TLS_ERR_CERTIFICATE detail 5"           
 row "TLS 1.2 only server"       "TLSERR TLS_ERR_ALERT_RECEIVED detail 70"              good int.pem -tls1_2
 row "AES-256 suite only"        "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"              good int.pem -tls1_3 -ciphersuites TLS_AES_256_GCM_SHA384
 row "P-256 group only"          "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"              good int.pem -tls1_3 -groups P-256
+# OpenSSL answers a ClientHello without an x25519 share (FLAGS=2) with a HelloRetryRequest
+ROWOPTS=0,0,0,0,2 row "openssl HelloRetryRequest" OK                                good int.pem -tls1_3 -groups X25519
 
 # crafted ServerHellos (fakesh.py): the client's own refusals
 fake() {
@@ -129,7 +135,7 @@ fake() {
   printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fake ServerHello: $1" "$2" "$got"
 }
 fake tls12  "TLSERR TLS_ERR_PROTOCOL_VERSION"
-fake hrr    "TLSERR TLS_ERR_HELLO_RETRY_UNSUPPORTED"
+fake hrr    "TLSERR TLS_ERR_DECODE"
 fake suite  "TLSERR TLS_ERR_CIPHER_SUITE"
 fake sid    "TLSERR TLS_ERR_SESSION_ID_ECHO"
 fake group  "TLSERR TLS_ERR_KEY_SHARE"
@@ -142,7 +148,7 @@ fake trail  "TLSERR TLS_ERR_DECODE"
 # fsrv MODE EXPECT [OPTS]: OPTS is the client's "REC,HSMS,SPLIT" (record limit, handshake ms, split)
 fsrv() {
   nextport; rows=$((rows + 1))
-  python3 "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
+  ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
   fp=$!
   sleep 0.6
   timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${3:-0}" > "c$port.out" 2> "c$port.err"; rc=$?
@@ -173,6 +179,42 @@ fsrv kurot       OK                                                      5,0,0
 fsrv kuw:8       OK                                                      8,0,1
 fsrv loris       "TLSERR TLS_ERR_TIMEOUT detail 0 (exit 13)"             0,2000,0
 fsrv slowsh      OK                                                      0,10000,0
+# HelloRetryRequest (RFC 8446 4.1.4); OPTS FLAGS=2 withholds the x25519 share from ClientHello1
+fsrv hrrok       OK                                                      0,0,0,0,2
+fsrv hrrok       "TLSERR TLS_ERR_KEY_SHARE detail 0 (exit 21)"
+fsrv hrrnock     OK                                                      0,0,0,0,2
+fsrv hrrccs      OK                                                      0,0,0,0,2
+fsrv hrrbadgrp   "TLSERR TLS_ERR_KEY_SHARE detail 0 (exit 21)"           0,0,0,0,2
+fsrv hrr2        "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"  0,0,0,0,2
+fsrv hrrsuite    "TLSERR TLS_ERR_CIPHER_SUITE detail 0 (exit 20)"        0,0,0,0,2
+fsrv hrrnochg    "TLSERR TLS_ERR_HELLO_RETRY detail 0 (exit 23)"         0,0,0,0,2
+fsrv hrrunk      "TLSERR TLS_ERR_ILLEGAL_PARAMETER detail 0 (exit 41)"   0,0,0,0,2
+fsrv hrrunk2     "TLSERR TLS_ERR_EXTENSION detail 0 (exit 22)"           0,0,0,0,2
+fsrv hrrsv       "TLSERR TLS_ERR_PROTOCOL_VERSION detail 0 (exit 19)"    0,0,0,0,2
+fsrv hrrbigck    "TLSERR TLS_ERR_MESSAGE_TOO_BIG detail 0 (exit 32)"     0,0,0,0,2
+# NewSessionTicket syntax (RFC 8446 4.6.1), CertificateEntry extensions, zero-length tls_read
+fsrv nstok       OK
+fsrv nstlife     "TLSERR TLS_ERR_TICKET detail 0 (exit 40)"
+fsrv nstnotk     "TLSERR TLS_ERR_DECODE"
+fsrv nsttrail    "TLSERR TLS_ERR_DECODE"
+fsrv nstext      "TLSERR TLS_ERR_DECODE"
+fsrv entryext    "TLSERR TLS_ERR_EXTENSION detail 21"
+fsrv ok          OK                                                      0,0,0,0,4
+
+# htlssend (seed/net/https.om) with BIGSEND (a build of test/tls/bigsend.om, 2nd argument): a send
+# past the end of io is HEINVAL, not a trap; then one send of the whole io below the TLS state,
+# which fakesrv.py sink checks byte for byte
+if [ -n "$big" ]; then
+  nextport; rows=$((rows + 1))
+  ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" sink > "f$port.log" 2>&1 &
+  fp=$!
+  sleep 0.6
+  timeout 120 "$big" "$port" "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
+  got="$(tr -d '\n' < "c$port.out") (exit $rc)"
+  case "$got" in "BIGSEND OK "*"(exit 0)") v=PASS ;; *) v=FAIL; fail=1 ;; esac
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: sink (htlssend)" "BIGSEND OK (exit 0)" "$got"
+fi
 
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac
