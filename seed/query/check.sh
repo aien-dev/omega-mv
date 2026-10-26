@@ -118,9 +118,14 @@ ret y"
     req "${H}x = add int 1 2
 ret y "
     req "${H}abcdefghij = 1"
+    req "${H}local arr[i324i324"
+    req "${H}invarian"
+    req "${H}note extraordinarily"
+    req "${H}x = 1234567890123456789012"
 } | "$Q" "$OMC" prefix > "$B/prefix.txt"
-printf '1 4\n0 0\n1 3\n2 3\n2 13\n' > "$B/prefix.want"
-if cmp -s "$B/prefix.txt" "$B/prefix.want"; then ok "prefix verdicts 5/5"; else bad "prefix verdicts"; diff "$B/prefix.want" "$B/prefix.txt"; fi
+# rows 6-9: an open word longer than any omc word is dead (2), except keyword prefixes and notes
+printf '1 4\n0 0\n1 3\n2 3\n2 13\n2 13\n1 4\n1 15\n2 6\n' > "$B/prefix.want"
+if cmp -s "$B/prefix.txt" "$B/prefix.want"; then ok "prefix verdicts 9/9 (dead open word)"; else bad "prefix verdicts"; diff "$B/prefix.want" "$B/prefix.txt"; fi
 
 # 7. The goldens can fail: a corrupted expected answer must not compare equal.
 sed 's/"regs_free":11/"regs_free":12/' $C/stmt_loop.json > "$B/corrupt.json"

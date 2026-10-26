@@ -14,6 +14,10 @@ const GHA ulong 5
 const GHK ulong 6
 const GFL ulong 7
 const GD0 ulong 8
+note prefix mode word limits of omc 2c824805: a name over 8 bytes is error 13, a number over 20
+note bytes is error 6 (MEASURED by OmegaMind). longnames (#837) raises NAMEMAX to 63.
+const NAMEMAX ulong 8
+const NUMMAX ulong 20
 const GD1 ulong 9
 const GEND ulong 10
 const GMI ulong 11
@@ -2576,12 +2580,84 @@ end
 ret ebnum add p 1
 end
 
+note prefix mode: the open word at the prefix end is dead once it is longer than any word omc
+note accepts, because growing it never helps (OmegaMind mask eval: runaway words such as
+note "arr[i324i324..." reached max_tokens). Exempt: note lines, text literals (odd quote count on
+note the line) and prefixes of the long keyword invariant.
+fn spc c uchar to bool
+ret or or eq c 32 eq c 10 or eq c 9 eq c 13
+end
+
+fn freetxt b ulong to bool
+q = ulong 0
+i = add b 1
+note and evaluates both sides, so the scan tests i before reading src at i - 1
+while gt i 0
+if eq get src sub i 1 10
+break
+end
+i = sub i 1
+if eq get src i 34
+q = add q 1
+end
+end
+if eq and q 1 1
+ret true
+end
+if gt add i 4 b
+ret false
+end
+for j ulong len tnote
+if ne get src add i j get tnote j
+ret false
+end
+end
+ret true
+end
+
+fn kwpre b ulong w ulong to bool
+if gt w len tinv
+ret false
+end
+for j ulong w
+if ne get src add b j get tinv j
+ret false
+end
+end
+ret true
+end
+
+fn wdead n ulong to bool
+b = n
+while gt b 0
+if spc get src sub b 1
+break
+end
+b = sub b 1
+end
+w = sub n b
+if or eq w 0 freetxt b
+ret false
+end
+if gt w NUMMAX
+ret true
+end
+f = get src b
+if or and ge f 48 le f 57 eq f 45
+ret false
+end
+ret and gt w NAMEMAX not kwpre b w
+end
+
 fn pverd rc ulong n ulong to ulong
 if eq rc 0
 ret 0
 end
 if ge rc 250
 ret 3
+end
+if wdead n
+ret 2
 end
 s = dfield ksev
 if ge s get g GEN
