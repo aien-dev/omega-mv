@@ -91,7 +91,12 @@ hole outside a function (the answer says which), 2 usage or a compiler that fail
 program prefix. For each it writes one line `V CODE`: whether the prefix can still be completed to
 a program `omc` accepts, and the code. This replaces `omviable.om` (OmegaMind, handoffs
 `OmegaMind/omviable/`), which this unit absorbed; OmegaMind's own `selftest.py` passed 13/13 cases
-against it.
+against it. An open word at the prefix end that is longer than any word `omc` accepts (a name over
+`NAMEMAX` 8 bytes, a number over `NUMMAX` 20 bytes) is answered `2`, since growing it never
+helps; before this, `local arr[i324i324` was answered `1 13` and sampled models ran to max_tokens
+(OmegaMind, `OmegaMind/omviable/wdead-check.txt`). Note lines, text literals and prefixes of
+`invariant` are exempt; a first word that merely starts with `note` is wrongly exempt (fails open).
+#837 raises `NAMEMAX` to 63.
 
 ## Limits
 
@@ -111,7 +116,7 @@ against it.
 ## Evidence
 
 `check.sh` on 2026-10-26: `SEED QUERY PASS 45 checks`, `omq` sha256
-`b7fcd8a43ef6c1dc5db2d5e3b2172635a4c567c19f0f2b122985e186ab88489b`. The checks are byte-identical
+`62a21f4462e217f4efcc3eaf1495ca65a0b51a7d47cb1dac25e54a92e1877f9c`. The checks are byte-identical
 goldens for every case; negative controls (closed-block name absent, no `break` outside a loop, a
 wrong-type array excluded, no contract forms in OM-1, a length-mismatched array not offered and
 rejected by `omc`); every `next` form at the loop hole substituted and recompiled; the omitted
