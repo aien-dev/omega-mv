@@ -300,3 +300,5 @@ Of the 2003 parse cases checked in mode `t`, 1094 were compared byte for byte an
 refusals checked by their `ERR ` prefix. Pinned refusals are compared exactly. All five mutants
 made the parity run fail. If any of the hashes above change, this record no longer applies; rerun
 the gate.
+
+Re-verified 2026-10-26 after refresh onto main `c5d981041` with reseeded `seed/out/omc` `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`: `JSONGATE PASS rows=8758 mutants=5`; gate pin updated.

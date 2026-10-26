@@ -237,3 +237,5 @@ Stages:
 
 Every socket in the checks is 127.0.0.1 with a port chosen by the kernel. Nothing contacts port
 18091 or any outside host.
+
+Re-verified 2026-10-26 after refresh onto main `c5d981041` with reseeded `seed/out/omc` `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`: `HTTP-CHECK PASS` (same counts).
