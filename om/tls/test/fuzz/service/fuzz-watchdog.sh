@@ -25,12 +25,15 @@ QG=${SPARK_QUIET_GATE:-/tmp/aien-quiet.gate}
 QW=${SPARK_QUIET_WANT:-/tmp/aien-quiet.want.d}
 GB=${SPARK_GB10_LOCK:-/tmp/aien-gb10.lock}
 CLEAN=${FUZZ_CLEANUP_LOCK:-$H/.local/state/spark-cleanup/run.lock}
-EQ=${FUZZ_EQ_GLOB:-/tmp/eq_* /tmp/*bench*.lock}
-Q27=${FUZZ_Q27_MARKERS:-/tmp/aien-q27-window $H/.local/state/aien-q27/WINDOW}
-SWEEP=${FUZZ_SWEEP_PATTERN:-aien-alpha |aien-test worker|r15-sweep}
+# Optional extra markers (empty by default). The timing lanes and GPU windows are already covered
+# above: quiet-measure/spark-window take $QL/$QW/$QG, and every GPU window (Q27 included) holds $GB.
+EQ=${FUZZ_EQ_GLOB:-}
+Q27=${FUZZ_Q27_MARKERS:-}
+SWEEP=${FUZZ_SWEEP_PATTERN:-}
 QLBIN=${FUZZ_QUIETLOCK:-$H/.local/bin/quietlock}
 PORT=${FUZZ_GUARD_PORT:-18091}
-LOADMAX=${FUZZ_LOAD_MAX:-4}
+# 20-core host whose load1 ran 16.1-30.2 during the TlsProof bench (2026-10-26); the 2 niced workers stay on cpus 10-11.
+LOADMAX=${FUZZ_LOAD_MAX:-16}
 DISKMIN=${FUZZ_DISK_MIN_GIB:-150}
 SIZEMAX=${FUZZ_SIZE_MAX_GIB:-20}
 
@@ -54,7 +57,7 @@ reason() {
   held "$CLEAN" && { echo "pause spark-cleanup running"; return; }
   for f in $EQ; do held "$f" && { echo "pause bench lock $f held"; return; }; done
   for f in $Q27; do [ -e "$f" ] && { echo "pause Q27 GPU window ($f)"; return; }; done
-  pgrep -f "$SWEEP" >/dev/null 2>&1 && { echo "pause sweep running ($(pgrep -af "$SWEEP" | head -1 | cut -c1-80))"; return; }
+  [ -n "$SWEEP" ] && pgrep -f "$SWEEP" >/dev/null 2>&1 && { echo "pause sweep running ($(pgrep -af "$SWEEP" | head -1 | cut -c1-80))"; return; }
   [ -n "$(ss -ltnH "sport = :$PORT" 2>/dev/null)" ] || { echo "pause 127.0.0.1:$PORT not listening"; return; }
   l=$(cut -d' ' -f1 /proc/loadavg)
   awk -v l="$l" -v m="$LOADMAX" 'BEGIN{exit !(l>m)}' && { echo "pause load1 $l > $LOADMAX"; return; }
