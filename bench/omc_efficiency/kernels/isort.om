@@ -1,8 +1,10 @@
 note isort: insertion sort of 20000 numbers from the generator of seed/rung4/tests/sort.om, in a
 note global array; prints sum a[i]*(i+1), the count of unsorted neighbours, a[0] and a[19999].
+note OMC-EFF-2: main writes the nanoseconds between its two monons readings (the computation, without
+note start-up and output) as one decimal line on stderr; stdout is unchanged.
 global out uchar 32
 global a ulong 20000
-fn putnum v ulong to void
+fn putnum fd int v ulong to void
 put out 31 10
 p = ulong 31
 x = v
@@ -13,7 +15,7 @@ x = div x 10
 end
 p = sub p 1
 put out p uchar add x 48
-w = write 1 out p sub 32 p
+w = write fd out p sub 32 p
 end
 fn gen to void
 x = ulong 12345
@@ -40,6 +42,7 @@ put a k v
 end
 end
 fn main to int
+t0 = monons
 gen
 isort
 s = ulong 0
@@ -52,9 +55,11 @@ if gt get a i get a add i 1
 bad = add bad 1
 end
 end
-putnum s
-putnum bad
-putnum get a 0
-putnum get a 19999
+t1 = monons
+putnum 2 ulong sub t1 t0
+putnum 1 s
+putnum 1 bad
+putnum 1 get a 0
+putnum 1 get a 19999
 ret 0
 end

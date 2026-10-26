@@ -1,12 +1,15 @@
-note OMC-EFF-1 measurement conductor (bench/omc_efficiency/PROTOCOL.md). It runs every arm of every case
-note as its own process, in a seeded random arm order per case and round, times each run with monons
-note around fork .. waitpid, checks every output byte against want/CASE.out, reads perf stat counters,
-note and writes one raw row per run on stdout. It computes no statistics.
+note OMC-EFF measurement conductor (bench/omc_efficiency/PROTOCOL.md, corrected by PROTOCOL-2.md). It runs
+note every arm of every case as its own process, in a seeded random arm order per case and round, times
+note each run with monons around fork .. waitpid, reads the program's own in-process runtime (one decimal
+note line on its stderr, OMC-EFF-2), checks every output byte against want/CASE.out, reads perf stat
+note counters, and writes one raw row per run on stdout. It computes no statistics.
 note
 note run mode:   conductor run ROUNDS WARM SEED NCTL A ARM1 .. ARMA CASE ..
 note             binary bin/ARM/CASE, expected output want/CASE.out; the last NCTL arms are negative
 note             controls (their output must NOT match). Rows:
-note             T round warm case arm pos wall_ns status ok
+note             T round warm case arm pos wall_ns status ok runtime_ns
+note             (ok is 1 only when status is 0, stdout equals want/CASE.out and stderr is exactly one
+note             decimal line, whose value is runtime_ns; otherwise runtime_ns is what could be read, or 0)
 note             P round warm case arm pos instructions cycles status ok   (controls get no P row)
 note build mode: conductor build ROUNDS WARM SEED OMC A ARM1 .. ARMA CASE ..
 note             arm omc: OMC < src/CASE.om > build.out; arm cOx: /usr/bin/gcc -B/usr/bin/ -Ox -static
@@ -25,6 +28,7 @@ text tdotc ".c"
 text trunout "run.out"
 text tbuild "build.out"
 text tchild "child.log"
+text ttime "time.out"
 text tperfc "perf.csv"
 text tperf "/usr/bin/perf"
 text tstat "stat"
@@ -72,7 +76,8 @@ global ord ulong 64
 global cfg ulong 16
 global cnt ulong 8
 note cfg: 0 mode (0 run, 1 build), 1 rounds, 2 warm, 3 nctl, 4 arm count, 5 first arm arg, 6 first case
-note arg, 7 case count, 8 omc arg index. cnt: 0 rows, 1 ok, 2 fail, 3 detected, 4 missed
+note arg, 7 case count, 8 omc arg index, 10 instructions, 11 cycles, 12 runtime line valid.
+note cnt: 0 rows, 1 ok, 2 fail, 3 detected, 4 missed
 
 fn pbclr to void
 put pbn 0 0
@@ -230,7 +235,7 @@ end
 end
 
 note ---- run one child: fork, redirect, exec pk; the parent times fork .. waitpid
-note how: 0 stdout to run.out; 1 stdin from ip, stdout to build.out; 2 stdout to child.log
+note how: 0 stdout to run.out, stderr to time.out; 1 stdin from ip, stdout to build.out; 2 stdout to child.log
 fn child how ulong to void
 fd = long -1
 if eq how 0
@@ -248,6 +253,16 @@ end
 r = dupfd int fd 1 0
 if ne r 1
 exit 121
+end
+if eq how 0
+fe = fopen ttime 0 len ttime 577 420
+if lt fe 0
+exit 126
+end
+r = dupfd int fe 2 0
+if ne r 2
+exit 127
+end
 end
 if eq how 1
 fi = fopen ip 0 get ipn 0 0 0
@@ -295,7 +310,11 @@ else
 if eq how 1
 fd = fopen tbuild 0 len tbuild 0 0
 else
+if eq how 2
 fd = fopen tperfc 0 len tperfc 0 0
+else
+fd = fopen ttime 0 len ttime 0 0
+end
 end
 end
 if lt fd 0
@@ -546,6 +565,28 @@ end
 end
 end
 
+note ---- rtparse: the n bytes of time.out in ob must be 1 .. 19 digits and one LF; cfg 12 is 1 when
+note they are, and the value is returned (0 and cfg 12 = 0 otherwise)
+fn rtparse n ulong to ulong
+put cfg 12 0
+if or lt n 2 gt n 20
+ret 0
+end
+if ne get ob sub n 1 10
+ret 0
+end
+v = ulong 0
+for i ulong sub n 1
+c = get ob i
+if or lt c 48 gt c 57
+ret 0
+end
+v = add mul v 10 ulong sub c 48
+end
+put cfg 12 1
+ret v
+end
+
 note ---- one timed run and one counted run of arm slot p
 fn dotime r ulong ci ulong p ulong nw ulong to void
 ax = get ord p
@@ -562,12 +603,19 @@ ok = same no nw
 if ne sc 0
 ok = 0
 end
+nt = slurpob 3
+rt = rtparse nt
+if eq get cfg 12 0
+ok = 0
+end
 rowhead 0 r ci ai p
 lbnum wall
 lbsp
 lbnum sc
 lbsp
 lbnum ok
+lbsp
+lbnum rt
 lbflush
 tally ok ctl
 end

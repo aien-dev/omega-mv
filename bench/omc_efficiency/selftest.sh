@@ -1,6 +1,7 @@
 #!/bin/sh
-# OMC-EFF-1 conductor self-test: proves the conductor's checks can fail. No timing value is printed
-# (wall and counter columns are masked). Exit 0 only when every expectation below holds.
+# OMC-EFF conductor self-test (PROTOCOL.md, PROTOCOL-2.md): proves the conductor's checks can fail.
+# No measured timing value is printed (wall, runtime and counter columns are only tested for presence;
+# runtime=123 is a synthetic line). Exit 0 only when every expectation below holds.
 #
 #   sh bench/omc_efficiency/selftest.sh OMC SCRATCHDIR
 set -u
@@ -31,6 +32,8 @@ expect() { # name want_rc got_rc want_summary got_summary
 expect clean_run 0 $rc "S rows=14 ok=12 fail=0 ctl_detected=2 ctl_missed=0" "$(tail -n 1 ok.raw)"
 z=$(awk '$1=="P" && ($7==0 || $8==0)' ok.raw | wc -l)
 expect counters_nonzero 0 0 "zero_rows=0" "zero_rows=$z"
+z=$(awk '$1=="T" && $5!="neg" && (NF!=10 || $9!=1 || $10==0)' ok.raw | wc -l)
+expect runtime_present 0 0 "bad_T_rows=0" "bad_T_rows=$z"
 cp want/fib.out want.keep && printf '39088168\n' > want/fib.out
 ./conductor run 1 0 7 1 4 omc cO2 cO0 neg fib > nc1.raw; rc=$?
 expect wrong_want 1 $rc "S rows=7 ok=0 fail=6 ctl_detected=1 ctl_missed=0" "$(tail -n 1 nc1.raw)"
@@ -43,6 +46,19 @@ expect wrong_reference 1 $rc "S rows=3 ok=2 fail=1 ctl_detected=0 ctl_missed=0" 
 cp cO2.keep bin/cO2/fib
 ./conductor build 1 0 9 "$OMC" 3 omc cO2 cO0 fib > b.raw; rc=$?
 expect clean_build 0 $rc "S rows=3 ok=3 fail=0 ctl_detected=0 ctl_missed=0" "$(tail -n 1 b.raw)"
+# OMC-EFF-2: the in-process runtime line on stderr is required, and read exactly
+cp bin/cO2/fib cO2.keep
+printf '#!/bin/sh\nprintf "39088169\\n"\n' > bin/cO2/fib && chmod +x bin/cO2/fib
+./conductor run 1 0 7 1 4 omc cO2 cO0 neg fib > nc4.raw; rc=$?
+expect no_runtime_line 1 $rc "S rows=7 ok=5 fail=1 ctl_detected=1 ctl_missed=0" "$(tail -n 1 nc4.raw)"
+printf '#!/bin/sh\nprintf "39088169\\n"\nprintf "12x\\n" >&2\n' > bin/cO2/fib
+./conductor run 1 0 7 1 4 omc cO2 cO0 neg fib > nc5.raw; rc=$?
+expect bad_runtime_line 1 $rc "S rows=7 ok=5 fail=1 ctl_detected=1 ctl_missed=0" "$(tail -n 1 nc5.raw)"
+printf '#!/bin/sh\nprintf "39088169\\n"\nprintf "123\\n" >&2\n' > bin/cO2/fib
+./conductor run 1 0 7 1 4 omc cO2 cO0 neg fib > ok2.raw; rc=$?
+v=$(awk '$1=="T" && $5=="cO2" {print $10}' ok2.raw)
+expect runtime_read_exactly 0 $rc "S rows=7 ok=6 fail=0 ctl_detected=1 ctl_missed=0 runtime=123" "$(tail -n 1 ok2.raw) runtime=$v"
+cp cO2.keep bin/cO2/fib
 ./conductor run 1 0 > /dev/null; rc=$?
 expect usage 2 $rc "" ""
 ./conductor run 1 0 0 1 4 omc cO2 cO0 neg fib > /dev/null; rc=$?

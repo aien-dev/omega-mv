@@ -3,22 +3,22 @@
     "generated": {
       "children": [],
       "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "compiled_at": "2026-10-26T15:43:45Z",
+      "compiled_at": "2026-10-26T16:04:38Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:a1b7a9935586a889c227e737bc16106942e5b11e7fcd3e856604fa4e46ba31e4",
+      "digest": "sha256:61396e779a9a1ffefe26884a6344d4a45746183437a04113510c0ef41edcec08",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 25,
-      "generated_at_commit": "273c0f3f7ce152aa15d96d2f0540613f2cd97102",
-      "source_tree": "sha256:8893856d25c02ffcee024cd8ece5d07978ec6e1272c5fe2f0331e81e9eebfef0"
+      "files": 26,
+      "generated_at_commit": "322a5257e36b02840dce86cf3bba571b5f7c9b7e",
+      "source_tree": "sha256:daa6cae60a6f07bf3f4c4debfe473eb3acaa71594e512e12b2d2ff62eeaaa397"
     }
   },
   "invariants": [
-    "PROTOCOL.md is frozen at its commit; any change to cases, arms, rounds, seeds, metrics or rules is a new protocol version, never an edit",
+    "PROTOCOL.md and PROTOCOL-2.md are frozen at their commits; any change to cases, arms, rounds, seeds, metrics or rules is a new protocol version, never an edit",
     "want/*.out values are computed by Wolfram independently of both compilers; never regenerate them from a compiler's output",
     "the conductor computes no statistics and never reruns a case to select a result"
   ],
   "name": "bench/omc_efficiency",
-  "purpose": "OMC-EFF-1 fixed efficiency protocol for the seeded Omega compiler: seven scalar kernels with C twins, Wolfram-computed expected outputs, the Omega measurement conductor and its self-test",
+  "purpose": "OMC-EFF fixed efficiency protocol for the seeded Omega compiler (PROTOCOL.md, corrected by PROTOCOL-2.md to an in-process runtime metric): seven scalar kernels with C twins, Wolfram-computed expected outputs, the Omega measurement conductor and its self-test",
   "schema_version": "1.0.0"
 }

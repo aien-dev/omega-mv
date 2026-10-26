@@ -1,8 +1,10 @@
 note sieve: 50 fresh passes of the sieve of Eratosthenes over 0 .. 2000000 in a global byte array;
 note prints the prime count of the last pass and the sum of the counts of all passes.
+note OMC-EFF-2: main writes the nanoseconds between its two monons readings (the computation, without
+note start-up and output) as one decimal line on stderr; stdout is unchanged.
 global out uchar 32
 global fl uchar 2000001
-fn putnum v ulong to void
+fn putnum fd int v ulong to void
 put out 31 10
 p = ulong 31
 x = v
@@ -13,7 +15,7 @@ x = div x 10
 end
 p = sub p 1
 put out p uchar add x 48
-w = write 1 out p sub 32 p
+w = write fd out p sub 32 p
 end
 fn pass to ulong
 for i ulong 2000001
@@ -39,13 +41,16 @@ end
 ret c
 end
 fn main to int
+t0 = monons
 sum = ulong 0
 last = ulong 0
 for r ulong 50
 last = pass
 sum = add sum last
 end
-putnum last
-putnum sum
+t1 = monons
+putnum 2 ulong sub t1 t0
+putnum 1 last
+putnum 1 sum
 ret 0
 end

@@ -1,6 +1,8 @@
 note fib: doubly recursive Fibonacci of 38 (ulong); prints fib(38). Call and return heavy.
+note OMC-EFF-2: main writes the nanoseconds between its two monons readings (the computation, without
+note start-up and output) as one decimal line on stderr; stdout is unchanged.
 global out uchar 32
-fn putnum v ulong to void
+fn putnum fd int v ulong to void
 put out 31 10
 p = ulong 31
 x = v
@@ -11,7 +13,7 @@ x = div x 10
 end
 p = sub p 1
 put out p uchar add x 48
-w = write 1 out p sub 32 p
+w = write fd out p sub 32 p
 end
 fn fib n ulong to ulong
 if lt n 2
@@ -22,6 +24,10 @@ b = fib sub n 2
 ret add a b
 end
 fn main to int
-putnum fib 38
+t0 = monons
+r = fib 38
+t1 = monons
+putnum 2 ulong sub t1 t0
+putnum 1 r
 ret 0
 end

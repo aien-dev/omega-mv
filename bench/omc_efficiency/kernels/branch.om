@@ -1,7 +1,9 @@
 note branch: Collatz steps to reach 1 for every start 1 .. 1000000; prints the total steps and the
 note largest step count. Data-dependent branch in a bounded while.
+note OMC-EFF-2: main writes the nanoseconds between its two monons readings (the computation, without
+note start-up and output) as one decimal line on stderr; stdout is unchanged.
 global out uchar 32
-fn putnum v ulong to void
+fn putnum fd int v ulong to void
 put out 31 10
 p = ulong 31
 x = v
@@ -12,9 +14,10 @@ x = div x 10
 end
 p = sub p 1
 put out p uchar add x 48
-w = write 1 out p sub 32 p
+w = write fd out p sub 32 p
 end
 fn main to int
+t0 = monons
 tot = ulong 0
 mx = ulong 0
 for n ulong 1000000
@@ -33,7 +36,9 @@ if gt k mx
 mx = k
 end
 end
-putnum tot
-putnum mx
+t1 = monons
+putnum 2 ulong sub t1 t0
+putnum 1 tot
+putnum 1 mx
 ret 0
 end
