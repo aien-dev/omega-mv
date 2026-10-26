@@ -153,6 +153,10 @@ printf 'PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refuse
 compile psync
 (cd "$stage"; ./psync)
 printf 'PASS native getsid/syncfs/shutdown: session id, filesystem sync, non-socket refusal\n'
+compile flock
+(cd "$stage"; timeout 10 ./flock)
+test ! -e "$stage/flock.tmp"
+printf 'PASS native flock: exclusive lock blocks a second open (EWOULDBLOCK), unlock, shared, EINVAL, EBADF\n'
 compile pgroup
 (cd "$stage"; ./pgroup)
 printf 'PASS native process groups: getpgid/setpgid, setsid or EPERM\n'

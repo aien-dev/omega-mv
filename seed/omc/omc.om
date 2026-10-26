@@ -760,7 +760,7 @@ put tkb 0 get inlen 0
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus native host words 100..177) ========
+note ======== keyword lookup (original om4 KWTAB plus native host words 100..177 and flock 197) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
 if eq w 6584163
@@ -912,6 +912,9 @@ ret 176
 end
 if eq w 28268896573219181
 ret 177
+end
+if eq w 461229747302
+ret 197
 end
 if eq w 1819242338
 ret 1
@@ -4197,6 +4200,9 @@ end
 if eq c 165
 ret 2
 end
+if eq c 197
+ret 2
+end
 ret 3
 end
 fn hsysno c ulong to ulong
@@ -4271,6 +4277,9 @@ ret 267
 end
 if eq c 165
 ret 210
+end
+if eq c 197
+ret 32
 end
 if eq c 105
 ret 201
@@ -5697,6 +5706,10 @@ fail 9
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
+if eq c 197
+hscalar c dst x
+ret
+end
 if eq c 220
 hpeercr dst x
 ret
@@ -6104,7 +6117,7 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
-if or and ge c 100 le c 177 and ge c 220 le c 222
+if or or and ge c 100 le c 177 eq c 197 and ge c 220 le c 222
 hostval c dst
 ret
 end
