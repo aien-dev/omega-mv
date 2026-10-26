@@ -240,7 +240,8 @@ heartbeat, image generation and transcription. What it has is the four-tool codi
   echo through the shell tool, then the final answer;
 - the same advertised tools: nanobot is reduced to `read_file`, `write_file`, `exec` and
   `web_fetch` by `bench/nb_minimal.py`, because its config cannot drop the rest. It also has no
-  MCP, no channels, every skill disabled, `restrictToWorkspace`, and a fresh session each run;
+  MCP, no channels, every built-in skill disabled, `restrictToWorkspace`, and a fresh session each
+  run;
 - the mock checks every tool result, and the driver checks the written file and the final answer.
 
 Remaining differences:
@@ -249,6 +250,10 @@ Remaining differences:
   refuses `/bin/echo`. omagent runs `/bin/echo` directly.
 
 A negative control (omagent without `--allow-write`) is graded BAD.
+
+Known flaw in the numbers below: the bench misnamed one skill, so nanobot's `update-setup` skill
+stayed enabled. The name is fixed in `bench/equal_bench.py`; a rerun is pending and will replace
+these numbers.
 
 MEASURED on 2026-10-26 with omc 2c824805 (binary sha256 3eb8e93e..., 188,268 bytes):
 - N=30 paired runs per core class and model delay, arm order alternating;
