@@ -70,6 +70,10 @@ refuse bad_continue 9
 refuse bad_after_continue 17
 refuse bad_trap0 8
 refuse bad_trap15 8
+refuse bad_elif 16
+refuse bad_elsif 16
+refuse bad_elseif 16
+run_exit c6 3
 
 say "PASS gate7 $n cases"
 exit 0

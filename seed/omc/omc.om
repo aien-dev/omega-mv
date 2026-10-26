@@ -8484,6 +8484,11 @@ if eq c 68
 s_else
 ret 0
 end
+note elif / elsif / elseif are not Omega words: as a bare `name value` assignment they silently wrote a
+note new local and dropped the branch (an if/elif/else chain ran every elif body). Refused, error 16.
+if or eq w 1718185061 or eq w 439855836261 eq w 112602859662437
+fail 16
+end
 if ne get dead 0 0
 fail 17
 end

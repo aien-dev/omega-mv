@@ -1,0 +1,13 @@
+note an if/elif/else chain: elif is not an Omega word (it was a bare assignment to a local named elif).
+fn main to int
+k = ulong 1
+r = ulong 0
+if eq k 0
+r = ulong 10
+elif eq k 1
+r = ulong 11
+else
+r = ulong 12
+end
+ret int r
+end
