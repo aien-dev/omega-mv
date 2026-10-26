@@ -245,32 +245,34 @@ heartbeat, image generation and transcription. What it has is the four-tool codi
 - the mock checks every tool result, and the driver checks the written file and the final answer.
 
 Remaining differences:
-- nanobot's system prompt is larger: 44,698 request bytes per session against 7,480.
+- nanobot's system prompt is larger: 43,230 request bytes per session against 7,480 (5.78x).
 - nanobot's command runs as `env echo gamma-789` through `sh`, because its workspace guard
   refuses `/bin/echo`. omagent runs `/bin/echo` directly.
 
 A negative control (omagent without `--allow-write`) is graded BAD.
 
-Known flaw in the numbers below: the bench misnamed one skill, so nanobot's `update-setup` skill
-stayed enabled. The name is fixed in `bench/equal_bench.py`; a rerun is pending and will replace
-these numbers.
-
 MEASURED on 2026-10-26 with omc 2c824805 (binary sha256 3eb8e93e..., 188,268 bytes):
 - N=30 paired runs per core class and model delay, arm order alternating;
 - client pinned with `taskset` to X925 cpu 5 or A725 cpu 1;
 - all 240 runs graded ok;
-- warm page cache; the Spark was heavily loaded by other work (load average 22 to 30), so absolute
-  times are noisy, while the paired order keeps the comparison fair.
+- warm page cache; the Spark was heavily loaded by other work (load average 28 to 45 during the
+  runs, recorded per group), so absolute times are noisy, while the paired order keeps the
+  comparison fair.
+
+A first run misnamed one skill, so nanobot's `update-setup` skill stayed enabled. That skill
+added 1,468 request bytes per session (3.3% of nanobot's 44,698). The numbers below are from the
+rerun with every built-in skill disabled. They are a little different from the first run, partly
+because the machine was busier.
 
 Wall times include the same Python launcher and `/usr/bin/time` for both arms. Medians, with ratios
 from Wolfram:
 
 | measure | omagent | nanobot | nanobot/omagent |
 |---|---|---|---|
-| launch to first model request, X925 / A725 | 5.7 / 6.5 ms | 897 / 1845 ms | 169x / 290x |
-| full session, instant mock, X925 / A725 | 13.4 / 19.5 ms | 1294 / 2439 ms | 101x / 136x |
-| full session, mock at 50 ms per chunk, X925 / A725 | 1834 / 1846 ms | 3340 / 4456 ms | 1.82x / 2.34x |
-| peak RSS | 2,584 KiB | 142,940 KiB | 55.3x |
+| launch to first model request, X925 / A725 | 5.5 / 9.0 ms | 831 / 2228 ms | 167x / 255x |
+| full session, instant mock, X925 / A725 | 14.2 / 23.1 ms | 1206 / 2917 ms | 92x / 126x |
+| full session, mock at 50 ms per chunk, X925 / A725 | 1838 / 1850 ms | 3758 / 5020 ms | 2.02x / 2.73x |
+| peak RSS | 2,584 KiB | 142,838 to 143,046 KiB | 55.3x |
 
 On-disk footprint:
 - omagent is the 188,268-byte static binary and nothing else.
@@ -281,13 +283,13 @@ On-disk footprint:
   the interpreter.
 
 Once the model is slow, the harness matters much less. With the mock spending about 1.8 s per
-session, omagent's advantage falls from 101x to 1.82x (X925) and from 136x to 2.34x (A725). The
-absolute gap stays at 1.3 to 2.5 s per session, mostly nanobot's 0.9 to 1.8 s startup, and
-amounts to 45% (X925) and 57% (A725) of nanobot's session time. Against a real model that takes
+session, omagent's advantage falls from 92x to 2.02x (X925) and from 126x to 2.73x (A725). The
+absolute gap stays at 1.2 to 3.2 s per session, mostly nanobot's 0.8 to 2.4 s startup, and
+amounts to 50% (X925) and 63% (A725) of nanobot's session time. Against a real model that takes
 seconds per reply, the share is smaller again. NOT_RUN: a real model server.
 
 Raw rows, machine state, the Wolfram input and output, and the footprint lists are filed in the
-operator handoff `OmegaBot/eqbench/`.
+operator handoff `OmegaBot/eqbench2/` (the first, flawed run is in `OmegaBot/eqbench/`).
 
 ## Limits and NOT_RUN
 
