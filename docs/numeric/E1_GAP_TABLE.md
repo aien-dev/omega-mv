@@ -284,7 +284,7 @@ Bounds of the natural ops (Wolfram derivation of the error model of the C sequen
 exponent -1), one above the declared `NUM_ORACLE_LOG_ULP` of 4 in `tests/test_omega_numeric.c`. An a-priori bound
 is a ceiling, not a measurement. The measurement over all 2^32 inputs against the binary128 oracle is
 `test_omega_numeric_cpu --ulp-exhaustive EXP|LOG` (commit `0919efc3`); at this commit it is NOT_RUN to completion
-(running at `nice -n 19` on five shared cores), and the declared tolerances stand unchanged until it reports.
+(started on five shared cores, stopped unfinished), and the declared tolerances stand unchanged until it reports.
 
 A second, independent tier: the same eleven ops as seeded Omega compiled to SPIR-V and run on PoCL, compared bit for
 bit with the CPU tier, is documented in `docs/numeric/E1_SPIRV_TIER.md` on branch `e1open/eleven-ops-three-tiers`.
