@@ -328,7 +328,7 @@ if [ -n "${OPENSSL35:-}" ] && "$OPENSSL35" list -kem-algorithms 2> /dev/null | g
   row "ossl35: default groups"      OK                                                   good int.pem -tls1_3 -trace
   ropts=0,0,0,0,2
   row "ossl35: FLAGS 2, hybrid srv" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
-  rowgroup=X25519
+  rowgroup=ecdh_x25519
   row "ossl35: FLAGS 2, HRR x25519" OK                                                   good int.pem -tls1_3 -groups X25519 -trace
   ropts=
   row "ossl35: X25519-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519 -trace

@@ -238,7 +238,8 @@ rmut "mutant shared secret kept" 's/^tls_zero c TLSS 64$/tls_zero c TLSS 0/'
 rmut "mutant approved P-256 shared secret kept" 's/^tls_zero c TLECZ 48$/tls_zero c TLECZ 0/' --approved
 rmut "mutant hybrid shared secret kept" 's/^tls_zero c TLSS 64$/tls_zero c TLSS 0/' --hybrid
 rmut "mutant decapsulation key kept"   '/^fn tls_kemdec /,/^fn /s/^tls_zero c TLKDK 2400$/tls_zero c TLKDK 0/' --hybrid
-rmut "mutant ML-KEM secret copy kept"  '/^fn tls_kemdec /,/^fn /s/^tls_zero ss 0 32$/tls_zero ss 0 0/' --hybrid
+# (no mutant for the `tls_zero ss 0 32` wipe in tls_kemdec: runner 40430489221 showed that copy, a
+# stack array, is overwritten by later frames before the scan, so dropping the wipe is not observable)
 
 if [ "${TLS_NET:-0}" = 1 ]; then
   if python3 "$here/parity.py" "$out/client/bin" api.github.com /licenses/mit /licenses/apache-2.0 /repos/torvalds/linux/license > "$out/net.log" 2>&1 \
