@@ -920,8 +920,10 @@ foreign-language compiler or runtime is on the new implementation path.
 
 The proposed device/memory extension adds checked `devctl`, `mapnew`,
 `mapdrop`, `mapread` and `mapwrite` to this same compiler, plus the VFIO words
-`vfioctl` (literal allowlisted request, exact size, `argsz` forced) and
-`vfiomap` (read-only shared map of exactly one reported VFIO region). Its exact type,
+`vfioctl` (literal allowlisted request, exact size, `argsz` forced; IOMMU_MAP_DMA takes an
+owned mapping handle, never an address),
+`vfiomap` (read-only shared map of exactly one reported VFIO region) and `vfiomapw`
+(the same map read/write, for device registers). Its exact type,
 ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/MAPPING.md).
 It adds process-local mapped resources while the compiler's own storage remains
 fixed pools. GPU launch and model execution are separate, still-unqualified gates.

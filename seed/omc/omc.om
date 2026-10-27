@@ -760,7 +760,7 @@ put tkb 0 get inlen 0
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus native host words 100..179 and flock 197) ========
+note ======== keyword lookup (original om4 KWTAB plus native host words 100..180 and flock 197) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
 if eq w 6584163
@@ -918,6 +918,9 @@ ret 178
 end
 if eq w 31632320040101494
 ret 179
+end
+if eq w 8606486010553525878
+ret 180
 end
 if eq w 461229747302
 ret 197
@@ -5326,10 +5329,12 @@ note mapnew fd:int offset:ulong bytes:ulong access:int mode:int -> long handle/e
 note Access 1 or 3 and modes 1/2/33/34 must be literal. No fixed address or executable map.
 note vfiomap fd:int A off n -> long handle/errno: n must be 32, a struct vfio_region_info the kernel
 note filled. Its flags need READ|MMAP (1|4); size and offset come from the span. Always read-only shared.
+note vfiomapw is the same with flags READ|WRITE|MMAP (7) and a read/write shared map, so mapset can store
+note to device registers (BAR0 MMIO). Only a span the kernel reported writable maps writable.
 fn mnew c ulong dst ulong x ulong to void
 acc = ulong 0
 mode = ulong 1048610
-if eq c 179
+if or eq c 179 eq c 180
 harg x 4 8
 put fr add x 20 harray x 0
 put fr add x 23 alloc
@@ -5337,6 +5342,9 @@ matconst get fr add x 23 32
 e3 3942645760 31 get fr add x 22 get fr add x 23
 trapc 1 3
 acc = ulong 1
+if eq c 180
+acc = ulong 3
+end
 mode = ulong 1
 end
 if eq c 167
@@ -5362,14 +5370,14 @@ harg x 1 5
 harg x 2 5
 end
 save
-if eq c 179
+if or eq c 179 eq c 180
 basearg 6 get fr add x 20
 loadarg 16 1 get fr add x 21
 e3 2332033024 6 6 16
 mimmed 3107979264 15 6 1
-matconst 14 5
+matconst 14 or 5 sub acc 1
 e3 2315255808 15 15 14
-mimmed 4043309056 31 15 5
+mimmed 4043309056 31 15 or 5 sub acc 1
 trapc 1 3
 mload 1 6 2
 hload x 4 4
@@ -5731,6 +5739,11 @@ note GROUP_SET_CONTAINER 15208 points at a 4-byte fd. GROUP_GET_STATUS 15207 (8)
 note (24) and DEVICE_GET_REGION_INFO 15212 (32) point at the span after the compiler itself stores
 note argsz = n, so the kernel copies at most n bytes. GROUP_GET_DEVICE_FD 15210 passes a private zero-
 note terminated copy of a non-empty span (at most 4095 bytes, no embedded zero).
+note IOMMU_MAP_DMA 15217 (32) takes an Omega mapping handle in the vaddr field (bytes 8..15), never an
+note address: the compiler checks the handle like mapget, requires a read/write mapping and flags exactly
+note READ|WRITE (3), then stores the mapping's own base address and whole length into vaddr and size.
+note The caller chooses only the IOVA (bytes 16..23). IOMMU_UNMAP_DMA 15218 (24) requires flags 0 (no
+note dirty bitmap, no ALL, no VADDR) and unmaps only the caller's IOVA range in its own container.
 fn hvfioctl dst ulong x ulong to void
 harg x 4 8
 harg x 2 4
@@ -5769,6 +5782,12 @@ end
 if eq q 15212
 n = ulong 32
 end
+if eq q 15217
+n = ulong 32
+end
+if eq q 15218
+n = ulong 24
+end
 if eq n 99
 fail 9
 end
@@ -5787,6 +5806,23 @@ e3 2332033024 2 2 16
 if ge n 8
 matconst 16 n
 mimmed 3103784960 16 2 0
+end
+if eq q 15217
+mimmed 3107979264 15 2 1
+mimmed 4043309056 31 15 3
+trapc 1 3
+mload 10 2 1
+mcheck
+mload 15 11 3
+mimmed 4043309056 31 15 3
+trapc 1 3
+mstore 13 2 1
+mstore 12 2 3
+end
+if eq q 15218
+mimmed 3107979264 15 2 1
+mimmed 4043309056 31 15 0
+trapc 1 3
 end
 if or eq q 15205 eq q 15206
 mimmed 3107979264 2 2 0
@@ -5899,10 +5935,11 @@ hsendmsg dst x
 ret
 end
 if eq c 178
+mtinit
 hvfioctl dst x
 ret
 end
-if eq c 179
+if or eq c 179 eq c 180
 mtinit
 mnew c dst x
 ret
@@ -6302,7 +6339,7 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
-if or or and ge c 100 le c 179 eq c 197 and ge c 220 le c 222
+if or or and ge c 100 le c 180 eq c 197 and ge c 220 le c 222
 hostval c dst
 ret
 end
