@@ -42,7 +42,8 @@ jobs:
             sh om/tls/test/${{ matrix.suite }}/run.sh "$PWD/seed/out/omc" > logs/${{ matrix.suite }}.log 2>&1; rc=$?
           fi
           echo "RC=$rc seconds=$(( $(date +%s) - start ))" | tee -a logs/${{ matrix.suite }}.log
-          tail -5 logs/*.log
+          tail -n 5 logs/*.log
+          [ "$rc" = 0 ] && [ "${rc2:-0}" = 0 ]
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: "suite-${{ matrix.suite }}", path: "logs/\nbuild/tls/", if-no-files-found: ignore}
