@@ -1,0 +1,20 @@
+# GPU stack: SUPERSEDED by aien-dev/CUDApp (CUDA++), the single source of truth since P0.4 (2026-10-27).
+# Do not change these files here. Make the change in https://github.com/aien-dev/CUDApp; CUDA++'s drift gate
+# (.github/workflows/drift.yml, tools/extract/drift.sh) fails when omega-mv main changes one of them after the
+# cutover baseline (omega-mv e5b32567) and CUDA++ does not hold the same bytes.
+# These paths are removed from omega-mv in a later, separate PR; until then any PR touching them requests review
+# from the owner below so it can be redirected to CUDA++.
+/src/omega_gpu_*        @aien-spark
+/src/omega_blackwell_*  @aien-spark
+/src/omega_bw_*         @aien-spark
+/src/omega_sm121_*      @aien-spark
+/tests/gpu_*            @aien-spark
+/tests/bw_*             @aien-spark
+/tests/test_omega_gpu_* @aien-spark
+/tests/test_omega_blackwell_* @aien-spark
+/tests/fake_m16_native.* @aien-spark
+/mk/omega-gpu-*         @aien-spark
+/mk/runtime-*           @aien-spark
+/mk/sm121dis.mk         @aien-spark
+/tools/sm121dis/        @aien-spark
+/tools/gpu_engine_*     @aien-spark

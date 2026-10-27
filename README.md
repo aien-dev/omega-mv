@@ -1,5 +1,7 @@
 # OMEGA (.om or .omg)
 
+> **GPU stack superseded by [CUDA++ (aien-dev/CUDApp)](https://github.com/aien-dev/CUDApp).** CUDA++ is the single source of truth for the GB10 GPU stack: `src/omega_gpu_*`, `src/omega_blackwell_*`, `src/omega_bw_*`, `src/omega_sm121_*`, the GPU host tests (`tests/gpu_*`, `tests/bw_*`, `tests/test_omega_gpu_*`), `mk/omega-gpu-*`, `mk/runtime-*` and `tools/sm121dis/` (full list: `.github/CODEOWNERS`). Make GPU changes there; the copies here are frozen at `e5b32567` and will be removed in a separate PR. CUDA++'s drift gate fails when a frozen file changes here without the same bytes in CUDA++. The server (aien-sovereign-core) builds its GPU engine from CUDA++ pinned in `cudapp.lock`.
+
 **Omega is a systems language and compute platform being implemented in handwritten, seeded `.om`.** Its goal is one inspectable path from a small seed through compiler, runtime and applications to machine execution. Pure computation and authorized effects have distinct contracts; semantic identities identify declared computations, while validation and receipts record what was actually checked.
 
 **Migration is not finished.** This repository's default branch still contains substantial C implementation and build/test tooling. The seeded `.om` compiler, its native host and device/mapping words, the OM-2 profile and the WebAssembly back end are on `main`; an existing C implementation is an outstanding replacement task, not the final language of Omega.
