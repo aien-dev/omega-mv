@@ -1201,9 +1201,12 @@ byte-identical output, not just equal exit statuses.
 
 The claim, exactly: **an Omega GPU kernel unit that `seed/detcheck/detcheck` and checker2 both accept
 has no construct whose result can depend on the order in which threads run.** Floating-point
-atomics, order-dependent atomics, unordered reductions and data races are refused before any
-lowering. This is a checker property of the IR, not a hardware receipt; the chip side ("the same
-bits on every run") is D7 in aien-dev/CUDApp (`docs/issues/D7-same-bits-chip.md`).
+atomics, order-dependent atomics, unordered reductions and data races are refused on the IR,
+before lowering; detcheck is not yet called by the launch path (see Gate). This is a checker
+property of the IR, not a hardware receipt. The chip side ("the same bits on every run") is D7 in
+aien-dev/CUDApp (`docs/issues/D7-same-bits-chip.md`; draft CUDApp#141: 10 of 10 runs with one
+output hash each for `hello_gpu`, a bf16 matrix-vector product, rmsnorm and decode attention on
+the GB10, receipt `evidence/d7-same-bits-chip/2026-10-27/` there).
 
 Scope. Host functions are single-threaded: Omegese has no shared-memory threads (section 10), so the
 ban concerns kernels. Process-level concurrency through native host words (fork, pipes, memfd) is
@@ -1270,5 +1273,5 @@ fixed-order tree reduction `tests/checker2/kernels/reduce.json`, is accepted by 
 C2-DECODE-OPCODE; (4) empty, truncated, trailing and version-6 inputs fail closed; (5) four mutants,
 each dropping one rule (41, 42, 43, 44), must produce a wrong verdict. The C omegese, omega_emit and
 checker2 are referees and IR producers there; detcheck's own rules are seeded Omega. Status:
-IMPLEMENTED and EXERCISED on the host (receipt in `evidence/determinism-ban/`); the checker is not
-yet wired into the launch path, so a launch does not run detcheck today.
+IMPLEMENTED and EXERCISED on the host (receipt `evidence/determinism-ban/2026-10-27/`); the checker
+is not yet wired into the launch path, so a launch does not run detcheck today.
