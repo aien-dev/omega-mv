@@ -795,28 +795,16 @@ static int finish(G *g) {
     int whole[] = { g->st, g->one, g->zero, g->poison };
     for (unsigned i = 0; i < sizeof whole / sizeof whole[0]; i++) ra->intervals[whole[i]].last_use = last;
     ra->uintervals[g->udesc].last_use = last;
-    if (omega_bw_regalloc_solve(p) != 0) return fail(g, "the register allocator has no room (v1 does not spill)");
-    uint32_t gpr = (ra->peak_gpr_usage + 7u) & ~7u;
-    uint32_t cap = 65536u / f->threads; if (cap > GPR_LIMIT) cap = GPR_LIMIT;
-    if (gpr > cap) return fail(g, "needs %u registers per thread; %u threads allow %u", gpr, f->threads, cap);
-    OscGpuKernel *k = g->k;
-    k->code = malloc((size_t)BW_MAX_IR_INSNS * 16u);
-    if (!k->code) return fail(g, "out of memory");
-    size_t n = 0;
-    if (omega_bw_encode_program(p, k->code, (size_t)BW_MAX_IR_INSNS * 16u, &n) != 0) return fail(g, "the encoder refused an instruction");
-    k->code_size = n; k->insn_count = (uint32_t)(n / 16u); k->gpr_count = gpr;
-    sha256_hash(k->code, k->code_size, k->code_sha256);
     return 0;
 }
 
-int osc_gpu_build(const OscUnit *u, unsigned fn, OscGpuKernel *k, char *err, size_t errn) {
+int osc_gpu_lower(const OscUnit *u, unsigned fn, OscGpuKernel *k, BlackwellIRProgram *p, char *err, size_t errn) {
     if (err && errn) err[0] = 0;
-    if (!u || !k || fn >= u->nfuncs) { if (err && errn) snprintf(err, errn, "no such function"); return -1; }
+    if (!u || !k || !p || fn >= u->nfuncs) { if (err && errn) snprintf(err, errn, "no such function"); return -1; }
     memset(k, 0, sizeof *k);
     G *g = calloc(1, sizeof *g);
-    BlackwellIRProgram *p = calloc(1, sizeof *p);
     char dummy[8];
-    if (!g || !p) { free(g); free(p); if (err && errn) snprintf(err, errn, "out of memory"); return -1; }
+    if (!g) { if (err && errn) snprintf(err, errn, "out of memory"); return -1; }
     g->u = u; g->f = &u->funcs[fn]; g->k = k; g->p = p;
     g->err = err && errn ? err : dummy; g->errn = err && errn ? errn : sizeof dummy;
     omega_bw_ir_init(p);
@@ -841,9 +829,44 @@ int osc_gpu_build(const OscUnit *u, unsigned fn, OscGpuKernel *k, char *err, siz
             }
         }
     }
-    if (rc == 0) k->prog = p;
-    else { free(p); free(k->code); k->code = NULL; }
     free(g);
+    return rc;
+}
+
+/* the refusal of osc_gpu_encode, worded like fail() */
+static int efail(const OscGpuKernel *k, char *err, size_t errn, const char *fmt, ...) {
+    if (err && errn) {
+        int n = snprintf(err, errn, "%s: ", k->name);
+        va_list ap; va_start(ap, fmt);
+        if (n >= 0 && (size_t)n < errn) vsnprintf(err + n, errn - (size_t)n, fmt, ap);
+        va_end(ap);
+    }
+    return -1;
+}
+
+int osc_gpu_encode(OscGpuKernel *k, BlackwellIRProgram *p, char *err, size_t errn) {
+    if (err && errn) err[0] = 0;
+    OmegaRegAlloc *ra = &p->regalloc;
+    if (omega_bw_regalloc_solve(p) != 0) return efail(k, err, errn, "the register allocator has no room (v1 does not spill)");
+    uint32_t gpr = (ra->peak_gpr_usage + 7u) & ~7u;
+    uint32_t cap = 65536u / k->threads; if (cap > GPR_LIMIT) cap = GPR_LIMIT;
+    if (gpr > cap) return efail(k, err, errn, "needs %u registers per thread; %u threads allow %u", gpr, (unsigned)k->threads, cap);
+    k->code = malloc((size_t)BW_MAX_IR_INSNS * 16u);
+    if (!k->code) return efail(k, err, errn, "out of memory");
+    size_t n = 0;
+    if (omega_bw_encode_program(p, k->code, (size_t)BW_MAX_IR_INSNS * 16u, &n) != 0) return efail(k, err, errn, "the encoder refused an instruction");
+    k->code_size = n; k->insn_count = (uint32_t)(n / 16u); k->gpr_count = gpr;
+    sha256_hash(k->code, k->code_size, k->code_sha256);
+    return 0;
+}
+
+int osc_gpu_build(const OscUnit *u, unsigned fn, OscGpuKernel *k, char *err, size_t errn) {
+    BlackwellIRProgram *p = calloc(1, sizeof *p);
+    if (!p) { if (err && errn) snprintf(err, errn, "out of memory"); return -1; }
+    int rc = osc_gpu_lower(u, fn, k, p, err, errn);
+    if (rc == 0) rc = osc_gpu_encode(k, p, err, errn);
+    if (rc == 0) k->prog = p;
+    else { free(p); if (k) { free(k->code); k->code = NULL; } }
     return rc;
 }
 
