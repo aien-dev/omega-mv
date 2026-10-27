@@ -1,0 +1,3118 @@
+note seed/oscgpu/oscir.om: strict OSC binary IR decoder and validator in seeded Omega.
+note Port of osc_ir_decode + osc_ir_validate (src/compiler/osc_ir.c); the C stays as the
+note differential oracle (tests/osc_gpu/oscir_diff.sh). No imports: concatenate this file
+note in front of its users with cat. The decoded unit lives in the contract globals below
+note (read-only for users). Private globals start with o, functions with oscir_.
+note Entry points:
+note   oscir_read_file ai ulong to int    read the file named by argv[ai] into irbuf/irlen
+note                                      (0 ok, -1 unreadable); irlen is the true length
+note   oscir_decode to int                0 ok, else the negative OscIrRefusal of osc_ir.c
+note   oscir_validate to int              0 ok, -1 refused, message in oerr / oerrn
+note A refused decode leaves every contract global zero, as osc_ir_decode memsets its unit.
+note oerr is meaningful only after a direct oscir_validate call.
+
+global irbuf uchar 4194304
+global irlen ulong 1
+global unfn uint 1
+global unst uint 1
+global fkind uchar 32
+global fthr uint 32
+global fnpar uint 32
+global fnvr uint 32
+global fnin uint 32
+global fnbl uint 32
+global fname uchar 2048
+global fnlen uint 32
+global frs uchar 32
+global frref uchar 32
+global frel uchar 32
+global frlen uint 32
+global frsid uchar 32
+global vts uchar 15360
+global vtref uchar 15360
+global vtel uchar 15360
+global vtlen uint 15360
+global vtsid uchar 15360
+global iop uchar 131072
+global isub uchar 131072
+global idst int 131072
+global ia int 131072
+global ib int 131072
+global ic int 131072
+global ibt int 131072
+global ibf int 131072
+global icall int 131072
+global inarg uchar 131072
+global iimm ulong 131072
+global iline uint 131072
+global iarg int 786432
+global bfst uint 16384
+global bcnt uint 16384
+
+note private state
+global opos ulong 1
+global orc int 1
+global onoval uchar 1
+global oerr uchar 256
+global oerrn ulong 1
+global osnm uchar 1024
+global osnl uint 16
+global osnf uint 16
+global osnc uint 16
+global osfnm uchar 16384
+global osfnl uint 256
+global osfs uchar 256
+global osfal uint 256
+global osfof uint 256
+global oreq uchar 8192
+global oreql uint 32
+global oens uchar 8192
+global oensl uint 32
+global ot uchar 4
+global otl uint 1
+global oma long 4
+global omai ulong 1
+global osl uchar 480
+global ocov uchar 4096
+global ondef uint 480
+global ohk uchar 480
+global opk uchar 480
+global obin ulong 4096
+global obout ulong 4096
+global ocur ulong 8
+global ous int 12
+global ox ulong 4
+global osb ulong 1
+global owp ulong 1
+global owd uchar 1
+global oxs uchar 65536
+global opath uchar 4096
+
+note kernel wire numbers: the values osc_ir.c/osc_ir.h use at c1/chip-fix 939fe6480
+note (encoding version 6, OSC_I_GPU..OSC_I_MAD = 30..36). The decided renumber
+note (version 8, ops 40..46) is these 8 constants only.
+const okver ulong 6
+const ogpu uchar 30
+const oshar uchar 31
+const ogld uchar 32
+const ogst uchar 33
+const osync uchar 34
+const oshfl uchar 35
+const omad uchar 36
+
+text omagic "OSC1IR"
+text ostr "void\nbool\nu8\nu16\nu32\nu64\ni8\ni16\ni32\ni64\nref\nbytes\ncells\nf32\ngview\ngedit\n?\nSLOAD\nSSTORE\nFLOAD\nFSTORE\nGLOAD\nGSTORE\n"
+note message templates, id = line number from 0; a leading @ stands for template 0
+text omt "func %d insn %u: \n@CONST bad dst vreg %d\n@CONST dst not scalar\n@CONST imm not canonical for %s\n@MOV bad vreg\n@MOV ref kind/type mismatch\n@MOV type mismatch\n@BIN bad vreg\n@BIN bad sub-op %u\n@BIN dst/a type mismatch\n@BIN operand type mismatch\n@f32 BIN sub-op %u not allowed\n@MIN/MAX need u32 or f32\n@shift of non-integer\n@shift amount not integer\n@arith BIN needs identical integer types\n@UN bad vreg\n@UN type mismatch\n@LNOT needs bool\n@NEG needs a number\n@BNOT needs integer\n@EXP/INV/RSQ/SQRT need f32\n@UN bad sub-op %u\n@CMP bad vreg\n@CMP bad cc %u\n@CMP dst not bool\n@CMP operand type mismatch\n@CAST bad vreg\n@f32 CAST needs u32 <-> f32\n@CAST needs integer types\n@ALLOC bad vreg\n@ALLOC dst not an owner\n@ALLOC struct init not u64\n@ALLOC init type != elem type\n@RELEASE bad vreg\n@RELEASE of a non-owner\n@AOPEN bad vreg\n@AOPEN handle not u64\n@AOPEN capacity out of range\n@AALLOC bad vreg\n@AALLOC dst not an owner\n@AALLOC struct init not u64\n@AALLOC init type != elem type\n@AALLOC handle not u64\n@ADESTROY handle not u64\n@POPEN pool not u64\n@POPEN slot count out of range\n@POPEN element type not scalar\n@PCLOSE pool not u64\n@handle op bad operand\n@handle op bad dst\n@handle slot/gen not u64\n@HSTORE needs one value\n@handle slot not u64\n@handle gen not u64\n@LOAD bad vreg\n@LOAD base not an array ref\n@LOAD index not integer\n@LOAD dst type != elem\n@STORE bad vreg\n@STORE through a shared borrow or non-ref\n@STORE index not integer\n@STORE value type != elem\n@%s bad vreg\n@%s base not a slice pointer\n@%s index not integer\n@%s value not u64\n@SSTORE into a bytes slice\n@%s base not a struct ref\n@%s field %llu out of range\n@field index not integer\n@scalar field with an index\n@field value type != field type\n@FSTORE through a shared borrow\n@CALL to function %d not defined earlier\n@CALL arity %u != %u\n@CALL bad arg vreg\n@CALL arg %d slice mismatch\n@CALL arg %d ref mismatch\n@CALL arg %d type mismatch\n@CALL of void function with dst\n@CALL dst type != callee return\n@GPU dst not u32\n@GPU bad value %u\n@SHARED dst not a block array\n@%s base not a global buffer\n@%s index not u32\n@%s value type != elem\n@GSTORE into a view buffer\n@SHFL bad sub-op %u\n@SHFL bad vreg\n@SHFL value not u32/f32\n@SHFL distance not u32\n@MAD bad vreg\n@MAD needs f32\n@TRAP bad code\n@BR bad target\n@CBR condition not bool\n@CBR bad target\n@RET value from void function\n@RET type mismatch\n@unknown op %u\nfunc %d: name not terminated\nfunc %d: contract text not terminated\nfunc %d: bad kind %u\nfunc %d: bad thread count %u\nfunc %d: %u params > %d\nfunc %d: bad nvregs\nfunc %d: return type must be void or scalar\nfunc %d: vreg %d has invalid type\nfunc %d: vreg %d: type %s not allowed in a kernel\nfunc %d: vreg %d: kernel type in a host function\nfunc %d: f32 return from a host function\nfunc %d: a kernel returns nothing and has no contract\nfunc %d: slice vreg %d is not a parameter pair with a u64 length\nfunc %d: buffer vreg %d is not a parameter pair with a u32 length\nfunc %d: block array %d as a parameter\nfunc %d: bad ninsns\nfunc %d: bad nblocks\nfunc %d block %d: bad range\nfunc %d: insn %u in two blocks\nfunc %d block %d: missing terminator\nfunc %d block %d: terminator before block end\nfunc %d: insn %u in no block\n@slice register redefined\n@kernel instruction in a host function\n@call to a kernel\n@op %u not allowed in a kernel\n@SHARED outside the entry block\n@block array defined more than once\n@block arrays over %u bytes\n@kernel div/rem needs a nonzero constant divisor\n@shuffle distance is not one constant 1..31\n@AOPEN handle vreg reused\n@arena handle vreg redefined\n@AALLOC handle misuse\n@ADESTROY of a non-handle\n@arena handle used as a value\n@POPEN pool vreg reused\n@pool vreg redefined\n@PCLOSE of a non-pool\n@HALLOC pool misuse\n@HALLOC init type != pool element type\n@handle pool misuse\n@HLOAD type != pool element type\n@HSTORE value type != pool element type\n@pool used as a value\n@vreg %d may be used before it is defined\nout of memory\ntoo many structs\nstruct %d: bad name\nstruct %d: duplicate name\nstruct %d: bad field count\nstruct %d field %d: bad name\nstruct %d field %d: duplicate\nstruct %d field %d: bad type\nstruct %d field %d: offset %u != %u\nstruct %d: bad size\nnull unit\ntoo many functions\n"
+
+note ---- file loader ----------------------------------------------------
+fn oscir_read_file ai ulong to int
+n = argread ai opath 0 4095
+if lt n 0
+ret -1
+end
+fd = fopen opath 0 ulong n 0 0
+if lt fd 0
+ret -1
+end
+h = int fd
+t = ulong 0
+w = false
+while lt t 4194304 bound 999999
+x = read h irbuf t sub ulong 4194304 t
+if lt x 0
+w = true
+break
+end
+if eq x 0
+break
+end
+t = add t ulong x
+end
+if eq t 4194304
+while true bound 999999
+x = read h oxs 0 65536
+if lt x 0
+w = true
+break
+end
+if eq x 0
+break
+end
+t = add t ulong x
+end
+end
+c = fclose h
+put irlen 0 t
+if w
+ret -1
+end
+ret 0
+end
+
+note ---- reader (R of osc_ir.c) ------------------------------------------
+fn oscir_fail rc int to void
+if eq get orc 0 0
+put orc 0 rc
+end
+end
+
+fn oscir_need k ulong to bool
+if ne get orc 0 0
+ret false
+end
+if gt k sub get irlen 0 get opos 0
+put orc 0 -4
+ret false
+end
+ret true
+end
+
+fn oscir_rle k ulong to ulong
+if not oscir_need k
+ret 0
+end
+p = get opos 0
+v = ulong 0
+for i ulong k
+v = or v shl ulong get irbuf add p i mul i 8
+end
+put opos 0 add p k
+ret v
+end
+
+fn oscir_rcount k ulong mx ulong to ulong
+v = oscir_rle k
+if eq get orc 0 0
+if gt v mx
+oscir_fail -5
+end
+end
+if ne get orc 0 0
+ret 0
+end
+ret v
+end
+
+fn oscir_rvr to int
+v = oscir_rle 2
+if ne get orc 0 0
+ret -1
+end
+if eq v 65535
+ret -1
+end
+if gt v 32767
+oscir_fail -7
+ret -1
+end
+ret int v
+end
+
+fn oscir_rsc to uchar
+v = oscir_rle 1
+if eq get orc 0 0
+if gt v 15
+oscir_fail -7
+end
+end
+if ne get orc 0 0
+ret 0
+end
+ret uchar v
+end
+
+note text into destination dst (0 fname, 1 osnm, 2 osfnm, 3 oreq, 4 oens) at base; returns its length
+fn oscir_rtext lb ulong mx ulong dst ulong base ulong to ulong
+k = oscir_rcount lb mx
+if not oscir_need k
+ret 0
+end
+p = get opos 0
+for i ulong k
+if eq get irbuf add p i 0
+oscir_fail -8
+ret 0
+end
+end
+for i ulong k
+c = get irbuf add p i
+j = add base i
+if eq dst 0
+put fname j c
+end
+if eq dst 1
+put osnm j c
+end
+if eq dst 2
+put osfnm j c
+end
+if eq dst 3
+put oreq j c
+end
+if eq dst 4
+put oens j c
+end
+end
+put opos 0 add p k
+ret k
+end
+
+note one type into the scratch ot (s ref elem sid) / otl (len)
+fn oscir_rtype to void
+put ot 0 0
+put ot 1 0
+put ot 2 0
+put ot 3 0
+put otl 0 0
+s = oscir_rsc
+put ot 0 s
+if ne get orc 0 0
+ret
+end
+if or eq s 14 eq s 15
+put ot 2 oscir_rsc
+ret
+end
+if ne s 10
+ret
+end
+r = oscir_rle 1
+if eq get orc 0 0
+if gt r 4
+oscir_fail -7
+ret
+end
+end
+put ot 1 uchar r
+put ot 2 oscir_rsc
+put otl 0 uint oscir_rle 2
+if eq get orc 0 0
+if eq get ot 2 0
+put ot 3 uchar oscir_rle 1
+end
+end
+end
+
+fn oscir_tovr x ulong to void
+put vts x get ot 0
+put vtref x get ot 1
+put vtel x get ot 2
+put vtlen x get otl 0
+put vtsid x get ot 3
+end
+
+fn oscir_toret f ulong to void
+put frs f get ot 0
+put frref f get ot 1
+put frel f get ot 2
+put frlen f get otl 0
+put frsid f get ot 3
+end
+
+note ---- decode_insn ------------------------------------------------------
+fn oscir_dsub s ulong to void
+put isub s uchar oscir_rle 1
+end
+
+fn oscir_dins s ulong to void
+put idst s -1
+put ia s -1
+put ib s -1
+put ic s -1
+put ibt s -1
+put ibf s -1
+put icall s -1
+put isub s 0
+put inarg s 0
+put iimm s 0
+put iline s 0
+for k ulong 6
+put iarg add mul s 6 k 0
+end
+o = uchar oscir_rle 1
+put iop s o
+if ne get orc 0 0
+ret
+end
+if eq o 1
+put idst s oscir_rvr
+put iimm s oscir_rle 8
+ret
+end
+if or or eq o 2 eq o 6 eq o 7
+put idst s oscir_rvr
+put ia s oscir_rvr
+ret
+end
+if or eq o 3 eq o 5
+oscir_dsub s
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+ret
+end
+if eq o 4
+oscir_dsub s
+put idst s oscir_rvr
+put ia s oscir_rvr
+ret
+end
+if or or eq o 8 eq o 20 eq o 22
+put ia s oscir_rvr
+ret
+end
+if eq o 18
+put idst s oscir_rvr
+put iimm s oscir_rle 1
+ret
+end
+if or or or or eq o 19 eq o 23 eq o 24 eq o 9 eq o 28
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+ret
+end
+if eq o 21
+put idst s oscir_rvr
+oscir_dsub s
+put inarg s uchar oscir_rle 1
+put iimm s oscir_rle 8
+ret
+end
+if or or eq o 25 eq o 10 eq o 29
+put ia s oscir_rvr
+put ib s oscir_rvr
+put ic s oscir_rvr
+ret
+end
+if eq o 26
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+put ic s oscir_rvr
+ret
+end
+if eq o 27
+put ia s oscir_rvr
+put ib s oscir_rvr
+put ic s oscir_rvr
+put iarg mul s 6 oscir_rvr
+put inarg s 1
+ret
+end
+if eq o 16
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+put iimm s oscir_rle 1
+ret
+end
+if eq o 17
+put ia s oscir_rvr
+put ib s oscir_rvr
+put ic s oscir_rvr
+put iimm s oscir_rle 1
+ret
+end
+if eq o 11
+put idst s oscir_rvr
+put icall s oscir_rvr
+n = oscir_rcount 1 6
+put inarg s uchar n
+for k ulong n
+if ne get orc 0 0
+break
+end
+put iarg add mul s 6 k oscir_rvr
+end
+ret
+end
+if eq o 12
+put iimm s oscir_rle 1
+ret
+end
+if eq o 13
+put ibt s oscir_rvr
+ret
+end
+if eq o 14
+put ia s oscir_rvr
+put ibt s oscir_rvr
+put ibf s oscir_rvr
+ret
+end
+if eq o 15
+put ia s oscir_rvr
+ret
+end
+if eq o ogpu
+oscir_dsub s
+put idst s oscir_rvr
+ret
+end
+if eq o oshar
+put idst s oscir_rvr
+ret
+end
+if eq o ogld
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+ret
+end
+if eq o ogst
+put ia s oscir_rvr
+put ib s oscir_rvr
+put ic s oscir_rvr
+ret
+end
+if eq o osync
+ret
+end
+if eq o oshfl
+oscir_dsub s
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+ret
+end
+if eq o omad
+put idst s oscir_rvr
+put ia s oscir_rvr
+put ib s oscir_rvr
+put ic s oscir_rvr
+ret
+end
+oscir_fail -7
+end
+
+note ---- decode_func / decode_unit -----------------------------------------
+fn oscir_dfunc f ulong ver ulong to void
+n = oscir_rtext 1 63 0 mul f 64
+put fnlen f uint n
+if ge ver okver
+k = oscir_rle 1
+put fkind f uchar k
+if eq k 1
+put fthr f uint oscir_rle 2
+end
+end
+put fnpar f uint oscir_rle 1
+oscir_rtype
+oscir_toret f
+nv = oscir_rcount 2 480
+put fnvr f uint nv
+for v ulong nv
+if ne get orc 0 0
+break
+end
+oscir_rtype
+oscir_tovr add mul f 480 v
+end
+nb = oscir_rcount 2 512
+put fnbl f uint nb
+for b ulong nb
+if ne get orc 0 0
+break
+end
+x = add mul f 512 b
+put bfst x uint oscir_rle 4
+put bcnt x uint oscir_rle 4
+end
+ni = oscir_rcount 4 4096
+put fnin f uint ni
+for i ulong ni
+if ne get orc 0 0
+break
+end
+oscir_dins add mul f 4096 i
+end
+n = oscir_rtext 2 255 3 mul f 256
+put oreql f uint n
+n = oscir_rtext 2 255 4 mul f 256
+put oensl f uint n
+end
+
+fn oscir_dstruct k ulong to void
+n = oscir_rtext 1 63 1 mul k 64
+put osnl k uint n
+nf = oscir_rcount 1 16
+put osnf k uint nf
+put osnc k uint oscir_rle 2
+for j ulong nf
+if ne get orc 0 0
+break
+end
+x = add mul k 16 j
+n = oscir_rtext 1 63 2 mul x 64
+put osfnl x uint n
+put osfs x oscir_rsc
+put osfal x uint oscir_rle 2
+put osfof x uint oscir_rle 2
+end
+end
+
+note OSC_IR_ENCODED_MAX, evaluated with the C formula
+fn oscir_encmax to ulong
+fl = ulong 1
+fl = add fl 63
+fl = add fl 1
+fl = add fl 2
+fl = add fl 2
+st = ulong 1
+st = add st 63
+st = add st 1
+st = add st 2
+st = add st mul 16 fl
+fu = ulong 1
+fu = add fu 63
+fu = add fu 1
+fu = add fu 1
+fu = add fu 2
+fu = add fu 6
+fu = add fu 2
+fu = add fu mul ulong 480 6
+fu = add fu 2
+fu = add fu mul ulong 512 8
+fu = add fu 4
+fu = add fu mul ulong 4096 18
+fu = add fu mul ulong 2 add ulong 2 sub ulong 256 1
+t = ulong 8
+t = add t 1
+t = add t mul ulong 16 st
+t = add t 2
+t = add t mul ulong 32 fu
+ret t
+end
+
+fn oscir_magb i ulong to uchar
+if lt i 6
+ret get omagic i
+end
+ret 0
+end
+
+fn oscir_verok v ulong to bool
+if and ge v 1 le v 5
+ret true
+end
+ret eq v okver
+end
+
+fn oscir_dunit to int
+n = get irlen 0
+if gt n oscir_encmax
+ret -5
+end
+put opos 0 0
+put orc 0 0
+if lt n 7
+for i ulong n
+if ne get irbuf i oscir_magb i
+ret -2
+end
+end
+ret -4
+end
+for i ulong 7
+if ne get irbuf i oscir_magb i
+ret -2
+end
+end
+put opos 0 7
+ver = oscir_rle 1
+if ne get orc 0 0
+ret get orc 0
+end
+if not oscir_verok ver
+ret -3
+end
+if ge ver 2
+ns = oscir_rcount 1 16
+put unst 0 uint ns
+for k ulong ns
+if ne get orc 0 0
+break
+end
+oscir_dstruct k
+end
+end
+nf = oscir_rcount 2 32
+put unfn 0 uint nf
+for f ulong nf
+if ne get orc 0 0
+break
+end
+oscir_dfunc f ver
+end
+if ne get orc 0 0
+ret get orc 0
+end
+if ne get opos 0 n
+ret -6
+end
+if eq get onoval 0 0
+v = oscir_validate
+if ne v 0
+ret -9
+end
+end
+if ne oscir_uver ver
+ret -10
+end
+put owp 0 0
+put owd 0 0
+oscir_enc
+if ne get owd 0 0
+ret -11
+end
+if ne get owp 0 n
+ret -11
+end
+ret 0
+end
+
+fn oscir_clrf f ulong to void
+nv = ulong get fnvr f
+for v ulong nv
+x = add mul f 480 v
+put vts x 0
+put vtref x 0
+put vtel x 0
+put vtlen x 0
+put vtsid x 0
+end
+nb = ulong get fnbl f
+for b ulong nb
+x = add mul f 512 b
+put bfst x 0
+put bcnt x 0
+end
+ni = ulong get fnin f
+for i ulong ni
+x = add mul f 4096 i
+put iop x 0
+put isub x 0
+put idst x 0
+put ia x 0
+put ib x 0
+put ic x 0
+put ibt x 0
+put ibf x 0
+put icall x 0
+put inarg x 0
+put iimm x 0
+put iline x 0
+for k ulong 6
+put iarg add mul x 6 k 0
+end
+end
+for j ulong 64
+put fname add mul f 64 j 0
+end
+for j ulong 256
+put oreq add mul f 256 j 0
+put oens add mul f 256 j 0
+end
+put fkind f 0
+put fthr f 0
+put fnpar f 0
+put fnvr f 0
+put fnin f 0
+put fnbl f 0
+put fnlen f 0
+put frs f 0
+put frref f 0
+put frel f 0
+put frlen f 0
+put frsid f 0
+put oreql f 0
+put oensl f 0
+end
+
+fn oscir_clear to void
+for f ulong 32
+oscir_clrf f
+end
+for k ulong 16
+for j ulong 16
+x = add mul k 16 j
+for c ulong 64
+put osfnm add mul x 64 c 0
+end
+put osfnl x 0
+put osfs x 0
+put osfal x 0
+put osfof x 0
+end
+for c ulong 64
+put osnm add mul k 64 c 0
+end
+put osnl k 0
+put osnf k 0
+put osnc k 0
+end
+put unfn 0 0
+put unst 0 0
+put opos 0 0
+put orc 0 0
+end
+
+fn oscir_decode to int
+oscir_clear
+rc = oscir_dunit
+if ne rc 0
+oscir_clear
+end
+ret rc
+end
+
+note ---- canonical encoder used as a comparator against irbuf ---------------
+fn oscir_wb v ulong to void
+p = get owp 0
+if eq get owd 0 0
+if ge p get irlen 0
+put owd 0 1
+else
+if ne ulong get irbuf p and v 255
+put owd 0 1
+end
+end
+end
+put owp 0 add p 1
+end
+
+fn oscir_wn v ulong k ulong to void
+for i ulong k
+oscir_wb shr v mul i 8
+end
+end
+
+fn oscir_wvr x int to void
+y = long x
+if lt y 0
+y = add y 65536
+end
+oscir_wn ulong y 2
+end
+
+fn oscir_wtype s uchar r uchar e uchar l uint d uchar to void
+oscir_wb ulong s
+if or eq s 14 eq s 15
+oscir_wb ulong e
+end
+if eq s 10
+oscir_wb ulong r
+oscir_wb ulong e
+oscir_wn ulong l 2
+if ne d 0
+oscir_wb ulong d
+end
+end
+end
+
+note bytes of source src (0 fname, 1 osnm, 2 osfnm, 3 oreq, 4 oens) at base
+fn oscir_wbytes src ulong base ulong k ulong to void
+for i ulong k
+j = add base i
+c = uchar 0
+if eq src 0
+c = get fname j
+end
+if eq src 1
+c = get osnm j
+end
+if eq src 2
+c = get osfnm j
+end
+if eq src 3
+c = get oreq j
+end
+if eq src 4
+c = get oens j
+end
+oscir_wb ulong c
+end
+end
+
+fn oscir_eins s ulong to void
+o = get iop s
+oscir_wb ulong o
+if eq o 1
+oscir_wvr get idst s
+oscir_wn get iimm s 8
+ret
+end
+if or or eq o 2 eq o 6 eq o 7
+oscir_wvr get idst s
+oscir_wvr get ia s
+ret
+end
+if or eq o 3 eq o 5
+oscir_wb ulong get isub s
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+ret
+end
+if eq o 4
+oscir_wb ulong get isub s
+oscir_wvr get idst s
+oscir_wvr get ia s
+ret
+end
+if or or eq o 8 eq o 20 eq o 22
+oscir_wvr get ia s
+ret
+end
+if eq o 18
+oscir_wvr get idst s
+oscir_wb get iimm s
+ret
+end
+if or or or or eq o 19 eq o 23 eq o 24 eq o 9 eq o 28
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+ret
+end
+if eq o 21
+oscir_wvr get idst s
+oscir_wb ulong get isub s
+oscir_wb ulong get inarg s
+oscir_wn get iimm s 8
+ret
+end
+if or or eq o 25 eq o 10 eq o 29
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wvr get ic s
+ret
+end
+if eq o 26
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wvr get ic s
+ret
+end
+if eq o 27
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wvr get ic s
+oscir_wvr get iarg mul s 6
+ret
+end
+if eq o 16
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wb get iimm s
+ret
+end
+if eq o 17
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wvr get ic s
+oscir_wb get iimm s
+ret
+end
+if eq o 11
+oscir_wvr get idst s
+oscir_wvr get icall s
+n = ulong get inarg s
+oscir_wb n
+for k ulong n
+oscir_wvr get iarg add mul s 6 k
+end
+ret
+end
+if eq o 12
+oscir_wb get iimm s
+ret
+end
+if eq o 13
+oscir_wvr get ibt s
+ret
+end
+if eq o 14
+oscir_wvr get ia s
+oscir_wvr get ibt s
+oscir_wvr get ibf s
+ret
+end
+if eq o 15
+oscir_wvr get ia s
+ret
+end
+if eq o ogpu
+oscir_wb ulong get isub s
+oscir_wvr get idst s
+ret
+end
+if eq o oshar
+oscir_wvr get idst s
+ret
+end
+if eq o ogld
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+ret
+end
+if eq o ogst
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wvr get ic s
+ret
+end
+if eq o oshfl
+oscir_wb ulong get isub s
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+ret
+end
+if eq o omad
+oscir_wvr get idst s
+oscir_wvr get ia s
+oscir_wvr get ib s
+oscir_wvr get ic s
+ret
+end
+end
+
+fn oscir_wtx x ulong to void
+oscir_wtype get vts x get vtref x get vtel x get vtlen x get vtsid x
+end
+
+fn oscir_efunc f ulong ver ulong to void
+oscir_wb ulong get fnlen f
+oscir_wbytes 0 mul f 64 ulong get fnlen f
+if ge ver okver
+oscir_wb ulong get fkind f
+if eq get fkind f 1
+oscir_wn ulong get fthr f 2
+end
+end
+oscir_wb ulong get fnpar f
+oscir_wtype get frs f get frref f get frel f get frlen f get frsid f
+nv = ulong get fnvr f
+oscir_wn nv 2
+for v ulong nv
+x = add mul f 480 v
+oscir_wtx x
+end
+nb = ulong get fnbl f
+oscir_wn nb 2
+for b ulong nb
+x = add mul f 512 b
+oscir_wn ulong get bfst x 4
+oscir_wn ulong get bcnt x 4
+end
+ni = ulong get fnin f
+oscir_wn ni 4
+for i ulong ni
+oscir_eins add mul f 4096 i
+end
+oscir_wn ulong get oreql f 2
+oscir_wbytes 3 mul f 256 ulong get oreql f
+oscir_wn ulong get oensl f 2
+oscir_wbytes 4 mul f 256 ulong get oensl f
+end
+
+fn oscir_enc to void
+ver = oscir_uver
+for i ulong 7
+oscir_wb ulong oscir_magb i
+end
+oscir_wb ver
+if ge ver 2
+ns = ulong get unst 0
+oscir_wb ns
+for k ulong ns
+oscir_wb ulong get osnl k
+oscir_wbytes 1 mul k 64 ulong get osnl k
+nf = ulong get osnf k
+oscir_wb nf
+oscir_wn ulong get osnc k 2
+for j ulong nf
+x = add mul k 16 j
+oscir_wb ulong get osfnl x
+oscir_wbytes 2 mul x 64 ulong get osfnl x
+oscir_wb ulong get osfs x
+oscir_wn ulong get osfal x 2
+oscir_wn ulong get osfof x 2
+end
+end
+end
+nf = ulong get unfn 0
+oscir_wn nf 2
+for f ulong nf
+oscir_efunc f ver
+end
+end
+
+note ---- unit_version --------------------------------------------------------
+fn oscir_uver to ulong
+nf = ulong get unfn 0
+for f ulong nf
+if ne get fkind f 0
+ret okver
+end
+end
+for f ulong nf
+nv = ulong get fnvr f
+for v ulong nv
+if oscir_xsl add mul f 480 v
+ret 5
+end
+end
+end
+for f ulong nf
+ni = ulong get fnin f
+for i ulong ni
+o = get iop add mul f 4096 i
+if and ge o 21 le o 27
+ret 4
+end
+end
+end
+for f ulong nf
+ni = ulong get fnin f
+for i ulong ni
+o = get iop add mul f 4096 i
+if and ge o 18 le o 20
+ret 3
+end
+end
+end
+if ne get unst 0 0
+ret 2
+end
+ret 1
+end
+
+note ---- type predicates (osc_ir.c) ------------------------------------------
+fn oscir_isval s uchar to bool
+ret and ge s 1 le s 9
+end
+
+fn oscir_isint s uchar to bool
+ret and ge s 2 le s 9
+end
+
+fn oscir_gel e uchar to bool
+ret or eq e 4 eq e 13
+end
+
+fn oscir_tsc s uchar r uchar e uchar l uint d uchar to bool
+if not or oscir_isval s eq s 13
+ret false
+end
+ret and and and eq r 0 eq e 0 eq l 0 eq d 0
+end
+
+fn oscir_tref s uchar r uchar e uchar l uint d uchar to bool
+if ne s 10
+ret false
+end
+if or lt r 1 gt r 3
+ret false
+end
+if eq d 0
+ret and oscir_isval e and ge l 1 le l 64
+end
+if gt uint d get unst 0
+ret false
+end
+if ne e 0
+ret false
+end
+ret eq l get osnc sub ulong d 1
+end
+
+fn oscir_tsl s uchar r uchar e uchar l uint d uchar to bool
+if not or eq s 11 eq s 12
+ret false
+end
+ret and and and eq r 0 eq e 0 eq l 0 eq d 0
+end
+
+fn oscir_tgb s uchar r uchar e uchar l uint d uchar to bool
+if not or eq s 14 eq s 15
+ret false
+end
+ret and and and eq r 0 oscir_gel e eq l 0 eq d 0
+end
+
+fn oscir_tbl s uchar r uchar e uchar l uint d uchar to bool
+if ne s 10
+ret false
+end
+if ne r 4
+ret false
+end
+ret and and and oscir_gel e ge l 1 le l 12288 eq d 0
+end
+
+fn oscir_xsc x ulong to bool
+ret oscir_tsc get vts x get vtref x get vtel x get vtlen x get vtsid x
+end
+
+fn oscir_xref x ulong to bool
+ret oscir_tref get vts x get vtref x get vtel x get vtlen x get vtsid x
+end
+
+fn oscir_xsl x ulong to bool
+ret oscir_tsl get vts x get vtref x get vtel x get vtlen x get vtsid x
+end
+
+fn oscir_xgb x ulong to bool
+ret oscir_tgb get vts x get vtref x get vtel x get vtlen x get vtsid x
+end
+
+fn oscir_xbl x ulong to bool
+ret oscir_tbl get vts x get vtref x get vtel x get vtlen x get vtsid x
+end
+
+fn oscir_xis x ulong s uchar to bool
+if not oscir_xsc x
+ret false
+end
+ret eq get vts x s
+end
+
+note array ref: a ref with sid 0
+fn oscir_xarr x ulong to bool
+if not oscir_xref x
+ret false
+end
+ret eq get vtsid x 0
+end
+
+note struct ref: a ref with sid != 0
+fn oscir_xstr x ulong to bool
+if not oscir_xref x
+ret false
+end
+ret ne get vtsid x 0
+end
+
+fn oscir_xeq a ulong b ulong to bool
+if ne get vts a get vts b
+ret false
+end
+if ne get vtref a get vtref b
+ret false
+end
+if ne get vtel a get vtel b
+ret false
+end
+if ne get vtlen a get vtlen b
+ret false
+end
+ret eq get vtsid a get vtsid b
+end
+
+note type_eq of vreg slot a and the return type of function g
+fn oscir_xeqr a ulong g ulong to bool
+if ne get vts a get frs g
+ret false
+end
+if ne get vtref a get frref g
+ret false
+end
+if ne get vtel a get frel g
+ret false
+end
+if ne get vtlen a get frlen g
+ret false
+end
+ret eq get vtsid a get frsid g
+end
+
+fn oscir_xbind d ulong s ulong to bool
+if not and oscir_xref d oscir_xref s
+ret false
+end
+if ne get vtel d get vtel s
+ret false
+end
+if ne get vtlen d get vtlen s
+ret false
+end
+if ne get vtsid d get vtsid s
+ret false
+end
+rd = get vtref d
+rs = get vtref s
+if eq rd 1
+ret eq rs 1
+end
+if eq rd 3
+ret or eq rs 1 eq rs 3
+end
+ret eq rd 2
+end
+
+fn oscir_width s uchar to ulong
+if or eq s 2 eq s 6
+ret 8
+end
+if or eq s 3 eq s 7
+ret 16
+end
+if eq s 1
+ret 1
+end
+if or eq s 4 eq s 8
+ret 32
+end
+if or eq s 5 eq s 9
+ret 64
+end
+ret 0
+end
+
+fn oscir_canon s uchar v ulong to bool
+if eq s 1
+ret le v 1
+end
+if eq s 13
+ret le v 4294967295
+end
+w = oscir_width s
+if eq w 64
+ret true
+end
+if and ge s 6 le s 9
+hi = sub shl ulong 1 sub w 1 1
+lo = sub ulong 0 shl ulong 1 sub w 1
+ret or le v hi ge v lo
+end
+ret lt v shl ulong 1 w
+end
+
+fn oscir_vr x int nv uint to bool
+if lt x 0
+ret false
+end
+ret lt uint x nv
+end
+
+fn oscir_sname s uchar to long
+if le s 15
+ret long s
+end
+ret 16
+end
+
+note ---- message formatting (vsnprintf into a 256-byte buffer) --------------
+fn oscir_putc c uchar to void
+n = get oerrn 0
+if lt n 255
+put oerr n c
+put oerrn 0 add n 1
+end
+end
+
+fn oscir_putd v long to void
+dg = new uchar 24 0
+x = v
+if lt x 0
+oscir_putc 45
+end
+u = ulong 0
+if lt x 0
+u = ulong sub 0 add x 1
+u = add u 1
+else
+u = ulong x
+end
+n = ulong 0
+while true bound 30
+put dg n uchar add 48 rem u 10
+n = add n 1
+u = div u 10
+if eq u 0
+break
+end
+end
+while gt n 0 bound 30
+n = sub n 1
+oscir_putc get dg n
+end
+end
+
+fn oscir_puts id ulong to void
+k = ulong 0
+for i ulong len ostr
+c = get ostr i
+if eq c 10
+if eq k id
+ret
+end
+k = add k 1
+else
+if eq k id
+oscir_putc c
+end
+end
+end
+end
+
+fn oscir_narg to long
+i = get omai 0
+put omai 0 add i 1
+ret get oma i
+end
+
+fn oscir_fmt id ulong to void
+k = ulong 0
+p = ulong 0
+for i ulong len omt
+if eq k id
+p = i
+break
+end
+if eq get omt i 10
+k = add k 1
+end
+end
+i = p
+while lt i len omt bound 999
+c = get omt i
+if eq c 10
+break
+end
+if eq c 64
+if eq i p
+oscir_fmt 0
+i = add i 1
+continue
+end
+end
+if eq c 37
+d = get omt add i 1
+if eq d 115
+oscir_puts ulong oscir_narg
+i = add i 2
+continue
+end
+if eq d 108
+oscir_putd oscir_narg
+i = add i 4
+continue
+end
+oscir_putd oscir_narg
+i = add i 2
+continue
+end
+oscir_putc c
+i = add i 1
+end
+end
+
+fn oscir_vf id ulong a long b long c long d long to int
+put oma 0 a
+put oma 1 b
+put oma 2 c
+put oma 3 d
+put omai 0 0
+put oerrn 0 0
+oscir_fmt id
+ret -1
+end
+
+note ---- insn_uses / insn_def ----------------------------------------------------
+fn oscir_inc16 a int to int
+if eq a 32767
+ret -32768
+end
+ret add a 1
+end
+
+fn oscir_in4 o uchar a uchar b uchar c uchar d uchar to bool
+p = or eq o a eq o b
+q = or eq o c eq o d
+ret or p q
+end
+
+fn oscir_uses s ulong to ulong
+o = get iop s
+a = get ia s
+b = get ib s
+c = get ic s
+put ous 0 a
+put ous 1 b
+put ous 2 c
+p = oscir_in4 o 2 4 6 7
+p = or p oscir_in4 o 8 14 20 22
+if p
+ret 1
+end
+p = oscir_in4 o 19 23 24 3
+p = or p oscir_in4 o 5 9 oshfl oshfl
+if p
+ret 2
+end
+if oscir_in4 o 25 26 10 omad
+ret 3
+end
+if eq o 27
+put ous 3 get iarg mul s 6
+ret 4
+end
+if or eq o 28 eq o ogld
+put ous 1 oscir_inc16 a
+put ous 2 b
+ret 3
+end
+if or eq o 29 eq o ogst
+put ous 1 oscir_inc16 a
+put ous 2 b
+put ous 3 c
+ret 4
+end
+if eq o 16
+if ge b 0
+ret 2
+end
+ret 1
+end
+if eq o 17
+if ge b 0
+put ous 2 c
+ret 3
+end
+put ous 1 c
+ret 2
+end
+if eq o 11
+n = ulong get inarg s
+for k ulong n
+put ous k get iarg add mul s 6 k
+end
+ret n
+end
+if eq o 15
+if ge a 0
+ret 1
+end
+ret 0
+end
+ret 0
+end
+
+fn oscir_def s ulong to int
+o = get iop s
+if and ge o 1 le o 7
+ret get idst s
+end
+p = oscir_in4 o 9 16 28 18
+p = or p oscir_in4 o 19 21 23 24
+if p
+ret get idst s
+end
+p = oscir_in4 o 26 ogpu oshar ogld
+p = or p oscir_in4 o oshfl omad 11 11
+if p
+ret get idst s
+end
+ret -1
+end
+
+fn oscir_isterm o uchar to bool
+ret or or eq o 13 eq o 14 eq o 15
+end
+
+note ---- validate_insn ---------------------------------------------------------
+fn oscir_vi id ulong f ulong i ulong to int
+ret oscir_vf id long f long i 0 0
+end
+
+fn oscir_vi1 id ulong f ulong i ulong x long to int
+ret oscir_vf id long f long i x 0
+end
+
+note operand slots: ox[0..3] = vreg slot of dst a b c; returned mask bit k set when that operand is VR
+fn oscir_ld f ulong i ulong to ulong
+s = add mul f 4096 i
+nv = get fnvr f
+bs = mul f 480
+m = ulong 0
+v = get idst s
+if oscir_vr v nv
+put ox 0 add bs ulong v
+m = or m 1
+end
+v = get ia s
+if oscir_vr v nv
+put ox 1 add bs ulong v
+m = or m 2
+end
+v = get ib s
+if oscir_vr v nv
+put ox 2 add bs ulong v
+m = or m 4
+end
+v = get ic s
+if oscir_vr v nv
+put ox 3 add bs ulong v
+m = or m 8
+end
+ret m
+end
+
+note all operands in mask k are VR
+fn oscir_vm m ulong k ulong to bool
+ret eq and m k k
+end
+
+note slot k is a scalar of an integer type
+fn oscir_xint k ulong to bool
+x = get ox k
+ret and oscir_xsc x oscir_isint get vts x
+end
+
+note CONST MOV
+fn oscir_vins1 f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+if eq o 1
+if not oscir_vm m 1
+ret oscir_vi1 1 f i long get idst s
+end
+x = get ox 0
+if not oscir_xsc x
+ret oscir_vi 2 f i
+end
+if not oscir_canon get vts x get iimm s
+ret oscir_vi1 3 f i oscir_sname get vts x
+end
+ret 0
+end
+if not oscir_vm m 3
+ret oscir_vi 4 f i
+end
+x = get ox 0
+y = get ox 1
+if oscir_xref x
+if not oscir_xbind x y
+ret oscir_vi 5 f i
+end
+ret 0
+end
+if not and oscir_xsc x oscir_xeq x y
+ret oscir_vi 6 f i
+end
+ret 0
+end
+
+note BIN
+fn oscir_vbin f ulong i ulong to int
+s = add mul f 4096 i
+m = oscir_ld f i
+if not oscir_vm m 7
+ret oscir_vi 7 f i
+end
+u = get isub s
+if or lt u 1 gt u 12
+ret oscir_vi1 8 f i long u
+end
+xa = get ox 1
+xb = get ox 2
+if not and oscir_xsc get ox 0 oscir_xeq get ox 0 xa
+ret oscir_vi 9 f i
+end
+t = get vts xa
+if eq t 13
+if not oscir_xeq xa xb
+ret oscir_vi 10 f i
+end
+p = oscir_in4 u 1 2 3 11
+p = or p eq u 12
+if not p
+ret oscir_vi1 11 f i long u
+end
+ret 0
+end
+if or eq u 11 eq u 12
+if not and eq t 4 oscir_xeq xa xb
+ret oscir_vi 12 f i
+end
+ret 0
+end
+if or eq u 9 eq u 10
+if not oscir_isint t
+ret oscir_vi 13 f i
+end
+if not oscir_xint 2
+ret oscir_vi 14 f i
+end
+ret 0
+end
+if or or eq u 6 eq u 7 eq u 8
+if not oscir_xeq xa xb
+ret oscir_vi 10 f i
+end
+ret 0
+end
+if not and oscir_isint t oscir_xeq xa xb
+ret oscir_vi 15 f i
+end
+ret 0
+end
+
+note UN
+fn oscir_vun f ulong i ulong to int
+s = add mul f 4096 i
+m = oscir_ld f i
+if not oscir_vm m 3
+ret oscir_vi 16 f i
+end
+xa = get ox 1
+if not and oscir_xsc get ox 0 oscir_xeq get ox 0 xa
+ret oscir_vi 17 f i
+end
+t = get vts xa
+u = get isub s
+if eq u 3
+if ne t 1
+ret oscir_vi 18 f i
+end
+ret 0
+end
+if eq u 1
+if not or oscir_isint t eq t 13
+ret oscir_vi 19 f i
+end
+ret 0
+end
+if eq u 2
+if not oscir_isint t
+ret oscir_vi 20 f i
+end
+ret 0
+end
+if and ge u 4 le u 7
+if ne t 13
+ret oscir_vi 21 f i
+end
+ret 0
+end
+ret oscir_vi1 22 f i long u
+end
+
+note CMP CAST
+fn oscir_vins2 f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+if eq o 5
+if not oscir_vm m 7
+ret oscir_vi 23 f i
+end
+u = get isub s
+if or lt u 1 gt u 6
+ret oscir_vi1 24 f i long u
+end
+if not oscir_xis get ox 0 1
+ret oscir_vi 25 f i
+end
+xa = get ox 1
+if not and oscir_xsc xa oscir_xeq xa get ox 2
+ret oscir_vi 26 f i
+end
+ret 0
+end
+if not oscir_vm m 3
+ret oscir_vi 27 f i
+end
+xd = get ox 0
+xa = get ox 1
+if or eq get vts xd 13 eq get vts xa 13
+p = and oscir_xis xd 13 oscir_xis xa 4
+q = and oscir_xis xd 4 oscir_xis xa 13
+if not or p q
+ret oscir_vi 28 f i
+end
+ret 0
+end
+if not and oscir_xint 0 oscir_xint 1
+ret oscir_vi 29 f i
+end
+ret 0
+end
+
+note ALLOC AALLOC
+fn oscir_valloc f ulong i ulong to int
+m = oscir_ld f i
+e = ulong 30
+if eq get iop add mul f 4096 i 19
+e = 39
+m = or m 64
+end
+if eq and m 64 0
+if not oscir_vm m 3
+ret oscir_vi e f i
+end
+else
+if not oscir_vm m 7
+ret oscir_vi e f i
+end
+end
+xd = get ox 0
+xa = get ox 1
+if not and oscir_xref xd eq get vtref xd 1
+ret oscir_vi add e 1 f i
+end
+if ne get vtsid xd 0
+if not oscir_xis xa 5
+ret oscir_vi add e 2 f i
+end
+else
+if not oscir_xse xa xd
+ret oscir_vi add e 3 f i
+end
+end
+if eq e 39
+if not oscir_xis get ox 2 5
+ret oscir_vi 43 f i
+end
+end
+ret 0
+end
+
+note slot x is a scalar whose type is the element type of slot y
+fn oscir_xse x ulong y ulong to bool
+if not oscir_xsc x
+ret false
+end
+ret eq get vts x get vtel y
+end
+
+note RELEASE AOPEN ADESTROY POPEN PCLOSE
+fn oscir_vins3 f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+if eq o 8
+if not oscir_vm m 2
+ret oscir_vi 34 f i
+end
+xa = get ox 1
+if not and oscir_xref xa eq get vtref xa 1
+ret oscir_vi 35 f i
+end
+ret 0
+end
+if eq o 18
+if not oscir_vm m 1
+ret oscir_vi 36 f i
+end
+if not oscir_xis get ox 0 5
+ret oscir_vi 37 f i
+end
+n = get iimm s
+if or lt n 1 gt n 64
+ret oscir_vi 38 f i
+end
+ret 0
+end
+if or eq o 20 eq o 22
+e = ulong 44
+if eq o 22
+e = 48
+end
+if not oscir_vm m 2
+ret oscir_vi e f i
+end
+if not oscir_xis get ox 1 5
+ret oscir_vi e f i
+end
+ret 0
+end
+if not oscir_vm m 1
+ret oscir_vi 45 f i
+end
+if not oscir_xis get ox 0 5
+ret oscir_vi 45 f i
+end
+n = get inarg s
+if or lt n 1 gt n 16
+ret oscir_vi 46 f i
+end
+if not oscir_isval get isub s
+ret oscir_vi 47 f i
+end
+ret 0
+end
+
+note HALLOC HGEN HFREE HLOAD HSTORE
+fn oscir_vins4 f ulong i ulong to int
+s = add mul f 4096 i
+nv = get fnvr f
+bs = mul f 480
+o = get iop s
+k = oscir_uses s
+for j ulong k
+u = get ous j
+if not oscir_vr u nv
+ret oscir_vi 49 f i
+end
+if not oscir_xsc add bs ulong u
+ret oscir_vi 49 f i
+end
+end
+d = oscir_def s
+if oscir_in4 o 23 24 26 26
+if not oscir_vr d nv
+ret oscir_vi 50 f i
+end
+if not oscir_xsc add bs ulong d
+ret oscir_vi 50 f i
+end
+end
+if or eq o 23 eq o 24
+if ne get vts add bs ulong d 5
+ret oscir_vi 51 f i
+end
+end
+if eq o 27
+if ne get inarg s 1
+ret oscir_vi 52 f i
+end
+end
+if eq o 23
+ret 0
+end
+if ne get vts add bs ulong get ib s 5
+ret oscir_vi 53 f i
+end
+if ne o 24
+if ne get vts add bs ulong get ic s 5
+ret oscir_vi 54 f i
+end
+end
+ret 0
+end
+
+note LOAD STORE
+fn oscir_vldst f ulong i ulong to int
+o = get iop add mul f 4096 i
+m = oscir_ld f i
+e = ulong 55
+v = ulong 0
+if eq o 10
+e = 59
+v = 3
+end
+if eq o 9
+if not oscir_vm m 7
+ret oscir_vi e f i
+end
+else
+if not oscir_vm m 14
+ret oscir_vi e f i
+end
+end
+xa = get ox 1
+if not oscir_ldbase o xa
+ret oscir_vi add e 1 f i
+end
+if not oscir_xint 2
+ret oscir_vi add e 2 f i
+end
+if not oscir_xse get ox v xa
+ret oscir_vi add e 3 f i
+end
+ret 0
+end
+
+note LOAD base: array ref or block; STORE base: own/mut array ref or block
+fn oscir_ldbase o uchar xa ulong to bool
+if oscir_xbl xa
+ret true
+end
+if not oscir_xarr xa
+ret false
+end
+if eq o 9
+ret true
+end
+r = get vtref xa
+ret or eq r 1 eq r 3
+end
+
+note SLOAD SSTORE
+fn oscir_vsl f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+nm = long 17
+v = ulong 0
+if eq o 29
+nm = 18
+v = 3
+end
+if not oscir_vm m 6
+ret oscir_vi1 63 f i nm
+end
+xa = get ox 1
+p = false
+if oscir_xsl xa
+if oscir_vr add get ia s 1 get fnvr f
+p = oscir_xis add xa 1 5
+end
+end
+if not p
+ret oscir_vi1 64 f i nm
+end
+if not oscir_xint 2
+ret oscir_vi1 65 f i nm
+end
+if not oscir_vm m shl ulong 1 v
+ret oscir_vi1 66 f i nm
+end
+if not oscir_xis get ox v 5
+ret oscir_vi1 66 f i nm
+end
+if eq o 29
+if ne get vts xa 12
+ret oscir_vi 67 f i
+end
+end
+ret 0
+end
+
+note FLOAD FSTORE
+fn oscir_vins6 f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+nm = long 19
+v = ulong 0
+if eq o 17
+nm = 20
+v = 3
+end
+if not oscir_vm m 2
+ret oscir_vi1 68 f i nm
+end
+xa = get ox 1
+if not oscir_xstr xa
+ret oscir_vi1 68 f i nm
+end
+st = sub ulong get vtsid xa 1
+n = get iimm s
+if ge n ulong get osnf st
+ret oscir_vf 69 long f long i nm long n
+end
+ret oscir_vfs2 f i m add mul st 16 n
+end
+
+note FLOAD FSTORE after the field index check; fd = field slot
+fn oscir_vfs2 f ulong i ulong m ulong fd ulong to int
+s = add mul f 4096 i
+if ne get osfal fd 0
+p = false
+if oscir_vm m 4
+p = oscir_xint 2
+end
+if not p
+ret oscir_vi 70 f i
+end
+else
+if ne get ib s -1
+ret oscir_vi 71 f i
+end
+end
+v = ulong 0
+if eq get iop s 17
+v = 3
+end
+if not oscir_vm m shl ulong 1 v
+ret oscir_vi 72 f i
+end
+xv = get ox v
+if not oscir_xsc xv
+ret oscir_vi 72 f i
+end
+if ne get vts xv get osfs fd
+ret oscir_vi 72 f i
+end
+if eq v 3
+r = get vtref get ox 1
+if not or eq r 1 eq r 3
+ret oscir_vi 73 f i
+end
+end
+ret 0
+end
+
+note one CALL argument k: 0 ok, else the message id
+fn oscir_varg f ulong s ulong gi ulong k ulong n ulong to ulong
+a = get iarg add mul s 6 k
+if not oscir_vr a get fnvr f
+ret 76
+end
+xa = add mul f 480 ulong a
+p = add mul gi 480 k
+if oscir_xsl p
+q = false
+if oscir_xeq p xa
+if lt add k 1 n
+w = get iarg add mul s 6 add k 1
+q = eq w add a 1
+end
+end
+if not q
+ret 77
+end
+ret 0
+end
+if oscir_xref p
+if not oscir_xbind p xa
+ret 78
+end
+ret 0
+end
+if not oscir_xeq p xa
+ret 79
+end
+ret 0
+end
+
+note CALL
+fn oscir_vins7 f ulong i ulong to int
+s = add mul f 4096 i
+g = get icall s
+if not and ge g 0 lt long g long f
+ret oscir_vi1 74 f i long g
+end
+gi = ulong g
+n = ulong get inarg s
+if ne n ulong get fnpar gi
+ret oscir_vf 75 long f long i long n long get fnpar gi
+end
+for k ulong n
+e = oscir_varg f s gi k n
+if eq e 76
+ret oscir_vi 76 f i
+end
+if ne e 0
+ret oscir_vi1 e f i long k
+end
+end
+d = get idst s
+if eq get frs gi 0
+if ne d -1
+ret oscir_vi 80 f i
+end
+ret 0
+end
+if not oscir_vr d get fnvr f
+ret oscir_vi 81 f i
+end
+if not oscir_xeqr add mul f 480 ulong d gi
+ret oscir_vi 81 f i
+end
+ret 0
+end
+
+note GPU SHARED
+fn oscir_vins8 f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+if eq o ogpu
+p = false
+if oscir_vm m 1
+p = oscir_xis get ox 0 4
+end
+if not p
+ret oscir_vi 82 f i
+end
+u = get isub s
+if or lt u 1 gt u 5
+ret oscir_vi1 83 f i long u
+end
+ret 0
+end
+p = false
+if oscir_vm m 1
+p = oscir_xbl get ox 0
+end
+if not p
+ret oscir_vi 84 f i
+end
+ret 0
+end
+
+note GLOAD GSTORE
+fn oscir_vgl f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+nm = long 21
+v = ulong 0
+if eq o ogst
+nm = 22
+v = 3
+end
+if not oscir_vm m 6
+ret oscir_vi1 63 f i nm
+end
+xa = get ox 1
+p = false
+if oscir_xgb xa
+if oscir_vr add get ia s 1 get fnvr f
+p = oscir_xis add xa 1 4
+end
+end
+if not p
+ret oscir_vi1 85 f i nm
+end
+if not oscir_xis get ox 2 4
+ret oscir_vi1 86 f i nm
+end
+p = false
+if oscir_vm m shl ulong 1 v
+p = oscir_xis get ox v get vtel xa
+end
+if not p
+ret oscir_vi1 87 f i nm
+end
+if eq o ogst
+if ne get vts xa 15
+ret oscir_vi 88 f i
+end
+end
+ret 0
+end
+
+note SHFL MAD
+fn oscir_vins9 f ulong i ulong to int
+s = add mul f 4096 i
+o = get iop s
+m = oscir_ld f i
+if eq o oshfl
+u = get isub s
+if ne u 1
+ret oscir_vi1 89 f i long u
+end
+if not oscir_vm m 7
+ret oscir_vi 90 f i
+end
+xa = get ox 1
+p = or oscir_xis xa 4 oscir_xis xa 13
+if not and p oscir_xeq get ox 0 xa
+ret oscir_vi 91 f i
+end
+if not oscir_xis get ox 2 4
+ret oscir_vi 92 f i
+end
+ret 0
+end
+if not oscir_vm m 15
+ret oscir_vi 93 f i
+end
+p = and oscir_xis get ox 0 13 oscir_xis get ox 1 13
+q = and oscir_xis get ox 2 13 oscir_xis get ox 3 13
+if not and p q
+ret oscir_vi 94 f i
+end
+ret 0
+end
+
+note TRAP BR CBR RET
+fn oscir_vctl f ulong i ulong to int
+s = add mul f 4096 i
+nb = int get fnbl f
+o = get iop s
+m = oscir_ld f i
+if eq o 12
+n = get iimm s
+if or lt n 1 gt n 14
+ret oscir_vi 95 f i
+end
+ret 0
+end
+t = get ibt s
+if eq o 13
+if not and ge t 0 lt t nb
+ret oscir_vi 96 f i
+end
+ret 0
+end
+if eq o 14
+p = false
+if oscir_vm m 2
+p = oscir_xis get ox 1 1
+end
+if not p
+ret oscir_vi 97 f i
+end
+e = get ibf s
+p = and ge t 0 lt t nb
+q = and ge e 0 lt e nb
+if not and p q
+ret oscir_vi 98 f i
+end
+ret 0
+end
+if eq get frs f 0
+if ne get ia s -1
+ret oscir_vi 99 f i
+end
+ret 0
+end
+if not oscir_vm m 2
+ret oscir_vi 100 f i
+end
+if not oscir_xeqr get ox 1 f
+ret oscir_vi 100 f i
+end
+ret 0
+end
+
+fn oscir_vins f ulong i ulong to int
+o = get iop add mul f 4096 i
+if or eq o 1 eq o 2
+ret oscir_vins1 f i
+end
+if eq o 3
+ret oscir_vbin f i
+end
+if eq o 4
+ret oscir_vun f i
+end
+if or eq o 5 eq o 6
+ret oscir_vins2 f i
+end
+if or eq o 7 eq o 19
+ret oscir_valloc f i
+end
+if oscir_in4 o 8 18 20 21
+ret oscir_vins3 f i
+end
+if eq o 22
+ret oscir_vins3 f i
+end
+if and ge o 23 le o 27
+ret oscir_vins4 f i
+end
+if or eq o 9 eq o 10
+ret oscir_vldst f i
+end
+if or eq o 28 eq o 29
+ret oscir_vsl f i
+end
+if or eq o 16 eq o 17
+ret oscir_vins6 f i
+end
+if eq o 11
+ret oscir_vins7 f i
+end
+if eq o osync
+ret 0
+end
+if or eq o ogpu eq o oshar
+ret oscir_vins8 f i
+end
+if or eq o ogld eq o ogst
+ret oscir_vgl f i
+end
+if or eq o oshfl eq o omad
+ret oscir_vins9 f i
+end
+if and ge o 12 le o 15
+ret oscir_vctl f i
+end
+ret oscir_vi1 101 f i long o
+end
+
+note ---- validate_func -----------------------------------------------------------
+note header: kind, threads, params, vregs, return type, vreg types, contract
+fn oscir_vfh f ulong to int
+fl = long f
+k = get fkind f
+if gt k 1
+ret oscir_vf 104 fl long k 0 0
+end
+kern = eq k 1
+t = get fthr f
+bad = ne t 0
+if kern
+bad = or or lt t 32 gt t 1024 ne rem t 32 0
+end
+if bad
+ret oscir_vf 105 fl long t 0 0
+end
+mp = uint 6
+if kern
+mp = 32
+end
+np = get fnpar f
+if gt np mp
+ret oscir_vf 106 fl long np long mp 0
+end
+nv = ulong get fnvr f
+if or gt nv 480 gt ulong np nv
+ret oscir_vf 107 fl 0 0 0
+end
+if not oscir_vfret f
+ret oscir_vf 108 fl 0 0 0
+end
+ret oscir_vfh2 f
+end
+
+note return type: void (all zero) or a valid type
+fn oscir_vfret f ulong to bool
+p = and eq get frs f 0 eq get frref f 0
+q = and eq get frel f 0 eq get frlen f 0
+if and and p q eq get frsid f 0
+ret true
+end
+s = get frs f
+r = get frref f
+e = get frel f
+n = get frlen f
+d = get frsid f
+ret oscir_tsc s r e n d
+end
+
+note vreg types against the kernel/host kind, return and contract rules
+fn oscir_vfh2 f ulong to int
+fl = long f
+kern = eq get fkind f 1
+nv = ulong get fnvr f
+bs = mul f 480
+for v ulong nv
+x = add bs v
+ok = or or oscir_xsc x oscir_xref x oscir_xsl x
+ok = or ok or oscir_xgb x oscir_xbl x
+if not ok
+ret oscir_vf 109 fl long v 0 0
+end
+end
+for v ulong nv
+x = add bs v
+kt = or or oscir_xgb x oscir_xbl x oscir_xis x 13
+if kern
+if not or or kt oscir_xis x 1 oscir_xis x 4
+ret oscir_vf 110 fl long v oscir_sname get vts x 0
+end
+end
+if not kern
+if kt
+ret oscir_vf 111 fl long v 0 0
+end
+end
+end
+if not kern
+if eq get frs f 13
+ret oscir_vf 112 fl 0 0 0
+end
+end
+if kern
+if or or ne get frs f 0 ne get oreql f 0 ne get oensl f 0
+ret oscir_vf 113 fl 0 0 0
+end
+end
+ret 0
+end
+
+note parameter pairs, counts
+fn oscir_vfp f ulong to int
+fl = long f
+nv = ulong get fnvr f
+np = ulong get fnpar f
+bs = mul f 480
+for v ulong nv
+put osl v 0
+end
+v = ulong 0
+while lt v nv bound 999
+x = add bs v
+if oscir_xsl x
+p = lt add v 1 np
+if p
+p = oscir_xis add x 1 5
+end
+if not p
+ret oscir_vf 114 fl long v 0 0
+end
+put osl v 1
+put osl add v 1 1
+v = add v 1
+end
+v = add v 1
+end
+v = 0
+while lt v nv bound 999
+x = add bs v
+if oscir_xgb x
+p = lt add v 1 np
+if p
+p = oscir_xis add x 1 4
+end
+if not p
+ret oscir_vf 115 fl long v 0 0
+end
+put osl v 1
+put osl add v 1 1
+v = add v 1
+end
+v = add v 1
+end
+for w ulong np
+if oscir_xbl add bs w
+ret oscir_vf 116 fl long w 0 0
+end
+end
+ni = get fnin f
+if or lt ni 1 gt ni 4096
+ret oscir_vf 117 fl 0 0 0
+end
+nb = get fnbl f
+if or lt nb 1 gt nb 512
+ret oscir_vf 118 fl 0 0 0
+end
+ret 0
+end
+
+note blocks partition the instruction array
+fn oscir_vfb f ulong to int
+fl = long f
+ni = ulong get fnin f
+nb = ulong get fnbl f
+for i ulong ni
+put ocov i 0
+end
+for b ulong nb
+fs = ulong get bfst add mul f 512 b
+ct = ulong get bcnt add mul f 512 b
+if or lt ct 1 gt add fs ct ni
+ret oscir_vf 119 fl long b 0 0
+end
+r = oscir_vfb1 f b fs ct
+if ne r 0
+ret r
+end
+end
+for i ulong ni
+if eq get ocov i 0
+ret oscir_vf 123 fl long i 0 0
+end
+end
+ret 0
+end
+
+note one block: coverage and terminator placement
+fn oscir_vfb1 f ulong b ulong fs ulong ct ulong to int
+for j ulong ct
+i = add fs j
+if ne get ocov i 0
+ret oscir_vf 120 long f long i 0 0
+end
+put ocov i 1
+la = eq j sub ct 1
+tm = oscir_isterm get iop add mul f 4096 i
+if ne tm la
+if la
+ret oscir_vf 121 long f long b 0 0
+end
+ret oscir_vf 122 long f long b 0 0
+end
+end
+ret 0
+end
+
+note last insn of f defining vreg b, or -1
+fn oscir_lastdef f ulong b int to long
+ni = ulong get fnin f
+r = long -1
+for j ulong ni
+if eq oscir_def add mul f 4096 j b
+r = long j
+end
+end
+ret r
+end
+
+note one kernel divisor / shuffle distance: 1 when it is a single CONST in lo..hi
+fn oscir_kconst f ulong b int lo ulong hi ulong to bool
+if lt long b long get fnpar f
+ret false
+end
+if ne get ondef add 0 ulong b 1
+ret false
+end
+j = oscir_lastdef f b
+if lt j 0
+ret false
+end
+s = add mul f 4096 ulong j
+if ne get iop s 1
+ret false
+end
+m = get iimm s
+ret and ge m lo le m hi
+end
+
+note which instructions each function kind may hold
+fn oscir_vfk f ulong to int
+fl = long f
+nv = ulong get fnvr f
+ni = ulong get fnin f
+nb = ulong get fnbl f
+kern = eq get fkind f 1
+for v ulong nv
+put ondef v 0
+end
+for i ulong ni
+d = oscir_def add mul f 4096 i
+if ge d 0
+if lt ulong d nv
+put ondef ulong d add get ondef ulong d 1
+end
+end
+end
+put osb 0 0
+for b ulong nb
+fs = ulong get bfst add mul f 512 b
+ct = ulong get bcnt add mul f 512 b
+for j ulong ct
+r = oscir_vfk1 f b add fs j kern
+if ne r 0
+ret r
+end
+end
+end
+ret 0
+end
+
+note one instruction i of block b; shared bytes accumulate in osb
+fn oscir_vfk1 f ulong b ulong i ulong kern bool to int
+fl = long f
+s = add mul f 4096 i
+o = get iop s
+u = get isub s
+go = and ge o ogpu le o omad
+gs = and eq o 3 or eq u 11 eq u 12
+gs = or gs and eq o 4 ge u 4
+if not kern
+if or go gs
+ret oscir_vf 125 fl long i 0 0
+end
+if eq o 11
+if ne get fkind ulong get icall s 0
+ret oscir_vf 126 fl long i 0 0
+end
+end
+ret 0
+end
+ret oscir_vfk2 f b i o u
+end
+
+note shared-memory declaration of a kernel: block 0, single definition, byte budget
+fn oscir_vfsh f ulong b ulong i ulong to int
+fl = long f
+if ne b 0
+ret oscir_vf 128 fl long i 0 0
+end
+d = ulong get idst add mul f 4096 i
+if ne get ondef d 1
+ret oscir_vf 129 fl long i 0 0
+end
+ln = ulong get vtlen add mul f 480 d
+sb = add get osb 0 mul ln 4
+put osb 0 sb
+if gt sb 49152
+ret oscir_vf 130 fl long i 49152 0
+end
+ret 0
+end
+
+note kernel instruction rules
+fn oscir_vfk2 f ulong b ulong i ulong o uchar u uchar to int
+fl = long f
+s = add mul f 4096 i
+p = or or eq o 7 eq o 8 eq o 11
+if or p and ge o 16 le o 29
+ret oscir_vf 127 fl long i long o 0
+end
+if eq o oshar
+r = oscir_vfsh f b i
+if ne r 0
+ret r
+end
+end
+if eq o 3
+if or eq u 4 eq u 5
+if not oscir_kconst f get ib s 1 18446744073709551615
+ret oscir_vf 131 fl long i 0 0
+end
+end
+end
+if eq o oshfl
+if not oscir_kconst f get ib s 1 31
+ret oscir_vf 132 fl long i 0 0
+end
+end
+ret 0
+end
+
+note OSC-2 arena handles
+fn oscir_vfa f ulong to int
+fl = long f
+nv = ulong get fnvr f
+ni = ulong get fnin f
+np = long get fnpar f
+for v ulong nv
+put ohk v 0
+end
+for i ulong ni
+s = add mul f 4096 i
+if eq get iop s 18
+d = get idst s
+if or ne get ohk ulong d 0 lt long d np
+ret oscir_vf 133 fl long i 0 0
+end
+put ohk ulong d 1
+end
+end
+for i ulong ni
+r = oscir_vfa1 f i
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note arena-handle use rules for instruction i
+fn oscir_vfa1 f ulong i ulong to int
+fl = long f
+s = add mul f 4096 i
+o = get iop s
+d = oscir_def s
+if ne o 18
+if ge d 0
+if ne get ohk ulong d 0
+ret oscir_vf 134 fl long i 0 0
+end
+end
+end
+if eq o 19
+hb = get ohk ulong get ib s
+ha = get ohk ulong get ia s
+if or eq hb 0 ne ha 0
+ret oscir_vf 135 fl long i 0 0
+end
+ret 0
+end
+if eq o 20
+if eq get ohk ulong get ia s 0
+ret oscir_vf 136 fl long i 0 0
+end
+ret 0
+end
+k = oscir_uses s
+for j ulong k
+if ne get ohk ulong get ous j 0
+ret oscir_vf 137 fl long i 0 0
+end
+end
+ret 0
+end
+
+note OSC-3 pools
+fn oscir_vfo f ulong to int
+fl = long f
+nv = ulong get fnvr f
+ni = ulong get fnin f
+np = long get fnpar f
+for v ulong nv
+put opk v 0
+end
+for i ulong ni
+s = add mul f 4096 i
+if eq get iop s 21
+d = ulong get idst s
+p = or ne get opk d 0 ne get ohk d 0
+if or p lt long d np
+ret oscir_vf 138 fl long i 0 0
+end
+put opk d get isub s
+end
+end
+for i ulong ni
+r = oscir_vfo1 f i
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note pool-handle use rules for instruction i
+fn oscir_vfo1 f ulong i ulong to int
+fl = long f
+s = add mul f 4096 i
+o = get iop s
+d = oscir_def s
+if ne o 21
+if ge d 0
+if ne get opk ulong d 0
+ret oscir_vf 139 fl long i 0 0
+end
+end
+end
+if eq o 22
+if eq get opk ulong get ia s 0
+ret oscir_vf 140 fl long i 0 0
+end
+ret 0
+end
+if eq o 23
+a = ulong get ia s
+b = ulong get ib s
+if or eq get opk b 0 ne get opk a 0
+ret oscir_vf 141 fl long i 0 0
+end
+if ne get vts add mul f 480 a get opk b
+ret oscir_vf 142 fl long i 0 0
+end
+ret 0
+end
+if and ge o 24 le o 27
+ret oscir_vfo2 f i o
+end
+k = oscir_uses s
+for j ulong k
+if ne get opk ulong get ous j 0
+ret oscir_vf 146 fl long i 0 0
+end
+end
+ret 0
+end
+
+note HGEN HFREE HLOAD HSTORE pool rules
+fn oscir_vfo2 f ulong i ulong o uchar to int
+fl = long f
+s = add mul f 4096 i
+bs = mul f 480
+a = ulong get ia s
+b = ulong get ib s
+p = or eq get opk a 0 ne get opk b 0
+if ne o 24
+p = or p ne get opk ulong get ic s 0
+end
+if p
+ret oscir_vf 143 fl long i 0 0
+end
+if eq o 26
+g = add bs ulong get idst s
+if ne get vts g get opk a
+ret oscir_vf 144 fl long i 0 0
+end
+end
+if eq o 27
+g = ulong get iarg mul s 6
+if ne get opk g 0
+ret oscir_vf 145 fl long i 0 0
+end
+if ne get vts add bs g get opk a
+ret oscir_vf 145 fl long i 0 0
+end
+end
+ret 0
+end
+
+note definite assignment (8 words of 64 bits per block)
+fn oscir_dbit d int to void
+if ge d 0
+w = div ulong d 64
+put ocur w or get ocur w shl ulong 1 rem ulong d 64
+end
+end
+
+fn oscir_ispred f ulong p ulong b ulong to bool
+x = add mul f 512 p
+s = add mul f 4096 sub add ulong get bfst x ulong get bcnt x 1
+o = get iop s
+bl = long b
+if eq o 13
+ret eq long get ibt s bl
+end
+if eq o 14
+ret or eq long get ibt s bl eq long get ibf s bl
+end
+ret false
+end
+
+note one dataflow pass over every block; returns 1 when anything changed
+fn oscir_dpass f ulong to bool
+nb = ulong get fnbl f
+ch = false
+for b ulong nb
+c = oscir_dblk f b
+ch = or ch c
+end
+ret ch
+end
+
+note block b of the dataflow pass: meet, then transfer; true when in/out changed
+fn oscir_dblk f ulong b ulong to bool
+nb = ulong get fnbl f
+for k ulong 8
+put ocur k 18446744073709551615
+end
+if eq b 0
+for k ulong 8
+put ocur k 0
+end
+np = ulong get fnpar f
+for v ulong np
+oscir_dbit int v
+end
+end
+for p ulong nb
+if oscir_ispred f p b
+for k ulong 8
+y = add mul p 8 k
+put ocur k and get ocur k get obout y
+end
+end
+end
+ch = false
+for k ulong 8
+y = add mul b 8 k
+if ne get ocur k get obin y
+ch = true
+end
+end
+if ch
+for k ulong 8
+put obin add mul b 8 k get ocur k
+end
+end
+fs = ulong get bfst add mul f 512 b
+ct = ulong get bcnt add mul f 512 b
+for j ulong ct
+oscir_dbit oscir_def add mul f 4096 add fs j
+end
+c2 = false
+for k ulong 8
+y = add mul b 8 k
+if ne get ocur k get obout y
+c2 = true
+end
+end
+if c2
+for k ulong 8
+put obout add mul b 8 k get ocur k
+end
+end
+ret or ch c2
+end
+
+fn oscir_vfd f ulong to int
+fl = long f
+nb = ulong get fnbl f
+for y ulong mul nb 8
+put obin y 18446744073709551615
+put obout y 18446744073709551615
+end
+while oscir_dpass f bound 999999
+end
+for b ulong nb
+r = oscir_vfd1 f b
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note uses of block b read only definitely-assigned vregs
+fn oscir_vfd1 f ulong b ulong to int
+for k ulong 8
+put ocur k get obin add mul b 8 k
+end
+fs = ulong get bfst add mul f 512 b
+ct = ulong get bcnt add mul f 512 b
+for j ulong ct
+r = oscir_vfu f add fs j
+if ne r 0
+ret r
+end
+end
+ret 0
+end
+
+note instruction i reads only vregs set in ocur; then its def is set
+fn oscir_vfu f ulong i ulong to int
+s = add mul f 4096 i
+n = oscir_uses s
+for q ulong n
+u = ulong get ous q
+w = get ocur div u 64
+if eq and shr w rem u 64 1 0
+ret oscir_vf 147 long f long i long u 0
+end
+end
+oscir_dbit oscir_def s
+ret 0
+end
+
+fn oscir_vfunc f ulong to int
+r = oscir_vfh f
+if ne r 0
+ret r
+end
+r = oscir_vfp f
+if ne r 0
+ret r
+end
+r = oscir_vfb f
+if ne r 0
+ret r
+end
+ni = ulong get fnin f
+for i ulong ni
+r = oscir_vins f i
+if ne r 0
+ret r
+end
+end
+nv = get fnvr f
+for i ulong ni
+d = oscir_def add mul f 4096 i
+if ge d 0
+if lt uint d nv
+if ne get osl ulong d 0
+ret oscir_vf 124 long f long i 0 0
+end
+end
+end
+end
+r = oscir_vfk f
+if ne r 0
+ret r
+end
+r = oscir_vfa f
+if ne r 0
+ret r
+end
+r = oscir_vfo f
+if ne r 0
+ret r
+end
+ret oscir_vfd f
+end
+
+note ---- validate_structs / osc_ir_validate ---------------------------------------
+fn oscir_sneq a ulong b ulong to bool
+n = get osnl a
+if ne n get osnl b
+ret false
+end
+for c ulong ulong n
+if ne get osnm add mul a 64 c get osnm add mul b 64 c
+ret false
+end
+end
+ret true
+end
+
+fn oscir_fneq a ulong b ulong to bool
+n = get osfnl a
+if ne n get osfnl b
+ret false
+end
+pa = mul a 64
+pb = mul b 64
+for c ulong ulong n
+ca = get osfnm add pa c
+if ne ca get osfnm add pb c
+ret false
+end
+end
+ret true
+end
+
+fn oscir_vst to int
+ns = ulong get unst 0
+if gt ns 16
+ret oscir_vf 149 0 0 0 0
+end
+for k ulong ns
+kl = long k
+if eq get osnl k 0
+ret oscir_vf 150 kl 0 0 0
+end
+for j ulong k
+if oscir_sneq j k
+ret oscir_vf 151 kl 0 0 0
+end
+end
+nf = ulong get osnf k
+if or lt nf 1 gt nf 16
+ret oscir_vf 152 kl 0 0 0
+end
+off = uint 0
+for g ulong nf
+x = add mul k 16 g
+if eq get osfnl x 0
+ret oscir_vf 153 kl long g 0 0
+end
+for h ulong g
+if oscir_fneq add mul k 16 h x
+ret oscir_vf 154 kl long g 0 0
+end
+end
+if or not oscir_isval get osfs x gt get osfal x 64
+ret oscir_vf 155 kl long g 0 0
+end
+if ne get osfof x off
+ret oscir_vf 156 kl long g long get osfof x long off
+end
+al = get osfal x
+if eq al 0
+al = 1
+end
+off = add off al
+end
+if or or ne off get osnc k lt off 1 gt off 64
+ret oscir_vf 157 kl 0 0 0
+end
+end
+ret 0
+end
+
+fn oscir_validate to int
+put oerrn 0 0
+if gt get unfn 0 32
+ret oscir_vf 159 0 0 0 0
+end
+r = oscir_vst
+if ne r 0
+ret r
+end
+nf = ulong get unfn 0
+for f ulong nf
+r = oscir_vfunc f
+if ne r 0
+ret r
+end
+end
+put oerrn 0 0
+ret 0
+end
