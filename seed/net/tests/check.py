@@ -1155,6 +1155,15 @@ def https_compose(src_lines, notls=False):
     return units + src_lines
 
 
+def https_integ(omc, binary):
+    """om/tls/build.sh -p: write the fips.om integrity HMAC into a binary that composes om/tls;
+    without it tls_connect fails closed (TLS_ERR_SELF_TEST detail 16)."""
+    p = subprocess.run(NICE + ["sh", os.path.join(TLSDIR, "build.sh"), "-p", omc, binary],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600)
+    if p.returncode != 0:
+        raise Fail("integrity step on %s rc=%d %s" % (binary, p.returncode, p.stderr.decode(errors="replace").strip()))
+
+
 def https_mutate(text, fn, old, new):
     """Replace the first line equal to old after the line 'fn <fn> ...' (exactly one hit in that function)."""
     lines = text.split("\n")
@@ -1227,6 +1236,8 @@ def stage_https(omc, work, http_src, notls_src, log):
     # the real program
     hbin = os.path.join(work, "https")
     ssrc, sbin = compile_unit(omc, hbin, https_compose(http_src + https_src), "tests/https.om")
+    https_integ(omc, hbin)
+    sbin = sha(open(hbin, "rb").read())
     log("https.src=%s https.bin=%s https.om sha256=%s" % (ssrc, sbin, sha(https_src)))
     stop = threading.Event()
     port = {}
@@ -1261,6 +1272,7 @@ def stage_https(omc, work, http_src, notls_src, log):
                 lib = http_src + mt.encode()
             try:
                 compile_unit(omc, mbin, https_compose(lib), "tests/https.om")
+                https_integ(omc, mbin)
             except Fail as e:
                 raise Fail("https mutant %r does not compile (invalid mutant): %s" % (name, e))
             bad = https_rows(mbin, pki, port, None, lambda s: None, "mutant")

@@ -7,7 +7,8 @@ note
 note One process-wide mutable global, FPST, holds the module state (the only global in om/tls):
 note   FPST[0] 0 self-tests not run, 1 passed, 2 error state (latched; only a new process clears it)
 note   FPST[1] the first failure: 1..15 a pre-operational self-test (fips_selftest), 14 the DRBG
-note           self-test, 20 the DRBG continuous test, 21 a pairwise consistency test (X25519 here, or
+note           self-test, 16 the software integrity test (fips_integ, after the known-answer tests),
+note           20 the DRBG continuous test, 21 a pairwise consistency test (X25519 here, or
 note           the approved-mode P-256/P-384 key generation in tls.om: failed PCT or 16 rejected draws),
 note           22 the repetition count test, 23 the adaptive proportion test, 24 getrandom failed,
 note           25 a DRBG call failed, 30.. reserved for callers (fips_fail)
@@ -149,6 +150,241 @@ if ne d 0
 ret 1
 end
 ret 0
+end
+
+note ---- software integrity test (FIPS 140-3 style, ISO/IEC 19790 7.10.2.2) and version service ----
+note The composed program carries one text slot FKIH: a 35-byte marker followed by 64 hex digits.
+note No other text starts with that marker, so the marker occurs once in the file. om/tls/build.sh
+note compiles the program, then fips_itool writes HMAC-SHA-256(FKIK, file) into the slot, the 64
+note slot bytes taken as '0' while hashing. At first use fips_check, after the known-answer tests
+note (SHA-256 and HMAC-SHA-256 among them), recomputes the HMAC over /proc/self/exe the same way and
+note compares it with the slot as loaded (code 16). An unpatched program keeps 64 '0' digits and
+note fails closed. FKIK is public (OpenSSL FIPS provider style): this detects corruption and
+note accidental modification, not a deliberate attacker who can rewrite the file. The file on disk
+note is hashed, not the mapped image.
+text FKIH "omega-tls-integrity-v1-hmac-sha256:0000000000000000000000000000000000000000000000000000000000000000"
+text FKIK "omega-tls module integrity key v1"
+text FKEXE "/proc/self/exe"
+text FKNAME "Omega TLS module (om/tls)"
+text FKVER "0.1.0"
+text FKV1 " version "
+text FKV2 " integrity hmac-sha256:"
+text FKV3 " state "
+const FIMK ulong 35
+const FICH ulong 65536
+const FISTEP ulong 65408
+const FIMAX ulong 4096
+
+note 1 when b[i..i+FIMK) is the marker (the first FIMK bytes of FKIH), 0 otherwise
+fn fips_imark b view uchar * i ulong to ulong
+d = ulong 0
+for j ulong FIMK
+d = or d xor ulong get b add i j ulong get FKIH j
+end
+if eq d 0
+ret 1
+end
+ret 0
+end
+
+note markers in b[0..n) read at file offset pos: s updated to the slot offset of a marker found,
+note -3 for a second one. A marker starting at FISTEP or later is left to the next chunk unless
+note this is the last chunk (last 1).
+fn fips_iscan b view uchar * n ulong last ulong pos long s long to long
+if lt n FIMK
+ret s
+end
+for i ulong add sub n FIMK 1
+if or lt i FISTEP eq last 1
+if eq fips_imark b i 1
+if ge s 0
+ret neg long 3
+end
+s = add pos long add i FIMK
+end
+end
+end
+ret s
+end
+
+note the slot offset of the one marker in file fd (b: a FICH-byte buffer), or -1 read error,
+note -2 no marker, -3 more than one marker, -4 larger than FIMAX chunks. Chunks overlap by
+note FICH - FISTEP bytes so a marker across a chunk edge is still seen, and counted once.
+fn fips_ifind fd int b edit uchar * to long
+s = neg long 2
+pos = long 0
+more = ulong 1
+for k ulong FIMAX
+if eq more 1
+r = pread fd b 0 FICH pos
+if lt r 0
+ret neg long 1
+end
+n = ulong r
+if lt n FICH
+more = 0
+end
+s = fips_iscan b n xor more 1 pos s
+if eq s neg long 3
+ret s
+end
+pos = add pos long FISTEP
+end
+end
+if eq more 1
+ret neg long 4
+end
+ret s
+end
+
+note b[0..n) read at file offset pos: the bytes of the slot [s, s + 64) set to '0'; returns how many
+fn fips_imask b edit uchar * n ulong pos long s long to ulong
+t = ulong 0
+for i ulong n
+a = add pos long i
+if and ge a s lt a add s 64
+put b i 48
+t = add t 1
+end
+end
+ret t
+end
+
+note mac[0..32) = HMAC-SHA-256(FKIK, file fd) with the 64 slot bytes at offset s taken as '0';
+note 0, -1 read error, -3 slot past the end of the file
+fn fips_imac fd int b edit uchar * s long mac edit uchar * to long
+c = new ulong 96 0
+hmac_init 256 c FKIK
+pos = long 0
+more = ulong 1
+t = ulong 0
+for k ulong FIMAX
+if eq more 1
+r = pread fd b 0 FICH pos
+if lt r 0
+drbg_zx c
+ret neg long 1
+end
+n = ulong r
+if lt n FICH
+more = 0
+end
+t = add t fips_imask b n pos s
+hmac_update c part b 0 n
+pos = add pos long n
+end
+end
+if ne t 64
+drbg_zx c
+ret neg long 3
+end
+n = hmac_final c mac
+ret 0
+end
+
+note mac[0..32) = HMAC-SHA-256(FKIK, file fd) with the 64 slot bytes after the one marker taken as
+note '0'. Returns the slot's file offset, or the negative fips_ifind / fips_imac failure.
+fn fips_isum fd int mac edit uchar * to long
+b = new uchar FICH 0
+s = fips_ifind fd b
+if lt s 0
+ret s
+end
+r = fips_imac fd b s mac
+if lt r 0
+ret r
+end
+ret s
+end
+
+note the integrity test: 0 when the HMAC over /proc/self/exe matches the slot as loaded, 1 otherwise
+fn fips_integ to ulong
+m = new uchar 32 0
+fd = fopen FKEXE 0 len FKEXE 0 0
+if lt fd 0
+ret 1
+end
+s = fips_isum int fd m
+r = fclose int fd
+if lt s 0
+ret 1
+end
+ret fips_cmp m part FKIH FIMK 64
+end
+
+note o[k..k + len t) = t; returns k + len t
+fn fips_put o edit uchar * k ulong t view uchar * to ulong
+for i ulong len t
+put o add k i get t i
+end
+ret add k len t
+end
+
+note o[0..2 len m) = lower-case hex of m
+fn fips_hex m view uchar * o edit uchar * to void
+for i ulong len m
+x = ulong get m i
+for j ulong 2
+v = and shr x sub 4 mul j 4 15
+g = mul 39 shr sub 9 v 63
+q = add mul i 2 j
+put o q uchar add add v 48 g
+end
+end
+end
+
+note the integrity tool behind om/tls/build.sh: argument 1 names a composed program; writes the
+note HMAC hex into its slot. 0 done, 2 usage or path too long, 3 open/read/write error, 4 no
+note marker, two markers or file too large.
+fn fips_itool to int
+p = new uchar 4096 0
+m = new uchar 32 0
+h = new uchar 64 0
+if ne argcnt 2
+ret 2
+end
+n = argread 1 p 0 4095
+if or le n 0 ge n 4095
+ret 2
+end
+fd = fopen p 0 ulong n 2 0
+if lt fd 0
+ret 3
+end
+s = fips_isum int fd m
+if lt s 0
+r = fclose int fd
+if eq s neg long 1
+ret 3
+end
+ret 4
+end
+fips_hex m h
+w = pwrite int fd h 0 64 s
+r = fclose int fd
+if ne w 64
+ret 3
+end
+ret 0
+end
+
+note the show-version service: writes "NAME version VER integrity hmac-sha256:HEX state S\n" into
+note o (S: 0 self-tests not yet run, 1 passed, 2 error state) and returns its length; 0 when o is
+note shorter than that line. HEX is the value this program verifies itself against.
+fn fips_version o edit uchar * to ulong
+n = add add add add add len FKNAME len FKV1 len FKVER len FKV2 len FKV3 66
+if lt len o n
+ret 0
+end
+k = fips_put o 0 FKNAME
+k = fips_put o k FKV1
+k = fips_put o k FKVER
+k = fips_put o k FKV2
+k = fips_put o k part FKIH FIMK 64
+k = fips_put o k FKV3
+put o k uchar add 48 get FPST 0
+put o add k 1 10
+ret add k 2
 end
 
 note ---- pre-operational self-tests (known-answer tests); each returns 0 or 1 ----
@@ -402,6 +638,9 @@ if eq get FPST 0 0
 d = fips_selftest
 if ne d 0
 ret fips_fail d
+end
+if ne fips_integ 0
+ret fips_fail 16
 end
 put FPST 0 1
 end
