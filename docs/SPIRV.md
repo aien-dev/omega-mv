@@ -64,12 +64,23 @@ Every IR function is exported as a kernel with its original name and this ABI:
 void kernel_name(__global const ulong *inputs, __global ulong *outputs);
 ```
 
-- Launch exactly one work item. Launching more races on the shared output pair.
+- NDRange: work item `g` (its `GlobalInvocationId.x`) reads its arguments from
+  `inputs[g*P + j]` for `P` parameters and writes `outputs[2g]` and
+  `outputs[2g + 1]`. Launching one work item (`g = 0`) is the original
+  single-call ABI; a launch of `N` items needs `N*P` input and `2N` output slots.
+  `opencl-host --sweep MODULE.spv KERNEL START COUNT` launches a one-parameter
+  kernel over inputs `START..START+COUNT-1` (batches of 2^20 work items) and
+  writes the low 32 bits of each result to stdout; any nonzero status fails.
 - Input slots are scalar arguments in source order, at most six. Unsigned values
   are zero-extended, signed values sign-extended, and booleans are 0 or 1.
 - `outputs[0]` is the canonical 64-bit result, or zero for void and trapped calls.
 - `outputs[1]` is zero on success or the exact native Omega status `100 + trap`.
   A trap is a completed kernel result, not an OpenCL API failure.
+- Checked conversions trap with the Omega status, so `ulong` of a negative
+  `long` returns status `100 + 5` on the device exactly as on the host. Mask or
+  range-check signed values before converting them (the E1 trig quadrant
+  `(k + qoff) & 3` is masked on `long`, `seed/spirv/e1/trig.om`; the E1 kernels
+  and their parity runs are in `docs/numeric/E1_SPIRV_TIER.md`).
 - Modules declare Addresses, Kernel and Int64 capabilities, Physical64 addressing,
   and the OpenCL memory model. Internal function values use 64-bit integer bits;
   private Function-storage variables hold mutable OSC virtual registers.
