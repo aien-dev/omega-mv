@@ -1,0 +1,261 @@
+; tmatmul16.s2 -- one 16x16x16 tile matmul D = A x B on the tensor cores of sm_121 (GB10), written by hand
+; for asm2 with seed/sm121/sm121.tbl. A and B are f16 row-major 16x16 (A 0x380, B 0x388), D is f32
+; row-major 16x16 (D 0x390); one CTA of one warp (32 threads). Two HMMA.16816.F32 (m16n8k16) instructions
+; cover the two 8-column halves of D; the accumulator input is RZ (C = 0).
+; Fragment layout (PTX ISA 9.4, mma.m16n8k16 .f16, "Matrix Fragments for mma.m16n8k16"): lane l,
+; g = l >> 2, t = l & 3. A: a0 = A[g][2t..2t+1], a1 = A[g+8][2t..], a2 = A[g][2t+8..], a3 = A[g+8][2t+8..],
+; one 32-bit load each (two f16, low half first) at byte g*32 + t*4 (+256 rows+8, +16 cols+8).
+; B for column half j (col = 8j + g): b0 = {B[2t][col], B[2t+1][col]}, b1 = {B[2t+8][col], B[2t+9][col]};
+; the two f16 of a register are in different rows, so each is one LDG.E.U16 at t*64 + g*2 + 16j (+32 for the
+; odd row, +256 for rows+8) and the pair is packed with IMAD (hi * 0x10000 + lo).
+; D for half j: d0 d1 = D[g][2t+8j], D[g][2t+1+8j]; d2 d3 = D[g+8][...]: byte g*64 + t*8 + 32j (+512).
+; Each ";=" line is the instruction text expected from nvdisasm -b SM121 for the next instruction (kflow's
+; intent check, written before the first disassembly). Two texts were corrected after it: nvdisasm 13.0
+; prints IMAD with a power-of-two number and RZ as IMAD.SHL (predicted IMAD.SHL.U32), and the BRA target
+; is the absolute byte address 0x2d0 (left open in the prediction).
+; Control words (stall, yield, write-sb, read-sb, wait mask) are MODELED and unmeasured: every
+; variable-latency instruction (S2R LDC LDCU LDG) sets scoreboard 0 (0x000e2200) and the first reader after
+; them waits on it (wait mask bit 20); fixed-latency ALU steps stall 6 (0x000fcc00). HMMA stalls 15 like
+; nvcc 13.0's sm_121 HMMA (0x...fde00) and two NOP stall-15 slots separate the second HMMA from the stores
+; (nvcc uses one NOP); the HMMA latency of GB10 is not measured here. No GPU ran this (NOT_RUN).
+;= S2R R0, SR_TID.X
+  s2r.0 0
+  s2r.1
+  s2r.2 33
+  ctl 0x000e2200
+;= LDCU.64 UR4, c[0x0][0x358]
+  ldcu.64.0 4
+  ldcu.64.1 107
+  ldcu.64.2
+  ctl 0x000e2200
+;= LDC.64 R2, c[0x0][0x380]
+  ldc.64.0 2
+  ldc.64.1 224
+  ldc.64.2
+  ctl 0x000e2200
+;= LDC.64 R4, c[0x0][0x388]
+  ldc.64.0 4
+  ldc.64.1 226
+  ldc.64.2
+  ctl 0x000e2200
+;= LDC.64 R6, c[0x0][0x390]
+  ldc.64.0 6
+  ldc.64.1 228
+  ldc.64.2
+  ctl 0x000e2200
+; g = tid >> 2 (R8), t = tid & 3 (R9)
+;= SHF.R.U32.HI R8, RZ, 0x2, R0
+  shf.r.hi.0 8
+  n.1 0x00000002
+  shf.r.hi.2 0
+  ctl 0x001fcc00
+;= LOP3.LUT R9, R0, 0x3, RZ, 0xc0, !PT
+  lop3.and.i.0 9 0
+  n.1 0x00000003
+  lop3.and.i.2
+  ctl 0x000fcc00
+; A byte offset g*32 + t*4 (R10), address R12:R13
+;= IMAD.SHL R10, R8, 0x20, RZ
+  imad.i.0 10 8
+  imad.i.1 0x00000020
+  imad.i.2 255
+  ctl 0x000fcc00
+;= IMAD R10, R9, 0x4, R10
+  imad.i.0 10 9
+  imad.i.1 0x00000004
+  imad.i.2 10
+  ctl 0x000fcc00
+;= IMAD.WIDE.U32 R12, R10, 0x1, R2
+  imad.wide.0 12 10
+  imad.wide.1 0x00000001
+  imad.wide.2 2
+  ctl 0x000fcc00
+; B byte offset t*64 + g*2 (R11), address R14:R15
+;= IMAD.SHL R11, R9, 0x40, RZ
+  imad.i.0 11 9
+  imad.i.1 0x00000040
+  imad.i.2 255
+  ctl 0x000fcc00
+;= IMAD R11, R8, 0x2, R11
+  imad.i.0 11 8
+  imad.i.1 0x00000002
+  imad.i.2 11
+  ctl 0x000fcc00
+;= IMAD.WIDE.U32 R14, R11, 0x1, R4
+  imad.wide.0 14 11
+  imad.wide.1 0x00000001
+  imad.wide.2 4
+  ctl 0x000fcc00
+; A fragment a0..a3 -> R16..R19
+;= LDG.E R16, desc[UR4][R12.64]
+  ldg.0 16 12
+  ldg.w.1 4 0
+  ldg.2
+  ctl 0x000e2200
+;= LDG.E R17, desc[UR4][R12.64+0x100]
+  ldg.0 17 12
+  ldg.w.1 4 256
+  ldg.2
+  ctl 0x000e2200
+;= LDG.E R18, desc[UR4][R12.64+0x10]
+  ldg.0 18 12
+  ldg.w.1 4 16
+  ldg.2
+  ctl 0x000e2200
+;= LDG.E R19, desc[UR4][R12.64+0x110]
+  ldg.0 19 12
+  ldg.w.1 4 272
+  ldg.2
+  ctl 0x000e2200
+; B halves for j = 0 (R24..R27) and j = 1 (R28..R31): b0 lo, b0 hi, b1 lo, b1 hi
+;= LDG.E.U16 R24, desc[UR4][R14.64]
+  ldg.0 24 14
+  ldg.w.1 4 0
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R25, desc[UR4][R14.64+0x20]
+  ldg.0 25 14
+  ldg.w.1 4 32
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R26, desc[UR4][R14.64+0x100]
+  ldg.0 26 14
+  ldg.w.1 4 256
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R27, desc[UR4][R14.64+0x120]
+  ldg.0 27 14
+  ldg.w.1 4 288
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R28, desc[UR4][R14.64+0x10]
+  ldg.0 28 14
+  ldg.w.1 4 16
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R29, desc[UR4][R14.64+0x30]
+  ldg.0 29 14
+  ldg.w.1 4 48
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R30, desc[UR4][R14.64+0x110]
+  ldg.0 30 14
+  ldg.w.1 4 272
+  ldg.u16.2
+  ctl 0x000e2200
+;= LDG.E.U16 R31, desc[UR4][R14.64+0x130]
+  ldg.0 31 14
+  ldg.w.1 4 304
+  ldg.u16.2
+  ctl 0x000e2200
+; D byte offset g*64 + t*8 (R10, A's offset is dead), address R38:R39 (overlaps the loads' latency)
+;= IMAD.SHL R10, R8, 0x40, RZ
+  imad.i.0 10 8
+  imad.i.1 0x00000040
+  imad.i.2 255
+  ctl 0x000fcc00
+;= IMAD R10, R9, 0x8, R10
+  imad.i.0 10 9
+  imad.i.1 0x00000008
+  imad.i.2 10
+  ctl 0x000fcc00
+;= IMAD.WIDE.U32 R38, R10, 0x1, R6
+  imad.wide.0 38 10
+  imad.wide.1 0x00000001
+  imad.wide.2 6
+  ctl 0x000fcc00
+; pack B registers: R32 R33 (j = 0), R34 R35 (j = 1); the first waits for all loads (scoreboard 0)
+;= IMAD R32, R25, 0x10000, R24
+  imad.i.0 32 25
+  imad.i.1 0x00010000
+  imad.i.2 24
+  ctl 0x001fcc00
+;= IMAD R33, R27, 0x10000, R26
+  imad.i.0 33 27
+  imad.i.1 0x00010000
+  imad.i.2 26
+  ctl 0x000fcc00
+;= IMAD R34, R29, 0x10000, R28
+  imad.i.0 34 29
+  imad.i.1 0x00010000
+  imad.i.2 28
+  ctl 0x000fcc00
+;= IMAD R35, R31, 0x10000, R30
+  imad.i.0 35 31
+  imad.i.1 0x00010000
+  imad.i.2 30
+  ctl 0x000fcc00
+;= HMMA.16816.F32 R40, R16, R32, RZ
+  hmma.0 40 16
+  r.1 32
+  hmma.f16.2 255
+  ctl 0x000fde00
+;= HMMA.16816.F32 R44, R16, R34, RZ
+  hmma.0 44 16
+  r.1 34
+  hmma.f16.2 255
+  ctl 0x000fde00
+;= NOP
+  nop.0
+  nop.1
+  nop.2
+  ctl 0x000fde00
+;= NOP
+  nop.0
+  nop.1
+  nop.2
+  ctl 0x000fde00
+;= STG.E desc[UR4][R38.64], R40
+  stg.0 38
+  stg.1 40 0
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x4], R41
+  stg.0 38
+  stg.1 41 4
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x200], R42
+  stg.0 38
+  stg.1 42 512
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x204], R43
+  stg.0 38
+  stg.1 43 516
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x20], R44
+  stg.0 38
+  stg.1 44 32
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x24], R45
+  stg.0 38
+  stg.1 45 36
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x220], R46
+  stg.0 38
+  stg.1 46 544
+  stg.2 4
+  stg.3
+;= STG.E desc[UR4][R38.64+0x224], R47
+  stg.0 38
+  stg.1 47 548
+  stg.2 4
+  stg.3
+;= EXIT
+  exit.0
+  z.1
+  exit.2
+  exit.3
+;= BRA 0x2d0
+  bra.0 7 63
+  bra.1 -1
+  bra.back.2
+  bra.self.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3

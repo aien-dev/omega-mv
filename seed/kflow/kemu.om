@@ -8,7 +8,11 @@ note   BIN      raw SASS text, 16 bytes per instruction, at most 65536 bytes
 note   HARNESS  vadd (c[i] = a[i] + b[i] as u32, i < n = 1000, 8 CTAs of 128 threads; the
 note            vecadd ABI: a 0x380, b 0x388, c 0x390, n 0x398) or radd (x[i] += a[i] as f32,
 note            2048 values, 1 CTA of 256 threads; the Qwen3 decode RES ADD ABI: x 0x380,
-note            a 0x388, five unused parameters through 0x3ac)
+note            a 0x388, five unused parameters through 0x3ac) or tmm1 (D = A x B, 16x16x16, A and
+note            B f16 row-major, D f32 row-major, 1 CTA of 32 threads; A 0x380, B 0x388, D 0x390) or
+note            tmmt (the tmm1 reference, but the arena holds B transposed: a negative control) or
+note            tsmx (softmax of each 32-value f32 row, 16 CTAs of 32 threads, row = CTA; X 0x380,
+note            Y 0x388)
 note   SEED     decimal splitmix64 seed for the inputs
 note
 note The decoder reads fixed field positions of the Volta+ 128-bit encoding (opcode bits 0..11, guard
@@ -16,29 +20,45 @@ note 12..15, destination 16..23, first source 24..31, second source word 1, thir
 note word 2), not the asm2 tables, so a wrong table base that still decodes is a different program
 note here. Each modifier the semantics below do not implement is refused (UNSUPPORTED), never
 note ignored, except memory ordering and cache hints, which do not change single-thread results.
-note Threads run one after another to EXIT on an 256 KiB global arena filled with 0xa5. The expected
-note arena is the input arena with the harness reference applied (u32 add; f32 add on the AArch64 FPU,
-note round to nearest even, no flush, finite normal inputs). Every arena byte is compared, so a
-note stray store fails as well as a wrong value.
-note Exit: 0 MATCH, 1 MISMATCH, 2 UNSUPPORTED (incomplete model), 3 usage, unreadable input, a fault
-note (address outside the arena) or a runaway thread. stdout: one line of key=value words.
+note Each CTA runs warp after warp. The 32 lanes of a warp step in lockstep with their own registers
+note and predicates (uniform registers are per warp); lanes leave at EXIT; lanes that reach different
+note pcs stop the run as DIVERGED (no reconvergence model). HMMA and SHFL act on the whole warp and
+note are refused unless all 32 lanes are running with one guard value. Control words (stall,
+note scoreboards) are not modelled: a schedule that is wrong on silicon can still MATCH here.
+note The arena is 256 KiB filled with 0xa5. The expected arena is the input arena with the harness
+note reference applied (vadd/radd exactly: u32 add; f32 add on the AArch64 FPU, round to nearest
+note even, no flush, finite normal inputs). Every arena byte is compared, so a stray store fails as
+note well as a wrong value; tmm1/tmmt/tsmx compare their output region as f32 against an f64
+note reference within a stated bound (fcmp) and every other byte exactly.
+note Exit: 0 MATCH, 1 MISMATCH, 2 UNSUPPORTED (incomplete model, DIVERGED), 3 usage, unreadable
+note input, a fault (address outside the arena) or a runaway thread. stdout: one line of key=value words.
 om2
-text msg "kemu: usage: kemu ARCH BIN HARNESS SEED\nkemu: arch=\n harness=\n threads=\n insts=\n result=MATCH\n result=MISMATCH arena_offset=\n expected=\n got=\n result=UNSUPPORTED op=\n pc=\n result=FAULT address=\n result=RUNAWAY pc=\nkemu: bin unreadable, empty or not a multiple of 16 bytes\nkemu: unknown harness or arch\n w1=\n w2=\n"
-text hn "vaddradd"
+text msg "kemu: usage: kemu ARCH BIN HARNESS SEED\nkemu: arch=\n harness=\n threads=\n insts=\n result=MATCH\n result=MISMATCH arena_offset=\n expected=\n got=\n result=UNSUPPORTED op=\n pc=\n result=FAULT address=\n result=RUNAWAY pc=\nkemu: bin unreadable, empty or not a multiple of 16 bytes\nkemu: unknown harness or arch\n w1=\n w2=\n result=DIVERGED pc=\n tol_used_ppm=\n"
+text hn "vaddraddtmm1tmmttsmx"
 global code uchar 65536
 global gm uchar 262144
 global ex uchar 262144
 global cb uchar 65536
-global rr uint 256
+global rr uint 8192
 global ur uint 256
-global pr uchar 8
+global pr uchar 256
+global ls uchar 32
+global sh uint 32
+global ma uint 256
+global mb uint 128
+global mc uint 128
+global fr ulong 2
+global rf f64 2048
+global tl f64 2048
 global sv ulong 16
 global ab uchar 256
 global dig uchar 32
 global bad uint 4
 note sv: 0 arch, 1 ntid.x, 2 ctaid.x, 3 tid.x, 4 URZ index, 5 thread state (0 run, 1 exit,
-note 2 unsupported, 3 fault, 4 runaway), 6 instructions, 7 rng state, 8 code bytes, 9 fault address,
-note 10 pc of the stopping instruction. bad: w0 w1 w2 of an unsupported instruction.
+note 2 unsupported, 3 fault, 4 runaway, 5 diverged), 6 instructions, 7 rng state, 8 code bytes,
+note 9 fault address, 10 pc of the stopping instruction, 11 CTAs, 12 lane, 13 lane register base,
+note 14 lane predicate base, 15 warp. bad: w0 w1 w2 of an unsupported instruction. ls: lane state.
+note fr: arena offset and count of the f32 region compared within tolerance (rf value, tl bound).
 const GB ulong 0x100000000000
 note ---- output ----
 fn say id ulong to void
@@ -110,16 +130,16 @@ v = rnd
 e = add and shr v 23 63 100
 ret uint or or and v 0x807fffff shl e 23 0
 end
-note ---- registers ----
+note ---- registers (rr and pr hold 32 lanes; sv 13 and sv 14 select the current lane) ----
 fn rg r uint to uint
 if eq r 255
 ret 0
 end
-ret get rr r
+ret get rr add ulong r get sv 13
 end
 fn wr r uint v uint to void
 if ne r 255
-put rr r v
+put rr add ulong r get sv 13 v
 end
 end
 fn ug r uint to uint
@@ -137,7 +157,7 @@ fn pg g uint to bool
 i = and g 7
 v = true
 if ne i 7
-v = ne get pr i 0
+v = ne get pr add ulong i get sv 14 0
 end
 if ne and g 8 0
 ret not v
@@ -338,9 +358,12 @@ if eq op 0x0c
 isetp w0 w1 w2 a b
 ret true
 end
-if not modok f w1 w2 0xc0000000 0x1e300
+if not modok f w1 w2 0x40000000 0x1e300
 unsup w0 w1 w2
 ret true
+end
+if and eq f 1 ne and w1 0x80000000 0
+b = xor b 0x80000000
 end
 wr d bitcast uint add bitcast f32 a bitcast f32 b
 ret true
@@ -398,9 +421,10 @@ r = icmp a b and shr w2 12 7 and shr w2 9 1
 r = and r pg and shr w2 23 15
 p = and shr w2 17 7
 if ne p 7
-put pr p uchar 0
+q = add ulong p get sv 14
+put pr q uchar 0
 if r
-put pr p uchar 1
+put pr q uchar 1
 end
 end
 end
@@ -505,19 +529,19 @@ ret true
 end
 note LDG/STG with a 64-bit address register (word 2 bit 8). sm_80 adds the uniform register in its
 note uniform-address field; sm_121's uniform field is the memory descriptor and adds nothing.
+note Size (word 2 bits 9..11): 0 U8, 1 S8, 2 U16, 3 S16 (loads only), 4 32, 5 64, 6 128 bits.
 fn gmem w0 uint w1 uint w2 uint to void
 sz = and shr w2 9 7
-if or eq and w2 0x100 0 or lt sz 4 gt sz 6
+st = eq and w0 0xfff 0x986
+if or or eq and w2 0x100 0 gt sz 6 and st lt sz 4
 unsup w0 w1 w2
 ret
 end
-n = shl ulong 1 sub sz 4
 off = ulong shr w1 8
 if ge off 0x800000
 off = or off 0xffffffffff000000
 end
 a = add rp and shr w0 24 255 off
-st = eq and w0 0xfff 0x986
 if eq get sv 0 80
 u = and w1 63
 if st
@@ -525,7 +549,11 @@ u = and w2 63
 end
 a = add a ulong ug u
 end
-o = madr a mul n 4
+nb = shl ulong 1 shr sz 1
+if ge sz 4
+nb = shl ulong 4 sub sz 4
+end
+o = madr a nb
 if ne get sv 5 0
 ret
 end
@@ -533,7 +561,25 @@ d = and shr w0 16 255
 if st
 d = and w1 255
 end
-xfer st o d n
+if lt sz 4
+gsmall o d sz
+ret
+end
+xfer st o d shr nb 2
+end
+fn gsmall o ulong d uint sz uint to void
+v = uint get gm o
+if lt sz 2
+if and eq sz 1 ne and v 0x80 0
+v = or v 0xffffff00
+end
+else
+v = or v shl uint get gm add o 1 8
+if and eq sz 3 ne and v 0x8000 0
+v = or v 0xffff0000
+end
+end
+wr d v
 end
 fn xfer st bool o ulong d uint n ulong to void
 for i ulong n
@@ -546,7 +592,221 @@ wr r gmr p
 end
 end
 end
-note one instruction at pc; gives the next pc
+note ---- FMUL, FMNMX, MUFU.EX2/RCP (register forms); false when the opcode is not one of these ----
+fn fpu w0 uint w1 uint w2 uint to bool
+op = and w0 0xfff
+if and and ne op 0x220 ne op 0x209 ne op 0x308
+ret false
+end
+d = and shr w0 16 255
+a = bitcast f32 rg and shr w0 24 255
+b = bitcast f32 rg and w1 255
+if ne and w1 0xffffff00 0
+unsup w0 w1 w2
+ret true
+end
+if eq op 0x308
+mufu w0 w1 w2 b
+ret true
+end
+if eq op 0x220
+if ne w2 0x00400000
+unsup w0 w1 w2
+ret true
+end
+wr d bitcast uint mul a b
+ret true
+end
+if ne and w2 0xf87fffff 0
+unsup w0 w1 w2
+ret true
+end
+r = fmax a b
+if pg and shr w2 23 15
+r = fmin a b
+end
+wr d bitcast uint r
+ret true
+end
+note MUFU: EX2 (word 2 0x800) and RCP (0x1000) only; source register in word 1
+fn mufu w0 uint w1 uint w2 uint x f32 to void
+d = and shr w0 16 255
+if eq w2 0x800
+wr d bitcast uint ex2m x
+ret
+end
+if eq w2 0x1000
+wr d bitcast uint div 1.0f32 x
+ret
+end
+unsup w0 w1 w2
+end
+note model of MUFU.EX2: 2^x from an f64 series, rounded once to f32; below 2^-126 flushes to 0,
+note from 2^128 up gives +inf (the hardware is within 2 ulp of this; the harness bound allows it)
+fn ex2m x f32 to f32
+y = f64 x
+if lt y -126.0f64
+ret 0.0f32
+end
+if ge y 128.0f64
+ret bitcast f32 uint 0x7f800000
+end
+n = long y
+if gt f64 n y
+n = sub n 1
+end
+f = mul sub y f64 n 0.6931471805599453094f64
+s = 1.0f64
+t = 1.0f64
+for i ulong 24
+t = div mul t f f64 add i 1
+s = add s t
+end
+p = bitcast f64 shl ulong add n 1023 52
+ret f32 mul s p
+end
+note ---- warp-wide HMMA and SHFL ----
+note SHFL.BFLY / SHFL.DOWN with immediate lane and clamp 0x1f over a full warp, predicate out PT
+fn shfl w0 uint w1 uint w2 uint to void
+md = and shr w1 26 3
+k = ulong and shr w1 21 31
+x = or ne and w1 0xf01fe0ff 0 ne and w1 0x1f00 0x1f00
+if or x or lt md 2 ne w2 0x000e0000
+unsup w0 w1 w2
+ret
+end
+a = and shr w0 24 255
+for l ulong 32
+lane l
+put sh l rg a
+end
+d = and shr w0 16 255
+for l ulong 32
+s = xor l k
+if eq md 2
+s = add l k
+if gt s 31
+s = l
+end
+end
+lane l
+wr d get sh s
+end
+end
+note fragment index of accumulator register i of lane l: row g (+8 for i 2,3), column 2t + (i and 1)
+fn cidx l ulong i ulong to ulong
+r = add shr l 2 mul shr i 1 8
+n = add mul and l 3 2 and i 1
+ret add mul r 8 n
+end
+note A registers of lane l (g = l/4, t = l%4): i holds row g (+8 if i odd), columns 2t, 2t+1 (+8 if
+note i >= 2), low half first; C likewise by cidx (RZ reads 0)
+fn hga l ulong a uint c uint to void
+g = shr l 2
+t = and l 3
+for i ulong 4
+v = rg add a uint i
+r = add g mul and i 1 8
+n = add mul t 2 mul shr i 1 8
+o = add mul r 16 n
+put ma o and v 0xffff
+put ma add o 1 shr v 16
+w = uint 0
+if ne c 255
+w = rg add c uint i
+end
+put mc cidx l i w
+end
+end
+note B registers of lane l: i holds rows k = 2t, 2t+1 (+8 if i = 1) of column g, low half first
+fn hgb l ulong b uint to void
+g = shr l 2
+t = and l 3
+for i ulong 2
+v = rg add b uint i
+k = add mul t 2 mul i 8
+put mb add mul k 8 g and v 0xffff
+k = add k 1
+put mb add mul k 8 g shr v 16
+end
+end
+note model: f16/bf16 to f32 by moving bits, each product exact in f32, accumulated in f32 in k order
+fn h2f h uint bf bool to f32
+if bf
+ret bitcast f32 shl h 16
+end
+s = shl and h 0x8000 16
+e = and shr h 10 31
+f = and h 1023
+if eq e 31
+ret bitcast f32 or or s 0x7f800000 shl f 13
+end
+if eq e 0
+x = mul f32 f 5.9604644775390625e-8f32
+if ne s 0
+ret neg x
+end
+ret x
+end
+e = shl add e 112 23
+ret bitcast f32 or or s e shl f 13
+end
+fn hcomp bf bool to void
+for r ulong 16
+for n ulong 8
+acc = bitcast f32 get mc add mul r 8 n
+for k ulong 16
+x = h2f get ma add mul r 16 k bf
+y = h2f get mb add mul k 8 n bf
+acc = add acc mul x y
+end
+put mc add mul r 8 n bitcast uint acc
+end
+end
+end
+note HMMA.16816.F32 (word 2 0x1800 F16 or 0x41800 BF16 inputs): D = A x B + C, m16n8k16
+fn hmma w0 uint w1 uint w2 uint to void
+if not hmmok w0 w1 w2
+unsup w0 w1 w2
+ret
+end
+hmmx w0 w1 w2
+end
+note register pairs/quads aligned, word 1 only the B register, F32 accumulate of F16 or BF16
+fn hmmok w0 uint w1 uint w2 uint to bool
+m = and w2 0xffffff00
+if or ne and w1 0xffffff00 0 and ne m 0x1800 ne m 0x41800
+ret false
+end
+if or ne and shr w0 24 3 0 ne and w1 1 0
+ret false
+end
+if ne and shr w0 16 3 0
+ret false
+end
+c = and w2 255
+ret or eq c 255 eq and c 3 0
+end
+fn hmmx w0 uint w1 uint w2 uint to void
+m = and w2 0xffffff00
+c = and w2 255
+a = and shr w0 24 255
+b = and w1 255
+d = and shr w0 16 255
+for l ulong 32
+lane l
+hga l a c
+hgb l b
+end
+hcomp eq m 0x41800
+for l ulong 32
+lane l
+for i ulong 4
+wr add d uint i get mc cidx l i
+end
+end
+end
+note one instruction at pc for the current lane; gives the next pc
 fn step pc ulong to ulong
 w0 = cw pc 0
 w1 = cw pc 1
@@ -558,36 +818,133 @@ end
 if alu w0 w1 w2
 ret add pc 16
 end
+if fpu w0 w1 w2
+ret add pc 16
+end
 if memop pc w0 w1 w2
 ret add pc 16
 end
 unsup w0 w1 w2
 ret pc
 end
-fn thread to void
-for i ulong 256
-put rr i 0
-put ur i 0
+note ---- one warp: 32 lanes in lockstep ----
+const ALL ulong 0xffffffffffffffff
+fn lane l ulong to void
+put sv 12 l
+put sv 13 mul l 256
+put sv 14 mul l 8
+put sv 3 add mul get sv 15 32 l
 end
-for i ulong 7
+fn wclear to void
+for i ulong len rr
+put rr i 0
+end
+for i ulong 256
+put ur i 0
 put pr i 0
 end
-put pr 7 1
+for l ulong 32
+put pr add mul l 8 7 1
+put ls l 0
+end
+end
+fn nrun to ulong
+n = ulong 0
+for l ulong 32
+if eq get ls l 0
+n = add n 1
+end
+end
+ret n
+end
+note HMMA and SHFL: false when the instruction at pc is neither; refused unless the warp is full
+note and its guard is uniform
+fn coll pc ulong to bool
+w0 = cw pc 0
+op = and w0 0xfff
+if and ne op 0x23c ne op 0xf89
+ret false
+end
+w1 = cw pc 1
+w2 = cw pc 2
+put sv 6 add get sv 6 nrun
+if ne nrun 32
+unsup w0 w1 w2
+ret true
+end
+g = and shr w0 12 15
+lane 0
+v = pg g
+for l ulong 32
+lane l
+x = pg g
+if or and x not v and v not x
+unsup w0 w1 w2
+ret true
+end
+end
+if not v
+ret true
+end
+if eq op 0x23c
+hmma w0 w1 w2
+else
+shfl w0 w1 w2
+end
+ret true
+end
+note every running lane executes pc; gives their common next pc, ALL when none is left running,
+note sub ALL 1 when the warp stops (state in sv 5)
+fn wstep pc ulong to ulong
+q = ALL
+for l ulong 32
+if eq get ls l 0
+lane l
 put sv 5 0
+x = step pc
+s = get sv 5
+if gt s 1
+ret sub ALL 1
+end
+put ls l uchar s
+if eq s 0
+if eq q ALL
+q = x
+end
+if ne q x
+put sv 5 5
+ret sub ALL 1
+end
+end
+end
+end
+put sv 5 0
+ret q
+end
+fn warp to void
+wclear
 pc = ulong 0
 for k ulong 200000
-if ge pc get sv 8
-put sv 5 4
-end
-if ne get sv 5 0
-break
+if eq nrun 0
+put sv 5 1
+ret
 end
 put sv 10 pc
-pc = step pc
-end
-if eq get sv 5 0
+put sv 5 0
+if ge pc get sv 8
 put sv 5 4
+ret
 end
+q = add pc 16
+if not coll pc
+q = wstep pc
+end
+if ne get sv 5 0
+ret
+end
+pc = q
+end
+put sv 5 4
 end
 note ---- harnesses ----
 fn arena to void
@@ -645,6 +1002,160 @@ end
 put sv 1 256
 put sv 11 1
 end
+note ---- tile harnesses: an f64 reference by a different route, and a stated bound ----
+note a normal f16: exponent field 10..20 (2^-5..2^5), any sign and fraction
+fn rnh to uint
+v = rnd
+e = add rem and shr v 16 255 11 10
+ret uint or and v 0x83ff shl e 10
+end
+fn gmh o ulong v uint to void
+put gm o uchar and v 255
+put gm add o 1 uchar shr v 8
+end
+fn gmhr o ulong to uint
+ret or uint get gm o shl uint get gm add o 1 8
+end
+note an f16 value as f64 by arithmetic on its fields (not the HMMA model's bit moves)
+fn h64 h uint to f64
+m = f64 and h 1023
+e = and shr h 10 31
+if ne e 0
+m = add m 1024.0f64
+else
+e = uint 1
+end
+for i uint e
+m = mul m 2.0f64
+end
+m = mul m 2.98023223876953125e-8f64
+if ne and h 0x8000 0
+ret neg m
+end
+ret m
+end
+note D[r][n] = sum over k of A[r][k] B[k][n] in f64; bound gamma_15 (u = 2^-23) times sum |A B|,
+note rounded up to 1966085 * 2^-40 (Wolfram, see seed/kflow/README.md)
+fn mmcell r ulong n ulong to void
+s = 0.0f64
+z = 0.0f64
+for k ulong 16
+a = h64 gmhr add 0x10000 mul add mul r 16 k 2
+b = h64 gmhr add 0x20000 mul add mul k 16 n 2
+s = add s mul a b
+z = add z fabs mul a b
+end
+i = add mul r 16 n
+put rf i s
+q = div 1966085.0f64 1099511627776.0f64
+put tl i mul z q
+exw add 0x30000 mul i 4 bitcast uint f32 s
+end
+note B transposed in place (gm and the expected arena): the tmmt negative control
+fn btr to void
+for i ulong 256
+put ma i gmhr add 0x20000 mul i 2
+end
+for k ulong 16
+for n ulong 16
+o = add 0x20000 mul add mul k 16 n 2
+gmh o get ma add mul n 16 k
+put ex o get gm o
+put ex add o 1 get gm add o 1
+end
+end
+end
+fn hmm tr bool to void
+cbput 0x360 32
+cbput 0x364 1
+cbput 0x368 1
+cbput 0x37c 0xfffc
+cbp 0x380 add GB 0x10000
+cbp 0x388 add GB 0x20000
+cbp 0x390 add GB 0x30000
+for i ulong 256
+gmh add 0x10000 mul i 2 rnh
+gmh add 0x20000 mul i 2 rnh
+end
+for i ulong len gm
+put ex i get gm i
+end
+for r ulong 16
+for n ulong 16
+mmcell r n
+end
+end
+if tr
+btr
+end
+put fr 0 0x30000
+put fr 1 256
+put sv 1 32
+put sv 11 1
+end
+note e^z for z in [-8, 0]: series for e^(z/16), squared four times (no ln 2, no log2 e)
+fn expr z f64 to f64
+y = mul z 0.0625f64
+s = 1.0f64
+t = 1.0f64
+for i ulong 24
+t = div mul t y f64 add i 1
+s = add s t
+end
+for i ulong 4
+s = mul s s
+end
+ret s
+end
+fn xin i ulong to f64
+ret f64 bitcast f32 gmr add 0x10000 mul i 4
+end
+note softmax of row r in f64; bound 2528617 * 2^-40 relative (Wolfram, see seed/kflow/README.md)
+fn smrow r ulong to void
+b = mul r 32
+m = xin b
+for j ulong 32
+x = xin add b j
+m = fmax m x
+end
+s = 0.0f64
+for j ulong 32
+x = xin add b j
+s = add s expr sub x m
+end
+for j ulong 32
+i = add b j
+x = xin i
+y = div expr sub x m s
+put rf i y
+q = div 2528617.0f64 1099511627776.0f64
+put tl i mul y q
+exw add 0x20000 mul i 4 bitcast uint f32 y
+end
+end
+note X: multiples of 2^-17 in [-4, 4), so x - max is exact in f32
+fn hsmx to void
+cbput 0x360 32
+cbput 0x364 1
+cbput 0x368 1
+cbput 0x37c 0xfffc
+cbp 0x380 add GB 0x10000
+cbp 0x388 add GB 0x20000
+for i ulong 512
+x = mul f32 sub long and rnd 0xfffff 524288 7.62939453125e-6f32
+gmw add 0x10000 mul i 4 bitcast uint x
+end
+for i ulong len gm
+put ex i get gm i
+end
+for r ulong 16
+smrow r
+end
+put fr 0 0x20000
+put fr 1 512
+put sv 1 32
+put sv 11 16
+end
 note ---- arguments ----
 fn argdec i ulong to ulong
 r = argread i ab 0 20
@@ -666,7 +1177,7 @@ r = argread 3 ab 0 8
 if ne r 4
 ret 0
 end
-for h ulong 2
+for h ulong 5
 m = true
 for k ulong 4
 if ne get ab k get hn add mul h 4 k
@@ -726,14 +1237,22 @@ hexn get sv 10
 newline
 ret 3
 end
+if eq st 5
+say 18
+hexn get sv 10
+newline
+ret 2
+end
 if ne st 1
 say 13
 hexn get sv 10
 newline
 ret 3
 end
+lo = get fr 0
+hi = add lo mul get fr 1 4
 for i ulong len gm
-if ne get gm i get ex i
+if and ne get gm i get ex i or lt i lo ge i hi
 say 7
 hexn i
 say 8
@@ -744,9 +1263,54 @@ newline
 ret 1
 end
 end
+if ne fcmp 0
+ret 1
+end
 say 6
 newline
 ret 0
+end
+note the f32 region: |got - reference| within the bound; prints the largest share of the bound used
+fn fcmp to int
+lo = get fr 0
+w = 0.0f64
+for i ulong get fr 1
+o = add lo mul i 4
+g = f64 bitcast f32 gmr o
+e = fabs sub g get rf i
+t = get tl i
+if not le e t
+say 7
+hexn o
+say 8
+hexn ulong exr o
+say 9
+hexn ulong gmr o
+newline
+ret 1
+end
+q = div e t
+w = fmax w q
+end
+if ne get fr 1 0
+say 19
+num ulong mul w 1000000.0f64
+end
+ret 0
+end
+note every CTA, warp by warp; false at the first warp that does not end by EXIT in all lanes
+fn runall to bool
+for c ulong get sv 11
+put sv 2 c
+for wi ulong div get sv 1 32
+put sv 15 wi
+warp
+if ne get sv 5 1
+ret false
+end
+end
+end
+ret true
 end
 fn main to int
 if ne argcnt 5
@@ -776,26 +1340,27 @@ put sv 7 sd
 arena
 if eq h 1
 hvadd
-else
+end
+if eq h 2
 hradd
+end
+if or eq h 3 eq h 4
+hmm eq h 4
+end
+if eq h 5
+hsmx
 end
 say 2
 num ar
 say 3
 r = write 1 hn mul sub h 1 4 4
-for c ulong get sv 11
-for t ulong get sv 1
-put sv 2 c
-put sv 3 t
-thread
-if ne get sv 5 1
+if not runall
 say 4
-num add mul c get sv 1 t
+t = add mul get sv 2 get sv 1 get sv 3
+num t
 say 5
 num get sv 6
 ret report
-end
-end
 end
 say 4
 num mul get sv 11 get sv 1
