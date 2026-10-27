@@ -1499,7 +1499,7 @@ fn tls_ikm c view uchar * to ulong
 s = or TLHS shl TLHS 16
 if eq tls_apm c 0
 if eq ulong get c TLGSEL TLGHYB
-ret or s or shl TLSS 32 shl 64 48
+ret or s or shl TLSS 32 shl ulong 64 48
 end
 ret or s shl TLSS 32
 end
@@ -1743,10 +1743,14 @@ note way. A wrong ciphertext gives the implicit-rejection secret, so the Finishe
 note TLEKEYS
 fn tls_kemdec c edit uchar * to ulong
 r = ulong 0
-if eq ulong get c TLGSEL TLGHYB
 ss = new uchar 32 0
+ct = new uchar 1088 0
 o = tls_gn c TLKSO 4
-r = mlkem_decaps part c TLKDK 2400 part c o 1088 ss
+if eq ulong get c TLGSEL TLGHYB
+for i ulong 1088
+put ct i get c add o i
+end
+r = mlkem_decaps part c TLKDK 2400 ct ss
 for i ulong 32
 put c add TLSS i get ss i
 end

@@ -58,7 +58,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.kem_mutant
         run: |
           cp om/tls/tls.om /tmp/tls.om.orig
-          sed -i '/^r = mlkem_decaps part c TLKDK 2400 part c o 1088 ss$/i put c add o 7 uchar xor ulong get c add o 7 1' om/tls/tls.om
+          sed -i '/^r = mlkem_decaps part c TLKDK 2400 ct ss$/i put ct 7 uchar xor ulong get ct 7 1' om/tls/tls.om
           ! cmp -s om/tls/tls.om /tmp/tls.om.orig || { echo "mutation did not apply"; exit 1; }
           diff /tmp/tls.om.orig om/tls/tls.om || true
       - name: om/tls ML-KEM and SHA-3 suite

@@ -185,9 +185,9 @@ imut "mutant approved invalid share accepted" '/^fn tls_ecdhp /,/^fn tls_ikm /s/
 # X25519MLKEM768: the hybrid rows (kyber-py fakesrv, OpenSSL 3.5) must catch each of these; without
 # both oracles (interop pq=NOT_RUN) they are NOT_RUN, and TLS_PQ=1 already failed the table
 if [ "$ipq" = PASS ]; then
-  imut "mutant KEM ciphertext byte flipped"     '/^r = mlkem_decaps part c TLKDK 2400 part c o 1088 ss$/i put c add o 7 uchar xor ulong get c add o 7 1'
+  imut "mutant KEM ciphertext byte flipped"     '/^r = mlkem_decaps part c TLKDK 2400 ct ss$/i put ct 7 uchar xor ulong get ct 7 1'
   imut "mutant KEM share corrupted in ClientHello" 's/^tls_mov c add p 4 add TLKDK 1152 1184$/&\nput c add p 10 uchar xor ulong get c add p 10 1/'
-  imut "mutant ML-KEM secret left out of the KDF" 's/^ret or s or shl TLSS 32 shl 64 48$/ret or s shl TLSS 32/'
+  imut "mutant x25519 half left out of the KDF"  's/^ret or s or shl TLSS 32 shl ulong 64 48$/ret or s shl TLSS 32/'
   imut "mutant x25519 half over the ML-KEM half"  's/^x = add TLSS 32$/x = TLSS/'
   imut "mutant hybrid group not offered"         's/^const TLGOFF ulong 3$/const TLGOFF ulong 2/'
 else
