@@ -3,7 +3,7 @@
 # qemu_mode CPU_TARGET=aarch64) natively on the runner; then CHUNKS sequential chunks of SECONDS each
 # run tls-fuzz-chunk.yml (7 targets in parallel, 4 instances per target), carrying each target's
 # corpus between chunks as an artifact. Full campaign: 5 chunks x 18000 s = 25 h per target.
-# SMOKE PLAN: 2 chunks x 300 s. Scratch branch only, never merged. The plan below is edited per push (smoke vs full campaign).
+# Scratch branch only, never merged. The plan below is edited per push (smoke vs full campaign).
 name: tls-fuzz-24h
 on:
   push:
@@ -40,24 +40,24 @@ jobs:
   c1:
     needs: aflpp
     uses: ./.github/workflows/tls-fuzz-chunk.yml
-    with: {chunk: 1, prev: 0, seconds: 300}
+    with: {chunk: 1, prev: 0, seconds: 18000}
   c2:
     needs: c1
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/tls-fuzz-chunk.yml
-    with: {chunk: 2, prev: 1, seconds: 300}
+    with: {chunk: 2, prev: 1, seconds: 18000}
   c3:
     needs: c2
-    if: false
+    if: ${{ !cancelled() }}
     uses: ./.github/workflows/tls-fuzz-chunk.yml
-    with: {chunk: 3, prev: 2, seconds: 300}
+    with: {chunk: 3, prev: 2, seconds: 18000}
   c4:
     needs: c3
-    if: false
+    if: ${{ !cancelled() }}
     uses: ./.github/workflows/tls-fuzz-chunk.yml
-    with: {chunk: 4, prev: 3, seconds: 300}
+    with: {chunk: 4, prev: 3, seconds: 18000}
   c5:
     needs: c4
-    if: false
+    if: ${{ !cancelled() }}
     uses: ./.github/workflows/tls-fuzz-chunk.yml
-    with: {chunk: 5, prev: 4, seconds: 300}
+    with: {chunk: 5, prev: 4, seconds: 18000}
