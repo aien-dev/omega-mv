@@ -1,0 +1,785 @@
+note SPDX-License-Identifier: Apache-2.0
+note erfcx piecewise table of src/omega_numeric_transc_tables.h as binary32 bits: ecx i n is, for interval i,
+note n=0 ERFCX_LO, n=1 ERFCX_C, n=2 ERFCX_A0LO, n=3+j ERFCX_A[i][j] (j 0..10). Split in two functions to stay under the block cap.
+fn ecx0 i ulong n ulong to ulong
+if eq i 0
+if eq n 0
+ret ulong 1056964608
+end
+if eq n 1
+ret ulong 1059061760
+end
+if eq n 2
+ret ulong 2994651809
+end
+if eq n 3
+ret ulong 1057917787
+end
+if eq n 4
+ret ulong 3202178695
+end
+if eq n 5
+ret ulong 1049803681
+end
+if eq n 6
+ret ulong 3190612398
+end
+if eq n 7
+ret ulong 1035561525
+end
+if eq n 8
+ret ulong 3174557487
+end
+if eq n 9
+ret ulong 1017812980
+end
+if eq n 10
+ret ulong 3155509160
+end
+if eq n 11
+ret ulong 997713950
+end
+if eq n 12
+ret ulong 3133437901
+end
+if eq n 13
+ret ulong 974468440
+end
+end
+if eq i 1
+if eq n 0
+ret ulong 1061158912
+end
+if eq n 1
+ret ulong 1063256064
+end
+if eq n 2
+ret ulong 845416876
+end
+if eq n 3
+ret ulong 1055767103
+end
+if eq n 4
+ret ulong 3198268667
+end
+if eq n 5
+ret ulong 1044412360
+end
+if eq n 6
+ret ulong 3184438324
+end
+if eq n 7
+ret ulong 1028397281
+end
+if eq n 8
+ret ulong 3166424809
+end
+if eq n 9
+ret ulong 1008898852
+end
+if eq n 10
+ret ulong 3146078658
+end
+if eq n 11
+ret ulong 986740671
+end
+if eq n 12
+ret ulong 3122396984
+end
+if eq n 13
+ret ulong 962615742
+end
+end
+if eq i 2
+if eq n 0
+ret ulong 1065353216
+end
+if eq n 1
+ret ulong 1066401792
+end
+if eq n 2
+ret ulong 840635547
+end
+if eq n 3
+ret ulong 1053464816
+end
+if eq n 4
+ret ulong 3195258267
+end
+if eq n 5
+ret ulong 1040380819
+end
+if eq n 6
+ret ulong 3179321885
+end
+if eq n 7
+ret ulong 1021997961
+end
+if eq n 8
+ret ulong 3158869295
+end
+if eq n 9
+ret ulong 1000486441
+end
+if eq n 10
+ret ulong 3136931383
+end
+if eq n 11
+ret ulong 976743635
+end
+if eq n 12
+ret ulong 3112308508
+end
+if eq n 13
+ret ulong 951138846
+end
+end
+if eq i 3
+if eq n 0
+ret ulong 1067450368
+end
+if eq n 1
+ret ulong 1068498944
+end
+if eq n 2
+ret ulong 2991637385
+end
+if eq n 3
+ret ulong 1051706491
+end
+if eq n 4
+ret ulong 3191651634
+end
+if eq n 5
+ret ulong 1035471265
+end
+if eq n 6
+ret ulong 3173377757
+end
+if eq n 7
+ret ulong 1015805395
+end
+if eq n 8
+ret ulong 3151952166
+end
+if eq n 9
+ret ulong 992531920
+end
+if eq n 10
+ret ulong 3128186676
+end
+if eq n 11
+ret ulong 967421868
+end
+if eq n 12
+ret ulong 3101883702
+end
+if eq n 13
+ret ulong 940746601
+end
+end
+if eq i 4
+if eq n 0
+ret ulong 1069547520
+end
+if eq n 1
+ret ulong 1070596096
+end
+if eq n 2
+ret ulong 835225167
+end
+if eq n 3
+ret ulong 1050329595
+end
+if eq n 4
+ret ulong 3189082355
+end
+if eq n 5
+ret ulong 1032129238
+end
+if eq n 6
+ret ulong 3168600263
+end
+if eq n 7
+ret ulong 1009584661
+end
+if eq n 8
+ret ulong 3145770839
+end
+if eq n 9
+ret ulong 985051216
+end
+if eq n 10
+ret ulong 3120093727
+end
+if eq n 11
+ret ulong 958607207
+end
+if eq n 12
+ret ulong 3092164884
+end
+if eq n 13
+ret ulong 930971208
+end
+end
+if eq i 5
+if eq n 0
+ret ulong 1071644672
+end
+if eq n 1
+ret ulong 1072693248
+end
+if eq n 2
+ret ulong 829260064
+end
+if eq n 3
+ret ulong 1049227962
+end
+if eq n 4
+ret ulong 3186733760
+end
+if eq n 5
+ret ulong 1027946367
+end
+if eq n 6
+ret ulong 3164044440
+end
+if eq n 7
+ret ulong 1004325573
+end
+if eq n 8
+ret ulong 3139015102
+end
+if eq n 9
+ret ulong 978115335
+end
+if eq n 10
+ret ulong 3112404742
+end
+if eq n 11
+ret ulong 950212834
+end
+if eq n 12
+ret ulong 3083064079
+end
+if eq n 13
+ret ulong 920923300
+end
+end
+if eq i 6
+if eq n 0
+ret ulong 1073741824
+end
+if eq n 1
+ret ulong 1074790400
+end
+if eq n 2
+ret ulong 836118419
+end
+if eq n 3
+ret ulong 1047306787
+end
+if eq n 4
+ret ulong 3182770281
+end
+if eq n 5
+ret ulong 1023609524
+end
+if eq n 6
+ret ulong 3157541373
+end
+if eq n 7
+ret ulong 997010603
+end
+if eq n 8
+ret ulong 3130386729
+end
+if eq n 9
+ret ulong 968276898
+end
+if eq n 10
+ret ulong 3101125622
+end
+if eq n 11
+ret ulong 938883998
+end
+if eq n 12
+ret ulong 3070803251
+end
+if eq n 13
+ret ulong 907270049
+end
+end
+if eq i 7
+if eq n 0
+ret ulong 1075838976
+end
+if eq n 1
+ret ulong 1076887552
+end
+if eq n 2
+ret ulong 831517309
+end
+if eq n 3
+ret ulong 1044795227
+end
+if eq n 4
+ret ulong 3179381436
+end
+if eq n 5
+ret ulong 1017240774
+end
+if eq n 6
+ret ulong 3150083286
+end
+if eq n 7
+ret ulong 987849624
+end
+if eq n 8
+ret ulong 3120353057
+end
+if eq n 9
+ret ulong 956927449
+end
+if eq n 10
+ret ulong 3088157017
+end
+if eq n 11
+ret ulong 924188078
+end
+if eq n 12
+ret ulong 3054948757
+end
+if eq n 13
+ret ulong 890514301
+end
+end
+if eq i 8
+if eq n 0
+ret ulong 1077936128
+end
+if eq n 1
+ret ulong 1078984704
+end
+if eq n 2
+ret ulong 831343540
+end
+if eq n 3
+ret ulong 1042961360
+end
+if eq n 4
+ret ulong 3175175209
+end
+if eq n 5
+ret ulong 1012135662
+end
+if eq n 6
+ret ulong 3143706021
+end
+if eq n 7
+ret ulong 979911363
+end
+if eq n 8
+ret ulong 3110678366
+end
+if eq n 9
+ret ulong 946094456
+end
+if eq n 10
+ret ulong 3076140673
+end
+if eq n 11
+ret ulong 910945980
+end
+if eq n 12
+ret ulong 3040517718
+end
+if eq n 13
+ret ulong 874995785
+end
+end
+ret ulong 0
+end
+fn ecx1 i ulong n ulong to ulong
+if eq i 9
+if eq n 0
+ret ulong 1080033280
+end
+if eq n 1
+ret ulong 1081081856
+end
+if eq n 2
+ret ulong 2974275290
+end
+if eq n 3
+ret ulong 1041569145
+end
+if eq n 4
+ret ulong 3172291368
+end
+if eq n 5
+ret ulong 1007777843
+end
+if eq n 6
+ret ulong 3138001495
+end
+if eq n 7
+ret ulong 973076505
+end
+if eq n 8
+ret ulong 3102205685
+end
+if eq n 9
+ret ulong 936224872
+end
+if eq n 10
+ret ulong 3065166789
+end
+if eq n 11
+ret ulong 899178878
+end
+if eq n 12
+ret ulong 3028229913
+end
+if eq n 13
+ret ulong 861003634
+end
+end
+if eq i 10
+if eq n 0
+ret ulong 1082130432
+end
+if eq n 1
+ret ulong 1083179008
+end
+if eq n 2
+ret ulong 814980761
+end
+if eq n 3
+ret ulong 1039849808
+end
+if eq n 4
+ret ulong 3168083803
+end
+if eq n 5
+ret ulong 1001480342
+end
+if eq n 6
+ret ulong 3130050413
+end
+if eq n 7
+ret ulong 963118019
+end
+if eq n 8
+ret ulong 3090590297
+end
+if eq n 9
+ret ulong 923626322
+end
+if eq n 10
+ret ulong 3050798197
+end
+if eq n 11
+ret ulong 883010174
+end
+if eq n 12
+ret ulong 3010397354
+end
+if eq n 13
+ret ulong 841888346
+end
+end
+if eq i 11
+if eq n 0
+ret ulong 1084227584
+end
+if eq n 1
+ret ulong 1085276160
+end
+if eq n 2
+ret ulong 2975693581
+end
+if eq n 3
+ret ulong 1036961096
+end
+if eq n 4
+ret ulong 3163670100
+end
+if eq n 5
+ret ulong 994742934
+end
+if eq n 6
+ret ulong 3121269687
+end
+if eq n 7
+ret ulong 951822244
+end
+if eq n 8
+ret ulong 3078255159
+end
+if eq n 9
+ret ulong 908397553
+end
+if eq n 10
+ret ulong 3033983958
+end
+if eq n 11
+ret ulong 864702060
+end
+if eq n 12
+ret ulong 2989490191
+end
+if eq n 13
+ret ulong 819823837
+end
+end
+if eq i 12
+if eq n 0
+ret ulong 1086324736
+end
+if eq n 1
+ret ulong 1087373312
+end
+if eq n 2
+ret ulong 809131100
+end
+if eq n 3
+ret ulong 1034926818
+end
+if eq n 4
+ret ulong 3159585128
+end
+if eq n 5
+ret ulong 989572988
+end
+if eq n 6
+ret ulong 3113499712
+end
+if eq n 7
+ret ulong 942463305
+end
+if eq n 8
+ret ulong 3066532351
+end
+if eq n 9
+ret ulong 895760593
+end
+if eq n 10
+ret ulong 3019982755
+end
+if eq n 11
+ret ulong 848372541
+end
+if eq n 12
+ret ulong 2971762714
+end
+if eq n 13
+ret ulong 800204894
+end
+end
+if eq i 13
+if eq n 0
+ret ulong 1088421888
+end
+if eq n 1
+ret ulong 1089470464
+end
+if eq n 2
+ret ulong 2972873395
+end
+if eq n 3
+ret ulong 1033419288
+end
+if eq n 4
+ret ulong 3156222507
+end
+if eq n 5
+ret ulong 983991262
+end
+if eq n 6
+ret ulong 3106652625
+end
+if eq n 7
+ret ulong 934266165
+end
+if eq n 8
+ret ulong 3056762462
+end
+if eq n 9
+ret ulong 884204822
+end
+if eq n 10
+ret ulong 3006527655
+end
+if eq n 11
+ret ulong 833798045
+end
+if eq n 12
+ret ulong 2955954001
+end
+if eq n 13
+ret ulong 783065915
+end
+end
+if eq i 14
+if eq n 0
+ret ulong 1090519040
+end
+if eq n 1
+ret ulong 1091043328
+end
+if eq n 2
+ret ulong 816048420
+end
+if eq n 3
+ret ulong 1032258496
+end
+if eq n 4
+ret ulong 3153772119
+end
+if eq n 5
+ret ulong 979849496
+end
+if eq n 6
+ret ulong 3100903317
+end
+if eq n 7
+ret ulong 927015222
+end
+if eq n 8
+ret ulong 3048133708
+end
+if eq n 9
+ret ulong 874335681
+end
+if eq n 10
+ret ulong 2995564832
+end
+if eq n 11
+ret ulong 821703133
+end
+if eq n 12
+ret ulong 2942119543
+end
+if eq n 13
+ret ulong 767716539
+end
+end
+if eq i 15
+if eq n 0
+ret ulong 1091567616
+end
+if eq n 1
+ret ulong 1092091904
+end
+if eq n 2
+ret ulong 2953322604
+end
+if eq n 3
+ret ulong 1030876622
+end
+if eq n 4
+ret ulong 3150547014
+end
+if eq n 5
+ret ulong 975634074
+end
+if eq n 6
+ret ulong 3096029178
+end
+if eq n 7
+ret ulong 920766502
+end
+if eq n 8
+ret ulong 3040361043
+end
+if eq n 9
+ret ulong 865440502
+end
+if eq n 10
+ret ulong 2985406424
+end
+if eq n 11
+ret ulong 809652660
+end
+if eq n 12
+ret ulong 2929425786
+end
+if eq n 13
+ret ulong 754428793
+end
+end
+if eq i 16
+if eq n 0
+ret ulong 1092616192
+end
+if eq n 1
+ret ulong 1093140480
+end
+if eq n 2
+ret ulong 2969541220
+end
+if eq n 3
+ret ulong 1029380691
+end
+if eq n 4
+ret ulong 3148182622
+end
+if eq n 5
+ret ulong 972606360
+end
+if eq n 6
+ret ulong 3090825388
+end
+if eq n 7
+ret ulong 915068646
+end
+if eq n 8
+ret ulong 3033407358
+end
+if eq n 9
+ret ulong 857235265
+end
+if eq n 10
+ret ulong 2975881804
+end
+if eq n 11
+ret ulong 799309809
+end
+if eq n 12
+ret ulong 2918204279
+end
+if eq n 13
+ret ulong 741262416
+end
+end
+ret ulong 0
+end
+fn ecx i ulong n ulong to ulong
+if lt i 9
+ret ecx0 i n
+end
+ret ecx1 i n
+end
+note erfcx: erfcx_eval2(y), y >= 0.5 -> c | cl << 32. The interval search compares bits (y positive).
+fn erfcx y ulong to ulong
+i = ulong 0
+j = ulong 1
+for z ulong 16
+if ge y ecx j 0
+i = j
+end
+j = add j 1
+end
+t = sfsub y ecx i 1
+p = ecx i 13
+n = ulong 12
+for z ulong 9
+p = sffma p t ecx i n
+n = sub n 1
+end
+a0 = ecx i 3
+c = sffma p t a0
+cl = sfadd sffma p t sfsub a0 c ecx i 2
+ret or c shl cl 32
+end

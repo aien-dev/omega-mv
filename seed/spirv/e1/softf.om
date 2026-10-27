@@ -1,0 +1,388 @@
+note SPDX-License-Identifier: Apache-2.0
+note E1 SPIR-V tier, shared prelude: IEEE 754 binary32 arithmetic on integers, round to nearest even,
+note subnormal inputs and outputs (no flush), overflow to infinity, default NaN 0x7fc00000.
+note Every function takes and returns FP32 bit patterns in the low 32 bits of a ulong.
+note sfadd/sfsub/sfmul/sfdiv/sfsqrt round once; sffma computes a*b+c with one rounding (AArch64 FMADD).
+note These are the operations src/omega_numeric_transc.c issues as AArch64 instructions.
+const SIGN ulong 2147483648
+const MAG ulong 2147483647
+const INF ulong 2139095040
+const QNAN ulong 2143289344
+const FRAC ulong 8388607
+const HID ulong 8388608
+note msb: index of the highest set bit of m > 0.
+fn msb m ulong to long
+p = long 0
+v = m
+if ge v 4294967296
+v = shr v 32
+p = add p 32
+end
+if ge v 65536
+v = shr v 16
+p = add p 16
+end
+if ge v 256
+v = shr v 8
+p = add p 8
+end
+if ge v 16
+v = shr v 4
+p = add p 4
+end
+if ge v 4
+v = shr v 2
+p = add p 2
+end
+if ge v 2
+p = add p 1
+end
+ret p
+end
+note fman/fexp: a finite nonzero x equals fman(x) * 2^fexp(x).
+fn fman u ulong to ulong
+f = and shr u 23 255
+m = and u FRAC
+if ne f 0
+m = or m HID
+end
+ret m
+end
+fn fexp u ulong to long
+f = and shr u 23 255
+if eq f 0
+ret long -149
+end
+g = long f
+ret sub g 150
+end
+note rpk: round s * m * 2^e (m > 0, m < 2^63) to binary32; st = 1 when nonzero bits lie below m's
+note last bit (only used when at least one bit of m is discarded). s is 0 or SIGN.
+fn rpk s ulong e long m ulong st ulong to ulong
+p = msb m
+top = add p e
+sh = sub p 23
+if lt top -126
+sh = sub -149 e
+end
+if gt sh add p 1
+ret s
+end
+q = ulong 0
+if gt sh 0
+u = ulong sh
+q = shr m u
+r = sub m shl q u
+h = shl ulong 1 sub u 1
+if gt r h
+q = add q 1
+else
+if eq r h
+if or ne st 0 eq and q 1 1
+q = add q 1
+end
+end
+end
+else
+n = neg sh
+u = ulong n
+q = shl m u
+end
+if lt top -126
+ret or s q
+end
+t = add top 126
+u = ulong t
+b = add shl u 23 q
+if ge b INF
+ret or s INF
+end
+ret or s b
+end
+note sfadd: a + b, one rounding.
+fn sfadd a ulong b ulong to ulong
+sa = and a SIGN
+sb = and b SIGN
+aa = and a MAG
+ab = and b MAG
+if or gt aa INF gt ab INF
+ret QNAN
+end
+if eq aa INF
+if and eq ab INF ne sa sb
+ret QNAN
+end
+ret a
+end
+if eq ab INF
+ret b
+end
+if eq aa 0
+if eq ab 0
+ret and a b
+end
+ret b
+end
+if eq ab 0
+ret a
+end
+ea = fexp a
+eb = fexp b
+ma = fman a
+mb = fman b
+if lt ea eb
+t = ea
+ea = eb
+eb = t
+x = ma
+ma = mb
+mb = x
+x = sa
+sa = sb
+sb = x
+end
+d = sub ea eb
+e = eb
+if gt d 38
+note b lies wholly below a quarter-ulp of the result: a sticky unit decides rounding alike.
+ma = shl ma 4
+mb = ulong 1
+e = sub ea 4
+else
+u = ulong d
+ma = shl ma u
+end
+if eq sa sb
+ret rpk sa e add ma mb 0
+end
+if gt ma mb
+ret rpk sa e sub ma mb 0
+end
+if gt mb ma
+ret rpk sb e sub mb ma 0
+end
+ret ulong 0
+end
+fn sfsub a ulong b ulong to ulong
+ret sfadd a xor b SIGN
+end
+fn sfmul a ulong b ulong to ulong
+s = and xor a b SIGN
+aa = and a MAG
+ab = and b MAG
+if or gt aa INF gt ab INF
+ret QNAN
+end
+if or eq aa INF eq ab INF
+if or eq aa 0 eq ab 0
+ret QNAN
+end
+ret or s INF
+end
+if or eq aa 0 eq ab 0
+ret s
+end
+ret rpk s add fexp a fexp b mul fman a fman b 0
+end
+note sffma: a * b + c with one rounding. Both addends are aligned with their top bit at bit 60; the
+note smaller is shifted right with a sticky (jam) bit, exact unless more than 12 positions, where at
+note least 36 guard bits remain.
+fn sffma a ulong b ulong c ulong to ulong
+sp = and xor a b SIGN
+sc = and c SIGN
+aa = and a MAG
+ab = and b MAG
+ac = and c MAG
+if or or gt aa INF gt ab INF gt ac INF
+ret QNAN
+end
+if or eq aa INF eq ab INF
+if or eq aa 0 eq ab 0
+ret QNAN
+end
+if and eq ac INF ne sp sc
+ret QNAN
+end
+ret or sp INF
+end
+if eq ac INF
+ret c
+end
+if or eq aa 0 eq ab 0
+if eq ac 0
+if eq sp sc
+ret sp
+end
+ret ulong 0
+end
+ret c
+end
+pm = mul fman a fman b
+ep = add fexp a fexp b
+if eq ac 0
+ret rpk sp ep pm 0
+end
+mc = fman c
+ec = fexp c
+k = sub 60 msb pm
+u = ulong k
+x = shl pm u
+ex = sub ep k
+k = sub 60 msb mc
+u = ulong k
+y = shl mc u
+ey = sub ec k
+if lt ex ey
+t = ex
+ex = ey
+ey = t
+v = x
+x = y
+y = v
+v = sp
+sp = sc
+sc = v
+end
+d = sub ex ey
+if gt d 62
+y = ulong 1
+else
+u = ulong d
+v = shr y u
+if ne shl v u y
+v = or v 1
+end
+y = v
+end
+if eq sp sc
+ret rpk sp ex add x y 0
+end
+if gt x y
+ret rpk sp ex sub x y 0
+end
+if gt y x
+ret rpk sc ex sub y x 0
+end
+ret ulong 0
+end
+fn sfdiv a ulong b ulong to ulong
+s = and xor a b SIGN
+aa = and a MAG
+ab = and b MAG
+if or gt aa INF gt ab INF
+ret QNAN
+end
+if eq aa INF
+if eq ab INF
+ret QNAN
+end
+ret or s INF
+end
+if eq ab INF
+ret s
+end
+if eq ab 0
+if eq aa 0
+ret QNAN
+end
+ret or s INF
+end
+if eq aa 0
+ret s
+end
+k = sub 23 msb fman a
+u = ulong k
+ma = shl fman a u
+ea = sub fexp a k
+k = sub 23 msb fman b
+u = ulong k
+mb = shl fman b u
+eb = sub fexp b k
+n = shl ma 39
+q = div n mb
+r = sub n mul q mb
+st = ulong 0
+if ne r 0
+st = ulong 1
+end
+ret rpk s sub sub ea eb 39 q st
+end
+fn sfsqrt a ulong to ulong
+aa = and a MAG
+if gt aa INF
+ret QNAN
+end
+if eq aa 0
+ret a
+end
+if ne and a SIGN 0
+ret QNAN
+end
+if eq aa INF
+ret a
+end
+k = sub 23 msb fman a
+u = ulong k
+m = shl fman a u
+e = sub fexp a k
+if ne and e 1 0
+m = shl m 1
+e = sub e 1
+end
+o = shl m 38
+e = sub e 38
+r = ulong 0
+w = shl ulong 1 62
+for j ulong 32
+if ge o add r w
+o = sub o add r w
+r = add shr r 1 w
+else
+r = shr r 1
+end
+w = shr w 2
+end
+st = ulong 0
+if ne o 0
+st = ulong 1
+end
+ret rpk 0 div e 2 r st
+end
+note pow2i: 2^n as a normal binary32, n in [-126, 127].
+fn pow2i n long to ulong
+t = add n 127
+u = ulong t
+ret shl u 23
+end
+note scale2: m * 2^k, k in [-252, 254], m normal; one rounding in the last multiply.
+fn scale2 m ulong k long to ulong
+if gt k 127
+ret sfmul sfmul m pow2i 127 pow2i sub k 127
+end
+if lt k -126
+ret sfmul sfmul m pow2i add k 126 pow2i -126
+end
+ret sfmul m pow2i k
+end
+note fkey: total order key of a non-NaN binary32 (+0 and -0 equal).
+fn fkey u ulong to long
+m = and u MAG
+v = long m
+if ne and u SIGN 0
+ret neg v
+end
+ret v
+end
+note fint: exact small integer to binary32 (|i| < 2^24).
+fn fint i long to ulong
+if eq i 0
+ret ulong 0
+end
+if lt i 0
+n = neg i
+u = ulong n
+ret rpk SIGN 0 u 0
+end
+u = ulong i
+ret rpk 0 0 u 0
+end

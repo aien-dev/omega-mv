@@ -4,6 +4,14 @@
 //
 // usage: opencl-host MODULE.spv KERNEL [ARG ...]   (up to 6 canonical u64 decimals)
 // stdout: "VALUE STATUS\n" read back from outputs[0] and outputs[1].
+//
+// usage: opencl-host --sweep MODULE.spv KERNEL START COUNT
+// NDRange sweep of a one-parameter kernel: work item g receives START+g
+// (START+COUNT <= 2^32). stdout: COUNT raw little-endian 32-bit results in
+// input order. Any nonzero Omega status or a result above 2^32-1 is a failure.
+// Migration pending: this C host is a verification oracle (E1 SPIR-V tier,
+// docs/numeric/E1_SPIRV_TIER.md); its named seeded-Omega successor is an
+// OpenCL host built on the omc device/host-word extension (OMEGESE section 10).
 // Exit 0 only when every OpenCL call succeeded; any usage, environment, API or
 // runtime failure exits nonzero with a named stderr line and prints nothing on
 // stdout. Device and toolchain identity are recorded on stderr.
@@ -34,6 +42,7 @@ enum {
 };
 
 #define MAX_ARGS 6
+#define SWEEP_BATCH ((size_t)1 << 20)
 #define INFO_MAX 1024
 #define POISON UINT64_C(0xa5a5a5a5a5a5a5a5)
 #ifndef IRSPIRV_POCL_LIBRARY
@@ -156,11 +165,102 @@ static void print_build_log(cl_program program, cl_device_id device, int always)
 	free(log);
 }
 
+static int sweep(cl_context context, cl_command_queue queue, cl_kernel kernel, cl_ulong start, cl_ulong count)
+{
+	cl_int err;
+	int rc = 0;
+	cl_mem in_buffer = NULL, out_buffer = NULL;
+	cl_ulong *inputs = malloc(SWEEP_BATCH * sizeof *inputs);
+	cl_ulong *outputs = malloc(2 * SWEEP_BATCH * sizeof *outputs);
+	unsigned char *bytes = malloc(4 * SWEEP_BATCH);
+	if (inputs == NULL || outputs == NULL || bytes == NULL) {
+		rc = refuse(EXIT_RUN, "out of memory");
+		goto out;
+	}
+	in_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY, SWEEP_BATCH * sizeof *inputs, NULL, &err);
+	if (err != CL_SUCCESS) {
+		rc = fail(EXIT_RUN, "clCreateBuffer(inputs)", err);
+		goto out;
+	}
+	out_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, 2 * SWEEP_BATCH * sizeof *outputs, NULL, &err);
+	if (err != CL_SUCCESS) {
+		rc = fail(EXIT_RUN, "clCreateBuffer(outputs)", err);
+		goto out;
+	}
+	if (clSetKernelArg(kernel, 0, sizeof in_buffer, &in_buffer) != CL_SUCCESS ||
+	    clSetKernelArg(kernel, 1, sizeof out_buffer, &out_buffer) != CL_SUCCESS) {
+		rc = refuse(EXIT_KERNEL, "clSetKernelArg failed");
+		goto out;
+	}
+	for (cl_ulong done = 0; done < count;) {
+		size_t n = count - done < SWEEP_BATCH ? (size_t)(count - done) : SWEEP_BATCH;
+		for (size_t i = 0; i < n; i++)
+			inputs[i] = start + done + i;
+		for (size_t i = 0; i < 2 * n; i++)
+			outputs[i] = POISON;
+		err = clEnqueueWriteBuffer(queue, in_buffer, CL_FALSE, 0, n * sizeof *inputs, inputs, 0, NULL, NULL);
+		if (err == CL_SUCCESS)
+			err = clEnqueueWriteBuffer(queue, out_buffer, CL_FALSE, 0, 2 * n * sizeof *outputs, outputs, 0, NULL, NULL);
+		if (err != CL_SUCCESS) {
+			rc = fail(EXIT_RUN, "clEnqueueWriteBuffer", err);
+			goto out;
+		}
+		err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &n, NULL, 0, NULL, NULL);
+		if (err != CL_SUCCESS) {
+			rc = fail(EXIT_RUN, "clEnqueueNDRangeKernel", err);
+			goto out;
+		}
+		err = clEnqueueReadBuffer(queue, out_buffer, CL_TRUE, 0, 2 * n * sizeof *outputs, outputs, 0, NULL, NULL);
+		if (err != CL_SUCCESS) {
+			rc = fail(EXIT_RUN, "clEnqueueReadBuffer", err);
+			goto out;
+		}
+		for (size_t i = 0; i < n; i++) {
+			cl_ulong v = outputs[2 * i], s = outputs[2 * i + 1];
+			if (s != 0 || v > UINT32_MAX) {
+				fprintf(stderr, "opencl-host: input %llu returned value %llu status %llu\n",
+					(unsigned long long)(start + done + i), (unsigned long long)v, (unsigned long long)s);
+				rc = EXIT_RUN;
+				goto out;
+			}
+			bytes[4 * i] = (unsigned char)v;
+			bytes[4 * i + 1] = (unsigned char)(v >> 8);
+			bytes[4 * i + 2] = (unsigned char)(v >> 16);
+			bytes[4 * i + 3] = (unsigned char)(v >> 24);
+		}
+		if (fwrite(bytes, 4, n, stdout) != n) {
+			rc = refuse(EXIT_RUN, "cannot write result stream");
+			goto out;
+		}
+		done += n;
+	}
+	if (fflush(stdout) != 0)
+		rc = refuse(EXIT_RUN, "cannot write result stream");
+out:
+	if (out_buffer)
+		clReleaseMemObject(out_buffer);
+	if (in_buffer)
+		clReleaseMemObject(in_buffer);
+	free(bytes);
+	free(outputs);
+	free(inputs);
+	return rc;
+}
+
 int main(int argc, char **argv)
 {
+	int sweeping = argc > 1 && strcmp(argv[1], "--sweep") == 0;
+	cl_ulong inputs[MAX_ARGS] = { 0 };
+	cl_ulong sweep_start = 0, sweep_count = 0;
+	if (sweeping) {
+		if (argc != 6 || parse_u64(argv[4], &sweep_start) != 0 || parse_u64(argv[5], &sweep_count) != 0 ||
+		    sweep_count == 0 || sweep_start > (UINT64_C(1) << 32) || sweep_count > (UINT64_C(1) << 32) - sweep_start)
+			return refuse(EXIT_USAGE, "usage: opencl-host --sweep MODULE.spv KERNEL START COUNT (START+COUNT <= 2^32, COUNT > 0)");
+		argv += 1;
+		argc = 3;
+	}
 	if (argc < 3 || argc > 3 + MAX_ARGS)
 		return refuse(EXIT_USAGE, "usage: opencl-host MODULE.spv KERNEL [u64 ...] (at most 6 arguments)");
-	cl_ulong inputs[MAX_ARGS] = { 0 };
 	for (int i = 3; i < argc; i++)
 		if (parse_u64(argv[i], &inputs[i - 3]) != 0) {
 			fprintf(stderr, "opencl-host: argument %d is not a canonical u64 decimal: %s\n", i - 2, argv[i]);
@@ -177,7 +277,6 @@ int main(int argc, char **argv)
 	unsigned char *il = read_module(argv[1], &il_size);
 	if (il == NULL)
 		return refuse(EXIT_MODULE, "cannot read module or size is not a nonzero multiple of 4 bytes");
-
 	cl_context context = NULL;
 	cl_command_queue queue = NULL;
 	cl_program program = NULL;
@@ -269,6 +368,10 @@ int main(int argc, char **argv)
 	}
 	if (kernel_args != 2) {
 		rc = refuse(EXIT_KERNEL, "kernel signature is not (inputs, outputs)");
+		goto out;
+	}
+	if (sweeping) {
+		rc = sweep(context, queue, kernel, sweep_start, sweep_count);
 		goto out;
 	}
 
