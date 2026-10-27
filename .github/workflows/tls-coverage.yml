@@ -1,0 +1,109 @@
+# tls-coverage: runs the om/tls primitive suites (ecdh included), the TLS_NET=1 suite, the Wycheproof
+# ledger with its negative controls and BoGo on free GitHub-hosted ubuntu-24.04-arm runners with the
+# pinned omc. Scratch branch freecompute/tls-coverage only, never merged.
+name: tls-coverage
+on:
+  push:
+    branches: ["freecompute/tls-coverage"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  WYCHEPROOF_PIN: d17cc89fa5c8f4f4d378b5385ebf75da5d0926c9
+jobs:
+  suite:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [aesgcm, chacha, sha2, x25519, ec, rsa, mlkem, ecdh, tls-net]
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - name: omc pin
+        run: |
+          pin=$(sed -n 's/^OMC_PIN=//p' om/units.sh | tr -d '"')
+          got=$(sha256sum seed/out/omc | cut -c1-64)
+          echo "omc $got pin $pin"; [ "$pin" = "$got" ]; chmod +x seed/out/omc
+      - name: packages
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq python3-cryptography openssl > /dev/null
+      - name: run
+        run: |
+          set +e
+          mkdir -p logs; { grep -m1 Features /proc/cpuinfo; nproc; git rev-parse HEAD; } > logs/${{ matrix.suite }}.machine
+          start=$(date +%s)
+          if [ "${{ matrix.suite }}" = tls-net ]; then
+            TLS_NET=1 sh om/tls/test/tls/run.sh "$PWD/seed/out/omc" > logs/tls-net.log 2>&1; rc=$?
+            s2=$(date +%s)
+            TLS_NET=1 python3 seed/net/tests/check.py --keep build/netcheck > logs/net-check.log 2>&1; rc2=$?
+            echo "RC=$rc2 seconds=$(( $(date +%s) - s2 ))" >> logs/net-check.log
+          else
+            sh om/tls/test/${{ matrix.suite }}/run.sh "$PWD/seed/out/omc" > logs/${{ matrix.suite }}.log 2>&1; rc=$?
+          fi
+          echo "RC=$rc seconds=$(( $(date +%s) - start ))" | tee -a logs/${{ matrix.suite }}.log
+          tail -5 logs/*.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "suite-${{ matrix.suite }}", path: "logs/\nbuild/tls/", if-no-files-found: ignore}
+  ledger:
+    needs: suite
+    if: always()
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/download-artifact@v4
+        with: {path: art}
+      - name: wycheproof
+        run: git clone -q https://github.com/C2SP/wycheproof.git wyc && git -C wyc checkout -q "$WYCHEPROOF_PIN"
+      - name: ledger and negative controls
+        run: |
+          mkdir -p logs build/tls
+          for d in art/suite-*; do cp -r "$d"/logs/* logs/ 2>/dev/null; cp -r "$d"/build/tls/* build/tls/ 2>/dev/null; done
+          set +e
+          sh om/tls/test/wycheproof/ledger.sh "$PWD/wyc" "$PWD/logs" > ledger.txt 2>&1; echo "RC=$?" >> ledger.txt
+          sh om/tls/test/wycheproof/ledger-nc.sh "$PWD/wyc" "$PWD/logs" > ledger-nc.txt 2>&1; echo "RC=$?" >> ledger-nc.txt
+          mkdir -p out; cp ledger.txt ledger-nc.txt out/; cp -r logs out/suite-logs
+          tail -40 ledger.txt; cat ledger-nc.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: ledger, path: out/}
+  bogo:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [patched, unpatched]
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - name: omc pin
+        run: |
+          pin=$(sed -n 's/^OMC_PIN=//p' om/units.sh | tr -d '"')
+          got=$(sha256sum seed/out/omc | cut -c1-64)
+          [ "$pin" = "$got" ]; chmod +x seed/out/omc
+      - name: go (test oracle only, pinned)
+        run: |
+          . om/tls/test/bogo/PINS
+          curl -fsSL -o go.tgz "$GO_URL"
+          echo "$GO_SHA256  go.tgz" | sha256sum -c -
+          tar -C "$RUNNER_TEMP" -xzf go.tgz
+      - name: boringssl (pinned)
+        run: |
+          . om/tls/test/bogo/PINS
+          git init -q bssl && git -C bssl fetch -q --depth 1 "$BORINGSSL_URL" "$BORINGSSL_COMMIT" && git -C bssl checkout -q FETCH_HEAD
+      - name: bogo
+        run: |
+          set +e
+          mkdir -p out
+          [ "${{ matrix.fixture }}" = unpatched ] && export BOGO_UNPATCHED=1
+          BOGO_OUT=$PWD/out BOGO_WORKERS=$(nproc) sh om/tls/test/bogo/run.sh "$PWD/seed/out/omc" "$PWD/bssl" "$RUNNER_TEMP/go/bin/go" > out/verdict.txt 2>&1
+          echo "RC=$?" >> out/verdict.txt
+          { grep -m1 Features /proc/cpuinfo; nproc; git rev-parse HEAD; "$RUNNER_TEMP/go/bin/go" version; } > out/machine.txt
+          rm -f out/runner.test
+          cat out/verdict.txt; head -40 out/failures.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "bogo-${{ matrix.fixture }}", path: out/}
