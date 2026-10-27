@@ -1,0 +1,31 @@
+{
+  "cases": [
+    "golden-chat-max-24-red",
+    "golden-chat-code-red",
+    "golden-chat-prose2-red",
+    "golden-chat-chat-red",
+    "golden-chat-review-red",
+    "concurrent-32-red"
+  ],
+  "levers": [
+    {
+      "id": "L386-red",
+      "name": "mutated Omegese gate (control)",
+      "present": "yes",
+      "cells": [
+        "RED-OK",
+        "RED-OK",
+        "RED-OK",
+        "RED-OK",
+        "RED-OK",
+        "RED-OK"
+      ],
+      "verdict": "PASS"
+    }
+  ],
+  "red_controls": {
+    "ran": 6,
+    "ok": 6,
+    "total": 6
+  }
+}

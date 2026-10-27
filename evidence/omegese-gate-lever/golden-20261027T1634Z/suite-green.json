@@ -1,0 +1,112 @@
+{
+  "about": "C1Lang golden.sh: L386 Omegese decode gate (AIEN_OMEGA_Q36_OMEGESE_GATE=1) vs the host goldens and the alone reference",
+  "model_dir": "qwen3.6-35b-a3b-fp8-95a723d0",
+  "prompts": "evidence/q36-batch-20261021/prompts.txt",
+  "defaults": {
+    "temperature": 0,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "aien_return_token_ids": true
+  },
+  "arms": {
+    "plain": {
+      "about": "the green build, its server started with AIEN_OMEGA_Q36_OMEGESE_GATE=1 (log proof: omegese gate on)"
+    }
+  },
+  "levers": [
+    {
+      "id": "L386",
+      "name": "Omegese decode gate",
+      "present": {
+        "always": true
+      },
+      "arms": [
+        "plain"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "golden-chat-max-24",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-max-24.json",
+      "max_tokens": 24,
+      "user": "Write a C function that returns the larger of two ints.",
+      "about": "gate2-http: the motor's chat golden through the door (host reference, no load needed)"
+    },
+    {
+      "id": "golden-chat-code",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-code.json",
+      "max_tokens": 32,
+      "user": "Write a Rust function that reverses the words in a sentence, keeping the words themselves intact."
+    },
+    {
+      "id": "golden-chat-prose2",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-prose2.json",
+      "max_tokens": 32,
+      "user": "Write one short paragraph, in plain prose, about a baker opening the shop before dawn on the first cold morning of autumn."
+    },
+    {
+      "id": "golden-chat-chat",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-chat.json",
+      "max_tokens": 32,
+      "user": "I have a free Saturday and want to go on a day hike with a friend who has never hiked. How should we plan it?"
+    },
+    {
+      "id": "golden-chat-review",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-review.json",
+      "max_tokens": 32,
+      "user": "Review this C function and point out any bugs:\n\nint sum(int *a, int n) {\n    int s;\n    for (int i = 0; i <= n; i++) s += a[i];\n    return s;\n}"
+    },
+    {
+      "id": "concurrent-32",
+      "kind": "together",
+      "ref": "alone",
+      "n": 32,
+      "stagger_ms": 250,
+      "about": "all 32 prompts at once, rows joining and leaving mid-spell; every reply == the same request alone (reference store)"
+    },
+    {
+      "id": "turn2",
+      "kind": "turn2",
+      "ref": "alone",
+      "prompt": 5,
+      "max_tokens": 16,
+      "follow_up": "Now say it again in one short sentence.",
+      "about": "a second turn on prompt 5's conversation after the concurrent run == the same turn alone"
+    },
+    {
+      "id": "tool-call",
+      "kind": "tool",
+      "max_tokens": 200,
+      "expect_tool": "get_weather",
+      "user": "What is the weather in Paris right now? Use the tool.",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Current weather for a city",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "city": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "city"
+              ]
+            }
+          }
+        }
+      ],
+      "about": "the reply is a parsed tool call to get_weather (L374 tools build; Hermes depends on it)"
+    }
+  ]
+}
