@@ -1,0 +1,714 @@
+# asm2.hex1 -- rung 2 of the Omega seed chain: "names", a two-pass assembler whose instruction set is
+# a readable text table. Written in hex1's language (rung 1: 8-digit words, ':c' labels, '@c' branch
+# marks, '#' comments) and built by hex1: hex1.bin < asm2.hex1 > asm2.bin.
+# Input language of asm2 (one statement per line, ';' starts a comment, words split by spaces/tabs/commas):
+#   = name 0xBASE field...   table line: an instruction name, its fixed bits, then one field per operand:
+#                            rP (register, 5 bits at bit P), iP.W (unsigned, W bits at P), sP.W (signed),
+#                            lP.W (distance to a label in words, signed, W bits at P), a (ADR byte distance:
+#                            low 2 bits at 29, the rest at 5..23). Width defaults to 5.
+#   :name                    a label: the current output position in bytes
+#   name operand...          an instruction from the table; registers x0..x30 w0..w30 xzr wzr sp wsp,
+#                            numbers [-]decimal or [-]0x lower-case hex, labels by name (up to 16 characters)
+#   .w number / .b number    one 32-bit little-endian word / one byte
+# Errors print "asm2: line N: error E" on stderr and exit E: 1 read, 2 write, 3 unknown name, 4 too few
+# operands, 5 extra words, 6 bad number, 7 bad register, 8 out of range, 9 unknown label, 10 label twice,
+# 11 name twice, 12 bad table line, 13 word over 16 characters, 14 not 4-byte aligned, 15 unknown
+# directive, 16 table/labels/output full.
+# Memory (one mapping at 0x400000): table 0x500000 (1024 x 64 bytes: name 16, base 8, field count 8,
+# 8 fields of kind/position/width), labels 0x510000 (8192 x 32 bytes: name 16, position 8), message
+# buffer 0x5f0000, input 0x600000, output 0xe00000 (8 MiB).
+#
+# ---- ELF-64 file header, 16 words ----
+464c457f  # e_ident[0..3] = 7f 'E' 'L' 'F'
+00010102  # e_ident[4..7] = ELFCLASS64, ELFDATA2LSB, EV_CURRENT, ELFOSABI_NONE
+00000000  # e_ident[8..11] = ABI version 0, padding
+00000000  # e_ident[12..15] = padding
+00b70002  # e_type = 2 ET_EXEC, e_machine = 183 EM_AARCH64
+00000001  # e_version = 1
+00400078  # e_entry low = 0x400078 (file offset 120)
+00000000  # e_entry high
+00000040  # e_phoff low = 64
+00000000  # e_phoff high
+00000000  # e_shoff low = 0 (no sections)
+00000000  # e_shoff high
+00000000  # e_flags = 0
+00380040  # e_ehsize = 64, e_phentsize = 56
+00000001  # e_phnum = 1, e_shentsize = 0
+00000000  # e_shnum = 0, e_shstrndx = 0
+# ---- program header, 14 words ----
+00000001  # p_type = PT_LOAD
+00000007  # p_flags = read, write, execute
+00000000  # p_offset low = 0
+00000000  # p_offset high
+00400000  # p_vaddr low = 0x400000
+00000000  # p_vaddr high
+00400000  # p_paddr low = 0x400000
+00000000  # p_paddr high
+000009a0  # p_filesz low = 2464 bytes (120 header + 580 instructions * 4 + 6 data words * 4)
+00000000  # p_filesz high
+01200000  # p_memsz low = 0x1200000 (tables and buffers up to 0x1600000, zero-filled)
+00000000  # p_memsz high
+00001000  # p_align low = 4096
+00000000  # p_align high
+# ---- code from address 0x400078 ----
+d2a00a1a  # [0] movz x26, #0x50, lsl #16  C6.2.285 MOVZ
+d2a00a3b  # [1] movz x27, #0x51, lsl #16  C6.2.285 MOVZ
+d2a00c1d  # [2] movz x29, #0x60, lsl #16  C6.2.285 MOVZ
+d2a01c1c  # [3] movz x28, #0xe0, lsl #16  C6.2.285 MOVZ
+aa1d03f3  # [4] orr x19, xzr, x29  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+:a  # RD
+d2800000  # [5] movz x0, #0  C6.2.285 MOVZ
+aa1303e1  # [6] orr x1, xzr, x19  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d1004382  # [7] sub x2, x28, #16  C6.2.457 SUB (immediate)
+cb130042  # [8] sub x2, x2, x19  C6.2.458 SUB (shifted register)
+d2800031  # [9] movz x17, #1  C6.2.285 MOVZ
+b4000002@J  # [10] cbz x2, @J  C6.2.78 CBZ -> ERR
+d28007e8  # [11] movz x8, #63  C6.2.285 MOVZ
+d4000001  # [12] svc #0  C6.2.466 SVC
+f100001f  # [13] subs xzr, x0, #0  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000000@b  # [14] b.eq @b  C6.2.34 B.cond (cond 0, Table C1-1) -> RDDONE
+5400000b@J  # [15] b.lt @J  C6.2.34 B.cond (cond 11, Table C1-1) -> ERR
+8b000273  # [16] add x19, x19, x0  C6.2.6 ADD (shifted register)
+5400000e@a  # [17] b.al @a  C6.2.34 B.cond (cond 14, Table C1-1) -> RD
+:b  # RDDONE
+d2800140  # [18] movz x0, #10  C6.2.285 MOVZ
+39000260  # [19] strb w0, [x19]  C6.2.417 STRB (immediate), unsigned offset
+3900067f  # [20] strb wzr, [x19, #1]  C6.2.417 STRB (immediate), unsigned offset
+d2800015  # [21] movz x21, #0  C6.2.285 MOVZ
+:c  # PASS
+aa1d03f3  # [22] orr x19, xzr, x29  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d2800016  # [23] movz x22, #0  C6.2.285 MOVZ
+d2800039  # [24] movz x25, #1  C6.2.285 MOVZ
+:d  # LINE
+1000005e  # [25] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@h  # [26] b.al @h  C6.2.34 B.cond (cond 14, Table C1-1) -> SKIPSP
+b4000000@=  # [27] cbz x0, @=  C6.2.78 CBZ -> PASSEND
+7100281f  # [28] subs wzr, w0, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@e  # [29] b.eq @e  C6.2.34 B.cond (cond 0, Table C1-1) -> NL
+7100ec1f  # [30] subs wzr, w0, #59  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@f  # [31] b.eq @f  C6.2.34 B.cond (cond 0, Table C1-1) -> SKIPL
+7100f41f  # [32] subs wzr, w0, #61  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@S  # [33] b.eq @S  C6.2.34 B.cond (cond 0, Table C1-1) -> TABDEF
+7100e81f  # [34] subs wzr, w0, #58  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@1  # [35] b.eq @1  C6.2.34 B.cond (cond 0, Table C1-1) -> LABDEF
+7100b81f  # [36] subs wzr, w0, #46  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@2  # [37] b.eq @2  C6.2.34 B.cond (cond 0, Table C1-1) -> DIR
+5400000e@6  # [38] b.al @6  C6.2.34 B.cond (cond 14, Table C1-1) -> INSTR
+:e  # NL
+91000673  # [39] add x19, x19, #1  C6.2.5 ADD (immediate)
+91000739  # [40] add x25, x25, #1  C6.2.5 ADD (immediate)
+5400000e@d  # [41] b.al @d  C6.2.34 B.cond (cond 14, Table C1-1) -> LINE
+:f  # SKIPL
+39400260  # [42] ldrb w0, [x19]  C6.2.220 LDRB (immediate), unsigned offset
+b4000000@d  # [43] cbz x0, @d  C6.2.78 CBZ -> LINE
+7100281f  # [44] subs wzr, w0, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@e  # [45] b.eq @e  C6.2.34 B.cond (cond 0, Table C1-1) -> NL
+91000673  # [46] add x19, x19, #1  C6.2.5 ADD (immediate)
+5400000e@f  # [47] b.al @f  C6.2.34 B.cond (cond 14, Table C1-1) -> SKIPL
+:g  # ENDL
+1000005e  # [48] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@h  # [49] b.al @h  C6.2.34 B.cond (cond 14, Table C1-1) -> SKIPSP
+b4000000@d  # [50] cbz x0, @d  C6.2.78 CBZ -> LINE
+7100281f  # [51] subs wzr, w0, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@e  # [52] b.eq @e  C6.2.34 B.cond (cond 0, Table C1-1) -> NL
+7100ec1f  # [53] subs wzr, w0, #59  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@f  # [54] b.eq @f  C6.2.34 B.cond (cond 0, Table C1-1) -> SKIPL
+d28000b1  # [55] movz x17, #5  C6.2.285 MOVZ
+5400000e@J  # [56] b.al @J  C6.2.34 B.cond (cond 14, Table C1-1) -> ERR
+:h  # SKIPSP
+39400260  # [57] ldrb w0, [x19]  C6.2.220 LDRB (immediate), unsigned offset
+7100801f  # [58] subs wzr, w0, #32  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@i  # [59] b.eq @i  C6.2.34 B.cond (cond 0, Table C1-1) -> SS1
+7100241f  # [60] subs wzr, w0, #9  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@i  # [61] b.eq @i  C6.2.34 B.cond (cond 0, Table C1-1) -> SS1
+7100b01f  # [62] subs wzr, w0, #44  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@i  # [63] b.eq @i  C6.2.34 B.cond (cond 0, Table C1-1) -> SS1
+d65f03c0  # [64] ret  C6.2.338 RET (x30)
+:i  # SS1
+91000673  # [65] add x19, x19, #1  C6.2.5 ADD (immediate)
+5400000e@h  # [66] b.al @h  C6.2.34 B.cond (cond 14, Table C1-1) -> SKIPSP
+:j  # TOKEN
+:k  # TK0
+39400260  # [67] ldrb w0, [x19]  C6.2.220 LDRB (immediate), unsigned offset
+7100801f  # [68] subs wzr, w0, #32  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@l  # [69] b.eq @l  C6.2.34 B.cond (cond 0, Table C1-1) -> TK1
+7100241f  # [70] subs wzr, w0, #9  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@l  # [71] b.eq @l  C6.2.34 B.cond (cond 0, Table C1-1) -> TK1
+7100b01f  # [72] subs wzr, w0, #44  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@l  # [73] b.eq @l  C6.2.34 B.cond (cond 0, Table C1-1) -> TK1
+aa1303ec  # [74] orr x12, xzr, x19  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d2800009  # [75] movz x9, #0  C6.2.285 MOVZ
+d280000a  # [76] movz x10, #0  C6.2.285 MOVZ
+d280000b  # [77] movz x11, #0  C6.2.285 MOVZ
+:m  # TK3
+39400260  # [78] ldrb w0, [x19]  C6.2.220 LDRB (immediate), unsigned offset
+b4000000@p  # [79] cbz x0, @p  C6.2.78 CBZ -> TKR
+7100281f  # [80] subs wzr, w0, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@p  # [81] b.eq @p  C6.2.34 B.cond (cond 0, Table C1-1) -> TKR
+7100801f  # [82] subs wzr, w0, #32  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@p  # [83] b.eq @p  C6.2.34 B.cond (cond 0, Table C1-1) -> TKR
+7100241f  # [84] subs wzr, w0, #9  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@p  # [85] b.eq @p  C6.2.34 B.cond (cond 0, Table C1-1) -> TKR
+7100b01f  # [86] subs wzr, w0, #44  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@p  # [87] b.eq @p  C6.2.34 B.cond (cond 0, Table C1-1) -> TKR
+7100ec1f  # [88] subs wzr, w0, #59  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@p  # [89] b.eq @p  C6.2.34 B.cond (cond 0, Table C1-1) -> TKR
+d28001b1  # [90] movz x17, #13  C6.2.285 MOVZ
+f100417f  # [91] subs xzr, x11, #16  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000000@J  # [92] b.eq @J  C6.2.34 B.cond (cond 0, Table C1-1) -> ERR
+f100217f  # [93] subs xzr, x11, #8  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000002@n  # [94] b.hs @n  C6.2.34 B.cond (cond 2, Table C1-1) -> TK4
+8b0b0161  # [95] add x1, x11, x11  C6.2.6 ADD (shifted register)
+8b010021  # [96] add x1, x1, x1  C6.2.6 ADD (shifted register)
+8b010021  # [97] add x1, x1, x1  C6.2.6 ADD (shifted register)
+9ac12002  # [98] lslv x2, x0, x1  C6.2.271 LSLV
+aa020129  # [99] orr x9, x9, x2  C6.2.302 ORR (shifted register)
+5400000e@o  # [100] b.al @o  C6.2.34 B.cond (cond 14, Table C1-1) -> TK5
+:n  # TK4
+d1002161  # [101] sub x1, x11, #8  C6.2.457 SUB (immediate)
+8b010021  # [102] add x1, x1, x1  C6.2.6 ADD (shifted register)
+8b010021  # [103] add x1, x1, x1  C6.2.6 ADD (shifted register)
+8b010021  # [104] add x1, x1, x1  C6.2.6 ADD (shifted register)
+9ac12002  # [105] lslv x2, x0, x1  C6.2.271 LSLV
+aa02014a  # [106] orr x10, x10, x2  C6.2.302 ORR (shifted register)
+:o  # TK5
+9100056b  # [107] add x11, x11, #1  C6.2.5 ADD (immediate)
+91000673  # [108] add x19, x19, #1  C6.2.5 ADD (immediate)
+5400000e@m  # [109] b.al @m  C6.2.34 B.cond (cond 14, Table C1-1) -> TK3
+:p  # TKR
+d65f03c0  # [110] ret  C6.2.338 RET (x30)
+:l  # TK1
+91000673  # [111] add x19, x19, #1  C6.2.5 ADD (immediate)
+5400000e@k  # [112] b.al @k  C6.2.34 B.cond (cond 14, Table C1-1) -> TK0
+:q  # NUM
+d28000d1  # [113] movz x17, #6  C6.2.285 MOVZ
+b400000b@J  # [114] cbz x11, @J  C6.2.78 CBZ -> ERR
+aa0c03e1  # [115] orr x1, xzr, x12  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+8b0b0182  # [116] add x2, x12, x11  C6.2.6 ADD (shifted register)
+d2800003  # [117] movz x3, #0  C6.2.285 MOVZ
+d2800000  # [118] movz x0, #0  C6.2.285 MOVZ
+39400024  # [119] ldrb w4, [x1]  C6.2.220 LDRB (immediate), unsigned offset
+7100b49f  # [120] subs wzr, w4, #45  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000001@r  # [121] b.ne @r  C6.2.34 B.cond (cond 1, Table C1-1) -> N1
+d2800023  # [122] movz x3, #1  C6.2.285 MOVZ
+91000421  # [123] add x1, x1, #1  C6.2.5 ADD (immediate)
+:r  # N1
+eb02003f  # [124] subs xzr, x1, x2  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@J  # [125] b.eq @J  C6.2.34 B.cond (cond 0, Table C1-1) -> ERR
+39400024  # [126] ldrb w4, [x1]  C6.2.220 LDRB (immediate), unsigned offset
+7100c09f  # [127] subs wzr, w4, #48  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000001@s  # [128] b.ne @s  C6.2.34 B.cond (cond 1, Table C1-1) -> NDEC
+91000425  # [129] add x5, x1, #1  C6.2.5 ADD (immediate)
+eb0200bf  # [130] subs xzr, x5, x2  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@s  # [131] b.eq @s  C6.2.34 B.cond (cond 0, Table C1-1) -> NDEC
+394000a4  # [132] ldrb w4, [x5]  C6.2.220 LDRB (immediate), unsigned offset
+7101e09f  # [133] subs wzr, w4, #120  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000001@s  # [134] b.ne @s  C6.2.34 B.cond (cond 1, Table C1-1) -> NDEC
+91000821  # [135] add x1, x1, #2  C6.2.5 ADD (immediate)
+eb02003f  # [136] subs xzr, x1, x2  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@J  # [137] b.eq @J  C6.2.34 B.cond (cond 0, Table C1-1) -> ERR
+:t  # NHEX
+eb02003f  # [138] subs xzr, x1, x2  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@v  # [139] b.eq @v  C6.2.34 B.cond (cond 0, Table C1-1) -> NEND
+39400024  # [140] ldrb w4, [x1]  C6.2.220 LDRB (immediate), unsigned offset
+7100c085  # [141] subs w5, w4, #48  C6.2.464 SUBS (immediate) 32-bit
+710028bf  # [142] subs wzr, w5, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000003@u  # [143] b.lo @u  C6.2.34 B.cond (cond 3, Table C1-1) -> NH1
+71018485  # [144] subs w5, w4, #97  C6.2.464 SUBS (immediate) 32-bit
+710018bf  # [145] subs wzr, w5, #6  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000002@J  # [146] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+910028a5  # [147] add x5, x5, #10  C6.2.5 ADD (immediate)
+:u  # NH1
+d2800786  # [148] movz x6, #60  C6.2.285 MOVZ
+9ac62406  # [149] lsrv x6, x0, x6  C6.2.274 LSRV
+b5000006@J  # [150] cbnz x6, @J  C6.2.77 CBNZ -> ERR
+8b000000  # [151] add x0, x0, x0  C6.2.6 ADD (shifted register)
+8b000000  # [152] add x0, x0, x0  C6.2.6 ADD (shifted register)
+8b000000  # [153] add x0, x0, x0  C6.2.6 ADD (shifted register)
+8b000000  # [154] add x0, x0, x0  C6.2.6 ADD (shifted register)
+aa050000  # [155] orr x0, x0, x5  C6.2.302 ORR (shifted register)
+91000421  # [156] add x1, x1, #1  C6.2.5 ADD (immediate)
+5400000e@t  # [157] b.al @t  C6.2.34 B.cond (cond 14, Table C1-1) -> NHEX
+:s  # NDEC
+eb02003f  # [158] subs xzr, x1, x2  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@v  # [159] b.eq @v  C6.2.34 B.cond (cond 0, Table C1-1) -> NEND
+39400024  # [160] ldrb w4, [x1]  C6.2.220 LDRB (immediate), unsigned offset
+7100c085  # [161] subs w5, w4, #48  C6.2.464 SUBS (immediate) 32-bit
+710028bf  # [162] subs wzr, w5, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000002@J  # [163] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d2800146  # [164] movz x6, #10  C6.2.285 MOVZ
+9b067c00  # [165] madd x0, x0, x6, xzr  C6.2.275 MADD, alias MUL C6.2.293
+8b050000  # [166] add x0, x0, x5  C6.2.6 ADD (shifted register)
+91000421  # [167] add x1, x1, #1  C6.2.5 ADD (immediate)
+5400000e@s  # [168] b.al @s  C6.2.34 B.cond (cond 14, Table C1-1) -> NDEC
+:v  # NEND
+b4000003@w  # [169] cbz x3, @w  C6.2.78 CBZ -> NRET
+cb0003e0  # [170] sub x0, xzr, x0  C6.2.458 SUB (shifted register)
+:w  # NRET
+d65f03c0  # [171] ret  C6.2.338 RET (x30)
+:x  # REG
+d28000f1  # [172] movz x17, #7  C6.2.285 MOVZ
+d28f4f01  # [173] movz x1, #0x7a78  C6.2.285 MOVZ
+f2a00e41  # [174] movk x1, #0x72, lsl #16  C6.2.283 MOVK
+eb01013f  # [175] subs xzr, x9, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@A  # [176] b.eq @A  C6.2.34 B.cond (cond 0, Table C1-1) -> R31
+d28f4ee1  # [177] movz x1, #0x7a77  C6.2.285 MOVZ
+f2a00e41  # [178] movk x1, #0x72, lsl #16  C6.2.283 MOVK
+eb01013f  # [179] subs xzr, x9, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@A  # [180] b.eq @A  C6.2.34 B.cond (cond 0, Table C1-1) -> R31
+d28e0e61  # [181] movz x1, #0x7073  C6.2.285 MOVZ
+eb01013f  # [182] subs xzr, x9, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@A  # [183] b.eq @A  C6.2.34 B.cond (cond 0, Table C1-1) -> R31
+d28e6ee1  # [184] movz x1, #0x7377  C6.2.285 MOVZ
+f2a00e01  # [185] movk x1, #0x70, lsl #16  C6.2.283 MOVK
+eb01013f  # [186] subs xzr, x9, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@A  # [187] b.eq @A  C6.2.34 B.cond (cond 0, Table C1-1) -> R31
+f100097f  # [188] subs xzr, x11, #2  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000003@J  # [189] b.lo @J  C6.2.34 B.cond (cond 3, Table C1-1) -> ERR
+f1000d7f  # [190] subs xzr, x11, #3  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000008@J  # [191] b.hi @J  C6.2.34 B.cond (cond 8, Table C1-1) -> ERR
+39400181  # [192] ldrb w1, [x12]  C6.2.220 LDRB (immediate), unsigned offset
+7101e03f  # [193] subs wzr, w1, #120  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@y  # [194] b.eq @y  C6.2.34 B.cond (cond 0, Table C1-1) -> R1
+7101dc3f  # [195] subs wzr, w1, #119  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000001@J  # [196] b.ne @J  C6.2.34 B.cond (cond 1, Table C1-1) -> ERR
+:y  # R1
+39400581  # [197] ldrb w1, [x12, #1]  C6.2.220 LDRB (immediate), unsigned offset
+7100c021  # [198] subs w1, w1, #48  C6.2.464 SUBS (immediate) 32-bit
+7100283f  # [199] subs wzr, w1, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000002@J  # [200] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+f100097f  # [201] subs xzr, x11, #2  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000000@z  # [202] b.eq @z  C6.2.34 B.cond (cond 0, Table C1-1) -> R2
+39400982  # [203] ldrb w2, [x12, #2]  C6.2.220 LDRB (immediate), unsigned offset
+7100c042  # [204] subs w2, w2, #48  C6.2.464 SUBS (immediate) 32-bit
+7100285f  # [205] subs wzr, w2, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000002@J  # [206] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+b4000001@J  # [207] cbz x1, @J  C6.2.78 CBZ -> ERR
+d2800143  # [208] movz x3, #10  C6.2.285 MOVZ
+9b037c21  # [209] madd x1, x1, x3, xzr  C6.2.275 MADD, alias MUL C6.2.293
+8b020021  # [210] add x1, x1, x2  C6.2.6 ADD (shifted register)
+:z  # R2
+f1007c3f  # [211] subs xzr, x1, #31  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000002@J  # [212] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+aa0103e0  # [213] orr x0, xzr, x1  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d65f03c0  # [214] ret  C6.2.338 RET (x30)
+:A  # R31
+d28003e0  # [215] movz x0, #31  C6.2.285 MOVZ
+d65f03c0  # [216] ret  C6.2.338 RET (x30)
+:B  # FINDTAB
+aa1a03ed  # [217] orr x13, xzr, x26  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d280000f  # [218] movz x15, #0  C6.2.285 MOVZ
+:C  # FT1
+eb1701ff  # [219] subs xzr, x15, x23  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@E  # [220] b.eq @E  C6.2.34 B.cond (cond 0, Table C1-1) -> FT0
+f94001a1  # [221] ldr x1, [x13]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+f94005a2  # [222] ldr x2, [x13, #8]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+eb09003f  # [223] subs xzr, x1, x9  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000001@D  # [224] b.ne @D  C6.2.34 B.cond (cond 1, Table C1-1) -> FT2
+eb0a005f  # [225] subs xzr, x2, x10  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000001@D  # [226] b.ne @D  C6.2.34 B.cond (cond 1, Table C1-1) -> FT2
+d65f03c0  # [227] ret  C6.2.338 RET (x30)
+:D  # FT2
+910101ad  # [228] add x13, x13, #64  C6.2.5 ADD (immediate)
+910005ef  # [229] add x15, x15, #1  C6.2.5 ADD (immediate)
+5400000e@C  # [230] b.al @C  C6.2.34 B.cond (cond 14, Table C1-1) -> FT1
+:E  # FT0
+d280000d  # [231] movz x13, #0  C6.2.285 MOVZ
+d65f03c0  # [232] ret  C6.2.338 RET (x30)
+:F  # FINDSYM
+aa1b03ed  # [233] orr x13, xzr, x27  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d280000f  # [234] movz x15, #0  C6.2.285 MOVZ
+:G  # FS1
+eb1801ff  # [235] subs xzr, x15, x24  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@I  # [236] b.eq @I  C6.2.34 B.cond (cond 0, Table C1-1) -> FS0
+f94001a1  # [237] ldr x1, [x13]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+f94005a2  # [238] ldr x2, [x13, #8]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+eb09003f  # [239] subs xzr, x1, x9  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000001@H  # [240] b.ne @H  C6.2.34 B.cond (cond 1, Table C1-1) -> FS2
+eb0a005f  # [241] subs xzr, x2, x10  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000001@H  # [242] b.ne @H  C6.2.34 B.cond (cond 1, Table C1-1) -> FS2
+d65f03c0  # [243] ret  C6.2.338 RET (x30)
+:H  # FS2
+910081ad  # [244] add x13, x13, #32  C6.2.5 ADD (immediate)
+910005ef  # [245] add x15, x15, #1  C6.2.5 ADD (immediate)
+5400000e@G  # [246] b.al @G  C6.2.34 B.cond (cond 14, Table C1-1) -> FS1
+:I  # FS0
+d280000d  # [247] movz x13, #0  C6.2.285 MOVZ
+d65f03c0  # [248] ret  C6.2.338 RET (x30)
+:J  # ERR
+d2a00bef  # [249] movz x15, #0x5f, lsl #16  C6.2.285 MOVZ
+10000001@Q  # [250] adr x1, @Q  C6.2.12 ADR (word-aligned target, immlo 0) -> MSG1
+1000005e  # [251] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@K  # [252] b.al @K  C6.2.34 B.cond (cond 14, Table C1-1) -> COPYZ
+aa1903e0  # [253] orr x0, xzr, x25  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+1000005e  # [254] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@M  # [255] b.al @M  C6.2.34 B.cond (cond 14, Table C1-1) -> PUTDEC
+10000001@R  # [256] adr x1, @R  C6.2.12 ADR (word-aligned target, immlo 0) -> MSG2
+1000005e  # [257] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@K  # [258] b.al @K  C6.2.34 B.cond (cond 14, Table C1-1) -> COPYZ
+aa1103e0  # [259] orr x0, xzr, x17  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+1000005e  # [260] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@M  # [261] b.al @M  C6.2.34 B.cond (cond 14, Table C1-1) -> PUTDEC
+d2800140  # [262] movz x0, #10  C6.2.285 MOVZ
+390001e0  # [263] strb w0, [x15]  C6.2.417 STRB (immediate), unsigned offset
+910005ef  # [264] add x15, x15, #1  C6.2.5 ADD (immediate)
+d2800040  # [265] movz x0, #2  C6.2.285 MOVZ
+d2a00be1  # [266] movz x1, #0x5f, lsl #16  C6.2.285 MOVZ
+cb0101e2  # [267] sub x2, x15, x1  C6.2.458 SUB (shifted register)
+d2800808  # [268] movz x8, #64  C6.2.285 MOVZ
+d4000001  # [269] svc #0  C6.2.466 SVC
+aa1103e0  # [270] orr x0, xzr, x17  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d2800ba8  # [271] movz x8, #93  C6.2.285 MOVZ
+d4000001  # [272] svc #0  C6.2.466 SVC
+:K  # COPYZ
+39400022  # [273] ldrb w2, [x1]  C6.2.220 LDRB (immediate), unsigned offset
+b4000002@L  # [274] cbz x2, @L  C6.2.78 CBZ -> CZR
+390001e2  # [275] strb w2, [x15]  C6.2.417 STRB (immediate), unsigned offset
+910005ef  # [276] add x15, x15, #1  C6.2.5 ADD (immediate)
+91000421  # [277] add x1, x1, #1  C6.2.5 ADD (immediate)
+5400000e@K  # [278] b.al @K  C6.2.34 B.cond (cond 14, Table C1-1) -> COPYZ
+:L  # CZR
+d65f03c0  # [279] ret  C6.2.338 RET (x30)
+:M  # PUTDEC
+d2802803  # [280] movz x3, #0x140  C6.2.285 MOVZ
+f2a00be3  # [281] movk x3, #0x5f, lsl #16  C6.2.283 MOVK
+d2800144  # [282] movz x4, #10  C6.2.285 MOVZ
+aa0303e5  # [283] orr x5, xzr, x3  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+:N  # PD1
+9ac40806  # [284] udiv x6, x0, x4  C6.2.490 UDIV
+9b0480c7  # [285] msub x7, x6, x4, x0  C6.2.291 MSUB
+9100c0e7  # [286] add x7, x7, #48  C6.2.5 ADD (immediate)
+d10004a5  # [287] sub x5, x5, #1  C6.2.457 SUB (immediate)
+390000a7  # [288] strb w7, [x5]  C6.2.417 STRB (immediate), unsigned offset
+aa0603e0  # [289] orr x0, xzr, x6  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+b5000000@N  # [290] cbnz x0, @N  C6.2.77 CBNZ -> PD1
+:O  # PD2
+eb0300bf  # [291] subs xzr, x5, x3  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@P  # [292] b.eq @P  C6.2.34 B.cond (cond 0, Table C1-1) -> PDR
+394000a7  # [293] ldrb w7, [x5]  C6.2.220 LDRB (immediate), unsigned offset
+390001e7  # [294] strb w7, [x15]  C6.2.417 STRB (immediate), unsigned offset
+910005ef  # [295] add x15, x15, #1  C6.2.5 ADD (immediate)
+910004a5  # [296] add x5, x5, #1  C6.2.5 ADD (immediate)
+5400000e@O  # [297] b.al @O  C6.2.34 B.cond (cond 14, Table C1-1) -> PD2
+:P  # PDR
+d65f03c0  # [298] ret  C6.2.338 RET (x30)
+:S  # TABDEF
+91000673  # [299] add x19, x19, #1  C6.2.5 ADD (immediate)
+b5000015@f  # [300] cbnz x21, @f  C6.2.77 CBNZ -> SKIPL
+1000005e  # [301] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [302] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+d2800191  # [303] movz x17, #12  C6.2.285 MOVZ
+b400000b@J  # [304] cbz x11, @J  C6.2.78 CBZ -> ERR
+1000005e  # [305] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@B  # [306] b.al @B  C6.2.34 B.cond (cond 14, Table C1-1) -> FINDTAB
+d2800171  # [307] movz x17, #11  C6.2.285 MOVZ
+b500000d@J  # [308] cbnz x13, @J  C6.2.77 CBNZ -> ERR
+d2800211  # [309] movz x17, #16  C6.2.285 MOVZ
+d2808001  # [310] movz x1, #1024  C6.2.285 MOVZ
+eb0102ff  # [311] subs xzr, x23, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [312] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d2800801  # [313] movz x1, #64  C6.2.285 MOVZ
+9b017eed  # [314] madd x13, x23, x1, xzr  C6.2.275 MADD, alias MUL C6.2.293
+8b1a01ad  # [315] add x13, x13, x26  C6.2.6 ADD (shifted register)
+f90001a9  # [316] str x9, [x13]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+f90005aa  # [317] str x10, [x13, #8]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+1000005e  # [318] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [319] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+1000005e  # [320] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@q  # [321] b.al @q  C6.2.34 B.cond (cond 14, Table C1-1) -> NUM
+f90009a0  # [322] str x0, [x13, #16]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+d280000e  # [323] movz x14, #0  C6.2.285 MOVZ
+:T  # TD1
+1000005e  # [324] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [325] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+b400000b@0  # [326] cbz x11, @0  C6.2.78 CBZ -> TD9
+d2800211  # [327] movz x17, #16  C6.2.285 MOVZ
+f10021df  # [328] subs xzr, x14, #8  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000002@J  # [329] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d2800191  # [330] movz x17, #12  C6.2.285 MOVZ
+39400181  # [331] ldrb w1, [x12]  C6.2.220 LDRB (immediate), unsigned offset
+7101c83f  # [332] subs wzr, w1, #114  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@U  # [333] b.eq @U  C6.2.34 B.cond (cond 0, Table C1-1) -> TD2
+7101a43f  # [334] subs wzr, w1, #105  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@U  # [335] b.eq @U  C6.2.34 B.cond (cond 0, Table C1-1) -> TD2
+7101cc3f  # [336] subs wzr, w1, #115  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@U  # [337] b.eq @U  C6.2.34 B.cond (cond 0, Table C1-1) -> TD2
+7101b03f  # [338] subs wzr, w1, #108  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@U  # [339] b.eq @U  C6.2.34 B.cond (cond 0, Table C1-1) -> TD2
+7101843f  # [340] subs wzr, w1, #97  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000001@J  # [341] b.ne @J  C6.2.34 B.cond (cond 1, Table C1-1) -> ERR
+:U  # TD2
+91000582  # [342] add x2, x12, #1  C6.2.5 ADD (immediate)
+8b0b0183  # [343] add x3, x12, x11  C6.2.6 ADD (shifted register)
+d2800004  # [344] movz x4, #0  C6.2.285 MOVZ
+d2800146  # [345] movz x6, #10  C6.2.285 MOVZ
+eb03005f  # [346] subs xzr, x2, x3  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@Y  # [347] b.eq @Y  C6.2.34 B.cond (cond 0, Table C1-1) -> TD5
+:V  # TD3
+eb03005f  # [348] subs xzr, x2, x3  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@Y  # [349] b.eq @Y  C6.2.34 B.cond (cond 0, Table C1-1) -> TD5
+39400045  # [350] ldrb w5, [x2]  C6.2.220 LDRB (immediate), unsigned offset
+7100b8bf  # [351] subs wzr, w5, #46  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@W  # [352] b.eq @W  C6.2.34 B.cond (cond 0, Table C1-1) -> TD4
+7100c0a5  # [353] subs w5, w5, #48  C6.2.464 SUBS (immediate) 32-bit
+710028bf  # [354] subs wzr, w5, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000002@J  # [355] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+9b067c84  # [356] madd x4, x4, x6, xzr  C6.2.275 MADD, alias MUL C6.2.293
+8b050084  # [357] add x4, x4, x5  C6.2.6 ADD (shifted register)
+91000442  # [358] add x2, x2, #1  C6.2.5 ADD (immediate)
+5400000e@V  # [359] b.al @V  C6.2.34 B.cond (cond 14, Table C1-1) -> TD3
+:W  # TD4
+91000442  # [360] add x2, x2, #1  C6.2.5 ADD (immediate)
+d2800007  # [361] movz x7, #0  C6.2.285 MOVZ
+:X  # TD4A
+eb03005f  # [362] subs xzr, x2, x3  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@Z  # [363] b.eq @Z  C6.2.34 B.cond (cond 0, Table C1-1) -> TD6
+39400045  # [364] ldrb w5, [x2]  C6.2.220 LDRB (immediate), unsigned offset
+7100c0a5  # [365] subs w5, w5, #48  C6.2.464 SUBS (immediate) 32-bit
+710028bf  # [366] subs wzr, w5, #10  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000002@J  # [367] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+9b067ce7  # [368] madd x7, x7, x6, xzr  C6.2.275 MADD, alias MUL C6.2.293
+8b0500e7  # [369] add x7, x7, x5  C6.2.6 ADD (shifted register)
+91000442  # [370] add x2, x2, #1  C6.2.5 ADD (immediate)
+5400000e@X  # [371] b.al @X  C6.2.34 B.cond (cond 14, Table C1-1) -> TD4A
+:Y  # TD5
+d28000a7  # [372] movz x7, #5  C6.2.285 MOVZ
+:Z  # TD6
+8b070085  # [373] add x5, x4, x7  C6.2.6 ADD (shifted register)
+f10084bf  # [374] subs xzr, x5, #33  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000002@J  # [375] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+8b0e01c8  # [376] add x8, x14, x14  C6.2.6 ADD (shifted register)
+8b080108  # [377] add x8, x8, x8  C6.2.6 ADD (shifted register)
+8b0d0108  # [378] add x8, x8, x13  C6.2.6 ADD (shifted register)
+39008101  # [379] strb w1, [x8, #32]  C6.2.417 STRB (immediate), unsigned offset
+39008504  # [380] strb w4, [x8, #33]  C6.2.417 STRB (immediate), unsigned offset
+39008907  # [381] strb w7, [x8, #34]  C6.2.417 STRB (immediate), unsigned offset
+910005ce  # [382] add x14, x14, #1  C6.2.5 ADD (immediate)
+5400000e@T  # [383] b.al @T  C6.2.34 B.cond (cond 14, Table C1-1) -> TD1
+:0  # TD9
+f9000dae  # [384] str x14, [x13, #24]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+910006f7  # [385] add x23, x23, #1  C6.2.5 ADD (immediate)
+5400000e@g  # [386] b.al @g  C6.2.34 B.cond (cond 14, Table C1-1) -> ENDL
+:1  # LABDEF
+91000673  # [387] add x19, x19, #1  C6.2.5 ADD (immediate)
+1000005e  # [388] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [389] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+d2800191  # [390] movz x17, #12  C6.2.285 MOVZ
+b400000b@J  # [391] cbz x11, @J  C6.2.78 CBZ -> ERR
+b5000015@g  # [392] cbnz x21, @g  C6.2.77 CBNZ -> ENDL
+1000005e  # [393] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@F  # [394] b.al @F  C6.2.34 B.cond (cond 14, Table C1-1) -> FINDSYM
+d2800151  # [395] movz x17, #10  C6.2.285 MOVZ
+b500000d@J  # [396] cbnz x13, @J  C6.2.77 CBNZ -> ERR
+d2800211  # [397] movz x17, #16  C6.2.285 MOVZ
+d2840001  # [398] movz x1, #8192  C6.2.285 MOVZ
+eb01031f  # [399] subs xzr, x24, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [400] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d2800401  # [401] movz x1, #32  C6.2.285 MOVZ
+9b017f0d  # [402] madd x13, x24, x1, xzr  C6.2.275 MADD, alias MUL C6.2.293
+8b1b01ad  # [403] add x13, x13, x27  C6.2.6 ADD (shifted register)
+f90001a9  # [404] str x9, [x13]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+f90005aa  # [405] str x10, [x13, #8]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+f90009b6  # [406] str x22, [x13, #16]  C6.2.415 STR (immediate) 64-bit, unsigned offset
+91000718  # [407] add x24, x24, #1  C6.2.5 ADD (immediate)
+5400000e@g  # [408] b.al @g  C6.2.34 B.cond (cond 14, Table C1-1) -> ENDL
+:2  # DIR
+1000005e  # [409] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [410] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+d28001f1  # [411] movz x17, #15  C6.2.285 MOVZ
+f100097f  # [412] subs xzr, x11, #2  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000001@J  # [413] b.ne @J  C6.2.34 B.cond (cond 1, Table C1-1) -> ERR
+d28ee5c1  # [414] movz x1, #0x772e  C6.2.285 MOVZ
+eb01013f  # [415] subs xzr, x9, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000000@3  # [416] b.eq @3  C6.2.34 B.cond (cond 0, Table C1-1) -> DW
+d28c45c1  # [417] movz x1, #0x622e  C6.2.285 MOVZ
+eb01013f  # [418] subs xzr, x9, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000001@J  # [419] b.ne @J  C6.2.34 B.cond (cond 1, Table C1-1) -> ERR
+1000005e  # [420] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [421] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+1000005e  # [422] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@q  # [423] b.al @q  C6.2.34 B.cond (cond 14, Table C1-1) -> NUM
+d2800111  # [424] movz x17, #8  C6.2.285 MOVZ
+d2802001  # [425] movz x1, #256  C6.2.285 MOVZ
+eb01001f  # [426] subs xzr, x0, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [427] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d2800211  # [428] movz x17, #16  C6.2.285 MOVZ
+d2a01001  # [429] movz x1, #0x80, lsl #16  C6.2.285 MOVZ
+eb0102df  # [430] subs xzr, x22, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [431] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+8b160381  # [432] add x1, x28, x22  C6.2.6 ADD (shifted register)
+39000020  # [433] strb w0, [x1]  C6.2.417 STRB (immediate), unsigned offset
+910006d6  # [434] add x22, x22, #1  C6.2.5 ADD (immediate)
+5400000e@g  # [435] b.al @g  C6.2.34 B.cond (cond 14, Table C1-1) -> ENDL
+:3  # DW
+1000005e  # [436] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [437] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+1000005e  # [438] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@q  # [439] b.al @q  C6.2.34 B.cond (cond 14, Table C1-1) -> NUM
+d2800111  # [440] movz x17, #8  C6.2.285 MOVZ
+d2800401  # [441] movz x1, #32  C6.2.285 MOVZ
+9ac12402  # [442] lsrv x2, x0, x1  C6.2.274 LSRV
+b4000002@4  # [443] cbz x2, @4  C6.2.78 CBZ -> DW1
+d28003e1  # [444] movz x1, #31  C6.2.285 MOVZ
+9ac12802  # [445] asrv x2, x0, x1  C6.2.21 ASRV
+91000442  # [446] add x2, x2, #1  C6.2.5 ADD (immediate)
+b5000002@J  # [447] cbnz x2, @J  C6.2.77 CBNZ -> ERR
+:4  # DW1
+aa0003f0  # [448] orr x16, xzr, x0  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+:5  # STORE
+d28001d1  # [449] movz x17, #14  C6.2.285 MOVZ
+d28007c1  # [450] movz x1, #62  C6.2.285 MOVZ
+9ac122c2  # [451] lslv x2, x22, x1  C6.2.271 LSLV
+b5000002@J  # [452] cbnz x2, @J  C6.2.77 CBNZ -> ERR
+d2800211  # [453] movz x17, #16  C6.2.285 MOVZ
+d2a01001  # [454] movz x1, #0x80, lsl #16  C6.2.285 MOVZ
+eb0102df  # [455] subs xzr, x22, x1  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [456] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+8b160381  # [457] add x1, x28, x22  C6.2.6 ADD (shifted register)
+b9000030  # [458] str w16, [x1]  C6.2.415 STR (immediate) 32-bit, unsigned offset
+910012d6  # [459] add x22, x22, #4  C6.2.5 ADD (immediate)
+5400000e@g  # [460] b.al @g  C6.2.34 B.cond (cond 14, Table C1-1) -> ENDL
+:6  # INSTR
+1000005e  # [461] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [462] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+1000005e  # [463] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@B  # [464] b.al @B  C6.2.34 B.cond (cond 14, Table C1-1) -> FINDTAB
+d2800071  # [465] movz x17, #3  C6.2.285 MOVZ
+b400000d@J  # [466] cbz x13, @J  C6.2.78 CBZ -> ERR
+f94009b0  # [467] ldr x16, [x13, #16]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+f9400dae  # [468] ldr x14, [x13, #24]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+910081b2  # [469] add x18, x13, #32  C6.2.5 ADD (immediate)
+:7  # IF1
+b400000e@<  # [470] cbz x14, @<  C6.2.78 CBZ -> IDONE
+1000005e  # [471] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@j  # [472] b.al @j  C6.2.34 B.cond (cond 14, Table C1-1) -> TOKEN
+d2800091  # [473] movz x17, #4  C6.2.285 MOVZ
+b400000b@J  # [474] cbz x11, @J  C6.2.78 CBZ -> ERR
+39400241  # [475] ldrb w1, [x18]  C6.2.220 LDRB (immediate), unsigned offset
+7101c83f  # [476] subs wzr, w1, #114  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@8  # [477] b.eq @8  C6.2.34 B.cond (cond 0, Table C1-1) -> FR
+7101a43f  # [478] subs wzr, w1, #105  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@9  # [479] b.eq @9  C6.2.34 B.cond (cond 0, Table C1-1) -> FI
+7101cc3f  # [480] subs wzr, w1, #115  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@$  # [481] b.eq @$  C6.2.34 B.cond (cond 0, Table C1-1) -> FS
+7101b03f  # [482] subs wzr, w1, #108  C6.2.464 SUBS (immediate) 32-bit, alias CMP C6.2.96
+54000000@&  # [483] b.eq @&  C6.2.34 B.cond (cond 0, Table C1-1) -> FL
+5400000e@+  # [484] b.al @+  C6.2.34 B.cond (cond 14, Table C1-1) -> FA
+:8  # FR
+1000005e  # [485] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@x  # [486] b.al @x  C6.2.34 B.cond (cond 14, Table C1-1) -> REG
+5400000e@!  # [487] b.al @!  C6.2.34 B.cond (cond 14, Table C1-1) -> FU
+:9  # FI
+1000005e  # [488] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@q  # [489] b.al @q  C6.2.34 B.cond (cond 14, Table C1-1) -> NUM
+:!  # FU
+39400a43  # [490] ldrb w3, [x18, #2]  C6.2.220 LDRB (immediate), unsigned offset
+d2800024  # [491] movz x4, #1  C6.2.285 MOVZ
+9ac32084  # [492] lslv x4, x4, x3  C6.2.271 LSLV
+d2800111  # [493] movz x17, #8  C6.2.285 MOVZ
+eb04001f  # [494] subs xzr, x0, x4  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [495] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+5400000e@-  # [496] b.al @-  C6.2.34 B.cond (cond 14, Table C1-1) -> FINS
+:$  # FS
+1000005e  # [497] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@q  # [498] b.al @q  C6.2.34 B.cond (cond 14, Table C1-1) -> NUM
+:%  # FSC
+39400a43  # [499] ldrb w3, [x18, #2]  C6.2.220 LDRB (immediate), unsigned offset
+d2800024  # [500] movz x4, #1  C6.2.285 MOVZ
+9ac32084  # [501] lslv x4, x4, x3  C6.2.271 LSLV
+d2800025  # [502] movz x5, #1  C6.2.285 MOVZ
+9ac52485  # [503] lsrv x5, x4, x5  C6.2.274 LSRV
+8b050006  # [504] add x6, x0, x5  C6.2.6 ADD (shifted register)
+d2800111  # [505] movz x17, #8  C6.2.285 MOVZ
+eb0400df  # [506] subs xzr, x6, x4  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [507] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d1000484  # [508] sub x4, x4, #1  C6.2.457 SUB (immediate)
+8a040000  # [509] and x0, x0, x4  C6.2.15 AND (shifted register)
+5400000e@-  # [510] b.al @-  C6.2.34 B.cond (cond 14, Table C1-1) -> FINS
+:&  # FL
+b4000015@.  # [511] cbz x21, @.  C6.2.78 CBZ -> FL0
+1000005e  # [512] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@F  # [513] b.al @F  C6.2.34 B.cond (cond 14, Table C1-1) -> FINDSYM
+d2800131  # [514] movz x17, #9  C6.2.285 MOVZ
+b400000d@J  # [515] cbz x13, @J  C6.2.78 CBZ -> ERR
+f94009a0  # [516] ldr x0, [x13, #16]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+cb160000  # [517] sub x0, x0, x22  C6.2.458 SUB (shifted register)
+d28001d1  # [518] movz x17, #14  C6.2.285 MOVZ
+d28007c1  # [519] movz x1, #62  C6.2.285 MOVZ
+9ac12002  # [520] lslv x2, x0, x1  C6.2.271 LSLV
+b5000002@J  # [521] cbnz x2, @J  C6.2.77 CBNZ -> ERR
+d2800041  # [522] movz x1, #2  C6.2.285 MOVZ
+9ac12800  # [523] asrv x0, x0, x1  C6.2.21 ASRV
+5400000e@%  # [524] b.al @%  C6.2.34 B.cond (cond 14, Table C1-1) -> FSC
+:.  # FL0
+d2800000  # [525] movz x0, #0  C6.2.285 MOVZ
+5400000e@-  # [526] b.al @-  C6.2.34 B.cond (cond 14, Table C1-1) -> FINS
+:+  # FA
+b4000015@/  # [527] cbz x21, @/  C6.2.78 CBZ -> FNEXT
+1000005e  # [528] adr x30, +2  C6.2.12 ADR: return point = after the next word
+5400000e@F  # [529] b.al @F  C6.2.34 B.cond (cond 14, Table C1-1) -> FINDSYM
+d2800131  # [530] movz x17, #9  C6.2.285 MOVZ
+b400000d@J  # [531] cbz x13, @J  C6.2.78 CBZ -> ERR
+f94009a0  # [532] ldr x0, [x13, #16]  C6.2.216 LDR (immediate) 64-bit, unsigned offset
+cb160000  # [533] sub x0, x0, x22  C6.2.458 SUB (shifted register)
+d2a00404  # [534] movz x4, #0x20, lsl #16  C6.2.285 MOVZ
+d2a00205  # [535] movz x5, #0x10, lsl #16  C6.2.285 MOVZ
+8b050006  # [536] add x6, x0, x5  C6.2.6 ADD (shifted register)
+d2800111  # [537] movz x17, #8  C6.2.285 MOVZ
+eb0400df  # [538] subs xzr, x6, x4  C6.2.465 SUBS (shifted register), alias CMP C6.2.97
+54000002@J  # [539] b.hs @J  C6.2.34 B.cond (cond 2, Table C1-1) -> ERR
+d28007c1  # [540] movz x1, #62  C6.2.285 MOVZ
+9ac12002  # [541] lslv x2, x0, x1  C6.2.271 LSLV
+d2800421  # [542] movz x1, #33  C6.2.285 MOVZ
+9ac12442  # [543] lsrv x2, x2, x1  C6.2.274 LSRV
+aa020210  # [544] orr x16, x16, x2  C6.2.302 ORR (shifted register)
+d2800041  # [545] movz x1, #2  C6.2.285 MOVZ
+9ac12803  # [546] asrv x3, x0, x1  C6.2.21 ASRV
+d28005a1  # [547] movz x1, #45  C6.2.285 MOVZ
+9ac12063  # [548] lslv x3, x3, x1  C6.2.271 LSLV
+d2800501  # [549] movz x1, #40  C6.2.285 MOVZ
+9ac12463  # [550] lsrv x3, x3, x1  C6.2.274 LSRV
+aa030210  # [551] orr x16, x16, x3  C6.2.302 ORR (shifted register)
+5400000e@/  # [552] b.al @/  C6.2.34 B.cond (cond 14, Table C1-1) -> FNEXT
+:-  # FINS
+39400642  # [553] ldrb w2, [x18, #1]  C6.2.220 LDRB (immediate), unsigned offset
+9ac22000  # [554] lslv x0, x0, x2  C6.2.271 LSLV
+aa000210  # [555] orr x16, x16, x0  C6.2.302 ORR (shifted register)
+:/  # FNEXT
+91001252  # [556] add x18, x18, #4  C6.2.5 ADD (immediate)
+d10005ce  # [557] sub x14, x14, #1  C6.2.457 SUB (immediate)
+5400000e@7  # [558] b.al @7  C6.2.34 B.cond (cond 14, Table C1-1) -> IF1
+:<  # IDONE
+5400000e@5  # [559] b.al @5  C6.2.34 B.cond (cond 14, Table C1-1) -> STORE
+:=  # PASSEND
+b5000015@>  # [560] cbnz x21, @>  C6.2.77 CBNZ -> OUTP
+d2800035  # [561] movz x21, #1  C6.2.285 MOVZ
+5400000e@c  # [562] b.al @c  C6.2.34 B.cond (cond 14, Table C1-1) -> PASS
+:>  # OUTP
+aa1c03f4  # [563] orr x20, xzr, x28  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+aa1603ee  # [564] orr x14, xzr, x22  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+:_  # WL
+b400000e@^  # [565] cbz x14, @^  C6.2.78 CBZ -> EXIT0
+d2800020  # [566] movz x0, #1  C6.2.285 MOVZ
+aa1403e1  # [567] orr x1, xzr, x20  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+aa0e03e2  # [568] orr x2, xzr, x14  C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d2800808  # [569] movz x8, #64  C6.2.285 MOVZ
+d4000001  # [570] svc #0  C6.2.466 SVC
+d2800051  # [571] movz x17, #2  C6.2.285 MOVZ
+f100001f  # [572] subs xzr, x0, #0  C6.2.464 SUBS (immediate), alias CMP C6.2.96
+5400000d@J  # [573] b.le @J  C6.2.34 B.cond (cond 13, Table C1-1) -> ERR
+8b000294  # [574] add x20, x20, x0  C6.2.6 ADD (shifted register)
+cb0001ce  # [575] sub x14, x14, x0  C6.2.458 SUB (shifted register)
+5400000e@_  # [576] b.al @_  C6.2.34 B.cond (cond 14, Table C1-1) -> WL
+:^  # EXIT0
+d2800000  # [577] movz x0, #0  C6.2.285 MOVZ
+d2800ba8  # [578] movz x8, #93  C6.2.285 MOVZ
+d4000001  # [579] svc #0  C6.2.466 SVC
+:Q  # MSG1
+326d7361  # data: "asm2"
+696c203a  # data: ": li"
+0020656e  # data: "ne " 0
+:R  # MSG2
+7265203a  # data: ": er"
+20726f72  # data: "ror "
+00000000  # data: 0

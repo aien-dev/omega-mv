@@ -1,0 +1,19 @@
+encode-control rc=0 bw_encode_control_test: 480 encodings checked, 0 opcodes refused (no operands), 0 dropped the contro
+cmdlist-host rc=0 host-only: 27 checks, 0 failed: PASS
+cmdlist-sim rc=0 sim: 74 checks, 0 failed: PASS
+q38-host rc=0 gpu_q38_graph_test (host-only): 4 checks, 0 failed: PASS
+fp8-host rc=0 gpu_fp8_api_test: 4997 checks, 0 failed: PASS
+fp8-host-bigk rc=0 gpu_fp8_api_test: 4997 checks, 0 failed: PASS
+fp8-sim rc=0 gpu_fp8_api_test: 214 checks, 0 failed: PASS
+fp8-coal rc=0 gpu_fp8_api_test: 10 checks, 0 failed: PASS
+fp8-deep rc=0 gpu_fp8_api_test: 9 checks, 0 failed: PASS
+default-l2 rc=0 gpu_q38_graph_test: 18 checks, 0 failed: PASS
+default-l4 rc=0 gpu_q38_graph_test: 28 checks, 0 failed: PASS
+overlap0-l2 rc=0 gpu_q38_graph_test: 18 checks, 0 failed: PASS
+overlap0-l4 rc=0 gpu_q38_graph_test: 28 checks, 0 failed: PASS
+bigk-l2 rc=0 gpu_q38_graph_test: 18 checks, 0 failed: PASS
+bigk-l4 rc=0 gpu_q38_graph_test: 28 checks, 0 failed: PASS
+head8-l2 rc=0 gpu_q38_graph_test: 21 checks, 0 failed: PASS
+head8-l4 rc=0 gpu_q38_graph_test: 31 checks, 0 failed: PASS
+fp8-chip-head rc=0 gpu_fp8_api_test: 5 checks, 0 failed: PASS
+CHIPGATE: PASS

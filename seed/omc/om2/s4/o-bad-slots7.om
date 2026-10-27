@@ -1,0 +1,5 @@
+note S4 slots: view (2) + view (2) + out (1) + two scalars = 7: error 9 on the fn line.
+om2
+export fn f a view uchar * b view uchar * r out uchar 1 c uchar d uchar to void
+put r 0 c
+end

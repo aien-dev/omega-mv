@@ -1,0 +1,8 @@
+note S3 layout refusal
+om2
+layout z 8
+field a ushort at 0 little
+end
+fn f c edit z to ushort
+ret get c a 1
+end

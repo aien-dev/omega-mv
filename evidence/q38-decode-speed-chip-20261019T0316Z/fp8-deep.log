@@ -1,0 +1,3 @@
+deep default 0: qkv 5120x2048 depth 0 (coal 1, shared 64), o_proj 2048x4096 depth 0, gate_up 8x1536x2048 depth 0
+deep default: 4800 qkv spec_for calls 0.068 ms
+gpu_fp8_api_test: 9 checks, 0 failed: PASS

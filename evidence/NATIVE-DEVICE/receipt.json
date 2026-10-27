@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "compiler_sha256": "9749f38841a55917d41924a68bce31463ec2339910bddd5e6cbf6ea4420551db",
+  "source_sha256": {
+    "seed/omc/omc.om": "fe67a0c31e42fcf6d86fce786b0a16b46a95daf3c7da1af7b6974df68ecfe400",
+    "seed/host/tests/devcall.om": "ca76010ea6cf2ab7acd8b8fab36234dcaad8f2cede057e01a52e840842a2e8ed",
+    "seed/host/tests/uvmctl.om": "1e7b46b9d0fb44f5c97768f92daa7599e9b36e6d5cbc6553ac755a7c02047b5f",
+    "seed/host/tests/mapio.om": "f657ff3daa44b070608178834b46f1f83ade03e65b73c00e05a1c2e2a9356267",
+    "seed/host/tests/reserve.om": "8498b995e3ee7a2d9ac86085af1674af7c14b57da5778051fc5e7a15406768dc",
+    "seed/host/tests/memcheck.om": "652a4bc9455251bb51d01a75fc5be0ad008ae5e022e4835e43959f073c82413d"
+  },
+  "host": "PASS",
+  "original_fixture_count": 70,
+  "legacy_host_negative_controls": 41,
+  "device_mapping_compile_refusals": 36,
+  "new_forked_runtime_refusals": 30,
+  "compiled_mutants": 16,
+  "branch669": "PASS",
+  "implementation": "handwritten seeded Omega",
+  "orchestration": "shell and Node; mutation deltas retained",
+  "independent_oracles": "GCC header sizeof/offsetof; GNU assembler/objdump instruction and branch decoding; no linked runtime helper",
+  "scope": "compiler/device primitives; does not qualify a model or complete experiment"
+}

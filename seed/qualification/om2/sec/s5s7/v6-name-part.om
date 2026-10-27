@@ -1,0 +1,11 @@
+note SPDX-License-Identifier: Apache-2.0
+note erratum E6 Q1: the section 6 word part declared as a function name in an OM-2 unit is
+note error 16.
+om2
+fn part a ulong to ulong
+ret a
+end
+fn main to int
+putd part 3
+ret 0
+end

@@ -1,0 +1,31 @@
+# Harness controls. The verdict of every line is fixed in advance by the comment above its group;
+# the whole list must end OM2GATE INVALID (exit 3) because it contains INVALID controls.
+# --- expected PASS
+trap-103 run seed/qualification/om2/selftest/trap.om - - - 103
+refuse-11 refuse seed/qualification/om2/selftest/refuse.om 11
+killed-at-5 kill seed/qualification/om2/selftest/cat-bad.om seq:300 file:seed/qualification/om2/fixtures/gen/seq-300.bin - 0
+subst seed/qualification/om2/selftest/exit-from.txt seed/qualification/om2/selftest/exit-to.txt
+subst-exit-3 run seed/qualification/om2/selftest/cat.om - - - 3
+cc seed/omc/omc.om
+cat-rebuilt-omc run seed/qualification/om2/selftest/cat.om seq:300 file:seed/qualification/om2/fixtures/gen/seq-300.bin - 0
+cc pinned
+# --- expected FAIL
+survivor kill seed/qualification/om2/selftest/cat.om seq:300 file:seed/qualification/om2/fixtures/gen/seq-300.bin - 0
+exit-mismatch run seed/qualification/om2/selftest/cat.om - - - 1
+refuse-wrong-code refuse seed/qualification/om2/selftest/refuse.om 12
+refuse-accepted refuse seed/qualification/om2/selftest/cat.om 11
+stderr-mismatch run seed/qualification/om2/selftest/cat.om - - line:x 0
+# --- expected NOT_RUN
+planned notrun OM-2 contract not frozen
+# --- expected INVALID
+malformed run only-three
+signal run seed/qualification/om2/selftest/signal.om - - - 0
+deadline 1
+timeout run seed/qualification/om2/selftest/slow.om - - - 0
+deadline 30
+subst seed/qualification/om2/selftest/none-from.txt seed/qualification/om2/selftest/exit-to.txt
+subst-no-match run seed/qualification/om2/selftest/cat.om - - - 0
+missing-input run seed/qualification/om2/selftest/cat.om file:seed/qualification/om2/selftest/does-not-exist - - 0
+missing-source run seed/qualification/om2/selftest/does-not-exist.om - - - 0
+exit-127 run seed/qualification/om2/selftest/cat.om - - - 127
+subst seed/qualification/om2/selftest/exit-from.txt seed/qualification/om2/selftest/exit-to.txt

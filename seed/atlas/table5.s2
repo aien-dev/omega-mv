@@ -1,0 +1,30 @@
+; table5.s2 -- extra table lines for rung 5 (Atlas), read after rung2/table.s2 and rung3/table3.s2.
+; Same format; every fixed part from the encoding diagram of Arm DDI 0487 M.d, section named.
+= msr.daifset 0xd50340df i8.4        ; C6.2.288 MSR (immediate): op1 011, op2 110 = DAIFSet, CRm = the mask
+= wfe        0xd503205f              ; C6.2.502 WFE
+= nop        0xd503201f              ; C6.2.299 NOP
+= ldr.x.lit  0x58000000 r0 l5.19     ; C6.2.217 LDR (literal), 64-bit (opc 01); distance in words
+= ldp.x      0xa9400000 r0 r10 r5 s15.7 ; C6.2.214 LDP, signed offset, 64-bit (Rt, Rt2, Rn, offset/8)
+= ldp.w      0x29400000 r0 r10 r5 s15.7 ; C6.2.214 LDP, signed offset, 32-bit (offset/4)
+= ldp.x.post 0xa8c00000 r0 r10 r5 s15.7 ; C6.2.214 LDP, post-index, 64-bit
+= stp.x      0xa9000000 r0 r10 r5 s15.7 ; C6.2.414 STP, signed offset, 64-bit
+= stp.w      0x29000000 r0 r10 r5 s15.7 ; C6.2.414 STP, signed offset, 32-bit
+= stp.x.pre  0xa9800000 r0 r10 r5 s15.7 ; C6.2.414 STP, pre-index, 64-bit
+= ldrb.post  0x38400400 r0 r5 s12.9  ; C6.2.220 LDRB (immediate), post-index
+= strb.post  0x38000400 r0 r5 s12.9  ; C6.2.417 STRB (immediate), post-index
+= strb.r     0x38206800 r0 r5 r16    ; C6.2.418 STRB (register), option 011 (LSL), S 0
+= ldur.w     0xb8400000 r0 r5 s12.9  ; C6.2.259 LDUR, 32-bit (offset in bytes)
+= stur.w     0xb8000000 r0 r5 s12.9  ; C6.2.446 STUR, 32-bit (offset in bytes)
+= rev.w      0x5ac00800 r0 r5        ; C6.2.342 REV, 32-bit (opc 10)
+= extr.w     0x13800000 r0 r5 r16 i10.6 ; C6.2.160 EXTR, 32-bit (Rd, Rn, Rm, lsb); ROR #s = EXTR Rd, Rs, Rs, #s
+= eor.w.ror  0x4ac00000 r0 r5 r16 i10.6 ; C6.2.156 EOR (shifted register), 32-bit, shift 11 = ROR
+= eor.w.lsr  0x4a400000 r0 r5 r16 i10.6 ; C6.2.156 EOR (shifted register), 32-bit, shift 01 = LSR
+= add.x.lsl  0x8b000000 r0 r5 r16 i10.6 ; C6.2.6 ADD (shifted register), 64-bit, shift 00 = LSL
+= add.x.uxtw 0x8b204000 r0 r5 r16    ; C6.2.4 ADD (extended register), 64-bit, option 010 = UXTW, imm3 0
+= bic.w      0x0a200000 r0 r5 r16    ; C6.2.41 BIC (shifted register), 32-bit, shift 0
+= and.x.bm   0x92000000 r0 r5 i22.1 i16.6 i10.6 ; C6.2.14 AND (immediate), 64-bit (Rd, Rn, N, immr, imms)
+= adrp       0x90000000 r0 i5.19 i29.2 ; C6.2.13 ADRP (Rd, immhi, immlo): page distance = immhi:immlo
+= movn.w     0x12800000 r0 i5.16 i21.1 ; C6.2.284 MOVN, 32-bit
+= add.w.i    0x11000000 r0 r5 i10.12 ; C6.2.5 ADD (immediate), 32-bit
+= sub.w.i    0x51000000 r0 r5 i10.12 ; C6.2.457 SUB (immediate), 32-bit
+= cmn.w.i    0x3100001f r5 i10.12    ; C6.2.93 CMN (immediate) = ADDS WZR, Wn, #imm (C6.2.10)

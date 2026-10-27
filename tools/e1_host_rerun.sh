@@ -53,7 +53,7 @@ record() {
     local L=$1 EV=$2 JC commit before after start end l v lines= logs= s body d
     [ -f "$L/summary.txt" ] && [ "$(tail -n1 "$L/summary.txt")" = DONE ] || { echo "record: $L/summary.txt is not finished (no DONE line)" >&2; exit 1; }
     JC=$(mktemp -d "${TMPDIR:-/tmp}/e1hr.XXXXXX"); trap "rm -rf '$JC'" EXIT
-    gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$HERE/src" -o "$JC/json_canon" "$HERE/tools/json_canon.c" "$HERE/src/sha256.c" -lm || exit 1
+    gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$HERE/src" -o "$JC/json_canon" "$HERE/tools/json_canon.c" "$HERE/src/omega_om_units.c" -lm || exit 1
     read -r _ commit before _ start < <(head -n1 "$L/summary.txt")
     before=${before#dirty_tracked=}; end=$(grep -E '^end ' "$L/summary.txt" | awk '{print $2}'); after=$(grep -E '^end ' "$L/summary.txt" | sed 's/.*dirty_tracked_after=//')
     [[ $commit =~ ^[0-9a-f]{40}$ ]] || { echo "record: bad HEAD line" >&2; exit 1; }

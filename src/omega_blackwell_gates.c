@@ -1152,10 +1152,13 @@ static bool test_m18_gate18_receipt(void) {
         snprintf(target_hardware, sizeof(target_hardware), "UNOBSERVED (world init failed)");
     }
 
-    /* 4. Binary SHA-256 */
+    /* 4. Binary SHA-256 of the omegatool under test, wherever make put it
+     * (build/step-<step>/omegatool under tests/gates/run.sh, omega#511). */
+    char self_path[PATH_MAX];
+    if (!omega_evidence_self_binary(self_path, sizeof(self_path))) return false;
     uint8_t bin_digest[32];
     char bin_hex[65] = {0};
-    compute_file_sha256("build/omegatool", bin_digest, bin_hex);
+    if (!compute_file_sha256(self_path, bin_digest, bin_hex)) return false;
 
     /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area. */
     const char *manifest_files[] = {
@@ -1172,7 +1175,7 @@ static bool test_m18_gate18_receipt(void) {
         "src/omega_blackwell_gates.h",
         "src/omega_blackwell_gates.c",
         "tools/omegatool.c",
-        "build/omegatool"
+        self_path
     };
     size_t num_files = sizeof(manifest_files) / sizeof(manifest_files[0]);
 

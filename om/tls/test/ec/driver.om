@@ -1,0 +1,343 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/ec.om (program mode), concatenated after sha2.om and ec.om.
+note Reads a vector file on stdin, one case per line (see gen_vectors.py):
+note   ID CRV MODE EXP ALG PUBHEX SIGHEX MSGHEX DIGESTHEX   ('-' = empty hex field, '#' comment)
+note For each case: digest = sha2_digest ALG MSG (om/tls/sha2.om), cross-checked against DIGESTHEX
+note (hashlib; a difference is a MISMATCH ... hash line); then
+note ecdsa_verify (MODE d) or ecdsa_verify_raw (MODE r) on digest || sig; EXP 0 needs 0, EXP 1
+note needs a nonzero code, EXP =K needs exactly code K. Negative controls for every EXP 0 case:
+note digest[0] flipped must give exactly 1; hlen = len hs + 1 must give exactly 2 (both modes). Optional argument: repeat count R (timing; each verify runs R
+note times). Prints one MISMATCH line per wrong result and a summary line:
+note   cases C verifies V controls K mismatches X ns T codes c0 c1 c2 c3 c4 c5
+note Exit 0 only when at least one verify ran and none mismatched; 1 otherwise; 65 bad input.
+
+text tmis "MISMATCH line "
+text tgot " got "
+text twhy " "
+text thash "hash"
+text tctl "control"
+text tver "verify"
+text tcase "cases "
+text tvers " verifies "
+text tctls " controls "
+text tmm " mismatches "
+text tns " ns "
+text tcod " codes"
+text tsp " "
+text tnl "\n"
+text tbad "driver: bad input\n"
+
+global dvin uchar 16777216
+global dvout uchar 32
+global dvarg uchar 32
+note dvc: 0 line, 1 cases, 2 verifies, 3 mismatches, 4 ns, 5 repeats, 6 pos, 7 controls,
+note 8..13 code counts 0..5, 16 crv, 17 mode (0 d, 1 r), 18 exp, 19 alg, 20 pub len, 21 sig len,
+note 22 msg len, 23 digest len, 24 id start, 25 id end, 26 input length, 27 exact-code flag
+global dvc ulong 32
+
+fn dvnum v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put dvout sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 dvout sub 32 k k
+end
+
+fn dvdie to void
+r = write 2 tbad 0 len tbad
+exit 65
+end
+
+fn dvnib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+dvdie
+ret 0
+end
+
+fn dvslurp to void
+t = ulong 0
+while true bound 999999
+room = sub len dvin t
+if eq room 0
+dvdie
+end
+r = read 0 dvin t room
+if lt r 0
+dvdie
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put dvc 26 t
+end
+
+fn dvreps to ulong
+if lt argcnt 2
+ret 1
+end
+l = argread 1 dvarg 0 20
+v = ulong 0
+for i ulong ulong l
+v = add mul v 10 sub ulong get dvarg i 48
+end
+ret v
+end
+
+note end of the token at the current position (stops at a space or newline); the token must be
+note non-empty
+fn dvend to ulong
+p = get dvc 6
+e = p
+while lt e get dvc 26 bound 999999
+c = get dvin e
+if or eq c 32 eq c 10
+break
+end
+e = add e 1
+end
+if eq e p
+dvdie
+end
+ret e
+end
+
+note step past the token ending at e and one following space (a newline is left in place)
+fn dvnext e ulong to void
+if lt e get dvc 26
+if eq get dvin e 32
+e = add e 1
+end
+end
+put dvc 6 e
+end
+
+fn dvdec to ulong
+e = dvend
+v = ulong 0
+for i ulong sub e get dvc 6
+c = ulong get dvin add get dvc 6 i
+if or lt c 48 gt c 57
+dvdie
+end
+v = add mul v 10 sub c 48
+end
+dvnext e
+ret v
+end
+
+fn dvbyte p ulong to uchar
+hi = dvnib ulong get dvin p
+lo = dvnib ulong get dvin add p 1
+ret uchar or shl hi 4 lo
+end
+
+note hex token into a[0..); returns the byte count ('-' is empty)
+fn dvhex a edit uchar * to ulong
+e = dvend
+p = get dvc 6
+if and eq sub e p 1 eq get dvin p 45
+dvnext e
+ret 0
+end
+h = sub e p
+if ne and h 1 0
+dvdie
+end
+c = div h 2
+if gt c len a
+dvdie
+end
+for i ulong c
+put a i dvbyte add p mul i 2
+end
+dvnext e
+ret c
+end
+
+fn dvbump i ulong v ulong to void
+put dvc i add get dvc i v
+end
+
+fn dvmis why view uchar * got ulong to void
+r = write 1 tmis 0 len tmis
+dvnum get dvc 0
+r = write 1 tsp 0 1
+r = write 1 dvin get dvc 24 sub get dvc 25 get dvc 24
+r = write 1 twhy 0 1
+r = write 1 why 0 len why
+r = write 1 tgot 0 len tgot
+dvnum got
+r = write 1 tnl 0 1
+dvbump 3 1
+end
+
+fn dvver pk view uchar * hs view uchar * to ulong
+if eq get dvc 17 0
+ret ecdsa_verify get dvc 16 pk hs get dvc 23
+end
+ret ecdsa_verify_raw get dvc 16 pk hs get dvc 23
+end
+
+note parse one case line into pk (public key) and hs (digest from file at 0, signature at 64)
+fn dvparse pk edit uchar * hs edit uchar * m edit uchar * to void
+put dvc 24 get dvc 6
+e = dvend
+put dvc 25 e
+dvnext e
+put dvc 16 dvdec
+md = dvend
+c = get dvin get dvc 6
+if eq c 100
+put dvc 17 0
+else
+if eq c 114
+put dvc 17 1
+else
+dvdie
+end
+end
+dvnext md
+put dvc 27 0
+if eq get dvin get dvc 6 61
+put dvc 27 1
+put dvc 6 add get dvc 6 1
+end
+put dvc 18 dvdec
+put dvc 19 dvdec
+put dvc 20 dvhex pk
+put dvc 21 dvhex part hs 64 sub len hs 64
+put dvc 22 dvhex m
+put dvc 23 dvhex part hs 0 64
+if gt get dvc 23 64
+dvdie
+end
+if ne get dvin get dvc 6 10
+dvdie
+end
+end
+
+note digest = sha2_digest ALG of the message, written over hs[0..); cross-check: it must equal the
+note file's (hashlib) digest that was parsed there
+fn dvhash hs edit uchar * m view uchar * dg edit uchar * to void
+n = sha2_digest get dvc 19 m dg
+if ne n get dvc 23
+dvmis thash n
+ret
+end
+for i ulong n
+if ne get dg i get hs i
+dvmis thash i
+end
+put hs i get dg i
+end
+end
+
+fn dvrun pk view uchar * hs edit uchar * to void
+n = add get dvc 23 get dvc 21
+got = ulong 0
+for k ulong get dvc 5
+t0 = monons
+got = dvver pk part hs 0 n
+dvbump 4 ulong sub monons t0
+dvbump 2 1
+end
+if le got 5
+dvbump add 8 got 1
+end
+x = get dvc 18
+if eq get dvc 27 1
+if ne got x
+dvmis tver got
+end
+else
+if or and eq x 0 ne got 0 and eq x 1 eq got 0
+dvmis tver got
+end
+end
+if and eq x 0 gt get dvc 23 0
+put hs 0 xor get hs 0 1
+got = dvver pk part hs 0 n
+put hs 0 xor get hs 0 1
+dvbump 7 1
+if ne got 1
+dvmis tctl got
+end
+note hlen past the end of hs: code 2 from both entry points
+got = ecdsa_verify get dvc 16 pk part hs 0 get dvc 23 add get dvc 23 1
+dvbump 7 1
+if ne got 2
+dvmis tctl got
+end
+got = ecdsa_verify_raw get dvc 16 pk part hs 0 get dvc 23 add get dvc 23 1
+dvbump 7 1
+if ne got 2
+dvmis tctl got
+end
+end
+end
+
+fn dvcase pk edit uchar * hs edit uchar * m edit uchar * to void
+dvbump 1 1
+dvparse pk hs m
+dg = new uchar 64 0
+dvhash hs part m 0 get dvc 22 dg
+d = get dvc 23
+for i ulong get dvc 21
+put hs add d i get hs add 64 i
+end
+dvrun part pk 0 get dvc 20 hs
+end
+
+fn main to int
+pk = new uchar 256 0
+hs = new uchar 8448 0
+m = new uchar 4096 0
+dvslurp
+put dvc 5 dvreps
+tot = get dvc 26
+while lt get dvc 6 tot bound 999999
+dvbump 0 1
+p = get dvc 6
+if ne get dvin p 35
+dvcase pk hs m
+end
+e = get dvc 6
+while and lt e tot ne get dvin e 10 bound 999999
+e = add e 1
+end
+put dvc 6 add e 1
+end
+r = write 1 tcase 0 len tcase
+dvnum get dvc 1
+r = write 1 tvers 0 len tvers
+dvnum get dvc 2
+r = write 1 tctls 0 len tctls
+dvnum get dvc 7
+r = write 1 tmm 0 len tmm
+dvnum get dvc 3
+r = write 1 tns 0 len tns
+dvnum get dvc 4
+r = write 1 tcod 0 len tcod
+for i ulong 6
+r = write 1 tsp 0 1
+dvnum get dvc add 8 i
+end
+r = write 1 tnl 0 1
+if or gt get dvc 3 0 eq get dvc 2 0
+ret 1
+end
+ret 0
+end

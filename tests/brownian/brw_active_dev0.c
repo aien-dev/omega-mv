@@ -340,7 +340,7 @@ static void receipt_head(buf_t *rc, const char *title, const char *tagname, cons
     static const char *srcs[] = {"tools/brownian/brw_active.c", "tools/brownian/brw_active.h", "tests/brownian/brw_active_dev0.c",
                                  "tests/brownian/test_brw_active.c", "mk/brownian_active.mk", "src/turing/ty_prd2.c",
                                  "src/turing/ty_prd2.h", "src/turing/ty_qcont.c", "src/turing/ty_qcont.h", "src/turing/ty_prd.c",
-                                 "src/turing/ty_prd.h", "src/turing/ty_math.c", "src/turing/ty_math.h", "src/sha256.c", "src/sha256.h"};
+                                 "src/turing/ty_prd.h", "src/turing/ty_math.c", "src/turing/ty_math.h", "src/omega_om_units.c", "src/omega_api_decl.h", "src/omega_native.h", "src/sha256.h"};
     for (size_t i = 0; i < sizeof srcs / sizeof *srcs; i++)
         bprintf(rc, "source: %s sha256 %s\n", srcs[i], file_sha(srcs[i], sha) ? "UNREADABLE" : sha);
     bprintf(rc, "runner_binary: /proc/self/exe sha256 %s\n", file_sha("/proc/self/exe", sha) ? "UNREADABLE" : sha);

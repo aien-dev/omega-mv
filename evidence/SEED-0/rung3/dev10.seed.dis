@@ -1,0 +1,8 @@
+   0:	eb20801f 	subs	xzr, x0, w0, sxtb
+   4:	540000a1 	b.ne	0x18  // b.any
+   8:	d65f03c0 	ret
+   c:	aa0703e0 	orr	x0, xzr, x7
+  10:	f94008f0 	ldr	x16, [x7, #16]
+  14:	d61f0200 	br	x16
+  18:	d28000a1 	movz	x1, #0x5
+  1c:	17fffffc 	b	0xc

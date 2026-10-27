@@ -121,8 +121,8 @@
           "purpose": "Tests 1-10 for ANS (docs/ans/INERTIAL_ALIGNMENT_SPEC_V1.md): freeze/digest, hostile reference mu"
         },
         {
-          "digest": "45c5f4fd157769cf0dcc4b8acbd76b0953580bc328714bab8e1d65e9264a5664",
-          "last_commit": "d863780e",
+          "digest": "7b69a19958c5a5f55bba4fbc33bc6f26423358efd46311b0eacfe83bb665d4c1",
+          "last_commit": "450bbefd",
           "name": "brownian",
           "purpose": "Directory tests/brownian. Purpose not yet described by a human."
         },
@@ -133,8 +133,8 @@
           "purpose": "Directory tests/canonicalization. Purpose not yet described by a human."
         },
         {
-          "digest": "646c083a94914e5726634c33cc1e694349cfcd4f43817864ffec83e506a52d4e",
-          "last_commit": "d863780e",
+          "digest": "088f526f8cae115209dd0162f28669812483ce5c926e41e8810dada1eefcb81a",
+          "last_commit": "450bbefd",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -205,8 +205,8 @@
           "purpose": "osh lexer host driver, vendored aien-protocols PR#16 draft vectors (5ae5292)"
         },
         {
-          "digest": "12b31dc2cd4f6a6c27983db11b4140c597025c9124da5ddcbe6a9230ab4f8410",
-          "last_commit": "d863780e",
+          "digest": "65e84051bb8dc00b180c6b06bec58103773785eebd6d6c69c9783de5fd0e2ba9",
+          "last_commit": "450bbefd",
           "name": "path",
           "purpose": "Directory tests/path. Purpose not yet described by a human."
         },
@@ -265,8 +265,8 @@
           "purpose": "Reservoir tests (omega#440): Gate 1 simulator and readout checks against an independent binary64"
         },
         {
-          "digest": "30285ed967d2ff789e473a6173486a025628ebf7264c251fff254c551f555e80",
-          "last_commit": "3591ef08",
+          "digest": "10d19641e4bb5b435ec6363d4ea7d3c1596af47d97b86f4de35d6ae57770241e",
+          "last_commit": "45f7d769",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -295,21 +295,21 @@
           "purpose": "Directory tests/turing. Purpose not yet described by a human."
         },
         {
-          "digest": "003966bc697c6f85cfffbae00fae992a634bc386f4a44340daaa8ddcb5618ef6",
-          "last_commit": "d863780e",
+          "digest": "930fcb9ce348c604424e5380796a77c3586a835b43d42b504325c36b12d166d7",
+          "last_commit": "450bbefd",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:a301d678e5b67bb2db8ea92d905135af26f58b487b3980b95fba3fab5299521a",
-      "compiled_at": "2026-10-24T17:55:17Z",
+      "children_root": "sha256:0c57282ff8cf1d34e5685e2729755f2978917e66debb5423961033be9d25c902",
+      "compiled_at": "2026-10-26T21:37:12Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:a70798a491ddfc05b492c2410dc029fa533a6065f68dc72b42c2da453960f5bc",
+      "digest": "sha256:cd80558f97d3249ef8e2159e8a6e485e19248925e30721041aa591e7bc403fc9",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1277,
-      "generated_at_commit": "e0eb7fac44e1ecf66effab643f6ff6ea8b5dda2b",
-      "source_tree": "sha256:ab2841877543e9f2f9f39e0e9ec2919f4102dd76f1f3341a02e4012470ef76ec"
+      "files": 1295,
+      "generated_at_commit": "0b65024dc687ad47d4b349e92d57e3104870397b",
+      "source_tree": "sha256:69fa8d677d55cc704fbed3c56af31b53bc45fc68d9a1f7854947176673ce6ff6"
     },
     "owner_lane": "",
     "provenance": {

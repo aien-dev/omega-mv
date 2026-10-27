@@ -3,6 +3,9 @@
 # tests/compiler/legacy_a64_callers.sh in `make test-compiler`.
 # New code must NOT be added here: it uses the validating encoder src/compiler/osc_a64.c.
 # Removing a line when a caller stops using the legacy writer is the only allowed edit.
+# Exception: a reference check may list itself when it only uses the legacy writer as an oracle to
+# compare hand-written words against, and makes no program or seed byte with it (seed/README.md).
+seed/check/a64check.c
 src/aarch64_encoder.c
 src/aarch64_encoder.h
 src/omega_exec.c

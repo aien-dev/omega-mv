@@ -1,0 +1,37 @@
+note chmod: path permissions through fchmodat; mode 0600 is 384, checked in st_mode at byte 16.
+text p "mode.tmp"
+text miss "no.such.file"
+fn main to int
+fd = int fopen p 0 len p 578 420
+if lt fd 0
+ret 1
+end
+r = fclose fd
+if ne r 0
+ret 2
+end
+r = chmod p 0 len p 384
+if ne r 0
+ret 3
+end
+buf = new uchar 128 0
+r = stat p 0 len p buf 0 128
+if ne r 0
+ret 4
+end
+m = add ulong get buf 16 shl ulong get buf 17 ulong 8
+m = add m shl ulong get buf 18 ulong 16
+m = add m shl ulong get buf 19 ulong 24
+if ne and m ulong 4095 ulong 384
+ret 5
+end
+r = chmod miss 0 len miss 384
+if ge r 0
+ret 6
+end
+r = unlink p 0 len p
+if ne r 0
+ret 7
+end
+ret 0
+end
