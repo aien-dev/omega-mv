@@ -282,12 +282,20 @@ Bounds of the natural ops (Wolfram derivation of the error model of the C sequen
 `evidence/E1-ULP-EXPLOG/20261027/exp-log-ulp-bounds.md`): EXP a priori at most 40 ulp (largest pre-rounding term
 39.15 ulp), equal to the declared `NUM_ORACLE_EXP_ULP`; LOG a priori at most 5 ulp (largest term 4.22 ulp, at
 exponent -1), one above the declared `NUM_ORACLE_LOG_ULP` of 4 in `tests/test_omega_numeric.c`. An a-priori bound
-is a ceiling, not a measurement. The measurement over all 2^32 inputs against the binary128 oracle is
-`test_omega_numeric_cpu --ulp-exhaustive EXP|LOG` (commit `0919efc3`); at this commit it is NOT_RUN to completion
-(started on five shared cores, stopped unfinished), and the declared tolerances stand unchanged until it reports.
+is a ceiling, not a measurement. The measurement over all 2^32 inputs against the binary128 oracle,
+`test_omega_numeric_cpu --ulp-exhaustive EXP|LOG` (binary sha256 `aa42c9bd…a0c4`, equal to a rebuild at `db1a7e6`
+with the Makefile line), ran 2026-10-27 16:51:32Z-17:34:48Z (`OMEGA_ULP_PROCS=5`, cores 5-9), logs in
+`evidence/E1-ULP-EXPLOG/20261027-exhaustive-db1a7e6/`: EXP maximum 40 ulp on normal or infinite results (one input,
+`0xc187db53`), 20 ulp on subnormal or zero results, 0 over the bound, 0 NaN-class mismatches, `ULP exhaustive EXP
+verdict: PASS`; LOG maximum 3 ulp (5014 inputs at 3 ulp, argmax `0x3f2e5f63`), 0 over the bound, 0 NaN-class
+mismatches, `ULP exhaustive LOG verdict: PASS`. EXP reaches its declared bound of 40 exactly; LOG stays one below its
+declared 4. Both tolerances stand unchanged. Row 8's "EXP worst case 39 ulp" (from the omega#107 notes) is one below
+this exhaustive maximum.
 
 A second, independent tier: the same eleven ops as seeded Omega compiled to SPIR-V and run on PoCL, compared bit for
-bit with the CPU tier, is documented in `docs/numeric/E1_SPIRV_TIER.md` on branch `e1open/eleven-ops-three-tiers`.
+bit with the CPU tier, is documented in `docs/numeric/E1_SPIRV_TIER.md` on branch `e1open/eleven-ops-three-tiers`
+(omega-mv #901, commit `83097b915`): all 2^32 inputs of each op, 0 mismatches, and every full-domain digest equal to
+the CPU-tier digest and to the GB10 receipt above. PoCL CPU device only.
 
 Gate 5 chip run, 2026-10-27 16:29:45Z-16:30:06Z, on the GB10 at omega `db1a7e6` (this branch, trees clean), physics
 `048e5f5`, `tests/run_numeric_gates.sh --record`, exit 0: `Gate 5 PASS: receipt digest

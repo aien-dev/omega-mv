@@ -1,0 +1,2 @@
+OMEGA_NUMERIC_ULP_JSON:{"op":"LOG","oracle":"binary128_series_rounded_once","inputs":4294967296,"bound_ulp":4,"normal_or_inf_results":2139095041,"max_ulp_normal_or_inf":3,"argmax_normal":"0x3f2e5f63","subnormal_or_zero_results":1,"max_ulp_subnormal_or_zero":0,"argmax_subnormal":"0x00000000","nan_class_mismatches":0,"over_bound":0,"hist":[1623433223,515205579,451226,5014,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
+ULP exhaustive LOG verdict: PASS
