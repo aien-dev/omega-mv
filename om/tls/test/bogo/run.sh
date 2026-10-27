@@ -7,13 +7,13 @@
 # env: BOGO_OUT (default build/tls/bogo), BOGO_TEST (runner -test filter, ';'-separated globs),
 #      BOGO_WORKERS (default 1)
 # outputs in BOGO_OUT: shim, shim-nc (negative control), runner.test, run.log, results.json,
-#   summary.txt, failures.txt, nc.log, nc.json
+#   summary.txt, failures.txt, nc-cand.list, nc-real.json, nc.list, nc.log, nc.json
 # Runner flags: -allow-unimplemented (the shim exits 89 for any flag or mode it does not implement:
 #   server, DTLS, QUIC, TLS < 1.3, resumption, ...; those tests are SKIP, not PASS) and -loose-errors
 #   (the shim cannot print BoringSSL error strings, so a test that is expected to fail passes on ANY
 #   failure; expected-failure PASS counts are therefore weaker than handshake PASS counts).
-# Negative control: shim-nc echoes with XOR 0xfe instead of 0xff; every test in NC_TESTS that passes
-#   with the real shim must fail with shim-nc.
+# Negative control: shim-nc echoes with XOR 0xfe instead of 0xff; every success-expecting test in
+#   NC_TESTS that passes with the real shim (re-checked without -loose-errors) must fail with shim-nc.
 # Fixture patch: runner-critical-san.patch marks the runner's subjectAltName critical when the
 #   certificate subject is empty (RFC 5280 4.2.1.6 MUST). Unpatched, the runner's leaves have an empty
 #   subject and a non-critical SAN, which x509.om refuses (X509_ERR_MALFORMED, a deliberate strictness;
@@ -63,18 +63,31 @@ set -- -shim-path "$out/shim" -allow-unimplemented -loose-errors -num-workers "$
 echo "runner exit $?" >> "$out/run.log"
 [ -s "$out/results.json" ] || { echo "BOGO FAIL no results.json (see $out/run.log)"; exit 1; }
 # results.json is json.MarshalIndent: a test is '    "NAME": {' then "actual", "error" lines.
+# A FAIL is counted as na (with its reason, never as a pass) only for two runner-side refusals that
+# are not defects of a TLS 1.3-only client:
+#   tls12-only   runner "client did not offer any supported protocol versions": the test's runner
+#                config has MaxVersion below TLS 1.3, and om/tls offers TLS 1.3 only by design.
+#   record-301   runner "received record with version 303 when expecting version 301": BoringSSL
+#                expects 0x0301 on the initial ClientHello record; RFC 8446 5.1 allows 0x0303 there.
+# Every other FAIL stays a FAIL (fail-reason lines classify them; "no cipher suite" / "no curve"
+# mean the runner insisted on a suite or group om/tls does not offer).
 summ() {
 	awk -v F="$2" '
 	/^    "[^"]+": \{$/ { if (n != "") emit(); n = $0; sub(/^    "/, "", n); sub(/": \{$/, "", n); a = ""; e = ""; next }
 	/^      "actual": / { a = $0; sub(/.*"actual": "/, "", a); sub(/".*/, "", a); next }
 	/^      "error": / { e = $0; next }
 	function emit(   r) {
+		if (a == "FAIL" && index(e, "client did not offer any supported protocol versions")) { a = "NA"; r = "tls12-only" }
+		else if (a == "FAIL" && index(e, "received record with version 303 when expecting version 301")) { a = "NA"; r = "record-301" }
 		c[a]++
+		if (a == "NA") { nr[r]++; print n "\tNA " r > F }
 		if (a == "FAIL") {
 			r = "other"
 			if (match(e, /TLSERR [A-Z0-9_]+ detail [0-9]+( [A-Z0-9_]+)?/)) r = substr(e, RSTART + 7, RLENGTH - 7)
 			else if (index(e, "timeout")) r = "timeout"
 			else if (index(e, "unexpected success")) r = "unexpected success"
+			if (index(e, "no cipher suite supported by both")) r = r " (runner: no common cipher suite)"
+			if (index(e, "no curve supported by both")) r = r " (runner: no common group)"
 			why[r]++
 			print n "\t" r > F
 		}
@@ -82,7 +95,8 @@ summ() {
 	}
 	END {
 		if (n != "") emit()
-		printf "BOGO-RESULTS tests=%d pass=%d fail=%d skip=%d\n", c["PASS"] + c["FAIL"] + c["SKIP"], c["PASS"], c["FAIL"], c["SKIP"]
+		printf "BOGO-RESULTS tests=%d pass=%d fail=%d na=%d skip=%d\n", c["PASS"] + c["FAIL"] + c["NA"] + c["SKIP"], c["PASS"], c["FAIL"], c["NA"], c["SKIP"]
+		for (r in nr) printf "na-reason %d %s\n", nr[r], r
 		for (r in why) printf "fail-reason %d %s\n", why[r], r
 	}' "$1"
 }
@@ -90,17 +104,30 @@ summ() {
 summ "$out/results.json" "$out/failures.txt" | sort > "$out/summary.txt"
 sort -o "$out/failures.txt" "$out/failures.txt"
 cat "$out/summary.txt"
-# negative control over handshake tests that passed and are not expected-failure tests
-awk '/^    "[^"]+": \{$/ { n = $0; sub(/^    "/, "", n); sub(/": \{$/, "", n) }
-	/^      "actual": "PASS"/ { print n }' "$out/results.json" | grep -E "${NC_TESTS:-^(LargePlaintext-TLS13-Padded-|TLS13-|Basic-Client)}" | head -20 > "$out/nc.list"
+# Negative control over tests that must SUCCEED. Expected-failure tests pass on any error under
+# -loose-errors, so an echo-corrupting shim would still pass them; they are filtered out by re-running
+# the passing candidates with the real shim WITHOUT -loose-errors: the shim never prints BoringSSL error
+# strings, so only tests that expect success still pass there (nc-real.json). Those must all fail
+# with shim-nc (nc.json).
+pass_list() {
+	awk '/^    "[^"]+": \{$/ { n = $0; sub(/^    "/, "", n); sub(/": \{$/, "", n) }
+		/^      "actual": "PASS"/ { print n }' "$1"
+}
+pass_list "$out/results.json" | grep -E "${NC_TESTS:-^(LargePlaintext-TLS13-Padded-|TLS13-|Basic-Client)}" | head -60 > "$out/nc-cand.list"
+: > "$out/nc.list"
+if [ -s "$out/nc-cand.list" ]; then
+	"$out/runner.test" -shim-path "$out/shim" -allow-unimplemented -num-workers 1 \
+		-json-output "$out/nc-real.json" -test "$(paste -sd';' "$out/nc-cand.list")" > "$out/nc-real.log" 2>&1
+	pass_list "$out/nc-real.json" | head -20 > "$out/nc.list"
+fi
 if [ ! -s "$out/nc.list" ]; then
-	echo "BOGO-NC NOT_RUN no passing handshake test to mutate"
+	echo "BOGO-NC NOT_RUN no passing success test to mutate"
 	nc=notrun
 else
-	"$out/runner.test" -shim-path "$out/shim-nc" -allow-unimplemented -loose-errors -num-workers 1 \
+	"$out/runner.test" -shim-path "$out/shim-nc" -allow-unimplemented -num-workers 1 \
 		-json-output "$out/nc.json" -test "$(paste -sd';' "$out/nc.list")" > "$out/nc.log" 2>&1
 	ncp=$(grep -c '^      "actual": "PASS"' "$out/nc.json")
-	echo "BOGO-NC tests=$(wc -l < "$out/nc.list") still_pass=$ncp"
+	echo "BOGO-NC candidates=$(wc -l < "$out/nc-cand.list") tests=$(wc -l < "$out/nc.list") still_pass=$ncp"
 	if [ "$ncp" -eq 0 ]; then nc=ok; else nc=bad; fi
 fi
 fail=$(sed -n 's/^BOGO-RESULTS .* fail=\([0-9]*\) .*/\1/p' "$out/summary.txt")
