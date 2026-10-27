@@ -6694,6 +6694,7 @@ fn_tail f
 end
 
 note s_fn: fn name (param type | param view T N | param edit T N)* to type | void. om4 S_FN.
+note A name of 9..63 bytes is never a keyword: tw packs only its first 8 bytes (continue_x is not continue).
 fn s_fn to void
 if ne get curret 0 0
 fail 15
@@ -6706,8 +6707,10 @@ if gt get tl 0 63
 fail 13
 end
 w = get tw 0
+if le get tl 0 8
 if ne kw w 0
 fail 16
+end
 end
 l = get tl 0
 s = get ts 0
@@ -8783,11 +8786,11 @@ end
 
 note s_field: the current word is a field name of struct w. Returns the cell count after this field.
 fn s_field w ulong fo ulong cells ulong to ulong
-if ne kw get tw 0 0
-fail 16
-end
 if gt get tl 0 8
 fail 13
+end
+if ne kw get tw 0 0
+fail 16
 end
 fw = get tw 0
 if eq fw w
