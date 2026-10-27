@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 5
       - name: machine and tools
         run: |
           uname -a; nproc; openssl version; python3 --version; git log -2 --format='%H %s'
@@ -28,7 +28,9 @@ jobs:
           echo "pin $pin"; echo "got $got"
           [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
           chmod +x seed/out/omc
-          test "$(git rev-parse HEAD~1)" = e5b32567a7aff3ce594e3254a622a846a6cd190b; git diff --stat HEAD~1 HEAD
+          git merge-base --is-ancestor e5b32567a7aff3ce594e3254a622a846a6cd190b HEAD
+          git diff --stat e5b32567a7aff3ce594e3254a622a846a6cd190b HEAD
+          test "$(git diff --name-only e5b32567a7aff3ce594e3254a622a846a6cd190b HEAD)" = .github/workflows/omegafacts-tls-main.yml
       - name: om/tls suites
         shell: bash
         run: |
