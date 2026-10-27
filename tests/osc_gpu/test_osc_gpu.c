@@ -40,12 +40,17 @@ static bool same_f(float x, float y) { return (x != x && y != y) || fbits(x) == 
  * and root are the fast function unit, which treats a denormal input as zero and is not correctly
  * rounded. A result passes when it equals the reference bit for bit (NaN equal to NaN), or when the
  * reference is finite and not zero and |got - want| <= 2^-20 |want|. On the host the simulator's
- * EX2/RCP/RSQ are exact, so there the test stays bit for bit and mufu_in leaves the input alone. */
+ * EX2/RCP/RSQ are exact, so there the test stays bit for bit and mufu_in leaves the input alone.
+ * Amended 2026-10-27, after a chip run, and labelled as such: the 2026-10-22 run (d1ac019e,
+ * evidence/omegese-gpu/chip-20261027/README.md) measured RCP(0x7f7fffff) = +0 where 1/x is the denormal
+ * 0x00200000, so the unit flushes a denormal RESULT to zero as well. A denormal reference therefore also
+ * passes against a zero of the same sign; GPU.md section 5 now says so. Nothing else moved. */
 #ifdef OSC_CHIP
 #define MUFU_REL 0x1p-20f
 static float mufu_in(float x) { return fpclassify(x) == FP_SUBNORMAL ? copysignf(0.0f, x) : x; }
 static bool near_mufu(float got, float want) {
     if (same_f(got, want)) return true;
+    if (fpclassify(want) == FP_SUBNORMAL && same_f(got, copysignf(0.0f, want))) return true;
     if (!isfinite(want) || want == 0.0f || !isfinite(got)) return false;
     return fabsf(got - want) <= MUFU_REL * fabsf(want);
 }
@@ -670,7 +675,8 @@ int main(int argc, char **argv) {
         omega_gpu_session_unlock();
         return 1;
     }
-    printf("test_osc_gpu_chip: GB10, mutant %d, MUFU tolerance 2^-20 relative (stated in the source before the run)\n", osc_gpu_mutant);
+    printf("test_osc_gpu_chip: GB10, mutant %d, MUFU tolerance 2^-20 relative (stated in the source before the run; denormal results may be"
+           " a zero of the same sign, amended 2026-10-27 after the 2026-10-22 run)\n", osc_gpu_mutant);
     kernels();
     if (g_code.va) omega_gpu_session_free(&g_code);
     for (unsigned i = 0; i < OSC_MAX_KPARAMS; i++) omega_gpu_session_scratch_free(&g_dev[i]);

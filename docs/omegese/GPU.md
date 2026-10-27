@@ -104,7 +104,9 @@ inside a kernel (host functions have no float).
 
 `exp`, `inv`, `inv root` and `root` use the chip's fast function unit (MUFU). They are deterministic
 (the same input gives the same bits on every run) but are not correctly rounded. MUFU treats a
-denormal input as zero (so `inv` of a denormal is +inf). The definitions:
+denormal input as zero (so `inv` of a denormal is +inf), and gives a zero of the same sign where the
+true result is denormal (so `inv 0x7F7FFFFF` is +0, measured on the GB10 on 2026-10-22; this sentence was
+added on 2026-10-27, after that run). The definitions:
 
 - `exp x` = EX2(RN(x * 0x3FB8AA3B)): 2 to the power of (x times log2 e, rounded to binary32).
 - `inv x` = RCP(x).

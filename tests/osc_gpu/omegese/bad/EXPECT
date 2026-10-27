@@ -10,3 +10,6 @@ call_kernel.omegese omegese k1 is a kernel; the launcher starts a kernel
 threads_48.omegese omegese threads '48' must be a number 32 to 1024, a multiple of 32
 bad_number.omegese omegese '0.1.2' is not a number
 float_inexact.omegese omegese 16777217 is not exact in float
+vadd_cross_block.omegese checker2 C2-GPU-GLOBAL-RACE
+gemm_no_sync.omegese checker2 C2-GPU-SHARED-RACE
+attn_no_second_sync.omegese checker2 C2-GPU-SHARED-RACE
