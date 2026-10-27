@@ -57,9 +57,8 @@ lo = sfsub sfadd e1 e2 sfmul kf P3
 rh = sfadd s2 lo
 rl = sfsub lo sfsub rh s2
 end
-kq = add k qoff
+kq = and add k qoff 3
 q = ulong kq
-q = and q 3
 r = sinp rh rl
 if eq and q 1 1
 r = cosp rh rl
