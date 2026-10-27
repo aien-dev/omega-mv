@@ -29,14 +29,14 @@ out="$root/build/tls/tls"
 rm -rf "$out"; mkdir -p "$out"
 fail=0; mut=0; mutok=0
 echo "omc $(sha256sum "$omc" | cut -c1-64)"
-for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do echo "$u.om $(sha256sum "$tls/$u.om" | cut -c1-64)"; done
+for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips tls; do echo "$u.om $(sha256sum "$tls/$u.om" | cut -c1-64)"; done
 
 # build NAME TLSFILE PROGRAM: compose with a given tls.om (the real one or a mutant); a non-empty
 # $ecdhsrc replaces ecdh.om (an ecdh.om mutant under the unchanged tls.om)
 ecdhsrc=
 build() {
   mkdir -p "$out/$1"
-  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips; do cp "$tls/$u.om" "$out/$1/"; done
+  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips; do cp "$tls/$u.om" "$out/$1/"; done
   [ -z "$ecdhsrc" ] || cp "$ecdhsrc" "$out/$1/ecdh.om"
   cp "$2" "$out/$1/tls.om"; cp "$tls/build.sh" "$out/$1/"
   sh "$out/$1/build.sh" "$omc" "$3" "$out/$1/bin" 2> "$out/$1.err" || { echo "FAIL build $1: $(cat "$out/$1.err")"; return 1; }
