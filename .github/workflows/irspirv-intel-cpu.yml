@@ -166,7 +166,7 @@ jobs:
             bash seed/spirv/ocl-vendor-matrix.sh build/seed/spirv ./intel-host $1 $2 results/$2-intel-intercept.tsv | tee -a results/summary.txt || true
           done
           # The intercept layer must be live: its banner appears in the per-row stderr.
-          grep -l 'Intercept Layer' results/case-intel-intercept.logs/1.err
+          grep -l 'CLIntercept (64-bit) is loading' results/case-intel-intercept.logs/1.err
       - name: bundle results
         if: ${{ !cancelled() }}
         run: |
