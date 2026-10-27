@@ -1,0 +1,65 @@
+name: prtrain-gates
+# Scratch runner job for PRTrain (quiet window on the Spark): reruns this PR head's gate steps on a
+# GitHub ubuntu-24.04-arm runner. The tested tree is the PR head plus only this workflow file
+# (printed below). Lives on prtrain/ci-* scratch branches only; never on a PR branch.
+on: push
+jobs:
+  gates:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 150
+    env:
+      PR: "507"
+      PR_HEAD: "d42ec7ca05294152d5cd0dd9f8268fc10231bcfd"
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: omega-mv, fetch-depth: 4 }
+      - name: Tested tree = PR head + this workflow only
+        working-directory: omega-mv
+        run: |
+          git fetch -q origin "$PR_HEAD"
+          git diff --stat "$PR_HEAD" HEAD
+          test "$(git diff --name-only "$PR_HEAD" HEAD)" = ".github/workflows/prtrain-gates.yml"
+      - name: Siblings (physics at physics.lock from its object store)
+        run: |
+          git clone -q https://github.com/aien-spark/physics.git physics
+          git -C physics cat-file -e "$(awk 'NF && $1 !~ /^#/ {print $1; exit}' omega-mv/physics.lock)^{commit}"
+          gcc --version | head -1; nproc
+      - name: Gate steps on the PR head
+        working-directory: omega-mv
+        run: |
+          set -o pipefail
+          st() { echo "::group::$*"; "$@" 2>&1 | tee "/tmp/gate-$(echo "$*" | tr -c 'A-Za-z0-9' '_').log"; r=${PIPESTATUS[0]}; echo "::endgroup::"; echo "GATE $* rc=$r"; return $r; }
+          case "$PR" in
+            507) st bash tests/gates/run.sh chip-tool-selftests ;;
+            509) st bash tests/gates/run.sh numeric-cpu; st bash tests/gates/run.sh gpu-attention ;;
+            514) st bash tests/gates/run.sh gpu-attention
+                 PL=$(awk 'NF && $1 !~ /^#/ {print $1; exit}' physics.lock)
+                 git clone -q --shared ../physics /tmp/physics-pin && git -C /tmp/physics-pin checkout -q --detach "$PL"
+                 st make -j"$(nproc)" OUT_DIR=build/imadhi PHYSICS_DIR=/tmp/physics-pin test-gpu-imadhi-rc ;;
+          esac
+      - name: Negative controls (each must go red)
+        working-directory: omega-mv
+        run: |
+          set +e; N=/tmp/neg; mkdir -p $N
+          case "$PR" in
+            507) # the pre-fix generator (fopen 0666 & ~umask) must fail case 5 of tests/dgraph_receipt/run.sh
+                 git show HEAD~3:tools/dgraph_receipt.c > $N/dgraph_receipt_prefix.c
+                 grep -q 'fopen(a->out, "wb")' $N/dgraph_receipt_prefix.c || exit 9
+                 gcc -std=gnu11 -O2 -D_GNU_SOURCE -o $N/dgr_old $N/dgraph_receipt_prefix.c || exit 9
+                 out=$(sh tests/dgraph_receipt/run.sh $N/dgr_old build/step-chip-tool-selftests/dgraph_receipt/json_canon $N/w 2>&1); rc=$?
+                 echo "$out" | tail -3; echo "NEG 507 rc=$rc"
+                 test $rc -ne 0; echo "$out" | grep -q "FAIL: generator: receipt mode '666'" ;;
+            509) # drop the flush: the mufu-ftz tests must fail
+                 mkdir -p $N/t && cp tests/*.h tests/bw_mufu_ftz_test.c $N/t/
+                 sed -i 's/^    if ((u \& 0x7f800000u) == 0u) u \&= 0x80000000u;$/    \/\* NEG: flush removed \*\//' $N/t/bw_mufu_ftz.h
+                 ! grep -q '0x7f800000u) == 0u' $N/t/bw_mufu_ftz.h || exit 9
+                 gcc -std=gnu11 -O2 -D_GNU_SOURCE -ffp-contract=off -Isrc -I$N/t -DWS_SIM_HDR='"bw_warp_sim_k.h"' -o $N/k $N/t/bw_mufu_ftz_test.c -lm || exit 9
+                 $N/k | tail -2; rc=${PIPESTATUS[0]}; echo "NEG 509 rc=$rc"; test $rc -ne 0 ;;
+            514) # drop the register-Rc refusal from bw_warp_sim_k.h (in place, after the gates): its imadhi test must fail
+                 sed -i '/WS_E_IMADHI_RC, pc, "IMAD.HI.U32 with a register Rc/d' tests/bw_warp_sim_k.h
+                 ! grep -q 'WS_E_IMADHI_RC, pc' tests/bw_warp_sim_k.h || exit 9
+                 git diff --stat
+                 make OUT_DIR=build/imadhi PHYSICS_DIR=/tmp/physics-pin build/imadhi/gpu_imadhi_rc_test_bw_warp_sim_k || exit 9
+                 ./build/imadhi/gpu_imadhi_rc_test_bw_warp_sim_k | tail -3; rc=${PIPESTATUS[0]}; echo "NEG 514 rc=$rc"
+                 git checkout -- tests/bw_warp_sim_k.h; test $rc -ne 0 ;;
+          esac
