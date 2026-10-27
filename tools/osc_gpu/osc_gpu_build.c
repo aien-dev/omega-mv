@@ -8,11 +8,21 @@
  * SHA-256 of the IR and of the code. Exit 0 written; 1 refused (one line on stdout); 2 usage or I/O. */
 #include "omega_osc_gpu.h"
 #include "sha256.h"
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static void hex(const uint8_t *d, size_t n, char *out) { for (size_t i = 0; i < n; i++) sprintf(out + 2 * i, "%02x", d[i]); }
+/* out.bin and out.h are created 0644 (before the umask), never 0666 */
+static FILE *create(const char *path, const char *mode) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) return NULL;
+    FILE *f = fdopen(fd, mode);
+    if (!f) close(fd);
+    return f;
+}
 
 int main(int argc, char **argv) {
     if (argc != 6) { fprintf(stderr, "usage: osc_gpu_build <unit.ir> <kernel-name> <out.bin> <out.h> <c-prefix>\n"); return 2; }
@@ -35,9 +45,9 @@ int main(int argc, char **argv) {
     char irh[65], codeh[65];
     hex(irsha, 32, irh);
     hex(k.code_sha256, 32, codeh);
-    FILE *ob = fopen(argv[3], "wb");
+    FILE *ob = create(argv[3], "wb");
     if (!ob || fwrite(k.code, 1, k.code_size, ob) != k.code_size || fclose(ob)) { perror(argv[3]); return 2; }
-    FILE *oh = fopen(argv[4], "w");
+    FILE *oh = create(argv[4], "w");
     if (!oh) { perror(argv[4]); return 2; }
     const char *P = argv[5];
     fprintf(oh, "/* %s: kernel %s built by tools/osc_gpu/osc_gpu_build (omega src/omega_osc_gpu.c, L386). Generated: do not edit.\n", P, k.name);
