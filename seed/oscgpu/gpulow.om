@@ -1,0 +1,1029 @@
+note seed/oscgpu/gpulow.om: the lowering of one OSC IR kernel function to BlackwellIR, a port of
+note src/omega_osc_gpu.c (cfg, uniformity, regions, liveness, params_and_layout, prologue, lower,
+note emit_block, finish) including every osc_gpu_mutant 1..8. Reads the decoded unit of oscir.om.
+
+note ---- bitsets: block sets of 9 words (blocks 0..512), vreg sets of 8 words (vregs 0..479)
+note block-set ids: 0..512 post-dominators, 513..576 regions, 577 scratch m, 578 scratch n,
+note 579 noregion, 580 all
+global gbs ulong 5229
+note vreg-set ids: 0..511 live_in, 512..1023 live_out, 1024.. use, 1536.. def, 2048 out, 2049 in
+global gvs ulong 16400
+
+note ---- analysis state
+global gnb int 1
+global gns int 512
+global gsc int 1024
+global gipd int 512
+global gstk int 1024
+global gus int 4
+global gvar uchar 480
+global gdiv uchar 512
+note regions: head, join, bar, parent, bssy_at, bsync_at; count
+global grh int 64
+global grj int 64
+global grb int 64
+global grp int 64
+global grs int 64
+global gry int 64
+global gnr int 1
+global gna int 512
+global gam int 8192
+note layout
+global gmap int 480
+global gsho uint 480
+global gshl uint 480
+global garg uint 480
+note block positions
+global gbf int 512
+global gbl int 512
+global gaa int 512
+global gba int 512
+note fixes: at, kind (0 edge, 1 bsync, 2 arms), a, b
+global gfa int 4096
+global gfk int 4096
+global gfx int 4096
+global gfy int 4096
+global gnf int 1
+
+note ---- unit access
+fn gpu_ix i int to ulong
+ret add mul get gfn 0 4096 ulong i
+end
+
+fn gpu_vx v int to ulong
+ret add mul get gfn 0 480 ulong v
+end
+
+fn gpu_bx b int to ulong
+ret add mul get gfn 0 512 ulong b
+end
+
+fn gpu_bf b int to int
+ret int get bfst gpu_bx b
+end
+
+fn gpu_term b int to int
+s = gpu_bx b
+ret sub add int get bfst s int get bcnt s 1
+end
+
+fn gpu_ty v int to uchar
+ret get vts gpu_vx v
+end
+
+fn gpu_r v int to int
+ret get gmap v
+end
+
+note ---- block sets
+fn gpu_bw s int i int to ulong
+ret add mul ulong s 9 ulong shr i 6
+end
+
+fn gpu_bhas s int i int to bool
+w = get gbs gpu_bw s i
+ret eq and shr w ulong and i 63 1 1
+end
+
+fn gpu_bset s int i int to void
+x = gpu_bw s i
+put gbs x or get gbs x shl 1 ulong and i 63
+end
+
+fn gpu_bclr s int to void
+b = mul ulong s 9
+for k ulong 9
+put gbs add b k 0
+end
+end
+
+fn gpu_bcopy d int s int to void
+x = mul ulong d 9
+y = mul ulong s 9
+for k ulong 9
+put gbs add x k get gbs add y k
+end
+end
+
+fn gpu_band d int s int to void
+x = mul ulong d 9
+y = mul ulong s 9
+for k ulong 9
+p = add x k
+q = get gbs add y k
+put gbs p and get gbs p q
+end
+end
+
+fn gpu_bor d int s int to void
+x = mul ulong d 9
+y = mul ulong s 9
+for k ulong 9
+p = add x k
+q = get gbs add y k
+put gbs p or get gbs p q
+end
+end
+
+fn gpu_beq a int b int to bool
+x = mul ulong a 9
+y = mul ulong b 9
+for k ulong 9
+q = get gbs add y k
+if ne get gbs add x k q
+ret false
+end
+end
+ret true
+end
+
+note a within b
+fn gpu_bsub a int b int to bool
+x = mul ulong a 9
+y = mul ulong b 9
+for k ulong 9
+q = not get gbs add y k
+if ne and get gbs add x k q 0
+ret false
+end
+end
+ret true
+end
+
+fn gpu_bmeet a int b int to bool
+x = mul ulong a 9
+y = mul ulong b 9
+for k ulong 9
+q = get gbs add y k
+if ne and get gbs add x k q 0
+ret true
+end
+end
+ret false
+end
+
+fn gpu_pop w ulong to int
+n = int 0
+x = w
+while ne x 0 bound 65
+x = and x sub x 1
+n = add n 1
+end
+ret n
+end
+
+fn gpu_bcnt s int to int
+x = mul ulong s 9
+n = int 0
+for k ulong 9
+c = gpu_pop get gbs add x k
+n = add n c
+end
+ret n
+end
+
+note ---- vreg sets
+fn gpu_vhas s int i int to bool
+w = get gvs add mul ulong s 8 ulong shr i 6
+ret eq and shr w ulong and i 63 1 1
+end
+
+fn gpu_vset s int i int to void
+x = add mul ulong s 8 ulong shr i 6
+put gvs x or get gvs x shl 1 ulong and i 63
+end
+
+fn gpu_vclr s int to void
+b = mul ulong s 8
+for k ulong 8
+put gvs add b k 0
+end
+end
+
+note ---- instruction uses and defs (insn_uses, insn_def)
+fn gpu_uses i int to int
+s = gpu_ix i
+o = get iop s
+a = get ia s
+b = get ib s
+c = get ic s
+put gus 0 a
+put gus 1 b
+put gus 2 c
+if or or or eq o 2 eq o 4 eq o 6 eq o 14
+ret 1
+end
+if or or or eq o 3 eq o 5 eq o 9 eq o oshfl
+ret 2
+end
+if or eq o 10 eq o omad
+ret 3
+end
+if eq o ogld
+put gus 1 add a 1
+put gus 2 b
+ret 3
+end
+if eq o ogst
+put gus 1 add a 1
+put gus 2 b
+put gus 3 c
+ret 4
+end
+if eq o 15
+if ge a 0
+ret 1
+end
+end
+ret 0
+end
+
+fn gpu_def i int to int
+s = gpu_ix i
+o = get iop s
+if or or or or or eq o 1 eq o 2 eq o 3 eq o 4 eq o 5 eq o 6
+ret get idst s
+end
+if or or or or or eq o 9 eq o ogpu eq o oshar eq o ogld eq o oshfl eq o omad
+ret get idst s
+end
+ret -1
+end
+
+note single_const: the one u32 value of vreg v (defined once, by a CONST, not a parameter); -1 if not
+fn gpu_sconst v int to long
+f = get gfn 0
+n = int get fnin f
+defs = int 0
+val = long 0
+for i int n
+d = gpu_def i
+if eq d v
+defs = add defs 1
+s = gpu_ix i
+if ne get iop s 1
+ret -1
+end
+val = long and get iimm s 4294967295
+end
+end
+if ne defs 1
+ret -1
+end
+if lt v int get fnpar f
+ret -1
+end
+ret val
+end
+
+note ---- cfg: successors, post-dominators, immediate post-dominators
+fn gpu_succ to int
+nb = get gnb 0
+for b int nb
+t = gpu_term b
+s = gpu_ix t
+o = get iop s
+put gns b 0
+k = mul b 2
+if eq o 13
+put gsc k get ibt s
+put gns b 1
+end
+if eq o 14
+put gsc k get ibt s
+put gsc add k 1 get ibf s
+put gns b 2
+end
+if and ne o 13 and ne o 14 ne o 15
+r = gpu_f2 29 long b 30
+ret -1
+end
+end
+ret 0
+end
+
+fn gpu_pdom to void
+x = get gnb 0
+gpu_bclr 580
+for d int add x 1
+gpu_bset 580 d
+end
+for b int x
+gpu_bcopy b 580
+end
+gpu_bclr x
+gpu_bset x x
+ch = true
+while ch bound 999999
+ch = false
+b = sub x 1
+while ge b 0 bound 999999
+n = get gns b
+k = mul b 2
+if eq n 0
+gpu_bcopy 578 x
+else
+gpu_bcopy 578 get gsc k
+if eq n 2
+gpu_band 578 get gsc add k 1
+end
+end
+gpu_bset 578 b
+if not gpu_beq 578 b
+gpu_bcopy b 578
+ch = true
+end
+b = sub b 1
+end
+end
+end
+
+fn gpu_ipdom to void
+x = get gnb 0
+for b int x
+put gipd b -1
+w = sub gpu_bcnt b 1
+for d int add x 1
+if ne d b
+if gpu_bhas b d
+c = gpu_bcnt d
+if eq c w
+put gipd b d
+break
+end
+end
+end
+end
+end
+end
+
+fn gpu_cfg to int
+f = get gfn 0
+put gnb 0 int get fnbl f
+r = gpu_succ
+if lt r 0
+ret -1
+end
+gpu_pdom
+gpu_ipdom
+ret 0
+end
+
+note reach_from(b, j) into set 577
+fn gpu_reach b int j int to void
+gpu_bclr 577
+sp = int 0
+n = get gns b
+for k int n
+y = get gsc add mul b 2 k
+if ne y j
+if not gpu_bhas 577 y
+gpu_bset 577 y
+put gstk sp y
+sp = add sp 1
+end
+end
+end
+while gt sp 0 bound 999999
+sp = sub sp 1
+x = get gstk sp
+m = get gns x
+for k int m
+y = get gsc add mul x 2 k
+if ne y j
+if not gpu_bhas 577 y
+gpu_bset 577 y
+put gstk sp y
+sp = add sp 1
+end
+end
+end
+end
+end
+
+note ---- uniformity
+fn gpu_isvar b int i int to bool
+if ne get gdiv b 0
+ret true
+end
+s = gpu_ix i
+o = get iop s
+if or or eq o ogld eq o 9 eq o oshfl
+ret true
+end
+if and eq o ogpu eq get isub s 1
+ret true
+end
+n = gpu_uses i
+for k int n
+if ne get gvar get gus k 0
+ret true
+end
+end
+ret false
+end
+
+fn gpu_unif1 to bool
+ch = false
+nb = get gnb 0
+for b int nb
+x = gpu_bf b
+e = add gpu_term b 1
+i = x
+while lt i e bound 999999
+d = gpu_def i
+if ge d 0
+if eq get gvar d 0
+v = gpu_isvar b i
+if v
+put gvar d 1
+ch = true
+end
+end
+end
+i = add i 1
+end
+end
+ret ch
+end
+
+fn gpu_unif2 to bool
+ch = false
+nb = get gnb 0
+for b int nb
+s = gpu_ix gpu_term b
+if eq get iop s 14
+if ne get gvar get ia s 0
+j = get gipd b
+if lt j 0
+j = nb
+end
+gpu_reach b j
+for x int nb
+if gpu_bhas 577 x
+if eq get gdiv x 0
+put gdiv x 1
+ch = true
+end
+end
+end
+end
+end
+end
+ret ch
+end
+
+fn gpu_unif to void
+for v ulong 480
+put gvar v 0
+end
+for b ulong 512
+put gdiv b 0
+end
+ch = true
+while ch bound 999999
+a = gpu_unif1
+c = gpu_unif2
+ch = or a c
+end
+end
+
+note ---- liveness
+fn gpu_lv0 to void
+nb = get gnb 0
+for b int nb
+u = add 1024 b
+d = add 1536 b
+gpu_vclr u
+gpu_vclr d
+gpu_vclr b
+gpu_vclr add 512 b
+x = gpu_bf b
+e = add gpu_term b 1
+i = x
+while lt i e bound 999999
+n = gpu_uses i
+for k int n
+w = get gus k
+if not gpu_vhas d w
+gpu_vset u w
+end
+end
+y = gpu_def i
+if ge y 0
+gpu_vset d y
+end
+i = add i 1
+end
+end
+end
+
+note out = the union of live_in of the successors of b, into vset 2048
+fn gpu_lvo b int to void
+gpu_vclr 2048
+n = get gns b
+for k int n
+y = mul ulong get gsc add mul b 2 k 8
+for w ulong 8
+p = add 16384 w
+q = get gvs add y w
+put gvs p or get gvs p q
+end
+end
+end
+
+note one block of the liveness pass; true when live_in or live_out changed
+fn gpu_lv1 b int to bool
+gpu_lvo b
+ch = false
+xi = mul ulong b 8
+xo = mul ulong add 512 b 8
+xu = mul ulong add 1024 b 8
+xd = mul ulong add 1536 b 8
+for w ulong 8
+z = get gvs add 16384 w
+e = not get gvs add xd w
+q = or get gvs add xu w and z e
+if ne q get gvs add xi w
+put gvs add xi w q
+ch = true
+end
+if ne z get gvs add xo w
+put gvs add xo w z
+ch = true
+end
+end
+ret ch
+end
+
+fn gpu_live to void
+gpu_lv0
+nb = get gnb 0
+ch = true
+while ch bound 999999
+ch = false
+b = sub nb 1
+while ge b 0 bound 999999
+c = gpu_lv1 b
+if c
+ch = true
+end
+b = sub b 1
+end
+end
+end
+
+note ---- regions
+note the head of the region in set 577 for branch block b; -2 when refused
+fn gpu_head b int to int
+h = int -1
+nb = get gnb 0
+for u int nb
+if not gpu_bhas 577 u
+n = get gns u
+for k int n
+v = get gsc add mul u 2 k
+if gpu_bhas 577 v
+if and ge h 0 ne h v
+gpu_fb 29
+gpu_pi long b
+gpu_pt 34
+gpu_pi long h
+gpu_pt 35
+gpu_pi long v
+gpu_pt 36
+gpu_fe
+ret -2
+end
+h = v
+end
+end
+end
+end
+if gpu_bhas 577 0
+if and ge h 0 ne h 0
+gpu_fb 29
+gpu_pi long b
+gpu_pt 34
+gpu_pi long h
+gpu_pt 37
+gpu_fe
+ret -2
+end
+h = 0
+end
+if lt h 0
+r = gpu_f2 29 long b 38
+ret -2
+end
+ret h
+end
+
+fn gpu_reg1 b int to int
+j = get gipd b
+if lt j 0
+r = gpu_f2 29 long b 31
+ret -1
+end
+gpu_reach b j
+if eq j get gnb 0
+gpu_bor 579 577
+ret 0
+end
+gpu_bset 577 b
+nr = get gnr 0
+dup = int -1
+for r int nr
+if gpu_beq add 513 r 577
+dup = r
+end
+end
+if ge dup 0
+if ne get grj dup j
+r = gpu_f2 29 long b 32
+ret -1
+end
+ret 0
+end
+if ge nr 64
+r = gpu_f1 33
+ret -1
+end
+h = gpu_head b
+if lt h -1
+ret -1
+end
+gpu_bcopy add 513 nr 577
+put grh nr h
+put grj nr j
+put grp nr -1
+put grs nr -1
+put gry nr -1
+put grb nr 0
+put gnr 0 add nr 1
+ret 0
+end
+
+fn gpu_nest to int
+nr = get gnr 0
+for a int nr
+best = int -1
+for b int nr
+if ne b a
+x = gpu_bsub add 513 a add 513 b
+y = gpu_bsub add 513 b add 513 a
+z = gpu_bmeet add 513 a add 513 b
+if and and not x not y z
+r = gpu_f1 41
+ret -1
+end
+if and x not y
+if lt best 0
+best = b
+else
+c = gpu_bcnt add 513 b
+e = gpu_bcnt add 513 best
+if lt c e
+best = b
+end
+end
+end
+end
+end
+put grp a best
+end
+ret 0
+end
+
+fn gpu_conf a int b int to bool
+x = gpu_bsub add 513 a add 513 b
+y = gpu_bsub add 513 b add 513 a
+if or x y
+ret true
+end
+nr = get gnr 0
+for c int nr
+if and ne c a ne c b
+p = gpu_bsub add 513 a add 513 c
+q = gpu_bsub add 513 b add 513 c
+if and p q
+ret true
+end
+end
+end
+ret false
+end
+
+fn gpu_bars to int
+nr = get gnr 0
+used = uint 0
+for a int nr
+busy = uint 0
+for b int a
+c = gpu_conf a b
+if c
+busy = or busy shl 1 uint get grb b
+end
+end
+bar = uint 0
+while lt bar 16 bound 17
+if eq and shr busy bar 1 0
+break
+end
+bar = add bar 1
+end
+if ge bar 16
+r = gpu_f1 42
+ret -1
+end
+if eq get gmut 0 5
+put grb a 0
+else
+put grb a int bar
+end
+used = or used shl 1 bar
+end
+put gkm 9 uint nr
+put gkm 10 uint gpu_pop ulong used
+ret 0
+end
+
+fn gpu_arms to int
+for b ulong 512
+put gna b 0
+end
+nr = get gnr 0
+for r int nr
+h = get grh r
+pos = get gna h
+if ge pos 16
+q = gpu_f2 43 long h -1
+ret -1
+end
+put gna h add pos 1
+c = gpu_bcnt add 513 r
+while gt pos 0 bound 17
+p = get gam add mul h 16 sub pos 1
+e = gpu_bcnt add 513 p
+if ge e c
+break
+end
+put gam add mul h 16 pos p
+pos = sub pos 1
+end
+put gam add mul h 16 pos r
+end
+ret 0
+end
+
+fn gpu_regions to int
+put gnr 0 0
+gpu_bclr 579
+nb = get gnb 0
+for b int nb
+s = gpu_ix gpu_term b
+if eq get iop s 14
+if ne get gvar get ia s 0
+r = gpu_reg1 b
+if lt r 0
+ret -1
+end
+end
+end
+end
+nr = get gnr 0
+for r int nr
+h = get grh r
+if gpu_bhas 579 h
+q = gpu_f2 39 long h 40
+ret -1
+end
+end
+r = gpu_nest
+if lt r 0
+ret -1
+end
+r = gpu_bars
+if lt r 0
+ret -1
+end
+r = gpu_arms
+ret r
+end
+
+note ---- parameters and layout
+fn gpu_par1 v int off uint to uint
+k = get gkm 2
+s = gpu_ty v
+if or eq s 4 or eq s 13 eq s 1
+kd = uchar 3
+if eq s 13
+kd = 4
+end
+if eq s 1
+kd = 5
+end
+put gpk k kd
+put gpe k 0
+put gpo k off
+put garg v off
+ret add off 4
+end
+ret 0
+end
+
+note one parameter; returns the next offset, or 4294967295 when refused; *v advances by gstk[0]
+fn gpu_param v int off uint to uint
+f = get gfn 0
+np = int get fnpar f
+k = get gkm 2
+s = gpu_ty v
+put gstk 0 1
+if or eq s 14 eq s 15
+if ge add v 1 np
+r = gpu_f2 47 long v 48
+ret 4294967295
+end
+if ne gpu_ty add v 1 4
+r = gpu_f2 47 long v 48
+ret 4294967295
+end
+o = and add off 7 not uint 7
+kd = uchar 1
+if eq s 15
+kd = 2
+end
+el = get vtel gpu_vx v
+put gpk k kd
+put gpe k el
+put gpo k o
+if and ne el 4 ne el 13
+gpu_fb 49
+gpu_ps el
+gpu_fe
+ret 4294967295
+end
+put garg v o
+put garg add v 1 add o 8
+put gstk 0 2
+ret add o 12
+end
+if or eq s 4 or eq s 13 eq s 1
+n = gpu_par1 v off
+ret n
+end
+gpu_fb 50
+gpu_pi long v
+gpu_pt 51
+gpu_ps s
+gpu_fe
+ret 4294967295
+end
+
+fn gpu_layout to int
+f = get gfn 0
+nv = int get fnvr f
+sh = uint 0
+for v int nv
+put gmap v -1
+s = gpu_ty v
+if eq s 10
+x = gpu_vx v
+if ne get vtref x 4
+r = gpu_f2 54 long v 55
+ret -1
+end
+put gsho v sh
+put gshl v get vtlen x
+sh = add sh mul 4 get vtlen x
+continue
+end
+if or eq s 14 eq s 15
+r = bw_v64
+put gmap v r
+continue
+end
+if or eq s 4 or eq s 13 eq s 1
+r = bw_v
+put gmap v r
+continue
+end
+gpu_fb 54
+gpu_pi long v
+gpu_pt 51
+gpu_ps s
+gpu_fe
+ret -1
+end
+if gt sh 49152
+r = gpu_f2 56 long sh 57
+ret -1
+end
+put gkm 1 sh
+if ne get gee 0 0
+r = gpu_f1 58
+ret -1
+end
+ret 0
+end
+
+fn gpu_params to int
+f = get gfn 0
+np = int get fnpar f
+off = uint 0
+put gkm 2 0
+v = int 0
+while lt v np bound 999999
+off = gpu_param v off
+if eq off 4294967295
+ret -1
+end
+put gkm 2 add get gkm 2 1
+v = add v get gstk 0
+end
+off = and add off 7 not uint 7
+put gkm 3 off
+put gkm 4 add off 8
+put gkm 5 add off 12
+off = add off 16
+if gt div off 4 32
+r = gpu_f2 52 long div off 4 53
+ret -1
+end
+put gkm 6 div off 4
+r = gpu_layout
+ret r
+end
+
+note ---- prologue
+fn gpu_pzero to void
+t0 = gpu_t 0
+t1 = gpu_t 1
+t2 = gpu_t 2
+bw_s2r t0 33
+bw_imadi t0 t0 4 -1
+bw_movi t1 get gkm 1 0
+bw_movi t2 mul 4 get gkm 0 0
+bs = bw_here
+bw_i0 54
+bw_im 2
+bw_e 8 0
+bw_lbeg
+top = bw_here
+bw_ge t0 t1
+out = bw_branch 1
+bw_sts32 t0 get grg 4 0
+bw_iadd t0 t0 t2
+bw_bra top
+bw_lend
+j = bw_here
+bw_i0 55
+bw_e 9 0
+bw_patch out j
+if eq get gee 0 0
+put gxim bs gpu_u32 sub add j 1 bs
+end
+bw_bar
+end
+
+fn gpu_addfix p int k int a int b int to void
+n = get gnf 0
+if ge n 4096
+r = gpu_f1 65
+ret
+end
+put gfa n p
+put gfk n k
+put gfx n a
+put gfy n b
+put gnf 0 add n 1
+end
+
+fn gpu_prolog to void
+put grg 0 bw_uv64
+put grg 1 bw_v64
+put grg 2 bw_v64
+for k ulong 9
+put grg add k 3 bw_v
+end
+bw_ldcu64 get grg 0 856
+f = get gfn 0
+nv = int get fnpar f
+for v int nv
+s = gpu_ty v
+if or eq s 14 eq s 15
+bw_ldc64 get gmap v add 896 get garg v
+else
+bw_ldc32 get gmap v add 896 get garg v
+end
+end
+bw_ldc64 get grg 1 add 896 get gkm 3
+bw_movi get grg 3 1 0
+bw_movi get grg 4 0 0
+bw_movi get grg 5 0 0
+if and ne get gkm 1 0 ne get gmut 0 6
+gpu_pzero
+end
+p = bw_branch 0
+gpu_addfix p 0 -1 0
+end
