@@ -8,6 +8,7 @@ ctl-p-wrap run seed/omc/om2/s4/p-wrap.om - - - 103
 ctl-p-o run seed/omc/om2/s4/p-o.om - - - 103
 ctl-x-two emit seed/omc/om2/s4/x-two.om sha:52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e - 0
 ctl-p-bad-base refuse seed/omc/om2/s4/p-bad-base.om 19
+ctl-v-text-empty run seed/omc/om2/s4/v-text-empty.om - - - 0
 # unsized view: a number index left unchecked (check elimination on an unsized view)
 subst seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
 cc seed/omc/omc.om
@@ -32,3 +33,7 @@ m-p19 refuse seed/omc/om2/s4/p-bad-base.om 19
 subst seed/omc/om2/s4/mut/tramp.from seed/omc/om2/s4/mut/tramp.to
 cc seed/omc/omc.om
 m-tramp emit seed/omc/om2/s4/x-two.om sha:52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e - 0
+# empty text: a text of length 0 taken as unsized (its count read from register nm_lr, never set)
+subst seed/omc/om2/s4/mut/textlen.from seed/omc/om2/s4/mut/textlen.to
+cc seed/omc/omc.om
+m-textlen run seed/omc/om2/s4/v-text-empty.om - - - 0
