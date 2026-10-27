@@ -47,10 +47,16 @@ tls_pn c add TLRB 3 n 2
 ret tls_post c
 end
 
-note fz_hscv: m = L1 L0 leaf-entry[L] CertificateVerify, over a fixed transcript hash
+note fz_hscv: m = L1 L0 leaf-entry[L] CertificateVerify, over a fixed transcript hash. tls_cert
+note only stores a leaf entry whose 3-byte length l1 has l1 + 5 <= TLLFSZ (tls.om tls_cert), and
+note tls_cvcall relies on it; inputs breaking that invariant are not reachable and return 0 here.
+note (Smoke run 40423071743 chunk 1 reported them as exit-103 crashes before this check.)
 fn fz_hscv c edit uchar * m view uchar * to ulong
 h = new uchar 32 0
 fz_fill h 0 32 217
+if lt len m 2
+ret 0
+end
 l = fz_be2 m 0
 if gt l sub len m 2
 ret 0
@@ -60,6 +66,9 @@ ret 0
 end
 for i ulong l
 put c add TLLF i get m add 2 i
+end
+if gt add tls_gn c TLLF 3 5 l
+ret 0
 end
 if ne fz_hsput c part m add 2 l sub sub len m 2 l 0
 ret 0

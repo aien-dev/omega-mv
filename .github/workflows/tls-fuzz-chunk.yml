@@ -73,7 +73,7 @@ jobs:
           for f in out/*/crashes/id* out/*/hangs/id*; do
             [ -f "$f" ] || continue
             n=$((n+1)); [ $n -le 200 ] || { echo "triage cap 200 reached" >> rep/triage.txt; break; }
-            timeout 20 fz/bin/$T $A < "$f" > /dev/null 2>&1; ex=$?
+            ex=0; timeout 20 fz/bin/$T $A < "$f" > /dev/null 2>&1 || ex=$?
             h=$(sha256sum "$f" | cut -c1-12)
             echo "$f exit $ex sha $h" | tee -a rep/triage.txt
             if [ "$ex" -ge 100 ] && [ "$ex" -ne 124 ]; then
