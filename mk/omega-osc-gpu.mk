@@ -13,7 +13,7 @@ OMEGA_OSC_GPU_MK := 1
 .PHONY: test-osc-gpu test-osc-gpu-chip
 OSG_DIR = $(OUT_DIR)/osc_gpu
 OSG_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc -Isrc/compiler -Itests
-OSG_OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/sha256.c
+OSG_OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/omega_om_units.c
 OSG_SRCS = src/omega_osc_gpu.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_osc_launch_args.c
 OSG_HDRS = src/omega_osc_gpu.h src/omega_osc_launch.h src/omega_gpu_session.h src/omega_blackwell_codegen.h src/omega_bw_em.h tests/bw_warp_sim.h $(wildcard src/compiler/*.h)
 

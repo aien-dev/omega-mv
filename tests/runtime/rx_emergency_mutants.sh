@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # R16 G6 operator emergency stop: each guard is load-bearing. Every mutant below
 # removes one guard from a temporary copy of the runtime; tests/runtime/rx_emergency.c
 # must FAIL against each one (and PASS against the unmutated copy). A mutant whose
@@ -8,7 +23,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 W=$(mktemp -d "${TMPDIR:-/tmp}/rx-estop-mut.XXXXXX")
 trap 'rm -rf "$W"' EXIT
 CC=${CC:-cc}
-SRCS="src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/runtime/rx_generation.c src/sha256.c tests/runtime/rx_emergency.c"
+SRCS="src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/runtime/rx_generation.c src/omega_om_units.c tests/runtime/rx_emergency.c"
 
 # name|file|perl substitution (applied with -0, must match exactly once)
 MUTANTS='M1 run_one publishes under a stop|src/runtime/rx_world.c|s/(on resume, against the state then \(rearm keeps its admission path\)\. \*\/\n    )if \(w->halted\) \{/${1}if (0) {/

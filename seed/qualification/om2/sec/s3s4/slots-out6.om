@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 99-101, section 6 line 196, errata E1: an out parameter takes one slot.
+note One out and five scalars = 6 slots: accepted.
+om2
+fn f o out uchar 8 v ulong w ulong x ulong y ulong z ulong to void
+put o 0 uchar and add v add w add x add y z 255
+end

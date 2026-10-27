@@ -1,0 +1,40 @@
+# om-units-arm64: independent ARM64 rerun of tests/gates/run.sh om-units on a GitHub-hosted
+# ubuntu-24.04-arm machine (not the Spark). It births omc from the seed hex on that machine, takes the
+# binding generator from aien-dev/omega-bridge at om/omega-bridge.lock, regenerates
+# src/omega_om_units.c, omega_native.h, omega_api_decl.h and omega_om_units.ident byte for byte, and checks
+# SHA-256 and BLAKE3 byte parity against the C they replaced plus the BLAKE3 mutants. Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
+name: om-units-arm64
+on:
+  pull_request:
+    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "tests/gates/**", ".github/workflows/om-units-arm64.yml"]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  om-units:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: omega-bridge at om/omega-bridge.lock, as the sibling ../omega-bridge the gate pins from
+        run: |
+          sha=$(awk 'NF && $1 !~ /^#/ {print $1; exit}' om/omega-bridge.lock)
+          git clone --quiet https://github.com/aien-dev/omega-bridge.git ../omega-bridge
+          git -C ../omega-bridge checkout --quiet --detach "$sha"
+      - name: machine
+        run: uname -a; nproc; cc --version | head -1
+      - name: gate om-units
+        run: mkdir -p build && bash tests/gates/run.sh om-units
+      - name: throughput (report only)
+        run: |
+          cc -std=gnu11 -O2 -D_GNU_SOURCE -Isrc -c src/omega_om_units.c -o /tmp/new.o
+          git show a647b6a9821fffcf52ba9ce813f75afa4b84be62:src/sha256.h > /tmp/sha256.h
+          git show a647b6a9821fffcf52ba9ce813f75afa4b84be62:src/sha256.c \
+            | sed 's/sha256_\(init\|update\|final\|hash\|transform\)/orc_sha256_\1/g' > /tmp/oracle.c
+          cc -O2 -c /tmp/oracle.c -o /tmp/oracle.o
+          cc -O2 -Isrc om/sha256/parity/bench.c /tmp/new.o /tmp/oracle.o -o /tmp/bench -pthread
+          /tmp/bench
+          cc -O2 -Isrc om/sha256/parity/small.c /tmp/new.o /tmp/oracle.o -o /tmp/small -pthread && /tmp/small

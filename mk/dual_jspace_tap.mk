@@ -23,15 +23,15 @@ DJT_TEST = tests/runtime/rx_dual_jspace_tap.c
 DJT_BENCH = tests/runtime/rx_dual_jspace_tap_bench.c
 
 # The parity test includes rx_jspace.c (reference oracle needs its statics).
-$(DJT_DIR)/rx_dual_jspace_tap: $(DJT_TEST) $(DJT_JSPACE) src/sha256.c
+$(DJT_DIR)/rx_dual_jspace_tap: $(DJT_TEST) $(DJT_JSPACE) src/omega_om_units.c
 	@mkdir -p $(DJT_DIR)
-	$(CC) $(DJT_CFLAGS) -o $@ $(DJT_TEST) src/sha256.c -lm
-$(DJT_DIR)/rx_dual_jspace_tap_asan: $(DJT_TEST) $(DJT_JSPACE) src/sha256.c
+	$(CC) $(DJT_CFLAGS) -o $@ $(DJT_TEST) src/omega_om_units.c -lm
+$(DJT_DIR)/rx_dual_jspace_tap_asan: $(DJT_TEST) $(DJT_JSPACE) src/omega_om_units.c
 	@mkdir -p $(DJT_DIR)
-	$(CC) $(DJT_CFLAGS) $(DJT_ASAN) -o $@ $(DJT_TEST) src/sha256.c -lm
-$(DJT_DIR)/rx_dual_jspace_tap_hostile: $(DJT_TEST) $(DJT_JSPACE) src/sha256.c
+	$(CC) $(DJT_CFLAGS) $(DJT_ASAN) -o $@ $(DJT_TEST) src/omega_om_units.c -lm
+$(DJT_DIR)/rx_dual_jspace_tap_hostile: $(DJT_TEST) $(DJT_JSPACE) src/omega_om_units.c
 	@mkdir -p $(DJT_DIR)
-	$(CC) $(DJT_CFLAGS) -DDUAL_TAP_HOSTILE_TEST -o $@ $(DJT_TEST) src/sha256.c -lm
+	$(CC) $(DJT_CFLAGS) -DDUAL_TAP_HOSTILE_TEST -o $@ $(DJT_TEST) src/omega_om_units.c -lm
 
 test-dual-jspace-tap: $(DJT_DIR)/rx_dual_jspace_tap $(DJT_DIR)/rx_dual_jspace_tap_asan
 	./$(DJT_DIR)/rx_dual_jspace_tap
@@ -64,12 +64,12 @@ $(DJT_BASE_DIR)/rx_jspace.c:
 	git show $(DJT_BASE_SHA):src/runtime/rx_jspace.c > $@
 	git show $(DJT_BASE_SHA):src/runtime/rx_jspace.h > $(DJT_BASE_DIR)/rx_jspace.h
 	git show $(DJT_BASE_SHA):src/runtime/aien_machine_id.h > $(DJT_BASE_DIR)/aien_machine_id.h
-$(DJT_DIR)/rx_dual_jspace_tap_bench_base: $(DJT_BENCH) $(DJT_BASE_DIR)/rx_jspace.c src/sha256.c
+$(DJT_DIR)/rx_dual_jspace_tap_bench_base: $(DJT_BENCH) $(DJT_BASE_DIR)/rx_jspace.c src/omega_om_units.c
 	@mkdir -p $(DJT_DIR)
-	$(CC) $(DJT_CFLAGS) -DDUAL_TAP_BENCH_BASE -I$(DJT_BASE_DIR) -o $@ $(DJT_BENCH) $(DJT_BASE_DIR)/rx_jspace.c src/sha256.c -lm
-$(DJT_DIR)/rx_dual_jspace_tap_bench: $(DJT_BENCH) $(DJT_JSPACE) src/sha256.c
+	$(CC) $(DJT_CFLAGS) -DDUAL_TAP_BENCH_BASE -I$(DJT_BASE_DIR) -o $@ $(DJT_BENCH) $(DJT_BASE_DIR)/rx_jspace.c src/omega_om_units.c -lm
+$(DJT_DIR)/rx_dual_jspace_tap_bench: $(DJT_BENCH) $(DJT_JSPACE) src/omega_om_units.c
 	@mkdir -p $(DJT_DIR)
-	$(CC) $(DJT_CFLAGS) -o $@ $(DJT_BENCH) src/runtime/rx_jspace.c src/sha256.c -lm
+	$(CC) $(DJT_CFLAGS) -o $@ $(DJT_BENCH) src/runtime/rx_jspace.c src/omega_om_units.c -lm
 
 bench-dual-jspace-tap: $(DJT_DIR)/rx_dual_jspace_tap_bench_base $(DJT_DIR)/rx_dual_jspace_tap_bench
 	./$(DJT_DIR)/rx_dual_jspace_tap_bench_base

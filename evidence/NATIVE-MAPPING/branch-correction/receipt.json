@@ -1,0 +1,116 @@
+{
+  "source": "078455c9c1862b9145ef892dfba68676204a38da",
+  "upstream_source": "7a1692908d86c69be91191ac227ce465d4ee8b1d",
+  "compiler_source_sha256": "a2691c76dfae15e1e8c4503fb22ce483f638824e5ab87146a13e2edb70b5a513",
+  "compiler_sha256": "9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4",
+  "stages": [
+    "9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4",
+    "9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4",
+    "9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4"
+  ],
+  "host_exit": 0,
+  "native_branch_gate_exit": 0,
+  "native_branch_gate_sha256": "04247ac6436ac176f98fd0b9a205fe8f51e02c6ded7ac81dba3e9e113c5a4fc2",
+  "controls": [
+    {
+      "name": "generation",
+      "test": "mapping",
+      "exit": 80,
+      "stdout": "",
+      "source_sha256": "fc961c7e04c8be6de1a6f74c343bba0de0a6e335e78f95546cf867e10bd9723e",
+      "compiler_sha256": "d4cef3de2cfd97ffc22f3ccff24ac2d9b0f323c1a4a9ff1dd0f5ef99f7220015",
+      "test_sha256": "30ff02532e27f15fba1ae890710879cf78ecb9281c1b062c60ee867d9494a0ee"
+    },
+    {
+      "name": "readonly",
+      "test": "mapping",
+      "exit": 80,
+      "stdout": "",
+      "source_sha256": "b4f4ba7f6af82eb78b989dd91a2f571ca5f37b1434cc0279cc7f5f3c0a7d3eda",
+      "compiler_sha256": "3720e1ddbb70ad01ff28e6bf3f4350168a6391028e2ab233dd42cd6b31e1f2d1",
+      "test_sha256": "bf60b5a75ccd367b5ed1bd0313e061d33356a4047d35ba46f5b752addf98594a"
+    },
+    {
+      "name": "range",
+      "test": "mapping",
+      "exit": 80,
+      "stdout": "",
+      "source_sha256": "630894b59b9b3ac8612c61fc1a5715dcc695feeb390e3f121c6585d2144ba483",
+      "compiler_sha256": "d78ddec406501f4b0c92537c0b3d86540f79ee1b35d4434ff6b984653d216225",
+      "test_sha256": "ec80bd2740998e5270fdb33b5553b74f84e724254b7c96aaec00c6a8138aef07"
+    },
+    {
+      "name": "reuse",
+      "test": "mapping",
+      "exit": 103,
+      "stdout": "",
+      "source_sha256": "1ac0cecbbecc93677cc83b97394657610c91fcf2a57664a11bced1815066a74f",
+      "compiler_sha256": "66cc6d11c22047468212b875dee2435789153af41622f0031fde66f68f387262",
+      "test_sha256": "86d990b6c2be2eab9ab3826f93c10d40c33855347193d8a9d464c0f07e8e6f15"
+    },
+    {
+      "name": "ioctl-size",
+      "test": "device",
+      "exit": 16,
+      "stdout": "",
+      "source_sha256": "57694b126830dea0d7d096fed32f77bc8bc96deb9f0cbba7839e2e7e09ec2b17",
+      "compiler_sha256": "991429b0245e0417c03799ab42a8660927e2d0d73bc7b7aa59d7c9bd629030cd",
+      "test_sha256": "6d36f5b7d7c060d469429c7fd3d736935da28c38bfdc1bab7b5a7474e71757f2"
+    },
+    {
+      "name": "ioctl-call",
+      "test": "device",
+      "exit": 3,
+      "stdout": "",
+      "source_sha256": "0dbe86a620dde6d1f3ccf1d1c954168ea2d1ea66b0e080195833ab4c602bf7e8",
+      "compiler_sha256": "1c3666c99abfb4c1b58aaca719cc3ba78fe8bca1508b3655589efe26c33cdd64",
+      "test_sha256": "b287af1791f1529b2c5847e8caeeb62fe8ff1683541ce73ee88874db75b26b11"
+    },
+    {
+      "name": "unmap",
+      "test": "mapping",
+      "exit": 80,
+      "stdout": "",
+      "source_sha256": "ec27e365154d7b35b73e8a94c530b91d77550e56aedf885b9c432a788a27de14",
+      "compiler_sha256": "950a647ef499a645c8559a60dfb609640305535f527ab4495ace655eb95b1580",
+      "test_sha256": "7918683920a3331ed76f0c6bef0d75d29bca19b95df0578a5bdbf69aa118cdb1"
+    },
+    {
+      "name": "slots",
+      "test": "mapping",
+      "exit": 80,
+      "stdout": "",
+      "source_sha256": "cad618aa85f5091eebbd24b0fb880fb4c013a08b012657e1fbb12e4e175ac66c",
+      "compiler_sha256": "8adb455963a81e706ae880a6e5be5eaf767a69cc021ac870f64c4b7721a5e1ac",
+      "test_sha256": "61171e23557609ba71e16a149d00b8c9b264dac27d63132b8ca40cd9853ae91c"
+    },
+    {
+      "name": "access-literal",
+      "test": "memcheck",
+      "exit": 7,
+      "stdout": "",
+      "source_sha256": "f83ff14edc3a23e2361823efd8172e63fe14c82178e32d1ee2e0c6be2c3b451e",
+      "compiler_sha256": "630e5d925e6a90c664c2486e1b25159d082965fbb658fa85f21fa63b0426a4ba",
+      "test_sha256": "835dc550483c325a05231340a4e76040f05d98fda96b771c5571b2618d514060"
+    },
+    {
+      "name": "mode-literal",
+      "test": "memcheck",
+      "exit": 8,
+      "stdout": "",
+      "source_sha256": "fb84e43a2253f168dcd23b75d07ea06932cf9281876af3e611ad307b9cd93e64",
+      "compiler_sha256": "0a10fc8bd3ee21ca30de162fc42cf3d32280bbfc6ecc820f054f7c3c21379c00",
+      "test_sha256": "835dc550483c325a05231340a4e76040f05d98fda96b771c5571b2618d514060"
+    },
+    {
+      "name": "generation-ceiling",
+      "test": "genlimit",
+      "exit": 0,
+      "stdout": "PASS generation ceiling, retirement and final exhaustion\n",
+      "source_sha256": "ccbd7758f713be51a33484de7abda6c2e5cfd151368b5b3bd1b010513ec082a0",
+      "compiler_sha256": "a09491049f42d5ea071f2dc771196516b21c714b42cb8b1ff5ae8586b33ba8cf",
+      "test_sha256": "3e9e367576aec36446fec61aff573d1cefce0af354031654ad0c23c45b175557"
+    }
+  ],
+  "hardware_trials": "NOT_RUN"
+}

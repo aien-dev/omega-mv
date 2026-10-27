@@ -101,7 +101,7 @@ Status vocabulary: IMPLEMENTED (code + passing test/receipt), PARTIAL (works for
 | Item | Status | Evidence |
 |---|---|---|
 | Mojo toolchain | IMPLEMENTED (installed) | `~/.pixi/bin/mojo` = static aarch64 ELF, `mojo --version` -> `Mojo 1.0.0 (ed45d567)`. |
-| Mojo on PATH | CONFLICTING | `~/.local/bin/mojo` (first on PATH) is a **Python script** (`#!/home/drakestapleton/max-env/bin/python`, imports `mojo._entrypoints`). Lane B3 should call `~/.pixi/bin/mojo` explicitly. |
+| Mojo on PATH | CONFLICTING | `~/.local/bin/mojo` (first on PATH) is a **Python script** (`#!~/max-env/bin/python`, imports `mojo._entrypoints`). Lane B3 should call `~/.pixi/bin/mojo` explicitly. |
 | Mojo in omega / aienos / physics | MISSING | 0 `.mojo` files in all three. Only mentions: `spec/polyglot-0.md`, `src/polyglot/omx_lang.h:16,33`. |
 | Mojo elsewhere (prior art) | EXPERIMENTAL | aegis-runtime `mojo/aegis_simd.mojo`: `@export("...") ... abi("C")` C-ABI exports (header says "Mojo 1.1", host has 1.0.0: syntax may differ). sovereign-core `crates/aien-inference-abi/mojo/**` (inference kernels). Neither built or tested here. |
 | Mojo doctrine | PLANNED (memory only) | No Mojo rule in aien-architecture doctrine/ADRs (grep). Drake's rule "Mojo is default, not dogma; leave MAX" lives in operator memory, not in repo authority. |

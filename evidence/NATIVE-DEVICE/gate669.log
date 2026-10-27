@@ -1,0 +1,121 @@
+seed/rung4/om4.bin < seed/omc/omc.om > build/device-runtime669/1001 2> build/device-runtime669/501001
+exit=0 expected=0
+build/device-runtime669/1001 < seed/omc/omc.om > build/device-runtime669/1002 2> build/device-runtime669/501002
+exit=0 expected=0
+build/device-runtime669/1002 < seed/qualification/security673/branch-corpus.om > build/device-runtime669/1003 2> build/device-runtime669/501003
+exit=0 expected=0
+build/device-runtime669/1002 < seed/qualification/security673/branch-mutate.om > build/device-runtime669/1004 2> build/device-runtime669/501004
+exit=0 expected=0
+build/device-runtime669/1002 < seed/qualification/security673/branch-check.om > build/device-runtime669/1005 2> build/device-runtime669/501005
+exit=0 expected=0
+build/device-runtime669/1004 0 < seed/omc/omc.om > build/device-runtime669/1006 2> build/device-runtime669/501006
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1006 > build/device-runtime669/1007 2> build/device-runtime669/501007
+exit=0 expected=0
+build/device-runtime669/1007 < build/device-runtime669/1008 > build/device-runtime669/1009 2> build/device-runtime669/501009
+exit=0 expected=0
+build/device-runtime669/1007 < build/device-runtime669/1010 > build/device-runtime669/1011 2> build/device-runtime669/501011
+exit=0 expected=0
+build/device-runtime669/1007 < build/device-runtime669/1012 > build/device-runtime669/1013 2> build/device-runtime669/501013
+exit=0 expected=0
+build/device-runtime669/1007 < build/device-runtime669/1014 > build/device-runtime669/1015 2> build/device-runtime669/501015
+exit=0 expected=0
+build/device-runtime669/1007 < build/device-runtime669/1016 > build/device-runtime669/1017 2> build/device-runtime669/501017
+exit=24 expected=24
+build/device-runtime669/1007 < build/device-runtime669/1018 > build/device-runtime669/1019 2> build/device-runtime669/501019
+exit=24 expected=24
+build/device-runtime669/1007 < build/device-runtime669/1020 > build/device-runtime669/1021 2> build/device-runtime669/501021
+exit=24 expected=24
+build/device-runtime669/1007 < build/device-runtime669/1022 > build/device-runtime669/1023 2> build/device-runtime669/501023
+exit=24 expected=24
+build/device-runtime669/1002 < seed/qualification/security673/array-fill.om > build/device-runtime669/1024 2> build/device-runtime669/501024
+exit=0 expected=0
+build/device-runtime669/1024 < /dev/null > build/device-runtime669/1025 2> build/device-runtime669/501025
+exit=0 expected=0
+build/device-runtime669/1002 < seed/qualification/security673/oracle-corpus.om > build/device-runtime669/1026 2> build/device-runtime669/501026
+exit=0 expected=0
+build/device-runtime669/1026 < build/device-runtime669/1027 > build/device-runtime669/1028 2> build/device-runtime669/501028
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1028 > build/device-runtime669/1029 2> build/device-runtime669/501029
+exit=0 expected=0
+build/device-runtime669/1026 < build/device-runtime669/1030 > build/device-runtime669/1031 2> build/device-runtime669/501031
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1031 > build/device-runtime669/1032 2> build/device-runtime669/501032
+exit=62 expected=62
+build/device-runtime669/1026 < build/device-runtime669/1033 > build/device-runtime669/1034 2> build/device-runtime669/501034
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1034 > build/device-runtime669/1035 2> build/device-runtime669/501035
+exit=62 expected=62
+build/device-runtime669/1026 < build/device-runtime669/1036 > build/device-runtime669/1037 2> build/device-runtime669/501037
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1037 > build/device-runtime669/1038 2> build/device-runtime669/501038
+exit=62 expected=62
+build/device-runtime669/1026 < build/device-runtime669/1039 > build/device-runtime669/1040 2> build/device-runtime669/501040
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1040 > build/device-runtime669/1041 2> build/device-runtime669/501041
+exit=62 expected=62
+build/device-runtime669/1026 < build/device-runtime669/1042 > build/device-runtime669/1043 2> build/device-runtime669/501043
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1043 > build/device-runtime669/1044 2> build/device-runtime669/501044
+exit=61 expected=61
+build/device-runtime669/1026 < build/device-runtime669/1045 > build/device-runtime669/1046 2> build/device-runtime669/501046
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1046 > build/device-runtime669/1047 2> build/device-runtime669/501047
+exit=62 expected=62
+build/device-runtime669/1003 < build/device-runtime669/1048 > build/device-runtime669/1049 2> build/device-runtime669/501049
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1049 > build/device-runtime669/1050 2> build/device-runtime669/501050
+exit=0 expected=0
+/usr/bin/objdump -D -b binary -m aarch64 build/device-runtime669/1050 < /dev/null > build/device-runtime669/1051 2> build/device-runtime669/501051
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1051 > build/device-runtime669/1052 2> build/device-runtime669/501052
+exit=0 expected=0
+build/device-runtime669/1050 < /dev/null > build/device-runtime669/1053 2> build/device-runtime669/501053
+exit=0 expected=0
+build/device-runtime669/1003 < build/device-runtime669/1054 > build/device-runtime669/1055 2> build/device-runtime669/501055
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1055 > build/device-runtime669/1056 2> build/device-runtime669/501056
+exit=0 expected=0
+/usr/bin/objdump -D -b binary -m aarch64 build/device-runtime669/1056 < /dev/null > build/device-runtime669/1057 2> build/device-runtime669/501057
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1057 > build/device-runtime669/1058 2> build/device-runtime669/501058
+exit=0 expected=0
+build/device-runtime669/1056 < /dev/null > build/device-runtime669/1059 2> build/device-runtime669/501059
+exit=0 expected=0
+build/device-runtime669/1003 < build/device-runtime669/1060 > build/device-runtime669/1061 2> build/device-runtime669/501061
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1061 > build/device-runtime669/1062 2> build/device-runtime669/501062
+exit=24 expected=24
+build/device-runtime669/1003 < build/device-runtime669/1063 > build/device-runtime669/1064 2> build/device-runtime669/501064
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1064 > build/device-runtime669/1065 2> build/device-runtime669/501065
+exit=24 expected=24
+build/device-runtime669/1003 < build/device-runtime669/1066 > build/device-runtime669/1067 2> build/device-runtime669/501067
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1067 > build/device-runtime669/1068 2> build/device-runtime669/501068
+exit=24 expected=24
+build/device-runtime669/1003 < build/device-runtime669/1069 > build/device-runtime669/1070 2> build/device-runtime669/501070
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1070 > build/device-runtime669/1071 2> build/device-runtime669/501071
+exit=24 expected=24
+build/device-runtime669/1003 < build/device-runtime669/1072 > build/device-runtime669/1073 2> build/device-runtime669/501073
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1073 > build/device-runtime669/1074 2> build/device-runtime669/501074
+exit=24 expected=24
+build/device-runtime669/1004 1 < seed/omc/omc.om > build/device-runtime669/1075 2> build/device-runtime669/501075
+exit=0 expected=0
+build/device-runtime669/1002 < build/device-runtime669/1075 > build/device-runtime669/1076 2> build/device-runtime669/501076
+exit=0 expected=0
+build/device-runtime669/1003 < build/device-runtime669/1077 > build/device-runtime669/1078 2> build/device-runtime669/501078
+exit=0 expected=0
+build/device-runtime669/1076 < build/device-runtime669/1078 > build/device-runtime669/1079 2> build/device-runtime669/501079
+exit=0 expected=0
+/usr/bin/objdump -D -b binary -m aarch64 build/device-runtime669/1079 < /dev/null > build/device-runtime669/1080 2> build/device-runtime669/501080
+exit=0 expected=0
+build/device-runtime669/1005 < build/device-runtime669/1080 > build/device-runtime669/1081 2> build/device-runtime669/501081
+exit=61 expected=61
+build/device-runtime669/1002 < build/device-runtime669/1078 > build/device-runtime669/1082 2> build/device-runtime669/501082
+exit=24 expected=24
+build/device-runtime669/1005 < /dev/null > build/device-runtime669/1083 2> build/device-runtime669/501083
+exit=62 expected=62
+GATE669 PASS bounded Linux AArch64 execution and independent decoding only

@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * rx_r15_parity.c -- R15 SEQ semantic parity gate (spec §16 C1 item 9).
  *
@@ -15,7 +31,8 @@
  * and the authority outcome. Gated on each side: goal MET, crumbs verify,
  * no crumb overflow, no illegal transition, no wrong result, no use of a
  * realization not in force, and no lost trigger. Measured costs are printed
- * and not compared.
+ * and not compared; the detector that reads them is configured (see main)
+ * so that host timing noise cannot change a compared plan field.
  *
  * R15_PARITY_PAIRS (default 5) sets the number of pairs.
  * Exit status 0 = SEQ_SEMANTIC_PARITY PASS.
@@ -98,17 +115,19 @@ static int run_side(R15Config c, uint64_t target, R15Outcome *o, char *first, si
     return rc;
 }
 
-static void print_side(const char *side, const R15Outcome *o) {
-    printf("    %-5s goal status %llu, plan action %llu reason %llu, epoch %llu, "
+static void print_side_tag(const char *side, const R15Outcome *o, const char *tag) {
+    printf("    %-5s%s goal status %llu, plan action %llu reason %llu, epoch %llu, "
            "selected %016llx (verdict %llu), evidence %llu/%llu trials, belief %llu, "
            "generation %llu -> %llu, in force %016llx; measured: incumbent %llu ns, "
            "selected %llu ps, reference %llu ps, served %llu, crumbs %llu\n",
-           side, U(o->goal_status), U(o->plan_action), U(o->plan_reason), U(o->selection_epoch),
+           side, tag, U(o->goal_status), U(o->plan_action), U(o->plan_reason), U(o->selection_epoch),
            U(o->selection_id[0]), U(o->selected_verdict), U(o->evidence[4]), U(o->evidence[3]),
            U(o->belief[2]), U(o->gen_before), U(o->gen_after), U(o->inforce_id[0]),
            U(o->incumbent_ns), U(o->selected_ps), U(o->reference_ps), U(o->served),
            U(o->crumbs));
 }
+
+static void print_side(const char *side, const R15Outcome *o) { print_side_tag(side, o, ""); }
 
 /* The lost-trigger detector must see a trigger that did not run. With no
  * run slots, a production request (it triggers workload.matvec.serve) is
@@ -182,6 +201,23 @@ int main(void) {
         printf("R15 repeat %s: %d of %d failed\n", r15_config_name(c), bad, n);
         return bad ? 1 : 0;
     }
+    /* AIEN's drift detector reads Omega's wall-clock serve costs. Under host
+     * load one side can see two consecutive intervals outside the tolerance,
+     * fail its prediction, and research the regime because of DRIFT (plan
+     * reason 2, condition A725, no goal) where the other side researches
+     * because of the GOAL (reason 3, condition X925, goal 1): the same work
+     * for a different reason, and the gate rightly fails. The stimulus here
+     * has no drift, so both sides get a detector whose miss streak cannot
+     * fail a prediction within an episode, and a hit band that one preempted
+     * baseline interval cannot defeat: within 20 percent of a baseline mean
+     * that one such interval inflated, a normal interval never lands, so
+     * the confirmation the episode waits for never comes. Everything else
+     * stays the product default and every compared field is still compared. */
+    RxAienConfig ac;
+    rx_aien_default_config(&ac);
+    ac.misses_to_fail = UINT32_MAX;
+    ac.tolerance_pct = 99;
+    r15_set_aien_config(&ac);
     detector_control(R15_RES1);
     detector_control(R15_SEQ);
     for (int p = 0; p < pairs; p++) {
@@ -202,6 +238,13 @@ int main(void) {
         }
         printf("  pair %d (%s first, target %llu ns)\n", p, res_first ? "RES-1" : "SEQ",
                U(res_first ? res.target_ns : seq.target_ns));
+        /* Print the numbers this pair produced, including the failing side's.
+         * A failure reason with no measurement behind it cannot be diagnosed:
+         * a side that stops early leaves zeroed fields, so its line is tagged. */
+        if (rc_a == 0) print_side("RES-1", &res);
+        else if (res.why[0]) print_side_tag("RES-1", &res, " (at failure)");
+        if (rc_b == 0) print_side("SEQ", &seq);
+        else if (seq.why[0]) print_side_tag("SEQ", &seq, " (at failure)");
         if (rc_a != 0 || rc_b != 0) {
             g_fail++;
             /* The second side runs only if the first completed; say so, or a
@@ -212,8 +255,6 @@ int main(void) {
                     rc_b ? (seq.why[0] ? seq.why : skipped) : "ok");
             continue;
         }
-        print_side("RES-1", &res);
-        print_side("SEQ", &seq);
         check_side(p, "RES-1", &res, lost_res);
         check_side(p, "SEQ", &seq, lost_seq);
         compare(p, &res, &seq);

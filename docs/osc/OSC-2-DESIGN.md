@@ -483,9 +483,11 @@ refusal is a bug in the caller.
 
 ### 4.4 No new callers
 
-`tests/compiler/legacy_a64_allowlist.txt` lists the 16 C files that include
+`tests/compiler/legacy_a64_allowlist.txt` lists the 17 C files that include
 `aarch64_encoder.h` or name an `aarch64_emit_*` function (14 callers, the writer itself
-and its header, plus this item's test). `tests/compiler/legacy_a64_callers.sh` scans every
+and its header, this item's test, and `seed/check/a64check.c`, a reference check that uses
+the writer only as an oracle for the seed's hand-written words and makes no program with it).
+`tests/compiler/legacy_a64_callers.sh` scans every
 tracked and untracked (not ignored) `*.c` / `*.h` file and requires the set to equal the
 list:
 

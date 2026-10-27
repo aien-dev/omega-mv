@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * omega_evidence.h -- immutable run-evidence plumbing shared by every gate suite.
  *
@@ -68,6 +84,15 @@ bool omega_evidence_run_commit(char out[41]);
 
 /* True if the full relevant git tree (including untracked files) is dirty. */
 bool omega_evidence_tree_dirty(void);
+
+/* Path of the omegatool that is running the gates, for receipt digests and manifests:
+ * "$OUT_DIR/omegatool" (tests/gates/run.sh builds each step into build/step-<step>/,
+ * omega#511; a clean clone builds with OUT_DIR=build), "build/omegatool" when OUT_DIR
+ * is unset, else the kernel's record of the running executable (/proc/self/exe).
+ * The file name is taken from /proc/self/exe, never spelled in the code: this file is
+ * linked into production binaries and R16-G3 refuses legacy program names in them.
+ * Returns false when no readable file is found. */
+bool omega_evidence_self_binary(char *out, size_t n);
 
 /* Reads physics.lock at the repo root; trims whitespace/newline. Returns
  * false if the file cannot be read. */

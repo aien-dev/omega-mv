@@ -8,7 +8,7 @@
 GATE=unwritten_trap
 OWNER=unwritten_trap
 TEST_SOURCE="tests/test_omega_unwritten_trap_gb10.c"
-SOURCES="src/omega_unwritten_trap.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c"
+SOURCES="src/omega_unwritten_trap.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
 EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 # Same default as the old script.
 RUN_ARGS="--chip --repeats 3000"

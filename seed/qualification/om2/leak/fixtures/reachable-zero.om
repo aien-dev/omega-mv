@@ -1,0 +1,6 @@
+note E12 native reachability: same loaded ulong-to-uint conversion as reachable-trap.om.
+note Zero fits: process returns 0. This is executed, not a scan of its artifact.
+fn main to uint
+a = new ulong 4 0
+ret uint get a 0
+end
