@@ -1,0 +1,5 @@
+# Demo rows, separate from the 129-row seed/wasm/cases.tsv denominator.
+# unit export return typed-arguments native-status
+demo	avgu32	uint	uint:4294967295,uint:4294967293	0
+demo	avgu32	uint	uint:0,uint:1	0
+demo	avgu32	uint	uint:7,uint:10	0

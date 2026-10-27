@@ -1,0 +1,6 @@
+note L412 probe conv_sign: 2^63 is a ulong; converting it to long traps 5
+fn main to int
+x = ulong 9223372036854775808
+y = long x
+ret 0
+end

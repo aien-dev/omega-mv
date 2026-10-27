@@ -1,0 +1,92 @@
+fn eq64 a ulong b ulong to bool
+ret eq a b
+end
+fn ne64 a long b long to bool
+ret ne a b
+end
+fn lts64 a long b long to bool
+ret lt a b
+end
+fn ltu64 a ulong b ulong to bool
+ret lt a b
+end
+fn les32 a int b int to bool
+ret le a b
+end
+fn leu32 a uint b uint to bool
+ret le a b
+end
+fn gts16 a short b short to bool
+ret gt a b
+end
+fn gtu16 a ushort b ushort to bool
+ret gt a b
+end
+fn ges8 a byte b byte to bool
+ret ge a b
+end
+fn geu8 a uchar b uchar to bool
+ret ge a b
+end
+fn booland a bool b bool to bool
+ret and a b
+end
+fn boolor a bool b bool to bool
+ret or a b
+end
+fn boolxor a bool b bool to bool
+ret xor a b
+end
+fn addone a uint to uint
+ret add a 1
+end
+fn nested a uint to uint
+ret addone addone a
+end
+fn six a uint b uint c uint d uint e uint z uint to uint
+ret add add add add add a b c d e z
+end
+fn breaks n uint to uint
+x = uint 0
+while lt x n bound 20
+y = uint 0
+while lt y n bound 20
+if eq y 2
+break
+end
+y = add y 1
+end
+x = add x y
+if eq y 0
+break
+end
+end
+ret x
+end
+fn forbreak n uint to uint
+s = uint 0
+for i uint n
+if eq i 3
+break
+end
+s = add s i
+end
+ret s
+end
+fn choose a int to int
+if lt a 0
+ret neg a
+else
+ret add a 1
+end
+end
+fn looptrap n uint to uint
+x = uint 0
+while lt x n bound 2
+x = add x 1
+end
+ret x
+end
+fn explicit to uint
+trap 9
+end

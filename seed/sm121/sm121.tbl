@@ -1,0 +1,235 @@
+; sm121.tbl -- the GB10 (sm_121, Blackwell) instruction table for asm2 (rung 6), readable text.
+; Same format as rung2/table.s2:   = name  0xBASE  field...
+; asm2 writes one 32-bit word per line. A GPU instruction is 128 bits = four 32-bit words, stored
+; in the order word 0, 1, 2, 3 (each little-endian), exactly as src/omega_blackwell_codegen.c
+; omega_bw_encode_program lays them out. So every instruction is four lines in a listing, one per word;
+; where several instructions share a word (for example "word 1 = one register") they share one line:
+;   .0  opcode, predicate (bits 12..15), destination register (bits 16..23), first source (24..31)
+;   .1  second source register or a 32-bit number
+;   .2  modifier bits (fixed per instruction) and the third source register
+;   .3  the scheduling ("control") word; name.3 holds the C codegen's default, `ctl N` writes any other.
+; Fields: iP.W = unsigned number at bit P, W bits wide; sP.W = signed. Registers are written as numbers
+; (R5 = 5, RZ = 255); predicates as numbers (7 = always, 0 = @P0, 8 = @!P0).
+; Units: every number is written as the bits hold it (constant-bank offsets in 4- or 8-byte units,
+; branch distances in instructions, split the way the word splits them). See seed/sm121/README.md.
+; Source of every base word and field: our own encoder, src/omega_blackwell_codegen.c (blob b09fa1e5),
+; encode_single_insn, line named per entry; three after-encoding patches in codegen_tc.c (blob 1b7f55df)
+; and codegen_qmma.c (blob 7616015e). The C encoder is the referee; this table was written from reading it.
+;
+= ctl          0x00000000 i0.32          ; word 3 written out: any scheduling word
+; ---- NOP (codegen.c:276; also the padding of every program, codegen.c:1016) ----
+= nop.0        0x00007918
+= nop.1        0x00000000
+= nop.2        0x00000000
+= nop.3        0x000fc000
+; ---- MOV Rd, RZ (codegen.c:283) ----
+= mov.rz.0     0x00007202 i16.8
+= mov.rz.1     0x000000ff
+= mov.rz.2     0x00000f00
+= mov.rz.3     0x000fe200
+; ---- MOV Rd, imm32 (codegen.c:291) ----
+= mov.i.0      0x00007802 i16.8
+= mov.i.1      0x00000000 i0.32
+= mov.i.2      0x00000f00
+= mov.i.3      0x000fe200
+; ---- S2R Rd, SR (codegen.c:299): special-register number at word-2 bit 8 ----
+= s2r.0        0x00007919 i16.8
+= s2r.1        0x00000000
+= s2r.2        0x00000000 i8.8
+= s2r.3        0x000e2200
+; ---- LDC Rd, c[0x0][off] (codegen.c:307): offset/4 at word-1 bits 8..23 ----
+= ldc.0        0xff007b82 i16.8
+= ldc.1        0x00000000 i8.16
+= ldc.2        0x00000800
+= ldc.3        0x000fe200
+; ---- LDC.64 (codegen.c:315) ----
+= ldc.64.0     0xff007b82 i16.8
+= ldc.64.1     0x00000000 i8.16
+= ldc.64.2     0x00000a00
+= ldc.64.3     0x000e2200
+; ---- LDCU URd, c[0x0][off] (codegen.c:323): offset/8 at word-1 bits 8..23 (the C code shifts by 5) ----
+= ldcu.0       0xff0077ac i16.8
+= ldcu.1       0x00000000 i8.16
+= ldcu.2       0x08000800
+= ldcu.3       0x000e2200
+; ---- LDCU.64 (codegen.c:331) ----
+= ldcu.64.0    0xff0077ac i16.8
+= ldcu.64.1    0x00000000 i8.16
+= ldcu.64.2    0x08000a00
+= ldcu.64.3    0x000e6e00
+; ---- IMAD Rd, Ra, Rb, Rc (codegen.c:341, register form) ----
+= imad.0       0x00007224 i16.8 i24.8
+= imad.1       0x00000000 i0.8
+= imad.2       0x078e0200 i0.8
+= imad.3       0x001fca00
+; ---- IMAD Rd, Ra, URb, Rc (codegen.c:347, uniform-register multiplier) ----
+= imad.u.0     0x00007c24 i16.8 i24.8
+= imad.u.1     0x00000000 i0.8
+= imad.u.2     0x0f8e0200 i0.8
+= imad.u.3     0x001fca00
+; ---- IMAD Rd, Ra, imm32, Rc (codegen.c:353) ----
+= imad.i.0     0x00007824 i16.8 i24.8
+= imad.i.1     0x00000000 i0.32
+= imad.i.2     0x078e0200 i0.8
+= imad.i.3     0x001fca00
+; ---- IMAD.WIDE.U32 Rd:Rd+1, Ra, imm32, Rc:Rc+1 (codegen.c:361) ----
+= imad.wide.0  0x00007825 i16.8 i24.8
+= imad.wide.1  0x00000000 i0.32
+= imad.wide.2  0x078e0000 i0.8
+= imad.wide.3  0x001fcc00
+; ---- ISETP.GE (codegen.c:369): word 3 fixed (the C code ignores a given control word here) ----
+= isetp.ge.u.0 0x00007c0c i16.8 i24.8
+= isetp.ge.u.1 0x00000000 i0.8
+= isetp.ge.u.2 0x0bf06070
+= isetp.ge.u.3 0x002fda00
+= isetp.ge.i.0 0x0000780c i16.8 i24.8
+= isetp.ge.i.1 0x00000000 i0.32
+= isetp.ge.i.2 0x03f06270
+= isetp.ge.i.3 0x001fda00
+; ---- LDG.E Rd, desc[URd][Ra.64] (codegen.c:383) and its siblings ----
+= ldg.0        0x00007981 i16.8 i24.8
+= ldg.1        0x00000000 i0.8
+= ldg.2        0x0c1e1900
+= ldg.3        0x000f2200
+= ldg.u16.2    0x0c1e1500                ; codegen.c:461 (words .0 .1 .3 as ldg)
+= ldg.strong.sys.2 0x0c1f5900            ; codegen.c:469
+= ldg.mmio.2   0x0c0e1900                ; codegen.c:478
+; ---- LDG.E.64 / .128 Rd, desc[URd][Ra.64+off] (codegen.c:447): signed byte offset at word-1 bit 8 ----
+= ldg.w.1      0x00000000 i0.8 s8.24
+= ldg.64.2     0x0c1e1b00
+= ldg.128.2    0x0c1e1d00
+; ---- STG.E desc[URd][Ra.64+off], Rb (codegen.c:391) ----
+= stg.0        0x00007986 i24.8
+= stg.1        0x00000000 i0.8 s8.24
+= stg.2        0x0c101900 i0.8
+= stg.3        0x000fe200
+; ---- STG_EF (codegen.c:404) ----
+= stg.ef.1     0x00000000 i0.8
+= stg.ef.2     0x0c111900 i0.8
+; ---- STG.E.STRONG.SYS, optional predicate (codegen.c:486) ----
+= stg.strong.sys.0 0x00000986 i12.4 i24.8
+= stg.strong.sys.2 0x0c115900 i0.8
+; ---- memory order (codegen.c:497, 504, 511) ----
+= membar.all.sys.0 0x00007992
+= membar.all.sys.2 0x0000b000
+= membar.3     0x000fec00
+= membar.sc.sys.2  0x00003000
+= cctl.ivall.0 0xff00798f
+= cctl.ivall.2 0x02000000
+= cctl.ivall.3 0x000fe800
+; ---- ATOMG.ADD / .EXCH .STRONG.SYS (codegen.c:518, 525) ----
+= atomg.0      0x000079a8 i16.8 i24.8
+= atomg.1      0x80000000 i0.8
+= atomg.add.2  0x081f5100 i0.8
+= atomg.exch.2 0x0c1f5100 i0.8
+= atomg.3      0x00321e00
+; ---- ISETP.GE.U32 P0, PT, Ra, Rb, PT (codegen.c:532) ----
+= isetp.ge.u32.0 0x0000720c i24.8
+= isetp.ge.u32.2 0x03f06070
+= isetp.ge.u32.3 0x001fda00
+; ---- LOP3.LUT (codegen.c:439 AND with imm, 540 XOR, 782 general) ----
+= lop3.and.i.0 0x00007812 i16.8 i24.8
+= lop3.and.i.2 0x078ec0ff
+= lop3.0       0x00007212 i16.8 i24.8
+= lop3.xor.2   0x078e3cff
+= lop3.lut.2   0x078e0000 i8.8 i0.8      ; truth table at bit 8, Rc at bit 0
+; ---- IADD3 Rd, PT, PT, Ra, Rb, RZ (codegen.c:412): word 2 and 3 fixed, third source always RZ ----
+= iadd3.0      0x00007210 i16.8 i24.8
+= iadd3.2      0x07ffe0ff
+= iadd3.3      0x010fca00
+; ---- HMMA.16816.F32[.BF16] (codegen.c:420) ----
+= hmma.0       0x0000723c i16.8 i24.8
+= hmma.f16.2   0x00001800 i0.8
+= hmma.bf16.2  0x00041800 i0.8
+; ---- shifts (codegen.c:431 SHF.R.U32.HI with imm, 793 SHF.L.U32 register) ----
+= shf.r.hi.0   0xff007819 i16.8
+= shf.r.hi.2   0x00011600 i0.8
+= shf.l.u32.0  0x00007219 i16.8 i24.8
+= shf.l.u32.2  0x00000600 i0.8
+; ---- IMAD.HI.U32 (codegen.c:805) ----
+= imad.hi.0    0x00007227 i16.8 i24.8
+= imad.hi.2    0x078e0000 i0.8
+; ---- float (codegen.c:548..636, 734) ----
+= fadd.0       0x00007221 i16.8 i24.8
+= fsub.1       0x80000000 i0.8           ; FADD with the second source negated
+= f.2          0x00000000
+= f.3          0x004fc400
+= fmul.0       0x00007220 i16.8 i24.8
+= fmul.2       0x00400000
+= ffma.0       0x00007223 i16.8 i24.8
+= fsetp.0      0x0000720b i16.3 i24.8
+= fsetp.ge.2   0x03f06000                ; the default condition; fsetp.2 writes another
+= fsetp.2      0x00000000 i0.32
+= fsel.0       0x00007208 i16.8 i24.8
+= fsel.2       0x00000000 i0.3
+= fsel.3       0x000fca00
+= fmnmx.0      0x00007209 i16.8 i24.8
+= fmnmx.min.2  0x03800000
+= fmnmx.max.2  0x07800000
+= i2fp.0       0x00007245 i16.8
+= i2fp.2       0x00201400
+= i2fp.3       0x004fe200
+= f2i.0        0x00007305 i16.8
+= f2i.2        0x0020f100
+= f2i.3        0x004e2200
+= mufu.0       0x00007308 i16.8
+= mufu.rcp.2   0x00001000
+= mufu.rsq.2   0x00001400
+= mufu.ex2.2   0x00000800
+= mufu.3       0x000e2400
+; ---- SHFL.DOWN / .BFLY PT, Rd, Ra, lane, 0x1f (codegen.c:644; BFLY = the codegen_tc.c:240 patch, bit 26) ----
+= shfl.0       0x00007f89 i16.8 i24.8
+= shfl.down.1  0x08001f00 i21.5
+= shfl.bfly.1  0x0c001f00 i21.5
+= shfl.2       0x000e0000
+= shfl.3       0x000e2400
+; ---- shared memory (codegen.c:652 LDS.U8, 660 STS.U8, 752 LDS.128, 765 LDS, 773 STS) ----
+= lds.0        0x00007984 i16.8 i24.8
+= lds.u8.2     0x00000000 i0.16
+= sts.u8.0     0x00007388 i24.8
+= sts.u8.2     0x00000000 i0.16
+= lds.128.1    0x00000000 i8.23          ; byte offset below 2^23
+= lds.128.2    0x00000c00
+= lds.128.3    0x000fe800
+= lds.32.1     0x000000ff
+= lds.32.2     0x08000800
+= lds.32.3     0x000e2800
+= sts.32.0     0x00007988 i24.8
+= sts.32.2     0x080008ff
+; ---- EXIT (codegen.c:668): word 3 fixed ----
+= exit.0       0x0000794d
+= exit.p0.0    0x0000094d
+= exit.2       0x03800000
+= exit.3       0x000fea00
+; ---- BRA (codegen.c:675). d = (target - this) - 1 instructions; low 6 bits of d at word-0 bit 18,
+;      the rest (d >> 6, signed) at word-1 bit 2; word 2 carries the sign: .fwd for d >= 0, .back for d < 0 ----
+= bra.0        0x00000947 i12.4 i18.6
+= bra.1        0x00000000 s2.30
+= bra.fwd.2    0x03800000
+= bra.back.2   0x0383ffff
+= bra.self.3   0x000fc000                ; the unpredicated branch-to-itself after EXIT
+= bra.3        0x000fea00
+; ---- BSSY / BSYNC .RECONVERGENT Bn (codegen.c:698, 720): barrier at bit 16; BSSY distance - 1 at word-1 bit 4 ----
+= bssy.0       0x00000945 i12.4 i16.4
+= bssy.1       0x00000000 i4.28
+= bsync.0      0x00000941 i12.4 i16.4
+= b.2          0x03800200
+; ---- BAR.SYNC.DEFER_BLOCKING 0x0 (codegen.c:743) ----
+= bar.sync.0   0x00007b1d
+= bar.sync.2   0x00010000
+; ---- after-encoding patches: QMMA (codegen_qmma.c:25), F2FP.SATFINITE.E4M3 (qmma.c:19), F2FP.BF16 (tc.c:244) ----
+= qmma.0       0x0000727a i16.8 i24.8
+= qmma.2       0x00002c00 i0.8
+= f2fp.0       0x0000723e i16.8 i24.8
+= f2fp.e4m3.2  0x048070ff
+= f2fp.bf16.2  0x000010ff
+; ---- shared word-1 / word-2 / word-3 forms used by several instructions above ----
+= r.1          0x00000000 i0.8           ; word 1 = one source register
+= r.2          0x00000000 i0.8           ; word 2 = one source register (FFMA Rc)
+= z.1          0x00000000                ; word 1 = 0
+= n.1          0x00000000 i0.32          ; word 1 = a 32-bit number (SHF.R amount, LOP3.AND mask)
+= z.2          0x00000000
+= w.3          0x000fe200                ; the most common default scheduling word
+= alu.3        0x001fca00
+= ld.3         0x000f2200
+= jmp.3        0x000fea00

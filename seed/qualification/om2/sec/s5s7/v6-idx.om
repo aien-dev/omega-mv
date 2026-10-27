@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 170 and 4 lines 106-108: every index into an unsized view is checked at run time,
+note even a constant one: get v 10 on len 10 traps 3 (exit 103, no stdout); it is not error 21.
+om2
+fn g v view uchar * to ulong
+ret ulong get v 10
+end
+fn main to int
+a = new uchar 10 0
+putd g a
+ret 0
+end

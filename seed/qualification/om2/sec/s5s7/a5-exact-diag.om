@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 145-150 and 1 lines 36-38: with om2 diag the exact constructor
+note body reports `omc-check 1 erased line=N rule=dup32`, N = the line of `ret seal` (confirmed by erratum E8).
+note Function mode (no fn main), entry `entry` returns ulong, so no abstract type crosses the entry.
+om2 diag
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn entry x uint to ulong
+ret open dup32mk x
+end

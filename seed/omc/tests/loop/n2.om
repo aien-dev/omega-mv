@@ -1,0 +1,13 @@
+note a break outside the inner loop targets the outer loop: 2 + 2 = 4
+fn main to ulong
+n = ulong 0
+for i ulong 3
+for j ulong 2
+n = add n 1
+end
+if eq i 1
+break
+end
+end
+ret n
+end

@@ -1,0 +1,22 @@
+$ /usr/bin/python3 /home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/oracle/sha/stack.py /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha.bin
+SIZE bytes=21340 words=5335
+ROTATE encoding: EXTR=576 (of which ROR-immediate alias Rn==Rm: 576) RORV=0; objdump mnemonics: ror=576 extr=0 rorv=0
+STACK export 0 (sha256_init) entry=0x4180 bound=64 bytes
+STACK export 1 (sha256_update) entry=0x46dc bound=1040 bytes
+STACK export 2 (sha256_final) entry=0x47c4 bound=896 bytes
+STACK export 3 (sha256_hash) entry=0x4d34 bound=1040 bytes
+FRAME fn@0x10 bound-incl-callees=0
+FRAME fn@0x314 bound-incl-callees=0
+FRAME fn@0x378 bound-incl-callees=0
+FRAME fn@0x17dc bound-incl-callees=0
+FRAME fn@0x3b64 bound-incl-callees=64
+FRAME fn@0x3c0c bound-incl-callees=144
+FRAME fn@0x3cc8 bound-incl-callees=256
+FRAME fn@0x3f3c bound-incl-callees=144
+FRAME fn@0x4180 bound-incl-callees=64
+FRAME fn@0x423c bound-incl-callees=0
+FRAME fn@0x42b0 bound-incl-callees=976
+FRAME fn@0x46dc bound-incl-callees=1040
+FRAME fn@0x47c4 bound-incl-callees=896
+FRAME fn@0x4d34 bound-incl-callees=1040
+EXIT 0

@@ -1,0 +1,51 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s1/s1-mutants.cases scratch=build/om2-qual/s4-s1mut
+IDENTITY omc /tmp/zl/omc-s4 sha256=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 pinned=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 match
+COMPILER build/om2-qual/s4-s1mut/8.elf sha256=26017d777b24a9e99c95520cfb9590b4d6bba978f5bdc2e0bc5f2e69b9151d22 source line=8
+VERDICT ctl-s1-rebuilt-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT correct-rot-values PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.from seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.to
+  MUTATE exact-once substitution at byte 59151
+COMPILER build/om2-qual/s4-s1mut/15.elf sha256=c18b0eb1167cbf894e0397112e60760c1f9bd5c24fa5ede26308d7b7749edb4e source line=15
+VERDICT ctl-rot-imm-plus1-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-imm-plus1-kill-rot-values PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.from seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.to
+  MUTATE exact-once substitution at byte 59105
+COMPILER build/om2-qual/s4-s1mut/21.elf sha256=766d423ed4b933da254161db22484f73f14fecc949a1d8f0d388e1c4b22ebc37 source line=21
+VERDICT ctl-rot-imm-wminusn-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-imm-wminusn-kill-rot-values PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.to
+  MUTATE exact-once substitution at byte 59112
+COMPILER build/om2-qual/s4-s1mut/27.elf sha256=f6b1f49c79074dc5f187b7c3ee16c182d9be2404e331620959cbccc4e9952d4b source line=27
+VERDICT ctl-rol-imm-as-ror-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rol-imm-as-ror-kill-rot-values PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 18 stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.to
+  MUTATE exact-once substitution at byte 59194
+COMPILER build/om2-qual/s4-s1mut/33.elf sha256=e989bd4425812e45c28f5cf0f4ed63452b72c6bcb954e2fc000e493e8b887178 source line=33
+VERDICT ctl-rol-reg-as-ror-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rol-reg-as-ror-kill-rot-values PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 47 stderr=match
+COMPILER /tmp/zl/omc-s4
+SUBST seed/qualification/om2/candidates/s1/mutants/rot-nocheck.from seed/qualification/om2/candidates/s1/mutants/rot-nocheck.to
+  MUTATE exact-once substitution at byte 59026
+COMPILER build/om2-qual/s4-s1mut/39.elf sha256=87b14011fef585d345700e711ece0617db4bc34323a62d1695fa4a13f5c6a70f source line=39
+VERDICT ctl-rot-nocheck-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT rot-nocheck-kill-rot-trap-A PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-B PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-C PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-D PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-E PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-F PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-G PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-H PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-I PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-J PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-K PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-L PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-M PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-N PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+VERDICT rot-nocheck-kill-rot-trap-O PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+COMPILER /tmp/zl/omc-s4
+OM2GATE PASS cases=26 pass=26 fail=0 invalid=0 not_run=0
