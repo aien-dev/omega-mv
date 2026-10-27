@@ -1,0 +1,26 @@
+note Data-parallel fixtures for the Vulkan GLCompute path (gate-vkspirv.sh).
+note One invocation computes one element; inputs and outputs are canonical ulong words.
+fn vadd a ulong b ulong to ulong
+ret add a b
+end
+note Integer saxpy: signed, so an overflowing row traps (status 101) instead of wrapping.
+fn saxpy a long x long y long to long
+ret add mul a x y
+end
+note SplitMix64 finaliser, the element generator for the reduce fixture.
+fn mix x ulong to ulong
+z = add x 11400714819323198485
+z = mul xor z shr z 30 13787848793156543929
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+note Reduce stage 1: one invocation sums n generated u32 elements starting at base.
+note Stage 2 combines partials pairwise with vadd, one dispatch per tree level.
+fn rsum seed ulong base ulong n ulong to ulong
+s = ulong 0
+for i ulong n
+e = and mix add seed add base i 4294967295
+s = add s e
+end
+ret s
+end
