@@ -35,6 +35,7 @@
  *   int  omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Graph **out);
  *   void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g);
  *   int  omega_gpu_q38_graph_set_layer(g, layer, mix, ab, o, gate_up, down, in_norm, post_norm);
+ *   int  omega_gpu_q38_graph_set_layer_bf16(g, layer, mix, ab, o, gate_up, down, down2, in_norm, post_norm);
  *   int  omega_gpu_q38_graph_set_final_norm(g, final_norm);
  *   int  omega_gpu_q38_graph_token(g, x_embed, pos, &token, &stats);
  *   int  omega_gpu_q38_graph_read(g, x, hidden, logits);
@@ -95,6 +96,17 @@ void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g);
 int omega_gpu_q38_graph_set_layer(OmegaGpuQ38Graph *g, uint32_t layer, const OmegaGpuFp8Tensor *mix, const OmegaGpuBf16Tensor *ab,
                                   const OmegaGpuFp8Tensor *o, const OmegaGpuFp8Tensor *gate_up, const OmegaGpuFp8Tensor *down,
                                   const float *in_norm, const float *post_norm);
+/* The same layer with bf16 projections (2026-10-27, the BF16 head-to-head of the 9B): mix, o, gate_up and down are
+ * OmegaGpuBf16Tensor [n][k] with the set_layer shapes and rows (mix rows in the FP8 stacking order), every value * 2^-64 (as
+ * ab: the GEMV inputs hold x * 2^64, so a power-of-two pre-scale gives plain outputs; the caller checks the shift is exact).
+ * Recorded with omega_gpu_bf16_gemv_record, which stages the f32 x row in shared memory (32 KiB descriptor cap: k <= 8192).
+ * down2 NULL: down is [hidden][inter]. Else (inter > 8192, the 9B's 12288) down is columns 0..inter/2 and down2 columns
+ * inter/2..inter, both [hidden][inter/2]: the layer records down -> x += (K_ADD) -> down2 -> the usual ADDNORM, two
+ * launches more. The plain kernels for widths hidden, mixer out and the down K are prepared and pinned here (CODEGEN_FAIL
+ * if they cannot be). Layers may mix: each layer is FP8 or bf16 by its last set call. */
+int omega_gpu_q38_graph_set_layer_bf16(OmegaGpuQ38Graph *g, uint32_t layer, const OmegaGpuBf16Tensor *mix, const OmegaGpuBf16Tensor *ab,
+                                       const OmegaGpuBf16Tensor *o, const OmegaGpuBf16Tensor *gate_up, const OmegaGpuBf16Tensor *down,
+                                       const OmegaGpuBf16Tensor *down2, const float *in_norm, const float *post_norm);
 int omega_gpu_q38_graph_set_final_norm(OmegaGpuQ38Graph *g, const float *final_norm); /* f32 [hidden] as (1 + w) */
 /* Optional FP8 lm_head (qwen38/decode-speed): an FP8 tensor [vocab][hidden] (experts 1, e.g. from omega_gpu_fp8_quantize_bf16)
  * replaces the bf16 lm_head in every later token (half the bytes); NULL goes back to bf16. The tensor must outlive its use.
