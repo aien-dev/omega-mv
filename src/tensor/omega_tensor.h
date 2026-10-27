@@ -134,9 +134,10 @@ typedef enum {
      * (src/omega_numeric.c:458, :501) applied per element through the
      * realization's transc entry, bit-exact with calling them directly. NOT
      * correctly rounded: E1 checks them against binary128 within EXP 40 ulp,
-     * LOG 4 ulp (tests/test_omega_numeric.c:376-384). E1 row 10 has GB10
-     * whole-program kernels for both (src/omega_numeric_divsqrt_gb10.c,
-     * body_exp / body_log); the tensor GB10 table does not submit them.
+     * LOG 4 ulp (NUM_ORACLE_EXP_ULP / NUM_ORACLE_LOG_ULP in
+     * tests/test_omega_numeric.c). E1 row 10 has GB10 whole-program kernels
+     * for both (src/omega_numeric_divsqrt_gb10.c, body_exp / body_log); the
+     * GB10 table submits them through its transc entry.
      * RELU: no E1 op; a tensor-layer bit select, no float arithmetic:
      * x > +0 (incl. +inf, +subnormals) -> x; +0, -0, negatives, -inf -> +0;
      * any NaN (any sign or payload) -> canonical qNaN OMEGA_QNAN_BITS. */
@@ -255,6 +256,9 @@ const OmegaTensorRealization *omega_tensor_cpu_realization(void);
 const OmegaTensorRealization *omega_tensor_gb10_realization(void);
 /* E1 op name the GB10 table submits for op, or NULL if op is refused. */
 const char *omega_tensor_gb10_op_name(OmegaNumericOp op);
+/* E1 row-10 kernel (an OmegaDsOp value, src/omega_numeric_divsqrt_gb10.h) the
+ * GB10 table's transc entry launches for op, or -1 if op is refused. */
+int omega_tensor_gb10_transc_kernel(OmegaTensorUnaryOp op);
 
 typedef struct OmegaTensorCtx OmegaTensorCtx;
 
