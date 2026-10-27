@@ -1,16 +1,17 @@
 note cubin.om -- wraps asm2 machine code for one kernel in a cubin, the ELF that NVIDIA's CUDA
 note driver loads with cuModuleLoadData. It follows the CUDA kernel-parameter ABI, not CUDA++'s:
 note parameters sit in constant bank 0 from byte 352 (sm_8x), 528 (sm_90) or 896 (sm_100 on).
-note The layout was read from nvcc 13.0 and CUDA 12.8 cubins with readelf and cuobjdump -elf
+note The layout was read from nvcc 13.0 cubins of my own probe kernels with readelf and cuobjdump -elf
 note (field values only, no bytes copied) and from CUDApp src/omega_cubin.c (sm_121):
 note   1 .shstrtab 2 .strtab 3 .symtab 4 .nv.info 5 .nv.callgraph 6 .note.nv.cuinfo
 note   7 .text.NAME 8 .nv.constant0.NAME 9 .nv.info.NAME, and from sm_90 on also
 note   10 .nv.compat 11 .nv.shared.reserved.0; ABI 8 appends .note.nv.tkinfo, which every
-note   NVIDIA ABI 8 cubin read carries (nvcc 13.0 sm_80/89/90/100/103/120, cuBLAS 12.8 sm_120) and
+note   NVIDIA ABI 8 cubin read carries (nvcc 13.0 sm_80/89/90/100/103/120) and
 note   .note.nv.cuinfo links to; then the section headers, then the program headers (PHDR,
 note   LOAD of the header table, LOAD text, [LOAD shared,] LOAD constant bank).
-note From sm_90 the .text sh_info is the kernel symbol alone (nvcc 13.0 sm_90/120, cuBLAS 12.8
-note sm_90/120); below sm_90 it also carries the register count in bits 24..31 (nvcc 13.0 sm_89).
+note From sm_90 the .text sh_info is the kernel symbol alone (nvcc 13.0 sm_90/120);
+note below sm_90 it also carries the register count in bits 24..31 (nvcc 13.0 sm_89).
+note ABI 7 constants (ELFOSABI_CUDA 51, ELFABIVERSION_CUDA_V1 7, EF_CUDA_SM*) are LLVM's ELF.h.
 note From sm_90 .note.nv.cuinfo has SHF_INFO_LINK and sh_info .nv.compat (nvcc 13.0 sm_90/120).
 note symbols: 1 section .text, 2 section .nv.constant0, 3 the kernel (global function).
 note usage: cubin SM ABI API REGS NAME SIG < code.bin > kernel.cubin
