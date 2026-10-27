@@ -3,33 +3,33 @@
     "generated": {
       "children": [
         {
-          "digest": "d16052a41951da04f9d5581286bf1b523c4fd4a8b22b2f5a9f77ab724f000c38",
-          "last_commit": "181e2ea8",
+          "digest": "4a34c4254df84173e225ddfcd932b9d703cdbef74b76c8702c17003fa3ddda4c",
+          "last_commit": "dc7c1304",
           "name": "e2e",
           "purpose": "end-to-end tests of the osh program: argprint helper plus a runner comparing native and OSH_INTE"
         },
         {
-          "digest": "d0f42501a21a18f494990b88f370ef66e89265cde98d55a6ab6a93880d7ec9fb",
-          "last_commit": "462f9f32",
+          "digest": "4c16e4211dbc6411b14f2cc0ae0c7201c6cbc6275c0d8aac8d24a00dc1fe9c99",
+          "last_commit": "dc7c1304",
           "name": "host",
           "purpose": "tests for the osh Linux host adapter execution service (hand-built request records, helper-mode "
         },
         {
-          "digest": "27e4840c198f9b3f0d6acdcb5a279124a157199ab42632d4be18c79e9ac1b5cd",
-          "last_commit": "4cc3bdda",
+          "digest": "12b30cde36c62e66c13ab90d447e321ac648541af04d0b19d65393418bdba79b",
+          "last_commit": "dc7c1304",
           "name": "trace",
           "purpose": "Core-only step traces of the osh shell units over fixture scripts (OSH-AIENOS-0 differential fix"
         }
       ],
-      "children_root": "sha256:0c30d758ea0a085e950c5df69c53069c317df4141043e14a83e19247106399f3",
-      "compiled_at": "2026-10-10T08:29:30Z",
+      "children_root": "sha256:0b5655b5310165991cb5863b391d5d5a89d2f13789e3e09dfb5f167ff0fcd56a",
+      "compiled_at": "2026-10-24T04:15:18Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:f3085ce1facdcdb22bfedc85de659dd5e512aa7b59cd8103666c24a4456681c3",
+      "digest": "sha256:d958af5413726ddc48a47721800d9766939129f480b26492332ba094577837cb",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 93,
-      "generated_at_commit": "181e2ea8961e1067efc0337b6b4dddc9f19d6947",
-      "source_tree": "sha256:67f4c363f1a849cf10cbae3aa94fb4675c59d42a075e6a260cc264bebc52319d"
+      "generated_at_commit": "dc7c1304c038f49db3b121d5a5e27d7bcab5bf6c",
+      "source_tree": "sha256:1d065ed1a8de4f7224de651d2d5cf8e05914fb8bbc9ad3a44e37f0466c369429"
     }
   },
   "name": "osh-tests",

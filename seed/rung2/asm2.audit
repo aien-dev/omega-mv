@@ -1,0 +1,620 @@
+| Offset | Word | Bytes in file | Named (hand-decoded, from the comment) | Our decoder | ours | objdump -M no-aliases | objdump | Class |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `0x0000` | `464c457f` | `464c457f` | e_ident[0..3] = 7f 'E' 'L' 'F' | - | n/a | - | n/a | DATA |
+| `0x0004` | `00010102` | `00010102` | e_ident[4..7] = ELFCLASS64, ELFDATA2LSB, EV_CURRENT, ELFOSABI_NONE | - | n/a | - | n/a | DATA |
+| `0x0008` | `00000000` | `00000000` | e_ident[8..11] = ABI version 0, padding | - | n/a | - | n/a | DATA |
+| `0x000c` | `00000000` | `00000000` | e_ident[12..15] = padding | - | n/a | - | n/a | DATA |
+| `0x0010` | `00b70002` | `00b70002` | e_type = 2 ET_EXEC, e_machine = 183 EM_AARCH64 | - | n/a | - | n/a | DATA |
+| `0x0014` | `00000001` | `00000001` | e_version = 1 | - | n/a | - | n/a | DATA |
+| `0x0018` | `00400078` | `00400078` | e_entry low = 0x400078 (file offset 120) | - | n/a | - | n/a | DATA |
+| `0x001c` | `00000000` | `00000000` | e_entry high | - | n/a | - | n/a | DATA |
+| `0x0020` | `00000040` | `00000040` | e_phoff low = 64 | - | n/a | - | n/a | DATA |
+| `0x0024` | `00000000` | `00000000` | e_phoff high | - | n/a | - | n/a | DATA |
+| `0x0028` | `00000000` | `00000000` | e_shoff low = 0 (no sections) | - | n/a | - | n/a | DATA |
+| `0x002c` | `00000000` | `00000000` | e_shoff high | - | n/a | - | n/a | DATA |
+| `0x0030` | `00000000` | `00000000` | e_flags = 0 | - | n/a | - | n/a | DATA |
+| `0x0034` | `00380040` | `00380040` | e_ehsize = 64, e_phentsize = 56 | - | n/a | - | n/a | DATA |
+| `0x0038` | `00000001` | `00000001` | e_phnum = 1, e_shentsize = 0 | - | n/a | - | n/a | DATA |
+| `0x003c` | `00000000` | `00000000` | e_shnum = 0, e_shstrndx = 0 | - | n/a | - | n/a | DATA |
+| `0x0040` | `00000001` | `00000001` | p_type = PT_LOAD | - | n/a | - | n/a | DATA |
+| `0x0044` | `00000007` | `00000007` | p_flags = read, write, execute | - | n/a | - | n/a | DATA |
+| `0x0048` | `00000000` | `00000000` | p_offset low = 0 | - | n/a | - | n/a | DATA |
+| `0x004c` | `00000000` | `00000000` | p_offset high | - | n/a | - | n/a | DATA |
+| `0x0050` | `00400000` | `00400000` | p_vaddr low = 0x400000 | - | n/a | - | n/a | DATA |
+| `0x0054` | `00000000` | `00000000` | p_vaddr high | - | n/a | - | n/a | DATA |
+| `0x0058` | `00400000` | `00400000` | p_paddr low = 0x400000 | - | n/a | - | n/a | DATA |
+| `0x005c` | `00000000` | `00000000` | p_paddr high | - | n/a | - | n/a | DATA |
+| `0x0060` | `000009a0` | `000009a0` | p_filesz low = 2464 bytes (120 header + 580 instructions * 4 + 6 data words * 4) | - | n/a | - | n/a | DATA |
+| `0x0064` | `00000000` | `00000000` | p_filesz high | - | n/a | - | n/a | DATA |
+| `0x0068` | `01200000` | `01200000` | p_memsz low = 0x1200000 (tables and buffers up to 0x1600000, zero-filled) | - | n/a | - | n/a | DATA |
+| `0x006c` | `00000000` | `00000000` | p_memsz high | - | n/a | - | n/a | DATA |
+| `0x0070` | `00001000` | `00001000` | p_align low = 4096 | - | n/a | - | n/a | DATA |
+| `0x0074` | `00000000` | `00000000` | p_align high | - | n/a | - | n/a | DATA |
+| `0x0078` | `d2a00a1a` | `d2a00a1a` | `movz x26, #0x50, lsl #16` | `op=MOVZ sf=1 rd=26 rn=0 rm=0 imm16=80 hw=1 bimm=0 cond=0` | agree | `movz x26, #0x50, lsl #16` | agree | INSTRUCTION |
+| `0x007c` | `d2a00a3b` | `d2a00a3b` | `movz x27, #0x51, lsl #16` | `op=MOVZ sf=1 rd=27 rn=0 rm=0 imm16=81 hw=1 bimm=0 cond=0` | agree | `movz x27, #0x51, lsl #16` | agree | INSTRUCTION |
+| `0x0080` | `d2a00c1d` | `d2a00c1d` | `movz x29, #0x60, lsl #16` | `op=MOVZ sf=1 rd=29 rn=0 rm=0 imm16=96 hw=1 bimm=0 cond=0` | agree | `movz x29, #0x60, lsl #16` | agree | INSTRUCTION |
+| `0x0084` | `d2a01c1c` | `d2a01c1c` | `movz x28, #0xe0, lsl #16` | `op=MOVZ sf=1 rd=28 rn=0 rm=0 imm16=224 hw=1 bimm=0 cond=0` | agree | `movz x28, #0xe0, lsl #16` | agree | INSTRUCTION |
+| `0x0088` | `aa1d03f3` | `aa1d03f3` | `orr x19, xzr, x29` | `op=ORR sf=1 rd=19 rn=31 rm=29 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x19, xzr, x29` | agree | INSTRUCTION |
+| `0x008c` | `d2800000` | `d2800000` | `movz x0, #0` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x0` | agree | INSTRUCTION |
+| `0x0090` | `aa1303e1` | `aa1303e1` | `orr x1, xzr, x19` | `op=ORR sf=1 rd=1 rn=31 rm=19 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x1, xzr, x19` | agree | INSTRUCTION |
+| `0x0094` | `d1004382` | `d1004382` | `sub x2, x28, #16` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `sub x2, x28, #0x10` | agree | INSTRUCTION |
+| `0x0098` | `cb130042` | `cb130042` | `sub x2, x2, x19` | `op=SUB sf=1 rd=2 rn=2 rm=19 imm16=0 hw=0 bimm=0 cond=0` | agree | `sub x2, x2, x19` | agree | INSTRUCTION |
+| `0x009c` | `d2800031` | `d2800031` | `movz x17, #1` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x1` | agree | INSTRUCTION |
+| `0x00a0` | `b4000002` | `b4001de2` | `cbz x2, +239` | `op=CBZ sf=1 rd=2 rn=0 rm=0 imm16=0 hw=0 bimm=239 cond=0` | agree | `cbz x2, 0x45c` | agree | INSTRUCTION |
+| `0x00a4` | `d28007e8` | `d28007e8` | `movz x8, #63` | `op=MOVZ sf=1 rd=8 rn=0 rm=0 imm16=63 hw=0 bimm=0 cond=0` | agree | `movz x8, #0x3f` | agree | INSTRUCTION |
+| `0x00a8` | `d4000001` | `d4000001` | `svc #0` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `svc #0x0` | agree | INSTRUCTION |
+| `0x00ac` | `f100001f` | `f100001f` | `subs xzr, x0, #0` | `op=SUBS sf=1 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x0, #0x0` | agree | INSTRUCTION |
+| `0x00b0` | `54000000` | `54000080` | `b.eq +4` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=4 cond=0` | agree | `b.eq 0xc0` | agree | INSTRUCTION |
+| `0x00b4` | `5400000b` | `54001d4b` | `b.lt +234` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=234 cond=11` | agree | `b.lt 0x45c` | agree | INSTRUCTION |
+| `0x00b8` | `8b000273` | `8b000273` | `add x19, x19, x0` | `op=ADD sf=1 rd=19 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x19, x19, x0` | agree | INSTRUCTION |
+| `0x00bc` | `5400000e` | `54fffe8e` | `b.al -12` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524276 cond=14` | agree | `b.al 0x8c` | agree | INSTRUCTION |
+| `0x00c0` | `d2800140` | `d2800140` | `movz x0, #10` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x0, #0xa` | agree | INSTRUCTION |
+| `0x00c4` | `39000260` | `39000260` | `strb w0, [x19]` | `op=STRB sf=0 rd=0 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w0, [x19]` | agree | INSTRUCTION |
+| `0x00c8` | `3900067f` | `3900067f` | `strb wzr, [x19, #1]` | `op=STRB sf=0 rd=31 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb wzr, [x19, #1]` | agree | INSTRUCTION |
+| `0x00cc` | `d2800015` | `d2800015` | `movz x21, #0` | `op=MOVZ sf=1 rd=21 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x21, #0x0` | agree | INSTRUCTION |
+| `0x00d0` | `aa1d03f3` | `aa1d03f3` | `orr x19, xzr, x29` | `op=ORR sf=1 rd=19 rn=31 rm=29 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x19, xzr, x29` | agree | INSTRUCTION |
+| `0x00d4` | `d2800016` | `d2800016` | `movz x22, #0` | `op=MOVZ sf=1 rd=22 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x22, #0x0` | agree | INSTRUCTION |
+| `0x00d8` | `d2800039` | `d2800039` | `movz x25, #1` | `op=MOVZ sf=1 rd=25 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x25, #0x1` | agree | INSTRUCTION |
+| `0x00dc` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0xe4` | agree | INSTRUCTION |
+| `0x00e0` | `5400000e` | `540003ee` | `b.al +31` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=31 cond=14` | agree | `b.al 0x15c` | agree | INSTRUCTION |
+| `0x00e4` | `b4000000` | `b40042a0` | `cbz x0, +533` | `op=CBZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=533 cond=0` | agree | `cbz x0, 0x938` | agree | INSTRUCTION |
+| `0x00e8` | `7100281f` | `7100281f` | `subs wzr, w0, #10` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0xa` | agree | INSTRUCTION |
+| `0x00ec` | `54000000` | `54000140` | `b.eq +10` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=10 cond=0` | agree | `b.eq 0x114` | agree | INSTRUCTION |
+| `0x00f0` | `7100ec1f` | `7100ec1f` | `subs wzr, w0, #59` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x3b` | agree | INSTRUCTION |
+| `0x00f4` | `54000000` | `54000160` | `b.eq +11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=11 cond=0` | agree | `b.eq 0x120` | agree | INSTRUCTION |
+| `0x00f8` | `7100f41f` | `7100f41f` | `subs wzr, w0, #61` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x3d` | agree | INSTRUCTION |
+| `0x00fc` | `54000000` | `54002140` | `b.eq +266` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=266 cond=0` | agree | `b.eq 0x524` | agree | INSTRUCTION |
+| `0x0100` | `7100e81f` | `7100e81f` | `subs wzr, w0, #58` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x3a` | agree | INSTRUCTION |
+| `0x0104` | `54000000` | `54002c00` | `b.eq +352` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=352 cond=0` | agree | `b.eq 0x684` | agree | INSTRUCTION |
+| `0x0108` | `7100b81f` | `7100b81f` | `subs wzr, w0, #46` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x2e` | agree | INSTRUCTION |
+| `0x010c` | `54000000` | `54002e80` | `b.eq +372` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=372 cond=0` | agree | `b.eq 0x6dc` | agree | INSTRUCTION |
+| `0x0110` | `5400000e` | `540034ee` | `b.al +423` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=423 cond=14` | agree | `b.al 0x7ac` | agree | INSTRUCTION |
+| `0x0114` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x0118` | `91000739` | `91000739` | `add x25, x25, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x25, x25, #0x1` | agree | INSTRUCTION |
+| `0x011c` | `5400000e` | `54fffe0e` | `b.al -16` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524272 cond=14` | agree | `b.al 0xdc` | agree | INSTRUCTION |
+| `0x0120` | `39400260` | `39400260` | `ldrb w0, [x19]` | `op=LDRB sf=0 rd=0 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w0, [x19]` | agree | INSTRUCTION |
+| `0x0124` | `b4000000` | `b4fffdc0` | `cbz x0, -18` | `op=CBZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524270 cond=0` | agree | `cbz x0, 0xdc` | agree | INSTRUCTION |
+| `0x0128` | `7100281f` | `7100281f` | `subs wzr, w0, #10` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0xa` | agree | INSTRUCTION |
+| `0x012c` | `54000000` | `54ffff40` | `b.eq -6` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524282 cond=0` | agree | `b.eq 0x114` | agree | INSTRUCTION |
+| `0x0130` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x0134` | `5400000e` | `54ffff6e` | `b.al -5` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524283 cond=14` | agree | `b.al 0x120` | agree | INSTRUCTION |
+| `0x0138` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x140` | agree | INSTRUCTION |
+| `0x013c` | `5400000e` | `5400010e` | `b.al +8` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=8 cond=14` | agree | `b.al 0x15c` | agree | INSTRUCTION |
+| `0x0140` | `b4000000` | `b4fffce0` | `cbz x0, -25` | `op=CBZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524263 cond=0` | agree | `cbz x0, 0xdc` | agree | INSTRUCTION |
+| `0x0144` | `7100281f` | `7100281f` | `subs wzr, w0, #10` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0xa` | agree | INSTRUCTION |
+| `0x0148` | `54000000` | `54fffe60` | `b.eq -13` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524275 cond=0` | agree | `b.eq 0x114` | agree | INSTRUCTION |
+| `0x014c` | `7100ec1f` | `7100ec1f` | `subs wzr, w0, #59` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x3b` | agree | INSTRUCTION |
+| `0x0150` | `54000000` | `54fffe80` | `b.eq -12` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524276 cond=0` | agree | `b.eq 0x120` | agree | INSTRUCTION |
+| `0x0154` | `d28000b1` | `d28000b1` | `movz x17, #5` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=5 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x5` | agree | INSTRUCTION |
+| `0x0158` | `5400000e` | `5400182e` | `b.al +193` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=193 cond=14` | agree | `b.al 0x45c` | agree | INSTRUCTION |
+| `0x015c` | `39400260` | `39400260` | `ldrb w0, [x19]` | `op=LDRB sf=0 rd=0 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w0, [x19]` | agree | INSTRUCTION |
+| `0x0160` | `7100801f` | `7100801f` | `subs wzr, w0, #32` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x20` | agree | INSTRUCTION |
+| `0x0164` | `54000000` | `540000c0` | `b.eq +6` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=6 cond=0` | agree | `b.eq 0x17c` | agree | INSTRUCTION |
+| `0x0168` | `7100241f` | `7100241f` | `subs wzr, w0, #9` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x9` | agree | INSTRUCTION |
+| `0x016c` | `54000000` | `54000080` | `b.eq +4` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=4 cond=0` | agree | `b.eq 0x17c` | agree | INSTRUCTION |
+| `0x0170` | `7100b01f` | `7100b01f` | `subs wzr, w0, #44` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x2c` | agree | INSTRUCTION |
+| `0x0174` | `54000000` | `54000040` | `b.eq +2` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=2 cond=0` | agree | `b.eq 0x17c` | agree | INSTRUCTION |
+| `0x0178` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x017c` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x0180` | `5400000e` | `54fffeee` | `b.al -9` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524279 cond=14` | agree | `b.al 0x15c` | agree | INSTRUCTION |
+| `0x0184` | `39400260` | `39400260` | `ldrb w0, [x19]` | `op=LDRB sf=0 rd=0 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w0, [x19]` | agree | INSTRUCTION |
+| `0x0188` | `7100801f` | `7100801f` | `subs wzr, w0, #32` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x20` | agree | INSTRUCTION |
+| `0x018c` | `54000000` | `54000540` | `b.eq +42` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=42 cond=0` | agree | `b.eq 0x234` | agree | INSTRUCTION |
+| `0x0190` | `7100241f` | `7100241f` | `subs wzr, w0, #9` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x9` | agree | INSTRUCTION |
+| `0x0194` | `54000000` | `54000500` | `b.eq +40` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=40 cond=0` | agree | `b.eq 0x234` | agree | INSTRUCTION |
+| `0x0198` | `7100b01f` | `7100b01f` | `subs wzr, w0, #44` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x2c` | agree | INSTRUCTION |
+| `0x019c` | `54000000` | `540004c0` | `b.eq +38` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=38 cond=0` | agree | `b.eq 0x234` | agree | INSTRUCTION |
+| `0x01a0` | `aa1303ec` | `aa1303ec` | `orr x12, xzr, x19` | `op=ORR sf=1 rd=12 rn=31 rm=19 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x12, xzr, x19` | agree | INSTRUCTION |
+| `0x01a4` | `d2800009` | `d2800009` | `movz x9, #0` | `op=MOVZ sf=1 rd=9 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x9, #0x0` | agree | INSTRUCTION |
+| `0x01a8` | `d280000a` | `d280000a` | `movz x10, #0` | `op=MOVZ sf=1 rd=10 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x10, #0x0` | agree | INSTRUCTION |
+| `0x01ac` | `d280000b` | `d280000b` | `movz x11, #0` | `op=MOVZ sf=1 rd=11 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x11, #0x0` | agree | INSTRUCTION |
+| `0x01b0` | `39400260` | `39400260` | `ldrb w0, [x19]` | `op=LDRB sf=0 rd=0 rn=19 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w0, [x19]` | agree | INSTRUCTION |
+| `0x01b4` | `b4000000` | `b40003e0` | `cbz x0, +31` | `op=CBZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=31 cond=0` | agree | `cbz x0, 0x230` | agree | INSTRUCTION |
+| `0x01b8` | `7100281f` | `7100281f` | `subs wzr, w0, #10` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0xa` | agree | INSTRUCTION |
+| `0x01bc` | `54000000` | `540003a0` | `b.eq +29` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=29 cond=0` | agree | `b.eq 0x230` | agree | INSTRUCTION |
+| `0x01c0` | `7100801f` | `7100801f` | `subs wzr, w0, #32` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x20` | agree | INSTRUCTION |
+| `0x01c4` | `54000000` | `54000360` | `b.eq +27` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=27 cond=0` | agree | `b.eq 0x230` | agree | INSTRUCTION |
+| `0x01c8` | `7100241f` | `7100241f` | `subs wzr, w0, #9` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x9` | agree | INSTRUCTION |
+| `0x01cc` | `54000000` | `54000320` | `b.eq +25` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=25 cond=0` | agree | `b.eq 0x230` | agree | INSTRUCTION |
+| `0x01d0` | `7100b01f` | `7100b01f` | `subs wzr, w0, #44` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x2c` | agree | INSTRUCTION |
+| `0x01d4` | `54000000` | `540002e0` | `b.eq +23` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=23 cond=0` | agree | `b.eq 0x230` | agree | INSTRUCTION |
+| `0x01d8` | `7100ec1f` | `7100ec1f` | `subs wzr, w0, #59` | `op=SUBS sf=0 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w0, #0x3b` | agree | INSTRUCTION |
+| `0x01dc` | `54000000` | `540002a0` | `b.eq +21` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=21 cond=0` | agree | `b.eq 0x230` | agree | INSTRUCTION |
+| `0x01e0` | `d28001b1` | `d28001b1` | `movz x17, #13` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=13 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xd` | agree | INSTRUCTION |
+| `0x01e4` | `f100417f` | `f100417f` | `subs xzr, x11, #16` | `op=SUBS sf=1 rd=31 rn=11 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x11, #0x10` | agree | INSTRUCTION |
+| `0x01e8` | `54000000` | `540013a0` | `b.eq +157` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=157 cond=0` | agree | `b.eq 0x45c` | agree | INSTRUCTION |
+| `0x01ec` | `f100217f` | `f100217f` | `subs xzr, x11, #8` | `op=SUBS sf=1 rd=31 rn=11 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x11, #0x8` | agree | INSTRUCTION |
+| `0x01f0` | `54000002` | `540000e2` | `b.hs +7` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=7 cond=2` | agree | `b.hs 0x20c` | agree | INSTRUCTION |
+| `0x01f4` | `8b0b0161` | `8b0b0161` | `add x1, x11, x11` | `op=ADD sf=1 rd=1 rn=11 rm=11 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x11, x11` | agree | INSTRUCTION |
+| `0x01f8` | `8b010021` | `8b010021` | `add x1, x1, x1` | `op=ADD sf=1 rd=1 rn=1 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x1, x1` | agree | INSTRUCTION |
+| `0x01fc` | `8b010021` | `8b010021` | `add x1, x1, x1` | `op=ADD sf=1 rd=1 rn=1 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x1, x1` | agree | INSTRUCTION |
+| `0x0200` | `9ac12002` | `9ac12002` | `lslv x2, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x2, x0, x1` | agree | INSTRUCTION |
+| `0x0204` | `aa020129` | `aa020129` | `orr x9, x9, x2` | `op=ORR sf=1 rd=9 rn=9 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x9, x9, x2` | agree | INSTRUCTION |
+| `0x0208` | `5400000e` | `540000ee` | `b.al +7` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=7 cond=14` | agree | `b.al 0x224` | agree | INSTRUCTION |
+| `0x020c` | `d1002161` | `d1002161` | `sub x1, x11, #8` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `sub x1, x11, #0x8` | agree | INSTRUCTION |
+| `0x0210` | `8b010021` | `8b010021` | `add x1, x1, x1` | `op=ADD sf=1 rd=1 rn=1 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x1, x1` | agree | INSTRUCTION |
+| `0x0214` | `8b010021` | `8b010021` | `add x1, x1, x1` | `op=ADD sf=1 rd=1 rn=1 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x1, x1` | agree | INSTRUCTION |
+| `0x0218` | `8b010021` | `8b010021` | `add x1, x1, x1` | `op=ADD sf=1 rd=1 rn=1 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x1, x1` | agree | INSTRUCTION |
+| `0x021c` | `9ac12002` | `9ac12002` | `lslv x2, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x2, x0, x1` | agree | INSTRUCTION |
+| `0x0220` | `aa02014a` | `aa02014a` | `orr x10, x10, x2` | `op=ORR sf=1 rd=10 rn=10 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x10, x10, x2` | agree | INSTRUCTION |
+| `0x0224` | `9100056b` | `9100056b` | `add x11, x11, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x11, x11, #0x1` | agree | INSTRUCTION |
+| `0x0228` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x022c` | `5400000e` | `54fffc2e` | `b.al -31` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524257 cond=14` | agree | `b.al 0x1b0` | agree | INSTRUCTION |
+| `0x0230` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x0234` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x0238` | `5400000e` | `54fffa6e` | `b.al -45` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524243 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x023c` | `d28000d1` | `d28000d1` | `movz x17, #6` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=6 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x6` | agree | INSTRUCTION |
+| `0x0240` | `b400000b` | `b40010eb` | `cbz x11, +135` | `op=CBZ sf=1 rd=11 rn=0 rm=0 imm16=0 hw=0 bimm=135 cond=0` | agree | `cbz x11, 0x45c` | agree | INSTRUCTION |
+| `0x0244` | `aa0c03e1` | `aa0c03e1` | `orr x1, xzr, x12` | `op=ORR sf=1 rd=1 rn=31 rm=12 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x1, xzr, x12` | agree | INSTRUCTION |
+| `0x0248` | `8b0b0182` | `8b0b0182` | `add x2, x12, x11` | `op=ADD sf=1 rd=2 rn=12 rm=11 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x2, x12, x11` | agree | INSTRUCTION |
+| `0x024c` | `d2800003` | `d2800003` | `movz x3, #0` | `op=MOVZ sf=1 rd=3 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x3, #0x0` | agree | INSTRUCTION |
+| `0x0250` | `d2800000` | `d2800000` | `movz x0, #0` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x0` | agree | INSTRUCTION |
+| `0x0254` | `39400024` | `39400024` | `ldrb w4, [x1]` | `op=LDRB sf=0 rd=4 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w4, [x1]` | agree | INSTRUCTION |
+| `0x0258` | `7100b49f` | `7100b49f` | `subs wzr, w4, #45` | `op=SUBS sf=0 rd=31 rn=4 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w4, #0x2d` | agree | INSTRUCTION |
+| `0x025c` | `54000001` | `54000061` | `b.ne +3` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=3 cond=1` | agree | `b.ne 0x268` | agree | INSTRUCTION |
+| `0x0260` | `d2800023` | `d2800023` | `movz x3, #1` | `op=MOVZ sf=1 rd=3 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x3, #0x1` | agree | INSTRUCTION |
+| `0x0264` | `91000421` | `91000421` | `add x1, x1, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x1, x1, #0x1` | agree | INSTRUCTION |
+| `0x0268` | `eb02003f` | `eb02003f` | `subs xzr, x1, x2` | `op=SUBS sf=1 rd=31 rn=1 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, x2` | agree | INSTRUCTION |
+| `0x026c` | `54000000` | `54000f80` | `b.eq +124` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=124 cond=0` | agree | `b.eq 0x45c` | agree | INSTRUCTION |
+| `0x0270` | `39400024` | `39400024` | `ldrb w4, [x1]` | `op=LDRB sf=0 rd=4 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w4, [x1]` | agree | INSTRUCTION |
+| `0x0274` | `7100c09f` | `7100c09f` | `subs wzr, w4, #48` | `op=SUBS sf=0 rd=31 rn=4 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w4, #0x30` | agree | INSTRUCTION |
+| `0x0278` | `54000001` | `540003c1` | `b.ne +30` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=30 cond=1` | agree | `b.ne 0x2f0` | agree | INSTRUCTION |
+| `0x027c` | `91000425` | `91000425` | `add x5, x1, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x5, x1, #0x1` | agree | INSTRUCTION |
+| `0x0280` | `eb0200bf` | `eb0200bf` | `subs xzr, x5, x2` | `op=SUBS sf=1 rd=31 rn=5 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x5, x2` | agree | INSTRUCTION |
+| `0x0284` | `54000000` | `54000360` | `b.eq +27` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=27 cond=0` | agree | `b.eq 0x2f0` | agree | INSTRUCTION |
+| `0x0288` | `394000a4` | `394000a4` | `ldrb w4, [x5]` | `op=LDRB sf=0 rd=4 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w4, [x5]` | agree | INSTRUCTION |
+| `0x028c` | `7101e09f` | `7101e09f` | `subs wzr, w4, #120` | `op=SUBS sf=0 rd=31 rn=4 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w4, #0x78` | agree | INSTRUCTION |
+| `0x0290` | `54000001` | `54000301` | `b.ne +24` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=24 cond=1` | agree | `b.ne 0x2f0` | agree | INSTRUCTION |
+| `0x0294` | `91000821` | `91000821` | `add x1, x1, #2` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x1, x1, #0x2` | agree | INSTRUCTION |
+| `0x0298` | `eb02003f` | `eb02003f` | `subs xzr, x1, x2` | `op=SUBS sf=1 rd=31 rn=1 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, x2` | agree | INSTRUCTION |
+| `0x029c` | `54000000` | `54000e00` | `b.eq +112` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=112 cond=0` | agree | `b.eq 0x45c` | agree | INSTRUCTION |
+| `0x02a0` | `eb02003f` | `eb02003f` | `subs xzr, x1, x2` | `op=SUBS sf=1 rd=31 rn=1 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, x2` | agree | INSTRUCTION |
+| `0x02a4` | `54000000` | `540003c0` | `b.eq +30` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=30 cond=0` | agree | `b.eq 0x31c` | agree | INSTRUCTION |
+| `0x02a8` | `39400024` | `39400024` | `ldrb w4, [x1]` | `op=LDRB sf=0 rd=4 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w4, [x1]` | agree | INSTRUCTION |
+| `0x02ac` | `7100c085` | `7100c085` | `subs w5, w4, #48` | `op=SUBS sf=0 rd=5 rn=4 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w5, w4, #0x30` | agree | INSTRUCTION |
+| `0x02b0` | `710028bf` | `710028bf` | `subs wzr, w5, #10` | `op=SUBS sf=0 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w5, #0xa` | agree | INSTRUCTION |
+| `0x02b4` | `54000003` | `540000a3` | `b.lo +5` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=5 cond=3` | agree | `b.lo 0x2c8` | agree | INSTRUCTION |
+| `0x02b8` | `71018485` | `71018485` | `subs w5, w4, #97` | `op=SUBS sf=0 rd=5 rn=4 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w5, w4, #0x61` | agree | INSTRUCTION |
+| `0x02bc` | `710018bf` | `710018bf` | `subs wzr, w5, #6` | `op=SUBS sf=0 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w5, #0x6` | agree | INSTRUCTION |
+| `0x02c0` | `54000002` | `54000ce2` | `b.hs +103` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=103 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x02c4` | `910028a5` | `910028a5` | `add x5, x5, #10` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x5, x5, #0xa` | agree | INSTRUCTION |
+| `0x02c8` | `d2800786` | `d2800786` | `movz x6, #60` | `op=MOVZ sf=1 rd=6 rn=0 rm=0 imm16=60 hw=0 bimm=0 cond=0` | agree | `movz x6, #0x3c` | agree | INSTRUCTION |
+| `0x02cc` | `9ac62406` | `9ac62406` | `lsrv x6, x0, x6` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lsrv x6, x0, x6` | agree | INSTRUCTION |
+| `0x02d0` | `b5000006` | `b5000c66` | `cbnz x6, +99` | `op=CBNZ sf=1 rd=6 rn=0 rm=0 imm16=0 hw=0 bimm=99 cond=0` | agree | `cbnz x6, 0x45c` | agree | INSTRUCTION |
+| `0x02d4` | `8b000000` | `8b000000` | `add x0, x0, x0` | `op=ADD sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x0, x0, x0` | agree | INSTRUCTION |
+| `0x02d8` | `8b000000` | `8b000000` | `add x0, x0, x0` | `op=ADD sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x0, x0, x0` | agree | INSTRUCTION |
+| `0x02dc` | `8b000000` | `8b000000` | `add x0, x0, x0` | `op=ADD sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x0, x0, x0` | agree | INSTRUCTION |
+| `0x02e0` | `8b000000` | `8b000000` | `add x0, x0, x0` | `op=ADD sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x0, x0, x0` | agree | INSTRUCTION |
+| `0x02e4` | `aa050000` | `aa050000` | `orr x0, x0, x5` | `op=ORR sf=1 rd=0 rn=0 rm=5 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x0, x0, x5` | agree | INSTRUCTION |
+| `0x02e8` | `91000421` | `91000421` | `add x1, x1, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x1, x1, #0x1` | agree | INSTRUCTION |
+| `0x02ec` | `5400000e` | `54fffdae` | `b.al -19` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524269 cond=14` | agree | `b.al 0x2a0` | agree | INSTRUCTION |
+| `0x02f0` | `eb02003f` | `eb02003f` | `subs xzr, x1, x2` | `op=SUBS sf=1 rd=31 rn=1 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, x2` | agree | INSTRUCTION |
+| `0x02f4` | `54000000` | `54000140` | `b.eq +10` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=10 cond=0` | agree | `b.eq 0x31c` | agree | INSTRUCTION |
+| `0x02f8` | `39400024` | `39400024` | `ldrb w4, [x1]` | `op=LDRB sf=0 rd=4 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w4, [x1]` | agree | INSTRUCTION |
+| `0x02fc` | `7100c085` | `7100c085` | `subs w5, w4, #48` | `op=SUBS sf=0 rd=5 rn=4 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w5, w4, #0x30` | agree | INSTRUCTION |
+| `0x0300` | `710028bf` | `710028bf` | `subs wzr, w5, #10` | `op=SUBS sf=0 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w5, #0xa` | agree | INSTRUCTION |
+| `0x0304` | `54000002` | `54000ac2` | `b.hs +86` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=86 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0308` | `d2800146` | `d2800146` | `movz x6, #10` | `op=MOVZ sf=1 rd=6 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x6, #0xa` | agree | INSTRUCTION |
+| `0x030c` | `9b067c00` | `9b067c00` | `madd x0, x0, x6, xzr` | `op=MUL sf=1 rd=0 rn=0 rm=6 imm16=0 hw=0 bimm=0 cond=0` | agree | `madd x0, x0, x6, xzr` | agree | INSTRUCTION |
+| `0x0310` | `8b050000` | `8b050000` | `add x0, x0, x5` | `op=ADD sf=1 rd=0 rn=0 rm=5 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x0, x0, x5` | agree | INSTRUCTION |
+| `0x0314` | `91000421` | `91000421` | `add x1, x1, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x1, x1, #0x1` | agree | INSTRUCTION |
+| `0x0318` | `5400000e` | `54fffece` | `b.al -10` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524278 cond=14` | agree | `b.al 0x2f0` | agree | INSTRUCTION |
+| `0x031c` | `b4000003` | `b4000043` | `cbz x3, +2` | `op=CBZ sf=1 rd=3 rn=0 rm=0 imm16=0 hw=0 bimm=2 cond=0` | agree | `cbz x3, 0x324` | agree | INSTRUCTION |
+| `0x0320` | `cb0003e0` | `cb0003e0` | `sub x0, xzr, x0` | `op=SUB sf=1 rd=0 rn=31 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `sub x0, xzr, x0` | agree | INSTRUCTION |
+| `0x0324` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x0328` | `d28000f1` | `d28000f1` | `movz x17, #7` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=7 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x7` | agree | INSTRUCTION |
+| `0x032c` | `d28f4f01` | `d28f4f01` | `movz x1, #0x7a78` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=31352 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x7a78` | agree | INSTRUCTION |
+| `0x0330` | `f2a00e41` | `f2a00e41` | `movk x1, #0x72, lsl #16` | `op=MOVK sf=1 rd=1 rn=0 rm=0 imm16=114 hw=1 bimm=0 cond=0` | agree | `movk x1, #0x72, lsl #16` | agree | INSTRUCTION |
+| `0x0334` | `eb01013f` | `eb01013f` | `subs xzr, x9, x1` | `op=SUBS sf=1 rd=31 rn=9 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x9, x1` | agree | INSTRUCTION |
+| `0x0338` | `54000000` | `540004e0` | `b.eq +39` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=39 cond=0` | agree | `b.eq 0x3d4` | agree | INSTRUCTION |
+| `0x033c` | `d28f4ee1` | `d28f4ee1` | `movz x1, #0x7a77` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=31351 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x7a77` | agree | INSTRUCTION |
+| `0x0340` | `f2a00e41` | `f2a00e41` | `movk x1, #0x72, lsl #16` | `op=MOVK sf=1 rd=1 rn=0 rm=0 imm16=114 hw=1 bimm=0 cond=0` | agree | `movk x1, #0x72, lsl #16` | agree | INSTRUCTION |
+| `0x0344` | `eb01013f` | `eb01013f` | `subs xzr, x9, x1` | `op=SUBS sf=1 rd=31 rn=9 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x9, x1` | agree | INSTRUCTION |
+| `0x0348` | `54000000` | `54000460` | `b.eq +35` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=35 cond=0` | agree | `b.eq 0x3d4` | agree | INSTRUCTION |
+| `0x034c` | `d28e0e61` | `d28e0e61` | `movz x1, #0x7073` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=28787 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x7073` | agree | INSTRUCTION |
+| `0x0350` | `eb01013f` | `eb01013f` | `subs xzr, x9, x1` | `op=SUBS sf=1 rd=31 rn=9 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x9, x1` | agree | INSTRUCTION |
+| `0x0354` | `54000000` | `54000400` | `b.eq +32` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=32 cond=0` | agree | `b.eq 0x3d4` | agree | INSTRUCTION |
+| `0x0358` | `d28e6ee1` | `d28e6ee1` | `movz x1, #0x7377` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=29559 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x7377` | agree | INSTRUCTION |
+| `0x035c` | `f2a00e01` | `f2a00e01` | `movk x1, #0x70, lsl #16` | `op=MOVK sf=1 rd=1 rn=0 rm=0 imm16=112 hw=1 bimm=0 cond=0` | agree | `movk x1, #0x70, lsl #16` | agree | INSTRUCTION |
+| `0x0360` | `eb01013f` | `eb01013f` | `subs xzr, x9, x1` | `op=SUBS sf=1 rd=31 rn=9 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x9, x1` | agree | INSTRUCTION |
+| `0x0364` | `54000000` | `54000380` | `b.eq +28` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=28 cond=0` | agree | `b.eq 0x3d4` | agree | INSTRUCTION |
+| `0x0368` | `f100097f` | `f100097f` | `subs xzr, x11, #2` | `op=SUBS sf=1 rd=31 rn=11 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x11, #0x2` | agree | INSTRUCTION |
+| `0x036c` | `54000003` | `54000783` | `b.lo +60` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=60 cond=3` | agree | `b.lo 0x45c` | agree | INSTRUCTION |
+| `0x0370` | `f1000d7f` | `f1000d7f` | `subs xzr, x11, #3` | `op=SUBS sf=1 rd=31 rn=11 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x11, #0x3` | agree | INSTRUCTION |
+| `0x0374` | `54000008` | `54000748` | `b.hi +58` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=58 cond=8` | agree | `b.hi 0x45c` | agree | INSTRUCTION |
+| `0x0378` | `39400181` | `39400181` | `ldrb w1, [x12]` | `op=LDRB sf=0 rd=1 rn=12 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w1, [x12]` | agree | INSTRUCTION |
+| `0x037c` | `7101e03f` | `7101e03f` | `subs wzr, w1, #120` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x78` | agree | INSTRUCTION |
+| `0x0380` | `54000000` | `54000060` | `b.eq +3` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=3 cond=0` | agree | `b.eq 0x38c` | agree | INSTRUCTION |
+| `0x0384` | `7101dc3f` | `7101dc3f` | `subs wzr, w1, #119` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x77` | agree | INSTRUCTION |
+| `0x0388` | `54000001` | `540006a1` | `b.ne +53` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=53 cond=1` | agree | `b.ne 0x45c` | agree | INSTRUCTION |
+| `0x038c` | `39400581` | `39400581` | `ldrb w1, [x12, #1]` | `op=LDRB sf=0 rd=1 rn=12 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w1, [x12, #1]` | agree | INSTRUCTION |
+| `0x0390` | `7100c021` | `7100c021` | `subs w1, w1, #48` | `op=SUBS sf=0 rd=1 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w1, w1, #0x30` | agree | INSTRUCTION |
+| `0x0394` | `7100283f` | `7100283f` | `subs wzr, w1, #10` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0xa` | agree | INSTRUCTION |
+| `0x0398` | `54000002` | `54000622` | `b.hs +49` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=49 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x039c` | `f100097f` | `f100097f` | `subs xzr, x11, #2` | `op=SUBS sf=1 rd=31 rn=11 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x11, #0x2` | agree | INSTRUCTION |
+| `0x03a0` | `54000000` | `54000120` | `b.eq +9` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=9 cond=0` | agree | `b.eq 0x3c4` | agree | INSTRUCTION |
+| `0x03a4` | `39400982` | `39400982` | `ldrb w2, [x12, #2]` | `op=LDRB sf=0 rd=2 rn=12 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w2, [x12, #2]` | agree | INSTRUCTION |
+| `0x03a8` | `7100c042` | `7100c042` | `subs w2, w2, #48` | `op=SUBS sf=0 rd=2 rn=2 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w2, w2, #0x30` | agree | INSTRUCTION |
+| `0x03ac` | `7100285f` | `7100285f` | `subs wzr, w2, #10` | `op=SUBS sf=0 rd=31 rn=2 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w2, #0xa` | agree | INSTRUCTION |
+| `0x03b0` | `54000002` | `54000562` | `b.hs +43` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=43 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x03b4` | `b4000001` | `b4000541` | `cbz x1, +42` | `op=CBZ sf=1 rd=1 rn=0 rm=0 imm16=0 hw=0 bimm=42 cond=0` | agree | `cbz x1, 0x45c` | agree | INSTRUCTION |
+| `0x03b8` | `d2800143` | `d2800143` | `movz x3, #10` | `op=MOVZ sf=1 rd=3 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x3, #0xa` | agree | INSTRUCTION |
+| `0x03bc` | `9b037c21` | `9b037c21` | `madd x1, x1, x3, xzr` | `op=MUL sf=1 rd=1 rn=1 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `madd x1, x1, x3, xzr` | agree | INSTRUCTION |
+| `0x03c0` | `8b020021` | `8b020021` | `add x1, x1, x2` | `op=ADD sf=1 rd=1 rn=1 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x1, x2` | agree | INSTRUCTION |
+| `0x03c4` | `f1007c3f` | `f1007c3f` | `subs xzr, x1, #31` | `op=SUBS sf=1 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, #0x1f` | agree | INSTRUCTION |
+| `0x03c8` | `54000002` | `540004a2` | `b.hs +37` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=37 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x03cc` | `aa0103e0` | `aa0103e0` | `orr x0, xzr, x1` | `op=ORR sf=1 rd=0 rn=31 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x0, xzr, x1` | agree | INSTRUCTION |
+| `0x03d0` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x03d4` | `d28003e0` | `d28003e0` | `movz x0, #31` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=31 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x1f` | agree | INSTRUCTION |
+| `0x03d8` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x03dc` | `aa1a03ed` | `aa1a03ed` | `orr x13, xzr, x26` | `op=ORR sf=1 rd=13 rn=31 rm=26 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x13, xzr, x26` | agree | INSTRUCTION |
+| `0x03e0` | `d280000f` | `d280000f` | `movz x15, #0` | `op=MOVZ sf=1 rd=15 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x15, #0x0` | agree | INSTRUCTION |
+| `0x03e4` | `eb1701ff` | `eb1701ff` | `subs xzr, x15, x23` | `op=SUBS sf=1 rd=31 rn=15 rm=23 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x15, x23` | agree | INSTRUCTION |
+| `0x03e8` | `54000000` | `54000160` | `b.eq +11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=11 cond=0` | agree | `b.eq 0x414` | agree | INSTRUCTION |
+| `0x03ec` | `f94001a1` | `f94001a1` | `ldr x1, [x13]` | `op=LDR sf=1 rd=1 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x1, [x13]` | agree | INSTRUCTION |
+| `0x03f0` | `f94005a2` | `f94005a2` | `ldr x2, [x13, #8]` | `op=LDR sf=1 rd=2 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x2, [x13, #8]` | agree | INSTRUCTION |
+| `0x03f4` | `eb09003f` | `eb09003f` | `subs xzr, x1, x9` | `op=SUBS sf=1 rd=31 rn=1 rm=9 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, x9` | agree | INSTRUCTION |
+| `0x03f8` | `54000001` | `54000081` | `b.ne +4` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=4 cond=1` | agree | `b.ne 0x408` | agree | INSTRUCTION |
+| `0x03fc` | `eb0a005f` | `eb0a005f` | `subs xzr, x2, x10` | `op=SUBS sf=1 rd=31 rn=2 rm=10 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x2, x10` | agree | INSTRUCTION |
+| `0x0400` | `54000001` | `54000041` | `b.ne +2` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=2 cond=1` | agree | `b.ne 0x408` | agree | INSTRUCTION |
+| `0x0404` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x0408` | `910101ad` | `910101ad` | `add x13, x13, #64` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x13, x13, #0x40` | agree | INSTRUCTION |
+| `0x040c` | `910005ef` | `910005ef` | `add x15, x15, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x15, x15, #0x1` | agree | INSTRUCTION |
+| `0x0410` | `5400000e` | `54fffeae` | `b.al -11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524277 cond=14` | agree | `b.al 0x3e4` | agree | INSTRUCTION |
+| `0x0414` | `d280000d` | `d280000d` | `movz x13, #0` | `op=MOVZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x13, #0x0` | agree | INSTRUCTION |
+| `0x0418` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x041c` | `aa1b03ed` | `aa1b03ed` | `orr x13, xzr, x27` | `op=ORR sf=1 rd=13 rn=31 rm=27 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x13, xzr, x27` | agree | INSTRUCTION |
+| `0x0420` | `d280000f` | `d280000f` | `movz x15, #0` | `op=MOVZ sf=1 rd=15 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x15, #0x0` | agree | INSTRUCTION |
+| `0x0424` | `eb1801ff` | `eb1801ff` | `subs xzr, x15, x24` | `op=SUBS sf=1 rd=31 rn=15 rm=24 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x15, x24` | agree | INSTRUCTION |
+| `0x0428` | `54000000` | `54000160` | `b.eq +11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=11 cond=0` | agree | `b.eq 0x454` | agree | INSTRUCTION |
+| `0x042c` | `f94001a1` | `f94001a1` | `ldr x1, [x13]` | `op=LDR sf=1 rd=1 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x1, [x13]` | agree | INSTRUCTION |
+| `0x0430` | `f94005a2` | `f94005a2` | `ldr x2, [x13, #8]` | `op=LDR sf=1 rd=2 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x2, [x13, #8]` | agree | INSTRUCTION |
+| `0x0434` | `eb09003f` | `eb09003f` | `subs xzr, x1, x9` | `op=SUBS sf=1 rd=31 rn=1 rm=9 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x1, x9` | agree | INSTRUCTION |
+| `0x0438` | `54000001` | `54000081` | `b.ne +4` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=4 cond=1` | agree | `b.ne 0x448` | agree | INSTRUCTION |
+| `0x043c` | `eb0a005f` | `eb0a005f` | `subs xzr, x2, x10` | `op=SUBS sf=1 rd=31 rn=2 rm=10 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x2, x10` | agree | INSTRUCTION |
+| `0x0440` | `54000001` | `54000041` | `b.ne +2` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=2 cond=1` | agree | `b.ne 0x448` | agree | INSTRUCTION |
+| `0x0444` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x0448` | `910081ad` | `910081ad` | `add x13, x13, #32` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x13, x13, #0x20` | agree | INSTRUCTION |
+| `0x044c` | `910005ef` | `910005ef` | `add x15, x15, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x15, x15, #0x1` | agree | INSTRUCTION |
+| `0x0450` | `5400000e` | `54fffeae` | `b.al -11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524277 cond=14` | agree | `b.al 0x424` | agree | INSTRUCTION |
+| `0x0454` | `d280000d` | `d280000d` | `movz x13, #0` | `op=MOVZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x13, #0x0` | agree | INSTRUCTION |
+| `0x0458` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x045c` | `d2a00bef` | `d2a00bef` | `movz x15, #0x5f, lsl #16` | `op=MOVZ sf=1 rd=15 rn=0 rm=0 imm16=95 hw=1 bimm=0 cond=0` | agree | `movz x15, #0x5f, lsl #16` | agree | INSTRUCTION |
+| `0x0460` | `10000001` | `10002941` | `adr x1, +330` | `op=ADR sf=0 rd=1 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x1, 0x988` | agree | INSTRUCTION |
+| `0x0464` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x46c` | agree | INSTRUCTION |
+| `0x0468` | `5400000e` | `540002ae` | `b.al +21` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=21 cond=14` | agree | `b.al 0x4bc` | agree | INSTRUCTION |
+| `0x046c` | `aa1903e0` | `aa1903e0` | `orr x0, xzr, x25` | `op=ORR sf=1 rd=0 rn=31 rm=25 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x0, xzr, x25` | agree | INSTRUCTION |
+| `0x0470` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x478` | agree | INSTRUCTION |
+| `0x0474` | `5400000e` | `5400032e` | `b.al +25` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=25 cond=14` | agree | `b.al 0x4d8` | agree | INSTRUCTION |
+| `0x0478` | `10000001` | `100028e1` | `adr x1, +327` | `op=ADR sf=0 rd=1 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x1, 0x994` | agree | INSTRUCTION |
+| `0x047c` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x484` | agree | INSTRUCTION |
+| `0x0480` | `5400000e` | `540001ee` | `b.al +15` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=15 cond=14` | agree | `b.al 0x4bc` | agree | INSTRUCTION |
+| `0x0484` | `aa1103e0` | `aa1103e0` | `orr x0, xzr, x17` | `op=ORR sf=1 rd=0 rn=31 rm=17 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x0, xzr, x17` | agree | INSTRUCTION |
+| `0x0488` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x490` | agree | INSTRUCTION |
+| `0x048c` | `5400000e` | `5400026e` | `b.al +19` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=19 cond=14` | agree | `b.al 0x4d8` | agree | INSTRUCTION |
+| `0x0490` | `d2800140` | `d2800140` | `movz x0, #10` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x0, #0xa` | agree | INSTRUCTION |
+| `0x0494` | `390001e0` | `390001e0` | `strb w0, [x15]` | `op=STRB sf=0 rd=0 rn=15 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w0, [x15]` | agree | INSTRUCTION |
+| `0x0498` | `910005ef` | `910005ef` | `add x15, x15, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x15, x15, #0x1` | agree | INSTRUCTION |
+| `0x049c` | `d2800040` | `d2800040` | `movz x0, #2` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=2 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x2` | agree | INSTRUCTION |
+| `0x04a0` | `d2a00be1` | `d2a00be1` | `movz x1, #0x5f, lsl #16` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=95 hw=1 bimm=0 cond=0` | agree | `movz x1, #0x5f, lsl #16` | agree | INSTRUCTION |
+| `0x04a4` | `cb0101e2` | `cb0101e2` | `sub x2, x15, x1` | `op=SUB sf=1 rd=2 rn=15 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `sub x2, x15, x1` | agree | INSTRUCTION |
+| `0x04a8` | `d2800808` | `d2800808` | `movz x8, #64` | `op=MOVZ sf=1 rd=8 rn=0 rm=0 imm16=64 hw=0 bimm=0 cond=0` | agree | `movz x8, #0x40` | agree | INSTRUCTION |
+| `0x04ac` | `d4000001` | `d4000001` | `svc #0` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `svc #0x0` | agree | INSTRUCTION |
+| `0x04b0` | `aa1103e0` | `aa1103e0` | `orr x0, xzr, x17` | `op=ORR sf=1 rd=0 rn=31 rm=17 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x0, xzr, x17` | agree | INSTRUCTION |
+| `0x04b4` | `d2800ba8` | `d2800ba8` | `movz x8, #93` | `op=MOVZ sf=1 rd=8 rn=0 rm=0 imm16=93 hw=0 bimm=0 cond=0` | agree | `movz x8, #0x5d` | agree | INSTRUCTION |
+| `0x04b8` | `d4000001` | `d4000001` | `svc #0` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `svc #0x0` | agree | INSTRUCTION |
+| `0x04bc` | `39400022` | `39400022` | `ldrb w2, [x1]` | `op=LDRB sf=0 rd=2 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w2, [x1]` | agree | INSTRUCTION |
+| `0x04c0` | `b4000002` | `b40000a2` | `cbz x2, +5` | `op=CBZ sf=1 rd=2 rn=0 rm=0 imm16=0 hw=0 bimm=5 cond=0` | agree | `cbz x2, 0x4d4` | agree | INSTRUCTION |
+| `0x04c4` | `390001e2` | `390001e2` | `strb w2, [x15]` | `op=STRB sf=0 rd=2 rn=15 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w2, [x15]` | agree | INSTRUCTION |
+| `0x04c8` | `910005ef` | `910005ef` | `add x15, x15, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x15, x15, #0x1` | agree | INSTRUCTION |
+| `0x04cc` | `91000421` | `91000421` | `add x1, x1, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x1, x1, #0x1` | agree | INSTRUCTION |
+| `0x04d0` | `5400000e` | `54ffff6e` | `b.al -5` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524283 cond=14` | agree | `b.al 0x4bc` | agree | INSTRUCTION |
+| `0x04d4` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x04d8` | `d2802803` | `d2802803` | `movz x3, #0x140` | `op=MOVZ sf=1 rd=3 rn=0 rm=0 imm16=320 hw=0 bimm=0 cond=0` | agree | `movz x3, #0x140` | agree | INSTRUCTION |
+| `0x04dc` | `f2a00be3` | `f2a00be3` | `movk x3, #0x5f, lsl #16` | `op=MOVK sf=1 rd=3 rn=0 rm=0 imm16=95 hw=1 bimm=0 cond=0` | agree | `movk x3, #0x5f, lsl #16` | agree | INSTRUCTION |
+| `0x04e0` | `d2800144` | `d2800144` | `movz x4, #10` | `op=MOVZ sf=1 rd=4 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x4, #0xa` | agree | INSTRUCTION |
+| `0x04e4` | `aa0303e5` | `aa0303e5` | `orr x5, xzr, x3` | `op=ORR sf=1 rd=5 rn=31 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x5, xzr, x3` | agree | INSTRUCTION |
+| `0x04e8` | `9ac40806` | `9ac40806` | `udiv x6, x0, x4` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `udiv x6, x0, x4` | agree | INSTRUCTION |
+| `0x04ec` | `9b0480c7` | `9b0480c7` | `msub x7, x6, x4, x0` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `msub x7, x6, x4, x0` | agree | INSTRUCTION |
+| `0x04f0` | `9100c0e7` | `9100c0e7` | `add x7, x7, #48` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x7, x7, #0x30` | agree | INSTRUCTION |
+| `0x04f4` | `d10004a5` | `d10004a5` | `sub x5, x5, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `sub x5, x5, #0x1` | agree | INSTRUCTION |
+| `0x04f8` | `390000a7` | `390000a7` | `strb w7, [x5]` | `op=STRB sf=0 rd=7 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w7, [x5]` | agree | INSTRUCTION |
+| `0x04fc` | `aa0603e0` | `aa0603e0` | `orr x0, xzr, x6` | `op=ORR sf=1 rd=0 rn=31 rm=6 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x0, xzr, x6` | agree | INSTRUCTION |
+| `0x0500` | `b5000000` | `b5ffff40` | `cbnz x0, -6` | `op=CBNZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524282 cond=0` | agree | `cbnz x0, 0x4e8` | agree | INSTRUCTION |
+| `0x0504` | `eb0300bf` | `eb0300bf` | `subs xzr, x5, x3` | `op=SUBS sf=1 rd=31 rn=5 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x5, x3` | agree | INSTRUCTION |
+| `0x0508` | `54000000` | `540000c0` | `b.eq +6` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=6 cond=0` | agree | `b.eq 0x520` | agree | INSTRUCTION |
+| `0x050c` | `394000a7` | `394000a7` | `ldrb w7, [x5]` | `op=LDRB sf=0 rd=7 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w7, [x5]` | agree | INSTRUCTION |
+| `0x0510` | `390001e7` | `390001e7` | `strb w7, [x15]` | `op=STRB sf=0 rd=7 rn=15 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w7, [x15]` | agree | INSTRUCTION |
+| `0x0514` | `910005ef` | `910005ef` | `add x15, x15, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x15, x15, #0x1` | agree | INSTRUCTION |
+| `0x0518` | `910004a5` | `910004a5` | `add x5, x5, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x5, x5, #0x1` | agree | INSTRUCTION |
+| `0x051c` | `5400000e` | `54ffff4e` | `b.al -6` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524282 cond=14` | agree | `b.al 0x504` | agree | INSTRUCTION |
+| `0x0520` | `d65f03c0` | `d65f03c0` | `ret` | `op=RET sf=0 rd=0 rn=30 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ret` | agree | INSTRUCTION |
+| `0x0524` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x0528` | `b5000015` | `b5ffdfd5` | `cbnz x21, -258` | `op=CBNZ sf=1 rd=21 rn=0 rm=0 imm16=0 hw=0 bimm=524030 cond=0` | agree | `cbnz x21, 0x120` | agree | INSTRUCTION |
+| `0x052c` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x534` | agree | INSTRUCTION |
+| `0x0530` | `5400000e` | `54ffe2ae` | `b.al -235` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524053 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x0534` | `d2800191` | `d2800191` | `movz x17, #12` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=12 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xc` | agree | INSTRUCTION |
+| `0x0538` | `b400000b` | `b4fff92b` | `cbz x11, -55` | `op=CBZ sf=1 rd=11 rn=0 rm=0 imm16=0 hw=0 bimm=524233 cond=0` | agree | `cbz x11, 0x45c` | agree | INSTRUCTION |
+| `0x053c` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x544` | agree | INSTRUCTION |
+| `0x0540` | `5400000e` | `54fff4ee` | `b.al -89` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524199 cond=14` | agree | `b.al 0x3dc` | agree | INSTRUCTION |
+| `0x0544` | `d2800171` | `d2800171` | `movz x17, #11` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=11 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xb` | agree | INSTRUCTION |
+| `0x0548` | `b500000d` | `b5fff8ad` | `cbnz x13, -59` | `op=CBNZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=524229 cond=0` | agree | `cbnz x13, 0x45c` | agree | INSTRUCTION |
+| `0x054c` | `d2800211` | `d2800211` | `movz x17, #16` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=16 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x10` | agree | INSTRUCTION |
+| `0x0550` | `d2808001` | `d2808001` | `movz x1, #1024` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=1024 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x400` | agree | INSTRUCTION |
+| `0x0554` | `eb0102ff` | `eb0102ff` | `subs xzr, x23, x1` | `op=SUBS sf=1 rd=31 rn=23 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x23, x1` | agree | INSTRUCTION |
+| `0x0558` | `54000002` | `54fff822` | `b.hs -63` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524225 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x055c` | `d2800801` | `d2800801` | `movz x1, #64` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=64 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x40` | agree | INSTRUCTION |
+| `0x0560` | `9b017eed` | `9b017eed` | `madd x13, x23, x1, xzr` | `op=MUL sf=1 rd=13 rn=23 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `madd x13, x23, x1, xzr` | agree | INSTRUCTION |
+| `0x0564` | `8b1a01ad` | `8b1a01ad` | `add x13, x13, x26` | `op=ADD sf=1 rd=13 rn=13 rm=26 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x13, x13, x26` | agree | INSTRUCTION |
+| `0x0568` | `f90001a9` | `f90001a9` | `str x9, [x13]` | `op=STR sf=1 rd=9 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x9, [x13]` | agree | INSTRUCTION |
+| `0x056c` | `f90005aa` | `f90005aa` | `str x10, [x13, #8]` | `op=STR sf=1 rd=10 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x10, [x13, #8]` | agree | INSTRUCTION |
+| `0x0570` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x578` | agree | INSTRUCTION |
+| `0x0574` | `5400000e` | `54ffe08e` | `b.al -252` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524036 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x0578` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x580` | agree | INSTRUCTION |
+| `0x057c` | `5400000e` | `54ffe60e` | `b.al -208` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524080 cond=14` | agree | `b.al 0x23c` | agree | INSTRUCTION |
+| `0x0580` | `f90009a0` | `f90009a0` | `str x0, [x13, #16]` | `op=STR sf=1 rd=0 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x0, [x13, #16]` | agree | INSTRUCTION |
+| `0x0584` | `d280000e` | `d280000e` | `movz x14, #0` | `op=MOVZ sf=1 rd=14 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x14, #0x0` | agree | INSTRUCTION |
+| `0x0588` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x590` | agree | INSTRUCTION |
+| `0x058c` | `5400000e` | `54ffdfce` | `b.al -258` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524030 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x0590` | `b400000b` | `b400074b` | `cbz x11, +58` | `op=CBZ sf=1 rd=11 rn=0 rm=0 imm16=0 hw=0 bimm=58 cond=0` | agree | `cbz x11, 0x678` | agree | INSTRUCTION |
+| `0x0594` | `d2800211` | `d2800211` | `movz x17, #16` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=16 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x10` | agree | INSTRUCTION |
+| `0x0598` | `f10021df` | `f10021df` | `subs xzr, x14, #8` | `op=SUBS sf=1 rd=31 rn=14 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x14, #0x8` | agree | INSTRUCTION |
+| `0x059c` | `54000002` | `54fff602` | `b.hs -80` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524208 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x05a0` | `d2800191` | `d2800191` | `movz x17, #12` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=12 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xc` | agree | INSTRUCTION |
+| `0x05a4` | `39400181` | `39400181` | `ldrb w1, [x12]` | `op=LDRB sf=0 rd=1 rn=12 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w1, [x12]` | agree | INSTRUCTION |
+| `0x05a8` | `7101c83f` | `7101c83f` | `subs wzr, w1, #114` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x72` | agree | INSTRUCTION |
+| `0x05ac` | `54000000` | `54000120` | `b.eq +9` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=9 cond=0` | agree | `b.eq 0x5d0` | agree | INSTRUCTION |
+| `0x05b0` | `7101a43f` | `7101a43f` | `subs wzr, w1, #105` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x69` | agree | INSTRUCTION |
+| `0x05b4` | `54000000` | `540000e0` | `b.eq +7` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=7 cond=0` | agree | `b.eq 0x5d0` | agree | INSTRUCTION |
+| `0x05b8` | `7101cc3f` | `7101cc3f` | `subs wzr, w1, #115` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x73` | agree | INSTRUCTION |
+| `0x05bc` | `54000000` | `540000a0` | `b.eq +5` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=5 cond=0` | agree | `b.eq 0x5d0` | agree | INSTRUCTION |
+| `0x05c0` | `7101b03f` | `7101b03f` | `subs wzr, w1, #108` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x6c` | agree | INSTRUCTION |
+| `0x05c4` | `54000000` | `54000060` | `b.eq +3` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=3 cond=0` | agree | `b.eq 0x5d0` | agree | INSTRUCTION |
+| `0x05c8` | `7101843f` | `7101843f` | `subs wzr, w1, #97` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x61` | agree | INSTRUCTION |
+| `0x05cc` | `54000001` | `54fff481` | `b.ne -92` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524196 cond=1` | agree | `b.ne 0x45c` | agree | INSTRUCTION |
+| `0x05d0` | `91000582` | `91000582` | `add x2, x12, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x2, x12, #0x1` | agree | INSTRUCTION |
+| `0x05d4` | `8b0b0183` | `8b0b0183` | `add x3, x12, x11` | `op=ADD sf=1 rd=3 rn=12 rm=11 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x3, x12, x11` | agree | INSTRUCTION |
+| `0x05d8` | `d2800004` | `d2800004` | `movz x4, #0` | `op=MOVZ sf=1 rd=4 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x4, #0x0` | agree | INSTRUCTION |
+| `0x05dc` | `d2800146` | `d2800146` | `movz x6, #10` | `op=MOVZ sf=1 rd=6 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x6, #0xa` | agree | INSTRUCTION |
+| `0x05e0` | `eb03005f` | `eb03005f` | `subs xzr, x2, x3` | `op=SUBS sf=1 rd=31 rn=2 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x2, x3` | agree | INSTRUCTION |
+| `0x05e4` | `54000000` | `54000320` | `b.eq +25` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=25 cond=0` | agree | `b.eq 0x648` | agree | INSTRUCTION |
+| `0x05e8` | `eb03005f` | `eb03005f` | `subs xzr, x2, x3` | `op=SUBS sf=1 rd=31 rn=2 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x2, x3` | agree | INSTRUCTION |
+| `0x05ec` | `54000000` | `540002e0` | `b.eq +23` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=23 cond=0` | agree | `b.eq 0x648` | agree | INSTRUCTION |
+| `0x05f0` | `39400045` | `39400045` | `ldrb w5, [x2]` | `op=LDRB sf=0 rd=5 rn=2 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w5, [x2]` | agree | INSTRUCTION |
+| `0x05f4` | `7100b8bf` | `7100b8bf` | `subs wzr, w5, #46` | `op=SUBS sf=0 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w5, #0x2e` | agree | INSTRUCTION |
+| `0x05f8` | `54000000` | `54000100` | `b.eq +8` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=8 cond=0` | agree | `b.eq 0x618` | agree | INSTRUCTION |
+| `0x05fc` | `7100c0a5` | `7100c0a5` | `subs w5, w5, #48` | `op=SUBS sf=0 rd=5 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w5, w5, #0x30` | agree | INSTRUCTION |
+| `0x0600` | `710028bf` | `710028bf` | `subs wzr, w5, #10` | `op=SUBS sf=0 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w5, #0xa` | agree | INSTRUCTION |
+| `0x0604` | `54000002` | `54fff2c2` | `b.hs -106` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524182 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0608` | `9b067c84` | `9b067c84` | `madd x4, x4, x6, xzr` | `op=MUL sf=1 rd=4 rn=4 rm=6 imm16=0 hw=0 bimm=0 cond=0` | agree | `madd x4, x4, x6, xzr` | agree | INSTRUCTION |
+| `0x060c` | `8b050084` | `8b050084` | `add x4, x4, x5` | `op=ADD sf=1 rd=4 rn=4 rm=5 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x4, x4, x5` | agree | INSTRUCTION |
+| `0x0610` | `91000442` | `91000442` | `add x2, x2, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x2, x2, #0x1` | agree | INSTRUCTION |
+| `0x0614` | `5400000e` | `54fffeae` | `b.al -11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524277 cond=14` | agree | `b.al 0x5e8` | agree | INSTRUCTION |
+| `0x0618` | `91000442` | `91000442` | `add x2, x2, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x2, x2, #0x1` | agree | INSTRUCTION |
+| `0x061c` | `d2800007` | `d2800007` | `movz x7, #0` | `op=MOVZ sf=1 rd=7 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x7, #0x0` | agree | INSTRUCTION |
+| `0x0620` | `eb03005f` | `eb03005f` | `subs xzr, x2, x3` | `op=SUBS sf=1 rd=31 rn=2 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x2, x3` | agree | INSTRUCTION |
+| `0x0624` | `54000000` | `54000140` | `b.eq +10` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=10 cond=0` | agree | `b.eq 0x64c` | agree | INSTRUCTION |
+| `0x0628` | `39400045` | `39400045` | `ldrb w5, [x2]` | `op=LDRB sf=0 rd=5 rn=2 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w5, [x2]` | agree | INSTRUCTION |
+| `0x062c` | `7100c0a5` | `7100c0a5` | `subs w5, w5, #48` | `op=SUBS sf=0 rd=5 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs w5, w5, #0x30` | agree | INSTRUCTION |
+| `0x0630` | `710028bf` | `710028bf` | `subs wzr, w5, #10` | `op=SUBS sf=0 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w5, #0xa` | agree | INSTRUCTION |
+| `0x0634` | `54000002` | `54fff142` | `b.hs -118` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524170 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0638` | `9b067ce7` | `9b067ce7` | `madd x7, x7, x6, xzr` | `op=MUL sf=1 rd=7 rn=7 rm=6 imm16=0 hw=0 bimm=0 cond=0` | agree | `madd x7, x7, x6, xzr` | agree | INSTRUCTION |
+| `0x063c` | `8b0500e7` | `8b0500e7` | `add x7, x7, x5` | `op=ADD sf=1 rd=7 rn=7 rm=5 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x7, x7, x5` | agree | INSTRUCTION |
+| `0x0640` | `91000442` | `91000442` | `add x2, x2, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x2, x2, #0x1` | agree | INSTRUCTION |
+| `0x0644` | `5400000e` | `54fffeee` | `b.al -9` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524279 cond=14` | agree | `b.al 0x620` | agree | INSTRUCTION |
+| `0x0648` | `d28000a7` | `d28000a7` | `movz x7, #5` | `op=MOVZ sf=1 rd=7 rn=0 rm=0 imm16=5 hw=0 bimm=0 cond=0` | agree | `movz x7, #0x5` | agree | INSTRUCTION |
+| `0x064c` | `8b070085` | `8b070085` | `add x5, x4, x7` | `op=ADD sf=1 rd=5 rn=4 rm=7 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x5, x4, x7` | agree | INSTRUCTION |
+| `0x0650` | `f10084bf` | `f10084bf` | `subs xzr, x5, #33` | `op=SUBS sf=1 rd=31 rn=5 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x5, #0x21` | agree | INSTRUCTION |
+| `0x0654` | `54000002` | `54fff042` | `b.hs -126` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524162 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0658` | `8b0e01c8` | `8b0e01c8` | `add x8, x14, x14` | `op=ADD sf=1 rd=8 rn=14 rm=14 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x8, x14, x14` | agree | INSTRUCTION |
+| `0x065c` | `8b080108` | `8b080108` | `add x8, x8, x8` | `op=ADD sf=1 rd=8 rn=8 rm=8 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x8, x8, x8` | agree | INSTRUCTION |
+| `0x0660` | `8b0d0108` | `8b0d0108` | `add x8, x8, x13` | `op=ADD sf=1 rd=8 rn=8 rm=13 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x8, x8, x13` | agree | INSTRUCTION |
+| `0x0664` | `39008101` | `39008101` | `strb w1, [x8, #32]` | `op=STRB sf=0 rd=1 rn=8 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w1, [x8, #32]` | agree | INSTRUCTION |
+| `0x0668` | `39008504` | `39008504` | `strb w4, [x8, #33]` | `op=STRB sf=0 rd=4 rn=8 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w4, [x8, #33]` | agree | INSTRUCTION |
+| `0x066c` | `39008907` | `39008907` | `strb w7, [x8, #34]` | `op=STRB sf=0 rd=7 rn=8 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w7, [x8, #34]` | agree | INSTRUCTION |
+| `0x0670` | `910005ce` | `910005ce` | `add x14, x14, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x14, x14, #0x1` | agree | INSTRUCTION |
+| `0x0674` | `5400000e` | `54fff8ae` | `b.al -59` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524229 cond=14` | agree | `b.al 0x588` | agree | INSTRUCTION |
+| `0x0678` | `f9000dae` | `f9000dae` | `str x14, [x13, #24]` | `op=STR sf=1 rd=14 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x14, [x13, #24]` | agree | INSTRUCTION |
+| `0x067c` | `910006f7` | `910006f7` | `add x23, x23, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x23, x23, #0x1` | agree | INSTRUCTION |
+| `0x0680` | `5400000e` | `54ffd5ce` | `b.al -338` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523950 cond=14` | agree | `b.al 0x138` | agree | INSTRUCTION |
+| `0x0684` | `91000673` | `91000673` | `add x19, x19, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x19, x19, #0x1` | agree | INSTRUCTION |
+| `0x0688` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x690` | agree | INSTRUCTION |
+| `0x068c` | `5400000e` | `54ffd7ce` | `b.al -322` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523966 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x0690` | `d2800191` | `d2800191` | `movz x17, #12` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=12 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xc` | agree | INSTRUCTION |
+| `0x0694` | `b400000b` | `b4ffee4b` | `cbz x11, -142` | `op=CBZ sf=1 rd=11 rn=0 rm=0 imm16=0 hw=0 bimm=524146 cond=0` | agree | `cbz x11, 0x45c` | agree | INSTRUCTION |
+| `0x0698` | `b5000015` | `b5ffd515` | `cbnz x21, -344` | `op=CBNZ sf=1 rd=21 rn=0 rm=0 imm16=0 hw=0 bimm=523944 cond=0` | agree | `cbnz x21, 0x138` | agree | INSTRUCTION |
+| `0x069c` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x6a4` | agree | INSTRUCTION |
+| `0x06a0` | `5400000e` | `54ffebee` | `b.al -161` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524127 cond=14` | agree | `b.al 0x41c` | agree | INSTRUCTION |
+| `0x06a4` | `d2800151` | `d2800151` | `movz x17, #10` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=10 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xa` | agree | INSTRUCTION |
+| `0x06a8` | `b500000d` | `b5ffedad` | `cbnz x13, -147` | `op=CBNZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=524141 cond=0` | agree | `cbnz x13, 0x45c` | agree | INSTRUCTION |
+| `0x06ac` | `d2800211` | `d2800211` | `movz x17, #16` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=16 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x10` | agree | INSTRUCTION |
+| `0x06b0` | `d2840001` | `d2840001` | `movz x1, #8192` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=8192 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x2000` | agree | INSTRUCTION |
+| `0x06b4` | `eb01031f` | `eb01031f` | `subs xzr, x24, x1` | `op=SUBS sf=1 rd=31 rn=24 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x24, x1` | agree | INSTRUCTION |
+| `0x06b8` | `54000002` | `54ffed22` | `b.hs -151` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524137 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x06bc` | `d2800401` | `d2800401` | `movz x1, #32` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=32 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x20` | agree | INSTRUCTION |
+| `0x06c0` | `9b017f0d` | `9b017f0d` | `madd x13, x24, x1, xzr` | `op=MUL sf=1 rd=13 rn=24 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `madd x13, x24, x1, xzr` | agree | INSTRUCTION |
+| `0x06c4` | `8b1b01ad` | `8b1b01ad` | `add x13, x13, x27` | `op=ADD sf=1 rd=13 rn=13 rm=27 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x13, x13, x27` | agree | INSTRUCTION |
+| `0x06c8` | `f90001a9` | `f90001a9` | `str x9, [x13]` | `op=STR sf=1 rd=9 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x9, [x13]` | agree | INSTRUCTION |
+| `0x06cc` | `f90005aa` | `f90005aa` | `str x10, [x13, #8]` | `op=STR sf=1 rd=10 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x10, [x13, #8]` | agree | INSTRUCTION |
+| `0x06d0` | `f90009b6` | `f90009b6` | `str x22, [x13, #16]` | `op=STR sf=1 rd=22 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str x22, [x13, #16]` | agree | INSTRUCTION |
+| `0x06d4` | `91000718` | `91000718` | `add x24, x24, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x24, x24, #0x1` | agree | INSTRUCTION |
+| `0x06d8` | `5400000e` | `54ffd30e` | `b.al -360` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523928 cond=14` | agree | `b.al 0x138` | agree | INSTRUCTION |
+| `0x06dc` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x6e4` | agree | INSTRUCTION |
+| `0x06e0` | `5400000e` | `54ffd52e` | `b.al -343` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523945 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x06e4` | `d28001f1` | `d28001f1` | `movz x17, #15` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=15 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xf` | agree | INSTRUCTION |
+| `0x06e8` | `f100097f` | `f100097f` | `subs xzr, x11, #2` | `op=SUBS sf=1 rd=31 rn=11 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x11, #0x2` | agree | INSTRUCTION |
+| `0x06ec` | `54000001` | `54ffeb81` | `b.ne -164` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524124 cond=1` | agree | `b.ne 0x45c` | agree | INSTRUCTION |
+| `0x06f0` | `d28ee5c1` | `d28ee5c1` | `movz x1, #0x772e` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=30510 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x772e` | agree | INSTRUCTION |
+| `0x06f4` | `eb01013f` | `eb01013f` | `subs xzr, x9, x1` | `op=SUBS sf=1 rd=31 rn=9 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x9, x1` | agree | INSTRUCTION |
+| `0x06f8` | `54000000` | `54000280` | `b.eq +20` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=20 cond=0` | agree | `b.eq 0x748` | agree | INSTRUCTION |
+| `0x06fc` | `d28c45c1` | `d28c45c1` | `movz x1, #0x622e` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=25134 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x622e` | agree | INSTRUCTION |
+| `0x0700` | `eb01013f` | `eb01013f` | `subs xzr, x9, x1` | `op=SUBS sf=1 rd=31 rn=9 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x9, x1` | agree | INSTRUCTION |
+| `0x0704` | `54000001` | `54ffeac1` | `b.ne -170` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524118 cond=1` | agree | `b.ne 0x45c` | agree | INSTRUCTION |
+| `0x0708` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x710` | agree | INSTRUCTION |
+| `0x070c` | `5400000e` | `54ffd3ce` | `b.al -354` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523934 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x0710` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x718` | agree | INSTRUCTION |
+| `0x0714` | `5400000e` | `54ffd94e` | `b.al -310` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523978 cond=14` | agree | `b.al 0x23c` | agree | INSTRUCTION |
+| `0x0718` | `d2800111` | `d2800111` | `movz x17, #8` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=8 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x8` | agree | INSTRUCTION |
+| `0x071c` | `d2802001` | `d2802001` | `movz x1, #256` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=256 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x100` | agree | INSTRUCTION |
+| `0x0720` | `eb01001f` | `eb01001f` | `subs xzr, x0, x1` | `op=SUBS sf=1 rd=31 rn=0 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x0, x1` | agree | INSTRUCTION |
+| `0x0724` | `54000002` | `54ffe9c2` | `b.hs -178` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524110 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0728` | `d2800211` | `d2800211` | `movz x17, #16` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=16 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x10` | agree | INSTRUCTION |
+| `0x072c` | `d2a01001` | `d2a01001` | `movz x1, #0x80, lsl #16` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=128 hw=1 bimm=0 cond=0` | agree | `movz x1, #0x80, lsl #16` | agree | INSTRUCTION |
+| `0x0730` | `eb0102df` | `eb0102df` | `subs xzr, x22, x1` | `op=SUBS sf=1 rd=31 rn=22 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x22, x1` | agree | INSTRUCTION |
+| `0x0734` | `54000002` | `54ffe942` | `b.hs -182` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524106 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0738` | `8b160381` | `8b160381` | `add x1, x28, x22` | `op=ADD sf=1 rd=1 rn=28 rm=22 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x28, x22` | agree | INSTRUCTION |
+| `0x073c` | `39000020` | `39000020` | `strb w0, [x1]` | `op=STRB sf=0 rd=0 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `strb w0, [x1]` | agree | INSTRUCTION |
+| `0x0740` | `910006d6` | `910006d6` | `add x22, x22, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x22, x22, #0x1` | agree | INSTRUCTION |
+| `0x0744` | `5400000e` | `54ffcfae` | `b.al -387` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523901 cond=14` | agree | `b.al 0x138` | agree | INSTRUCTION |
+| `0x0748` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x750` | agree | INSTRUCTION |
+| `0x074c` | `5400000e` | `54ffd1ce` | `b.al -370` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523918 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x0750` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x758` | agree | INSTRUCTION |
+| `0x0754` | `5400000e` | `54ffd74e` | `b.al -326` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523962 cond=14` | agree | `b.al 0x23c` | agree | INSTRUCTION |
+| `0x0758` | `d2800111` | `d2800111` | `movz x17, #8` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=8 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x8` | agree | INSTRUCTION |
+| `0x075c` | `d2800401` | `d2800401` | `movz x1, #32` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=32 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x20` | agree | INSTRUCTION |
+| `0x0760` | `9ac12402` | `9ac12402` | `lsrv x2, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lsrv x2, x0, x1` | agree | INSTRUCTION |
+| `0x0764` | `b4000002` | `b40000a2` | `cbz x2, +5` | `op=CBZ sf=1 rd=2 rn=0 rm=0 imm16=0 hw=0 bimm=5 cond=0` | agree | `cbz x2, 0x778` | agree | INSTRUCTION |
+| `0x0768` | `d28003e1` | `d28003e1` | `movz x1, #31` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=31 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x1f` | agree | INSTRUCTION |
+| `0x076c` | `9ac12802` | `9ac12802` | `asrv x2, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `asrv x2, x0, x1` | agree | INSTRUCTION |
+| `0x0770` | `91000442` | `91000442` | `add x2, x2, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x2, x2, #0x1` | agree | INSTRUCTION |
+| `0x0774` | `b5000002` | `b5ffe742` | `cbnz x2, -198` | `op=CBNZ sf=1 rd=2 rn=0 rm=0 imm16=0 hw=0 bimm=524090 cond=0` | agree | `cbnz x2, 0x45c` | agree | INSTRUCTION |
+| `0x0778` | `aa0003f0` | `aa0003f0` | `orr x16, xzr, x0` | `op=ORR sf=1 rd=16 rn=31 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x16, xzr, x0` | agree | INSTRUCTION |
+| `0x077c` | `d28001d1` | `d28001d1` | `movz x17, #14` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=14 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xe` | agree | INSTRUCTION |
+| `0x0780` | `d28007c1` | `d28007c1` | `movz x1, #62` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=62 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x3e` | agree | INSTRUCTION |
+| `0x0784` | `9ac122c2` | `9ac122c2` | `lslv x2, x22, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x2, x22, x1` | agree | INSTRUCTION |
+| `0x0788` | `b5000002` | `b5ffe6a2` | `cbnz x2, -203` | `op=CBNZ sf=1 rd=2 rn=0 rm=0 imm16=0 hw=0 bimm=524085 cond=0` | agree | `cbnz x2, 0x45c` | agree | INSTRUCTION |
+| `0x078c` | `d2800211` | `d2800211` | `movz x17, #16` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=16 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x10` | agree | INSTRUCTION |
+| `0x0790` | `d2a01001` | `d2a01001` | `movz x1, #0x80, lsl #16` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=128 hw=1 bimm=0 cond=0` | agree | `movz x1, #0x80, lsl #16` | agree | INSTRUCTION |
+| `0x0794` | `eb0102df` | `eb0102df` | `subs xzr, x22, x1` | `op=SUBS sf=1 rd=31 rn=22 rm=1 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x22, x1` | agree | INSTRUCTION |
+| `0x0798` | `54000002` | `54ffe622` | `b.hs -207` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524081 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x079c` | `8b160381` | `8b160381` | `add x1, x28, x22` | `op=ADD sf=1 rd=1 rn=28 rm=22 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x1, x28, x22` | agree | INSTRUCTION |
+| `0x07a0` | `b9000030` | `b9000030` | `str w16, [x1]` | `op=STR sf=0 rd=16 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `str w16, [x1]` | agree | INSTRUCTION |
+| `0x07a4` | `910012d6` | `910012d6` | `add x22, x22, #4` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x22, x22, #0x4` | agree | INSTRUCTION |
+| `0x07a8` | `5400000e` | `54ffcc8e` | `b.al -412` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523876 cond=14` | agree | `b.al 0x138` | agree | INSTRUCTION |
+| `0x07ac` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x7b4` | agree | INSTRUCTION |
+| `0x07b0` | `5400000e` | `54ffceae` | `b.al -395` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523893 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x07b4` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x7bc` | agree | INSTRUCTION |
+| `0x07b8` | `5400000e` | `54ffe12e` | `b.al -247` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524041 cond=14` | agree | `b.al 0x3dc` | agree | INSTRUCTION |
+| `0x07bc` | `d2800071` | `d2800071` | `movz x17, #3` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=3 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x3` | agree | INSTRUCTION |
+| `0x07c0` | `b400000d` | `b4ffe4ed` | `cbz x13, -217` | `op=CBZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=524071 cond=0` | agree | `cbz x13, 0x45c` | agree | INSTRUCTION |
+| `0x07c4` | `f94009b0` | `f94009b0` | `ldr x16, [x13, #16]` | `op=LDR sf=1 rd=16 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x16, [x13, #16]` | agree | INSTRUCTION |
+| `0x07c8` | `f9400dae` | `f9400dae` | `ldr x14, [x13, #24]` | `op=LDR sf=1 rd=14 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x14, [x13, #24]` | agree | INSTRUCTION |
+| `0x07cc` | `910081b2` | `910081b2` | `add x18, x13, #32` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x18, x13, #0x20` | agree | INSTRUCTION |
+| `0x07d0` | `b400000e` | `b4000b2e` | `cbz x14, +89` | `op=CBZ sf=1 rd=14 rn=0 rm=0 imm16=0 hw=0 bimm=89 cond=0` | agree | `cbz x14, 0x934` | agree | INSTRUCTION |
+| `0x07d4` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x7dc` | agree | INSTRUCTION |
+| `0x07d8` | `5400000e` | `54ffcd6e` | `b.al -405` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523883 cond=14` | agree | `b.al 0x184` | agree | INSTRUCTION |
+| `0x07dc` | `d2800091` | `d2800091` | `movz x17, #4` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=4 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x4` | agree | INSTRUCTION |
+| `0x07e0` | `b400000b` | `b4ffe3eb` | `cbz x11, -225` | `op=CBZ sf=1 rd=11 rn=0 rm=0 imm16=0 hw=0 bimm=524063 cond=0` | agree | `cbz x11, 0x45c` | agree | INSTRUCTION |
+| `0x07e4` | `39400241` | `39400241` | `ldrb w1, [x18]` | `op=LDRB sf=0 rd=1 rn=18 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w1, [x18]` | agree | INSTRUCTION |
+| `0x07e8` | `7101c83f` | `7101c83f` | `subs wzr, w1, #114` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x72` | agree | INSTRUCTION |
+| `0x07ec` | `54000000` | `54000100` | `b.eq +8` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=8 cond=0` | agree | `b.eq 0x80c` | agree | INSTRUCTION |
+| `0x07f0` | `7101a43f` | `7101a43f` | `subs wzr, w1, #105` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x69` | agree | INSTRUCTION |
+| `0x07f4` | `54000000` | `54000120` | `b.eq +9` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=9 cond=0` | agree | `b.eq 0x818` | agree | INSTRUCTION |
+| `0x07f8` | `7101cc3f` | `7101cc3f` | `subs wzr, w1, #115` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x73` | agree | INSTRUCTION |
+| `0x07fc` | `54000000` | `54000200` | `b.eq +16` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=16 cond=0` | agree | `b.eq 0x83c` | agree | INSTRUCTION |
+| `0x0800` | `7101b03f` | `7101b03f` | `subs wzr, w1, #108` | `op=SUBS sf=0 rd=31 rn=1 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs wzr, w1, #0x6c` | agree | INSTRUCTION |
+| `0x0804` | `54000000` | `54000380` | `b.eq +28` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=28 cond=0` | agree | `b.eq 0x874` | agree | INSTRUCTION |
+| `0x0808` | `5400000e` | `5400056e` | `b.al +43` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=43 cond=14` | agree | `b.al 0x8b4` | agree | INSTRUCTION |
+| `0x080c` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x814` | agree | INSTRUCTION |
+| `0x0810` | `5400000e` | `54ffd8ce` | `b.al -314` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523974 cond=14` | agree | `b.al 0x328` | agree | INSTRUCTION |
+| `0x0814` | `5400000e` | `5400006e` | `b.al +3` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=3 cond=14` | agree | `b.al 0x820` | agree | INSTRUCTION |
+| `0x0818` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x820` | agree | INSTRUCTION |
+| `0x081c` | `5400000e` | `54ffd10e` | `b.al -376` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523912 cond=14` | agree | `b.al 0x23c` | agree | INSTRUCTION |
+| `0x0820` | `39400a43` | `39400a43` | `ldrb w3, [x18, #2]` | `op=LDRB sf=0 rd=3 rn=18 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w3, [x18, #2]` | agree | INSTRUCTION |
+| `0x0824` | `d2800024` | `d2800024` | `movz x4, #1` | `op=MOVZ sf=1 rd=4 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x4, #0x1` | agree | INSTRUCTION |
+| `0x0828` | `9ac32084` | `9ac32084` | `lslv x4, x4, x3` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x4, x4, x3` | agree | INSTRUCTION |
+| `0x082c` | `d2800111` | `d2800111` | `movz x17, #8` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=8 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x8` | agree | INSTRUCTION |
+| `0x0830` | `eb04001f` | `eb04001f` | `subs xzr, x0, x4` | `op=SUBS sf=1 rd=31 rn=0 rm=4 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x0, x4` | agree | INSTRUCTION |
+| `0x0834` | `54000002` | `54ffe142` | `b.hs -246` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524042 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0838` | `5400000e` | `5400072e` | `b.al +57` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=57 cond=14` | agree | `b.al 0x91c` | agree | INSTRUCTION |
+| `0x083c` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x844` | agree | INSTRUCTION |
+| `0x0840` | `5400000e` | `54ffcfee` | `b.al -385` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523903 cond=14` | agree | `b.al 0x23c` | agree | INSTRUCTION |
+| `0x0844` | `39400a43` | `39400a43` | `ldrb w3, [x18, #2]` | `op=LDRB sf=0 rd=3 rn=18 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w3, [x18, #2]` | agree | INSTRUCTION |
+| `0x0848` | `d2800024` | `d2800024` | `movz x4, #1` | `op=MOVZ sf=1 rd=4 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x4, #0x1` | agree | INSTRUCTION |
+| `0x084c` | `9ac32084` | `9ac32084` | `lslv x4, x4, x3` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x4, x4, x3` | agree | INSTRUCTION |
+| `0x0850` | `d2800025` | `d2800025` | `movz x5, #1` | `op=MOVZ sf=1 rd=5 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x5, #0x1` | agree | INSTRUCTION |
+| `0x0854` | `9ac52485` | `9ac52485` | `lsrv x5, x4, x5` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lsrv x5, x4, x5` | agree | INSTRUCTION |
+| `0x0858` | `8b050006` | `8b050006` | `add x6, x0, x5` | `op=ADD sf=1 rd=6 rn=0 rm=5 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x6, x0, x5` | agree | INSTRUCTION |
+| `0x085c` | `d2800111` | `d2800111` | `movz x17, #8` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=8 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x8` | agree | INSTRUCTION |
+| `0x0860` | `eb0400df` | `eb0400df` | `subs xzr, x6, x4` | `op=SUBS sf=1 rd=31 rn=6 rm=4 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x6, x4` | agree | INSTRUCTION |
+| `0x0864` | `54000002` | `54ffdfc2` | `b.hs -258` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524030 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x0868` | `d1000484` | `d1000484` | `sub x4, x4, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `sub x4, x4, #0x1` | agree | INSTRUCTION |
+| `0x086c` | `8a040000` | `8a040000` | `and x0, x0, x4` | `op=AND sf=1 rd=0 rn=0 rm=4 imm16=0 hw=0 bimm=0 cond=0` | agree | `and x0, x0, x4` | agree | INSTRUCTION |
+| `0x0870` | `5400000e` | `5400056e` | `b.al +43` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=43 cond=14` | agree | `b.al 0x91c` | agree | INSTRUCTION |
+| `0x0874` | `b4000015` | `b40001d5` | `cbz x21, +14` | `op=CBZ sf=1 rd=21 rn=0 rm=0 imm16=0 hw=0 bimm=14 cond=0` | agree | `cbz x21, 0x8ac` | agree | INSTRUCTION |
+| `0x0878` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x880` | agree | INSTRUCTION |
+| `0x087c` | `5400000e` | `54ffdd0e` | `b.al -280` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524008 cond=14` | agree | `b.al 0x41c` | agree | INSTRUCTION |
+| `0x0880` | `d2800131` | `d2800131` | `movz x17, #9` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=9 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x9` | agree | INSTRUCTION |
+| `0x0884` | `b400000d` | `b4ffdecd` | `cbz x13, -266` | `op=CBZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=524022 cond=0` | agree | `cbz x13, 0x45c` | agree | INSTRUCTION |
+| `0x0888` | `f94009a0` | `f94009a0` | `ldr x0, [x13, #16]` | `op=LDR sf=1 rd=0 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x0, [x13, #16]` | agree | INSTRUCTION |
+| `0x088c` | `cb160000` | `cb160000` | `sub x0, x0, x22` | `op=SUB sf=1 rd=0 rn=0 rm=22 imm16=0 hw=0 bimm=0 cond=0` | agree | `sub x0, x0, x22` | agree | INSTRUCTION |
+| `0x0890` | `d28001d1` | `d28001d1` | `movz x17, #14` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=14 hw=0 bimm=0 cond=0` | agree | `movz x17, #0xe` | agree | INSTRUCTION |
+| `0x0894` | `d28007c1` | `d28007c1` | `movz x1, #62` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=62 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x3e` | agree | INSTRUCTION |
+| `0x0898` | `9ac12002` | `9ac12002` | `lslv x2, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x2, x0, x1` | agree | INSTRUCTION |
+| `0x089c` | `b5000002` | `b5ffde02` | `cbnz x2, -272` | `op=CBNZ sf=1 rd=2 rn=0 rm=0 imm16=0 hw=0 bimm=524016 cond=0` | agree | `cbnz x2, 0x45c` | agree | INSTRUCTION |
+| `0x08a0` | `d2800041` | `d2800041` | `movz x1, #2` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=2 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x2` | agree | INSTRUCTION |
+| `0x08a4` | `9ac12800` | `9ac12800` | `asrv x0, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `asrv x0, x0, x1` | agree | INSTRUCTION |
+| `0x08a8` | `5400000e` | `54fffcee` | `b.al -25` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524263 cond=14` | agree | `b.al 0x844` | agree | INSTRUCTION |
+| `0x08ac` | `d2800000` | `d2800000` | `movz x0, #0` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x0` | agree | INSTRUCTION |
+| `0x08b0` | `5400000e` | `5400036e` | `b.al +27` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=27 cond=14` | agree | `b.al 0x91c` | agree | INSTRUCTION |
+| `0x08b4` | `b4000015` | `b40003b5` | `cbz x21, +29` | `op=CBZ sf=1 rd=21 rn=0 rm=0 imm16=0 hw=0 bimm=29 cond=0` | agree | `cbz x21, 0x928` | agree | INSTRUCTION |
+| `0x08b8` | `1000005e` | `1000005e` | `adr x30, +2` | `op=ADR sf=0 rd=30 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `adr x30, 0x8c0` | agree | INSTRUCTION |
+| `0x08bc` | `5400000e` | `54ffdb0e` | `b.al -296` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523992 cond=14` | agree | `b.al 0x41c` | agree | INSTRUCTION |
+| `0x08c0` | `d2800131` | `d2800131` | `movz x17, #9` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=9 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x9` | agree | INSTRUCTION |
+| `0x08c4` | `b400000d` | `b4ffdccd` | `cbz x13, -282` | `op=CBZ sf=1 rd=13 rn=0 rm=0 imm16=0 hw=0 bimm=524006 cond=0` | agree | `cbz x13, 0x45c` | agree | INSTRUCTION |
+| `0x08c8` | `f94009a0` | `f94009a0` | `ldr x0, [x13, #16]` | `op=LDR sf=1 rd=0 rn=13 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldr x0, [x13, #16]` | agree | INSTRUCTION |
+| `0x08cc` | `cb160000` | `cb160000` | `sub x0, x0, x22` | `op=SUB sf=1 rd=0 rn=0 rm=22 imm16=0 hw=0 bimm=0 cond=0` | agree | `sub x0, x0, x22` | agree | INSTRUCTION |
+| `0x08d0` | `d2a00404` | `d2a00404` | `movz x4, #0x20, lsl #16` | `op=MOVZ sf=1 rd=4 rn=0 rm=0 imm16=32 hw=1 bimm=0 cond=0` | agree | `movz x4, #0x20, lsl #16` | agree | INSTRUCTION |
+| `0x08d4` | `d2a00205` | `d2a00205` | `movz x5, #0x10, lsl #16` | `op=MOVZ sf=1 rd=5 rn=0 rm=0 imm16=16 hw=1 bimm=0 cond=0` | agree | `movz x5, #0x10, lsl #16` | agree | INSTRUCTION |
+| `0x08d8` | `8b050006` | `8b050006` | `add x6, x0, x5` | `op=ADD sf=1 rd=6 rn=0 rm=5 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x6, x0, x5` | agree | INSTRUCTION |
+| `0x08dc` | `d2800111` | `d2800111` | `movz x17, #8` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=8 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x8` | agree | INSTRUCTION |
+| `0x08e0` | `eb0400df` | `eb0400df` | `subs xzr, x6, x4` | `op=SUBS sf=1 rd=31 rn=6 rm=4 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x6, x4` | agree | INSTRUCTION |
+| `0x08e4` | `54000002` | `54ffdbc2` | `b.hs -290` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523998 cond=2` | agree | `b.hs 0x45c` | agree | INSTRUCTION |
+| `0x08e8` | `d28007c1` | `d28007c1` | `movz x1, #62` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=62 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x3e` | agree | INSTRUCTION |
+| `0x08ec` | `9ac12002` | `9ac12002` | `lslv x2, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x2, x0, x1` | agree | INSTRUCTION |
+| `0x08f0` | `d2800421` | `d2800421` | `movz x1, #33` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=33 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x21` | agree | INSTRUCTION |
+| `0x08f4` | `9ac12442` | `9ac12442` | `lsrv x2, x2, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lsrv x2, x2, x1` | agree | INSTRUCTION |
+| `0x08f8` | `aa020210` | `aa020210` | `orr x16, x16, x2` | `op=ORR sf=1 rd=16 rn=16 rm=2 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x16, x16, x2` | agree | INSTRUCTION |
+| `0x08fc` | `d2800041` | `d2800041` | `movz x1, #2` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=2 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x2` | agree | INSTRUCTION |
+| `0x0900` | `9ac12803` | `9ac12803` | `asrv x3, x0, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `asrv x3, x0, x1` | agree | INSTRUCTION |
+| `0x0904` | `d28005a1` | `d28005a1` | `movz x1, #45` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=45 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x2d` | agree | INSTRUCTION |
+| `0x0908` | `9ac12063` | `9ac12063` | `lslv x3, x3, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x3, x3, x1` | agree | INSTRUCTION |
+| `0x090c` | `d2800501` | `d2800501` | `movz x1, #40` | `op=MOVZ sf=1 rd=1 rn=0 rm=0 imm16=40 hw=0 bimm=0 cond=0` | agree | `movz x1, #0x28` | agree | INSTRUCTION |
+| `0x0910` | `9ac12463` | `9ac12463` | `lsrv x3, x3, x1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lsrv x3, x3, x1` | agree | INSTRUCTION |
+| `0x0914` | `aa030210` | `aa030210` | `orr x16, x16, x3` | `op=ORR sf=1 rd=16 rn=16 rm=3 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x16, x16, x3` | agree | INSTRUCTION |
+| `0x0918` | `5400000e` | `5400008e` | `b.al +4` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=4 cond=14` | agree | `b.al 0x928` | agree | INSTRUCTION |
+| `0x091c` | `39400642` | `39400642` | `ldrb w2, [x18, #1]` | `op=LDRB sf=0 rd=2 rn=18 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `ldrb w2, [x18, #1]` | agree | INSTRUCTION |
+| `0x0920` | `9ac22000` | `9ac22000` | `lslv x0, x0, x2` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `lslv x0, x0, x2` | agree | INSTRUCTION |
+| `0x0924` | `aa000210` | `aa000210` | `orr x16, x16, x0` | `op=ORR sf=1 rd=16 rn=16 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x16, x16, x0` | agree | INSTRUCTION |
+| `0x0928` | `91001252` | `91001252` | `add x18, x18, #4` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `add x18, x18, #0x4` | agree | INSTRUCTION |
+| `0x092c` | `d10005ce` | `d10005ce` | `sub x14, x14, #1` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `sub x14, x14, #0x1` | agree | INSTRUCTION |
+| `0x0930` | `5400000e` | `54fff50e` | `b.al -88` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524200 cond=14` | agree | `b.al 0x7d0` | agree | INSTRUCTION |
+| `0x0934` | `5400000e` | `54fff24e` | `b.al -110` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524178 cond=14` | agree | `b.al 0x77c` | agree | INSTRUCTION |
+| `0x0938` | `b5000015` | `b5000075` | `cbnz x21, +3` | `op=CBNZ sf=1 rd=21 rn=0 rm=0 imm16=0 hw=0 bimm=3 cond=0` | agree | `cbnz x21, 0x944` | agree | INSTRUCTION |
+| `0x093c` | `d2800035` | `d2800035` | `movz x21, #1` | `op=MOVZ sf=1 rd=21 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x21, #0x1` | agree | INSTRUCTION |
+| `0x0940` | `5400000e` | `54ffbc8e` | `b.al -540` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523748 cond=14` | agree | `b.al 0xd0` | agree | INSTRUCTION |
+| `0x0944` | `aa1c03f4` | `aa1c03f4` | `orr x20, xzr, x28` | `op=ORR sf=1 rd=20 rn=31 rm=28 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x20, xzr, x28` | agree | INSTRUCTION |
+| `0x0948` | `aa1603ee` | `aa1603ee` | `orr x14, xzr, x22` | `op=ORR sf=1 rd=14 rn=31 rm=22 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x14, xzr, x22` | agree | INSTRUCTION |
+| `0x094c` | `b400000e` | `b400018e` | `cbz x14, +12` | `op=CBZ sf=1 rd=14 rn=0 rm=0 imm16=0 hw=0 bimm=12 cond=0` | agree | `cbz x14, 0x97c` | agree | INSTRUCTION |
+| `0x0950` | `d2800020` | `d2800020` | `movz x0, #1` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=1 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x1` | agree | INSTRUCTION |
+| `0x0954` | `aa1403e1` | `aa1403e1` | `orr x1, xzr, x20` | `op=ORR sf=1 rd=1 rn=31 rm=20 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x1, xzr, x20` | agree | INSTRUCTION |
+| `0x0958` | `aa0e03e2` | `aa0e03e2` | `orr x2, xzr, x14` | `op=ORR sf=1 rd=2 rn=31 rm=14 imm16=0 hw=0 bimm=0 cond=0` | agree | `orr x2, xzr, x14` | agree | INSTRUCTION |
+| `0x095c` | `d2800808` | `d2800808` | `movz x8, #64` | `op=MOVZ sf=1 rd=8 rn=0 rm=0 imm16=64 hw=0 bimm=0 cond=0` | agree | `movz x8, #0x40` | agree | INSTRUCTION |
+| `0x0960` | `d4000001` | `d4000001` | `svc #0` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `svc #0x0` | agree | INSTRUCTION |
+| `0x0964` | `d2800051` | `d2800051` | `movz x17, #2` | `op=MOVZ sf=1 rd=17 rn=0 rm=0 imm16=2 hw=0 bimm=0 cond=0` | agree | `movz x17, #0x2` | agree | INSTRUCTION |
+| `0x0968` | `f100001f` | `f100001f` | `subs xzr, x0, #0` | `op=SUBS sf=1 rd=31 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `subs xzr, x0, #0x0` | agree | INSTRUCTION |
+| `0x096c` | `5400000d` | `54ffd78d` | `b.le -324` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=523964 cond=13` | agree | `b.le 0x45c` | agree | INSTRUCTION |
+| `0x0970` | `8b000294` | `8b000294` | `add x20, x20, x0` | `op=ADD sf=1 rd=20 rn=20 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `add x20, x20, x0` | agree | INSTRUCTION |
+| `0x0974` | `cb0001ce` | `cb0001ce` | `sub x14, x14, x0` | `op=SUB sf=1 rd=14 rn=14 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `sub x14, x14, x0` | agree | INSTRUCTION |
+| `0x0978` | `5400000e` | `54fffeae` | `b.al -11` | `op=B_COND sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=524277 cond=14` | agree | `b.al 0x94c` | agree | INSTRUCTION |
+| `0x097c` | `d2800000` | `d2800000` | `movz x0, #0` | `op=MOVZ sf=1 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | agree | `movz x0, #0x0` | agree | INSTRUCTION |
+| `0x0980` | `d2800ba8` | `d2800ba8` | `movz x8, #93` | `op=MOVZ sf=1 rd=8 rn=0 rm=0 imm16=93 hw=0 bimm=0 cond=0` | agree | `movz x8, #0x5d` | agree | INSTRUCTION |
+| `0x0984` | `d4000001` | `d4000001` | `svc #0` | `op=INVALID sf=0 rd=0 rn=0 rm=0 imm16=0 hw=0 bimm=0 cond=0` | not covered (agree: INVALID) | `svc #0x0` | agree | INSTRUCTION |
+| `0x0988` | `326d7361` | `326d7361` | data: "asm2" | - | n/a | - | n/a | DATA |
+| `0x098c` | `696c203a` | `696c203a` | data: ": li" | - | n/a | - | n/a | DATA |
+| `0x0990` | `0020656e` | `0020656e` | data: "ne " 0 | - | n/a | - | n/a | DATA |
+| `0x0994` | `7265203a` | `7265203a` | data: ": er" | - | n/a | - | n/a | DATA |
+| `0x0998` | `20726f72` | `20726f72` | data: "ror " | - | n/a | - | n/a | DATA |
+| `0x099c` | `00000000` | `00000000` | data: 0 | - | n/a | - | n/a | DATA |
+
+AUDIT words=616 code=580 data=36 decoder_mismatch=0 objdump_mismatch=0 byte_mismatch=0

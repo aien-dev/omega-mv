@@ -1,0 +1,81 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 102-104 and 105-108: an all-constant operation that would trap inside an
+note unrolled or inlined body is not folded and stays the run-time trap with its OM-1 code; conversion
+note range checks are kept. One stdin byte selects a case; values printed before the trap show order:
+note   A 999, then unrolled div 100 i: trap 2 at i = 0                exit 102, stdout 999
+note   B unrolled int add 2147483646 i: 2147483646 2147483647, trap 1  exit 101
+note   C unrolled uchar add 254 i: 254 255, conversion trap 5         exit 105
+note   D unrolled shl 1 add 62 i: 2^62 2^63, shift trap 7              exit 107
+note   E unrolled int mul 1073741824 add i 1: 1073741824, trap 1      exit 101
+note   F unrolled int div -2147483648 sub i 1: min / -1 at i = 0, trap 1   exit 101
+note   G 999, then unrolled rem 7 i: trap 2 at i = 0                  exit 102, stdout 999
+note   H inline cv 255, cv 256 (uchar a): 255, conversion trap 5      exit 105
+note   I inline dv 100 4, dv 100 0 (div a b): 25, trap 2               exit 102
+note ps v prints v, or 7777 for a negative v (only a wrongly folded, wrapped value is negative).
+note Twin fold-trap-rolled.om (unroll and inline removed) has the same expectations:
+note oracle/s3s4/exp/fold-trap-*.out (python3, oracle/s3s4/oracle.py).
+om2
+fn cv a ulong to uchar inline
+ret uchar a
+end
+fn dv a ulong b ulong to ulong inline
+ret div a b
+end
+fn ps v int to void
+if lt v 0
+pu 7777
+else
+pu ulong v
+end
+end
+fn main to int
+s = new uchar 1 0
+r = read 0 s 0 1
+k = get s 0
+if eq k 65
+pu 999
+for i ulong 4 unroll
+pu div 100 i
+end
+end
+if eq k 66
+for i int 4 unroll
+ps add 2147483646 i
+end
+end
+if eq k 67
+for i ulong 4 unroll
+pu ulong uchar add 254 i
+end
+end
+if eq k 68
+for i ulong 4 unroll
+pu shl 1 add 62 i
+end
+end
+if eq k 69
+for i int 4 unroll
+ps mul 1073741824 add i 1
+end
+end
+if eq k 70
+for i int 4 unroll
+ps add 5 div -2147483648 sub i 1
+end
+end
+if eq k 71
+pu 999
+for i ulong 4 unroll
+pu rem 7 i
+end
+end
+if eq k 72
+pu ulong cv 255
+pu ulong cv 256
+end
+if eq k 73
+pu dv 100 4
+pu dv 100 0
+end
+ret 0
+end

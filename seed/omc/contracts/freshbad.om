@@ -1,0 +1,9 @@
+om2 release
+fn fill a edit uint 2 fresh to void
+ensures eq get a 0 1
+end
+fn main to int
+a = new uint 2 0
+fill a
+ret 0
+end

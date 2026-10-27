@@ -1,0 +1,10 @@
+struct C n uint last uint end
+fn bump c edit C v uint to void
+put c n add get c n v
+put c last v
+end
+fn main to uint
+c = new C 4 4
+bump c 3
+ret add get c n get c last
+end

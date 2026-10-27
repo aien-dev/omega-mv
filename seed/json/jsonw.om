@@ -1,0 +1,671 @@
+note seed/json/jsonw.om: strict JSON writer for seeded Omega (omega-mv #788). Needs json.om before it. README.md.
+note The caller owns one `uchar` output array ob. Its first 1040 bytes are the writer state; the JSON text is
+note ob[1040 .. 1040 + js_wlen ob). State bytes: 0..7 text length (little-endian), 8 error code, 9 flags
+note (1 inside a string, 2 that string is a member key, 4 the root value is complete), 10 UTF-8 state of the
+note string being written, 11..12 depth (little-endian), 16 + d - 1 level d: 1 object, 2 array, 4 has an item,
+note 8 a key was written and its value is due. Every call checks the state, so only RFC 8259 text can come
+note out; a refused call writes nothing more and its code sticks until js_winit.
+
+const jswh ulong 1040
+const jswdcap ulong 1024
+const jswerr ulong 8
+const jswflg ulong 9
+const jswu8 ulong 10
+
+note writer refusal codes; js_wdone returns minus the code
+const jswesp ulong 21
+const jswest ulong 22
+const jsweut ulong 23
+const jswenm ulong 24
+const jswedp ulong 25
+const jswearg ulong 26
+const jswesrc ulong 27
+
+note ======== state ========
+
+fn js_winit ob edit uchar * to long
+if le len ob jswh
+ret neg long jswearg
+end
+for i ulong jswh
+put ob i 0
+end
+ret 0
+end
+
+fn js_wlen ob view uchar * to ulong
+if le len ob jswh
+ret 0
+end
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get ob i mul i 8
+end
+ret v
+end
+
+fn js_wsetn ob edit uchar * v ulong to void
+for i ulong 8
+put ob i uchar and shr v mul i 8 255
+end
+end
+
+fn js_werr ob view uchar * to ulong
+if le len ob jswh
+ret jswearg
+end
+ret ulong get ob jswerr
+end
+
+fn js_wfail ob edit uchar * code ulong to void
+if eq get ob jswerr 0
+put ob jswerr uchar code
+end
+end
+
+fn js_wdep ob edit uchar * to ulong
+ret or ulong get ob 11 shl ulong get ob 12 8
+end
+
+fn js_wsdep ob edit uchar * d ulong to void
+put ob 11 uchar and d 255
+put ob 12 uchar shr d 8
+end
+
+fn js_wb ob edit uchar * c uchar to void
+if ne get ob jswerr 0
+ret
+end
+n = js_wlen ob
+q = add jswh n
+if ge q len ob
+js_wfail ob jswesp
+ret
+end
+put ob q c
+js_wsetn ob add n 1
+end
+
+note js_wpre: before a value. Refuses a value where a member key is due, a second root value, and any
+note value inside a string; writes the comma between array elements.
+fn js_wpre ob edit uchar * to bool
+if ne get ob jswerr 0
+ret false
+end
+f = get ob jswflg
+if ne and f 1 0
+js_wfail ob jswest
+ret false
+end
+d = js_wdep ob
+if eq d 0
+if ne and f 4 0
+js_wfail ob jswest
+ret false
+end
+ret true
+end
+l = get ob add 15 d
+if eq and l 1 1
+if eq and l 8 0
+js_wfail ob jswest
+ret false
+end
+ret true
+end
+if ne and l 4 0
+js_wb ob 44
+end
+ret eq get ob jswerr 0
+end
+
+fn js_wpost ob edit uchar * to void
+d = js_wdep ob
+if eq d 0
+put ob jswflg or get ob jswflg 4
+ret
+end
+i = add 15 d
+put ob i and or get ob i 4 247
+end
+
+fn js_wiskey ob edit uchar * to bool
+d = js_wdep ob
+if eq d 0
+ret false
+end
+l = get ob add 15 d
+ret and eq and l 1 1 eq and l 8 0
+end
+
+fn js_wkpre ob edit uchar * to bool
+if ne get ob jswerr 0
+ret false
+end
+if ne and get ob jswflg 1 0
+js_wfail ob jswest
+ret false
+end
+if not js_wiskey ob
+js_wfail ob jswest
+ret false
+end
+if ne and get ob add 15 js_wdep ob 4 0
+js_wb ob 44
+end
+ret eq get ob jswerr 0
+end
+
+note ======== containers ========
+
+fn js_wopen ob edit uchar * kind ulong to void
+if not js_wpre ob
+ret
+end
+d = js_wdep ob
+if ge d jswdcap
+js_wfail ob jswedp
+ret
+end
+if eq kind 1
+js_wb ob 123
+else
+js_wb ob 91
+end
+if ne get ob jswerr 0
+ret
+end
+d = add d 1
+js_wsdep ob d
+put ob add 15 d uchar kind
+end
+
+fn js_wclose ob edit uchar * kind ulong to void
+if ne get ob jswerr 0
+ret
+end
+if ne and get ob jswflg 1 0
+js_wfail ob jswest
+ret
+end
+d = js_wdep ob
+if eq d 0
+js_wfail ob jswest
+ret
+end
+l = ulong get ob add 15 d
+if ne and l 3 kind
+js_wfail ob jswest
+ret
+end
+if ne and l 8 0
+js_wfail ob jswest
+ret
+end
+if eq kind 1
+js_wb ob 125
+else
+js_wb ob 93
+end
+if ne get ob jswerr 0
+ret
+end
+put ob add 15 d 0
+js_wsdep ob sub d 1
+js_wpost ob
+end
+
+fn js_wobj ob edit uchar * to void
+js_wopen ob 1
+end
+
+fn js_wobje ob edit uchar * to void
+js_wclose ob 1
+end
+
+fn js_warr ob edit uchar * to void
+js_wopen ob 2
+end
+
+fn js_warre ob edit uchar * to void
+js_wclose ob 2
+end
+
+note ======== scalars ========
+
+fn js_wlit ob edit uchar * k ulong to void
+if not js_wpre ob
+ret
+end
+for i ulong js_litn k
+js_wb ob js_litb k i
+end
+js_wpost ob
+end
+
+fn js_wnull ob edit uchar * to void
+js_wlit ob 2
+end
+
+fn js_wbool ob edit uchar * b bool to void
+if b
+js_wlit ob 0
+else
+js_wlit ob 1
+end
+end
+
+fn js_wdig ob edit uchar * m ulong to void
+tmp = new uchar 20 0
+k = ulong 0
+v = m
+for i ulong 20
+put tmp k uchar add rem v 10 48
+k = add k 1
+v = div v 10
+if eq v 0
+break
+end
+end
+while gt k 0 bound 21
+k = sub k 1
+js_wb ob get tmp k
+end
+end
+
+fn js_wulong ob edit uchar * v ulong to void
+if not js_wpre ob
+ret
+end
+js_wdig ob v
+js_wpost ob
+end
+
+fn js_wlong ob edit uchar * v long to void
+if not js_wpre ob
+ret
+end
+if lt v 0
+js_wb ob 45
+js_wdig ob add ulong neg add v 1 1
+else
+js_wdig ob ulong v
+end
+js_wpost ob
+end
+
+note js_numend: end of the RFC 8259 number lexeme starting at s[p], within s[p .. e); jsnone when none starts there
+fn js_isb s view uchar * q ulong e ulong c uchar to bool
+if ge q e
+ret false
+end
+ret eq get s q c
+end
+
+fn js_digend s view uchar * p ulong e ulong to ulong
+q = p
+while lt q e bound 999999
+c = get s q
+if or lt c 48 gt c 57
+break
+end
+q = add q 1
+end
+ret q
+end
+
+fn js_numend s view uchar * p ulong e ulong to ulong
+q = p
+if js_isb s q e 45
+q = add q 1
+end
+r = js_digend s q e
+if eq r q
+ret jsnone
+end
+if and eq get s q 48 gt sub r q 1
+ret jsnone
+end
+q = r
+if js_isb s q e 46
+r = js_digend s add q 1 e
+if eq r add q 1
+ret jsnone
+end
+q = r
+end
+if or js_isb s q e 101 js_isb s q e 69
+q = add q 1
+if or js_isb s q e 43 js_isb s q e 45
+q = add q 1
+end
+r = js_digend s q e
+if eq r q
+ret jsnone
+end
+q = r
+end
+ret q
+end
+
+fn js_wcopy ob edit uchar * s view uchar * p ulong e ulong to void
+for i ulong sub e p
+js_wb ob get s add p i
+end
+end
+
+note js_wnumb: s[off .. off + n) must be exactly one number lexeme; it is written byte for byte
+fn js_wnumb ob edit uchar * s view uchar * off ulong n ulong to void
+if ne get ob jswerr 0
+ret
+end
+if or gt n jsmaxn gt n len s
+js_wfail ob jswearg
+ret
+end
+if gt off sub len s n
+js_wfail ob jswearg
+ret
+end
+e = add off n
+if ne js_numend s off e e
+js_wfail ob jswenm
+ret
+end
+if not js_wpre ob
+ret
+end
+js_wcopy ob s off e
+js_wpost ob
+end
+
+note js_wlex: the number lexeme that starts at src[off] (a parsed number token's offset), unchanged
+fn js_wlex ob edit uchar * src view uchar * off ulong to void
+if ne get ob jswerr 0
+ret
+end
+e = js_numend src off js_slim src off
+if eq e jsnone
+js_wfail ob jswenm
+ret
+end
+if not js_wpre ob
+ret
+end
+js_wcopy ob src off e
+js_wpost ob
+end
+
+note ======== strings ========
+
+fn js_hexd v uchar to uchar
+if lt v 10
+ret add v 48
+end
+ret add v 87
+end
+
+note js_wesc: RFC 8259 section 7 escaping of one ASCII byte: quote, backslash and U+0000..U+001F only,
+note with the two-character forms for b f n r t and \u00xx (lowercase hex) for the other controls.
+fn js_wesc ob edit uchar * c uchar to void
+if eq c 34
+js_wb ob 92
+js_wb ob 34
+ret
+end
+if eq c 92
+js_wb ob 92
+js_wb ob 92
+ret
+end
+if ge c 32
+js_wb ob c
+ret
+end
+js_wb ob 92
+if eq c 8
+js_wb ob 98
+ret
+end
+if eq c 12
+js_wb ob 102
+ret
+end
+if eq c 10
+js_wb ob 110
+ret
+end
+if eq c 13
+js_wb ob 114
+ret
+end
+if eq c 9
+js_wb ob 116
+ret
+end
+js_wb ob 117
+js_wb ob 48
+js_wb ob 48
+js_wb ob js_hexd shr c 4
+js_wb ob js_hexd and c 15
+end
+
+note js_wsbeg / js_wsb / js_wsend stream one string of raw UTF-8 bytes. It is a member key when the
+note innermost open container is an object whose next item is a key, otherwise a value.
+fn js_wsbeg ob edit uchar * to void
+if ne get ob jswerr 0
+ret
+end
+if ne and get ob jswflg 1 0
+js_wfail ob jswest
+ret
+end
+if js_wiskey ob
+if not js_wkpre ob
+ret
+end
+js_wb ob 34
+put ob jswflg or get ob jswflg 3
+else
+if not js_wpre ob
+ret
+end
+js_wb ob 34
+put ob jswflg or get ob jswflg 1
+end
+put ob jswu8 0
+end
+
+fn js_wsb ob edit uchar * c uchar to void
+if ne get ob jswerr 0
+ret
+end
+if eq and get ob jswflg 1 0
+js_wfail ob jswest
+ret
+end
+s = ulong get ob jswu8
+if or ne s 0 ge c 128
+s = js_u8st s c
+if eq s 9
+js_wfail ob jsweut
+ret
+end
+put ob jswu8 uchar s
+js_wb ob c
+ret
+end
+js_wesc ob c
+end
+
+fn js_wsend ob edit uchar * to void
+if ne get ob jswerr 0
+ret
+end
+f = get ob jswflg
+if eq and f 1 0
+js_wfail ob jswest
+ret
+end
+if ne get ob jswu8 0
+js_wfail ob jsweut
+ret
+end
+js_wb ob 34
+if ne get ob jswerr 0
+ret
+end
+put ob jswflg and f 252
+if ne and f 2 0
+js_wb ob 58
+i = add 15 js_wdep ob
+put ob i or get ob i 8
+ret
+end
+js_wpost ob
+end
+
+note js_wsbuf: the string s[off .. off + n) of raw UTF-8 bytes (n <= 983040)
+fn js_wsbuf ob edit uchar * s view uchar * off ulong n ulong to void
+if ne get ob jswerr 0
+ret
+end
+if or gt n jsmaxn gt n len s
+js_wfail ob jswearg
+ret
+end
+if gt off sub len s n
+js_wfail ob jswearg
+ret
+end
+js_wsbeg ob
+for i ulong n
+js_wsb ob get s add off i
+end
+js_wsend ob
+end
+
+note js_wsesc: write the escape at src[p] as raw UTF-8 string bytes; the next p, or jsnone after a refusal
+fn js_wsesc ob edit uchar * src view uchar * p ulong to ulong
+tmp = new uchar 4 0
+cp = js_ecp src p
+if ge cp jsbads
+js_wfail ob jswesrc
+ret jsnone
+end
+m = js_putcp tmp 0 cp
+for i ulong m
+js_wsb ob get tmp i
+end
+ret add p js_elen src p cp
+end
+
+note js_wsrc: re-encode the JSON string whose opening quote is src[off] (a parsed key or string token)
+fn js_wsrc ob edit uchar * src view uchar * off ulong to void
+if ne get ob jswerr 0
+ret
+end
+if not js_atv src off 34
+js_wfail ob jswesrc
+ret
+end
+js_wsbeg ob
+p = add off 1
+while lt p js_slim src off bound 999999
+if ne get ob jswerr 0
+ret
+end
+c = get src p
+if and eq get ob jswu8 0 eq c 34
+js_wsend ob
+ret
+end
+if and eq get ob jswu8 0 eq c 92
+p = js_wsesc ob src p
+if eq p jsnone
+ret
+end
+continue
+end
+if and eq get ob jswu8 0 lt c 32
+js_wfail ob jswesrc
+ret
+end
+js_wsb ob c
+p = add p 1
+end
+js_wfail ob jswesrc
+end
+
+note ======== tape tokens and completion ========
+
+note js_wtok: write one parsed token, given its type (js_type) and offset (js_off). A key token must land
+note where a key is due and a string token where a value is due.
+fn js_wtok ob edit uchar * src view uchar * ty ulong off ulong to void
+if ne get ob jswerr 0
+ret
+end
+if eq ty jsobj
+js_wobj ob
+ret
+end
+if eq ty jsobje
+js_wobje ob
+ret
+end
+if eq ty jsarr
+js_warr ob
+ret
+end
+if eq ty jsarre
+js_warre ob
+ret
+end
+if or eq ty jskey eq ty jsstr
+isk = js_wiskey ob
+if and eq ty jskey not isk
+js_wfail ob jswest
+ret
+end
+if and eq ty jsstr isk
+js_wfail ob jswest
+ret
+end
+js_wsrc ob src off
+ret
+end
+if eq ty jsnum
+js_wlex ob src off
+ret
+end
+if and ge ty jstrue le ty jsnull
+js_wlit ob sub ty 8
+ret
+end
+js_wfail ob jswest
+end
+
+note js_wdone: the text length when exactly one complete root value was written, else minus a code
+fn js_wdone ob edit uchar * to long
+if le len ob jswh
+ret neg long jswearg
+end
+e = ulong get ob jswerr
+if ne e 0
+ret neg long e
+end
+f = get ob jswflg
+d = js_wdep ob
+bad = ne and f 1 0
+if ne d 0
+bad = true
+end
+if eq and f 4 0
+bad = true
+end
+if bad
+js_wfail ob jswest
+ret neg long jswest
+end
+ret long js_wlen ob
+end

@@ -1,0 +1,98 @@
+note S4: 32 exports are accepted; words 0..31 branch to e1..e32 (bytes pinned).
+om2
+export fn e1 to ulong
+ret 1
+end
+export fn e2 to ulong
+ret 2
+end
+export fn e3 to ulong
+ret 3
+end
+export fn e4 to ulong
+ret 4
+end
+export fn e5 to ulong
+ret 5
+end
+export fn e6 to ulong
+ret 6
+end
+export fn e7 to ulong
+ret 7
+end
+export fn e8 to ulong
+ret 8
+end
+export fn e9 to ulong
+ret 9
+end
+export fn e10 to ulong
+ret 10
+end
+export fn e11 to ulong
+ret 11
+end
+export fn e12 to ulong
+ret 12
+end
+export fn e13 to ulong
+ret 13
+end
+export fn e14 to ulong
+ret 14
+end
+export fn e15 to ulong
+ret 15
+end
+export fn e16 to ulong
+ret 16
+end
+export fn e17 to ulong
+ret 17
+end
+export fn e18 to ulong
+ret 18
+end
+export fn e19 to ulong
+ret 19
+end
+export fn e20 to ulong
+ret 20
+end
+export fn e21 to ulong
+ret 21
+end
+export fn e22 to ulong
+ret 22
+end
+export fn e23 to ulong
+ret 23
+end
+export fn e24 to ulong
+ret 24
+end
+export fn e25 to ulong
+ret 25
+end
+export fn e26 to ulong
+ret 26
+end
+export fn e27 to ulong
+ret 27
+end
+export fn e28 to ulong
+ret 28
+end
+export fn e29 to ulong
+ret 29
+end
+export fn e30 to ulong
+ret 30
+end
+export fn e31 to ulong
+ret 31
+end
+export fn e32 to ulong
+ret 32
+end
