@@ -1,0 +1,782 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2ins.om: check_insn of src/checker2/c2_check.c, one function per opcode group. Each returns 0
+note or the -1 of c2_fail. Operand types are slots (c2_vs); an operand outside 0..nv-1 never reaches
+note a slot read, because the C reads the same operands only after the same range checks.
+
+text cropr "C2-OPERAND-RANGE"
+text crslw "C2-SLICE-WRITE"
+text crgbuf "C2-GPU-BUFFER"
+text crtcon "C2-TYPE-CONST"
+text crccan "C2-CONST-CANONICAL"
+text crslesc "C2-SLICE-ESCAPE"
+text crtmov "C2-TYPE-MOV"
+text crsubop "C2-DECODE-SUBOP"
+text crtbin "C2-TYPE-BIN"
+text crtun "C2-TYPE-UN"
+text crtcmp "C2-TYPE-CMP"
+text crtcast "C2-TYPE-CAST"
+text crtall "C2-TYPE-ALLOC"
+text crtrel "C2-TYPE-RELEASE"
+text crtidx "C2-TYPE-INDEX"
+text crro "C2-READ-ONLY"
+text crtfld "C2-TYPE-FIELD"
+text crthnd "C2-TYPE-HANDLE"
+text cracap "C2-ARENA-CAPACITY"
+text crtpool "C2-TYPE-POOL"
+text crpcap "C2-POOL-CAPACITY"
+text crtslc "C2-TYPE-SLICE"
+text crtrap "C2-TRAP-CODE"
+text crcfgt "C2-CFG-TARGET"
+text crtcond "C2-TYPE-COND"
+text crtret "C2-TYPE-RET"
+text crcord "C2-CALL-ORDER"
+text crgcall "C2-GPU-CALL"
+text crtcall "C2-TYPE-CALL"
+text cralias "C2-CALL-ALIAS"
+text crtgpu "C2-TYPE-GPU"
+text crgsv "C2-GPU-STORE-VIEW"
+
+text cmopr "operand v%d out of range"
+text cmnodst "missing destination"
+text cmdstr "destination v%d out of range"
+text cmslrd "slice register v%d redefined"
+text cmsllrd "slice length register v%d redefined"
+text cmgbrd "buffer register v%d redefined"
+text cmgblrd "buffer length register v%d redefined"
+text cmcnsc "constant into a non-scalar register"
+text cmcncan "constant %llu not canonical for its type"
+text cmslcp "slice copied"
+text cmmovr "reference kinds or shapes do not bind"
+text cmmovt "MOV between different types"
+text cmbinop "binary op %u"
+text cmminmx "min/max need u32 or f32"
+text cmf32op "f32 binary op %u"
+text cmf32t "f32 operand types"
+text cmshift "shift operand types"
+text cmbitw "bitwise operand types"
+text cmarith "arithmetic operand types"
+text cmunop "unary op %u"
+text cmundif "unary result type differs from operand"
+text cmunty "unary operand type"
+text cmcmpop "comparison %u"
+text cmcmpt "comparison operand types"
+text cmcastf "f32 cast other than u32 <-> f32"
+text cmcasti "cast between non-integers (bool casts are refused)"
+text cmallo "allocation into a non-owner"
+text cmalinit "initial value type"
+text cmahnd "arena handle is not u64"
+text cmrel "release of a non-owner"
+text cmidxa "indexing a non-array"
+text cmidxi "index is not an integer"
+text cmidxe "element type"
+text cmstsh "store through a shared borrow"
+text cmfldns "field access on a non-struct"
+text cmfldn "field %llu of %s"
+text cmfldei "element index of field %s.%s"
+text cmfldt "type of field %s.%s"
+text cmfstsh "field store through a shared borrow"
+text cmhndl "handle is not u64"
+text cmpoolid "pool id is not u64"
+text cmpelt "pool element type %u"
+text cmpcap "pool of %u slots"
+text cmarcap "arena of %llu cells"
+text cmpalo "pool alloc operand types"
+text cmpgen "pool generation operand types"
+text cmpfree "pool free operand types"
+text cmpload "pool load operand types"
+text cmpsval "pool store value"
+text cmpstor "pool store operand types"
+text cmslnon "slice access through a non-slice register"
+text cmslro "store into a read-only bytes slice"
+text cmslidx "slice index is not an integer"
+text cmslel "slice element is u64"
+text cmtrap "trap code %llu"
+text cmbr "branch to block %u"
+text cmcbr "branch to block %u/%u"
+text cmcond "branch condition is not bool"
+text cmretv "return value type"
+text cmcord "call to function %u from function %d (no recursion, no forward calls)"
+text cmgcall "call into or out of a kernel"
+text cmcarit "%u arguments for %u parameters"
+text cmcret "call result type"
+text cmcbind "argument %d does not bind"
+text cmcslt "slice argument %d type"
+text cmcsll "slice argument %d is not passed with its own length"
+text cmcargt "argument %d type"
+text cmalias "register v%d passed twice and written"
+text cmgsub "launch value %u"
+text cmgu32 "launch value into a non-u32 register"
+text cmshty "shared array into a non-block register"
+text cmgbnon "buffer access through a non-buffer register"
+text cmgblen "buffer v%d has no u32 length register"
+text cmgbidx "buffer index is not u32"
+text cmgbel "buffer element type"
+text cmgsv "store into a view buffer"
+text cmshsub "shuffle %u"
+text cmshv "shuffle value is not u32 or f32"
+text cmshd "shuffle distance is not u32"
+text cmmad "mad needs f32 operands"
+text cmopc2 "opcode %u"
+
+fn c2_ff rule view uchar * ii long fmt view uchar * to long
+ret c2_fail rule get cfi 0 ii fmt
+end
+
+note Range of uses and destination, slice/buffer redefinition (the head of check_insn).
+fn c2_ihead ii long to long
+nv = c2_nv
+nu = c2_uses ii
+for k long nu
+u = get cus k
+if or lt u 0 ge u nv
+c2_a1 u
+ret c2_ff cropr ii cmopr
+end
+end
+s = c2_is ii
+op = get cop s
+dst = get cdst s
+d = c2_defs ii
+iscall = eq op cqcall
+nd = ne d -1
+if and iscall eq dst -1
+nd = false
+end
+if not iscall
+if and c2_defop op lt dst 0
+ret c2_ff cropr ii cmnodst
+end
+end
+if nd
+if or lt d 0 ge d nv
+c2_a1 d
+ret c2_ff cropr ii cmdstr
+end
+end
+if lt d 0
+ret 0
+end
+ret c2_iredef ii d
+end
+
+fn c2_iredef ii long d long to long
+np = c2_np
+c2_a1 d
+if c2_slice c2_vs d
+ret c2_ff crslw ii cmslrd
+end
+if and lt d np gt d 0
+if c2_slice c2_vs sub d 1
+ret c2_ff crslw ii cmsllrd
+end
+end
+if c2_gbuf c2_vs d
+ret c2_ff crgbuf ii cmgbrd
+end
+if and gt d 0 lt d np
+if c2_gbuf c2_vs sub d 1
+ret c2_ff crgbuf ii cmgblrd
+end
+end
+ret 0
+end
+
+fn c2_imov ii long td long ta long to long
+if or c2_slice ta c2_slice td
+ret c2_ff crslesc ii cmslcp
+end
+if or c2_isref td c2_isref ta
+if or not c2_shape td ta not c2_bind get ctk td get ctk ta
+ret c2_ff crtmov ii cmmovr
+end
+ret 0
+end
+if or not c2_same td ta not c2_scal td
+ret c2_ff crtmov ii cmmovt
+end
+ret 0
+end
+
+fn c2_ibin ii long sb long td long ta long tb long to long
+if or lt sb 1 ge sb 13
+c2_a1 sb
+ret c2_ff crsubop ii cmbinop
+end
+if or eq sb 11 eq sb 12
+if or or not c2_kv get cts td not c2_same td ta not c2_same td tb
+ret c2_ff crtbin ii cmminmx
+end
+ret 0
+end
+if or eq get cts td 13 eq get cts ta 13
+if not or or eq sb 1 eq sb 2 eq sb 3
+c2_a1 sb
+ret c2_ff crtbin ii cmf32op
+end
+if or not c2_same td ta not c2_same td tb
+ret c2_ff crtbin ii cmf32t
+end
+ret 0
+end
+if or eq sb 9 eq sb 10
+if or or not c2_int get cts td not c2_same td ta not c2_int get cts tb
+ret c2_ff crtbin ii cmshift
+end
+ret 0
+end
+if or or eq sb 6 eq sb 7 eq sb 8
+if or or not c2_scal td not c2_same td ta not c2_same td tb
+ret c2_ff crtbin ii cmbitw
+end
+ret 0
+end
+if or or not c2_int get cts td not c2_same td ta not c2_same td tb
+ret c2_ff crtbin ii cmarith
+end
+ret 0
+end
+
+fn c2_iun ii long sb long td long ta long to long
+if or lt sb 1 ge sb 8
+c2_a1 sb
+ret c2_ff crsubop ii cmunop
+end
+if not c2_same td ta
+ret c2_ff crtun ii cmundif
+end
+s = get cts td
+bad = ne s 13
+if eq sb 3
+bad = ne s 1
+end
+if eq sb 1
+bad = not or c2_int s eq s 13
+end
+if eq sb 2
+bad = not c2_int s
+end
+if bad
+ret c2_ff crtun ii cmunty
+end
+ret 0
+end
+
+fn c2_icmp ii long sb long td long ta long tb long to long
+if or lt sb 1 ge sb 7
+c2_a1 sb
+ret c2_ff crsubop ii cmcmpop
+end
+if or or ne get cts td 1 not c2_scal ta not c2_same ta tb
+ret c2_ff crtcmp ii cmcmpt
+end
+ret 0
+end
+
+fn c2_icast ii long td long ta long to long
+d = get cts td
+a = get cts ta
+if or eq d 13 eq a 13
+if not or and eq d 13 eq a 4 and eq d 4 eq a 13
+ret c2_ff crtcast ii cmcastf
+end
+ret 0
+end
+if or not c2_int d not c2_int a
+ret c2_ff crtcast ii cmcasti
+end
+ret 0
+end
+
+fn c2_ialloc ii long op long td long ta long tb long to long
+if or not c2_isref td ne get ctk td 1
+ret c2_ff crtall ii cmallo
+end
+bad = ne get cts ta 5
+if c2_isarr td
+bad = ne get cts ta get cte td
+end
+if bad
+ret c2_ff crtall ii cmalinit
+end
+if eq op cqaalloc
+if not c2_u64 tb
+ret c2_ff crtall ii cmahnd
+end
+end
+ret 0
+end
+
+fn c2_iidx ii long op long td long ta long tb long tc long to long
+if not c2_isarr ta
+ret c2_ff crtidx ii cmidxa
+end
+if not c2_int get cts tb
+ret c2_ff crtidx ii cmidxi
+end
+if eq op cqload
+if ne get cts td get cte ta
+ret c2_ff crtidx ii cmidxe
+end
+else
+if ne get cts tc get cte ta
+ret c2_ff crtidx ii cmidxe
+end
+end
+if and eq op cqstore eq get ctk ta 2
+ret c2_ff crro ii cmstsh
+end
+ret 0
+end
+
+note FLOAD/FSTORE. b is the raw element-index register (-1 none); tb its slot when in range, else -1.
+fn c2_ifld ii long td long ta long b long tc long to long
+if not c2_isstr ta
+ret c2_ff crtfld ii cmfldns
+end
+st = sub get cti ta 1
+imm = get cimm c2_is ii
+if ge imm ulong get csnf st
+put cvu 0 imm
+c2_s1 st
+ret c2_ff crtfld ii cmfldn
+end
+q = add mul st 16 long imm
+c2_s2 st add 100 q
+bad = ne b -1
+if ne get cfal q 0
+bad = true
+if ge b 0
+bad = not c2_int get cts c2_vs b
+end
+end
+if bad
+ret c2_ff crtfld ii cmfldei
+end
+ret c2_ifld2 ii td ta tc q
+end
+
+fn c2_ifld2 ii long td long ta long tc long q long to long
+fs = get cfs q
+op = c2_op ii
+if eq op cqfload
+if ne get cts td fs
+ret c2_ff crtfld ii cmfldt
+end
+else
+if ne get cts tc fs
+ret c2_ff crtfld ii cmfldt
+end
+end
+if eq op cqfstore
+if eq get ctk ta 2
+ret c2_ff crro ii cmfstsh
+end
+end
+ret 0
+end
+
+fn c2_ihandle ii long op long td long ta long tb long tc long to long
+s = c2_is ii
+if eq op cqaopen
+if not c2_u64 td
+ret c2_ff crthnd ii cmahnd
+end
+imm = get cimm s
+if or lt imm 1 gt imm 64
+put cvu 0 imm
+ret c2_ff cracap ii cmarcap
+end
+ret 0
+end
+if or eq op cqadest eq op cqpclose
+if not c2_u64 ta
+ret c2_ff crthnd ii cmhndl
+end
+ret 0
+end
+if eq op cqpopen
+if not c2_u64 td
+ret c2_ff crthnd ii cmpoolid
+end
+if not c2_val get csub s
+c2_a1 get csub s
+ret c2_ff crtpool ii cmpelt
+end
+n = get cnag s
+if or lt n 1 gt n 16
+c2_a1 n
+ret c2_ff crpcap ii cmpcap
+end
+ret 0
+end
+ret c2_ipool ii op td ta tb tc
+end
+
+fn c2_ipool ii long op long td long ta long tb long tc long to long
+if eq op cqhalloc
+ok = and c2_u64 td c2_u64 tb
+if not and ok c2_val get cts ta
+ret c2_ff crtpool ii cmpalo
+end
+ret 0
+end
+if eq op cqhgen
+if not c2_u64x3 td ta tb
+ret c2_ff crtpool ii cmpgen
+end
+ret 0
+end
+if eq op cqhfree
+if not c2_u64x3 ta tb tc
+ret c2_ff crtpool ii cmpfree
+end
+ret 0
+end
+if eq op cqhload
+ok2 = c2_u64x3 ta tb tc
+if not and ok2 c2_val get cts td
+ret c2_ff crtpool ii cmpload
+end
+ret 0
+end
+note HSTORE
+v = get carg mul c2_is ii 6
+if or lt v 0 ge v c2_nv
+ret c2_ff cropr ii cmpsval
+end
+if not c2_u64x3 ta tb tc
+ret c2_ff crtpool ii cmpstor
+end
+ret 0
+end
+
+fn c2_u64x3 x long y long z long to bool
+if not c2_u64 x
+ret false
+end
+if not c2_u64 y
+ret false
+end
+ret c2_u64 z
+end
+
+fn c2_islice ii long op long td long ta long tb long tc long to long
+if not c2_slice ta
+ret c2_ff crtslc ii cmslnon
+end
+if and eq op cqsstore ne get cts ta 12
+ret c2_ff crslw ii cmslro
+end
+if not c2_int get cts tb
+ret c2_ff crtslc ii cmslidx
+end
+bad = false
+if eq op cqsload
+bad = not c2_u64 td
+else
+bad = not c2_u64 tc
+end
+if bad
+ret c2_ff crtslc ii cmslel
+end
+ret 0
+end
+
+fn c2_ictl ii long op long ta long to long
+s = c2_is ii
+nb = c2_nb
+if eq op cqtrap
+imm = get cimm s
+if or lt imm 1 gt imm 14
+put cvu 0 imm
+ret c2_ff crtrap ii cmtrap
+end
+ret 0
+end
+if eq op cqbr
+if ge get ct s nb
+c2_a1 get ct s
+ret c2_ff crcfgt ii cmbr
+end
+ret 0
+end
+if eq op cqcbr
+if or ge get ct s nb ge get cf s nb
+c2_a2 get ct s get cf s
+ret c2_ff crcfgt ii cmcbr
+end
+if ne get cts ta 1
+ret c2_ff crtcond ii cmcond
+end
+ret 0
+end
+note RET
+rs = add mul get cfi 0 481 480
+a = get ca s
+bad = ne a -1
+if ne get cts rs 0
+bad = lt a 0
+if not bad
+bad = not c2_same c2_vs a rs
+end
+end
+if bad
+ret c2_ff crtret ii cmretv
+end
+ret 0
+end
+
+fn c2_icall ii long to long
+s = c2_is ii
+fi = get cfi 0
+g = get ccal s
+if ge g fi
+c2_a2 g fi
+ret c2_ff crcord ii cmcord
+end
+if or ne get cgk fi 0 ne get cgk g 0
+ret c2_ff crgcall ii cmgcall
+end
+n = get cnag s
+if ne n get cgnp g
+c2_a2 n get cgnp g
+ret c2_ff crtcall ii cmcarit
+end
+rs = add mul g 481 480
+d = get cdst s
+bad = ne d -1
+if ne get cts rs 0
+bad = or lt d 0 ge d c2_nv
+if not bad
+bad = not c2_same c2_vs d rs
+end
+end
+if bad
+ret c2_ff crtcall ii cmcret
+end
+for k long n
+if ne c2_icarg ii s g k 0
+ret -1
+end
+end
+ret 0
+end
+
+fn c2_icarg ii long s long g long k long to long
+r = get carg add mul s 6 k
+pa = c2_vs r
+pp = add mul g 481 k
+c2_a1 k
+if c2_isref pp
+ok = c2_shape pa pp
+if not and ok c2_bind get ctk pp get ctk pa
+ret c2_ff crtcall ii cmcbind
+end
+else
+if c2_slice pp
+if ne get cts pa get cts pp
+ret c2_ff crtcall ii cmcslt
+end
+if c2_cslen s k r
+ret c2_ff crtcall ii cmcsll
+end
+else
+if not c2_same pa pp
+ret c2_ff crtcall ii cmcargt
+end
+end
+end
+ret c2_calias ii s g k
+end
+
+note true when the slice argument k (register r) is not followed by its length register r+1.
+fn c2_cslen s long k long r long to bool
+if ge add k 1 get cnag s
+ret true
+end
+q = get carg add mul s 6 add k 1
+ret ne q add r 1
+end
+
+fn c2_calias ii long s long g long k long to long
+pp = add mul g 481 k
+if not or c2_isref pp eq get cts pp 12
+ret 0
+end
+shp = ne get ctk pp 2
+for j long k
+if c2_aliasj s g j k shp
+c2_a1 get carg add mul s 6 k
+ret c2_ff cralias ii cmalias
+end
+end
+ret 0
+end
+
+fn c2_aliasj s long g long j long k long shp bool to bool
+base = mul s 6
+if ne get carg add base j get carg add base k
+ret false
+end
+if shp
+ret true
+end
+ret ne get ctk add mul g 481 j 2
+end
+
+fn c2_igpu ii long op long td long ta long tb long tc long to long
+s = c2_is ii
+if eq op cqgpu
+sb = get csub s
+if or lt sb 1 ge sb 6
+c2_a1 sb
+ret c2_ff crsubop ii cmgsub
+end
+if ne get cts td 4
+ret c2_ff crtgpu ii cmgu32
+end
+ret 0
+end
+if eq op cqshared
+if not c2_isblk td
+ret c2_ff crtgpu ii cmshty
+end
+ret 0
+end
+if or eq op cqgload eq op cqgstore
+if not c2_gbuf ta
+ret c2_ff crtgpu ii cmgbnon
+end
+a = get ca s
+if ne get cts c2_vs c2_i16 add a 1 4
+c2_a1 a
+ret c2_ff crtgpu ii cmgblen
+end
+if ne get cts tb 4
+ret c2_ff crtgpu ii cmgbidx
+end
+if eq op cqgload
+if ne get cts td get cte ta
+ret c2_ff crtgpu ii cmgbel
+end
+else
+if ne get cts tc get cte ta
+ret c2_ff crtgpu ii cmgbel
+end
+end
+if and eq op cqgstore ne get cts ta 15
+ret c2_ff crgsv ii cmgsv
+end
+ret 0
+end
+if eq op cqsync
+ret 0
+end
+if eq op cqshfl
+if ne get csub s 1
+c2_a1 get csub s
+ret c2_ff crsubop ii cmshsub
+end
+if or not c2_kv get cts ta not c2_same td ta
+ret c2_ff crtgpu ii cmshv
+end
+if ne get cts tb 4
+ret c2_ff crtgpu ii cmshd
+end
+ret 0
+end
+if eq op cqmad
+bad = ne get cts td 13
+if ne get cts ta 13
+bad = true
+end
+if ne get cts tb 13
+bad = true
+end
+if ne get cts tc 13
+bad = true
+end
+if bad
+ret c2_ff crtgpu ii cmmad
+end
+ret 0
+end
+c2_a1 op
+ret c2_ff cropc ii cmopc2
+end
+
+note Slot of register r when 0 <= r < nv, else -1 (the C's NULL type pointer, never read on a path
+note that reaches here with an out-of-range operand).
+fn c2_tslot r long to long
+if and ge r 0 lt r c2_nv
+ret c2_vs r
+end
+ret -1
+end
+
+fn c2_insn ii long to long
+if ne c2_ihead ii 0
+ret -1
+end
+s = c2_is ii
+op = get cop s
+sb = get csub s
+d = c2_defs ii
+td = c2_tslot d
+ta = c2_tslot get ca s
+tb = c2_tslot get cb s
+tc = c2_tslot get cc s
+if eq op cqconst
+if not c2_scal td
+ret c2_ff crtcon ii cmcnsc
+end
+if not c2_canonv get cts td get cimm s
+put cvu 0 get cimm s
+ret c2_ff crccan ii cmcncan
+end
+ret 0
+end
+if eq op cqmov
+ret c2_imov ii td ta
+end
+if eq op cqbin
+ret c2_ibin ii sb td ta tb
+end
+if eq op cqun
+ret c2_iun ii sb td ta
+end
+if eq op cqcmp
+ret c2_icmp ii sb td ta tb
+end
+if eq op cqcast
+ret c2_icast ii td ta
+end
+if or eq op cqalloc eq op cqaalloc
+ret c2_ialloc ii op td ta tb
+end
+if eq op cqrel
+if or not c2_isref ta ne get ctk ta 1
+ret c2_ff crtrel ii cmrel
+end
+ret 0
+end
+if or eq op cqload eq op cqstore
+ret c2_iidx ii op td ta tb tc
+end
+if or eq op cqfload eq op cqfstore
+ret c2_ifld ii td ta get cb s tc
+end
+if and ge op cqaopen le op cqhstore
+ret c2_ihandle ii op td ta tb tc
+end
+if or eq op cqsload eq op cqsstore
+ret c2_islice ii op td ta tb tc
+end
+if or or or eq op cqtrap eq op cqbr eq op cqcbr eq op cqret
+ret c2_ictl ii op ta
+end
+if eq op cqcall
+ret c2_icall ii
+end
+ret c2_igpu ii op td ta tb tc
+end

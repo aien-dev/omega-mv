@@ -1,0 +1,1063 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2race.om: kernel_races of src/checker2/c2_check.c (C2-GPU-SHARED-RACE, C2-GPU-GLOBAL-RACE).
+note Nodes: cnk kind, cna a, cnb b, cnh h, cnv v; cnn[0] the count (node 0 is the opaque tree).
+note Kinds: 0 OPAQUE 1 CONST 2 INV 3 THREAD 4 BLOCK 5 BATCH 6 LO 7 HI 8 LOOP 9 ADD 10 MUL 11 DIV 12 REM.
+note Natural loops at cbloop + 8h. Accesses x: cxi insn, cxr ref, cxb block, cxm phase mask,
+note cxs store, cxe tree; facts: cxnl/cxlt (lt pairs at x*64+2k), cxnf/cxfi/cxfv (fixes at x*32+k).
+note Digit lists: cdgl slot sl at sl*1024, count cdgn[sl]. A BIN's operand trees are built a then b.
+
+text crshr "C2-GPU-SHARED-RACE"
+text crglr "C2-GPU-GLOBAL-RACE"
+text cmrdiff "v%d is accessed at two different indexes (insns %u and %u)"
+text cmrinj "the index of v%d is not one-to-one"
+text cmrloop "a loop counter is used as an index outside its loop"
+text cmrcov "two threads can reach the same element of v%d"
+
+fn c2_mk4 k long a long b long h long v ulong to long
+nn = get cnn 0
+for i long nn
+if gt i 0
+if c2_ndeq i k a b h
+if eq get cnv i v
+ret i
+end
+end
+end
+end
+if ge nn 4096
+ret 0
+end
+put cnk nn k
+put cna nn a
+put cnb nn b
+put cnh nn h
+put cnv nn v
+put cnn 0 add nn 1
+ret nn
+end
+
+fn c2_ndeq i long k long a long b long h long to bool
+if ne get cnk i k
+ret false
+end
+if ne get cna i a
+ret false
+end
+if ne get cnb i b
+ret false
+end
+ret eq get cnh i h
+end
+
+fn c2_mk k long a long b long v ulong to long
+ret c2_mk4 k a b 0 v
+end
+
+fn c2_isdig k long to bool
+ret and ge k 3 le k 8
+end
+
+fn c2_thdig k long to bool
+ret or or eq k 3 eq k 6 eq k 7
+end
+
+fn c2_rloop h long b long to bool
+ret c2_btest add cbloop mul h 8 b
+end
+
+note loop_digit: init/inc search, then the latch, then the guard.
+fn c2_ldig c long to long
+init = long -1
+inc = long -1
+for i long c2_ni
+if eq c2_defs i c
+if c2_ldinc i c
+inc = i
+else
+if c2_ldini i
+init = i
+end
+end
+end
+end
+if or lt init 0 lt inc 0
+ret 0
+end
+ret c2_ldig2 c init inc
+end
+
+fn c2_ldinc i long c long to bool
+s = c2_is i
+if or ne get cop s cqbin ne get csub s 1
+ret false
+end
+if ne get ca s c
+ret false
+end
+ob = get cb s
+if not c2_sconst ob
+ret false
+end
+ret eq c2_sval ob ulong 1
+end
+
+fn c2_ldini i long to bool
+s = c2_is i
+op = get cop s
+if eq op cqconst
+ret true
+end
+if eq op cqmov
+ret c2_sconst get ca s
+end
+ret false
+end
+
+fn c2_ldig2 c long init long inc long to long
+lb = get cblk inc
+t = c2_is c2_blast lb
+if ne and add inc 2 cmask32 c2_bend lb
+ret 0
+end
+if ne get cop t cqbr
+ret 0
+end
+h = get ct t
+if not c2_dom h lb
+ret 0
+end
+nl = long 0
+for p long c2_nb
+if and ne get creach p 0 c2_hassuc p h
+if c2_dom h p
+nl = add nl 1
+end
+end
+end
+if ne nl 1
+ret 0
+end
+if c2_rloop h get cblk init
+ret 0
+end
+ret c2_ldig3 c h
+end
+
+note The bound: the first loop block whose guard `lt c K` / `ge c K` exits the loop; K is its CMP's b.
+fn c2_ldig3 c long h long to long
+for g long c2_nb
+if and ne get creach g 0 c2_rloop h g
+gin = c2_lgin g c h
+if ge gin 0
+ret c2_mk4 8 c gin h c2_sval get cb c2_is get cdi get ca c2_is c2_blast g
+end
+end
+end
+ret c2_mk4 8 c -1 h ulong 0
+end
+
+note For guard block g of the loop at h: the loop-side target, or -1.
+fn c2_lgin g long c long h long to long
+t = c2_is c2_blast g
+if ne get cop t cqcbr
+ret -1
+end
+tt = get ct t
+tf = get cf t
+if eq tt tf
+ret -1
+end
+ci = get cdi get ca t
+if lt ci 0
+ret -1
+end
+if ne get cblk ci g
+ret -1
+end
+ret c2_lgin2 c2_is ci c h tt tf
+end
+
+fn c2_lgin2 cm long c long h long tt long tf long to long
+if ne get cop cm cqcmp
+ret -1
+end
+if ne get ca cm c
+ret -1
+end
+if not c2_sconst get cb cm
+ret -1
+end
+it = c2_rloop h tt
+inf = c2_rloop h tf
+sb = get csub cm
+if and eq sb 3 and it not inf
+ret tt
+end
+if and eq sb 6 and inf not it
+ret tf
+end
+ret -1
+end
+
+fn c2_comb sb long ta long tb long to long
+if or eq ta 0 eq tb 0
+ret 0
+end
+if or eq sb 1 eq sb 2
+lo = ta
+hi = tb
+if gt ta tb
+lo = tb
+hi = ta
+end
+if eq sb 1
+ret c2_mk 9 lo hi ulong 0
+end
+ret c2_mk 10 lo hi ulong 0
+end
+if or eq sb 4 eq sb 5
+ret c2_combd sb ta tb
+end
+ret 0
+end
+
+fn c2_combd sb long ta long tb long to long
+if ne get cnk tb 1
+ret 0
+end
+k = get cnv tb
+if eq k ulong 0
+ret 0
+end
+if eq get cnk ta 3
+t = ulong get cthr 0
+if eq sb 4
+if eq k ulong 1
+ret ta
+end
+if ge k t
+ret c2_mk 1 0 0 ulong 0
+end
+ret c2_mk 7 0 0 k
+end
+if eq k ulong 1
+ret c2_mk 1 0 0 ulong 0
+end
+if ge k t
+ret ta
+end
+ret c2_mk 6 0 0 k
+end
+if eq sb 4
+ret c2_mk 11 ta tb ulong 0
+end
+ret c2_mk 12 ta tb ulong 0
+end
+
+fn c2_btree r long to long
+if ne get cts c2_vs r 4
+ret 0
+end
+nd = get cnd r
+if lt r c2_np
+if eq nd 1
+ret c2_mk 2 r 0 ulong 0
+end
+ret 0
+end
+if eq nd 2
+ret c2_ldig r
+end
+if or ne nd 1 lt get cdi r 0
+ret 0
+end
+s = c2_is get cdi r
+op = get cop s
+if eq op cqconst
+ret c2_mk 1 0 0 get cimm s
+end
+if eq op cqmov
+ret c2_tree get ca s
+end
+if eq op cqgpu
+ret c2_tgpu get csub s
+end
+if eq op cqbin
+ta = c2_tree get ca s
+tb = c2_tree get cb s
+ret c2_comb get csub s ta tb
+end
+ret 0
+end
+
+fn c2_tgpu sb long to long
+if eq sb 1
+ret c2_mk 3 0 0 ulong 0
+end
+if eq sb 2
+ret c2_mk 4 0 0 ulong 0
+end
+if eq sb 4
+ret c2_mk 5 0 0 ulong 0
+end
+ret c2_mk 2 neg sb 0 ulong 0
+end
+
+fn c2_tree r long to long
+if or lt r 0 ge r c2_nv
+ret 0
+end
+m = get cmemo r
+if eq m -2
+ret 0
+end
+if ge m 0
+ret m
+end
+put cmemo r -2
+n = c2_btree r
+put cmemo r n
+ret n
+end
+
+note digits(n) appended to list sl; 0, or -1 for an opaque node or more than 16 digits.
+fn c2_digs n long sl long to long
+k = get cnk n
+if eq k 0
+ret -1
+end
+if c2_isdig k
+base = mul sl 1024
+m = get cdgn sl
+for i long m
+if eq get cdgl add base i n
+ret 0
+end
+end
+if ge m 16
+ret -1
+end
+put cdgl add base m n
+put cdgn sl add m 1
+ret 0
+end
+if ge k 9
+if lt c2_digs get cna n sl 0
+ret -1
+end
+ret c2_digs get cnb n sl
+end
+ret 0
+end
+
+fn c2_dig0 n long sl long to long
+put cdgn sl 0
+ret c2_digs n sl
+end
+
+fn c2_dfree n long to bool
+if ne c2_dig0 n 0 0
+ret false
+end
+ret eq get cdgn 0 0
+end
+
+fn c2_disj a long b long to bool
+if ne c2_dig0 a 0 0
+ret false
+end
+if ne c2_dig0 b 1 0
+ret false
+end
+for i long get cdgn 0
+for j long get cdgn 1
+if not c2_disj1 get cdgl i get cdgl add 1024 j
+ret false
+end
+end
+end
+ret true
+end
+
+fn c2_disj1 p long q long to bool
+if eq p q
+ret false
+end
+pk = get cnk p
+qk = get cnk q
+if and c2_thdig pk c2_thdig qk
+if ne get cnv p get cnv q
+ret false
+end
+ret or and eq pk 6 eq qk 7 and eq pk 7 eq qk 6
+end
+ret true
+end
+
+fn c2_umax to ulong
+ret sub ulong 0 ulong 1
+end
+
+fn c2_sadd a ulong b ulong to ulong
+s = add a b
+if lt s a
+ret c2_umax
+end
+ret s
+end
+
+fn c2_smul a ulong b ulong to ulong
+if ne a ulong 0
+if gt b div c2_umax a
+ret c2_umax
+end
+end
+ret mul a b
+end
+
+fn c2_maxv n long sb long to ulong
+k = get cnk n
+v = get cnv n
+t = ulong get cthr 0
+if eq k 1
+ret v
+end
+if eq k 3
+ret sub t ulong 1
+end
+if eq k 6
+if lt v t
+ret sub v ulong 1
+end
+ret sub t ulong 1
+end
+if eq k 7
+ret div sub t ulong 1 v
+end
+if eq k 8
+ret c2_maxl n sb
+end
+ret c2_maxv2 n sb k
+end
+
+fn c2_maxl n long sb long to ulong
+b = get cnb n
+if ge b 0
+if c2_dom b sb
+v = get cnv n
+if eq v ulong 0
+ret ulong 0
+end
+ret sub v ulong 1
+end
+end
+ret c2_umax
+end
+
+fn c2_maxv2 n long sb long k long to ulong
+a = get cna n
+b = get cnb n
+if eq k 9
+x = c2_maxv a sb
+ret c2_sadd x c2_maxv b sb
+end
+if eq k 10
+x = c2_maxv a sb
+ret c2_smul x c2_maxv b sb
+end
+if eq k 11
+ret div c2_maxv a sb get cnv b
+end
+if eq k 12
+m = c2_maxv a sb
+q = sub get cnv b ulong 1
+if lt m q
+ret m
+end
+ret q
+end
+ret c2_umax
+end
+
+fn c2_less y long mm long sb long ax long to bool
+if eq get cnk mm 1
+if lt c2_maxv y sb get cnv mm
+ret true
+end
+end
+ret c2_ltfact y mm ax
+end
+
+fn c2_ltfact y long mm long ax long to bool
+for i long get cxnl ax
+o = add mul ax 64 mul i 2
+if eq get cxlt o y
+if eq get cxlt add o 1 mm
+ret true
+end
+end
+end
+ret false
+end
+
+fn c2_inj n long sb long ax long to bool
+k = get cnk n
+if c2_isdig k
+ret true
+end
+if c2_dfree n
+ret true
+end
+if eq k 10
+a = get cna n
+b = get cnb n
+if and eq get cnk a 1 ne get cnv a ulong 0
+ret c2_inj b sb ax
+end
+if and eq get cnk b 1 ne get cnv b ulong 0
+ret c2_inj a sb ax
+end
+ret false
+end
+if ne k 9
+ret false
+end
+for o long 2
+r = c2_inj1 n o sb ax
+if ge r 0
+ret eq r 1
+end
+end
+ret false
+end
+
+note One orientation o of an ADD: 1 or 0 to return that, -1 to go on.
+fn c2_inj1 n long o long sb long ax long to long
+m = get cna n
+y = get cnb n
+if eq o 1
+m = get cnb n
+y = get cna n
+end
+if c2_dfree y
+if c2_inj m sb ax
+ret 1
+end
+ret 0
+end
+if ne get cnk m 10
+ret -1
+end
+for q long 2
+if c2_inj2 m q y sb ax
+ret 1
+end
+end
+ret -1
+end
+
+fn c2_inj2 m long q long y long sb long ax long to bool
+a = get cna m
+mm = get cnb m
+if eq q 1
+a = get cnb m
+mm = get cna m
+end
+if not c2_dfree mm
+ret false
+end
+if not c2_less y mm sb ax
+ret false
+end
+if not c2_inj a sb ax
+ret false
+end
+if not c2_inj y sb ax
+ret false
+end
+ret c2_disj a y
+end
+
+fn c2_lhold n long sb long to bool
+if ne c2_dig0 n 0 0
+ret false
+end
+for i long get cdgn 0
+p = get cdgl i
+if eq get cnk p 8
+if not c2_rloop get cnh p sb
+ret false
+end
+end
+end
+ret true
+end
+
+fn c2_acond r long pol bool ax long dp long to void
+if or gt dp 32 lt r 0
+ret
+end
+if ne get cnd r 1
+ret
+end
+di = get cdi r
+if lt di 0
+ret
+end
+s = c2_is di
+op = get cop s
+sb = get csub s
+if eq op cqmov
+c2_acond get ca s pol ax add dp 1
+ret
+end
+if and eq op cqun eq sb 3
+c2_acond get ca s not pol ax add dp 1
+ret
+end
+want = long 7
+if pol
+want = 6
+end
+if and eq op cqbin eq sb want
+c2_acond get ca s pol ax add dp 1
+c2_acond get cb s pol ax add dp 1
+ret
+end
+if ne op cqcmp
+ret
+end
+if ne get cts c2_vs get ca s 4
+ret
+end
+c2_acmp s pol ax get cblk di
+end
+
+fn c2_acmp s long pol bool ax long blk long to void
+ta = c2_tree get ca s
+tb = c2_tree get cb s
+if or eq ta 0 eq tb 0
+ret
+end
+if not c2_lhold ta blk
+ret
+end
+if not c2_lhold tb blk
+ret
+end
+kc = get csub s
+if not pol
+kc = c2_ncc kc
+end
+n = get cxnl ax
+if and or eq kc 3 eq kc 5 lt n 32
+o = add mul ax 64 mul n 2
+if eq kc 3
+put cxlt o ta
+put cxlt add o 1 tb
+else
+put cxlt o tb
+put cxlt add o 1 ta
+end
+put cxnl ax add n 1
+end
+if eq kc 1
+c2_afix ta tb ax
+end
+end
+
+fn c2_ncc kc long to long
+if eq kc 6
+ret 3
+end
+if eq kc 4
+ret 5
+end
+if eq kc 2
+ret 1
+end
+ret 0
+end
+
+fn c2_afix ta long tb long ax long to void
+nf = get cxnf ax
+if ge nf 32
+ret
+end
+x = ta
+y = tb
+if eq get cnk ta 1
+x = tb
+y = ta
+end
+xk = get cnk x
+if and eq get cnk y 1 and c2_isdig xk ne xk 8
+o = add mul ax 32 nf
+put cxfi o x
+put cxfv o get cnv y
+put cxnf ax add nf 1
+end
+end
+
+fn c2_facts sb long ax long to void
+put cxnl ax 0
+put cxnf ax 0
+for g long c2_nb
+if ne get creach g 0
+t = c2_is c2_blast g
+if eq get cop t cqcbr
+if ne get ct t get cf t
+c2_fside get ct t get ca t true sb ax
+c2_fside get cf t get ca t false sb ax
+end
+end
+end
+end
+end
+
+fn c2_fside s long r long pol bool sb long ax long to void
+if ne get cnpr s 1
+ret
+end
+if not c2_dom s sb
+ret
+end
+c2_acond r pol ax 0
+end
+
+fn c2_covers e long pa long qa long wb bool wa bool to bool
+if ne c2_dig0 e 0 0
+ret false
+end
+c2_cfixa pa qa
+th = or c2_cvhas 3 c2_cvlohi
+if not th
+ret false
+end
+if wb
+if not c2_cvhas 4
+ret false
+end
+end
+if wa
+ret c2_cvhas 5
+end
+ret true
+end
+
+fn c2_cfixa pa long qa long to void
+for i long get cxnf pa
+c2_cfixb add mul pa 32 i qa
+end
+end
+
+fn c2_cfixb oa long qa long to void
+for j long get cxnf qa
+c2_cfix oa add mul qa 32 j
+end
+end
+
+fn c2_cvhas k long to bool
+for i long get cdgn 0
+if eq get cnk get cdgl i k
+ret true
+end
+end
+ret false
+end
+
+fn c2_cvlohi to bool
+for i long get cdgn 0
+p = get cdgl i
+if eq get cnk p 6
+if c2_chi get cnv p
+ret true
+end
+end
+end
+ret false
+end
+
+fn c2_cfix oa long ob long to void
+x = get cxfi oa
+if ne x get cxfi ob
+ret
+end
+if eq get cxfv oa get cxfv ob
+n = get cdgn 0
+put cdgl n x
+put cdgn 0 add n 1
+end
+end
+
+fn c2_chi v ulong to bool
+for j long get cdgn 0
+q = get cdgl j
+if and eq get cnk q 7 eq get cnv q v
+ret true
+end
+end
+ret false
+end
+
+fn c2_rpair p long q long rule view uchar * wb bool wa bool to long
+w = c2_rchk p q wb wa
+if eq w 0
+ret 0
+end
+qi = get cxi q
+c2_a1 get cxr q
+if eq w 1
+put cv 0 get cxr p
+put cv 1 get cxi p
+put cv 2 qi
+ret c2_fail rule get cfi 0 qi cmrdiff
+end
+if eq w 2
+ret c2_fail rule get cfi 0 qi cmrinj
+end
+if eq w 3
+ret c2_fail rule get cfi 0 qi cmrloop
+end
+ret c2_fail rule get cfi 0 qi cmrcov
+end
+
+note race_pair's four tests in order: 0 pass, 1 different trees, 2 not one-to-one, 3 loop digit
+note outside its loop, 4 not covered.
+fn c2_rchk p long q long wb bool wa bool to long
+e = get cxe q
+pe = get cxe p
+if or eq pe 0 ne pe e
+ret 1
+end
+sb = get cxb q
+if not c2_inj e sb q
+ret 2
+end
+if not c2_lhold e sb
+ret 3
+end
+if not c2_covers e p q wb wa
+ret 4
+end
+ret 0
+end
+
+fn c2_rloops nb long to void
+for h long nb
+c2_bzero add cbloop mul h 8
+end
+for h long nb
+n = long 0
+lp = add cbloop mul h 8
+for p long nb
+if and ne get creach p 0 c2_hassuc p h
+if c2_dom h p
+c2_bset lp p
+put cstk n p
+n = add n 1
+end
+end
+end
+if gt n 0
+c2_bset lp h
+c2_rgrow lp n nb
+end
+end
+end
+
+fn c2_rgrow lp long n0 long nb long to void
+n = n0
+while gt n 0 bound 999999
+n = sub n 1
+b = get cstk n
+for p long nb
+if and ne get creach p 0 not c2_btest lp p
+if c2_hassuc p b
+c2_bset lp p
+put cstk n p
+n = add n 1
+end
+end
+end
+end
+end
+
+fn c2_rphase nb long to void
+ns = long 0
+for i long c2_ni
+if and eq c2_op i cqsync lt ns 63
+ns = add ns 1
+put csyn ns i
+end
+end
+put cnsy 0 ns
+for b long nb
+put cpout b ulong 0
+end
+ch = true
+while ch bound 999999
+ch = false
+for b long nb
+if ne get creach b 0
+if c2_rph1 b nb
+ch = true
+end
+end
+end
+end
+end
+
+fn c2_rph1 b long nb long to bool
+m = ulong 0
+if eq b 0
+m = ulong 1
+end
+for p long nb
+if and ne get creach p 0 c2_hassuc p b
+m = or m get cpout p
+end
+end
+put cpin b m
+m = c2_rsync b m
+if eq m get cpout b
+ret false
+end
+put cpout b m
+ret true
+end
+
+note The phase mask after walking block b from m (every sync line sets its own bit).
+fn c2_rsync b long m0 ulong to ulong
+m = m0
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+m = c2_rsyn1 i m
+i = add i 1
+end
+ret m
+end
+
+fn c2_rsyn1 i long m ulong to ulong
+if ne c2_op i cqsync
+ret m
+end
+r = m
+for s long add get cnsy 0 1
+if and gt s 0 eq get csyn s i
+r = shl ulong 1 s
+end
+end
+ret r
+end
+
+fn c2_races to long
+nb = c2_nb
+put cthr 0 get cgth get cfi 0
+put cnn 0 1
+put cnk 0 0
+for r long c2_nv
+put cmemo r -1
+end
+for p long nb
+put cnpr p 0
+end
+for p long nb
+if ne get creach p 0
+for k long get cnsu p
+q = get csuc add mul p 2 k
+put cnpr q add get cnpr q 1
+end
+end
+end
+c2_rloops nb
+c2_rphase nb
+na = c2_racc nb
+ret c2_rpairs na
+end
+
+fn c2_racc nb long to long
+na = long 0
+for b long nb
+if ne get creach b 0
+na = c2_racc1 b na
+end
+end
+ret na
+end
+
+fn c2_racc1 b long na0 long to long
+na = na0
+m = get cpin b
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+m = c2_rsyn1 i m
+s = c2_is i
+op = get cop s
+if or or eq op cqload eq op cqstore or eq op cqgload eq op cqgstore
+put cxi na i
+put cxr na get ca s
+put cxb na b
+put cxm na m
+put cxs na 0
+if or eq op cqstore eq op cqgstore
+put cxs na 1
+end
+put cxe na c2_tree get cb s
+c2_facts b na
+na = add na 1
+end
+i = add i 1
+end
+ret na
+end
+
+fn c2_wantg sb long to bool
+for i long c2_ni
+s = c2_is i
+if and eq get cop s cqgpu eq get csub s sb
+ret true
+end
+end
+ret false
+end
+
+fn c2_rpairs na long to long
+wb = c2_wantg 2
+wa = c2_wantg 4
+for p long na
+q = p
+while lt q na bound 4097
+if lt c2_rpq p q wb wa 0
+ret -1
+end
+q = add q 1
+end
+end
+ret 0
+end
+
+fn c2_rpq p long q long wb bool wa bool to long
+if ne get cxr p get cxr q
+ret 0
+end
+if and eq get cxs p 0 eq get cxs q 0
+ret 0
+end
+op = c2_op get cxi p
+if or eq op cqload eq op cqstore
+if eq and get cxm p get cxm q ulong 0
+ret 0
+end
+if lt c2_rpair p q crshr false false 0
+ret -1
+end
+ret c2_rpair q p crshr false false
+end
+if lt c2_rpair p q crglr wb wa 0
+ret -1
+end
+ret c2_rpair q p crglr wb wa
+end

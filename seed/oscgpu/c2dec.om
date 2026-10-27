@@ -1,0 +1,729 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2dec.om: c2_decode of src/checker2/c2_ir.c. Readers are little-endian and do nothing once cbad is
+note set (the C stops at the first failed read of an operand list; the verdict is the same either way
+note because a failed read always ends in C2-DECODE-TRUNCATED at that point).
+
+text crtrunc "C2-DECODE-TRUNCATED"
+text crmagic "C2-DECODE-MAGIC"
+text crver "C2-DECODE-VERSION"
+text crlstr "C2-LIMIT-STRUCTS"
+text crname "C2-DECODE-NAME"
+text crsfld "C2-STRUCT-FIELDS"
+text crlfn "C2-LIMIT-FUNCS"
+text crkind "C2-DECODE-KIND"
+text crlvr "C2-LIMIT-VREGS"
+text crlbl "C2-LIMIT-BLOCKS"
+text crlin "C2-LIMIT-INSNS"
+text crtext "C2-DECODE-TEXT"
+text crtrail "C2-DECODE-TRAILING"
+text crnonc "C2-DECODE-VERSION-NONCANONICAL"
+text crarity "C2-CALL-ARITY"
+text cropc "C2-DECODE-OPCODE"
+text cmmagic "bad magic"
+text cmver "unknown version %u"
+text cmscnt "struct count"
+text cmnstr "%u structs"
+text cmsnm "struct name"
+text cmsnm2 "struct %d name"
+text cmshdr "struct header"
+text cmsfld "struct %d has %u fields"
+text cmfnm "field name"
+text cmfnm2 "struct %d field %d name"
+text cmfield "field"
+text cmfcnt "function count"
+text cmnfn "%u functions"
+text cmgnm "function name"
+text cmgkind "function kind"
+text cmgkd2 "function kind %u"
+text cmthr "thread count"
+text cmnpar "nparams"
+text cmret "return type"
+text cmnvr "nvregs"
+text cmnvr2 "%u vregs"
+text cmvrt "vreg type"
+text cmnbl "nblocks"
+text cmnbl2 "%u blocks"
+text cmblock "block"
+text cmnin "ninsns"
+text cmnin2 "%u instructions"
+text cmreq "requires text"
+text cmens "ensures text"
+text cmtrail "%zu bytes after the last function"
+text cmnonc "version byte %u, content needs %d"
+text cmopc "opcode"
+text cmopnd "instruction operands"
+text cmcarg "call with %u arguments"
+text cmuopc "unknown opcode %u"
+
+fn c2_q8 to long
+if ne get cbad 0 0
+ret 0
+end
+p = get cpos 0
+if gt add p 1 get cn 0
+put cbad 0 1
+ret 0
+end
+put cpos 0 add p 1
+ret long get cbuf p
+end
+
+fn c2_q16 to long
+lo = c2_q8
+hi = c2_q8
+ret or lo shl hi 8
+end
+
+fn c2_q32 to long
+if ne get cbad 0 0
+ret 0
+end
+if gt add get cpos 0 4 get cn 0
+put cbad 0 1
+ret 0
+end
+a = c2_q16
+b = c2_q16
+ret or a shl b 16
+end
+
+fn c2_q64 to ulong
+if ne get cbad 0 0
+ret 0
+end
+p = get cpos 0
+if gt add p 8 get cn 0
+put cbad 0 1
+ret 0
+end
+x = ulong 0
+k = long 7
+while ge k 0 bound 9
+x = or shl x 8 ulong get cbuf add p k
+k = sub k 1
+end
+put cpos 0 add p 8
+ret x
+end
+
+note u16 as int16: 0xFFFF is -1.
+fn c2_qvr to long
+if ne get cbad 0 0
+ret 0
+end
+if gt add get cpos 0 2 get cn 0
+put cbad 0 1
+ret 0
+end
+x = c2_q16
+if ge x 32768
+ret sub x 65536
+end
+ret x
+end
+
+note rdname: 0 ok (bytes in cnm, length cnml), -1 length byte missing, -2 too long, short or not an
+note identifier ([A-Za-z_][A-Za-z0-9_]*).
+fn c2_rname to long
+put cbad 0 0
+n = c2_q8
+if ne get cbad 0 0
+ret -1
+end
+if gt n 63
+ret -2
+end
+p = get cpos 0
+if gt add p n get cn 0
+ret -2
+end
+put cnml 0 n
+ok = long 1
+if eq n 0
+ok = 0
+end
+for i long n
+x = get cbuf add p i
+put cnm i x
+al = or or and ge x 65 le x 90 and ge x 97 le x 122 eq x 95
+dg = and ge x 48 le x 57
+if not or al and gt i 0 dg
+ok = 0
+end
+end
+put cpos 0 add p n
+if eq ok 0
+ret -2
+end
+ret 0
+end
+
+note rdtext: length (>= 0), -1 length missing, -2 over 255, short, or an inner NUL.
+fn c2_rtext to long
+put cbad 0 0
+n = c2_q16
+if ne get cbad 0 0
+ret -1
+end
+p = get cpos 0
+if or gt n 255 gt add p n get cn 0
+ret -2
+end
+put cpos 0 add p n
+for i long n
+if eq get cbuf add p i 0
+ret -2
+end
+end
+ret n
+end
+
+note rdtype into type slot s: 0 ok, -1 truncated.
+fn c2_rtype s long to long
+put cbad 0 0
+put cts s 0
+put ctk s 0
+put cte s 0
+put ctl s 0
+put cti s 0
+x = c2_q8
+if ne get cbad 0 0
+ret -1
+end
+put cts s x
+if or eq x 14 eq x 15
+put cte s c2_q8
+if ne get cbad 0 0
+ret -1
+end
+ret 0
+end
+if eq x 10
+put ctk s c2_q8
+put cte s c2_q8
+put ctl s c2_q16
+if ne get cbad 0 0
+ret -1
+end
+if eq get cte s 0
+put cti s c2_q8
+if ne get cbad 0 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+fn c2_trunc fi long msg view uchar * to long
+ret c2_fail crtrunc fi -1 msg
+end
+
+note Opcode classes. clay: wire layout of the operands; cuse: registers read (see c2_uses); cdop: 1
+note when the opcode defines its destination (CALL is handled apart: a void call has none).
+fn c2_cls op long ly long us long dp long to void
+put clay op ly
+put cuse op us
+put cdop op dp
+end
+
+fn c2_init to void
+c2_cls cqconst 1 0 1
+c2_cls cqmov 2 1 1
+c2_cls cqbin 3 3 1
+c2_cls cqun 4 1 1
+c2_cls cqcmp 3 3 1
+c2_cls cqcast 2 1 1
+c2_cls cqalloc 2 1 1
+c2_cls cqrel 5 1 0
+c2_cls cqload 7 3 1
+c2_cls cqstore 9 4 0
+c2_cls cqcall 14 8 0
+c2_cls cqtrap 15 0 0
+c2_cls cqbr 16 0 0
+c2_cls cqcbr 17 1 0
+c2_cls cqret 5 2 0
+c2_cls cqfload 12 6 1
+c2_cls cqfstore 13 7 0
+c2_cls cqaopen 6 0 1
+c2_cls cqaalloc 7 3 1
+c2_cls cqadest 5 1 0
+c2_cls cqpopen 8 0 1
+c2_cls cqpclose 5 1 0
+c2_cls cqhalloc 7 3 1
+c2_cls cqhgen 7 3 1
+c2_cls cqhfree 9 4 0
+c2_cls cqhload 10 4 1
+c2_cls cqhstore 11 5 0
+c2_cls cqsload 7 3 1
+c2_cls cqsstore 9 4 0
+c2_cls cqgpu 18 0 1
+c2_cls cqshared 19 0 1
+c2_cls cqgload 7 9 1
+c2_cls cqgstore 9 10 0
+c2_cls cqsync 20 0 0
+c2_cls cqshfl 3 3 1
+c2_cls cqmad 10 4 1
+end
+
+note Operand list of instruction slot s whose opcode is op: 0 read, 1 unknown opcode, 2 call arity.
+fn c2_dops s long op long to long
+ly = get clay op
+if eq ly 0
+ret 1
+end
+if eq ly 1
+put cdst s c2_qvr
+put cimm s c2_q64
+ret 0
+end
+if eq ly 2
+put cdst s c2_qvr
+put ca s c2_qvr
+ret 0
+end
+if eq ly 3
+put csub s c2_q8
+put cdst s c2_qvr
+put ca s c2_qvr
+put cb s c2_qvr
+ret 0
+end
+if eq ly 4
+put csub s c2_q8
+put cdst s c2_qvr
+put ca s c2_qvr
+ret 0
+end
+if eq ly 5
+put ca s c2_qvr
+ret 0
+end
+if eq ly 6
+put cdst s c2_qvr
+put cimm s ulong c2_q8
+ret 0
+end
+if eq ly 7
+put cdst s c2_qvr
+put ca s c2_qvr
+put cb s c2_qvr
+ret 0
+end
+if eq ly 8
+put cdst s c2_qvr
+put csub s c2_q8
+put cnag s c2_q8
+put cimm s c2_q64
+ret 0
+end
+if eq ly 9
+put ca s c2_qvr
+put cb s c2_qvr
+put cc s c2_qvr
+ret 0
+end
+ret c2_dops2 s ly
+end
+
+fn c2_dops2 s long ly long to long
+if eq ly 10
+put cdst s c2_qvr
+put ca s c2_qvr
+put cb s c2_qvr
+put cc s c2_qvr
+ret 0
+end
+if eq ly 11
+put ca s c2_qvr
+put cb s c2_qvr
+put cc s c2_qvr
+put carg mul s 6 c2_qvr
+put cnag s 1
+ret 0
+end
+if eq ly 12
+put cdst s c2_qvr
+put ca s c2_qvr
+put cb s c2_qvr
+put cimm s ulong c2_q8
+ret 0
+end
+if eq ly 13
+put ca s c2_qvr
+put cb s c2_qvr
+put cc s c2_qvr
+put cimm s ulong c2_q8
+ret 0
+end
+if eq ly 14
+put cdst s c2_qvr
+put ccal s c2_q16
+put cnag s c2_q8
+if c2_bad
+ret 0
+end
+n = get cnag s
+if gt n 6
+ret 2
+end
+for k long n
+put carg add mul s 6 k c2_qvr
+end
+ret 0
+end
+if eq ly 15
+put cimm s ulong c2_q8
+ret 0
+end
+if eq ly 16
+put ct s c2_q16
+ret 0
+end
+if eq ly 17
+put ca s c2_qvr
+put ct s c2_q16
+put cf s c2_q16
+ret 0
+end
+if eq ly 18
+put csub s c2_q8
+put cdst s c2_qvr
+ret 0
+end
+if eq ly 19
+put cdst s c2_qvr
+end
+ret 0
+end
+
+fn c2_bad to bool
+ret ne get cbad 0 0
+end
+
+fn c2_dinsn fi long ii long to long
+s = add mul fi 4096 ii
+put cdst s -1
+put ca s -1
+put cb s -1
+put cc s -1
+for k long 6
+put carg add mul s 6 k -1
+end
+put csub s 0
+put cnag s 0
+put ct s 0
+put cf s 0
+put ccal s 0
+put cimm s 0
+put cbad 0 0
+op = c2_q8
+if ne get cbad 0 0
+ret c2_trunc fi cmopc
+end
+put cop s op
+r = c2_dops s op
+if eq r 1
+c2_a1 op
+ret c2_fail cropc fi ii cmuopc
+end
+if eq r 2
+c2_a1 get cnag s
+ret c2_fail crarity fi ii cmcarg
+end
+if ne get cbad 0 0
+ret c2_trunc fi cmopnd
+end
+ret 0
+end
+
+fn c2_cpname dst long to void
+note dst: 0..15 struct name, 100+slot field name, 1000+fi function name
+n = get cnml 0
+if lt dst 100
+put csnl dst n
+for i long n
+put csn add mul dst 64 i get cnm i
+end
+ret
+end
+if lt dst 1000
+q = sub dst 100
+put cfnl q n
+for i long n
+put cfn add mul q 64 i get cnm i
+end
+ret
+end
+g = sub dst 1000
+put cgnl g n
+for i long n
+put cgn add mul g 64 i get cnm i
+end
+end
+
+fn c2_dfield k long f long to long
+e = c2_rname
+if eq e -1
+ret c2_trunc -1 cmfnm
+end
+if ne e 0
+c2_a2 k f
+ret c2_fail crname -1 -1 cmfnm2
+end
+q = add mul k 16 f
+c2_cpname add 100 q
+put cbad 0 0
+put cfs q c2_q8
+put cfal q c2_q16
+put cfof q c2_q16
+if ne get cbad 0 0
+ret c2_trunc -1 cmfield
+end
+ret 0
+end
+
+fn c2_dstructs to long
+put cbad 0 0
+n = c2_q8
+if ne get cbad 0 0
+ret c2_trunc -1 cmscnt
+end
+put cnst 0 n
+if gt n 16
+c2_a1 n
+ret c2_fail crlstr -1 -1 cmnstr
+end
+for k long n
+e = c2_rname
+if eq e -1
+ret c2_trunc -1 cmsnm
+end
+if ne e 0
+c2_a1 k
+ret c2_fail crname -1 -1 cmsnm2
+end
+c2_cpname k
+put cbad 0 0
+put csnf k c2_q8
+put csnc k c2_q16
+if ne get cbad 0 0
+ret c2_trunc -1 cmshdr
+end
+nf = get csnf k
+if or lt nf 1 gt nf 16
+c2_a2 k nf
+ret c2_fail crsfld -1 -1 cmsfld
+end
+for f long nf
+if ne c2_dfield k f 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+note Function header up to and including the vreg types.
+fn c2_dfhead fi long to long
+e = c2_rname
+if eq e -1
+ret c2_trunc fi cmgnm
+end
+if ne e 0
+ret c2_fail crname fi -1 cmgnm
+end
+c2_cpname add 1000 fi
+put cgk fi 0
+put cgth fi 0
+if eq get cver 0 cvkern
+put cbad 0 0
+kd = c2_q8
+if ne get cbad 0 0
+ret c2_trunc fi cmgkind
+end
+put cgk fi kd
+if gt kd 1
+c2_a1 kd
+ret c2_fail crkind fi -1 cmgkd2
+end
+if eq kd 1
+put cgth fi c2_q16
+if ne get cbad 0 0
+ret c2_trunc fi cmthr
+end
+end
+end
+put cbad 0 0
+put cgnp fi c2_q8
+if ne get cbad 0 0
+ret c2_trunc fi cmnpar
+end
+base = mul fi 481
+if ne c2_rtype add base 480 0
+ret c2_trunc fi cmret
+end
+put cbad 0 0
+nv = c2_q16
+if ne get cbad 0 0
+ret c2_trunc fi cmnvr
+end
+put cgnv fi nv
+if gt nv 480
+c2_a1 nv
+ret c2_fail crlvr fi -1 cmnvr2
+end
+for k long nv
+if ne c2_rtype add base k 0
+ret c2_trunc fi cmvrt
+end
+end
+ret 0
+end
+
+fn c2_dfunc fi long to long
+if ne c2_dfhead fi 0
+ret -1
+end
+put cbad 0 0
+nb = c2_q16
+if ne get cbad 0 0
+ret c2_trunc fi cmnbl
+end
+put cgnb fi nb
+if or lt nb 1 gt nb 512
+c2_a1 nb
+ret c2_fail crlbl fi -1 cmnbl2
+end
+for b long nb
+s = add mul fi 512 b
+put cbf s c2_q32
+put cbc s c2_q32
+if ne get cbad 0 0
+ret c2_trunc fi cmblock
+end
+end
+ni = c2_q32
+if ne get cbad 0 0
+ret c2_trunc fi cmnin
+end
+put cgni fi ni
+if or lt ni 1 gt ni 4096
+c2_a1 ni
+ret c2_fail crlin fi -1 cmnin2
+end
+for i long ni
+if ne c2_dinsn fi i 0
+ret -1
+end
+end
+e = c2_rtext
+if eq e -1
+ret c2_trunc fi cmreq
+end
+if lt e 0
+ret c2_fail crtext fi -1 cmreq
+end
+put cgrq fi e
+e = c2_rtext
+if eq e -1
+ret c2_trunc fi cmens
+end
+if lt e 0
+ret c2_fail crtext fi -1 cmens
+end
+put cgen fi e
+ret 0
+end
+
+fn c2_canon to long
+nf = get cnfn 0
+for g long nf
+if ne get cgk g 0
+ret cvkern
+end
+end
+for g long nf
+for k long get cgnv g
+x = get cts add mul g 481 k
+if or eq x 11 eq x 12
+ret 5
+end
+end
+end
+h3 = long 0
+for g long nf
+for i long get cgni g
+op = get cop add mul g 4096 i
+if and ge op cqpopen le op cqhstore
+ret 4
+end
+if and ge op cqaopen le op cqadest
+h3 = 1
+end
+end
+end
+if ne h3 0
+ret 3
+end
+if gt get cnst 0 0
+ret 2
+end
+ret 1
+end
+
+text cmagic "OSC1IR"
+
+fn c2_decode to long
+n = get cn 0
+if lt n 8
+ret c2_fail crmagic -1 -1 cmmagic
+end
+for i ulong 6
+if ne get cbuf i get cmagic i
+ret c2_fail crmagic -1 -1 cmmagic
+end
+end
+if ne get cbuf 6 0
+ret c2_fail crmagic -1 -1 cmmagic
+end
+v = long get cbuf 7
+put cver 0 v
+if not or and ge v 1 le v 5 eq v cvkern
+c2_a1 v
+ret c2_fail crver -1 -1 cmver
+end
+put cpos 0 8
+put cnst 0 0
+if ge v 2
+if ne c2_dstructs 0
+ret -1
+end
+end
+put cbad 0 0
+nf = c2_q16
+if ne get cbad 0 0
+ret c2_trunc -1 cmfcnt
+end
+put cnfn 0 nf
+if or lt nf 1 gt nf 32
+c2_a1 nf
+ret c2_fail crlfn -1 -1 cmnfn
+end
+for fi long nf
+if ne c2_dfunc fi 0
+ret -1
+end
+end
+p = get cpos 0
+if ne p n
+c2_a1 sub n p
+ret c2_fail crtrail -1 -1 cmtrail
+end
+cv2 = c2_canon
+if ne cv2 v
+c2_a2 v cv2
+ret c2_fail crnonc -1 -1 cmnonc
+end
+ret 0
+end
