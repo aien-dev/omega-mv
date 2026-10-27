@@ -1,0 +1,40 @@
+# Scratch (not for merge): interleaved A/B timing of om/tls P-256 ECDH and ECDSA verify,
+# base = audit/tls-integration 9472e961 ec.om/ecdh.om, new = perf/ec-fast. One pinned core, loadavg per sample.
+name: ec-fast-bench
+on:
+  push:
+    branches: [scratch/ec-fast-bench]
+permissions:
+  contents: read
+jobs:
+  bench:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: build arms
+        run: |
+          set -eu
+          uname -a; nproc; lscpu | sed -n '1,20p'; cat /proc/loadavg
+          omc=$PWD/seed/out/omc; chmod +x "$omc"
+          pin=$(sed -n 's/^OMC_PIN=//p' om/units.sh | tr -d '"'); [ "$(sha256sum "$omc" | cut -c1-64)" = "$pin" ]
+          B=/tmp/ecfast/bench; mkdir -p $B
+          git show 9472e9615:om/tls/ec.om > $B/ec.base.om; git show 9472e9615:om/tls/ecdh.om > $B/ecdh.base.om
+          cp om/tls/ec.om $B/ec.new.om; cp om/tls/ecdh.om $B/ecdh.new.om
+          T=om/tls/test
+          for v in base new; do
+            { echo om2; cat om/tls/sha2.om $B/ec.$v.om $T/ec/driver.om; } > $B/ecv.$v.u; "$omc" < $B/ecv.$v.u > $B/ecv.$v; chmod +x $B/ecv.$v
+            { echo om2; cat $B/ec.$v.om $B/ecdh.$v.om $T/ecdh/driver.om; } > $B/ecdh.$v.u; "$omc" < $B/ecdh.$v.u > $B/ecdh.$v; chmod +x $B/ecdh.$v
+          done
+          sha256sum $B/ec.*.om $B/ecdh.*.om $B/ecv.base $B/ecv.new $B/ecdh.base $B/ecdh.new
+          awk -v c="cavp-256-" '$2 == "S" && index($1, c) == 1 { print; exit }' $T/ecdh/vectors/cavp_cdh.txt > $B/bench-256.txt
+          awk -v c="cavp-384-" '$2 == "S" && index($1, c) == 1 { print; exit }' $T/ecdh/vectors/cavp_cdh.txt > $B/bench-384.txt
+          for c in secp256r1_sha256 secp384r1_sha384; do awk '$4 == "0" && $3 == "d" { print; exit }' $T/ec/vectors/wycheproof_$c.txt > $B/bench-$c.txt; done
+          for v in base new; do $B/ecdh.$v 1 < $B/bench-256.txt; $B/ecv.$v 1 < $B/bench-secp256r1_sha256.txt; done
+      - name: interleaved A/B (core 1)
+        run: |
+          sed -e 's/taskset -c 5/taskset -c 1/' -e 's/l <= 8/l <= 100/' om/tls/test/ec/ab.sh.scratch > /tmp/ab.sh
+          ROUNDS=12 sh /tmp/ab.sh | tee /tmp/ab.log
+      - uses: actions/upload-artifact@v4
+        with: { name: ec-fast-bench, path: /tmp/ab.log }

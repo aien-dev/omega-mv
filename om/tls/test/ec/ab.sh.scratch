@@ -1,0 +1,26 @@
+#!/bin/sh
+# Interleaved A/B: base (5c098681 ec.om/ecdh.om) vs new (perf/ec-fast), core 5, loadavg per sample.
+# Waits until load1 <= 8 before starting (re-check every 180 s). Output: one line per sample.
+B=/tmp/ecfast/bench
+R=${ROUNDS:-12}
+while :; do
+	l=$(cut -d' ' -f1 /proc/loadavg)
+	awk -v l="$l" 'BEGIN { exit !(l <= 8) }' && break
+	echo "WAIT load1=$l $(date -u +%FT%TZ)"
+	sleep 180
+done
+echo "START $(date -u +%FT%TZ) loadavg $(cat /proc/loadavg)"
+i=0
+while [ "$i" -lt "$R" ]; do
+	i=$((i + 1))
+	if [ $((i % 2)) -eq 1 ]; then order="base new"; else order="new base"; fi
+	for v in $order; do
+		for job in "ecdh 256 100 bench-256.txt" "ecdh 384 20 bench-384.txt" "ecv 256 200 bench-secp256r1_sha256.txt" "ecv 384 40 bench-secp384r1_sha384.txt"; do
+			set -- $job
+			la=$(cut -d' ' -f1-3 /proc/loadavg)
+			ns=$(nice -n 19 taskset -c 5 "$B/$1.$v" "$3" < "$B/$4" | awk '{ print $10 }')
+			echo "S round=$i arm=$v op=$1 curve=$2 n=$3 ns=$ns per=$((ns / $3)) load=$la"
+		done
+	done
+done
+echo "END $(date -u +%FT%TZ) loadavg $(cat /proc/loadavg)"
