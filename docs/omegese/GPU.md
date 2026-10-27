@@ -353,6 +353,16 @@ on the GB10 with outputs equal to a host reference (bit for bit, or a tolerance 
 run); a broken kernel is refused; one kernel of the live 35B decode path (the gate) is swapped for
 its Omegese version on a test server with identical golden tokens.
 
+Status on 2026-10-27, commit e83c740c7: the first three parts ran on the GB10.
+`evidence/omegese-gpu/chip-20261027/chip-green.log` has 59 launches and 645 checks with 0 failed,
+the four Omegese kernels (`om_vadd`, `om_gate`, `om_gemm`, `om_attn`) included.
+`chip-red-mutant1.log` uses the same binary with mutant 1, which drops the predicate so trapped
+threads still store. It fails 8 checks and exits 1, which shows the chip test can fail.
+The refusals are on the host, in `chip-20261027/host-test-osc-gpu.log` at the same commit:
+checker2 accepts 13 kernels and refuses 15 broken ones, each with its expected reason.
+The gate swap on a test server with golden tokens is NOT_RUN. It needs an exclusive GPU window,
+because the live 35B on port 18091 must not be touched.
+
 ## 14. Review 1 (2026-10-21)
 
 The brief asks for a Fable review before building past vector add. Fable refused twice with its
