@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 line 87 (K is a number) and erratum E7: a K that is not a number is error 16,
+note at line 9 (the for line).
+note
+om2
+fn main to int
+n = ulong 4
+s = ulong 0
+for i ulong n unroll
+s = add s 1
+end
+ret int s
+end

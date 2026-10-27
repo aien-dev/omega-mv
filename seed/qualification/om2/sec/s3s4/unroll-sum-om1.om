@@ -1,0 +1,38 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of unroll-sum.om (unroll removed, om2 line made a note) for the pinned compiler
+note 734f0a39: same expected stdout, so OM-1 arithmetic cross-checks the python oracle now.
+note Contract section 4 lines 87-92: for i T K unroll emits the body K times with i bound to 0..K-1,
+note and removing unroll leaves behaviour unchanged (twin unroll-sum-rolled.om, same expectation).
+note K = 1 (uint), 4 (uchar), 64 (ulong). Each loop folds i into an order-sensitive accumulator and
+note the K = 64 loop also writes a[i] of a 65-element array, so K-1 or K+1 copies, a wrong binding of i
+note or a reordering changes the printed lines (a K+1 copy writes a[64], read back below, never out of
+note range). Expected stdout: oracle/s3s4/exp/unroll-sum.out (python3, oracle/s3s4/oracle.py).
+note OM-1 unit: this line replaces the om2 line
+fn main to int
+h = ulong 7
+for i uint 1
+h = add mul h 1000003 add ulong i 11
+end
+pu h
+s = ulong 0
+for i uchar 4
+s = add mul s 131 add ulong i 3
+end
+pu s
+a = new uchar 65 0
+t = ulong 0
+c = ulong 0
+for i ulong 64
+t = add mul t 6364136223846793005 add i 1442695040888963407
+c = add c 1
+put a i uchar and add mul i 37 5 255
+end
+pu t
+pu c
+q = ulong 0
+for k ulong 65
+q = add mul q 257 ulong get a k
+end
+pu q
+ret 0
+end

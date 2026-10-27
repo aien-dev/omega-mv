@@ -1,0 +1,7 @@
+$ xcheck.py entry2.bin t4-leak-final-pub.txt
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=5335
+XCHECK branches objdump=199 leakscan=199
+XCHECK mem-non-sp objdump=732 leakscan=732 (sp/x29-only accesses not listed: 480)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE
+EXIT 0

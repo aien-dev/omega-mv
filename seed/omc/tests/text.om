@@ -1,0 +1,8 @@
+note text bytes with every escape are written to stdout and read back with get and len
+text t "a\tb\\c\"d\ne"
+global g uchar 16
+fn main to int
+n = write int 1 t ulong 0 len t
+put g 0 get t 2
+ret add int get t 0 int add len t ulong get g 0
+end

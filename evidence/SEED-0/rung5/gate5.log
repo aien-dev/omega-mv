@@ -1,0 +1,17 @@
+gate5 2026-10-20T02:35:06Z at 265b69dbf7ae853ce1c4d7b12096fb15521aac9f
+PASS built by asm2 twice, same bytes
+atlas.bin 1480 bytes sha256 f7802501b410a0c19eff7b8fca8865c9ba9c96bfa4f8065ca8f508b67748b9a5
+PASS sha256 = audited atlas.bin
+PASS byte-identical to /home/drakestapleton/workspace/atlas/atlas.bin
+AUDIT2 instructions=263 data_bytes=428 mismatch=0
+PASS audit (objdump reference run)
+PASS control caught (s/^  and.x.bm x20 x20 1 58 57 /  and.x.bm x20 x20 1 58 56 /)
+PASS control caught (s/^  ldp.w w13 w11 sp 25$/  ldp.w w13 w11 sp 26/)
+PASS control caught (s/^  adrp x13 0 0 /  adrp x13 1 0 /)
+PASS control caught (s/^  ldr.x.lit x19 L_40200000$/  ldr.x.lit x19 L_401fe100/)
+PASS control caught (s/^  extr.w w2 w3 w3 19$/  extr.w w2 w3 w2 19/)
+5aa2d636e7b4c2b95b4a6d5bc7ba8ecf959ee0fe878af138bcf5dcbb31da159a  /tmp/seed-atlas-gate5.aNkTdF/run_m1_gates.sh
+5aa2d636e7b4c2b95b4a6d5bc7ba8ecf959ee0fe878af138bcf5dcbb31da159a  /home/drakestapleton/workspace/atlas/run_m1_gates.sh
+run_m1_gates.sh exit 0 on the asm2-made atlas.bin (log: evidence/SEED-0/rung5/m1-gates.log)
+scratch copy left at /tmp/seed-atlas-gate5.aNkTdF
+GATE5 PASS

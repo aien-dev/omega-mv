@@ -80,7 +80,7 @@ PG_O3_RENAME := -Doma_rz_r1_plain=omx_o3_r1_plain -Doma_rz_r1_sdot=omx_o3_r1_sdo
 PG_HDRS := src/algebra/realize_common.h src/polyglot/omx_lang.h src/polyglot/omx_bench.h src/sha256.h
 PG_TOOLCHAIN_DEFS = -DOMX_C_O2_TOOLCHAIN='"gcc $(PG_GCC_VER) $(PG_O2_FLAGS)"' \
 	-DOMX_C_O3_TOOLCHAIN='"gcc $(PG_GCC_VER) $(PG_O3_FLAGS)"'
-PG_COMMON_SRCS := src/polyglot/omx_lang.c src/polyglot/omx_bench.c src/sha256.c
+PG_COMMON_SRCS := src/polyglot/omx_lang.c src/polyglot/omx_bench.c src/omega_om_units.c
 
 # Lanes that predate this contract are picked up by their own variables:
 # B1 asm (PGA_ASM + omx_asm.c).
@@ -135,9 +135,9 @@ $(PG_BENCH): tests/polyglot/bench_polyglot.c $(PG_COMMON_SRCS) $(PG_HDRS) $$(PG_
 	@mkdir -p $(dir $@)
 	$(CC) $(PG_HCFLAGS) $(PG_TOOLCHAIN_DEFS) -o $@ \
 		tests/polyglot/bench_polyglot.c $(PG_COMMON_SRCS) $(PG_PLAIN_OBJS) $(PG_LDLIBS)
-$(PG_EXPLAIN): tests/polyglot/polyglot_explain.c src/polyglot/omx_bench.c src/sha256.c $(PG_HDRS)
+$(PG_EXPLAIN): tests/polyglot/polyglot_explain.c src/polyglot/omx_bench.c src/omega_om_units.c $(PG_HDRS)
 	@mkdir -p $(dir $@)
-	$(CC) $(PG_HCFLAGS) -o $@ tests/polyglot/polyglot_explain.c src/polyglot/omx_bench.c src/sha256.c -lm
+	$(CC) $(PG_HCFLAGS) -o $@ tests/polyglot/polyglot_explain.c src/polyglot/omx_bench.c src/omega_om_units.c -lm
 
 # ---- bench manifest: source <TAB> flavor <TAB> object <TAB> compile command ----
 # (@OUT@ in the command is replaced by a scratch path when the bench times it)

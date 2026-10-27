@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* bw_warp_sim.h: host SIMT simulator for the Blackwell IR (omega #308).
  *
  * Models what the earlier per-thread simulators could not: a warp of 32 lanes with an
@@ -332,8 +348,8 @@ static int ws_run_warp(WsSim *s, WsWarp *w, uint32_t warp, uint32_t cx, uint32_t
                 int gg = L / 4, tt = L % 4;
                 const WsLane *ln = &w->lane[L];
                 uint32_t a4[4], b2[2], c4[4];
-                for (unsigned q = 0; q < 4; q++) { a4[q] = ws_rds(ln, in->src1_vreg, q, p); c4[q] = in->src3_vreg >= 0 ? ws_rds(ln, in->src3_vreg, q, p) : 0u; }
-                for (unsigned q = 0; q < 2; q++) b2[q] = ws_rds(ln, in->src2_vreg, q, p);
+                for (unsigned q = 0; q < 4; q++) { a4[q] = ws_rds(ln, in->src1_vreg, in->src1_subreg + q, p); c4[q] = in->src3_vreg >= 0 ? ws_rds(ln, in->src3_vreg, in->src3_subreg + q, p) : 0u; }
+                for (unsigned q = 0; q < 2; q++) b2[q] = ws_rds(ln, in->src2_vreg, in->src2_subreg + q, p); /* operands may start at a subregister (the encoder adds it) */
                 const int ar[4] = { gg, gg + 8, gg, gg + 8 }, ac[4] = { 2 * tt, 2 * tt, 2 * tt + 8, 2 * tt + 8 };
                 for (unsigned q = 0; q < 4; q++) { A[ar[q]][ac[q]] = ws_u2f(a4[q] << 16); A[ar[q]][ac[q] + 1] = ws_u2f(a4[q] & 0xffff0000u); }
                 for (unsigned q = 0; q < 2; q++) { B[2 * tt + 8 * q][gg] = ws_u2f(b2[q] << 16); B[2 * tt + 8 * q + 1][gg] = ws_u2f(b2[q] & 0xffff0000u); }

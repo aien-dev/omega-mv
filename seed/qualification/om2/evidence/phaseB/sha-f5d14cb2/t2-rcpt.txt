@@ -1,0 +1,28 @@
+$ /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha_qual rcpt
+PASS rcpt-hash-eq-stream hash(n) == init/update(n)/final == sha256sum, n = 0..300, 1000, 2000
+PASS rcpt-ctx-copy copy after k updates (k = 0..200, then every 61 to 2000), both copies continued, digests equal == sha256sum
+PASS rcpt-hash-overlap hash(d, n, d+j) == sha256sum(original d) for n in {32,64,100}, j = -31..31 (incl. hash(d,32,d))
+PASS rcpt-post-final init/update(n)/final after a final == sha256sum, n = 0..130; update/final without init returned status 0
+PASS rcpt-empty len-0 updates (NULL, valid, bogus 0x10 pointer) at every split 0..200, before first data, before final; hash(NULL,0)
+INFO rcpt-refuse-update-null-len1 status=32
+INFO rcpt-refuse-update-null-len2^40 status=32
+INFO rcpt-refuse-update-wrap status=32
+INFO rcpt-refuse-update-wrap-end2^64 status=32
+INFO rcpt-refuse-update-len-max status=32
+INFO rcpt-refuse-update-ctx-null status=32
+INFO rcpt-refuse-update-ctx-wrap status=32
+INFO rcpt-refuse-update-view-overlaps-ctx status=32
+INFO rcpt-refuse-update-result-in-ctx status=32
+INFO rcpt-refuse-update-result-null status=32
+INFO rcpt-refuse-init-null status=32
+INFO rcpt-refuse-final-out-null status=32
+INFO rcpt-refuse-final-ctx-null status=32
+INFO rcpt-refuse-final-out-overlaps-ctx status=32
+INFO rcpt-refuse-final-out-wrap status=32
+INFO rcpt-refuse-hash-null-len5 status=32
+INFO rcpt-refuse-hash-wrap status=32
+INFO rcpt-refuse-hash-out-null status=32
+INFO rcpt-refuse-hash-result-overlaps-out status=32
+PASS rcpt-refuse 19 refusals returned status 32; context, out and result untouched
+TOTAL rcpt pass=6 fail=0 trap=0
+EXIT 0

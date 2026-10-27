@@ -1,0 +1,10 @@
+note Exercise the actual backward B.LO caller for local-array initialization.
+fn main to int
+a = new ulong 64 12345
+for i ulong 64
+if ne get a i 12345
+ret 1
+end
+end
+ret 0
+end

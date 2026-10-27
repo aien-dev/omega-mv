@@ -1,0 +1,8 @@
+om2 release
+fn f to bool
+ret true
+end
+fn main to int
+requires f
+ret 0
+end

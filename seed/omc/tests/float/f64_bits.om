@@ -1,0 +1,48 @@
+note literals convert exactly: every constant here was computed outside this compiler (IEEE-754 bits).
+fn main to int
+a = bitcast ulong f64 1.5
+if ne a 4609434218613702656
+ret 1
+end
+b = bitcast ulong f64 0.1
+if ne b 4591870180066957722
+ret 2
+end
+c = bitcast ulong f64 3.141592653589793
+if ne c 4614256656552045848
+ret 3
+end
+d = bitcast ulong f64 1e-3
+if ne d 4562254508917369340
+ret 4
+end
+e = bitcast ulong f64 -0.0
+if ne e 9223372036854775808
+ret 5
+end
+f = bitcast ulong f64 6.02214076e23
+if ne f 4962933279127225623
+ret 6
+end
+g = bitcast ulong f64 1.602176634e-19
+if ne g 4325607224011134547
+ret 7
+end
+h = bitcast ulong f64 1e308
+if ne h 9214871658872686752
+ret 8
+end
+i = bitcast ulong f64 5e-324
+if ne i 1
+ret 9
+end
+j = bitcast ulong f64 1e-324
+if ne j 0
+ret 10
+end
+k = bitcast ulong f64 1.7976931348623158e308
+if ne k 9218868437227405311
+ret 11
+end
+ret 0
+end

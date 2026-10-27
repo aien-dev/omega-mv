@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# Unsized-view check mutant of om2/compiler-s4 @ 3ea0721a (omc 26017d77...). The run-time index check of a
+# view T * / edit T * is dropped (MUTANTS.md B7). Correct side: v6-idx and v6-idx-edit trap 3 (exit 103, empty
+# stdout). Mutant: the out-of-range read/write proceeds, the program prints and exits 0 (stdout differs from empty).
+# The part-based witnesses kill-ce-view-* stay NOT_RUN until part lands.
+cc build/om2-qual/cand-s4/omc.om
+ctl-s4-rebuilt run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+cc pinned
+subst seed/qualification/om2/candidates/s4/mutants/view-nocheck.from seed/qualification/om2/candidates/s4/mutants/view-nocheck.to
+cc build/om2-qual/cand-s4/omc.om
+ctl-view-nocheck-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-view-nocheck-v6-sum run seed/qualification/om2/sec/s5s7/v6-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+view-nocheck-kill-v6-idx kill seed/qualification/om2/sec/s5s7/v6-idx.om+seed/qualification/om2/sec/s5s7/pr.om - - - 0
+cc pinned

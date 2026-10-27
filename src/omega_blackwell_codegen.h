@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef OMEGA_BLACKWELL_CODEGEN_H
 #define OMEGA_BLACKWELL_CODEGEN_H
 
@@ -206,6 +222,8 @@ int omega_bw_ir_set_gpr_limit(BlackwellIRProgram *prog, uint32_t limit);
 
 /* Encodes scheduled IR program into 128-bit sm_121 machine code */
 int omega_bw_encode_program(const BlackwellIRProgram *prog, uint8_t *code_buf, size_t max_len, size_t *out_len);
+/* C6 kernel capture: writes code to $OMEGA_KERNEL_DUMP_DIR/<sha16>.bin when that is set; no-op otherwise (see the .c) */
+void omega_kernel_dump(const uint8_t *code, size_t len);
 
 /* ---- native v1 P07 cut A.2: allocation-free code generation (aienos#286) ----------------------------
  * The freestanding build (OMEGA_GPU_NO_POSIX, make gpu-engine-freestanding) has no allocator: the caller
