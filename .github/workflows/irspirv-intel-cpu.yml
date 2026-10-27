@@ -88,10 +88,13 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y -q --no-install-recommends intel-oneapi-runtime-opencl \
             ocl-icd-opencl-dev opencl-c-headers clinfo cmake ninja-build
-          dpkg-query -W 'intel-oneapi-runtime-opencl*' ocl-icd-libopencl1 | tee runtime.txt
+          dpkg-query -W -f '${db:Status-Abbrev} ${Package} ${Version}\n' 'intel-oneapi-runtime-*' ocl-icd-libopencl1 |
+            awk '$1=="ii"' | tee runtime.txt
           ls /etc/OpenCL/vendors/ && cat /etc/OpenCL/vendors/* | tee -a runtime.txt
-          lib=$(dpkg -L $(dpkg-query -W -f '${Package}\n' 'intel-oneapi-runtime-opencl*') | grep '/libintelocl\.so$' | head -1)
-          test -n "$lib"
+          # The ICD file names the library; it must exist. Record its owning package (if dpkg knows it).
+          lib=$(grep -h '/libintelocl\.so$' /etc/OpenCL/vendors/*.icd | head -1)
+          test -n "$lib" && test -f "$lib"
+          { dpkg -S "$lib" || dpkg -S "$(readlink -f "$lib")" || echo "owner of $lib unknown to dpkg"; } 2>&1 | tee -a runtime.txt
           echo "INTEL_LIB=$lib" >> "$GITHUB_ENV"
           echo "library $lib" | tee -a runtime.txt
           lscpu | sed -n '1,20p' | tee -a runtime.txt
