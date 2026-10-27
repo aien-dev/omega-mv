@@ -88,17 +88,17 @@ global owd uchar 1
 global oxs uchar 65536
 global opath uchar 4096
 
-note kernel wire numbers: the values osc_ir.c/osc_ir.h use at c1/chip-fix 939fe6480
-note (encoding version 6, OSC_I_GPU..OSC_I_MAD = 30..36). The decided renumber
-note (version 8, ops 40..46) is these 8 constants only.
-const okver ulong 6
-const ogpu uchar 30
-const oshar uchar 31
-const ogld uchar 32
-const ogst uchar 33
-const osync uchar 34
-const oshfl uchar 35
-const omad uchar 36
+note kernel wire numbers, as osc_ir.h defines them since 451cbcb6c: kernel units are
+note encoding version 8 (OSC_IR_VERSION_KERNEL), ops OSC_I_GPU..OSC_I_MAD = 40..46.
+note Versions 6 and 7 and ops 30..39 are refused.
+const okver ulong 8
+const ogpu uchar 40
+const oshar uchar 41
+const ogld uchar 42
+const ogst uchar 43
+const osync uchar 44
+const oshfl uchar 45
+const omad uchar 46
 
 text omagic "OSC1IR"
 text ostr "void\nbool\nu8\nu16\nu32\nu64\ni8\ni16\ni32\ni64\nref\nbytes\ncells\nf32\ngview\ngedit\n?\nSLOAD\nSSTORE\nFLOAD\nFSTORE\nGLOAD\nGSTORE\n"

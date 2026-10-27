@@ -122,8 +122,9 @@ int main(int argc, char **argv) {
         KB(q.req_len = OSC_CLAUSE_MAX);
         KB(q.req_len = OSC_CLAUSE_MAX - 1);
         KB(q.op0 = 0);
-        for (unsigned op = 16; op <= 40; op++) KB(q.op0 = op);
-        for (unsigned op = 28; op <= 40; op++) KB(q.op0 = op; q.version = 6; q.kind = 1);
+        for (unsigned op = 16; op <= 50; op++) KB(q.op0 = op);
+        for (unsigned op = 28; op <= 50; op++) KB(q.op0 = op; q.version = 6; q.kind = 1);
+        for (unsigned op = 28; op <= 50; op++) KB(q.op0 = op; q.version = 8; q.kind = 1);
         KB(q.ret_tag = OSC_T_LAST + 1);
         KB(q.ret_tag = OSC_T_F32);
         KB(q.dst = 0x8000);
@@ -137,6 +138,10 @@ int main(int argc, char **argv) {
         KB(q.version = 6; q.struct_table = 1; q.kind = 1);
         KB(q.version = 6; q.struct_table = 1; q.kind = 2);
         KB(q.version = 6; q.struct_table = 1; q.kind = 1; q.ret_tag = OSC_T_VOID);
+        KB(q.version = 8; q.struct_table = 1; q.kind = 0);
+        KB(q.version = 8; q.struct_table = 1; q.kind = 1);
+        KB(q.version = 8; q.struct_table = 1; q.kind = 2);
+        KB(q.version = 8; q.struct_table = 1; q.kind = 1; q.ret_tag = OSC_T_VOID);
 #undef KB
         build(&m, &d);
         m.b[3] = '2';
