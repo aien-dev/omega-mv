@@ -1,0 +1,16 @@
+note a float pool holds the same 8-byte (f64) or 4-byte (f32) patterns as an array.
+global g f64 4
+global h f32 4
+fn main to int
+put g 1 0.5
+b = bitcast ulong get g 1
+if ne b 4602678819172646912
+ret 1
+end
+put h 3 1.5
+c = bitcast uint get h 3
+if ne c 1069547520
+ret 2
+end
+ret 0
+end

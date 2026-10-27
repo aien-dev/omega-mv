@@ -1,0 +1,37 @@
+L838 desk check of om/sha256/sha256-om2.om (evidence class SOURCE; NOT compiler or machine evidence)
+interp.py interprets the OM-2 subset the unit uses, as written in spec/omegese-om2.md and OMEGESE.md
+section 9 (prefix words of fixed arity, uint/ulong wrap, rotr, rolled and unrolled for, layout fields
+little endian, run-time index checks). It is the author's reading of the language, run by python3
+3.12.3 against hashlib (OpenSSL 3.0.13). It cannot show that an OM-2 omc accepts the unit or emits
+correct code; that waits for compiler-s1..s4 and L836.
+
+Cases, seed 838: lengths 0..259, 447, 448, 511, 512, 1000, 4095, 4096, 4097, 12345, each as
+  sha256_hash; init + random update splits (0, 1, 3, 55, 56, 63, 64, 65, 200 bytes, plus empty
+  updates) + final; copy of a live context after the first half, both continued (erratum E3);
+  init/update/final on a context that was already finalized.
+  python3 interp.py om/sha256/sha256-om2.om  ->  desk-check cases=1076 fail=0
+  After erratum E5 (count is a scalar field; interp.py reads `field F T at OFF E` as a scalar):
+  python3 interp.py om/sha256/sha256-om2.om  ->  desk-check cases=1076 fail=0
+  mutant s/^put c count 0$/put c count 1/    ->  fail=807
+
+Mutants (sed on a copy; each must fail):
+  s/rotr e 11/rotr e 12/                      fail=1076
+  s/^put k 5 0x59f111f1$/put k 5 0x59f111f0/  fail=1076
+  s/^put p k 0x80$/put p k 0x81/              fail=1076
+  s/lt n sub 64 bi/le n sub 64 bi/            fail=43   (a full buffer left uncompressed)
+  s/^b = a$/b = c/                            fail=1076
+
+Rolled-loop pass limit (AbiLane report; omc s_for/s_while: trap 4 after 1000000 passes). The unit
+now hashes whole blocks through blocks/run: runs of 2^25 bytes, nested so no loop passes 2^20 times.
+interp.py traps 4 when a rolled loop's count exceeds LIMIT (default 1000000) and models part
+(checks o <= len, then k <= len - o).
+  python3 interp.py om/sha256/sha256-om2.om                         cases=1076 fail=0
+  Scaled test (scale.sed: runs of 16 blocks, so every level is exercised by lengths up to 49216):
+  LIMIT=63 EXTRA=16383,16384,40000,49216 python3 interp.py scaled.om  cases=1092 fail=0
+  Scaled mutants (LIMIT=63, EXTRA=16383,16384,16448,40000,49216):
+    inner run loop 0x10 -> 0x8                 TRAP 4 at 49216, fail=4
+    middle mask 0xf -> 0x7                     TRAP 4 at 49216, fail=5
+    last run length -> 0                       fail=668
+    run step shr 6 -> shr 7                    fail=681
+  A wrong split only moves bytes into the final run, so digests stay right; the pass limit is what
+  catches it, which is why the scaled test sets LIMIT.

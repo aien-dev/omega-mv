@@ -1,0 +1,24 @@
+AIEN-OBS pin_omega_bridge "431fff0a95f84c0a8bf9d3383f94d7e1f02d913e"
+AIEN-OBS omc_sha256 "2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f"
+PASS src/{omega_om_units.c,omega_native.h,omega_api_decl.h,omega_om_units.ident} regenerate byte for byte
+lengths 0..9000: diff=0
+PASS lengths 0..9000: hash and split update equal the C
+PASS 2000 random lengths < 20000: hash and split update equal the C
+PASS hash(d,32,d) x100 equals the C
+PASS hash(d,64,d) (digest overlaps the first 32 bytes) equals the C
+PASS copy of a live context after k = 0..299 updates of 7 bytes, both continued, equals the C
+PASS init/update/final after a final equals a fresh context
+PASS hash(n) equals init/update(0, NULL)/update(n)/update(0)/final, n = 0..299
+ident omega-ident 1 unit=sha256_om2 abi=2 profile=OM-2 src=dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb omc=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+PASS omega2_ident_sha256_om2 names the unit and profile
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0
+cases=2000 diff=0
+SHA256-PARITY PASS
+vectors=35 vecfail=0 cases=1000 diff=0
+mutant b3-merge killed (exit 1, 16 of 35 vectors differ)
+mutant b3-root killed (exit 1, 35 of 35 vectors differ)
+BLAKE3-PARITY PASS
+OMUNITS_RC=0

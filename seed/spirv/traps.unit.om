@@ -1,0 +1,27 @@
+note Nested calls must preserve the callee's first trap, not execute the caller's later trap.
+fn failval x uint to uint
+if eq x 0
+trap 5
+end
+ret x
+end
+fn nestedfail x uint to uint
+y = failval x
+if eq y 0
+trap 9
+end
+ret y
+end
+fn failvoid x uint to void
+if eq x 0
+trap 6
+end
+ret
+end
+fn nestedvoid x uint to uint
+failvoid x
+if eq x 0
+trap 9
+end
+ret x
+end

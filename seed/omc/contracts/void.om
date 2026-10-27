@@ -1,0 +1,9 @@
+om2
+fn f to void
+ensures false
+ret
+end
+fn main to int
+f
+ret 0
+end

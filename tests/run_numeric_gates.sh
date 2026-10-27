@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # tests/run_numeric_gates.sh -- M19R Gate 5 (OMEGA-NUMERIC-0) qualification.
 #
 #   tests/run_numeric_gates.sh --omega-candidate SHA --physics-candidate SHA
@@ -157,7 +172,7 @@ num_build() {
         src/omega_numeric_divsqrt_gb10.c \
         src/omega_numeric_provenance.c src/omega_blackwell_codegen.c \
         src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c \
-        src/forge_realization.c src/aegis_verification.c src/sha256.c \
+        src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
         "$p/forge/forge_descriptor.c" "$p/forge/forge_realize.c" "$p/sha256_clean.c" \
         "$p/nvrm/nvrm.c" "$p/m16/m16_native.c") > "$log" 2>&1 ||
         m19r_fail "build failed; see $log" || return 1

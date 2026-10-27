@@ -1,0 +1,31 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Combined gate: a struct value drives a native file operation in one program.
+struct H x uint y ulong end
+text path "structfile.tmp"
+text body "ok\n"
+fn main to int
+h = new H 7 9
+put h y 42
+fd = int fopen path 0 len path 577 420
+if lt fd 0
+ret 1
+end
+n = write fd body 0 len body
+r = fclose fd
+u = unlink path 0 len path
+if ne n long len body
+ret 2
+end
+if ne r 0
+ret 3
+end
+if ne u 0
+ret 4
+end
+if eq get h x 7
+if eq get h y 42
+ret 0
+end
+end
+ret 5
+end

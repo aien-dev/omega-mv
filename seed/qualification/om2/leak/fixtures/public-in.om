@@ -1,0 +1,8 @@
+note Contract section 8, E11/E12: an explicit public count field makes a branch len.
+note byte offset 32 is covered by pub:0:32:8. Constant index uses omc's register-offset form.
+fn f c view uchar 64 to ulong
+if eq get c 32 0
+ret 1
+end
+ret 0
+end

@@ -1,0 +1,17 @@
+Baseline summary (computed from baseline-acb3f15c/raw-acb3f15c-cpu6.txt by sort/awk; evidence class HOST, GB10 Cortex-X925 cpu6, no GPU)
+bench.c x11  bulk 64 MiB  omega MB/s: median 248.6 (248.2..248.7) n=11
+bench.c x11  bulk 64 MiB  C     MB/s: median 202.7 (202.6..202.8) n=11
+bench.c x11  32 B x200000 omega us:   median 0.28 (0.28..0.28) n=11
+bench.c x11  32 B x200000 C     us:   median 0.34 (0.34..0.34) n=11
+small.c (11 interleaved rounds per length, 200000 calls per batch):
+MEASURED len    0: omega median 279 ns (279..279)  C median 339 ns (338..339)  omega/C 0.825
+MEASURED len   32: omega median 278 ns (278..278)  C median 340 ns (340..340)  omega/C 0.818
+MEASURED len   55: omega median 277 ns (277..277)  C median 336 ns (336..336)  omega/C 0.823
+MEASURED len   64: omega median 530 ns (530..530)  C median 657 ns (657..658)  omega/C 0.806
+MEASURED len  100: omega median 527 ns (527..527)  C median 657 ns (657..658)  omega/C 0.802
+MEASURED len  200: omega median 1028 ns (1028..1034)  C median 1289 ns (1289..1293)  omega/C 0.798
+MEASURED len 1000: omega median 4029 ns (4028..4030)  C median 5082 ns (5082..5089)  omega/C 0.793
+Historical reference (om/sha256/README.md): 248.7 vs 202.7 MB/s, 0.28 vs 0.34 us. Here: omega bulk median
+248.6 MB/s (the 11-run range 248.2..248.7 contains 248.7), C 202.7, 32 B 0.28 vs 0.34 us. The historical run's
+core and pinning are not recorded; this run is pinned to cpu6 (X925). bench.c runs its two bulk arms in
+sequence inside each process (C first), so the bulk pairing is interleaved across the 11 runs, not per call.

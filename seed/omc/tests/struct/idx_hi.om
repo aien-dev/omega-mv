@@ -1,0 +1,5 @@
+struct H v uint 4 end
+fn main to uint
+h = new H 1
+ret get h v 4
+end

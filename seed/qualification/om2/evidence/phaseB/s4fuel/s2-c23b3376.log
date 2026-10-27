@@ -1,0 +1,10 @@
+OM2GATE START cases=seed/qualification/om2/sec/s4fuel/candidate.cases scratch=build/om2-qual/fuel-s2
+IDENTITY omc /tmp/zl/omc-s2 sha256=c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533 pinned=c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533 match
+VERDICT fuel-d2 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fuel-d3 FAIL compile exit=0 expected=14 stdout differs at byte 0 stderr differs at byte 0
+VERDICT fuel-d3-code FAIL compile exit=0 expected=14 refusal wrote compiler output diagnostic does not name the expected error
+VERDICT fuel-d4 FAIL compile exit=0 expected=14 stdout differs at byte 0 stderr differs at byte 0
+VERDICT fuel-d4-code FAIL compile exit=0 expected=14 refusal wrote compiler output diagnostic does not name the expected error
+VERDICT fuel-inl FAIL compile exit=0 expected=14 stdout differs at byte 0 stderr differs at byte 0
+VERDICT fuel-inl-code FAIL compile exit=0 expected=14 refusal wrote compiler output diagnostic does not name the expected error
+OM2GATE FAIL cases=7 pass=1 fail=6 invalid=0 not_run=0

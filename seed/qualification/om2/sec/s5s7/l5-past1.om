@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 160: off by one: a uint at 5 ends at byte 9 > SIZE 8: error 29.
+om2
+layout ps1 8
+field a uint 1 at 5 little
+end
+fn main to int
+ret 0
+end
