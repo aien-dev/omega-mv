@@ -1,0 +1,166 @@
+# irspirv-intel-cpu: replays the irspirv SPIR-V suite through Intel's CPU OpenCL runtime.
+# Job "modules" (ubuntu-24.04-arm) runs seed/spirv/gate-irspirv.sh unchanged on the committed
+# seed/out/omc: it builds the translator, the 13+ unit modules and the AArch64 native dumps, and
+# checks them against PoCL 7.2 (built here at the commit the Spark oracle uses). Job "intel-cpu"
+# (ubuntu-24.04, x86-64) installs intel-oneapi-runtime-opencl, builds seed/spirv/opencl-host.c
+# pinned to libintelocl.so and its platform name, and runs seed/spirv/ocl-vendor-matrix.sh over the
+# 129 cases.tsv rows plus demo and regression rows, then the mutant negative control, then the same
+# rows again under intel/opencl-intercept-layer (cliloader) to capture build logs and API errors.
+# The matrix reports per row (built, ran, matches native, error text); mismatches are findings,
+# so only the negative control and setup failures fail this job. CPU evidence only. Advisory.
+name: irspirv-intel-cpu
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ["seed/spirv/**", "seed/wasm/cases.tsv", "seed/out/omc", ".github/workflows/irspirv-intel-cpu.yml"]
+permissions:
+  contents: read
+env:
+  POCL_SHA: 888c9774b94590fff1afef003154ca2c0ea66605   # PoCL v7.2, same as the Spark oracle
+  INTERCEPT_TAG: v3.0.6
+jobs:
+  modules:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain (distro oracles)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends cmake ninja-build pkg-config python3 \
+            llvm-18-dev clang-18 libclang-18-dev libclang-cpp18-dev llvm-spirv-18 libllvmspirvlib-18-dev \
+            ocl-icd-dev ocl-icd-opencl-dev opencl-c-headers libhwloc-dev spirv-tools
+          dpkg-query -W llvm-18-dev clang-18 llvm-spirv-18 libllvmspirvlib-18-dev ocl-icd-libopencl1 spirv-tools
+      - id: pocl-cache
+        uses: actions/cache@v4
+        with:
+          path: /opt/pocl
+          key: pocl-${{ env.POCL_SHA }}-llvm18-ubuntu2404-arm64
+      - name: build PoCL
+        if: steps.pocl-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --quiet https://github.com/pocl/pocl.git /tmp/pocl
+          git -C /tmp/pocl checkout --quiet --detach "$POCL_SHA"
+          cmake -S /tmp/pocl -B /tmp/pocl/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/opt/pocl -DWITH_LLVM_CONFIG=/usr/bin/llvm-config-18 \
+            -DENABLE_ICD=ON -DENABLE_SPIRV=ON -DHOST_CPU_ENABLE_SPIRV=ON \
+            -DENABLE_TESTS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_POCLCC=OFF
+          cmake --build /tmp/pocl/build
+          sudo cmake --install /tmp/pocl/build
+      - name: gate-irspirv (PoCL baseline; produces modules and native dumps)
+        run: |
+          lib=$(find /opt/pocl -name 'libpocl.so.*.*' -type f | head -1)
+          echo "PoCL library $lib"
+          export POCL_LIBRARY="$lib" POCL_CACHE_DIR=/tmp/pocl-cache
+          set +e
+          sh seed/spirv/gate-irspirv.sh > gate.out 2>&1
+          rc=$?
+          set -e
+          cat gate.out
+          echo "gate exit $rc"
+          test "$rc" = 0
+      - name: bundle
+        if: ${{ !cancelled() }}
+        run: tar cf irspirv-bundle.tar build/seed/spirv gate.out
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: irspirv-bundle
+          path: irspirv-bundle.tar
+  intel-cpu:
+    needs: modules
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: irspirv-bundle
+      - name: unpack AArch64 bundle
+        run: tar xf irspirv-bundle.tar && grep -E '^(SUMMARY|PASS IRSPIRV|FAIL|NOT_RUN)' gate.out
+      - name: Intel CPU OpenCL runtime (oneAPI apt repository)
+        run: |
+          wget -q -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB |
+            gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+          echo 'deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main' |
+            sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends intel-oneapi-runtime-opencl \
+            ocl-icd-opencl-dev opencl-c-headers clinfo cmake ninja-build
+          dpkg-query -W 'intel-oneapi-runtime-opencl*' ocl-icd-libopencl1 | tee runtime.txt
+          ls /etc/OpenCL/vendors/ && cat /etc/OpenCL/vendors/* | tee -a runtime.txt
+          lib=$(dpkg -L $(dpkg-query -W -f '${Package}\n' 'intel-oneapi-runtime-opencl*') | grep '/libintelocl\.so$' | head -1)
+          test -n "$lib"
+          echo "INTEL_LIB=$lib" >> "$GITHUB_ENV"
+          echo "library $lib" | tee -a runtime.txt
+          lscpu | sed -n '1,20p' | tee -a runtime.txt
+          ls -l /dev/dri 2>&1 | tee -a runtime.txt || true
+      - name: clinfo (pinned library only)
+        run: |
+          OCL_ICD_VENDORS="$INTEL_LIB" clinfo | tee clinfo.txt
+          name=$(OCL_ICD_VENDORS="$INTEL_LIB" clinfo -l | sed -n 's/^Platform #0: //p')
+          test -n "$name"
+          echo "INTEL_PLATFORM=$name" >> "$GITHUB_ENV"
+          echo "platform $name" | tee -a runtime.txt
+      - name: build opencl-host pinned to Intel CPU runtime
+        run: |
+          cc -std=c11 -O2 -Wall -Wextra -Werror "-DIRSPIRV_POCL_LIBRARY=\"$INTEL_LIB\"" \
+            '-DIRSPIRV_OCL_LIBRARY_BASE="libintelocl.so"' "-DIRSPIRV_OCL_PLATFORM=\"$INTEL_PLATFORM\"" \
+            seed/spirv/opencl-host.c -o intel-host -lOpenCL
+          sha256sum intel-host seed/spirv/opencl-host.c seed/spirv/ocl-vendor-matrix.sh | tee -a runtime.txt
+          ./intel-host build/seed/spirv/demo.spv avgu32 7 10 2>&1 | tee smoke.txt
+      - name: host control (a PoCL-pinned build must refuse the Intel library)
+        run: |
+          cc -std=c11 -O2 "-DIRSPIRV_POCL_LIBRARY=\"$INTEL_LIB\"" seed/spirv/opencl-host.c -o pocl-pinned-host -lOpenCL
+          set +e; ./pocl-pinned-host build/seed/spirv/demo.spv avgu32 7 10 > control.out 2> control.err; rc=$?; set -e
+          cat control.err; test "$rc" = 3; test ! -s control.out
+      - name: matrix (Intel CPU runtime)
+        run: |
+          mkdir -p results
+          B=build/seed/spirv
+          for t in "seed/wasm/cases.tsv case" "seed/spirv/demo.tsv demo-case" "seed/spirv/regression.tsv regression-case"; do
+            set -- $t
+            bash seed/spirv/ocl-vendor-matrix.sh $B ./intel-host $1 $2 results/$2-intel.tsv | tee -a results/summary.txt || true
+          done
+          test "$(awk 'END{print NR-1}' results/case-intel.tsv)" = 129
+      - name: negative control (mutant module must mismatch exactly mutant.mutadd)
+        run: |
+          set +e
+          bash seed/spirv/ocl-vendor-matrix.sh build/seed/spirv ./intel-host seed/wasm/cases.tsv case \
+            results/case-intel-mutant.tsv --mutant-baseline | tee -a results/summary.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          test "$rc" = 1
+          awk -F'\t' 'NR>1 && $11!="yes"' results/case-intel-mutant.tsv | tee results/negative.txt
+          grep -q $'\tmutant\tmutadd\t19,7\t0\t26\tyes\tyes\t12\t0\tno\t' results/negative.txt
+          # Every other row must be identical to the main matrix (mutant row aside).
+          diff <(awk -F'\t' 'NR>1 && $2!="mutant"' results/case-intel.tsv | cut -f1-12) \
+               <(awk -F'\t' 'NR>1 && $2!="mutant"' results/case-intel-mutant.tsv | cut -f1-12)
+      - name: intercept layer (cliloader, build and error logging)
+        run: |
+          git clone --quiet https://github.com/intel/opencl-intercept-layer.git /tmp/cli
+          git -C /tmp/cli checkout --quiet "$INTERCEPT_TAG"
+          git -C /tmp/cli rev-parse HEAD | tee -a runtime.txt
+          cmake -S /tmp/cli -B /tmp/cli/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_CLILOADER=ON
+          cmake --build /tmp/cli/build
+          loader=$(find /tmp/cli/build -name cliloader -type f -perm -u+x | head -1)
+          test -n "$loader"
+          export CLI_BuildLogging=1 CLI_ErrorLogging=1 CLI_CallLogging=1 CLI_ReportToStderr=1 CLI_LogToFile=0
+          export HOST_WRAP="$loader"
+          for t in "seed/wasm/cases.tsv case" "seed/spirv/demo.tsv demo-case" "seed/spirv/regression.tsv regression-case"; do
+            set -- $t
+            bash seed/spirv/ocl-vendor-matrix.sh build/seed/spirv ./intel-host $1 $2 results/$2-intel-intercept.tsv | tee -a results/summary.txt || true
+          done
+          # The intercept layer must be live: its banner appears in the per-row stderr.
+          grep -l 'Intercept Layer' results/case-intel-intercept.logs/1.err
+      - name: bundle results
+        if: ${{ !cancelled() }}
+        run: |
+          cat results/summary.txt || true
+          tar cf intel-cpu-results.tar results runtime.txt clinfo.txt smoke.txt gate.out || true
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: irspirv-intel-cpu
+          path: intel-cpu-results.tar
