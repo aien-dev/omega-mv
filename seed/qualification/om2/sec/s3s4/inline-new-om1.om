@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of inline-new-plain.om for the pinned compiler 734f0a39: same stdout.
+note Contract section 4 line 94: an inline function must contain no new (error 9). The same text
+note without inline (inline-new-plain.om) is accepted and prints 3.
+note OM-1 unit: this line replaces the om2 line
+fn f a ulong to ulong
+b = new ulong 4 0
+put b 0 a
+ret get b 0
+end
+fn main to int
+pu f 3
+ret 0
+end

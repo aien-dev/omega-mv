@@ -1,0 +1,105 @@
+note Owned low-address reservations and complete-span file binding. Host only.
+text path "reserve.bin"
+text mark "Z"
+text msg "PASS owned reservations, collision refusal and failed-bind retirement\n"
+global buf uchar 4
+global status uchar 4
+global fds int 2
+fn ck yes bool to void
+if not yes
+exit int 80
+end
+end
+fn bad k int to void
+if eq k 0
+r = maphold 4096 4096
+ret
+end
+if eq k 1
+r = maphold 1099511627776 4096
+ret
+end
+if eq k 2
+r = maphold 68719476737 4096
+ret
+end
+if eq k 3
+r = maphold 68719476736 4097
+ret
+end
+if eq k 4
+r = maphold 18446744073709551615 4096
+ret
+end
+h = maphold 68719542272 4096
+ck gt h 0
+if eq k 5
+r = mapread h 0 buf 0 1
+ret
+end
+if eq k 6
+r = mapwrite h 0 mark 0 1
+ret
+end
+if eq k 7
+r = mapget h 0 4
+ret
+end
+if eq k 8
+r = mapset h 0 4 0
+ret
+end
+if eq k 9
+ck eq mapbind h neg int 1 0 3 neg long 9
+r = mapaddr h
+ret
+end
+ck eq mapbind h get fds 0 0 3 0
+r = mapbind h get fds 0 0 3
+end
+fn main to int
+fd = fopen path 0 len path 524482 384
+ck ge fd 0
+put fds 0 int fd
+ck eq fseek int fd 4095 0 4095
+ck eq write int fd mark 0 1 1
+ro = fopen path 0 len path 524288 0
+ck ge ro 0
+put fds 1 int ro
+for i ulong 16
+h = maphold 68719476736 4096
+ck gt h 0
+ck eq mapaddr h 68719476736
+ck eq maphold 68719476736 4096 neg long 17
+ck eq mapbind h int fd 0 3 0
+ck eq mapread h 4095 buf 0 1 1
+ck eq get buf 0 90
+ck eq mapset h 0 4 add 123 i 0
+ck eq mapget h 0 4 add 123 i
+ck eq mapdrop h 0
+end
+h = maphold 68719476736 4096
+ck gt h 0
+ck eq mapbind h int ro 0 3 neg long 13
+j = maphold 68719476736 4096
+ck gt j 0
+ck ne j h
+ck eq mapbind j int ro 0 1 0
+ck eq mapget j 0 4 138
+ck eq mapdrop j 0
+for k int 11
+p = fork
+ck ge p 0
+if eq p 0
+bad k
+exit int 80
+end
+ck eq waitpid int p status 0 4 0 p
+ck and eq get status 0 0 eq get status 1 103
+end
+ck eq fclose int fd 0
+ck eq fclose int ro 0
+ck eq unlink path 0 len path 0
+ck eq write 1 msg 0 len msg long len msg
+ret 0
+end

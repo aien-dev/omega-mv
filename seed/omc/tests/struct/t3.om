@@ -1,0 +1,8 @@
+struct A x int end
+struct B y int z int end
+fn main to int
+p = new A 5
+q = new B 4 5
+put q z mul get p x get q y
+ret sub get q z get p x
+end

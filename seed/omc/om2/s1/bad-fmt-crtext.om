@@ -1,0 +1,7 @@
+om2 fmt
+note a CR inside a text literal on line 4
+om2
+text t "ab"
+fn main to int
+ret 0
+end

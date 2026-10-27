@@ -1,0 +1,13 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s4/s4-mutants.cases scratch=build/om2-qual/qf6a6492f-s4mut
+IDENTITY omc /tmp/zl/omc-f6a6492f sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+COMPILER build/om2-qual/qf6a6492f-s4mut/6.elf sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec source line=6
+VERDICT ctl-s4-rebuilt PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s4/mutants/view-nocheck.from seed/qualification/om2/candidates/s4/mutants/view-nocheck.to
+  MUTATE exact-once substitution at byte 64783
+COMPILER build/om2-qual/qf6a6492f-s4mut/10.elf sha256=da6e3b75c672d80ba2c6e5c02fc3a693d64b71dece3e2076e1eed880c50a2f49 source line=10
+VERDICT ctl-view-nocheck-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ctl-view-nocheck-v6-sum PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT view-nocheck-kill-v6-idx PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+OM2GATE PASS cases=4 pass=4 fail=0 invalid=0 not_run=0

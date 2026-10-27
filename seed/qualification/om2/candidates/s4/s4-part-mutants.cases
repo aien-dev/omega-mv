@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0
+# part/view mutants of om2/compiler-s4 @ f6a6492f (omc 49923639...). Kill rows: sec/s5s7/mutant-side.cases
+# (mut-a*) and sec/s3s4/mutant-kills.cases (kill-ce-view-*), written before S4 was read. Each mutant must
+# also pass v6-part-empty (o = len, k = 0) and hash abc.
+cc build/om2-qual/cand-s4/omc.om
+ctl-head-rebuilt run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+cc pinned
+# --- mutant part-wrapped
+subst seed/qualification/om2/candidates/s4/mutants/part-wrapped.from seed/qualification/om2/candidates/s4/mutants/part-wrapped.to
+cc build/om2-qual/cand-s4/omc.om
+ctl-part-wrapped-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+part-wrapped-ctl-v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+part-wrapped-mut-a-part-wrap run seed/qualification/om2/sec/s5s7/v6-part-wrap.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-wrap.mutant - 0
+cc pinned
+# --- mutant part-nosecond
+subst seed/qualification/om2/candidates/s4/mutants/part-nosecond.from seed/qualification/om2/candidates/s4/mutants/part-nosecond.to
+cc build/om2-qual/cand-s4/omc.om
+ctl-part-nosecond-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+part-nosecond-ctl-v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+part-nosecond-mut-a2-part-tail run seed/qualification/om2/sec/s5s7/v6-part-tail.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-tail.mutant - 0
+cc pinned
+# --- mutant part-nofirst
+subst seed/qualification/om2/candidates/s4/mutants/part-nofirst.from seed/qualification/om2/candidates/s4/mutants/part-nofirst.to
+cc build/om2-qual/cand-s4/omc.om
+ctl-part-nofirst-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+part-nofirst-ctl-v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+part-nofirst-mut-a3-part-o run seed/qualification/om2/sec/s5s7/v6-part-o.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-o.mutant - 0
+cc pinned
+# --- mutant view-nocheck
+subst seed/qualification/om2/candidates/s4/mutants/view-nocheck.from seed/qualification/om2/candidates/s4/mutants/view-nocheck.to
+cc build/om2-qual/cand-s4/omc.om
+ctl-view-nocheck-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+view-nocheck-ctl-v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+view-nocheck-kill-ce-view-A kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-A.out - 0
+view-nocheck-kill-ce-view-C kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-C.out - 0
+view-nocheck-kill-ce-view-D kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-D.out - 0
+view-nocheck-kill-ce-view-F kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-F.out - 0
+cc pinned

@@ -1,0 +1,82 @@
+OM2GATE START cases=seed/omc/om2/s1/s1-mutants.cases scratch=/tmp/om2c/g-s1m
+IDENTITY omc /home/drakestapleton/workspace/om2-compiler/seed/out/omc sha256=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f pinned=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f match
+DEADLINE 60
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/5.src > /tmp/om2c/g-s1m/5.elf 2> /tmp/om2c/g-s1m/5.cerr
+COMPILER /tmp/om2c/g-s1m/5.elf sha256=3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f source line=5
+CASE ctl-rot line=6
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/6.src > /tmp/om2c/g-s1m/6.elf 2> /tmp/om2c/g-s1m/6.cerr
+  $ /tmp/om2c/g-s1m/6.elf < /dev/null > /tmp/om2c/g-s1m/6.out 2> /tmp/om2c/g-s1m/6.err
+VERDICT ctl-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-rot-trap line=7
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/7.src > /tmp/om2c/g-s1m/7.elf 2> /tmp/om2c/g-s1m/7.cerr
+  $ /tmp/om2c/g-s1m/7.elf < /dev/null > /tmp/om2c/g-s1m/7.out 2> /tmp/om2c/g-s1m/7.err
+VERDICT ctl-rot-trap PASS run exit=107 expected=107 stdout=match stderr=match
+CASE ctl-hex-max line=8
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/8.src > /tmp/om2c/g-s1m/8.elf 2> /tmp/om2c/g-s1m/8.cerr
+  $ /tmp/om2c/g-s1m/8.elf < /dev/null > /tmp/om2c/g-s1m/8.out 2> /tmp/om2c/g-s1m/8.err
+VERDICT ctl-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-hex-upper line=9
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/9.src > /tmp/om2c/g-s1m/9.elf 2> /tmp/om2c/g-s1m/9.cerr
+VERDICT ctl-hex-upper PASS compile exit=6 expected=6 refused with the expected error
+CASE ctl-om1-names line=10
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/10.src > /tmp/om2c/g-s1m/10.elf 2> /tmp/om2c/g-s1m/10.cerr
+  $ /tmp/om2c/g-s1m/10.elf < /dev/null > /tmp/om2c/g-s1m/10.out 2> /tmp/om2c/g-s1m/10.err
+VERDICT ctl-om1-names PASS run exit=2 expected=2 stdout=match stderr=match
+CASE ctl-fmt line=11
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/11.src > /tmp/om2c/g-s1m/11.elf 2> /tmp/om2c/g-s1m/11.cerr
+VERDICT ctl-fmt PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE ctl-diag-unknown line=12
+  $ /tmp/om2c/g-s1m/5.elf < /tmp/om2c/g-s1m/12.src > /tmp/om2c/g-s1m/12.elf 2> /tmp/om2c/g-s1m/12.cerr
+VERDICT ctl-diag-unknown PASS compile exit=3 expected=3 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to
+  MUTATE exact-once substitution at byte 53547
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/15.src > /tmp/om2c/g-s1m/15.elf 2> /tmp/om2c/g-s1m/15.cerr
+COMPILER /tmp/om2c/g-s1m/15.elf sha256=b9f9bfd26702427b6d10509170166a6140d89b1c14fdf39a6e4c05ec08c46964 source line=15
+CASE m-rotl line=16
+  $ /tmp/om2c/g-s1m/15.elf < /tmp/om2c/g-s1m/16.src > /tmp/om2c/g-s1m/16.elf 2> /tmp/om2c/g-s1m/16.cerr
+  $ /tmp/om2c/g-s1m/16.elf < /dev/null > /tmp/om2c/g-s1m/16.out 2> /tmp/om2c/g-s1m/16.err
+VERDICT m-rotl FAIL run exit=4 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rchk.from seed/omc/om2/s1/mut/rchk.to
+  MUTATE exact-once substitution at byte 53461
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/19.src > /tmp/om2c/g-s1m/19.elf 2> /tmp/om2c/g-s1m/19.cerr
+COMPILER /tmp/om2c/g-s1m/19.elf sha256=4daf3fd90b2b934cc5dac2b8f902d2b65668fbbb416aad5b1ef1b06ae16f105e source line=19
+CASE m-rchk line=20
+  $ /tmp/om2c/g-s1m/19.elf < /tmp/om2c/g-s1m/20.src > /tmp/om2c/g-s1m/20.elf 2> /tmp/om2c/g-s1m/20.cerr
+  $ /tmp/om2c/g-s1m/20.elf < /dev/null > /tmp/om2c/g-s1m/20.out 2> /tmp/om2c/g-s1m/20.err
+VERDICT m-rchk FAIL run exit=5 expected=107 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/hexd.from seed/omc/om2/s1/mut/hexd.to
+  MUTATE exact-once substitution at byte 23972
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/23.src > /tmp/om2c/g-s1m/23.elf 2> /tmp/om2c/g-s1m/23.cerr
+COMPILER /tmp/om2c/g-s1m/23.elf sha256=e2ce7d2045cb1361314603424c7f508a31be27d4385d9482c2f25d5e068ce78f source line=23
+CASE m-hexd line=24
+  $ /tmp/om2c/g-s1m/23.elf < /tmp/om2c/g-s1m/24.src > /tmp/om2c/g-s1m/24.elf 2> /tmp/om2c/g-s1m/24.cerr
+VERDICT m-hexd FAIL compile exit=8 expected=0
+SUBST seed/omc/om2/s1/mut/hexU.from seed/omc/om2/s1/mut/hexU.to
+  MUTATE exact-once substitution at byte 23948
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/27.src > /tmp/om2c/g-s1m/27.elf 2> /tmp/om2c/g-s1m/27.cerr
+COMPILER /tmp/om2c/g-s1m/27.elf sha256=d8e53d23a2a681c69c1ebd6265c9b5ed9915c85e6baf785dbeec5720fee12221 source line=27
+CASE m-hexU line=28
+  $ /tmp/om2c/g-s1m/27.elf < /tmp/om2c/g-s1m/28.src > /tmp/om2c/g-s1m/28.elf 2> /tmp/om2c/g-s1m/28.cerr
+VERDICT m-hexU FAIL compile exit=8 expected=6 diagnostic does not name the expected error
+SUBST seed/omc/om2/s1/mut/optin.from seed/omc/om2/s1/mut/optin.to
+  MUTATE exact-once substitution at byte 16813
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/31.src > /tmp/om2c/g-s1m/31.elf 2> /tmp/om2c/g-s1m/31.cerr
+COMPILER /tmp/om2c/g-s1m/31.elf sha256=9bdb7f5230486c9535580868ebf0a54477a96ae5798643ca1c4ab8786ca3c01b source line=31
+CASE m-optin line=32
+  $ /tmp/om2c/g-s1m/31.elf < /tmp/om2c/g-s1m/32.src > /tmp/om2c/g-s1m/32.elf 2> /tmp/om2c/g-s1m/32.cerr
+VERDICT m-optin FAIL compile exit=16 expected=0
+SUBST seed/omc/om2/s1/mut/paren.from seed/omc/om2/s1/mut/paren.to
+  MUTATE exact-once substitution at byte 22679
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/35.src > /tmp/om2c/g-s1m/35.elf 2> /tmp/om2c/g-s1m/35.cerr
+COMPILER /tmp/om2c/g-s1m/35.elf sha256=926f86e1791b0787a4acd938741481a3d3ede385d843ac244e5757514c9081f1 source line=35
+CASE m-paren line=36
+  $ /tmp/om2c/g-s1m/35.elf < /tmp/om2c/g-s1m/36.src > /tmp/om2c/g-s1m/36.elf 2> /tmp/om2c/g-s1m/36.cerr
+VERDICT m-paren FAIL compile exit=0 expected=0 stdout differs at byte 102 stderr=match
+SUBST seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to
+  MUTATE exact-once substitution at byte 17858
+  $ /home/drakestapleton/workspace/om2-compiler/seed/out/omc < /tmp/om2c/g-s1m/39.src > /tmp/om2c/g-s1m/39.elf 2> /tmp/om2c/g-s1m/39.cerr
+COMPILER /tmp/om2c/g-s1m/39.elf sha256=54fff6f39e6a10f80bf2ca07132f18c6875ab426a0899cebbf6a99191420f2df source line=39
+CASE m-unk line=40
+  $ /tmp/om2c/g-s1m/39.elf < /tmp/om2c/g-s1m/40.src > /tmp/om2c/g-s1m/40.elf 2> /tmp/om2c/g-s1m/40.cerr
+VERDICT m-unk FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 43
+OM2GATE FAIL cases=14 pass=7 fail=7 invalid=0 not_run=0

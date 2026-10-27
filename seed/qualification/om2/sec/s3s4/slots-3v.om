@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 99-101 (function mode): an unsized view or edit takes two of the six
+note parameter slots. Three unsized arrays = 6 slots: accepted (compile exit 0, function-mode words).
+om2
+fn f a view uchar * b view uchar * c edit uchar * to ulong
+ret add len a add len b len c
+end

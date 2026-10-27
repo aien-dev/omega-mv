@@ -1,0 +1,12 @@
+om2
+fn main to int
+s = ulong 0
+for i ulong 64 unroll
+for j ulong 64 unroll
+for k ulong 64 unroll
+s = add s k
+end
+end
+end
+ret int and s 1
+end

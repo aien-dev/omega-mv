@@ -1,0 +1,8 @@
+global g uchar 1
+fn set v uchar to void
+put g 0 v
+end
+fn main to int
+set 77
+ret int get g 0
+end

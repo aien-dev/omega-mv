@@ -1,0 +1,11 @@
+note leak fixture (contract spec/omegese-om2.md section 8, lines 232-236, evidence (a)):
+note a loop over a public length n with a data-independent body. The loaded bytes are summed but
+note never reach a branch or an address, so every branch is len and every access is public-index.
+note Expected: TRACE-EQUIV-STATIC PASS with no data-dependent item.
+fn f a view uchar 64 n ulong to ulong
+s = ulong 0
+for i ulong n
+s = add s ulong get a and i 63
+end
+ret s
+end
