@@ -32,6 +32,10 @@ with every hash, is `build/seed/challenge/challenge.log`.
 The script builds in `build/seed/challenge/` from `git archive <pin>`: it never runs
 `seed/omega-from-seed.sh` and never rewrites a tracked file.
 
+Use a full clone. In a `git clone --depth 1` the pinned commit is missing, and the script stops with
+`CHALLENGE NOT_RUN: pin … is not in this clone` (exit 3). Running
+`git fetch --depth 1 origin 369dbc96daa1684db2d7c2c7085bbf16b3fd77ee` first makes a shallow clone work.
+
 ## The published values
 
 `seed/challenge/expected.txt` names the pin, source commit `369dbc96daa1684db2d7c2c7085bbf16b3fd77ee`,
@@ -53,8 +57,8 @@ of `om4.s` already holds the size of the image it describes, and that stage3 com
 
 ## Watch it pass, post your result
 
-- A GitHub-hosted `ubuntu-24.04-arm` runner does the same thing in public, with two negative controls (a
-  tampered rung and a wrong published value must both fail):
+- A GitHub-hosted `ubuntu-24.04-arm` runner does the same thing in public, with three negative controls (a
+  tampered rung, a wrong published value and a forged log must all fail):
   <https://github.com/aien-dev/omega-seed-challenge/actions>.
 - Post your own run with the "I reproduced it" issue form, or a pull request adding your
   `challenge.log`, at <https://github.com/aien-dev/omega-seed-challenge>. A check compares the hashes in
