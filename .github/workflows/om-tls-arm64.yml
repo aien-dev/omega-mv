@@ -1,7 +1,7 @@
 # om-tls-arm64: independent ARM64 rerun of the om/tls ECDH unit suite (CAVP KAS ECC CDH, Wycheproof,
-# edge cases, mutants) and the om/tls suite (RFC 8448 vectors, DNS unit, DIT probe, interop against
-# openssl s_server and the Python fake server, secret-residue scan in default and approved-only mode,
-# mutants) and
+# edge cases, mutants), the x509 suite, the om/tls suite (RFC 8448 vectors, DNS unit, DIT probe,
+# interop against openssl s_server and the Python fake server, secret-residue scan in default and
+# approved-only mode, mutants), the hostile-server suite (hostile.py, local only, with its mutants) and
 # of the seed/net HTTP/HTTPS check on a GitHub-hosted ubuntu-24.04-arm machine, with the pinned omc
 # (om/units.sh OMC_PIN). Network stages stay NOT_RUN (TLS_NET unset). Logs are uploaded as artifacts.
 # Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
@@ -37,8 +37,12 @@ jobs:
         run: mkdir -p build && sh om/tls/test/drbg/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-drbg.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls self-test (fips) suite
         run: mkdir -p build && sh om/tls/test/fips/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-fips.log; test "${PIPESTATUS[0]}" = 0
+      - name: om/tls x509 suite
+        run: mkdir -p build && sh om/tls/test/x509/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-x509.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls suite
         run: mkdir -p build && sh om/tls/test/tls/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-run.log; test "${PIPESTATUS[0]}" = 0
+      - name: om/tls hostile-server suite
+        run: mkdir -p build && sh om/tls/test/net/hostile.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-hostile.log; test "${PIPESTATUS[0]}" = 0
       - name: seed/net HTTP and HTTPS check
         run: python3 seed/net/tests/check.py --keep build/netcheck 2>&1 | tee build/net-check.log; test "${PIPESTATUS[0]}" = 0
       - name: logs
@@ -51,6 +55,8 @@ jobs:
             build/om-tls-ecdh.log
             build/om-tls-drbg.log
             build/om-tls-fips.log
+            build/om-tls-x509.log
+            build/om-tls-hostile.log
             build/net-check.log
             build/tls/tls/*.log
             build/tls/tls/interop-table.txt
