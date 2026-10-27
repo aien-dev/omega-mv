@@ -3,33 +3,33 @@
     "generated": {
       "children": [
         {
-          "digest": "62d7fb6a9ef393196990035afe943a384315bcd96a2e7646fe4bc2fc62706e1c",
-          "last_commit": "8a2e2687",
+          "digest": "c240d123580c0e6a3881a500bc2d34166aa04232f9f17ea4eea8910cb522d0da",
+          "last_commit": "dc7c1304",
           "name": "learner",
           "purpose": "Learner gates: unit tests (determinism, PDLAW1 round trip, memoriser vs compact theory, null wor"
         },
         {
-          "digest": "16ac4563cb6a991cc4029a8d0dbbb89ae1bb5c19de8774c0292763181a3893b3",
-          "last_commit": "e59633e5",
+          "digest": "61025e324e0e5a1833011256d423accfe902b38c9e32813e62908e21bb44939b",
+          "last_commit": "dc7c1304",
           "name": "learner_v2",
           "purpose": "Learner v2 tests and dev drivers: unit tests, byte-level dev world, C1 flag, C2 regime switch an"
         },
         {
-          "digest": "267199e8d5f72e12649a8f608abb42ab82ef85c6e3b4531ce1812f7e5e491644",
-          "last_commit": "f9a17970",
+          "digest": "1ea404d12882786546ecb7063303d6e8f3d6fae691fbe6adb531879fd55e7a31",
+          "last_commit": "dc7c1304",
           "name": "verify",
           "purpose": "PD-0 verify: see docs on physics main"
         }
       ],
-      "children_root": "sha256:9e4a1426cf5e270f54e1f90abac3585c7bcf8dbf2a2d87af930900f401cbd342",
-      "compiled_at": "2026-10-14T01:16:48Z",
+      "children_root": "sha256:c0c532e5433e21852f8750a989daa581e8ef5cab8a8b41cba2299c320123f312",
+      "compiled_at": "2026-10-24T04:15:18Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:024a746eff9cd1871d1e507c2f56ed6a1f7125cb457915904f9b1455140f8942",
+      "digest": "sha256:51f14936b27d3d21379cf05ea1b6b532cf3175a40844dac85f023a61e7a0912c",
       "evidence_files": 5,
       "evidence_root": "sha256:18312cebaaff58331eeb55a9d72d3df046afd3d71d0127276fc70473d460d558",
       "files": 38,
-      "generated_at_commit": "e0abd0b524f5bf8e3ba6960b53868980bdd41b4e",
-      "source_tree": "sha256:cbc4f683b5d7b9cb883f0634798ee10ac8821c4223adffe6bcfaf7cb3ee466a4"
+      "generated_at_commit": "dc7c1304c038f49db3b121d5a5e27d7bcab5bf6c",
+      "source_tree": "sha256:fb3695eaad9c59218b2228c5db6d7adbe2fe4abbf68779bdd84c6e8d2dc1e47b"
     }
   },
   "layer": "tests",

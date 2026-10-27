@@ -1,0 +1,14 @@
+om2
+fn inner x int to int inline
+ensures eq result add x 1
+ret add x 1
+end
+fn outer x int to int inline
+ensures eq result add x 2
+y = inner x
+ret inner y
+end
+fn main to int
+ensures eq result 0
+ret sub outer 3 5
+end

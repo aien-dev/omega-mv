@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 148-150: the non-exact body reports
+note `omc-check 1 kept line=N rule=-`, N = the line of `ret seal` (confirmed by erratum E8). Function mode.
+om2 diag
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong add x 1
+end
+fn entry x uint to ulong
+ret open dup32mk x
+end

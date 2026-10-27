@@ -1,0 +1,6 @@
+note Contract E12 negative control: branch-to-trap alone is not a never-taken proof.
+note Without an AND mask this uint conversion can trap for a loaded value of 2^32.
+note Expected data MANUAL trap=5, overall TRACE-EQUIV-STATIC NOT_RUN, exit 2.
+fn f a view ulong 4 to uint
+ret uint get a 0
+end
