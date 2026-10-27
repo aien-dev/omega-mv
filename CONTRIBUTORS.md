@@ -31,3 +31,4 @@ Every model below did real work. A model is listed only for work it did. The orc
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
 Update this table in the same commit as the work it credits.
+| Claude Opus 5.5 | Seed-chain bootstrap challenge: `seed/challenge/run.sh` rebuilds omc from the 408-byte seed out of a pinned `git archive` and checks every input and rung against a table read from committed files, with tampered-rung and wrong-value negative controls |
