@@ -33,9 +33,10 @@ def free_port():
     return p
 
 
-def scan(pid, secrets):
-    """{name: [(mapping, count), ...]} over every writable private mapping of pid."""
-    found = {n: [] for n in secrets}
+def scan(pid, names, values):
+    """{name: [(mapping, count), ...]} over every writable private mapping of pid; values[i] is the
+    secret called names[i]. Only names, mapping names and counts leave this function."""
+    found = {n: [] for n in names}
     with open("/proc/%d/maps" % pid) as mf, open("/proc/%d/mem" % pid, "rb", 0) as mem:
         for line in mf:
             f = line.split()
@@ -48,10 +49,10 @@ def scan(pid, secrets):
                 data = mem.read(hi - lo)
             except OSError:
                 continue
-            for n, v in secrets.items():
+            for i, v in enumerate(values):
                 k = data.count(v)
                 if k:
-                    found[n].append((name, k))
+                    found[names[i]].append((name, k))
     return found
 
 
@@ -80,12 +81,13 @@ def main():
         cl.kill(); srv.kill()
         return 3
     time.sleep(1.0)  # the client has consumed Finished and is blocked in tls_read
-    secrets = {}
+    names, values = [], []
     for line in open(keyfile):
         n, h = line.split()
-        secrets[n] = bytes.fromhex(h)
+        names.append(n)
+        values.append(bytes.fromhex(h))
     try:
-        after_hs = scan(cl.pid, secrets)
+        after_hs = scan(cl.pid, names, values)
     except PermissionError as e:
         print("RESIDUE NOT_RUN: /proc/%d/mem unreadable (%s)" % (cl.pid, e))
         cl.kill(); srv.kill()
@@ -102,7 +104,7 @@ def main():
         print("RESIDUE NOT_RUN: client exited before the post-close scan (exit %s)" % cl.returncode)
         srv.kill()
         return 3
-    after_close = scan(cl.pid, secrets)
+    after_close = scan(cl.pid, names, values)
     cl.wait(timeout=20)
     srv.wait(timeout=20)
     bad = []
@@ -112,10 +114,10 @@ def main():
     for n in AP:
         if not after_hs[n]:
             bad.append("after handshake: positive control %s not found (scan broken)" % n)
-    for n in secrets:
+    for n in names:
         if after_close[n]:
             bad.append("after tls_close: %s in %s" % (n, after_close[n]))
-    for n in sorted(secrets):
+    for n in sorted(names):
         print("residue %-9s after-handshake=%-24s after-close=%s" % (n, after_hs[n] or "-", after_close[n] or "-"))
     print("client exit %d, %s" % (cl.returncode, open(os.path.join(work, "client.err")).read().strip() or "no stderr"))
     if cl.returncode != 0:
@@ -123,7 +125,7 @@ def main():
     if bad:
         print("RESIDUE FAIL\n  " + "\n  ".join(bad))
         return 1
-    print("RESIDUE PASS secrets=%d hs_only=%d" % (len(secrets), len(HS_ONLY)))
+    print("RESIDUE PASS secrets=%d hs_only=%d" % (len(names), len(HS_ONLY)))
     if not keep:
         subprocess.call(["rm", "-rf", work])
     return 0
