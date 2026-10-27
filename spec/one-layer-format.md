@@ -235,16 +235,17 @@ build `tests/compiler/test_osc_ir_decode.c` plain and with ASan/UBSan. Measured 
 **Specification only; producer and backend qualification is separate.** The
 milestone name “IR v2 memory” does not change the meaning of wire version 2,
 which already carries structs. Wire versions 1..5 and their identity bytes
-remain unchanged. Wire version 6 is used by the GPU kernel encoding of draft
-PR #885 (docs/omegese/GPU.md section 9; OSC_IR_VERSION_MAX 6 on that branch).
-PROPOSED (Main, 2026-10-27, pending Drake): kernels keep version 6 and the
-numeric-identifier/structured-contract proposal of draft PR #525, which
-reserved version 6 earlier, moves to version 8. Until that is confirmed and
-#885 merges, neither number is settled on main. The memory extension uses
-version 7; its opcodes 30-33 reuse numbers that version 6 gives to GPU kernel
-opcodes 30-36, which is safe only because every reader dispatches opcodes by
-the version byte. A backend that has not implemented this profile must refuse
-it, not ignore its regions.
+remain unchanged. Wire version 6 remains reserved by draft PR #525 for its
+numeric-identifier/structured-contract proposal; this profile neither closes
+nor supersedes that proposal. The memory extension uses version 7. GPU
+kernel units (docs/omegese/GPU.md section 9, draft PR #885) use version 8,
+with kernel opcodes 40..46 (GPU, SHARED, GLOAD, GSTORE, SYNC, SHFL, MAD),
+disjoint from this profile's opcodes 30..33; in a version 8 unit opcodes
+30..39 are RANGE. Version 8 keeps the version 7 meaning of tag 13 (f32) but
+gives tag 14 to the GVIEW buffer pointer (f64 in version 7) and tag 15 to
+GEDIT, so a reader must still select tag meanings by the version byte.
+Until #885 merges, version 8 is not settled on main. A backend that has not
+implemented this profile must refuse it, not ignore its regions.
 
 ### 10.1 Header and regions
 

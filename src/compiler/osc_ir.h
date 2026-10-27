@@ -73,7 +73,7 @@ typedef enum {
      * register of a slice parameter; its length is the next register (u64) */
     OSC_T_BYTES,                                   /* read-only borrowed bytes */
     OSC_T_CELLS,                                   /* caller-supplied writable u64 cells */
-    /* GPU kernels (docs/omegese/GPU.md, encoding version 6); kernel functions only */
+    /* GPU kernels (docs/omegese/GPU.md, encoding version 8); kernel functions only */
     OSC_T_F32,                                     /* IEEE binary32 */
     /* the POINTER register of a global buffer parameter: elements `elem` (U32 or F32);
      * its length is the next register (u32) */
@@ -155,8 +155,10 @@ typedef enum {
                      /*   extended; CELLS: u64), its length is vreg a+1 (u64); b any   */
                      /*   integer type; unsigned b >= len: TRAP_BOUNDS (len 0 always)  */
     OSC_I_SSTORE,    /* a[b] = c(u64) ; same bounds rule; a is a CELLS pointer vreg   */
-    /* appended for GPU kernels (docs/omegese/GPU.md); kernel functions only */
-    OSC_I_GPU,       /* dst(u32) = launch value `sub` (OscGpuValue)                   */
+    /* GPU kernels (docs/omegese/GPU.md), wire version 8 only; kernel functions only.
+     * Numbered from 40 so they are disjoint from version 7's memory-profile opcodes 30..33
+     * (spec/one-layer-format.md section 10); 30..39 are refused. */
+    OSC_I_GPU = 40,  /* dst(u32) = launch value `sub` (OscGpuValue)                   */
     OSC_I_SHARED,    /* dst(REF BLOCK) = the block-shared array, every element 0;     */
                      /*   entry block only, each dst defined once                     */
     OSC_I_GLOAD,     /* dst(elem) = a[b] ; a a GVIEW/GEDIT pointer vreg, its length   */
@@ -253,7 +255,7 @@ typedef struct {
 
 typedef struct {
     char name[OSC_NAME_MAX];
-    uint8_t kind;        /* OSC_FN_HOST, or OSC_FN_KERNEL (encoding version 6) */
+    uint8_t kind;        /* OSC_FN_HOST, or OSC_FN_KERNEL (encoding version 8) */
     uint16_t threads;    /* kernel: threads per block (u16 after the kind byte); host: 0 */
     uint8_t nparams;     /* params are vregs 0..nparams-1 */
     OscType ret;         /* scalar or VOID; OSC-1 never returns a REF */
@@ -309,13 +311,18 @@ int osc_ir_validate(const OscUnit *u, char *err, size_t n);
 int osc_ir_encode(const OscUnit *u, uint8_t *buf, size_t cap, size_t *len);
 int osc_ir_digest(const OscUnit *u, uint8_t out[32]);
 
-/* Encoding format version (byte 7 of the magic) of an encoded unit: 1..5, or -1
+/* Encoding format version (byte 7 of the magic) of an encoded unit: 1..5 or 8, or -1
  * if the magic is wrong or the version is unknown (never reinterpreted).
  * Version 5 = the unit uses external byte slices; units without slices keep
- * versions 1..4 and their bytes. Version 6 = the unit has a GPU kernel
+ * versions 1..4 and their bytes. Version 8 = the unit has a GPU kernel
  * (docs/omegese/GPU.md): each function carries a kind byte after its name;
- * units without a kernel keep versions 1..5 and their bytes. */
-#define OSC_IR_VERSION_MAX 6
+ * units without a kernel keep versions 1..5 and their bytes. Version 6 is
+ * reserved by draft PR #525 and version 7 is the memory profile
+ * (spec/one-layer-format.md section 10); neither is implemented here, so both are
+ * refused as unknown. */
+#define OSC_IR_VERSION_KERNEL 8
+#define OSC_IR_VERSION_MAX OSC_IR_VERSION_KERNEL
+#define OSC_IR_VERSION_KNOWN(v) (((v) >= 1 && (v) <= 5) || (v) == OSC_IR_VERSION_KERNEL)
 int osc_ir_encoding_version(const uint8_t *buf, size_t len);
 
 /* Strict decoder (omega#444; format and refusal classes: spec/one-layer-format.md).
@@ -344,7 +351,7 @@ typedef enum {
 #define OSC_IR_REFUSAL_COUNT 11
 
 /* Upper bound on any canonical encoding (every count at its maximum, every
- * instruction at its widest, CALL with 6 args = 18 bytes; v6 adds a kind byte per function and a u16 thread count per kernel). Longer input is OVERSIZED. */
+ * instruction at its widest, CALL with 6 args = 18 bytes; v8 adds a kind byte per function and a u16 thread count per kernel). Longer input is OVERSIZED. */
 #define OSC_IR_ENCODED_MAX                                                                   \
     (8u + 1u + OSC_MAX_STRUCTS * (1u + 63u + 1u + 2u + OSC_MAX_FIELDS * (1u + 63u + 1u + 2u + 2u)) + 2u + \
      OSC_MAX_FUNCS * (1u + 63u + 1u + 1u + 2u + 6u + 2u + OSC_MAX_VREGS * 6u + 2u + OSC_MAX_BLOCKS * 8u + 4u +  \

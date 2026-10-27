@@ -780,7 +780,7 @@ static bool unit_has_slice(const OscUnit *u) {
  * 5 = external byte slices, 4 = pools (OSC-3 item 2), 3 = arenas, 2 = structs,
  * 1 = none of these. Versions 2..5 share one layout (struct table after the magic). */
 static uint8_t unit_version(const OscUnit *u) {
-    if (osc_ir_has_kernel(u)) return 6;
+    if (osc_ir_has_kernel(u)) return OSC_IR_VERSION_KERNEL;
     if (unit_has_slice(u)) return 5;
     if (unit_has_pool(u)) return 4;
     if (unit_has_arena(u)) return 3;
@@ -817,8 +817,8 @@ static void encode_unit(const OscUnit *u, W *w) {
         size_t nl = strnlen(f->name, sizeof f->name);
         w8(w, nl);
         wbytes(w, f->name, nl);
-        if (magic[7] >= 6) w8(w, f->kind);
-        if (magic[7] >= 6 && f->kind == OSC_FN_KERNEL) w16(w, f->threads);
+        if (magic[7] == OSC_IR_VERSION_KERNEL) w8(w, f->kind);
+        if (magic[7] == OSC_IR_VERSION_KERNEL && f->kind == OSC_FN_KERNEL) w16(w, f->threads);
         w8(w, f->nparams);
         wtype(w, &f->ret);
         w16(w, f->nvregs);
@@ -878,7 +878,7 @@ static void encode_unit(const OscUnit *u, W *w) {
 int osc_ir_encoding_version(const uint8_t *buf, size_t len) {
     static const uint8_t magic[7] = {'O', 'S', 'C', '1', 'I', 'R', 0};
     if (!buf || len < 8 || memcmp(buf, magic, sizeof magic) != 0) return -1;
-    return (buf[7] >= 1 && buf[7] <= OSC_IR_VERSION_MAX) ? buf[7] : -1;
+    return OSC_IR_VERSION_KNOWN(buf[7]) ? buf[7] : -1;
 }
 
 int osc_ir_slice_args_ok(const OscFunc *f, const uint64_t *args, unsigned nargs) {
@@ -1035,8 +1035,8 @@ static void decode_insn(R *r, OscInsn *in) {
 
 static void decode_func(R *r, OscFunc *f, uint64_t version) {
     rtext(r, 1, OSC_NAME_MAX - 1, f->name);
-    if (version >= 6) f->kind = (uint8_t)rle(r, 1);
-    if (version >= 6 && f->kind == OSC_FN_KERNEL) f->threads = (uint16_t)rle(r, 2);
+    if (version == OSC_IR_VERSION_KERNEL) f->kind = (uint8_t)rle(r, 1);
+    if (version == OSC_IR_VERSION_KERNEL && f->kind == OSC_FN_KERNEL) f->threads = (uint16_t)rle(r, 2);
     f->nparams = (uint8_t)rle(r, 1);
     rtype(r, &f->ret);
     f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS);
@@ -1061,7 +1061,7 @@ static int decode_unit(const uint8_t *buf, size_t len, OscUnit *u) {
     r.pos = sizeof magic;
     uint64_t version = rle(&r, 1);
     if (r.rc) return r.rc;
-    if (version < 1 || version > OSC_IR_VERSION_MAX) return OSC_IR_REFUSE_UNKNOWN_VERSION;
+    if (!OSC_IR_VERSION_KNOWN(version)) return OSC_IR_REFUSE_UNKNOWN_VERSION;
     if (version >= 2) {
         u->nstructs = (uint8_t)rcount(&r, 1, OSC_MAX_STRUCTS);
         for (int k = 0; k < u->nstructs && !r.rc; k++) {

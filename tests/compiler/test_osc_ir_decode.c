@@ -57,7 +57,7 @@ _Static_assert(OSC_I_CONST == 1 && OSC_I_CALL == 11 && OSC_I_RET == 15 && OSC_I_
                OSC_I_POPEN == 21 && OSC_I_HSTORE == 27 && OSC_I_SSTORE == 29, "opcode numbers in the spec");
 _Static_assert(OSC_T_BOOL == 1 && OSC_T_U64 == 5 && OSC_T_I64 == 9 && OSC_T_REF == 10 && OSC_T_CELLS == 12, "scalar tags in the spec");
 _Static_assert(OSC_REF_OWN == 1 && OSC_REF_MUT == 3 && OSC_REF_BLOCK == 4, "ref kinds in the spec");
-_Static_assert(OSC_T_F32 == 13 && OSC_T_GEDIT == 15 && OSC_I_GPU == 30 && OSC_I_SHFL == 35, "GPU kernel tags in the spec (version 6)");
+_Static_assert(OSC_T_F32 == 13 && OSC_T_GEDIT == 15 && OSC_I_GPU == 40 && OSC_I_SHFL == 45 && OSC_I_MAD == 46, "GPU kernel tags in the spec (version 8)");
 
 static int g_fail;
 static void fail(const char *fmt, ...) {
@@ -146,7 +146,7 @@ static void load_dir(const char *dir) {
     }
 }
 
-/* GPU kernel units (encoding version 6, docs/omegese/GPU.md), built here by hand: the OSC text
+/* GPU kernel units (encoding version 8, docs/omegese/GPU.md), built here by hand: the OSC text
  * front end has no kernel form. One uses every kernel instruction and type. */
 static OscInsn kin(uint8_t op, uint8_t sub, int dst, int a, int b, int c) {
     OscInsn x;
@@ -345,11 +345,13 @@ static void test_corpus(void) {
         if (v >= 1 && v <= OSC_IR_VERSION_MAX) seen[v]++;
         if (round_trip(c->u, c->name) == 0) ok++;
     }
-    printf("corpus: units=%d round_trip_ok=%d compile_refused=%d versions v1=%d v2=%d v3=%d v4=%d v5=%d v6=%d\n", g_ncorpus, ok,
-           g_compile_refused, seen[1], seen[2], seen[3], seen[4], seen[5], seen[6]);
+    printf("corpus: units=%d round_trip_ok=%d compile_refused=%d versions v1=%d v2=%d v3=%d v4=%d v5=%d v8=%d\n", g_ncorpus, ok,
+           g_compile_refused, seen[1], seen[2], seen[3], seen[4], seen[5], seen[OSC_IR_VERSION_KERNEL]);
     CHECK(g_ncorpus >= 40, "corpus too small: %d units", g_ncorpus);
     CHECK(ok == g_ncorpus, "corpus round trip: %d of %d", ok, g_ncorpus);
-    for (int v = 1; v <= OSC_IR_VERSION_MAX; v++) CHECK(seen[v] > 0, "corpus has no version %d unit", v);
+    for (int v = 1; v <= OSC_IR_VERSION_MAX; v++)
+        if (OSC_IR_VERSION_KNOWN(v)) CHECK(seen[v] > 0, "corpus has no version %d unit", v);
+        else CHECK(seen[v] == 0, "corpus has a version %d unit (reserved, not implemented)", v);
 }
 
 /* ---- 2. valid variants -------------------------------------------------- */
@@ -450,6 +452,7 @@ static void test_requirement_identity(void) {
     for (int i = 0; i < g_ncorpus; i++) {
         const OscUnit *u = g_corpus[i].u;
         for (int fi = 0; fi < u->nfuncs; fi++) {
+            if (u->funcs[fi].kind != OSC_FN_HOST) continue; /* a kernel carries no requires/ensures (GPU.md section 9) */
             for (int which = 0; which < 2; which++) {
                 copy_unit(g_tmp, u);
                 char *t = which ? g_tmp->funcs[fi].ensures_text : g_tmp->funcs[fi].requires_text;
@@ -488,7 +491,7 @@ typedef struct {
     unsigned dst;          /* CONST dst field (u16) */
     uint64_t imm;
     unsigned req_len;      /* requires text length field */
-    int kind;              /* function kind byte (version 6), -1 = not written */
+    int kind;              /* function kind byte (version 8), -1 = not written */
 } Knobs;
 static Knobs knobs_default(void) {
     Knobs k = {1, 0, 1, "f", 1, OSC_T_U8, OSC_I_CONST, 0, 7, 0, -1};
@@ -546,7 +549,11 @@ static void test_classes(void) {
     k = knobs_default(); k.version = 0; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 0");
     k.version = OSC_IR_VERSION_MAX + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 7");
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 9");
+    k.version = 6; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 6 (reserved by #525)");
+    k.version = 7; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_UNKNOWN_VERSION, "version 7 (memory profile, not implemented)");
     EXPECT(b.b, b.n - 1, OSC_IR_REFUSE_TRUNCATED, "last byte missing");
     EXPECT(b.b, 7, OSC_IR_REFUSE_TRUNCATED, "magic without version");
     k = knobs_default(); k.name_len = 64; k.name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl"; build(&m, &k);
@@ -566,8 +573,12 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_TRAILING, "one trailing byte");
     k = knobs_default(); k.op0 = 0; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode 0");
-    k.op0 = OSC_I_SHFL + 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past SHFL");
+    k.op0 = OSC_I_MAD + 1; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode past MAD");
+    k.op0 = 30; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode 30 (version 7 RLOAD number)");
+    k.op0 = 39; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "opcode 39");
     k = knobs_default(); k.ret_tag = OSC_T_LAST + 1; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_RANGE, "scalar tag 16");
     k = knobs_default(); k.ret_tag = OSC_T_F32; build(&m, &k);
@@ -584,10 +595,10 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 2 with no structs");
     k.version = 5; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 5 with no slices");
-    k.version = 6; k.kind = 0; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 6 with no kernel");
+    k.version = OSC_IR_VERSION_KERNEL; k.kind = 0; build(&m, &k);
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_VERSION_MISMATCH, "version 8 with no kernel");
     k.kind = 1; build(&m, &k);
-    EXPECT(m.b, m.n, OSC_IR_REFUSE_INVALID, "version 6 kernel that returns u8");
+    EXPECT(m.b, m.n, OSC_IR_REFUSE_INVALID, "version 8 kernel that returns u8");
 #undef EXPECT
     int classes = 0;
     for (int c = 1; c <= OSC_IR_REFUSAL_COUNT; c++) classes += refused[c];

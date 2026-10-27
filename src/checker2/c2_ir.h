@@ -21,7 +21,7 @@
  * docs/osc/OSC-1-DESIGN.md, OSC-2-DESIGN.md, OSC-3-DESIGN.md, OSC-EXT-BYTES-DESIGN.md and the
  * comments of src/compiler/osc_ir.h. It includes no compiler header, links no compiler object and
  * never read osc_check.* or osc_ir_validate. Every constant below is restated here, not imported.
- * The rule list is in spec/one-layer-receipts.md section 9. GPU kernels (encoding version 6) are
+ * The rule list is in spec/one-layer-receipts.md section 9. GPU kernels (encoding version 8) are
  * restated from docs/omegese/GPU.md sections 6-9 and the version-6 byte layout stated there.
  *
  * Fails closed: anything not understood is a rejection with a stable rule name. */
@@ -55,17 +55,21 @@
 
 /* scalar codes on the wire */
 enum { S_VOID = 0, S_BOOL, S_U8, S_U16, S_U32, S_U64, S_I8, S_I16, S_I32, S_I64, S_REF, S_BYTES, S_CELLS,
-       S_F32, S_GVIEW, S_GEDIT, /* version 6: binary32; global buffer pointers (one elem byte follows) */
+       S_F32, S_GVIEW, S_GEDIT, /* version 8: binary32; global buffer pointers (one elem byte follows) */
        S_LIMIT };
-enum { K_NONE = 0, K_OWN, K_SHARED, K_MUT, K_BLOCK /* version 6: block-shared array */ };
-enum { FN_HOST = 0, FN_KERNEL = 1 }; /* function kind byte, version 6 */
+enum { K_NONE = 0, K_OWN, K_SHARED, K_MUT, K_BLOCK /* version 8: block-shared array */ };
+enum { FN_HOST = 0, FN_KERNEL = 1 }; /* function kind byte, version 8 */
+/* GPU kernels use wire version 8 (version 6 is reserved by draft #525, version 7 is the memory
+ * profile of spec/one-layer-format.md section 10; neither is accepted here). */
+#define C2_V_KERNEL 8
 
 /* opcodes on the wire */
 enum {
     C2_CONST = 1, C2_MOV, C2_BIN, C2_UN, C2_CMP, C2_CAST, C2_ALLOC, C2_RELEASE, C2_LOAD, C2_STORE,
     C2_CALL, C2_TRAP, C2_BR, C2_CBR, C2_RET, C2_FLOAD, C2_FSTORE, C2_AOPEN, C2_AALLOC, C2_ADESTROY,
     C2_POPEN, C2_PCLOSE, C2_HALLOC, C2_HGEN, C2_HFREE, C2_HLOAD, C2_HSTORE, C2_SLOAD, C2_SSTORE,
-    C2_GPU, C2_SHARED, C2_GLOAD, C2_GSTORE, C2_SYNC, C2_SHFL, C2_MAD, /* version 6, kernels only */
+    /* version 8, kernels only; numbered from 40, disjoint from version 7's opcodes 30..33 */
+    C2_GPU = 40, C2_SHARED, C2_GLOAD, C2_GSTORE, C2_SYNC, C2_SHFL, C2_MAD,
     C2_OP_LIMIT
 };
 enum { B_ADD = 1, B_SUB, B_MUL, B_DIV, B_REM, B_AND, B_OR, B_XOR, B_SHL, B_SHR, B_MIN, B_MAX, B_LIMIT };
@@ -91,7 +95,7 @@ typedef struct { uint32_t first, count; } C2Block;
 
 typedef struct {
     char name[C2_NAME_MAX + 1];
-    uint8_t kind;     /* FN_HOST, FN_KERNEL; on the wire only from version 6 */
+    uint8_t kind;     /* FN_HOST, FN_KERNEL; on the wire only in version 8 */
     uint16_t threads; /* kernel: threads per block (u16 after the kind byte); host: 0 */
     uint8_t nparams;
     C2Type ret;
