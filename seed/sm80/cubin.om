@@ -1,12 +1,12 @@
 note cubin.om -- wraps asm2 machine code for one kernel in a cubin, the ELF that NVIDIA's CUDA
 note driver loads with cuModuleLoadData. It follows the CUDA kernel-parameter ABI, not CUDA++'s:
-note parameters sit in constant bank 0 from byte 352 (sm_8x), 528 (sm_90) or 896 (sm_120).
+note parameters sit in constant bank 0 from byte 352 (sm_8x), 528 (sm_90) or 896 (sm_100 on).
 note The layout was read from nvcc 13.0 and CUDA 12.8 cubins with readelf and cuobjdump -elf
 note (field values only, no bytes copied) and from CUDApp src/omega_cubin.c (sm_121):
 note   1 .shstrtab 2 .strtab 3 .symtab 4 .nv.info 5 .nv.callgraph 6 .note.nv.cuinfo
 note   7 .text.NAME 8 .nv.constant0.NAME 9 .nv.info.NAME, and from sm_90 on also
 note   10 .nv.compat 11 .nv.shared.reserved.0; ABI 8 appends .note.nv.tkinfo, which every
-note   NVIDIA ABI 8 cubin read carries (nvcc 13.0 sm_80/89/90/120, cuBLAS 12.8 sm_120) and which
+note   NVIDIA ABI 8 cubin read carries (nvcc 13.0 sm_80/89/90/100/103/120, cuBLAS 12.8 sm_120) and
 note   .note.nv.cuinfo links to; then the section headers, then the program headers (PHDR,
 note   LOAD of the header table, LOAD text, [LOAD shared,] LOAD constant bank).
 note From sm_90 the .text sh_info is the kernel symbol alone (nvcc 13.0 sm_90/120, cuBLAS 12.8
@@ -14,7 +14,10 @@ note sm_90/120); below sm_90 it also carries the register count in bits 24..31 (
 note From sm_90 .note.nv.cuinfo has SHF_INFO_LINK and sh_info .nv.compat (nvcc 13.0 sm_90/120).
 note symbols: 1 section .text, 2 section .nv.constant0, 3 the kernel (global function).
 note usage: cubin SM ABI API REGS NAME SIG < code.bin > kernel.cubin
-note   SM    80 86 87 89 90 or 120
+note   SM    80 86 87 89 90 100 103 or 120 (nvcc 13.0 sm_100, sm_103 and sm_120 emit the same
+note         vecadd instruction bytes; their cubins differ in e_flags, the compat value
+note         CAN_FASTPATH_FINALIZE (sm_100 9, sm_103 0, sm_120 80) and EIATTR_SW_WAR (8 on
+note         sm_90/100/103, 0 on sm_120))
 note   ABI   8 (CUDA 13 style: OS/ABI 0x41, e_flags 0x6000000 | SM << 8 | 4, or | 2 from sm_100)
 note         or 7 (CUDA 12 style: OS/ABI 0x33, e_flags SM << 16 | 0x500 | SM; below sm_100 only)
 note   API   the EIATTR_CUDA_API_VERSION number (130 = CUDA 13.0, 128 = CUDA 12.8)
@@ -165,6 +168,9 @@ if or eq sm 87 eq sm 89
 ok = true
 end
 if or eq sm 90 eq sm 120
+ok = true
+end
+if or eq sm 100 eq sm 103
 ok = true
 end
 if not ok
@@ -546,7 +552,10 @@ p = exits p
 p = at3 p 25 get v VPSZ
 p = cbank p
 p = at4 p 54 4
-if eq get v VSM 90
+if or eq get v VSM 90 eq get v VSM 100
+b4 p 8
+end
+if eq get v VSM 103
 b4 p 8
 end
 ret add p 4
@@ -562,6 +571,9 @@ b4 add o 20 67074
 b4 add o 24 527108
 if eq get v VSM 120
 b4 add o 28 80
+end
+if eq get v VSM 100
+b4 add o 28 9
 end
 ret add o 36
 end
