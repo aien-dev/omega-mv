@@ -1,0 +1,51 @@
+# tls-coverage: runs the om/tls primitive suites (ecdh included), the TLS_NET=1 suite, the Wycheproof
+# ledger with its negative controls and BoGo on free GitHub-hosted ubuntu-24.04-arm runners with the
+# pinned omc. Scratch branch freecompute/tls-hybrid-bogo (BoGo only: PR 873 tree plus the tls-coverage shim), never merged.
+name: tls-hybrid-bogo
+on:
+  push:
+    branches: ["freecompute/tls-hybrid-bogo"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  WYCHEPROOF_PIN: d17cc89fa5c8f4f4d378b5385ebf75da5d0926c9
+jobs:
+  bogo:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [patched, unpatched]
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - name: omc pin
+        run: |
+          pin=$(sed -n 's/^OMC_PIN=//p' om/units.sh | tr -d '"')
+          got=$(sha256sum seed/out/omc | cut -c1-64)
+          [ "$pin" = "$got" ]; chmod +x seed/out/omc
+      - name: go (test oracle only, pinned)
+        run: |
+          . om/tls/test/bogo/PINS
+          curl -fsSL -o go.tgz "$GO_URL"
+          echo "$GO_SHA256  go.tgz" | sha256sum -c -
+          tar -C "$RUNNER_TEMP" -xzf go.tgz
+      - name: boringssl (pinned)
+        run: |
+          . om/tls/test/bogo/PINS
+          git init -q bssl && git -C bssl fetch -q --depth 1 "$BORINGSSL_URL" "$BORINGSSL_COMMIT" && git -C bssl checkout -q FETCH_HEAD
+      - name: bogo
+        run: |
+          set +e
+          mkdir -p out
+          [ "${{ matrix.fixture }}" = unpatched ] && export BOGO_UNPATCHED=1
+          BOGO_OUT=$PWD/out BOGO_WORKERS=$(nproc) sh om/tls/test/bogo/run.sh "$PWD/seed/out/omc" "$PWD/bssl" "$RUNNER_TEMP/go/bin/go" > out/verdict.txt 2>&1
+          echo "RC=$?" >> out/verdict.txt
+          { grep -m1 Features /proc/cpuinfo; nproc; git rev-parse HEAD; "$RUNNER_TEMP/go/bin/go" version; } > out/machine.txt
+          rm -f out/runner.test
+          cat out/verdict.txt; head -40 out/failures.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "bogo-${{ matrix.fixture }}", path: out/}
