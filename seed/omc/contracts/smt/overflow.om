@@ -1,0 +1,14 @@
+om2
+note A signed add that would overflow traps (1) at run time, so that path never reaches ensures:
+note twice is unsat without any requires. wrap is unsigned, wraps, and its ensures is sat at x = 2^31.
+fn twice x int to int
+ensures eq div result 2 x
+ret add x x
+end
+fn wrap x uint to uint
+ensures ge result x
+ret add x x
+end
+fn main to int
+ret sub twice 2 4
+end

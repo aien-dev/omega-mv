@@ -1,0 +1,10 @@
+om2
+note Broken ensures (off by one): inc 9 is 10. gate-smt.sh wants sat for inc; the native run exits 110.
+fn inc x uint to uint
+requires lt x 10
+ensures lt result 10
+ret add x 1
+end
+fn main to int
+ret int sub inc 9 10
+end

@@ -11985,6 +11985,1722 @@ put cur 0 p
 put line 0 l
 end
 
+note ======== omc smt (leading line smt): contracts as SMT-LIB 2 verification conditions ========
+note A leading line smt, before any other line, makes omc print, for each function of the unit, one SMT-LIB
+note 2 script (QF_BV) that starts with a line "; omc-smt 1 fn NAME line=N". Its check-sat is unsat when no
+note input that meets the requires can reach a failing ensures, invariant or callee requires; sat comes
+note with values for the inputs (in_NAME), loop-head values (loop_L<line>_NAME_s<id>), call results
+note (call_L<line>_s<id>) and the obligations (fail_L<line>_<kind>_s<id>, true for the one that fails).
+note Numbers are bit vectors of their width (OMEGESE 9.3). A path that traps (overflow, zero divisor,
+note range, shift amount, trap) stops there, as at run time; a check that fails stops its path too, so
+note later checks assume the earlier ones held. A while or for uses its invariants inductively: they are
+note checked on entry, assumed at an arbitrary head where every outer name the body assigns (and a for
+note counter, 0 .. count) is a fresh value, and checked again at the end of the body and at continue; the
+note loop is left with the condition false or at a break. No bound or unroll count is needed: unsat holds
+note for every number of passes. A call checks its callee's requires on the arguments and assumes its
+note ensures on a fresh result (not when the callee assigns a parameter, since ensures reads the final
+note parameter values). Not in this subset (error 9): arrays, globals, texts, structs, floats, host words,
+note a bool conversion or order, and a call of a function not yet translated (itself included). Only
+note scalar names: the unit should compile first (types, scope, purity and error 30 are omc's own).
+note Token packs: Wolfram FromDigits[Reverse[ToCharacterCode[chunk]],256].
+global smvw ulong 256
+global smvl ulong 256
+global smvs ulong 256
+global smvt ulong 256
+global smvm uchar 256
+global smvn ulong 1
+global smnp ulong 1
+global smpm ulong 1
+global smid ulong 1
+global smlv ulong 1
+global smlk uchar 65536
+global smlw ulong 65536
+global smll ulong 65536
+global smsn ulong 65536
+global smsp ulong 1
+global smbs ulong 65536
+global smbp ulong 1
+global smob ulong 4096
+global smno ulong 1
+global smgv ulong 4096
+global smng ulong 1
+global smfw ulong 256
+global smfl ulong 256
+global smfs ulong 256
+global smfn ulong 256
+global smfp ulong 1536
+global smfq ulong 1536
+global smfz ulong 1536
+global smfr ulong 256
+global smfc ulong 256
+global smfk ulong 256
+global smfm uchar 256
+global smfd uchar 256
+global smfx ulong 1
+global smcf ulong 1
+global smbk ulong 1024
+global smbl ulong 1024
+global smbn ulong 1
+global smlp ulong 64
+global smli ulong 64
+global smlc ulong 64
+global smlb ulong 64
+global smld ulong 1
+global smrk ulong 1
+global smrs ulong 1
+global smrt ulong 1
+global smrb ulong 1
+global smro ulong 1
+global smrr ulong 1
+global smry ulong 1
+
+fn smlead to ulong
+p = ulong 0
+while and lt p get inlen 0 le get inp p 32
+if eq get inp p 10
+ret 0
+end
+p = add p 1
+end
+if ge add p 3 get inlen 0
+ret 0
+end
+if ne get inp p 115
+ret 0
+end
+if ne get inp add p 1 109
+ret 0
+end
+if ne get inp add p 2 116
+ret 0
+end
+if gt get inp add p 3 32
+ret 0
+end
+q = add p 3
+while and lt q get inlen 0 ne get inp q 10
+if gt get inp q 32
+ret 0
+end
+q = add q 1
+end
+if lt q get inlen 0
+q = add q 1
+end
+put cur 0 q
+put line 0 1
+ret 1
+end
+
+fn smw w ulong n ulong to void
+i = ulong 0
+x = w
+while lt i n
+emitb uchar and x 255
+x = shr x 8
+i = add i 1
+end
+end
+
+fn smn v ulong to void
+if ge v 10
+smn div v 10
+end
+emitb uchar add 48 rem v 10
+end
+
+fn smnm w ulong to void
+x = w
+while ne x 0
+emitb uchar and x 255
+x = shr x 8
+end
+end
+
+fn smcl n ulong to void
+i = ulong 0
+while lt i n
+emitb 41
+i = add i 1
+end
+emitb 10
+end
+
+fn smkind k ulong to void
+if eq k 1
+smw 8315178084276987250 8
+end
+if eq k 2
+smw 32481164592901733 7
+end
+if eq k 3
+smw 7953754356895346281 8
+emitb 116
+end
+if eq k 4
+smw 31918214488023395 7
+end
+end
+
+fn smsym id ulong to void
+if eq id 0
+smw 435728179558 5
+ret
+end
+if eq id 1
+smw 1702195828 4
+ret
+end
+k = ulong get smlk id
+if eq k 0
+emitb 115
+smn id
+ret
+end
+if eq k 1
+smw 6254185 3
+smnm get smlw id
+ret
+end
+if eq k 2
+smw 83972791955308 6
+smn get smll id
+emitb 95
+smnm get smlw id
+end
+if eq k 3
+smw 83972724449638 6
+smn get smll id
+emitb 95
+smkind get smlw id
+end
+if eq k 4
+smw 83972724646243 6
+smn get smll id
+end
+smw 29535 2
+smn id
+end
+
+fn smty t ulong to void
+if eq t 1
+smw 1819242306 4
+ret
+end
+smw 7302151841257643816 8
+smw 8291 2
+smn twid t
+emitb 41
+end
+
+fn smbvw v ulong w ulong to void
+smw 508452429608 5
+smn v
+emitb 32
+smn w
+emitb 41
+end
+
+fn smlit v ulong t ulong to void
+w = twid t
+x = v
+if lt w 64
+x = and v sub shl ulong 1 w 1
+end
+smbvw x w
+end
+
+fn smnew to ulong
+id = get smid 0
+if ge id 65536
+fail 14
+end
+put smid 0 add id 1
+put smlk id uchar 0
+ret id
+end
+
+fn smhdr id ulong t ulong to void
+smw 3271142103323075624 8
+smw 544109926 4
+smsym id
+smw 539568160 4
+smty t
+emitb 32
+end
+
+fn smdef t ulong to ulong
+id = smnew
+smhdr id t
+ret id
+end
+
+fn smgadd id ulong to void
+n = get smng 0
+if ge n 4096
+fail 14
+end
+put smgv n id
+put smng 0 add n 1
+end
+
+fn smdecl k ulong w ulong ln ulong t ulong to ulong
+id = smnew
+put smlk id uchar k
+put smlw id w
+put smll id ln
+smw 7310012263327687720 8
+smw 9135238377595693 7
+smsym id
+emitb 32
+smty t
+smcl 1
+smgadd id
+ret id
+end
+
+note smopn: "(" and the operator of op c on values of type t (u or s by the type's sign)
+fn smopn c ulong t ulong to void
+if eq c 43
+smw 2112808 2
+ret
+end
+if eq c 44
+smw 7164780006066447400 8
+emitb 116
+ret
+end
+if eq t 1
+emitb 40
+if eq c 38
+smw 6581857 3
+end
+if eq c 39
+smw 29295 2
+end
+if eq c 40
+smw 7499640 3
+end
+if eq c 50
+smw 7630702 3
+end
+ret
+end
+smw 7758376 3
+if eq c 42
+if ge t 6
+smw 1919447905 4
+else
+smw 1919447916 4
+end
+ret
+end
+if or or eq c 36 eq c 37 and ge c 45 le c 48
+if ge t 6
+emitb 115
+else
+emitb 117
+end
+end
+if eq c 33
+smw 6579297 3
+end
+if eq c 34
+smw 6452595 3
+end
+if eq c 35
+smw 7107949 3
+end
+if eq c 36
+smw 7760228 3
+end
+if eq c 37
+smw 7169394 3
+end
+if eq c 38
+smw 6581857 3
+end
+if eq c 39
+smw 29295 2
+end
+if eq c 40
+smw 7499640 3
+end
+if eq c 41
+smw 7104627 3
+end
+if eq c 45
+smw 29804 2
+end
+if eq c 46
+smw 25964 2
+end
+if eq c 47
+smw 29799 2
+end
+if eq c 48
+smw 25959 2
+end
+if eq c 49
+smw 6776174 3
+end
+if eq c 50
+smw 7630702 3
+end
+end
+
+fn smapp c ulong t ulong a ulong b ulong to void
+smopn c t
+emitb 32
+smsym a
+emitb 32
+smsym b
+emitb 41
+end
+
+fn smsx k ulong x ulong to void
+emitb 40
+smw 6876547383642054440 8
+smw 9117624566052965 7
+smn k
+emitb 41
+emitb 32
+smsym x
+emitb 41
+end
+
+fn smzx k ulong x ulong to void
+emitb 40
+smw 6876840936184241960 8
+smw 9117624566052965 7
+smn k
+emitb 41
+emitb 32
+smsym x
+emitb 41
+end
+
+fn smext hi ulong lo ulong x ulong to void
+emitb 40
+smw 7021802829465542440 8
+smw 2126947 3
+smn hi
+emitb 32
+smn lo
+emitb 41
+emitb 32
+smsym x
+emitb 41
+end
+
+note smtrap: a new live flag, the old one and not the trap condition the caller writes, then smcl 3
+fn smtrap to ulong
+id = smdef 1
+smw 139123908904 5
+smsym get smlv 0
+emitb 32
+smw 139392413224 5
+put smlv 0 id
+ret id
+end
+
+fn smand a ulong b ulong to ulong
+if or eq a 0 eq b 0
+ret 0
+end
+if eq a 1
+ret b
+end
+if eq b 1
+ret a
+end
+id = smdef 1
+smapp 38 1 a b
+smcl 1
+ret id
+end
+
+fn smor a ulong b ulong to ulong
+if eq a 0
+ret b
+end
+if eq b 0
+ret a
+end
+if or eq a 1 eq b 1
+ret 1
+end
+id = smdef 1
+smapp 39 1 a b
+smcl 1
+ret id
+end
+
+fn smnot a ulong to ulong
+if eq a 0
+ret 1
+end
+if eq a 1
+ret 0
+end
+id = smdef 1
+smopn 50 1
+emitb 32
+smsym a
+smcl 2
+ret id
+end
+
+fn smite c ulong a ulong b ulong t ulong to ulong
+if eq a b
+ret a
+end
+id = smdef t
+smw 139141081384 5
+smsym c
+emitb 32
+smsym a
+emitb 32
+smsym b
+smcl 2
+ret id
+end
+
+note smoblig: a check of predicate p (kind 1 requires, 2 ensures, 3 invariant, 4 callee requires) at
+note line ln, then the path goes on with p true
+fn smoblig k ulong ln ulong p ulong to void
+lv = get smlv 0
+if eq lv 0
+ret
+end
+id = smnew
+put smlk id uchar 3
+put smlw id k
+put smll id ln
+smhdr id 1
+smw 139123908904 5
+smsym lv
+emitb 32
+smw 139392413224 5
+smsym p
+smcl 3
+n = get smno 0
+if ge n 4096
+fail 14
+end
+put smob n id
+put smno 0 add n 1
+smgadd id
+put smlv 0 smand lv p
+end
+
+fn smset s ulong t ulong to void
+put smrk 0 0
+put smrs 0 s
+put smrt 0 t
+end
+
+fn smfix t ulong to void
+if eq t 1
+fail 7
+end
+range get smrs 0 t get smrb 0
+v = get smrs 0
+id = smdef t
+smlit v t
+smcl 1
+smset id t
+end
+
+fn smchk exp ulong to void
+if eq exp 0
+ret
+end
+if ne get smrk 0 0
+smfix exp
+ret
+end
+if ne get smrt 0 exp
+fail 7
+end
+end
+
+fn smfind w ulong l ulong to ulong
+i = get smvn 0
+while ne i 0
+i = sub i 1
+if and eq get smvw i w eq get smvl i l
+ret add i 1
+end
+end
+ret 0
+end
+
+fn smvadd w ulong l ulong s ulong t ulong to void
+n = get smvn 0
+if ge n 256
+fail 14
+end
+if gt l 8
+fail 9
+end
+put smvw n w
+put smvl n l
+put smvs n s
+put smvt n t
+put smvm n uchar 0
+put smvn 0 add n 1
+end
+
+fn smfeq a ulong b ulong n ulong to ulong
+i = ulong 0
+while lt i n
+if ne get inp add a i get inp add b i
+ret 0
+end
+i = add i 1
+end
+ret 1
+end
+
+fn smfunc w ulong l ulong to ulong
+i = ulong 0
+while lt i get smfx 0
+if and eq get smfw i w eq get smfl i l
+if ne smfeq get smfs i get ts 0 l 0
+ret add i 1
+end
+end
+i = add i 1
+end
+ret 0
+end
+
+fn smname to void
+w = get tw 0
+l = get tl 0
+if and ne get smro 0 0 and eq l 6 eq w 128009175786866
+smset get smrr 0 get smry 0
+ret
+end
+i = smfind w l
+if ne i 0
+j = sub i 1
+smset get smvs j get smvt j
+ret
+end
+f = smfunc w l
+if eq f 0
+fail 3
+end
+smcall sub f 1
+end
+
+fn smval exp ulong to void
+tok
+k = get tk 0
+if or eq k 0 eq k 3
+fail 4
+end
+if eq k 2
+put smrk 0 1
+put smrs 0 get tw 0
+put smrb 0 get tbig 0
+smchk exp
+ret
+end
+if ne k 1
+fail 9
+end
+c = ir_kwt
+if eq c 0
+smname
+smchk exp
+ret
+end
+if eq c 74
+smval exp
+tok
+if ne get tk 0 1
+fail 16
+end
+if ne ir_kwt 75
+fail 16
+end
+ret
+end
+if le sub c 1 8
+smcast c
+smchk exp
+ret
+end
+if and ge c 33 le c 48
+smbin c
+smchk exp
+ret
+end
+if or eq c 49 eq c 50
+smun c
+smchk exp
+ret
+end
+if eq c 55
+smset 1 1
+smchk exp
+ret
+end
+if eq c 56
+smset 0 1
+smchk exp
+ret
+end
+fail 9
+end
+
+fn smbin c ulong to void
+smval 0
+if ne get smrk 0 0
+mag = get smrs 0
+bg = get smrb 0
+smval 0
+if ne get smrk 0 0
+fail 11
+end
+r = get smrs 0
+t = get smrt 0
+put smrk 0 1
+put smrs 0 mag
+put smrb 0 bg
+smfix t
+smop c get smrs 0 t r t
+ret
+end
+a = get smrs 0
+t = get smrt 0
+smval 0
+if ne get smrk 0 0
+smfix t
+end
+smop c a t get smrs 0 get smrt 0
+end
+
+fn smop c ulong a ulong ta ulong b ulong tb ulong to void
+if or eq c 41 eq c 42
+smshift c a ta b tb
+ret
+end
+if ne ta tb
+fail 7
+end
+if ge c 43
+if and ge c 45 eq ta 1
+fail 9
+end
+id = smdef 1
+smapp c ta a b
+smcl 1
+smset id 1
+ret
+end
+if and le c 37 eq ta 1
+fail 7
+end
+if or eq c 36 eq c 37
+smdivz a b ta c
+end
+id = smdef ta
+smapp c ta a b
+smcl 1
+if and ge ta 6 le c 35
+smovf c id a b ta
+end
+smset id ta
+end
+
+note smdivz: a zero divisor traps 2; the signed minimum divided by -1 traps 1 (rem gives 0)
+fn smdivz a ulong b ulong t ulong c ulong to void
+i = smtrap
+w = twid t
+if and eq c 36 ge t 6
+smopn 39 1
+emitb 32
+end
+smopn 43 t
+emitb 32
+smsym b
+emitb 32
+smbvw 0 w
+emitb 41
+if and eq c 36 ge t 6
+emitb 32
+smopn 38 1
+emitb 32
+smopn 43 t
+emitb 32
+smsym a
+emitb 32
+smlit shl ulong 1 sub w 1 t
+emitb 41
+emitb 32
+smopn 43 t
+emitb 32
+smsym b
+emitb 32
+smlit sub ulong 0 1 t
+smcl 6
+ret
+end
+smcl 3
+end
+
+note smovf: signed add, sub, mul trap 1 when the exact result is outside the type
+fn smovf c ulong id ulong a ulong b ulong t ulong to void
+k = ulong 1
+if eq c 35
+k = twid t
+end
+i = smtrap
+smopn 44 t
+emitb 32
+smsx k id
+emitb 32
+smopn c t
+emitb 32
+smsx k a
+emitb 32
+smsx k b
+smcl 5
+end
+
+fn smshift c ulong a ulong ta ulong b ulong tb ulong to void
+if or eq ta 1 eq tb 1
+fail 7
+end
+wa = twid ta
+wb = twid tb
+i = smtrap
+smopn 48 2
+emitb 32
+smsym b
+emitb 32
+smbvw wa wb
+smcl 4
+am = b
+if ne wa wb
+am = smdef ta
+if gt wb wa
+smext sub wa 1 0 b
+else
+smzx sub wa wb b
+end
+smcl 1
+end
+id = smdef ta
+smapp c ta a am
+smcl 1
+if and eq c 41 ge ta 6
+i = smtrap
+smopn 44 ta
+emitb 32
+smapp 42 ta id am
+emitb 32
+smsym a
+smcl 4
+end
+smset id ta
+end
+
+fn smun c ulong to void
+smval 0
+if ne get smrk 0 0
+fail 11
+end
+a = get smrs 0
+t = get smrt 0
+if and eq c 49 eq t 1
+fail 7
+end
+id = smdef t
+smopn c t
+emitb 32
+smsym a
+smcl 2
+if and eq c 49 ge t 6
+i = smtrap
+smopn 43 t
+emitb 32
+smsym a
+emitb 32
+smlit shl ulong 1 sub twid t 1 t
+smcl 4
+end
+smset id t
+end
+
+note smrng: a conversion traps 5 when the value is outside the new type
+fn smrng s ulong t ulong c ulong to void
+ws = twid t
+wt = twid c
+sa = ulong 0
+if ge t 6
+sa = 1
+end
+sb = ulong 0
+if ge c 6
+sb = 1
+end
+if eq sa sb
+if ge wt ws
+ret
+end
+i = smtrap
+smopn 44 t
+emitb 32
+smsym s
+emitb 32
+if ge t 6
+emitb 40
+smw 6876547383642054440 8
+else
+emitb 40
+smw 6876840936184241960 8
+end
+smw 9117624566052965 7
+smn sub ws wt
+emitb 41
+emitb 32
+smext sub wt 1 0 s
+emitb 41
+smcl 4
+ret
+end
+lo = wt
+if ge c 6
+if lt ws wt
+ret
+end
+lo = sub wt 1
+else
+if ge wt ws
+lo = sub ws 1
+end
+end
+i = smtrap
+smopn 44 t
+emitb 32
+smext sub ws 1 lo s
+emitb 32
+smbvw 0 sub ws lo
+smcl 4
+end
+
+fn smconv s ulong t ulong c ulong to void
+ws = twid t
+wt = twid c
+if eq ws wt
+smset s c
+ret
+end
+id = smdef c
+if lt wt ws
+smext sub wt 1 0 s
+else
+if ge t 6
+smsx sub wt ws s
+else
+smzx sub wt ws s
+end
+end
+smcl 1
+smset id c
+end
+
+fn smcast c ulong to void
+smval 0
+if ne get smrk 0 0
+smfix c
+ret
+end
+s = get smrs 0
+t = get smrt 0
+if eq t c
+ret
+end
+if or eq t 1 eq c 1
+fail 9
+end
+smrng s t c
+smconv s t c
+end
+
+fn smpred to ulong
+smval 1
+eol
+ret get smrs 0
+end
+
+note smcall: callee f (index) on the next values; its requires are checked, its ensures assumed
+fn smcall f ulong to void
+if eq get smfd f 0
+fail 9
+end
+np = get smfn f
+cl = get line 0
+ab = get smsp 0
+i = ulong 0
+while lt i np
+smval get smfp add mul f 6 i
+sp = get smsp 0
+if ge sp 65536
+fail 14
+end
+put smsn sp get smrs 0
+put smsp 0 add sp 1
+i = add i 1
+end
+en = get smvn 0
+i = ulong 0
+while lt i np
+j = add mul f 6 i
+smvadd get smfq j get smfz j get smsn add ab i get smfp j
+i = add i 1
+end
+r = smccl f cl
+put smvn 0 en
+put smsp 0 ab
+smset r get smfr f
+end
+
+fn smccl f ulong cl ulong to ulong
+p = get cur 0
+l = get line 0
+put cur 0 get smfc f
+put line 0 get smfk f
+k = cp_next
+while ne k 0
+if eq k 1
+q = smpred
+smoblig 4 cl q
+else
+skipnl
+end
+k = cp_next
+end
+r = ulong 0
+t = get smfr f
+if ne t 76
+r = smdecl 4 0 cl t
+end
+if eq get smfm f 0
+put cur 0 get smfc f
+put line 0 get smfk f
+put smro 0 1
+put smrr 0 r
+put smry 0 t
+k = cp_next
+while ne k 0
+if eq k 2
+q = smpred
+put smlv 0 smand get smlv 0 q
+else
+skipnl
+end
+k = cp_next
+end
+put smro 0 0
+end
+put cur 0 p
+put line 0 l
+ret r
+end
+
+note smpost: the function's own ensures at a return, result r of type t
+fn smpost r ulong t ulong to void
+if eq get smlv 0 0
+ret
+end
+p = get cur 0
+l = get line 0
+f = get smcf 0
+put cur 0 get smfc f
+put line 0 get smfk f
+put smro 0 1
+put smrr 0 r
+put smry 0 t
+k = cp_next
+while ne k 0
+if eq k 2
+ln = get line 0
+q = smpred
+smoblig 2 ln q
+else
+skipnl
+end
+k = cp_next
+end
+put smro 0 0
+put cur 0 p
+put line 0 l
+end
+
+note smhead: the loop's invariants at pos, line ln: checked (mode 0) or assumed (mode 1)
+fn smhead pos ulong ln ulong mode ulong to void
+p = get cur 0
+l = get line 0
+put cur 0 pos
+put line 0 ln
+k = cp_next
+while eq k 3
+x = get line 0
+q = smpred
+if eq mode 0
+smoblig 3 x q
+else
+put smlv 0 smand get smlv 0 q
+end
+k = cp_next
+end
+put cur 0 p
+put line 0 l
+end
+
+fn smpush n ulong to ulong
+b = get smsp 0
+if gt add b n 65536
+fail 14
+end
+i = ulong 0
+while lt i n
+put smsn add b i get smvs i
+i = add i 1
+end
+put smsp 0 add b n
+ret b
+end
+
+fn smrest b ulong n ulong to void
+i = ulong 0
+while lt i n
+put smvs i get smsn add b i
+i = add i 1
+end
+end
+
+note smmerge: after if: then values at snapshot tb (live te), else values in the names (live ee)
+fn smmerge c ulong tb ulong n ulong te ulong ee ulong to void
+i = ulong 0
+while lt i n
+a = get smsn add tb i
+if eq ee 0
+put smvs i a
+else
+if ne te 0
+put smvs i smite c a get smvs i get smvt i
+end
+end
+i = add i 1
+end
+put smlv 0 smor te ee
+end
+
+fn smif to void
+n = get smvn 0
+pre = smpush n
+c = smpred
+lv = get smlv 0
+nc = smnot c
+lf = smand lv nc
+put smlv 0 smand lv c
+t = smblk
+put smvn 0 n
+tb = smpush n
+te = get smlv 0
+smrest pre n
+if eq t 68
+put smlv 0 lf
+t = smblk
+if ne t 66
+fail 15
+end
+put smvn 0 n
+lf = get smlv 0
+end
+smmerge c tb n te lf
+put smsp 0 pre
+end
+
+note smscan: mark the outer names a loop body assigns (the first word of one of its lines)
+fn smscan ip ulong to void
+p = get cur 0
+l = get line 0
+put cur 0 ip
+d = ulong 1
+go = true
+while go
+tok
+k = get tk 0
+if eq k 3
+fail 15
+end
+if eq k 1
+c = ir_kwt
+if or or eq c 67 eq c 69 eq c 71
+d = add d 1
+end
+if eq c 66
+d = sub d 1
+if eq d 0
+go = false
+end
+end
+if eq c 0
+i = smfind get tw 0 get tl 0
+if ne i 0
+put smvm sub i 1 uchar 1
+end
+end
+if go
+skipnl
+end
+end
+end
+put cur 0 p
+put line 0 l
+end
+
+note smlpre: invariants checked on entry, then the assigned names (and counter ctr, index + 1) fresh
+fn smlpre ip ulong il ulong n ulong ctr ulong to ulong
+smhead ip il 0
+smscan ip
+if ne ctr 0
+put smvm sub ctr 1 uchar 1
+end
+i = ulong 0
+while lt i get smvn 0
+if ne get smvm i 0
+put smvs i smdecl 2 get smvw i sub il 1 get smvt i
+put smvm i uchar 0
+end
+i = add i 1
+end
+hb = smpush n
+d = get smld 0
+if ge d 64
+fail 14
+end
+put smlp d ip
+put smli d il
+put smlc d ctr
+put smlb d get smbn 0
+put smld 0 add d 1
+ret hb
+end
+
+fn smback to void
+if eq get smlv 0 0
+ret
+end
+d = sub get smld 0 1
+ci = get smlc d
+if ne ci 0
+j = sub ci 1
+t = get smvt j
+one = smdef t
+smlit 1 t
+smcl 1
+id = smdef t
+smapp 33 t get smvs j one
+smcl 1
+put smvs j id
+end
+smhead get smlp d get smli d 0
+end
+
+fn smbone k ulong n ulong to void
+b = get smbk k
+lb = get smbl k
+lv = get smlv 0
+i = ulong 0
+while lt i n
+a = get smbs add b i
+if eq lv 0
+put smvs i a
+else
+put smvs i smite lb a get smvs i get smvt i
+end
+i = add i 1
+end
+put smlv 0 smor lb lv
+end
+
+note smlbody: condition c, outer names n, head snapshot hb; the body, the back edge, the exits
+fn smlbody c ulong n ulong hb ulong to void
+lv = get smlv 0
+nc = smnot c
+lx = smand lv nc
+put smlv 0 smand lv c
+cp_skip
+t = smblk
+if ne t 66
+fail 15
+end
+smback
+d = sub get smld 0 1
+put smld 0 d
+smrest hb n
+put smvn 0 n
+put smlv 0 lx
+k = get smlb d
+while lt k get smbn 0
+smbone k n
+k = add k 1
+end
+if lt get smlb d get smbn 0
+put smbp 0 get smbk get smlb d
+end
+put smbn 0 get smlb d
+put smsp 0 hb
+end
+
+fn smwhile to void
+cp = get cur 0
+cl = get line 0
+skipnl
+tok
+ip = get cur 0
+il = get line 0
+n = get smvn 0
+hb = smlpre ip il n 0
+smhead ip il 1
+put cur 0 cp
+put line 0 cl
+smval 1
+c = get smrs 0
+tok
+if eq get tk 0 1
+if ne ir_kwt 70
+fail 5
+end
+tok
+eol
+else
+if and ne get tk 0 0 ne get tk 0 3
+fail 5
+end
+end
+smlbody c n hb
+end
+
+fn smfor to void
+tok
+if ne get tk 0 1
+fail 16
+end
+w = get tw 0
+l = get tl 0
+tok
+t = ir_kwt
+if gt sub t 1 8
+fail 9
+end
+smval t
+cnt = get smrs 0
+tok
+if eq get tk 0 1
+eol
+else
+if and ne get tk 0 0 ne get tk 0 3
+fail 5
+end
+end
+ip = get cur 0
+il = get line 0
+n = get smvn 0
+z = smdef t
+smlit 0 t
+smcl 1
+smvadd w l z t
+hb = smlpre ip il n add n 1
+smforh n cnt ip il hb
+end
+
+note smforh: the for head: counter 0 .. count, invariants assumed, condition counter lt count
+fn smforh n ulong cnt ulong ip ulong il ulong hb ulong to void
+x = get smvs n
+t = get smvt n
+q = smdef 1
+smw 544370472 4
+smopn 43 t
+emitb 32
+smsym x
+emitb 32
+smlit 0 t
+emitb 41
+emitb 32
+if ge t 6
+smopn 38 1
+emitb 32
+smopn 46 t
+emitb 32
+smlit 0 t
+emitb 32
+smsym x
+emitb 41
+emitb 32
+smapp 46 t x cnt
+emitb 41
+else
+smapp 46 t x cnt
+end
+smcl 2
+put smlv 0 smand get smlv 0 q
+smhead ip il 1
+c = smdef 1
+smapp 45 t x cnt
+smcl 1
+smlbody c n hb
+end
+
+fn smbrk to void
+eol
+lv = get smlv 0
+if ne lv 0
+k = get smbn 0
+if ge k 1024
+fail 14
+end
+b = get smbp 0
+n = get smvn 0
+if gt add b n 65536
+fail 14
+end
+i = ulong 0
+while lt i n
+put smbs add b i get smvs i
+i = add i 1
+end
+put smbp 0 add b n
+put smbk k b
+put smbl k lv
+put smbn 0 add k 1
+end
+put smlv 0 0
+end
+
+fn smretst to void
+f = get smcf 0
+t = get smfr f
+if eq t 76
+eol
+smpost 0 0
+put smlv 0 0
+ret
+end
+smval t
+eol
+smpost get smrs 0 t
+put smlv 0 0
+end
+
+fn smasgn to void
+w = get tw 0
+l = get tl 0
+p = get cur 0
+ln = get line 0
+tok
+if or ne get tk 0 1 ne ir_kwt 73
+put cur 0 p
+put line 0 ln
+end
+i = smfind w l
+if ne i 0
+j = sub i 1
+smval get smvt j
+put smvs j get smrs 0
+if lt j get smnp 0
+put smpm 0 1
+end
+else
+smval 0
+if ne get smrk 0 0
+fail 11
+end
+smvadd w l get smrs 0 get smrt 0
+end
+eol
+end
+
+fn smstmt c ulong to void
+if eq c 83
+skipnl
+ret
+end
+if eq c 67
+smif
+ret
+end
+if eq c 69
+smwhile
+ret
+end
+if eq c 71
+smfor
+ret
+end
+if eq c 72
+smretst
+ret
+end
+if eq c 86
+smbrk
+ret
+end
+if eq c 97
+eol
+smback
+put smlv 0 0
+ret
+end
+if eq c 87
+skipnl
+put smlv 0 0
+ret
+end
+if ne c 0
+fail 9
+end
+f = smfunc get tw 0 get tl 0
+if ne f 0
+smcall sub f 1
+eol
+ret
+end
+smasgn
+end
+
+fn smblk to ulong
+go = true
+while go
+tok
+k = get tk 0
+if eq k 3
+fail 15
+end
+if eq k 1
+c = ir_kwt
+if or eq c 66 eq c 68
+eol
+ret c
+end
+smstmt c
+else
+if ne k 0
+fail 16
+end
+end
+end
+ret 0
+end
+
+fn smparams f ulong to void
+np = ulong 0
+go = true
+while go
+tok
+if ne get tk 0 1
+fail 16
+end
+c = ir_kwt
+if eq c 65
+go = false
+else
+if or ne c 0 ge np 6
+fail 9
+end
+w = get tw 0
+l = get tl 0
+tok
+t = ir_kwt
+if gt sub t 1 8
+fail 9
+end
+s = smdecl 1 w 0 t
+smvadd w l s t
+j = add mul f 6 np
+put smfq j w
+put smfz j l
+put smfp j t
+np = add np 1
+end
+end
+put smfn f np
+tok
+r = ir_kwt
+if and ne r 76 gt sub r 1 8
+fail 9
+end
+put smfr f r
+tok
+if eq get tk 0 1
+eol
+else
+if and ne get tk 0 0 ne get tk 0 3
+fail 5
+end
+end
+end
+
+note smreq: a requires is assumed (each caller checks it); main has no caller, so its own are checks
+fn smreq to void
+f = get smcf 0
+mn = ulong 0
+if and eq get smfl f 4 eq get smfw f 1852399981
+mn = 1
+end
+k = cp_next
+while ne k 0
+if eq k 1
+ln = get line 0
+q = smpred
+if eq mn 0
+put smlv 0 smand get smlv 0 q
+else
+smoblig 1 ln q
+end
+else
+if eq k 3
+fail 30
+end
+skipnl
+end
+k = cp_next
+end
+end
+
+fn smtail to void
+smw 2338619886566334760 8
+smw 8317129703105392424 8
+smw 28555881975521381 7
+i = ulong 0
+while lt i get smno 0
+emitb 32
+smsym get smob i
+i = add i 1
+end
+smcl 2
+smw 8299407762960966440 8
+smw 2716769 3
+emitb 10
+if ne get smng 0 0
+smw 7809653166435559208 8
+smw 673211765 4
+i = ulong 0
+while lt i get smng 0
+if ne i 0
+emitb 32
+end
+smsym get smgv i
+i = add i 1
+end
+smcl 2
+end
+end
+
+fn smfhead f ulong to void
+smw 7886697277516881979 8
+smw 9128584160551028 7
+s = get smfs f
+i = ulong 0
+while lt i get smfl f
+emitb get inp add s i
+i = add i 1
+end
+smw 67505853393952 6
+smn get line 0
+emitb 10
+smw 7453294850803594024 8
+smw 6215635191338132329 8
+smcl 1
+end
+
+fn smfn to void
+tok
+if ne get tk 0 1
+fail 16
+end
+f = get smfx 0
+if ge f 256
+fail 14
+end
+put smfw f get tw 0
+put smfl f get tl 0
+put smfs f get ts 0
+put smfd f uchar 0
+put smcf 0 f
+put smid 0 2
+put smvn 0 0
+put smsp 0 0
+put smbp 0 0
+put smno 0 0
+put smng 0 0
+put smbn 0 0
+put smld 0 0
+put smpm 0 0
+put smro 0 0
+smfhead f
+smparams f
+put smfx 0 add f 1
+put smnp 0 get smvn 0
+put smfc f get cur 0
+put smfk f get line 0
+put smlv 0 1
+smreq
+t = smblk
+if ne t 66
+fail 15
+end
+if eq get smfr f 76
+smpost 0 0
+end
+put smfm f uchar get smpm 0
+put smfd f uchar 1
+smtail
+end
+
+fn smrun to void
+go = true
+while go
+tok
+k = get tk 0
+if eq k 3
+go = false
+else
+if eq k 1
+if and eq get tl 0 3 eq get tw 0 3304815
+put om2 0 1
+skipnl
+else
+c = ir_kwt
+if eq c 64
+smfn
+else
+if ne c 83
+fail 9
+end
+skipnl
+end
+end
+else
+if ne k 0
+fail 16
+end
+end
+end
+end
+writeout 0
+exit 0
+end
+
 note main: read all of stdin
 note (8 MiB at most, error 14; a read error is 1), find the mode, then one
 note statement per line from output byte 180 (om4 START .. STMT)
@@ -12010,6 +13726,9 @@ m = add m 1
 end
 end
 put inlen 0 off
+if ne smlead 0
+smrun
+end
 om2lead
 if eq get om2m 0 2
 fmtprep

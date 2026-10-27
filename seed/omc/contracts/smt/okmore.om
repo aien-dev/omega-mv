@@ -1,0 +1,24 @@
+om2
+note Proved for every input by gate-smt.sh: a branch, a counted loop, signed and unsigned numbers.
+fn absv x int to int
+requires gt x -1000
+ensures ge result 0
+if lt x 0
+ret neg x
+end
+ret x
+end
+fn sumto n uint to uint
+requires le n 100
+ensures le result mul n 100
+s = uint 0
+for i uint n
+invariant le i n
+invariant le s mul i 100
+s = add s i
+end
+ret s
+end
+fn main to int
+ret sub absv -3 3
+end

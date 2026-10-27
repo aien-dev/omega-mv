@@ -1,0 +1,11 @@
+om2
+note Broken invariant: lt i 3 holds on entry and fails after the last pass (i becomes 3).
+note gate-smt.sh wants sat for main; the native run exits 110.
+fn main to int
+i = uint 0
+while lt i 3
+invariant lt i 3
+i = add i 1
+end
+ret int sub i 3
+end
