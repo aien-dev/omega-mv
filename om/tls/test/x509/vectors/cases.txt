@@ -62,7 +62,7 @@ C bad_signature X509_ERR_BAD_SIGNATURE 1792972800 www.example.test pki/storeR.pe
 C intermediate_not_ca X509_ERR_NOT_CA 1792972800 www.example.test pki/storeR.pem pki/lViaNoCA.der pki/intNoCA.der
 C intermediate_ku_no_certsign X509_ERR_KEY_USAGE 1792972800 www.example.test pki/storeR.pem pki/lViaNoKU.der pki/intNoKU.der
 C path_length_violated X509_ERR_PATH_LENGTH 1792972800 www.example.test pki/storeR.pem pki/lViaP0.der pki/intP0b.der pki/intP0.der
-C name_constraints_critical X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test pki/storeR.pem pki/lViaNC.der pki/intNC.der
+C name_constraints_critical X509_OK 1792972800 www.example.test pki/storeR.pem pki/lViaNC.der pki/intNC.der
 C intermediate_eku_client X509_ERR_EKU 1792972800 www.example.test pki/storeR.pem pki/lViaEKUc.der pki/intEKUc.der
 C depth_8_intermediates X509_ERR_TOO_DEEP 1792972800 www.example.test pki/storeR.pem pki/lD8.der pki/d8.der pki/d7.der pki/d6.der pki/d5.der pki/d4.der pki/d3.der pki/d2.der pki/d1.der
 # --- leaf rules
@@ -128,9 +128,38 @@ P san_10001 X509_ERR_MALFORMED crafted/san10001.der
 P extensions_10001 X509_ERR_MALFORMED crafted/ext10001.der
 C crafted_base X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXbase.der
 C leaf_too_big X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXbig.der
-# finding 5: nameConstraints refused whether critical or not
+# finding 5: a nameConstraints that is not critical is refused (RFC 5280 4.2.1.10 MUST be critical)
 C name_constraints_noncritical X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test crafted/storeX.pem crafted/lViaXnc.der crafted/intXnc.der
 C name_constraints_noncritical_violated X509_ERR_NAME_CONSTRAINTS 1792972800 www.other.test crafted/storeX.pem crafted/lViaXncOut.der crafted/intXnc.der
+# name constraints (RFC 5280 4.2.1.10; gen_nc.py, every constraint critical)
+C nc_dns_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lDnsOk.der nc/iDns.der
+C nc_dns_out X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lDnsOut.der nc/iDns.der
+C nc_dns_nodot X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lDnsNoDot.der nc/iDns.der
+C nc_dns_wild X509_OK 1792972800 www.example.test nc/storeN.pem nc/lDnsWild.der nc/iDns.der
+C nc_dnsx_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lDnsXOk.der nc/iDnsX.der
+C nc_dnsx_hit X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lDnsXHit.der nc/iDnsX.der
+C nc_dnsx_wild X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lDnsXWild.der nc/iDnsX.der
+C nc_ip_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lIpOk.der nc/iIp.der
+C nc_ip_hit X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lIpHit.der nc/iIp.der
+C nc_ipp_dnsonly X509_OK 1792972800 www.example.test nc/storeN.pem nc/lIpPDnsOnly.der nc/iIpP.der
+C nc_ipp_out X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lIpPOut.der nc/iIpP.der
+C nc_mail_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lMailOk.der nc/iMail.der
+C nc_mail_out X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lMailOut.der nc/iMail.der
+C nc_dn_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lDnOk.der nc/iDn.der
+C nc_dn_out X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lDnOut.der nc/iDn.der
+C nc_uri_absent X509_OK 1792972800 www.example.test nc/storeN.pem nc/lUriNoUri.der nc/iUri.der
+C nc_uri_present X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lUriHas.der nc/iUri.der
+C nc_minimum X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lMin.der nc/iMin.der
+C nc_bad_mask X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lMask.der nc/iMask.der
+C nc_empty_permitted X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lEmpty.der nc/iEmpty.der
+C nc_no_subtrees X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lNone.der nc/iNone.der
+C nc_star_base X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lStar.der nc/iStar.der
+C nc_on_leaf X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lLeafNc.der
+C nc_anchor_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lUnderNO.der
+C nc_anchor_out X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lUnderNC.der
+C nc_two_ok X509_OK 1792972800 www.example.test nc/storeN.pem nc/lNarOk.der nc/iNar.der
+C nc_two_out X509_ERR_NAME_CONSTRAINTS 1792972800 www.example.test nc/storeN.pem nc/lNarOut.der nc/iNar.der
+C nc_widen X509_ERR_NAME_CONSTRAINTS 1792972800 www.other.test nc/storeN.pem nc/lWide.der nc/iWide.der
 # finding 6: server-presented RSA keys: 2048..4096 bits, e odd in 3..2^32-1
 C rsa_4096_leaf X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lX4096.der
 C rsa_e3_leaf X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXe3.der

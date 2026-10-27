@@ -27,8 +27,9 @@ note  16 NO_SAN         leaf has no subjectAltName (no CN fallback)
 note  17 IP_HOST        host is an IP literal (refused)
 note  18 ALG_MISMATCH   tbsCertificate.signature differs from signatureAlgorithm
 note  19 SCHEME         CertificateVerify scheme refused or does not match the leaf key
-note  20 NAME_CONSTRAINTS a nameConstraints extension (critical or not) on any certificate: name
-note                    constraints are not implemented, so such a certificate is always refused
+note  20 NAME_CONSTRAINTS a nameConstraints extension that is not critical, on a leaf, malformed, or
+note                    not evaluable (minimum/maximum, unsupported name forms, work bound), or a name
+note                    of a certificate below it that the constraints exclude or do not permit
 note
 note Constant time: nothing here handles secrets. Certificates, names, signatures and keys are public;
 note every function is variable time by design (branches on public data). Hashing and signature checks
@@ -75,6 +76,8 @@ const X5WDEP ulong 67
 const X5WCUR ulong 68
 const X5WSEL ulong 69
 const X5WLNB ulong 70
+const X5WNCJ ulong 71
+const X5WPTH ulong 72
 const X5WIX ulong 96
 const X5WSZ ulong 128
 const X5MAXC ulong 16
@@ -110,14 +113,15 @@ const X5ESCH ulong 19
 const X5ENC ulong 20
 const X5EEXT ulong 21
 const X5XMAX ulong 64
+const X5NCWK ulong 65536
 
 note OID content bytes (hex), space separated; der_oidix returns the 1-based position.
 note 1-3 sha256/384/512WithRSAEncryption (RFC 4055), 4 RSASSA-PSS, 5-7 ecdsa-with-SHA256/384/512
 note (RFC 5758), 8 rsaEncryption, 9 id-ecPublicKey, 10 prime256v1, 11 secp384r1 (RFC 5480),
 note 12-14 sha256/384/512 (NIST CSOR), 15 id-mgf1, 16 basicConstraints, 17 keyUsage, 18 extKeyUsage,
 note 19 subjectAltName, 20 nameConstraints (RFC 5280 4.2.1), 21 id-kp-serverAuth, 22 anyExtendedKeyUsage,
-note 23 authorityKeyIdentifier, 24 subjectKeyIdentifier
-text X5OIDS "2a864886f70d01010b 2a864886f70d01010c 2a864886f70d01010d 2a864886f70d01010a 2a8648ce3d040302 2a8648ce3d040303 2a8648ce3d040304 2a864886f70d010101 2a8648ce3d0201 2a8648ce3d030107 2b81040022 608648016503040201 608648016503040202 608648016503040203 2a864886f70d010108 551d13 551d0f 551d25 551d11 551d1e 2b06010505070301 551d2500 551d23 551d0e "
+note 23 authorityKeyIdentifier, 24 subjectKeyIdentifier, 25 emailAddress (PKCS #9, RFC 5280 4.1.2.6)
+text X5OIDS "2a864886f70d01010b 2a864886f70d01010c 2a864886f70d01010d 2a864886f70d01010a 2a8648ce3d040302 2a8648ce3d040303 2a8648ce3d040304 2a864886f70d010101 2a8648ce3d0201 2a8648ce3d030107 2b81040022 608648016503040201 608648016503040202 608648016503040203 2a864886f70d010108 551d13 551d0f 551d25 551d11 551d1e 2b06010505070301 551d2500 551d23 551d0e 2a864886f70d010901 "
 text X5NAMES "X509_OK X509_ERR_MALFORMED X509_ERR_EXPIRED X509_ERR_NOT_YET_VALID X509_ERR_NAME_MISMATCH X509_ERR_UNKNOWN_ISSUER X509_ERR_BAD_SIGNATURE X509_ERR_NOT_CA X509_ERR_PATH_LENGTH X509_ERR_KEY_USAGE X509_ERR_EKU X509_ERR_UNSUPPORTED_ALG X509_ERR_WEAK_KEY X509_ERR_CRITICAL_EXT X509_ERR_TOO_DEEP X509_ERR_LEAF_IS_CA X509_ERR_NO_SAN X509_ERR_IP_HOST X509_ERR_ALG_MISMATCH X509_ERR_SCHEME X509_ERR_NAME_CONSTRAINTS X509_ERR_ENTRY_EXT "
 text X5PATH "/etc/ssl/certs/ca-certificates.crt"
 text X5BEG "-----BEGIN CERTIFICATE-----"
@@ -939,8 +943,9 @@ end
 
 note x509_ext: one Extension, content c[a .. b): {extnID, critical BOOLEAN DEFAULT FALSE, extnValue}.
 note Known: basicConstraints, keyUsage, extKeyUsage, subjectAltName, authorityKeyIdentifier,
-note subjectKeyIdentifier (each at most once, RFC 5280 4.2). A nameConstraints extension, critical or
-note not, is X5ENC; any other unknown critical one X5ECRIT (x509_extk).
+note subjectKeyIdentifier, nameConstraints (each at most once, RFC 5280 4.2). A nameConstraints that is
+note not critical is X5ENC (4.2.1.10 MUST); any other unknown critical one X5ECRIT (x509_extk).
+note nameConstraints is only recorded (X5RSEEN bit 16); it is parsed and applied by nc_path.
 fn x509_ext c view uchar * a ulong b ulong r edit ulong * to ulong
 h = new ulong 3 0
 if ne der_hdr c a b h 0
@@ -998,15 +1003,18 @@ note parsed (16..19), 1 when done (an unknown non-critical one; AKI/SKI, recorde
 note else a reject code. X5RSEEN bit (o - 16) marks each known extension (a repeat is X5EMAL); bit 9
 note (512) a critical subjectAltName. AKI/SKI MUST be non-critical (RFC 5280 4.2.1.1, 4.2.1.2).
 fn x509_extk o ulong cr ulong r edit ulong * to ulong
-if eq o 20
-ret X5ENC
-end
 kn = ulong 0
 if and ge o 16 le o 19
 kn = 1
 end
 if or eq o 23 eq o 24
 kn = 2
+end
+if eq o 20
+if eq cr 0
+ret X5ENC
+end
+kn = 3
 end
 if eq kn 0
 if ne cr 0
@@ -1026,6 +1034,9 @@ if eq kn 2
 if ne cr 0
 ret X5ECRIT
 end
+ret 1
+end
+if eq kn 3
 ret 1
 end
 ret 0
@@ -2034,15 +2045,717 @@ end
 ret 0
 end
 
+note ---------------------------------------------------------------- name constraints (RFC 5280 4.2.1.10)
+note A nameConstraints on a CA (presented intermediate or trust anchor) constrains every certificate
+note below it in the path, except self-issued intermediates (RFC 5280 6.1.3 b, 6.1.4 g). Each
+note constraining certificate is applied on its own, which is the same as the RFC's running
+note intersection (permitted) and union (excluded). Name forms evaluated: dNSName, iPAddress,
+note rfc822Name (subjectAltName and subject emailAddress) and directoryName (subject and
+note subjectAltName). Any other form that meets a subtree of the same form, minimum or maximum in a
+note subtree, a malformed constraint, or more than X5NCWK name x subtree pairs is X5ENC (fail closed).
+
+note nc_isuf: n ends with c under ASCII case folding
+fn nc_isuf n view uchar * c view uchar * to bool
+ln = len n
+lc = len c
+if lt ln lc
+ret false
+end
+ret chain_ieq part n sub ln lc lc c
+end
+
+note nc_at: index of the only '@' in n; X5BIG when none, sub X5BIG 1 when several
+fn nc_at n view uchar * to ulong
+p = X5BIG
+for i ulong len n
+if eq get n i 64
+if ne p X5BIG
+ret sub X5BIG 1
+end
+p = i
+end
+end
+ret p
+end
+
+note nc_dstr: t is a directory string tag (UTF8String, PrintableString, TeletexString, IA5String)
+fn nc_dstr t ulong to bool
+ret or or eq t 12 eq t 19 or eq t 20 eq t 22
+end
+
+note nc_dns: dNSName n within constraint c: c empty, n = c, or n ends with "." c (case folded). x = 1
+note (excluded subtrees): a wildcard n = "*." B also falls within c = L "." B, L one label, since
+note the wildcard can stand for c.
+fn nc_dns n view uchar * c view uchar * x ulong to bool
+lc = len c
+ln = len n
+if eq lc 0
+ret true
+end
+if chain_ieq n c
+ret true
+end
+if gt ln lc
+if eq get n sub sub ln lc 1 46
+if nc_isuf n c
+ret true
+end
+end
+end
+if eq x 0
+ret false
+end
+if lt ln 3
+ret false
+end
+if ne get n 0 42
+ret false
+end
+lb = sub ln 2
+if le lc add lb 1
+ret false
+end
+k = sub sub lc lb 1
+if ne get c k 46
+ret false
+end
+for i ulong k
+if eq get c i 46
+ret false
+end
+end
+ret chain_ieq part c add k 1 lb part n 2 lb
+end
+
+note nc_ip: iPAddress n (4 or 16 bytes) within constraint c (address || mask, 8 or 32 bytes)
+fn nc_ip n view uchar * c view uchar * to bool
+k = len n
+if ne mul k 2 len c
+ret false
+end
+for i ulong k
+m = get c add k i
+if ne and get n i m and get c i m
+ret false
+end
+end
+ret true
+end
+
+note nc_mail: rfc822Name n (checked by nc_nok) within constraint c: c with '@' is one mailbox
+note (local part exact, x = 1: case folded too; host case folded), c ".host" any host ending with it,
+note c "host" that host only (RFC 5280 4.2.1.10)
+fn nc_mail n view uchar * c view uchar * x ulong to bool
+ln = len n
+lc = len c
+p = nc_at n
+q = nc_at c
+hs = add p 1
+hl = sub ln hs
+if lt q lc
+if ne p q
+ret false
+end
+if eq x 0
+if not der_same part n 0 p part c 0 p
+ret false
+end
+end
+if not chain_ieq part n 0 p part c 0 p
+ret false
+end
+ret chain_ieq part n hs hl part c hs sub lc hs
+end
+if eq get c 0 46
+ret nc_isuf part n hs hl c
+end
+ret chain_ieq part n hs hl c
+end
+
+note nc_dneq: n[0 .. len c) equals c byte for byte; x = 1 (excluded subtrees) also where bytes differ
+note only by ASCII case or are both directory string tags, so a re-encoded name cannot slip past an
+note excluded directoryName (a re-encoding that changes a length still can: compared as bytes)
+fn nc_dneq n view uchar * c view uchar * x ulong to bool
+for i ulong len c
+a = ulong get n i
+b = ulong get c i
+if ne a b
+if eq x 0
+ret false
+end
+if and nc_dstr a nc_dstr b
+continue
+end
+if ne chain_low a chain_low b
+ret false
+end
+end
+end
+ret true
+end
+
+note nc_dn: Name TLV n within the Name TLV c: the RDNs of c are the first RDNs of n (as encoded)
+fn nc_dn n view uchar * c view uchar * x ulong to bool
+h = new ulong 3 0
+if ne der_hdr c 0 len c h 0
+ret false
+end
+co = get h 1
+cl = sub get h 2 co
+if ne der_hdr n 0 len n h 0
+ret false
+end
+no = get h 1
+if gt cl sub get h 2 no
+ret false
+end
+ret nc_dneq part n no cl part c co cl x
+end
+
+note nc_name1: the Name TLV d is exactly one SEQUENCE; 1 yes, 0 no
+fn nc_name1 d view uchar * to ulong
+h = new ulong 3 0
+if ne der_hdr d 0 len d h 0
+ret 0
+end
+if or ne get h 0 0x30 ne get h 2 len d
+ret 0
+end
+ret 1
+end
+
+note nc_nok: a certificate name of form t with content n can be compared: dNSName non-empty, no
+note leading '.', '*' only as a whole "*." first label; iPAddress 4 or 16 bytes; rfc822Name one '@'
+note between non-empty parts; directoryName one Name. 1 yes, 0 no
+fn nc_nok t ulong n view uchar * to ulong
+k = len n
+if eq t 0x82
+if eq k 0
+ret 0
+end
+if eq get n 0 46
+ret 0
+end
+for i ulong k
+if eq get n i 42
+if ne i 0
+ret 0
+end
+if lt k 3
+ret 0
+end
+if ne get n 1 46
+ret 0
+end
+end
+end
+ret 1
+end
+if eq t 0x87
+if or eq k 4 eq k 16
+ret 1
+end
+ret 0
+end
+if eq t 0x81
+p = nc_at n
+if and and lt p k gt p 0 lt add p 1 k
+ret 1
+end
+ret 0
+end
+if eq t 0xa4
+ret nc_name1 n
+end
+ret 1
+end
+
+note nc_ipok: iPAddress constraint: 8 or 32 bytes, contiguous mask, no address bit outside the mask
+fn nc_ipok c view uchar * to ulong
+n = len c
+if and ne n 8 ne n 32
+ret 0
+end
+k = div n 2
+z = ulong 0
+for i ulong k
+m = ulong get c add k i
+if ne and ulong get c i xor m 255 0
+ret 0
+end
+if and eq z 1 ne m 0
+ret 0
+end
+if ne m 255
+x = xor m 255
+if ne and x add x 1 0
+ret 0
+end
+z = 1
+end
+end
+ret 1
+end
+
+note nc_bok: a subtree base of form t with content c is well formed: dNSName without '*' and not
+note starting with '.'; iPAddress nc_ipok; rfc822Name non-empty, at most one '@' and then between
+note non-empty parts, ".host" longer than the dot; directoryName one Name. The forms that are never
+note evaluated (otherName, x400Address, ediPartyName, URI, registeredID) are accepted here and
+note refused when a certificate name of the same form meets them. Any other tag: 0.
+fn nc_bok t ulong c view uchar * to ulong
+k = len c
+if eq t 0x82
+for i ulong k
+if eq get c i 42
+ret 0
+end
+end
+if gt k 0
+if eq get c 0 46
+ret 0
+end
+end
+ret 1
+end
+if eq t 0x87
+ret nc_ipok c
+end
+if eq t 0x81
+if eq k 0
+ret 0
+end
+q = nc_at c
+if eq q sub X5BIG 1
+ret 0
+end
+if lt q k
+if or eq q 0 ge add q 1 k
+ret 0
+end
+end
+if and eq get c 0 46 lt k 2
+ret 0
+end
+ret 1
+end
+if eq t 0xa4
+ret nc_name1 c
+end
+if or or eq t 0xa0 eq t 0x86 or or eq t 0x88 eq t 0xa3 eq t 0xa5
+ret 1
+end
+ret 0
+end
+
+note nc_one: name n of form t within base c; k = 1 excluded. 0 no, 1 yes, 3 not evaluable
+fn nc_one t ulong n view uchar * c view uchar * k ulong to ulong
+if eq t 0x82
+if nc_dns n c k
+ret 1
+end
+ret 0
+end
+if eq t 0x87
+if nc_ip n c
+ret 1
+end
+ret 0
+end
+if eq t 0x81
+if nc_mail n c k
+ret 1
+end
+ret 0
+end
+if eq t 0xa4
+if nc_dn n c k
+ret 1
+end
+ret 0
+end
+ret 3
+end
+
+note nc_list: the subtrees [k] (k = 0 permitted, 1 excluded) of the NameConstraints TLV nc (checked
+note by nc_valid) against the name of form t with content n. 0 no subtree of form t, 1 some but none
+note contains n, 2 one contains n, 3 a subtree of form t cannot be evaluated. k + 2: presence only
+note (1 when [k and 1] has a subtree of form t, n unused)
+fn nc_list nc view uchar * k ulong t ulong n view uchar * to ulong
+h = new ulong 5 0
+g = new ulong 4 0
+if ne der_hdr nc 0 len nc h 0
+ret 3
+end
+put h 3 get h 2
+s = get h 1
+put h 4 add 0xa0 and k 1
+while lt s get h 3 bound 3
+if ne der_hdr nc s get h 3 h 0
+ret 3
+end
+s = get h 2
+if ne get h 0 get h 4
+continue
+end
+q = get h 1
+while lt q s bound 100000
+if ne der_hdr nc q s g 0
+ret 3
+end
+q = get g 2
+if ne der_hdr nc get g 1 q g 0
+ret 3
+end
+if ne get g 0 t
+continue
+end
+if ge k 2
+ret 1
+end
+put g 3 1
+o = get g 1
+ln = sub get g 2 o
+m = nc_one t n part nc o ln k
+if eq m 3
+ret 3
+end
+if eq m 1
+ret 2
+end
+end
+end
+ret get g 3
+end
+
+note nc_name: one name of form t, content n, against nc: X5ENC when an excluded subtree contains it,
+note permitted subtrees of its form exist and none contains it, a subtree of its form cannot be
+note evaluated, or a subtree of its form exists and the name is malformed (nc_nok); else 0
+fn nc_name nc view uchar * t ulong n view uchar * to ulong
+if eq nc_nok t n 0
+if or ne nc_list nc 2 t n 0 ne nc_list nc 3 t n 0
+ret X5ENC
+end
+ret 0
+end
+x = nc_list nc 1 t n
+if ge x 2
+ret X5ENC
+end
+p = nc_list nc 0 t n
+if or eq p 1 eq p 3
+ret X5ENC
+end
+ret 0
+end
+
+note nc_valid: the NameConstraints TLV nc: SEQUENCE { permittedSubtrees [0] OPTIONAL,
+note excludedSubtrees [1] OPTIONAL }, at least one present, each a non-empty SEQUENCE OF
+note GeneralSubtree { base, no minimum, no maximum } with nc_bok bases. The subtree count, or X5BIG.
+fn nc_valid nc view uchar * to ulong
+h = new ulong 3 0
+g = new ulong 3 0
+if ne der_hdr nc 0 len nc h 0
+ret X5BIG
+end
+if or ne get h 0 0x30 ne get h 2 len nc
+ret X5BIG
+end
+e = get h 2
+s = get h 1
+if eq s e
+ret X5BIG
+end
+k = ulong 0x9f
+n = ulong 0
+while lt s e bound 3
+if ne der_hdr nc s e h 0
+ret X5BIG
+end
+if or le get h 0 k gt get h 0 0xa1
+ret X5BIG
+end
+k = get h 0
+s = get h 2
+q = get h 1
+if eq q s
+ret X5BIG
+end
+while lt q s bound 100000
+if ne der_hdr nc q s g 0
+ret X5BIG
+end
+if ne get g 0 0x30
+ret X5BIG
+end
+q = get g 2
+if ne der_hdr nc get g 1 q g 0
+ret X5BIG
+end
+if ne get g 2 q
+ret X5BIG
+end
+n = add n 1
+o = get g 1
+ln = sub get g 2 o
+if eq nc_bok get g 0 part nc o ln 0
+ret X5BIG
+end
+end
+end
+ret n
+end
+
+note nc_subj: subject emailAddress attributes of the Name TLV c[a .. b) as rfc822Name (nc_name)
+fn nc_subj nc view uchar * c view uchar * a ulong b ulong to ulong
+h = new ulong 3 0
+if ne der_hdr c a b h 0
+ret X5EMAL
+end
+s = get h 1
+e = get h 2
+while lt s e bound 100000
+if ne der_hdr c s e h 0
+ret X5EMAL
+end
+s = get h 2
+q = get h 1
+while lt q s bound 100000
+if ne der_hdr c q s h 0
+ret X5EMAL
+end
+q = get h 2
+if ne der_hdr c get h 1 q h 0
+ret X5EMAL
+end
+if ne get h 0 6
+ret X5EMAL
+end
+o = get h 1
+ln = sub get h 2 o
+if eq der_oidix part c o ln 25
+if ne der_hdr c get h 2 q h 0
+ret X5EMAL
+end
+o = get h 1
+ln = sub get h 2 o
+v = nc_name nc 0x81 part c o ln
+if ne v 0
+ret v
+end
+end
+end
+end
+ret 0
+end
+
+note nc_cnt: names nc_cert compares for certificate c (record r): subject, emailAddress attributes
+note bounded by the subject length, subjectAltName entries
+fn nc_cnt c view uchar * r view ulong * to ulong
+h = new ulong 3 0
+n = add 1 div get r X5RSBL 8
+if eq get r X5RSAN 0
+ret n
+end
+s = get r X5RSNO
+e = add s get r X5RSNL
+while lt s e bound 100000
+if ne der_hdr c s e h 0
+ret X5BIG
+end
+s = get h 2
+n = add n 1
+end
+ret n
+end
+
+note nc_cert: the names of certificate c (record r) against nc: the subject as directoryName (when
+note not empty), its emailAddress attributes as rfc822Name, every subjectAltName entry. 0 or a code
+fn nc_cert nc view uchar * c view uchar * r view ulong * to ulong
+h = new ulong 3 0
+so = get r X5RSBO
+sl = get r X5RSBL
+v = ulong 0
+if gt sl 2
+v = nc_name nc 0xa4 part c so sl
+if ne v 0
+ret v
+end
+end
+v = nc_subj nc c so add so sl
+if ne v 0
+ret v
+end
+if eq get r X5RSAN 0
+ret 0
+end
+s = get r X5RSNO
+e = add s get r X5RSNL
+while lt s e bound 100000
+if ne der_hdr c s e h 0
+ret X5EMAL
+end
+s = get h 2
+so = get h 1
+sl = sub get h 2 so
+v = nc_name nc get h 0 part c so sl
+if ne v 0
+ret v
+end
+end
+ret 0
+end
+
+note nc_si: certificate c (record r) is self-issued (issuer DER == subject DER)
+fn nc_si c view uchar * r view ulong * to bool
+a = get r X5RISO
+b = get r X5RSBO
+x = get r X5RISL
+y = get r X5RSBL
+ret x509_same c a b x y
+end
+
+note nc_below: the NameConstraints TLV nc of path position j = w[X5WNCJ] against positions 0 .. j-1 of
+note w (leaf first), self-issued intermediates skipped. 0, X5ENC or X5EMAL
+fn nc_below nc view uchar * cl view uchar * w view ulong * to ulong
+r = new ulong 33 0
+put r 32 nc_valid nc
+if eq get r 32 X5BIG
+ret X5ENC
+end
+for i ulong get w X5WNCJ
+o = get w add X5WPTH i
+o = add X5WIX mul o 2
+l = get w add o 1
+o = get w o
+if ne x509_parse part cl o l edit r 0
+ret X5EMAL
+end
+if ne i 0
+if nc_si part cl o l view r
+continue
+end
+end
+v = nc_cnt part cl o l view r
+if eq v X5BIG
+ret X5ENC
+end
+v = mul get r 32 v
+if gt v X5NCWK
+ret X5ENC
+end
+v = nc_cert nc part cl o l view r
+if ne v 0
+ret v
+end
+end
+ret 0
+end
+
+note nc_by: the nameConstraints of certificate c (path position w[X5WNCJ]), if any, against the path
+note below it
+fn nc_by c view uchar * cl view uchar * w view ulong * to ulong
+r = new ulong 32 0
+if ne x509_parse c edit r 0
+ret X5EMAL
+end
+if eq and get r X5RSEEN 16 0
+ret 0
+end
+h = new ulong 5 0
+s = add get r X5RKO get r X5RKL
+put h 3 add get r X5RTBO get r X5RTBL
+while lt s get h 3 bound 4
+if ne der_hdr c s get h 3 h 0
+ret X5EMAL
+end
+s = get h 2
+if ne get h 0 0xa3
+continue
+end
+if ne der_hdr c get h 1 s h 0
+ret X5EMAL
+end
+q = get h 1
+put h 4 get h 2
+while lt q get h 4 bound 100000
+if ne der_hdr c q get h 4 h 0
+ret X5EMAL
+end
+q = get h 2
+if ne der_hdr c get h 1 q h 0
+ret X5EMAL
+end
+f = get h 1
+if eq der_oidix part c f sub get h 2 f 20
+f = get h 2
+if ne der_hdr c f q h 0
+ret X5EMAL
+end
+if eq get h 0 1
+if ne der_hdr c get h 2 q h 0
+ret X5EMAL
+end
+end
+f = get h 1
+ret nc_below part c f sub get h 2 f cl w
+end
+end
+end
+ret X5EMAL
+end
+
+note nc_mid: the nameConstraints of the presented intermediate at path position w[X5WNCJ], copied to
+note kb first (one array may not be passed twice in a call), against the path below it
+fn nc_mid kb edit uchar * cl view uchar * w view ulong * to ulong
+i = get w X5WNCJ
+i = get w add X5WPTH i
+i = add X5WIX mul i 2
+o = get w i
+i = get w add i 1
+if gt i len kb
+ret X5EMAL
+end
+for k ulong i
+put kb k get cl add o k
+end
+ret nc_by part kb 0 i cl w
+end
+
+note nc_path: every nameConstraints on the path w[X5WPTH .. + w[X5WDEP]) (presented entries of cl,
+note leaf first) and on the anchor an (position w[X5WDEP]). 0, X5ENC or X5EMAL
+fn nc_path cl view uchar * an view uchar * w edit ulong * to ulong
+kb = new uchar 16384 0
+for j ulong get w X5WDEP
+put w X5WNCJ add j 1
+v = ulong 0
+if eq get w X5WNCJ get w X5WDEP
+v = nc_by an cl view w
+else
+v = nc_mid kb cl view w
+end
+if ne v 0
+ret v
+end
+end
+ret 0
+end
+
 note chain_anchor: try every trust anchor in st (store format) whose subject is the issuer of the
-note current certificate cd. 0 when one verifies it; else the code of the last failed candidate,
-note X5EUNK when none has the name. Anchors that do not parse are skipped, and so are store entries
+note current certificate (presented entry w[X5WCUR] of cl). 0 when one verifies it; else the code of
+note the last failed candidate, X5EUNK when none has the name. Anchors that do not parse are skipped,
+note and so are store entries
 note that are not self-issued (subject DER == issuer DER, chain_self): an intermediate placed in the
 note store is not a trust anchor (OpenSSL without -partial_chain; stricter than RFC 5280 6.1.1 d).
 note An anchor that verifies the certificate must itself be within its validity period and carry
 note basicConstraints cA TRUE (chain_aok; RFC 5280 6.1 leaves this to the relying party, OpenSSL and
 note x509-limbo rfc5280::validity::expired-root / root-missing-basic-constraints require it).
-fn chain_anchor cd view uchar * st view uchar * w edit ulong * to ulong
+note The path w[X5WPTH ..] (presented entries of cl, leaf first) under an anchor that verifies must then
+note satisfy every nameConstraints on it and on the anchor (nc_path); a violation tries the next anchor.
+fn chain_anchor cl view uchar * st view uchar * w edit ulong * to ulong
+co = get w X5WCUR
+co = add X5WIX mul co 2
+cn = get w add co 1
+co = get w co
 p = ulong 0
 res = X5EUNK
 while lt p len st bound 100000
@@ -2051,11 +2764,17 @@ break
 end
 l = der_u24 st p
 p = add p 3
-if or eq l 0 gt l sub len st p
+if eq l 0
+break
+end
+if gt l sub len st p
 break
 end
 if eq x509_parse part st p l part w X5RSZ X5RSZ 0
-v = chain_alink cd part st p l view w
+v = chain_alink part cl co cn part st p l view w
+if eq v 0
+v = nc_path cl part st p l w
+end
 if eq v 0
 ret 0
 end
@@ -2196,6 +2915,9 @@ end
 if eq get w X5RCA 1
 ret X5ELCA
 end
+if ne and get w X5RSEEN 16 0
+ret X5ENC
+end
 if eq get w X5RKU 1
 if eq and get w X5RKUB 128 0
 ret X5EKU
@@ -2227,11 +2949,9 @@ fn chain_path cl view uchar * st view uchar * w edit ulong * to ulong
 put w X5WUSED 1
 put w X5WDEP 1
 put w X5WCUR 0
+put w X5WPTH 0
 for k ulong X5MAXD
-cu = get w X5WCUR
-co = get w add X5WIX mul cu 2
-cn = get w add X5WIX add mul cu 2 1
-a = chain_anchor part cl co cn st w
+a = chain_anchor cl st w
 if eq a 0
 ret 0
 end
@@ -2257,6 +2977,7 @@ put w i get w add X5RSZ i
 end
 j = get w X5WSEL
 put w X5WCUR j
+put w add X5WPTH get w X5WDEP j
 put w X5WUSED or get w X5WUSED shl ulong 1 j
 put w X5WDEP add get w X5WDEP 1
 end

@@ -1,0 +1,203 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/ed25519.om (program mode). run.sh writes the line om2, then
+note sha2.om, x25519.om, ed25519.om, then this file. Reads a vector file on stdin, one case per line:
+note   V R PKHEX SIGHEX MSGHEX   ed25519_verify(pk, msg, sig) must return R (0 valid, 1 bad signature,
+note                             2 bad key, 3 bad signature encoding); a field is - when empty;
+note                             pk at most 64 bytes, sig 256, msg 8192
+note Lines starting with # and empty lines are skipped. Prints one MISMATCH line per wrong result
+note and the summary line: cases C calls V mismatches X ns T (T = ns spent in checked calls).
+note Exit 0 only when at least one checked call ran and none mismatched; 1 otherwise; 65 bad input.
+
+text EDTMIS "MISMATCH line "
+text EDTGOT " got rc "
+text EDTWANT " want rc "
+text EDTCASE "cases "
+text EDTCALL " calls "
+text EDTMM " mismatches "
+text EDTNS " ns "
+text EDTNL "\n"
+text EDTBAD "driver: bad input\n"
+
+global EDIN uchar 16777216
+global EDLEN ulong 1
+global EDOUT uchar 32
+global EDCNT ulong 8
+
+fn edt_num v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put EDOUT sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 EDOUT sub 32 k k
+end
+
+fn edt_bad to void
+r = write 2 EDTBAD 0 len EDTBAD
+exit 65
+end
+
+fn edt_nib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+edt_bad
+ret 0
+end
+
+note bytes from the hex digits at EDIN[o..] up to a space or newline into a; returns the count,
+note 0 for the field -
+fn edt_hexv a edit uchar * o ulong to ulong
+if eq get EDIN o 45
+c = get EDIN add o 1
+if and ne c 32 ne c 10
+edt_bad
+end
+ret 0
+end
+n = ulong 0
+while true bound 9000
+q = add o mul n 2
+c = get EDIN q
+if or eq c 32 eq c 10
+break
+end
+if ge n len a
+edt_bad
+end
+hi = edt_nib ulong c
+lo = edt_nib ulong get EDIN add q 1
+put a n uchar or shl hi 4 lo
+n = add n 1
+end
+if eq n 0
+edt_bad
+end
+ret n
+end
+
+note position after the field at o holding n bytes and its separator
+fn edt_next o ulong n ulong to ulong
+if eq n 0
+ret add o 2
+end
+ret add add o mul n 2 1
+end
+
+fn edt_bump i ulong v ulong to void
+put EDCNT i add get EDCNT i v
+end
+
+note counters in EDCNT: 0 line, 1 cases, 2 calls, 3 mismatches, 4 ns
+fn edt_chk got ulong want ulong to void
+edt_bump 2 1
+if ne got want
+edt_bump 3 1
+r = write 1 EDTMIS 0 len EDTMIS
+edt_num get EDCNT 0
+r = write 1 EDTGOT 0 len EDTGOT
+edt_num got
+r = write 1 EDTWANT 0 len EDTWANT
+edt_num want
+r = write 1 EDTNL 0 1
+end
+end
+
+fn edt_v p ulong e ulong to void
+k = new uchar 64 0
+g = new uchar 256 0
+m = new uchar 8192 0
+if lt sub e p 8
+edt_bad
+end
+if ne get EDIN add p 3 32
+edt_bad
+end
+want = edt_nib ulong get EDIN add p 2
+q = add p 4
+nk = edt_hexv k q
+q = edt_next q nk
+ns = edt_hexv g q
+q = edt_next q ns
+nm = edt_hexv m q
+q = edt_next q nm
+if ne q add e 1
+edt_bad
+end
+t0 = monons
+got = ed25519_verify part k 0 nk part m 0 nm part g 0 ns
+edt_bump 4 ulong sub monons t0
+edt_chk got want
+end
+
+fn edt_slurp to void
+t = ulong 0
+while true bound 999999
+room = sub len EDIN t
+if eq room 0
+edt_bad
+end
+r = read 0 EDIN t room
+if lt r 0
+edt_bad
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put EDLEN 0 t
+end
+
+note the case on EDIN[p..e), e at its newline
+fn edt_line p ulong e ulong to void
+c = get EDIN p
+if or eq e p eq c 35
+ret
+end
+edt_bump 1 1
+if eq c 86
+edt_v p e
+ret
+end
+edt_bad
+end
+
+fn main to int
+edt_slurp
+tot = get EDLEN 0
+if or eq tot 0 ne get EDIN sub tot 1 10
+edt_bad
+end
+p = ulong 0
+while lt p tot bound 999999
+edt_bump 0 1
+e = p
+while ne get EDIN e 10 bound 999999
+e = add e 1
+end
+edt_line p e
+p = add e 1
+end
+r = write 1 EDTCASE 0 len EDTCASE
+edt_num get EDCNT 1
+r = write 1 EDTCALL 0 len EDTCALL
+edt_num get EDCNT 2
+r = write 1 EDTMM 0 len EDTMM
+edt_num get EDCNT 3
+r = write 1 EDTNS 0 len EDTNS
+edt_num get EDCNT 4
+r = write 1 EDTNL 0 1
+if or gt get EDCNT 3 0 eq get EDCNT 2 0
+ret 1
+end
+ret 0
+end

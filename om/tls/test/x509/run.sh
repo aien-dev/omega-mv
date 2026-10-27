@@ -157,6 +157,22 @@ mutant '0,/^v = chain_time part w X5RSZ X5RSZ get w X5WNOW$/s//v = ulong 0/' anc
 mutant 's/^if eq and get w add X5RSZ X5RSEEN 256 0$/if eq and get w add X5RSZ X5RSEEN 256 9/' intermediate-ski
 mutant 's/^if ne and b 7 0$/if ne and b 0 0/' rsa-octets
 mutant 's/^if gt get w X5WLNB chain_dcut add s 65$/if gt get w X5WLNB 99999999999/' mozilla-distrust
+# name constraints (vectors/nc, gen_nc.py): each check removed must be caught
+mutant 's/^if ge x 2$/if ge x 9/' nc-excluded-ignored
+mutant 's/^if or eq p 1 eq p 3$/if eq p 3/' nc-permitted-ignored
+mutant 's/^v = nc_by an cl view w$/v = ulong 0/' nc-anchor-ignored
+mutant 's/^v = nc_mid kb cl view w$/v = ulong 0/' nc-intermediate-ignored
+mutant 's/^v = nc_path cl part st p l w$/v = ulong 0/' nc-path-unwired
+mutant 's/^if eq get n sub sub ln lc 1 46$/if ne get n 0 0/' nc-dns-label-boundary
+mutant 's/^ret chain_ieq part c add k 1 lb part n 2 lb$/ret false/' nc-excluded-wildcard
+mutant 's/^if ne and get n i m and get c i m$/if ne and get n i 0 and get c i 0/' nc-ip-mask
+mutant 's/^if ne and x add x 1 0$/if ne and x add x 1 9999/' nc-mask-contiguous
+mutant 's/^ret chain_ieq part n hs hl c$/ret true/' nc-mail-host
+mutant 's/^if gt sl 2$/if gt sl 99999/' nc-subject-dn
+mutant 's/^if ne get g 2 q$/if eq get g 2 99999999/' nc-minimum-maximum
+mutant 's/^if eq q s$/if eq q 99999999/' nc-empty-subtrees
+mutant 's/^if ne and get w X5RSEEN 16 0$/if ne and get w X5RSEEN 0 0/' nc-on-leaf
+mutant 's/^ret 3$/ret 0/' nc-unevaluable-form
 # expectation mutant: one expected code changed
 mut=$((mut + 1))
 sed 's/^C rsa_good X509_OK /C rsa_good X509_ERR_EXPIRED /' "$out/cases.txt" > "$out/mut-expect.txt"

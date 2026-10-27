@@ -1,0 +1,518 @@
+note SPDX-License-Identifier: Apache-2.0
+note ed25519.om: Ed25519 signature verification (RFC 8032 sections 5.1.3, 5.1.4, 5.1.7) for om/tls
+note (x509 certificate and TLS 1.3 CertificateVerify signatures, RFC 8446 section 4.4.3).
+note Library unit (module code ED): functions and consts only, no om2 line, no main, no globals.
+note Composition: after sha2 (sha512_init/update/final) and x25519 (x25519_fcarry, x25519_fenc),
+note before x509: sha2 hkdf drbg x25519 ed25519 chacha aesgcm ec ecdh rsa x509 fips tls.
+note
+note API
+note   ed25519_verify pk view uchar * m view uchar * sg view uchar * to ulong
+note     pk the 32-byte public key A, m the message (any length), sg the 64-byte signature R || S.
+note     Returns 0 valid, 1 bad signature, 2 bad public key (len pk not 32, or pk does not decode:
+note     y >= p, x^2 = u / v has no root, or x = 0 with the sign bit set, RFC 8032 section 5.1.3),
+note     3 bad signature encoding (len sg not 64, or S >= L). The key is checked first, then the
+note     signature encoding, then the equation.
+note     Equation (cofactorless, RFC 8032 section 5.1.7 step 3 without the factor 8): with
+note     k = SHA-512(R || A || m) mod L, the signature is valid when encode([S]B + [k](-A)) equals the
+note     32 bytes R. Comparing encodings rejects a non-canonical or undecodable R (an encoding this unit
+note     writes is always canonical). Small and mixed order keys are accepted when the cofactorless
+note     equation holds (Wycheproof "acceptable").
+note
+note Not constant time, by design: every input of a verification (key, message, signature) is public,
+note so the decoding branches, the S >= L test and the double-scalar loop (it adds B, -A or B - A by
+note the bits of S and k) branch on data. Do not reuse these functions for secret scalars.
+note
+note Field GF(p), p = 2^255 - 19: the ten-limb radix 2^25.5 layout of x25519.om (its header carries
+note the limb bounds). Every field result written here is carried (x25519_fcarry): fmul as in
+note x25519.om; fadd adds then carries; fsub and fneg add 2p limbwise before subtracting a carried
+note value (2p limbs 134217690, 67108862 (odd), 134217726 (even), each at or above a carried limb),
+note then carry. So every fmul input is carried and inside the x25519.om product bound.
+note Points: extended coordinates (X, Y, Z, T), x = X / Z, y = Y / Z, x y = T / Z (RFC 8032 5.1.4),
+note four consecutive slots. Addition and doubling are the RFC 8032 section 5.1.4 formulas (a = -1).
+note Powers: x^(2^250 - 1) and x^11 by the ref10 chain; inverse x^(p - 2) = (2^250 - 1) 2^5 + 11,
+note square-root power x^((p - 5) / 8) = x^((2^250 - 1) 2^2 + 1).
+note Scalars mod L: 4 little-endian ulong words; k is SHA-512 output reduced bit by bit (r = 2 r + bit,
+note minus L when r >= L; r < L < 2^253 so 2 r + 1 fits 256 bits).
+note
+note Constants checked with the Wolfram Language evaluator (2026-10-26):
+note   p=2^255-19; d=Mod[-121665 PowerMod[121666,-1,p],p]; i1=PowerMod[2,(p-1)/4,p];
+note   L=2^252+27742317777372353535851937790883648493; by=Mod[4 PowerMod[5,-1,p],p];
+note   w[x_]:=IntegerString[#,16,16]&/@Reverse[IntegerDigits[x,2^64,4]] (words, least significant first)
+note   w[d] -> 75eb4dca135978a3 00700a4d4141d8ab 8cc740797779e898 52036cee2b6ffe73
+note   w[i1] -> c4ee1b274a0ea0b0 2f431806ad2fe478 2b4d00993dfbd7a7 2b8324804fc1df0b; Mod[i1^2+1,p]==0 True
+note   w[L] -> 5812631a5cf5d3ed 14def9dea2f79cd6 0000000000000000 1000000000000000; PrimeQ[L] True
+note   w[by] -> 6666666666666658 6666666666666666 6666666666666666 6666666666666666
+note   JacobiSymbol[d,p] -> -1 (d is not a square: the addition law is complete); Mod[p,8] -> 5;
+note   (p-5)/8==2^252-3 True; Floor[Log2[L]] -> 252; Sum of 2p limbs 2^e(i) == 2 p True;
+note   exponent chain simulation: z^11, 2^250-1, (2^250-1) 4 + 1 == (p-5)/8, (2^250-1) 32 + 11 == p-2.
+
+note workspace slots (ulong offsets into w, 10 limbs each); points take four slots X Y Z T
+const EDWN ulong 310
+const EDB ulong 0
+const EDA ulong 40
+const EDC ulong 80
+const EDQ ulong 120
+const EDTA ulong 160
+const EDTB ulong 170
+const EDTC ulong 180
+const EDTD ulong 190
+const EDTE ulong 200
+const EDTF ulong 210
+const EDTG ulong 220
+const EDTH ulong 230
+const EDT0 ulong 240
+const EDT1 ulong 250
+const EDT2 ulong 260
+const EDZ11 ulong 270
+const EDD ulong 280
+const ED2D ulong 290
+const EDI ulong 300
+note d = -121665 / 121666 mod p, sqrt(-1) = 2^((p - 1) / 4) mod p, L, and the y of B (4 / 5 mod p),
+note as little-endian 64-bit words (Wolfram values above)
+const EDD0 ulong 0x75eb4dca135978a3
+const EDD1 ulong 0x00700a4d4141d8ab
+const EDD2 ulong 0x8cc740797779e898
+const EDD3 ulong 0x52036cee2b6ffe73
+const EDI0 ulong 0xc4ee1b274a0ea0b0
+const EDI1 ulong 0x2f431806ad2fe478
+const EDI2 ulong 0x2b4d00993dfbd7a7
+const EDI3 ulong 0x2b8324804fc1df0b
+const EDL0 ulong 0x5812631a5cf5d3ed
+const EDL1 ulong 0x14def9dea2f79cd6
+const EDL2 ulong 0x0000000000000000
+const EDL3 ulong 0x1000000000000000
+const EDBY0 ulong 0x6666666666666658
+const EDBY1 ulong 0x6666666666666666
+
+note slot o = slot a * slot b mod p, carried (o may equal a or b)
+fn ed25519_fmul w edit ulong EDWN o ulong a ulong b ulong to void
+x = new ulong 10 0
+y = new ulong 10 0
+t = new ulong 10 0
+for i ulong 10 unroll
+put x i get w add a i
+put y i get w add b i
+end
+for i ulong 10 unroll
+for j ulong 10 unroll
+put t rem add i j 10 add get t rem add i j 10 mul mul get x i get y j mul add 1 and and i j 1 add 1 mul 18 div add i j 10
+end
+end
+x25519_fcarry t
+for i ulong 10 unroll
+put w add o i get t i
+end
+end
+
+note slot o = slot a + slot b, carried
+fn ed25519_fadd w edit ulong EDWN o ulong a ulong b ulong to void
+t = new ulong 10 0
+for i ulong 10 unroll
+put t i add get w add a i get w add b i
+end
+x25519_fcarry t
+for i ulong 10 unroll
+put w add o i get t i
+end
+end
+
+note slot o = slot a + 2p - slot b, carried (b carried)
+fn ed25519_fsub w edit ulong EDWN o ulong a ulong b ulong to void
+t = new ulong 10 0
+for i ulong 10 unroll
+put t i sub add get w add a i sub sub 134217726 mul 67108864 and i 1 mul 36 div sub 10 i 10 get w add b i
+end
+x25519_fcarry t
+for i ulong 10 unroll
+put w add o i get t i
+end
+end
+
+note slot o = 2p - slot a = -a, carried (a carried)
+fn ed25519_fneg w edit ulong EDWN o ulong a ulong to void
+t = new ulong 10 0
+for i ulong 10 unroll
+put t i sub sub sub 134217726 mul 67108864 and i 1 mul 36 div sub 10 i 10 get w add a i
+end
+x25519_fcarry t
+for i ulong 10 unroll
+put w add o i get t i
+end
+end
+
+note slot o = slot a ^ (2^n), n >= 1
+fn ed25519_fsqn w edit ulong EDWN o ulong a ulong n ulong to void
+ed25519_fmul w o a a
+for i ulong sub n 1
+ed25519_fmul w o o o
+end
+end
+
+note EDT0 = a^(2^250 - 1), EDZ11 = a^11; uses EDT1 EDT2; a must be another slot
+fn ed25519_p250 w edit ulong EDWN a ulong to void
+note a^2, a^8, a^9, a^11 (EDZ11), a^22, a^31 = a^(2^5 - 1)
+ed25519_fmul w EDT0 a a
+ed25519_fsqn w EDT1 EDT0 2
+ed25519_fmul w EDT1 a EDT1
+ed25519_fmul w EDZ11 EDT0 EDT1
+ed25519_fmul w EDT0 EDZ11 EDZ11
+ed25519_fmul w EDT0 EDT1 EDT0
+ed25519_fsqn w EDT1 EDT0 5
+ed25519_fmul w EDT0 EDT1 EDT0
+ed25519_fsqn w EDT1 EDT0 10
+ed25519_fmul w EDT1 EDT1 EDT0
+ed25519_fsqn w EDT2 EDT1 20
+ed25519_fmul w EDT1 EDT2 EDT1
+ed25519_fsqn w EDT1 EDT1 10
+ed25519_fmul w EDT0 EDT1 EDT0
+ed25519_fsqn w EDT1 EDT0 50
+ed25519_fmul w EDT1 EDT1 EDT0
+ed25519_fsqn w EDT2 EDT1 100
+ed25519_fmul w EDT1 EDT2 EDT1
+ed25519_fsqn w EDT1 EDT1 50
+ed25519_fmul w EDT0 EDT1 EDT0
+end
+
+note slot o = a^(p - 2) = 1 / a (0 for a = 0); o and a are not power temporaries
+fn ed25519_finv w edit ulong EDWN o ulong a ulong to void
+ed25519_p250 w a
+ed25519_fsqn w EDT0 EDT0 5
+ed25519_fmul w o EDT0 EDZ11
+end
+
+note slot o = a^((p - 5) / 8) = a^(2^252 - 3); o and a are not power temporaries
+fn ed25519_fpow w edit ulong EDWN o ulong a ulong to void
+ed25519_p250 w a
+ed25519_fsqn w EDT0 EDT0 2
+ed25519_fmul w o EDT0 a
+end
+
+note slot o = the 32 little-endian bytes of b with bit 255 masked (len b = 32 checked by the caller)
+fn ed25519_fload w edit ulong EDWN o ulong b view uchar * to void
+for i ulong 10
+e = div add mul i 51 1 2
+c = shr e 3
+v = ulong get b c
+v = or v shl ulong get b add c 1 8
+v = or v shl ulong get b add c 2 16
+v = or v shl ulong get b add c 3 24
+m = sub shl ulong 1 sub 26 and i 1 1
+put w add o i and shr v and e 7 m
+end
+end
+
+note o = the canonical 32-byte encoding of slot a (carried), as x25519_fstore; returns 1 when a = 0
+fn ed25519_fstore w edit ulong EDWN a ulong o edit uchar * to ulong
+t = new ulong 10 0
+for i ulong 10 unroll
+put t i get w add a i
+end
+c = ulong 19
+for i ulong 10 unroll
+c = shr add get t i c sub 26 and i 1
+end
+put t 0 add get t 0 mul c 19
+for i ulong 9 unroll
+put t add i 1 add get t add i 1 shr get t i sub 26 and i 1
+put t i and get t i sub 67108863 mul 33554432 and i 1
+end
+put t 9 and get t 9 33554431
+ret x25519_fenc t o
+end
+
+note 1 when slot a is 0 mod p, else 0
+fn ed25519_fzero w edit ulong EDWN a ulong to ulong
+e = new uchar 32 0
+ret ed25519_fstore w a e
+end
+
+note e = the 32 little-endian bytes of the words a b c d
+fn ed25519_unpk e edit uchar 32 a ulong b ulong c ulong d ulong to void
+for i ulong 8
+s = mul i 8
+put e i uchar and shr a s 255
+put e add i 8 uchar and shr b s 255
+put e add i 16 uchar and shr c s 255
+put e add i 24 uchar and shr d s 255
+end
+end
+
+note point o = the decoding of the 32 bytes b (RFC 8032 section 5.1.3). Returns 0, or 1 when b is
+note not the canonical encoding of a curve point: y >= p (re-encoding differs), u / v not a square,
+note or x = 0 with the sign bit set. Uses EDTA .. EDTG and the power temporaries; needs EDD, EDI.
+fn ed25519_dec w edit ulong EDWN o ulong b view uchar * to ulong
+e = new uchar 32 0
+y = add o 10
+z = add o 20
+ed25519_fload w y b
+r = ed25519_fstore w y e
+d = ulong 0
+for i ulong 31
+d = or d ulong xor get e i get b i
+end
+d = or d ulong xor get e 31 and get b 31 127
+if ne d 0
+ret 1
+end
+s = ulong shr get b 31 7
+for i ulong 10 unroll
+put w add z i 0
+end
+put w z 1
+note u = y^2 - 1 (EDTA), v = d y^2 + 1 (EDTB), x = u v^3 (u v^7)^((p - 5) / 8)
+ed25519_fmul w EDTA y y
+ed25519_fmul w EDTB EDTA EDD
+ed25519_fsub w EDTA EDTA z
+ed25519_fadd w EDTB EDTB z
+ed25519_fmul w EDTC EDTB EDTB
+ed25519_fmul w EDTC EDTC EDTB
+ed25519_fmul w EDTD EDTC EDTC
+ed25519_fmul w EDTD EDTD EDTB
+ed25519_fmul w EDTD EDTD EDTA
+ed25519_fpow w EDTE EDTD
+ed25519_fmul w EDTE EDTE EDTC
+ed25519_fmul w o EDTE EDTA
+note v x^2 = u: x is a root; v x^2 = -u: x sqrt(-1) is; else no root
+ed25519_fmul w EDTF o o
+ed25519_fmul w EDTF EDTF EDTB
+ed25519_fsub w EDTG EDTF EDTA
+if eq ed25519_fzero w EDTG 0
+ed25519_fadd w EDTG EDTF EDTA
+if eq ed25519_fzero w EDTG 0
+ret 1
+end
+ed25519_fmul w o o EDI
+end
+r = ed25519_fstore w o e
+if and eq r 1 eq s 1
+ret 1
+end
+if ne ulong and get e 0 1 s
+ed25519_fneg w o o
+end
+ed25519_fmul w add o 30 o y
+ret 0
+end
+
+note point o = point p + point q (RFC 8032 section 5.1.4, a = -1); o may equal p or q
+fn ed25519_padd w edit ulong EDWN o ulong p ulong q ulong to void
+ed25519_fsub w EDTA add p 10 p
+ed25519_fsub w EDTB add q 10 q
+ed25519_fmul w EDTA EDTA EDTB
+ed25519_fadd w EDTB add p 10 p
+ed25519_fadd w EDTC add q 10 q
+ed25519_fmul w EDTB EDTB EDTC
+ed25519_fmul w EDTC add p 30 add q 30
+ed25519_fmul w EDTC EDTC ED2D
+ed25519_fmul w EDTD add p 20 add q 20
+ed25519_fadd w EDTD EDTD EDTD
+ed25519_fsub w EDTE EDTB EDTA
+ed25519_fsub w EDTF EDTD EDTC
+ed25519_fadd w EDTG EDTD EDTC
+ed25519_fadd w EDTH EDTB EDTA
+ed25519_fmul w o EDTE EDTF
+ed25519_fmul w add o 10 EDTG EDTH
+ed25519_fmul w add o 30 EDTE EDTH
+ed25519_fmul w add o 20 EDTF EDTG
+end
+
+note point o = 2 point p (RFC 8032 section 5.1.4 doubling); o may equal p
+fn ed25519_pdbl w edit ulong EDWN o ulong p ulong to void
+ed25519_fmul w EDTA p p
+ed25519_fmul w EDTB add p 10 add p 10
+ed25519_fmul w EDTC add p 20 add p 20
+ed25519_fadd w EDTC EDTC EDTC
+ed25519_fadd w EDTH EDTA EDTB
+ed25519_fadd w EDTE p add p 10
+ed25519_fmul w EDTE EDTE EDTE
+ed25519_fsub w EDTE EDTH EDTE
+ed25519_fsub w EDTG EDTA EDTB
+ed25519_fadd w EDTF EDTC EDTG
+ed25519_fmul w o EDTE EDTF
+ed25519_fmul w add o 10 EDTG EDTH
+ed25519_fmul w add o 30 EDTE EDTH
+ed25519_fmul w add o 20 EDTF EDTG
+end
+
+note o = the 32-byte encoding of point p (RFC 8032 section 5.1.2): y = Y / Z with the low bit of
+note x = X / Z in bit 255
+fn ed25519_penc w edit ulong EDWN p ulong o edit uchar * to void
+e = new uchar 32 0
+ed25519_finv w EDTA add p 20
+ed25519_fmul w EDTB p EDTA
+ed25519_fmul w EDTC add p 10 EDTA
+z = ed25519_fstore w EDTC o
+z = ed25519_fstore w EDTB e
+put o 31 or get o 31 shl and get e 0 1 7
+end
+
+note word i of L
+fn ed25519_lw i ulong to ulong
+if eq i 0
+ret EDL0
+end
+if eq i 1
+ret EDL1
+end
+if eq i 2
+ret EDL2
+end
+ret EDL3
+end
+
+note 1 when the 4-word little-endian value r is at least L, else 0
+fn ed25519_gel r view ulong 4 to ulong
+for i ulong 4
+j = sub 3 i
+a = get r j
+b = ed25519_lw j
+if gt a b
+ret 1
+end
+if lt a b
+ret 0
+end
+end
+ret 1
+end
+
+note r = r - L (r >= L)
+fn ed25519_subl r edit ulong 4 to void
+c = ulong 0
+for i ulong 4
+a = get r i
+b = ed25519_lw i
+t = sub a b
+n = ulong 0
+if lt a b
+n = 1
+end
+if lt t c
+n = 1
+end
+put r i sub t c
+c = n
+end
+end
+
+note r = the 64 little-endian bytes h mod L, bit by bit from the top: r = 2 r + bit, minus L when
+note r >= L (r < L before each step, so 2 r + 1 < 2 L < 2^254 fits the four words)
+fn ed25519_modl h view uchar 64 r edit ulong 4 to void
+for i ulong 4 unroll
+put r i 0
+end
+for i ulong 512
+j = sub 511 i
+b = ulong and shr get h shr j 3 uchar and j 7 1
+put r 3 or shl get r 3 1 shr get r 2 63
+put r 2 or shl get r 2 1 shr get r 1 63
+put r 1 or shl get r 1 1 shr get r 0 63
+put r 0 or shl get r 0 1 b
+if eq ed25519_gel r 1
+ed25519_subl r
+end
+end
+end
+
+note the 8 little-endian bytes b[o .. o + 8) as a word
+fn ed25519_ldw b view uchar * o ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get b add o i mul i 8
+end
+ret v
+end
+
+note point EDQ = [s]B + [k]A' with B at EDB, A' at EDA and B + A' at EDC (Straus: one doubling per
+note bit, one addition of B, A' or B + A' by the bit pair; s, k < 2^253)
+fn ed25519_dsm w edit ulong EDWN s view ulong 4 k view ulong 4 to void
+for i ulong 40
+put w add EDQ i 0
+end
+put w add EDQ 10 1
+put w add EDQ 20 1
+for i ulong 253
+j = sub 252 i
+a = and shr get s shr j 6 and j 63 1
+b = and shr get k shr j 6 and j 63 1
+ed25519_pdbl w EDQ EDQ
+c = add a shl b 1
+if eq c 1
+ed25519_padd w EDQ EDQ EDB
+end
+if eq c 2
+ed25519_padd w EDQ EDQ EDA
+end
+if eq c 3
+ed25519_padd w EDQ EDQ EDC
+end
+end
+end
+
+note loads d, 2d, sqrt(-1) and decodes B into EDB; returns the decode status of B (0)
+fn ed25519_init w edit ulong EDWN to ulong
+e = new uchar 32 0
+ed25519_unpk e EDD0 EDD1 EDD2 EDD3
+ed25519_fload w EDD e
+ed25519_fadd w ED2D EDD EDD
+ed25519_unpk e EDI0 EDI1 EDI2 EDI3
+ed25519_fload w EDI e
+ed25519_unpk e EDBY0 EDBY1 EDBY1 EDBY1
+ret ed25519_dec w EDB e
+end
+
+note k = SHA-512(the bytes absorbed by c) mod L
+fn ed25519_hk c edit ulong 40 k edit ulong 4 to void
+h = new uchar 64 0
+sha512_final c h
+ed25519_modl h k
+end
+
+note 0 when encode(point EDQ) equals the 32 bytes r, else 1
+fn ed25519_req w edit ulong EDWN r view uchar * to ulong
+e = new uchar 32 0
+ed25519_penc w EDQ e
+d = ulong 0
+for i ulong 32
+d = or d ulong xor get e i get r i
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+fn ed25519_verify pk view uchar * m view uchar * sg view uchar * to ulong
+w = new ulong EDWN 0
+s = new ulong 4 0
+k = new ulong 4 0
+c = new ulong 40 0
+if ne len pk 32
+ret 2
+end
+if ne ed25519_init w 0
+ret 1
+end
+if ne ed25519_dec w EDA pk 0
+ret 2
+end
+if ne len sg 64
+ret 3
+end
+for i ulong 4
+put s i ed25519_ldw sg add 32 mul i 8
+end
+if eq ed25519_gel s 1
+ret 3
+end
+sha512_init c
+sha512_update c part sg 0 32
+sha512_update c pk
+sha512_update c m
+ed25519_hk c k
+ed25519_fneg w EDA EDA
+ed25519_fneg w add EDA 30 add EDA 30
+ed25519_padd w EDC EDB EDA
+ed25519_dsm w s k
+ret ed25519_req w part sg 0 32
+end
