@@ -1,0 +1,51 @@
+# omegafacts-tls-main: scratch rerun (OmegaFacts claims ledger) of every om/tls suite that exists on
+# main e5b32567, on a GitHub-hosted ubuntu-24.04-arm machine with the pinned omc (om/units.sh OMC_PIN).
+# The only change on this branch is this file; om/tls and seed/out/omc are main's bytes.
+# TLS_NET unset: the Internet stage prints NOT_RUN by design. Never merged.
+name: omegafacts-tls-main
+on:
+  push:
+    branches: [freecompute/omegafacts-tls-main]
+permissions:
+  contents: read
+jobs:
+  om-tls-main:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: machine and tools
+        run: |
+          uname -a; nproc; openssl version; python3 --version; git log -2 --format='%H %s'
+          python3 -c 'import cryptography' 2>/dev/null || sudo apt-get install -y -q python3-cryptography
+          python3 -c 'import cryptography; print("cryptography", cryptography.__version__)'
+      - name: omc pin
+        run: |
+          pin=$(sed -n 's/^OMC_PIN=//p' om/units.sh | tr -d '"')
+          got=$(sha256sum seed/out/omc | cut -c1-64)
+          echo "pin $pin"; echo "got $got"
+          [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
+          chmod +x seed/out/omc
+          git diff --stat e5b32567a7aff3ce594e3254a622a846a6cd190b HEAD
+      - name: om/tls suites
+        shell: bash
+        run: |
+          mkdir -p build/facts
+          rc=0
+          for s in sha2 x25519 chacha aesgcm ec rsa x509 tls; do
+            echo "=== suite $s start $(date -u +%FT%TZ)"
+            r=0; sh om/tls/test/$s/run.sh "$PWD/seed/out/omc" > build/facts/$s.log 2>&1 || r=$?
+            tail -n 3 build/facts/$s.log
+            echo "=== suite $s exit=$r end $(date -u +%FT%TZ)"
+            [ $r = 0 ] || rc=1
+          done
+          exit $rc
+      - name: logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: omegafacts-tls-main-logs
+          path: |
+            build/facts/*.log
+            build/tls/tls/*.log
+            build/tls/tls/interop-table.txt
