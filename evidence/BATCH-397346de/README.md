@@ -40,7 +40,7 @@ The rows each PR added, run through `seed/qualification/om2/gate.om`. Case files
 | `seed/net/tests/check.py` | rc 0, HTTP-CHECK PASS | net.log |
 | `om/tls/test/*/run.sh`, eight suites | all rc 0 PASS; `tls` net=NOT_RUN (TLS_NET unset, no network traffic in this run) | tls*.log |
 | `seed/wasm/gate-irwasm.sh` | rc 0, PASS IRWASM native parity cases=129 | irwasm.log |
-| `seed/spirv/gate-irspirv.sh` | rc 3 NOT_RUN: no `spirv-val` on this host (and no POCL_LIBRARY) | irspirv.log |
+| `seed/spirv/gate-irspirv.sh` (SPIRV-Tools v2025.1 spirv-val and PoCL 2.16.0 CPU from `~/work/E1Open/tools`, the E1Open recipe `pocl-env.sh`) | rc 0, PASS IRSPIRV CPU OpenCL parity cases=129 deterministic=16 validated=17 refusals=16; old-pin control (2c824805) rc 1 `FAIL compiler pin differs` | irspirv.log, irspirv-oldpin.log |
 | `gate-ir-trap.py`; `mutants-ir-trap.py` | RC=0; 5/5 caught | ir-trap*.log |
 
 Pin negative controls (working clone, not logged here): with the 2c824805 compiler the JSON gate ends
@@ -48,7 +48,6 @@ Pin negative controls (working clone, not logged here): with the 2c824805 compil
 
 ## Not run
 
-- `seed/spirv/gate-irspirv.sh`: NOT_RUN (no spirv-val, no PoCL on this host).
 - TLS network parity (`TLS_NET=1`): NOT_RUN.
 - `seed/challenge/run.sh` stays pinned to its published source commit and compiler 2c824805 by design; it was not moved.
 - No GPU, silicon or chip gate was run.
