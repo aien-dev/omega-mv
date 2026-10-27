@@ -1,0 +1,204 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2glob.om: checker2 in seeded Omega, part 1 of the unit (constants and tables).
+note Port of src/checker2/c2_ir.c (c2_decode) and src/checker2/c2_check.c (c2_check_unit) plus the
+note `check` command of src/checker2/checker2_main.c. The C stays as the differential oracle
+note (tests/checker2/om_diff.sh). checker2 is independent of the compiler's decoder by design, so this
+note unit shares no code with seed/oscgpu/oscir.om. Build order: tests/checker2/om_build.sh.
+note Names: globals and constants start with c, functions with c2_.
+om2
+
+note Opcodes (c2_ir.h C2Op). The kernel opcodes are separate constants: the wire numbering moved.
+const cqconst long 1
+const cqmov long 2
+const cqbin long 3
+const cqun long 4
+const cqcmp long 5
+const cqcast long 6
+const cqalloc long 7
+const cqrel long 8
+const cqload long 9
+const cqstore long 10
+const cqcall long 11
+const cqtrap long 12
+const cqbr long 13
+const cqcbr long 14
+const cqret long 15
+const cqfload long 16
+const cqfstore long 17
+const cqaopen long 18
+const cqaalloc long 19
+const cqadest long 20
+const cqpopen long 21
+const cqpclose long 22
+const cqhalloc long 23
+const cqhgen long 24
+const cqhfree long 25
+const cqhload long 26
+const cqhstore long 27
+const cqsload long 28
+const cqsstore long 29
+const cqgpu long 40
+const cqshared long 41
+const cqgload long 42
+const cqgstore long 43
+const cqsync long 44
+const cqshfl long 45
+const cqmad long 46
+note Version byte of a unit with a kernel (kind byte and thread count present iff this version).
+const cvkern long 8
+
+note Input: the first 16 MiB of the file (a canonical unit is under 3 MiB, so the decoder fails or
+note finishes before it could index past the stored prefix; an index past it traps 3, fail closed).
+global cbuf uchar 16777216
+global cn long 1
+global cpos long 1
+global cdig uchar 32
+global cbad long 1
+global crv ulong 1
+global cnm uchar 256
+global cnml long 1
+global cus long 8
+note Per-opcode classes (c2_init): operand layout on the wire, registers read, defines a register.
+global clay long 256
+global cuse long 256
+global cdop long 256
+
+note Unit header.
+global cver long 1
+global cnst long 1
+global cnfn long 1
+
+note Structs (16) and fields (slot k*16+f); names 64 bytes per entry.
+global csn uchar 1024
+global csnl long 16
+global csnf long 16
+global csnc long 16
+global cfn uchar 16384
+global cfnl long 256
+global cfs long 256
+global cfal long 256
+global cfof long 256
+
+note Functions (32).
+global cgn uchar 2048
+global cgnl long 32
+global cgk long 32
+global cgth long 32
+global cgnp long 32
+global cgnv long 32
+global cgnb long 32
+global cgni long 32
+global cgrq long 32
+global cgen long 32
+
+note Types: slot f*481+v for vreg v, slot f*481+480 for the return type.
+global cts long 15392
+global ctk long 15392
+global cte long 15392
+global ctl long 15392
+global cti long 15392
+
+note Instructions: slot f*4096+i; args at slot*6+k.
+global cop long 131072
+global csub long 131072
+global cnag long 131072
+global cdst long 131072
+global ca long 131072
+global cb long 131072
+global cc long 131072
+global ct long 131072
+global cf long 131072
+global ccal long 131072
+global cimm ulong 131072
+global carg long 786432
+
+note Blocks: slot f*512+b.
+global cbf long 16384
+global cbc long 16384
+
+note Verdict.
+global cfail long 1
+global cvf long 1
+global cvi long 1
+global crul uchar 64
+global crln long 1
+global cdet uchar 160
+global cdtn long 1
+note Format arguments: numbers in order, one u64 for %llu, names in order (see c2_oname).
+global cv long 4
+global cvu ulong 1
+global cvs long 2
+note Output staging buffer and its cap.
+global cob uchar 8192
+global cobn long 1
+global cocap long 1
+
+note Current function.
+global cfi long 1
+global cquiet long 1
+global cblk long 4096
+global csuc long 1024
+global cnsu long 512
+global creach long 512
+global cnd long 480
+global cdi long 480
+
+note Bitsets of 512 bits (8 words). Regions of cbs: dom 0, defined-in 4096, defined-out 8192,
+note pdom 12288, varying regions 16384, loops 20480, scratch sets from 24576 (8 words each).
+global cbs ulong 32768
+const cbdom long 0
+const cbdin long 4096
+const cbdout long 8192
+const cbpdom long 12288
+const cbreg long 16384
+const cbloop long 20480
+const cbt0 long 24576
+const cbt1 long 24584
+const cbt2 long 24592
+
+note check_loops / kernel_uniform scratch.
+global cinl long 512
+global ccol long 512
+global cstk long 4096
+global cidx long 512
+global cdivb long 512
+global cdone long 512
+global cvary long 480
+global cwl long 4096
+
+note Ownership: arena object, borrow origin, in-states (b*480+r), live blocks, current states.
+global coao long 480
+global coor long 480
+global coin long 245760
+global colv long 512
+global cst long 480
+
+note Races: expression nodes, memo, preds, phases, sync lines, accesses and their facts.
+global cnk long 4096
+global cna long 4096
+global cnb long 4096
+global cnh long 4096
+global cnv ulong 4096
+global cnn long 1
+global cthr long 1
+global cmemo long 480
+global cnpr long 512
+global cpin ulong 512
+global cpout ulong 512
+global csyn long 64
+global cnsy long 1
+global cxi long 4096
+global cxr long 4096
+global cxb long 4096
+global cxm ulong 4096
+global cxs long 4096
+global cxe long 4096
+note facts per access x: lt pairs at x*64+2k, fixes at x*32+k (id, value).
+global cxnl long 4096
+global cxnf long 4096
+global cxlt long 262144
+global cxfi long 131072
+global cxfv ulong 131072
+note digit lists (two of 1024)
+global cdgl long 2048
+global cdgn long 2
