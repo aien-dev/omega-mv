@@ -136,6 +136,9 @@ imut "mutant handshake close_notify unmapped" '/^if eq e TLCLOSE$/{n;s/^ret TLEA
 imut "mutant version not checked"  's/^ret TLEVER$/ret 0/'
 imut "mutant record MAC ignored"   's/^ret TLEMAC$/ret 0/'
 imut "mutant session id not checked" 's/^ret TLESID$/ret 0/'
+# revocation (flag 8, rev.om; rev.om's own mutants are in test/rev/run.sh): the rev rows catch these
+imut "mutant revocation result ignored"  's/^r = tls_rev cb q st b$/r = ulong 0/'
+imut "mutant status_request not offered" 's/^tls_pn c q 5 2$/tls_pn c q 65280 2/'
 # MODEL-REVIEWED fixes: record limit on read and write, proactive KeyUpdate, handshake budget.
 # "KeyUpdate not sent" is caught by the client's own seal limit (SEQUENCE_LIMIT); with both gone
 # the kuw:8 server sees too many records under one key and answers with a fatal alert.
