@@ -249,6 +249,15 @@ end
 ret 1
 end
 
+note unsz: 1 when name entry i is an unsized array (nm_len 0, its count in register nm_lr), else 0. A text
+note (kind 5) of length 0 (`text e ""`) is sized: its count is the number 0 and it has no count register.
+fn unsz i ulong to ulong
+if and eq get nm_len i 0 ne get nm_kind i 5
+ret 1
+end
+ret 0
+end
+
 note pslot: the first slot (register) of parameter i of function f (index)
 fn pslot f ulong i ulong to ulong
 s = ulong 0
@@ -3668,7 +3677,7 @@ note elemaddr: array name e (index + 1), index value (kind, number or register, 
 note be inside the array (error 21) and needs no check; a register index: CMP Xi, #len (C6.2.96) or CMP Xi,
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
-note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
+note OM-2 unsized array (unsz): every index, a number too, is checked against its count register nm_lr
 note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6).
 fn elemaddr e ulong k ulong v ulong t ulong to void
 if or eq t 1 ge t 10
@@ -3677,7 +3686,7 @@ end
 i = sub e 1
 ln = get nm_len i
 x = v
-if eq ln 0
+if ne unsz i 0
 x = matreg k v t
 emit or or 3942645791 shl ulong get nm_lr i 16 shl x 5
 trapc 2 3
@@ -3789,7 +3798,7 @@ fail 7
 end
 ux = add mul get depth 0 6 pi
 if eq get fn_pl p 0
-if eq get nm_len i 0
+if ne unsz i 0
 put ul_k ux 1
 put ul_v ux ulong get nm_lr i
 else
@@ -3869,7 +3878,7 @@ end
 note partck: the two checks of part (name index i, o in ro, k in rn), then the part's base register
 fn partck i ulong ro ulong rn ulong to ulong
 rl = ulong get nm_lr i
-if ne get nm_len i 0
+if eq unsz i 0
 rl = alloc
 matconst rl get nm_len i
 end
@@ -4052,7 +4061,7 @@ fail 7
 end
 t = alloc
 l = ulong get nm_lr sub e 1
-if ne get nm_len sub e 1 0
+if eq unsz sub e 1 0
 l = t
 matconst t get nm_len sub e 1
 end
@@ -6217,7 +6226,7 @@ e = arrname
 if ge get nm_kind sub e 1 6
 fail 7
 end
-if eq get nm_len sub e 1 0
+if ne unsz sub e 1 0
 vdone 1 ulong get nm_lr sub e 1 5
 ret
 end

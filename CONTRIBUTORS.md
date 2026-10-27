@@ -32,3 +32,4 @@ This table starts with the numeric work on this branch. Earlier work in this rep
 
 Update this table in the same commit as the work it credits.
 | Claude Opus 5.5 | Seed-chain bootstrap challenge: `seed/challenge/run.sh` rebuilds omc from the 408-byte seed out of a pinned `git archive` and checks every input and rung against a table read from committed files, with tampered-rung and wrong-value negative controls |
+| Claude Opus 5.5 | Seeded compiler: an empty `text e ""` (length 0) kept sized instead of read as an unsized view (`unsz` at the element, view-argument, `part`, read/write and `len` sites; #775), s4 regression rows, a reintroducing mutant and the 2c824805 negative control |
