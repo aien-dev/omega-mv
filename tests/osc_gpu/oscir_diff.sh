@@ -13,7 +13,8 @@
 #              valid variants, invalid units, random byte edits)
 #   pfx/flip   for each kernel and badkernel IR: every prefix of length 0..64 and
 #              32 single-byte flips (position k*len/32, mask 01/80/ff/10 cycling)
-# Prints OMDIFF PASS n=N same=N diff=0, or OMDIFF FAIL and exits 1.
+# Prints OMDIFF PASS n=N same=N diff=0, or OMDIFF FAIL and exits 1. OSCIR_SRC=<file> replaces
+# seed/oscgpu/oscir.om (negative control: a mutated copy must give diff>0).
 set -u
 OMC=$1
 W=${2:-build/osc_gpu/oscir_diff}
@@ -28,7 +29,7 @@ rm -rf "$W"; mkdir -p "$W/in" "$W/gen"
 CC=${CC:-cc}
 CF="-std=gnu11 -O2 -D_GNU_SOURCE -Isrc -Isrc/compiler -Isrc/compiler/model"
 
-cat seed/oscgpu/oscir.om seed/oscgpu/oscirdump.om > "$W/oscirdump.om"
+cat "${OSCIR_SRC:-seed/oscgpu/oscir.om}" seed/oscgpu/oscirdump.om > "$W/oscirdump.om"
 "$OMC" < "$W/oscirdump.om" > "$W/oscirdump" 2> "$W/omc.err" || { echo "OMDIFF FAIL: omc refuses oscirdump: $(cat "$W/omc.err")"; exit 1; }
 chmod +x "$W/oscirdump"
 $CC $CF -o "$W/oscir_dump_c" tests/osc_gpu/oscir_dump.c src/compiler/osc_ir.c src/compiler/osc_alloc.c src/omega_om_units.c \
