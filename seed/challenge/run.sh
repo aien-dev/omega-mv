@@ -43,7 +43,8 @@ LOG=$OUT/challenge.log
 : > "$LOG"
 fails=0
 say() { printf '%s\n' "$*" | tee -a "$LOG"; }
-ms() { date +%s%3N; }
+# Milliseconds; a date without %N (busybox) falls back to whole seconds.
+ms() { v=$(date +%s%3N 2>/dev/null); case $v in ''|*[!0-9]*) echo $(( $(date +%s) * 1000 )) ;; *) echo "$v" ;; esac; }
 sha() { sha256sum "$1" | cut -d' ' -f1; }
 
 if [ -z "$TREE" ]; then
