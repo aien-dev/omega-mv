@@ -162,7 +162,10 @@ test-gpu-engine-freestanding: $(GPU_FS_LINK) build/test_omega_gpu_engine_freesta
 # nm -u check to refuse it (a check that can never fail proves nothing).
 .PHONY: test-codegen-freestanding test-gpu-fs-allowlist-control
 CODEGEN_FS_TEST_DEPS = tests/test_omega_codegen_freestanding.c src/omega_blackwell_codegen.h src/omega_blackwell_matmul.h
-build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c
+# The hosted side encodes through the .om encoder (om/encoder/bw_enc_sm121.om via src/omega_om_units.c), the
+# freestanding side through the migration-pending C encoder, so the cmp below is also an .om-vs-C differential.
+build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c \
+		src/omega_native.h
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o $@ tests/test_omega_codegen_freestanding.c \
 		src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c

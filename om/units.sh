@@ -15,12 +15,16 @@
 #   src/omega_om_units.ident  each unit's identity: source sha256, compiler pin, ABI, profile. An OM-2
 #                             unit also embeds its identity (omega2_ident_<unit>() in omega_om_units.c).
 # A unit, compiler or profile that changes without regenerating these files fails --check.
+# OMEGA_UNITS (the unit list, repo-relative or absolute) and OMEGA_UNITS_DEST (output directory, default src)
+# override the defaults; mk/om-encoder.mk uses them to build mutant encoders beside the real binding.
 set -eu
 OMC_PIN=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
 NATIVE_PIN=c77a5922f91d53d4a0bbd4e7b1c4703f7098263abc843be2918db1ece7496782
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # One generated library for all units: the bindings share one ABI runtime (ombr_enter).
-UNITS="om/sha256/sha256-om2.om om/blake3/b3unit.om"
+# om/encoder/bw_enc_sm121.om: the sm_121 instruction encoder, twin of aien-dev/CUDApp's (mk/om-encoder.mk).
+UNITS="${OMEGA_UNITS:-om/sha256/sha256-om2.om om/blake3/b3unit.om om/encoder/bw_enc_sm121.om}"
+DEST="${OMEGA_UNITS_DEST:-$ROOT/src}"
 OUTS="omega_om_units.c omega_native.h omega_api_decl.h omega_om_units.ident"
 [ -n "${OMEGA_OMC:-}" ] && [ -n "${OMEGA_BRIDGE:-}" ] || { echo "NOT_RUN: set OMEGA_OMC and OMEGA_BRIDGE"; exit 3; }
 [ "$(sha256sum < "$OMEGA_OMC" | cut -c1-64)" = "$OMC_PIN" ] || { echo "NOT_RUN: omc is not the pinned compiler"; exit 3; }
@@ -29,21 +33,22 @@ T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 "$OMEGA_OMC" < "$OMEGA_BRIDGE/src/native.om" > "$T/native"; chmod +x "$T/native"
 : > "$T/units.in"; : > "$T/omega_om_units.ident"
 for u in $UNITS; do
+  case "$u" in /*) src=$u ;; *) src=$ROOT/$u ;; esac
   name=$(basename "$u" .om | tr -c 'A-Za-z0-9_\n' '_')
-  "$OMEGA_OMC" < "$ROOT/$u" > "$T/u.bin"
+  "$OMEGA_OMC" < "$src" > "$T/u.bin"
   # The profile: OM-2 iff the first line that is neither a note nor blank is exactly om2 (erratum E10).
-  if [ "$(sed -n '/^ *note\( \|$\)/d; /^ *$/d; p; q' "$ROOT/$u")" = om2 ]; then abi=2; prof=OM-2; else abi=1; prof=OM-1; fi
-  { cat "$ROOT/$u"; printf '\0'; printf '%08d' "$(wc -c < "$T/u.bin")"; cat "$T/u.bin"
+  if [ "$(sed -n '/^ *note\( \|$\)/d; /^ *$/d; p; q' "$src")" = om2 ]; then abi=2; prof=OM-2; else abi=1; prof=OM-1; fi
+  { cat "$src"; printf '\0'; printf '%08d' "$(wc -c < "$T/u.bin")"; cat "$T/u.bin"
     [ $abi = 1 ] || printf 'omega-unit %s %s\n' "$name" "$OMC_PIN"; } >> "$T/units.in"
-  echo "omega-ident 1 unit=$name abi=$abi profile=$prof src=$(sha256sum < "$ROOT/$u" | cut -c1-64) omc=$OMC_PIN path=$u" >> "$T/omega_om_units.ident"
+  echo "omega-ident 1 unit=$name abi=$abi profile=$prof src=$(sha256sum < "$src" | cut -c1-64) omc=$OMC_PIN path=$u" >> "$T/omega_om_units.ident"
 done
 { "$T/native" c < "$T/units.in"; "$T/native" apic < "$T/units.in"; } > "$T/omega_om_units.c"
 "$T/native" h < "$T/units.in" > "$T/omega_native.h"
 "$T/native" apih < "$T/units.in" > "$T/omega_api_decl.h"
 if [ "${1:-}" = --check ]; then
   bad=0
-  for f in $OUTS; do cmp -s "$T/$f" "$ROOT/src/$f" || { echo "FAIL src/$f differs from the pinned tools' output"; bad=1; }; done
+  for f in $OUTS; do cmp -s "$T/$f" "$DEST/$f" || { echo "FAIL $DEST/$f differs from the pinned tools' output"; bad=1; }; done
   [ $bad = 0 ] || exit 1
   echo "PASS src/{$(echo $OUTS | tr ' ' ,)} regenerate byte for byte"; exit 0
 fi
-for f in $OUTS; do cp "$T/$f" "$ROOT/src/$f"; done; echo "wrote src/{$(echo $OUTS | tr ' ' ,)}"
+for f in $OUTS; do cp "$T/$f" "$DEST/$f"; done; echo "wrote $DEST/{$(echo $OUTS | tr ' ' ,)}"
