@@ -1,6 +1,7 @@
 # S4 compiled mutants of omc.om. Expected verdicts fixed in advance: ctl-* PASS, m-* FAIL (detected).
 deadline 60
 cc seed/omc/omc.om
+ctl-v-bad-pread-text refuse seed/omc/om2/s4/v-bad-pread-text.om 20
 ctl-v-ok run seed/omc/om2/s4/v-ok.om - - - 0
 ctl-v-trap-get run seed/omc/om2/s4/v-trap-get.om - - - 103
 ctl-p-ok run seed/omc/om2/s4/p-ok.om - - - 0
@@ -13,6 +14,10 @@ ctl-v-text-empty run seed/omc/om2/s4/v-text-empty.om - - - 0
 subst seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
 cc seed/omc/omc.om
 m-uce run seed/omc/om2/s4/v-trap-get.om - - - 103
+# pread/pwrite: the writable-array check on pwrite instead of pread (pread into a text compiles)
+subst seed/omc/om2/s4/mut/preadwr.from seed/omc/om2/s4/mut/preadwr.to
+cc seed/omc/omc.om
+m-preadwr refuse seed/omc/om2/s4/v-bad-pread-text.om 20
 # parameter slots: every parameter one slot at the call (the count slot of an unsized view not skipped)
 subst seed/omc/om2/s4/mut/slot.from seed/omc/om2/s4/mut/slot.to
 cc seed/omc/omc.om

@@ -17,6 +17,9 @@ s4-v-bad-type refuse seed/omc/om2/s4/v-bad-type.om 7
 s4-v-bad-viewedit refuse seed/omc/om2/s4/v-bad-viewedit.om 20
 s4-v-bad-put refuse seed/omc/om2/s4/v-bad-put.om 20
 s4-v-bad-read refuse seed/omc/om2/s4/v-bad-read.om 20
+s4-v-bad-pread-text refuse seed/omc/om2/s4/v-bad-pread-text.om 20
+s4-v-bad-pread-view refuse seed/omc/om2/s4/v-bad-pread-view.om 20
+s4-v-pwrite-text run seed/omc/om2/s4/v-pwrite-text.om - file:seed/omc/om2/s4/v-pwrite-text.out - 0
 s4-v-bad-fresh refuse seed/omc/om2/s4/v-bad-fresh.om 16
 s4-v-bad-local refuse seed/omc/om2/s4/v-bad-local.om 16
 s4-v-bad-global refuse seed/omc/om2/s4/v-bad-global.om 19

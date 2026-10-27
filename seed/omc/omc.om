@@ -5019,10 +5019,11 @@ end
 note stat: path slice (readonly) + output slice, at least 128 bytes for the ARM64 stat structure.
 note Linux newfstatat(AT_FDCWD, path, out, 0); returns 0 or -errno. A short output traps 3.
 note pread/pwrite: fd, byte slice (off, n), position long. The file offset is not moved.
+note pread (161) writes A, so A must be writable (error 20); pwrite (162) only reads A, so a text is allowed.
 fn hpread c ulong dst ulong x ulong to void
 harg x 4 8
 wr = ulong 0
-if eq c 162
+if eq c 161
 wr = ulong 1
 end
 e = harray x wr

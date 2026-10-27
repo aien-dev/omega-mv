@@ -484,7 +484,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   moved, or minus the Linux error number. They trap 3 unless n <= len A and off <= len A - n, before the
   call. `read` needs a writable array (error 20). A must be an array of uchar for the counts to be bytes.
   `pread fd A off n pos` / `pwrite fd A off n pos` (pos long) do the same at an explicit file position
-  without changing the descriptor's offset, with the same slice checks and result. (s.6 echo, bytecopy, t_rw)
+  without changing the descriptor's offset, with the same slice checks and result. Like `read`, `pread`
+  needs a writable array (error 20); `pwrite`, like `write`, also takes a text or a view. (s.6 echo,
+  bytecopy, t_rw; s4 v-bad-pread-text, v-pwrite-text)
 - `exit v` (v int) ends the program with status v modulo 256. Like `ret`, it ends the path: a line after
   it in the same block is error 17. (s.6 t_exit, s.7)
 - `note ...` is a line the translator does not read beyond its first word. (s.6 sort, fib)
