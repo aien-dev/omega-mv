@@ -9759,6 +9759,24 @@ ximm 3 0
 loop = get oc 0
 xrr 57 3 7
 exitp = xbranch 2
+note UEFI2.4 7.3 OpenProtocol EXCLUSIVE (32) disconnects MNP and the IP stack above SNP;
+note while they stay bound, MNP's poll timer drains the receive queue and drops frames
+note no MNP child wants (aienux#454). Firmware that refuses keeps the shared HandleProtocol path.
+xrr 137 0 3
+xb 72 193 224
+emitb 3
+xrr 1 0 6
+xmem 139 1 0 0
+xaddr 2 g
+xpriv 8 128
+xpget 9 8
+ximm 0 0
+xmem 137 0 4 32
+ximm 0 32
+xmem 137 0 4 40
+xboot 280
+xrr 133 0 0
+excl = xbranch 0
 xrr 137 0 3
 xb 72 193 224
 emitb 3
@@ -9767,6 +9785,7 @@ xmem 139 1 0 0
 xaddr 2 g
 xpriv 8 128
 xboot 152
+xpatch excl get oc 0
 xrr 133 0 0
 skip = xbranch 1
 xeprobe
