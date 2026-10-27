@@ -1,0 +1,11 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -2866,7 +2866,7 @@
+ hsys 215
+ mimmed 4043309056 31 0 0
+ trapc 1 3
+-mstore 31 11 0
++note removed failed bind retirement
+ mstore 31 11 1
+ mstore 31 11 3
+ e3 2852126720 0 31 10

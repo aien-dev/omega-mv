@@ -4,20 +4,20 @@
       "children": [
         {
           "digest": "3f7fa0c52f7bb68844ccc5ace8d5e96284fe1846698f9df59483c2e13b9cf2e9",
-          "last_commit": "ac35a166",
+          "last_commit": "dd67f6bd",
           "name": "fixtures",
           "purpose": "Two unmodified CC-BY-4.0 files from the authors' Zenodo archive 10.5281/zenodo.17296788 (Length5"
         }
       ],
       "children_root": "sha256:7f9e3ef224698ef23587379e76f59fa3b24eb483797f039bb99529208213655e",
-      "compiled_at": "2026-10-14T17:30:45Z",
+      "compiled_at": "2026-10-24T04:15:18Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:e505518cad5dd5bb87591ad6e105c0394161cebe5ac399ff0cde45d0dec59ee9",
+      "digest": "sha256:e5f68362c083510e34c41f65de3ba2d553eac8a52fbc3e4cc1f69314eac9cc32",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 7,
-      "generated_at_commit": "2ec9e45fbc14d6838cceffe5c164f2af43b61a31",
-      "source_tree": "sha256:561b5fd05cade59a3396ae2a64fa78df240908db2bed1576c949b20bffcd3d96"
+      "generated_at_commit": "dc7c1304c038f49db3b121d5a5e27d7bcab5bf6c",
+      "source_tree": "sha256:bd5e7ca8945f46cc72304d0e96e21cfd2b80be9d7d4d8cc74123bf813ba56b86"
     }
   },
   "layer": "tests/reservoir",

@@ -1,0 +1,26 @@
+note S3 E16 fuel (D-S3-1 regression): inline expansions cost 1 at the call line and unrolls K at the loop
+note line, in emission order. main comes first, so its expansion is compiled first: f1 call 1, f1 loop 64,
+note 7 f2 expansions of 8321, the 8th f2 call and loop (58377), 55 f3 expansions of 129 (65472), the 56th
+note f3 call (65473); its loop (line 13) takes the total to 65537: error 14 on line 13.
+om2
+fn main to int
+f1
+ret 0
+end
+fn f4 to void inline
+end
+fn f3 to void inline
+for i ulong 64 unroll
+f4
+end
+end
+fn f2 to void inline
+for i ulong 64 unroll
+f3
+end
+end
+fn f1 to void inline
+for i ulong 64 unroll
+f2
+end
+end

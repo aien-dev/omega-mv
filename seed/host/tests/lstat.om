@@ -1,0 +1,60 @@
+note stat follows the final symlink (size 4); lstat reports S_IFLNK in st_mode at byte 16.
+text a "ls1.tmp"
+text c "ls2.tmp"
+text body "abcd"
+fn main to int
+fd = int fopen a 0 len a 578 420
+if lt fd 0
+ret 1
+end
+w = write fd body 0 len body
+r = fclose fd
+list = new uchar 64 0
+put list 0 2
+put list 1 0
+put list 2 uchar len a
+put list 3 0
+i = ulong 0
+while lt i len a bound 64
+put list add 4 i get a i
+i = add i 1
+end
+off = add 4 len a
+put list off uchar len c
+put list add off 1 0
+i = ulong 0
+while lt i len c bound 64
+put list add add off 2 i get c i
+i = add i 1
+end
+total = add add off 2 len c
+r = symlnk list 0 total
+if ne r 0
+ret 2
+end
+st = new uchar 128 0
+r = stat c 0 len c st 0 128
+if ne r 0
+ret 3
+end
+if ne get st 48 4
+ret 4
+end
+r = lstat c 0 len c st 0 128
+if ne r 0
+ret 5
+end
+m = add ulong get st 16 shl ulong get st 17 ulong 8
+if ne and m ulong 61440 ulong 40960
+ret 6
+end
+r = unlink c 0 len c
+if ne r 0
+ret 7
+end
+r = unlink a 0 len a
+if ne r 0
+ret 8
+end
+ret 0
+end

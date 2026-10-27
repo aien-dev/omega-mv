@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* omega_gpu_platform_linux.h -- the Linux REFERENCE implementation of OmegaGpuPlatform (ABI 1.1).
  *
  * REFERENCE ONLY (native v1 P07 cut C, session part; aienos#286). This is today's GB10 path under Linux
@@ -33,6 +49,11 @@ extern "C" {
 
 /* The process-wide Linux reference platform and its caps (written to *caps when caps is not NULL). */
 const OmegaGpuPlatform *omega_gpu_platform_linux(OmegaGpuPlatformCaps *caps);
+
+/* L136: channels (GPFIFO queues) the next device_open creates, from env AIEN_OMEGA_GPU_CHANNELS: 1 (unset, empty, "1" or
+ * anything not 2..4) is today's single channel exactly; 2..4 adds that many minus one channels in the same channel group
+ * (nvrm_channel_n). Queue i (0-based, in queue_open order) submits on channel i. Read at every device_open. */
+uint32_t omega_gpu_platform_linux_channels_env(void);
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,29 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 158: fields at declared width and endianness; a big-endian field is
+note stored most significant byte first, a little-endian one least significant first, and get reads
+note the value back. Erratum E5: fa and fb have COUNT 1, so they are arrays and take index 0. stdout: the 16 bytes, then the four values in hex (exp/l5-endian.out, python3).
+om2
+layout be16 16
+field fa uint 1 at 0 big
+field fb ulong 1 at 4 big
+field fc ushort 2 at 12 little
+end
+fn fill x edit be16 to void
+put x fa 0 0x0a0b0c0d
+put x fb 0 0x0102030405060708
+put x fc 0 0xbeef
+put x fc 1 0x1234
+end
+fn show x view be16 to void
+puth ulong get x fa 0
+puth get x fb 0
+puth ulong get x fc 0
+puth ulong get x fc 1
+end
+fn main to int
+c = new uchar 16 0
+fill c
+w = write 1 c 0 16
+show c
+ret 0
+end

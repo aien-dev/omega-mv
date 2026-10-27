@@ -1,0 +1,14 @@
+note S3 E14/E16 fuel: three nested 64-copy unrolls exhaust the fuel. Each loop is charged 64 when it starts
+note (E16): 15 a-copies reach 62464, the 16th adds b (62528) and 47 c loops (65536); the 48th c loop
+note (65600) is error 14 on its line 8.
+om2
+fn main to int
+for a ulong 64 unroll
+for b ulong 64 unroll
+for c ulong 64 unroll
+note empty
+end
+end
+end
+ret 0
+end

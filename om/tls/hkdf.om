@@ -1,0 +1,170 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/hkdf.om: HMAC-SHA256/384/512 (RFC 2104, FIPS 198-1) streaming and HKDF (RFC 5869) as an
+note OM-2 library unit (no om2 line, no main, no globals). Needs om/tls/sha2.om in the same unit.
+note Functions hmac_*, hkdf_*.
+note
+note API
+note   hmac_init alg ulong c edit ulong * key view uchar *     alg 256|384|512; c: 96 ulong cells
+note     a key longer than the block size (64 / 128 bytes) is hashed first (RFC 2104 section 2).
+note     Any other alg traps 9 (caller contract).
+note   hmac_update c edit ulong * m view uchar *               any length, any chunking
+note   hmac_final c edit ulong * o edit uchar * to ulong       writes the full tag (32|48|64 bytes,
+note     o shorter traps 3), returns its length. The context is spent afterwards; truncated tags
+note     compare a prefix (the caller's constant-time comparison).
+note   hkdf_extract alg ulong si view uchar * slen ulong prk edit uchar * to ulong
+note     si = salt || ikm, salt = first slen bytes (slen 0 = no salt = HashLen zero bytes, RFC 5869 2.2,
+note     which HMAC's zero padding makes identical). Writes PRK, returns its length (32|48|64);
+note     returns 0 and writes nothing for an unsupported alg or slen > len si.
+note   hkdf_expand alg ulong pi view uchar * plen ulong okm edit uchar * to ulong
+note     pi = prk || info, prk = first plen bytes; fills all len okm bytes. Returns 0 ok,
+note     1 unsupported alg, 2 plen > len pi, 3 len okm > 255 * HashLen (RFC 5869 2.3); okm untouched
+note     on a nonzero return.
+note Context cells: 0..39 inner SHA-2 context (key xor ipad absorbed), 40..79 outer SHA-2 context
+note (key xor opad absorbed), 80 = alg, 81..95 = 0.
+note Constant time: no branch, loop count or index depends on key, message or PRK bytes; only on
+note their lengths and alg (lengths are treated as public). Key-derived local arrays are zeroed
+note before return. The SHA-2 layer has the same property (see sha2.om).
+
+note the inner and outer contexts of HMAC under key (RFC 2104: K0 = key, or H(key) when longer than
+note the block, zero-padded to the block; inner absorbs K0 xor 0x36.., outer K0 xor 0x5c..)
+fn hmac_init alg ulong c edit ulong * key view uchar * to void
+kb = new uchar 128 0
+pad = new uchar 128 0
+bs = ulong 128
+if eq alg 256
+bs = 64
+end
+dl = ulong 0
+if gt len key bs
+dl = sha2_digest alg key kb
+else
+for i ulong len key
+put kb i get key i
+end
+end
+for i ulong bs
+put pad i xor get kb i 0x36
+end
+sha2_init part c 0 40 alg
+sha2_update part c 0 40 part pad 0 bs
+for i ulong bs
+put pad i xor get kb i 0x5c
+end
+sha2_init part c 40 40 alg
+sha2_update part c 40 40 part pad 0 bs
+for i ulong 15
+put c add 81 i 0
+end
+put c 80 alg
+for i ulong 128
+put kb i 0
+put pad i 0
+end
+end
+
+fn hmac_update c edit ulong * m view uchar * to void
+sha2_update part c 0 40 m
+end
+
+note tag = H(K0 xor opad || H(K0 xor ipad || m))
+fn hmac_final c edit ulong * o edit uchar * to ulong
+dg = new uchar 64 0
+dl = sha2_fin part c 0 40 dg
+sha2_update part c 40 40 part dg 0 dl
+dl = sha2_fin part c 40 40 o
+for i ulong 64
+put dg i 0
+end
+ret dl
+end
+
+note PRK = HMAC-Hash(salt, IKM) (RFC 5869 2.2)
+fn hkdf_extract alg ulong si view uchar * slen ulong prk edit uchar * to ulong
+c = new ulong 96 0
+if ne alg 256
+if ne alg 384
+if ne alg 512
+ret 0
+end
+end
+end
+if gt slen len si
+ret 0
+end
+hmac_init alg c part si 0 slen
+hmac_update c part si slen sub len si slen
+dl = hmac_final c prk
+for i ulong 96
+put c i 0
+end
+ret dl
+end
+
+note one block T(n) = HMAC(PRK, T(n-1) || info || n) on the keyed copy c (RFC 5869 2.3).
+note t[0..t[65]) holds T(n-1) (t[65] is 0 for n = 1), t[64] the counter n; T(n) goes to t[0..HashLen).
+fn hkdf_t c edit ulong * t edit uchar * nf view uchar * to ulong
+tl = ulong get t 65
+hmac_update c part t 0 tl
+hmac_update c nf
+hmac_update c part t 64 1
+ret hmac_final c t
+end
+
+note copies T(n) (all of t, or what is left of okm) to okm at d; returns the next d
+fn hkdf_cp okm edit uchar * t view uchar * d ulong to ulong
+k = sub len okm d
+if gt k len t
+k = len t
+end
+for j ulong k
+put okm add d j get t j
+end
+ret add d k
+end
+
+note okm = T(1) || T(2) || .. cut to len okm, from the keyed template tp (len okm <= 255 * HashLen)
+fn hkdf_fill tp edit ulong * okm edit uchar * nf view uchar * to void
+w = new ulong 96 0
+t = new uchar 66 0
+hl = shr get tp 80 3
+done = ulong 0
+n = ulong 0
+k = ulong 0
+while lt done len okm bound 256
+n = add n 1
+put t 64 uchar n
+sha2_copy w tp
+k = hkdf_t w t nf
+put t 65 uchar hl
+done = hkdf_cp okm part t 0 hl done
+end
+for i ulong 96
+put w i 0
+end
+for i ulong 66
+put t i 0
+end
+end
+
+fn hkdf_expand alg ulong pi view uchar * plen ulong okm edit uchar * to ulong
+tp = new ulong 96 0
+if ne alg 256
+if ne alg 384
+if ne alg 512
+ret 1
+end
+end
+end
+if gt plen len pi
+ret 2
+end
+if gt len okm mul 255 shr alg 3
+ret 3
+end
+hmac_init alg tp part pi 0 plen
+hkdf_fill tp okm part pi plen sub len pi plen
+for i ulong 96
+put tp i 0
+end
+ret 0
+end
