@@ -1,0 +1,55 @@
+note Host only: every listed accel/ethosu request on an invalid fd (EBADF) and on /dev/null (ENOTTY).
+note No accel or GPU device is opened. A wrong byte count traps (exit 103).
+global arg uchar 64
+global status uchar 4
+text null "/dev/null"
+text msg "PASS bounded native accel/ethosu DRM requests\n"
+fn ck yes bool to void
+if not yes
+exit int 80
+end
+end
+fn bad k int to long
+if eq k 0
+ret devctl neg int 1 uint 3222299712 arg 0 8
+end
+if eq k 1
+ret devctl neg int 1 uint 3222824004 arg 0 16
+end
+ret devctl neg int 1 uint 1074291721 arg 57 8
+end
+fn each fd int want long to void
+ck eq devctl fd uint 3222299712 arg 0 16 want
+ck eq devctl fd uint 3222299713 arg 0 16 want
+ck eq devctl fd uint 3222299714 arg 0 16 want
+ck eq devctl fd uint 3222299715 arg 0 16 want
+ck eq devctl fd uint 3222824004 arg 0 24 want
+ck eq devctl fd uint 3222299717 arg 0 16 want
+ck eq devctl fd uint 3222824006 arg 0 24 want
+ck eq devctl fd uint 3221775431 arg 0 8 want
+ck eq devctl fd uint 3222299720 arg 0 16 want
+ck eq devctl fd uint 3221775433 arg 0 8 want
+ck eq devctl fd uint 1074291721 arg 0 8 want
+ck eq devctl fd uint 1074291721 arg 56 8 want
+end
+fn main to int
+each neg int 1 neg long 9
+fd = fopen null 0 len null 2 0
+ck ge fd 0
+each int fd neg long 25
+c = fclose int fd
+ck eq c 0
+for k int 3
+p = fork
+ck ge p 0
+if eq p 0
+r = bad k
+exit int 80
+end
+ck eq waitpid int p status 0 4 0 p
+ck eq get status 0 0
+ck eq get status 1 103
+end
+ck eq write 1 msg 0 len msg long len msg
+ret 0
+end

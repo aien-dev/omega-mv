@@ -61,6 +61,9 @@ test ! -e "$stage/netpeer.sock"
 compile device
 "$stage/device"
 printf 'PASS native checked device ioctl composed with host files and pipes\n'
+compile drmctl
+"$stage/drmctl"
+printf 'PASS native listed accel/ethosu requests: EBADF, ENOTTY on /dev/null, exact-size traps\n'
 compile devcall
 "$stage/devcall"
 compile uvmctl
