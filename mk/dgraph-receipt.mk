@@ -24,9 +24,9 @@ $(DGR_DIR)/dgraph_receipt_asan: tools/dgraph_receipt.c
 	$(CC) $(DGR_CFLAGS) $(DGR_ASAN) -o $@ tools/dgraph_receipt.c
 
 # independent strict-JSON check of the golden receipts (tools/json_canon.c, the M19R helper)
-$(DGR_DIR)/json_canon: tools/json_canon.c src/sha256.c src/sha256.h
+$(DGR_DIR)/json_canon: tools/json_canon.c src/omega_om_units.c src/sha256.h
 	@mkdir -p $(DGR_DIR)
-	$(CC) $(DGR_CFLAGS) -Isrc -o $@ tools/json_canon.c src/sha256.c
+	$(CC) $(DGR_CFLAGS) -Isrc -o $@ tools/json_canon.c src/omega_om_units.c
 
 test-dgraph-receipt: $(DGR_DIR)/dgraph_receipt $(DGR_DIR)/dgraph_receipt_asan $(DGR_DIR)/json_canon
 	sh tests/dgraph_receipt/run.sh $(DGR_DIR)/dgraph_receipt $(DGR_DIR)/json_canon $(DGR_DIR)/work
