@@ -16,6 +16,7 @@
 # MISMATCH line on a selected record; every run record when the driver left none). Tests not run are
 # na when not_run_file lists them (per-file "tests=N", per-flag ": N", or a whole-file line) or the
 # row gives a reason; anything left is unexplained.
+# A FAIL line for a label wins over a PASS line for it in the same log.
 # Exit 0 PASS: every test is pass or na. Exit 1 FAIL: a failure, an unexplained test or a ledger
 # error. Exit 3 NOT_RUN: no failure, but some applicable tests did not run here.
 set -eu
@@ -123,8 +124,6 @@ grep -v '^#' "$tsv" | while IFS="$tab" read -r json prim suite label vec sel nrf
 		elif [ ! -f "$log" ]; then
 			notrun=$run
 			note="${note:+$note; }no log $suite.log"
-		elif grep -q "^PASS $label:" "$log"; then
-			pass=$run
 		elif grep -q "^FAIL $label[ :]" "$log"; then
 			out=""
 			for c in "$build/$suite/$label.out" "$build/$suite/$label.log"; do [ -f "$c" ] && out=$c && break; done
@@ -134,6 +133,8 @@ grep -v '^#' "$tsv" | while IFS="$tab" read -r json prim suite label vec sel nrf
 			fail=$m
 			pass=$((run - m))
 			note="${note:+$note; }FAIL in $suite.log${out:+, see $out}"
+		elif grep -q "^PASS $label:" "$log"; then
+			pass=$run
 		else
 			notrun=$run
 			note="${note:+$note; }$suite.log has no PASS/FAIL line for $label"
