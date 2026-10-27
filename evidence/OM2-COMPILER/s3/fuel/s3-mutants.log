@@ -1,0 +1,60 @@
+OM2GATE START cases=seed/omc/om2/s3/s3-mutants.cases scratch=/tmp/om2c/s3/g-fuel-s3-mutants
+IDENTITY omc /tmp/om2c/s3/omc-fuel sha256=f195e2198f9c9d1a53b1d5006477461d3569a2ac8d5df8039ba894254ae1fa9d pinned=f195e2198f9c9d1a53b1d5006477461d3569a2ac8d5df8039ba894254ae1fa9d match
+DEADLINE 60
+  $ /tmp/om2c/s3/omc-fuel < /tmp/om2c/s3/g-fuel-s3-mutants/3.src > /tmp/om2c/s3/g-fuel-s3-mutants/3.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/3.cerr
+COMPILER /tmp/om2c/s3/g-fuel-s3-mutants/3.elf sha256=f195e2198f9c9d1a53b1d5006477461d3569a2ac8d5df8039ba894254ae1fa9d source line=3
+CASE ctl-l-rw line=4
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/3.elf < /tmp/om2c/s3/g-fuel-s3-mutants/4.src > /tmp/om2c/s3/g-fuel-s3-mutants/4.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/4.cerr
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/4.elf < /dev/null > /tmp/om2c/s3/g-fuel-s3-mutants/4.out 2> /tmp/om2c/s3/g-fuel-s3-mutants/4.err
+VERDICT ctl-l-rw PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-l-trap line=5
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/3.elf < /tmp/om2c/s3/g-fuel-s3-mutants/5.src > /tmp/om2c/s3/g-fuel-s3-mutants/5.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/5.cerr
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/5.elf < /dev/null > /tmp/om2c/s3/g-fuel-s3-mutants/5.out 2> /tmp/om2c/s3/g-fuel-s3-mutants/5.err
+VERDICT ctl-l-trap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ctl-l-overlap line=6
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/3.elf < /tmp/om2c/s3/g-fuel-s3-mutants/6.src > /tmp/om2c/s3/g-fuel-s3-mutants/6.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/6.cerr
+VERDICT ctl-l-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE ctl-l-past line=7
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/3.elf < /tmp/om2c/s3/g-fuel-s3-mutants/7.src > /tmp/om2c/s3/g-fuel-s3-mutants/7.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/7.cerr
+VERDICT ctl-l-past PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE ctl-fuel line=8
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/3.elf < /tmp/om2c/s3/g-fuel-s3-mutants/8.src > /tmp/om2c/s3/g-fuel-s3-mutants/8.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/8.cerr
+VERDICT ctl-fuel PASS compile exit=14 expected=14 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
+  MUTATE exact-once substitution at byte 146179
+  $ /tmp/om2c/s3/omc-fuel < /tmp/om2c/s3/g-fuel-s3-mutants/11.src > /tmp/om2c/s3/g-fuel-s3-mutants/11.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/11.cerr
+COMPILER /tmp/om2c/s3/g-fuel-s3-mutants/11.elf sha256=9b843b1c64813381b4e4d9f64917301aad7ff8cabc1c103835990a81b4e34a9e source line=11
+CASE m-l-ovl line=12
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/11.elf < /tmp/om2c/s3/g-fuel-s3-mutants/12.src > /tmp/om2c/s3/g-fuel-s3-mutants/12.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/12.cerr
+VERDICT m-l-ovl FAIL compile exit=0 expected=29 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/rev.from seed/omc/om2/s3/mut/rev.to
+  MUTATE exact-once substitution at byte 149407
+  $ /tmp/om2c/s3/omc-fuel < /tmp/om2c/s3/g-fuel-s3-mutants/15.src > /tmp/om2c/s3/g-fuel-s3-mutants/15.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/15.cerr
+COMPILER /tmp/om2c/s3/g-fuel-s3-mutants/15.elf sha256=dda4faf3ec73bf41040dba5381d640b986e6851d8d8f9e8c11c652c6fb919f65 source line=15
+CASE m-l-rev line=16
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/15.elf < /tmp/om2c/s3/g-fuel-s3-mutants/16.src > /tmp/om2c/s3/g-fuel-s3-mutants/16.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/16.cerr
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/16.elf < /dev/null > /tmp/om2c/s3/g-fuel-s3-mutants/16.out 2> /tmp/om2c/s3/g-fuel-s3-mutants/16.err
+VERDICT m-l-rev FAIL run exit=2 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/lix.from seed/omc/om2/s3/mut/lix.to
+  MUTATE exact-once substitution at byte 148772
+  $ /tmp/om2c/s3/omc-fuel < /tmp/om2c/s3/g-fuel-s3-mutants/19.src > /tmp/om2c/s3/g-fuel-s3-mutants/19.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/19.cerr
+COMPILER /tmp/om2c/s3/g-fuel-s3-mutants/19.elf sha256=c1967c8c96af1995770901c6f929f93e09f42f010390001130a17e076ad2b0c4 source line=19
+CASE m-l-lix line=20
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/19.elf < /tmp/om2c/s3/g-fuel-s3-mutants/20.src > /tmp/om2c/s3/g-fuel-s3-mutants/20.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/20.cerr
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/20.elf < /dev/null > /tmp/om2c/s3/g-fuel-s3-mutants/20.out 2> /tmp/om2c/s3/g-fuel-s3-mutants/20.err
+VERDICT m-l-lix FAIL run exit=0 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to
+  MUTATE exact-once substitution at byte 146135
+  $ /tmp/om2c/s3/omc-fuel < /tmp/om2c/s3/g-fuel-s3-mutants/23.src > /tmp/om2c/s3/g-fuel-s3-mutants/23.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/23.cerr
+COMPILER /tmp/om2c/s3/g-fuel-s3-mutants/23.elf sha256=3c136ef96d4672c1a24eb6db8ba2b211b5255870ab23163ed84928208c58d4cd source line=23
+CASE m-l-past line=24
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/23.elf < /tmp/om2c/s3/g-fuel-s3-mutants/24.src > /tmp/om2c/s3/g-fuel-s3-mutants/24.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/24.cerr
+VERDICT m-l-past FAIL compile exit=0 expected=29 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/fuel.from seed/omc/om2/s3/mut/fuel.to
+  MUTATE exact-once substitution at byte 114751
+  $ /tmp/om2c/s3/omc-fuel < /tmp/om2c/s3/g-fuel-s3-mutants/27.src > /tmp/om2c/s3/g-fuel-s3-mutants/27.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/27.cerr
+COMPILER /tmp/om2c/s3/g-fuel-s3-mutants/27.elf sha256=cb9176cab4e3b7c0d939c48030852511dfbe8d262d1207b9d3b2a1502932085f source line=27
+CASE m-fuel line=28
+  $ /tmp/om2c/s3/g-fuel-s3-mutants/27.elf < /tmp/om2c/s3/g-fuel-s3-mutants/28.src > /tmp/om2c/s3/g-fuel-s3-mutants/28.elf 2> /tmp/om2c/s3/g-fuel-s3-mutants/28.cerr
+VERDICT m-fuel FAIL compile exit=0 expected=14 stdout differs at byte 0 stderr differs at byte 0
+OM2GATE FAIL cases=10 pass=5 fail=5 invalid=0 not_run=0

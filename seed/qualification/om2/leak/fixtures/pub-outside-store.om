@@ -1,0 +1,10 @@
+note E13 disjoint-store control: secret byte stored at 40 is proven outside public [32,40).
+note The declared byte at 32 remains public. Expected PASS, no revocation.
+fn f c edit uchar 104 a view uchar 1 to ulong
+put c 40 get a 0
+if eq get c 32 0
+ret 0
+else
+ret 1
+end
+end

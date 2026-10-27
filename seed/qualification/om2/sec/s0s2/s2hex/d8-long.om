@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of the hex error-8 case: the decimal range rule (OMEGESE.md 9.3) gives error 8 here,
+note and omegese-om2.md 2 line 54 makes hex follow exactly this rule.
+fn main to int
+x = long 9223372036854775808
+ret 0
+end
