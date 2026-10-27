@@ -643,7 +643,7 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   `om2 diag` or `om2 fmt` (no other bytes on it) the unit is OM-2. Any other line leaves the unit OM-1,
   where the `om2` line itself is error 16 as before. The words of this section are reserved only in an
   OM-2 unit: `rotr rotl unroll inline fresh abstract seal open holds layout field at little big part out
-  export ops`. Using one as a name there is error 16; an OM-1 unit keeps them as ordinary names.
+  export ops dit scrub`. Using one as a name there is error 16; an OM-1 unit keeps them as ordinary names.
 - **`om2 diag`.** After the human line `omc: line N: error E` (unchanged), stderr gets one record
   `omc-diag 1 code=E sev=S line=N col=C span=A-B expect=K found=H obligation=O profile=OM-2`. `line` is
   the human line. `A-B` is the half-open byte span of the token being read (the LF for a line that ends
@@ -764,6 +764,33 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   are `B` to the exports in source order and the code starts at word E; the other functions are private.
   Without export the OM-1 rule holds (one function: its bare words; more: word 0 is `B` to the last). The
   entry rules of the abstract types apply to each export (to the last function when there is none).
+
+#### 9.13.1 Secret hygiene: `dit` and `scrub` (program mode)
+
+Two value words for code that handles secrets. Both are OM-2 only (reserved as above), program mode only
+(error 9 in function mode and in IR mode), and give a long. The emitted words are fixed, so the output is
+byte-for-byte deterministic. Fixtures: `seed/omc/om2/s5/` (`s5.cases`, `s5-mutants.cases`).
+
+- **`dit v`** (v int, else error 7) sets PSTATE.DIT (Arm ARM C5.2.4, FEAT_DIT; bit 24 of the DIT
+  special-purpose register) and gives the previous bit as 0 or 1. v outside {0, 1} (a negative int too)
+  is trap 3 before the write. Words: `CMP Xv, #1` (SUBS, C6.2.464), `B.HI` trap 3, `LSL X16, Xv, #24`
+  (UBFM, C6.2.487), `MRS Xd, DIT` (C6.2.287, d53b42a0|d), `MSR DIT, X16` (C6.2.289, d51b42b0),
+  `UBFX Xd, Xd, #24, #1`. Writes to PSTATE take effect in program order with no barrier (C5.1). A core
+  without FEAT_DIT raises SIGILL; the Spark's GB10 lists `dit` in /proc/cpuinfo. Linux starts a process
+  with DIT 0 and keeps it across context switches; `dit` does not restore it at function exit.
+- **`scrub n`** (n ulong, else error 7) zeroes the dead stack and the dead registers and gives 0. n must
+  be a multiple of 16 and at most 1048576 (1 MiB), else trap 3; when SP - n is below the stack-pool floor
+  X28 it is trap 6, before any store. Then the n bytes `[SP - n, SP)` are zeroed with `STP XZR, XZR,
+  [X16], #16` (C6.2.414) from SP - n upward: the frames of returned callees, their spilled registers and
+  local arrays. Then `MOVZ Xr, #0` for every register that holds no live value: the pool registers at
+  index npar + temporaries-in-use and above (the free temporaries and caller-saved registers), X16, and
+  X7, X18-X26, X29 (never used by program-mode code); and `MOVI Vd.2D, #0` (C7.2.247) for V0-V31, which
+  also clears the upper SVE Z bits. Floats live in X registers and pass through V0/V1 for one instruction
+  only, so no V register is live. Not zeroed: SP; X27 (the Linux initial stack when the unit reads its
+  arguments or environment); X28 (the floor); X30 (the return address); the pool registers below the
+  free index (parameters, locals, the held operands of the expression and of an enclosing call); NZCV,
+  FPCR, FPSR, the SVE P registers and FFR; memory above SP, the live frames. The result register is set
+  to 0 last.
 
 ## 10. Native host extension (2026-10-23)
 
