@@ -61,30 +61,42 @@ extern "C" {
 #define OMEGA_GPU_Q38_ROTARY 64u
 #define OMEGA_GPU_Q38_MAX_LAYERS 64u
 
+/* Model shape (2026-10-27): the widths above and in the comments are the Qwen3.8-27B shape, which is also each width's
+ * maximum. A zero shape field of the config takes its 27B value, and the 27B builds the same kernels as before the fields
+ * existed. Qwen3.5-9B: hidden 4096, inter 12288, q_heads 16, kv_heads 4, gdn_heads 32. The other widths follow (head_dim
+ * 256, 16 DeltaNet key heads of 128):
+ *   GDN qkv   (32 + gdn_heads) * 128           GDN mix  qkv + gdn_heads * 128      a|b  2 * gdn_heads
+ *   ATT mix   (q_heads + kv_heads) * 512       ATT qkv  q_heads * 256 + kv_heads * 512
+ *   mixer out q_heads * 256, which must equal gdn_heads * 128 */
 typedef struct {
     uint32_t layers;                    /* 1..64 (a model prefix in tests) */
     uint64_t attn_mask;                 /* bit l set: model layer l is full attention, else GDN */
     uint32_t vocab;                     /* lm_head rows (248320), <= 2048 * 2048 */
     float eps;                          /* rms_norm_eps (1e-6) */
     float eps_l2;                       /* GDN q/k l2norm eps (1e-6) */
-    OmegaGpuGdn *gdn;                   /* >= (layers - attention layers) entries, parameters set */
-    OmegaGpuDecodeAttn256Cache *attn;   /* >= attention layers entries, q/k norms set; rotary 64 */
-    const OmegaGpuBf16Tensor *lm_head;  /* [vocab][5120] */
+    OmegaGpuGdn *gdn;                   /* >= (layers - attention layers) entries, parameters set, gdn_heads value heads */
+    OmegaGpuDecodeAttn256Cache *attn;   /* >= attention layers entries, q/k norms set; rotary 64; q_heads / kv_heads heads */
+    const OmegaGpuBf16Tensor *lm_head;  /* [vocab][hidden] */
+    uint32_t hidden;                    /* residual width: a multiple of 1024, <= 5120 (0: 5120) */
+    uint32_t inter;                     /* MLP width: a multiple of 256, <= 17408 (0: 17408) */
+    uint32_t q_heads;                   /* attention q heads, <= 24 (0: 24) */
+    uint32_t kv_heads;                  /* attention kv heads, divides q_heads, q_heads / kv_heads <= 8 (0: 4) */
+    uint32_t gdn_heads;                 /* DeltaNet value heads: 32 or 48 (0: 48) */
 } OmegaGpuQ38GraphConfig;
 
 typedef struct OmegaGpuQ38Graph OmegaGpuQ38Graph;
 
 int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Graph **out);
 void omega_gpu_q38_graph_free(OmegaGpuQ38Graph *g);
-/* Shapes are checked. GDN layer: mix [1][16384][5120], ab bf16 [96][5120] (row 2h = in_proj_a[h], 2h + 1 = in_proj_b[h],
- * each value * 2^-64), o [1][5120][6144]. Attention layer: mix [1][14336][5120], ab NULL, o [1][5120][6144].
- * Both: gate_up [1][34816][5120], down [1][5120][17408], in_norm and post_norm f32 [5120] as (1 + w). The tensors stay
- * owned by the caller. */
+/* Shapes are checked (27B widths shown; the config's shape in general). GDN layer: mix [1][16384][5120], ab bf16 [96][5120]
+ * (row 2h = in_proj_a[h], 2h + 1 = in_proj_b[h], each value * 2^-64), o [1][5120][6144]. Attention layer: mix [1][14336][5120],
+ * ab NULL, o [1][5120][6144]. Both: gate_up [1][34816][5120], down [1][5120][17408], in_norm and post_norm f32 [5120] as
+ * (1 + w). The tensors stay owned by the caller. */
 int omega_gpu_q38_graph_set_layer(OmegaGpuQ38Graph *g, uint32_t layer, const OmegaGpuFp8Tensor *mix, const OmegaGpuBf16Tensor *ab,
                                   const OmegaGpuFp8Tensor *o, const OmegaGpuFp8Tensor *gate_up, const OmegaGpuFp8Tensor *down,
                                   const float *in_norm, const float *post_norm);
-int omega_gpu_q38_graph_set_final_norm(OmegaGpuQ38Graph *g, const float *final_norm); /* f32 [5120] as (1 + w) */
-/* Optional FP8 lm_head (qwen38/decode-speed): an FP8 tensor [vocab][5120] (experts 1, e.g. from omega_gpu_fp8_quantize_bf16)
+int omega_gpu_q38_graph_set_final_norm(OmegaGpuQ38Graph *g, const float *final_norm); /* f32 [hidden] as (1 + w) */
+/* Optional FP8 lm_head (qwen38/decode-speed): an FP8 tensor [vocab][hidden] (experts 1, e.g. from omega_gpu_fp8_quantize_bf16)
  * replaces the bf16 lm_head in every later token (half the bytes); NULL goes back to bf16. The tensor must outlive its use.
  * While set, the device hidden buffer (OMEGA_GPU_Q38_BUF_HIDDEN) holds hidden x 2^64 (the FP8 GEMV input scale);
  * omega_gpu_q38_graph_read returns the unscaled hidden (exact power-of-two rescale). Logits are those of the quantised head:
@@ -93,7 +105,7 @@ int omega_gpu_q38_graph_set_lm_head_fp8(OmegaGpuQ38Graph *g, const OmegaGpuFp8Te
 /* GDN layers record the a|b GEMV first and the mix GEMV beside it (no barrier between the two; both only read xq), process-wide.
  * 1 (default) or 0 (mix then a|b, each behind a barrier); env AIEN_OMEGA_Q38_OVERLAP_AB when never set. Values are identical. */
 void omega_gpu_q38_graph_set_overlap_ab(int on);
-/* One whole token: x_embed (f32 [5120]) -> greedy token; pos: the token's position (attention layers append K/V there,
+/* One whole token: x_embed (f32 [hidden]) -> greedy token; pos: the token's position (attention layers append K/V there,
  * GDN layers advance their state). */
 int omega_gpu_q38_graph_token(OmegaGpuQ38Graph *g, const float *x_embed, uint32_t pos, uint32_t *token, OmegaGpuDecodeGraphStats *st);
 /* The same in steps (between begin and end only record calls on this thread). */
@@ -108,8 +120,9 @@ enum { OMEGA_GPU_Q38_BUF_X, OMEGA_GPU_Q38_BUF_XQ, OMEGA_GPU_Q38_BUF_MIX, OMEGA_G
        OMEGA_GPU_Q38_BUF_ATT, OMEGA_GPU_Q38_BUF_O, OMEGA_GPU_Q38_BUF_GU, OMEGA_GPU_Q38_BUF_ACT, OMEGA_GPU_Q38_BUF_HIDDEN,
        OMEGA_GPU_Q38_BUF_COUNT };
 int omega_gpu_q38_graph_read_buf(OmegaGpuQ38Graph *g, int which, float *out, uint32_t n);
-/* The gather table (u32 [14336]): agg[n] = mix[tab[n]] (host side; the graph uploads it at create). */
-void omega_q38_gather_table(uint32_t *tab);
+/* The gather table (u32 [(q_heads + kv_heads) * 512]): agg[n] = mix[tab[n]] (host side; the graph uploads it at create).
+ * 24 / 4 is the 27B table. Returns -1 for a shape the graph refuses (q_heads 0 or above 24, kv_heads 0 or not dividing). */
+int omega_q38_gather_table(uint32_t q_heads, uint32_t kv_heads, uint32_t *tab);
 
 /* ---- timeline (measurement; as the decode graph) ---- */
 enum {

@@ -18,8 +18,8 @@
 #define SCALE_2P64 18446744073709551616.0f
 #define NEG_PAD (-1e30f)
 #define TOKEN_POISON 0xffffffffu
-#define H OMEGA_GPU_Q38_HIDDEN
-#define I OMEGA_GPU_Q38_INTER
+#define H (g->hd)  /* the model shape (config; 27B defaults): every use has the graph g in scope */
+#define I (g->in)
 
 /* glue kernels */
 enum { K_NORM, K_ADDNORM, K_SW, K_GATHER, K_GATE, K_AM0, K_AM1, K_SW_M1, K_GATHER_M1, K_GATE_M1, K_ADDNORM_M1, K_COPY, K_COUNT };
@@ -39,6 +39,9 @@ typedef struct {
 
 struct OmegaGpuQ38Graph {
     OmegaGpuQ38GraphConfig cfg;
+    /* the shape, resolved: hidden, inter, attention q / kv heads, GDN value heads; GDN qkv and qkv|z widths, a|b width,
+     * attention mix (q_proj|k_proj|v_proj) and kernel-row widths, mixer output width (see the header) */
+    uint32_t hd, in, qh, kvh, gh, gqkv, gmix, ab, amix, aqkv, mout;
     uint32_t am_ctas;                    /* stage-1 ARGMAX CTAs = ceil(vocab / 2048) */
     Layout lo;
     OmegaGpuMem buf, dbuf;               /* the host-visible regions; the chip-only regions (see Layout) */
@@ -71,16 +74,19 @@ static int fail(OmegaGpuQ38Graph *g, const char *what, int rc) {
     return rc;
 }
 
-void omega_q38_gather_table(uint32_t *tab) {
-    const uint32_t R = OMEGA_GPU_Q38_ROTARY, QP = 24u * 512u, KP = QP + 4u * 256u;
-    for (uint32_t n = 0; n < OMEGA_GPU_Q38_ATT_MIX; n++) {
+int omega_q38_gather_table(uint32_t q_heads, uint32_t kv_heads, uint32_t *tab) {
+    if (!tab || q_heads == 0 || q_heads > 24u || kv_heads == 0 || q_heads % kv_heads != 0) return -1;
+    const uint32_t R = OMEGA_GPU_Q38_ROTARY, QP = q_heads * 512u, KP = QP + kv_heads * 256u;
+    const uint32_t qn = q_heads * 256u, kn = kv_heads * 256u, qkv = qn + 2u * kn, mix = (q_heads + kv_heads) * 512u;
+    for (uint32_t n = 0; n < mix; n++) {
         uint32_t s;
-        if (n < 6144u) s = (n / 256u) * 512u + omega_dattn256_perm_slot(n % 256u, R);              /* q, permuted */
-        else if (n < 7168u) s = QP + ((n - 6144u) / 256u) * 256u + omega_dattn256_perm_slot(n % 256u, R); /* k, permuted */
-        else if (n < 8192u) s = KP + (n - 7168u);                                                    /* v */
-        else s = ((n - 8192u) / 256u) * 512u + 256u + (n - 8192u) % 256u;                            /* gate */
+        if (n < qn) s = (n / 256u) * 512u + omega_dattn256_perm_slot(n % 256u, R);                      /* q, permuted */
+        else if (n < qn + kn) s = QP + ((n - qn) / 256u) * 256u + omega_dattn256_perm_slot(n % 256u, R); /* k, permuted */
+        else if (n < qkv) s = KP + (n - qn - kn);                                                        /* v */
+        else s = ((n - qkv) / 256u) * 512u + 256u + (n - qkv) % 256u;                                    /* gate */
         tab[n] = s;
     }
+    return 0;
 }
 
 /* lock held */
@@ -118,12 +124,23 @@ int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Gra
     if (!cfg || !out || cfg->layers == 0 || cfg->layers > OMEGA_GPU_Q38_MAX_LAYERS || !cfg->gdn || !cfg->attn || !cfg->lm_head ||
         cfg->vocab == 0 || cfg->vocab > OMEGA_DEC_ARGMAX_SPAN * OMEGA_DEC_ARGMAX_SPAN) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (cfg->layers < 64u && (cfg->attn_mask >> cfg->layers) != 0) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    /* the shape: zero fields take the 27B values; the widths are capped at the 27B ones (the RES kernel's 1024-lane rows,
+     * the SWIGLU / GATE 256-lane grids, the attention kernel's q / kv group) */
+    const uint32_t hd = cfg->hidden ? cfg->hidden : OMEGA_GPU_Q38_HIDDEN, in = cfg->inter ? cfg->inter : OMEGA_GPU_Q38_INTER;
+    const uint32_t qh = cfg->q_heads ? cfg->q_heads : 24u, kvh = cfg->kv_heads ? cfg->kv_heads : 4u, gh = cfg->gdn_heads ? cfg->gdn_heads : 48u;
+    if (hd % 1024u || hd > OMEGA_GPU_Q38_HIDDEN || in == 0 || in % 256u || in > OMEGA_GPU_Q38_INTER || qh > 24u || qh % kvh ||
+        qh / kvh > 8u || (gh != 32u && gh != 48u) || qh * 256u != gh * 128u) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    OmegaGpuDecodeAttn256CacheView av;
+    if (omega_gpu_decode_attn256_cache_view(cfg->attn, 0, &av) != 0 || av.q_heads != qh || av.kv_heads != kvh) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     uint32_t n = 0, k = 0;
     omega_gpu_bf16_tensor_shape(cfg->lm_head, &n, &k);
-    if (n != cfg->vocab || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS;
+    if (n != cfg->vocab || k != hd) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     OmegaGpuQ38Graph *g = omega_gpu_host_calloc(1, sizeof *g);
     if (!g) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     g->cfg = *cfg;
+    g->hd = hd; g->in = in; g->qh = qh; g->kvh = kvh; g->gh = gh;
+    g->gqkv = (32u + gh) * 128u; g->gmix = g->gqkv + gh * 128u; g->ab = 2u * gh;
+    g->amix = (qh + kvh) * 512u; g->aqkv = qh * 256u + kvh * 512u; g->mout = qh * 256u;
     g->am_ctas = (cfg->vocab + OMEGA_DEC_ARGMAX_SPAN - 1) / OMEGA_DEC_ARGMAX_SPAN;
     g->xq_layer = -1;
     for (uint32_t l = 0, na = 0, ng = 0; l < cfg->layers; l++) {
@@ -132,13 +149,13 @@ int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Gra
     }
     Layout *L = &g->lo; size_t o = 0;
 #define REG(f, bytes) do { L->f = o; o = al(o + (bytes)); } while (0)
-    REG(x, H * 4); REG(ab, OMEGA_GPU_Q38_AB * 4); REG(hidden, H * 4);
+    REG(x, H * 4); REG(ab, g->ab * 4); REG(hidden, H * 4);
     REG(logits, (size_t)g->am_ctas * OMEGA_DEC_ARGMAX_SPAN * 4); REG(am_v, OMEGA_DEC_ARGMAX_SPAN * 4); REG(am_i, OMEGA_DEC_ARGMAX_SPAN * 4);
     REG(token, 16); REG(norms, (size_t)cfg->layers * 2 * H * 4); REG(fnorm, H * 4); REG(tabs, (size_t)cfg->layers * 4 * 16 + 16); /* + the FP8 lm_head entry */
-    REG(gtab, OMEGA_GPU_Q38_ATT_MIX * 4); REG(idtab, COPY_ROW * 4); REG(stage, 2 * I * 4);
+    REG(gtab, g->amix * 4); REG(idtab, COPY_ROW * 4); REG(stage, 2 * I * 4);
     L->split = o;
-    REG(xq, H * 4); REG(mix, OMEGA_GPU_Q38_GDN_MIX * 4); REG(agg, OMEGA_GPU_Q38_ATT_MIX * 4);
-    REG(att, OMEGA_GPU_Q38_MIXER_OUT * 4); REG(o, H * 4); REG(gu, 2 * I * 4); REG(act, I * 4);
+    REG(xq, H * 4); REG(mix, g->gmix * 4); REG(agg, g->amix * 4);
+    REG(att, g->mout * 4); REG(o, H * 4); REG(gu, 2 * I * 4); REG(act, I * 4);
 #undef REG
     L->bytes = o;
     int rc = OMEGA_GPU_DGRAPH_OK;
@@ -148,16 +165,16 @@ int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Gra
     int (*const dalloc)(size_t, OmegaGpuMem *) = (pbc && pbc[0] == '0' && pbc[1] == 0) ? omega_gpu_session_alloc : omega_gpu_session_alloc_cached;
     if (!omega_gpu_session_open() || omega_gpu_session_alloc(L->split, &g->buf) != 0 || dalloc(L->bytes - L->split, &g->dbuf) != 0)
         rc = OMEGA_GPU_DGRAPH_CHIP_FAIL;
-    static const OmegaDecSpec spec[K_COUNT] = {
+    const OmegaDecSpec spec[K_COUNT] = {
         [K_NORM] = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_NORM, .width = H },
         [K_ADDNORM] = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_ADD | OMEGA_DEC_RES_NORM, .width = H },
         [K_SW] = { .kind = OMEGA_DEC_SWIGLU, .width = I },
-        [K_GATHER] = { .kind = OMEGA_DEC_GATHER, .width = OMEGA_GPU_Q38_ATT_MIX, .stride = OMEGA_GPU_Q38_ATT_MIX },
+        [K_GATHER] = { .kind = OMEGA_DEC_GATHER, .width = g->amix, .stride = g->amix },
         [K_GATE] = { .kind = OMEGA_DEC_GATE },
         [K_AM0] = { .kind = OMEGA_DEC_ARGMAX, .mode = 0 },
         [K_AM1] = { .kind = OMEGA_DEC_ARGMAX, .mode = 1 },
         [K_SW_M1] = { .kind = OMEGA_DEC_SWIGLU, .width = I, .mutant = 1 },
-        [K_GATHER_M1] = { .kind = OMEGA_DEC_GATHER, .width = OMEGA_GPU_Q38_ATT_MIX, .stride = OMEGA_GPU_Q38_ATT_MIX, .mutant = 1 },
+        [K_GATHER_M1] = { .kind = OMEGA_DEC_GATHER, .width = g->amix, .stride = g->amix, .mutant = 1 },
         [K_GATE_M1] = { .kind = OMEGA_DEC_GATE, .mutant = 1 },
         [K_ADDNORM_M1] = { .kind = OMEGA_DEC_RES, .mode = OMEGA_DEC_RES_ADD | OMEGA_DEC_RES_NORM, .width = H, .mutant = 1 },
         [K_COPY] = { .kind = OMEGA_DEC_GATHER, .width = COPY_ROW, .stride = COPY_ROW },
@@ -171,7 +188,7 @@ int omega_gpu_q38_graph_create(const OmegaGpuQ38GraphConfig *cfg, OmegaGpuQ38Gra
         float *lg = cpu_of(g, L->logits), *amv = cpu_of(g, L->am_v);
         for (size_t i = cfg->vocab; i < (size_t)g->am_ctas * OMEGA_DEC_ARGMAX_SPAN; i++) lg[i] = NEG_PAD; /* lm_head writes [0, vocab) only */
         for (size_t i = 0; i < OMEGA_DEC_ARGMAX_SPAN; i++) amv[i] = NEG_PAD;                              /* stage 1 writes [0, ctas) only */
-        omega_q38_gather_table(cpu_of(g, L->gtab));
+        (void)omega_q38_gather_table(qh, kvh, cpu_of(g, L->gtab)); /* the shape was checked above */
         if (omega_gpu_session_sync_to_gpu(&g->buf) != 0 || omega_gpu_session_sync_to_gpu(&g->dbuf) != 0) rc = OMEGA_GPU_DGRAPH_CHIP_FAIL;
     }
     omega_gpu_session_unlock();
@@ -190,10 +207,10 @@ int omega_gpu_q38_graph_set_layer(OmegaGpuQ38Graph *g, uint32_t layer, const Ome
                                   const float *in_norm, const float *post_norm) {
     if (!g || layer >= g->cfg.layers || !in_norm || !post_norm || g->in_token) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     const int attn = g->layer[layer].attn;
-    if (!shape_is(mix, attn ? OMEGA_GPU_Q38_ATT_MIX : OMEGA_GPU_Q38_GDN_MIX, H) || !shape_is(o, H, OMEGA_GPU_Q38_MIXER_OUT) ||
+    if (!shape_is(mix, attn ? g->amix : g->gmix, H) || !shape_is(o, H, g->mout) ||
         !shape_is(gate_up, 2 * I, H) || !shape_is(down, H, I)) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     if (attn ? ab != NULL : ab == NULL) return OMEGA_GPU_DGRAPH_BAD_ARGS;
-    if (!attn) { uint32_t n = 0, k = 0; omega_gpu_bf16_tensor_shape(ab, &n, &k); if (n != OMEGA_GPU_Q38_AB || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
+    if (!attn) { uint32_t n = 0, k = 0; omega_gpu_bf16_tensor_shape(ab, &n, &k); if (n != g->ab || k != H) return OMEGA_GPU_DGRAPH_BAD_ARGS; }
     uint64_t t[8];
     if (omega_gpu_fp8_tensor_entry(mix, 0, &t[0], &t[1]) != 0 || omega_gpu_fp8_tensor_entry(o, 0, &t[2], &t[3]) != 0 ||
         omega_gpu_fp8_tensor_entry(gate_up, 0, &t[4], &t[5]) != 0 || omega_gpu_fp8_tensor_entry(down, 0, &t[6], &t[7]) != 0) return OMEGA_GPU_DGRAPH_BAD_ARGS;
@@ -285,7 +302,7 @@ static int add_glue(OmegaGpuQ38Graph *g, uint8_t kind, int ki, uint32_t gx, uint
     return after_op(g, kind, omega_gpu_cmdlist_add(g->cl, &L) < 0 ? -1 : 0);
 }
 
-/* RES at width 5120: NORM (x -> y) or ADD|NORM (x += a; y = norm(x)) */
+/* RES at the hidden width: NORM (x -> y) or ADD|NORM (x += a; y = norm(x)) */
 static int rec_res(OmegaGpuQ38Graph *g, int ki, uint64_t x, uint64_t a, uint64_t nw, uint64_t y, float scale) {
     uint32_t w[OMEGA_DEC_RES_WORDS]; memset(w, 0, sizeof w);
     put64(w, OMEGA_DEC_RES_X, x); put64(w, OMEGA_DEC_RES_A, a); put64(w, OMEGA_DEC_RES_NW, nw); put64(w, OMEGA_DEC_RES_Y, y);
@@ -346,22 +363,22 @@ int omega_gpu_q38_graph_record_layer(OmegaGpuQ38Graph *g, uint32_t l, uint32_t p
         const uint64_t ab = va_of(g, g->lo.ab);
         if (!overlap && rc == OMEGA_GPU_DGRAPH_OK) rc = after_op(g, OMEGA_GPU_Q38_K_AB, omega_gpu_bf16_gemv_record(g->cl, g->layer[l].ab, xq, ab));
         if (rc == OMEGA_GPU_DGRAPH_OK)
-            rc = after_op(g, OMEGA_GPU_Q38_K_GDN, omega_gpu_gdn_record(g->cl, g->cfg.gdn, ki, mix, mix + OMEGA_GPU_Q38_GDN_QKV * 4u, ab,
+            rc = after_op(g, OMEGA_GPU_Q38_K_GDN, omega_gpu_gdn_record(g->cl, g->cfg.gdn, ki, mix, mix + g->gqkv * 4u, ab,
                                                                      g->cfg.eps_l2, g->cfg.eps, 1.0f, SCALE_2P64, &mixer_out));
     } else {
         uint32_t w[OMEGA_DEC_GA_WORDS]; memset(w, 0, sizeof w);
         put64(w, OMEGA_DEC_GA_IN, mix); put64(w, OMEGA_DEC_GA_TAB, va_of(g, g->lo.gtab)); put64(w, OMEGA_DEC_GA_OUT, agg);
         if (rc == OMEGA_GPU_DGRAPH_OK)
-            rc = add_glue(g, OMEGA_GPU_Q38_K_GATHER, g->mutant == 2 ? K_GATHER_M1 : K_GATHER, (OMEGA_GPU_Q38_ATT_MIX + OMEGA_DEC_THREADS - 1) / OMEGA_DEC_THREADS, 1,
-                          OMEGA_GPU_Q38_ATT_MIX, w, OMEGA_DEC_GA_WORDS);
+            rc = add_glue(g, OMEGA_GPU_Q38_K_GATHER, g->mutant == 2 ? K_GATHER_M1 : K_GATHER, (g->amix + OMEGA_DEC_THREADS - 1) / OMEGA_DEC_THREADS, 1,
+                          g->amix, w, OMEGA_DEC_GA_WORDS);
         if (rc == OMEGA_GPU_DGRAPH_OK)
             rc = after_op(g, OMEGA_GPU_Q38_K_ATTN, omega_gpu_decode_attn256_record(g->cl, g->cfg.attn, ki, pos, agg, g->cfg.eps, SCALE_2P64, att));
         uint32_t w2[OMEGA_DEC_GT_WORDS]; memset(w2, 0, sizeof w2);
-        put64(w2, OMEGA_DEC_GT_A, att); put64(w2, OMEGA_DEC_GT_G, agg + OMEGA_GPU_Q38_ATT_QKV * 4u); put64(w2, OMEGA_DEC_GT_OUT, att);
-        w2[(OMEGA_DEC_GT_N - 0x380) / 4] = OMEGA_GPU_Q38_MIXER_OUT;
+        put64(w2, OMEGA_DEC_GT_A, att); put64(w2, OMEGA_DEC_GT_G, agg + g->aqkv * 4u); put64(w2, OMEGA_DEC_GT_OUT, att);
+        w2[(OMEGA_DEC_GT_N - 0x380) / 4] = g->mout;
         if (rc == OMEGA_GPU_DGRAPH_OK)
-            rc = add_glue(g, OMEGA_GPU_Q38_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, OMEGA_GPU_Q38_MIXER_OUT / OMEGA_DEC_THREADS, 1,
-                          OMEGA_GPU_Q38_MIXER_OUT, w2, OMEGA_DEC_GT_WORDS);
+            rc = add_glue(g, OMEGA_GPU_Q38_K_GATE, g->mutant == 3 ? K_GATE_M1 : K_GATE, g->mout / OMEGA_DEC_THREADS, 1,
+                          g->mout, w2, OMEGA_DEC_GT_WORDS);
     }
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_fp8(g, OMEGA_GPU_Q38_K_O, g->layer[l].o, tab + 16u, mixer_out, o);
     if (rc == OMEGA_GPU_DGRAPH_OK) rc = rec_res(g, g->mutant == 4 ? K_ADDNORM_M1 : K_ADDNORM, x, o, post_norm, xq, SCALE_2P64);
@@ -445,9 +462,9 @@ int omega_gpu_q38_graph_read(OmegaGpuQ38Graph *g, float *x, float *hidden, float
 int omega_gpu_q38_graph_read_buf(OmegaGpuQ38Graph *g, int which, float *out, uint32_t n) {
     if (!g || g->in_token || !out || which < 0 || which >= OMEGA_GPU_Q38_BUF_COUNT) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     const struct { size_t off; uint32_t cap; } b[OMEGA_GPU_Q38_BUF_COUNT] = {
-        [OMEGA_GPU_Q38_BUF_X] = { g->lo.x, H }, [OMEGA_GPU_Q38_BUF_XQ] = { g->lo.xq, H }, [OMEGA_GPU_Q38_BUF_MIX] = { g->lo.mix, OMEGA_GPU_Q38_GDN_MIX },
-        [OMEGA_GPU_Q38_BUF_AB] = { g->lo.ab, OMEGA_GPU_Q38_AB }, [OMEGA_GPU_Q38_BUF_AGG] = { g->lo.agg, OMEGA_GPU_Q38_ATT_MIX },
-        [OMEGA_GPU_Q38_BUF_ATT] = { g->lo.att, OMEGA_GPU_Q38_MIXER_OUT }, [OMEGA_GPU_Q38_BUF_O] = { g->lo.o, H },
+        [OMEGA_GPU_Q38_BUF_X] = { g->lo.x, H }, [OMEGA_GPU_Q38_BUF_XQ] = { g->lo.xq, H }, [OMEGA_GPU_Q38_BUF_MIX] = { g->lo.mix, g->gmix },
+        [OMEGA_GPU_Q38_BUF_AB] = { g->lo.ab, g->ab }, [OMEGA_GPU_Q38_BUF_AGG] = { g->lo.agg, g->amix },
+        [OMEGA_GPU_Q38_BUF_ATT] = { g->lo.att, g->mout }, [OMEGA_GPU_Q38_BUF_O] = { g->lo.o, H },
         [OMEGA_GPU_Q38_BUF_GU] = { g->lo.gu, 2 * I }, [OMEGA_GPU_Q38_BUF_ACT] = { g->lo.act, I }, [OMEGA_GPU_Q38_BUF_HIDDEN] = { g->lo.hidden, H },
     };
     if (n > b[which].cap) return OMEGA_GPU_DGRAPH_BAD_ARGS;
