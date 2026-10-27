@@ -398,7 +398,7 @@ static void sweep(void) {
     { unsigned ks[] = { 256, 768, 2048, 4096, 8192 };
       for (unsigned a = 0; a < 5; a++) for (unsigned lb = 8; lb <= 16; lb += 8) for (unsigned rows = 1; rows <= 8; rows *= 2)
       for (unsigned w = 1; w <= 32; w *= 2) for (unsigned dp = 0; dp <= 8; dp += dp ? dp : 1) {
-          OmegaFp8GemvSpec s = { ks[a], lb, rows, w, dp, 0 };
+          OmegaFp8GemvSpec s = { .k = ks[a], .lane_bytes = lb, .rows = rows, .warps = w, .depth = dp };
           snprintf(v, sizeof v, "k%u lane%u rows%u warps%u depth%u", ks[a], lb, rows, w, dp);
           if (BUILD(omega_blackwell_codegen_fp8_gemv_prog(&s, &g_prog))) sweep_prog("fp8_gemv", v, P_NONE);
           if (BUILD(omega_blackwell_codegen_fp8_gemv2_prog(&s, &g_prog))) sweep_prog("fp8_gemv2", v, P_NONE);
@@ -406,14 +406,14 @@ static void sweep(void) {
     /* bf16 GEMV (lm_head) */
     { unsigned ks[] = { 256, 2048, 4096, 5120 };
       for (unsigned a = 0; a < 4; a++) for (unsigned rows = 1; rows <= 4; rows *= 2) for (unsigned w = 1; w <= 32; w *= 2) for (unsigned dp = 1; dp <= 16; dp *= 2) {
-          OmegaBf16GemvSpec s = { ks[a], rows, w, dp, 0 };
+          OmegaBf16GemvSpec s = { .k = ks[a], .rows = rows, .warps = w, .depth = dp };
           snprintf(v, sizeof v, "k%u rows%u warps%u depth%u", ks[a], rows, w, dp);
           if (BUILD(omega_blackwell_codegen_bf16_gemv_prog(&s, &g_prog))) sweep_prog("bf16_gemv", v, P_NONE);
       } }
     /* fp8 grouped GEMM */
     { unsigned ks[] = { 768, 2048, 4096 };
       for (unsigned a = 0; a < 3; a++) for (unsigned lb = 8; lb <= 16; lb += 8) for (unsigned mt = 1; mt <= 16; mt *= 2) for (unsigned w = 1; w <= 32; w *= 2) {
-          OmegaFp8GemmSpec s = { ks[a], lb, mt, w, 0 };
+          OmegaFp8GemmSpec s = { .k = ks[a], .lane_bytes = lb, .mt = mt, .warps = w };
           snprintf(v, sizeof v, "k%u lane%u mt%u warps%u", ks[a], lb, mt, w);
           if (BUILD(omega_blackwell_codegen_fp8gemm_prog(&s, &g_prog))) sweep_prog("fp8gemm", v, P_NONE);
       } }
@@ -427,7 +427,7 @@ static void sweep(void) {
       } }
     /* router, decode attention */
     for (unsigned w = 8; w <= 32; w *= 2) for (unsigned dp = 1; dp <= 8; dp *= 2) {
-        OmegaRouterSpec s = { w, dp, 0 }; snprintf(v, sizeof v, "warps%u depth%u", w, dp);
+        OmegaRouterSpec s = { .warps = w, .depth = dp }; snprintf(v, sizeof v, "warps%u depth%u", w, dp);
         if (BUILD(omega_blackwell_codegen_router_prog(&s, &g_prog))) sweep_prog("router", v, P_NONE);
     }
     for (unsigned dp = 1; dp <= 4; dp++) {
@@ -486,7 +486,7 @@ static void sweep(void) {
           if (BUILD(omega_blackwell_codegen_qgemm_prog(&s, &g_prog))) sweep_prog("qgemm", v, P_TC | P_QMMA);
       }
       for (unsigned a = 0; a < 4; a++) for (unsigned it = 0; it <= 2; it++) {
-          OmegaPqSpec s = { ks[a], it, 0 }; snprintf(v, sizeof v, "k%u in_type%u", ks[a], it);
+          OmegaPqSpec s = { .k = ks[a], .in_type = it }; snprintf(v, sizeof v, "k%u in_type%u", ks[a], it);
           if (BUILD(omega_blackwell_codegen_pq_prog(&s, &g_prog))) sweep_prog("pq", v, P_TC | P_QMMA);
       } }
     { unsigned ks[] = { 768, 2048, 4096 }, es[] = { 8, 64, 128 }, ts[] = { 1, 16, 128, 1024 };
