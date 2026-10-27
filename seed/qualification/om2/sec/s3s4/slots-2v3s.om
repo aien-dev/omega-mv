@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 99-101: two unsized arrays (4 slots) and three SIZED arrays = 7 slots:
+note error 9 at line 5 (the signature).
+om2
+fn f a view uchar * b edit ulong * c view uchar 16 d edit ulong 4 e view uchar 8 to ulong
+ret add len a add len b add len c add len d len e
+end

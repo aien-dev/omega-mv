@@ -1,0 +1,7 @@
+fn g a uint to uint
+x = new uint 4 7
+put x 2 a
+r = get x a
+free x
+ret r
+end

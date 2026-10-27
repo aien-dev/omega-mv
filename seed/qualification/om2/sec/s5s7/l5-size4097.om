@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 155: SIZE 4097 is outside 1..4096; error 29 on the layout line (E8).
+om2
+layout z 4097
+field a uchar 1 at 0 little
+end
+fn main to int
+ret 0
+end

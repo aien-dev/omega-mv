@@ -1,0 +1,6 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 14: the OM-2 words are recognised only in OM-2 units. This OM-1 unit uses
+note export fn (6 line 204); it keeps its OM-1 verdict (C1, line 17), the pinned error and line.
+export fn main to int
+ret 0
+end

@@ -1,0 +1,12 @@
+note S4: an unsized view passed to a sized parameter is error 7 (its length is not N).
+om2
+fn s v view uchar 4 to ulong
+ret len v
+end
+fn g v view uchar * to ulong
+ret s v
+end
+fn main to int
+a = new uchar 4 0
+ret int g a
+end

@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # tests/one_layer/acceptance/selftest.sh <build/one_layer dir> -- selftest of the stage-1 harness (and its v2
 # extension, section 7: kind oscir, score-v2, the experiment task corpus, omega#445) on
 # the PUBLIC sample corpus (sample/). It never touches the sealed corpus. Every check has a
@@ -188,7 +203,7 @@ for s in $OLA_RUNNER_SRCS; do o="$T/obj/$(echo "$s" | tr / _).o"; $CC $OLA_CFLAG
 mut_ola() { # mut_ola <name> <sed script>
   sed "$2" "$HERE/ola.c" > "$T/mut/$1.c"
   cmp -s "$HERE/ola.c" "$T/mut/$1.c" && { bad "mutant $1: sed changed nothing"; return 1; }
-  $CC ${OLA_CFLAGS/-Werror/} -w -o "$T/mut/$1" "$T/mut/$1.c" src/sha256.c || { bad "mutant $1 does not compile"; return 1; }
+  $CC ${OLA_CFLAGS/-Werror/} -w -o "$T/mut/$1" "$T/mut/$1.c" src/omega_om_units.c || { bad "mutant $1 does not compile"; return 1; }
 }
 mut_runner() {
   sed "$2" "$HERE/ola_runner.c" > "$T/mut/$1.c"

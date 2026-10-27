@@ -1,0 +1,20 @@
+model: 4 layers (3 GDN, 1 attention, mask 0x8), vocab 248320
+ok: token 0: graph 19649 == baseline 19649
+ok: token 0: logits max diff 7.09e-06 <= 1e-04 * 9.78
+ok: token 0: x max diff 1.79e-06 <= 1e-04 * 2.65
+ok: token 0: 41 launches in 1 submit
+ok: token 1: graph 72160 == baseline 72160
+ok: token 1: logits max diff 6.68e-06 <= 1e-04 * 9.56
+ok: token 1: x max diff 1.53e-06 <= 1e-04 * 2.54
+ok: token 1: 41 launches in 1 submit
+ok: token 2: graph 114197 == baseline 114197
+ok: token 2: logits max diff 4.29e-06 <= 1e-04 * 9.58
+ok: token 2: x max diff 1.07e-06 <= 1e-04 * 2.59
+ok: token 2: 41 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+timing: 10 reps, median chip 20863.4 us, median total 20881.2 us per token (4 layers)
+gpu_q38_graph_test: 17 checks, 0 failed: PASS

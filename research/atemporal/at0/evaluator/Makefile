@@ -1,6 +1,6 @@
 # AT-0 Agent 4 independent evaluator (research/atemporal/at0/evaluator).
 # Standalone: not part of omega `all` or `test`; not mk/at0.mk (Agent 5 owns that).
-# Links exactly one omega source: src/sha256.c (charter section 3).
+# Links exactly one omega source: src/omega_om_units.c (charter section 3).
 OMEGA_ROOT ?= ../../../..
 OUT ?= build
 CC ?= cc
@@ -11,13 +11,13 @@ INC = -Isrc -I$(OMEGA_ROOT)/src
 
 .PHONY: all asan clean selftest
 all: $(OUT)/at0-eval
-$(OUT)/at0-eval: $(SRCS) src/at0e.h $(OMEGA_ROOT)/src/sha256.c
+$(OUT)/at0-eval: $(SRCS) src/at0e.h $(OMEGA_ROOT)/src/omega_om_units.c
 	@mkdir -p $(OUT)
-	$(CC) $(CFLAGS) $(INC) -o $@ $(SRCS) $(OMEGA_ROOT)/src/sha256.c -lm
+	$(CC) $(CFLAGS) $(INC) -o $@ $(SRCS) $(OMEGA_ROOT)/src/omega_om_units.c -lm
 asan: $(OUT)/at0-eval-asan
-$(OUT)/at0-eval-asan: $(SRCS) src/at0e.h $(OMEGA_ROOT)/src/sha256.c
+$(OUT)/at0-eval-asan: $(SRCS) src/at0e.h $(OMEGA_ROOT)/src/omega_om_units.c
 	@mkdir -p $(OUT)
-	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic $(ASAN) -D_POSIX_C_SOURCE=200809L $(INC) -o $@ $(SRCS) $(OMEGA_ROOT)/src/sha256.c -lm
+	$(CC) -std=c11 -Wall -Wextra -Werror -pedantic $(ASAN) -D_POSIX_C_SOURCE=200809L $(INC) -o $@ $(SRCS) $(OMEGA_ROOT)/src/omega_om_units.c -lm
 selftest: all
 	sh run.sh --self-only
 clean:

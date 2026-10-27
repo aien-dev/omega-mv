@@ -1,0 +1,34 @@
+note SPDX-License-Identifier: Apache-2.0
+note Concatenate rng.om, request.om then this consumer before compilation.
+note Request: 8-byte little-endian seed, then 0..256 nonzero tag bytes, then EOF.
+note Response: eight successive little-endian 64-bit words, exactly 64 bytes.
+note Exit 2 malformed/capacity, 4 I/O failure; no output before validation.
+fn main to int
+used = ulong 0
+reading = true
+while and reading lt used len rngreq
+n = read 0 rngreq used sub len rngreq used
+if lt n 0
+ret 4
+end
+if eq n 0
+reading = false
+else
+used = add used ulong n
+end
+end
+status = rngreqok used
+if ne status 0
+ret status
+end
+rngpack
+sent = ulong 0
+while lt sent len rngout
+n = write 1 rngout sent sub len rngout sent
+if le n 0
+ret 4
+end
+sent = add sent ulong n
+end
+ret 0
+end

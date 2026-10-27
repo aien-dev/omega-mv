@@ -1,0 +1,6 @@
+chip-q38.log: build/gpu_qgemm_test sha256 a855e364a9e93ea5db300573bf0e62000bcbd41ad2b6e0dedf00e12a277400f3 (ground.txt),
+built from feat/q38-graph 65925086 + this branch's diff (before the merge of the libm-free GDN fix, which touches
+no file this test links differently). Command: flock /tmp/aien-gb10.lock build/gpu_qgemm_test --chip --shape q38 --tokens 2048
+Run 2026-10-18 ~16:35Z, result GPU_QGEMM: PASS, rc=0.
+chip-q38-run1-mutant3-not-caught-stale-buffer.log: INVALID first run (binary d88e28cd): mutant 3 looked uncaught because the
+good run's output was still in the buffer; the test now junk-fills before the mutant launch.

@@ -1,0 +1,27 @@
+note S3 E16 fuel: the order of oracle/s4fuel fuel-inl (main last). Every inline function is also compiled
+note standalone in source order (OMEGESE 9.13), each with its own fuel, so f1 is expanded first without the
+note call of f1 itself: f1 loop 64, 7 f2 expansions (58311), the 8th f2 call and loop (58376), 55 f3
+note expansions (65471), the 56th f3 call and loop (65536, still allowed), then its f4 call (line 11) is
+note 65537: error 14 on line 11.
+om2
+fn f4 to void inline
+end
+fn f3 to void inline
+for i ulong 64 unroll
+f4
+end
+end
+fn f2 to void inline
+for i ulong 64 unroll
+f3
+end
+end
+fn f1 to void inline
+for i ulong 64 unroll
+f2
+end
+end
+fn main to int
+f1
+ret 0
+end

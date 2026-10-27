@@ -1,0 +1,10 @@
+om2 diag
+fn main to int
+w = new uint 4 0
+for i ulong 2 unroll
+for j ulong 2 unroll
+x = div uint 7 get w add i j
+end
+end
+ret int get w 0
+end

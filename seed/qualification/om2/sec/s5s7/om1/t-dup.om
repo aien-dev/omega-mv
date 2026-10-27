@@ -1,0 +1,27 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of a5-exact.om (contract 140-141): dup values and 64-bit rotations computed with
+note OM-1 shifts only; expected stdout oracle/s5s7/exp/a5-exact.out (python3). 2309737967 = 0x89abcdef,
+note 19088743 = 0x01234567.
+fn dupmk x uint to ulong
+ret or shl ulong x 32 ulong x
+end
+fn rr v ulong n ulong to ulong
+if eq n 0
+ret v
+end
+ret or shr v n shl v sub 64 n
+end
+fn main to int
+d = dupmk 2309737967
+puth d
+puth add d 1
+puth rr d 0
+puth rr d 1
+puth rr d 8
+puth rr d 31
+puth rr d 32
+puth rr d 33
+puth rr d 63
+puth xor d dupmk 19088743
+ret 0
+end
