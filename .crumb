@@ -77,14 +77,14 @@
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "f390041dbba29a5707b5652e20e6bffd69e0a1f1ebfc493736ff5266370fa4aa",
-          "last_commit": "82a399b9f",
+          "digest": "b24c4baba78e4967ebd8f7cee63c6ec091a4c28fc97b82aecf8ba70f7685c3b2",
+          "last_commit": "001aa63ad",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "cd80558f97d3249ef8e2159e8a6e485e19248925e30721041aa591e7bc403fc9",
-          "last_commit": "f401f2baa",
+          "digest": "326ab066f273e0d464499e8e23a63dc57bab3ff7f3f0b3fbccfd08e0a2e649df",
+          "last_commit": "001aa63ad",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
@@ -95,15 +95,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:534f796d8e0fc81c75e714b05cf9bf36f60f0b5d31d5430fdea52d8bf179e6ea",
-      "compiled_at": "2026-10-27T00:45:25Z",
+      "children_root": "sha256:35b067e95fcd78215093f07555e3a63eab8942f75eff709611d79e4c54c7f877",
+      "compiled_at": "2026-10-27T01:55:49Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:fcb2fe9e59c8b7feeffedb41f1ae7cb713c34e33e1985e5aad1d473df75567f0",
+      "digest": "sha256:2948df27ad3b9995ce5da59ee65f309248ee93c6dac1b95d9a23eaeba2e0adc1",
       "evidence_files": 12477,
       "evidence_root": "sha256:9d96c8c22e5c574c4768d1eadd333b9750f73cd27be276a0f190c876960008a1",
       "files": 17302,
-      "generated_at_commit": "52eba8831aa0b8db9fa2f2e13289920be4fa85f6",
-      "source_tree": "sha256:cd64f35f93a5dbeb923558fcae52ddcc8b82be786c4ca2e84e4d0a61ec07dcd6"
+      "generated_at_commit": "001aa63ad89220ef91e0898b5d41972fe74bbf09",
+      "source_tree": "sha256:92ebd8844c056f4e16c7ec3c6b0b7690a9022468eb35ceccd8610e2a096cc77f"
     },
     "owner_lane": "",
     "provenance": {
