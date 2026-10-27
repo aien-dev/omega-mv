@@ -7,6 +7,7 @@
 #   3. every negative fixture in negatives.txt is refused, for the reason named there, and differs
 #      from the good receipt it was cut from (a negative identical to a good one proves nothing)
 #   4. the generator refuses bad input (missing flag, log without settings, stats/log from two runs)
+#   5. a receipt written under umask 000 is mode 644, never world-writable
 # Run from the repo root (the Makefile does). Exit 0 only when every case holds.
 set -u
 TOOL="${1:?tool}"; CANON="${2:?json_canon}"; WORK="${3:?workdir}"
@@ -84,6 +85,10 @@ if [ $rc = 2 ]; then ok "generator: a repeated --status is a usage error"; else 
 "$TOOL" --run-dir "$R1" --stats "$R1/receipt-main.json" --log "$R1/main.log" --status DONE --repo aien-spark/omega --model m \
   --precision p --mode d --runner r --out "$WORK/x6.json" 2> "$WORK/x6.err"
 rc=$?; if [ $rc = 1 ] && [ ! -e "$WORK/x6.json" ] && grep -q 'fails its own check' "$WORK/x6.err"; then ok "generator: status outside the enum never written"; else bad "generator: status DONE gave exit $rc"; fi
+# 5: a written receipt is never world-writable, even under umask 000 (CodeQL cpp/world-writable-file-creation)
+( umask 000; gen_main --out "$WORK/mode.json" 2> "$WORK/mode.err" )
+rc=$?; mode=$(stat -c %a "$WORK/mode.json" 2> /dev/null)
+if [ $rc = 0 ] && [ "$mode" = 644 ]; then ok "generator: receipt created mode 644 under umask 000"; else bad "generator: receipt mode '$mode' (exit $rc) under umask 000, wanted 644"; fi
 
 echo "dgraph_receipt tests: $cases cases, $fails failed"
 [ $fails = 0 ]

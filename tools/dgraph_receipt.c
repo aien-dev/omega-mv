@@ -29,6 +29,8 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define SCHEMA "omega-decode-graph-receipt/1"
 #define MAX_INPUT (4u << 20)
@@ -762,7 +764,12 @@ static int generate(const Args *a) {
         fprintf(stderr, "dgraph_receipt: refusing to write: the receipt fails its own check: %s\n", err);
         free(buf); rc = 1; goto out;
     }
-    FILE *o = a->out ? fopen(a->out, "wb") : stdout;
+    FILE *o = stdout;
+    if (a->out) { /* 0644, not fopen's 0666 & ~umask: a receipt is never world-writable */
+        int fd = open(a->out, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+        o = fd >= 0 ? fdopen(fd, "wb") : NULL;
+        if (fd >= 0 && !o) close(fd);
+    }
     if (!o) { fprintf(stderr, "dgraph_receipt: cannot write %s\n", a->out); free(buf); goto out; }
     int wbad = fwrite(buf, 1, blen, o) != blen;
     if (a->out) wbad |= fclose(o) != 0; else wbad |= fflush(o) != 0;
