@@ -115,7 +115,7 @@ static int rdtype(Rd *r, C2Type *t)
 {
     memset(t, 0, sizeof *t);
     if (rd8(r, &t->s)) return -1;
-    if (t->s == S_GVIEW || t->s == S_GEDIT) return rd8(r, &t->elem) ? -1 : 0; /* version 6 buffer: elem */
+    if (t->s == S_GVIEW || t->s == S_GEDIT) return rd8(r, &t->elem) ? -1 : 0; /* version 8 buffer: elem */
     if (t->s == S_REF) {
         if (rd8(r, &t->kind) || rd8(r, &t->elem) || rd16(r, &t->len)) return -1;
         /* a struct reference has elem VOID and carries its struct index + 1 */
@@ -217,7 +217,7 @@ static int has_kernel(const C2Unit *u)
 
 static int canonical_version(const C2Unit *u)
 {
-    if (has_kernel(u)) return 6; /* GUARD:kernel-version */
+    if (has_kernel(u)) return C2_V_KERNEL; /* GUARD:kernel-version */
     if (has_slice(u)) return 5;
     if (has_op(u, C2_POPEN, C2_HSTORE)) return 4;
     if (has_op(u, C2_AOPEN, C2_ADESTROY)) return 3;
@@ -260,7 +260,7 @@ int c2_decode(const uint8_t *buf, size_t len, C2Unit *u, C2Verdict *v)
     Rd rr = {buf, len, 0}, *r = &rr;
     if (!buf || len < 8 || memcmp(buf, MAGIC7, 7) != 0) return fail(v, "C2-DECODE-MAGIC", -1, -1, "bad magic");
     u->version = buf[7];
-    if (u->version < 1 || u->version > 6) /* GUARD:version-range */
+    if (!((u->version >= 1 && u->version <= 5) || u->version == C2_V_KERNEL)) /* GUARD:version-range */
         return fail(v, "C2-DECODE-VERSION", -1, -1, "unknown version %u", u->version);
     r->i = 8;
     if (u->version >= 2) {
@@ -290,7 +290,7 @@ int c2_decode(const uint8_t *buf, size_t len, C2Unit *u, C2Verdict *v)
         int e = rdname(r, f->name);
         if (e == -1) TRUNC("function name");
         if (e) return fail(v, "C2-DECODE-NAME", fi, -1, "function name");
-        if (u->version >= 6) {
+        if (u->version == C2_V_KERNEL) {
             if (rd8(r, &f->kind)) TRUNC("function kind");
             if (f->kind > FN_KERNEL) return fail(v, "C2-DECODE-KIND", fi, -1, "function kind %u", f->kind); /* GUARD:kind-range */
             if (f->kind == FN_KERNEL && rd16(r, &f->threads)) TRUNC("thread count");
@@ -380,8 +380,8 @@ size_t c2_encode(const C2Unit *u, uint8_t *buf, size_t cap)
     for (int fi = 0; fi < u->nfuncs; fi++) {
         const C2Func *f = &u->fn[fi];
         wname(&w, f->name);
-        if (u->version >= 6) w8(&w, f->kind);
-        if (u->version >= 6 && f->kind == FN_KERNEL) w16(&w, f->threads);
+        if (u->version == C2_V_KERNEL) w8(&w, f->kind);
+        if (u->version == C2_V_KERNEL && f->kind == FN_KERNEL) w16(&w, f->threads);
         w8(&w, f->nparams); wtype(&w, &f->ret);
         w16(&w, f->nvregs);
         for (int k = 0; k < f->nvregs; k++) wtype(&w, &f->vt[k]);

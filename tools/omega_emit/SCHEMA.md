@@ -64,7 +64,7 @@ Example: `fn clamp_sub(a: u32, b: u32) -> u32`: a - b when a >= b, else 0.
 
 A loop is a block that branches back to an earlier block (`br` or `cbr` to a lower block number).
 
-## GPU kernels (IR encoding version 6, docs/omegese/GPU.md)
+## GPU kernels (IR encoding version 8, docs/omegese/GPU.md)
 
 A function with `"kind": "kernel"` and `"threads": N` (32..1024, a multiple of 32) runs once per GPU
 thread. It returns `"void"`, takes at most 32 params, and is never called. Its key order is `name`,

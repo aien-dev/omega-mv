@@ -21,7 +21,7 @@
  *   unit tables  -> per-function types -> CFG shape -> per-instruction typing -> calls ->
  *   GPU kernel rules -> handle disciplines -> definite assignment -> loop bounds (termination) ->
  *   ownership flow.
- * GPU kernels (version 6) are restated from docs/omegese/GPU.md sections 6-9: their types, the ops
+ * GPU kernels (version 8) are restated from docs/omegese/GPU.md sections 6-9: their types, the ops
  * each function kind may hold, block-shared arrays, constant divisors, and the uniformity rule for
  * SYNC and SHFL.
  * The ownership flow is a may-analysis that rejects only DEFINITE errors (a state that holds on
@@ -1068,7 +1068,7 @@ static uint64_t maxval(const Rx *r, int n, int sb)
     case N_LO: return (p->v < r->T ? p->v : r->T) - 1;
     case N_HI: return (r->T - 1) / p->v;
     case N_LOOP: /* the counter is below K wherever the guard's loop side dominates */
-        if (p->b >= 0 && dominates(r->x, p->b, sb)) return p->v ? p->v - 1 : 0; /* GUARD:loop-bound */
+        if (p->b >= 0 && dominates(r->x, p->b, sb)) return p->v ? p->v - 1 : 0; /* GUARD:race-loop-bound */
         return UINT64_MAX;
     case N_ADD: return sat_add(maxval(r, p->a, sb), maxval(r, p->b, sb));
     case N_MUL: return sat_mul(maxval(r, p->a, sb), maxval(r, p->b, sb));
