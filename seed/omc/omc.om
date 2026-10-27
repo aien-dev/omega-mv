@@ -2979,6 +2979,62 @@ bo_fix rd ty
 end
 end
 
+note sdiv2k (OM-2): signed div / rem by a constant 2^k, 1 <= k <= 62, with shifts and no SDIV (OmegaMind
+note superopt RULES.md rows 34-37, here at W=64 on the sign-extended value): t = x + (x < 0 ? 2^k - 1 : 0);
+note div: rd = t >> k (ASR); rem: rd = x - (t AND -2^k). k 1: ADD Xt, Xa, Xa, LSR #63; else ASR Xt, Xa, #63
+note then ADD Xt, Xa, Xt, LSR #(64-k). No trap and no width check: the divisor is neither 0 nor -1, and
+note |q| <= |x|, |r| < 2^k keep the result inside every signed width.
+fn sdiv2k op ulong ra ulong k ulong rd ulong to void
+t = alloc
+if eq k 1
+emit or or or 2336291840 t shl ra 5 shl ra 16
+else
+emit or or 2474638336 t shl ra 5
+w = or or 2336227328 t shl ra 5
+emit or or w shl t 16 shl sub 64 k 10
+end
+if eq op 37
+w = or or 2453667840 t shl t 5
+emit or or w shl sub 64 k 16 shl sub 63 k 10
+emit or or or 3405774848 rd shl ra 5 shl t 16
+ret
+end
+emit or or or 2470509568 rd shl t 5 shl k 16
+end
+
+note sdiv2kt: binop's OM-2 hook. When op is a signed div / rem (ty 6..9) of a register by a number b = 2^k,
+note 1 <= k <= 62, emit sdiv2k into dst, set the result to that register, and give 1; otherwise emit nothing
+note and give 0.
+fn sdiv2kt op ulong ty ulong ra ulong bk ulong bn ulong dst ulong to ulong
+if eq get om2 0 0
+ret 0
+end
+if or or ne bk 3 lt ty 6 gt ty 9
+ret 0
+end
+if and ne op 36 ne op 37
+ret 0
+end
+if or le bn 1 gt bn 4611686018427387904
+ret 0
+end
+if ne and bn sub bn 1 0
+ret 0
+end
+k = ulong 0
+x = bn
+while gt x 1
+x = shr x 1
+k = add k 1
+end
+rd = destreg dst
+sdiv2k op ra k rd
+put rk 0 1
+put rv 0 rd
+put rt 0 ty
+ret 1
+end
+
 note and, or, xor (om4 BO_LOG)
 fn bo_log op ulong ra ulong rb ulong rd ulong to void
 fx = ulong 2315255808
@@ -3674,6 +3730,9 @@ bk = get fr add ix 3
 bn = get fr add ix 4
 rb = ulong 0
 useimm = false
+if ne sdiv2kt op ty ra bk bn dst 0
+ret
+end
 if eq bk 3
 if or eq op 41 eq op 42
 if lt bn twid ty

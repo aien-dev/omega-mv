@@ -22,6 +22,7 @@ sh seed/omc/gate16.sh
 sh seed/omc/gate17.sh
 sh seed/omc/gate18.sh
 sh seed/omc/gate19.sh
+sh seed/omc/gate20.sh
 # Executable contracts use the existing fail-closed Omega conductor.
 B=build/seed/contracts
 mkdir -p "$B"

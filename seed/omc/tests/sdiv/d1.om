@@ -1,0 +1,202 @@
+om2
+note signed div / rem by 2^k for long, int, short, byte: one line per divisor, a hash of q and r over
+note 4096 xorshift values plus each width's boundaries; the SDIV build is the oracle (gate20)
+global obuf uchar 32
+fn putnum v ulong to void
+put obuf 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put obuf p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put obuf p uchar add x 48
+w = write 1 obuf p sub 32 p
+end
+fn mix h ulong q ulong r ulong to ulong
+a = xor h q
+a = mul a 1099511628211
+a = xor a r
+ret mul a 1099511628211
+end
+fn d_long_1 x long to ulong
+q = div x long 2
+r = rem x long 2
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_2 x long to ulong
+q = div x long 4
+r = rem x long 4
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_3 x long to ulong
+q = div x long 8
+r = rem x long 8
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_7 x long to ulong
+q = div x long 128
+r = rem x long 128
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_12 x long to ulong
+q = div x long 4096
+r = rem x long 4096
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_31 x long to ulong
+q = div x long 2147483648
+r = rem x long 2147483648
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_32 x long to ulong
+q = div x long 4294967296
+r = rem x long 4294967296
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_33 x long to ulong
+q = div x long 8589934592
+r = rem x long 8589934592
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_long_62 x long to ulong
+q = div x long 4611686018427387904
+r = rem x long 4611686018427387904
+ret mix 0 bitcast ulong q bitcast ulong r
+end
+fn d_int_1 x int to ulong
+q = div x int 2
+r = rem x int 2
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_int_2 x int to ulong
+q = div x int 4
+r = rem x int 4
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_int_5 x int to ulong
+q = div x int 32
+r = rem x int 32
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_int_16 x int to ulong
+q = div x int 65536
+r = rem x int 65536
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_int_30 x int to ulong
+q = div x int 1073741824
+r = rem x int 1073741824
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_short_1 x short to ulong
+q = div x short 2
+r = rem x short 2
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_short_3 x short to ulong
+q = div x short 8
+r = rem x short 8
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_short_8 x short to ulong
+q = div x short 256
+r = rem x short 256
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_short_14 x short to ulong
+q = div x short 16384
+r = rem x short 16384
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_byte_1 x byte to ulong
+q = div x byte 2
+r = rem x byte 2
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_byte_2 x byte to ulong
+q = div x byte 4
+r = rem x byte 4
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn d_byte_6 x byte to ulong
+q = div x byte 64
+r = rem x byte 64
+ret mix 0 bitcast ulong long q bitcast ulong long r
+end
+fn h_long x long h ulong to ulong
+g = h
+g = xor mul g 31 d_long_1 x
+g = xor mul g 31 d_long_2 x
+g = xor mul g 31 d_long_3 x
+g = xor mul g 31 d_long_7 x
+g = xor mul g 31 d_long_12 x
+g = xor mul g 31 d_long_31 x
+g = xor mul g 31 d_long_32 x
+g = xor mul g 31 d_long_33 x
+g = xor mul g 31 d_long_62 x
+ret g
+end
+fn h_int x int h ulong to ulong
+g = h
+g = xor mul g 31 d_int_1 x
+g = xor mul g 31 d_int_2 x
+g = xor mul g 31 d_int_5 x
+g = xor mul g 31 d_int_16 x
+g = xor mul g 31 d_int_30 x
+ret g
+end
+fn h_short x short h ulong to ulong
+g = h
+g = xor mul g 31 d_short_1 x
+g = xor mul g 31 d_short_3 x
+g = xor mul g 31 d_short_8 x
+g = xor mul g 31 d_short_14 x
+ret g
+end
+fn h_byte x byte h ulong to ulong
+g = h
+g = xor mul g 31 d_byte_1 x
+g = xor mul g 31 d_byte_2 x
+g = xor mul g 31 d_byte_6 x
+ret g
+end
+fn main to int
+hl = ulong 0
+hi = ulong 0
+hs = ulong 0
+hc = ulong 0
+u = ulong 88172645463325252
+for i ulong 4096
+u = xor u shl u 13
+u = xor u shr u 7
+u = xor u shl u 17
+hl = h_long long sub long and u 9223372036854775807 long 4611686018427387904 hl
+hi = h_int int sub long and u 4294967295 long 2147483648 hi
+hs = h_short short sub long and u 65535 long 32768 hs
+hc = h_byte byte sub long and u 255 long 128 hc
+end
+hl = h_long sub long 0 long 9223372036854775807 hl
+hl = h_long sub sub long 0 long 9223372036854775807 long 1 hl
+hl = h_long long 9223372036854775807 hl
+hi = h_int int sub long 0 long 2147483648 hi
+hi = h_int int 2147483647 hi
+hs = h_short short sub long 0 long 32768 hs
+hs = h_short short 32767 hs
+hc = h_byte byte sub long 0 long 128 hc
+hc = h_byte byte 127 hc
+for j ulong 129
+v = sub long j long 64
+hl = h_long v hl
+hi = h_int int v hi
+hs = h_short short v hs
+hc = h_byte byte v hc
+end
+putnum hl
+putnum hi
+putnum hs
+putnum hc
+ret 0
+end

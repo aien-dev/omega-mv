@@ -10,3 +10,4 @@ RM-batch2	batch 2: function-mode const (#806), flock 197 (#805), peercred/pollfd
 RM-fpvreg	f64/f32 names in V registers (v16+j twins), FMOV immediates, STR/LDR D across calls (#853)	12322	413	83490	0d0062075f6e25f94bd8e82dc24688191fdd2e8cba232fb360594213e4bb2553
 RM-loopchk	OM-2 only: index checks implied by a constant-count for head dropped (nm_bk, ixbound), loop constants hoisted into x20..x27 (hzopen, hzrem after BL), CMP #imm LSL 12; OM-1 code unchanged	12655	425	85105	55b73f0a7f8f99a6191992904c8ba6051f0aba36f2bdcf55ebc009f016365b2e
 RM-hzcap7	OM-2 hoisting stops at x26 (hzcap 7, hzreg): x27 is the program-mode host-args pointer, x28 the stack floor (review D1)	12667	427	85159	13ce76c274d6bdce50613a242faa7cb07aadf65441ceecddf2d06bcfa4e48b69
+RM-sdiv2k	OM-2 signed div / rem by a constant 2^k as ASR/ADD/AND shifts, no SDIV (sdiv2k, sdiv2kt); unsigned and float unchanged	12726	429	85554	d16c580ec48c627b84f046538bb90fd75362d92e6d6a2f5d22d46cbf9a292253

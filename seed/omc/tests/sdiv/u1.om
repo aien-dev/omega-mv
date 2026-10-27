@@ -1,0 +1,31 @@
+om2
+note unsigned div / rem by 2^k stay unsigned (gate20): 2^63+5 and 2^32-3 have the top bit of their width
+note set; Wolfram: Quotient[2^63+5,4] = 2305843009213693953, Mod[2^63+5,8] = 5, Quotient[2^32-3,4] =
+note 1073741823, Mod[2^32-3,8] = 5. Exit 7 when all four hold.
+fn ql x ulong to ulong
+ret div x 4
+end
+fn rl x ulong to ulong
+ret rem x 8
+end
+fn qi x uint to uint
+ret div x uint 4
+end
+fn ri x uint to uint
+ret rem x uint 8
+end
+fn main to int
+if ne ql 9223372036854775813 2305843009213693953
+ret 1
+end
+if ne rl 9223372036854775813 5
+ret 2
+end
+if ne qi uint 4294967293 uint 1073741823
+ret 3
+end
+if ne ri uint 4294967293 uint 5
+ret 4
+end
+ret 7
+end
