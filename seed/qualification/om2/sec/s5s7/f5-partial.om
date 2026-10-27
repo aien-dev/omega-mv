@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, lines 125-126: elements 0..6 written (unroll 7), element 7 not; a get with a
+note non-constant index is error 27 unless all N bits are definitely written.
+om2
+fn f s edit uchar 8 fresh k ulong to ulong
+for i ulong 7 unroll
+put s i 1
+end
+ret ulong get s k
+end
+fn main to int
+a = new uchar 8 0
+putd f a 3
+ret 0
+end

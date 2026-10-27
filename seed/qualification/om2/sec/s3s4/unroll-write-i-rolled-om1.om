@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of unroll-write-i-rolled.om for the pinned compiler 734f0a39: same stdout.
+note Control for unroll-write-i.om: contract section 4 line 89 restricts only unrolled bodies, and an
+note OM-2 unit keeps the OM-1 meaning of everything not stated (lines 5-6). OM-1 accepts a write to the
+note counter of a rolled for (observed under 734f0a39, twin unroll-write-i-rolled-om1.om); the counter
+note is then advanced by the for's increment (OMEGESE 9.8 continue: "the increment of a for, so the
+note counter still advances"). Expected stdout 1 and 3: oracle/s3s4/exp/unroll-write-i-rolled.out.
+note OM-1 unit: this line replaces the om2 line
+fn main to int
+for i ulong 4
+i = add i 1
+pu i
+end
+ret 0
+end

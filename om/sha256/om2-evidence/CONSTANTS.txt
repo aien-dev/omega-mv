@@ -1,0 +1,11 @@
+Provenance of the K and IV hex lines in om/sha256/sha256-om2.om (no value typed by hand)
+Source: aien-dev/om2/qualification seed/qualification/om2/fixtures (tool-computed, see PROVENANCE.txt)
+  66e0d9b40b2605fb5984b25fb10e1ea162dcb7ad9bb593ec8aaf1056a85c5b4e  sha256-k.dec
+  b831ee5e6e1ed07aeb8654d0dbd962f76a3078a89b091453f059ac26f3fea103  sha256-iv.dec
+Commands (bash printf, run 2026-10-25):
+  i=0; while read v; do printf 'put k %d 0x%08x\n' $i $v; i=$((i+1)); done < sha256-k.dec  > k.om
+  i=0; while read v; do printf 'put s %d 0x%08x\n' $i $v; i=$((i+1)); done < sha256-iv.dec > iv.om
+  spliced into the unit at the kinit and iv bodies with awk (whole lines, no edits)
+Round trip, both PASS (ROUNDTRIP-OK, SPLICE-OK):
+  while read a b c h; do printf '%d\n' $h; done < k.om | cmp - sha256-k.dec      (and iv)
+  diff <(grep '^put k ' sha256-om2.om) k.om ; diff <(grep '^put s [0-7] 0x' sha256-om2.om) iv.om

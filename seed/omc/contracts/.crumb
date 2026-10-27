@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T16:57:15Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:eb5a79df27493236e4d4272b5287adf4e672f7442ff6178d1296d62fdbc5afa6",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 55,
+      "generated_at_commit": "00031d2456b2fe1e6ecdee6a0245d4c27b6749d2",
+      "source_tree": "sha256:9b181dd699445d689525b46d182ccf6afc61e44a38e45ed24711bebc45afe07a"
+    }
+  },
+  "name": "contracts",
+  "purpose": "Executable native contract fixtures, C oracle parity, release erasure and enforcement mutant",
+  "schema_version": "1.0.0"
+}

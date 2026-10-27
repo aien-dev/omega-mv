@@ -1,0 +1,8 @@
+note the while bound still counts when every pass continues: trap 4 after 3 passes, exit 104
+fn main to int
+i = ulong 0
+while lt i 3 bound 3
+continue
+end
+ret 0
+end

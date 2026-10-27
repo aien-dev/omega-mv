@@ -1,0 +1,20 @@
+# Controls for the emit and same kinds (Phase B). Verdicts fixed in advance by the group comment;
+# the list must end OM2GATE FAIL (exit 1): it holds FAIL controls and no INVALID ones.
+# --- expected PASS
+emit-sha emit seed/qualification/om2/selftest/cat.om sha:fb3282c020d0a8761c6272dae83837b83d7d1578b5ac71bef18d9e506a23ecad - 0
+emit-any emit seed/qualification/om2/selftest/cat.om any - 0
+emit-err emit seed/qualification/om2/selftest/refuse.om - err:3:11 11
+emit-file emit seed/qualification/om2/selftest/refuse.om - file:seed/qualification/om2/selftest/refuse-file.txt 11
+emit-has emit seed/qualification/om2/selftest/refuse.om - has:seed/qualification/om2/selftest/refuse-has.txt 11
+emit-tok emit seed/qualification/om2/selftest/refuse.om - tok:seed/qualification/om2/selftest/refuse-tok.txt 11
+emit-anyerr emit seed/qualification/om2/selftest/refuse.om - any 11
+same-note same seed/qualification/om2/selftest/cat.om seed/qualification/om2/selftest/cat-note.om
+# --- expected FAIL
+emit-sha-wrong emit seed/qualification/om2/selftest/cat.om sha:0000000000000000000000000000000000000000000000000000000000000000 - 0
+emit-exit-wrong emit seed/qualification/om2/selftest/refuse.om - err:3:11 12
+emit-err-line-wrong emit seed/qualification/om2/selftest/refuse.om - err:4:11 11
+emit-has-wrong emit seed/qualification/om2/selftest/refuse.om - has:seed/qualification/om2/selftest/refuse-has-bad.txt 11
+emit-tok-wrong emit seed/qualification/om2/selftest/refuse.om - tok:seed/qualification/om2/selftest/refuse-tok-bad.txt 11
+emit-stdout-nonempty emit seed/qualification/om2/selftest/cat.om - - 0
+same-differ same seed/qualification/om2/selftest/cat.om seed/qualification/om2/selftest/trap.om
+same-refused same seed/qualification/om2/selftest/cat.om seed/qualification/om2/selftest/refuse.om

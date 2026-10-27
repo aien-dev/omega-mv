@@ -1,0 +1,121 @@
+# seed0.hex -- rung 0 of the Omega seed chain. Written by hand, one 32-bit word per line.
+# Language read by seed0: every 8 hex digits make one 32-bit word, written to stdout little-endian
+# (lowest byte first, as an AArch64 machine stores it). '#' starts a comment to the end of the line.
+# Spaces, tabs and newlines are skipped. Any other character: exit 4. A word cut short at the end: exit 1.
+# Instruction bits from the Arm Architecture Reference Manual for A-profile, DDI 0487 revision M.d
+# (sections C6.2.n named on each line). ELF fields from the System V gABI ELF-64 layout; e_machine 183
+# (EM_AARCH64) from "ELF for the Arm 64-bit Architecture" (IHI 0056).
+#
+# ---- ELF-64 file header, 64 bytes = 16 words (word = 4 file bytes, lowest byte first) ----
+464c457f  # e_ident[0..3] = 7f 'E' 'L' 'F' (magic)
+00010102  # e_ident[4..7] = ELFCLASS64 2, ELFDATA2LSB 1, EV_CURRENT 1, ELFOSABI_NONE 0
+00000000  # e_ident[8..11] = ABI version 0, padding
+00000000  # e_ident[12..15] = padding
+00b70002  # e_type = 2 (ET_EXEC, low half), e_machine = 183 0xb7 (EM_AARCH64, high half)
+00000001  # e_version = 1 (EV_CURRENT)
+00400078  # e_entry low 32 bits: 0x400078 = load address 0x400000 + 120 (first instruction)
+00000000  # e_entry high 32 bits
+00000040  # e_phoff low: program header table at file offset 64
+00000000  # e_phoff high
+00000000  # e_shoff low: no section header table
+00000000  # e_shoff high
+00000000  # e_flags = 0
+00380040  # e_ehsize = 64 (low half), e_phentsize = 56 (high half)
+00000001  # e_phnum = 1 (low half), e_shentsize = 0 (high half)
+00000000  # e_shnum = 0, e_shstrndx = 0
+# ---- ELF-64 program header (one PT_LOAD), 56 bytes = 14 words ----
+00000001  # p_type = 1 (PT_LOAD)
+00000007  # p_flags = 7 (read, write, execute: the work buffer sits in the same mapping)
+00000000  # p_offset low: map from file offset 0
+00000000  # p_offset high
+00400000  # p_vaddr low: 0x400000
+00000000  # p_vaddr high
+00400000  # p_paddr low: 0x400000 (unused on Linux)
+00000000  # p_paddr high
+00000198  # p_filesz low: 408 bytes = whole file (120 header + 72 instructions * 4)
+00000000  # p_filesz high
+00011000  # p_memsz low: 0x11000; the bytes past the file are zero, buffers at 0x410000 and 0x410004
+00000000  # p_memsz high
+00001000  # p_align low: 4096 (page size)
+00000000  # p_align high
+# ---- code, 72 words, file offset 0x78 = address 0x400078. Word index in [brackets]. ----
+# registers: x9 = 10, x25 = 1, x23 = input byte buffer 0x410000, x24 = output word buffer 0x410004,
+#            x19 = word being built, x20 = digits in it, x21 = 1 while inside a comment
+d2800149  # [0]  movz x9, #10                  C6.2.285 MOVZ (64-bit)
+d2800039  # [1]  movz x25, #1                  C6.2.285 MOVZ
+d2a00837  # [2]  movz x23, #0x41, lsl #16      C6.2.285 MOVZ (hw=1): x23 = 0x410000
+d2800098  # [3]  movz x24, #4                  C6.2.285 MOVZ
+f2a00838  # [4]  movk x24, #0x41, lsl #16      C6.2.283 MOVK (hw=1): x24 = 0x410004
+d2800013  # [5]  movz x19, #0                  C6.2.285 MOVZ
+d2800014  # [6]  movz x20, #0                  C6.2.285 MOVZ
+d2800015  # [7]  movz x21, #0                  C6.2.285 MOVZ
+# loop: read one byte
+d2800000  # [8]  movz x0, #0  (fd 0, stdin)    C6.2.285 MOVZ
+aa1703e1  # [9]  orr x1, xzr, x23 (mov x1,x23) C6.2.302 ORR (shifted register), alias MOV C6.2.282
+d2800022  # [10] movz x2, #1  (one byte)       C6.2.285 MOVZ
+d28007e8  # [11] movz x8, #63 (Linux read)     C6.2.285 MOVZ
+d4000001  # [12] svc #0                        C6.2.466 SVC
+f100001f  # [13] subs xzr, x0, #0 (cmp x0, #0) C6.2.464 SUBS (immediate), alias CMP C6.2.96
+54000620  # [14] b.eq +49 -> [63] eof          C6.2.34 B.cond, cond 0000 EQ (Table C1-1)
+5400068b  # [15] b.lt +52 -> [67] read failed  C6.2.34 B.cond, cond 1011 LT
+394002e0  # [16] ldrb w0, [x23]                C6.2.220 LDRB (immediate), unsigned offset 0
+b40000b5  # [17] cbz x21, +5 -> [22]           C6.2.78 CBZ (64-bit)
+# inside a comment: only a newline ends it
+7100281f  # [18] subs wzr, w0, #10 (cmp '\n')  C6.2.464 SUBS (immediate) 32-bit, alias CMP
+54fffea1  # [19] b.ne -11 -> [8] loop          C6.2.34 B.cond, cond 0001 NE
+d2800015  # [20] movz x21, #0                  C6.2.285 MOVZ
+17fffff3  # [21] b -13 -> [8] loop             C6.2.35 B
+# not in a comment
+71008c1f  # [22] subs wzr, w0, #35 (cmp '#')   C6.2.464 SUBS (immediate), alias CMP
+54000061  # [23] b.ne +3 -> [26]               C6.2.34 B.cond NE
+d2800035  # [24] movz x21, #1                  C6.2.285 MOVZ
+17ffffef  # [25] b -17 -> [8] loop             C6.2.35 B
+7100c001  # [26] subs w1, w0, #48 ('0')        C6.2.464 SUBS (immediate)
+7100283f  # [27] subs wzr, w1, #10             C6.2.464 SUBS (immediate), alias CMP
+54000203  # [28] b.lo +16 -> [44] digit 0-9    C6.2.34 B.cond, cond 0011 CC/LO
+71018401  # [29] subs w1, w0, #97 ('a')        C6.2.464 SUBS (immediate)
+7100183f  # [30] subs wzr, w1, #6              C6.2.464 SUBS (immediate), alias CMP
+54000183  # [31] b.lo +12 -> [43] a-f          C6.2.34 B.cond LO
+71010401  # [32] subs w1, w0, #65 ('A')        C6.2.464 SUBS (immediate)
+7100183f  # [33] subs wzr, w1, #6              C6.2.464 SUBS (immediate), alias CMP
+54000123  # [34] b.lo +9 -> [43] A-F           C6.2.34 B.cond LO
+7100801f  # [35] subs wzr, w0, #32 (space)     C6.2.464 SUBS (immediate), alias CMP
+54fffc80  # [36] b.eq -28 -> [8] loop          C6.2.34 B.cond EQ
+7100281f  # [37] subs wzr, w0, #10 (newline)   C6.2.464 SUBS (immediate), alias CMP
+54fffc40  # [38] b.eq -30 -> [8] loop          C6.2.34 B.cond EQ
+7100241f  # [39] subs wzr, w0, #9 (tab)        C6.2.464 SUBS (immediate), alias CMP
+54fffc00  # [40] b.eq -32 -> [8] loop          C6.2.34 B.cond EQ
+d2800080  # [41] movz x0, #4 (bad character)   C6.2.285 MOVZ
+1400001c  # [42] b +28 -> [70] exit            C6.2.35 B
+# a hex digit: x1 holds its value (letters get +10 first)
+0b090021  # [43] add w1, w1, w9                C6.2.6 ADD (shifted register) 32-bit, no shift
+8b130273  # [44] add x19, x19, x19             C6.2.6 ADD (shifted register): x19 * 2
+8b130273  # [45] add x19, x19, x19             C6.2.6 ADD: x19 * 4
+8b130273  # [46] add x19, x19, x19             C6.2.6 ADD: x19 * 8
+8b130273  # [47] add x19, x19, x19             C6.2.6 ADD: x19 * 16
+aa010273  # [48] orr x19, x19, x1              C6.2.302 ORR (shifted register), no shift
+8b190294  # [49] add x20, x20, x25             C6.2.6 ADD: one more digit
+f100229f  # [50] subs xzr, x20, #8             C6.2.464 SUBS (immediate), alias CMP
+54fffaa1  # [51] b.ne -43 -> [8] loop          C6.2.34 B.cond NE
+# eight digits: write the word
+b9000313  # [52] str w19, [x24]                C6.2.415 STR (immediate) 32-bit, unsigned offset 0
+d2800020  # [53] movz x0, #1  (fd 1, stdout)   C6.2.285 MOVZ
+aa1803e1  # [54] orr x1, xzr, x24 (mov x1,x24) C6.2.302 ORR (shifted register), alias MOV
+d2800082  # [55] movz x2, #4  (four bytes)     C6.2.285 MOVZ
+d2800808  # [56] movz x8, #64 (Linux write)    C6.2.285 MOVZ
+d4000001  # [57] svc #0                        C6.2.466 SVC
+f100101f  # [58] subs xzr, x0, #4              C6.2.464 SUBS (immediate), alias CMP
+54000141  # [59] b.ne +10 -> [69] write failed C6.2.34 B.cond NE
+d2800013  # [60] movz x19, #0                  C6.2.285 MOVZ
+d2800014  # [61] movz x20, #0                  C6.2.285 MOVZ
+17ffffca  # [62] b -54 -> [8] loop             C6.2.35 B
+# eof: exit 0, or 1 if a word was cut short
+d2800000  # [63] movz x0, #0                   C6.2.285 MOVZ
+b40000d4  # [64] cbz x20, +6 -> [70] exit      C6.2.78 CBZ (64-bit)
+d2800020  # [65] movz x0, #1                   C6.2.285 MOVZ
+14000004  # [66] b +4 -> [70] exit             C6.2.35 B
+d2800040  # [67] movz x0, #2 (read failed)     C6.2.285 MOVZ
+14000002  # [68] b +2 -> [70] exit             C6.2.35 B
+d2800060  # [69] movz x0, #3 (write failed)    C6.2.285 MOVZ
+d2800ba8  # [70] movz x8, #93 (Linux exit)     C6.2.285 MOVZ
+d4000001  # [71] svc #0                        C6.2.466 SVC

@@ -1,0 +1,7 @@
+fn s_eof to void
+if ne get curret 0 0
+fail 15
+end
+if eq get nf 0 0
+fail 16
+end

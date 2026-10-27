@@ -1,0 +1,98 @@
+perm rotary  64: bijection, pairs, rope-by-permutation max abs diff 8.31e-08 over 50 positions
+perm rotary 256: bijection, pairs, rope-by-permutation max abs diff 1.08e-07 over 50 positions
+perm rotary   2: bijection, pairs, rope-by-permutation max abs diff 7.09e-08 over 50 positions
+perm rotary 128: bijection, pairs, rope-by-permutation max abs diff 1.05e-07 over 50 positions
+perm rotary  32: bijection, pairs, rope-by-permutation max abs diff 1.05e-07 over 50 positions
+codegen depth 1: 873 instructions, 96 registers (declared 104, 256 threads -> 26624 of 65536)
+codegen depth 2: 881 instructions, 100 registers (declared 104, 256 threads -> 26624 of 65536)
+codegen depth 3: 889 instructions, 104 registers (declared 112, 256 threads -> 28672 of 65536)
+codegen depth 4: 897 instructions, 108 registers (declared 112, 256 threads -> 28672 of 65536)
+gpu_decode_attn256_test: 58 checks, 0 failed: PASS
+sim context 1                                          depth 1: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 7                                          depth 2: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 7, sharp q (x4)                            depth 4: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 7, full rope (rotary 256)                  depth 4: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 256 (full chunk, 1 split)                  depth 4: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 257 (2 splits, last holds one position)    depth 4: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 301 (2 splits)                             depth 3: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 701 (3 splits)                             depth 4: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim context 701 (per_split 512: 2 chunks per CTA)      depth 2: ok bad=0 worst=0.000 rows: ok (0 one-ulp k flips)
+sim mutant 1 at context 301: caught (bad=5719 worst=12.743 rows: k slot 0 (model dim 0) chip bfd3 ref 3b51)
+sim mutant 2 at context 301: caught (bad=5674 worst=36.957 rows: ok (0 one-ulp k flips))
+sim mutant 3 at context 301: caught (bad=2028 worst=10.895 rows: v[0] chip 0000 ref 3f41)
+sim mutant 4 at context 301: caught (bad=4068 worst=27.701 rows: ok (0 one-ulp k flips))
+sim mutant 5 at context 301: caught (bad=2979 worst=inf rows: ok (0 one-ulp k flips))
+sim: 10975936 warp issues in total
+gpu_decode_attn256_test: 14 checks, 0 failed: PASS
+PASS timing 1x2048x8192 upload_ms=149.1 ok_calls=100 median_ms=0.209 p90_ms=0.212 min_ms=0.169 max_ms=3.471 chip_ns_mean=252944 grid=1024x1 e2e_first=2.36603e-07 e2e_last=2.36603e-07 repeat_mismatch=0
+PASS timing 1x8192x2048 upload_ms=106.3 ok_calls=100 median_ms=0.210 p90_ms=0.311 min_ms=0.202 max_ms=3.161 chip_ns_mean=258955 grid=256x1 e2e_first=5.21488e-07 e2e_last=5.21488e-07 repeat_mismatch=0
+PASS: 4 checks, 0 failed
+baseline exit 0 (recorded)
+cache alloc (1 layer, 32768 positions, 128 MiB): rc=OK 165.2 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=4 kv_bytes=4096 fill=0.0ms chip_med=52.1us (0.1 GB/s) call_med=55.4us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=4 kv_bytes=28672 fill=0.0ms chip_med=58.0us (0.5 GB/s) call_med=60.9us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=4 kv_bytes=1048576 fill=0.1ms chip_med=109.8us (9.5 GB/s) call_med=112.9us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=2x4 per_split=256 depth=4 kv_bytes=1232896 fill=0.1ms chip_med=120.0us (10.3 GB/s) call_med=122.6us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=4815 worst=17.399)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=5666 worst=40.991)
+chip context 301 sharp q      mutant 3: caught (rc=OK bad=899 worst=3.363)
+chip context 301 sharp q      mutant 4: caught (rc=OK bad=2752 worst=30.582)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=2937 worst=78.730)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=4x4 per_split=256 depth=4 kv_bytes=4194304 fill=0.2ms chip_med=144.0us (29.1 GB/s) call_med=146.5us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=16x4 per_split=256 depth=4 kv_bytes=16777216 fill=1.1ms chip_med=339.6us (49.4 GB/s) call_med=342.4us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=32x4 per_split=256 depth=4 kv_bytes=33554432 fill=2.8ms chip_med=619.7us (54.1 GB/s) call_med=624.5us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=128x4 per_split=256 depth=4 kv_bytes=134217728 fill=7.1ms chip_med=2103.2us (63.8 GB/s) call_med=2107.7us reps=20
+gpu_decode_attn256_test: 30 checks, 0 failed: PASS
+cache alloc (1 layer, 32768 positions, 128 MiB): rc=OK 170.4 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=4 kv_bytes=4096 fill=0.0ms chip_med=50.4us (0.1 GB/s) call_med=52.9us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=4 kv_bytes=28672 fill=0.0ms chip_med=54.9us (0.5 GB/s) call_med=57.6us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=4 kv_bytes=1048576 fill=0.1ms chip_med=106.2us (9.9 GB/s) call_med=108.8us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=2x4 per_split=256 depth=4 kv_bytes=1232896 fill=0.1ms chip_med=121.6us (10.1 GB/s) call_med=124.9us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=4815 worst=17.399)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=5666 worst=40.991)
+chip context 301 sharp q      mutant 3: caught (rc=OK bad=899 worst=3.363)
+chip context 301 sharp q      mutant 4: caught (rc=OK bad=2752 worst=30.582)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=2937 worst=78.730)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=4x4 per_split=256 depth=4 kv_bytes=4194304 fill=0.3ms chip_med=125.5us (33.4 GB/s) call_med=128.4us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=16x4 per_split=256 depth=4 kv_bytes=16777216 fill=0.9ms chip_med=322.3us (52.1 GB/s) call_med=325.1us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=32x4 per_split=256 depth=4 kv_bytes=33554432 fill=2.5ms chip_med=594.6us (56.4 GB/s) call_med=597.8us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=128x4 per_split=256 depth=4 kv_bytes=134217728 fill=7.6ms chip_med=2107.0us (63.7 GB/s) call_med=2112.8us reps=20
+gpu_decode_attn256_test: 30 checks, 0 failed: PASS
+no-evict exit 0 (informational)
+cache alloc (1 layer, 32768 positions, 128 MiB): rc=OK 177.4 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=1 kv_bytes=4096 fill=0.0ms chip_med=49.0us (0.1 GB/s) call_med=51.6us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=1 kv_bytes=28672 fill=0.0ms chip_med=56.4us (0.5 GB/s) call_med=59.2us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=256 depth=1 kv_bytes=1048576 fill=0.1ms chip_med=107.4us (9.8 GB/s) call_med=110.2us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=2x4 per_split=256 depth=1 kv_bytes=1232896 fill=0.1ms chip_med=122.5us (10.1 GB/s) call_med=125.6us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=4815 worst=17.399)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=5666 worst=40.991)
+chip context 301 sharp q      mutant 3: caught (rc=OK bad=899 worst=3.363)
+chip context 301 sharp q      mutant 4: caught (rc=OK bad=2752 worst=30.582)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=2937 worst=78.730)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=4x4 per_split=256 depth=1 kv_bytes=4194304 fill=0.4ms chip_med=148.7us (28.2 GB/s) call_med=151.5us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=16x4 per_split=256 depth=1 kv_bytes=16777216 fill=1.3ms chip_med=312.8us (53.6 GB/s) call_med=315.7us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=32x4 per_split=256 depth=1 kv_bytes=33554432 fill=1.8ms chip_med=591.1us (56.8 GB/s) call_med=594.1us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=128x4 per_split=256 depth=1 kv_bytes=134217728 fill=11.4ms chip_med=1863.3us (72.0 GB/s) call_med=1866.0us reps=20
+gpu_decode_attn256_test: 30 checks, 0 failed: PASS
+depth 1 exit 0 (informational)
+cache alloc (1 layer, 32768 positions, 128 MiB): rc=OK 183.8 ms ()
+chip context 1                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=4096 fill=0.0ms chip_med=52.4us (0.1 GB/s) call_med=55.8us reps=20
+chip context 7                rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=28672 fill=0.0ms chip_med=56.8us (0.5 GB/s) call_med=59.9us reps=20
+chip context 256              rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=1048576 fill=0.1ms chip_med=105.6us (9.9 GB/s) call_med=108.3us reps=20
+chip context 301 sharp q      rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=1232896 fill=0.1ms chip_med=131.8us (9.4 GB/s) call_med=134.6us reps=20
+chip context 301 sharp q      mutant 1: caught (rc=OK bad=4815 worst=17.399)
+chip context 301 sharp q      mutant 2: caught (rc=OK bad=5666 worst=40.991)
+chip context 301 sharp q      mutant 3: caught (rc=OK bad=899 worst=3.363)
+chip context 301 sharp q      mutant 4: inert (1 split, the combine is not exercised)
+chip context 301 sharp q      mutant 5: caught (rc=OK bad=2969 worst=86.774)
+chip context 1024             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=1x4 per_split=1024 depth=4 kv_bytes=4194304 fill=0.3ms chip_med=308.9us (13.6 GB/s) call_med=312.7us reps=20
+chip context 4096             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=4x4 per_split=1024 depth=4 kv_bytes=16777216 fill=1.2ms chip_med=362.7us (46.3 GB/s) call_med=365.3us reps=20
+chip context 8192             rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=8x4 per_split=1024 depth=4 kv_bytes=33554432 fill=1.5ms chip_med=460.9us (72.8 GB/s) call_med=463.6us reps=20
+chip context 32768            rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=32x4 per_split=1024 depth=4 kv_bytes=134217728 fill=5.8ms chip_med=1412.2us (95.0 GB/s) call_med=1414.9us reps=20
+gpu_decode_attn256_test: 29 checks, 0 failed: PASS
+per-split 1024 exit 0 (informational)
+cache alloc (1 layer, 131072 positions, 512 MiB): rc=OK 532.1 ms ()
+chip context 131072           rc=OK        bad=0 worst=0.000 rows=ok (0 one-ulp k flips) grid=512x4 per_split=256 depth=4 kv_bytes=536870912 fill=42.4ms chip_med=8691.6us (61.8 GB/s) call_med=8704.7us reps=5
+gpu_decode_attn256_test: 4 checks, 0 failed: PASS
+max-pos 131072 exit 0 (informational)
+GPU_DECODE_ATTN256_CHIP: PASS

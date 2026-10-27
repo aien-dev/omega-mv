@@ -1,0 +1,288 @@
+call sites (built dirs): 894  files: 165
+by fn: {'hash': 211, 'init': 163, 'update': 353, 'final': 167}
+by top dir: {'om': 17, 'research': 29, 'src': 575, 'tests': 217, 'tools': 56}
+evidence snapshots (not built): 25 in 21 files
+definitions/declarations skipped: [('src/sha256.c', 50), ('src/sha256.c', 55), ('src/sha256.c', 69), ('src/sha256.c', 74), ('src/sha256.h', 32), ('src/sha256.h', 33), ('src/sha256.h', 34), ('src/sha256.h', 35)]
+== A. sha256_hash: digest base == data base, or digest derived from data
+  src/omega_blackwell_codegen.c:1286: hash(kernel->code, kernel->code_size, kernel->code_digest)
+  src/omega_blackwell_gates.c:824: hash(k_mut.code, k_mut.code_size, k_mut.code_digest)
+  src/omega_gpu_attention_api.c:739: hash(kernel->code, kernel->code_size, kernel->code_digest)
+  src/omega_gpu_elementwise_api.c:869: hash(kernel->code, kernel->code_size, kernel->code_digest)
+  src/omega_program.c:777: hash(task, sizeof(SynthesisTask) - OMEGA_ID_BYTES, task->task_id.bytes)
+  src/physics0/ladder/pd0_fmt.c:54: hash(out, o, out + o)
+  src/physics0/ladder/pd0_fmt.c:336: hash(o, PD0_LEDG_HDR + plen + PD0_HASH, o + PD0_LEDG_HDR + plen + PD0_HASH)
+  src/runtime/rx_costmodel.c:487: hash(out, n, out + n)
+  src/runtime/rx_jspace.c:1663: hash(h, 96, h + 96)
+  src/tensor/omega_tensor_store.c:307: hash(out, HDR_SUM, out + HDR_SUM)
+  src/tensor/omega_tensor_store.c:322: hash(out, REC_SUM, out + REC_SUM)
+  tests/runtime/rx_c4_requal.c:788: hash(m + 128, bl, m + 64)
+  tests/runtime/rx_c4_requal.c:789: hash(m, 96, m + 96)
+  tests/runtime/rx_costmodel_unit.c:434: hash(b, n - 32, b + n - 32)
+  tests/runtime/rx_jspace_prod.c:828: hash(h, 96, h + 96)
+  tests/runtime/rx_jspace_prod.c:885: hash(f + 128, bl, f + 64)
+  tests/runtime/rx_jspace_prod.c:886: hash(f, 96, f + 96)
+  tests/runtime/rx_sem_incremental.c:183: hash(d, 32, d)
+  tests/test_omega_tensor_store.c:534: hash(h, 24, h + 24)
+  tests/test_omega_tensor_store.c:551: hash(r, 168, r + 168)
+  tests/vc_fixture.h:55: hash(f->ir, f->ir_len, f->digest)
+== B. sha256_final: digest arg mentions the ctx expression
+== C. sha256_update: data arg mentions the ctx expression
+== D. lifecycle: update/final on a ctx after its final with no init between (textual), or final in a loop whose body has no init of that ctx
+== D2. finals in functions that do not init that ctx (wrappers; callers reviewed by hand)
+  src/fabric/fab_loopback.c:108: final(c) with no init(c) in the same function
+  src/fabric/fabric.c:498: final(ev) with no init(ev) in the same function
+  src/reservoir/omega_reservoir.c:217: final(c) with no init(c) in the same function
+  src/reservoir/omega_reservoir.c:613: final(c) with no init(c) in the same function
+  src/reservoir/omega_reservoir.c:631: final(c) with no init(c) in the same function
+  src/reservoir/omega_reservoir.c:653: final(c) with no init(c) in the same function
+== E. sha256_ctx object names, struct members, copies/compares
+  copy-init? src/fabric/fab_loopback.c:107: sha256_ctx c = l->transcript
+  copy-init? src/osh/host/osh_journal.c:81: sha256_ctx h = *hp
+  struct members of type sha256_ctx:
+    src/fabric/fab_loopback.h:62: member sha256_ctx transcript;
+    src/fabric/fabric.h:277: member sha256_ctx event_hash;
+  ctx by-value names per file: 111  pointer names: 17
+  assign research/atemporal/at0/evaluator/src/at0e_text.c:32: uint8_t c = b[i];
+  assign research/atemporal/at0/evaluator/src/at0e_text.c:105: char c = s[i];
+  assign research/atemporal/at0/evaluator/src/at0e_text.c:127: for (int i = 0; i < 16; i++) { char c = s16[i]; v = (v << 4) | (uint64_t)(c <= ' ' ? c - ' ' : c - ' ' + 10); }
+  assign research/atemporal/at0/integration/at0_assemble.c:237: int k = atoi(t[1]), s = axis_index(t[2], t[3]); int isref = t[0][0] == ' ';
+  assign research/atemporal/at0/integration/at0_assemble.c:281: for (int s = 0; s < 6; s++) if (V->pauli[k][s].kind == V_NONFINITE || V->ref[k][s].kind == V_NONFINITE) nonfin = 1;
+  assign research/atemporal/at0/integration/at0_assemble.c:305: for (int s = 0; s < 6; s++) { p[np++] = &V->pauli[k][s]; p[np++] = &V->ref[k][s]; }
+  assign research/atemporal/at0/integration/at0_assemble.c:336: for (int s = 0; s < 6; s++) {
+  assign research/atemporal/at0/integration/at0_assemble.c:47: uint64_t c = 0;
+  assign research/atemporal/at0/integration/at0_assemble.c:52: uint64_t c = 1;
+  assign research/atemporal/at0/integration/at0_assemble.c:66: uint64_t c = 0;
+  assign research/atemporal/at0/integration/at0_assemble.c:71: uint64_t c = m;
+  assign research/atemporal/at0/integration/at0_assemble.c:128: char c = vt[i]; int d = (c >= ' ' && c <= ' ') ? c - ' ' : (c >= ' ' && c <= ' ') ? c - ' ' + 10 : -1;
+  assign src/ans/ans_encode.c:241: cd c = { buf, cap, 0, 0, 0, 0 };                                                       \
+  assign src/ans/ans_encode.c:255: cd c = { tmp, 0, len, 0, 1, 0 };                                                       \
+  assign src/checker2/checker2_main.c:72: char c = s[2 * i + k];
+  assign src/compiler/osc_ir.c:829: in->dst = in->a = in->b = in->c = in->blk_t = in->blk_f = in->callee = -1;
+  assign src/compiler/osc_ir.c:844: case OSC_I_HFREE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); break;
+  assign src/compiler/osc_ir.c:845: case OSC_I_HLOAD: in->dst = rvr(r); in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); break;
+  assign src/compiler/osc_ir.c:846: case OSC_I_HSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); in->args[0] = rvr(r); in->nargs = 1; break;
+  assign src/compiler/osc_ir.c:848: case OSC_I_STORE: case OSC_I_SSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); break;
+  assign src/compiler/osc_ir.c:850: case OSC_I_FSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); in->imm = rle(r, 1); break;
+  memset src/estimation/est_pred.c:651: memset(c, 0, sizeof *c)
+  assign src/estimation/est_pred.c:39: double c = 1.0, d = 1.0 - qab * x / qap;
+  assign src/estimation/est_pred.c:48: c = 1.0 + aa / c;
+  assign src/estimation/est_pred.c:49: if (fabs(c) < BETACF_FPMIN) c = BETACF_FPMIN;
+  assign src/estimation/est_pred.c:55: c = 1.0 + aa / c;
+  assign src/estimation/est_pred.c:56: if (fabs(c) < BETACF_FPMIN) c = BETACF_FPMIN;
+  assign src/estimation/est_pred.c:544: double c = a->param[3] * sqrt(S);
+  assign src/estimation/est_pred.c:635: double c = 0.0;
+  assign src/estimation/est_types.c:92: double c = A[i * n + j];
+  assign src/estimation/est_types.c:109: double c = w[i * n + k];
+  assign src/osh/host/osh_journal.c:104: *hp = h;
+  assign src/polyglot/omx_bench.c:197: for (int c = 0; c < n; c++) {
+  assign src/polyglot/omx_bench.c:322: unsigned char c = (unsigned char)*s;
+  memset src/reservoir/omega_reservoir.c:241: memset(&c, 0, sizeof c)
+  assign src/runtime/aien_machine_id.h:177: uint64_t h = 0;
+  assign src/runtime/aien_machine_id.h:178: for (unsigned i = 0; i < 8; i++) h = (h << 8) | m->id[i];
+  assign src/runtime/rx_argus.c:482: uint64_t h = now_ns() - g.hold_start;
+  memcpy src/runtime/rx_compose.c:53: memcpy(out + i, &h, n - i < 8 ? n - i : 8)
+  memset src/runtime/rx_compose.c:454: memset(&h, 0, sizeof h)
+  memset src/runtime/rx_compose.c:476: memset(&h, 0, sizeof h)
+  memset src/runtime/rx_compose.c:495: memset(&h, 0, sizeof h)
+  memset src/runtime/rx_compose.c:576: memset(&h, 0, sizeof h)
+  memset src/runtime/rx_compose.c:660: memset(&h, 0, sizeof h)
+  assign src/runtime/rx_compose.c:48: uint64_t h = rxc_mix(token ^ 0xC0A1E5CEull);
+  assign src/runtime/rx_compose.c:52: h = rxc_mix(h + p + i);
+  assign src/runtime/rx_cortex.c:482: const CxObject *c = cx_get(s, candidate);
+  assign src/runtime/rx_cortex.c:576: RecallCtx *c = user;
+  assign src/runtime/rx_fusion.c:343: ObsCtx *c = vc;
+  assign src/runtime/rx_fusion.c:1028: FindCtx *c = vc;
+  assign src/runtime/rx_generation.c:1408: void *ctx = next->done_ctx;
+  memset src/runtime/rx_jspace.c:1649: memset(h, 0, sizeof h)
+  assign src/runtime/rx_jspace.c:1172: uint64_t h = 0;
+  assign src/runtime/rx_jspace.c:208: JsReal *c = s->slab[slot / JS_SLAB_CHUNK];
+  assign src/runtime/rx_jspace.c:217: JsReal *c = calloc(JS_SLAB_CHUNK, sizeof *c);
+  assign src/runtime/rx_jspace.c:237: const JsReal *c = s->real_hw / JS_SLAB_CHUNK < s->slab_chunks ? s->slab[s->real_hw / JS_SLAB_CHUNK] : NULL;
+  assign src/runtime/rx_jspace.c:486: JsReal *c = r;
+  assign src/runtime/rx_jspace.c:496: c = c->parent_realization;
+  assign src/runtime/rx_jspace.c:665: JsReal *c = s->slab[k];
+  assign src/runtime/rx_jspace.c:938: const JsCosts *c = &s->costs;
+  assign src/runtime/rx_jspace.c:985: const JsCosts *c = &s->costs;
+  assign src/runtime/rx_jspace.c:1247: JsCosts *c = &s->costs;
+  assign src/runtime/rx_jspace.c:1520: size_t c = b->cap ? b->cap : 4096;
+  assign src/runtime/rx_living.c:445: const RxCallerCred *c = rx_caller_find(p->keys, RX_LIVING_PROMOTE_SUBJ);
+  memset src/runtime/rx_plan.c:347: memset(c, 0, sizeof *c)
+  memset src/runtime/rx_plan.c:351: memset(c, 0, sizeof *c)
+  assign src/runtime/rx_plan_arrange.c:177: uint32_t c = order[i];
+  assign src/runtime/rx_route.c:92: double c = p + z * z / (2 * nn);
+  assign src/runtime/rx_route.c:402: const RxCogCost *c = &r->real[ix[i]].resource_cost_model[op];
+  assign src/runtime/rx_route.c:678: uint32_t c = failed[k] ? 0 : conf[k];
+  assign src/runtime/rx_semcomm.c:171: const RxCrumb *c = rx_world_crumb(w, e->crumb);
+  assign src/runtime/rx_world.c:299: const RxCrumb *c = &w->crumbs[id - 1];
+  assign src/runtime/rx_world.c:2450: const RxCallerCred *c = rx_caller_find(keys, d->subject);
+  memset src/searchtrace/st_holdout.c:285: memset(&c, 0, sizeof c)
+  assign src/searchtrace/st_holdout.c:69: char c = s[i];
+  memcpy src/tensor/omega_tensor.c:372: memcpy(&h, p, 2)
+  assign src/tensor/omega_tensor.c:608: uint16_t *h = malloc(n * sizeof(uint16_t));
+  assign src/train/tg_store.c:113: char c = s[i]; int v;
+  memset src/turing/field.c:161: memset(c, 0, sizeof *c)
+  assign src/turing/field.c:643: for (size_t c = 0; c < d->ncand; ++c) in_cand |= turing_digest_eq(&d->cand[c], &st->ev[k].spec_id);
+  assign src/turing/tc_pstream.c:91: char c = hex[i];
+  assign src/turing/ty_energy.c:93: for (int c = 0; c < TY_NCH; c++)
+  assign src/turing/ty_energy.c:95: for (int c = 0; c < TY_NCH; c++)
+  assign src/turing/ty_energy.c:101: ty_energy_status c = check_condition(w);
+  assign src/turing/ty_qrecord.c:568: int c = 0;
+  assign src/turing/ty_qrecord.c:616: size_t pos = 0, c = 0;
+  assign src/turing/ty_qrecord.c:634: int c = strcmp(a->cell, b->cell);
+  assign src/turing/ty_qrecord.c:656: size_t pos = 0, c = 0;
+  assign src/turing/ty_qrecord.c:703: int c = memcmp(ka, kb, m);
+  assign src/turing/ty_qrecord.c:704: if (c == 0) c = a < b ? -1 : (a > b ? 1 : 0);
+  assign src/turing/ty_record.c:51: char c = hex[2 * i + j];
+  assign tests/algebra/bench_select.c:152: for (size_t c = 0; c < d[0].ncand; c++) {
+  assign tests/brownian/brw_active_dev0.c:94: double u = u_half(r), p = exp(-lam), c = p;
+  assign tests/brownian/brw_active_dev0.c:393: for (int c = C_DRIFT; c <= C_OU; c++)
+  assign tests/brownian/brw_active_dev0.c:461: for (int c = 0, wi = 0; c < NCLS; c++)
+  assign tests/brownian/brw_active_dev0.c:522: for (int c = 0; c < 3; c++)
+  assign tests/physics0/pd1/pd1_run.c:222: for (int i = 0; i < nc; i++) { const pd0l_candidate *c = pd0_learner_candidate(L, i); printf("                          
+  assign tests/polyglot/bench_polyglot.c:154: char *a = strtok(line, "  "), *b = strtok(NULL, "  "), *c = strtok(NULL, "  "), *d = strtok(NULL, "");
+  assign tests/polyglot/bench_polyglot.c:662: const omx_candidate *c = ci < g_nc ? omx_candidate_get(ci) : NULL;
+  assign tests/polyglot/bench_polyglot.c:1040: const omx_candidate *c = omx_candidate_get(ci);
+  assign tests/q36_codegen_hash.c:42: for (int c = 1; c <= 2; c++) {
+  memset tests/runtime/rx_action_graph.c:457: memset(&c, 0, sizeof c)
+  assign tests/runtime/rx_action_graph.c:300: c = node_pure(g, OP_MUL, b, -1, 3);
+  assign tests/runtime/rx_action_graph.c:331: c = node_pure(g, OP_MUL, a, -1, 2);
+  assign tests/runtime/rx_action_graph.c:432: c = node_pure(g, OP_ADD, a, ph, 0);
+  assign tests/runtime/rx_action_graph.c:470: AgConstraints c = open_constraints();
+  assign tests/runtime/rx_action_graph.c:733: int c = N(&x, AG_CONST, AG_T_U64);
+  assign tests/runtime/rx_action_graph.c:799: AgConstraints c = open_constraints();
+  assign tests/runtime/rx_action_graph.c:803: c = open_constraints();
+  assign tests/runtime/rx_action_graph.c:1096: int c = N(&f, AG_CONST, AG_T_U64);
+  assign tests/runtime/rx_action_graph.c:1125: AgConstraints c = open_constraints();
+  assign tests/runtime/rx_action_graph.c:1204: for (long c = 0; c < n; c++) {
+  assign tests/runtime/rx_capability_query.c:430: for (CqCatalog *c = &a; c; c = c == &a ? &b : NULL) {
+  assign tests/runtime/rx_capability_query.c:430: for (CqCatalog *c = &a; c; c = c == &a ? &b : NULL) {
+  assign tests/runtime/rx_capability_query.c:1097: for (long c = 0; c < n; c++) {
+  assign tests/runtime/rx_cognitive_routing.c:144: for (long c = n - 1; c >= 0; c--) {
+  assign tests/runtime/rx_cognitive_routing.c:812: const RxCogCost *c = &x->resource_cost_model[op];
+  assign tests/runtime/rx_cognitive_routing.c:976: const RxCogCost *c = &R.prof[i].resource_cost_model[op];
+  assign tests/runtime/rx_empirical_optimizer.c:171: uint64_t c = 600000ull / ((uint64_t)M * N + 64u);
+  assign tests/runtime/rx_empirical_optimizer.c:172: if (c < 3) c = 3;
+  assign tests/runtime/rx_empirical_optimizer.c:173: if (c > 3000) c = 3000;
+  assign tests/runtime/rx_empirical_optimizer.c:186: for (uint32_t c = 0; c < j->calls; c++)
+  assign tests/runtime/rx_empirical_optimizer.c:205: for (uint32_t c = 0; c < per; c++)
+  assign tests/runtime/rx_empirical_optimizer.c:254: for (long c = 0; c < n && c < 64; c++) {
+  assign tests/runtime/rx_empirical_optimizer.c:298: for (int c = 0; c < ncpu && c < 64; c++) {
+  assign tests/runtime/rx_empirical_optimizer.c:329: double a = 0, b = 0, c = 0;
+  assign tests/runtime/rx_empirical_optimizer.c:331: if (fscanf(fp, "           ", &a, &b, &c) != 3) a = b = c = 0;
+  assign tests/runtime/rx_empirical_optimizer.c:434: for (long c = n - 1; c >= 0 && g_press_n < PRESS_THREADS; c--) {
+  assign tests/runtime/rx_empirical_optimizer.c:567: for (uint32_t c = 0; c < j->calls; c++) exec_arm(arm, g_A, g_x, g_y, j->M, j->N);
+  assign tests/runtime/rx_empirical_optimizer.c:1016: for (uint32_t c = 0; c < RX_CM_CELLS; c++) {
+  assign tests/runtime/rx_empirical_optimizer.c:1136: int c = fgetc(fp);
+  assign tests/runtime/rx_empirical_optimizer.c:1249: for (uint32_t c = 0; c < jobs[i].calls; c++)
+  assign tests/runtime/rx_empirical_optimizer.c:1262: for (uint32_t c = 0; c < jobs[i].calls; c++)
+  memcpy tests/runtime/rx_plan_reuse.c:568: memcpy(c, v, n * sizeof *c)
+  assign tests/runtime/rx_plan_reuse.c:567: uint64_t *c = malloc(n * sizeof *c);
+  assign tests/runtime/rx_plan_reuse.c:1083: for (long c = 0; c < n; c++) {
+  assign tests/runtime/rx_r10_omega.c:132: uint32_t c = RX_OMEGA_RES_CANDIDATE0 + k, v = RX_OMEGA_RES_VERDICT0 + k,
+  assign tests/runtime/rx_r10_omega.c:189: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r10_omega.c:242: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r10_omega.c:251: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r10_omega.c:260: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r10_omega.c:282: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r10_omega.c:331: for (long c = 0; c < n && c < CPU_SETSIZE; c++) {
+  assign tests/runtime/rx_r11_aien.c:250: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r11_aien.c:264: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r11_aien.c:579: for (long c = 0; c < n && c < CPU_SETSIZE; c++) {
+  assign tests/runtime/rx_r11_aien.c:642: uint32_t c = RX_OMEGA_RES_CANDIDATE0 + k, v = RX_OMEGA_RES_VERDICT0 + k,
+  assign tests/runtime/rx_r11_aien.c:807: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r11_aien.c:871: const RxCrumb *c = rx_world_crumb(&e.w, id);
+  assign tests/runtime/rx_r12_resident.c:265: r->ch.c = mkobj(&r->e, RES_C);
+  assign tests/runtime/rx_r12_silicon.c:981: const RxCrumb *c = rx_world_crumb(&w, j);
+  memset tests/runtime/rx_r13_living.c:1477: memset(c, 0, sizeof *c)
+  memset tests/runtime/rx_r13_living.c:1739: memset(c, 0, sizeof *c)
+  assign tests/runtime/rx_r13_living.c:369: const RxCrumb *c = rx_world_crumb(&r->w, id);
+  assign tests/runtime/rx_r13_living.c:815: const RxCrumb *c = rx_world_crumb(w, g_stack[--sp]);
+  assign tests/runtime/rx_r13_living.c:854: const RxCrumb *c = rx_world_crumb(&r->w, id);
+  assign tests/runtime/rx_r13_living.c:932: const RxCrumb *c = rx_world_crumb(&r->w, id);
+  assign tests/runtime/rx_r13_living.c:1015: const RxCrumb *c = rx_world_crumb(&r->w, id);
+  assign tests/runtime/rx_r13_living.c:1516: RxCompose *c = &g_compose;
+  assign tests/runtime/rx_r13_living.c:1838: const CompositionReceipt *c = &g_comp;
+  assign tests/runtime/rx_r13_living.c:2001: unsigned char c = (unsigned char)*s;
+  assign tests/runtime/rx_r14_recovery.c:169: RxCapRef c = mint(r, subject, resource, rights);
+  assign tests/runtime/rx_r14_recovery.c:876: const RxCrumb *c = rx_world_crumb(w, g_stack[--sp]);
+  assign tests/runtime/rx_r14_recovery.c:1019: const RxCrumb *c = rx_world_crumb(&r->w, id);
+  assign tests/runtime/rx_r14_recovery.c:1735: const RxCrumb *c = rx_world_crumb(&r->w, k);
+  assign tests/runtime/rx_r14_recovery.c:1741: const RxCrumb *c = rx_world_crumb(&r->w, k);
+  assign tests/runtime/rx_r14_recovery.c:1751: const RxCrumb *c = rx_world_crumb(&r->w, k);
+  assign tests/runtime/rx_r14_recovery.c:1798: const RxCrumb *c = rx_world_crumb(&r->w, k);
+  assign tests/runtime/rx_r8_aegis.c:290: RxCapRef c = mint(e, SUBJ_EXTERNAL, rx_aegis_res(0, RX_AEGIS_RES_APPROVAL), RX_RIGHT_WRITE);
+  assign tests/runtime/rx_r8_aegis.c:310: const RxCrumb *c = rx_world_crumb(&e->w, id);
+  assign tests/runtime/rx_r8_aegis.c:559: const RxCrumb *c = rx_world_crumb(&e.w, id);
+  assign tests/runtime/rx_r8_aegis.c:610: const RxCrumb *c = rx_world_crumb(&e.w, id);
+  assign tests/runtime/rx_sem_incremental.c:831: for (int c = 0; c < 16; c++) {
+  assign tests/runtime/rx_sem_incremental.c:1043: for (int c = 0; c < JSPACE_WIDTH; c++) {
+  assign tests/runtime/rx_sem_incremental.c:1149: for (int c = 0; c < E_CH; c++) {
+  assign tests/runtime/rx_sem_incremental.c:1193: for (int c = 0; c < E_CH && ok; c++) {
+  assign tests/runtime/rx_sem_incremental.c:1280: for (int c = 0; c < E_CH; c++)
+  assign tests/runtime/rx_sem_incremental.c:1284: for (int c = 0; c < E_CH; c++) {
+  assign tests/runtime/rx_sem_incremental.c:1457: for (int c = 0; c < E_CH; c++) {
+  assign tests/runtime/rx_semantic_comm.c:235: RxCapRef c = mint(e, SUBJ_TEAM0 + t, res, RX_RIGHT_READ);
+  assign tests/runtime/rx_semantic_comm.c:413: uint64_t c = v->crumb[id][f];
+  assign tests/runtime/rx_semantic_comm.c:473: const RxCrumb *c = rx_world_crumb(&e->w, o->field_writer[f]);
+  assign tests/runtime/rx_semantic_comm.c:566: ReasonCtx *c = ctx;
+  assign tests/runtime/rx_semantic_comm.c:1003: for (long c = 0; c < n; c++) {
+  assign tests/runtime/rx_state_projection.c:903: for (uint32_t c = 1; c < PJ_STATE_CLASS_END; c++)
+  assign tests/runtime/rx_typed_results.c:768: int c = fault(s->k, (int)rin(&r, 0, N_FAULTS - 1), &t, s->in, &r, &gv);
+  assign tests/runtime/rx_typed_results.c:877: int c = fault((RcKind)k, (int)rin(&r, 0, N_FAULTS - 1), &t, &in, &r, &gv);
+  assign tests/runtime/rx_typed_results.c:1059: int c = fault((RcKind)k, id, &o, &in, &r, &gv);
+  assign tests/runtime/rx_typed_results.c:1164: uint64_t c = rx_world_explain(&E.w, E.pub[k], f);
+  assign tests/runtime/rx_typed_results.c:1294: const RcContract *c = &E.con[RC_SKILL_INVOCATION];
+  assign tests/runtime/rx_typed_results.c:1332: for (long c = 0; c < n; c++) {
+  assign tests/runtime/rx_typed_results.c:1433: Sum c = summarize(PATH_CONSTRAINED, 0), f = summarize(PATH_FREE, 0);
+  assign tests/runtime/rx_typed_results.c:1550: Sum c = summarize(PATH_CONSTRAINED, 0), f = summarize(PATH_FREE, 0);
+  memset tests/runtime/rx_workflow_fusion.c:479: memset(&c, 0, sizeof c)
+  assign tests/runtime/rx_workflow_fusion.c:439: int c = node_read(g, 3, 0, 0);
+  assign tests/runtime/rx_workflow_fusion.c:492: AgConstraints c = open_constraints();
+  assign tests/runtime/rx_workflow_fusion.c:500: AgConstraints c = open_constraints();
+  assign tests/runtime/rx_workflow_fusion.c:1450: for (long c = 0; c < n; c++) {
+  assign tests/test_omega_transc.c:685: for (uint32_t c = 0; c < NCHUNK; c++) digest_of(blk + c * per, per, ch[c]);
+  assign tests/test_omega_vcstore.c:662: OmegaVcStore *a = new_store(), *b = new_store(), *c = new_store();
+  assign tests/test_omega_vcstore.c:879: OmegaVcStore *c = new_store();
+  assign tools/estimation/est3c_common.c:98: char c = tok[i];
+  assign tools/estimation/est3c_common.c:866: unsigned char c = (unsigned char)*s;
+  assign tools/estimation/est4.c:325: p.phi = 1.0; p.nu_h = 1.0; p.c_h = 1.0; p.nu = 1.0; p.c = 1.0;
+  assign tools/estimation/est4.c:333: for (int c = 0; c < NC4; c += stride) {
+  assign tools/estimation/est4.c:338: gf->p = p; gf->p.nu = NU4[u]; gf->p.c = gc4(c);
+  assign tools/estimation/est4.c:349: for (int c = 0; c < NCH4; c += stride) {
+  assign tools/estimation/est5.c:355: p.phi = 1.0; p.nu_h = 1.0; p.c_h = 1.0; p.nu = 1.0; p.c = 1.0;
+  assign tools/estimation/est5.c:363: for (int c = 0; c < NC4; c += stride) {
+  assign tools/estimation/est5.c:368: gf->p = p; gf->p.nu = NU4[u]; gf->p.c = gc4(c);
+  assign tools/estimation/est5.c:379: for (int c = 0; c < NCH4; c += stride) {
+  assign tools/estimation/est_replay.c:250: char c = line[at + n];
+  memcpy tools/r15_reduce.c:185: memcpy(c, v, n * sizeof *c)
+  assign tools/r15_reduce.c:80: char c = *jp++;
+  assign tools/r15_reduce.c:81: if (c == '  ' && *jp) c = *jp++;
+  assign tools/r15_reduce.c:184: double *c = malloc(n * sizeof *c);
+  assign tools/r15_reduce.c:344: while ((c = fgetc(f)) != EOF && c != '  ') {
+  assign tools/r15_reduce.c:542: const J *c = t->cwin[C_ADAPT];
+  assign tools/r15_reduce.c:556: double c = jd(t->cwin[C_SPAN], "             ");
+  assign tools/r15_reduce.c:586: Cmp c = {NAN, NAN, NAN, 0, 0};
+  assign tools/r15_reduce.c:893: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:908: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:921: Pct w = pct_of(l1_get(" ", "            ", fan[f], "     ")), c = pct_of(l1_get(" ", "           ", fan[f], "     "));
+  assign tools/r15_reduce.c:934: for (int c = 0; c < 2; c++) {
+  assign tools/r15_reduce.c:982: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:1010: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:1032: for (int c = 0; c < 2; c++) {
+  assign tools/r15_reduce.c:1077: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:1134: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:1154: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:1201: for (int c = 0; c < 4; c++) {
+  assign tools/r15_reduce.c:1231: for (int c = 0; c < 2; c++) {
+  assign tools/r15_reduce.c:1246: for (int c = 0; c < 4; c++) {
+  assign tools/reservoir/res_common.c:84: char c = h[2 * i + k];
+  assign tools/reservoir/res_common.c:152: unsigned char c = (unsigned char)*s;
+  assign tools/reservoir/res_common.c:298: double e = ref[i * stride] - pred[i * stride], c = ref[i * stride] - m;
+  assign tools/reservoir/res_common.c:466: for (uint32_t c = j + 1; c <= p; c++) {
+  assign tools/reservoir/res_common.c:483: for (uint32_t c = jj + 1; c < p; c++) s -= A[(size_t)c * n + jj] * w[c];
+  assign tools/turing_cal_eval.c:721: cand_t *c = &C[nc];
+  assign tools/turing_cal_eval.c:759: cand_t *c = &C[i];
+  assign tools/turing_cal_eval.c:917: cand_t *c = &C[ci];
+  assign tools/turing_cal_eval.c:934: cand_t *c = &C[ci];
+  assign tools/turing_cal_overlap.c:209: uint64_t blk = count_shared32(&dev.blocks, &sea.blocks);
+== F. field access on any expression (.state/.count/.buffer near sha256_ctx use), by-value params/returns
