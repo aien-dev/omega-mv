@@ -85,21 +85,22 @@ Logs and summaries: `evidence/E1-SPIRV-POCL/20261027-f2624645/`. "Sampled" is th
 per op (`sample/run2.summary` for SIN and COS after the fix, `sample/run1.summary` for the other nine, whose
 modules in that run were byte-identical to the table above). "Exhaustive" is all 2^32 inputs
 (`exhaustive/SUMMARY`, per-window lines in `exhaustive/<op>.log`). A mismatch is any output whose 32 bits differ
-from the CPU tier's, NaN payloads included.
+from the CPU tier's, NaN payloads included. TANH and RSQRT ran with `chunkdig.py` in the pipe, so their summary
+line carries the SPIR-V tier's full-domain digest; EXP2, LOG2 and SIGMOID ran before it was added and have none.
 
-| Op | Sampled: mismatches | Exhaustive: inputs checked, mismatches |
-|---|---|---|
-| EXP2 | 0 | 4294967296, 0 |
-| LOG2 | 0 | 4294967296, 0 |
-| SIGMOID | 0 | 4294967296, 0 |
-| TANH | 0 | NOT_RUN at this commit (running) |
-| RSQRT | 0 | NOT_RUN at this commit (queued) |
-| ERF | 0 | NOT_RUN at this commit (queued) |
-| GELU | 0 | NOT_RUN at this commit (queued) |
-| SIN | 0 | NOT_RUN at this commit (queued) |
-| COS | 0 | NOT_RUN at this commit (queued) |
-| EXP | 0 | NOT_RUN at this commit (queued) |
-| LOG | 0 | NOT_RUN at this commit (queued) |
+| Op | Sampled: mismatches | Exhaustive: inputs checked, mismatches | Full-domain digest |
+|---|---|---|---|
+| EXP2 | 0 | 4294967296, 0 | NOT_RUN |
+| LOG2 | 0 | 4294967296, 0 | NOT_RUN |
+| SIGMOID | 0 | 4294967296, 0 | NOT_RUN |
+| TANH | 0 | 4294967296, 0 | `932c09ff…5daa`, equal to `DIGEST_TANH` and to GB10 receipt `ae3a4123` |
+| RSQRT | 0 | 4294967296, 0 | `454fc9d5…51e4`, equal to `DIGEST_RSQRT` and to GB10 receipt `d846fbe3` |
+| ERF | 0 | NOT_RUN (stopped part-way at the 2026-10-27 wind-down) | NOT_RUN |
+| GELU | 0 | NOT_RUN | NOT_RUN |
+| SIN | 0 | NOT_RUN | NOT_RUN |
+| COS | 0 | NOT_RUN | NOT_RUN |
+| EXP | 0 | NOT_RUN | NOT_RUN |
+| LOG | 0 | NOT_RUN | NOT_RUN |
 
 Negative controls (`control.out`): with `E1_MUTATE`, EXP NC4 gives 43084 of 131072 mismatches at
 start `0x3f000000`; SIN S5 gives 131072 of 131072; LOG NL2 gives 0 at start `0x3f000000` and

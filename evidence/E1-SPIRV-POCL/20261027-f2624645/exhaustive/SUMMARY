@@ -1,3 +1,5 @@
 EXHAUSTIVE exp2 windows=0..255 checked=4294967296 mismatches=0 no_result_windows=0
 EXHAUSTIVE log2 windows=0..255 checked=4294967296 mismatches=0 no_result_windows=0
 EXHAUSTIVE sigmoid windows=0..255 checked=4294967296 mismatches=0 no_result_windows=0
+EXHAUSTIVE tanh windows=0..255 checked=4294967296 mismatches=0 no_result_windows=0 digest=932c09ffe7f02125dc302bfe9c3666a4866b109627fd89cfca0827cf3b1e5daa
+EXHAUSTIVE rsqrt windows=0..255 checked=4294967296 mismatches=0 no_result_windows=0 digest=454fc9d5fb2e640acc8ba48422c3ae5e61d17fcee8cec20091cfb4a044ec51e4
