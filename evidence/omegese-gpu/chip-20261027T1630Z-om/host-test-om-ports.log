@@ -1,0 +1,59 @@
+sh tests/osc_gpu/run.sh build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2 build/osc_gpu/test_osc_gpu build/osc_gpu/ir build/osc_gpu/osc_gpu_build
+sh tests/checker2/differential.sh build/compiler/oscc build/checker2/osc_emit_ir build/checker2/checker2 build/checker2/differential build/omega_emit/omega_emit
+run.sh: 14 kernels emitted and accepted by checker2
+run.sh: 15 broken kernels refused with their expected reasons
+run.sh: 1 embedded kernels still build to the bytes they embed
+differential: kernels accepted=6, kernel negatives refused by their rule=19
+differential: accepted by both=107 front-end refusals=138 (known-bad neg units=138) disagreements=0
+  division by a number: 5899975 quotients checked
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  gemm    248 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  reduce  192 instructions,  24 registers, 256 threads, 8224 shared bytes, 2 regions on 1 barriers, 12 argument words
+  nest16  112 instructions,  16 registers, 32 threads, 0 shared bytes, 0 regions on 0 barriers, 8 argument words
+  ops_u   624 instructions,  32 registers, 256 threads, 0 shared bytes, 16 regions on 1 barriers, 24 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+  nest16j 288 instructions,  16 registers, 32 threads, 0 shared bytes, 16 regions on 16 barriers, 8 argument words
+  vloop    80 instructions,  24 registers, 64 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_gemm    256 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_attn    248 instructions,  48 registers, 128 threads, 16 shared bytes, 1 regions on 1 barriers, 22 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  mutant 1 (stores ignore poison): caught by 16 checks
+  mutant 2 (joins dropped): caught by 52 checks
+  mutant 3 (no add overflow trap): caught by 5 checks
+  mutant 4 (intervals not stretched): caught by 10 checks
+  mutant 5 (every region on barrier 0): caught by 3 checks
+  mutant 6 (shared not zeroed): caught by 2 checks
+  mutant 7 (bounds-failed loads run): caught by 4 checks
+  mutant 8 (division magic off by one): caught by 4 checks
+test_osc_gpu: 1308 checks, 0 failed
+sh tests/osc_gpu/oscir_diff.sh seed/out/omc build/osc_gpu/oscir_diff
+sh tests/checker2/om_diff.sh build/checker2/checker2 build/checker2/om build/checker2/differential/ir build/osc_gpu/ir
+sh tests/osc_gpu/om_diff.sh seed/out/omc build/osc_gpu/om_oracle build/osc_gpu/test_osc_gpu build/osc_gpu/ir build/osc_gpu/om
+om_build: build/checker2/om/c2om sha256 cda15ebdae028b34fa4e49d1151ff3dcea6d1588fd8e6f9ed36adaaa343c5d46
+om_diff: omc 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+om_diff: c9f4e2068899b291fad4104bb214961be974798d549ca6d8f8fad20b7b194c3e  seed/oscgpu/oscir.om
+om_diff: 1dd4c97662ba74093a938e63281e467ea69cf7244de26288f9d54348b496dd79  seed/oscgpu/gpuir.om
+om_diff: 425fa68ea37b6b86e61c4a070cdc46dd4effacb8880e645d80c7b297c8799d31  seed/oscgpu/gpulow.om
+om_diff: 84797b27c32f79935107dd8e6bc52aab38c6c533c92f99830cbed27252039633  seed/oscgpu/gpuemit.om
+om_diff: c3586e38e27337eea9526ee6142187edf83c17ddeb620296276a92f96a825fa6  seed/oscgpu/gpumain.om
+om_diff: dbf619ac365fe5e30ca81ad76ecae4b5c6d92b2b74b468e8f69060fe403ded58  gpu
+om_diff: corpus 15 units x names x mutants 0..8: n=270
+om_diff: damaged units and usage: n=9
+corpus kernel: 15
+corpus badkernel: 6
+corpus repo: 1
+corpus gen: 3995
+corpus pfx: 1365
+corpus flip: 672
+OMDIFF PASS n=6054 same=6054 diff=0
+om_diff: log build/checker2/om/omdiff.log
+OMDIFF PASS cases=21627 differ=0
+om_diff: variants: n=26275
+om_diff: embedded gate.omegese gate fabdfc55cf9d67bc608ae066e5c63b69f7d779f379dbf558d392ad668605d230
+om_diff: test_osc_gpu: OMBYTES identical=119 differ=0
+OMDIFF PASS n=26556 same=26556 diff=0
+rc=0

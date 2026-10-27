@@ -1,0 +1,8 @@
+sh tests/checker2/owner_receipt.sh build/checker2/checker2 tests/checker2/fixtures/owner-receipt build/checker2/owner-receipt
+owner_receipt: FAIL owner draft is not byte-identical to the committed draft
+owner_receipt: FAIL production verify: receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL default (production) verify: receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL control wrong-target: want WRONG_TARGET, got receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL control wrong-executable: want EXECUTABLE_MISMATCH, got receipt=UNTRUSTED_CHECKER
+owner_receipt: FAIL (5)
+make: *** [mk/checker2.mk:108: test-checker2-owner-receipt] Error 1

@@ -364,8 +364,33 @@ the four Omegese kernels (`om_vadd`, `om_gate`, `om_gemm`, `om_attn`) included.
 threads still store. It fails 8 checks and exits 1, which shows the chip test can fail.
 The refusals are on the host, in `chip-20261027/host-test-osc-gpu.log` at the same commit:
 checker2 accepts 13 kernels and refuses 15 broken ones, each with its expected reason.
-The gate swap on a test server with golden tokens is NOT_RUN. It needs an exclusive GPU window,
-because the live 35B on port 18091 must not be touched.
+
+Status on 2026-10-27, commit 67d228d26 (wire version 8, kernel opcodes 40..46): the lowering from
+OSC IR to BlackwellIR is also written in seeded `.om` (`seed/oscgpu/oscir.om`, `gpu*.om`, `c2*.om`),
+built with the pinned `seed/out/omc`. Register allocation and the encoder stay the C builder; the C
+lowering stays the production path and the oracle until the `.om` replaces it. On the host,
+`make test-om-ports` passes: `oscir.om` against `osc_ir_decode`/`osc_ir_validate` (n=6054, diff=0),
+`c2*.om` against checker2 (21627 cases, 0 differ), and the `.om` lowering against the C one
+(n=26556, diff=0; `OMBYTES identical=119 differ=0` over the test kernels' code). `make test-omegese`
+passes (its tokenizer gate is SKIPPED without a tokenizer). On the GB10 at 2026-10-27T16:30:40Z,
+`evidence/omegese-gpu/chip-20261027T1630Z-om/chip-green.log` ran `test_osc_gpu_chip` with
+`OSC_GPU_OM_DIR`, so the kernels it launches took their code from the `.om` lowering, checked equal
+to the C build (`OMBYTES identical=13 differ=0`): 59 launches, 645 checks, 0 failed. The red run
+with mutant 1 fails 8 checks and exits 1.
+
+`make test-checker2-owner-receipt` fails with UNTRUSTED_CHECKER: checker2's identity changed on this
+branch, so its owner receipt needs Drake to re-sign it with his YubiKey (BLOCKED_OPERATOR).
+
+The gate swap ran on 2026-10-27 in an exclusive window that Drake authorized (18091 stopped), on
+draft PR #886 (`c1/gate-lever-reembed`; library from omega 2f6561d4b, the live library plus the
+lever commits). Its receipt is `evidence/omegese-gate-lever/golden-20261027T1634Z/` on that
+branch (commit b8c907e7d). With `AIEN_OMEGA_Q36_OMEGESE_GATE=1`, a test server on 127.0.0.1:18195
+logged the Omegese gate on (code sha256 fabdfc55) and passed 8 of 8 cells: five golden chats, 32
+requests together against the alone reference 5b726818, a second turn and a tool call. The red
+control, with the gate mutated to a * sigmoid(-g) (code 09522207, which checker2 accepts), changed
+the tokens in 6 of 6 cells (RED-OK). The gate's code from the `.om` lowering is the same fabdfc55
+(`chip-20261027T1630Z-om/host-test-om-ports.log`). An earlier attempt at 16:31Z loaded nothing and is NOT_RUN, not FAIL
+(`golden-20261027T1631Z-NOTE.md`). The swap is on #886, not merged into this branch or `main`.
 
 ## 14. Review 1 (2026-10-21)
 
