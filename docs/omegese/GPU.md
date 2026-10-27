@@ -1,7 +1,7 @@
 # Omegese on the GPU: kernels
 
 Status: design v2 (2026-10-21, L386), after review 1 (section 14). Bar row C1 in `docs/OMEGA.md`.
-Tool: `tools/omegese/omegese.c`; IR: `src/compiler/osc_ir.h` (encoding version 6); checker:
+Tool: `tools/omegese/omegese.c`; IR: `src/compiler/osc_ir.h` (encoding version 8); checker:
 `src/checker2/`; backend: `src/omega_osc_gpu.c` over the sm_121 kernel builder
 (`src/omega_blackwell_codegen.h`), launcher: `src/omega_osc_launch.c`. No second encoder.
 Tests: `make test-osc-gpu` (host simulator), `make test-osc-gpu-chip` (the GB10).
@@ -232,10 +232,13 @@ At most 63 `sync` lines in a kernel. This bounds the phase sets.
 write a result into an input, declare the input `edit` and use the same index (the 35B gate in
 section 12 does this).
 
-## 9. The IR (encoding version 6)
+## 9. The IR (encoding version 8)
 
-Version 6 is used only when a unit has a kernel; units without one keep versions 1 to 5 and their
-bytes. Additions:
+Version 8 is used only when a unit has a kernel; units without one keep versions 1 to 5 and their
+bytes. Version 6 is reserved by draft PR #525 (structured contracts) and version 7 is the memory
+profile of `spec/one-layer-format.md` section 10; this decoder refuses both as unknown versions.
+Kernel units were written as version 6 with opcodes 30 to 36 until 2026-10-27; evidence committed
+before then records those bytes and their hashes and is kept as history. Additions:
 
 - Each function carries a kind byte: 0 host, 1 kernel. A kernel then carries its thread count
   (u16, 32 to 1024, a multiple of 32). A kernel returns VOID and has no `requires` or `ensures`.
@@ -243,7 +246,8 @@ bytes. Additions:
 - Scalar F32. Pointer scalars GVIEW and GEDIT (elem U32 or F32), each followed by its u32 length
   register, as slices are (OSC_T_BYTES).
 - REF kind BLOCK: a shared array (elem U32 or F32, len 1 to 12288).
-- New instructions:
+- New instructions, numbered from 40 so they are disjoint from version 7's opcodes 30 to 33
+  (GPU 40, SHARED 41, GLOAD 42, GSTORE 43, SYNC 44, SHFL 45, MAD 46; 30 to 39 are refused):
   - `GPU` sub THREAD/BLOCK/BLOCKS/BATCH/BATCHES: dst u32. (`threads` lowers to CONST.)
   - `SHARED`: dst = a zeroed shared array; entry block only.
   - `GLOAD` a b: dst = buffer a at index b (u32), bounds against a+1.

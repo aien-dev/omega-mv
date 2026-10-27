@@ -237,8 +237,15 @@ milestone name “IR v2 memory” does not change the meaning of wire version 2,
 which already carries structs. Wire versions 1..5 and their identity bytes
 remain unchanged. Wire version 6 remains reserved by draft PR #525 for its
 numeric-identifier/structured-contract proposal; this profile neither closes
-nor supersedes that proposal. The memory extension uses version 7. A backend
-that has not implemented this profile must refuse it, not ignore its regions.
+nor supersedes that proposal. The memory extension uses version 7. GPU
+kernel units (docs/omegese/GPU.md section 9, draft PR #885) use version 8,
+with kernel opcodes 40..46 (GPU, SHARED, GLOAD, GSTORE, SYNC, SHFL, MAD),
+disjoint from this profile's opcodes 30..33; in a version 8 unit opcodes
+30..39 are RANGE. Version 8 keeps the version 7 meaning of tag 13 (f32) but
+gives tag 14 to the GVIEW buffer pointer (f64 in version 7) and tag 15 to
+GEDIT, so a reader must still select tag meanings by the version byte.
+Until #885 merges, version 8 is not settled on main. A backend that has not
+implemented this profile must refuse it, not ignore its regions.
 
 ### 10.1 Header and regions
 

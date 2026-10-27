@@ -1002,10 +1002,10 @@ static int byte_defects(void)
     memcpy(b, s->b, s->n);
     b[7] = 7;
     planted += bytes_reject(b, s->n, "C2-DECODE-VERSION", "unknown-version");
-    /* a kernel unit (version 6, no structs) with function kind 2: the kind byte follows the name */
+    /* a kernel unit (version 8, no structs) with function kind 2: the kind byte follows the name */
     for (int i = 0; i < ncorpus; i++) {
         const Unit *k = &corpus[i];
-        if (k->n < 13 || k->b[7] != 6 || k->b[8] != 0) continue;
+        if (k->n < 13 || k->b[7] != C2_V_KERNEL || k->b[8] != 0) continue;
         size_t at = 8 + 1 + 2 + 1 + k->b[11];
         if (at >= k->n || k->b[at] != FN_KERNEL) continue;
         uint8_t *kb = malloc(k->n);
