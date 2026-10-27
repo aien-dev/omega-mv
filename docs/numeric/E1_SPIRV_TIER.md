@@ -60,7 +60,7 @@ branch head reproduced every module byte for byte (`cmp`, 10 of 10):
 Spark, aarch64 Linux 7.0.0-1019-nvidia, PoCL 7.2 (Release, SPIR-V, LLVM 18.1.3, SLEEF; a
 user-space build, `POCL_DEVICES=cpu`), opencl-host sha256
 `82c65325d3bc4ae00ddcaedf794e6fd9069566f787b690ecb162b9cf42713c26`. All runs at
-`nice -n 19 taskset -c 10-14`.
+`nice -n 19 taskset -c 10-14`, except the second exhaustive run (`taskset -c 5-9`, see Results).
 
 ## Parity check
 
@@ -81,26 +81,35 @@ evidence (`evidence/E1-SPIRV-POCL/20261027-f2624645/recipe/`), not part of any b
 
 ## Results
 
-Logs and summaries: `evidence/E1-SPIRV-POCL/20261027-f2624645/`. "Sampled" is the 42-window set, 5,505,024 inputs
+Logs and summaries: `evidence/E1-SPIRV-POCL/20261027-f2624645/` and, for the second exhaustive run,
+`evidence/E1-SPIRV-POCL/20261027-exh-0fca2343/`. "Sampled" is the 42-window set, 5,505,024 inputs
 per op (`sample/run2.summary` for SIN and COS after the fix, `sample/run1.summary` for the other nine, whose
 modules in that run were byte-identical to the table above). "Exhaustive" is all 2^32 inputs
 (`exhaustive/SUMMARY`, per-window lines in `exhaustive/<op>.log`). A mismatch is any output whose 32 bits differ
-from the CPU tier's, NaN payloads included. TANH and RSQRT ran with `chunkdig.py` in the pipe, so their summary
-line carries the SPIR-V tier's full-domain digest; EXP2, LOG2 and SIGMOID ran before it was added and have none.
+from the CPU tier's, NaN payloads included. Every exhaustive run used `chunkdig.py` in the pipe, so each summary line
+carries the SPIR-V tier's full-domain digest. TANH and RSQRT: first run (`20261027-f2624645`). The other nine:
+second run, 2026-10-27 16:28:51Z-16:51:32Z, `nice -n 19 taskset -c 5-9`, with the same modules, opencl-host, `par`,
+`exh.sh` and `chunkdig.py` (sha256 in `20261027-exh-0fca2343/inputs.sha256`, equal to the tables above and to
+`recipe/`; the script as run is `run.sh`). EXP2, LOG2 and SIGMOID had an earlier exhaustive run without a digest
+(4294967296 checked, 0 mismatches, `20261027-f2624645/exhaustive/`); the second run repeats them with one.
 
-| Op | Sampled: mismatches | Exhaustive: inputs checked, mismatches | Full-domain digest |
-|---|---|---|---|
-| EXP2 | 0 | 4294967296, 0 | NOT_RUN |
-| LOG2 | 0 | 4294967296, 0 | NOT_RUN |
-| SIGMOID | 0 | 4294967296, 0 | NOT_RUN |
-| TANH | 0 | 4294967296, 0 | `932c09ff…5daa`, equal to `DIGEST_TANH` and to GB10 receipt `ae3a4123` |
-| RSQRT | 0 | 4294967296, 0 | `454fc9d5…51e4`, equal to `DIGEST_RSQRT` and to GB10 receipt `d846fbe3` |
-| ERF | 0 | NOT_RUN (stopped part-way at the 2026-10-27 wind-down) | NOT_RUN |
-| GELU | 0 | NOT_RUN | NOT_RUN |
-| SIN | 0 | NOT_RUN | NOT_RUN |
-| COS | 0 | NOT_RUN | NOT_RUN |
-| EXP | 0 | NOT_RUN | NOT_RUN |
-| LOG | 0 | NOT_RUN | NOT_RUN |
+| Op | Sampled: mismatches | Exhaustive: inputs checked, mismatches | Full-domain digest | Equal to CPU tier and GB10 receipt |
+|---|---|---|---|---|
+| EXP2 | 0 | 4294967296, 0 | `227cb657…5bd8` | yes, `DIGEST_EXP2`, GB10 `b2f4afe9` |
+| LOG2 | 0 | 4294967296, 0 | `fdf21ee2…07f3` | yes, `DIGEST_LOG2`, GB10 `d846fbe3` |
+| SIGMOID | 0 | 4294967296, 0 | `b4e43cb7…886d` | yes, `DIGEST_SIGMOID`, GB10 `ae3a4123` |
+| TANH | 0 | 4294967296, 0 | `932c09ff…5daa` | yes, `DIGEST_TANH`, GB10 `ae3a4123` |
+| RSQRT | 0 | 4294967296, 0 | `454fc9d5…51e4` | yes, `DIGEST_RSQRT`, GB10 `d846fbe3` |
+| ERF | 0 | 4294967296, 0 | `aef63f62…4aba` | yes, `DIGEST_ERF`, GB10 `d846fbe3` |
+| GELU | 0 | 4294967296, 0 | `bda4da73…89db` | yes, `DIGEST_GELU`, GB10 `d846fbe3` |
+| SIN | 0 | 4294967296, 0 | `9e4debc7…cddc` | yes, `DIGEST_SIN`, GB10 `ae3a4123` |
+| COS | 0 | 4294967296, 0 | `28d580ee…ceb3` | yes, `DIGEST_COS`, GB10 `ae3a4123` |
+| EXP | 0 | 4294967296, 0 | `413c3429…829c` | yes, host-model EXP digest, GB10 `b2f4afe9` |
+| LOG | 0 | 4294967296, 0 | `05e94f63…f51e` | yes, host-model LOG digest, GB10 `b2f4afe9` |
+
+No window of either run lacked a result (`no_result_windows=0` on every summary line), and opencl-host's stderr held
+only its three banner lines per window. The reference digests as compared are in
+`20261027-exh-0fca2343/ref-digests.txt`.
 
 Negative controls (`control.out`): with `E1_MUTATE`, EXP NC4 gives 43084 of 131072 mismatches at
 start `0x3f000000`; SIN S5 gives 131072 of 131072; LOG NL2 gives 0 at start `0x3f000000` and
