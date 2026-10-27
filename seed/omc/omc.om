@@ -12053,6 +12053,7 @@ global smrb ulong 1
 global smro ulong 1
 global smrr ulong 1
 global smry ulong 1
+global smpq ulong 1
 
 fn smlead to ulong
 p = ulong 0
@@ -12593,6 +12594,9 @@ f = smfunc w l
 if eq f 0
 fail 3
 end
+if ne get smpq 0 0
+fail 30
+end
 smcall sub f 1
 end
 
@@ -12934,7 +12938,9 @@ smconv s t c
 end
 
 fn smpred to ulong
+put smpq 0 1
 smval 1
+put smpq 0 0
 eol
 ret get smrs 0
 end

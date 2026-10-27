@@ -1196,3 +1196,79 @@ Fixtures and exact expected outcomes are in
 `seed/qualification/om2/gate.om` conductor. The example above is exercised by
 `seed/omc/contracts/ok.om`; release/erased and proved/plain pairs require
 byte-identical output, not just equal exit statuses.
+
+### Verification conditions (omc smt mode)
+
+When the first line of omc's input is `smt`, omc checks no program and writes
+no binary. Instead it prints one SMT-LIB 2 script (logic `QF_BV`) for each
+function of the unit. Each script starts with
+`; omc-smt 1 fn NAME line=N`. omc takes no arguments, so this leading line
+selects the mode, as `ir` does for the IR dump.
+`seed/omc/contracts/smt/emit-smt.sh UNIT.om OUTDIR` is the `--emit-smt` form:
+it writes `OUTDIR/NAME.smt2` for each function.
+
+A script's `check-sat` answers `unsat` when no input that meets the function's
+`requires` can reach a failing `ensures`, a failing `invariant`, or a failing
+callee `requires`. That holds for every input, and for every number of loop
+passes. When the answer is `sat`, the script's `get-value` gives a
+counterexample:
+
+- `in_NAME`: the inputs;
+- `loop_L<line>_NAME_s<id>`: the loop-head values;
+- `call_L<line>_s<id>`: the call results;
+- `fail_L<line>_<kind>_s<id>`: one flag per check, `true` for the check that
+  fails.
+
+The translation follows the runtime meaning:
+
+- **Numbers.** A number is a bit vector of its width, with exactly the 9.3
+  semantics: unsigned wrap and signed order.
+- **Traps.** Any operation that traps ends its path, exactly as at run time.
+  This covers signed overflow, a zero divisor, the minimum divided by -1, a
+  shift amount, a conversion range, and `trap`. A check that fails also ends
+  its path, so each later check assumes that the earlier ones held.
+- **Branches.** `if`/`else` merges its two paths.
+- **Loops.** A `while` or `for` uses its invariants inductively:
+  1. They are checked on entry.
+  2. They are assumed at an arbitrary head. There, each outer name that the
+     body assigns (the first word of one of its lines) takes a fresh value. A
+     `for` counter is also fresh, limited to `0 .. count`.
+  3. They are checked again at the end of the body and at each `continue`.
+  4. The loop is left with its condition false, or at a `break`.
+
+  The translation does not use `bound`, loop fuel or `unroll`: it over-approximates
+  every number of passes. A weak invariant can therefore give a `sat` that no run
+  reaches. Only a native run that stops with 109/110 confirms that a
+  counterexample is real.
+- **Calls.** A call checks the callee's `requires` on its arguments and
+  assumes the callee's `ensures` on a fresh result. The `ensures` is not
+  assumed if the callee assigns one of its parameters, because `ensures` reads
+  the final parameter values.
+- **requires.** A function's own `requires` are assumed, because each caller
+  checks them. `main` has no caller, so its `requires` are checked.
+
+Only a unit that omc compiles is meant for this mode. omc's types, scopes,
+purity rules and error 30 stay authoritative, and the mode only re-checks what
+it needs. The mode refuses the following with error 9:
+
+- arrays, globals, texts, structs, floats and host words;
+- conversions to or from `bool`, and order comparisons of `bool` values;
+- `exit`;
+- a call to a function that has not been translated yet, the function itself
+  included.
+
+A call inside a predicate is error 30, as in compilation. The trap numbers and
+compile errors of the native path are unchanged.
+
+`seed/omc/contracts/smt/gate-smt.sh` runs z3. z3 is a host oracle, not part of
+the build; the gate records its version and SHA-256, and reports NOT_RUN
+without it. The gate checks:
+
+- every function of `ok.om` and `smt/okmore.om` gives `unsat`;
+- each broken contract, one per construct, gives `sat` with its
+  counterexample, and its native run stops with the contract trap;
+- a pair of oracle controls;
+- an out-of-subset refusal.
+
+The planned successor of z3 is a linear-integer decision procedure written in
+`.om` (roadmap T4).
