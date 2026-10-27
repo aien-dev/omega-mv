@@ -34,7 +34,7 @@ hostbuild() {
     "$CC" -std=c11 -O2 -Wall -Wextra -Werror ${VULKAN_CFLAGS:-} "$1" seed/spirv/vk-host.c \
         -o "$2" ${VULKAN_LIBS:--lvulkan} > "$2.build.log" 2>&1
 }
-hostbuild "-DVKSPIRV_LVP_ICD=\"$LVP_ICD\"" "$B/vk-host" ||
+hostbuild "-DVKSPIRV_ICD=\"$LVP_ICD\"" "$B/vk-host" ||
     { cat "$B/vk-host.build.log"; fail 'Vulkan host build failed'; }
 H=$B/vk-host
 say "SOURCE $(git rev-parse HEAD)"
@@ -122,8 +122,8 @@ env VK_ICD_FILENAMES=/nonexistent/vk-icd.json VK_DRIVER_FILES=/nonexistent/vk-dr
     fail 'inherited discovery changed the configured lavapipe oracle'
 printf '8 0\n' | cmp - "$B/host-environment.out" || fail 'environment control changed result'
 for control in unconfigured missing-manifest; do
-    definition='-DVKSPIRV_LVP_ICD=""'
-    [ "$control" = unconfigured ] || definition='-DVKSPIRV_LVP_ICD="/nonexistent/vkspirv/lvp_icd.json"'
+    definition='-DVKSPIRV_ICD=""'
+    [ "$control" = unconfigured ] || definition='-DVKSPIRV_ICD="/nonexistent/vkspirv/lvp_icd.json"'
     hostbuild "$definition" "$B/host-$control" || fail "host $control control build failed"
     set +e
     (ulimit -c 0; "$B/host-$control" "$B/demo.spv" avgu32 2 < "$B/avg.rows") \
@@ -221,15 +221,20 @@ vk_cases() {
         awk -F "$tab" -v k="$key" '$1 == k' "$B/$prefix.rows" > "$B/$prefix.$key.group"
         np=$(sed -n 1p "$B/$prefix.$key.group" | cut -f2)
         cut -f3 "$B/$prefix.$key.group" > "$B/$prefix.$key.in"
-        cut -f4 "$B/$prefix.$key.group" >> "$B/$prefix.expected"
+        cut -f4 "$B/$prefix.$key.group" > "$B/$prefix.$key.expected"
+        cat "$B/$prefix.$key.expected" >> "$B/$prefix.expected"
         module=$B/$unit.spv
         [ -z "$module_override" ] || [ "$unit" != mutant ] || module=$module_override
         nice -n 19 "$H" "$module" "$function" "$np" < "$B/$prefix.$key.in" \
             >> "$B/$prefix.vk" 2> "$B/$prefix.$key.err" ||
             { cat "$B/$prefix.$key.err"; fail "$prefix $key Vulkan run exited $?"; }
         groups=$((groups+1))
+        [ -n "$module_override" ] ||
+            printf '%s\t%s\t%s\t%s\t%s\tmatch\n' "$unit.spv" "$function" "$np" \
+                "$prefix.$key.in" "$prefix.$key.expected" >> "$B/replay.tsv"
     done
 }
+: > "$B/replay.tsv"
 native_cases seed/wasm/cases.tsv case
 [ "$i" = 129 ] || fail "seed/wasm/cases.tsv denominator is $i, expected 129"
 cases=$i; case_traps=$traps
@@ -265,6 +270,8 @@ mutrows=$(grep -c '^mutant\.' "$B/case.rows" || :)
 [ "$(paste "$B/case.rows" "$B/case.vk" | awk -F "$tab" '$4 != $5 {print $1}' | sort -u)" = mutant.mutadd ] ||
     fail 'mutant mismatch outside mutant.mutadd'
 if cmp -s "$B/case.expected" "$B/case.vk"; then fail 'gate comparison accepted the mutant'; fi
+printf 'mutant-flipped.spv\tmutadd\t2\tcase.mutant.mutadd.in\tcase.mutant.mutadd.expected\tmismatch\n' >> "$B/replay.tsv"
+[ "$(sed -n 1p "$B/case.mutant.mutadd.group" | cut -f2)" = 2 ] || fail 'mutadd arity changed'
 say "PASS opcode mutant add->sub caught: mismatched_rows=$mism of mutant_rows=$mutrows (all mutant.mutadd)"
 
 # Refusals: invalid IR is rejected with a named class and empty stdout.
@@ -368,6 +375,7 @@ for k in vadd:2 saxpy:3 rsum:3; do
     nice -n 19 "$H" "$B/vk.spv" "$name" "$np" < "$B/$name.in" > "$B/$name.vk" 2> "$B/$name.err" ||
         { cat "$B/$name.err"; fail "$name Vulkan run exited $?"; }
     cmp "$B/$name.expected" "$B/$name.vk" || fail "$name Vulkan output differs from native"
+    printf 'vk.spv\t%s\t%s\t%s.in\t%s.expected\tmatch\n' "$name" "$np" "$name" "$name" >> "$B/replay.tsv"
     say "PASS $name lavapipe == native invocations=$N $(grep 'workgroups=' "$B/$name.err" | sed 's/^vk-host: //')"
 done
 cp "$B/rsum.vk" "$B/level-0.vk"; level=0; rows=$N
@@ -378,6 +386,9 @@ while [ "$rows" -gt 1 ]; do
     nice -n 19 "$H" "$B/vk.spv" vadd 2 < "$B/level-$((level+1)).in" > "$B/level-$((level+1)).vk" \
         2> "$B/level-$((level+1)).err" || fail "tree level $((level+1)) Vulkan run exited $?"
     level=$((level+1)); rows=$((rows/2))
+done
+for l in $(seq 1 "$level"); do
+    printf 'vk.spv\tvadd\t2\tlevel-%s.in\tlevel-%s.vk\tmatch\n' "$l" "$l" >> "$B/replay.tsv"
 done
 cmp "$B/total.native" "$B/level-$level.vk" || fail 'tree reduce total differs from native sequential sum'
 say "PASS reduce stage1=$N partials tree_levels=$level total=$(cut -d ' ' -f 1 "$B/total.native") lavapipe == native"
