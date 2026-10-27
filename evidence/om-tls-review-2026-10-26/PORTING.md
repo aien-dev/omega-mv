@@ -12,6 +12,9 @@ Pin that merge commit. omc on main is 189ada82…3b54 (suites re-run on it).
 - Local arrays: `c` needs `new uchar 119296` (TLCSZ) and the trust store `new uchar 262144`
   (TLSTSZ), together about 372 KiB of the 4 MiB local-array limit. Allocate both in `main`.
   Globals cannot be passed (error 19).
+- Correction (2026-10-27): 119296 was TLCSZ when this was written. Since cb6e46510 (HelloRetryRequest
+  and the hybrid key share) TLCSZ is 121696: TLKDK = 119296 plus the 2400-byte ML-KEM-768 decapsulation
+  key. Allocate `new uchar TLCSZ` by name.
 
 ## Calls
 

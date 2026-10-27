@@ -213,6 +213,8 @@ server Finished.
 - An all-zero inner plaintext is refused, and plaintext is exposed only after a successful open.
 - An alert must be 2 bytes long. EOF without close_notify gives `-TLS_ERR_EOF`.
 - Buffer offsets end exactly at TLCSZ = 119296.
+  Correction (2026-10-27): true for the reviewed revision. Since cb6e46510 TLCSZ is 121696, and
+  119296 is TLKDK, the start of the 2400-byte ML-KEM-768 decapsulation key that now ends at TLCSZ.
 
 **Post-handshake**
 - `tls_post` (bound 4096 messages per record ≤ 16384/4 is unreachable).
