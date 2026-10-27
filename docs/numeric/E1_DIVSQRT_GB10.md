@@ -196,5 +196,8 @@ LOG 05e94f63d078b9d460bc94305389a874216c6cb50d2d462b8d4bd0943c86f51e.
 with c1 one ulp up; each must fail a host-model check. nvdisasm 13.0.85 and
 sm121dis decode all 88 + 312 words to the encoder's text
 (`tools/divsqrt_nvdisasm_check.sh`). Chip run: `tools/run_numeric_transc_gate.sh`
-(default op list includes EXP and LOG); NOT_RUN on the GB10 until that
-receipt exists.
+(default op list includes EXP and LOG). Chip PASS on the GB10, 2026-10-27,
+omega `cb6d201`, physics `048e5f5`: EXP and LOG each over all 2^32 inputs,
+0 mismatches, 0 unwritten, output digests equal to the host-model digests above
+(receipt `evidence/E1-TRANSC-GB10/b2f4afe91148931db0f10f40edec9b8cce4533db99ec8e7d9733492794fa2b0e.json`,
+chip log `blobs/ea7a32198c71b30b6682f53a556bf01d02d1a765e32c632e970f51330d6c92ef.log`).

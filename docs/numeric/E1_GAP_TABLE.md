@@ -118,7 +118,7 @@ later, not now.
 | 7 | Division and square root on GB10 | Closed (chip PASS) | Standalone GB10 kernels `src/omega_numeric_divsqrt_gb10.c` (DIV 264 words, SQRT 336 words, every word from Omega's encoder and checked by nvdisasm); `make test-divsqrt-host`; gate `tools/run_divsqrt_gate.sh`; receipt `E1-DIVSQRT/de7b2dd6a930ae94529773cf4e31aa08aac7065602b1d771e13e6ed2784a9074.json` ; wired into the main GB10 path (`omega_numeric_gb10.c` dispatches DIV/SQRT to `omega_ds_gb10_run`); Gate 5 chip parity 0 of 4096 mismatches each, receipt `OMEGA-NUMERIC-0/dafb645a9692aab551327c4de7c5dfd7d194504b1ae2ac998a0f5480c687cbb2.json` | None for DIV/SQRT | None | - | No |
 | 8 | Transcendental: exact sequences (wording) | Met (decided) | EXP/LOG frozen polynomial sequences (`omega_numeric.h:125-131`); edge and round-trip checks (`test_omega_numeric.c:803-844`); binary128 oracle bound EXP 40 ulp, LOG 4 ulp (lines 379-380) | Decided by aien-architecture #76 (merge `15808f9`, Option 1): "exact" means a frozen sequence with a declared per-op error bound, bit-identical on CPU and GB10, not correct rounding. RSQRT, DIV and SQRT stay correctly rounded. EXP worst case 39 ulp against its 40 ulp bound (omega#107 notes) | None for the wording; GB10 parity is tracked in row 10 | - | No |
 | 9 | Transcendental: coverage | Closed on CPU | omega#127 (merge `7a5a13c`): SIGMOID, TANH, RSQRT, EXP2, LOG2, ERF, SIN, COS, GELU. Frozen binary32 sequences, bounded ulp (declared 3, 3, 0, 2, 2, 3, 2, 2, 3), checked against a binary128 oracle over all 2^32 inputs. CI: `.github/workflows/pr-smoke.yml` runs `test-numeric-transc` (sampled bound check and 10 mutants, must print `all 10 mutants killed`) and `host-suites-3.yml` runs it with `test-numeric-transc-digest`. Full-domain run `test-numeric-transc-full` PASS on omega `9d11565` (forge job `E1-CLOSE-TRANSC-FULL`, "E1 WP-B verdict: PASS", every op's full-domain digest matches the frozen one; GELU max 2 ulp at bound 3). The erfcx tables now live in one header, `src/omega_numeric_transc_tables.h`, read by both the CPU sequence and the GB10 kernels | pow variants not defined (no plan requirement); not in `OP_TABLE` dispatch | None | - | No |
-| 10 | Transcendental on GB10 | EXP2, LOG2, SIGMOID, TANH PASS on chip; SIN, COS, ERF, GELU closed in code, chip receipt pending; RSQRT open; natural EXP, LOG closed in code (host model 2^32, 0 mismatches each), chip NOT_RUN (`docs/numeric/E1_DIVSQRT_GB10.md`, Row 10: natural EXP and LOG) | Whole-program GB10 kernels (`src/omega_numeric_divsqrt_gb10.c`), same operation order and FMA placement as `src/omega_numeric_transc.c`, no MUFU, nvdisasm-checked, digest-pinned. Merged-main receipt `evidence/E1-TRANSC-GB10/96fbc78df41fb62244e9d16cd59531182f64a01fb8c5ef1e02c8dadb8be6f556.json` (omega `4863803`, physics `e95e3ed`): EXP2, LOG2, SIGMOID, TANH each every 32-bit input, 0 mismatches. This PR (commit `966c47c`) adds SIN (120 words), COS (120), ERF (360), GELU (424): `tools/divsqrt_nvdisasm_check.sh` VERDICT PASS for all ten kernels; `make test-numeric-transc-gb10-host` 64/0 (edge set, stride 4093, 1M random per op, digest recorded); the host model of each new kernel equals the CPU tier on every one of the 2^32 inputs (`--host-all` SIN, COS, ERF, GELU: 4294967296 checked, 0 mismatches, forge job `E1-CLOSE-HOSTALL`). Kept FAILs from earlier runs are listed in the receipts' history | Chip run of the four new ops over all 2^32 inputs (queued: forge job `E1-CLOSE-TRANSC-CHIP`). RSQRT has no GB10 kernel: the CPU sequence decides rounding with a 128-bit integer midpoint test (`mid_below`), and the DS frame has no integer multiply, so a bit-identical kernel needs a different exact-rounding scheme (FMA residual checks); not attempted here. Unwritten-output intermittent event on the DS executor is C3 part 1 (branch `c3-h1-fence`), not touched | Run the chip job; design the RSQRT exact-rounding scheme | M (RSQRT) | Yes |
+| 10 | Transcendental on GB10 | Closed (chip PASS, 2026-10-27): all eleven ops, EXP2, LOG2, SIGMOID, TANH, SIN, COS, ERF, GELU, RSQRT and natural EXP, LOG, bit-identical to the CPU tier on every 32-bit input, 0 mismatches each, at omega `cb6d201`, physics `048e5f5`. Receipts and digests: "Update, 2026-10-27" at the end of this file | Whole-program GB10 kernels (`src/omega_numeric_divsqrt_gb10.c`), same operation order and FMA placement as `src/omega_numeric_transc.c` (EXP, LOG: `src/omega_numeric.c`), no MUFU, digest-pinned. `tools/divsqrt_nvdisasm_check.sh` decodes every word of all 13 whole-program kernels with Omega's own `sm121dis` and compares with the encoder's listing (VERDICT PASS). Earlier states (merged-main receipt `96fbc78d…` for EXP2, LOG2, SIGMOID, TANH; commit `966c47c` adding SIN, COS, ERF, GELU; RSQRT exact-rounding design) are in "Closure, 2026-10-02" and git history | None for bit parity of these eleven ops. Their Gate 5 parity lines are row 11 | Row 11 | - | Yes (done) |
 | 11 | CPU/GB10 parity under frozen contracts | Partial | Gate 5 receipt `OMEGA-NUMERIC-0/dafb645a9692aab551327c4de7c5dfd7d194504b1ae2ac998a0f5480c687cbb2.json` (omega 7852570, physics e95e3ed): 40 encoded ops, 47 GB10 parity lines (FFMA x8), 0 mismatches over 4096 inputs each incl. subnormal/NaN/inf classes, DIV and SQRT included; frozen contracts = FPCR rule, declared reduction order, provenance table, physics.lock pin | EXP and LOG are encoded on the main path (row 10 whole-program kernels) and in the Gate 5 manifest (42 ops, 49 parity lines), Gate 5 chip parity NOT_RUN; the nine #127 ops are still refused on the main path and have no Gate 5 chip parity | Rerun Gate 5 with each new op added; keep the 23 tests and extend the expected-ID list | M per batch | Yes |
 | 12 | Integration (not named in the plan, implied by "before tensor training") | Partial (tensor tier closed; program IR FP32 type open) | The M20 tensor CPU tier now calls the qualified library: `src/tensor/omega_tensor_cpu.c` routes elementwise ops through `omega_numeric_cpu_realize`, EXP2/LOG2/SIGMOID/TANH/SIN/COS/RSQRT/ERF/GELU through `omega_numeric_transc.c`, and reductions through `omega_tensor_reduce_seam.c` into `omega_reduce_cpu`; `tools/tensor_mutations.sh` and `tools/autodiff_mutations.sh` mutate those call sites. Program IR still refuses DIV (`tests/realize/test_program_realize.c:249`) and `src/omega_program.c` has no FP32 type | The program IR and visor do not carry FP32 values | Design decision (FP32 value type in the program IR) belongs to the program-IR owner and Drake; not code that can be closed by a test alone. Blocked on that decision | M | No |
 
@@ -225,9 +225,9 @@ The 2026-10-01 summary ("NOT closed, 2 of 6") stands as history of that date.
 
 Exclusions and remaining work (recorded, not hidden):
 
-- EXP and LOG (natural base, the 40 ulp / 4 ulp bounded `OP_TABLE` sequences) have no GB10 kernel and are refused
-  on the GB10 path (`src/omega_numeric_gb10.c` header). EXP2 and LOG2 are on the chip. Nothing in the plan's six
-  bullets names natural-base EXP/LOG; if a consumer needs them on the chip, that is a new row.
+- (History, superseded 2026-10-27, see "Update, 2026-10-27" below.) EXP and LOG (natural base, the 40 ulp / 4 ulp
+  bounded `OP_TABLE` sequences) had no GB10 kernel and were refused on the GB10 path. EXP2 and LOG2 are on the chip.
+  Nothing in the plan's six bullets names natural-base EXP/LOG; the chip kernels are the new row 10 entry.
 - Gate 5's expected-ID list was not extended with the transcendental ops (row 11 as written on 2026-10-01). Their
   chip parity is established by the two `E1-TRANSC-GB10` receipts, not by Gate 5 parity lines.
 - Row 12 (FP32 in the program IR, `spec/program-fp32.md`) is merged and its tests ran in the host rerun
@@ -244,3 +244,50 @@ SHA-256 of the canonical body without that field (`tools/json_canon.c`), the sam
 reduce, transc, host-rerun and mutant files are named for the SHA-256 of the file itself. Digests make alteration
 detectable; they are not signatures. To re-verify, run the combiner again on the same inputs with
 `E1_TIMESTAMP_UTC` set to the receipt's `timestamp_utc`: it must print the same digest.
+
+## Update, 2026-10-27: all eleven ops on the GB10, natural EXP and LOG included
+
+Row 10's last exclusion is closed on the chip. Commit `cb6d201` adds whole-program GB10 kernels for natural EXP
+(88 instruction words) and LOG (312), the unfused FMUL/FADD/FSUB sequences of `omega_math_exp` / `omega_math_log` in
+C order, LOG reusing the row 7 DIV core; no MUFU, no FFMA. `tools/run_numeric_transc_gate.sh` now defaults to all
+eleven ops. Three gate runs on omega `cb6d201`, physics `048e5f5`, each under `/tmp/aien-gb10.lock`:
+
+| Receipt (`evidence/E1-TRANSC-GB10/`) | Run (UTC) | Ops | Result |
+|---|---|---|---|
+| `b2f4afe91148931db0f10f40edec9b8cce4533db99ec8e7d9733492794fa2b0e.json` | 08:16:05 to 08:22:44 | EXP, LOG, EXP2 | 2^32 inputs each, 0 mismatches, 0 unwritten; host tier `SUMMARY passed=88 failed=0` |
+| `ae3a41238f689eedcd0173a024402737a867baf5361875a81190ed34d69b7b32.json` | 08:29:50 to 08:44:48 | SIGMOID, TANH, SIN, COS | same |
+| `d846fbe38fde84edd8be48ff4f7ad0c6f6113aae89b61f4b3071b4fcb5f71c24.json` | 08:46:43 to 08:59:35 | ERF, GELU, RSQRT, LOG2 | same |
+
+Each op's output digest (tree layout of `tests/test_omega_transc.c`) in these receipts equals the CPU-tier digest:
+the frozen digests for the nine earlier ops, and for EXP `413c3429...829c`, LOG `05e94f63...f51e`, the host-model
+digests recorded in `E1_DIVSQRT_GB10.md`. Chip logs are under `evidence/E1-TRANSC-GB10/blobs/`, named by sha256.
+
+Tensor path: commit `0919efc3` removes the tensor-layer refusal of the transcendental ops on the GB10. The tensor
+executor's `.transc` entry submits all eleven ops through these kernels (map `GB10_TRANSC_DS1`); ops without a
+kernel refuse with `NOT_ENCODED` and there is no CPU fallback (an `nm` check plus the `GB10_TRANSC_NO_CPU_FALLBACK`
+mutant). Chip run on omega `0919efc3`, finished 09:01:55Z, receipt
+`evidence/M20-TENSOR-GB10/a00b4178fe331647296d85a02b87f419ef55e53a38254ed2e879debf85209e2d.json`:
+`TENSOR_GB10_PARITY: PASS (99 of 99 cases bit-exact value ids)` (88 earlier cases plus 11 transcendental),
+`TENSOR_GB10_MUTANTS: PASS (3 of 3 caught on chip)`, `TENSOR_GB10_HOST: PASS (37 checks, 0 failed)`.
+
+Receipt field defect, found and fixed: `tools/manifests/numeric_transc.chiprun` captured the disassembler summary with
+`grep '^nvdisasm'`, which matched NVIDIA nvdisasm's version line in the earlier transc receipts. Since
+`tools/divsqrt_nvdisasm_check.sh` moved to Omega's own sm_121 disassembler it prints `disassembler: ...` and
+`VERDICT ...` lines instead, so the `nvdisasm_check` field is the empty string in all three receipts above. The check
+itself gated every run: the manifest refuses to continue unless the script exits 0. The receipts are unchanged; the
+manifest now captures `^disassembler|^VERDICT`. Rerun on the host at this commit: exit
+0, `VERDICT PASS` on 13 kernels (DIV, SQRT and the 11 transcendental kernels) with Omega's own sm_121 disassembler.
+
+Bounds of the natural ops (Wolfram derivation of the error model of the C sequences, kept as
+`evidence/E1-ULP-EXPLOG/20261027/exp-log-ulp-bounds.md`): EXP a priori at most 40 ulp (largest pre-rounding term
+39.15 ulp), equal to the declared `NUM_ORACLE_EXP_ULP`; LOG a priori at most 5 ulp (largest term 4.22 ulp, at
+exponent -1), one above the declared `NUM_ORACLE_LOG_ULP` of 4 in `tests/test_omega_numeric.c`. An a-priori bound
+is a ceiling, not a measurement. The measurement over all 2^32 inputs against the binary128 oracle is
+`test_omega_numeric_cpu --ulp-exhaustive EXP|LOG` (commit `0919efc3`); at this commit it is NOT_RUN to completion
+(running at `nice -n 19` on five shared cores), and the declared tolerances stand unchanged until it reports.
+
+A second, independent tier: the same eleven ops as seeded Omega compiled to SPIR-V and run on PoCL, compared bit for
+bit with the CPU tier, is documented in `docs/numeric/E1_SPIRV_TIER.md` on branch `e1open/eleven-ops-three-tiers`.
+
+NOT_RUN after this update: Gate 5 chip parity lines for EXP and LOG and for the nine ops of #127 (their chip parity is
+established by the transc receipts, not by Gate 5, as for row 11 on 2026-10-02); no CI job runs any GB10 path.

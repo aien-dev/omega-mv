@@ -17,8 +17,9 @@
 /*
  * OMEGA-NUMERIC-0 GB10 executor. Every request passes
  * omega_numeric_submit_check before any device is opened: unknown ops,
- * ops without a GB10 encoding (EXP, LOG and the refused variants
- * such as LDS.U8 or SHFL_UP), operand shapes the kernel cannot carry, and a
+ * ops without a GB10 encoding (the refused variants such as LDS.U8 or
+ * SHFL_UP; DIV, SQRT, EXP and LOG run as whole-program kernels,
+ * omega_numeric_op_whole_kernel), operand shapes the kernel cannot carry, and a
  * patch that fails the structural check (shared-memory order and bounds,
  * barriers, reduction order) are refused here with a message on stderr. The
  * structural check runs again on the exact QMD that is submitted. The kernel is the calibrated vecadd with the op's patch words from
