@@ -5724,7 +5724,8 @@ hreturn dst x
 end
 
 note VFIO container, group and device requests: _IO(';', 100 + k) from linux/vfio.h, exact allowlist and
-note shapes. GET_API_VERSION 15204 and DEVICE_RESET 15215 take no argument (n 0). CHECK_EXTENSION 15205 and
+note shapes. GET_API_VERSION 15204 takes no argument (n 0). DEVICE_RESET 15215 is not allowed: W0 never
+note resets the device from Omega (Drake: W0a only, no FLR). CHECK_EXTENSION 15205 and
 note SET_IOMMU 15206 pass the 4-byte little-endian value in the span; SET_IOMMU accepts only TYPE1v2 (3).
 note GROUP_SET_CONTAINER 15208 points at a 4-byte fd. GROUP_GET_STATUS 15207 (8), DEVICE_GET_INFO 15211
 note (24) and DEVICE_GET_REGION_INFO 15212 (32) point at the span after the compiler itself stores
@@ -5753,7 +5754,7 @@ hreturn dst x
 ret
 end
 n = ulong 99
-if or eq q 15204 eq q 15215
+if eq q 15204
 n = ulong 0
 end
 if or or eq q 15205 eq q 15206 eq q 15208

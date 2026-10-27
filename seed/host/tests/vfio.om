@@ -119,7 +119,6 @@ ck eq vfioctl neg int 1 uint 15212 data 32 32 neg long 9
 ck eq word32 32 32
 ck eq word32 28 4294967295
 ck eq word32 36 4294967295
-ck eq vfioctl neg int 1 uint 15215 data 64 0 neg long 9
 setinfo 5 4096 0
 h = vfiomap fd info 0 32
 ck gt h 0

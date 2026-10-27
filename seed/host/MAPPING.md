@@ -67,14 +67,18 @@ The VFIO allowlist (`_IO(';', 100+k)`, Linux `include/uapi/linux/vfio.h`) is
 GET_API_VERSION15204/0, CHECK_EXTENSION15205/4, SET_IOMMU15206/4 (value must be
 TYPE1v2 = 3), GROUP_GET_STATUS15207/8, GROUP_SET_CONTAINER15208/4,
 GROUP_GET_DEVICE_FD15210 (nonempty device name without zero bytes, copied with a
-terminator to private stack memory), DEVICE_GET_INFO15211/24,
-DEVICE_GET_REGION_INFO15212/32 and DEVICE_RESET15215/0. For spans of 8 bytes or
+terminator to private stack memory), DEVICE_GET_INFO15211/24 and
+DEVICE_GET_REGION_INFO15212/32. DEVICE_RESET15215 is refused: W0 is approved
+without a device reset, so Omega code cannot request one. For spans of 8 bytes or
 more the compiler writes `argsz = n` before the call, so the kernel copies at most
 n bytes back. CHECK_EXTENSION and SET_IOMMU pass the 4-byte value read from the
 span. Every other request, a non-literal request, a non-uchar span or library
 mode is refused at compile time; a wrong count, a bad SET_IOMMU value or an empty
-device name traps 3 at run time. DMA mapping, IRQ, region writes and migration
-requests are not covered. `vfiomap` refuses a size of zero and region flags
+device name traps 3 at run time. DMA mapping, IRQ, region writes, reset and migration
+requests are not covered. Note that closing a vfio-pci device fd lets Linux reset the
+function (FLR) or, when every reset method is disabled, the bus (SBR); the allowlist
+cannot prevent that kernel behaviour.
+`vfiomap` refuses a size of zero and region flags
 without READ|MMAP; it never requests PROT_WRITE. Host tests use an invalid fd and
 a memfd stand-in; the device path is exercised only in the QEMU bench of
 aien-dev/omega-gpu-driver, not on hardware.
