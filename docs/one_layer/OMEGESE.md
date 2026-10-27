@@ -420,7 +420,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - `to void` makes a void function; `ret` with no value returns from it, and so does reaching its `end`.
   A function with a return type whose `end` can be reached is error 18. (s.6 t_void, s.7)
 - Arguments are read left to right, each fully before the next. (s.5 fm5)
-- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7)
+- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7) A
+  function name longer than 8 characters is never a keyword, even when its first 8 spell one
+  (`continue_x`, `truncate_number`); a name that is exactly a keyword is error 16. (s1 kw-long-names)
 - A function has at most 6 parameters; a seventh is error 9. `main` has none (error 9). A new name
   may not reuse a name already in scope, a function or a struct: error 10.
 - In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
