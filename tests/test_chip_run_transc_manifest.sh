@@ -64,8 +64,10 @@ int main(int argc, char **argv) {
     const char *v = !strcmp(m, "fail") ? "FAIL" : (!strcmp(m, "notrun") || !strcmp(m, "notrun0")) ? "NOT_RUN" : "PASS";
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--chip")) continue;
-        printf("RESULT chip %s checked=%s exhaustive=%s mismatches=%s unwritten=0 verdict=%s\n", argv[i],
-               strcmp(v, "NOT_RUN") ? "4294967296" : "0", strcmp(v, "NOT_RUN") ? "true" : "false", strcmp(v, "FAIL") ? "0" : "7", v);
+        /* digest: a hex word that starts with a digit, so a loose number test in the manifest would break it */
+        printf("RESULT chip %s checked=%s exhaustive=%s mismatches=%s unwritten=0 verdict=%s digest=%s\n", argv[i],
+               strcmp(v, "NOT_RUN") ? "4294967296" : "0", strcmp(v, "NOT_RUN") ? "true" : "false", strcmp(v, "FAIL") ? "0" : "7", v,
+               strcmp(v, "NOT_RUN") ? "227cb65782077d82" : "none");
     }
     if (strcmp(m, "silent")) printf("VERDICT %s\n", v);
     return (strcmp(m, "pass") && strcmp(m, "silent") && strcmp(m, "notrun0")) ? 1 : 0;
@@ -124,12 +126,12 @@ suite() {
     runw happy -- ; HAPPY_R=$R
     ck happy_exit test "$RC" = 0
     ck happy_last_line last_is "VERDICT PASS"
-    ck happy_results_echoed test "$(grep -c '^RESULT chip ' "$OUT")" = 9
+    ck happy_results_echoed test "$(grep -c '^RESULT chip ' "$OUT")" = 11
     ck happy_noise_not_echoed lacks '^noise'
     ck happy_receipt_line has '^RECEIPT /.*\.json$'
     ck happy_no_chiprun_line lacks '^CHIP_RUN:'
-    ck happy_default_ops rj '.ops_requested == ["EXP2","LOG2","SIGMOID","TANH","SIN","COS","ERF","GELU","RSQRT"] and (.ops | map(.op)) == ["EXP2","LOG2","SIGMOID","TANH","SIN","COS","ERF","GELU","RSQRT"]'
-    ck happy_ops_typed rj '.ops[0] == {op:"EXP2",checked:4294967296,exhaustive:true,mismatches:0,unwritten:0,verdict:"PASS"}'
+    ck happy_default_ops rj '.ops_requested == ["EXP2","LOG2","SIGMOID","TANH","SIN","COS","ERF","GELU","RSQRT","EXP","LOG"] and (.ops | map(.op)) == ["EXP2","LOG2","SIGMOID","TANH","SIN","COS","ERF","GELU","RSQRT","EXP","LOG"]'
+    ck happy_ops_typed rj '.ops[0] == {op:"EXP2",checked:4294967296,exhaustive:true,mismatches:0,unwritten:0,verdict:"PASS",digest:"227cb65782077d82"}'
     ck happy_kernels rj '.kernels == [{op:"EXP2",instructions:12,sha256:"aaaa"},{op:"LOG2",instructions:34,sha256:"bbbb"}]'
     ck happy_nvd rj '.nvdisasm_check == "nvdisasm fake provenance line"'
     ck happy_host_tier rj '.host_tier == "FAKE_HOST_LAST"'
@@ -249,6 +251,7 @@ mutant nonvd 's#^tools/divsqrt_nvdisasm_check.sh > #true > #' nvdfail_refusal
 mutant nokdig 's#^build/test_omega_numeric_transc_gb10_cpu --digest > .*#true#' happy_kernels
 mutant nokdigcheck 's#^build/test_omega_numeric_transc_gb10_cpu --digest > \(.*\) || { echo "kernel digest failed"; exit 1; }$#build/test_omega_numeric_transc_gb10_cpu --digest > \1#' digfail_refusal
 mutant pass_loose "s/^PASS_LINE=.*/PASS_LINE='^VERDICT'/" notrun0_receipt
+mutant loosenum 's/test("^\[0-9\]+\$")/test("^[0-9]")/' happy_ops_typed
 sed 's#^SOURCES="src/omega_numeric_divsqrt_gb10.c #SOURCES="#' "$MAN" > "$T/m_dropsrc"
 sed 's#src/omega_om_units.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
 for m in m_dropsrc m_badfile; do [ "$(load_list "$T/$m")" = "$OLD_SRCS" ] && bad "mutant $m passed check 2" || ok "mutant $m fails check 2"; done

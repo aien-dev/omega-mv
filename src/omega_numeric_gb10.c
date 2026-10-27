@@ -95,11 +95,12 @@ int omega_gb10_execute_simt_op(const char *op_name,
     const OmegaNumericOpInfo *info = omega_numeric_op_find(op_name);
 
     if (omega_numeric_op_whole_kernel(info->op)) {
-        /* DIV/SQRT: the whole-program kernels of src/omega_numeric_divsqrt_gb10.c
-         * (E1 row 7). omega_ds_gb10_run repeats the argument check and checks
-         * the kernel image, its nvdisasm-verified digest and the QMD before it
-         * opens the device. Inputs and outputs travel as bit patterns. */
-        OmegaDsOp dop = info->op == OMEGA_NOP_DIV ? OMEGA_DS_DIV : OMEGA_DS_SQRT;
+        /* DIV/SQRT/EXP/LOG: the whole-program kernels of
+         * src/omega_numeric_divsqrt_gb10.c (E1 rows 7 and 10). omega_ds_gb10_run
+         * repeats the argument check and checks the kernel image, its
+         * nvdisasm-verified digest and the QMD before it opens the device.
+         * Inputs and outputs travel as bit patterns. */
+        OmegaDsOp dop = omega_ds_op_for_numeric(info->op);
         uint32_t *ua = malloc(count * sizeof(uint32_t));
         uint32_t *ub = malloc(count * sizeof(uint32_t));
         uint32_t *uo = malloc(count * sizeof(uint32_t));

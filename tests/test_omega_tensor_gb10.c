@@ -650,11 +650,12 @@ static void host_checks(void) {
     /* op map, and its counterexamples */
     CHECK(check_map(omega_tensor_gb10_op_name, true) == 0, "GB10 op map");
     CHECK(check_map(mut_map_wrong_op, false) > 0, "map check missed FSUB->FADD");
-    CHECK(check_map(mut_map_exp, false) > 0, "map check missed EXP (no GB10 kernel)");
+    CHECK(check_map(mut_map_exp, false) > 0, "map check missed EXP (not an elementwise op of the tensor layer)");
     CHECK(check_map(mut_map_uniform_ffma, false) > 0, "map check missed FFMA_V->FFMA (uniform c)");
 
-    /* refusals before any device is opened: ops without a GB10 kernel (or not
-     * used by the tensor layer) and sizes past OMEGA_REDUCE_GB10_MAX_N */
+    /* refusals before any device is opened: ops the tensor layer's elementwise
+     * table does not submit (EXP and LOG go through the transc entry) and sizes
+     * past OMEGA_REDUCE_GB10_MAX_N */
     static const OmegaNumericOp REFUSED[] = { OMEGA_NOP_EXP, OMEGA_NOP_LOG, OMEGA_NOP_FFMA, OMEGA_NOP_MUFU_RCP,
                                               OMEGA_NOP_LDS_STS, OMEGA_NOP_SHFL_DOWN, OMEGA_NOP_REDUCE_SUM };
     float a[4] = { 1.0f, 2.0f, 3.0f, 4.0f }, b[4] = { 1.0f, 1.0f, 1.0f, 1.0f }, o[4];

@@ -134,8 +134,9 @@ typedef enum {
      * (src/omega_numeric.c:458, :501) applied per element through the
      * realization's transc entry, bit-exact with calling them directly. NOT
      * correctly rounded: E1 checks them against binary128 within EXP 40 ulp,
-     * LOG 4 ulp (tests/test_omega_numeric.c:376-384). E1 has no GB10 kernel
-     * for either (src/omega_numeric.c:585-588).
+     * LOG 4 ulp (tests/test_omega_numeric.c:376-384). E1 row 10 has GB10
+     * whole-program kernels for both (src/omega_numeric_divsqrt_gb10.c,
+     * body_exp / body_log); the tensor GB10 table does not submit them.
      * RELU: no E1 op; a tensor-layer bit select, no float arithmetic:
      * x > +0 (incl. +inf, +subnormals) -> x; +0, -0, negatives, -inf -> +0;
      * any NaN (any sign or payload) -> canonical qNaN OMEGA_QNAN_BITS. */

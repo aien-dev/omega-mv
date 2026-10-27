@@ -66,8 +66,9 @@
 # re-hash them and re-run the log checks.
 # The historical file evidence/m19r_gate5_omega_numeric_evidence.json is not
 # touched; its hash is recorded as the predecessor.
-# All 40 ops in the manifest (the 15 original ops, the 23 E1 scalar ops, and
-# DIV and SQRT, which run the E1 row 7 whole-program kernels),
+# All 42 ops in the manifest (the 15 original ops, the 23 E1 scalar ops,
+# DIV and SQRT, which run the E1 row 7 whole-program kernels, and EXP and
+# LOG, which run the E1 row 10 whole-program kernels),
 # LDS_STS and REDUCE_SUM included, need one GB10
 # parity line each (FFMA one per c) at n=4096 with zero mismatches against the
 # CPU reference. REDUCE_SUM checks lane 0 of each warp (n/32 sums) and must
@@ -113,7 +114,7 @@ FSETP_NE_SEL:INT_EXACT FSETP_NUM_SEL:INT_EXACT FSETP_NAN_SEL:INT_EXACT FSETP_LTU
 FSETP_LEU_SEL:INT_EXACT FSETP_GTU_SEL:INT_EXACT FSETP_GEU_SEL:INT_EXACT FSETP_EQU_SEL:INT_EXACT
 FSETP_NEU_SEL:INT_EXACT F2I_FLOOR:INT_EXACT F2I_CEIL:INT_EXACT F2I_RNI:INT_EXACT F2U:INT_EXACT
 I2FP_U32:BIT_EXACT F32_TO_F16:F16_BITS F32_TO_BF16:BF16_BITS F16_TO_F32:BIT_EXACT
-BF16_TO_F32:BIT_EXACT FFMA_V:BIT_EXACT DIV:BIT_EXACT SQRT:BIT_EXACT"
+BF16_TO_F32:BIT_EXACT FFMA_V:BIT_EXACT DIV:BIT_EXACT SQRT:BIT_EXACT EXP:BIT_EXACT LOG:BIT_EXACT"
 NUM_ENCODED_OPS=$(printf '%s\n' $NUM_OP_MANIFEST | cut -d: -f1 | tr '\n' ' ')
 # Elements per launch (N in tests/test_omega_numeric.c).
 NUM_CORPUS_N=4096

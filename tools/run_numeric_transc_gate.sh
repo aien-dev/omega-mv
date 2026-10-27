@@ -15,10 +15,12 @@
 # limitations under the License.
 
 # run_numeric_transc_gate.sh -- E1 row 10 chip gate: GB10 realizations of the
-# frozen FP32 transcendental sequences (src/omega_numeric_transc.c), every
-# 2^32 input of each op compared bit for bit with the CPU tier.
+# frozen FP32 transcendental sequences (src/omega_numeric_transc.c; natural EXP
+# and LOG: omega_math_exp / omega_math_log of src/omega_numeric.c), every
+# 2^32 input of each op compared bit for bit with the CPU tier. Each op's RESULT
+# line carries the full-domain output digest (digest=<hex>).
 #
-# Usage: tools/run_numeric_transc_gate.sh [OP ...]   (default: EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT)
+# Usage: tools/run_numeric_transc_gate.sh [OP ...]   (default: EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT EXP LOG)
 # Exit: 0 PASS; 1 anything else (FAIL, NOT_RUN, refused). Refusals print
 # "REFUSED: why" and "VERDICT NOT_RUN". Last stdout line: "VERDICT <word>".
 #
@@ -36,7 +38,7 @@
 set -u
 HERE=$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 PHYSICS=${PHYSICS_DIR:-$HOME/workspace/hive-worktrees/physics-gate14-e95e3ed}
-OPS=("$@"); [ ${#OPS[@]} -gt 0 ] || OPS=(EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT)
+OPS=("$@"); [ ${#OPS[@]} -gt 0 ] || OPS=(EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT EXP LOG)
 refuse() { echo "REFUSED: $*"; echo "VERDICT NOT_RUN"; exit 1; }
-for op in "${OPS[@]}"; do case "$op" in EXP2|LOG2|SIGMOID|TANH|SIN|COS|ERF|GELU|RSQRT) ;; *) refuse "unknown op $op" ;; esac; done
+for op in "${OPS[@]}"; do case "$op" in EXP2|LOG2|SIGMOID|TANH|SIN|COS|ERF|GELU|RSQRT|EXP|LOG) ;; *) refuse "unknown op $op" ;; esac; done
 exec bash "$HERE/tools/chip_run.sh" "$HERE/tools/manifests/numeric_transc.chiprun" --physics-dir "$PHYSICS" -- --chip "${OPS[@]}"

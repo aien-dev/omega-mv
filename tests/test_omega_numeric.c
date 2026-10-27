@@ -883,13 +883,13 @@ int main(int argc, char **argv) {
         if (!info->gb10_encoded) continue;
         encoded++;
         if (omega_numeric_op_whole_kernel(info->op)) {
-            /* DIV/SQRT: whole-program kernel, structural check and the
+            /* DIV/SQRT/EXP/LOG: whole-program kernel, structural check and the
              * nvdisasm-verified digest (src/omega_numeric_divsqrt_gb10.c). The
              * vecadd patch path must refuse it. */
             static uint8_t dcode[OMEGA_DS_MAX_CODE_BYTES];
             size_t dlen = 0;
             char derr[256];
-            OmegaDsOp dop = info->op == OMEGA_NOP_DIV ? OMEGA_DS_DIV : OMEGA_DS_SQRT;
+            OmegaDsOp dop = omega_ds_op_for_numeric(info->op);
             OmegaNumericPatchInsn dp[OMEGA_NUMERIC_PATCH_MAX];
             uint8_t pcode[0x200];
             if (omega_ds_build_kernel(dop, dcode, sizeof(dcode), &dlen) != 0 ||
@@ -908,7 +908,7 @@ int main(int argc, char **argv) {
     }
     printf("[*] Provenance entries: %zu, encoded ops: %zu\n", omega_numeric_get_opcode_count(), encoded);
     report("PROVENANCE_MATCHES_EXECUTOR",
-           fixtures_rc == 0 && prov_problems == 0 && build_ok && encoded == 40 &&
+           fixtures_rc == 0 && prov_problems == 0 && build_ok && encoded == 42 &&
            omega_numeric_get_opcode_count() == 52);
 
     /* Refusal before submission: never a silent wrong instruction. */
@@ -932,9 +932,10 @@ int main(int argc, char **argv) {
             refuse_ok = 0;
         printf("    refused %-14s rc=%d: %s\n", nname, rc, err);
     }
-    /* only EXP LOG remain refused (the 23 E1 scalar ops are encoded, E1 WP-C;
-     * DIV SQRT run the E1 row 7 whole-program kernels) */
-    if (refused_ops != omega_numeric_op_count() - 40) refuse_ok = 0;
+    /* no registry op remains refused (the 23 E1 scalar ops are encoded, E1
+     * WP-C; DIV SQRT run the E1 row 7 and EXP LOG the E1 row 10
+     * whole-program kernels) */
+    if (refused_ops != omega_numeric_op_count() - 42) refuse_ok = 0;
     {
         char err[256];
         fill_c(g_c, 0x3f800000u);
