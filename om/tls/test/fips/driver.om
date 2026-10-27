@@ -153,7 +153,7 @@ fdt 72 fdnz part c TLECD2 145 0
 end
 
 note steps 2-5 (id base 10)
-fn fdpos c edit uchar 119296 st edit uchar 128 b edit uchar 4096 k edit uchar 32 q edit uchar 32 to void
+fn fdpos c edit uchar TLCSZ st edit uchar 128 b edit uchar 4096 k edit uchar 32 q edit uchar 32 to void
 fdt 10 fips_entropy b 0
 fdt 11 get FPST 9 1
 fdt 12 get FPST 8 0

@@ -479,7 +479,7 @@ ret 0
 end
 
 fn main to int
-cs = new uchar 121696 0
+cs = new uchar TLCSZ 0
 st = new uchar 262144 0
 w = new uchar 16384 0
 ret cl_main cs st w
