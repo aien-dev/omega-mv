@@ -6,8 +6,10 @@ fz_flight frag_aes 000
 fz_flight frag_chacha 000
 fz_flight full_aes 000
 fz_flight full_chacha 000
-fz_flight hrr_aes 013
-fz_flight hrr_chacha 013
+fz_flight hrr_aes 004
+fz_flight hrr_chacha 004
+fz_flight hrrdup_aes 011
+fz_flight hrrdup_chacha 011
 fz_flight pad_aes 007
 fz_flight pad_chacha 007
 fz_flight shonly_aes 004

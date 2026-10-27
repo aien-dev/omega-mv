@@ -53,7 +53,8 @@ def extract(salt, ikm): return hmac.new(salt, ikm, hashlib.sha256).digest()
 
 
 def pki():
-    """root -> int -> leaf, P-256, valid 2025..2049, leaf SAN www.example.test"""
+    """root -> int -> leaf, P-256, valid 2025..2049, leaf SAN www.example.test; SKI on root and
+    int, AKI on int and leaf (x509.om chain_leaf / chain_ca, RFC 5280 4.2.1.1-2, since #833)"""
     nb = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
     na = datetime.datetime(2049, 12, 31, tzinfo=datetime.timezone.utc)
     keys = [ec.generate_private_key(ec.SECP256R1()) for _ in range(3)]
@@ -70,6 +71,11 @@ def pki():
             digital_signature=not ca, content_commitment=False, key_encipherment=False,
             data_encipherment=False, key_agreement=False, key_cert_sign=ca, crl_sign=ca,
             encipher_only=False, decipher_only=False), critical=True)
+        if ca:
+            b = b.add_extension(x509.SubjectKeyIdentifier.from_public_key(keys[i].public_key()), False)
+        if i > 0:
+            b = b.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(
+                keys[i - 1].public_key()), False)
         if not ca:
             b = b.add_extension(x509.SubjectAlternativeName([x509.DNSName(HOST.decode())]), False)
             b = b.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), False)
@@ -134,9 +140,12 @@ def flight(o, ch, der, key, suite):
     o.put("fz_flight", f"pad_{tag}", pre + chunk(22, ee) + chunk(0, b"") + chunk(22, cert + cv + fin))
     o.put("fz_flight", f"alert_{tag}", pre + chunk(22, ee) + chunk(21, b"\x02\x28"))
     o.put("fz_flight", f"shonly_{tag}", u16(len(rec(22, sh))) + rec(22, sh))
-    hrr = msg(2, b"\x03\x03" + h256(b"HelloRetryRequest") + u8(32) + sid + u16(suite) + b"\x00"
-              + u16(12) + u16(43) + u16(2) + b"\x03\x04" + u16(51) + u16(2) + u16(29))
-    o.put("fz_flight", f"hrr_{tag}", u16(len(rec(22, hrr))) + rec(22, hrr))
+    # HelloRetryRequest: a cookie-only request changes ClientHello2 and is accepted; naming x25519,
+    # whose share ClientHello1 already carries, is illegal_parameter (RFC 8446 4.1.4, TLEKEYS)
+    for name, ext in (("hrr", u16(44) + u16(6) + u16(4) + b"omfz"), ("hrrdup", u16(51) + u16(2) + u16(29))):
+        hrr = msg(2, b"\x03\x03" + h256(b"HelloRetryRequest") + u8(32) + sid + u16(suite) + b"\x00"
+                  + u16(6 + len(ext)) + u16(43) + u16(2) + b"\x03\x04" + ext)
+        o.put("fz_flight", f"{name}_{tag}", u16(len(rec(22, hrr))) + rec(22, hrr))
     return sh, ee, cert, cv
 
 
