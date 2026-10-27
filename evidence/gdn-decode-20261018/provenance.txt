@@ -1,0 +1,1 @@
+chip run 2 binary = base-commit.txt (f4a9849f) + change.diff = commit in built-from-commit.txt (before the rebase onto feat/fp8-k32768, which touches none of these files); status.txt is from run 1

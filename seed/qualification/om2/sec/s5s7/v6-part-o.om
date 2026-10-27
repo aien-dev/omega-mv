@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 173: len 10, o = 11, k = 0: o <= len fails, trap 3, exit 103. A mutant that
+note drops the first check computes len - o = 2^64-1 >= 0 and prints 0 (exp/v6-part-o.mutant).
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = ulong 11
+putd plen part a o 0
+ret 0
+end

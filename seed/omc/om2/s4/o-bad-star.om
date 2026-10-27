@@ -1,0 +1,5 @@
+note S4: an out is sized; `out uchar *` is error 16.
+om2
+export fn f r out uchar * to void
+put r 0 1
+end

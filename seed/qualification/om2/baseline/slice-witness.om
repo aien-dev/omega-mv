@@ -1,0 +1,23 @@
+note SPDX-License-Identifier: Apache-2.0
+note Weakened-guard witness (#748): write 4 bytes from offset o = 2^64-2 of a 4-byte array to /dev/null.
+note o and k = 4 are the issue's overflow pair (fixtures/obligations.txt, first slice row): the
+note wrapped sum o+k = 2 <= len 4 is TRUE but k <= len - o is FALSE. A correct compiler traps 3
+note before the system call (exit 103, no output). A compiler whose check is the wrapped sum lets
+note the call run; /dev/null accepts the bytes without reading them, so the mutant path is
+note deterministic: it prints WRAPPED_SLICE_ACCEPTED_4 and a newline and exits 0.
+text devnull "/dev/null"
+text accepted "WRAPPED_SLICE_ACCEPTED_4\n"
+fn main to int
+a = new uchar 4 0
+f = fopen devnull 0 len devnull 1 0
+if lt f 0
+ret 90
+end
+o = ulong 18446744073709551614
+r = write int f a o 4
+if eq r 4
+w = write 1 accepted 0 len accepted
+ret 0
+end
+ret 91
+end

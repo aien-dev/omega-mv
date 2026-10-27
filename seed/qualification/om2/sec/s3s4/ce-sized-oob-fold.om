@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 105-106: the index add i 1 folds to the constant 4 in the i = 3 copy, a
+note constant outside the SIZED array a4: error 21 at compile time (line 10, the put).
+om2
+fn main to int
+a4 = new ulong 4 7
+s = ulong 0
+for i ulong 4 unroll
+s = add s get a4 i
+put a4 add i 1 s
+end
+ret int s
+end

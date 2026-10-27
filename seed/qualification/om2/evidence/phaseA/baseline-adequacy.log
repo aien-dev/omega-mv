@@ -1,0 +1,15 @@
+OM2GATE START cases=seed/qualification/om2/baseline/adequacy.cases scratch=build/om2-qual/baseline-adequacy
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+SUBST seed/qualification/om2/baseline/mutants/nowrite.from seed/qualification/om2/baseline/mutants/nowrite.to
+CASE mut-nowrite-fips-empty line=5
+  MUTATE exact-once substitution at byte 24373
+  $ seed/out/omc < build/om2-qual/baseline-adequacy/5.src > build/om2-qual/baseline-adequacy/5.elf 2> build/om2-qual/baseline-adequacy/5.cerr
+  $ build/om2-qual/baseline-adequacy/5.elf < /dev/null > build/om2-qual/baseline-adequacy/5.out 2> build/om2-qual/baseline-adequacy/5.err
+VERDICT mut-nowrite-fips-empty FAIL run exit=0 expected=0 mutant survived: stdout equals the oracle stderr=match
+SUBST seed/qualification/om2/baseline/mutants/split.from seed/qualification/om2/baseline/mutants/split.to
+CASE mut-split-seq-1000-p4096 line=7
+  MUTATE exact-once substitution at byte 22984
+  $ seed/out/omc < build/om2-qual/baseline-adequacy/7.src > build/om2-qual/baseline-adequacy/7.elf 2> build/om2-qual/baseline-adequacy/7.cerr
+  $ build/om2-qual/baseline-adequacy/7.elf 4096 < build/om2-qual/baseline-adequacy/7.in > build/om2-qual/baseline-adequacy/7.out 2> build/om2-qual/baseline-adequacy/7.err
+VERDICT mut-split-seq-1000-p4096 FAIL run exit=0 expected=0 mutant survived: stdout equals the oracle stderr=match
+OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0

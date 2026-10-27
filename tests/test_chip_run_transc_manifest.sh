@@ -1,4 +1,19 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Host-only check of tools/manifests/numeric_transc.chiprun and its wrapper
 # tools/run_numeric_transc_gate.sh. No GPU, no chip sources, no real build: a fake omega and
 # fake physics (git repos in a temp dir), a tiny fake chip binary and fake host tier, run through
@@ -23,7 +38,7 @@ FAKE_PHYS=/nonexistent-physics-for-test
 
 # Pinned from the old script (origin/main before this change): receipt keys in order, gcc sources in order.
 OLD_KEYS="gate row reference omega_commit omega_tree_clean_before omega_tree_clean_after omega_commit_unchanged_after physics_commit physics_lock_pin physics_tree_clean_before physics_tree_clean_after physics_commit_unchanged_after binary_sha256 chip_log_sha256 kernels nvdisasm_check host_tier ops_requested ops chip_exit_status started_utc finished_utc verdict"
-OLD_SRCS="tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c $FAKE_PHYS/nvrm/nvrm.c $FAKE_PHYS/m16/m16_native.c"
+OLD_SRCS="tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c $FAKE_PHYS/nvrm/nvrm.c $FAKE_PHYS/m16/m16_native.c"
 
 # Cross-check of the pins against the old script, only while origin/main still has it.
 OLDSH=$(git -C "$HERE" show origin/main:tools/run_numeric_transc_gate.sh 2>/dev/null)
@@ -235,7 +250,7 @@ mutant nokdig 's#^build/test_omega_numeric_transc_gb10_cpu --digest > .*#true#' 
 mutant nokdigcheck 's#^build/test_omega_numeric_transc_gb10_cpu --digest > \(.*\) || { echo "kernel digest failed"; exit 1; }$#build/test_omega_numeric_transc_gb10_cpu --digest > \1#' digfail_refusal
 mutant pass_loose "s/^PASS_LINE=.*/PASS_LINE='^VERDICT'/" notrun0_receipt
 sed 's#^SOURCES="src/omega_numeric_divsqrt_gb10.c #SOURCES="#' "$MAN" > "$T/m_dropsrc"
-sed 's#src/sha256.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
+sed 's#src/omega_om_units.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
 for m in m_dropsrc m_badfile; do [ "$(load_list "$T/$m")" = "$OLD_SRCS" ] && bad "mutant $m passed check 2" || ok "mutant $m fails check 2"; done
 ( PHYSICS=$FAKE_PHYS; . "$T/m_badfile"; for s in $TEST_SOURCE $SOURCES; do [ -f "$HERE/$s" ] || exit 1; done ) && bad "mutant badfile passed 2b" || ok "mutant badfile fails 2b"
 
