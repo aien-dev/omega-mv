@@ -1,0 +1,13 @@
+om2
+note a for inside an if hoists 10001; the if's close restores hz_n (bhz), so the use after the if
+note loads 10001 itself. With no arguments the if is not taken and x20 was never loaded: exits 1
+fn main to int
+s = ulong 0
+if gt argcnt 5
+for i ulong 4
+s = add s 10001
+end
+end
+s = add s 10001
+ret int sub s 10000
+end

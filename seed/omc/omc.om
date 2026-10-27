@@ -244,7 +244,10 @@ global fn_exp uchar 4096
 
 note ======== leaf helpers ========
 
-note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
+note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch). The rest of
+note the map: x18 unused (platform), x19 the native bridge's frame (never written), x20..x26 the OM-2 hoisted
+note loop constants (hzreg, hzcap), x27 the program-mode host-args pointer (args, envcnt, envread), x28
+note the program-mode stack floor (cmp sp, x28), x29 unused, x30 the link register.
 fn poolc i ulong to ulong
 if lt i 7
 ret i
@@ -3976,19 +3979,28 @@ ret r
 end
 
 note ---- loop-invariant hoisting. A constant-count for (sf_num) loads, before its head, the constants its
-note body uses into x20 + j (j < 8, hz_v j the value, hz_n active): the address of a global array named
+note body uses into hzreg j = x20 + j (j < hzcap = 7, hz_v j the value, hz_n active): the address of a global array named
 note after get or put, a plain number after sub, any plain number above 4095. Uses take the register
 note holding the same value, so a register is right whatever line chose it: the base and number index of
 note elemaddr, the operands of binop (read only there) and the value of put. The callee of a BL may load
 note its own: hzrem reloads every active one after each BL. The block's close restores hz_n (bhz).
-note x20..x27 are callee-saved (AAPCS64): the native bridge trampoline saves and restores them.
+note x20..x26 are callee-saved (AAPCS64): the native bridge trampoline saves and restores them. x27 and
+note x28 are never hoist registers: program mode keeps the host-args pointer and the stack floor there.
+
+note hzreg: the register of hoist entry j. hzcap: the number of entries, 7 (x20..x26, see poolc).
+fn hzreg j ulong to ulong
+ret add j 20
+end
+fn hzcap to ulong
+ret 7
+end
 
 note hzfind: the register holding v (an active entry), 0 when none
 fn hzfind v ulong to ulong
 j = ulong 0
 while lt j get hz_n 0
 if eq get hz_v j v
-ret add j 20
+ret hzreg j
 end
 j = add j 1
 end
@@ -4006,14 +4018,14 @@ end
 ret matreg k v t
 end
 
-note hzadd: load v into the next register (MOVZ/MOVN/MOVK), unless it is held or all 8 are active
+note hzadd: load v into the next register (MOVZ/MOVN/MOVK), unless it is held or all hzcap are active
 fn hzadd v ulong to void
 if eq hzfind v 0
 n = get hz_n 0
-if lt n 8
+if lt n hzcap
 put hz_v n v
 put hz_n 0 add n 1
-matconst add n 20 v
+matconst hzreg n v
 end
 end
 end
@@ -4022,7 +4034,7 @@ note hzrem: after a BL, load every active entry again
 fn hzrem to void
 j = ulong 0
 while lt j get hz_n 0
-matconst add j 20 get hz_v j
+matconst hzreg j get hz_v j
 j = add j 1
 end
 end

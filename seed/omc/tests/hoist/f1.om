@@ -1,0 +1,18 @@
+note function mode (export): nine constants above 4095 in a constant-count loop. hzcap 7 hoists the first
+note seven into x20..x26; gate19 scans the unit: x20..x26 written, x19 and x27..x29 never written
+om2
+export fn hsum a ulong to ulong
+s = a
+for i ulong 8
+s = add mul s 3 70001
+s = add mul s 3 70002
+s = add mul s 3 70003
+s = add mul s 3 70004
+s = add mul s 3 70005
+s = add mul s 3 70006
+s = add mul s 3 70007
+s = add mul s 3 70008
+s = add mul s 3 70009
+end
+ret s
+end
