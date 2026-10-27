@@ -16,7 +16,10 @@ receipt). The backend is new; nothing above the IR changes meaning.
 
 A kernel that checker2 accepts gives the same output bits on every run. That is the design goal
 of sections 6 to 9: no data races, no hang at `sync` or `down`, and a trap code that does not depend
-on thread timing.
+on thread timing. Atomics and reductions are covered by the determinism ban in
+`docs/one_layer/OMEGESE.md` section 13 (`seed/detcheck/`): float and order-dependent atomics are
+refused, and there is no reduction without a written order. Same bits on the chip is D7 in
+aien-dev/CUDApp, not a property this checker proves.
 
 ## 2. The kernel line
 
@@ -386,7 +389,7 @@ weekly limit, so Claude Opus 5.5 reviewed design v1 (commit c0295f31) read-only.
 | 13 | should-fix | no fused multiply-add | `mad` added (IR op MAD) |
 | 14 | should-fix | the thread count was known only at launch | the thread count is part of the kernel line |
 | 15 | should-fix | 16 parameter registers is only 8 buffers | raised to 32 registers; `down` on bool is refused and the doc says so |
-| 16 | should-fix | pieces missing for a full CUDA replacement | deferred to the C3 roadmap, none is needed by a C1 kernel: atomics, bf16/fp16/fp8, vector loads, tensor-core matrix multiply, sin and cos, a third grid axis, divisors known only at run time, more than 48 KiB of shared memory. Too many registers is refused, not spilled (section 11) |
+| 16 | should-fix | pieces missing for a full CUDA replacement | deferred to the C3 roadmap, none is needed by a C1 kernel: atomics, bf16/fp16/fp8, vector loads, tensor-core matrix multiply, sin and cos, a third grid axis, divisors known only at run time, more than 48 KiB of shared memory. Too many registers is refused, not spilled (section 11). Atomics: the determinism rule now comes before the instruction; ATOM (op 47) is specified and checked by `seed/detcheck/` (`docs/one_layer/OMEGESE.md` section 13), which refuses float and order-dependent forms, while Omegese, the producers and this backend still have no atomic |
 | 17 | should-fix | `root` read as 1/sqrt would be misread | `root` is sqrt; `inv root` is one RSQ |
 | 18 | nit | one-letter word pairs, unverified token counts | words kept (they are the words a model already uses for these things); every new word is checked against the Qwen3 tokenizer and the result saved in `evidence/omegese-gpu/tokens/` |
 | 19 | nit | the backend nesting cap was not in checker2 | C2-GPU-NEST, cap 16 |

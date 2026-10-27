@@ -1,0 +1,185 @@
+note SPDX-License-Identifier: Apache-2.0
+note mkfix: writes one OSC IR wire-v8 kernel unit that uses ATOM (op 47) to stdout.
+note No producer emits ATOM, so the fixtures for detcheck are built here, byte by byte,
+note from four selector letters on stdin:
+note   1 target: u = edit buffer of u32, f = edit buffer of f32, v = view buffer of u32,
+note             s = shared array of u32, h = shared array of f32
+note   2 sub-op: 1 ADD 2 MIN 3 MAX 4 AND 5 OR 6 XOR 7 EXCH 8 CAS 9 INC a DEC b SUB
+note   3 result: r = the old value goes to a register, n = it is dropped (dst -1)
+note   4 extra:  n = nothing, l = the thread also reads the target, x = a second ATOM
+note             with another sub-op on the same target
+note Kernel: kernel hist 32, out[0] <sub>= 1 from every thread (docs/one_layer/OMEGESE.md 12).
+global input uchar 8
+global out uchar 512
+global state ulong 4
+fn b v ulong to void
+n = get state 0
+put out n uchar v
+put state 0 add n 1
+end
+fn h v ulong to void
+b and v 255
+b shr v 8
+end
+fn w v ulong to void
+h and v 65535
+h shr v 16
+end
+fn q v ulong to void
+w and v 4294967295
+w shr v 32
+end
+fn atom s ulong d ulong to void
+b 47
+b s
+h d
+h 0
+h 3
+h 4
+end
+fn main to int
+n = ulong 0
+for a ulong 8
+k = read 0 input n sub 4 n
+if lt k 0
+exit 28
+end
+if eq k 0
+break
+end
+n = add n ulong k
+if eq n 4
+break
+end
+end
+if ne n 4
+exit 22
+end
+t = ulong get input 0
+s = ulong get input 1
+s = sub s 48
+if gt s 9
+s = sub s 39
+end
+if or lt s 1 gt s 11
+exit 26
+end
+r = ulong get input 2
+x = ulong get input 3
+e = ulong 4
+if or eq t 102 eq t 104
+e = 13
+end
+sh = or eq t 115 eq t 104
+note header: magic, version 6, no structs, one function
+b 79
+b 83
+b 67
+b 49
+b 73
+b 82
+b 0
+b 8
+b 0
+h 1
+b 4
+b 104
+b 105
+b 115
+b 116
+note kernel, 32 threads, two parameter registers unless the target is shared
+b 1
+h 32
+if sh
+b 0
+else
+b 2
+end
+b 0
+h 6
+if sh
+b 10
+b 4
+b e
+h 32
+else
+if eq t 118
+b 14
+else
+b 15
+end
+b e
+end
+b 4
+b 4
+b 4
+b e
+b e
+note one block holding every instruction
+ni = ulong 5
+if sh
+ni = add ni 1
+end
+if ne x 110
+ni = add ni 1
+end
+h 1
+w 0
+w ni
+w ni
+if sh
+b 41
+h 0
+end
+b 40
+b 1
+h 2
+b 1
+h 3
+q 0
+b 1
+h 4
+if eq e 13
+q 1065353216
+else
+q 1
+end
+if eq r 114
+atom s 5
+else
+atom s 65535
+end
+if eq x 108
+if sh
+b 9
+else
+b 42
+end
+h 5
+h 0
+h 3
+end
+if eq x 120
+if eq s 3
+atom 2 65535
+else
+atom 3 65535
+end
+end
+b 15
+h 65535
+h 0
+h 0
+p = ulong 0
+for a ulong 64
+if eq p get state 0
+break
+end
+k = write 1 out p sub get state 0 p
+if le k 0
+exit 28
+end
+p = add p ulong k
+end
+ret 0
+end

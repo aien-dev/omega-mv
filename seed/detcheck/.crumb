@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "name": "detcheck",
+  "layer": "seed",
+  "purpose": "Seeded Omega determinism checker for GPU kernel IR: refuses float and order-dependent atomics (DET-ATOM-*), fixture writer and gate"
+}
