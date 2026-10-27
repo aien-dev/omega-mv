@@ -574,8 +574,12 @@ conversion is error 7.
   (gate8 intrinsics, neg_intr_*)
 - Conversions `<type> value` handle int<->float, f32<->f64 and float->int. Int to float is SCVTF/UCVTF
   (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
-  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
-  changing its bits; any other width or a bool is error 7. (gate8 convert)
+  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64, and
+  i8/u8, i16/u16 between integers) without changing its bits; any other width or a bool is error 7.
+  The result is an ordinary value of T: `bitcast int uint 4294967295` equals -1 and
+  `bitcast uint int -1` equals 4294967295; an 8/16/32-bit integer or f32 is extended again for T into
+  a new register, so the source name keeps its value (omc 2c824805 kept the source's extension).
+  (gate8 convert, bitcast_int, neg_bitcast_width)
 - Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields.
   Arrays are packed by element type: f32 occupies four bytes and f64 eight (`tlog` and `sa_arr`
   in `seed/omc/omc.om`). Struct fields retain eight-byte cells, including f32 in the low half.
