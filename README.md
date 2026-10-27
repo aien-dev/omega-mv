@@ -38,7 +38,7 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 ## Core ideas
 
 - **SMART is not TRUSTED, INTELLIGENCE is not AUTHORITY.** Trust comes from verified invariants, never from capability.
-- **Meaning is permanent; representation is disposable.** Equivalent programs collapse to one `SEMANTIC_ID` (SHA-256 of the canonical encoding); different programs get different ones.
+- **Meaning is permanent; representation is disposable.** A program's `SEMANTIC_ID` (SHA-256 of the canonical encoding) names its canonical body, so respellings of one body (whitespace, parameter name, operand order) share it, but `x + 1 + 1` and `x + 2` do not. The separate `FUNCTION_ID` names the function: inside the polynomial fragment (`+ - *` and exact `and`/`or` identities modulo 2^w, w = 1..64) two programs get the same `FUNCTION_ID` exactly when they compute the same function; outside it the id falls back to the body and says so. Equality of arbitrary programs is undecidable, so no id is extensional for every program. Nodes, typed relations and receipt-backed equivalences form the graph of meaning ([spec/program-identity.md](spec/program-identity.md) sections 9-10, `om/meaning/`; host-exercised, not yet wired into the C library or Visor).
 - **Pure computation is separate from effects**, and effects need capability-bounded, receipt-producing transactions.
 
 ## How this fits with the other repositories

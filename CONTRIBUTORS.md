@@ -32,3 +32,4 @@ This table starts with the numeric work on this branch. Earlier work in this rep
 
 Update this table in the same commit as the work it credits.
 | Claude Opus 5.5 | Seed-chain bootstrap challenge: `seed/challenge/run.sh` rebuilds omc from the 408-byte seed out of a pinned `git archive` and checks every input and rung against a table read from committed files, with tampered-rung and wrong-value negative controls |
+| Claude Opus 5.5 | FUNCTION_ID (`omega.function.v1`, canonical falling-factorial form over the polynomial fragment modulo 2^w) and the graph of meaning (`om/meaning/`): receipt-backed equivalence edges, canonical storage, queries, randomized differential and mutant suite, spec sections 9-10 |

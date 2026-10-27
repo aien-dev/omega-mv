@@ -1,0 +1,1798 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/meaning/meaning.om: FUNCTION_ID (omega.function.v1) and the graph of meaning, as an OM-2
+note library unit for program mode (no om2 line, no main; it keeps its state in mg* globals, so it
+note links only into a program, not into function mode). Needs om/tls/sha2.om before it.
+note Specification: spec/program-identity.md section 9 (FUNCTION_ID) and section 10 (graph).
+note
+note Programs. A program is a width w (1..64) and a postfix (RPN) token list over
+note   1 x (the parameter)   2 c (a constant below 2^w)   3 add  4 sub  5 mul  9 and  10 or
+note (the token codes are the OpCode numbers of src/omega_types.h; 1 and 2 are OP_IDENTITY and
+note OP_CONSTANT read as "parameter" and "literal"). Arithmetic wraps modulo 2^w. The V0 program
+note body of spec/program-identity.md 2.1, f(x) = op_n(...op_1(x, c_1)..., c_n), is the token list
+note x c_1 op_1 c_2 op_2 ... c_n op_n.
+note
+note API (p is a program index, n a node index, slot a 32-byte id slot in mgi)
+note   mg_reset                         empty programs, ids and graph
+note   mg_pnew w -> p; mg_ptok p op v   build a program token by token
+note   mg_pchk p -> 0 | code            0 = well formed (see the function for codes)
+note   mg_eval p x -> f(x)              the semantics: wrap arithmetic modulo 2^w
+note   mg_frag p -> 1 | 0               1 = the polynomial fragment (FUNCTION_ID is canonical)
+note   mg_canon p -> K                  canonical falling-factorial coefficients into mgc[0..K)
+note   mg_fid p slot -> 1 | 2           FUNCTION_ID into slot: 1 canonical, 2 intensional fallback
+note   mg_body p slot                   the body's SEMANTIC_ID (OMG0 apply graph, as the C builders)
+note   mg_pid bs w po pl qo ql          program_id v2 (omega.program.v2) into slot 102
+note   mg_addprog p po pl qo ql -> n    add the program, its body and its function to the graph
+note   mg_exh a b, mg_wit a b           prove two body nodes equal (exhaustive, w <= 32) or not
+note   mg_nbr n rel, mg_class n, mg_prov n   queries into mgq; return the count
+note   mg_verify -> failures            recheck every node id and every edge receipt
+note   mg_ser -> length, mg_gdig slot, mg_load length   canonical storage in mgo, its digest, reading
+note Contract texts (pre/post) are byte runs in the heap mgh, written with mg_hpush.
+
+const MGNMAX ulong 4096
+const MGRMAX ulong 8192
+const MGEMAX ulong 16384
+const MGNONE ulong 18446744073709551615
+
+global mgs ulong 64
+global mgtk ulong 2097152
+global mgpr ulong 262144
+global mgst ulong 64
+global mgcl ulong 64
+global mgcv ulong 64
+global mgc ulong 80
+global mgd ulong 80
+global mgb uchar 4096
+global mgi uchar 1048576
+global mgh uchar 4194304
+global mgnd ulong 16384
+global mgrc ulong 16384
+global mged ulong 65536
+global mgq ulong 16384
+global mgsn ulong 4096
+global mgsr ulong 8192
+global mgse ulong 16384
+global mgvp ulong 4096
+global mgo uchar 4194304
+text mgtfd "omega.function.v1"
+text mgtpd "omega.program.v2"
+text mgtrd "omega.meaning.receipt.v1"
+text mgtgd "omega.meaning.graph.v1"
+text mgtpa "omega.param"
+
+note mgs cells: 0 tokens used, 1 programs, 2 mgb cursor, 3 nodes, 4 receipts, 5 edges, 6 heap used,
+note 8 mgo cursor, 9 mgo read cursor, 10 read error flag, 11 read limit
+note id slots: 0 type, 1 param, 2 operation, 3 pre, 4 post, 5 fallback body, 16..79 body stack,
+note 100 body, 101 function, 102 program, 103 receipt, 104..109 verify and load scratch,
+note 1024 + n node n, 8192 + r receipt r, 16384.. free for callers
+
+fn mg_reset to void
+for i ulong 16
+put mgs i 0
+end
+end
+
+fn mg_mask w ulong to ulong
+if ge w 64
+ret not ulong 0
+end
+ret sub shl ulong 1 w 1
+end
+
+note ---- programs ----
+
+fn mg_pnew w ulong to ulong
+p = get mgs 1
+if ge p 65536
+trap 12
+end
+put mgpr mul p 4 get mgs 0
+put mgpr add mul p 4 1 0
+put mgpr add mul p 4 2 w
+put mgs 1 add p 1
+ret p
+end
+
+fn mg_ptok p ulong o ulong v ulong to void
+t = get mgs 0
+if ge t 1048576
+trap 12
+end
+put mgtk mul t 2 o
+put mgtk add mul t 2 1 v
+put mgs 0 add t 1
+q = add mul p 4 1
+put mgpr q add get mgpr q 1
+end
+
+fn mg_top t ulong to ulong
+ret get mgtk mul t 2
+end
+
+fn mg_tv t ulong to ulong
+ret get mgtk add mul t 2 1
+end
+
+fn mg_pw p ulong to ulong
+ret get mgpr add mul p 4 2
+end
+
+note 0 well formed; 1 width not 1..64; 2 no tokens or over 4096; 3 unknown token; 4 constant not
+note below 2^w; 5 operation without two operands; 6 stack over 64; 7 not exactly one result
+fn mg_pchk p ulong to ulong
+b = get mgpr mul p 4
+n = get mgpr add mul p 4 1
+w = mg_pw p
+if eq w 0
+ret 1
+end
+if gt w 64
+ret 1
+end
+if eq n 0
+ret 2
+end
+if gt n 4096
+ret 2
+end
+m = mg_mask w
+sp = ulong 0
+for i ulong n
+o = mg_top add b i
+v = mg_tv add b i
+if le o 2
+if eq o 0
+ret 3
+end
+if eq o 2
+if ne and v not m 0
+ret 4
+end
+end
+if ge sp 64
+ret 6
+end
+sp = add sp 1
+continue
+end
+if ne o 3
+if ne o 4
+if ne o 5
+if ne o 9
+if ne o 10
+ret 3
+end
+end
+end
+end
+end
+if lt sp 2
+ret 5
+end
+sp = sub sp 1
+end
+if ne sp 1
+ret 7
+end
+ret 0
+end
+
+fn mg_op o ulong l ulong r ulong m ulong to ulong
+if eq o 3
+ret and add l r m
+end
+if eq o 4
+ret and sub l r m
+end
+if eq o 5
+ret and mul l r m
+end
+if eq o 9
+ret and l r
+end
+if eq o 10
+ret and or l r m
+end
+trap 9
+end
+
+fn mg_eval p ulong x ulong to ulong
+b = get mgpr mul p 4
+n = get mgpr add mul p 4 1
+m = mg_mask mg_pw p
+sp = ulong 0
+for i ulong n
+o = mg_top add b i
+if eq o 1
+put mgst sp and x m
+sp = add sp 1
+continue
+end
+if eq o 2
+put mgst sp mg_tv add b i
+sp = add sp 1
+continue
+end
+sp = sub sp 1
+put mgst sub sp 1 mg_op o get mgst sub sp 1 get mgst sp m
+end
+ret get mgst 0
+end
+
+note ---- the polynomial fragment ----
+note Abstract evaluation, one class per stack entry: 0 constant (value in mgcv), 1 polynomial in x,
+note 2 outside. add sub mul of classes 0/1 stay polynomial; mul by the constant 0 is the constant 0.
+note and/or with a constant side: and all-ones = the other side, and 0 = constant 0, or 0 = the other
+note side, or all-ones = constant all-ones (exact identities modulo 2^w). Everything else is class 2.
+
+fn mg_fset j ulong c ulong v ulong to void
+put mgcl j c
+put mgcv j v
+end
+
+fn mg_fstep o ulong j ulong m ulong to void
+lc = get mgcl j
+rc = get mgcl add j 1
+lv = get mgcv j
+rv = get mgcv add j 1
+if eq lc 0
+if eq rc 0
+mg_fset j 0 mg_op o lv rv m
+ret
+end
+end
+if le o 5
+if eq o 5
+if eq lc 0
+if eq lv 0
+mg_fset j 0 0
+ret
+end
+end
+if eq rc 0
+if eq rv 0
+mg_fset j 0 0
+ret
+end
+end
+end
+if eq lc 2
+mg_fset j 2 0
+ret
+end
+if eq rc 2
+mg_fset j 2 0
+ret
+end
+mg_fset j 1 0
+ret
+end
+c = ulong 0
+oc = ulong 2
+ov = ulong 0
+if eq lc 0
+c = lv
+oc = rc
+ov = rv
+else
+if eq rc 0
+c = rv
+oc = lc
+ov = lv
+else
+mg_fset j 2 0
+ret
+end
+end
+if eq o 9
+if eq c m
+mg_fset j oc ov
+ret
+end
+if eq c 0
+mg_fset j 0 0
+ret
+end
+mg_fset j 2 0
+ret
+end
+if eq c 0
+mg_fset j oc ov
+ret
+end
+if eq c m
+mg_fset j 0 m
+ret
+end
+mg_fset j 2 0
+end
+
+fn mg_frag p ulong to ulong
+b = get mgpr mul p 4
+n = get mgpr add mul p 4 1
+m = mg_mask mg_pw p
+sp = ulong 0
+for i ulong n
+o = mg_top add b i
+if eq o 1
+mg_fset sp 1 0
+sp = add sp 1
+continue
+end
+if eq o 2
+mg_fset sp 0 mg_tv add b i
+sp = add sp 1
+continue
+end
+sp = sub sp 1
+mg_fstep o sub sp 1 m
+end
+if eq get mgcl 0 2
+ret 0
+end
+ret 1
+end
+
+note ---- canonical form (spec/program-identity.md 9.2) ----
+
+fn mg_tz k ulong to ulong
+t = k
+z = ulong 0
+while eq and t 1 0 bound 64
+t = shr t 1
+z = add z 1
+end
+ret z
+end
+
+note K(w): the least k with v2(k!) >= w (Wolfram table in the spec: K(8) = 10, K(64) = 66)
+fn mg_kof w ulong to ulong
+v = ulong 0
+k = ulong 0
+while lt v w bound 200
+k = add k 1
+v = add v mg_tz k
+end
+ret k
+end
+
+note inverse of an odd u modulo 2^64: Newton y <- y (2 - u y), 3 -> 6 -> 12 -> 24 -> 48 -> 96 bits
+fn mg_inv u ulong to ulong
+y = u
+for i ulong 5
+y = mul y sub 2 mul u y
+end
+ret y
+end
+
+note f(0..K-1), forward differences d_k = Delta^k f(0) mod 2^w = k! b_k, then with k! = 2^v u (u odd)
+note a_k = (d_k / 2^v) u^-1 mod 2^(w - v): the unique coefficients with 0 <= a_k < 2^(w - v2(k!)) and
+note f(x) = sum a_k x(x-1)...(x-k+1) mod 2^w. A d_k not divisible by 2^v means f is not a polynomial
+note function: trap 9 (the fragment check makes this unreachable).
+fn mg_canon p ulong to ulong
+w = mg_pw p
+m = mg_mask w
+kk = mg_kof w
+for t ulong kk
+put mgd t mg_eval p t
+end
+k = ulong 1
+while lt k kk bound 100
+j = sub kk 1
+while ge j k bound 100
+put mgd j and sub get mgd j get mgd sub j 1 m
+j = sub j 1
+end
+k = add k 1
+end
+u = ulong 1
+v = ulong 0
+for i ulong kk
+if gt i 0
+u = mul u shr i mg_tz i
+v = add v mg_tz i
+end
+dk = get mgd i
+if ne and dk sub shl ulong 1 v 1 0
+trap 9
+end
+a = mul shr dk v mg_inv u
+put mgc i and a mg_mask sub w v
+end
+ret kk
+end
+
+note ---- byte building and hashing ----
+
+fn mg_b0 to void
+put mgs 2 0
+end
+
+fn mg_b8 v ulong to void
+c = get mgs 2
+put mgb c uchar and v 255
+put mgs 2 add c 1
+end
+
+fn mg_b16 v ulong to void
+mg_b8 shr v 8
+mg_b8 v
+end
+
+fn mg_b32 v ulong to void
+mg_b16 shr v 16
+mg_b16 and v 65535
+end
+
+fn mg_b64 v ulong to void
+mg_b32 shr v 32
+mg_b32 and v 4294967295
+end
+
+fn mg_bz n ulong to void
+for i ulong n
+mg_b8 0
+end
+end
+
+fn mg_bid s ulong to void
+o = mul s 32
+for i ulong 32
+mg_b8 ulong get mgi add o i
+end
+end
+
+fn mg_bh o ulong n ulong to void
+for i ulong n
+mg_b8 ulong get mgh add o i
+end
+end
+
+note domain tags (always followed by 0x00): 1 function, 2 program v2, 3 receipt, 4 graph
+fn mg_bdom k ulong to void
+mg_b0
+if eq k 1
+for i ulong len mgtfd
+mg_b8 ulong get mgtfd i
+end
+end
+if eq k 2
+for i ulong len mgtpd
+mg_b8 ulong get mgtpd i
+end
+end
+if eq k 3
+for i ulong len mgtrd
+mg_b8 ulong get mgtrd i
+end
+end
+mg_b8 0
+end
+
+fn mg_hash s ulong to void
+n = get mgs 2
+a = new uchar 4096 0
+o = new uchar 32 0
+for i ulong n
+put a i get mgb i
+end
+k = sha2_digest 256 part a 0 n o
+if ne k 32
+trap 10
+end
+for j ulong 32
+put mgi add mul s 32 j get o j
+end
+end
+
+fn mg_idcp s ulong d ulong to void
+for i ulong 32
+put mgi add mul d 32 i get mgi add mul s 32 i
+end
+end
+
+note 0 equal, 1 a < b, 2 a > b (bytewise, as memcmp)
+fn mg_idcmp a ulong b ulong to ulong
+for i ulong 32
+x = get mgi add mul a 32 i
+y = get mgi add mul b 32 i
+if lt x y
+ret 1
+end
+if gt x y
+ret 2
+end
+end
+ret 0
+end
+
+fn mg_idz s ulong to void
+for i ulong 32
+put mgi add mul s 32 i 0
+end
+end
+
+note ---- OMG0 objects (spec/canonical-encoding.md; payloads are the C host-struct images of
+note src/omega_types.h on LP64 little-endian, zero padded, exactly as src/omega_core.c hashes them) ----
+
+fn mg_bhdr k ulong to void
+mg_b0
+mg_b8 79
+mg_b8 77
+mg_b8 71
+mg_b8 48
+mg_b8 1
+mg_b8 k
+end
+
+note TypePayload{tag u32 = 3 UNSIGNED_INT, width u16, pad 2, length u32 0, elem_type 32 zero}: 44 bytes
+fn mg_tyid w ulong s ulong to void
+mg_bhdr 2
+mg_b16 0
+mg_b16 0
+mg_b16 0
+mg_b32 44
+mg_b8 3
+mg_bz 3
+mg_b8 and w 255
+mg_b8 shr w 8
+mg_bz 38
+mg_hash s
+end
+
+note parameter 0: attribute "omega.param" = 00 00, ValuePayload{type_id, byte_len 0, bytes 0}: 98
+fn mg_parid t ulong s ulong to void
+mg_bhdr 1
+mg_b16 1
+mg_b8 len mgtpa
+for i ulong len mgtpa
+mg_b8 ulong get mgtpa i
+end
+mg_b16 2
+mg_b16 0
+mg_b16 0
+mg_b16 0
+mg_b32 98
+mg_bid t
+mg_bz 66
+end
+
+fn mg_parfin s ulong to void
+mg_hash s
+end
+
+note literal: ValuePayload{type_id, byte_len LE = (w+7)/8, value big-endian in byte_len bytes}: 98
+fn mg_valid t ulong w ulong v ulong s ulong to void
+mg_bhdr 1
+mg_b16 0
+mg_b16 0
+mg_b16 0
+mg_b32 98
+mg_bid t
+nb = shr add w 7 3
+mg_b8 nb
+mg_b8 0
+for i ulong nb
+mg_b8 shr v mul sub sub nb 1 i 8
+end
+mg_bz sub 64 nb
+mg_hash s
+end
+
+note OperationPayload{opcode u32, overflow u32 = 1 WRAP, type_id, arity 2, input_types T T 0 0,
+note output_type T, pad 3}: 204 bytes
+fn mg_opid t ulong o ulong s ulong to void
+mg_bhdr 3
+mg_b16 0
+mg_b16 0
+mg_b16 0
+mg_b32 204
+mg_b8 o
+mg_bz 3
+mg_b8 1
+mg_bz 3
+mg_bid t
+mg_b8 2
+mg_bid t
+mg_bid t
+mg_bz 64
+mg_bid t
+mg_bz 3
+mg_hash s
+end
+
+note ApplyPayload{op_id, operand_count 2, operands a b 0 0}: 161 bytes
+fn mg_apid o ulong a ulong b ulong s ulong to void
+mg_bhdr 3
+mg_b16 0
+mg_b16 0
+mg_b16 0
+mg_b32 161
+mg_bid o
+mg_b8 2
+mg_bid a
+mg_bid b
+mg_bz 64
+mg_hash s
+end
+
+note the body's SEMANTIC_ID: the root apply object built bottom-up; for a V0 chain this is exactly
+note omega_program_body_root_id (src/omega_program.c), checked against the program_id goldens
+fn mg_body p ulong s ulong to void
+b = get mgpr mul p 4
+n = get mgpr add mul p 4 1
+w = mg_pw p
+mg_tyid w 0
+mg_parid 0 1
+mg_parfin 1
+sp = ulong 16
+for i ulong n
+o = mg_top add b i
+if eq o 1
+mg_idcp 1 sp
+sp = add sp 1
+continue
+end
+if eq o 2
+mg_valid 0 w mg_tv add b i sp
+sp = add sp 1
+continue
+end
+mg_opid 0 o 2
+mg_apid 2 sub sp 2 sub sp 1 sub sp 2
+sp = sub sp 1
+end
+mg_idcp 16 s
+end
+
+note constraint object: no attributes or relations, one constraint {kind, text}, empty payload
+fn mg_cid k ulong o ulong n ulong s ulong to void
+if gt n 128
+trap 10
+end
+mg_bhdr 5
+mg_b16 0
+mg_b16 0
+mg_b16 1
+mg_b16 k
+mg_b16 n
+mg_bh o n
+mg_b32 0
+mg_hash s
+end
+
+note program_id v2 = SHA256("omega.program.v2" 0x00 || body || T(w) || T(w) || pre || post) -> slot 102
+fn mg_pid bs ulong w ulong po ulong pl ulong qo ulong ql ulong to void
+mg_tyid w 0
+mg_cid 7 po pl 3
+mg_cid 8 qo ql 4
+mg_bdom 2
+mg_bid bs
+mg_bid 0
+mg_bid 0
+mg_bid 3
+mg_bid 4
+mg_hash 102
+end
+
+note ---- FUNCTION_ID (spec/program-identity.md 9) ----
+note class 1: SHA256("omega.function.v1" 0x00 || 01 || w u16 || K u16 || a_0..a_{K-1} u64 BE)
+note class 2: SHA256("omega.function.v1" 0x00 || 02 || w u16 || body SEMANTIC_ID)
+note The preimage stays in mgb after the call.
+fn mg_fid p ulong s ulong to ulong
+w = mg_pw p
+if eq mg_frag p 1
+kk = mg_canon p
+mg_bdom 1
+mg_b8 1
+mg_b16 w
+mg_b16 kk
+for i ulong kk
+mg_b64 get mgc i
+end
+mg_hash s
+ret 1
+end
+mg_body p 5
+mg_bdom 1
+mg_b8 2
+mg_b16 w
+mg_bid 5
+mg_hash s
+ret 2
+end
+
+note ---- heap ----
+
+fn mg_hpush v ulong to void
+h = get mgs 6
+if ge h len mgh
+trap 12
+end
+put mgh h uchar and v 255
+put mgs 6 add h 1
+end
+
+fn mg_hpos to ulong
+ret get mgs 6
+end
+
+note copy mgb[from..cursor) to the heap; returns its offset
+fn mg_hput f ulong to ulong
+h = get mgs 6
+c = get mgs 2
+for i ulong sub c f
+mg_hpush ulong get mgb add f i
+end
+ret h
+end
+
+fn mg_h8 o ulong to ulong
+ret ulong get mgh o
+end
+
+fn mg_h16 o ulong to ulong
+ret or shl mg_h8 o 8 mg_h8 add o 1
+end
+
+fn mg_h64 o ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or shl v 8 mg_h8 add o i
+end
+ret v
+end
+
+note ---- graph store (spec/program-identity.md 10) ----
+note node kinds: 1 PROGRAM (program_id v2), 2 BODY (body SEMANTIC_ID), 3 FUNCTION (FUNCTION_ID)
+note node cells: kind, heap offset, content length, aux (BODY: program index; FUNCTION: class;
+note PROGRAM: body node). Edge cells: src node, rel, dst node, receipt index + 1 (0 = none).
+note rel codes are RelationKind (src/omega_types.h): 2 NOT_EQUAL, 4 CONTAINS, 7 DERIVED_FROM,
+note 9 EQUIVALENT_TO.
+
+fn mg_ns n ulong to ulong
+ret add 1024 n
+end
+
+fn mg_nk n ulong to ulong
+ret get mgnd mul n 4
+end
+
+fn mg_no n ulong to ulong
+ret get mgnd add mul n 4 1
+end
+
+fn mg_nl n ulong to ulong
+ret get mgnd add mul n 4 2
+end
+
+fn mg_na n ulong to ulong
+ret get mgnd add mul n 4 3
+end
+
+fn mg_nfind s ulong to ulong
+for i ulong get mgs 3
+if eq mg_idcmp s mg_ns i 0
+ret i
+end
+end
+ret MGNONE
+end
+
+fn mg_nadd k ulong s ulong o ulong l ulong a ulong to ulong
+f = mg_nfind s
+if ne f MGNONE
+if ne mg_nk f k
+trap 11
+end
+ret f
+end
+n = get mgs 3
+if ge n MGNMAX
+trap 12
+end
+mg_idcp s mg_ns n
+put mgnd mul n 4 k
+put mgnd add mul n 4 1 o
+put mgnd add mul n 4 2 l
+put mgnd add mul n 4 3 a
+put mgs 3 add n 1
+ret n
+end
+
+fn mg_rfind s ulong to ulong
+for i ulong get mgs 4
+if eq mg_idcmp s add 8192 i 0
+ret i
+end
+end
+ret MGNONE
+end
+
+note receipt content is mgb[25..cursor) after mg_bdom 3; id = SHA256(whole mgb) -> slot 103
+fn mg_radd to ulong
+mg_hash 103
+f = mg_rfind 103
+if ne f MGNONE
+ret f
+end
+r = get mgs 4
+if ge r MGRMAX
+trap 12
+end
+h = mg_hput 25
+put mgrc mul r 2 h
+put mgrc add mul r 2 1 sub get mgs 2 25
+mg_idcp 103 add 8192 r
+put mgs 4 add r 1
+ret r
+end
+
+fn mg_eadd s ulong rl ulong d ulong r ulong to void
+ne0 = get mgs 5
+for e ulong ne0
+if eq get mged mul e 4 s
+if eq get mged add mul e 4 1 rl
+if eq get mged add mul e 4 2 d
+if eq get mged add mul e 4 3 r
+ret
+end
+end
+end
+end
+end
+if ge ne0 MGEMAX
+trap 12
+end
+put mged mul ne0 4 s
+put mged add mul ne0 4 1 rl
+put mged add mul ne0 4 2 d
+put mged add mul ne0 4 3 r
+put mgs 5 add ne0 1
+end
+
+fn mg_lo a ulong b ulong to ulong
+if eq mg_idcmp mg_ns a mg_ns b 2
+ret b
+end
+ret a
+end
+
+note receipt kind 1 CANON: 01 || lo id || hi id || w u16 || FUNCTION_ID
+fn mg_rcanon a ulong b ulong f ulong to void
+lo = mg_lo a b
+hi = sub add a b lo
+mg_bdom 3
+mg_b8 1
+mg_bid mg_ns lo
+mg_bid mg_ns hi
+mg_b16 mg_pw mg_na lo
+mg_bid mg_ns f
+r = mg_radd
+mg_eadd lo 9 hi add r 1
+end
+
+fn mg_fnode bn ulong to void
+cl = mg_fid mg_na bn 101
+h = mg_hput 0
+fnn = mg_nadd 3 101 h get mgs 2 cl
+mg_eadd fnn 7 bn 0
+if ne cl 1
+ret
+end
+for e ulong get mgs 5
+if eq get mged mul e 4 fnn
+if eq get mged add mul e 4 1 7
+o = get mged add mul e 4 2
+if ne o bn
+mg_rcanon o bn fnn
+end
+end
+end
+end
+end
+
+note body content: w u16 || token count u16 || tokens (op u8, and for op 2 the constant u64 BE)
+fn mg_bcont p ulong to void
+b = get mgpr mul p 4
+n = get mgpr add mul p 4 1
+mg_b0
+mg_b16 mg_pw p
+mg_b16 n
+for i ulong n
+o = mg_top add b i
+mg_b8 o
+if eq o 2
+mg_b64 mg_tv add b i
+end
+end
+end
+
+note program content: body id || w u16 || pre length u16 || pre || post length u16 || post
+fn mg_addprog p ulong po ulong pl ulong qo ulong ql ulong to ulong
+w = mg_pw p
+mg_body p 100
+mg_bcont p
+h = mg_hput 0
+n0 = get mgs 3
+bn = mg_nadd 2 100 h get mgs 2 p
+if gt get mgs 3 n0
+mg_fnode bn
+end
+mg_pid 100 w po pl qo ql
+mg_b0
+mg_bid 100
+mg_b16 w
+mg_b16 pl
+mg_bh po pl
+mg_b16 ql
+mg_bh qo ql
+h = mg_hput 0
+pn = mg_nadd 1 102 h get mgs 2 bn
+mg_eadd pn 4 bn 0
+ret pn
+end
+
+note 0 when the programs agree on all 2^w inputs (w <= 32), else first differing x + 1
+fn mg_exeq pa ulong pb ulong w ulong to ulong
+inner = ulong 65536
+outer = ulong 1
+if lt w 16
+inner = shl ulong 1 w
+else
+outer = shl ulong 1 sub w 16
+end
+for oi ulong outer
+for ii ulong inner
+x = add mul oi inner ii
+if ne mg_eval pa x mg_eval pb x
+ret add x 1
+end
+end
+end
+ret 0
+end
+
+note receipt kind 3 WITNESS: 03 || lo || hi || w u16 || x u64 || f_lo(x) u64 || f_hi(x) u64
+fn mg_rwit a ulong b ulong x ulong to void
+lo = mg_lo a b
+hi = sub add a b lo
+mg_bdom 3
+mg_b8 3
+mg_bid mg_ns lo
+mg_bid mg_ns hi
+mg_b16 mg_pw mg_na lo
+mg_b64 x
+mg_b64 mg_eval mg_na lo x
+mg_b64 mg_eval mg_na hi x
+r = mg_radd
+mg_eadd lo 2 hi add r 1
+end
+
+note 0 equal (EQUIVALENT_TO edge with an EXHAUSTIVE receipt), 1 differ (NOT_EQUAL edge with a
+note WITNESS receipt), 3 widths differ, 4 w over 32. a and b are BODY nodes.
+fn mg_exh a ulong b ulong to ulong
+pa = mg_na a
+pb = mg_na b
+w = mg_pw pa
+if ne w mg_pw pb
+ret 3
+end
+if gt w 32
+ret 4
+end
+x = mg_exeq pa pb w
+if ne x 0
+mg_rwit a b sub x 1
+ret 1
+end
+lo = mg_lo a b
+hi = sub add a b lo
+mg_bdom 3
+mg_b8 2
+mg_bid mg_ns lo
+mg_bid mg_ns hi
+mg_b16 w
+mg_b64 shl ulong 1 w
+r = mg_radd
+mg_eadd lo 9 hi add r 1
+ret 0
+end
+
+note candidate inputs: 0..127, the edges (all-ones, all-ones - 1, 2^(w-1), 2^(w-1) - 1), then splitmix64
+fn mg_cand i ulong w ulong to ulong
+m = mg_mask w
+if lt i 128
+ret and i m
+end
+if eq i 128
+ret m
+end
+if eq i 129
+ret and sub m 1 m
+end
+if eq i 130
+ret shl ulong 1 sub w 1
+end
+if eq i 131
+ret and sub shl ulong 1 sub w 1 1 m
+end
+z = mul i 0x9e3779b97f4a7c15
+z = mul xor z shr z 30 0xbf58476d1ce4e5b9
+z = mul xor z shr z 27 0x94d049bb133111eb
+ret and xor z shr z 31 m
+end
+
+note search 4096 candidates for a witness; 1 found (NOT_EQUAL edge added), 0 none (nothing added:
+note no witness is not a proof of equality)
+fn mg_wit a ulong b ulong to ulong
+pa = mg_na a
+pb = mg_na b
+w = mg_pw pa
+if ne w mg_pw pb
+ret 0
+end
+for i ulong 4096
+x = mg_cand i w
+if ne mg_eval pa x mg_eval pb x
+mg_rwit a b x
+ret 1
+end
+end
+ret 0
+end
+
+note ---- queries (results in mgq) ----
+
+fn mg_qhas v ulong n ulong to ulong
+for i ulong n
+if eq get mgq i v
+ret 1
+end
+end
+ret 0
+end
+
+note every node joined to n by an edge (either direction); rel 0 = any relation
+fn mg_nbr n ulong rl ulong to ulong
+c = ulong 0
+for e ulong get mgs 5
+r = get mged add mul e 4 1
+if eq rl 0
+r = rl
+end
+if eq r rl
+s = get mged mul e 4
+d = get mged add mul e 4 2
+if eq s n
+put mgq c d
+c = add c 1
+else
+if eq d n
+put mgq c s
+c = add c 1
+end
+end
+end
+end
+ret c
+end
+
+note the equivalence class of n: closure over EQUIVALENT_TO edges, n first
+fn mg_class n ulong to ulong
+put mgq 0 n
+c = ulong 1
+h = ulong 0
+while lt h c bound 16384
+v = get mgq h
+for e ulong get mgs 5
+if eq get mged add mul e 4 1 9
+s = get mged mul e 4
+d = get mged add mul e 4 2
+o = MGNONE
+if eq s v
+o = d
+end
+if eq d v
+o = s
+end
+if ne o MGNONE
+if eq mg_qhas o c 0
+put mgq c o
+c = add c 1
+end
+end
+end
+end
+h = add h 1
+end
+ret c
+end
+
+note provenance of n: every edge index touching n (its receipts explain each relation)
+fn mg_prov n ulong to ulong
+c = ulong 0
+for e ulong get mgs 5
+if eq get mged mul e 4 n
+put mgq c e
+c = add c 1
+else
+if eq get mged add mul e 4 2 n
+put mgq c e
+c = add c 1
+end
+end
+end
+ret c
+end
+
+note ---- verification ----
+
+note rebuild a program from body content at heap o, length l; MGNONE if malformed
+fn mg_bparse o ulong l ulong to ulong
+if lt l 4
+ret MGNONE
+end
+w = mg_h16 o
+n = mg_h16 add o 2
+if eq n 0
+ret MGNONE
+end
+if gt n 4096
+ret MGNONE
+end
+p = mg_pnew w
+q = add o 4
+e = add o l
+for i ulong n
+if ge q e
+ret MGNONE
+end
+t = mg_h8 q
+q = add q 1
+v = ulong 0
+if eq t 2
+if gt add q 8 e
+ret MGNONE
+end
+v = mg_h64 q
+q = add q 8
+end
+mg_ptok p t v
+end
+if ne q e
+ret MGNONE
+end
+if ne mg_pchk p 0
+ret MGNONE
+end
+ret p
+end
+
+fn mg_hideq o ulong s ulong to ulong
+for i ulong 32
+if ne get mgh add o i get mgi add mul s 32 i
+ret 0
+end
+end
+ret 1
+end
+
+fn mg_hid o ulong s ulong to void
+for i ulong 32
+put mgi add mul s 32 i get mgh add o i
+end
+end
+
+note 1 when node n (kind 1) has well-formed content whose program_id v2 recomputes to its id
+fn mg_vprog n ulong to ulong
+o = mg_no n
+l = mg_nl n
+if lt l 38
+ret 0
+end
+w = mg_h16 add o 32
+pl = mg_h16 add o 34
+if gt add 38 pl l
+ret 0
+end
+ql = mg_h16 add add o 36 pl
+if ne l add add 38 pl ql
+ret 0
+end
+mg_hid o 106
+mg_pid 106 w add o 36 pl add add o 38 pl ql
+if eq mg_idcmp 102 mg_ns n 0
+ret 1
+end
+ret 0
+end
+
+fn mg_vnodes to ulong
+bad = ulong 0
+for n ulong get mgs 3
+k = mg_nk n
+put mgvp n MGNONE
+if eq k 2
+p = mg_bparse mg_no n mg_nl n
+if eq p MGNONE
+bad = add bad 1
+continue
+end
+put mgvp n p
+mg_body p 104
+if ne mg_idcmp 104 mg_ns n 0
+bad = add bad 1
+end
+continue
+end
+if eq k 3
+mg_b0
+mg_bh mg_no n mg_nl n
+mg_hash 105
+if ne mg_idcmp 105 mg_ns n 0
+bad = add bad 1
+end
+continue
+end
+if eq k 1
+if eq mg_vprog n 0
+bad = add bad 1
+end
+continue
+end
+bad = add bad 1
+end
+ret bad
+end
+
+fn mg_vrecs to ulong
+bad = ulong 0
+for r ulong get mgs 4
+mg_bdom 3
+mg_bh get mgrc mul r 2 get mgrc add mul r 2 1
+mg_hash 105
+if ne mg_idcmp 105 add 8192 r 0
+bad = add bad 1
+end
+end
+ret bad
+end
+
+note 1 when the receipt of edge e (src s, rel rl, dst d) proves the relation
+fn mg_vrec s ulong rl ulong d ulong ri ulong to ulong
+if eq ri 0
+ret 0
+end
+o = get mgrc mul sub ri 1 2
+l = get mgrc add mul sub ri 1 2 1
+if lt l 67
+ret 0
+end
+k = mg_h8 o
+if eq mg_hideq add o 1 mg_ns s 0
+ret 0
+end
+if eq mg_hideq add o 33 mg_ns d 0
+ret 0
+end
+if ne mg_idcmp mg_ns s mg_ns d 1
+ret 0
+end
+pa = get mgvp s
+pb = get mgvp d
+if eq pa MGNONE
+ret 0
+end
+if eq pb MGNONE
+ret 0
+end
+w = mg_h16 add o 65
+if ne w mg_pw pa
+ret 0
+end
+if ne w mg_pw pb
+ret 0
+end
+if eq k 1
+if ne rl 9
+ret 0
+end
+if ne l 99
+ret 0
+end
+if ne mg_fid pa 107 1
+ret 0
+end
+if ne mg_fid pb 108 1
+ret 0
+end
+if eq mg_hideq add o 67 107 0
+ret 0
+end
+if eq mg_hideq add o 67 108 0
+ret 0
+end
+ret 1
+end
+if eq k 2
+if ne rl 9
+ret 0
+end
+if ne l 75
+ret 0
+end
+if gt w 32
+ret 0
+end
+if ne mg_h64 add o 67 shl ulong 1 w
+ret 0
+end
+if ne mg_exeq pa pb w 0
+ret 0
+end
+ret 1
+end
+if eq k 3
+if ne rl 2
+ret 0
+end
+if ne l 91
+ret 0
+end
+x = mg_h64 add o 67
+ya = mg_h64 add o 75
+if ne mg_eval pa x ya
+ret 0
+end
+if ne mg_eval pb x mg_h64 add o 83
+ret 0
+end
+if eq ya mg_h64 add o 83
+ret 0
+end
+ret 1
+end
+ret 0
+end
+
+fn mg_vedges to ulong
+bad = ulong 0
+for e ulong get mgs 5
+s = get mged mul e 4
+rl = get mged add mul e 4 1
+d = get mged add mul e 4 2
+ri = get mged add mul e 4 3
+if eq rl 4
+if ne mg_nk s 1
+bad = add bad 1
+continue
+end
+if ne mg_nk d 2
+bad = add bad 1
+continue
+end
+if eq mg_hideq mg_no s mg_ns d 0
+bad = add bad 1
+end
+continue
+end
+if eq rl 7
+if ne mg_nk s 3
+bad = add bad 1
+continue
+end
+if ne mg_nk d 2
+bad = add bad 1
+continue
+end
+p = get mgvp d
+if eq p MGNONE
+bad = add bad 1
+continue
+end
+c = mg_fid p 107
+if ne mg_idcmp 107 mg_ns s 0
+bad = add bad 1
+end
+continue
+end
+if ne mg_nk s 2
+bad = add bad 1
+continue
+end
+if ne mg_nk d 2
+bad = add bad 1
+continue
+end
+if eq mg_vrec s rl d ri 0
+bad = add bad 1
+end
+end
+ret bad
+end
+
+note number of failures over every node id, receipt id and edge receipt (0 = the graph checks)
+fn mg_verify to ulong
+a = mg_vnodes
+b = mg_vrecs
+c = mg_vedges
+ret add add a b c
+end
+
+note ---- canonical storage (spec/program-identity.md 10.3) ----
+
+fn mg_o8 v ulong to void
+c = get mgs 8
+put mgo c uchar and v 255
+put mgs 8 add c 1
+end
+
+fn mg_o32 v ulong to void
+mg_o8 shr v 24
+mg_o8 shr v 16
+mg_o8 shr v 8
+mg_o8 v
+end
+
+fn mg_oid s ulong to void
+for i ulong 32
+mg_o8 ulong get mgi add mul s 32 i
+end
+end
+
+fn mg_oh o ulong n ulong to void
+for i ulong n
+mg_o8 ulong get mgh add o i
+end
+end
+
+note edge order: src id, rel, dst id, receipt id (none = 32 zero bytes, slot 109)
+fn mg_ers e ulong to ulong
+r = get mged add mul e 4 3
+if eq r 0
+mg_idz 109
+ret 109
+end
+ret add 8192 sub r 1
+end
+
+fn mg_ecmp a ulong b ulong to ulong
+c = mg_idcmp mg_ns get mged mul a 4 mg_ns get mged mul b 4
+if ne c 0
+ret c
+end
+ra = get mged add mul a 4 1
+rb = get mged add mul b 4 1
+if lt ra rb
+ret 1
+end
+if gt ra rb
+ret 2
+end
+c = mg_idcmp mg_ns get mged add mul a 4 2 mg_ns get mged add mul b 4 2
+if ne c 0
+ret c
+end
+sa = mg_ers a
+mg_idcp sa 108
+ret mg_idcmp 108 mg_ers b
+end
+
+note insertion sorts of index lists: 1 nodes (mgsn), 2 receipts (mgsr), 3 edges (mgse)
+fn mg_gt k ulong a ulong b ulong to ulong
+c = ulong 0
+if eq k 1
+c = mg_idcmp mg_ns a mg_ns b
+else
+if eq k 2
+c = mg_idcmp add 8192 a add 8192 b
+else
+c = mg_ecmp a b
+end
+end
+if eq c 2
+ret 1
+end
+ret 0
+end
+
+fn mg_sget k ulong i ulong to ulong
+if eq k 1
+ret get mgsn i
+end
+if eq k 2
+ret get mgsr i
+end
+ret get mgse i
+end
+
+fn mg_sput k ulong i ulong v ulong to void
+if eq k 1
+put mgsn i v
+ret
+end
+if eq k 2
+put mgsr i v
+ret
+end
+put mgse i v
+end
+
+fn mg_sort k ulong n ulong to void
+for i ulong n
+mg_sput k i i
+end
+i = ulong 1
+while lt i n bound 999999
+cur = mg_sget k i
+j = i
+while gt j 0 bound 999999
+pv = mg_sget k sub j 1
+if eq mg_gt k pv cur 0
+break
+end
+mg_sput k j pv
+j = sub j 1
+end
+mg_sput k j cur
+i = add i 1
+end
+end
+
+note "omega.meaning.graph.v1" 0x00 || u32 N || N x (id, kind u8, u32 len, content)
+note || u32 R || R x (id, u32 len, content) || u32 E || E x (src id, rel u16, dst id, receipt id)
+fn mg_sern nn ulong to void
+mg_o32 nn
+for i ulong nn
+n = get mgsn i
+mg_oid mg_ns n
+mg_o8 mg_nk n
+mg_o32 mg_nl n
+mg_oh mg_no n mg_nl n
+end
+end
+
+fn mg_serr nr ulong to void
+mg_o32 nr
+for i ulong nr
+r = get mgsr i
+l = get mgrc add mul r 2 1
+mg_oid add 8192 r
+mg_o32 l
+mg_oh get mgrc mul r 2 l
+end
+end
+
+fn mg_sere ne0 ulong to void
+mg_o32 ne0
+for i ulong ne0
+e = get mgse i
+q = mul e 4
+rl = get mged add q 1
+mg_oid mg_ns get mged q
+mg_o8 shr rl 8
+mg_o8 rl
+mg_oid mg_ns get mged add q 2
+mg_oid mg_ers e
+end
+end
+
+fn mg_ser to ulong
+put mgs 8 0
+for i ulong len mgtgd
+mg_o8 ulong get mgtgd i
+end
+mg_o8 0
+mg_sort 1 get mgs 3
+mg_sort 2 get mgs 4
+mg_sort 3 get mgs 5
+mg_sern get mgs 3
+mg_serr get mgs 4
+mg_sere get mgs 5
+ret get mgs 8
+end
+
+note SHA-256 of mgo[0..n) -> slot s, streamed in 4096-byte runs
+fn mg_odig n ulong s ulong to void
+c = new ulong 40 0
+a = new uchar 4096 0
+o = new uchar 32 0
+sha256_init c
+q = ulong 0
+while lt q n bound 999999
+k = sub n q
+if gt k 4096
+k = 4096
+end
+for i ulong k
+put a i get mgo add q i
+end
+sha256_update c part a 0 k
+q = add q k
+end
+sha256_final c o
+for j ulong 32
+put mgi add mul s 32 j get o j
+end
+end
+
+fn mg_gdig s ulong to ulong
+n = mg_ser
+mg_odig n s
+ret n
+end
+
+note ---- reading the storage back ----
+
+fn mg_i8 to ulong
+c = get mgs 9
+if ge c get mgs 11
+put mgs 10 1
+ret 0
+end
+put mgs 9 add c 1
+ret ulong get mgo c
+end
+
+fn mg_i32 to ulong
+v = ulong 0
+for i ulong 4
+v = or shl v 8 mg_i8
+end
+ret v
+end
+
+fn mg_iid s ulong to void
+for i ulong 32
+put mgi add mul s 32 i uchar mg_i8
+end
+end
+
+fn mg_ih n ulong to ulong
+h = get mgs 6
+for i ulong n
+mg_hpush mg_i8
+end
+ret h
+end
+
+note replace the whole state by the graph in mgo[0..n). 0 ok; 1 truncated or trailing bytes; 2 bad
+note domain tag; 3 order not strictly increasing (non-canonical or duplicate); 4 malformed body;
+note 5 edge names an unknown node or receipt; 6 bad node kind. Run mg_verify afterwards.
+fn mg_load n ulong to ulong
+mg_reset
+put mgs 9 0
+put mgs 10 0
+put mgs 11 n
+for i ulong len mgtgd
+if ne mg_i8 ulong get mgtgd i
+ret 2
+end
+end
+if ne mg_i8 0
+ret 2
+end
+nn = mg_i32
+if gt nn MGNMAX
+ret 1
+end
+for i ulong nn
+mg_iid 104
+if gt i 0
+if ne mg_idcmp mg_ns sub i 1 104 1
+ret 3
+end
+end
+k = mg_i8
+l = mg_i32
+if gt l 65536
+ret 1
+end
+h = mg_ih l
+if ne get mgs 10 0
+ret 1
+end
+a = ulong 0
+if eq k 2
+a = mg_bparse h l
+if eq a MGNONE
+ret 4
+end
+end
+if eq k 3
+if lt l 19
+ret 4
+end
+a = mg_h8 add h 18
+end
+if eq k 0
+ret 6
+end
+if gt k 3
+ret 6
+end
+f = mg_nadd k 104 h l a
+end
+nr = mg_i32
+if gt nr MGRMAX
+ret 1
+end
+for i ulong nr
+mg_iid add 8192 i
+if gt i 0
+if ne mg_idcmp add 8191 i add 8192 i 1
+ret 3
+end
+end
+l = mg_i32
+if gt l 65536
+ret 1
+end
+h = mg_ih l
+put mgrc mul i 2 h
+put mgrc add mul i 2 1 l
+put mgs 4 add i 1
+end
+ne0 = mg_i32
+if gt ne0 MGEMAX
+ret 1
+end
+for i ulong ne0
+mg_iid 104
+rl = mg_i8
+rl = or shl rl 8 mg_i8
+mg_iid 105
+mg_iid 106
+if ne get mgs 10 0
+ret 1
+end
+s = mg_nfind 104
+d = mg_nfind 105
+if eq s MGNONE
+ret 5
+end
+if eq d MGNONE
+ret 5
+end
+r = ulong 0
+mg_idz 109
+if ne mg_idcmp 106 109 0
+r = mg_rfind 106
+if eq r MGNONE
+ret 5
+end
+r = add r 1
+end
+e = get mgs 5
+put mged mul e 4 s
+put mged add mul e 4 1 rl
+put mged add mul e 4 2 d
+put mged add mul e 4 3 r
+put mgs 5 add e 1
+if gt e 0
+if ne mg_ecmp sub e 1 e 1
+ret 3
+end
+end
+end
+if ne get mgs 10 0
+ret 1
+end
+if ne get mgs 9 n
+ret 1
+end
+for i ulong get mgs 3
+if eq mg_nk i 1
+if lt mg_nl i 32
+ret 4
+end
+mg_hid mg_no i 107
+b = mg_nfind 107
+if eq b MGNONE
+ret 5
+end
+put mgnd add mul i 4 3 b
+end
+end
+ret 0
+end
