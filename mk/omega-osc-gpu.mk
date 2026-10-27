@@ -54,7 +54,7 @@ test-osc-gpu-om: test-osc-gpu $(OSG_DIR)/om_oracle
 	sh tests/osc_gpu/om_diff.sh seed/out/omc $(OSG_DIR)/om_oracle $(OSG_DIR)/test_osc_gpu $(OSG_DIR)/ir $(OSG_DIR)/om
 
 .PHONY: test-oscir-om test-checker2-om test-om-ports
-test-oscir-om:
+test-oscir-om: test-osc-gpu
 	sh tests/osc_gpu/oscir_diff.sh seed/out/omc $(OSG_DIR)/oscir_diff
 test-checker2-om: test-checker2-differential test-osc-gpu
 	sh tests/checker2/om_diff.sh $(OUT_DIR)/checker2/checker2 $(OUT_DIR)/checker2/om $(OUT_DIR)/checker2/differential/ir $(OSG_DIR)/ir
