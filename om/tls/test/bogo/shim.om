@@ -293,6 +293,22 @@ end
 ret 7
 end
 
+note after an abort: read and discard what the runner already sent (bounded, 200 ms idle) so the
+note close is a FIN, not a TCP RST; an RST over unread data can drop the alert we just sent
+fn sh_drain f int to void
+b = new uchar 4096 0
+for i ulong 256
+w = waitio f 1 200000000
+if le w 0
+ret
+end
+n = recv f b 0 4096 0
+if le n 0
+ret
+end
+end
+end
+
 note handshake and echo on the runner connection; c holds the TLS state, st the trust anchors
 fn sh_run c edit uchar * st edit uchar * v view ulong * to int
 e = tls_init c sh_name 0
@@ -311,6 +327,9 @@ end
 e = tls_connect c st f
 if eq e 0
 e = sh_echo c v
+end
+if ne e 0
+sh_drain f
 end
 x = fclose f
 if eq e 0
