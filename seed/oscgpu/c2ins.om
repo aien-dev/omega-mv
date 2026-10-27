@@ -540,7 +540,7 @@ end
 n = get cnag s
 if ne n get cgnp g
 c2_a2 n get cgnp g
-ret c2_ff crtcall ii cmcarit
+ret c2_ff crarity ii cmcarit
 end
 rs = add mul g 481 480
 d = get cdst s

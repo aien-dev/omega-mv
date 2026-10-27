@@ -203,7 +203,7 @@ fn c2_comb sb long ta long tb long to long
 if or eq ta 0 eq tb 0
 ret 0
 end
-if or eq sb 1 eq sb 2
+if or eq sb 1 eq sb 3
 lo = ta
 hi = tb
 if gt ta tb

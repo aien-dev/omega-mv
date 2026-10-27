@@ -1,0 +1,588 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2main.om: check_func and c2_check_unit of src/checker2/c2_check.c and the `check` command of
+note src/checker2/checker2_main.c (judge, slurp, usage). Only `checker2 check <unit.ir>` is ported:
+note every other command line, `version` and `receipt ...` included, prints the C usage line and exits 2.
+note Output contract (equal to the C, compared by tests/checker2/om_diff.sh):
+note   stdout  checker2=ACCEPT ir_sha256=H                                             exit 0
+note           checker2=REJECT rule=R func=F insn=I ir_sha256=H detail=D              exit 1
+note   stderr  checker2: cannot open P: strerror(errno)   or   checker2: cannot read P  exit 2
+note   stderr  the usage line                                                         exit 2
+note H is the SHA-256 of every byte of the file. A file of 2^28 bytes or more is refused as unreadable,
+note exactly where slurp's doubling buffer stops (cap reaches 1 << 28 with the buffer full).
+
+text crfname "C2-FUNC-NAME"
+text cmfname "function %s defined twice"
+text crfpar "C2-FUNC-PARAMS"
+text cmfpar "%u parameters, %u registers"
+text crgkern "C2-GPU-KERNEL"
+text cmkvoid "a kernel returns nothing and carries no requires/ensures"
+text cmkthr "%u threads per block (32..1024, a multiple of 32)"
+text crfret "C2-FUNC-RETURN"
+text cmfret "function returns a non-scalar"
+text crtinv "C2-TYPE-INVALID"
+text cmtinv "register v%d has an invalid type"
+text crgtype "C2-GPU-TYPE"
+text cmgtyk "register v%d: type %u is not allowed in a kernel"
+text cmgtyh "register v%d: type %u is not allowed in a host function"
+text cmshpar "shared array v%d is a parameter"
+text cmgbpar "buffer register v%d is not a parameter followed by its u32 length"
+text cmgbsit "buffer v%d sits in the length register of v%d"
+text crslpar "C2-SLICE-PARAM"
+text cmslpar "slice register v%d is not a parameter followed by its u64 length"
+text cmslsit "slice v%d sits in the length register of v%d"
+
+note A buffer (u32 length, S_U32 4, rule C2-GPU-BUFFER) or slice (u64 length, S_U64 5, rule
+note C2-SLICE-PARAM) register x = slot of vreg r: a parameter followed by its length register, never
+note itself in the length register of an earlier one. The r + 1 test is first, as the C's ||.
+fn c2_fbuf fi long r long x long np long to long
+bad = ge add r 1 np
+if not bad
+bad = ne get cts add x 1 4
+end
+if bad
+c2_a1 r
+ret c2_fail crgbuf fi -1 cmgbpar
+end
+if gt r 0
+if c2_gbuf sub x 1
+c2_a2 r sub r 1
+ret c2_fail crgbuf fi -1 cmgbsit
+end
+end
+ret 0
+end
+
+fn c2_fsl fi long r long x long np long to long
+bad = ge add r 1 np
+if not bad
+bad = ne get cts add x 1 5
+end
+if bad
+c2_a1 r
+ret c2_fail crslpar fi -1 cmslpar
+end
+if gt r 0
+if c2_slice sub x 1
+c2_a2 r sub r 1
+ret c2_fail crslpar fi -1 cmslsit
+end
+end
+ret 0
+end
+
+note One register of check_func's type loop (C 1532-1552).
+fn c2_freg fi long r long kern bool to long
+x = add mul fi 481 r
+np = get cgnp fi
+if not c2_ctype x
+c2_a1 r
+ret c2_fail crtinv fi -1 cmtinv
+end
+s = get cts x
+kt = or or c2_gbuf x c2_isblk x eq s 13
+if kern
+if not or or kt eq s 1 eq s 4
+c2_a2 r s
+ret c2_fail crgtype fi -1 cmgtyk
+end
+else
+if kt
+c2_a2 r s
+ret c2_fail crgtype fi -1 cmgtyh
+end
+end
+if c2_isblk x
+if lt r np
+c2_a1 r
+ret c2_fail crgsh fi -1 cmshpar
+end
+end
+if c2_gbuf x
+ret c2_fbuf fi r x np
+end
+if c2_slice x
+ret c2_fsl fi r x np
+end
+ret 0
+end
+
+note check_func's header checks (C 1521-1552).
+fn c2_fhdr fi long to long
+for g long fi
+if c2_gnameq g fi
+c2_s1 add 1000 fi
+ret c2_fail crfname fi -1 cmfname
+end
+end
+kern = ne get cgk fi 0
+np = get cgnp fi
+nv = get cgnv fi
+mx = long 6
+if kern
+mx = 32
+end
+if or gt np mx gt np nv
+c2_a2 np nv
+ret c2_fail crfpar fi -1 cmfpar
+end
+rs = get cts add mul fi 481 480
+if kern
+if or or ne rs 0 ne get cgrq fi 0 ne get cgen fi 0
+ret c2_fail crgkern fi -1 cmkvoid
+end
+th = get cgth fi
+if or or lt th 32 gt th 1024 ne rem th 32 0
+c2_a1 th
+ret c2_fail crgkern fi -1 cmkthr
+end
+end
+if not or eq rs 0 c2_val rs
+ret c2_fail crfret fi -1 cmfret
+end
+for r long nv
+if ne c2_freg fi r kern 0
+ret -1
+end
+end
+ret 0
+end
+
+note The C allocates its per-function context Fx with calloc: blk_of, succ, nsucc, reach, dom, ndefs,
+note def_insn and quiet start at zero for every function. These are their globals.
+fn c2_freset to void
+for i long 4096
+put cblk i 0
+end
+for i long 32768
+put cbs i 0
+end
+for i long 1024
+put csuc i 0
+end
+for i long 512
+put cnsu i 0
+put creach i 0
+end
+for i long 480
+put cnd i 0
+put cdi i 0
+end
+put cquiet 0 0
+end
+
+note check_func (C 1518-1576): the phases in the C's order, the first failure wins.
+fn c2_cfunc fi long to long
+put cfi 0 fi
+if ne c2_fhdr fi 0
+ret -1
+end
+kern = ne get cgk fi 0
+c2_freset
+if ne c2_bcfg 0
+ret -1
+end
+for i long c2_ni
+if ne c2_insn i 0
+ret -1
+end
+end
+c2_lcfg
+c2_cdefs
+if ne c2_kops 0
+ret -1
+end
+if kern
+if ne c2_kuni 0
+ret -1
+end
+end
+if ne c2_hands 0
+ret -1
+end
+if ne c2_cdef 0
+ret -1
+end
+if ne c2_loops 0
+ret -1
+end
+if ne c2_own 0
+ret -1
+end
+if kern
+if ne c2_races 0
+ret -1
+end
+end
+ret 0
+end
+
+fn c2_cunit to long
+if ne c2_cstructs 0
+ret -1
+end
+for fi long get cnfn 0
+if ne c2_cfunc fi 0
+ret -1
+end
+end
+ret 0
+end
+
+note ---------------------------------------------------------------- command line
+
+text cusage "usage: checker2 check <unit.ir> | version | receipt issue|tbs|attach|verify ... (see source header)\n"
+text ccheck "check"
+text cpre "checker2: "
+text copen "cannot open "
+text cread "cannot read "
+text ccolon ": "
+text cnl "\n"
+text cacc "checker2=ACCEPT ir_sha256="
+text crej "checker2=REJECT rule="
+text cfunc " func="
+text cinsn " insn="
+text csha " ir_sha256="
+text cdetl " detail="
+text chex "0123456789abcdef"
+note glibc strerror texts for the errnos open(O_RDONLY) can return; any other is "Unknown error N".
+text ce1 "Operation not permitted"
+text ce2 "No such file or directory"
+text ce4 "Interrupted system call"
+text ce5 "Input/output error"
+text ce6 "No such device or address"
+text ce12 "Cannot allocate memory"
+text ce13 "Permission denied"
+text ce14 "Bad address"
+text ce16 "Device or resource busy"
+text ce19 "No such device"
+text ce20 "Not a directory"
+text ce21 "Is a directory"
+text ce22 "Invalid argument"
+text ce23 "Too many open files in system"
+text ce24 "Too many open files"
+text ce26 "Text file busy"
+text ce27 "File too large"
+text ce30 "Read-only file system"
+text ce36 "File name too long"
+text ce40 "Too many levels of symbolic links"
+text ce75 "Value too large for defined data type"
+text ce95 "Operation not supported"
+text ce11 "Resource temporarily unavailable"
+text ceunk "Unknown error "
+
+note The path argument (Linux caps one argument at 128 KiB, MAX_ARG_STRLEN) and its length.
+global cpth uchar 131072
+global cptn long 1
+
+note Writes all of cob[0 .. cobn) to fd. A failed or empty write ends it, as printf's result is ignored.
+fn c2_flush fd int to void
+n = get cobn 0
+o = long 0
+while lt o n bound 999999
+k = write fd cob ulong o ulong sub n o
+if le k 0
+break
+end
+o = add o k
+end
+put cobn 0 0
+end
+
+fn c2_ostart to void
+put cobn 0 0
+put cocap 0 8192
+end
+
+fn c2_opath to void
+for i long get cptn 0
+c2_oc get cpth i
+if eq get cobn 0 8192
+c2_flush 2
+end
+end
+end
+
+fn c2_strerr e long to void
+if eq e 1
+c2_ot ce1
+ret
+end
+if eq e 2
+c2_ot ce2
+ret
+end
+if eq e 4
+c2_ot ce4
+ret
+end
+if eq e 5
+c2_ot ce5
+ret
+end
+if eq e 6
+c2_ot ce6
+ret
+end
+if eq e 11
+c2_ot ce11
+ret
+end
+if eq e 12
+c2_ot ce12
+ret
+end
+if eq e 13
+c2_ot ce13
+ret
+end
+c2_strer2 e
+end
+
+fn c2_strer2 e long to void
+if eq e 14
+c2_ot ce14
+ret
+end
+if eq e 16
+c2_ot ce16
+ret
+end
+if eq e 19
+c2_ot ce19
+ret
+end
+if eq e 20
+c2_ot ce20
+ret
+end
+if eq e 21
+c2_ot ce21
+ret
+end
+if eq e 22
+c2_ot ce22
+ret
+end
+if eq e 23
+c2_ot ce23
+ret
+end
+if eq e 24
+c2_ot ce24
+ret
+end
+c2_strer3 e
+end
+
+fn c2_strer3 e long to void
+if eq e 26
+c2_ot ce26
+ret
+end
+if eq e 27
+c2_ot ce27
+ret
+end
+if eq e 30
+c2_ot ce30
+ret
+end
+if eq e 36
+c2_ot ce36
+ret
+end
+if eq e 40
+c2_ot ce40
+ret
+end
+if eq e 75
+c2_ot ce75
+ret
+end
+if eq e 95
+c2_ot ce95
+ret
+end
+c2_ot ceunk
+c2_od e
+end
+
+note "checker2: cannot open P: E\n" (e > 0, the errno) on stderr; exit 2.
+fn c2_nopen e long to int
+c2_ostart
+c2_ot cpre
+c2_ot copen
+c2_flush 2
+c2_opath
+c2_ot ccolon
+c2_strerr e
+c2_ot cnl
+c2_flush 2
+ret 2
+end
+
+note "checker2: cannot read P\n" on stderr; exit 2.
+fn c2_nread to int
+c2_ostart
+c2_ot cpre
+c2_ot cread
+c2_flush 2
+c2_opath
+c2_ot cnl
+c2_flush 2
+ret 2
+end
+
+fn c2_usage to int
+c2_ostart
+c2_ot cusage
+c2_flush 2
+ret 2
+end
+
+note Lower-case hex of the 32 digest bytes.
+fn c2_ohex d view uchar 32 to void
+for i ulong 32
+x = get d i
+c2_oc get chex ulong shr x 4
+c2_oc get chex ulong and x 15
+end
+end
+
+note Appends k bytes of chunk to cbuf from position t while they fit in its 16 MiB.
+fn c2_keep b view uchar 65536 t long k long to void
+for i long k
+p = add t i
+if ge p 16777216
+ret
+end
+put cbuf p get b i
+end
+end
+
+note Reads the file at the path: every byte into the hash, the first 16 MiB into cbuf, cn the total.
+note Returns 0, -1 cannot open (errno in crv), -2 cannot read. A read error or 2^28 bytes is -2,
+note after the C: slurp's buffer doubles from 64 KiB and gives up full at 1 << 28 bytes.
+note Bounds: each pass of the inner loop adds at least one byte or ends the read, and the file stops
+note at 2^28 bytes, so 1024 x 999999 passes are more than enough; a slower source traps 4 (fail closed).
+fn c2_slurp hc edit shactx to long
+n = get cptn 0
+if eq n 0
+put crv 0 2
+ret -1
+end
+if gt n 4095
+put crv 0 36
+ret -1
+end
+fd = fopen cpth 0 ulong n 0 0
+if lt fd 0
+put crv 0 ulong neg fd
+ret -1
+end
+b = new uchar 65536 0
+t = long 0
+st = long 1
+for j long 1024
+if ne st 1
+break
+end
+while true bound 999999
+k = read int fd b 0 65536
+if lt k 0
+st = -2
+break
+end
+if eq k 0
+st = 0
+break
+end
+c2_h2 hc b k
+c2_keep b t k
+t = add t k
+if ge t 268435456
+st = -2
+break
+end
+end
+end
+r = fclose int fd
+put cn 0 t
+ret st
+end
+
+fn c2_h2 hc edit shactx b view uchar 65536 k long to void
+c2h_upd hc part b 0 ulong k
+end
+
+note judge (C 126-143): decode, check, print the verdict line.
+fn c2_judge to int
+hc = new uchar 104 0
+dg = new uchar 32 0
+c2h_init hc
+s = c2_slurp hc
+if eq s -1
+ret c2_nopen long get crv 0
+end
+if ne s 0
+ret c2_nread
+end
+c2h_final hc dg
+put cfail 0 0
+rc = c2_decode
+if eq rc 0
+rc = c2_cunit
+end
+c2_ostart
+if eq rc 0
+c2_ot cacc
+c2_ohex dg
+c2_ot cnl
+c2_flush 1
+ret 0
+end
+c2_ot crej
+for i long get crln 0
+c2_oc get crul i
+end
+c2_ot cfunc
+c2_od get cvf 0
+c2_ot cinsn
+c2_od get cvi 0
+c2_ot csha
+c2_ohex dg
+c2_ot cdetl
+for i long get cdtn 0
+c2_oc get cdet i
+end
+c2_ot cnl
+c2_flush 1
+ret 1
+end
+
+fn main to int
+c2_init
+na = argcnt
+if lt na 2
+ret c2_usage
+end
+w = new uchar 8 0
+k = argread 1 w 0 8
+if ne k 5
+ret c2_usage
+end
+for i ulong 5
+if ne get w i get ccheck i
+ret c2_usage
+end
+end
+if ne na 3
+ret c2_usage
+end
+k = argread 2 cpth 0 131072
+if lt k 0
+ret c2_usage
+end
+put cptn 0 k
+ret c2_judge
+end
