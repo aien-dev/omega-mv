@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - name: machine and tools
         run: |
           uname -a; nproc; openssl version; python3 --version; git log -2 --format='%H %s'
@@ -26,7 +28,7 @@ jobs:
           echo "pin $pin"; echo "got $got"
           [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
           chmod +x seed/out/omc
-          git diff --stat e5b32567a7aff3ce594e3254a622a846a6cd190b HEAD
+          test "$(git rev-parse HEAD~1)" = e5b32567a7aff3ce594e3254a622a846a6cd190b; git diff --stat HEAD~1 HEAD
       - name: om/tls suites
         shell: bash
         run: |
