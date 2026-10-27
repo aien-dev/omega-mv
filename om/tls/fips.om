@@ -1,0 +1,542 @@
+note SPDX-License-Identifier: Apache-2.0
+note fips.om: FIPS 140-3 style self-tests and health tests for om/tls (FIPS 140-3 section 7.10,
+note SP 800-140C/D, IG 10.3.A, SP 800-90B section 4.4). Tested against the FIPS 140-3 / CAVP test
+note methods, not NIST-validated; nothing here is a certificate. Needs sha2, hkdf, drbg, x25519,
+note chacha, aesgcm, ec, ecdh, rsa and x509 composed before it and tls.om after it (om/tls/build.sh).
+note
+note One process-wide mutable global, FPST, holds the module state (the only global in om/tls):
+note   FPST[0] 0 self-tests not run, 1 passed, 2 error state (latched; only a new process clears it)
+note   FPST[1] the first failure: 1..15 a pre-operational self-test (fips_selftest), 14 the DRBG
+note           self-test, 20 the DRBG continuous test, 21 a pairwise consistency test (X25519 here, or
+note           the approved-mode P-256/P-384 key generation in tls.om: failed PCT or 16 rejected draws),
+note           22 the repetition count test, 23 the adaptive proportion test, 24 getrandom failed,
+note           25 a DRBG call failed, 30.. reserved for callers (fips_fail)
+note   FPST[2] 1 when the DRBG self-test (approved mode only) has passed
+note   FPST[3..8) health-test state: previous sample, RCT run length, APT reference, APT count,
+note           APT window position; FPST[8] health failures (bit 0 RCT, bit 1 APT);
+note   FPST[9] 1 after the SP 800-90B start-up test (FHSTART samples) has run
+note
+note Entropy input: the `random` word (Linux getrandom, flags 0). The samples are the kernel's
+note already-conditioned CRNG output, not an Omega noise source; the RCT/APT below guard against a
+note stuck or broken source (SP 800-90B 4.4), they do not make it an entropy source. Cut-offs for a
+note claimed H = 6 bits per byte (below every SP 800-90B estimate measured on this source; the lowest
+note was 6.638, a restart test) and alpha = 2^-40: RCT C = 1 + ceil(40 / 6) = 8; APT W = 512,
+note C = 1 + CRITBINOM(512, 2^-6, 1 - 2^-40) = 35.
+note The tests run on every sample with the same instructions for every value: the only branches
+note are on the public window position and on the accumulated failure flag.
+note
+note Self-test vectors (hex texts below; a changed digit makes the module refuse, test/fips/run.sh):
+note   SHA-256/384/512 "abc" (FIPS 180-4 examples); HMAC-SHA-256/384 RFC 4231 test case 2;
+note   HKDF-SHA-256 RFC 5869 A.1; TLS 1.3 KDF RFC 8448 "derived" secret (HKDF-Expand-Label);
+note   AES-128-GCM CAVP gcmEncryptExtIV128 [IVlen 96, PTlen 256, AADlen 128, Taglen 128] Count 0
+note   (encrypt and decrypt); ECDSA P-256 SHA-256 verify CAVP SigVer P-256,SHA-256 (test/ec
+note   c-p256-sha256-4r); RSA-2048 PKCS#1 v1.5 and PSS (SHA-256, MGF1-SHA-256, salt 32) verify,
+note   Wycheproof rsa_pkcs1_2048_sig_gen #81 and rsa_pss_2048_sha256_mgf1_32 #1; HMAC_DRBG
+note   CAVP pr_false [SHA-256] (instantiate with personalization, reseed, two generates).
+note   Non-approved algorithms, tested all the same: ChaCha20-Poly1305 RFC 8439 2.8.2 and X25519
+note   RFC 7748 5.2.
+
+global FPST ulong 16
+note Health-test cut-offs (SP 800-90B 4.4.1/4.4.2) for H = 6 bits per sample, alpha = 2^-40, MODELED
+note with Wolfram: h=6; a=2^-40; 1+Ceiling[-Log2[a]/h] -> 8 (RCT cut-off: 7 equal samples pass,
+note 8 trip); 1+InverseCDF[BinomialDistribution[512,2^-h],1-a] -> 35 (APT: 34 in a window pass).
+const FHRCT1 ulong 7
+const FHAPT1 ulong 34
+const FHAPTW ulong 512
+const FHSTART ulong 1024
+
+text FKABC "abc"
+text FKJEFE "Jefe"
+text FKWHAT "what do ya want for nothing?"
+text FKL13D "tls13 derived"
+text FKPERS "omega-tls approved mode"
+text FKS256 "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+text FKS384 "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7"
+text FKS512 "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f"
+text FKH256 "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+text FKH384 "af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649"
+text FKHS "000102030405060708090a0b0c"
+text FKHI "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+text FKHN "f0f1f2f3f4f5f6f7f8f9"
+text FKHO "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+text FKTD "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba"
+text FKGK "298efa1ccf29cf62ae6824bfc19557fc"
+text FKGI "6f58a93fe1d207fae4ed2f6d"
+text FKGA "021fafd238463973ffe80256e5b1c6b1"
+text FKGP "cc38bccd6bc536ad919b1395f5d63801f99f8068d65ca5ac63872daf16b93901"
+text FKGC "dfce4e9cd291103d7fe4e63351d9e79d3dfd391e3267104658212da96521b7db542465ef599316f73a7a560509a2d9f2"
+text FKEQ "04e424dc61d4bb3cb7ef4344a7f8957a0c5134e16f7a67c074f82e6e12f49abf3c970eed7aa2bc48651545949de1dddaf0127e5965ac85d1243d6f60e7dfaee927"
+text FKED "d1b8ef21eb4182ee270638061063a3f3c16c114e33937f69fb232cc833965a94"
+text FKES "bf96b99aa49c705c910be33142017c642ff540c76349b9dab72f981fd9347f4f17c55095819089c2e03b9cd415abdf12444e323075d98f31920b9e0f57ec871c"
+text FKR1K "3082010a0282010100a2b451a07d0aa5f96e455671513550514a8a5b462ebef717094fa1fee82224e637f9746d3f7cafd31878d80325b6ef5a1700f65903b469429e89d6eac8845097b5ab393189db92512ed8a7711a1253facd20f79c15e8247f3d3e42e46e48c98e254a2fe9765313a03eff8f17e1a029397a1fa26a8dce26f490ed81299615d9814c22da610428e09c7d9658594266f5c021d0fceca08d945a12be82de4d1ece6b4c03145b5d3495d4ed5411eb878daf05fd7afc3e09ada0f1126422f590975a1969816f48698bcbba1b4d9cae79d460d8f9f85e7975005d9bc22c4e5ac0f7c1a45d12569a62807d3b9a02e5a530e773066f453d1f5b4c2e9cf7820283f742b9d50203010001"
+text FKR1D "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+text FKR1S "840f5dac53106dd1f9c57219224cf51289290c42f20466875ba8e830ac5690e541536fcc8ab03b731f82bf66d83f194e7e180b3963ec7a2f3f7904a7ce49aed47da4d4b79421eaf937d301b3e696169297b797c32c076a12be4de0b58e003c5123051a84a10c62f8dac2f42a8640008eb3c7cccd6760ff5b51b689763922582845f048fb8150e5a7a6ca2eccc7bdc85349ad5b26c52137a79fa3fe5c29ab5cd7615013219c1941b6708e9c3c23feff5febaf0c8ebca5750b54e3e6e99a3e876b396f27860b7f3ec4e9191703c6332d944f6f69751167680c79c4f6b57f1cc8755d24b6ec158ccdbacdb23107a33cb6b332516c13274d1f9dccc21dced869e486"
+text FKR2K "3082010a0282010100a2b451a07d0aa5f96e455671513550514a8a5b462ebef717094fa1fee82224e637f9746d3f7cafd31878d80325b6ef5a1700f65903b469429e89d6eac8845097b5ab393189db92512ed8a7711a1253facd20f79c15e8247f3d3e42e46e48c98e254a2fe9765313a03eff8f17e1a029397a1fa26a8dce26f490ed81299615d9814c22da610428e09c7d9658594266f5c021d0fceca08d945a12be82de4d1ece6b4c03145b5d3495d4ed5411eb878daf05fd7afc3e09ada0f1126422f590975a1969816f48698bcbba1b4d9cae79d460d8f9f85e7975005d9bc22c4e5ac0f7c1a45d12569a62807d3b9a02e5a530e773066f453d1f5b4c2e9cf7820283f742b9d50203010001"
+text FKR2D "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+text FKR2S "4f01e0c12b08625ecac89a69231906edf826380f37c959a96690d046316d68ffce9d5c471694fcebfc6b45534864689256e4fc81c78e583f675d0c94b449647451e81beff01a11a516d5e5ce3f1a910437cb8a3a5096b19fb15f4524a35b23d89cdba12cf5b71aac1047b28c562df7c5542c34ce23a182cf7e0e231934b17294799d44877a1d68ef1b8f073619b7618e6b7c22db20030d98cf591ffc3d4da5f58613ecd5ecfc3b40a1d02f40891ca43695cd4c088b05a8054c89c595a47e274816f35384226f74459ee63e25a1bfc03c360490552ec38343f8ace502f065303b00bc0ec320711b211fde92e57feb9013c3609342495ec0d7cabdec21e54acc38"
+text FKCK "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f070000004041424344454647"
+text FKCA "50515253c0c1c2c3c4c5c6c7"
+text FKCP "4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66202739393a204966204920636f756c64206f6666657220796f75206f6e6c79206f6e652074697020666f7220746865206675747572652c2073756e73637265656e20776f756c642062652069742e"
+text FKCC "d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b61161ae10b594f09e26a7e902ecbd0600691"
+text FKXK "a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4"
+text FKXU "e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c"
+text FKXO "c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552"
+text FKDE "cdb0d9117cc6dbc9ef9dcb06a97579841d72dc18b2d46a1cb61e314012bdf416"
+text FKDN "d0c0d01d156016d0eb6b7e9c7c3c8da8"
+text FKDP "6f0fb9eab3f9ea7ab0a719bfa879bf0aaed683307fda0c6d73ce018b6e34faaa"
+text FKDER "8ec6f7d5a8e2e88f43986f70b86e050d07c84b931bcf18e601c5a3eee3064c82"
+text FKDAR "1ab4ca9014fa98a55938316de8ba5a68c629b0741bdd058c4d70c91cda5099b3"
+text FKDA1 "16e2d0721b58d839a122852abd3bf2c942a31c84d82fca74211871880d7162ff"
+text FKDA2 "53686f042a7b087d5d2eca0d2a96de131f275ed7151189f7ca52deaa78b79fb2"
+text FKDR "dda04a2ca7b8147af1548f5d086591ca4fd951a345ce52b3cd49d47e84aa31a183e31fbc42a1ff1d95afec7143c8008c97bc2a9c091df0a763848391f68cb4a366ad89857ac725a53b303ddea767be8dc5f605b1b95f6d24c9f06be65a973a089320b3cc42569dcfd4b92b62a993785b0301b3fc452445656fce22664827b88f"
+
+note ---- module state ----
+note enter the error state with failure code (the first code is kept); returns code
+fn fips_fail code ulong to ulong
+if ne get FPST 0 2
+put FPST 1 code
+end
+put FPST 0 2
+ret code
+end
+
+note 1 in the error state, 0 otherwise
+fn fips_bad to ulong
+if eq get FPST 0 2
+ret 1
+end
+ret 0
+end
+
+note the first failure code (0 when none)
+fn fips_detail to ulong
+ret get FPST 1
+end
+
+note ---- hex texts ----
+fn fips_hx ch ulong to ulong
+if le ch 57
+ret sub ch 48
+end
+ret sub or ch 32 87
+end
+
+fn fips_hb t view uchar * i ulong to ulong
+j = mul i 2
+ret or shl fips_hx ulong get t j 4 fips_hx ulong get t add j 1
+end
+
+note o[0..len t / 2) = the bytes of hex text t; returns that count
+fn fips_unhex t view uchar * o edit uchar * to ulong
+n = shr len t 1
+for i ulong n
+put o i uchar fips_hb t i
+end
+ret n
+end
+
+note 0 when a equals the bytes of hex text t (same length), 1 otherwise; no early exit
+fn fips_cmp a view uchar * t view uchar * to ulong
+n = shr len t 1
+if ne len a n
+ret 1
+end
+d = ulong 0
+for i ulong n
+d = or d xor ulong get a i fips_hb t i
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+note ---- pre-operational self-tests (known-answer tests); each returns 0 or 1 ----
+fn fips_ksha alg ulong m view uchar * want view uchar * to ulong
+o = new uchar 64 0
+n = sha2_digest alg m o
+ret fips_cmp part o 0 n want
+end
+
+fn fips_khmac alg ulong want view uchar * to ulong
+c = new ulong 96 0
+o = new uchar 64 0
+hmac_init alg c FKJEFE
+hmac_update c FKWHAT
+n = hmac_final c o
+drbg_zx c
+ret fips_cmp part o 0 n want
+end
+
+note HKDF-SHA-256 extract then expand (RFC 5869 A.1)
+fn fips_khkdf to ulong
+si = new uchar 64 0
+p = new uchar 64 0
+o = new uchar 42 0
+a = fips_unhex FKHS si
+b = fips_unhex FKHI part si a sub 64 a
+n = hkdf_extract 256 part si 0 add a b a part p 0 32
+if ne n 32
+ret 1
+end
+m = fips_unhex FKHN part p 32 32
+if ne hkdf_expand 256 part p 0 add 32 m 32 o 0
+ret 1
+end
+ret fips_cmp o FKHO
+end
+
+note TLS 1.3 key schedule (RFC 8446 7.1): early secret = HKDF-Extract(0, 0^32), then
+note Derive-Secret(., "derived", "") = HKDF-Expand-Label(., "derived", SHA-256(""), 32), RFC 8448
+fn fips_ktls to ulong
+z = new uchar 32 0
+p = new uchar 81 0
+o = new uchar 32 0
+n = hkdf_extract 256 z 0 part p 0 32
+if ne n 32
+ret 1
+end
+put p 33 32
+put p 34 13
+for i ulong 13
+put p add 35 i get FKL13D i
+end
+put p 48 32
+n = sha2_digest 256 part z 0 0 part p 49 32
+if ne hkdf_expand 256 p 32 o 0
+ret 1
+end
+ret fips_cmp o FKTD
+end
+
+note AES-128-GCM encrypt (CT || tag) then decrypt; 0, 1 (encrypt) or 2 (decrypt)
+fn fips_kgcm to ulong
+kn = new uchar 28 0
+ad = new uchar 16 0
+b = new uchar 48 0
+n = fips_unhex FKGK kn
+n = fips_unhex FKGI part kn 16 12
+n = fips_unhex FKGA ad
+n = fips_unhex FKGP b
+if ne aead_aes128gcm_seal kn ad b 0
+ret 1
+end
+if ne fips_cmp b FKGC 0
+ret 1
+end
+if ne aead_aes128gcm_open kn ad b 0
+ret 2
+end
+if ne fips_cmp part b 0 32 FKGP 0
+ret 2
+end
+ret 0
+end
+
+note ChaCha20-Poly1305 seal then open (RFC 8439 2.8.2); non-approved
+fn fips_kchacha to ulong
+kn = new uchar 44 0
+ad = new uchar 12 0
+b = new uchar 130 0
+n = fips_unhex FKCK kn
+n = fips_unhex FKCA ad
+n = fips_unhex FKCP b
+if ne aead_chacha_seal kn ad b 0
+ret 1
+end
+if ne fips_cmp b FKCC 0
+ret 1
+end
+if ne aead_chacha_open kn ad b 0
+ret 1
+end
+ret fips_cmp part b 0 114 FKCP
+end
+
+note ECDSA P-256 verify: the CAVP signature must verify and fail with the digest changed
+fn fips_kecdsa to ulong
+q = new uchar 65 0
+hs = new uchar 96 0
+n = fips_unhex FKEQ q
+n = fips_unhex FKED hs
+n = fips_unhex FKES part hs 32 64
+if ne ecdsa_verify_raw 256 q hs 32 0
+ret 1
+end
+put hs 0 uchar xor ulong get hs 0 1
+if eq ecdsa_verify_raw 256 q hs 32 0
+ret 1
+end
+ret 0
+end
+
+note RSA-2048 verify; hs = SHA-256 digest || signature (rsa.om); ps 0 PKCS#1 v1.5, 1 PSS
+fn fips_rsav ps ulong k view uchar * hs edit uchar * to ulong
+r = ulong 0
+if eq ps 0
+r = rsa_verify_pkcs1 256 k hs 32
+else
+r = rsa_verify_pss 137455730944 k hs 32
+end
+if ne r 0
+ret 1
+end
+put hs 0 uchar xor ulong get hs 0 1
+if eq ps 0
+r = rsa_verify_pkcs1 256 k hs 32
+else
+r = rsa_verify_pss 137455730944 k hs 32
+end
+if eq r 0
+ret 1
+end
+ret 0
+end
+
+fn fips_kpkcs to ulong
+k = new uchar 270 0
+hs = new uchar 288 0
+n = fips_unhex FKR1K k
+n = fips_unhex FKR1D hs
+n = fips_unhex FKR1S part hs 32 256
+ret fips_rsav 0 k hs
+end
+
+note PSS control word: SHA-256 | MGF1-SHA-256 << 16 | salt 32 << 32 = 137455730944
+fn fips_kpss to ulong
+k = new uchar 270 0
+hs = new uchar 288 0
+n = fips_unhex FKR2K k
+n = fips_unhex FKR2D hs
+n = fips_unhex FKR2S part hs 32 256
+ret fips_rsav 1 k hs
+end
+
+note X25519 (RFC 7748 5.2 first vector); non-approved
+fn fips_kx to ulong
+k = new uchar 32 0
+u = new uchar 32 0
+o = new uchar 32 0
+n = fips_unhex FKXK k
+n = fips_unhex FKXU u
+if ne x25519_scalarmult o k u 0
+ret 1
+end
+ret fips_cmp o FKXO
+end
+
+note HMAC_DRBG instantiate (with personalization), reseed (with additional input) and two
+note generates with additional input; the second output must equal the CAVP ReturnedBits
+fn fips_kdrbg to ulong
+st = new uchar 128 0
+sm = new uchar 96 0
+o = new uchar 128 0
+a = new uchar 32 0
+n = fips_unhex FKDE sm
+n = add n fips_unhex FKDN part sm n sub 96 n
+n = add n fips_unhex FKDP part sm n sub 96 n
+r = drbg_inst st part sm 0 n
+n = fips_unhex FKDER sm
+n = add n fips_unhex FKDAR part sm n sub 96 n
+r = or r drbg_reseed st part sm 0 n
+n = fips_unhex FKDA1 a
+r = or r drbg_gen st o a
+n = fips_unhex FKDA2 a
+r = or r drbg_gen st o a
+drbg_wipe st
+if ne r 0
+ret 1
+end
+ret fips_cmp o FKDR
+end
+
+note all pre-operational self-tests except the DRBG: 0 or the number of the first that failed
+fn fips_selftest to ulong
+if ne fips_ksha 256 FKABC FKS256 0
+ret 1
+end
+if ne fips_ksha 384 FKABC FKS384 0
+ret 2
+end
+if ne fips_ksha 512 FKABC FKS512 0
+ret 3
+end
+if ne fips_khmac 256 FKH256 0
+ret 4
+end
+if ne fips_khmac 384 FKH384 0
+ret 5
+end
+if ne fips_khkdf 0
+ret 6
+end
+r = fips_kgcm
+if ne r 0
+ret add 6 r
+end
+if ne fips_kecdsa 0
+ret 9
+end
+if ne fips_kpkcs 0
+ret 10
+end
+if ne fips_kpss 0
+ret 11
+end
+if ne fips_kchacha 0
+ret 12
+end
+if ne fips_kx 0
+ret 13
+end
+if ne fips_ktls 0
+ret 15
+end
+ret 0
+end
+
+note run the self-tests once per process (first use); ap 1 also runs the DRBG self-test.
+note 0 when the module may operate, otherwise the latched failure code
+fn fips_check ap ulong to ulong
+if eq get FPST 0 0
+d = fips_selftest
+if ne d 0
+ret fips_fail d
+end
+put FPST 0 1
+end
+if eq get FPST 0 2
+ret get FPST 1
+end
+if and ne ap 0 eq get FPST 2 0
+if ne fips_kdrbg 0
+ret fips_fail 14
+end
+put FPST 2 1
+end
+ret 0
+end
+
+note ---- SP 800-90B 4.4 health tests on getrandom samples ----
+note one 8-bit sample x through the repetition count and adaptive proportion tests
+fn fips_ht x ulong to void
+z = shr sub xor x get FPST 3 1 63
+b = add mul z get FPST 4 1
+put FPST 4 b
+f = shr sub FHRCT1 b 63
+p = get FPST 7
+if eq p 0
+put FPST 5 x
+put FPST 6 0
+end
+c = add get FPST 6 shr sub xor x get FPST 5 1 63
+put FPST 6 c
+g = shr sub FHAPT1 c 63
+put FPST 8 or get FPST 8 or f shl g 1
+put FPST 7 rem add p 1 FHAPTW
+put FPST 3 x
+end
+
+note b gets len b bytes from getrandom, every one through the health tests; 0, or 1 with b
+note zeroed and the error state latched (22 RCT, 23 APT, 24 getrandom)
+fn fips_draw b edit uchar * to ulong
+n = len b
+r = random b 0 n 0
+if ne ulong r n
+drbg_zb b
+ret fips_fail 24
+end
+for i ulong n
+fips_ht ulong get b i
+end
+f = get FPST 8
+if ne f 0
+drbg_zb b
+ret fips_fail add 22 xor and f 1 1
+end
+ret 0
+end
+
+note entropy input for the DRBG: the start-up test (FHSTART samples, discarded) runs first
+fn fips_entropy b edit uchar * to ulong
+s = new uchar FHSTART 0
+if eq fips_bad 1
+ret 1
+end
+if eq get FPST 9 0
+r = fips_draw s
+drbg_zb s
+if ne r 0
+ret 1
+end
+put FPST 9 1
+end
+if ne fips_draw b 0
+ret 1
+end
+ret 0
+end
+
+note ---- approved-mode DRBG (tls.om, flag 4) ----
+note instantiate st: 48 bytes entropy input, 32 bytes nonce (also from the source, SP 800-90A
+note 8.6.7) and the personalization string; 0, or 1 with the error state latched
+fn fips_drbgnew st edit uchar * to ulong
+sm = new uchar 112 0
+r = fips_entropy part sm 0 80
+if eq r 0
+for i ulong len FKPERS
+put sm add 80 i get FKPERS i
+end
+r = drbg_inst st part sm 0 add 80 len FKPERS
+if ne r 0
+r = fips_fail 25
+end
+end
+drbg_zb sm
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note b gets len b DRBG bytes with prediction resistance: reseed with 48 fresh health-tested
+note bytes before every generate (SP 800-90A 9.3.1); 0, or 1 with b zeroed and the error latched
+fn fips_drbgget st edit uchar * b edit uchar * to ulong
+e = new uchar 48 0
+if ne fips_entropy e 0
+drbg_zb b
+ret 1
+end
+r = drbg_reseed st e
+drbg_zb e
+if eq r 0
+r = drbg_gen st b part e 0 0
+end
+if eq r 0
+ret 0
+end
+drbg_zb b
+if eq r 4
+r = fips_fail 20
+ret 1
+end
+r = fips_fail 25
+ret 1
+end
+
+note ---- conditional self-test: X25519 pairwise consistency (SP 800-56A 5.6.2.1.4 style) ----
+note recompute the public key from k and compare with pub (constant-time); 0, or 1 latched (21)
+fn fips_pctx k view uchar * pub view uchar * to ulong
+o = new uchar 32 0
+r = x25519_base o k
+d = ulong 0
+for i ulong 32
+d = or d xor ulong get o i ulong get pub i
+end
+drbg_zb o
+if or ne r 0 ne d 0
+r = fips_fail 21
+ret 1
+end
+ret 0
+end

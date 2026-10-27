@@ -145,6 +145,18 @@ mutant 's/^if or lt v 3 eq and v 1 0$/if lt v 1/' rsa-exponent
 mutant 's/^if gt get w add X5WIX 1 X5LMAX$/if gt get w add X5WIX 1 X5BIG/' leaf-size
 # finding 2: element caps removed: a 10001-element list hits the loop bound (trap)
 mutant 's/^if gt n X5NMAX$/if gt n 99999/' elemcap
+# omega-mv #833 suite audit: each new check removed must be caught by its cases.txt vectors
+mutant 's/^if lt np 5$/if lt np 1/' san-bare-star-bounds
+mutant 's/^if ne x509_dupx c f s 0$/if ne x509_dupx c f s 9/' duplicate-extension
+mutant 's/^if ne x509_serok part c get h 1 sub get h 2 get h 1 0$/if eq x509_serok part c get h 1 sub get h 2 get h 1 9/' serial-profile
+mutant 's/^ret x509_vtimes c get h 1 get h 2$/ret 0/' time-encoding
+mutant 's/^if gt sub b s 3$/if gt sub b s 9/' ku-octets
+mutant 's/^if eq and get r X5RSEEN 128 0$/if eq and get r X5RSEEN 128 9/' leaf-aki
+mutant 's/^if ne and get w X5RKUB 4 0$/if ne and get w X5RKUB 0 0/' leaf-keycertsign
+mutant '0,/^v = chain_time part w X5RSZ X5RSZ get w X5WNOW$/s//v = ulong 0/' anchor-validity
+mutant 's/^if eq and get w add X5RSZ X5RSEEN 256 0$/if eq and get w add X5RSZ X5RSEEN 256 9/' intermediate-ski
+mutant 's/^if ne and b 7 0$/if ne and b 0 0/' rsa-octets
+mutant 's/^if gt get w X5WLNB chain_dcut add s 65$/if gt get w X5WLNB 99999999999/' mozilla-distrust
 # expectation mutant: one expected code changed
 mut=$((mut + 1))
 sed 's/^C rsa_good X509_OK /C rsa_good X509_ERR_EXPIRED /' "$out/cases.txt" > "$out/mut-expect.txt"
@@ -155,6 +167,28 @@ if [ "$rc" -eq 1 ] && printf '%s\n' "$last" | grep -q '^x509 driver: [0-9]* chec
 else
 	fail "expectation mutant not detected: exit $rc: $last"
 fi
+
+# M1 wiring through x509_chain_verify: the first X5DIST entry replaced by the crafted root
+# (lXbase notBefore 2026-01-01 = 1767225600); refused for cutoffs before it, accepted at it
+hx=$(sha256sum < "$vec/crafted/rootX.der" | cut -c1-64)
+for pc in 0000000000:X509_ERR_UNKNOWN_ISSUER 1767225599:X509_ERR_UNKNOWN_ISSUER 1767225600:X509_OK; do
+	cut=${pc%%:*}
+	want=${pc#*:}
+	mut=$((mut + 1))
+	sed "s/^text X5DIST \"[0-9a-f]* [0-9]* /text X5DIST \"$hx $cut /" "$tls/x509.om" > "$out/plant-$cut-lib.om"
+	if cmp -s "$tls/x509.om" "$out/plant-$cut-lib.om" || ! build "$out/plant-$cut-lib.om" "$here/driver.om" "$out/plant-$cut"; then
+		fail "planted distrust $cut: no build"
+		continue
+	fi
+	echo "C planted_distrust_$cut $want 1792972800 www.example.test crafted/storeX.pem crafted/lXbase.der" > "$out/plant-$cut.txt"
+	drive "$out/plant-$cut.txt" "$out/plant-$cut" "plant-$cut"
+	if [ "$rc" -eq 0 ] && printf '%s\n' "$last" | grep -q '^x509 driver: 1 checks, 0 failed$'; then
+		mutok=$((mutok + 1))
+		say "PASS planted distrust cutoff $cut -> $want"
+	else
+		fail "planted distrust cutoff $cut: exit $rc: $(cat "$out/plant-$cut.out" | tr '\n' ' ')"
+	fi
+done
 
 say "driver checks=${checks:-0} fuzz-mutations=$fuzzn"
 if [ "$bad" -ne 0 ]; then

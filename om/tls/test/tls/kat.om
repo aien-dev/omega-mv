@@ -317,7 +317,7 @@ end
 
 fn main to int
 in = new uchar 65536 0
-c = new uchar 119296 0
+c = new uchar TLCSZ 0
 n = read 0 in 0 65536
 if le n 0
 ret 2
