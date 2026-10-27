@@ -82,11 +82,12 @@ done
 sed 's/^/CASE /' "$B/cases.out" >> "$B/gate.log"
 
 # 4. Structural refusals fail closed.
-"$B/detcheck" < /dev/null > /dev/null 2>&1; [ $? = 20 ] || fail 'empty input not MAGIC'
 head -c 40 "$B/ir/reduce.ir" | "$B/detcheck" > /dev/null 2>&1; [ $? = 22 ] || fail 'truncated unit not TRUNCATED'
 { cat "$B/ir/reduce.ir"; printf x; } | "$B/detcheck" > /dev/null 2>&1; [ $? = 27 ] || fail 'trailing byte not TRAILING'
 { head -c 7 "$B/ir/reduce.ir"; printf '\006'; tail -c +9 "$B/ir/reduce.ir"; } | "$B/detcheck" > /dev/null 2>&1
 [ $? = 21 ] || fail 'wire version 6 not VERSION'
+"$B/detcheck" < /dev/null > /dev/null 2>&1; [ $? = 22 ] || fail 'empty input not TRUNCATED'
+{ printf X; tail -c +2 "$B/ir/reduce.ir"; } | "$B/detcheck" > /dev/null 2>&1; [ $? = 20 ] || fail 'bad magic not MAGIC'
 
 # 5. Mutants: each drops one rule; the gate must see at least one wrong verdict.
 caught=0
