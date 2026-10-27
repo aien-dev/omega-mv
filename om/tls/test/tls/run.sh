@@ -29,14 +29,14 @@ out="$root/build/tls/tls"
 rm -rf "$out"; mkdir -p "$out"
 fail=0; mut=0; mutok=0
 echo "omc $(sha256sum "$omc" | cut -c1-64)"
-for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips tls; do echo "$u.om $(sha256sum "$tls/$u.om" | cut -c1-64)"; done
+for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls; do echo "$u.om $(sha256sum "$tls/$u.om" | cut -c1-64)"; done
 
 # build NAME TLSFILE PROGRAM: compose with a given tls.om (the real one or a mutant); a non-empty
 # $ecdhsrc replaces ecdh.om (an ecdh.om mutant under the unchanged tls.om)
 ecdhsrc=
 build() {
   mkdir -p "$out/$1"
-  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips; do cp "$tls/$u.om" "$out/$1/"; done
+  for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips; do cp "$tls/$u.om" "$out/$1/"; done
   [ -z "$ecdhsrc" ] || cp "$ecdhsrc" "$out/$1/ecdh.om"
   cp "$2" "$out/$1/tls.om"; cp "$tls/build.sh" "$out/$1/"
   sh "$out/$1/build.sh" "$omc" "$3" "$out/$1/bin" 2> "$out/$1.err" || { echo "FAIL build $1: $(cat "$out/$1.err")"; return 1; }
@@ -114,7 +114,8 @@ if sh "$here/interop.sh" "$out/client/bin" "$out/big/bin" > "$out/interop.log" 2
 else
   echo "FAIL interop:"; grep -v '^PASS' "$out/interop.log"; fail=1
 fi
-irows=$(sed -n 's/^INTEROP .* rows=\([0-9]*\)/\1/p' "$out/interop.log")
+irows=$(sed -n 's/^INTEROP .* rows=\([0-9]*\).*/\1/p' "$out/interop.log")
+ipq=$(sed -n 's/^INTEROP .* pq=\([^ ]*\).*/\1/p' "$out/interop.log")
 cp "$out/interop.log" "$out/interop-table.txt"
 
 # interop mutants: each must turn at least one row of the table into FAIL
@@ -181,6 +182,17 @@ imut "mutant approved accepts ChaCha"       's/^if and eq get c TLSU 1 eq tls_ap
 imut "mutant approved offers ChaCha"        '/^fn tls_suites /,/^end$/s/^tls_pn c add p 2 4865 2$/tls_pn c add p 2 4867 2/'
 imut "mutant approved offers x25519 group"  '/^fn tls_apgs /,/^end$/s/^tls_pn c add q 6 23 2$/tls_pn c add q 6 29 2/'
 imut "mutant approved invalid share accepted" '/^fn tls_ecdhp /,/^fn tls_ikm /s/^ret TLEKEYS$/ret 0/'
+# X25519MLKEM768: the hybrid rows (kyber-py fakesrv, OpenSSL 3.5) must catch each of these; without
+# both oracles (interop pq=NOT_RUN) they are NOT_RUN, and TLS_PQ=1 already failed the table
+if [ "$ipq" = PASS ]; then
+  imut "mutant KEM ciphertext byte flipped"     '/^r = mlkem_decaps part c TLKDK 2400 part c o 1088 ss$/i put c add o 7 uchar xor ulong get c add o 7 1'
+  imut "mutant KEM share corrupted in ClientHello" 's/^tls_mov c add p 4 add TLKDK 1152 1184$/&\nput c add p 10 uchar xor ulong get c add p 10 1/'
+  imut "mutant ML-KEM secret left out of the KDF" 's/^ret or s or shl TLSS 32 shl 64 48$/ret or s shl TLSS 32/'
+  imut "mutant x25519 half over the ML-KEM half"  's/^x = add TLSS 32$/x = TLSS/'
+  imut "mutant hybrid group not offered"         's/^const TLGOFF ulong 3$/const TLGOFF ulong 2/'
+else
+  echo "NOT_RUN X25519MLKEM768 mutants (interop pq=${ipq:-?})"
+fi
 # ecdh.om mutants under the real tls.om: the peer-point verdict ignored (SP 800-56A Rev. 3
 # 5.6.2.3.4 validation skipped) and Z taken from the y coordinate. A wrong ladder step is not
 # here: it changes d*G and d*Q by the same scalar map, so both sides still agree on Z (measured:
@@ -199,27 +211,34 @@ emut "mutant ecdh Z from y"               '/^fn ecdh_shared /,/^fn ecdh_pct /s/^
 # secret residue (MODEL-REVIEWED, item 4b): after the handshake no handshake secret may remain in
 # the client's memory; after tls_close no secret at all. The interop PKI must exist (built above).
 # A second run in approved-only mode (fakesrv.py ap-hold:4: secp256r1, AES-128-GCM) checks the
-# P-256 shared secret c[TLECZ] and the AES key schedule; residue=PASS needs both runs.
+# P-256 shared secret c[TLECZ] and the AES key schedule; a third (--hybrid, fakesrv.py hybhold:4 with
+# kyber-py, FAKESRV_PY) checks the 64-byte hybrid secret, its halves and the decapsulation key.
+# residue=PASS needs all three runs.
 res="NOT_RUN"
 rc=0; python3 "$here/residue.py" "$out/client/bin" "$root/build/tls/interop" > "$out/residue.log" 2>&1 || rc=$?
 rc2=0; python3 "$here/residue.py" "$out/client/bin" "$root/build/tls/interop" --approved > "$out/residue-ap.log" 2>&1 || rc2=$?
-if [ "$rc" = 0 ] && [ "$rc2" = 0 ]; then res="PASS"; echo "PASS residue: $(tail -n 1 "$out/residue.log")"; echo "PASS residue approved: $(tail -n 1 "$out/residue-ap.log")"
-elif [ "$rc" = 3 ] || [ "$rc2" = 3 ]; then echo "NOT_RUN residue: $(tail -n 1 "$out/residue.log") / $(tail -n 1 "$out/residue-ap.log")"
-else res="FAIL"; echo "FAIL residue:"; cat "$out/residue.log" "$out/residue-ap.log"; fail=1; fi
+rc3=0; ${FAKESRV_PY:-python3} "$here/residue.py" "$out/client/bin" "$root/build/tls/interop" --hybrid > "$out/residue-hyb.log" 2>&1 || rc3=$?
+if [ "$rc" = 0 ] && [ "$rc2" = 0 ] && [ "$rc3" = 0 ]; then res="PASS"; echo "PASS residue: $(tail -n 1 "$out/residue.log")"; echo "PASS residue approved: $(tail -n 1 "$out/residue-ap.log")"; echo "PASS residue hybrid: $(tail -n 1 "$out/residue-hyb.log")"
+elif [ "$rc" = 3 ] || [ "$rc2" = 3 ] || [ "$rc3" = 3 ]; then echo "NOT_RUN residue: $(tail -n 1 "$out/residue.log") / $(tail -n 1 "$out/residue-ap.log") / $(tail -n 1 "$out/residue-hyb.log")"
+  [ "${TLS_PQ:-0}" = 1 ] && { echo "FAIL residue NOT_RUN with TLS_PQ=1"; fail=1; }
+else res="FAIL"; echo "FAIL residue:"; cat "$out/residue.log" "$out/residue-ap.log" "$out/residue-hyb.log"; fail=1; fi
 rmut() { # LABEL SED-EXPR [--approved]: the residue check must fail on the mutant
   [ "$res" = PASS ] || return
   sed "$2" "$tls/tls.om" > "$out/m.om"
   if cmp -s "$out/m.om" "$tls/tls.om"; then echo "FAIL $1: the mutation did not apply"; fail=1; return; fi
   rm -rf "$out/rm"; build rm "$out/m.om" "$here/client.om" || { fail=1; return; }
   mut=$((mut + 1))
-  rc=0; python3 "$here/residue.py" "$out/rm/bin" "$root/build/tls/interop" ${3:-} > "$out/rm.log" 2>&1 || rc=$?
+  rc=0; ${FAKESRV_PY:-python3} "$here/residue.py" "$out/rm/bin" "$root/build/tls/interop" ${3:-} > "$out/rm.log" 2>&1 || rc=$?
   if [ "$rc" = 1 ]; then mutok=$((mutok + 1)); echo "PASS $1 detected: $(grep -c '^  after' "$out/rm.log") residues"
   else echo "FAIL $1 not detected (exit $rc)"; fail=1; fi
 }
 rmut "mutant close keeps the traffic secrets" '/^fn tls_wipe /,/^end$/s/^tls_zero c TLCAP 64$/tls_zero c TLCAP 0/'
 rmut "mutant handshake secrets kept after Finished" 's/^tls_zero c TLHS 128$/tls_zero c TLHS 0/'
-rmut "mutant shared secret kept" 's/^tls_zero c TLSS 32$/tls_zero c TLSS 0/'
+rmut "mutant shared secret kept" 's/^tls_zero c TLSS 64$/tls_zero c TLSS 0/'
 rmut "mutant approved P-256 shared secret kept" 's/^tls_zero c TLECZ 48$/tls_zero c TLECZ 0/' --approved
+rmut "mutant hybrid shared secret kept" 's/^tls_zero c TLSS 64$/tls_zero c TLSS 0/' --hybrid
+rmut "mutant decapsulation key kept"   '/^fn tls_kemdec /,/^fn /s/^tls_zero c TLKDK 2400$/tls_zero c TLKDK 0/' --hybrid
+rmut "mutant ML-KEM secret copy kept"  '/^fn tls_kemdec /,/^fn /s/^tls_zero ss 0 32$/tls_zero ss 0 0/' --hybrid
 
 if [ "${TLS_NET:-0}" = 1 ]; then
   if python3 "$here/parity.py" "$out/client/bin" api.github.com /licenses/mit /licenses/apache-2.0 /repos/torvalds/linux/license > "$out/net.log" 2>&1 \
@@ -234,6 +253,6 @@ else
 fi
 
 if [ $fail = 0 ]; then
-  echo "TLS PASS vectors=$kcount (rfc8448) dns=$dcount dit=$dgot interop=$irows residue=$res net=$net mutants=$mutok/$mut"; exit 0
+  echo "TLS PASS vectors=$kcount (rfc8448) dns=$dcount dit=$dgot interop=$irows pq=$ipq residue=$res net=$net mutants=$mutok/$mut"; exit 0
 fi
-echo "TLS FAIL vectors=${kcount:-0} dns=${dcount:-0} dit=${dgot:-?} interop=${irows:-0} residue=$res net=$net mutants=$mutok/$mut"; exit 1
+echo "TLS FAIL vectors=${kcount:-0} dns=${dcount:-0} dit=${dgot:-?} interop=${irows:-0} pq=${ipq:-?} residue=$res net=$net mutants=$mutok/$mut"; exit 1

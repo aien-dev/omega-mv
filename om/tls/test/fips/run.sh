@@ -23,7 +23,7 @@ root=$(cd "$lib/../.." && pwd)
 out="$root/build/tls/fips"
 rm -rf "$out"; mkdir -p "$out"
 nice="nice -n 19 ionice -c3"
-units="sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips tls"
+units="sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls"
 bad=0; kmut=0; kok=0; cmut=0; cok=0; checks=0; derr=0; eerr=0
 
 say() { printf '%s\n' "$*"; }

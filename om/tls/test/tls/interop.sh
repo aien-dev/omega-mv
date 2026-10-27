@@ -121,15 +121,21 @@ row() {
   while [ $n -lt 5 ]; do
     nextport
     # shellcheck disable=SC2086
-    openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
+    "${OSSL:-openssl}" s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
     sp=$!
     owns "$sp" "$port" && break
     drop "$sp"; n=$((n + 1))
   done
   timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${ROWOPTS:-${ropts:-0}}" > "c$port.out" 2> "c$port.err"
   rc=$?
+  # $rowgroup (with s_server -trace): the group of the last key_share the server sent must be it
+  if [ -n "${rowgroup:-}" ]; then i=0; while [ $i -lt 50 ] && kill -0 "$sp" 2> /dev/null; do sleep 0.1; i=$((i + 1)); done; fi
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
+  if [ "$got" = OK ] && [ -n "${rowgroup:-}" ]; then
+    g=$(sed -n 's/^ *NamedGroup: \([^ ]*\) .*/\1/p' "s$port.log" | tail -n 1)
+    [ "$g" = "$rowgroup" ] || got="GROUP ${g:-none} (server log s$port.log)"
+  fi
   case "$got" in
   "$expect"*) v=PASS ;;
   *) v=FAIL; fail=1 ;;
@@ -299,6 +305,48 @@ fi
 fsrv ap-ok       OK                                                      0,0,0,0,1
 fsrv ap-cvbad    "TLSERR TLS_ERR_CERTIFICATE_VERIFY"                     0,0,0,0,1
 
+# X25519MLKEM768 (0x11EC, draft-ietf-tls-ecdhe-mlkem): ClientHello1 carries the hybrid share and an
+# x25519 share (tls_init flag 2: the hybrid share only). Two oracles independent of om/tls:
+# fakesrv.py with kyber-py (FAKESRV_PY must import kyber_py) and OpenSSL 3.5 s_server (OPENSSL35,
+# built by openssl35.sh; -trace names the group of the server's key_share). A missing oracle leaves
+# its rows NOT_RUN; TLS_PQ=1 (CI) makes a missing oracle a FAIL.
+pqmiss=""
+if ${FAKESRV_PY:-python3} -c 'import kyber_py.ml_kem' 2> /dev/null; then
+  fsrv hyb       OK
+  fsrv hyb       OK                                                      0,0,0,0,2
+  fsrv hybx      OK
+  fsrv hybshort  "TLSERR TLS_ERR_KEY_SHARE"
+  fsrv hybzero   "TLSERR TLS_ERR_ZERO_SHARED_SECRET"
+  fsrv hybct     "TLSERR TLS_ERR_BAD_RECORD_MAC"
+else
+  pqmiss="$pqmiss kyber-py"
+fi
+if [ -n "${OPENSSL35:-}" ] && "$OPENSSL35" list -kem-algorithms 2> /dev/null | grep -q ML-KEM-768; then
+  OSSL=$OPENSSL35
+  rowgroup=X25519MLKEM768
+  row "ossl35: hybrid-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
+  row "ossl35: default groups"      OK                                                   good int.pem -tls1_3 -trace
+  ropts=0,0,0,0,2
+  row "ossl35: FLAGS 2, hybrid srv" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
+  rowgroup=X25519
+  row "ossl35: FLAGS 2, HRR x25519" OK                                                   good int.pem -tls1_3 -groups X25519 -trace
+  ropts=
+  row "ossl35: X25519-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519 -trace
+  ropts=0,0,0,0,1
+  rowgroup=secp256r1
+  row "ossl35: approved, no hybrid" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768:P-256 -ciphersuites TLS_AES_128_GCM_SHA256 -trace
+  ropts=
+  rowgroup=
+  row "ossl35: MLKEM768-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups MLKEM768
+  OSSL=
+else
+  pqmiss="$pqmiss openssl-3.5"
+fi
+if [ -n "$pqmiss" ]; then
+  if [ "${TLS_PQ:-0}" = 1 ]; then v=FAIL; fail=1; else v=NOT_RUN; fi
+  printf '%s | %-28s | missing oracle:%s\n' "$v" "X25519MLKEM768 rows" "$pqmiss"
+fi
+
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac
 rows=$((rows + 1)); n=0
@@ -321,5 +369,6 @@ got="$(tr -d '\n' < "c$port.err") (exit $rc)"
 case "$got" in "TLSERR TLS_ERR_BAD_RECORD_MAC"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
 printf '%s | %-28s | expect %-60s | got %s\n' "$v" "tampered record (proxy)" "TLSERR TLS_ERR_BAD_RECORD_MAC" "$got"
 
-if [ $fail = 0 ]; then echo "INTEROP PASS rows=$rows"; else echo "INTEROP FAIL rows=$rows"; fi
+if [ -n "$pqmiss" ]; then pq="NOT_RUN($(echo $pqmiss | tr ' ' ,))"; else pq=PASS; fi
+if [ $fail = 0 ]; then echo "INTEROP PASS rows=$rows pq=$pq"; else echo "INTEROP FAIL rows=$rows pq=$pq"; fi
 exit $fail
