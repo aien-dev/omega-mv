@@ -1252,6 +1252,9 @@ end
 if eq w 29118836274783603
 ret 222
 end
+if eq w 7959665
+ret 223
+end
 if eq get om2 0 0
 ret 0
 end
@@ -2119,7 +2122,7 @@ ret fbits ty
 end
 
 fn isfloat t ulong to ulong
-if ge t 10
+if or eq t 10 eq t 11
 ret 1
 end
 ret 0
@@ -2128,6 +2131,9 @@ end
 note ======== om4's small tables, as functions ========
 note twid: width in bits by type 0..9 (bool 1; uchar ushort uint ulong; byte short int long)
 fn twid t ulong to ulong
+if eq t 13
+ret 64
+end
 if eq t 10
 ret 32
 end
@@ -2154,6 +2160,9 @@ end
 
 note tlog: log2 of the element size by type
 fn tlog t ulong to ulong
+if eq t 13
+ret 3
+end
 if eq t 10
 ret 2
 end
@@ -2235,7 +2244,7 @@ end
 if eq t 4
 ret 3093329920
 end
-if or eq t 5 eq t 9
+if or or eq t 5 eq t 9 eq t 13
 ret 4167071744
 end
 if eq t 10
@@ -2267,7 +2276,7 @@ end
 if or eq t 4 eq t 8
 ret 3089135616
 end
-if or eq t 5 eq t 9
+if or or eq t 5 eq t 9 eq t 13
 ret 4162877440
 end
 if eq t 10
@@ -2770,6 +2779,9 @@ end
 if eq c 89
 ret 11
 end
+if eq c 223
+ret 13
+end
 if gt sub c 1 8
 fail 16
 end
@@ -2891,6 +2903,15 @@ bo_w3 or fx 536870912 rd ra rb imm
 trapc 6 1
 ret
 end
+if eq ty 13
+bo_w3 or fx 536870912 rd ra rb imm
+if eq op 34
+trapc 3 1
+else
+trapc 2 1
+end
+ret
+end
 bo_w3 fx rd ra rb imm
 bo_fix rd ty
 end
@@ -2902,6 +2923,14 @@ t = alloc
 e3 2604694528 t ra rb
 bo_w3 2600500224 rd ra rb 0
 e3 3951098911 0 t rd
+trapc 1 1
+ret
+end
+if eq ty 13
+t = alloc
+e3 2613083136 t ra rb
+bo_w3 2600500224 rd ra rb 0
+emit or 4043309087 shl t 5
 trapc 1 1
 ret
 end
@@ -2922,7 +2951,7 @@ trapsite or 3019898880 rb 2
 end
 if eq op 37
 t = alloc
-if ge ty 6
+if and ge ty 6 le ty 9
 e3 2596277248 t ra rb
 else
 e3 2596276224 t ra rb
@@ -2930,7 +2959,7 @@ end
 e3 or 2600501248 shl ra 10 rd t rb
 ret
 end
-if lt ty 6
+if or lt ty 6 eq ty 13
 bo_w3 2596276224 rd ra rb 0
 ret
 end
@@ -3027,7 +3056,7 @@ else
 emit or or 3942645791 shl rb 16 shl ra 5
 end
 i = mul sub op 43 2
-if ge ty 6
+if and ge ty 6 le ty 9
 i = add i 1
 end
 put rk 0 4
@@ -3479,7 +3508,7 @@ ret
 end
 ty = get fr add ix 2
 ra = matreg get fr ix get fr add ix 1 ty
-if ge ty 10
+if or eq ty 10 eq ty 11
 rb = matreg get fr add ix 3 get fr add ix 4 ty
 if ge op 43
 fp_cmp op ty ra rb
@@ -3494,6 +3523,11 @@ put rk 0 1
 put rv 0 rd
 put rt 0 ty
 ret
+end
+if eq ty 13
+if and ge op 38 le op 42
+fail 7
+end
 end
 imm = ulong 0
 bk = get fr add ix 3
@@ -3671,7 +3705,7 @@ note (the array's register, or a new one holding its address), ea_i index regist
 note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
 note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6).
 fn elemaddr e ulong k ulong v ulong t ulong to void
-if or eq t 1 ge t 10
+if or or eq t 1 eq t 10 eq t 11
 fail 7
 end
 i = sub e 1
@@ -3848,15 +3882,17 @@ if ne get fn_pl p 0
 fail 7
 end
 rdval 0 5 255 0
-if ne get rt 0 5
+k = get rt 0
+if and ne k 5 ne k 13
 fail 7
 end
-ro = matreg get rk 0 get rv 0 5
+ro = matreg get rk 0 get rv 0 k
 rdval 0 5 255 0
-if ne get rt 0 5
+k = get rt 0
+if and ne k 5 ne k 13
 fail 7
 end
-rn = matreg get rk 0 get rv 0 5
+rn = matreg get rk 0 get rv 0 k
 d = partck i ro rn
 ux = add mul get depth 0 6 pi
 put ul_k ux 1
@@ -3919,7 +3955,7 @@ end
 end
 end
 ty = get rt 0
-if ge ty 10
+if or eq ty 10 eq ty 11
 if eq c 50
 fail 7
 end
@@ -3934,6 +3970,9 @@ end
 ra = matreg get rk 0 get rv 0 ty
 rd = destreg dst
 if eq c 50
+if eq ty 13
+fail 7
+end
 if eq ty 1
 e3 3527409664 rd ra 0
 else
@@ -3947,7 +3986,7 @@ end
 end
 end
 else
-if eq ty 1
+if or eq ty 1 eq ty 13
 fail 7
 end
 if eq ty 9
@@ -3976,7 +4015,10 @@ note at or above s is set: LSR Xt, Xa, #s (UBFM, C6.2.487); CBNZ Xt trap 5 (C6.2
 note signed type: the sign-extension check, trap 5. om4 VTT1 .. VC_OK.
 fn vt_conv tt ulong to void
 ft = get rt 0
-if or ge ft 10 ge tt 10
+if or or or eq ft 10 eq ft 11 eq tt 10 eq tt 11
+if or eq ft 13 eq tt 13
+fail 7
+end
 if eq ft 1
 fail 9
 end
@@ -4000,8 +4042,10 @@ end
 wf = twid ft
 wt = twid tt
 s = ulong 99
-if lt ft 6
-if ge tt 6
+sgf = and ge ft 6 le ft 9
+sgt = and ge tt 6 le tt 9
+if eq sgf 0
+if ne sgt 0
 if ge wf wt
 s = sub wt 1
 end
@@ -4011,7 +4055,7 @@ s = wt
 end
 end
 else
-if lt tt 6
+if eq sgt 0
 s = wt
 if gt s 63
 s = ulong 63
@@ -6162,6 +6206,26 @@ vt_conv c
 vdec
 ret
 end
+if eq c 223
+tok
+if eq get tk 0 2
+range get tw 0 13 get tbig 0
+vdone 3 get tw 0 13
+ret
+end
+rdval 1 0 255 0
+if ge get rt 0 64
+fail 7
+end
+if eq get rk 0 2
+fail 11
+end
+if ne get rt 0 13
+fail 7
+end
+vdec
+ret
+end
 if eq c 74
 rdval 0 exp dst 0
 tok
@@ -6589,10 +6653,14 @@ else
 if eq c 89
 t = ulong 11
 else
+if eq c 223
+t = ulong 13
+else
 if gt sub c 1 8
 t = abty
 else
 t = c
+end
 end
 end
 end
@@ -6646,8 +6714,14 @@ else
 if eq c 89
 r = ulong 11
 else
+if eq c 223
+r = ulong 13
+else
 if gt sub c 1 8
 r = abty
+else
+r = c
+end
 end
 end
 end
