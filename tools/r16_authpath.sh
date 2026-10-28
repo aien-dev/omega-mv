@@ -116,6 +116,7 @@ for b in "$r13" "$r14"; do
     n=$(basename "$b")
     nm "$b" > "$out/$n.nm" 2>&1 || fail "nm failed on $b"
     awk '{print $NF}' "$out/$n.nm" > "$out/$n.symbols" || fail "symbol scanner failed"
+    [ -s "$out/$n.symbols" ] || fail "empty symbol scanner input: $b"
     grep -Ei "$legacy_sym" "$out/$n.symbols" > "$out/$n.legacy-symbols"; scan=$?
     case $scan in
         0) fail "$n links legacy orchestrator symbols: $(tr '\n' ' ' < "$out/$n.legacy-symbols")";;
@@ -124,6 +125,7 @@ for b in "$r13" "$r14"; do
     grep -E 'sequential_reference|rx_world_seq_' "$out/$n.symbols" > "$out/$n.reference-hooks"; scan=$?
     [ "$scan" -le 1 ] || fail "reference symbol scanner failed"
     ldd "$b" > "$out/$n.ldd" 2>&1 || fail "ldd failed on $b"
+    [ -s "$out/$n.ldd" ] || fail "empty shared library scanner input: $b"
     grep -vE 'linux-vdso|libc\.so|libm\.so|libpthread\.so|ld-linux|libdl\.so' "$out/$n.ldd" > "$out/$n.foreign-libraries"; scan=$?
     case $scan in
         0) fail "$n needs a shared library outside the C runtime: $(cat "$out/$n.foreign-libraries")";;
@@ -144,6 +146,7 @@ legacy_exe='spark-aegis|aegis-runtime|aien-cli|aien-runtime|aien-server|spark-dr
 for b in "$r13" "$r14"; do
     n=$(basename "$b")
     strings -a "$b" > "$out/$n.strings" || fail "strings scanner failed"
+    [ -s "$out/$n.strings" ] || fail "empty embedded name scanner input: $b"
     grep -E "$legacy_exe" "$out/$n.strings" > "$out/$n.legacy-strings"; scan=$?
     case $scan in
         0) fail "$n embeds a legacy program name: $(cat "$out/$n.legacy-strings")";;
