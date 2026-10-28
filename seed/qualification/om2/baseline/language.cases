@@ -78,3 +78,5 @@ qty-bitwise-and refuse tests/quantity/p_and.om 7
 qty-shift refuse tests/quantity/p_shl.om 7
 qty-negate refuse tests/quantity/p_neg.om 7
 qty-complement refuse tests/quantity/p_not.om 7
+qty-float-bits-control refuse tests/quantity/float_bits_control.om 7
+qty-unsupported-rotate refuse tests/quantity/p_rotr.om 3

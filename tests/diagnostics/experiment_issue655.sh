@@ -12,7 +12,7 @@ OMC="${OMC:-$ROOT/seed/out/omc}"
 [ -x "$OMC" ] || { echo "FAIL: $OMC not found or not executable" >&2; exit 1; }
 
 PASS_COUNT=0
-TOTAL=39
+TOTAL=54
 
 echo "=== Issue #655 Milestone A Diagnostic Precision Experiment ==="
 printf "%-14s | %-12s | %-8s | %-9s | %-14s | %s\n" "Task" "Good Result" "Bad Exit" "Span" "Span Text" "Diagnostic"
@@ -452,8 +452,8 @@ $'fn grow n qty to qty\nv = qty 1\n' \
 $'omega-query v1\nscope: function\nconstructs: ret if while for trap exit put end note\nnames:\nn qty param\nv qty local\nfunctions:\nfn grow to qty qty'
 
 run_check_record() {
-    local name="$1" input="$2" code="$3" expected="$4" out rc=0
-    out=$(printf "check\n%s" "$input" | "$OMC" 2>/dev/null) || rc=$?
+    local name="$1" input="$2" code="$3" expected="$4" mode="${5:-check}" out rc=0
+    out=$(printf "%s\n%s" "$mode" "$input" | "$OMC" 2>/dev/null) || rc=$?
     if [ "$rc" -ne "$code" ] || [ "$out" != "$expected" ]; then
         echo "FAIL check record on $name: rc=$rc out=$out" >&2
         return 1
@@ -563,6 +563,23 @@ for mode in check next normal; do
     fi
     PASS_COUNT=$((PASS_COUNT + 1))
 done
+
+# Remaining audit prefixes preserve profile routing and finality boundaries.
+run_next_case "audit_next_after_ret" $'fn f to int\nret 0\n' $'omega-query v1\nscope: function\nconstructs: ret if while for trap exit put end note\nnames:\nfunctions:\nfn f to int'
+run_next_case "audit_next_after_break" $'fn f to int\nwhile true\nbreak\n' $'omega-query v1\nscope: function\nconstructs: ret if while for trap exit put end note break continue\nnames:\nfunctions:\nfn f to int'
+run_next_case "audit_next_after_global" $'global g uchar 1\n' $'omega-query v1\nscope: toplevel\nconstructs: fn const global text struct note\nnames:\ng uchar global\nfunctions:'
+run_next_case "audit_next_function_complete" $'fn f to int\nret 0\nend\n' $'omega-query v1\nscope: toplevel\nconstructs: fn const global text struct note\nnames:\nfunctions:\nfn f to int'
+run_check_record "audit_next_in_struct" $'struct S a ulong\n' 4 $'omega-diag v1\nom1 SYNTAX span=16-17 FINAL REPAIRABLE code=4 line=2 expect=type found=0a' next
+run_check_record "audit_check_prefix_note" $'note comment\nfn f to int\nret true\nend\n' 7 $'omega-diag v1\nom1 TYPE span=29-33 FINAL REPAIRABLE code=7 line=3 expect=value found=true'
+run_check_record "audit_check_ir_bad" $'ir\nfn f to int\nret true\nend\n' 16 $'omega-diag v1\nom1 SYNTAX span=0-2 FINAL REPAIRABLE code=16 line=1 expect=word found=ir'
+run_check_record "audit_check_ir" $'ir\nfn f to int\nret 0\nend\n' 16 $'omega-diag v1\nom1 SYNTAX span=0-2 FINAL REPAIRABLE code=16 line=1 expect=word found=ir'
+run_check_record "audit_check_om2" $'om2\nfn f to int\nret true\nend\n' 7 $'omega-diag v1\nom2 TYPE span=20-24 FINAL REPAIRABLE code=7 line=3 expect=value found=true'
+run_check_record "audit_check_om2fmt" $'om2 fmt\nfn f to int\nret true\nend\n' 16 $'omega-diag v1\nom2 SYNTAX span=0-0 FINAL REPAIRABLE code=16 line=1 expect=word found=-'
+run_check_record "audit_check_om2diag" $'om2 diag\nfn f to int\nret true\nend\n' 7 $'omega-diag v1\nom2 TYPE span=25-29 FINAL REPAIRABLE code=7 line=3 expect=value found=true'
+run_check_record "audit_finality_unknown" $'fn f to int\nret nosuch\nend\n' 3 $'omega-diag v1\nom1 NAME span=16-22 UNKNOWN REPAIRABLE code=3 line=2 expect=name found=nosuch'
+run_check_record "audit_finality_bad_line" $'fn f to int\nret add 1\n' 4 $'omega-diag v1\nom1 SYNTAX span=21-22 FINAL REPAIRABLE code=4 line=3 expect=value found=0a'
+run_check_record "audit_finality_end_type" $'fn f to int\nret true' 7 $'omega-diag v1\nom1 TYPE span=16-20 FINAL REPAIRABLE code=7 line=2 expect=value found=true'
+run_check_record "audit_finality_badnum" $'fn f to int\nret 1z' 6 $'omega-diag v1\nom1 SYNTAX span=16-18 FINAL REPAIRABLE code=6 line=2 expect=number found=1z'
 
 [ "$PASS_COUNT" -eq "$TOTAL" ] || {
     echo "FAIL case count: ran $PASS_COUNT, expected $TOTAL" >&2
