@@ -156,7 +156,15 @@ Independent expected arithmetic: WolframLanguageEvaluator query
 `{7+1,7*2,7,16+1,16*2}` returned `{8,14,7,17,32}` on 2026-10-28.
 The Wolfram mount was verified with `Integrate[x^2,{x,0,1}] -> 1/3` and
 WolframAlpha `sqrt(27)/2 -> (3 sqrt(3))/2`. These establish expected arithmetic,
-not execution evidence. Measured host results live in `host-results.json`.
+not execution evidence. The clean implementation pin exercised was
+`39e89fb1c2aaed99ddc05ec565274dd05792b70f`. The host conductor returned
+`OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0`, including seventeen
+guard-removal mutant kills, the wrong-codebook control, and ordinary type,
+purity, precondition and postcondition checks. Measured source/artifact hashes,
+commands and every verdict are in
+[`host-results.287fdc263f7af93107c378ba63c92202a0e6c1479cb1ff6971706b423b0b15fb.json`](host-results.287fdc263f7af93107c378ba63c92202a0e6c1479cb1ff6971706b423b0b15fb.json);
+the unedited conductor transcript is
+[`host-3163bdc1f56d02803df5061439d0a51156443b339e8e08870a93647894e99222.log`](host-3163bdc1f56d02803df5061439d0a51156443b339e8e08870a93647894e99222.log).
 No model inference, learned representation, GPU, hardware qualification,
 production transport, merge or deployment is claimed.
 
