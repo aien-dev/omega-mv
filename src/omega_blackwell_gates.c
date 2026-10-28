@@ -1044,17 +1044,26 @@ static bool test_m18_gate16_clean_clone(void) {
         fprintf(stderr, "%s\n", physics_err);
         return false;
     }
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "root=$(git rev-parse --show-toplevel) && "
-                       "rm -rf /tmp/omega_clean_m18 && "
-                       "cp -r \"$root\" /tmp/omega_clean_m18 && "
-                       "cd /tmp/omega_clean_m18 && "
-                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
-                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
-                       physics_dir_resolved);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
+    /* Resolve every inherited checkout/tool path before changing directories.
+     * The stage repository is the default canonical source, never a retired
+     * Omega duplicate or an unrelated sibling checkout. */
+    const char command[] =
+        "root=$(git rev-parse --show-toplevel) && "
+        "PHYSICS_DIR=$(realpath -- \"${PHYSICS_DIR:-../physics}\") && "
+        "CUDAPP_STAGE=$(realpath -- \"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\") && "
+        "if [ -z \"${CUDAPP_DIR:-}\" ]; then "
+        "IFS= read -r CUDAPP_DIR < \"$CUDAPP_STAGE/repository\"; fi && "
+        "CUDAPP_DIR=$(realpath -- \"$CUDAPP_DIR\") && "
+        "OMEGA_OMC=$(realpath -- \"${OMEGA_OMC:?}\") && "
+        "OMEGA_BRIDGE=$(realpath -- \"${OMEGA_BRIDGE:?}\") && "
+        "export PHYSICS_DIR CUDAPP_DIR CUDAPP_STAGE OMEGA_OMC OMEGA_BRIDGE && "
+        "sh tools/cudapp-stage.sh --verify cudapp.lock \"$CUDAPP_STAGE\" >/dev/null && "
+        "rm -rf /tmp/omega_clean_m18 && "
+        "cp -r \"$root\" /tmp/omega_clean_m18 && "
+        "cd /tmp/omega_clean_m18 && "
+        "make OUT_DIR=build clean >/dev/null 2>&1 && "
+        "make -j OUT_DIR=build >/dev/null 2>&1 && "
+        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1";
     int rc = system(command);
     return (rc == 0);
 }
@@ -1081,7 +1090,9 @@ static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[6
     while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
         sha256_update(&ctx, buf, n);
     }
-    fclose(f);
+    bool read_ok = !ferror(f);
+    if (fclose(f) != 0) read_ok = false;
+    if (!read_ok) return false;
     sha256_final(&ctx, digest);
     for (int i = 0; i < 32; i++) {
         sprintf(&hex[i * 2], "%02x", digest[i]);

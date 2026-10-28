@@ -34,6 +34,12 @@ PIN=$(tr -d '[:space:]' < "$HERE/physics.lock")
 [ -n "$(pgrep est_load)" ] && refuse "an est_load process is running"
 RUN=$(mktemp -d /tmp/ldst-chip.XXXXXX)
 echo "omega $(git -C "$HERE" rev-parse HEAD) physics $PIN"
+WORK=$RUN/source
+bash "$HERE/tools/e1_manifest.sh" --canonical-overlay "$WORK" >/dev/null || refuse "canonical CUDApp authentication failed"
+cp "$WORK/cudapp-source.json" "$RUN/CUDAPP-SOURCE.json" || refuse "cannot record canonical identity"
+STAGE=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+case $STAGE in /*) ;; *) STAGE=$HERE/$STAGE;; esac
+CANONICAL=$(cd "$STAGE/source" && pwd -P) || refuse "canonical source missing"
 echo "== host tier"
 make -s -C "$HERE" build/test_omega_ldst_gb10_cpu > "$RUN/host-build.log" 2>&1 || refuse "host build failed"
 "$HERE/build/test_omega_ldst_gb10_cpu" > "$RUN/host.log" 2>&1 || { tail -5 "$RUN/host.log"; refuse "host tier failed"; }
@@ -44,16 +50,16 @@ tail -3 "$RUN/nvdisasm.log"
 exec 9> /tmp/aien-gb10.lock || refuse "cannot open /tmp/aien-gb10.lock"
 flock -x 9 || refuse "cannot take /tmp/aien-gb10.lock"
 echo "== chip build"
-NV=$PHYSICS/third_party/nvidia-open-580.173.02
+NV=$CANONICAL/third_party/nvidia-open-580.173.02
 BIN=$RUN/test_omega_ldst_gb10
-(cd "$HERE" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -pthread \
-    -Isrc -I"$PHYSICS/nvrm" -I"$PHYSICS/m16" \
+(cd "$WORK" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -pthread \
+    -Isrc -I"$CANONICAL/nvrm" -I"$CANONICAL/m16" \
     -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" \
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
     -o "$BIN" tests/test_omega_ldst_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
     src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c \
-    "$PHYSICS/nvrm/nvrm.c" "$PHYSICS/m16/m16_native.c") > "$RUN/chip-build.log" 2>&1 || { cat "$RUN/chip-build.log"; refuse "chip build failed"; }
+    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c \
+    "$CANONICAL/nvrm/nvrm.c" "$CANONICAL/m16/m16_native.c") > "$RUN/chip-build.log" 2>&1 || { cat "$RUN/chip-build.log"; refuse "chip build failed"; }
 echo "== chip run (not killed, not timed out)"
 # LDST_CHIP_ARGS (optional) e.g. "--spec 129 --repeats 500" reruns one spec; default is the whole table.
 "$BIN" --chip ${LDST_CHIP_ARGS:-} > "$RUN/chip.log" 2>&1; RC=$?

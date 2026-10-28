@@ -26,22 +26,34 @@
 # Run: make test-numeric-sweep   (or run this file).
 set -u
 HERE=$(cd -P "$(dirname "$0")/.." && pwd)
-SRC=$HERE/src/omega_numeric.c
-TMP=$(mktemp -d)
+TMP=$(mktemp -d) || exit 2
 trap 'rm -rf "$TMP"' EXIT
+WORK=$TMP/source
+bash "$HERE/tools/e1_manifest.sh" --canonical-overlay "$WORK" >/dev/null || exit 2
+cat "$WORK/cudapp-source.json" >&2
+SRC=$WORK/src/omega_numeric.c
 OTHER="tests/test_omega_numeric.c src/omega_numeric_provenance.c src/omega_numeric_divsqrt_gb10.c src/omega_blackwell_encoder.c
-       src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
-names=$(grep -o '/\* CHECK:[a-z0-9_]* \*/' "$SRC" | sed 's|/\* CHECK:\([a-z0-9_]*\) \*/|\1|')
+       src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c"
+grep -o '/\* CHECK:[a-z0-9_]* \*/' "$SRC" > "$TMP/markers" || exit 2
+[ -s "$TMP/markers" ] || exit 2
+names=$(sed 's|/\* CHECK:\([a-z0-9_]*\) \*/|\1|' "$TMP/markers") || exit 2
+# A broken baseline is not evidence that removing a guard was caught.
+if ! (cd "$WORK" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc \
+        -DOMEGA_NUMERIC_CPU_ONLY -o "$TMP/baseline" "$SRC" $OTHER) > "$TMP/build.log" 2>&1; then
+    cat "$TMP/build.log"; exit 2
+fi
+"$TMP/baseline" > "$TMP/baseline.log" 2>&1 || { cat "$TMP/baseline.log"; exit 2; }
 total=0 killed=0 survived=0 broken=0
 for name in $names; do
     total=$((total + 1))
     mut=$TMP/omega_numeric.c
-    grep -v "/\* CHECK:$name \*/" "$SRC" > "$mut"
+    grep -v "/\* CHECK:$name \*/" "$SRC" > "$mut"; scan=$?
+    [ "$scan" -le 1 ] && [ -s "$mut" ] || exit 2
     if [ "$(wc -l < "$SRC")" -ne $(( $(wc -l < "$mut") + 1 )) ]; then
         echo "  [BROKEN]   $name: marker is not on exactly one line"; broken=$((broken + 1)); continue
     fi
     # shellcheck disable=SC2086
-    if ! (cd "$HERE" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc \
+    if ! (cd "$WORK" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc \
             -Wno-unused-variable -Wno-unused-but-set-variable \
             -DOMEGA_NUMERIC_CPU_ONLY -o "$TMP/t" "$mut" $OTHER) > "$TMP/build.log" 2>&1; then
         echo "  [BROKEN]   $name: scratch copy does not build"; broken=$((broken + 1)); continue

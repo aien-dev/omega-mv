@@ -48,6 +48,38 @@
 # traversal and SHA-256 units, preserving runner exit and baseline semantics.
 # Until that lands, bash/git/coreutils/jq/gcc and runner sed/perl/awk remain
 # explicit host dependencies, not an Omega implementation.
+# Snapshot only authenticated canonical inputs for the chip receipt collectors.
+# This mode never builds a binary, takes a GPU lock or opens a device.
+if [ "${1:-}" = --canonical-evidence ]; then
+    set -eu
+    root=$(cd -P "$(dirname "$0")/.." && pwd)
+    stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+    case $stage in /*) ;; *) stage=$root/$stage;; esac
+    metadata=$(sh "$root/tools/cudapp-stage.sh" --verify "$root/cudapp.lock" "$stage")
+    [ -n "$metadata" ]
+    source=$(cd -P "$stage/source" && pwd)
+    target=${2:?evidence directory required}
+    shift 2
+    [ "$#" -gt 0 ]
+    mkdir -p "$target"
+    for input in "$@"; do
+        case $input in src/*.[ch]) ;; *) echo "invalid canonical source: $input" >&2; exit 2;; esac
+        case $input in */../*|*/./*) exit 2;; esac
+        [ -s "$source/$input" ] && [ -f "$source/$input" ] || {
+            echo "missing or empty canonical source: $input" >&2; exit 2;
+        }
+        cp -- "$source/$input" "$target/"
+    done
+    [ -s "$stage/source.tar" ]
+    cp -- "$stage/source.tar" "$target/cudapp-source.tar"
+    cp -- "$stage/pin" "$target/cudapp.pin"
+    for oracle in bash git sha256sum gcc make; do
+        "$oracle" --version > "$target/$oracle.version" 2>&1
+        [ -s "$target/$oracle.version" ]
+    done
+    printf '%s\n' "$metadata" > "$target/CUDAPP-SOURCE.json"
+    exit 0
+fi
 if [ "${1:-}" = --canonical-overlay ]; then
     set -eu
     root=$(cd -P "$(dirname "$0")/.." && pwd)
