@@ -3,8 +3,11 @@
 This project is built by AI models, orchestrated by Drake Stapleton, who wrote none of the code.
 Every model below did real work. A model is listed only for work it did. The orchestrator checks all output before it merges.
 
+The current development method is [Human-Directed Agentic Engineering (HDAE)](README.md#human-directed-agentic-engineering): human-defined goals, architecture, constraints, acceptance criteria, and stopping points bound agent implementation and checks. Human review owns claims, acceptance, and releases. The README cites Gregory M. Kurtzer's documented method and Ginux case study; that citation does not change the contributor credits below.
+
 | Model | What it did |
 |---|---|
+| Codex (GPT-6.1 Sol) | Current HDAE development-method wording and Gregory M. Kurtzer citation, preserving source pins and historical evidence |
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
 | Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
 | Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
