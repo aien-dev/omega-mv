@@ -3,14 +3,14 @@
     "generated": {
       "children": [],
       "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "compiled_at": "2026-10-28T11:21:28Z",
+      "compiled_at": "2026-10-28T11:32:52Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:73fd3e4797bb3e0d0d505ba8d026a27a4c6d39e07b8bfd23d0107efe973fad3f",
+      "digest": "sha256:1419ac561aa6f4a201eeaa535273ab251d682f9f2667780a4a744f4bee53edea",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 250,
-      "generated_at_commit": "6999fa9e6dae4847c155ef4eacaece74f491d3ca",
-      "source_tree": "sha256:5eec5a64e71b818292859b5cf97f6dbc631567b24d29b47e66fef5fbfd61b372"
+      "files": 251,
+      "generated_at_commit": "cec01577f8fb895f1cb08a8542b89f5d13c22777",
+      "source_tree": "sha256:e1227c36d38afd9b770bc803fefae7da8922b73c5e97314e6cf0a6a02dc47929"
     }
   },
   "name": "bench/inference_cost",
