@@ -1062,7 +1062,9 @@ static bool test_m18_gate16_clean_clone(void) {
         "cp -r \"$root\" /tmp/omega_clean_m18 && "
         "cd /tmp/omega_clean_m18 && "
         "make OUT_DIR=build clean >/dev/null 2>&1 && "
-        "make -j OUT_DIR=build >/dev/null 2>&1 && "
+        "make -j OUT_DIR=build PHYSICS_DIR=\"$PHYSICS_DIR\" "
+        "CUDAPP_DIR=\"$CUDAPP_DIR\" CUDAPP_STAGE=\"$CUDAPP_STAGE\" "
+        "OMEGA_OMC=\"$OMEGA_OMC\" OMEGA_BRIDGE=\"$OMEGA_BRIDGE\" >/dev/null 2>&1 && "
         "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1";
     int rc = system(command);
     return (rc == 0);
