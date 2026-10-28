@@ -1,1 +1,1 @@
-Write a function absdiff_i32 that takes two signed 32-bit numbers a and b as int and returns the absolute difference |a - b| as an unsigned 64-bit number (ulong). It never traps.
+Write a function absdiff_i32(a, b). The arguments a and b are signed 32-bit integers (i32) and the result is an unsigned 64-bit integer (u64). Return the absolute difference |a - b|, computed without overflow for every pair of i32 values.

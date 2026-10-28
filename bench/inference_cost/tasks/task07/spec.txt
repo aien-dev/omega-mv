@@ -1,4 +1,4 @@
-version 1
+version 2
 name bitrev_u16
-params uint
-ret uint
+param x u32
+ret u32

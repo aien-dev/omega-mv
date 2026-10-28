@@ -1,1 +1,1 @@
-Write a function hamming_dist_u32 that takes two unsigned 32-bit numbers a and b as uint and returns the Hamming distance between them: the number of bit positions in which they differ. It never traps.
+Write a function hamming_dist_u32(a, b). The arguments a and b are unsigned 32-bit integers (u32) and the result is a u32. Return the Hamming distance between a and b: the number of bit positions in which they differ.

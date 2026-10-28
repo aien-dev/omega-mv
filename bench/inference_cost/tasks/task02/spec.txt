@@ -1,4 +1,5 @@
-version 1
+version 2
 name absdiff_i32
-params int int
-ret ulong
+param a i32
+param b i32
+ret u64
