@@ -24,6 +24,13 @@ test ! -e "$stage/native.sock"
 printf 'PASS native socket exchange, poll timeout, fork, accept and child reaping\n'
 (cd "$stage"; timeout 10 ./network tcp)
 printf 'PASS native TCP loopback exchange on an OS-assigned port\n'
+compile peername
+(cd "$stage"; timeout 10 ./peername)
+for case in 1 2 3; do
+    rc=0
+    "$stage/peername" "$case" || rc=$?
+    [ "$rc" = 103 ] || { printf 'FAIL peername bounds %s exit %s\n' "$case" "$rc" >&2; exit 1; }
+done
 cp "$stage/args" "$stage/exec-child"
 compile process
 (cd "$stage"; timeout 10 ./process)
