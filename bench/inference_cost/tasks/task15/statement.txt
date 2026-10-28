@@ -1,1 +1,1 @@
-Write a function min3_i32 that takes three signed 32-bit integers a, b, and c as int and returns the minimum of the three. It never traps.
+Write a function min3_i32(a, b, c). The arguments a, b and c are signed 32-bit integers (i32) and the result is an i32. Return the smallest of the three.

@@ -1,1 +1,1 @@
-Write a function clamp_add_u16 that takes two unsigned 16-bit numbers a and b as uint and returns their sum saturated at 65535: if a + b > 65535, return 65535, otherwise return a + b. It never traps.
+Write a function clamp_add_u16(a, b). The arguments a and b are unsigned 32-bit integers (u32) and the result is a u32. Return a + b saturated at 65535: if a + b > 65535 return 65535, otherwise return a + b. In every tested input a + b fits in 32 bits.

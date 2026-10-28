@@ -1,4 +1,6 @@
-version 1
+version 2
 name min3_i32
-params int int int
-ret int
+param a i32
+param b i32
+param c i32
+ret i32

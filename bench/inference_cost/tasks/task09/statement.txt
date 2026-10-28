@@ -1,1 +1,1 @@
-Write a function factorial_u32 that takes n as uint and returns n! (n factorial) modulo 2^32. factorial_u32(0) = 1, factorial_u32(1) = 1, factorial_u32(4) = 24. For n >= 34, it returns 0. It never traps.
+Write a function factorial_u32(n). The argument n is an unsigned 32-bit integer (u32) and the result is a u32. Return n! (n factorial) modulo 2^32, where factorial_u32(0) = 1, factorial_u32(1) = 1 and factorial_u32(4) = 24. For n >= 34 the result is 0.

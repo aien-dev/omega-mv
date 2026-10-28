@@ -1,77 +1,180 @@
-# Inference-Cost Benchmark (Held-Out Evaluation)
+# Inference-Cost Benchmark: Tokens per Verified Program
 
-This benchmark implements the metric articulated in Drake Stapleton's Omega/encoder essay:
-**Optimize for verified programs produced per unit of inference cost.**
+This benchmark measures the metric from Drake Stapleton's Omega/encoder essay,
+**verified programs produced per unit of inference cost**. It compares Omega, C, Python and Rust on the
+same 20 held-out tasks.
 
-Rather than constraining vocabulary words to a single model's tokenizer (such as Qwen), the language
-interface evaluates empirical model efficiency across held-out coding tasks. Progress is measured by:
-- First-attempt correctness
-- Successful compilation (`omc` return code 0)
-- Verified behavior (all hidden test cases pass)
-- Completion time (wall seconds / milliseconds)
-- Total compute cost (prompt tokens + completion tokens)
+A model writes one function per task. The harness compiles it, runs it on hidden inputs and compares
+the output. Token counts come only from the `usage` object the endpoint reports; nothing is estimated.
 
-Reported summary metrics:
-- **`verified_per_1k_tokens`**: $(V \times 1000) / T_{\text{total\_tokens}}$
-- **`verified_per_minute`**: $(V \times 60) / T_{\text{total\_seconds}}$
+Two arms run for every language:
+- **plain**: the same two messages (system, user) are sent for up to K attempts.
+- **feedback**: after a failed attempt, the conversation grows by the model's code (assistant) and a
+  user message holding the compiler's diagnostic, or "wrong results (exit status N)". Omega candidates
+  are compiled as `om2 diag` units, so the feedback carries both `omc: line N: error K` and the
+  `omc-diag 1 code=... line=... col=...` record.
 
-## 1. Line-Oriented Wire Format (No JSON)
+Each task stops at its first verified attempt.
 
-All data files use versioned, line-oriented plain text with explicit rejection rules.
+## Run against a real model
 
-### Task Specification (`spec.txt`)
+The model server must be up first. This harness never starts one.
+
+```sh
+sh bench/inference_cost/driver.sh --run-model --endpoint http://127.0.0.1:18091 --model <model-id> \
+    --langs om,c,py,rs --arms plain,feedback --attempts 3
+```
+
+- `--endpoint` is required and has no default; requests go to `<endpoint>/v1/chat/completions` with
+  `"stream":false`.
+- The other options and their defaults are `--temperature 0.2`, `--max-tokens 4096` and
+  `--out build/inference_cost/run-<utc>-<pid>`.
+- A missing endpoint, a curl failure, a non-200 status, or a body without `usage` (or with an `error`
+  member) prints `NOT_RUN: ...` and exits 3. Logs written up to that point are kept.
+
+The run directory holds:
+
+| file | content |
+|---|---|
+| `run.txt` | endpoint, requested model, `models_reported` (the ids the endpoint returned), options, omc sha256, times |
+| `calls.txt` | one line per HTTP call: task lang arm attempt http_code model prompt completion total http_ms |
+| `attempts.txt` | the attempt wire, version 2, read by `scorer.om` |
+| `summary.txt` | the scorer report |
+| `<lang>/<arm>/<task>/conv/` | the messages sent |
+| `<lang>/<arm>/<task>/a<N>/` | request.json, response.json, candidate, compiler and run output |
+
+The driver prints one line per (lang, arm): verified/attempted tasks, attempts, first-attempt
+verified, total tokens, tokens per verified program, verified per 1k tokens and verified per minute.
+
+## Not run yet
+
+- **Every real-model number is NOT_RUN.** No real endpoint has been measured with this harness: the
+  self-test talks only to `fake_model.om`.
+- Wall time in the self-test is the fake model's latency plus local compile and run time. It says
+  nothing about inference speed.
+
+## Self-test and task check
+
+```sh
+sh bench/inference_cost/driver.sh --check-tasks   # every reference verifies, every mutant is rejected
+sh bench/inference_cost/driver.sh --self-test     # also run by `make test-inference-cost`
+```
+
+`--self-test` performs these checks, in order:
+
+1. **Build.** Checks the compiler pin: the sha256 of `seed/out/omc` must equal `seed/out/omc.sha256`,
+   otherwise NOT_RUN exit 3. Then builds `scorer`, `chat` and `fake_model` into
+   `build/inference_cost/bin`.
+2. **Scorer rejections.** A wrong version gives 3, a truncated wire 2, and an unknown language 2.
+3. **Chat edge.** An error object, a body without usage, and a non-JSON body each give exit 4.
+4. **`--check-tasks`.**
+5. **Fake-model runs.** `fake_model` listens on an ephemeral 127.0.0.1 port, and every reply reports
+   usage 111/37/148. Four runs, all over om, c, py and rs:
+
+   | mode | arms, attempts | expected |
+   |---|---|---|
+   | `good` | plain, 1 | 20/20 per language, with exact token sums |
+   | `bad` | plain, 1 | every mutant compiles and none verifies |
+   | `bad-then-good` | plain + feedback, 2 | feedback verifies all 20 on attempt 2 with both attempts' tokens summed; plain verifies 0 |
+   | `refuse` | plain, 1 | compiles 0 and verifies 0, and no binary is ever run |
+
+6. **NOT_RUN paths.** An unreachable endpoint (the fake is killed first), an HTTP 404, and a missing
+   `--endpoint` each give exit 3.
+
+## Files
+
+| file | role |
+|---|---|
+| `driver.sh` | POSIX sh glue: assembles candidates, runs compilers and curl, writes records |
+| `chat.om` | the only JSON code (composed with `seed/json/json.om` and `jsonw.om`). `chat req` turns the request wire into the OpenAI request body. `chat resp` reads a response: usage, model id, and the code block (after the last `</think>`, the first fenced block) on fd 3 |
+| `fake_model.om` | an OpenAI-compatible fake on `seed/net/http.om`. Modes `good`, `bad`, `bad-then-good` (reference only when the conversation has 3 or more messages) and `refuse`. Uses headers `X-Bench-Task` and `X-Bench-Lang` |
+| `scorer.om` | reads the attempt wire (v1 or v2) and writes the summary |
+| `io.om` | stdin/stdout helpers appended after an Omega candidate |
+| `prompts/system-<lang>.txt` | system prompts; the Omega one is a compact language primer |
+| `tasks/taskNN/` | `statement.txt`, `spec.txt`, `inputs.txt`, `expected.txt`, and `reference.<lang>` plus `mutant.<lang>` for om, c, py and rs |
+
+## Candidate assembly and verification
+
+The model writes only the function. The harness appends a stdin driver generated from `spec.txt`: it
+reads `inputs.txt` and prints one decimal per case. A candidate is verified when:
+- it compiles with exit 0;
+- the run exits 0 within 10 s;
+- its output equals the cases of `expected.txt` byte for byte.
+
+A compiler refusal is never verified and its output is never run.
+
+| lang | assembled as | compile |
+|---|---|---|
+| om | `om2 diag`, candidate, `io.om`, generated `fn main` | pinned `seed/out/omc` |
+| c | candidate, generated `main` | `cc -O2 -include stdint.h -include stdio.h -include stdlib.h ... -lm` |
+| py | candidate, generated `_bench_main()` (the result must be an `int`) | `python3 -m py_compile`, run with `python3 -I` |
+| rs | candidate, generated `fn main` | `rustc -O --edition 2021 -A warnings` |
+
+For an Omega candidate, line 1 of the compiled unit is the added `om2 diag` line. A leading `om2...` line
+written by the model is dropped.
+
+## Wire formats (plain text, no JSON)
+
+### Task specification (`spec.txt`)
 ```text
-version 1
+version 2
 name <function_name>
-params <param_types...>
-ret <return_type>
+param <name> <u32|i32|u64>      (one line per parameter, in order)
+ret <u32|i32|u64>
 ```
-Rejection:
-- First line must be `version 1`. Any other version is rejected with exit code 3.
-- Malformed header or missing fields reject immediately.
 
-### Hidden Inputs (`inputs.txt`)
+### Hidden inputs and expected outputs
 ```text
 version 1
 cases <N>
-<arguments for case 1>
+<arguments for case 1, or its expected value>
 ...
 ```
 
-### Hidden Expected Outputs (`expected.txt`)
+### Chat request wire (`chat req`)
 ```text
 version 1
-cases <N>
-<expected return value for case 1>
+model <id>
+max_tokens <N>
+temperature <JSON number>
+messages <K>
+msg <system|user|assistant> <NB>
+<NB bytes>
 ...
 ```
+A malformed wire exits 2; a writer refusal exits 3.
 
-### Attempt Records (`attempts.txt`)
+`chat resp` writes `version 1`, `model`, `prompt_tokens`, `completion_tokens`, `total_tokens` and
+`code_bytes` lines. It exits 4 on a missing usage object, an error object, no choices, or a body that
+is not JSON.
+
+### Attempt records (`attempts.txt`)
+Version 2:
 ```text
-version 1
+version 2
 attempts <N>
-<task_id> <attempt_num> <first_attempt> <compiled_rc> <verified_flag> <wall_ms> <prompt_tokens> <completion_tokens> <total_tokens>
+<task_id> <lang> <arm> <attempt_num> <first_attempt> <compiled_rc> <verified_flag> <wall_ms> <prompt_tokens> <completion_tokens> <total_tokens>
 ```
-Field order:
-1. `task_id`: Identifier of the benchmark task (`task01`..`task20`)
-2. `attempt_num`: 1-based attempt sequence number
-3. `first_attempt`: `1` if first attempt, `0` otherwise
-4. `compiled_rc`: Return code from `omc` (`0` = success, `>0` = compile error code)
-5. `verified_flag`: `1` if all behavior cases passed, `0` otherwise
-6. `wall_ms`: Milliseconds elapsed during compilation and execution
-7. `prompt_tokens`: Input tokens consumed
-8. `completion_tokens`: Output tokens generated
-9. `total_tokens`: Sum of prompt and completion tokens
+- `lang` is one of `om c py rs`; `arm` is one of `plain feedback`.
+- `wall_ms` runs from the request until verification ends (model latency plus compile and run).
 
-Rejection:
-- First line must be `version 1` (exit 3 on mismatch).
-- Line count must match `attempts <N>` (exit 2 on truncated or extra data).
-- Non-numeric or invalid fields exit 2.
+Version 1 (still accepted) has no `lang` or `arm` column:
+`<task_id> <attempt_num> <first_attempt> <compiled_rc> <verified_flag> <wall_ms> <prompt_tokens> <completion_tokens> <total_tokens>`.
 
-### Summary Report (`summary.txt`)
-Emitted by `scorer.om`:
+Rejection rules:
+- An unknown version exits 3.
+- A line count different from `attempts <N>`, a non-numeric field, or an unknown lang or arm exits 2.
+- Input of 983040 bytes or more exits 2.
+
+### Summary (`summary.txt`)
+A version-1 input gives the version-1 summary (`version 1`, `tasks_total` ... `status`).
+
+A version-2 input gives one block per (lang, arm) present, in the order om, c, py, rs × plain,
+feedback:
 ```text
-version 1
+version 2
+groups <G>
+group <lang> <arm>
 tasks_total <N>
 attempts_total <N>
 compiled_count <N>
@@ -82,54 +185,46 @@ total_completion_tokens <N>
 total_tokens <N>
 total_wall_ms <N>
 total_wall_seconds <N>
+tokens_per_verified <fixed3>|none
 verified_per_1k_tokens <fixed3>
 verified_per_minute <fixed3>
 status PASS|FAIL
+end
+...
+status PASS|FAIL
 ```
+- A group's `status` is PASS when every task in it verified.
+- Exit status: 0 when every group passes, 1 when any fails (a valid result for a model run), 2 for
+  malformed input, 3 for an unknown version.
 
-## 2. Tasks
+The rates:
+- `tokens_per_verified` $= T_{\text{total\_tokens}} / V$
+- `verified_per_1k_tokens` $= (V \times 1000) / T_{\text{total\_tokens}}$
+- `verified_per_minute` $= (V \times 60) / T_{\text{total\_seconds}}$
 
-The held-out benchmark contains 20 algorithmic and bitwise tasks implemented and checked in native `.om`:
-1. `task01`: `clamp_add_u16` -- Saturated 16-bit addition
-2. `task02`: `absdiff_i32` -- Exact absolute difference $|a - b|$ returning `ulong`
-3. `task03`: `popcount_u32` -- Count of set bits in 32-bit unsigned integer
-4. `task04`: `gcd_u32` -- Greatest common divisor via Euclidean algorithm
-5. `task05`: `isqrt_u32` -- Integer square root $\lfloor\sqrt{x}\rfloor$
-6. `task06`: `collatz_steps_u32` -- Steps to reach 1 under $3n + 1$ dynamics
-7. `task07`: `bitrev_u16` -- 16-bit reversal
-8. `task08`: `fibonacci_u32` -- $n$-th Fibonacci number mod $2^{32}$
-9. `task09`: `factorial_u32` -- $n!$ mod $2^{32}$
-10. `task10`: `is_prime_u32` -- Primality test
-11. `task11`: `parity_u32` -- Bitwise parity (1 if odd, 0 if even)
-12. `task12`: `clz_u32` -- Count leading zero bits
-13. `task13`: `ctz_u32` -- Count trailing zero bits
-14. `task14`: `power_mod_u32` -- Modular exponentiation $(a^b) \bmod 2^{32}$
-15. `task15`: `min3_i32` -- Minimum of three signed 32-bit integers
-16. `task16`: `max3_i32` -- Maximum of three signed 32-bit integers
-17. `task17`: `sum_digits_u32` -- Sum of decimal digits
-18. `task18`: `reverse_digits_u32` -- Reverse decimal digits
-19. `task19`: `hamming_dist_u32` -- Hamming distance between two 32-bit integers
-20. `task20`: `rot_left_u32` -- 32-bit circular left rotation
+## Tasks
 
-## 3. Usage
+| task | function | computes |
+|---|---|---|
+| `task01` | `clamp_add_u16` | saturated 16-bit addition |
+| `task02` | `absdiff_i32` | exact $\lvert a - b\rvert$ as u64 |
+| `task03` | `popcount_u32` | set bits |
+| `task04` | `gcd_u32` | greatest common divisor |
+| `task05` | `isqrt_u32` | $\lfloor\sqrt{x}\rfloor$ |
+| `task06` | `collatz_steps_u32` | steps to 1 under $3n + 1$ |
+| `task07` | `bitrev_u16` | 16-bit reversal |
+| `task08` | `fibonacci_u32` | $F_n \bmod 2^{32}$ |
+| `task09` | `factorial_u32` | $n! \bmod 2^{32}$ |
+| `task10` | `is_prime_u32` | primality |
+| `task11` | `parity_u32` | bit parity |
+| `task12` | `clz_u32` | leading zero bits |
+| `task13` | `ctz_u32` | trailing zero bits |
+| `task14` | `power_mod_u32` | $a^b \bmod 2^{32}$ |
+| `task15` | `min3_i32` | minimum of three |
+| `task16` | `max3_i32` | maximum of three |
+| `task17` | `sum_digits_u32` | sum of decimal digits |
+| `task18` | `reverse_digits_u32` | reversed decimal digits |
+| `task19` | `hamming_dist_u32` | Hamming distance |
+| `task20` | `rot_left_u32` | 32-bit left rotation |
 
-Run self-test (verifies scorer compilation, positive control reference replay, negative control mutant catch, and format rejection):
-```bash
-./bench/inference_cost/driver.sh --self-test
-```
-
-Replay reference solutions:
-```bash
-./bench/inference_cost/driver.sh --replay-ref
-```
-
-Replay mutant set (negative control):
-```bash
-./bench/inference_cost/driver.sh --replay-mutants
-```
-
-## Replay token counts are synthetic
-
-`--replay-ref` and `--replay-mutants` call no model. Their prompt and completion token counts are a placeholder
-(words x 4/3 plus a constant) that only exercises the scorer arithmetic. They are not inference cost and must not be
-quoted as such. Real counts come only from `--run-model`, which reads the endpoint's reported usage (NOT_RUN so far).
+Each `statement.txt` is language-neutral; the per-language signature is added to the user prompt.
