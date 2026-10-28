@@ -1,0 +1,151 @@
+note SPDX-License-Identifier: Apache-2.0
+note NL4 consumes NL3 lpvalid and NL1 nddec; neither is execution authority.
+note Caller must run lpvalid against receiver-owned context before this decoder.
+note No host words, executable payload, capability, allocation from input or effects.
+note Concatenate after an om2 debug entry, NL1 hadamard.om and NL3 validator.om.
+fn nlencode f view f64 4 wire edit uchar 32 to int
+stage = new uint 8 0
+for i ulong 4
+if not and ge get f i 0.0f64 le get f i 1.0f64
+ret 50
+end
+end
+for i ulong 8
+v = 0.0f64
+for j ulong 4
+v = add v mul get f j ndelem i j
+end
+put stage i bitcast uint f32 v
+end
+for i ulong 8
+for j ulong 4
+put wire add mul i 4 j uchar and shr get stage i mul sub ulong 3 j 8 255
+end
+end
+ret 0
+end
+fn nlbe32 a view uchar * off ulong to uint
+v = uint 0
+for i ulong 4
+v = or shl v 8 uint get a add off i
+end
+ret v
+end
+fn nlbit v f64 to int
+note Closed synthetic codebook tolerance; ambiguous and nonfinite scores refuse.
+if and ge v -0.0625f64 le v 0.0625f64
+ret 0
+end
+if and ge v 0.9375f64 le v 1.0625f64
+ret 1
+end
+ret -1
+end
+fn nlproposal a view uchar * p edit uint 16 to int
+note This function proposes only; it does not validate context, reserve or execute.
+b = new uint 4 0
+if lt len a 1024
+ret 40
+end
+if ne get a 5 1
+ret 41
+end
+dtype = get a 10
+width = uint 4
+if eq dtype 2
+width = 1
+else
+if ne dtype 1
+ret 41
+end
+end
+if ne len a add ulong 1024 ulong mul width 8
+ret 40
+end
+if or ne get a 11 1 ne nlbe32 a 24 8
+ret 42
+end
+if or ne nlbe32 a 16 mul width 8 ne nlbe32 a 20 8
+ret 42
+end
+if ne get a 101 0
+ret 43
+end
+if lt nlbe32 a 104 1
+ret 44
+end
+factor = 1.0f64
+zero = int 0
+if eq dtype 2
+scale = nlbe32 a 56
+zero = bitcast int nlbe32 a 60
+if or eq scale 0 ge scale 0x7f800000
+ret 45
+end
+if or lt zero -128 gt zero 127
+ret 45
+end
+factor = f64 bitcast f32 scale
+end
+for i ulong 8
+if eq dtype 1
+u = nlbe32 a add 1024 mul i 4
+note Exponent255 includes every NaN and infinity, without floating comparison.
+if eq and shr u 23 255 255
+ret 45
+end
+put NM i f64 bitcast f32 u
+else
+q = int get a add 1024 i
+if ge q 128
+q = sub q 256
+end
+put NM i mul f64 sub q zero factor
+end
+end
+r = nddec 8
+if ne r 0
+ret 46
+end
+for i ulong 4
+v = nlbit get NF i
+if lt v 0
+ret 47
+end
+put b i uint v
+end
+op = add get b 0 mul get b 1 2
+if eq op 0
+ret 48
+end
+arg = add get b 2 mul get b 3 2
+note All checks precede output writes: refusal preserves the caller's proposal.
+for i ulong 16
+put p i 0
+end
+put p 0 op
+put p 1 arg
+if eq op 1
+put p 2 1
+end
+if eq op 2
+put p 2 2
+end
+put p 3 1
+put p 4 1
+put p 5 1
+put p 6 4
+put p 7 1
+put p 8 0
+put p 9 1
+ret 0
+end
+fn nlmatch p view uint 16 e view uint 16 to bool
+note Independent receiver expectation, never sourced from the numerical message.
+for i ulong 16
+if ne get p i get e i
+ret false
+end
+end
+ret true
+end

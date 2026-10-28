@@ -1,0 +1,181 @@
+note SPDX-License-Identifier: Apache-2.0
+note Host synthetic one-shot CLI: receiver-context-file expected-op expected-operand.
+note This harness cannot authorize effects or reserve a production microjob.
+om2 debug
+note Closed compiled ordinary Omega operations, never dynamically execute vector bytes.
+fn nlinc x uint to uint
+requires le x 16
+ensures le result 32
+ret add x 1
+end
+fn nldouble x uint to uint
+requires le x 16
+ensures le result 32
+ret mul x 2
+end
+fn nlident x uint to uint
+requires le x 16
+ensures le result 32
+ret x
+end
+text nlrhead "NL4R1 0 "
+text nlrtail " 1 1 0 1 0 "
+text nlrno "NL4R1 "
+text nlzeros " 0 0 0 0 0 0 0 0 0\n"
+text nlnewline "\n"
+text nlspace " "
+fn nlout b view uchar * fd int to void
+pos = ulong 0
+while lt pos len b bound 8192
+r = write fd b pos sub len b pos
+if le r 0
+exit 81
+end
+pos = add pos ulong r
+end
+end
+fn nlnumber v uint fd int to void
+b = new uchar 10 0
+pos = ulong 10
+x = v
+while true bound 10
+pos = sub pos 1
+put b pos uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+nlout part b pos sub 10 pos fd
+end
+fn nlfail code int to int
+nlout nlrno 2
+nlnumber uint code 2
+nlout nlzeros 2
+ret code
+end
+fn nlread fd int b edit uchar * to long
+pos = ulong 0
+while lt pos len b bound 5121
+r = read fd b pos sub len b pos
+if lt r 0
+ret r
+end
+if eq r 0
+break
+end
+pos = add pos ulong r
+end
+ret long pos
+end
+fn nlcontext c edit uchar 1025 to int
+path = new uchar 4096 0
+n = argread 1 path 0 4096
+if le n 0
+ret 80
+end
+fd = fopen path 0 ulong n 0 0
+if lt fd 0
+ret 80
+end
+r = nlread int fd c
+cl = fclose int fd
+if or ne r 1024 ne cl 0
+ret 80
+end
+ret 0
+end
+fn nlrequest e edit uint 16 to int
+argbuf = new uchar 2 0
+r = argread 2 argbuf 0 2
+if ne r 1
+ret 80
+end
+v = get argbuf 0
+if or lt v 49 gt v 51
+ret 80
+end
+put e 0 uint sub v 48
+r = argread 3 argbuf 0 2
+if ne r 1
+ret 80
+end
+v = get argbuf 0
+if or lt v 48 gt v 51
+ret 80
+end
+put e 1 uint sub v 48
+if eq get e 0 1
+put e 2 1
+end
+if eq get e 0 2
+put e 2 2
+end
+put e 3 1
+put e 4 1
+put e 5 1
+put e 6 4
+put e 7 1
+put e 8 0
+put e 9 1
+ret 0
+end
+fn nlexec p view uint 16 to void
+z = uint 0
+if eq get p 0 1
+z = nlinc get p 1
+end
+if eq get p 0 2
+z = nldouble get p 1
+end
+if eq get p 0 3
+z = nlident get p 1
+end
+nlout nlrhead 1
+for i ulong 3
+if ne i 0
+nlout nlspace 1
+end
+nlnumber get p i 1
+end
+nlout nlrtail 1
+nlnumber z 1
+nlout nlnewline 1
+end
+fn main to int
+frame = new uchar 5121 0
+ctx = new uchar 1025 0
+p = new uint 16 0
+e = new uint 16 0
+if ne argc 4
+ret nlfail 80
+end
+r = nlcontext ctx
+if ne r 0
+ret nlfail r
+end
+r = nlrequest e
+if ne r 0
+ret nlfail r
+end
+n = nlread 0 frame
+if lt n 0
+ret nlfail 80
+end
+note Receiver fixture's issued_at is the trusted synthetic clock, not input now.
+now = lpbe64 ctx 64
+r = lpvalid part frame 0 ulong n part ctx 0 1024 now 0
+if ne r 0
+ret nlfail r
+end
+r = nlproposal part frame 0 ulong n p
+if ne r 0
+ret nlfail r
+end
+if not nlmatch p e
+ret nlfail 49
+end
+note One-shot pure proposal only; no reservation or external effect occurs.
+nlexec p
+ret 0
+end

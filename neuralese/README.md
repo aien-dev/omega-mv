@@ -231,3 +231,120 @@ compression, and do not claim efficiency before measuring the full path.
 
 No models have been run for this supplement. A later run needs its own authority,
 resource reservation where applicable, immutable evidence and separate review.
+
+## NL4: canonical numerical payload to closed pure execution
+
+This additive boundary addresses [#920](https://github.com/aien-dev/omega-mv/issues/920)
+on draft #919, without replacing its historical NLE1 fixtures or receipts.
+It consumes the canonical LTP0 schema and `lpvalid` from
+[aien-protocols-mv #69](https://github.com/aien-dev/aien-protocols-mv/issues/69),
+not another envelope. Exact immutable native dependency commits, hashes, licenses
+and staging paths are in [`nl4-dependencies.json`](nl4-dependencies.json).
+The reused NL1 Hadamard unit is handwritten `.om`, licensed AGPL-3.0-only.
+Composed qualification executables retain that license; it is not silently
+reimplemented in a host language. No permanent foreign decoder/runtime is added.
+
+`proposal.om` implements a bounded native IEEE32 big-endian payload encoder and
+a tensor-to-typed-proposal decoder. Rank-one length-eight contiguous f32 and
+signed affine i8 payloads are admitted by LTP0; quantization scale and signed
+zero-point are checked against the receiver template. The codec itself does not
+authenticate a model or grant authority. Native-model profile2 is deliberately
+refused by this synthetic-only consumer.
+
+The fixed G0 projection uses Hadamard columns {2,3,5,8}/sqrt(8), producing eight
+coordinates from four features. It is not the learned three-coordinate channel.
+The first two decoded bits propose opcode1 increment,2 double or3 identity;
+opcode0 is refused. The other two propose explicit uint operand0..3.
+Scores within1/16 of exactly0 or1 are accepted; everything ambiguous refuses.
+These thresholds are frozen correctness fixtures, not tuned held-out results.
+The receiver independently supplies the expected opcode and operand on the CLI;
+the message cannot provide its own objective oracle.
+
+The proposed `uint[16]` descriptor is explicit:
+
+| Index | Meaning |
+|---|---|
+|0|opcode1/2/3|
+|1|left operand uint0..3|
+|2|right operand1 increment,2 double,0 identity|
+|3,4,5|rank1, sole dimension1, element count1|
+|6,7,8,9|result byte bound4, operation step bound1, required effects0, closed uint type id1|
+|10..15|reserved zero|
+
+`nlproposal(frame,proposal)` requires prior successful canonical `lpvalid`;
+it proposes, never executes or reserves. All refusal paths preserve the caller's
+descriptor. `nlmatch` compares all sixteen fields with a receiver-owned descriptor.
+The host harness first validates LTP0 against a local admitted fixture context,
+then proposes, compares, and calls ordinary compiled `om2 debug` functions with
+`requires x<=16` and `ensures result<=32`. Vectors are never instructions or
+dynamically executed source. All nonzero producer effect classes are refused,
+even if the synthetic template admits them.
+
+The receipt stream is `NL4R1 decision op lhs rhs rank dim0 dim1 elements effects result`.
+Success decision0 is stdout after executing the closed pure function. Refusals
+write stderr with a nonzero decision and every other numeric field zero, stdout
+empty. These are **HOST_SYNTHETIC** observations, not signed/authorized production
+receipts. The fixture's issued time is the receiver's synthetic clock and its
+high-water is0. This one-shot pure process has no durable replay ledger.
+Shape/type/resource admission and capability-reference equality are necessary
+checks, not capability authorization.
+
+LTP0 field101 is the producer-node effect class; fields192/224 preserve existing
+producer MJR1 DAG/input-binding semantics. A production caller must verify a
+completed producer MJR1.output_digest equals SHA256(entire LTP0), equals the
+independently admitted consumer CONTENT digest, and matches generation plus
+objective/tenant/subject. Consumer capability/verifier admission is independent.
+`lpvalid` does not verify this signed relation. Current native host words have
+ambient process permissions, not a capability sandbox. The absent canonical
+bindings are concrete owner proposals:
+[AEGIS #79](https://github.com/aien-dev/aegis-runtime-mv/issues/79) and
+[microjob reservation #70](https://github.com/aien-dev/aien-protocols-mv/issues/70).
+They must bind existing authority and lifecycle, never invent a Neuralese grant.
+Production admission, durable replay protection and all effectful execution are
+**NOT_RUN**.
+
+### Independent math and replay
+
+Raw actual Wolfram tool-call/result events are preserved in `nl4-wolfram-*.jsonl`;
+no private model activations or inference traces are included.
+Verification calls were `Integrate[x^2,{x,0,1}] -> 1/3` and Alpha
+`sqrt(27)/2 -> 3 sqrt(3)/2`. The exact query in `nl4-wolfram-oracle.jsonl`
+checks `Transpose[E].E == IdentityMatrix[4]`, all sixteen `X.E^T.E-X` zero,
+and all sixteen exact real decodes after IEEE32 rounding. Its exact maximum
+feature error is `1-47453131/(33554432*Sqrt[2])`.
+That models quantized input decoded in exact arithmetic, not a claim that native
+floating-point execution is exact. The native encoder is separately compared
+byte-for-byte against independently Wolfram-exported IEEE32 payloads.
+`nl4-wolfram-int8.jsonl` queries `Q=Round[16 H]`, `Q.E/16`,
+returning maximum exact feature error `-1+3/(2*Sqrt[2])` and all sixteen bits
+recovered within the frozen tolerance. Independent ambiguity, wrong-sign and
+wrong-scale controls are in `nl4-wolfram-ambiguity.jsonl`.
+
+The scoped compiler hash `d6290c76...` is not a substitute for older pins.
+It is exactly the committed `seed/out/omc` introduced by
+`1fe5976d398646b17acabbf6d9dfae96b017e439`, with the full binary/source hashes in
+the lock. Read-only `git show <revision>:seed/out/omc | sha256sum` resolved the
+older `2c824805...` at82a399b9 and `49923639...` at ec07d25d as different
+historical binaries. No compiler change is part of NL4.
+
+From this checkout with separately fetched sibling source repositories:
+
+```sh
+mkdir -p build/nl4-deps
+git -C ../aien-train show 0e01c58a41f1a2fb976efa75c1cc554503aa2ee4:native/neuralese/hadamard.om > build/nl4-deps/h.om
+git -C ../aien-protocols-mv show 6fb728a14781eb4e5262ffbdc9c2e6be64974f36:specs/latent-payload/validator.om > build/nl4-deps/v.om
+sha256sum build/nl4-deps/h.om build/nl4-deps/v.om
+# Refuse to continue unless both hashes equal nl4-dependencies.json.
+seed/out/omc < seed/qualification/om2/gate.om > build/nl4-gate
+chmod +x build/nl4-gate
+build/nl4-gate seed/out/omc d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 neuralese/nl4-host.cases build/nl4-host
+```
+
+The conductor hashes the compiler itself and requires a previously absent scratch
+directory. `codec-check.om` checks all sixteen independent encoder payloads and
+refusal output preservation; the end-to-end cases use independent expected
+results, explicit wrong objective/operand, quantization ambiguity and malformed/
+stale/foreign/withdrawn-context refusals. Guard-removal and wrong-operation
+mutants must be killed, and native pre/postcondition violations must trap.
+These are deterministic correctness cases, not independent statistical trials
+or the preregistered learned-arm campaign (benchmarks draft #56).
