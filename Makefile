@@ -2,6 +2,7 @@ CC ?= gcc
 .DEFAULT_GOAL := all
 PHYSICS_DIR ?= ../physics
 OUT_DIR ?= build
+include mk/cudapp-consumer.mk
 -include mk/*.mk
 PHYSICS_LOCK_CHECK ?= 1
 
@@ -11,67 +12,17 @@ CFLAGS ?= -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/common/inc \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include
+override CFLAGS := -Isrc $(CUDAPP_HEADER_FLAGS) $(filter-out -Isrc,$(CFLAGS))
 
+# Omega owns its CPU substrate and evidence adapters. Native GPU implementation
+# and bundled driver objects come only from the pinned canonical CUDApp archive.
 SRCS = src/omega_om_units.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c \
 	src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_exec.c \
 	src/omega_self_host.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c \
 	src/omega_library.c src/omega_discovery.c src/omega_machine.c src/omega_realize_synth.c \
 	src/omega_matvec.c src/omega_accelerator.c src/omega_accelerator_world.c \
-	src/omega_vector.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-	src/omega_blackwell_realize.c src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_gates.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_elementwise_api.c src/omega_gpu_attention_api.c src/omega_gpu_serving.c src/omega_world_gates.c src/omega_gpu_wait.c \
-	src/omega_evidence.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
-	tools/omegatool.c
-# OWN-30B cut 2 (2026-10-13): column windows over a resident bf16 tensor for the MoE path. New file,
-# adds exports only (8B decode-speed lane collision rule: no existing GPU source moves).
-SRCS += src/omega_gpu_moe_api.c
-
-# OWN-30B Cut 6 / Cut 5 (2026-10-13): FP8 e4m3 GEMV kernel family, new files only (omega_gpu_fp8_api.h)
-SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu_fp8_api.c
-# OWN-30B W-L2c (2026-10-14): FP8 GEMV variant 2, row-pipelined (omega_blackwell_codegen_moe2.h), selectable, variant 1 untouched
-SRCS += src/omega_blackwell_codegen_moe2.c
-# OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
-SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
-# Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
-SRCS += src/omega_blackwell_codegen_attn256.c src/omega_gpu_decode_attn256_api.c
-# Qwen3.8-27B (omega-mv#545, 2026-10-18): prefill attention head_dim 256 on the decode cache, new files only
-SRCS += src/omega_blackwell_codegen_pattn256.c src/omega_gpu_prefill_attn256_api.c
-# OWN-30B (2026-10-13): libm-free host math (omega_gpu_hostmath.h) so libomega_gpu.a links without -lm
-SRCS += src/omega_gpu_hostmath.c
-# OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h), new files only
-SRCS += src/omega_blackwell_codegen_router.c src/omega_gpu_router_api.c
-# Qwen3.8-27B Gated DeltaNet decode step (omega#542, 2026-10-18): one launch per layer (omega_gpu_gdn_api.h), new files only
-SRCS += src/omega_blackwell_codegen_gdn.c src/omega_gpu_gdn_api.c
-# OWN-30B W-L2 (2026-10-13): decode launch collapse, new files only: command list (N launches, one submit) + glue kernels
-SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
-# C3 (docs/OMEGA.md): reductions and prefix sums of any length, bit-exact against the frozen-order host reference.
-SRCS += src/omega_gpu_scan.c src/omega_gpu_scan_ref.c
-# C3: matrix multiply of any shape, BF16 and FP8, both layouts, on the tensor cores (pack kernels + one multiply kernel).
-SRCS += src/omega_gpu_gemm.c
-SRCS += src/omega_gpu_mem_cached.c
-SRCS += src/omega_gpu_decode_graph.c
-# sc #642 (2026-10-18): one Qwen3.8-27B decode token as one command list (GDN + hd256 attention layers, dense MLP)
-SRCS += src/omega_gpu_q38_graph.c
-SRCS += src/omega_gpu_q36_graph.c
-# C6 (L386): Omega's own sm_121 disassembler; the listing checks in tests/ call it instead of nvdisasm
-SRCS += src/omega_sm121_disasm.c
-# OWN-30B (2026-10-13): bf16 streaming GEMV for the lm_head (omega_gpu_bf16_gemv_api.h), new files only
-SRCS += src/omega_blackwell_codegen_bf16.c src/omega_gpu_bf16_gemv_api.c
-# OWN-30B prefill (2026-10-13): FP8 grouped GEMM, each expert streamed once per pass (omega_gpu_fp8gemm_api.h), new files only
-SRCS += src/omega_blackwell_codegen_gemm.c src/omega_gpu_fp8gemm_api.c
-# OWN-30B T3 (2026-10-13): tensor-core prefill kernels (omega_blackwell_codegen_tc.h), new files only
-SRCS += src/omega_blackwell_codegen_tc.c
-SRCS += src/omega_gpu_tcgemm_api.c
-# OWN-30B L1 attention (2026-10-13): tensor-core causal prefill attention (omega_gpu_prefill_attn_api.h), new files only
-SRCS += src/omega_blackwell_codegen_pattn.c src/omega_gpu_prefill_attn_api.c
-# OWN-30B T3b (2026-10-13): device-resident prefill (omega_gpu_prefill.h), new files only
-SRCS += src/omega_blackwell_codegen_pf.c src/omega_gpu_prefill.c src/omega_blackwell_codegen_tc2.c src/omega_gpu_pfgemm.c
-# OWN-30B L1 GEMM (W-L1G, 2026-10-14): native FP8 QMMA, new files only
-SRCS += src/omega_blackwell_codegen_qmma.c src/omega_blackwell_codegen_qg.c
-# OWN-30B W-L1G-D (2026-10-14): router logits + MoE combine for the whole-prompt prefill, new files only
-SRCS += src/omega_blackwell_codegen_pfhost.c src/omega_gpu_pfhost.c
-# Ternary engine T0 (2026-10-15): KT1, the W2A8 ternary GEMV (omega_gpu_tern_api.h), new files only
-SRCS += src/omega_blackwell_codegen_tern.c src/omega_gpu_tern_api.c
+	src/omega_vector.c src/omega_blackwell_gates.c src/omega_world_gates.c \
+	src/omega_evidence.c tools/omegatool.c
 OBJS = $(patsubst %.c,$(OUT_DIR)/%.o,$(notdir $(SRCS)))
 DEPS = $(OBJS:.o=.d)
 -include $(DEPS)
@@ -116,12 +67,6 @@ $(OUT_DIR):
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
 	mkdir -p $(OUT_DIR)/crumbline
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -141,8 +86,8 @@ $(LEARNER): $(LEARNER_OBJS)
 $(OUT_DIR)/omegatool.o: tools/omegatool.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TARGET): $(OBJS) | check-physics-lock
-	$(CC) $(CFLAGS) -o $@.tmp.$$$$ $(OBJS) && mv -f $@.tmp.$$$$ $@
+$(TARGET): $(OBJS) $(CUDAPP_LIB) | check-physics-lock check-cudapp
+	$(CC) $(CFLAGS) -o $@.tmp.$$$$ $(OBJS) $(CUDAPP_LIB) && mv -f $@.tmp.$$$$ $@
 
 test: $(TARGET)
 	./$(TARGET) --run-gates
@@ -251,9 +196,9 @@ NUMERIC_CPU_SRCS = tests/test_omega_numeric.c src/omega_numeric.c src/omega_nume
                    $(NUMERIC_BW_SRCS)
 NUMERIC_CPU_HDRS = src/omega_numeric.h src/omega_numeric_provenance.h src/omega_numeric_divsqrt_gb10.h tests/numeric_oracle.h \
                    $(NUMERIC_BW_HDRS)
-build/test_omega_numeric_cpu: $(NUMERIC_CPU_SRCS) $(NUMERIC_CPU_HDRS)
+build/test_omega_numeric_cpu: $(NUMERIC_CPU_SRCS) $(NUMERIC_CPU_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $@ $(NUMERIC_CPU_SRCS)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc $(CUDAPP_HEADER_FLAGS) -DOMEGA_NUMERIC_CPU_ONLY -o $@ $(NUMERIC_CPU_SRCS) $(CUDAPP_LIB) -lpthread
 # test-numeric-cpu exit status: 0 means no host test failed and the only SKIPs
 # are the five declared chip-only IDs (CHIP_ONLY_IDS in the test; the last line
 # prints "Gate 5 Verdict: PASS_EXCEPT_DECLARED_CHIP_ONLY"). Nonzero means a real
@@ -291,9 +236,9 @@ test-numeric-e1-exhaustive: build/test_omega_numeric_cpu
 REDUCE_CPU_SRCS = tests/test_omega_reduce.c src/omega_numeric_reduce.c src/omega_numeric_reduce_gb10.c \
                   src/omega_numeric.c src/omega_numeric_provenance.c src/omega_numeric_divsqrt_gb10.c \
                   $(NUMERIC_BW_SRCS)
-build/test_omega_reduce_cpu: $(REDUCE_CPU_SRCS) src/omega_numeric_reduce.h $(NUMERIC_CPU_HDRS)
+build/test_omega_reduce_cpu: $(REDUCE_CPU_SRCS) src/omega_numeric_reduce.h $(NUMERIC_CPU_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $@ $(REDUCE_CPU_SRCS)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc $(CUDAPP_HEADER_FLAGS) -DOMEGA_NUMERIC_CPU_ONLY -o $@ $(REDUCE_CPU_SRCS) $(CUDAPP_LIB) -lpthread
 test-numeric-reduce-cpu: build/test_omega_reduce_cpu
 	./build/test_omega_reduce_cpu
 
@@ -676,16 +621,13 @@ test-cortex: $(RX_CX_TEST) $(RX_CXJ_TEST)
 RX_R12_SILICON_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
 	src/runtime/rx_coherent.c src/runtime/rx_native_bind.c \
 	src/runtime/rx_resident_gpu.c src/omega_om_units.c src/omega_evidence.c \
-	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
 	tests/runtime/rx_r12_silicon.c
 RX_R12_SILICON = $(OUT_DIR)/rx_r12_silicon_test
 
 $(RX_R12_SILICON): $(RX_R12_SILICON_SRCS) src/runtime/rx_world.h \
 	src/runtime/rx_resident_gpu.h src/runtime/rx_caproot.h src/runtime/aienos_cap.h \
-	src/omega_blackwell_codegen.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R12_SILICON_SRCS) $(AIENOS_CAP_LIB) -ldl -lm
+	$(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
+	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R12_SILICON_SRCS) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 test-r12-silicon: $(RX_R12_SILICON)
 	./$(RX_R12_SILICON)
@@ -745,9 +687,7 @@ RX_R13_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c \
 # RX_ERR_AUTHORITY (sovereign-core abi-qualify, 2026-10-12).
 -include $(RXC_LIB_OBJS:.o=.d)
 RX_R13_TEST_SRCS = $(RX_R13_SRCS) $(RX_FABRIC_TEST_SRCS)
-RX_R13_SILICON_EXTRA = src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
-	src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
+RX_R13_SILICON_EXTRA = src/runtime/rx_resident_gpu.c
 # Production program (rules after the ARGUS block below: they link ARGUS).
 RX_R13_HOST = $(OUT_DIR)/rx_r13_living_host
 RX_R13_SILICON = $(OUT_DIR)/rx_r13_living_silicon
@@ -762,9 +702,9 @@ $(RX_R13_TEST_HOST): $(RX_R13_TEST_SRCS) src/runtime/rx_living.h $(RX_COMPOSE_LI
 # Lane 17: the Fabric phase runs in the silicon test build too; its Fabric part
 # is CPU-only loopback. The composition phase stays host-only.
 $(RX_R13_TEST_SILICON): $(RX_R13_TEST_SRCS) $(RX_R13_SILICON_EXTRA) src/runtime/rx_living.h \
-	$(RX_COMPOSE_LIVING_CHECKS) $(RX_R13_TEST_CHECKS) $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(RX_COMPOSE_LIVING_CHECKS) $(RX_R13_TEST_CHECKS) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) $(AIEN_TEST_FLAGS) -DR13_SILICON -pthread -o $@ $(RX_R13_TEST_SRCS) \
-		$(RX_R13_SILICON_EXTRA) $(AIENOS_CAP_LIB) -ldl -lm
+		$(RX_R13_SILICON_EXTRA) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 test-r13-host: $(RX_R13_HOST)
 	./$(RX_R13_HOST)
@@ -815,15 +755,9 @@ $(RX_R14_HOST): $(RX_R14_SRCS) src/runtime/rx_living.h $(RX_COMPOSE_LIVING_CHECK
 	$(CC) $(CFLAGS) -pthread -o $@ $(RX_R14_SRCS) $(AIENOS_CAP_LIB) -lm
 
 $(RX_R14_SILICON): $(RX_R14_SRCS) src/runtime/rx_resident_gpu.c \
-	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_qmd.c src/omega_blackwell_matmul.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c \
-	$(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) -DR14_SILICON -pthread -o $@ $(RX_R14_SRCS) \
-		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
-		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
-		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB) -ldl -lm
+		src/runtime/rx_resident_gpu.c $(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 test-r14-host: $(RX_R14_HOST)
 	./$(RX_R14_HOST)
@@ -851,9 +785,7 @@ RX_R15_RIG_SRCS = $(filter-out tests/runtime/rx_r13_living.c src/runtime/rx_oper
 	src/runtime/rx_seq_reference.c tests/runtime/rx_r15_rig.c
 RX_R15_RIG_HDRS = src/runtime/rx_living.h src/runtime/rx_seq_reference.h \
 	src/runtime/rx_world.h tests/runtime/rx_r15_rig.h
-RX_R15_GPU_SRCS = src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
-	src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-	src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
+RX_R15_GPU_SRCS = src/runtime/rx_resident_gpu.c
 RX_R15_PARITY_HOST = $(OUT_DIR)/rx_r15_parity_host
 RX_R15_PARITY_SILICON = $(OUT_DIR)/rx_r15_parity_silicon
 
@@ -863,9 +795,9 @@ $(RX_R15_PARITY_HOST): $(RX_R15_RIG_SRCS) tests/runtime/rx_r15_parity.c $(RX_R15
 		$(AIENOS_CAP_LIB) -lm
 
 $(RX_R15_PARITY_SILICON): $(RX_R15_RIG_SRCS) tests/runtime/rx_r15_parity.c $(RX_R15_RIG_HDRS) \
-	$(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) -DR15_SILICON -pthread -o $@ $(RX_R15_RIG_SRCS) \
-		tests/runtime/rx_r15_parity.c $(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) -ldl -lm
+		tests/runtime/rx_r15_parity.c $(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 test-r15-parity-host: $(RX_R15_PARITY_HOST)
 	./$(RX_R15_PARITY_HOST)
@@ -887,9 +819,9 @@ R15_GPU_LOAD_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/
 	tests/runtime/r15_gpu_load.c
 
 $(R15_GPU_LOAD): $(R15_GPU_LOAD_SRCS) $(RX_R15_GPU_SRCS) src/runtime/rx_world.h \
-	$(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) -pthread -o $@ $(R15_GPU_LOAD_SRCS) $(RX_R15_GPU_SRCS) \
-		$(AIENOS_CAP_LIB) -ldl -lm
+		$(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 r15-gpu-load: $(R15_GPU_LOAD)
 
@@ -916,14 +848,14 @@ $(RX_R15_PERF_HOST_ND): $(RX_R15_PERF_SRCS) $(RX_R15_PERF_HDRS) $(AIENOS_CAP_LIB
 		$(AIENOS_CAP_LIB) -ldl -lm
 
 $(RX_R15_PERF_SILICON): $(RX_R15_PERF_SRCS) $(RX_R15_PERF_HDRS) $(RX_R15_GPU_SRCS) \
-	$(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) -DR15_SILICON -pthread -o $@ $(RX_R15_PERF_SRCS) $(RX_R15_GPU_SRCS) \
-		$(AIENOS_CAP_LIB) -ldl -lm
+		$(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 $(RX_R15_PERF_SILICON_ND): $(RX_R15_PERF_SRCS) $(RX_R15_PERF_HDRS) $(RX_R15_GPU_SRCS) \
-	$(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) -DR15_SILICON -DRX_MEASURE_NO_CAUSAL_DIGEST -pthread -o $@ \
-		$(RX_R15_PERF_SRCS) $(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) -ldl -lm
+		$(RX_R15_PERF_SRCS) $(RX_R15_GPU_SRCS) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 $(R15_REDUCE): tools/r15_reduce.c src/omega_om_units.c src/sha256.h | $(OUT_DIR)
 	$(CC) $(CFLAGS) -o $@ tools/r15_reduce.c src/omega_om_units.c -lm
@@ -1004,10 +936,7 @@ test-r16-authpath: $(RX_R13_HOST) $(RX_R14_HOST)
 test-r16-authpath-silicon: $(RX_R13_SILICON) $(RX_R14_SILICON)
 	sh tools/r16_authpath.sh silicon $(RX_R13_SILICON) $(RX_R14_SILICON) \
 		$(OUT_DIR)/r16/authpath/silicon-$(R16_STAMP) $(RX_R13_SRCS) $(RX_PROD_ARGUS_SRCS) \
-		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
-		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
-		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
+		src/runtime/rx_resident_gpu.c $(AIENOS_CAP_LIB) $(CUDAPP_LIB)
 
 # R16-G3 checks 1-3 only (sources, link map, shared libraries, embedded names)
 # on the current living-system build, for CI runners. Nothing is executed, so
@@ -1022,10 +951,7 @@ test-r16-authpath-linkmap: $(RX_R13_HOST) $(RX_R14_HOST)
 test-r16-authpath-linkmap-silicon: $(RX_R13_SILICON) $(RX_R14_SILICON)
 	R16_G3_STATIC_ONLY=1 sh tools/r16_authpath.sh silicon $(RX_R13_SILICON) $(RX_R14_SILICON) \
 		$(OUT_DIR)/r16/authpath/linkmap-silicon-$(R16_STAMP) $(RX_R13_SRCS) $(RX_PROD_ARGUS_SRCS) \
-		src/runtime/rx_resident_gpu.c src/omega_blackwell_codegen.c \
-		src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-		src/omega_blackwell_matmul.c $(PHYSICS_DIR)/m16/m16_native.c \
-		$(PHYSICS_DIR)/nvrm/nvrm.c $(AIENOS_CAP_LIB)
+		src/runtime/rx_resident_gpu.c $(AIENOS_CAP_LIB) $(CUDAPP_LIB)
 
 # R16-G4: legacy paths cannot bypass authority. The R13 body (R15 rig, RES-4,
 # host seat) is started; a legacy context tries six acts and each must be
@@ -1415,10 +1341,10 @@ test-regulate: $(RX_REGULATE_TEST)
 	./$(RX_REGULATE_TEST)
 
 $(RX_R13_SILICON): $(RX_R13_SRCS) $(RX_R13_SILICON_EXTRA) src/runtime/rx_living.h src/runtime/rx_argus.h \
-	$(RX_COMPOSE_LIVING_CHECKS) $(ARGUS_STAMP) $(AIENOS_CAP_LIB) | $(OUT_DIR)
+	$(RX_COMPOSE_LIVING_CHECKS) $(ARGUS_STAMP) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) | check-cudapp $(OUT_DIR)
 	$(RX_PROD_REFUSE_TEST)
 	$(CC) $(CFLAGS) $(RX_PROD_ARGUS_FLAGS) -DR13_SILICON -pthread -o $@ $(RX_R13_SRCS) \
-		$(RX_PROD_ARGUS_SRCS) $(RX_R13_SILICON_EXTRA) $(AIENOS_CAP_LIB) -ldl -lm
+		$(RX_PROD_ARGUS_SRCS) $(RX_R13_SILICON_EXTRA) $(AIENOS_CAP_LIB) $(CUDAPP_LIB) -ldl -lm
 
 # Production hygiene (link map + strings + ARGUS present; host run of the
 # ARGUS probe where the binary can run) and the negative build test: compiling
@@ -1862,15 +1788,12 @@ print-c4-requal-bin:
 # tests/runtime/rx_compose_gpu_skill.h. A chip run: take the quiet flag and
 # use tools/composition_gate.sh --gpu (clean tree, content-addressed receipt).
 RX_COMPOSE_GATE_GPU = $(OUT_DIR)/rx_composition_gate_gpu
-RX_COMPOSE_GPU_SRCS = src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c \
-	src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-	src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_gpu_wait.c \
-	$(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_DIR)/nvrm/nvrm.c
+RX_COMPOSE_GPU_SRCS = src/omega_vector.c src/omega_validate.c
 
 $(RX_COMPOSE_GATE_GPU): $(RX_COMPOSE_DEPS) $(RX_COMPOSE_GPU_SRCS) tests/runtime/rx_composition_gate.c \
-	tests/runtime/rx_compose_gpu_skill.h | check-physics-lock $(OUT_DIR)
+	tests/runtime/rx_compose_gpu_skill.h $(CUDAPP_LIB) | check-physics-lock check-cudapp $(OUT_DIR)
 	$(CC) $(CFLAGS) -DRXC_GATE_GPU -Itests/runtime -pthread -o $@ $(RX_COMPOSE_SRCS) \
-		$(RX_COMPOSE_GPU_SRCS) tests/runtime/rx_composition_gate.c $(RX_COMPOSE_LINK) -ldl
+		$(RX_COMPOSE_GPU_SRCS) tests/runtime/rx_composition_gate.c $(RX_COMPOSE_LINK) $(CUDAPP_LIB) -ldl
 
 test-composition-gate-gpu: $(RX_COMPOSE_GATE_GPU)
 	./$(RX_COMPOSE_GATE_GPU) "$$(git rev-parse HEAD)" $(OUT_DIR)/composition_gate_gpu_receipt.json
@@ -1888,12 +1811,11 @@ print-composition-gate-gpu-bin:
 # tools/run_divsqrt_gate.sh only (quiet flag, detached, receipt).
 DIVSQRT_SRCS = tests/test_omega_divsqrt_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
                src/omega_numeric_provenance.c $(NUMERIC_BW_SRCS)
-DIVSQRT_HDRS = src/omega_numeric_divsqrt_gb10.h src/omega_numeric.h src/omega_blackwell_encoder.h \
-               src/omega_blackwell_qmd.h src/sha256.h
+DIVSQRT_HDRS = src/omega_numeric_divsqrt_gb10.h src/omega_numeric.h $(NUMERIC_BW_HDRS)
 .PHONY: test-divsqrt-host test-divsqrt-nvdisasm test-divsqrt-sweep
-build/test_omega_divsqrt_gb10_cpu: $(DIVSQRT_SRCS) $(DIVSQRT_HDRS)
+build/test_omega_divsqrt_gb10_cpu: $(DIVSQRT_SRCS) $(DIVSQRT_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(DIVSQRT_SRCS)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc $(CUDAPP_HEADER_FLAGS) -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(DIVSQRT_SRCS) $(CUDAPP_LIB)
 test-divsqrt-host: build/test_omega_divsqrt_gb10_cpu
 	./build/test_omega_divsqrt_gb10_cpu
 test-divsqrt-nvdisasm:
@@ -1910,9 +1832,9 @@ TRANSC_GB10_SRCS = tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divs
                    src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c \
                    $(NUMERIC_BW_SRCS)
 .PHONY: test-numeric-transc-gb10-host
-build/test_omega_numeric_transc_gb10_cpu: $(TRANSC_GB10_SRCS) $(DIVSQRT_HDRS) src/omega_numeric_transc.h
+build/test_omega_numeric_transc_gb10_cpu: $(TRANSC_GB10_SRCS) $(DIVSQRT_HDRS) src/omega_numeric_transc.h $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -Isrc -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(TRANSC_GB10_SRCS)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -Isrc $(CUDAPP_HEADER_FLAGS) -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(TRANSC_GB10_SRCS) $(CUDAPP_LIB)
 test-numeric-transc-gb10-host: build/test_omega_numeric_transc_gb10_cpu
 	./build/test_omega_numeric_transc_gb10_cpu
 
@@ -1931,14 +1853,12 @@ test-unwritten-trap-host: build/test_omega_unwritten_trap
 # docs/numeric/E1_LDST_GB10.md). test-ldst-host needs no device; test-ldst-nvdisasm
 # decodes every table kernel offline; the chip run is tools/run_numeric_ldst_chip.sh.
 LDST_SRCS = tests/test_omega_ldst_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
-            src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-            src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c
-LDST_HDRS = src/omega_numeric_ldst_gb10.h src/omega_numeric_divsqrt_gb10.h src/omega_numeric.h src/omega_blackwell_encoder.h \
-            src/omega_blackwell_qmd.h src/sha256.h
+            src/omega_numeric_provenance.c $(NUMERIC_BW_SRCS)
+LDST_HDRS = src/omega_numeric_ldst_gb10.h src/omega_numeric_divsqrt_gb10.h src/omega_numeric.h $(NUMERIC_BW_HDRS)
 .PHONY: test-ldst-host test-ldst-nvdisasm
-build/test_omega_ldst_gb10_cpu: $(LDST_SRCS) $(LDST_HDRS)
+build/test_omega_ldst_gb10_cpu: $(LDST_SRCS) $(LDST_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(LDST_SRCS)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc $(CUDAPP_HEADER_FLAGS) -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(LDST_SRCS) $(CUDAPP_LIB)
 test-ldst-host: build/test_omega_ldst_gb10_cpu
 	./build/test_omega_ldst_gb10_cpu
 test-ldst-nvdisasm:
@@ -2396,9 +2316,9 @@ test-vc-bridge: tests/test_omega_vc_bridge.c src/omega_vc_bridge.c src/omega_vc_
 	@echo "test-vc-bridge: PASS (bridge verifies and recomputes the id, bridge records refused in build, ASan/UBSan clean, 4 mutants killed)"
 
 # FB-1 cut 1: native (no CUDA) matmul entry point for the inference stack.
-# libomega_gpu.a = everything the tool links except its main; the Rust FFI crate
-# (cut 2) links it. test-gpu-matmul-api runs the host-only refusals; the chip
-# sweep is `./build/gpu_matmul_api_test --out receipt.json` through the heavy queue.
+# libomega_gpu.a is the Omega CPU/evidence adapter companion, not a
+# second GPU implementation. Consumers link it FIRST and the pinned canonical
+# CUDApp archive LAST. Host-only API refusals do not qualify the chip path.
 .PHONY: libomega_gpu test-gpu-matmul-api
 # The two gate-runner objects (omegatool's M17/M18/M19 and World gates) are NOT part of the
 # library: nothing in the library or in the Rust FFI crate calls them (checked with nm), and
@@ -2406,22 +2326,25 @@ test-vc-bridge: tests/test_omega_vc_bridge.c src/omega_vc_bridge.c src/omega_vc_
 # archive digest depend on where physics was checked out. Without them libomega_gpu.a is
 # byte-identical for any PHYSICS_DIR and any omega checkout directory.
 GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o,$(OBJS))
+GPU_LINK_LIBS = $(OUT_DIR)/libomega_gpu.a $(CUDAPP_LIB)
 GPU_API_TEST = $(OUT_DIR)/gpu_matmul_api_test
 GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
-$(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock
-	ar rcs $@ $(GPU_API_OBJS)
-libomega_gpu: $(OUT_DIR)/libomega_gpu.a
+$(OUT_DIR)/libomega_gpu.a: $(GPU_API_OBJS) | check-physics-lock check-cudapp
+	ar rcs $@.tmp.$$$$ $(GPU_API_OBJS) && mv -f $@.tmp.$$$$ $@
+libomega_gpu: $(GPU_LINK_LIBS)
 # omega-mv#471: the archive must link without -lm (omegatool, the Rust FFI crate and AIENOS link it bare). Fails if any symbol
 # the archive leaves undefined is one libm exports (the export list is read from this toolchain's libm.so.6).
 .PHONY: test-gpu-libm-free
-test-gpu-libm-free: $(OUT_DIR)/libomega_gpu.a
+test-gpu-libm-free: $(GPU_LINK_LIBS)
 	@export LC_ALL=C; libm="$$($(CC) -print-file-name=libm.so.6)"; test -f "$$libm" || { echo "libm-free: no libm.so.6 from $(CC)"; exit 1; }; \
-	nm -D --defined-only "$$libm" | awk '{print $$3}' | sed 's/@.*//' | sort -u > $(OUT_DIR)/libm.syms; \
-	nm -u $(OUT_DIR)/libomega_gpu.a | awk '{print $$2}' | sort -u | comm -12 - $(OUT_DIR)/libm.syms > $(OUT_DIR)/libm-refs.txt; \
-	n=$$(wc -l < $(OUT_DIR)/libm-refs.txt); echo "libm-free: $$n libm symbols referenced by libomega_gpu.a ($$(wc -l < $(OUT_DIR)/libm.syms) libm exports checked)"; \
-	if [ "$$n" -ne 0 ]; then sed 's/^/  /' $(OUT_DIR)/libm-refs.txt; echo "FAIL: libomega_gpu.a is not libm-free"; exit 1; fi; echo "PASS: libomega_gpu.a is libm-free"
-$(GPU_API_TEST): tests/gpu_matmul_api_test.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+	nm -D --defined-only "$$libm" > $(OUT_DIR)/libm-exports.raw || exit $$?; \
+	awk '{print $$3}' $(OUT_DIR)/libm-exports.raw | sed 's/@.*//' | sort -u > $(OUT_DIR)/libm.syms; \
+	nm -u $(GPU_LINK_LIBS) > $(OUT_DIR)/gpu-undefined.raw || exit $$?; \
+	awk '{print $$2}' $(OUT_DIR)/gpu-undefined.raw | sort -u | comm -12 - $(OUT_DIR)/libm.syms > $(OUT_DIR)/libm-refs.txt; \
+	n=$$(wc -l < $(OUT_DIR)/libm-refs.txt); echo "libm-free: $$n libm symbols referenced by the adapter plus canonical GPU archives ($$(wc -l < $(OUT_DIR)/libm.syms) libm exports checked)"; \
+	if [ "$$n" -ne 0 ]; then sed 's/^/  /' $(OUT_DIR)/libm-refs.txt; echo "FAIL: adapter plus canonical GPU archives are not libm-free"; exit 1; fi; echo "PASS: adapter plus canonical GPU archives are libm-free"
+$(GPU_API_TEST): tests/gpu_matmul_api_test.c $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
 	./$(GPU_API_TEST) --host-only
 	./$(GPU_R4_RECEIPT) --host-only
@@ -2429,8 +2352,8 @@ test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
 # omega #473 R4: the sealed CTA-budget receipt (full-output comparison at the training shapes,
 # every budget, repeats, I42 stale-output check, negative controls). Host-only self-test above; the
 # chip receipt is `quietlock run -- ./build/gpu_matmul_r4_receipt --out receipt.json`.
-$(GPU_R4_RECEIPT): tests/gpu_matmul_r4_receipt.c src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_r4_receipt.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_R4_RECEIPT): tests/gpu_matmul_r4_receipt.c $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_r4_receipt.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # FB-1 cut 4: native rmsnorm / rope / swiglu (+ EX2 and shared-exchange probes).
 # test-gpu-elementwise is host-only (refusals, codegen, word fixtures, nvdisasm
@@ -2438,8 +2361,8 @@ $(GPU_R4_RECEIPT): tests/gpu_matmul_r4_receipt.c src/omega_gpu_matmul_api.h $(OU
 # through the heavy queue. -ffp-contract=off keeps the f32 oracle free of FMA.
 .PHONY: test-gpu-elementwise
 GPU_EW_TEST = $(OUT_DIR)/gpu_elementwise_test
-$(GPU_EW_TEST): tests/gpu_elementwise_test.c src/omega_gpu_elementwise_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_elementwise_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_EW_TEST): tests/gpu_elementwise_test.c $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_elementwise_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-elementwise: $(GPU_EW_TEST)
 	./$(GPU_EW_TEST) --host-only
 
@@ -2447,8 +2370,8 @@ test-gpu-elementwise: $(GPU_EW_TEST)
 # into instruction word 3. Host only; the golden-word checks compare words 0..2, so this is the check for word 3.
 .PHONY: test-bw-encode-control
 BW_ENCODE_CONTROL_TEST = $(OUT_DIR)/bw_encode_control_test
-$(BW_ENCODE_CONTROL_TEST): tests/bw_encode_control_test.c src/omega_blackwell_codegen.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/bw_encode_control_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(BW_ENCODE_CONTROL_TEST): tests/bw_encode_control_test.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/bw_encode_control_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-bw-encode-control: $(BW_ENCODE_CONTROL_TEST)
 	./$(BW_ENCODE_CONTROL_TEST)
 
@@ -2458,8 +2381,8 @@ test-bw-encode-control: $(BW_ENCODE_CONTROL_TEST)
 # controls); the chip gate is tools/run_gpu_reconv_chip.sh.
 .PHONY: test-gpu-reconv
 GPU_RECONV_TEST = $(OUT_DIR)/gpu_reconv_test
-$(GPU_RECONV_TEST): tests/gpu_reconv_test.c tests/bw_warp_sim.h src/omega_gpu_elementwise_api.h src/omega_bw_reconv.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_reconv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_RECONV_TEST): tests/gpu_reconv_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(CUDAPP_SOURCE)/src/omega_bw_reconv.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_reconv_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-reconv: $(GPU_RECONV_TEST)
 	./$(GPU_RECONV_TEST) --host-only
 
@@ -2472,8 +2395,8 @@ test-gpu-reconv: $(GPU_RECONV_TEST)
 # (tools/run_gpu_attention_chip.sh). -ffp-contract=off keeps the oracle free of FMA.
 .PHONY: test-gpu-attention
 GPU_ATTN_TEST = $(OUT_DIR)/gpu_attention_test
-$(GPU_ATTN_TEST): tests/gpu_attention_test.c tests/bw_warp_sim.h src/omega_gpu_attention_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_attention_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_ATTN_TEST): tests/gpu_attention_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_attention_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_attention_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-attention: $(GPU_ATTN_TEST)
 	./$(GPU_ATTN_TEST) --host-only
 	./$(GPU_ATTN_TEST) --sim
@@ -2483,15 +2406,15 @@ test-gpu-attention: $(GPU_ATTN_TEST)
 	./$(GPU_ATTN_TEST) --hd 128 --divergent --sim
 
 # FB-1 cut 4b: fresh-process device-open probe (flake investigation, tools/probe_gpu_open.sh)
-$(OUT_DIR)/gpu_session_probe: tests/gpu_session_probe.c src/omega_gpu_session.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/gpu_session_probe.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(OUT_DIR)/gpu_session_probe: tests/gpu_session_probe.c $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/gpu_session_probe.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B cut 2: window matmul gate (tests/gpu_moe_window_test.c). test-gpu-moe-window runs the host-only
 # refusals and the packed-window byte rule; the chip gate is `./build/gpu_moe_window_test --out r.json`
 # under /tmp/aien-gb10.lock (equivalence to the whole-tensor columns, mutants, window timing).
 GPU_MOE_TEST = $(OUT_DIR)/gpu_moe_window_test
-$(GPU_MOE_TEST): tests/gpu_moe_window_test.c src/omega_gpu_moe_api.h src/omega_gpu_matmul_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/gpu_moe_window_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_MOE_TEST): tests/gpu_moe_window_test.c $(CUDAPP_SOURCE)/src/omega_gpu_moe_api.h $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/gpu_moe_window_test.c $(GPU_LINK_LIBS) -lpthread -lm
 .PHONY: test-gpu-moe-window
 test-gpu-moe-window: $(GPU_MOE_TEST)
 	./$(GPU_MOE_TEST) --host-only
@@ -2502,8 +2425,8 @@ test-gpu-moe-window: $(GPU_MOE_TEST)
 # -ffp-contract=off keeps the double oracle free of FMA.
 .PHONY: test-gpu-fp8
 GPU_FP8_TEST = $(OUT_DIR)/gpu_fp8_api_test
-$(GPU_FP8_TEST): tests/gpu_fp8_api_test.c tests/bw_warp_sim.h src/omega_gpu_fp8_api.h src/omega_blackwell_codegen_moe.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fp8_api_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_FP8_TEST): tests/gpu_fp8_api_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_moe.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fp8_api_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-fp8: $(GPU_FP8_TEST)
 	./$(GPU_FP8_TEST) --host-only
 	AIEN_OMEGA_FP8_COAL=0 ./$(GPU_FP8_TEST) --coal-default
@@ -2513,15 +2436,15 @@ test-gpu-fp8: $(GPU_FP8_TEST)
 # omega #457 (2026-10-15): host rewrite of a GPU-cached buffer must be visible to the next launch. Chip only; the gate
 # is tools/run_gpu_l2_stale_chip.sh.
 GPU_L2_STALE_TEST = $(OUT_DIR)/gpu_l2_stale_test
-$(GPU_L2_STALE_TEST): tests/gpu_l2_stale_test.c src/omega_gpu_fp8_api.h src/omega_gpu_session.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_stale_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_L2_STALE_TEST): tests/gpu_l2_stale_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_stale_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h). test-gpu-decode-attn is
 # host-only + simulator; the chip gate is tools/run_gpu_decode_attn_chip.sh.
 .PHONY: test-gpu-decode-attn
 GPU_DATTN_TEST = $(OUT_DIR)/gpu_decode_attn_test
-$(GPU_DATTN_TEST): tests/gpu_decode_attn_test.c tests/bw_warp_sim_k.h src/omega_gpu_decode_attn_api.h src/omega_blackwell_codegen_attn.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_DATTN_TEST): tests/gpu_decode_attn_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-attn: $(GPU_DATTN_TEST)
 	$(GPU_DATTN_TEST) --host-only
 	$(GPU_DATTN_TEST) --sim
@@ -2531,8 +2454,8 @@ test-gpu-decode-attn: $(GPU_DATTN_TEST)
 # tools/run_gpu_decode_attn256_chip.sh.
 .PHONY: test-gpu-decode-attn256
 GPU_DATTN256_TEST = $(OUT_DIR)/gpu_decode_attn256_test
-$(GPU_DATTN256_TEST): tests/gpu_decode_attn256_test.c tests/bw_warp_sim_k.h src/omega_gpu_decode_attn256_api.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn256_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_DATTN256_TEST): tests/gpu_decode_attn256_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn256_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 	$(GPU_DATTN256_TEST) --host-only
 	$(GPU_DATTN256_TEST) --sim
@@ -2541,8 +2464,8 @@ test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 # (oracle, budgets) plus the warp simulator; the chip gate is tools/run_gpu_router_chip.sh under the GB10 lock.
 .PHONY: test-gpu-router
 GPU_ROUTER_TEST = $(OUT_DIR)/gpu_router_test
-$(GPU_ROUTER_TEST): tests/gpu_router_test.c tests/bw_warp_sim_k.h src/omega_gpu_router_api.h src/omega_blackwell_codegen_router.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_router_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_ROUTER_TEST): tests/gpu_router_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_router_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_router.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_router_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-router: $(GPU_ROUTER_TEST)
 	./$(GPU_ROUTER_TEST) --host-only
 	./$(GPU_ROUTER_TEST) --sim
@@ -2551,15 +2474,15 @@ test-gpu-router: $(GPU_ROUTER_TEST)
 # test-gpu-gdn is host-only plus the warp simulator over the whole grid; the chip run is ./build/gpu_gdn_test under the GB10 lock.
 .PHONY: test-gpu-gdn
 GPU_GDN_TEST = $(OUT_DIR)/gpu_gdn_test
-$(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_gdn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gdn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # L369: the multi-token GDN decode == T decode steps bit for bit (--sim: simulator; default: the chip, under the GB10 lock)
 GPU_GDN_MULTI_TEST = $(OUT_DIR)/gpu_gdn_multi_test
-$(GPU_GDN_MULTI_TEST): tests/gpu_gdn_multi_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_multi_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_GDN_MULTI_TEST): tests/gpu_gdn_multi_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_gdn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gdn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_multi_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_DATTN256_MULTI_TEST = $(OUT_DIR)/gpu_dattn256_multi_test
-$(GPU_DATTN256_MULTI_TEST): tests/gpu_dattn256_multi_test.c src/omega_gpu_decode_attn256_api.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_dattn256_multi_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_DATTN256_MULTI_TEST): tests/gpu_dattn256_multi_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_dattn256_multi_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-gdn: $(GPU_GDN_TEST)
 	./$(GPU_GDN_TEST) --host-only
 	./$(GPU_GDN_TEST) --sim
@@ -2569,8 +2492,8 @@ test-gpu-gdn: $(GPU_GDN_TEST)
 # gate is tools/run_gpu_bf16_gemv_chip.sh under the GB10 lock.
 .PHONY: test-gpu-bf16-gemv
 GPU_BF16_TEST = $(OUT_DIR)/gpu_bf16_gemv_test
-$(GPU_BF16_TEST): tests/gpu_bf16_gemv_test.c tests/bw_warp_sim_k.h src/omega_gpu_bf16_gemv_api.h src/omega_blackwell_codegen_bf16.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_bf16_gemv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_BF16_TEST): tests/gpu_bf16_gemv_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_bf16.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_bf16_gemv_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 	$(GPU_BF16_TEST) --host-only
 	$(GPU_BF16_TEST) --sim
@@ -2580,30 +2503,30 @@ test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 # epilogue, mutants 1-3 caught); the chip gate is tools/run_gpu_tern_chip.sh with the quiet flag held.
 .PHONY: test-gpu-tern
 GPU_TERN_TEST = $(OUT_DIR)/gpu_tern_test
-$(GPU_TERN_TEST): tests/gpu_tern_test.c tests/bw_warp_sim_k.h src/omega_gpu_tern_api.h src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off $(OMA_RZ_ARCH) -Itests -o $@ tests/gpu_tern_test.c $(OMA_RZ_SRCS) $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_TERN_TEST): tests/gpu_tern_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_tern_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off $(OMA_RZ_ARCH) -Itests -o $@ tests/gpu_tern_test.c $(OMA_RZ_SRCS) $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-tern: $(GPU_TERN_TEST)
 	$(GPU_TERN_TEST) --host-only
 	$(GPU_TERN_TEST) --sim
 
 # OWN-30B (2026-10-13): report-only lm_head study, fp8 vs bf16 argmax agreement on the real checkpoint (chip, GB10 lock).
-$(OUT_DIR)/gpu_lmhead_fp8_study: tests/gpu_lmhead_fp8_study.c src/omega_gpu_bf16_gemv_api.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -O2 -o $@ tests/gpu_lmhead_fp8_study.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(OUT_DIR)/gpu_lmhead_fp8_study: tests/gpu_lmhead_fp8_study.c $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -O2 -o $@ tests/gpu_lmhead_fp8_study.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM (omega_gpu_fp8gemm_api.h). test-gpu-fp8gemm is host-only (emulation,
 # permutation, budgets) plus the warp simulator (512 threads); the chip gate is tools/run_gpu_fp8gemm_chip.sh under the GB10 lock.
 .PHONY: test-gpu-fp8gemm
 GPU_FP8GEMM_TEST = $(OUT_DIR)/gpu_fp8gemm_test
-$(GPU_FP8GEMM_TEST): tests/gpu_fp8gemm_test.c tests/bw_warp_sim_k.h src/omega_gpu_fp8gemm_api.h src/omega_blackwell_codegen_gemm.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_fp8gemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_FP8GEMM_TEST): tests/gpu_fp8gemm_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8gemm_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gemm.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_fp8gemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # Qwen3.6-35B (sc L306 / L312) host-only simulator checks of the decode glue kernels, and the codegen hash pin
 Q36_DEC_SIM_TEST = $(OUT_DIR)/q36_dec_sim_test
-$(Q36_DEC_SIM_TEST): tests/q36_dec_sim_test.c tests/bw_warp_sim_k.h src/omega_blackwell_codegen_dec.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/q36_dec_sim_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(Q36_DEC_SIM_TEST): tests/q36_dec_sim_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/q36_dec_sim_test.c $(GPU_LINK_LIBS) -lpthread -lm
 Q36_CODEGEN_HASH = $(OUT_DIR)/q36_codegen_hash
-$(Q36_CODEGEN_HASH): tests/q36_codegen_hash.c $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -Itests -o $@ tests/q36_codegen_hash.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(Q36_CODEGEN_HASH): tests/q36_codegen_hash.c $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -Itests -o $@ tests/q36_codegen_hash.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-fp8gemm: $(GPU_FP8GEMM_TEST)
 	$(GPU_FP8GEMM_TEST) --host-only
 	$(GPU_FP8GEMM_TEST) --sim
@@ -2611,56 +2534,56 @@ test-gpu-fp8gemm: $(GPU_FP8GEMM_TEST)
 # OWN-30B (2026-10-13): host-only audit that every launcher declares peak + 2 registers (the chip hung at peak + 1).
 .PHONY: test-gpu-gpr-boundary
 GPU_GPR_BOUNDARY_TEST = $(OUT_DIR)/gpu_gpr_boundary_test
-$(GPU_GPR_BOUNDARY_TEST): tests/gpu_gpr_boundary_test.c src/omega_blackwell_codegen.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -o $@ tests/gpu_gpr_boundary_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_GPR_BOUNDARY_TEST): tests/gpu_gpr_boundary_test.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/gpu_gpr_boundary_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-gpr-boundary: $(GPU_GPR_BOUNDARY_TEST)
 	$(GPU_GPR_BOUNDARY_TEST)
 
 # OWN-30B T3 (2026-10-13): HMMA arithmetic probe (host model self-checks; chip run under the GB10 lock).
 GPU_TC_PROBE_TEST = $(OUT_DIR)/gpu_tc_probe_test
-$(GPU_TC_PROBE_TEST): tests/gpu_tc_probe_test.c tests/bw_hmma_model.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_tc_probe_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_TC_PROBE_TEST): tests/gpu_tc_probe_test.c tests/bw_hmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_tc_probe_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 GPU_TCGEMM_TEST = $(OUT_DIR)/gpu_tcgemm_test
-$(GPU_TCGEMM_TEST): tests/gpu_tcgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tcgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_TCGEMM_TEST): tests/gpu_tcgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tcgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 GPU_TC_PEAK_TEST = $(OUT_DIR)/gpu_tc_peak_test
-$(GPU_TC_PEAK_TEST): tests/gpu_tc_peak_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tc_peak_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_TC_PEAK_TEST): tests/gpu_tc_peak_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tc_peak_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B L1 attention (2026-10-13): tensor-core causal prefill attention. --host-only and --sim are host proofs;
 # the chip gate is tools/run_gpu_prefill_attn_chip.sh.
 GPU_PATTN_TEST = $(OUT_DIR)/gpu_prefill_attn_test
-$(GPU_PATTN_TEST): tests/gpu_prefill_attn_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h src/omega_gpu_prefill_attn_api.h src/omega_blackwell_codegen_pattn.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_PATTN_TEST): tests/gpu_prefill_attn_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pattn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # Qwen3.8-27B (omega-mv#545, 2026-10-18): head_dim 256 prefill attention on the decode cache. --host-only and --sim
 # are host proofs; the chip run is the default mode (under the GB10 lock).
 GPU_PATTN256_TEST = $(OUT_DIR)/gpu_prefill_attn256_test
-$(GPU_PATTN256_TEST): tests/gpu_prefill_attn256_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h src/omega_gpu_prefill_attn256_api.h src/omega_blackwell_codegen_pattn256.h src/omega_blackwell_codegen_attn256.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn256_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_PATTN256_TEST): tests/gpu_prefill_attn256_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pattn256.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn256_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # OWN-30B T3b (2026-10-13): device-resident prefill module tests (host sim first; chip parts under the GB10 lock)
 GPU_PF_MEM_TEST = $(OUT_DIR)/gpu_pf_mem_test
-$(GPU_PF_MEM_TEST): tests/gpu_pf_mem_test.c tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_pf.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pf_mem_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_PF_MEM_TEST): tests/gpu_pf_mem_test.c tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pf.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pf_mem_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_PFGEMM_TEST = $(OUT_DIR)/gpu_pfgemm_test
-$(GPU_PFGEMM_TEST): tests/gpu_pfgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_tc2.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pfgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_PFGEMM_TEST): tests/gpu_pfgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc2.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pfgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_QMMA_PROBE_TEST = $(OUT_DIR)/gpu_qmma_probe_test
-$(GPU_QMMA_PROBE_TEST): tests/gpu_qmma_probe_test.c tests/bw_qmma_model.h src/omega_blackwell_codegen_qmma.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_qmma_probe_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_QMMA_PROBE_TEST): tests/gpu_qmma_probe_test.c tests/bw_qmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_qmma.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_qmma_probe_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_QGEMM_TEST = $(OUT_DIR)/gpu_qgemm_test
-$(GPU_QGEMM_TEST): tests/gpu_qgemm_test.c tests/bw_qmma_model.h tests/bw_warp_sim_tc.h src/omega_gpu_prefill.h src/omega_blackwell_codegen_qg.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_qgemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_QGEMM_TEST): tests/gpu_qgemm_test.c tests/bw_qmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_qg.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_qgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_PFHOST_TEST = $(OUT_DIR)/gpu_pfhost_test
-$(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h src/omega_gpu_pfhost.h src/omega_blackwell_codegen_pfhost.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_pfhost_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_pfhost.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pfhost.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_pfhost_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # OWN-30B W-L2 (2026-10-13): command list (many launches, one submission) + decode glue kernels. test-gpu-cmdlist is
 # host-only + warp simulator; the chip gate is tools/run_gpu_cmdlist_chip.sh under the GB10 lock.
 .PHONY: test-gpu-cmdlist
 GPU_CMDLIST_TEST = $(OUT_DIR)/gpu_cmdlist_test
-$(GPU_CMDLIST_TEST): tests/gpu_cmdlist_test.c tests/bw_warp_sim_k.h src/omega_gpu_cmdlist.h src/omega_blackwell_codegen_dec.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_cmdlist_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_CMDLIST_TEST): tests/gpu_cmdlist_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_cmdlist_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 	./$(GPU_CMDLIST_TEST) --host-only
 	./$(GPU_CMDLIST_TEST) --sim
@@ -2670,8 +2593,8 @@ test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 # with no flag, under the GB10 lock (timings need an exclusive window).
 .PHONY: test-gpu-streams
 GPU_STREAMS_TEST = $(OUT_DIR)/gpu_streams_test
-$(GPU_STREAMS_TEST): tests/gpu_streams_test.c tests/bw_warp_sim.h src/omega_gpu_cmdlist.h src/omega_bw_em.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_streams_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_STREAMS_TEST): tests/gpu_streams_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(CUDAPP_SOURCE)/src/omega_bw_em.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_streams_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-streams: $(GPU_STREAMS_TEST)
 	./$(GPU_STREAMS_TEST) --sim
 
@@ -2680,8 +2603,8 @@ test-gpu-streams: $(GPU_STREAMS_TEST)
 # the chip tier is "$(GPU_ISOLATION_TEST)" with no flag, under the GB10 lock.
 .PHONY: test-gpu-isolation
 GPU_ISOLATION_TEST = $(OUT_DIR)/gpu_isolation_test
-$(GPU_ISOLATION_TEST): tests/gpu_isolation_test.c tests/bw_warp_sim.h src/omega_gpu_session.h src/omega_bw_em.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_isolation_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_ISOLATION_TEST): tests/gpu_isolation_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(CUDAPP_SOURCE)/src/omega_bw_em.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_isolation_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-isolation: $(GPU_ISOLATION_TEST)
 	./$(GPU_ISOLATION_TEST) --host-only
 
@@ -2689,39 +2612,39 @@ test-gpu-isolation: $(GPU_ISOLATION_TEST)
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
 .PHONY: test-gpu-decode-graph
 GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
-$(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c src/omega_gpu_decode_graph.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST)
 	./$(GPU_DECODE_GRAPH_TEST) --host-only
 
 # OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
-$(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_launch_cost_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_launch_cost_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B W-L2d (2026-10-14): L2 reuse of FP8 GEMV weights between two launches of one list (tests/gpu_l2_reuse_test.c, chip only, GB10 lock).
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
-$(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # sc #642 (2026-10-18): Qwen3.8-27B decode graph (one token = one command list), chip test vs the APIs one call at a time
 .PHONY: test-gpu-q38-graph-host
 GPU_Q38_GRAPH_TEST = $(OUT_DIR)/gpu_q38_graph_test
-$(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c src/omega_gpu_q38_graph.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_q38_graph.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
 
 # HUM L314 exact two-pass lm_head (XBOUND simulator proofs; the chip run comes with the export)
 GPU_EXACT_HEAD_TEST = $(OUT_DIR)/gpu_exact_head_test
-$(GPU_EXACT_HEAD_TEST): tests/gpu_exact_head_test.c tests/bw_warp_sim_k.h src/omega_blackwell_codegen_dec.h src/omega_gpu_bf16_gemv_api.h src/omega_gpu_fp8_api.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_exact_head_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_EXACT_HEAD_TEST): tests/gpu_exact_head_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_exact_head_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # C3 (docs/OMEGA.md): sum, max, min and prefix sum of any length 1..2^28, bit-exact against the frozen order.
 # test-gpu-scan: host refusals, codegen, references vs exact sums and vs the E1 reference, then the warp simulator
 # (both orders, mutants caught). The chip tier is "$(GPU_SCAN_TEST)" with no flag, under the GB10 lock.
 GPU_SCAN_TEST = $(OUT_DIR)/gpu_scan_test
-$(GPU_SCAN_TEST): tests/gpu_scan_test.c tests/bw_warp_sim.h src/omega_gpu_scan.h src/omega_numeric_reduce.c src/omega_numeric.c $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_scan_test.c src/omega_numeric_reduce.c src/omega_numeric.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_SCAN_TEST): tests/gpu_scan_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_scan.h src/omega_numeric_reduce.c src/omega_numeric.c $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_scan_test.c src/omega_numeric_reduce.c src/omega_numeric.c $(GPU_LINK_LIBS) -lpthread -lm
 .PHONY: test-gpu-scan
 test-gpu-scan: $(GPU_SCAN_TEST)
 	./$(GPU_SCAN_TEST) --sim
@@ -2730,8 +2653,8 @@ test-gpu-scan: $(GPU_SCAN_TEST)
 # against the chip-measured tensor-core model. test-gpu-gemm: host refusals and codegen, then the warp simulator.
 # The chip tier is "$(GPU_GEMM_TEST)" with no flag (>= 200 shapes up to 8192, speed vs the measured ceiling), under the GB10 lock.
 GPU_GEMM_TEST = $(OUT_DIR)/gpu_gemm_test
-$(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_model.h tests/bw_qmma_model.h src/omega_gpu_gemm.h $(OUT_DIR)/libomega_gpu.a
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gemm_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+$(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_model.h tests/bw_qmma_model.h $(CUDAPP_SOURCE)/src/omega_gpu_gemm.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 .PHONY: test-gpu-gemm
 test-gpu-gemm: $(GPU_GEMM_TEST)
 	./$(GPU_GEMM_TEST) --sim

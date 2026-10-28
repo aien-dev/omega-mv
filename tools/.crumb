@@ -26,50 +26,50 @@
       "children": [
         {
           "digest": "9f82d33852a7cdcedb210ee1525f42c4d963c18940cae1df7f69d1210de71985",
-          "last_commit": "d863780eb",
+          "last_commit": "d863780e",
           "name": "argus",
           "purpose": "Directory tools/argus. Purpose not yet described by a human."
         },
         {
           "digest": "4b3a030252eaa6f1c693105a76092e8a5fccfd340658a982f5bb1130ce9aba33",
-          "last_commit": "d863780eb",
+          "last_commit": "d863780e",
           "name": "brownian",
           "purpose": "Directory tools/brownian. Purpose not yet described by a human."
         },
         {
           "digest": "1d21e7e466d0fd96abf30d11b2d7e45718bc42ada1784bc8bc2a749f541b3ab7",
-          "last_commit": "d863780eb",
+          "last_commit": "d863780e",
           "name": "dual_experiment",
           "purpose": "Runner for the DUAL applicability experiment: runs the pre-registered campaign and writes result"
         },
         {
           "digest": "2a1bd46e9c9502d02144e3f76c784863001323c564a22bdae2905c0660a5f7a4",
-          "last_commit": "d863780eb",
+          "last_commit": "d863780e",
           "name": "estimation",
           "purpose": "Directory tools/estimation. Purpose not yet described by a human."
         },
         {
           "digest": "b3241d8cdc884bbfcca5cf9d5f4ed0aac8f7e2df43d9ab47ca2789432dd49a75",
-          "last_commit": "d863780eb",
+          "last_commit": "d863780e",
           "name": "reservoir",
           "purpose": "Gate 2 tooling for the reservoir (omega#440): in-house zlib inflate and MAT v5 reader, the archi"
         },
         {
           "digest": "f1a1a7f24d51a52f01171d01edbd59e8b15c53b15eeffb97e3c0ffc553e639af",
-          "last_commit": "d863780eb",
+          "last_commit": "d863780e",
           "name": "turing_verify_indep",
           "purpose": "Directory tools/turing_verify_indep. Purpose not yet described by a human."
         }
       ],
       "children_root": "sha256:8d3d3b952374b3b72e667521f07bf028c4c02bcefff772ad1a71cfff3e5266f2",
-      "compiled_at": "2026-10-28T02:06:07Z",
+      "compiled_at": "2026-10-28T18:40:57Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:4e83dea21da137c30076c2dc0ca4f3a488f576f30a94e334558ad5ea523f3a6b",
+      "digest": "sha256:51ffb23dba87627d105a76d899d9e01ddfcdc3fc1c9f7acd4eec016adc33043e",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 295,
-      "generated_at_commit": "82509c4f949504dc63f13371607b211c14cdee74",
-      "source_tree": "sha256:319916f06e7ad69219b50ea9df5420b8baec42170d0ba675632059208dda0949"
+      "files": 296,
+      "generated_at_commit": "841001e42fdc87b9d627334add9288f8748a578d",
+      "source_tree": "sha256:f0ae0c6b0a24fbad020a361ae0dd1a44f2cbc098af26ce20bcaf9c133ce03b87"
     },
     "owner_lane": "",
     "provenance": {

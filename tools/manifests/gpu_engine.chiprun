@@ -30,10 +30,15 @@ CHILD_EXIT_PASSTHROUGH=1
 HOST_TIER_CMD="make test-gpu-engine-sim test-gpu-engine-backend-mutants PHYSICS_DIR=\"$PHYSICS\""
 # Authenticate before any host build; the final stage is the only GPU source authority.
 canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
-canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage") || return 2
+case $canonical_stage in /*) ;; *) canonical_stage=$HERE/$canonical_stage;; esac
+canonical_log=$(mktemp) || return 2
+if ! canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage" 2>"$canonical_log"); then
+    cat "$canonical_log" >&2; rm -f -- "$canonical_log"; return 2
+fi
+rm -f -- "$canonical_log" || return 2
 canonical_root=$(cd -P "$canonical_stage/source" && pwd) || return 2
-PHYSICS=$canonical_root
-EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
+GPU_SOURCE_ROOT=$canonical_root
+EXTRA_BUILD_SOURCES="$GPU_SOURCE_ROOT/nvrm/nvrm.c $GPU_SOURCE_ROOT/m16/m16_native.c $canonical_stage/build/libcudapp.a"
 canonical_sources=
 for canonical_file in $SOURCES; do
     case $canonical_file in

@@ -70,9 +70,12 @@ mkdir -p "$OMEGA/build/tensor-runs" || die "cannot create build/tensor-runs"
 OUT=$(mktemp -d "$OMEGA/build/tensor-runs/$RUN_ID.XXXXXX") || die "cannot create a run directory"
 RUN_ID=$(basename "$OUT")
 BIN=$OUT/test_omega_tensor_gb10
+make -s -C "$OMEGA" PHYSICS_DIR="$PHYS" check-cudapp || die "canonical source stage failed"
+WORK=$OUT/source
+bash "$OMEGA/tools/e1_manifest.sh" --canonical-overlay "$WORK" || die "canonical source verification failed"
 NV=$PHYS/third_party/nvidia-open-580.173.02
 FAIL_REASON=""
-(cd "$OMEGA" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off \
+(cd "$WORK" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off \
     -Isrc -Isrc/tensor -I"$PHYS/forge" -I"$PHYS/nvrm" -I"$PHYS/m16" \
     -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" \
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
@@ -82,7 +85,7 @@ FAIL_REASON=""
     src/omega_numeric.c src/omega_numeric_gb10.c src/omega_numeric_divsqrt_gb10.c \
     src/omega_numeric_provenance.c src/omega_blackwell_codegen.c \
     src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c \
-    src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
+    src/forge_realization.c src/aegis_verification.c src/omega_om_units.c src/cudapp_om_units.c \
     "$PHYS/forge/forge_descriptor.c" "$PHYS/forge/forge_realize.c" "$PHYS/sha256_clean.c" \
     "$PHYS/nvrm/nvrm.c" "$PHYS/m16/m16_native.c") > "$OUT/build.log" 2>&1 || FAIL_REASON="build failed"
 if [ -z "$FAIL_REASON" ]; then
@@ -148,6 +151,7 @@ jq -n --arg suite M20_TENSOR_GB10_PARITY --arg status "$VERDICT" --arg reason "$
     --arg run_id "$RUN_ID" --arg commit "$COMMIT" --arg physics "$PHEAD" --arg pin "$LOCKED" \
     --argjson clean_after "$CLEAN_AFTER" --argjson head_same "$HEAD_SAME" \
     --argjson pclean_after "$PCLEAN_AFTER" --argjson phead_same "$PHEAD_SAME" \
+    --slurpfile canonical "$WORK/cudapp-source.json" \
     --arg started "$STARTED" --arg finished "$FINISHED" \
     --arg order "RECURSIVE_TILE32_PAIRWISE_TREE_LANE_DELTA_16_8_4_2_1_PAD_IDENTITY_MIN_ONE_LEVEL" \
     --arg mm_order "MATMUL_V1_FMUL_RNE_PRODUCTS_THEN_E1_REDUCE_SUM_RECURSIVE_TILE32_PAIRWISE_TREE_LANE_DELTA_16_8_4_2_1_PAD_IDENTITY_MIN_ONE_LEVEL" \
@@ -160,6 +164,7 @@ jq -n --arg suite M20_TENSOR_GB10_PARITY --arg status "$VERDICT" --arg reason "$
     '{suite:$suite,status:$status,reason:$reason,run_id:$run_id,started_utc:$started,finished_utc:$finished,
       omega_commit:$commit,omega_tree_clean_before:true,omega_tree_clean_after:$clean_after,
       omega_commit_unchanged_after:$head_same,physics_commit:$physics,physics_lock_pin:$pin,
+      canonical_source:$canonical[0],
       physics_tree_clean_before:true,physics_tree_clean_after:$pclean_after,physics_commit_unchanged_after:$phead_same,
       reduce_declared_order:$order,matmul_declared_order:$mm_order,binary_sha256:$bin,chip_log_sha256:$log,
       chip_stderr_sha256:$errlog,devfail_lines:$devfail_n,failed_gb10_calls:$failed_calls_n,

@@ -1,0 +1,121 @@
+om2
+note SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+note Receipt serialization only, never admission or qualification authority.
+text JHead "{\"source\":\"git-object\",\"cudapp_pin\":\""
+text JSrc "\",\"source_archive_sha256\":\""
+text JGuard "\",\"guard_sha256\":\""
+text JLib "\",\"library_sha256\":\""
+text JPath "\",\"source_path\":\""
+text JEnd "\"}\n"
+text JHex "0123456789abcdef"
+fn jr_copy dst edit uchar 16384 pos ulong src view uchar * n ulong to ulong
+if gt add pos n len dst
+exit 3
+end
+for i ulong n
+put dst add pos i get src i
+end
+ret add pos n
+end
+fn jr_hex b view uchar 8192 start ulong n ulong to void
+for i ulong n
+c = get b add start i
+if not or and ge c 48 le c 57 and ge c 97 le c 102
+exit 3
+end
+end
+end
+fn main to int
+b = new uchar 8192 0
+dst = new uchar 16384 0
+used = ulong 0
+while lt used len b bound 8192
+r = read 0 b used sub len b used
+if eq r 0
+break
+end
+if eq r -4
+continue
+end
+if lt r 0
+ret 3
+end
+used = add used ulong r
+end
+if or lt used 238 ge used len b
+ret 3
+end
+if or ne get b 40 10 or ne get b 105 10 or ne get b 170 10 ne get b 235 10
+ret 3
+end
+if ne get b sub used 1 10
+ret 3
+end
+jr_hex b 0 40
+jr_hex b 41 64
+jr_hex b 106 64
+jr_hex b 171 64
+pos = jr_copy dst 0 JHead len JHead
+for i ulong 40
+put dst pos get b i
+pos = add pos 1
+end
+pos = jr_copy dst pos JSrc len JSrc
+for i ulong 64
+put dst pos get b add 41 i
+pos = add pos 1
+end
+pos = jr_copy dst pos JGuard len JGuard
+for i ulong 64
+put dst pos get b add 106 i
+pos = add pos 1
+end
+pos = jr_copy dst pos JLib len JLib
+for i ulong 64
+put dst pos get b add 171 i
+pos = add pos 1
+end
+pos = jr_copy dst pos JPath len JPath
+for i ulong sub used 237
+if gt add pos 6 len dst
+ret 3
+end
+c = get b add 236 i
+if eq c 0
+ret 3
+end
+if or eq c 34 eq c 92
+put dst pos 92
+pos = add pos 1
+else
+if lt c 32
+put dst pos 92
+put dst add pos 1 117
+put dst add pos 2 48
+put dst add pos 3 48
+put dst add pos 4 get JHex shr c 4
+put dst add pos 5 get JHex and c 15
+pos = add pos 6
+continue
+end
+end
+put dst pos c
+pos = add pos 1
+end
+pos = jr_copy dst pos JEnd len JEnd
+sent = ulong 0
+while lt sent pos bound 16384
+r = write 1 dst sent sub pos sent
+if eq r -4
+continue
+end
+if le r 0
+ret 3
+end
+sent = add sent ulong r
+end
+if ne sent pos
+ret 3
+end
+ret 0
+end

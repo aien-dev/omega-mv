@@ -45,6 +45,57 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 
 [aienux](https://github.com/aien-dev/aienux) holds Aienux, the kernel of AienOS, which Omega is meant to run on. [physics](https://github.com/aien-spark/physics) provides FORGE machine realization and the GB10 native path (pinned in `physics.lock`). [aien-architecture](https://github.com/aien-spark/aien-architecture) owns status and sequencing. ARGUS-0/1 (a defensive plane) is implemented in aienux (`native/argus`, pinned by `argus.lock`); Omega only carries the opt-in `RX_ARGUS` hooks (`src/runtime/rx_argus.c`) and receipts in `evidence/ARGUS/`. Physics Zero exists here as a host benchmark apparatus and learner (`src/physics0/`, `tests/physics0/`, `mk/physics0-learner.mk`, `docs/physics0/`, receipts in `evidence/physics0/`), with its specifications in the physics repository. DIRAC-0 is a specification in aien-architecture plus an oracle source in `research/dirac-oracle/` that has never been built or run. The Evolution Arena is a plan only.
 
+### Canonical native GPU sources
+
+`cudapp.lock` pins the CUDApp source consumed by this tree. Native GPU implementation, driver closure, generated native GPU units and their public headers come from that revision, not from a second Omega copy. `tools/cudapp-stage.sh` authenticates the checkout, materializes its committed tree, checks native-unit regeneration, builds the canonical archive and publishes an immutable stage under `OUT_DIR/cudapp`. Every native build authenticates that stage again, including a build without `make clean`. A missing or different pin, missing source, changed source or changed archive refuses the build. There is no lock-check bypass.
+
+Set `CUDAPP_DIR` to a checkout whose HEAD is exactly `cudapp.lock`, `OMEGA_OMC` to the seeded compiler with SHA-256 `2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f` (Omega `e5b32567a7aff3ce594e3254a622a846a6cd190b`), and `OMEGA_BRIDGE` to omega-bridge `0c4cb9ff980af278890b231b994eaede4dc7621c`. The canonical library is linked after Omega's retained CPU objects. Omega's CPU SHA-256/BLAKE3 binding retains its separately recorded compiler and bridge pins in `om/units.sh` and `om/omega-bridge.lock`; those are not the native GPU binding.
+
+`tests/cudapp_retirement_sources.json` records all 123 removed source/header paths, their exact historical and canonical object identities, and the SHA-256 of the preserved original-source archive. Omega retains its unique Blackwell qualification adapter and resident runtime adapter. Historical receipts and unmerged branches, including #618, are not rewritten or represented as newly qualified. The remaining CPU implementation overlap is explicit: Omega's CPU companion objects precede the canonical archive; native GPU implementation comes only from CUDApp.
+
+Standalone chip collectors use the same authenticated stage or disposable canonical overlay and retain their existing device-authorization requirements. Their `canonical_source` field embeds the existing `.om` stage-verifier object unchanged; it is source provenance, not qualification authority. M17 reruns refuse an existing receipt or corpus manifest: set `M17_EVIDENCE_DIR` to a fresh evidence directory rather than replacing historical evidence. A build-only check of a chip collector is not a chip run.
+
+This ownership cutover does not activate new native candidates. Existing artifact admission remains authoritative; new candidates have no production qualification record and remain refused. Host fixtures use explicitly synthetic handles. GPU execution, exact-artifact independent hardware qualification and full-model parity/performance are separate authorized gates, not consequences of staging, compilation or host tests.
+
+#### Existing 35B candidate acceptance boundary
+
+The first whole-model target is the existing Q36 35B inference path on Spark,
+not a new operator, adapter or hardware backend. Before an authorized device run,
+freeze one manifest containing the Core source and executable hashes, this Omega
+source, `cudapp.lock`, staged source/archive hashes, all generated-unit identities,
+compiler and bridge pins, model/config/tokenizer/weight/scale content identities,
+exact command/environment, admission records and workload inputs. The capacity
+repair CUDApp #173 and command-lifetime repair #174 are candidate prerequisites;
+pending source is not merged source and historical component receipts are not
+qualification of that manifest.
+
+Build the canonical archive through `check-cudapp`, then build the existing Core
+35B consumer against that exact archive without an alternate GPU implementation.
+Retain the link map and verify the consumed archive and generated-unit identities.
+Run host/refusal controls first, including wrong pin, changed source/archive,
+shape/grouped-MoE admission, capacity exhaustion, command disposal and recovery.
+Production resolver `NULL` and record count zero remain unchanged; a build-only
+candidate does not acquire production admission.
+
+Actual inference requires a current authorized GPU reservation and an isolated
+endpoint, never an unapproved replacement or second large model beside the resident
+service. Compare the candidate with the saved qualified incumbent using identical
+model bytes, prompts, decoding settings, context and slot configuration. Record
+correctness and numerical/model-quality results, complete prefill/decode timings,
+peak and steady memory, repeated-run reliability, timeout/refusal and recovery
+behavior, and effects on neighboring processes. Cover one-user and existing
+multi-user workloads, ragged/large-M prefill and grouped experts; bind every actual
+recorded code/launch occurrence before submission. A partial run, a mismatched
+artifact or any unaccepted qualification refuses activation. GPU, full-model,
+memory, speed, recovery and neighboring-process outcomes remain NOT_RUN until
+measured against the frozen candidate; publish new receipts without changing old ones.
+
+This path still depends on Linux and NVIDIA's kernel driver/firmware; the vendored
+driver interface headers are version `580.173.02`. Record the actual running driver
+and firmware versions in the candidate manifest. Removing CUDA userspace imports
+does not establish an independent driver, generic CUDA compatibility or a drop-in
+replacement for arbitrary applications.
+
 ## Standing rules
 
 Language rule: `.om` is the only forward first-party implementation language. Implement and qualify each replacement, switch its actual consumers, then remove the superseded first-party source and obsolete build/runtime dependencies from the active tree. This includes compiler/runtime code, services, tools, automation and project-owned tests; C/Rust/shell remaining today are unfinished migration, not permanent exemptions. Preserve Git history and immutable evidence. External protocol formats, generated machine code, device firmware and independently sourced qualification oracles have separately declared roles; they must not conceal a foreign implementation of Omega. See the [replacement/deletion contract](https://github.com/aien-dev/aien-architecture-mv/issues/300).

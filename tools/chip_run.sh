@@ -20,6 +20,8 @@
 # The gcc line is the transc/unwritten-trap one; reduce differs (see NOT COVERED).
 # MANIFEST is shell syntax setting: GATE TEST_SOURCE SOURCES EXTRA_BUILD_SOURCES (relative
 #   to the omega root, may use $PHYSICS and $HERE) RUN_ARGS VERDICT_RE PASS_LINE OWNER
+#   GPU_SOURCE_ROOT (native headers/driver closure; defaults to the independently
+#   pinned Physics checkout; canonical manifests authenticate their CUDApp root)
 #   EVIDENCE_DIR RAISE_QUIET TAKE_GPU_LOCK REFUSE_DIRTY_OMEGA (default 1) REFUSE_EXIT
 #   (default 2; must be an integer 1..125, else exit 1 "CHIP_RUN: BAD_MANIFEST") REFUSE_VERDICT_LINE
 #   (default "CHIP_RUN: NOT_RUN") REQUIRE_ALL_PASS (default 0; 0 or 1; when 1 EVERY line matching
@@ -136,6 +138,7 @@ seam_check # REFUSAL:seam_before
 # Physics dir resolution lives here and nowhere else.
 PHYSICS=${PHYS_FLAG:-${PHYSICS_DIR:-${PHYSICS:-$HOME/workspace/physics}}}
 PHYSICS=$(realpath -m "$PHYSICS")
+GPU_SOURCE_ROOT=$PHYSICS
 
 GATE=""; TEST_SOURCE=""; SOURCES=""; EXTRA_BUILD_SOURCES=""; RUN_ARGS=""; VERDICT_RE=""; PASS_LINE=""
 OWNER=""; EVIDENCE_DIR=""; RAISE_QUIET=1; TAKE_GPU_LOCK=1; REFUSE_DIRTY_OMEGA=1; HOST_TIER_CMD=""; RECEIPT_EXTRA_JQ=""; REQUIRE_ALL_PASS=0; CHILD_EXIT_PASSTHROUGH=0; ECHO_RE=""; GPU_LOCK_MODE=flock
@@ -205,9 +208,9 @@ else
     BIN=$RUN/$GATE.bin
     read -ra SRCS <<< "$TEST_SOURCE $SOURCES $EXTRA_BUILD_SOURCES"
     for s in "${SRCS[@]}"; do case $s in /*) f=$s ;; *) f=$HERE/$s ;; esac; [ -f "$f" ] || refuse "missing source $s"; done # REFUSAL:missing_source
-    NV=$PHYSICS/$NVDIR
+    NV=$GPU_SOURCE_ROOT/$NVDIR
     (cd "$HERE" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -pthread \
-        -Isrc -I"$PHYSICS/nvrm" -I"$PHYSICS/m16" \
+        -I"$GPU_SOURCE_ROOT/src" -Isrc -I"$GPU_SOURCE_ROOT/nvrm" -I"$GPU_SOURCE_ROOT/m16" \
         -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" \
         -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
         -o "$BIN" "${SRCS[@]}") > "$RUN/chip-build.log" 2>&1; BRC=$?

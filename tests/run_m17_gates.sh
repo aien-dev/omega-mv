@@ -15,13 +15,18 @@
 # limitations under the License.
 
 # tests/run_m17_gates.sh: Master Qualification Gate Runner for Milestone 17 (OMEGA_BLACKWELL_VECTOR)
-set -eu
+set -euC
 
 OMEGA_ROOT=$(cd "$(dirname "$0")/.." && pwd -P)
 cd "$OMEGA_ROOT"
 TOOL="$OMEGA_ROOT/${OUT_DIR:-build}/omegatool"
-EVIDENCE_DIR="$OMEGA_ROOT/evidence"
+EVIDENCE_DIR=${M17_EVIDENCE_DIR:-"$OMEGA_ROOT/evidence"}
 RECEIPT="$EVIDENCE_DIR/omega_blackwell_vector_qualification_receipt.json"
+# A canonical rerun must never replace a historical qualification receipt.
+if [ -e "$RECEIPT" ] || [ -e "$EVIDENCE_DIR/m17_corpus_digests.txt" ]; then
+    echo "M17 evidence already exists; choose a fresh M17_EVIDENCE_DIR" >&2
+    exit 2
+fi
 
 echo "================================================================================"
 echo "    AIEN OMEGA SUBSTRATE: MILESTONE 17: BLACKWELL VECTOR QUALIFICATION"
@@ -37,6 +42,16 @@ make -C "$OMEGA_ROOT" clean
 make -C "$OMEGA_ROOT" -j
 echo "    Build OK."
 echo ""
+# The existing .om stage verifier supplies provenance, not qualification.
+CANONICAL="$EVIDENCE_DIR/m17_blackwell_vector/canonical-source"
+bash "$OMEGA_ROOT/tools/e1_manifest.sh" --canonical-evidence "$CANONICAL" \
+    src/omega_blackwell_encoder.c src/omega_blackwell_encoder.h \
+    src/omega_blackwell_qmd.c src/omega_blackwell_qmd.h \
+    src/omega_blackwell_realize.c src/omega_blackwell_realize.h \
+    src/omega_blackwell_submit.c src/omega_blackwell_submit.h \
+    src/omega_blackwell_engine.c src/omega_blackwell_engine.h
+CANONICAL_SOURCE=$(cat "$CANONICAL/CUDAPP-SOURCE.json")
+
 
 # Step 2: Run all 18 M17 qualification gates
 echo "[*] Step 2: Evaluating 18 canonical M17 qualification gates on physical GB10 SM..."
@@ -68,20 +83,20 @@ echo ""
 # Step 5: Compute artifact digests
 echo "[*] Step 5: Computing artifact digests..."
 mkdir -p "$EVIDENCE_DIR/m17_blackwell_vector"
-sha256sum "$OMEGA_ROOT/src/omega_vector."*           "$OMEGA_ROOT/src/omega_blackwell_encoder."*           "$OMEGA_ROOT/src/omega_blackwell_qmd."*           "$OMEGA_ROOT/src/omega_blackwell_realize."*           "$OMEGA_ROOT/src/omega_blackwell_submit."*           "$OMEGA_ROOT/src/omega_blackwell_engine."*           "$OMEGA_ROOT/src/omega_blackwell_gates."*           "$TOOL" > "$EVIDENCE_DIR/m17_corpus_digests.txt"
+sha256sum "$OMEGA_ROOT/src/omega_vector."* "$OMEGA_ROOT/src/omega_blackwell_gates."* "$CANONICAL/"* "$TOOL" > "$EVIDENCE_DIR/m17_corpus_digests.txt"
 
 DIGEST_VEC_C=$(sha256sum "$OMEGA_ROOT/src/omega_vector.c" | cut -d' ' -f1)
 DIGEST_VEC_H=$(sha256sum "$OMEGA_ROOT/src/omega_vector.h" | cut -d' ' -f1)
-DIGEST_ENC_C=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_encoder.c" | cut -d' ' -f1)
-DIGEST_ENC_H=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_encoder.h" | cut -d' ' -f1)
-DIGEST_QMD_C=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_qmd.c" | cut -d' ' -f1)
-DIGEST_QMD_H=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_qmd.h" | cut -d' ' -f1)
-DIGEST_REAL_C=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_realize.c" | cut -d' ' -f1)
-DIGEST_REAL_H=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_realize.h" | cut -d' ' -f1)
-DIGEST_SUB_C=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_submit.c" | cut -d' ' -f1)
-DIGEST_SUB_H=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_submit.h" | cut -d' ' -f1)
-DIGEST_ENGINE_C=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_engine.c" | cut -d' ' -f1)
-DIGEST_ENGINE_H=$(sha256sum "$OMEGA_ROOT/src/omega_blackwell_engine.h" | cut -d' ' -f1)
+DIGEST_ENC_C=$(sha256sum "$CANONICAL/omega_blackwell_encoder.c" | cut -d' ' -f1)
+DIGEST_ENC_H=$(sha256sum "$CANONICAL/omega_blackwell_encoder.h" | cut -d' ' -f1)
+DIGEST_QMD_C=$(sha256sum "$CANONICAL/omega_blackwell_qmd.c" | cut -d' ' -f1)
+DIGEST_QMD_H=$(sha256sum "$CANONICAL/omega_blackwell_qmd.h" | cut -d' ' -f1)
+DIGEST_REAL_C=$(sha256sum "$CANONICAL/omega_blackwell_realize.c" | cut -d' ' -f1)
+DIGEST_REAL_H=$(sha256sum "$CANONICAL/omega_blackwell_realize.h" | cut -d' ' -f1)
+DIGEST_SUB_C=$(sha256sum "$CANONICAL/omega_blackwell_submit.c" | cut -d' ' -f1)
+DIGEST_SUB_H=$(sha256sum "$CANONICAL/omega_blackwell_submit.h" | cut -d' ' -f1)
+DIGEST_ENGINE_C=$(sha256sum "$CANONICAL/omega_blackwell_engine.c" | cut -d' ' -f1)
+DIGEST_ENGINE_H=$(sha256sum "$CANONICAL/omega_blackwell_engine.h" | cut -d' ' -f1)
 DIGEST_TOOL=$(sha256sum "$TOOL" | cut -d' ' -f1)
 
 QUALIFIED_COMMIT="$(git -C "$OMEGA_ROOT" rev-parse HEAD)"
@@ -113,6 +128,7 @@ cat <<RECEIPT_EOF > "$RECEIPT"
   "contract_id": "CONTRACT-OMEGA-BLACKWELL-VECTOR-M17",
   "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "qualified_implementation_commit": "$QUALIFIED_COMMIT",
+  "canonical_source": $CANONICAL_SOURCE,
   "host": {
     "os": "$(uname -s)",
     "arch": "$(uname -m)",

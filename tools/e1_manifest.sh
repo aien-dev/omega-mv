@@ -100,8 +100,15 @@ if [ "${1:-}" = --canonical-overlay ]; then
         }
     done
     mkdir -p "$target"
-    cp -R "$root/src" "$root/tests" "$target/"
-    cp -R "$source/src/." "$target/src/"
+    cp -R "$source/src" "$target/"
+    # Retained Omega CPU/adapters keep ownership; retired GPU paths no longer
+    # exist here and therefore remain the authenticated canonical versions.
+    cp -R "$root/src/." "$target/src/"
+    # Canonical GPU translation units use the public SHA facade, not Omega's
+    # generated CPU declaration header (whose native ABI guard is independent).
+    # The unchanged Omega binding remains the linked SHA implementation.
+    cp -- "$source/src/sha256.h" "$target/src/sha256.h"
+    cp -R "$root/tests" "$target/"
     # Capture each oracle's version as a checked command, not a command
     # substitution whose failure jq could otherwise mask.
     oracle_version() {

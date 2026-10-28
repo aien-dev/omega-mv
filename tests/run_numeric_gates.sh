@@ -162,19 +162,24 @@ num_check_physics() {
 
 # num_build OMEGA PHYSICS OUT LOG -- build the chip test binary.
 num_build() {
-    local omega=$1 p=$2 out=$3 log=$4 nv
+    local omega=$1 p=$2 out=$3 log=$4 nv stage
     nv=$p/third_party/nvidia-open-580.173.02
-    (cd "$omega" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off \
-        -Isrc -I"$p/forge" -I"$p/nvrm" -I"$p/m16" \
-        -I"$nv/src/common/sdk/nvidia/inc" -I"$nv/kernel-open/common/inc" \
+    stage=${CUDAPP_STAGE:-$omega/build/cudapp}
+    case $stage in /*) ;; *) stage=$omega/$stage;; esac
+    (cd "$omega" &&
+        sh tools/cudapp-stage.sh cudapp.lock "${CUDAPP_DIR:-../CUDApp}" "$stage" &&
+        CUDAPP_STAGE="$stage" bash tools/e1_manifest.sh --canonical-evidence "$out.canonical" \
+            src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
+            src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c &&
+        gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off \
+        -Isrc -I"$stage/source/src" -I"$stage/source/m16" -I"$stage/source/nvrm" \
+        -I"$p/forge" -I"$nv/src/common/sdk/nvidia/inc" -I"$nv/kernel-open/common/inc" \
         -I"$nv/kernel-open/nvidia-uvm" -I"$nv/src/nvidia/arch/nvalloc/unix/include" \
         -o "$out" tests/test_omega_numeric.c src/omega_numeric.c src/omega_numeric_gb10.c \
-        src/omega_numeric_divsqrt_gb10.c \
-        src/omega_numeric_provenance.c src/omega_blackwell_codegen.c \
-        src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c \
+        src/omega_numeric_divsqrt_gb10.c src/omega_numeric_provenance.c \
         src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
         "$p/forge/forge_descriptor.c" "$p/forge/forge_realize.c" "$p/sha256_clean.c" \
-        "$p/nvrm/nvrm.c" "$p/m16/m16_native.c") > "$log" 2>&1 ||
+        "$stage/build/libcudapp.a" -lpthread) > "$log" 2>&1 ||
         m19r_fail "build failed; see $log" || return 1
     if nm -u "$out" | grep -Eq '\b(sqrtf?|expf?|logf?|powf?|fmaf?|sinf?|cosf?|roundf?|fabsf?)\b'; then
         m19r_fail "libm math symbols found in $out"; return 1
