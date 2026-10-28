@@ -361,6 +361,30 @@ expanded name/function capacities. Those failures remain visible. Revising the
 contract requires an explicit decision; neither reverting safety fixes nor
 silently replacing current-candidate checks with historical replay is allowed.
 
+### Recovered OM-2 growth bound
+
+The recovered x86 byte emitter now enforces the same per-function emitted-storage
+budget as the AArch64 word emitter: 262144 bytes in an OM-2 function, including
+unrolled and inlined output. This is a storage bound, not an x86 instruction
+count. The total output-pool ceiling and expansion-fuel bounds remain unchanged.
+The existing growth fixtures must refuse with error 14 and empty stdout;
+their diagnostic twins must retain `obligation=growth`. Rolled and OM-1 controls
+remain accepted. Removing only the new guard is the negative control.
+
+Different instruction sizes reach that storage ceiling at different source
+locations. The corpus deliberately retains its literal cross-target refusal
+and diagnostic equality assertions: a clean refusal does not turn a different
+source location into PASS. Likewise, x86 bare-unit stack checks retain every
+`omc-site` record required by the recovery ABI; they are not suppressed to
+imitate AArch64's program-mode-only stack checks.
+
+The interrupted current-compiler mutant repairs re-anchor the S2 cycle and S3
+error-16 substitutions to their intended guards and distinguish the x86
+constant-index guard from the unchanged AArch64 occurrence. Historical mutant
+sources and frozen receipts remain unchanged. A5 kept-constructor and rotate
+bare-unit callers use the independently recorded exits in
+`candidates/s4/export/sec5.cases`, rather than incorrectly requiring exit zero.
+
 Disassembly uses bounded chunks starting at decoded instruction boundaries,
 with lookahead for crossing instructions. Every code byte and direct-branch
 target is still checked, including large generated images; the child output

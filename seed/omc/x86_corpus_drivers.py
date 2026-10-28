@@ -785,6 +785,12 @@ def plan_case(root, rel, source):
         elif sha == "92c7813513f2bb511bbacc53e1a351a417cabc10139134e477bfb61483005c92":
             plan["expected_exit"] = 5
             evidence["exit_authority"] = "seed/omc/om2/s3/s3.cases s3-a-om1"
+        elif sha in ("0ec2b5eb427d759eb7563f9dbf8cd1a921a23b9e80c9d7f779315490b23f274c", "c0c8cd2d3c8c9fe4e1cb8f9cfebb5af8d5c625368db1d9af713b0acb33504b24"):
+            plan["expected_exit"] = 110
+            evidence["exit_authority"] = "seed/qualification/om2/candidates/s4/export/sec5.cases a5-kept"
+        elif sha in ("1e0a5f4c22cee6170a7f6787fb6c1cc215e1ff9aa0e997bc8f7450c06b3a072b", "d7df44a4f803645594ec1e758201d8e1c672c4ebe94c553ed9b4cdca98bb4607"):
+            plan["expected_exit"] = 107
+            evidence["exit_authority"] = "seed/qualification/om2/candidates/s4/export/sec5.cases a5-rot64"
         return plan
     if sha == "2fe76d4c44b3e3faf6bfd250ebec794ba5b3d11b6b9199366549b664d219cc38":
         evidence["effect_review"] = "opens /dev/null write-only; overflowing slice must trap before write; original guard.cases requires exit103"

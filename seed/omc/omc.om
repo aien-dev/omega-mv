@@ -534,6 +534,14 @@ o = get oc 0
 if or ge o len out and eq get xtarget 0 0 ge o 8388608
 fail 14
 end
+note Charge x86's variable-width encoding to the same OM-2 emitted-storage budget as emit.
+if and ne get xtarget 0 0 ne get om2 0 0
+if ne get curret 0 0
+if ge sub o get fstart 0 262144
+fail 14
+end
+end
+end
 put out o b
 put oc 0 add o 1
 end
@@ -15224,7 +15232,7 @@ xcmp x ulong get nm_lr i 0
 xtrap 2 3
 else
 if eq k 3
-if ge v ln
+if le ln v
 fail 21
 end
 if and ne get om2 0 0 le v 4095

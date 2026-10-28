@@ -13,3 +13,5 @@ FR9-x86	x86-64 Linux semantic backend, private bare entries, SSE2 floats and nat
 FR9-x86-repair	checked numeric/value-loop contracts; target-specific output pool; dead-branch boundary repair; returnable private-unit traps	15543	512	118524	1f0fdef06574ffec782c164941114edcf51f36f9f9cd1e79bc0452dbcebb3322
 FR9-x86-index-diag	OM-2 constant-index addressing without extra virtual registers; retain trap-site diagnostic records	15555	512	118588	7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316
 FR9-x86-proof-sites	division/remainder/shift lowering retains shared constant proofs and only required source trap sites	15566	512	118654	f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409
+FR9-x86-mutant-repair	x86 constant index check distinct; re-anchor mutant s2/s3 drift; pure-name control exit authority	15566	512	118654	a4162d529b2d8d1e2ef8121a16ac61fa3d23c4919ac97202fe50cb4566a4ea6b
+FR9-x86-growth-bound	OM-2 x86 byte emission enforces the existing per-function emitted-storage ceiling; literal diagnostic/refusal parity retained	15574	512	118694	badedbb0c6287887641fcd7e97301b43b5f82f2d7a2838bbe0d17547873108be
