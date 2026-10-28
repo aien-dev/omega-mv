@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-28T02:07:42Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:05a1cab8bdd433b7dd674e7204ad513cb3ded671713ae9ea3e6724f904c56970",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 143,
+      "generated_at_commit": "a877dd17f638e6a729fd425b505964ff3253c0f8",
+      "source_tree": "sha256:b7e801203a75fe38570b8f924e04bd3156595d9f9bb72a1e7465bfc305634016"
+    }
+  },
+  "name": "bench/inference_cost",
+  "purpose": "Held-out inference-cost benchmark: evaluate verified programs produced per unit of inference cost",
+  "schema_version": "1.0.0"
+}

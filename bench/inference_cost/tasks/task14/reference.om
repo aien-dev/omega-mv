@@ -1,0 +1,13 @@
+fn power_mod_u32 a uint b uint to uint
+res = uint 1
+cur = a
+exp = b
+while gt exp 0
+if eq (and exp 1) 1
+res = mul res cur
+end
+cur = mul cur cur
+exp = shr exp 1
+end
+ret res
+end

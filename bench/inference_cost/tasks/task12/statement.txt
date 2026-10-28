@@ -1,0 +1,1 @@
+Write a function clz_u32 that takes an unsigned 32-bit number x as uint and returns the number of leading zero bits (from bit 31 down to 0). If x == 0, clz_u32(0) = 32. It never traps.

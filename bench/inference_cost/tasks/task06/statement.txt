@@ -1,0 +1,1 @@
+Write a function collatz_steps_u32 that takes an unsigned 32-bit number n (n >= 1) as uint and returns the number of steps required to reach 1 following the Collatz rule: if n is even, n = n / 2; if n is odd, n = 3 * n + 1. collatz_steps_u32(1) = 0. For all checked inputs, the result is less than 1000. It never traps.
