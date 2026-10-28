@@ -1,0 +1,1 @@
+Write a function bitrev_u16 that takes an unsigned 16-bit number x as uint (x <= 65535) and returns the uint with the 16 bits reversed (bit 0 swapped with bit 15, bit 1 with bit 14, and so on). It never traps.

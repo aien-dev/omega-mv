@@ -1,0 +1,264 @@
+note bench/inference_cost/scorer.om -- inference-cost scorer in native .om
+note Reads line-oriented plain-text attempt records from stdin (fd 0)
+note and emits the evaluated benchmark summary to stdout (fd 1).
+
+global inbuf uchar 65536
+global out uchar 64
+
+global pos ulong 1
+global inlen ulong 1
+global stats ulong 16
+
+text err "scorer: error\n"
+fn fail code int to void
+w = write 2 err 0 len err
+exit code
+end
+
+fn is_space c uchar to bool
+if or eq c 32 eq c 10
+ret true
+end
+if or eq c 9 eq c 13
+ret true
+end
+ret false
+end
+
+fn is_digit c uchar to bool
+if and ge c 48 le c 57
+ret true
+end
+ret false
+end
+
+fn skip_ws to void
+p = get pos 0
+lim = get inlen 0
+while and lt p lim (is_space (get inbuf p))
+p = add p 1
+end
+put pos 0 p
+end
+
+fn read_uint to ulong
+skip_ws
+p = get pos 0
+lim = get inlen 0
+if ge p lim
+fail 2
+end
+c = get inbuf p
+if not (is_digit c)
+fail 2
+end
+val = ulong 0
+while and lt p lim (is_digit c)
+val = add (mul val 10) (ulong sub c 48)
+p = add p 1
+if lt p lim
+c = get inbuf p
+end
+end
+put pos 0 p
+ret val
+end
+
+fn skip_token to void
+skip_ws
+p = get pos 0
+lim = get inlen 0
+while and lt p lim (not (is_space (get inbuf p)))
+p = add p 1
+end
+put pos 0 p
+end
+
+text zero_nl "0\n"
+fn put_num v ulong to void
+if eq v 0
+w = write 1 zero_nl 0 len zero_nl
+ret
+end
+put out 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+end
+
+text zero_dot "0."
+fn put_fixed3 v ulong to void
+intp = div v 1000
+frac = rem v 1000
+
+if eq intp 0
+w = write 1 zero_dot 0 len zero_dot
+else
+put out 31 46
+p = ulong 31
+x = intp
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+end
+
+d1 = uchar add (div frac 100) 48
+d2 = uchar add (rem (div frac 10) 10) 48
+d3 = uchar add (rem frac 10) 48
+put out 0 d1
+put out 1 d2
+put out 2 d3
+put out 3 10
+w = write 1 out 0 4
+end
+
+text t_ver "version 1\n"
+text t_tasks "tasks_total "
+text t_att "attempts_total "
+text t_comp "compiled_count "
+text t_verif "verified_count "
+text t_fver "first_attempt_verified "
+text t_ptok "total_prompt_tokens "
+text t_ctok "total_completion_tokens "
+text t_ttok "total_tokens "
+text t_wms "total_wall_ms "
+text t_wsec "total_wall_seconds "
+text t_p1k "verified_per_1k_tokens "
+text t_pmin "verified_per_minute "
+text t_stat "status "
+text ztok "0.000\n"
+text zmin "0.000\n"
+text t_pass "PASS\n"
+text t_fail "FAIL\n"
+
+fn parse_attempt to void
+skip_token
+att_n = read_uint
+first = read_uint
+comp_rc = read_uint
+ver_ok = read_uint
+wms = read_uint
+ptok = read_uint
+ctok = read_uint
+ttok = read_uint
+
+if eq first 1
+put stats 0 (add (get stats 0) 1)
+end
+if eq comp_rc 0
+put stats 1 (add (get stats 1) 1)
+end
+if eq ver_ok 1
+put stats 2 (add (get stats 2) 1)
+if eq first 1
+put stats 3 (add (get stats 3) 1)
+end
+end
+put stats 4 (add (get stats 4) ptok)
+put stats 5 (add (get stats 5) ctok)
+put stats 6 (add (get stats 6) ttok)
+put stats 7 (add (get stats 7) wms)
+end
+
+fn print_report to int
+w = write 1 t_ver 0 len t_ver
+
+w = write 1 t_tasks 0 len t_tasks
+put_num (get stats 0)
+
+w = write 1 t_att 0 len t_att
+put_num (get stats 8)
+
+w = write 1 t_comp 0 len t_comp
+put_num (get stats 1)
+
+w = write 1 t_verif 0 len t_verif
+put_num (get stats 2)
+
+w = write 1 t_fver 0 len t_fver
+put_num (get stats 3)
+
+w = write 1 t_ptok 0 len t_ptok
+put_num (get stats 4)
+
+w = write 1 t_ctok 0 len t_ctok
+put_num (get stats 5)
+
+w = write 1 t_ttok 0 len t_ttok
+put_num (get stats 6)
+
+w = write 1 t_wms 0 len t_wms
+put_num (get stats 7)
+
+w = write 1 t_wsec 0 len t_wsec
+put_num (div (get stats 7) 1000)
+
+w = write 1 t_p1k 0 len t_p1k
+tot_tok = get stats 6
+n_ver = get stats 2
+if gt tot_tok 0
+rt_tok = div (mul (mul n_ver 1000) 1000) tot_tok
+put_fixed3 rt_tok
+else
+w = write 1 ztok 0 len ztok
+end
+
+w = write 1 t_pmin 0 len t_pmin
+tot_ms = get stats 7
+if gt tot_ms 0
+rt_time = div (mul (mul n_ver 60000) 1000) tot_ms
+put_fixed3 rt_time
+else
+w = write 1 zmin 0 len zmin
+end
+
+w = write 1 t_stat 0 len t_stat
+n_tasks = get stats 0
+if and eq n_ver n_tasks gt n_tasks 0
+w = write 1 t_pass 0 len t_pass
+ret 0
+else
+w = write 1 t_fail 0 len t_fail
+ret 1
+end
+end
+
+fn main to int
+n = read 0 inbuf 0 65536
+if le n 0
+fail 1
+end
+put inlen 0 (ulong n)
+put pos 0 0
+
+note Check header: version 1
+skip_token
+v = read_uint
+if ne v 1
+fail 3
+end
+
+note attempts N
+skip_token
+att_cnt = read_uint
+put stats 8 att_cnt
+
+for i ulong att_cnt
+parse_attempt
+end
+
+rc = print_report
+ret rc
+end

@@ -1,0 +1,1 @@
+Write a function clamp_add_u16 that takes two unsigned 16-bit numbers a and b as uint and returns their sum saturated at 65535: if a + b > 65535, return 65535, otherwise return a + b. It never traps.
