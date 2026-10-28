@@ -18,13 +18,18 @@ bookkeeping and the punctuation. Its words are chosen from the writer model's ow
 
 ## 2. Design rules
 
-1. **One word, one token.** Every fixed word (ops, types, keywords) is exactly one token of the
-   target tokenizer when written with its leading space (Qwen3; the 8B, 30B and 4B tokenizers share
-   one vocabulary). `make test-omegese` checks this when given a tokenizer (section 6). There is no
-   punctuation besides `=` (also one token, and optional) and the optional brackets `( )`; no
-   commas, no indentation. Values nest in prefix order (every op takes a fixed number of values), so
-   brackets are never needed. Numbers cost one token for the space plus one per digit (Qwen3 splits
-   digits).
+1. **Efficiency metric: verified programs per unit of inference cost.** Language design optimizes
+   for verified programs produced per unit of inference cost (measured on held-out tasks by
+   first-attempt correctness, successful compilation, verified behavior, completion time, and total
+   compute cost), rather than treating single-token vocabulary as a rigid language rule.
+   Fitting fixed words into single tokens under a specific tokenizer (e.g. Qwen3 where ops, types,
+   and keywords were verified as single tokens with a leading space) is an empirical token-cost
+   consideration, not a binding constraint on the language definition. The compiler-guided interface
+   must remain portable across models and tokenizers.
+   There is no punctuation besides `=` (also one token, and optional) and the optional brackets `( )`;
+   no commas, no indentation. Values nest in prefix order (every op takes a fixed number of values),
+   so brackets are never needed. Numbers cost one token for the space plus one per digit under tokenizers
+   that split digits.
 2. **Types are inferred.** Only parameters, the return type, conversions, typed numbers
    (`uint 5`) and new arrays name a type. A value's type comes from the op that makes it, bottom-up
    through nested values; a number takes the type of the other value in its op. This removes the
@@ -326,8 +331,9 @@ out; a `ret` whose value moves the array into a call is not tried by the witness
   word it belongs to) and `complete` must finish the prefix into a program `emit` accepts;
 - loop guard negative control: the dev04 op list without the hidden counter increment passes
   omega_emit and is REJECTED by checker2 (`C2-LOOP-UNBOUNDED`);
-- tokenizer gate, when `OMEGESE_TOKCOUNT` (a counter: `<tool> <tokenizer.json> words <word>...`
-  printing the token count of " word" first) and `OMEGESE_TOKENIZER` are set.
+- tokenizer measurement: when `OMEGESE_TOKCOUNT` (a counter: `<tool> <tokenizer.json> words <word>...`
+  printing the token count of " word" first) and `OMEGESE_TOKENIZER` are set, records empirical token
+  efficiency across candidate vocabularies (an observational cost consideration rather than a language rule).
 
 The same suite then runs again on a build with AddressSanitizer and UndefinedBehaviorSanitizer
 (memory and undefined-behaviour checks), with 10 walks and one mutant per program; every sanitizer

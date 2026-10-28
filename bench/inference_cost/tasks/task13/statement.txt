@@ -1,0 +1,1 @@
+Write a function ctz_u32 that takes an unsigned 32-bit number x as uint and returns the number of trailing zero bits (from bit 0 up to 31). If x == 0, ctz_u32(0) = 32. It never traps.

@@ -1,0 +1,1 @@
+Write a function reverse_digits_u32 that takes an unsigned 32-bit number n as uint and returns the number formed by reversing its decimal digits. For example, reverse_digits_u32(1234) = 4321, reverse_digits_u32(100) = 1, reverse_digits_u32(0) = 0. For all checked inputs, the reversed number fits in uint without overflow. It never traps.
