@@ -18,8 +18,12 @@ end
 put stage i bitcast uint f32 v
 end
 for i ulong 8
+u = get stage i
+off = mul i 4
 for j ulong 4
-put wire add mul i 4 j uchar and shr get stage i mul sub ulong 3 j 8 255
+sh = mul sub ulong 3 j 8
+c = uchar and shr u sh 255
+put wire add off j c
 end
 end
 ret 0

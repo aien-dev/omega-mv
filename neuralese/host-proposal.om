@@ -22,7 +22,7 @@ text nlrhead "NL4R1 0 "
 text nlrtail " 1 1 0 1 0 "
 text nlrno "NL4R1 "
 text nlzeros " 0 0 0 0 0 0 0 0 0\n"
-text nlnewline "\n"
+text nlendl "\n"
 text nlspace " "
 fn nlout b view uchar * fd int to void
 pos = ulong 0
@@ -140,7 +140,7 @@ nlnumber get p i 1
 end
 nlout nlrtail 1
 nlnumber z 1
-nlout nlnewline 1
+nlout nlendl 1
 end
 fn main to int
 frame = new uchar 5121 0
