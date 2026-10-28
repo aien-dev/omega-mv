@@ -34,9 +34,9 @@ while IFS= read -r args; do
   printf '$ tilelab %s\n%s\nrc=%s\n' "$args" "$out" "$rc" >> "$B/observed.txt"
 done < "$D/cases.txt"
 # the picked cfg row with its byte model, per planner shape (checked against Wolfram)
-for s in "1024 1024 1024" "4096 4096 4096" "2048 8192 2048" "100 100 100"; do
+for s in "1024 1024 1024" "4096 4096 4096" "2048 8192 2048" "100 100 100" "8192 8192 8192"; do
   # shellcheck disable=SC2086
-  p=$("$B/tilelab" 1 $s | sed -n 's/^pick cfg \(rt=[0-9]* ct=[0-9]* wm=[0-9]* wn=[0-9]*\) band=.*/\1 /p')
+  p=$("$B/tilelab" 1 $s | sed -n 's/^pick cfg \(rt=[0-9]* ct=[0-9]* wm=[0-9]* wn=[0-9]* band=[0-9]*\)$/\1 /p')
   # shellcheck disable=SC2086
   "$B/tilelab" 1 $s | grep "^cfg $p" | head -n 1 | sed "s/^/row $s: /" >> "$B/observed.txt"
 done

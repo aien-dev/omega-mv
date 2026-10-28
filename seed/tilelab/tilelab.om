@@ -4,11 +4,18 @@ note Run:  tilelab 1 M N K [REGS]   plan a BF16 GEMM tile schedule for CUDApp om
 note       tilelab 2 [MUT]          streaming (m,s,p) merge over 32 scores vs the direct softmax-weighted sum, f64
 note                                MUT 0 correct, 1 tile-local normalisation, 2 merge without rescale, 3 wrong tree order
 note Exit: 0 ok, 1 numeric tolerance failed, 2 refused (shape, limit or no configuration fits), 3 usage.
-note The GEMM model (logical global requests, no cache): tile_bytes = 2 M Kp ceil(N/BN) + 2 N Kp ceil(M/BM) + 4 M N,
-note BM = 16 rt wm, BN = 8 ct wn, Kp = K rounded up to 32 (one k pair of two 16-steps). Cost = tile_bytes * tail,
-note tail = ceil(ctas/48) 48 / ctas (48 SMs, one CTA each, an ASSUMPTION). Not a time prediction; the chip decides.
+note The GEMM model is calibrated on GB10 chip timings of the CUDApp kernel (no shared memory: each warp loads its own
+note 16rt x 8ct operands, band orders CTAs in column bands so packed B stays in L2). BM = 16 rt wm, BN = 8 ct wn,
+note Kp = K rounded up to 32, mt = ceil(M/BM), nt = ceil(N/BN). l2_bytes = 2 Kp (M nt + N mt) (operand bytes per CTA tile);
+note dram_bytes = 2 M Kp ceil(nt/band) + 2 Kp N when band >= 2 and the band of B, 2 Kp min(N, band BN) bytes, fits a
+note 32 MiB L2 budget; otherwise (band < 2 or the band overflows) 2 M Kp nt + 2 Kp N mt.
+note cost_ns = l2_bytes / 1827.5440 + 2 M N Kp / 37166.0364 + dram_bytes / 1890.5139, constants and the 32 MiB budget
+note fitted to 96 GB10 sweep medians (seed/tilelab/WOLFRAM.md). An empirical RANKING, not a time prediction and not
+note physical bandwidths. Held out per shape, its top 2 plus the default reach the best of 32 configurations on two of
+note three shapes and come within 1.9% on the third, so the planner names the top 2 and the CUDApp default
+note (rt2 ct4 wm2 wn4 band8) as `measure` lines and the chip decides between them.
 om2
-text msg "tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]\nrefused: dimension zero or above 16384\nrefused: no configuration fits the register budget\ncfg rt=\n ct=\n wm=\n wn=\n band=\n bm=\n bn=\n regs=\n ctas=\n bytes=\n cost=\npick \nrefused: unknown mode\nsmx direct_plus100_e9=\n seq_err_ppt=\n tree_err_ppt=\n one_err_ppt=\n tol_ppt=\nsmx FAIL\nsmx OK\nmut=\n"
+text msg "tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]\nrefused: dimension zero or above 16384\nrefused: no configuration fits the register budget\ncfg rt=\n ct=\n wm=\n wn=\n band=\n bm=\n bn=\n regs=\n ctas=\n l2_bytes=\n cost_ns=\npick \nrefused: unknown mode\nsmx direct_plus100_e9=\n seq_err_ppt=\n tree_err_ppt=\n one_err_ppt=\n tol_ppt=\nsmx FAIL\nsmx OK\nmut=\nmeasure \n dram_bytes=\n"
 global dig uchar 32
 global ab uchar 256
 global xs f64 32
@@ -107,15 +114,31 @@ end
 fn cctas i ulong m ulong n ulong to ulong
 ret mul cdiv m cbm i cdiv n cbn i
 end
-fn cbytes i ulong m ulong n ulong kp ulong to ulong
-x = mul mul mul 2 m kp cdiv n cbn i
-y = mul mul mul 2 n kp cdiv m cbm i
-ret add add x y mul mul 4 m n
+fn cl2 i ulong m ulong n ulong kp ulong to ulong
+x = mul m cdiv n cbn i
+y = mul n cdiv m cbm i
+ret mul mul 2 kp add x y
+end
+fn cdram i ulong m ulong n ulong kp ulong to ulong
+a = mul mul 2 m kp
+b = mul mul 2 kp n
+nt = cdiv n cbn i
+bd = cband i
+bw = mul bd cbn i
+if gt bw n
+bw = n
+end
+bb = mul mul 2 kp bw
+if or lt bd 2 gt bb 33554432
+ret add mul a nt mul b cdiv m cbm i
+end
+ret add mul a cdiv nt bd b
 end
 fn ccost i ulong m ulong n ulong kp ulong to f64
-ctas = cctas i m n
-waves = cdiv ctas 48
-ret div mul f64 cbytes i m n kp f64 mul waves 48 f64 ctas
+t2 = div f64 cl2 i m n kp 1827.5440f64
+tc = div f64 mul mul 2 m mul n kp 37166.0364f64
+td = div f64 cdram i m n kp 1890.5139f64
+ret add add t2 tc td
 end
 fn show i ulong m ulong n ulong kp ulong to void
 say 4
@@ -137,30 +160,33 @@ num cregs i
 say 12
 num cctas i m n
 say 13
-num cbytes i m n kp
+num cl2 i m n kp
+say 26
+num cdram i m n kp
 say 14
 num ulong ccost i m n kp
 newline
 end
-fn pickband bi ulong n ulong to ulong
-if ge cdiv n cbn bi 8
-ret 8
-end
-ret 0
-end
-fn pick bi ulong n ulong to void
-say 15
+fn cfgline i ulong to void
 say 4
-num crt bi
+num crt i
 say 5
-num cct bi
+num cct i
 say 6
-num cwm bi
+num cwm i
 say 7
-num cwn bi
+num cwn i
 say 8
-num pickband bi n
+num cband i
 newline
+end
+fn pick bi ulong to void
+say 15
+cfgline bi
+end
+fn measure i ulong to void
+say 25
+cfgline i
 end
 fn plan m ulong n ulong k ulong regs ulong to int
 if or or eq m 0 eq n 0 eq k 0
@@ -175,14 +201,23 @@ ret 2
 end
 kp = mul cdiv k 32 32
 best = 1.0e300f64
+next = 1.0e300f64
 bi = ulong 9999
+b2 = ulong 9999
 for i ulong 405
 if le cregs i regs
 show i m n kp
 c = ccost i m n kp
 if lt c best
+next = best
+b2 = bi
 best = c
 bi = i
+else
+if lt c next
+next = c
+b2 = i
+end
 end
 end
 end
@@ -191,7 +226,15 @@ say 3
 newline
 ret 2
 end
-pick bi n
+pick bi
+measure bi
+if ne b2 9999
+measure b2
+end
+dflt = ulong 232
+if and le cregs dflt regs and ne dflt bi ne dflt b2
+measure dflt
+end
 ret 0
 end
 

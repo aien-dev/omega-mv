@@ -1,14 +1,32 @@
 $ tilelab 1 1024 1024 1024
 pick cfg rt=2 ct=4 wm=4 wn=4 band=8
+measure cfg rt=2 ct=4 wm=4 wn=4 band=8
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
 rc=0
 $ tilelab 1 4096 4096 4096
-pick cfg rt=2 ct=4 wm=4 wn=4 band=8
+pick cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
 rc=0
 $ tilelab 1 2048 8192 2048
-pick cfg rt=2 ct=4 wm=4 wn=4 band=8
+pick cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
 rc=0
 $ tilelab 1 100 100 100
-pick cfg rt=2 ct=2 wm=1 wn=1 band=0
+pick cfg rt=2 ct=4 wm=4 wn=4 band=0
+measure cfg rt=2 ct=4 wm=4 wn=4 band=0
+measure cfg rt=2 ct=4 wm=4 wn=4 band=4
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
+rc=0
+$ tilelab 1 8192 8192 8192
+pick cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=4 wn=4 band=8
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
 rc=0
 $ tilelab 1 64 64 64 20
 refused: no configuration fits the register budget
@@ -48,7 +66,8 @@ rc=1
 $ tilelab 9
 refused: unknown mode
 rc=3
-row 1024 1024 1024: cfg rt=2 ct=4 wm=4 wn=4 band=0 bm=128 bn=128 regs=96 ctas=64 bytes=37748736 cost=56623104
-row 4096 4096 4096: cfg rt=2 ct=4 wm=4 wn=4 band=0 bm=128 bn=128 regs=96 ctas=1024 bytes=2214592512 cost=2283798528
-row 2048 8192 2048: cfg rt=2 ct=4 wm=4 wn=4 band=0 bm=128 bn=128 regs=96 ctas=1024 bytes=1140850688 cost=1176502272
-row 100 100 100: cfg rt=2 ct=2 wm=1 wn=1 band=0 bm=32 bn=16 regs=64 ctas=28 bytes=321600 cost=551314
+row 1024 1024 1024: cfg rt=2 ct=4 wm=4 wn=4 band=8 bm=128 bn=128 regs=96 ctas=64 l2_bytes=33554432 dram_bytes=4194304 cost_ns=78359
+row 4096 4096 4096: cfg rt=2 ct=4 wm=4 wn=4 band=32 bm=128 bn=128 regs=96 ctas=1024 l2_bytes=2147483648 dram_bytes=67108864 cost_ns=4908534
+row 2048 8192 2048: cfg rt=2 ct=4 wm=4 wn=4 band=32 bm=128 bn=128 regs=96 ctas=1024 l2_bytes=1073741824 dram_bytes=50331648 cost_ns=2463141
+row 100 100 100: cfg rt=2 ct=4 wm=4 wn=4 band=0 bm=128 bn=128 regs=96 ctas=1 l2_bytes=51200 dram_bytes=51200 cost_ns=123
+row 8192 8192 8192: cfg rt=2 ct=4 wm=4 wn=4 band=16 bm=128 bn=128 regs=96 ctas=4096 l2_bytes=17179869184 dram_bytes=671088640 cost_ns=39339273
