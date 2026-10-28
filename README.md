@@ -75,6 +75,14 @@ exact command/environment, admission records and workload inputs. The capacity
 repair CUDApp #173 and command-lifetime repair #174 are candidate prerequisites;
 pending source is not merged source and historical component receipts are not
 qualification of that manifest.
+This isolated host-integration branch pins local, unmerged CUDApp
+`6ed24d1618e06b6e8f92e307f731a38c0d515a4b`: parents
+`491da3ce11c74fe66b49d679aafb0334915b7ab4` (#175 on accepted #173
+`ca441c5a92f5a951a67de00aeddae0e077f10216`) and
+`8cd1c912e8c7a68b7adcca75c6f71d1652401a54` (#174 evidence head;
+corrected code `05be6d98211d7fdc043d173da8f661bbb51e0138`).
+This is not canonical main, merged source, device qualification or production admission.
+The original #924 draft pin and all earlier component receipts remain unchanged.
 
 Build the canonical archive through `check-cudapp`, then build the existing Core
 35B consumer against that exact archive without an alternate GPU implementation.
