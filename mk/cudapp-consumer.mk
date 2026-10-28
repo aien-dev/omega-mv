@@ -12,9 +12,12 @@ CUDAPP_HEADER_FLAGS = -I"$(CUDAPP_SOURCE)/src" -I"$(CUDAPP_SOURCE)/m16" -I"$(CUD
 	-I"$(CUDAPP_SOURCE)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm" \
 	-I"$(CUDAPP_SOURCE)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include" \
 	-DOMEGA_CUDAPP_SOURCE='"$(abspath $(CUDAPP_SOURCE))"'
-.PHONY: check-cudapp
+.PHONY: check-cudapp test-cudapp-stage-hermetic
 check-cudapp:
 	sh tools/cudapp-stage.sh cudapp.lock "$(CUDAPP_DIR)" "$(CUDAPP_STAGE)"
+
+test-cudapp-stage-hermetic:
+	sh tests/cudapp_stage_hermetic.sh "$(CUDAPP_DIR)"
 
 $(CUDAPP_LIB): cudapp.lock | check-cudapp
 	@test -f "$@"
