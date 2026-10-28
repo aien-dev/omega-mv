@@ -68,7 +68,9 @@ evaluate_task() {
 
     # Compile candidate + check
     local comp_rc=0
-    if ! cat "$candidate_file" "$check_file" | "$OMC" > "$bin_file" 2>/dev/null; then
+    if cat "$candidate_file" "$check_file" | "$OMC" > "$bin_file" 2>/dev/null; then
+        comp_rc=0
+    else
         comp_rc=$?
     fi
 
