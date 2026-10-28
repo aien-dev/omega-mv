@@ -348,3 +348,15 @@ stale/foreign/withdrawn-context refusals. Guard-removal and wrong-operation
 mutants must be killed, and native pre/postcondition violations must trap.
 These are deterministic correctness cases, not independent statistical trials
 or the preregistered learned-arm campaign (benchmarks draft #56).
+
+Observed at clean implementation `09b1394fe68287eaa10b0d90cf07a9dd00e6cb60`:
+`OM2GATE PASS cases=63 pass=63 fail=0 invalid=0 not_run=0`
+(24 pure executions,27 deliberate refusals,9 killed mutants,2 native contract
+traps,1 sixteen-payload independent codec oracle).
+The unchanged inherited suite separately returned54/54PASS.
+The actual receipt is
+[`nl4-host-results.03b624d6ad393604d958f554fc55844885712ca49f425f98459974846e9e5280.json`](nl4-host-results.03b624d6ad393604d958f554fc55844885712ca49f425f98459974846e9e5280.json).
+`nl4-host-pass.log` and `nl4-inherited-pass.log` preserve every verdict;
+the initial compiler/name and lexical-order failures are retained separately,
+not rewritten as success. Representative actual channels are
+`nl4-success.stdout` and `nl4-refusal.stderr`.
