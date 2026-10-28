@@ -318,5 +318,11 @@ case "$step" in
     sh om/sha256/parity/run.sh
     sh om/blake3/parity/run.sh
     ;;
+  tilelab)            # omega#906: native .om tile planner and streaming (m,s,p) softmax. omc born from the seed
+                      # here, then seed/tilelab/gate.sh (expected output, mutants failing for their own reason).
+    sh seed/omega-from-seed.sh > build/tilelab-seed.log 2>&1 || { tail -3 build/tilelab-seed.log; exit 1; }
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/tilelab/gate.sh
+    ;;
   *) echo "run.sh: unknown step '$step'" >&2; exit 2 ;;
 esac
