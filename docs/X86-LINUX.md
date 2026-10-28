@@ -312,6 +312,20 @@ Additional entryless callers and trap authorities are implemented in the oracle.
 The full differential after those changes was **NOT_RUN** at that operator
 wrap-up. Do not attribute the earlier counts or host gates to that unrerun patch.
 
+The recovered source `efd15c234afc584e1e67492e736cbb42806c2a7d` (source
+SHA256 `e9d70e7cbe1b7026b2fcac5bbf61a64bde931b50a632c954355ba5299954a61c`,
+AArch64 compiler `f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409`)
+passed `sh seed/host/check.sh` and `sh seed/omc/gate5.sh` on the AArch64 host.
+Its complete differential exited 1: **14,930 PASS, 60 FAIL, 10 NOT_RUN,
+216 EXCLUDED**. Verdict **FAIL**. The remaining failures are structured
+diagnostic mismatches, unclean expansion-growth refusals, OM-2 fold/unroll
+mutant oracle mismatches, A5 bare-unit fixture exits, and frozen C2 mismatches
+`c2-00015`, `c2-00033`, `c2-00304`, `c2-00306`, `c2-00675`, `c2-00728` and
+`c2-05713` through `c2-05719` except `c2-05718`. Two QEMU ioctl
+EMULATOR_ARTIFACT cases and eight entryless callers remain NOT_RUN. Exact case
+names and receipts are in `seed/qualification/x86-linux/20261028-recovered-corpus.json`
+and `20261028-recovered-host.json`.
+
 Two invalid-fd ioctl cases in the resumed run have concrete emulator evidence:
 QEMU's own trace records request `0xc020462b`, fd `-1`, errno ENOTTY, while the
 native fixture requires EBADF. QEMU 10.0.14
