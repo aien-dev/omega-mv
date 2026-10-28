@@ -14808,6 +14808,9 @@ end
 put tcode n code
 put tsite n xbranch cc
 put nt 0 add n 1
+if eq get om2m 0 1
+siterec
+end
 end
 
 fn xcmp a ulong b ulong imm ulong to void
@@ -15213,8 +15216,13 @@ if eq k 3
 if ge v ln
 fail 21
 end
+if and ne get om2 0 0 le v 4095
+x = ulong 255
+put ea_k 0 v
+else
 x = alloc
 matconst x v
+end
 else
 xcmp v ln 1
 xtrap 2 3
@@ -15233,7 +15241,11 @@ end
 note Indexed load/store uses RDX=base+index*element-size; pointers never enter source scalars.
 fn xmemval store ulong base ulong idx ulong ty ulong val ulong to void
 xload 2 base
+if eq idx 255
+ximm 1 get ea_k 0
+else
 xload 1 idx
+end
 xb 72 193 225
 emitb uchar tlog ty
 xrr 1 2 1

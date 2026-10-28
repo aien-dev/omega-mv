@@ -999,7 +999,7 @@ def exercise_bare(case, default, x86, qemu, cwd, timeout):
         if runs[0][0] < 0 or runs[1][0] < 0 or runs[0] != runs[1]:
             raise Failure(f"bare caller {spec['name']} differs: default={result_details(runs[0])}; x86={result_details(runs[1])}")
         expected_exit = spec.get("expected_exit", 0)
-        if runs[0][0] != expected_exit:
+        if expected_exit is not None and runs[0][0] != expected_exit:
             raise Failure(f"bare caller {spec['name']} exit {runs[0][0]}, expected {expected_exit}")
         if "expected_stdout" in spec and runs[0][1] != spec["expected_stdout"]:
             raise Failure(f"bare caller {spec['name']} full-width return/array oracle differs: "

@@ -11,3 +11,4 @@ RM-qty	qty bounded quantity type: checked add/mul trap 1, error 7 on implicit mo
 RM-diag-query	check and next directives: omega-diag v1 records and omega-query v1 prefix query (#911, refs #655)	12520	415	84632	d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84
 FR9-x86	x86-64 Linux semantic backend, private bare entries, SSE2 floats and native host syscall lowering; seed function table unchanged	15525	512	118293	5f0faab7cd4fc12158cf8e099418098d278df644efc10e4e7e2e5ca6141fca86
 FR9-x86-repair	checked numeric/value-loop contracts; target-specific output pool; dead-branch boundary repair; returnable private-unit traps	15543	512	118524	1f0fdef06574ffec782c164941114edcf51f36f9f9cd1e79bc0452dbcebb3322
+FR9-x86-index-diag	OM-2 constant-index addressing without extra virtual registers; retain trap-site diagnostic records	15555	512	118588	7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316

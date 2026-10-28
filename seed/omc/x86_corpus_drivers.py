@@ -223,6 +223,18 @@ ebfa2f5c672805ab1cf48f30a94b1bae14767a78a76e637d31e69241ae95748b seed/wasm/integ
 eb16f331ad57fcae0eba99ddfedc9874120733eaa0ae487e57f26d3beda619d5 seed/wasm/mutant.unit.om
 """.strip().splitlines())
 
+# Entryless diagnostic and leak fixtures retain their actual last-function ABI.
+REVIEWED_SOURCES.update({
+    "af6c2faa6087359c0c51bcd5d61d973143f45d4719eb98278370bfb03284a79e":
+        "seed/omc/om2/s3/a-exact-diag.om",
+    "2702ef2f9bcf2fbadd6c9ced8382a13f1939378c024a5c5706d167d98798be13":
+        "seed/qualification/om2/sec/s5s7/a5-exact-diag.om",
+    "a7682122ef8f6707e48f8d6cf76459aca4ebab53ab3245dd51b88d8067fad948":
+        "seed/qualification/om2/leak/fixtures/pub-outside-store.om",
+    "03fba96f85d365cec80d11c1f10400d6f1874c924e3e824458fb812c023f267c":
+        "seed/qualification/om2/leak/fixtures/pub-secret.om",
+})
+
 REVIEWED_SOURCES['dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb'] = 'om/sha256/sha256-om2.om'
 
 RECORDED_INPUTS = {'5ff3b6cddb9f66971ecb7b58da2d2f07e3df9e7176dd1ba50a2c3a36f2447e81': {'path': 'seed/rung4/tests/fm1.inputs', 'sha256': '3b521473ebf69009db11ed5af2e393c452f65a479796c3e872de4c876301abb6', 'values': [(7, 2), (-7, 2), (7, -2), (-7, -2), (5, 0), (-9223372036854775808, -1), (-9223372036854775808, 1), (9223372036854775807, -1), (0, 5), (-9223372036854775807, -1), (123456789, -1000)]}, '02b9d845454e7379d4d55f3c78af7e9ddd9f87f15d196765b338ee5ae6416965': {'path': 'seed/rung4/tests/fm2.inputs', 'sha256': '18342c0716c373eb7d01da95e11a4bb0f88148bf601817d24c79e5118394ae89', 'values': [(7, 2), (-7, 2), (-2147483648, -1), (-2147483648, 1), (2147483647, -1), (9, 0), (-9, 4), (100, -7)]}, '3323f23ff905d4915ced5c83d97d772c5b4e4e1347ba738ae3752ef74d99cc0e': {'path': 'seed/rung4/tests/fm3.inputs', 'sha256': '1f2c517d98c0c1a2f6cc18965d758dfa52a1099e8209dc0ad0c2692d2536c99f', 'values': [(1, 62), (1, 63), (-1, 63), (3, 62), (-5, 2), (5, 64), (0, 63), (-4611686018427387904, 1), (-4611686018427387905, 1), (7, 0)]}, '06149063fb825604227f54d226fbce04afe48b755f6ccbe2690ef35afe1c5a65': {'path': 'seed/rung4/tests/fm4.inputs', 'sha256': 'f44900dbe6897acaecff1fc0f585902f404197069338a90cef18ecfe317a3bce', 'values': [(1, 30), (1, 31), (-1, 31), (3, 29), (-5, 2), (5, 32), (536870911, 2), (536870912, 2), (-536870912, 2), (-536870913, 2)]}, '3b0acd8ea8b0a46d3131378ae447ffd337e15e0b92da1c45ba2c1a2383dc4b54': {'path': 'seed/rung4/tests/fm5.inputs', 'sha256': 'c79c7bf9df3333862da681fefcc2b6fdab887a25740cdb76594a9bdd1ae9c0e8', 'values': [(3, 4), (0, 0), (1, 1), (4294967296, 1), (18446744073709551615, 2), (1000, 2000)]}, 'cf0a8200ec4341d1c4634bceb6bab5e7cca15bae510ca4d6f41982fe1ad70a9c': {'path': 'seed/rung4/tests/fm6.inputs', 'sha256': '60983787c391a667e6b4198c75c09aa5f75681e882d112334562987fdf280a55', 'values': [(0,), (1,), (5,), (100,), (1000,), (1000000,), (1000001,)]}, 'ccbdc5fd0b1005df6bbd17dee7d8679f7d5fbc0355ca1cca9a5c4e32cc1c352a': {'path': 'seed/rung4/tests/fm7.inputs', 'sha256': 'df36cfb0562e591237602b1fe12f5c5403c3af941ca6aece8faaa77c2c7c2aa5', 'values': [(1, 2), (0, 0), (4294967295, 1), (100, 200)]}, '1cb48989143498ec44e1cbc9ed9bfd11082b9426d937c1ebae5ac02a2c171f93': {'path': 'seed/rung4/tests/fm8.inputs', 'sha256': 'cecbd6b5657af7a9f8bf119aa34bfc11e0ac300fca584435d63f86f60e2d88fb', 'values': [(0,), (1,), (2,), (3,), (4,), (5,), (4294967295,)]}, 'e9548779048e3d97b48f7d9904fa832aa47c8a6158c9355d2b88eefa50c87589': {'path': 'seed/rung4/tests/fm9.inputs', 'sha256': 'dcb7b50d378bbd78226e3c4423cb9b353f292d65dbb66124546be0c92ea0c102', 'values': [(100, 7), (-100, 7), (-32768, -1), (-32768, 2), (32767, 0), (-7, -7)]}, 'b5624972ed3b4394027eca96d94b670f7a8846af51d3083940e63c079c8649e4': {'path': 'tools/exp445/arms/examples/clamp_sub/inputs', 'sha256': 'fdd78820e3fe41bb5c427b72044ae709eabc4b4c1ed9d99493052135f3358da8', 'values': [(5, 3), (3, 5), (0, 0), (7, 7), (4294967295, 0), (4294967295, 1), (1, 4294967295), (100, 99)], 'expected': ['2', '0', '0', '0', '4294967295', '4294967294', '0', '1'], 'expected_path': 'tools/exp445/arms/examples/clamp_sub/expected', 'expected_sha256': '2d8f2492e08fb5a4408d11dfb94011723dcec64fb9e20d406044b6c0203b954d'}, '0bfe80ea229071421efd1418bbf09db219acf1c303d4c8a80025d1033744759d': {'path': 'tools/exp445/arms/examples/count_above/inputs', 'sha256': '188675879873c3484e770bd793be8e5395d1b96575e0031f710edfc610918b3a', 'values': [(1, 2, 3, 4, 2), (0, 0, 0, 0, 0), (5, 5, 5, 5, 4), (-1, -2, -3, -4, -5), (2147483647, -2147483648, 0, 1, 0), (10, 20, 30, 40, 25), (7, 8, 9, 10, 10), (1, 1, 1, 1, -2147483648)], 'expected': ['2', '0', '4', '4', '2', '2', '0', '4'], 'expected_path': 'tools/exp445/arms/examples/count_above/expected', 'expected_sha256': 'ff0be81ecc695f3046237b3157c420f58c65e6439720489e0aa948583452e892'}, '14439646d9db8ec1c40b7646b3ec177d21ce8178a1e7c6c001134339cd8fab76': {'path': 'tools/exp445/arms/examples/count_digits/inputs', 'sha256': '6383af745b837f467812b692ddad3de333f6f6799dfaee7c210628ef2cd4f534', 'values': [(0,), (9,), (10,), (99,), (100,), (12345,), (18446744073709551615,), (10000000000000000000,), (9999999999999999999,)], 'expected': ['1', '1', '2', '2', '3', '5', '20', '20', '19'], 'expected_path': 'tools/exp445/arms/examples/count_digits/expected', 'expected_sha256': '66e82cbe8e78af1ef919a48a526efb2b48ce024c5e8322e89b828854f30a90a7'}, '83b4aad4f657f489ac7a7b9eee847118bc8d37c452a83efd3d5135af4f2e69dd': {'path': 'tools/exp445/arms/examples/cube_xor_pair/inputs', 'sha256': 'fe1cac4cf9dd56c91bc70907af7a0a21e9cee1990617bed1c5dc3b03a1a4aae6', 'values': [(0,), (1,), (2,), (7,), (13,), (14,), (15,), (16,), (200,), (255,)], 'expected': ['1', '9', '19', '855', '557', '1943', 'TRAP 3', 'TRAP 3', 'TRAP 3', 'TRAP 3'], 'expected_path': 'tools/exp445/arms/examples/cube_xor_pair/expected', 'expected_sha256': '06a16d3f2fdc6dc5bc5b7d3bcc4af1f18c2e18c177c3d2df1a6f6ce0b4a9b9ef'}, '1974598d956017c608019ebd9a8b5af42dc34c5eae20809b47940337c14f2349': {'path': 'tools/exp445/arms/examples/dot3/inputs', 'sha256': 'bca0c3df5f4ba03ffd6fd50d74654b51a34120e13266ab3100f7ebd8ffb95b70', 'values': [(1, 2, 3, 4, 5, 6), (0, 0, 0, 0, 0, 0), (-32768, -32768, -32768, -32768, -32768, -32768), (32767, 32767, 32767, 32767, 32767, 32767), (-32768, 32767, 1, 32767, -32768, -1), (1, -1, 1, 1, 1, -1), (100, 200, 300, -3, -2, -1), (5, 0, 0, 7, 9, 11)], 'expected': ['32', '0', '3221225472', '3221028867', '-2147418113', '-1', '-1000', '35'], 'expected_path': 'tools/exp445/arms/examples/dot3/expected', 'expected_sha256': 'bb0f1153516a1e224305057797fa99a392bd137ba2ad1936fd775c9061054cbc'}, '95a41a420eb97cac77023a066936cc4c9673e3224489d118834edd076232ab59': {'path': 'tools/exp445/arms/examples/halve_or_dec_steps/inputs', 'sha256': '81203c47f140c7767b6d831e0cd4c68d0995d674fc5b19b22a0e27b0c3f2b27f', 'values': [(0,), (1,), (2,), (3,), (7,), (8,), (15,), (1000,), (4294967295,), (2147483648,)], 'expected': ['0', '0', '1', '2', '4', '3', '6', '14', '62', '31'], 'expected_path': 'tools/exp445/arms/examples/halve_or_dec_steps/expected', 'expected_sha256': '03cadfc2b73c4cb64ec9878acdb24f73ce82c863934c4de7b74ad3da1296157a'}, 'bd88c1daeb2c9f2bde005d46172b7b7e0b4ed2c95081ea106dd62f8caafb16a0': {'path': 'tools/exp445/arms/examples/has_digit/inputs', 'sha256': '5e3f2fc4b3b9b962f883861183906f399596eee331b65d71195dba4d2a4b2088', 'values': [(0, 0), (0, 1), (12345, 3), (12345, 6), (4294967295, 9), (4294967295, 8), (1000, 0), (7, 7), (5, 10), (5, 255)], 'expected': ['1', '0', '1', '0', '1', '0', '1', '1', '0', '0'], 'expected_path': 'tools/exp445/arms/examples/has_digit/expected', 'expected_sha256': 'a848801f579c98ca8fc9e6a90ed5bfe8659cc9b7a85e2afc471e1c44343eb21f'}, 'fe9f95b097d0137a3ddb4a62246c5e6875fbc19aded228c2f23c4679b84c2ccf': {'path': 'tools/exp445/arms/examples/hash_step/inputs', 'sha256': '129fd09a51d0ecd85174e69c98f0fd700340be2335d35241dee90ec1de459e95', 'values': [(0, 0), (1, 1), (0, 255), (4294967295, 255), (138547332, 1), (123456789, 65), (4294967295, 0), (2, 0)], 'expected': ['0', '32', '255', '224', '4294967293', '3827160524', '4294967265', '62'], 'expected_path': 'tools/exp445/arms/examples/hash_step/expected', 'expected_sha256': '867df00b00610ee5374b95425f9c199cc078fa9e98c5d32478ee9bad993ca41f'}, '4335f62c4d839f7a7d0addd992208b6107249d7620d840080a81076b3800bc26': {'path': 'tools/exp445/arms/examples/narrow_sum/inputs', 'sha256': '3257617c170c938ee5bbd4741016a4f6eb77de48a280944475ba3ab695bc83ca', 'values': [(1, 2), (100, 27), (100, 28), (-100, -28), (-100, -29), (32767, 1), (-32768, -1), (-128, 0), (200, -100), (0, 0)], 'expected': ['3', '127', 'TRAP 5', '-128', 'TRAP 5', 'TRAP 1', 'TRAP 1', '-128', '100', '0'], 'expected_path': 'tools/exp445/arms/examples/narrow_sum/expected', 'expected_sha256': '3aa8e311d290b7f34575a0f23d4657abecadcfe73d106853cf4abfe4cf5140ef'}, '23026d2191616675acd10e798835bcb290ecd259c1e17935019bb2f97021d9fd': {'path': 'tools/exp445/arms/examples/nibble_mirror/inputs', 'sha256': 'dee5944c3255af19088c8b7938aef0a47fa8a65df83786afbeefe265d28c982b', 'values': [(0,), (4660,), (4385,), (43690,), (65535,), (1,), (4096,), (37129,), (23205,), (17185,)], 'expected': ['1', '0', '0', '1', '1', '0', '0', '0', '1', '0'], 'expected_path': 'tools/exp445/arms/examples/nibble_mirror/expected', 'expected_sha256': '36a8593ee441c6ac3381a58d2dc09a26373d3c07187d08df138c4e22f1e1d583'}, 'a55747b9894b8a8c07f33e6678b8f5482eee35096c97ff686be7ec7b7784d9c1': {'path': 'tools/exp445/arms/examples/power_mod/inputs', 'sha256': '5c16767626808d1bbfce04c745237d43d694b31cd2acdc49c3b5c9491805df34', 'values': [(2, 10, 1000), (3, 0, 7), (0, 0, 5), (5, 3, 1), (4294967295, 4294967295, 4294967291), (7, 13, 0), (0, 0, 0), (123456789, 987654321, 1000000007), (2, 31, 4294967295), (10, 2, 0)], 'expected': ['24', '1', '1', '0', '1024', 'TRAP 2', 'TRAP 2', '652541198', '2147483648', 'TRAP 2'], 'expected_path': 'tools/exp445/arms/examples/power_mod/expected', 'expected_sha256': '47b9c5eb1d9d6b0729ed484e8bea8b32aae12c83658870e69ea2d14fe0da2825'}, 'd8196e4bdfe690afeed43f7a52aefbb76f13ca42a6caa51fc61e70a585165213': {'path': 'tools/exp445/arms/examples/rotl8/inputs', 'sha256': 'ec5b74aca087a19be46cb8530bc4cf3a03914e87890ceabcb7250368b1c51ea2', 'values': [(1, 1), (128, 1), (1, 0), (1, 8), (165, 4), (15, 3), (255, 7), (6, 9), (129, 255), (0, 5)], 'expected': ['2', '1', '1', '1', '90', '120', '255', '12', '192', '0'], 'expected_path': 'tools/exp445/arms/examples/rotl8/expected', 'expected_sha256': 'cb04e913e46bcbc9ea2c9831080733e166396faf8edf6a510e2b4f53eb210534'}, '9acda5f3fd9ddc1dc01923fa76a30a4667f2d0e8d460ba2a60c5d6d5fc27807c': {'path': 'tools/exp445/arms/examples/sum_range/inputs', 'sha256': '40ea4e80ec323db346cdaa019887c692792b29802ede84ff3a4cc79199fb067c', 'values': [(1, 10), (5, 5), (6, 5), (-3, 3), (-100000, 100000), (0, 100000), (-10, -1), (100000, -100000)], 'expected': ['55', '5', '0', '0', '0', '5000050000', '-55', '0'], 'expected_path': 'tools/exp445/arms/examples/sum_range/expected', 'expected_sha256': '07eed9ef40f75e42d50f6cdf9b3ba780cb6b0998c47439e0b53f36c33145fb4d'}, '17b76ece94d8d691b3339b4d3f58443814c81d897a6e3f746981263674d32257': {'path': 'tools/exp445/arms/examples/sum_squares3/inputs', 'sha256': '37b9505a9528cda2f2598c72c60528812adecba24d9f859875f1482e4ee7efac', 'values': [(1, 2, 3), (0, 0, 0), (-3, 4, 0), (181, 0, 0), (182, 0, 0), (100, 100, 100), (-100, -100, -50), (-32768, 0, 0), (128, 128, 0), (128, 127, 0)], 'expected': ['14', '0', '25', '32761', 'TRAP 1', '30000', '22500', 'TRAP 1', 'TRAP 1', '32513'], 'expected_path': 'tools/exp445/arms/examples/sum_squares3/expected', 'expected_sha256': '04d8dc4400f7096d6c95956a54712a07073aabef624c97296a15f9ca493316bc'}, '8ecfa30de1ec78883a3c4c40fc5a11aeb2646a38df403a8bf61da47d99017e1d': {'path': 'tools/exp445/arms/examples/tri_kind/inputs', 'sha256': '12deb164b789ad554af56d30c59339772ab16022f405a9be1d026074c442acbb', 'values': [(3, 3, 3), (3, 4, 5), (2, 2, 3), (1, 2, 3), (0, 5, 5), (65535, 65535, 65535), (65535, 65535, 1), (1, 65535, 65535), (5, 1, 1), (10, 6, 5)], 'expected': ['1', '3', '2', '0', '0', '1', '2', '2', '0', '3'], 'expected_path': 'tools/exp445/arms/examples/tri_kind/expected', 'expected_sha256': 'afec9abbb1c91597ce7a1c73a7e254dd10e83cd16d435a4f2475037bc969a81d'}}
@@ -376,6 +388,60 @@ def bare_calls(root, rel, source):
                                 "signature":line.decode(),"input_authority":recorded or
                                 "explicit original loaded-data predicates/conversion boundary and zero vectors; native differential only",
                                 "abi":"docs/osc/OSC-1-DESIGN.md section 7; omc param/xpro/xunit"}}
+            # A recorded input list is not an independent result oracle. The
+            # original rung4 conductor compares the OSC/C referee, including
+            # traps; absent a result table retain native differential evidence.
+            if recorded and "expected" not in recorded:
+                spec["expected_exit"] = None
+                spec["evidence"]["result_authority"] = "seed/rung4/gate4.sh cmpc; native differential, not independent semantics"
+            trap = None
+            if index == 1 and sha in (
+                "1de96237beb1b2d7d76fb226cd930036d8cc1d8c82faf4114f3309a1396365a5",
+                "3490824f6e8cb82e661c7a408e8e4264790875e9e0147914ad4b0571dde0fc79",
+                "ef1b3dc9f12deef3e2536b6689e79f529f216bff87c8c7b8dd5d5f259b7f3703",
+                "e1b60bc4c240e03be0c0fbdb630066f295ff7a53b73a380dab52fa8509f498d6",
+            ):
+                trap = 103  # zero-length input, unconditional element access
+            if index == 0 and sha == "21e366be6ad718395e5018186a3915d57ea02147a54b247ef1f69f001960f642":
+                trap = 105  # original reachable-trap conversion counterexample
+            if index == 1 and sha in (
+                "432b642f9b3f5a0502705ef06d61502f4312e82c85adb58b64e5791a5d553e49",
+                "f578c1f645e8a7e6112b2f45028fa8a018f73fad2149d0de16141607b0969ccc",
+                "781ba1bf2768974166c10a3724acbf766080db732bee8d195fa3d872a5ab05c9",
+                "050c286588e3066c396697c397c999a6ac8aa98334cc9c3bb3fcb43a6d8c084f",
+                "5b09682d993bbb9afb96fdbc0f7a75c8e2cf14fc094b5b6c6e1ecf7fcd6ee374",
+            ):
+                trap = 102  # original div-by-zero arm
+            if index == 1 and name == "collatz_steps":
+                trap = 104  # cases.tsv dev08, zero input exhausts loop bound
+            if sha == "94c38bc25d64c36a7e0cebc1e7fe0cfef51517507322a3f526cb31e1e0553444":
+                trap = 109  # cases.tsv control explicit, last-function entry
+            if index == 1 and sha == "0419a9380955e1199e9927412cdbde107b081243da2345f0cc77900ce641554e":
+                trap = 106  # regression.tsv nestedvoid, callee traps first
+            if trap is not None:
+                spec.update(expected_exit=trap, expected_stdout=b"")
+                spec["evidence"]["trap_authority"] = "reviewed source body and original conductor table; caller vector retained"
+            if sha in (
+                "af6c2faa6087359c0c51bcd5d61d973143f45d4719eb98278370bfb03284a79e",
+                "2702ef2f9bcf2fbadd6c9ced8382a13f1939378c024a5c5706d167d98798be13",
+            ):
+                # Exact dup32 constructor: zero and all-one representation
+                # boundaries, observing the entire returned representation.
+                slots[0] = 4294967295 if index == 0 else 0
+                spec.update(expected_exit=0, expected_stdout=bytes([255])*8 if index == 0 else bytes(8))
+                spec["evidence"]["result_authority"] = "reviewed exact dup32 constructor and open; full-width representation"
+            if sha in (
+                "a7682122ef8f6707e48f8d6cf76459aca4ebab53ab3245dd51b88d8067fad948",
+                "03fba96f85d365cec80d11c1f10400d6f1874c924e3e824458fb812c023f267c",
+            ):
+                secret = 1 if index == 0 else 0
+                context = bytearray(104)
+                context[40 if sha.startswith("a768") else 32] = secret
+                arrays[0]["data"] = bytes(104)
+                arrays[1]["data"] = bytes([secret])
+                value = 0 if sha.startswith("a768") else secret
+                spec.update(expected_exit=0, expected_stdout=struct.pack("<Q",value)+bytes(context)+bytes([secret]))
+                spec["evidence"]["result_authority"] = "reviewed store offset and branch; pub-secret native-zero/one controls; complete edit and input observations"
             if recorded and "expected" in recorded:
                 want = recorded["expected"][index]
                 if want.startswith("TRAP "):
@@ -693,7 +759,14 @@ def plan_case(root, rel, source):
         elif b"putd " in source and not re.search(rb"(?m)^fn putd ",source):
             override += _pinned(root,*HELPERS["pr"])
             evidence["appended_helper"] = HELPERS["pr"]
-        return {"source":override,"driver":"pure-name-control","evidence":evidence}
+        plan = {"source":override,"driver":"pure-name-control","evidence":evidence}
+        if sha == "e1109db40b1ab3f8b7c5b847bb9032810fc3dcf836ec58a0caf5459033636764":
+            plan["expected_exit"] = 110
+            evidence["exit_authority"] = "seed/omc/om2/s3/s3.cases s3-a-kept"
+        elif sha == "92c7813513f2bb511bbacc53e1a351a417cabc10139134e477bfb61483005c92":
+            plan["expected_exit"] = 5
+            evidence["exit_authority"] = "seed/omc/om2/s3/s3.cases s3-a-om1"
+        return plan
     if sha == "2fe76d4c44b3e3faf6bfd250ebec794ba5b3d11b6b9199366549b664d219cc38":
         evidence["effect_review"] = "opens /dev/null write-only; overflowing slice must trap before write; original guard.cases requires exit103"
         return {"driver":"slice-wrap-control","expected_exit":103,"evidence":evidence}

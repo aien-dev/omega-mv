@@ -1,15 +1,12 @@
 # x86-64 Linux backend (FR-9)
 
-Status: **DRAFT, integration and execution evidence pending**, 2026-10-28.
-This is the design note requested for FR-9, not a qualification receipt. The
-canonical integration base is `aien-dev/omega-mv` commit
-`6999fa9e6dae4847c155ef4eacaece74f491d3ca`. The historical implementation is
-`7eca2ac3fbd1f35a7d65471065408ce4bea07fd4`, inspected with
-`git show 7eca2ac3f:seed/omc/omc.om`. Current integration lives in the same
-`seed/omc/omc.om`; the function names below are source anchors, not a claim
-that a completed candidate has been tested. Historical commit-message test
-claims are not evidence for this integration. Limited coordinator observations
-are labelled below; no full acceptance or qualification result is asserted.
+Status: **DRAFT; native x86 qualification NOT_RUN**, 2026-10-28.
+The canonical integration base is `aien-dev/omega-mv` commit
+`6999fa9e6dae4847c155ef4eacaece74f491d3ca`; the historical backend is
+`7eca2ac3fbd1f35a7d65471065408ce4bea07fd4`. Current implementation lives in
+`seed/omc/omc.om`. Source anchors describe implementation, not by themselves
+execution evidence. The dated baseline below is immutable history; resumed
+qualification records supersede it only for their exact source/tool pins.
 
 ## Selection and implementation boundary
 
@@ -53,6 +50,13 @@ backend in the source.
 its relative displacement and a padding NOP; conditional branches use the long
 Jcc form. `xpatch` distinguishes their displacement positions. Calls have a
 separate rel32 fixup in `resolve`.
+
+The x86 byte-output pool is 16 MiB; default AArch64 emission retains its existing
+8 MiB ceiling. This target-specific capacity accommodates the larger variable-
+length instruction stream without changing the default target's refusal gate.
+Dead then-arms do not emit an unreachable skip branch past the final bare-unit
+instruction. Numeric and value `for` loops both check invariant obligations at
+the loop head, including final false heads and `continue` backedges.
 
 The historical backend refused floating-point paths. The current draft adds
 baseline SSE2 scalar lowering through `xfmov`, `xfsse`, `xfucom`, `xfbin`,
@@ -235,7 +239,7 @@ handwritten bootstrap rungs. The source remains within om4's unchanged
 514-function candidate correctly failed bootstrap error 14. No bootstrap gate,
 table capacity, seed0, hex1, asm2 or om4 was weakened or replaced.
 
-Exercised 2026-10-28 on AArch64 Linux:
+### Historical baseline at `becf5c817bcb7e0846d12ebfc2be91042d8ad89a`
 
 - `sh seed/host/check.sh`: PASS, including seed ladder/fixpoint, IR C-oracle
   comparisons, gates 7 through 18, 44 contract cases, enforcement/prover
@@ -243,7 +247,7 @@ Exercised 2026-10-28 on AArch64 Linux:
   historical fixture outputs.
 - `sh seed/omc/gate5.sh`: GATE5 PASS, including 153 corpus inputs, 4,860
   cut/changed inputs and the existing wrong-compiler mutants.
-- Current source: 15,525 lines, 512 functions, SHA256
+- Baseline source: 15,525 lines, 512 functions, SHA256
   `3a40637bfc11eb4b0c0af80a73bd228a3975c25ef805859f06cb1f6d7fc089f4`.
 - AArch64 compiler: 473,348 bytes, SHA256
   `5f0faab7cd4fc12158cf8e099418098d278df644efc10e4e7e2e5ca6141fca86`.
@@ -275,14 +279,46 @@ also remain. These are not silently excluded from the overall failing verdict.
 For the invalid-fd `devcall` discrepancy, a minimal trace returned EBADF (9)
 on AArch64, while QEMU translated the same x86
 `ioctl(-1,0xc020462b,...)` to ENOTTY (25). No backend errno shim or weakened
-gate was introduced. Work stopped at the user's explicit wrap-up instruction;
-full stage-C acceptance remains unmet.
+gate was introduced. This dated baseline did not satisfy full stage-C
+acceptance; the resumed run must retain the original cases and explain each
+remaining deviation.
 Native x86 execution and a native x86 seed0 chain are **NOT_RUN**.
 
 Word-count bookkeeping was checked through WolframLanguageEvaluator:
 `(473348-176)/4 -> 118293`. QEMU version was 8.2.2
 (`1:8.2.2+ds-0ubuntu1.18`); Python was 3.12.3. These are verification
 oracles only, not production dependencies of the emitted static programs.
+
+## Resumed differential and operator wrap-up
+
+The complete resumed run at `66807b62914461b88df5ac73b827a8c809a854b4`
+used QEMU 10.0.14 and the original/private/bridge callers. It remained **FAIL**:
+8,243 PASS, 476 FAIL, 211 EXCLUDED, six NOT_RUN and one
+MISSING_IMPLEMENTATION. These counts are not directly comparable as a fixed
+denominator: previously excluded metadata/conductor arms and missing inputs
+were expanded into exercised cases. All 570 original exclusions and all
+remaining exclusions are individually recorded in
+`seed/qualification/x86-linux/20261028-resumed.json`, alongside unresolved
+records, hashes, commands and the exact counting rule. The historical baseline
+has 152 top-level FAIL records; its summary is not another failing case.
+
+The current source additionally repairs OM-2 constant-index temporary allocation
+and missing x86 trap-site diagnostics. The SHA unit now compiles for both targets
+and the contract diagnostic fixture emits matching source-site records after
+target-prefix line translation. The seed ladder rebuilds to compiler SHA256
+`7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316`.
+Additional entryless callers and trap authorities are implemented in the oracle.
+The full differential after these last changes is **NOT_RUN**: the operator
+explicitly requested wrap-up. Do not attribute the earlier counts or host gates
+to the unrerun final patch.
+
+Two invalid-fd ioctl cases in the resumed run have concrete emulator evidence:
+QEMU's own trace records request `0xc020462b`, fd `-1`, errno ENOTTY, while the
+native fixture requires EBADF. QEMU 10.0.14
+[`linux-user/syscall.c:5713–5717`](https://github.com/qemu/qemu/blob/v10.0.14/linux-user/syscall.c#L5713-L5717)
+returns `-TARGET_ENOTTY` for an unknown request before checking the descriptor.
+The receipt pins the source, source archive, emulator binary and trace. These
+are NOT_RUN/EMULATOR_ARTIFACT records, not backend PASS or native-x86 evidence.
 
 ## Standalone qualification oracle
 
@@ -319,8 +355,9 @@ Coverage distinctions must accompany any result:
   SPIR-V demo/regression tables supply full-width native wrapper callers.
 - Embedded memory-check refusals and pread/pwrite view controls are included.
 - The process fixture executes a native AArch64 child helper in both runs;
-  it does not establish exec of an x86 child. `genlimit` exercises the ordinary
-  compiler, not the generation-ceiling mutant.
+  it does not establish exec of an x86 child. `genlimit` uses an explicitly
+  recorded fixture-only compiler variant with the fixture-required generation
+  ceiling 3 on both targets; the production compiler's ceiling is unchanged.
 - `psync` invokes syncfs on the scratch descriptor and therefore flushes its
   filesystem; a temporary directory does not isolate that kernel effect.
 
