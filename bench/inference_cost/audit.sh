@@ -88,6 +88,48 @@ EOF
     else
         st_bad 'Rust oracle include did not fail at the filesystem boundary'
     fi
+    # bwrap emits namespace JSON before mount setup; only an in-sandbox handshake
+    # distinguishes setup failure from a genuine compiler/candidate exit status.
+    mkdir -p "$ac_dir/setup-tools" "$ac_dir/empty-sysroot"
+    cat > "$ac_dir/setup-tools/rustc" <<EOF
+#!/bin/sh
+printf '%s\n' "$ac_dir/empty-sysroot"
+EOF
+    chmod +x "$ac_dir/setup-tools/rustc"
+    ac_rc=0
+    ac_out=$(PATH="$ac_dir/setup-tools:$PATH" sh "$SCRIPT_DIR/driver.sh" --evaluate-probe rs \
+        "$TASKS_DIR/task01/reference.rs" "$ac_dir/compile-setup" 2>&1) || ac_rc=$?
+    st_expect 'compiler mount setup failure NOT_RUN' 3 "$ac_rc"
+    if [ -s "$ac_dir/compile-setup/compile.sandbox" ] && [ ! -s "$ac_dir/compile-setup/compile.ready" ]; then
+        st_ok 'namespace JSON is not compiler readiness'
+    else
+        st_bad 'compiler setup negative control did not separate JSON and readiness'
+    fi
+    ac_bwrap=$(command -v bwrap)
+    cat > "$ac_dir/setup-tools/bwrap" <<EOF
+#!/bin/sh
+for arg do :; done
+if [ "\$arg" = /work/candidate ]; then
+    exec "$ac_bwrap" --ro-bind "$ac_dir/nonexistent-mount" /unavailable "\$@"
+fi
+exec "$ac_bwrap" "\$@"
+EOF
+    chmod +x "$ac_dir/setup-tools/bwrap"
+    ac_rc=0
+    ac_out=$(PATH="$ac_dir/setup-tools:$PATH" sh "$SCRIPT_DIR/driver.sh" --evaluate-probe py \
+        "$TASKS_DIR/task01/reference.py" "$ac_dir/run-setup" 2>&1) || ac_rc=$?
+    st_expect 'runtime mount setup failure NOT_RUN' 3 "$ac_rc"
+    if [ -s "$ac_dir/run-setup/run.sandbox" ] && [ ! -s "$ac_dir/run-setup/run.ready" ]; then
+        st_ok 'namespace JSON is not candidate readiness'
+    else
+        st_bad 'runtime setup negative control did not separate JSON and readiness'
+    fi
+    {
+        printf 'import os\ntry:\n    os.write(3, b"forged")\nexcept OSError:\n    pass\nelse:\n    raise RuntimeError("readiness fd leaked")\n'
+        cat "$TASKS_DIR/task01/reference.py"
+    } > "$ac_dir/readiness-fd.py"
+    evaluate py "$TASKS_DIR/task01" "$ac_dir/readiness-fd.py" "$ac_dir/readiness-fd"
+    st_expect 'candidate cannot inherit readiness fd' 1 "$VERIFIED"
 
     cat > "$ac_dir/ignore-term.py" <<'EOF'
 import os
@@ -131,6 +173,54 @@ EOF
             st_expect "empty $ac_option '$ac_value' rejected" 2 "$ac_rc"
         done
     done
+    mkdir "$ac_dir/empty-output"
+    ac_rc=0
+    sh "$SCRIPT_DIR/driver.sh" --output-probe "$ac_dir/empty-output" || ac_rc=$?
+    st_expect 'existing empty output can be claimed' 0 "$ac_rc"
+    mkdir "$ac_dir/link-target"
+    ln -s "$ac_dir/link-target" "$ac_dir/output-link"
+    for ac_link in "$ac_dir/output-link" "$ac_dir/output-link/"; do
+        ac_rc=0
+        sh "$SCRIPT_DIR/driver.sh" --output-probe "$ac_link" >/dev/null 2>&1 || ac_rc=$?
+        st_expect 'symlink output rejected, including trailing slash' 2 "$ac_rc"
+    done
+    st_expect 'symlink target left empty' '' "$(find "$ac_dir/link-target" -mindepth 1 -print -quit)"
+    # Force both processes past the initial emptiness check before either tries
+    # mkdir on the ownership marker; this exercises the actual acquisition race.
+    mkdir -p "$ac_dir/claim-tools" "$ac_dir/claim-barrier"
+    ac_mkdir=$(command -v mkdir)
+    cat > "$ac_dir/claim-tools/mkdir" <<EOF
+#!/bin/sh
+for arg do :; done
+if [ "\$arg" = "$ac_dir/raced-output/.inference-cost-owner" ]; then
+    : > "$ac_dir/claim-barrier/\$\$"
+    while [ "\$(find "$ac_dir/claim-barrier" -type f | wc -l)" -lt 2 ]; do
+        sleep 0.01
+    done
+fi
+exec "$ac_mkdir" "\$@"
+EOF
+    chmod +x "$ac_dir/claim-tools/mkdir"
+    (
+        ac_rc=0
+        PATH="$ac_dir/claim-tools:$PATH" timeout --kill-after=1s 5s sh "$SCRIPT_DIR/driver.sh" \
+            --output-probe "$ac_dir/raced-output" >"$ac_dir/race1.log" 2>&1 || ac_rc=$?
+        say "$ac_rc" > "$ac_dir/race1.rc"
+    ) &
+    ac_pid1=$!
+    (
+        ac_rc=0
+        PATH="$ac_dir/claim-tools:$PATH" timeout --kill-after=1s 5s sh "$SCRIPT_DIR/driver.sh" \
+            --output-probe "$ac_dir/raced-output" >"$ac_dir/race2.log" 2>&1 || ac_rc=$?
+        say "$ac_rc" > "$ac_dir/race2.rc"
+    ) &
+    ac_pid2=$!
+    wait "$ac_pid1"
+    wait "$ac_pid2"
+    case $(cat "$ac_dir/race1.rc"):$(cat "$ac_dir/race2.rc") in
+        0:2|2:0) st_ok 'only one concurrent output claimant succeeds' ;;
+        *) st_bad 'concurrent output claim did not have exactly one owner' ;;
+    esac
 }
 
 audit_reuse_check() {
@@ -140,6 +230,13 @@ audit_reuse_check() {
         --langs py --arms feedback --out "$BUILD_DIR/selftest/good" 2>&1) || ac_rc=$?
     st_expect 'nonempty output rejected' 2 "$ac_rc"
     case $ac_out in *'--out must be empty'*) st_ok 'output refused before HTTP' ;; *) st_bad 'wrong output refusal' ;; esac
+    ln -s "$BUILD_DIR/selftest/good" "$BUILD_DIR/selftest/good-link"
+    for ac_link in "$BUILD_DIR/selftest/good-link" "$BUILD_DIR/selftest/good-link/"; do
+        ac_rc=0
+        sh "$SCRIPT_DIR/driver.sh" --run-model --endpoint http://127.0.0.1:1 --model fake \
+            --langs py --arms feedback --out "$ac_link" >/dev/null 2>&1 || ac_rc=$?
+        st_expect 'run-model refuses symlink to completed run' 2 "$ac_rc"
+    done
     find "$BUILD_DIR/selftest/good" -type f -exec sha256sum {} \; | sort > "$BUILD_DIR/selftest/after.sha256"
     if cmp -s "$BUILD_DIR/selftest/before.sha256" "$BUILD_DIR/selftest/after.sha256"; then
         st_ok 'reused output remains byte-identical'

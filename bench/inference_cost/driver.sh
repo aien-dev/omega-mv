@@ -206,45 +206,46 @@ EOF
 sandbox() { # mode candidate_file
     sb_mode=$1
     sb_file=$2
-    set -- bwrap --unshare-all --unshare-user --disable-userns --die-with-parent --new-session --clearenv --info-fd 3 \
+    # Only the trusted shell can write readiness; fd 3 is closed before candidate code.
+    # bwrap's fd 4 namespace JSON is useful telemetry, not proof mount/setup succeeded.
+    sb_start='printf "ready\n" >&3 || exit 125; exec 3>&-; exec "$@"'
+    set -- bwrap --unshare-all --unshare-user --disable-userns --die-with-parent --new-session --clearenv --info-fd 4 \
         --setenv PATH /usr/bin --setenv LC_ALL C \
         --ro-bind /usr/lib /usr/lib --symlink usr/lib /lib \
+        --dir /usr/bin --ro-bind "$(readlink -f "$(command -v sh)")" /usr/bin/sh \
+        --ro-bind "$(readlink -f "$(command -v python3)")" /usr/bin/python3 --symlink usr/bin /bin \
         --proc /proc --dev /dev --tmpfs /tmp --dir /work --chdir /work \
         --ro-bind "$sb_file" /work/candidate
     # Compiler-only system headers/tools; never mount home, /tmp or the checkout.
     case $sb_mode in
         c|rs)
-            set -- "$@" --dir /usr/bin --ro-bind /usr/include /usr/include \
+            set -- "$@" --ro-bind /usr/include /usr/include \
                 --ro-bind /usr/libexec /usr/libexec \
                 --ro-bind "$(readlink -f "$(command -v cc)")" /usr/bin/cc \
                 --ro-bind "$(readlink -f "$(command -v as)")" /usr/bin/as \
                 --ro-bind "$(readlink -f "$(command -v ld)")" /usr/bin/ld \
-                --ro-bind "$(readlink -f "$(command -v cat)")" /usr/bin/cat \
-                --ro-bind "$(readlink -f "$(command -v sh)")" /usr/bin/sh \
-                --symlink usr/bin /bin ;;
-        *) set -- "$@" --dir /usr/bin --ro-bind "$(readlink -f "$(command -v python3)")" /usr/bin/python3 ;;
+                --ro-bind "$(readlink -f "$(command -v cat)")" /usr/bin/cat ;;
     esac
     case $sb_mode in
         om)
-            "$@" --ro-bind "$OMC" /compiler --remount-ro / /usr/bin/python3 -I -c \
-                'import os; os.execv("/compiler", ["/compiler"])' ;;
+            "$@" --ro-bind "$OMC" /compiler --remount-ro / /usr/bin/sh -c "$sb_start" ready /compiler ;;
         c)
-            "$@" --remount-ro / /usr/bin/sh -c 'cc -O2 -x c -include stdint.h -include stdio.h -include stdlib.h -o /tmp/bin /work/candidate -lm && cat /tmp/bin' ;;
+            "$@" --remount-ro / /usr/bin/sh -c "$sb_start" ready /usr/bin/sh -c 'cc -O2 -x c -include stdint.h -include stdio.h -include stdlib.h -o /tmp/bin /work/candidate -lm && cat /tmp/bin' ;;
         py)
-            "$@" --remount-ro / /usr/bin/python3 -I -c \
+            "$@" --remount-ro / /usr/bin/sh -c "$sb_start" ready /usr/bin/python3 -I -c \
                 'import py_compile; py_compile.compile("/work/candidate", cfile="/tmp/candidate.pyc", doraise=True)' ;;
         rs)
             sb_root=$(rustc --print sysroot) || not_run "cannot resolve Rust sysroot"
             "$@" --ro-bind "$sb_root/bin/rustc" /toolchain/bin/rustc \
                 --ro-bind "$sb_root/lib" /toolchain/lib --setenv LD_LIBRARY_PATH /toolchain/lib \
-                --remount-ro / /usr/bin/sh -c '/toolchain/bin/rustc --sysroot /toolchain -O --edition 2021 -A warnings --crate-name bench -o /tmp/bin /work/candidate && cat /tmp/bin' ;;
+                --remount-ro / /usr/bin/sh -c "$sb_start" ready /usr/bin/sh -c '/toolchain/bin/rustc --sysroot /toolchain -O --edition 2021 -A warnings --crate-name bench -o /tmp/bin /work/candidate && cat /tmp/bin' ;;
         run)
             if [ "$sb_file" = /dev/null ]; then
-                "$@" --remount-ro / /usr/bin/python3 -I -c 'pass'
+                "$@" --remount-ro / /usr/bin/sh -c "$sb_start" ready /usr/bin/python3 -I -c 'pass'
             elif [ "${sb_file##*.}" = py ]; then
-                "$@" --remount-ro / /usr/bin/python3 -I /work/candidate
+                "$@" --remount-ro / /usr/bin/sh -c "$sb_start" ready /usr/bin/python3 -I /work/candidate
             else
-                "$@" --remount-ro / /work/candidate
+                "$@" --remount-ro / /usr/bin/sh -c "$sb_start" ready /work/candidate
             fi ;;
         *) die "unknown sandbox mode" ;;
     esac
@@ -255,7 +256,7 @@ check_sandbox() {
     need_tool timeout
     need_tool python3
     # Exercise the actual namespace setup, not merely bwrap's presence in PATH.
-    sandbox run /dev/null 3>/dev/null >/dev/null 2>&1 ||
+    sandbox run /dev/null 3>/dev/null 4>/dev/null >/dev/null 2>&1 ||
         not_run "bubblewrap sandbox is unavailable; no candidate was run"
 }
 
@@ -282,30 +283,30 @@ evaluate() { # lang task_dir candidate work
         om)
             # om2 diag: the human "omc: line N: error K" plus an "omc-diag 1 ..." record on refusal.
             { printf 'om2 diag\n'; sed '1{/^om2\( .*\)\{0,1\}$/d;}' "$ev_c"; printf '\n'; cat "$SCRIPT_DIR/io.om"; gen_main om "$ev_s"; } > "$ev_w/src.om"
-            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox om "$ev_w/src.om" < "$ev_w/src.om" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox om "$ev_w/src.om" < "$ev_w/src.om" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.ready" 4> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
         c)
             { cat "$ev_c"; gen_main c "$ev_s"; } > "$ev_w/src.c"
-            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox c "$ev_w/src.c" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox c "$ev_w/src.c" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.ready" 4> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
         py)
             { cat "$ev_c"; gen_main py "$ev_s"; } > "$ev_w/src.py"
-            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox py "$ev_w/src.py" > "$ev_w/compile.out" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox py "$ev_w/src.py" > "$ev_w/compile.out" 2> "$ev_w/err.txt" 3> "$ev_w/compile.ready" 4> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
         rs)
             { cat "$ev_c"; gen_main rs "$ev_s"; } > "$ev_w/src.rs"
-            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox rs "$ev_w/src.rs" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox rs "$ev_w/src.rs" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.ready" 4> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
     esac
-    [ -s "$ev_w/compile.sandbox" ] ||
+    [ "$(cat "$ev_w/compile.ready")" = ready ] ||
         not_run "bubblewrap could not start the compiler sandbox; no unsandboxed fallback"
     VERIFIED=0
     RUN_RC=-
     if [ "$COMP_RC" -eq 0 ]; then
         RUN_RC=0
         if [ "$ev_l" = py ]; then
-            run_candidate "$ev_w/src.py" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" 3> "$ev_w/run.sandbox" || RUN_RC=$?
+            run_candidate "$ev_w/src.py" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" 3> "$ev_w/run.ready" 4> "$ev_w/run.sandbox" || RUN_RC=$?
         else
             chmod +x "$ev_w/bin"
-            run_candidate "$ev_w/bin" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" 3> "$ev_w/run.sandbox" || RUN_RC=$?
+            run_candidate "$ev_w/bin" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" 3> "$ev_w/run.ready" 4> "$ev_w/run.sandbox" || RUN_RC=$?
         fi
-        [ -s "$ev_w/run.sandbox" ] ||
+        [ "$(cat "$ev_w/run.ready")" = ready ] ||
             not_run "bubblewrap could not start the candidate sandbox; no unsandboxed fallback"
         if [ "$RUN_RC" -eq 0 ] && tail -n +3 "$ev_t/expected.txt" | cmp -s - "$ev_w/out.txt"; then
             VERIFIED=1
@@ -403,6 +404,31 @@ $r}" ;;
 
 meta() { awk -v k="$1" '$1==k{print $2; exit}' "$2"; }
 
+claim_output() { # output directory; a persistent marker gives one invocation ownership
+    OUT=$1
+    while :; do
+        case $OUT in /) die "--out must be a fresh directory" ;;
+            */) OUT=${OUT%/} ;; *) break ;; esac
+    done
+    [ ! -L "$OUT" ] || die "--out must not be a symbolic link"
+    if [ -e "$OUT" ]; then
+        [ -d "$OUT" ] || die "--out must be a directory"
+        co_entries=$(find -H "$OUT" -mindepth 1 -maxdepth 1 -print -quit) ||
+            die "--out cannot be inspected"
+        [ -z "$co_entries" ] || die "--out must be empty; existing runs are never reused"
+    fi
+    mkdir -p "$OUT"
+    [ ! -L "$OUT" ] || die "--out must not be a symbolic link"
+    mkdir "$OUT/.inference-cost-owner" 2>/dev/null ||
+        die "--out is already claimed; existing runs are never reused"
+    co_entries=$(find -H "$OUT" -mindepth 1 -maxdepth 1 ! -name .inference-cost-owner -print -quit) ||
+        die "--out cannot be inspected"
+    if [ -n "$co_entries" ]; then
+        rmdir "$OUT/.inference-cost-owner"
+        die "--out must be empty; existing runs are never reused"
+    fi
+}
+
 run_model() {
     ENDPOINT=""
     MODEL=""
@@ -440,10 +466,7 @@ run_model() {
     check_sandbox
     ENDPOINT=${ENDPOINT%/}
     [ -n "$OUT" ] || OUT="$BUILD_DIR/run-$(date -u +%Y%m%dT%H%M%SZ)-$$"
-    [ ! -e "$OUT" ] || [ -d "$OUT" ] || die "--out must be a directory"
-    [ ! -d "$OUT" ] || [ -z "$(find "$OUT" -mindepth 1 -maxdepth 1 -print -quit)" ] ||
-        die "--out must be empty; existing runs are never reused"
-    mkdir -p "$OUT"
+    claim_output "$OUT"
     {
         say "version 1"
         say "endpoint $ENDPOINT"
@@ -699,6 +722,10 @@ mode=$1
 shift
 case $mode in
     --sandbox) sandbox "$@" ;;
+    --output-probe) claim_output "$1" ;;
+    --evaluate-probe)
+        evaluate "$1" "$TASKS_DIR/task01" "$2" "$3"
+        say "COMP_RC=$COMP_RC RUN_RC=$RUN_RC VERIFIED=$VERIFIED" ;;
     --deadline-probe)
         evaluate py "$TASKS_DIR/task01" "$1" "$2"
         [ "$COMP_RC" -eq 0 ] && [ "$VERIFIED" -eq 0 ] &&

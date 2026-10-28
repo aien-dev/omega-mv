@@ -31,8 +31,11 @@ sh bench/inference_cost/driver.sh --run-model --endpoint http://127.0.0.1:18091 
   `--out build/inference_cost/run-<utc>-<pid>`.
 - A missing endpoint, a curl failure, a non-200 status, or a body without `usage` (or with an `error`
   member) prints `NOT_RUN: ...` and exits 3. Logs written up to that point are kept.
-- `--out` must be absent or an empty directory, including hidden files. A nonempty directory is
-  refused with exit 2 before any of its files change; completed or interrupted runs are never reused.
+- `--out` must be absent or an empty real directory, including hidden files. Symbolic links
+  (including names with trailing slashes) and nonempty directories are refused with exit 2 before
+  any run files change. An atomic, persistent `.inference-cost-owner/` marker allows exactly one
+  invocation to claim the output; a post-claim emptiness check closes concurrent creation races.
+  Completed, interrupted and already-claimed runs are never reused.
 - `--langs` and `--arms` require nonempty comma-separated lists without empty elements.
 - Bubblewrap is mandatory and fails closed: missing `bwrap` or unavailable namespaces give NOT_RUN
   exit 3, never unsandboxed compilation or execution. GNU `timeout`, system Python, C and Rust
@@ -89,8 +92,9 @@ sh bench/inference_cost/driver.sh --self-test     # also run by `make test-infer
 6. **NOT_RUN paths.** An unreachable endpoint (the fake is killed first), an HTTP 404, and a missing
    `--endpoint` each give exit 3.
 7. **Adversarial boundaries.** Oracle-reading Python, host writes, C/Rust compile-time oracle reads,
-   a TERM-ignoring process with a descendant, an unavailable sandbox, empty workloads, and reused
-   output directories are permanent shell-driven controls in `audit.sh`. Good, bad, mixed-arm and
+   a TERM-ignoring process with a descendant, an unavailable sandbox, empty workloads, reused or
+   symlinked output directories, and competing output claimants are permanent shell-driven controls
+   in `audit.sh`. Good, bad, mixed-arm and
    compiler-refusal runs assert both the group and global PASS/FAIL strings, not only counters.
 
 ## Files
@@ -122,7 +126,11 @@ and read-only candidate and system runtime mounts. Compiler sandboxes additional
 headers/tools; Rust exposes only the selected toolchain's compiler and libraries, not its home.
 Inputs enter on stdin and compiler/runtime output leaves on stdout/stderr. The verifier and all
 oracle files remain outside. Compilation has the same bounded deadline as execution. Setup failure
-aborts the run; a sandbox status record is required before output can be scored.
+aborts the run. A trusted shell inside the fully configured sandbox must emit a readiness handshake
+on a dedicated descriptor, then close it before executing candidate-controlled code. The host
+requires that handshake for compilation and execution; bubblewrap namespace JSON alone is not
+readiness evidence because it is emitted before mount setup. Permanent tests exercise late compiler
+and runtime mount failures with real bubblewrap and assert NOT_RUN, as well as descriptor closure.
 
 The host dependencies exercised here are bubblewrap 0.9.0, which enforces Linux namespaces and
 mounts, and GNU coreutils `timeout` 9.4, which supplies the host deadline. These are isolation/verification infrastructure,
