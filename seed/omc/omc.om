@@ -16,7 +16,7 @@ global tw ulong 1
 global tl ulong 1
 global ts ulong 1
 global tbig ulong 1
-global out uchar 8388608
+global out uchar 16777216
 global oc ulong 1
 
 note ---- OM-2 profile (spec/omegese-om2.md, OMEGESE.md 9.13). om2 is 1 in an OM-2 unit (its first line
@@ -528,10 +528,10 @@ w = write 2 msg 0 get mc 0
 end
 
 note emitb / emit: one byte / one 32-bit word (little-endian) to the output; error 14 when it is full
-note (om4 EMIT, EMITB: the 8 MiB output area)
+note AArch64 retains its 8 MiB output ceiling; x86 byte sequences use the full output pool.
 fn emitb b uchar to void
 o = get oc 0
-if ge o 8388608
+if or ge o len out and eq get xtarget 0 0 ge o 8388608
 fail 14
 end
 put out o b
@@ -8140,7 +8140,10 @@ fail 15
 end
 b = get oc 0
 if ne get xtarget 0 0
+note A terminated then-path needs no skip jump, particularly at a bare unit's final byte.
+if eq get dead 0 0
 p = xbranch 14
+end
 else
 emit 335544320
 end
@@ -9259,7 +9262,9 @@ j = add j 1
 end
 end
 if eq k 2
+if or eq get xtarget 0 0 eq get bdead i 0
 patch26 get bbr i get oc 0
+end
 else
 patch19 get bbr i get oc 0
 end
@@ -15372,10 +15377,12 @@ put held 0 get nslot 0
 addname w i t 0 0 0
 matconst i 0
 hd = get oc 0
+cp_head get cur 0 get line 0
 xcmp i k 1
 br = sf_br t
 pushb br 4 hd i t
 pushnh sn sh
+cp_skip
 end
 
 fn xforval w ulong t ulong kr ulong sn ulong sh ulong to void
@@ -15388,11 +15395,13 @@ c = alloc
 put held 0 get nslot 0
 matconst c 0
 hd = get oc 0
+cp_head get cur 0 get line 0
 xcmp i kr 0
 br = sf_br t
 lpcnt c 1000000
 pushb br 4 hd i t
 pushnh sn sh
+cp_skip
 end
 
 fn xleave to void

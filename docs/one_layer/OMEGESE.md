@@ -509,6 +509,10 @@ blocks. A function that needs more than the 16 registers it hands out is error 1
 input, output, nesting, trap-site and block limits but holds 8192 names in scope, 4096 functions and
 524288 call sites per unit (`seed/omc/gate12.sh`, `gate15.sh`), so whole programs such as an
 interpreter fit in one unit; om4 itself keeps its own smaller tables.
+The candidate `target x86linux` backend has a 16 MiB output pool because native
+x86 instruction sequences can require more bytes than their AArch64 counterparts.
+The AArch64 output ceiling remains 8 MiB; input and frontend limits are unchanged.
+An exhausted target output pool still refuses with error 14.
 
 ### 9.7 Structs (omc only, rung 6)
 
