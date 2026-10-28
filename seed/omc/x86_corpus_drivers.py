@@ -398,10 +398,14 @@ def bare_calls(root, rel, source):
             if index == 1 and sha in (
                 "1de96237beb1b2d7d76fb226cd930036d8cc1d8c82faf4114f3309a1396365a5",
                 "3490824f6e8cb82e661c7a408e8e4264790875e9e0147914ad4b0571dde0fc79",
-                "ef1b3dc9f12deef3e2536b6689e79f529f216bff87c8c7b8dd5d5f259b7f3703",
                 "e1b60bc4c240e03be0c0fbdb630066f295ff7a53b73a380dab52fa8509f498d6",
             ):
                 trap = 103  # zero-length input, unconditional element access
+            if sha == "ef1b3dc9f12deef3e2536b6689e79f529f216bff87c8c7b8dd5d5f259b7f3703":
+                if name == "revtrap":
+                    trap = 109  # explicit trap after filling the output
+                if index == 1 and name in ("rev", "revtrap"):
+                    trap = 103  # only these exports unconditionally read the empty view
             if index == 0 and sha == "21e366be6ad718395e5018186a3915d57ea02147a54b247ef1f69f001960f642":
                 trap = 105  # original reachable-trap conversion counterexample
             if index == 1 and sha in (
@@ -442,6 +446,21 @@ def bare_calls(root, rel, source):
                 value = 0 if sha.startswith("a768") else secret
                 spec.update(expected_exit=0, expected_stdout=struct.pack("<Q",value)+bytes(context)+bytes([secret]))
                 spec["evidence"]["result_authority"] = "reviewed store offset and branch; pub-secret native-zero/one controls; complete edit and input observations"
+            if sha in (
+                "313b425a4e6b779633e06c0ed3dd6906730f39d230834b2921e4abffe9428a41",
+                "28883f52212233aa4bc76182dec3733ad550f209a109a7bd57f5c4227a373e10",
+            ):
+                # The original helper really writes stdout. The zero return word
+                # is the wrapper's void observation, not a fabricated I/O result.
+                spec.update(expected_exit=0, expected_stdout=(b"1\n" if index == 0 else b"0\n")+bytes(8))
+                spec["evidence"]["result_authority"] = "reviewed private-void decimal helper body; stdout syscall plus void observation"
+            if sha in (
+                "d65dd8eefd07ecb2e6fa2498fbedb1ad4919681632e2bf99b5b0fffe6f3c56b5",
+                "28932d16844b094298e10b2ddbd3e21499668ec5877d67dca19339100a04363f",
+            ):
+                payload = arrays[0]["data"]
+                spec.update(expected_exit=0, expected_stdout=payload[:1]+struct.pack("<Q",1)+payload)
+                spec["evidence"]["result_authority"] = "reviewed write(1,a,0,1) syscall, actual byte-count return and unchanged edit array"
             if recorded and "expected" in recorded:
                 want = recorded["expected"][index]
                 if want.startswith("TRAP "):
@@ -631,7 +650,7 @@ CURRENT_SHA256 = 'dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994
 RESOURCE_PINS = {'seed/qualification/om2/fixtures/sha256-k.dec': '66e0d9b40b2605fb5984b25fb10e1ea162dcb7ad9bb593ec8aaf1056a85c5b4e', 'seed/qualification/om2/fixtures/sha256-iv.dec': 'b831ee5e6e1ed07aeb8654d0dbd962f76a3078a89b091453f059ac26f3fea103', 'seed/qualification/om2/selftest/pass.cases': 'b3158f424965f8e8c6f590e736e8bd52622befb45978e7fbffc9e1063fd83dd1', 'seed/qualification/om2/selftest/fail.cases': '2bff4f5a29fa9f17e3416e769538ed845154317cb7d82baa39980c88ba055c44', 'seed/qualification/om2/selftest/cat.om': '2ad4147ae3e2a3b836b862b4653bf2fe83c86a98b4b0c50896ebff84338537a1', 'seed/qualification/om2/selftest/cat-bad.om': '46066af11f0ee008a60d719d3033ff6d9ddef3c854e318271f3cf577ed8a753d', 'seed/qualification/om2/fixtures/gen/seq-300.bin': '43f9b5d59eb108817176c6f65c2c6203a22f2ae8bc28b7a1dde45947678c5042', 'seed/qualification/om2/fixtures/gen/rnd-7-64.bin': '47a8c8a33e5576b929664df2e1bec6aae0158d3dee0210185a975de8a9a04c39', 'seed/qualification/om2/fixtures/gen/rep-0-5.bin': '8855508aade16ec573d21e6a485dfd0a7624085c1a14b5ecdd6485de0c6839a4', 'seed/qualification/security673/branch-corpus.om': 'a2672e4d018ca2ded61044af19bcde0ad7f8a3990429067aa2d5086ee681a413', 'seed/qualification/security673/branch-mutate.om': '4bc9e252ca68ba185c284b9b9aed09dee83526abae9913db6c6b592700db76e1', 'seed/qualification/security673/branch-check.om': '3165c09cb7ed7523355ccaa1acbdc89be55c2882fbb61fc7f25594bd68deeca3', 'seed/qualification/security673/array-fill.om': 'bcfb200a48291c27d4a700ea074e02616a881767c8838a52ad2dfd7b83b52d33', 'seed/qualification/security673/oracle-corpus.om': '41118388d232dd6897bebf9b239f4174a2e5054cdd07a4753c4ce60bf7c022fa', 'seed/qualification/security673/gate-child.om': '459a60da8e660ee1f433a9679bb41467074fda45997e5168e23e92ebad0d570b'}
 PURE_NAME_CONTROLS = {'e1109db40b1ab3f8b7c5b847bb9032810fc3dcf836ec58a0caf5459033636764': 'seed/omc/om2/s3/a-kept.om', 'e6e04d5f60f921be058b89ab369735e6b8aa9d398d836f713bbc8c688c95c513': 'seed/omc/om2/s3/a-ok.om', '92c7813513f2bb511bbacc53e1a351a417cabc10139134e477bfb61483005c92': 'seed/omc/om2/s3/a-om1.om', 'cfccbeb34d3bfb051e01977b9acb2b6166c41bbfaba85a26c85c123643e8012a': 'pack:seed/qualification/om2/c2/corpus.pack:3495087:1831', 'e7ea21711b45c957a6264e373e66f597c091b67809bd0c785113d2ea601e71d7': 'pack:seed/qualification/om2/c2/corpus.pack:3497014:1462', '2e011318d020bd5e0283bde413b74335b4e4b3c5b417e34b03caa832f5efcf66': 'pack:seed/qualification/om2/c2/corpus.pack:3516061:1403', '63eab87101f8c71645b26023d422fb910c8d6ce603504608bfb395fc5a7a0cb0': 'pack:seed/qualification/om2/c2/corpus.pack:3517560:1034', '767fc04dd38d62a2f1f700366a641a2a7ea7b5429e0341dcffb97bcc8558029b': 'pack:seed/qualification/om2/c2/corpus.pack:3596649:1500', '4ae68017b93e47a9ddc638ef9d0f3e950c9639346102c510c36909e728f28dec': 'pack:seed/qualification/om2/c2/corpus.pack:3609196:824', '3bd0be5b72fc92825742422dc7157196d85d57891b81c8ce89a6df8969584a82': 'seed/qualification/om2/sec/s5s7/a5-allops.om', '9cb0393b2c6c8f99ad93e5af2db0ae4bbf17de884767de162f9737c20717f369': 'seed/qualification/om2/sec/s5s7/a5-exact.om', '0ec2b5eb427d759eb7563f9dbf8cd1a921a23b9e80c9d7f779315490b23f274c': 'seed/qualification/om2/sec/s5s7/a5-kept.om', '1e0a5f4c22cee6170a7f6787fb6c1cc215e1ff9aa0e997bc8f7450c06b3a072b': 'seed/qualification/om2/sec/s5s7/a5-rot64.om', '373509e26a12a1c579bf4021d1c275929da7c534812ecdf62c9d0486f11d3eff': 'seed/qualification/om2/sec/s5s7/a5-swap.om', 'b21d8c82a5a3648011325261bac9481e9e3147dd29e17b491e04008bda289295': 'seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om', '56fbd35bc5e262553585cdd18a54524622c638fff89d9bf0f84d9c42884c8366': 'seed/qualification/om2/sec/s5s7/a5-allops.om+seed/qualification/om2/sec/s5s7/pr.om', 'd7df44a4f803645594ec1e758201d8e1c672c4ebe94c553ed9b4cdca98bb4607': 'seed/qualification/om2/sec/s5s7/a5-rot64.om+seed/qualification/om2/sec/s5s7/pr.om', 'c0c8cd2d3c8c9fe4e1cb8f9cfebb5af8d5c625368db1d9af713b0acb33504b24': 'seed/qualification/om2/sec/s5s7/a5-kept.om+seed/qualification/om2/sec/s5s7/pr.om', 'c7ceccff2f370d5c82df978399a82372f6d354703d9ff263de8d560df13d3481': 'seed/qualification/om2/sec/s5s7/a5-swap.om+seed/qualification/om2/sec/s5s7/pr.om'}
 ABI_DRIVER = ("seed/qualification/om2/oracle/s5s7/abi/driver.c",
-              "dd7ddd56b399475f7c7bc04dbe825f6bec06b34ed24c49c21a66c00ba60fc40c")
+              "a9d134a149ae1bbc89ca799ffa6036cb0612947e36e267e1535a544d34c52d3b")
 SHA_DRIVER = ("seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
               "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48")
 HELPERS = {"putu": ("seed/qualification/om2/sec/s0s2/lib/putu.om",

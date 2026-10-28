@@ -15,17 +15,17 @@ Unreviewed host effects remain NOT_RUN and make the verdict nonzero.
 
 The fixture inventory includes every .om/.omegese under tests/, every seed/*/tests,
 seed/omc/{om2,contracts}, seed/qualification, unit .om files and wasm/SPIRV case tables.
-Historical evidence is inventoried but never replayed. .cases and frozen C2
-manifest rows add composed, packed and cyclic sources and their stdin/argv. Raw
-files are also checked, so a manifest omission cannot quietly shrink the corpus.
-Pinned/mutant manifests are differential inputs, not old semantic authority. cc/subst
-conductor arms are counted separately, never confused with candidate execution.
+Frozen .cases and C2 rows retain their pinned historical assertions and exact
+inputs. Current C2 compatibility assertions remain mandatory and separate from
+their frozen provenance replay. Mutant specifications link to actual compiler
+mutation executions with build/control verdicts; healthy compiler output is not
+treated as a mutant. Current cross-target comparisons remain additional coverage.
 """
 from __future__ import annotations
 
 import argparse
 from collections import Counter, OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import hashlib
 from functools import lru_cache
 import json
@@ -146,6 +146,30 @@ HISTORICAL_COMPILERS = {
     "build/om2-qual/cand-s3/omc.om": ("ad220c054b2e018a985384a33bf09b9f0d612787", "656d4e25f503d38ae7523c758b37734b191ecc064d370ac7928011f25c02a3d6"),
     "build/om2-qual/cand-s4/omc.om": ("f6a6492fd1a3b608f0413a75685ddbb712075a73", "c792b401193d8477d38965d6ddb0fd0cb8fd5ac24fcb92fae9af52037a765f1c"),
 }
+ORIGINAL_SOURCE = {
+    "path": "seed/omc/omc.om",
+    "git_revision": "acb3f15cdc691b1b046b48b0dad0f9255a12ba4b",
+    "git_path": "seed/omc/omc.om",
+    "sha256": "2e35db7d6c2066fb4a20d19b8a9579c44caca9c9937b0594a89422010b673637",
+}
+PINNED_COMPILER_SHA256 = "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61"
+MUTANT_SPECIFICATIONS = {
+    "seed/qualification/om2/sec/s3s4/mutant-kills.cases",
+    "seed/qualification/om2/sec/s5s7/mutant-side.cases",
+}
+
+
+def frozen_manifest(rel):
+    return rel.startswith("seed/qualification/om2/sec/") and rel.endswith("/pinned.cases")
+
+
+def conductor_identity(rel):
+    if rel.startswith("seed/qualification/om2/candidates/"):
+        stage = rel.split("/")[4]
+        return "build/om2-qual/cand-" + stage + "/omc.om"
+    if frozen_manifest(rel) or rel.startswith("seed/qualification/om2/baseline/") or rel.endswith("/manifest-c2.txt"):
+        return "pinned"
+    return "current"
 SELFTEST_MANIFESTS = {
     "seed/qualification/om2/selftest/" + name + ".cases"
     for name in ("controls", "emit", "fail", "pass")
@@ -407,6 +431,8 @@ def conductor_resources(path):
             revision, sha = HISTORICAL_COMPILERS[name]
             resources[name] = {"path": name, "sha256": sha,
                                "git_revision": revision, "git_path": "seed/omc/omc.om"}
+        elif name == "seed/omc/omc.om" and path.relative_to(ROOT).as_posix().startswith("seed/qualification/om2/baseline/"):
+            resources[name] = dict(ORIGINAL_SOURCE)
         elif name == "om/sha256/sha256.om":
             resources[name] = {"path": name, "sha256": "7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21",
                                "pack_path": "seed/qualification/om2/c2/corpus.pack", "offset": 12540, "length": 35333}
@@ -483,12 +509,14 @@ def selftest_expectations(path):
 def conductor_case(path, name, line, alternate, compiler_subst):
     rel = path.relative_to(ROOT).as_posix()
     selftest = rel in SELFTEST_MANIFESTS
-    if not selftest and rel not in CONDUCTOR_FAILURES:
+    historical = frozen_manifest(rel) or rel.endswith("/manifest-c2.txt")
+    adequacy = rel == "seed/qualification/om2/baseline/adequacy.cases"
+    if not selftest and not historical and not adequacy and rel not in CONDUCTOR_FAILURES:
         raise Failure(f"alternate compiler manifest has no reviewed original-verdict authority: {rel}")
     resources = conductor_resources(path)
     original_name = line.split()[0]
     expected = (selftest_expectations(path)[0][original_name] if selftest else
-                ("FAIL" if original_name in CONDUCTOR_FAILURES[rel].split() else "PASS"))
+                ("FAIL" if adequacy or original_name in CONDUCTOR_FAILURES.get(rel, "").split() else "PASS"))
     authority = "\n".join(row for row in path.read_text().splitlines() if row.startswith("#"))
     authority_path = rel
     if rel.endswith("s1-lexmutants.cases"):
@@ -499,6 +527,8 @@ def conductor_case(path, name, line, alternate, compiler_subst):
                 expected_compile="accept", evidence={
                     "manifest": rel, "resources": resources, "conductor_row": line,
                     "alternate_compiler": alternate, "compiler_substitution": compiler_subst,
+                    "child_compiler_identity": conductor_identity(rel),
+                    "expected_failure_reason": "mutant survived" if adequacy else None,
                     "control_kind": "supervisor_verdict_control" if selftest else ("compiler_mutant" if expected == "FAIL" else "compiler_control"),
                     "expected_overall_exit": selftest_expectations(path)[1] if selftest else None,
                     "expected_original_conductor": expected, "original_case_name": original_name,
@@ -556,6 +586,36 @@ def cases(files, record):
                 record("INVALID", name, "malformed conductor row", conductor_row=line)
                 continue
             mode = fields[1]
+            if frozen_manifest(rel):
+                yield conductor_case(path, name, line, None, None)
+                # The old compiler's oracle remains a separate, mandatory replay.
+                # Current code generation is additionally compared, not substituted.
+                source = source_bytes(fields[2])
+                yield Case(name + ":current-differential", source,
+                           stdin=stdin_bytes(fields[3]) if fields[1] == "run" else b"",
+                           args=tuple(fields[7:]) if fields[1] == "run" else (),
+                           evidence={"historical_obligation": name, "conductor_row": line})
+                continue
+            if rel == "seed/qualification/om2/baseline/adequacy.cases":
+                yield conductor_case(path, name, line, None, None)
+                subst = None
+                continue
+            if rel in MUTANT_SPECIFICATIONS and mode != "notrun":
+                matches = []
+                for candidate in sorted((ROOT / "seed/qualification/om2/candidates").rglob("*mutants.cases")):
+                    for candidate_line in candidate.read_text().splitlines():
+                        candidate_fields = candidate_line.split()
+                        if candidate_fields and candidate_fields[1:] == fields[1:]:
+                            matches.append(conductor_case(candidate, name, candidate_line, None, None))
+                if not matches:
+                    record("FAIL", name, "mutant specification has no executable compiler mutation", conductor_row=line)
+                else:
+                    obligation = matches[0]
+                    replays = [dict(item.evidence) for item in matches]
+                    obligation.evidence["mutant_specification"] = {"path": rel, "line": number, "row": line}
+                    obligation.evidence["required_mutant_replays"] = replays
+                    yield obligation
+                continue
             if rel in SELFTEST_MANIFESTS:
                 try:
                     yield conductor_case(path, name, line, alternate, compiler_subst)
@@ -605,6 +665,9 @@ def cases(files, record):
                 continue
             try:
                 source = source_bytes(fields[2])
+                if rel.endswith("/manifest-c2.txt"):
+                    frozen = conductor_case(path, name + ":frozen-provenance", line, None, None)
+                    yield frozen
                 evidence = {"conductor_row": line, "source_spec": fields[2], "conductor_deadline_seconds": deadline}
                 if "om/sha256/sha256.om" in fields[2]:
                     evidence["historical_source"] = {
@@ -613,6 +676,8 @@ def cases(files, record):
                         "sha256": "7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21",
                         "provenance": "seed/qualification/om2/c2/index.tsv:c2-00003"}
                 if subst is not None:
+                    if mode == "same":
+                        raise Failure("original conductor forbids substitution before same")
                     if len(subst) != 2:
                         raise Failure("malformed subst directive")
                     old, new = (source_bytes(part) for part in subst)
@@ -786,35 +851,45 @@ def disassemble(image, source, objdump, llvm, cwd, timeout):
     mnemonics = Counter()
     instructions = []
     for n, (start, end, base) in enumerate(spans):
-        wrapper = cwd / f"oracle-{n}.elf"
-        wrapper.write_bytes(oracle_elf(image[start:end], base + start))
-        options = ["-d", "-z", "--x86-asm-syntax=intel"] if llvm else ["-d", "-z", "-M", "intel", "--insn-width=16"]
-        rc, output, error = run([objdump, *options, str(wrapper)], b"", cwd, timeout)
-        if rc:
-            raise Failure("disassembler refusal: " + error.decode("utf-8", "replace"))
         cursor = base + start
-        for line in output.decode("utf-8", "replace").splitlines():
-            match = INSTRUCTION.match(line)
-            if not match:
-                continue
-            address = int(match[1], 16)
-            raw = bytes.fromhex(match[2])
-            asm = match[3].strip()
-            if address != cursor or not raw or not asm:
-                raise Failure("disassembly byte gap/overlap or undecoded instruction: " + line)
-            offset = address - base
-            if image[offset:offset + len(raw)] != raw:
-                raise Failure("disassembler bytes differ from emitted image")
-            if re.search(r"\(bad\)|<unknown>|\.byte|\.word|\.short|\.long|\.quad", asm):
-                raise Failure("invalid instruction: " + line)
-            mnemonic = asm.split()[0]
-            if mnemonic in ("rex", "rex.W", "data16", "addr32", "rep", "repz", "repnz", "lock") and len(asm.split()) == 1:
-                raise Failure("orphan instruction prefix: " + line)
-            mnemonics[mnemonic] += 1
-            instructions.append((offset, raw, asm))
-            cursor += len(raw)
-        if cursor != base + end:
-            raise Failure(f"disassembler did not cover every code byte: stopped {cursor:x}, expected {base + end:x}")
+        while cursor < base + end:
+            offset = cursor - base
+            chunk_end = min(offset + 65536, end)
+            # Decode from an established instruction boundary, with enough
+            # lookahead to finish a boundary-crossing x86 instruction. Consume
+            # only through that instruction, then start the next bounded chunk
+            # there. The child output cap never truncates a large whole image.
+            decode_end = min(chunk_end + 15, end)
+            wrapper = cwd / f"oracle-{n}.elf"
+            wrapper.write_bytes(oracle_elf(image[offset:decode_end], cursor))
+            options = ["-d", "-z", "--x86-asm-syntax=intel"] if llvm else ["-d", "-z", "-M", "intel", "--insn-width=16"]
+            rc, output, error = run([objdump, *options, str(wrapper)], b"", cwd, timeout)
+            if rc:
+                raise Failure(f"disassembler refusal: exit={rc} stdout_bytes={len(output)} stderr={error!r}")
+            for line in output.decode("utf-8", "replace").splitlines():
+                match = INSTRUCTION.match(line)
+                if not match:
+                    continue
+                address = int(match[1], 16)
+                raw = bytes.fromhex(match[2])
+                asm = match[3].strip()
+                if address != cursor or not raw or not asm:
+                    raise Failure("disassembly byte gap/overlap or undecoded instruction: " + line)
+                offset = address - base
+                if image[offset:offset + len(raw)] != raw:
+                    raise Failure("disassembler bytes differ from emitted image")
+                if re.search(r"\(bad\)|<unknown>|\.byte|\.word|\.short|\.long|\.quad", asm):
+                    raise Failure("invalid instruction: " + line)
+                mnemonic = asm.split()[0]
+                if mnemonic in ("rex", "rex.W", "data16", "addr32", "rep", "repz", "repnz", "lock") and len(asm.split()) == 1:
+                    raise Failure("orphan instruction prefix: " + line)
+                mnemonics[mnemonic] += 1
+                instructions.append((offset, raw, asm))
+                cursor += len(raw)
+                if cursor >= base + chunk_end:
+                    break
+            if cursor < base + chunk_end or cursor > base + end:
+                raise Failure(f"disassembler did not cover every code byte: stopped {cursor:x}, expected chunk {base + chunk_end:x}")
     boundaries = {base + offset for offset, _, _ in instructions}
     for offset, raw, asm in instructions:
         branch = re.match(r"(?:j\w+|callq?)\s+(?:0x)?([0-9a-fA-F]+)(?:\s|$)", asm)
@@ -836,10 +911,10 @@ def normalized_diagnostics(error, shift):
     for line in error.splitlines(keepends=True):
         if line.startswith(b"omc: line "):
             line = re.sub(rb"(?<=line )\d+(?=: error )",
-                          lambda m: str(int(m[0]) - shift).encode(), line)
+                          lambda m: str(int(m[0]) - shift if int(m[0]) else 0).encode(), line)
         elif re.match(rb"omc-(?:diag|site|check) 1 ", line):
             line = re.sub(rb"(?<=line=)\d+",
-                          lambda m: str(int(m[0]) - shift).encode(), line)
+                          lambda m: str(int(m[0]) - shift if int(m[0]) else 0).encode(), line)
             line = re.sub(rb"(?<=span=)(\d+)-(\d+)",
                           lambda m: f"{int(m[1]) - shift * len(TARGET_PREFIX)}-{int(m[2]) - shift * len(TARGET_PREFIX)}".encode(),
                           line)
@@ -1037,14 +1112,18 @@ def exercise_conductor(case, default, x86, compiler, qemu, cwd, timeout):
         raise Failure(f"original conductor architecture differential: native={result_details(runs[0])}; x86={result_details(runs[1])}; filesystem_equal={effects[0] == effects[1]}; native_log={runs[0][1]!r}; x86_log={runs[1][1]!r}")
     if runs[0][0] not in (0, 1, 2, 3) or b"OM2GATE " not in runs[0][1]:
         raise Failure(f"original conductor invalid/setup failure: {result_details(runs[0])}; original_log={runs[0][1]!r}")
-    verdicts = {}
+    verdicts, directives = {}, []
     for match in re.finditer(rb"(?m)^VERDICT ([^ \n]+) (PASS|FAIL|INVALID|NOT_RUN)([^\n]*)$", runs[0][1]):
         name = match[1].decode()
+        verdict = {"status": match[2].decode(), "line": match[0].decode()}
+        if name in ("cc", "subst", "deadline"):
+            directives.append(verdict)
+            continue
         if name in verdicts:
             raise Failure("original conductor emitted duplicate case name: " + name)
-        verdicts[name] = {"status": match[2].decode(), "line": match[0].decode()}
+        verdicts[name] = verdict
     return {"exit": runs[0][0], "stdout": runs[0][1].decode(), "stdout_sha256": digest(runs[0][1]), "stderr": runs[0][2].decode(),
-            "verdicts": verdicts,
+            "verdicts": verdicts, "directive_verdicts": directives,
             "filesystem_sha256": digest(json.dumps(effects[0], sort_keys=True).encode())}
 
 def exercise_bridge(plan, compiler, qemu, options, scratch, state):
@@ -1153,8 +1232,7 @@ def _exercise_bridge(plan, compiler, qemu, options, scratch, state):
     for arch, cc in (("aarch64", native_cc), ("x86_64", x86_cc)):
         library_key = arch, tuple((unit["path"], unit["sha256"]) for unit in plan["units"]), selected_sha
         if library_key not in state["libraries"]:
-            libwork = scratch / ("bridge-library-" + str(len(state["libraries"])))
-            libwork.mkdir()
+            libwork = Path(tempfile.mkdtemp(prefix="bridge-library-", dir=scratch))
             copy_resources(plan["units"], libwork)
             output = libwork / "generated"
             command = [str(bridge)]
@@ -1224,7 +1302,7 @@ def _exercise_bridge(plan, compiler, qemu, options, scratch, state):
                 if changes:
                     raise Failure("read-only C-boundary caller changed its scratch filesystem: " + str(changes))
         if observed[0] != plan["expected_exit"]:
-            raise Failure(f"original {arch} C-boundary caller expected {plan['expected_exit']}: {result_details(observed)}")
+            raise Failure(f"original {arch} C-boundary caller expected {plan['expected_exit']}: {result_details(observed)}; stdout={observed[1]!r}; stderr={observed[2]!r}")
         observations.append({"architecture": arch, "compiler_sha256": selected_sha,
                              "args": list(args), "stdin_hex": "", "deadline_seconds": driver_timeout,
                              "caller_resources": plan["resources"], "unit_sources": plan["units"],
@@ -1321,6 +1399,29 @@ def main():
     generation_variant = None
     with tempfile.TemporaryDirectory(prefix="omega-fr9-oracle-") as scratch:
         scratch = Path(scratch)
+        original_compilers = {}
+
+        def original_compiler(identity):
+            if identity == "current":
+                return compiler
+            baseline = options.bridge_baseline_compiler.resolve()
+            if not baseline.is_file() or digest(baseline.read_bytes()) != PINNED_COMPILER_SHA256:
+                raise Failure("original conductor requires exact independently pinned OM1 compiler " + PINNED_COMPILER_SHA256)
+            if identity == "pinned":
+                return str(baseline)
+            if identity not in original_compilers:
+                revision, sha = HISTORICAL_COMPILERS[identity]
+                fetched = run(["git", "show", revision + ":seed/omc/omc.om"], b"", ROOT, options.timeout)
+                if fetched[0] or digest(fetched[1]) != sha:
+                    raise Failure("historical compiler source identity mismatch: " + identity)
+                built = run([str(baseline)], fetched[1], scratch, options.timeout)
+                if built[0] or built[2] or not built[1]:
+                    raise Failure("historical compiler bootstrap failed: " + identity + ": " + str(result_details(built)))
+                binary = scratch / ("original-" + sha)
+                binary.write_bytes(built[1])
+                binary.chmod(0o700)
+                original_compilers[identity] = str(binary)
+            return original_compilers[identity]
 
         def generation_compiler():
             nonlocal generation_variant
@@ -1394,7 +1495,7 @@ def main():
             cwd = scratch / str(index)
             cwd.mkdir()
             diagnostics = {}
-            child_timeout = min(options.timeout, case.deadline) if case.deadline is not None else options.timeout
+            child_timeout = case.deadline if case.deadline is not None else options.timeout
             try:
                 if case.bridge:
                     replay = exercise_bridge(case.bridge, compiler, qemu, options, scratch, bridge_state)
@@ -1408,7 +1509,7 @@ def main():
                            contract_status=case.evidence.get("contract_status", "original fixed obligation"))
                     continue
                 case_compiler = compiler
-                if driver == "genlimit":
+                if driver == "genlimit" and case.operation != "emit":
                     case_compiler, case.evidence["generation_ceiling_whitebox"] = generation_compiler()
                     case.stdout_oracle = "sha:" + digest(literal_bytes(case.source)[0])
                 compilekey = key, digest(target), frontend_mode, child_timeout, case_compiler
@@ -1473,33 +1574,63 @@ def main():
                         default[1][:6] != b"\x7fELF\x02\x01" or
                         struct.unpack_from("<H", default[1], 18)[0] != 183):
                     raise Failure("default no longer emits AArch64 ELF program")
-                mnemonics, instructions, carveouts = disassemble(x86[1], target, objdump, llvm, cwd, options.timeout)
+                mnemonics, instructions, carveouts = disassemble(x86[1], target, objdump, llvm, cwd, child_timeout)
                 templates.update(mnemonics)
                 if case.operation == "conductor":
-                    manifest = case.evidence["manifest"]
-                    if manifest not in conductor_cache:
-                        try:
-                            conductor_cache[manifest] = exercise_conductor(
-                                case, default[1], x86[1], compiler, qemu, cwd, options.timeout)
-                        except (OSError, ValueError, Failure) as error:
-                            conductor_cache[manifest] = {"error": str(error)}
-                    replay = conductor_cache[manifest]
-                    if "error" in replay:
-                        raise Failure(replay["error"])
-                    overall = case.evidence.get("expected_overall_exit")
-                    if overall is not None and replay["exit"] != overall:
-                        raise Failure(f"original conductor expected whole-manifest exit {overall}, observed {replay['exit']}; original_log={replay['stdout']}")
-                    observed = replay["verdicts"].get(case.evidence["original_case_name"])
-                    expected = case.evidence["expected_original_conductor"]
-                    if observed is None or observed["status"] != expected:
-                        raise Failure(f"original conductor oracle: expected {expected}, observed {observed}; log_sha256={replay['stdout_sha256']}; original_log={replay['stdout']}")
-                    record("PASS", case.name, "original conductor expected verdict proved on native/x86 conductor, including compiler-mutant detection",
-                           source_sha256=key, evidence=case.evidence,
-                           control_kind=case.evidence["control_kind"],
-                           expected_original_conductor=expected, observed_original_conductor=observed,
-                           conductor_exit=replay["exit"], conductor_stdout_sha256=replay["stdout_sha256"],
-                           filesystem_sha256=replay["filesystem_sha256"],
-                           oracle_instructions=len(instructions),
+                    observations = []
+                    required = case.evidence.get("required_mutant_replays", [case.evidence])
+                    for replay_number, requirement in enumerate(required):
+                        manifest = requirement["manifest"]
+                        identity = requirement["child_compiler_identity"]
+                        cachekey = manifest, identity, digest(json.dumps(requirement["resources"], sort_keys=True).encode())
+                        if cachekey not in conductor_cache:
+                            try:
+                                replaydir = cwd / ("replay-" + str(replay_number))
+                                replaydir.mkdir()
+                                replay_case = replace(case, evidence=requirement)
+                                child_compiler = original_compiler(identity)
+                                conductor_cache[cachekey] = exercise_conductor(
+                                    replay_case, default[1], x86[1], child_compiler, qemu, replaydir, options.timeout)
+                                # File the actual build/control/kill transcript
+                                # once, independently of per-row verdicts. A
+                                # successful mutation assertion is not merely
+                                # an expected output attached to healthy code.
+                                print(json.dumps({"kind": "original-conductor-evidence",
+                                                  "manifest": manifest, "child_compiler_identity": identity,
+                                                  "child_compiler_sha256": digest(Path(child_compiler).read_bytes()),
+                                                  "resources": requirement["resources"],
+                                                  "replay": conductor_cache[cachekey]}, sort_keys=True))
+                            except (OSError, ValueError, Failure) as error:
+                                conductor_cache[cachekey] = {"error": str(error)}
+                        replay = conductor_cache[cachekey]
+                        if "error" in replay:
+                            raise Failure(replay["error"])
+                        overall = requirement.get("expected_overall_exit")
+                        if overall is not None and replay["exit"] != overall:
+                            raise Failure(f"original conductor expected whole-manifest exit {overall}, observed {replay['exit']}; original_log={replay['stdout']}")
+                        observed = replay["verdicts"].get(requirement["original_case_name"])
+                        expected = requirement["expected_original_conductor"]
+                        if observed is None or observed["status"] != expected:
+                            raise Failure(f"original conductor oracle: expected {expected}, observed {observed}; log_sha256={replay['stdout_sha256']}; original_log={replay['stdout']}")
+                        reason = requirement.get("expected_failure_reason")
+                        if reason and reason not in observed["line"]:
+                            raise Failure("original negative control failed for the wrong reason: " + observed["line"])
+                        if requirement.get("required_mutant_replays") is not None:
+                            raise Failure("recursive mutant replay plan")
+                        if "mutant_specification" in case.evidence:
+                            bad_controls = {name: verdict for name, verdict in replay["verdicts"].items()
+                                            if ("ctl" in name) and verdict["status"] != "PASS"}
+                            if bad_controls or replay["directive_verdicts"]:
+                                raise Failure(f"mutant replay build/control failed: {bad_controls}; {replay['directive_verdicts']}")
+                        observations.append({"manifest": manifest, "child_compiler_identity": identity,
+                                             "expected": expected, "observed": observed,
+                                             "conductor_exit": replay["exit"],
+                                             "conductor_stdout_sha256": replay["stdout_sha256"],
+                                             "filesystem_sha256": replay["filesystem_sha256"],
+                                             "directive_verdicts": replay["directive_verdicts"]})
+                    record("PASS", case.name, "original conductor oracle proved on native/x86 hosts with explicit child compiler identity",
+                           source_sha256=key, evidence=case.evidence, replays=observations,
+                           control_kind=case.evidence["control_kind"], oracle_instructions=len(instructions),
                            child_compiler_architecture="native AArch64 in both conductor runs")
                     continue
                 if case.operation == "structural":

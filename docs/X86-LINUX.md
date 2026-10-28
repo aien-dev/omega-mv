@@ -302,15 +302,15 @@ remaining exclusions are individually recorded in
 records, hashes, commands and the exact counting rule. The historical baseline
 has 152 top-level FAIL records; its summary is not another failing case.
 
-The current source additionally repairs OM-2 constant-index temporary allocation
-and missing x86 trap-site diagnostics. The SHA unit now compiles for both targets
+At `4f14b2d8f1eeb470836fcd2adf1e6ad5b7608c16`, the source additionally repaired
+OM-2 constant-index temporary allocation and missing x86 trap-site diagnostics.
+The SHA unit compiled for both targets
 and the contract diagnostic fixture emits matching source-site records after
 target-prefix line translation. The seed ladder rebuilds to compiler SHA256
 `7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316`.
 Additional entryless callers and trap authorities are implemented in the oracle.
-The full differential after these last changes is **NOT_RUN**: the operator
-explicitly requested wrap-up. Do not attribute the earlier counts or host gates
-to the unrerun final patch.
+The full differential after those changes was **NOT_RUN** at that operator
+wrap-up. Do not attribute the earlier counts or host gates to that unrerun patch.
 
 Two invalid-fd ioctl cases in the resumed run have concrete emulator evidence:
 QEMU's own trace records request `0xc020462b`, fd `-1`, errno ENOTTY, while the
@@ -319,6 +319,38 @@ native fixture requires EBADF. QEMU 10.0.14
 returns `-TARGET_ENOTTY` for an unknown request before checking the descriptor.
 The receipt pins the source, source archive, emulator binary and trace. These
 are NOT_RUN/EMULATOR_ARTIFACT records, not backend PASS or native-x86 evidence.
+
+## Corpus authority and compatibility
+
+The runner distinguishes current-candidate checks from historical authorities:
+
+- Frozen `sec/*/pinned.cases` assertions execute through the original Omega
+  conductor with the independently checked compiler SHA256
+  `734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61`.
+  Separate current-candidate differential records do not replace those assertions.
+- C2 still requires the current candidate to reproduce its frozen compile bytes
+  and diagnostics. A separate `:frozen-provenance` replay checks the historical
+  authority; its PASS cannot satisfy a failing current-candidate C2 row.
+- Historical candidate manifests receive the compiler source at their recorded
+  stage revision. Compiler substitutions, builds, controls and mutant executions
+  run through their original conductor, rather than testing a healthy compiler
+  against a mutant-only expected output.
+- Standalone mutant specifications must map to executable mutation blocks.
+  Actual build/control/kill transcripts are filed once in the JSONL as
+  `original-conductor-evidence`; per-row records reference their hashes.
+  Adequacy controls must fail specifically because the mutant survived, not
+  because its compiler failed to build.
+
+The original C2 compatibility contract conflicts with intentional later native
+changes, including corrected `getppid`, the socket-option safety allowlist and
+expanded name/function capacities. Those failures remain visible. Revising the
+contract requires an explicit decision; neither reverting safety fixes nor
+silently replacing current-candidate checks with historical replay is allowed.
+
+Disassembly uses bounded chunks starting at decoded instruction boundaries,
+with lookahead for crossing instructions. Every code byte and direct-branch
+target is still checked, including large generated images; the child output
+file limit is not treated as malformed compiler output or waived.
 
 ## Standalone qualification oracle
 

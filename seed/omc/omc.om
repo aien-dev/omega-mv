@@ -3431,7 +3431,7 @@ note SDIV; rem: t = a / b, rd = a - t * b (MSUB); i64 div: CMN Xb, #1; B.NE +3; 
 note unless fl bit 2 (b a number other than -1)
 fn bo_div op ulong ty ulong ra ulong rb ulong rd ulong fl ulong to void
 if ne get xtarget 0 0
-xdiv op ty ra rb rd
+xdiv op ty ra rb rd fl
 ret
 end
 if eq and fl 1 0
@@ -14915,7 +14915,7 @@ bo_fix d ty
 end
 end
 
-fn xdiv op ulong ty ulong a ulong b ulong d ulong to void
+fn xdiv op ulong ty ulong a ulong b ulong d ulong fl ulong to void
 if or eq ty 10 eq ty 11
 if ne op 36
 fail 7
@@ -14925,11 +14925,15 @@ ret
 end
 xload 0 a
 xload 1 b
+note Match bo_div's constant-divisor proofs and source trap sites.
+if eq and fl 1 0
 xrr 133 1 1
 xtrap 0 2
+end
 done = ulong 0
 if and ge ty 6 le ty 9
-note IDIV faults on MIN/-1 even for remainder: bypass with zero remainder.
+if and eq ty 9 eq and fl 2 0
+note Only 64-bit IDIV can fault on MIN/-1; remainder must bypass with zero.
 ximm 2 18446744073709551615
 xrr 57 1 2
 other = xbranch 1
@@ -14942,6 +14946,7 @@ xtrap 6 1
 done = xbranch 14
 end
 xpatch other get oc 0
+end
 xb 72 153 144
 xb 72 247 249
 else
@@ -14955,7 +14960,10 @@ if ne done 0
 xpatch done get oc 0
 end
 xstore 0 d
+note Narrow signed quotients can overflow; remainders and unsigned quotients cannot.
+if and eq op 36 and ge ty 6 lt ty 9
 bo_fix d ty
+end
 end
 
 fn xshift op ulong ty ulong a ulong b ulong imm ulong d ulong to void
@@ -14965,13 +14973,16 @@ ximm 1 b
 else
 xload 1 b
 end
+note imm is set only for a statically valid shift amount, as in bo_shl/bo_shr.
+if eq imm 0
 ximm 2 twid ty
 xrr 57 1 2
 xtrap 2 7
+end
 xrr 137 2 0
 if eq op 41
 xb 72 211 224
-if ge ty 6
+if eq ty 9
 xrr 137 8 0
 xb 73 211 248
 xrr 57 8 2
