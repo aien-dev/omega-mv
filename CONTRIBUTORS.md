@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
 | Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
 | Codex (GPT-6 Astra) | Seeded IR statement/type/scope validation repairs, bootstrap-safe helper splits, and independent C-oracle regression qualification |
 | Codex (GPT-6 Astra) | Strict seeded-Omega HTTP/1.1 server/client with SSE and strict RFC 8259 JSON reader/writer, with oracle parity, seeded fuzz, mutants, fd-leak/timeout and curl SSE demo (#788) |
