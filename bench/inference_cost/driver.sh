@@ -199,6 +199,72 @@ EOF
     esac
 }
 
+# Candidate execution has no host root, home, network or inherited environment. Only
+# system runtime libraries and the single executable/source are exposed read-only;
+# stdin carries inputs, and the host compares stdout against the oracle afterward.
+# Never fall back to direct execution if bubblewrap cannot establish its namespaces.
+sandbox() { # mode candidate_file
+    sb_mode=$1
+    sb_file=$2
+    set -- bwrap --unshare-all --unshare-user --disable-userns --die-with-parent --new-session --clearenv --info-fd 3 \
+        --setenv PATH /usr/bin --setenv LC_ALL C \
+        --ro-bind /usr/lib /usr/lib --symlink usr/lib /lib \
+        --proc /proc --dev /dev --tmpfs /tmp --dir /work --chdir /work \
+        --ro-bind "$sb_file" /work/candidate
+    # Compiler-only system headers/tools; never mount home, /tmp or the checkout.
+    case $sb_mode in
+        c|rs)
+            set -- "$@" --dir /usr/bin --ro-bind /usr/include /usr/include \
+                --ro-bind /usr/libexec /usr/libexec \
+                --ro-bind "$(readlink -f "$(command -v cc)")" /usr/bin/cc \
+                --ro-bind "$(readlink -f "$(command -v as)")" /usr/bin/as \
+                --ro-bind "$(readlink -f "$(command -v ld)")" /usr/bin/ld \
+                --ro-bind "$(readlink -f "$(command -v cat)")" /usr/bin/cat \
+                --ro-bind "$(readlink -f "$(command -v sh)")" /usr/bin/sh \
+                --symlink usr/bin /bin ;;
+        *) set -- "$@" --dir /usr/bin --ro-bind "$(readlink -f "$(command -v python3)")" /usr/bin/python3 ;;
+    esac
+    case $sb_mode in
+        om)
+            "$@" --ro-bind "$OMC" /compiler --remount-ro / /usr/bin/python3 -I -c \
+                'import os; os.execv("/compiler", ["/compiler"])' ;;
+        c)
+            "$@" --remount-ro / /usr/bin/sh -c 'cc -O2 -x c -include stdint.h -include stdio.h -include stdlib.h -o /tmp/bin /work/candidate -lm && cat /tmp/bin' ;;
+        py)
+            "$@" --remount-ro / /usr/bin/python3 -I -c \
+                'import py_compile; py_compile.compile("/work/candidate", cfile="/tmp/candidate.pyc", doraise=True)' ;;
+        rs)
+            sb_root=$(rustc --print sysroot) || not_run "cannot resolve Rust sysroot"
+            "$@" --ro-bind "$sb_root/bin/rustc" /toolchain/bin/rustc \
+                --ro-bind "$sb_root/lib" /toolchain/lib --setenv LD_LIBRARY_PATH /toolchain/lib \
+                --remount-ro / /usr/bin/sh -c '/toolchain/bin/rustc --sysroot /toolchain -O --edition 2021 -A warnings --crate-name bench -o /tmp/bin /work/candidate && cat /tmp/bin' ;;
+        run)
+            if [ "$sb_file" = /dev/null ]; then
+                "$@" --remount-ro / /usr/bin/python3 -I -c 'pass'
+            elif [ "${sb_file##*.}" = py ]; then
+                "$@" --remount-ro / /usr/bin/python3 -I /work/candidate
+            else
+                "$@" --remount-ro / /work/candidate
+            fi ;;
+        *) die "unknown sandbox mode" ;;
+    esac
+}
+
+check_sandbox() {
+    need_tool bwrap
+    need_tool timeout
+    need_tool python3
+    # Exercise the actual namespace setup, not merely bwrap's presence in PATH.
+    sandbox run /dev/null 3>/dev/null >/dev/null 2>&1 ||
+        not_run "bubblewrap sandbox is unavailable; no candidate was run"
+}
+
+run_candidate() { # file command [args...]
+    # GNU timeout owns a process group; bubblewrap also owns a PID namespace.
+    # TERM gets a short grace period, then KILL tears down every descendant.
+    timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox run "$1"
+}
+
 # ---- evaluate one candidate: sets COMP_RC, RUN_RC and VERIFIED; the work dir holds src, err.txt,
 # out.txt. A compiler refusal (COMP_RC != 0) is never verified and its output is never run (#910).
 # sh has no locals: every name set here starts with ev_.
@@ -216,27 +282,31 @@ evaluate() { # lang task_dir candidate work
         om)
             # om2 diag: the human "omc: line N: error K" plus an "omc-diag 1 ..." record on refusal.
             { printf 'om2 diag\n'; sed '1{/^om2\( .*\)\{0,1\}$/d;}' "$ev_c"; printf '\n'; cat "$SCRIPT_DIR/io.om"; gen_main om "$ev_s"; } > "$ev_w/src.om"
-            "$OMC" < "$ev_w/src.om" > "$ev_w/bin" 2> "$ev_w/err.txt" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox om "$ev_w/src.om" < "$ev_w/src.om" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
         c)
             { cat "$ev_c"; gen_main c "$ev_s"; } > "$ev_w/src.c"
-            cc -O2 -include stdint.h -include stdio.h -include stdlib.h -o "$ev_w/bin" "$ev_w/src.c" -lm 2> "$ev_w/err.txt" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox c "$ev_w/src.c" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
         py)
             { cat "$ev_c"; gen_main py "$ev_s"; } > "$ev_w/src.py"
-            python3 -m py_compile "$ev_w/src.py" 2> "$ev_w/err.txt" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox py "$ev_w/src.py" > "$ev_w/compile.out" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
         rs)
             { cat "$ev_c"; gen_main rs "$ev_s"; } > "$ev_w/src.rs"
-            rustc -O --edition 2021 -A warnings -o "$ev_w/bin" "$ev_w/src.rs" 2> "$ev_w/err.txt" || COMP_RC=$? ;;
+            timeout --kill-after=1s 10s sh "$SCRIPT_DIR/driver.sh" --sandbox rs "$ev_w/src.rs" > "$ev_w/bin" 2> "$ev_w/err.txt" 3> "$ev_w/compile.sandbox" || COMP_RC=$? ;;
     esac
+    [ -s "$ev_w/compile.sandbox" ] ||
+        not_run "bubblewrap could not start the compiler sandbox; no unsandboxed fallback"
     VERIFIED=0
     RUN_RC=-
     if [ "$COMP_RC" -eq 0 ]; then
         RUN_RC=0
         if [ "$ev_l" = py ]; then
-            timeout 10 python3 -I "$ev_w/src.py" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" || RUN_RC=$?
+            run_candidate "$ev_w/src.py" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" 3> "$ev_w/run.sandbox" || RUN_RC=$?
         else
             chmod +x "$ev_w/bin"
-            timeout 10 "$ev_w/bin" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" || RUN_RC=$?
+            run_candidate "$ev_w/bin" < "$ev_t/inputs.txt" > "$ev_w/out.txt" 2> "$ev_w/run.err" 3> "$ev_w/run.sandbox" || RUN_RC=$?
         fi
+        [ -s "$ev_w/run.sandbox" ] ||
+            not_run "bubblewrap could not start the candidate sandbox; no unsandboxed fallback"
         if [ "$RUN_RC" -eq 0 ] && tail -n +3 "$ev_t/expected.txt" | cmp -s - "$ev_w/out.txt"; then
             VERIFIED=1
         fi
@@ -248,6 +318,7 @@ evaluate() { # lang task_dir candidate work
 task_ids() { for d in "$TASKS_DIR"/task*/; do basename "$d"; done; }
 
 check_tasks() {
+    check_sandbox
     need_lang_tools "$ALL_LANGS"
     cwork="$BUILD_DIR/check"
     rm -rf "$cwork"
@@ -359,13 +430,19 @@ run_model() {
     case $MODEL in *[!A-Za-z0-9._:/@+-]*) die "--model must be one word of [A-Za-z0-9._:/@+-]" ;; esac
     case $ATTEMPTS in ''|*[!0-9]*|0) die "--attempts must be a positive integer" ;; esac
     case $MAXTOK in ''|*[!0-9]*|0) die "--max-tokens must be a positive integer" ;; esac
+    case $LANGS in ''|,*|*,|*,,*|*[!a-z,]*) die "--langs requires a nonempty comma-separated language list" ;; esac
+    case $ARMS in ''|,*|*,|*,,*|*[!a-z,]*) die "--arms requires a nonempty comma-separated arm list" ;; esac
     langs=$(printf '%s' "$LANGS" | tr ',' ' ')
     arms=$(printf '%s' "$ARMS" | tr ',' ' ')
     for a in $arms; do case $a in plain|feedback) ;; *) die "unknown arm '$a' (plain feedback)" ;; esac; done
     need_lang_tools "$langs"
     need_tool curl
+    check_sandbox
     ENDPOINT=${ENDPOINT%/}
     [ -n "$OUT" ] || OUT="$BUILD_DIR/run-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    [ ! -e "$OUT" ] || [ -d "$OUT" ] || die "--out must be a directory"
+    [ ! -d "$OUT" ] || [ -z "$(find "$OUT" -mindepth 1 -maxdepth 1 -print -quit)" ] ||
+        die "--out must be empty; existing runs are never reused"
     mkdir -p "$OUT"
     {
         say "version 1"
@@ -494,7 +571,9 @@ fake_run() { # name mode arms attempts -> sets FR_RC, SUMMARY
 }
 
 self_test() {
+    . "$SCRIPT_DIR/audit.sh"
     need_lang_tools "$ALL_LANGS"
+    check_sandbox
     need_tool curl
     rm -rf "$BUILD_DIR/selftest"
     mkdir -p "$BUILD_DIR/selftest"
@@ -517,6 +596,7 @@ self_test() {
     rc=0
     printf 'version 2\nattempts 1\ntask01 om plain 1 1 1 0 10 111 37 148\n' | "$BIN_DIR/scorer" > /dev/null || rc=$?
     st_expect "scorer v2 refused compile rc (FAIL)" 1 "$rc"
+    audit_checks
 
     say "== JSON edge (chat.om)"
     rc=0
@@ -534,7 +614,9 @@ self_test() {
 
     fake_run good good plain 1
     st_expect "good rc" 0 "$FR_RC"
+    st_expect "good global verdict" PASS "$(summary_status "$SUMMARY")"
     for l in $ALL_LANGS; do
+        st_expect "good $l plain verdict" PASS "$(group_field "$SUMMARY" "$l" plain status)"
         st_expect "good $l plain verified" "$ntask" "$(group_field "$SUMMARY" "$l" plain verified_count)"
         st_expect "good $l plain first_attempt_verified" "$ntask" "$(group_field "$SUMMARY" "$l" plain first_attempt_verified)"
         st_expect "good $l plain prompt_tokens" "$((ntask * 111))" "$(group_field "$SUMMARY" "$l" plain total_prompt_tokens)"
@@ -545,14 +627,19 @@ self_test() {
 
     fake_run bad bad plain 1
     st_expect "bad rc" 0 "$FR_RC"
+    st_expect "bad global verdict" FAIL "$(summary_status "$SUMMARY")"
     for l in $ALL_LANGS; do
+        st_expect "bad $l plain verdict" FAIL "$(group_field "$SUMMARY" "$l" plain status)"
         st_expect "bad $l plain compiled" "$ntask" "$(group_field "$SUMMARY" "$l" plain compiled_count)"
         st_expect "bad $l plain verified" 0 "$(group_field "$SUMMARY" "$l" plain verified_count)"
     done
 
     fake_run bad-then-good bad-then-good plain,feedback 2
     st_expect "bad-then-good rc" 0 "$FR_RC"
+    st_expect "bad-then-good global verdict" FAIL "$(summary_status "$SUMMARY")"
     for l in $ALL_LANGS; do
+        st_expect "bad-then-good $l plain verdict" FAIL "$(group_field "$SUMMARY" "$l" plain status)"
+        st_expect "bad-then-good $l feedback verdict" PASS "$(group_field "$SUMMARY" "$l" feedback status)"
         st_expect "bad-then-good $l plain verified" 0 "$(group_field "$SUMMARY" "$l" plain verified_count)"
         st_expect "bad-then-good $l plain attempts" "$((ntask * 2))" "$(group_field "$SUMMARY" "$l" plain attempts_total)"
         st_expect "bad-then-good $l feedback verified" "$ntask" "$(group_field "$SUMMARY" "$l" feedback verified_count)"
@@ -566,11 +653,14 @@ self_test() {
 
     fake_run refuse refuse plain 1
     st_expect "refuse rc" 0 "$FR_RC"
+    st_expect "refuse global verdict" FAIL "$(summary_status "$SUMMARY")"
     for l in $ALL_LANGS; do
+        st_expect "refuse $l plain verdict" FAIL "$(group_field "$SUMMARY" "$l" plain status)"
         st_expect "refuse $l plain compiled" 0 "$(group_field "$SUMMARY" "$l" plain compiled_count)"
         st_expect "refuse $l plain verified" 0 "$(group_field "$SUMMARY" "$l" plain verified_count)"
     done
     st_expect "refuse never ran a binary" 0 "$(find "$BUILD_DIR/selftest/refuse" -name out.txt | wc -l)"
+    audit_reuse_check
 
     say "== NOT_RUN paths"
     start_fake good "$TASKS_DIR"
@@ -608,6 +698,11 @@ self_test() {
 mode=$1
 shift
 case $mode in
+    --sandbox) sandbox "$@" ;;
+    --deadline-probe)
+        evaluate py "$TASKS_DIR/task01" "$1" "$2"
+        [ "$COMP_RC" -eq 0 ] && [ "$VERIFIED" -eq 0 ] &&
+            { [ "$RUN_RC" -eq 124 ] || [ "$RUN_RC" -eq 137 ]; } ;;
     --check-tasks) build_tools; check_tasks ;;
     --self-test) build_tools; self_test ;;
     --run-model)

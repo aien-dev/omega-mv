@@ -6,6 +6,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Model | What it did |
 |---|---|
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
+| Codex (GPT-6.1 Sol) | Inference-cost audit F1-F8: fail-closed compiler/runtime sandboxes, hard process deadlines, strict task-identity scoring and adversarial self-tests |
 | Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
 | Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
 | Codex (GPT-6 Astra) | Seeded IR statement/type/scope validation repairs, bootstrap-safe helper splits, and independent C-oracle regression qualification |
