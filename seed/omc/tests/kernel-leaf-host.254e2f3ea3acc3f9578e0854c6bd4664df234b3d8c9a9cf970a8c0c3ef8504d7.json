@@ -1,0 +1,730 @@
+{
+  "scope": "UNPRIVILEGED_HOST_ONLY, no kernel execution or module load",
+  "source_commit": "c4b4500d172690c8a72ae2df7124c1bf70c39173",
+  "source_tree_clean": true,
+  "seed_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "prototype_source_sha256": "545e630349b45b826d49f8e75ed1fbc0e5d76c90410650f9945e0d89829441c8",
+  "prototype_binary_sha256": "e7e95a8305fe0bf8331f579533b1fca69101eaf351fc5cea8208e3892a8733b8",
+  "bridge_source_commit": "9a4e5102a82c913699fb7c3dd99a2736cab2b3d6",
+  "bridge_tree_clean": true,
+  "bridge_source_sha256": "3f599cd22bc636084e81d4d3118a352da5ed1c42ce93624c88d7394ebed044cb",
+  "experiment_source_sha256": "4d9e01e751563e329d52d4c930be30194ee479e3ff7c4eb681389a2076600fa6",
+  "kernel_config_sha256": "2f1e5c968baa001a34c47bf95dcf2b0b83e0cc93228c809637ef8035c5f50e23",
+  "kernel_symvers_sha256": "c6b31953f1dc52ce625f4a8e4f0f35b5e1f0520f1acde36c2cf0c150d3778b42",
+  "tools": {
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "as": "GNU assembler (GNU Binutils for Ubuntu) 2.42\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `aarch64-linux-gnu'.",
+    "ld": "GNU ld (GNU Binutils for Ubuntu) 2.42\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty.",
+    "make": "GNU Make 4.3\nBuilt for aarch64-unknown-linux-gnu\nCopyright (C) 1988-2020 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.",
+    "python3": "Python 3.12.3"
+  },
+  "files": {
+    "exercise.py": "37de39f58b317d4ecd3d2ee6c72c47fce1be326d8697ca179c8a139d8fd85311",
+    "oracle.o": "d2e0cc7de2bc80608a805d5eb0e830b5a92be447d6fb92d71abb12e5eef18af4",
+    "scrub.dis": "5b37e540d9d58b9057ff51014433cb12ff5bfcc0f887354eda27a00c9f6a84ab",
+    "span.dis": "4061f662c031a0a860f595034193f82e6839033c8e76790bf90c6586c8514a21",
+    "span.bin": "3ab6280d8e072373d8eedfa5998f2c63f0856a37f592ba28b33c41cd12915bd8",
+    "bad-clearing": "8e21af58714223b6e2e7e175a581d1e9220d9975e19aa0cd967282d6a346f659",
+    "mutant": "b4ebee65aab57365e9a9522d3484483ef5f3045dee9da6e5f7a69f8e1daa75eb",
+    "kbuild-hardened.log": "302fe3787d5f183425d505bfb014e09c3f259e5af4007ea35108a5e956e81524",
+    "bad-clearing.o": "2c04af4b9c1badd83b2f00fb97438c51686736492bfe6ae8f4589c29aaacd992",
+    "omc-kleaf": "e7e95a8305fe0bf8331f579533b1fca69101eaf351fc5cea8208e3892a8733b8",
+    "divide.om": "521e6180ef9242e5625a35de10490f8f87c72ee655b09d7b16bcd6f693cb6e16",
+    "scrub.om": "cf61868cf1dea920f0e41854e0703a3935b7e906ad934b0b7374f2fde07a48bf",
+    "bad-metadata.o": "1417e80c9f3411e8d071dcab002e36d1e9f02f7de73d57ff3fd71daa83a58fa7",
+    "oracle": "520e090260b87f9bd3b6056bb09a9dde6d251abeadc6537f679de7887455a420",
+    "leaf_oracle.o": "926dfda203df961a7660024f2b098ce58fe835a1127b7cb9913eeb8cf3faae35",
+    "leaf_oracle.o.metadata.json": "2a1989e8c3f30a4d391c3c930ce0cf2e3731888816f355f21f8206e5a880a075",
+    "Makefile": "2c2b1e999f360d5780884bef356f0ae0ac78b5cd66d5f1f380f03b0191ac4aef",
+    "omega_leaf.S": "b94b33f27364f0b0d2c6f083aef3cf5194e92272e854ed7e232a4079561b1c6a",
+    "bad-clearing.S": "f0d61224e2a03d44d524279f47a8a22128d2fcbc9887572c3db816db7add9961",
+    ".leaf_oracle.o.cmd": "bdc4997d7ad15d2aa79cd3a5a58d1b668d5cd43337761f1a8e0807e7faf17499",
+    "mutant-leaf.S": "58fd093472c9b1a2487a15d3aaebc67a1e00984e9b583b010cccc677bd61d383",
+    "scrub.bin": "31f5be60ca7d55d8e2f748564cafcbb153e35ec905ad89c862a1be9c80508120",
+    "mutant.bin": "d0fdb9cbd661f23634dd3b7792ef21edbc90f4691d97651d9063916d1ff6bd99",
+    "leaf_oracle.c": "9bf46e8758cb213863f4f57d4653b9b00fb5f0591ade28a81f784e021f4f7a08",
+    "mutant.o": "9618027a257b2ccdc66aee4d852c0599c3deab2df31e8e27dc7a89da0876240d",
+    "span.om": "b06c3c7f759fa6039a8f2a208fc0461ee1dee8e9a1e66367d0c7148f455246ef",
+    "divide.dis": "310f315628d0bf5e320286d4e21dc87f234e5edf11c1f4460eccd252ed3cd9ba",
+    "oracle.S": "980ca08fcc979d51a6636220d6b972f814aa0059decbed016d8a0939110a103a",
+    "divide.bin": "7fbb8f1f40373d156e15df2a6527e85118fb0f8ee271719cb6b718705fcf3499",
+    "mutant.S": "70d6cab281568ed7ddae7d28c9099e0ff548edfab92df419b17df3b1d8625a32",
+    "omega_leaf.o": "3e8808efaf5e9d5955273e640bff20822ee4247d482b4720086630f8e25c3f6e",
+    "omega_leaf.o.metadata.json": "d851757988f8d92d1f10b2232662d32254986bc148f64f57210205fa3225ff12",
+    "bad-metadata.S": "e532ae757c30b612d6a5004bff0486894df4ad16b64cb2e1fe4d9dcbc80b09fb",
+    "kernel-envelope": "891b4ef13bc8461ec79cd3ac8ef6f6baa9b787784ab0a076086485698916d5bc",
+    "bad-clearing-leaf.S": "de73881b1289d40bf5fe431b9625d3f8b77675b48ce69691bdbed4c23962d31c",
+    ".omega_leaf.o.cmd": "aa6312e1b0b0ee943653364b2b630903811c5fcd5c6fdc66411b2f4648a7fe1f"
+  },
+  "results": [
+    {
+      "command": [
+        "git",
+        "-C",
+        "/tmp/omega-linux-kernel-profile",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "/tmp/omega-linux-kernel-profile",
+        "status",
+        "--porcelain",
+        "--untracked-files=normal"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "/tmp/omega-kernel-bridge-profile",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "/tmp/omega-kernel-bridge-profile",
+        "status",
+        "--porcelain",
+        "--untracked-files=normal"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omc-kleaf"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omc-kleaf"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omc-kleaf"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omc-kleaf"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/kernel-envelope"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/kernel-envelope"
+      ],
+      "exit": 110,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/kernel-envelope"
+      ],
+      "exit": 110,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/kernel-envelope"
+      ],
+      "exit": 110,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/kernel-envelope"
+      ],
+      "exit": 110,
+      "stderr": ""
+    },
+    {
+      "envelope_refusal": "empty/bad-prefix/oversized/unaligned",
+      "result": "PASS"
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omc-kleaf"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "negative": "loop",
+      "exit": 9,
+      "stderr": "omc: line 2: error 9\n"
+    },
+    {
+      "negative": "helper",
+      "exit": 9,
+      "stderr": "omc: line 7: error 9\n"
+    },
+    {
+      "negative": "recursive",
+      "exit": 9,
+      "stderr": "omc: line 3: error 9\n"
+    },
+    {
+      "negative": "array",
+      "exit": 9,
+      "stderr": "omc: line 1: error 9\n"
+    },
+    {
+      "negative": "float",
+      "exit": 9,
+      "stderr": "omc: line 1: error 9\n"
+    },
+    {
+      "negative": "host",
+      "exit": 9,
+      "stderr": "omc: line 2: error 9\n"
+    },
+    {
+      "negative": "main",
+      "exit": 9,
+      "stderr": "omc: line 5: error 9\n"
+    },
+    {
+      "negative": "text",
+      "exit": 9,
+      "stderr": "omc: line 1: error 9\n"
+    },
+    {
+      "negative": "om2",
+      "exit": 9,
+      "stderr": "omc: line 1: error 9\n"
+    },
+    {
+      "negative": "void",
+      "exit": 9,
+      "stderr": "omc: line 1: error 9\n"
+    },
+    {
+      "negative": "byte-budget",
+      "exit": 9,
+      "stderr": "omc: line 905: error 9\n"
+    },
+    {
+      "command": [
+        "as",
+        "-o",
+        "oracle.o",
+        "oracle.S"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ld",
+        "-e",
+        "_start",
+        "-o",
+        "oracle",
+        "oracle.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/oracle"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omc-kleaf"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/kernel-envelope"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "as",
+        "-o",
+        "mutant.o",
+        "mutant.S"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ld",
+        "-e",
+        "_start",
+        "-o",
+        "mutant",
+        "mutant.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/mutant"
+      ],
+      "exit": 1,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "as",
+        "-o",
+        "bad-clearing.o",
+        "bad-clearing.S"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ld",
+        "-e",
+        "_start",
+        "-o",
+        "bad-clearing",
+        "bad-clearing.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/bad-clearing"
+      ],
+      "exit": 8,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "objdump",
+        "-D",
+        "-b",
+        "binary",
+        "-m",
+        "aarch64",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/span.bin"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "closed_acyclic_cfg": "span",
+      "entry_offset": 8,
+      "reachable_instructions": 27,
+      "result": "PASS"
+    },
+    {
+      "instruction_inspection": "span",
+      "count": 29,
+      "result": "PASS"
+    },
+    {
+      "used_gpr_clearing": "span",
+      "used": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "cleared": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "result": "PASS"
+    },
+    {
+      "command": [
+        "objdump",
+        "-D",
+        "-b",
+        "binary",
+        "-m",
+        "aarch64",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/divide.bin"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "closed_acyclic_cfg": "divide",
+      "entry_offset": 8,
+      "reachable_instructions": 11,
+      "result": "PASS"
+    },
+    {
+      "instruction_inspection": "divide",
+      "count": 13,
+      "result": "PASS"
+    },
+    {
+      "used_gpr_clearing": "divide",
+      "used": [],
+      "cleared": [],
+      "result": "PASS"
+    },
+    {
+      "command": [
+        "objdump",
+        "-D",
+        "-b",
+        "binary",
+        "-m",
+        "aarch64",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/scrub.bin"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "closed_acyclic_cfg": "scrub",
+      "entry_offset": 8,
+      "reachable_instructions": 30,
+      "result": "PASS"
+    },
+    {
+      "instruction_inspection": "scrub",
+      "count": 32,
+      "result": "PASS"
+    },
+    {
+      "used_gpr_clearing": "scrub",
+      "used": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17
+      ],
+      "cleared": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17
+      ],
+      "result": "PASS"
+    },
+    {
+      "command": [
+        "make",
+        "-C",
+        "/usr/src/linux-headers-7.0.0-1019-nvidia",
+        "M=/tmp/omega-linux-kernel-profile/build/kernel-profile",
+        "V=1",
+        "leaf_oracle.o",
+        "omega_leaf.o"
+      ],
+      "exit": 0,
+      "stderr": "warning: the compiler differs from the one used to build the kernel\n  The kernel was built by: aarch64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\n  You are using:           gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nwarning: pahole version differs from the one used to build the kernel\n  The kernel was built with: 125\n  You are using:             0\n"
+    },
+    {
+      "command": [
+        "readelf",
+        "-WS",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/leaf_oracle.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Ws",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/leaf_oracle.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Wr",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/leaf_oracle.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-n",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/leaf_oracle.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "objcopy",
+        "-O",
+        "binary",
+        "-j",
+        ".text",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/leaf_oracle.o",
+        "/dev/stdout"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-WS",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Ws",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Wr",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-n",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "objcopy",
+        "-O",
+        "binary",
+        "-j",
+        ".text",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o",
+        "/dev/stdout"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "objcopy",
+        "-O",
+        "binary",
+        "-j",
+        ".text",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o",
+        "/dev/stdout"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Ws",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/omega_leaf.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "exact_kernel_object_contract": "4,2 ftrace, pre-entry relocation, used-gpr, PAC leaf, fixed SCS x18, AX instruction mapping",
+      "result": "PASS"
+    },
+    {
+      "command": [
+        "as",
+        "-o",
+        "bad-metadata.o",
+        "bad-metadata.S"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-WS",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/bad-metadata.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Ws",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/bad-metadata.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-Wr",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/bad-metadata.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "-n",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/bad-metadata.o"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "objcopy",
+        "-O",
+        "binary",
+        "-j",
+        ".text",
+        "/tmp/omega-linux-kernel-profile/build/kernel-profile/bad-metadata.o",
+        "/dev/stdout"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "metadata_negative": "entry rather than pre-entry relocation",
+      "result": "PASS"
+    },
+    {
+      "command": [
+        "gcc",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "as",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ld",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "make",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": ""
+    }
+  ]
+}
