@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-28T13:45:01Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:d359823363b8a27e2a29a3f2ee1be0005a2c8bf1e6573744f0ebe89bcf145ecd",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "6999fa9e6dae4847c155ef4eacaece74f491d3ca",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "layer": "test",
+  "name": "neuralese-fixtures",
+  "purpose": "Independent SHA-256 envelope fixtures and exact decoded-source oracles for the native Omega host conductor",
+  "schema_version": "1.0.0"
+}

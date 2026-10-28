@@ -8,6 +8,7 @@
 - [Omega 1.0 roadmap: readiness audit, milestones and acceptance gates](docs/ROADMAP-1.0.md)
 - [Remaining C source/header inventory](docs/migration/C-TO-OM-INVENTORY.md)
 - [Experimental `.om` deterministic-stream successor](seed/physics0/README.md): source/host checks passed; native compilation and execution NOT_RUN.
+- [Neuralese supplement](neuralese/README.md): PROPOSED model-bound representation design, with a bounded native `.om` envelope/codebook candidate and ordinary checked-source boundary. No learned reasoning or model experiment is claimed.
 - [Alpha model/platform qualification](https://github.com/aien-dev/aien-architecture-mv/issues/305)
 
 ### Why GitHub still shows C
