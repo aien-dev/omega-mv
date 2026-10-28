@@ -30,10 +30,10 @@ $(OUT_DIR)/tests-visor-authority:
 $(VISOR_AUTH_TEST): tests/visor/test_visor_authority.c $(VISOR_AUTH_RX_SRCS) \
 		$(OUT_DIR)/visor/visor_effect_request.o $(VISOR_CORE_OBJS) src/visor/visor_effect_request.h \
 		src/runtime/rx_aegis.h src/runtime/rx_caproot.h src/runtime/rx_world.h \
-		src/runtime/rx_generation.h $(VISOR_AUTH_CAP_LIB) | $(OUT_DIR)/tests-visor-authority
+		src/runtime/rx_generation.h $(VISOR_AUTH_CAP_LIB) $(CUDAPP_LIB) | $(OUT_DIR)/tests-visor-authority check-cudapp
 	@test -f "$(VISOR_AUTH_CAP_LIB)" || { echo "error: VISOR_AUTH_CAP_LIB=$(VISOR_AUTH_CAP_LIB) not found (needed by rx_aegis.c); pass VISOR_AUTH_CAP_LIB=<path to libaienos_capability.a>" >&2; exit 1; }
 	$(CC) $(CFLAGS) -Isrc/visor -pthread -o $@ tests/visor/test_visor_authority.c $(VISOR_AUTH_RX_SRCS) \
-		$(OUT_DIR)/visor/visor_effect_request.o $(VISOR_CORE_OBJS) $(VISOR_AUTH_CAP_LIB) -lm
+		$(OUT_DIR)/visor/visor_effect_request.o $(VISOR_CORE_OBJS) $(VISOR_AUTH_CAP_LIB) $(CUDAPP_LIB) -lm
 
 .PHONY: test-visor-authority visor-authority-check
 test-visor-authority: $(VISOR_AUTH_TEST)

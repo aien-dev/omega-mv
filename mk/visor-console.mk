@@ -11,8 +11,8 @@ VISOR_CONSOLE_OBJS = $(OUT_DIR)/visor/visor.o $(OUT_DIR)/visor/visor_console.o $
 $(OUT_DIR)/lane2:
 	mkdir -p $@
 
-$(OUT_DIR)/lane2/test_visor_console: tests/visor/test_visor_console.c $(VISOR_CORE_OBJS) $(VISOR_CONSOLE_OBJS) | $(OUT_DIR)/lane2
-	$(CC) $(VISOR_CFLAGS) -DVISOR_CONSOLE_LANE_ONLY -Itests/visor -o $@ $< $(VISOR_CORE_OBJS) $(VISOR_CONSOLE_OBJS)
+$(OUT_DIR)/lane2/test_visor_console: tests/visor/test_visor_console.c $(VISOR_CORE_OBJS) $(VISOR_CONSOLE_OBJS) $(CUDAPP_LIB) | $(OUT_DIR)/lane2 check-cudapp
+	$(CC) $(VISOR_CFLAGS) -DVISOR_CONSOLE_LANE_ONLY -Itests/visor -o $@ $< $(VISOR_CORE_OBJS) $(VISOR_CONSOLE_OBJS) $(CUDAPP_LIB)
 
 # The full test #includes tools/omega.c (with OMEGA_TOOL_NO_MAIN) for the wiring.
 $(OUT_DIR)/tests-visor/test_visor_console: tools/omega.c

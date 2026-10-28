@@ -68,7 +68,7 @@ test-tensor-no-hooks: src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c sr
 			echo "test-tensor-no-hooks: FAIL ($$s present in default build)"; exit 1; fi; \
 	done; echo "test-tensor-no-hooks: PASS (test-only hook absent from default build)"
 
-test-tensor-mutations:
+test-tensor-mutations: | check-cudapp
 	tools/tensor_mutations.sh
 
 # Kept as an alias: the seam now always calls omega_reduce_cpu (E1 WP-D, #134 merged).
@@ -111,7 +111,7 @@ test-tensor-store: $(OUT_DIR)/test_omega_tensor_store $(OUT_DIR)/test_omega_tens
 #                        unless GB10_CHIP_RUN=1 is set, so it never runs by
 #                        accident. Never pass a quiet flag.
 .PHONY: test-tensor-gb10-host test-tensor-gb10-chip
-test-tensor-gb10-host:
+test-tensor-gb10-host: | check-cudapp
 	@test -n "$(PHYSICS_DIR)" && test -d "$(PHYSICS_DIR)" \
 		|| { echo "test-tensor-gb10-host: set PHYSICS_DIR to the physics checkout"; exit 2; }
 	tools/tensor_mutations.sh --gb10 "$(PHYSICS_DIR)"

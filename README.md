@@ -53,6 +53,13 @@ Set `CUDAPP_DIR` to a checkout whose HEAD is exactly `cudapp.lock`, `OMEGA_OMC` 
 
 `tests/cudapp_retirement_sources.json` records all 123 removed source/header paths, their exact historical and canonical object identities, and the SHA-256 of the preserved original-source archive. Omega retains its unique Blackwell qualification adapter and resident runtime adapter. Historical receipts and unmerged branches, including #618, are not rewritten or represented as newly qualified. The remaining CPU implementation overlap is explicit: Omega's CPU companion objects precede the canonical archive; native GPU implementation comes only from CUDApp.
 
+Visor and program host callers also link the canonical archive after retained CPU
+objects; they do not require retired local Blackwell object rules. Tensor mutation
+and GB10-host controls authenticate/stage before invoking their standalone runner,
+including parallel builds. `test-numeric-cpu`, `test-program-fp32`,
+`test-program-realize`, `test-program-id`, `test-tensor`, `test-tensor-store` and
+`test-tensor-mutations` exercise host behavior only.
+
 Standalone chip collectors use the same authenticated stage or disposable canonical overlay and retain their existing device-authorization requirements. Their `canonical_source` field embeds the existing `.om` stage-verifier object unchanged; it is source provenance, not qualification authority. M17 reruns refuse an existing receipt or corpus manifest: set `M17_EVIDENCE_DIR` to a fresh evidence directory rather than replacing historical evidence. A build-only check of a chip collector is not a chip run.
 
 This ownership cutover does not activate new native candidates. Existing artifact admission remains authoritative; new candidates have no production qualification record and remain refused. Host fixtures use explicitly synthetic handles. GPU execution, exact-artifact independent hardware qualification and full-model parity/performance are separate authorized gates, not consequences of staging, compilation or host tests.

@@ -2,9 +2,9 @@
 # Visor core object set. Executes generated code natively: run on an AArch64 host.
 PROGRAM_REALIZE_TEST = $(OUT_DIR)/tests-realize/test_program_realize
 
-$(PROGRAM_REALIZE_TEST): tests/realize/test_program_realize.c $(VISOR_CORE_OBJS)
+$(PROGRAM_REALIZE_TEST): tests/realize/test_program_realize.c $(VISOR_CORE_OBJS) $(CUDAPP_LIB) | check-cudapp
 	mkdir -p $(dir $@)
-	$(CC) $(VISOR_CFLAGS) -o $@ $< $(VISOR_CORE_OBJS)
+	$(CC) $(VISOR_CFLAGS) -o $@ $< $(VISOR_CORE_OBJS) $(CUDAPP_LIB)
 
 .PHONY: test-program-realize
 test-program-realize: $(PROGRAM_REALIZE_TEST)
