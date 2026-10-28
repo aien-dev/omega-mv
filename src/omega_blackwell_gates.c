@@ -575,14 +575,27 @@ static bool canonical_stage_path(char *path, size_t capacity, const char *suffix
     return n >= 0 && (size_t)n < capacity;
 }
 
-static bool canonical_stage_verified(void) {
-    return system("sh tools/cudapp-stage.sh --verify cudapp.lock "
-                  "\"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\" >/dev/null") == 0;
+static bool canonical_stage_verified(FILE *receipt) {
+    /* Generic I/O only: the fresh JSON is authored by the seeded .om guard
+     * and receipt unit. Never deserialize/recreate its policy here. */
+    FILE *child = popen("sh tools/cudapp-stage.sh --verify cudapp.lock "
+                        "\"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\"", "r");
+    if (!child) return false;
+    unsigned char bytes[4096];
+    size_t n;
+    bool nonempty = false, ok = true;
+    while ((n = fread(bytes, 1, sizeof bytes, child)) != 0) {
+        nonempty = true;
+        if (receipt && fwrite(bytes, 1, n, receipt) != n) ok = false;
+    }
+    if (ferror(child)) ok = false;
+    if (pclose(child) != 0) ok = false;
+    return nonempty && ok;
 }
 
 static bool test_m18_gate6_code_truth(void) {
     char path[PATH_MAX];
-    if (!canonical_stage_verified() ||
+    if (!canonical_stage_verified(NULL) ||
         !canonical_stage_path(path, sizeof path, "source/src/omega_blackwell_codegen.c")) return false;
     FILE *f = fopen(path, "r");
     if (!f) return false;
@@ -1188,7 +1201,14 @@ static bool test_m18_gate18_receipt(void) {
     if (!compute_file_sha256(self_path, bin_digest, bin_hex)) return false;
 
     /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area. */
-    if (!canonical_stage_verified()) return false;
+    char source_receipt_path[1024];
+    if (omega_evidence_path("CUDAPP-SOURCE.json", source_receipt_path,
+                            sizeof source_receipt_path) != 0) return false;
+    FILE *source_receipt = fopen(source_receipt_path, "w");
+    if (!source_receipt) return false;
+    bool source_verified = canonical_stage_verified(source_receipt);
+    if (fclose(source_receipt) != 0) source_verified = false;
+    if (!source_verified) return false;
     const char *canonical_files[] = {
         "source/src/omega_blackwell_matmul.h", "source/src/omega_blackwell_matmul.c",
         "source/src/omega_blackwell_codegen.h", "source/src/omega_blackwell_codegen.c",
@@ -1201,6 +1221,7 @@ static bool test_m18_gate18_receipt(void) {
         "src/omega_blackwell_gates.h",
         "src/omega_blackwell_gates.c",
         "tools/omegatool.c",
+        source_receipt_path,
         self_path
     };
     size_t num_files = sizeof(manifest_files) / sizeof(manifest_files[0]);
