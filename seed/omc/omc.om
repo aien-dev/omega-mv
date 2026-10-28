@@ -2448,6 +2448,12 @@ if eq t 12
 mputw 1684631414 4
 ret
 end
+if eq t 13
+mputb 113
+mputb 116
+mputb 121
+ret
+end
 mputw 2003134838 4
 end
 
@@ -2590,18 +2596,20 @@ end
 if eq s 1
 mputw 4993454379819552329 8
 mputw 2114900 3
-mputw 4774187554571306322 8
-mputw 2114892 3
 else
 if eq s 2
 mputw 2327894055524716117 8
-mputw 5929342197426179669 8
-mputw 138601579073 5
 else
 mputw 35511885252934 6
-mputw 5929342197426179669 8
-mputw 138601579073 5
 end
+end
+note Repairability is independent of prefix finality; only capacity failures are unrepairable.
+if or or or eq code 12 eq code 14 eq code 23 eq code 24
+mputw 5929342197426179669 8
+mputw 138601579073 4
+else
+mputw 4774187554571306322 8
+mputw 2114892 2
 end
 mputw 67505686012704 6
 mputn code

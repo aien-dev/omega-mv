@@ -73,6 +73,9 @@ Fields MUST appear in this exact order:
    Indicates whether code editing can resolve the issue:
    - `REPAIRABLE`: Can be repaired by modifying or appending Omega code.
    - `UNREPAIRABLE`: Hardware or architectural limit reached (compiler capacity, pool limit).
+   Repairability is independent of finality: a `FINAL` or `UNKNOWN` record is still
+   `REPAIRABLE` unless its code is a capacity failure (12, 14, 23 or 24).
+   The compiler emits exactly one space between fields, including before `code=`.
 
 6. **`constraints`** (Optional):
    Trailing whitespace-delimited key-value pairs or token descriptions providing additional structured context:

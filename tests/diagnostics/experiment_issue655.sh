@@ -12,7 +12,7 @@ OMC="$ROOT/seed/out/omc"
 [ -x "$OMC" ] || { echo "FAIL: $OMC not found or not executable" >&2; exit 1; }
 
 PASS_COUNT=0
-TOTAL=18
+TOTAL=23
 
 echo "=== Issue #655 Milestone A Diagnostic Precision Experiment ==="
 printf "%-14s | %-12s | %-8s | %-9s | %-14s | %s\n" "Task" "Good Result" "Bad Exit" "Span" "Span Text" "Diagnostic"
@@ -67,6 +67,11 @@ run_case() {
 
     if [ "$span_text" != "$exp_repr" ]; then
         echo "FAIL span text mismatch on $name: expected $exp_repr, got $span_text" >&2
+        return 1
+    fi
+    # Finality and repairability are independent; these edited drafts are not capacity failures.
+    if [[ "$diag_line" != *" REPAIRABLE code=$exp_code "* ]] || [[ "$diag_line" == *"  "* ]]; then
+        echo "FAIL repairability or spacing on $name: $diag_line" >&2
         return 1
     fi
 
@@ -425,6 +430,36 @@ names:
 a ulong param
 functions:
 fn main to int"
+
+# qty must be preserved in names and function signatures, not reported as view.
+run_next_case "next_qty" \
+$'fn grow n qty to qty\nv = qty 1\n' \
+$'omega-query v1\nscope: function\nconstructs: ret if while for trap exit put end note\nnames:\nn qty param\nv qty local\nfunctions:\nfn grow to qty qty'
+
+run_check_record() {
+    local name="$1" input="$2" code="$3" expected="$4" out rc=0
+    out=$(printf "check\n%s" "$input" | "$OMC" 2>/dev/null) || rc=$?
+    if [ "$rc" -ne "$code" ] || [ "$out" != "$expected" ]; then
+        echo "FAIL check record on $name: rc=$rc out=$out" >&2
+        return 1
+    fi
+    printf '%s | PASS (exact check record)\n' "$name"
+    PASS_COUNT=$((PASS_COUNT + 1))
+}
+
+run_check_record "check_final" $'fn f to int\nret true\nend\n' 7 \
+$'omega-diag v1\nom1 TYPE span=16-20 FINAL REPAIRABLE code=7 line=2 expect=value found=true'
+run_check_record "check_unknown" $'fn f to int\nret missing\nend\n' 3 \
+$'omega-diag v1\nom1 TYPE span=16-23 UNKNOWN REPAIRABLE code=3 line=2 expect=name found=missing'
+run_check_record "check_incomplete" $'fn f to int\n' 15 \
+$'omega-diag v1\nom1 SYNTAX span=12-12 INCOMPLETE REPAIRABLE code=15 line=2 expect=end found=eof'
+
+# Register exhaustion is still UNREPAIRABLE, regardless of finality.
+capacity=$'fn f to int\n'
+for i in {1..17}; do capacity+="v$i = int 0"$'\n'; done
+capacity+=$'ret 0\nend\n'
+run_check_record "check_capacity" "$capacity" 12 \
+$'omega-diag v1\nom1 CAPACITY span=201-204 FINAL UNREPAIRABLE code=12 line=18 expect=word found=int'
 
 echo "---------------------------------------------------------------------------------------------------------"
 echo "ALL $PASS_COUNT/$TOTAL EXPERIMENT CHECKS PASSED (negative control + exact first error span matching)"
