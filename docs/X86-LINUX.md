@@ -1,0 +1,313 @@
+# x86-64 Linux backend (FR-9)
+
+Status: **DRAFT, integration and execution evidence pending**, 2026-10-28.
+This is the design note requested for FR-9, not a qualification receipt. The
+canonical integration base is `aien-dev/omega-mv` commit
+`6999fa9e6dae4847c155ef4eacaece74f491d3ca`. The historical implementation is
+`7eca2ac3fbd1f35a7d65471065408ce4bea07fd4`, inspected with
+`git show 7eca2ac3f:seed/omc/omc.om`. Current integration lives in the same
+`seed/omc/omc.om`; the function names below are source anchors, not a claim
+that a completed candidate has been tested. Historical commit-message test
+claims are not evidence for this integration. Limited coordinator observations
+are labelled below; no full acceptance or qualification result is asserted.
+
+## Selection and implementation boundary
+
+The required opt-in is the exact first line `target x86linux`. Inputs without
+that line retain the AArch64 default. Target selection belongs in `xlead`,
+before `prescan` and normal parsing; it must preserve diagnostic line numbers.
+Whitespace variants, truncated/extended target names, a later target line, and
+combining the target with another output mode must not accidentally select a
+backend. The historical `xlead` token comparison is not itself sufficient proof
+of the exact-line contract: the tokenizer packs only the initial name bytes.
+
+The backend is handwritten Omega in `seed/omc/omc.om`, not a C, Python or
+assembly implementation behind an Omega facade. Shared semantic operations
+select x86 emission before the AArch64 `emit` path. `emit` refuses with error 25
+when a nondefault target reaches it. This is a refusal boundary, not a substitute
+for implementing a reachable language operation. The historical commit also
+contained `target x86efi` and a firmware boundary; those are removed from this
+Linux-only integration. FR-9 does not qualify PE32+, OVMF or physical firmware.
+
+## Instruction selection
+
+The backend lowers language operations directly; it does not decode AArch64
+words. `xb`, `xword`, `ximm`, `xrr`, and `xmem` emit bytes, little-endian
+immediates, REX prefixes, ModRM and (for a stack base) SIB. Hardware register
+numbers are private emitter operands, distinct from the language value IDs.
+The instruction references are the Intel SDM volume 2 entries cited beside the
+backend in the source.
+
+| Operation | Source anchors and selection |
+|---|---|
+| Integer constants and moves | `matconst`, `force`, `ximm`, `xload`, `xstore`: materialize a full-width immediate or copy a frame value through a hardware register |
+| Add/subtract/multiply and bitwise operations | `bo_add`, `bo_mul`, `bo_log`, `xarith`: ADD, SUB, two-operand IMUL, AND, OR, XOR; signed checks branch before later operations overwrite flags |
+| Division/remainder | `bo_div`, `xdiv`: test zero first, DIV for unsigned, CQO/IDIV for signed; handle the signed divisor-minus-one case explicitly so remainder does not raise a hardware divide exception |
+| Shifts | `xshift`: check count against the language width before CL-based SHL/SHR/SAR; signed left shifts must retain the overflow check |
+| Unary/conversion | `xunary`, `xconv`, `xcanrax`, `xext`: NEG/NOT, shift-based width canonicalization and checked narrowing; bool conversions retain language restrictions |
+| Comparison | `xcmp`, `xcc`, `cset`: CMP and SETcc followed by zero extension; signed/unsigned predicates must not be interchanged |
+| Branch/call/return | `xbranch`, `xpatch`, `ca_bl`, `resolve`, `epi`: rel32 Jcc, JMP, CALL, then LEAVE/RET; patch byte displacements, not AArch64 word displacements |
+| Arrays and cells | `xelem`, `xmemval`, `st_ld`, `st_put`: bounds check, scaled index, width-specific MOV/MOVZX/MOVSX/MOVSXD; internal addresses are not source scalar pointers |
+
+`xbranch` reserves six bytes for every branch site. An unconditional JMP uses
+its relative displacement and a padding NOP; conditional branches use the long
+Jcc form. `xpatch` distinguishes their displacement positions. Calls have a
+separate rel32 fixup in `resolve`.
+
+The historical backend refused floating-point paths. The current draft adds
+baseline SSE2 scalar lowering through `xfmov`, `xfsse`, `xfucom`, `xfbin`,
+`xfminmax`, `xfcmp`, `xfint`, `xftoint` and `xfconv`, routed from `fp_*`.
+Float bits retain the same frame slots; f32 extraction zero-extends its bits.
+Comparisons normalize unordered/parity handling to the existing boolean flag
+contract rather than adding a public condition code. The source implements
+signaling-NaN priority and quieting, numeric selection for quiet NaNs in min/max,
+signed-zero min/max, and default positive NaN for invalid arithmetic.
+Float-to-integer conversion truncates and saturates to the destination bounds,
+with NaN producing zero, rather than raising the checked integer-conversion
+trap. Unsigned 64-bit conversion has dedicated high-half handling. These are
+IMPLEMENTED source paths, not exercised IEEE parity claims; full fixtures must
+still cover arithmetic, comparisons, conversions, arrays, pools and structs.
+
+## Sixteen-value register model and frame map
+
+The parser's allocation model is retained; frame storage is not general spilling
+and does not remove error 12. `poolc` allocates these sixteen operand IDs:
+
+| Pool positions (source `poolc`) | Stored operand IDs |
+|---|---|
+| Before the first branch in `poolc` | `0, 1, 2, 3, 4, 5, 6` |
+| Before the second branch in `poolc` | `8, 9, 10, 11, 12, 13, 14, 15` |
+| Final return in `poolc` | `17` |
+
+The historical operand-ID holes `7` (runtime) and `16` (scratch) are retained.
+For **each** operand ID `s`, `xload` and `xstore` use exactly the source expression
+`RBP - ((s + 1) * 8)` for its slot. This is an operand-ID-indexed frame, not a
+new dense renumbering of the sixteen values. `xpro` reserves 256 bytes below RBP;
+`xsave` and `xrestore` copy storage indices `0..17`, including the holes. RBP
+addresses values; RSP moves for local arrays and call reservations. R15 retains
+the owned-stack floor. RAX, RCX and RDX are commonly temporary integer operands;
+R11 temporarily retains the caller's frame pointer during prologue entry.
+
+The source constants for Linux startup are stack floor `268435456` and initial
+RSP `276824064`. `xcheck` compares prospective RSP against R15. `xsave` checks
+space for a callee return address, saved frame pointer and frame before CALL;
+`xsp` checks before stack subtraction. The owned stack is not Linux's original
+argument/environment stack.
+
+## Internal ABI versus Linux SysV
+
+This is a private Omega calling convention, **not** the SysV C function ABI.
+`xsave` snapshots caller storage into a 256-byte reservation. `xarg` installs
+arguments in caller frame slots, and `xpro` copies parameters from the old RBP
+into the new frame. `epi` loads result slot zero into RAX and emits LEAVE/RET.
+`xrestore` preserves that result while restoring other saved storage and RSP.
+The existing six-parameter/slot accounting is a front-end contract; OM-2 unsized
+arrays additionally require their pointer/count slot accounting (`pwid`,
+`pslot`), not a scalar-only parameter loop.
+
+Bare-function output is now implemented by `xunit` using this same private
+frame ABI. Each exported entry occupies a six-byte JMP/NOP slot in source
+order; without exports, the unit enters its last function. `writeout 512`
+removes the image reservation, so the result is raw code, not ELF or an
+independently executable process. The caller must establish the private frame
+and owned-stack convention. Existing `fnstore` restrictions on globals/text,
+call-cycle checks and refusal boundaries remain in force. A bare unit's trap
+terminates the Linux process with `100 + code`; it is not an OscRt trap return
+and is not a SysV C-callable export.
+
+There is no exported C-callable function, shared-object relocation contract,
+PLT/GOT, dynamic linker, libc startup, or general foreign-call boundary in this
+Linux design. In particular, using the Linux syscall register convention does
+not establish FR-7. External SysV callers would also need an explicit entry ABI,
+stack alignment, callee-save rules, symbol and relocation design.
+
+## Linux syscalls and cross-architecture records
+
+The imported Linux implementation covers `read` and `write` through `xio`, and
+process termination through `xleave`. `xio` supplies fd in RDI, the checked byte
+slice address in RSI, count in RDX and the syscall number in RAX; SYSCALL returns
+in RAX. Its source selects `read`/`write` numbers with `c - 53`. `xleave` moves
+the status to RDI and uses syscall number 60. Caller frame storage must survive
+the architectural RCX/R11 clobbers. Raw kernel error returns must retain the
+existing host-word result convention, rather than silently becoming success.
+
+**Historical host gap:** imported `hostval` refused every nondefault target with
+error 25. The draft now contains an `xhost` dispatcher and native host helpers,
+including socket, polling and device/mapping routes; wiring and coverage are
+still being integrated. Their presence alone does not establish support for
+every existing host fixture. Reusing AArch64 emitters is not an implementation.
+
+A complete host lowering needs a per-word x86 Linux syscall-number and
+argument-order mapping, checked against the x86 UAPI rather than
+`asm-generic/unistd.h`. Record layouts need a separate audit: `stat` fields and
+offsets, `timespec`, polling records, socket addresses/options, ancillary data,
+`iovec`/`msghdr`, wait results and architecture-dependent flags cannot be assumed
+portable by changing a syscall number. Private kernel records must be translated
+to the existing language-visible layout where those layouts differ. No kernel
+pointer may escape into a source scalar; slice bounds and refusal allowlists
+must remain enforced. Startup argument/environment support must preserve the
+initial Linux stack before replacing RSP. This paragraph is a design obligation,
+not a claim that these translations are present.
+
+## Static ELF64 and address fixups
+
+`xelf` reuses the static `elfhdr` layout, replacing the executable/machine word
+for x86-64 and the entry address. The two PT_LOAD mappings remain code at
+`0x400000` (read/execute) and owned pools/stack at `0x10000000` (read/write).
+The output is ELF64 little-endian ET_EXEC, without a PT_INTERP or dynamic
+linker. `xeof` emits startup after the functions, installs the owned stack,
+calls parameterless `main`, then exits. The Linux code reservation starts at
+byte 512 in the historical path.
+
+`mataddr`, `xaddr`, and `xfixaddr` retain address origin separately from integer
+constants and patch RIP-relative LEA displacements after layout. A numeric
+constant that happens to resemble a pool address must not relocate. Calls and
+branches are resolved against code byte offsets. Static fixed-address segments
+are not a claim of PIE or a shared-object ABI.
+
+## Traps and refusal paths
+
+`xtrap` records a branch site and language trap code; `xfinish` resolves each
+site to a process-exit sequence with status `100 + code`. Trap numbers and
+source-level boundaries must match AArch64, including signed overflow (1),
+division by zero (2), bounds (3), loop bound (4), conversion (5), stack (6) and
+shift count (7). Explicit traps and contract-related traps retain their existing
+language definitions; Linux termination is not a host signal oracle.
+
+Compiler refusal is distinct from runtime trapping: error 25 identifies an
+unsupported target/emission path, while existing parse, type, capacity and
+bounds refusals remain compiler errors. The historical program-only restriction
+has been replaced by the private bare-unit output described above. No unsupported
+construct may be represented by empty emission or a fallback AArch64 instruction.
+
+## Integration gaps and acceptance evidence
+
+The historical import lacked host words beyond byte I/O/exit, floating-point
+lowering, OM-2 unsized-array checks, pointer/count parameter accounting and newer
+semantic operations. The current draft adds SSE2 lowering, an `xhost` dispatcher,
+`nm_lr` checks in `xelem`, parameter-slot integration, and core/layout/rotate
+lowering (`xrot` among the native helpers). These are source integration changes,
+not execution evidence. The guard against AArch64 emission remains required.
+
+The historical target-name prefix comparison is now length checked in `xlead`;
+the exact-first-line contract still needs its complete negative controls.
+Bare-function and multi-entry output boundaries, all host records and every
+current language path must be accounted for by the final differential. No gap
+listed here is an approved reduction of FR-9 scope. Final source pins and
+exercised coverage must supersede draft observations before FR-9 is complete.
+
+Acceptance requires the **full existing fixture differential**, not a selected
+integer subset: default AArch64 bytes/refusals/diagnostics unchanged against the
+independently pinned baseline; x86 results, stdout/stderr, side effects and trap
+statuses compared to the corresponding AArch64 executions; documented treatment
+of architecture-specific fixtures without silently omitting them. An independent
+`objdump` instruction oracle must inspect emitted instructions and fixups, and
+wrong-encoding mutants must demonstrably fail that oracle or the behavioral
+checks. Record exact commands, source/compiler pins, baseline hashes and both
+expected and observed results. An x86 QEMU run is **EMULATED**; it is not a
+physical x86 execution receipt. Full acceptance remains pending for this draft.
+
+## Seed impact
+
+The compiler source and its generated seed compiler are separate artifacts.
+Adding x86 output does not replace the AArch64 seed ladder or authorize editing
+handwritten bootstrap rungs. The source remains within om4's unchanged
+512-function table: two one-use ELF/relocation helpers were inlined after a
+514-function candidate correctly failed bootstrap error 14. No bootstrap gate,
+table capacity, seed0, hex1, asm2 or om4 was weakened or replaced.
+
+Exercised 2026-10-28 on AArch64 Linux:
+
+- `sh seed/host/check.sh`: PASS, including seed ladder/fixpoint, IR C-oracle
+  comparisons, gates 7 through 18, 44 contract cases, enforcement/prover
+  negative controls, native host checks, 53 negative controls and 62 unchanged
+  historical fixture outputs.
+- `sh seed/omc/gate5.sh`: GATE5 PASS, including 153 corpus inputs, 4,860
+  cut/changed inputs and the existing wrong-compiler mutants.
+- Current source: 15,525 lines, 512 functions, SHA256
+  `3a40637bfc11eb4b0c0af80a73bd228a3975c25ef805859f06cb1f6d7fc089f4`.
+- AArch64 compiler: 473,348 bytes, SHA256
+  `5f0faab7cd4fc12158cf8e099418098d278df644efc10e4e7e2e5ca6141fca86`.
+- x86 compiler: 3,652,870 bytes, SHA256
+  `a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc`.
+  Under QEMU it compiled the complete compiler source for both targets to
+  bytes identical to the AArch64-hosted compiler, including its own x86 image.
+  This is **EMULATED**, not a native x86 seed chain.
+- Independent GNU x86-64 objdump 2.42 decoded all 517,049 instructions of that
+  x86 compiler image without invalid opcodes or undecoded bytes.
+- Exit-42 ELF behavior matched native AArch64 and QEMU x86. All four actual
+  CUDA++ units (`bw_enc_sm121`, `cubin_elf`, `ampere_enc_sm86`, `amp_runtime`)
+  compiled for both targets; their bare ABI behavior is not established by
+  compilation.
+
+The full cross-target runner completed with verdict **FAIL**: 7,537 PASS,
+152 FAIL, 399 NOT_RUN, five MISSING_IMPLEMENTATION, 570 EXCLUDED and
+257 MISSING_INPUT records. Both encoding mutants were caught. Exact pins,
+command, counts and unresolved cases are recorded in
+`seed/qualification/x86-linux/20261028.json`; the unchanged complete JSONL
+is preserved at the path and SHA256 recorded there. This is not stage-C PASS.
+
+Failures include contract `forfinal`/`forcontinue` refusal, x86 output capacity
+on C2 case 05712, four bare-unit direct-branch boundary failures, structured
+diagnostic positions, explicit-refusal oracle mismatches and device fixtures.
+Uncomposed bare callers, unreviewed host drivers and missing SHA fixture inputs
+also remain. These are not silently excluded from the overall failing verdict.
+
+For the invalid-fd `devcall` discrepancy, a minimal trace returned EBADF (9)
+on AArch64, while QEMU translated the same x86
+`ioctl(-1,0xc020462b,...)` to ENOTTY (25). No backend errno shim or weakened
+gate was introduced. Work stopped at the user's explicit wrap-up instruction;
+full stage-C acceptance remains unmet.
+Native x86 execution and a native x86 seed0 chain are **NOT_RUN**.
+
+Word-count bookkeeping was checked through WolframLanguageEvaluator:
+`(473348-176)/4 -> 118293`. QEMU version was 8.2.2
+(`1:8.2.2+ds-0ubuntu1.18`); Python was 3.12.3. These are verification
+oracles only, not production dependencies of the emitted static programs.
+
+## Standalone qualification oracle
+
+`seed/omc/qualify-x86.py` is a read-only host verification oracle, not backend
+implementation or a build/runtime dependency. The coordinator command
+on AArch64 Linux is:
+
+```sh
+python3 seed/omc/qualify-x86.py --compiler /absolute/path/to/candidate/omc --objdump /usr/bin/x86_64-linux-gnu-objdump
+```
+
+It requires Python 3, `qemu-x86_64` and an x86-capable objdump. `--inventory`
+categorizes source files and `.cases` rows without invoking the compiler.
+The inventory also includes the frozen `seed/qualification/om2/manifest-c2*.txt`
+corpus alongside live fixture roots and composed `.cases` inputs. A frozen
+manifest is not a substitute for accounting for new fixture files.
+Results go to JSONL stdout and isolated temporary storage, not historical
+receipts. Mode snippets, conductor self-tests and alternate-compiler arms are
+accounted for separately. Reviewed, SHA-pinned host fixtures have dedicated
+drivers for temporary files, normalized clock/random results, invalid-fd device
+calls, private Unix sockets and ephemeral loopback sockets. The two executions
+use separate architecture-local directories with identical argv0/environment.
+Unreviewed host effects remain NOT_RUN, not automatic PASS; unresolved
+implementation/input/driver gaps must fail the overall verdict. Resource limits
+and a temporary working directory are not a security sandbox, so only trusted
+fixture sources belong in the runner.
+
+Coverage distinctions must accompany any result:
+
+- `directories` and `fchdir` adapt their pinned `O_DIRECTORY` literal for the
+  target, with separate hashes; this is not identical-source parity.
+- Entryless units are compiled/refused and fully decoded, but runtime is
+  NOT_RUN without an explicit composed caller. Existing wasm `cases.tsv` and
+  SPIR-V demo/regression tables supply full-width native wrapper callers.
+- Embedded memory-check refusals and pread/pwrite view controls are included.
+- The process fixture executes a native AArch64 child helper in both runs;
+  it does not establish exec of an x86 child. `genlimit` exercises the ordinary
+  compiler, not the generation-ceiling mutant.
+- `psync` invokes syncfs on the scratch descriptor and therefore flushes its
+  filesystem; a temporary directory does not isolate that kernel effect.
+
+The disassembly check linearly decodes code bytes, including unreachable code,
+while carving source-matched jump-protected literal spans. A mnemonic inventory
+is not exhaustive instruction-template proof. The oracle includes an invalid
+opcode control and a valid-but-wrong-immediate control; they must be rejected,
+not merely disassembled. Both controls were exercised and caught. The complete
+differential verdict was FAIL, not a qualification claim.

@@ -412,6 +412,16 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
   calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
 
+An initial line `target x86linux` selects the candidate FR-9 native x86-64 Linux backend.
+Without it, the existing AArch64 output remains unchanged. Whole-program output is a
+static ELF64 image with Linux x86-64 syscalls. A bare x86 unit has six-byte
+`JMP rel32`/`NOP` entry slots and uses omc's private frame ABI; it is not a SysV
+C-callable object and is not compatible with the AArch64 OSC runtime. Its trap
+path ends the process with `100 + code`, without an OscRt callback. Explicit raw AArch64 `emit`
+is refused on the x86 target (error 25). OS flag values remain target-native.
+See [the backend design and evidence](../X86-LINUX.md) for the register map,
+syscall adaptation, seed-chain boundaries and qualification status.
+
 ### 9.2 Functions and calls
 
 - `fn` may appear many times. A names pass reads every signature before any code is written, so a call

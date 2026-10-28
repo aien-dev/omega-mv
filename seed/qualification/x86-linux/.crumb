@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-28T17:04:03Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:0c37089bd356ed8dbee8b920ae98099167ae1c428f3857b846e32147c4cd4a1c",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "6999fa9e6dae4847c155ef4eacaece74f491d3ca",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "20261028.json"
+      ],
+      "purpose_auto": "Repository root x86-linux. Purpose not yet described by a human."
+    }
+  },
+  "layer": "root",
+  "name": "x86-linux",
+  "purpose": "Repository root x86-linux. Purpose not yet described by a human.",
+  "schema_version": "1.0.0"
+}
