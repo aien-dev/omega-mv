@@ -111,15 +111,33 @@ order; without exports, the unit enters its last function. `writeout 512`
 removes the image reservation, so the result is raw code, not ELF or an
 independently executable process. The caller must establish the private frame
 and owned-stack convention. Existing `fnstore` restrictions on globals/text,
-call-cycle checks and refusal boundaries remain in force. A bare unit's trap
-terminates the Linux process with `100 + code`; it is not an OscRt trap return
-and is not a SysV C-callable export.
+call-cycle checks and refusal boundaries remain in force.
 
-There is no exported C-callable function, shared-object relocation contract,
-PLT/GOT, dynamic linker, libc startup, or general foreign-call boundary in this
-Linux design. In particular, using the Linux syscall register convention does
-not establish FR-7. External SysV callers would also need an explicit entry ABI,
-stack alignment, callee-save rules, symbol and relocation design.
+For bare units, physical R12 holds the wrapper's recovery-stack anchor, R14
+points to an immutable table of 32 runtime entry pointers, and R15 holds the
+owned-stack floor. These physical registers are distinct from language operand
+IDs. The native host-extension helpers overwrite R12/R14 in program mode and
+remain forbidden in bare units. Legacy byte `read`/`write` use the separate
+`xio` syscall path, preserve these registers and remain allowed in bare units.
+Before CALL, the wrapper supplies a separate 256-byte old-RBP slot area,
+including pointer/count argument slots, and at least 272 writable bytes below
+pre-CALL RSP for the return address, saved RBP and callee frame. The first
+prologue does not check this caller-owned initial allowance.
+
+A bare trap places its code in ESI and jumps through runtime table entry 2
+(`JMP [R14 + 16]`). This is a private nonlocal landing pad, not a C function call:
+there is no new return address and the current frame may be incomplete. The
+landing pad restores RSP from R12 and the wrapper's saved SysV callee-preserved
+registers and RBP, then returns the status without storing a result. It must
+validate trap codes and restore SysV alignment before any foreign CALL. Normal
+unit returns still produce their value in RAX through LEAVE/RET. Trap recovery
+does not roll back earlier writes or I/O.
+
+The raw compiler output itself has no SysV C-callable export, shared-object
+relocation contract, PLT/GOT, dynamic linker, libc startup or general foreign-call
+boundary. The separate omega-bridge x86 wrapper supplies the C boundary; its
+qualification is separate from the private compiler ABI. Linux syscall register
+conventions alone do not establish FR-7.
 
 ## Linux syscalls and cross-architecture records
 
@@ -168,11 +186,12 @@ are not a claim of PIE or a shared-object ABI.
 ## Traps and refusal paths
 
 `xtrap` records a branch site and language trap code; `xfinish` resolves each
-site to a process-exit sequence with status `100 + code`. Trap numbers and
-source-level boundaries must match AArch64, including signed overflow (1),
-division by zero (2), bounds (3), loop bound (4), conversion (5), stack (6) and
-shift count (7). Explicit traps and contract-related traps retain their existing
-language definitions; Linux termination is not a host signal oracle.
+site to process termination with status `100 + code` in program mode, or the
+runtime-table landing pad described above in bare mode. Trap numbers and
+source-level boundaries match AArch64, including signed overflow (1), division
+by zero (2), bounds (3), loop bound (4), conversion (5), stack (6) and shift count
+(7). Explicit and contract-related traps retain their existing definitions.
+Linux termination is not a host signal oracle.
 
 Compiler refusal is distinct from runtime trapping: error 25 identifies an
 unsupported target/emission path, while existing parse, type, capacity and

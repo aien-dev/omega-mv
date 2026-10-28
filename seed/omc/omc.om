@@ -15424,8 +15424,17 @@ j = ulong 0
 n = get nt 0
 while lt j n
 xpatch get tsite j get oc 0
+if eq get progmode 0 0
+note Bare units reserve physical R12/R14: recovery stack and immutable runtime table.
+note Host helpers clobber these registers and must remain forbidden in bare units.
+emitb 190
+xword get tcode j
+xb 65 255 102
+emitb 16
+else
 ximm 0 add 100 get tcode j
 xleave
+end
 j = add j 1
 end
 put curret 0 0

@@ -416,9 +416,12 @@ An initial line `target x86linux` selects the candidate FR-9 native x86-64 Linux
 Without it, the existing AArch64 output remains unchanged. Whole-program output is a
 static ELF64 image with Linux x86-64 syscalls. A bare x86 unit has six-byte
 `JMP rel32`/`NOP` entry slots and uses omc's private frame ABI; it is not a SysV
-C-callable object and is not compatible with the AArch64 OSC runtime. Its trap
-path ends the process with `100 + code`, without an OscRt callback. Explicit raw AArch64 `emit`
-is refused on the x86 target (error 25). OS flag values remain target-native.
+C-callable object. In bare mode, physical R14 points to an immutable runtime
+entry table: a trap places its code in ESI and jumps through entry 2, whose
+landing pad recovers the wrapper stack through R12 without storing a result.
+This is not the AArch64 register ABI. Whole-program traps still terminate with
+`100 + code`. Explicit raw AArch64 `emit` is refused on x86 (error 25).
+OS flag values remain target-native.
 See [the backend design and evidence](../X86-LINUX.md) for the register map,
 syscall adaptation, seed-chain boundaries and qualification status.
 
