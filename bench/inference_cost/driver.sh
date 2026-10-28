@@ -16,17 +16,13 @@ TASKS_DIR="$SCRIPT_DIR/tasks"
 BUILD_DIR="$REPO_DIR/build/inference_cost"
 mkdir -p "$BUILD_DIR"
 
-# Locate and verify pinned omc compiler
+# Locate omc and check it against the repository's own pin (seed/out/omc.sha256)
 OMC="${OMC:-$REPO_DIR/seed/out/omc}"
-PIN_SHA="2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f"
+PIN_SHA="$(awk '{print $1}' "$REPO_DIR/seed/out/omc.sha256" 2>/dev/null)"
 
-if [ ! -f "$OMC" ]; then
-    if [ -f "/home/drakestapleton/workspace/tilelab/omega-mv/seed/out/omc" ]; then
-        OMC="/home/drakestapleton/workspace/tilelab/omega-mv/seed/out/omc"
-    else
-        echo "driver.sh: omc compiler not found at $OMC" >&2
-        exit 3
-    fi
+if [ ! -f "$OMC" ] || [ -z "$PIN_SHA" ]; then
+    echo "driver.sh: omc or seed/out/omc.sha256 not found under $REPO_DIR" >&2
+    exit 3
 fi
 
 ACTUAL_SHA="$(sha256sum "$OMC" | awk '{print $1}')"
