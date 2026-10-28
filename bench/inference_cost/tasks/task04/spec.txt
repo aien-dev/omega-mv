@@ -1,4 +1,5 @@
-version 1
+version 2
 name gcd_u32
-params uint uint
-ret uint
+param a u32
+param b u32
+ret u32

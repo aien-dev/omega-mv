@@ -1,0 +1,131 @@
+note bench/inference_cost/io.om -- stdin argument reader and decimal writer.
+note driver.sh appends this unit after an Omega candidate (so omc line numbers in
+note feedback match the candidate) and then a generated fn main that calls the
+note candidate once per line of inputs.txt. Exit 90..93 are harness I/O failures.
+global bxin uchar 65536
+global bxst ulong 2
+global bxob uchar 24
+
+fn bench_load to void
+p = ulong 0
+note every pass adds at least one byte to the 65536-byte buffer or leaves the loop
+while lt p 65536 bound 65537
+k = read 0 bxin p sub 65536 p
+if lt k 0
+exit 90
+end
+if eq k 0
+break
+end
+p = add p ulong k
+end
+if ge p 65536
+exit 91
+end
+put bxst 0 0
+put bxst 1 p
+end
+
+fn bench_ws to void
+p = get bxst 0
+n = get bxst 1
+while lt p n bound 65537
+c = get bxin p
+if gt c 32
+break
+end
+p = add p 1
+end
+put bxst 0 p
+end
+
+fn bench_skip to void
+bench_ws
+p = get bxst 0
+n = get bxst 1
+while lt p n bound 65537
+c = get bxin p
+if le c 32
+break
+end
+p = add p 1
+end
+put bxst 0 p
+end
+
+fn bench_arg to long
+bench_ws
+p = get bxst 0
+n = get bxst 1
+sg = long 1
+if lt p n
+if eq get bxin p 45
+sg = long -1
+p = add p 1
+end
+end
+v = long 0
+d = ulong 0
+note at most 20 digits fit a long-sized decimal; more is refused below by the checked mul
+while lt p n bound 65537
+c = get bxin p
+if lt c 48
+break
+end
+if gt c 57
+break
+end
+v = add mul v 10 long sub c 48
+p = add p 1
+d = add d 1
+end
+if eq d 0
+exit 92
+end
+put bxst 0 p
+ret mul v sg
+end
+
+fn bench_cases to ulong
+bench_skip
+bench_skip
+bench_skip
+v = bench_arg
+if lt v 0
+exit 92
+end
+ret ulong v
+end
+
+fn bench_putu x ulong to void
+v = x
+i = ulong 23
+put bxob i 10
+note a ulong has at most 20 decimal digits
+for j ulong 21
+i = sub i 1
+put bxob i uchar add rem v 10 48
+v = div v 10
+if eq v 0
+break
+end
+end
+n = sub 24 i
+w = write 1 bxob i n
+if ne w long n
+exit 93
+end
+end
+
+fn bench_puti x long to void
+if lt x 0
+put bxob 0 45
+w = write 1 bxob 0 1
+if ne w 1
+exit 93
+end
+bench_putu ulong neg x
+else
+bench_putu ulong x
+end
+end

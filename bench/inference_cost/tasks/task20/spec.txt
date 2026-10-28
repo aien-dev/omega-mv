@@ -1,4 +1,5 @@
-version 1
+version 2
 name rot_left_u32
-params uint uint
-ret uint
+param x u32
+param k u32
+ret u32
