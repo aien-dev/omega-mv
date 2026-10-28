@@ -1,0 +1,18 @@
+fn main to int
+if ne (min3_i32 1 2 3) 1
+ret 1
+end
+if ne (min3_i32 3 1 2) 1
+ret 2
+end
+if ne (min3_i32 2 3 1) 1
+ret 3
+end
+if ne (min3_i32 -10 -5 0) -10
+ret 4
+end
+if ne (min3_i32 0 0 0) 0
+ret 5
+end
+ret 0
+end

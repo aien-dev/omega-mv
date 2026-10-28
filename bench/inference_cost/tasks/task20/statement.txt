@@ -1,0 +1,1 @@
+Write a function rot_left_u32 that takes an unsigned 32-bit integer x and a shift count k as uint, and returns x rotated left by (k % 32) bits. rot_left_u32(x, 0) = x. It never traps.

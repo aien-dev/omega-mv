@@ -1,0 +1,1 @@
+Write a function isqrt_u32 that takes an unsigned 32-bit number x as uint and returns the integer square root of x: the largest uint r such that r * r <= x. isqrt_u32(0) = 0. It never traps.
