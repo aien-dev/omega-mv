@@ -87,3 +87,19 @@ def opsjson: try ([$log | split("\n")[] | select(startswith("RESULT chip ")) | s
   verdict: (if $r.verdict == "PASS" then "PASS" elif $cw == "PASS" then "FAIL" elif $cw == "" then "NOT_RUN" else $cw end)
 }
 '
+canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage") || return 1
+canonical_root=$(cd -P "$canonical_stage/source" && pwd) || return 1
+canonical_sources=
+for canonical_file in $SOURCES; do
+    case $canonical_file in
+        src/omega_numeric_divsqrt_gb10.c|src/omega_numeric_transc.c|src/omega_numeric_provenance.c|src/omega_om_units.c)
+            canonical_sources="$canonical_sources $canonical_file";;
+        *)
+            [ -s "$canonical_root/$canonical_file" ] || return 1
+            canonical_sources="$canonical_sources $canonical_root/$canonical_file";;
+    esac
+done
+SOURCES="$canonical_sources $canonical_root/src/cudapp_om_units.c"
+CPATH="$canonical_root/src${CPATH:+:$CPATH}"; export CPATH
+RECEIPT_EXTRA_JQ="$RECEIPT_EXTRA_JQ | . + {canonical_source: $canonical_metadata}"

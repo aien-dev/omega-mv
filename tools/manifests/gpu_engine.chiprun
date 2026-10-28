@@ -29,3 +29,20 @@ REQUIRE_ALL_PASS=0
 CHILD_EXIT_PASSTHROUGH=1
 # Host tier first (nonzero refuses): the simulated-driver test and the backend mutants, real target names.
 HOST_TIER_CMD="make test-gpu-engine-sim test-gpu-engine-backend-mutants PHYSICS_DIR=\"$PHYSICS\""
+# Authenticate before any host build; the final stage is the only GPU source authority.
+canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage") || return 2
+canonical_root=$(cd -P "$canonical_stage/source" && pwd) || return 2
+canonical_sources=
+for canonical_file in $SOURCES; do
+    case $canonical_file in
+        src/omega_validate.c|src/omega_om_units.c)
+            canonical_sources="$canonical_sources $canonical_file";;
+        *)
+            [ -s "$canonical_root/$canonical_file" ] || return 2
+            canonical_sources="$canonical_sources $canonical_root/$canonical_file";;
+    esac
+done
+SOURCES="$canonical_sources $canonical_root/src/cudapp_om_units.c"
+CPATH="$canonical_root/src${CPATH:+:$CPATH}"; export CPATH
+RECEIPT_EXTRA_JQ=". + {canonical_source: $canonical_metadata}"

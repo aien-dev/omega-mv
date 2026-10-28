@@ -41,6 +41,10 @@
 set -u
 cd "$(dirname "$0")/.." || exit 2
 unset ONLY
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/gpu-backend-canonical.XXXXXX") || exit 2
+trap 'rm -rf "$WORK"' EXIT HUP INT TERM
+bash tools/e1_manifest.sh --canonical-overlay "$WORK" >/dev/null || exit 2
+cat "$WORK/cudapp-source.json" >&2
 
 # The scratch copy lives in /tmp, where ../physics does not resolve, so the physics
 # path is made absolute here (PHYSICS_DIR, default ../physics).
@@ -50,11 +54,11 @@ PHYS=$(cd "${PHYSICS_DIR:-../physics}" 2>/dev/null && pwd -P) || {
 }
 TP=$PHYS/third_party/nvidia-open-580.173.02
 INC="-I$PHYS/m16 -I$PHYS/nvrm -I$TP/src/common/sdk/nvidia/inc -I$TP/kernel-open/common/inc -I$TP/kernel-open/nvidia-uvm -I$TP/src/nvidia/arch/nvalloc/unix/include"
-SRCS="src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_core.c src/omega_canonical.c src/omega_om_units.c"
+SRCS="src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_core.c src/omega_canonical.c src/omega_om_units.c src/cudapp_om_units.c"
 BUILD="gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -ffunction-sections -fdata-sections -Isrc -Itests $INC -o .gpu_engine_bt tests/test_omega_blackwell_engine.c tests/fake_m16_native.c $SRCS -Wl,--gc-sections -lm"
 
 OUT=${GPU_ENGINE_BMUT_OUT:-}
-set -- -k table -m - -t ./.gpu_engine_bt -b "$BUILD" \
+set -- -k table -m - -d "$WORK" -t ./.gpu_engine_bt -b "$BUILD" \
     -c "src tests/test_omega_blackwell_engine.c tests/fake_m16_native.c tests/fake_m16_native.h" \
     -f '\[FAIL\]' -B
 [ -z "$OUT" ] || set -- "$@" -o "$OUT"
@@ -188,3 +192,9 @@ WRAP_PROGRAM_LENGTH~src/omega_blackwell_submit.c~/^int omega_blackwell_execute_v
 WRAP_MARKER_CHECK~src/omega_blackwell_submit.c~/^int omega_blackwell_execute_vector/,/^}/ s/if (info.marker != OMEGA_BW_MARKER_COMPLETION_PAYLOAD) return -1;/(void)0;/~second check of the marker payload~redundant~the backend wait_word already refuses any first-marker value other than 0x44444444 (UNKNOWN_STATE), so the engine fails before this line is reached
 WRAP_SEMAPHORE_CHECK~src/omega_blackwell_submit.c~/^int omega_blackwell_execute_vector/,/^}/ s/if (info.semaphore != OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE) return -1;/(void)0;/~second check of the semaphore value~redundant~the backend wait_word already refuses any semaphore value other than DONE (6), so the engine fails before this line is reached
 ROWS
+rc=$?
+if [ -n "$OUT" ] && [ -s "$OUT" ]; then
+    jq --slurpfile source "$WORK/cudapp-source.json" '. + {canonical_source: $source[0]}' "$OUT" > "$WORK/receipt.json" &&
+        cp "$WORK/receipt.json" "$OUT" || exit 2
+fi
+exit "$rc"

@@ -25,6 +25,10 @@
 set -u
 cd "$(dirname "$0")/.." || exit 2
 unset ONLY
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/gpu-engine-canonical.XXXXXX") || exit 2
+trap 'rm -rf "$WORK"' EXIT HUP INT TERM
+bash tools/e1_manifest.sh --canonical-overlay "$WORK" >/dev/null || exit 2
+cat "$WORK/cudapp-source.json" >&2
 
 FILE=src/omega_gpu_engine.c
 BUILD='gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o .gpu_engine_t tests/test_omega_gpu_engine.c src/omega_gpu_engine.c'
@@ -82,8 +86,14 @@ UNCHANGED_COUNT_SATURATES|$FILE|s/unchanged++;/unchanged = 1u;/
 UNCHANGED_CHECK_SKIPPED|$FILE|s/if (unchanged != 0u) {/if (0) {/"
 
 OUT=${GPU_ENGINE_MUT_OUT:-}
-set -- -k marker -m - -t ./.gpu_engine_t -b "$BUILD" \
+set -- -k marker -m - -d "$WORK" -t ./.gpu_engine_t -b "$BUILD" \
     -c "src/omega_gpu_engine.c src/omega_gpu_engine.h tests/test_omega_gpu_engine.c" \
     -f '\[FAIL\]' -B
 [ -z "$OUT" ] || set -- "$@" -o "$OUT"
 printf '%s\n' "$ROWS" | tools/mutation_runner.sh "$@"
+rc=$?
+if [ -n "$OUT" ] && [ -s "$OUT" ]; then
+    jq --slurpfile source "$WORK/cudapp-source.json" '. + {canonical_source: $source[0]}' "$OUT" > "$WORK/receipt.json" &&
+        cp "$WORK/receipt.json" "$OUT" || exit 2
+fi
+exit "$rc"
