@@ -266,6 +266,20 @@ note ---- error reporting ----
 global msg uchar 65536
 global mc ulong 1
 
+note mflush: complete a diagnostic/query stdout chunk or report compiler output error 2.
+fn mflush to void
+off = ulong 0
+n = get mc 0
+while lt off n
+w = write 1 msg off sub n off
+if le w 0
+exit int 2
+end
+off = add off ulong w
+end
+put mc 0 0
+end
+
 fn mputb b uchar to void
 m = get mc 0
 put msg m b
@@ -2370,24 +2384,24 @@ if or or eq code 4 eq code 6 eq code 16
 mputw 9104236865280339 7
 ret
 end
-if or or or or eq code 3 eq code 7 eq code 8 eq code 11 eq code 23
+if or or eq code 7 eq code 11 eq code 19
 mputw 138601847124 5
 ret
 end
-if eq code 9
+if or eq code 17 eq code 18
 mputw 138903768134 5
 ret
 end
-if or eq code 10 eq code 13
+if or or eq code 3 eq code 10 eq code 13
 mputw 138601644366 5
 ret
 end
-if or eq code 12 eq code 14
+if or or or eq code 12 eq code 14 eq code 23 eq code 24
 mputw 6436850320626696515 8
 mputb 32
 ret
 end
-if or or eq code 5 eq code 18 eq code 21
+if or eq code 8 eq code 21
 mputw 35481921143122 6
 ret
 end
@@ -2628,7 +2642,7 @@ dexp_w code
 mputw 17280399158765088 7
 mput_tok a b
 mputb 10
-w = write 1 msg 0 get mc 0
+mflush
 end
 
 fn emit_query to void
@@ -2671,6 +2685,7 @@ mputb 10
 end
 end
 mputw 2879017064423790 7
+mflush
 i = ulong 0
 while lt i get nn 0
 if ne get nm_name i 0
@@ -2680,11 +2695,13 @@ dty_w ulong get nm_type i
 mputb 32
 dname_kind i
 mputb 10
+mflush
 end
 i = add i 1
 end
 mputw 7957695015192261990 8
 mputw 670323 3
+mflush
 f = ulong 0
 while lt f get nf 0
 mputw 2125414 3
@@ -2699,9 +2716,10 @@ dty_w ulong get fn_pt add mul f 6 p
 p = add p 1
 end
 mputb 10
+mflush
 f = add f 1
 end
-w = write 1 msg 0 get mc 0
+mflush
 exit int 0
 end
 note ======== names and functions ========
@@ -3573,7 +3591,7 @@ if eq get rk 0 6
 fail 11
 end
 t = get rt 0
-if lt t 10
+if eq isfloat t 0
 fail 7
 end
 ra = matreg get rk 0 get rv 0 t
@@ -3604,7 +3622,7 @@ rdval 0 0 255 0
 if or eq get rk 0 2 eq get rk 0 6
 fail 11
 end
-if or lt at 10 lt get rt 0 10
+if or eq isfloat at 0 eq isfloat get rt 0 0
 fail 7
 end
 if ne at get rt 0
@@ -3667,10 +3685,10 @@ if eq tt 1
 fail 9
 end
 rd = alloc
-if ge ft 10
+if ne isfloat ft 0
 f2v ft ra 0
 ra = ulong 0
-if ge tt 10
+if ne isfloat tt 0
 if eq ft 10
 emit or or 505593856 shl ra 5 rd
 else
@@ -3714,7 +3732,7 @@ end
 end
 end
 end
-if ge tt 10
+if ne isfloat tt 0
 fv2x tt rd rd
 end
 ret rd
@@ -6426,7 +6444,7 @@ if eq exp 0
 vdone 6 add mul get ts 0 64 get tl 0 ulong 0
 ret
 end
-if lt exp 10
+if eq isfloat exp 0
 fail 7
 end
 t = exp
@@ -6483,7 +6501,7 @@ if ne e 0
 if eq get nm_kind sub e 1 9
 ct = ulong get nm_type sub e 1
 cv = get nm_addr sub e 1
-if ge ct 10
+if ne isfloat ct 0
 vdone 7 cv ct
 else
 vdone 3 cv ct
@@ -6607,15 +6625,16 @@ vdone 3 get tw 0 13
 ret
 end
 rdval 1 0 255 0
+if eq get rk 0 6
+fail 7
+end
 if ge get rt 0 64
 fail 7
 end
 if eq get rk 0 2
 fail 11
 end
-if ne get rt 0 13
-fail 7
-end
+vt_conv 13
 vdec
 ret
 end
@@ -6755,12 +6774,12 @@ end
 if and eq ak 6 eq bk 6
 fail 11
 end
-if or ge at 10 ge bt 10
+if or ne isfloat at 0 ne isfloat bt 0
 if eq ak 6
 if eq bt 0
 fail 11
 end
-if lt bt 10
+if eq isfloat bt 0
 fail 7
 end
 av = fspan bt av
@@ -6771,7 +6790,7 @@ if eq bk 6
 if eq at 0
 fail 11
 end
-if lt at 10
+if eq isfloat at 0
 fail 7
 end
 bv = fspan at bv
@@ -6784,6 +6803,9 @@ end
 if or eq bk 2 eq bk 3
 fail 7
 end
+end
+if or eq ak 6 eq bk 6
+fail 7
 end
 if eq ak 2
 if eq bk 2
@@ -7404,7 +7426,7 @@ t = typeword
 if ge t 64
 fail 7
 end
-if ge t 10
+if ne isfloat t 0
 note float constant: rdval reads the float token as a value (kind 6); fspan converts it to the
 note target type's bits and rdval has already balanced the nesting depth.
 rdval 0 0 255 0
@@ -7420,6 +7442,9 @@ end
 tok
 if eq get tk 0 0
 fail 4
+end
+if eq get tk 0 5
+fail 7
 end
 if ne get tk 0 2
 fail 16
@@ -8621,7 +8646,7 @@ if eq get chkmode 0 1
 put mc 0 0
 mputw 7594244768023276911 8
 mputw 11207551510369 6
-w = write 1 msg 0 get mc 0
+mflush
 exit int 0
 end
 if ne get fmtm 0 0
