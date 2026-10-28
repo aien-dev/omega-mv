@@ -558,19 +558,46 @@ static bool test_m18_gate5_instruction_sequencing(void) {
     return valid;
 }
 
+/* Host provenance adapter only; authentication policy lives in seeded Omega.
+ * Proposed replacement: a bounded .om source scanner plus SHA-256 receipt unit,
+ * returning refusal on empty input, read errors, forbidden tokens or pin drift. */
+static bool canonical_stage_path(char *path, size_t capacity, const char *suffix) {
+    const char *stage = getenv("CUDAPP_STAGE");
+    const char *out = getenv("OUT_DIR");
+    char fallback[PATH_MAX];
+    if (!stage || !stage[0]) {
+        int n = snprintf(fallback, sizeof fallback, "%s/cudapp",
+                         out && out[0] ? out : "build");
+        if (n < 0 || (size_t)n >= sizeof fallback) return false;
+        stage = fallback;
+    }
+    int n = snprintf(path, capacity, "%s/%s", stage, suffix);
+    return n >= 0 && (size_t)n < capacity;
+}
+
+static bool canonical_stage_verified(void) {
+    return system("sh tools/cudapp-stage.sh --verify cudapp.lock "
+                  "\"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\" >/dev/null") == 0;
+}
+
 static bool test_m18_gate6_code_truth(void) {
-    FILE *f = fopen("src/omega_blackwell_codegen.c", "r");
+    char path[PATH_MAX];
+    if (!canonical_stage_verified() ||
+        !canonical_stage_path(path, sizeof path, "source/src/omega_blackwell_codegen.c")) return false;
+    FILE *f = fopen(path, "r");
     if (!f) return false;
     char line[512];
-    bool has_static_table = false;
+    bool has_static_table = false, nonempty = false;
     while (fgets(line, sizeof(line), f)) {
+        nonempty = true;
         if (strstr(line, "MATMUL_INSTRUCTIONS") || strstr(line, "static const uint32_t MATMUL_CODE")) {
             has_static_table = true;
             break;
         }
     }
-    fclose(f);
-    return !has_static_table;
+    bool read_ok = !ferror(f);
+    if (fclose(f) != 0) read_ok = false;
+    return nonempty && read_ok && !has_static_table;
 }
 
 static bool test_m18_gate7_codegen_variation(void) {
@@ -1161,17 +1188,16 @@ static bool test_m18_gate18_receipt(void) {
     if (!compute_file_sha256(self_path, bin_digest, bin_hex)) return false;
 
     /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area. */
+    if (!canonical_stage_verified()) return false;
+    const char *canonical_files[] = {
+        "source/src/omega_blackwell_matmul.h", "source/src/omega_blackwell_matmul.c",
+        "source/src/omega_blackwell_codegen.h", "source/src/omega_blackwell_codegen.c",
+        "source/src/omega_blackwell_qmd.h", "source/src/omega_blackwell_qmd.c",
+        "source/src/omega_blackwell_submit.h", "source/src/omega_blackwell_submit.c",
+        "source/src/omega_blackwell_engine.h", "source/src/omega_blackwell_engine.c",
+        "pin", "observed", "source.tar", "hashes"
+    };
     const char *manifest_files[] = {
-        "src/omega_blackwell_matmul.h",
-        "src/omega_blackwell_matmul.c",
-        "src/omega_blackwell_codegen.h",
-        "src/omega_blackwell_codegen.c",
-        "src/omega_blackwell_qmd.h",
-        "src/omega_blackwell_qmd.c",
-        "src/omega_blackwell_submit.h",
-        "src/omega_blackwell_submit.c",
-        "src/omega_blackwell_engine.h",
-        "src/omega_blackwell_engine.c",
         "src/omega_blackwell_gates.h",
         "src/omega_blackwell_gates.c",
         "tools/omegatool.c",
@@ -1184,14 +1210,25 @@ static bool test_m18_gate18_receipt(void) {
 
     FILE *f_sums = fopen(sums_path, "w");
     if (!f_sums) return false;
+    bool sums_ok = true;
+    for (size_t i = 0; i < sizeof canonical_files / sizeof canonical_files[0]; i++) {
+        char path[PATH_MAX], h[65];
+        uint8_t d[32];
+        if (!canonical_stage_path(path, sizeof path, canonical_files[i]) ||
+            !compute_file_sha256(path, d, h) ||
+            fprintf(f_sums, "%s  cudapp/%s\n", h, canonical_files[i]) < 0) {
+            sums_ok = false;
+            break;
+        }
+    }
     for (size_t i = 0; i < num_files; i++) {
         uint8_t d[32];
         char h[65];
-        if (compute_file_sha256(manifest_files[i], d, h)) {
-            fprintf(f_sums, "%s  %s\n", h, manifest_files[i]);
-        }
+        if (!compute_file_sha256(manifest_files[i], d, h) ||
+            fprintf(f_sums, "%s  %s\n", h, manifest_files[i]) < 0) sums_ok = false;
     }
-    fclose(f_sums);
+    if (fclose(f_sums) != 0) sums_ok = false;
+    if (!sums_ok) return false;
 
     /* 6. Compute manifest digest */
     uint8_t manifest_digest[32];

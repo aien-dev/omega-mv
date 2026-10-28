@@ -24,10 +24,12 @@ set -u
 cd "$(dirname "$0")/.." || exit 2
 SCRATCH=$(mktemp -d "${TMPDIR:-/tmp}/autodiff-mut.XXXXXX") || exit 2
 trap 'rm -rf "$SCRATCH"' EXIT INT TERM
+bash tools/e1_manifest.sh --canonical-overlay "$SCRATCH/source" >/dev/null || exit 2
+cat "$SCRATCH/source/cudapp-source.json" >&2
 TENSOR="src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c src/tensor/omega_tensor_reduce_seam.c \
 src/omega_numeric_reduce.c src/omega_numeric_transc.c"
 DEPS="src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c \
-src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
+src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c"
 FLAGS="-std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -O2 -DOMEGA_NUMERIC_CPU_ONLY"
 
 # name|file|sed expression (applied only to the line carrying MUT:<name>)
@@ -54,8 +56,9 @@ DIV_FORMULA|omega_autodiff.c|{s/OMEGA_TB_DIV, n->value, nb->value, &tmp)/OMEGA_T
 BUILD="gcc $FLAGS -Isrc -Isrc/tensor -Isrc/autodiff -o t tests/test_omega_autodiff.c src/autodiff/omega_autodiff.c \
 $TENSOR $DEPS"
 printf '%s\n' "$MUTATIONS" | sed 's#^\([A-Z_]*\)|#\1|src/autodiff/#' > "$SCRATCH/rows"
-tools/mutation_runner.sh -k marker -m "$SCRATCH/rows" -d . -c "src tests/test_omega_autodiff.c" \
+tools/mutation_runner.sh -k marker -m "$SCRATCH/rows" -d "$SCRATCH/source" -c "src tests/test_omega_autodiff.c" \
     -b "$BUILD" -t ./t -f FAIL -B > "$SCRATCH/runner.out" 2> "$SCRATCH/runner.err"
+runner_rc=$?
 if grep -q 'unmutated baseline' "$SCRATCH/runner.out"; then
     cat "$SCRATCH/runner.err"
     echo "autodiff mutation sweep: FAIL (unmutated baseline does not pass)"; exit 1
@@ -86,5 +89,6 @@ while IFS= read -r line; do
     esac
 done < "$SCRATCH/runner.err"
 if [ "$total" -lt 5 ]; then echo "autodiff mutation sweep: FAIL (fewer than 5 mutations)"; exit 1; fi
+if [ "$runner_rc" -ne 0 ]; then cat "$SCRATCH/runner.err"; echo "autodiff mutation sweep: FAIL (runner error)"; exit 1; fi
 if [ "$fail" -ne 0 ]; then echo "autodiff mutation sweep: FAIL"; exit 1; fi
 echo "autodiff mutation sweep: PASS ($total of $total mutations caught)"

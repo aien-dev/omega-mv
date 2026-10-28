@@ -26,22 +26,26 @@
 # Run: make test-divsqrt-sweep   (or run this file).
 set -u
 HERE=$(cd -P "$(dirname "$0")/.." && pwd)
-SRC=$HERE/src/omega_numeric_divsqrt_gb10.c
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
+bash "$HERE/tools/e1_manifest.sh" --canonical-overlay "$TMP/source" >/dev/null || exit 2
+cat "$TMP/source/cudapp-source.json" >&2
+SRC=$TMP/source/src/omega_numeric_divsqrt_gb10.c
+[ -s "$SRC" ] || exit 2
 OTHER="tests/test_omega_divsqrt_gb10.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c
-       src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
-names=$(grep -o '/\* CHECK:[a-z0-9_]* \*/' "$SRC" | sed 's|/\* CHECK:\([a-z0-9_]*\) \*/|\1|')
+       src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c"
+grep -o '/\* CHECK:[a-z0-9_]* \*/' "$SRC" > "$TMP/markers" || { echo "scanner failed or no CHECK markers" >&2; exit 2; }
+names=$(sed 's|/\* CHECK:\([a-z0-9_]*\) \*/|\1|' "$TMP/markers") || exit 2
 total=0 killed=0 survived=0 broken=0
 for name in $names; do
     total=$((total + 1))
     mut=$TMP/omega_numeric_divsqrt_gb10.c
-    grep -v "/\* CHECK:$name \*/" "$SRC" > "$mut"
+    grep -v "/\* CHECK:$name \*/" "$SRC" > "$mut" || { echo "source scanner failed" >&2; exit 2; }
     if [ "$(wc -l < "$SRC")" -ne $(( $(wc -l < "$mut") + 1 )) ]; then
         echo "  [BROKEN]   $name: marker is not on exactly one line"; broken=$((broken + 1)); continue
     fi
     # shellcheck disable=SC2086
-    if ! (cd "$HERE" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -pthread \
+    if ! (cd "$TMP/source" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -pthread \
             -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter \
             -DOMEGA_NUMERIC_CPU_ONLY -o "$TMP/t" "$mut" $OTHER) > "$TMP/build.log" 2>&1; then
         echo "  [BROKEN]   $name: scratch copy does not build"; broken=$((broken + 1)); continue
