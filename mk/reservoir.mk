@@ -24,13 +24,12 @@ ifndef RESERVOIR_MK
 RESERVOIR_MK := 1
 .PHONY: test-reservoir reservoir-purity qualify-reservoir
 RES_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -O2 -Isrc -Isrc/reservoir -Itests/reservoir \
-	-ffp-contract=off -fno-fast-math -fno-math-errno -DOMEGA_NUMERIC_CPU_ONLY
+	-ffp-contract=off -fno-fast-math -fno-math-errno -DOMEGA_NUMERIC_CPU_ONLY $(CUDAPP_HEADER_FLAGS)
 RES_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -DRES_QUICK
 RES_SRCS = src/reservoir/omega_reservoir.c src/reservoir/omega_reservoir_readout.c
 RES_HDRS = src/reservoir/omega_reservoir.h src/reservoir/omega_reservoir_readout.h src/omega_numeric.h src/sha256.h
-# omega_numeric.c pulls in the provenance and encoder objects at link time.
-RES_DEPS = src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c
+# CPU numerics retain provenance and Omega units; GPU definitions are canonical.
+RES_DEPS = src/omega_numeric.c src/omega_numeric_provenance.c src/omega_om_units.c
 RES_TEST_SRCS = tests/reservoir/test_reservoir.c tests/reservoir/res_oracle64.c
 RES_TEST_HDRS = tests/reservoir/res_fixtures.h tests/reservoir/res_oracle64.h
 RES_DIR = $(OUT_DIR)/tests-reservoir
@@ -42,7 +41,7 @@ RES_TOOL_CFLAGS = $(RES_CFLAGS) -Itools/reservoir -pthread
 RES_MAT_SRCS = tools/reservoir/res_mat.c tools/reservoir/res_inflate.c src/omega_om_units.c
 RES_MAT_TEST = tests/reservoir/test_res_mat.c
 
-$(RES_DIR)/%.o: src/reservoir/%.c $(RES_HDRS)
+$(RES_DIR)/%.o: src/reservoir/%.c $(RES_HDRS) | check-cudapp
 	@mkdir -p $(RES_DIR)
 	$(CC) $(RES_CFLAGS) -pedantic -c -o $@ $<
 
@@ -51,20 +50,20 @@ reservoir-purity: $(RES_DIR)/omega_reservoir.o $(RES_DIR)/omega_reservoir_readou
 		echo "reservoir object references an allocator, libm or an I/O or process operation"; exit 1; fi
 	@echo "reservoir-purity: omega_reservoir.o and omega_reservoir_readout.o reference no forbidden symbol"
 
-$(RES_DIR)/test_reservoir: $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) $(RES_HDRS) $(RES_TEST_HDRS)
+$(RES_DIR)/test_reservoir: $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) $(RES_HDRS) $(RES_TEST_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(RES_DIR)
-	$(CC) $(RES_CFLAGS) -o $@ $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) -lm
-$(RES_DIR)/test_reservoir_asan: $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) $(RES_HDRS) $(RES_TEST_HDRS)
+	$(CC) $(RES_CFLAGS) -o $@ $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) -lm $(CUDAPP_LIB)
+$(RES_DIR)/test_reservoir_asan: $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) $(RES_HDRS) $(RES_TEST_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(RES_DIR)
-	$(CC) $(RES_CFLAGS) $(RES_ASAN) -o $@ $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) -lm
+	$(CC) $(RES_CFLAGS) $(RES_ASAN) -o $@ $(RES_TEST_SRCS) $(RES_SRCS) $(RES_DEPS) -lm $(CUDAPP_LIB)
 
-$(RES_DIR)/res_qualify: $(RES_TOOL_SRCS) $(RES_TOOL_HDRS) $(RES_SRCS) $(RES_DEPS) $(RES_HDRS) $(RES_TEST_HDRS)
+$(RES_DIR)/res_qualify: $(RES_TOOL_SRCS) $(RES_TOOL_HDRS) $(RES_SRCS) $(RES_DEPS) $(RES_HDRS) $(RES_TEST_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(RES_DIR)
-	$(CC) $(RES_TOOL_CFLAGS) -DRES_BUILD_FLAGS='"$(strip $(RES_TOOL_CFLAGS))"' -o $@ $(RES_TOOL_SRCS) $(RES_SRCS) $(RES_DEPS) -lm
-$(RES_DIR)/test_res_mat: $(RES_MAT_TEST) $(RES_MAT_SRCS) $(RES_TOOL_HDRS) $(RES_TEST_HDRS)
+	$(CC) $(RES_TOOL_CFLAGS) -DRES_BUILD_FLAGS='"$(strip $(RES_TOOL_CFLAGS))"' -o $@ $(RES_TOOL_SRCS) $(RES_SRCS) $(RES_DEPS) -lm $(CUDAPP_LIB)
+$(RES_DIR)/test_res_mat: $(RES_MAT_TEST) $(RES_MAT_SRCS) $(RES_TOOL_HDRS) $(RES_TEST_HDRS) | check-cudapp
 	@mkdir -p $(RES_DIR)
 	$(CC) $(RES_TOOL_CFLAGS) -o $@ $(RES_MAT_TEST) $(RES_MAT_SRCS)
-$(RES_DIR)/test_res_mat_asan: $(RES_MAT_TEST) $(RES_MAT_SRCS) $(RES_TOOL_HDRS) $(RES_TEST_HDRS)
+$(RES_DIR)/test_res_mat_asan: $(RES_MAT_TEST) $(RES_MAT_SRCS) $(RES_TOOL_HDRS) $(RES_TEST_HDRS) | check-cudapp
 	@mkdir -p $(RES_DIR)
 	$(CC) $(RES_TOOL_CFLAGS) $(RES_ASAN) -o $@ $(RES_MAT_TEST) $(RES_MAT_SRCS)
 

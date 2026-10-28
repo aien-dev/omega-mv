@@ -17,32 +17,27 @@
 #   test-gpu-engine-freestanding     the engine contract test and the platform contract test linked against
 #                                    those freestanding objects (host runner, opens no device)
 .PHONY: test-gpu-engine-compile test-gpu-engine test-gpu-engine-mutants test-gpu-engine-backend-compile test-gpu-engine-prod-build test-gpu-engine-sim test-gpu-engine-backend-mutants test-gpu-engine-gb10-compile gpu-engine-freestanding test-gpu-engine-freestanding
-build/test_omega_gpu_engine_compile: tests/test_omega_gpu_engine_compile.c src/omega_gpu_engine.c src/omega_gpu_engine.h
+build/test_omega_gpu_engine_compile: tests/test_omega_gpu_engine_compile.c $(CUDAPP_SOURCE)/src/omega_gpu_engine.h $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $@ tests/test_omega_gpu_engine_compile.c src/omega_gpu_engine.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $@ tests/test_omega_gpu_engine_compile.c $(CUDAPP_LIB)
 test-gpu-engine-compile: build/test_omega_gpu_engine_compile
 	./build/test_omega_gpu_engine_compile
 
-build/test_omega_gpu_engine: tests/test_omega_gpu_engine.c src/omega_gpu_engine.c src/omega_gpu_engine.h
+build/test_omega_gpu_engine: tests/test_omega_gpu_engine.c $(CUDAPP_SOURCE)/src/omega_gpu_engine.h $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $@ tests/test_omega_gpu_engine.c src/omega_gpu_engine.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $@ tests/test_omega_gpu_engine.c $(CUDAPP_LIB)
 test-gpu-engine: build/test_omega_gpu_engine
 	./build/test_omega_gpu_engine
 
 test-gpu-engine-mutants:
 	sh tools/gpu_engine_mutations.sh
 
-# A3b1: the Blackwell backend includes physics headers (m16_native.h, nvrm.h), so it
-# uses the same physics -I paths as the top-level Makefile CFLAGS (Makefile lines 9-14).
-GPU_ENGINE_PHYS_INC = -I$(PHYSICS_DIR)/m16 -I$(PHYSICS_DIR)/nvrm \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/common/inc \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm \
-	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include
+# Syntax-check the canonical backend, using its bundled driver headers.
+GPU_ENGINE_PHYS_INC = $(CUDAPP_HEADER_FLAGS)
 
-build/omega_blackwell_engine_syntax.o: src/omega_blackwell_engine.c src/omega_blackwell_engine.h src/omega_gpu_engine.h
+build/omega_blackwell_engine_syntax.o: $(CUDAPP_SOURCE)/src/omega_blackwell_engine.c $(CUDAPP_SOURCE)/src/omega_blackwell_engine.h $(CUDAPP_SOURCE)/src/omega_gpu_engine.h | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc $(GPU_ENGINE_PHYS_INC) -c -o $@ src/omega_blackwell_engine.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE $(GPU_ENGINE_PHYS_INC) -Isrc -c -o $@ $(CUDAPP_SOURCE)/src/omega_blackwell_engine.c
 test-gpu-engine-backend-compile: build/omega_blackwell_engine_syntax.o
 
 # Links only, opens no device. Uses the real m16_native and nvrm sources at the physics pin.
@@ -52,17 +47,15 @@ test-gpu-engine-prod-build:
 # A3b2: simulated-driver host test. Links the sources of the Makefile RX_COMPOSE_GPU_SRCS list (plus the
 # three core files the vector builder needs) with tests/fake_m16_native.c in place of the physics
 # m16_native.c and nvrm.c. Opens no device.
-GPU_ENGINE_SIM_SRCS = src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c \
-	src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c \
+GPU_ENGINE_SIM_SRCS = src/omega_vector.c src/omega_validate.c \
 	src/omega_core.c src/omega_canonical.c src/omega_om_units.c
 
 build/test_omega_blackwell_engine: tests/test_omega_blackwell_engine.c tests/fake_m16_native.c tests/fake_m16_native.h \
-	$(GPU_ENGINE_SIM_SRCS) src/omega_gpu_engine.h src/omega_blackwell_engine.h
+	$(GPU_ENGINE_SIM_SRCS) $(CUDAPP_SOURCE)/src/omega_gpu_engine.h $(CUDAPP_SOURCE)/src/omega_blackwell_engine.h $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -ffunction-sections -fdata-sections \
 		-Isrc -Itests $(GPU_ENGINE_PHYS_INC) -o $@ tests/test_omega_blackwell_engine.c tests/fake_m16_native.c \
-		$(GPU_ENGINE_SIM_SRCS) -Wl,--gc-sections -lm
+		$(GPU_ENGINE_SIM_SRCS) -Wl,--gc-sections -lm $(CUDAPP_LIB)
 test-gpu-engine-sim: build/test_omega_blackwell_engine
 	./build/test_omega_blackwell_engine
 
@@ -71,7 +64,7 @@ test-gpu-engine-backend-mutants:
 	PHYSICS_DIR="$(PHYSICS_DIR)" sh tools/gpu_engine_backend_mutations.sh
 
 # Phase B chip test, compile only here. Never run in Phase A.
-build/test_omega_gpu_engine_gb10.o: tests/test_omega_gpu_engine_gb10.c src/omega_gpu_engine.h src/omega_blackwell_engine.h src/omega_blackwell_submit.h
+build/test_omega_gpu_engine_gb10.o: tests/test_omega_gpu_engine_gb10.c $(CUDAPP_SOURCE)/src/omega_gpu_engine.h $(CUDAPP_SOURCE)/src/omega_blackwell_engine.h $(CUDAPP_SOURCE)/src/omega_blackwell_submit.h | check-cudapp
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -pthread -Isrc $(GPU_ENGINE_PHYS_INC) -c -o $@ tests/test_omega_gpu_engine_gb10.c
 test-gpu-engine-gb10-compile: build/test_omega_gpu_engine_gb10.o
@@ -79,13 +72,11 @@ test-gpu-engine-gb10-compile: build/test_omega_gpu_engine_gb10.o
 # Measurement (sc#277): driver allocations and frees made by the REAL session + matmul + attention
 # APIs while serving a Qwen3-4B-shaped sequence, against the simulated driver. Host only, no device.
 # Prints MEASURE lines; asserts only bookkeeping. Links no physics C sources, only its headers.
-GPU_SERVE_ALLOC_SRCS = src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_attention_api.c src/omega_gpu_serving.c \
-	src/omega_gpu_wait.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c \
-	src/omega_blackwell_matmul.c src/omega_om_units.c
-build/gpu_serving_alloc_count_test: tests/gpu_serving_alloc_count_test.c tests/fake_m16_native.c tests/fake_m16_native.h $(GPU_SERVE_ALLOC_SRCS)
+GPU_SERVE_ALLOC_SRCS = src/omega_om_units.c
+build/gpu_serving_alloc_count_test: tests/gpu_serving_alloc_count_test.c tests/fake_m16_native.c tests/fake_m16_native.h $(GPU_SERVE_ALLOC_SRCS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -ffp-contract=off -Isrc -Itests $(GPU_ENGINE_PHYS_INC) \
-		-o $@ tests/gpu_serving_alloc_count_test.c tests/fake_m16_native.c $(GPU_SERVE_ALLOC_SRCS) -lm
+		-o $@ tests/gpu_serving_alloc_count_test.c tests/fake_m16_native.c $(GPU_SERVE_ALLOC_SRCS) -lm $(CUDAPP_LIB)
 .PHONY: test-gpu-serving-alloc
 test-gpu-serving-alloc: build/gpu_serving_alloc_count_test
 	./build/gpu_serving_alloc_count_test plain
@@ -112,23 +103,27 @@ test-gpu-serving-alloc: build/gpu_serving_alloc_count_test
 # runtime symbols; it proves nothing about device ownership (NOT_RUN until cut B runs on the Spark).
 GPU_FS_DIR = build/gpu_fs
 GPU_FS_CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector \
-	-U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY -Isrc
+	-U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY $(CUDAPP_HEADER_FLAGS) -Isrc
 # P07 cut C (session part): the persistent session, the matmul and attention APIs, the serving reservation and the
 # bounded wait join the link. Their machine comes from an installed OmegaGpuPlatform; the Linux reference
 # (src/omega_gpu_platform_linux.c) is deliberately NOT in this list. Still outside it: the elementwise API, the
 # numeric launchers, the vector executor, the resident runtime (docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md).
-GPU_FS_SRCS = src/omega_gpu_engine.c src/omega_gpu_platform.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-	src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_om_units.c \
-	src/omega_gpu_session.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_attention_api.c \
-	src/omega_gpu_serving.c src/omega_gpu_wait.c
-GPU_FS_HDRS = src/omega_gpu_engine.h src/omega_gpu_platform.h src/omega_blackwell_codegen.h src/omega_blackwell_matmul.h \
-	src/omega_gpu_session.h src/omega_gpu_fmt.h src/omega_gpu_matmul_api.h src/omega_gpu_attention_api.h \
-	src/omega_gpu_serving.h src/omega_gpu_wait.h
-GPU_FS_OBJS = $(patsubst src/%.c,$(GPU_FS_DIR)/%.o,$(GPU_FS_SRCS))
+GPU_FS_NAMES = omega_gpu_engine omega_gpu_platform omega_blackwell_encoder omega_blackwell_codegen \
+	omega_blackwell_matmul omega_blackwell_qmd omega_blackwell_realize \
+	omega_gpu_session omega_gpu_fmt omega_gpu_matmul_api omega_gpu_attention_api \
+	omega_gpu_serving omega_gpu_wait cudapp_freest_units
+GPU_FS_SRCS = $(addprefix $(CUDAPP_SOURCE)/src/,$(addsuffix .c,$(GPU_FS_NAMES))) src/omega_om_units.c
+GPU_FS_HDRS = $(addprefix $(CUDAPP_SOURCE)/src/,omega_gpu_engine.h omega_gpu_platform.h omega_blackwell_codegen.h omega_blackwell_matmul.h \
+	omega_gpu_session.h omega_gpu_fmt.h omega_gpu_matmul_api.h omega_gpu_attention_api.h omega_gpu_serving.h omega_gpu_wait.h)
+GPU_FS_OBJS = $(addprefix $(GPU_FS_DIR)/,$(addsuffix .o,$(GPU_FS_NAMES))) $(GPU_FS_DIR)/omega_om_units.o
 GPU_FS_LINK = $(GPU_FS_DIR)/omega_gpu_freestanding.o
 GPU_FS_ALLOWED = memcpy|memmove|memset|memcmp|strlen|strcmp
 
-$(GPU_FS_DIR)/%.o: src/%.c $(GPU_FS_HDRS)
+$(GPU_FS_DIR)/%.o: $(CUDAPP_SOURCE)/src/%.c $(GPU_FS_HDRS) | check-cudapp
+	@mkdir -p $(GPU_FS_DIR)
+	gcc $(GPU_FS_CFLAGS) -c -o $@ $<
+
+$(GPU_FS_DIR)/omega_om_units.o: src/omega_om_units.c $(GPU_FS_HDRS) | check-cudapp
 	@mkdir -p $(GPU_FS_DIR)
 	gcc $(GPU_FS_CFLAGS) -c -o $@ $<
 
@@ -139,13 +134,13 @@ $(GPU_FS_LINK): $(GPU_FS_OBJS)
 	@echo "freestanding GPU link ($(words $(GPU_FS_SRCS)) files): only $$(nm -u $@ | awk '{print $$NF}' | grep -Ev '^_GLOBAL_OFFSET_TABLE_$$' | sort -u | tr '\n' ' ')undefined"
 gpu-engine-freestanding: $(GPU_FS_LINK)
 
-build/test_omega_gpu_engine_freestanding: tests/test_omega_gpu_engine.c $(GPU_FS_DIR)/omega_gpu_engine.o src/omega_gpu_engine.h
+build/test_omega_gpu_engine_freestanding: tests/test_omega_gpu_engine.c $(GPU_FS_LINK) $(CUDAPP_SOURCE)/src/omega_gpu_engine.h | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_NUMERIC_CPU_ONLY -DOMEGA_GPU_NO_POSIX \
-		-o $@ tests/test_omega_gpu_engine.c $(GPU_FS_DIR)/omega_gpu_engine.o
-build/test_omega_gpu_platform: tests/test_omega_gpu_platform.c $(GPU_FS_DIR)/omega_gpu_platform.o src/omega_gpu_platform.h
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -DOMEGA_NUMERIC_CPU_ONLY -DOMEGA_GPU_NO_POSIX \
+		-o $@ tests/test_omega_gpu_engine.c $(GPU_FS_LINK)
+build/test_omega_gpu_platform: tests/test_omega_gpu_platform.c $(GPU_FS_LINK) $(CUDAPP_SOURCE)/src/omega_gpu_platform.h | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o $@ tests/test_omega_gpu_platform.c $(GPU_FS_DIR)/omega_gpu_platform.o
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -o $@ tests/test_omega_gpu_platform.c $(GPU_FS_LINK)
 test-gpu-engine-freestanding: $(GPU_FS_LINK) build/test_omega_gpu_engine_freestanding build/test_omega_gpu_platform
 	./build/test_omega_gpu_engine_freestanding
 	./build/test_omega_gpu_platform
@@ -158,15 +153,15 @@ test-gpu-engine-freestanding: $(GPU_FS_LINK) build/test_omega_gpu_engine_freesta
 # all 2^32 inputs. The allowlist control links a malloc caller into the freestanding object and requires the
 # nm -u check to refuse it (a check that can never fail proves nothing).
 .PHONY: test-codegen-freestanding test-gpu-fs-allowlist-control
-CODEGEN_FS_TEST_DEPS = tests/test_omega_codegen_freestanding.c src/omega_blackwell_codegen.h src/omega_blackwell_matmul.h
-build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c
+CODEGEN_FS_TEST_DEPS = tests/test_omega_codegen_freestanding.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(CUDAPP_SOURCE)/src/omega_blackwell_matmul.h
+build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_om_units.c $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o $@ tests/test_omega_codegen_freestanding.c \
-		src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c
-build/test_codegen_freestanding: $(CODEGEN_FS_TEST_DEPS) $(GPU_FS_LINK)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -o $@ tests/test_omega_codegen_freestanding.c \
+		src/omega_om_units.c $(CUDAPP_LIB)
+build/test_codegen_freestanding: $(CODEGEN_FS_TEST_DEPS) $(GPU_FS_LINK) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o $@ tests/test_omega_codegen_freestanding.c \
-		$(GPU_FS_DIR)/omega_blackwell_codegen.o $(GPU_FS_DIR)/omega_blackwell_matmul.o $(GPU_FS_DIR)/omega_om_units.o
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -DOMEGA_GPU_NO_POSIX -o $@ tests/test_omega_codegen_freestanding.c \
+		$(GPU_FS_LINK)
 test-codegen-freestanding: build/test_codegen_hosted build/test_codegen_freestanding test-gpu-fs-allowlist-control
 	./build/test_codegen_hosted --dump > build/codegen_dump_hosted.txt
 	./build/test_codegen_freestanding --dump > build/codegen_dump_freestanding.txt
@@ -192,19 +187,14 @@ test-gpu-fs-allowlist-control: $(GPU_FS_LINK)
 #  - the mutants prove the session test can fail: each one breaks one rule in a copy of the session and the test
 #    must report FAIL for it.
 .PHONY: test-gpu-session-platform test-gpu-session-mutants
-build/test_omega_gpu_session_platform: tests/test_omega_gpu_session_platform.c $(GPU_FS_LINK)
+build/test_omega_gpu_session_platform: tests/test_omega_gpu_session_platform.c $(GPU_FS_LINK) | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o $@ tests/test_omega_gpu_session_platform.c $(GPU_FS_LINK)
-GPU_LINUX_REF_SRCS = src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c src/omega_gpu_fmt.c src/omega_blackwell_qmd.c
-# omega #459: the command list over the reference (near-full ring with the #457 L2 invalidate prefix pending) needs the
-# cached allocation, the command list and the codegen behind its nop kernel.
-GPU_LINUX_REF_CMDLIST_SRCS = src/omega_gpu_mem_cached.c src/omega_gpu_cmdlist.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_matmul.c src/omega_blackwell_realize.c src/omega_om_units.c
-build/test_omega_gpu_platform_linux: tests/test_omega_gpu_platform_linux.c tests/fake_m16_native.c tests/fake_m16_native.h $(GPU_LINUX_REF_SRCS) $(GPU_FS_HDRS) src/omega_gpu_platform_linux.h \
-		src/omega_gpu_cmdlist.h src/omega_gpu_mem_cached.h $(GPU_LINUX_REF_CMDLIST_SRCS)
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -DOMEGA_GPU_NO_POSIX -o $@ tests/test_omega_gpu_session_platform.c $(GPU_FS_LINK)
+GPU_LINUX_REF_SRCS = src/omega_om_units.c
+build/test_omega_gpu_platform_linux: tests/test_omega_gpu_platform_linux.c tests/fake_m16_native.c tests/fake_m16_native.h $(GPU_LINUX_REF_SRCS) $(GPU_FS_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -Isrc -Itests $(GPU_ENGINE_PHYS_INC) \
-		-o $@ tests/test_omega_gpu_platform_linux.c tests/fake_m16_native.c $(GPU_LINUX_REF_SRCS) $(GPU_LINUX_REF_CMDLIST_SRCS) -lm
+		-o $@ tests/test_omega_gpu_platform_linux.c tests/fake_m16_native.c $(GPU_LINUX_REF_SRCS) -lm $(CUDAPP_LIB)
 test-gpu-session-platform: build/test_omega_gpu_session_platform build/test_omega_gpu_platform_linux test-gpu-session-mutants
 	./build/test_omega_gpu_session_platform
 	./build/test_omega_gpu_platform_linux
@@ -214,11 +204,11 @@ test-gpu-session-mutants: $(GPU_FS_LINK)
 	@mkdir -p $(GPU_SESSION_MUT_DIR)
 	@set -e; killed=0; \
 	smut() { name=$$1; script=$$2; \
-	  sed -e "$$script" src/omega_gpu_session.c > $(GPU_SESSION_MUT_DIR)/$$name.c; \
-	  if cmp -s src/omega_gpu_session.c $(GPU_SESSION_MUT_DIR)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_session.c > $(GPU_SESSION_MUT_DIR)/$$name.c; \
+	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_session.c $(GPU_SESSION_MUT_DIR)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
 	  gcc $(GPU_FS_CFLAGS) -c -o $(GPU_SESSION_MUT_DIR)/$$name.o $(GPU_SESSION_MUT_DIR)/$$name.c; \
 	  objs=$$(echo $(GPU_FS_OBJS) | tr ' ' '\n' | grep -v '/omega_gpu_session.o$$' | tr '\n' ' '); \
-	  gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o $(GPU_SESSION_MUT_DIR)/$$name \
+	  gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -DOMEGA_GPU_NO_POSIX -o $(GPU_SESSION_MUT_DIR)/$$name \
 	    tests/test_omega_gpu_session_platform.c $$objs $(GPU_SESSION_MUT_DIR)/$$name.o; \
 	  if ./$(GPU_SESSION_MUT_DIR)/$$name > $(GPU_SESSION_MUT_DIR)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
 	  echo "mutant $$name killed: $$(grep -c '^FAIL' $(GPU_SESSION_MUT_DIR)/$$name.log) case(s) failed"; killed=$$((killed+1)); }; \

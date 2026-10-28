@@ -22,11 +22,10 @@ ifndef TENSOR_MK
 TENSOR_MK := 1
 .PHONY: test-tensor test-tensor-no-hooks test-tensor-mutations test-tensor-e1-reduce test-tensor-store
 TENSOR_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -Isrc -Isrc/tensor \
-	-DOMEGA_NUMERIC_CPU_ONLY
+	-DOMEGA_NUMERIC_CPU_ONLY $(CUDAPP_HEADER_FLAGS)
 TENSOR_SRCS = src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c src/tensor/omega_tensor_reduce_seam.c \
 	src/omega_numeric_reduce.c src/omega_numeric_transc.c
-TENSOR_DEPS = src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c \
-	src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c
+TENSOR_DEPS = src/omega_numeric.c src/omega_numeric_provenance.c src/omega_om_units.c
 TENSOR_HDRS = src/tensor/omega_tensor.h src/tensor/omega_tensor_reduce_seam.h src/omega_numeric_reduce.h src/omega_numeric.h src/sha256.h src/omega_numeric_transc.h
 # CR-5 tests are #included by tests/test_omega_tensor.c: rebuild when they change.
 TENSOR_HDRS += tests/tensor_reduce_multi_tests.inc
@@ -37,14 +36,14 @@ TENSOR_HOOK_SYMS = omega_tensor_test_set_storage_generation omega_tensor_store_t
 TENSOR_STORE_SRCS = src/tensor/omega_tensor_store.c
 TENSOR_STORE_HDRS = src/tensor/omega_tensor_store.h
 
-$(OUT_DIR)/test_omega_tensor: tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS) $(TENSOR_HDRS)
+$(OUT_DIR)/test_omega_tensor: tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS) $(TENSOR_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(OUT_DIR)
-	gcc $(TENSOR_CFLAGS) $(TENSOR_TEST_FLAGS) -O2 -o $@ tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS)
+	gcc $(TENSOR_CFLAGS) $(TENSOR_TEST_FLAGS) -O2 -o $@ tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS) $(CUDAPP_LIB)
 
-$(OUT_DIR)/test_omega_tensor_asan: tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS) $(TENSOR_HDRS)
+$(OUT_DIR)/test_omega_tensor_asan: tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS) $(TENSOR_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(OUT_DIR)
 	gcc $(TENSOR_CFLAGS) $(TENSOR_TEST_FLAGS) -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
-		-o $@ tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS)
+		-o $@ tests/test_omega_tensor.c $(TENSOR_SRCS) $(TENSOR_DEPS) $(CUDAPP_LIB)
 
 test-tensor: $(OUT_DIR)/test_omega_tensor $(OUT_DIR)/test_omega_tensor_asan
 	./$(OUT_DIR)/test_omega_tensor
@@ -54,7 +53,7 @@ test-tensor: $(OUT_DIR)/test_omega_tensor $(OUT_DIR)/test_omega_tensor_asan
 # Default (library) build of the tensor sources: no OMEGA_TENSOR_TEST_HOOKS.
 # Fails if any test-only hook symbol is defined or referenced in the objects.
 test-tensor-no-hooks: src/tensor/omega_tensor.c src/tensor/omega_tensor_cpu.c src/tensor/omega_tensor_reduce_seam.c $(TENSOR_HDRS) \
-		$(TENSOR_STORE_SRCS) $(TENSOR_STORE_HDRS)
+		$(TENSOR_STORE_SRCS) $(TENSOR_STORE_HDRS) | check-cudapp
 	@mkdir -p $(OUT_DIR)/tensor-lib
 	gcc $(TENSOR_CFLAGS) -O2 -c -o $(OUT_DIR)/tensor-lib/omega_tensor.o src/tensor/omega_tensor.c
 	gcc $(TENSOR_CFLAGS) -O2 -c -o $(OUT_DIR)/tensor-lib/omega_tensor_cpu.o src/tensor/omega_tensor_cpu.c
@@ -85,16 +84,16 @@ test-m20-receipt:
 # only under $TMPDIR (default /tmp). Its mutants run in test-tensor-mutations.
 
 $(OUT_DIR)/test_omega_tensor_store: tests/test_omega_tensor_store.c $(TENSOR_STORE_SRCS) $(TENSOR_SRCS) $(TENSOR_DEPS) \
-		$(TENSOR_HDRS) $(TENSOR_STORE_HDRS)
+		$(TENSOR_HDRS) $(TENSOR_STORE_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(OUT_DIR)
 	gcc $(TENSOR_CFLAGS) $(TENSOR_TEST_FLAGS) -O2 -o $@ tests/test_omega_tensor_store.c $(TENSOR_STORE_SRCS) \
-		$(TENSOR_SRCS) $(TENSOR_DEPS)
+		$(TENSOR_SRCS) $(TENSOR_DEPS) $(CUDAPP_LIB)
 
 $(OUT_DIR)/test_omega_tensor_store_asan: tests/test_omega_tensor_store.c $(TENSOR_STORE_SRCS) $(TENSOR_SRCS) \
-		$(TENSOR_DEPS) $(TENSOR_HDRS) $(TENSOR_STORE_HDRS)
+		$(TENSOR_DEPS) $(TENSOR_HDRS) $(TENSOR_STORE_HDRS) $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(OUT_DIR)
 	gcc $(TENSOR_CFLAGS) $(TENSOR_TEST_FLAGS) -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
-		-o $@ tests/test_omega_tensor_store.c $(TENSOR_STORE_SRCS) $(TENSOR_SRCS) $(TENSOR_DEPS)
+		-o $@ tests/test_omega_tensor_store.c $(TENSOR_STORE_SRCS) $(TENSOR_SRCS) $(TENSOR_DEPS) $(CUDAPP_LIB)
 
 test-tensor-store: $(OUT_DIR)/test_omega_tensor_store $(OUT_DIR)/test_omega_tensor_store_asan
 	./$(OUT_DIR)/test_omega_tensor_store
