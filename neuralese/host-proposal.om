@@ -147,7 +147,7 @@ frame = new uchar 5121 0
 ctx = new uchar 1025 0
 p = new uint 16 0
 e = new uint 16 0
-if ne argc 4
+if ne argcnt 4
 ret nlfail 80
 end
 r = nlcontext ctx
