@@ -76,7 +76,9 @@ repair CUDApp #173 and command-lifetime repair #174 are candidate prerequisites;
 pending source is not merged source and historical component receipts are not
 qualification of that manifest.
 This isolated host-integration branch pins local, unmerged CUDApp
-`6ed24d1618e06b6e8f92e307f731a38c0d515a4b`: parents
+`685f6c38924383667469fa32d1f6495490b94bc9`: combines the prior candidate
+`6ed24d1618e06b6e8f92e307f731a38c0d515a4b` with MMIO instruction repair #172
+at `885e32017eaae6208719eefcfa516ceaa853a846`. The prior candidate combines
 `491da3ce11c74fe66b49d679aafb0334915b7ab4` (#175 on accepted #173
 `ca441c5a92f5a951a67de00aeddae0e077f10216`) and
 `8cd1c912e8c7a68b7adcca75c6f71d1652401a54` (#174 evidence head;
