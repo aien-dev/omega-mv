@@ -24,42 +24,54 @@ set -u
 cd "$(dirname "$0")/.." || exit 2
 SCRATCH=$(mktemp -d "${TMPDIR:-/tmp}/tensor-mut.XXXXXX") || exit 2
 trap 'rm -rf "$SCRATCH"' EXIT INT TERM
+WORK=$SCRATCH/source
+bash tools/e1_manifest.sh --canonical-overlay "$WORK" >/dev/null || exit 2
+cat "$WORK/cudapp-source.json" >&2
 
 # --gb10 PHYSICS_DIR: the GB10 realization table (src/tensor/omega_tensor_gb10.c,
-# M20 cut gb10). Builds tests/test_omega_tensor_gb10.c against the physics
-# checkout and runs it WITHOUT --chip (host self checks, no device). Also
-# requires, via nm, that the GB10 table references no CPU or reference tier
+# M20 cut gb10). Builds against the authenticated CUDApp source/driver closure
+# plus the existing physics forge oracle, then runs WITHOUT --chip (host only).
+# Also requires, via nm, that the GB10 table references no CPU or reference tier
 # (no silent CPU fallback). Each GB10_MUTATIONS rule must then make the host
 # run or the nm check fail. Never opens the device.
 if [ "${1:-}" = "--gb10" ]; then
     PHYS=${2:-}
     [ -n "$PHYS" ] && [ -d "$PHYS" ] || { echo "tensor gb10 mutation sweep: --gb10 needs the physics checkout"; exit 2; }
-    NV=$PHYS/third_party/nvidia-open-580.173.02
-    GFLAGS="-std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -Isrc -I$PHYS/forge -I$PHYS/nvrm -I$PHYS/m16 \
+    PHYS=$(cd "$PHYS" && pwd -P) || exit 2
+    STAGE=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+    CANONICAL=$(cd "$STAGE/source" && pwd -P) || exit 2
+    NV=$CANONICAL/third_party/nvidia-open-580.173.02
+    GFLAGS="-std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -Isrc -I$PHYS/forge -I$CANONICAL/nvrm -I$CANONICAL/m16 \
 -I$NV/src/common/sdk/nvidia/inc -I$NV/kernel-open/common/inc -I$NV/kernel-open/nvidia-uvm -I$NV/src/nvidia/arch/nvalloc/unix/include"
     GDEPS="src/omega_numeric_reduce.c src/omega_numeric_transc.c src/omega_numeric_reduce_gb10.c src/omega_numeric.c src/omega_numeric_gb10.c \
 src/omega_numeric_divsqrt_gb10.c src/omega_numeric_provenance.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
-src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
-$PHYS/forge/forge_descriptor.c $PHYS/forge/forge_realize.c $PHYS/sha256_clean.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c"
+src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/forge_realization.c src/aegis_verification.c src/omega_om_units.c src/cudapp_om_units.c \
+$PHYS/forge/forge_descriptor.c $PHYS/forge/forge_realize.c $PHYS/sha256_clean.c $CANONICAL/nvrm/nvrm.c $CANONICAL/m16/m16_native.c"
     CPU_TIER='\b(omega_numeric_cpu_realize|omega_numeric_reference|omega_numeric_reference_ftz|omega_reduce_cpu|omega_reduce_rows_cpu|omega_reduce_reference|omega_reduce_rows_reference|omega_tensor_seam_reduce_cpu)\b'
     GB10_MUTATIONS='GB10_NO_CPU_FALLBACK|s/return OMEGA_NUMERIC_ERR_NOT_ENCODED;/return omega_numeric_cpu_realize(op, a, b, c, out, n);/
 GB10_REDUCE_MAX_N|s/if (n > OMEGA_REDUCE_GB10_MAX_N) return OMEGA_NUMERIC_ERR_OPERANDS;/(void)0;/
 GB10_ROWS_MAX_N|s/if (n > OMEGA_REDUCE_GB10_MAX_N) return OMEGA_NUMERIC_ERR_OPERANDS;/(void)0;/'
     # gb10_try DIR: 0 if build + host run + nm check all pass, 1 otherwise
     gb10_try() {
-        gcc $GFLAGS -I"$1" -o "$SCRATCH/g" tests/test_omega_tensor_gb10.c "$1/omega_tensor.c" "$1/omega_tensor_cpu.c" \
-            "$1/omega_tensor_reduce_seam.c" "$1/omega_tensor_gb10.c" $GDEPS > "$SCRATCH/gbuild.log" 2>&1 || return 2
-        gcc $GFLAGS -I"$1" -c -o "$SCRATCH/g.o" "$1/omega_tensor_gb10.c" >> "$SCRATCH/gbuild.log" 2>&1 || return 2
-        if nm -u "$SCRATCH/g.o" | grep -Eq "$CPU_TIER"; then echo "  nm: GB10 table references a CPU/reference tier"; return 1; fi
+        (cd "$WORK" && gcc $GFLAGS -I"$1" -o "$SCRATCH/g" tests/test_omega_tensor_gb10.c "$1/omega_tensor.c" "$1/omega_tensor_cpu.c" \
+            "$1/omega_tensor_reduce_seam.c" "$1/omega_tensor_gb10.c" $GDEPS) > "$SCRATCH/gbuild.log" 2>&1 || return 2
+        (cd "$WORK" && gcc $GFLAGS -I"$1" -c -o "$SCRATCH/g.o" "$1/omega_tensor_gb10.c") >> "$SCRATCH/gbuild.log" 2>&1 || return 2
+        nm -u "$SCRATCH/g.o" > "$SCRATCH/undefined-symbols" || return 2
+        [ -s "$SCRATCH/undefined-symbols" ] || return 2
+        grep -E "$CPU_TIER" "$SCRATCH/undefined-symbols" > "$SCRATCH/cpu-references"; scan=$?
+        case $scan in
+            0) echo "  nm: GB10 table references a CPU/reference tier"; return 1;;
+            1) ;; *) return 2;;
+        esac
         "$SCRATCH/g" > "$SCRATCH/grun.log" 2>&1 || return 1
         return 0
     }
-    gb10_try src/tensor; rc=$?
+    gb10_try "$WORK/src/tensor"; rc=$?
     if [ "$rc" -ne 0 ]; then
         head -20 "$SCRATCH/gbuild.log" "$SCRATCH/grun.log" 2>/dev/null
         echo "tensor gb10 mutation sweep: FAIL (unmutated GB10 baseline does not pass, rc $rc)"; exit 1
     fi
-    grep -E '^(TENSOR_GB10_HOST|HOST_HARNESS_MUTANTS|HOST_MUTANT_)' "$SCRATCH/grun.log"
+    grep -E '^(TENSOR_GB10_HOST|HOST_HARNESS_MUTANTS|HOST_MUTANT_)' "$SCRATCH/grun.log" || exit 2
     echo "GB10 nm check: PASS (no CPU or reference tier referenced by omega_tensor_gb10.c)"
     gfail=0; gtotal=0
     old_ifs=$IFS
@@ -69,9 +81,9 @@ GB10_ROWS_MAX_N|s/if (n > OMEGA_REDUCE_GB10_MAX_N) return OMEGA_NUMERIC_ERR_OPER
         IFS=$old_ifs
         gname=${m%%|*}; gexpr=${m#*|}
         gtotal=$((gtotal + 1))
-        rm -rf "$SCRATCH/tensor" && cp -r src/tensor "$SCRATCH/tensor"
-        sed -i "/MUT:$gname/ $gexpr" "$SCRATCH/tensor/omega_tensor_gb10.c"
-        if cmp -s src/tensor/omega_tensor_gb10.c "$SCRATCH/tensor/omega_tensor_gb10.c"; then
+        rm -rf "$SCRATCH/tensor" && cp -r "$WORK/src/tensor" "$SCRATCH/tensor" || exit 2
+        sed -i "/MUT:$gname/ $gexpr" "$SCRATCH/tensor/omega_tensor_gb10.c" || exit 2
+        if cmp -s "$WORK/src/tensor/omega_tensor_gb10.c" "$SCRATCH/tensor/omega_tensor_gb10.c"; then
             echo "MUTATION $gname: NOT APPLIED (marker or pattern missing)"; gfail=1; continue
         fi
         gb10_try "$SCRATCH/tensor"; rc=$?
@@ -87,7 +99,7 @@ GB10_ROWS_MAX_N|s/if (n > OMEGA_REDUCE_GB10_MAX_N) return OMEGA_NUMERIC_ERR_OPER
     exit 0
 fi
 DEPS="src/omega_numeric_reduce.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c \
-src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
+src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c"
 FLAGS="-std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -ffp-contract=off -O2 -DOMEGA_NUMERIC_CPU_ONLY -DOMEGA_TENSOR_TEST_HOOKS"
 
 # name|file|sed expression (applied only to the line carrying MUT:<name>)
@@ -144,8 +156,10 @@ total=0
 # is replaced by the runner's one-line build error note.
 run_block() {
     rb_rows=$1
-    "tools/mutation_runner.sh" -k marker -m "$rb_rows" -t "$3" -b "$2" -c "src tests" -f FAIL -B \
+    "tools/mutation_runner.sh" -k marker -m "$rb_rows" -d "$WORK" -t "$3" -b "$2" -c "src tests" -f FAIL -B \
         > "$SCRATCH/rb.out" 2> "$SCRATCH/rb.err"
+    rb_rc=$?
+    [ "$rb_rc" -eq 0 ] || fail=1
     if grep -q 'unmutated baseline does not pass' "$SCRATCH/rb.out"; then
         cat "$SCRATCH/rb.err"; return 3
     fi
@@ -170,7 +184,8 @@ run_block() {
     # The legacy sweep walked the rows itself, so a row could not be skipped.
     # A runner that died, was killed or reported nothing must not pass silently:
     # one verdict line per row is required.
-    rb_want=$(grep -c '|' "$rb_rows")
+    rb_want=$(grep -c '|' "$rb_rows") || { fail=1; return 2; }
+    [ "$rb_want" -gt 0 ] || { fail=1; return 2; }
     if [ "$rb_seen" -ne "$rb_want" ]; then
         echo "MUTATION $rb_rows: runner reported $rb_seen verdicts for $rb_want rows (runner died or reported nothing)"
         fail=1
