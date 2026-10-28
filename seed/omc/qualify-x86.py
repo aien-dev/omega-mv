@@ -25,8 +25,9 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
+from functools import lru_cache
 import json
 import os
 from pathlib import Path
@@ -35,9 +36,12 @@ import re
 import resource
 import shutil
 import signal
+import stat
 import struct
 import subprocess
 import tempfile
+
+from x86_corpus_drivers import bare_calls, bridge_plan, bridge_positive_plan, directive_plan, plan_case, prepare_case, select_a64_entry, wrap_bare
 
 ROOT = Path(__file__).resolve().parents[2]
 MAIN = re.compile(rb"(?m)^[ \t]*(?:export[ \t]+)?fn[ \t]+main(?:[ \t]|$)")
@@ -54,6 +58,17 @@ setpgid setsid
 """.split())
 INSTRUCTION = re.compile(r"^\s*([0-9a-fA-F]+):\s+((?:[0-9a-fA-F]{2}[ \t]+)+)(.*?)\s*$")
 DIAG = re.compile(rb"line ([0-9]+): error ([0-9]+)")
+TARGET_PREFIX = b"target x86linux\n"
+QEMU_IOCTL_URL = "https://github.com/qemu/qemu/blob/v10.0.14/linux-user/syscall.c#L5713-L5717"
+QEMU_SYSCALL_SHA256 = "0d6212a547d456f47612a4c297e093dd60fe59ad021f44e3f21e5c6bb9be0cf7"
+QEMU_ORACLE_SHA256 = "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee"
+QEMU_SOURCE_ARCHIVE_SHA256 = "c7230968906fdb5540d803e2af1f515e77590a414f2a4dbd3ec9ada3c47083d0"
+QEMU_IOCTL_EXCERPT = b"""        if (ie->target_cmd == 0) {
+            qemu_log_mask(
+                LOG_UNIMP, "Unsupported ioctl: cmd=0x%04lx\\n", (long)cmd);
+            return -TARGET_ENOTTY;
+        }
+"""
 
 # Inspected host fixtures at the source revision below. These are not authority
 # to run a changed fixture: hashes pin exact reviewed effects. Drivers use local
@@ -104,6 +119,42 @@ psync 8355680fe35976dc5fd3621c3dc9b2ff8f6cc8b210ec90915d2044a4de133473
 """
 HOST_DRIVERS = {sha: name for name, sha in (row.split() for row in HOST_PINS.splitlines() if row)}
 
+# Explicit reviewed verdicts, not a name-prefix heuristic. The first comments
+# of these manifests fix ctl PASS / mutant FAIL in advance; the lexical list's
+# RESULTS.txt:38-43 describes exactly the listed refusals/format/diag failures.
+CONDUCTOR_FAILURES = {
+    "seed/omc/contracts/mutant.cases": "mutant-requires mutant-proof",
+    "seed/omc/om2/s1/s1-mutants.cases": "m-rotl m-rchk m-hexd m-hexU m-optin m-paren m-unk m-tyunk",
+    "seed/omc/om2/s2/s2-mutants.cases": "m-div0 m-sovf m-ucount m-brk m-idx m-depth m-cyc",
+    "seed/omc/om2/s3/s3-mutants.cases": "m-l-ovl m-l-rev m-l-lix m-l-past m-fuel m-e16-d3 m-e16-inl m-fzu m-fzl m-fzc m-fzr m-fzn m-aer m-aex m-act m-aop m-araw",
+    "seed/omc/om2/s4/s4-mutants.cases": "m-uce m-slot m-pwrap m-pfirst m-p19 m-tramp",
+    "seed/qualification/om2/candidates/s1/s1-lexmutants.cases":
+        "hex-upper-s1-d-hexupper hex-upper-s1-d-hexupper-plain hex-upper-s2-r6-upper hex-upper-s2-r6-mixed hex-upper-s2-r6-upper-ulong "
+        "hex-17-s2-r6-17small hex-17-s2-r6-17big diag-col0-s1-d-left diag-col0-s1-d-eof-left diag-col0-s1-d-hexrange diag-col0-s1-d-unknown-fn "
+        "fmt-note-s2-fmt-x1 fmt-note-s2-fmt-x3 fmt-text-s2-fmt-x1 fmt-text-s2-fmt-x5",
+    "seed/qualification/om2/candidates/s1/s1-mutants.cases": "",
+    "seed/qualification/om2/candidates/s2/s2-mutants.cases": "",
+    "seed/qualification/om2/candidates/s3/s3-mutants.cases": "",
+    "seed/qualification/om2/candidates/s4/s4-mutants.cases": "",
+    "seed/qualification/om2/candidates/s4/s4-part-mutants.cases": "",
+    "seed/qualification/om2/baseline/guard.cases": "",
+    "seed/qualification/om2/baseline/transform.cases": "",
+}
+HISTORICAL_COMPILERS = {
+    "build/om2-qual/cand-s1/omc.om": ("a5927895c02a5abe6b5c3a455f5d54303962ebe8", "3d7bcf9afdaa36fc42b862e0af39c524a14e85204bd5f40ee74107db40ce6a1d"),
+    "build/om2-qual/cand-s2/omc.om": ("7fb62f3a87104f48bb1317ab05333c5805ce5340", "1f41c7dc4f27324c2595c60f601e74548cd1bb4aeca8d4d367056ee803e7de72"),
+    "build/om2-qual/cand-s3/omc.om": ("ad220c054b2e018a985384a33bf09b9f0d612787", "656d4e25f503d38ae7523c758b37734b191ecc064d370ac7928011f25c02a3d6"),
+    "build/om2-qual/cand-s4/omc.om": ("f6a6492fd1a3b608f0413a75685ddbb712075a73", "c792b401193d8477d38965d6ddb0fd0cb8fd5ac24fcb92fae9af52037a765f1c"),
+}
+SELFTEST_MANIFESTS = {
+    "seed/qualification/om2/selftest/" + name + ".cases"
+    for name in ("controls", "emit", "fail", "pass")
+}
+DELIBERATELY_ABSENT = {
+    "seed/qualification/om2/selftest/does-not-exist",
+    "seed/qualification/om2/selftest/does-not-exist.om",
+}
+
 
 @dataclass
 class Case:
@@ -113,6 +164,15 @@ class Case:
     args: tuple[str, ...] = ()
     expected_exit: int | None = None
     expected_compile: str | None = None
+    operation: str = "differential"
+    stdout_oracle: str | None = None
+    stderr_oracle: str | None = None
+    same_source: bytes | None = None
+    driver: str | None = None
+    blocker: str | None = None
+    evidence: dict = field(default_factory=dict)
+    deadline: int | None = None
+    bridge: dict | None = None
 
 
 class Failure(Exception):
@@ -160,6 +220,14 @@ def source_bytes(spec):
             if not data or length < 0:
                 raise Failure("invalid cyclic input: " + part)
             parts.append((data * (length // len(data) + 1))[:length])
+        elif part == "om/sha256/sha256.om" and not contained(part).exists():
+            # Removed by the OM-2 cutover. The old caller uses omsha, not the
+            # current API: recover its EXACT frozen source, never alias APIs.
+            frozen = source_bytes("pack:seed/qualification/om2/c2/corpus.pack:12540:35333")
+            expected = "7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21"
+            if digest(frozen) != expected:
+                raise Failure("historical SHA source differs from independent c2/index.tsv pin")
+            parts.append(frozen)
         else:
             parts.append(contained(part).read_bytes())
     return b"".join(parts)
@@ -186,14 +254,6 @@ def stdin_bytes(spec):
             out.extend((z ^ (z >> 31)).to_bytes(8, "little"))
         return bytes(out[:length])
     raise Failure("unknown stdin grammar: " + spec)
-
-
-def exclusion(source):
-    if MODE.match(source):
-        return "mode-specific IR/check/next/formatter/explicit-target input"
-    # Entryless sources still undergo compile/refusal differential. Only their
-    # undefined runtime entry is excluded later; known unit conductors add mains.
-    return None
 
 
 def host_words(source):
@@ -275,9 +335,9 @@ def positional_view_cases():
                                       ("pwrite", "view", True),
                                       ("pwrite", "edit", False)):
         source = (
-            "text ro \"abcd\"\nglobal rw uchar 4\n"
+            "text ro \"abcd\"\n"
             f"fn probe b {qualifier} uchar 4 to long\n"
-            f"ret {word} neg int 1 b 0 4 0\nend\nfn main to int\n"
+            f"ret {word} neg int 1 b 0 4 0\nend\nfn main to int\nrw = new uchar 4 0\n"
             f"if ne probe {'rw' if word == 'pread' else 'ro'} neg long 9\n"
             "ret 1\nend\nret 0\nend\n").encode()
         yield Case(f"oracle-positional-{word}-{qualifier}", source,
@@ -287,8 +347,18 @@ def positional_view_cases():
 
 def expanded_cases(files, record):
     for case in cases(files, record):
+        plan = {} if case.operation in ("conductor", "bridge") else plan_case(ROOT, case.name.split(":", 1)[0], case.source)
+        if plan:
+            for key in ("source", "stdin", "args", "expected_exit", "driver", "blocker"):
+                if key in plan and (case.operation == "differential" or key in ("driver", "blocker")):
+                    setattr(case, key, plan[key])
+            case.evidence.update(plan.get("evidence", {}))
+            if "effects" in plan:
+                case.evidence["reviewed_effects"] = plan["effects"]
+        case.evidence.update(stdin_bytes=len(case.stdin), stdin_sha256=digest(case.stdin),
+                             args=list(case.args), original_case=case.name)
         yield case
-        driver = HOST_DRIVERS.get(digest(case.source))
+        driver = case.driver or HOST_DRIVERS.get(digest(case.source))
         if driver == "network" and not case.args:
             yield Case(case.name + ":gate-host-tcp-loopback", case.source, args=("tcp",), expected_exit=0)
         elif driver == "netdata" and not case.args:
@@ -296,27 +366,149 @@ def expanded_cases(files, record):
                 yield Case(case.name + ":gate-host-bounds-" + argument, case.source,
                            args=(argument,), expected_exit=103)
         elif driver == "memcheck":
-            # The runtime conductor invokes the native compiler; replay its 36
-            # literal source inputs directly as well, including x86 refusals.
-            for n, source in enumerate(s for s in literal_bytes(case.source) if b"fn " in s):
-                code = "9"
-                if n in (0, 4, 5, 10, 12, 15, 17, 21, 28, 33):
-                    code = "7"
-                elif n in (3, 11, 18, 19):
-                    code = "20"
-                yield Case(case.name + f":embedded-refusal-{n}", source, expected_compile=code)
+            # Read the conductor's literal-name and want assignments together.
+            # Literal ordering is not the case index (letters i/l/o/r are absent).
+            texts = {m[1]: literal_bytes(m[0])[0] for m in re.finditer(
+                rb'(?m)^[ \t]*text[ \t]+(\w+)[ \t]+"(?:[^"\\]|\\.)*"[^\n]*$', case.source)}
+            default = re.search(rb"(?m)^want = int (\d+)$", case.source)
+            arms = list(re.finditer(
+                rb"(?m)^if eq num (\d+)\nr = write fd (\w+) 0 len \2\n(?:want = (\d+)\n)?end$", case.source))
+            if default is None or len(arms) != 36:
+                record("INVALID", case.name + ":embedded-refusals",
+                       "memcheck conductor grammar changed; cannot infer expectations",
+                       source_sha256=digest(case.source))
+                continue
+            for arm in arms:
+                number, literal, code = arm.groups()
+                yield Case(case.name + ":embedded-refusal-" + number.decode(), texts[literal],
+                           expected_compile=(code or default[1]).decode())
     yield from positional_view_cases()
+    current_sha = contained("om/sha256/sha256-om2.om").read_bytes()
+    yield Case("oracle-current-sha256-private-api", current_sha, driver="bare-private-abi",
+               expected_compile="accept", evidence={
+                   "source_spec": "om/sha256/sha256-om2.om", "source_sha256": digest(current_sha),
+                   "scope": "current API, separate from frozen historical omsha composition and leak scanner"})
+
+
+@lru_cache(maxsize=None)
+def conductor_resources(path):
+    """Exact transitive file allowlist for an original-conductor replay."""
+    resources = {}
+
+    def add(name):
+        if name in resources:
+            return
+        contained(name)
+        if path.relative_to(ROOT).as_posix() in SELFTEST_MANIFESTS and name in DELIBERATELY_ABSENT:
+            if contained(name).exists():
+                raise Failure("original absent-input control unexpectedly exists: " + name)
+            return
+        if name in HISTORICAL_COMPILERS:
+            revision, sha = HISTORICAL_COMPILERS[name]
+            resources[name] = {"path": name, "sha256": sha,
+                               "git_revision": revision, "git_path": "seed/omc/omc.om"}
+        elif name == "om/sha256/sha256.om":
+            resources[name] = {"path": name, "sha256": "7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21",
+                               "pack_path": "seed/qualification/om2/c2/corpus.pack", "offset": 12540, "length": 35333}
+        else:
+            resources[name] = {"path": name, "sha256": digest(contained(name).read_bytes())}
+
+    def source(spec, review=False):
+        for segment in spec.split("+"):
+            if segment.startswith(("pack:", "cyc:")):
+                add(segment.split(":")[1])
+            else:
+                add(segment)
+        if review:
+            if spec in DELIBERATELY_ABSENT and path.relative_to(ROOT).as_posix() in SELFTEST_MANIFESTS:
+                return
+            data = source_bytes(spec)
+            words = host_words(data)
+            if words and digest(data) not in HOST_DRIVERS and not plan_case(ROOT, spec, data):
+                raise Failure(f"original conductor source {spec} has unreviewed effects: {words}")
+
+    add(path.relative_to(ROOT).as_posix())
+    for constant in ("sha256-k", "sha256-iv"):
+        add("seed/qualification/om2/fixtures/" + constant + ".dec")
+    for line in path.read_text().splitlines():
+        row = line.split()
+        if not row or row[0].startswith("#"):
+            continue
+        if path.relative_to(ROOT).as_posix() in SELFTEST_MANIFESTS and row[0] == "malformed":
+            continue  # This exact reviewed control has no syntactically valid source field.
+        if row[0] == "subst":
+            for name in row[1:]:
+                add(name)
+        elif row[0] == "cc":
+            if row[1:] != ["pinned"]:
+                source("+".join(row[1:]))
+        elif len(row) > 2 and row[1] != "notrun":
+            source(row[2], review=row[1] in ("run", "kill"))
+            if row[1] == "same":
+                source(row[3])
+            for spec in row[3:]:
+                if spec.startswith(("file:", "has:", "tok:")):
+                    add(spec.split(":", 1)[1])
+    return list(resources.values())
+
+
+@lru_cache(maxsize=None)
+def selftest_expectations(path):
+    """Parse the original selftest's explicit comment groups, not case indices."""
+    verdicts, group, overall = {}, None, None
+    for line in path.read_text().splitlines():
+        if line.startswith("#"):
+            match = re.search(r"(?:expected|Expected)(?::\s+([\w-]+))?\s+(PASS|FAIL|INVALID|NOT_RUN)\b", line)
+            if match:
+                if match[1]:
+                    verdicts[match[1]] = match[2]
+                else:
+                    group = match[2]
+            elif "every case must PASS" in line:
+                group = "PASS"
+            exit_match = re.search(r"\bexit ([0-3])\b", line)
+            if exit_match:
+                overall = int(exit_match[1])
+            continue
+        fields = line.split()
+        if not fields or fields[0] in ("subst", "cc", "deadline"):
+            continue
+        if fields[0] not in verdicts:
+            if group is None:
+                raise Failure("selftest case has no explicit comment verdict: " + line)
+            verdicts[fields[0]] = group
+    return verdicts, overall
+
+
+def conductor_case(path, name, line, alternate, compiler_subst):
+    rel = path.relative_to(ROOT).as_posix()
+    selftest = rel in SELFTEST_MANIFESTS
+    if not selftest and rel not in CONDUCTOR_FAILURES:
+        raise Failure(f"alternate compiler manifest has no reviewed original-verdict authority: {rel}")
+    resources = conductor_resources(path)
+    original_name = line.split()[0]
+    expected = (selftest_expectations(path)[0][original_name] if selftest else
+                ("FAIL" if original_name in CONDUCTOR_FAILURES[rel].split() else "PASS"))
+    authority = "\n".join(row for row in path.read_text().splitlines() if row.startswith("#"))
+    authority_path = rel
+    if rel.endswith("s1-lexmutants.cases"):
+        authority_path = "seed/qualification/om2/candidates/s1/RESULTS.txt"
+        authority = "\n".join(contained(authority_path).read_text().splitlines()[37:43])
+    return Case(name, contained("seed/qualification/om2/gate.om").read_bytes(),
+                driver="corpus-gate", operation="conductor",
+                expected_compile="accept", evidence={
+                    "manifest": rel, "resources": resources, "conductor_row": line,
+                    "alternate_compiler": alternate, "compiler_substitution": compiler_subst,
+                    "control_kind": "supervisor_verdict_control" if selftest else ("compiler_mutant" if expected == "FAIL" else "compiler_control"),
+                    "expected_overall_exit": selftest_expectations(path)[1] if selftest else None,
+                    "expected_original_conductor": expected, "original_case_name": original_name,
+                    "authority": {"path": authority_path, "sha256": digest(contained(authority_path).read_bytes()),
+                                  "quote": authority}})
 
 
 def cases(files, record):
     for path in files:
         rel = path.relative_to(ROOT).as_posix()
-        if "evidence" in path.relative_to(ROOT).parts:
-            record("EXCLUDED", rel, "historical evidence, never replayed")
-            continue
-        if "selftest" in path.relative_to(ROOT).parts:
-            record("EXCLUDED", rel, "qualification conductor selftest, not language fixture")
-            continue
         if path.suffix == ".tsv":
             try:
                 yield from unit_cases(path)
@@ -324,58 +516,129 @@ def cases(files, record):
                 record("MISSING_INPUT", rel, str(error))
             continue
         if path.suffix in (".om", ".omegese"):
-            if path.parent == ROOT / "seed/qualification/om2" or any(
-                    part in ("selftest", "oracle") for part in path.relative_to(ROOT).parts):
-                record("EXCLUDED", rel, "qualification conductor/oracle selftest, not language fixture")
-                continue
             source = path.read_bytes()
+            # Conductors are real compiler inputs too. Their effects are gated
+            # by reviewed drivers, not dropped just because they test a checker.
             yield Case(rel, source)
             if rel in ("seed/rung4/tests/echo.om", "seed/rung4/tests/bytecopy.om"):
-                # gate4 section 6 uses a nonempty binary input; retain its length
-                # with deterministic varying binary input, not host randomness.
                 yield Case(rel + ":gate4-nonempty", source, stdin_bytes("seq:50000"))
             continue
-        alternate = False
-        subst = None
+        alternate, compiler_subst, subst = None, None, None
+        deadline = 30  # Original gate.om's documented default, seconds.
         for number, line in enumerate(path.read_text().splitlines(), 1):
             fields = line.split()
             if not fields or fields[0].startswith("#"):
                 continue
             name = f"{rel}:{number}:{fields[0]}"
             if fields[0] == "cc":
-                alternate = fields[1:] != ["pinned"]
-                record("EXCLUDED", name, "conductor compiler-selection directive")
+                alternate = None if fields[1:] == ["pinned"] else "+".join(fields[1:])
+                compiler_subst, subst = subst, None
+                record("EXCLUDED", name,
+                       f"compiler-selection directive {' '.join(fields[1:])}; subsequent rows retain this compiler identity",
+                       conductor_row=line, compiler_substitution=compiler_subst)
                 continue
             if fields[0] == "deadline":
-                record("EXCLUDED", name, "conductor deadline; checker uses explicit --timeout")
+                if len(fields) != 2 or not fields[1].isdigit() or not 1 <= int(fields[1]) <= 900:
+                    record("INVALID", name, "deadline requires original conductor's integer seconds 1..900", conductor_row=line)
+                    continue
+                deadline = int(fields[1])
+                record("EXCLUDED", name,
+                       f"conductor-only metadata: exact {deadline}-second deadline attached to subsequent child arms",
+                       conductor_row=line, manifest_sha256=digest(path.read_bytes()))
                 continue
             if fields[0] == "subst":
                 subst = fields[1:]
-                record("EXCLUDED", name, "conductor source substitution directive")
+                record("EXCLUDED", name,
+                       f"stateful substitution {' '.join(fields[1:])}; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+                       conductor_row=line, manifest_sha256=digest(path.read_bytes()), substitution_paths=fields[1:])
                 continue
             if len(fields) < 2:
-                record("INVALID", name, "malformed conductor row")
+                record("INVALID", name, "malformed conductor row", conductor_row=line)
                 continue
             mode = fields[1]
-            if mode == "notrun":
-                record("NOT_RUN", name, " ".join(fields[2:]))
+            if rel in SELFTEST_MANIFESTS:
+                try:
+                    yield conductor_case(path, name, line, alternate, compiler_subst)
+                except (OSError, ValueError, Failure) as error:
+                    record("FAIL", name, str(error), conductor_row=line)
+                subst = None
                 continue
-            if alternate or subst is not None:
-                record("EXCLUDED", name, "compiler-mutant/substitution conductor arm; raw source remains inventoried")
+            if mode == "notrun":
+                try:
+                    binding = bridge_plan(ROOT, name)
+                except (OSError, ValueError, Failure) as error:
+                    record("FAIL", name, "reviewed bridge plan: " + str(error), conductor_row=line)
+                    continue
+                if binding:
+                    if binding["operation"] == "units-check":
+                        source = contained(binding["script"]).read_bytes()
+                    elif "driver_source" in binding:
+                        source = binding["driver_source"]
+                    else:
+                        source = contained(binding["driver"]).read_bytes()
+                    yield Case(name, source, driver="external-c-boundary", operation="bridge", bridge=binding,
+                               args=tuple(binding["args"]), expected_exit=binding["expected_exit"],
+                               evidence={"conductor_row": line, "unit_sources": binding["units"],
+                                         "driver_sha256": binding["driver_sha256"], **binding["evidence"]})
+                    continue
+                plan = directive_plan(ROOT, name)
+                evidence = {"conductor_row": line, **(plan.get("evidence", {}) if plan else {})}
+                if plan and "source" in plan:
+                    yield Case(name, plan["source"], stdin=plan.get("stdin", b""),
+                               args=tuple(plan.get("args", ())), driver=plan.get("driver"),
+                               expected_exit=plan.get("expected_exit"),
+                               expected_compile=plan.get("expected_compile", "accept"),
+                               operation=plan.get("operation", "differential"), evidence=evidence, deadline=deadline,
+                               stdout_oracle=plan.get("stdout_oracle"), stderr_oracle=plan.get("stderr_oracle"))
+                else:
+                    reason = plan.get("blocker", " ".join(fields[2:])) if plan else " ".join(fields[2:])
+                    record("BLOCKED" if reason.startswith("BLOCKED_ON ") else "NOT_RUN",
+                           name, reason, evidence=evidence, conductor_row=line)
+                continue
+            if alternate:
+                try:
+                    yield conductor_case(path, name, line, alternate, compiler_subst)
+                except (OSError, ValueError, Failure) as error:
+                    record("BLOCKED", name, str(error), conductor_row=line,
+                           alternate_compiler=alternate, compiler_substitution=compiler_subst)
                 subst = None
                 continue
             try:
+                source = source_bytes(fields[2])
+                evidence = {"conductor_row": line, "source_spec": fields[2], "conductor_deadline_seconds": deadline}
+                if "om/sha256/sha256.om" in fields[2]:
+                    evidence["historical_source"] = {
+                        "path": "om/sha256/sha256.om", "revision": "acb3f15",
+                        "packed_spec": "pack:seed/qualification/om2/c2/corpus.pack:12540:35333",
+                        "sha256": "7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21",
+                        "provenance": "seed/qualification/om2/c2/index.tsv:c2-00003"}
+                if subst is not None:
+                    if len(subst) != 2:
+                        raise Failure("malformed subst directive")
+                    old, new = (source_bytes(part) for part in subst)
+                    if not old or source.count(old) != 1:
+                        raise Failure("subst source must contain FROMFILE exactly once")
+                    source = source.replace(old, new)
+                    evidence["source_substitution"] = subst
+                    subst = None
                 if mode in ("run", "kill") and len(fields) >= 7:
-                    yield Case(name, source_bytes(fields[2]), stdin_bytes(fields[3]), tuple(fields[7:]))
-                elif mode in ("emit", "refuse"):
-                    yield Case(name, source_bytes(fields[2]))
+                    yield Case(name, source, stdin_bytes(fields[3]), tuple(fields[7:]),
+                               expected_exit=int(fields[6]), expected_compile="accept",
+                               operation=mode, stdout_oracle=fields[4], stderr_oracle=fields[5], evidence=evidence, deadline=deadline)
+                elif mode == "emit" and len(fields) == 6:
+                    code = int(fields[5])
+                    yield Case(name, source, expected_exit=code,
+                               expected_compile="accept" if code == 0 else str(code),
+                               operation=mode, stdout_oracle=fields[3], stderr_oracle=fields[4], evidence=evidence, deadline=deadline)
+                elif mode == "refuse" and len(fields) == 4:
+                    yield Case(name, source, expected_compile=fields[3], operation=mode, evidence=evidence, deadline=deadline)
                 elif mode == "same" and len(fields) == 4:
-                    yield Case(name + ":left", source_bytes(fields[2]))
-                    yield Case(name + ":right", source_bytes(fields[3]))
+                    yield Case(name, source, expected_compile="accept", operation=mode,
+                               same_source=source_bytes(fields[3]), evidence=evidence, deadline=deadline)
                 else:
-                    record("INVALID", name, "unknown/malformed conductor operation " + mode)
+                    record("INVALID", name, "unknown/malformed conductor operation " + mode, conductor_row=line)
             except (OSError, ValueError, Failure) as error:
-                record("MISSING_INPUT", name, str(error))
+                record("MISSING_INPUT", name, str(error), conductor_row=line)
 
 
 def limits():
@@ -384,20 +647,24 @@ def limits():
     resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
 
 
-def run(command, data, cwd, timeout):
+def run(command, data, cwd, timeout, *, extra_env=None):
     # Regular-file stdin matches seekable-input fixtures; no shell interpolation.
     with tempfile.TemporaryFile() as inp, tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
         inp.write(data)
         inp.seek(0)
         process = subprocess.Popen(command, stdin=inp, stdout=out, stderr=err, cwd=cwd,
-                                   env={"LC_ALL": "C", "PATH": os.defpath, "HOME": ".", "OMTEST": "hello"},
+                                   env={"LC_ALL": "C", "PATH": os.defpath, "HOME": ".", "OMTEST": "hello", **(extra_env or {})},
                                    start_new_session=True, preexec_fn=limits)
         try:
             process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             os.killpg(process.pid, signal.SIGKILL)
             process.wait()
-            raise Failure("child timeout: " + str(command[0]))
+            out.seek(0, os.SEEK_END)
+            out.seek(max(0, out.tell() - 4096))
+            err.seek(0, os.SEEK_END)
+            err.seek(max(0, err.tell() - 4096))
+            raise Failure(f"child timeout after {timeout}s: {command!r}; stdout_tail={out.read()!r}; stderr_tail={err.read()!r}")
         finally:
             # Also remove descendants of a child which exited before its children.
             try:
@@ -556,17 +823,447 @@ def disassemble(image, source, objdump, llvm, cwd, timeout):
     return mnemonics, instructions, carveouts
 
 
+def normalized_diagnostics(error, shift):
+    """Undo ONLY the known selector's source-coordinate translation.
+
+    xlead replaces the 14 selector characters by spaces but keeps its LF.
+    Human and structured line fields move by one, absolute spans by 15 bytes.
+    Columns, codes, token bytes, obligations and all other text stay exact.
+    """
+    if not shift:
+        return error
+    translated = []
+    for line in error.splitlines(keepends=True):
+        if line.startswith(b"omc: line "):
+            line = re.sub(rb"(?<=line )\d+(?=: error )",
+                          lambda m: str(int(m[0]) - shift).encode(), line)
+        elif re.match(rb"omc-(?:diag|site|check) 1 ", line):
+            line = re.sub(rb"(?<=line=)\d+",
+                          lambda m: str(int(m[0]) - shift).encode(), line)
+            line = re.sub(rb"(?<=span=)(\d+)-(\d+)",
+                          lambda m: f"{int(m[1]) - shift * len(TARGET_PREFIX)}-{int(m[2]) - shift * len(TARGET_PREFIX)}".encode(),
+                          line)
+        translated.append(line)
+    return b"".join(translated)
+
+
+def source_site_diagnostics(native, target, source_lines):
+    """Compare reviewed source sites, retaining architecture-specific stub tables."""
+    allowed = set(source_lines)
+
+    def parse(data):
+        other, all_sites, source_sites, seen = [], [], [], set()
+        for line in data.splitlines(keepends=True):
+            if not line.startswith(b"omc-site "):
+                other.append(line)
+                continue
+            match = re.fullmatch(rb"omc-site 1 line=(\d+) iter=(-|\d+(?:\.\d+)*)\n", line)
+            if not match:
+                raise Failure("malformed compiler site record: " + repr(line))
+            site = int(match[1]), match[2].decode()
+            all_sites.append(site)
+            if site[0] in allowed and site not in seen:
+                source_sites.append(site)
+                seen.add(site)
+        return b"".join(other), all_sites, source_sites
+
+    left, right = parse(native), parse(target)
+    observation = {"native_sites": left[1], "x86_normalized_sites": right[1],
+                   "native_source_sites": left[2], "x86_source_sites": right[2],
+                   "reviewed_source_lines": source_lines,
+                   "comparison": "ordered first-occurrence (source line, unrolled iteration); all non-site diagnostic bytes exact"}
+    if not left[2] or left[0] != right[0] or left[2] != right[2]:
+        raise Failure("source-level site/non-site compiler diagnostic differential: " + str(observation))
+    return observation
+
+
 def refusal(result, shift):
     rc, output, error = result
     match = DIAG.search(error)
     if rc <= 0 or output or not match or int(match[2]) != rc:
         raise Failure("not a clean compiler refusal")
-    return rc, int(match[1]) - shift, DIAG.sub(b"line LINE: error CODE", error)
+    return rc, output, normalized_diagnostics(error, shift)
+
+
+def matches_oracle(actual, spec):
+    if spec is None or spec == "any":
+        return True
+    if spec == "-":
+        return actual == b""
+    if spec.startswith("sha:"):
+        return digest(actual) == spec[4:]
+    if spec.startswith("file:"):
+        return actual == contained(spec[5:]).read_bytes()
+    if spec.startswith("line:"):
+        return actual == spec[5:].encode() + b"\n"
+    if spec.startswith("err:"):
+        _, line, code = spec.split(":")
+        return actual == f"omc: line {line}: error {code}\n".encode()
+    if spec.startswith(("has:", "tok:")):
+        kind, path = spec.split(":", 1)
+        expected = contained(path).read_bytes().splitlines()
+        observed = actual.splitlines()
+        if kind == "has":
+            return all(line in observed for line in expected)
+        return all(any(all(word in line.split() for word in wanted.split())
+                       for line in observed) for wanted in expected)
+    raise Failure("unknown output oracle grammar: " + spec)
+
+
+def assert_oracle(actual, spec, label, different=False):
+    matched = matches_oracle(actual, spec)
+    if matched == different:
+        raise Failure(f"{label} {'mutant survived (equals)' if different else 'differs from'} "
+                      f"oracle {spec}: bytes={len(actual)} sha256={digest(actual)} "
+                      f"prefix={actual[:160]!r}")
+
+
+def result_details(result):
+    return {"exit": result[0], "stdout_bytes": len(result[1]),
+            "stdout_sha256": digest(result[1]), "stdout_prefix": repr(result[1][:160]),
+            "stderr_bytes": len(result[2]), "stderr_sha256": digest(result[2]),
+            "stderr": result[2][:8192].decode("utf-8", "backslashreplace")}
+
+
+def ioctl_emulator_artifact(case, driver, arun, xrun, qemu, argv0, args, cwd, timeout):
+    # Not a PASS or an errno waiver: challenge the exact failed syscall under
+    # QEMU's own tracer, after the pinned native fixture has passed its EBADF
+    # assertions. Unknown ioctls are rejected before host ioctl(fd,cmd,arg).
+    request = {"devcall": 3223340587, "uvmctl": 805306369}.get(driver)
+    if digest(Path(qemu).read_bytes()) != QEMU_ORACLE_SHA256:
+        return None  # No source attribution for an unreviewed QEMU executable.
+    if request is None or arun[0] != 0 or xrun != (80, b"", b""):
+        return None
+    trace = run([qemu, "-strace", "-0", argv0, argv0, *args], case.stdin, cwd, timeout)
+    if trace[:2] != xrun[:2]:
+        return None
+    for line in trace[2].splitlines():
+        match = re.search(rb"ioctl\(-1,([^,]+),.*\)\s*=\s*-1 errno=25\b", line)
+        if match:
+            try:
+                observed = int(match[1], 0) & 0xffffffff
+            except ValueError:
+                continue
+            if observed == request:
+                return {"classification": "EMULATOR_ARTIFACT", "syscall": "ioctl", "fd": -1,
+                        "request": request, "native_required_errno": "EBADF",
+                        "qemu_observed_errno": "ENOTTY", "qemu_trace_line": line.decode(),
+                        "qemu_trace_sha256": digest(trace[2]),
+                        "upstream_source": QEMU_IOCTL_URL,
+                        "upstream_source_sha256": QEMU_SYSCALL_SHA256,
+                        "upstream_checked_source_path": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/qemu-10.0.14/linux-user/syscall.c",
+                        "upstream_source_archive": "https://download.qemu.org/qemu-10.0.14.tar.xz",
+                        "upstream_source_archive_sha256": QEMU_SOURCE_ARCHIVE_SHA256,
+                        "qemu_binary_sha256": QEMU_ORACLE_SHA256,
+                        "upstream_excerpt": QEMU_IOCTL_EXCERPT.decode(),
+                        "upstream_excerpt_sha256": digest(QEMU_IOCTL_EXCERPT)}
+    return None
+
+
+def filesystem_snapshot(directory, excluded):
+    """Compare persistent effects, not inode/timestamp/owner allocation noise."""
+    snapshot = {}
+    for path in sorted(directory.rglob("*")):
+        rel = path.relative_to(directory).as_posix()
+        if rel in excluded:
+            continue
+        info = path.lstat()
+        entry = {"mode": stat.S_IMODE(info.st_mode)}
+        if stat.S_ISLNK(info.st_mode):
+            entry.update(type="symlink", target=os.readlink(path))
+        elif stat.S_ISREG(info.st_mode):
+            entry.update(type="file", bytes=info.st_size, sha256=digest(path.read_bytes()))
+        elif stat.S_ISDIR(info.st_mode):
+            entry.update(type="directory")
+        else:
+            entry.update(type=stat.S_IFMT(info.st_mode))
+        snapshot[rel] = entry
+    return snapshot
+
+
+def exercise_bare(case, default, x86, qemu, cwd, timeout):
+    specs = bare_calls(ROOT, case.name.split(":", 1)[0], case.source)
+    outcomes = []
+    for number, spec in enumerate(specs):
+        runs, wrappers = [], []
+        for arch, image in (("aarch64", default), ("x86_64", x86)):
+            work = cwd / f"caller-{number}-{arch}"
+            work.mkdir()
+            wrapped = wrap_bare(image, case.source, arch, spec)
+            binary = work / "caller"
+            binary.write_bytes(wrapped)
+            binary.chmod(0o700)
+            wrappers.append(digest(wrapped))
+            command = ["./caller"] if arch == "aarch64" else [qemu, "-0", "./caller", "./caller"]
+            runs.append(run(command, case.stdin, work, timeout))
+        if runs[0][0] < 0 or runs[1][0] < 0 or runs[0] != runs[1]:
+            raise Failure(f"bare caller {spec['name']} differs: default={result_details(runs[0])}; x86={result_details(runs[1])}")
+        expected_exit = spec.get("expected_exit", 0)
+        if runs[0][0] != expected_exit:
+            raise Failure(f"bare caller {spec['name']} exit {runs[0][0]}, expected {expected_exit}")
+        if "expected_stdout" in spec and runs[0][1] != spec["expected_stdout"]:
+            raise Failure(f"bare caller {spec['name']} full-width return/array oracle differs: "
+                          f"expected={spec['expected_stdout']!r}; actual={runs[0][1]!r}")
+        outcomes.append({"name": spec["name"], "evidence": spec.get("evidence", {}),
+                         "caller_inputs": {"slots": spec.get("slots", []),
+                                           "calls": spec.get("calls", []),
+                                           "arrays": [{key: value for key, value in array.items() if key != "data"} |
+                                                      {"initial_bytes": len(array.get("data", b"")),
+                                                       "initial_sha256": digest(array.get("data", b""))}
+                                                      for array in spec["arrays"]]},
+                         "expected_exit": expected_exit, "observed": result_details(runs[0]),
+                         "oracle": "independent full-width/array oracle" if "expected_stdout" in spec else "native differential",
+                         "wrapper_sha256": dict(zip(("aarch64", "x86_64"), wrappers))})
+    return outcomes
+
+
+def exercise_conductor(case, default, x86, compiler, qemu, cwd, timeout):
+    runs, effects = [], []
+    # The original conductor itself enforces each directive's child deadline.
+    # Its enclosing process must have time for all declared compile/run arms.
+    lines = contained(case.evidence["manifest"]).read_text().splitlines()
+    outer_timeout = max(timeout, 60) * max(1, len(lines))
+    for arch, image in (("aarch64", default), ("x86_64", x86)):
+        work = cwd / ("conductor-" + arch)
+        work.mkdir()
+        binary = work / "conductor"
+        binary.write_bytes(image)
+        binary.chmod(0o700)
+        args = prepare_case(ROOT, work, "corpus-gate", compiler, case=case.evidence)
+        command = ["./conductor", *args] if arch == "aarch64" else [qemu, "-0", "./conductor", "./conductor", *args]
+        runs.append(run(command, b"", work, outer_timeout))
+        effects.append(filesystem_snapshot(work, {"conductor"}))
+    if runs[0] != runs[1] or effects[0] != effects[1]:
+        raise Failure(f"original conductor architecture differential: native={result_details(runs[0])}; x86={result_details(runs[1])}; filesystem_equal={effects[0] == effects[1]}; native_log={runs[0][1]!r}; x86_log={runs[1][1]!r}")
+    if runs[0][0] not in (0, 1, 2, 3) or b"OM2GATE " not in runs[0][1]:
+        raise Failure(f"original conductor invalid/setup failure: {result_details(runs[0])}; original_log={runs[0][1]!r}")
+    verdicts = {}
+    for match in re.finditer(rb"(?m)^VERDICT ([^ \n]+) (PASS|FAIL|INVALID|NOT_RUN)([^\n]*)$", runs[0][1]):
+        name = match[1].decode()
+        if name in verdicts:
+            raise Failure("original conductor emitted duplicate case name: " + name)
+        verdicts[name] = {"status": match[2].decode(), "line": match[0].decode()}
+    return {"exit": runs[0][0], "stdout": runs[0][1].decode(), "stdout_sha256": digest(runs[0][1]), "stderr": runs[0][2].decode(),
+            "verdicts": verdicts,
+            "filesystem_sha256": digest(json.dumps(effects[0], sort_keys=True).encode())}
+
+def exercise_bridge(plan, compiler, qemu, options, scratch, state):
+    key = plan["cache_key"]
+    if key in state["errors"]:
+        raise Failure(state["errors"][key])
+    try:
+        return _exercise_bridge(plan, compiler, qemu, options, scratch, state)
+    except (OSError, ValueError, Failure) as error:
+        state["errors"][key] = str(error)
+        raise Failure(str(error)) from error
+
+
+def _exercise_bridge(plan, compiler, qemu, options, scratch, state):
+    """Use original reviewed callers and generated native bindings, never raw-ABI substitutes."""
+    if plan["cache_key"] in state["results"]:
+        return state["results"][plan["cache_key"]]
+    if not options.bridge or not options.bridge.is_file():
+        raise Failure("BLOCKED_ON BridgeX86: --bridge must name its reviewed tools/native executable")
+    bridge = options.bridge.resolve()
+    bridge_root = bridge.parents[1]
+    work = scratch / ("bridge-" + plan["cache_key"])
+    work.mkdir()
+
+    def copy_resources(items, directory):
+        for item in items:
+            data = contained(item["path"]).read_bytes()
+            if digest(data) != item["sha256"]:
+                raise Failure("reviewed bridge input changed: " + item["path"])
+            dest = directory / item["path"]
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(data)
+
+    def git_resource(repository, item):
+        result = run(["git", "-C", str(repository), "show",
+                      item["git_revision"] + ":" + item["git_path"]], b"", work, options.timeout)
+        if result[0] or digest(result[1]) != item["sha256"]:
+            raise Failure(f"pinned bridge resource unavailable/mismatched: {repository} {item}: {result_details(result)}")
+        return result[1]
+
+    def mutate(path, mutation):
+        data = path.read_bytes()
+        if "append" in mutation:
+            data += mutation["append"]
+        else:
+            count = data.count(mutation["old"])
+            if count != mutation["count"]:
+                raise Failure(f"reviewed mutation {path} expected {mutation['count']} matches, found {count}; "
+                              f"source_sha256={digest(data)} old_hex={mutation['old'].hex()} new_hex={mutation['new'].hex()}")
+            data = data.replace(mutation["old"], mutation["new"])
+        path.write_bytes(data)
+        return {"path": str(path.relative_to(work)), "sha256": digest(data),
+                "old_hex": mutation.get("old", b"").hex(), "new_hex": mutation.get("new", mutation.get("append", b"")).hex()}
+
+    if plan["operation"] == "units-check":
+        tree = work / "tree"
+        tree.mkdir()
+        copy_resources(plan["resources"], tree)
+        old_compiler = work / "pinned-omc"
+        old_compiler.write_bytes(git_resource(ROOT, plan["strict_compiler"]))
+        old_compiler.chmod(0o700)
+        old_bridge = work / "pinned-bridge"
+        (old_bridge / "src").mkdir(parents=True)
+        (old_bridge / "src/native.om").write_bytes(git_resource(bridge_root, plan["strict_generator"]))
+        temp = work / "tmp"
+        temp.mkdir()
+        environment = {"OMEGA_OMC": str(old_compiler), "OMEGA_BRIDGE": str(old_bridge), "TMPDIR": str(temp)}
+        command = ["sh", str(tree / plan["script"]), *plan["args"]]
+        before = filesystem_snapshot(tree, set())
+        positive = run(command, b"", tree, options.timeout, extra_env=environment)
+        if positive[0] != plan["positive_control_expected_exit"] or filesystem_snapshot(tree, set()) != before:
+            raise Failure(f"original strict gate positive control failed or wrote source: {result_details(positive)}")
+        mutation = mutate(tree / plan["mutation"]["path"], plan["mutation"])
+        before = filesystem_snapshot(tree, set())
+        negative = run(command, b"", tree, options.timeout, extra_env=environment)
+        if negative[0] != plan["expected_exit"] or filesystem_snapshot(tree, set()) != before:
+            raise Failure(f"original strict gate did not reject exact stale metadata without writes: {result_details(negative)}")
+        result = {"exit": negative[0], "stdout": negative[1].decode(), "stderr": negative[2].decode(),
+                  "positive_control": result_details(positive), "negative_control": result_details(negative),
+                  "mutation": mutation, "scope": "original host regeneration gate, not x86 device/runtime evidence",
+                  "compiler": plan["strict_compiler"], "generator": plan["strict_generator"]}
+        state["results"][plan["cache_key"]] = result
+        return result
+
+    if "positive_control" in plan:
+        positive = exercise_bridge(bridge_positive_plan(ROOT, plan), compiler, qemu, options, scratch, state)
+        if positive["exit"] != 0:
+            raise Failure("original C-boundary positive control did not pass before negative control")
+    baseline = options.bridge_baseline_compiler.resolve()
+    selected = (options.bridge_compiler or Path(compiler)).resolve()
+    if not baseline.is_file() or not selected.is_file():
+        raise Failure("BLOCKED_ON BridgeX86: pinned baseline/candidate compiler artifact missing")
+    selected_sha = digest(selected.read_bytes())
+    if digest(baseline.read_bytes()) != "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61":
+        raise Failure("BLOCKED_ON BridgeX86: baseline compiler hash does not match its exact seeded generator pin")
+    if selected_sha != digest(Path(compiler).read_bytes()):
+        raise Failure("BLOCKED_ON BridgeX86: bridge compiler does not match selected qualification candidate")
+    native_cc, x86_cc = shutil.which("cc"), shutil.which("x86_64-linux-gnu-gcc")
+    nm = shutil.which("nm")
+    if not native_cc or not x86_cc or not nm:
+        raise Failure("BLOCKED_ON BridgeX86: native cc, x86_64-linux-gnu-gcc and nm are required")
+    observations, runs, effects = [], [], []
+    driver_timeout = options.timeout
+    if plan["cache_key"] == "sha-original-driver-big" and plan["args"] == ("big",):
+        driver_timeout = max(driver_timeout, options.bridge_big_timeout)
+    for arch, cc in (("aarch64", native_cc), ("x86_64", x86_cc)):
+        library_key = arch, tuple((unit["path"], unit["sha256"]) for unit in plan["units"]), selected_sha
+        if library_key not in state["libraries"]:
+            libwork = scratch / ("bridge-library-" + str(len(state["libraries"])))
+            libwork.mkdir()
+            copy_resources(plan["units"], libwork)
+            output = libwork / "generated"
+            command = [str(bridge)]
+            if arch == "x86_64":
+                command += ["--target", "x86linux"]
+            command += [str(output), *(str(libwork / unit["path"]) for unit in plan["units"])]
+            environment = {"OMEGA_NATIVE_OMC": str(baseline), "OMEGA_NATIVE_OMC2": str(selected),
+                           "OMEGA_NATIVE_X86_OMC": str(selected), "CC": cc}
+            built = run(command, b"", libwork, options.timeout, extra_env=environment)
+            if built[0]:
+                raise Failure(f"actual {arch} bridge generation failed: {result_details(built)}")
+            state["libraries"][library_key] = output
+        library = state["libraries"][library_key]
+        local = work / arch
+        local.mkdir()
+        copy_resources(plan["resources"], local)
+        generated = local / "generated"
+        shutil.copytree(library, generated)
+        mutation = None
+        if plan["operation"] == "bridge-mutant":
+            mutation = mutate(generated / "omega_native.c", plan["mutation"])
+        symbols_result = run([nm, "-D", "--defined-only", str(generated / "libomega_native.so")],
+                             b"", local, options.timeout)
+        if symbols_result[0]:
+            raise Failure("cannot inspect generated bridge symbols: " + str(result_details(symbols_result)))
+        symbols = sorted({line.split()[-1].decode() for line in symbols_result[1].splitlines() if line.split()})
+        for symbol in plan.get("required_symbols", ()):
+            if symbol not in symbols:
+                raise Failure("required native binding symbol absent: " + symbol)
+        for symbol in plan.get("forbidden_symbols", ()):
+            if symbol in symbols:
+                raise Failure("forbidden binding symbol exported: " + symbol)
+        linked, binary_sha = None, None
+        args = ()
+        if plan["operation"] == "symbols":
+            observed = symbols_result
+        else:
+            if plan.get("driver") is None:
+                driver = local / "original-driver.c"
+                driver.write_bytes(plan["driver_source"])
+            else:
+                driver = local / plan["driver"]
+            if digest(driver.read_bytes()) != plan["driver_sha256"]:
+                raise Failure("original C driver pin mismatch")
+            executable = local / "original-driver"
+            command = [cc, *plan["cflags"], "-static", "-I", str(generated),
+                       str(driver), str(generated / "omega_native.c"), "-o", str(executable)]
+            linked = run(command, b"", local, options.timeout)
+            if plan["operation"] == "negative-link":
+                symbol = plan["undefined_symbol"].encode()
+                if linked[0] != plan["expected_exit"] or b"undefined reference" not in linked[2] or symbol not in linked[2]:
+                    raise Failure(f"negative-link failed for wrong reason or survived: {result_details(linked)}")
+                observed = linked
+            else:
+                if linked[0]:
+                    raise Failure("original C driver build failed: " + str(result_details(linked)))
+                binary_sha = digest(executable.read_bytes())
+                args = tuple(selected_sha if arg == "$COMPILER_SHA256" else arg for arg in plan["args"])
+                before = filesystem_snapshot(local, set())
+                command = ["./original-driver", *args] if arch == "aarch64" else [
+                    qemu, "-0", "./original-driver", "./original-driver", *args]
+                observed = run(command, b"", local, driver_timeout)
+                after = filesystem_snapshot(local, set())
+                changes = {name: after.get(name) for name in before.keys() | after.keys()
+                           if before.get(name) != after.get(name)}
+                effects.append(changes)
+                if changes:
+                    raise Failure("read-only C-boundary caller changed its scratch filesystem: " + str(changes))
+        if observed[0] != plan["expected_exit"]:
+            raise Failure(f"original {arch} C-boundary caller expected {plan['expected_exit']}: {result_details(observed)}")
+        observations.append({"architecture": arch, "compiler_sha256": selected_sha,
+                             "args": list(args), "stdin_hex": "", "deadline_seconds": driver_timeout,
+                             "caller_resources": plan["resources"], "unit_sources": plan["units"],
+                             "baseline_compiler_sha256": digest(baseline.read_bytes()),
+                             "bridge_tool_sha256": digest(bridge.read_bytes()),
+                             "bridge_generator_sha256": digest((bridge_root / "src/native.om").read_bytes()),
+                             "cc": cc, "cc_version": run([cc, "--version"], b"", local, options.timeout)[1].decode(),
+                             "generated_c_sha256": digest((generated / "omega_native.c").read_bytes()),
+                             "generated_library_sha256": digest((generated / "libomega_native.so").read_bytes()),
+                             "driver_sha256": plan.get("driver_sha256"), "driver_binary_sha256": binary_sha,
+                             "mutation": mutation, "link": result_details(linked) if linked else None,
+                             "symbol_names": symbols, "symbol_observation": result_details(symbols_result),
+                             "observed": result_details(observed)})
+        runs.append(observed)
+    if plan["operation"] not in ("symbols", "negative-link") and runs[0] != runs[1]:
+        raise Failure(f"original C-boundary architecture differential: native={result_details(runs[0])}; x86={result_details(runs[1])}")
+    result = {"exit": runs[0][0], "stdout": runs[0][1].decode(), "stderr": runs[0][2].decode(),
+              "operation": plan["operation"], "observations": observations, "runtime_filesystem_changes": effects,
+              "comparison": ("independent original required/forbidden symbol obligations, not runtime"
+                             if plan["operation"] == "symbols" else
+                             "independent original absent-symbol link obligation; complete linker diagnostics retained, not runtime"
+                             if plan["operation"] == "negative-link" else
+                             "actual C/SysV native-AArch64 versus EMULATED x86_64")}
+    state["results"][plan["cache_key"]] = result
+    return result
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--compiler", type=Path)
+    parser.add_argument("--x86-compiler", type=Path, help="optional x86-hosted paired compiler; otherwise built once from exact current seeded source")
     parser.add_argument("--qemu", default="qemu-x86_64")
+    parser.add_argument("--bridge", type=Path, help="reviewed x86-capable omega-bridge executable for external ABI drivers")
+    parser.add_argument("--bridge-baseline-compiler", type=Path, default=Path("/tmp/bridge-x86-baseline-omc"),
+                        help="exact 734f0a39 seeded compiler required by the bridge generator")
+    parser.add_argument("--bridge-compiler", type=Path,
+                        help="bridge candidate artifact, required to hash-match --compiler (default: --compiler)")
+    parser.add_argument("--bridge-big-timeout", type=float, default=3600,
+                        help="per-architecture deadline for unchanged original SHA big mode (all original 2^32+3-byte cases)")
     parser.add_argument("--objdump", help="GNU x86-64 objdump or llvm-objdump executable")
     parser.add_argument("--timeout", type=float, default=30)
     parser.add_argument("--inventory", action="store_true")
@@ -579,10 +1276,24 @@ def main():
         totals[status] += 1
         if status != "PASS":
             reasons[(status, reason)] += 1
+        if details.get("evidence", {}).get("evidence_kind") == "differential_only":
+            details.update(scope="differential_only", conformance_status="UNASSERTED",
+                           original_not_run_reason=details["evidence"].get("original_not_run_reason", details["evidence"].get("reason")))
         print(json.dumps(dict(status=status, case=name, reason=reason, **details)), flush=True)
 
     files = fixture_files()
-    print(json.dumps({"inventory_files": len(files), "roots": "tests; seed/*/tests; seed/omc/{om2,contracts}; seed/qualification; tools/exp445/arms/examples", "source_revision_contract": "6999fa9e6dae4847c155ef4eacaece74f491d3ca", "checker_sha256": digest(Path(__file__).read_bytes())}))
+    revision = run(["git", "rev-parse", "HEAD"], b"", ROOT, options.timeout)
+    if revision[0] or not re.fullmatch(rb"[0-9a-f]{40}\n", revision[1]):
+        parser.error("cannot record actual repository HEAD: " + str(result_details(revision)))
+    compiler_source = contained("seed/omc/omc.om").read_bytes()
+    print(json.dumps({"inventory_files": len(files),
+                      "roots": "tests; seed/*/tests; seed/omc/{om2,contracts}; seed/qualification; tools/exp445/arms/examples",
+                      "source_revision_contract": revision[1].decode().strip(),
+                      "baseline_revision": "becf5c817bcb7e0846d12ebfc2be91042d8ad89a",
+                      "compiler_source_sha256": digest(compiler_source),
+                      "checker_sha256": digest(Path(__file__).read_bytes()),
+                      "driver_sha256": digest(Path(__file__).with_name("x86_corpus_drivers.py").read_bytes()),
+                      "bridge": str(options.bridge) if options.bridge else None}))
     if not options.inventory:
         if not options.compiler or not options.compiler.is_file():
             parser.error("--compiler must name an existing compiler")
@@ -595,76 +1306,242 @@ def main():
         if not qemu or not objdump:
             parser.error("qemu-x86_64 and an x86-64-capable GNU/LLVM objdump are required")
         llvm = "llvm" in Path(objdump).name
-        print(json.dumps({"compiler": compiler, "compiler_sha256": digest(Path(compiler).read_bytes()), "qemu": qemu, "objdump": objdump, "platform": platform.platform(), "timeout_seconds": options.timeout}))
+        print(json.dumps({"compiler": compiler, "compiler_sha256": digest(Path(compiler).read_bytes()),
+                          "qemu": qemu, "qemu_sha256": digest(Path(qemu).read_bytes()),
+                          "qemu_version": run([qemu, "--version"], b"", ROOT, options.timeout)[1].decode().strip(),
+                          "objdump": objdump, "platform": platform.platform(), "timeout_seconds": options.timeout,
+                          "bridge_big_timeout_seconds": options.bridge_big_timeout}))
     cache = OrderedDict()
+    conductor_cache = {}
+    bridge_state = {"results": {}, "errors": {}, "libraries": {}}
     controls = None
     helper_image = None
+    frontend_compiler = None
+    frontend_evidence = {}
+    generation_variant = None
     with tempfile.TemporaryDirectory(prefix="omega-fr9-oracle-") as scratch:
         scratch = Path(scratch)
+
+        def generation_compiler():
+            nonlocal generation_variant
+            if generation_variant is None:
+                source = compiler_source
+                substitutions = []
+                for old, new in (
+                    (b"matconst 15 36028797018963967\n", b"matconst 15 3\n"),
+                    (b"xhcmp 10 36028797018963967\n", b"xhcmp 10 3\n"),
+                ):
+                    if source.count(old) != 1:
+                        raise Failure("generation-ceiling whitebox setup no longer matches exact current emitter: " + repr(old))
+                    source = source.replace(old, new)
+                    substitutions.append({"old_hex": old.hex(), "new_hex": new.hex(), "count": 1})
+                built = run([compiler], source, scratch, options.timeout)
+                if built[0] or built[2] or not built[1]:
+                    raise Failure("generation-ceiling compiler build failed: " + str(result_details(built)))
+                binary = scratch / "generation-limit-compiler"
+                binary.write_bytes(built[1])
+                binary.chmod(0o700)
+                generation_variant = str(binary), {
+                    "authority_path": "seed/host/tests/genlimit.om",
+                    "authority_sha256": "ea4f544b49878f5532f75b0ac7e8fa42e6926d5b57ea002e748679922859ad48",
+                    "authority_quote": "White-box boundary fixture: compiler's generation ceiling replaced with 3 for this test only.",
+                    "original_compiler_source_sha256": digest(compiler_source),
+                    "variant_source_sha256": digest(source), "variant_compiler_sha256": digest(built[1]),
+                    "substitutions": substitutions, "scope": "fixture-only, both target generation ceilings; production source unchanged"}
+            return generation_variant
+
+        def paired_frontend_compiler():
+            nonlocal frontend_compiler, frontend_evidence
+            if frontend_compiler is None:
+                binary = scratch / "x86-hosted-compiler"
+                if options.x86_compiler:
+                    image = options.x86_compiler.read_bytes()
+                    frontend_evidence = {"provenance": "explicit external --x86-compiler",
+                                         "path": str(options.x86_compiler.resolve())}
+                else:
+                    source = compiler_source
+                    built = run([compiler], TARGET_PREFIX + source, scratch, options.timeout)
+                    if built[0] or built[2] or not built[1]:
+                        raise Failure(f"x86-hosted compiler bootstrap failed: {result_details(built)}")
+                    disassemble(built[1], source, objdump, llvm, scratch, options.timeout)
+                    image = built[1]
+                    frontend_evidence = {"provenance": "exact current seeded source compiled by selected native compiler",
+                                         "source": "seed/omc/omc.om", "source_sha256": digest(source)}
+                binary.write_bytes(image)
+                binary.chmod(0o700)
+                frontend_compiler = str(binary)
+                frontend_evidence.update(x86_compiler_sha256=digest(image),
+                                         native_compiler_sha256=digest(Path(compiler).read_bytes()))
+            return frontend_compiler
+
         for index, case in enumerate(expanded_cases(files, record)):
-            excluded = exclusion(case.source)
-            if excluded:
-                record("EXCLUDED", case.name, excluded)
-                continue
+            frontend_mode = bool(MODE.match(case.source))
             key = digest(case.source)
-            driver = HOST_DRIVERS.get(key)
+            driver = case.driver or HOST_DRIVERS.get(key)
             if case.name.startswith("oracle-positional-"):
                 driver = "positional-view"
-            target, adaptation = target_source(case, driver)
+            target, adaptation = (case.source, None) if case.bridge else target_source(case, driver)
             if options.inventory:
                 words = host_words(case.source)
-                kind = "INVENTORY_UNIT" if not MAIN.search(case.source) else (
-                    "INVENTORY_HOST" if words else "INVENTORY_PROGRAM")
+                kind = "INVENTORY_HOST" if case.bridge else ("INVENTORY_UNIT" if not MAIN.search(case.source) else (
+                    "INVENTORY_HOST" if words else "INVENTORY_PROGRAM"))
                 record(kind, case.name, "reviewed host driver" if driver else (
                     "unreviewed host driver missing" if words else "compile/runtime differential input"),
                     host_words=words, host_driver=driver, source_sha256=key,
-                    target_adaptation=adaptation, expected_compile=case.expected_compile)
+                    target_adaptation=adaptation, expected_compile=case.expected_compile,
+                    operation=case.operation, evidence=case.evidence, blocker=case.blocker)
                 continue
             cwd = scratch / str(index)
             cwd.mkdir()
+            diagnostics = {}
+            child_timeout = min(options.timeout, case.deadline) if case.deadline is not None else options.timeout
             try:
-                compilekey = key, digest(target)
+                if case.bridge:
+                    replay = exercise_bridge(case.bridge, compiler, qemu, options, scratch, bridge_state)
+                    prefix = case.bridge.get("required_line_prefix")
+                    if prefix and not any(line.startswith(prefix) for line in replay["stdout"].splitlines()):
+                        raise Failure("original C driver did not report required exact case: " + prefix)
+                    record("PASS", case.name, "original C-boundary/gate obligation, actual reviewed driver",
+                           source_sha256=key, evidence=case.evidence, bridge_result=replay,
+                           control_kind=case.bridge["operation"],
+                           evidence_kind=case.evidence.get("evidence_kind", "original explicit oracle"),
+                           contract_status=case.evidence.get("contract_status", "original fixed obligation"))
+                    continue
+                case_compiler = compiler
+                if driver == "genlimit":
+                    case_compiler, case.evidence["generation_ceiling_whitebox"] = generation_compiler()
+                    case.stdout_oracle = "sha:" + digest(literal_bytes(case.source)[0])
+                compilekey = key, digest(target), frontend_mode, child_timeout, case_compiler
                 if compilekey not in cache:
-                    default = run([compiler], case.source, cwd, options.timeout)
-                    x86 = run([compiler], b"target x86linux\n" + target, cwd, options.timeout)
+                    default = run([case_compiler], case.source, cwd, child_timeout)
+                    if frontend_mode:
+                        x86 = run([qemu, "-0", "./omc", paired_frontend_compiler()],
+                                  case.source, cwd, child_timeout)
+                    else:
+                        x86 = run([case_compiler], TARGET_PREFIX + target, cwd, child_timeout)
                     cache[compilekey] = default, x86
                     if len(cache) > 32:
                         cache.popitem(last=False)
                 default, x86 = cache[compilekey]
+                diagnostics = {"default_compile": result_details(default), "x86_compile": result_details(x86)}
+                if frontend_mode:
+                    case.evidence.update(frontend_compiler=frontend_evidence,
+                                         comparison="crossHOST native-AArch64 versus EMULATED x86 compiler, exact original mode bytes")
+                if case.operation == "emit":
+                    assert_oracle(default[1], case.stdout_oracle, "compiler stdout")
+                    assert_oracle(default[2], case.stderr_oracle, "compiler stderr")
                 if default[0]:
                     if case.expected_compile == "accept":
-                        raise Failure("fixture required acceptance but default compiler refused")
+                        raise Failure(f"fixture required acceptance but default compiler refused with {default[0]}")
                     if case.expected_compile and default[0] != int(case.expected_compile):
-                        raise Failure("fixture default refusal code differs from explicit oracle")
-                    if refusal(default, 0) != refusal(x86, 1):
-                        raise Failure("compile refusal differs (target directive line offset normalized)")
-                    record("PASS", case.name, "compile-refusal differential", compile_exit=default[0],
-                           source_sha256=key, target_adaptation=adaptation)
+                        raise Failure(f"fixture default refusal code {default[0]} differs from explicit oracle {case.expected_compile}")
+                    if refusal(default, 0) != refusal(x86, 0 if frontend_mode else 1):
+                        raise Failure("compile refusal differs after exact source-coordinate translation")
+                    record("PASS", case.name, "compile-refusal differential + explicit conductor oracle",
+                           compile_exit=default[0], source_sha256=key,
+                           target_adaptation=adaptation, evidence=case.evidence,
+                           comparison="crossHOST exact frontend mode" if frontend_mode else "crossTARGET")
                     continue
                 if case.expected_compile not in (None, "accept"):
                     raise Failure("refusal control was incorrectly accepted by default compiler")
                 if x86[0]:
-                    record("MISSING_IMPLEMENTATION", case.name, "default accepts; x86 compiler refuses", compile_exit=x86[0], diagnostic=x86[2].decode("utf-8", "replace"), source_sha256=key)
+                    record("MISSING_IMPLEMENTATION", case.name, "default accepts; x86 compiler refuses",
+                           compile_exit=x86[0], diagnostic=x86[2].decode("utf-8", "replace"),
+                           source_sha256=key, evidence=case.evidence)
+                    continue
+                translated_stderr = normalized_diagnostics(x86[2], 0 if frontend_mode else 1)
+                if case.evidence.get("compiler_stderr_comparison") == "source-site-records":
+                    case.evidence["raw_compiler_stderr"] = {"native_hex": default[2].hex(), "x86_hex": x86[2].hex()}
+                    case.evidence["site_comparison"] = source_site_diagnostics(
+                        default[2], translated_stderr, case.evidence["site_source_lines"])
+                elif default[2] != translated_stderr:
+                    raise Failure("successful compiler diagnostics differ after exact source-coordinate translation")
+                if frontend_mode:
+                    if default[1] != x86[1]:
+                        raise Failure("exact-mode output differs between native and x86-hosted compiler")
+                    if case.operation == "same":
+                        left = run([compiler], case.same_source, cwd, options.timeout)
+                        right = run([qemu, "-0", "./omc", paired_frontend_compiler()],
+                                    case.same_source, cwd, options.timeout)
+                        if left[0] or right[0] or default[1] != left[1] or x86[1] != right[1]:
+                            raise Failure("exact frontend same-artifact oracle differs")
+                    record("PASS", case.name, "exact-mode frontend crossHOST differential, original conductor oracles preserved",
+                           source_sha256=key, evidence=case.evidence, compile_exit=default[0],
+                           stdout_sha256=digest(default[1]), comparison="crossHOST EMULATED, not backend crossTARGET")
                     continue
                 if MAIN.search(case.source) and (
                         default[1][:6] != b"\x7fELF\x02\x01" or
                         struct.unpack_from("<H", default[1], 18)[0] != 183):
                     raise Failure("default no longer emits AArch64 ELF program")
-                if default[2] != x86[2]:
-                    # Diagnostic line numbers can move by the selector line.
-                    normalized = re.sub(rb"line ([0-9]+)", lambda m: b"line " + str(int(m[1]) - 1).encode(), x86[2])
-                    if default[2] != normalized:
-                        raise Failure("successful compiler diagnostics differ")
                 mnemonics, instructions, carveouts = disassemble(x86[1], target, objdump, llvm, cwd, options.timeout)
                 templates.update(mnemonics)
+                if case.operation == "conductor":
+                    manifest = case.evidence["manifest"]
+                    if manifest not in conductor_cache:
+                        try:
+                            conductor_cache[manifest] = exercise_conductor(
+                                case, default[1], x86[1], compiler, qemu, cwd, options.timeout)
+                        except (OSError, ValueError, Failure) as error:
+                            conductor_cache[manifest] = {"error": str(error)}
+                    replay = conductor_cache[manifest]
+                    if "error" in replay:
+                        raise Failure(replay["error"])
+                    overall = case.evidence.get("expected_overall_exit")
+                    if overall is not None and replay["exit"] != overall:
+                        raise Failure(f"original conductor expected whole-manifest exit {overall}, observed {replay['exit']}; original_log={replay['stdout']}")
+                    observed = replay["verdicts"].get(case.evidence["original_case_name"])
+                    expected = case.evidence["expected_original_conductor"]
+                    if observed is None or observed["status"] != expected:
+                        raise Failure(f"original conductor oracle: expected {expected}, observed {observed}; log_sha256={replay['stdout_sha256']}; original_log={replay['stdout']}")
+                    record("PASS", case.name, "original conductor expected verdict proved on native/x86 conductor, including compiler-mutant detection",
+                           source_sha256=key, evidence=case.evidence,
+                           control_kind=case.evidence["control_kind"],
+                           expected_original_conductor=expected, observed_original_conductor=observed,
+                           conductor_exit=replay["exit"], conductor_stdout_sha256=replay["stdout_sha256"],
+                           filesystem_sha256=replay["filesystem_sha256"],
+                           oracle_instructions=len(instructions),
+                           child_compiler_architecture="native AArch64 in both conductor runs")
+                    continue
+                if case.operation == "structural":
+                    minimum = case.evidence["structural"]["minimum_calls"]
+                    calls = sum(count for mnemonic, count in mnemonics.items() if mnemonic in ("call", "callq"))
+                    if calls < minimum:
+                        raise Failure(f"explicit structural call obligation: decoded {calls}, requires at least {minimum}")
+                if case.operation == "same":
+                    left = run([compiler], case.same_source, cwd, options.timeout)
+                    right = run([compiler], TARGET_PREFIX + case.same_source, cwd, options.timeout)
+                    if left[0] or right[0] or default[1] != left[1] or x86[1] != right[1]:
+                        diagnostics.update(default_same=result_details(left), x86_same=result_details(right))
+                        raise Failure("same oracle failed: each architecture must compile both sources to byte-identical artifacts")
+                    record("PASS", case.name, "same-artifact oracle independently satisfied on both architectures + decoded x86",
+                           source_sha256=key, evidence=case.evidence, oracle_instructions=len(instructions))
+                    continue
+                if case.operation == "emit":
+                    record("PASS", case.name, "explicit compiler exit/stdout/stderr oracle + x86 differential/decode",
+                           source_sha256=key, evidence=case.evidence, oracle_instructions=len(instructions))
+                    continue
+                if case.blocker:
+                    record("BLOCKED" if case.blocker.startswith("BLOCKED_ON ") else "NOT_RUN",
+                           case.name, case.blocker, source_sha256=key,
+                           evidence=case.evidence, oracle_instructions=len(instructions),
+                           bridge=str(options.bridge) if options.bridge else None)
+                    continue
                 if not MAIN.search(case.source):
-                    record("NOT_RUN", case.name, "entryless unit compiled and fully decoded; runtime requires explicit composed main/private-ABI caller",
-                           source_sha256=key, oracle_instructions=len(instructions), data_carveouts=carveouts)
+                    callers = exercise_bare(case, default[1], x86[1], qemu, cwd, options.timeout)
+                    if callers:
+                        record("PASS", case.name, "original bare artifact decoded + reviewed full-width private-ABI callers exercised",
+                               source_sha256=key, evidence=case.evidence, callers=callers,
+                               oracle_instructions=len(instructions), data_carveouts=carveouts)
+                        continue
+                    record("NOT_RUN", case.name, f"entryless source {key} has no reviewed private-ABI caller for its exported/last entry",
+                           source_sha256=key, evidence=case.evidence,
+                           oracle_instructions=len(instructions), data_carveouts=carveouts)
                     continue
                 words = host_words(case.source)
                 if words and not driver:
-                    record("NOT_RUN", case.name, "unreviewed host effects require dedicated driver",
-                           host_words=words, oracle_instructions=len(instructions), data_carveouts=carveouts)
+                    record("NOT_RUN", case.name, f"source {key} requires unreviewed effects: {', '.join(words)}",
+                           source_sha256=key, evidence=case.evidence, host_words=words,
+                           oracle_instructions=len(instructions), data_carveouts=carveouts)
                     continue
                 native, emulated = cwd / "native", cwd / "emulated"
                 native.mkdir(); emulated.mkdir()
@@ -688,34 +1565,83 @@ def main():
                     for directory in (native, emulated):
                         child = directory / "exec-child"
                         child.write_bytes(helper_image); child.chmod(0o700)
+                prepared = [prepare_case(ROOT, directory, driver, compiler, case=case.evidence)
+                            for directory in (native, emulated)]
+                if prepared[0] != prepared[1]:
+                    raise Failure("reviewed prepare_case produced architecture-dependent argv")
+                if prepared[0]:
+                    args = tuple(prepared[0])
+                if "stdin_compiled_source" in case.evidence:
+                    source_path = case.evidence["stdin_compiled_source"]
+                    stdin_source = contained(source_path).read_bytes()
+                    if digest(stdin_source) != case.evidence["stdin_source_sha256"]:
+                        raise Failure("reviewed scanner input source changed: " + source_path)
+                    compiled_input = run([compiler], stdin_source, cwd, options.timeout)
+                    if compiled_input[0] or compiled_input[2]:
+                        raise Failure(f"scanner input compilation failed: {result_details(compiled_input)}")
+                    case.evidence["stdin_original_artifact_sha256"] = digest(compiled_input[1])
+                    case.stdin = select_a64_entry(compiled_input[1], case.evidence["stdin_export_index"])
+                    case.evidence["stdin_selected_entry_artifact_sha256"] = digest(case.stdin)
+                case.evidence["runtime_args"] = list(args)
+                case.evidence["runtime_stdin_sha256"] = digest(case.stdin)
                 expected = case.expected_exit
-                if expected is None and driver and driver != "genlimit":
+                if expected is None and driver:
                     expected = 103 if driver in ("environment_trap", "stat_short", "links_short") else 0
                 # Both argv[0] strings and initial environments are byte-identical;
                 # filesystem mutations cannot leak between architectures.
                 argv0 = "./" + basename
-                arun = run([argv0, *args], case.stdin, native, options.timeout)
-                xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, options.timeout)
+                arun = run([argv0, *args], case.stdin, native, child_timeout)
+                xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, child_timeout)
+                diagnostics.update(default_run=result_details(arun), x86_run=result_details(xrun))
+                if "required_verdict" in case.evidence:
+                    required = ("VERDICT " + case.evidence["required_verdict"]).encode()
+                    if required not in arun[1].splitlines() or required not in xrun[1].splitlines():
+                        raise Failure(f"original scanner did not prove required verdict {required!r}")
+                native_files = filesystem_snapshot(native, {basename, "exec-child"})
+                x86_files = filesystem_snapshot(emulated, {basename, "exec-child"})
+                diagnostics.update(default_filesystem=native_files, x86_filesystem=x86_files)
+                if native_files != x86_files:
+                    raise Failure("persistent scratch filesystem effects differ (type/mode/contents/symlink target)")
                 if arun[0] < 0 or xrun[0] < 0:
-                    raise Failure(f"runtime signal: default={arun[0]} x86={xrun[0]}")
+                    if not (driver == "supervisor-self-signal" and case.operation == "differential" and
+                            case.evidence.get("required_conductor_verdict") == "INVALID signal" and
+                            arun[0] == xrun[0] == case.expected_exit == -9):
+                        raise Failure(f"runtime signal: default={arun[0]} x86={xrun[0]}")
                 if arun != xrun:
+                    artifact = ioctl_emulator_artifact(case, driver, arun, xrun, qemu, argv0,
+                                                      args, emulated, options.timeout)
+                    if artifact:
+                        record("NOT_RUN", case.name, "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF",
+                               source_sha256=key, evidence=case.evidence, emulator_artifact=artifact,
+                               diagnostics=diagnostics, oracle_instructions=len(instructions))
+                        continue
                     raise Failure(f"runtime differential: default={arun[0]} x86={xrun[0]}, stdout={arun[1] == xrun[1]}, stderr={arun[2] == xrun[2]}")
                 if expected is not None and arun[0] != expected:
                     raise Failure(f"fixture oracle exit {expected}, observed {arun[0]}")
+                assert_oracle(arun[1], case.stdout_oracle, "runtime stdout", different=case.operation == "kill")
+                assert_oracle(arun[2], case.stderr_oracle, "runtime stderr")
                 reason = "target-adapted ABI differential" if adaptation else "identical-source native-AArch64/qemu-x86 differential"
+                if driver == "supervisor-self-signal":
+                    reason = "supervisor negative-input control: both children observed SIGKILL, never an ordinary mutant kill"
                 record("PASS", case.name, reason + " + every code byte decoded", run_exit=arun[0],
                        stdout_sha256=digest(arun[1]), source_sha256=key, x86_source_sha256=digest(target),
                        x86_sha256=digest(x86[1]), oracle_instructions=len(instructions),
                        data_carveouts=carveouts, host_driver=driver, target_adaptation=adaptation,
                        exec_child_architecture="native AArch64" if driver == "process" else None,
-                       ordinary_not_generation_mutant=driver == "genlimit")
+                       generation_ceiling_whitebox=driver == "genlimit", evidence=case.evidence,
+                       conductor_operation=case.operation,
+                       control_kind=("generation_ceiling_whitebox" if driver == "genlimit" else
+                                     "supervisor_negative_input" if driver in ("supervisor-self-signal", "supervisor-self-sleep") else None),
+                       filesystem_sha256=digest(json.dumps(native_files, sort_keys=True).encode()),
+                       filesystem_entries=len(native_files))
                 if case.name == "seed/rung4/tests/t_exit.om":
                     expected = int((ROOT / "seed/rung4/tests/t_exit.want").read_text())
                     if arun != (expected, b"", b""):
                         raise Failure("exit control disagrees with existing .want oracle")
                     controls = (case.source, x86[1], arun)
             except (OSError, ValueError, struct.error, Failure) as error:
-                record("FAIL", case.name, str(error))
+                record("BLOCKED" if str(error).startswith("BLOCKED_ON ") else "FAIL", case.name, str(error), source_sha256=key,
+                       evidence=case.evidence, diagnostics=diagnostics)
         if not options.inventory:
             if controls is None:
                 record("FAIL", "negative-controls", "required t_exit.om did not qualify")
@@ -761,10 +1687,10 @@ def main():
             "Only source-matched JMP-protected literal/padding spans are carved out; ambiguous/missing data maps fail closed",
             "Mnemonic counts are not exhaustive encoding-template, register, width, displacement or trap coverage",
             "The default baseline may share frontend defects; invalid and valid-but-wrong encoding controls challenge separate oracles",
-            "Frozen C2 replays captured inline/fuzz inputs; current shell-only generators and alternate-compiler/subst conductor arms are not executed",
-            "Reviewed content-pinned host drivers run in separate architecture-local directories; other host effects remain NOT_RUN",
-            "Bare units are fully decoded but are runtime NOT_RUN without explicit main composition; wasm and SPIRV case tables supply composed full-width callers",
-            "process exec enters a native AArch64 helper in both runs, not an x86 child; genlimit runs ordinary-compiler differential, not a mutated generation ceiling",
+            "Frozen C2 retains exact historical inputs; original frontend modes compare unchanged bytes through native/x86-hosted compilers, separately from cross-target code generation",
+            "Reviewed content-pinned host drivers run in separate architecture-local directories and compare persistent filesystem effects; other host effects remain NOT_RUN",
+            "Bare callers execute original unit bytes through architecture-specific ABI wrappers and observe full-width returns/arrays; missing callers remain individually NOT_RUN",
+            "process exec enters a native AArch64 helper in both runs, not an x86 child; generation retirement uses the original fixture's exact ceiling3 compiler variant on both targets",
             "psync invokes syncfs on its scratch-file descriptor and therefore flushes the scratch filesystem; no service process is controlled",
             "No hardware qualification"],
         "verdict": "INVENTORY_ONLY" if options.inventory else ("FAIL" if missing else "PASS")}))
