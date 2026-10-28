@@ -1195,7 +1195,7 @@ static bool test_m18_gate18_receipt(void) {
         "source/src/omega_blackwell_qmd.h", "source/src/omega_blackwell_qmd.c",
         "source/src/omega_blackwell_submit.h", "source/src/omega_blackwell_submit.c",
         "source/src/omega_blackwell_engine.h", "source/src/omega_blackwell_engine.c",
-        "pin", "observed", "source.tar", "hashes"
+        "pin", "observed", "source.tar", "hashes", "build/libcudapp.a"
     };
     const char *manifest_files[] = {
         "src/omega_blackwell_gates.h",
