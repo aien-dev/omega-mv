@@ -418,7 +418,7 @@ run_model() {
                     say "$tid $lang $arm $att $first $COMP_RC $VERIFIED $((t2 - t0)) $p $c $t" >> "$OUT/rows.txt"
                     say "$tid $lang $arm $att $code $m $p $c $t $((t1 - t0))" >> "$OUT/calls.txt"
                     [ "$VERIFIED" -eq 0 ] || break
-                    if [ "$arm" = feedback ]; then
+                    if [ "$arm" = feedback ] && [ "$att" -lt "$ATTEMPTS" ]; then
                         { printf '```%s\n' "$(lang_fence "$lang")"; cat "$a/candidate.$lang"; printf '\n```\n'; } > "$a/assistant.txt"
                         feedback "$lang" "$a/eval" > "$a/feedback.txt"
                         add_msg "$conv" assistant "$a/assistant.txt"

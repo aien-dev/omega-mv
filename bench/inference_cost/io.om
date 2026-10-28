@@ -1,7 +1,7 @@
 note bench/inference_cost/io.om -- stdin argument reader and decimal writer.
-note driver.sh appends this unit after an Omega candidate (so omc line numbers in
-note feedback match the candidate) and then a generated fn main that calls the
-note candidate once per line of inputs.txt. Exit 90..93 are harness I/O failures.
+note driver.sh builds an Omega candidate's unit as: the line "om2 diag", the candidate,
+note this unit, then a generated fn main that calls the candidate once per case of
+note inputs.txt. Exit 90..93 are harness I/O failures.
 global bxin uchar 65536
 global bxst ulong 2
 global bxob uchar 24
