@@ -30,6 +30,8 @@ global om2m ulong 1
 global om2ln ulong 1
 global om2pos ulong 1
 global fmtm ulong 1
+global chkmode ulong 1
+global chkln ulong 1
 global lbase ulong 1
 global sbase ulong 1
 global tka ulong 1
@@ -261,7 +263,7 @@ ret s
 end
 
 note ---- error reporting ----
-global msg uchar 512
+global msg uchar 65536
 global mc ulong 1
 
 fn mputb b uchar to void
@@ -318,6 +320,9 @@ if ne get om2 0 0
 if eq get om2m 0 1
 drec code
 end
+end
+if ne get chkmode 0 0
+diagrec code
 end
 exit int code
 end
@@ -1379,12 +1384,61 @@ end
 ret 1
 end
 
+fn chk_mode q ulong to ulong
+if ne lineis q 461229090915 5 0
+ret 1
+end
+if ne lineis q 1954047342 4 0
+ret 2
+end
+ret 0
+end
+
+fn chk_lead to void
+e = get inlen 0
+p = ulong 0
+ln = ulong 1
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+q = skipbl p
+if ge q e
+go = false
+else
+if eq get inp q 10
+p = add q 1
+ln = add ln 1
+else
+if ne isnote q 0
+p = skipln q
+ln = add ln 1
+else
+k = chk_mode q
+if ne k 0
+put chkmode 0 k
+put chkln 0 ln
+put sbase 0 skipln q
+end
+go = false
+end
+end
+end
+m = add m 1
+end
+end
+end
+
 note om2lead: skip blank lines and note lines; when the next line is exactly om2 (1), om2 diag (2) or
 note om2 fmt (3) the unit is OM-2: om2, om2m, om2ln, om2pos. Anything else leaves the unit OM-1.
 fn om2lead to void
 e = get inlen 0
 p = ulong 0
 ln = ulong 1
+if ne get chkmode 0 0
+p = get sbase 0
+ln = add get chkln 0 1
+end
 go = true
 while go
 m = ulong 0
@@ -2302,6 +2356,337 @@ global nbrk ulong 1
 global cpos ulong 1024
 global cblk ulong 1024
 global ncont ulong 1
+fn dcat_w code ulong to void
+if or or eq code 4 eq code 6 eq code 16
+mputw 9104236865280339 7
+ret
+end
+if or or or or eq code 3 eq code 7 eq code 8 eq code 11 eq code 23
+mputw 138601847124 5
+ret
+end
+if eq code 9
+mputw 138903768134 5
+ret
+end
+if or eq code 10 eq code 13
+mputw 138601644366 5
+ret
+end
+if or eq code 12 eq code 14
+mputw 6436850320626696515 8
+mputb 32
+ret
+end
+if or or eq code 5 eq code 18 eq code 21
+mputw 35481921143122 6
+ret
+end
+if or or or eq code 27 eq code 28 eq code 29 eq code 30
+mputw 6071768544483102531 8
+mputb 32
+ret
+end
+mputw 9104236865280339 7
+end
+
+fn dty_w t ulong to void
+if eq t 1
+mputw 1819242338 4
+ret
+end
+if eq t 2
+mputw 491260502901 5
+ret
+end
+if eq t 3
+mputw 128034844210037 6
+ret
+end
+if eq t 4
+mputw 1953393013 4
+ret
+end
+if eq t 5
+mputw 444234427509 5
+ret
+end
+if eq t 6
+mputw 1702132066 4
+ret
+end
+if eq t 7
+mputw 500136110195 5
+ret
+end
+if eq t 8
+mputw 7630441 3
+ret
+end
+if eq t 9
+mputw 1735290732 4
+ret
+end
+if eq t 10
+mputw 3289958 3
+ret
+end
+if eq t 11
+mputw 3421798 3
+ret
+end
+if eq t 12
+mputw 1684631414 4
+ret
+end
+mputw 2003134838 4
+end
+
+fn dname_kind i ulong to void
+k = ulong get nm_kind i
+if eq k 4
+mputw 119165519096935 6
+ret
+end
+if eq k 5
+mputw 1954047348 4
+ret
+end
+if eq k 9
+mputw 500152823651 5
+ret
+end
+if or eq k 2 eq k 8
+mputw 2003134838 4
+ret
+end
+if or eq k 3 eq k 7
+mputw 1953064037 4
+ret
+end
+if ne get curfn 0 0
+f = sub get curfn 0 1
+np = ulong get fn_np f
+endp = add get nglob 0 np
+if and ge i get nglob 0 lt i endp
+mputw 469786321264 5
+ret
+end
+end
+mputw 465490374508 5
+end
+
+fn mput_name w ulong to void
+x = w
+go = true
+while go
+if eq x 0
+go = false
+else
+b = and x 255
+if eq b 0
+go = false
+else
+mputb uchar b
+x = shr x 8
+end
+end
+end
+end
+
+fn mput_fnname f ulong to void
+o = get fn_off f
+l = get fn_nmlen f
+if and ne o 0 gt l 0
+i = ulong 0
+while lt i l
+mputb get inp add o i
+i = add i 1
+end
+else
+mput_name get fn_name f
+end
+end
+
+fn mput_tok a ulong b ulong to void
+if eq a b
+if eq get tk 0 3
+mputw 6713189 3
+ret
+end
+mputb 45
+ret
+end
+i = a
+while and lt i b lt sub i a 16
+c = ulong get inp i
+if and gt c 32 lt c 127
+mputb uchar c
+else
+mputh c
+end
+i = add i 1
+end
+end
+
+fn diagrec code ulong to void
+put mc 0 0
+mputw 7594244768023276911 8
+mputw 11207551510369 6
+if eq get om2 0 0
+mputw 3239279 3
+mputb 32
+else
+mputw 3304815 3
+mputb 32
+end
+dcat_w code
+a = get tka 0
+b = get tkb 0
+if le b a
+b = a
+if gt get cur 0 a
+b = get cur 0
+end
+end
+if gt b get inlen 0
+b = get inlen 0
+end
+sa = a
+sb = b
+if ge sa get sbase 0
+sa = sub sa get sbase 0
+else
+sa = ulong 0
+end
+if ge sb get sbase 0
+sb = sub sb get sbase 0
+else
+sb = ulong 0
+end
+mputw 263844884595 5
+mputn sa
+mputb 45
+mputn sb
+mputb 32
+s = get dsev 0
+if eq s 0
+if eq get tk 0 3
+s = ulong 1
+end
+if and eq code 22 ge get cur 0 get inlen 0
+s = ulong 1
+end
+end
+if eq s 1
+mputw 4993454379819552329 8
+mputw 2114900 3
+mputw 4774187554571306322 8
+mputw 2114892 3
+else
+if eq s 2
+mputw 2327894055524716117 8
+mputw 5929342197426179669 8
+mputw 138601579073 5
+else
+mputw 35511885252934 6
+mputw 5929342197426179669 8
+mputw 138601579073 5
+end
+end
+mputw 67505686012704 6
+mputn code
+mputw 67505853393952 6
+hl = get line 0
+if ne get chkmode 0 0
+if gt hl get chkln 0
+hl = sub hl get chkln 0
+else
+hl = ulong 1
+end
+end
+mputn hl
+mputw 4428273620941825312 8
+dexp_w code
+mputw 17280399158765088 7
+mput_tok a b
+mputb 10
+w = write 1 msg 0 get mc 0
+end
+
+fn emit_query to void
+put mc 0 0
+mputw 8462595071175650671 8
+mputw 2869133187838565 7
+mputw 9071406607197043 7
+if eq get curfn 0 0
+mputw 7810779306727075700 8
+mputb 10
+mputw 7166760226508402531 8
+mputw 7142830393916027764 8
+mputw 8028905624785088111 8
+mputw 8392569455039504738 8
+mputw 2338603462594687776 8
+mputw 44651802478 5
+else
+mputw 7957695015192261990 8
+mputb 10
+mputw 7166760226508402531 8
+mputw 2338605647353508724 8
+mputw 7308332192711599721 8
+mputw 7021802451731703328 8
+mputw 8079585727842951280 8
+mputw 9117624560546933 7
+mputw 1702129518 4
+in_loop = ulong 0
+j = get nb 0
+while and eq in_loop 0 gt j 0
+j = sub j 1
+if and ge get bkind j 3 le get bkind j 4
+in_loop = ulong 1
+end
+end
+if ne in_loop 0
+mputw 7142827075067601440 8
+mputw 749134030103146095 8
+else
+mputb 10
+end
+end
+mputw 2879017064423790 7
+i = ulong 0
+while lt i get nn 0
+if ne get nm_name i 0
+mput_name get nm_name i
+mputb 32
+dty_w ulong get nm_type i
+mputb 32
+dname_kind i
+mputb 10
+end
+i = add i 1
+end
+mputw 7957695015192261990 8
+mputw 670323 3
+f = ulong 0
+while lt f get nf 0
+mputw 2125414 3
+mput_fnname f
+mputw 544175136 4
+dty_w ulong get fn_ret f
+np = ulong get fn_np f
+p = ulong 0
+while lt p np
+mputb 32
+dty_w ulong get fn_pt add mul f 6 p
+p = add p 1
+end
+mputb 10
+f = add f 1
+end
+w = write 1 msg 0 get mc 0
+exit int 0
+end
 note ======== names and functions ========
 note findname: packed name -> its index + 1 among the names in scope (0 none). om4 FINDNAME.
 fn findname w ulong to ulong
@@ -8150,6 +8535,13 @@ end
 note ======== the end of the input: the output ========
 note writeout: the output from byte st to the end, to stdout (error 2), then exit 0. om4 WRITEOUT.
 fn writeout st ulong to void
+if eq get chkmode 0 1
+put mc 0 0
+mputw 7594244768023276911 8
+mputw 11207551510369 6
+w = write 1 msg 0 get mc 0
+exit int 0
+end
 if ne get fmtm 0 0
 fmtout
 end
@@ -8353,6 +8745,9 @@ ret ch
 end
 
 fn s_eof to void
+if eq get chkmode 0 2
+emit_query
+end
 if ne get curret 0 0
 fail 15
 end
@@ -8422,11 +8817,13 @@ end
 if ne k 1
 fail 16
 end
-if ne get om2 0 0
-if eq get line 0 get om2ln 0
+if and ne get chkmode 0 0 eq get line 0 get chkln 0
 skipnl
 ret 0
 end
+if and ne get om2 0 0 eq get line 0 get om2ln 0
+skipnl
+ret 0
 end
 if ne cp_kind 0
 fail 30
@@ -12010,6 +12407,7 @@ m = add m 1
 end
 end
 put inlen 0 off
+chk_lead
 om2lead
 if eq get om2m 0 2
 fmtprep
