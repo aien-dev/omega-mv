@@ -127,3 +127,9 @@ Replay mutant set (negative control):
 ```bash
 ./bench/inference_cost/driver.sh --replay-mutants
 ```
+
+## Replay token counts are synthetic
+
+`--replay-ref` and `--replay-mutants` call no model. Their prompt and completion token counts are a placeholder
+(words x 4/3 plus a constant) that only exercises the scorer arithmetic. They are not inference cost and must not be
+quoted as such. Real counts come only from `--run-model`, which reads the endpoint's reported usage (NOT_RUN so far).
