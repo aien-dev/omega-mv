@@ -19,6 +19,12 @@ global tbig ulong 1
 global out uchar 8388608
 global oc ulong 1
 
+note Isolated kernel-leaf ABI experiment, not an adopted kernel target.
+global klmode ulong 1
+global klused ulong 1
+global klrn ulong 1
+global klrets ulong 1024
+
 note ---- OM-2 profile (spec/omegese-om2.md, OMEGESE.md 9.13). om2 is 1 in an OM-2 unit (its first line
 note that is not a note or blank is exactly om2, om2 diag or om2 fmt); om2m 0 compile, 1 diag, 2 fmt;
 note om2ln/om2pos the line number and offset of that line; fmtm 1 while a unit is formatted; lbase and
@@ -231,15 +237,48 @@ global fn_exp uchar 4096
 
 note ======== leaf helpers ========
 
+note Kernel scalar register use is the allocation pool plus explicitly materialized scratch.
+fn klreg r ulong to void
+if and ne get klmode 0 0 and ge r 2 le r 17
+put klused 0 or get klused 0 shl ulong 1 r
+end
+end
+
+fn klret to void
+n = get klrn 0
+if ge n 1024
+fail 14
+end
+put klrets n get oc 0
+put klrn 0 add n 1
+emit 335544320
+end
+
+fn klclear to void
+at = get oc 0
+mask = get klused 0
+for r ulong 18
+if ne and mask shl ulong 1 r 0
+matconst r 0
+end
+end
+emit 3596551104
+for i ulong get klrn 0
+patch26 get klrets i at
+end
+end
+
 note poolc: the i-th register of the pool x0..x6, x8..x15, x17 (x7 is the runtime, x16 scratch)
 fn poolc i ulong to ulong
-if lt i 7
-ret i
+r = i
+if ge i 7
+r = add i 1
 end
-if lt i 15
-ret add i 1
+if ge i 15
+r = ulong 17
 end
-ret 17
+klreg r
+ret r
 end
 
 note pwid: the parameter slots of fn table entry p: 2 for an unsized array (pointer, count), else 1
@@ -1360,6 +1399,60 @@ ret 0
 end
 end
 ret 1
+end
+
+note kleaf is an experimental first-line directive, followed by one pure scalar leaf.
+note Packed directive and BTI c: Wolfram FromDigits reversed ASCII/hex, 439720701035/3573752927.
+fn klprep to void
+if eq lineis 0 439720701035 5 0
+ret
+end
+put klmode 0 1
+put cur 0 skipln 0
+put line 0 1
+n = ulong 0
+go = true
+while go
+tok
+k = get tk 0
+if eq k 3
+go = false
+else
+if eq k 1
+if gt get tl 0 8
+fail 9
+end
+c = kw get tw 0
+if eq get tw 0 3304815
+fail 9
+end
+if eq c 83
+skipnl
+else
+ok = or or eq c 0 eq c 1 eq c 5
+ok = or ok and ge c 33 le c 56
+ok = or ok and ge c 64 le c 68
+ok = or ok and ge c 72 le c 75
+ok = or ok eq c 87
+if not ok
+fail 9
+end
+if eq c 64
+n = add n 1
+end
+end
+else
+if and ne k 0 ne k 2
+fail 9
+end
+end
+end
+end
+if ne n 1
+fail 9
+end
+put cur 0 0
+put line 0 1
 end
 
 note isnote: the word at p is note (the lexer ends a word at a blank, a parenthesis or the end)
@@ -2904,6 +2997,7 @@ note matconst: put a 64-bit value in register r: MOVZ (C6.2.285) or, for a value
 note MOVN (C6.2.284) with the first halfword that differs from the fill, then MOVK (C6.2.283) for each
 note other such halfword. om4 MATCONST.
 fn matconst r ulong v ulong to void
+klreg r
 fill = ulong 0
 mop = ulong 3531603968
 if ne shr v 63 0
@@ -3053,6 +3147,11 @@ end
 note epi: give back the stack of the local arrays, then RET (C6.2.338)
 fn epi to void
 spadd get stkbytes 0
+if ne get klmode 0 0
+matconst 1 0
+klret
+ret
+end
 emit 3596551104
 end
 
@@ -3996,6 +4095,9 @@ note save: n = registers in use (parameters + pool slots), A = 8 (n + 1) rounded
 note (C6.2.457); the stack check; STR Xr, [SP, #8j] for each (C6.2.415); STR X30, [SP, #8n]. Out: svn n,
 note sva A. om4 SAVE.
 fn save to void
+if ne get klmode 0 0
+fail 9
+end
 n = add get npar 0 get nslot 0
 a = shl shr add n 2 1 4
 put svn 0 n
@@ -7134,6 +7236,8 @@ end
 
 note s_fn: fn name (param type | param view T N | param edit T N)* to type | void. om4 S_FN.
 fn s_fn to void
+put klused 0 0
+put klrn 0 0
 if ne get curret 0 0
 fail 15
 end
@@ -7173,6 +7277,15 @@ put curfn 0 add f 1
 put lastfn 0 add f 1
 put fn_addr f get oc 0
 put fstart 0 get oc 0
+if ne get klmode 0 0
+note Exact configured kernel ftrace entry: two pre-entry and two entry NOPs.
+note Wolfram FromDigits["d503201f",16] -> 3573751839.
+emit 3573751839
+emit 3573751839
+put fn_addr f get oc 0
+emit 3573751839
+emit 3573751839
+end
 put fuel 0 0
 put fz_n 0 0
 end
@@ -8506,9 +8619,14 @@ nt0 = get nt 0
 if ne nt0 0
 tail = get oc 0
 if eq get progmode 0 0
+if ne get klmode 0 0
+matconst 0 0
+klret
+else
 emit 2852586464
 emit 4181723376
 emit 3592356352
+end
 else
 emit 2432798752
 emit 3531606952
@@ -8531,6 +8649,9 @@ j = add j 1
 end
 code = add code 1
 end
+end
+if ne get klmode 0 0
+klclear
 end
 put curret 0 0
 put nn 0 get nglob 0
@@ -8840,6 +8961,14 @@ if ne get om2 0 0
 inlcyc
 end
 resolve
+if ne get klmode 0 0
+if or ne get progmode 0 0 ne get fn_ret 0 5
+fail 9
+end
+if or ne get ncalls 0 0 gt sub get oc 0 180 4096
+fail 9
+end
+end
 if ne get progmode 0 0
 eof_prog
 end
@@ -8898,6 +9027,10 @@ ret 1
 end
 if ne k 1
 fail 16
+end
+if and ne get klmode 0 0 eq get line 0 1
+skipnl
+ret 0
 end
 if and ne get chkmode 0 0 eq get line 0 get chkln 0
 skipnl
@@ -12489,6 +12622,7 @@ m = add m 1
 end
 end
 put inlen 0 off
+klprep
 chk_lead
 om2lead
 if eq get om2m 0 2

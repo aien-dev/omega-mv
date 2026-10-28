@@ -1,0 +1,15 @@
+kleaf
+note Exercise all allocated volatile pool registers, including x17.
+fn scrub a ulong b ulong c ulong d ulong e ulong f ulong to ulong
+g = ulong 7
+h = ulong 8
+i = ulong 9
+j = ulong 10
+k = ulong 11
+l = ulong 12
+m = ulong 13
+n = ulong 14
+o = ulong 15
+p = ulong 16
+ret p
+end

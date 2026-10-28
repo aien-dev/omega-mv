@@ -12,6 +12,13 @@ The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
 `spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
 See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
 
+The pending [Linux kernel-leaf experiment](../kernel-profile-design.md) adds a
+restricted `kleaf` function ABI, not a driver or deployed compiler pin. Its
+verification-only runner is `python3 seed/omc/kernel-leaf-experiment.py`, with
+`OMEGA_KERNEL_BRIDGE` naming the companion experimental omega-bridge checkout.
+It executes only unprivileged scalar oracles and builds explicit kbuild objects;
+it neither links/loads a module nor grants kernel effects.
+
 To rebuild omc from the 408-byte seed on your own AArch64 Linux machine and check every rung against
 published hashes without touching tracked files, run `sh seed/challenge/run.sh`
 (see [the seed-chain bootstrap challenge](challenge/CHALLENGE.md)).

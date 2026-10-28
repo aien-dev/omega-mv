@@ -1,0 +1,2 @@
+# Verification-only single object target. Never install or load.
+obj-m := leaf_oracle.o
