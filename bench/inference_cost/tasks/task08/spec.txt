@@ -1,4 +1,4 @@
-version 1
+version 2
 name fibonacci_u32
-params uint
-ret uint
+param n u32
+ret u32

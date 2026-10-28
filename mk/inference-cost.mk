@@ -5,5 +5,5 @@ INFERENCE_COST_MK := 1
 .PHONY: test-inference-cost
 
 test-inference-cost:
-	bash bench/inference_cost/driver.sh --self-test
+	sh bench/inference_cost/driver.sh --self-test
 endif

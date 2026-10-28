@@ -1,13 +1,30 @@
 note bench/inference_cost/scorer.om -- inference-cost scorer in native .om
 note Reads line-oriented plain-text attempt records from stdin (fd 0)
 note and emits the evaluated benchmark summary to stdout (fd 1).
+note
+note Wire version 1 (one language, one arm):
+note   version 1 / attempts N / N rows "<task> <attempt> <first> <comp_rc> <verified>
+note   <wall_ms> <prompt_tok> <completion_tok> <total_tok>"
+note Wire version 2 (per language and arm):
+note   version 2 / attempts N / N rows "<task> <lang> <arm> <attempt> <first> <comp_rc>
+note   <verified> <wall_ms> <prompt_tok> <completion_tok> <total_tok>", lang one of
+note   om c py rs, arm plain or feedback. Version 2 reports one block per (lang, arm)
+note   present, in that order, and adds tokens_per_verified (none when nothing verified).
+note A group PASSes when every task in it verified (verified_count = tasks_total > 0);
+note exit 0 when every group passes, 1 otherwise, 1 for empty input, 2 for truncated or
+note malformed rows (or 983040 bytes of input or more), 3 for an unknown version.
+note Compile as om2: { printf 'om2\n'; cat scorer.om; } | omc
 
-global inbuf uchar 65536
-global out uchar 64
+global inbuf uchar 983040
+global obuf uchar 64
 
 global pos ulong 1
 global inlen ulong 1
-global stats ulong 16
+global tokb ulong 1
+note 8 groups (lang * 2 + arm) of 12 counters: 0 tasks (first rows), 1 compiled,
+note 2 verified, 3 first-attempt verified, 4..6 prompt/completion/total tokens,
+note 7 wall ms, 8 rows, 9 present
+global stats ulong 96
 
 text err "scorer: error\n"
 fn fail code int to void
@@ -30,6 +47,25 @@ if and ge c 48 le c 57
 ret true
 end
 ret false
+end
+
+fn read_all to ulong
+p = ulong 0
+note every pass adds at least one byte or leaves the loop
+while lt p 983040 bound 999999
+k = read 0 inbuf p sub 983040 p
+if lt k 0
+fail 1
+end
+if eq k 0
+break
+end
+p = add p ulong k
+end
+if eq p 983040
+fail 2
+end
+ret p
 end
 
 fn skip_ws to void
@@ -74,23 +110,87 @@ end
 put pos 0 p
 end
 
+note read_tok: the next token is inbuf[tokb .. pos); a missing token is truncated input
+fn read_tok to void
+skip_ws
+put tokb 0 get pos 0
+skip_token
+if eq get pos 0 get tokb 0
+fail 2
+end
+end
+
+fn tok_eq t view uchar * to bool
+b = get tokb 0
+if ne sub get pos 0 b len t
+ret false
+end
+for i ulong len t
+if ne get inbuf add b i get t i
+ret false
+end
+end
+ret true
+end
+
+text l_om "om"
+text l_c "c"
+text l_py "py"
+text l_rs "rs"
+text a_plain "plain"
+text a_feed "feedback"
+
+fn lang_idx to ulong
+read_tok
+if tok_eq l_om
+ret 0
+end
+if tok_eq l_c
+ret 1
+end
+if tok_eq l_py
+ret 2
+end
+if tok_eq l_rs
+ret 3
+end
+fail 2
+ret 0
+end
+
+fn arm_idx to ulong
+read_tok
+if tok_eq a_plain
+ret 0
+end
+if tok_eq a_feed
+ret 1
+end
+fail 2
+ret 0
+end
+
+fn wtext t view uchar * to void
+w = write 1 t 0 len t
+end
+
 text zero_nl "0\n"
 fn put_num v ulong to void
 if eq v 0
 w = write 1 zero_nl 0 len zero_nl
 ret
 end
-put out 31 10
+put obuf 31 10
 p = ulong 31
 x = v
 while gt x 9
 p = sub p 1
-put out p uchar add rem x 10 48
+put obuf p uchar add rem x 10 48
 x = div x 10
 end
 p = sub p 1
-put out p uchar add x 48
-w = write 1 out p sub 32 p
+put obuf p uchar add x 48
+w = write 1 obuf p sub 32 p
 end
 
 text zero_dot "0."
@@ -101,30 +201,36 @@ frac = rem v 1000
 if eq intp 0
 w = write 1 zero_dot 0 len zero_dot
 else
-put out 31 46
+put obuf 31 46
 p = ulong 31
 x = intp
 while gt x 9
 p = sub p 1
-put out p uchar add rem x 10 48
+put obuf p uchar add rem x 10 48
 x = div x 10
 end
 p = sub p 1
-put out p uchar add x 48
-w = write 1 out p sub 32 p
+put obuf p uchar add x 48
+w = write 1 obuf p sub 32 p
 end
 
 d1 = uchar add (div frac 100) 48
 d2 = uchar add (rem (div frac 10) 10) 48
 d3 = uchar add (rem frac 10) 48
-put out 0 d1
-put out 1 d2
-put out 2 d3
-put out 3 10
-w = write 1 out 0 4
+put obuf 0 d1
+put obuf 1 d2
+put obuf 2 d3
+put obuf 3 10
+w = write 1 obuf 0 4
 end
 
 text t_ver "version 1\n"
+text t_ver2 "version 2\n"
+text t_groups "groups "
+text t_group "group "
+text t_sp " "
+text t_nl "\n"
+text t_end "end\n"
 text t_tasks "tasks_total "
 text t_att "attempts_total "
 text t_comp "compiled_count "
@@ -135,6 +241,8 @@ text t_ctok "total_completion_tokens "
 text t_ttok "total_tokens "
 text t_wms "total_wall_ms "
 text t_wsec "total_wall_seconds "
+text t_tpv "tokens_per_verified "
+text t_none "none\n"
 text t_p1k "verified_per_1k_tokens "
 text t_pmin "verified_per_minute "
 text t_stat "status "
@@ -143,8 +251,12 @@ text zmin "0.000\n"
 text t_pass "PASS\n"
 text t_fail "FAIL\n"
 
-fn parse_attempt to void
-skip_token
+fn bump i ulong v ulong to void
+put stats i add get stats i v
+end
+
+note parse_row: the eight numbers after the row's labels, added into group base b
+fn parse_row b ulong to void
 att_n = read_uint
 first = read_uint
 comp_rc = read_uint
@@ -155,110 +267,174 @@ ctok = read_uint
 ttok = read_uint
 
 if eq first 1
-put stats 0 (add (get stats 0) 1)
+bump b 1
 end
 if eq comp_rc 0
-put stats 1 (add (get stats 1) 1)
+bump add b 1 1
 end
 if eq ver_ok 1
-put stats 2 (add (get stats 2) 1)
+bump add b 2 1
 if eq first 1
-put stats 3 (add (get stats 3) 1)
+bump add b 3 1
 end
 end
-put stats 4 (add (get stats 4) ptok)
-put stats 5 (add (get stats 5) ctok)
-put stats 6 (add (get stats 6) ttok)
-put stats 7 (add (get stats 7) wms)
+bump add b 4 ptok
+bump add b 5 ctok
+bump add b 6 ttok
+bump add b 7 wms
+bump add b 8 1
+put stats add b 9 1
 end
 
-fn print_report to int
-w = write 1 t_ver 0 len t_ver
+note print_group: the counters of group base b; 0 when it passes, else 1
+fn print_group b ulong v2 bool to int
+wtext t_tasks
+put_num get stats b
+wtext t_att
+put_num get stats add b 8
+wtext t_comp
+put_num get stats add b 1
+wtext t_verif
+put_num get stats add b 2
+wtext t_fver
+put_num get stats add b 3
+wtext t_ptok
+put_num get stats add b 4
+wtext t_ctok
+put_num get stats add b 5
+wtext t_ttok
+put_num get stats add b 6
+wtext t_wms
+put_num get stats add b 7
+wtext t_wsec
+put_num div get stats add b 7 1000
 
-w = write 1 t_tasks 0 len t_tasks
-put_num (get stats 0)
+tot_tok = get stats add b 6
+n_ver = get stats add b 2
+if v2
+wtext t_tpv
+if gt n_ver 0
+put_fixed3 div mul tot_tok 1000 n_ver
+else
+wtext t_none
+end
+end
 
-w = write 1 t_att 0 len t_att
-put_num (get stats 8)
-
-w = write 1 t_comp 0 len t_comp
-put_num (get stats 1)
-
-w = write 1 t_verif 0 len t_verif
-put_num (get stats 2)
-
-w = write 1 t_fver 0 len t_fver
-put_num (get stats 3)
-
-w = write 1 t_ptok 0 len t_ptok
-put_num (get stats 4)
-
-w = write 1 t_ctok 0 len t_ctok
-put_num (get stats 5)
-
-w = write 1 t_ttok 0 len t_ttok
-put_num (get stats 6)
-
-w = write 1 t_wms 0 len t_wms
-put_num (get stats 7)
-
-w = write 1 t_wsec 0 len t_wsec
-put_num (div (get stats 7) 1000)
-
-w = write 1 t_p1k 0 len t_p1k
-tot_tok = get stats 6
-n_ver = get stats 2
+wtext t_p1k
 if gt tot_tok 0
-rt_tok = div (mul (mul n_ver 1000) 1000) tot_tok
-put_fixed3 rt_tok
+put_fixed3 div (mul (mul n_ver 1000) 1000) tot_tok
 else
-w = write 1 ztok 0 len ztok
+wtext ztok
 end
 
-w = write 1 t_pmin 0 len t_pmin
-tot_ms = get stats 7
+wtext t_pmin
+tot_ms = get stats add b 7
 if gt tot_ms 0
-rt_time = div (mul (mul n_ver 60000) 1000) tot_ms
-put_fixed3 rt_time
+put_fixed3 div (mul (mul n_ver 60000) 1000) tot_ms
 else
-w = write 1 zmin 0 len zmin
+wtext zmin
 end
 
-w = write 1 t_stat 0 len t_stat
-n_tasks = get stats 0
+wtext t_stat
+n_tasks = get stats b
 if and eq n_ver n_tasks gt n_tasks 0
-w = write 1 t_pass 0 len t_pass
+wtext t_pass
 ret 0
-else
-w = write 1 t_fail 0 len t_fail
+end
+wtext t_fail
 ret 1
 end
+
+fn put_label g ulong to void
+lg = div g 2
+if eq lg 0
+wtext l_om
+end
+if eq lg 1
+wtext l_c
+end
+if eq lg 2
+wtext l_py
+end
+if eq lg 3
+wtext l_rs
+end
+wtext t_sp
+if eq rem g 2 0
+wtext a_plain
+else
+wtext a_feed
+end
+wtext t_nl
+end
+
+fn print_v2 to int
+wtext t_ver2
+ng = ulong 0
+for g ulong 8
+if eq get stats add mul g 12 9 1
+ng = add ng 1
+end
+end
+wtext t_groups
+put_num ng
+rc = int 0
+if eq ng 0
+rc = 1
+end
+for g ulong 8
+b = mul g 12
+if eq get stats add b 9 1
+wtext t_group
+put_label g
+s = print_group b true
+if ne s 0
+rc = 1
+end
+wtext t_end
+end
+end
+wtext t_stat
+if eq rc 0
+wtext t_pass
+else
+wtext t_fail
+end
+ret rc
 end
 
 fn main to int
-n = read 0 inbuf 0 65536
-if le n 0
+n = read_all
+if eq n 0
 fail 1
 end
-put inlen 0 (ulong n)
+put inlen 0 n
 put pos 0 0
 
-note Check header: version 1
+note Check header: version 1 or 2
 skip_token
 v = read_uint
-if ne v 1
+if and ne v 1 ne v 2
 fail 3
 end
 
 note attempts N
 skip_token
 att_cnt = read_uint
-put stats 8 att_cnt
 
+if eq v 1
 for i ulong att_cnt
-parse_attempt
+skip_token
+parse_row 0
 end
-
-rc = print_report
-ret rc
+wtext t_ver
+ret print_group 0 false
+end
+for i ulong att_cnt
+skip_token
+lg = lang_idx
+am = arm_idx
+parse_row mul add mul lg 2 am 12
+end
+ret print_v2
 end
