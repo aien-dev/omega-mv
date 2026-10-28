@@ -385,6 +385,39 @@ sources and frozen receipts remain unchanged. A5 kept-constructor and rotate
 bare-unit callers use the independently recorded exits in
 `candidates/s4/export/sec5.cases`, rather than incorrectly requiring exit zero.
 
+Source `3e66b6744590cc72c623d8e09413b9072bcab36e` (compiler source SHA256
+`4b5392fffd25a3a37844ad8bb5138fbaada690be7dae95132614524bdb78a1e0`)
+rebuilds to seeded compiler
+`badedbb0c6287887641fcd7e97301b43b5f82f2d7a2838bbe0d17547873108be`.
+The seed ladder, `sh seed/host/check.sh` and `sh seed/omc/gate5.sh` passed.
+The complete corpus exited 1: **14,936 PASS, 54 FAIL, 10 NOT_RUN,
+216 EXCLUDED**, verdict **FAIL**. All 15,216 outcome-row case names and their
+multiplicities match the preceding complete corpus; no failing case was removed.
+Both independent encoding mutants were caught.
+
+The 54 remaining FAIL records are 17 literal successful-diagnostic mismatches,
+8 growth-refusal coordinate mismatches, 16 historical S2 mutant obligations,
+12 frozen current-C2 obligations, and one pre-OM-2 refusal expectation in
+`leak.cases`. Eight formerly failing mutation-anchor/A5 caller records now pass.
+Two formerly passing S2 growth records now fail literal coordinate parity:
+both targets cleanly refuse error 14, but their emitted-storage ceilings cross
+at different source tokens. These are not relabelled PASS.
+
+The ten NOT_RUN records remain two concrete QEMU ioctl artifacts and eight
+entryless diagnostic-site callers. Native x86 execution remains NOT_RUN.
+The source-bound guide examples ran on both targets: FNV input `abc` emitted
+`0be9471a` with exit 0, narrowing trapped with exit 105, and removing only the
+unmasked store changed that exit to 44. x86 execution is EMULATED; AArch64
+execution is HOST_TESTED.
+
+Additive receipts are `seed/qualification/x86-linux/20261028-orphan-host.json`
+and `20261028-orphan-corpus.json`. They record exact commands, binary/source
+digests, the guard-removal negative control, every remaining obligation, and the
+complete JSONL SHA256. Earlier failed and interrupted receipts are preserved.
+Literal parity, current-C2 compatibility and historical kill assertions remain
+unchanged; an explicit contract decision is required before any revised gate
+scope. This repair is IMPLEMENTED and EXERCISED, not QUALIFIED, MERGED or DEPLOYED.
+
 Disassembly uses bounded chunks starting at decoded instruction boundaries,
 with lookahead for crossing instructions. Every code byte and direct-branch
 target is still checked, including large generated images; the child output
