@@ -77,7 +77,9 @@ mkdir "$stage/source"
 tar -xf "$stage/source.tar" -C "$stage/source"
 verify_source "$stage/pin" "$stage" "$stage" >&2
 sh "$stage/source/om/units.sh" --check
-make -C "$stage/source" OUT_DIR="$stage/build" all
+# Build only the authenticated tree: no inherited MAKEFLAGS/PHYSICS_DIR/CFLAGS/CC may
+# substitute another driver client or flags (a parent make passes PHYSICS_DIR via MAKEFLAGS).
+env -i PATH="$PATH" make -C "$stage/source" PHYSICS_DIR=. OUT_DIR="$stage/build" CC=cc CUDAPP_ENCODER=om all
 sha256sum "$stage/source.tar" > "$stage/source.sha256"
 sha256sum "$stage/pincheck" > "$stage/guard.sha256"
 sha256sum "$stage/build/libcudapp.a" > "$stage/archive.sha256"
