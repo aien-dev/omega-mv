@@ -208,11 +208,21 @@ sandbox() { # mode candidate_file
     sb_file=$2
     # Only the trusted shell can write readiness; fd 3 is closed before candidate code.
     # bwrap's fd 4 namespace JSON is useful telemetry, not proof mount/setup succeeded.
-    sb_start='printf "ready\n" >&3 || exit 125; exec 3>&-; exec "$@"'
+    sb_start='for fd in /proc/self/fd/*; do
+        fd=${fd##*/}
+        case $fd in
+            0|1|2|3) ;;
+            *[!0-9]*) exit 125 ;;
+            *) eval "exec ${fd}>&-" || exit 125 ;;
+        esac
+    done
+    printf "ready\n" >&3 || exit 125
+    exec 3>&-
+    exec "$@"'
     set -- bwrap --unshare-all --unshare-user --disable-userns --die-with-parent --new-session --clearenv --info-fd 4 \
         --setenv PATH /usr/bin --setenv LC_ALL C \
         --ro-bind /usr/lib /usr/lib --symlink usr/lib /lib \
-        --dir /usr/bin --ro-bind "$(readlink -f "$(command -v sh)")" /usr/bin/sh \
+        --dir /usr/bin --ro-bind "$(readlink -f "$(command -v bash)")" /usr/bin/sh \
         --ro-bind "$(readlink -f "$(command -v python3)")" /usr/bin/python3 --symlink usr/bin /bin \
         --proc /proc --dev /dev --tmpfs /tmp --dir /work --chdir /work \
         --ro-bind "$sb_file" /work/candidate
@@ -255,6 +265,8 @@ check_sandbox() {
     need_tool bwrap
     need_tool timeout
     need_tool python3
+    # The sandbox-only shell needs numeric fd redirections above 9 (dash does not).
+    need_tool bash
     # Exercise the actual namespace setup, not merely bwrap's presence in PATH.
     sandbox run /dev/null 3>/dev/null 4>/dev/null >/dev/null 2>&1 ||
         not_run "bubblewrap sandbox is unavailable; no candidate was run"

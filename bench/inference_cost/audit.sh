@@ -130,6 +130,31 @@ EOF
     } > "$ac_dir/readiness-fd.py"
     evaluate py "$TASKS_DIR/task01" "$ac_dir/readiness-fd.py" "$ac_dir/readiness-fd"
     st_expect 'candidate cannot inherit readiness fd' 1 "$VERIFIED"
+    # A caller may hold host files on arbitrary inheritable descriptors. Both
+    # compiler includes and runtime /proc/self/fd reads must lose that access.
+    {
+        printf 'import os\ntry:\n    os.read(99, 1)\nexcept OSError:\n    pass\nelse:\n    raise RuntimeError("inherited host descriptor leaked")\n'
+        cat "$TASKS_DIR/task01/reference.py"
+    } > "$ac_dir/inherited-fd.py"
+    ac_rc=0
+    ac_out=$(bash -c 'exec 99< "$1"; shift; exec "$@"' _ "$TASKS_DIR/task01/expected.txt" \
+        sh "$SCRIPT_DIR/driver.sh" --evaluate-probe py "$ac_dir/inherited-fd.py" "$ac_dir/inherited-py" 2>&1) || ac_rc=$?
+    st_expect 'inherited descriptor runtime control rc' 0 "$ac_rc"
+    case $ac_out in *'COMP_RC=0 RUN_RC=0 VERIFIED=1'*) st_ok 'runtime cannot read inherited host descriptor' ;;
+        *) st_bad 'runtime inherited descriptor was not closed' ;; esac
+    {
+        printf 'const SECRET: &str = include_str!("/proc/self/fd/99");\n'
+        cat "$TASKS_DIR/task01/reference.rs"
+    } > "$ac_dir/inherited-fd.rs"
+    ac_rc=0
+    ac_out=$(bash -c 'exec 99< "$1"; shift; exec "$@"' _ "$TASKS_DIR/task01/expected.txt" \
+        sh "$SCRIPT_DIR/driver.sh" --evaluate-probe rs "$ac_dir/inherited-fd.rs" "$ac_dir/inherited-rs" 2>&1) || ac_rc=$?
+    st_expect 'inherited descriptor compiler control rc' 0 "$ac_rc"
+    if grep -q 'No such file or directory' "$ac_dir/inherited-rs/err.txt"; then
+        st_ok 'compiler cannot read inherited host descriptor'
+    else
+        st_bad 'compiler inherited descriptor was not closed'
+    fi
 
     cat > "$ac_dir/ignore-term.py" <<'EOF'
 import os

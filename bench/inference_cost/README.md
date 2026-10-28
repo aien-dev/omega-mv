@@ -126,16 +126,21 @@ and read-only candidate and system runtime mounts. Compiler sandboxes additional
 headers/tools; Rust exposes only the selected toolchain's compiler and libraries, not its home.
 Inputs enter on stdin and compiler/runtime output leaves on stdout/stderr. The verifier and all
 oracle files remain outside. Compilation has the same bounded deadline as execution. Setup failure
-aborts the run. A trusted shell inside the fully configured sandbox must emit a readiness handshake
-on a dedicated descriptor, then close it before executing candidate-controlled code. The host
-requires that handshake for compilation and execution; bubblewrap namespace JSON alone is not
-readiness evidence because it is emitted before mount setup. Permanent tests exercise late compiler
-and runtime mount failures with real bubblewrap and assert NOT_RUN, as well as descriptor closure.
+aborts the run. A trusted shell inside the fully configured sandbox closes all inherited caller
+descriptors except stdin/stdout/stderr and its dedicated readiness descriptor. It emits a readiness
+handshake, closes that descriptor, then executes candidate-controlled code. The host requires that
+handshake for compilation and execution; bubblewrap namespace JSON alone is not readiness evidence
+because it is emitted before mount setup. Permanent tests exercise late compiler/runtime mount
+failures with real bubblewrap and assert NOT_RUN, descriptor closure, and denial of inherited host
+file reads at both compile time and runtime.
 
-The host dependencies exercised here are bubblewrap 0.9.0, which enforces Linux namespaces and
-mounts, and GNU coreutils `timeout` 9.4, which supplies the host deadline. These are isolation/verification infrastructure,
-not Omega implementations. Their Omega replacement would require a qualified namespace/mount and
-process-tree supervisor; no such replacement is claimed here.
+The host dependencies exercised here are bubblewrap 0.9.0 (Linux namespaces/mounts), GNU coreutils
+`timeout` 9.4 (host deadline), and Bash 5.2.21 (sandbox-only trusted launcher, mounted as `/usr/bin/sh`).
+The driver itself remains POSIX sh. The launcher needs arbitrary numeric descriptor redirections,
+which dash cannot perform above fd 9; it validates the kernel-provided numeric descriptors before
+closing them. These are isolation/verification infrastructure, not Omega implementations. Their
+Omega replacement would require a qualified namespace/mount, process-tree and descriptor supervisor;
+no such replacement is claimed here.
 
 | lang | assembled as | compile |
 |---|---|---|
