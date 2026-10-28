@@ -46,12 +46,10 @@ trap 'rm -rf "$WORK"' EXIT HUP INT TERM
 bash tools/e1_manifest.sh --canonical-overlay "$WORK" >/dev/null || exit 2
 cat "$WORK/cudapp-source.json" >&2
 
-# The scratch copy lives in /tmp, where ../physics does not resolve, so the physics
-# path is made absolute here (PHYSICS_DIR, default ../physics).
-PHYS=$(cd "${PHYSICS_DIR:-../physics}" 2>/dev/null && pwd -P) || {
-    echo "gpu_engine_backend_mutations: physics directory not found (set PHYSICS_DIR)" >&2
-    exit 2
-}
+# Driver declarations come from the same authenticated closure as the C sources;
+# the fake implementation remains the Omega test oracle, never a live driver.
+STAGE=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+PHYS=$(cd "$STAGE/source" && pwd -P) || exit 2
 TP=$PHYS/third_party/nvidia-open-580.173.02
 INC="-I$PHYS/m16 -I$PHYS/nvrm -I$TP/src/common/sdk/nvidia/inc -I$TP/kernel-open/common/inc -I$TP/kernel-open/nvidia-uvm -I$TP/src/nvidia/arch/nvalloc/unix/include"
 SRCS="src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_core.c src/omega_canonical.c src/omega_om_units.c src/cudapp_om_units.c"

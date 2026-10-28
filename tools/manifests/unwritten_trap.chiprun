@@ -9,7 +9,6 @@ GATE=unwritten_trap
 OWNER=unwritten_trap
 TEST_SOURCE="tests/test_omega_unwritten_trap_gb10.c"
 SOURCES="src/omega_unwritten_trap.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
-EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 # Same default as the old script.
 RUN_ARGS="--chip --repeats 3000"
 # Every line starting with the trap tag is a verdict candidate (this includes NOT_RUN lines);
@@ -40,6 +39,8 @@ CHILD_EXIT_PASSTHROUGH=1
 canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
 canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage") || return 2
 canonical_root=$(cd -P "$canonical_stage/source" && pwd) || return 2
+PHYSICS=$canonical_root
+EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 canonical_sources=
 for canonical_file in $SOURCES; do
     case $canonical_file in
