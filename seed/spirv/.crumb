@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-29T01:41:23Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:fce1a5e21ee6196b27311b71962ae921bf67ec46b08ec8496b2bf6b1adc99f6f",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 8,
+      "generated_at_commit": "28a7b749a6da68407af60a7cccaf34dc2e5eab48",
+      "source_tree": "sha256:4de38a7cc086f62c54f17ec6bfe984bfd9c38ab68953b3ea12a9314546ece1b9"
+    }
+  },
+  "layer": "seed",
+  "name": "spirv",
+  "purpose": "Seeded Omega OSC IR v1 to SPIR-V OpenCL Kernel backend with CPU differential verification and demo",
+  "schema_version": "1.0.0"
+}

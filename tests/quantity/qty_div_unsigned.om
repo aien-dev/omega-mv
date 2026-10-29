@@ -1,0 +1,10 @@
+fn main to int
+a = qty 18446744073709551615
+b = qty 2
+c = div a b
+z = qty 9223372036854775807
+if eq c z
+ret 0
+end
+ret 1
+end

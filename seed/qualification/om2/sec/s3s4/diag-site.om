@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 114-116: with om2 diag a run-time trap site table follows the artifact on
+note stderr as omc-site 1 line=N iter=k records, iter=- outside unrolled copies; stdout is unchanged.
+note Function mode (no stack trap, section 6 line 202), one unsigned div by a run-time divisor: exactly one
+note trap site (OMEGESE 9.3 trap 2), line 8. Expected stderr exp/diag-site.err; same artifact as diag-site-plain.om.
+om2 diag
+fn f a ulong b ulong to ulong
+ret div a b
+end

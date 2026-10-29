@@ -1,0 +1,22 @@
+v6-sum run seed/qualification/om2/sec/s5s7/v6-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+v6-idx run seed/qualification/om2/sec/s5s7/v6-idx.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+v6-idx-edit run seed/qualification/om2/sec/s5s7/v6-idx-edit.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+v6-write run seed/qualification/om2/sec/s5s7/v6-write.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+v6-slots7 refuse seed/qualification/om2/sec/s5s7/v6-slots7.om 9
+v6-slots6 emit seed/qualification/om2/sec/s5s7/v6-slots6.om any - 0
+v6-fm-e2 emit seed/qualification/om2/sec/s5s7/v6-fm-e2.om any - 0
+t-dup run seed/qualification/om2/sec/s5s7/om1/t-dup.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+t-allops run seed/qualification/om2/sec/s5s7/om1/t-allops.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-allops.out - 0
+t-shactx run seed/qualification/om2/sec/s5s7/om1/t-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out - 0
+t-endian run seed/qualification/om2/sec/s5s7/om1/t-endian.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-endian.out - 0
+t-sum run seed/qualification/om2/sec/s5s7/om1/t-sum.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-sum.out - 0
+t-edit run seed/qualification/om2/sec/s5s7/om1/t-edit.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-edit.out - 0
+t-sle run seed/qualification/om2/sec/s5s7/om1/t-sle.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+t-names run seed/qualification/om2/sec/s5s7/om1/t-names.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/t-names.out - 0
+t-slw run seed/qualification/om2/sec/s5s7/om1/t-slw.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+t-slt run seed/qualification/om2/sec/s5s7/om1/t-slt.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+t-slo run seed/qualification/om2/sec/s5s7/om1/t-slo.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+t-order run seed/qualification/om2/sec/s5s7/om1/t-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 102
+t-trap10 run seed/qualification/om2/sec/s5s7/om1/t-trap10.om+seed/qualification/om2/sec/s5s7/pr.om - - - 110
+t-shl64 run seed/qualification/om2/sec/s5s7/om1/t-shl64.om+seed/qualification/om2/sec/s5s7/pr.om - - - 107
+t-unsized16 emit seed/qualification/om2/sec/s5s7/om1/t-unsized16.om - err:5:16 16

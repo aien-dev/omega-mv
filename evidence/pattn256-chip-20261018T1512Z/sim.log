@@ -1,0 +1,15 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+sim one token at position 0                    ok bad=0 worst=0.000 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0) (0.1 s)
+sim 8 tokens from 0 (one CTA)                  ok bad=0 worst=0.286 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0) (0.1 s)
+sim 37 tokens from 0 (odd m, partial CTA)      ok bad=0 worst=0.254 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0) (0.9 s)
+sim 19 tokens from 37 (odd start)              ok bad=0 worst=0.136 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0) (0.8 s)
+sim 19 tokens from 100, sharp q (x4)           ok bad=0 worst=0.088 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0) (0.9 s)
+sim 40 tokens from 250 (crosses 256)           ok bad=0 worst=0.059 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0) (3.7 s)
+sim 24 tokens from 0, full rope (rotary 256)   ok bad=0 worst=0.292 rows vs decode twin: 0 differ; vs reference: ok (1 one-ulp k flips, worst token 1) (0.4 s)
+sim prep mutant 1 at 24 tokens from 40: caught (bad=3122843 worst=31.641 rows vs decode twin: 96 differ; vs reference: token 0 k[0] slot 0 chip bf9f ref 3f5c)
+sim prep mutant 3 at 24 tokens from 40: caught (bad=3135017 worst=95.649 rows vs decode twin: 192 differ; vs reference: token 0 v[0][0] chip 0000 ref 3f41)
+sim attend mutant 1 at 24 tokens from 40: caught (bad=114761 worst=76.729 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0))
+sim attend mutant 2 at 24 tokens from 40: caught (bad=110456 worst=374.128 rows vs decode twin: 0 differ; vs reference: ok (0 one-ulp k flips, worst token 0))
+sim: 53330976 warp issues in total
+gpu_prefill_attn256_test: 29 checks, 0 failed: PASS

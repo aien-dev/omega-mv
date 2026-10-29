@@ -1,0 +1,1364 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "status": "EXERCISED_NOT_QUALIFIED",
+  "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+  "compiler_source_sha256": "96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e",
+  "full_suite": {
+    "source_commit": "7ab5fdd067884fd3044155084b39163da1be5c8a",
+    "command": "python3 seed/omc/qualify-x86.py --compiler seed/out/omc --qemu QEMU_10_0_14 --bridge BRIDGE/tools/native --bridge-baseline-compiler BASELINE_734F --objdump x86_64-linux-gnu-objdump",
+    "exit": 1,
+    "raw_log_sha256": "f57bbad346dd18bc10e6b4506268681c546bda71f850391f8b92bb85503dd152",
+    "observations": [
+      {
+        "status": "NOT_RUN",
+        "case": "seed/host/tests/devcall.om",
+        "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF",
+        "source_sha256": "ca76010ea6cf2ab7acd8b8fab36234dcaad8f2cede057e01a52e840842a2e8ed",
+        "evidence": {
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [],
+          "original_case": "seed/host/tests/devcall.om",
+          "runtime_args": [],
+          "runtime_stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "emulator_artifact": {
+          "classification": "EMULATOR_ARTIFACT",
+          "syscall": "ioctl",
+          "fd": -1,
+          "request": 3223340587,
+          "native_required_errno": "EBADF",
+          "qemu_observed_errno": "ENOTTY",
+          "qemu_trace_line": "3588460 ioctl(-1,0xc020462b,0x107ffdd0) = -1 errno=25 (Inappropriate ioctl for device)",
+          "qemu_trace_sha256": "fb4fc297fe1cdd926586b25e98f135049bc00a4102f7d53c933f3c439ae795b5",
+          "upstream_source": "https://github.com/qemu/qemu/blob/v10.0.14/linux-user/syscall.c#L5713-L5717",
+          "upstream_source_sha256": "0d6212a547d456f47612a4c297e093dd60fe59ad021f44e3f21e5c6bb9be0cf7",
+          "upstream_checked_source_path": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/qemu-10.0.14/linux-user/syscall.c",
+          "upstream_source_archive": "https://download.qemu.org/qemu-10.0.14.tar.xz",
+          "upstream_source_archive_sha256": "c7230968906fdb5540d803e2af1f515e77590a414f2a4dbd3ec9ada3c47083d0",
+          "qemu_binary_sha256": "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee",
+          "upstream_excerpt": "        if (ie->target_cmd == 0) {\n            qemu_log_mask(\n                LOG_UNIMP, \"Unsupported ioctl: cmd=0x%04lx\\n\", (long)cmd);\n            return -TARGET_ENOTTY;\n        }\n",
+          "upstream_excerpt_sha256": "f3eab9ff7ef300cb0c45892c5bfb11bf9cdca7a5c08cb7f4eb61b9639125584b"
+        },
+        "diagnostics": {
+          "default_compile": {
+            "exit": 0,
+            "stdout_bytes": 5432,
+            "stdout_sha256": "4e91a65c6550a1d297b8315a9e7ff7c3810824cfc3075f2aafb047e3847251a1",
+            "stdout_prefix": "b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x008\\x15\\x00\\x00\\x00\\x00\\x00\\x008\\x15\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "x86_compile": {
+            "exit": 0,
+            "stdout_bytes": 28089,
+            "stdout_sha256": "c772940e5464b92b40d7aade2449415eb03574c373e46d6c90d70629d1c937bd",
+            "stdout_prefix": "b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00>\\x00\\x01\\x00\\x00\\x00\\x84m@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\xb9m\\x00\\x00\\x00\\x00\\x00\\x00\\xb9m\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "default_run": {
+            "exit": 0,
+            "stdout_bytes": 37,
+            "stdout_sha256": "5eddae088a707439e6fc9ce21371c5ead9c1715bef37f5ce77a5be734d6b682f",
+            "stdout_prefix": "b'PASS native device parameter binding\\n'",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "x86_run": {
+            "exit": 80,
+            "stdout_bytes": 0,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_prefix": "b''",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "default_filesystem": {},
+          "x86_filesystem": {}
+        },
+        "oracle_instructions": 4083
+      },
+      {
+        "status": "NOT_RUN",
+        "case": "seed/host/tests/uvmctl.om",
+        "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF",
+        "source_sha256": "1e7b46b9d0fb44f5c97768f92daa7599e9b36e6d5cbc6553ac755a7c02047b5f",
+        "evidence": {
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [],
+          "original_case": "seed/host/tests/uvmctl.om",
+          "runtime_args": [],
+          "runtime_stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "emulator_artifact": {
+          "classification": "EMULATOR_ARTIFACT",
+          "syscall": "ioctl",
+          "fd": -1,
+          "request": 805306369,
+          "native_required_errno": "EBADF",
+          "qemu_observed_errno": "ENOTTY",
+          "qemu_trace_line": "3590912 ioctl(-1,0x30000001,0x10800008) = -1 errno=25 (Inappropriate ioctl for device)",
+          "qemu_trace_sha256": "36ed146cabb6bf975f2017d42275401d7a1f1cd72bb13e72f1c7ebec081976d6",
+          "upstream_source": "https://github.com/qemu/qemu/blob/v10.0.14/linux-user/syscall.c#L5713-L5717",
+          "upstream_source_sha256": "0d6212a547d456f47612a4c297e093dd60fe59ad021f44e3f21e5c6bb9be0cf7",
+          "upstream_checked_source_path": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/qemu-10.0.14/linux-user/syscall.c",
+          "upstream_source_archive": "https://download.qemu.org/qemu-10.0.14.tar.xz",
+          "upstream_source_archive_sha256": "c7230968906fdb5540d803e2af1f515e77590a414f2a4dbd3ec9ada3c47083d0",
+          "qemu_binary_sha256": "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee",
+          "upstream_excerpt": "        if (ie->target_cmd == 0) {\n            qemu_log_mask(\n                LOG_UNIMP, \"Unsupported ioctl: cmd=0x%04lx\\n\", (long)cmd);\n            return -TARGET_ENOTTY;\n        }\n",
+          "upstream_excerpt_sha256": "f3eab9ff7ef300cb0c45892c5bfb11bf9cdca7a5c08cb7f4eb61b9639125584b"
+        },
+        "diagnostics": {
+          "default_compile": {
+            "exit": 0,
+            "stdout_bytes": 3988,
+            "stdout_sha256": "a1c40ff274fb4dfe3e3b51a4a8a8cb56f516191f6841ce2cd0ca54263ba50692",
+            "stdout_prefix": "b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x94\\x0f\\x00\\x00\\x00\\x00\\x00\\x00\\x94\\x0f\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "x86_compile": {
+            "exit": 0,
+            "stdout_bytes": 30345,
+            "stdout_sha256": "96c59dc4644397dc3010214a1e1b6673d728e7155c0d6e26783ed9fc0c745330",
+            "stdout_prefix": "b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00>\\x00\\x01\\x00\\x00\\x00Tv@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x89v\\x00\\x00\\x00\\x00\\x00\\x00\\x89v\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "default_run": {
+            "exit": 0,
+            "stdout_bytes": 33,
+            "stdout_sha256": "d3db277e2313aaa844fe47b83741d313dab5d4ea5955d27996520695ed41a705",
+            "stdout_prefix": "b'PASS bounded native UVM requests\\n'",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "x86_run": {
+            "exit": 80,
+            "stdout_bytes": 0,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_prefix": "b''",
+            "stderr_bytes": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": ""
+          },
+          "default_filesystem": {},
+          "x86_filesystem": {}
+        },
+        "oracle_instructions": 4309
+      },
+      {
+        "status": "NOT_RUN",
+        "case": "seed/omc/om2/s4/s4.cases:22:s4-v-pwrite-text",
+        "reason": "source e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb requires unreviewed effects: pwrite",
+        "source_sha256": "e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb",
+        "evidence": {
+          "conductor_row": "s4-v-pwrite-text run seed/omc/om2/s4/v-pwrite-text.om - file:seed/omc/om2/s4/v-pwrite-text.out - 0",
+          "source_spec": "seed/omc/om2/s4/v-pwrite-text.om",
+          "conductor_deadline_seconds": 30,
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [],
+          "original_case": "seed/omc/om2/s4/s4.cases:22:s4-v-pwrite-text"
+        },
+        "host_words": [
+          "pwrite"
+        ],
+        "oracle_instructions": 406,
+        "data_carveouts": [
+          [
+            518,
+            524
+          ]
+        ]
+      },
+      {
+        "status": "NOT_RUN",
+        "case": "seed/omc/om2/s4/v-pwrite-text.om",
+        "reason": "source e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb requires unreviewed effects: pwrite",
+        "source_sha256": "e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb",
+        "evidence": {
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [],
+          "original_case": "seed/omc/om2/s4/v-pwrite-text.om"
+        },
+        "host_words": [
+          "pwrite"
+        ],
+        "oracle_instructions": 406,
+        "data_carveouts": [
+          [
+            518,
+            524
+          ]
+        ]
+      },
+      {
+        "status": "PASS",
+        "case": "seed/qualification/om2/sec/s5s7/candidate.cases:276:sha-big-1",
+        "reason": "original C-boundary/gate obligation, actual reviewed driver",
+        "source_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+        "evidence": {
+          "conductor_row": "sha-big-1 notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case",
+          "unit_sources": [
+            {
+              "path": "om/sha256/sha256-om2.om",
+              "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+            }
+          ],
+          "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+          "reason": "needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case",
+          "requirement": "contract 214: one update of 2^32+3 bytes",
+          "manifest_sha256": "d7e3c1655c1b20c86581725cd52c133867367896ceb17a519995c8733cb72ce4",
+          "review_revision": "becf5c817",
+          "boundary": "actual generated SysV C bridge; private-body coverage remains separate",
+          "effects": "caller-local arrays, stdout; big mode additionally read-only anonymous MAP_NORESERVE 4294967299-byte zero mapping, released with munmap; no file/device/network",
+          "oracle": "original sha_driver.c and pinned expected.h; no rewritten digest expectations",
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [
+            "big"
+          ],
+          "original_case": "seed/qualification/om2/sec/s5s7/candidate.cases:276:sha-big-1"
+        },
+        "bridge_result": {
+          "exit": 0,
+          "stdout": "PASS sha-empty init, final = sha256(\"\")\nPASS sha-abc abc\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\nPASS sha-split3-zero three-way splits with length-0 updates between them\nPASS sha-bytewise 1000 one-byte updates\nPASS sha-update-null0 update(NULL, 0) is an empty update (ABI: len 0 any pointer)\nPASS sha-hash-overlap0 sha256_hash(buf, 64, buf)\nPASS sha-hash-overlap16 sha256_hash(buf, 64, buf + 16)\nPASS sha-hash-overlap-before digest [8,40) overlapping data [32,96)\nPASS sha-post-final init, update, final after a final == fresh context\nPASS sha-no-init-safe update, final without init returned (digest unspecified; memory safety only)\nPASS sha-hash-eq-stream hash(n) == init, update(n), final == python, n in {0,1,55,56,63,64,65,119,120,1000}\nPASS sha-ctx-copy byte copy after k updates, both continued: equal digests (E3)\nPASS sha-big-1 one update of 2^32+3 zero bytes\nPASS sha-big-split updates of 2^32-1 and 4 zero bytes\nPASS sha-big-hash hash of 2^32+3 zero bytes\nPASS SHA driver: 0 failure(s)\n",
+          "stderr": "",
+          "operation": "c-driver",
+          "observations": [
+            {
+              "architecture": "aarch64",
+              "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+              "args": [
+                "big"
+              ],
+              "stdin_hex": "",
+              "deadline_seconds": 3600,
+              "caller_resources": [
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
+                  "sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48"
+                },
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/expected.h",
+                  "sha256": "26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495"
+                }
+              ],
+              "unit_sources": [
+                {
+                  "path": "om/sha256/sha256-om2.om",
+                  "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+                }
+              ],
+              "baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+              "bridge_tool_sha256": "1d62607e131dfa603a97aec5dbc1a9d82d76fb71df8f6015d706e59071c2ae7b",
+              "bridge_generator_sha256": "6cdd7f05f02f776bcc04cdf827af4cb45d7107254c3b3a88780a4c8bfda1ea52",
+              "cc": "/usr/bin/cc",
+              "cc_version": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+              "generated_c_sha256": "dfd1a100f3ac333bc6850573b26b291516fc83566045151a4387c8375a5f9c99",
+              "generated_library_sha256": "03e3fae70a0efb2f8d138b674ccba8cdece45d7175ee3632f4725b44392f09eb",
+              "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+              "driver_binary_sha256": "4663ee2d28914acdb23b9362b7410cac24d4cdcdd0b5c69b86552541b4c7df48",
+              "mutation": null,
+              "link": {
+                "exit": 0,
+                "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_prefix": "b''",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "symbol_names": [
+                "omega2_ident_sha256_om2",
+                "omega2_sha256_final",
+                "omega2_sha256_hash",
+                "omega2_sha256_init",
+                "omega2_sha256_update"
+              ],
+              "symbol_observation": {
+                "exit": 0,
+                "stdout_bytes": 198,
+                "stdout_sha256": "17a1b54de5fed4753ab238ce61a5eb289a3906c7feb85bef01ebad0a81a9efe7",
+                "stdout_prefix": "b'0000000000001124 T omega2_ident_sha256_om2\\n0000000000001390 T omega2_sha256_final\\n00000000000014d0 T omega2_sha256_hash\\n0000000000001130 T omega2_sha256_init\\n00'",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "observed": {
+                "exit": 0,
+                "stdout_bytes": 1017,
+                "stdout_sha256": "10bef560acf53c25197e3a7a0eb66e4684a00feb83bf537515430db669bb57ef",
+                "stdout_prefix": "b'PASS sha-empty init, final = sha256(\"\")\\nPASS sha-abc abc\\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\\nPASS sha-split3-zero three-way splits with '",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              }
+            },
+            {
+              "architecture": "x86_64",
+              "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+              "args": [
+                "big"
+              ],
+              "stdin_hex": "",
+              "deadline_seconds": 3600,
+              "caller_resources": [
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
+                  "sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48"
+                },
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/expected.h",
+                  "sha256": "26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495"
+                }
+              ],
+              "unit_sources": [
+                {
+                  "path": "om/sha256/sha256-om2.om",
+                  "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+                }
+              ],
+              "baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+              "bridge_tool_sha256": "1d62607e131dfa603a97aec5dbc1a9d82d76fb71df8f6015d706e59071c2ae7b",
+              "bridge_generator_sha256": "6cdd7f05f02f776bcc04cdf827af4cb45d7107254c3b3a88780a4c8bfda1ea52",
+              "cc": "/usr/bin/x86_64-linux-gnu-gcc",
+              "cc_version": "x86_64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+              "generated_c_sha256": "71e8d35ed1c59df35bae5386d82d5b9ce13a3aa381b17e3d2f005da21b0f62ec",
+              "generated_library_sha256": "b063e77a8e3c1fa8dd8d33f4a3b849c8956150d7c0579381a97c86f38e98a524",
+              "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+              "driver_binary_sha256": "59a187e7e6c5c58dc23790cc10936b7a63588fe102e792f1f3443b86c139bf69",
+              "mutation": null,
+              "link": {
+                "exit": 0,
+                "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_prefix": "b''",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "symbol_names": [
+                "omega2_ident_sha256_om2",
+                "omega2_sha256_final",
+                "omega2_sha256_hash",
+                "omega2_sha256_init",
+                "omega2_sha256_update"
+              ],
+              "symbol_observation": {
+                "exit": 0,
+                "stdout_bytes": 198,
+                "stdout_sha256": "b548670c684471336b9e4359896c17a723fd22c01a1b84975f4591060324689b",
+                "stdout_prefix": "b'00000000000015f0 T omega2_ident_sha256_om2\\n00000000000018b0 T omega2_sha256_final\\n0000000000001a30 T omega2_sha256_hash\\n0000000000001600 T omega2_sha256_init\\n00'",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "observed": {
+                "exit": 0,
+                "stdout_bytes": 1017,
+                "stdout_sha256": "10bef560acf53c25197e3a7a0eb66e4684a00feb83bf537515430db669bb57ef",
+                "stdout_prefix": "b'PASS sha-empty init, final = sha256(\"\")\\nPASS sha-abc abc\\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\\nPASS sha-split3-zero three-way splits with '",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              }
+            }
+          ],
+          "runtime_filesystem_changes": [
+            {},
+            {}
+          ],
+          "comparison": "actual C/SysV native-AArch64 versus EMULATED x86_64"
+        },
+        "control_kind": "c-driver",
+        "evidence_kind": "original explicit oracle",
+        "contract_status": "original fixed obligation"
+      },
+      {
+        "status": "PASS",
+        "case": "seed/qualification/om2/sec/s5s7/candidate.cases:278:sha-big-split",
+        "reason": "original C-boundary/gate obligation, actual reviewed driver",
+        "source_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+        "evidence": {
+          "conductor_row": "sha-big-split notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case",
+          "unit_sources": [
+            {
+              "path": "om/sha256/sha256-om2.om",
+              "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+            }
+          ],
+          "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+          "reason": "needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case",
+          "requirement": "contract 214: updates of 2^32-1 and 4 bytes",
+          "manifest_sha256": "d7e3c1655c1b20c86581725cd52c133867367896ceb17a519995c8733cb72ce4",
+          "review_revision": "becf5c817",
+          "boundary": "actual generated SysV C bridge; private-body coverage remains separate",
+          "effects": "caller-local arrays, stdout; big mode additionally read-only anonymous MAP_NORESERVE 4294967299-byte zero mapping, released with munmap; no file/device/network",
+          "oracle": "original sha_driver.c and pinned expected.h; no rewritten digest expectations",
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [
+            "big"
+          ],
+          "original_case": "seed/qualification/om2/sec/s5s7/candidate.cases:278:sha-big-split"
+        },
+        "bridge_result": {
+          "exit": 0,
+          "stdout": "PASS sha-empty init, final = sha256(\"\")\nPASS sha-abc abc\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\nPASS sha-split3-zero three-way splits with length-0 updates between them\nPASS sha-bytewise 1000 one-byte updates\nPASS sha-update-null0 update(NULL, 0) is an empty update (ABI: len 0 any pointer)\nPASS sha-hash-overlap0 sha256_hash(buf, 64, buf)\nPASS sha-hash-overlap16 sha256_hash(buf, 64, buf + 16)\nPASS sha-hash-overlap-before digest [8,40) overlapping data [32,96)\nPASS sha-post-final init, update, final after a final == fresh context\nPASS sha-no-init-safe update, final without init returned (digest unspecified; memory safety only)\nPASS sha-hash-eq-stream hash(n) == init, update(n), final == python, n in {0,1,55,56,63,64,65,119,120,1000}\nPASS sha-ctx-copy byte copy after k updates, both continued: equal digests (E3)\nPASS sha-big-1 one update of 2^32+3 zero bytes\nPASS sha-big-split updates of 2^32-1 and 4 zero bytes\nPASS sha-big-hash hash of 2^32+3 zero bytes\nPASS SHA driver: 0 failure(s)\n",
+          "stderr": "",
+          "operation": "c-driver",
+          "observations": [
+            {
+              "architecture": "aarch64",
+              "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+              "args": [
+                "big"
+              ],
+              "stdin_hex": "",
+              "deadline_seconds": 3600,
+              "caller_resources": [
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
+                  "sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48"
+                },
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/expected.h",
+                  "sha256": "26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495"
+                }
+              ],
+              "unit_sources": [
+                {
+                  "path": "om/sha256/sha256-om2.om",
+                  "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+                }
+              ],
+              "baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+              "bridge_tool_sha256": "1d62607e131dfa603a97aec5dbc1a9d82d76fb71df8f6015d706e59071c2ae7b",
+              "bridge_generator_sha256": "6cdd7f05f02f776bcc04cdf827af4cb45d7107254c3b3a88780a4c8bfda1ea52",
+              "cc": "/usr/bin/cc",
+              "cc_version": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+              "generated_c_sha256": "dfd1a100f3ac333bc6850573b26b291516fc83566045151a4387c8375a5f9c99",
+              "generated_library_sha256": "03e3fae70a0efb2f8d138b674ccba8cdece45d7175ee3632f4725b44392f09eb",
+              "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+              "driver_binary_sha256": "4663ee2d28914acdb23b9362b7410cac24d4cdcdd0b5c69b86552541b4c7df48",
+              "mutation": null,
+              "link": {
+                "exit": 0,
+                "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_prefix": "b''",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "symbol_names": [
+                "omega2_ident_sha256_om2",
+                "omega2_sha256_final",
+                "omega2_sha256_hash",
+                "omega2_sha256_init",
+                "omega2_sha256_update"
+              ],
+              "symbol_observation": {
+                "exit": 0,
+                "stdout_bytes": 198,
+                "stdout_sha256": "17a1b54de5fed4753ab238ce61a5eb289a3906c7feb85bef01ebad0a81a9efe7",
+                "stdout_prefix": "b'0000000000001124 T omega2_ident_sha256_om2\\n0000000000001390 T omega2_sha256_final\\n00000000000014d0 T omega2_sha256_hash\\n0000000000001130 T omega2_sha256_init\\n00'",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "observed": {
+                "exit": 0,
+                "stdout_bytes": 1017,
+                "stdout_sha256": "10bef560acf53c25197e3a7a0eb66e4684a00feb83bf537515430db669bb57ef",
+                "stdout_prefix": "b'PASS sha-empty init, final = sha256(\"\")\\nPASS sha-abc abc\\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\\nPASS sha-split3-zero three-way splits with '",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              }
+            },
+            {
+              "architecture": "x86_64",
+              "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+              "args": [
+                "big"
+              ],
+              "stdin_hex": "",
+              "deadline_seconds": 3600,
+              "caller_resources": [
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
+                  "sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48"
+                },
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/expected.h",
+                  "sha256": "26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495"
+                }
+              ],
+              "unit_sources": [
+                {
+                  "path": "om/sha256/sha256-om2.om",
+                  "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+                }
+              ],
+              "baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+              "bridge_tool_sha256": "1d62607e131dfa603a97aec5dbc1a9d82d76fb71df8f6015d706e59071c2ae7b",
+              "bridge_generator_sha256": "6cdd7f05f02f776bcc04cdf827af4cb45d7107254c3b3a88780a4c8bfda1ea52",
+              "cc": "/usr/bin/x86_64-linux-gnu-gcc",
+              "cc_version": "x86_64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+              "generated_c_sha256": "71e8d35ed1c59df35bae5386d82d5b9ce13a3aa381b17e3d2f005da21b0f62ec",
+              "generated_library_sha256": "b063e77a8e3c1fa8dd8d33f4a3b849c8956150d7c0579381a97c86f38e98a524",
+              "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+              "driver_binary_sha256": "59a187e7e6c5c58dc23790cc10936b7a63588fe102e792f1f3443b86c139bf69",
+              "mutation": null,
+              "link": {
+                "exit": 0,
+                "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_prefix": "b''",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "symbol_names": [
+                "omega2_ident_sha256_om2",
+                "omega2_sha256_final",
+                "omega2_sha256_hash",
+                "omega2_sha256_init",
+                "omega2_sha256_update"
+              ],
+              "symbol_observation": {
+                "exit": 0,
+                "stdout_bytes": 198,
+                "stdout_sha256": "b548670c684471336b9e4359896c17a723fd22c01a1b84975f4591060324689b",
+                "stdout_prefix": "b'00000000000015f0 T omega2_ident_sha256_om2\\n00000000000018b0 T omega2_sha256_final\\n0000000000001a30 T omega2_sha256_hash\\n0000000000001600 T omega2_sha256_init\\n00'",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "observed": {
+                "exit": 0,
+                "stdout_bytes": 1017,
+                "stdout_sha256": "10bef560acf53c25197e3a7a0eb66e4684a00feb83bf537515430db669bb57ef",
+                "stdout_prefix": "b'PASS sha-empty init, final = sha256(\"\")\\nPASS sha-abc abc\\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\\nPASS sha-split3-zero three-way splits with '",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              }
+            }
+          ],
+          "runtime_filesystem_changes": [
+            {},
+            {}
+          ],
+          "comparison": "actual C/SysV native-AArch64 versus EMULATED x86_64"
+        },
+        "control_kind": "c-driver",
+        "evidence_kind": "original explicit oracle",
+        "contract_status": "original fixed obligation"
+      },
+      {
+        "status": "PASS",
+        "case": "seed/qualification/om2/sec/s5s7/candidate.cases:280:sha-big-hash",
+        "reason": "original C-boundary/gate obligation, actual reviewed driver",
+        "source_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+        "evidence": {
+          "conductor_row": "sha-big-hash notrun needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case",
+          "unit_sources": [
+            {
+              "path": "om/sha256/sha256-om2.om",
+              "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+            }
+          ],
+          "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+          "reason": "needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case",
+          "requirement": "contract 214, 223: hash of 2^32+3 bytes",
+          "manifest_sha256": "d7e3c1655c1b20c86581725cd52c133867367896ceb17a519995c8733cb72ce4",
+          "review_revision": "becf5c817",
+          "boundary": "actual generated SysV C bridge; private-body coverage remains separate",
+          "effects": "caller-local arrays, stdout; big mode additionally read-only anonymous MAP_NORESERVE 4294967299-byte zero mapping, released with munmap; no file/device/network",
+          "oracle": "original sha_driver.c and pinned expected.h; no rewritten digest expectations",
+          "stdin_bytes": 0,
+          "stdin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "args": [
+            "big"
+          ],
+          "original_case": "seed/qualification/om2/sec/s5s7/candidate.cases:280:sha-big-hash"
+        },
+        "bridge_result": {
+          "exit": 0,
+          "stdout": "PASS sha-empty init, final = sha256(\"\")\nPASS sha-abc abc\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\nPASS sha-split3-zero three-way splits with length-0 updates between them\nPASS sha-bytewise 1000 one-byte updates\nPASS sha-update-null0 update(NULL, 0) is an empty update (ABI: len 0 any pointer)\nPASS sha-hash-overlap0 sha256_hash(buf, 64, buf)\nPASS sha-hash-overlap16 sha256_hash(buf, 64, buf + 16)\nPASS sha-hash-overlap-before digest [8,40) overlapping data [32,96)\nPASS sha-post-final init, update, final after a final == fresh context\nPASS sha-no-init-safe update, final without init returned (digest unspecified; memory safety only)\nPASS sha-hash-eq-stream hash(n) == init, update(n), final == python, n in {0,1,55,56,63,64,65,119,120,1000}\nPASS sha-ctx-copy byte copy after k updates, both continued: equal digests (E3)\nPASS sha-big-1 one update of 2^32+3 zero bytes\nPASS sha-big-split updates of 2^32-1 and 4 zero bytes\nPASS sha-big-hash hash of 2^32+3 zero bytes\nPASS SHA driver: 0 failure(s)\n",
+          "stderr": "",
+          "operation": "c-driver",
+          "observations": [
+            {
+              "architecture": "aarch64",
+              "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+              "args": [
+                "big"
+              ],
+              "stdin_hex": "",
+              "deadline_seconds": 3600,
+              "caller_resources": [
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
+                  "sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48"
+                },
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/expected.h",
+                  "sha256": "26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495"
+                }
+              ],
+              "unit_sources": [
+                {
+                  "path": "om/sha256/sha256-om2.om",
+                  "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+                }
+              ],
+              "baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+              "bridge_tool_sha256": "1d62607e131dfa603a97aec5dbc1a9d82d76fb71df8f6015d706e59071c2ae7b",
+              "bridge_generator_sha256": "6cdd7f05f02f776bcc04cdf827af4cb45d7107254c3b3a88780a4c8bfda1ea52",
+              "cc": "/usr/bin/cc",
+              "cc_version": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+              "generated_c_sha256": "dfd1a100f3ac333bc6850573b26b291516fc83566045151a4387c8375a5f9c99",
+              "generated_library_sha256": "03e3fae70a0efb2f8d138b674ccba8cdece45d7175ee3632f4725b44392f09eb",
+              "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+              "driver_binary_sha256": "4663ee2d28914acdb23b9362b7410cac24d4cdcdd0b5c69b86552541b4c7df48",
+              "mutation": null,
+              "link": {
+                "exit": 0,
+                "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_prefix": "b''",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "symbol_names": [
+                "omega2_ident_sha256_om2",
+                "omega2_sha256_final",
+                "omega2_sha256_hash",
+                "omega2_sha256_init",
+                "omega2_sha256_update"
+              ],
+              "symbol_observation": {
+                "exit": 0,
+                "stdout_bytes": 198,
+                "stdout_sha256": "17a1b54de5fed4753ab238ce61a5eb289a3906c7feb85bef01ebad0a81a9efe7",
+                "stdout_prefix": "b'0000000000001124 T omega2_ident_sha256_om2\\n0000000000001390 T omega2_sha256_final\\n00000000000014d0 T omega2_sha256_hash\\n0000000000001130 T omega2_sha256_init\\n00'",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "observed": {
+                "exit": 0,
+                "stdout_bytes": 1017,
+                "stdout_sha256": "10bef560acf53c25197e3a7a0eb66e4684a00feb83bf537515430db669bb57ef",
+                "stdout_prefix": "b'PASS sha-empty init, final = sha256(\"\")\\nPASS sha-abc abc\\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\\nPASS sha-split3-zero three-way splits with '",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              }
+            },
+            {
+              "architecture": "x86_64",
+              "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+              "args": [
+                "big"
+              ],
+              "stdin_hex": "",
+              "deadline_seconds": 3600,
+              "caller_resources": [
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/sha_driver.c",
+                  "sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48"
+                },
+                {
+                  "path": "seed/qualification/om2/oracle/s5s7/sha/expected.h",
+                  "sha256": "26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495"
+                }
+              ],
+              "unit_sources": [
+                {
+                  "path": "om/sha256/sha256-om2.om",
+                  "sha256": "dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb"
+                }
+              ],
+              "baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+              "bridge_tool_sha256": "1d62607e131dfa603a97aec5dbc1a9d82d76fb71df8f6015d706e59071c2ae7b",
+              "bridge_generator_sha256": "6cdd7f05f02f776bcc04cdf827af4cb45d7107254c3b3a88780a4c8bfda1ea52",
+              "cc": "/usr/bin/x86_64-linux-gnu-gcc",
+              "cc_version": "x86_64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+              "generated_c_sha256": "71e8d35ed1c59df35bae5386d82d5b9ce13a3aa381b17e3d2f005da21b0f62ec",
+              "generated_library_sha256": "b063e77a8e3c1fa8dd8d33f4a3b849c8956150d7c0579381a97c86f38e98a524",
+              "driver_sha256": "50ac882ad0e4ec19f3076ad29d52ffa864ac5960490116f9f6c72fc9ef0f7b48",
+              "driver_binary_sha256": "59a187e7e6c5c58dc23790cc10936b7a63588fe102e792f1f3443b86c139bf69",
+              "mutation": null,
+              "link": {
+                "exit": 0,
+                "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_prefix": "b''",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "symbol_names": [
+                "omega2_ident_sha256_om2",
+                "omega2_sha256_final",
+                "omega2_sha256_hash",
+                "omega2_sha256_init",
+                "omega2_sha256_update"
+              ],
+              "symbol_observation": {
+                "exit": 0,
+                "stdout_bytes": 198,
+                "stdout_sha256": "b548670c684471336b9e4359896c17a723fd22c01a1b84975f4591060324689b",
+                "stdout_prefix": "b'00000000000015f0 T omega2_ident_sha256_om2\\n00000000000018b0 T omega2_sha256_final\\n0000000000001a30 T omega2_sha256_hash\\n0000000000001600 T omega2_sha256_init\\n00'",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              },
+              "observed": {
+                "exit": 0,
+                "stdout_bytes": 1017,
+                "stdout_sha256": "10bef560acf53c25197e3a7a0eb66e4684a00feb83bf537515430db669bb57ef",
+                "stdout_prefix": "b'PASS sha-empty init, final = sha256(\"\")\\nPASS sha-abc abc\\nPASS sha-split2 every two-way split k = 0..1000 of seq:1000\\nPASS sha-split3-zero three-way splits with '",
+                "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr": ""
+              }
+            }
+          ],
+          "runtime_filesystem_changes": [
+            {},
+            {}
+          ],
+          "comparison": "actual C/SysV native-AArch64 versus EMULATED x86_64"
+        },
+        "control_kind": "c-driver",
+        "evidence_kind": "original explicit oracle",
+        "contract_status": "original fixed obligation"
+      },
+      {
+        "summary": {
+          "PASS": 15179,
+          "NOT_RUN": 4,
+          "EXCLUDED": 222
+        },
+        "reasons": [
+          {
+            "status": "EXCLUDED",
+            "reason": "compiler-selection directive build/om2-qual/cand-s1/omc.om; subsequent rows retain this compiler identity",
+            "count": 11
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "compiler-selection directive build/om2-qual/cand-s2/omc.om; subsequent rows retain this compiler identity",
+            "count": 4
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "compiler-selection directive build/om2-qual/cand-s3/omc.om; subsequent rows retain this compiler identity",
+            "count": 5
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "compiler-selection directive build/om2-qual/cand-s4/omc.om; subsequent rows retain this compiler identity",
+            "count": 9
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "compiler-selection directive pinned; subsequent rows retain this compiler identity",
+            "count": 33
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "compiler-selection directive seed/omc/omc.om; subsequent rows retain this compiler identity",
+            "count": 50
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "conductor-only metadata: exact 1-second deadline attached to subsequent child arms",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "conductor-only metadata: exact 10-second deadline attached to subsequent child arms",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "conductor-only metadata: exact 120-second deadline attached to subsequent child arms",
+            "count": 3
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "conductor-only metadata: exact 2-second deadline attached to subsequent child arms",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "conductor-only metadata: exact 30-second deadline attached to subsequent child arms",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "conductor-only metadata: exact 60-second deadline attached to subsequent child arms",
+            "count": 6
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/contracts/mutant-from.txt seed/omc/contracts/mutant-to.txt; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/contracts/proof-mutant-from.txt seed/omc/contracts/proof-mutant-to.txt; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/hexU.from seed/omc/om2/s1/mut/hexU.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/hexd.from seed/omc/om2/s1/mut/hexd.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/kwlong.from seed/omc/om2/s1/mut/kwlong.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/optin.from seed/omc/om2/s1/mut/optin.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/paren.from seed/omc/om2/s1/mut/paren.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/rchk.from seed/omc/om2/s1/mut/rchk.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/tyunk.from seed/omc/om2/s1/mut/tyunk.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/brk.from seed/omc/om2/s2/mut/brk.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/cyc.from seed/omc/om2/s2/mut/cyc.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/depth.from seed/omc/om2/s2/mut/depth.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/div0.from seed/omc/om2/s2/mut/div0.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/idx.from seed/omc/om2/s2/mut/idx.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/sovf.from seed/omc/om2/s2/mut/sovf.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s2/mut/ucount.from seed/omc/om2/s2/mut/ucount.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/act.from seed/omc/om2/s3/mut/act.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/aer.from seed/omc/om2/s3/mut/aer.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/aex.from seed/omc/om2/s3/mut/aex.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/aop.from seed/omc/om2/s3/mut/aop.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/araw.from seed/omc/om2/s3/mut/araw.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/e16.from seed/omc/om2/s3/mut/e16.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/fuel.from seed/omc/om2/s3/mut/fuel.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/fzc.from seed/omc/om2/s3/mut/fzc.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/fzl.from seed/omc/om2/s3/mut/fzl.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/fzn.from seed/omc/om2/s3/mut/fzn.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/fzr.from seed/omc/om2/s3/mut/fzr.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/fzu.from seed/omc/om2/s3/mut/fzu.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/lix.from seed/omc/om2/s3/mut/lix.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s3/mut/rev.from seed/omc/om2/s3/mut/rev.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/p19.from seed/omc/om2/s4/mut/p19.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/pfirst.from seed/omc/om2/s4/mut/pfirst.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/preadwr.from seed/omc/om2/s4/mut/preadwr.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/pwrap.from seed/omc/om2/s4/mut/pwrap.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/slot.from seed/omc/om2/s4/mut/slot.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/textlen.from seed/omc/om2/s4/mut/textlen.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/tramp.from seed/omc/om2/s4/mut/tramp.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/baseline/mutants/iv.from seed/qualification/om2/baseline/mutants/iv.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/baseline/mutants/k0.from seed/qualification/om2/baseline/mutants/k0.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/baseline/mutants/nowrite.from seed/qualification/om2/baseline/mutants/nowrite.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/baseline/mutants/order.from seed/qualification/om2/baseline/mutants/order.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/baseline/mutants/rot.from seed/qualification/om2/baseline/mutants/rot.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/baseline/mutants/split.from seed/qualification/om2/baseline/mutants/split.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/diag-col0.from seed/qualification/om2/candidates/s1/mutants/diag-col0.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/fmt-note.from seed/qualification/om2/candidates/s1/mutants/fmt-note.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/fmt-text.from seed/qualification/om2/candidates/s1/mutants/fmt-text.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/hex-17.from seed/qualification/om2/candidates/s1/mutants/hex-17.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/hex-upper.from seed/qualification/om2/candidates/s1/mutants/hex-upper.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.from seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.from seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s1/mutants/rot-nocheck.from seed/qualification/om2/candidates/s1/mutants/rot-nocheck.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s2/mutants/fold-div0.from seed/qualification/om2/candidates/s2/mutants/fold-div0.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s2/mutants/unroll-kminus1.from seed/qualification/om2/candidates/s2/mutants/unroll-kminus1.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s2/mutants/unroll-kplus1.from seed/qualification/om2/candidates/s2/mutants/unroll-kplus1.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s3/mutants/check-erased.from seed/qualification/om2/candidates/s3/mutants/check-erased.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s3/mutants/ctor-bypass.from seed/qualification/om2/candidates/s3/mutants/ctor-bypass.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s3/mutants/fresh-noreset.from seed/qualification/om2/candidates/s3/mutants/fresh-noreset.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s3/mutants/fresh-union.from seed/qualification/om2/candidates/s3/mutants/fresh-union.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s4/mutants/part-nofirst.from seed/qualification/om2/candidates/s4/mutants/part-nofirst.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s4/mutants/part-nosecond.from seed/qualification/om2/candidates/s4/mutants/part-nosecond.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s4/mutants/part-order.from seed/qualification/om2/candidates/s4/mutants/part-order.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s4/mutants/part-wrapped.from seed/qualification/om2/candidates/s4/mutants/part-wrapped.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/candidates/s4/mutants/view-nocheck.from seed/qualification/om2/candidates/s4/mutants/view-nocheck.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/compiler-mutants/guard-wrapped.from seed/qualification/om2/compiler-mutants/guard-wrapped.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/compiler-mutants/shr-imm-plus1.from seed/qualification/om2/compiler-mutants/shr-imm-plus1.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/callexit.from seed/qualification/om2/leak/mutants/callexit.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/cbtaint.from seed/qualification/om2/leak/mutants/cbtaint.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/flagsweak.from seed/qualification/om2/leak/mutants/flagsweak.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/loadpub.from seed/qualification/om2/leak/mutants/loadpub.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/norevoke.from seed/qualification/om2/leak/mutants/norevoke.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/nostub.from seed/qualification/om2/leak/mutants/nostub.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/pubrange.from seed/qualification/om2/leak/mutants/pubrange.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/leak/mutants/slotoff.from seed/qualification/om2/leak/mutants/slotoff.to; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/selftest/exit-from.txt seed/qualification/om2/selftest/exit-to.txt; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 2
+          },
+          {
+            "status": "EXCLUDED",
+            "reason": "stateful substitution seed/qualification/om2/selftest/none-from.txt seed/qualification/om2/selftest/exit-to.txt; not a standalone source; interpreted by the next arm or complete original selftest conductor",
+            "count": 1
+          },
+          {
+            "status": "NOT_RUN",
+            "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF",
+            "count": 2
+          },
+          {
+            "status": "NOT_RUN",
+            "reason": "source e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb requires unreviewed effects: pwrite",
+            "count": 2
+          }
+        ],
+        "oracle_mnemonic_counts": {
+          "add": 11447395,
+          "addsd": 9,
+          "addss": 1,
+          "and": 249800,
+          "bswap": 25,
+          "call": 4089662,
+          "cmp": 13993626,
+          "cqo": 629,
+          "cvtsd2ss": 2,
+          "cvtss2sd": 12,
+          "cvttsd2si": 49,
+          "div": 55961,
+          "divsd": 11,
+          "idiv": 629,
+          "imul": 99667,
+          "ja": 625169,
+          "jae": 1909336,
+          "jb": 8948479,
+          "jbe": 113384,
+          "je": 1304970,
+          "jg": 13355,
+          "jge": 184638,
+          "jl": 33082,
+          "jle": 76,
+          "jmp": 801938,
+          "jne": 719409,
+          "jo": 26961,
+          "jp": 81,
+          "lea": 11839835,
+          "leave": 1783685,
+          "mfence": 88,
+          "mov": 396316786,
+          "movabs": 38195483,
+          "movd": 31,
+          "movq": 323,
+          "movsx": 5,
+          "movsxd": 55,
+          "movzx": 1065136,
+          "mul": 8,
+          "mulsd": 8,
+          "mulss": 2,
+          "neg": 895,
+          "nop": 800922,
+          "not": 73985,
+          "or": 355692,
+          "push": 732457,
+          "rep": 33197,
+          "ret": 1783685,
+          "rex": 86446,
+          "ror": 1143,
+          "sar": 16189,
+          "seta": 66615,
+          "setae": 26942,
+          "setb": 14205,
+          "setbe": 20163,
+          "sete": 303660,
+          "setg": 6918,
+          "setge": 26331,
+          "setl": 59374,
+          "setle": 13163,
+          "setne": 61500,
+          "shl": 3205179,
+          "shr": 927070,
+          "sqrtsd": 4,
+          "sqrtss": 2,
+          "sub": 5935025,
+          "subsd": 3,
+          "syscall": 11621108,
+          "test": 456953,
+          "ucomisd": 186,
+          "ucomiss": 2,
+          "xor": 491391
+        },
+        "coverage_limits": [
+          "Every emitted code byte is linearly decoded, including unreachable functions; direct branches must target decoded instruction boundaries",
+          "Only source-matched JMP-protected literal/padding spans are carved out; ambiguous/missing data maps fail closed",
+          "Mnemonic counts are not exhaustive encoding-template, register, width, displacement or trap coverage",
+          "The default baseline may share frontend defects; invalid and valid-but-wrong encoding controls challenge separate oracles",
+          "Frozen C2 retains exact historical inputs; original frontend modes compare unchanged bytes through native/x86-hosted compilers, separately from cross-target code generation",
+          "Reviewed content-pinned host drivers run in separate architecture-local directories and compare persistent filesystem effects; other host effects remain NOT_RUN",
+          "Bare callers execute original unit bytes through architecture-specific ABI wrappers and observe full-width returns/arrays; missing callers remain individually NOT_RUN",
+          "process exec enters a native AArch64 helper in both runs, not an x86 child; generation retirement uses the original fixture's exact ceiling3 compiler variant on both targets",
+          "psync invokes syncfs on its scratch-file descriptor and therefore flushes the scratch filesystem; no service process is controlled",
+          "No hardware qualification"
+        ],
+        "verdict": "FAIL"
+      }
+    ]
+  },
+  "followup": {
+    "source_commit": "00ebdee8461467f26e7ec7b56289ab6549f2c0a2",
+    "change": "Only reviewed fd1 text-write driver plus generated crumb; compiler bytes unchanged",
+    "command": "Existing qualification runner restricted to v-pwrite-text.om, its s4.cases row, t_exit.om and encoding negative controls",
+    "exit": 0,
+    "summary": {
+      "PASS": 5
+    },
+    "raw_log_sha256": "32b6b78c34fd0408a77dc3d8efcf730e7251eac045d2f77fe523ad5882e4e249"
+  },
+  "other_checks": {
+    "seed_gate5": "PASS",
+    "om_units": "PASS",
+    "crumb": "PASS",
+    "evidence_immutable": "PASS",
+    "zero_disk_secrets": "PASS",
+    "exact_diagnostic_negative_controls": "PASS",
+    "historical_stale_binding_controls": "PASS",
+    "bridge_six_languages_and_failed_missing_toolchain_controls": "PASS"
+  },
+  "remaining": [
+    "devcall and uvmctl invalid-fd ioctl: QEMU reports ENOTTY rather than native EBADF",
+    "Native x86 execution NOT_RUN",
+    "Independent review and merge pending"
+  ],
+  "limits": [
+    "Full-suite verdict remains FAIL because NOT_RUN is not PASS",
+    "Full suite ran before the isolated text-write driver addition; followup execution covers both formerly unrun text-write cases",
+    "Historical failed experiments retain their original FAIL verdicts; replay success does not qualify those historical mutations",
+    "No GPU, firmware, service or deployment qualification"
+  ]
+}

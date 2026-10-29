@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of the trap-10 exit status (contract 149, 151; OMEGESE 9.8): trap 10 exits 110.
+fn main to int
+trap 10
+end

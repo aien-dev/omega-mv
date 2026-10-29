@@ -1,0 +1,36 @@
+PROVENANCE: seed/qualification/om2/oracle/s3s4 (#748, ledger L836, lane QualPhaseB.FixRotUnroll, 2026-10-25)
+
+These files are independent ORACLES for the fixtures in seed/qualification/om2/sec/s3s4. They model the
+documented semantics (contract spec/omegese-om2.md sections 3-4, frozen sha 245bb74e..., errata E1-E7;
+docs/one_layer/OMEGESE.md 9.2-9.4 at main acb3f15) in Python integers. They never run, read or copy the
+output of any Omega compiler. Host: DGX Spark, Linux aarch64.
+
+Tool: Python 3.12.3 (/usr/bin/python3).
+
+1. oracle.py -> exp/
+   Command (from the worktree root):  python3 seed/qualification/om2/oracle/s3s4/oracle.py
+   Writes exp/<name>.out (exact expected stdout, one decimal per line), exp/exits.txt ("<name> <exit>",
+   exit = main's value mod 256, or 100 + trap code), and the mutant predictions exp/mut/<model>.out with
+   exp/mutants.txt ("<model> <exit> <first differing stdout byte, 0-based>").
+   Also asserts that each rotation operand (uchar 177, ushort 45508, uint 4041331395,
+   ulong 9305357566071262703) has w distinct rotations.
+   sha256 oracle.py           16032f8e2637785639fca548422292234fd43155691acdfc7b35a4ec195d800a
+   sha256 exp/exits.txt       ee5b50973de2eb5d48e6c0da140fe4045864651ac1ce9891108c4d28236f0ee3
+   sha256 exp/mutants.txt     d6339f6c543d4f2665ff56a337fb328d04557104ff6ca641e5c94f33ba0b94ac
+
+2. pinned_rule.py -> pinned-refusals.txt
+   Command:  python3 seed/qualification/om2/oracle/s3s4/pinned_rule.py \
+               > seed/qualification/om2/oracle/s3s4/pinned-refusals.txt
+   "<fixture> <line> <code>": the refusal of each OM-2 fixture by the pinned OM-1 compiler 734f0a39,
+   from the OM-1 rules written in the script's header (names pass first, OMEGESE 9.2; `*` length and
+   `out` kind error 16, OMEGESE 9.4/9.11; a word after the return type error 5, the code reported by
+   the FixInvariants lane; otherwise the om2 line, error 16, contract section 0 lines 13-14).
+   sha256 pinned_rule.py      5880d151c42d44577313a733f61339ecf737d67ea20f8b46bdc8d288c9c60a29
+   sha256 pinned-refusals.txt c029a9acc22652f2eeaf5cef9171c81b16af4c0e0864bfb641df076455f3d833
+
+Cross-check (HOST): sec/s3s4/pinned.cases runs every OM-1 twin against these same exp files and every
+OM-2 fixture against pinned-refusals.txt under 734f0a39 with gate-b 44ec9a6a...f611:
+OM2GATE PASS cases=145 pass=145 fail=0 invalid=0 not_run=0
+(seed/qualification/om2/evidence/phaseB/s3s4-pinned.log). The OM-1 twins are a second, independent
+computation of every run expectation except the OM-2-only ones (constant-index-into-view D case uses a
+run-time index in the twin; see sec/s3s4/README.txt).
