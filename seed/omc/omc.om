@@ -8134,7 +8134,7 @@ if ne get tk 0 4
 fail 16
 end
 br = ulong 0
-if ne get xtarget 0 0
+if and ne get xtarget 0 0 ne get tl 0 0
 br = xbranch 14
 end
 a = add get oc 0 4194304
@@ -8171,10 +8171,13 @@ end
 m = add m 1
 end
 end
+note Empty text carries no data or padding; its zero count forbids every access.
+if ne n 0
 while ne and get oc 0 3 0
 emitb 0
 end
-if ne get xtarget 0 0
+end
+if ne br 0
 xpatch br get oc 0
 end
 addname w 0 2 n 5 a
@@ -15059,6 +15062,9 @@ end
 
 fn xunary op ulong dst ulong to void
 ty = get rt 0
+if eq ty 13
+fail 7
+end
 if or eq ty 10 eq ty 11
 if eq op 50
 fail 7

@@ -194,6 +194,10 @@ b0bf509e7383e3532db4a548406f37bc6c8000e4ba0023c3f239eca724eea032 seed/qualificat
 729054dd66a64449b34d9db594b7e2babc2c396d982a0da8a9cc6af03dc96668 seed/qualification/om2/sec/s3s4/slots-6s.om
 278556501859427e66202c6a685f4af8d737aa395932463f633eb564193d83b3 seed/qualification/om2/sec/s3s4/slots-out6.om
 f578c1f645e8a7e6112b2f45028fa8a018f73fad2149d0de16141607b0969ccc seed/qualification/om2/sec/s3s4/diag-site-plain.om
+1ab250b1d4e7d2f437ee680cce5a8918752cf0ef8efe1d89b490270005ceb294 seed/qualification/om2/sec/s3s4/diag-site.om
+06c137ece7a94b3e6f5e19043bd6045fbe5208019b4366a43de9cb7558cee587 seed/qualification/om2/sec/s3s4/diag-site-rolled.om
+035d21b803806853451dc2f408cc29c3490714b7b73081dd8cfe4b283abb2f85 seed/qualification/om2/sec/s3s4/diag-site-unroll.om
+f4c545da9cfed4a6884b39634a371c09353139992f0be377dcea2f4e65e9187d seed/qualification/om2/sec/s3s4/diag-site-nest.om
 781ba1bf2768974166c10a3724acbf766080db732bee8d195fa3d872a5ab05c9 seed/qualification/om2/sec/s3s4/diag-site-rolled-plain.om
 050c286588e3066c396697c397c999a6ac8aa98334cc9c3bb3fcb43a6d8c084f seed/qualification/om2/sec/s3s4/diag-site-unroll-plain.om
 432b642f9b3f5a0502705ef06d61502f4312e82c85adb58b64e5791a5d553e49 seed/qualification/om2/sec/s3s4/diag-site-nest-plain.om
@@ -225,6 +229,12 @@ eb16f331ad57fcae0eba99ddfedc9874120733eaa0ae487e57f26d3beda619d5 seed/wasm/mutan
 
 # Entryless diagnostic and leak fixtures retain their actual last-function ABI.
 REVIEWED_SOURCES.update({
+    "8e1b8605e8d77c792a2aaf6adeb2167a38a538d0857792b006eeafd408d78e94":
+        "seed/omc/om2/s3/a-kept-diag.om",
+    "79d2da33312969e14d9cdefe34b19306cce03471d91add08aa1e0285af22cf9c":
+        "seed/qualification/om2/sec/s5s7/a5-kept-diag.om",
+    "20773907e95cbc9b1e157be91b099dc1ad13ab6ca79d2966e4259a93a8625eff":
+        "seed/qualification/om2/sec/s5s7/a5-swap-diag.om",
     "af6c2faa6087359c0c51bcd5d61d973143f45d4719eb98278370bfb03284a79e":
         "seed/omc/om2/s3/a-exact-diag.om",
     "2702ef2f9bcf2fbadd6c9ced8382a13f1939378c024a5c5706d167d98798be13":
@@ -395,6 +405,11 @@ def bare_calls(root, rel, source):
                 spec["expected_exit"] = None
                 spec["evidence"]["result_authority"] = "seed/rung4/gate4.sh cmpc; native differential, not independent semantics"
             trap = None
+            if sha in (
+                "8e1b8605e8d77c792a2aaf6adeb2167a38a538d0857792b006eeafd408d78e94",
+                "79d2da33312969e14d9cdefe34b19306cce03471d91add08aa1e0285af22cf9c",
+            ):
+                trap = 110  # dup32 halves differ; original s3/sec5 kept controls.
             if index == 1 and sha in (
                 "1de96237beb1b2d7d76fb226cd930036d8cc1d8c82faf4114f3309a1396365a5",
                 "3490824f6e8cb82e661c7a408e8e4264790875e9e0147914ad4b0571dde0fc79",
@@ -410,6 +425,10 @@ def bare_calls(root, rel, source):
                 trap = 105  # original reachable-trap conversion counterexample
             if index == 1 and sha in (
                 "432b642f9b3f5a0502705ef06d61502f4312e82c85adb58b64e5791a5d553e49",
+                "1ab250b1d4e7d2f437ee680cce5a8918752cf0ef8efe1d89b490270005ceb294",
+                "06c137ece7a94b3e6f5e19043bd6045fbe5208019b4366a43de9cb7558cee587",
+                "035d21b803806853451dc2f408cc29c3490714b7b73081dd8cfe4b283abb2f85",
+                "f4c545da9cfed4a6884b39634a371c09353139992f0be377dcea2f4e65e9187d",
                 "f578c1f645e8a7e6112b2f45028fa8a018f73fad2149d0de16141607b0969ccc",
                 "781ba1bf2768974166c10a3724acbf766080db732bee8d195fa3d872a5ab05c9",
                 "050c286588e3066c396697c397c999a6ac8aa98334cc9c3bb3fcb43a6d8c084f",
@@ -428,6 +447,7 @@ def bare_calls(root, rel, source):
             if sha in (
                 "af6c2faa6087359c0c51bcd5d61d973143f45d4719eb98278370bfb03284a79e",
                 "2702ef2f9bcf2fbadd6c9ced8382a13f1939378c024a5c5706d167d98798be13",
+                "20773907e95cbc9b1e157be91b099dc1ad13ab6ca79d2966e4259a93a8625eff",
             ):
                 # Exact dup32 constructor: zero and all-one representation
                 # boundaries, observing the entire returned representation.
@@ -1044,7 +1064,9 @@ def bridge_plan(root, name):
                                        "new":identity.replace(b"profile=OM-2",b"profile=OM-1"),"count":1},
         }
         common.update(operation="units-check",units=[],args=("--check",),expected_exit=1,
-                      resources=[resource(path,sha) for path,sha in STRICT_UNIT_PINS.items()],
+                      resources=[{"path":path, "sha256":sha,
+                                  "git_revision":"6999fa9e6dae4847c155ef4eacaece74f491d3ca",
+                                  "git_path":path} for path,sha in STRICT_UNIT_PINS.items()],
                       script="om/units.sh",script_sha256=STRICT_UNIT_PINS["om/units.sh"],
                       strict_compiler={"git_revision":"6999fa9e6dae4847c155ef4eacaece74f491d3ca",
                                        "git_path":"seed/out/omc","sha256":STRICT_OMC_SHA256},

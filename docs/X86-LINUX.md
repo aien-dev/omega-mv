@@ -2,7 +2,8 @@
 
 Status: **DRAFT; native x86 qualification NOT_RUN**, 2026-10-28.
 The canonical integration base is `aien-dev/omega-mv` commit
-`6999fa9e6dae4847c155ef4eacaece74f491d3ca`; the historical backend is
+`d94a503f7aae57d09697046405da2e9a5895be6d`, with compiler batch 3 integrated
+at `7bce2a4fddc43268ac2af09cddc4a5a67d78312d`; the historical backend is
 `7eca2ac3fbd1f35a7d65471065408ce4bea07fd4`. Current implementation lives in
 `seed/omc/omc.om`. Source anchors describe implementation, not by themselves
 execution evidence. The dated baseline below is immutable history; resumed
@@ -424,6 +425,35 @@ target is still checked, including large generated images; the child output
 file limit is not treated as malformed compiler output or waived.
 
 ## Standalone qualification oracle
+
+### Current acceptance contracts (2026-10-28 integration)
+
+The current integration preserves every frozen manifest and historical receipt.
+Current acceptance applies the already declared `manifest-c2-capacity.txt` and
+`manifest-c2-batch2.txt` deltas to their named rows, while separately replaying
+the original rows against their pinned historical compiler. The old OM-1
+`s1-rot-refused` assertion likewise remains a historical replay; the current
+assertion comes from `leak/candidate.cases` and requires OM-2 acceptance.
+
+`seed/omc/x86-diagnostic-contracts.json` declares exact diagnostics for specific,
+source-hash-pinned inputs on each target. It retains all stack checks, source
+coordinates and unrolled iteration records. Changed, missing or extra records
+fail. Growth refusals require the declared error and empty output. For the
+frozen branch-range cases that x86 accepts, the checker additionally decodes the
+artifact and requires an explicit execution result; a default-target refusal
+alone cannot qualify that target artifact. Inputs outside this table retain
+the exact translated diagnostic comparison.
+
+The historical S2 mutant experiments include failed kills. Their original
+expected PASS and observed FAIL remain in the replay record, with the exact
+failure line. A successful reproduction means only that the old failed
+experiment was reproduced; it is never evidence of a successful mutant kill or
+current compiler acceptance. The current S1-S4 mutant suites remain separate.
+
+Repeated conductor decoding may reuse a result only for identical artifact
+and source hashes. It does not cache case verdicts or skip conductor execution.
+Empty text emits no literal bytes, so the decoder does not carve out an empty
+data region. Native x86 execution remains a separate qualification requirement.
 
 `seed/omc/qualify-x86.py` is a read-only host verification oracle, not backend
 implementation or a build/runtime dependency. The coordinator command

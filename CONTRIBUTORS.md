@@ -43,3 +43,4 @@ Update this table in the same commit as the work it credits.
 | Codex | Integrated compiler batch #904 with the quantity and diagnostic audit on current main; rebuilt compiler and bindings, refreshed pinned checks, and repaired the recursive-inline mutant anchor without changing its obligation. |
 
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
+| Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |

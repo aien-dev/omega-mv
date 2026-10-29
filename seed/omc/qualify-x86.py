@@ -124,10 +124,10 @@ HOST_DRIVERS = {sha: name for name, sha in (row.split() for row in HOST_PINS.spl
 # RESULTS.txt:38-43 describes exactly the listed refusals/format/diag failures.
 CONDUCTOR_FAILURES = {
     "seed/omc/contracts/mutant.cases": "mutant-requires mutant-proof",
-    "seed/omc/om2/s1/s1-mutants.cases": "m-rotl m-rchk m-hexd m-hexU m-optin m-paren m-unk m-tyunk",
+    "seed/omc/om2/s1/s1-mutants.cases": "m-rotl m-rchk m-hexd m-hexU m-optin m-paren m-unk m-tyunk m-kwlong",
     "seed/omc/om2/s2/s2-mutants.cases": "m-div0 m-sovf m-ucount m-brk m-idx m-depth m-cyc",
     "seed/omc/om2/s3/s3-mutants.cases": "m-l-ovl m-l-rev m-l-lix m-l-past m-fuel m-e16-d3 m-e16-inl m-fzu m-fzl m-fzc m-fzr m-fzn m-aer m-aex m-act m-aop m-araw",
-    "seed/omc/om2/s4/s4-mutants.cases": "m-uce m-slot m-pwrap m-pfirst m-p19 m-tramp",
+    "seed/omc/om2/s4/s4-mutants.cases": "m-uce m-slot m-pwrap m-pfirst m-p19 m-tramp m-preadwr m-textlen",
     "seed/qualification/om2/candidates/s1/s1-lexmutants.cases":
         "hex-upper-s1-d-hexupper hex-upper-s1-d-hexupper-plain hex-upper-s2-r6-upper hex-upper-s2-r6-mixed hex-upper-s2-r6-upper-ulong "
         "hex-17-s2-r6-17small hex-17-s2-r6-17big diag-col0-s1-d-left diag-col0-s1-d-eof-left diag-col0-s1-d-hexrange diag-col0-s1-d-unknown-fn "
@@ -509,7 +509,9 @@ def selftest_expectations(path):
 def conductor_case(path, name, line, alternate, compiler_subst):
     rel = path.relative_to(ROOT).as_posix()
     selftest = rel in SELFTEST_MANIFESTS
-    historical = frozen_manifest(rel) or rel.endswith("/manifest-c2.txt")
+    old_om2_refusal = (rel == "seed/qualification/om2/leak/leak.cases"
+                      and line.split()[0] == "s1-rot-refused")
+    historical = frozen_manifest(rel) or rel.endswith("/manifest-c2.txt") or old_om2_refusal
     adequacy = rel == "seed/qualification/om2/baseline/adequacy.cases"
     if not selftest and not historical and not adequacy and rel not in CONDUCTOR_FAILURES:
         raise Failure(f"alternate compiler manifest has no reviewed original-verdict authority: {rel}")
@@ -517,6 +519,21 @@ def conductor_case(path, name, line, alternate, compiler_subst):
     original_name = line.split()[0]
     expected = (selftest_expectations(path)[0][original_name] if selftest else
                 ("FAIL" if adequacy or original_name in CONDUCTOR_FAILURES.get(rel, "").split() else "PASS"))
+    historical_failure = None
+    if rel == "seed/qualification/om2/candidates/s2/s2-mutants.cases":
+        failures = {"unroll-kplus1-kill-unroll-nest": "compile exit=21 expected=0"}
+        for arm, code in (("B", 101), ("C", 105), ("D", 107), ("E", 101),
+                          ("F", 101), ("H", 105), ("I", 102)):
+            failures["fold-div0-kill-fold-trap-" + arm] = (
+                f"run exit={code} expected=0 mutant survived: stdout equals the oracle "
+                "stderr=match; not a meaningful kill")
+        if original_name in failures:
+            if digest(path.read_bytes()) != "0ac554e4497232cc1ba99caca4e07cb12c62b5e3dd1c4af027864a31b29fbc64":
+                raise Failure("historical S2 failure contract manifest changed")
+            historical_failure = {
+                "original_expected": expected, "original_observed": "FAIL",
+                "exact_verdict": f"VERDICT {original_name} FAIL {failures[original_name]}",
+                "scope": "historical failed experiment; reproduction is not a successful mutant kill"}
     authority = "\n".join(row for row in path.read_text().splitlines() if row.startswith("#"))
     authority_path = rel
     if rel.endswith("s1-lexmutants.cases"):
@@ -527,13 +544,30 @@ def conductor_case(path, name, line, alternate, compiler_subst):
                 expected_compile="accept", evidence={
                     "manifest": rel, "resources": resources, "conductor_row": line,
                     "alternate_compiler": alternate, "compiler_substitution": compiler_subst,
-                    "child_compiler_identity": conductor_identity(rel),
+                    "child_compiler_identity": "pinned" if old_om2_refusal else conductor_identity(rel),
                     "expected_failure_reason": "mutant survived" if adequacy else None,
                     "control_kind": "supervisor_verdict_control" if selftest else ("compiler_mutant" if expected == "FAIL" else "compiler_control"),
                     "expected_overall_exit": selftest_expectations(path)[1] if selftest else None,
                     "expected_original_conductor": expected, "original_case_name": original_name,
+                    "historical_failure": historical_failure,
                     "authority": {"path": authority_path, "sha256": digest(contained(authority_path).read_bytes()),
                                   "quote": authority}})
+
+
+def current_c2_contract(fields):
+    """Use the already accepted deltas, retaining the frozen replay separately."""
+    for relative in ("seed/qualification/om2/manifest-c2-capacity.txt",
+                     "seed/qualification/om2/manifest-c2-batch2.txt"):
+        path = ROOT / relative
+        for line in path.read_text().splitlines():
+            replacement = line.split()
+            if not replacement or replacement[0].startswith("#") or replacement[0] != fields[0]:
+                continue
+            if replacement[1:3] != fields[1:3]:
+                raise Failure("current C2 delta changed the frozen operation or input")
+            return replacement, {"path": relative, "sha256": digest(path.read_bytes()),
+                                 "frozen_row": " ".join(fields), "current_row": line}
+    return fields, None
 
 
 def cases(files, record):
@@ -586,6 +620,20 @@ def cases(files, record):
                 record("INVALID", name, "malformed conductor row", conductor_row=line)
                 continue
             mode = fields[1]
+            if rel == "seed/qualification/om2/leak/leak.cases" and fields[0] == "s1-rot-refused":
+                yield conductor_case(path, name + ":frozen-provenance", line, None, None)
+                current_path = ROOT / "seed/qualification/om2/leak/candidate.cases"
+                current = next(row for row in current_path.read_text().splitlines()
+                               if row.startswith("s1-rot-build "))
+                replacement = current.split()
+                if replacement[1:] != ["emit", fields[2], "any", "-", "0"]:
+                    raise Failure("current OM-2 acceptance contract changed")
+                yield Case(name + ":current", source_bytes(fields[2]), expected_compile="accept",
+                           operation="emit", stdout_oracle="any", stderr_oracle="-",
+                           evidence={"historical_obligation": name, "accepted_current_contract": {
+                               "path": current_path.relative_to(ROOT).as_posix(),
+                               "sha256": digest(current_path.read_bytes()), "row": current}})
+                continue
             if frozen_manifest(rel):
                 yield conductor_case(path, name, line, None, None)
                 # The old compiler's oracle remains a separate, mandatory replay.
@@ -669,6 +717,10 @@ def cases(files, record):
                     frozen = conductor_case(path, name + ":frozen-provenance", line, None, None)
                     yield frozen
                 evidence = {"conductor_row": line, "source_spec": fields[2], "conductor_deadline_seconds": deadline}
+                if rel.endswith("/manifest-c2.txt"):
+                    fields, replacement = current_c2_contract(fields)
+                    if replacement:
+                        evidence["accepted_current_contract"] = replacement
                 if "om/sha256/sha256.om" in fields[2]:
                     evidence["historical_source"] = {
                         "path": "om/sha256/sha256.om", "revision": "acb3f15",
@@ -788,7 +840,9 @@ def code_spans(image, source):
     # Every literal must be unambiguously protected by a near JMP, exactly match
     # the source-decoded bytes, and have only zero alignment padding. Ambiguous
     # matches fail closed rather than silently carving possible instructions out.
-    literals = literal_bytes(source)
+    # Empty text emits no bytes, jump or padding in the integrated compiler.
+    # It creates no carveout: every executable byte still goes to the decoder.
+    literals = [literal for literal in literal_bytes(source) if literal]
     locations = {}
     for literal in set(literals):
         candidates = []
@@ -950,6 +1004,38 @@ def source_site_diagnostics(native, target, source_lines):
     if not left[2] or left[0] != right[0] or left[2] != right[2]:
         raise Failure("source-level site/non-site compiler diagnostic differential: " + str(observation))
     return observation
+
+
+@lru_cache(maxsize=1)
+def diagnostic_contracts():
+    path = ROOT / "seed/omc/x86-diagnostic-contracts.json"
+    document = json.loads(path.read_text())
+    if document["schema"] != 1:
+        raise Failure("unsupported target diagnostic contract schema")
+    contracts = {}
+    for entry in document["contracts"]:
+        key = entry["source_sha256"]
+        if key in contracts or digest(source_bytes(entry["source_spec"])) != key:
+            raise Failure("duplicate or stale target diagnostic contract: " + entry["source_spec"])
+        contracts[key] = entry
+    return contracts
+
+
+def target_diagnostic_contract(source, native, target):
+    """Assert exact records, never discard target-specific safety checks."""
+    contract = diagnostic_contracts().get(digest(source))
+    if contract is None:
+        return None
+    for architecture, actual in (("aarch64", native), ("x86_64", target)):
+        expected = contract[architecture]
+        if actual[0] != expected["exit"] or actual[2] != expected["stderr"].encode():
+            raise Failure("exact target diagnostic contract differs: " + architecture)
+        if expected["exit"]:
+            refusal(actual, 0)  # Refusals must still be clean, with no artifact.
+    return {"path": "seed/omc/x86-diagnostic-contracts.json",
+            "sha256": digest((ROOT / "seed/omc/x86-diagnostic-contracts.json").read_bytes()),
+            "source_spec": contract["source_spec"], "reason": contract["reason"],
+            "x86_execution": contract.get("x86_execution")}
 
 
 def refusal(result, shift):
@@ -1150,7 +1236,8 @@ def _exercise_bridge(plan, compiler, qemu, options, scratch, state):
 
     def copy_resources(items, directory):
         for item in items:
-            data = contained(item["path"]).read_bytes()
+            data = (git_resource(ROOT, item) if "git_revision" in item
+                    else contained(item["path"]).read_bytes())
             if digest(data) != item["sha256"]:
                 raise Failure("reviewed bridge input changed: " + item["path"])
             dest = directory / item["path"]
@@ -1391,6 +1478,7 @@ def main():
                           "bridge_big_timeout_seconds": options.bridge_big_timeout}))
     cache = OrderedDict()
     conductor_cache = {}
+    conductor_decode_cache = OrderedDict()
     bridge_state = {"results": {}, "errors": {}, "libraries": {}}
     controls = None
     helper_image = None
@@ -1525,6 +1613,11 @@ def main():
                         cache.popitem(last=False)
                 default, x86 = cache[compilekey]
                 diagnostics = {"default_compile": result_details(default), "x86_compile": result_details(x86)}
+                diagnostic_contract = None
+                if not frontend_mode and target == case.source:
+                    diagnostic_contract = target_diagnostic_contract(case.source, default, x86)
+                    if diagnostic_contract:
+                        case.evidence["target_diagnostic_contract"] = diagnostic_contract
                 if frontend_mode:
                     case.evidence.update(frontend_compiler=frontend_evidence,
                                          comparison="crossHOST native-AArch64 versus EMULATED x86 compiler, exact original mode bytes")
@@ -1536,7 +1629,23 @@ def main():
                         raise Failure(f"fixture required acceptance but default compiler refused with {default[0]}")
                     if case.expected_compile and default[0] != int(case.expected_compile):
                         raise Failure(f"fixture default refusal code {default[0]} differs from explicit oracle {case.expected_compile}")
-                    if refusal(default, 0) != refusal(x86, 0 if frontend_mode else 1):
+                    if diagnostic_contract and diagnostic_contract["x86_execution"]:
+                        expected = diagnostic_contract["x86_execution"]
+                        mnemonics, instructions, carveouts = disassemble(
+                            x86[1], target, objdump, llvm, cwd, child_timeout)
+                        binary = cwd / "target-limit-control"
+                        binary.write_bytes(x86[1])
+                        binary.chmod(0o700)
+                        observed = run([qemu, str(binary)], b"", cwd, child_timeout)
+                        if observed != (expected["exit"], expected["stdout"].encode(), expected["stderr"].encode()):
+                            raise Failure("target-specific limit execution oracle differs: " + str(result_details(observed)))
+                        templates.update(mnemonics)
+                        record("PASS", case.name, "exact per-target limit contract and independent x86 execution oracle",
+                               source_sha256=key, evidence=case.evidence,
+                               default_compile=result_details(default), x86_compile=result_details(x86),
+                               x86_execution=result_details(observed), instructions=len(instructions))
+                        continue
+                    if not diagnostic_contract and refusal(default, 0) != refusal(x86, 0 if frontend_mode else 1):
                         raise Failure("compile refusal differs after exact source-coordinate translation")
                     record("PASS", case.name, "compile-refusal differential + explicit conductor oracle",
                            compile_exit=default[0], source_sha256=key,
@@ -1555,7 +1664,7 @@ def main():
                     case.evidence["raw_compiler_stderr"] = {"native_hex": default[2].hex(), "x86_hex": x86[2].hex()}
                     case.evidence["site_comparison"] = source_site_diagnostics(
                         default[2], translated_stderr, case.evidence["site_source_lines"])
-                elif default[2] != translated_stderr:
+                elif not diagnostic_contract and default[2] != translated_stderr:
                     raise Failure("successful compiler diagnostics differ after exact source-coordinate translation")
                 if frontend_mode:
                     if default[1] != x86[1]:
@@ -1574,7 +1683,17 @@ def main():
                         default[1][:6] != b"\x7fELF\x02\x01" or
                         struct.unpack_from("<H", default[1], 18)[0] != 183):
                     raise Failure("default no longer emits AArch64 ELF program")
-                mnemonics, instructions, carveouts = disassemble(x86[1], target, objdump, llvm, cwd, child_timeout)
+                decode_key = digest(x86[1]), digest(target)
+                decoded = conductor_decode_cache.get(decode_key) if case.operation == "conductor" else None
+                if decoded is None:
+                    decoded = disassemble(x86[1], target, objdump, llvm, cwd, child_timeout)
+                    if case.operation == "conductor":
+                        # Frozen manifests repeatedly execute the same conductor.
+                        # Cache only an exact image AND source, never a verdict.
+                        conductor_decode_cache[decode_key] = decoded
+                        if len(conductor_decode_cache) > 4:
+                            conductor_decode_cache.popitem(last=False)
+                mnemonics, instructions, carveouts = decoded
                 templates.update(mnemonics)
                 if case.operation == "conductor":
                     observations = []
@@ -1610,7 +1729,11 @@ def main():
                             raise Failure(f"original conductor expected whole-manifest exit {overall}, observed {replay['exit']}; original_log={replay['stdout']}")
                         observed = replay["verdicts"].get(requirement["original_case_name"])
                         expected = requirement["expected_original_conductor"]
-                        if observed is None or observed["status"] != expected:
+                        historical_failure = requirement.get("historical_failure")
+                        if historical_failure:
+                            if observed is None or observed["status"] != "FAIL" or observed["line"] != historical_failure["exact_verdict"]:
+                                raise Failure("historical failure replay changed: " + str(observed))
+                        elif observed is None or observed["status"] != expected:
                             raise Failure(f"original conductor oracle: expected {expected}, observed {observed}; log_sha256={replay['stdout_sha256']}; original_log={replay['stdout']}")
                         reason = requirement.get("expected_failure_reason")
                         if reason and reason not in observed["line"]:
@@ -1624,11 +1747,14 @@ def main():
                                 raise Failure(f"mutant replay build/control failed: {bad_controls}; {replay['directive_verdicts']}")
                         observations.append({"manifest": manifest, "child_compiler_identity": identity,
                                              "expected": expected, "observed": observed,
+                                             "historical_failure": historical_failure,
                                              "conductor_exit": replay["exit"],
                                              "conductor_stdout_sha256": replay["stdout_sha256"],
                                              "filesystem_sha256": replay["filesystem_sha256"],
                                              "directive_verdicts": replay["directive_verdicts"]})
-                    record("PASS", case.name, "original conductor oracle proved on native/x86 hosts with explicit child compiler identity",
+                    historical_failures = [item for item in observations if item["historical_failure"]]
+                    record("PASS", case.name, ("historical FAIL reproduced exactly; not current acceptance or a successful mutant kill"
+                           if historical_failures else "original conductor oracle proved on native/x86 hosts with explicit child compiler identity"),
                            source_sha256=key, evidence=case.evidence, replays=observations,
                            control_kind=case.evidence["control_kind"], oracle_instructions=len(instructions),
                            child_compiler_architecture="native AArch64 in both conductor runs")
