@@ -1,4 +1,7 @@
 fn s_eof to void
+if eq get chkmode 0 2
+emit_query
+end
 if ne get curret 0 0
 fail 15
 end

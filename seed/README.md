@@ -12,6 +12,10 @@ The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
 `spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
 See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
 
+To rebuild omc from the 408-byte seed on your own AArch64 Linux machine and check every rung against
+published hashes without touching tracked files, run `sh seed/challenge/run.sh`
+(see [the seed-chain bootstrap challenge](challenge/CHALLENGE.md)).
+
 Think of it as a ladder. Each rung is a small program, written in the language the rung below understands,
 and built by the rung below. Every rung must rebuild itself to the exact same bytes, which proves it reads
 its own language the same way the rung below does.
@@ -939,6 +943,22 @@ pairs with `fn kw` scoped to that function; it also checks the two computed entr
 `sockopt` 134) and that the generator lists them. The generator now includes every host word
 100-177 (the device and mapping words devctl..mapbind are 166-177) and packs 64-bit words with decimal string arithmetic, so values above 2^53 print exactly.
 0 mismatches; `seed/host/check.sh` runs the gate.
+
+## Rung R51: constants in function mode (done)
+
+A function-mode unit (no `fn main`) used to refuse any top-level name with error 9 at the end of the
+input, because `s_eof` tested the count of top-level names, and that count includes constants. The
+new `fnstore` scans those names and refuses only a `global` pool (kind 4) or a `text` (kind 5); a
+constant (kind 9) folds to its typed number at every read and needs no program image. Host words
+keep their error 9 at the line that uses them.
+
+- `gate16` now runs 18 accepted programs, 27 refusals (adding function-mode `global`, `text`, a
+  global or text beside a constant, a host word, a trap code out of range, a float length and an
+  assignment) and 9 function-mode units whose words must equal the literal-only unit byte for byte.
+- Negative controls: the same gate16 against the previous compiler (`befb8199…`) fails at `fm_value`
+  with error 9; a compiled mutant whose `fnstore` never refuses fails at `fm_global`.
+- `seed/omc/omc.om`, 11,131 lines and 379 functions. The committed `seed/out/omc` is not refreshed in
+  this change; the integration owner reseeds once per batch.
 
 ## How the checks stay honest
 
