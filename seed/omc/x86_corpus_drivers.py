@@ -778,6 +778,11 @@ def directive_plan(root, name):
 
 
 def plan_case(root, rel, source):
+    if digest(source) == "e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb":
+        return {"driver":"pwrite-text", "expected_exit":0,
+                "evidence":{"effect_review":"pwrite only to fd1, the runner's private seekable output file; no paths or device access",
+                            "source_authority":"seed/omc/om2/s4/v-pwrite-text.om",
+                            "result_authority":"s4.cases s4-v-pwrite-text: exact ABC newline output and exit0"}}
     sha = digest(source)
     if sha not in REVIEWED_SOURCES:
         return {}
