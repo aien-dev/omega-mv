@@ -428,6 +428,17 @@ file limit is not treated as malformed compiler output or waived.
 
 ### Current acceptance contracts (2026-10-28 integration)
 
+At source `7ab5fdd067884fd3044155084b39163da1be5c8a`, the complete runner
+reported 15179 PASS, 4 NOT_RUN and 222 EXCLUDED, with no FAIL cases. Its aggregate
+verdict remains FAIL because NOT_RUN is not PASS. All three original large-input
+SHA cases passed. Source `00ebdee8461467f26e7ec7b56289ab6549f2c0a2` then added
+only the reviewed text-write driver: both previously unrun text-write cases and
+the exit/encoding controls passed (5 PASS). The remaining unrun cases are the
+two invalid-fd ioctl fixtures affected by QEMU's ENOTTY versus native EBADF.
+The compiler binary is identical for both runs. Native x86 qualification and
+independent review remain outstanding. The additive acceptance receipt records
+both revisions and the original full-run verdict.
+
 The current integration preserves every frozen manifest and historical receipt.
 Current acceptance applies the already declared `manifest-c2-capacity.txt` and
 `manifest-c2-batch2.txt` deltas to their named rows, while separately replaying
