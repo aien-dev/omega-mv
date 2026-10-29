@@ -412,6 +412,19 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
   calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
 
+An initial line `target x86linux` selects the candidate FR-9 native x86-64 Linux backend.
+Without it, the existing AArch64 output remains unchanged. Whole-program output is a
+static ELF64 image with Linux x86-64 syscalls. A bare x86 unit has six-byte
+`JMP rel32`/`NOP` entry slots and uses omc's private frame ABI; it is not a SysV
+C-callable object. In bare mode, physical R14 points to an immutable runtime
+entry table: a trap places its code in ESI and jumps through entry 2, whose
+landing pad recovers the wrapper stack through R12 without storing a result.
+This is not the AArch64 register ABI. Whole-program traps still terminate with
+`100 + code`. Explicit raw AArch64 `emit` is refused on x86 (error 25).
+OS flag values remain target-native.
+See [the backend design and evidence](../X86-LINUX.md) for the register map,
+syscall adaptation, seed-chain boundaries and qualification status.
+
 ### 9.2 Functions and calls
 
 - `fn` may appear many times. A names pass reads every signature before any code is written, so a call
@@ -505,6 +518,10 @@ blocks. A function that needs more than the 16 registers it hands out is error 1
 input, output, nesting, trap-site and block limits but holds 8192 names in scope, 4096 functions and
 524288 call sites per unit (`seed/omc/gate12.sh`, `gate15.sh`), so whole programs such as an
 interpreter fit in one unit; om4 itself keeps its own smaller tables.
+The candidate `target x86linux` backend has a 16 MiB output pool because native
+x86 instruction sequences can require more bytes than their AArch64 counterparts.
+The AArch64 output ceiling remains 8 MiB; input and frontend limits are unchanged.
+An exhausted target output pool still refuses with error 14.
 
 ### 9.7 Structs (omc only, rung 6)
 

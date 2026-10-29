@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Codex (GPT-6.1 Sol) | FR-9 x86-64 Linux backend integration from historical 7eca2ac3f, full-language lowering, contract-loop/output-capacity/dead-branch repairs, division/shift proof-aware diagnostics, original-conductor and historical-mutant qualification repair, independent disassembly and cross-architecture qualification; orphaned-lane recovery, current mutation re-anchoring and x86 OM-2 emitted-storage bound |
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
 | Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
 | Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
@@ -40,3 +41,5 @@ Update this table in the same commit as the work it credits.
 | Claude Opus 5.5 | Seeded compiler: `pread` needs a writable array (error 20) and `pwrite` takes a text, the writable check moved from code 162 to 161 in `hpread`; s4 regression rows, a reintroducing mutant and the 2c824805 negative control |
 
 | Codex | Integrated compiler batch #904 with the quantity and diagnostic audit on current main; rebuilt compiler and bindings, refreshed pinned checks, and repaired the recursive-inline mutant anchor without changing its obligation. |
+
+| Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
