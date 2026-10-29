@@ -99,9 +99,10 @@ feature anyone may want", and it never means hardware qualification beyond the t
    `aien-math`; a local unpublished x86 branch raises to 1024), 16 registers with no spilling (error 12),
    6 parameter slots, 8-character local names (error 13). These are implementation limits, not language
    rules, and each needs a decision before 1.0 freezes them.
-7. **A second target is in draft integration, not qualified.** FR-9 integrates the historical
+7. **A second target is merged as a draft, not qualified.** FR-9 (#923) integrates the historical
    `7eca2ac3f` backend into canonical base `6999fa9e6`; [X86-LINUX.md](X86-LINUX.md) records
-   the design and actual unsupported paths. Implementation and execution evidence are pending.
+   the design and actual unsupported paths. Its full fixture differential ran EMULATED (QEMU) at
+   `7ab5fdd0`: 15179 PASS, 4 NOT_RUN, 222 EXCLUDED, no FAIL, aggregate verdict FAIL; native x86 is NOT_RUN.
    The earlier off-GitHub observation is not a current publication check or a completion claim.
 8. **No contracts in the forward compiler.** omc has no `requires`, `ensures` or `assert`; the only
    contract syntax is in the legacy C front end, and OSC IR carries contract text as metadata.
@@ -293,7 +294,7 @@ Acceptance:
 | AArch64 Linux static ELF (program and function mode) | MERGED; host EXERCISED by `OMEGA-SEED` | QUALIFIED by RM1's full gate at the release commit |
 | WebAssembly MVP via OSC IR v1 (`irwasm`) | MERGED, scalar subset; host EXERCISED by authors | Gate wired (RM1); scope decision: stay scalar-only for 1.0, or add linear memory, text and globals with IR v2+ |
 | SPIR-V 1.0 OpenCL Kernel via OSC IR v1 (`irspirv`) | IMPLEMENTED and CPU EXERCISED in [#804](https://github.com/aien-dev/omega-mv/pull/804); [ABI, parity and toolchain](SPIRV.md) | Standalone `seed/spirv/gate-irspirv.sh`: full irwasm scalar corpus, exact trap/result parity on PoCL CPU, validator, determinism, mutant and refusals. Manifest wiring needs operator authorization; GPU and DPC++ integration NOT_RUN. |
-| x86-64 Linux static ELF | DRAFT integration pending implementation/evidence on canonical base `6999fa9e6`, using historical `7eca2ac3f`; [design and unsupported paths](X86-LINUX.md) | Published PR; default AArch64 output byte-identical (C2 manifest); full existing fixture differential with equal trap codes; independent objdump oracle and wrong-encoding mutants; all NOT_RUN for this draft; QEMU labelled EMULATED, physical x86 NOT_RUN unless tested |
+| x86-64 Linux static ELF | DRAFT, merged as #923 on canonical base `6999fa9e6`, using historical `7eca2ac3f`; [design and unsupported paths](X86-LINUX.md) | Published PR; default AArch64 output byte-identical (C2 manifest); full existing fixture differential with equal trap codes (EMULATED run at `7ab5fdd0`: 15179 PASS, 4 NOT_RUN, 222 EXCLUDED, no FAIL, verdict FAIL); independent objdump oracle and wrong-encoding mutants; all but the differential NOT_RUN for this draft; QEMU labelled EMULATED, physical x86 NOT_RUN unless tested |
 | x86-64 UEFI PE32+ | Historical implementation in `7eca2ac3f`; removed from the Linux-only FR-9 draft | Outside this integration; separate firmware/PE32+ acceptance and evidence required; Linux execution does not establish firmware or physical x86 qualification |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
 | GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR (author run `evidence/SEED-0/sm121/chip/` at load average 61 is not an exclusive-window qualification); host and simulator results are never cited as GPU qualification |

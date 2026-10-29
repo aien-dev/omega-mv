@@ -69,7 +69,7 @@ cannot emit them, so there is no reference unit to verify against.
 | FR-6 threads/atomics | absent | decision 37 (disjoint threads) has no chosen design |
 | FR-7 shared objects/C ABI | absent | needs an ABI contract (calling convention, symbols, relocation) |
 | FR-8 kernel words | absent | needs a target kernel interface, not a compiler change |
-| FR-9 x86-64 | DRAFT integration pending implementation/evidence, based on historical backend `7eca2ac3f` and canonical base `6999fa9e6`; see [design and unsupported paths](../X86-LINUX.md) | full existing fixture differential, default AArch64 byte preservation, objdump oracle and wrong-encoding mutants NOT_RUN; no completion or qualification claim |
+| FR-9 x86-64 | DRAFT, merged as #923 from historical backend `7eca2ac3f` on canonical base `6999fa9e6`; see [design and unsupported paths](../X86-LINUX.md) | full existing fixture differential ran EMULATED (QEMU) at source `7ab5fdd0`: 15179 PASS, 4 NOT_RUN, 222 EXCLUDED, no FAIL, aggregate verdict FAIL because NOT_RUN is not PASS; native x86 NOT_RUN; default AArch64 byte preservation, objdump oracle and wrong-encoding mutants NOT_RUN; no completion or qualification claim |
 | decision 24 | no heap, no free | Drake's rule; any allocation model would reverse it |
 | decision 37 | no shared-state threads | design decision pending |
 
@@ -77,4 +77,4 @@ cannot emit them, so there is no reference unit to verify against.
 
 No self-contained compiler feature remains for the supported scalar subset. Next work requires a
 decision (FR-2/3/5/6/7/8, decisions 24/37) or a shared target-extension model (IR arrays,
-structs, floats); FR-9 has a draft integration described above, not a completed second target.
+structs, floats); FR-9 is merged as a draft (#923) described above, not a completed second target.
