@@ -251,6 +251,15 @@ end
 ret 1
 end
 
+note unsz: 1 when name entry i is an unsized array (nm_len 0, its count in register nm_lr), else 0. A text
+note (kind 5) of length 0 (`text e ""`) is sized: its count is the number 0 and it has no count register.
+fn unsz i ulong to ulong
+if and eq get nm_len i 0 ne get nm_kind i 5
+ret 1
+end
+ret 0
+end
+
 note pslot: the first slot (register) of parameter i of function f (index)
 fn pslot f ulong i ulong to ulong
 s = ulong 0
@@ -2949,6 +2958,11 @@ end
 
 note canon: u8/u16/u32 UBFM Xr, Xr, #0, #w-1 (C6.2.487); i8/i16/i32 SBFM (C6.2.355); else nothing
 fn canon r ulong t ulong to void
+canonto r r t
+end
+
+note canonto: canon of Xn written to Xd (the same UBFM / SBFM with Rd = d, Rn = n)
+fn canonto d ulong n ulong t ulong to void
 if lt t 2
 ret
 end
@@ -2962,7 +2976,7 @@ base = ulong 3544186880
 if gt t 5
 base = ulong 2470445056
 end
-emit or or or base shl sub twid t 1 10 r shl r 5
+emit or or or base shl sub twid t 1 10 d shl n 5
 end
 
 note chkext: CMP Xr, Wr, SXTB/SXTH/SXTW (SUBS extended, C6.2.463), then B.NE trap code
@@ -4113,7 +4127,7 @@ note elemaddr: array name e (index + 1), index value (kind, number or register, 
 note be inside the array (error 21) and needs no check; a register index: CMP Xi, #len (C6.2.96) or CMP Xi,
 note Xt (C6.2.97), B.HS trap 3 (unsigned, so a negative signed index traps too). Out: ea_b base register
 note (the array's register, or a new one holding its address), ea_i index register. om4 ELEMADDR.
-note OM-2 unsized array (nm_len 0): every index, a number too, is checked against its count register nm_lr
+note OM-2 unsized array (unsz): every index, a number too, is checked against its count register nm_lr
 note (CMP Xi, Xn; B.HS trap 3); none is eliminated (spec 4, 6).
 fn elemaddr e ulong k ulong v ulong t ulong to void
 if or or eq t 1 eq t 10 eq t 11
@@ -4122,7 +4136,7 @@ end
 i = sub e 1
 ln = get nm_len i
 x = v
-if eq ln 0
+if ne unsz i 0
 x = matreg k v t
 emit or or 3942645791 shl ulong get nm_lr i 16 shl x 5
 trapc 2 3
@@ -4234,7 +4248,7 @@ fail 7
 end
 ux = add mul get depth 0 6 pi
 if eq get fn_pl p 0
-if eq get nm_len i 0
+if ne unsz i 0
 put ul_k ux 1
 put ul_v ux ulong get nm_lr i
 else
@@ -4316,7 +4330,7 @@ end
 note partck: the two checks of part (name index i, o in ro, k in rn), then the part's base register
 fn partck i ulong ro ulong rn ulong to ulong
 rl = ulong get nm_lr i
-if ne get nm_len i 0
+if eq unsz i 0
 rl = alloc
 matconst rl get nm_len i
 end
@@ -4507,7 +4521,7 @@ fail 7
 end
 t = alloc
 l = ulong get nm_lr sub e 1
-if ne get nm_len sub e 1 0
+if eq unsz sub e 1 0
 l = t
 matconst t get nm_len sub e 1
 end
@@ -5460,10 +5474,11 @@ end
 note stat: path slice (readonly) + output slice, at least 128 bytes for the ARM64 stat structure.
 note Linux newfstatat(AT_FDCWD, path, out, 0); returns 0 or -errno. A short output traps 3.
 note pread/pwrite: fd, byte slice (off, n), position long. The file offset is not moved.
+note pread (161) writes A, so A must be writable (error 20); pwrite (162) only reads A, so a text is allowed.
 fn hpread c ulong dst ulong x ulong to void
 harg x 4 8
 wr = ulong 0
-if eq c 162
+if eq c 161
 wr = ulong 1
 end
 e = harray x wr
@@ -6577,6 +6592,20 @@ if ne twid ft twid tt
 fail 7
 end
 r = matreg get rk 0 get rv 0 ft
+note A register holds an 8/16/32-bit unsigned value and an f32 zero-extended (canon, FMOV W) and a signed
+note one sign-extended, so a bitcast that changes the extension extends the bits again for tt, into a new
+note register (a name's register keeps its value). f32 takes the uint form.
+if ne twid tt 64
+if ne and ge ft 6 le ft 8 and ge tt 6 le tt 8
+ct = tt
+if eq tt 10
+ct = ulong 4
+end
+rd = destreg dst
+canonto rd r ct
+r = rd
+end
+end
 put rk 0 1
 put rv 0 r
 put rt 0 tt
@@ -6693,7 +6722,7 @@ e = arrname
 if ge get nm_kind sub e 1 6
 fail 7
 end
-if eq get nm_len sub e 1 0
+if ne unsz sub e 1 0
 vdone 1 ulong get nm_lr sub e 1 5
 ret
 end
@@ -7155,6 +7184,7 @@ fn_tail f
 end
 
 note s_fn: fn name (param type | param view T N | param edit T N)* to type | void. om4 S_FN.
+note A name of 9..63 bytes is never a keyword: tw packs only its first 8 bytes (continue_x is not continue).
 fn s_fn to void
 if ne get curret 0 0
 fail 15
@@ -7167,8 +7197,10 @@ if gt get tl 0 63
 fail 13
 end
 w = get tw 0
+if le get tl 0 8
 if ne kw w 0
 fail 16
+end
 end
 l = get tl 0
 s = get ts 0
@@ -9259,11 +9291,11 @@ end
 
 note s_field: the current word is a field name of struct w. Returns the cell count after this field.
 fn s_field w ulong fo ulong cells ulong to ulong
-if ne kw get tw 0 0
-fail 16
-end
 if gt get tl 0 8
 fail 13
+end
+if ne kw get tw 0 0
+fail 16
 end
 fw = get tw 0
 if eq fw w

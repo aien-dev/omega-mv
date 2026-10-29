@@ -426,7 +426,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - `to void` makes a void function; `ret` with no value returns from it, and so does reaching its `end`.
   A function with a return type whose `end` can be reached is error 18. (s.6 t_void, s.7)
 - Arguments are read left to right, each fully before the next. (s.5 fm5)
-- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7)
+- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7) A
+  function name longer than 8 characters is never a keyword, even when its first 8 spell one
+  (`continue_x`, `truncate_number`); a name that is exactly a keyword is error 16. (s1 kw-long-names)
 - A function has at most 6 parameters; a seventh is error 9. `main` has none (error 9). A new name
   may not reuse a name already in scope, a function or a struct: error 10.
 - In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
@@ -462,7 +464,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   Program mode only (error 9). (s.6 echo, bytecopy, s.7)
 - `text NAME "bytes"`: a read-only array of uchar holding the bytes between the quotes, with its
   length; `\n` is 10, `\t` is 9, `\\` is 92, `\"` is 34; any other escape, or a quote missing its end,
-  is error 22. Program mode only. (s.7)
+  is error 22. An empty text `""` is a sized array of length 0: `len` is 0, a number index is error 21,
+  a run-time index or `part`/`write` past 0 traps 3, and as a `view` argument its count is 0. Program
+  mode only. (s.7)
 - `NAME = new T N v`: a local array of N elements, each v, on the stack, given back when the function
   returns. Only in a function's outermost block (error 9); at most 4 MiB of local arrays (error 23).
   There is no `free`: nothing is given back by hand (decision 24), and the word is refused (error 9).
@@ -486,7 +490,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   moved, or minus the Linux error number. They trap 3 unless n <= len A and off <= len A - n, before the
   call. `read` needs a writable array (error 20). A must be an array of uchar for the counts to be bytes.
   `pread fd A off n pos` / `pwrite fd A off n pos` (pos long) do the same at an explicit file position
-  without changing the descriptor's offset, with the same slice checks and result. (s.6 echo, bytecopy, t_rw)
+  without changing the descriptor's offset, with the same slice checks and result. Like `read`, `pread`
+  needs a writable array (error 20); `pwrite`, like `write`, also takes a text or a view. (s.6 echo,
+  bytecopy, t_rw; s4 v-bad-pread-text, v-pwrite-text)
 - `exit v` (v int) ends the program with status v modulo 256. Like `ret`, it ends the path: a line after
   it in the same block is error 17. (s.6 t_exit, s.7)
 - `note ...` is a line the translator does not read beyond its first word. (s.6 sort, fib)
@@ -580,8 +586,12 @@ conversion is error 7.
   (gate8 intrinsics, neg_intr_*)
 - Conversions `<type> value` handle int<->float, f32<->f64 and float->int. Int to float is SCVTF/UCVTF
   (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
-  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
-  changing its bits; any other width or a bool is error 7. (gate8 convert)
+  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64, and
+  i8/u8, i16/u16 between integers) without changing its bits; any other width or a bool is error 7.
+  The result is an ordinary value of T: `bitcast int uint 4294967295` equals -1 and
+  `bitcast uint int -1` equals 4294967295; an 8/16/32-bit integer or f32 is extended again for T into
+  a new register, so the source name keeps its value (omc 2c824805 kept the source's extension).
+  (gate8 convert, bitcast_int, neg_bitcast_width)
 - Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields.
   Arrays are packed by element type: f32 occupies four bytes and f64 eight (`tlog` and `sa_arr`
   in `seed/omc/omc.om`). Struct fields retain eight-byte cells, including f32 in the low half.
