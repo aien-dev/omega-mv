@@ -46,7 +46,8 @@ static void on_alarm(int sig)
     uint64_t r = SENT;
     uint8_t b[2] = {0, 0};
     (void)sig;
-    inner = omega2_bcnt(&r, b, 2);
+    if (inner != 33)
+        inner = omega2_bcnt(&r, b, 2);
 }
 
 static int ident_ok(const char *s, const char *src, const char *pin)
@@ -135,9 +136,15 @@ int main(int argc, char **argv)
         sa.sa_handler = on_alarm;
         sigaction(SIGALRM, &sa, NULL);
         memset(&it, 0, sizeof it);
-        it.it_value.tv_usec = 20000;
+        /* A dynamic Omega loop is bounded to 1000000 iterations. A recurring
+         * alarm reaches the legal workload even if the first signal arrives
+         * before bridge entry; the handler latches only an actual status 33. */
+        it.it_value.tv_usec = 100;
+        it.it_interval.tv_usec = 100;
         setitimer(ITIMER_REAL, &it, NULL);
-        r = SENT; st = omega2_spin(&r, UINT64_C(4000000000));
+        r = SENT; st = omega2_spin(&r, UINT64_C(1000000));
+        memset(&it, 0, sizeof it);
+        setitimer(ITIMER_REAL, &it, NULL);
         check("abi-reentry", st == 0 && inner == 33, "bcnt from SIGALRM during spin -> 33; spin still 0");
     }
     /* two units in one binary, interleaved (contract 207-210); OM-1 unit stays v1 (E1) */
