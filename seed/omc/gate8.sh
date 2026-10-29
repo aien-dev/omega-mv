@@ -65,6 +65,7 @@ run_ok intrinsics
 run_ok f32_return
 run_ok convert_sat
 run_ok vreg
+run_ok bitcast_int
 refuse neg_intr_int 7
 refuse neg_intr_mixed 7
 refuse neg_intr_ambig 11
@@ -80,6 +81,7 @@ refuse neg_overflow3 8
 refuse neg_ir 3
 refuse neg_void_value 7
 refuse neg_f32_fall 18
+refuse neg_bitcast_width 7
 
 say "PASS gate8 $n cases"
 exit 0
