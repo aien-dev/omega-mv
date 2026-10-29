@@ -5,6 +5,8 @@ Status: PROPOSED plan, 2026-10-26. Source audited: `aien-dev/omega-mv` main
 It records what exists at that commit, what is missing for a 1.0 language and toolchain, and the gate
 each milestone must pass before anyone may call it done.
 
+Update 2026-10-29, after main `bf54b19fa590e8ae925c0e80815516dbf41e7326`: finding 3 (#775) is fixed and the issue is closed. Fixing commit `e2662fffbce1c21ef09da71c0d8808133a6af8ab` (`fix(omc): keep an empty text sized, never an unsized view (#775)`) is an ancestor of that main. Host exercise against shipped `seed/out/omc` `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`: `seed/omc/om2/s4/v-text-empty.om` compile rc=0, run rc=0; negative control `v-bad-text-empty.om` compile rc=21 (`omc: line 5: error 21`). Full s4 suite and mutant rebuild NOT_RUN in that check. The 2026-10-26 audit text below stays a record of `3364a1dfd`.
+
 Ownership. Live programme status and sequencing stay with aien-architecture
 (`CURRENT_EXECUTION_PLAN.md`, `doctrine/ROADMAP.md`); its `M0..M40` rows are system milestones and are
 not renumbered here. This file owns only the language/toolchain acceptance contract for Omega 1.0. Its
@@ -120,8 +122,8 @@ must come with a negative control that fails.
 
 ### RM1. Ground truth and gate coverage
 
-Current: OM-2 and irwasm are MERGED with author-run evidence only; spec missing from main; #775 open;
-#789 open (fail-closed seed/secret gates).
+Current at the audit commit: OM-2 and irwasm are MERGED with author-run evidence only; spec missing from main; #775 open; #789 open (fail-closed seed/secret gates).
+2026-10-29: #775 is fixed on main (`e2662fffb`) and closed. The other clauses are the audit state.
 
 Gap: a single gate run cannot currently show that every merged compiler path still works.
 
@@ -220,8 +222,8 @@ Acceptance:
 Current: `text NAME "bytes"` read-only literals (program mode only), `uchar` arrays, explicit lengths,
 no terminators. OM-2 unsized views (`view uchar *`) and `part` give checked slices; this resolves the
 "open arrays" blocker of `OM_COMPLETION.md` item 4 for parameters. There is no UTF-8 handling, no
-number/text conversion, no formatting word, no comparison or search library. #775 is a defect in this
-path. Consumers that need more: #788 (TLS/HTTP/JSON proposal), omega-bridge text constants
+number/text conversion, no formatting word, no comparison or search library. #775 was a defect in this
+path at `3364a1dfd`; it is fixed on main by `e2662fffb` and the issue was closed 2026-10-29. Consumers that need more: #788 (TLS/HTTP/JSON proposal), omega-bridge text constants
 (unsupported by its converters).
 
 Acceptance:
