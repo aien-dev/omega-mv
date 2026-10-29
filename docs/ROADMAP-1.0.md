@@ -58,7 +58,7 @@ feature anyone may want", and it never means hardware qualification beyond the t
 | OM-2 qualification conductor | `seed/qualification/om2/gate.om` (4 args: `omc pinhash casesfile scratchdir`) | MERGED. Not referenced by any gate manifest or by `seed/host/check.sh`. |
 | Native host words | OMEGESE section 10, `seed/host/` | MERGED, Linux AArch64 only, program mode only, no sandbox (operate with the process's permissions). |
 | Device and mapping words | `seed/host/MAPPING.md`, `seed/host/tests/{device,devcall,mapio,mapping}.om` | MERGED. No GPU launcher and no model execution (MAPPING.md first paragraph). |
-| GPU instruction encoding | `seed/sm121/` (asm2 table, `vecadd.s2`, `gate6.sh`, `chip6.sh`) | IMPLEMENTED; table lines cite the C code generator. Chip run is BLOCKED_OPERATOR. |
+| GPU instruction encoding | `seed/sm121/` (asm2 table, `vecadd.s2`, `gate6.sh`, `chip6.sh`) | IMPLEMENTED; table lines cite the C code generator. Chip run is BLOCKED_OPERATOR. An author run exists: `evidence/SEED-0/sm121/chip/` (2026-10-20 03:02 UTC, `omega_commit 9d5d95ad dirty=3`, session PASS, 1,048,576 additions with 0 wrong, mutant all wrong), at load average 61, not an exclusive window. |
 | omega-bridge (C/Python emit, native ABI) | `aien-dev/omega-bridge`, lock `om/omega-bridge.lock` | Lock pins `431fff0a95f84c0a8bf9d3383f94d7e1f02d913e`; bridge main is `adb26cc654656926e76ab1839adae63e92909e88` (#18, fail-closed native caller runner). ABI v2 (`omega2_` symbols) consumed by `om/sha256`. |
 | Omega units behind C entry points | `om/sha256/sha256-om2.om`, `om/blake3/*.om`, `om/units.sh` | MERGED. `tests/gates/run.sh om-units` is their gate. |
 | Repository language mix | tracked files | 725 `.c`, 346 `.h`, 730 `.om` (385 under `seed/qualification`, 274 under `seed/omc`). `docs/migration/C-TO-OM-INVENTORY.md` is a 2026-10-24 snapshot of `d863780e` and says "no tracked `.om`", which no longer holds. |
@@ -73,7 +73,7 @@ feature anyone may want", and it never means hardware qualification beyond the t
 | SHA-256 and BLAKE3 parity, binding regeneration | `tests/gates/run.sh om-units` (`OMEGA-OM-UNITS`) | Needs `../omega-bridge` at the lock. |
 | Branch displacement (#669) | `seed/qualification/security673/gate669.om` | Branch-form slice on `fix/security673-qualified`; #669 open. |
 | Diverse double compilation | none | #650 open. The fixpoint is a same-lineage consistency check. |
-| GPU words on the chip | `seed/sm121/chip6.sh` | BLOCKED_OPERATOR. |
+| GPU words on the chip | `seed/sm121/chip6.sh` | BLOCKED_OPERATOR. Author run `evidence/SEED-0/sm121/chip/steps.txt`: check_words ok, run_seed exit 0, control_mutant exit 1 (caught), session PASS. Its launcher `tools/omega_bytes` came from ledger L098 and is not tracked on main, so `chip6.sh` cannot be rerun from main. |
 
 ### 1.3 Findings
 
@@ -296,7 +296,7 @@ Acceptance:
 | x86-64 Linux static ELF | DRAFT integration pending implementation/evidence on canonical base `6999fa9e6`, using historical `7eca2ac3f`; [design and unsupported paths](X86-LINUX.md) | Published PR; default AArch64 output byte-identical (C2 manifest); full existing fixture differential with equal trap codes; independent objdump oracle and wrong-encoding mutants; all NOT_RUN for this draft; QEMU labelled EMULATED, physical x86 NOT_RUN unless tested |
 | x86-64 UEFI PE32+ | Historical implementation in `7eca2ac3f`; removed from the Linux-only FR-9 draft | Outside this integration; separate firmware/PE32+ acceptance and evidence required; Linux execution does not establish firmware or physical x86 qualification |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
-| GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR; host and simulator results are never cited as GPU qualification |
+| GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR (author run `evidence/SEED-0/sm121/chip/` at load average 61 is not an exclusive-window qualification); host and simulator results are never cited as GPU qualification |
 
 Acceptance: the 1.0 target list is a recorded decision; every listed target has its own gate in the
 manifest set, a negative control, and an evidence class (HOST, EMULATED, PHYSICAL-GPU). A target not
