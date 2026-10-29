@@ -33,6 +33,9 @@
 #include <time.h>
 #include <math.h>
 #include <limits.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 #include "omega_physics_dir.h"
 
 static int m17_gate_count = 0;
@@ -991,32 +994,118 @@ fail:
     return false;
 }
 
-static bool test_m18_gate16_clean_clone(void) {
-    if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
-        return true;
+/* Start one program directly. No shell: a path passed here stays an argument.
+ * Returns the exit status, or -1 if it did not run. */
+static int m18_run(char *const argv[], const char *dir, const char *log_path,
+                   const char *e1_name, const char *e1_value) {
+    if (!argv || !argv[0]) return -1;
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        if (dir && chdir(dir) != 0) _exit(127);
+        if (e1_name && e1_value && setenv(e1_name, e1_value, 1) != 0) _exit(127);
+        if (log_path) {
+            int fd = open(log_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) _exit(127);
+            if (dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0) _exit(127);
+            if (fd > STDERR_FILENO) close(fd);
+        }
+        execvp(argv[0], argv);
+        _exit(127);
     }
-    /* Copy the repo this omegatool runs from (the code under test), not a
-     * hardcoded checkout, and pass the PHYSICS_DIR this process resolves at run time
-     * (omega_physics_dir.h) as an absolute path so the copy in /tmp does not fall back to
-     * the Makefile default ../physics (= /tmp/physics). Mirrors M19. */
+    int status = 0;
+    if (waitpid(pid, &status, 0) < 0) return -1;
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    return -1;
+}
+
+static void m18_echo_log_tail(const char *path) {
+    FILE *f = fopen(path, "rb");
+    if (!f) return;
+    char buf[2048];
+    size_t want = sizeof(buf) - 1;
+    if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return; }
+    long end = ftell(f);
+    if (end < 0) { fclose(f); return; }
+    long start = end > (long)want ? end - (long)want : 0;
+    if (fseek(f, start, SEEK_SET) != 0) { fclose(f); return; }
+    size_t got = fread(buf, 1, want, f);
+    fclose(f);
+    if (got == 0) return;
+    buf[got] = '\0';
+    fputs(buf, stderr);
+    if (buf[got - 1] != '\n') fputc('\n', stderr);
+}
+
+/* Only the directory this gate just created. Refuses any other path. */
+static void m18_remove_tree(const char *path) {
+    if (!path || strstr(path, "omega_clean_m18.") == NULL) return;
+    char *argv[] = { (char *)"rm", (char *)"-rf", (char *)path, NULL };
+    m18_run(argv, "/", "/dev/null", NULL, NULL);
+}
+
+static bool test_m18_gate16_clean_clone(void) {
+    if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) return true;
+
+    /* omega-mv#526: the old command was one shell string. It wrote
+     * /tmp/clean_clone_m18.log, which the Spark judge cannot create, and it
+     * interpolated PHYSICS_DIR into that string. The clone now lives in a
+     * unique directory under OUT_DIR (or TMPDIR), the log is next to it, and
+     * every path is an argument or an environment value. */
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
         return false;
     }
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "root=$(git rev-parse --show-toplevel) && "
-                       "rm -rf /tmp/omega_clean_m18 && "
-                       "cp -r \"$root\" /tmp/omega_clean_m18 && "
-                       "cd /tmp/omega_clean_m18 && "
-                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
-                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
-                       physics_dir_resolved);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    int rc = system(command);
-    return (rc == 0);
+    if (strchr(physics_dir_resolved, '\n') || strchr(physics_dir_resolved, '\r')) {
+        fprintf(stderr, "M18 gate 16: PHYSICS_DIR contains a newline\n");
+        return false;
+    }
+
+    const char *base = NULL;
+    const char *out = getenv("OUT_DIR");
+    if (out && out[0] && access(out, W_OK) == 0) base = out;
+    if (!base) {
+        const char *tmp = getenv("TMPDIR");
+        if (tmp && tmp[0] && access(tmp, W_OK) == 0) base = tmp;
+    }
+    if (!base) base = "/tmp";
+
+    char clone_template[PATH_MAX];
+    int tl = snprintf(clone_template, sizeof(clone_template), "%s/omega_clean_m18.XXXXXX", base);
+    if (tl < 0 || (size_t)tl >= sizeof(clone_template)) return false;
+    char *clone = mkdtemp(clone_template);
+    if (!clone) {
+        fprintf(stderr, "M18 gate 16: mkdtemp under %s failed\n", base);
+        return false;
+    }
+
+    char checkout[PATH_MAX], log_path[PATH_MAX];
+    int cl = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    int lp = snprintf(log_path, sizeof(log_path), "%s/qualification.log", clone);
+    if (cl < 0 || lp < 0 || (size_t)cl >= sizeof(checkout) || (size_t)lp >= sizeof(log_path)) {
+        m18_remove_tree(clone);
+        return false;
+    }
+
+    char *clone_argv[] = { (char *)"git", (char *)"clone", (char *)"--quiet",
+                           (char *)"--no-hardlinks", (char *)".", checkout, NULL };
+    char *clean_argv[] = { (char *)"make", (char *)"OUT_DIR=build", (char *)"clean", NULL };
+    char *build_argv[] = { (char *)"make", (char *)"-j", (char *)"OUT_DIR=build", NULL };
+    char *gates_argv[] = { (char *)"./build/omegatool", (char *)"--run-m18-gates", NULL };
+
+    bool nested_ok = m18_run(clone_argv, ".", "/dev/null", NULL, NULL) == 0 &&
+                     m18_run(clean_argv, checkout, "/dev/null", NULL, NULL) == 0 &&
+                     m18_run(build_argv, checkout, log_path, "PHYSICS_DIR", physics_dir_resolved) == 0 &&
+                     m18_run(gates_argv, checkout, log_path, "OMEGA_IN_CLEAN_CLONE", "1") == 0;
+    if (!nested_ok) {
+        fprintf(stderr, "M18 gate 16: nested build or nested run failed; log: %s\n", log_path);
+        m18_echo_log_tail(log_path);
+        m18_remove_tree(clone);
+        return false;
+    }
+    m18_remove_tree(clone);
+    return true;
 }
 
 

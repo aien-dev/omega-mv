@@ -110,6 +110,50 @@ check-physics-lock:
 		fi; \
 	fi
 
+# omega-mv#488: m16_native.o and nvrm.o are compiled from $(PHYSICS_DIR).
+# check-physics-lock refuses a wrong commit, but it does not order object
+# compilation, so a parallel make can compile those objects from the unpinned
+# tree and then keep them when the pinned tree is older. The stamp recipe
+# runs the same refusal, then records the commit and the resolved directory.
+# The file is rewritten only when that text changes, so an unchanged tree
+# does not rebuild dependents.
+.PHONY: force-physics-stamp
+force-physics-stamp:
+	@:
+
+$(OUT_DIR)/physics.stamp: force-physics-stamp | $(OUT_DIR)
+	@set -e; \
+	dir="$(PHYSICS_DIR)"; \
+	if [ ! -d "$$dir" ]; then \
+		echo "error: PHYSICS_DIR=$$dir is not a directory" >&2; exit 1; \
+	fi; \
+	resolved=$$(cd "$$dir" && pwd -P); \
+	actual=$$(git -C "$$resolved" rev-parse HEAD 2>/dev/null || true); \
+	if [ "$(PHYSICS_LOCK_CHECK)" != "0" ]; then \
+		if [ ! -f physics.lock ]; then \
+			echo "error: physics.lock not found at repo root" >&2; exit 1; \
+		fi; \
+		locked=$$(tr -d '[:space:]' < physics.lock); \
+		if [ -z "$$actual" ]; then \
+			echo "error: could not read HEAD of PHYSICS_DIR=$$resolved" >&2; exit 1; \
+		fi; \
+		if [ "$$actual" != "$$locked" ]; then \
+			echo "error: PHYSICS_DIR=$$resolved is at commit $$actual but physics.lock pins $$locked." >&2; \
+			echo "       Checkout the pinned physics commit, or override with PHYSICS_LOCK_CHECK=0." >&2; \
+			exit 1; \
+		fi; \
+	fi; \
+	if [ -z "$$actual" ]; then actual=unknown; fi; \
+	tmp="$(OUT_DIR)/physics.stamp.tmp.$$$$"; \
+	printf 'commit %s\ndir %s\n' "$$actual" "$$resolved" > "$$tmp"; \
+	if [ ! -f "$(OUT_DIR)/physics.stamp" ] || ! cmp -s "$$tmp" "$(OUT_DIR)/physics.stamp"; then \
+		mv -f "$$tmp" "$(OUT_DIR)/physics.stamp"; \
+	else \
+		rm -f "$$tmp"; \
+	fi
+
+$(OUT_DIR)/m16_native.o $(OUT_DIR)/nvrm.o $(OUT_DIR)/libomega_gpu.a: $(OUT_DIR)/physics.stamp
+
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
@@ -1881,6 +1925,12 @@ print-composition-gate-gpu-bin:
 	@echo $(RX_COMPOSE_GATE_GPU)
 
 .PHONY: test-composition-gate-gpu composition-gate-gpu-bin print-composition-gate-gpu-bin
+
+# omega-mv#488: these targets compile $(PHYSICS_DIR) sources directly, so the
+# object-file stamp above does not cover them.
+$(RX_R12_SILICON) $(RX_R13_TEST_SILICON) $(RX_R13_SILICON) $(RX_R14_SILICON) \
+$(RX_R15_PARITY_SILICON) $(RX_R15_PERF_SILICON) $(RX_R15_PERF_SILICON_ND) \
+$(R15_GPU_LOAD) $(RX_COMPOSE_GATE_GPU): $(OUT_DIR)/physics.stamp
 
 # E1 row 7: correctly rounded FP32 DIV and SQRT on the GB10
 # (docs/numeric/E1_DIVSQRT_GB10.md). Host tier, offline nvdisasm provenance

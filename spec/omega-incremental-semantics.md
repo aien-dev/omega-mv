@@ -205,6 +205,13 @@ measurement and not a quiet-machine R15 qualification.
 | `HOST_PASS_ENERGY_UNMEASURED` | Everything passes on a host with no energy counter, such as CI. |
 | `FAIL` | Anything else. |
 
+The host gate (`tests/gates/run.sh`) accepts `PASS` or
+`HOST_PASS_ENERGY_UNMEASURED` for `OMEGA_INCREMENTAL_SEMANTICS_PASS`. `PASS`
+records that the meter measured a valid window. `HOST_PASS_ENERGY_UNMEASURED`
+records that the host has no counter. Either is a pass. `FAIL` and
+`PASS_UNBOUND` still fail the gate. (omega-mv#404 item 2, orchestrator ruling
+2026-10-11.)
+
 ## Limits
 
 - Functions must be pure over their declared inputs. The engine cannot see an

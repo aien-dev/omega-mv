@@ -219,7 +219,17 @@ case "$step" in
     grep -q '^OMEGA_EFFECT_CAP64_PASS$' build/effect-cap64.log
     receipt omega_state_projection_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_STATE_PROJECTION_PASS": "PASS"'
     receipt rx_action_graph_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_ACTION_GRAPH_IR_PASS": "PASS"'
-    receipt omega_incremental_semantics_receipt.json '"OMEGA_INCREMENTAL_SEMANTICS_PASS": "HOST_PASS_ENERGY_UNMEASURED"' '"false_hits": 0,'
+    r="$(find build/qual-runs -name omega_incremental_semantics_receipt.json -type f -newer "$STEP_MARK" | head -n 1)"
+    test -n "$r"
+    grep -q '"false_hits": 0,' "$r"
+    # omega-mv#404 item 2: PASS means the meter measured a valid window.
+    # HOST_PASS_ENERGY_UNMEASURED means this host has no counter. Either is a
+    # pass. FAIL and PASS_UNBOUND still fail the gate.
+    if ! grep -q '"OMEGA_INCREMENTAL_SEMANTICS_PASS": "PASS"' "$r" \
+       && ! grep -q '"OMEGA_INCREMENTAL_SEMANTICS_PASS": "HOST_PASS_ENERGY_UNMEASURED"' "$r"; then
+      echo "error: OMEGA_INCREMENTAL_SEMANTICS_PASS is neither PASS nor HOST_PASS_ENERGY_UNMEASURED in $r" >&2
+      exit 1
+    fi
     receipt rx_capability_query_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_CAPABILITY_QUERY_PASS": "PASS"'
     receipt rx_semantic_comm_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_SEMANTIC_COMMUNICATION_PASS": "PASS"'
     receipt rx_cognitive_routing_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_COGNITIVE_ROUTING_PASS": "PASS"'
