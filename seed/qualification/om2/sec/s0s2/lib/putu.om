@@ -1,0 +1,17 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 helper appended after a fixture (SRC a+b): putu v writes v in decimal and a newline to stdout.
+note It has no om2 line of its own; the unit's first non-note line comes from the fixture in front.
+fn putu v ulong to void
+b = new uchar 21 10
+p = ulong 20
+x = v
+while true
+p = sub p 1
+put b p uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 b p sub 21 p
+end

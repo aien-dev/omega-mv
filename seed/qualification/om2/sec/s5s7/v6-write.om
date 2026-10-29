@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 171 with OMEGESE 9.5: write keeps its slice check on an unsized view:
+note off 9, n 4 on len 10 traps 3 before the call (exit 103, no stdout).
+om2
+fn g v view uchar * to void
+w = write 1 v 9 4
+end
+fn main to int
+a = new uchar 10 65
+g a
+ret 0
+end

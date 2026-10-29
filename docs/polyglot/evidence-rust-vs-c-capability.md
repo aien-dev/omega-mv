@@ -1,6 +1,6 @@
 # Evidence: capability authority, Rust crate vs C port (historical, black box)
 
-Repo: aien-dev/aienos, clone at /home/drakestapleton/.claude/jobs/cd904311/tmp/aienos-h, main = 603c91d8ec2e6b1d7e2db25591275662eb5c92f0 (`git rev-parse HEAD`).
+Repo: aien-dev/aienos, clone at ~/.claude/jobs/cd904311/tmp/aienos-h, main = 603c91d8ec2e6b1d7e2db25591275662eb5c92f0 (`git rev-parse HEAD`).
 Host: this Spark (aarch64), cargo/rustc 1.98.1, cc = gcc. Nothing was written, edited or added to the repo; only existing entry points were run.
 Compared units: Rust = `crates/aienos-capability` (core, no_std) + `crates/aienos-capability-ffi` (C binding). C = `native/capability/aienos_capability.{c,h}` (authority + binding in one file). The C `aienos_contain.*` gate (ARGUS-1 lane G, added later) has no Rust twin and is excluded.
 

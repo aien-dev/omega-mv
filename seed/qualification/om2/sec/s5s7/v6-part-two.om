@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 177-178: two parts of one array in one call are error 19, whatever their
+note ranges (here disjoint 0..1 and 5..6).
+om2
+fn two x view uchar * y view uchar * to ulong
+ret add len x len y
+end
+fn main to int
+a = new uchar 10 0
+putd two part a 0 2 part a 5 2
+ret 0
+end

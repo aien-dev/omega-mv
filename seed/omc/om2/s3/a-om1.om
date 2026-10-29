@@ -1,0 +1,9 @@
+note S3 C1 control: abstract, seal, open, holds and ops stay ordinary names in an OM-1 unit
+fn main to int
+abstract = ulong 1
+seal = add abstract 1
+open = add seal 1
+holds = add open 1
+ops = add holds 1
+ret int ops
+end
