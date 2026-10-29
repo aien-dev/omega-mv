@@ -121,8 +121,8 @@
           "purpose": "Tests 1-10 for ANS (docs/ans/INERTIAL_ALIGNMENT_SPEC_V1.md): freeze/digest, hostile reference mu"
         },
         {
-          "digest": "7f5cd521bcc4c1475a185281d79f68a02b26d229e296c609c046748d57be148c",
-          "last_commit": "",
+          "digest": "2224a2d78038ae3d43c15bcbebe6636cb1327d58384c610d5de4210c002e1d88",
+          "last_commit": "965fb7627",
           "name": "autodiff664",
           "purpose": "Native tape tests: differential checks, refusals, no-FMA control, compiled source mutants of nat"
         },
@@ -301,15 +301,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:4cb7bb212bf4d6ea43979cbbb2f55dbf111efede6d479491cd2bc9d7266d465f",
-      "compiled_at": "2026-10-29T16:53:10Z",
+      "children_root": "sha256:00158baef9c6f7f767e88348ec167578626ab816ef4b29cc72cb384f762e7b7a",
+      "compiled_at": "2026-10-29T17:08:43Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:4ab51e7fcb05ec1f8681121d5c7b1998dc955b7437e0dd599d06f94b68b51a57",
+      "digest": "sha256:0ce50395b208c7e4254c30cff0ff0bb62dd48c8a501fcc68d5c8d76b92cd0787",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1271,
-      "generated_at_commit": "8975287573f284dd2140b2f2b169619d3e145cf1",
-      "source_tree": "sha256:d74a9cf12535f002d6dcb06d00240a7689e966e8f934d0082cfe51472814c0fe"
+      "files": 1276,
+      "generated_at_commit": "afc60408015090420db178be8e15e2b46337052c",
+      "source_tree": "sha256:92c575f4e49a9578b22ef84ccd96ef148bf0ef6b9a08f983de3de8c269b16f0d"
     },
     "owner_lane": "",
     "provenance": {
