@@ -70,6 +70,14 @@ There are **no implicit conversions** between modular words and bounded quantiti
 3. **Narrowing Conversions**:
    Converting `qty` to a narrower scalar (such as `uint` or `uchar`) requires checking that no higher-order bits are set. If `q >= 2^w`, the conversion traps (`trap 5`) or returns a declared refusal before effects.
 
+The seeded syntax is prefix conversion (`q = qty w`, `w = ulong q`).
+Integer literals settle to `qty` in a quantity context, including `add q 1`
+and `add q qty 1`; `const ONE qty 1` is an integer quantity constant.
+Floating literals, floating values, and `fsqrt`, `fabs`, `fmin`, or `fmax`
+on quantities are refused with error 7, not interpreted as quantity bit patterns.
+Permanent host regressions are in `tests/quantity/` and
+`seed/qualification/om2/baseline/language.cases`.
+
 ---
 
 ## 4. Checked Arithmetic and Slice Invariants
