@@ -8,7 +8,10 @@
 ifndef BROWNIAN_ACTIVE_MK
 BROWNIAN_ACTIVE_MK := 1
 .PHONY: brownian-active-reanalyse test-brownian-active brownian-active-dev0 brwa-purity brwa-cli brownian-active-dev1-power brownian-active-dev1 brownian-active-dev0-regress
-BRWA_FLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itools -ffp-contract=off -fno-fast-math
+# -Wno-pedantic: brw_active_dev0 links the generated binding src/omega_om_units.c, whose runtime
+# entry table uses GNU range designators that ISO C forbids under -Werror=pedantic. Generator fix:
+# omega-bridge #17 (ABI-v2 line); only that diagnostic is silenced, the rest stay strict.
+BRWA_FLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -D_POSIX_C_SOURCE=200809L -Isrc -Itools -ffp-contract=off -fno-fast-math -Wno-pedantic
 BRWA_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 BRWA_LIB = tools/brownian/brw_active.c src/turing/ty_prd2.c src/turing/ty_qcont.c src/turing/ty_prd.c src/turing/ty_math.c
 BRWA_HDRS = tools/brownian/brw_active.h src/turing/ty_prd2.h src/turing/ty_qcont.h src/turing/ty_prd.h src/turing/ty_math.h src/sha256.h
@@ -24,9 +27,9 @@ $(BRWA_DIR)/test_brw_active: tests/brownian/test_brw_active.c $(BRWA_LIB) $(BRWA
 $(BRWA_DIR)/test_brw_active_asan: tests/brownian/test_brw_active.c $(BRWA_LIB) $(BRWA_HDRS)
 	@mkdir -p $(BRWA_DIR)
 	$(CC) $(BRWA_FLAGS) $(BRWA_ASAN) -o $@ tests/brownian/test_brw_active.c $(BRWA_LIB) -lm
-$(BRWA_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c $(BRWA_HDRS)
+$(BRWA_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c $(BRWA_HDRS)
 	@mkdir -p $(BRWA_DIR)
-	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c -lm
+	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c -lm
 
 brwa-purity:
 	@mkdir -p $(BRWA_DIR)/purity
@@ -67,9 +70,9 @@ brownian-active-dev0: $(BRWA_DIR)/brw_active_dev0
 # Built into its own directory. The power receipt (evidence/BRW-ACT-DEV1/power/receipt.txt, never overwritten) fixes B.
 BRWA1_DIR = $(OUT_DIR)/brownian-active-dev1
 BRWA1_POWER = evidence/BRW-ACT-DEV1/power
-$(BRWA1_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c $(BRWA_HDRS)
+$(BRWA1_DIR)/brw_active_dev0: tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c $(BRWA_HDRS)
 	@mkdir -p $(BRWA1_DIR)
-	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/sha256.c -lm
+	$(CC) $(BRWA_FLAGS) -DBRW_FLAGS='"$(BRWA_FLAGS)"' -o $@ tests/brownian/brw_active_dev0.c $(BRWA_LIB) src/omega_om_units.c -lm
 
 # DEV0 must stay bit-identical under the parametrised runner: the table digest of the committed DEV0 dev run.
 brownian-active-dev0-regress: $(BRWA1_DIR)/brw_active_dev0

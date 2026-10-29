@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-28",
+  "source_revision": "efd15c234afc584e1e67492e736cbb42806c2a7d",
+  "source_sha256": "e9d70e7cbe1b7026b2fcac5bbf61a64bde931b50a632c954355ba5299954a61c",
+  "native_compiler_sha256": "f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409",
+  "source_provenance": "Checks ran on settled source bytes immediately before the recorded commit; the source and artifact digests identify those bytes.",
+  "host_checks": [
+    {
+      "command": ["sh", "seed/host/check.sh"],
+      "exit": 0,
+      "execution": "HOST_TESTED_AARCH64",
+      "log_path": "build/fr9-20261028-recovered/host-check.log",
+      "log_sha256": "3d61a4f77b5150c0982f6c9287d631270307f0b68b2b8d32e7249b33f5fe6c2b",
+      "final_verdict": "PASS native-host qualification; seeded build, C tools are comparison oracles only"
+    },
+    {
+      "command": ["sh", "seed/omc/gate5.sh"],
+      "exit": 0,
+      "execution": "HOST_TESTED_AARCH64",
+      "log_path": "build/fr9-20261028-recovered/gate5.log",
+      "log_sha256": "771d1b057b28494237bc7b85279509e80890048d436480898baf6e22eacb54d7",
+      "cases": 177,
+      "cut_or_changed_inputs": 4860,
+      "compiler_mutants": "A/B caught by corpus; C caught only by independent C path",
+      "final_verdict": "GATE5 PASS"
+    }
+  ],
+  "focused_repairs_before_bridge_pin_refresh": {
+    "exit": 1,
+    "log_path": "build/fr9-20261028-recovered/focused.jsonl",
+    "log_sha256": "e5a2969690a6fcccfabd2c40a8e5b19042f0c92e66287f85ee7dc69dc18120d0",
+    "pass": 21,
+    "fail": 2,
+    "failure": "ABI reentry and SHA-empty refused because tools/native still required the old exact candidate digest. No pin bypass was used.",
+    "scope": "Focused fixture selection, not full corpus qualification"
+  },
+  "focused_boundary_after_exact_bridge_pin_refresh": {
+    "exit": 0,
+    "execution": "EMULATED_X86_AND_HOST_TESTED_AARCH64",
+    "log_path": "build/fr9-20261028-recovered/focused-boundary.jsonl",
+    "log_sha256": "6c4d992ac45a1f57c9a9547abadb185b017a316a5377eb118cbfdf5ca17cbcef",
+    "pass_cases": [
+      "seed/qualification/om2/sec/s5s7/candidate.cases:226:abi-reentry",
+      "seed/qualification/om2/sec/s5s7/candidate.cases:250:sha-empty",
+      "seed/rung4/tests/t_exit.om",
+      "negative-invalid-encoding",
+      "negative-valid-wrong-encoding"
+    ],
+    "scope": "Focused fixture selection, not full corpus qualification",
+    "generator_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+    "x86_compiler_sha256": "f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409"
+  },
+  "size_bookkeeping": {
+    "source_lines": 15566,
+    "functions": 512,
+    "compiler_bytes": 474792,
+    "header_bytes": 176,
+    "words": 118654,
+    "wolfram_query": "(474792-176)/4",
+    "wolfram_result": 118654
+  },
+  "native_x86": "NOT_RUN",
+  "gpu": "NOT_RUN"
+}

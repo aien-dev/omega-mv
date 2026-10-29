@@ -1,0 +1,9 @@
+LEAKSCAN 1 words=13 entry=@0 data=none
+PUBLIC-DECL 0+32:8
+MEM @1 ldrb reg base=x1 index=x2 public-index
+MEM @3 strb reg base=x0 index=x4 public-index
+MEM @5 ldrb reg base=x0 index=x2 public-index
+PUBLIC-MEM @5 public-mem 0+32
+BRANCH @7 b.ne ->@11 len
+SUMMARY branches=1 len=1 trap-check=0 data-branch=0 branch-unreached=0 mem=3 const=0 public-index=3 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC PASS

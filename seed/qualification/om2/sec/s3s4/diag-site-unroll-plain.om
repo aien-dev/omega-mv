@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note diag-site-unroll.om with om2 instead of om2 diag (same artifact expected).
+note
+note
+note
+om2
+fn f a ulong to ulong
+s = ulong 0
+for i ulong 3 unroll
+s = add s div i a
+end
+ret s
+end

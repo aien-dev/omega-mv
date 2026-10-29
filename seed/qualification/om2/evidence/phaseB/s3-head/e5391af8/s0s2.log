@@ -1,0 +1,166 @@
+OM2GATE START cases=seed/qualification/om2/sec/s0s2/candidate.cases scratch=build/om2-qual/qe5391af8-s0s2
+IDENTITY omc /tmp/zl/omc-e5391af8 sha256=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 pinned=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 match
+VERDICT s0-optin-min PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s0-optin-diag PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s0-optin-diag-emit PASS compile exit=0 expected=0 stdout=unchecked stderr=unchecked
+VERDICT s0-optin-diag-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s0-notfirst PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-trail-space PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-trail-word PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-trail-diagx PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-double-space PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-indent PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-upper PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-blank-first PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT s0-blank-spaces-first PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT s0-names-fn PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT s0-names-var PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT s0-om1-crlf PASS run exit=5 expected=5 stdout=match stderr=match
+VERDICT s0-w-unroll PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s0-w-inline PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s0-w-fresh PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-w-rotr PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s0-w-abstract PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-w-layout PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-w-export PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-w-part PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s0-w-viewstar PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-w-out PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-w-hex PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s0-q1-fn-rotr PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-q1-param-part PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-q1-var-fresh PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-q1-var-at PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s0-q1-fn-layout PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s1-d-left PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s1-d-left-plain PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s1-d-eof-left PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s1-d-eof-mid PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s1-d-eof-noend PASS compile exit=15 expected=15 stdout=match stderr=match
+VERDICT s1-d-mid-short PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s1-d-hexupper PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s1-d-hexupper-plain PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s1-d-hexrange PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s1-d-longtok PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s1-d-unknown-fn PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s1-d-unknown-struct PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s1-d-unknown-sparam PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s1-d-unknown-args PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s1-d-mid-short-line NOT_RUN not run: E6 Q2 makes the LF the span, but whether the record's line= (and expect=) is the LF's line or the human line N (one later in OM-1) is not fixed; the tok case checks the rest
+VERDICT s2-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-dec-max PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-dec-places PASS run exit=10 expected=10 stdout=match stderr=match
+VERDICT s2-hex-places PASS run exit=10 expected=10 stdout=match stderr=match
+VERDICT s2-same-hex42 PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-same-hexmax PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-r8-uchar PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-ushort PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-uint PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-byte PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-short PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-int PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-long PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r8-intffff PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-r6-upper PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-mixed PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-upperX PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-minus PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-empty PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-17small PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-17big PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-under1 PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-under2 PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-g PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-z PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-r6-upper-ulong PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-d8-uchar PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-ushort PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-uint PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-byte PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-short PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-int PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-long PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-d8-intffff PASS compile exit=8 expected=8 stdout=match stderr=match
+VERDICT s2-om1-left-typed PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-om2-left-typed PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-om1-left-assign PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-om2-left-assign PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-om1-left-paren PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-om2-left-paren PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-om1-left-bare PASS compile exit=11 expected=11 stdout=match stderr=match
+VERDICT s2-om2-left-bare PASS compile exit=11 expected=11 stdout=match stderr=match
+VERDICT s2-om1-short-next PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-om2-short-next PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-om1-short-bare PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-om2-short-bare PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-om1-short-eof PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-om2-short-eof PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-om1-group-open PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-om2-group-open PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-om1-group-short PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-om2-group-short PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-om1-group-wide PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-om2-group-wide PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-om1-bracket PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s2-om2-bracket PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s2-om1-brace PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s2-om2-brace PASS compile exit=3 expected=3 stdout=match stderr=match
+VERDICT s2-om1-g0-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om1-g1-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om1-g1-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om1-g2-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om1-g2-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om1-g3-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om1-g3-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om1-g4-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om1-g4-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om2-g0-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om2-g1-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om2-g1-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om2-g2-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om2-g2-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om2-g3-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om2-g3-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-om2-g4-run PASS run exit=7 expected=7 stdout=match stderr=match
+VERDICT s2-om2-g4-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-fmt-x1 PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x1-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x1-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-fmt-x2 PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x2-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x2-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-fmt-x3 PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x3-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x3-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-fmt-x4 PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x4-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x4-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-fmt-x5 PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x5-idem PASS compile exit=0 expected=0 stdout=match stderr=match
+VERDICT s2-fmt-x5-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+VERDICT s2-fmt-x1-run PASS run exit=42 expected=42 stdout=match stderr=match
+VERDICT s2-fmt-x1fmt-run PASS run exit=42 expected=42 stdout=match stderr=match
+VERDICT s2-fmt-x5fmt-run PASS run exit=9 expected=9 stdout=match stderr=match
+VERDICT s2-fmt-bad-left PASS compile exit=5 expected=5 stdout=match stderr=match
+VERDICT s2-fmt-bad-hex PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-fmt-bad-short PASS compile exit=4 expected=4 stdout=match stderr=match
+VERDICT s2-fmt-bad-cr PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-fmt-bad-cr1 PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-fmt-bad-crtext PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT s2-fmt-bad-fmtlater PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-fmt-bad-trailblank PASS compile exit=6 expected=6 refused with the expected error
+VERDICT s2-fmt-bad-trailblank-nostdout PASS compile exit=6 expected=6 stdout=match stderr=unchecked
+VERDICT s2-fmt-bad-trailblank-line NOT_RUN not run: E6 (a) makes trailing blank lines error 6 but does not say which line the human line names (first or last blank line)
+VERDICT s2-fmt-notes-before PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT s2-fmt-om2-then-fmt PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT c2-s0-names-fn PASS compile exit=0 expected=0 sha256=8c1e625abb265e5ec2bb1d70bcf70e16f494d5f2d69d21b84d4010f02a4597cd stderr=match
+VERDICT c2-s0-names-var PASS compile exit=0 expected=0 sha256=8f809f5336881a5a9a2bc8a47c7577d4d607729bfb0b94d169b072d6acd57a50 stderr=match
+VERDICT c2-s0-om1-crlf PASS compile exit=0 expected=0 sha256=38921391cc3b9bfdd733c61f6078165678d1290d0917715a92097e31b7fb33de stderr=match
+VERDICT c2-s2-dec-max PASS compile exit=0 expected=0 sha256=6921d6a044ea452a5b3a1231d8b86fc1a7afd204b26ac3c6b6a68f93dea61de3 stderr=match
+VERDICT c2-s2-dec-places PASS compile exit=0 expected=0 sha256=2e3ab50c6637eb326d446d9940957d98be64e2934193289716ec2c8df0e7f2c4 stderr=match
+VERDICT c2-s2-om1-g0 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+VERDICT c2-s2-om1-g1 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+VERDICT c2-s2-om1-g2 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+VERDICT c2-s2-om1-g3 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+VERDICT c2-s2-om1-g4 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+OM2GATE NOT_RUN cases=163 pass=161 fail=0 invalid=0 not_run=2

@@ -1,0 +1,147 @@
+OM2GATE START cases=seed/qualification/om2/sec/s5s7/candidate.cases scratch=build/om2-qual/qe5391af8-s5s7
+IDENTITY omc /tmp/zl/omc-e5391af8 sha256=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 pinned=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 match
+VERDICT f5-branch PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-loop PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-line PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT f5-unroll-all PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT f5-n64 PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT f5-n65 PASS compile exit=14 expected=14 refused with the expected error
+VERDICT f5-partial PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-call PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-write PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-read PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-part FAIL compile exit=16 expected=27 stdout=match stderr differs at byte 10
+VERDICT f5-ifelse PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT f5-join-diff PASS compile exit=27 expected=27 stdout=match stderr=match
+VERDICT f5-inline PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT a5-exact FAIL compile exit=16 expected=0
+VERDICT a5-allops FAIL compile exit=16 expected=0
+VERDICT a5-rot64 FAIL compile exit=16 expected=0
+VERDICT a5-exact-diag FAIL compile exit=16 expected=0 stdout=unchecked stderr lacks expected line 1
+VERDICT a5-kept FAIL compile exit=16 expected=0
+VERDICT a5-kept-diag FAIL compile exit=16 expected=0 stdout=unchecked stderr lacks expected line 1
+VERDICT a5-swap FAIL compile exit=16 expected=0
+VERDICT a5-swap-diag FAIL compile exit=16 expected=0 stdout=unchecked stderr lacks expected line 1
+VERDICT a5-seal-main FAIL compile exit=16 expected=28 stdout=match stderr differs at byte 10
+VERDICT a5-seal-other FAIL compile exit=16 expected=28 stdout=match stderr differs at byte 10
+VERDICT a5-raw-num FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-raw-arg FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-raw-ret FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-raw-assign FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-op-and FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-op-rotl FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-op-add FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-pred FAIL compile exit=16 expected=28 stdout=match stderr differs at byte 10
+VERDICT a5-name-seal PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT a5-entry-param FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-entry-ret FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT a5-array FAIL compile exit=16 expected=7 diagnostic does not name the expected error
+VERDICT l5-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT l5-endian PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT l5-scalar PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT l5-scalar-idx PASS compile exit=5 expected=5 refused with the expected error
+VERDICT l5-count1-noidx PASS compile exit=4 expected=4 refused with the expected error
+VERDICT l5-trap PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT l5-const-idx PASS compile exit=21 expected=21 refused with the expected error
+VERDICT l5-fit PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT l5-max PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT l5-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-past PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-past1 PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-count0 PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-count4097 PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-off PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-size0 PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-size4097 PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-after-fn PASS compile exit=29 expected=29 stdout=match stderr=match
+VERDICT l5-view-put PASS compile exit=20 expected=20 refused with the expected error
+VERDICT l5-wrong-size PASS compile exit=7 expected=7 refused with the expected error
+VERDICT v6-sum FAIL compile exit=16 expected=0
+VERDICT v6-edit FAIL compile exit=16 expected=0
+VERDICT v6-idx FAIL compile exit=16 expected=0
+VERDICT v6-idx-edit FAIL compile exit=16 expected=0
+VERDICT v6-part-wrap FAIL compile exit=16 expected=0
+VERDICT v6-part-tail FAIL compile exit=16 expected=0
+VERDICT v6-part-golden-literal NOT_RUN not run: unreachable without a 2^64-1-element view; bridge side is abi-golden-wrap (status 32)
+VERDICT v6-part-empty FAIL compile exit=16 expected=0
+VERDICT v6-part-o FAIL compile exit=16 expected=0
+VERDICT v6-part-order FAIL compile exit=16 expected=0
+VERDICT v6-part-local FAIL compile exit=16 expected=9 diagnostic does not name the expected error
+VERDICT v6-part-view-edit FAIL compile exit=16 expected=20 diagnostic does not name the expected error
+VERDICT v6-part-two FAIL compile exit=16 expected=19 diagnostic does not name the expected error
+VERDICT v6-part-base FAIL compile exit=16 expected=19 diagnostic does not name the expected error
+VERDICT v6-name-part PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT v6-write FAIL compile exit=16 expected=0
+VERDICT v6-slots7 FAIL compile exit=16 expected=9 diagnostic does not name the expected error
+VERDICT v6-slots6 FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT v6-fm-e2 FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT v6-out FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT m6-export2 FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT m6-noexport PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+VERDICT m6-export-layout FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT abiv-compiles FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT abiw-compiles FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+VERDICT abi-vsum-ok NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-bcnt-ok NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-null-len1 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-misaligned NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-size-overflow NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-golden-wrap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-wrap-high NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-null-len0 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-null-len0-ulong NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-bogus-len0 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-edit-overlap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-edit-adjacent NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-edit-empty NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-edit-result NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-out-overlap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-out-trap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-out-bounds NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-layout NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-layout-null NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-null-result NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-reentry NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-two-units NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-ident-abiv NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-ident-abiw NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-ident-distinct NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-v1-absent NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-v1-kept NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-units-stale-source NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-units-stale-omc NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-units-stale-profile NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT abi-misaligned-len0 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+VERDICT sha-empty NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-abc NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-split2 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-split3-zero NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-bytewise NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-update-null0 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-hash-overlap0 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-hash-overlap16 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-hash-overlap-before NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-post-final NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-no-init-safe NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-hash-eq-stream NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-ctx-copy NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-big-1 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-big-split NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT sha-big-hash NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+VERDICT t-dup PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-allops PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-endian PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-sum PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-edit PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-sle PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-names PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT t-slw PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT t-slt PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT t-slo PASS run exit=103 expected=103 stdout=match stderr=match
+VERDICT t-order PASS run exit=102 expected=102 stdout=match stderr=match
+VERDICT t-trap10 PASS run exit=110 expected=110 stdout=match stderr=match
+VERDICT t-shl64 PASS run exit=107 expected=107 stdout=match stderr=match
+VERDICT t-unsized16 PASS compile exit=16 expected=16 stdout=match stderr=match
+VERDICT abi1-om1 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+OM2GATE FAIL cases=144 pass=52 fail=44 invalid=0 not_run=48

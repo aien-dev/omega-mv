@@ -1,0 +1,5 @@
+global g qty 4
+fn main to int
+put g 0 ulong 7
+ret int 0
+end

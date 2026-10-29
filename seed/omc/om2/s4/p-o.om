@@ -1,0 +1,11 @@
+note S4 part: o = len + 1, k = 0: the first check fails, trap 3 (exit 103); without it len - o wraps and
+note k = 0 passes.
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = ulong 11
+ret int plen part a o 0
+end

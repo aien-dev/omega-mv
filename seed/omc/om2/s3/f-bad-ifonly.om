@@ -1,0 +1,11 @@
+note S3 fresh refusal
+om2
+fn f s edit uchar 8 fresh c ulong to ulong
+if eq c 1
+put s 0 7
+end
+ret ulong get s 0
+end
+fn main to int
+ret 0
+end

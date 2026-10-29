@@ -1,0 +1,20 @@
+gate6 2026-10-20T03:04:04Z at e506b7fa6609bc6cf483d175f5b3be47a403ada7
+asm2 6988abe072fac3cdef2240d5ad13a3ecd8fb576fa09112d344b9e7c2315969c4  table 05463722450e1c4635eac08f0fcffafc2ca5b7d19062dfe2462e1193edd0af74  (181 lines)
+kernels 6091 (instructions 2398274), identical repeats skipped 1825, settings refused 12790
+edge cases 65352
+kernels: 6091 programs, 6091 bit-identical, 0 differ (evidence/SEED-0/sm121/kernels-result.tsv)
+kernels: 2419440 instruction words compared (38711040 bytes)
+PASS edges: 65352 instruction cases bit-identical
+PASS vecadd built by asm2 twice, same bytes
+PASS vecadd.bin = omega_blackwell_encode_vecadd (512 bytes)
+PASS control caught: wrong register (IADD3 R9 -> R8) ()
+PASS control caught: wrong offset (LDC.64 b 226 -> 227) ()
+PASS control caught: register out of range (256) (asm2: line 243: error 8)
+PASS control caught: wrong table bit (LDG.E word 2) ()
+PASS control caught: wrong field position (S2R register at bit 9) ()
+nvdisasm: release 13.0, V13.0.85  (reference reader only)
+nvdisasm refusals by schedule word: 0xffffffff x20104, default x112, 0x000fe200 x112
+nvdisasm read 45024 of 65352 edge instructions; refused 20328 (evidence/SEED-0/sm121/nvdisasm-refused.txt; with an ordinary schedule word, by form: evidence/SEED-0/sm121/nvdisasm-refused-forms.txt)
+names: 68 forms checked, 9 where the C encoder's name and the disassembler's differ (evidence/SEED-0/sm121/name-differences.tsv)
+notes (what the C encoder silently ignores or drops): 4 kinds, evidence/SEED-0/sm121/notes-summary.tsv
+GATE6 PASS

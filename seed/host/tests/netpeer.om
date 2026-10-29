@@ -1,0 +1,95 @@
+note Parent and child connect independently; SO_PEERCRED must return the other process PID.
+text pname "netpeer.sock"
+text pass "PASS independent Unix peer identity and offset sentinels\n"
+global pa uchar 110
+global pc uchar 16
+global ps uchar 4
+global pb uchar 8
+global pp uchar 16
+fn pcheck yes bool to void
+if not yes
+exit 1
+end
+end
+fn pget off ulong to long
+v = ulong 0
+for i ulong 4
+v = or v shl ulong get pc add off i mul i 8
+end
+ret long v
+end
+fn pcreds fd int pid long to void
+for i ulong len pc
+put pc i 165
+end
+pcheck eq add peercred fd pc 2 12 9 9
+pcheck eq pget 2 pid
+pcheck eq pget 6 getuid
+pcheck eq pget 10 getgid
+pcheck eq get pc 0 165
+pcheck eq get pc 1 165
+pcheck eq get pc 14 165
+pcheck eq get pc 15 165
+end
+fn pchild to int
+fd = socknew 1 524289 0
+pcheck ge fd 0
+pcheck eq connect int fd pa 0 len pa 0
+pcreds int fd getppid
+put pb 3 42
+pcheck eq sendmsg int fd pb 3 1 0 1
+pcheck gt waitio int fd 1 1000000000 0
+pcheck eq recv int fd pb 4 1 0 1
+pcheck eq get pb 4 99
+pcheck eq fclose int fd 0
+ret 0
+end
+fn pserve fd int pid long to void
+pcheck gt waitio fd 1 1000000000 0
+conn = accept fd 524288
+pcheck ge conn 0
+pcreds int conn pid
+for i ulong len pp
+put pp i 0
+end
+for i ulong 4
+put pp add i 4 uchar and shr ulong conn mul i 8 255
+end
+put pp 8 1
+put pp 0 165
+put pp 15 165
+pcheck eq add pollfds pp 4 8 neg long 1 9 10
+pcheck ne and get pp 10 1 0
+pcheck eq get pp 0 165
+pcheck eq get pp 15 165
+pcheck eq recv int conn pb 2 1 0 1
+pcheck eq get pb 2 42
+put pb 3 99
+pcheck eq add sendmsg int conn pb 3 1 0 9 10
+pcheck eq fclose int conn 0
+end
+fn main to int
+put pa 0 1
+for i ulong len pname
+put pa add i 2 get pname i
+end
+fd = socknew 1 524289 0
+pcheck ge fd 0
+pcheck eq bind int fd pa 0 len pa 0
+pcheck eq listen int fd 1 0
+pid = fork
+pcheck ge pid 0
+if eq pid 0
+pcheck eq fclose int fd 0
+ret pchild
+end
+pserve int fd pid
+pcheck eq waitpid int pid ps 0 4 0 pid
+for i ulong 4
+pcheck eq get ps i 0
+end
+pcheck eq fclose int fd 0
+pcheck eq unlink pname 0 len pname 0
+pcheck eq write 1 pass 0 len pass long len pass
+ret 0
+end

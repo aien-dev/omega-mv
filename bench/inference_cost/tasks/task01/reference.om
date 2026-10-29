@@ -1,0 +1,7 @@
+fn clamp_add_u16 a uint b uint to uint
+s = add a b
+if gt s 65535
+ret 65535
+end
+ret s
+end

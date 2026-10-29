@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: Apache-2.0
+# L836 Phase B lane FixLex: OM-1 units for the C2 manifest (contract 0 lines 19-22).
+# name path sha256 -- sha256 of the pinned omc 734f0a39 output (compiled 2026-10-25 by FixLex).
+# A path a+b means the bytes of a then b, concatenated (gate SRC convention); paths from the worktree root.
+s0-names-fn seed/qualification/om2/sec/s0s2/s0/names-fn.om+seed/qualification/om2/sec/s0s2/lib/putu.om 8c1e625abb265e5ec2bb1d70bcf70e16f494d5f2d69d21b84d4010f02a4597cd
+s0-names-var seed/qualification/om2/sec/s0s2/s0/names-var.om+seed/qualification/om2/sec/s0s2/lib/putu.om 8f809f5336881a5a9a2bc8a47c7577d4d607729bfb0b94d169b072d6acd57a50
+s0-om1-crlf seed/qualification/om2/sec/s0s2/s0/om1-crlf.om+seed/qualification/om2/sec/s0s2/lib/putu.om 38921391cc3b9bfdd733c61f6078165678d1290d0917715a92097e31b7fb33de
+s2-dec-max seed/qualification/om2/sec/s0s2/s2hex/dec-max.om+seed/qualification/om2/sec/s0s2/lib/putu.om 6921d6a044ea452a5b3a1231d8b86fc1a7afd204b26ac3c6b6a68f93dea61de3
+s2-dec-places seed/qualification/om2/sec/s0s2/s2hex/dec-places.om+seed/qualification/om2/sec/s0s2/lib/putu.om 2e3ab50c6637eb326d446d9940957d98be64e2934193289716ec2c8df0e7f2c4
+s2-om1-g0 seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce
+s2-om1-g1 seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce
+s2-om1-g2 seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce
+s2-om1-g3 seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce
+s2-om1-g4 seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce
+# Refusals (C2 'or the identical error'): name path then the exact pinned stderr line.
+# refuse s0-notfirst seed/qualification/om2/sec/s0s2/s0/notfirst.om omc: line 7: error 16
+# refuse s0-trail-space seed/qualification/om2/sec/s0s2/s0/trail-space.om omc: line 4: error 16
+# refuse s0-trail-word seed/qualification/om2/sec/s0s2/s0/trail-word.om omc: line 4: error 16
+# refuse s0-trail-diagx seed/qualification/om2/sec/s0s2/s0/trail-diagx.om omc: line 4: error 16
+# refuse s0-double-space seed/qualification/om2/sec/s0s2/s0/double-space.om omc: line 4: error 16
+# refuse s0-indent seed/qualification/om2/sec/s0s2/s0/indent.om omc: line 4: error 16
+# refuse s0-upper seed/qualification/om2/sec/s0s2/s0/upper.om omc: line 4: error 16
+# refuse s0-blank-first seed/qualification/om2/sec/s0s2/s0/blank-first.om omc: line 5: error 16
+# refuse s0-w-unroll seed/qualification/om2/sec/s0s2/s0/w-unroll.om omc: line 5: error 5
+# refuse s0-w-inline seed/qualification/om2/sec/s0s2/s0/w-inline.om omc: line 4: error 5
+# refuse s0-w-fresh seed/qualification/om2/sec/s0s2/s0/w-fresh.om omc: line 4: error 16
+# refuse s0-w-rotr seed/qualification/om2/sec/s0s2/s0/w-rotr.om omc: line 6: error 3
+# refuse s0-w-abstract seed/qualification/om2/sec/s0s2/s0/w-abstract.om omc: line 4: error 16
+# refuse s0-w-layout seed/qualification/om2/sec/s0s2/s0/w-layout.om omc: line 4: error 16
+# refuse s0-w-export seed/qualification/om2/sec/s0s2/s0/w-export.om omc: line 4: error 16
+# refuse s0-w-part seed/qualification/om2/sec/s0s2/s0/w-part.om omc: line 8: error 3
+# refuse s0-w-viewstar seed/qualification/om2/sec/s0s2/s0/w-viewstar.om omc: line 4: error 16
+# refuse s0-w-out seed/qualification/om2/sec/s0s2/s0/w-out.om omc: line 4: error 16
+# refuse s0-w-hex seed/qualification/om2/sec/s0s2/s0/w-hex.om omc: line 5: error 6
+# refuse s2-d8-uchar seed/qualification/om2/sec/s0s2/s2hex/d8-uchar.om omc: line 5: error 8
+# refuse s2-d8-ushort seed/qualification/om2/sec/s0s2/s2hex/d8-ushort.om omc: line 5: error 8
+# refuse s2-d8-uint seed/qualification/om2/sec/s0s2/s2hex/d8-uint.om omc: line 5: error 8
+# refuse s2-d8-byte seed/qualification/om2/sec/s0s2/s2hex/d8-byte.om omc: line 5: error 8
+# refuse s2-d8-short seed/qualification/om2/sec/s0s2/s2hex/d8-short.om omc: line 5: error 8
+# refuse s2-d8-int seed/qualification/om2/sec/s0s2/s2hex/d8-int.om omc: line 5: error 8
+# refuse s2-d8-long seed/qualification/om2/sec/s0s2/s2hex/d8-long.om omc: line 5: error 8
+# refuse s2-d8-intffff seed/qualification/om2/sec/s0s2/s2hex/d8-intffff.om omc: line 5: error 8
+# refuse s2-om1-left-typed seed/qualification/om2/sec/s0s2/s2bnd/om1-left-typed.om omc: line 6: error 5
+# refuse s2-om1-left-assign seed/qualification/om2/sec/s0s2/s2bnd/om1-left-assign.om omc: line 6: error 5
+# refuse s2-om1-left-paren seed/qualification/om2/sec/s0s2/s2bnd/om1-left-paren.om omc: line 6: error 5
+# refuse s2-om1-left-bare seed/qualification/om2/sec/s0s2/s2bnd/om1-left-bare.om omc: line 5: error 11
+# refuse s2-om1-short-next seed/qualification/om2/sec/s0s2/s2bnd/om1-short-next.om omc: line 7: error 4
+# refuse s2-om1-short-bare seed/qualification/om2/sec/s0s2/s2bnd/om1-short-bare.om omc: line 6: error 4
+# refuse s2-om1-short-eof seed/qualification/om2/sec/s0s2/s2bnd/om1-short-eof.om omc: line 6: error 4
+# refuse s2-om1-group-open seed/qualification/om2/sec/s0s2/s2bnd/om1-group-open.om omc: line 6: error 16
+# refuse s2-om1-group-short seed/qualification/om2/sec/s0s2/s2bnd/om1-group-short.om omc: line 6: error 16
+# refuse s2-om1-group-wide seed/qualification/om2/sec/s0s2/s2bnd/om1-group-wide.om omc: line 6: error 16
+# refuse s2-om1-bracket seed/qualification/om2/sec/s0s2/s2bnd/om1-bracket.om omc: line 6: error 3
+# refuse s2-om1-brace seed/qualification/om2/sec/s0s2/s2bnd/om1-brace.om omc: line 6: error 3

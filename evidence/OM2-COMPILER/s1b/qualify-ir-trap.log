@@ -1,0 +1,44 @@
+PASS mut runs, exit 0
+PASS cycle exit 9
+PASS assign exit 7
+RC=0
+RC=0
+PASS unsupported_break refused error 9; no output
+PASS unsupported_own refused error 9; no output
+CHECKS=67 FAILURES=0 VALID_PROGRAMS=19 REFUSALS=11
+RC=0
+RC=0
+CAUGHT unchecked-code: compiled ELF sha256=319f263873cf364249c2d689f3c72a4ea92710b7881ae655936139c980831a32; FAIL too_large refused error 8
+CAUGHT eol-code: compiled ELF sha256=d5b1995409511041714e75dee1ae611dc4b8c8bc8ffced4e7ec3671b31975987; FAIL missing refused error 4
+CAUGHT name-code: compiled ELF sha256=55dbfe86116faaec6313ecad89aa37e30d363926193927614d69db498f055b9c; FAIL named refused error 16
+COMPILED_MUTANTS=5 CAUGHT=5 RC=0
+RC=0
+PASS unsupported_break refused error 9; no output
+PASS unsupported_own refused error 9; no output
+CHECKS=67 FAILURES=0 VALID_PROGRAMS=19 REFUSALS=11
+RC=0
+RC=0
+PASS cast_ret IR identical; checker2 ACCEPT
+PASS 30 random two-function call units identical; checker2 ACCEPT
+SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 1 bool unit + 1 cast unit + 30 fuzz units; structs IR spec-blocked
+RC=0
+RC=0
+PASS missing_val error 4
+PASS mut field-swap exit 22
+PASS gate6 26 cases
+RC=0
+RC=0
+PASS deterministic: same bytes under another environment and a second later
+PASS om4 = stage2 in the nextfuzz: 20 programs (20 accepted, 0 out of registers, error 12), 4860 cut or changed inputs, 0 bad; exit codes 0:215 3:107 4:1351 5:64 6:66 7:115 8:48 9:277 10:4 11:37 13:24 15:487 16:2020 17:36 18:3 21:4 23:2 
+PASS every error number 1..23 is reached, om4 = stage2 on each
+GATE5_CORRECTNESS sections1-6b cases=177 fail=0; performance section7 NOT_RUN
+RC=0
+checker2 residual: 0 of 80 completed walks that emit accepts are rejected later (omega_emit or checker2)
+truncation fuzz: 2799 byte prefixes through emit, next and next --machine, exit 0 or 1; at the 2698 prefixes of accepted programs, next allows the byte that follows and complete finishes into a program emit accepts
+sanitizers: no ASan or UBSan report in the whole run
+test-omegese: PASS
+RC=0
+seed/out/omc: OK
+QUALIFIED host trap repair; whole R6 remains experimental; full Gate5 section7 timing NOT_RUN
+RC=0
+RC=0
