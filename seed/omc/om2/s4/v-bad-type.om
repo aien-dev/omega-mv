@@ -1,0 +1,9 @@
+note S4 / erratum E2: the element type of an unsized parameter must match (uchar array to ulong *: error 7).
+om2
+fn g v view ulong * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 4 0
+ret int g a
+end

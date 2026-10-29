@@ -1,4 +1,19 @@
 #!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # TEST HARNESS: PATH-1 mutation oracle. Each mutant edits a scratch copy of
 # src/path/rx_path.c, never the source. A mutant counts as killed only when it
 # compiles and the test program reports at least one FAIL line.
@@ -19,7 +34,7 @@ run() {
     fi
     # A compiler error does not count as an invariant caught by tests.
     ${CC:-cc} -std=c11 -Wall -Wextra -Werror -O2 -I"$root/src" -I"$root/src/path" \
-        "$scratch/mutant.c" "$root/src/sha256.c" "$root/tests/path/test_path_identity.c" \
+        "$scratch/mutant.c" "$root/src/omega_om_units.c" "$root/tests/path/test_path_identity.c" \
         -o "$scratch/test"
     if "$scratch/test" > "$scratch/log" 2>&1; then
         echo "MUTANT $name: SURVIVED" >&2; cat "$scratch/log" >&2; exit 1

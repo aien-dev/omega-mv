@@ -1,0 +1,10 @@
+om2
+fn main to int
+i = uint 0
+while true
+invariant eq i 0
+i = add i 1
+break
+end
+ret int sub i 1
+end

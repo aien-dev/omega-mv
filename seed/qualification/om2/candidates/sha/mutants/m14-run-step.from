@@ -1,0 +1,3 @@
+for b ulong and shr len m 25 0x7ffff
+run s w kt part m q 0x2000000
+q = add q 0x2000000

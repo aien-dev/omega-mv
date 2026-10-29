@@ -1,0 +1,6 @@
+struct N a uchar b uint c uchar d uchar e uchar end
+fn main to uint
+p = new N 0 1 0 0 0
+put p e 9
+ret get p b
+end

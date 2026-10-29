@@ -1,0 +1,9 @@
+note S4: a part of a global is error 19 (a global is never passed).
+om2
+global g uchar 10
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+ret int plen part g 0 4
+end

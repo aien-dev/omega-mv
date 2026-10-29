@@ -1,0 +1,6 @@
+note S4 empty text: a constant index into `text e ""` (length 0) is out of range at compile time, error 21.
+om2
+text e ""
+fn main to int
+ret int get e 0
+end

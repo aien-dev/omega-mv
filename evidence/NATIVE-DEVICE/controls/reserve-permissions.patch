@@ -1,0 +1,10 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -2906,7 +2906,6 @@
+ mcheck
+ mload 15 11 3
+ mimmed 4043309056 31 15 0
+-trapc 0 3
+ hload x 3 0
+ e3 3942645760 31 0 12
+ trapc 8 3

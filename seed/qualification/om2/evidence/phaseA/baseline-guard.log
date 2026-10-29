@@ -1,0 +1,28 @@
+OM2GATE START cases=seed/qualification/om2/baseline/guard.cases scratch=build/om2-qual/baseline-guard
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE witness-pinned line=4
+  $ seed/out/omc < build/om2-qual/baseline-guard/4.src > build/om2-qual/baseline-guard/4.elf 2> build/om2-qual/baseline-guard/4.cerr
+  $ build/om2-qual/baseline-guard/4.elf < /dev/null > build/om2-qual/baseline-guard/4.out 2> build/om2-qual/baseline-guard/4.err
+VERDICT witness-pinned PASS run exit=103 expected=103 stdout=match stderr=match
+SUBST seed/qualification/om2/compiler-mutants/guard-wrapped.from seed/qualification/om2/compiler-mutants/guard-wrapped.to
+  MUTATE exact-once substitution at byte 48931
+  $ seed/out/omc < build/om2-qual/baseline-guard/6.src > build/om2-qual/baseline-guard/6.elf 2> build/om2-qual/baseline-guard/6.cerr
+COMPILER build/om2-qual/baseline-guard/6.elf sha256=75297a57ab831894598031d1e32c6a03d5109e054e0e8f011f32a88c1065c0da source line=6
+CASE witness-guard-mutant line=7
+  $ build/om2-qual/baseline-guard/6.elf < build/om2-qual/baseline-guard/7.src > build/om2-qual/baseline-guard/7.elf 2> build/om2-qual/baseline-guard/7.cerr
+  $ build/om2-qual/baseline-guard/7.elf < /dev/null > build/om2-qual/baseline-guard/7.out 2> build/om2-qual/baseline-guard/7.err
+VERDICT witness-guard-mutant PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+CASE witness-guard-mutant-exact line=8
+  $ build/om2-qual/baseline-guard/6.elf < build/om2-qual/baseline-guard/8.src > build/om2-qual/baseline-guard/8.elf 2> build/om2-qual/baseline-guard/8.cerr
+  $ build/om2-qual/baseline-guard/8.elf < /dev/null > build/om2-qual/baseline-guard/8.out 2> build/om2-qual/baseline-guard/8.err
+VERDICT witness-guard-mutant-exact PASS run exit=0 expected=0 stdout=match stderr=match
+CASE sha-abc-guard-mutant line=9
+  $ build/om2-qual/baseline-guard/6.elf < build/om2-qual/baseline-guard/9.src > build/om2-qual/baseline-guard/9.elf 2> build/om2-qual/baseline-guard/9.cerr
+  $ build/om2-qual/baseline-guard/9.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-guard/9.out 2> build/om2-qual/baseline-guard/9.err
+VERDICT sha-abc-guard-mutant PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER seed/out/omc
+CASE witness-pinned-again line=11
+  $ seed/out/omc < build/om2-qual/baseline-guard/11.src > build/om2-qual/baseline-guard/11.elf 2> build/om2-qual/baseline-guard/11.cerr
+  $ build/om2-qual/baseline-guard/11.elf < /dev/null > build/om2-qual/baseline-guard/11.out 2> build/om2-qual/baseline-guard/11.err
+VERDICT witness-pinned-again PASS run exit=103 expected=103 stdout=match stderr=match
+OM2GATE PASS cases=5 pass=5 fail=0 invalid=0 not_run=0

@@ -1,0 +1,11 @@
+note continue in a for jumps to the increment, so the loop still advances: 0+1+2+4+5 = 12
+fn main to ulong
+s = ulong 0
+for i ulong 6
+if eq i 3
+continue
+end
+s = add s i
+end
+ret s
+end
