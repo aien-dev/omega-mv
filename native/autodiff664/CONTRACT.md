@@ -82,7 +82,12 @@ OMC=<pinned omc> OUT=<scratch> sh tests/autodiff664/run-tape.sh
   IEEE identities (`x·x` grad is `x + x`, SUB grad is `neg s`) and the f64
   widening control. No expected value is a hand-entered constant. `torder`
   requires at least one input where the tree sum differs from the sequential
-  sum, and requires the tape to follow the tree on every input.
+  sum, and requires the tape to follow the tree on every input. Deviation from
+  the plan: these are not Wolfram-computed literal bit patterns. A rounding
+  mistake shared by the tape and the test-local tile would pass here. That case
+  is covered elsewhere: by the C M21 fixture replay below, and by the
+  exact-rational Wolfram oracle on the full training step in aien-train
+  `tests/adtrain/gradient.wl`, which gave 58/58 exact.
 - `tests/autodiff664/mutate.om`: three compiled source mutants of `tape.om`
   (SUB sign dropped, MUL operand swapped to `value(in0)`, RELU tie `gt`→`ge`).
   Each compiles with rc 0 and makes the test exit 1, at checks 212, 66 and 171.
@@ -95,8 +100,12 @@ OMC=<pinned omc> OUT=<scratch> sh tests/autodiff664/run-tape.sh
 - The fixture is 187 u32 words, 748 bytes: a 6-word header, 106 inputs and 75
   expected values. The plan's "179 words" was an arithmetic slip.
 - The GB10 arm is `tests/run_ad_chip.sh` (`GB10_CHIP_RUN=1`,
-  `/tmp/aien-gb10.lock`, physics at `physics.lock`). It needs an explicit GPU
-  window. Until a receipt exists, it is NOT_RUN.
+  `/tmp/aien-gb10.lock`, physics at `physics.lock`). It ran once on 2026-10-29
+  at 17:07Z, in a window Drake authorised. Result:
+  `AD_FIXTURE_CHIP: exact=75/75 max_ulp=0 verdict=PASS`; the sign-flip control
+  exits 1. Receipt: aien-train `evidence/ADTRAIN/gb10/`. This is one fixture on
+  one device. The GB10 executes the C M21 replay; the native tape runs on the
+  host.
 
 ## Not claimed
 
