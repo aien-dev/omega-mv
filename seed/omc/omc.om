@@ -93,6 +93,16 @@ note fuel (E14, E16): the expansion fuel used by the function being compiled: an
 note it starts, an inline expansion 1, at most 65536 in all (error 14)
 global fuel ulong 1
 global fok ulong 1
+note kv (OM-2 code generation only): kvok/kvv, a register holding a number bound to an inline parameter
+note (set in inl_par; cleared by alloc, by an assignment to the name, at s_while / s_for and at s_inlx);
+note lkr/lkv, the temporary last written by a folded binop (register + 1, cleared by every emitted word,
+note at a join and at every statement). kvget answers kvf/kvx for a value of kind k, v.
+global kvok uchar 32
+global kvv ulong 32
+global lkr ulong 1
+global lkv ulong 1
+global kvf ulong 1
+global kvx ulong 1
 global fval ulong 1
 global fty ulong 1
 global sitebuf uchar 8388608
@@ -528,6 +538,7 @@ put oc 0 add o 1
 end
 
 fn emit w ulong to void
+put lkr 0 0
 if ge get oc 0 8388608
 fail 14
 end
@@ -2410,7 +2421,12 @@ if ge i 16
 fail 12
 end
 put nslot 0 add get nslot 0 1
-ret poolc i
+r = poolc i
+put kvok r 0
+if eq get lkr 0 add r 1
+put lkr 0 0
+end
+ret r
 end
 
 note destreg: d, or a new temporary when d is 255
@@ -2479,6 +2495,7 @@ d = disp19 at target
 wrword at or rdword at shl d 5
 if eq target get oc 0
 put tgoc 0 target
+put lkr 0 0
 end
 end
 
@@ -2490,6 +2507,7 @@ d = and shr sub target at 2 67108863
 wrword at or rdword at d
 if eq target get oc 0
 put tgoc 0 target
+put lkr 0 0
 end
 end
 
@@ -2958,6 +2976,140 @@ if eq op 40
 fx = ulong 3388997632
 end
 bo_w3 fx rd ra rb 0
+end
+
+note lmask (OM-2): the AArch64 bitmask immediate of the 64-bit value v (C6.2.12, DecodeBitMasks): an element
+note of e bits (2 .. 64) repeated to 64 bits, holding r ones rotated right by immr. Out: N << 12 | immr << 6
+note | imms, or'd with 8192; 0 when v has none (0, all ones, or not a repeated rotated run of ones).
+fn lmask v ulong to ulong
+if or eq v 0 eq v not ulong 0
+ret 0
+end
+e = ulong 64
+go = ulong 1
+while and ne go 0 gt e 2
+h = shr e 1
+m = sub shl ulong 1 h 1
+if eq and v m and shr v h m
+e = h
+else
+go = ulong 0
+end
+end
+fm = fmask e
+x = and v fm
+s = ulong 0
+while lt s e
+y = x
+if ne s 0
+y = and or shr x s shl x sub e s fm
+end
+if eq and y add y 1 0
+ret lmenc e s y
+end
+s = add s 1
+end
+ret 0
+end
+
+note lmenc: the lmask word for an element of e bits whose ones y (a low run) are rotated right by e - s
+fn lmenc e ulong s ulong y ulong to ulong
+r = ulong 0
+while ne y 0
+r = add r 1
+y = shr y 1
+end
+n = ulong 0
+if eq e 64
+n = ulong 1
+end
+immr = shl and sub e s sub e 1 6
+imms = and or shl not sub e 1 1 sub r 1 63
+ret or or or 8192 shl n 12 immr imms
+end
+
+note bo_logi (OM-2): and, or, xor with a number b whose bitmask immediate is lm (lmask): AND / ORR / EOR
+note (immediate, C6.2.12 / C6.2.205 / C6.2.103), 64-bit, the same value the register form would use
+fn bo_logi op ulong ra ulong lm ulong rd ulong to void
+fx = ulong 2449473536
+if eq op 39
+fx = ulong 2986344448
+end
+if eq op 40
+fx = ulong 3523215360
+end
+emit or or or fx shl and lm 8191 10 shl ra 5 rd
+end
+
+note pow2k (OM-2): k when v is 2^k (k 0 .. 63), else 64
+fn pow2k v ulong to ulong
+if or eq v 0 ne and v sub v 1 0
+ret 64
+end
+k = ulong 0
+while ne v 1
+v = shr v 1
+k = add k 1
+end
+ret k
+end
+
+note binsp (OM-2): for b of kind bk holding bn: and/or/xor with a bitmask immediate gives lmask's word
+note (bit 8192); an unsigned div/rem by 2^k gives 16384 | k; anything else, and any OM-1 unit, 0
+fn binsp op ulong ty ulong bk ulong bn ulong to ulong
+if or eq get om2 0 0 ne bk 3
+ret 0
+end
+if and ge op 38 le op 40
+ret lmask bn
+end
+if and lt ty 6 or eq op 36 eq op 37
+k = pow2k bn
+if lt k 64
+ret or 16384 k
+end
+end
+ret 0
+end
+
+note bo_divx: div or rem, b at fr slot ix + 3: a number b other than 0 sets fl bit 1, other than -1 bit 2
+note (bo_div); in an OM-2 unit an unsigned b of 2^k goes to bo_div2 (binsp)
+fn bo_divx op ulong ty ulong ra ulong rb ulong rd ulong ix ulong to void
+bk = get fr add ix 3
+bn = get fr add ix 4
+sp = binsp op ty bk bn
+if ne sp 0
+bo_div2 op ra and sp 63 rd
+ret
+end
+fl = ulong 0
+if and eq bk 3 ne bn 0
+fl = or fl 1
+end
+if and eq bk 3 ne bn 18446744073709551615
+fl = or fl 2
+end
+bo_div op ty ra rb rd fl
+end
+
+note bo_div2 (OM-2): unsigned div / rem by the number 2^k: div LSR Xd, Xa, #k (UBFM, C6.2.333) or MOV for
+note k 0; rem AND Xd, Xa, #(2^k - 1) (C6.2.12) or MOVZ Xd, #0 for k 0. b is not 0, so there is no trap.
+note rem takes the quotient register bo_div would, so error 12 falls where it did.
+fn bo_div2 op ulong ra ulong k ulong rd ulong to void
+if eq op 37
+t = alloc
+if eq k 0
+emit or 3531603968 rd
+ret
+end
+bo_logi 38 ra lmask sub shl ulong 1 k 1 rd
+ret
+end
+if eq k 0
+emit or or 2852127712 rd shl ra 16
+ret
+end
+emit or or or 3544251392 shl k 16 shl ra 5 rd
 end
 
 note bo_lsl: LSL Xd, Xn, #s as UBFM Xd, Xn, #(64-s) mod 64, #63-s
@@ -3460,7 +3612,9 @@ put rt 0 ty
 end
 
 note binop: op 33..48, destination (255 none), ix the fr slot of a (kind, number/register, type) then b.
-note Result in rk/rv/rt. om4 BINOP.
+note Result in rk/rv/rt. om4 BINOP. In an OM-2 unit a number b of and/or/xor with a bitmask immediate uses
+note the immediate form, and an unsigned div/rem by the number 2^k a shift or mask (bo_div2); b's register
+note is still taken from the pool, so the error 12 boundary is that of the register form.
 fn binop op ulong dst ulong ix ulong to void
 if ne get fzone 0 0
 if and eq get fr ix 3 eq get fr add ix 3 3
@@ -3513,11 +3667,21 @@ end
 end
 end
 end
+sp = binsp op ty bk bn
+if ne get om2 0 0
+if ne kvbin op dst ix 0
+ret
+end
+end
 if useimm
 rb = bn
 imm = ulong 1
 else
+if ne sp 0
+rb = alloc
+else
 rb = matreg bk bn get fr add ix 5
+end
 end
 if ge op 43
 bo_cmp op ty ra rb imm
@@ -3536,17 +3700,14 @@ if eq op 35
 bo_mul ty ra rb rd
 else
 if lt op 38
-fl = ulong 0
-if and eq bk 3 ne bn 0
-fl = or fl 1
-end
-if and eq bk 3 ne bn 18446744073709551615
-fl = or fl 2
-end
-bo_div op ty ra rb rd fl
+bo_divx op ty ra rb rd ix
 else
 if lt op 41
+if ne sp 0
+bo_logi op ra sp rd
+else
 bo_log op ra rb rd
+end
 else
 if eq op 41
 bo_shl ty ra rb imm rd
@@ -3694,6 +3855,8 @@ x = alloc
 matconst x v
 end
 else
+h = kvidx k v ln
+if eq h 0
 if le ln 4095
 emit or or 4043309087 shl ln 10 shl v 5
 else
@@ -3702,6 +3865,10 @@ matconst y ln
 emit or or 3942645791 shl y 16 shl v 5
 end
 trapc 2 3
+end
+if eq h 1
+x = ulong 255
+end
 end
 end
 put ea_i 0 x
@@ -3712,6 +3879,131 @@ put ea_b 0 b
 else
 put ea_b 0 ulong get nm_reg i
 end
+end
+
+note kvclr: forget every known register value (a loop head, the end of an inline frame)
+fn kvclr to void
+for i ulong 32
+put kvok i 0
+end
+put lkr 0 0
+end
+
+note kvget: kvf 1 and kvx the value when the value of kind k, v is known: a number, a register bound to
+note a number (kvok), or the temporary just written by a folded binop (lkr)
+fn kvget k ulong v ulong to void
+put kvf 0 0
+if eq k 3
+put kvf 0 1
+put kvx 0 v
+ret
+end
+if or ne k 1 ge v 32
+ret
+end
+if ne get kvok v 0
+put kvf 0 1
+put kvx 0 get kvv v
+ret
+end
+if eq get lkr 0 add v 1
+put kvf 0 1
+put kvx 0 get lkv 0
+end
+end
+
+note kvpar: an inline parameter r of integer type pt bound to the number v (kind 3) holds v (OM-2)
+fn kvpar k ulong v ulong pt ulong r ulong to void
+if and and ne get om2 0 0 eq k 3 and ge pt 2 lt pt 10
+put kvok r 1
+put kvv r v
+end
+end
+
+note kvimm: 1 when binop takes the number bn as an immediate (no register for b), as binop decides
+fn kvimm op ulong ty ulong bn ulong to ulong
+if or eq op 41 eq op 42
+if lt bn twid ty
+ret 1
+end
+ret 0
+end
+if or lt op 35 ge op 43
+if le bn 4095
+ret 1
+end
+end
+ret 0
+end
+
+note kvbin (OM-2): an integer op 33..42 whose operands are both known, at least one a register, folds
+note (foldbin: no fold where the op would trap) into MOVZ/MOVN/MOVK of the result. The registers binop
+note would take for b are still taken, so error 12 falls where it did; the result stays a register (rk 1)
+note so every front-end rule sees what it saw. Returns 1 when done.
+fn kvbin op ulong dst ulong ix ulong to ulong
+ty = get fr add ix 2
+if or or ge op 43 lt ty 2 ge ty 10
+ret 0
+end
+bk = get fr add ix 3
+bn = get fr add ix 4
+if and eq get fr ix 3 eq bk 3
+ret 0
+end
+kvget get fr ix get fr add ix 1
+if eq get kvf 0 0
+ret 0
+end
+a = get kvx 0
+kvget bk bn
+if eq get kvf 0 0
+ret 0
+end
+foldbin op ty a get kvx 0
+if eq get fok 0 0
+ret 0
+end
+if eq bk 3
+if eq kvimm op ty bn 0
+d = alloc
+end
+end
+f = get fval 0
+rd = destreg dst
+matconst rd f
+if eq dst 255
+put lkr 0 add rd 1
+put lkv 0 f
+end
+put rk 0 1
+put rv 0 rd
+put rt 0 ty
+ret 1
+end
+
+note kvidx (OM-2): a register index of known value c inside the sized array (c < ln) needs no check:
+note 1 for the immediate form (c <= 4095, ea_k), 2 to keep the register, 0 when not known or not inside.
+note The register ln > 4095 would take is still taken.
+fn kvidx k ulong v ulong ln ulong to ulong
+if eq get om2 0 0
+ret 0
+end
+kvget k v
+if eq get kvf 0 0
+ret 0
+end
+c = get kvx 0
+if ge c ln
+ret 0
+end
+if gt ln 4095
+d = alloc
+end
+if le c 4095
+put ea_k 0 c
+ret 1
+end
+ret 2
 end
 
 note aa_word: the next word of an array argument must be a name of at most 8 bytes
@@ -6491,6 +6783,7 @@ if ne get rt 0 t
 fail 7
 end
 force get rk 0 get rv 0 get rt 0 r
+put kvok r 0
 eol
 ret
 end
@@ -7081,14 +7374,29 @@ trapc 2 4
 emit or or 2432697344 c shl c 5
 end
 
+note lpalign (OM-2): NOP (C6.2.238) up to a 16-byte boundary before a loop head, so the head starts a fetch
+note block. The pad does not count toward the function's 262144-byte bound (error 14): fstart moves with it.
+fn lpalign to void
+if eq get om2 0 0
+ret
+end
+while ne and get oc 0 15 0 bound 4
+put fstart 0 add get fstart 0 4
+emit 3573751839
+end
+end
+
 note s_while: while cond [bound N]: hidden counter = 0; head: cond false -> exit; counter >= N -> trap 4;
 note counter = counter + 1; body; B head. N is 1 .. 999999 (error 8), 1000000 with no bound. om4 S_WHILE.
+note In an OM-2 unit the head is aligned to 16 bytes (lpalign).
 fn s_while to void
+kvclr
 sn = get nn 0
 sh = get held 0
 c = alloc
 put held 0 get nslot 0
 emit or 3531603968 c
+lpalign
 hd = get oc 0
 cp_head skipln get cur 0 add get line 0 1
 br = cond
@@ -7138,6 +7446,7 @@ i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
 emit or 3531603968 i
+lpalign
 hd = get oc 0
 cp_head get cur 0 get line 0
 if le kk 4095
@@ -7154,7 +7463,8 @@ cp_skip
 end
 
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
-note Xi, Xk; B.HS/B.GE exit; the counter guard of a while with no bound. om4 SF_VAL.
+note Xi, Xk; B.HS/B.GE exit; the counter guard of a while with no bound. om4 SF_VAL. In an OM-2 unit the
+note head is aligned (lpalign).
 fn sf_val w ulong t ulong kr ulong sn ulong sh ulong to void
 eol
 i = alloc
@@ -7164,6 +7474,7 @@ emit or 3531603968 i
 c = alloc
 put held 0 get nslot 0
 emit or 3531603968 c
+lpalign
 hd = get oc 0
 cp_head get cur 0 get line 0
 emit or or 3942645791 shl kr 16 shl i 5
@@ -7181,6 +7492,7 @@ end
 note s_for: for i T K: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number, or a
 note value of type T: a name is read at every pass, another value once before the loop. om4 S_FOR.
 fn s_for to void
+kvclr
 sn = get nn 0
 sh = get held 0
 tok
@@ -7417,6 +7729,7 @@ r = v
 else
 r = alloc
 force k v ulong get fn_pt p r
+kvpar k v ulong get fn_pt p r
 end
 else
 if eq k 5
@@ -7601,6 +7914,7 @@ note s_inlx: the end of an inlined body: a value function must not reach it (err
 note that is the last word, with no branch patched to the place after it, is taken back; the other rets
 note branch here. The caller's line, names, registers and return type come back; the result is in rk/rv/rt.
 fn s_inlx i ulong to void
+kvclr
 eol
 lv = sub get inl 0 1
 fe = get il_fn lv
@@ -8408,6 +8722,7 @@ end
 
 note stmt: one line. Returns 1 at the end of the input. om4 STMT.
 fn stmt to ulong
+put lkr 0 0
 put dexp 0 0
 put nslot 0 get held 0
 tok
@@ -11786,6 +12101,7 @@ end
 
 fn cp_erase to void
 put oc 0 get csnap 0
+put lkr 0 0
 put nt 0 get csnap 1
 put nsite 0 get csnap 2
 put tgoc 0 get csnap 5
