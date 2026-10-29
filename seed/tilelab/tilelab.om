@@ -3,7 +3,7 @@ note seed/tilelab/tilelab.om: OmegaTileLab. Native tile planner and streaming-so
 note Run:  tilelab 1 M N K [REGS]   plan a BF16 GEMM tile schedule for CUDApp omega_gpu_gemm (rt ct wm wn band)
 note       tilelab 2 [MUT]          streaming (m,s,p) merge over 32 scores vs the direct softmax-weighted sum, f64
 note                                MUT 0 correct, 1 tile-local normalisation, 2 merge without rescale, 3 wrong tree order
-note Exit: 0 ok, 1 numeric tolerance failed, 2 refused (shape, limit or no configuration fits), 3 usage.
+note Exit: 0 ok, 1 numeric tolerance failed, 2 refused (shape, limit or no configuration fits), 3 usage (missing args, unknown mode, or a REGS value that is not a decimal ulong).
 note The GEMM model is calibrated on GB10 chip timings of the CUDApp kernel (no shared memory: each warp loads its own
 note 16rt x 8ct operands, band orders CTAs in column bands so packed B stays in L2). BM = 16 rt wm, BN = 8 ct wn,
 note Kp = K rounded up to 32, mt = ceil(M/BM), nt = ceil(N/BN). l2_bytes = 2 Kp (M nt + N mt) (operand bytes per CTA tile);
@@ -18,6 +18,7 @@ om2
 text msg "tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]\nrefused: dimension zero or above 16384\nrefused: no configuration fits the register budget\ncfg rt=\n ct=\n wm=\n wn=\n band=\n bm=\n bn=\n regs=\n ctas=\n l2_bytes=\n cost_ns=\npick \nrefused: unknown mode\nsmx direct_plus100_e9=\n seq_err_ppt=\n tree_err_ppt=\n one_err_ppt=\n tol_ppt=\nsmx FAIL\nsmx OK\nmut=\nmeasure \n dram_bytes=\n"
 global dig uchar 32
 global ab uchar 256
+global argbad uchar 1
 global xs f64 32
 global vs f64 32
 global ms f64 64
@@ -60,17 +61,27 @@ end
 end
 
 fn argdec i ulong to ulong
+note Keep parse status separate: every ulong, including the old failure sentinel, is valid decimal input.
+put argbad 0 0
 r = argread i ab 0 20
 if lt r 1
+put argbad 0 1
 ret 0xffffffffffffffff
 end
 v = ulong 0
 for k ulong ulong r
 c = get ab k
 if or lt c 48 gt c 57
+put argbad 0 1
 ret 0xffffffffffffffff
 end
-v = add mul v 10 ulong sub c 48
+digit = ulong sub c 48
+note Refuse before either unsigned operation could wrap. v > (2^64-1 - digit) / 10.
+if gt v div sub ulong 0xffffffffffffffff digit 10
+put argbad 0 1
+ret 0xffffffffffffffff
+end
+v = add mul v 10 digit
 end
 ret v
 end
@@ -403,6 +414,11 @@ end
 regs = ulong 100
 if ge argcnt 6
 regs = argdec 5
+if ne get argbad 0 0
+say 1
+newline
+ret 3
+end
 end
 ret plan argdec 2 argdec 3 argdec 4 regs
 end

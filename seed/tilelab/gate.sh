@@ -5,7 +5,8 @@
 # case in seed/tilelab/cases.txt, and requires stdout and exit status to equal seed/tilelab/expected.txt
 # byte for byte. expected.txt is the program's frozen output (a regression pin); the planner picks, bytes,
 # costs, direct value and softmax error figures in it were reproduced independently in Wolfram Language
-# (seed/tilelab/WOLFRAM.md lists each value and query; the rest is pinned, not verified). Then checks that each softmax mutant fails for its own reason:
+# (seed/tilelab/WOLFRAM.md lists each value and query; the rest is pinned, not verified). Then checks that each softmax mutant fails for its own reason,
+# and that removing either parser guard (overflow, malformed REGS) restores acceptance of the audit input.
 # mut 1 only on one_err, mut 2 on seq_err and tree_err, mut 3 only on tree_err.
 # Prints PASS tilelab and exits 0, or FAIL and exits 1.
 set -eu
@@ -53,4 +54,27 @@ over 2 seq_err_ppt || bad "mut 2 seq_err not over tolerance"
 over 2 tree_err_ppt || bad "mut 2 tree_err not over tolerance"
 over 3 seq_err_ppt && bad "mut 3 fails for a reason other than tree order"
 over 3 tree_err_ppt || bad "mut 3 tree_err not over tolerance"
-printf 'PASS tilelab %s cases, 3/3 softmax mutants fail for the intended reason\n' "$(grep -c '^\$ ' "$B/observed.txt")"
+# All representable unsigned budgets remain valid, including the former failure sentinel.
+"$B/tilelab" 1 8 8 8 18446744073709551615 > "$B/max-regs.txt" || bad "maximum ulong REGS refused"
+grep -q '^pick cfg ' "$B/max-regs.txt" || bad "maximum ulong REGS did not produce a plan"
+if "$B/tilelab" 1 8 8 8 "" > "$B/empty-regs.txt"; then rc=0; else rc=$?; fi
+[ "$rc" -eq 3 ] || bad "empty REGS returned $rc, wanted usage refusal 3"
+printf 'tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]\n' > "$B/usage.txt"
+cmp -s "$B/empty-regs.txt" "$B/usage.txt" || bad "empty REGS emitted a plan or unexpected diagnostic"
+
+# The .om fixture removes one guard at a time; both controls must compile and
+# produce a successful plan for the otherwise-refused audit input.
+seed/out/omc < "$D/parser_mutant.om" > "$B/parser-mutant" || bad "omc refused parser_mutant.om"
+chmod +x "$B/parser-mutant"
+for mut in 1 2; do
+  "$B/parser-mutant" "$mut" < "$D/tilelab.om" > "$B/mutant-$mut.om" || bad "could not remove parser guard $mut"
+  seed/out/omc < "$B/mutant-$mut.om" > "$B/mutant-$mut" || bad "omc refused parser mutant $mut"
+  chmod +x "$B/mutant-$mut"
+  if [ "$mut" -eq 1 ]; then
+    "$B/mutant-$mut" 1 18446744073709551617 8 8 > "$B/mutant-$mut.txt" || bad "overflow control did not reach the planner"
+  else
+    "$B/mutant-$mut" 1 1024 1024 1024 extra > "$B/mutant-$mut.txt" || bad "REGS control did not reach the planner"
+  fi
+  grep -q '^pick cfg ' "$B/mutant-$mut.txt" || bad "parser control $mut did not restore invalid-input acceptance"
+done
+printf 'PASS tilelab %s cases, 3/3 softmax mutants fail for the intended reason, 2/2 parser guards challenged\n' "$(grep -c '^\$ ' "$B/observed.txt")"
