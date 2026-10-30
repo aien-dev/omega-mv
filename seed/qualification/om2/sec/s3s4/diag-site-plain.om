@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note diag-site.om with om2 instead of om2 diag (section 4 line 116: stdout unchanged), same lines.
+note
+note
+note
+om2
+fn f a ulong b ulong to ulong
+ret div a b
+end

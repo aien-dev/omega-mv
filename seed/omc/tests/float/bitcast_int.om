@@ -1,0 +1,207 @@
+note bitcast between integer types of one width keeps the bits, and the result is a canonical value of the
+note new type: compare, add, signed shr, widening conversion, call argument and array store all see it, and
+note the source name keeps its own value. Each 8/16/32-bit signed/unsigned pair both ways, f32 to and from
+note int, and the 64-bit pair as the control that was already right. omc 2c824805 kept the old extension
+note (uint 4294967295 as int compared unequal to -1 and add 2 trapped 1). Expected values were computed with
+note Wolfram (two's complement of the bit patterns), never by this compiler. Exit 0 when every check passed.
+fn bi32 x uint to int
+ret bitcast int x
+end
+fn bu32 x int to uint
+ret bitcast uint x
+end
+fn bi16 x ushort to short
+ret bitcast short x
+end
+fn bu16 x short to ushort
+ret bitcast ushort x
+end
+fn bi8 x uchar to byte
+ret bitcast byte x
+end
+fn bu8 x byte to uchar
+ret bitcast uchar x
+end
+fn isneg1 x int to int
+if eq x -1
+ret 0
+end
+ret 1
+end
+fn u2i32 to int
+a = new int 1 0
+u = uint 4294967295
+v = bitcast int u
+if ne v -1
+ret 1
+end
+if ge v 0
+ret 2
+end
+if ne add v 2 1
+ret 3
+end
+if ne shr v 1 -1
+ret 4
+end
+if ne long v -1
+ret 5
+end
+if ne u 4294967295
+ret 6
+end
+if ne isneg1 v 0
+ret 7
+end
+put a 0 v
+if ne get a 0 -1
+ret 8
+end
+m = bitcast int uint 2147483648
+if ne add m 1 -2147483647
+ret 9
+end
+if ne bi32 2147483653 -2147483643
+ret 10
+end
+ret 0
+end
+fn i2u32 to int
+s = int -1
+v = bitcast uint s
+if ne v 4294967295
+ret 11
+end
+if ne ulong v 4294967295
+ret 12
+end
+if ne add v 1 0
+ret 13
+end
+if ne shr v 31 1
+ret 14
+end
+if ne s -1
+ret 15
+end
+if ne bu32 -2147483648 2147483648
+ret 16
+end
+ret 0
+end
+fn u2i16 to int
+u = ushort 65535
+v = bitcast short u
+if ne v -1
+ret 21
+end
+if ge v 0
+ret 22
+end
+if ne add v 2 1
+ret 23
+end
+if ne long v -1
+ret 24
+end
+if ne bi16 32768 -32768
+ret 25
+end
+s = short -1
+w = bitcast ushort s
+if ne ulong w 65535
+ret 26
+end
+if ne bu16 -32768 32768
+ret 27
+end
+ret 0
+end
+fn u2i8 to int
+u = uchar 255
+v = bitcast byte u
+if ne v -1
+ret 31
+end
+if ge v 0
+ret 32
+end
+if ne add v 2 1
+ret 33
+end
+if ne long v -1
+ret 34
+end
+if ne bi8 200 -56
+ret 35
+end
+s = byte -1
+w = bitcast uchar s
+if ne ulong w 255
+ret 36
+end
+if ne bu8 -128 128
+ret 37
+end
+ret 0
+end
+fn f32int to int
+f = bitcast f32 int -1
+g = bitcast uint f
+if ne g 4294967295
+ret 41
+end
+if ne ulong g 4294967295
+ret 42
+end
+h = bitcast int f32 -1.0
+if ne h -1082130432
+ret 43
+end
+if ge h 0
+ret 44
+end
+ret 0
+end
+fn w64pair to int
+u = ulong 18446744073709551615
+v = bitcast long u
+if ne v -1
+ret 51
+end
+if ne add v 2 1
+ret 52
+end
+w = bitcast ulong long -1
+if ne w 18446744073709551615
+ret 53
+end
+ret 0
+end
+fn main to int
+r = u2i32
+if ne r 0
+ret r
+end
+r = i2u32
+if ne r 0
+ret r
+end
+r = u2i16
+if ne r 0
+ret r
+end
+r = u2i8
+if ne r 0
+ret r
+end
+r = f32int
+if ne r 0
+ret r
+end
+r = w64pair
+if ne r 0
+ret r
+end
+ret 0
+end

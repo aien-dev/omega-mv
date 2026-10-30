@@ -1,0 +1,15 @@
+om2
+fn main to int
+s = ulong 0
+for i ulong 4 unroll
+k = ulong 0
+while lt k 9
+if eq k 2
+break
+end
+k = add k 1
+end
+s = add s k
+end
+ret int s
+end

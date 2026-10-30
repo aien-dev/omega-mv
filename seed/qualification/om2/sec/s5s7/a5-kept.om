@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 148-149: any other constructor body keeps the runtime check, trap 10
+note on false. high32 = x, low32 = x+1 mod 2^32 differ for every x: exit 110, no stdout.
+note Erased-check mutant: prints 0000000500000006 and exits 0 (exp/a5-kept.mutant).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong add x 1
+end
+fn main to int
+d = dup32mk 5
+puth open d
+ret 0
+end

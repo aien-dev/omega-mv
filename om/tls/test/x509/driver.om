@@ -1,0 +1,612 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: program-mode test driver for om/tls/x509.om (composed after sha2 hkdf ec rsa x509).
+note Reads case records from stdin, one per line, tokens separated by single spaces; paths are
+note relative to the working directory (run.sh runs it in vectors/). Records:
+note   C NAME EXPECT NOW HOST STORE CERT...   x509_chain_verify of the certificate_list built from the
+note                                          DER files CERT... (leaf first); STORE a PEM bundle, or SYS
+note                                          for x509_store_load; NOW unix seconds
+note   V NAME EXPECT SCHEME CERT MSG SIG       x509_cv_verify (SCHEME decimal; MSG, SIG raw files)
+note   M NAME EXPECT PATTERN HOST            chain_match, EXPECT 1 match / 0 no match
+note   H NAME EXPECT HOST                    chain_hostok code name
+note   T NAME EXPECT HEX                     der_time of the Time TLV in HEX; EXPECT unix seconds
+note                                          (decimal, may be negative) or BAD
+note   S NAME EXPECT STORE                   store entries loaded from STORE (or SYS)
+note   E NAME EXPECT CODE                    x509_errname(CODE) equals EXPECT (- for empty)
+note   F NAME COUNT NOW HOST STORE CERT...   COUNT deterministic mutations of the certificate_list;
+note                                          each must return (any code); counts rejections
+note   P NAME EXPECT CERT                    x509_parse of the single DER file CERT (any size up to
+note                                          the 262144-byte list buffer; no chain, no policy)
+note EXPECT for C/V/H is a code name (X509_OK, X509_ERR_...). Prints "MISMATCH line L NAME got G want
+note W" per failure, "fuzz NAME n=N rejected=R" per F record, then "x509 driver: C checks, F failed".
+note Exit 0 when F is 0 and C > 0, 1 otherwise, 2 when input cannot be read.
+
+global inp uchar 4194304
+global ds ulong 16
+text DR0 "0"
+text DR1 "1"
+global ob uchar 32
+global sname uchar 256
+global nm uchar 64
+global onebyte uchar 1
+text DRSUM "x509 driver: "
+text DRCHK " checks, "
+text DRFLD " failed\n"
+text DRMIS "MISMATCH line "
+text DRGOT " got "
+text DRWANT " want "
+text DRFUZ "fuzz "
+text DRFN " n="
+text DRFR " rejected="
+text DRNL "\n"
+text DRSP " "
+text DRSYS "SYS"
+text DRBAD "BAD"
+text DRERR "ERR"
+text DRIO "x509 driver: cannot read input\n"
+
+note ds: 0 input length, 1 cursor, 2 line number, 3 checks, 4 failures, 5 store bytes (0 = none),
+note 6 name length, 7 store name length
+
+fn drv_slurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+ret 2
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put ds 0 t
+ret 0
+end
+
+fn drv_peek to ulong
+c = get ds 1
+if ge c get ds 0
+ret 256
+end
+ret ulong get inp c
+end
+
+note next token into tk (skipping one space before it); its length (0 at the line end)
+fn drv_tok tk edit uchar * to ulong
+if eq drv_peek 32
+put ds 1 add get ds 1 1
+end
+n = ulong 0
+while true bound 999999
+c = drv_peek
+if or or eq c 32 eq c 10 eq c 256
+break
+end
+if lt n len tk
+put tk n uchar c
+end
+n = add n 1
+put ds 1 add get ds 1 1
+end
+if gt n len tk
+ret 0
+end
+ret n
+end
+
+fn drv_eol to void
+while true bound 999999
+c = drv_peek
+if eq c 256
+ret
+end
+put ds 1 add get ds 1 1
+if eq c 10
+ret
+end
+end
+end
+
+fn drv_num t view uchar * to ulong
+v = ulong 0
+for i ulong len t
+v = add mul v 10 sub ulong get t i 48
+end
+ret v
+end
+
+fn drv_prn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+fn drv_out t view uchar * to void
+for i ulong len t
+put ob 0 get t i
+r = write 1 ob 0 1
+end
+end
+
+note record a mismatch: got / want as text
+fn drv_mis g view uchar * w view uchar * to void
+put ds 4 add get ds 4 1
+r = write 1 DRMIS 0 len DRMIS
+drv_prn get ds 2
+r = write 1 DRSP 0 1
+r = write 1 nm 0 get ds 6
+r = write 1 DRGOT 0 len DRGOT
+drv_out g
+r = write 1 DRWANT 0 len DRWANT
+drv_out w
+r = write 1 DRNL 0 1
+end
+
+note compare code c against the expected name w
+fn drv_code c ulong w view uchar * to void
+b = new uchar 64 0
+put ds 3 add get ds 3 1
+n = x509_errname c edit b
+if eq n 0
+drv_mis DRBAD w
+ret
+end
+if not der_same view part b 0 n w
+drv_mis view part b 0 n w
+end
+end
+
+fn drv_name to void
+t = new uchar 64 0
+n = drv_tok edit t
+for i ulong n
+put nm i get t i
+end
+put ds 6 n
+end
+
+note read the file named p into b; bytes read, or -1 (missing, error, or over len b)
+fn drv_file p view uchar * b edit uchar * to long
+fd = fopen p 0 len p 0 0
+if lt fd 0
+ret -1
+end
+n = ulong 0
+while lt n len b bound 999999
+r = read int fd b n sub len b n
+if le r 0
+break
+end
+n = add n ulong r
+end
+r = read int fd onebyte 0 1
+z = fclose int fd
+if or ne r 0 eq n len b
+ret -1
+end
+ret long n
+end
+
+note load store tk (SYS or a path) into st unless it is the current one; 0 ok, 1 failure
+fn drv_store st edit uchar * tk view uchar * to ulong
+if eq len tk get ds 7
+d = ulong 0
+for i ulong len tk
+if ne get tk i get sname i
+d = 1
+end
+end
+if and eq d 0 gt get ds 5 0
+ret 0
+end
+end
+for i ulong len tk
+put sname i get tk i
+end
+put ds 7 len tk
+put ds 5 0
+r = long 0
+if der_same tk DRSYS
+r = x509_store_load st
+else
+r = x509_store_loadf st tk
+end
+if le r 0
+ret 1
+end
+put ds 5 ulong r
+ret 0
+end
+
+note certificate_list from the remaining DER file tokens of the line into cl; its length (0 bad)
+fn drv_list cl edit uchar * tk edit uchar * to ulong
+p = ulong 0
+while true bound 64
+n = drv_tok tk
+if eq n 0
+break
+end
+r = drv_file view part tk 0 n part cl add p 3 sub len cl add p 5
+if lt r 1
+ret 0
+end
+l = ulong r
+put cl p uchar shr l 16
+put cl add p 1 uchar and shr l 8 255
+put cl add p 2 uchar and l 255
+put cl add add p 3 l 0
+put cl add add p 4 l 0
+p = add add p 5 l
+end
+ret p
+end
+
+note x509_chain_verify of cl[0 .. ds 12) with hq[0 .. ds 11)
+fn drv_crun cl view uchar * st view uchar * hq view uchar 300 to ulong
+k = get ds 12
+hn = get ds 11
+ret x509_chain_verify part cl 0 k st part hq 0 hn
+end
+
+note C record
+note NOW and HOST tokens into hq (8-byte big-endian time || host); total length
+fn drv_now hq edit uchar 300 tk edit uchar * to ulong
+n = drv_tok tk
+nw = drv_num view part tk 0 n
+for i ulong 8
+put hq i uchar and shr nw mul sub 7 i 8 255
+end
+ret add 8 drv_tok part hq 8 sub len hq 8
+end
+
+fn drv_c st edit uchar * cl edit uchar * tk edit uchar * to void
+hq = new uchar 300 0
+drv_name
+w = new uchar 64 0
+wn = drv_tok edit w
+hn = drv_now hq tk
+n = drv_tok tk
+if ne drv_store st view part tk 0 n 0
+drv_code 99 view part w 0 wn
+ret
+end
+k = drv_list cl tk
+if eq k 0
+drv_code 98 view part w 0 wn
+ret
+end
+put ds 11 hn
+put ds 12 k
+c = drv_crun cl st hq
+drv_code c view part w 0 wn
+end
+
+note P record
+fn drv_p cl edit uchar * tk edit uchar * to void
+r = new ulong 32 0
+drv_name
+w = new uchar 64 0
+wn = drv_tok edit w
+n = drv_tok tk
+k = drv_file view part tk 0 n cl
+if lt k 1
+drv_code 98 view part w 0 wn
+ret
+end
+c = x509_parse part cl 0 ulong k edit r
+drv_code c view part w 0 wn
+end
+
+note V record
+fn drv_v cl edit uchar * ms edit uchar * tk edit uchar * to void
+drv_name
+w = new uchar 64 0
+wn = drv_tok edit w
+n = drv_tok tk
+sc = drv_num view part tk 0 n
+k = drv_list cl tk
+if eq k 0
+drv_code 98 view part w 0 wn
+ret
+end
+put ds 8 sc
+drv_vrun cl ms view part w 0 wn
+end
+
+note V record, second half: the leaf is the only entry; MSG and SIG were listed after it, so
+note drv_list put them in cl as entries 2 and 3; move them into ms
+fn drv_vrun cl edit uchar * ms edit uchar * w view uchar * to void
+m = drv_vcopy cl ms
+a = get ds 13
+b = get ds 14
+c = x509_cv_verify view part cl 0 a get ds 8 view part ms 0 b m
+drv_code c w
+end
+
+note move MSG and SIG (entries 2, 3 of cl) into ms; MSG length; ds 13 leaf list length, ds 14 total
+fn drv_vcopy cl edit uchar * ms edit uchar * to ulong
+l1 = der_u24 cl 0
+p = add l1 5
+l2 = der_u24 cl p
+p = add p 3
+for i ulong l2
+put ms i get cl add p i
+end
+p = add add p l2 2
+l3 = der_u24 cl p
+p = add p 3
+for i ulong l3
+put ms add l2 i get cl add p i
+end
+put cl add l1 3 0
+put cl add l1 4 0
+put ds 13 add l1 5
+put ds 14 add l2 l3
+ret l2
+end
+
+note M record
+fn drv_m tk edit uchar * hb edit uchar * to void
+drv_name
+e = drv_num view part tk 0 drv_tok tk
+n = drv_tok tk
+h = drv_tok hb
+g = ulong 0
+if chain_match view part tk 0 n view part hb 0 h
+g = 1
+end
+put ds 3 add get ds 3 1
+if ne g e
+if eq g 1
+drv_mis DR1 DR0
+else
+drv_mis DR0 DR1
+end
+end
+end
+
+note H record
+fn drv_h tk edit uchar * hb edit uchar * to void
+drv_name
+n = drv_tok tk
+h = drv_tok hb
+c = chain_hostok view part hb 0 h
+drv_code c view part tk 0 n
+end
+
+note T record
+fn drv_t tk edit uchar * hb edit uchar * to void
+drv_name
+n = drv_tok tk
+h = drv_tok hb
+k = div h 2
+for i ulong k
+put hb i uchar or shl der_hexv ulong get hb mul i 2 4 der_hexv ulong get hb add mul i 2 1
+end
+v = der_time view part hb 0 k
+put ds 3 add get ds 3 1
+if eq v X5BIG
+if not der_same view part tk 0 n DRBAD
+drv_mis DRBAD view part tk 0 n
+end
+ret
+end
+ep = mul x509_days 1970 1 1 86400
+if gt get tk 0 47
+if ge v ep
+if ne sub v ep drv_num view part tk 0 n
+drv_mis DRBAD view part tk 0 n
+end
+ret
+end
+end
+if eq get tk 0 45
+if lt v ep
+if eq sub ep v drv_num view part tk 1 sub n 1
+ret
+end
+end
+end
+drv_mis DRBAD view part tk 0 n
+end
+
+note S record
+fn drv_s st edit uchar * tk edit uchar * to void
+drv_name
+e = drv_num view part tk 0 drv_tok tk
+n = drv_tok tk
+put ds 5 0
+put ds 7 0
+put ds 3 add get ds 3 1
+if ne drv_store st view part tk 0 n 0
+if ne e 0
+drv_mis DRERR DRBAD
+end
+ret
+end
+k = ulong 0
+p = ulong 0
+while lt add p 3 len st bound 100000
+l = der_u24 st p
+if eq l 0
+break
+end
+p = add add p 3 l
+k = add k 1
+end
+if ne k e
+drv_prn k
+drv_mis DRERR DRBAD
+end
+end
+
+note E record
+fn drv_e tk edit uchar * hb edit uchar * to void
+drv_name
+n = drv_tok tk
+c = drv_num view part hb 0 drv_tok hb
+b = new uchar 64 0
+m = x509_errname c edit b
+put ds 3 add get ds 3 1
+if eq get tk 0 45
+if ne m 0
+drv_mis view part b 0 m view part tk 0 n
+end
+ret
+end
+if not der_same view part b 0 m view part tk 0 n
+drv_mis view part b 0 m view part tk 0 n
+end
+end
+
+note F record: mutation k of the certificate_list cl[0 .. n) into mu: k mod 4 = 0 one byte set to a
+note pseudo-random value, 1 one byte xor 0x80 at a pseudo-random header-ish position, 2 truncate the
+note leaf length field to a smaller value, 3 two bytes overwritten
+fn drv_mut cl view uchar * mu edit uchar * k ulong to ulong
+n = len cl
+for i ulong n
+put mu i get cl i
+end
+x = add mul k 2654435761 12345
+x = xor x shr x 13
+p = rem x n
+m = rem k 4
+if eq m 1
+p = rem p 64
+put mu p xor get mu p 128
+ret n
+end
+if eq m 2
+p = rem x der_u24 cl 0
+put mu 0 0
+put mu 1 uchar and shr p 8 255
+put mu 2 uchar and p 255
+ret n
+end
+put mu p uchar and shr x 17 255
+if eq m 3
+p = rem mul p 7 n
+put mu p uchar and shr x 29 255
+end
+ret n
+end
+
+note F record
+fn drv_f st edit uchar * cl edit uchar * tk edit uchar * to void
+hq = new uchar 300 0
+drv_name
+cnt = drv_num view part tk 0 drv_tok tk
+hn = drv_now hq tk
+n = drv_tok tk
+put ds 3 add get ds 3 1
+if ne drv_store st view part tk 0 n 0
+drv_mis DRERR DRBAD
+ret
+end
+k = drv_list cl tk
+if eq k 0
+drv_mis DRERR DRBAD
+ret
+end
+put ds 9 k
+put ds 10 cnt
+drv_fz st cl view part hq 0 hn
+end
+
+note one mutation (index ds 15) of cl checked by x509_cv_verify and x509_chain_verify; the latter's code
+fn drv_fz1 st view uchar * cl view uchar * hq view uchar * to ulong
+mu = new uchar 65536 0
+k = get ds 9
+c = drv_mut part cl 0 k part mu 0 k get ds 15
+c = x509_cv_verify view part mu 0 k 0x0804 cl 16
+ret x509_chain_verify view part mu 0 k st hq
+end
+
+fn drv_fz st view uchar * cl view uchar * hq view uchar * to void
+cnt = get ds 10
+rj = ulong 0
+for j ulong cnt
+put ds 15 j
+if ne drv_fz1 st cl hq 0
+rj = add rj 1
+end
+end
+r = write 1 DRFUZ 0 len DRFUZ
+r = write 1 nm 0 get ds 6
+r = write 1 DRFN 0 len DRFN
+drv_prn cnt
+r = write 1 DRFR 0 len DRFR
+drv_prn rj
+r = write 1 DRNL 0 1
+end
+
+fn main to int
+st = new uchar 1048576 0
+cl = new uchar 262144 0
+ms = new uchar 65536 0
+tk = new uchar 4096 0
+hb = new uchar 4096 0
+if ne drv_slurp 0
+r = write 2 DRIO 0 len DRIO
+ret 2
+end
+while lt get ds 1 get ds 0 bound 999999
+put ds 2 add get ds 2 1
+c = drv_peek
+put ds 1 add get ds 1 1
+if eq c 67
+drv_c st cl tk
+end
+if eq c 86
+drv_v cl ms tk
+end
+if eq c 77
+drv_m tk hb
+end
+if eq c 72
+drv_h tk hb
+end
+if eq c 84
+drv_t tk hb
+end
+if eq c 83
+drv_s st tk
+end
+if eq c 69
+drv_e tk hb
+end
+if eq c 70
+drv_f st cl tk
+end
+if eq c 80
+drv_p cl tk
+end
+if ne c 10
+drv_eol
+end
+end
+r = write 1 DRSUM 0 len DRSUM
+drv_prn get ds 3
+r = write 1 DRCHK 0 len DRCHK
+drv_prn get ds 4
+r = write 1 DRFLD 0 len DRFLD
+if ne get ds 4 0
+ret 1
+end
+if eq get ds 3 0
+ret 1
+end
+ret 0
+end

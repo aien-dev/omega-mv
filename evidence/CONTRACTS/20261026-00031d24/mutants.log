@@ -1,0 +1,20 @@
+OM2GATE START cases=seed/omc/contracts/mutant.cases scratch=/tmp/contracts-mutants-0fab20af
+IDENTITY omc seed/out/omc sha256=3d2b7411b8a2ba1a3e770e70fd7c9be22100357c51206f2e90a80df826c30fa3 pinned=3d2b7411b8a2ba1a3e770e70fd7c9be22100357c51206f2e90a80df826c30fa3 match
+SUBST seed/omc/contracts/mutant-from.txt seed/omc/contracts/mutant-to.txt
+  MUTATE exact-once substitution at byte 194739
+  $ seed/out/omc < /tmp/contracts-mutants-0fab20af/3.src > /tmp/contracts-mutants-0fab20af/3.elf 2> /tmp/contracts-mutants-0fab20af/3.cerr
+COMPILER /tmp/contracts-mutants-0fab20af/3.elf sha256=2a34a1f818affe6bda7af5b54ea00e70203d022518ffe42389ae86cb2b5bca00 source line=3
+CASE mutant-requires line=4
+  $ /tmp/contracts-mutants-0fab20af/3.elf < /tmp/contracts-mutants-0fab20af/4.src > /tmp/contracts-mutants-0fab20af/4.elf 2> /tmp/contracts-mutants-0fab20af/4.cerr
+  $ /tmp/contracts-mutants-0fab20af/4.elf < /dev/null > /tmp/contracts-mutants-0fab20af/4.out 2> /tmp/contracts-mutants-0fab20af/4.err
+VERDICT mutant-requires FAIL run exit=0 expected=109 stdout=match stderr=match
+COMPILER seed/out/omc
+SUBST seed/omc/contracts/proof-mutant-from.txt seed/omc/contracts/proof-mutant-to.txt
+  MUTATE exact-once substitution at byte 194675
+  $ seed/out/omc < /tmp/contracts-mutants-0fab20af/7.src > /tmp/contracts-mutants-0fab20af/7.elf 2> /tmp/contracts-mutants-0fab20af/7.cerr
+COMPILER /tmp/contracts-mutants-0fab20af/7.elf sha256=4b4ba6ff44325ab7ad5862ac53ad7051ee859c408f42c5dfe1b3031a15262659 source line=7
+CASE mutant-proof line=8
+  $ /tmp/contracts-mutants-0fab20af/7.elf < /tmp/contracts-mutants-0fab20af/8.src > /tmp/contracts-mutants-0fab20af/8.elf 2> /tmp/contracts-mutants-0fab20af/8.cerr
+  $ /tmp/contracts-mutants-0fab20af/8.elf < /dev/null > /tmp/contracts-mutants-0fab20af/8.out 2> /tmp/contracts-mutants-0fab20af/8.err
+VERDICT mutant-proof FAIL run exit=0 expected=109 stdout=match stderr=match
+OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0

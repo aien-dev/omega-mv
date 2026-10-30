@@ -1,0 +1,13 @@
+note S4: an unsized view never reaches an edit parameter (error 20, OMEGESE 9.4).
+om2
+fn w e edit uchar * to void
+put e 0 1
+end
+fn g v view uchar * to void
+w v
+end
+fn main to int
+a = new uchar 4 0
+g a
+ret 0
+end

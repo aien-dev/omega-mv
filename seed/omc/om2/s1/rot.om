@@ -1,0 +1,141 @@
+om2
+note rotr/rotl against shift references for every unsigned width, constant and variable amounts
+fn r64 x ulong n ulong to ulong
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 64 n
+end
+fn r32 x uint n uint to uint
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 32 n
+end
+fn r16 x ushort n ushort to ushort
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 16 n
+end
+fn r8 x uchar n uchar to uchar
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 8 n
+end
+fn chk64 x ulong to int
+n = ulong 0
+while lt n 64
+if ne rotr x n r64 x n
+ret 1
+end
+if ne rotl x n r64 x rem sub 64 n 64
+ret 2
+end
+n = add n 1
+end
+if ne rotr x 13 r64 x 13
+ret 3
+end
+if ne rotl x 13 r64 x 51
+ret 4
+end
+if ne rotr x 0 x
+ret 5
+end
+if ne rotl x 0 x
+ret 6
+end
+if ne rotr x 63 r64 x 63
+ret 7
+end
+ret 0
+end
+fn chk32 x uint to int
+n = uint 0
+while lt n 32
+if ne rotr x n r32 x n
+ret 11
+end
+if ne rotl x n r32 x rem sub 32 n 32
+ret 12
+end
+n = add n 1
+end
+if ne rotr x 7 r32 x 7
+ret 13
+end
+if ne rotl x 7 r32 x 25
+ret 14
+end
+if ne rotl x 0 x
+ret 15
+end
+ret 0
+end
+fn chk16 x ushort to int
+n = ushort 0
+while lt n 16
+if ne rotr x n r16 x n
+ret 21
+end
+if ne rotl x n r16 x rem sub 16 n 16
+ret 22
+end
+n = add n 1
+end
+if ne rotr x 3 r16 x 3
+ret 23
+end
+if ne rotl x 3 r16 x 13
+ret 24
+end
+ret 0
+end
+fn chk8 x uchar to int
+n = uchar 0
+while lt n 8
+if ne rotr x n r8 x n
+ret 31
+end
+if ne rotl x n r8 x rem sub 8 n 8
+ret 32
+end
+n = add n 1
+end
+if ne rotr x 5 r8 x 5
+ret 33
+end
+if ne rotl x 5 r8 x 3
+ret 34
+end
+ret 0
+end
+fn main to int
+s = ulong 88172645463325252
+i = ulong 0
+while lt i 2000
+s = xor s shl s 13
+s = xor s shr s 7
+s = xor s shl s 17
+r = chk64 s
+if ne r 0
+ret r
+end
+r = chk32 uint and s 4294967295
+if ne r 0
+ret r
+end
+r = chk16 ushort and s 65535
+if ne r 0
+ret r
+end
+r = chk8 uchar and s 255
+if ne r 0
+ret r
+end
+i = add i 1
+end
+ret 0
+end

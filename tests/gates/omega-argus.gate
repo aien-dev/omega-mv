@@ -11,7 +11,9 @@ inputs:
   - src/runtime/
   - tests/runtime/
   - tests/bench_rx_argus.c
-  - src/sha256.c
+  - src/omega_om_units.c
+  - src/omega_native.h
+  - src/omega_api_decl.h
   - src/sha256.h
   - src/omega_evidence.c
   - src/omega_evidence.h
