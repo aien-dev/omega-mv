@@ -12524,8 +12524,8 @@ put ir_fc n 1
 ir_start get ir_fb n
 end
 
-note ir_bound: the rest of a while or for line: `bound N` (1 .. 9223372036854775807, error 8) -> N, or 0
-note when the line ends there.
+note ir_bound: the rest of a while or for line: `bound N` (1 .. 1000000, error 8: the C oracle's range,
+note omegese.c, and the guard range checker2 proves) -> N, or 0 when the line ends there.
 fn ir_bound to ulong
 tok
 if or eq get tk 0 0 eq get tk 0 3
@@ -12535,7 +12535,7 @@ if or ne get tk 0 1 ne ir_kwt 70
 fail 5
 end
 bnd = lenval 4
-if ge sub bnd 1 9223372036854775807
+if ge sub bnd 1 1000000
 fail 8
 end
 eol
@@ -15549,8 +15549,8 @@ blo lp
 addname w r t n 1 0
 end
 
-note xfornum / xforval: the x86 sf_num / sf_val. bn and n come from forbnd (sf_val: 1000000 when no bound
-note is written); bn = 0 leaves a number count unguarded, as on Arm.
+note xfornum / xforval: the x86 sf_num / sf_val. bn and n come from sf_num / sf_val, which parse the bound
+note themselves (sf_val: 1000000 when no bound is written); bn = 0 leaves a number count unguarded, as on Arm.
 fn xfornum w ulong t ulong k ulong sn ulong sh ulong bn ulong to void
 eol
 i = alloc

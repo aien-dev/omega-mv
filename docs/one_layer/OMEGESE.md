@@ -60,8 +60,8 @@ fn <name> (<param> <type>)* to <type> | void      a function; `end` closes it
 <name> = <value>          write a value (a new name, or an existing one of the same type);
 <name> <value>            the same, with `=` left out
 if <cond> / else / end
-while <cond> [bound N] / end      N 1..9223372036854775807 (a number or a ulong const), default
-                          1000000; past N iterations: trap 4
+while <cond> [bound N] / end      N 1..9223372036854775807 (a number or any integer const; IR
+                          mode: 1..1000000), default 1000000; past N iterations: trap 4
 for <name> <type> <count> [bound N] / end   name = 0 .. count-1 (count a number, or a value of that
                           type); N as for while. With no bound a number count is not guarded and any
                           other count traps 4 after 1000000 passes; with `bound N` any count traps 4
@@ -141,8 +141,8 @@ is defined exactly once, as checker2 requires). Blocks are numbered in the order
 - `for i T K` (K a number, no bound): i = 0; head: `lt i K` -> body | exit; latch: `i = add i 1`.
 - `for i T n` (n a name or any value that is not a number), and any `for ... bound N` (omc's IR mode
   only): as `while lt i n bound N` (N 1000000 when omitted), with the hidden guard, plus
-  `i = add i 1` at the latch. checker2 proves the guard only for N up to 1000000; a larger N is
-  emitted unchanged.
+  `i = add i 1` at the latch. IR mode refuses N above 1000000 with error 8 (as the C oracle does),
+  so every emitted guard is one checker2 proves.
 - `if c` -> cbr then | else-or-join; a join block exists only if some branch reaches it.
 - Nested values: each op inside a value writes a fresh hidden register (a local with the op's type,
   never a name, so the unread-name rule does not apply), in evaluation order: innermost first, left
@@ -667,7 +667,7 @@ length is error 16. A length token that is a name other than an integer constant
 constant used in a parameter length must be defined before that function.
 
 An integer constant is also accepted as a `trap` code (1..14) and as a `while ... bound` or
-`for ... bound` count (1..9223372036854775807); a `for` count is an ordinary value, so a constant
+`for ... bound` count (1..9223372036854775807; 1..1000000 in IR mode); a `for` count is an ordinary value, so a constant
 works there too. Out-of-range values keep error 8, and a float constant in any of these positions is
 error 16.
 

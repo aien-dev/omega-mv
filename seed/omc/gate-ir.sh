@@ -108,6 +108,40 @@ timeout 5 "$B/stage2" < "$B/forbn.om" > "$B/forbn.ir"
 build/checker2/checker2 check "$B/forbn.ir" > "$B/forbn.check"
 grep -q '^checker2=ACCEPT ' "$B/forbn.check" || fail 'for_num_bound checker refusal'
 echo 'PASS for_num_bound guarded; checker2 ACCEPT'
+# IR bound range = the C oracle's (omegese.c, 1..1000000) = the guard range checker2 proves
+# (c2_check.c "loop bounds"): bound 1000000 is emitted and accepted, bound 1000001 is error 8.
+printf 'fn f a uint to uint\nx = uint 0\nwhile lt x a bound 1000000\nx = add x uint 1\nend\nret x\nend\n' > "$B/wbmax.omegese"
+build/omegese/omegese emit "$B/wbmax.omegese" "$B/wbmax.json" > /dev/null
+build/omega_emit/omega_emit emit "$B/wbmax.json" "$B/wbmax.oracle" > /dev/null
+{ printf 'ir\n'; cat "$B/wbmax.omegese"; } > "$B/wbmax.om"
+timeout 5 "$B/stage2" < "$B/wbmax.om" > "$B/wbmax.ir"
+cmp -s "$B/wbmax.oracle" "$B/wbmax.ir" || fail 'while_bound_max differs from the oracle'
+build/checker2/checker2 check "$B/wbmax.ir" > "$B/wbmax.check"
+grep -q '^checker2=ACCEPT ' "$B/wbmax.check" || fail 'while_bound_max checker refusal'
+echo 'PASS while_bound_max identical; checker2 ACCEPT'
+printf 'fn f a uint to uint\nx = uint 0\nwhile lt x a bound 1000001\nx = add x uint 1\nend\nret x\nend\n' > "$B/wbover.omegese"
+if build/omegese/omegese emit "$B/wbover.omegese" "$B/wbover.json" > /dev/null 2>&1; then fail 'oracle accepted while bound 1000001'; fi
+ir_refuse while_bound_over 8 'ir
+fn f a uint to uint
+x = uint 0
+while lt x a bound 1000001
+x = add x uint 1
+end
+ret x
+end'
+printf 'ir\nfn f a uint to uint\nx = uint 0\nfor i uint a bound 1000000\nx = add x uint 1\nend\nret x\nend\n' > "$B/fbmax.om"
+timeout 5 "$B/stage2" < "$B/fbmax.om" > "$B/fbmax.ir"
+build/checker2/checker2 check "$B/fbmax.ir" > "$B/fbmax.check"
+grep -q '^checker2=ACCEPT ' "$B/fbmax.check" || fail 'for_bound_max checker refusal'
+echo 'PASS for_bound_max guarded; checker2 ACCEPT'
+ir_refuse for_bound_c2 8 'ir
+fn f a uint to uint
+x = uint 0
+for i uint a bound 1000001
+x = add x uint 1
+end
+ret x
+end'
 ir_refuse float_const 9 'ir
 const H f64 0.1
 fn f to f64
@@ -501,5 +535,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 28 refusals + 9 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units + 1 guarded for-bound unit; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 28 refusals + 9 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units + 1 guarded for-bound unit + 2 bound-range pairs (1000000 accepted, 1000001 error 8); validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'
