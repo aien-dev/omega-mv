@@ -43,6 +43,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Codex (GPT-6.1 Sol) | NL4 native numerical payload codec, canonical LTP0 consumer, independent receiver-matched pure execution boundary and host synthetic rejection/mutant qualification (#920) |
 | Codex (GPT-6.1 Sol) | Repaired qty float-domain classification and checked ingress, diagnostic categories and query/output streaming; permanent adversarial regression fixtures for the #909/#911 audit |
 | Claude Opus 5.5 | OSC IR v7 memory oracle: independent decoder, validator and interpreter (`seed/wasm/v7/oracle.js`), separate hand-written fixture writer, hand-written expectations and a mutant-checked self-test |
+| Claude Opus 5.5 | Effect-derived capability manifest (`seed/effects`, M1): host-word manifest, ELF syscall resolution that fails closed, seccomp cBPF output, probe-parity/strace/bwrap gate with negative controls and tool mutants |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
