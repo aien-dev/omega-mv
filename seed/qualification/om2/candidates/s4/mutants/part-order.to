@@ -1,0 +1,70 @@
+note arrpart mutant: `part A o k` keeps its operands and bounds checks, but evaluates k before o.
+note The source expressions are still parsed in their original order. partord emits branch trampolines
+note rather than moving instruction spans, so trap sites, deferred calls, inline fixups, global addresses
+note and diagnostic source records retain their original emitted positions without relocation changes.
+fn arrpart f ulong pi ulong md ulong to void
+p = add mul sub f 1 6 pi
+e = arrname
+i = sub e 1
+k = ulong get nm_kind i
+if ge k 6
+fail 7
+end
+if eq k 4
+fail 19
+end
+fz_arg e
+if eq get fn_pk p 3
+if eq md 57
+fail 20
+end
+if and ne k 1 ne k 3
+fail 20
+end
+else
+if eq md 58
+fail 7
+end
+end
+if ne ulong get nm_type i ulong get fn_pt p
+fail 7
+end
+if ne get fn_pl p 0
+fail 7
+end
+rn = alloc
+ro = partord rn
+d = partck i ro rn
+ux = add mul get depth 0 6 pi
+put ul_k ux 1
+put ul_v ux rn
+put rt 0 e
+put rk 0 5
+put rv 0 d
+end
+
+note partord: emitted layout is B length; offset; B checks; length; B offset; checks.
+note Reserve rn before lowering offset, so offset temporaries cannot overwrite it and offset calls save
+note and restore it through the existing register-save machinery. No new runtime stack convention is used.
+note Force the length result into rn before jumping back to offset; ro remains the offset result.
+fn partord rn ulong to ulong
+first = get oc 0
+emit 335544320
+head = get oc 0
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+ro = matreg get rk 0 get rv 0 5
+done = get oc 0
+emit 335544320
+patch26 first get oc 0
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+force get rk 0 get rv 0 5 rn
+back head
+patch26 done get oc 0
+ret ro
+end

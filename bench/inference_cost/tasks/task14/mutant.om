@@ -1,0 +1,3 @@
+fn power_mod_u32 a uint b uint to uint
+ret mul a b
+end
