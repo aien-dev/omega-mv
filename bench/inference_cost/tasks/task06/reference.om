@@ -1,0 +1,13 @@
+fn collatz_steps_u32 n uint to uint
+steps = uint 0
+cur = ulong n
+while gt cur 1
+if eq (and cur 1) 0
+cur = div cur 2
+else
+cur = add (mul 3 cur) 1
+end
+steps = add steps 1
+end
+ret steps
+end
