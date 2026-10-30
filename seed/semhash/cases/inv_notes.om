@@ -1,0 +1,97 @@
+om2
+    note  	 semhash  	 fixture:  	 the  	 base  	 unit  	 every  	 case  	 is  	 diffed  	 against
+const  	 lim  	 ulong  	 7
+global  	 buf  	 uchar  	 16
+struct  	 pt  	 px  	 uint  	 py  	 uint  	 end
+layout  	 lay  	 8
+field  	 fa  	 uchar  	 at  	 0  	 little
+field  	 fb  	 ushort  	 at  	 1  	 little
+end
+
+note   reformatted: fn leaf a ulong b ulong to ulong
+fn  	 leaf  	 a  	 ulong  	 b  	 ulong  	 to  	 ulong
+    ret  	 add  	 a  	 b
+end
+
+note   reformatted: fn mid x ulong to ulong
+fn  	 mid  	 x  	 ulong  	 to  	 ulong
+    y  	 =  	 leaf  	 x  	 3
+    ret  	 mul  	 y  	 2
+end
+
+note   reformatted: fn top n ulong to ulong
+fn  	 top  	 n  	 ulong  	 to  	 ulong
+    r  	 =  	 mid  	 n
+    ret  	 add  	 r  	 1
+end
+
+note   reformatted: fn other s ulong to ulong
+fn  	 other  	 s  	 ulong  	 to  	 ulong
+    ret  	 xor  	 s  	 5
+end
+
+note   reformatted: fn psub a ulong b ulong to ulong
+fn  	 psub  	 a  	 ulong  	 b  	 ulong  	 to  	 ulong
+    ret  	 sub  	 a  	 b
+end
+
+note   reformatted: fn useconst v ulong to ulong
+fn  	 useconst  	 v  	 ulong  	 to  	 ulong
+    ret  	 add  	 v  	 lim
+end
+
+note   reformatted: fn useglob i ulong to ulong
+fn  	 useglob  	 i  	 ulong  	 to  	 ulong
+    put  	 buf  	 0  	 uchar  	 i
+    ret  	 len  	 buf
+end
+
+note   reformatted: fn callargs u ulong to ulong
+fn  	 callargs  	 u  	 ulong  	 to  	 ulong
+    ret  	 psub  	 u  	 2
+end
+
+note   reformatted: fn rdlay c view lay i ulong to ulong
+fn  	 rdlay  	 c  	 view  	 lay  	 i  	 ulong  	 to  	 ulong
+    ret  	 ulong  	 get  	 c  	 i
+end
+
+note   reformatted: fn sumpt p view pt to ulong
+fn  	 sumpt  	 p  	 view  	 pt  	 to  	 ulong
+    q  	 =  	 ulong  	 get  	 p  	 px
+    ret  	 add  	 q  	 ulong  	 get  	 p  	 py
+end
+
+note   reformatted: fn iseven n ulong to bool
+fn  	 iseven  	 n  	 ulong  	 to  	 bool
+    if  	 eq  	 n  	 0
+    ret  	 true
+end
+    ret  	 isodd  	 sub  	 n  	 1
+end
+
+note   reformatted: fn isodd n ulong to bool
+fn  	 isodd  	 n  	 ulong  	 to  	 bool
+    if  	 eq  	 n  	 0
+    ret  	 false
+end
+    ret  	 iseven  	 sub  	 n  	 1
+end
+
+note   reformatted: fn main to int
+fn  	 main  	 to  	 int
+    c  	 =  	 new  	 uchar  	 8  	 0
+    put  	 c  	 1  	 9
+    p  	 =  	 new  	 pt  	 3  	 4
+    t  	 =  	 add  	 top  	 1  	 other  	 2
+    t  	 =  	 add  	 t  	 psub  	 9  	 4
+    t  	 =  	 add  	 t  	 useconst  	 1
+    t  	 =  	 add  	 t  	 useglob  	 2
+    t  	 =  	 add  	 t  	 callargs  	 5
+    t  	 =  	 add  	 t  	 rdlay  	 c  	 1
+    t  	 =  	 add  	 t  	 sumpt  	 p
+    if  	 iseven  	 t
+    t  	 =  	 add  	 t  	 64
+end
+    ret  	 int  	 rem  	 t  	 251
+end
