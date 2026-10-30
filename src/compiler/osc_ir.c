@@ -611,9 +611,14 @@ int osc_ir_validate_a(const OscAlloc *a, const OscUnit *u, char *err, size_t n) 
 int osc_ir_validate(const OscUnit *u, char *err, size_t n) { return osc_ir_validate_a(osc_alloc_libc(), u, err, n); }
 
 /* Negative controls: tests/compiler builds this file with OSC_IR_DECODE_MUTANT = k
- * (k >= 1) to switch off exactly one refusal (14: the version-6 identity rule); the
- * decoder tests must then fail.
- * The default build has no mutant and every check is live. */
+ * (k >= 1) to switch off exactly one refusal; the decoder tests must then fail.
+ * The default build has no mutant and every check is live.
+ *   1 trailing bytes   2 version mismatch   3 partial output   4 validation
+ *   5 NUL in text      6 register range     7 input size       8 truncation
+ *   9 every count/length maximum (rcount)   10 unknown opcode admitted
+ *   11..22 one count/length maximum each (the site argument of rcount/rtext below)
+ *   version 6 (omega#451): 23 domain tag   24 name-table target   25 name-table order
+ *   26 requirement objects   27 core identifiers   28 name table hashed into the identity */
 #ifndef OSC_IR_DECODE_MUTANT
 #define OSC_IR_DECODE_MUTANT 0
 #endif
@@ -752,10 +757,13 @@ static void wbody(W *w, const OscFunc *f) {
 
 static void encode_unit(const OscUnit *u, W *w) {
     /* format version 1 (OSC-1, no structs) / 2 (OSC-2 structs: struct table
-     * after the magic) / 3 (OSC-2 arenas: AOPEN/AALLOC/ADESTROY present; the
-     * struct count byte and table always follow the magic, even when 0).
-     * A unit without structs or arenas encodes exactly as version 1; one with
-     * structs but no arenas exactly as version 2. */
+     * after the magic) / 3 (OSC-2 arenas: AOPEN/AALLOC/ADESTROY present) /
+     * 4 (OSC-3 pools: an opcode in POPEN..HSTORE present) /
+     * 5 (external byte slices: a BYTES or CELLS register). unit_version above
+     * picks the highest feature used. From version 2 on, the struct count byte
+     * and table always follow the magic, even when 0, and the layout is the
+     * same; only the magic's version byte differs. A unit without structs,
+     * arenas, pools or slices encodes exactly as version 1. */
     uint8_t magic[8] = {'O', 'S', 'C', '1', 'I', 'R', 0, unit_version(u)};
     wbytes(w, magic, sizeof magic);
     if (magic[7] >= 2) { /* struct table present (possibly empty) */
@@ -851,8 +859,8 @@ static void encode_unit_v6(const OscUnit *u, W *w) {
         wterms(w, f->req, f->nreq);
         wterms(w, f->ens, f->nens);
     }
-    /* identity = header and core: the name table never reaches it (mutant 14 hashes it too) */
-    if (!MUTANT(14)) w->sha = NULL;
+    /* identity = header and core: the name table never reaches it (mutant 28 hashes it too) */
+    if (!MUTANT(28)) w->sha = NULL;
     g_name_count = 0;
     each_name(u, w, count_name);
     w16(w, g_name_count);
@@ -923,7 +931,6 @@ int osc_ir_digest_v6(const OscUnit *u, uint8_t out[32]) {
 }
 
 /* ---- strict decoder (omega#444, spec/one-layer-format.md) -------------- */
-
 typedef struct {
     const uint8_t *p;
     size_t n, pos;
@@ -947,10 +954,13 @@ static uint64_t rle(R *r, unsigned k) {
     return v;
 }
 static void rfail(R *r, int rc) { if (!r->rc) r->rc = rc; }
-/* a count or length field: refuse OVERSIZED above max (checked before anything is read under it) */
-static uint64_t rcount(R *r, unsigned k, uint64_t max) {
+/* a count or length field: refuse OVERSIZED above max (checked before anything is read under it).
+ * site names the decoder mutant that switches off this one maximum (omega#450); NO_SITE marks a
+ * version 6 only field, which mutant 9 alone switches off. */
+#define NO_SITE (-1)
+static uint64_t rcount(R *r, unsigned k, uint64_t max, int site) {
     uint64_t v = rle(r, k);
-    if (!r->rc && v > max) rfail(r, OSC_IR_REFUSE_OVERSIZED);
+    if (!r->rc && v > max && !MUTANT(9) && !MUTANT(site)) rfail(r, OSC_IR_REFUSE_OVERSIZED);
     return r->rc ? 0 : v;
 }
 /* a register / block / callee field: u16 two's complement; 0..0x7FFF or 0xFFFF (= -1) */
@@ -974,8 +984,8 @@ static void rtext_n(R *r, size_t k, char *dst) {
     dst[k] = 0;
     r->pos += k;
 }
-static void rtext(R *r, unsigned lenbytes, size_t max, char *dst) {
-    size_t k = (size_t)rcount(r, lenbytes, max);
+static void rtext(R *r, unsigned lenbytes, size_t max, char *dst, int site) {
+    size_t k = (size_t)rcount(r, lenbytes, max, site);
     rtext_n(r, k, dst);
 }
 static void rtype(R *r, OscType *t) {
@@ -1015,14 +1025,14 @@ static void decode_insn(R *r, OscInsn *in) {
     case OSC_I_FSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); in->imm = rle(r, 1); break;
     case OSC_I_CALL:
         in->dst = rvr(r); in->callee = rvr(r);
-        in->nargs = (uint8_t)rcount(r, 1, OSC_MAX_PARAMS);
+        in->nargs = (uint8_t)rcount(r, 1, OSC_MAX_PARAMS, 17);
         for (int k = 0; k < in->nargs && !r->rc; k++) in->args[k] = rvr(r);
         break;
     case OSC_I_TRAP: in->imm = rle(r, 1); break;
     case OSC_I_BR: in->blk_t = rvr(r); break;
     case OSC_I_CBR: in->a = rvr(r); in->blk_t = rvr(r); in->blk_f = rvr(r); break;
     case OSC_I_RET: in->a = rvr(r); break;
-    default: rfail(r, OSC_IR_REFUSE_RANGE); break;  /* unknown opcode: its size is unknown */
+    default: if (!MUTANT(10)) rfail(r, OSC_IR_REFUSE_RANGE); break;  /* unknown opcode: its size is unknown */
     }
 }
 
@@ -1030,26 +1040,26 @@ static void decode_insn(R *r, OscInsn *in) {
 static void decode_body(R *r, OscFunc *f) {
     f->nparams = (uint8_t)rle(r, 1);
     rtype(r, &f->ret);
-    f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS);
+    f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS, 14);
     for (int v = 0; v < f->nvregs && !r->rc; v++) rtype(r, &f->vtype[v]);
-    f->nblocks = (uint16_t)rcount(r, 2, OSC_MAX_BLOCKS);
+    f->nblocks = (uint16_t)rcount(r, 2, OSC_MAX_BLOCKS, 15);
     for (int b = 0; b < f->nblocks && !r->rc; b++) {
         f->blocks[b].first = (uint32_t)rle(r, 4);
         f->blocks[b].count = (uint32_t)rle(r, 4);
     }
-    f->ninsns = (uint32_t)rcount(r, 4, OSC_MAX_INSNS);
+    f->ninsns = (uint32_t)rcount(r, 4, OSC_MAX_INSNS, 16);
     for (uint32_t i = 0; i < f->ninsns && !r->rc; i++) decode_insn(r, &f->insns[i]);
 }
 static void decode_func(R *r, OscFunc *f) {
-    rtext(r, 1, OSC_NAME_MAX - 1, f->name);
+    rtext(r, 1, OSC_NAME_MAX - 1, f->name, 18);
     decode_body(r, f);
-    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->requires_text);
-    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->ensures_text);
+    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->requires_text, 19);
+    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->ensures_text, 20);
 }
 
 /* version 6: a requirement object, count then terms (unknown term kind: size unknown, RANGE) */
 static uint8_t rterms(R *r, OscCterm *t) {
-    uint8_t n = (uint8_t)rcount(r, 1, OSC_CONTRACT_MAX);
+    uint8_t n = (uint8_t)rcount(r, 1, OSC_CONTRACT_MAX, NO_SITE);
     for (unsigned i = 0; i < n && !r->rc; i++) {
         OscCterm *c = &t[i];
         c->kind = (uint8_t)rle(r, 1);
@@ -1067,8 +1077,8 @@ static uint8_t rterms(R *r, OscCterm *t) {
 /* version 6: the name table. Per entry, in this order: kind (RANGE), target (IDENT),
  * order and field number (ORDER), length (OVERSIZED; 0 is ORDER), text (TRUNCATED, TEXT). */
 static void decode_names(R *r, OscUnit *u) {
-    static char scratch[OSC_CLAUSE_MAX];  /* mutant 10 only: text of a dangling entry */
-    unsigned nn = (unsigned)rcount(r, 2, OSC_IR_V6_NAMES_MAX);
+    static char scratch[OSC_CLAUSE_MAX];  /* mutant 24 only: text of a dangling entry */
+    unsigned nn = (unsigned)rcount(r, 2, OSC_IR_V6_NAMES_MAX, NO_SITE);
     uint32_t prev = 0;
     for (unsigned i = 0; i < nn && !r->rc; i++) {
         unsigned kind = (unsigned)rle(r, 1), idx = (unsigned)rle(r, 1), sub = (unsigned)rle(r, 1);
@@ -1077,14 +1087,14 @@ static void decode_names(R *r, OscUnit *u) {
         bool of_func = kind == OSC_IR_NAME_FUNC || kind == OSC_IR_NAME_REQUIRES || kind == OSC_IR_NAME_ENSURES;
         bool target = of_func ? idx < u->nfuncs
                               : idx < u->nstructs && (kind != OSC_IR_NAME_FIELD || sub < u->structs[idx].nfields);
-        if (!target && !MUTANT(10)) { rfail(r, OSC_IR_REFUSE_IDENT); return; }
+        if (!target && !MUTANT(24)) { rfail(r, OSC_IR_REFUSE_IDENT); return; }
         uint32_t key = (uint32_t)kind << 16 | (uint32_t)idx << 8 | sub;
-        if (((kind != OSC_IR_NAME_FIELD && sub) || key <= prev) && !MUTANT(11)) { rfail(r, OSC_IR_REFUSE_ORDER); return; }
+        if (((kind != OSC_IR_NAME_FIELD && sub) || key <= prev) && !MUTANT(25)) { rfail(r, OSC_IR_REFUSE_ORDER); return; }
         prev = key;
         size_t max = kind >= OSC_IR_NAME_REQUIRES ? OSC_CLAUSE_MAX - 1 : OSC_NAME_MAX - 1;
-        size_t k = (size_t)rcount(r, 2, max);
+        size_t k = (size_t)rcount(r, 2, max, NO_SITE);
         if (r->rc) return;
-        if (k == 0 && !MUTANT(11)) { rfail(r, OSC_IR_REFUSE_ORDER); return; }  /* absent names are omitted */
+        if (k == 0 && !MUTANT(25)) { rfail(r, OSC_IR_REFUSE_ORDER); return; }  /* absent names are omitted */
         char *dst = scratch;
         if (target) {
             if (kind == OSC_IR_NAME_FUNC) dst = u->funcs[idx].name;
@@ -1111,12 +1121,12 @@ static bool core_ids_ok(const OscUnit *u) {
 }
 static int decode_v6(R *r, OscUnit *u) {
     if (!rneed(r, OSC_IR_V6_TAG_LEN)) return r->rc;
-    if (memcmp(r->p + r->pos, OSC_IR_V6_TAG, OSC_IR_V6_TAG_LEN) && !MUTANT(9)) return OSC_IR_REFUSE_DOMAIN;
+    if (memcmp(r->p + r->pos, OSC_IR_V6_TAG, OSC_IR_V6_TAG_LEN) && !MUTANT(23)) return OSC_IR_REFUSE_DOMAIN;
     r->pos += OSC_IR_V6_TAG_LEN;
-    u->nstructs = (uint8_t)rcount(r, 1, OSC_MAX_STRUCTS);
+    u->nstructs = (uint8_t)rcount(r, 1, OSC_MAX_STRUCTS, 11);
     for (int k = 0; k < u->nstructs && !r->rc; k++) {
         OscStruct *s = &u->structs[k];
-        s->nfields = (uint8_t)rcount(r, 1, OSC_MAX_FIELDS);
+        s->nfields = (uint8_t)rcount(r, 1, OSC_MAX_FIELDS, 12);
         s->ncells = (uint16_t)rle(r, 2);
         for (int f = 0; f < s->nfields && !r->rc; f++) {
             OscField *fd = &s->fields[f];
@@ -1125,7 +1135,7 @@ static int decode_v6(R *r, OscUnit *u) {
             fd->off = (uint16_t)rle(r, 2);
         }
     }
-    u->nfuncs = (uint16_t)rcount(r, 2, OSC_MAX_FUNCS);
+    u->nfuncs = (uint16_t)rcount(r, 2, OSC_MAX_FUNCS, 13);
     for (int fi = 0; fi < u->nfuncs && !r->rc; fi++) {
         OscFunc *f = &u->funcs[fi];
         decode_body(r, f);
@@ -1135,8 +1145,8 @@ static int decode_v6(R *r, OscUnit *u) {
     decode_names(r, u);
     if (r->rc) return r->rc;
     if (r->pos != r->n && !MUTANT(1)) return OSC_IR_REFUSE_TRAILING;
-    if (!MUTANT(13) && !core_ids_ok(u)) return OSC_IR_REFUSE_IDENT;
-    if (!MUTANT(12))
+    if (!MUTANT(27) && !core_ids_ok(u)) return OSC_IR_REFUSE_IDENT;
+    if (!MUTANT(26))
         for (int fi = 0; fi < u->nfuncs; fi++)
             if (!func_contracts_ok(&u->funcs[fi])) return OSC_IR_REFUSE_CONTRACT;
     if (!MUTANT(4) && osc_ir_validate(u, NULL, 0) != 0) return OSC_IR_REFUSE_INVALID;
@@ -1162,22 +1172,22 @@ static int decode_unit(const uint8_t *buf, size_t len, OscUnit *u) {
     if (len > OSC_IR_ENCODED_MAX && !MUTANT(7)) return OSC_IR_REFUSE_OVERSIZED;  /* versions 1..5: their own bound */
     if (version < 1 || version > OSC_IR_VERSION_MAX) return OSC_IR_REFUSE_UNKNOWN_VERSION;
     if (version >= 2) {
-        u->nstructs = (uint8_t)rcount(&r, 1, OSC_MAX_STRUCTS);
+        u->nstructs = (uint8_t)rcount(&r, 1, OSC_MAX_STRUCTS, 11);
         for (int k = 0; k < u->nstructs && !r.rc; k++) {
             OscStruct *s = &u->structs[k];
-            rtext(&r, 1, OSC_NAME_MAX - 1, s->name);
-            s->nfields = (uint8_t)rcount(&r, 1, OSC_MAX_FIELDS);
+            rtext(&r, 1, OSC_NAME_MAX - 1, s->name, 21);
+            s->nfields = (uint8_t)rcount(&r, 1, OSC_MAX_FIELDS, 12);
             s->ncells = (uint16_t)rle(&r, 2);
             for (int f = 0; f < s->nfields && !r.rc; f++) {
                 OscField *fd = &s->fields[f];
-                rtext(&r, 1, OSC_NAME_MAX - 1, fd->name);
+                rtext(&r, 1, OSC_NAME_MAX - 1, fd->name, 22);
                 fd->s = rscalar(&r);
                 fd->alen = (uint16_t)rle(&r, 2);
                 fd->off = (uint16_t)rle(&r, 2);
             }
         }
     }
-    u->nfuncs = (uint16_t)rcount(&r, 2, OSC_MAX_FUNCS);
+    u->nfuncs = (uint16_t)rcount(&r, 2, OSC_MAX_FUNCS, 13);
     for (int fi = 0; fi < u->nfuncs && !r.rc; fi++) decode_func(&r, &u->funcs[fi]);
     if (r.rc) return r.rc;
     if (r.pos != len && !MUTANT(1)) return OSC_IR_REFUSE_TRAILING;

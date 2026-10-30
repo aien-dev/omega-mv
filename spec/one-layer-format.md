@@ -204,7 +204,7 @@ version 6 only; section 11.8 gives their meaning, check order and counterexample
 NONCANONICAL is a backstop. Given the checks above it, every field read back writes back to the
 same bytes, so no input reaches it; the sweeps assert it is never returned. It is reached only when
 a check above it is removed: decoder mutants 1, 2, 5 and 8 (section 8), and for version 6
-mutants 9, 10 and 11 (section 11.9), fall through to it.
+mutants 23, 24 and 25 (section 11.9), fall through to it.
 
 ## 8. Qualification
 
@@ -226,10 +226,12 @@ build `tests/compiler/test_osc_ir_decode.c` plain and with ASan/UBSan. Measured 
   the random edits differ because it draws fewer valid variants first) with no sanitizer report;
 - one counterexample per reachable class (section 7), built by an independent writer in the test,
   whose canonical case is byte-identical to `osc_ir_encode`;
-- negative controls: 5 planted defects caught by the test's own checks, and 8 decoder mutants
+- negative controls: 5 planted defects caught by the test's own checks, and 22 decoder mutants
   (`OSC_IR_DECODE_MUTANT` = 1 no trailing check, 2 no version check, 3 no zeroing on refusal,
   4 no validation, 5 no NUL check, 6 no register range check, 7 no total size check, 8 truncation
-  read as zeros) each make the test fail.
+  read as zeros, 9 no count/length maximum anywhere, 10 unknown opcode admitted, 11..22 one
+  count/length maximum off each: nstructs, nfields, nfuncs, nvregs, nblocks, ninsns, call nargs,
+  function name, requires, ensures, struct name, field name) each make the test fail.
 
 ## 9. Resolved by version 6 (asked by #444, specified in section 11, omega#451)
 
@@ -675,9 +677,11 @@ byte flips now lands on version 6 and is refused DOMAIN):
 - 35 counterexamples (11.8) from an independent writer in the test, whose canonical case is
   byte-identical to `osc_ir_encode_v6`; with section 7's 22 cases, 57 of 57 as expected and 14 of
   the 15 classes exhibited (all but the NONCANONICAL backstop);
-- 6 more decoder mutants, each caught: 9 no domain check, 10 no name-table target check, 11 no
-  order or empty-entry check, 12 no requirement-object check, 13 no core identifier check, 14 name
-  table hashed into the identity.
+- 6 more decoder mutants, each caught: 23 no domain check, 24 no name-table target check, 25 no
+  order or empty-entry check, 26 no requirement-object check, 27 no core identifier check, 28 name
+  table hashed into the identity. Mutants 9 and 11..17 switch off the same count maxima in the
+  version 6 core; the version 6 only maxima (terms per object, name-table entries, name-table text
+  length) have no single-site mutant and are switched off by mutant 9.
 
 Not in this change: the front end (`osc_lower`) still writes versions 1..5 and fills no requirement
 objects; translating `requires` / `ensures` source into objects, evaluating them, and teaching the
