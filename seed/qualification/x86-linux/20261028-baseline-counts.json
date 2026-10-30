@@ -1,0 +1,12 @@
+{
+  "execution": "EMULATED",
+  "native_x86": "NOT_RUN",
+  "source_commit": "becf5c817bcb7e0846d12ebfc2be91042d8ad89a",
+  "log_path": "/home/drakestapleton/handoffs/omega-fr9-20261028-corpus.jsonl",
+  "log_sha256": "a772e28905b99de412f3fed818b7c3bb0ce42eeec05dfa8a68e82547eec9ff85",
+  "counting_rule": "Parse each JSONL record and count only its top-level status key, never a nested summary or reasons entry.",
+  "case_counts": {"PASS": 7537, "FAIL": 152, "NOT_RUN": 399, "MISSING_IMPLEMENTATION": 5, "EXCLUDED": 570, "MISSING_INPUT": 257},
+  "statusless_metadata_records": 3,
+  "metadata_record_kinds": ["inventory/source/checker pin", "compiler/platform/oracle pins", "final summary/reason counts/mnemonic coverage/verdict"],
+  "reconciliation": "The final summary line contains a nested FAIL reason group but has no top-level status. It is metadata, not an extra case. There are 152 top-level FAIL case records and three statusless metadata records; the original recorded summary is accurate."
+}
