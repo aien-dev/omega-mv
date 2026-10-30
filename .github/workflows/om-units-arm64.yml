@@ -6,7 +6,7 @@
 name: om-units-arm64
 on:
   pull_request:
-    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "mk/omega-gpu-engine.mk", "tests/gates/**", ".github/workflows/om-units-arm64.yml"]
+    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "src/omega_om_units_fs.c", "mk/omega-gpu-engine.mk", "tests/gates/**", ".github/workflows/om-units-arm64.yml"]
   push:
     branches: [main]
 permissions:
