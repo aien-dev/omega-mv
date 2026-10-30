@@ -666,9 +666,11 @@ the length to X1.
 
 ## Rung R30: refusal-code conformance gate (done)
 
-`seed/omc/gate15.sh` pins the compiler's refusal table: one minimal program per code 3..23, each of
-which must exit with exactly that code and print `error N`, plus a valid control. Codes 1 and 2 are
-I/O errors on the compiler's own input/output, not language inputs, and are excluded.
+`seed/omc/gate15.sh` pins the compiler's refusal table. At R30 that was one minimal program per code
+3..23, each of which had to exit with exactly that code and print `error N`, plus a valid control.
+Since #797 the codes live in one registry, `seed/omc/error-codes.reg`, and gate15 covers every emitted
+code 1..25 and 27..30 (33 cases, each checked against its exact `omc: line L: error C`) and runs the
+`seed/omc/codereg.om` drift check with three negative controls; see OMEGESE §9.14.
 
 - The cases are: 3 unknown name, 4 line ends early, 5 extra words, 6 bad number, 7 type mismatch,
   8 out of range, 9 word not allowed, 10 duplicate name, 11 ambiguous literal, 12 register pool,
