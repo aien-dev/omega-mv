@@ -1,0 +1,429 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: OMEGA-CRYPTO-REUSE-1 gates 1 and 2 (issue #639), keystream reuse on synthetic inputs.
+note Built as `om2`, om/tls/chacha.om, om/tls/aesgcm.om, om/tls/gcmsiv.om, driver.om (om/tls/test/reuse/run.sh).
+note Stdin: lines; empty lines and lines starting with # are skipped; exactly one line
+note   X HEX    HEX = 160 hex digits, the 80 bytes of P1 XOR P2, computed outside this program
+note All inputs are synthetic (no real key, no real payload), 80 bytes so that ChaCha20 crosses a
+note 64-byte block and AES-GCM uses five counter blocks:
+note   P1[i] = (7 i + 3) mod 256      P2[i] = (13 i + 101) mod 256       i = 0..79
+note   K1[i] = (29 i + 17) mod 256    K2[i] = (31 i + 5) mod 256         synthetic keystreams
+note   ChaCha20-Poly1305 kn = key || nonce, byte i = i (44 bytes); the distinct-nonce kn flips bit 0
+note     of the last nonce byte. AES-128-GCM and AES-128-GCM-SIV kn byte i = (3 i + 1) mod 256
+note     (28 bytes), same flip. Mode 2 derives its keystream from the tag, so a repeated nonce
+note     does not disclose P1 XOR P2 (RFC 8452).
+note   aad = "abcd". Tags (16 bytes) are never part of the reuse comparison.
+note The detector kreuse says "reuse" when C1 XOR C2 equals P1 XOR P2 over the ciphertext bytes:
+note with both plaintexts known, equal XORs mean the two keystreams were equal there. A primitive
+note API accepts a repeated nonce (RFC 8439 4, SP 800-38D 8): nothing here expects it to refuse.
+note Checks (numbered as printed):
+note   1  synthetic: (P1^K1) ^ (P2^K1) == X                  (independent expected bytes)
+note   2  synthetic: detector flags reuse for one keystream K1
+note   3  synthetic: detector does not flag K1 against K2   (distinct-keystream control)
+note   then for m = 0 (ChaCha20-Poly1305, checks 4..11) and m = 1 (AES-128-GCM, checks 12..19):
+note   +0 seal P1 and P2 under one kn, and P2 under the distinct-nonce kn: all three return 0
+note   +1 ct1 ^ ct2 == X over the 80 ciphertext bytes        (payload XOR disclosed)
+note   +2 detector flags reuse for the repeated nonce
+note   +3 detector does not flag the distinct nonce          (negative control)
+note   +4 the two tags under the repeated nonce differ        (why tags are excluded)
+note   +5 open(ct1) under the repeated nonce returns 0 and P1 (authentication still holds)
+note   +6 ct2 with one ciphertext bit flipped: open returns 1 and zeroes the data part
+note   +7 the distinct-nonce sealed P2 opened with the first kn returns 1 (wrong nonce refused)
+note   then mode 2 (AES-128-GCM-SIV, checks 20..27):
+note   20  the three seals return 0
+note   21  mode-2 ciphertext of P1 differs from the mode-1 ciphertext of the same kn and P1
+note   22  ct1 ^ ct2 != X over the 80 ciphertext bytes        (nonce misuse does not disclose XOR)
+note   23  detector does not flag the repeated nonce
+note   24  the two tags under the repeated nonce differ
+note   25  open(ct1) returns 0 and restores P1
+note   26  ct2 with one other ciphertext bit flipped: open returns 1 and zeroes the data
+note   27  the distinct-nonce sealed P2 opened with the first kn returns 1
+note Prints "MISMATCH check N" per failed check, "BAD input" for a malformed X line, then
+note "reuse driver: C checks, F failed". Exit 0 only when F is 0 and C is 27; 1 otherwise; 2 when
+note stdin cannot be read or is over 4096 bytes.
+
+const RLEN ulong 80
+const SLEN ulong 96
+note offsets in the work buffer w (one buffer keeps main within 16 live values)
+const OP1 ulong 0
+const OP2 ulong 96
+const OK1 ulong 192
+const OK2 ulong 288
+const OC1 ulong 384
+const OC2 ulong 480
+const OC3 ulong 576
+const OT ulong 672
+const OX ulong 768
+const ON1 ulong 864
+const ON2 ulong 928
+const OAD ulong 992
+const WLEN ulong 1024
+
+global inp uchar 4096
+global st ulong 4
+global ob uchar 32
+global one uchar 1
+text tmis "MISMATCH check "
+text tbad "BAD input\n"
+text tsum "reuse driver: "
+text tchk " checks, "
+text tfld " failed\n"
+text tnl "\n"
+text tio "reuse driver: cannot read input or input over 4096 bytes\n"
+
+note st: 0 input length, 1 checks, 2 failed
+
+fn dslurp to int
+t = ulong 0
+while true bound 4097
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn dhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+if ge c 65
+if le c 70
+ret sub c 55
+end
+end
+ret 16
+end
+
+note find the one "X " line and decode its 160 hex digits into x; 0 ok, 1 malformed or not one line
+fn dparse x edit uchar * to ulong
+n = get st 0
+p = ulong 0
+seen = ulong 0
+bad = ulong 0
+while lt p n bound 4097
+c = ulong get inp p
+q = p
+while lt q n bound 4097
+if eq get inp q 10
+break
+end
+q = add q 1
+end
+if eq c 88
+seen = add seen 1
+bad = or bad dxline x p q
+else
+if and ne c 35 ne q p
+bad = 1
+end
+end
+p = add q 1
+end
+if ne seen 1
+bad = 1
+end
+ret bad
+end
+
+note decode the X line inp[p .. q) into x: 0 ok, 1 malformed
+fn dxline x edit uchar * p ulong q ulong to ulong
+if ne sub q p 162
+ret 1
+end
+if ne get inp add p 1 32
+ret 1
+end
+bad = ulong 0
+for i ulong RLEN
+o = add p mul i 2
+hi = dhexv ulong get inp add o 2
+lo = dhexv ulong get inp add o 3
+if or gt hi 15 gt lo 15
+bad = 1
+else
+put x i uchar or shl hi 4 lo
+end
+end
+ret bad
+end
+
+fn dprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+fn dchk ok bool id ulong to void
+put st 1 add get st 1 1
+if not ok
+put st 2 add get st 2 1
+r = write 1 tmis 0 len tmis
+dprn id
+r = write 1 tnl 0 1
+end
+end
+
+note the reuse detector over the work buffer: true when w[a..] ^ w[b..] == w[p..] ^ w[q..] over the
+note first n bytes (a, b ciphertexts; p, q the known plaintexts)
+fn kreuse w view uchar WLEN a ulong b ulong p ulong q ulong n ulong to bool
+acc = uchar 0
+for i ulong n
+c = xor get w add a i get w add b i
+acc = or acc xor c xor get w add p i get w add q i
+end
+ret not ne acc 0
+end
+
+note true when w[a..] ^ w[b..] == w[x..] over the first n bytes
+fn dxeq w view uchar WLEN a ulong b ulong x ulong n ulong to bool
+acc = uchar 0
+for i ulong n
+acc = or acc xor xor get w add a i get w add b i get w add x i
+end
+ret eq acc 0
+end
+
+note true when w[a..] and w[b..] differ somewhere in their first n bytes
+fn ddiff w view uchar WLEN a ulong b ulong n ulong to bool
+acc = uchar 0
+for i ulong n
+acc = or acc xor get w add a i get w add b i
+end
+ret ne acc 0
+end
+
+note copy w[s .. s + n) to w[d .. d + n)
+fn dmove w edit uchar WLEN d ulong s ulong n ulong to void
+for i ulong n
+put w add d i get w add s i
+end
+end
+
+note true when the first n bytes of a are 0
+fn dzero a view uchar * n ulong to bool
+acc = uchar 0
+for i ulong n
+acc = or acc get a i
+end
+ret eq acc 0
+end
+
+fn dcopy d edit uchar * s view uchar * to void
+for i ulong len s
+put d i get s i
+end
+end
+
+note synthetic plaintexts, keystreams, aad and the kn pair of mode m (0 ChaCha, 1 AES-GCM, 2 AES-GCM-SIV)
+fn dgen w edit uchar WLEN m ulong to ulong
+for i ulong SLEN
+put w add OP1 i 0
+put w add OP2 i 0
+end
+for i ulong RLEN
+put w add OP1 i uchar rem add mul 7 i 3 256
+put w add OP2 i uchar rem add mul 13 i 101 256
+put w add OK1 i uchar rem add mul 29 i 17 256
+put w add OK2 i uchar rem add mul 31 i 5 256
+end
+put w add OAD 0 97
+put w add OAD 1 98
+put w add OAD 2 99
+put w add OAD 3 100
+nl = ulong 44
+if eq m 1
+nl = 28
+end
+if eq m 2
+nl = 28
+end
+for i ulong nl
+v = uchar i
+if eq m 1
+v = uchar rem add mul 3 i 1 256
+end
+if eq m 2
+v = uchar rem add mul 3 i 1 256
+end
+put w add ON1 i v
+put w add ON2 i v
+end
+last = add ON2 sub nl 1
+put w last xor get w last 1
+ret nl
+end
+
+note seal / open w[o .. o + SLEN) in place under kn = w[k .. k + nl) and aad = w[OAD .. OAD + 4);
+note kn and aad are copied to local arrays first (one array may not be passed twice in a call)
+fn dseal m ulong w edit uchar WLEN k ulong nl ulong o ulong to ulong
+kb = new uchar 44 0
+ad = new uchar 4 0
+dcopy part kb 0 nl part w k nl
+dcopy ad part w OAD 4
+if eq m 2
+ret aes_gcmsiv_seal part kb 0 nl ad part w o SLEN
+end
+if eq m 1
+ret aead_aes128gcm_seal part kb 0 nl ad part w o SLEN
+end
+ret aead_chacha_seal part kb 0 nl ad part w o SLEN
+end
+
+fn dopen m ulong w edit uchar WLEN k ulong nl ulong o ulong to ulong
+kb = new uchar 44 0
+ad = new uchar 4 0
+dcopy part kb 0 nl part w k nl
+dcopy ad part w OAD 4
+if eq m 2
+ret aes_gcmsiv_open part kb 0 nl ad part w o SLEN
+end
+if eq m 1
+ret aead_aes128gcm_open part kb 0 nl ad part w o SLEN
+end
+ret aead_chacha_open part kb 0 nl ad part w o SLEN
+end
+
+note gate 1: one synthetic keystream reused, then two distinct ones
+fn dsynth w edit uchar WLEN to void
+for i ulong RLEN
+put w add OC1 i xor get w add OP1 i get w add OK1 i
+put w add OC2 i xor get w add OP2 i get w add OK1 i
+put w add OC3 i xor get w add OP2 i get w add OK2 i
+end
+dchk dxeq w OC1 OC2 OX RLEN 1
+dchk kreuse w OC1 OC2 OP1 OP2 RLEN 2
+dchk not kreuse w OC1 OC3 OP1 OP2 RLEN 3
+end
+
+note gate 2 for mode m, checks b .. b + 7
+fn daead w edit uchar WLEN m ulong b ulong to void
+nl = dgen w m
+dmove w OC1 OP1 SLEN
+dmove w OC2 OP2 SLEN
+dmove w OC3 OP2 SLEN
+r1 = dseal m w ON1 nl OC1
+r2 = dseal m w ON1 nl OC2
+r3 = dseal m w ON2 nl OC3
+dchk eq or or r1 r2 r3 0 b
+dchk dxeq w OC1 OC2 OX RLEN add b 1
+dchk kreuse w OC1 OC2 OP1 OP2 RLEN add b 2
+dchk not kreuse w OC1 OC3 OP1 OP2 RLEN add b 3
+dchk ddiff w add OC1 RLEN add OC2 RLEN 16 add b 4
+dmove w OT OC1 SLEN
+r4 = dopen m w ON1 nl OT
+dchk and eq r4 0 not ddiff w OT OP1 RLEN add b 5
+dmove w OT OC2 SLEN
+put w add OT 5 xor get w add OT 5 1
+r5 = dopen m w ON1 nl OT
+dchk and eq r5 1 dzero part w OT RLEN RLEN add b 6
+dmove w OT OC3 SLEN
+r6 = dopen m w ON1 nl OT
+dchk eq r6 1 add b 7
+end
+
+note gate 3: AES-128-GCM-SIV. Check 21 is the siv-as-other-mode site: only the first seal is mode 2.
+fn dsiv_seals w edit uchar WLEN nl ulong to void
+dmove w OC1 OP1 SLEN
+dmove w OC2 OP2 SLEN
+dmove w OC3 OP2 SLEN
+r1 = dseal 2 w ON1 nl OC1
+r2 = dseal 2 w ON1 nl OC2
+r3 = dseal 2 w ON2 nl OC3
+dchk eq or or r1 r2 r3 0 20
+end
+
+fn dsiv_notgcm w edit uchar WLEN nl ulong to void
+dmove w OT OC1 SLEN
+dmove w OC1 OP1 SLEN
+r1 = dseal 1 w ON1 nl OC1
+dchk ddiff w OT OC1 RLEN 21
+dmove w OC1 OP1 SLEN
+r2 = dseal 2 w ON1 nl OC1
+end
+
+fn dsiv_misuse w edit uchar WLEN to void
+dchk not dxeq w OC1 OC2 OX RLEN 22
+dchk not kreuse w OC1 OC2 OP1 OP2 RLEN 23
+dchk ddiff w add OC1 RLEN add OC2 RLEN 16 24
+end
+
+fn dsiv_auth w edit uchar WLEN nl ulong to void
+dmove w OT OC1 SLEN
+r4 = dopen 2 w ON1 nl OT
+dchk and eq r4 0 not ddiff w OT OP1 RLEN 25
+dmove w OT OC2 SLEN
+put w add OT 9 xor get w add OT 9 1
+r5 = dopen 2 w ON1 nl OT
+dchk and eq r5 1 dzero part w OT RLEN RLEN 26
+dmove w OT OC3 SLEN
+r6 = dopen 2 w ON1 nl OT
+dchk eq r6 1 27
+end
+
+fn dsiv w edit uchar WLEN to void
+nl = dgen w 2
+dsiv_seals w nl
+dsiv_notgcm w nl
+dsiv_misuse w
+dsiv_auth w nl
+end
+
+fn main to int
+w = new uchar WLEN 0
+if ne dslurp 0
+r = write 2 tio 0 len tio
+ret 2
+end
+put st 1 0
+put st 2 0
+if ne dparse part w OX RLEN 0
+r = write 1 tbad 0 len tbad
+put st 2 add get st 2 1
+end
+nl = dgen w 0
+dsynth w
+daead w 0 4
+daead w 1 12
+dsiv w
+r = write 1 tsum 0 len tsum
+dprn get st 1
+r = write 1 tchk 0 len tchk
+dprn get st 2
+r = write 1 tfld 0 len tfld
+if ne get st 2 0
+ret 1
+end
+if ne get st 1 27
+ret 1
+end
+ret 0
+end

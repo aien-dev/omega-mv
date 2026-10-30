@@ -71,3 +71,4 @@ Update this table in the same commit as the work it credits.
 | Grok 4.7 | Merged current main (089e5b05) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
 | Grok 4.7 | Merged current main (62d1d0d) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
 | Grok 4.7 | Cost-model refusal of unsupported semantic operation IDs before prediction or learning, with a clamp-restoring mutant (Refs #704) |
+| Grok 4.7 | AES-GCM-SIV (RFC 8452) in `om/tls/gcmsiv.om`, the #639 keystream-reuse detector (27 checks, six mutants including a one-line AES-GCM mode swap), and the `seed/host/check.sh` hook whose no-op tamper exits nonzero. Host exercised; not hardware qualified. |

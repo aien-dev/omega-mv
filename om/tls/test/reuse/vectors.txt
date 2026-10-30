@@ -1,0 +1,4 @@
+# X = P1 XOR P2, P1[i] = (7 i + 3) mod 256, P2[i] = (13 i + 101) mod 256, i = 0..79, computed
+# independently of the driver with Wolfram (WolframLanguageEvaluator, 2026-10-30):
+#   StringJoin[Table[IntegerString[BitXor[Mod[7 i + 3, 256], Mod[13 i + 101, 256]], 16, 2], {i, 0, 79}]]
+X 66786e9486809ef4f698aea456507e444638ced4e6e01e3436180e0416103e24e6f8eed4c6405e747658aea49690fe8486b88e9466605eb4b6d8cec4d6d03e2466786e1406001ef4f6182e2456507e44
