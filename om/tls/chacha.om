@@ -1,0 +1,443 @@
+note SPDX-License-Identifier: Apache-2.0
+note chacha.om: ChaCha20, Poly1305 and AEAD_CHACHA20_POLY1305 exactly as RFC 8439 (module CC).
+note OM-2 library unit (no om2 line, no main): the build writes `om2`, then the library files.
+note
+note API (0 = success; reject codes are documented per function):
+note   chacha20_xor kn ctr buf      kn = key(32) || nonce(12); buf ^= keystream from block counter ctr.
+note                                2: len kn != 44, ctr above 2^32 - 1, or the last block would
+note                                need a counter above 2^32 - 1 (ctr + blocks > 2^32).
+note   poly1305_mac kd m o          o[0..16) = Poly1305(kd one-time key, m). 2: len kd != 32 or len o < 16.
+note   aead_chacha_seal kn aad buf  buf = plaintext || 16 bytes of tag room; encrypts in place and
+note                                writes the tag at buf[n-16..n). 2: len kn != 44, len buf < 16,
+note                                plaintext over the counter range (2^32 - 1 blocks).
+note   aead_chacha_open kn aad buf  buf = ciphertext || tag. 0: tag valid, buf[0..n-16) decrypted in
+note                                place. 1: tag invalid, buf[0..n-16) zeroed (no unauthenticated
+note                                plaintext is ever released). 2: bad lengths as for seal; buf untouched.
+note
+note Constant time: no branch, loop count or array index depends on key, nonce, plaintext, keystream,
+note Poly1305 accumulator or tag bytes; they depend only on lengths, the public counter and the
+note public verdict of the tag comparison (accumulated with or over all 16 bytes). Poly1305 uses
+note 26-bit limbs in ulong (products under 2^59) and a branch-free final reduction mod 2^130 - 5
+note (mask select) and addition of s mod 2^128. Compiler-level caveat: omc emits plain AArch64; we
+note rely on MUL/ADD/EOR/AND/ORR/shift being data-independent; the DIT bit is not set. Run-time bounds
+note checks compare public indices only. Keystream, ChaCha state, one-time key and Poly1305 state
+note arrays are zeroed before return.
+
+note little-endian 32-bit load of a[o .. o+4)
+fn chacha20_ld32 a view uchar * o ulong to uint inline
+x = uint get a add o 3
+x = or shl x 8 uint get a add o 2
+x = or shl x 8 uint get a add o 1
+ret or shl x 8 uint get a o
+end
+
+note RFC 8439 2.1 / 2.2: QUARTERROUND(a, b, c, d) on the state x; the four indices are the bytes
+note of q, a in bits 0..7 up to d in bits 24..31 (one parameter keeps the inlined body in 16 registers)
+fn chacha20_qr x edit uint 16 q ulong to void inline
+a = get x and q 15
+b = get x and shr q 8 15
+c = get x and shr q 16 15
+d = get x and shr q 24 15
+a = add a b
+d = rotl xor d a 16
+c = add c d
+b = rotl xor b c 12
+a = add a b
+d = rotl xor d a 8
+c = add c d
+b = rotl xor b c 7
+put x and q 15 a
+put x and shr q 8 15 b
+put x and shr q 16 15 c
+put x and shr q 24 15 d
+end
+
+note one column round and one diagonal round (RFC 8439 2.3); i is a constant in each unrolled copy,
+note so q folds to a number
+fn chacha20_dround x edit uint 16 to void
+for i ulong 4 unroll
+chacha20_qr x or or or i shl add i 4 8 shl add i 8 16 shl add i 12 24
+end
+for i ulong 4 unroll
+chacha20_qr x or or or i shl add and add i 1 3 4 8 shl add and add i 2 3 8 16 shl add and add i 3 3 12 24
+end
+end
+
+note RFC 8439 2.3 state: constants, key words, counter, nonce words (len kn = 44, ctr < 2^32)
+fn chacha20_init s edit uint 16 kn view uchar * ctr ulong to void
+put s 0 0x61707865
+put s 1 0x3320646e
+put s 2 0x79622d32
+put s 3 0x6b206574
+for i ulong 8 unroll
+put s add i 4 chacha20_ld32 kn mul i 4
+end
+put s 12 uint ctr
+for i ulong 3 unroll
+put s add i 13 chacha20_ld32 kn add mul i 4 32
+end
+end
+
+note ks = serialize(20 rounds(s) + s); w is the working state
+fn chacha20_block s view uint 16 w edit uint 16 ks edit uchar 64 to void
+x = uint 0
+for i ulong 16 unroll
+put w i get s i
+end
+for r ulong 10
+chacha20_dround w
+end
+for i ulong 16 unroll
+x = add get w i get s i
+put ks mul i 4 uchar and x 0xff
+put ks add mul i 4 1 uchar and shr x 8 0xff
+put ks add mul i 4 2 uchar and shr x 16 0xff
+put ks add mul i 4 3 uchar shr x 24
+end
+end
+
+note one keystream block of s into buf[o .. min(o + 64, len buf)); s[12] += 1; returns the new o
+fn chacha20_step s edit uint 16 w edit uint 16 ks edit uchar 64 buf edit uchar * o ulong to ulong
+chacha20_block s w ks
+k = sub len buf o
+if gt k 64
+k = 64
+end
+for i ulong k
+q = add o i
+put buf q xor get buf q get ks i
+end
+put s 12 add get s 12 1
+ret add o k
+end
+
+note buf ^= keystream blocks of s, s[12] counting up from its initial value; w, ks scratch
+fn chacha20_run s edit uint 16 w edit uint 16 ks edit uchar 64 buf edit uchar * to void
+n = len buf
+o = ulong 0
+for h ulong add shr n 22 1
+for l ulong 65536
+if ge o n
+break
+end
+o = chacha20_step s w ks buf o
+end
+end
+end
+
+note RFC 8439 2.4: buf ^= ChaCha20 keystream from block counter ctr
+fn chacha20_xor kn view uchar * ctr ulong buf edit uchar * to ulong
+s = new uint 16 0
+w = new uint 16 0
+ks = new uchar 64 0
+if ne len kn 44
+ret 2
+end
+if gt ctr 0xffffffff
+ret 2
+end
+if gt shr add len buf 63 6 sub 0x100000000 ctr
+ret 2
+end
+chacha20_init s kn ctr
+chacha20_run s w ks buf
+for i ulong 16 unroll
+put s i 0
+put w i 0
+end
+for i ulong 64 unroll
+put ks i 0
+end
+ret 0
+end
+
+note Poly1305 state p (ulong 24): 0..4 r limbs (26 bits), 5..8 5*r1..5*r4, 9..13 accumulator h
+note limbs, 14..18 scratch, 19..22 s as four 32-bit words.
+note Load the one-time key kd (32 bytes): r clamped as RFC 8439 2.5 (bytes 3, 7, 11, 15 and 15;
+note bytes 4, 8, 12 and 252), then cut into 26-bit limbs; s little-endian words; h = 0.
+fn poly1305_key p edit ulong 24 kd view uchar * to void
+c = new uchar 16 0
+for i ulong 16 unroll
+put c i get kd i
+end
+put c 3 and get c 3 15
+put c 7 and get c 7 15
+put c 11 and get c 11 15
+put c 15 and get c 15 15
+put c 4 and get c 4 252
+put c 8 and get c 8 252
+put c 12 and get c 12 252
+put p 0 and ulong chacha20_ld32 c 0 0x3ffffff
+put p 1 and shr ulong chacha20_ld32 c 3 2 0x3ffffff
+put p 2 and shr ulong chacha20_ld32 c 6 4 0x3ffffff
+put p 3 and shr ulong chacha20_ld32 c 9 6 0x3ffffff
+put p 4 shr ulong chacha20_ld32 c 12 8
+for i ulong 4 unroll
+put p add i 5 mul get p add i 1 5
+put p add i 19 ulong chacha20_ld32 kd add mul i 4 16
+end
+for i ulong 5 unroll
+put p add i 9 0
+end
+for i ulong 16 unroll
+put c i 0
+end
+end
+
+note h = (h + block b + hib * 2^128) * r mod 2^130 - 5 (partial: limbs below 2^26 + 2^6)
+fn poly1305_block p edit ulong 24 b view uchar 16 hib ulong to void
+h0 = add get p 9 and ulong chacha20_ld32 b 0 0x3ffffff
+h1 = add get p 10 and shr ulong chacha20_ld32 b 3 2 0x3ffffff
+h2 = add get p 11 and shr ulong chacha20_ld32 b 6 4 0x3ffffff
+h3 = add get p 12 and shr ulong chacha20_ld32 b 9 6 0x3ffffff
+h4 = add get p 13 or shr ulong chacha20_ld32 b 12 8 shl hib 24
+d = mul h0 get p 0
+d = add d mul h1 get p 8
+d = add d mul h2 get p 7
+d = add d mul h3 get p 6
+put p 14 add d mul h4 get p 5
+d = mul h0 get p 1
+d = add d mul h1 get p 0
+d = add d mul h2 get p 8
+d = add d mul h3 get p 7
+put p 15 add d mul h4 get p 6
+d = mul h0 get p 2
+d = add d mul h1 get p 1
+d = add d mul h2 get p 0
+d = add d mul h3 get p 8
+put p 16 add d mul h4 get p 7
+d = mul h0 get p 3
+d = add d mul h1 get p 2
+d = add d mul h2 get p 1
+d = add d mul h3 get p 0
+put p 17 add d mul h4 get p 8
+d = mul h0 get p 4
+d = add d mul h1 get p 3
+d = add d mul h2 get p 2
+d = add d mul h3 get p 1
+put p 18 add d mul h4 get p 0
+c = ulong 0
+for i ulong 5 unroll
+d = add get p add i 14 c
+put p add i 9 and d 0x3ffffff
+c = shr d 26
+end
+d = add get p 9 mul c 5
+put p 9 and d 0x3ffffff
+put p 10 add get p 10 shr d 26
+end
+
+note absorb m: whole 16-byte blocks with the 2^128 bit; a final partial block either RFC 8439 2.5
+note style (pad 1: append 0x01, zero fill, no 2^128 bit) or zero padded to a whole block as the
+note AEAD construction of 2.8 requires (pad 0). b is the caller's 16-byte block scratch.
+fn poly1305_feed p edit ulong 24 b edit uchar 16 m view uchar * pad ulong to void
+n = len m
+o = ulong 0
+for h ulong add shr n 20 1
+for l ulong 65536
+if gt add o 16 n
+break
+end
+for i ulong 16 unroll
+put b i get m add o i
+end
+poly1305_block p b 1
+o = add o 16
+end
+end
+r = sub n o
+if eq r 0
+ret
+end
+for i ulong 16 unroll
+put b i 0
+end
+for i ulong r
+put b i get m add o i
+end
+if eq pad 1
+put b r 1
+poly1305_block p b 0
+else
+poly1305_block p b 1
+end
+end
+
+note full carry, then h = h - (2^130 - 5) when that is not negative, by mask select (RFC 8439 2.5)
+fn poly1305_reduce p edit ulong 24 to void
+c = ulong 0
+d = ulong 0
+for i ulong 4 unroll
+d = add get p add i 10 c
+put p add i 10 and d 0x3ffffff
+c = shr d 26
+end
+d = add get p 9 mul c 5
+put p 9 and d 0x3ffffff
+put p 10 add get p 10 shr d 26
+c = 5
+for i ulong 4 unroll
+d = add get p add i 9 c
+put p add i 14 and d 0x3ffffff
+c = shr d 26
+end
+d = sub add get p 13 c 0x4000000
+put p 18 d
+m = sub shr d 63 1
+for i ulong 5 unroll
+put p add i 9 or and get p add i 9 not m and get p add i 14 m
+end
+end
+
+note o[0..16) = (h + s) mod 2^128, little-endian (h fully reduced, limbs below 2^26)
+fn poly1305_finish p edit ulong 24 o edit uchar * to void
+poly1305_reduce p
+a = add get p 9 shl get p 10 26
+f = add and a 0xffffffff get p 19
+put p 14 and f 0xffffffff
+a = add shr a 32 shl get p 11 20
+f = add add and a 0xffffffff get p 20 shr f 32
+put p 15 and f 0xffffffff
+a = add shr a 32 shl get p 12 14
+f = add add and a 0xffffffff get p 21 shr f 32
+put p 16 and f 0xffffffff
+a = add shr a 32 shl get p 13 8
+f = add add and a 0xffffffff get p 22 shr f 32
+put p 17 and f 0xffffffff
+x = ulong 0
+for i ulong 4 unroll
+x = get p add i 14
+put o mul i 4 uchar and x 0xff
+put o add mul i 4 1 uchar and shr x 8 0xff
+put o add mul i 4 2 uchar and shr x 16 0xff
+put o add mul i 4 3 uchar and shr x 24 0xff
+end
+end
+
+note RFC 8439 2.5: o[0..16) = Poly1305(kd, m)
+fn poly1305_mac kd view uchar * m view uchar * o edit uchar * to ulong
+p = new ulong 24 0
+b = new uchar 16 0
+if ne len kd 32
+ret 2
+end
+if lt len o 16
+ret 2
+end
+poly1305_key p kd
+poly1305_feed p b m 1
+poly1305_finish p o
+for i ulong 24 unroll
+put p i 0
+end
+for i ulong 16 unroll
+put b i 0
+end
+ret 0
+end
+
+note RFC 8439 2.8 tag over aad, pad16, buf[0..n-16), pad16, le64 len aad, le64 (n-16), keyed by the
+note one-time key pk; the tag replaces pk[0..16) and pk[16..32) is zeroed.
+fn aead_chacha_mac pk edit uchar 32 aad view uchar * buf view uchar * to void
+p = new ulong 24 0
+b = new uchar 16 0
+poly1305_key p pk
+poly1305_feed p b aad 0
+n = sub len buf 16
+poly1305_feed p b part buf 0 n 0
+a = len aad
+for i ulong 8 unroll
+put b i uchar and shr a mul i 8 0xff
+put b add i 8 uchar and shr n mul i 8 0xff
+end
+poly1305_block p b 1
+poly1305_finish p pk
+for i ulong 16 unroll
+put pk add i 16 0
+end
+for i ulong 24 unroll
+put p i 0
+end
+for i ulong 16 unroll
+put b i 0
+end
+end
+
+note 0 when kn and buf have AEAD lengths (len kn 44, len buf >= 16, ciphertext within the counter
+note range from block 1), else 2
+fn aead_chacha_lens kn view uchar * buf view uchar * to ulong
+if ne len kn 44
+ret 2
+end
+if lt len buf 16
+ret 2
+end
+if gt shr add sub len buf 16 63 6 0xffffffff
+ret 2
+end
+ret 0
+end
+
+note zero a, any length (two loop levels: one rolled loop traps past 1000000 passes)
+fn aead_chacha_zero a edit uchar * to void
+n = len a
+o = ulong 0
+for h ulong add shr n 20 1
+for l ulong 65536
+if ge o n
+break
+end
+k = sub n o
+if gt k 16
+k = 16
+end
+for i ulong k
+put a add o i 0
+end
+o = add o k
+end
+end
+end
+
+note RFC 8439 2.8 AEAD_CHACHA20_POLY1305 encryption, in place
+fn aead_chacha_seal kn view uchar * aad view uchar * buf edit uchar * to ulong
+pk = new uchar 32 0
+if ne aead_chacha_lens kn buf 0
+ret 2
+end
+m = sub len buf 16
+r = chacha20_xor kn 0 pk
+r = or r chacha20_xor kn 1 part buf 0 m
+aead_chacha_mac pk aad buf
+for i ulong 16 unroll
+put buf add m i get pk i
+end
+for i ulong 32 unroll
+put pk i 0
+end
+ret r
+end
+
+note RFC 8439 2.8 AEAD_CHACHA20_POLY1305 decryption, in place; the tag is checked before any
+note plaintext is produced, with a constant-time or-accumulated comparison
+fn aead_chacha_open kn view uchar * aad view uchar * buf edit uchar * to ulong
+pk = new uchar 32 0
+if ne aead_chacha_lens kn buf 0
+ret 2
+end
+m = sub len buf 16
+r = chacha20_xor kn 0 pk
+aead_chacha_mac pk aad buf
+d = uchar 0
+for i ulong 16 unroll
+d = or d xor get pk i get buf add m i
+end
+for i ulong 32 unroll
+put pk i 0
+end
+if ne d 0
+aead_chacha_zero part buf 0 m
+ret 1
+end
+ret or r chacha20_xor kn 1 part buf 0 m
+end
