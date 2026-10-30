@@ -1,0 +1,5 @@
+note S4: function mode, entry with an unsized view: x0 pointer, x1 count; `ret len v` is MOV X0, X1, RET.
+om2
+fn f v view ulong * to ulong
+ret len v
+end

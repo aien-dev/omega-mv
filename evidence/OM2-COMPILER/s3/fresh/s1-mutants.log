@@ -1,0 +1,92 @@
+OM2GATE START cases=seed/omc/om2/s1/s1-mutants.cases scratch=/tmp/om2c/s3/g-fresh-s1-mutants
+IDENTITY omc /tmp/om2c/s3/omc-fresh sha256=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 pinned=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 match
+DEADLINE 60
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/5.src > /tmp/om2c/s3/g-fresh-s1-mutants/5.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/5.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/5.elf sha256=f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97 source line=5
+CASE ctl-rot line=6
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/6.src > /tmp/om2c/s3/g-fresh-s1-mutants/6.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/6.cerr
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/6.elf < /dev/null > /tmp/om2c/s3/g-fresh-s1-mutants/6.out 2> /tmp/om2c/s3/g-fresh-s1-mutants/6.err
+VERDICT ctl-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-rot-trap line=7
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/7.src > /tmp/om2c/s3/g-fresh-s1-mutants/7.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/7.cerr
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/7.elf < /dev/null > /tmp/om2c/s3/g-fresh-s1-mutants/7.out 2> /tmp/om2c/s3/g-fresh-s1-mutants/7.err
+VERDICT ctl-rot-trap PASS run exit=107 expected=107 stdout=match stderr=match
+CASE ctl-hex-max line=8
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/8.src > /tmp/om2c/s3/g-fresh-s1-mutants/8.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/8.cerr
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/8.elf < /dev/null > /tmp/om2c/s3/g-fresh-s1-mutants/8.out 2> /tmp/om2c/s3/g-fresh-s1-mutants/8.err
+VERDICT ctl-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-hex-upper line=9
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/9.src > /tmp/om2c/s3/g-fresh-s1-mutants/9.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/9.cerr
+VERDICT ctl-hex-upper PASS compile exit=6 expected=6 refused with the expected error
+CASE ctl-om1-names line=10
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/10.src > /tmp/om2c/s3/g-fresh-s1-mutants/10.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/10.cerr
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/10.elf < /dev/null > /tmp/om2c/s3/g-fresh-s1-mutants/10.out 2> /tmp/om2c/s3/g-fresh-s1-mutants/10.err
+VERDICT ctl-om1-names PASS run exit=2 expected=2 stdout=match stderr=match
+CASE ctl-fmt line=11
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/11.src > /tmp/om2c/s3/g-fresh-s1-mutants/11.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/11.cerr
+VERDICT ctl-fmt PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE ctl-diag-unknown line=12
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/12.src > /tmp/om2c/s3/g-fresh-s1-mutants/12.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/12.cerr
+VERDICT ctl-diag-unknown PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE ctl-diag-newpt line=13
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/5.elf < /tmp/om2c/s3/g-fresh-s1-mutants/13.src > /tmp/om2c/s3/g-fresh-s1-mutants/13.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/13.cerr
+VERDICT ctl-diag-newpt PASS compile exit=16 expected=16 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to
+  MUTATE exact-once substitution at byte 57419
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/16.src > /tmp/om2c/s3/g-fresh-s1-mutants/16.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/16.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/16.elf sha256=9f55703aab844e5a1c2c1bee6c44c7a0084fe1743a5b7953c095b63733aa901a source line=16
+CASE m-rotl line=17
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/16.elf < /tmp/om2c/s3/g-fresh-s1-mutants/17.src > /tmp/om2c/s3/g-fresh-s1-mutants/17.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/17.cerr
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/17.elf < /dev/null > /tmp/om2c/s3/g-fresh-s1-mutants/17.out 2> /tmp/om2c/s3/g-fresh-s1-mutants/17.err
+VERDICT m-rotl FAIL run exit=4 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rchk.from seed/omc/om2/s1/mut/rchk.to
+  MUTATE exact-once substitution at byte 57340
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/20.src > /tmp/om2c/s3/g-fresh-s1-mutants/20.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/20.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/20.elf sha256=39c96dd9c7dd74162fdd367c260b6e2f57c589298c3d457ae8cf2aa2fc788c8b source line=20
+CASE m-rchk line=21
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/20.elf < /tmp/om2c/s3/g-fresh-s1-mutants/21.src > /tmp/om2c/s3/g-fresh-s1-mutants/21.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/21.cerr
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/21.elf < /dev/null > /tmp/om2c/s3/g-fresh-s1-mutants/21.out 2> /tmp/om2c/s3/g-fresh-s1-mutants/21.err
+VERDICT m-rchk FAIL run exit=5 expected=107 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/hexd.from seed/omc/om2/s1/mut/hexd.to
+  MUTATE exact-once substitution at byte 27514
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/24.src > /tmp/om2c/s3/g-fresh-s1-mutants/24.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/24.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/24.elf sha256=3027a5e4c9046c38f85fe9c2a82ae55745bdf1db737da0b9106ac09c2dc7ec0c source line=24
+CASE m-hexd line=25
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/24.elf < /tmp/om2c/s3/g-fresh-s1-mutants/25.src > /tmp/om2c/s3/g-fresh-s1-mutants/25.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/25.cerr
+VERDICT m-hexd FAIL compile exit=8 expected=0
+SUBST seed/omc/om2/s1/mut/hexU.from seed/omc/om2/s1/mut/hexU.to
+  MUTATE exact-once substitution at byte 27490
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/28.src > /tmp/om2c/s3/g-fresh-s1-mutants/28.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/28.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/28.elf sha256=20ec5b7ca68e2ecfa7cd8877079f0119b6d807528f109b006820fb4b4932b0ff source line=28
+CASE m-hexU line=29
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/28.elf < /tmp/om2c/s3/g-fresh-s1-mutants/29.src > /tmp/om2c/s3/g-fresh-s1-mutants/29.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/29.cerr
+VERDICT m-hexU FAIL compile exit=8 expected=6 diagnostic does not name the expected error
+SUBST seed/omc/om2/s1/mut/optin.from seed/omc/om2/s1/mut/optin.to
+  MUTATE exact-once substitution at byte 20342
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/32.src > /tmp/om2c/s3/g-fresh-s1-mutants/32.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/32.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/32.elf sha256=2e800b3174526071044315b64300f3c1ef194d4762dc981d73132336c84d7f2f source line=32
+CASE m-optin line=33
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/32.elf < /tmp/om2c/s3/g-fresh-s1-mutants/33.src > /tmp/om2c/s3/g-fresh-s1-mutants/33.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/33.cerr
+VERDICT m-optin FAIL compile exit=16 expected=0
+SUBST seed/omc/om2/s1/mut/paren.from seed/omc/om2/s1/mut/paren.to
+  MUTATE exact-once substitution at byte 26208
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/36.src > /tmp/om2c/s3/g-fresh-s1-mutants/36.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/36.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/36.elf sha256=0a51d801e73b2e454427e7c186ddb9cc10f85422b57d8e5c30cadabcf4d1f91d source line=36
+CASE m-paren line=37
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/36.elf < /tmp/om2c/s3/g-fresh-s1-mutants/37.src > /tmp/om2c/s3/g-fresh-s1-mutants/37.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/37.cerr
+VERDICT m-paren FAIL compile exit=0 expected=0 stdout differs at byte 102 stderr=match
+SUBST seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to
+  MUTATE exact-once substitution at byte 21387
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/40.src > /tmp/om2c/s3/g-fresh-s1-mutants/40.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/40.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/40.elf sha256=d4fcaf49f66b24b1b523c9366f89a6d04eac19f0fba0654085697cb74d09726d source line=40
+CASE m-unk line=41
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/40.elf < /tmp/om2c/s3/g-fresh-s1-mutants/41.src > /tmp/om2c/s3/g-fresh-s1-mutants/41.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/41.cerr
+VERDICT m-unk FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 43
+SUBST seed/omc/om2/s1/mut/tyunk.from seed/omc/om2/s1/mut/tyunk.to
+  MUTATE exact-once substitution at byte 45935
+  $ /tmp/om2c/s3/omc-fresh < /tmp/om2c/s3/g-fresh-s1-mutants/44.src > /tmp/om2c/s3/g-fresh-s1-mutants/44.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/44.cerr
+COMPILER /tmp/om2c/s3/g-fresh-s1-mutants/44.elf sha256=426664d6749e186d420d46c353fd5b578ea94ed0965163e93d4ccb1f101e988c source line=44
+CASE m-tyunk line=45
+  $ /tmp/om2c/s3/g-fresh-s1-mutants/44.elf < /tmp/om2c/s3/g-fresh-s1-mutants/45.src > /tmp/om2c/s3/g-fresh-s1-mutants/45.elf 2> /tmp/om2c/s3/g-fresh-s1-mutants/45.cerr
+VERDICT m-tyunk FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 45
+OM2GATE FAIL cases=16 pass=8 fail=8 invalid=0 not_run=0

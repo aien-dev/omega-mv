@@ -1,0 +1,419 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/tilelab/tilelab.om: OmegaTileLab. Native tile planner and streaming-softmax algebra (host program, seeded Omega).
+note Run:  tilelab 1 M N K [REGS]   plan a BF16 GEMM tile schedule for CUDApp omega_gpu_gemm (rt ct wm wn band)
+note       tilelab 2 [MUT]          streaming (m,s,p) merge over 32 scores vs the direct softmax-weighted sum, f64
+note                                MUT 0 correct, 1 tile-local normalisation, 2 merge without rescale, 3 wrong tree order
+note Exit: 0 ok, 1 numeric tolerance failed, 2 refused (shape, limit or no configuration fits), 3 usage.
+note The GEMM model is calibrated on GB10 chip timings of the CUDApp kernel (no shared memory: each warp loads its own
+note 16rt x 8ct operands, band orders CTAs in column bands so packed B stays in L2). BM = 16 rt wm, BN = 8 ct wn,
+note Kp = K rounded up to 32, mt = ceil(M/BM), nt = ceil(N/BN). l2_bytes = 2 Kp (M nt + N mt) (operand bytes per CTA tile);
+note dram_bytes = 2 M Kp ceil(nt/band) + 2 Kp N when band >= 2 and the band of B, 2 Kp min(N, band BN) bytes, fits a
+note 32 MiB L2 budget; otherwise (band < 2 or the band overflows) 2 M Kp nt + 2 Kp N mt.
+note cost_ns = l2_bytes / 1827.5440 + 2 M N Kp / 37166.0364 + dram_bytes / 1890.5139, constants and the 32 MiB budget
+note fitted to 96 GB10 sweep medians (seed/tilelab/WOLFRAM.md). An empirical RANKING, not a time prediction and not
+note physical bandwidths. Held out per shape, its top 2 plus the default reach the best of 32 configurations on two of
+note three shapes and come within 1.9% on the third, so the planner names the top 2 and the CUDApp default
+note (rt2 ct4 wm2 wn4 band8) as `measure` lines and the chip decides between them.
+om2
+text msg "tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]\nrefused: dimension zero or above 16384\nrefused: no configuration fits the register budget\ncfg rt=\n ct=\n wm=\n wn=\n band=\n bm=\n bn=\n regs=\n ctas=\n l2_bytes=\n cost_ns=\npick \nrefused: unknown mode\nsmx direct_plus100_e9=\n seq_err_ppt=\n tree_err_ppt=\n one_err_ppt=\n tol_ppt=\nsmx FAIL\nsmx OK\nmut=\nmeasure \n dram_bytes=\n"
+global dig uchar 32
+global ab uchar 256
+global xs f64 32
+global vs f64 32
+global ms f64 64
+global ss f64 64
+global ps f64 64
+
+note ---- output ----
+fn say id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len msg
+if eq get msg i 10
+if eq k id
+r = write 1 msg s sub i s
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn newline to void
+put dig 0 10
+r = write 1 dig 0 1
+end
+fn num v ulong to void
+x = v
+n = ulong 0
+while ge x 10 bound 64
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+n = add n 1
+for i ulong n
+r = write 1 dig sub sub n i 1 1
+end
+end
+
+fn argdec i ulong to ulong
+r = argread i ab 0 20
+if lt r 1
+ret 0xffffffffffffffff
+end
+v = ulong 0
+for k ulong ulong r
+c = get ab k
+if or lt c 48 gt c 57
+ret 0xffffffffffffffff
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+note ---- planner ----
+fn cdiv a ulong b ulong to ulong
+ret div add a sub b 1 b
+end
+fn pw2 v ulong to ulong
+ret shl ulong 1 v
+end
+fn crt i ulong to ulong
+ret pw2 rem i 3
+end
+fn cct i ulong to ulong
+ret pw2 rem div i 3 3
+end
+fn cwm i ulong to ulong
+ret pw2 rem div i 9 3
+end
+fn cwn i ulong to ulong
+ret pw2 rem div i 27 3
+end
+fn cband i ulong to ulong
+bj = div i 81
+if eq bj 0
+ret 0
+end
+ret pw2 add bj 1
+end
+fn cregs i ulong to ulong
+rt = crt i
+ct = cct i
+ret mul 4 add add mul 4 rt mul 2 ct mul rt ct
+end
+fn cbm i ulong to ulong
+ret mul mul 16 crt i cwm i
+end
+fn cbn i ulong to ulong
+ret mul mul 8 cct i cwn i
+end
+fn cctas i ulong m ulong n ulong to ulong
+ret mul cdiv m cbm i cdiv n cbn i
+end
+fn cl2 i ulong m ulong n ulong kp ulong to ulong
+x = mul m cdiv n cbn i
+y = mul n cdiv m cbm i
+ret mul mul 2 kp add x y
+end
+fn cdram i ulong m ulong n ulong kp ulong to ulong
+a = mul mul 2 m kp
+b = mul mul 2 kp n
+nt = cdiv n cbn i
+bd = cband i
+bw = mul bd cbn i
+if gt bw n
+bw = n
+end
+bb = mul mul 2 kp bw
+if or lt bd 2 gt bb 33554432
+ret add mul a nt mul b cdiv m cbm i
+end
+ret add mul a cdiv nt bd b
+end
+fn ccost i ulong m ulong n ulong kp ulong to f64
+t2 = div f64 cl2 i m n kp 1827.5440f64
+tc = div f64 mul mul 2 m mul n kp 37166.0364f64
+td = div f64 cdram i m n kp 1890.5139f64
+ret add add t2 tc td
+end
+fn show i ulong m ulong n ulong kp ulong to void
+say 4
+num crt i
+say 5
+num cct i
+say 6
+num cwm i
+say 7
+num cwn i
+say 8
+num cband i
+say 9
+num cbm i
+say 10
+num cbn i
+say 11
+num cregs i
+say 12
+num cctas i m n
+say 13
+num cl2 i m n kp
+say 26
+num cdram i m n kp
+say 14
+num ulong ccost i m n kp
+newline
+end
+fn cfgline i ulong to void
+say 4
+num crt i
+say 5
+num cct i
+say 6
+num cwm i
+say 7
+num cwn i
+say 8
+num cband i
+newline
+end
+fn pick bi ulong to void
+say 15
+cfgline bi
+end
+fn measure i ulong to void
+say 25
+cfgline i
+end
+fn plan m ulong n ulong k ulong regs ulong to int
+if or or eq m 0 eq n 0 eq k 0
+say 2
+newline
+ret 2
+end
+if or or gt m 16384 gt n 16384 gt k 16384
+say 2
+newline
+ret 2
+end
+kp = mul cdiv k 32 32
+best = 1.0e300f64
+next = 1.0e300f64
+bi = ulong 9999
+b2 = ulong 9999
+for i ulong 405
+if le cregs i regs
+show i m n kp
+c = ccost i m n kp
+if lt c best
+next = best
+b2 = bi
+best = c
+bi = i
+else
+if lt c next
+next = c
+b2 = i
+end
+end
+end
+end
+if eq bi 9999
+say 3
+newline
+ret 2
+end
+pick bi
+measure bi
+if ne b2 9999
+measure b2
+end
+dflt = ulong 232
+if and le cregs dflt regs and ne dflt bi ne dflt b2
+measure dflt
+end
+ret 0
+end
+
+note ---- streaming softmax ----
+note exp by argument halving: exp(y) = exp(y / 256)^256, Taylor to 14 terms
+fn ex y f64 to f64
+z = div y 256.0f64
+t = 1.0f64
+s = 1.0f64
+for i uint 14
+t = div mul t z f64 add i 1
+s = add s t
+end
+for j uint 8
+s = mul s s
+end
+ret s
+end
+fn vabs d f64 to f64
+if lt d 0.0f64
+ret sub 0.0f64 d
+end
+ret d
+end
+fn vmax x1 f64 x2 f64 to f64
+if gt x1 x2
+ret x1
+end
+ret x2
+end
+note summary of tile t over scores [lo, hi): m = max, s = sum e^(x-m), p = sum v e^(x-m)
+fn tile t uint lo uint hi uint to void
+m = get xs lo
+for i uint sub hi lo
+m = vmax m get xs add lo i
+end
+s = 0.0f64
+p = 0.0f64
+for i uint sub hi lo
+w = ex sub get xs add lo i m
+s = add s w
+p = add p mul w get vs add lo i
+end
+put ms t m
+put ss t s
+put ps t p
+end
+note merge summary b into a (slot a), mutant 2 skips the rescale
+fn merge a uint b uint mut ulong to void
+m1 = get ms a
+m2 = get ms b
+m = vmax m1 m2
+e1 = ex sub m1 m
+e2 = ex sub m2 m
+if eq mut 2
+e1 = 1.0f64
+e2 = 1.0f64
+end
+put ss a add mul e1 get ss a mul e2 get ss b
+put ps a add mul e1 get ps a mul e2 get ps b
+put ms a m
+end
+fn ppt d f64 r f64 to ulong
+e = div vabs d vabs r
+if not lt e 1.0e30f64
+ret 0xffffffffffffffff
+end
+ret ulong mul e 1.0e12f64
+end
+fn fixture to void
+for i uint 32
+put xs i div sub f64 rem add mul i 37 11 64 32.0f64 4.0f64
+put vs i div sub f64 rem add mul i 53 7 41 20.0f64 8.0f64
+end
+end
+fn direct to f64
+m = get xs 0
+for i uint 32
+m = vmax m get xs i
+end
+s = 0.0f64
+p = 0.0f64
+for i uint 32
+w = ex sub get xs i m
+s = add s w
+p = add p mul w get vs i
+end
+ret div p s
+end
+fn tiles base uint to void
+for t uint 4
+tile add base t mul t 8 add mul t 8 8
+end
+end
+fn seqfold mut ulong to f64
+tiles 0
+merge 0 1 mut
+merge 0 2 mut
+merge 0 3 mut
+ret div get ps 0 get ss 0
+end
+fn treefold mut ulong to f64
+tiles 8
+merge 8 9 mut
+merge 10 11 mut
+if eq mut 3
+merge 9 11 mut
+else
+merge 8 10 mut
+end
+ret div get ps 8 get ss 8
+end
+note mutant 1: each tile normalised on its own, the four outputs averaged
+fn localnorm to f64
+tiles 16
+one = 0.0f64
+for t uint 4
+one = add one div div get ps add 16 t get ss add 16 t 4.0f64
+end
+ret one
+end
+fn smx mut ulong to int
+fixture
+ref = direct
+sq = ppt sub seqfold mut ref ref
+tq = ppt sub treefold mut ref ref
+oq = ppt sub localnorm ref ref
+say 17
+num ulong mul add ref 100.0f64 1.0e9f64
+say 18
+num sq
+say 19
+num tq
+say 20
+num oq
+say 21
+num 2000000
+newline
+bad = or gt sq 2000000 gt tq 2000000
+if eq mut 1
+bad = gt oq 2000000
+end
+if bad
+say 22
+newline
+ret 1
+end
+say 23
+newline
+ret 0
+end
+
+fn main to int
+if lt argcnt 2
+say 1
+newline
+ret 3
+end
+sel = argdec 1
+if eq sel 1
+if lt argcnt 5
+say 1
+newline
+ret 3
+end
+regs = ulong 100
+if ge argcnt 6
+regs = argdec 5
+end
+ret plan argdec 2 argdec 3 argdec 4 regs
+end
+if eq sel 2
+mut = ulong 0
+if ge argcnt 3
+mut = argdec 2
+end
+ret smx mut
+end
+say 16
+newline
+ret 3
+end

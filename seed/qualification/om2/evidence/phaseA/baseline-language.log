@@ -1,0 +1,6 @@
+OM2GATE START cases=seed/qualification/om2/baseline/language.cases scratch=build/om2-qual/baseline-language
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE alias-same-array line=2
+  $ seed/out/omc < build/om2-qual/baseline-language/2.src > build/om2-qual/baseline-language/2.elf 2> build/om2-qual/baseline-language/2.cerr
+VERDICT alias-same-array PASS compile exit=19 expected=19 refused with the expected error
+OM2GATE PASS cases=1 pass=1 fail=0 invalid=0 not_run=0
