@@ -1,0 +1,11 @@
+note S4 part on an empty text: part e 0 1 on count 0: o <= len holds, k <= len - o fails, trap 3 (exit
+note 103). x = 7 is live in the register the old lowering read as the count.
+om2
+text e ""
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+x = ulong 7
+ret int add plen part e 0 1 x
+end
