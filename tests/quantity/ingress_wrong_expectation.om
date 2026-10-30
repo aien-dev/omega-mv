@@ -1,0 +1,8 @@
+fn main to int
+a = ulong 7
+b = qty a
+if ne b qty 1
+ret 1
+end
+ret 0
+end

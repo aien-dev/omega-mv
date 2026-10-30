@@ -1,0 +1,531 @@
+note bench/inference_cost/chat.om -- the JSON edge of driver.sh --run-model.
+note Compose: { printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om bench/inference_cost/chat.om; } | omc
+note
+note chat req  < wire > request.json
+note   wire: "version 1", "model M", "max_tokens N", "temperature L" (one JSON number
+note   lexeme), "messages K", then K times "msg ROLE NB", a newline, NB content bytes and
+note   a newline. ROLE is system, user or assistant. Writes one OpenAI chat-completions
+note   request object. Exit 2 bad wire, 3 the JSON writer refused (invalid UTF-8 content).
+note
+note chat resp < body > meta 3> code
+note   body: the endpoint's JSON response. meta: "version 1", "model ID" (the id the
+note   endpoint returned, bytes outside 33..126 as _, "-" when absent), "prompt_tokens P",
+note   "completion_tokens C", "total_tokens T", "code_bytes N". fd 3: the code taken from
+note   choices[0].message.content: after the last "</think>", the body of the first ```
+note   fence (its info line dropped), else the whole content. A null content is empty
+note   code. Exit 4 protocol failure: not one JSON object, an "error" member, no usage
+note   or a usage count that is not a non-negative integer, no choices[0].message, or a
+note   content that is neither a string nor null. Token counts are only ever copied
+note   from usage; nothing is estimated.
+text cwver "version"
+text cwone "1"
+text cwmodel "model"
+text cwmaxt "max_tokens"
+text cwtemp "temperature"
+text cwmsgs "messages"
+text cwmsg "msg"
+text cwrole "role"
+text cwcont "content"
+text cwsys "system"
+text cwuser "user"
+text cwasst "assistant"
+text cwstrm "stream"
+text cwusage "usage"
+text cwptok "prompt_tokens"
+text cwctok "completion_tokens"
+text cwttok "total_tokens"
+text cwchoic "choices"
+text cwmessg "message"
+text cwerror "error"
+text cwreq "req"
+text cwresp "resp"
+text cwthink "</think>"
+text cwfence "```"
+text cwmver "version 1\nmodel "
+text cwnl "\n"
+text cwdash "-"
+text cwcodeb "code_bytes"
+
+fn cw_out fd int b view uchar * off ulong n ulong to void
+p = ulong 0
+note every pass writes at least one byte or exits
+while lt p n bound 999999
+w = write fd b add off p sub n p
+if le w 0
+exit 5
+end
+p = add p ulong w
+end
+end
+
+fn cw_text fd int t view uchar * to void
+cw_out fd t 0 len t
+end
+
+fn cw_putu fd int v ulong to void
+d = new uchar 24 0
+i = ulong 24
+x = v
+note a ulong has at most 20 decimal digits
+for it ulong 21
+i = sub i 1
+put d i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+cw_out fd d i sub 24 i
+end
+
+note cw_line: the label, one space, the number, a newline
+fn cw_line t view uchar * v ulong to void
+sp = new uchar 1 32
+cw_text 1 t
+cw_out 1 sp 0 1
+cw_putu 1 v
+cw_text 1 cwnl
+end
+
+fn cw_slurp b edit uchar * to ulong
+p = ulong 0
+n = len b
+note every pass adds at least one byte to b or leaves the loop
+while lt p n bound 999999
+k = read 0 b p sub n p
+if lt k 0
+exit 2
+end
+if eq k 0
+ret p
+end
+p = add p ulong k
+end
+x = new uchar 1 0
+k = read 0 x 0 1
+if ne k 0
+exit 2
+end
+ret p
+end
+
+fn cw_eqa a view uchar * n ulong t view uchar * to bool
+if ne n len t
+ret false
+end
+for i ulong n
+if ne get a i get t i
+ret false
+end
+end
+ret true
+end
+
+note ---- request wire: cursor cu = pos, word start, word end, length, then saved fields
+
+fn cw_word b view uchar * cu edit ulong * to bool
+p = get cu 0
+n = get cu 3
+while lt p n bound 999999
+c = get b p
+if and ne c 32 ne c 10
+break
+end
+p = add p 1
+end
+s = p
+while lt p n bound 999999
+if le get b p 32
+break
+end
+p = add p 1
+end
+put cu 0 p
+put cu 1 s
+put cu 2 p
+ret gt p s
+end
+
+fn cw_is b view uchar * cu edit ulong * t view uchar * to bool
+s = get cu 1
+e = get cu 2
+if ne sub e s len t
+ret false
+end
+for i ulong len t
+if ne get b add s i get t i
+ret false
+end
+end
+ret true
+end
+
+fn cw_want b view uchar * cu edit ulong * t view uchar * to void
+if not cw_word b cu
+exit 2
+end
+if not cw_is b cu t
+exit 2
+end
+end
+
+fn cw_num b view uchar * cu edit ulong * to ulong
+if not cw_word b cu
+exit 2
+end
+s = get cu 1
+e = get cu 2
+if gt sub e s 19
+exit 2
+end
+v = ulong 0
+for i ulong sub e s
+c = get b add s i
+if or lt c 48 gt c 57
+exit 2
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+
+fn cw_onemsg b view uchar * cu edit ulong * ob edit uchar * to void
+cw_want b cu cwmsg
+if not cw_word b cu
+exit 2
+end
+rs = get cu 1
+rl = sub get cu 2 rs
+ok = or or cw_is b cu cwsys cw_is b cu cwuser cw_is b cu cwasst
+if not ok
+exit 2
+end
+nb = cw_num b cu
+p = get cu 2
+n = get cu 3
+if gt nb n
+exit 2
+end
+if gt add p 2 sub n nb
+exit 2
+end
+if ne get b p 10
+exit 2
+end
+c0 = add p 1
+if ne get b add c0 nb 10
+exit 2
+end
+js_wobj ob
+js_wsbuf ob cwrole 0 len cwrole
+js_wsbuf ob b rs rl
+js_wsbuf ob cwcont 0 len cwcont
+js_wsbuf ob b c0 nb
+js_wobje ob
+put cu 0 add c0 add nb 1
+end
+
+fn cw_req b view uchar * n ulong ob edit uchar * to long
+cu = new ulong 16 0
+put cu 3 n
+cw_want b cu cwver
+cw_want b cu cwone
+cw_want b cu cwmodel
+if not cw_word b cu
+exit 2
+end
+put cu 4 get cu 1
+put cu 5 get cu 2
+cw_want b cu cwmaxt
+put cu 6 cw_num b cu
+cw_want b cu cwtemp
+if not cw_word b cu
+exit 2
+end
+put cu 7 get cu 1
+put cu 8 get cu 2
+cw_want b cu cwmsgs
+k = cw_num b cu
+if or eq k 0 gt k 1000
+exit 2
+end
+r = js_winit ob
+if lt r 0
+exit 3
+end
+js_wobj ob
+js_wsbuf ob cwmodel 0 len cwmodel
+js_wsbuf ob b get cu 4 sub get cu 5 get cu 4
+js_wsbuf ob cwmsgs 0 len cwmsgs
+js_warr ob
+for i ulong k
+cw_onemsg b cu ob
+end
+js_warre ob
+js_wsbuf ob cwmaxt 0 len cwmaxt
+js_wulong ob get cu 6
+js_wsbuf ob cwtemp 0 len cwtemp
+js_wnumb ob b get cu 7 sub get cu 8 get cu 7
+js_wsbuf ob cwstrm 0 len cwstrm
+js_wbool ob false
+js_wobje ob
+if cw_word b cu
+exit 2
+end
+ret js_wdone ob
+end
+
+note ---- response
+
+note cw_keq: the decoded key at s[off] equals key number kid (two unsized arrays plus
+note scalars is the most a signature takes here: three arrays and a scalar is error 9)
+fn cw_keq s view uchar * off ulong kid ulong to bool
+if eq kid 0
+ret js_streq s off cwmodel
+end
+if eq kid 1
+ret js_streq s off cwusage
+end
+if eq kid 2
+ret js_streq s off cwptok
+end
+if eq kid 3
+ret js_streq s off cwctok
+end
+if eq kid 4
+ret js_streq s off cwttok
+end
+if eq kid 5
+ret js_streq s off cwchoic
+end
+if eq kid 6
+ret js_streq s off cwmessg
+end
+if eq kid 7
+ret js_streq s off cwcont
+end
+ret js_streq s off cwerror
+end
+
+note cw_mem: the value token of the first member kid of object o, else jsnone
+fn cw_mem s view uchar * t view uint * o ulong kid ulong to ulong
+if ne js_type t o jsobj
+ret jsnone
+end
+m = js_first t o
+while ne m jsnone
+if cw_keq s js_off t m kid
+ret add m 1
+end
+m = js_mnext t m
+end
+ret jsnone
+end
+
+fn cw_count s view uchar * t view uint * u ulong kid ulong to ulong
+v = cw_mem s t u kid
+if eq v jsnone
+exit 4
+end
+if ne js_type t v jsnum
+exit 4
+end
+o = js_off t v
+if not js_isu s o
+exit 4
+end
+ret js_tou s o
+end
+
+fn cw_model s view uchar * t view uint * to void
+mb = new uchar 256 0
+cw_text 1 cwmver
+v = cw_mem s t 0 0
+if eq v jsnone
+cw_text 1 cwdash
+cw_text 1 cwnl
+ret
+end
+if ne js_type t v jsstr
+cw_text 1 cwdash
+cw_text 1 cwnl
+ret
+end
+n = js_sget s js_off t v mb
+if le n 0
+cw_text 1 cwdash
+cw_text 1 cwnl
+ret
+end
+for i ulong ulong n
+c = get mb i
+if or le c 32 ge c 127
+put mb i 95
+end
+end
+cw_out 1 mb 0 ulong n
+cw_text 1 cwnl
+end
+
+fn cw_usage s view uchar * t view uint * to void
+u = cw_mem s t 0 1
+if eq u jsnone
+exit 4
+end
+if ne js_type t u jsobj
+exit 4
+end
+p = cw_count s t u 2
+c = cw_count s t u 3
+a = cw_count s t u 4
+cw_line cwptok p
+cw_line cwctok c
+cw_line cwttok a
+end
+
+fn cw_content s view uchar * t view uint * ob edit uchar * to ulong
+ch = cw_mem s t 0 5
+if eq ch jsnone
+exit 4
+end
+if ne js_type t ch jsarr
+exit 4
+end
+e = js_first t ch
+if eq e jsnone
+exit 4
+end
+m = cw_mem s t e 6
+if eq m jsnone
+exit 4
+end
+if ne js_type t m jsobj
+exit 4
+end
+c = cw_mem s t m 7
+if eq c jsnone
+ret 0
+end
+ty = js_type t c
+if eq ty jsnull
+ret 0
+end
+if ne ty jsstr
+exit 4
+end
+n = js_sget s js_off t c ob
+if lt n 0
+exit 4
+end
+ret ulong n
+end
+
+fn cw_find c view uchar * n ulong st ulong pat view uchar * to ulong
+m = len pat
+if gt m n
+ret jsnone
+end
+i = st
+while le add i m n bound 999999
+hit = true
+for j ulong m
+if ne get c add i j get pat j
+hit = false
+break
+end
+end
+if hit
+ret i
+end
+i = add i 1
+end
+ret jsnone
+end
+
+fn cw_code c view uchar * n ulong to void
+st = ulong 0
+i = ulong 0
+note each pass moves past one "</think>"; content is at most 2 MiB
+while lt i n bound 999999
+f = cw_find c n i cwthink
+if eq f jsnone
+break
+end
+st = add f len cwthink
+i = st
+end
+a = cw_find c n st cwfence
+if eq a jsnone
+cw_line cwcodeb sub n st
+cw_out 3 c st sub n st
+ret
+end
+p = add a len cwfence
+while lt p n bound 999999
+if eq get c p 10
+break
+end
+p = add p 1
+end
+if lt p n
+p = add p 1
+end
+e = cw_find c n p cwfence
+if eq e jsnone
+e = n
+end
+cw_line cwcodeb sub e p
+cw_out 3 c p sub e p
+end
+
+fn cw_resp s view uchar * tape edit uint * ob edit uchar * to int
+if ne js_type tape 0 jsobj
+exit 4
+end
+if ne cw_mem s tape 0 8 jsnone
+exit 4
+end
+c = cw_content s tape ob
+cw_model s tape
+cw_usage s tape
+cw_code ob c
+ret 0
+end
+
+fn main to int
+ib = new uchar 983040 0
+ob = new uchar 2098192 0
+tape = new uint 65536 0
+ab = new uchar 16 0
+if ne argcnt 2
+ret 2
+end
+an = argread 1 ab 0 16
+if lt an 0
+ret 2
+end
+n = cw_slurp ib
+if cw_eqa ab ulong an cwreq
+r = cw_req ib n ob
+if lt r 0
+ret 3
+end
+cw_out 1 ob jswh ulong r
+ret 0
+end
+if cw_eqa ab ulong an cwresp
+if eq n 0
+exit 4
+end
+r = js_init tape n 64
+if lt r 0
+exit 4
+end
+r = js_parse ib tape n
+if lt r 0
+exit 4
+end
+ret cw_resp ib tape ob
+end
+ret 2
+end
