@@ -1,0 +1,51 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_http.om: fuzz target for the HTTP/1.1 message parser of seed/net/http.om in memory mode
+note (hmemld), the mode seed/net/tests/parse.om uses, with the same caps (head 2048 bytes, 16 header
+note fields, body 4096 bytes, chunk framing allowance 1024 bytes).
+note Input: M message. M bit 0 and 1: 0 = response (hrsprd), 1 = response to HEAD, 2 or 3 = request
+note (hreqrd, server role); then the decoded body (hbodyall), whatever framing the head chose.
+
+fn fz_hrun cs edit ulong 320 io edit uchar 65536 x view uchar * to long
+aux = new uchar 65536 0
+md = and ulong get x 0 3
+role = ulong 0
+if ge md 2
+role = 1
+end
+r = hinit cs io -1 role
+if lt r 0
+ret r
+end
+r = hmemld cs io view part x 1 sub len x 1
+if lt r 0
+ret r
+end
+put cs HHEADMX 2048
+put cs HHMAX 16
+put cs HBCAP 4096
+put cs HFRMAX 1024
+if ge md 2
+r = hreqrd cs io
+else
+if eq md 1
+put cs HISHEAD 1
+end
+r = hrsprd cs io
+end
+if le r 0
+ret r
+end
+ret hbodyall cs io part aux 0 65536
+end
+
+fn main to int
+cs = new ulong 320 0
+io = new uchar 65536 0
+in = new uchar FZCAP 0
+n = fz_read in
+if lt n 1
+ret 0
+end
+r = fz_hrun cs io part in 0 n
+ret 0
+end

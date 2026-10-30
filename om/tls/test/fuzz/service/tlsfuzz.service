@@ -1,0 +1,23 @@
+# om/tls fuzz workers (AFL++ qemu_mode), host tooling. Install: see ../run.sh header and NOTES.
+# Two workers on cpus 10-11 only (A725 cores; never the X925 cores 5-9, 15-19), lowest CPU and I/O priority.
+# fuzz-watchdog.sh (tlsfuzz-watch.service) SIGSTOPs/SIGCONTs this unit and stops it on the disk/size caps.
+[Unit]
+Description=om/tls fuzz workers (AFL++ qemu_mode, 2 workers on cpus 10-11)
+After=tlsfuzz-watch.service
+
+[Service]
+Type=simple
+Environment=OUT=%h/.cache/omtls-fuzz FUZZ_CPUS=10\x2011
+ExecStartPre=/bin/sh %h/.local/lib/omtls-fuzz/run.sh build replay
+ExecStart=/bin/sh %h/.local/lib/omtls-fuzz/run.sh service
+Nice=19
+IOSchedulingClass=idle
+CPUAffinity=10 11
+CPUQuota=200%
+MemoryMax=8G
+KillMode=control-group
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=default.target

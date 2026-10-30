@@ -1,0 +1,142 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_hs.om: fuzz target for each TLS 1.3 handshake-message parser of om/tls/tls.om, called directly
+note with the message already reassembled at c[TLHB], as tls_hsmsg leaves it (a whole message of
+note 4 + length bytes, possibly followed by more bytes). Input: S rest, S mod 8 selects:
+note   0 ServerHello          tls_shhead, then tls_shext, then tls_ecdh (X25519 on the server share)
+note   1 EncryptedExtensions  tls_ee
+note   2 CertificateRequest   tls_cr
+note   3 Certificate          tls_cert (x509_chain_verify against the store named by argument 1)
+note   4 CertificateVerify    rest = L1 L0 leaf-entry[L] message: the entry (3-byte length, DER, 2 bytes)
+note                          is put at c[TLLF] as tls_leaf would, then tls_cv
+note   5 server Finished      tls_sfin under a fixed server handshake secret
+note   6 KeyUpdate            tls_kupd under fixed traffic secrets (an update_requested answer is sent)
+note   7 post-handshake       rest is a decrypted record body; tls_post (NewSessionTicket, KeyUpdate,
+note                          messages split across or coalesced in records)
+note A message whose header length runs past the input is skipped: tls_hsmsg never hands one over.
+note Arguments: 1 = PEM trust store (om/tls/test/x509/vectors/pki/storeAll.pem).
+
+fn fz_hsput c edit uchar * m view uchar * to ulong
+n = len m
+if lt n 4
+ret 1
+end
+ml = add or shl ulong get m 1 16 or shl ulong get m 2 8 ulong get m 3 4
+if gt ml n
+ret 1
+end
+for i ulong n
+put c add TLHB i get m i
+end
+tls_pn c TLHF n 4
+ret 0
+end
+
+note fz_hspost: m is the body of one decrypted handshake record, into c[TLRB] for tls_post
+fn fz_hspost c edit uchar * m view uchar * to ulong
+n = len m
+if gt n 16640
+n = 16640
+end
+if eq n 0
+ret 0
+end
+for i ulong n
+put c add add TLRB 5 i get m i
+end
+tls_pn c add TLRB 3 n 2
+ret tls_post c
+end
+
+note fz_hscv: m = L1 L0 leaf-entry[L] CertificateVerify, over a fixed transcript hash
+fn fz_hscv c edit uchar * m view uchar * to ulong
+h = new uchar 32 0
+fz_fill h 0 32 217
+l = fz_be2 m 0
+if gt l sub len m 2
+ret 0
+end
+if gt l TLLFSZ
+ret 0
+end
+for i ulong l
+put c add TLLF i get m add 2 i
+end
+if ne fz_hsput c part m add 2 l sub sub len m 2 l 0
+ret 0
+end
+ret tls_cv c h
+end
+
+note fz_hsrun: x = S rest (the whole input); dispatch on S mod 8
+fn fz_hsrun c edit uchar * st view uchar * x view uchar * to ulong
+h = new uchar 32 0
+fz_fill h 0 32 217
+sel = rem ulong get x 0 8
+if eq sel 7
+ret fz_hspost c part x 1 sub len x 1
+end
+if eq sel 4
+ret fz_hscv c part x 1 sub len x 1
+end
+if ne fz_hsput c part x 1 sub len x 1 0
+ret 0
+end
+if eq sel 0
+r = tls_shhead c
+if eq r 0
+r = tls_shext c
+end
+if eq r 0
+r = tls_ecdh c
+end
+ret r
+end
+if eq sel 1
+ret tls_ee c
+end
+if eq sel 2
+ret tls_cr c
+end
+if eq sel 3
+ret tls_cert c st
+end
+if eq sel 5
+ret tls_sfin c h
+end
+ret tls_kupd c
+end
+
+fn main to int
+c = new uchar TLCSZ 0
+st = new uchar TLSTSZ 0
+fds = new ulong 2 0
+in = new uchar FZCAP 0
+n = fz_read in
+if lt n 1
+ret 0
+end
+s = fz_store st
+if ne tls_init c FZHOST 1 0
+ret 0
+end
+if ne fz_pair fds 0
+ret 0
+end
+tls_pn c TLFD get fds 0 4
+tls_pn c TLDL add ulong monons 2000000000 8
+put c TLPH 1
+put c TLSU 1
+put c TLWK 1
+put c TLRK 1
+fz_fill c TLEPK 32 1
+fz_fill c TLSHS 32 33
+fz_fill c TLSAP 32 65
+fz_fill c TLCAP 32 97
+fz_fill c TLWKEY 32 129
+fz_fill c TLWIV 12 161
+fz_fill c TLRKEY 32 173
+fz_fill c TLRIV 12 205
+r = fz_hsrun c view st part in 0 n
+fz_say r
+ret 0
+end

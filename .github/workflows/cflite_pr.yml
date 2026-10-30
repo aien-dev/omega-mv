@@ -1,0 +1,35 @@
+# ClusterFuzzLite PR fuzzing for the om/tls fuzz targets. Actions pinned by commit sha.
+# Black-box: libFuzzer sees the labelled host-tooling driver (om/tls/test/fuzz/oss-fuzz/omexec_fuzzer.c),
+# not .om coverage; a target exit >= 100 (Omega trap) aborts the driver and is reported as a crash.
+name: ClusterFuzzLite PR fuzzing
+on:
+  pull_request:
+    paths: ['om/tls/**', 'seed/net/**', '.clusterfuzzlite/**']
+permissions: read-all
+jobs:
+  PR:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address]
+    steps:
+      - name: Build fuzzers
+        id: build
+        uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: c
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sanitizer: ${{ matrix.sanitizer }}
+      - name: Run fuzzers
+        id: run
+        uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fuzz-seconds: 600
+          mode: code-change
+          sanitizer: ${{ matrix.sanitizer }}
+          output-sarif: true
