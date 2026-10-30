@@ -2477,7 +2477,14 @@ end
 ret 0
 end
 
-note FIPS 140-3 style self-tests (fips.om): the known-answer tests run once per process at first
+note the module's show-version service (fips_version): "Omega TLS module (om/tls) version V integrity
+note hmac-sha256:HEX state S\n" into o, returns its length (0 when o is too short)
+fn tls_version o edit uchar * to ulong
+ret fips_version o
+end
+
+note FIPS 140-3 style self-tests (fips.om): the known-answer tests and then the software integrity
+note test (HMAC-SHA-256 of the program file, detail 16) run once per process at first
 note use in every mode; approved mode (flag 4) adds the DRBG self-test and a fresh DRBG at
 note c[TLDRBG]. 0, or TLESELF with the failing test in tls_detail.
 fn tls_fips c edit uchar * to ulong

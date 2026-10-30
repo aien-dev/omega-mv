@@ -40,6 +40,7 @@ never QUALIFIED (no third-party or hardware qualification exists).
 | timing | constant-time units (README table) | dudect-style Welch t-test, `test/tls/timing.om` v3, 2026-10-26, cores 17 (X925) and 2 (A725): x25519, ChaCha20-Poly1305, AES-128-GCM, HKDF-SHA256 max \|t\| 3.52 (no flag); `tls_cteq` LEAK SUSPECT on core 17 only (5/15 runs, \|t\| up to 27.97, both signs), not root-caused; P-256 `ecdh_shared` all 4 \|t\| < 0.8 on two cores, 2026-10-26, with the v2 driver (per-sample class); MEASURED host-only, a screen (see "Timing measurement") |
 | HTTPS misuse | `seed/net/https.om` refuses plaintext fall-back on a TLS port, maps EOF without close_notify to -604, wipes keys in `htlsend` | `seed/net/tests/check.py` stage 5: 9 rows, 5 mutants; `TLS_NET=1` live GETs; EXERCISED |
 | broken primitive or bad entropy | self-tests on first `tls_connect` (KATs), X25519 pairwise consistency test, SP 800-90B RCT/APT on the bytes feeding the approved-mode HMAC_DRBG, latched module error state (`TLS_ERR_SELFTEST`) (`fips.om`, `drbg.om`) | `test/fips/run.sh` 45 checks, 14 KAT mutants and 16 code mutants each FAIL as expected; `test/drbg/run.sh` 810 ACVP/CAVP vectors, 13 mutants; MEASURED 2026-10-26 host-only, tested against the FIPS 140-3 / CAVP test methods, not NIST-validated |
+| modified or corrupted program file | software integrity test after the KATs on first `tls_connect`: HMAC-SHA-256 (public key `omega-tls module integrity key v1`) over `/proc/self/exe` with the 64-byte slot read as `'0'`, compared with the value `build.sh` wrote into the `fips.om` slot; mismatch, missing slot or an unpatched build latch `TLS_ERR_SELFTEST` detail 16 | `test/integrity/run.sh`: slot equals `openssl dgst -sha256 -hmac` over the slot-zeroed file, unpatched / changed text byte / appended byte / changed slot digit each refused with detail 16, tool error exits, 4 code mutants killed; MEASURED `INTEGRITY PASS checks=14 mutants=4` 2026-10-27 host-only |
 
 ## Known limits (not mitigated)
 
@@ -71,6 +72,10 @@ never QUALIFIED (no third-party or hardware qualification exists).
 7. **Single host, single toolchain**: every result above was produced on one DGX Spark (arm64,
    GB10) with the pinned omc; the hosted arm64 CI job reruns the suites on a second machine, but the
    compiler binary is the same pinned one.
+8. **Integrity test scope.** The HMAC key is public, so the test works as an error-detection code:
+   the test detects accidental corruption and a careless edit, not an attacker who can rewrite the
+   file and recompute the slot. It hashes the file on disk at first use, not the mapped image in
+   memory, so a change made in memory after start, or to the file after the check ran, is not seen.
 
 ## Timing measurement
 

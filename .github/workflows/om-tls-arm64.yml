@@ -69,6 +69,8 @@ jobs:
         run: mkdir -p build && sh om/tls/test/drbg/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-drbg.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls self-test (fips) suite
         run: mkdir -p build && sh om/tls/test/fips/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-fips.log; test "${PIPESTATUS[0]}" = 0
+      - name: om/tls software integrity suite
+        run: mkdir -p build && sh om/tls/test/integrity/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-integrity.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls x509 suite
         run: mkdir -p build && sh om/tls/test/x509/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-x509.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls revocation (rev) suite
@@ -90,6 +92,7 @@ jobs:
             build/om-tls-ecdh.log
             build/om-tls-drbg.log
             build/om-tls-fips.log
+            build/om-tls-integrity.log
             build/om-tls-x509.log
             build/om-tls-rev.log
             build/om-tls-hostile.log

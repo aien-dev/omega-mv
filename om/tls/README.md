@@ -129,8 +129,24 @@ been submitted to a laboratory, there is no CMVP certificate, and nothing here i
   approved mode the HMAC_DRBG KAT (CAVP HMAC_DRBG SHA-256, no prediction resistance) runs too.
   A failure latches the module error state: `tls_connect` returns `TLS_ERR_SELFTEST` (code 32)
   before any I/O, `tls_detail` names the test (1-3 SHA, 4-5 HMAC, 6 HKDF, 7/8 GCM seal/open,
-  9 ECDSA, 10 PKCS#1, 11 PSS, 12 ChaCha20-Poly1305, 13 X25519, 14 DRBG, 15 TLS key derivation),
-  and `tls_seal` and `tls_open` refuse with the same code for every connection of the process.
+  9 ECDSA, 10 PKCS#1, 11 PSS, 12 ChaCha20-Poly1305, 13 X25519, 14 DRBG, 15 TLS key derivation,
+  16 software integrity), and `tls_seal` and `tls_open` refuse with the same code for every
+  connection of the process.
+- **Software integrity test (detail 16).** After the known-answer tests (which cover SHA-256 and
+  HMAC-SHA-256 first), `fips_integ` recomputes HMAC-SHA-256 over `/proc/self/exe` and compares it
+  with the 64-hex-digit slot after the marker `omega-tls-integrity-v1-hmac-sha256:` in the
+  program. `build.sh` writes that value after compiling (an Omega tool, `fips_itool`, composed from
+  the same units; `build.sh -p OMC BIN` patches a program composed elsewhere). The slot is taken as
+  64 '0' digits while hashing. An unpatched program (all '0') refuses. The key
+  `omega-tls module integrity key v1` is public, as in OpenSSL's FIPS provider: this detects
+  corruption and accidental modification of the file, not an attacker who can rewrite it, and it
+  hashes the file on disk, not the mapped image. `test/integrity/run.sh` checks it against an
+  independent openssl HMAC and with changed bytes, an appended byte, an unpatched build and code
+  mutants.
+- **Show-version service.** `tls_version o` (`fips_version`) writes
+  `Omega TLS module (om/tls) version 0.1.0 integrity hmac-sha256:HEX state S` and a newline, S being
+  0 before the self-tests, 1 after they passed and 2 in the error state; it returns the length, or
+  0 when `o` is shorter than the line.
 - **Conditional tests.** X25519 pairwise consistency (the ephemeral public key is recomputed and
   compared in constant time; detail 21), the P-256/P-384 pair-wise consistency test and rejection
   sampling limit of approved-mode key generation (detail 21), the DRBG continuous test and error
@@ -299,7 +315,8 @@ Not covered, or covered only partly:
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
 | `sh om/tls/test/drbg/run.sh OMC` | `DRBG PASS vectors=810 (acvp=90, cavp=720) api=23 mutants=13/13` (observed 2026-10-26, omc `2c824805`) |
-| `sh om/tls/test/fips/run.sh OMC` | `FIPS PASS checks=49 drbgerr=50 ecgenerr=52 kat-mutants=14/14 code-mutants=18/18` (observed 2026-10-26, omc `2c824805`, with the approved-only ECDH key generation) |
+| `sh om/tls/test/fips/run.sh OMC` | `FIPS PASS checks=49 drbgerr=50 ecgenerr=52 kat-mutants=14/14 code-mutants=18/18` (observed 2026-10-26, omc `2c824805`, with the approved-only ECDH key generation; same line 2026-10-27 with the integrity test, detail 16) |
+| `sh om/tls/test/integrity/run.sh OMC [OUT]` | `INTEGRITY PASS checks=14 mutants=4` (observed 2026-10-27, omc `2c824805`) |
 | `sh om/tls/test/fips/entropy.sh OMC EA_CPP_DIR` | `ENTROPY PASS ...` with the min-entropy estimates; needs the NIST SP800-90B_EntropyAssessment tool built separately |
 | `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | @@GATE-TLS@@ Before the integration: `interop=44 ... mutants=27/27` on audit/tls-suites and `interop=57 ... mutants=34/34` on audit/tls-fips-approved (omc `2c824805`; `net=NOT_RUN` without `TLS_NET`) |
 | `sh om/tls/build.sh OMC om/tls/test/tls/timing.om build/tls/timing` then `nice -n 19 taskset -c CPU build/tls/timing WHAT N` | dudect samples (`CLASS NANOSECONDS` lines), statistics outside; see `THREAT_MODEL.md` |
