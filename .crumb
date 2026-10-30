@@ -65,7 +65,7 @@
           "purpose": "Directory mk. Purpose not yet described by a human."
         },
         {
-          "digest": "6aa3a708f53866253dc89b07b51ffbf368429253983b0b8e90d69b55d31a8d04",
+          "digest": "65f1202e88ee0f12269dd0f996985ed7abf486a9c8289f856328c7526d63788d",
           "last_commit": "42254b8a9",
           "name": "native",
           "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow adviso"
@@ -78,7 +78,7 @@
         },
         {
           "digest": "95363b734ded76be2962718e0a98c8f5385479705ff6b7038cb057714dcc8751",
-          "last_commit": "42254b8a9",
+          "last_commit": "03057d275",
           "name": "spec",
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
@@ -90,7 +90,7 @@
         },
         {
           "digest": "a0fedc157b8bf0a5658e052fcb1160f1397860697b26320e5ab6f0b51f540d1c",
-          "last_commit": "42254b8a9",
+          "last_commit": "03057d275",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
@@ -101,15 +101,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:581e6e8abef0a8511c32773416d471f600358dd9c4e22cb2858e729750caa061",
-      "compiled_at": "2026-10-30T14:53:53Z",
+      "children_root": "sha256:7a56bdb7a2036f637d12bac3b606cfe8170c2344830da0dc8019483c5c6a573f",
+      "compiled_at": "2026-10-30T16:32:14Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:42416b43a9b1b4617e5383ba2d98866b217484fe83fcf163126e8904624b8986",
+      "digest": "sha256:866c38ecbcbb0d575e4368d4a3950902a0cb30a2d51b6212af12d5d8f88ff9e5",
       "evidence_files": 12800,
       "evidence_root": "sha256:9ca4c98046256b689a1b462b45ffc86722ae6c01e1774b22ebc82126b22884c0",
       "files": 18038,
-      "generated_at_commit": "42254b8a9d085f00dc512a7c3f31c6bed15b9b0c",
-      "source_tree": "sha256:c7e08cc5a98606d03e09c97b417c3929540b5c32f6e1e1741d87dba7c2d07f89"
+      "generated_at_commit": "03057d2753afd0beead08216ccb87154f7f3cf02",
+      "source_tree": "sha256:3352cea68abad6e1cb86f95325b4cb410581e4edb44d2e9d5a6012b8c8723aa8"
     },
     "owner_lane": "",
     "provenance": {
