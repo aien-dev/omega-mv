@@ -327,5 +327,29 @@ case "$step" in
     obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
     sh seed/tilelab/gate.sh
     ;;
+  native)             # omega#663/#664: native .om units built by the committed seed/out/omc after its recorded
+                      # SHA-256 is checked. The metadata test must pass and each recorded ECOSYSTEM663 mutant must
+                      # exit 1; with native/autodiff664 present, its tape suite (test + 3 compiled mutants) and the
+                      # C M21 fixture replay (CPU table, value-exact, mutant-sign control must FAIL) run too.
+    sha256sum -c seed/out/omc.sha256
+    OMC="$ROOT/seed/out/omc"
+    obs omc_sha256 "\"$(sha256sum < "$OMC" | cut -c1-64)\""
+    nat="$OUT_DIR/native"; rm -rf "$nat"; mkdir -p "$nat"
+    native_build() { "$OMC" < "$1" > "$2" && [ "$(od -An -tx1 -N4 "$2" | tr -d ' ')" = 7f454c46 ] && chmod 700 "$2"; }
+    cat native/ecosystem663/metadata.om tests/ecosystem663/metadata-test.om > "$nat/metadata-test.om"
+    native_build "$nat/metadata-test.om" "$nat/metadata-test.elf"
+    "$nat/metadata-test.elf" > "$nat/metadata-test.stdout"
+    grep "^M20_METADATA_V1_PASS checks=" "$nat/metadata-test.stdout"
+    for m in evidence/ECOSYSTEM663/mutant-*.om; do
+      native_build "$m" "$nat/mutant.elf"
+      rc=0; "$nat/mutant.elf" > /dev/null 2>&1 || rc=$?
+      [ "$rc" = 1 ] || { echo "run.sh: $m was not rejected (exit $rc, need 1)" >&2; exit 1; }
+      echo "mutant $m: exit 1 as required"
+    done
+    if [ -d native/autodiff664 ]; then
+      OMC="$OMC" OUT="$ROOT/$nat/tape" sh tests/autodiff664/run-tape.sh
+      make $NOPHYS test-autodiff-fixture FIXTURE=tests/fixtures/autodiff664/adtrain.fix
+    fi
+    ;;
   *) echo "run.sh: unknown step '$step'" >&2; exit 2 ;;
 esac
