@@ -17,6 +17,7 @@
 /* Lane 4: visor_evidence tests (fixtures + read-only pass over the real evidence/ tree).
  * Run from the repo root. Prints "PASS n/n" on success. */
 #include <dirent.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,8 +66,11 @@ static int build_big_tree(const char *dir, int descending) {
         char name[64], p[512];
         big_name(descending ? BIG_FILES - 1 - i : i, name, sizeof(name));
         snprintf(p, sizeof(p), "%s/%s", dir, name);
-        FILE *f = fopen(p, "wb");
-        if (!f) return -1;
+        /* Owner-only, never through an existing file or link (CodeQL world-writable-file-creation). */
+        int fd = open(p, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+        if (fd < 0) return -1;
+        FILE *f = fdopen(fd, "wb");
+        if (!f) { close(fd); return -1; }
         int json = strstr(name, ".json") != NULL;
         size_t w = json ? fwrite(receipt_bytes, 1, receipt_len, f) : fwrite("not a receipt\n", 1, 14, f);
         if (fclose(f) != 0 || w != (json ? receipt_len : 14)) return -1;
@@ -116,10 +120,10 @@ static void check_large_tree(void) {
     if (f) fclose(f);
     CHECK(receipt_len > 0 && receipt_len < sizeof(receipt_bytes), "large tree: receipt fixture read");
 
+    /* Fixed bases only: no directory from the environment reaches the scanner (CodeQL path-injection). */
     struct stat st;
-    const char *tmp = getenv("TMPDIR");
     const char *base = stat("/dev/shm", &st) == 0 && S_ISDIR(st.st_mode) && access("/dev/shm", W_OK) == 0
-                           ? "/dev/shm" : (tmp && tmp[0] ? tmp : "/tmp");
+                           ? "/dev/shm" : "/tmp";
     char root[512], asc[600], desc[600];
     snprintf(root, sizeof(root), "%s/visor-evidence-404-XXXXXX", base);
     if (!mkdtemp(root)) { CHECK(0, "large tree: mkdtemp"); return; }
