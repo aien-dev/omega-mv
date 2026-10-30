@@ -215,6 +215,9 @@ else
 if gt c 127
 die 69
 end
+if eq c 35
+die 72
+end
 put Tk 0 ulong c
 put Cur 0 add p 1
 put Te 0 add p 1

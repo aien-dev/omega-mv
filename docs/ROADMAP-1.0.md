@@ -99,10 +99,10 @@ feature anyone may want", and it never means hardware qualification beyond the t
    `aien-math`; a local unpublished x86 branch raises to 1024), 16 registers with no spilling (error 12),
    6 parameter slots, 8-character local names (error 13). These are implementation limits, not language
    rules, and each needs a decision before 1.0 freezes them.
-7. **A second target exists only off GitHub.** omega-harness#9 cites commit `7eca2ac3f` ("x86-64 Linux and
-   UEFI back ends", 2,043 lines added to `omc.om`) on branch `feat/allen-imac-competition`; that commit is
-   not on `aien-dev/omega-mv` (GitHub returns 422 for it). Reported IMPLEMENTED in omega-harness#9;
-   not independently verified by this audit, unreviewed and unpublished.
+7. **A second target is in draft integration, not qualified.** FR-9 integrates the historical
+   `7eca2ac3f` backend into canonical base `6999fa9e6`; [X86-LINUX.md](X86-LINUX.md) records
+   the design and actual unsupported paths. Implementation and execution evidence are pending.
+   The earlier off-GitHub observation is not a current publication check or a completion claim.
 8. **No contracts in the forward compiler.** omc has no `requires`, `ensures` or `assert`; the only
    contract syntax is in the legacy C front end, and OSC IR carries contract text as metadata.
 9. **Efficiency is not measured against an optimizing baseline.** The only filed comparison
@@ -293,7 +293,8 @@ Acceptance:
 | AArch64 Linux static ELF (program and function mode) | MERGED; host EXERCISED by `OMEGA-SEED` | QUALIFIED by RM1's full gate at the release commit |
 | WebAssembly MVP via OSC IR v1 (`irwasm`) | MERGED, scalar subset; host EXERCISED by authors | Gate wired (RM1); scope decision: stay scalar-only for 1.0, or add linear memory, text and globals with IR v2+ |
 | SPIR-V 1.0 OpenCL Kernel via OSC IR v1 (`irspirv`) | IMPLEMENTED and CPU EXERCISED in [#804](https://github.com/aien-dev/omega-mv/pull/804); [ABI, parity and toolchain](SPIRV.md) | Standalone `seed/spirv/gate-irspirv.sh`: full irwasm scalar corpus, exact trap/result parity on PoCL CPU, validator, determinism, mutant and refusals. Manifest wiring needs operator authorization; GPU and DPC++ integration NOT_RUN. |
-| x86-64 Linux ELF and x86-64 UEFI PE32+ | Reported IMPLEMENTED in omega-harness#9 on unpublished commit `7eca2ac3f`; not independently verified here | Published PR; default AArch64 output byte-identical (C2 manifest); differential against AArch64 on the full fixture set; trap codes equal; QEMU run labelled EMULATED; physical x86 hardware NOT_RUN unless tested |
+| x86-64 Linux static ELF | DRAFT integration pending implementation/evidence on canonical base `6999fa9e6`, using historical `7eca2ac3f`; [design and unsupported paths](X86-LINUX.md) | Published PR; default AArch64 output byte-identical (C2 manifest); full existing fixture differential with equal trap codes; independent objdump oracle and wrong-encoding mutants; all NOT_RUN for this draft; QEMU labelled EMULATED, physical x86 NOT_RUN unless tested |
+| x86-64 UEFI PE32+ | Historical implementation in `7eca2ac3f`; removed from the Linux-only FR-9 draft | Outside this integration; separate firmware/PE32+ acceptance and evidence required; Linux execution does not establish firmware or physical x86 qualification |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
 | GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR; host and simulator results are never cited as GPU qualification |
 
@@ -358,6 +359,44 @@ parallel on disjoint paths. RM11 is last and freezes only what passed.
 | RM9 Targets | [#798](https://github.com/aien-dev/omega-mv/issues/798) |
 | RM10 Compiler trust and C retirement | [#799](https://github.com/aien-dev/omega-mv/issues/799) |
 | RM11 Stability guarantee | [#800](https://github.com/aien-dev/omega-mv/issues/800) |
+
+## 4a. Networking and TLS follow-on
+
+The bounded HTTP/JSON work tracked by [#788](https://github.com/aien-dev/omega-mv/issues/788)
+uses existing Linux-arm64 socket words, with additional bounded host operations proposed in
+[PR #808](https://github.com/aien-dev/omega-mv/pull/808) (pending). It does not add TLS.
+Public traffic terminates TLS at the hub's nginx; authorized internal services use plain HTTP
+on loopback or over the WireGuard tailnet. This transport arrangement is not a claim that
+Omega implements certificate verification or that plaintext is suitable on arbitrary networks.
+
+**TLS 1.3 client: PROPOSED, separate OmegaTLS lane.** Implement record framing, handshake,
+transcript hashes, key schedule, authenticated encryption, signature verification, and bounded
+X.509 verification in `.om`. The minimum contract verifies a chain to an explicitly configured
+trust store, hostname, validity interval and certificate constraints, and fails closed on every
+unsupported or invalid input. There is no insecure verification toggle, implicit trust-on-first-use,
+or silent downgrade. Trust-store provenance and trusted wall-clock requirements are explicit inputs.
+No TLS 1.2, 0-RTT, or session-resumption claim is included without a separate replay/security contract.
+
+Acceptance gates, all required before a consumer cutover:
+
+- Published cryptographic known-answer vectors and differential tests against a pinned independent
+  TLS implementation; document exact versions and oracle-only roles.
+- Positive and negative certificate chains: hostname mismatch, expired/not-yet-valid certificates,
+  unknown issuer, invalid signature, wrong key usage/EKU, path constraints, malformed DER, and
+  unsupported critical extensions all refuse without sending application data.
+- Fragmented/coalesced records, partial I/O, handshake and read deadlines, authenticated close,
+  truncation, corrupt tags, altered handshake transcript, replay and sequence exhaustion tests.
+- Deterministically seeded malformed-record/certificate fuzz corpus, retained failures, and a
+  verification-bypass mutant that the gate demonstrably catches.
+- Descriptor/memory lifecycle checks and a read-only end-to-end HTTPS GET with status, headers,
+  bounded body, and an independently verified certificate identity.
+- Independent protocol/cryptographic review plus seeded compiler/referee and consumer parity
+  evidence at exact source and compiler pins. Host tests do not qualify hardware or deployment.
+
+The GitHub API pusher and catalog remain recorded host dependencies until this separate TLS
+implementation passes these gates and each consumer completes its own exercised port. nginx
+termination does not replace outbound GitHub certificate verification. This item does not
+silently add a new RM milestone or declare Omega 1.0 ready.
 
 ## 5. Keeping this file honest
 

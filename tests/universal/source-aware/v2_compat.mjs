@@ -88,7 +88,7 @@ try{
  for(const b of validUnits.slice(0,24)){const n=b.readUInt16LE(23),off=13+semLen(b);for(let i=0;i<n;i++)for(const at of [2,3,4,5,6,7,8,10,12]){const d=Buffer.from(b);d[57+i*20+at]^=255;edges.push(d);}const d=Buffer.from(b);d[off+42]^=1;edges.push(d);}
  const evidence=new Map();
  for(const dir of ['evidence/UNIVERSAL-621','evidence/UNIVERSAL-622','evidence/UNIVERSAL-625'])for(const f of fs.readdirSync(dir,{recursive:true})){
-  const p=path.join(dir,f);if(!fs.statSync(p).isFile())continue;const bytes=fs.readFileSync(p);
+  const p=path.join(dir,f),fd=fs.openSync(p,'r');let bytes;try{if(!fs.fstatSync(fd).isFile())continue;bytes=fs.readFileSync(fd);}finally{fs.closeSync(fd);}
   if(bytes.subarray(0,4).equals(Buffer.from('OMSB')))evidence.set(digest(bytes),{from:p,input:bytes});
   else for(const m of bytes.toString('latin1').matchAll(/4f4d5342(?:[0-9a-f]{2})+/gi)){const e=Buffer.from(m[0],'hex');evidence.set(digest(e),{from:p,input:e});}
  }
