@@ -2,6 +2,7 @@
 set -eu
 cd "$(dirname "$0")/../.."
 root=$PWD
+OMC=${OMC:-"$root/seed/out/omc"}
 mkdir -p build/seed/host
 stage=$(mktemp -d "$root/build/seed/host/negative.XXXXXX")
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
@@ -9,7 +10,7 @@ count=0
 runtime() {
     name=$1
     cat > "$stage/$name.om"
-    seed/out/omc < "$stage/$name.om" > "$stage/$name"
+    "$OMC" < "$stage/$name.om" > "$stage/$name"
     chmod +x "$stage/$name"
     code=0
     (cd "$stage"; "./$name") > "$stage/out" || code=$?
@@ -23,7 +24,7 @@ compile_error() {
     want=$2
     code=0
     cat > "$stage/$name.om"
-    seed/out/omc < "$stage/$name.om" > "$stage/out" 2> "$stage/err" || code=$?
+    "$OMC" < "$stage/$name.om" > "$stage/out" 2> "$stage/err" || code=$?
     test "$code" = "$want" && test ! -s "$stage/out" || {
         echo "Wrong compile refusal: $name (exit $code)" >&2; exit 1;
     }
@@ -339,4 +340,72 @@ fn probe buf view uchar 4 to long
 ret sockopt 0 1 2 buf 0 4
 end
 OM
-printf 'PASS %s total host negative controls, including cwd, readlnk and sockopt\n' "$count"
+compile_error flock-fd-type 7 <<'OM'
+fn main to int
+r = flock long 0 2
+ret 0
+end
+OM
+compile_error flock-op-type 7 <<'OM'
+fn main to int
+r = flock 0 ulong 2
+ret 0
+end
+OM
+compile_error flock-arity 4 <<'OM'
+fn main to int
+r = flock 0
+ret 0
+end
+OM
+compile_error flock-name 16 <<'OM'
+fn main to int
+flock = int 1
+ret 0
+end
+OM
+compile_error flock-function-mode 9 <<'OM'
+fn probe fd int to long
+ret flock fd 2
+end
+OM
+runtime pollfds-limit <<'OM'
+global buf uchar 8200
+fn main to int
+ret int pollfds buf 0 len buf 0
+end
+OM
+compile_error peercred-readonly 20 <<'OM'
+text buf "abcdefghijkl"
+fn main to int
+ret int peercred 0 buf 0 12
+end
+OM
+compile_error pollfds-readonly 20 <<'OM'
+text buf "abcdefgh"
+fn main to int
+ret int pollfds buf 0 8 0
+end
+OM
+compile_error sendmsg-array-type 7 <<'OM'
+global buf uint 4
+fn main to int
+ret int sendmsg 0 buf 0 4 0
+end
+OM
+compile_error peercred-function-mode 9 <<'OM'
+fn probe buf edit uchar 16 to long
+ret peercred 0 buf 0 12
+end
+OM
+compile_error pollfds-function-mode 9 <<'OM'
+fn probe buf edit uchar 16 to long
+ret pollfds buf 0 8 0
+end
+OM
+compile_error sendmsg-function-mode 9 <<'OM'
+fn probe buf view uchar 16 to long
+ret sendmsg 0 buf 0 8 0
+end
+OM
+printf 'PASS %s total host negative controls, including cwd, readlnk, sockopt, flock and network\n' "$count"

@@ -1,0 +1,76 @@
+note S3 layout: every integer field type, both byte orders, scalar and array fields, run-time and constant
+note indexes, an inline function with a layout parameter, the raw uchar fallback and len. Writes the 40-byte
+note image to stdout, then exits 0 when every read-back matches (else the failing check's number).
+om2
+layout mix 40
+field sb byte at 0 little
+field ss short at 1 big
+field si int at 3 little
+field sl long at 7 big
+field us ushort 2 at 15 big
+field ui uint 2 at 19 little
+field ul ulong at 27 little
+field tail uchar 5 at 35 big
+end
+fn setul c edit mix v ulong to void inline
+put c ul v
+end
+fn fill c edit mix k ulong to void
+put c sb -2
+put c ss -300
+put c si -70000
+put c sl -4294967296
+put c us 0 0xbeef
+put c us k 0x1234
+put c ui 0 0xdeadbeef
+put c ui k 7
+setul c 0x0102030405060708
+for i ulong 5
+put c tail i uchar add i 0xa0
+end
+end
+fn check c view mix k ulong to int
+if ne get c sb -2
+ret 1
+end
+if ne get c ss -300
+ret 2
+end
+if ne get c si -70000
+ret 3
+end
+if ne get c sl -4294967296
+ret 4
+end
+if ne get c us 0 0xbeef
+ret 5
+end
+if ne get c us k 0x1234
+ret 6
+end
+if ne get c ui 0 0xdeadbeef
+ret 7
+end
+if ne get c ui k 7
+ret 8
+end
+if ne get c ul 0x0102030405060708
+ret 9
+end
+if ne get c tail 4 0xa4
+ret 10
+end
+if ne get c 1 254
+ret 11
+end
+if ne len c 40
+ret 12
+end
+ret 0
+end
+fn main to int
+c = new uchar 40 0
+fill c 1
+w = write 1 c 0 40
+ret check c 1
+end

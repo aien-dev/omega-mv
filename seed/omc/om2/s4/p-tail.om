@@ -1,0 +1,12 @@
+note S4 part: o = 8, k = 4 on count 10: o <= len holds, k <= len - o fails, trap 3 (exit 103).
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn g v view uchar * o ulong to ulong
+ret plen part v o 4
+end
+fn main to int
+a = new uchar 10 0
+ret int g a 8
+end

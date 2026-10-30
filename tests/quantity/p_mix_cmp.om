@@ -1,0 +1,8 @@
+fn main to int
+a = qty 5
+b = ulong 3
+if lt a b
+ret int 1
+end
+ret int 0
+end
