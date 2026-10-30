@@ -1,0 +1,9 @@
+om2 debug
+fn apply x uint to uint
+requires le x 16
+ensures le result 32
+ret add x 1
+end
+fn main to int
+ret int apply uint 16
+end

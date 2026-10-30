@@ -27,7 +27,7 @@ sh seed/omega-from-seed.sh   # or: make omega-from-seed
 
 `omega-from-seed.sh` grows the compiler from `seed/rung0/seed0.hex` (the one outside step is `seed/rung0/load0.sh`, POSIX `printf`), has omc rebuild itself twice to identical bytes, and leaves it at `seed/out/omc` with its sha256 beside it. No C is on that path.
 
-Some gates expect sibling checkouts next to this one: `../physics` (physics-mv) and `../aienos` for the pinned FORGE and kernel sources, `../aien-architecture` for the crumb tool, `../omega-bridge` for `om-units`. A step whose sibling is missing exits 3 with a message.
+Some gates expect sibling checkouts next to this one: `../physics` (physics-mv) and `../aienos` for the pinned FORGE and kernel sources, `../aien-architecture` for the crumb tool, `../omega-bridge` for `om-units`, `../aien-train` for `orig4-shadow`. A step whose sibling is missing exits 3 with a message.
 
 ## Configuration
 

@@ -1,0 +1,19 @@
+Source revision exercised: 70a057475bb51c4f9bd254bfcbe097c6f142cc32
+Platform: Linux aarch64 (DGX Spark host CPU; GPU not used).
+Command: IREE_COMPILE=<venv>/bin/iree-compile IREE_RUN=<venv>/bin/iree-run-module PYTHON=<venv>/bin/python nice -n 19 sh seed/stablehlo/gate-irstablehlo.sh
+Observed exit: 0
+Full output: gate.log
+Observed gate verdict: PASS irstablehlo: 7 cases on two interop oracles (not Omega-native, not hardware), 23 negatives caught
+
+Oracles (interop oracle, not Omega-native; they read the Omega-written module, never generate it):
+iree-base-compiler 3.13.0 wheel sha256 230aec9b5d63c49f3f1ba228c35a7ce950075ce7b7780b786c85fa6fb0be3dbb
+iree-base-runtime 3.13.0 wheel sha256 2a46a517c7dbdaa8701f9ee324dd94089af51a8251f36bd689949ee37e30d1d1
+jaxlib 0.12.0.1 wheel sha256 40812201c3bcd4cb104b88f71f58fec4cbd0c32ba90e5c92b3fa8f40819f6774
+jax 0.12.0.1 wheel sha256 e9dfd256ba090259b10f97f0755d4fc92535b8cb38c0a40df6488a8c8a7dd8ae
+numpy 2.5.4 wheel sha256 fe4d21ab149f15e4e6043dfb0de87e6e5f34ac176cde83060e9802981fca2ac2
+
+Determinism: each module is translated twice per run (cmp); a second full run of the
+gate (before this commit, same translator source) printed identical SHA256 lines.
+Expected vectors: Wolfram Language evaluator, 2026-10-26 (integer wrap/fit checks; f32/f64
+round-to-nearest-even of each sum; decimal round-trip of every float input and expected value).
+Evidence class: HOST interop oracle. TPU: NOT_RUN (libtpu is closed and x86_64-only; no TPU VM).

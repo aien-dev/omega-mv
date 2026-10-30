@@ -1,0 +1,76 @@
+note SC1-E pure public partition helper, not a scheduler or secrecy proof.
+note Record8: format,owner,reservation-id,public-boundary,active,capacity,partition,zero.
+note Open once before any secret work. Owner/id refer to existing writer reservation.
+note Fixed public partition must cover descendants, cleanup and supervisor work too.
+note Failure leaves record unchanged. State and boundary are trusted writer inputs.
+note Copies do not mint authority: only the single serialized owner may mutate live state.
+fn ep_valid e view ulong 8 to ulong
+if ne get e 0 1
+ret 1
+end
+if or eq get e 1 0 or eq get e 2 0 eq get e 3 0
+ret 1
+end
+if or gt get e 4 1 ne get e 7 0
+ret 1
+end
+if or eq get e 6 0 gt get e 6 get e 5
+ret 1
+end
+ret 0
+end
+fn ep_open e edit ulong 8 owner ulong id ulong boundary ulong cap ulong part ulong to ulong
+for i ulong 8
+if ne get e i 0
+ret 1
+end
+end
+if or eq owner 0 or eq id 0 eq boundary 0
+ret 1
+end
+if or eq part 0 gt part cap
+ret 1
+end
+put e 0 1
+put e 1 owner
+put e 2 id
+put e 3 boundary
+put e 4 1
+put e 5 cap
+put e 6 part
+ret 0
+end
+fn ep_available e view ulong 8 to ulong
+if ne ep_valid e 0
+ret 0
+end
+if eq get e 4 0
+ret get e 5
+end
+ret sub get e 5 get e 6
+end
+note event1 completion,2 cancellation,3 error,4 supervisor-work. None refunds.
+fn ep_event e edit ulong 8 event ulong to ulong
+if ne ep_valid e 0
+ret 1
+end
+if or lt event 1 gt event 4
+ret 1
+end
+ret 0
+end
+note Unknown quiescence returns4 and retains. Do not certify secret-dependent release delay.
+note Boundary is a public schedule identity, not a secret-selected completion timestamp.
+fn ep_release e edit ulong 8 boundary ulong quiet bool to ulong
+if ne ep_valid e 0
+ret 1
+end
+if ne boundary get e 3
+ret 2
+end
+if not quiet
+ret 4
+end
+put e 4 0
+ret 0
+end

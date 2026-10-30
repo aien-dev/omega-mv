@@ -62,6 +62,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -357,6 +358,93 @@ static uint32_t thermal_c(void) {
 }
 
 static char g_meter_dir[128];
+
+/* ---- experience record tap (default off; aien-train #24 ORIG-1, omega #731) ----
+ * OMEGA_EMPIRICAL_RECORDS=<fd> appends one fixed 256-byte little-endian
+ * record per cost table to descriptor fd (3..1023), which the caller opened
+ * for append on a regular file, e.g. OMEGA_EMPIRICAL_RECORDS=3 ... 3>>records.bin.
+ * The harness opens no path named by its environment; any other value leaves
+ * the tap off. Records hold the state the consumer saw and every eligible arm's
+ * measured, digest-checked cost. Observation only: no decision, measurement
+ * or verdict of this harness reads it. Layout omexp-v1, 32 words of 8 bytes:
+ *   0 magic 0x314f4d4558505243 ("CRPXEMO1" LE)  1 version 1
+ *   2 family (0 train grid, 1 validation grid, 2 H1, 3 H2, 4 H3, 5 coverage sample)
+ *   3 core class (RX_CM_CORE_*)  4 pressure bucket  5 M  6 N  7 calls
+ *   8 job seed  9 state bytes  10 cache bytes  11 thermal C  12 eligible mask
+ *   13 arm count  14 sequence  15 monotonic ns
+ *   16..23 ps per call per arm (0 = not measured)  24..29 verified flag per arm
+ *   30 reference digest  31 digest mismatches during this table (0 = all verified) */
+#define OMEXP_MAGIC 0x314f4d4558505243ull
+static int g_tap_fd = -1;
+static uint64_t g_tap_seq;
+static uint32_t g_tap_family, g_tap_core, g_tap_pressure;
+
+static void tap_open(void) {
+    const char *p = getenv("OMEGA_EMPIRICAL_RECORDS");
+    if (!p || !p[0]) return;
+    char *end;
+    errno = 0;
+    long fd = strtol(p, &end, 10);
+    struct stat sb;
+    int fl = -1;
+    if (errno != 0 || *end != '\0' || fd < 3 || fd > 1023 || (fl = fcntl((int)fd, F_GETFL)) < 0 ||
+        (fl & O_ACCMODE) == O_RDONLY || !(fl & O_APPEND) || fstat((int)fd, &sb) != 0 || !S_ISREG(sb.st_mode)) {
+        fprintf(stderr, "  record tap: OMEGA_EMPIRICAL_RECORDS=%s is not a descriptor 3..1023 open for append "
+                        "on a regular file; tap off\n", p);
+        return;
+    }
+    g_tap_fd = (int)fd;
+}
+
+static void tap_ctx(uint32_t family, uint32_t core, uint32_t pressure) {
+    g_tap_family = family;
+    g_tap_core = core;
+    g_tap_pressure = pressure;
+}
+
+static void tap_record(const Job *j, const uint64_t table[N_ARMS], uint64_t mismatches) {
+    if (g_tap_fd < 0) return;
+    uint64_t w[32];
+    uint8_t b[256];
+    memset(w, 0, sizeof w);
+    w[0] = OMEXP_MAGIC;
+    w[1] = 1;
+    w[2] = g_tap_family;
+    w[3] = g_tap_core;
+    w[4] = g_tap_pressure;
+    w[5] = j->M;
+    w[6] = j->N;
+    w[7] = j->calls;
+    w[8] = j->seed;
+    w[9] = ((uint64_t)j->M * j->N + j->M + j->N) * 8u;
+    w[10] = g_class[g_tap_core].cache_bytes;
+    w[11] = thermal_c();
+    w[12] = g_eligible;
+    w[13] = N_ARMS;
+    w[14] = g_tap_seq++;
+    w[15] = now_ns();
+    for (uint32_t a = 0; a < N_ARMS && a < 8; a++) {
+        w[16 + a] = table[a] == UINT64_MAX ? 0 : table[a];
+        w[24 + a] = g_verified[a] ? 1u : 0u;
+    }
+    w[30] = j->ref_digest;
+    w[31] = mismatches;
+    for (int i = 0; i < 32; i++)
+        for (int k = 0; k < 8; k++) b[i * 8 + k] = (uint8_t)(w[i] >> (8 * k));
+    size_t off = 0;
+    while (off < sizeof b) {
+        ssize_t n = write(g_tap_fd, b + off, sizeof b - off);
+        if (n <= 0) break;
+        off += (size_t)n;
+    }
+}
+
+/* truth_table plus the tap; the table itself is unchanged. */
+static void truth_table_tap(const Job *j, uint64_t table[N_ARMS]) {
+    uint64_t before = K.mismatches;
+    truth_table(j, table);
+    tap_record(j, table, K.mismatches - before);
+}
 
 static void find_meter(void) {
     for (int h = 0; h < 32; h++) {
@@ -824,12 +912,13 @@ static void train_class(RxCostModel *m, uint32_t k) {
     LearnStats s;
     memset(&s, 0, sizeof s);
     uint32_t current = ARM_REF;
+    tap_ctx(0, k, 0);
     for (int pass = 0; pass < 2; pass++) {
         shuffle(jobs, n, 99u + (uint64_t)pass + k);
         for (uint32_t i = 0; i < n; i++) {
             job_load(&jobs[i]);
             uint64_t table[N_ARMS];
-            truth_table(&jobs[i], table);
+            truth_table_tap(&jobs[i], table);
             for (uint32_t a = 0; a < N_ARMS; a++)
                 if (g_eligible & (1u << a)) R.train_cost[k][a] += (double)table[a] * jobs[i].calls;
             learner_job(m, &g_train_policy, &jobs[i], k, 0, &current, table, &s);
@@ -876,10 +965,11 @@ static void build_validation(void) {
     for (uint32_t k = 0; k < RX_CM_CORES; k++) {
         if (!R.present[k]) continue;
         place_quiet(k);
+        tap_ctx(1, k, 0);
         g_val.n[k] = grid(g_val.jobs[k], VAL_M, NA(VAL_M), VAL_N, NA(VAL_N), 5000u + k);
         for (uint32_t i = 0; i < g_val.n[k]; i++) {
             job_load(&g_val.jobs[k][i]);
-            truth_table(&g_val.jobs[k][i], g_val.table[k][i]);
+            truth_table_tap(&g_val.jobs[k][i], g_val.table[k][i]);
         }
     }
 }
@@ -1153,6 +1243,43 @@ static int promote_phase(const RxCostModel *m, RxCostModel *durable) {
     return 0;
 }
 
+/* ---- coverage sample (default off; ORIG v2, aien-train#24/#25, benchmarks#45) ----
+ * OMEGA_EMPIRICAL_COVERAGE=<n> with the record tap on: after the held-out
+ * phase, n further log-uniform shapes per present core class (M, N in
+ * [1, 8192], M N <= MAX_ELEMS, seed 9000 + core) are measured with the same
+ * truth table and tapped as family 5. Observation only: no policy, judge,
+ * learner or verdict of this harness sees them. Without the tap it does nothing;
+ * n above 640 is capped, a negative or non-numeric n takes no sample. */
+#define COVERAGE_MAX 640u
+
+static uint32_t coverage_count(void) {
+    const char *e = getenv("OMEGA_EMPIRICAL_COVERAGE");
+    if (g_tap_fd < 0 || !e || !e[0]) return 0;
+    char *end;
+    errno = 0;
+    long v = strtol(e, &end, 10);
+    if (errno != 0 || *end != '\0' || v < 0) {
+        fprintf(stderr, "  coverage sample: OMEGA_EMPIRICAL_COVERAGE=%s is not a count >= 0; no sample\n", e);
+        return 0;
+    }
+    return v > (long)COVERAGE_MAX ? COVERAGE_MAX : (uint32_t)v;
+}
+
+static void coverage_sample(uint32_t k, uint32_t count) {
+    uint64_t s = 9000u + k;
+    uint32_t n = 0;
+    tap_ctx(5, k, 0);
+    while (n < count) {
+        uint32_t M = log_uniform(&s, 0.0, 13.0), N = log_uniform(&s, 0.0, 13.0);
+        if (M < 1 || N < 1 || (uint64_t)M * N > MAX_ELEMS || M > MAX_M || N > MAX_N) continue;
+        Job j = { M, N, calls_for(M, N), 9000u + k + (uint64_t)n * 2654435761u, 0 };
+        job_load(&j);
+        uint64_t table[N_ARMS];
+        truth_table_tap(&j, table);
+        n++;
+    }
+}
+
 /* ---- held-out ---- */
 
 static Job g_h1[MAX_JOBS], g_h2[MAX_JOBS];
@@ -1175,11 +1302,12 @@ static void heldout(const RxCostModel *durable, uint32_t k, uint32_t dist, Job *
     double contention[MAX_JOBS];
     uint32_t n_cont = 0;
     if (pressure) pressure_on(g_class[k].timed);
+    tap_ctx(2 + dist, k, pressure);
     for (uint32_t i = 0; i < n; i++) {
         Job *j = &jobs[i];
         job_load(j);
         uint64_t table[N_ARMS];
-        truth_table(j, table);
+        truth_table_tap(j, table);
         if (dist == D_H1) memcpy(g_h1_table[k][i], table, sizeof table);
         RxCmDecision d;
         uint32_t fz = frozen_choice(durable, &g_frozen_policy, j, k, pressure, &d);
@@ -1505,6 +1633,7 @@ int main(void) {
     setvbuf(stdout, NULL, _IOLBF, 0);
     discover();
     find_meter();
+    tap_open();
     for (uint32_t k = 0; k < RX_CM_CORES; k++) R.present[k] = g_class[k].n > 0;
     printf("[*] cores: %s; energy meter: %s\n", g_cpus_desc, g_meter_dir[0] ? g_meter_dir : "none");
     R.thermal_start = thermal_c();
@@ -1594,6 +1723,15 @@ int main(void) {
         rx_cm_digest(&durable, c);
         R.online_not_durable = changed && memcmp(b, c, 32) == 0;
         CHECK(R.online_not_durable, "online learning changed only the working copy");
+    }
+    uint32_t cover = coverage_count();
+    if (cover) {
+        printf("[*] coverage sample: %u shapes per core class, tapped as family 5\n", cover);
+        for (uint32_t k = 0; k < RX_CM_CORES; k++) {
+            if (!R.present[k]) continue;
+            place_quiet(k);
+            coverage_sample(k, cover);
+        }
     }
     R.thermal_end = thermal_c();
     loadavg(R.load_end, sizeof R.load_end);

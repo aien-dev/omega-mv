@@ -1,0 +1,76 @@
+# omega#344 bash-differential cases. Grammar: see bashdiff.sh. Run: make osh-bash-diff
+# exit with too many arguments: bash -c stops the whole string at the failed exit (status 1); a script file or stdin
+# continues with the next line.
+### exit-many-c | c | match |
+exit 1 2; echo after
+echo next
+### exit-many-f | f | match |
+exit 1 2; echo after
+echo next
+### exit-many-s | s | match |
+exit 1 2; echo after
+echo next
+### exit-many-c-andor | c | match |
+true && exit 1 2 || echo or; echo after
+echo next
+# An empty expansion before `export` does not make it the declaration builtin: A=$y is split like any argument.
+### export-after-empty-word | c | match |
+y="a b"; e=; $e export A=$y; echo "[$A]"
+### export-quoted-name | c | match |
+y="a b"; "export" A=$y; echo "[$A]"
+### export-plain | c | match |
+y="a b"; export A=$y; echo "[$A]"
+### export-after-redirect | c | match |
+y="a b"; >/dev/null export A=$y; echo "[$A]"
+# bash puts _=<full path of the program> into each child's environment.
+### underscore-child-env | c | match |
+env | grep '^_='
+### underscore-printenv | c | match |
+printenv _
+### underscore-inherited | c | match |
+_=/x/y env | grep '^_='
+### underscore-param | c | refuse=SPECIAL_PARAM |
+echo hi > f; echo $_
+# pwd and cd .. after the working directory was removed while reached through a symlink.
+### pwd-removed-cwd-logical | c | match |
+mkdir real; ln -s real lnk
+%%
+cd lnk; rmdir ../real; pwd; echo "rc=$?"
+### pwd-removed-cwd-physical | c | match |
+mkdir real; ln -s real lnk
+%%
+cd lnk; rmdir ../real; pwd -P; echo "rc=$?"
+### cd-dotdot-removed-cwd | c | match |
+mkdir real; ln -s real lnk
+%%
+cd lnk; rmdir ../real; cd ..; echo "rc=$?"; pwd; ls
+# stderr wording of builtin errors.
+### export-bad-name | c | match |
+export 1x=2; echo "rc=$?"
+### printf-no-format | c | match |
+printf; echo "rc=$?"
+### unset-bad-option | c | match |
+unset -x; echo "rc=$?"
+# Builtin option and operand diagnostics (bash 5.2.21 wording, status 2 for an invalid option).
+### cd-bad-option | c | match |
+cd -x; echo "rc=$?"
+### pwd-bad-option | c | match |
+pwd -x; echo "rc=$?"
+### pwd-LP | c | match |
+mkdir real; ln -s real lnk
+%%
+cd lnk; pwd -LP; pwd -PL; echo "rc=$?"
+### pwd-operand | c | match |
+pwd a b >/dev/null; echo "rc=$?"
+### export-bad-option | c | match |
+export -x; echo "rc=$?"
+### export-eq-name | c | match |
+export =a; echo "rc=$?"
+### printf-bad-option | c | match |
+printf -x; echo "rc=$?"
+### printf-v | c | refuse=option not supported |
+printf -v v %s x
+### unset-bad-name | c | match |
+unset 1x; echo "rc=$?"
+### exit-nonnumeric | c | match |
+exit x
