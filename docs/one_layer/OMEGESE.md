@@ -1096,7 +1096,9 @@ results; equal means the same bits or the same trap code. Wider signatures are o
 (`irequiv sample`), printed as `NOT_A_PROOF` with exit 10. A PASS covers the IR both functions
 lowered to under `src/compiler/osc_interp.c` semantics, not native words. `seed/equiv/gate-irequiv.sh`
 runs the fixture pairs (repo functions js_hexv/hhexv, clamp_add, bitrev8, r8 against refactors and
-single-input mutants); `seed/equiv/README.md` has the command line and exit codes.
+single-input mutants), then checks `irequiv eval` against native AArch64 programs on the 140 rows of
+`seed/wasm/cases.tsv`, `seed/spirv/regression.tsv` and `seed/spirv/demo.tsv` (same bits, same trap
+code); `seed/equiv/README.md` has the command line and exit codes.
 
 ### 11.2 Memory profile contract (IR v2 milestone)
 

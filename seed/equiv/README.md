@@ -33,6 +33,12 @@ hhexv from seed/net/http.om), `clamp` (dev01 clamp_add), `bitrev` (dev09 bitrev8
 seed/omc/om2/s1/rot.om), `pop16`, and `wide` (sampling and fuel). Each names its source and its
 deliberate mutants.
 
+The gate also runs every row of `seed/wasm/cases.tsv` (129), `seed/spirv/regression.tsv` (8) and
+`seed/spirv/demo.tsv` (3) twice: as a native program built by `omc` with the irwasm/irspirv gates'
+64-bit result dumper, and through `irequiv eval` on the unit's IR. It requires the same bits or the
+same trap code on all 140 rows (`CONFORM native rows=140 equal=140`), so an interpreter defect that
+no fixture pair reaches still fails the gate.
+
 Limits: OSC IR v1 scalar functions only (what `omc` IR mode emits: at most 32 functions, 6
 parameters); the result is a statement about the IR both functions lowered to, not about the
 AArch64 words the native path emits for the same source.

@@ -75,4 +75,88 @@ set +e; "$B/irequiv" check pop16 pop16s < "$B/trunc.ir" > /dev/null 2>&1; st=$?;
 [ "$(wc -c < "$B/bitrev.dump")" = 2048 ] || bad "dump size"
 [ "$(od -An -tu8 -j8 -N8 "$B/bitrev.dump" | tr -d ' ')" = 128 ] || bad "dump bitrev8(1)"
 
+# Conformance with native code: every row of the irwasm/irspirv tables is run as a
+# real native program (the dumper of seed/wasm/gate-irwasm.sh, all 64 result bits)
+# and through `irequiv eval` on the same unit's IR. Values must be bit-identical and
+# traps must carry the same code; the native exit must also match the table.
+for source in tests/one_layer/omegese/dev/*.omegese seed/wasm/*.unit.om seed/spirv/*.unit.om; do
+	id=$(basename "$source" .omegese)
+	id=${id%.unit.om}
+	printf '%s\n' "$source" > "$B/nx-$id.source"
+	{ printf 'ir\n'; cat "$source"; } | "$OMC" > "$B/nx-$id.ir" || bad "ir $source"
+done
+tab=$(printf '\t')
+nx_rows=0
+nx_equal=0
+conform() {
+	table=$1; want=$2; rows=0
+	while IFS="$tab" read -r unit function result typed status; do
+		case "$unit" in ''|'#'*) continue ;; esac
+		rows=$((rows + 1)); nx_rows=$((nx_rows + 1))
+		om=$B/nx-row-$nx_rows.om
+		cat "$(cat "$B/nx-$unit.source")" > "$om"
+		cat >> "$om" <<'DUMP'
+global dumpbuf uchar 8
+fn ir_dump x ulong to void
+for j ulong 8
+put dumpbuf j uchar and shr x mul j 8 255
+end
+p = ulong 0
+while lt p 8 bound 8
+k = write 1 dumpbuf p sub ulong 8 p
+if le k 0
+exit 90
+end
+p = add p ulong k
+end
+end
+fn main to int
+DUMP
+		actual=; eargs=
+		if [ "$typed" != - ]; then
+			for a in $(printf '%s' "$typed" | tr ',' ' '); do
+				ty=${a%%:*}; v=${a#*:}
+				if [ "$ty" = bool ]; then actual="$actual $v"; else actual="$actual $ty $v"; fi
+				eargs="$eargs $a"
+			done
+		fi
+		case "$result" in
+			bool|void|byte|short|int|long|uchar|ushort|uint|ulong) ;;
+			*) bad "$table row $rows: unknown result $result"; continue ;;
+		esac
+		case "$result" in
+			bool) printf 'if %s %s\nir_dump ulong 1\nelse\nir_dump ulong 0\nend\n' "$function" "$actual" ;;
+			void) printf '%s %s\nir_dump ulong 0\n' "$function" "$actual" ;;
+			byte|short|int|long) printf 'ir_dump bitcast ulong long %s %s\n' "$function" "$actual" ;;
+			uchar|ushort|uint|ulong) printf 'ir_dump ulong %s %s\n' "$function" "$actual" ;;
+		esac >> "$om"
+		printf 'ret 0\nend\n' >> "$om"
+		"$OMC" < "$om" > "$B/nx-row-$nx_rows" || { bad "$table row $rows: native compile"; continue; }
+		chmod +x "$B/nx-row-$nx_rows"
+		set +e
+		timeout 10 "$B/nx-row-$nx_rows" > "$B/nx-row-$nx_rows.out"; rc=$?
+		ir=$("$B/irequiv" eval "$function" $eargs < "$B/nx-$unit.ir" 2>&1); st=$?
+		set -e
+		[ "$rc" = "$status" ] || bad "$table row $rows: native exit $rc, table $status"
+		if [ "$rc" = 0 ] && [ "$(wc -c < "$B/nx-row-$nx_rows.out")" = 8 ]; then
+			native="value:$(od -An -tu8 "$B/nx-row-$nx_rows.out" | tr -d ' ')"
+		elif [ "$rc" -gt 100 ] && [ "$rc" -lt 200 ]; then
+			native="trap:$((rc - 100))"
+		else
+			native="native-exit:$rc"
+		fi
+		if [ "$st" = 0 ] && [ "$ir" = "$native" ]; then
+			nx_equal=$((nx_equal + 1))
+		else
+			bad "$table row $rows $unit.$function $typed: native $native, irequiv $ir (exit $st)"
+		fi
+	done < "$table"
+	[ "$rows" = "$want" ] || bad "$table denominator $rows, want $want"
+}
+conform seed/wasm/cases.tsv 129
+conform seed/spirv/regression.tsv 8
+conform seed/spirv/demo.tsv 3
+[ "$nx_equal" = 140 ] || bad "native conformance equal=$nx_equal of $nx_rows, want 140"
+echo "CONFORM native rows=$nx_rows equal=$nx_equal"
+
 if [ "$fails" = 0 ]; then echo "GATE-IREQUIV PASS"; else echo "GATE-IREQUIV FAIL ($fails)"; exit 1; fi
