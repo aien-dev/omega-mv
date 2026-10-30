@@ -89,7 +89,7 @@ build_world() { # MANIFEST
     git -C "$PHYS" rev-parse HEAD > "$OM/physics.lock"
     echo "build/" > "$OM/.gitignore"
     printf '#!/bin/sh\nif [ "$1" = --digest ]; then printf "EXP2 12 aaaa\\nLOG2 34 bbbb\\n"; exit ${FAKE_DIGEST_RC:-0}; fi\necho "[PASS] fake host check"; echo "FAKE_HOST_LAST"; exit ${FAKE_HOST_RC:-0}\n' > "$OM/tools/fakehost.sh"
-    printf '#!/bin/sh\necho "[PASS] fake nvd"\necho "nvdisasm fake provenance line"\necho "VERDICT PASS"\nexit ${FAKE_NVD_RC:-0}\n' > "$OM/tools/divsqrt_nvdisasm_check.sh"
+    printf '#!/bin/sh\necho "[PASS] fake nvd"\necho "disassembler: fake provenance line"\necho "nvdisasm noise line"\necho "VERDICT PASS"\nexit ${FAKE_NVD_RC:-0}\n' > "$OM/tools/divsqrt_nvdisasm_check.sh"
     printf 'build/test_omega_numeric_transc_gb10_cpu:\n\tmkdir -p build && cp tools/fakehost.sh $@ && chmod +x $@\n' > "$OM/Makefile"
     chmod +x "$OM/tools/"*.sh "$OM/tools/run_numeric_transc_gate.sh"
     g "$OM" add -A && g "$OM" commit -q -m omega
@@ -133,7 +133,7 @@ suite() {
     ck happy_default_ops rj '.ops_requested == ["EXP2","LOG2","SIGMOID","TANH","SIN","COS","ERF","GELU","RSQRT","EXP","LOG"] and (.ops | map(.op)) == ["EXP2","LOG2","SIGMOID","TANH","SIN","COS","ERF","GELU","RSQRT","EXP","LOG"]'
     ck happy_ops_typed rj '.ops[0] == {op:"EXP2",checked:4294967296,exhaustive:true,mismatches:0,unwritten:0,verdict:"PASS",digest:"227cb65782077d82"}'
     ck happy_kernels rj '.kernels == [{op:"EXP2",instructions:12,sha256:"aaaa"},{op:"LOG2",instructions:34,sha256:"bbbb"}]'
-    ck happy_nvd rj '.nvdisasm_check == "nvdisasm fake provenance line"'
+    ck happy_nvd rj '.nvdisasm_check == "disassembler: fake provenance line\nVERDICT PASS"'
     ck happy_host_tier rj '.host_tier == "FAKE_HOST_LAST"'
     ck happy_gate_fields rj '.gate == "E1-TRANSC-GB10" and .verdict == "PASS" and .chip_exit_status == 0 and (.row | startswith("E1 gap table row 10")) and (.reference | startswith("omega_math_<op>"))'
     ck happy_flag_dropped test ! -e "$FLAG"
