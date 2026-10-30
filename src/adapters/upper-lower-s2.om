@@ -1,0 +1,468 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten S2 upper -> restricted Omegese lowering (spec/universal/translation-s2-v1.md section 5 and
+note amendment A1). Build prepends the unchanged pinned vendor sha256.om and src/source-aware/core-v3.om;
+note `decode` is the full source-aware v3 validation. One envelope per process: core globals are not reentrant.
+note The pinned omc traps (status 1) on every signed long add/sub/mul overflow, while C ?: and Rust if are lazy,
+note so the lowered unit evaluates every record with wrapping arithmetic and carries a poison bit per record:
+note attribute 6 arithmetic ORs in its own overflow, select ORs only the chosen arm. The root's poison traps 1.
+global One uchar 1
+global Nm uchar 64
+global Nl ulong 1
+global Lo uchar 16384
+global Ln ulong 1
+global Dg uchar 20
+global Pt ulong 6
+text Words "cwd random envcnt envread chdir ftrunc stat link symlnk chmod faccess getuid geteuid getgid getegid lstat truncate chown const fchdir getppid umask fdsync memfd setsid getpgid setpgid pread pwrite getsid syncfs shutdown devctl mapnew mapdrop mapread mapwrite devcall uvmctl mapaddr mapget mapset maphold mapbind bool uchar u8 ushort u16 uint u32 ulong u64 byte i8 short i16 int i32 long i64 add sub mul div rem and or xor shl shr eq ne lt le gt ge neg not get len read write true false view edit fn to end if else while bound for ret void global text put free exit note new break trap own sockname realns execprog renames rmdir killpid pipefds getpid waitio getdnts connect bind waitpid fstat recv send sleepns argcnt argread fclose fsync fchmod fseek socknew listen accept fork dupfd monons fopen unlink makedir struct f32 f64 bitcast fsqrt fabs fmin fmax sizeof offsetof continue v i0 i1 i2 i3 i4 i5 main u p a b r x sbits slong wadd wsub wmul oadd osub omul"
+text Frag "note omega.universal.lower.s2.v1 semantic |fn sbits a long to ulong\nif lt a 0\nret add ulong add add a 9223372036854775807 1 9223372036854775808\nend\nret ulong a\nend\nfn slong x ulong to long\nif lt x 9223372036854775808\nret long x\nend\nret sub sub long sub x 9223372036854775808 9223372036854775807 1\nend\nfn wadd a long b long to long\nret slong add sbits a sbits b\nend\nfn wsub a long b long to long\nret slong sub sbits a sbits b\nend\nfn wmul a long b long to long\nret slong mul sbits a sbits b\nend\nfn oadd a long b long to ulong\nr = wadd a b\nif lt a 0\nif and lt b 0 ge r 0\nret 1\nend\nret 0\nend\nif and ge b 0 lt r 0\nret 1\nend\nret 0\nend\nfn osub a long b long to ulong\nr = wsub a b\nif lt a 0\nif and ge b 0 ge r 0\nret 1\nend\nret 0\nend\nif and lt b 0 lt r 0\nret 1\nend\nret 0\nend\nfn omul a long b long to ulong\nif eq a 0\nret 0\nend\nif eq a -1\nif eq b -9223372036854775808\nret 1\nend\nret 0\nend\nr = wmul a b\nif ne div r a b\nret 1\nend\nret 0\nend\n|fn | long| ulong| to long\n| to ulong\n|v = new long |u = new ulong |p = new ulong |put v |put u |put p | get v | get u | get p |if |else\n|end\n| 0\n| add| sub| mul| wadd| wsub| wmul| oadd| osub| omul|eq|ne|lt|le|gt|ge| or|trap 1\n|ret get v |ret get u | 1\n| xor|if ne get u | i|"
+text Hexd "0123456789abcdef"
+text Dflt "calc"
+text E64 "LOWER_BAD_COMMAND\n"
+text E65 "LOWER_MALFORMED\n"
+text E68 "LOWER_PROFILE_MISMATCH\n"
+text E77 "LOWER_IO\n"
+
+fn die code ulong to void
+if eq code 64
+w = write 2 E64 0 len E64
+end
+if eq code 65
+w = write 2 E65 0 len E65
+end
+if eq code 68
+w = write 2 E68 0 len E68
+end
+if eq code 77
+w = write 2 E77 0 len E77
+end
+exit int code
+end
+
+fn oc c ulong to void
+p = get Ln 0
+if ge p 8192
+die 65
+end
+put Lo p uchar c
+put Ln 0 add p 1
+end
+fn odec v ulong to void
+n = ulong 0
+x = v
+put Dg 0 48
+if eq x 0
+n = 1
+end
+while ne x 0
+put Dg n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+end
+while gt n 0
+n = sub n 1
+oc ulong get Dg n
+end
+end
+
+fn alnum c ulong to bool
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 97 le c 122
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+ret eq c 95
+end
+
+fn wrdchar p ulong to bool
+if ge p len Words
+ret false
+end
+ret ne get Words p 32
+end
+
+fn sameword b ulong e ulong to bool
+if ne sub e b get Nl 0
+ret false
+end
+for i ulong get Nl 0
+if ne get Words add b i get Nm i
+ret false
+end
+end
+ret true
+end
+
+fn reserved to bool
+p = ulong 0
+while lt p len Words
+b = p
+while wrdchar p
+p = add p 1
+end
+if sameword b p
+ret true
+end
+p = add p 1
+end
+ret false
+end
+
+fn takename to void
+c = argcnt
+if eq c 1
+for i ulong len Dflt
+put Nm i get Dflt i
+end
+put Nl 0 len Dflt
+ret
+end
+if ne c 2
+die 64
+end
+r = argread 1 Nm 0 64
+if lt r 1
+die 64
+end
+n = ulong r
+if gt n 63
+die 64
+end
+put Nl 0 n
+f = ulong get Nm 0
+if and ge f 48 le f 57
+die 64
+end
+for i ulong n
+if not alnum ulong get Nm i
+die 64
+end
+end
+if reserved
+die 64
+end
+end
+
+note ofrag: the i-th '|'-terminated fragment of Frag.
+fn ofrag i ulong to void
+p = ulong 0
+k = ulong 0
+while lt k i
+if eq get Frag p 124
+k = add k 1
+end
+p = add p 1
+end
+while ne get Frag p 124
+oc ulong get Frag p
+p = add p 1
+end
+end
+
+note Records of type 5 live in the long array v; types 1 and 6 in the ulong array u; poison bits in p.
+fn oput t ulong k ulong to void
+if eq t 5
+ofrag 10
+else
+ofrag 11
+end
+odec k
+end
+
+fn oget t ulong a ulong to void
+if eq t 5
+ofrag 13
+else
+ofrag 14
+end
+odec a
+end
+
+fn opp k ulong to void
+ofrag 12
+odec k
+end
+
+fn ogp a ulong to void
+ofrag 15
+odec a
+end
+
+fn lprofile to ulong
+if or lt get M 1 10 gt get M 1 15
+die 68
+end
+if or ne get M 2 0 ne get M 3 1
+die 68
+end
+n = ulong 0
+for i ulong get M 4
+if eq get Oc i 9
+n = add n 1
+end
+end
+for i ulong get M 4
+if eq get Oc i 9
+if ge get Oi i n
+die 68
+end
+put Pt get Oi i get Ot i
+end
+end
+ret n
+end
+
+fn oheader to void
+ofrag 0
+hinit
+for i ulong len Semdom
+hbyte get Semdom i
+end
+part 13 get M 5
+finish
+for i ulong 32
+b = ulong get Hash i
+oc ulong get Hexd shr b 4
+oc ulong get Hexd and b 15
+end
+oc 10
+ofrag 1
+end
+
+fn oarray f ulong to void
+ofrag f
+odec get M 4
+ofrag 19
+end
+
+fn osig n ulong rt ulong to void
+ofrag 2
+for i ulong get Nl 0
+oc ulong get Nm i
+end
+for s ulong n
+ofrag 42
+odec s
+if eq get Pt s 5
+ofrag 3
+else
+ofrag 4
+end
+end
+if eq rt 5
+ofrag 5
+else
+ofrag 6
+end
+oarray 7
+oarray 8
+oarray 9
+end
+
+fn oconst k ulong to void
+t = get Ot k
+v = get Oi k
+oput t k
+oc 32
+if and eq t 5 ge v 9223372036854775808
+oc 45
+odec sub 0 v
+else
+odec v
+end
+oc 10
+end
+
+fn oarith k ulong to void
+t = get Ot k
+c = get Oc k
+a = get Oa k
+b = get Ob k
+oput t k
+if eq t 5
+ofrag add c 21
+else
+ofrag add c 18
+end
+oget t a
+oget t b
+oc 10
+note attr 6 first stores its own overflow predicate in p[k], then ORs in each operand's poison in its own
+note statement: short statements keep a 6-input body inside the pinned omc's per-function register budget
+note (error 12, measured on a six-input sum).
+if eq get Oat k 6
+opp k
+ofrag add c 24
+oget 5 a
+oget 5 b
+oc 10
+opp k
+ofrag 35
+ogp k
+ogp a
+oc 10
+opp k
+ofrag 35
+ogp k
+ogp b
+oc 10
+else
+opp k
+ofrag 35
+ogp a
+ogp b
+oc 10
+end
+end
+
+fn ocmp k ulong to void
+a = get Oa k
+x = get Ot a
+ofrag 16
+ofrag add get Oc k 19
+oget x a
+oget x get Ob k
+oc 10
+oput 6 k
+ofrag 39
+ofrag 17
+oput 6 k
+ofrag 19
+ofrag 18
+opp k
+ofrag 35
+ogp a
+ogp get Ob k
+oc 10
+end
+
+fn oarm k ulong c ulong x ulong to void
+t = get Ot k
+oput t k
+oget t x
+oc 10
+opp k
+ofrag 35
+ogp c
+ogp x
+oc 10
+end
+
+fn osel k ulong to void
+c = get Oa k
+ofrag 41
+odec c
+ofrag 19
+oarm k c get Ob k
+ofrag 17
+oarm k c get Oi k
+ofrag 18
+end
+
+fn onot k ulong to void
+a = get Oa k
+oput 6 k
+ofrag 40
+oget 6 a
+ofrag 39
+opp k
+ogp a
+oc 10
+end
+
+fn obody to void
+for k ulong get M 4
+code = get Oc k
+if eq code 9
+oput get Ot k k
+ofrag 42
+odec get Oi k
+oc 10
+end
+if eq code 1
+oconst k
+end
+if and ge code 2 le code 4
+oarith k
+end
+if and ge code 10 le code 15
+ocmp k
+end
+if eq code 16
+osel k
+end
+if eq code 17
+onot k
+end
+end
+r = sub get M 4 1
+ofrag 16
+ofrag 30
+ogp r
+ofrag 19
+ofrag 36
+ofrag 18
+if eq get Ot r 5
+ofrag 37
+else
+ofrag 38
+end
+odec r
+oc 10
+ofrag 18
+end
+
+fn main to int
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub 8192 n
+if lt r 0
+die 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+big = ulong 0
+if eq n 8192
+r = read 0 One 0 1
+if lt r 0
+die 77
+end
+if gt r 0
+big = 1
+end
+end
+takename
+if eq big 1
+die 65
+end
+constants
+code = decode n
+if eq code 68
+die 68
+end
+if ne code 0
+die 65
+end
+k = lprofile
+put Ln 0 0
+oheader
+osig k get Ot sub get M 4 1
+obody
+sent = ulong 0
+m = get Ln 0
+while lt sent m
+r = write 1 Lo sent sub m sent
+if le r 0
+die 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
