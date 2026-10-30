@@ -1,0 +1,9 @@
+fn rot_left_u32 x uint k uint to uint
+s = rem k 32
+if eq s 0
+ret x
+end
+hi = shl x s
+lo = shr x (sub 32 s)
+ret or hi lo
+end

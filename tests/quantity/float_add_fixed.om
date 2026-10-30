@@ -1,0 +1,9 @@
+fn main to int
+a = qty 0
+b = add a 1.0
+one = qty 1
+if eq b one
+ret 0
+end
+ret 1
+end
