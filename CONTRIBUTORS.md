@@ -50,3 +50,5 @@ Update this table in the same commit as the work it credits.
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
 | Grok 4.7 | Merged current main (b3dca0f1) into #514. The only conflict was the generated root `.crumb`; regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (089e5b05) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (62d1d0d) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
