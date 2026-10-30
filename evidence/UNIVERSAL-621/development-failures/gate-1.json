@@ -1,0 +1,40 @@
+{
+  "schema": "omega.source-aware.development.v1",
+  "fidelity": "DIFFERENTIAL_COMPATIBILITY",
+  "host": "HOST_NATIVE",
+  "seed": 102827380,
+  "run": "build/L574/runs/2026-10-22T22-18-16.455Z",
+  "sourceHEAD": "4d41457466c42ccb52f405915fd95da469a439e3",
+  "base625": "69790fb4ad1e803ca79245430745b96129d1dcf4",
+  "review": "PENDING",
+  "signed": false,
+  "notRun": [
+    "full local judge",
+    "independent API/core review",
+    "translation proof",
+    "general language adapters",
+    "GPU/hardware targets"
+  ],
+  "steps": [],
+  "toolchain": {
+    "compilerSHA256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "compilerSourceSHA256": "8608fa11f6a2cf1c50db22d871eef16b00d5bc719bc1a222cc3e456984ac5ebf",
+    "bridgeCommit": "0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9",
+    "seedCommit": "29b12760f4c962606411d6bf25032aedef063301",
+    "imports": "a69187fd4ee9f72d0094b11ff8c00dbe73b9adb1c95e162e08ae6b6c0ce21729",
+    "nativeSourceSHA256": "ce518dd9bdd9693059757b5cfcf088e648caa7c3a03d0376dc255cdfb9fd2aeb",
+    "nativeBinarySHA256": "1a127bf032e403b103d12d3140f27e74ab490e9a8b7af46b70233c6f3aaa60ce",
+    "oracle": "Node v24.21.0 Buffer, TextDecoder and OpenSSL SHA256"
+  },
+  "batch": {
+    "exe": "build/L574/runs/2026-10-22T22-18-16.455Z/batch",
+    "sourceSHA256": "bbd0dd6adf8395be20103af7ae9fe02fd5b20673f3f3e9ca9e86521e03739fe7",
+    "binarySHA256": "9784ff4f829aa069a936922ae12667430c6a8bceab5a130c1447eed500aa6a3e",
+    "compileStatus": 0
+  },
+  "verdict": "FAIL",
+  "failure": {
+    "message": "Do not know how to serialize a BigInt",
+    "stack": "TypeError: Do not know how to serialize a BigInt\n    at JSON.stringify (<anonymous>)\n    at file:///home/drakestapleton/workspace/hermes-desk/universal-L574-source-aware/tests/universal/source-aware/gate.mjs:38:88\n    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)\n    at async node:internal/modules/esm/loader:647:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)"
+  }
+}

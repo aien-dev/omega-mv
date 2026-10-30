@@ -1,0 +1,29 @@
+
+/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run2/compare32.bin:     file format binary
+
+
+Disassembly of section .data:
+
+0000000000000000 <.data>:
+   0:	d2800002 	mov	x2, #0x0                   	// #0
+   4:	d2800003 	mov	x3, #0x0                   	// #0
+   8:	f100807f 	cmp	x3, #0x20
+   c:	54000162 	b.cs	0x38  // b.hs, b.nlast
+  10:	f100807f 	cmp	x3, #0x20
+  14:	540001e2 	b.cs	0x50  // b.hs, b.nlast
+  18:	38636804 	ldrb	w4, [x0, x3]
+  1c:	f100807f 	cmp	x3, #0x20
+  20:	54000182 	b.cs	0x50  // b.hs, b.nlast
+  24:	38636825 	ldrb	w5, [x1, x3]
+  28:	ca050086 	eor	x6, x4, x5
+  2c:	aa060042 	orr	x2, x2, x6
+  30:	91000463 	add	x3, x3, #0x1
+  34:	17fffff5 	b	0x8
+  38:	d1000443 	sub	x3, x2, #0x1
+  3c:	d37ffc60 	lsr	x0, x3, #63
+  40:	d65f03c0 	ret
+  44:	aa0703e0 	mov	x0, x7
+  48:	f94008f0 	ldr	x16, [x7, #16]
+  4c:	d61f0200 	br	x16
+  50:	d2800061 	mov	x1, #0x3                   	// #3
+  54:	17fffffc 	b	0x44

@@ -1,0 +1,13 @@
+{
+  "repo": "omega-mv",
+  "source": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+  "command": [
+    "make",
+    "-j2",
+    "OUT_DIR=build/L569-baseline",
+    "test-compiler-quick",
+    "test-checker2-differential"
+  ],
+  "rc": 0,
+  "log": "omega-mv.log"
+}

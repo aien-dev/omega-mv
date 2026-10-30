@@ -1,0 +1,23 @@
+OM2GATE START cases=/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/bindings.cases scratch=/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/wrongcompiler
+IDENTITY omc /home/drakestapleton/workspace/security673-relational/seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=0000000000000000000000000000000000000000000000000000000000000000 MISMATCH: every case is NOT_RUN and the gate is INVALID
+CASE raw-pin line=2
+VERDICT raw-pin NOT_RUN omc identity mismatch; case not run
+CASE checker-pin line=3
+VERDICT checker-pin NOT_RUN omc identity mismatch; case not run
+CASE embed-primitive line=4
+VERDICT embed-primitive NOT_RUN omc identity mismatch; case not run
+CASE embed-wrong-image-assert61 line=5
+VERDICT embed-wrong-image-assert61 NOT_RUN omc identity mismatch; case not run
+CASE embed-branch-mut line=6
+VERDICT embed-branch-mut NOT_RUN omc identity mismatch; case not run
+CASE patch-public-branch line=7
+VERDICT patch-public-branch NOT_RUN omc identity mismatch; case not run
+CASE patch-public-branch-native line=8
+VERDICT patch-public-branch-native NOT_RUN omc identity mismatch; case not run
+CASE patch-public-address line=9
+VERDICT patch-public-address NOT_RUN omc identity mismatch; case not run
+CASE patch-public-address-native line=10
+VERDICT patch-public-address-native NOT_RUN omc identity mismatch; case not run
+CASE patch-missing-assert93 line=11
+VERDICT patch-missing-assert93 NOT_RUN omc identity mismatch; case not run
+OM2GATE INVALID cases=10 pass=0 fail=0 invalid=0 not_run=10

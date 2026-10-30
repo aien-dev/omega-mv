@@ -1,0 +1,4 @@
+compare basis=records (segment format 1 carries no machine, build or precision metadata: not a qualified cross-run comparison)
+a: verify ok records=40 bytes=2576 lost=0 reason=clean
+b: verify ok records=40 bytes=2576 lost=0 reason=clean
+compare differ at=17

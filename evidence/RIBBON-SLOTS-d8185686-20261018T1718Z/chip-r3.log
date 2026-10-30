@@ -1,0 +1,38 @@
+== shape n=1536 k=2048, 12 resident experts, pool of 5 slots, 64 churn rounds
+ok   pool driver bytes 15732736 for 15732480 payload bytes (page rounding only)
+ok   parity: 130 launches, pool y bit-identical to the resident tensor after every reload
+ok   pin slot 0
+ok   load into a pinned slot refused BUSY
+ok   evict of a pinned slot refused BUSY
+ok   entry of an unpinned slot refused
+ok   reload slot 0 -> newer version
+ok   launch with the replaced version refused STALE (nothing launched)
+ok   NaN weight refused
+ok   refused load leaves the slot EMPTY; its old version cannot be pinned
+ok   references: experts 2 and 3 give different y
+ok   load into the slot a recorded list reads: refused BUSY
+ok   the list read the pinned expert 2 bit-exactly (submit ok=1)
+stats slots=5 device_bytes=15732480 loads=71 load_failures=1 busy=3 stale=2 pins=328 pinned_now=0 pinned_high=5 bytes_loaded=223401216 load_ns=76701800 load_GBps=2.913
+ok   no pin leaked (pinned_now 0, high-water 5 <= 5)
+ok   pool freed
+ok   pool returned its 2 driver buffers (frees 10 -> 12)
+== shape n=2048 k=768, 12 resident experts, pool of 5 slots, 64 churn rounds
+ok   pool driver bytes 7868416 for 7866240 payload bytes (page rounding only)
+ok   parity: 130 launches, pool y bit-identical to the resident tensor after every reload
+ok   pin slot 0
+ok   load into a pinned slot refused BUSY
+ok   evict of a pinned slot refused BUSY
+ok   entry of an unpinned slot refused
+ok   reload slot 0 -> newer version
+ok   launch with the replaced version refused STALE (nothing launched)
+ok   NaN weight refused
+ok   refused load leaves the slot EMPTY; its old version cannot be pinned
+ok   references: experts 2 and 3 give different y
+ok   load into the slot a recorded list reads: refused BUSY
+ok   the list read the pinned expert 2 bit-exactly (submit ok=1)
+stats slots=5 device_bytes=7866240 loads=71 load_failures=1 busy=3 stale=2 pins=328 pinned_now=0 pinned_high=5 bytes_loaded=111700608 load_ns=37481862 load_GBps=2.980
+ok   no pin leaked (pinned_now 0, high-water 5 <= 5)
+ok   pool freed
+ok   pool returned its 2 driver buffers (frees 24 -> 26)
+GPU_FP8_SLOTS: PASS (32 checks, 0 failed)
+# exit 0

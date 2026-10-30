@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note L4 stronger-policy witness: secret x0, public constant7 divisor, only output0.
+fn probe s ulong to ulong
+q = div s 7
+ret xor q q
+end
+note SPDX-License-Identifier: Apache-2.0
+fn main to int
+ret int probe sub ulong argcnt 1
+end

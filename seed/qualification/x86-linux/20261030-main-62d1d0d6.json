@@ -1,0 +1,73 @@
+{
+ "schema": 1,
+ "date": "2026-10-30",
+ "status": "EXERCISED_NOT_QUALIFIED",
+ "execution": "EMULATED",
+ "source_commit": "62d1d0d668f897386a0e311374f8dbcc5c32dde8",
+ "command": "TMPDIR=/dev/shm taskset -c 15-19 nice -n 19 ionice -c3 python3 seed/omc/qualify-x86.py --compiler seed/out/omc --qemu QEMU_10_0_14 --bridge BRIDGE/tools/native --bridge-baseline-compiler BASELINE_734F --objdump x86_64-linux-gnu-objdump",
+ "pins": {
+  "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+  "compiler_source_sha256": "96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e",
+  "qemu_binary_sha256": "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee",
+  "qemu_version": "10.0.14",
+  "bridge_repo": "aien-dev/omega-bridge",
+  "bridge_commit": "1958a1895279c0d4869bab39eaa20f070b174a6c",
+  "bridge_baseline_compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "bridge_baseline_compiler_source": "git e17039d9ceeb30e0637ef4145e37afc5821c3773:seed/out/omc"
+ },
+ "exit": 1,
+ "summary": {
+  "PASS": 15182,
+  "FAIL": 0,
+  "NOT_RUN": 2,
+  "EXCLUDED": 222
+ },
+ "verdict": "FAIL",
+ "verdict_reason": "NOT_RUN is not PASS",
+ "not_run": [
+  {
+   "case": "seed/host/tests/devcall.om",
+   "source_sha256": "ca76010ea6cf2ab7acd8b8fab36234dcaad8f2cede057e01a52e840842a2e8ed",
+   "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF",
+   "request": 3223340587
+  },
+  {
+   "case": "seed/host/tests/uvmctl.om",
+   "source_sha256": "1e7b46b9d0fb44f5c97768f92daa7599e9b36e6d5cbc6553ac755a7c02047b5f",
+   "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF",
+   "request": 805306369
+  }
+ ],
+ "negative_controls": [
+  {
+   "case": "negative-invalid-encoding",
+   "status": "PASS",
+   "reason": "independent disassembler rejected deliberately invalid emitted opcode"
+  },
+  {
+   "case": "negative-valid-wrong-encoding",
+   "status": "PASS",
+   "reason": "disassembler accepts valid changed immediate; behavior oracle rejects it"
+  }
+ ],
+ "emitter_mutant_control": {
+  "mutation": "seed/omc/omc.om xcc: cc 12 (GT) returns 13 (x86 GE, 0x0d) instead of 15 (x86 GT, 0x0f); one byte, not committed",
+  "mutant_compiler_sha256": "d32e72007768a08b91b342f98b171c95d9d5e41fe524893a3339d5b917a120b4",
+  "tiny_repro": "if le a b with a=5 b=5: unmutated native exit 3 and emulated exit 3; mutant native exit 3, emulated exit 4",
+  "suite_summary": {
+   "PASS": 8560,
+   "FAIL": 6622,
+   "NOT_RUN": 2,
+   "EXCLUDED": 222
+  },
+  "suite_exit": 1,
+  "direct_runtime_kills": {
+   "default=0 x86=90": 16,
+   "default=90 x86=104": 1
+  },
+  "conductor_differential_kills": "the remainder of the 6622 FAIL rows"
+ },
+ "jsonl_bytes": 47915363,
+ "jsonl_sha256": "e77dbfc6f06ada4e5c3a8fbd843ee77f91be565a67a3ef634a853924b75f5dfa",
+ "scope": "HOST_TESTED AArch64 versus EMULATED x86_64. Native x86 execution NOT_RUN. Not QUALIFIED, not MERGED, not DEPLOYED."
+}

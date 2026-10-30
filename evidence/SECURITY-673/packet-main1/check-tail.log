@@ -1,0 +1,4 @@
+PASS 18 bounds, packet, mutability, type and function-mode negative controls
+PASS 53 total host negative controls, including cwd, readlnk, sockopt, flock and network
+PASS 62 original fixtures retain identical machine code, refusal status and diagnostics
+PASS native-host qualification; seeded build, C tools are comparison oracles only
