@@ -101,7 +101,12 @@ no unlimited-demand availability or actual concurrency claim.
 Native replay (AArch64 Linux, no GPU, from repository root)
   nice -n 19 sh seed/omega-from-seed.sh
   sha256sum seed/out/omc
-Required compiler: 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+Recorded receipts used compiler: 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+After merging main (qty keyword, #909/#914) the committed compiler is
+62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b. A 2026-10-30
+replay with it of every command below gave the same results: demo, exhaust and
+measure exit0; mutants modes1..4 exit7 and mode5 exit4 at the named assertions;
+oracle --edges 1296 bytes, SHA-256 19e4706d...de03. No receipt was re-recorded.
 For NAME in demo, exhaust, measure, run the following existing-tool
 composition (replace NAME literally; these commands are not a shipped runner):
   cat seed/authority/reserve.om seed/authority/envelope.om seed/qualification/security673/resources/checks.om seed/qualification/security673/resources/NAME.om | nice -n 19 seed/out/omc > /tmp/sc1-NAME
