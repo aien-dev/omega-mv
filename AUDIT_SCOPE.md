@@ -1,7 +1,7 @@
 # Audit scope
 
 Written for an outside, independent security audit. Revision described:
-`705c0f010e782408c270f66d67462bb46170e5b5` on `main`, 2026-10-26. Everything below is taken from
+`bf54b19fa590e8ae925c0e80815516dbf41e7326` on `main`, 2026-10-28. Everything below is taken from
 the repository's own files at that revision; items marked NOT_RUN were not executed while writing
 this document.
 
@@ -9,7 +9,9 @@ this document.
 
 Omega is a systems language and compute platform being implemented in handwritten, seeded `.om`.
 The seeded compiler `seed/out/omc` is rebuilt from a 408-byte hand-written loader
-(`seed0 -> hex1 -> asm2 -> om4 -> omc`); its one supported profile is AArch64 Linux, static ELF.
+(`seed0 -> hex1 -> asm2 -> om4 -> omc`); its qualified profile is AArch64 Linux, static ELF. An x86-64 Linux backend (`target x86linux`,
+#923) is merged as DRAFT: emulated execution only, native x86 qualification NOT_RUN
+(`docs/X86-LINUX.md`).
 The default branch still holds substantial C (about 600 tracked files under `src/`: the legacy
 OSC compiler, the reaction runtime, GB10 numerics), which the README calls unfinished migration.
 Status: research grade, staged Alpha qualification in progress. `OMEGA_SYSTEMS_CORE_CODE_AUDIT.md`
@@ -21,7 +23,7 @@ current security review.
 1. The seed chain: `seed/rung0/seed0.hex`, `seed/rung0/load0.sh` (the one outside step, POSIX
    `printf`), rungs 1 to 4, `seed/omc/omc.om`, `seed/omega-from-seed.sh` (rebuilds omc twice to
    identical bytes), and the committed `seed/out/omc` (sha256
-   `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`).
+   `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`).
 2. Native host words (ids 100..165) and device and mapping words (ids 166..177) in
    `docs/one_layer/OMEGESE.md` and `seed/host/`: what effects compiled programs can perform.
 3. Seeded libraries that parse input: `seed/json`, `seed/net` (`http.om`), `seed/wasm`,
@@ -73,7 +75,7 @@ AArch64 Linux with `gcc`, `make` and `sh`. Some gates need sibling checkouts (`.
 ```sh
 git clone https://github.com/aien-dev/omega-mv.git omega
 cd omega
-git checkout 705c0f010e782408c270f66d67462bb46170e5b5
+git checkout bf54b19fa590e8ae925c0e80815516dbf41e7326
 sh seed/omega-from-seed.sh
 sha256sum seed/out/omc
 ```
