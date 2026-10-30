@@ -167,7 +167,15 @@ no file of `src/compiler/` and shares no parser, evaluator or instruction table 
 
 Every rejection names a stable rule (`C2-*`, listed in `c2_check.c`). Acceptance requires, per
 function: valid types and operands; well-formed control flow; every use defined on every path;
-ownership, arena, pool and handle discipline (a may-set analysis that rejects definite errors);
+ownership, arena, pool and handle discipline (a may-set analysis: use-after-release, double release
+and double close are rejected when they hold on every path; a heap owner or pool still live at a
+return, or overwritten while live, is rejected when that holds on some path (omega#465), with
+drop-flag branches followed by the flag's value so a conditional release is not a false leak; arena
+objects keep the every-path rule because `ADESTROY` reclaims them); mutable-borrow exclusivity
+(`C2-BORROW-MUT-ALIAS`, omega#465: a register is not used while a mutable borrow taken from it,
+directly or through a copy, is still live, on some path; a shared borrow used while a mutable borrow
+of the same object is live, and a mutable borrow whose owner was moved to another register, are outside
+this rule);
 every loop reducible and bounded by a guarded counter with a constant limit of at most 10^6.
 
 ## 10. Evidence class 2: LRAT proofs

@@ -811,9 +811,75 @@ static int d_endless_loop(C2Unit *u)
     replace_fn0(u, 2, code, 2, counts);
     return 1;
 }
+/* omega#465: fn0 rebuilt as straight code over new registers, so only its ownership can be wrong */
+static int fn0_owns_param(const C2Unit *u)
+{
+    const C2Func *f = &u->fn[0];
+    for (int r = 0; r < f->nparams; r++)
+        if (f->vt[r].s == S_REF && f->vt[r].kind == K_OWN) return 1;
+    return 0;
+}
+static int d_leak_one_path(C2Unit *u)
+{
+    /* B0: x=0; y=1; c=(x==y); a=alloc[4](x); CBR c B1 B2   B1: RELEASE a; BR B2   B2: RET -- the
+     * false edge reaches the return still owning a */
+    C2Func *f = &u->fn[0];
+    if (fn0_owns_param(u)) return 0;
+    int x = newreg(f, (C2Type){.s = S_U32}), y = newreg(f, (C2Type){.s = S_U32});
+    int c = newreg(f, (C2Type){.s = S_BOOL});
+    int a = newreg(f, (C2Type){.s = S_REF, .kind = K_OWN, .elem = S_U32, .len = 4});
+    C2Insn code[8] = {mk(C2_CONST, -1), mk(C2_CONST, -1), mk(C2_CMP, (int16_t)x), mk(C2_ALLOC, (int16_t)x),
+                      mk(C2_CBR, (int16_t)c), mk(C2_RELEASE, (int16_t)a), mk(C2_BR, -1), mk(C2_RET, -1)};
+    code[0].dst = (int16_t)x;
+    code[1].dst = (int16_t)y; code[1].imm = 1;
+    code[2].dst = (int16_t)c; code[2].b = (int16_t)y; code[2].sub = CC_EQ;
+    code[3].dst = (int16_t)a;
+    code[4].t = 1; code[4].f = 2;
+    code[6].t = 2;
+    int counts[3] = {5, 2, 1};
+    replace_fn0(u, 3, code, 8, counts);
+    return 1;
+}
+static int d_mut_borrow_copied(C2Unit *u)
+{
+    /* x=0; a=alloc[4](x); d=mut a; e=mut d; d[x]=x; e[x]=x; RELEASE a; RET -- d and e are two
+     * live writers of one array when d is written */
+    C2Func *f = &u->fn[0];
+    if (fn0_owns_param(u)) return 0;
+    int x = newreg(f, (C2Type){.s = S_U32});
+    int a = newreg(f, (C2Type){.s = S_REF, .kind = K_OWN, .elem = S_U32, .len = 4});
+    int d = newreg(f, (C2Type){.s = S_REF, .kind = K_MUT, .elem = S_U32, .len = 4});
+    int e = newreg(f, (C2Type){.s = S_REF, .kind = K_MUT, .elem = S_U32, .len = 4});
+    C2Insn code[8] = {mk(C2_CONST, -1), mk(C2_ALLOC, (int16_t)x), mk(C2_MOV, (int16_t)a), mk(C2_MOV, (int16_t)d),
+                      mk(C2_STORE, (int16_t)d), mk(C2_STORE, (int16_t)e), mk(C2_RELEASE, (int16_t)a), mk(C2_RET, -1)};
+    code[0].dst = (int16_t)x;
+    code[1].dst = (int16_t)a;
+    code[2].dst = (int16_t)d;
+    code[3].dst = (int16_t)e;
+    code[4].b = code[4].c = (int16_t)x;
+    code[5].b = code[5].c = (int16_t)x;
+    int counts[1] = {8};
+    replace_fn0(u, 1, code, 8, counts);
+    return 1;
+}
+static int d_overwrite_one_path(C2Unit *u)
+{
+    /* as d_leak_one_path, but B2: a=alloc[4](x); RELEASE a; RET -- on the false edge the second
+     * allocation overwrites a while it still owns the first */
+    if (!d_leak_one_path(u)) return 0;
+    C2Func *f = &u->fn[0];
+    int a = f->in[3].dst;
+    C2Insn al = f->in[3];
+    ins(f, 7, mk(C2_RELEASE, (int16_t)a));
+    ins(f, 7, al);
+    return 1;
+}
 
 typedef struct { const char *name, *rule; int (*apply)(C2Unit *); } Defect;
 static const Defect defects[] = {
+    {"leak-on-one-path", "C2-OWN-LEAK", d_leak_one_path},
+    {"mut-borrow-copied", "C2-BORROW-MUT-ALIAS", d_mut_borrow_copied},
+    {"overwrite-on-one-path", "C2-OWN-LEAK", d_overwrite_one_path},
     {"const-noncanonical", "C2-CONST-CANONICAL", d_const_noncanon},
     {"const-into-reference", "C2-TYPE-CONST", d_const_into_ref},
     {"mov-scalar-mismatch", "C2-TYPE-MOV", d_mov_scalar_mismatch},

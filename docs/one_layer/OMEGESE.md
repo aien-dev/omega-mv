@@ -260,14 +260,18 @@ by any program in the suite or the fuzz.
 **Ownership (checker2's C2-OWN rules), folded into `emit` on 2026-10-15.** checker2 follows every own
 array along every path (it holds an array, holds nothing yet, or was freed or moved) and rejects a use,
 a move or a free where it holds nothing on every path (C2-OWN-USE-DEAD, C2-OWN-DOUBLE-RELEASE), and a
-new array or a return where it still holds one on every path (C2-OWN-LEAK). `emit` keeps the same
+new array or a return where it still holds one on some path (C2-OWN-LEAK). `emit` keeps the same
 states along the lines it reads and refuses such a line where it is written, so `next` leaves out the
 word that leads there. Inside an open loop a state that includes the loop head is not known until the
 loop's `end` line (a later line of the body can change it); such a check waits and is decided at
 `end`. `complete` (and every witness) settles what it can: before a loop's `end` it gives a name the
-loop head needs an array (`x = new ...`) or frees one that would still hold its array there, and at the
-function's end it frees each array that still holds one on every path (or ends the path with `trap 1`
-when that array's name is out of scope).
+loop head needs an array (`x = new ...`, after `free x` when the name may still hold the array an
+earlier pass gave it) or frees one that would still hold its array there, and at the function's end
+it frees each array that still holds one on some path (or ends the path with `trap 1` when that
+array's name is out of scope). Since omega#465 a leak on some path is refused, so a loop that gives
+an array a second one while it still holds the first (`x = new ...` before the loop and again in its
+body, with no `free x` before it) leaks on its first pass, and no line after it repairs that: `next`
+and `complete` report that no completion exists.
 
 Measured with the residual walk in 6.5 (1000 walks from each of two starts, seed 4453): completed
 walks that `emit` accepts and omega_emit or checker2 then rejects.
@@ -277,11 +281,17 @@ walks that `emit` accepts and omega_emit or checker2 then rejects.
 | before (2026-10-15, `f6b44356`) | 154 of 2000 (7.7%) | 136 C2-OWN-LEAK, 15 C2-OWN-USE-DEAD, 3 C2-OWN-DOUBLE-RELEASE |
 | ownership states only, no loop checks | 2 of 2000 (0.1%) | 2 C2-OWN-USE-DEAD (a use in a loop head of an array freed before it) |
 | after | 0 of 2000 | none |
+| `emit` leak checks on some path (omega#465) | 1 of 2000 (0.05%) | 1 C2-OWN-DOUBLE-RELEASE |
 
 Not folded, so a program `emit` accepts can still be rejected later:
+- C2-OWN-DOUBLE-RELEASE after a branch whose condition is a constant (`if true`): `emit` follows
+  both sides, so an array freed on one side holds one on some path and `complete` frees it again;
+  checker2 follows the constant and sees the second free on every path (1 of 2000 walks);
 - C2-BORROW-OUTLIVES-OWNER: checker2 ties each view to the array it was taken from over the whole
   function (a view filled from two arrays loses its origin); `emit` does not follow borrows (0 of
   2000 walks met it);
+- C2-BORROW-MUT-ALIAS (omega#465): `emit` does not follow borrows, so a mutable view copied and used
+  beside its copy is refused by checker2 only (0 of 2000 walks met it);
 - more than 64 own arrays in one function: the ones past 64 are not tracked;
 - C2-OWN-ARENA-MOVE and C2-OWN-RELEASE-ARENA: Omegese has no arenas, so no program reaches them.
 
