@@ -1,0 +1,61 @@
+note OM-2 profile tour: hex, rotr, unroll, fresh, layout, unsized views, part, abstract dup32
+om2
+layout blk 8
+field lo uint at 0 little
+field hi uint at 4 little
+end
+abstract v32 ulong
+holds v32 dup32
+note the erasing constructor: the body must be exactly this line
+fn v32mk x uint to v32
+ret seal v32 or shl ulong x 32 ulong x
+end
+fn seed s edit uint 8 fresh to uint
+for i uint 8 unroll
+put s i add i 0x9e3779b9
+end
+ret get s 7
+end
+fn stamp c edit blk to uint
+put c lo 0x01020304
+put c hi 0x05060708
+ret or get c lo shl get c hi 16
+end
+note a layout field name is read through a layout parameter, not a plain uchar array
+fn rd c view blk to uint
+ret get c lo
+end
+fn fold a view uint * to uint
+x = new uint 1 0
+put x 0 uint len a
+for i uint uint len a
+put x 0 add get x 0 rotr get a i 5
+end
+ret get x 0
+end
+fn main to int
+s = new uint 8 0
+v = seed s
+a = new uint 4 0
+put a 0 v
+put a 1 rotr v 12
+put a 2 0xffffffff
+put a 3 add v 1
+t = fold part a 1 2
+c = new uchar 8 0
+w = stamp c
+u = open v32mk 7
+if ne u or shl ulong 7 32 ulong 7
+ret 9
+end
+if eq t 0
+ret 10
+end
+if ne rd c 0x01020304
+ret 11
+end
+if ne shr w 16 0x070a
+ret 12
+end
+ret 0
+end

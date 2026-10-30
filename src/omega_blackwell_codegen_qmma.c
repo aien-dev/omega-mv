@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* omega_blackwell_codegen_qmma.c: QMMA.16832.F32.E4M3.E4M3 placeholder, patch, probe and peak kernels (W-L1G). See the header. */
 #include "omega_blackwell_codegen_qmma.h"
 #include "omega_bw_em.h"
@@ -26,6 +42,7 @@ int omega_qmma_patch_code(const BlackwellIRProgram *prog, uint8_t *code, size_t 
         wr32q(w + 8, (w2 & 0xffu) | 0x00002c00u);
         n++;
     }
+    if (n > 0) { size_t b = omega_bw_program_code_bytes(prog); omega_kernel_dump(code, b && b <= len ? b : prog->count * 16u); } /* the patched body is a different kernel */
     return n;
 }
 

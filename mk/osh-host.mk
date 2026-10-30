@@ -6,7 +6,7 @@ OSH_HOST_MK := 1
 .PHONY: test-osh-host
 OSH_HOST_DIR = $(OUT_DIR)/osh-host
 OSH_HOST_SRCS = tests/osh/host/test_osh_host.c src/osh/host/osh_req.c src/osh/host/osh_vars.c \
-	src/osh/host/osh_builtin.c src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/sha256.c
+	src/osh/host/osh_builtin.c src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/omega_om_units.c
 OSH_HOST_HDRS = src/osh/host/osh_host.h src/osh/host/osh_priv.h src/osh/host/osh_journal.h src/sha256.h
 OSH_HOST_FLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc/osh/host -Isrc
 OSH_HOST_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
@@ -29,7 +29,7 @@ test-osh-host: $(OSH_HOST_DIR)/test_osh_host $(OSH_HOST_DIR)/test_osh_host_asan
 #   make test-osh-caps   plain and under ASan/UBSan
 .PHONY: test-osh-caps
 OSH_CAPS_SRCS = tests/osh/host/test_osh_caps.c src/osh/host/osh_caps.c src/runtime/rx_caproot.c src/osh/host/osh_req.c \
-	src/osh/host/osh_vars.c src/osh/host/osh_builtin.c src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/sha256.c
+	src/osh/host/osh_vars.c src/osh/host/osh_builtin.c src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/omega_om_units.c
 OSH_CAPS_HDRS = $(OSH_HOST_HDRS) src/osh/host/osh_caps.h src/runtime/rx_caproot.h
 OSH_CAPS_FLAGS = $(OSH_HOST_FLAGS) -Isrc/runtime -Wno-format-truncation
 
@@ -49,7 +49,7 @@ test-osh-caps: $(OSH_HOST_DIR)/test_osh_caps $(OSH_HOST_DIR)/test_osh_caps_asan 
 #   make test-osh-journal   plain and under ASan/UBSan
 .PHONY: test-osh-journal
 OSH_JOURNAL_SRCS = tests/osh/host/test_osh_journal.c src/osh/host/osh_req.c src/osh/host/osh_vars.c src/osh/host/osh_builtin.c \
-	src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/sha256.c
+	src/osh/host/osh_exec.c src/osh/host/osh_journal.c src/omega_om_units.c
 
 $(OSH_HOST_DIR)/test_osh_journal: $(OSH_JOURNAL_SRCS) $(OSH_HOST_HDRS)
 	@mkdir -p $(OSH_HOST_DIR)

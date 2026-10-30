@@ -1,0 +1,38 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s3/s3-mutants.cases scratch=build/om2-qual/qf6a6492f-s3mut
+IDENTITY omc /tmp/zl/omc-f6a6492f sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+COMPILER build/om2-qual/qf6a6492f-s3mut/4.elf sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec source line=4
+VERDICT ctl-s3-rebuilt PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s3/mutants/fresh-union.from seed/qualification/om2/candidates/s3/mutants/fresh-union.to
+  MUTATE exact-once substitution at byte 160854
+COMPILER build/om2-qual/qf6a6492f-s3mut/9.elf sha256=09980e9e9e3b84b534ff34f8ca4ef35ca279c05a8fb5d020f15d6c6b87a8e4ab source line=9
+VERDICT ctl-fresh-union-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fresh-union-ctl-a5-exact PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fresh-union-ctl-f5-ifelse PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fresh-union-mut-b-join-diff PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s3/mutants/ctor-bypass.from seed/qualification/om2/candidates/s3/mutants/ctor-bypass.to
+  MUTATE exact-once substitution at byte 154500
+COMPILER build/om2-qual/qf6a6492f-s3mut/20.elf sha256=f8dac3c864b47f4a3db48d1e614a4af3f48f22a30116ff8c7abfbe302c35c3a7 source line=20
+VERDICT ctl-ctor-bypass-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ctor-bypass-ctl-a5-exact PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ctor-bypass-ctl-f5-ifelse PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT ctor-bypass-mut-c-seal-main PASS compile exit=0 expected=0 stdout=unchecked stderr=unchecked
+VERDICT ctor-bypass-mut-c-seal-other PASS compile exit=0 expected=0 stdout=unchecked stderr=unchecked
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s3/mutants/check-erased.from seed/qualification/om2/candidates/s3/mutants/check-erased.to
+  MUTATE exact-once substitution at byte 155436
+COMPILER build/om2-qual/qf6a6492f-s3mut/29.elf sha256=7024b91238ce73d9eaa7c14f51d5c87ec690d299fb62db1635a4ffc0d513a951 source line=29
+VERDICT ctl-check-erased-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT check-erased-ctl-a5-exact PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT check-erased-ctl-f5-ifelse PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT check-erased-mut-d-kept PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT check-erased-mut-d-kept-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s3/mutants/fresh-noreset.from seed/qualification/om2/candidates/s3/mutants/fresh-noreset.to
+  MUTATE exact-once substitution at byte 160991
+COMPILER build/om2-qual/qf6a6492f-s3mut/38.elf sha256=c59af8a97f998cbcd67073fc6a951fca75c249b332afdc41f530063ac5f3ae70 source line=38
+VERDICT ctl-fresh-noreset-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fresh-noreset-mut-b-branch PASS run exit=0 expected=0 stdout=match stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+OM2GATE PASS cases=17 pass=17 fail=0 invalid=0 not_run=0

@@ -1,0 +1,19 @@
+note S4 empty text: a callee that walks its view (for i ulong len s, get s i) reads no byte of `text e ""`.
+note x = 100000000 is live in the register the old lowering read as the count, so the old loop ran off the
+note image (SIGSEGV). Exit 0 when the sum is 0, else 1.
+om2
+text e ""
+fn sum s view uchar * to ulong
+t = ulong 0
+for i ulong len s
+t = add t ulong get s i
+end
+ret t
+end
+fn main to int
+x = ulong 100000000
+if ne sum e 0
+ret 1
+end
+ret int sub x 100000000
+end

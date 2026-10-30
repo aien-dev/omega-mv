@@ -1,0 +1,5 @@
+note Harness negative control: sleeps 5 s; run under "deadline 1" the gate must kill it, INVALID.
+fn main to int
+r = sleepns 5000000000
+ret 0
+end

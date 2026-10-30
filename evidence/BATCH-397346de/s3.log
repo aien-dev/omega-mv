@@ -1,0 +1,223 @@
+OM2GATE START cases=seed/omc/om2/s3/s3.cases scratch=build/batch3/scratch-s3
+IDENTITY omc seed/out/omc sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e pinned=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e match
+CASE s3-l-rw line=6
+  $ seed/out/omc < build/batch3/scratch-s3/6.src > build/batch3/scratch-s3/6.elf 2> build/batch3/scratch-s3/6.cerr
+  $ build/batch3/scratch-s3/6.elf < /dev/null > build/batch3/scratch-s3/6.out 2> build/batch3/scratch-s3/6.err
+VERDICT s3-l-rw PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s3-l-trap line=7
+  $ seed/out/omc < build/batch3/scratch-s3/7.src > build/batch3/scratch-s3/7.elf 2> build/batch3/scratch-s3/7.cerr
+  $ build/batch3/scratch-s3/7.elf < /dev/null > build/batch3/scratch-s3/7.out 2> build/batch3/scratch-s3/7.err
+VERDICT s3-l-trap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s3-l-om1 line=8
+  $ seed/out/omc < build/batch3/scratch-s3/8.src > build/batch3/scratch-s3/8.elf 2> build/batch3/scratch-s3/8.cerr
+  $ build/batch3/scratch-s3/8.elf < /dev/null > build/batch3/scratch-s3/8.out 2> build/batch3/scratch-s3/8.err
+VERDICT s3-l-om1 PASS run exit=10 expected=10 stdout=match stderr=match
+CASE s3-l-bad-size line=9
+  $ seed/out/omc < build/batch3/scratch-s3/9.src > build/batch3/scratch-s3/9.elf 2> build/batch3/scratch-s3/9.cerr
+VERDICT s3-l-bad-size PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE s3-l-bad-late line=10
+  $ seed/out/omc < build/batch3/scratch-s3/10.src > build/batch3/scratch-s3/10.elf 2> build/batch3/scratch-s3/10.cerr
+VERDICT s3-l-bad-late PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE s3-l-bad-overlap line=11
+  $ seed/out/omc < build/batch3/scratch-s3/11.src > build/batch3/scratch-s3/11.elf 2> build/batch3/scratch-s3/11.cerr
+VERDICT s3-l-bad-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE s3-l-bad-past line=12
+  $ seed/out/omc < build/batch3/scratch-s3/12.src > build/batch3/scratch-s3/12.elf 2> build/batch3/scratch-s3/12.cerr
+VERDICT s3-l-bad-past PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE s3-l-bad-count line=13
+  $ seed/out/omc < build/batch3/scratch-s3/13.src > build/batch3/scratch-s3/13.elf 2> build/batch3/scratch-s3/13.cerr
+VERDICT s3-l-bad-count PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE s3-l-bad-off line=14
+  $ seed/out/omc < build/batch3/scratch-s3/14.src > build/batch3/scratch-s3/14.elf 2> build/batch3/scratch-s3/14.cerr
+VERDICT s3-l-bad-off PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE s3-l-bad-dup line=15
+  $ seed/out/omc < build/batch3/scratch-s3/15.src > build/batch3/scratch-s3/15.elf 2> build/batch3/scratch-s3/15.cerr
+VERDICT s3-l-bad-dup PASS compile exit=10 expected=10 refused with the expected error
+CASE s3-l-bad-bool line=16
+  $ seed/out/omc < build/batch3/scratch-s3/16.src > build/batch3/scratch-s3/16.elf 2> build/batch3/scratch-s3/16.cerr
+VERDICT s3-l-bad-bool PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-l-bad-noat line=17
+  $ seed/out/omc < build/batch3/scratch-s3/17.src > build/batch3/scratch-s3/17.elf 2> build/batch3/scratch-s3/17.cerr
+VERDICT s3-l-bad-noat PASS compile exit=16 expected=16 refused with the expected error
+CASE s3-l-bad-order line=18
+  $ seed/out/omc < build/batch3/scratch-s3/18.src > build/batch3/scratch-s3/18.elf 2> build/batch3/scratch-s3/18.cerr
+VERDICT s3-l-bad-order PASS compile exit=16 expected=16 refused with the expected error
+CASE s3-l-bad-kwname line=19
+  $ seed/out/omc < build/batch3/scratch-s3/19.src > build/batch3/scratch-s3/19.elf 2> build/batch3/scratch-s3/19.cerr
+VERDICT s3-l-bad-kwname PASS compile exit=16 expected=16 refused with the expected error
+CASE s3-l-bad-clash line=20
+  $ seed/out/omc < build/batch3/scratch-s3/20.src > build/batch3/scratch-s3/20.elf 2> build/batch3/scratch-s3/20.cerr
+VERDICT s3-l-bad-clash PASS compile exit=10 expected=10 refused with the expected error
+CASE s3-l-bad-noend line=21
+  $ seed/out/omc < build/batch3/scratch-s3/21.src > build/batch3/scratch-s3/21.elf 2> build/batch3/scratch-s3/21.cerr
+VERDICT s3-l-bad-noend PASS compile exit=4 expected=4 refused with the expected error
+CASE s3-l-bad-const line=22
+  $ seed/out/omc < build/batch3/scratch-s3/22.src > build/batch3/scratch-s3/22.elf 2> build/batch3/scratch-s3/22.cerr
+VERDICT s3-l-bad-const PASS compile exit=21 expected=21 refused with the expected error
+CASE s3-l-bad-view line=23
+  $ seed/out/omc < build/batch3/scratch-s3/23.src > build/batch3/scratch-s3/23.elf 2> build/batch3/scratch-s3/23.cerr
+VERDICT s3-l-bad-view PASS compile exit=20 expected=20 refused with the expected error
+CASE s3-l-bad-size7 line=24
+  $ seed/out/omc < build/batch3/scratch-s3/24.src > build/batch3/scratch-s3/24.elf 2> build/batch3/scratch-s3/24.cerr
+VERDICT s3-l-bad-size7 PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-l-bad-noidx line=25
+  $ seed/out/omc < build/batch3/scratch-s3/25.src > build/batch3/scratch-s3/25.elf 2> build/batch3/scratch-s3/25.cerr
+VERDICT s3-l-bad-noidx PASS compile exit=4 expected=4 refused with the expected error
+CASE s3-l-bad-extra line=26
+  $ seed/out/omc < build/batch3/scratch-s3/26.src > build/batch3/scratch-s3/26.elf 2> build/batch3/scratch-s3/26.cerr
+VERDICT s3-l-bad-extra PASS compile exit=5 expected=5 refused with the expected error
+CASE s3-l-bad-type line=27
+  $ seed/out/omc < build/batch3/scratch-s3/27.src > build/batch3/scratch-s3/27.elf 2> build/batch3/scratch-s3/27.cerr
+VERDICT s3-l-bad-type PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-fuel-d2 line=29
+  $ seed/out/omc < build/batch3/scratch-s3/29.src > build/batch3/scratch-s3/29.elf 2> build/batch3/scratch-s3/29.cerr
+  $ build/batch3/scratch-s3/29.elf < /dev/null > build/batch3/scratch-s3/29.out 2> build/batch3/scratch-s3/29.err
+VERDICT s3-fuel-d2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s3-fuel-d3 line=30
+  $ seed/out/omc < build/batch3/scratch-s3/30.src > build/batch3/scratch-s3/30.elf 2> build/batch3/scratch-s3/30.cerr
+VERDICT s3-fuel-d3 PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE s3-fuel-inl14 line=31
+  $ seed/out/omc < build/batch3/scratch-s3/31.src > build/batch3/scratch-s3/31.elf 2> build/batch3/scratch-s3/31.cerr
+  $ build/batch3/scratch-s3/31.elf < /dev/null > build/batch3/scratch-s3/31.out 2> build/batch3/scratch-s3/31.err
+VERDICT s3-fuel-inl14 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s3-fuel-inl16 line=32
+  $ seed/out/omc < build/batch3/scratch-s3/32.src > build/batch3/scratch-s3/32.elf 2> build/batch3/scratch-s3/32.cerr
+VERDICT s3-fuel-inl16 PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE s3-fuel-e16-inl line=34
+  $ seed/out/omc < build/batch3/scratch-s3/34.src > build/batch3/scratch-s3/34.elf 2> build/batch3/scratch-s3/34.cerr
+VERDICT s3-fuel-e16-inl PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE s3-fuel-e16-inlsa line=35
+  $ seed/out/omc < build/batch3/scratch-s3/35.src > build/batch3/scratch-s3/35.elf 2> build/batch3/scratch-s3/35.cerr
+VERDICT s3-fuel-e16-inlsa PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE s3-f-ok line=37
+  $ seed/out/omc < build/batch3/scratch-s3/37.src > build/batch3/scratch-s3/37.elf 2> build/batch3/scratch-s3/37.cerr
+  $ build/batch3/scratch-s3/37.elf < /dev/null > build/batch3/scratch-s3/37.out 2> build/batch3/scratch-s3/37.err
+VERDICT s3-f-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s3-f-om1 line=38
+  $ seed/out/omc < build/batch3/scratch-s3/38.src > build/batch3/scratch-s3/38.elf 2> build/batch3/scratch-s3/38.cerr
+  $ build/batch3/scratch-s3/38.elf < /dev/null > build/batch3/scratch-s3/38.out 2> build/batch3/scratch-s3/38.err
+VERDICT s3-f-om1 PASS run exit=5 expected=5 stdout=match stderr=match
+CASE s3-f-bad-ifonly line=39
+  $ seed/out/omc < build/batch3/scratch-s3/39.src > build/batch3/scratch-s3/39.elf 2> build/batch3/scratch-s3/39.cerr
+VERDICT s3-f-bad-ifonly PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-join line=40
+  $ seed/out/omc < build/batch3/scratch-s3/40.src > build/batch3/scratch-s3/40.elf 2> build/batch3/scratch-s3/40.cerr
+VERDICT s3-f-bad-join PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-loop line=41
+  $ seed/out/omc < build/batch3/scratch-s3/41.src > build/batch3/scratch-s3/41.elf 2> build/batch3/scratch-s3/41.cerr
+VERDICT s3-f-bad-loop PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-loopc line=42
+  $ seed/out/omc < build/batch3/scratch-s3/42.src > build/batch3/scratch-s3/42.elf 2> build/batch3/scratch-s3/42.cerr
+VERDICT s3-f-bad-loopc PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-partial line=43
+  $ seed/out/omc < build/batch3/scratch-s3/43.src > build/batch3/scratch-s3/43.elf 2> build/batch3/scratch-s3/43.cerr
+VERDICT s3-f-bad-partial PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-self line=44
+  $ seed/out/omc < build/batch3/scratch-s3/44.src > build/batch3/scratch-s3/44.elf 2> build/batch3/scratch-s3/44.cerr
+VERDICT s3-f-bad-self PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-call line=45
+  $ seed/out/omc < build/batch3/scratch-s3/45.src > build/batch3/scratch-s3/45.elf 2> build/batch3/scratch-s3/45.cerr
+VERDICT s3-f-bad-call PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-write line=46
+  $ seed/out/omc < build/batch3/scratch-s3/46.src > build/batch3/scratch-s3/46.elf 2> build/batch3/scratch-s3/46.cerr
+VERDICT s3-f-bad-write PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-read line=47
+  $ seed/out/omc < build/batch3/scratch-s3/47.src > build/batch3/scratch-s3/47.elf 2> build/batch3/scratch-s3/47.cerr
+VERDICT s3-f-bad-read PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-inl line=48
+  $ seed/out/omc < build/batch3/scratch-s3/48.src > build/batch3/scratch-s3/48.elf 2> build/batch3/scratch-s3/48.cerr
+VERDICT s3-f-bad-inl PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-inlfresh line=49
+  $ seed/out/omc < build/batch3/scratch-s3/49.src > build/batch3/scratch-s3/49.elf 2> build/batch3/scratch-s3/49.cerr
+VERDICT s3-f-bad-inlfresh PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s3-f-bad-n65 line=50
+  $ seed/out/omc < build/batch3/scratch-s3/50.src > build/batch3/scratch-s3/50.elf 2> build/batch3/scratch-s3/50.cerr
+VERDICT s3-f-bad-n65 PASS compile exit=14 expected=14 refused with the expected error
+CASE s3-f-bad-view line=51
+  $ seed/out/omc < build/batch3/scratch-s3/51.src > build/batch3/scratch-s3/51.elf 2> build/batch3/scratch-s3/51.cerr
+VERDICT s3-f-bad-view PASS compile exit=16 expected=16 refused with the expected error
+CASE s3-f-bad-idx line=52
+  $ seed/out/omc < build/batch3/scratch-s3/52.src > build/batch3/scratch-s3/52.elf 2> build/batch3/scratch-s3/52.cerr
+VERDICT s3-f-bad-idx PASS compile exit=21 expected=21 refused with the expected error
+CASE s3-a-ok line=54
+  $ seed/out/omc < build/batch3/scratch-s3/54.src > build/batch3/scratch-s3/54.elf 2> build/batch3/scratch-s3/54.cerr
+  $ build/batch3/scratch-s3/54.elf < /dev/null > build/batch3/scratch-s3/54.out 2> build/batch3/scratch-s3/54.err
+VERDICT s3-a-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s3-a-om1 line=55
+  $ seed/out/omc < build/batch3/scratch-s3/55.src > build/batch3/scratch-s3/55.elf 2> build/batch3/scratch-s3/55.cerr
+  $ build/batch3/scratch-s3/55.elf < /dev/null > build/batch3/scratch-s3/55.out 2> build/batch3/scratch-s3/55.err
+VERDICT s3-a-om1 PASS run exit=5 expected=5 stdout=match stderr=match
+CASE s3-a-kept line=56
+  $ seed/out/omc < build/batch3/scratch-s3/56.src > build/batch3/scratch-s3/56.elf 2> build/batch3/scratch-s3/56.cerr
+  $ build/batch3/scratch-s3/56.elf < /dev/null > build/batch3/scratch-s3/56.out 2> build/batch3/scratch-s3/56.err
+VERDICT s3-a-kept PASS run exit=110 expected=110 stdout=match stderr=match
+CASE s3-a-kept-diag line=57
+  $ seed/out/omc < build/batch3/scratch-s3/57.src > build/batch3/scratch-s3/57.elf 2> build/batch3/scratch-s3/57.cerr
+VERDICT s3-a-kept-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s3-a-exact-diag line=58
+  $ seed/out/omc < build/batch3/scratch-s3/58.src > build/batch3/scratch-s3/58.elf 2> build/batch3/scratch-s3/58.cerr
+VERDICT s3-a-exact-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s3-a-bad-sealinl line=59
+  $ seed/out/omc < build/batch3/scratch-s3/59.src > build/batch3/scratch-s3/59.elf 2> build/batch3/scratch-s3/59.cerr
+VERDICT s3-a-bad-sealinl PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE s3-a-bad-holdsuint line=60
+  $ seed/out/omc < build/batch3/scratch-s3/60.src > build/batch3/scratch-s3/60.elf 2> build/batch3/scratch-s3/60.cerr
+VERDICT s3-a-bad-holdsuint PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE s3-a-bad-ctorname line=61
+  $ seed/out/omc < build/batch3/scratch-s3/61.src > build/batch3/scratch-s3/61.elf 2> build/batch3/scratch-s3/61.cerr
+VERDICT s3-a-bad-ctorname PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE s3-a-bad-ctorret line=62
+  $ seed/out/omc < build/batch3/scratch-s3/62.src > build/batch3/scratch-s3/62.elf 2> build/batch3/scratch-s3/62.cerr
+VERDICT s3-a-bad-ctorret PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE s3-a-bad-base line=63
+  $ seed/out/omc < build/batch3/scratch-s3/63.src > build/batch3/scratch-s3/63.elf 2> build/batch3/scratch-s3/63.cerr
+VERDICT s3-a-bad-base PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-bitcast line=64
+  $ seed/out/omc < build/batch3/scratch-s3/64.src > build/batch3/scratch-s3/64.elf 2> build/batch3/scratch-s3/64.cerr
+VERDICT s3-a-bad-bitcast PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-cmp line=65
+  $ seed/out/omc < build/batch3/scratch-s3/65.src > build/batch3/scratch-s3/65.elf 2> build/batch3/scratch-s3/65.cerr
+VERDICT s3-a-bad-cmp PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-const line=66
+  $ seed/out/omc < build/batch3/scratch-s3/66.src > build/batch3/scratch-s3/66.elf 2> build/batch3/scratch-s3/66.cerr
+VERDICT s3-a-bad-const PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-conv line=67
+  $ seed/out/omc < build/batch3/scratch-s3/67.src > build/batch3/scratch-s3/67.elf 2> build/batch3/scratch-s3/67.cerr
+VERDICT s3-a-bad-conv PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-holds2 line=68
+  $ seed/out/omc < build/batch3/scratch-s3/68.src > build/batch3/scratch-s3/68.elf 2> build/batch3/scratch-s3/68.cerr
+VERDICT s3-a-bad-holds2 PASS compile exit=10 expected=10 refused with the expected error
+CASE s3-a-bad-holdsname line=69
+  $ seed/out/omc < build/batch3/scratch-s3/69.src > build/batch3/scratch-s3/69.elf 2> build/batch3/scratch-s3/69.cerr
+VERDICT s3-a-bad-holdsname PASS compile exit=16 expected=16 refused with the expected error
+CASE s3-a-bad-late line=70
+  $ seed/out/omc < build/batch3/scratch-s3/70.src > build/batch3/scratch-s3/70.elf 2> build/batch3/scratch-s3/70.cerr
+VERDICT s3-a-bad-late PASS compile exit=9 expected=9 refused with the expected error
+CASE s3-a-bad-lateabs line=71
+  $ seed/out/omc < build/batch3/scratch-s3/71.src > build/batch3/scratch-s3/71.elf 2> build/batch3/scratch-s3/71.cerr
+VERDICT s3-a-bad-lateabs PASS compile exit=9 expected=9 refused with the expected error
+CASE s3-a-bad-open line=72
+  $ seed/out/omc < build/batch3/scratch-s3/72.src > build/batch3/scratch-s3/72.elf 2> build/batch3/scratch-s3/72.cerr
+VERDICT s3-a-bad-open PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-opword line=73
+  $ seed/out/omc < build/batch3/scratch-s3/73.src > build/batch3/scratch-s3/73.elf 2> build/batch3/scratch-s3/73.cerr
+VERDICT s3-a-bad-opword PASS compile exit=16 expected=16 refused with the expected error
+CASE s3-a-bad-rawleft line=74
+  $ seed/out/omc < build/batch3/scratch-s3/74.src > build/batch3/scratch-s3/74.elf 2> build/batch3/scratch-s3/74.cerr
+VERDICT s3-a-bad-rawleft PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-rotcnt line=75
+  $ seed/out/omc < build/batch3/scratch-s3/75.src > build/batch3/scratch-s3/75.elf 2> build/batch3/scratch-s3/75.cerr
+VERDICT s3-a-bad-rotcnt PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-sizeof line=76
+  $ seed/out/omc < build/batch3/scratch-s3/76.src > build/batch3/scratch-s3/76.elf 2> build/batch3/scratch-s3/76.cerr
+VERDICT s3-a-bad-sizeof PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-struct line=77
+  $ seed/out/omc < build/batch3/scratch-s3/77.src > build/batch3/scratch-s3/77.elf 2> build/batch3/scratch-s3/77.cerr
+VERDICT s3-a-bad-struct PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-op line=78
+  $ seed/out/omc < build/batch3/scratch-s3/78.src > build/batch3/scratch-s3/78.elf 2> build/batch3/scratch-s3/78.cerr
+VERDICT s3-a-bad-op PASS compile exit=7 expected=7 refused with the expected error
+CASE s3-a-bad-rawnum line=79
+  $ seed/out/omc < build/batch3/scratch-s3/79.src > build/batch3/scratch-s3/79.elf 2> build/batch3/scratch-s3/79.cerr
+VERDICT s3-a-bad-rawnum PASS compile exit=7 expected=7 refused with the expected error
+OM2GATE PASS cases=70 pass=70 fail=0 invalid=0 not_run=0

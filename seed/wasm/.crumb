@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-30T17:12:13Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:130d4e4092093f334429674959e943ec10f9325a2a6e592e65678fa1a2333faa",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 7,
+      "generated_at_commit": "92789c95f7fd9168edaab28cb8cdd7ed358c2053",
+      "source_tree": "sha256:12dbf273fccbd7a346c62f38e1dc009572c59abf82e87dbb66584aa3440e7274"
+    }
+  },
+  "layer": "seed",
+  "name": "wasm",
+  "purpose": "Seeded Omega OSC IR v1 scalar to WebAssembly MVP backend with host differential verification",
+  "schema_version": "1.0.0"
+}

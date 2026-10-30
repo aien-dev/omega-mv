@@ -1,0 +1,9 @@
+struct Acc sum long v long 4 end
+fn main to long
+s = new Acc 3 3
+for i long 4
+put s v i add get s v i i
+put s sum add get s sum get s v i
+end
+ret get s sum
+end

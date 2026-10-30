@@ -32,7 +32,7 @@ stored receipts. Kill test FAILED (K.6); reframed 2026-09-29 as the record-keepi
 - `make test-turing`: plain and ASan+UBSan suites, then the rebuild check (spec ids from the plain and ASan builds must
   be byte-identical), then `turing-field` under ASan.
 - `make turing-field`: history view, winners per shape, selector comparison, kill-test dry run.
-- Precondition for any build: /home/drakestapleton/workspace/.spark-quiet must not exist.
+- Precondition for any build: ~/workspace/.spark-quiet must not exist.
 
 ## Next steps (after the K.7 reframe)
 - PR to main from feat/turing-w1 with the recorded FAIL, the reframe and the v1 tests; not merged by the lanes.
