@@ -43,6 +43,8 @@ SRCS += src/omega_gpu_moe_api.c
 SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu_fp8_api.c
 # OWN-30B W-L2c (2026-10-14): FP8 GEMV variant 2, row-pipelined (omega_blackwell_codegen_moe2.h), selectable, variant 1 untouched
 SRCS += src/omega_blackwell_codegen_moe2.c
+# Expert Ribbon P1 (aienix#4 / omega#533, 2026-10-18): versioned replaceable FP8 expert slots, new files only
+SRCS += src/omega_fp8_slot_table.c src/omega_gpu_fp8_slots.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -2925,3 +2927,13 @@ $(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_mod
 .PHONY: test-gpu-gemm
 test-gpu-gemm: $(GPU_GEMM_TEST)
 	./$(GPU_GEMM_TEST) --sim
+
+# Expert Ribbon P1 (aienix#4 / omega#533, 2026-10-18): versioned replaceable FP8 expert slots (omega_gpu_fp8_slots.h).
+# test-gpu-fp8-slots is host-only (slot state machine, threaded race, mutant); the chip gate is
+# tools/run_gpu_fp8_slots_chip.sh under the GB10 lock (parity vs resident, churn, reader fence via a command list, negative control).
+.PHONY: test-gpu-fp8-slots
+GPU_FP8_SLOTS_TEST = $(OUT_DIR)/gpu_fp8_slots_test
+$(GPU_FP8_SLOTS_TEST): tests/gpu_fp8_slots_test.c src/omega_gpu_fp8_slots.h src/omega_fp8_slot_table.h src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_fp8_slots_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-fp8-slots: $(GPU_FP8_SLOTS_TEST)
+	./$(GPU_FP8_SLOTS_TEST) --host-only
