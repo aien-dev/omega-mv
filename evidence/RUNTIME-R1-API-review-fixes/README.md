@@ -1,6 +1,6 @@
 # R1 Runtime API: review findings fixed (#955, omega-mv#594)
 
-Review ledger: `~/handoffs/omega-issues-20261030/lanes/ApiReview594.md` (head 2908f13a against main 62d1d0d6; the same
+Review record: `docs/runtime/API-REVIEW.md`, review 1 (ApiReview594, head 2908f13a against main 62d1d0d6; the same
 tree as PR head 933dcdba). Host only (aarch64 Linux, gcc 13.3.0), no GPU, no physics checkout.
 
 | File | Result |

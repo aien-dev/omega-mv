@@ -11,16 +11,17 @@ set -u
 MANIFEST=$1; ROOT=$(cd "$2" && pwd) || exit 2; WORK=$3; APIMD=$4
 HERE=$(dirname "$0")
 bad=0
-# control NAME EXPECTED_TEXT SED_FILE-or-"" SED_EXPR
+# control NAME EXPECTED_TEXT FILE SED_EXPR   (FILE: a header under src/, API.md, or manifest)
 control() {
   name=$1; expect=$2; file=$3; expr=$4
-  d=$WORK/neg-$name; rm -rf "$d"; mkdir -p "$d/src"; cp "$ROOT"/src/omega_*.h "$d/src/"; cp "$APIMD" "$d/API.md"
+  d=$WORK/neg-$name; rm -rf "$d"; mkdir -p "$d/src"; cp "$ROOT"/src/omega_*.h "$d/src/"; cp "$APIMD" "$d/API.md"; cp "$MANIFEST" "$d/manifest"
   case $file in
-    API.md) sed -i "$expr" "$d/API.md" ;;
-    *) sed -i "$expr" "$d/src/$file" ;;
+    API.md) sed -i "$expr" "$d/API.md"; orig=$APIMD; new=$d/API.md ;;
+    manifest) sed -i "$expr" "$d/manifest"; orig=$MANIFEST; new=$d/manifest ;;
+    *) sed -i "$expr" "$d/src/$file"; orig=$ROOT/src/$file; new=$d/src/$file ;;
   esac
-  if cmp -s "$ROOT/src/$file" "$d/src/$file" 2>/dev/null && [ "$file" != API.md ]; then echo "NEGATIVE CONTROL $name: BROKEN (the edit changed nothing)"; bad=1; return; fi
-  out=$("$HERE/runtime_api_check.sh" "$MANIFEST" "$d" "$d/work" "$d/API.md" 2>&1); rc=$?
+  if cmp -s "$orig" "$new"; then echo "NEGATIVE CONTROL $name: BROKEN (the edit changed nothing)"; bad=1; return; fi
+  out=$("$HERE/runtime_api_check.sh" "$d/manifest" "$d" "$d/work" "$d/API.md" 2>&1); rc=$?
   if [ $rc -ne 0 ] && printf '%s\n' "$out" | grep -qF "$expect"; then echo "NEGATIVE CONTROL $name: FAILED as it must ($expect)"
   else echo "NEGATIVE CONTROL $name: NOT CAUGHT (rc=$rc, wanted \"$expect\")"; printf '%s\n' "$out" | head -5; bad=1; fi
 }
@@ -37,5 +38,8 @@ control removed-recover      "header disagrees with manifest: fn omega_gpu_sessi
 control removed-padding-field "header disagrees with manifest: field OmegaGpuCmdListOpts first_barrier_none" omega_gpu_cmdlist.h '/int first_barrier_none;/,/\*\/$/d'
 control new-header-function  "omega_gpu_session.h declares omega_gpu_session_zzz_new, which is neither" omega_gpu_session.h '$a int omega_gpu_session_zzz_new(void);'
 control internal-unlisted    "omega_gpu_session.h declares omega_gpu_session_set_error, which is neither" API.md 's/^- `omega_gpu_session_set_error` (library code/- (library code/'
+control manifest-fn-named-in-prose "omega_gpu_serving.h declares omega_gpu_serving_seal, which is neither" manifest '/^fn omega_gpu_serving_seal /d'
+control internal-also-manifest "API.md section 10 names omega_gpu_session_launch as INTERNAL but the manifest lists it as a fn" API.md 's/^- `omega_gpu_session_set_error` (library code/- `omega_gpu_session_set_error`, `omega_gpu_session_launch` (library code/'
+control new-fnptr-function   "omega_gpu_session.h declares omega_gpu_session_zzz_fp, which is neither" omega_gpu_session.h '$a int (*omega_gpu_session_zzz_fp(void))(int);'
 [ $bad = 0 ] && { echo "RESULT: PASS (every negative control was caught)"; exit 0; }
 echo "RESULT: FAIL (a negative control was not caught)"; exit 1

@@ -14,7 +14,7 @@
 #   - every `struct`/`field`/`const` line becomes a printf of sizeof/alignof/offsetof/value, compared with the manifest;
 #   - the version macros OMEGA_RUNTIME_API_VERSION_MAJOR/MINOR must exist (#error otherwise) and equal the manifest.
 # With API_MD it also scans the headers back (gcc -aux-info): every external function a listed header declares must be a
-# manifest `fn` or be named INTERNAL in API.md section 10, and every name there must still be declared. So a new public
+# manifest `fn` or be a leading name of a bullet in API.md section 10 (INTERNAL), never both, and every such name must still be declared. So a new public
 # function is seen. Not seen: a new struct or constant (no manifest line, nothing to compare), a field added inside struct
 # padding that the manifest does not list (the struct size would not change), and a field that changes type but keeps its
 # size (int -> unsigned). sovereign-core's Rust checker, which reads field names, covers the field cases later (R12).
@@ -165,16 +165,25 @@ if [ -n "$APIMD" ]; then
   # headers -> manifest: every external function a listed header declares is a manifest `fn` or is named INTERNAL in
   # API.md section 10, and every name section 10 lists is still declared. gcc -aux-info writes each declaration with the
   # file it came from, so a function added to a header without a manifest line or an INTERNAL entry fails here.
+  # A name is INTERNAL only as a leading token of a section-10 bullet ("- `a`, `b` (prose `c`)": a and b, not c), so a
+  # manifest function mentioned in the prose is not taken as INTERNAL; a name that is both a manifest fn and INTERNAL fails.
   if $CC $CFL -fsyntax-only -aux-info "$WORK/aux.txt" "$PROBE" 2> "$WORK/aux.err"; then
-    awk '/^## 10\./ { s = 1; next } /^## / { s = 0 } s { while (match($0, /`omega_[a-z0-9_]+`/)) { print substr($0, RSTART + 1, RLENGTH - 2); $0 = substr($0, RSTART + RLENGTH) } }' "$APIMD" | sort -u > "$WORK/internal.txt"
+    awk '/^## 10\./ { s = 1; next } /^## / { s = 0 } s && /^- `/ { t = substr($0, 3)
+      while (match(t, /^`omega_[a-z0-9_]+`/)) { print substr(t, 2, RLENGTH - 2); t = substr(t, RLENGTH + 1); if (t !~ /^, `/) break; t = substr(t, 3) } }' "$APIMD" | sort -u > "$WORK/internal.txt"
     awk -v internal="$WORK/internal.txt" 'BEGIN { while ((getline l < internal) > 0) in10[l] = 1 }
       FNR == NR { if ($1 == "header") hdr[$2] = 1; if ($1 == "fn") fn[$2] = 1; next }
       /^\/\* .* \*\/ extern / { f = $2; sub(/:[0-9]+:[A-Z]+$/, "", f); listed = 0
         for (h in hdr) if (f == h || substr(f, length(f) - length(h)) == "/" h) { listed = 1; hf = h }
         if (!listed) next
-        s = $0; sub(/^\/\* [^*]* \*\/ extern /, "", s); sub(/ *\(.*/, "", s); n = split(s, a, /[ *]+/); nm = a[n]; seen[nm] = 1
+        # the name is the identifier before the first "(" that does not open a declarator "(*" (a function returning a
+        # function pointer is written "int (*name (void)) (int)")
+        s = $0; sub(/^\/\* [^*]* \*\/ extern /, "", s); pre = ""
+        while ((i = index(s, "(")) > 0) { if (substr(s, i + 1) ~ /^ *\*/) { pre = pre substr(s, 1, i); s = substr(s, i + 1); continue }
+          pre = pre substr(s, 1, i - 1); break }
+        sub(/ +$/, "", pre); n = split(pre, a, /[^A-Za-z0-9_]+/); nm = a[n]; seen[nm] = 1
         if (!(nm in fn) && !(nm in in10)) print "FAIL: " hf " declares " nm ", which is neither a manifest fn nor named INTERNAL in API.md section 10" }
-      END { for (l in in10) if (!(l in seen)) print "FAIL: API.md section 10 names " l " as INTERNAL but no listed header declares it" }' "$MANIFEST" "$WORK/aux.txt" | sort > "$WORK/decls.txt"
+      END { for (l in in10) { if (!(l in seen)) print "FAIL: API.md section 10 names " l " as INTERNAL but no listed header declares it"
+          if (l in fn) print "FAIL: API.md section 10 names " l " as INTERNAL but the manifest lists it as a fn" } }' "$MANIFEST" "$WORK/aux.txt" | sort > "$WORK/decls.txt"
     if [ -s "$WORK/decls.txt" ]; then cat "$WORK/decls.txt"; fail=1; fi
   else
     say_fail "the header declaration scan needs a compiler with -aux-info (gcc; set CC=gcc):"; grep -m3 . "$WORK/aux.err" | sed 's/^/      /'

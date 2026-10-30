@@ -3,6 +3,7 @@
 RUNTIME_API_MANIFEST ?= docs/runtime/omega_runtime_api.manifest
 RUNTIME_API_MD ?= docs/runtime/API.md
 RUNTIME_API_WORK ?= $(OUT_DIR)/runtime-api
+.PHONY: test-runtime-api
 test-runtime-api:
 	CC="$(CC)" tools/runtime_api_check.sh $(RUNTIME_API_MANIFEST) . $(RUNTIME_API_WORK)/real $(RUNTIME_API_MD)
 	CC="$(CC)" tools/runtime_api_negative.sh $(RUNTIME_API_MANIFEST) . $(RUNTIME_API_WORK) $(RUNTIME_API_MD)

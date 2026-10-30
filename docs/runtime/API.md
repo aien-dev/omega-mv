@@ -5,10 +5,10 @@ Omega Runtime API version: 0.1
 Status: first written version, 2026-10-19 (slice R1, omega-mv#594, tracking #593). Source of truth is the C headers in
 `src/`. This file describes them; `docs/runtime/omega_runtime_api.manifest` lists them; `make test-runtime-api` checks the
 list against the headers (a host check, no GPU). Review state: the first version was reviewed by Opus 5.5 on 2026-10-22 (L386).
-The sections changed for main 62d1d0d6 (head 2908f13a) were reviewed again by a separate review lane (ApiReview594,
-`~/handoffs/omega-issues-20261030/lanes/ApiReview594.md`); its findings F1-F7 and N1-N5 are fixed in this version. The
-fixes themselves have not been reviewed again. The check proves the list and every quoted C signature match the headers;
-prose is checked by review.
+The sections changed for main 62d1d0d6 (head 2908f13a) were reviewed again by a separate review lane (ApiReview594); its
+findings F1-F7 and N1-N5 are fixed in this version. Those fixes were reviewed at head 7be2c6f7 (Rev955), and its six
+findings are fixed too; `docs/runtime/API-REVIEW.md` records both reviews. The fixes of the second review have not been
+reviewed again. The check proves the list and every quoted C signature match the headers; prose is checked by review.
 
 The version number lives in one header, `src/omega_runtime_api.h` (`OMEGA_RUNTIME_API_VERSION_MAJOR`, `_MINOR`).
 
@@ -109,7 +109,7 @@ named states and returns success or exactly one named failure. EXPERIMENTAL.
   Linux reference's close does on the chip is intended, not shown: its RM client close is meant to destroy this process's
   channels, and with them any grid still running, and to release the driver objects. The chip run of this path has not
   been done (`evidence/C5-ISOLATION/README.md`: NO RESULT, then NOT RUN). The reference does not unmap buffers the caller
-  did not free (`src/omega_gpu_platform_linux.c:197-198`), so whether each recovery leaks CPU mappings is not known.
+  did not free (`src/omega_gpu_platform_linux.c:198-199`), so whether each recovery leaks CPU mappings is not known.
   Every handle and command list of the old device is stale afterwards. A latch held only by the command lists also
   counts: `omega_gpu_session_is_blocked()` is then 0 while `omega_gpu_cmdlist_is_latched()` is 1, so check both.
 
@@ -122,8 +122,10 @@ deadlocks. These take the lock themselves and must be called without it: `omega_
 (the compute and upload calls, `omega_gpu_tensor_free`, `omega_gpu_matmul_cache_clear`, `omega_gpu_matmul_set_cta_budget`,
 `omega_gpu_matmul_prepare`, `omega_gpu_attention_pool_alloc`, `omega_gpu_attention_pool_free`, the serving reserve, seal and
 release calls, and `omega_gpu_device_close` through `omega_gpu_session_close`). The section 9.5 accessors do not take the lock:
-`omega_gpu_matmul_cta_budget`, `omega_gpu_tensor_shape`, the `*_rc_name` and `*_last_error` calls, and
-`omega_gpu_matmul_is_blocked` (an atomic read). `omega_gpu_matmul_cta_budget` reads without the lock the value that
+`omega_gpu_matmul_cta_budget`, `omega_gpu_tensor_shape`, `omega_gpu_matmul_rc_name`, `omega_gpu_matmul_last_error`,
+`omega_gpu_elementwise_rc_name`, `omega_gpu_attention_rc_name`, `omega_gpu_attention_last_error` and
+`omega_gpu_matmul_is_blocked` (an atomic read); neither does the INTERNAL `omega_gpu_elementwise_last_error` (section 10).
+`omega_gpu_matmul_cta_budget` reads without the lock the value that
 `omega_gpu_matmul_set_cta_budget` writes under it (`src/omega_gpu_matmul_api.c:146-153`), so calling the two from different
 threads at once is a data race.
 `omega_gpu_session_cancel` may be called from any thread without the lock (header). `omega_gpu_session_is_blocked` reads the latch with an atomic load (`src/omega_gpu_session.c:173`), so it is safe without the lock too.
@@ -442,8 +444,9 @@ and list b on extra queue 1, both submitted before either is waited; caller hold
 
 Reason: omega-mv#580 is building pipelined and dependency-ordered execution on this module, so the options, statistics
 and barrier modes will grow. The measured extra cost of each launch in a list is about 30 us with a wait-for-idle barrier
-(`evidence/OWN30B-LAUNCH-COST-20261014T0120Z/r1/receipt.json`, verdict FAIL on 4 of 11 checks). A timeout latches the list
-and then the session. The `OMEGA_GPU_CMDLIST_BARRIER_NONE` mode and `skip_launch` option are test-only.
+(`evidence/OWN30B-LAUNCH-COST-20261014T0120Z/r1/receipt.json`, verdict FAIL on 4 of 11 checks). A timeout latches the list;
+the session latches as well only if the 1 ms check launch queued behind the list also times out
+(`src/omega_gpu_cmdlist.c:233-240`, section 3). The `OMEGA_GPU_CMDLIST_BARRIER_NONE` mode and `skip_launch` option are test-only.
 `OmegaGpuCmdListOpts.first_barrier_none` (C4 streams) drops the WAIT_FOR_IDLE and the shader-cache invalidate before launch 0
 of a list. The caller must make sure the code, constant banks and QMDs that launch 0 reads are not in a stale cache line
 (fresh slots or unchanged contents), or launch 0 may read old bytes (`src/omega_gpu_cmdlist.h:85-87`). 0 keeps the barrier.
@@ -517,7 +520,8 @@ Types are the manifest's Rust spelling (`*const`, `*mut`, `u32`, ...); the heade
 ## 10. INTERNAL (not part of the API)
 
 Not in the manifest; may change or vanish without notice. Every external function a manifest header declares is either
-a manifest `fn` or named below; `make test-runtime-api` fails on any other (section 11).
+a manifest `fn` or named below as one of the leading names of a bullet (the names before any other text; names in the
+prose after them do not count); `make test-runtime-api` fails on any other, and on a name that is both (section 11).
 
 Session (`src/omega_gpu_session.h`):
 - `omega_gpu_session_set_error` (library code names its failure stage through it).
@@ -530,7 +534,7 @@ Job engine (`src/omega_gpu_engine.h`):
 Matmul (`src/omega_gpu_matmul_api.h`):
 - `omega_gpu_matmul_reserve`, `omega_gpu_matmul_unreserve`, `omega_gpu_matmul_seal` (the serving reservation; callers use `omega_gpu_reserve_serving`, `omega_gpu_serving_seal` and `omega_gpu_serving_release`).
 - `omega_gpu_tensor_update_bf16`, `omega_gpu_tensor_update_f32` (rewrite a resident B in place).
-- `omega_gpu_matmul_last_stages` (per-stage timing of the last call), `omega_gpu_matmul_set_oracle` (host oracle on the non-resident calls).
+- `omega_gpu_matmul_last_stages`, `omega_gpu_matmul_set_oracle` (per-stage timing of the last call; host oracle on the non-resident calls).
 - `omega_gpu_matmul_test_set_mutant`, `omega_gpu_matmul_test_set_unroll`, `omega_gpu_matmul_test_a_row0_hits`: TEST ONLY.
 
 Elementwise (`src/omega_gpu_elementwise_api.h`):
@@ -550,15 +554,24 @@ Everything else under `src/omega_gpu_*` and `src/omega_blackwell_*` in headers t
 ## 11. Checking this file
 
 `make test-runtime-api` runs `tools/runtime_api_check.sh` on the real headers and then `tools/runtime_api_negative.sh`, which breaks a
-copy of the headers (or this file) in thirteen ways and requires the check to fail each time: a removed function (twice: a STABLE one and the EXPERIMENTAL `omega_gpu_session_recover`), a missing version macro, a
+copy of the headers, the manifest or this file in sixteen ways and requires the check to fail each time: a removed function (twice: a STABLE one and the EXPERIMENTAL `omega_gpu_session_recover`), a missing version macro, a
 changed function signature, a changed struct, a changed constant, a version line in this file that disagrees with the macro, a quoted signature in this file that no header has, a quoted
 signature that only appears inside a longer one (`int32_t` inside `uint32_t`), a STABLE entry with no section here, a removed
 struct field the manifest lists (`OmegaGpuCmdListOpts.first_barrier_none`), a new function in a manifest header with no
-manifest line, and an INTERNAL function dropped from section 10. It needs no GPU and no physics checkout. It checks: every manifest function against its header
+manifest line, the same for a function that returns a function pointer, an INTERNAL function dropped from section 10, a
+manifest `fn` dropped from the manifest while section 10's prose still mentions it (`omega_gpu_serving_seal`), and a
+manifest `fn` also listed as INTERNAL. It needs no GPU and no physics checkout. It checks: every manifest function against its header
 with exact types; sizes, offsets and constants against a compiled probe; the version macros against the manifest and this file;
 that every STABLE entry has a `####` section here and every EXPERIMENTAL one is named here; that every C signature quoted
 in this file appears verbatim in a header; and, with gcc's `-aux-info`, that every external function a manifest header
-declares is a manifest `fn` or named in section 10, and every name in section 10 is still declared (another compiler fails
+declares is either a manifest `fn` or a leading name of a section-10 bullet, never both, and every such name is still
+declared (another compiler fails
 the check with "needs a compiler with -aux-info"). It does not check that the prose is true. Not seen: a new struct or
 constant (nothing to compare it with), a field added inside padding that the manifest does not list, a field that changes
 type but keeps its size, and a constant value quoted in prose.
+
+Where it runs: the gate `OMEGA-RUNTIME-API` (`tests/gates/omega-runtime-api.gate`, requires `portable`) runs
+`make test-runtime-api` through `tests/gates/run.sh runtime-api`. The Spark judge runs it on a pull request that touches
+its inputs. The hosted AIEN Checks job runs the portable gates it finds on main (`.github/workflows/aien-verification.yml`),
+so it runs there from the first pull request after the gate file is on main. It needs gcc (for `-aux-info`), make, perl,
+sed and a POSIX awk.
