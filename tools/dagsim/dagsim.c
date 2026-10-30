@@ -650,6 +650,8 @@ int ds_eval(const ds_model *m, const ds_opts *o, ds_result *r) {
         }
         for (int i = 0; i < en; i++) {
             live += ev[i];
+            /* Reachable by rounding: 1e20 + 1 sums to 1e20, so the later
+             * frees overshoot (dagsim_unit rounding_drives_live_negative). */
             if (live < -1e-6) {
                 char msg[256];
                 snprintf(msg, sizeof msg,

@@ -618,6 +618,24 @@ static void test_inverted_lifetimes(void) {
     CHECK(rc == DS_OK, "omitted endpoints status %s (%s)", ds_status_name(rc), r.reason);
     CHECK(NEAR(r.peak_live_bytes[0], 175, 1e-9), "omitted endpoints peak 175, got %.1f", r.peak_live_bytes[0]);
 
+    /* The went-negative refusal is reachable without an inverted window: the
+     * ledger sums doubles, and 1e20 + 1 rounds to 1e20 (ulp 16384). Events
+     * +1e20@0, +1@10, -1e20@20, -1@30 end the sweep at -1. A certificate
+     * built on that ledger would be wrong, so it is refused. */
+    rc = eval_text(
+        "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+        "resource id=hbm kind=capacity cap=1e30 prov=specified src=test\n"
+        "op id=A kind=compute engine=cpu t_ns=10 prov=measured src=t\n"
+        "op id=B kind=compute engine=cpu t_ns=10 prov=measured src=t\n"
+        "op id=C kind=compute engine=cpu t_ns=10 prov=measured src=t\n"
+        "dep A B\ndep B C\n"
+        "buffer id=huge bytes=1e20 cap=hbm first=A last=B\n"
+        "buffer id=tiny bytes=1 cap=hbm first=B last=C\n", &m, &r, NULL);
+    CHECK(rc == DS_REFUSED_LIFETIME && strstr(r.reason, "went negative"),
+          "rounding_drives_live_negative: got %s (%s)", ds_status_name(rc), r.reason);
+    CHECK(peak_of(&m, &r, "hbm") == 0 && r.makespan_ns == 0,
+          "negative-ledger refusal carries no capacity certificate");
+
     char text[2048], err[256];
     snprintf(text, sizeof text, "%s%s", HDR, "buffer id=neg bytes=-5 cap=mem\n");
     CHECK(ds_parse_text(text, &m, err, sizeof err) == DS_PARSE_ERROR && strstr(err, "finite number >= 0"),
