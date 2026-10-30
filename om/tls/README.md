@@ -28,14 +28,15 @@ every connection of the process).
 | `chacha.om` | ChaCha20, Poly1305, ChaCha20-Poly1305 AEAD (RFC 8439) | 19 |
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
 | `gcmsiv.om` | AES-128/256-GCM-SIV (RFC 8452); calls `aesgcm.om`; not in the TLS client build | 24 |
-| `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
-| `ecdh.om` | constant-time P-256/P-384 ECDH (SP 800-56A Rev. 3): key generation, partial public-key validation, Z, pair-wise consistency test | 17 |
+| `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 50 |
+| `ecdh.om` | constant-time P-256/P-384 ECDH (SP 800-56A Rev. 3): key generation, partial public-key validation, Z, pair-wise consistency test | 18 |
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
-| `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
-| `fips.om` | self-tests (KATs), SP 800-90B health tests on getrandom, approved-mode DRBG wiring, X25519 pairwise consistency test, module error state | 27 |
-| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect, approved-only mode, X25519MLKEM768 hybrid key exchange | 148 |
+| `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 81 |
+| `rev.om` | revocation: SHA-1 for OCSP CertID only, stapled OCSP (RFC 6960), must-staple (RFC 7633), caller-supplied CRL (RFC 5280); composed after `x509.om` | 61 |
+| `fips.om` | self-tests (KATs), SP 800-90B health tests on getrandom, approved-mode DRBG wiring, X25519 pairwise consistency test, module error state | 38 |
+| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect, approved-only mode, X25519MLKEM768 hybrid key exchange | 149 |
 
-The client composition is 504 functions. `gcmsiv.om` adds 24, so the table total is 528. omc at
+The client composition is 612 functions. `gcmsiv.om` adds 24, so the table total is 636. omc at
 `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
 the ec, rsa and x509 suites check) allows 4095 functions per unit, as `189ada82` did.
 
