@@ -1,0 +1,6 @@
+note bitcast keeps the width: ushort to int is error 7, so the re-extension never has to guess a width
+fn main to int
+u = ushort 65535
+v = bitcast int u
+ret v
+end

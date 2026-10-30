@@ -1,0 +1,9 @@
+fn main to int
+a = qty 18446744073709551615
+b = qty 1
+c = fmax a b
+if eq c a
+ret 0
+end
+ret 1
+end
