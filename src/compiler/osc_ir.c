@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * osc_ir.c -- OSC-1 typed IR: structural validation, canonical encoding,
  * SHA-256 identity. See osc_ir.h and docs/osc/OSC-1-DESIGN.md section 4.
@@ -322,7 +338,7 @@ static int validate_insn(const OscUnit *u, int fi, const OscFunc *f, uint32_t ii
 static bool str_ok(const char *s, size_t cap) { return memchr(s, 0, cap) != NULL; }
 
 /* omega#451: a structured requirement object (OscCterm list, spec/one-layer-format.md
- * section 10.4) is a postfix program over a typed value stack that leaves exactly one
+ * section 11.4) is a postfix program over a typed value stack that leaves exactly one
  * bool (an empty list: no clause). Typing follows the IR's BIN/UN/CMP/CAST rules over
  * value scalars; every field a term does not use is 0, so one object has one form. */
 static bool contract_ok(const OscFunc *f, const OscCterm *t, unsigned n, bool ens) {
@@ -686,7 +702,7 @@ static uint8_t unit_version(const OscUnit *u) {
 }
 
 /* the function fields every version writes the same way, in this order: nparams, return
- * type, register types, blocks, instructions (spec/one-layer-format.md 3.3 and 10.3) */
+ * type, register types, blocks, instructions (spec/one-layer-format.md 3.3 and 11.3) */
 static void wbody(W *w, const OscFunc *f) {
     w8(w, f->nparams);
     wtype(w, &f->ret);
@@ -782,7 +798,7 @@ static bool legacy_ok(const OscUnit *u) {
     return true;
 }
 
-/* ---- format version 6 (omega#451, spec/one-layer-format.md section 10) ---- */
+/* ---- format version 6 (omega#451, spec/one-layer-format.md section 11) ---- */
 static void wterm(W *w, const OscCterm *t) {
     w8(w, t->kind);
     switch (t->kind) {

@@ -1,0 +1,26 @@
+OM2GATE START cases=/home/drakestapleton/work/OmcBatchPin/build/batch3/pr897.cases scratch=build/batch3/scratch-pr897-old
+IDENTITY omc /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f pinned=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f match
+CASE s4-v-text-empty line=1
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr897-old/1.src > build/batch3/scratch-pr897-old/1.elf 2> build/batch3/scratch-pr897-old/1.cerr
+  $ build/batch3/scratch-pr897-old/1.elf < /dev/null > build/batch3/scratch-pr897-old/1.out 2> build/batch3/scratch-pr897-old/1.err
+VERDICT s4-v-text-empty FAIL run exit=1 expected=0 stdout=match stderr=match
+CASE s4-v-text-empty-loop line=2
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr897-old/2.src > build/batch3/scratch-pr897-old/2.elf 2> build/batch3/scratch-pr897-old/2.cerr
+  $ build/batch3/scratch-pr897-old/2.elf < /dev/null > build/batch3/scratch-pr897-old/2.out 2> build/batch3/scratch-pr897-old/2.err
+VERDICT s4-v-text-empty-loop INVALID child signal; wait low byte=139
+CASE s4-v-text-empty-get line=3
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr897-old/3.src > build/batch3/scratch-pr897-old/3.elf 2> build/batch3/scratch-pr897-old/3.cerr
+  $ build/batch3/scratch-pr897-old/3.elf < /dev/null > build/batch3/scratch-pr897-old/3.out 2> build/batch3/scratch-pr897-old/3.err
+VERDICT s4-v-text-empty-get FAIL run exit=231 expected=103 stdout=match stderr=match
+CASE s4-v-text-empty-write line=4
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr897-old/4.src > build/batch3/scratch-pr897-old/4.elf 2> build/batch3/scratch-pr897-old/4.cerr
+  $ build/batch3/scratch-pr897-old/4.elf < /dev/null > build/batch3/scratch-pr897-old/4.out 2> build/batch3/scratch-pr897-old/4.err
+VERDICT s4-v-text-empty-write FAIL run exit=7 expected=103 stdout differs at byte 0 stderr=match
+CASE s4-p-text-empty line=5
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr897-old/5.src > build/batch3/scratch-pr897-old/5.elf 2> build/batch3/scratch-pr897-old/5.cerr
+  $ build/batch3/scratch-pr897-old/5.elf < /dev/null > build/batch3/scratch-pr897-old/5.out 2> build/batch3/scratch-pr897-old/5.err
+VERDICT s4-p-text-empty FAIL run exit=8 expected=103 stdout=match stderr=match
+CASE s4-v-bad-text-empty line=6
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr897-old/6.src > build/batch3/scratch-pr897-old/6.elf 2> build/batch3/scratch-pr897-old/6.cerr
+VERDICT s4-v-bad-text-empty FAIL compile exit=0 expected=21 refusal wrote compiler output diagnostic does not name the expected error
+OM2GATE INVALID cases=6 pass=0 fail=5 invalid=1 not_run=0

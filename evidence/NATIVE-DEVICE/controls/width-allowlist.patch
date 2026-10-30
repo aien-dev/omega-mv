@@ -1,0 +1,11 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -3091,7 +3091,7 @@
+ fail 9
+ end
+ w = get fr add x 13
+-if and ne w 4 ne w 8
++if eq w 0
+ fail 9
+ end
+ if eq c 144

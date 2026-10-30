@@ -1,0 +1,28 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of s2hex/hex-max.om: the same values in decimal (OMEGESE.md 9.3), so the expected
+note stdout of hex-max.om is also checked against the pinned OM-1 compiler. Used with lib/putu.om.
+fn main to int
+a = uchar 255
+putu ulong a
+b = ushort 65535
+putu ulong b
+c = uint 4294967295
+putu ulong c
+d = ulong 18446744073709551615
+putu d
+e = byte 127
+putu ulong e
+f = short 32767
+putu ulong f
+g = int 2147483647
+putu ulong g
+h = long 9223372036854775807
+putu ulong h
+z = ulong 0
+putu z
+y = uchar 255
+putu ulong y
+w = ulong 81985529216486895
+putu w
+ret 0
+end

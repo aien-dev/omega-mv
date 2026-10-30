@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * test_osc_ir_decode.c -- omega#444: the strict OSC binary IR decoder
  * (osc_ir_decode, src/compiler/osc_ir.c) against the format in
@@ -598,7 +614,7 @@ static bool param_value(const OscFunc *f, int i) {
     return value_scalar(f->vtype[i].s) && f->vtype[i].ref == OSC_REF_NONE && f->vtype[i].sid == 0;
 }
 
-/* Random well-typed requirement objects (postfix, spec section 10.4), built bottom-up
+/* Random well-typed requirement objects (postfix, spec section 11.4), built bottom-up
  * over f's value parameters and, for an ensures clause, its scalar result. */
 typedef struct { const OscFunc *f; int ens; OscCterm *t; unsigned n; } Gen;
 static void gput(Gen *g, uint8_t kind, uint8_t sub, uint8_t arg, uint64_t imm) {

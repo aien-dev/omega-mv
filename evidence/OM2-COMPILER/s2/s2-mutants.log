@@ -1,0 +1,71 @@
+OM2GATE START cases=seed/omc/om2/s2/s2-mutants.cases scratch=/tmp/om2c/g-s2-mutants
+IDENTITY omc /tmp/om2c/omc-s2 sha256=c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533 pinned=c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533 match
+DEADLINE 60
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/3.src > /tmp/om2c/g-s2-mutants/3.elf 2> /tmp/om2c/g-s2-mutants/3.cerr
+COMPILER /tmp/om2c/g-s2-mutants/3.elf sha256=c23b33760f255bb4083a02da238ac802796bf94be23d9f4c4d2fc9bdb6e0b533 source line=3
+CASE ctl-u1 line=4
+  $ /tmp/om2c/g-s2-mutants/3.elf < /tmp/om2c/g-s2-mutants/4.src > /tmp/om2c/g-s2-mutants/4.elf 2> /tmp/om2c/g-s2-mutants/4.cerr
+  $ /tmp/om2c/g-s2-mutants/4.elf < /dev/null > /tmp/om2c/g-s2-mutants/4.out 2> /tmp/om2c/g-s2-mutants/4.err
+VERDICT ctl-u1 PASS run exit=117 expected=117 stdout=match stderr=match
+CASE ctl-fold-guard line=5
+  $ /tmp/om2c/g-s2-mutants/3.elf < /tmp/om2c/g-s2-mutants/5.src > /tmp/om2c/g-s2-mutants/5.elf 2> /tmp/om2c/g-s2-mutants/5.cerr
+  $ /tmp/om2c/g-s2-mutants/5.elf < /dev/null > /tmp/om2c/g-s2-mutants/5.out 2> /tmp/om2c/g-s2-mutants/5.err
+VERDICT ctl-fold-guard PASS run exit=150 expected=150 stdout=match stderr=match
+CASE ctl-fold-trap line=6
+  $ /tmp/om2c/g-s2-mutants/3.elf < /tmp/om2c/g-s2-mutants/6.src > /tmp/om2c/g-s2-mutants/6.elf 2> /tmp/om2c/g-s2-mutants/6.cerr
+  $ /tmp/om2c/g-s2-mutants/6.elf < /dev/null > /tmp/om2c/g-s2-mutants/6.out 2> /tmp/om2c/g-s2-mutants/6.err
+VERDICT ctl-fold-trap PASS run exit=101 expected=101 stdout=match stderr=match
+CASE ctl-break line=7
+  $ /tmp/om2c/g-s2-mutants/3.elf < /tmp/om2c/g-s2-mutants/7.src > /tmp/om2c/g-s2-mutants/7.elf 2> /tmp/om2c/g-s2-mutants/7.cerr
+VERDICT ctl-break PASS compile exit=9 expected=9 refused with the expected error
+CASE ctl-depth5 line=8
+  $ /tmp/om2c/g-s2-mutants/3.elf < /tmp/om2c/g-s2-mutants/8.src > /tmp/om2c/g-s2-mutants/8.elf 2> /tmp/om2c/g-s2-mutants/8.cerr
+VERDICT ctl-depth5 PASS compile exit=14 expected=14 refused with the expected error
+CASE ctl-idx line=9
+  $ /tmp/om2c/g-s2-mutants/3.elf < /tmp/om2c/g-s2-mutants/9.src > /tmp/om2c/g-s2-mutants/9.elf 2> /tmp/om2c/g-s2-mutants/9.cerr
+VERDICT ctl-idx PASS compile exit=21 expected=21 refused with the expected error
+SUBST seed/omc/om2/s2/mut/div0.from seed/omc/om2/s2/mut/div0.to
+  MUTATE exact-once substitution at byte 120610
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/12.src > /tmp/om2c/g-s2-mutants/12.elf 2> /tmp/om2c/g-s2-mutants/12.cerr
+COMPILER /tmp/om2c/g-s2-mutants/12.elf sha256=59ab3d9e9a27694c5c14e1707b3b9f5594223e65039a538f372d061850db4d3e source line=12
+CASE m-div0 line=13
+  $ /tmp/om2c/g-s2-mutants/12.elf < /tmp/om2c/g-s2-mutants/13.src > /tmp/om2c/g-s2-mutants/13.elf 2> /tmp/om2c/g-s2-mutants/13.cerr
+VERDICT m-div0 FAIL compile exit=102 expected=0
+SUBST seed/omc/om2/s2/mut/sovf.from seed/omc/om2/s2/mut/sovf.to
+  MUTATE exact-once substitution at byte 120364
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/16.src > /tmp/om2c/g-s2-mutants/16.elf 2> /tmp/om2c/g-s2-mutants/16.cerr
+COMPILER /tmp/om2c/g-s2-mutants/16.elf sha256=5294fdc314e2e9080f52b809a35f2b292d834b123e4ab8f0c7886c647f439a2e source line=16
+CASE m-sovf line=17
+  $ /tmp/om2c/g-s2-mutants/16.elf < /tmp/om2c/g-s2-mutants/17.src > /tmp/om2c/g-s2-mutants/17.elf 2> /tmp/om2c/g-s2-mutants/17.cerr
+  $ /tmp/om2c/g-s2-mutants/17.elf < /dev/null > /tmp/om2c/g-s2-mutants/17.out 2> /tmp/om2c/g-s2-mutants/17.err
+VERDICT m-sovf FAIL run exit=0 expected=101 stdout=match stderr=match
+SUBST seed/omc/om2/s2/mut/ucount.from seed/omc/om2/s2/mut/ucount.to
+  MUTATE exact-once substitution at byte 113398
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/20.src > /tmp/om2c/g-s2-mutants/20.elf 2> /tmp/om2c/g-s2-mutants/20.cerr
+COMPILER /tmp/om2c/g-s2-mutants/20.elf sha256=05b4a133b70351087e7fade536b376b0fdd4ed46039c559609e58743d31fa5f6 source line=20
+CASE m-ucount line=21
+  $ /tmp/om2c/g-s2-mutants/20.elf < /tmp/om2c/g-s2-mutants/21.src > /tmp/om2c/g-s2-mutants/21.elf 2> /tmp/om2c/g-s2-mutants/21.cerr
+  $ /tmp/om2c/g-s2-mutants/21.elf < /dev/null > /tmp/om2c/g-s2-mutants/21.out 2> /tmp/om2c/g-s2-mutants/21.err
+VERDICT m-ucount FAIL run exit=18 expected=117 stdout=match stderr=match
+SUBST seed/omc/om2/s2/mut/brk.from seed/omc/om2/s2/mut/brk.to
+  MUTATE exact-once substitution at byte 105054
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/24.src > /tmp/om2c/g-s2-mutants/24.elf 2> /tmp/om2c/g-s2-mutants/24.cerr
+COMPILER /tmp/om2c/g-s2-mutants/24.elf sha256=b9452f34a57b954ba6e97de78476fe29a29861115ad61f79f4f33e6c01e863f3 source line=24
+CASE m-brk line=25
+  $ /tmp/om2c/g-s2-mutants/24.elf < /tmp/om2c/g-s2-mutants/25.src > /tmp/om2c/g-s2-mutants/25.elf 2> /tmp/om2c/g-s2-mutants/25.cerr
+VERDICT m-brk FAIL compile exit=0 expected=9 refusal wrote compiler output diagnostic does not name the expected error
+SUBST seed/omc/om2/s2/mut/idx.from seed/omc/om2/s2/mut/idx.to
+  MUTATE exact-once substitution at byte 60525
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/28.src > /tmp/om2c/g-s2-mutants/28.elf 2> /tmp/om2c/g-s2-mutants/28.cerr
+COMPILER /tmp/om2c/g-s2-mutants/28.elf sha256=41e1345ec7e56e17bfa215dc6d52d4cc3e60caaeb8525d802c8af0695e93870a source line=28
+CASE m-idx line=29
+  $ /tmp/om2c/g-s2-mutants/28.elf < /tmp/om2c/g-s2-mutants/29.src > /tmp/om2c/g-s2-mutants/29.elf 2> /tmp/om2c/g-s2-mutants/29.cerr
+VERDICT m-idx FAIL compile exit=0 expected=21 refusal wrote compiler output diagnostic does not name the expected error
+SUBST seed/omc/om2/s2/mut/depth.from seed/omc/om2/s2/mut/depth.to
+  MUTATE exact-once substitution at byte 116135
+  $ /tmp/om2c/omc-s2 < /tmp/om2c/g-s2-mutants/32.src > /tmp/om2c/g-s2-mutants/32.elf 2> /tmp/om2c/g-s2-mutants/32.cerr
+COMPILER /tmp/om2c/g-s2-mutants/32.elf sha256=61e4c66894504be6aea942de0d29174c5c6d5000fab70c5c6d31e7a8489ac581 source line=32
+CASE m-depth line=33
+  $ /tmp/om2c/g-s2-mutants/32.elf < /tmp/om2c/g-s2-mutants/33.src > /tmp/om2c/g-s2-mutants/33.elf 2> /tmp/om2c/g-s2-mutants/33.cerr
+VERDICT m-depth FAIL compile exit=0 expected=14 refusal wrote compiler output diagnostic does not name the expected error
+OM2GATE FAIL cases=12 pass=6 fail=6 invalid=0 not_run=0

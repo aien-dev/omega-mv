@@ -1,0 +1,14 @@
+note leak fixture (call rule, README.txt): a helper called inside a loop over a public length. The
+note caller's registers are spilled to the stack around the BL and loaded back; the slot tracking
+note keeps the loop counter and the bound public, so the loop branch stays len after the call.
+note The helper's loaded byte reaches only the sum. Expected: TRACE-EQUIV-STATIC PASS.
+fn h a view uchar 64 i ulong to ulong
+ret ulong get a and i 63
+end
+fn f a view uchar 64 n ulong to ulong
+s = ulong 0
+for i ulong n
+s = add s h a i
+end
+ret s
+end

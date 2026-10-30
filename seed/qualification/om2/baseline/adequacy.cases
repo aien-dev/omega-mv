@@ -1,0 +1,7 @@
+# Adequacy controls (expected FAIL: mutant survived). A vector that never reaches the fault
+# cannot kill it: the length is not padded into the block (empty message, bit length 0), or
+# every piece is a whole number of blocks.
+subst seed/qualification/om2/baseline/mutants/nowrite.from seed/qualification/om2/baseline/mutants/nowrite.to
+mut-nowrite-fips-empty kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om - line:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 - 0
+subst seed/qualification/om2/baseline/mutants/split.from seed/qualification/om2/baseline/mutants/split.to
+mut-split-seq-1000-p4096 kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 4096

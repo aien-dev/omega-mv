@@ -1,0 +1,11 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -2703,7 +2703,7 @@
+ note Access 1 or 3 and modes 1/2/33/34 must be literal. No fixed address or executable map.
+ fn mnew c ulong dst ulong x ulong to void
+ acc = ulong 0
+-mode = ulong 1048610
++mode = ulong 34
+ if eq c 136
+ harg x 0 8
+ harg x 1 5

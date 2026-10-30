@@ -1,0 +1,16 @@
+fn main to int
+a = f64 1.0
+if ne fsqrt a a
+ret 1
+end
+if ne fabs a a
+ret 2
+end
+if ne fmin a a a
+ret 3
+end
+if ne fmax a a a
+ret 4
+end
+ret 0
+end

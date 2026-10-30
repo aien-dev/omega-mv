@@ -3,7 +3,7 @@
 ```text
 Document ID:   SPEC-ONE-LAYER-FORMAT
 Issue:         aien-spark/omega#444 (one-layer plan, stage 2 "Open the binary front door"); omega#451 (version 6)
-Status:        IMPLEMENTED for format versions 1..6 (reader + writer); version 6 in section 10
+Status:        IMPLEMENTED for format versions 1..6 (reader + writer); version 6 in section 11
 Code:          src/compiler/osc_ir.h (osc_ir_encode, osc_ir_encode_v6, osc_ir_decode, OscIrRefusal)
                src/compiler/osc_ir.c (encode_unit, encode_unit_v6, unit_version, decode_unit, decode_v6)
 Tests:         tests/compiler/test_osc_ir_decode.c; make test-osc-ir-decode(-quick)
@@ -23,7 +23,7 @@ The canonical set is exactly
 
     { osc_ir_encode(u) : osc_ir_validate(u) == 0 }  ∪  { osc_ir_encode_v6(u) : osc_ir_validate(u) == 0 }
 
-(the second set is format version 6, section 10; `osc_ir_encode` refuses a unit that only
+(the second set is format version 6, section 11; `osc_ir_encode` refuses a unit that only
 version 6 can carry). `osc_ir_decode(buf, len, out)` returns `OSC_IR_OK` only when `buf[0..len)` is in that set, and then
 fills `out` with the unit `u` that encodes to it. Every other input is refused with one named class
 (section 7) and `out` is left all zero. The reader never repairs, skips, pads, truncates or guesses.
@@ -152,8 +152,8 @@ struct table. Every version 1..5 is read. A version byte that is not the one the
 is refused (VERSION_MISMATCH), so one unit never has two encodings among versions 1..5. Versions
 are only ever added; an existing version's bytes are never reinterpreted.
 
-Version 6 (section 10) is not chosen by content: only `osc_ir_encode_v6` writes it, and its
-domain tag (10.1) keeps it a separate identity domain. `unit_version` and `OSC_IR_VERSION_MAX` (5)
+Version 6 (section 11) is not chosen by content: only `osc_ir_encode_v6` writes it, and its
+domain tag (11.1) keeps it a separate identity domain. `unit_version` and `OSC_IR_VERSION_MAX` (5)
 are unchanged, so `osc_ir_encode` writes exactly the bytes it wrote before.
 
 ## 5. Limits
@@ -174,14 +174,14 @@ preimage. Function names and the `requires` / `ensures` texts are inside the has
 change to a requirement changes the identity (tested: 514 one-character changes over the corpus,
 each a new digest, each round-trips). OSC unit identity is separate from Omega program identity v2
 (`omega.program.v2`, spec/program-identity.md); this change does not alter either law. Version 6
-has its own identity law (section 10.7): names excluded, structured contracts included, under the
+has its own identity law (section 11.7): names excluded, structured contracts included, under the
 tag `omega.osc.ir.v6`. The law above for versions 1..5 is unchanged.
 
 ## 7. Refusal classes
 
 `osc_ir_decode` returns the first defect met while reading front to back; the checks after parsing
 run in the order listed. `osc_ir_refusal_name` gives the names. Classes -12..-15 exist for
-version 6 only; section 10.8 gives their meaning, check order and counterexamples.
+version 6 only; section 11.8 gives their meaning, check order and counterexamples.
 
 | code | class | meaning | counterexample in the test |
 |---|---|---|---|
@@ -196,15 +196,15 @@ version 6 only; section 10.8 gives their meaning, check order and counterexample
 | -9 | INVALID | well-formed, but `osc_ir_validate` refuses the unit | u8 constant 256; register out of range |
 | -10 | VERSION_MISMATCH | version byte differs from the one the content requires (section 4) | version 2 or 5 for a plain unit |
 | -11 | NONCANONICAL | the unit re-encodes to different bytes | none: unreachable (below) |
-| -12 | DOMAIN | version 6 without its exact domain tag (10.8) | tag "omega.osc.ir.v7" |
-| -13 | IDENT | version 6: a numeric identifier or name entry names no object (10.8) | name for function 1 of 1 |
-| -14 | ORDER | version 6: name table not in canonical order, or an empty entry (10.8) | two names for function 0 |
-| -15 | CONTRACT | version 6: a malformed requires/ensures object (10.8) | result in a requires clause |
+| -12 | DOMAIN | version 6 without its exact domain tag (11.8) | tag "omega.osc.ir.v7" |
+| -13 | IDENT | version 6: a numeric identifier or name entry names no object (11.8) | name for function 1 of 1 |
+| -14 | ORDER | version 6: name table not in canonical order, or an empty entry (11.8) | two names for function 0 |
+| -15 | CONTRACT | version 6: a malformed requires/ensures object (11.8) | result in a requires clause |
 
 NONCANONICAL is a backstop. Given the checks above it, every field read back writes back to the
 same bytes, so no input reaches it; the sweeps assert it is never returned. It is reached only when
 a check above it is removed: decoder mutants 1, 2, 5 and 8 (section 8), and for version 6
-mutants 9, 10 and 11 (section 10.9), fall through to it.
+mutants 9, 10 and 11 (section 11.9), fall through to it.
 
 ## 8. Qualification
 
@@ -231,25 +231,294 @@ build `tests/compiler/test_osc_ir_decode.c` plain and with ASan/UBSan. Measured 
   4 no validation, 5 no NUL check, 6 no register range check, 7 no total size check, 8 truncation
   read as zeros) each make the test fail.
 
-## 9. Resolved by version 6 (asked by #444, specified in section 10, omega#451)
+## 9. Resolved by version 6 (asked by #444, specified in section 11, omega#451)
 
 - **Numeric identifiers.** Version 6 identifies functions, structs and fields by index only (calls,
   struct references and field accesses already did). Names move to an optional side table outside
-  identity (10.5, 10.7).
+  identity (11.5, 11.7).
 - **Structured requirement objects.** Version 6 carries each `requires` / `ensures` clause as a typed
-  postfix term list (10.4) that a checker reads without parsing source text. The objects are inside
+  postfix term list (11.4) that a checker reads without parsing source text. The objects are inside
   identity; the source texts move to the side table.
-- **Domain tag string.** Version 6 writes the tag `omega.osc.ir.v6` after the version byte (10.1),
+- **Domain tag string.** Version 6 writes the tag `omega.osc.ir.v6` after the version byte (11.1),
   inside the hashed bytes. Versions 1..5 keep their bytes and identities: the tag exists only in the
   new version, so no existing OSC unit identity changes.
 
-## 10. Format version 6 (omega#451)
+## 10. Seeded memory profile: IR v2 milestone, OSC wire v7
+
+**Specification only; producer and backend qualification is separate.** The
+milestone name “IR v2 memory” does not change the meaning of wire version 2,
+which already carries structs. Wire versions 1..5 and their identity bytes
+remain unchanged. Wire version 6 is the numeric-identifier/structured-contract
+format of section 11; this profile neither extends nor replaces it. The memory
+extension uses version 7. A backend
+that has not implemented this profile must refuse it, not ignore its regions.
+
+### 10.1 Header and regions
+
+All fields remain unsigned little-endian integers without wire padding:
+
+```
+magic[7] = "OSC1IR\0"
+version:u8 = 7
+nstructs:u8, structs[nstructs]       existing section 3.2 encoding
+nregions:u16, regions[nregions]
+nfuncs:u16, functions[nfuncs]        existing section 3.3 encoding
+```
+
+The struct table stays before the region table. Supporting this profile does
+not imply supporting structs: a backend may explicitly refuse a nonempty
+struct table. A region has the following encoding:
+
+| Field | Encoding and rule |
+|---|---|
+| name | u8 length, then 1..63 non-NUL ASCII bytes |
+| element | u8 scalar tag: 2..9, 13 f32, or 14 f64 |
+| storage | u8 class from the table below |
+| owner | u16 function index, or 65535 for module scope |
+| count | u32 number of elements |
+| initial length | u32 byte count |
+| initial data | exactly initial-length bytes |
+
+Region IDs are zero-based table indices, not addresses or value registers.
+Table order is source declaration order; names and order participate in
+identity. Names are unique within an owner scope and may not shadow a module
+region in an owning function. The initial profile admits at most 1024 regions.
+Mutable regions have 1..16777216 elements; an empty read-only text is allowed.
+Existing native aggregate capacity limits still apply to source compilation.
+Backends check each element-count multiplication, alignment and aggregate
+addition for overflow before allocating or emitting memory. Source global
+pools retain the native 1 GiB aggregate limit and local arrays the native
+4 MiB aggregate limit. Backend input/output limits remain independently
+enforced; an unsupported size is a capacity refusal, never truncation.
+
+Sections 3 through 7 remain the complete rules for versions 1..5. For
+version 7, this section extends them: tags 13/14 and opcodes 30..33 are
+admitted only in v7. In a v1..5 unit those bytes remain RANGE, exactly as
+before. Version 7 carries the historical tag/opcode set unchanged, but this
+profile's seeded backends refuse references, slices, allocation, arena,
+pool and struct operations (opcodes 7, 8, 16..29 and tags 10..12) with
+UNSUPPORTED_OP or UNSUPPORTED_TAG. A complete v7 input is at most
+8,388,608 bytes, checked before parsing; a backend may set a smaller
+documented input capacity and refuse beyond it.
+
+Reader classes are applied in byte order. An unknown storage class or an
+element tag outside 2..9/13/14 is INVALID; class 3 is UNSUPPORTED_OP. A
+name that is empty, over 63 bytes, contains NUL, is non-ASCII or contains
+a dot is INVALID. Initial data for classes 0/1, a mismatched text length,
+count 0 for a mutable region, a count over 16,777,216, or more than 1024
+regions is INVALID. Owner validity and duplicate/shadowing names are
+checked after the function table is read and are INVALID. Every region or
+register operand outside its table, including 0x8000..0xFFFF, is INVALID.
+An f32 constant or initializer with a nonzero upper half is INVALID.
+
+| Class | Meaning | Owner and initialization |
+|---|---|---|
+| 0 | Module-private mutable global | owner 65535; no initial data; zero-filled once per module instance |
+| 1 | Function-local mutable array | owner is its function; no initial data; fresh logical storage on every invocation |
+| 2 | Read-only text | owner 65535; element u8; initial length equals count; no implicit NUL |
+| 3 | Reserved Workgroup | refused until initialization, synchronization and invocation ownership have a specified extension |
+
+No other class is admitted. Function-local regions are accessible only by
+their owning function. Calls remain restricted to earlier functions, so
+there is no recursive or reentrant invocation within a module call.
+An implementation may reuse physical storage for a function-local region
+between calls, but valid Omega execution cannot observe a previous
+invocation's values. Exported linear memory is not a JavaScript isolation
+or zeroization boundary; a JavaScript holder can inspect physical storage.
+The source initializer is evaluated once, at the `new` declaration, and fills
+every element before the array is accessible. Its value is not a module data
+segment. Input validation must establish that every local-region access is
+dominated by initialization of that region on the current invocation.
+
+Memory-backed scalar state uses a one-element region. Ordinary scalar
+locals remain value registers; this profile does not allocate regions for
+them or introduce a new source spelling for scalar globals.
+
+For a future SPIR-V backend, class 1 maps to Function storage and class 2 to
+read-only constant storage. Class 0 requires an explicitly persistent
+CrossWorkgroup state ABI, or a named refusal: SPIR-V Private storage is
+per-work-item and cannot implement persistence between module calls.
+Class 3 is reserved rather than pretending a CPU global supplies barriers.
+
+### 10.2 Instructions and bounds
+
+Existing opcodes, including reference LOAD/STORE 9/10, retain their meaning.
+The following instructions are appended; every operand below is u16:
+
+| Opcode | Name | Operands |
+|---|---|---|
+| 30 | RLOAD | destination register, region ID, index register |
+| 31 | RSTORE | region ID, index register, source register |
+| 32 | BITCAST | destination register, source register |
+| 33 | RINIT | region ID, initializer register |
+
+Every operand must designate an existing region or register of the stated
+kind. None of these instructions admits a sentinel operand. BITCAST and
+RINIT source registers are definite-assignment uses; RLOAD and BITCAST
+destinations are definitions.
+
+RLOAD's destination and RSTORE's source have exactly the region element type.
+Indices have an integer tag 2..9, never bool or float. Signed negative indices
+and indices greater than or equal to count trap with Omega bounds trap 3
+(native exit 103). Bounds are checked before multiplication, addition,
+pointer formation or narrowing to a wasm32 address. An invalid operation
+does not read or write its target element. Earlier side effects remain,
+including partial writes to module memory before a trap.
+RSTORE into read-only storage is invalid IR, not a silently ignored store.
+Index and source registers participate in definite-assignment validation.
+
+There is no unchecked access mode in this profile. An explicit source bounds
+test can select a nontrapping path, but it does not disable checks on the
+access. The backend may eliminate a check only when it proves the same
+in-bounds condition. Whole-linear-memory wasm bounds checks alone are
+insufficient: crossing into the next region must still trap. Module,
+text and per-function local backing ranges are pairwise disjoint.
+
+Arrays use packed element widths: u8/i8 one byte, u16/i16 two, u32/i32/f32
+four, u64/i64/f64 eight. Each region starts at an address aligned to its
+element width; no padding exists between elements. Region base addresses
+are backend layout, not IR identity. Struct cells retain their separate
+existing layout. Loads/stores preserve little-endian scalar bits.
+
+BITCAST admits any source/destination pair within exactly one of these
+wire-tag sets: {2 u8, 6 i8}, {3 u16, 7 i16},
+{4 u32, 8 i32, 13 f32}, {5 u64, 9 i64, 14 f64}. Same-type pairs are allowed.
+It reinterprets bits without numeric conversion. Bool, void, references,
+and pairs crossing sets are invalid IR.
+Only declared-width bits are reinterpreted. The destination value register
+then uses its canonical representation: narrow signed integers are
+sign-extended; unsigned integers and f32 are zero-extended. These high
+register bits are representation, not additional array-element bytes.
+
+RINIT is valid only for a function-local region owned by the current
+function; its initializer register has exactly the element type and must
+be definitely assigned. It fills every element with that scalar's bits,
+without conversion. An initialization bit for each local region starts
+false at function entry; RINIT sets it true only after the complete fill.
+A local region is initialized at a block exactly when every path from the
+function entry to that block passes RINIT for it. Unreachable blocks are
+still validated, starting with all local-region bits false. Both
+RLOAD and RSTORE require the target local region's bit to be true.
+Thus declaration-time initialization is explicit, and the validator need
+not prove that an arbitrary loop of stores fills the entire region.
+Repeating RINIT is well-defined and resets the whole region; it does not
+allocate a second region or expose previous contents.
+
+### 10.3 Floating-point types and canonical version selection
+
+Wire tags 13 and 14 mean f32 and f64. Tags 10..12 keep their historical
+reference/bytes/cells meanings. The producer must explicitly map its
+internal float tags rather than serialize them as wire tags.
+CONST keeps its eight-byte immediate: f32 occupies the low half with a zero
+upper half; f64 occupies the complete immediate.
+Floats may appear as value registers, region elements, constants, call
+arguments, returns and float-aware BIN/UN/CMP/CAST/BITCAST operands. They
+are not admitted as reference elements or struct fields in this profile.
+Float BIN subcodes 5..10 and UN subcodes 2..3 are invalid.
+
+Existing BIN add/sub/mul/div, UN negation, and CMP eq/ne/lt/le/gt/ge accept
+matching float operands. Float bitwise operations, shifts and remainder
+are invalid. NaN comparisons follow IEEE semantics: only ne is true.
+Arithmetic rounds to nearest, ties to even, retains subnormals, and does
+not contract separate operators into fused operations. Finite arithmetic,
+infinities and signed zeros follow IEEE-754 at the declared width.
+
+CONST, MOV, RLOAD, RSTORE, RINIT and BITCAST preserve all float bits,
+including signed zero and NaN payloads. Float negation toggles only the
+sign bit. A NaN produced by arithmetic or a float-width conversion may
+have any quiet-NaN payload/sign; exact-byte parity does not apply to those
+new NaN bits. This latitude never permits changing a transported NaN's
+bits. Tests compare such arithmetic results by NaN classification while
+separately checking exact payload transport.
+
+CAST has the following complete rules:
+
+- Integer-to-integer conversions retain the existing checked conversion
+  contract: an unrepresentable destination value traps 5.
+- Float-to-integer first truncates toward zero, then saturates to the
+  destination type's own signed or unsigned range, including narrow
+  destinations. Negative-to-unsigned saturates to zero; infinities saturate
+  to the appropriate endpoint; NaN converts to zero. Stored/reloaded and
+  directly returned results have the same canonical integer value.
+- Integer-to-float interprets the source according to its signedness and
+  rounds to the destination width using nearest, ties to even.
+- f64-to-f32 rounds nearest, ties to even, preserves signed zero and
+  subnormals, and overflows to signed infinity. f32-to-f64 is exact for
+  finite values and preserves infinity and signed zero. NaNs follow the
+  quiet-NaN latitude above. Same-type float CAST is a bit-preserving MOV.
+- Bool, void and reference types are excluded from CAST in this profile.
+
+Ordinary trapping wasm float-to-integer conversion alone is not an
+equivalent lowering. Native/backend conversion defects are implementation
+bugs, not alternate definitions of these rules. Floating-point intrinsics
+need separately specified subcodes and are not silently lowered as calls.
+
+Select wire v7 if and only if the unit has a region, a float type, or an
+opcode introduced by this profile. Otherwise retain the existing v1..5
+selection rule. A gratuitous v7 encoding of an old-only unit is refused.
+Old readers remain valid for their declared versions and must refuse v7.
+
+### 10.4 Backend and qualification obligations
+
+The wasm backend exports its memory as `memory` and every function by its
+original unique ASCII name. That name is reserved against a function export
+collision. Read-only initial bytes become active data segments; the source
+read-only property is enforced for generated Omega instructions, not a
+security barrier against a JavaScript holder of exported memory.
+An immutable i32 global named `region.NAME` exports each module region's
+unsigned wasm32 byte offset. JavaScript interprets the i32 global value as
+unsigned before indexing memory. Region bases remain stable for the module
+instance; local arrays have no exported address. Source names cannot
+contain the dot separator. Float parameters and results use wasm f32/f64
+for wire tags 13/14; the existing integer/bool ABI remains unchanged.
+The memory is exported, has the exact page count needed for every
+region's backing, rounded up to whole 64 KiB pages, has the same maximum,
+and is never grown. Its zero-filled class-0 storage persists while the
+instance lives. Region parity compares module regions only through their
+`region.NAME` offsets; local backing is not part of a portable comparison.
+Consumers use a typed view of exported memory and call exported scalar
+functions once per frame. There are no imports, WASI calls, implicit
+rendering loop, or allocation through JavaScript.
+All computed export names must be unique, including `memory`, function
+names and `region.NAME`; a collision is INVALID rather than an invalid wasm
+module emitted for a JavaScript engine to diagnose later.
+
+Wasm traps are `WebAssembly.RuntimeError`; MVP does not preserve numeric
+Omega trap codes. A producer reports ordinary source errors: 7 type
+mismatch, 9 unsupported context, 14 table capacity, 20 write to text/view,
+21 constant index out of bounds and 23 storage capacity. A v7 backend keeps
+the existing named refusal exits and empty stdout on parse/type/capacity
+refusal; unknown storage classes are INVALID, unsupported profile features
+are UNSUPPORTED_OP or UNSUPPORTED_TAG, and unsupported wire versions are
+VERSION. Refusal is not a successful empty module.
+
+Required qualification includes native/wasm scalar and memory parity;
+u8/i32/f32/f64 round trips; text data; local reinitialization on repeated
+calls; region-boundary, negative and wide-index traps; refusal of read-only
+stores and foreign local ownership; deterministic module bytes; an RGBX
+gradient framebuffer checksum comparison; a real pinned renderer primitive
+with a full-buffer pixel comparison; and a changed-store or missing-check
+mutant rejected by those checks. Existing v1 parity and refusal suites must
+remain unchanged and green. Host evidence does not qualify GPU execution.
+The new wire also needs an independent read-only oracle that decodes its
+region table, validates ownership/types/initialization, and executes memory
+instructions. Native/wasm agreement alone is not sufficient if both share a
+producer bug. Hand-encoded valid and malformed units challenge that oracle
+and both backends; the original pinned C renderer remains an independent
+pixel reference rather than a translation of the Omega implementation.
+Required malformed-wire controls include missing or loop-carried local
+initialization, foreign-local access, invalid/sentinel operands and export
+collisions. Repeated-call checks include calls after a trapped invocation.
+Conversion fixtures cover signed, unsigned and narrow destination
+boundaries, float widths, infinities, NaNs and signed zeros.
+
+## 11. Format version 6 (omega#451)
 
 Written only by `osc_ir_encode_v6`; identity by `osc_ir_digest_v6`; read by the same
 `osc_ir_decode`. Every integer is little-endian, as in section 3. Types (3.4) and instructions (3.5)
 are written exactly as in versions 1..5.
 
-### 10.1 Header
+### 11.1 Header
 
 | bytes | field |
 |---|---|
@@ -257,10 +526,10 @@ are written exactly as in versions 1..5.
 | 1 | version 6 |
 | 16 | domain tag: the 15 bytes `omega.osc.ir.v6` and one NUL (`OSC_IR_V6_TAG`, `OSC_IR_V6_TAG_LEN`) |
 
-The core (10.2) follows, then the name table (10.5). Nothing may follow the name table.
+The core (11.2) follows, then the name table (11.5). Nothing may follow the name table.
 `osc_ir_encoding_version` returns 6 only when all 16 tag bytes are present and exact.
 
-### 10.2 Core
+### 11.2 Core
 
 | bytes | field |
 |---|---|
@@ -270,11 +539,11 @@ The core (10.2) follows, then the name table (10.5). Nothing may follow the name
 | per field: 1 | scalar tag (3.4) |
 | per field: 2 | `alen` (0 = scalar field) |
 | per field: 2 | `off` |
-| 2 | `nfuncs` 0..32, then `nfuncs` function records (10.3) |
+| 2 | `nfuncs` 0..32, then `nfuncs` function records (11.3) |
 
 The struct table is always present (possibly empty) and carries no names.
 
-### 10.3 Function record
+### 11.3 Function record
 
 | bytes | field |
 |---|---|
@@ -283,14 +552,14 @@ The struct table is always present (possibly empty) and carries no names.
 | 2 | `nvregs` 0..480, then `nvregs` types (3.4) |
 | 2 | `nblocks` 0..512, then per block: 4 `first`, 4 `count` |
 | 4 | `ninsns` 0..4096, then `ninsns` instructions (3.5) |
-| 1 | `nreq` 0..64, then `nreq` requirement terms (10.4): the `requires` object |
-| 1 | `nens` 0..64, then `nens` requirement terms (10.4): the `ensures` object |
+| 1 | `nreq` 0..64, then `nreq` requirement terms (11.4): the `requires` object |
+| 1 | `nens` 0..64, then `nens` requirement terms (11.4): the `ensures` object |
 
 Numeric identifiers in the core: a CALL `callee` is a function index below `nfuncs`; a type's `sid`
 names `structs[sid-1]` and is at most `nstructs`; FLOAD / FSTORE `imm` is a field number of that
 struct. Function names, struct names, field names and contract texts are not in the core.
 
-### 10.4 Requirement terms
+### 11.4 Requirement terms
 
 A requirement object (`OscCterm req[]` / `ens[]`, `osc_ir.h`) is a postfix program over a typed
 value stack. Each term is one kind byte, then the kind's fields:
@@ -310,9 +579,9 @@ when it is empty (no clause) or leaves exactly one bool on the stack with no ste
 stack, and every term field its kind does not carry is 0 (one object has one form). The operator
 meanings are those of the IR instruction with the same `sub` (`osc_ir.h`). The `requires` object
 holds on entry, the `ensures` object on return. This change fixes the carried form, its typing and
-its place in identity; no consumer evaluates the objects yet (10.9).
+its place in identity; no consumer evaluates the objects yet (11.9).
 
-### 10.5 Name table
+### 11.5 Name table
 
 | bytes | field |
 |---|---|
@@ -328,9 +597,9 @@ Every entry names an existing object (IDENT). Entries are strictly ascending by
 of length 0 is a second spelling of "absent" and is refused (ORDER). Names are optional: a version 6
 unit may leave any function, struct or field unnamed. Present struct names stay unique within the
 unit and present field names unique within their struct (`osc_ir_validate`). The texts of kinds 4
-and 5 are the source spelling, kept for people; the checked meaning is the object in 10.4.
+and 5 are the source spelling, kept for people; the checked meaning is the object in 11.4.
 
-### 10.6 Limits
+### 11.6 Limits
 
 Section 5's counts apply to the core. In addition: at most 64 terms per object
 (`OSC_CONTRACT_MAX`), at most 368 name-table entries. Input longer than `OSC_IR_V6_ENCODED_MAX`
@@ -339,7 +608,7 @@ and every possible name-table entry at its longest) is refused before parsing. F
 byte other than 6, the section 5 bound (`OSC_IR_ENCODED_MAX`) is still applied, after the version
 byte is read and before it is judged, so inputs of versions 1..5 are refused exactly as before.
 
-### 10.7 Canonical law and identity
+### 11.7 Canonical law and identity
 
 The version 6 canonical set is `{ osc_ir_encode_v6(u) : osc_ir_validate(u) == 0 }`. Every valid
 unit has a version 6 form. A unit with a structured object or an unnamed struct or field has no
@@ -359,7 +628,7 @@ the name table's `count`. Consequences, each checked by the test:
 Two units that differ only in names share an identity and differ in bytes. A consumer that must tell
 them apart hashes the whole encoding.
 
-### 10.8 Refusal classes for version 6
+### 11.8 Refusal classes for version 6
 
 Order of checks: total size (OVERSIZED); magic (MAGIC); version byte; tag (TRUNCATED when fewer than
 16 bytes remain, else DOMAIN); the core front to back (TRUNCATED, OVERSIZED for counts, RANGE for
@@ -374,7 +643,7 @@ chooses version 6.
 | -12 | DOMAIN | version byte 6 without the exact 16-byte tag | tag "omega.osc.ir.v7"; tag without its NUL; tag missing |
 | -13 | IDENT | a core identifier or a name entry names no object: `sid` above `nstructs`, `callee` not below `nfuncs`, an entry for a missing function, struct or field | struct id 2 in a unit without structs; name for function 1 of 1; field name for a missing struct; requires text for function 5 |
 | -14 | ORDER | name entries not strictly ascending (including two for one object), `sub` nonzero outside kind 3, an entry of length 0 | descending entries; two names for function 0; empty entry; field number on a function name |
-| -15 | CONTRACT | a requirement object that 10.4 refuses | parameter 0 of a function with none; result in a requires clause; clause ending in a u8; BIN with one operand; clause leaving two values; u8 constant 256; constant of type ref; BIN operator 0 |
+| -15 | CONTRACT | a requirement object that 11.4 refuses | parameter 0 of a function with none; result in a requires clause; clause ending in a u8; BIN with one operand; clause leaving two values; u8 constant 256; constant of type ref; BIN operator 0 |
 
 The existing classes also have version 6 counterexamples: TRUNCATED (input ends inside the tag,
 inside a term, inside the name table), UNKNOWN_VERSION (version 7 followed by the version 6 tag),
@@ -383,7 +652,7 @@ term kinds 0 and 8), TEXT (NUL inside a name), TRAILING (one byte after the name
 (u8 constant 256 in the core). NONCANONICAL stays unreachable: the sweeps assert it is never
 returned for version 6 input either.
 
-### 10.9 Qualification and limits of this change
+### 11.9 Qualification and limits of this change
 
 Measured on the Spark, 2026-10-17, `make test-osc-ir-decode`, full mode (section 8's sweeps of
 versions 1..5 give the same case, refused and admitted totals as before this change; one of their
@@ -403,13 +672,12 @@ byte flips now lands on version 6 and is refused DOMAIN):
   3,597, IDENT 1,079, ORDER 1,085, CONTRACT 21,153), 30,569 decoded to a different valid unit that
   re-encodes to exactly those bytes, NONCANONICAL never returned, no crash. The ASan/UBSan build
   runs 231,397 such cases with no sanitizer report;
-- 35 counterexamples (10.8) from an independent writer in the test, whose canonical case is
+- 35 counterexamples (11.8) from an independent writer in the test, whose canonical case is
   byte-identical to `osc_ir_encode_v6`; with section 7's 22 cases, 57 of 57 as expected and 14 of
   the 15 classes exhibited (all but the NONCANONICAL backstop);
 - 6 more decoder mutants, each caught: 9 no domain check, 10 no name-table target check, 11 no
   order or empty-entry check, 12 no requirement-object check, 13 no core identifier check, 14 name
   table hashed into the identity.
-
 
 Not in this change: the front end (`osc_lower`) still writes versions 1..5 and fills no requirement
 objects; translating `requires` / `ensures` source into objects, evaluating them, and teaching the

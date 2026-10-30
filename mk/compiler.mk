@@ -1,7 +1,7 @@
 # OSC-1 compiler slice (docs/osc/OSC-1-DESIGN.md) and the OSC-0B exit gate
 # (II.11 executable memory model). Files under src/compiler/ and tests/compiler/.
 # Picked up by `-include mk/*.mk`; not part of `all` or `test`. Links nothing
-# but src/compiler/** and src/sha256.c (no physics, no runtime, no gate suites);
+# but src/compiler/** and src/omega_om_units.c (no physics, no runtime, no gate suites);
 # the OSC-2 item 4 test also links the legacy writer src/aarch64_encoder.c + decoder.
 # OSC-1 slice; not a general Omega compiler; no self-hosting.
 #
@@ -21,7 +21,7 @@ COMPILER_MK := 1
 OSC_DIR = $(OUT_DIR)/compiler
 OSC_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model
 OSC_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/sha256.c
+OSC_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/omega_om_units.c
 OSC_MODEL = src/compiler/model/osc_model.c
 OSC_MODEL_GEN = src/compiler/model/osc_model_gen.c
 OSC_HDRS = $(wildcard src/compiler/*.h) $(wildcard src/compiler/model/*.h) src/sha256.h

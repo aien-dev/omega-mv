@@ -1,0 +1,47 @@
+note Host only: every allowed UVM request uses an invalid fd, never a GPU.
+global data uchar 9280
+global status uchar 4
+text msg "PASS bounded native UVM requests\n"
+fn ck yes bool to void
+if not yes
+exit int 80
+end
+end
+fn bad k int to long
+if eq k 0
+ret uvmctl neg int 1 uint 33 data 0 9263
+end
+if eq k 1
+ret uvmctl neg int 1 uint 33 data 0 9265
+end
+if eq k 2
+ret uvmctl neg int 1 uint 33 data 17 9264
+end
+ret uvmctl neg int 1 uint 75 data 18446744073709551615 8
+end
+fn main to int
+ck eq uvmctl neg int 1 uint 805306369 data 8 16 neg long 9
+ck eq uvmctl neg int 1 uint 75 data 8 8 neg long 9
+ck eq uvmctl neg int 1 uint 37 data 8 40 neg long 9
+ck eq uvmctl neg int 1 uint 38 data 8 20 neg long 9
+ck eq uvmctl neg int 1 uint 25 data 8 32 neg long 9
+ck eq uvmctl neg int 1 uint 26 data 8 20 neg long 9
+ck eq uvmctl neg int 1 uint 27 data 8 56 neg long 9
+ck eq uvmctl neg int 1 uint 28 data 8 28 neg long 9
+ck eq uvmctl neg int 1 uint 33 data 8 9264 neg long 9
+ck eq uvmctl neg int 1 uint 34 data 8 24 neg long 9
+ck eq add uvmctl neg int 1 uint 73 data 8 24 10 1
+for k int 4
+p = fork
+ck ge p 0
+if eq p 0
+r = bad k
+exit int 80
+end
+ck eq waitpid int p status 0 4 0 p
+ck eq get status 0 0
+ck eq get status 1 103
+end
+ck eq write 1 msg 0 len msg long len msg
+ret 0
+end

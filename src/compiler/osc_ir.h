@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * osc_ir.h -- OSC-1 typed IR ("Flow IR" v0 slice). The contract between the
  * OSC-1 front end (src/compiler/osc_front.*), the reference interpreter
@@ -195,7 +211,7 @@ typedef struct {
 } OscBlock;
 
 /* Structured requirement object (omega#451, format version 6; spec/one-layer-format.md
- * section 10.4): a requires / ensures clause as a postfix term list over a typed value
+ * section 11.4): a requires / ensures clause as a postfix term list over a typed value
  * stack, so the contract travels with the unit as data a checker can read, not only as
  * source text. Operators reuse the IR's sub-op codes and typing rules (BIN/UN/CMP/CAST).
  * The list must leave exactly one bool; an empty list means "no clause". The lowered
@@ -289,7 +305,7 @@ int osc_ir_digest(const OscUnit *u, uint8_t out[32]);
 #define OSC_IR_VERSION_MAX 5
 int osc_ir_encoding_version(const uint8_t *buf, size_t len);
 
-/* Format version 6 (omega#451; spec/one-layer-format.md section 10). A second
+/* Format version 6 (omega#451; spec/one-layer-format.md section 11). A second
  * canonical form, chosen by the producer, never by content: osc_ir_encode keeps writing
  * versions 1..5 exactly as before (no existing identity changes). Version 6 carries
  *  - a domain tag: the 16 bytes "omega.osc.ir.v6\0" right after the version byte;

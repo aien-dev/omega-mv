@@ -1,0 +1,13 @@
+note continue in a while jumps to the head: 1 + 2 + 4 + 5 + 6 = 18
+fn main to ulong
+i = ulong 0
+s = ulong 0
+while lt i 6
+i = add i 1
+if eq i 3
+continue
+end
+s = add s i
+end
+ret s
+end

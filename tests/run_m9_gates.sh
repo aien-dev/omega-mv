@@ -1,4 +1,19 @@
 #!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # tests/run_m9_gates.sh -- Master Qualification Gate Runner for Milestone 9 (OMEGA_SYNTHESIS_V0)
 set -eu
 
@@ -53,8 +68,8 @@ DIGEST_PROGRAM=$(sha256sum "$OMEGA_ROOT/src/omega_program.c" | awk '{print $1}')
 DIGEST_TOOL=$(sha256sum "$TOOL" | awk '{print $1}')
 PARENT_COMMIT="d25349e4bf4a820dbcff0dd6a593d1db7b454a0b"
 SOURCE_PARENT_COMMIT="$PARENT_COMMIT"
-QUALIFIED_COMMIT="${QUALIFIED_IMPLEMENTATION_COMMIT:-39905a3eebc3f25c7e3f89d380b06b00539b233a}"
-RECEIPT_COMMIT="${RECEIPT_COMMIT:-39905a3eebc3f25c7e3f89d380b06b00539b233a}"
+. "$OMEGA_ROOT/tests/receipt_commit.sh"
+receipt_commit_resolve "$OMEGA_ROOT" || exit 1
 
 echo "[*] Step 6: Generating formal qualification receipt: $RECEIPT..."
 cat <<EOF > "$RECEIPT"
