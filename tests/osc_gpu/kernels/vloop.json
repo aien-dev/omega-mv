@@ -1,0 +1,12 @@
+{"functions": [
+  {"name": "vloop", "kind": "kernel", "threads": 64,
+   "params": ["gview:u32", "u32", "gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "u32", "u32", "u32", "bool", "bool", "u32", "u32", "u32"],
+   "blocks": [
+    [{"op": "thread", "dst": 4}, {"op": "gload", "dst": 5, "buf": 0, "index": 4}, {"op": "const", "dst": 13, "value": 8}, {"op": "rem", "dst": 6, "a": 5, "b": 13}, {"op": "const", "dst": 7, "value": 0}, {"op": "const", "dst": 8, "value": 0}, {"op": "const", "dst": 11, "value": 1}, {"op": "const", "dst": 12, "value": 3}, {"op": "br", "to": 1}],
+    [{"op": "lt", "dst": 9, "a": 7, "b": 13}, {"op": "cbr", "cond": 9, "then": 2, "else": 4}],
+    [{"op": "lt", "dst": 10, "a": 7, "b": 6}, {"op": "cbr", "cond": 10, "then": 3, "else": 4}],
+    [{"op": "mul", "dst": 5, "a": 7, "b": 12}, {"op": "add", "dst": 8, "a": 8, "b": 5}, {"op": "add", "dst": 8, "a": 8, "b": 11}, {"op": "add", "dst": 7, "a": 7, "b": 11}, {"op": "br", "to": 1}],
+    [{"op": "gstore", "buf": 2, "index": 4, "value": 8}, {"op": "ret"}]
+   ]}
+]}

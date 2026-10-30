@@ -1,0 +1,5 @@
+kernel late 64 c edit float
+if lt thread 5
+end
+s = shared float 64
+end

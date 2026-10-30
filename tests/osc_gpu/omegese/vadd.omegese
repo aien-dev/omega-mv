@@ -1,0 +1,6 @@
+kernel vadd 256 a view float b view float c edit float
+i = add mul block threads thread
+if lt i len c
+put c i add get a i get b i
+end
+end
