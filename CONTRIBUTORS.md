@@ -8,6 +8,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
 | Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
+| Grok 4.7 | Merged current main (`6d482de0e`) into #854. The only conflict was the generated root `.crumb` (compile stamps and source-tree digest). Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
@@ -46,6 +47,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Claude Opus 5.5 | Effect-derived capability manifest (`seed/effects`, M1): host-word manifest, ELF syscall resolution that fails closed, seccomp cBPF output, probe-parity/strace/bwrap gate with negative controls and tool mutants |
 | Claude Opus 5.5 | seed/agent: omagent, a nanobot-style coding agent in seeded Omega (agent loop, four permissioned tools, JSONL session memory, SSE streaming, CLI), its scripted-mock test referee with six mutants, and the paired startup/RSS benchmark against nanobot |
 | Claude Opus 5.5 | Tenstorrent Tensix vecadd (`seed/tensix`): RV32IM asm2 table, hand-written kernel and start code, seeded Omega emitter `irrv32.om` (OSC IR v1 scalar unit -> RV32 elementwise kernel, byte-identical to asm2), hand-written edge disassembly, ttsim WH/BH and qemu interop-oracle gate with negative controls |
+| Claude Opus 5.5 | AWS Trainium/Inferentia backend `seed/nki`: `irnki.om` OSC IR v1 to `nki.isa` vecadd/elementwise emitter, native-Omega reference lanes, NKI CPU simulator interop-oracle gate (trn1/trn2/trn3) with negative controls and refusals, pinned oracle setup |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
