@@ -82,6 +82,18 @@ The full omegatool build (`make`) links the `physics` repository at the commit i
 
 `make test-bw-hazard` (host only, links `libomega_gpu.a`, so it needs the physics checkout like `make`) reads the encoded bytes of every GPU kernel the generators build and checks the scoreboard waits: a register written by a load must be waited on before it is read, and a register a queued load or store still reads must be waited on before it is overwritten (omega-mv#554). The simulators do not model these waits, so this is the host check that would have caught the omega-mv#545 chip fault. Known findings on older kernels are listed, with how each was confirmed, in `tests/bw_hazard_test.c`.
 
+Host checks on the shared Spark judge, whose 1-minute load average is rarely below 2, keep every
+check they had and never turn load into a pass. `tests/runtime/r11_own_hold_test.sh` raises the R11
+load limit for its own runs (`R11_LOAD_LIMIT`, which can only raise it) and judges the quiet-flag hold
+decision the program prints; the living run's speed checks are judged there only when the load
+average is at most 2. The speed checks (the action-graph 2x speedup in
+`tests/runtime/rx_action_graph.c`, workflow fusion) take their median over the repetitions the
+machine did not disturb (run-queue delay from schedstat, `tests/runtime/rx_quiet_reps.h`); when too
+few are undisturbed the check reports `NOT_RUN` with reason `cpu_busy`, and `tests/gates/run.sh`
+reads that refusal from the receipt, runs the rest of the step and ends it NOT_RUN. Omega's serve
+cost is the CPU time of the serving thread (`cost_ns` in `src/runtime/rx_omega.c`), not wall-clock
+time, and the R15 parity rig gives both sides a fixed cost table (`r15_use_cost_model`).
+
 ## Repository layout
 
 `src/` existing core and C compiler awaiting replacement (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine).
