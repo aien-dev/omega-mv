@@ -5029,6 +5029,8 @@ ret nmbound x n
 end
 
 note fwscan: 1 when a line from here to the next `fn` line (or the end) starts with the word packed as w
+note A line's lead skips space, tab and CR in any order, as tok does (skipbl alone stops at CR, so a CR-led
+note assignment to the counter would hide and drop a needed check; gate19 cr1). hzopen skips the same lead.
 fn fwscan w ulong to ulong
 p = get cur 0
 r = ulong 0
@@ -5039,7 +5041,17 @@ while and go lt m 999999
 if ge p get inlen 0
 go = false
 else
+c = ulong 13
+while eq c 13
 p = skipbl p
+c = ulong 0
+if lt p get inlen 0
+c = ulong get inp p
+end
+if eq c 13
+p = add p 1
+end
+end
 x = pkword p
 if eq x w
 r = ulong 1
@@ -5185,7 +5197,17 @@ while and go lt m 999999
 if ge p get inlen 0
 go = false
 else
+c = ulong 13
+while eq 13 c
 p = skipbl p
+c = ulong 0
+if lt p get inlen 0
+c = ulong get inp p
+end
+if eq c 13
+p = add p 1
+end
+end
 x = pkword p
 if or or eq x 26217 eq x 435610544247 eq x 7499622
 d = add d 1

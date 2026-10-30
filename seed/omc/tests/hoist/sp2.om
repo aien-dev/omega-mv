@@ -1,0 +1,10 @@
+om2
+global a uchar 10
+fn main to int
+s = ulong 0
+for i ulong 10
+put a i 7
+ end
+s = add s 5000
+ret 0
+end

@@ -10,6 +10,10 @@
 # assignment to the counter (n3), m3 drops the reload after a BL (h1), m4 drops the block close's
 # restore of hz_n (b1), m5 restores the old cap of 8, which hoists into x27 (a8). m0 never sets the
 # implied range, so p1 must grow under it: the elimination is real, not only harmless.
+# A line lead of CR (byte 13, skipped by tok like space and tab): cr1 assigns the counter on a CR-led
+# line and must keep its check (exit 103) like its space-led twin sp1, and compile to the same bytes;
+# cr2 closes a hoisting for with a CR-led end and must compile to the same bytes as sp2. m7 stops fwscan
+# skipping CR (cr1 exits 0), m8 stops hzopen skipping CR (cr2 and sp2 differ).
 # Function mode: the exported unit f1 must write all of x20..x26 and none of x19, x27, x28, x29; no
 # program here writes x19 or x29 (objdump decodes the destinations). Differential fuzz: 64 random
 # programs of nested loops, ifs and calls (tests/hoist/fuzz.awk) exit the same under seed/out/omc as
@@ -43,13 +47,16 @@ runc() {
 }
 
 n=0
-for c in p1:120 h1:168 n1:103 n2:103 n3:103 n4:103 n5:103 a8:1 b1:1; do
+for c in p1:120 h1:168 n1:103 n2:103 n3:103 n4:103 n5:103 a8:1 b1:1 cr1:103 sp1:103 cr2:0 sp2:0; do
     name=${c%%:*} want=${c#*:}
     got=$(runc "$S" "$name" omc)
     [ "$got" = "$want" ] || bad "$name: ran $got, wanted $want"
     n=$((n+1))
     say "PASS $name exit $got"
 done
+cmp -s "$B/omc-cr1.bin" "$B/omc-sp1.bin" || bad "cr1 and sp1 (CR-led vs space-led line) compile differently"
+cmp -s "$B/omc-cr2.bin" "$B/omc-sp2.bin" || bad "cr2 and sp2 (CR-led vs space-led end) compile differently"
+say "PASS a CR line lead compiles like a space lead (cr1 = sp1, cr2 = sp2)"
 
 # mutant name anchor replacement: replace (or with an empty replacement, delete) the one line equal to
 # anchor, build it with seed/out/omc, and refuse a mutant whose anchor is missing or not unique.
@@ -79,6 +86,13 @@ mutant m4 'put hz_n 0 get bhz i' ''
 caught m4 b1 1
 mutant m5 'if lt n hzcap' 'if lt n 8'
 caught m5 a8 1
+mutant m7 'while eq c 13' 'while eq c 987654321'
+caught m7 cr1 103
+mutant m8 'while eq 13 c' 'while eq 987654321 c'
+runc "$B/m8.omc" cr2 m8 > /dev/null
+runc "$B/m8.omc" sp2 m8 > /dev/null
+! cmp -s "$B/m8-cr2.bin" "$B/m8-sp2.bin" || bad "mutant m8 not caught: cr2 and sp2 still compile the same"
+say "PASS mutant m8 caught: cr2 and sp2 compile differently without the CR skip in hzopen"
 
 mutant m0 'if eq fwscan w 0' 'if ne w w'
 runc "$B/m0.omc" p1 m0 > /dev/null
@@ -133,6 +147,5 @@ for s in $(seq 1 64); do
 done
 [ "$smaller" -gt 0 ] || bad "fuzz: no program changed size, so hoisting and implied ranges were never exercised"
 say "PASS fuzz 64 programs exit the same with and without hoisting ($smaller smaller with it)"
-
-say "PASS gate19 $n cases, 6 mutants caught, f1, register scan, fuzz 64"
+say "PASS gate19 $n cases, 8 mutants caught, f1, register scan, fuzz 64"
 exit 0
