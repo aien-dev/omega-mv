@@ -1,0 +1,74 @@
+OM2GATE START cases=seed/omc/om2/s2/s2.cases scratch=build/batch3/scratch-s2
+IDENTITY omc seed/out/omc sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e pinned=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e match
+CASE s2-u1 line=5
+  $ seed/out/omc < build/batch3/scratch-s2/5.src > build/batch3/scratch-s2/5.elf 2> build/batch3/scratch-s2/5.cerr
+  $ build/batch3/scratch-s2/5.elf < /dev/null > build/batch3/scratch-s2/5.out 2> build/batch3/scratch-s2/5.err
+VERDICT s2-u1 PASS run exit=117 expected=117 stdout=match stderr=match
+CASE s2-u1-rolled line=6
+  $ seed/out/omc < build/batch3/scratch-s2/6.src > build/batch3/scratch-s2/6.elf 2> build/batch3/scratch-s2/6.cerr
+  $ build/batch3/scratch-s2/6.elf < /dev/null > build/batch3/scratch-s2/6.out 2> build/batch3/scratch-s2/6.err
+VERDICT s2-u1-rolled PASS run exit=117 expected=117 stdout=match stderr=match
+CASE s2-fold-guard line=7
+  $ seed/out/omc < build/batch3/scratch-s2/7.src > build/batch3/scratch-s2/7.elf 2> build/batch3/scratch-s2/7.cerr
+  $ build/batch3/scratch-s2/7.elf < /dev/null > build/batch3/scratch-s2/7.out 2> build/batch3/scratch-s2/7.err
+VERDICT s2-fold-guard PASS run exit=150 expected=150 stdout=match stderr=match
+CASE s2-fold-guard-rolled line=8
+  $ seed/out/omc < build/batch3/scratch-s2/8.src > build/batch3/scratch-s2/8.elf 2> build/batch3/scratch-s2/8.cerr
+  $ build/batch3/scratch-s2/8.elf < /dev/null > build/batch3/scratch-s2/8.out 2> build/batch3/scratch-s2/8.err
+VERDICT s2-fold-guard-rolled PASS run exit=150 expected=150 stdout=match stderr=match
+CASE s2-fold-trap line=9
+  $ seed/out/omc < build/batch3/scratch-s2/9.src > build/batch3/scratch-s2/9.elf 2> build/batch3/scratch-s2/9.cerr
+  $ build/batch3/scratch-s2/9.elf < /dev/null > build/batch3/scratch-s2/9.out 2> build/batch3/scratch-s2/9.err
+VERDICT s2-fold-trap PASS run exit=101 expected=101 stdout=match stderr=match
+CASE s2-fold-trap-rolled line=10
+  $ seed/out/omc < build/batch3/scratch-s2/10.src > build/batch3/scratch-s2/10.elf 2> build/batch3/scratch-s2/10.cerr
+  $ build/batch3/scratch-s2/10.elf < /dev/null > build/batch3/scratch-s2/10.out 2> build/batch3/scratch-s2/10.err
+VERDICT s2-fold-trap-rolled PASS run exit=101 expected=101 stdout=match stderr=match
+CASE s2-depth4 line=11
+  $ seed/out/omc < build/batch3/scratch-s2/11.src > build/batch3/scratch-s2/11.elf 2> build/batch3/scratch-s2/11.cerr
+  $ build/batch3/scratch-s2/11.elf < /dev/null > build/batch3/scratch-s2/11.out 2> build/batch3/scratch-s2/11.err
+VERDICT s2-depth4 PASS run exit=2 expected=2 stdout=match stderr=match
+CASE s2-inner-break line=12
+  $ seed/out/omc < build/batch3/scratch-s2/12.src > build/batch3/scratch-s2/12.elf 2> build/batch3/scratch-s2/12.cerr
+  $ build/batch3/scratch-s2/12.elf < /dev/null > build/batch3/scratch-s2/12.out 2> build/batch3/scratch-s2/12.err
+VERDICT s2-inner-break PASS run exit=8 expected=8 stdout=match stderr=match
+CASE s2-sites line=13
+  $ seed/out/omc < build/batch3/scratch-s2/13.src > build/batch3/scratch-s2/13.elf 2> build/batch3/scratch-s2/13.cerr
+VERDICT s2-sites PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s2-bad-break line=14
+  $ seed/out/omc < build/batch3/scratch-s2/14.src > build/batch3/scratch-s2/14.elf 2> build/batch3/scratch-s2/14.cerr
+VERDICT s2-bad-break PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-continue line=15
+  $ seed/out/omc < build/batch3/scratch-s2/15.src > build/batch3/scratch-s2/15.elf 2> build/batch3/scratch-s2/15.cerr
+VERDICT s2-bad-continue PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-write-i line=16
+  $ seed/out/omc < build/batch3/scratch-s2/16.src > build/batch3/scratch-s2/16.elf 2> build/batch3/scratch-s2/16.cerr
+VERDICT s2-bad-write-i PASS compile exit=7 expected=7 refused with the expected error
+CASE s2-bad-k0 line=17
+  $ seed/out/omc < build/batch3/scratch-s2/17.src > build/batch3/scratch-s2/17.elf 2> build/batch3/scratch-s2/17.cerr
+VERDICT s2-bad-k0 PASS compile exit=8 expected=8 refused with the expected error
+CASE s2-bad-k65 line=18
+  $ seed/out/omc < build/batch3/scratch-s2/18.src > build/batch3/scratch-s2/18.elf 2> build/batch3/scratch-s2/18.cerr
+VERDICT s2-bad-k65 PASS compile exit=8 expected=8 refused with the expected error
+CASE s2-bad-kname line=19
+  $ seed/out/omc < build/batch3/scratch-s2/19.src > build/batch3/scratch-s2/19.elf 2> build/batch3/scratch-s2/19.cerr
+VERDICT s2-bad-kname PASS compile exit=16 expected=16 refused with the expected error
+CASE s2-bad-recur line=20
+  $ seed/out/omc < build/batch3/scratch-s2/20.src > build/batch3/scratch-s2/20.elf 2> build/batch3/scratch-s2/20.cerr
+VERDICT s2-bad-recur PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-new line=21
+  $ seed/out/omc < build/batch3/scratch-s2/21.src > build/batch3/scratch-s2/21.elf 2> build/batch3/scratch-s2/21.cerr
+VERDICT s2-bad-new PASS compile exit=9 expected=9 refused with the expected error
+CASE s2-bad-depth5 line=22
+  $ seed/out/omc < build/batch3/scratch-s2/22.src > build/batch3/scratch-s2/22.elf 2> build/batch3/scratch-s2/22.cerr
+VERDICT s2-bad-depth5 PASS compile exit=14 expected=14 refused with the expected error
+CASE s2-bad-growth line=23
+  $ seed/out/omc < build/batch3/scratch-s2/23.src > build/batch3/scratch-s2/23.elf 2> build/batch3/scratch-s2/23.cerr
+VERDICT s2-bad-growth PASS compile exit=14 expected=14 refused with the expected error
+CASE s2-bad-idx line=24
+  $ seed/out/omc < build/batch3/scratch-s2/24.src > build/batch3/scratch-s2/24.elf 2> build/batch3/scratch-s2/24.cerr
+VERDICT s2-bad-idx PASS compile exit=21 expected=21 refused with the expected error
+CASE s2-bad-recur-g line=25
+  $ seed/out/omc < build/batch3/scratch-s2/25.src > build/batch3/scratch-s2/25.elf 2> build/batch3/scratch-s2/25.cerr
+VERDICT s2-bad-recur-g PASS compile exit=9 expected=9 refused with the expected error
+OM2GATE PASS cases=21 pass=21 fail=0 invalid=0 not_run=0
