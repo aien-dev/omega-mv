@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 160: OFF 5000 is out of range (beyond SIZE 4096 and the 4096 cap): error 29.
+om2
+layout of 4096
+field a uchar 1 at 5000 little
+end
+fn main to int
+ret 0
+end

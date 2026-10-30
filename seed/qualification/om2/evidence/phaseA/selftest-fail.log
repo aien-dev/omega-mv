@@ -1,0 +1,11 @@
+OM2GATE START cases=seed/qualification/om2/selftest/fail.cases scratch=build/om2-qual/selftest-fail
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE cat-bad-seq line=3
+  $ seed/out/omc < build/om2-qual/selftest-fail/3.src > build/om2-qual/selftest-fail/3.elf 2> build/om2-qual/selftest-fail/3.cerr
+  $ build/om2-qual/selftest-fail/3.elf < build/om2-qual/selftest-fail/3.in > build/om2-qual/selftest-fail/3.out 2> build/om2-qual/selftest-fail/3.err
+VERDICT cat-bad-seq FAIL run exit=0 expected=0 stdout differs at byte 5 stderr=match
+CASE cat-bad-short line=6
+  $ seed/out/omc < build/om2-qual/selftest-fail/6.src > build/om2-qual/selftest-fail/6.elf 2> build/om2-qual/selftest-fail/6.cerr
+  $ build/om2-qual/selftest-fail/6.elf < build/om2-qual/selftest-fail/6.in > build/om2-qual/selftest-fail/6.out 2> build/om2-qual/selftest-fail/6.err
+VERDICT cat-bad-short PASS run exit=0 expected=0 stdout=match stderr=match
+OM2GATE FAIL cases=2 pass=1 fail=1 invalid=0 not_run=0

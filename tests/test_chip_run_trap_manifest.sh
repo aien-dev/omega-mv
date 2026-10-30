@@ -51,7 +51,7 @@ src/omega_blackwell_encoder.c
 src/omega_blackwell_codegen.c
 src/omega_blackwell_matmul.c
 src/omega_blackwell_qmd.c
-src/sha256.c
+src/omega_om_units.c
 /nonexistent-physics-for-test/nvrm/nvrm.c
 /nonexistent-physics-for-test/m16/m16_native.c'
 # gcc flags and include paths of the old script, in order (the -o and its sources excluded).
@@ -89,7 +89,7 @@ check_wrapper_exit() {
 
 # Mutants of the manifest.
 sed 's#^SOURCES="src/omega_unwritten_trap.c #SOURCES="#' "$MAN" > "$T/m_dropsrc"
-sed 's#src/sha256.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
+sed 's#src/omega_om_units.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
 sed '/^PASS_LINE=/d' "$MAN" > "$T/m_novar"
 sed 's#^REFUSE_EXIT=2#REFUSE_EXIT=1#' "$MAN" > "$T/m_exit"
 sed "s#evidence-out/OMEGA-UNWRITTEN-TRAP#evidence/unwritten_trap#" "$MAN" > "$T/m_evid"

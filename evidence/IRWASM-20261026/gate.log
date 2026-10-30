@@ -1,0 +1,39 @@
+SOURCE 8e083692ae1f597966c8d2eb6a92292bb278eb41
+COMPILER befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+v24.21.0
+Linux aarch64
+PASS dev01 deterministic
+PASS dev02 deterministic
+PASS dev03 deterministic
+PASS dev04 deterministic
+PASS dev05 deterministic
+PASS dev06 deterministic
+PASS dev07 deterministic
+PASS dev08 deterministic
+PASS dev09 deterministic
+PASS dev10 deterministic
+PASS control deterministic
+PASS integers deterministic
+PASS mutant deterministic
+PASS parity cases=129 units=13 traps=29; every export exercised
+PASS add-to-sub IR-byte mutant changes executed result
+PASS parity checker rejects mutant substituted as baseline (exit 1)
+PASS bad-magic MAGIC exit=20 stdout=empty
+PASS version2 VERSION exit=21 stdout=empty
+PASS version6 VERSION exit=21 stdout=empty
+PASS unsupported-op UNSUPPORTED_OP exit=24 stdout=empty
+PASS unknown-op UNSUPPORTED_OP exit=24 stdout=empty
+PASS unsupported-tag UNSUPPORTED_TAG exit=25 stdout=empty
+PASS unknown-tag UNSUPPORTED_TAG exit=25 stdout=empty
+PASS bad-register INVALID exit=26 stdout=empty
+PASS undefined-register INVALID exit=26 stdout=empty
+PASS nonascii-name INVALID exit=26 stdout=empty
+PASS oversized-count CAPACITY exit=23 stdout=empty
+PASS truncated TRUNCATED exit=22 stdout=empty
+PASS empty TRUNCATED exit=22 stdout=empty
+PASS trailing TRAILING exit=27 stdout=empty
+PASS oversized CAPACITY exit=23 stdout=empty
+PASS IRWASM native parity cases=129 deterministic mutant refusals
+8dc7bf602eb882e26a18b9e2dc4cacdd3ad68827215e71874b14c4acb237ccf8  seed/wasm/irwasm.om
+2d235a70c39ac1461a09c41e10e058d962b767ae83893cdcfc693ef6c47182e6  build/seed/wasm/irwasm
+f184e32f7bd6bbf3e5284861a337f178f2bdb8ee4662473cc0f1ad4fac1be6e3  seed/wasm/cases.tsv

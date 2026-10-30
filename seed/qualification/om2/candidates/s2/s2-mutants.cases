@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+# Mutants of candidate S2 (om2/compiler-s2 @ 7fb62f3a, omc c23b3376...b533). Run with OMC = the S2 omc born
+# from that commit; copy its seed/omc/omc.om to build/om2-qual/cand-s2/omc.om first. Kill rows are the
+# predictions of sec/s3s4/mutant-kills.cases (written before S2 was read).
+cc build/om2-qual/cand-s2/omc.om
+ctl-s2-rebuilt run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+cc pinned
+# --- mutant unroll-kminus1
+subst seed/qualification/om2/candidates/s2/mutants/unroll-kminus1.from seed/qualification/om2/candidates/s2/mutants/unroll-kminus1.to
+cc build/om2-qual/cand-s2/omc.om
+ctl-unroll-kminus1-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+unroll-kminus1-kill-unroll-sum kill seed/qualification/om2/sec/s3s4/unroll-sum.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-sum.out - 0
+unroll-kminus1-kill-unroll-nest kill seed/qualification/om2/sec/s3s4/unroll-nest.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-nest.out - 0
+cc pinned
+# --- mutant unroll-kplus1
+subst seed/qualification/om2/candidates/s2/mutants/unroll-kplus1.from seed/qualification/om2/candidates/s2/mutants/unroll-kplus1.to
+cc build/om2-qual/cand-s2/omc.om
+ctl-unroll-kplus1-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+unroll-kplus1-kill-unroll-sum kill seed/qualification/om2/sec/s3s4/unroll-sum.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-sum.out - 0
+unroll-kplus1-kill-unroll-nest kill seed/qualification/om2/sec/s3s4/unroll-nest.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-nest.out - 0
+cc pinned
+# --- mutant fold-div0
+subst seed/qualification/om2/candidates/s2/mutants/fold-div0.from seed/qualification/om2/candidates/s2/mutants/fold-div0.to
+cc build/om2-qual/cand-s2/omc.om
+ctl-fold-div0-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+fold-div0-kill-fold-trap-A kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-A.out - 0
+fold-div0-kill-fold-trap-B kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-B.out - 0
+fold-div0-kill-fold-trap-C kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-C.out - 0
+fold-div0-kill-fold-trap-D kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-D.out - 0
+fold-div0-kill-fold-trap-E kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-E.out - 0
+fold-div0-kill-fold-trap-F kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-F.out - 0
+fold-div0-kill-fold-trap-G kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-G.out - 0
+fold-div0-kill-fold-trap-H kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-H.out - 0
+fold-div0-kill-fold-trap-I kill seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-I.out - 0
+cc pinned
