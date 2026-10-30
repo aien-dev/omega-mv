@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note E17 (1): export together with fn main is error 9.
+om2
+export fn e1 a ulong to ulong
+ret a
+end
+fn main to int
+ret 0
+end

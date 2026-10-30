@@ -1,0 +1,11 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 99-101 and errata E2 (unsized parameters on internal functions): the
+note slot rule holds for every function of a function-mode unit. Internal g: 3 unsized + 1 scalar = 7 slots,
+note error 9 at line 6 (the signature of g, read before the entry f).
+om2
+fn g a view uchar * b view uchar * c view uchar * d ulong to ulong
+ret add d add len a add len b len c
+end
+fn f a view uchar 4 b view uchar 4 c view uchar 4 to ulong
+ret g a b c 1
+end

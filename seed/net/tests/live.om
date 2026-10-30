@@ -1,0 +1,981 @@
+note seed/net/tests/live.om -- loopback socket tests for seed/net/http.om, run by check.py.
+note Compose: { printf 'om2\n'; cat seed/net/http.om seed/net/tests/live.om; } | omc
+note Every socket is 127.0.0.1 with an ephemeral port chosen by the kernel (bind port 0); the
+note server side is a forked child. No fixed port, no outside traffic, never port 18091.
+note Exit 0 = every check passed; any other status names the first failed check (see the
+note `ret` numbers below; 100+ are traps). The parent reaps every child it forks.
+text tsum "/sum"
+text tblob "/blob"
+text tblobc "/blobc"
+text tevts "/events"
+text tquit "/quit"
+text tslash "/"
+text tpost "POST"
+text tget "GET"
+text thead "HEAD"
+text thost "Host"
+text thval "127.0.0.1"
+text texp "Expect"
+text tcont "100-continue"
+text tctype "Content-Type"
+text tplain "text/plain"
+text ttick "tick"
+text tkal "keepalive"
+text tretry "1500"
+text tsec "\nsecond"
+text tthird "third"
+text tpfd "/proc/self/fd"
+text tpart "GET / HTTP/1.1\n"
+text tpipe "GET /blob HTTP/1.1\nHost: a\n\nHEAD /blob HTTP/1.1\nHost: a\n\n"
+text tm1 "GET / HTTP/1.1\nHost: a\nBad Header: x\n\n"
+text tm2 "POST / HTTP/1.1\nHost: a\nContent-Length: 3\nTransfer-Encoding: chunked\n\n"
+text tm3 "POST / HTTP/1.1\nHost: a\nTransfer-Encoding: gzip\n\n"
+text tm4 "GET / HTTP/2.0\nHost: a\n\n"
+text tm5 "GET / HTTP/1.1\n\n"
+text tm6 "GET / HTTP/1.1\nHost: a\nX: 1\n folded\n\n"
+text tm7 "POST / HTTP/1.1\nHost: a\nContent-Length: 5\nContent-Length: 5\n\n"
+text tm8 "GET / HTTP/1.1\nHost: a\nExpect: something\n\n"
+text tearly "/early"
+text tone "x"
+text thello "hello"
+text tbodyp "POST /sum HTTP/1.1\nHost: a\nContent-Length: 10\n\n"
+text tearlyq "POST /early HTTP/1.1\nHost: a\nExpect: 100-continue\nContent-Length: 5\n\nhello"
+text tsmug "helloGET /admin HTTP/1.1\nHost: x\n\n"
+note ======== helpers
+fn pval j ulong to uchar
+ret uchar rem add mul j 7 3 251
+end
+fn pfill b edit uchar * n ulong to void
+for k ulong 64
+s = mul k 65536
+if ge s n
+break
+end
+m = hmin sub n s 65536
+for i ulong m
+j = add s i
+put b j pval j
+end
+end
+end
+fn pcheck b view uchar * n ulong to bool
+if ne len b n
+ret false
+end
+for k ulong 64
+s = mul k 65536
+if ge s n
+ret true
+end
+m = hmin sub n s 65536
+for i ulong m
+if ne get b add s i pval add s i
+ret false
+end
+end
+end
+ret true
+end
+fn fnvbig a view uchar * to ulong
+h = ulong 14695981039346656037
+n = len a
+for k ulong 64
+s = mul k 65536
+if ge s n
+ret h
+end
+m = hmin sub n s 65536
+for i ulong m
+h = mul xor h ulong get a add s i 1099511628211
+end
+end
+ret h
+end
+note ddecat: decimal v at b[p, ...); the end index
+fn ddecat b edit uchar * p ulong v ulong to ulong
+d = new uchar 20 0
+i = ulong 20
+x = v
+for it ulong 20
+i = sub i 1
+put d i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+q = p
+for k ulong sub 20 i
+put b q get d add i k
+q = add q 1
+end
+ret q
+end
+fn appt b edit uchar * p ulong t view uchar * to ulong
+for i ulong len t
+put b add p i get t i
+end
+ret add p len t
+end
+note obh: 16 hex digits of h, SP, decimal n; the length
+fn obh o edit uchar 64 h ulong n ulong to ulong
+for k ulong 16
+put o k hhexd and shr h mul sub 15 k 4 15
+end
+put o 16 32
+ret ddecat o 17 n
+end
+note evgen: SSE event i data; raw selects the CRLF line break the server sends, decoded form uses LF
+fn evgen b edit uchar 64 i ulong raw bool to ulong
+put b 0 101
+put b 1 118
+put b 2 45
+p = ddecat b 3 i
+if ne rem i 5 0
+ret p
+end
+p = appt b p tsec
+if raw
+put b p 13
+p = add p 1
+end
+put b p 10
+p = add p 1
+ret appt b p tthird
+end
+fn mklisten a edit uchar 16 to int
+r = haddr4 a 2130706433 0
+if lt r 0
+ret -1
+end
+fd = hlisten a 16
+if lt fd 0
+ret -1
+end
+ret int fd
+end
+note fdcount: open descriptors of this process (entries of /proc/self/fd, minus the one used)
+fn fdcount buf edit uchar 4096 to long
+fd = fopen tpfd 0 len tpfd 16384 0
+if lt fd 0
+ret -1
+end
+n = long 0
+for it ulong 1000
+k = getdnts int fd buf 0 len buf
+if le k 0
+break
+end
+p = ulong 0
+while lt p ulong k bound 4096
+rl = or ulong get buf add p 16 shl ulong get buf add p 17 8
+if ne get buf add p 19 46
+n = add n 1
+end
+p = add p rl
+end
+end
+c = fclose int fd
+ret sub n 1
+end
+note rawsend: t with every LF sent as CRLF (lets tests send malformed heads)
+fn rawsend cs edit ulong 320 io edit uchar 131072 t view uchar * to long
+hwreset cs
+r = long 0
+for i ulong len t
+c = get t i
+if eq c 10
+r = hfe r hputb cs io 13
+end
+r = hfe r hputb cs io c
+end
+ret hfe r hflush cs io
+end
+fn waitok pid long to int
+st = new uchar 4 0
+r = waitpid int pid st 0 4 0
+if ne r pid
+ret 90
+end
+if ne get st 0 0
+ret 91
+end
+ret int get st 1
+end
+note ======== server (child process)
+fn obsum cs edit ulong 320 io edit uchar 131072 o edit uchar 64 k ulong to long
+r = hrspst cs io 200
+r = hfe r hhname cs io tctype
+r = hfe r hhval cs io tplain
+r = hfe r hhend cs io 0 k
+r = hfe r hput cs io view part o 0 k
+ret hfe r hwfin cs io
+end
+fn rsum cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to long
+o = new uchar 64 0
+put cs HBCAP 1048576
+n = hbodyall cs io bg
+if lt n 0
+if eq n HEBIG
+ret hrsperr cs io 413
+end
+ret hrsperr cs io 400
+end
+h = fnvbig view part bg 0 ulong n
+k = obh o h ulong n
+ret obsum cs io o k
+end
+fn rblob cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to long
+pfill bg 307200
+r = hrspst cs io 200
+r = hfe r hhend cs io 0 307200
+r = hfe r hput cs io view part bg 0 307200
+ret hfe r hwfin cs io
+end
+fn rblobc cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to long
+pfill bg 307200
+r = hrspst cs io 200
+r = hfe r hhend cs io 1 0
+for k ulong 308
+s = mul k 1000
+if ge s 307200
+break
+end
+r = hfe r hput cs io view part bg s hmin 1000 sub 307200 s
+end
+ret hfe r hwfin cs io
+end
+fn revts cs edit ulong 320 io edit uchar 131072 to long
+b = new uchar 64 0
+d = new uchar 20 0
+r = hrspsse cs io
+if lt r 0
+ret r
+end
+for i ulong 40
+if eq i 3
+r = hfe r hssecmt cs io tkal
+end
+if eq i 7
+r = hfe r hsseret cs io tretry
+end
+if eq rem i 2 1
+r = hfe r hsseevt cs io ttick
+end
+k = ddecat d 0 i
+r = hfe r hsseid cs io view part d 0 k
+k = evgen b i true
+r = hfe r hssedat cs io view part b 0 k
+r = hfe r hsseend cs io
+if lt r 0
+ret r
+end
+end
+ret hwfin cs io
+end
+fn rearly cs edit ulong 320 io edit uchar 131072 to long
+d = new uchar 16 0
+put cs HKEEP 0
+r = hrspst cs io 200
+r = hfe r hhend cs io 0 5
+r = hfe r hput cs io thello
+r = hfe r hflush cs io
+b = hbodyall cs io d
+if ne b 5
+ret -1
+end
+ret hfe r hwfin cs io
+end
+note route: 0 = served, 1 = quit, negative = I/O failure
+fn route cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to long
+if and hismeth cs io tpost hispath cs io tsum
+ret rsum cs io bg
+end
+if hispath cs io tblob
+ret rblob cs io bg
+end
+if hispath cs io tblobc
+ret rblobc cs io bg
+end
+if hispath cs io tevts
+ret revts cs io
+end
+if hispath cs io tearly
+ret rearly cs io
+end
+if hispath cs io tquit
+r = hrsperr cs io 200
+ret 1
+end
+ret hrsperr cs io 404
+end
+fn srvconn lf int cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to long
+c = haccept lf 10000000000
+if lt c 0
+ret 40
+end
+r = hinit cs io int c 1
+if lt r 0
+ret 41
+end
+hsettmo cs 3000000000 3000000000
+q = long 0
+for k ulong 16
+r = hreqrd cs io
+if le r 0
+if lt r 0
+x = hreject cs io r
+end
+break
+end
+r = route cs io bg
+if lt r 0
+q = 42
+break
+end
+if eq r 1
+q = 1
+break
+end
+if eq hnext cs io 0
+break
+end
+end
+r = hclose cs
+ret q
+end
+fn srvmain lf int cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to int
+for j ulong 64
+r = srvconn lf cs io bg
+if eq r 1
+ret 0
+end
+if ne r 0
+ret int r
+end
+end
+ret 43
+end
+note ======== client (parent process)
+fn cdial cs edit ulong 320 io edit uchar 131072 a view uchar 16 to long
+fd = hdial a 2000000000
+if lt fd 0
+ret fd
+end
+r = hinit cs io int fd 0
+hsettmo cs 5000000000 5000000000
+ret r
+end
+fn creq cs edit ulong 320 io edit uchar 131072 m view uchar * pa view uchar * to long
+r = hreqst cs io m
+r = hfe r hreqtg cs io pa
+r = hfe r hhname cs io thost
+r = hfe r hhval cs io thval
+r = hfe r hhend cs io 0 0
+r = hfe r hwfin cs io
+if lt r 0
+ret r
+end
+ret hrsprd cs io
+end
+note csum: POST /sum with n pattern bytes (chunked or Content-Length); the server's hash must match
+fn csend cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 n ulong ch bool to long
+r = hreqst cs io tpost
+r = hfe r hreqtg cs io tsum
+r = hfe r hhname cs io thost
+r = hfe r hhval cs io thval
+if ch
+r = hfe r hhend cs io 1 0
+for k ulong 512
+s = mul k 4096
+if ge s n
+break
+end
+r = hfe r hput cs io view part bg s hmin 4096 sub n s
+end
+else
+r = hfe r hhend cs io 0 n
+r = hfe r hput cs io view part bg 0 n
+end
+r = hfe r hwfin cs io
+if lt r 0
+ret r
+end
+ret hrsprd cs io
+end
+fn csum cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 n ulong ch bool to int
+o = new uchar 64 0
+w = new uchar 64 0
+pfill bg n
+k = obh w fnvbig view part bg 0 n n
+st = csend cs io bg n ch
+if ne st 200
+ret 10
+end
+g = hbodyall cs io o
+if ne g long k
+ret 11
+end
+for i ulong k
+if ne get o i get w i
+ret 12
+end
+end
+ret 0
+end
+fn cblob cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 pa view uchar * to int
+st = creq cs io tget pa
+if ne st 200
+ret 20
+end
+g = hbodyall cs io bg
+if ne g 307200
+ret 21
+end
+if not pcheck view part bg 0 307200 307200
+ret 22
+end
+ret 0
+end
+fn chead cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to int
+st = creq cs io thead tblob
+if ne st 200
+ret 25
+end
+if ne get cs HBMODE 0
+ret 26
+end
+i = hhfind cs io hnclen
+if lt i 0
+ret 27
+end
+if ne hdecv view part io hhvoff cs ulong i hhvlen cs ulong i 307200
+ret 28
+end
+g = hbodyall cs io bg
+if ne g 0
+ret 29
+end
+ret 0
+end
+note chkev: event i as decoded by the reader
+fn chkev ss edit ulong 16 lb edit uchar 4096 eb edit uchar 64 i ulong to long
+k = evgen eb i false
+if ne get ss HSDLEN k
+ret -70
+end
+for j ulong k
+if ne get lb add 128 j get eb j
+ret -71
+end
+end
+if eq rem i 2 1
+if ne get ss HSELEN 4
+ret -72
+end
+if not heq view part lb 0 4 ttick
+ret -73
+end
+else
+if ne get ss HSELEN 0
+ret -74
+end
+end
+k = ddecat eb 0 i
+if ne get ss HSILEN k
+ret -75
+end
+for j ulong k
+if ne get lb add 64 j get eb j
+ret -76
+end
+end
+if and ge i 7 ne get ss HSRETRY 1500
+ret -77
+end
+ret 0
+end
+note cfeed: feed src to the reader, checking every completed event; the new event count
+fn cfeed ss edit ulong 16 lb edit uchar 4096 src view uchar * nev ulong to long
+eb = new uchar 64 0
+off = ulong 0
+v = nev
+for j ulong 1000
+if ge off len src
+ret long v
+end
+c = hssefeed ss lb view part src off sub len src off
+if lt c 0
+ret -63
+end
+off = add off ulong c
+if ne get ss HSRDY 0
+e = chkev ss lb eb v
+if lt e 0
+ret e
+end
+v = add v 1
+hssenext ss
+end
+end
+ret -64
+end
+fn csse cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to int
+ss = new ulong 16 0
+lb = new uchar 4096 0
+r = hsseinit ss
+st = creq cs io tget tevts
+if ne st 200
+ret 60
+end
+if ne get cs HBMODE 2
+ret 61
+end
+nev = ulong 0
+for it ulong 1000000
+n = hbodyrd cs io part bg 0 7
+if lt n 0
+ret 62
+end
+if eq n 0
+break
+end
+v = cfeed ss lb view part bg 0 ulong n nev
+if lt v 0
+ret int neg v
+end
+nev = ulong v
+end
+if ne nev 40
+ret 65
+end
+ret 0
+end
+fn cexp cs edit ulong 320 io edit uchar 131072 to int
+r = hreqst cs io tpost
+r = hfe r hreqtg cs io tsum
+r = hfe r hhname cs io thost
+r = hfe r hhval cs io thval
+r = hfe r hhname cs io texp
+r = hfe r hhval cs io tcont
+r = hfe r hhend cs io 0 1048577
+r = hfe r hflush cs io
+if lt r 0
+ret 80
+end
+st = hrsprd cs io
+if ne st 413
+ret 81
+end
+if ne get cs HKEEP 0
+ret 82
+end
+ret 0
+end
+note conn1: one keep-alive connection carrying seven exchanges
+fn conn1 cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 a view uchar 16 to int
+if lt cdial cs io a 0
+ret 1
+end
+e = csum cs io bg 307200 false
+if ne e 0
+ret e
+end
+e = csum cs io bg 1048576 true
+if ne e 0
+ret add e 2
+end
+e = cblob cs io bg tblob
+if ne e 0
+ret e
+end
+e = chead cs io bg
+if ne e 0
+ret e
+end
+e = cblob cs io bg tblobc
+if ne e 0
+ret add e 3
+end
+e = csse cs io bg
+if ne e 0
+ret e
+end
+if ne get cs HNMSG 6
+ret 2
+end
+e = cexp cs io
+if ne e 0
+ret e
+end
+r = hclose cs
+ret 0
+end
+note conn2: two pipelined requests sent in one write, answered in order
+fn conn2 cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 a view uchar 16 to int
+if lt cdial cs io a 0
+ret 3
+end
+if lt rawsend cs io tpipe 0
+ret 4
+end
+st = hrsprd cs io
+if ne st 200
+ret 5
+end
+g = hbodyall cs io bg
+if ne g 307200
+ret 6
+end
+if not pcheck view part bg 0 307200 307200
+ret 6
+end
+if ne hnext cs io 1
+ret 7
+end
+put cs HISHEAD 1
+st = hrsprd cs io
+if ne st 200
+ret 8
+end
+if ne hbodyall cs io bg 0
+ret 9
+end
+r = hclose cs
+ret 0
+end
+fn cmal cs edit ulong 320 io edit uchar 131072 a view uchar 16 t view uchar * want long to int
+if lt cdial cs io a 0
+ret 30
+end
+if lt rawsend cs io t 0
+ret 31
+end
+st = hrsprd cs io
+kp = get cs HKEEP
+r = hclose cs
+if ne st want
+ret 32
+end
+if ne kp 0
+ret 33
+end
+ret 0
+end
+fn cmals cs edit ulong 320 io edit uchar 131072 a view uchar 16 to int
+e = cmal cs io a tm1 400
+e = add e cmal cs io a tm2 400
+e = add e cmal cs io a tm3 501
+e = add e cmal cs io a tm4 505
+e = add e cmal cs io a tm5 400
+e = add e cmal cs io a tm6 400
+e = add e cmal cs io a tm7 400
+e = add e cmal cs io a tm8 417
+if ne e 0
+ret 34
+end
+ret 0
+end
+note cearly (F3): the handler sends its whole Content-Length response before reading a body sent
+note with Expect: 100-continue; no 100 Continue may follow the final response on the wire
+fn cearly cs edit ulong 320 io edit uchar 131072 a view uchar 16 to int
+d = new uchar 16 0
+if lt cdial cs io a 0
+ret 16
+end
+if lt rawsend cs io tearlyq 0
+ret 16
+end
+st = hrsprd cs io
+if ne st 200
+ret 17
+end
+g = hbodyall cs io d
+if or ne g 5 ne get cs HKEEP 0
+ret 18
+end
+n = get cs HRLEN
+k = long 0
+if gt n get cs HRPOS
+k = long sub n get cs HRPOS
+else
+k = hrecvio cs io n 1
+end
+r = hclose cs
+if ne k 0
+ret 19
+end
+ret 0
+end
+fn cquit cs edit ulong 320 io edit uchar 131072 a view uchar 16 to int
+if lt cdial cs io a 0
+ret 35
+end
+st = creq cs io tget tquit
+r = hclose cs
+if ne st 200
+ret 36
+end
+ret 0
+end
+fn tmain cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to int
+a = new uchar 16 0
+lf = mklisten a
+if lt lf 0
+ret 44
+end
+pid = fork
+if lt pid 0
+ret 45
+end
+if eq pid 0
+exit srvmain lf cs io bg
+end
+c = fclose lf
+e = conn1 cs io bg a
+if eq e 0
+e = conn2 cs io bg a
+end
+if eq e 0
+e = cmals cs io a
+end
+if eq e 0
+e = cearly cs io a
+end
+q = cquit cs io a
+w = waitok pid
+if ne e 0
+ret e
+end
+if ne q 0
+ret q
+end
+ret w
+end
+note ======== deadlines
+note tbody (F1): after a complete head, a client trickles the body one byte per 100 ms, each
+note well inside the 5 s idle limit; the server's 300 ms body deadline must end the read
+fn tbody cs edit ulong 320 io edit uchar 131072 bg edit uchar 1048592 to int
+a = new uchar 16 0
+lf = mklisten a
+if lt lf 0
+ret 46
+end
+pid = fork
+if lt pid 0
+ret 47
+end
+if eq pid 0
+c = fclose lf
+if lt cdial cs io a 0
+exit 1
+end
+r = rawsend cs io tbodyp
+for i ulong 10
+s = sleepns 100000000
+r = send int get cs HFD tone 0 1 0
+end
+r = hclose cs
+exit 0
+end
+c = haccept lf 2000000000
+if lt c 0
+ret 48
+end
+r = hinit cs io int c 1
+hsettmo cs 5000000000 5000000000
+hsetbdl cs 300000000
+r = hreqrd cs io
+t0 = monons
+if eq r 1
+r = hbodyall cs io bg
+end
+dt = sub monons t0
+x = hclose cs
+x = fclose lf
+w = waitok pid
+if ne r HETIME
+ret 49
+end
+if gt dt 1500000000
+ret 98
+end
+ret w
+end
+note tover (F2): a Content-Length body refuses bytes past clen before buffering any of them,
+note in the client role (no smuggled request) and in the server role (memory mode, no I/O)
+fn tover cs edit ulong 320 io edit uchar 131072 to int
+r = hinit cs io -1 0
+r = hreqst cs io tpost
+r = hfe r hreqtg cs io tslash
+r = hfe r hhname cs io thost
+r = hfe r hhval cs io thval
+r = hfe r hhend cs io 0 5
+if lt r 0
+ret 37
+end
+w0 = get cs HWLEN
+if ne hput cs io tsmug HEINVAL
+ret 38
+end
+if or ne get cs HWLEN w0 ne get cs HWOUT 0
+ret 39
+end
+r = hinit cs io -1 1
+r = hrspst cs io 200
+r = hfe r hhend cs io 0 5
+r = hfe r hput cs io thello
+if lt r 0
+ret 97
+end
+w0 = get cs HWLEN
+if ne hputb cs io 33 HEINVAL
+ret 97
+end
+if or ne get cs HWLEN w0 ne get cs HKEEP 0
+ret 97
+end
+ret 0
+end
+note tslow: a client that sends half a head and stalls; the server's 200 ms head deadline fires
+fn tslow cs edit ulong 320 io edit uchar 131072 to int
+a = new uchar 16 0
+lf = mklisten a
+if lt lf 0
+ret 50
+end
+pid = fork
+if lt pid 0
+ret 51
+end
+if eq pid 0
+c = fclose lf
+if lt cdial cs io a 0
+exit 1
+end
+r = rawsend cs io tpart
+s = sleepns 1500000000
+r = hclose cs
+exit 0
+end
+c = haccept lf 2000000000
+if lt c 0
+ret 52
+end
+r = hinit cs io int c 1
+hsettmo cs 5000000000 200000000
+t0 = monons
+r = hreqrd cs io
+dt = sub monons t0
+x = hclose cs
+x = fclose lf
+w = waitok pid
+if ne r HETIME
+ret 53
+end
+if or lt dt 150000000 gt dt 1000000000
+ret 54
+end
+ret w
+end
+note tidle: a server that never answers; the client's 200 ms idle wait fires
+fn tidle cs edit ulong 320 io edit uchar 131072 to int
+a = new uchar 16 0
+lf = mklisten a
+if lt lf 0
+ret 55
+end
+pid = fork
+if lt pid 0
+ret 56
+end
+if eq pid 0
+c = haccept lf 2000000000
+if lt c 0
+exit 1
+end
+r = hinit cs io int c 1
+r = hreqrd cs io
+s = sleepns 1500000000
+r = hclose cs
+exit 0
+end
+x = fclose lf
+if lt cdial cs io a 0
+ret 57
+end
+hsettmo cs 200000000 0
+t0 = monons
+r = creq cs io tget tslash
+dt = sub monons t0
+x = hclose cs
+w = waitok pid
+if ne r HETIME
+ret 58
+end
+if or lt dt 150000000 gt dt 1000000000
+ret 59
+end
+ret w
+end
+note trefuse: a bound but not listening port refuses the connection; nothing leaks
+fn trefuse to int
+a = new uchar 16 0
+r = haddr4 a 2130706433 0
+fd = socknew 2 526337 0
+if lt fd 0
+ret 66
+end
+r = bind int fd a 0 16
+k = sockname int fd a 0 16
+x = fclose int fd
+if or ne r 0 ne k 16
+ret 67
+end
+for i ulong 20
+c = hdial a 1000000000
+if ne c -111
+ret 68
+end
+end
+ret 0
+end
+fn main to int
+cs = new ulong 320 0
+io = new uchar 131072 0
+bg = new uchar 1048592 0
+fb = new uchar 4096 0
+f0 = fdcount fb
+if lt f0 0
+ret 95
+end
+e = tmain cs io bg
+if ne e 0
+ret e
+end
+e = tslow cs io
+if ne e 0
+ret e
+end
+e = tidle cs io
+if ne e 0
+ret e
+end
+e = tbody cs io bg
+if ne e 0
+ret e
+end
+e = tover cs io
+if ne e 0
+ret e
+end
+e = trefuse
+if ne e 0
+ret e
+end
+f1 = fdcount fb
+if ne f0 f1
+ret 96
+end
+ret 0
+end

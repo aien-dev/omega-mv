@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note C1 boundary control: in an OM-1 unit an array parameter without its length stays error 16
+note (OMEGESE 9.4: "An array parameter ... written without its length is refused (error 16)"),
+note reported on the fn line (line 5).
+fn f v view uchar * to ulong
+ret len v
+end
+fn main to int
+ret 0
+end

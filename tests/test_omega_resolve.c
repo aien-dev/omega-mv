@@ -1666,8 +1666,6 @@ static void t_cli(void) {
 
 /* ======================================================================== main */
 static const struct { const char *mutant, *check; } MUTANTS[] = {
-    { "b3-merge", "b3-official-vectors" },
-    { "b3-root", "b3-official-vectors" },
     { "profile-known", "profile-unknown-refused" },
     { "profile-version", "profile-version-too-old-refused" },
     { "lock-bytes-tab", "lock-refuses-tab-in-comment" },

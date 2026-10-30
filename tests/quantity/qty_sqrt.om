@@ -1,0 +1,8 @@
+fn main to int
+a = qty 1
+b = fsqrt a
+if eq a b
+ret 0
+end
+ret 1
+end

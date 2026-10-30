@@ -1,0 +1,9 @@
+note S4: a global is never passed, also to an unsized parameter (error 19).
+om2
+global g uchar 4
+fn f v view uchar * to ulong
+ret len v
+end
+fn main to int
+ret int f g
+end

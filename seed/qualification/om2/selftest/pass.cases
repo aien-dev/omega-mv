@@ -1,0 +1,5 @@
+# Harness self-test, correct program: every case must PASS (gate exit 0).
+cat-seq run seed/qualification/om2/selftest/cat.om seq:300 file:seed/qualification/om2/fixtures/gen/seq-300.bin - 0
+cat-rnd run seed/qualification/om2/selftest/cat.om rnd:7:64 file:seed/qualification/om2/fixtures/gen/rnd-7-64.bin - 0
+cat-rep run seed/qualification/om2/selftest/cat.om rep:0:5 file:seed/qualification/om2/fixtures/gen/rep-0-5.bin - 0
+cat-empty run seed/qualification/om2/selftest/cat.om - - - 0

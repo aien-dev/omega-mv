@@ -29,12 +29,12 @@ ALLEN_AIENOS_SVC = $(AIENOS_R7_DIR)/native/kernel/svc
 # kernel/core is -idirafter: it holds a sched.h that must not shadow <sched.h>.
 ALLEN_AIENOS_INC = -I$(ALLEN_AIENOS_SVC) -idirafter $(AIENOS_R7_DIR)/native/kernel/core \
 	-I$(AIENOS_R7_DIR)/native/argus -I$(AIENOS_R7_DIR)/native/store
-# One sha256: omega's src/sha256.c (same ctx layout and names as native/argus).
+# One sha256: omega's src/omega_om_units.c (same ctx layout and names as native/argus).
 ALLEN_AIENOS_SRCS = $(ALLEN_AIENOS_SVC)/continuity_subject.c $(ALLEN_AIENOS_SVC)/continuity_codec.c \
 	$(AIENOS_R7_DIR)/native/store/store_v1.c
 ALLEN_RX_SRCS = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c \
 	src/runtime/rx_native_bind.c src/runtime/rx_cortex.c src/runtime/rx_cortex_record.c \
-	src/sha256.c
+	src/omega_om_units.c
 ALLEN_HDRS = src/allen/allen_bind.h src/runtime/rx_aien.h src/runtime/rx_world.h \
 	src/runtime/rx_cortex.h src/runtime/rx_cortex_record.h src/runtime/aienos_cap.h
 
