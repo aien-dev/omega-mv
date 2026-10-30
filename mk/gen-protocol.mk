@@ -13,13 +13,13 @@ GENP_SRC = tools/gen/protocol
 GENP_DIR = $(OUT_DIR)/gen_protocol
 GENP_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -O2 -Isrc
 
-$(GENP_DIR)/famsig: $(GENP_SRC)/famsig.c $(GENP_SRC)/famsig_lib.h src/sha256.c src/sha256.h
+$(GENP_DIR)/famsig: $(GENP_SRC)/famsig.c $(GENP_SRC)/famsig_lib.h src/omega_om_units.c src/sha256.h
 	@mkdir -p $(GENP_DIR)
-	$(CC) $(GENP_CFLAGS) -o $@ $(GENP_SRC)/famsig.c src/sha256.c
+	$(CC) $(GENP_CFLAGS) -o $@ $(GENP_SRC)/famsig.c src/omega_om_units.c
 
-$(GENP_DIR)/gencheck: $(GENP_SRC)/gencheck.c $(GENP_SRC)/famsig_lib.h src/sha256.c src/sha256.h
+$(GENP_DIR)/gencheck: $(GENP_SRC)/gencheck.c $(GENP_SRC)/famsig_lib.h src/omega_om_units.c src/sha256.h
 	@mkdir -p $(GENP_DIR)
-	$(CC) $(GENP_CFLAGS) -o $@ $(GENP_SRC)/gencheck.c src/sha256.c
+	$(CC) $(GENP_CFLAGS) -o $@ $(GENP_SRC)/gencheck.c src/omega_om_units.c
 
 $(GENP_DIR)/genstats: $(GENP_SRC)/genstats.c
 	@mkdir -p $(GENP_DIR)

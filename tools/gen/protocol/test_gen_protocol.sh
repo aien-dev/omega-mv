@@ -41,8 +41,8 @@ refuse_why() { # name expected-output-substring command... : must exit non-zero 
   if "$@" > "$T/rw.out" 2>&1; then fail "mutant not caught: $n"; elif grep -qF -- "$w" "$T/rw.out"; then pass "refused: $n"; else fail "refused for another reason: $n ($(tail -2 "$T/rw.out" | tr "\n" " "))"; fi
 }
 
-${CC:-cc} $CFLAGS -I"$ROOT/src" -o "$B/famsig" "$ROOT/tools/gen/protocol/famsig.c" "$ROOT/src/sha256.c" || exit 1
-${CC:-cc} $CFLAGS -I"$ROOT/src" -o "$B/gencheck" "$ROOT/tools/gen/protocol/gencheck.c" "$ROOT/src/sha256.c" || exit 1
+${CC:-cc} $CFLAGS -I"$ROOT/src" -o "$B/famsig" "$ROOT/tools/gen/protocol/famsig.c" "$ROOT/src/omega_om_units.c" || exit 1
+${CC:-cc} $CFLAGS -I"$ROOT/src" -o "$B/gencheck" "$ROOT/tools/gen/protocol/gencheck.c" "$ROOT/src/omega_om_units.c" || exit 1
 ${CC:-cc} $CFLAGS -o "$B/genstats" "$ROOT/tools/gen/protocol/genstats.c" -lm || exit 1
 ${CC:-cc} $CFLAGS -o "$B/genjac" "$ROOT/tools/gen/protocol/genjac.c" || exit 1
 FS="$B/famsig"; GC="$B/gencheck"; GS="$B/genstats"; JC="$B/genjac"
