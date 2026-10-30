@@ -86,9 +86,9 @@ mutant m4 'put hz_n 0 get bhz i' ''
 caught m4 b1 1
 mutant m5 'if lt n hzcap' 'if lt n 8'
 caught m5 a8 1
-mutant m7 'while eq c 13' 'while eq c 987654321'
+mutant m7 'p = add 1 p' 'c = ulong 0'
 caught m7 cr1 103
-mutant m8 'while eq 13 c' 'while eq 987654321 c'
+mutant m8 'p = add p sub c 12' 'c = ulong 0'
 runc "$B/m8.omc" cr2 m8 > /dev/null
 runc "$B/m8.omc" sp2 m8 > /dev/null
 ! cmp -s "$B/m8-cr2.bin" "$B/m8-sp2.bin" || bad "mutant m8 not caught: cr2 and sp2 still compile the same"

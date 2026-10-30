@@ -4406,9 +4406,12 @@ end
 ret 10
 end
 
+note fp_cmp: FCMP Sn, Sm / Dn, Dm (scalar) of v registers va, vb: 0x1E202000 / 0x1E602000 with Rm and Rn
+note zero, so both fields come from va and vb alone (#861: the S word had Rm bit 0 set, and an even vb
+note read the next twin).
 fn fp_cmp op ulong ty ulong va ulong vb ulong to void
 if eq ty 10
-emit or or 505487360 shl vb 16 shl va 5
+emit or or 505421824 shl vb 16 shl va 5
 else
 emit or or 509616128 shl vb 16 shl va 5
 end
@@ -5030,7 +5033,9 @@ end
 
 note fwscan: 1 when a line from here to the next `fn` line (or the end) starts with the word packed as w
 note A line's lead skips space, tab and CR in any order, as tok does (skipbl alone stops at CR, so a CR-led
-note assignment to the counter would hide and drop a needed check; gate19 cr1). hzopen skips the same lead.
+note assignment to the counter would hide and drop a needed check; gate19 cr1). hzopen skips the same lead
+note (gate19 cr2). The two CR steps are written differently (add 1 p; add p sub c 12, c = 13) so that gate19's
+note mutants m7 and m8 each find one line to drop.
 fn fwscan w ulong to ulong
 p = get cur 0
 r = ulong 0
@@ -5049,7 +5054,7 @@ if lt p get inlen 0
 c = ulong get inp p
 end
 if eq c 13
-p = add p 1
+p = add 1 p
 end
 end
 x = pkword p
@@ -5205,7 +5210,7 @@ if lt p get inlen 0
 c = ulong get inp p
 end
 if eq c 13
-p = add p 1
+p = add p sub c 12
 end
 end
 x = pkword p
