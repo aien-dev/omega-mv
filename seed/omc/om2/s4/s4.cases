@@ -17,10 +17,20 @@ s4-v-bad-type refuse seed/omc/om2/s4/v-bad-type.om 7
 s4-v-bad-viewedit refuse seed/omc/om2/s4/v-bad-viewedit.om 20
 s4-v-bad-put refuse seed/omc/om2/s4/v-bad-put.om 20
 s4-v-bad-read refuse seed/omc/om2/s4/v-bad-read.om 20
+s4-v-bad-pread-text refuse seed/omc/om2/s4/v-bad-pread-text.om 20
+s4-v-bad-pread-view refuse seed/omc/om2/s4/v-bad-pread-view.om 20
+s4-v-pwrite-text run seed/omc/om2/s4/v-pwrite-text.om - file:seed/omc/om2/s4/v-pwrite-text.out - 0
 s4-v-bad-fresh refuse seed/omc/om2/s4/v-bad-fresh.om 16
 s4-v-bad-local refuse seed/omc/om2/s4/v-bad-local.om 16
 s4-v-bad-global refuse seed/omc/om2/s4/v-bad-global.om 19
 s4-v-om1 refuse seed/omc/om2/s4/v-om1.om 16
+## an empty text (length 0) is sized: count 0, never a count register
+s4-v-text-empty run seed/omc/om2/s4/v-text-empty.om - - - 0
+s4-v-text-empty-loop run seed/omc/om2/s4/v-text-empty-loop.om - - - 0
+s4-v-text-empty-get run seed/omc/om2/s4/v-text-empty-get.om - - - 103
+s4-v-text-empty-write run seed/omc/om2/s4/v-text-empty-write.om - - - 103
+s4-p-text-empty run seed/omc/om2/s4/p-text-empty.om - - - 103
+s4-v-bad-text-empty refuse seed/omc/om2/s4/v-bad-text-empty.om 21
 ## part (spec 6, erratum E8)
 s4-p-ok run seed/omc/om2/s4/p-ok.om - - - 0
 s4-p-wrap run seed/omc/om2/s4/p-wrap.om - - - 103

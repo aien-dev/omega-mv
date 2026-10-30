@@ -172,6 +172,22 @@ outputs/statuses, validator logs, and the rejected mutant comparison table under
 `build/seed/spirv`. A gate run replaces this scratch directory; archive receipts
 before rerunning. Published evidence is retained under `evidence/IRSPIRV/`.
 
+## Replay on Intel's CPU OpenCL runtime (x86-64 CI)
+
+`.github/workflows/irspirv-intel-cpu.yml` replays the gate's modules and AArch64
+native dumps on an x86-64 runner through `intel-oneapi-runtime-opencl`
+(`libintelocl.so`, taken from its ICD file). `opencl-host.c` is rebuilt with
+`IRSPIRV_POCL_LIBRARY`, `IRSPIRV_OCL_LIBRARY_BASE=libintelocl.so` and
+`IRSPIRV_OCL_PLATFORM`, and rpath-pinned to the distro ocl-icd loader: oneAPI's
+redist ships a Khronos `libOpenCL.so.1` that the ld.so cache prefers, and that
+loader ignores a library path in `OCL_ICD_VENDORS`.
+`seed/spirv/ocl-vendor-matrix.sh BUILD_DIR HOST TABLE PREFIX OUT.tsv [--mutant-baseline]`
+records built/ran/match and error text per row instead of stopping at the first
+failure; the mutant substitution must mismatch exactly `mutant.mutadd`. Rows are
+also replayed under intel/opencl-intercept-layer v3.0.6. Run 40441577102
+(runtime 2026.2.0-863, AMD EPYC 7763 runner): cases 129/129, demo 3/3,
+regression 8/8 matched; mutant 128/129. CPU evidence only, advisory.
+
 ## External oracle/toolchain ledger
 
 These are verification/demo dependencies, not translator implementation or

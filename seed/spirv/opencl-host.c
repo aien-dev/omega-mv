@@ -16,7 +16,10 @@
 // runtime failure exits nonzero with a named stderr line and prints nothing on
 // stdout. Device and toolchain identity are recorded on stderr.
 //
-// GPU isolation: the build pins one absolute PoCL shared-library path. Inherited
+// GPU isolation: the build pins one absolute CPU OpenCL shared-library path and the
+// platform name it must report (default PoCL: libpocl.so, "Portable Computing
+// Language"; a vendor CPU runtime such as Intel's libintelocl.so may be pinned
+// instead with IRSPIRV_OCL_LIBRARY_BASE and IRSPIRV_OCL_PLATFORM). Inherited
 // vendor/layer discovery settings are overwritten before the first OpenCL call.
 // Only CL_DEVICE_TYPE_CPU devices are enumerated; POCL_DEVICES is forced to cpu.
 
@@ -47,6 +50,12 @@ enum {
 #define POISON UINT64_C(0xa5a5a5a5a5a5a5a5)
 #ifndef IRSPIRV_POCL_LIBRARY
 #define IRSPIRV_POCL_LIBRARY ""
+#endif
+#ifndef IRSPIRV_OCL_LIBRARY_BASE
+#define IRSPIRV_OCL_LIBRARY_BASE "libpocl.so"
+#endif
+#ifndef IRSPIRV_OCL_PLATFORM
+#define IRSPIRV_OCL_PLATFORM "Portable Computing Language"
 #endif
 
 static int fail(int code, const char *what, cl_int err)
@@ -88,8 +97,9 @@ static int pin_loader(void)
 	if (library[0] != '/')
 		return refuse(EXIT_ENVIRONMENT, "build requires an absolute IRSPIRV_POCL_LIBRARY");
 	const char *base = strrchr(library, '/');
-	if (base == NULL || strncmp(base + 1, "libpocl.so", 10) != 0)
-		return refuse(EXIT_ENVIRONMENT, "configured library is not libpocl.so");
+	size_t base_len = strlen(IRSPIRV_OCL_LIBRARY_BASE);
+	if (base == NULL || base_len == 0 || strncmp(base + 1, IRSPIRV_OCL_LIBRARY_BASE, base_len) != 0)
+		return refuse(EXIT_ENVIRONMENT, "configured library is not " IRSPIRV_OCL_LIBRARY_BASE);
 	if (setenv("OCL_ICD_VENDORS", library, 1) != 0 ||
 	    unsetenv("OCL_ICD_FILENAMES") != 0 || unsetenv("OPENCL_LAYERS") != 0 ||
 	    unsetenv("OPENCL_VENDOR_PATH") != 0 ||
@@ -294,11 +304,11 @@ int main(int argc, char **argv)
 		goto out;
 	}
 	if (platforms != 1) {
-		rc = refuse(EXIT_DEVICE, "expected exactly one (PoCL) platform");
+		rc = refuse(EXIT_DEVICE, "expected exactly one (pinned) platform");
 		goto out;
 	}
-	if (platform_text(platform, CL_PLATFORM_NAME, text) != 0 || strcmp(text, "Portable Computing Language") != 0) {
-		rc = refuse(EXIT_DEVICE, "platform is not PoCL");
+	if (platform_text(platform, CL_PLATFORM_NAME, text) != 0 || strcmp(text, IRSPIRV_OCL_PLATFORM) != 0) {
+		rc = refuse(EXIT_DEVICE, "platform is not " IRSPIRV_OCL_PLATFORM);
 		goto out;
 	}
 	fprintf(stderr, "opencl-host: platform=%s", text);
