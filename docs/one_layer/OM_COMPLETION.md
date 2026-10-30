@@ -65,7 +65,7 @@ cannot emit them, so there is no reference unit to verify against.
 | FR-2 packed structs | structs are 8-byte cells; packed u8/u16/u32/u64 fields are not expressible | needs a layout syntax and alignment rule (decision) |
 | FR-3 imports by digest | no `import`; units concatenate | requires the OSC content-addressed unit store (external) |
 | FR-4 floats | implemented end to end for AArch64 (types, literals, arithmetic, arrays, pools, structs) | IR floats are spec-blocked: OSC-1 scalar tags are integer-only |
-| FR-5 mmap/ioctl | absent | the language exposes no address values; needs an address/pointer escape decision |
+| FR-5 mmap/ioctl | implemented for AArch64 program mode as handle-checked words `devctl devcall uvmctl mapnew mapdrop mapread mapwrite mapaddr mapget mapset maphold mapbind` (ids 166..177, `seed/omc/genkw.awk`; contracts in [`seed/host/MAPPING.md`](../../seed/host/MAPPING.md), tests `seed/host/tests/{mapio,devcall,memcheck,reserve}.om` run by `seed/host/gate.sh`) | access through a raw integer address stays refused: `mapaddr` exports a ulong but access requires the live owned handle; no GPU launcher or model execution (MAPPING.md) |
 | FR-6 threads/atomics | absent | decision 37 (disjoint threads) has no chosen design |
 | FR-7 shared objects/C ABI | absent | needs an ABI contract (calling convention, symbols, relocation) |
 | FR-8 kernel words | absent | needs a target kernel interface, not a compiler change |
