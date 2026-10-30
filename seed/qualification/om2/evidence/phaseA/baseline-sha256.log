@@ -1,0 +1,1055 @@
+OM2GATE START cases=seed/qualification/om2/baseline/sha256.cases scratch=build/om2-qual/baseline-sha256
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE fips-empty line=4
+  $ seed/out/omc < build/om2-qual/baseline-sha256/4.src > build/om2-qual/baseline-sha256/4.elf 2> build/om2-qual/baseline-sha256/4.cerr
+  $ build/om2-qual/baseline-sha256/4.elf < /dev/null > build/om2-qual/baseline-sha256/4.out 2> build/om2-qual/baseline-sha256/4.err
+VERDICT fips-empty PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-abc line=5
+  $ seed/out/omc < build/om2-qual/baseline-sha256/5.src > build/om2-qual/baseline-sha256/5.elf 2> build/om2-qual/baseline-sha256/5.cerr
+  $ build/om2-qual/baseline-sha256/5.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-sha256/5.out 2> build/om2-qual/baseline-sha256/5.err
+VERDICT fips-abc PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-448 line=6
+  $ seed/out/omc < build/om2-qual/baseline-sha256/6.src > build/om2-qual/baseline-sha256/6.elf 2> build/om2-qual/baseline-sha256/6.cerr
+  $ build/om2-qual/baseline-sha256/6.elf < seed/qualification/om2/fixtures/msg/m448.bin > build/om2-qual/baseline-sha256/6.out 2> build/om2-qual/baseline-sha256/6.err
+VERDICT fips-448 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896 line=7
+  $ seed/out/omc < build/om2-qual/baseline-sha256/7.src > build/om2-qual/baseline-sha256/7.elf 2> build/om2-qual/baseline-sha256/7.cerr
+  $ build/om2-qual/baseline-sha256/7.elf < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/7.out 2> build/om2-qual/baseline-sha256/7.err
+VERDICT fips-896 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-million-a line=8
+  $ seed/out/omc < build/om2-qual/baseline-sha256/8.src > build/om2-qual/baseline-sha256/8.elf 2> build/om2-qual/baseline-sha256/8.cerr
+  $ build/om2-qual/baseline-sha256/8.elf < build/om2-qual/baseline-sha256/8.in > build/om2-qual/baseline-sha256/8.out 2> build/om2-qual/baseline-sha256/8.err
+VERDICT fips-million-a PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-0 line=9
+  $ seed/out/omc < build/om2-qual/baseline-sha256/9.src > build/om2-qual/baseline-sha256/9.elf 2> build/om2-qual/baseline-sha256/9.cerr
+  $ build/om2-qual/baseline-sha256/9.elf < build/om2-qual/baseline-sha256/9.in > build/om2-qual/baseline-sha256/9.out 2> build/om2-qual/baseline-sha256/9.err
+VERDICT seq-0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1 line=10
+  $ seed/out/omc < build/om2-qual/baseline-sha256/10.src > build/om2-qual/baseline-sha256/10.elf 2> build/om2-qual/baseline-sha256/10.cerr
+  $ build/om2-qual/baseline-sha256/10.elf < build/om2-qual/baseline-sha256/10.in > build/om2-qual/baseline-sha256/10.out 2> build/om2-qual/baseline-sha256/10.err
+VERDICT seq-1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-2 line=11
+  $ seed/out/omc < build/om2-qual/baseline-sha256/11.src > build/om2-qual/baseline-sha256/11.elf 2> build/om2-qual/baseline-sha256/11.cerr
+  $ build/om2-qual/baseline-sha256/11.elf < build/om2-qual/baseline-sha256/11.in > build/om2-qual/baseline-sha256/11.out 2> build/om2-qual/baseline-sha256/11.err
+VERDICT seq-2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-3 line=12
+  $ seed/out/omc < build/om2-qual/baseline-sha256/12.src > build/om2-qual/baseline-sha256/12.elf 2> build/om2-qual/baseline-sha256/12.cerr
+  $ build/om2-qual/baseline-sha256/12.elf < build/om2-qual/baseline-sha256/12.in > build/om2-qual/baseline-sha256/12.out 2> build/om2-qual/baseline-sha256/12.err
+VERDICT seq-3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4 line=13
+  $ seed/out/omc < build/om2-qual/baseline-sha256/13.src > build/om2-qual/baseline-sha256/13.elf 2> build/om2-qual/baseline-sha256/13.cerr
+  $ build/om2-qual/baseline-sha256/13.elf < build/om2-qual/baseline-sha256/13.in > build/om2-qual/baseline-sha256/13.out 2> build/om2-qual/baseline-sha256/13.err
+VERDICT seq-4 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-5 line=14
+  $ seed/out/omc < build/om2-qual/baseline-sha256/14.src > build/om2-qual/baseline-sha256/14.elf 2> build/om2-qual/baseline-sha256/14.cerr
+  $ build/om2-qual/baseline-sha256/14.elf < build/om2-qual/baseline-sha256/14.in > build/om2-qual/baseline-sha256/14.out 2> build/om2-qual/baseline-sha256/14.err
+VERDICT seq-5 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-6 line=15
+  $ seed/out/omc < build/om2-qual/baseline-sha256/15.src > build/om2-qual/baseline-sha256/15.elf 2> build/om2-qual/baseline-sha256/15.cerr
+  $ build/om2-qual/baseline-sha256/15.elf < build/om2-qual/baseline-sha256/15.in > build/om2-qual/baseline-sha256/15.out 2> build/om2-qual/baseline-sha256/15.err
+VERDICT seq-6 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-7 line=16
+  $ seed/out/omc < build/om2-qual/baseline-sha256/16.src > build/om2-qual/baseline-sha256/16.elf 2> build/om2-qual/baseline-sha256/16.cerr
+  $ build/om2-qual/baseline-sha256/16.elf < build/om2-qual/baseline-sha256/16.in > build/om2-qual/baseline-sha256/16.out 2> build/om2-qual/baseline-sha256/16.err
+VERDICT seq-7 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8 line=17
+  $ seed/out/omc < build/om2-qual/baseline-sha256/17.src > build/om2-qual/baseline-sha256/17.elf 2> build/om2-qual/baseline-sha256/17.cerr
+  $ build/om2-qual/baseline-sha256/17.elf < build/om2-qual/baseline-sha256/17.in > build/om2-qual/baseline-sha256/17.out 2> build/om2-qual/baseline-sha256/17.err
+VERDICT seq-8 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-9 line=18
+  $ seed/out/omc < build/om2-qual/baseline-sha256/18.src > build/om2-qual/baseline-sha256/18.elf 2> build/om2-qual/baseline-sha256/18.cerr
+  $ build/om2-qual/baseline-sha256/18.elf < build/om2-qual/baseline-sha256/18.in > build/om2-qual/baseline-sha256/18.out 2> build/om2-qual/baseline-sha256/18.err
+VERDICT seq-9 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-10 line=19
+  $ seed/out/omc < build/om2-qual/baseline-sha256/19.src > build/om2-qual/baseline-sha256/19.elf 2> build/om2-qual/baseline-sha256/19.cerr
+  $ build/om2-qual/baseline-sha256/19.elf < build/om2-qual/baseline-sha256/19.in > build/om2-qual/baseline-sha256/19.out 2> build/om2-qual/baseline-sha256/19.err
+VERDICT seq-10 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-11 line=20
+  $ seed/out/omc < build/om2-qual/baseline-sha256/20.src > build/om2-qual/baseline-sha256/20.elf 2> build/om2-qual/baseline-sha256/20.cerr
+  $ build/om2-qual/baseline-sha256/20.elf < build/om2-qual/baseline-sha256/20.in > build/om2-qual/baseline-sha256/20.out 2> build/om2-qual/baseline-sha256/20.err
+VERDICT seq-11 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-12 line=21
+  $ seed/out/omc < build/om2-qual/baseline-sha256/21.src > build/om2-qual/baseline-sha256/21.elf 2> build/om2-qual/baseline-sha256/21.cerr
+  $ build/om2-qual/baseline-sha256/21.elf < build/om2-qual/baseline-sha256/21.in > build/om2-qual/baseline-sha256/21.out 2> build/om2-qual/baseline-sha256/21.err
+VERDICT seq-12 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-13 line=22
+  $ seed/out/omc < build/om2-qual/baseline-sha256/22.src > build/om2-qual/baseline-sha256/22.elf 2> build/om2-qual/baseline-sha256/22.cerr
+  $ build/om2-qual/baseline-sha256/22.elf < build/om2-qual/baseline-sha256/22.in > build/om2-qual/baseline-sha256/22.out 2> build/om2-qual/baseline-sha256/22.err
+VERDICT seq-13 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-14 line=23
+  $ seed/out/omc < build/om2-qual/baseline-sha256/23.src > build/om2-qual/baseline-sha256/23.elf 2> build/om2-qual/baseline-sha256/23.cerr
+  $ build/om2-qual/baseline-sha256/23.elf < build/om2-qual/baseline-sha256/23.in > build/om2-qual/baseline-sha256/23.out 2> build/om2-qual/baseline-sha256/23.err
+VERDICT seq-14 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-15 line=24
+  $ seed/out/omc < build/om2-qual/baseline-sha256/24.src > build/om2-qual/baseline-sha256/24.elf 2> build/om2-qual/baseline-sha256/24.cerr
+  $ build/om2-qual/baseline-sha256/24.elf < build/om2-qual/baseline-sha256/24.in > build/om2-qual/baseline-sha256/24.out 2> build/om2-qual/baseline-sha256/24.err
+VERDICT seq-15 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-16 line=25
+  $ seed/out/omc < build/om2-qual/baseline-sha256/25.src > build/om2-qual/baseline-sha256/25.elf 2> build/om2-qual/baseline-sha256/25.cerr
+  $ build/om2-qual/baseline-sha256/25.elf < build/om2-qual/baseline-sha256/25.in > build/om2-qual/baseline-sha256/25.out 2> build/om2-qual/baseline-sha256/25.err
+VERDICT seq-16 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-17 line=26
+  $ seed/out/omc < build/om2-qual/baseline-sha256/26.src > build/om2-qual/baseline-sha256/26.elf 2> build/om2-qual/baseline-sha256/26.cerr
+  $ build/om2-qual/baseline-sha256/26.elf < build/om2-qual/baseline-sha256/26.in > build/om2-qual/baseline-sha256/26.out 2> build/om2-qual/baseline-sha256/26.err
+VERDICT seq-17 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-18 line=27
+  $ seed/out/omc < build/om2-qual/baseline-sha256/27.src > build/om2-qual/baseline-sha256/27.elf 2> build/om2-qual/baseline-sha256/27.cerr
+  $ build/om2-qual/baseline-sha256/27.elf < build/om2-qual/baseline-sha256/27.in > build/om2-qual/baseline-sha256/27.out 2> build/om2-qual/baseline-sha256/27.err
+VERDICT seq-18 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-19 line=28
+  $ seed/out/omc < build/om2-qual/baseline-sha256/28.src > build/om2-qual/baseline-sha256/28.elf 2> build/om2-qual/baseline-sha256/28.cerr
+  $ build/om2-qual/baseline-sha256/28.elf < build/om2-qual/baseline-sha256/28.in > build/om2-qual/baseline-sha256/28.out 2> build/om2-qual/baseline-sha256/28.err
+VERDICT seq-19 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-20 line=29
+  $ seed/out/omc < build/om2-qual/baseline-sha256/29.src > build/om2-qual/baseline-sha256/29.elf 2> build/om2-qual/baseline-sha256/29.cerr
+  $ build/om2-qual/baseline-sha256/29.elf < build/om2-qual/baseline-sha256/29.in > build/om2-qual/baseline-sha256/29.out 2> build/om2-qual/baseline-sha256/29.err
+VERDICT seq-20 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-21 line=30
+  $ seed/out/omc < build/om2-qual/baseline-sha256/30.src > build/om2-qual/baseline-sha256/30.elf 2> build/om2-qual/baseline-sha256/30.cerr
+  $ build/om2-qual/baseline-sha256/30.elf < build/om2-qual/baseline-sha256/30.in > build/om2-qual/baseline-sha256/30.out 2> build/om2-qual/baseline-sha256/30.err
+VERDICT seq-21 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-22 line=31
+  $ seed/out/omc < build/om2-qual/baseline-sha256/31.src > build/om2-qual/baseline-sha256/31.elf 2> build/om2-qual/baseline-sha256/31.cerr
+  $ build/om2-qual/baseline-sha256/31.elf < build/om2-qual/baseline-sha256/31.in > build/om2-qual/baseline-sha256/31.out 2> build/om2-qual/baseline-sha256/31.err
+VERDICT seq-22 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-23 line=32
+  $ seed/out/omc < build/om2-qual/baseline-sha256/32.src > build/om2-qual/baseline-sha256/32.elf 2> build/om2-qual/baseline-sha256/32.cerr
+  $ build/om2-qual/baseline-sha256/32.elf < build/om2-qual/baseline-sha256/32.in > build/om2-qual/baseline-sha256/32.out 2> build/om2-qual/baseline-sha256/32.err
+VERDICT seq-23 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-24 line=33
+  $ seed/out/omc < build/om2-qual/baseline-sha256/33.src > build/om2-qual/baseline-sha256/33.elf 2> build/om2-qual/baseline-sha256/33.cerr
+  $ build/om2-qual/baseline-sha256/33.elf < build/om2-qual/baseline-sha256/33.in > build/om2-qual/baseline-sha256/33.out 2> build/om2-qual/baseline-sha256/33.err
+VERDICT seq-24 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-25 line=34
+  $ seed/out/omc < build/om2-qual/baseline-sha256/34.src > build/om2-qual/baseline-sha256/34.elf 2> build/om2-qual/baseline-sha256/34.cerr
+  $ build/om2-qual/baseline-sha256/34.elf < build/om2-qual/baseline-sha256/34.in > build/om2-qual/baseline-sha256/34.out 2> build/om2-qual/baseline-sha256/34.err
+VERDICT seq-25 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-26 line=35
+  $ seed/out/omc < build/om2-qual/baseline-sha256/35.src > build/om2-qual/baseline-sha256/35.elf 2> build/om2-qual/baseline-sha256/35.cerr
+  $ build/om2-qual/baseline-sha256/35.elf < build/om2-qual/baseline-sha256/35.in > build/om2-qual/baseline-sha256/35.out 2> build/om2-qual/baseline-sha256/35.err
+VERDICT seq-26 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-27 line=36
+  $ seed/out/omc < build/om2-qual/baseline-sha256/36.src > build/om2-qual/baseline-sha256/36.elf 2> build/om2-qual/baseline-sha256/36.cerr
+  $ build/om2-qual/baseline-sha256/36.elf < build/om2-qual/baseline-sha256/36.in > build/om2-qual/baseline-sha256/36.out 2> build/om2-qual/baseline-sha256/36.err
+VERDICT seq-27 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-28 line=37
+  $ seed/out/omc < build/om2-qual/baseline-sha256/37.src > build/om2-qual/baseline-sha256/37.elf 2> build/om2-qual/baseline-sha256/37.cerr
+  $ build/om2-qual/baseline-sha256/37.elf < build/om2-qual/baseline-sha256/37.in > build/om2-qual/baseline-sha256/37.out 2> build/om2-qual/baseline-sha256/37.err
+VERDICT seq-28 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-29 line=38
+  $ seed/out/omc < build/om2-qual/baseline-sha256/38.src > build/om2-qual/baseline-sha256/38.elf 2> build/om2-qual/baseline-sha256/38.cerr
+  $ build/om2-qual/baseline-sha256/38.elf < build/om2-qual/baseline-sha256/38.in > build/om2-qual/baseline-sha256/38.out 2> build/om2-qual/baseline-sha256/38.err
+VERDICT seq-29 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-30 line=39
+  $ seed/out/omc < build/om2-qual/baseline-sha256/39.src > build/om2-qual/baseline-sha256/39.elf 2> build/om2-qual/baseline-sha256/39.cerr
+  $ build/om2-qual/baseline-sha256/39.elf < build/om2-qual/baseline-sha256/39.in > build/om2-qual/baseline-sha256/39.out 2> build/om2-qual/baseline-sha256/39.err
+VERDICT seq-30 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-31 line=40
+  $ seed/out/omc < build/om2-qual/baseline-sha256/40.src > build/om2-qual/baseline-sha256/40.elf 2> build/om2-qual/baseline-sha256/40.cerr
+  $ build/om2-qual/baseline-sha256/40.elf < build/om2-qual/baseline-sha256/40.in > build/om2-qual/baseline-sha256/40.out 2> build/om2-qual/baseline-sha256/40.err
+VERDICT seq-31 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-32 line=41
+  $ seed/out/omc < build/om2-qual/baseline-sha256/41.src > build/om2-qual/baseline-sha256/41.elf 2> build/om2-qual/baseline-sha256/41.cerr
+  $ build/om2-qual/baseline-sha256/41.elf < build/om2-qual/baseline-sha256/41.in > build/om2-qual/baseline-sha256/41.out 2> build/om2-qual/baseline-sha256/41.err
+VERDICT seq-32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-33 line=42
+  $ seed/out/omc < build/om2-qual/baseline-sha256/42.src > build/om2-qual/baseline-sha256/42.elf 2> build/om2-qual/baseline-sha256/42.cerr
+  $ build/om2-qual/baseline-sha256/42.elf < build/om2-qual/baseline-sha256/42.in > build/om2-qual/baseline-sha256/42.out 2> build/om2-qual/baseline-sha256/42.err
+VERDICT seq-33 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-34 line=43
+  $ seed/out/omc < build/om2-qual/baseline-sha256/43.src > build/om2-qual/baseline-sha256/43.elf 2> build/om2-qual/baseline-sha256/43.cerr
+  $ build/om2-qual/baseline-sha256/43.elf < build/om2-qual/baseline-sha256/43.in > build/om2-qual/baseline-sha256/43.out 2> build/om2-qual/baseline-sha256/43.err
+VERDICT seq-34 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-35 line=44
+  $ seed/out/omc < build/om2-qual/baseline-sha256/44.src > build/om2-qual/baseline-sha256/44.elf 2> build/om2-qual/baseline-sha256/44.cerr
+  $ build/om2-qual/baseline-sha256/44.elf < build/om2-qual/baseline-sha256/44.in > build/om2-qual/baseline-sha256/44.out 2> build/om2-qual/baseline-sha256/44.err
+VERDICT seq-35 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-36 line=45
+  $ seed/out/omc < build/om2-qual/baseline-sha256/45.src > build/om2-qual/baseline-sha256/45.elf 2> build/om2-qual/baseline-sha256/45.cerr
+  $ build/om2-qual/baseline-sha256/45.elf < build/om2-qual/baseline-sha256/45.in > build/om2-qual/baseline-sha256/45.out 2> build/om2-qual/baseline-sha256/45.err
+VERDICT seq-36 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-37 line=46
+  $ seed/out/omc < build/om2-qual/baseline-sha256/46.src > build/om2-qual/baseline-sha256/46.elf 2> build/om2-qual/baseline-sha256/46.cerr
+  $ build/om2-qual/baseline-sha256/46.elf < build/om2-qual/baseline-sha256/46.in > build/om2-qual/baseline-sha256/46.out 2> build/om2-qual/baseline-sha256/46.err
+VERDICT seq-37 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-38 line=47
+  $ seed/out/omc < build/om2-qual/baseline-sha256/47.src > build/om2-qual/baseline-sha256/47.elf 2> build/om2-qual/baseline-sha256/47.cerr
+  $ build/om2-qual/baseline-sha256/47.elf < build/om2-qual/baseline-sha256/47.in > build/om2-qual/baseline-sha256/47.out 2> build/om2-qual/baseline-sha256/47.err
+VERDICT seq-38 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-39 line=48
+  $ seed/out/omc < build/om2-qual/baseline-sha256/48.src > build/om2-qual/baseline-sha256/48.elf 2> build/om2-qual/baseline-sha256/48.cerr
+  $ build/om2-qual/baseline-sha256/48.elf < build/om2-qual/baseline-sha256/48.in > build/om2-qual/baseline-sha256/48.out 2> build/om2-qual/baseline-sha256/48.err
+VERDICT seq-39 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-40 line=49
+  $ seed/out/omc < build/om2-qual/baseline-sha256/49.src > build/om2-qual/baseline-sha256/49.elf 2> build/om2-qual/baseline-sha256/49.cerr
+  $ build/om2-qual/baseline-sha256/49.elf < build/om2-qual/baseline-sha256/49.in > build/om2-qual/baseline-sha256/49.out 2> build/om2-qual/baseline-sha256/49.err
+VERDICT seq-40 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-41 line=50
+  $ seed/out/omc < build/om2-qual/baseline-sha256/50.src > build/om2-qual/baseline-sha256/50.elf 2> build/om2-qual/baseline-sha256/50.cerr
+  $ build/om2-qual/baseline-sha256/50.elf < build/om2-qual/baseline-sha256/50.in > build/om2-qual/baseline-sha256/50.out 2> build/om2-qual/baseline-sha256/50.err
+VERDICT seq-41 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-42 line=51
+  $ seed/out/omc < build/om2-qual/baseline-sha256/51.src > build/om2-qual/baseline-sha256/51.elf 2> build/om2-qual/baseline-sha256/51.cerr
+  $ build/om2-qual/baseline-sha256/51.elf < build/om2-qual/baseline-sha256/51.in > build/om2-qual/baseline-sha256/51.out 2> build/om2-qual/baseline-sha256/51.err
+VERDICT seq-42 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-43 line=52
+  $ seed/out/omc < build/om2-qual/baseline-sha256/52.src > build/om2-qual/baseline-sha256/52.elf 2> build/om2-qual/baseline-sha256/52.cerr
+  $ build/om2-qual/baseline-sha256/52.elf < build/om2-qual/baseline-sha256/52.in > build/om2-qual/baseline-sha256/52.out 2> build/om2-qual/baseline-sha256/52.err
+VERDICT seq-43 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-44 line=53
+  $ seed/out/omc < build/om2-qual/baseline-sha256/53.src > build/om2-qual/baseline-sha256/53.elf 2> build/om2-qual/baseline-sha256/53.cerr
+  $ build/om2-qual/baseline-sha256/53.elf < build/om2-qual/baseline-sha256/53.in > build/om2-qual/baseline-sha256/53.out 2> build/om2-qual/baseline-sha256/53.err
+VERDICT seq-44 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-45 line=54
+  $ seed/out/omc < build/om2-qual/baseline-sha256/54.src > build/om2-qual/baseline-sha256/54.elf 2> build/om2-qual/baseline-sha256/54.cerr
+  $ build/om2-qual/baseline-sha256/54.elf < build/om2-qual/baseline-sha256/54.in > build/om2-qual/baseline-sha256/54.out 2> build/om2-qual/baseline-sha256/54.err
+VERDICT seq-45 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-46 line=55
+  $ seed/out/omc < build/om2-qual/baseline-sha256/55.src > build/om2-qual/baseline-sha256/55.elf 2> build/om2-qual/baseline-sha256/55.cerr
+  $ build/om2-qual/baseline-sha256/55.elf < build/om2-qual/baseline-sha256/55.in > build/om2-qual/baseline-sha256/55.out 2> build/om2-qual/baseline-sha256/55.err
+VERDICT seq-46 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-47 line=56
+  $ seed/out/omc < build/om2-qual/baseline-sha256/56.src > build/om2-qual/baseline-sha256/56.elf 2> build/om2-qual/baseline-sha256/56.cerr
+  $ build/om2-qual/baseline-sha256/56.elf < build/om2-qual/baseline-sha256/56.in > build/om2-qual/baseline-sha256/56.out 2> build/om2-qual/baseline-sha256/56.err
+VERDICT seq-47 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-48 line=57
+  $ seed/out/omc < build/om2-qual/baseline-sha256/57.src > build/om2-qual/baseline-sha256/57.elf 2> build/om2-qual/baseline-sha256/57.cerr
+  $ build/om2-qual/baseline-sha256/57.elf < build/om2-qual/baseline-sha256/57.in > build/om2-qual/baseline-sha256/57.out 2> build/om2-qual/baseline-sha256/57.err
+VERDICT seq-48 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-49 line=58
+  $ seed/out/omc < build/om2-qual/baseline-sha256/58.src > build/om2-qual/baseline-sha256/58.elf 2> build/om2-qual/baseline-sha256/58.cerr
+  $ build/om2-qual/baseline-sha256/58.elf < build/om2-qual/baseline-sha256/58.in > build/om2-qual/baseline-sha256/58.out 2> build/om2-qual/baseline-sha256/58.err
+VERDICT seq-49 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-50 line=59
+  $ seed/out/omc < build/om2-qual/baseline-sha256/59.src > build/om2-qual/baseline-sha256/59.elf 2> build/om2-qual/baseline-sha256/59.cerr
+  $ build/om2-qual/baseline-sha256/59.elf < build/om2-qual/baseline-sha256/59.in > build/om2-qual/baseline-sha256/59.out 2> build/om2-qual/baseline-sha256/59.err
+VERDICT seq-50 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-51 line=60
+  $ seed/out/omc < build/om2-qual/baseline-sha256/60.src > build/om2-qual/baseline-sha256/60.elf 2> build/om2-qual/baseline-sha256/60.cerr
+  $ build/om2-qual/baseline-sha256/60.elf < build/om2-qual/baseline-sha256/60.in > build/om2-qual/baseline-sha256/60.out 2> build/om2-qual/baseline-sha256/60.err
+VERDICT seq-51 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-52 line=61
+  $ seed/out/omc < build/om2-qual/baseline-sha256/61.src > build/om2-qual/baseline-sha256/61.elf 2> build/om2-qual/baseline-sha256/61.cerr
+  $ build/om2-qual/baseline-sha256/61.elf < build/om2-qual/baseline-sha256/61.in > build/om2-qual/baseline-sha256/61.out 2> build/om2-qual/baseline-sha256/61.err
+VERDICT seq-52 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-53 line=62
+  $ seed/out/omc < build/om2-qual/baseline-sha256/62.src > build/om2-qual/baseline-sha256/62.elf 2> build/om2-qual/baseline-sha256/62.cerr
+  $ build/om2-qual/baseline-sha256/62.elf < build/om2-qual/baseline-sha256/62.in > build/om2-qual/baseline-sha256/62.out 2> build/om2-qual/baseline-sha256/62.err
+VERDICT seq-53 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-54 line=63
+  $ seed/out/omc < build/om2-qual/baseline-sha256/63.src > build/om2-qual/baseline-sha256/63.elf 2> build/om2-qual/baseline-sha256/63.cerr
+  $ build/om2-qual/baseline-sha256/63.elf < build/om2-qual/baseline-sha256/63.in > build/om2-qual/baseline-sha256/63.out 2> build/om2-qual/baseline-sha256/63.err
+VERDICT seq-54 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55 line=64
+  $ seed/out/omc < build/om2-qual/baseline-sha256/64.src > build/om2-qual/baseline-sha256/64.elf 2> build/om2-qual/baseline-sha256/64.cerr
+  $ build/om2-qual/baseline-sha256/64.elf < build/om2-qual/baseline-sha256/64.in > build/om2-qual/baseline-sha256/64.out 2> build/om2-qual/baseline-sha256/64.err
+VERDICT seq-55 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56 line=65
+  $ seed/out/omc < build/om2-qual/baseline-sha256/65.src > build/om2-qual/baseline-sha256/65.elf 2> build/om2-qual/baseline-sha256/65.cerr
+  $ build/om2-qual/baseline-sha256/65.elf < build/om2-qual/baseline-sha256/65.in > build/om2-qual/baseline-sha256/65.out 2> build/om2-qual/baseline-sha256/65.err
+VERDICT seq-56 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-57 line=66
+  $ seed/out/omc < build/om2-qual/baseline-sha256/66.src > build/om2-qual/baseline-sha256/66.elf 2> build/om2-qual/baseline-sha256/66.cerr
+  $ build/om2-qual/baseline-sha256/66.elf < build/om2-qual/baseline-sha256/66.in > build/om2-qual/baseline-sha256/66.out 2> build/om2-qual/baseline-sha256/66.err
+VERDICT seq-57 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-58 line=67
+  $ seed/out/omc < build/om2-qual/baseline-sha256/67.src > build/om2-qual/baseline-sha256/67.elf 2> build/om2-qual/baseline-sha256/67.cerr
+  $ build/om2-qual/baseline-sha256/67.elf < build/om2-qual/baseline-sha256/67.in > build/om2-qual/baseline-sha256/67.out 2> build/om2-qual/baseline-sha256/67.err
+VERDICT seq-58 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-59 line=68
+  $ seed/out/omc < build/om2-qual/baseline-sha256/68.src > build/om2-qual/baseline-sha256/68.elf 2> build/om2-qual/baseline-sha256/68.cerr
+  $ build/om2-qual/baseline-sha256/68.elf < build/om2-qual/baseline-sha256/68.in > build/om2-qual/baseline-sha256/68.out 2> build/om2-qual/baseline-sha256/68.err
+VERDICT seq-59 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-60 line=69
+  $ seed/out/omc < build/om2-qual/baseline-sha256/69.src > build/om2-qual/baseline-sha256/69.elf 2> build/om2-qual/baseline-sha256/69.cerr
+  $ build/om2-qual/baseline-sha256/69.elf < build/om2-qual/baseline-sha256/69.in > build/om2-qual/baseline-sha256/69.out 2> build/om2-qual/baseline-sha256/69.err
+VERDICT seq-60 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-61 line=70
+  $ seed/out/omc < build/om2-qual/baseline-sha256/70.src > build/om2-qual/baseline-sha256/70.elf 2> build/om2-qual/baseline-sha256/70.cerr
+  $ build/om2-qual/baseline-sha256/70.elf < build/om2-qual/baseline-sha256/70.in > build/om2-qual/baseline-sha256/70.out 2> build/om2-qual/baseline-sha256/70.err
+VERDICT seq-61 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-62 line=71
+  $ seed/out/omc < build/om2-qual/baseline-sha256/71.src > build/om2-qual/baseline-sha256/71.elf 2> build/om2-qual/baseline-sha256/71.cerr
+  $ build/om2-qual/baseline-sha256/71.elf < build/om2-qual/baseline-sha256/71.in > build/om2-qual/baseline-sha256/71.out 2> build/om2-qual/baseline-sha256/71.err
+VERDICT seq-62 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63 line=72
+  $ seed/out/omc < build/om2-qual/baseline-sha256/72.src > build/om2-qual/baseline-sha256/72.elf 2> build/om2-qual/baseline-sha256/72.cerr
+  $ build/om2-qual/baseline-sha256/72.elf < build/om2-qual/baseline-sha256/72.in > build/om2-qual/baseline-sha256/72.out 2> build/om2-qual/baseline-sha256/72.err
+VERDICT seq-63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64 line=73
+  $ seed/out/omc < build/om2-qual/baseline-sha256/73.src > build/om2-qual/baseline-sha256/73.elf 2> build/om2-qual/baseline-sha256/73.cerr
+  $ build/om2-qual/baseline-sha256/73.elf < build/om2-qual/baseline-sha256/73.in > build/om2-qual/baseline-sha256/73.out 2> build/om2-qual/baseline-sha256/73.err
+VERDICT seq-64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65 line=74
+  $ seed/out/omc < build/om2-qual/baseline-sha256/74.src > build/om2-qual/baseline-sha256/74.elf 2> build/om2-qual/baseline-sha256/74.cerr
+  $ build/om2-qual/baseline-sha256/74.elf < build/om2-qual/baseline-sha256/74.in > build/om2-qual/baseline-sha256/74.out 2> build/om2-qual/baseline-sha256/74.err
+VERDICT seq-65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-66 line=75
+  $ seed/out/omc < build/om2-qual/baseline-sha256/75.src > build/om2-qual/baseline-sha256/75.elf 2> build/om2-qual/baseline-sha256/75.cerr
+  $ build/om2-qual/baseline-sha256/75.elf < build/om2-qual/baseline-sha256/75.in > build/om2-qual/baseline-sha256/75.out 2> build/om2-qual/baseline-sha256/75.err
+VERDICT seq-66 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-67 line=76
+  $ seed/out/omc < build/om2-qual/baseline-sha256/76.src > build/om2-qual/baseline-sha256/76.elf 2> build/om2-qual/baseline-sha256/76.cerr
+  $ build/om2-qual/baseline-sha256/76.elf < build/om2-qual/baseline-sha256/76.in > build/om2-qual/baseline-sha256/76.out 2> build/om2-qual/baseline-sha256/76.err
+VERDICT seq-67 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-68 line=77
+  $ seed/out/omc < build/om2-qual/baseline-sha256/77.src > build/om2-qual/baseline-sha256/77.elf 2> build/om2-qual/baseline-sha256/77.cerr
+  $ build/om2-qual/baseline-sha256/77.elf < build/om2-qual/baseline-sha256/77.in > build/om2-qual/baseline-sha256/77.out 2> build/om2-qual/baseline-sha256/77.err
+VERDICT seq-68 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-69 line=78
+  $ seed/out/omc < build/om2-qual/baseline-sha256/78.src > build/om2-qual/baseline-sha256/78.elf 2> build/om2-qual/baseline-sha256/78.cerr
+  $ build/om2-qual/baseline-sha256/78.elf < build/om2-qual/baseline-sha256/78.in > build/om2-qual/baseline-sha256/78.out 2> build/om2-qual/baseline-sha256/78.err
+VERDICT seq-69 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-70 line=79
+  $ seed/out/omc < build/om2-qual/baseline-sha256/79.src > build/om2-qual/baseline-sha256/79.elf 2> build/om2-qual/baseline-sha256/79.cerr
+  $ build/om2-qual/baseline-sha256/79.elf < build/om2-qual/baseline-sha256/79.in > build/om2-qual/baseline-sha256/79.out 2> build/om2-qual/baseline-sha256/79.err
+VERDICT seq-70 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-71 line=80
+  $ seed/out/omc < build/om2-qual/baseline-sha256/80.src > build/om2-qual/baseline-sha256/80.elf 2> build/om2-qual/baseline-sha256/80.cerr
+  $ build/om2-qual/baseline-sha256/80.elf < build/om2-qual/baseline-sha256/80.in > build/om2-qual/baseline-sha256/80.out 2> build/om2-qual/baseline-sha256/80.err
+VERDICT seq-71 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-72 line=81
+  $ seed/out/omc < build/om2-qual/baseline-sha256/81.src > build/om2-qual/baseline-sha256/81.elf 2> build/om2-qual/baseline-sha256/81.cerr
+  $ build/om2-qual/baseline-sha256/81.elf < build/om2-qual/baseline-sha256/81.in > build/om2-qual/baseline-sha256/81.out 2> build/om2-qual/baseline-sha256/81.err
+VERDICT seq-72 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-73 line=82
+  $ seed/out/omc < build/om2-qual/baseline-sha256/82.src > build/om2-qual/baseline-sha256/82.elf 2> build/om2-qual/baseline-sha256/82.cerr
+  $ build/om2-qual/baseline-sha256/82.elf < build/om2-qual/baseline-sha256/82.in > build/om2-qual/baseline-sha256/82.out 2> build/om2-qual/baseline-sha256/82.err
+VERDICT seq-73 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-74 line=83
+  $ seed/out/omc < build/om2-qual/baseline-sha256/83.src > build/om2-qual/baseline-sha256/83.elf 2> build/om2-qual/baseline-sha256/83.cerr
+  $ build/om2-qual/baseline-sha256/83.elf < build/om2-qual/baseline-sha256/83.in > build/om2-qual/baseline-sha256/83.out 2> build/om2-qual/baseline-sha256/83.err
+VERDICT seq-74 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-75 line=84
+  $ seed/out/omc < build/om2-qual/baseline-sha256/84.src > build/om2-qual/baseline-sha256/84.elf 2> build/om2-qual/baseline-sha256/84.cerr
+  $ build/om2-qual/baseline-sha256/84.elf < build/om2-qual/baseline-sha256/84.in > build/om2-qual/baseline-sha256/84.out 2> build/om2-qual/baseline-sha256/84.err
+VERDICT seq-75 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-76 line=85
+  $ seed/out/omc < build/om2-qual/baseline-sha256/85.src > build/om2-qual/baseline-sha256/85.elf 2> build/om2-qual/baseline-sha256/85.cerr
+  $ build/om2-qual/baseline-sha256/85.elf < build/om2-qual/baseline-sha256/85.in > build/om2-qual/baseline-sha256/85.out 2> build/om2-qual/baseline-sha256/85.err
+VERDICT seq-76 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-77 line=86
+  $ seed/out/omc < build/om2-qual/baseline-sha256/86.src > build/om2-qual/baseline-sha256/86.elf 2> build/om2-qual/baseline-sha256/86.cerr
+  $ build/om2-qual/baseline-sha256/86.elf < build/om2-qual/baseline-sha256/86.in > build/om2-qual/baseline-sha256/86.out 2> build/om2-qual/baseline-sha256/86.err
+VERDICT seq-77 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-78 line=87
+  $ seed/out/omc < build/om2-qual/baseline-sha256/87.src > build/om2-qual/baseline-sha256/87.elf 2> build/om2-qual/baseline-sha256/87.cerr
+  $ build/om2-qual/baseline-sha256/87.elf < build/om2-qual/baseline-sha256/87.in > build/om2-qual/baseline-sha256/87.out 2> build/om2-qual/baseline-sha256/87.err
+VERDICT seq-78 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-79 line=88
+  $ seed/out/omc < build/om2-qual/baseline-sha256/88.src > build/om2-qual/baseline-sha256/88.elf 2> build/om2-qual/baseline-sha256/88.cerr
+  $ build/om2-qual/baseline-sha256/88.elf < build/om2-qual/baseline-sha256/88.in > build/om2-qual/baseline-sha256/88.out 2> build/om2-qual/baseline-sha256/88.err
+VERDICT seq-79 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-80 line=89
+  $ seed/out/omc < build/om2-qual/baseline-sha256/89.src > build/om2-qual/baseline-sha256/89.elf 2> build/om2-qual/baseline-sha256/89.cerr
+  $ build/om2-qual/baseline-sha256/89.elf < build/om2-qual/baseline-sha256/89.in > build/om2-qual/baseline-sha256/89.out 2> build/om2-qual/baseline-sha256/89.err
+VERDICT seq-80 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-81 line=90
+  $ seed/out/omc < build/om2-qual/baseline-sha256/90.src > build/om2-qual/baseline-sha256/90.elf 2> build/om2-qual/baseline-sha256/90.cerr
+  $ build/om2-qual/baseline-sha256/90.elf < build/om2-qual/baseline-sha256/90.in > build/om2-qual/baseline-sha256/90.out 2> build/om2-qual/baseline-sha256/90.err
+VERDICT seq-81 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-82 line=91
+  $ seed/out/omc < build/om2-qual/baseline-sha256/91.src > build/om2-qual/baseline-sha256/91.elf 2> build/om2-qual/baseline-sha256/91.cerr
+  $ build/om2-qual/baseline-sha256/91.elf < build/om2-qual/baseline-sha256/91.in > build/om2-qual/baseline-sha256/91.out 2> build/om2-qual/baseline-sha256/91.err
+VERDICT seq-82 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-83 line=92
+  $ seed/out/omc < build/om2-qual/baseline-sha256/92.src > build/om2-qual/baseline-sha256/92.elf 2> build/om2-qual/baseline-sha256/92.cerr
+  $ build/om2-qual/baseline-sha256/92.elf < build/om2-qual/baseline-sha256/92.in > build/om2-qual/baseline-sha256/92.out 2> build/om2-qual/baseline-sha256/92.err
+VERDICT seq-83 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-84 line=93
+  $ seed/out/omc < build/om2-qual/baseline-sha256/93.src > build/om2-qual/baseline-sha256/93.elf 2> build/om2-qual/baseline-sha256/93.cerr
+  $ build/om2-qual/baseline-sha256/93.elf < build/om2-qual/baseline-sha256/93.in > build/om2-qual/baseline-sha256/93.out 2> build/om2-qual/baseline-sha256/93.err
+VERDICT seq-84 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-85 line=94
+  $ seed/out/omc < build/om2-qual/baseline-sha256/94.src > build/om2-qual/baseline-sha256/94.elf 2> build/om2-qual/baseline-sha256/94.cerr
+  $ build/om2-qual/baseline-sha256/94.elf < build/om2-qual/baseline-sha256/94.in > build/om2-qual/baseline-sha256/94.out 2> build/om2-qual/baseline-sha256/94.err
+VERDICT seq-85 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-86 line=95
+  $ seed/out/omc < build/om2-qual/baseline-sha256/95.src > build/om2-qual/baseline-sha256/95.elf 2> build/om2-qual/baseline-sha256/95.cerr
+  $ build/om2-qual/baseline-sha256/95.elf < build/om2-qual/baseline-sha256/95.in > build/om2-qual/baseline-sha256/95.out 2> build/om2-qual/baseline-sha256/95.err
+VERDICT seq-86 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-87 line=96
+  $ seed/out/omc < build/om2-qual/baseline-sha256/96.src > build/om2-qual/baseline-sha256/96.elf 2> build/om2-qual/baseline-sha256/96.cerr
+  $ build/om2-qual/baseline-sha256/96.elf < build/om2-qual/baseline-sha256/96.in > build/om2-qual/baseline-sha256/96.out 2> build/om2-qual/baseline-sha256/96.err
+VERDICT seq-87 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-88 line=97
+  $ seed/out/omc < build/om2-qual/baseline-sha256/97.src > build/om2-qual/baseline-sha256/97.elf 2> build/om2-qual/baseline-sha256/97.cerr
+  $ build/om2-qual/baseline-sha256/97.elf < build/om2-qual/baseline-sha256/97.in > build/om2-qual/baseline-sha256/97.out 2> build/om2-qual/baseline-sha256/97.err
+VERDICT seq-88 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-89 line=98
+  $ seed/out/omc < build/om2-qual/baseline-sha256/98.src > build/om2-qual/baseline-sha256/98.elf 2> build/om2-qual/baseline-sha256/98.cerr
+  $ build/om2-qual/baseline-sha256/98.elf < build/om2-qual/baseline-sha256/98.in > build/om2-qual/baseline-sha256/98.out 2> build/om2-qual/baseline-sha256/98.err
+VERDICT seq-89 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-90 line=99
+  $ seed/out/omc < build/om2-qual/baseline-sha256/99.src > build/om2-qual/baseline-sha256/99.elf 2> build/om2-qual/baseline-sha256/99.cerr
+  $ build/om2-qual/baseline-sha256/99.elf < build/om2-qual/baseline-sha256/99.in > build/om2-qual/baseline-sha256/99.out 2> build/om2-qual/baseline-sha256/99.err
+VERDICT seq-90 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-91 line=100
+  $ seed/out/omc < build/om2-qual/baseline-sha256/100.src > build/om2-qual/baseline-sha256/100.elf 2> build/om2-qual/baseline-sha256/100.cerr
+  $ build/om2-qual/baseline-sha256/100.elf < build/om2-qual/baseline-sha256/100.in > build/om2-qual/baseline-sha256/100.out 2> build/om2-qual/baseline-sha256/100.err
+VERDICT seq-91 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-92 line=101
+  $ seed/out/omc < build/om2-qual/baseline-sha256/101.src > build/om2-qual/baseline-sha256/101.elf 2> build/om2-qual/baseline-sha256/101.cerr
+  $ build/om2-qual/baseline-sha256/101.elf < build/om2-qual/baseline-sha256/101.in > build/om2-qual/baseline-sha256/101.out 2> build/om2-qual/baseline-sha256/101.err
+VERDICT seq-92 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-93 line=102
+  $ seed/out/omc < build/om2-qual/baseline-sha256/102.src > build/om2-qual/baseline-sha256/102.elf 2> build/om2-qual/baseline-sha256/102.cerr
+  $ build/om2-qual/baseline-sha256/102.elf < build/om2-qual/baseline-sha256/102.in > build/om2-qual/baseline-sha256/102.out 2> build/om2-qual/baseline-sha256/102.err
+VERDICT seq-93 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-94 line=103
+  $ seed/out/omc < build/om2-qual/baseline-sha256/103.src > build/om2-qual/baseline-sha256/103.elf 2> build/om2-qual/baseline-sha256/103.cerr
+  $ build/om2-qual/baseline-sha256/103.elf < build/om2-qual/baseline-sha256/103.in > build/om2-qual/baseline-sha256/103.out 2> build/om2-qual/baseline-sha256/103.err
+VERDICT seq-94 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-95 line=104
+  $ seed/out/omc < build/om2-qual/baseline-sha256/104.src > build/om2-qual/baseline-sha256/104.elf 2> build/om2-qual/baseline-sha256/104.cerr
+  $ build/om2-qual/baseline-sha256/104.elf < build/om2-qual/baseline-sha256/104.in > build/om2-qual/baseline-sha256/104.out 2> build/om2-qual/baseline-sha256/104.err
+VERDICT seq-95 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-96 line=105
+  $ seed/out/omc < build/om2-qual/baseline-sha256/105.src > build/om2-qual/baseline-sha256/105.elf 2> build/om2-qual/baseline-sha256/105.cerr
+  $ build/om2-qual/baseline-sha256/105.elf < build/om2-qual/baseline-sha256/105.in > build/om2-qual/baseline-sha256/105.out 2> build/om2-qual/baseline-sha256/105.err
+VERDICT seq-96 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-97 line=106
+  $ seed/out/omc < build/om2-qual/baseline-sha256/106.src > build/om2-qual/baseline-sha256/106.elf 2> build/om2-qual/baseline-sha256/106.cerr
+  $ build/om2-qual/baseline-sha256/106.elf < build/om2-qual/baseline-sha256/106.in > build/om2-qual/baseline-sha256/106.out 2> build/om2-qual/baseline-sha256/106.err
+VERDICT seq-97 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-98 line=107
+  $ seed/out/omc < build/om2-qual/baseline-sha256/107.src > build/om2-qual/baseline-sha256/107.elf 2> build/om2-qual/baseline-sha256/107.cerr
+  $ build/om2-qual/baseline-sha256/107.elf < build/om2-qual/baseline-sha256/107.in > build/om2-qual/baseline-sha256/107.out 2> build/om2-qual/baseline-sha256/107.err
+VERDICT seq-98 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-99 line=108
+  $ seed/out/omc < build/om2-qual/baseline-sha256/108.src > build/om2-qual/baseline-sha256/108.elf 2> build/om2-qual/baseline-sha256/108.cerr
+  $ build/om2-qual/baseline-sha256/108.elf < build/om2-qual/baseline-sha256/108.in > build/om2-qual/baseline-sha256/108.out 2> build/om2-qual/baseline-sha256/108.err
+VERDICT seq-99 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-100 line=109
+  $ seed/out/omc < build/om2-qual/baseline-sha256/109.src > build/om2-qual/baseline-sha256/109.elf 2> build/om2-qual/baseline-sha256/109.cerr
+  $ build/om2-qual/baseline-sha256/109.elf < build/om2-qual/baseline-sha256/109.in > build/om2-qual/baseline-sha256/109.out 2> build/om2-qual/baseline-sha256/109.err
+VERDICT seq-100 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-101 line=110
+  $ seed/out/omc < build/om2-qual/baseline-sha256/110.src > build/om2-qual/baseline-sha256/110.elf 2> build/om2-qual/baseline-sha256/110.cerr
+  $ build/om2-qual/baseline-sha256/110.elf < build/om2-qual/baseline-sha256/110.in > build/om2-qual/baseline-sha256/110.out 2> build/om2-qual/baseline-sha256/110.err
+VERDICT seq-101 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-102 line=111
+  $ seed/out/omc < build/om2-qual/baseline-sha256/111.src > build/om2-qual/baseline-sha256/111.elf 2> build/om2-qual/baseline-sha256/111.cerr
+  $ build/om2-qual/baseline-sha256/111.elf < build/om2-qual/baseline-sha256/111.in > build/om2-qual/baseline-sha256/111.out 2> build/om2-qual/baseline-sha256/111.err
+VERDICT seq-102 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-103 line=112
+  $ seed/out/omc < build/om2-qual/baseline-sha256/112.src > build/om2-qual/baseline-sha256/112.elf 2> build/om2-qual/baseline-sha256/112.cerr
+  $ build/om2-qual/baseline-sha256/112.elf < build/om2-qual/baseline-sha256/112.in > build/om2-qual/baseline-sha256/112.out 2> build/om2-qual/baseline-sha256/112.err
+VERDICT seq-103 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-104 line=113
+  $ seed/out/omc < build/om2-qual/baseline-sha256/113.src > build/om2-qual/baseline-sha256/113.elf 2> build/om2-qual/baseline-sha256/113.cerr
+  $ build/om2-qual/baseline-sha256/113.elf < build/om2-qual/baseline-sha256/113.in > build/om2-qual/baseline-sha256/113.out 2> build/om2-qual/baseline-sha256/113.err
+VERDICT seq-104 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-105 line=114
+  $ seed/out/omc < build/om2-qual/baseline-sha256/114.src > build/om2-qual/baseline-sha256/114.elf 2> build/om2-qual/baseline-sha256/114.cerr
+  $ build/om2-qual/baseline-sha256/114.elf < build/om2-qual/baseline-sha256/114.in > build/om2-qual/baseline-sha256/114.out 2> build/om2-qual/baseline-sha256/114.err
+VERDICT seq-105 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-106 line=115
+  $ seed/out/omc < build/om2-qual/baseline-sha256/115.src > build/om2-qual/baseline-sha256/115.elf 2> build/om2-qual/baseline-sha256/115.cerr
+  $ build/om2-qual/baseline-sha256/115.elf < build/om2-qual/baseline-sha256/115.in > build/om2-qual/baseline-sha256/115.out 2> build/om2-qual/baseline-sha256/115.err
+VERDICT seq-106 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-107 line=116
+  $ seed/out/omc < build/om2-qual/baseline-sha256/116.src > build/om2-qual/baseline-sha256/116.elf 2> build/om2-qual/baseline-sha256/116.cerr
+  $ build/om2-qual/baseline-sha256/116.elf < build/om2-qual/baseline-sha256/116.in > build/om2-qual/baseline-sha256/116.out 2> build/om2-qual/baseline-sha256/116.err
+VERDICT seq-107 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-108 line=117
+  $ seed/out/omc < build/om2-qual/baseline-sha256/117.src > build/om2-qual/baseline-sha256/117.elf 2> build/om2-qual/baseline-sha256/117.cerr
+  $ build/om2-qual/baseline-sha256/117.elf < build/om2-qual/baseline-sha256/117.in > build/om2-qual/baseline-sha256/117.out 2> build/om2-qual/baseline-sha256/117.err
+VERDICT seq-108 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-109 line=118
+  $ seed/out/omc < build/om2-qual/baseline-sha256/118.src > build/om2-qual/baseline-sha256/118.elf 2> build/om2-qual/baseline-sha256/118.cerr
+  $ build/om2-qual/baseline-sha256/118.elf < build/om2-qual/baseline-sha256/118.in > build/om2-qual/baseline-sha256/118.out 2> build/om2-qual/baseline-sha256/118.err
+VERDICT seq-109 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-110 line=119
+  $ seed/out/omc < build/om2-qual/baseline-sha256/119.src > build/om2-qual/baseline-sha256/119.elf 2> build/om2-qual/baseline-sha256/119.cerr
+  $ build/om2-qual/baseline-sha256/119.elf < build/om2-qual/baseline-sha256/119.in > build/om2-qual/baseline-sha256/119.out 2> build/om2-qual/baseline-sha256/119.err
+VERDICT seq-110 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-111 line=120
+  $ seed/out/omc < build/om2-qual/baseline-sha256/120.src > build/om2-qual/baseline-sha256/120.elf 2> build/om2-qual/baseline-sha256/120.cerr
+  $ build/om2-qual/baseline-sha256/120.elf < build/om2-qual/baseline-sha256/120.in > build/om2-qual/baseline-sha256/120.out 2> build/om2-qual/baseline-sha256/120.err
+VERDICT seq-111 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-112 line=121
+  $ seed/out/omc < build/om2-qual/baseline-sha256/121.src > build/om2-qual/baseline-sha256/121.elf 2> build/om2-qual/baseline-sha256/121.cerr
+  $ build/om2-qual/baseline-sha256/121.elf < build/om2-qual/baseline-sha256/121.in > build/om2-qual/baseline-sha256/121.out 2> build/om2-qual/baseline-sha256/121.err
+VERDICT seq-112 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-113 line=122
+  $ seed/out/omc < build/om2-qual/baseline-sha256/122.src > build/om2-qual/baseline-sha256/122.elf 2> build/om2-qual/baseline-sha256/122.cerr
+  $ build/om2-qual/baseline-sha256/122.elf < build/om2-qual/baseline-sha256/122.in > build/om2-qual/baseline-sha256/122.out 2> build/om2-qual/baseline-sha256/122.err
+VERDICT seq-113 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-114 line=123
+  $ seed/out/omc < build/om2-qual/baseline-sha256/123.src > build/om2-qual/baseline-sha256/123.elf 2> build/om2-qual/baseline-sha256/123.cerr
+  $ build/om2-qual/baseline-sha256/123.elf < build/om2-qual/baseline-sha256/123.in > build/om2-qual/baseline-sha256/123.out 2> build/om2-qual/baseline-sha256/123.err
+VERDICT seq-114 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-115 line=124
+  $ seed/out/omc < build/om2-qual/baseline-sha256/124.src > build/om2-qual/baseline-sha256/124.elf 2> build/om2-qual/baseline-sha256/124.cerr
+  $ build/om2-qual/baseline-sha256/124.elf < build/om2-qual/baseline-sha256/124.in > build/om2-qual/baseline-sha256/124.out 2> build/om2-qual/baseline-sha256/124.err
+VERDICT seq-115 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-116 line=125
+  $ seed/out/omc < build/om2-qual/baseline-sha256/125.src > build/om2-qual/baseline-sha256/125.elf 2> build/om2-qual/baseline-sha256/125.cerr
+  $ build/om2-qual/baseline-sha256/125.elf < build/om2-qual/baseline-sha256/125.in > build/om2-qual/baseline-sha256/125.out 2> build/om2-qual/baseline-sha256/125.err
+VERDICT seq-116 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-117 line=126
+  $ seed/out/omc < build/om2-qual/baseline-sha256/126.src > build/om2-qual/baseline-sha256/126.elf 2> build/om2-qual/baseline-sha256/126.cerr
+  $ build/om2-qual/baseline-sha256/126.elf < build/om2-qual/baseline-sha256/126.in > build/om2-qual/baseline-sha256/126.out 2> build/om2-qual/baseline-sha256/126.err
+VERDICT seq-117 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-118 line=127
+  $ seed/out/omc < build/om2-qual/baseline-sha256/127.src > build/om2-qual/baseline-sha256/127.elf 2> build/om2-qual/baseline-sha256/127.cerr
+  $ build/om2-qual/baseline-sha256/127.elf < build/om2-qual/baseline-sha256/127.in > build/om2-qual/baseline-sha256/127.out 2> build/om2-qual/baseline-sha256/127.err
+VERDICT seq-118 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119 line=128
+  $ seed/out/omc < build/om2-qual/baseline-sha256/128.src > build/om2-qual/baseline-sha256/128.elf 2> build/om2-qual/baseline-sha256/128.cerr
+  $ build/om2-qual/baseline-sha256/128.elf < build/om2-qual/baseline-sha256/128.in > build/om2-qual/baseline-sha256/128.out 2> build/om2-qual/baseline-sha256/128.err
+VERDICT seq-119 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120 line=129
+  $ seed/out/omc < build/om2-qual/baseline-sha256/129.src > build/om2-qual/baseline-sha256/129.elf 2> build/om2-qual/baseline-sha256/129.cerr
+  $ build/om2-qual/baseline-sha256/129.elf < build/om2-qual/baseline-sha256/129.in > build/om2-qual/baseline-sha256/129.out 2> build/om2-qual/baseline-sha256/129.err
+VERDICT seq-120 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-121 line=130
+  $ seed/out/omc < build/om2-qual/baseline-sha256/130.src > build/om2-qual/baseline-sha256/130.elf 2> build/om2-qual/baseline-sha256/130.cerr
+  $ build/om2-qual/baseline-sha256/130.elf < build/om2-qual/baseline-sha256/130.in > build/om2-qual/baseline-sha256/130.out 2> build/om2-qual/baseline-sha256/130.err
+VERDICT seq-121 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-122 line=131
+  $ seed/out/omc < build/om2-qual/baseline-sha256/131.src > build/om2-qual/baseline-sha256/131.elf 2> build/om2-qual/baseline-sha256/131.cerr
+  $ build/om2-qual/baseline-sha256/131.elf < build/om2-qual/baseline-sha256/131.in > build/om2-qual/baseline-sha256/131.out 2> build/om2-qual/baseline-sha256/131.err
+VERDICT seq-122 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-123 line=132
+  $ seed/out/omc < build/om2-qual/baseline-sha256/132.src > build/om2-qual/baseline-sha256/132.elf 2> build/om2-qual/baseline-sha256/132.cerr
+  $ build/om2-qual/baseline-sha256/132.elf < build/om2-qual/baseline-sha256/132.in > build/om2-qual/baseline-sha256/132.out 2> build/om2-qual/baseline-sha256/132.err
+VERDICT seq-123 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-124 line=133
+  $ seed/out/omc < build/om2-qual/baseline-sha256/133.src > build/om2-qual/baseline-sha256/133.elf 2> build/om2-qual/baseline-sha256/133.cerr
+  $ build/om2-qual/baseline-sha256/133.elf < build/om2-qual/baseline-sha256/133.in > build/om2-qual/baseline-sha256/133.out 2> build/om2-qual/baseline-sha256/133.err
+VERDICT seq-124 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-125 line=134
+  $ seed/out/omc < build/om2-qual/baseline-sha256/134.src > build/om2-qual/baseline-sha256/134.elf 2> build/om2-qual/baseline-sha256/134.cerr
+  $ build/om2-qual/baseline-sha256/134.elf < build/om2-qual/baseline-sha256/134.in > build/om2-qual/baseline-sha256/134.out 2> build/om2-qual/baseline-sha256/134.err
+VERDICT seq-125 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-126 line=135
+  $ seed/out/omc < build/om2-qual/baseline-sha256/135.src > build/om2-qual/baseline-sha256/135.elf 2> build/om2-qual/baseline-sha256/135.cerr
+  $ build/om2-qual/baseline-sha256/135.elf < build/om2-qual/baseline-sha256/135.in > build/om2-qual/baseline-sha256/135.out 2> build/om2-qual/baseline-sha256/135.err
+VERDICT seq-126 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-127 line=136
+  $ seed/out/omc < build/om2-qual/baseline-sha256/136.src > build/om2-qual/baseline-sha256/136.elf 2> build/om2-qual/baseline-sha256/136.cerr
+  $ build/om2-qual/baseline-sha256/136.elf < build/om2-qual/baseline-sha256/136.in > build/om2-qual/baseline-sha256/136.out 2> build/om2-qual/baseline-sha256/136.err
+VERDICT seq-127 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128 line=137
+  $ seed/out/omc < build/om2-qual/baseline-sha256/137.src > build/om2-qual/baseline-sha256/137.elf 2> build/om2-qual/baseline-sha256/137.cerr
+  $ build/om2-qual/baseline-sha256/137.elf < build/om2-qual/baseline-sha256/137.in > build/om2-qual/baseline-sha256/137.out 2> build/om2-qual/baseline-sha256/137.err
+VERDICT seq-128 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129 line=138
+  $ seed/out/omc < build/om2-qual/baseline-sha256/138.src > build/om2-qual/baseline-sha256/138.elf 2> build/om2-qual/baseline-sha256/138.cerr
+  $ build/om2-qual/baseline-sha256/138.elf < build/om2-qual/baseline-sha256/138.in > build/om2-qual/baseline-sha256/138.out 2> build/om2-qual/baseline-sha256/138.err
+VERDICT seq-129 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130 line=139
+  $ seed/out/omc < build/om2-qual/baseline-sha256/139.src > build/om2-qual/baseline-sha256/139.elf 2> build/om2-qual/baseline-sha256/139.cerr
+  $ build/om2-qual/baseline-sha256/139.elf < build/om2-qual/baseline-sha256/139.in > build/om2-qual/baseline-sha256/139.out 2> build/om2-qual/baseline-sha256/139.err
+VERDICT seq-130 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000 line=140
+  $ seed/out/omc < build/om2-qual/baseline-sha256/140.src > build/om2-qual/baseline-sha256/140.elf 2> build/om2-qual/baseline-sha256/140.cerr
+  $ build/om2-qual/baseline-sha256/140.elf < build/om2-qual/baseline-sha256/140.in > build/om2-qual/baseline-sha256/140.out 2> build/om2-qual/baseline-sha256/140.err
+VERDICT seq-1000 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4095 line=141
+  $ seed/out/omc < build/om2-qual/baseline-sha256/141.src > build/om2-qual/baseline-sha256/141.elf 2> build/om2-qual/baseline-sha256/141.cerr
+  $ build/om2-qual/baseline-sha256/141.elf < build/om2-qual/baseline-sha256/141.in > build/om2-qual/baseline-sha256/141.out 2> build/om2-qual/baseline-sha256/141.err
+VERDICT seq-4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4096 line=142
+  $ seed/out/omc < build/om2-qual/baseline-sha256/142.src > build/om2-qual/baseline-sha256/142.elf 2> build/om2-qual/baseline-sha256/142.cerr
+  $ build/om2-qual/baseline-sha256/142.elf < build/om2-qual/baseline-sha256/142.in > build/om2-qual/baseline-sha256/142.out 2> build/om2-qual/baseline-sha256/142.err
+VERDICT seq-4096 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097 line=143
+  $ seed/out/omc < build/om2-qual/baseline-sha256/143.src > build/om2-qual/baseline-sha256/143.elf 2> build/om2-qual/baseline-sha256/143.cerr
+  $ build/om2-qual/baseline-sha256/143.elf < build/om2-qual/baseline-sha256/143.in > build/om2-qual/baseline-sha256/143.out 2> build/om2-qual/baseline-sha256/143.err
+VERDICT seq-4097 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8191 line=144
+  $ seed/out/omc < build/om2-qual/baseline-sha256/144.src > build/om2-qual/baseline-sha256/144.elf 2> build/om2-qual/baseline-sha256/144.cerr
+  $ build/om2-qual/baseline-sha256/144.elf < build/om2-qual/baseline-sha256/144.in > build/om2-qual/baseline-sha256/144.out 2> build/om2-qual/baseline-sha256/144.err
+VERDICT seq-8191 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8192 line=145
+  $ seed/out/omc < build/om2-qual/baseline-sha256/145.src > build/om2-qual/baseline-sha256/145.elf 2> build/om2-qual/baseline-sha256/145.cerr
+  $ build/om2-qual/baseline-sha256/145.elf < build/om2-qual/baseline-sha256/145.in > build/om2-qual/baseline-sha256/145.out 2> build/om2-qual/baseline-sha256/145.err
+VERDICT seq-8192 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193 line=146
+  $ seed/out/omc < build/om2-qual/baseline-sha256/146.src > build/om2-qual/baseline-sha256/146.elf 2> build/om2-qual/baseline-sha256/146.cerr
+  $ build/om2-qual/baseline-sha256/146.elf < build/om2-qual/baseline-sha256/146.in > build/om2-qual/baseline-sha256/146.out 2> build/om2-qual/baseline-sha256/146.err
+VERDICT seq-8193 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536 line=147
+  $ seed/out/omc < build/om2-qual/baseline-sha256/147.src > build/om2-qual/baseline-sha256/147.elf 2> build/om2-qual/baseline-sha256/147.cerr
+  $ build/om2-qual/baseline-sha256/147.elf < build/om2-qual/baseline-sha256/147.in > build/om2-qual/baseline-sha256/147.out 2> build/om2-qual/baseline-sha256/147.err
+VERDICT seq-65536 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rep-a-55 line=148
+  $ seed/out/omc < build/om2-qual/baseline-sha256/148.src > build/om2-qual/baseline-sha256/148.elf 2> build/om2-qual/baseline-sha256/148.cerr
+  $ build/om2-qual/baseline-sha256/148.elf < build/om2-qual/baseline-sha256/148.in > build/om2-qual/baseline-sha256/148.out 2> build/om2-qual/baseline-sha256/148.err
+VERDICT rep-a-55 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rep-a-56 line=149
+  $ seed/out/omc < build/om2-qual/baseline-sha256/149.src > build/om2-qual/baseline-sha256/149.elf 2> build/om2-qual/baseline-sha256/149.cerr
+  $ build/om2-qual/baseline-sha256/149.elf < build/om2-qual/baseline-sha256/149.in > build/om2-qual/baseline-sha256/149.out 2> build/om2-qual/baseline-sha256/149.err
+VERDICT rep-a-56 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rep-a-63 line=150
+  $ seed/out/omc < build/om2-qual/baseline-sha256/150.src > build/om2-qual/baseline-sha256/150.elf 2> build/om2-qual/baseline-sha256/150.cerr
+  $ build/om2-qual/baseline-sha256/150.elf < build/om2-qual/baseline-sha256/150.in > build/om2-qual/baseline-sha256/150.out 2> build/om2-qual/baseline-sha256/150.err
+VERDICT rep-a-63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rep-a-64 line=151
+  $ seed/out/omc < build/om2-qual/baseline-sha256/151.src > build/om2-qual/baseline-sha256/151.elf 2> build/om2-qual/baseline-sha256/151.cerr
+  $ build/om2-qual/baseline-sha256/151.elf < build/om2-qual/baseline-sha256/151.in > build/om2-qual/baseline-sha256/151.out 2> build/om2-qual/baseline-sha256/151.err
+VERDICT rep-a-64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rep-a-65 line=152
+  $ seed/out/omc < build/om2-qual/baseline-sha256/152.src > build/om2-qual/baseline-sha256/152.elf 2> build/om2-qual/baseline-sha256/152.cerr
+  $ build/om2-qual/baseline-sha256/152.elf < build/om2-qual/baseline-sha256/152.in > build/om2-qual/baseline-sha256/152.out 2> build/om2-qual/baseline-sha256/152.err
+VERDICT rep-a-65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rep-a-4096 line=153
+  $ seed/out/omc < build/om2-qual/baseline-sha256/153.src > build/om2-qual/baseline-sha256/153.elf 2> build/om2-qual/baseline-sha256/153.cerr
+  $ build/om2-qual/baseline-sha256/153.elf < build/om2-qual/baseline-sha256/153.in > build/om2-qual/baseline-sha256/153.out 2> build/om2-qual/baseline-sha256/153.err
+VERDICT rep-a-4096 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-1-3 line=154
+  $ seed/out/omc < build/om2-qual/baseline-sha256/154.src > build/om2-qual/baseline-sha256/154.elf 2> build/om2-qual/baseline-sha256/154.cerr
+  $ build/om2-qual/baseline-sha256/154.elf < build/om2-qual/baseline-sha256/154.in > build/om2-qual/baseline-sha256/154.out 2> build/om2-qual/baseline-sha256/154.err
+VERDICT rnd-1-3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-2-55 line=155
+  $ seed/out/omc < build/om2-qual/baseline-sha256/155.src > build/om2-qual/baseline-sha256/155.elf 2> build/om2-qual/baseline-sha256/155.cerr
+  $ build/om2-qual/baseline-sha256/155.elf < build/om2-qual/baseline-sha256/155.in > build/om2-qual/baseline-sha256/155.out 2> build/om2-qual/baseline-sha256/155.err
+VERDICT rnd-2-55 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-3-56 line=156
+  $ seed/out/omc < build/om2-qual/baseline-sha256/156.src > build/om2-qual/baseline-sha256/156.elf 2> build/om2-qual/baseline-sha256/156.cerr
+  $ build/om2-qual/baseline-sha256/156.elf < build/om2-qual/baseline-sha256/156.in > build/om2-qual/baseline-sha256/156.out 2> build/om2-qual/baseline-sha256/156.err
+VERDICT rnd-3-56 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-4-64 line=157
+  $ seed/out/omc < build/om2-qual/baseline-sha256/157.src > build/om2-qual/baseline-sha256/157.elf 2> build/om2-qual/baseline-sha256/157.cerr
+  $ build/om2-qual/baseline-sha256/157.elf < build/om2-qual/baseline-sha256/157.in > build/om2-qual/baseline-sha256/157.out 2> build/om2-qual/baseline-sha256/157.err
+VERDICT rnd-4-64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-5-111 line=158
+  $ seed/out/omc < build/om2-qual/baseline-sha256/158.src > build/om2-qual/baseline-sha256/158.elf 2> build/om2-qual/baseline-sha256/158.cerr
+  $ build/om2-qual/baseline-sha256/158.elf < build/om2-qual/baseline-sha256/158.in > build/om2-qual/baseline-sha256/158.out 2> build/om2-qual/baseline-sha256/158.err
+VERDICT rnd-5-111 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-6-4097 line=159
+  $ seed/out/omc < build/om2-qual/baseline-sha256/159.src > build/om2-qual/baseline-sha256/159.elf 2> build/om2-qual/baseline-sha256/159.cerr
+  $ build/om2-qual/baseline-sha256/159.elf < build/om2-qual/baseline-sha256/159.in > build/om2-qual/baseline-sha256/159.out 2> build/om2-qual/baseline-sha256/159.err
+VERDICT rnd-6-4097 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-7-12345 line=160
+  $ seed/out/omc < build/om2-qual/baseline-sha256/160.src > build/om2-qual/baseline-sha256/160.elf 2> build/om2-qual/baseline-sha256/160.cerr
+  $ build/om2-qual/baseline-sha256/160.elf < build/om2-qual/baseline-sha256/160.in > build/om2-qual/baseline-sha256/160.out 2> build/om2-qual/baseline-sha256/160.err
+VERDICT rnd-7-12345 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003 line=161
+  $ seed/out/omc < build/om2-qual/baseline-sha256/161.src > build/om2-qual/baseline-sha256/161.elf 2> build/om2-qual/baseline-sha256/161.cerr
+  $ build/om2-qual/baseline-sha256/161.elf < build/om2-qual/baseline-sha256/161.in > build/om2-qual/baseline-sha256/161.out 2> build/om2-qual/baseline-sha256/161.err
+VERDICT rnd-8-100003 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896-p1 line=163
+  $ seed/out/omc < build/om2-qual/baseline-sha256/163.src > build/om2-qual/baseline-sha256/163.elf 2> build/om2-qual/baseline-sha256/163.cerr
+  $ build/om2-qual/baseline-sha256/163.elf 1 < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/163.out 2> build/om2-qual/baseline-sha256/163.err
+VERDICT fips-896-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55-p1 line=164
+  $ seed/out/omc < build/om2-qual/baseline-sha256/164.src > build/om2-qual/baseline-sha256/164.elf 2> build/om2-qual/baseline-sha256/164.cerr
+  $ build/om2-qual/baseline-sha256/164.elf 1 < build/om2-qual/baseline-sha256/164.in > build/om2-qual/baseline-sha256/164.out 2> build/om2-qual/baseline-sha256/164.err
+VERDICT seq-55-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56-p1 line=165
+  $ seed/out/omc < build/om2-qual/baseline-sha256/165.src > build/om2-qual/baseline-sha256/165.elf 2> build/om2-qual/baseline-sha256/165.cerr
+  $ build/om2-qual/baseline-sha256/165.elf 1 < build/om2-qual/baseline-sha256/165.in > build/om2-qual/baseline-sha256/165.out 2> build/om2-qual/baseline-sha256/165.err
+VERDICT seq-56-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63-p1 line=166
+  $ seed/out/omc < build/om2-qual/baseline-sha256/166.src > build/om2-qual/baseline-sha256/166.elf 2> build/om2-qual/baseline-sha256/166.cerr
+  $ build/om2-qual/baseline-sha256/166.elf 1 < build/om2-qual/baseline-sha256/166.in > build/om2-qual/baseline-sha256/166.out 2> build/om2-qual/baseline-sha256/166.err
+VERDICT seq-63-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64-p1 line=167
+  $ seed/out/omc < build/om2-qual/baseline-sha256/167.src > build/om2-qual/baseline-sha256/167.elf 2> build/om2-qual/baseline-sha256/167.cerr
+  $ build/om2-qual/baseline-sha256/167.elf 1 < build/om2-qual/baseline-sha256/167.in > build/om2-qual/baseline-sha256/167.out 2> build/om2-qual/baseline-sha256/167.err
+VERDICT seq-64-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65-p1 line=168
+  $ seed/out/omc < build/om2-qual/baseline-sha256/168.src > build/om2-qual/baseline-sha256/168.elf 2> build/om2-qual/baseline-sha256/168.cerr
+  $ build/om2-qual/baseline-sha256/168.elf 1 < build/om2-qual/baseline-sha256/168.in > build/om2-qual/baseline-sha256/168.out 2> build/om2-qual/baseline-sha256/168.err
+VERDICT seq-65-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119-p1 line=169
+  $ seed/out/omc < build/om2-qual/baseline-sha256/169.src > build/om2-qual/baseline-sha256/169.elf 2> build/om2-qual/baseline-sha256/169.cerr
+  $ build/om2-qual/baseline-sha256/169.elf 1 < build/om2-qual/baseline-sha256/169.in > build/om2-qual/baseline-sha256/169.out 2> build/om2-qual/baseline-sha256/169.err
+VERDICT seq-119-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120-p1 line=170
+  $ seed/out/omc < build/om2-qual/baseline-sha256/170.src > build/om2-qual/baseline-sha256/170.elf 2> build/om2-qual/baseline-sha256/170.cerr
+  $ build/om2-qual/baseline-sha256/170.elf 1 < build/om2-qual/baseline-sha256/170.in > build/om2-qual/baseline-sha256/170.out 2> build/om2-qual/baseline-sha256/170.err
+VERDICT seq-120-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128-p1 line=171
+  $ seed/out/omc < build/om2-qual/baseline-sha256/171.src > build/om2-qual/baseline-sha256/171.elf 2> build/om2-qual/baseline-sha256/171.cerr
+  $ build/om2-qual/baseline-sha256/171.elf 1 < build/om2-qual/baseline-sha256/171.in > build/om2-qual/baseline-sha256/171.out 2> build/om2-qual/baseline-sha256/171.err
+VERDICT seq-128-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129-p1 line=172
+  $ seed/out/omc < build/om2-qual/baseline-sha256/172.src > build/om2-qual/baseline-sha256/172.elf 2> build/om2-qual/baseline-sha256/172.cerr
+  $ build/om2-qual/baseline-sha256/172.elf 1 < build/om2-qual/baseline-sha256/172.in > build/om2-qual/baseline-sha256/172.out 2> build/om2-qual/baseline-sha256/172.err
+VERDICT seq-129-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130-p1 line=173
+  $ seed/out/omc < build/om2-qual/baseline-sha256/173.src > build/om2-qual/baseline-sha256/173.elf 2> build/om2-qual/baseline-sha256/173.cerr
+  $ build/om2-qual/baseline-sha256/173.elf 1 < build/om2-qual/baseline-sha256/173.in > build/om2-qual/baseline-sha256/173.out 2> build/om2-qual/baseline-sha256/173.err
+VERDICT seq-130-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000-p1 line=174
+  $ seed/out/omc < build/om2-qual/baseline-sha256/174.src > build/om2-qual/baseline-sha256/174.elf 2> build/om2-qual/baseline-sha256/174.cerr
+  $ build/om2-qual/baseline-sha256/174.elf 1 < build/om2-qual/baseline-sha256/174.in > build/om2-qual/baseline-sha256/174.out 2> build/om2-qual/baseline-sha256/174.err
+VERDICT seq-1000-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097-p1 line=175
+  $ seed/out/omc < build/om2-qual/baseline-sha256/175.src > build/om2-qual/baseline-sha256/175.elf 2> build/om2-qual/baseline-sha256/175.cerr
+  $ build/om2-qual/baseline-sha256/175.elf 1 < build/om2-qual/baseline-sha256/175.in > build/om2-qual/baseline-sha256/175.out 2> build/om2-qual/baseline-sha256/175.err
+VERDICT seq-4097-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193-p1 line=176
+  $ seed/out/omc < build/om2-qual/baseline-sha256/176.src > build/om2-qual/baseline-sha256/176.elf 2> build/om2-qual/baseline-sha256/176.cerr
+  $ build/om2-qual/baseline-sha256/176.elf 1 < build/om2-qual/baseline-sha256/176.in > build/om2-qual/baseline-sha256/176.out 2> build/om2-qual/baseline-sha256/176.err
+VERDICT seq-8193-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536-p1 line=177
+  $ seed/out/omc < build/om2-qual/baseline-sha256/177.src > build/om2-qual/baseline-sha256/177.elf 2> build/om2-qual/baseline-sha256/177.cerr
+  $ build/om2-qual/baseline-sha256/177.elf 1 < build/om2-qual/baseline-sha256/177.in > build/om2-qual/baseline-sha256/177.out 2> build/om2-qual/baseline-sha256/177.err
+VERDICT seq-65536-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003-p1 line=178
+  $ seed/out/omc < build/om2-qual/baseline-sha256/178.src > build/om2-qual/baseline-sha256/178.elf 2> build/om2-qual/baseline-sha256/178.cerr
+  $ build/om2-qual/baseline-sha256/178.elf 1 < build/om2-qual/baseline-sha256/178.in > build/om2-qual/baseline-sha256/178.out 2> build/om2-qual/baseline-sha256/178.err
+VERDICT rnd-8-100003-p1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896-p32 line=179
+  $ seed/out/omc < build/om2-qual/baseline-sha256/179.src > build/om2-qual/baseline-sha256/179.elf 2> build/om2-qual/baseline-sha256/179.cerr
+  $ build/om2-qual/baseline-sha256/179.elf 32 < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/179.out 2> build/om2-qual/baseline-sha256/179.err
+VERDICT fips-896-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55-p32 line=180
+  $ seed/out/omc < build/om2-qual/baseline-sha256/180.src > build/om2-qual/baseline-sha256/180.elf 2> build/om2-qual/baseline-sha256/180.cerr
+  $ build/om2-qual/baseline-sha256/180.elf 32 < build/om2-qual/baseline-sha256/180.in > build/om2-qual/baseline-sha256/180.out 2> build/om2-qual/baseline-sha256/180.err
+VERDICT seq-55-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56-p32 line=181
+  $ seed/out/omc < build/om2-qual/baseline-sha256/181.src > build/om2-qual/baseline-sha256/181.elf 2> build/om2-qual/baseline-sha256/181.cerr
+  $ build/om2-qual/baseline-sha256/181.elf 32 < build/om2-qual/baseline-sha256/181.in > build/om2-qual/baseline-sha256/181.out 2> build/om2-qual/baseline-sha256/181.err
+VERDICT seq-56-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63-p32 line=182
+  $ seed/out/omc < build/om2-qual/baseline-sha256/182.src > build/om2-qual/baseline-sha256/182.elf 2> build/om2-qual/baseline-sha256/182.cerr
+  $ build/om2-qual/baseline-sha256/182.elf 32 < build/om2-qual/baseline-sha256/182.in > build/om2-qual/baseline-sha256/182.out 2> build/om2-qual/baseline-sha256/182.err
+VERDICT seq-63-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64-p32 line=183
+  $ seed/out/omc < build/om2-qual/baseline-sha256/183.src > build/om2-qual/baseline-sha256/183.elf 2> build/om2-qual/baseline-sha256/183.cerr
+  $ build/om2-qual/baseline-sha256/183.elf 32 < build/om2-qual/baseline-sha256/183.in > build/om2-qual/baseline-sha256/183.out 2> build/om2-qual/baseline-sha256/183.err
+VERDICT seq-64-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65-p32 line=184
+  $ seed/out/omc < build/om2-qual/baseline-sha256/184.src > build/om2-qual/baseline-sha256/184.elf 2> build/om2-qual/baseline-sha256/184.cerr
+  $ build/om2-qual/baseline-sha256/184.elf 32 < build/om2-qual/baseline-sha256/184.in > build/om2-qual/baseline-sha256/184.out 2> build/om2-qual/baseline-sha256/184.err
+VERDICT seq-65-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119-p32 line=185
+  $ seed/out/omc < build/om2-qual/baseline-sha256/185.src > build/om2-qual/baseline-sha256/185.elf 2> build/om2-qual/baseline-sha256/185.cerr
+  $ build/om2-qual/baseline-sha256/185.elf 32 < build/om2-qual/baseline-sha256/185.in > build/om2-qual/baseline-sha256/185.out 2> build/om2-qual/baseline-sha256/185.err
+VERDICT seq-119-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120-p32 line=186
+  $ seed/out/omc < build/om2-qual/baseline-sha256/186.src > build/om2-qual/baseline-sha256/186.elf 2> build/om2-qual/baseline-sha256/186.cerr
+  $ build/om2-qual/baseline-sha256/186.elf 32 < build/om2-qual/baseline-sha256/186.in > build/om2-qual/baseline-sha256/186.out 2> build/om2-qual/baseline-sha256/186.err
+VERDICT seq-120-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128-p32 line=187
+  $ seed/out/omc < build/om2-qual/baseline-sha256/187.src > build/om2-qual/baseline-sha256/187.elf 2> build/om2-qual/baseline-sha256/187.cerr
+  $ build/om2-qual/baseline-sha256/187.elf 32 < build/om2-qual/baseline-sha256/187.in > build/om2-qual/baseline-sha256/187.out 2> build/om2-qual/baseline-sha256/187.err
+VERDICT seq-128-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129-p32 line=188
+  $ seed/out/omc < build/om2-qual/baseline-sha256/188.src > build/om2-qual/baseline-sha256/188.elf 2> build/om2-qual/baseline-sha256/188.cerr
+  $ build/om2-qual/baseline-sha256/188.elf 32 < build/om2-qual/baseline-sha256/188.in > build/om2-qual/baseline-sha256/188.out 2> build/om2-qual/baseline-sha256/188.err
+VERDICT seq-129-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130-p32 line=189
+  $ seed/out/omc < build/om2-qual/baseline-sha256/189.src > build/om2-qual/baseline-sha256/189.elf 2> build/om2-qual/baseline-sha256/189.cerr
+  $ build/om2-qual/baseline-sha256/189.elf 32 < build/om2-qual/baseline-sha256/189.in > build/om2-qual/baseline-sha256/189.out 2> build/om2-qual/baseline-sha256/189.err
+VERDICT seq-130-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000-p32 line=190
+  $ seed/out/omc < build/om2-qual/baseline-sha256/190.src > build/om2-qual/baseline-sha256/190.elf 2> build/om2-qual/baseline-sha256/190.cerr
+  $ build/om2-qual/baseline-sha256/190.elf 32 < build/om2-qual/baseline-sha256/190.in > build/om2-qual/baseline-sha256/190.out 2> build/om2-qual/baseline-sha256/190.err
+VERDICT seq-1000-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097-p32 line=191
+  $ seed/out/omc < build/om2-qual/baseline-sha256/191.src > build/om2-qual/baseline-sha256/191.elf 2> build/om2-qual/baseline-sha256/191.cerr
+  $ build/om2-qual/baseline-sha256/191.elf 32 < build/om2-qual/baseline-sha256/191.in > build/om2-qual/baseline-sha256/191.out 2> build/om2-qual/baseline-sha256/191.err
+VERDICT seq-4097-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193-p32 line=192
+  $ seed/out/omc < build/om2-qual/baseline-sha256/192.src > build/om2-qual/baseline-sha256/192.elf 2> build/om2-qual/baseline-sha256/192.cerr
+  $ build/om2-qual/baseline-sha256/192.elf 32 < build/om2-qual/baseline-sha256/192.in > build/om2-qual/baseline-sha256/192.out 2> build/om2-qual/baseline-sha256/192.err
+VERDICT seq-8193-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536-p32 line=193
+  $ seed/out/omc < build/om2-qual/baseline-sha256/193.src > build/om2-qual/baseline-sha256/193.elf 2> build/om2-qual/baseline-sha256/193.cerr
+  $ build/om2-qual/baseline-sha256/193.elf 32 < build/om2-qual/baseline-sha256/193.in > build/om2-qual/baseline-sha256/193.out 2> build/om2-qual/baseline-sha256/193.err
+VERDICT seq-65536-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003-p32 line=194
+  $ seed/out/omc < build/om2-qual/baseline-sha256/194.src > build/om2-qual/baseline-sha256/194.elf 2> build/om2-qual/baseline-sha256/194.cerr
+  $ build/om2-qual/baseline-sha256/194.elf 32 < build/om2-qual/baseline-sha256/194.in > build/om2-qual/baseline-sha256/194.out 2> build/om2-qual/baseline-sha256/194.err
+VERDICT rnd-8-100003-p32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896-p63 line=195
+  $ seed/out/omc < build/om2-qual/baseline-sha256/195.src > build/om2-qual/baseline-sha256/195.elf 2> build/om2-qual/baseline-sha256/195.cerr
+  $ build/om2-qual/baseline-sha256/195.elf 63 < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/195.out 2> build/om2-qual/baseline-sha256/195.err
+VERDICT fips-896-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55-p63 line=196
+  $ seed/out/omc < build/om2-qual/baseline-sha256/196.src > build/om2-qual/baseline-sha256/196.elf 2> build/om2-qual/baseline-sha256/196.cerr
+  $ build/om2-qual/baseline-sha256/196.elf 63 < build/om2-qual/baseline-sha256/196.in > build/om2-qual/baseline-sha256/196.out 2> build/om2-qual/baseline-sha256/196.err
+VERDICT seq-55-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56-p63 line=197
+  $ seed/out/omc < build/om2-qual/baseline-sha256/197.src > build/om2-qual/baseline-sha256/197.elf 2> build/om2-qual/baseline-sha256/197.cerr
+  $ build/om2-qual/baseline-sha256/197.elf 63 < build/om2-qual/baseline-sha256/197.in > build/om2-qual/baseline-sha256/197.out 2> build/om2-qual/baseline-sha256/197.err
+VERDICT seq-56-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63-p63 line=198
+  $ seed/out/omc < build/om2-qual/baseline-sha256/198.src > build/om2-qual/baseline-sha256/198.elf 2> build/om2-qual/baseline-sha256/198.cerr
+  $ build/om2-qual/baseline-sha256/198.elf 63 < build/om2-qual/baseline-sha256/198.in > build/om2-qual/baseline-sha256/198.out 2> build/om2-qual/baseline-sha256/198.err
+VERDICT seq-63-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64-p63 line=199
+  $ seed/out/omc < build/om2-qual/baseline-sha256/199.src > build/om2-qual/baseline-sha256/199.elf 2> build/om2-qual/baseline-sha256/199.cerr
+  $ build/om2-qual/baseline-sha256/199.elf 63 < build/om2-qual/baseline-sha256/199.in > build/om2-qual/baseline-sha256/199.out 2> build/om2-qual/baseline-sha256/199.err
+VERDICT seq-64-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65-p63 line=200
+  $ seed/out/omc < build/om2-qual/baseline-sha256/200.src > build/om2-qual/baseline-sha256/200.elf 2> build/om2-qual/baseline-sha256/200.cerr
+  $ build/om2-qual/baseline-sha256/200.elf 63 < build/om2-qual/baseline-sha256/200.in > build/om2-qual/baseline-sha256/200.out 2> build/om2-qual/baseline-sha256/200.err
+VERDICT seq-65-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119-p63 line=201
+  $ seed/out/omc < build/om2-qual/baseline-sha256/201.src > build/om2-qual/baseline-sha256/201.elf 2> build/om2-qual/baseline-sha256/201.cerr
+  $ build/om2-qual/baseline-sha256/201.elf 63 < build/om2-qual/baseline-sha256/201.in > build/om2-qual/baseline-sha256/201.out 2> build/om2-qual/baseline-sha256/201.err
+VERDICT seq-119-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120-p63 line=202
+  $ seed/out/omc < build/om2-qual/baseline-sha256/202.src > build/om2-qual/baseline-sha256/202.elf 2> build/om2-qual/baseline-sha256/202.cerr
+  $ build/om2-qual/baseline-sha256/202.elf 63 < build/om2-qual/baseline-sha256/202.in > build/om2-qual/baseline-sha256/202.out 2> build/om2-qual/baseline-sha256/202.err
+VERDICT seq-120-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128-p63 line=203
+  $ seed/out/omc < build/om2-qual/baseline-sha256/203.src > build/om2-qual/baseline-sha256/203.elf 2> build/om2-qual/baseline-sha256/203.cerr
+  $ build/om2-qual/baseline-sha256/203.elf 63 < build/om2-qual/baseline-sha256/203.in > build/om2-qual/baseline-sha256/203.out 2> build/om2-qual/baseline-sha256/203.err
+VERDICT seq-128-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129-p63 line=204
+  $ seed/out/omc < build/om2-qual/baseline-sha256/204.src > build/om2-qual/baseline-sha256/204.elf 2> build/om2-qual/baseline-sha256/204.cerr
+  $ build/om2-qual/baseline-sha256/204.elf 63 < build/om2-qual/baseline-sha256/204.in > build/om2-qual/baseline-sha256/204.out 2> build/om2-qual/baseline-sha256/204.err
+VERDICT seq-129-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130-p63 line=205
+  $ seed/out/omc < build/om2-qual/baseline-sha256/205.src > build/om2-qual/baseline-sha256/205.elf 2> build/om2-qual/baseline-sha256/205.cerr
+  $ build/om2-qual/baseline-sha256/205.elf 63 < build/om2-qual/baseline-sha256/205.in > build/om2-qual/baseline-sha256/205.out 2> build/om2-qual/baseline-sha256/205.err
+VERDICT seq-130-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000-p63 line=206
+  $ seed/out/omc < build/om2-qual/baseline-sha256/206.src > build/om2-qual/baseline-sha256/206.elf 2> build/om2-qual/baseline-sha256/206.cerr
+  $ build/om2-qual/baseline-sha256/206.elf 63 < build/om2-qual/baseline-sha256/206.in > build/om2-qual/baseline-sha256/206.out 2> build/om2-qual/baseline-sha256/206.err
+VERDICT seq-1000-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097-p63 line=207
+  $ seed/out/omc < build/om2-qual/baseline-sha256/207.src > build/om2-qual/baseline-sha256/207.elf 2> build/om2-qual/baseline-sha256/207.cerr
+  $ build/om2-qual/baseline-sha256/207.elf 63 < build/om2-qual/baseline-sha256/207.in > build/om2-qual/baseline-sha256/207.out 2> build/om2-qual/baseline-sha256/207.err
+VERDICT seq-4097-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193-p63 line=208
+  $ seed/out/omc < build/om2-qual/baseline-sha256/208.src > build/om2-qual/baseline-sha256/208.elf 2> build/om2-qual/baseline-sha256/208.cerr
+  $ build/om2-qual/baseline-sha256/208.elf 63 < build/om2-qual/baseline-sha256/208.in > build/om2-qual/baseline-sha256/208.out 2> build/om2-qual/baseline-sha256/208.err
+VERDICT seq-8193-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536-p63 line=209
+  $ seed/out/omc < build/om2-qual/baseline-sha256/209.src > build/om2-qual/baseline-sha256/209.elf 2> build/om2-qual/baseline-sha256/209.cerr
+  $ build/om2-qual/baseline-sha256/209.elf 63 < build/om2-qual/baseline-sha256/209.in > build/om2-qual/baseline-sha256/209.out 2> build/om2-qual/baseline-sha256/209.err
+VERDICT seq-65536-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003-p63 line=210
+  $ seed/out/omc < build/om2-qual/baseline-sha256/210.src > build/om2-qual/baseline-sha256/210.elf 2> build/om2-qual/baseline-sha256/210.cerr
+  $ build/om2-qual/baseline-sha256/210.elf 63 < build/om2-qual/baseline-sha256/210.in > build/om2-qual/baseline-sha256/210.out 2> build/om2-qual/baseline-sha256/210.err
+VERDICT rnd-8-100003-p63 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896-p64 line=211
+  $ seed/out/omc < build/om2-qual/baseline-sha256/211.src > build/om2-qual/baseline-sha256/211.elf 2> build/om2-qual/baseline-sha256/211.cerr
+  $ build/om2-qual/baseline-sha256/211.elf 64 < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/211.out 2> build/om2-qual/baseline-sha256/211.err
+VERDICT fips-896-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55-p64 line=212
+  $ seed/out/omc < build/om2-qual/baseline-sha256/212.src > build/om2-qual/baseline-sha256/212.elf 2> build/om2-qual/baseline-sha256/212.cerr
+  $ build/om2-qual/baseline-sha256/212.elf 64 < build/om2-qual/baseline-sha256/212.in > build/om2-qual/baseline-sha256/212.out 2> build/om2-qual/baseline-sha256/212.err
+VERDICT seq-55-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56-p64 line=213
+  $ seed/out/omc < build/om2-qual/baseline-sha256/213.src > build/om2-qual/baseline-sha256/213.elf 2> build/om2-qual/baseline-sha256/213.cerr
+  $ build/om2-qual/baseline-sha256/213.elf 64 < build/om2-qual/baseline-sha256/213.in > build/om2-qual/baseline-sha256/213.out 2> build/om2-qual/baseline-sha256/213.err
+VERDICT seq-56-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63-p64 line=214
+  $ seed/out/omc < build/om2-qual/baseline-sha256/214.src > build/om2-qual/baseline-sha256/214.elf 2> build/om2-qual/baseline-sha256/214.cerr
+  $ build/om2-qual/baseline-sha256/214.elf 64 < build/om2-qual/baseline-sha256/214.in > build/om2-qual/baseline-sha256/214.out 2> build/om2-qual/baseline-sha256/214.err
+VERDICT seq-63-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64-p64 line=215
+  $ seed/out/omc < build/om2-qual/baseline-sha256/215.src > build/om2-qual/baseline-sha256/215.elf 2> build/om2-qual/baseline-sha256/215.cerr
+  $ build/om2-qual/baseline-sha256/215.elf 64 < build/om2-qual/baseline-sha256/215.in > build/om2-qual/baseline-sha256/215.out 2> build/om2-qual/baseline-sha256/215.err
+VERDICT seq-64-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65-p64 line=216
+  $ seed/out/omc < build/om2-qual/baseline-sha256/216.src > build/om2-qual/baseline-sha256/216.elf 2> build/om2-qual/baseline-sha256/216.cerr
+  $ build/om2-qual/baseline-sha256/216.elf 64 < build/om2-qual/baseline-sha256/216.in > build/om2-qual/baseline-sha256/216.out 2> build/om2-qual/baseline-sha256/216.err
+VERDICT seq-65-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119-p64 line=217
+  $ seed/out/omc < build/om2-qual/baseline-sha256/217.src > build/om2-qual/baseline-sha256/217.elf 2> build/om2-qual/baseline-sha256/217.cerr
+  $ build/om2-qual/baseline-sha256/217.elf 64 < build/om2-qual/baseline-sha256/217.in > build/om2-qual/baseline-sha256/217.out 2> build/om2-qual/baseline-sha256/217.err
+VERDICT seq-119-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120-p64 line=218
+  $ seed/out/omc < build/om2-qual/baseline-sha256/218.src > build/om2-qual/baseline-sha256/218.elf 2> build/om2-qual/baseline-sha256/218.cerr
+  $ build/om2-qual/baseline-sha256/218.elf 64 < build/om2-qual/baseline-sha256/218.in > build/om2-qual/baseline-sha256/218.out 2> build/om2-qual/baseline-sha256/218.err
+VERDICT seq-120-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128-p64 line=219
+  $ seed/out/omc < build/om2-qual/baseline-sha256/219.src > build/om2-qual/baseline-sha256/219.elf 2> build/om2-qual/baseline-sha256/219.cerr
+  $ build/om2-qual/baseline-sha256/219.elf 64 < build/om2-qual/baseline-sha256/219.in > build/om2-qual/baseline-sha256/219.out 2> build/om2-qual/baseline-sha256/219.err
+VERDICT seq-128-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129-p64 line=220
+  $ seed/out/omc < build/om2-qual/baseline-sha256/220.src > build/om2-qual/baseline-sha256/220.elf 2> build/om2-qual/baseline-sha256/220.cerr
+  $ build/om2-qual/baseline-sha256/220.elf 64 < build/om2-qual/baseline-sha256/220.in > build/om2-qual/baseline-sha256/220.out 2> build/om2-qual/baseline-sha256/220.err
+VERDICT seq-129-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130-p64 line=221
+  $ seed/out/omc < build/om2-qual/baseline-sha256/221.src > build/om2-qual/baseline-sha256/221.elf 2> build/om2-qual/baseline-sha256/221.cerr
+  $ build/om2-qual/baseline-sha256/221.elf 64 < build/om2-qual/baseline-sha256/221.in > build/om2-qual/baseline-sha256/221.out 2> build/om2-qual/baseline-sha256/221.err
+VERDICT seq-130-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000-p64 line=222
+  $ seed/out/omc < build/om2-qual/baseline-sha256/222.src > build/om2-qual/baseline-sha256/222.elf 2> build/om2-qual/baseline-sha256/222.cerr
+  $ build/om2-qual/baseline-sha256/222.elf 64 < build/om2-qual/baseline-sha256/222.in > build/om2-qual/baseline-sha256/222.out 2> build/om2-qual/baseline-sha256/222.err
+VERDICT seq-1000-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097-p64 line=223
+  $ seed/out/omc < build/om2-qual/baseline-sha256/223.src > build/om2-qual/baseline-sha256/223.elf 2> build/om2-qual/baseline-sha256/223.cerr
+  $ build/om2-qual/baseline-sha256/223.elf 64 < build/om2-qual/baseline-sha256/223.in > build/om2-qual/baseline-sha256/223.out 2> build/om2-qual/baseline-sha256/223.err
+VERDICT seq-4097-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193-p64 line=224
+  $ seed/out/omc < build/om2-qual/baseline-sha256/224.src > build/om2-qual/baseline-sha256/224.elf 2> build/om2-qual/baseline-sha256/224.cerr
+  $ build/om2-qual/baseline-sha256/224.elf 64 < build/om2-qual/baseline-sha256/224.in > build/om2-qual/baseline-sha256/224.out 2> build/om2-qual/baseline-sha256/224.err
+VERDICT seq-8193-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536-p64 line=225
+  $ seed/out/omc < build/om2-qual/baseline-sha256/225.src > build/om2-qual/baseline-sha256/225.elf 2> build/om2-qual/baseline-sha256/225.cerr
+  $ build/om2-qual/baseline-sha256/225.elf 64 < build/om2-qual/baseline-sha256/225.in > build/om2-qual/baseline-sha256/225.out 2> build/om2-qual/baseline-sha256/225.err
+VERDICT seq-65536-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003-p64 line=226
+  $ seed/out/omc < build/om2-qual/baseline-sha256/226.src > build/om2-qual/baseline-sha256/226.elf 2> build/om2-qual/baseline-sha256/226.cerr
+  $ build/om2-qual/baseline-sha256/226.elf 64 < build/om2-qual/baseline-sha256/226.in > build/om2-qual/baseline-sha256/226.out 2> build/om2-qual/baseline-sha256/226.err
+VERDICT rnd-8-100003-p64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896-p65 line=227
+  $ seed/out/omc < build/om2-qual/baseline-sha256/227.src > build/om2-qual/baseline-sha256/227.elf 2> build/om2-qual/baseline-sha256/227.cerr
+  $ build/om2-qual/baseline-sha256/227.elf 65 < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/227.out 2> build/om2-qual/baseline-sha256/227.err
+VERDICT fips-896-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55-p65 line=228
+  $ seed/out/omc < build/om2-qual/baseline-sha256/228.src > build/om2-qual/baseline-sha256/228.elf 2> build/om2-qual/baseline-sha256/228.cerr
+  $ build/om2-qual/baseline-sha256/228.elf 65 < build/om2-qual/baseline-sha256/228.in > build/om2-qual/baseline-sha256/228.out 2> build/om2-qual/baseline-sha256/228.err
+VERDICT seq-55-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56-p65 line=229
+  $ seed/out/omc < build/om2-qual/baseline-sha256/229.src > build/om2-qual/baseline-sha256/229.elf 2> build/om2-qual/baseline-sha256/229.cerr
+  $ build/om2-qual/baseline-sha256/229.elf 65 < build/om2-qual/baseline-sha256/229.in > build/om2-qual/baseline-sha256/229.out 2> build/om2-qual/baseline-sha256/229.err
+VERDICT seq-56-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63-p65 line=230
+  $ seed/out/omc < build/om2-qual/baseline-sha256/230.src > build/om2-qual/baseline-sha256/230.elf 2> build/om2-qual/baseline-sha256/230.cerr
+  $ build/om2-qual/baseline-sha256/230.elf 65 < build/om2-qual/baseline-sha256/230.in > build/om2-qual/baseline-sha256/230.out 2> build/om2-qual/baseline-sha256/230.err
+VERDICT seq-63-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64-p65 line=231
+  $ seed/out/omc < build/om2-qual/baseline-sha256/231.src > build/om2-qual/baseline-sha256/231.elf 2> build/om2-qual/baseline-sha256/231.cerr
+  $ build/om2-qual/baseline-sha256/231.elf 65 < build/om2-qual/baseline-sha256/231.in > build/om2-qual/baseline-sha256/231.out 2> build/om2-qual/baseline-sha256/231.err
+VERDICT seq-64-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65-p65 line=232
+  $ seed/out/omc < build/om2-qual/baseline-sha256/232.src > build/om2-qual/baseline-sha256/232.elf 2> build/om2-qual/baseline-sha256/232.cerr
+  $ build/om2-qual/baseline-sha256/232.elf 65 < build/om2-qual/baseline-sha256/232.in > build/om2-qual/baseline-sha256/232.out 2> build/om2-qual/baseline-sha256/232.err
+VERDICT seq-65-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119-p65 line=233
+  $ seed/out/omc < build/om2-qual/baseline-sha256/233.src > build/om2-qual/baseline-sha256/233.elf 2> build/om2-qual/baseline-sha256/233.cerr
+  $ build/om2-qual/baseline-sha256/233.elf 65 < build/om2-qual/baseline-sha256/233.in > build/om2-qual/baseline-sha256/233.out 2> build/om2-qual/baseline-sha256/233.err
+VERDICT seq-119-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120-p65 line=234
+  $ seed/out/omc < build/om2-qual/baseline-sha256/234.src > build/om2-qual/baseline-sha256/234.elf 2> build/om2-qual/baseline-sha256/234.cerr
+  $ build/om2-qual/baseline-sha256/234.elf 65 < build/om2-qual/baseline-sha256/234.in > build/om2-qual/baseline-sha256/234.out 2> build/om2-qual/baseline-sha256/234.err
+VERDICT seq-120-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128-p65 line=235
+  $ seed/out/omc < build/om2-qual/baseline-sha256/235.src > build/om2-qual/baseline-sha256/235.elf 2> build/om2-qual/baseline-sha256/235.cerr
+  $ build/om2-qual/baseline-sha256/235.elf 65 < build/om2-qual/baseline-sha256/235.in > build/om2-qual/baseline-sha256/235.out 2> build/om2-qual/baseline-sha256/235.err
+VERDICT seq-128-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129-p65 line=236
+  $ seed/out/omc < build/om2-qual/baseline-sha256/236.src > build/om2-qual/baseline-sha256/236.elf 2> build/om2-qual/baseline-sha256/236.cerr
+  $ build/om2-qual/baseline-sha256/236.elf 65 < build/om2-qual/baseline-sha256/236.in > build/om2-qual/baseline-sha256/236.out 2> build/om2-qual/baseline-sha256/236.err
+VERDICT seq-129-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130-p65 line=237
+  $ seed/out/omc < build/om2-qual/baseline-sha256/237.src > build/om2-qual/baseline-sha256/237.elf 2> build/om2-qual/baseline-sha256/237.cerr
+  $ build/om2-qual/baseline-sha256/237.elf 65 < build/om2-qual/baseline-sha256/237.in > build/om2-qual/baseline-sha256/237.out 2> build/om2-qual/baseline-sha256/237.err
+VERDICT seq-130-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000-p65 line=238
+  $ seed/out/omc < build/om2-qual/baseline-sha256/238.src > build/om2-qual/baseline-sha256/238.elf 2> build/om2-qual/baseline-sha256/238.cerr
+  $ build/om2-qual/baseline-sha256/238.elf 65 < build/om2-qual/baseline-sha256/238.in > build/om2-qual/baseline-sha256/238.out 2> build/om2-qual/baseline-sha256/238.err
+VERDICT seq-1000-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097-p65 line=239
+  $ seed/out/omc < build/om2-qual/baseline-sha256/239.src > build/om2-qual/baseline-sha256/239.elf 2> build/om2-qual/baseline-sha256/239.cerr
+  $ build/om2-qual/baseline-sha256/239.elf 65 < build/om2-qual/baseline-sha256/239.in > build/om2-qual/baseline-sha256/239.out 2> build/om2-qual/baseline-sha256/239.err
+VERDICT seq-4097-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193-p65 line=240
+  $ seed/out/omc < build/om2-qual/baseline-sha256/240.src > build/om2-qual/baseline-sha256/240.elf 2> build/om2-qual/baseline-sha256/240.cerr
+  $ build/om2-qual/baseline-sha256/240.elf 65 < build/om2-qual/baseline-sha256/240.in > build/om2-qual/baseline-sha256/240.out 2> build/om2-qual/baseline-sha256/240.err
+VERDICT seq-8193-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536-p65 line=241
+  $ seed/out/omc < build/om2-qual/baseline-sha256/241.src > build/om2-qual/baseline-sha256/241.elf 2> build/om2-qual/baseline-sha256/241.cerr
+  $ build/om2-qual/baseline-sha256/241.elf 65 < build/om2-qual/baseline-sha256/241.in > build/om2-qual/baseline-sha256/241.out 2> build/om2-qual/baseline-sha256/241.err
+VERDICT seq-65536-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003-p65 line=242
+  $ seed/out/omc < build/om2-qual/baseline-sha256/242.src > build/om2-qual/baseline-sha256/242.elf 2> build/om2-qual/baseline-sha256/242.cerr
+  $ build/om2-qual/baseline-sha256/242.elf 65 < build/om2-qual/baseline-sha256/242.in > build/om2-qual/baseline-sha256/242.out 2> build/om2-qual/baseline-sha256/242.err
+VERDICT rnd-8-100003-p65 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fips-896-p4095 line=243
+  $ seed/out/omc < build/om2-qual/baseline-sha256/243.src > build/om2-qual/baseline-sha256/243.elf 2> build/om2-qual/baseline-sha256/243.cerr
+  $ build/om2-qual/baseline-sha256/243.elf 4095 < seed/qualification/om2/fixtures/msg/m896.bin > build/om2-qual/baseline-sha256/243.out 2> build/om2-qual/baseline-sha256/243.err
+VERDICT fips-896-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-55-p4095 line=244
+  $ seed/out/omc < build/om2-qual/baseline-sha256/244.src > build/om2-qual/baseline-sha256/244.elf 2> build/om2-qual/baseline-sha256/244.cerr
+  $ build/om2-qual/baseline-sha256/244.elf 4095 < build/om2-qual/baseline-sha256/244.in > build/om2-qual/baseline-sha256/244.out 2> build/om2-qual/baseline-sha256/244.err
+VERDICT seq-55-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-56-p4095 line=245
+  $ seed/out/omc < build/om2-qual/baseline-sha256/245.src > build/om2-qual/baseline-sha256/245.elf 2> build/om2-qual/baseline-sha256/245.cerr
+  $ build/om2-qual/baseline-sha256/245.elf 4095 < build/om2-qual/baseline-sha256/245.in > build/om2-qual/baseline-sha256/245.out 2> build/om2-qual/baseline-sha256/245.err
+VERDICT seq-56-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-63-p4095 line=246
+  $ seed/out/omc < build/om2-qual/baseline-sha256/246.src > build/om2-qual/baseline-sha256/246.elf 2> build/om2-qual/baseline-sha256/246.cerr
+  $ build/om2-qual/baseline-sha256/246.elf 4095 < build/om2-qual/baseline-sha256/246.in > build/om2-qual/baseline-sha256/246.out 2> build/om2-qual/baseline-sha256/246.err
+VERDICT seq-63-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-64-p4095 line=247
+  $ seed/out/omc < build/om2-qual/baseline-sha256/247.src > build/om2-qual/baseline-sha256/247.elf 2> build/om2-qual/baseline-sha256/247.cerr
+  $ build/om2-qual/baseline-sha256/247.elf 4095 < build/om2-qual/baseline-sha256/247.in > build/om2-qual/baseline-sha256/247.out 2> build/om2-qual/baseline-sha256/247.err
+VERDICT seq-64-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65-p4095 line=248
+  $ seed/out/omc < build/om2-qual/baseline-sha256/248.src > build/om2-qual/baseline-sha256/248.elf 2> build/om2-qual/baseline-sha256/248.cerr
+  $ build/om2-qual/baseline-sha256/248.elf 4095 < build/om2-qual/baseline-sha256/248.in > build/om2-qual/baseline-sha256/248.out 2> build/om2-qual/baseline-sha256/248.err
+VERDICT seq-65-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-119-p4095 line=249
+  $ seed/out/omc < build/om2-qual/baseline-sha256/249.src > build/om2-qual/baseline-sha256/249.elf 2> build/om2-qual/baseline-sha256/249.cerr
+  $ build/om2-qual/baseline-sha256/249.elf 4095 < build/om2-qual/baseline-sha256/249.in > build/om2-qual/baseline-sha256/249.out 2> build/om2-qual/baseline-sha256/249.err
+VERDICT seq-119-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-120-p4095 line=250
+  $ seed/out/omc < build/om2-qual/baseline-sha256/250.src > build/om2-qual/baseline-sha256/250.elf 2> build/om2-qual/baseline-sha256/250.cerr
+  $ build/om2-qual/baseline-sha256/250.elf 4095 < build/om2-qual/baseline-sha256/250.in > build/om2-qual/baseline-sha256/250.out 2> build/om2-qual/baseline-sha256/250.err
+VERDICT seq-120-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-128-p4095 line=251
+  $ seed/out/omc < build/om2-qual/baseline-sha256/251.src > build/om2-qual/baseline-sha256/251.elf 2> build/om2-qual/baseline-sha256/251.cerr
+  $ build/om2-qual/baseline-sha256/251.elf 4095 < build/om2-qual/baseline-sha256/251.in > build/om2-qual/baseline-sha256/251.out 2> build/om2-qual/baseline-sha256/251.err
+VERDICT seq-128-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-129-p4095 line=252
+  $ seed/out/omc < build/om2-qual/baseline-sha256/252.src > build/om2-qual/baseline-sha256/252.elf 2> build/om2-qual/baseline-sha256/252.cerr
+  $ build/om2-qual/baseline-sha256/252.elf 4095 < build/om2-qual/baseline-sha256/252.in > build/om2-qual/baseline-sha256/252.out 2> build/om2-qual/baseline-sha256/252.err
+VERDICT seq-129-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-130-p4095 line=253
+  $ seed/out/omc < build/om2-qual/baseline-sha256/253.src > build/om2-qual/baseline-sha256/253.elf 2> build/om2-qual/baseline-sha256/253.cerr
+  $ build/om2-qual/baseline-sha256/253.elf 4095 < build/om2-qual/baseline-sha256/253.in > build/om2-qual/baseline-sha256/253.out 2> build/om2-qual/baseline-sha256/253.err
+VERDICT seq-130-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-1000-p4095 line=254
+  $ seed/out/omc < build/om2-qual/baseline-sha256/254.src > build/om2-qual/baseline-sha256/254.elf 2> build/om2-qual/baseline-sha256/254.cerr
+  $ build/om2-qual/baseline-sha256/254.elf 4095 < build/om2-qual/baseline-sha256/254.in > build/om2-qual/baseline-sha256/254.out 2> build/om2-qual/baseline-sha256/254.err
+VERDICT seq-1000-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-4097-p4095 line=255
+  $ seed/out/omc < build/om2-qual/baseline-sha256/255.src > build/om2-qual/baseline-sha256/255.elf 2> build/om2-qual/baseline-sha256/255.cerr
+  $ build/om2-qual/baseline-sha256/255.elf 4095 < build/om2-qual/baseline-sha256/255.in > build/om2-qual/baseline-sha256/255.out 2> build/om2-qual/baseline-sha256/255.err
+VERDICT seq-4097-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-8193-p4095 line=256
+  $ seed/out/omc < build/om2-qual/baseline-sha256/256.src > build/om2-qual/baseline-sha256/256.elf 2> build/om2-qual/baseline-sha256/256.cerr
+  $ build/om2-qual/baseline-sha256/256.elf 4095 < build/om2-qual/baseline-sha256/256.in > build/om2-qual/baseline-sha256/256.out 2> build/om2-qual/baseline-sha256/256.err
+VERDICT seq-8193-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE seq-65536-p4095 line=257
+  $ seed/out/omc < build/om2-qual/baseline-sha256/257.src > build/om2-qual/baseline-sha256/257.elf 2> build/om2-qual/baseline-sha256/257.cerr
+  $ build/om2-qual/baseline-sha256/257.elf 4095 < build/om2-qual/baseline-sha256/257.in > build/om2-qual/baseline-sha256/257.out 2> build/om2-qual/baseline-sha256/257.err
+VERDICT seq-65536-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rnd-8-100003-p4095 line=258
+  $ seed/out/omc < build/om2-qual/baseline-sha256/258.src > build/om2-qual/baseline-sha256/258.elf 2> build/om2-qual/baseline-sha256/258.cerr
+  $ build/om2-qual/baseline-sha256/258.elf 4095 < build/om2-qual/baseline-sha256/258.in > build/om2-qual/baseline-sha256/258.out 2> build/om2-qual/baseline-sha256/258.err
+VERDICT rnd-8-100003-p4095 PASS run exit=0 expected=0 stdout=match stderr=match
+SUBST seed/qualification/om2/baseline/mutants/k0.from seed/qualification/om2/baseline/mutants/k0.to
+CASE mut-k0-fips-abc line=262
+  MUTATE exact-once substitution at byte 4607
+  $ seed/out/omc < build/om2-qual/baseline-sha256/262.src > build/om2-qual/baseline-sha256/262.elf 2> build/om2-qual/baseline-sha256/262.cerr
+  $ build/om2-qual/baseline-sha256/262.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-sha256/262.out 2> build/om2-qual/baseline-sha256/262.err
+VERDICT mut-k0-fips-abc PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 1 stderr=match
+SUBST seed/qualification/om2/baseline/mutants/rot.from seed/qualification/om2/baseline/mutants/rot.to
+CASE mut-rot-fips-abc line=264
+  MUTATE exact-once substitution at byte 4593
+  $ seed/out/omc < build/om2-qual/baseline-sha256/264.src > build/om2-qual/baseline-sha256/264.elf 2> build/om2-qual/baseline-sha256/264.cerr
+  $ build/om2-qual/baseline-sha256/264.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-sha256/264.out 2> build/om2-qual/baseline-sha256/264.err
+VERDICT mut-rot-fips-abc PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST seed/qualification/om2/baseline/mutants/order.from seed/qualification/om2/baseline/mutants/order.to
+CASE mut-order-fips-abc line=266
+  MUTATE exact-once substitution at byte 4593
+  $ seed/out/omc < build/om2-qual/baseline-sha256/266.src > build/om2-qual/baseline-sha256/266.elf 2> build/om2-qual/baseline-sha256/266.cerr
+  $ build/om2-qual/baseline-sha256/266.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-sha256/266.out 2> build/om2-qual/baseline-sha256/266.err
+VERDICT mut-order-fips-abc PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST seed/qualification/om2/baseline/mutants/iv.from seed/qualification/om2/baseline/mutants/iv.to
+CASE mut-iv-fips-empty line=268
+  MUTATE exact-once substitution at byte 23295
+  $ seed/out/omc < build/om2-qual/baseline-sha256/268.src > build/om2-qual/baseline-sha256/268.elf 2> build/om2-qual/baseline-sha256/268.cerr
+  $ build/om2-qual/baseline-sha256/268.elf < /dev/null > build/om2-qual/baseline-sha256/268.out 2> build/om2-qual/baseline-sha256/268.err
+VERDICT mut-iv-fips-empty PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST seed/qualification/om2/baseline/mutants/nowrite.from seed/qualification/om2/baseline/mutants/nowrite.to
+CASE mut-nowrite-fips-abc line=270
+  MUTATE exact-once substitution at byte 24373
+  $ seed/out/omc < build/om2-qual/baseline-sha256/270.src > build/om2-qual/baseline-sha256/270.elf 2> build/om2-qual/baseline-sha256/270.cerr
+  $ build/om2-qual/baseline-sha256/270.elf < seed/qualification/om2/fixtures/msg/abc.bin > build/om2-qual/baseline-sha256/270.out 2> build/om2-qual/baseline-sha256/270.err
+VERDICT mut-nowrite-fips-abc PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST seed/qualification/om2/baseline/mutants/split.from seed/qualification/om2/baseline/mutants/split.to
+CASE mut-split-seq-1000-p32 line=272
+  MUTATE exact-once substitution at byte 22984
+  $ seed/out/omc < build/om2-qual/baseline-sha256/272.src > build/om2-qual/baseline-sha256/272.elf 2> build/om2-qual/baseline-sha256/272.cerr
+  $ build/om2-qual/baseline-sha256/272.elf 32 < build/om2-qual/baseline-sha256/272.in > build/om2-qual/baseline-sha256/272.out 2> build/om2-qual/baseline-sha256/272.err
+VERDICT mut-split-seq-1000-p32 PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 1 stderr=match
+OM2GATE PASS cases=260 pass=260 fail=0 invalid=0 not_run=0

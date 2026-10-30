@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* bw_warp_sim.h: host SIMT simulator for the Blackwell IR (omega #308).
  *
  * Models what the earlier per-thread simulators could not: a warp of 32 lanes with an
@@ -28,6 +44,8 @@
  *                      an exit jumped past it, or a target was corrupted)
  *   WS_E_NEVER_JOINED  the warp finished with a barrier still armed
  *   WS_E_SELF_BRANCH, WS_E_PC, WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS
+ *   WS_E_IMADHI_RC     IMAD.HI.U32 with a register Rc: the chip reads Rc as a 64-bit pair (omega #492,
+ *                      nvcc oracle, chip probe pending), so a non-RZ Rc is refused, not modelled
  * Every error names the pc. Memory: global addresses are host pointers (optionally range
  * checked); shared memory is a per-CTA buffer poisoned at CTA start so a read of a word
  * nobody wrote shows up in the oracle comparison.
@@ -69,12 +87,12 @@
 enum {
     WS_OK = 0, WS_E_SHFL_SPLIT, WS_E_SHFL_EXITED, WS_E_BAR_SPLIT, WS_E_BSYNC_UNARMED, WS_E_BSSY_REARM,
     WS_E_JOIN_MISMATCH, WS_E_NONMEMBER, WS_E_STUCK, WS_E_NEVER_JOINED, WS_E_SELF_BRANCH, WS_E_PC,
-    WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS, WS_E_BAR_TIMEOUT, WS_E_STEPS
+    WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS, WS_E_BAR_TIMEOUT, WS_E_STEPS, WS_E_IMADHI_RC
 };
 static const char *ws_err_name(int e) {
     static const char *const n[] = { "OK", "SHFL_SPLIT", "SHFL_EXITED", "BAR_SPLIT", "BSYNC_UNARMED", "BSSY_REARM",
         "JOIN_MISMATCH", "NONMEMBER", "STUCK", "NEVER_JOINED", "SELF_BRANCH", "PC", "OP", "SHIFT", "MEM", "SMEM",
-        "FRAGS", "BAR_TIMEOUT", "STEPS" };
+        "FRAGS", "BAR_TIMEOUT", "STEPS", "IMADHI_RC" };
     return (e >= 0 && e < (int)(sizeof n / sizeof n[0])) ? n[e] : "?";
 }
 
@@ -98,6 +116,8 @@ typedef struct {
     uint32_t smem_bytes;
     WsRange ranges[WS_MAX_RANGES]; int nranges; /* when > 0, every global access must fall in one */
     int order;                /* 0 = lowest pc first, 1 = highest pc first */
+    uint32_t reg_poison;      /* 0: registers start at zero; else every lane register starts as a hash of this seed, the CTA and the
+                               * register (the chip gives a CTA whatever the previous CTA on the SM left behind) */
     int trace;                /* print every issue of warp 0 of CTA (0,0) */
     /* results */
     int err; int err_pc; char msg[200];
@@ -155,7 +175,9 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_MOV_RZ: ws_wrs(l, in->dst_vreg, in->dst_subreg, 0, p); break;
     case BW_IR_IMAD: ws_wrs(l, in->dst_vreg, in->dst_subreg, in->src2_vreg >= 0 ? a * b + c : a * in->imm + c, p); break;
     case BW_IR_IMAD_WIDE: ws_wr64(l, in->dst_vreg, (uint64_t)a * in->imm + ws_rd64(l, in->src3_vreg, p), p); break;
-    case BW_IR_IMAD_HI_U32: ws_wrs(l, in->dst_vreg, in->dst_subreg, (uint32_t)(((uint64_t)a * b) >> 32) + c, p); break;
+    case BW_IR_IMAD_HI_U32: /* Rd = hi32(Ra * Rb) with Rc = RZ. The chip reads a register Rc as a 64-bit pair (omega #492): refused until a chip probe pins the model */
+        if (in->src3_vreg >= 0) { ws_fail(s, WS_E_IMADHI_RC, pc, "IMAD.HI.U32 with a register Rc (the chip reads Rc as a 64-bit pair, not chip-probed): use RZ, or SHF.R + IADD3"); return; }
+        ws_wrs(l, in->dst_vreg, in->dst_subreg, (uint32_t)(((uint64_t)a * b) >> 32), p); break;
     case BW_IR_IADD3: ws_wrs(l, in->dst_vreg, in->dst_subreg, a + b, p); break; /* the encoder's IADD3 has Rc = RZ */
     case BW_IR_SHF_R: ws_wrs(l, in->dst_vreg, in->dst_subreg, a >> (in->imm & 31), p); break;
     case BW_IR_SHF_L_U32: if (b >= 32) { ws_fail(s, WS_E_SHIFT, pc, "SHF.L.U32 amount >= 32 (not chip-verified)"); return; } ws_wrs(l, in->dst_vreg, in->dst_subreg, a << b, p); break;
@@ -344,6 +366,9 @@ static int ws_run(WsSim *s, uint32_t grid_x, uint32_t grid_y) {
     uint32_t nw = s->threads / WS_WARP;
     for (uint32_t cy = 0; cy < grid_y && !s->err; cy++) for (uint32_t cx = 0; cx < grid_x && !s->err; cx++) {
         memset(warps, 0, sizeof(WsWarp) * nw);
+        if (s->reg_poison) for (uint32_t w = 0; w < nw; w++) for (int L = 0; L < WS_WARP; L++) for (int r = 0; r < 256; r++) {
+            uint32_t h = s->reg_poison ^ (cx * 0x9e3779b9u) ^ (cy * 0x85ebca6bu) ^ ((w * 32u + (uint32_t)L) * 0xc2b2ae35u) ^ ((uint32_t)r * 0x27d4eb2fu);
+            h ^= h >> 15; h *= 0x2c1b3c6du; h ^= h >> 12; warps[w].lane[L].r[r] = h; if (r == 0) warps[w].lane[L].p0 = (uint8_t)((s->reg_poison >> 31) | (h & 1u)); }
         if (s->smem && s->smem_bytes) for (uint32_t i = 0; i + 4 <= s->smem_bytes; i += 4) { uint32_t poison = 0xfeedfaceu; memcpy(s->smem + i, &poison, 4); }
         for (uint32_t w = 0; w < nw; w++) { warps[w].nfrag = 1; warps[w].frag[0].pc = 0; warps[w].frag[0].mask = 0xffffffffu; warps[w].frag[0].parked = 0; }
         int trace = s->trace && cx == 0 && cy == 0;

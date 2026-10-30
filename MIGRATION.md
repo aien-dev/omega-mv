@@ -57,10 +57,10 @@ deleted legacy code and qualified consumers; a plan or a passing unit test is no
    exercised.
 6. **Build, release and automation**: Makefile targets and shell gates become `.om` coordinators;
    remove shell/Python orchestration from the delivered path.
-   Status: native `chdir` (code 136) landed with `seed/host/tests/chdir.om`; the `.om` host-gate
-   coordinator `seed/host/gate.om` replaced `seed/host/gate.sh` and passes all ten native fixtures
-   (files, args, network, tcp, process, directories, errors, location, sockopt, chdir). Remaining
-   shell release/packaging targets are still open.
+   Status: native `chdir` (code 138) landed with `seed/host/tests/chdir.om`; the `.om` host-gate
+   coordinator `seed/host/gate.om` replaced `seed/host/gate.sh` and runs all 39 native host
+   fixtures plus generated identity programs, with an optional candidate-compiler argument.
+   Remaining shell release/packaging targets are still open.
 7. **Compiler trust**: the C reference path is replaced or demoted to an external oracle outside the
    closure; add the independent route required for diverse double compilation.
 8. **Cross-repo services**: migrate the named repositories under their own owners and ledgers.

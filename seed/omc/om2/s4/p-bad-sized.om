@@ -1,0 +1,9 @@
+note S4: a part goes only to an unsized parameter; to a sized one it is error 7.
+om2
+fn s v view uchar 4 to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+ret int s part a 0 4
+end

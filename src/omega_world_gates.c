@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <math.h>
 #include "omega_world_gates.h"
 #include "omega_accelerator_world.h"
@@ -17,6 +33,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include "omega_physics_dir.h"
 
 static int m19_gate_count = 0;
@@ -1759,6 +1777,59 @@ static bool test_m19_gate15_zero_libcuda(void) {
     return true;
 }
 
+
+/* Start one program directly, with an optional working directory, one extra
+ * environment value, and stdout+stderr sent to log_path. No shell is involved,
+ * so a path, a commit id or a directory name passed here stays an argument and
+ * can never become command text. Returns the exit status, or -1 if it did not run. */
+static int m19_run(char *const argv[], const char *dir, const char *log_path,
+                   const char *e1_name, const char *e1_value,
+                   const char *e2_name, const char *e2_value) {
+    if (!argv || !argv[0]) return -1;
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        if (dir && chdir(dir) != 0) _exit(127);
+        if (e1_name && e1_value && setenv(e1_name, e1_value, 1) != 0) _exit(127);
+        if (e2_name && e2_value && setenv(e2_name, e2_value, 1) != 0) _exit(127);
+        if (log_path) {
+            int fd = open(log_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) _exit(127);
+            if (dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0) _exit(127);
+            if (fd > STDERR_FILENO) close(fd);
+        }
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    int status = 0;
+    if (waitpid(pid, &status, 0) < 0) return -1;
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    return -1;
+}
+/* Echo the tail of the nested clean-clone log to stderr. The file is read
+ * directly: building a shell command out of a path is both flagged by static
+ * analysis and a way for a crafted path to run something unintended. */
+static void m19_echo_log_tail(const char *dir) {
+    char path[PATH_MAX];
+    int n = snprintf(path, sizeof(path), "%s/qualification.log", dir);
+    if (n < 0 || (size_t)n >= sizeof(path)) return;
+    FILE *f = fopen(path, "rb");
+    if (!f) return;
+    char buf[2048];
+    size_t want = sizeof(buf) - 1;
+    if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return; }
+    long end = ftell(f);
+    if (end < 0) { fclose(f); return; }
+    long start = end > (long)want ? end - (long)want : 0;
+    if (fseek(f, start, SEEK_SET) != 0) { fclose(f); return; }
+    size_t got = fread(buf, 1, want, f);
+    fclose(f);
+    if (got == 0) return;
+    buf[got] = '\0';
+    fputs(buf, stderr);
+    if (buf[got - 1] != '\n') fputc('\n', stderr);
+}
+
 /* Gate 16: OMEGA_ACCEL_RESIDENT_CLEAN_CLONE_PASS */
 static bool test_m19_gate16_clean_clone(void) {
     char src_sha[41] = {0};
@@ -1796,14 +1867,39 @@ static bool test_m19_gate16_clean_clone(void) {
         return false;
     }
 
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "git clone --quiet --no-hardlinks . %s && cd %s && git checkout --quiet %s && "
-                       "make clean >/dev/null 2>&1 && make -j PHYSICS_DIR=%s >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m19-gates >%s/qualification.log 2>&1",
-                       checkout, checkout, src_sha, physics_dir_resolved, clone);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    if (system(command) != 0) return false;
+    /* OUT_DIR=build on the clone's make: tests/gates/run.sh exports a per-step OUT_DIR
+     * (omega#511), which the clone would inherit and build into, while the line below runs
+     * ./build/omegatool. The clone is its own directory, so its default build/ is private. */
+    /* Each step is started directly, without a shell. The checkout path, the commit id
+     * and the physics path are arguments to a program, never words in a command string. */
+    char log_path[PATH_MAX];
+    int lp = snprintf(log_path, sizeof(log_path), "%s/qualification.log", clone);
+    if (lp < 0 || (size_t)lp >= sizeof(log_path)) return false;
+
+    char *clone_argv[] = { (char *)"git", (char *)"clone", (char *)"--quiet",
+                           (char *)"--no-hardlinks", (char *)".", checkout, NULL };
+    char *clean_argv[] = { (char *)"make", (char *)"OUT_DIR=build", (char *)"clean", NULL };
+    char *build_argv[] = { (char *)"make", (char *)"-j", (char *)"OUT_DIR=build", NULL };
+    char *gates_argv[] = { (char *)"./build/omegatool", (char *)"--run-m19-gates", NULL };
+
+    /* No value read from a file goes on a command line. The clone carries the source's own
+     * head, so the commit id is never passed as an argument; the check further down still
+     * refuses a clone whose head is not src_sha. The physics path travels in the environment,
+     * which the Makefile's `PHYSICS_DIR ?= ../physics` picks up. */
+    bool nested_ok = m19_run(clone_argv, ".", "/dev/null", NULL, NULL, NULL, NULL) == 0 &&
+                     m19_run(clean_argv, checkout, "/dev/null", NULL, NULL, NULL, NULL) == 0 &&
+                     m19_run(build_argv, checkout, "/dev/null",
+                             "PHYSICS_DIR", physics_dir_resolved, NULL, NULL) == 0 &&
+                     m19_run(gates_argv, checkout, log_path,
+                             "OMEGA_IN_CLEAN_CLONE", "1", NULL, NULL) == 0;
+    if (!nested_ok) {
+        /* The nested clone builds and runs into qualification.log. A failure here used to report
+         * only "[FAIL]" with no reason while the log stayed inside the runner's temp directory.
+         * Echo the tail to stderr, which the gate runner captures into the evidence record. */
+        fprintf(stderr, "M19 gate 16: nested build or nested run failed; tail of %s:\n", log_path);
+        m19_echo_log_tail(clone);
+        return false;
+    }
 
     /* The built checkout must be exactly the named candidate revision. */
     char clone_sha[41] = {0};
@@ -1864,9 +1960,13 @@ static bool test_m19_gate18_receipt(void) {
         if (!candidate || strcmp(candidate, head_sha) != 0 ||
             omega_evidence_tree_dirty()) return false;
     }
+    /* The binary under test is wherever make put it: build/step-<step>/omegatool under
+     * tests/gates/run.sh (omega#511), build/omegatool in a clean clone or by hand. */
+    char self_path[PATH_MAX];
+    if (!omega_evidence_self_binary(self_path, sizeof(self_path))) return false;
     uint8_t digest[32];
     char hex[65];
-    return compute_file_sha256("build/omegatool", digest, hex);
+    return compute_file_sha256(self_path, digest, hex);
 }
 
 int run_m19_gates(void) {

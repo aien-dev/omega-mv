@@ -1,0 +1,272 @@
+# Baseline: the CURRENT consumer om/sha256/sha256.om (acb3f15) through baseline/sha256-main.om.
+# Generated from fixtures/sha256-vectors.txt by the awk commands in fixtures/PROVENANCE.txt.
+# --- vectors, default piece size 4096
+fips-empty run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om - line:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 - 0
+fips-abc run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+fips-448 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m448.bin line:248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1 - 0
+fips-896 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0
+fips-million-a run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:1000000 line:cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0 - 0
+seq-0 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:0 line:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 - 0
+seq-1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1 line:6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d - 0
+seq-2 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:2 line:b413f47d13ee2fe6c845b2ee141af81de858df4ec549a58b7970bb96645bc8d2 - 0
+seq-3 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:3 line:ae4b3280e56e2faf83f414a6e3dabe9d5fbe18976544c05fed121accb85b53fc - 0
+seq-4 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4 line:054edec1d0211f624fed0cbca9d4f9400b0e491c43742af2c5b0abebf0c990d8 - 0
+seq-5 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:5 line:08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d - 0
+seq-6 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:6 line:17e88db187afd62c16e5debf3e6527cd006bc012bc90b51a810cd80c2d511f43 - 0
+seq-7 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:7 line:57355ac3303c148f11aef7cb179456b9232cde33a818dfda2c2fcb9325749a6b - 0
+seq-8 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8 line:8a851ff82ee7048ad09ec3847f1ddf44944104d2cbd17ef4e3db22c6785a0d45 - 0
+seq-9 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:9 line:f8348e0b1df00833cbbbd08f07abdecc10c0efb78829d7828c62a7f36d0cc549 - 0
+seq-10 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:10 line:1f825aa2f0020ef7cf91dfa30da4668d791c5d4824fc8e41354b89ec05795ab3 - 0
+seq-11 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:11 line:78a6273103d17c39a0b6126e226cec70e33337f4bc6a38067401b54a33e78ead - 0
+seq-12 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:12 line:fff3a9bcdd37363d703c1c4f9512533686157868f0d4f16a0f02d0f1da24f9a2 - 0
+seq-13 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:13 line:86eba947d50c2c01570fe1bb5ca552958dabbdbb59b0657f0f26e21ff011e5c7 - 0
+seq-14 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:14 line:ab107f1bd632d3c3f5c724a99d024f7faa033f33c07696384b604bfe78ac352d - 0
+seq-15 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:15 line:7071fc3188fde7e7e500d4768f1784bede1a22e991648dcab9dc3219acff1d4c - 0
+seq-16 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:16 line:be45cb2605bf36bebde684841a28f0fd43c69850a3dce5fedba69928ee3a8991 - 0
+seq-17 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:17 line:3e5718fea51a8f3f5baca61c77afab473c1810f8b9db330273b4011ce92c787e - 0
+seq-18 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:18 line:7a096cc12702bcfa647ee070d4f3ba4c2d1d715b484b55b825d0edba6545803b - 0
+seq-19 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:19 line:5f9a753613d87b8a17302373c4aee56faa310d3b24b6ae1862d673aa22e1790f - 0
+seq-20 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:20 line:e7aebf577f60412f0312d442c70a1fa6148c090bf5bab404caec29482ae779e8 - 0
+seq-21 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:21 line:75aee9dcc9fbe7ddc9394f5bc5d38d9f5ad361f0520f7ceab59616e38f5950b5 - 0
+seq-22 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:22 line:22cb4df00cddd6067ad5cfa2bba9857f21a06843e1a6e39ad1a68cb9a45ab8b7 - 0
+seq-23 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:23 line:f6a954a68555187d88cd9a026940d15ab2a7e24c7517d21ceeb028e93c96f318 - 0
+seq-24 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:24 line:1d64add2a6388367c9bc2d1f1b384b069a6ef382cdaaa89771dd103e28613a25 - 0
+seq-25 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:25 line:b729ce724d9a48d3884dbfcbee1d3793d922b29fa9d639e7290af4978263772b - 0
+seq-26 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:26 line:b858da80d8a57dc546905fd147612ebddd3c9188620405d058f9ee5ab1e6bc52 - 0
+seq-27 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:27 line:d78750726155a89c9131d0ecf2704b973b8710865bf9e831845de4f2dcbc19da - 0
+seq-28 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:28 line:dc27f8e8ee2d08a2bccbb2dbd6c8e07ffba194101fc3458c34ded55f72c0971a - 0
+seq-29 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:29 line:d09bea65dff48928a14b79741de3274b646f55ac898b71a66fa3eae2d9facd77 - 0
+seq-30 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:30 line:f2192584b67da35dfc26f743e5f53bb0376046f899dc6dabd5e7b541ae86c32f - 0
+seq-31 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:31 line:4f23c2ca8c5c962e50cd31e221bfb6d0adca19111dca8e0c62598ff146dd19c4 - 0
+seq-32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:32 line:630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd - 0
+seq-33 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:33 line:5d8fcfefa9aeeb711fb8ed1e4b7d5c8a9bafa46e8e76e68aa18adce5a10df6ab - 0
+seq-34 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:34 line:14cdbf171499f86bd18b262243d669067efbdbb5431a48289cf02f2b5448b3d4 - 0
+seq-35 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:35 line:f12dd12340cb84e4d0d9958d62be7c59bb8f7243a7420fd043177ac542a26aaa - 0
+seq-36 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:36 line:5d7e2d9b1dcbc85e7c890036a2cf2f9fe7b66554f2df08cec6aa9c0a25c99c21 - 0
+seq-37 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:37 line:f4d285f47a1e4959a445ea6528e5df3efab041fa15aad94db1e2600b3f395518 - 0
+seq-38 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:38 line:a2fd0e15d72c9d18f383e40016f9ddc706673c54252084285aaa47a812552577 - 0
+seq-39 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:39 line:4aba23aea5e2a91b7807cf3026cdd10a1c38533ce55332683d4ccb88456e0703 - 0
+seq-40 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:40 line:5faa4eec3611556812c2d74b437c8c49add3f910f10063d801441f7d75cd5e3b - 0
+seq-41 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:41 line:753629a6117f5a25d338dff10f4dd3d07e63eecc2eaf8eabe773f6399706fe67 - 0
+seq-42 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:42 line:40a1ed73b46030c8d7e88682078c5ab1ae5a2e524e066e8c8743c484de0e21e5 - 0
+seq-43 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:43 line:c033843682818c475e187d260d5e2edf0469862dfa3bb0c116f6816a29edbf60 - 0
+seq-44 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:44 line:17619ec4250ef65f083e2314ef30af796b6f1198d0fddfbb0f272930bf9bb991 - 0
+seq-45 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:45 line:a8e960c769a9508d098451e3d74dd5a2ac6c861eb0341ae94e9fc273597278c9 - 0
+seq-46 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:46 line:8ebfeb2e3a159e9f39ad7cc040e6678dade70d4f59a67d529fa76af301ab2946 - 0
+seq-47 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:47 line:ef8a7781a95c32fa02ebf511eda3dc6e273be59cb0f9e20a4f84d54f41427791 - 0
+seq-48 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:48 line:4dbdc2b2b62cb00749785bc84202236dbc3777d74660611b8e58812f0cfde6c3 - 0
+seq-49 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:49 line:7509fe148e2c426ed16c990f22fe8116905c82c561756e723f63223ace0e147e - 0
+seq-50 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:50 line:a622e13829e488422ee72a5fc92cb11d25c3d0f185a1384b8138df5074c983bf - 0
+seq-51 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:51 line:3309847cee454b4f99dcfe8fdc5511a7ba168ce0b6e5684ef73f9030d009b8b5 - 0
+seq-52 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:52 line:c4c6540a15fc140a784056fe6d9e13566fb614ecb2d9ac0331e264c386442acd - 0
+seq-53 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:53 line:90962cc12ae9cdae32d7c33c4b93194b11fac835942ee41b98770c6141c66795 - 0
+seq-54 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:54 line:675f28acc0b90a72d1c3a570fe83ac565555db358cf01826dc8eefb2bf7ca0f3 - 0
+seq-55 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0
+seq-56 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0
+seq-57 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:57 line:2fe741af801cc238602ac0ec6a7b0c3a8a87c7fc7d7f02a3fe03d1c12eac4d8f - 0
+seq-58 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:58 line:e03b18640c635b338a92b82cce4ff072f9f1aba9ac5261ee1340f592f35c0499 - 0
+seq-59 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:59 line:bd2de8f5dd15c73f68dfd26a614080c2e323b2b51b1b5ed9d7933e535d223bda - 0
+seq-60 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:60 line:0ddde28e40838ef6f9853e887f597d6adb5f40eb35d5763c52e1e64d8ba3bfff - 0
+seq-61 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:61 line:4b5c2783c91ceccb7c839213bcbb6a902d7fe8c2ec866877a51f433ea17f3e85 - 0
+seq-62 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:62 line:c89da82cbcd76ddf220e4e9091019b9866ffda72bee30de1effe6c99701a2221 - 0
+seq-63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0
+seq-64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0
+seq-65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0
+seq-66 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:66 line:b6dfd259f6e0d07deb658a88148f8253f9bbbb74ddd6db3edbe159a56bc35073 - 0
+seq-67 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:67 line:8fa5913b62847d42bb4b464e00a72c612d2ab0df2af0b9a96af8d323fa509077 - 0
+seq-68 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:68 line:7ded979c0153ebb9ef28a15a314d0b27b41c4f8eed700b54974b48eb3ecaf91c - 0
+seq-69 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:69 line:1cf3aa651dcf35dbfe296e770ad7ebc4e00bcccd0224db296183dc952d0008c9 - 0
+seq-70 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:70 line:5767d69a906d4860db9079eb7e90ab4a543e5cb032fce846554aef6ceb600e1d - 0
+seq-71 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:71 line:8189e3d54767d51e8d1942659a9e2905f9ec3ae72860c16a66e75b8cc9bd2087 - 0
+seq-72 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:72 line:107de2bc788e11029f7851f8e1b0b5afb4e34379c709fc840689ebd3d1f51b5b - 0
+seq-73 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:73 line:169f6f093a9be82febe1a6a4471425697ec25d5040b472c5b1822aeea2625988 - 0
+seq-74 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:74 line:2087ebd358ae3ea2a092fc19c2dfee57c5f0860296bc7b057c14e1227c5cb9d1 - 0
+seq-75 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:75 line:182ab56f7739e43cee0b9ba1e92c4b2a81b088705516a5243910159744f21be9 - 0
+seq-76 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:76 line:081f6c68899a48a1be455a55416104921d2fe4bdae696f4b72f9d9626a47915e - 0
+seq-77 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:77 line:5ce02376cc256861b78f87e34783814ba1aec6d09ab500d579ed8ee95c8afcc8 - 0
+seq-78 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:78 line:b93e407404e3e95f20fd647365e0e7f46afabe9af1ff083af996135e00d54009 - 0
+seq-79 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:79 line:e81fa832b37be8ed8f79da29987aa4d61310dcb14b2859dedf8fb1daa2541fd3 - 0
+seq-80 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:80 line:c56705fea5b110b8dc63688533ced21167e628017387c885423b835a55edd5ef - 0
+seq-81 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:81 line:c2226285d08a245a17058ed2d24ad095b714f608ae364fddf119e0a7df890540 - 0
+seq-82 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:82 line:f9c270da8793221a6809ac685fdd4f5387e0fe1ee6aaf01c74f1e0a719621614 - 0
+seq-83 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:83 line:e69befd6ef7f685c36e343ac1702d87ad6a0e4ac8c0d5c521d04aad4ef0b7458 - 0
+seq-84 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:84 line:4e3033562ad74a7d43eb5ff5fc2382622c6307cb10e245ad62da77c4c63cb178 - 0
+seq-85 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:85 line:2ea17629472564a59e5eb845a2cdd04f442df2ff26bcc866e400f77158d612a1 - 0
+seq-86 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:86 line:b90223df74dd49a8a1461f340f2d7a90f96903ccbb5bc3c74ea3658fc8948b20 - 0
+seq-87 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:87 line:e0209f42b927ec9c0f6d6a76007ed540e9bdd6e427b3368a1ea6c5e7565972dd - 0
+seq-88 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:88 line:10d9bd424114319c0999adf6288f74060cd8918ef1228827a6269b2bf0f0880c - 0
+seq-89 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:89 line:7d1978a65ac94dbbcdc62e3d81850299fe157dd9b7bd9e01b170156210d2815a - 0
+seq-90 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:90 line:e052dff9e1c94aaa49556f86fad55029a4875839fda57f5005f4c4403876b256 - 0
+seq-91 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:91 line:58d29459b2130a2e151252d408b95e6dac424c564062eb911cc76440cb926ca0 - 0
+seq-92 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:92 line:4e4530c392316f598e1bd07f32166380a8f712a33a48e9eb4247131ec5dc05d3 - 0
+seq-93 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:93 line:a09c9d3e42342c7dea44edb4aeb48cf6727cacd8032a12cf77a25829fc249d32 - 0
+seq-94 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:94 line:eb978d0f1ac03ce5c3510b5f4a16073a7a2bdc15c4ab7777dcf01030cc316667 - 0
+seq-95 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:95 line:7d1905a3ace827ea1ac51c4fa08c281ed3be87e7f4e928d696bfde35c8f2dc0f - 0
+seq-96 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:96 line:08359b108fa567f5dcf319fa3434da6abbc1d595f426372666447f09cc5a87dc - 0
+seq-97 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:97 line:a7b3830ffab0f2bbabbef6df0b169a7917008bf238880bbf8c20b8e000077312 - 0
+seq-98 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:98 line:b4f5d9b1555994c5ebaebd82918d560a3bf82962a171a1614e7551939e943366 - 0
+seq-99 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:99 line:014ecaea1b378900f1212898c6ddb01565d81af1d0ef78df5e28d46e9caf7cfc - 0
+seq-100 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:100 line:bce0aff19cf5aa6a7469a30d61d04e4376e4bbf6381052ee9e7f33925c954d52 - 0
+seq-101 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:101 line:4565d7b898ccea3139ad260f9273115f806b30079d7683218c4e3ecd43af3b33 - 0
+seq-102 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:102 line:ddadeb660fe8902c9fb2db9b6cf237c9ce5b31753398085c4367eb5910b9cc13 - 0
+seq-103 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:103 line:c15a8928131f6687dd10f3c115ddf8d7c8f2df7e18d12c08c4fd16f666ce60ba - 0
+seq-104 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:104 line:ae8e3d799b1353a39815f90eceebefa265cc448fe39faf2008cb20784cb2df9f - 0
+seq-105 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:105 line:98545371a3d9981abe5ab4a32a1d7b2fadd9801d89da52a94a4f78a42740d21c - 0
+seq-106 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:106 line:6323dce2f8b3a04dcea8d205602348c40403cb200c677eb1a1c0fe37edb6eb2f - 0
+seq-107 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:107 line:8150f7c5da910d709ff02ddf85dd293c6a2672633de8cda30f2e0aa58b14b0c4 - 0
+seq-108 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:108 line:44d21db70716bd7644cb0d819fa6791805ebc526ea32996a60e41dc753fcfafc - 0
+seq-109 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:109 line:b9b7c375cca45db19466ebd0fe7c9e147948cc42c1c90f0579728cfb2651956d - 0
+seq-110 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:110 line:a47a551b01e55aaaa015531a4fa26a666f1ebd4ba4573898de712b8b5e0ca7e9 - 0
+seq-111 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:111 line:60780e9451bdc43cf4530ffc95cbb0c4eb24dae2c39f55f334d679e076c08065 - 0
+seq-112 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:112 line:09373f127d34e61dbbaa8bc4499c87074f2ddb10e1b465f506d7d70a15011979 - 0
+seq-113 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:113 line:13aaa9b5fb739cdb0e2af99d9ac0a409390adc4d1cb9b41f1ef94f8552060e92 - 0
+seq-114 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:114 line:5b0a32f1219524f5d72b00ba1a1b1c09a05ff10c83bb7a86042e42988f2afc06 - 0
+seq-115 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:115 line:32796a0a246ea67eb785eda2e045192b9d6e40b9fe2047b21ef0cee929039651 - 0
+seq-116 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:116 line:da9ab8930992a9f65eccec4c310882cab428a708e6c899181046a8c73af00855 - 0
+seq-117 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:117 line:9c94557382c966753c8cab0957eaedbe1d737b5fcb35c56c220ddd36f8a2d351 - 0
+seq-118 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:118 line:d32ab00929cb935b79d44e74c5a745db460ff794dea3b79be40c1cc5cf5388ef - 0
+seq-119 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0
+seq-120 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0
+seq-121 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:121 line:335a461692b30bba1d647cc71604e88e676c90e4c22455d0b8c83f4bd7c8ac9b - 0
+seq-122 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:122 line:3d08c4d7bdda7ec922b0741df357de46e7bd102f9ab7a5c67624ab58da6d9d75 - 0
+seq-123 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:123 line:cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9 - 0
+seq-124 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:124 line:865447fc4fae01471f2fc973bfb448de00217521ef02e3214d5177ea89c3ef31 - 0
+seq-125 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:125 line:3daa582f9563601e290f3cd6d304bff7e25a9ee42a34ffbac5cf2bf40134e0d4 - 0
+seq-126 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:126 line:5dda7cb7c2282a55676f8ad5c448092f4a9ebd65338b07ed224fcd7b6c73f5ef - 0
+seq-127 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:127 line:92ca0fa6651ee2f97b884b7246a562fa71250fedefe5ebf270d31c546bfea976 - 0
+seq-128 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0
+seq-129 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0
+seq-130 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0
+seq-1000 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0
+seq-4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4095 line:45de2924756389e3ccab98bdaacbef8a81cdeb651b59f916a6d6385b4f7b999d - 0
+seq-4096 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4096 line:d67c656e01756650d77717b0839985a056ec28ffe174601d690fc407a2ceffca - 0
+seq-4097 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0
+seq-8191 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8191 line:a7ff4cc384f150c0763c051418a0084ded32bfa5863717ab5f35d3f43a5ffe1c - 0
+seq-8192 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8192 line:25df2449b2e5a35fea14e02a7158e283801a1069c9f84631b9a9dacb2f809a7f - 0
+seq-8193 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0
+seq-65536 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0
+rep-a-55 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:55 line:9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318 - 0
+rep-a-56 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:56 line:b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a - 0
+rep-a-63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:63 line:7d3e74a05d7db15bce4ad9ec0658ea98e3f06eeecf16b4c6fff2da457ddc2f34 - 0
+rep-a-64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:64 line:ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb - 0
+rep-a-65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:65 line:635361c48bb9eab14198e76ea8ab7f1a41685d6ad62aa9146d301d4f17eb0ae0 - 0
+rep-a-4096 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rep:97:4096 line:c93eee2d0db02f10acc7460d9576e122dcf8cd53c4bf8dfcae1b3e74ebcfff5a - 0
+rnd-1-3 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:1:3 line:d46b892acb38e6d9d2f93fab2621df39929be969e7a6245e8f8828e1e224b122 - 0
+rnd-2-55 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:2:55 line:489354d7744738edcbc1228ca418ff7c0494df8e741686cf9092d364104bbe44 - 0
+rnd-3-56 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:3:56 line:a8126f4824235667aeede184b7dac301b41a5713caca7f972851f449a09d1520 - 0
+rnd-4-64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:4:64 line:df69de71c5b8b96befa275d42efa6feb59ffddf56501ae24db33ca419fa3afee - 0
+rnd-5-111 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:5:111 line:5fb527f8bc6556636300f5c4650021bd7c4f76b207b31ec13a9b64b9aeda2ad3 - 0
+rnd-6-4097 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:6:4097 line:4663feee0adebd8f54ad99f0a0e462d4f496613157a8a22d1ed0778a6b59cb4e - 0
+rnd-7-12345 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:7:12345 line:58257600665dc6151a6c00999f9a7a6474c66dd1910ddc4ce7660793504dd1f0 - 0
+rnd-8-100003 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0
+# --- split points: piece sizes 1, 32, 63, 64, 65, 4095
+fips-896-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0 1
+seq-55-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0 1
+seq-56-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0 1
+seq-63-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0 1
+seq-64-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0 1
+seq-65-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0 1
+seq-119-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0 1
+seq-120-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0 1
+seq-128-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0 1
+seq-129-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0 1
+seq-130-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0 1
+seq-1000-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 1
+seq-4097-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0 1
+seq-8193-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0 1
+seq-65536-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0 1
+rnd-8-100003-p1 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0 1
+fips-896-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0 32
+seq-55-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0 32
+seq-56-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0 32
+seq-63-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0 32
+seq-64-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0 32
+seq-65-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0 32
+seq-119-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0 32
+seq-120-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0 32
+seq-128-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0 32
+seq-129-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0 32
+seq-130-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0 32
+seq-1000-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 32
+seq-4097-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0 32
+seq-8193-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0 32
+seq-65536-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0 32
+rnd-8-100003-p32 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0 32
+fips-896-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0 63
+seq-55-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0 63
+seq-56-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0 63
+seq-63-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0 63
+seq-64-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0 63
+seq-65-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0 63
+seq-119-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0 63
+seq-120-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0 63
+seq-128-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0 63
+seq-129-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0 63
+seq-130-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0 63
+seq-1000-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 63
+seq-4097-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0 63
+seq-8193-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0 63
+seq-65536-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0 63
+rnd-8-100003-p63 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0 63
+fips-896-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0 64
+seq-55-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0 64
+seq-56-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0 64
+seq-63-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0 64
+seq-64-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0 64
+seq-65-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0 64
+seq-119-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0 64
+seq-120-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0 64
+seq-128-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0 64
+seq-129-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0 64
+seq-130-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0 64
+seq-1000-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 64
+seq-4097-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0 64
+seq-8193-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0 64
+seq-65536-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0 64
+rnd-8-100003-p64 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0 64
+fips-896-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0 65
+seq-55-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0 65
+seq-56-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0 65
+seq-63-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0 65
+seq-64-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0 65
+seq-65-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0 65
+seq-119-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0 65
+seq-120-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0 65
+seq-128-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0 65
+seq-129-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0 65
+seq-130-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0 65
+seq-1000-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 65
+seq-4097-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0 65
+seq-8193-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0 65
+seq-65536-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0 65
+rnd-8-100003-p65 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0 65
+fips-896-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/m896.bin line:cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1 - 0 4095
+seq-55-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:55 line:463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59 - 0 4095
+seq-56-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:56 line:da2ae4d6b36748f2a318f23e7ab1dfdf45acdc9d049bd80e59de82a60895f562 - 0 4095
+seq-63-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:63 line:29af2686fd53374a36b0846694cc342177e428d1647515f078784d69cdb9e488 - 0 4095
+seq-64-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:64 line:fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108 - 0 4095
+seq-65-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65 line:4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781 - 0 4095
+seq-119-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:119 line:da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6 - 0 4095
+seq-120-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:120 line:f52b23db1fbb6ded89ef42a23ce0c8922c45f25c50b568a93bf1c075420bbb7c - 0 4095
+seq-128-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:128 line:471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5 - 0 4095
+seq-129-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:129 line:5099c6a56203f9687f7d33f4bfdf576d31dc91f6b695ecea38b2770c87631135 - 0 4095
+seq-130-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:130 line:8d39b60b9c767c58975b270c1d6b13c9b4507e5aee7ad496a3528e4c7f880721 - 0 4095
+seq-1000-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 4095
+seq-4097-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:4097 line:a16560d668b843fb3be99ace41dbd18471f342bd3255a1d21204b35e43f74436 - 0 4095
+seq-8193-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:8193 line:7e3691790cd64b19d4edb1a80e988214515abeb53aa0f34ffbfe4b4bf405d120 - 0 4095
+seq-65536-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:65536 line:4b640d85ab3ba30fd02c9fc9db4a8928f416322ad27022ea58a65aaee68a4df2 - 0 4095
+rnd-8-100003-p4095 run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om rnd:8:100003 line:990929ebc8acf2ae2d7aa35428c6954f0320f5b48b969dec576f2070bb7afc31 - 0 4095
+# --- mutants of the consumer source (exact-once substitution); each must be killed by a
+# digest mismatch on the named vector, with a clean exit 0
+subst seed/qualification/om2/baseline/mutants/k0.from seed/qualification/om2/baseline/mutants/k0.to
+mut-k0-fips-abc kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+subst seed/qualification/om2/baseline/mutants/rot.from seed/qualification/om2/baseline/mutants/rot.to
+mut-rot-fips-abc kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+subst seed/qualification/om2/baseline/mutants/order.from seed/qualification/om2/baseline/mutants/order.to
+mut-order-fips-abc kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+subst seed/qualification/om2/baseline/mutants/iv.from seed/qualification/om2/baseline/mutants/iv.to
+mut-iv-fips-empty kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om - line:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 - 0
+subst seed/qualification/om2/baseline/mutants/nowrite.from seed/qualification/om2/baseline/mutants/nowrite.to
+mut-nowrite-fips-abc kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+subst seed/qualification/om2/baseline/mutants/split.from seed/qualification/om2/baseline/mutants/split.to
+mut-split-seq-1000-p32 kill seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om seq:1000 line:4e4c294b331f7a2099a379bec34b9f9fc03dc46ab465d998f4d683da53487e6d - 0 32

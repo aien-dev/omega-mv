@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 line 87 (K a number 1..64) and erratum E7: K > 64 is error 8. K = 65 on line 8
+note (the for line).
+om2
+fn main to int
+s = ulong 0
+c = ulong 0
+for i ulong 65 unroll
+s = add s i
+c = add c 1
+end
+ret int c
+end

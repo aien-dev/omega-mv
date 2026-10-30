@@ -1,0 +1,27 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+-- chip 1 tokens from 0 (max_pos 256)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 1.070 ms (prep 0.245, attend 0.106)
+   parity: 0 bad, worst ratio 0.000 of the tolerance (0.0 s reference); rows: ok (0 one-ulp k flips, worst token 0)
+   twin: 1 decode calls 0.6 ms; rows k 0 v 0 words differ
+-- chip 37 tokens from 0 (max_pos 256)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 1.851 ms (prep 0.320, attend 0.104)
+   parity: 0 bad, worst ratio 0.245 of the tolerance (0.0 s reference); rows: ok (0 one-ulp k flips, worst token 0)
+   twin: 37 decode calls 4.3 ms; rows k 0 v 0 words differ
+-- chip 19 tokens from 100 (max_pos 512)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 0.658 ms (prep 0.328, attend 0.105)
+   parity: 0 bad, worst ratio 0.088 of the tolerance (0.0 s reference); rows: ok (0 one-ulp k flips, worst token 0)
+   twin: 19 decode calls 2.3 ms; rows k 0 v 0 words differ
+-- chip 141 tokens from 37 (max_pos 512)
+FAIL: prefill 37+141: CHIP_FAIL marker wait timed out (latched)
+chip prep mutant 1: caught (rc CHIP_FAIL, 0 bad, worst 0.0, rows ok)
+chip prep mutant 3: caught (rc CHIP_FAIL, 0 bad, worst 0.0, rows ok)
+chip attend mutant 1: caught (rc CHIP_FAIL, 0 bad, worst 0.0, rows ok)
+chip attend mutant 2: caught (rc CHIP_FAIL, 0 bad, worst 0.0, rows ok)
+-- chip 2048 tokens from 0 (max_pos 4096)
+FAIL: cache with history: CHIP_FAIL process latched
+-- chip 2048 tokens from 6144 (max_pos 8192)
+FAIL: cache with history: CHIP_FAIL process latched
+-- chip 2048 tokens from 30720 (max_pos 32768)
+FAIL: cache with history: CHIP_FAIL process latched
+gpu_prefill_attn256_test: 57 checks, 4 failed: FAIL

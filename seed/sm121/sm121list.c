@@ -13,10 +13,12 @@
  * Notes on what the C encoder silently ignores or truncates go to DIR/notes.tsv.
  */
 #include <stdarg.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../../src/omega_blackwell_codegen.h"
 #include "../../src/omega_blackwell_codegen_attn.h"
 #include "../../src/omega_blackwell_codegen_bf16.h"
@@ -38,6 +40,16 @@
 static const char *g_dir;
 static FILE *g_notes;
 static unsigned long g_kernels, g_dups, g_refused, g_insns;
+
+/* Generated outputs require fresh paths; never truncate an existing file or
+ * follow a final-component symlink. gate6.sh cleans only its build outputs. */
+static FILE *private_output(const char *path, const char *mode) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+    if (fd < 0) return NULL;
+    FILE *f = fdopen(fd, mode);
+    if (!f) close(fd);
+    return f;
+}
 
 static void note(const char *kernel, size_t i, const char *what) {
     fprintf(g_notes, "%s\t%zu\t%s\n", kernel, i, what);
@@ -221,7 +233,7 @@ static void dump(const char *name, const BlackwellIRProgram *p) {
     if (g_nseen < NSEEN) g_seen[g_nseen++] = h;
     char path[512];
     snprintf(path, sizeof path, "%s/k/%s.s2", g_dir, name);
-    FILE *f = fopen(path, "w");
+    FILE *f = private_output(path, "w");
     if (!f) { perror(path); exit(2); }
     fprintf(f, "; %s: %zu instructions (+ NOP padding), listing written by sm121list from the generator's instruction list\n", name, p->count);
     size_t padded = (p->count + 7) & ~(size_t)7;
@@ -233,7 +245,7 @@ static void dump(const char *name, const BlackwellIRProgram *p) {
     }
     fclose(f);
     snprintf(path, sizeof path, "%s/k/%s.c.bin", g_dir, name);
-    f = fopen(path, "wb");
+    f = private_output(path, "wb");
     if (!f || fwrite(g_code, 1, len, f) != len) { perror(path); exit(2); }
     fclose(f);
     fprintf(g_tsv, "%s\t%zu\t%zu\t%d\t%d\n", name, p->count, len, nt, nq);
@@ -449,20 +461,20 @@ int main(int argc, char **argv) {
     if (!g_notes) { perror(path); return 2; }
     if (!strcmp(argv[1], "kernels")) {
         snprintf(path, sizeof path, "%s/kernels.tsv", g_dir);
-        g_tsv = fopen(path, "w");
+        g_tsv = private_output(path, "w");
         if (!g_tsv) { perror(path); return 2; }
         fprintf(g_tsv, "kernel\tinstructions\tcode_bytes\ttc_patched\tqmma_patched\n");
         kernels();
         ew_kernels();
         { uint8_t va[OMEGA_BW_VECADD_CODE_SIZE]; size_t vl = 0;   /* the chip-proven vector add, the rung-6 chip kernel */
-          snprintf(path, sizeof path, "%s/vecadd.c.bin", g_dir); FILE *vf = fopen(path, "wb");
+          snprintf(path, sizeof path, "%s/vecadd.c.bin", g_dir); FILE *vf = private_output(path, "wb");
           if (!vf || omega_blackwell_encode_vecadd(va, sizeof va, &vl) != 0 || fwrite(va, 1, vl, vf) != vl) { perror(path); return 2; }
           fclose(vf); }
         fclose(g_tsv);
         printf("kernels %lu (instructions %lu), identical repeats skipped %lu, settings refused %lu\n", g_kernels, g_insns, g_dups, g_refused);
     } else if (!strcmp(argv[1], "edges")) {
-        snprintf(path, sizeof path, "%s/edges.s2", g_dir); g_es2 = fopen(path, "w");
-        snprintf(path, sizeof path, "%s/edges.c.bin", g_dir); g_ebin = fopen(path, "wb");
+        snprintf(path, sizeof path, "%s/edges.s2", g_dir); g_es2 = private_output(path, "w");
+        snprintf(path, sizeof path, "%s/edges.c.bin", g_dir); g_ebin = private_output(path, "wb");
         if (!g_es2 || !g_ebin) { perror(path); return 2; }
         edges();
         fclose(g_es2); fclose(g_ebin);
