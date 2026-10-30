@@ -45,9 +45,10 @@ revocation checking).
 ## Status of the code
 
 Pre-alpha research software. Only `main` is supported. The TLS client has been tested against
-public test suites (Wycheproof, RFC test vectors, the FIPS 140-3 / CAVP test methods via ACVP vectors);
-it has **not** had a paid third-party audit and is **not** NIST-validated. Results and how to re-run
-them are published in aien-dev/aien-receipts under `audit/`.
+public test vectors (Wycheproof, RFC test vectors, and the NIST ACVP-Server sample vectors run locally
+by `om/tls/test/acvp/run.sh`, which is not a CAVP certificate); it has **not** had a paid third-party
+audit and is **not** NIST-validated. The commands that re-run every suite, and their expected results,
+are listed under "Tests" in `om/tls/README.md`.
 
 ## Not covered
 

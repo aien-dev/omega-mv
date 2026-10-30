@@ -188,6 +188,7 @@ Not covered, or covered only partly:
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
 | `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-26) |
 | `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
+| `sh om/tls/test/acvp/run.sh OMC` (NIST ACVP-Server sample vectors, pinned `975de31e`; not a CAVP certificate) | `ACVP PARTIAL algos=18 tests=7543 not_applicable=7139 not_run=ML-KEM,hmacDRBG` (exit 3; observed 2026-10-30 on omc `62775d2a`; 18 of 18 negative controls FAIL as required) |
 
 How the suites are built:
 
