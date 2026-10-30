@@ -1,0 +1,244 @@
+OM2GATE START cases=seed/qualification/security673/packets.cases scratch=build/seed/contracts/run.PLxgL5/packets
+IDENTITY omc seed/out/omc sha256=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b pinned=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b match
+CASE gen00-valid-one line=7
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/7.src > build/seed/contracts/run.PLxgL5/packets/7.elf 2> build/seed/contracts/run.PLxgL5/packets/7.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/7.elf < build/seed/contracts/run.PLxgL5/packets/7.in > build/seed/contracts/run.PLxgL5/packets/7.out 2> build/seed/contracts/run.PLxgL5/packets/7.err
+VERDICT gen00-valid-one PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen01-count-zero line=8
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/8.src > build/seed/contracts/run.PLxgL5/packets/8.elf 2> build/seed/contracts/run.PLxgL5/packets/8.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/8.elf < build/seed/contracts/run.PLxgL5/packets/8.in > build/seed/contracts/run.PLxgL5/packets/8.out 2> build/seed/contracts/run.PLxgL5/packets/8.err
+VERDICT gen01-count-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen02-count-65-bare line=9
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/9.src > build/seed/contracts/run.PLxgL5/packets/9.elf 2> build/seed/contracts/run.PLxgL5/packets/9.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/9.elf < build/seed/contracts/run.PLxgL5/packets/9.in > build/seed/contracts/run.PLxgL5/packets/9.out 2> build/seed/contracts/run.PLxgL5/packets/9.err
+VERDICT gen02-count-65-bare PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen03-record-truncated line=10
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/10.src > build/seed/contracts/run.PLxgL5/packets/10.elf 2> build/seed/contracts/run.PLxgL5/packets/10.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/10.elf < build/seed/contracts/run.PLxgL5/packets/10.in > build/seed/contracts/run.PLxgL5/packets/10.out 2> build/seed/contracts/run.PLxgL5/packets/10.err
+VERDICT gen03-record-truncated PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen04-trailing-byte line=11
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/11.src > build/seed/contracts/run.PLxgL5/packets/11.elf 2> build/seed/contracts/run.PLxgL5/packets/11.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/11.elf < build/seed/contracts/run.PLxgL5/packets/11.in > build/seed/contracts/run.PLxgL5/packets/11.out 2> build/seed/contracts/run.PLxgL5/packets/11.err
+VERDICT gen04-trailing-byte PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen05-first-empty line=12
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/12.src > build/seed/contracts/run.PLxgL5/packets/12.elf 2> build/seed/contracts/run.PLxgL5/packets/12.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/12.elf < build/seed/contracts/run.PLxgL5/packets/12.in > build/seed/contracts/run.PLxgL5/packets/12.out 2> build/seed/contracts/run.PLxgL5/packets/12.err
+VERDICT gen05-first-empty PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen06-embedded-zero line=13
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/13.src > build/seed/contracts/run.PLxgL5/packets/13.elf 2> build/seed/contracts/run.PLxgL5/packets/13.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/13.elf < build/seed/contracts/run.PLxgL5/packets/13.in > build/seed/contracts/run.PLxgL5/packets/13.out 2> build/seed/contracts/run.PLxgL5/packets/13.err
+VERDICT gen06-embedded-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen07-record-overdeclared line=14
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/14.src > build/seed/contracts/run.PLxgL5/packets/14.elf 2> build/seed/contracts/run.PLxgL5/packets/14.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/14.elf < build/seed/contracts/run.PLxgL5/packets/14.in > build/seed/contracts/run.PLxgL5/packets/14.out 2> build/seed/contracts/run.PLxgL5/packets/14.err
+VERDICT gen07-record-overdeclared PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen08-valid-64 line=15
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/15.src > build/seed/contracts/run.PLxgL5/packets/15.elf 2> build/seed/contracts/run.PLxgL5/packets/15.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/15.elf < build/seed/contracts/run.PLxgL5/packets/15.in > build/seed/contracts/run.PLxgL5/packets/15.out 2> build/seed/contracts/run.PLxgL5/packets/15.err
+VERDICT gen08-valid-64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen09-count-65-records line=16
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/16.src > build/seed/contracts/run.PLxgL5/packets/16.elf 2> build/seed/contracts/run.PLxgL5/packets/16.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/16.elf < build/seed/contracts/run.PLxgL5/packets/16.in > build/seed/contracts/run.PLxgL5/packets/16.out 2> build/seed/contracts/run.PLxgL5/packets/16.err
+VERDICT gen09-count-65-records PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen10-size-4097 line=17
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/17.src > build/seed/contracts/run.PLxgL5/packets/17.elf 2> build/seed/contracts/run.PLxgL5/packets/17.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/17.elf < build/seed/contracts/run.PLxgL5/packets/17.in > build/seed/contracts/run.PLxgL5/packets/17.out 2> build/seed/contracts/run.PLxgL5/packets/17.err
+VERDICT gen10-size-4097 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen11-size-4096 line=18
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/18.src > build/seed/contracts/run.PLxgL5/packets/18.elf 2> build/seed/contracts/run.PLxgL5/packets/18.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/18.elf < build/seed/contracts/run.PLxgL5/packets/18.in > build/seed/contracts/run.PLxgL5/packets/18.out 2> build/seed/contracts/run.PLxgL5/packets/18.err
+VERDICT gen11-size-4096 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen12-echo-argv line=19
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/19.src > build/seed/contracts/run.PLxgL5/packets/19.elf 2> build/seed/contracts/run.PLxgL5/packets/19.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/19.elf < build/seed/contracts/run.PLxgL5/packets/19.in > build/seed/contracts/run.PLxgL5/packets/19.out 2> build/seed/contracts/run.PLxgL5/packets/19.err
+VERDICT gen12-echo-argv PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen13-zero-after-path line=20
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/20.src > build/seed/contracts/run.PLxgL5/packets/20.elf 2> build/seed/contracts/run.PLxgL5/packets/20.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/20.elf < build/seed/contracts/run.PLxgL5/packets/20.in > build/seed/contracts/run.PLxgL5/packets/20.out 2> build/seed/contracts/run.PLxgL5/packets/20.err
+VERDICT gen13-zero-after-path PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen14-count-65535 line=21
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/21.src > build/seed/contracts/run.PLxgL5/packets/21.elf 2> build/seed/contracts/run.PLxgL5/packets/21.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/21.elf < build/seed/contracts/run.PLxgL5/packets/21.in > build/seed/contracts/run.PLxgL5/packets/21.out 2> build/seed/contracts/run.PLxgL5/packets/21.err
+VERDICT gen14-count-65535 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE gen15-length-65535 line=22
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/22.src > build/seed/contracts/run.PLxgL5/packets/22.elf 2> build/seed/contracts/run.PLxgL5/packets/22.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/22.elf < build/seed/contracts/run.PLxgL5/packets/22.in > build/seed/contracts/run.PLxgL5/packets/22.out 2> build/seed/contracts/run.PLxgL5/packets/22.err
+VERDICT gen15-length-65535 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE p00-valid-one line=23
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/23.src > build/seed/contracts/run.PLxgL5/packets/23.elf 2> build/seed/contracts/run.PLxgL5/packets/23.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/23.elf < seed/qualification/security673/packets/p00.bin > build/seed/contracts/run.PLxgL5/packets/23.out 2> build/seed/contracts/run.PLxgL5/packets/23.err
+VERDICT p00-valid-one PASS run exit=0 expected=0 stdout=match stderr=match
+CASE p01-count-zero line=24
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/24.src > build/seed/contracts/run.PLxgL5/packets/24.elf 2> build/seed/contracts/run.PLxgL5/packets/24.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/24.elf < seed/qualification/security673/packets/p01.bin > build/seed/contracts/run.PLxgL5/packets/24.out 2> build/seed/contracts/run.PLxgL5/packets/24.err
+VERDICT p01-count-zero PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p02-count-65-bare line=25
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/25.src > build/seed/contracts/run.PLxgL5/packets/25.elf 2> build/seed/contracts/run.PLxgL5/packets/25.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/25.elf < seed/qualification/security673/packets/p02.bin > build/seed/contracts/run.PLxgL5/packets/25.out 2> build/seed/contracts/run.PLxgL5/packets/25.err
+VERDICT p02-count-65-bare PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p03-record-truncated line=26
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/26.src > build/seed/contracts/run.PLxgL5/packets/26.elf 2> build/seed/contracts/run.PLxgL5/packets/26.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/26.elf < seed/qualification/security673/packets/p03.bin > build/seed/contracts/run.PLxgL5/packets/26.out 2> build/seed/contracts/run.PLxgL5/packets/26.err
+VERDICT p03-record-truncated PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p04-trailing-byte line=27
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/27.src > build/seed/contracts/run.PLxgL5/packets/27.elf 2> build/seed/contracts/run.PLxgL5/packets/27.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/27.elf < seed/qualification/security673/packets/p04.bin > build/seed/contracts/run.PLxgL5/packets/27.out 2> build/seed/contracts/run.PLxgL5/packets/27.err
+VERDICT p04-trailing-byte PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p05-first-empty line=28
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/28.src > build/seed/contracts/run.PLxgL5/packets/28.elf 2> build/seed/contracts/run.PLxgL5/packets/28.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/28.elf < seed/qualification/security673/packets/p05.bin > build/seed/contracts/run.PLxgL5/packets/28.out 2> build/seed/contracts/run.PLxgL5/packets/28.err
+VERDICT p05-first-empty PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p06-embedded-zero line=29
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/29.src > build/seed/contracts/run.PLxgL5/packets/29.elf 2> build/seed/contracts/run.PLxgL5/packets/29.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/29.elf < seed/qualification/security673/packets/p06.bin > build/seed/contracts/run.PLxgL5/packets/29.out 2> build/seed/contracts/run.PLxgL5/packets/29.err
+VERDICT p06-embedded-zero PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p07-record-overdeclared line=30
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/30.src > build/seed/contracts/run.PLxgL5/packets/30.elf 2> build/seed/contracts/run.PLxgL5/packets/30.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/30.elf < seed/qualification/security673/packets/p07.bin > build/seed/contracts/run.PLxgL5/packets/30.out 2> build/seed/contracts/run.PLxgL5/packets/30.err
+VERDICT p07-record-overdeclared PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p08-valid-64 line=31
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/31.src > build/seed/contracts/run.PLxgL5/packets/31.elf 2> build/seed/contracts/run.PLxgL5/packets/31.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/31.elf < seed/qualification/security673/packets/p08.bin > build/seed/contracts/run.PLxgL5/packets/31.out 2> build/seed/contracts/run.PLxgL5/packets/31.err
+VERDICT p08-valid-64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE p09-count-65-records line=32
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/32.src > build/seed/contracts/run.PLxgL5/packets/32.elf 2> build/seed/contracts/run.PLxgL5/packets/32.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/32.elf < seed/qualification/security673/packets/p09.bin > build/seed/contracts/run.PLxgL5/packets/32.out 2> build/seed/contracts/run.PLxgL5/packets/32.err
+VERDICT p09-count-65-records PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p10-size-4097 line=33
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/33.src > build/seed/contracts/run.PLxgL5/packets/33.elf 2> build/seed/contracts/run.PLxgL5/packets/33.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/33.elf < seed/qualification/security673/packets/p10.bin > build/seed/contracts/run.PLxgL5/packets/33.out 2> build/seed/contracts/run.PLxgL5/packets/33.err
+VERDICT p10-size-4097 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p11-size-4096 line=34
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/34.src > build/seed/contracts/run.PLxgL5/packets/34.elf 2> build/seed/contracts/run.PLxgL5/packets/34.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/34.elf < seed/qualification/security673/packets/p11.bin > build/seed/contracts/run.PLxgL5/packets/34.out 2> build/seed/contracts/run.PLxgL5/packets/34.err
+VERDICT p11-size-4096 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE p12-echo-argv line=35
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/35.src > build/seed/contracts/run.PLxgL5/packets/35.elf 2> build/seed/contracts/run.PLxgL5/packets/35.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/35.elf < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/35.out 2> build/seed/contracts/run.PLxgL5/packets/35.err
+VERDICT p12-echo-argv PASS run exit=0 expected=0 stdout=match stderr=match
+CASE p13-zero-after-path line=36
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/36.src > build/seed/contracts/run.PLxgL5/packets/36.elf 2> build/seed/contracts/run.PLxgL5/packets/36.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/36.elf < seed/qualification/security673/packets/p13.bin > build/seed/contracts/run.PLxgL5/packets/36.out 2> build/seed/contracts/run.PLxgL5/packets/36.err
+VERDICT p13-zero-after-path PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p14-count-65535 line=37
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/37.src > build/seed/contracts/run.PLxgL5/packets/37.elf 2> build/seed/contracts/run.PLxgL5/packets/37.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/37.elf < seed/qualification/security673/packets/p14.bin > build/seed/contracts/run.PLxgL5/packets/37.out 2> build/seed/contracts/run.PLxgL5/packets/37.err
+VERDICT p14-count-65535 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE p15-length-65535 line=38
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/38.src > build/seed/contracts/run.PLxgL5/packets/38.elf 2> build/seed/contracts/run.PLxgL5/packets/38.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/38.elf < seed/qualification/security673/packets/p15.bin > build/seed/contracts/run.PLxgL5/packets/38.out 2> build/seed/contracts/run.PLxgL5/packets/38.err
+VERDICT p15-length-65535 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc00 line=39
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/39.src > build/seed/contracts/run.PLxgL5/packets/39.elf 2> build/seed/contracts/run.PLxgL5/packets/39.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/39.elf 0 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/39.out 2> build/seed/contracts/run.PLxgL5/packets/39.err
+VERDICT trunc00 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc01 line=40
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/40.src > build/seed/contracts/run.PLxgL5/packets/40.elf 2> build/seed/contracts/run.PLxgL5/packets/40.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/40.elf 1 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/40.out 2> build/seed/contracts/run.PLxgL5/packets/40.err
+VERDICT trunc01 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc02 line=41
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/41.src > build/seed/contracts/run.PLxgL5/packets/41.elf 2> build/seed/contracts/run.PLxgL5/packets/41.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/41.elf 2 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/41.out 2> build/seed/contracts/run.PLxgL5/packets/41.err
+VERDICT trunc02 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc03 line=42
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/42.src > build/seed/contracts/run.PLxgL5/packets/42.elf 2> build/seed/contracts/run.PLxgL5/packets/42.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/42.elf 3 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/42.out 2> build/seed/contracts/run.PLxgL5/packets/42.err
+VERDICT trunc03 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc04 line=43
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/43.src > build/seed/contracts/run.PLxgL5/packets/43.elf 2> build/seed/contracts/run.PLxgL5/packets/43.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/43.elf 4 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/43.out 2> build/seed/contracts/run.PLxgL5/packets/43.err
+VERDICT trunc04 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc05 line=44
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/44.src > build/seed/contracts/run.PLxgL5/packets/44.elf 2> build/seed/contracts/run.PLxgL5/packets/44.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/44.elf 5 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/44.out 2> build/seed/contracts/run.PLxgL5/packets/44.err
+VERDICT trunc05 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc06 line=45
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/45.src > build/seed/contracts/run.PLxgL5/packets/45.elf 2> build/seed/contracts/run.PLxgL5/packets/45.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/45.elf 6 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/45.out 2> build/seed/contracts/run.PLxgL5/packets/45.err
+VERDICT trunc06 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc07 line=46
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/46.src > build/seed/contracts/run.PLxgL5/packets/46.elf 2> build/seed/contracts/run.PLxgL5/packets/46.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/46.elf 7 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/46.out 2> build/seed/contracts/run.PLxgL5/packets/46.err
+VERDICT trunc07 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc08 line=47
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/47.src > build/seed/contracts/run.PLxgL5/packets/47.elf 2> build/seed/contracts/run.PLxgL5/packets/47.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/47.elf 8 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/47.out 2> build/seed/contracts/run.PLxgL5/packets/47.err
+VERDICT trunc08 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc09 line=48
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/48.src > build/seed/contracts/run.PLxgL5/packets/48.elf 2> build/seed/contracts/run.PLxgL5/packets/48.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/48.elf 9 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/48.out 2> build/seed/contracts/run.PLxgL5/packets/48.err
+VERDICT trunc09 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc10 line=49
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/49.src > build/seed/contracts/run.PLxgL5/packets/49.elf 2> build/seed/contracts/run.PLxgL5/packets/49.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/49.elf 10 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/49.out 2> build/seed/contracts/run.PLxgL5/packets/49.err
+VERDICT trunc10 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc11 line=50
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/50.src > build/seed/contracts/run.PLxgL5/packets/50.elf 2> build/seed/contracts/run.PLxgL5/packets/50.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/50.elf 11 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/50.out 2> build/seed/contracts/run.PLxgL5/packets/50.err
+VERDICT trunc11 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc12 line=51
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/51.src > build/seed/contracts/run.PLxgL5/packets/51.elf 2> build/seed/contracts/run.PLxgL5/packets/51.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/51.elf 12 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/51.out 2> build/seed/contracts/run.PLxgL5/packets/51.err
+VERDICT trunc12 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc13 line=52
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/52.src > build/seed/contracts/run.PLxgL5/packets/52.elf 2> build/seed/contracts/run.PLxgL5/packets/52.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/52.elf 13 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/52.out 2> build/seed/contracts/run.PLxgL5/packets/52.err
+VERDICT trunc13 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc14 line=53
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/53.src > build/seed/contracts/run.PLxgL5/packets/53.elf 2> build/seed/contracts/run.PLxgL5/packets/53.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/53.elf 14 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/53.out 2> build/seed/contracts/run.PLxgL5/packets/53.err
+VERDICT trunc14 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc15 line=54
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/54.src > build/seed/contracts/run.PLxgL5/packets/54.elf 2> build/seed/contracts/run.PLxgL5/packets/54.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/54.elf 15 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/54.out 2> build/seed/contracts/run.PLxgL5/packets/54.err
+VERDICT trunc15 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc16 line=55
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/55.src > build/seed/contracts/run.PLxgL5/packets/55.elf 2> build/seed/contracts/run.PLxgL5/packets/55.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/55.elf 16 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/55.out 2> build/seed/contracts/run.PLxgL5/packets/55.err
+VERDICT trunc16 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc17 line=56
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/56.src > build/seed/contracts/run.PLxgL5/packets/56.elf 2> build/seed/contracts/run.PLxgL5/packets/56.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/56.elf 17 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/56.out 2> build/seed/contracts/run.PLxgL5/packets/56.err
+VERDICT trunc17 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc18 line=57
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/57.src > build/seed/contracts/run.PLxgL5/packets/57.elf 2> build/seed/contracts/run.PLxgL5/packets/57.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/57.elf 18 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/57.out 2> build/seed/contracts/run.PLxgL5/packets/57.err
+VERDICT trunc18 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc19 line=58
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/58.src > build/seed/contracts/run.PLxgL5/packets/58.elf 2> build/seed/contracts/run.PLxgL5/packets/58.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/58.elf 19 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/58.out 2> build/seed/contracts/run.PLxgL5/packets/58.err
+VERDICT trunc19 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc20 line=59
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/59.src > build/seed/contracts/run.PLxgL5/packets/59.elf 2> build/seed/contracts/run.PLxgL5/packets/59.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/59.elf 20 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/59.out 2> build/seed/contracts/run.PLxgL5/packets/59.err
+VERDICT trunc20 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc21 line=60
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/60.src > build/seed/contracts/run.PLxgL5/packets/60.elf 2> build/seed/contracts/run.PLxgL5/packets/60.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/60.elf 21 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/60.out 2> build/seed/contracts/run.PLxgL5/packets/60.err
+VERDICT trunc21 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc22 line=61
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/61.src > build/seed/contracts/run.PLxgL5/packets/61.elf 2> build/seed/contracts/run.PLxgL5/packets/61.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/61.elf 22 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/61.out 2> build/seed/contracts/run.PLxgL5/packets/61.err
+VERDICT trunc22 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc23 line=62
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/62.src > build/seed/contracts/run.PLxgL5/packets/62.elf 2> build/seed/contracts/run.PLxgL5/packets/62.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/62.elf 23 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/62.out 2> build/seed/contracts/run.PLxgL5/packets/62.err
+VERDICT trunc23 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc24 line=63
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/63.src > build/seed/contracts/run.PLxgL5/packets/63.elf 2> build/seed/contracts/run.PLxgL5/packets/63.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/63.elf 24 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/63.out 2> build/seed/contracts/run.PLxgL5/packets/63.err
+VERDICT trunc24 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc25 line=64
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/64.src > build/seed/contracts/run.PLxgL5/packets/64.elf 2> build/seed/contracts/run.PLxgL5/packets/64.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/64.elf 25 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/64.out 2> build/seed/contracts/run.PLxgL5/packets/64.err
+VERDICT trunc25 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc26 line=65
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/65.src > build/seed/contracts/run.PLxgL5/packets/65.elf 2> build/seed/contracts/run.PLxgL5/packets/65.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/65.elf 26 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/65.out 2> build/seed/contracts/run.PLxgL5/packets/65.err
+VERDICT trunc26 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE trunc27-whole line=66
+  $ seed/out/omc < build/seed/contracts/run.PLxgL5/packets/66.src > build/seed/contracts/run.PLxgL5/packets/66.elf 2> build/seed/contracts/run.PLxgL5/packets/66.cerr
+  $ build/seed/contracts/run.PLxgL5/packets/66.elf 27 < seed/qualification/security673/packets/p12.bin > build/seed/contracts/run.PLxgL5/packets/66.out 2> build/seed/contracts/run.PLxgL5/packets/66.err
+VERDICT trunc27-whole PASS run exit=0 expected=0 stdout=match stderr=match
+OM2GATE PASS cases=60 pass=60 fail=0 invalid=0 not_run=0
+PASS packed-list ingress: hostile packets refused; size, count and exact-length mutants detected

@@ -40,6 +40,20 @@ grep -qx 'VERDICT mutant-requires FAIL run exit=0 expected=109 stdout=match stde
 grep -qx 'VERDICT mutant-proof FAIL run exit=0 expected=109 stdout=match stderr=match' "$run/mutant.log"
 grep -qx 'OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0' "$run/mutant.log"
 echo 'PASS contract-enforcement mutant detected by exact runtime-status mismatch'
+# Packed-list hostile ingress (#671): generated packets reach execprog from stdin.
+"$B/gate" seed/out/omc "$pin" seed/qualification/security673/packets.cases "$run/packets"
+if "$B/gate" seed/out/omc "$pin" seed/qualification/security673/packets-mutant.cases "$run/packets-mutant" > "$run/packets-mutant.log"; then
+    echo 'FAIL packed-list bound mutant survived' >&2
+    exit 1
+else
+    status=$?
+    [ "$status" = 1 ] || { cat "$run/packets-mutant.log"; exit 1; }
+fi
+grep -qx 'VERDICT mutant-size FAIL run exit=0 expected=103 stdout=match stderr=match' "$run/packets-mutant.log"
+grep -qx 'VERDICT mutant-count FAIL run exit=0 expected=103 stdout=match stderr=match' "$run/packets-mutant.log"
+grep -qx 'VERDICT mutant-exact FAIL run exit=0 expected=103 stdout=match stderr=match' "$run/packets-mutant.log"
+grep -qx 'OM2GATE FAIL cases=3 pass=0 fail=3 invalid=0 not_run=0' "$run/packets-mutant.log"
+echo 'PASS packed-list ingress: hostile packets refused; size, count and exact-length mutants detected'
 # Same function-mode contract behavior through the unchanged C referee and OscRt.
 if [ ! -x build/omegese/omegese ] || [ ! -x build/omega_emit/omega_emit ]; then
     echo 'NOT_RUN contract C parity: build the comparison oracles' >&2

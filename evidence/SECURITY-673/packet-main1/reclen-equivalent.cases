@@ -1,0 +1,23 @@
+subst evidence/SECURITY-673/packet-main1/mut-reclen-from.txt evidence/SECURITY-673/packet-main1/mut-reclen-to.txt
+cc seed/omc/omc.om
+reclen-p03 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p03.bin - - 103
+reclen-p07 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p07.bin - - 103
+reclen-p15 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p15.bin - - 103
+reclen-trunc2 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 2
+reclen-trunc3 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 3
+reclen-trunc4 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 4
+reclen-trunc5 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 5
+reclen-trunc6 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 6
+reclen-trunc12 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 12
+reclen-trunc13 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 13
+reclen-trunc14 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 14
+reclen-trunc15 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 15
+reclen-trunc16 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 16
+reclen-trunc17 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 17
+reclen-trunc20 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 20
+reclen-trunc21 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 21
+reclen-trunc22 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 22
+reclen-trunc23 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 23
+reclen-trunc24 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 24
+reclen-trunc25 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 25
+reclen-trunc26 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 26

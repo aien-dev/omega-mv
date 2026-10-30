@@ -1,0 +1,26 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "4385185f574da5f429887ea1784c765d557adcbdc5031b0a5d8874ec3a4c5f55",
+          "last_commit": "",
+          "name": "packets",
+          "purpose": "Packed-list fixtures for #671: generated packet bytes (proven equal to packet-corpus.om), expect"
+        }
+      ],
+      "children_root": "sha256:10163324e4dd17137971842aefaef73b416bd76b96a6ce38c2b5ac2edade305e",
+      "compiled_at": "2026-10-30T14:50:35Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:4a75b97b504f993d3e35eee71e594753de7ee7718e6e5ff86a397b31f6ddd9dc",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 8,
+      "generated_at_commit": "62d1d0d668f897386a0e311374f8dbcc5c32dde8",
+      "source_tree": "sha256:ad6f63c333285d9aa935a6eb80a21de7845d33f8799ef41561ae1e681e506ba1"
+    }
+  },
+  "name": "security673",
+  "purpose": "Issue #671 packed-list hostile-ingress campaign: corpus generator, execprog consumer and OM-2 conductor cases run by seed/host/check.sh.",
+  "schema_version": "1.0.0"
+}

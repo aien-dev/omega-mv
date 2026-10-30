@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-30T14:50:35Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:4385185f574da5f429887ea1784c765d557adcbdc5031b0a5d8874ec3a4c5f55",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "62d1d0d668f897386a0e311374f8dbcc5c32dde8",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "name": "packets",
+  "purpose": "Packed-list fixtures for #671: generated packet bytes (proven equal to packet-corpus.om), expected echo output, and exact-once compiler substitutions for the bound mutants.",
+  "schema_version": "1.0.0"
+}
