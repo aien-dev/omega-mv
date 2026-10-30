@@ -1,0 +1,1 @@
+Write a function gcd_u32(a, b). The arguments a and b are unsigned 32-bit integers (u32) and the result is a u32. Return the greatest common divisor of a and b, with gcd_u32(a, 0) = a, gcd_u32(0, b) = b and gcd_u32(0, 0) = 0.

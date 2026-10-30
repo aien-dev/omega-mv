@@ -100,7 +100,9 @@ by the kernel until the container is closed; the driver must unmap before droppi
 without READ|MMAP; it never requests PROT_WRITE. `vfiomapw` additionally requires
 WRITE and is the only VFIO word that maps device memory writable. Host tests use an
 invalid fd and a memfd stand-in; the device path is exercised only in the QEMU bench
-of aien-dev/omega-gpu-driver, not on hardware.
+of aien-dev/omega-gpu-driver, not on hardware. All three words are AArch64 only: a
+`target x86linux` program that uses any of them is refused with error 25, because the
+x86 backend has no VFIO lowering.
 
 Kernel constants/layouts are from Linux asm-generic/unistd.h, mman-common.h and
 linux/mman.h. AArch64 encodings use seed/rung2/table.s2. The device request rule

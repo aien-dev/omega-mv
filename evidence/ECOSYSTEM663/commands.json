@@ -1,0 +1,20 @@
+{
+  "source_commit": "3a995ba8dace538c1532c747d829ca6e4a73582d",
+  "compiler": "/home/drakestapleton/workspace/omega-learning652-lead-L775/build/L775/toolchain/build/bootstrap/omc",
+  "compiler_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "commands": [
+    "sha256sum /home/drakestapleton/workspace/omega-learning652-lead-L775/build/L775/toolchain/build/bootstrap/omc",
+    "cat native/ecosystem663/metadata.om tests/ecosystem663/metadata-test.om > build/ecosystem663/metadata-test.om",
+    "quiet-build /home/drakestapleton/workspace/omega-learning652-lead-L775/build/L775/toolchain/build/bootstrap/omc < build/ecosystem663/metadata-test.om > build/ecosystem663/metadata-test.elf",
+    "chmod +x build/ecosystem663/metadata-test.elf",
+    "quiet-build build/ecosystem663/metadata-test.elf",
+    "readelf -h -l -d build/ecosystem663/metadata-test.elf",
+    "/usr/bin/time -v -o evidence/ECOSYSTEM663/shared-host-cost.txt quiet-build build/ecosystem663/metadata-test.elf"
+  ],
+  "mutant_procedure": "Feed each evidence/ECOSYSTEM663/mutant-{offset,generation,retirement}.om to the same exact compiler, separately save compile exit/stderr, execute only on compile success, and save native stdout/stderr/exit. All compiled0 and executed1.",
+  "boundary": "These are existing development commands. No new shell automation is delivered or represented as seeded native tooling.",
+  "hardware": "host CPU only, Linux7.0.0-1019-nvidia aarch64",
+  "model": null,
+  "dataset": null,
+  "retirement_count": 0
+}

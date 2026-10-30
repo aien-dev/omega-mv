@@ -1,0 +1,9 @@
+fn popcount_u32 x uint to uint
+c = uint 0
+v = x
+while gt v 0
+c = add c (and v 1)
+v = shr v 1
+end
+ret c
+end
