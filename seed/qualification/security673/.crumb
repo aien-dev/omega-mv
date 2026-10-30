@@ -3,21 +3,21 @@
     "generated": {
       "children": [
         {
-          "digest": "4385185f574da5f429887ea1784c765d557adcbdc5031b0a5d8874ec3a4c5f55",
-          "last_commit": "",
+          "digest": "474d06e1d689d1e6f6738a526ab4e5b8927a46349be8493d63d550f1440dcb7e",
+          "last_commit": "5d08c95e1",
           "name": "packets",
           "purpose": "Packed-list fixtures for #671: generated packet bytes (proven equal to packet-corpus.om), expect"
         }
       ],
-      "children_root": "sha256:10163324e4dd17137971842aefaef73b416bd76b96a6ce38c2b5ac2edade305e",
-      "compiled_at": "2026-10-30T14:50:35Z",
+      "children_root": "sha256:f41d6df2f8ad3022a730e903b841378e27265d8aa2553318ec209b4ede234b2b",
+      "compiled_at": "2026-10-30T16:03:36Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:4a75b97b504f993d3e35eee71e594753de7ee7718e6e5ff86a397b31f6ddd9dc",
+      "digest": "sha256:f42a5d7521a9596d35745563f002ba338a4503a00300ae67e1e9f8dd62df1d28",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 8,
-      "generated_at_commit": "62d1d0d668f897386a0e311374f8dbcc5c32dde8",
-      "source_tree": "sha256:ad6f63c333285d9aa935a6eb80a21de7845d33f8799ef41561ae1e681e506ba1"
+      "files": 35,
+      "generated_at_commit": "5d08c95e1adcc3c9f9e2e4e081746858c0d3927d",
+      "source_tree": "sha256:a5c9041b14c3da2d5101891c71ba5e80cb560700e8e74d372d928f83a34a9351"
     }
   },
   "name": "security673",
