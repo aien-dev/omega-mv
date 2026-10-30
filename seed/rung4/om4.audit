@@ -1,0 +1,3172 @@
+| 120 | 14000165  |   b START | b 0x60c |
+| 1548 | d2a01013  |   movz.x x19 0x80 1 | movz x19, #0x80, lsl #16 |
+| 1552 | d280000c  |   movz.x x12 0 0 | movz x12, #0x0 |
+| 1556 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 1560 | 8b0c0261  |   add.x x1 x19 x12 | add x1, x19, x12 |
+| 1564 | d2a01002  |   movz.x x2 0x80 1 | movz x2, #0x80, lsl #16 |
+| 1568 | cb0c0042  |   sub.x x2 x2 x12 | sub x2, x2, x12 |
+| 1572 | b4011342  |   cbz.x x2 E_FULL | cbz x2, 0x288c |
+| 1576 | d28007e8  |   movz.x x8 63 0 | movz x8, #0x3f |
+| 1580 | d4000001  |   svc 0 | svc #0x0 |
+| 1584 | f100001f  |   cmp.x.i x0 0 | subs xzr, x0, #0x0 |
+| 1588 | 54000080  |   b.eq RDDONE | b.eq 0x644  // b.none |
+| 1592 | 54010f6b  |   b.lt E_READ | b.lt 0x2824  // b.tstop |
+| 1596 | 8b00018c  |   add.x x12 x12 x0 | add x12, x12, x0 |
+| 1600 | 17fffff5  |   b RD | b 0x614 |
+| 1604 | 8b0c0272  |   add.x x18 x19 x12 | add x18, x19, x12 |
+| 1608 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 1612 | d280000a  |   movz.x x10 0 0 | movz x10, #0x0 |
+| 1616 | f900013f  |   str.x xzr x9 0 | str xzr, [x9] |
+| 1620 | 91002129  |   add.x.i x9 x9 8 | add x9, x9, #0x8 |
+| 1624 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 1628 | f100415f  |   cmp.x.i x10 16 | subs xzr, x10, #0x10 |
+| 1632 | 54ffff83  |   b.lo ST0 | b.cc 0x650  // b.lo, b.ul, b.last |
+| 1636 | aa1303ea  |   mov.x x10 x19 | orr x10, xzr, x19 |
+| 1640 | eb12015f  |   cmp.x x10 x18 | subs xzr, x10, x18 |
+| 1644 | 54000782  |   b.hs PS_DONE | b.cs 0x75c  // b.hs, b.nlast |
+| 1648 | 39400140  |   ldrb w0 x10 0 | ldrb w0, [x10] |
+| 1652 | 7100801f  |   cmp.w.i w0 32 | subs wzr, w0, #0x20 |
+| 1656 | 54000600  |   b.eq PS_ADV | b.eq 0x738  // b.none |
+| 1660 | 7100241f  |   cmp.w.i w0 9 | subs wzr, w0, #0x9 |
+| 1664 | 540005c0  |   b.eq PS_ADV | b.eq 0x738  // b.none |
+| 1668 | 7101981f  |   cmp.w.i w0 102 | subs wzr, w0, #0x66 |
+| 1672 | 540005c1  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1676 | 9100054c  |   add.x.i x12 x10 1 | add x12, x10, #0x1 |
+| 1680 | eb12019f  |   cmp.x x12 x18 | subs xzr, x12, x18 |
+| 1684 | 54000642  |   b.hs PS_DONE | b.cs 0x75c  // b.hs, b.nlast |
+| 1688 | 39400180  |   ldrb w0 x12 0 | ldrb w0, [x12] |
+| 1692 | 7101b81f  |   cmp.w.i w0 110 | subs wzr, w0, #0x6e |
+| 1696 | 54000501  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1700 | 9100058c  |   add.x.i x12 x12 1 | add x12, x12, #0x1 |
+| 1704 | aa0c03ed  |   mov.x x13 x12 | orr x13, xzr, x12 |
+| 1708 | eb12019f  |   cmp.x x12 x18 | subs xzr, x12, x18 |
+| 1712 | 54000562  |   b.hs PS_DONE | b.cs 0x75c  // b.hs, b.nlast |
+| 1716 | 39400180  |   ldrb w0 x12 0 | ldrb w0, [x12] |
+| 1720 | 7100801f  |   cmp.w.i w0 32 | subs wzr, w0, #0x20 |
+| 1724 | 54000060  |   b.eq PS_B1 | b.eq 0x6c8  // b.none |
+| 1728 | 7100241f  |   cmp.w.i w0 9 | subs wzr, w0, #0x9 |
+| 1732 | 54000061  |   b.ne PS_M | b.ne 0x6d0  // b.any |
+| 1736 | 9100058c  |   add.x.i x12 x12 1 | add x12, x12, #0x1 |
+| 1740 | 17fffff8  |   b PS_B | b 0x6ac |
+| 1744 | eb0d019f  |   cmp.x x12 x13 | subs xzr, x12, x13 |
+| 1748 | 54000360  |   b.eq PS_SKIP | b.eq 0x740  // b.none |
+| 1752 | 9100118d  |   add.x.i x13 x12 4 | add x13, x12, #0x4 |
+| 1756 | eb1201bf  |   cmp.x x13 x18 | subs xzr, x13, x18 |
+| 1760 | 54000308  |   b.hi PS_SKIP | b.hi 0x740  // b.pmore |
+| 1764 | 39400180  |   ldrb w0 x12 0 | ldrb w0, [x12] |
+| 1768 | 7101b41f  |   cmp.w.i w0 109 | subs wzr, w0, #0x6d |
+| 1772 | 540002a1  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1776 | 39400580  |   ldrb w0 x12 1 | ldrb w0, [x12, #1] |
+| 1780 | 7101841f  |   cmp.w.i w0 97 | subs wzr, w0, #0x61 |
+| 1784 | 54000241  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1788 | 39400980  |   ldrb w0 x12 2 | ldrb w0, [x12, #2] |
+| 1792 | 7101a41f  |   cmp.w.i w0 105 | subs wzr, w0, #0x69 |
+| 1796 | 540001e1  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1800 | 39400d80  |   ldrb w0 x12 3 | ldrb w0, [x12, #3] |
+| 1804 | 7101b81f  |   cmp.w.i w0 110 | subs wzr, w0, #0x6e |
+| 1808 | 54000181  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1812 | eb1201bf  |   cmp.x x13 x18 | subs xzr, x13, x18 |
+| 1816 | 54000082  |   b.hs PS_YES | b.cs 0x728  // b.hs, b.nlast |
+| 1820 | 394001a0  |   ldrb w0 x13 0 | ldrb w0, [x13] |
+| 1824 | 7100801f  |   cmp.w.i w0 32 | subs wzr, w0, #0x20 |
+| 1828 | 540000e8  |   b.hi PS_SKIP | b.hi 0x740  // b.pmore |
+| 1832 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 1836 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 1840 | f9001920  |   str.x x0 x9 6 | str x0, [x9, #48] |
+| 1844 | 1400000a  |   b PS_DONE | b 0x75c |
+| 1848 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 1852 | 17ffffcb  |   b PS_LINE | b 0x668 |
+| 1856 | eb12015f  |   cmp.x x10 x18 | subs xzr, x10, x18 |
+| 1860 | 540000c2  |   b.hs PS_DONE | b.cs 0x75c  // b.hs, b.nlast |
+| 1864 | 39400140  |   ldrb w0 x10 0 | ldrb w0, [x10] |
+| 1868 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 1872 | 7100281f  |   cmp.w.i w0 10 | subs wzr, w0, #0xa |
+| 1876 | 54ffff61  |   b.ne PS_SKIP | b.ne 0x740  // b.any |
+| 1880 | 17ffffc4  |   b PS_LINE | b 0x668 |
+| 1884 | d2a02015  |   movz.x x21 0x100 1 | movz x21, #0x100, lsl #16 |
+| 1888 | 9102d2b4  |   add.x.i x20 x21 180 | add x20, x21, #0xb4 |
+| 1892 | d2800036  |   movz.x x22 1 0 | movz x22, #0x1 |
+| 1896 | d2800017  |   movz.x x23 0 0 | movz x23, #0x0 |
+| 1900 | d2800018  |   movz.x x24 0 0 | movz x24, #0x0 |
+| 1904 | d2a03039  |   movz.x x25 0x181 1 | movz x25, #0x181, lsl #16 |
+| 1908 | d2a0305a  |   movz.x x26 0x182 1 | movz x26, #0x182, lsl #16 |
+| 1912 | d280001b  |   movz.x x27 0 0 | movz x27, #0x0 |
+| 1916 | d280001c  |   movz.x x28 0 0 | movz x28, #0x0 |
+| 1920 | 10ffea5d  |   adr x29 POOLC | adr x29, 0x4c8 |
+| 1924 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 1928 | f940352a  |   ldr.x x10 x9 13 | ldr x10, [x9, #104] |
+| 1932 | b400008a  |   cbz.x x10 NS_INIT | cbz x10, 0x79c |
+| 1936 | f100055f  |   cmp.x.i x10 1 | subs xzr, x10, #0x1 |
+| 1940 | 54000080  |   b.eq NS_LINE | b.eq 0x7a4  // b.none |
+| 1944 | 14000015  |   b BODY_LINE | b 0x7ec |
+| 1948 | d280002a  |   movz.x x10 1 0 | movz x10, #0x1 |
+| 1952 | f900352a  |   str.x x10 x9 13 | str x10, [x9, #104] |
+| 1956 | 94000756  |   bl TOK | bl 0x24fc |
+| 1960 | b4ffffe0  |   cbz.x x0 NS_LINE | cbz x0, 0x7a4 |
+| 1964 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 1968 | 54000120  |   b.eq NS_DONE | b.eq 0x7d4  // b.none |
+| 1972 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 1976 | 540007e1  |   b.ne S_NOTE | b.ne 0x8b4  // b.any |
+| 1980 | f100085f  |   cmp.x.i x2 2 | subs xzr, x2, #0x2 |
+| 1984 | 540007a1  |   b.ne S_NOTE | b.ne 0x8b4  // b.any |
+| 1988 | d28dccc9  |   movz.x x9 0x6e66 0 | movz x9, #0x6e66 |
+| 1992 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 1996 | 540009c0  |   b.eq S_FN | b.eq 0x904  // b.none |
+| 2000 | 14000039  |   b S_NOTE | b 0x8b4 |
+| 2004 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2008 | d280004a  |   movz.x x10 2 0 | movz x10, #0x2 |
+| 2012 | f900352a  |   str.x x10 x9 13 | str x10, [x9, #104] |
+| 2016 | f9000d3f  |   str.x xzr x9 3 | str xzr, [x9, #24] |
+| 2020 | d2a01013  |   movz.x x19 0x80 1 | movz x19, #0x80, lsl #16 |
+| 2024 | 17ffffdd  |   b PS_DONE | b 0x75c |
+| 2028 | aa1c03f8  |   mov.x x24 x28 | orr x24, xzr, x28 |
+| 2032 | 94000743  |   bl TOK | bl 0x24fc |
+| 2036 | b4fffc80  |   cbz.x x0 STMT | cbz x0, 0x784 |
+| 2040 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 2044 | 54007620  |   b.eq S_EOF | b.eq 0x16c0  // b.none |
+| 2048 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 2052 | 540104c1  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 2056 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 2060 | 540171e8  |   b.hi S_LONG | b.hi 0x3648  // b.pmore |
+| 2064 | aa0103ec  |   mov.x x12 x1 | orr x12, xzr, x1 |
+| 2068 | 940007b5  |   bl KW | bl 0x26e8 |
+| 2072 | f1014c1f  |   cmp.x.i x0 83 | subs xzr, x0, #0x53 |
+| 2076 | 540004c0  |   b.eq S_NOTE | b.eq 0x8b4  // b.none |
+| 2080 | f101001f  |   cmp.x.i x0 64 | subs xzr, x0, #0x40 |
+| 2084 | 54000700  |   b.eq S_FN | b.eq 0x904  // b.none |
+| 2088 | b40003db  |   cbz.x x27 S_TOP | cbz x27, 0x8a0 |
+| 2092 | f101081f  |   cmp.x.i x0 66 | subs xzr, x0, #0x42 |
+| 2096 | 54006640  |   b.eq S_END | b.eq 0x14f8  // b.none |
+| 2100 | f101101f  |   cmp.x.i x0 68 | subs xzr, x0, #0x44 |
+| 2104 | 540043a0  |   b.eq S_ELSE | b.eq 0x10ac  // b.none |
+| 2108 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2112 | f940152a  |   ldr.x x10 x9 5 | ldr x10, [x9, #40] |
+| 2116 | b501654a  |   cbnz.x x10 E_DEAD | cbnz x10, 0x34ec |
+| 2120 | b4000440  |   cbz.x x0 S_NAME | cbz x0, 0x8d0 |
+| 2124 | f1010c1f  |   cmp.x.i x0 67 | subs xzr, x0, #0x43 |
+| 2128 | 540041a0  |   b.eq S_IF | b.eq 0x1084  // b.none |
+| 2132 | f101141f  |   cmp.x.i x0 69 | subs xzr, x0, #0x45 |
+| 2136 | 540045a0  |   b.eq S_WHILE | b.eq 0x110c  // b.none |
+| 2140 | f1011c1f  |   cmp.x.i x0 71 | subs xzr, x0, #0x47 |
+| 2144 | 54004fa0  |   b.eq S_FOR | b.eq 0x1254  // b.none |
+| 2148 | f101201f  |   cmp.x.i x0 72 | subs xzr, x0, #0x48 |
+| 2152 | 54002d40  |   b.eq S_RET | b.eq 0xe10  // b.none |
+| 2156 | f101401f  |   cmp.x.i x0 80 | subs xzr, x0, #0x50 |
+| 2160 | 54003120  |   b.eq S_PUT | b.eq 0xe94  // b.none |
+| 2164 | f101441f  |   cmp.x.i x0 81 | subs xzr, x0, #0x51 |
+| 2168 | 5400ff60  |   b.eq E_SUBSET  | b.eq 0x2864  // b.none |
+| 2172 | f101481f  |   cmp.x.i x0 82 | subs xzr, x0, #0x52 |
+| 2176 | 54002ea0  |   b.eq S_EXIT | b.eq 0xe54  // b.none |
+| 2180 | f101341f  |   cmp.x.i x0 77 | subs xzr, x0, #0x4d |
+| 2184 | 5400fee0  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 2188 | f101381f  |   cmp.x.i x0 78 | subs xzr, x0, #0x4e |
+| 2192 | 5400fea0  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 2196 | f1013c1f  |   cmp.x.i x0 79 | subs xzr, x0, #0x4f |
+| 2200 | 5400fe60  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 2204 | 14000800  |   b E_SYNTAX | b 0x289c |
+| 2208 | f101381f  |   cmp.x.i x0 78 | subs xzr, x0, #0x4e |
+| 2212 | 540034e0  |   b.eq S_GLOBAL | b.eq 0xf40  // b.none |
+| 2216 | f1013c1f  |   cmp.x.i x0 79 | subs xzr, x0, #0x4f |
+| 2220 | 540038e0  |   b.eq S_TEXT | b.eq 0xfc8  // b.none |
+| 2224 | 140007fb  |   b E_SYNTAX | b 0x289c |
+| 2228 | eb12027f  |   cmp.x x19 x18 | subs xzr, x19, x18 |
+| 2232 | 54fff662  |   b.hs STMT | b.cs 0x784  // b.hs, b.nlast |
+| 2236 | 39400260  |   ldrb w0 x19 0 | ldrb w0, [x19] |
+| 2240 | 7100281f  |   cmp.w.i w0 10 | subs wzr, w0, #0xa |
+| 2244 | 54fff600  |   b.eq STMT | b.eq 0x784  // b.none |
+| 2248 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 2252 | 17fffffa  |   b S_NOTE | b 0x8b4 |
+| 2256 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 2260 | 94000a9a  |   bl FINDNAME | bl 0x333c |
+| 2264 | b5001360  |   cbnz.x x0 S_ASSIGN | cbnz x0, 0xb44 |
+| 2268 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 2272 | 94000b3c  |   bl FINDFN | bl 0x35d0 |
+| 2276 | b4001300  |   cbz.x x0 S_ASSIGN | cbz x0, 0xb44 |
+| 2280 | b9401009  |   ldr.w w9 x0 4 | ldr w9, [x0, #16] |
+| 2284 | f100293f  |   cmp.x.i x9 10 | subs xzr, x9, #0xa |
+| 2288 | 5400fb21  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 2292 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 2296 | 94000918  |   bl CALL | bl 0x2d58 |
+| 2300 | 94000793  |   bl EOL | bl 0x2748 |
+| 2304 | 17ffffa1  |   b STMT | b 0x784 |
+| 2308 | b500fc9b  |   cbnz.x x27 E_BLOCK | cbnz x27, 0x2894 |
+| 2312 | 940006fd  |   bl TOK | bl 0x24fc |
+| 2316 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 2320 | 5400fc61  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 2324 | f100fc5f  |   cmp.x.i x2 63 | subs xzr, x2, #0x3f |
+| 2328 | 5400fb68  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 2332 | aa0103ec  |   mov.x x12 x1 | orr x12, xzr, x1 |
+| 2336 | 94000772  |   bl KW | bl 0x26e8 |
+| 2340 | b500fbc0  |   cbnz.x x0 E_SYNTAX | cbnz x0, 0x289c |
+| 2344 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 2348 | cb020263  |   sub.x x3 x19 x2 | sub x3, x19, x2 |
+| 2352 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2356 | f940352a  |   ldr.x x10 x9 13 | ldr x10, [x9, #104] |
+| 2360 | f100095f  |   cmp.x.i x10 2 | subs xzr, x10, #0x2 |
+| 2364 | 540002a0  |   b.eq FN_KNOWN | b.eq 0x990  // b.none |
+| 2368 | 94000b18  |   bl NEWNAME | bl 0x35a0 |
+| 2372 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2376 | f940092a  |   ldr.x x10 x9 2 | ldr x10, [x9, #16] |
+| 2380 | f108015f  |   cmp.x.i x10 512 | subs xzr, x10, #0x200 |
+| 2384 | 5400f9e2  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 2388 | 9100054b  |   add.x.i x11 x10 1 | add x11, x10, #0x1 |
+| 2392 | f900092b  |   str.x x11 x9 2 | str x11, [x9, #16] |
+| 2396 | d2a0308b  |   movz.x x11 0x184 1 | movz x11, #0x184, lsl #16 |
+| 2400 | d379e14a  |   ubfm.x x10 x10 57 56 | ubfm x10, x10, #57, #56 |
+| 2404 | 8b0a016b  |   add.x x11 x11 x10 | add x11, x11, x10 |
+| 2408 | f9000d2b  |   str.x x11 x9 3 | str x11, [x9, #24] |
+| 2412 | f900252b  |   str.x x11 x9 9 | str x11, [x9, #72] |
+| 2416 | f900016c  |   str.x x12 x11 0 | str x12, [x11] |
+| 2420 | f9000574  |   str.x x20 x11 1 | str x20, [x11, #8] |
+| 2424 | f900097f  |   str.x xzr x11 2 | str xzr, [x11, #16] |
+| 2428 | b9007962  |   str.w w2 x11 30 | str w2, [x11, #120] |
+| 2432 | d2a01010  |   movz.x x16 0x80 1 | movz x16, #0x80, lsl #16 |
+| 2436 | cb100070  |   sub.x x16 x3 x16 | sub x16, x3, x16 |
+| 2440 | b9007d70  |   str.w w16 x11 31 | str w16, [x11, #124] |
+| 2444 | 14000007  |   b FN_SCOPE | b 0x9a8 |
+| 2448 | 94000b10  |   bl FINDFN | bl 0x35d0 |
+| 2452 | b400f840  |   cbz.x x0 E_SYNTAX | cbz x0, 0x289c |
+| 2456 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2460 | f9000d20  |   str.x x0 x9 3 | str x0, [x9, #24] |
+| 2464 | f9002520  |   str.x x0 x9 9 | str x0, [x9, #72] |
+| 2468 | f9000414  |   str.x x20 x0 1 | str x20, [x0, #8] |
+| 2472 | f9400537  |   ldr.x x23 x9 1 | ldr x23, [x9, #8] |
+| 2476 | d280000d  |   movz.x x13 0 0 | movz x13, #0x0 |
+| 2480 | 940006d3  |   bl TOK | bl 0x24fc |
+| 2484 | b400f440  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 2488 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 2492 | 5400f701  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 2496 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 2500 | 5400f608  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 2504 | aa0103ec  |   mov.x x12 x1 | orr x12, xzr, x1 |
+| 2508 | 94000747  |   bl KW | bl 0x26e8 |
+| 2512 | f101041f  |   cmp.x.i x0 65 | subs xzr, x0, #0x41 |
+| 2516 | 54000720  |   b.eq FN_TO | b.eq 0xab8  // b.none |
+| 2520 | b500f620  |   cbnz.x x0 E_SYNTAX | cbnz x0, 0x289c |
+| 2524 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 2528 | 94000af0  |   bl NEWNAME | bl 0x35a0 |
+| 2532 | f10019bf  |   cmp.x.i x13 6 | subs xzr, x13, #0x6 |
+| 2536 | 5400f3e2  |   b.hs E_SUBSET | b.cs 0x2864  // b.hs, b.nlast |
+| 2540 | d100c3ff  |   sub.x.i sp sp 48 | sub sp, sp, #0x30 |
+| 2544 | f90003ec  |   str.x x12 sp 0 | str x12, [sp] |
+| 2548 | 940006c2  |   bl TOK | bl 0x24fc |
+| 2552 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 2556 | 5400f501  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 2560 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 2564 | 5400f4c8  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 2568 | 94000738  |   bl KW | bl 0x26e8 |
+| 2572 | f100e41f  |   cmp.x.i x0 57 | subs xzr, x0, #0x39 |
+| 2576 | 54000140  |   b.eq FN_ARR | b.eq 0xa38  // b.none |
+| 2580 | f100e81f  |   cmp.x.i x0 58 | subs xzr, x0, #0x3a |
+| 2584 | 54000100  |   b.eq FN_ARR | b.eq 0xa38  // b.none |
+| 2588 | d1000409  |   sub.x.i x9 x0 1 | sub x9, x0, #0x1 |
+| 2592 | f100213f  |   cmp.x.i x9 8 | subs xzr, x9, #0x8 |
+| 2596 | 5400f3c8  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 2600 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 2604 | f9000bff  |   str.x xzr sp 2 | str xzr, [sp, #16] |
+| 2608 | f9000fff  |   str.x xzr sp 3 | str xzr, [sp, #24] |
+| 2612 | 1400000c  |   b FN_ADD | b 0xa64 |
+| 2616 | d100dc00  |   sub.x.i x0 x0 55 | sub x0, x0, #0x37 |
+| 2620 | f9000fe0  |   str.x x0 sp 3 | str x0, [sp, #24] |
+| 2624 | 94000733  |   bl TYPEWORD | bl 0x270c |
+| 2628 | 94000a66  |   bl ELEMTYPE | bl 0x33dc |
+| 2632 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 2636 | 940006ac  |   bl TOK | bl 0x24fc |
+| 2640 | b400ef60  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 2644 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 2648 | 5400f221  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 2652 | 94000a63  |   bl ARRLEN | bl 0x33e8 |
+| 2656 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 2660 | 10ffd329  |   adr x9 POOLC | adr x9, 0x4c8 |
+| 2664 | 386d6922  |   ldrb.r w2 x9 x13 | ldrb w2, [x9, x13] |
+| 2668 | f94003e1  |   ldr.x x1 sp 0 | ldr x1, [sp] |
+| 2672 | f94007e3  |   ldr.x x3 sp 1 | ldr x3, [sp, #8] |
+| 2676 | f9400be4  |   ldr.x x4 sp 2 | ldr x4, [sp, #16] |
+| 2680 | f9400fe5  |   ldr.x x5 sp 3 | ldr x5, [sp, #24] |
+| 2684 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 2688 | 94000a3d  |   bl ADDNAME | bl 0x3374 |
+| 2692 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2696 | f9400d2b  |   ldr.x x11 x9 3 | ldr x11, [x9, #24] |
+| 2700 | d37cedaa  |   ubfm.x x10 x13 60 59 | ubfm x10, x13, #60, #59 |
+| 2704 | 8b0a016b  |   add.x x11 x11 x10 | add x11, x11, x10 |
+| 2708 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 2712 | b9001960  |   str.w w0 x11 6 | str w0, [x11, #24] |
+| 2716 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 2720 | b9001d60  |   str.w w0 x11 7 | str w0, [x11, #28] |
+| 2724 | f9400fe0  |   ldr.x x0 sp 3 | ldr x0, [sp, #24] |
+| 2728 | b9002160  |   str.w w0 x11 8 | str w0, [x11, #32] |
+| 2732 | 9100c3ff  |   add.x.i sp sp 48 | add sp, sp, #0x30 |
+| 2736 | 910005ad  |   add.x.i x13 x13 1 | add x13, x13, #0x1 |
+| 2740 | 17ffffbf  |   b FN_P | b 0x9b0 |
+| 2744 | 94000691  |   bl TOK | bl 0x24fc |
+| 2748 | b400ec00  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 2752 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 2756 | 5400eec1  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 2760 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 2764 | 5400ee88  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 2768 | 94000706  |   bl KW | bl 0x26e8 |
+| 2772 | f101301f  |   cmp.x.i x0 76 | subs xzr, x0, #0x4c |
+| 2776 | 540000c0  |   b.eq FN_VOID | b.eq 0xaf0  // b.none |
+| 2780 | d1000409  |   sub.x.i x9 x0 1 | sub x9, x0, #0x1 |
+| 2784 | f100213f  |   cmp.x.i x9 8 | subs xzr, x9, #0x8 |
+| 2788 | 5400edc8  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 2792 | aa0003fb  |   mov.x x27 x0 | orr x27, xzr, x0 |
+| 2796 | 14000002  |   b FN_T2 | b 0xaf4 |
+| 2800 | d280015b  |   movz.x x27 10 0 | movz x27, #0xa |
+| 2804 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2808 | f9400d2b  |   ldr.x x11 x9 3 | ldr x11, [x9, #24] |
+| 2812 | b900117b  |   str.w w27 x11 4 | str w27, [x11, #16] |
+| 2816 | b900156d  |   str.w w13 x11 5 | str w13, [x11, #20] |
+| 2820 | f900113f  |   str.x xzr x9 4 | str xzr, [x9, #32] |
+| 2824 | f900153f  |   str.x xzr x9 5 | str xzr, [x9, #40] |
+| 2828 | 10ffcdfd  |   adr x29 POOLC | adr x29, 0x4c8 |
+| 2832 | 8b0d03bd  |   add.x x29 x29 x13 | add x29, x29, x13 |
+| 2836 | d2800018  |   movz.x x24 0 0 | movz x24, #0x0 |
+| 2840 | d280001c  |   movz.x x28 0 0 | movz x28, #0x0 |
+| 2844 | d2a03039  |   movz.x x25 0x181 1 | movz x25, #0x181, lsl #16 |
+| 2848 | d2a0305a  |   movz.x x26 0x182 1 | movz x26, #0x182, lsl #16 |
+| 2852 | 94000709  |   bl EOL | bl 0x2748 |
+| 2856 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 2860 | f940352a  |   ldr.x x10 x9 13 | ldr x10, [x9, #104] |
+| 2864 | f100055f  |   cmp.x.i x10 1 | subs xzr, x10, #0x1 |
+| 2868 | 54ffe281  |   b.ne STMT | b.ne 0x784  // b.any |
+| 2872 | d280001b  |   movz.x x27 0 0 | movz x27, #0x0 |
+| 2876 | d2800017  |   movz.x x23 0 0 | movz x23, #0x0 |
+| 2880 | 17ffff11  |   b STMT | b 0x784 |
+| 2884 | d10103ff  |   sub.x.i sp sp 64 | sub sp, sp, #0x40 |
+| 2888 | f90003ec  |   str.x x12 sp 0 | str x12, [sp] |
+| 2892 | 9400066c  |   bl TOK | bl 0x24fc |
+| 2896 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 2900 | aa0103e4  |   mov.x x4 x1 | orr x4, xzr, x1 |
+| 2904 | aa0203e5  |   mov.x x5 x2 | orr x5, xzr, x2 |
+| 2908 | f100047f  |   cmp.x.i x3 1 | subs xzr, x3, #0x1 |
+| 2912 | 54000161  |   b.ne SA1 | b.ne 0xb8c  // b.any |
+| 2916 | f10020bf  |   cmp.x.i x5 8 | subs xzr, x5, #0x8 |
+| 2920 | 54000128  |   b.hi SA1 | b.hi 0xb8c  // b.pmore |
+| 2924 | aa0403e1  |   mov.x x1 x4 | orr x1, xzr, x4 |
+| 2928 | 940006de  |   bl KW | bl 0x26e8 |
+| 2932 | f101241f  |   cmp.x.i x0 73 | subs xzr, x0, #0x49 |
+| 2936 | 540000a1  |   b.ne SA1 | b.ne 0xb8c  // b.any |
+| 2940 | 94000660  |   bl TOK | bl 0x24fc |
+| 2944 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 2948 | aa0103e4  |   mov.x x4 x1 | orr x4, xzr, x1 |
+| 2952 | aa0203e5  |   mov.x x5 x2 | orr x5, xzr, x2 |
+| 2956 | f94003e1  |   ldr.x x1 sp 0 | ldr x1, [sp] |
+| 2960 | 940009eb  |   bl FINDNAME | bl 0x333c |
+| 2964 | b40001c0  |   cbz.x x0 SA_NEW | cbz x0, 0xbcc |
+| 2968 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 2972 | b500e5c9  |   cbnz.x x9 E_TYPE | cbnz x9, 0x2854 |
+| 2976 | b9400801  |   ldr.w w1 x0 2 | ldr w1, [x0, #8] |
+| 2980 | f90007e1  |   str.x x1 sp 1 | str x1, [sp, #8] |
+| 2984 | b9400c00  |   ldr.w w0 x0 3 | ldr w0, [x0, #12] |
+| 2988 | f9000be0  |   str.x x0 sp 2 | str x0, [sp, #16] |
+| 2992 | 94000329  |   bl VALTOK | bl 0x1854 |
+| 2996 | f9400be9  |   ldr.x x9 sp 2 | ldr x9, [sp, #16] |
+| 3000 | eb09005f  |   cmp.x x2 x9 | subs xzr, x2, x9 |
+| 3004 | 5400e4c1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 3008 | f94007e3  |   ldr.x x3 sp 1 | ldr x3, [sp, #8] |
+| 3012 | 940005cd  |   bl FORCE | bl 0x22f8 |
+| 3016 | 1400001f  |   b SA_END | b 0xc44 |
+| 3020 | f94003e1  |   ldr.x x1 sp 0 | ldr x1, [sp] |
+| 3024 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 3028 | 94000a7f  |   bl FINDFN | bl 0x35d0 |
+| 3032 | b500e4a0  |   cbnz.x x0 E_TWICE | cbnz x0, 0x286c |
+| 3036 | f100047f  |   cmp.x.i x3 1 | subs xzr, x3, #0x1 |
+| 3040 | 540000e1  |   b.ne SA2 | b.ne 0xbfc  // b.any |
+| 3044 | f10020bf  |   cmp.x.i x5 8 | subs xzr, x5, #0x8 |
+| 3048 | 540000a8  |   b.hi SA2 | b.hi 0xbfc  // b.pmore |
+| 3052 | aa0403e1  |   mov.x x1 x4 | orr x1, xzr, x4 |
+| 3056 | 940006be  |   bl KW | bl 0x26e8 |
+| 3060 | f101501f  |   cmp.x.i x0 84 | subs xzr, x0, #0x54 |
+| 3064 | 540002c0  |   b.eq SA_ARR | b.eq 0xc50  // b.none |
+| 3068 | 940006da  |   bl ALLOC | bl 0x2764 |
+| 3072 | aa1803fc  |   mov.x x28 x24 | orr x28, xzr, x24 |
+| 3076 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 3080 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 3084 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 3088 | 94000311  |   bl VALTOK | bl 0x1854 |
+| 3092 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 3096 | 5400e2e0  |   b.eq E_BARE | b.eq 0x2874  // b.none |
+| 3100 | f9000be2  |   str.x x2 sp 2 | str x2, [sp, #16] |
+| 3104 | f94007e3  |   ldr.x x3 sp 1 | ldr x3, [sp, #8] |
+| 3108 | 940005b5  |   bl FORCE | bl 0x22f8 |
+| 3112 | f94003e1  |   ldr.x x1 sp 0 | ldr x1, [sp] |
+| 3116 | f94007e2  |   ldr.x x2 sp 1 | ldr x2, [sp, #8] |
+| 3120 | f9400be3  |   ldr.x x3 sp 2 | ldr x3, [sp, #16] |
+| 3124 | d2800004  |   movz.x x4 0 0 | movz x4, #0x0 |
+| 3128 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |
+| 3132 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 3136 | 940009cd  |   bl ADDNAME | bl 0x3374 |
+| 3140 | 910103ff  |   add.x.i sp sp 64 | add sp, sp, #0x40 |
+| 3144 | 940006c0  |   bl EOL | bl 0x2748 |
+| 3148 | 17fffece  |   b STMT | b 0x784 |
+| 3152 | d2a03029  |   movz.x x9 0x181 1 | movz x9, #0x181, lsl #16 |
+| 3156 | eb09033f  |   cmp.x x25 x9 | subs xzr, x25, x9 |
+| 3160 | 5400e061  |   b.ne E_SUBSET | b.ne 0x2864  // b.any |
+| 3164 | 940006ac  |   bl TYPEWORD | bl 0x270c |
+| 3168 | 940009df  |   bl ELEMTYPE | bl 0x33dc |
+| 3172 | f9000be0  |   str.x x0 sp 2 | str x0, [sp, #16] |
+| 3176 | 94000625  |   bl TOK | bl 0x24fc |
+| 3180 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 3184 | 5400e161  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 3188 | 940009dd  |   bl ARRLEN | bl 0x33e8 |
+| 3192 | f9000fe1  |   str.x x1 sp 3 | str x1, [sp, #24] |
+| 3196 | f9400be2  |   ldr.x x2 sp 2 | ldr x2, [sp, #16] |
+| 3200 | 10ffc3a9  |   adr x9 TLOG | adr x9, 0x4f4 |
+| 3204 | 38626929  |   ldrb.r w9 x9 x2 | ldrb w9, [x9, x2] |
+| 3208 | 9ac92021  |   lslv.x x1 x1 x9 | lslv x1, x1, x9 |
+| 3212 | 91003c21  |   add.x.i x1 x1 15 | add x1, x1, #0xf |
+| 3216 | d344fc21  |   ubfm.x x1 x1 4 63 | ubfm x1, x1, #4, #63 |
+| 3220 | d37cec21  |   ubfm.x x1 x1 60 59 | ubfm x1, x1, #60, #59 |
+| 3224 | f90013e1  |   str.x x1 sp 4 | str x1, [sp, #32] |
+| 3228 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 3232 | f940112a  |   ldr.x x10 x9 4 | ldr x10, [x9, #32] |
+| 3236 | 8b01014a  |   add.x x10 x10 x1 | add x10, x10, x1 |
+| 3240 | d2a0080b  |   movz.x x11 0x40 1 | movz x11, #0x40, lsl #16 |
+| 3244 | eb0b015f  |   cmp.x x10 x11 | subs xzr, x10, x11 |
+| 3248 | 54014368  |   b.hi E_TOOBIG | b.hi 0x351c  // b.pmore |
+| 3252 | f900112a  |   str.x x10 x9 4 | str x10, [x9, #32] |
+| 3256 | 940006ab  |   bl ALLOC | bl 0x2764 |
+| 3260 | aa1803fc  |   mov.x x28 x24 | orr x28, xzr, x24 |
+| 3264 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 3268 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 3272 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 3276 | 940002d8  |   bl VAL | bl 0x182c |
+| 3280 | f9400be9  |   ldr.x x9 sp 2 | ldr x9, [sp, #16] |
+| 3284 | eb09005f  |   cmp.x x2 x9 | subs xzr, x2, x9 |
+| 3288 | 5400dbe1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 3292 | 94000575  |   bl MATREG | bl 0x22b0 |
+| 3296 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 3300 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 3304 | 940009d4  |   bl SPSUB | bl 0x3438 |
+| 3308 | 940009ea  |   bl STKCHK | bl 0x3494 |
+| 3312 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 3316 | f2b22000  |   movk.x x0 0x9100 1  | movk x0, #0x9100, lsl #16 |
+| 3320 | f94007e1  |   ldr.x x1 sp 1 | ldr x1, [sp, #8] |
+| 3324 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3328 | 940006a3  |   bl EMIT | bl 0x278c |
+| 3332 | 94000698  |   bl ALLOC | bl 0x2764 |
+| 3336 | f9001be0  |   str.x x0 sp 6 | str x0, [sp, #48] |
+| 3340 | d2ba5009  |   movz.x x9 0xd280 1  | movz x9, #0xd280, lsl #16 |
+| 3344 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 3348 | 9400069e  |   bl EMIT | bl 0x278c |
+| 3352 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 3356 | d281ffe9  |   movz.x x9 4095 0 | movz x9, #0xfff |
+| 3360 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 3364 | 540000a9  |   b.ls SAA1 | b.ls 0xd38  // b.plast |
+| 3368 | 9400068f  |   bl ALLOC | bl 0x2764 |
+| 3372 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 3376 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 3380 | 94000590  |   bl MATCONST | bl 0x2374 |
+| 3384 | f90013f4  |   str.x x20 sp 4 | str x20, [sp, #32] |
+| 3388 | f9400be9  |   ldr.x x9 sp 2 | ldr x9, [sp, #16] |
+| 3392 | 10ffbfaa  |   adr x10 STOP | adr x10, 0x534 |
+| 3396 | b8697940  |   ldr.w.r w0 x10 x9 | ldr w0, [x10, x9, lsl #2] |
+| 3400 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 3404 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3408 | f94007e1  |   ldr.x x1 sp 1 | ldr x1, [sp, #8] |
+| 3412 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 3416 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3420 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 3424 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 3428 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3432 | 94000689  |   bl EMIT | bl 0x278c |
+| 3436 | d2808000  |   movz.x x0 0x0400 0 | movz x0, #0x400 |
+| 3440 | f2b22000  |   movk.x x0 0x9100 1  | movk x0, #0x9100, lsl #16 |
+| 3444 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 3448 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3452 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 3456 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3460 | 94000682  |   bl EMIT | bl 0x278c |
+| 3464 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 3468 | d281ffe9  |   movz.x x9 4095 0 | movz x9, #0xfff |
+| 3472 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 3476 | 540000c8  |   b.hi SAA2 | b.hi 0xdac  // b.pmore |
+| 3480 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 3484 | f2be2000  |   movk.x x0 0xf100 1  | movk x0, #0xf100, lsl #16 |
+| 3488 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 3492 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3496 | 14000006  |   b SAA3 | b 0xdc0 |
+| 3500 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 3504 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 3508 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 3512 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 3516 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3520 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 3524 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 3528 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 3532 | 94000670  |   bl EMIT | bl 0x278c |
+| 3536 | f94013e0  |   ldr.x x0 sp 4 | ldr x0, [sp, #32] |
+| 3540 | cb140002  |   sub.x x2 x0 x20 | sub x2, x0, x20 |
+| 3544 | d3425042  |   ubfm.x x2 x2 2 20 | ubfm x2, x2, #2, #20 |
+| 3548 | d37be842  |   ubfm.x x2 x2 59 58 | ubfm x2, x2, #59, #58 |
+| 3552 | d2800060  |   movz.x x0 0x0003 0 | movz x0, #0x3 |
+| 3556 | f2aa8000  |   movk.x x0 0x5400 1  | movk x0, #0x5400, lsl #16 |
+| 3560 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 3564 | 94000668  |   bl EMIT | bl 0x278c |
+| 3568 | f94003e1  |   ldr.x x1 sp 0 | ldr x1, [sp] |
+| 3572 | f94007e2  |   ldr.x x2 sp 1 | ldr x2, [sp, #8] |
+| 3576 | f9400be3  |   ldr.x x3 sp 2 | ldr x3, [sp, #16] |
+| 3580 | f9400fe4  |   ldr.x x4 sp 3 | ldr x4, [sp, #24] |
+| 3584 | d2800025  |   movz.x x5 1 0 | movz x5, #0x1 |
+| 3588 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 3592 | 9400095b  |   bl ADDNAME | bl 0x3374 |
+| 3596 | 17ffff8e  |   b SA_END | b 0xc44 |
+| 3600 | f1002b7f  |   cmp.x.i x27 10 | subs xzr, x27, #0xa |
+| 3604 | 54000180  |   b.eq SR_V | b.eq 0xe44  // b.none |
+| 3608 | aa1b03e0  |   mov.x x0 x27 | orr x0, xzr, x27 |
+| 3612 | d2800001  |   movz.x x1 0 0 | movz x1, #0x0 |
+| 3616 | 94000283  |   bl VAL | bl 0x182c |
+| 3620 | eb1b005f  |   cmp.x x2 x27 | subs xzr, x2, x27 |
+| 3624 | 5400d161  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 3628 | d2800003  |   movz.x x3 0 0 | movz x3, #0x0 |
+| 3632 | 94000532  |   bl FORCE | bl 0x22f8 |
+| 3636 | 94000976  |   bl EPI | bl 0x340c |
+| 3640 | 940009a3  |   bl DEAD1 | bl 0x34c4 |
+| 3644 | 94000643  |   bl EOL | bl 0x2748 |
+| 3648 | 17fffe51  |   b STMT | b 0x784 |
+| 3652 | 94000641  |   bl EOL | bl 0x2748 |
+| 3656 | 94000971  |   bl EPI | bl 0x340c |
+| 3660 | 9400099e  |   bl DEAD1 | bl 0x34c4 |
+| 3664 | 17fffe4d  |   b STMT | b 0x784 |
+| 3668 | d2800100  |   movz.x x0 8 0 | movz x0, #0x8 |
+| 3672 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 3676 | 94000274  |   bl VAL | bl 0x182c |
+| 3680 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 3684 | 5400cf81  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 3688 | d2800003  |   movz.x x3 0 0 | movz x3, #0x0 |
+| 3692 | 94000523  |   bl FORCE | bl 0x22f8 |
+| 3696 | d2817500  |   movz.x x0 0x0ba8 0 | movz x0, #0xba8 |
+| 3700 | f2ba5000  |   movk.x x0 0xd280 1  | movk x0, #0xd280, lsl #16 |
+| 3704 | 94000645  |   bl EMIT | bl 0x278c |
+| 3708 | d2800020  |   movz.x x0 0x0001 0 | movz x0, #0x1 |
+| 3712 | f2ba8000  |   movk.x x0 0xd400 1  | movk x0, #0xd400, lsl #16 |
+| 3716 | 94000642  |   bl EMIT | bl 0x278c |
+| 3720 | 9400098f  |   bl DEAD1 | bl 0x34c4 |
+| 3724 | 9400062f  |   bl EOL | bl 0x2748 |
+| 3728 | 17fffe3d  |   b STMT | b 0x784 |
+| 3732 | d10103ff  |   sub.x.i sp sp 64 | sub sp, sp, #0x40 |
+| 3736 | 9400090d  |   bl ARRNAME | bl 0x32cc |
+| 3740 | f90003e0  |   str.x x0 sp 0 | str x0, [sp] |
+| 3744 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 3748 | f100093f  |   cmp.x.i x9 2 | subs xzr, x9, #0x2 |
+| 3752 | 540132e0  |   b.eq E_RDONLY | b.eq 0x3504  // b.none |
+| 3756 | f100153f  |   cmp.x.i x9 5 | subs xzr, x9, #0x5 |
+| 3760 | 540132a0  |   b.eq E_RDONLY | b.eq 0x3504  // b.none |
+| 3764 | d28000a0  |   movz.x x0 5 0 | movz x0, #0x5 |
+| 3768 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 3772 | 9400025c  |   bl VAL | bl 0x182c |
+| 3776 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 3780 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 3784 | f9000fe2  |   str.x x2 sp 3 | str x2, [sp, #24] |
+| 3788 | f94003e9  |   ldr.x x9 sp 0 | ldr x9, [sp] |
+| 3792 | b9400d20  |   ldr.w w0 x9 3 | ldr w0, [x9, #12] |
+| 3796 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 3800 | 94000255  |   bl VAL | bl 0x182c |
+| 3804 | f94003e9  |   ldr.x x9 sp 0 | ldr x9, [sp] |
+| 3808 | b9400d29  |   ldr.w w9 x9 3 | ldr w9, [x9, #12] |
+| 3812 | eb09005f  |   cmp.x x2 x9 | subs xzr, x2, x9 |
+| 3816 | 5400cb61  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 3820 | 940004f1  |   bl MATREG | bl 0x22b0 |
+| 3824 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 3828 | f94003e0  |   ldr.x x0 sp 0 | ldr x0, [sp] |
+| 3832 | f94007e1  |   ldr.x x1 sp 1 | ldr x1, [sp, #8] |
+| 3836 | f9400be2  |   ldr.x x2 sp 2 | ldr x2, [sp, #16] |
+| 3840 | f9400fe3  |   ldr.x x3 sp 3 | ldr x3, [sp, #24] |
+| 3844 | 940008bb  |   bl ELEMADDR | bl 0x31f0 |
+| 3848 | f94003e9  |   ldr.x x9 sp 0 | ldr x9, [sp] |
+| 3852 | b9400d29  |   ldr.w w9 x9 3 | ldr w9, [x9, #12] |
+| 3856 | 10ffb12a  |   adr x10 STOP | adr x10, 0x534 |
+| 3860 | b8697942  |   ldr.w.r w2 x10 x9 | ldr w2, [x10, x9, lsl #2] |
+| 3864 | f94013e3  |   ldr.x x3 sp 4 | ldr x3, [sp, #32] |
+| 3868 | aa030042  |   orr.x x2 x2 x3 | orr x2, x2, x3 |
+| 3872 | d37be800  |   ubfm.x x0 x0 59 58 | ubfm x0, x0, #59, #58 |
+| 3876 | aa000042  |   orr.x x2 x2 x0 | orr x2, x2, x0 |
+| 3880 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 3884 | aa010040  |   orr.x x0 x2 x1 | orr x0, x2, x1 |
+| 3888 | 94000617  |   bl EMIT | bl 0x278c |
+| 3892 | 910103ff  |   add.x.i sp sp 64 | add sp, sp, #0x40 |
+| 3896 | 94000604  |   bl EOL | bl 0x2748 |
+| 3900 | 17fffe12  |   b STMT | b 0x784 |
+| 3904 | 940008f2  |   bl TOPNAME | bl 0x3308 |
+| 3908 | 940005f2  |   bl TYPEWORD | bl 0x270c |
+| 3912 | 94000925  |   bl ELEMTYPE | bl 0x33dc |
+| 3916 | aa0003ed  |   mov.x x13 x0 | orr x13, xzr, x0 |
+| 3920 | 9400056b  |   bl TOK | bl 0x24fc |
+| 3924 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 3928 | 5400ca21  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 3932 | 94000923  |   bl ARRLEN | bl 0x33e8 |
+| 3936 | aa0103ee  |   mov.x x14 x1 | orr x14, xzr, x1 |
+| 3940 | 10ffac89  |   adr x9 TLOG | adr x9, 0x4f4 |
+| 3944 | 386d6929  |   ldrb.r w9 x9 x13 | ldrb w9, [x9, x13] |
+| 3948 | 9ac92021  |   lslv.x x1 x1 x9 | lslv x1, x1, x9 |
+| 3952 | 91003c21  |   add.x.i x1 x1 15 | add x1, x1, #0xf |
+| 3956 | d344fc21  |   ubfm.x x1 x1 4 63 | ubfm x1, x1, #4, #63 |
+| 3960 | d37cec21  |   ubfm.x x1 x1 60 59 | ubfm x1, x1, #60, #59 |
+| 3964 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 3968 | f9401d2a  |   ldr.x x10 x9 7 | ldr x10, [x9, #56] |
+| 3972 | d2a21006  |   movz.x x6 0x1080 1 | movz x6, #0x1080, lsl #16 |
+| 3976 | 8b0a00c6  |   add.x x6 x6 x10 | add x6, x6, x10 |
+| 3980 | 8b01014a  |   add.x x10 x10 x1 | add x10, x10, x1 |
+| 3984 | d2a8000b  |   movz.x x11 0x4000 1 | movz x11, #0x4000, lsl #16 |
+| 3988 | eb0b015f  |   cmp.x x10 x11 | subs xzr, x10, x11 |
+| 3992 | 54012c28  |   b.hi E_TOOBIG | b.hi 0x351c  // b.pmore |
+| 3996 | f9001d2a  |   str.x x10 x9 7 | str x10, [x9, #56] |
+| 4000 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 4004 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 4008 | aa0d03e3  |   mov.x x3 x13 | orr x3, xzr, x13 |
+| 4012 | aa0e03e4  |   mov.x x4 x14 | orr x4, xzr, x14 |
+| 4016 | d2800085  |   movz.x x5 4 0 | movz x5, #0x4 |
+| 4020 | 940008f0  |   bl ADDNAME | bl 0x3374 |
+| 4024 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 4028 | f9000537  |   str.x x23 x9 1 | str x23, [x9, #8] |
+| 4032 | 940005e2  |   bl EOL | bl 0x2748 |
+| 4036 | 17fffdf0  |   b STMT | b 0x784 |
+| 4040 | 940008d0  |   bl TOPNAME | bl 0x3308 |
+| 4044 | 9400054c  |   bl TOK | bl 0x24fc |
+| 4048 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 4052 | 5400c641  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 4056 | cb150286  |   sub.x x6 x20 x21 | sub x6, x20, x21 |
+| 4060 | d2a00809  |   movz.x x9 0x40 1 | movz x9, #0x40, lsl #16 |
+| 4064 | 8b0900c6  |   add.x x6 x6 x9 | add x6, x6, x9 |
+| 4068 | 8b020022  |   add.x x2 x1 x2 | add x2, x1, x2 |
+| 4072 | d280000e  |   movz.x x14 0 0 | movz x14, #0x0 |
+| 4076 | eb02003f  |   cmp.x x1 x2 | subs xzr, x1, x2 |
+| 4080 | 540002c2  |   b.hs TX4 | b.cs 0x1048  // b.hs, b.nlast |
+| 4084 | 39400020  |   ldrb w0 x1 0 | ldrb w0, [x1] |
+| 4088 | 91000421  |   add.x.i x1 x1 1 | add x1, x1, #0x1 |
+| 4092 | 7101701f  |   cmp.w.i w0 92 | subs wzr, w0, #0x5c |
+| 4096 | 540001e1  |   b.ne TX3 | b.ne 0x103c  // b.any |
+| 4100 | 39400020  |   ldrb w0 x1 0 | ldrb w0, [x1] |
+| 4104 | 91000421  |   add.x.i x1 x1 1 | add x1, x1, #0x1 |
+| 4108 | 7101b81f  |   cmp.w.i w0 110 | subs wzr, w0, #0x6e |
+| 4112 | 54000061  |   b.ne TXa | b.ne 0x101c  // b.any |
+| 4116 | d2800140  |   movz.x x0 10 0 | movz x0, #0xa |
+| 4120 | 14000009  |   b TX3 | b 0x103c |
+| 4124 | 7101d01f  |   cmp.w.i w0 116 | subs wzr, w0, #0x74 |
+| 4128 | 54000061  |   b.ne TXb | b.ne 0x102c  // b.any |
+| 4132 | d2800120  |   movz.x x0 9 0 | movz x0, #0x9 |
+| 4136 | 14000005  |   b TX3 | b 0x103c |
+| 4140 | 7101701f  |   cmp.w.i w0 92 | subs wzr, w0, #0x5c |
+| 4144 | 54000060  |   b.eq TX3 | b.eq 0x103c  // b.none |
+| 4148 | 7100881f  |   cmp.w.i w0 34 | subs wzr, w0, #0x22 |
+| 4152 | 540126e1  |   b.ne E_TEXT | b.ne 0x3514  // b.any |
+| 4156 | 94000926  |   bl EMITB | bl 0x34d4 |
+| 4160 | 910005ce  |   add.x.i x14 x14 1 | add x14, x14, #0x1 |
+| 4164 | 17ffffea  |   b TX1 | b 0xfec |
+| 4168 | d3400689  |   ubfm.x x9 x20 0 1 | ubfm x9, x20, #0, #1 |
+| 4172 | b4000089  |   cbz.x x9 TX5 | cbz x9, 0x105c |
+| 4176 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 4180 | 94000920  |   bl EMITB | bl 0x34d4 |
+| 4184 | 17fffffc  |   b TX4 | b 0x1048 |
+| 4188 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 4192 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 4196 | d2800043  |   movz.x x3 2 0 | movz x3, #0x2 |
+| 4200 | aa0e03e4  |   mov.x x4 x14 | orr x4, xzr, x14 |
+| 4204 | d28000a5  |   movz.x x5 5 0 | movz x5, #0x5 |
+| 4208 | 940008c1  |   bl ADDNAME | bl 0x3374 |
+| 4212 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 4216 | f9000537  |   str.x x23 x9 1 | str x23, [x9, #8] |
+| 4220 | 940005b3  |   bl EOL | bl 0x2748 |
+| 4224 | 17fffdc1  |   b STMT | b 0x784 |
+| 4228 | 94000476  |   bl COND | bl 0x225c |
+| 4232 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 4236 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 4240 | d2800003  |   movz.x x3 0 0 | movz x3, #0x0 |
+| 4244 | d2800004  |   movz.x x4 0 0 | movz x4, #0x0 |
+| 4248 | aa1703e5  |   mov.x x5 x23 | orr x5, xzr, x23 |
+| 4252 | aa1c03e6  |   mov.x x6 x28 | orr x6, xzr, x28 |
+| 4256 | 940008c2  |   bl PUSHB | bl 0x33a8 |
+| 4260 | 940005a9  |   bl EOL | bl 0x2748 |
+| 4264 | 17fffdb7  |   b STMT | b 0x784 |
+| 4268 | d2a03029  |   movz.x x9 0x181 1 | movz x9, #0x181, lsl #16 |
+| 4272 | eb09033f  |   cmp.x x25 x9 | subs xzr, x25, x9 |
+| 4276 | 5400bf00  |   b.eq E_BLOCK | b.eq 0x2894  // b.none |
+| 4280 | d102032a  |   sub.x.i x10 x25 128 | sub x10, x25, #0x80 |
+| 4284 | f9400140  |   ldr.x x0 x10 0 | ldr x0, [x10] |
+| 4288 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 4292 | 5400be81  |   b.ne E_BLOCK | b.ne 0x2894  // b.any |
+| 4296 | aa1403eb  |   mov.x x11 x20 | orr x11, xzr, x20 |
+| 4300 | d2a28000  |   movz.x x0 0x1400 1  | movz x0, #0x1400, lsl #16 |
+| 4304 | 940005af  |   bl EMIT | bl 0x278c |
+| 4308 | f9400540  |   ldr.x x0 x10 1 | ldr x0, [x10, #8] |
+| 4312 | aa1403e1  |   mov.x x1 x20 | orr x1, xzr, x20 |
+| 4316 | 940005c0  |   bl PATCH19 | bl 0x27dc |
+| 4320 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 4324 | f9000140  |   str.x x0 x10 0 | str x0, [x10] |
+| 4328 | f900054b  |   str.x x11 x10 1 | str x11, [x10, #8] |
+| 4332 | f9401557  |   ldr.x x23 x10 5 | ldr x23, [x10, #40] |
+| 4336 | f940195c  |   ldr.x x28 x10 6 | ldr x28, [x10, #48] |
+| 4340 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 4344 | f940152b  |   ldr.x x11 x9 5 | ldr x11, [x9, #40] |
+| 4348 | f9001d4b  |   str.x x11 x10 7 | str x11, [x10, #56] |
+| 4352 | f900153f  |   str.x xzr x9 5 | str xzr, [x9, #40] |
+| 4356 | 94000591  |   bl EOL | bl 0x2748 |
+| 4360 | 17fffd9f  |   b STMT | b 0x784 |
+| 4364 | d10103ff  |   sub.x.i sp sp 64 | sub sp, sp, #0x40 |
+| 4368 | f90003f7  |   str.x x23 sp 0 | str x23, [sp] |
+| 4372 | f90007fc  |   str.x x28 sp 1 | str x28, [sp, #8] |
+| 4376 | 94000593  |   bl ALLOC | bl 0x2764 |
+| 4380 | aa1803fc  |   mov.x x28 x24 | orr x28, xzr, x24 |
+| 4384 | f9000be0  |   str.x x0 sp 2 | str x0, [sp, #16] |
+| 4388 | d2ba5009  |   movz.x x9 0xd280 1  | movz x9, #0xd280, lsl #16 |
+| 4392 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 4396 | 94000598  |   bl EMIT | bl 0x278c |
+| 4400 | f9000ff4  |   str.x x20 sp 3 | str x20, [sp, #24] |
+| 4404 | 9400044a  |   bl COND | bl 0x225c |
+| 4408 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 4412 | d2884809  |   movz.x x9 0x4240 0 | movz x9, #0x4240 |
+| 4416 | f2a001e9  |   movk.x x9 0x000f 1 | movk x9, #0xf, lsl #16 |
+| 4420 | f90017e9  |   str.x x9 sp 5 | str x9, [sp, #40] |
+| 4424 | 940004ed  |   bl TOK | bl 0x24fc |
+| 4428 | b40002a0  |   cbz.x x0 SW_NOB | cbz x0, 0x11a0 |
+| 4432 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 4436 | 54000260  |   b.eq SW_NOB | b.eq 0x11a0  // b.none |
+| 4440 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 4444 | 5400b741  |   b.ne E_EXTRA | b.ne 0x2844  // b.any |
+| 4448 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 4452 | 5400b708  |   b.hi E_EXTRA | b.hi 0x2844  // b.pmore |
+| 4456 | 94000560  |   bl KW | bl 0x26e8 |
+| 4460 | f101181f  |   cmp.x.i x0 70 | subs xzr, x0, #0x46 |
+| 4464 | 5400b6a1  |   b.ne E_EXTRA | b.ne 0x2844  // b.any |
+| 4468 | 940004e2  |   bl TOK | bl 0x24fc |
+| 4472 | b400b620  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 4476 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 4480 | 5400b8e1  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 4484 | d1000429  |   sub.x.i x9 x1 1 | sub x9, x1, #0x1 |
+| 4488 | d28847ea  |   movz.x x10 0x423f 0 | movz x10, #0x423f |
+| 4492 | f2a001ea  |   movk.x x10 0x000f 1 | movk x10, #0xf, lsl #16 |
+| 4496 | eb0a013f  |   cmp.x x9 x10 | subs xzr, x9, x10 |
+| 4500 | 5400b642  |   b.hs E_RANGE | b.cs 0x285c  // b.hs, b.nlast |
+| 4504 | f90017e1  |   str.x x1 sp 5 | str x1, [sp, #40] |
+| 4508 | 9400056b  |   bl EOL | bl 0x2748 |
+| 4512 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 4516 | d281ffe9  |   movz.x x9 4095 0 | movz x9, #0xfff |
+| 4520 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 4524 | 54000148  |   b.hi SW_BIG | b.hi 0x11d4  // b.pmore |
+| 4528 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 4532 | f2be2000  |   movk.x x0 0xf100 1  | movk x0, #0xf100, lsl #16 |
+| 4536 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 4540 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4544 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 4548 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 4552 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4556 | 94000570  |   bl EMIT | bl 0x278c |
+| 4560 | 1400000d  |   b SW_G | b 0x1204 |
+| 4564 | 94000564  |   bl ALLOC | bl 0x2764 |
+| 4568 | aa0003ed  |   mov.x x13 x0 | orr x13, xzr, x0 |
+| 4572 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 4576 | 94000465  |   bl MATCONST | bl 0x2374 |
+| 4580 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 4584 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 4588 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 4592 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 4596 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4600 | d370bda1  |   ubfm.x x1 x13 48 47 | ubfm x1, x13, #48, #47 |
+| 4604 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4608 | 94000563  |   bl EMIT | bl 0x278c |
+| 4612 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 4616 | d2800081  |   movz.x x1 4 0 | movz x1, #0x4 |
+| 4620 | 9400056b  |   bl TRAPC | bl 0x27b8 |
+| 4624 | d2808000  |   movz.x x0 0x0400 0 | movz x0, #0x400 |
+| 4628 | f2b22000  |   movk.x x0 0x9100 1  | movk x0, #0x9100, lsl #16 |
+| 4632 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 4636 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4640 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 4644 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4648 | 94000559  |   bl EMIT | bl 0x278c |
+| 4652 | f94013e0  |   ldr.x x0 sp 4 | ldr x0, [sp, #32] |
+| 4656 | d2800061  |   movz.x x1 3 0 | movz x1, #0x3 |
+| 4660 | f9400fe2  |   ldr.x x2 sp 3 | ldr x2, [sp, #24] |
+| 4664 | f9400be3  |   ldr.x x3 sp 2 | ldr x3, [sp, #16] |
+| 4668 | d2800004  |   movz.x x4 0 0 | movz x4, #0x0 |
+| 4672 | f94003e5  |   ldr.x x5 sp 0 | ldr x5, [sp] |
+| 4676 | f94007e6  |   ldr.x x6 sp 1 | ldr x6, [sp, #8] |
+| 4680 | 94000858  |   bl PUSHB | bl 0x33a8 |
+| 4684 | 910103ff  |   add.x.i sp sp 64 | add sp, sp, #0x40 |
+| 4688 | 17fffd4d  |   b STMT | b 0x784 |
+| 4692 | d10143ff  |   sub.x.i sp sp 80 | sub sp, sp, #0x50 |
+| 4696 | f90003f7  |   str.x x23 sp 0 | str x23, [sp] |
+| 4700 | f90007fc  |   str.x x28 sp 1 | str x28, [sp, #8] |
+| 4704 | 940004a7  |   bl TOK | bl 0x24fc |
+| 4708 | b400aec0  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 4712 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 4716 | 5400b181  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 4720 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 4724 | 5400b088  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 4728 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 4732 | 9400051b  |   bl KW | bl 0x26e8 |
+| 4736 | b500b0e0  |   cbnz.x x0 E_SYNTAX | cbnz x0, 0x289c |
+| 4740 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 4744 | 940008c6  |   bl NEWNAME | bl 0x35a0 |
+| 4748 | 94000520  |   bl TYPEWORD | bl 0x270c |
+| 4752 | f9000fe0  |   str.x x0 sp 3 | str x0, [sp, #24] |
+| 4756 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 4760 | 5400ade0  |   b.eq E_TYPE | b.eq 0x2854  // b.none |
+| 4764 | 94000498  |   bl TOK | bl 0x24fc |
+| 4768 | b400ace0  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 4772 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 4776 | 54000521  |   b.ne SF_VAL | b.ne 0x134c  // b.any |
+| 4780 | f9400fe2  |   ldr.x x2 sp 3 | ldr x2, [sp, #24] |
+| 4784 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 4788 | f9402d23  |   ldr.x x3 x9 11 | ldr x3, [x9, #88] |
+| 4792 | 94000477  |   bl RANGE | bl 0x2494 |
+| 4796 | f90013e1  |   str.x x1 sp 4 | str x1, [sp, #32] |
+| 4800 | 94000522  |   bl EOL | bl 0x2748 |
+| 4804 | 94000528  |   bl ALLOC | bl 0x2764 |
+| 4808 | aa1803fc  |   mov.x x28 x24 | orr x28, xzr, x24 |
+| 4812 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 4816 | aa0003e2  |   mov.x x2 x0 | orr x2, xzr, x0 |
+| 4820 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 4824 | f9400fe3  |   ldr.x x3 sp 3 | ldr x3, [sp, #24] |
+| 4828 | d2800004  |   movz.x x4 0 0 | movz x4, #0x0 |
+| 4832 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |
+| 4836 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 4840 | 94000823  |   bl ADDNAME | bl 0x3374 |
+| 4844 | f94017e0  |   ldr.x x0 sp 5 | ldr x0, [sp, #40] |
+| 4848 | d2ba5009  |   movz.x x9 0xd280 1  | movz x9, #0xd280, lsl #16 |
+| 4852 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 4856 | 94000525  |   bl EMIT | bl 0x278c |
+| 4860 | f9001bf4  |   str.x x20 sp 6 | str x20, [sp, #48] |
+| 4864 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 4868 | d281ffe9  |   movz.x x9 4095 0 | movz x9, #0xfff |
+| 4872 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 4876 | 54000148  |   b.hi SF_BIG | b.hi 0x1334  // b.pmore |
+| 4880 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 4884 | f2be2000  |   movk.x x0 0xf100 1  | movk x0, #0xf100, lsl #16 |
+| 4888 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 4892 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4896 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 4900 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 4904 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 4908 | 94000518  |   bl EMIT | bl 0x278c |
+| 4912 | 1400005b  |   b SF_B | b 0x149c |
+| 4916 | 9400050c  |   bl ALLOC | bl 0x2764 |
+| 4920 | aa0003ed  |   mov.x x13 x0 | orr x13, xzr, x0 |
+| 4924 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 4928 | 9400040d  |   bl MATCONST | bl 0x2374 |
+| 4932 | aa0d03e1  |   mov.x x1 x13 | orr x1, xzr, x13 |
+| 4936 | 1400004d  |   b SF_CMPR | b 0x147c |
+| 4940 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 4944 | aa0103e4  |   mov.x x4 x1 | orr x4, xzr, x1 |
+| 4948 | aa0203e5  |   mov.x x5 x2 | orr x5, xzr, x2 |
+| 4952 | f9400fe0  |   ldr.x x0 sp 3 | ldr x0, [sp, #24] |
+| 4956 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 4960 | 9400013d  |   bl VALTOK | bl 0x1854 |
+| 4964 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 4968 | 54000800  |   b.eq SF_TYPED | b.eq 0x1468  // b.none |
+| 4972 | f9400fe9  |   ldr.x x9 sp 3 | ldr x9, [sp, #24] |
+| 4976 | eb09005f  |   cmp.x x2 x9 | subs xzr, x2, x9 |
+| 4980 | 5400a701  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 4984 | 940003ce  |   bl MATREG | bl 0x22b0 |
+| 4988 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 4992 | 940004f2  |   bl EOL | bl 0x2748 |
+| 4996 | 940004f8  |   bl ALLOC | bl 0x2764 |
+| 5000 | aa1803fc  |   mov.x x28 x24 | orr x28, xzr, x24 |
+| 5004 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 5008 | aa0003e2  |   mov.x x2 x0 | orr x2, xzr, x0 |
+| 5012 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 5016 | f9400fe3  |   ldr.x x3 sp 3 | ldr x3, [sp, #24] |
+| 5020 | d2800004  |   movz.x x4 0 0 | movz x4, #0x0 |
+| 5024 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |
+| 5028 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 5032 | 940007f3  |   bl ADDNAME | bl 0x3374 |
+| 5036 | f94017e0  |   ldr.x x0 sp 5 | ldr x0, [sp, #40] |
+| 5040 | d2ba5009  |   movz.x x9 0xd280 1  | movz x9, #0xd280, lsl #16 |
+| 5044 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 5048 | 940004f5  |   bl EMIT | bl 0x278c |
+| 5052 | 940004ea  |   bl ALLOC | bl 0x2764 |
+| 5056 | aa1803fc  |   mov.x x28 x24 | orr x28, xzr, x24 |
+| 5060 | f90023e0  |   str.x x0 sp 8 | str x0, [sp, #64] |
+| 5064 | d2ba5009  |   movz.x x9 0xd280 1  | movz x9, #0xd280, lsl #16 |
+| 5068 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 5072 | 940004ef  |   bl EMIT | bl 0x278c |
+| 5076 | f9001bf4  |   str.x x20 sp 6 | str x20, [sp, #48] |
+| 5080 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 5084 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 5088 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 5092 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 5096 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5100 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 5104 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 5108 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5112 | 940004e5  |   bl EMIT | bl 0x278c |
+| 5116 | 94000032  |   bl SF_BR | bl 0x14c4 |
+| 5120 | f90027e0  |   str.x x0 sp 9 | str x0, [sp, #72] |
+| 5124 | 940004d8  |   bl ALLOC | bl 0x2764 |
+| 5128 | aa0003ed  |   mov.x x13 x0 | orr x13, xzr, x0 |
+| 5132 | d2884801  |   movz.x x1 0x4240 0 | movz x1, #0x4240 |
+| 5136 | f2a001e1  |   movk.x x1 0x000f 1 | movk x1, #0xf, lsl #16 |
+| 5140 | 940003d8  |   bl MATCONST | bl 0x2374 |
+| 5144 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 5148 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 5152 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 5156 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 5160 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5164 | d370bda1  |   ubfm.x x1 x13 48 47 | ubfm x1, x13, #48, #47 |
+| 5168 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5172 | 940004d6  |   bl EMIT | bl 0x278c |
+| 5176 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 5180 | d2800081  |   movz.x x1 4 0 | movz x1, #0x4 |
+| 5184 | 940004de  |   bl TRAPC | bl 0x27b8 |
+| 5188 | d2808000  |   movz.x x0 0x0400 0 | movz x0, #0x400 |
+| 5192 | f2b22000  |   movk.x x0 0x9100 1  | movk x0, #0x9100, lsl #16 |
+| 5196 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 5200 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5204 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 5208 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5212 | 940004cc  |   bl EMIT | bl 0x278c |
+| 5216 | f94027e0  |   ldr.x x0 sp 9 | ldr x0, [sp, #72] |
+| 5220 | 1400000f  |   b SF_PUSH | b 0x14a0 |
+| 5224 | f9400fe9  |   ldr.x x9 sp 3 | ldr x9, [sp, #24] |
+| 5228 | eb09005f  |   cmp.x x2 x9 | subs xzr, x2, x9 |
+| 5232 | 54009f21  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 5236 | f90013e1  |   str.x x1 sp 4 | str x1, [sp, #32] |
+| 5240 | 17ffff92  |   b SF_NUM | b 0x12c0 |
+| 5244 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 5248 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 5252 | f94017e9  |   ldr.x x9 sp 5 | ldr x9, [sp, #40] |
+| 5256 | d37be929  |   ubfm.x x9 x9 59 58 | ubfm x9, x9, #59, #58 |
+| 5260 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 5264 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 5268 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5272 | 940004bd  |   bl EMIT | bl 0x278c |
+| 5276 | 9400000a  |   bl SF_BR | bl 0x14c4 |
+| 5280 | d2800081  |   movz.x x1 4 0 | movz x1, #0x4 |
+| 5284 | f9401be2  |   ldr.x x2 sp 6 | ldr x2, [sp, #48] |
+| 5288 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 5292 | f9400fe4  |   ldr.x x4 sp 3 | ldr x4, [sp, #24] |
+| 5296 | f94003e5  |   ldr.x x5 sp 0 | ldr x5, [sp] |
+| 5300 | f94007e6  |   ldr.x x6 sp 1 | ldr x6, [sp, #8] |
+| 5304 | 940007bc  |   bl PUSHB | bl 0x33a8 |
+| 5308 | 910143ff  |   add.x.i sp sp 80 | add sp, sp, #0x50 |
+| 5312 | 17fffcb1  |   b STMT | b 0x784 |
+| 5316 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 5320 | aa1403ed  |   mov.x x13 x20 | orr x13, xzr, x20 |
+| 5324 | d2aa8000  |   movz.x x0 0x5400 1  | movz x0, #0x5400, lsl #16 |
+| 5328 | f94017e9  |   ldr.x x9 sp 5 | ldr x9, [sp, #40] |
+| 5332 | d2800041  |   movz.x x1 2 0 | movz x1, #0x2 |
+| 5336 | f100193f  |   cmp.x.i x9 6 | subs xzr, x9, #0x6 |
+| 5340 | 54000043  |   b.lo SFB1 | b.cc 0x14e4  // b.lo, b.ul, b.last |
+| 5344 | d2800141  |   movz.x x1 10 0 | movz x1, #0xa |
+| 5348 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5352 | 940004a9  |   bl EMIT | bl 0x278c |
+| 5356 | aa0d03e0  |   mov.x x0 x13 | orr x0, xzr, x13 |
+| 5360 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 5364 | d65f03c0  |   ret | ret  |
+| 5368 | d2a03029  |   movz.x x9 0x181 1 | movz x9, #0x181, lsl #16 |
+| 5372 | eb09033f  |   cmp.x x25 x9 | subs xzr, x25, x9 |
+| 5376 | 54000620  |   b.eq FINISH | b.eq 0x15c4  // b.none |
+| 5380 | d1020339  |   sub.x.i x25 x25 128 | sub x25, x25, #0x80 |
+| 5384 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 5388 | f9400320  |   ldr.x x0 x25 0 | ldr x0, [x25] |
+| 5392 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 5396 | 54000060  |   b.eq SE_D | b.eq 0x1520  // b.none |
+| 5400 | f900153f  |   str.x xzr x9 5 | str xzr, [x9, #40] |
+| 5404 | 14000005  |   b SE_D2 | b 0x1530 |
+| 5408 | f940152a  |   ldr.x x10 x9 5 | ldr x10, [x9, #40] |
+| 5412 | f9401f2b  |   ldr.x x11 x25 7 | ldr x11, [x25, #56] |
+| 5416 | 8a0b014a  |   and.x x10 x10 x11 | and x10, x10, x11 |
+| 5420 | f900152a  |   str.x x10 x9 5 | str x10, [x9, #40] |
+| 5424 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 5428 | 54000320  |   b.eq SE_IF | b.eq 0x1598  // b.none |
+| 5432 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 5436 | 54000360  |   b.eq SE_ELSE | b.eq 0x15a8  // b.none |
+| 5440 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 5444 | 54000260  |   b.eq SE_WHILE | b.eq 0x1590  // b.none |
+| 5448 | d100c3ff  |   sub.x.i sp sp 48 | sub sp, sp, #0x30 |
+| 5452 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 5456 | f90003e0  |   str.x x0 sp 0 | str x0, [sp] |
+| 5460 | f9400f20  |   ldr.x x0 x25 3 | ldr x0, [x25, #24] |
+| 5464 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 5468 | f9401320  |   ldr.x x0 x25 4 | ldr x0, [x25, #32] |
+| 5472 | f9000be0  |   str.x x0 sp 2 | str x0, [sp, #16] |
+| 5476 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 5480 | f9000fe0  |   str.x x0 sp 3 | str x0, [sp, #24] |
+| 5484 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 5488 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 5492 | f9401320  |   ldr.x x0 x25 4 | ldr x0, [x25, #32] |
+| 5496 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 5500 | d2800420  |   movz.x x0 33 0 | movz x0, #0x21 |
+| 5504 | f9400f21  |   ldr.x x1 x25 3 | ldr x1, [x25, #24] |
+| 5508 | 910003e2  |   add.x.i x2 sp 0 | add x2, sp, #0x0 |
+| 5512 | 940001f3  |   bl BINOP | bl 0x1d54 |
+| 5516 | 9100c3ff  |   add.x.i sp sp 48 | add sp, sp, #0x30 |
+| 5520 | f9400b20  |   ldr.x x0 x25 2 | ldr x0, [x25, #16] |
+| 5524 | 9400049f  |   bl BACK | bl 0x2810 |
+| 5528 | f9400720  |   ldr.x x0 x25 1 | ldr x0, [x25, #8] |
+| 5532 | aa1403e1  |   mov.x x1 x20 | orr x1, xzr, x20 |
+| 5536 | 9400048f  |   bl PATCH19 | bl 0x27dc |
+| 5540 | 14000004  |   b SE_X | b 0x15b4 |
+| 5544 | f9400720  |   ldr.x x0 x25 1 | ldr x0, [x25, #8] |
+| 5548 | aa1403e1  |   mov.x x1 x20 | orr x1, xzr, x20 |
+| 5552 | 94000492  |   bl PATCH26 | bl 0x27f8 |
+| 5556 | f9401737  |   ldr.x x23 x25 5 | ldr x23, [x25, #40] |
+| 5560 | f9401b3c  |   ldr.x x28 x25 6 | ldr x28, [x25, #48] |
+| 5564 | 94000463  |   bl EOL | bl 0x2748 |
+| 5568 | 17fffc71  |   b STMT | b 0x784 |
+| 5572 | 94000461  |   bl EOL | bl 0x2748 |
+| 5576 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 5580 | f940152a  |   ldr.x x10 x9 5 | ldr x10, [x9, #40] |
+| 5584 | b500008a  |   cbnz.x x10 FI_0 | cbnz x10, 0x15e0 |
+| 5588 | f1002b7f  |   cmp.x.i x27 10 | subs xzr, x27, #0xa |
+| 5592 | 5400f8e1  |   b.ne E_NORET | b.ne 0x34f4  // b.any |
+| 5596 | 9400078c  |   bl EPI | bl 0x340c |
+| 5600 | d2a03049  |   movz.x x9 0x182 1 | movz x9, #0x182, lsl #16 |
+| 5604 | eb09035f  |   cmp.x x26 x9 | subs xzr, x26, x9 |
+| 5608 | 54000620  |   b.eq FI_T | b.eq 0x16ac  // b.none |
+| 5612 | aa1403ed  |   mov.x x13 x20 | orr x13, xzr, x20 |
+| 5616 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 5620 | f940192a  |   ldr.x x10 x9 6 | ldr x10, [x9, #48] |
+| 5624 | b500016a  |   cbnz.x x10 FI_PT | cbnz x10, 0x1624 |
+| 5628 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 5632 | f2b540e0  |   movk.x x0 0xaa07 1  | movk x0, #0xaa07, lsl #16 |
+| 5636 | 94000462  |   bl EMIT | bl 0x278c |
+| 5640 | d2811e00  |   movz.x x0 0x08f0 0 | movz x0, #0x8f0 |
+| 5644 | f2bf2800  |   movk.x x0 0xf940 1  | movk x0, #0xf940, lsl #16 |
+| 5648 | 9400045f  |   bl EMIT | bl 0x278c |
+| 5652 | d2804000  |   movz.x x0 0x0200 0 | movz x0, #0x200 |
+| 5656 | f2bac3e0  |   movk.x x0 0xd61f 1  | movk x0, #0xd61f, lsl #16 |
+| 5660 | 9400045c  |   bl EMIT | bl 0x278c |
+| 5664 | 1400000a  |   b FI_C0 | b 0x1648 |
+| 5668 | d2920400  |   movz.x x0 0x9020 0 | movz x0, #0x9020 |
+| 5672 | f2b22020  |   movk.x x0 0x9101 1  | movk x0, #0x9101, lsl #16 |
+| 5676 | 94000458  |   bl EMIT | bl 0x278c |
+| 5680 | d2817500  |   movz.x x0 0x0ba8 0 | movz x0, #0xba8 |
+| 5684 | f2ba5000  |   movk.x x0 0xd280 1  | movk x0, #0xd280, lsl #16 |
+| 5688 | 94000455  |   bl EMIT | bl 0x278c |
+| 5692 | d2800020  |   movz.x x0 0x0001 0 | movz x0, #0x1 |
+| 5696 | f2ba8000  |   movk.x x0 0xd400 1  | movk x0, #0xd400, lsl #16 |
+| 5700 | 94000452  |   bl EMIT | bl 0x278c |
+| 5704 | d280002e  |   movz.x x14 1 0 | movz x14, #0x1 |
+| 5708 | d280000f  |   movz.x x15 0 0 | movz x15, #0x0 |
+| 5712 | d2a0304c  |   movz.x x12 0x182 1 | movz x12, #0x182, lsl #16 |
+| 5716 | eb1a019f  |   cmp.x x12 x26 | subs xzr, x12, x26 |
+| 5720 | 54000242  |   b.hs FI_N | b.cs 0x16a0  // b.hs, b.nlast |
+| 5724 | b9400580  |   ldr.w w0 x12 1 | ldr w0, [x12, #4] |
+| 5728 | eb0e001f  |   cmp.x x0 x14 | subs xzr, x0, x14 |
+| 5732 | 540001a1  |   b.ne FI_NX | b.ne 0x1698  // b.any |
+| 5736 | b500012f  |   cbnz.x x15 FI_P | cbnz x15, 0x168c |
+| 5740 | aa1403ef  |   mov.x x15 x20 | orr x15, xzr, x20 |
+| 5744 | d2800020  |   movz.x x0 0x0001 0 | movz x0, #0x1 |
+| 5748 | f2ba5000  |   movk.x x0 0xd280 1  | movk x0, #0xd280, lsl #16 |
+| 5752 | d37be9c1  |   ubfm.x x1 x14 59 58 | ubfm x1, x14, #59, #58 |
+| 5756 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 5760 | 94000443  |   bl EMIT | bl 0x278c |
+| 5764 | aa0d03e0  |   mov.x x0 x13 | orr x0, xzr, x13 |
+| 5768 | 94000462  |   bl BACK | bl 0x2810 |
+| 5772 | b9400180  |   ldr.w w0 x12 0 | ldr w0, [x12] |
+| 5776 | aa0f03e1  |   mov.x x1 x15 | orr x1, xzr, x15 |
+| 5780 | 94000452  |   bl PATCH19 | bl 0x27dc |
+| 5784 | 9100218c  |   add.x.i x12 x12 8 | add x12, x12, #0x8 |
+| 5788 | 17ffffee  |   b FI_S | b 0x1654 |
+| 5792 | 910005ce  |   add.x.i x14 x14 1 | add x14, x14, #0x1 |
+| 5796 | f10039df  |   cmp.x.i x14 14 | subs xzr, x14, #0xe |
+| 5800 | 54fffd29  |   b.ls FI_C | b.ls 0x164c  // b.plast |
+| 5804 | d280001b  |   movz.x x27 0 0 | movz x27, #0x0 |
+| 5808 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 5812 | f9400537  |   ldr.x x23 x9 1 | ldr x23, [x9, #8] |
+| 5816 | f9000d3f  |   str.x xzr x9 3 | str xzr, [x9, #24] |
+| 5820 | 17fffc32  |   b STMT | b 0x784 |
+| 5824 | b5008ebb  |   cbnz.x x27 E_BLOCK | cbnz x27, 0x2894 |
+| 5828 | 940007f5  |   bl RESOLVE | bl 0x3698 |
+| 5832 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 5836 | f940092a  |   ldr.x x10 x9 2 | ldr x10, [x9, #16] |
+| 5840 | b4008e6a  |   cbz.x x10 E_SYNTAX | cbz x10, 0x289c |
+| 5844 | f940192b  |   ldr.x x11 x9 6 | ldr x11, [x9, #48] |
+| 5848 | b50001eb  |   cbnz.x x11 EOF_PROG | cbnz x11, 0x1714 |
+| 5852 | f940052b  |   ldr.x x11 x9 1 | ldr x11, [x9, #8] |
+| 5856 | b5008c2b  |   cbnz.x x11 E_SUBSET | cbnz x11, 0x2864 |
+| 5860 | 9102d2ac  |   add.x.i x12 x21 180 | add x12, x21, #0xb4 |
+| 5864 | f100055f  |   cmp.x.i x10 1 | subs xzr, x10, #0x1 |
+| 5868 | 54000860  |   b.eq WRITEOUT | b.eq 0x17f8  // b.none |
+| 5872 | f9402520  |   ldr.x x0 x9 9 | ldr x0, [x9, #72] |
+| 5876 | f9400400  |   ldr.x x0 x0 1 | ldr x0, [x0, #8] |
+| 5880 | 9102c2ac  |   add.x.i x12 x21 176 | add x12, x21, #0xb0 |
+| 5884 | cb0c0002  |   sub.x x2 x0 x12 | sub x2, x0, x12 |
+| 5888 | d3426c42  |   ubfm.x x2 x2 2 27 | ubfm x2, x2, #2, #27 |
+| 5892 | d2a28003  |   movz.x x3 0x1400 1  | movz x3, #0x1400, lsl #16 |
+| 5896 | aa020063  |   orr.x x3 x3 x2 | orr x3, x3, x2 |
+| 5900 | b9000183  |   str.w w3 x12 0 | str w3, [x12] |
+| 5904 | 1400003a  |   b WRITEOUT | b 0x17f8 |
+| 5908 | d2800082  |   movz.x x2 4 0 | movz x2, #0x4 |
+| 5912 | d28c2da1  |   movz.x x1 0x616d 0 | movz x1, #0x616d |
+| 5916 | f2adcd21  |   movk.x x1 0x6e69 1 | movk x1, #0x6e69, lsl #16 |
+| 5920 | 940007ac  |   bl FINDFN | bl 0x35d0 |
+| 5924 | b4008bc0  |   cbz.x x0 E_SYNTAX | cbz x0, 0x289c |
+| 5928 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 5932 | b50089c9  |   cbnz.x x9 E_SUBSET | cbnz x9, 0x2864 |
+| 5936 | aa0003ee  |   mov.x x14 x0 | orr x14, xzr, x0 |
+| 5940 | 9102c2ac  |   add.x.i x12 x21 176 | add x12, x21, #0xb0 |
+| 5944 | cb0c0282  |   sub.x x2 x20 x12 | sub x2, x20, x12 |
+| 5948 | d3426c42  |   ubfm.x x2 x2 2 27 | ubfm x2, x2, #2, #27 |
+| 5952 | d2a28003  |   movz.x x3 0x1400 1  | movz x3, #0x1400, lsl #16 |
+| 5956 | aa020063  |   orr.x x3 x3 x2 | orr x3, x3, x2 |
+| 5960 | b9000183  |   str.w w3 x12 0 | str w3, [x12] |
+| 5964 | d2800380  |   movz.x x0 0x001c 0 | movz x0, #0x1c |
+| 5968 | f2ba5440  |   movk.x x0 0xd2a2 1  | movk x0, #0xd2a2, lsl #16 |
+| 5972 | 9400040e  |   bl EMIT | bl 0x278c |
+| 5976 | d2820200  |   movz.x x0 0x1010 0 | movz x0, #0x1010 |
+| 5980 | f2ba5440  |   movk.x x0 0xd2a2 1  | movk x0, #0xd2a2, lsl #16 |
+| 5984 | 9400040b  |   bl EMIT | bl 0x278c |
+| 5988 | d28043e0  |   movz.x x0 0x021f 0 | movz x0, #0x21f |
+| 5992 | f2b22000  |   movk.x x0 0x9100 1  | movk x0, #0x9100, lsl #16 |
+| 5996 | 94000408  |   bl EMIT | bl 0x278c |
+| 6000 | f94005c0  |   ldr.x x0 x14 1 | ldr x0, [x14, #8] |
+| 6004 | cb140002  |   sub.x x2 x0 x20 | sub x2, x0, x20 |
+| 6008 | d3426c42  |   ubfm.x x2 x2 2 27 | ubfm x2, x2, #2, #27 |
+| 6012 | d2b28000  |   movz.x x0 0x9400 1  | movz x0, #0x9400, lsl #16 |
+| 6016 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 6020 | 94000402  |   bl EMIT | bl 0x278c |
+| 6024 | b94011c9  |   ldr.w w9 x14 4 | ldr w9, [x14, #16] |
+| 6028 | f100293f  |   cmp.x.i x9 10 | subs xzr, x9, #0xa |
+| 6032 | 54000061  |   b.ne EP1 | b.ne 0x179c  // b.any |
+| 6036 | d2ba5000  |   movz.x x0 0xd280 1  | movz x0, #0xd280, lsl #16 |
+| 6040 | 940003fd  |   bl EMIT | bl 0x278c |
+| 6044 | d2817500  |   movz.x x0 0x0ba8 0 | movz x0, #0xba8 |
+| 6048 | f2ba5000  |   movk.x x0 0xd280 1  | movk x0, #0xd280, lsl #16 |
+| 6052 | 940003fa  |   bl EMIT | bl 0x278c |
+| 6056 | d2800020  |   movz.x x0 0x0001 0 | movz x0, #0x1 |
+| 6060 | f2ba8000  |   movk.x x0 0xd400 1  | movk x0, #0xd400, lsl #16 |
+| 6064 | 940003f7  |   bl EMIT | bl 0x278c |
+| 6068 | 10ff6d4a  |   adr x10 ELFHDR | adr x10, 0x55c |
+| 6072 | aa1503eb  |   mov.x x11 x21 | orr x11, xzr, x21 |
+| 6076 | d280000c  |   movz.x x12 0 0 | movz x12, #0x0 |
+| 6080 | b8404540  |   ldr.w.post w0 x10 4 | ldr w0, [x10], #4 |
+| 6084 | b8004560  |   str.w.post w0 x11 4 | str w0, [x11], #4 |
+| 6088 | 9100058c  |   add.x.i x12 x12 1 | add x12, x12, #0x1 |
+| 6092 | f100b19f  |   cmp.x.i x12 44 | subs xzr, x12, #0x2c |
+| 6096 | 54ffff83  |   b.lo EP2 | b.cc 0x17c0  // b.lo, b.ul, b.last |
+| 6100 | cb150280  |   sub.x x0 x20 x21 | sub x0, x20, x21 |
+| 6104 | b90062a0  |   str.w w0 x21 24 | str w0, [x21, #96] |
+| 6108 | b9006aa0  |   str.w w0 x21 26 | str w0, [x21, #104] |
+| 6112 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 6116 | f9401d20  |   ldr.x x0 x9 7 | ldr x0, [x9, #56] |
+| 6120 | d2a01001  |   movz.x x1 0x80 1 | movz x1, #0x80, lsl #16 |
+| 6124 | 8b010000  |   add.x x0 x0 x1 | add x0, x0, x1 |
+| 6128 | b900a2a0  |   str.w w0 x21 40 | str w0, [x21, #160] |
+| 6132 | aa1503ec  |   mov.x x12 x21 | orr x12, xzr, x21 |
+| 6136 | cb0c0282  |   sub.x x2 x20 x12 | sub x2, x20, x12 |
+| 6140 | b4000122  |   cbz.x x2 EXIT0 | cbz x2, 0x1820 |
+| 6144 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 6148 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 6152 | d2800808  |   movz.x x8 64 0 | movz x8, #0x40 |
+| 6156 | d4000001  |   svc 0 | svc #0x0 |
+| 6160 | f100001f  |   cmp.x.i x0 0 | subs xzr, x0, #0x0 |
+| 6164 | 540080cd  |   b.le E_WRITE | b.le 0x282c |
+| 6168 | 8b00018c  |   add.x x12 x12 x0 | add x12, x12, x0 |
+| 6172 | 17fffff7  |   b WRITEOUT | b 0x17f8 |
+| 6176 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 6180 | d2800ba8  |   movz.x x8 93 0 | movz x8, #0x5d |
+| 6184 | d4000001  |   svc 0 | svc #0x0 |
+| 6188 | f81e0ffe  |   str.x.pre x30 sp -32 | str x30, [sp, #-32]! |
+| 6192 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 6196 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 6200 | 94000331  |   bl TOK | bl 0x24fc |
+| 6204 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 6208 | aa0103e4  |   mov.x x4 x1 | orr x4, xzr, x1 |
+| 6212 | aa0203e5  |   mov.x x5 x2 | orr x5, xzr, x2 |
+| 6216 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 6220 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 6224 | f84207fe  |   ldr.x.post x30 sp 32 | ldr x30, [sp], #32 |
+| 6228 | f8180ffe  |   str.x.pre x30 sp -128 | str x30, [sp, #-128]! |
+| 6232 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 6236 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 6240 | d2a030a9  |   movz.x x9 0x185 1  | movz x9, #0x185, lsl #16 |
+| 6244 | f940292a  |   ldr.x x10 x9 10 | ldr x10, [x9, #80] |
+| 6248 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 6252 | f900292a  |   str.x x10 x9 10 | str x10, [x9, #80] |
+| 6256 | f110015f  |   cmp.x.i x10 1024 | subs xzr, x10, #0x400 |
+| 6260 | 540080c8  |   b.hi E_FULL | b.hi 0x288c  // b.pmore |
+| 6264 | b4007e23  |   cbz.x x3 E_FEW | cbz x3, 0x283c |
+| 6268 | f1000c7f  |   cmp.x.i x3 3 | subs xzr, x3, #0x3 |
+| 6272 | 54007de0  |   b.eq E_FEW | b.eq 0x283c  // b.none |
+| 6276 | f100107f  |   cmp.x.i x3 4 | subs xzr, x3, #0x4 |
+| 6280 | 540080a0  |   b.eq E_SYNTAX | b.eq 0x289c  // b.none |
+| 6284 | f100087f  |   cmp.x.i x3 2 | subs xzr, x3, #0x2 |
+| 6288 | 54000181  |   b.ne VT_W | b.ne 0x18c0  // b.any |
+| 6292 | aa0403e1  |   mov.x x1 x4 | orr x1, xzr, x4 |
+| 6296 | d2a030a9  |   movz.x x9 0x185 1  | movz x9, #0x185, lsl #16 |
+| 6300 | f9402d22  |   ldr.x x2 x9 11 | ldr x2, [x9, #88] |
+| 6304 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 6308 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 6312 | b4000e69  |   cbz.x x9 VT_RET | cbz x9, 0x1a74 |
+| 6316 | aa0203e3  |   mov.x x3 x2 | orr x3, xzr, x2 |
+| 6320 | aa0903e2  |   mov.x x2 x9 | orr x2, xzr, x9 |
+| 6324 | 940002f8  |   bl RANGE | bl 0x2494 |
+| 6328 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 6332 | 1400006e  |   b VT_RET | b 0x1a74 |
+| 6336 | f10020bf  |   cmp.x.i x5 8 | subs xzr, x5, #0x8 |
+| 6340 | 5400ede8  |   b.hi VT_LONG | b.hi 0x3680  // b.pmore |
+| 6344 | aa0403e1  |   mov.x x1 x4 | orr x1, xzr, x4 |
+| 6348 | 94000387  |   bl KW | bl 0x26e8 |
+| 6352 | b5000280  |   cbnz.x x0 VT_K | cbnz x0, 0x1920 |
+| 6356 | f90013e1  |   str.x x1 sp 4 | str x1, [sp, #32] |
+| 6360 | 94000699  |   bl FINDNAME | bl 0x333c |
+| 6364 | b40000e0  |   cbz.x x0 VT_FN | cbz x0, 0x18f8 |
+| 6368 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 6372 | b5007b89  |   cbnz.x x9 E_TYPE | cbnz x9, 0x2854 |
+| 6376 | b9400801  |   ldr.w w1 x0 2 | ldr w1, [x0, #8] |
+| 6380 | b9400c02  |   ldr.w w2 x0 3 | ldr w2, [x0, #12] |
+| 6384 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 6388 | 14000060  |   b VT_RET | b 0x1a74 |
+| 6392 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 6396 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 6400 | 94000734  |   bl FINDFN | bl 0x35d0 |
+| 6404 | b4007980  |   cbz.x x0 E_UNDEF | cbz x0, 0x2834 |
+| 6408 | b9401009  |   ldr.w w9 x0 4 | ldr w9, [x0, #16] |
+| 6412 | f100293f  |   cmp.x.i x9 10 | subs xzr, x9, #0xa |
+| 6416 | 54007a20  |   b.eq E_TYPE | b.eq 0x2854  // b.none |
+| 6420 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 6424 | 94000510  |   bl CALL | bl 0x2d58 |
+| 6428 | 14000056  |   b VT_RET | b 0x1a74 |
+| 6432 | d1000409  |   sub.x.i x9 x0 1 | sub x9, x0, #0x1 |
+| 6436 | f100213f  |   cmp.x.i x9 8 | subs xzr, x9, #0x8 |
+| 6440 | 540017e9  |   b.ls VT_TYPE | b.ls 0x1c24  // b.plast |
+| 6444 | f101281f  |   cmp.x.i x0 74 | subs xzr, x0, #0x4a |
+| 6448 | 54000ae0  |   b.eq VT_PAREN | b.eq 0x1a8c  // b.none |
+| 6452 | f101341f  |   cmp.x.i x0 77 | subs xzr, x0, #0x4d |
+| 6456 | 54007960  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 6460 | f9000fe0  |   str.x x0 sp 3 | str x0, [sp, #24] |
+| 6464 | f100cc1f  |   cmp.x.i x0 51 | subs xzr, x0, #0x33 |
+| 6468 | 54008f00  |   b.eq VT_GET | b.eq 0x2b24  // b.none |
+| 6472 | f100d01f  |   cmp.x.i x0 52 | subs xzr, x0, #0x34 |
+| 6476 | 54008e20  |   b.eq VT_LEN | b.eq 0x2b10  // b.none |
+| 6480 | f100d41f  |   cmp.x.i x0 53 | subs xzr, x0, #0x35 |
+| 6484 | 540092a0  |   b.eq VT_SYS | b.eq 0x2ba8  // b.none |
+| 6488 | f100d81f  |   cmp.x.i x0 54 | subs xzr, x0, #0x36 |
+| 6492 | 54009260  |   b.eq VT_SYS | b.eq 0x2ba8  // b.none |
+| 6496 | f100dc1f  |   cmp.x.i x0 55 | subs xzr, x0, #0x37 |
+| 6500 | 54008c60  |   b.eq VT_TRUE | b.eq 0x2af0  // b.none |
+| 6504 | f100e01f  |   cmp.x.i x0 56 | subs xzr, x0, #0x38 |
+| 6508 | 54008ca0  |   b.eq VT_FALSE | b.eq 0x2b00  // b.none |
+| 6512 | d1008409  |   sub.x.i x9 x0 33 | sub x9, x0, #0x21 |
+| 6516 | f100453f  |   cmp.x.i x9 17 | subs xzr, x9, #0x11 |
+| 6520 | 54007928  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 6524 | f9000fe0  |   str.x x0 sp 3 | str x0, [sp, #24] |
+| 6528 | f100c41f  |   cmp.x.i x0 49 | subs xzr, x0, #0x31 |
+| 6532 | 54000a82  |   b.hs VT_UN | b.cs 0x1ad4  // b.hs, b.nlast |
+| 6536 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 6540 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 6544 | 97ffffa7  |   bl VAL | bl 0x182c |
+| 6548 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 6552 | 540000a1  |   b.ne VB1 | b.ne 0x19ac  // b.any |
+| 6556 | 94000245  |   bl MATREG | bl 0x22b0 |
+| 6560 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 6564 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 6568 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 6572 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 6576 | f90017e1  |   str.x x1 sp 5 | str x1, [sp, #40] |
+| 6580 | f9001be2  |   str.x x2 sp 6 | str x2, [sp, #48] |
+| 6584 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 6588 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 6592 | 97ffff9b  |   bl VAL | bl 0x182c |
+| 6596 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 6600 | 540000a1  |   b.ne VB2 | b.ne 0x19dc  // b.any |
+| 6604 | 94000239  |   bl MATREG | bl 0x22b0 |
+| 6608 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 6612 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 6616 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 6620 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 6624 | f90023e1  |   str.x x1 sp 8 | str x1, [sp, #64] |
+| 6628 | f90027e2  |   str.x x2 sp 9 | str x2, [sp, #72] |
+| 6632 | f94013ea  |   ldr.x x10 sp 4 | ldr x10, [sp, #32] |
+| 6636 | f9401feb  |   ldr.x x11 sp 7 | ldr x11, [sp, #56] |
+| 6640 | f100095f  |   cmp.x.i x10 2 | subs xzr, x10, #0x2 |
+| 6644 | 54000141  |   b.ne VB3 | b.ne 0x1a1c  // b.any |
+| 6648 | f100097f  |   cmp.x.i x11 2 | subs xzr, x11, #0x2 |
+| 6652 | 540073c0  |   b.eq E_BARE | b.eq 0x2874  // b.none |
+| 6656 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 6660 | f94027e2  |   ldr.x x2 sp 9 | ldr x2, [sp, #72] |
+| 6664 | f9401be3  |   ldr.x x3 sp 6 | ldr x3, [sp, #48] |
+| 6668 | 940002a2  |   bl RANGE | bl 0x2494 |
+| 6672 | f9001be2  |   str.x x2 sp 6 | str x2, [sp, #48] |
+| 6676 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 6680 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 6684 | f100097f  |   cmp.x.i x11 2 | subs xzr, x11, #0x2 |
+| 6688 | 54000101  |   b.ne VB4 | b.ne 0x1a40  // b.any |
+| 6692 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 6696 | f9401be2  |   ldr.x x2 sp 6 | ldr x2, [sp, #48] |
+| 6700 | f94027e3  |   ldr.x x3 sp 9 | ldr x3, [sp, #72] |
+| 6704 | 94000299  |   bl RANGE | bl 0x2494 |
+| 6708 | f90027e2  |   str.x x2 sp 9 | str x2, [sp, #72] |
+| 6712 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 6716 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 6720 | f9400fe0  |   ldr.x x0 sp 3 | ldr x0, [sp, #24] |
+| 6724 | f100a41f  |   cmp.x.i x0 41 | subs xzr, x0, #0x29 |
+| 6728 | 540000e0  |   b.eq VB5 | b.eq 0x1a64  // b.none |
+| 6732 | f100a81f  |   cmp.x.i x0 42 | subs xzr, x0, #0x2a |
+| 6736 | 540000a0  |   b.eq VB5 | b.eq 0x1a64  // b.none |
+| 6740 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 6744 | f94027e2  |   ldr.x x2 sp 9 | ldr x2, [sp, #72] |
+| 6748 | eb02003f  |   cmp.x x1 x2 | subs xzr, x1, x2 |
+| 6752 | 54006fa1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 6756 | f9400fe0  |   ldr.x x0 sp 3 | ldr x0, [sp, #24] |
+| 6760 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 6764 | 910083e2  |   add.x.i x2 sp 32 | add x2, sp, #0x20 |
+| 6768 | 940000b9  |   bl BINOP | bl 0x1d54 |
+| 6772 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 6776 | f940292a  |   ldr.x x10 x9 10 | ldr x10, [x9, #80] |
+| 6780 | d100054a  |   sub.x.i x10 x10 1 | sub x10, x10, #0x1 |
+| 6784 | f900292a  |   str.x x10 x9 10 | str x10, [x9, #80] |
+| 6788 | f84807fe  |   ldr.x.post x30 sp 128 | ldr x30, [sp], #128 |
+| 6792 | d65f03c0  |   ret | ret  |
+| 6796 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 6800 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 6804 | 97ffff66  |   bl VAL | bl 0x182c |
+| 6808 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 6812 | f90017e1  |   str.x x1 sp 5 | str x1, [sp, #40] |
+| 6816 | f9001be2  |   str.x x2 sp 6 | str x2, [sp, #48] |
+| 6820 | 94000296  |   bl TOK | bl 0x24fc |
+| 6824 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 6828 | 54006f81  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 6832 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 6836 | 54006f48  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 6840 | 9400030c  |   bl KW | bl 0x26e8 |
+| 6844 | f1012c1f  |   cmp.x.i x0 75 | subs xzr, x0, #0x4b |
+| 6848 | 54006ee1  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 6852 | f94013e0  |   ldr.x x0 sp 4 | ldr x0, [sp, #32] |
+| 6856 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 6860 | f9401be2  |   ldr.x x2 sp 6 | ldr x2, [sp, #48] |
+| 6864 | 17ffffe9  |   b VT_RET | b 0x1a74 |
+| 6868 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 6872 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 6876 | 97ffff54  |   bl VAL | bl 0x182c |
+| 6880 | f9400fe9  |   ldr.x x9 sp 3 | ldr x9, [sp, #24] |
+| 6884 | f100c93f  |   cmp.x.i x9 50 | subs xzr, x9, #0x32 |
+| 6888 | 540000c1  |   b.ne VU1 | b.ne 0x1b00  // b.any |
+| 6892 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 6896 | 54000081  |   b.ne VU1 | b.ne 0x1b00  // b.any |
+| 6900 | d2800029  |   movz.x x9 1 0 | movz x9, #0x1 |
+| 6904 | ca090021  |   eor.x x1 x1 x9 | eor x1, x1, x9 |
+| 6908 | 17ffffde  |   b VT_RET | b 0x1a74 |
+| 6912 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 6916 | 54006b80  |   b.eq E_BARE | b.eq 0x2874  // b.none |
+| 6920 | f9001be2  |   str.x x2 sp 6 | str x2, [sp, #48] |
+| 6924 | 940001e9  |   bl MATREG | bl 0x22b0 |
+| 6928 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 6932 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 6936 | 9400031a  |   bl DESTREG | bl 0x2780 |
+| 6940 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 6944 | f9400fe9  |   ldr.x x9 sp 3 | ldr x9, [sp, #24] |
+| 6948 | f100c93f  |   cmp.x.i x9 50 | subs xzr, x9, #0x32 |
+| 6952 | 540003e0  |   b.eq VU_NOT | b.eq 0x1ba4  // b.none |
+| 6956 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 6960 | f100053f  |   cmp.x.i x9 1 | subs xzr, x9, #0x1 |
+| 6964 | 54006900  |   b.eq E_TYPE | b.eq 0x2854  // b.none |
+| 6968 | f100253f  |   cmp.x.i x9 9 | subs xzr, x9, #0x9 |
+| 6972 | 54000260  |   b.eq VN64 | b.eq 0x1b88  // b.none |
+| 6976 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 6980 | f2b96000  |   movk.x x0 0xcb00 1  | movk x0, #0xcb00, lsl #16 |
+| 6984 | f100113f  |   cmp.x.i x9 4 | subs xzr, x9, #0x4 |
+| 6988 | 540000a1  |   b.ne VN1 | b.ne 0x1b60  // b.any |
+| 6992 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 6996 | f2a96000  |   movk.x x0 0x4b00 1  | movk x0, #0x4b00, lsl #16 |
+| 7000 | 9400002f  |   bl VU_E | bl 0x1c14 |
+| 7004 | 1400002a  |   b VU_R | b 0x1c04 |
+| 7008 | 9400002d  |   bl VU_E | bl 0x1c14 |
+| 7012 | f9401fe0  |   ldr.x x0 sp 7 | ldr x0, [sp, #56] |
+| 7016 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 7020 | f100183f  |   cmp.x.i x1 6 | subs xzr, x1, #0x6 |
+| 7024 | 54000062  |   b.hs VN2 | b.cs 0x1b7c  // b.hs, b.nlast |
+| 7028 | 94000223  |   bl CANON | bl 0x2400 |
+| 7032 | 14000023  |   b VU_R | b 0x1c04 |
+| 7036 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 7040 | 94000235  |   bl CHKEXT | bl 0x2454 |
+| 7044 | 14000020  |   b VU_R | b 0x1c04 |
+| 7048 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 7052 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 7056 | 94000021  |   bl VU_E | bl 0x1c14 |
+| 7060 | d28000c0  |   movz.x x0 6 0 | movz x0, #0x6 |
+| 7064 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 7068 | 94000307  |   bl TRAPC | bl 0x27b8 |
+| 7072 | 14000019  |   b VU_R | b 0x1c04 |
+| 7076 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 7080 | f100053f  |   cmp.x.i x9 1 | subs xzr, x9, #0x1 |
+| 7084 | 54000101  |   b.ne VNT1 | b.ne 0x1bcc  // b.any |
+| 7088 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 7092 | f2ba4800  |   movk.x x0 0xd240 1  | movk x0, #0xd240, lsl #16 |
+| 7096 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 7100 | f94017e2  |   ldr.x x2 sp 5 | ldr x2, [sp, #40] |
+| 7104 | d2800003  |   movz.x x3 0 0 | movz x3, #0x0 |
+| 7108 | 940002f7  |   bl E3 | bl 0x27a0 |
+| 7112 | 1400000f  |   b VU_R | b 0x1c04 |
+| 7116 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 7120 | f2b54400  |   movk.x x0 0xaa20 1  | movk x0, #0xaa20, lsl #16 |
+| 7124 | f100113f  |   cmp.x.i x9 4 | subs xzr, x9, #0x4 |
+| 7128 | 540000a1  |   b.ne VNT2 | b.ne 0x1bec  // b.any |
+| 7132 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 7136 | f2a54400  |   movk.x x0 0x2a20 1  | movk x0, #0x2a20, lsl #16 |
+| 7140 | 9400000c  |   bl VU_E | bl 0x1c14 |
+| 7144 | 14000007  |   b VU_R | b 0x1c04 |
+| 7148 | 9400000a  |   bl VU_E | bl 0x1c14 |
+| 7152 | f9401fe0  |   ldr.x x0 sp 7 | ldr x0, [sp, #56] |
+| 7156 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 7160 | f100183f  |   cmp.x.i x1 6 | subs xzr, x1, #0x6 |
+| 7164 | 54000042  |   b.hs VU_R | b.cs 0x1c04  // b.hs, b.nlast |
+| 7168 | 94000200  |   bl CANON | bl 0x2400 |
+| 7172 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 7176 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 7180 | f9401be2  |   ldr.x x2 sp 6 | ldr x2, [sp, #48] |
+| 7184 | 17ffff99  |   b VT_RET | b 0x1a74 |
+| 7188 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 7192 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 7196 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 7200 | 140002e0  |   b E3 | b 0x27a0 |
+| 7204 | f9002be0  |   str.x x0 sp 10 | str x0, [sp, #80] |
+| 7208 | 94000235  |   bl TOK | bl 0x24fc |
+| 7212 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 7216 | 540000e1  |   b.ne VTT1 | b.ne 0x1c4c  // b.any |
+| 7220 | f9402be2  |   ldr.x x2 sp 10 | ldr x2, [sp, #80] |
+| 7224 | d2a030a9  |   movz.x x9 0x185 1  | movz x9, #0x185, lsl #16 |
+| 7228 | f9402d23  |   ldr.x x3 x9 11 | ldr x3, [x9, #88] |
+| 7232 | 94000215  |   bl RANGE | bl 0x2494 |
+| 7236 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 7240 | 17ffff8b  |   b VT_RET | b 0x1a74 |
+| 7244 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 7248 | aa0103e4  |   mov.x x4 x1 | orr x4, xzr, x1 |
+| 7252 | aa0203e5  |   mov.x x5 x2 | orr x5, xzr, x2 |
+| 7256 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 7260 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 7264 | 97fffefd  |   bl VALTOK | bl 0x1854 |
+| 7268 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 7272 | 54006060  |   b.eq E_BARE | b.eq 0x2874  // b.none |
+| 7276 | f9001be2  |   str.x x2 sp 6 | str x2, [sp, #48] |
+| 7280 | 94000190  |   bl MATREG | bl 0x22b0 |
+| 7284 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 7288 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 7292 | f9402be2  |   ldr.x x2 sp 10 | ldr x2, [sp, #80] |
+| 7296 | f100043f  |   cmp.x.i x1 1 | subs xzr, x1, #0x1 |
+| 7300 | 54005f00  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 7304 | f100045f  |   cmp.x.i x2 1 | subs xzr, x2, #0x1 |
+| 7308 | 54005ec0  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 7312 | 50ff42c9  |   adr x9 TWID | adr x9, 0x4ea |
+| 7316 | 38616923  |   ldrb.r w3 x9 x1 | ldrb w3, [x9, x1] |
+| 7320 | 38626924  |   ldrb.r w4 x9 x2 | ldrb w4, [x9, x2] |
+| 7324 | f100183f  |   cmp.x.i x1 6 | subs xzr, x1, #0x6 |
+| 7328 | 54000162  |   b.hs VC_SS | b.cs 0x1ccc  // b.hs, b.nlast |
+| 7332 | f100185f  |   cmp.x.i x2 6 | subs xzr, x2, #0x6 |
+| 7336 | 540000a2  |   b.hs VC_US | b.cs 0x1cbc  // b.hs, b.nlast |
+| 7340 | eb04007f  |   cmp.x x3 x4 | subs xzr, x3, x4 |
+| 7344 | 540004a9  |   b.ls VC_OK | b.ls 0x1d44  // b.plast |
+| 7348 | aa0403e5  |   mov.x x5 x4 | orr x5, xzr, x4 |
+| 7352 | 14000013  |   b VC_LSR | b 0x1d04 |
+| 7356 | eb04007f  |   cmp.x x3 x4 | subs xzr, x3, x4 |
+| 7360 | 54000423  |   b.lo VC_OK | b.cc 0x1d44  // b.lo, b.ul, b.last |
+| 7364 | d1000485  |   sub.x.i x5 x4 1 | sub x5, x4, #0x1 |
+| 7368 | 1400000f  |   b VC_LSR | b 0x1d04 |
+| 7372 | f100185f  |   cmp.x.i x2 6 | subs xzr, x2, #0x6 |
+| 7376 | 540000c2  |   b.hs VC_S2 | b.cs 0x1ce8  // b.hs, b.nlast |
+| 7380 | aa0403e5  |   mov.x x5 x4 | orr x5, xzr, x4 |
+| 7384 | f100fcbf  |   cmp.x.i x5 63 | subs xzr, x5, #0x3f |
+| 7388 | 54000149  |   b.ls VC_LSR | b.ls 0x1d04  // b.plast |
+| 7392 | d28007e5  |   movz.x x5 63 0 | movz x5, #0x3f |
+| 7396 | 14000008  |   b VC_LSR | b 0x1d04 |
+| 7400 | eb04007f  |   cmp.x x3 x4 | subs xzr, x3, x4 |
+| 7404 | 540002c9  |   b.ls VC_OK | b.ls 0x1d44  // b.plast |
+| 7408 | f94017e0  |   ldr.x x0 sp 5 | ldr x0, [sp, #40] |
+| 7412 | f9402be1  |   ldr.x x1 sp 10 | ldr x1, [sp, #80] |
+| 7416 | d28000a2  |   movz.x x2 5 0 | movz x2, #0x5 |
+| 7420 | 940001d6  |   bl CHKEXT | bl 0x2454 |
+| 7424 | 14000011  |   b VC_OK | b 0x1d44 |
+| 7428 | 94000298  |   bl ALLOC | bl 0x2764 |
+| 7432 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 7436 | d29f8001  |   movz.x x1 0xfc00 0 | movz x1, #0xfc00 |
+| 7440 | f2ba6801  |   movk.x x1 0xd340 1 | movk x1, #0xd340, lsl #16 |
+| 7444 | aa000021  |   orr.x x1 x1 x0 | orr x1, x1, x0 |
+| 7448 | d370bca5  |   ubfm.x x5 x5 48 47 | ubfm x5, x5, #48, #47 |
+| 7452 | aa050021  |   orr.x x1 x1 x5 | orr x1, x1, x5 |
+| 7456 | f94017e2  |   ldr.x x2 sp 5 | ldr x2, [sp, #40] |
+| 7460 | d37be842  |   ubfm.x x2 x2 59 58 | ubfm x2, x2, #59, #58 |
+| 7464 | aa020020  |   orr.x x0 x1 x2 | orr x0, x1, x2 |
+| 7468 | 94000298  |   bl EMIT | bl 0x278c |
+| 7472 | f9401fe0  |   ldr.x x0 sp 7 | ldr x0, [sp, #56] |
+| 7476 | d2b6a009  |   movz.x x9 0xb500 1  | movz x9, #0xb500, lsl #16 |
+| 7480 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 7484 | d28000a1  |   movz.x x1 5 0 | movz x1, #0x5 |
+| 7488 | 940002a0  |   bl TRAPSITE | bl 0x27c0 |
+| 7492 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 7496 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 7500 | f9402be2  |   ldr.x x2 sp 10 | ldr x2, [sp, #80] |
+| 7504 | 17ffff49  |   b VT_RET | b 0x1a74 |
+| 7508 | f81b0ffe  |   str.x.pre x30 sp -80 | str x30, [sp, #-80]! |
+| 7512 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 7516 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 7520 | f9000fe2  |   str.x x2 sp 3 | str x2, [sp, #24] |
+| 7524 | f9400849  |   ldr.x x9 x2 2 | ldr x9, [x2, #16] |
+| 7528 | f9001be9  |   str.x x9 sp 6 | str x9, [sp, #48] |
+| 7532 | f9400040  |   ldr.x x0 x2 0 | ldr x0, [x2] |
+| 7536 | f9400441  |   ldr.x x1 x2 1 | ldr x1, [x2, #8] |
+| 7540 | f9400842  |   ldr.x x2 x2 2 | ldr x2, [x2, #16] |
+| 7544 | 9400014e  |   bl MATREG | bl 0x22b0 |
+| 7548 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 7552 | d2800009  |   movz.x x9 0 0 | movz x9, #0x0 |
+| 7556 | f9001fe9  |   str.x x9 sp 7 | str x9, [sp, #56] |
+| 7560 | f9400fea  |   ldr.x x10 sp 3 | ldr x10, [sp, #24] |
+| 7564 | f9400d40  |   ldr.x x0 x10 3 | ldr x0, [x10, #24] |
+| 7568 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 7572 | 54000301  |   b.ne BO_BREG | b.ne 0x1df4  // b.any |
+| 7576 | f9401141  |   ldr.x x1 x10 4 | ldr x1, [x10, #32] |
+| 7580 | f94007eb  |   ldr.x x11 sp 1 | ldr x11, [sp, #8] |
+| 7584 | f100a57f  |   cmp.x.i x11 41 | subs xzr, x11, #0x29 |
+| 7588 | 54000160  |   b.eq BO_IS | b.eq 0x1dd0  // b.none |
+| 7592 | f100a97f  |   cmp.x.i x11 42 | subs xzr, x11, #0x2a |
+| 7596 | 54000120  |   b.eq BO_IS | b.eq 0x1dd0  // b.none |
+| 7600 | f1008d7f  |   cmp.x.i x11 35 | subs xzr, x11, #0x23 |
+| 7604 | 54000063  |   b.lo BO_II | b.cc 0x1dc0  // b.lo, b.ul, b.last |
+| 7608 | f100ad7f  |   cmp.x.i x11 43 | subs xzr, x11, #0x2b |
+| 7612 | 540001c3  |   b.lo BO_BREG | b.cc 0x1df4  // b.lo, b.ul, b.last |
+| 7616 | d281ffe9  |   movz.x x9 4095 0 | movz x9, #0xfff |
+| 7620 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 7624 | 54000168  |   b.hi BO_BREG | b.hi 0x1df4  // b.pmore |
+| 7628 | 14000006  |   b BO_IMM | b 0x1de4 |
+| 7632 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 7636 | 50ff38ac  |   adr x12 TWID | adr x12, 0x4ea |
+| 7640 | 38696989  |   ldrb.r w9 x12 x9 | ldrb w9, [x12, x9] |
+| 7644 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 7648 | 540000a2  |   b.hs BO_BREG | b.cs 0x1df4  // b.hs, b.nlast |
+| 7652 | f90017e1  |   str.x x1 sp 5 | str x1, [sp, #40] |
+| 7656 | d2800029  |   movz.x x9 1 0 | movz x9, #0x1 |
+| 7660 | f9001fe9  |   str.x x9 sp 7 | str x9, [sp, #56] |
+| 7664 | 14000007  |   b BO_OPS | b 0x1e0c |
+| 7668 | f9400fea  |   ldr.x x10 sp 3 | ldr x10, [sp, #24] |
+| 7672 | f9400d40  |   ldr.x x0 x10 3 | ldr x0, [x10, #24] |
+| 7676 | f9401141  |   ldr.x x1 x10 4 | ldr x1, [x10, #32] |
+| 7680 | f9401542  |   ldr.x x2 x10 5 | ldr x2, [x10, #40] |
+| 7684 | 9400012b  |   bl MATREG | bl 0x22b0 |
+| 7688 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 7692 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 7696 | f100ac1f  |   cmp.x.i x0 43 | subs xzr, x0, #0x2b |
+| 7700 | 54001902  |   b.hs BO_CMP | b.cs 0x2134  // b.hs, b.nlast |
+| 7704 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 7708 | f100053f  |   cmp.x.i x9 1 | subs xzr, x9, #0x1 |
+| 7712 | 54000081  |   b.ne BO_NB | b.ne 0x1e30  // b.any |
+| 7716 | d100980a  |   sub.x.i x10 x0 38 | sub x10, x0, #0x26 |
+| 7720 | f100095f  |   cmp.x.i x10 2 | subs xzr, x10, #0x2 |
+| 7724 | 54005148  |   b.hi E_TYPE | b.hi 0x2854  // b.pmore |
+| 7728 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 7732 | 94000253  |   bl DESTREG | bl 0x2780 |
+| 7736 | f9000be0  |   str.x x0 sp 2 | str x0, [sp, #16] |
+| 7740 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 7744 | f1008c1f  |   cmp.x.i x0 35 | subs xzr, x0, #0x23 |
+| 7748 | 54000103  |   b.lo BO_ADD | b.cc 0x1e64  // b.lo, b.ul, b.last |
+| 7752 | 540004c0  |   b.eq BO_MUL | b.eq 0x1ee0  // b.none |
+| 7756 | f100981f  |   cmp.x.i x0 38 | subs xzr, x0, #0x26 |
+| 7760 | 540008e3  |   b.lo BO_DIV | b.cc 0x1f6c  // b.lo, b.ul, b.last |
+| 7764 | f100a41f  |   cmp.x.i x0 41 | subs xzr, x0, #0x29 |
+| 7768 | 54000d83  |   b.lo BO_LOG | b.cc 0x2008  // b.lo, b.ul, b.last |
+| 7772 | 54000e80  |   b.eq BO_SHL | b.eq 0x202c  // b.none |
+| 7776 | 14000098  |   b BO_SHR | b 0x20c0 |
+| 7780 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 7784 | f9401fea  |   ldr.x x10 sp 7 | ldr x10, [sp, #56] |
+| 7788 | b50000ca  |   cbnz.x x10 BA_I | cbnz x10, 0x1e84 |
+| 7792 | d2b16000  |   movz.x x0 0x8b00 1  | movz x0, #0x8b00, lsl #16 |
+| 7796 | f100853f  |   cmp.x.i x9 33 | subs xzr, x9, #0x21 |
+| 7800 | 540000e0  |   b.eq BA_S | b.eq 0x1e94  // b.none |
+| 7804 | d2b96000  |   movz.x x0 0xcb00 1  | movz x0, #0xcb00, lsl #16 |
+| 7808 | 14000005  |   b BA_S | b 0x1e94 |
+| 7812 | d2b22000  |   movz.x x0 0x9100 1  | movz x0, #0x9100, lsl #16 |
+| 7816 | f100853f  |   cmp.x.i x9 33 | subs xzr, x9, #0x21 |
+| 7820 | 54000040  |   b.eq BA_S | b.eq 0x1e94  // b.none |
+| 7824 | d2ba2000  |   movz.x x0 0xd100 1  | movz x0, #0xd100, lsl #16 |
+| 7828 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 7832 | f100113f  |   cmp.x.i x9 4 | subs xzr, x9, #0x4 |
+| 7836 | 540000a1  |   b.ne BA2 | b.ne 0x1eb0  // b.any |
+| 7840 | d2b0000a  |   movz.x x10 0x8000 1  | movz x10, #0x8000, lsl #16 |
+| 7844 | ca0a0000  |   eor.x x0 x0 x10 | eor x0, x0, x10 |
+| 7848 | 940000c5  |   bl BO_W3 | bl 0x21bc |
+| 7852 | 140000bf  |   b BO_RET | b 0x21a8 |
+| 7856 | f100253f  |   cmp.x.i x9 9 | subs xzr, x9, #0x9 |
+| 7860 | 54000101  |   b.ne BA3 | b.ne 0x1ed4  // b.any |
+| 7864 | d2a4000a  |   movz.x x10 0x2000 1  | movz x10, #0x2000, lsl #16 |
+| 7868 | aa0a0000  |   orr.x x0 x0 x10 | orr x0, x0, x10 |
+| 7872 | 940000bf  |   bl BO_W3 | bl 0x21bc |
+| 7876 | d28000c0  |   movz.x x0 6 0 | movz x0, #0x6 |
+| 7880 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 7884 | 9400023b  |   bl TRAPC | bl 0x27b8 |
+| 7888 | 140000b6  |   b BO_RET | b 0x21a8 |
+| 7892 | 940000ba  |   bl BO_W3 | bl 0x21bc |
+| 7896 | 940000c7  |   bl BO_FIX | bl 0x21f4 |
+| 7900 | 140000b3  |   b BO_RET | b 0x21a8 |
+| 7904 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 7908 | f100253f  |   cmp.x.i x9 9 | subs xzr, x9, #0x9 |
+| 7912 | 54000180  |   b.eq BM64 | b.eq 0x1f18  // b.none |
+| 7916 | d28f8000  |   movz.x x0 0x7c00 0 | movz x0, #0x7c00 |
+| 7920 | f2b36000  |   movk.x x0 0x9b00 1  | movk x0, #0x9b00, lsl #16 |
+| 7924 | f100113f  |   cmp.x.i x9 4 | subs xzr, x9, #0x4 |
+| 7928 | 540000a1  |   b.ne BM1 | b.ne 0x1f0c  // b.any |
+| 7932 | d2b0000a  |   movz.x x10 0x8000 1 | movz x10, #0x8000, lsl #16 |
+| 7936 | ca0a0000  |   eor.x x0 x0 x10 | eor x0, x0, x10 |
+| 7940 | 940000ae  |   bl BO_W3 | bl 0x21bc |
+| 7944 | 140000a8  |   b BO_RET | b 0x21a8 |
+| 7948 | 940000ac  |   bl BO_W3 | bl 0x21bc |
+| 7952 | 940000b9  |   bl BO_FIX | bl 0x21f4 |
+| 7956 | 140000a5  |   b BO_RET | b 0x21a8 |
+| 7960 | 94000213  |   bl ALLOC | bl 0x2764 |
+| 7964 | f90023e0  |   str.x x0 sp 8 | str x0, [sp, #64] |
+| 7968 | d28f8000  |   movz.x x0 0x7c00 0 | movz x0, #0x7c00 |
+| 7972 | f2b36800  |   movk.x x0 0x9b40 1  | movk x0, #0x9b40, lsl #16 |
+| 7976 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 7980 | f94013e2  |   ldr.x x2 sp 4 | ldr x2, [sp, #32] |
+| 7984 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 7988 | 9400021b  |   bl E3 | bl 0x27a0 |
+| 7992 | d28f8000  |   movz.x x0 0x7c00 0 | movz x0, #0x7c00 |
+| 7996 | f2b36000  |   movk.x x0 0x9b00 1  | movk x0, #0x9b00, lsl #16 |
+| 8000 | 9400009f  |   bl BO_W3 | bl 0x21bc |
+| 8004 | d29f83e0  |   movz.x x0 0xfc1f 0 | movz x0, #0xfc1f |
+| 8008 | f2bd7000  |   movk.x x0 0xeb80 1  | movk x0, #0xeb80, lsl #16 |
+| 8012 | d2800001  |   movz.x x1 0 0 | movz x1, #0x0 |
+| 8016 | f94023e2  |   ldr.x x2 sp 8 | ldr x2, [sp, #64] |
+| 8020 | f9400be3  |   ldr.x x3 sp 2 | ldr x3, [sp, #16] |
+| 8024 | 94000212  |   bl E3 | bl 0x27a0 |
+| 8028 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 8032 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 8036 | 94000215  |   bl TRAPC | bl 0x27b8 |
+| 8040 | 14000090  |   b BO_RET | b 0x21a8 |
+| 8044 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 8048 | f100193f  |   cmp.x.i x9 6 | subs xzr, x9, #0x6 |
+| 8052 | 54004ba2  |   b.hs BO_SDIV | b.cs 0x28e8  // b.hs, b.nlast |
+| 8056 | f9400fea  |   ldr.x x10 sp 3 | ldr x10, [sp, #24] |
+| 8060 | f9400d40  |   ldr.x x0 x10 3 | ldr x0, [x10, #24] |
+| 8064 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 8068 | 54000061  |   b.ne BD1 | b.ne 0x1f90  // b.any |
+| 8072 | f9401140  |   ldr.x x0 x10 4 | ldr x0, [x10, #32] |
+| 8076 | b50000c0  |   cbnz.x x0 BD2 | cbnz x0, 0x1fa4 |
+| 8080 | f94017e0  |   ldr.x x0 sp 5 | ldr x0, [sp, #40] |
+| 8084 | d2b68009  |   movz.x x9 0xb400 1  | movz x9, #0xb400, lsl #16 |
+| 8088 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 8092 | d2800041  |   movz.x x1 2 0 | movz x1, #0x2 |
+| 8096 | 94000208  |   bl TRAPSITE | bl 0x27c0 |
+| 8100 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 8104 | f100953f  |   cmp.x.i x9 37 | subs xzr, x9, #0x25 |
+| 8108 | 540000a0  |   b.eq BD_REM | b.eq 0x1fc0  // b.none |
+| 8112 | d2810000  |   movz.x x0 0x0800 0 | movz x0, #0x800 |
+| 8116 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 8120 | 94000081  |   bl BO_W3 | bl 0x21bc |
+| 8124 | 1400007b  |   b BO_RET | b 0x21a8 |
+| 8128 | 940001e9  |   bl ALLOC | bl 0x2764 |
+| 8132 | f90023e0  |   str.x x0 sp 8 | str x0, [sp, #64] |
+| 8136 | d2810000  |   movz.x x0 0x0800 0 | movz x0, #0x800 |
+| 8140 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 8144 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 8148 | f94013e2  |   ldr.x x2 sp 4 | ldr x2, [sp, #32] |
+| 8152 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 8156 | 940001f1  |   bl E3 | bl 0x27a0 |
+| 8160 | d2900000  |   movz.x x0 0x8000 0 | movz x0, #0x8000 |
+| 8164 | f2b36000  |   movk.x x0 0x9b00 1  | movk x0, #0x9b00, lsl #16 |
+| 8168 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 8172 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 8176 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8180 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 8184 | f94023e2  |   ldr.x x2 sp 8 | ldr x2, [sp, #64] |
+| 8188 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 8192 | 940001e8  |   bl E3 | bl 0x27a0 |
+| 8196 | 14000069  |   b BO_RET | b 0x21a8 |
+| 8200 | d2b14000  |   movz.x x0 0x8a00 1  | movz x0, #0x8a00, lsl #16 |
+| 8204 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 8208 | f1009d3f  |   cmp.x.i x9 39 | subs xzr, x9, #0x27 |
+| 8212 | 54000083  |   b.lo BL1 | b.cc 0x2024  // b.lo, b.ul, b.last |
+| 8216 | d2b54000  |   movz.x x0 0xaa00 1  | movz x0, #0xaa00, lsl #16 |
+| 8220 | 54000040  |   b.eq BL1 | b.eq 0x2024  // b.none |
+| 8224 | d2b94000  |   movz.x x0 0xca00 1  | movz x0, #0xca00, lsl #16 |
+| 8228 | 94000066  |   bl BO_W3 | bl 0x21bc |
+| 8232 | 14000060  |   b BO_RET | b 0x21a8 |
+| 8236 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 8240 | f100253f  |   cmp.x.i x9 9 | subs xzr, x9, #0x9 |
+| 8244 | 54004e20  |   b.eq BS_64 | b.eq 0x29f8  // b.none |
+| 8248 | f9401fea  |   ldr.x x10 sp 7 | ldr x10, [sp, #56] |
+| 8252 | b50001ca  |   cbnz.x x10 BS_IL | cbnz x10, 0x2074 |
+| 8256 | 94000076  |   bl BO_SCHK | bl 0x2218 |
+| 8260 | d2840000  |   movz.x x0 0x2000 0 | movz x0, #0x2000 |
+| 8264 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 8268 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 8272 | f100113f  |   cmp.x.i x9 4 | subs xzr, x9, #0x4 |
+| 8276 | 540000a1  |   b.ne BS1 | b.ne 0x2068  // b.any |
+| 8280 | d2b0000a  |   movz.x x10 0x8000 1 | movz x10, #0x8000, lsl #16 |
+| 8284 | ca0a0000  |   eor.x x0 x0 x10 | eor x0, x0, x10 |
+| 8288 | 94000057  |   bl BO_W3 | bl 0x21bc |
+| 8292 | 14000051  |   b BO_RET | b 0x21a8 |
+| 8296 | 94000055  |   bl BO_W3 | bl 0x21bc |
+| 8300 | 94000062  |   bl BO_FIX | bl 0x21f4 |
+| 8304 | 1400004e  |   b BO_RET | b 0x21a8 |
+| 8308 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 8312 | d2800802  |   movz.x x2 64 0 | movz x2, #0x40 |
+| 8316 | cb010042  |   sub.x x2 x2 x1 | sub x2, x2, x1 |
+| 8320 | d3401442  |   ubfm.x x2 x2 0 5 | ubfm x2, x2, #0, #5 |
+| 8324 | d28007e3  |   movz.x x3 63 0 | movz x3, #0x3f |
+| 8328 | cb010063  |   sub.x x3 x3 x1 | sub x3, x3, x1 |
+| 8332 | d2ba6800  |   movz.x x0 0xd340 1  | movz x0, #0xd340, lsl #16 |
+| 8336 | d370bc42  |   ubfm.x x2 x2 48 47 | ubfm x2, x2, #48, #47 |
+| 8340 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 8344 | d376d463  |   ubfm.x x3 x3 54 53 | ubfm x3, x3, #54, #53 |
+| 8348 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 8352 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 8356 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 8360 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8364 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 8368 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8372 | 940001b6  |   bl EMIT | bl 0x278c |
+| 8376 | 9400004f  |   bl BO_FIX | bl 0x21f4 |
+| 8380 | 1400003b  |   b BO_RET | b 0x21a8 |
+| 8384 | f9401fea  |   ldr.x x10 sp 7 | ldr x10, [sp, #56] |
+| 8388 | b500016a  |   cbnz.x x10 BR_I | cbnz x10, 0x20f0 |
+| 8392 | 94000054  |   bl BO_SCHK | bl 0x2218 |
+| 8396 | d2848000  |   movz.x x0 0x2400 0 | movz x0, #0x2400 |
+| 8400 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 8404 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 8408 | f100193f  |   cmp.x.i x9 6 | subs xzr, x9, #0x6 |
+| 8412 | 54000063  |   b.lo BR1 | b.cc 0x20e8  // b.lo, b.ul, b.last |
+| 8416 | d2850000  |   movz.x x0 0x2800 0 | movz x0, #0x2800 |
+| 8420 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 8424 | 94000035  |   bl BO_W3 | bl 0x21bc |
+| 8428 | 1400002f  |   b BO_RET | b 0x21a8 |
+| 8432 | d29f8000  |   movz.x x0 0xfc00 0 | movz x0, #0xfc00 |
+| 8436 | f2ba6800  |   movk.x x0 0xd340 1  | movk x0, #0xd340, lsl #16 |
+| 8440 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 8444 | f100193f  |   cmp.x.i x9 6 | subs xzr, x9, #0x6 |
+| 8448 | 54000063  |   b.lo BR2 | b.cc 0x210c  // b.lo, b.ul, b.last |
+| 8452 | d29f8000  |   movz.x x0 0xfc00 0 | movz x0, #0xfc00 |
+| 8456 | f2b26800  |   movk.x x0 0x9340 1  | movk x0, #0x9340, lsl #16 |
+| 8460 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 8464 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 8468 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8472 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 8476 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 8480 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8484 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 8488 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8492 | 94000198  |   bl EMIT | bl 0x278c |
+| 8496 | 1400001e  |   b BO_RET | b 0x21a8 |
+| 8500 | f9401fea  |   ldr.x x10 sp 7 | ldr x10, [sp, #56] |
+| 8504 | b50000ea  |   cbnz.x x10 BC_I | cbnz x10, 0x2154 |
+| 8508 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 8512 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 8516 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 8520 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 8524 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8528 | 14000006  |   b BC_E | b 0x2168 |
+| 8532 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 8536 | f2be2000  |   movk.x x0 0xf100 1  | movk x0, #0xf100, lsl #16 |
+| 8540 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 8544 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 8548 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8552 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 8556 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 8560 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8564 | 94000186  |   bl EMIT | bl 0x278c |
+| 8568 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 8572 | d100ad29  |   sub.x.i x9 x9 43 | sub x9, x9, #0x2b |
+| 8576 | 8b090129  |   add.x x9 x9 x9 | add x9, x9, x9 |
+| 8580 | f9401bea  |   ldr.x x10 sp 6 | ldr x10, [sp, #48] |
+| 8584 | f100195f  |   cmp.x.i x10 6 | subs xzr, x10, #0x6 |
+| 8588 | 54000043  |   b.lo BC1 | b.cc 0x2194  // b.lo, b.ul, b.last |
+| 8592 | 91000529  |   add.x.i x9 x9 1 | add x9, x9, #0x1 |
+| 8596 | 50ff1b4a  |   adr x10 CONDS | adr x10, 0x4fe |
+| 8600 | 38696941  |   ldrb.r w1 x10 x9 | ldrb w1, [x10, x9] |
+| 8604 | d2800080  |   movz.x x0 4 0 | movz x0, #0x4 |
+| 8608 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 8612 | 14000004  |   b BO_RET2 | b 0x21b4 |
+| 8616 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 8620 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 8624 | f9401be2  |   ldr.x x2 sp 6 | ldr x2, [sp, #48] |
+| 8628 | f84507fe  |   ldr.x.post x30 sp 80 | ldr x30, [sp], #80 |
+| 8632 | d65f03c0  |   ret | ret  |
+| 8636 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 8640 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8644 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 8648 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 8652 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8656 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 8660 | f9401fe2  |   ldr.x x2 sp 7 | ldr x2, [sp, #56] |
+| 8664 | b5000082  |   cbnz.x x2 BW_I | cbnz x2, 0x21e8 |
+| 8668 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 8672 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8676 | 1400016a  |   b EMIT | b 0x278c |
+| 8680 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 8684 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8688 | 14000167  |   b EMIT | b 0x278c |
+| 8692 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 8696 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 8700 | f100183f  |   cmp.x.i x1 6 | subs xzr, x1, #0x6 |
+| 8704 | 54001003  |   b.lo CANON | b.cc 0x2400  // b.lo, b.ul, b.last |
+| 8708 | f100243f  |   cmp.x.i x1 9 | subs xzr, x1, #0x9 |
+| 8712 | 54000060  |   b.eq BF_X | b.eq 0x2214  // b.none |
+| 8716 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 8720 | 14000091  |   b CHKEXT | b 0x2454 |
+| 8724 | d65f03c0  |   ret | ret  |
+| 8728 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 8732 | 50ff1669  |   adr x9 TWID | adr x9, 0x4ea |
+| 8736 | 38616921  |   ldrb.r w1 x9 x1 | ldrb w1, [x9, x1] |
+| 8740 | f94017e2  |   ldr.x x2 sp 5 | ldr x2, [sp, #40] |
+| 8744 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 8748 | f2be2000  |   movk.x x0 0xf100 1  | movk x0, #0xf100, lsl #16 |
+| 8752 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 8756 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8760 | d37be842  |   ubfm.x x2 x2 59 58 | ubfm x2, x2, #59, #58 |
+| 8764 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 8768 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 8772 | 94000152  |   bl EMIT | bl 0x278c |
+| 8776 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 8780 | d28000e1  |   movz.x x1 7 0 | movz x1, #0x7 |
+| 8784 | 9400015a  |   bl TRAPC | bl 0x27b8 |
+| 8788 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 8792 | d65f03c0  |   ret | ret  |
+| 8796 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 8800 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 8804 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 8808 | 97fffd71  |   bl VAL | bl 0x182c |
+| 8812 | f100045f  |   cmp.x.i x2 1 | subs xzr, x2, #0x1 |
+| 8816 | 54002f21  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 8820 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 8824 | 540000c1  |   b.ne CO1 | b.ne 0x2290  // b.any |
+| 8828 | d2800029  |   movz.x x9 1 0 | movz x9, #0x1 |
+| 8832 | ca090021  |   eor.x x1 x1 x9 | eor x1, x1, x9 |
+| 8836 | d2aa8000  |   movz.x x0 0x5400 1  | movz x0, #0x5400, lsl #16 |
+| 8840 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 8844 | 14000004  |   b CO2 | b 0x229c |
+| 8848 | 94000008  |   bl MATREG | bl 0x22b0 |
+| 8852 | d2b68009  |   movz.x x9 0xb400 1  | movz x9, #0xb400, lsl #16 |
+| 8856 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 8860 | aa1403ea  |   mov.x x10 x20 | orr x10, xzr, x20 |
+| 8864 | 9400013b  |   bl EMIT | bl 0x278c |
+| 8868 | aa0a03e0  |   mov.x x0 x10 | orr x0, xzr, x10 |
+| 8872 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 8876 | d65f03c0  |   ret | ret  |
+| 8880 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 8884 | 54000061  |   b.ne MR1 | b.ne 0x22c0  // b.any |
+| 8888 | aa0103e0  |   mov.x x0 x1 | orr x0, xzr, x1 |
+| 8892 | d65f03c0  |   ret | ret  |
+| 8896 | f81e0ffe  |   str.x.pre x30 sp -32 | str x30, [sp, #-32]! |
+| 8900 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 8904 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 8908 | f9000fe2  |   str.x x2 sp 3 | str x2, [sp, #24] |
+| 8912 | 94000125  |   bl ALLOC | bl 0x2764 |
+| 8916 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 8920 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 8924 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 8928 | f9400fe2  |   ldr.x x2 sp 3 | ldr x2, [sp, #24] |
+| 8932 | f90007e3  |   str.x x3 sp 1 | str x3, [sp, #8] |
+| 8936 | 94000004  |   bl FORCE | bl 0x22f8 |
+| 8940 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 8944 | f84207fe  |   ldr.x.post x30 sp 32 | ldr x30, [sp], #32 |
+| 8948 | d65f03c0  |   ret | ret  |
+| 8952 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 8956 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 8960 | 54000100  |   b.eq FO_R | b.eq 0x2320  // b.none |
+| 8964 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 8968 | 540001e0  |   b.eq FO_C | b.eq 0x2344  // b.none |
+| 8972 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 8976 | 54002b21  |   b.ne E_BARE | b.ne 0x2874  // b.any |
+| 8980 | aa0303e0  |   mov.x x0 x3 | orr x0, xzr, x3 |
+| 8984 | 9400000f  |   bl CSET | bl 0x2354 |
+| 8988 | 1400000c  |   b FO_X | b 0x234c |
+| 8992 | eb03003f  |   cmp.x x1 x3 | subs xzr, x1, x3 |
+| 8996 | 54000140  |   b.eq FO_X | b.eq 0x234c  // b.none |
+| 9000 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 9004 | f2b54000  |   movk.x x0 0xaa00 1  | movk x0, #0xaa00, lsl #16 |
+| 9008 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 9012 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 9016 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 9020 | 94000114  |   bl EMIT | bl 0x278c |
+| 9024 | 14000003  |   b FO_X | b 0x234c |
+| 9028 | aa0303e0  |   mov.x x0 x3 | orr x0, xzr, x3 |
+| 9032 | 9400000b  |   bl MATCONST | bl 0x2374 |
+| 9036 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 9040 | d65f03c0  |   ret | ret  |
+| 9044 | d280fc09  |   movz.x x9 0x07e0 0 | movz x9, #0x7e0 |
+| 9048 | f2b353e9  |   movk.x x9 0x9a9f 1  | movk x9, #0x9a9f, lsl #16 |
+| 9052 | aa000129  |   orr.x x9 x9 x0 | orr x9, x9, x0 |
+| 9056 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 9060 | ca000021  |   eor.x x1 x1 x0 | eor x1, x1, x0 |
+| 9064 | d374cc21  |   ubfm.x x1 x1 52 51 | ubfm x1, x1, #52, #51 |
+| 9068 | aa010120  |   orr.x x0 x9 x1 | orr x0, x9, x1 |
+| 9072 | 14000107  |   b EMIT | b 0x278c |
+| 9076 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 9080 | aa0003e3  |   mov.x x3 x0 | orr x3, xzr, x0 |
+| 9084 | aa0103e4  |   mov.x x4 x1 | orr x4, xzr, x1 |
+| 9088 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |
+| 9092 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 9096 | d2ba5007  |   movz.x x7 0xd280 1  | movz x7, #0xd280, lsl #16 |
+| 9100 | d2800008  |   movz.x x8 0 0 | movz x8, #0x0 |
+| 9104 | f100009f  |   cmp.x.i x4 0 | subs xzr, x4, #0x0 |
+| 9108 | 5400006a  |   b.ge MC2 | b.ge 0x23a0  // b.tcont |
+| 9112 | d29fffe6  |   movz.x x6 0xffff 0 | movz x6, #0xffff |
+| 9116 | d2b25007  |   movz.x x7 0x9280 1  | movz x7, #0x9280, lsl #16 |
+| 9120 | d37ceca2  |   ubfm.x x2 x5 60 59 | ubfm x2, x5, #60, #59 |
+| 9124 | 9ac22481  |   lsrv.x x1 x4 x2 | lsrv x1, x4, x2 |
+| 9128 | d3403c21  |   ubfm.x x1 x1 0 15 | ubfm x1, x1, #0, #15 |
+| 9132 | eb06003f  |   cmp.x x1 x6 | subs xzr, x1, x6 |
+| 9136 | 54000180  |   b.eq MC4 | b.eq 0x23e0  // b.none |
+| 9140 | d2be5000  |   movz.x x0 0xf280 1  | movz x0, #0xf280, lsl #16 |
+| 9144 | b5000088  |   cbnz.x x8 MC3 | cbnz x8, 0x23c8 |
+| 9148 | ca060021  |   eor.x x1 x1 x6 | eor x1, x1, x6 |
+| 9152 | aa0703e0  |   mov.x x0 x7 | orr x0, xzr, x7 |
+| 9156 | d2800028  |   movz.x x8 1 0 | movz x8, #0x1 |
+| 9160 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 9164 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 9168 | d36ba8a2  |   ubfm.x x2 x5 43 42 | ubfm x2, x5, #43, #42 |
+| 9172 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 9176 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 9180 | 940000ec  |   bl EMIT | bl 0x278c |
+| 9184 | 910004a5  |   add.x.i x5 x5 1 | add x5, x5, #0x1 |
+| 9188 | f10010bf  |   cmp.x.i x5 4 | subs xzr, x5, #0x4 |
+| 9192 | 54fffdc3  |   b.lo MC2 | b.cc 0x23a0  // b.lo, b.ul, b.last |
+| 9196 | b5000068  |   cbnz.x x8 MC5 | cbnz x8, 0x23f8 |
+| 9200 | aa0300e0  |   orr.x x0 x7 x3 | orr x0, x7, x3 |
+| 9204 | 940000e6  |   bl EMIT | bl 0x278c |
+| 9208 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 9212 | d65f03c0  |   ret | ret  |
+| 9216 | f100083f  |   cmp.x.i x1 2 | subs xzr, x1, #0x2 |
+| 9220 | 540000e3  |   b.lo CN_X | b.cc 0x2420  // b.lo, b.ul, b.last |
+| 9224 | f100143f  |   cmp.x.i x1 5 | subs xzr, x1, #0x5 |
+| 9228 | 540000c3  |   b.lo CN_U | b.cc 0x2424  // b.lo, b.ul, b.last |
+| 9232 | f100183f  |   cmp.x.i x1 6 | subs xzr, x1, #0x6 |
+| 9236 | 54000063  |   b.lo CN_X | b.cc 0x2420  // b.lo, b.ul, b.last |
+| 9240 | f100243f  |   cmp.x.i x1 9 | subs xzr, x1, #0x9 |
+| 9244 | 54000083  |   b.lo CN_S | b.cc 0x242c  // b.lo, b.ul, b.last |
+| 9248 | d65f03c0  |   ret | ret  |
+| 9252 | d2ba6809  |   movz.x x9 0xd340 1  | movz x9, #0xd340, lsl #16 |
+| 9256 | 14000002  |   b CN_GO | b 0x2430 |
+| 9260 | d2b26809  |   movz.x x9 0x9340 1  | movz x9, #0x9340, lsl #16 |
+| 9264 | 50ff05ca  |   adr x10 TWID | adr x10, 0x4ea |
+| 9268 | 3861694a  |   ldrb.r w10 x10 x1 | ldrb w10, [x10, x1] |
+| 9272 | d100054a  |   sub.x.i x10 x10 1 | sub x10, x10, #0x1 |
+| 9276 | d376d54a  |   ubfm.x x10 x10 54 53 | ubfm x10, x10, #54, #53 |
+| 9280 | aa0a0129  |   orr.x x9 x9 x10 | orr x9, x9, x10 |
+| 9284 | aa000129  |   orr.x x9 x9 x0 | orr x9, x9, x0 |
+| 9288 | d37be800  |   ubfm.x x0 x0 59 58 | ubfm x0, x0, #59, #58 |
+| 9292 | aa000120  |   orr.x x0 x9 x0 | orr x0, x9, x0 |
+| 9296 | 140000cf  |   b EMIT | b 0x278c |
+| 9300 | d1000823  |   sub.x.i x3 x1 2 | sub x3, x1, #0x2 |
+| 9304 | d373c863  |   ubfm.x x3 x3 51 50 | ubfm x3, x3, #51, #50 |
+| 9308 | d28003e9  |   movz.x x9 0x001f 0 | movz x9, #0x1f |
+| 9312 | f2bd6409  |   movk.x x9 0xeb20 1  | movk x9, #0xeb20, lsl #16 |
+| 9316 | aa090063  |   orr.x x3 x3 x9 | orr x3, x3, x9 |
+| 9320 | d370bc09  |   ubfm.x x9 x0 48 47 | ubfm x9, x0, #48, #47 |
+| 9324 | aa090063  |   orr.x x3 x3 x9 | orr x3, x3, x9 |
+| 9328 | d37be809  |   ubfm.x x9 x0 59 58 | ubfm x9, x0, #59, #58 |
+| 9332 | aa090060  |   orr.x x0 x3 x9 | orr x0, x3, x9 |
+| 9336 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 9340 | 940000c4  |   bl EMIT | bl 0x278c |
+| 9344 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 9348 | aa0203e1  |   mov.x x1 x2 | orr x1, xzr, x2 |
+| 9352 | 940000cc  |   bl TRAPC | bl 0x27b8 |
+| 9356 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 9360 | d65f03c0  |   ret | ret  |
+| 9364 | 50ff02a9  |   adr x9 TWID | adr x9, 0x4ea |
+| 9368 | 38626929  |   ldrb.r w9 x9 x2 | ldrb w9, [x9, x2] |
+| 9372 | f101013f  |   cmp.x.i x9 64 | subs xzr, x9, #0x40 |
+| 9376 | 540001e0  |   b.eq RG_64 | b.eq 0x24dc  // b.none |
+| 9380 | b5001dc3  |   cbnz.x x3 E_RANGE | cbnz x3, 0x285c |
+| 9384 | d280002a  |   movz.x x10 1 0 | movz x10, #0x1 |
+| 9388 | 9ac9214a  |   lslv.x x10 x10 x9 | lslv x10, x10, x9 |
+| 9392 | f100185f  |   cmp.x.i x2 6 | subs xzr, x2, #0x6 |
+| 9396 | 54000082  |   b.hs RG_S | b.cs 0x24c4  // b.hs, b.nlast |
+| 9400 | eb0a003f  |   cmp.x x1 x10 | subs xzr, x1, x10 |
+| 9404 | 54001d02  |   b.hs E_RANGE | b.cs 0x285c  // b.hs, b.nlast |
+| 9408 | d65f03c0  |   ret | ret  |
+| 9412 | d341fd4a  |   ubfm.x x10 x10 1 63 | ubfm x10, x10, #1, #63 |
+| 9416 | 8b0a002b  |   add.x x11 x1 x10 | add x11, x1, x10 |
+| 9420 | 8b0a014a  |   add.x x10 x10 x10 | add x10, x10, x10 |
+| 9424 | eb0a017f  |   cmp.x x11 x10 | subs xzr, x11, x10 |
+| 9428 | 54001c42  |   b.hs E_RANGE | b.cs 0x285c  // b.hs, b.nlast |
+| 9432 | d65f03c0  |   ret | ret  |
+| 9436 | f100245f  |   cmp.x.i x2 9 | subs xzr, x2, #0x9 |
+| 9440 | 540000a0  |   b.eq RG_L | b.eq 0x24f4  // b.none |
+| 9444 | b5000063  |   cbnz.x x3 RG_OK | cbnz x3, 0x24f0 |
+| 9448 | f100003f  |   cmp.x.i x1 0 | subs xzr, x1, #0x0 |
+| 9452 | 54001b8b  |   b.lt E_RANGE | b.lt 0x285c  // b.tstop |
+| 9456 | d65f03c0  |   ret | ret  |
+| 9460 | b5001b43  |   cbnz.x x3 E_RANGE | cbnz x3, 0x285c |
+| 9464 | d65f03c0  |   ret | ret  |
+| 9468 | eb12027f  |   cmp.x x19 x18 | subs xzr, x19, x18 |
+| 9472 | 54000622  |   b.hs TK_EOF | b.cs 0x25c4  // b.hs, b.nlast |
+| 9476 | 39400260  |   ldrb w0 x19 0 | ldrb w0, [x19] |
+| 9480 | 7100801f  |   cmp.w.i w0 32 | subs wzr, w0, #0x20 |
+| 9484 | 54000580  |   b.eq TK_SKIP | b.eq 0x25bc  // b.none |
+| 9488 | 7100241f  |   cmp.w.i w0 9 | subs wzr, w0, #0x9 |
+| 9492 | 54000540  |   b.eq TK_SKIP | b.eq 0x25bc  // b.none |
+| 9496 | 7100341f  |   cmp.w.i w0 13 | subs wzr, w0, #0xd |
+| 9500 | 54000500  |   b.eq TK_SKIP | b.eq 0x25bc  // b.none |
+| 9504 | 7100281f  |   cmp.w.i w0 10 | subs wzr, w0, #0xa |
+| 9508 | 54000440  |   b.eq TK_NL | b.eq 0x25ac  // b.none |
+| 9512 | 7100881f  |   cmp.w.i w0 34 | subs wzr, w0, #0x22 |
+| 9516 | 54000080  |   b.eq TK_TEXT | b.eq 0x253c  // b.none |
+| 9520 | 7100801f  |   cmp.w.i w0 32 | subs wzr, w0, #0x20 |
+| 9524 | 54001b43  |   b.lo E_SYNTAX | b.cc 0x289c  // b.lo, b.ul, b.last |
+| 9528 | 14000025  |   b TK_WORD | b 0x25cc |
+| 9532 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9536 | aa1303e1  |   mov.x x1 x19 | orr x1, xzr, x19 |
+| 9540 | eb12027f  |   cmp.x x19 x18 | subs xzr, x19, x18 |
+| 9544 | 54007e62  |   b.hs E_TEXT | b.cs 0x3514  // b.hs, b.nlast |
+| 9548 | 39400260  |   ldrb w0 x19 0 | ldrb w0, [x19] |
+| 9552 | 7100281f  |   cmp.w.i w0 10 | subs wzr, w0, #0xa |
+| 9556 | 54007e00  |   b.eq E_TEXT | b.eq 0x3514  // b.none |
+| 9560 | 7100881f  |   cmp.w.i w0 34 | subs wzr, w0, #0x22 |
+| 9564 | 54000160  |   b.eq TT_END | b.eq 0x2588  // b.none |
+| 9568 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9572 | 7101701f  |   cmp.w.i w0 92 | subs wzr, w0, #0x5c |
+| 9576 | 54fffee1  |   b.ne TT1 | b.ne 0x2544  // b.any |
+| 9580 | eb12027f  |   cmp.x x19 x18 | subs xzr, x19, x18 |
+| 9584 | 54007d22  |   b.hs E_TEXT | b.cs 0x3514  // b.hs, b.nlast |
+| 9588 | 39400260  |   ldrb w0 x19 0 | ldrb w0, [x19] |
+| 9592 | 7100281f  |   cmp.w.i w0 10 | subs wzr, w0, #0xa |
+| 9596 | 54007cc0  |   b.eq E_TEXT | b.eq 0x3514  // b.none |
+| 9600 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9604 | 17fffff0  |   b TT1 | b 0x2544 |
+| 9608 | cb010262  |   sub.x x2 x19 x1 | sub x2, x19, x1 |
+| 9612 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9616 | d2800080  |   movz.x x0 4 0 | movz x0, #0x4 |
+| 9620 | eb12027f  |   cmp.x x19 x18 | subs xzr, x19, x18 |
+| 9624 | 54000082  |   b.hs TT_OK | b.cs 0x25a8  // b.hs, b.nlast |
+| 9628 | 39400263  |   ldrb w3 x19 0 | ldrb w3, [x19] |
+| 9632 | 7100807f  |   cmp.w.i w3 32 | subs wzr, w3, #0x20 |
+| 9636 | 54007b88  |   b.hi E_TEXT | b.hi 0x3514  // b.pmore |
+| 9640 | d65f03c0  |   ret | ret  |
+| 9644 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9648 | 910006d6  |   add.x.i x22 x22 1 | add x22, x22, #0x1 |
+| 9652 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 9656 | d65f03c0  |   ret | ret  |
+| 9660 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9664 | 17ffffcf  |   b TOK | b 0x24fc |
+| 9668 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 9672 | d65f03c0  |   ret | ret  |
+| 9676 | d2800001  |   movz.x x1 0 0 | movz x1, #0x0 |
+| 9680 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 9684 | d2800003  |   movz.x x3 0 0 | movz x3, #0x0 |
+| 9688 | eb12027f  |   cmp.x x19 x18 | subs xzr, x19, x18 |
+| 9692 | 54000182  |   b.hs TK_END | b.cs 0x260c  // b.hs, b.nlast |
+| 9696 | 39400260  |   ldrb w0 x19 0 | ldrb w0, [x19] |
+| 9700 | 7100801f  |   cmp.w.i w0 32 | subs wzr, w0, #0x20 |
+| 9704 | 54000129  |   b.ls TK_END | b.ls 0x260c  // b.plast |
+| 9708 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 9712 | 54000082  |   b.hs TK_LONG | b.cs 0x2600  // b.hs, b.nlast |
+| 9716 | 9ac32004  |   lslv.x x4 x0 x3 | lslv x4, x0, x3 |
+| 9720 | aa040021  |   orr.x x1 x1 x4 | orr x1, x1, x4 |
+| 9724 | 91002063  |   add.x.i x3 x3 8 | add x3, x3, #0x8 |
+| 9728 | 91000442  |   add.x.i x2 x2 1 | add x2, x2, #0x1 |
+| 9732 | 91000673  |   add.x.i x19 x19 1 | add x19, x19, #0x1 |
+| 9736 | 17fffff4  |   b TK_CH | b 0x25d8 |
+| 9740 | d3401c24  |   ubfm.x x4 x1 0 7 | ubfm x4, x1, #0, #7 |
+| 9744 | f100b49f  |   cmp.x.i x4 45 | subs xzr, x4, #0x2d |
+| 9748 | 540000c0  |   b.eq TK_NUM | b.eq 0x262c  // b.none |
+| 9752 | d100c084  |   sub.x.i x4 x4 48 | sub x4, x4, #0x30 |
+| 9756 | f100249f  |   cmp.x.i x4 9 | subs xzr, x4, #0x9 |
+| 9760 | 54000069  |   b.ls TK_NUM | b.ls 0x262c  // b.plast |
+| 9764 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 9768 | d65f03c0  |   ret | ret  |
+| 9772 | cb020265  |   sub.x x5 x19 x2 | sub x5, x19, x2 |
+| 9776 | d2800006  |   movz.x x6 0 0 | movz x6, #0x0 |
+| 9780 | 394000a0  |   ldrb w0 x5 0 | ldrb w0, [x5] |
+| 9784 | 7100b41f  |   cmp.w.i w0 45 | subs wzr, w0, #0x2d |
+| 9788 | 54000061  |   b.ne TK_N1 | b.ne 0x2648  // b.any |
+| 9792 | d2800026  |   movz.x x6 1 0 | movz x6, #0x1 |
+| 9796 | 910004a5  |   add.x.i x5 x5 1 | add x5, x5, #0x1 |
+| 9800 | cb050260  |   sub.x x0 x19 x5 | sub x0, x19, x5 |
+| 9804 | b4001000  |   cbz.x x0 E_NUM | cbz x0, 0x284c |
+| 9808 | f100501f  |   cmp.x.i x0 20 | subs xzr, x0, #0x14 |
+| 9812 | 54000fc8  |   b.hi E_NUM | b.hi 0x284c  // b.pmore |
+| 9816 | d2800001  |   movz.x x1 0 0 | movz x1, #0x0 |
+| 9820 | d2800147  |   movz.x x7 10 0 | movz x7, #0xa |
+| 9824 | d2933323  |   movz.x x3 0x9999 0  | movz x3, #0x9999 |
+| 9828 | f2b33323  |   movk.x x3 0x9999 1  | movk x3, #0x9999, lsl #16 |
+| 9832 | f2d33323  |   movk.x x3 0x9999 2 | movk x3, #0x9999, lsl #32 |
+| 9836 | f2e33323  |   movk.x x3 0x1999 3 | movk x3, #0x1999, lsl #48 |
+| 9840 | eb1300bf  |   cmp.x x5 x19 | subs xzr, x5, x19 |
+| 9844 | 540001c2  |   b.hs TK_N3 | b.cs 0x26ac  // b.hs, b.nlast |
+| 9848 | 394000a0  |   ldrb w0 x5 0 | ldrb w0, [x5] |
+| 9852 | d100c000  |   sub.x.i x0 x0 48 | sub x0, x0, #0x30 |
+| 9856 | f100241f  |   cmp.x.i x0 9 | subs xzr, x0, #0x9 |
+| 9860 | 54000e48  |   b.hi E_NUM | b.hi 0x284c  // b.pmore |
+| 9864 | eb03003f  |   cmp.x x1 x3 | subs xzr, x1, x3 |
+| 9868 | 54000e88  |   b.hi E_RANGE | b.hi 0x285c  // b.pmore |
+| 9872 | 54000063  |   b.lo TK_N2A | b.cc 0x269c  // b.lo, b.ul, b.last |
+| 9876 | f100141f  |   cmp.x.i x0 5 | subs xzr, x0, #0x5 |
+| 9880 | 54000e28  |   b.hi E_RANGE | b.hi 0x285c  // b.pmore |
+| 9884 | 9b077c21  |   mul.x x1 x1 x7 | madd x1, x1, x7, xzr |
+| 9888 | 8b000021  |   add.x x1 x1 x0 | add x1, x1, x0 |
+| 9892 | 910004a5  |   add.x.i x5 x5 1 | add x5, x5, #0x1 |
+| 9896 | 17fffff2  |   b TK_N2 | b 0x2670 |
+| 9900 | d2f00007  |   movz.x x7 0x8000 3 | movz x7, #0x8000, lsl #48 |
+| 9904 | d2a030a4  |   movz.x x4 0x185 1 | movz x4, #0x185, lsl #16 |
+| 9908 | f9002c9f  |   str.x xzr x4 11 | str xzr, [x4, #88] |
+| 9912 | b50000e6  |   cbnz.x x6 TK_NEG | cbnz x6, 0x26d4 |
+| 9916 | eb07003f  |   cmp.x x1 x7 | subs xzr, x1, x7 |
+| 9920 | 54000063  |   b.lo TK_N4 | b.cc 0x26cc  // b.lo, b.ul, b.last |
+| 9924 | d2800023  |   movz.x x3 1 0 | movz x3, #0x1 |
+| 9928 | f9002c83  |   str.x x3 x4 11 | str x3, [x4, #88] |
+| 9932 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 9936 | d65f03c0  |   ret | ret  |
+| 9940 | eb07003f  |   cmp.x x1 x7 | subs xzr, x1, x7 |
+| 9944 | 54000c28  |   b.hi E_RANGE | b.hi 0x285c  // b.pmore |
+| 9948 | cb0103e1  |   sub.x x1 xzr x1 | sub x1, xzr, x1 |
+| 9952 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 9956 | d65f03c0  |   ret | ret  |
+| 9960 | 10feccc9  |   adr x9 KWTAB | adr x9, 0x80 |
+| 9964 | b9400920  |   ldr.w w0 x9 2 | ldr w0, [x9, #8] |
+| 9968 | 340000c0  |   cbz.w w0 KW2 | cbz w0, 0x2708 |
+| 9972 | f940012a  |   ldr.x x10 x9 0 | ldr x10, [x9] |
+| 9976 | eb01015f  |   cmp.x x10 x1 | subs xzr, x10, x1 |
+| 9980 | 54000060  |   b.eq KW2 | b.eq 0x2708  // b.none |
+| 9984 | 91004129  |   add.x.i x9 x9 16 | add x9, x9, #0x10 |
+| 9988 | 17fffffa  |   b KW1 | b 0x26ec |
+| 9992 | d65f03c0  |   ret | ret  |
+| 9996 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 10000 | 97ffff7b  |   bl TOK | bl 0x24fc |
+| 10004 | b4000940  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 10008 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 10012 | 54000c01  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 10016 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 10020 | 54000bc8  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 10024 | 97fffff0  |   bl KW | bl 0x26e8 |
+| 10028 | f101301f  |   cmp.x.i x0 76 | subs xzr, x0, #0x4c |
+| 10032 | 540009a0  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 10036 | d1000409  |   sub.x.i x9 x0 1 | sub x9, x0, #0x1 |
+| 10040 | f100213f  |   cmp.x.i x9 8 | subs xzr, x9, #0x8 |
+| 10044 | 54000b08  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 10048 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 10052 | d65f03c0  |   ret | ret  |
+| 10056 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 10060 | 97ffff6c  |   bl TOK | bl 0x24fc |
+| 10064 | b4000060  |   cbz.x x0 EOL1 | cbz x0, 0x275c |
+| 10068 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 10072 | 54000761  |   b.ne E_EXTRA | b.ne 0x2844  // b.any |
+| 10076 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 10080 | d65f03c0  |   ret | ret  |
+| 10084 | 8b1803a0  |   add.x x0 x29 x24 | add x0, x29, x24 |
+| 10088 | 10feeb89  |   adr x9 POOLEND | adr x9, 0x4d8 |
+| 10092 | eb09001f  |   cmp.x x0 x9 | subs xzr, x0, x9 |
+| 10096 | 54000862  |   b.hs E_REGS | b.cs 0x287c  // b.hs, b.nlast |
+| 10100 | 39400000  |   ldrb w0 x0 0 | ldrb w0, [x0] |
+| 10104 | 91000718  |   add.x.i x24 x24 1 | add x24, x24, #0x1 |
+| 10108 | d65f03c0  |   ret | ret  |
+| 10112 | f103fc1f  |   cmp.x.i x0 255 | subs xzr, x0, #0xff |
+| 10116 | 54ffff00  |   b.eq ALLOC | b.eq 0x2764  // b.none |
+| 10120 | d65f03c0  |   ret | ret  |
+| 10124 | d2a03009  |   movz.x x9 0x180 1 | movz x9, #0x180, lsl #16 |
+| 10128 | eb09029f  |   cmp.x x20 x9 | subs xzr, x20, x9 |
+| 10132 | 540007c2  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 10136 | b8004680  |   str.w.post w0 x20 4 | str w0, [x20], #4 |
+| 10140 | d65f03c0  |   ret | ret  |
+| 10144 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10148 | d37be842  |   ubfm.x x2 x2 59 58 | ubfm x2, x2, #59, #58 |
+| 10152 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 10156 | d370bc63  |   ubfm.x x3 x3 48 47 | ubfm x3, x3, #48, #47 |
+| 10160 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 10164 | 17fffff6  |   b EMIT | b 0x278c |
+| 10168 | d2aa8009  |   movz.x x9 0x5400 1 | movz x9, #0x5400, lsl #16 |
+| 10172 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 10176 | d2a03069  |   movz.x x9 0x183 1 | movz x9, #0x183, lsl #16 |
+| 10180 | eb09035f  |   cmp.x x26 x9 | subs xzr, x26, x9 |
+| 10184 | 54000622  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 10188 | b9000354  |   str.w w20 x26 0 | str w20, [x26] |
+| 10192 | b9000741  |   str.w w1 x26 1 | str w1, [x26, #4] |
+| 10196 | 9100235a  |   add.x.i x26 x26 8 | add x26, x26, #0x8 |
+| 10200 | 17ffffed  |   b EMIT | b 0x278c |
+| 10204 | cb000022  |   sub.x x2 x1 x0 | sub x2, x1, x0 |
+| 10208 | d3425042  |   ubfm.x x2 x2 2 20 | ubfm x2, x2, #2, #20 |
+| 10212 | d37be842  |   ubfm.x x2 x2 59 58 | ubfm x2, x2, #59, #58 |
+| 10216 | b9400001  |   ldr.w w1 x0 0 | ldr w1, [x0] |
+| 10220 | aa020021  |   orr.x x1 x1 x2 | orr x1, x1, x2 |
+| 10224 | b9000001  |   str.w w1 x0 0 | str w1, [x0] |
+| 10228 | d65f03c0  |   ret | ret  |
+| 10232 | cb000022  |   sub.x x2 x1 x0 | sub x2, x1, x0 |
+| 10236 | d3426c42  |   ubfm.x x2 x2 2 27 | ubfm x2, x2, #2, #27 |
+| 10240 | b9400001  |   ldr.w w1 x0 0 | ldr w1, [x0] |
+| 10244 | aa020021  |   orr.x x1 x1 x2 | orr x1, x1, x2 |
+| 10248 | b9000001  |   str.w w1 x0 0 | str w1, [x0] |
+| 10252 | d65f03c0  |   ret | ret  |
+| 10256 | cb140002  |   sub.x x2 x0 x20 | sub x2, x0, x20 |
+| 10260 | d3426c42  |   ubfm.x x2 x2 2 27 | ubfm x2, x2, #2, #27 |
+| 10264 | d2a28000  |   movz.x x0 0x1400 1  | movz x0, #0x1400, lsl #16 |
+| 10268 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 10272 | 17ffffdb  |   b EMIT | b 0x278c |
+| 10276 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 10280 | 1400033f  |   b FAIL | b 0x3524 |
+| 10284 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 10288 | 1400033d  |   b FAIL | b 0x3524 |
+| 10292 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 10296 | 1400033b  |   b FAIL | b 0x3524 |
+| 10300 | d2800080  |   movz.x x0 4 0 | movz x0, #0x4 |
+| 10304 | 14000339  |   b FAIL | b 0x3524 |
+| 10308 | d28000a0  |   movz.x x0 5 0 | movz x0, #0x5 |
+| 10312 | 14000337  |   b FAIL | b 0x3524 |
+| 10316 | d28000c0  |   movz.x x0 6 0 | movz x0, #0x6 |
+| 10320 | 14000335  |   b FAIL | b 0x3524 |
+| 10324 | d28000e0  |   movz.x x0 7 0 | movz x0, #0x7 |
+| 10328 | 14000333  |   b FAIL | b 0x3524 |
+| 10332 | d2800100  |   movz.x x0 8 0 | movz x0, #0x8 |
+| 10336 | 14000331  |   b FAIL | b 0x3524 |
+| 10340 | d2800120  |   movz.x x0 9 0 | movz x0, #0x9 |
+| 10344 | 1400032f  |   b FAIL | b 0x3524 |
+| 10348 | d2800140  |   movz.x x0 10 0 | movz x0, #0xa |
+| 10352 | 1400032d  |   b FAIL | b 0x3524 |
+| 10356 | d2800160  |   movz.x x0 11 0 | movz x0, #0xb |
+| 10360 | 1400032b  |   b FAIL | b 0x3524 |
+| 10364 | d2800180  |   movz.x x0 12 0 | movz x0, #0xc |
+| 10368 | 14000329  |   b FAIL | b 0x3524 |
+| 10372 | d28001a0  |   movz.x x0 13 0 | movz x0, #0xd |
+| 10376 | 14000327  |   b FAIL | b 0x3524 |
+| 10380 | d28001c0  |   movz.x x0 14 0 | movz x0, #0xe |
+| 10384 | 14000325  |   b FAIL | b 0x3524 |
+| 10388 | d28001e0  |   movz.x x0 15 0 | movz x0, #0xf |
+| 10392 | 14000323  |   b FAIL | b 0x3524 |
+| 10396 | d2800200  |   movz.x x0 16 0 | movz x0, #0x10 |
+| 10400 | 14000321  |   b FAIL | b 0x3524 |
+| 10404 | d2800141  |   movz.x x1 10 0 | movz x1, #0xa |
+| 10408 | 9100a122  |   add.x.i x2 x9 40 | add x2, x9, #0x28 |
+| 10412 | aa0203e3  |   mov.x x3 x2 | orr x3, xzr, x2 |
+| 10416 | 9ac10804  |   udiv.x x4 x0 x1 | udiv x4, x0, x1 |
+| 10420 | 9b018085  |   msub.x x5 x4 x1 x0 | msub x5, x4, x1, x0 |
+| 10424 | 9100c0a5  |   add.x.i x5 x5 48 | add x5, x5, #0x30 |
+| 10428 | d1000463  |   sub.x.i x3 x3 1 | sub x3, x3, #0x1 |
+| 10432 | 39000065  |   strb w5 x3 0 | strb w5, [x3] |
+| 10436 | aa0403e0  |   mov.x x0 x4 | orr x0, xzr, x4 |
+| 10440 | b5ffff40  |   cbnz.x x0 PD1 | cbnz x0, 0x28b0 |
+| 10444 | 39400065  |   ldrb w5 x3 0 | ldrb w5, [x3] |
+| 10448 | 39000125  |   strb w5 x9 0 | strb w5, [x9] |
+| 10452 | 91000529  |   add.x.i x9 x9 1 | add x9, x9, #0x1 |
+| 10456 | 91000463  |   add.x.i x3 x3 1 | add x3, x3, #0x1 |
+| 10460 | eb02007f  |   cmp.x x3 x2 | subs xzr, x3, x2 |
+| 10464 | 54ffff63  |   b.lo PD2 | b.cc 0x28cc  // b.lo, b.ul, b.last |
+| 10468 | d65f03c0  |   ret | ret  |
+| 10472 | f9400fea  |   ldr.x x10 sp 3 | ldr x10, [sp, #24] |
+| 10476 | f9400d40  |   ldr.x x0 x10 3 | ldr x0, [x10, #24] |
+| 10480 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 10484 | 54000061  |   b.ne SD1 | b.ne 0x2900  // b.any |
+| 10488 | f9401140  |   ldr.x x0 x10 4 | ldr x0, [x10, #32] |
+| 10492 | b50000c0  |   cbnz.x x0 SD2 | cbnz x0, 0x2914 |
+| 10496 | f94017e0  |   ldr.x x0 sp 5 | ldr x0, [sp, #40] |
+| 10500 | d2b68009  |   movz.x x9 0xb400 1  | movz x9, #0xb400, lsl #16 |
+| 10504 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 10508 | d2800041  |   movz.x x1 2 0 | movz x1, #0x2 |
+| 10512 | 97ffffac  |   bl TRAPSITE | bl 0x27c0 |
+| 10516 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 10520 | f100953f  |   cmp.x.i x9 37 | subs xzr, x9, #0x25 |
+| 10524 | 540004a0  |   b.eq SD_REM | b.eq 0x29b0  // b.none |
+| 10528 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 10532 | f100253f  |   cmp.x.i x9 9 | subs xzr, x9, #0x9 |
+| 10536 | 54000341  |   b.ne SD4 | b.ne 0x2990  // b.any |
+| 10540 | f9400fea  |   ldr.x x10 sp 3 | ldr x10, [sp, #24] |
+| 10544 | f9400d40  |   ldr.x x0 x10 3 | ldr x0, [x10, #24] |
+| 10548 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 10552 | 54000081  |   b.ne SD3 | b.ne 0x2948  // b.any |
+| 10556 | f9401140  |   ldr.x x0 x10 4 | ldr x0, [x10, #32] |
+| 10560 | b100041f  |   cmn.x.i x0 1 | adds xzr, x0, #0x1 |
+| 10564 | 54000261  |   b.ne SD4 | b.ne 0x2990  // b.any |
+| 10568 | d28083e0  |   movz.x x0 0x041f 0 | movz x0, #0x41f |
+| 10572 | f2b62000  |   movk.x x0 0xb100 1  | movk x0, #0xb100, lsl #16 |
+| 10576 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 10580 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 10584 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10588 | 97ffff8c  |   bl EMIT | bl 0x278c |
+| 10592 | d2800c20  |   movz.x x0 0x0061 0 | movz x0, #0x61 |
+| 10596 | f2aa8000  |   movk.x x0 0x5400 1  | movk x0, #0x5400, lsl #16 |
+| 10600 | 97ffff89  |   bl EMIT | bl 0x278c |
+| 10604 | d2807fe0  |   movz.x x0 0x03ff 0 | movz x0, #0x3ff |
+| 10608 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 10612 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 10616 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 10620 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10624 | 97ffff83  |   bl EMIT | bl 0x278c |
+| 10628 | d28000c0  |   movz.x x0 6 0 | movz x0, #0x6 |
+| 10632 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 10636 | 97ffff8b  |   bl TRAPC | bl 0x27b8 |
+| 10640 | d2818000  |   movz.x x0 0x0c00 0 | movz x0, #0xc00 |
+| 10644 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 10648 | 97fffe09  |   bl BO_W3 | bl 0x21bc |
+| 10652 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 10656 | f100253f  |   cmp.x.i x9 9 | subs xzr, x9, #0x9 |
+| 10660 | 54ffc020  |   b.eq BO_RET | b.eq 0x21a8  // b.none |
+| 10664 | 97fffe13  |   bl BO_FIX | bl 0x21f4 |
+| 10668 | 17fffdff  |   b BO_RET | b 0x21a8 |
+| 10672 | 97ffff6d  |   bl ALLOC | bl 0x2764 |
+| 10676 | f90023e0  |   str.x x0 sp 8 | str x0, [sp, #64] |
+| 10680 | d2818000  |   movz.x x0 0x0c00 0 | movz x0, #0xc00 |
+| 10684 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 10688 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 10692 | f94013e2  |   ldr.x x2 sp 4 | ldr x2, [sp, #32] |
+| 10696 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 10700 | 97ffff75  |   bl E3 | bl 0x27a0 |
+| 10704 | d2900000  |   movz.x x0 0x8000 0 | movz x0, #0x8000 |
+| 10708 | f2b36000  |   movk.x x0 0x9b00 1  | movk x0, #0x9b00, lsl #16 |
+| 10712 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 10716 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 10720 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10724 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 10728 | f94023e2  |   ldr.x x2 sp 8 | ldr x2, [sp, #64] |
+| 10732 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 10736 | 97ffff6c  |   bl E3 | bl 0x27a0 |
+| 10740 | 17fffded  |   b BO_RET | b 0x21a8 |
+| 10744 | 97ffff5b  |   bl ALLOC | bl 0x2764 |
+| 10748 | f90023e0  |   str.x x0 sp 8 | str x0, [sp, #64] |
+| 10752 | f9401fea  |   ldr.x x10 sp 7 | ldr x10, [sp, #56] |
+| 10756 | b50001ea  |   cbnz.x x10 BS64_I | cbnz x10, 0x2a40 |
+| 10760 | 97fffe04  |   bl BO_SCHK | bl 0x2218 |
+| 10764 | d2840000  |   movz.x x0 0x2000 0 | movz x0, #0x2000 |
+| 10768 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 10772 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 10776 | f94013e2  |   ldr.x x2 sp 4 | ldr x2, [sp, #32] |
+| 10780 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 10784 | 97ffff60  |   bl E3 | bl 0x27a0 |
+| 10788 | d2850200  |   movz.x x0 0x2810 0 | movz x0, #0x2810 |
+| 10792 | f2b35800  |   movk.x x0 0x9ac0 1  | movk x0, #0x9ac0, lsl #16 |
+| 10796 | d2800001  |   movz.x x1 0 0 | movz x1, #0x0 |
+| 10800 | f94023e2  |   ldr.x x2 sp 8 | ldr x2, [sp, #64] |
+| 10804 | f94017e3  |   ldr.x x3 sp 5 | ldr x3, [sp, #40] |
+| 10808 | 97ffff5a  |   bl E3 | bl 0x27a0 |
+| 10812 | 1400001b  |   b BS64_C | b 0x2aa8 |
+| 10816 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 10820 | d2800802  |   movz.x x2 64 0 | movz x2, #0x40 |
+| 10824 | cb010042  |   sub.x x2 x2 x1 | sub x2, x2, x1 |
+| 10828 | d3401442  |   ubfm.x x2 x2 0 5 | ubfm x2, x2, #0, #5 |
+| 10832 | d28007e3  |   movz.x x3 63 0 | movz x3, #0x3f |
+| 10836 | cb010063  |   sub.x x3 x3 x1 | sub x3, x3, x1 |
+| 10840 | d2ba6800  |   movz.x x0 0xd340 1  | movz x0, #0xd340, lsl #16 |
+| 10844 | d370bc42  |   ubfm.x x2 x2 48 47 | ubfm x2, x2, #48, #47 |
+| 10848 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 10852 | d376d463  |   ubfm.x x3 x3 54 53 | ubfm x3, x3, #54, #53 |
+| 10856 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 10860 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 10864 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 10868 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10872 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 10876 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10880 | 97ffff43  |   bl EMIT | bl 0x278c |
+| 10884 | d29f8200  |   movz.x x0 0xfc10 0 | movz x0, #0xfc10 |
+| 10888 | f2b26800  |   movk.x x0 0x9340 1  | movk x0, #0x9340, lsl #16 |
+| 10892 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 10896 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 10900 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10904 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 10908 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 10912 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10916 | 97ffff3a  |   bl EMIT | bl 0x278c |
+| 10920 | d28043e0  |   movz.x x0 0x021f 0 | movz x0, #0x21f |
+| 10924 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 10928 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 10932 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 10936 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10940 | 97ffff34  |   bl EMIT | bl 0x278c |
+| 10944 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 10948 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 10952 | 97ffff3c  |   bl TRAPC | bl 0x27b8 |
+| 10956 | d2807c00  |   movz.x x0 0x03e0 0 | movz x0, #0x3e0 |
+| 10960 | f2b54000  |   movk.x x0 0xaa00 1  | movk x0, #0xaa00, lsl #16 |
+| 10964 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 10968 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10972 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 10976 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 10980 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 10984 | 97ffff29  |   bl EMIT | bl 0x278c |
+| 10988 | 17fffdaf  |   b BO_RET | b 0x21a8 |
+| 10992 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 10996 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 11000 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 11004 | 17fffbde  |   b VT_RET | b 0x1a74 |
+| 11008 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 11012 | d2800001  |   movz.x x1 0 0 | movz x1, #0x0 |
+| 11016 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 11020 | 17fffbda  |   b VT_RET | b 0x1a74 |
+| 11024 | 940001ef  |   bl ARRNAME | bl 0x32cc |
+| 11028 | b9401001  |   ldr.w w1 x0 4 | ldr w1, [x0, #16] |
+| 11032 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 11036 | d28000a2  |   movz.x x2 5 0 | movz x2, #0x5 |
+| 11040 | 17fffbd5  |   b VT_RET | b 0x1a74 |
+| 11044 | 940001ea  |   bl ARRNAME | bl 0x32cc |
+| 11048 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 11052 | d28000a0  |   movz.x x0 5 0 | movz x0, #0x5 |
+| 11056 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 11060 | 97fffb3e  |   bl VAL | bl 0x182c |
+| 11064 | aa0203e3  |   mov.x x3 x2 | orr x3, xzr, x2 |
+| 11068 | aa0103e2  |   mov.x x2 x1 | orr x2, xzr, x1 |
+| 11072 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 11076 | f94013e0  |   ldr.x x0 sp 4 | ldr x0, [sp, #32] |
+| 11080 | 940001aa  |   bl ELEMADDR | bl 0x31f0 |
+| 11084 | f90017e0  |   str.x x0 sp 5 | str x0, [sp, #40] |
+| 11088 | f9001be1  |   str.x x1 sp 6 | str x1, [sp, #48] |
+| 11092 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 11096 | 97ffff0a  |   bl DESTREG | bl 0x2780 |
+| 11100 | f9001fe0  |   str.x x0 sp 7 | str x0, [sp, #56] |
+| 11104 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 11108 | b9400d29  |   ldr.w w9 x9 3 | ldr w9, [x9, #12] |
+| 11112 | 10fecd2a  |   adr x10 LDOP | adr x10, 0x50c |
+| 11116 | b8697940  |   ldr.w.r w0 x10 x9 | ldr w0, [x10, x9, lsl #2] |
+| 11120 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 11124 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11128 | f94017e1  |   ldr.x x1 sp 5 | ldr x1, [sp, #40] |
+| 11132 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 11136 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11140 | f9401be1  |   ldr.x x1 sp 6 | ldr x1, [sp, #48] |
+| 11144 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 11148 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11152 | 97fffeff  |   bl EMIT | bl 0x278c |
+| 11156 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 11160 | f9401fe1  |   ldr.x x1 sp 7 | ldr x1, [sp, #56] |
+| 11164 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 11168 | b9400d22  |   ldr.w w2 x9 3 | ldr w2, [x9, #12] |
+| 11172 | 17fffbb4  |   b VT_RET | b 0x1a74 |
+| 11176 | f9003bf8  |   str.x x24 sp 14 | str x24, [sp, #112] |
+| 11180 | d2800100  |   movz.x x0 8 0 | movz x0, #0x8 |
+| 11184 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 11188 | 97fffb1e  |   bl VAL | bl 0x182c |
+| 11192 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 11196 | 54ffe4c1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 11200 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 11204 | f90017e1  |   str.x x1 sp 5 | str x1, [sp, #40] |
+| 11208 | 940001c1  |   bl ARRNAME | bl 0x32cc |
+| 11212 | f9001be0  |   str.x x0 sp 6 | str x0, [sp, #48] |
+| 11216 | f9400fe9  |   ldr.x x9 sp 3 | ldr x9, [sp, #24] |
+| 11220 | f100d53f  |   cmp.x.i x9 53 | subs xzr, x9, #0x35 |
+| 11224 | 540000c1  |   b.ne VS1 | b.ne 0x2bf0  // b.any |
+| 11228 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 11232 | f100093f  |   cmp.x.i x9 2 | subs xzr, x9, #0x2 |
+| 11236 | 54004900  |   b.eq E_RDONLY | b.eq 0x3504  // b.none |
+| 11240 | f100153f  |   cmp.x.i x9 5 | subs xzr, x9, #0x5 |
+| 11244 | 540048c0  |   b.eq E_RDONLY | b.eq 0x3504  // b.none |
+| 11248 | d28000a0  |   movz.x x0 5 0 | movz x0, #0x5 |
+| 11252 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 11256 | 97fffb0d  |   bl VAL | bl 0x182c |
+| 11260 | f100145f  |   cmp.x.i x2 5 | subs xzr, x2, #0x5 |
+| 11264 | 54ffe2a1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 11268 | 97fffdab  |   bl MATREG | bl 0x22b0 |
+| 11272 | f90023e0  |   str.x x0 sp 8 | str x0, [sp, #64] |
+| 11276 | d28000a0  |   movz.x x0 5 0 | movz x0, #0x5 |
+| 11280 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 11284 | 97fffb06  |   bl VAL | bl 0x182c |
+| 11288 | f100145f  |   cmp.x.i x2 5 | subs xzr, x2, #0x5 |
+| 11292 | 54ffe1c1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 11296 | 97fffda4  |   bl MATREG | bl 0x22b0 |
+| 11300 | f9002be0  |   str.x x0 sp 10 | str x0, [sp, #80] |
+| 11304 | 97fffecf  |   bl ALLOC | bl 0x2764 |
+| 11308 | f9002fe0  |   str.x x0 sp 11 | str x0, [sp, #88] |
+| 11312 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 11316 | b9401121  |   ldr.w w1 x9 4 | ldr w1, [x9, #16] |
+| 11320 | 97fffdcf  |   bl MATCONST | bl 0x2374 |
+| 11324 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 11328 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 11332 | f9402be1  |   ldr.x x1 sp 10 | ldr x1, [sp, #80] |
+| 11336 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 11340 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11344 | f9402fe1  |   ldr.x x1 sp 11 | ldr x1, [sp, #88] |
+| 11348 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 11352 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11356 | 97fffecc  |   bl EMIT | bl 0x278c |
+| 11360 | d2800100  |   movz.x x0 8 0 | movz x0, #0x8 |
+| 11364 | d2800061  |   movz.x x1 3 0 | movz x1, #0x3 |
+| 11368 | 97fffed4  |   bl TRAPC | bl 0x27b8 |
+| 11372 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 11376 | f2b96000  |   movk.x x0 0xcb00 1  | movk x0, #0xcb00, lsl #16 |
+| 11380 | f9402fe1  |   ldr.x x1 sp 11 | ldr x1, [sp, #88] |
+| 11384 | f9402fe2  |   ldr.x x2 sp 11 | ldr x2, [sp, #88] |
+| 11388 | f9402be3  |   ldr.x x3 sp 10 | ldr x3, [sp, #80] |
+| 11392 | 97fffec8  |   bl E3 | bl 0x27a0 |
+| 11396 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 11400 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 11404 | f94023e1  |   ldr.x x1 sp 8 | ldr x1, [sp, #64] |
+| 11408 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 11412 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11416 | f9402fe1  |   ldr.x x1 sp 11 | ldr x1, [sp, #88] |
+| 11420 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 11424 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 11428 | 97fffeba  |   bl EMIT | bl 0x278c |
+| 11432 | d2800100  |   movz.x x0 8 0 | movz x0, #0x8 |
+| 11436 | d2800061  |   movz.x x1 3 0 | movz x1, #0x3 |
+| 11440 | 97fffec2  |   bl TRAPC | bl 0x27b8 |
+| 11444 | 940000e6  |   bl SAVE | bl 0x304c |
+| 11448 | f90033e0  |   str.x x0 sp 12 | str x0, [sp, #96] |
+| 11452 | f90037e1  |   str.x x1 sp 13 | str x1, [sp, #104] |
+| 11456 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 11460 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 11464 | f94017e2  |   ldr.x x2 sp 5 | ldr x2, [sp, #40] |
+| 11468 | 94000103  |   bl LOADARG | bl 0x30d8 |
+| 11472 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 11476 | f9401be9  |   ldr.x x9 sp 6 | ldr x9, [sp, #48] |
+| 11480 | 9400010e  |   bl BASEARG | bl 0x3110 |
+| 11484 | d2800200  |   movz.x x0 16 0 | movz x0, #0x10 |
+| 11488 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 11492 | f94023e2  |   ldr.x x2 sp 8 | ldr x2, [sp, #64] |
+| 11496 | 940000fc  |   bl LOADARG | bl 0x30d8 |
+| 11500 | d2800420  |   movz.x x0 0x0021 0 | movz x0, #0x21 |
+| 11504 | f2b16200  |   movk.x x0 0x8b10 1  | movk x0, #0x8b10, lsl #16 |
+| 11508 | 97fffea6  |   bl EMIT | bl 0x278c |
+| 11512 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 11516 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 11520 | f9402be2  |   ldr.x x2 sp 10 | ldr x2, [sp, #80] |
+| 11524 | 940000f5  |   bl LOADARG | bl 0x30d8 |
+| 11528 | f9400fe9  |   ldr.x x9 sp 3 | ldr x9, [sp, #24] |
+| 11532 | 91002929  |   add.x.i x9 x9 10 | add x9, x9, #0xa |
+| 11536 | d37be929  |   ubfm.x x9 x9 59 58 | ubfm x9, x9, #59, #58 |
+| 11540 | d2800100  |   movz.x x0 0x0008 0 | movz x0, #0x8 |
+| 11544 | f2ba5000  |   movk.x x0 0xd280 1  | movk x0, #0xd280, lsl #16 |
+| 11548 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 11552 | 97fffe9b  |   bl EMIT | bl 0x278c |
+| 11556 | d2800020  |   movz.x x0 0x0001 0 | movz x0, #0x1 |
+| 11560 | f2ba8000  |   movk.x x0 0xd400 1  | movk x0, #0xd400, lsl #16 |
+| 11564 | 97fffe98  |   bl EMIT | bl 0x278c |
+| 11568 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 11572 | f9403be1  |   ldr.x x1 sp 14 | ldr x1, [sp, #112] |
+| 11576 | f94033e2  |   ldr.x x2 sp 12 | ldr x2, [sp, #96] |
+| 11580 | f94037e3  |   ldr.x x3 sp 13 | ldr x3, [sp, #104] |
+| 11584 | d2800024  |   movz.x x4 1 0 | movz x4, #0x1 |
+| 11588 | 940000fb  |   bl RESTORE | bl 0x3130 |
+| 11592 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 11596 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 11600 | d2800122  |   movz.x x2 9 0 | movz x2, #0x9 |
+| 11604 | 17fffb48  |   b VT_RET | b 0x1a74 |
+| 11608 | d10383ff  |   sub.x.i sp sp 224 | sub sp, sp, #0xe0 |
+| 11612 | f90003fe  |   str.x x30 sp 0 | str x30, [sp] |
+| 11616 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 11620 | f9000be1  |   str.x x1 sp 2 | str x1, [sp, #16] |
+| 11624 | f9000ff8  |   str.x x24 sp 3 | str x24, [sp, #24] |
+| 11628 | f90013ff  |   str.x xzr sp 4 | str xzr, [sp, #32] |
+| 11632 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 11636 | f90017e9  |   str.x x9 sp 5 | str x9, [sp, #40] |
+| 11640 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 11644 | f940192a  |   ldr.x x10 x9 6 | ldr x10, [x9, #48] |
+| 11648 | b500008a  |   cbnz.x x10 CA_ARG | cbnz x10, 0x2d90 |
+| 11652 | f9400d2a  |   ldr.x x10 x9 3 | ldr x10, [x9, #24] |
+| 11656 | eb00015f  |   cmp.x x10 x0 | subs xzr, x10, x0 |
+| 11660 | 54ffd6c0  |   b.eq E_SUBSET | b.eq 0x2864  // b.none |
+| 11664 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 11668 | f94017ea  |   ldr.x x10 sp 5 | ldr x10, [sp, #40] |
+| 11672 | eb0a013f  |   cmp.x x9 x10 | subs xzr, x9, x10 |
+| 11676 | 54000642  |   b.hs CA_DONE | b.cs 0x2e64  // b.hs, b.nlast |
+| 11680 | f94007eb  |   ldr.x x11 sp 1 | ldr x11, [sp, #8] |
+| 11684 | d37ced2c  |   ubfm.x x12 x9 60 59 | ubfm x12, x9, #60, #59 |
+| 11688 | 8b0c016b  |   add.x x11 x11 x12 | add x11, x11, x12 |
+| 11692 | b940216c  |   ldr.w w12 x11 8 | ldr w12, [x11, #32] |
+| 11696 | b500026c  |   cbnz.x x12 CA_ARR | cbnz x12, 0x2dfc |
+| 11700 | b9401960  |   ldr.w w0 x11 6 | ldr w0, [x11, #24] |
+| 11704 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 11708 | 97fffa9c  |   bl VAL | bl 0x182c |
+| 11712 | f100101f  |   cmp.x.i x0 4 | subs xzr, x0, #0x4 |
+| 11716 | 540000a1  |   b.ne CA1 | b.ne 0x2dd8  // b.any |
+| 11720 | 97fffd3a  |   bl MATREG | bl 0x22b0 |
+| 11724 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 11728 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 11732 | d2800022  |   movz.x x2 1 0 | movz x2, #0x1 |
+| 11736 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 11740 | f94007eb  |   ldr.x x11 sp 1 | ldr x11, [sp, #8] |
+| 11744 | d37ced2c  |   ubfm.x x12 x9 60 59 | ubfm x12, x9, #60, #59 |
+| 11748 | 8b0c016b  |   add.x x11 x11 x12 | add x11, x11, x12 |
+| 11752 | b940196c  |   ldr.w w12 x11 6 | ldr w12, [x11, #24] |
+| 11756 | eb0c005f  |   cmp.x x2 x12 | subs xzr, x2, x12 |
+| 11760 | 54ffd321  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 11764 | d2800003  |   movz.x x3 0 0 | movz x3, #0x0 |
+| 11768 | 1400000f  |   b CA_PUT | b 0x2e34 |
+| 11772 | 94000054  |   bl ARRARG | bl 0x2f4c |
+| 11776 | aa0203e3  |   mov.x x3 x2 | orr x3, xzr, x2 |
+| 11780 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 11784 | d280000a  |   movz.x x10 0 0 | movz x10, #0x0 |
+| 11788 | eb09015f  |   cmp.x x10 x9 | subs xzr, x10, x9 |
+| 11792 | 54000122  |   b.hs CA_PUT | b.cs 0x2e34  // b.hs, b.nlast |
+| 11796 | d280006b  |   movz.x x11 3 0 | movz x11, #0x3 |
+| 11800 | 9b0a7d6b  |   mul.x x11 x11 x10 | madd x11, x11, x10, xzr |
+| 11804 | 9100216b  |   add.x.i x11 x11 8 | add x11, x11, #0x8 |
+| 11808 | f86b7bec  |   ldr.x.r x12 sp x11 | ldr x12, [sp, x11, lsl #3] |
+| 11812 | eb03019f  |   cmp.x x12 x3 | subs xzr, x12, x3 |
+| 11816 | 540036a0  |   b.eq E_ALIAS | b.eq 0x34fc  // b.none |
+| 11820 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 11824 | 17fffff7  |   b CA2 | b 0x2e0c |
+| 11828 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 11832 | d280006b  |   movz.x x11 3 0 | movz x11, #0x3 |
+| 11836 | 9b097d6b  |   mul.x x11 x11 x9 | madd x11, x11, x9, xzr |
+| 11840 | 9100196b  |   add.x.i x11 x11 6 | add x11, x11, #0x6 |
+| 11844 | f82b7be0  |   str.x.r x0 sp x11 | str x0, [sp, x11, lsl #3] |
+| 11848 | 9100056b  |   add.x.i x11 x11 1 | add x11, x11, #0x1 |
+| 11852 | f82b7be1  |   str.x.r x1 sp x11 | str x1, [sp, x11, lsl #3] |
+| 11856 | 9100056b  |   add.x.i x11 x11 1 | add x11, x11, #0x1 |
+| 11860 | f82b7be3  |   str.x.r x3 sp x11 | str x3, [sp, x11, lsl #3] |
+| 11864 | 91000529  |   add.x.i x9 x9 1 | add x9, x9, #0x1 |
+| 11868 | f90013e9  |   str.x x9 sp 4 | str x9, [sp, #32] |
+| 11872 | 17ffffcc  |   b CA_ARG | b 0x2d90 |
+| 11876 | 9400007a  |   bl SAVE | bl 0x304c |
+| 11880 | f90063e0  |   str.x x0 sp 24 | str x0, [sp, #192] |
+| 11884 | f90067e1  |   str.x x1 sp 25 | str x1, [sp, #200] |
+| 11888 | d280000d  |   movz.x x13 0 0 | movz x13, #0x0 |
+| 11892 | f94017ea  |   ldr.x x10 sp 5 | ldr x10, [sp, #40] |
+| 11896 | eb0a01bf  |   cmp.x x13 x10 | subs xzr, x13, x10 |
+| 11900 | 54000162  |   b.hs CA4 | b.cs 0x2ea8  // b.hs, b.nlast |
+| 11904 | d280006b  |   movz.x x11 3 0 | movz x11, #0x3 |
+| 11908 | 9b0d7d6b  |   mul.x x11 x11 x13 | madd x11, x11, x13, xzr |
+| 11912 | 9100196b  |   add.x.i x11 x11 6 | add x11, x11, #0x6 |
+| 11916 | f86b7be1  |   ldr.x.r x1 sp x11 | ldr x1, [sp, x11, lsl #3] |
+| 11920 | 9100056b  |   add.x.i x11 x11 1 | add x11, x11, #0x1 |
+| 11924 | f86b7be2  |   ldr.x.r x2 sp x11 | ldr x2, [sp, x11, lsl #3] |
+| 11928 | aa0d03e0  |   mov.x x0 x13 | orr x0, xzr, x13 |
+| 11932 | 9400008f  |   bl LOADARG | bl 0x30d8 |
+| 11936 | 910005ad  |   add.x.i x13 x13 1 | add x13, x13, #0x1 |
+| 11940 | 17fffff4  |   b CA3 | b 0x2e74 |
+| 11944 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 11948 | f940312a  |   ldr.x x10 x9 12 | ldr x10, [x9, #96] |
+| 11952 | d2a0002b  |   movz.x x11 1 1 | movz x11, #0x1, lsl #16 |
+| 11956 | eb0b015f  |   cmp.x x10 x11 | subs xzr, x10, x11 |
+| 11960 | 54ffcea2  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 11964 | d280030b  |   movz.x x11 24 0 | movz x11, #0x18 |
+| 11968 | 9b0a7d6b  |   mul.x x11 x11 x10 | madd x11, x11, x10, xzr |
+| 11972 | d2a030cc  |   movz.x x12 0x186 1 | movz x12, #0x186, lsl #16 |
+| 11976 | 8b0c016b  |   add.x x11 x11 x12 | add x11, x11, x12 |
+| 11980 | f9000174  |   str.x x20 x11 0 | str x20, [x11] |
+| 11984 | f94007ec  |   ldr.x x12 sp 1 | ldr x12, [sp, #8] |
+| 11988 | f900056c  |   str.x x12 x11 1 | str x12, [x11, #8] |
+| 11992 | f9400d2c  |   ldr.x x12 x9 3 | ldr x12, [x9, #24] |
+| 11996 | f900096c  |   str.x x12 x11 2 | str x12, [x11, #16] |
+| 12000 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 12004 | f900312a  |   str.x x10 x9 12 | str x10, [x9, #96] |
+| 12008 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 12012 | f9400520  |   ldr.x x0 x9 1 | ldr x0, [x9, #8] |
+| 12016 | cb140002  |   sub.x x2 x0 x20 | sub x2, x0, x20 |
+| 12020 | d3426c42  |   ubfm.x x2 x2 2 27 | ubfm x2, x2, #2, #27 |
+| 12024 | d2b28000  |   movz.x x0 0x9400 1  | movz x0, #0x9400, lsl #16 |
+| 12028 | aa020000  |   orr.x x0 x0 x2 | orr x0, x0, x2 |
+| 12032 | 97fffe23  |   bl EMIT | bl 0x278c |
+| 12036 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 12040 | b9401129  |   ldr.w w9 x9 4 | ldr w9, [x9, #16] |
+| 12044 | d2800024  |   movz.x x4 1 0 | movz x4, #0x1 |
+| 12048 | f100293f  |   cmp.x.i x9 10 | subs xzr, x9, #0xa |
+| 12052 | 54000041  |   b.ne CA5 | b.ne 0x2f1c  // b.any |
+| 12056 | d2800004  |   movz.x x4 0 0 | movz x4, #0x0 |
+| 12060 | f9400be0  |   ldr.x x0 sp 2 | ldr x0, [sp, #16] |
+| 12064 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 12068 | f94063e2  |   ldr.x x2 sp 24 | ldr x2, [sp, #192] |
+| 12072 | f94067e3  |   ldr.x x3 sp 25 | ldr x3, [sp, #200] |
+| 12076 | 94000081  |   bl RESTORE | bl 0x3130 |
+| 12080 | aa0003e1  |   mov.x x1 x0 | orr x1, xzr, x0 |
+| 12084 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 12088 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 12092 | b9401122  |   ldr.w w2 x9 4 | ldr w2, [x9, #16] |
+| 12096 | f94003fe  |   ldr.x x30 sp 0 | ldr x30, [sp] |
+| 12100 | 910383ff  |   add.x.i sp sp 224 | add sp, sp, #0xe0 |
+| 12104 | d65f03c0  |   ret | ret  |
+| 12108 | f81e0ffe  |   str.x.pre x30 sp -32 | str x30, [sp, #-32]! |
+| 12112 | f90007eb  |   str.x x11 sp 1 | str x11, [sp, #8] |
+| 12116 | f9000bff  |   str.x xzr sp 2 | str xzr, [sp, #16] |
+| 12120 | 97fffd69  |   bl TOK | bl 0x24fc |
+| 12124 | b4ffc700  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 12128 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 12132 | 54ffc9c1  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 12136 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 12140 | 54ffc8c8  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 12144 | f9000fe1  |   str.x x1 sp 3 | str x1, [sp, #24] |
+| 12148 | 97fffddd  |   bl KW | bl 0x26e8 |
+| 12152 | b40001a0  |   cbz.x x0 AA1 | cbz x0, 0x2fac |
+| 12156 | f100e41f  |   cmp.x.i x0 57 | subs xzr, x0, #0x39 |
+| 12160 | 54ffc8e3  |   b.lo E_SYNTAX | b.cc 0x289c  // b.lo, b.ul, b.last |
+| 12164 | f100e81f  |   cmp.x.i x0 58 | subs xzr, x0, #0x3a |
+| 12168 | 54ffc8a8  |   b.hi E_SYNTAX | b.hi 0x289c  // b.pmore |
+| 12172 | f9000be0  |   str.x x0 sp 2 | str x0, [sp, #16] |
+| 12176 | 97fffd5b  |   bl TOK | bl 0x24fc |
+| 12180 | b4ffc540  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 12184 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 12188 | 54ffc801  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 12192 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 12196 | 54ffc708  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 12200 | f9000fe1  |   str.x x1 sp 3 | str x1, [sp, #24] |
+| 12204 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 12208 | 940000e3  |   bl FINDNAME | bl 0x333c |
+| 12212 | b4ffc400  |   cbz.x x0 E_UNDEF | cbz x0, 0x2834 |
+| 12216 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 12220 | b4ffc4c9  |   cbz.x x9 E_TYPE | cbz x9, 0x2854 |
+| 12224 | f100113f  |   cmp.x.i x9 4 | subs xzr, x9, #0x4 |
+| 12228 | 540029c0  |   b.eq E_ALIAS | b.eq 0x34fc  // b.none |
+| 12232 | f94007eb  |   ldr.x x11 sp 1 | ldr x11, [sp, #8] |
+| 12236 | b940216a  |   ldr.w w10 x11 8 | ldr w10, [x11, #32] |
+| 12240 | f1000d5f  |   cmp.x.i x10 3 | subs xzr, x10, #0x3 |
+| 12244 | 54000121  |   b.ne AA2 | b.ne 0x2ff8  // b.any |
+| 12248 | f9400bec  |   ldr.x x12 sp 2 | ldr x12, [sp, #16] |
+| 12252 | f100e59f  |   cmp.x.i x12 57 | subs xzr, x12, #0x39 |
+| 12256 | 54002920  |   b.eq E_RDONLY  | b.eq 0x3504  // b.none |
+| 12260 | f100053f  |   cmp.x.i x9 1 | subs xzr, x9, #0x1 |
+| 12264 | 540000e0  |   b.eq AA3 | b.eq 0x3004  // b.none |
+| 12268 | f1000d3f  |   cmp.x.i x9 3 | subs xzr, x9, #0x3 |
+| 12272 | 540028a1  |   b.ne E_RDONLY | b.ne 0x3504  // b.any |
+| 12276 | 14000004  |   b AA3 | b 0x3004 |
+| 12280 | f9400bec  |   ldr.x x12 sp 2 | ldr x12, [sp, #16] |
+| 12284 | f100e99f  |   cmp.x.i x12 58 | subs xzr, x12, #0x3a |
+| 12288 | 54ffc2a0  |   b.eq E_TYPE | b.eq 0x2854  // b.none |
+| 12292 | b9400c0c  |   ldr.w w12 x0 3 | ldr w12, [x0, #12] |
+| 12296 | b940196d  |   ldr.w w13 x11 6 | ldr w13, [x11, #24] |
+| 12300 | eb0d019f  |   cmp.x x12 x13 | subs xzr, x12, x13 |
+| 12304 | 54ffc221  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 12308 | b940100c  |   ldr.w w12 x0 4 | ldr w12, [x0, #16] |
+| 12312 | b9401d6d  |   ldr.w w13 x11 7 | ldr w13, [x11, #28] |
+| 12316 | eb0d019f  |   cmp.x x12 x13 | subs xzr, x12, x13 |
+| 12320 | 54ffc1a1  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 12324 | aa0003e2  |   mov.x x2 x0 | orr x2, xzr, x0 |
+| 12328 | f100153f  |   cmp.x.i x9 5 | subs xzr, x9, #0x5 |
+| 12332 | 54000080  |   b.eq AA4 | b.eq 0x303c  // b.none |
+| 12336 | b9400801  |   ldr.w w1 x0 2 | ldr w1, [x0, #8] |
+| 12340 | d28000a0  |   movz.x x0 5 0 | movz x0, #0x5 |
+| 12344 | 14000003  |   b AA5 | b 0x3044 |
+| 12348 | f9400c01  |   ldr.x x1 x0 3 | ldr x1, [x0, #24] |
+| 12352 | d28000c0  |   movz.x x0 6 0 | movz x0, #0x6 |
+| 12356 | f84207fe  |   ldr.x.post x30 sp 32 | ldr x30, [sp], #32 |
+| 12360 | d65f03c0  |   ret | ret  |
+| 12364 | f81e0ffe  |   str.x.pre x30 sp -32 | str x30, [sp, #-32]! |
+| 12368 | 10fea3c9  |   adr x9 POOLC | adr x9, 0x4c8 |
+| 12372 | cb0903aa  |   sub.x x10 x29 x9 | sub x10, x29, x9 |
+| 12376 | 8b18014a  |   add.x x10 x10 x24 | add x10, x10, x24 |
+| 12380 | f90007ea  |   str.x x10 sp 1 | str x10, [sp, #8] |
+| 12384 | 9100094b  |   add.x.i x11 x10 2 | add x11, x10, #0x2 |
+| 12388 | d341fd6b  |   ubfm.x x11 x11 1 63 | ubfm x11, x11, #1, #63 |
+| 12392 | d37ced6b  |   ubfm.x x11 x11 60 59 | ubfm x11, x11, #60, #59 |
+| 12396 | f9000beb  |   str.x x11 sp 2 | str x11, [sp, #16] |
+| 12400 | aa0b03e1  |   mov.x x1 x11 | orr x1, xzr, x11 |
+| 12404 | 940000f1  |   bl SPSUB | bl 0x3438 |
+| 12408 | 94000107  |   bl STKCHK | bl 0x3494 |
+| 12412 | d280000d  |   movz.x x13 0 0 | movz x13, #0x0 |
+| 12416 | f94007ea  |   ldr.x x10 sp 1 | ldr x10, [sp, #8] |
+| 12420 | eb0a01bf  |   cmp.x x13 x10 | subs xzr, x13, x10 |
+| 12424 | 54000162  |   b.hs SV2 | b.cs 0x30b4  // b.hs, b.nlast |
+| 12428 | 10fea1e9  |   adr x9 POOLC | adr x9, 0x4c8 |
+| 12432 | 386d6920  |   ldrb.r w0 x9 x13 | ldrb w0, [x9, x13] |
+| 12436 | d2807c09  |   movz.x x9 0x03e0 0 | movz x9, #0x3e0 |
+| 12440 | f2bf2009  |   movk.x x9 0xf900 1  | movk x9, #0xf900, lsl #16 |
+| 12444 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 12448 | d376d5a1  |   ubfm.x x1 x13 54 53 | ubfm x1, x13, #54, #53 |
+| 12452 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12456 | 97fffdb9  |   bl EMIT | bl 0x278c |
+| 12460 | 910005ad  |   add.x.i x13 x13 1 | add x13, x13, #0x1 |
+| 12464 | 17fffff4  |   b SV1 | b 0x3080 |
+| 12468 | d2807fc0  |   movz.x x0 0x03fe 0 | movz x0, #0x3fe |
+| 12472 | f2bf2000  |   movk.x x0 0xf900 1  | movk x0, #0xf900, lsl #16 |
+| 12476 | d376d5a1  |   ubfm.x x1 x13 54 53 | ubfm x1, x13, #54, #53 |
+| 12480 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12484 | 97fffdb2  |   bl EMIT | bl 0x278c |
+| 12488 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 12492 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 12496 | f84207fe  |   ldr.x.post x30 sp 32 | ldr x30, [sp], #32 |
+| 12500 | d65f03c0  |   ret | ret  |
+| 12504 | f1000c3f  |   cmp.x.i x1 3 | subs xzr, x1, #0x3 |
+| 12508 | 54000160  |   b.eq MATCONST_X | b.eq 0x3108  // b.none |
+| 12512 | f100183f  |   cmp.x.i x1 6 | subs xzr, x1, #0x6 |
+| 12516 | 54000120  |   b.eq MATCONST_X | b.eq 0x3108  // b.none |
+| 12520 | 10fe9f89  |   adr x9 REGIDX | adr x9, 0x4d8 |
+| 12524 | 38626929  |   ldrb.r w9 x9 x2 | ldrb w9, [x9, x2] |
+| 12528 | d2807c0a  |   movz.x x10 0x03e0 0 | movz x10, #0x3e0 |
+| 12532 | f2bf280a  |   movk.x x10 0xf940 1  | movk x10, #0xf940, lsl #16 |
+| 12536 | aa0a0000  |   orr.x x0 x0 x10 | orr x0, x0, x10 |
+| 12540 | d376d529  |   ubfm.x x9 x9 54 53 | ubfm x9, x9, #54, #53 |
+| 12544 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 12548 | 17fffda2  |   b EMIT | b 0x278c |
+| 12552 | aa0203e1  |   mov.x x1 x2 | orr x1, xzr, x2 |
+| 12556 | 17fffc9a  |   b MATCONST | b 0x2374 |
+| 12560 | b940152a  |   ldr.w w10 x9 5 | ldr w10, [x9, #20] |
+| 12564 | f100115f  |   cmp.x.i x10 4 | subs xzr, x10, #0x4 |
+| 12568 | 54000082  |   b.hs BA_ADDR | b.cs 0x3128  // b.hs, b.nlast |
+| 12572 | d2800021  |   movz.x x1 1 0 | movz x1, #0x1 |
+| 12576 | b9400922  |   ldr.w w2 x9 2 | ldr w2, [x9, #8] |
+| 12580 | 17ffffed  |   b LOADARG | b 0x30d8 |
+| 12584 | f9400d21  |   ldr.x x1 x9 3 | ldr x1, [x9, #24] |
+| 12588 | 17fffc92  |   b MATCONST | b 0x2374 |
+| 12592 | f81c0ffe  |   str.x.pre x30 sp -64 | str x30, [sp, #-64]! |
+| 12596 | f9000be2  |   str.x x2 sp 2 | str x2, [sp, #16] |
+| 12600 | f9000fe3  |   str.x x3 sp 3 | str x3, [sp, #24] |
+| 12604 | aa0103f8  |   mov.x x24 x1 | orr x24, xzr, x1 |
+| 12608 | f90013e1  |   str.x x1 sp 4 | str x1, [sp, #32] |
+| 12612 | d2801fe9  |   movz.x x9 255 0 | movz x9, #0xff |
+| 12616 | f90007e9  |   str.x x9 sp 1 | str x9, [sp, #8] |
+| 12620 | b4000144  |   cbz.x x4 RS2 | cbz x4, 0x3174 |
+| 12624 | f103fc1f  |   cmp.x.i x0 255 | subs xzr, x0, #0xff |
+| 12628 | 54000041  |   b.ne RS1 | b.ne 0x315c  // b.any |
+| 12632 | 97fffd83  |   bl ALLOC | bl 0x2764 |
+| 12636 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 12640 | b40000a0  |   cbz.x x0 RS2 | cbz x0, 0x3174 |
+| 12644 | d2807c09  |   movz.x x9 0x03e0 0 | movz x9, #0x3e0 |
+| 12648 | f2b54009  |   movk.x x9 0xaa00 1  | movk x9, #0xaa00, lsl #16 |
+| 12652 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 12656 | 97fffd87  |   bl EMIT | bl 0x278c |
+| 12660 | d280000d  |   movz.x x13 0 0 | movz x13, #0x0 |
+| 12664 | 10fe9a89  |   adr x9 POOLC | adr x9, 0x4c8 |
+| 12668 | cb0903ae  |   sub.x x14 x29 x9 | sub x14, x29, x9 |
+| 12672 | f94013e9  |   ldr.x x9 sp 4 | ldr x9, [sp, #32] |
+| 12676 | 8b0901ce  |   add.x x14 x14 x9 | add x14, x14, x9 |
+| 12680 | eb0e01bf  |   cmp.x x13 x14 | subs xzr, x13, x14 |
+| 12684 | 540001c2  |   b.hs RS4 | b.cs 0x31c4  // b.hs, b.nlast |
+| 12688 | 10fe99c9  |   adr x9 POOLC | adr x9, 0x4c8 |
+| 12692 | 386d6920  |   ldrb.r w0 x9 x13 | ldrb w0, [x9, x13] |
+| 12696 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 12700 | eb09001f  |   cmp.x x0 x9 | subs xzr, x0, x9 |
+| 12704 | 540000e0  |   b.eq RS5 | b.eq 0x31bc  // b.none |
+| 12708 | d2807c09  |   movz.x x9 0x03e0 0 | movz x9, #0x3e0 |
+| 12712 | f2bf2809  |   movk.x x9 0xf940 1  | movk x9, #0xf940, lsl #16 |
+| 12716 | aa090000  |   orr.x x0 x0 x9 | orr x0, x0, x9 |
+| 12720 | d376d5a1  |   ubfm.x x1 x13 54 53 | ubfm x1, x13, #54, #53 |
+| 12724 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12728 | 97fffd75  |   bl EMIT | bl 0x278c |
+| 12732 | 910005ad  |   add.x.i x13 x13 1 | add x13, x13, #0x1 |
+| 12736 | 17fffff2  |   b RS3 | b 0x3188 |
+| 12740 | d2807fc0  |   movz.x x0 0x03fe 0 | movz x0, #0x3fe |
+| 12744 | f2bf2800  |   movk.x x0 0xf940 1  | movk x0, #0xf940, lsl #16 |
+| 12748 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 12752 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 12756 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12760 | 97fffd6d  |   bl EMIT | bl 0x278c |
+| 12764 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 12768 | 94000094  |   bl SPADD | bl 0x3430 |
+| 12772 | f94007e0  |   ldr.x x0 sp 1 | ldr x0, [sp, #8] |
+| 12776 | f84407fe  |   ldr.x.post x30 sp 64 | ldr x30, [sp], #64 |
+| 12780 | d65f03c0  |   ret | ret  |
+| 12784 | f81d0ffe  |   str.x.pre x30 sp -48 | str x30, [sp, #-48]! |
+| 12788 | f90007e0  |   str.x x0 sp 1 | str x0, [sp, #8] |
+| 12792 | f100047f  |   cmp.x.i x3 1 | subs xzr, x3, #0x1 |
+| 12796 | 54ffb2c0  |   b.eq E_TYPE | b.eq 0x2854  // b.none |
+| 12800 | f1000c3f  |   cmp.x.i x1 3 | subs xzr, x1, #0x3 |
+| 12804 | 54000141  |   b.ne EA_R | b.ne 0x322c  // b.any |
+| 12808 | b9401009  |   ldr.w w9 x0 4 | ldr w9, [x0, #16] |
+| 12812 | eb09005f  |   cmp.x x2 x9 | subs xzr, x2, x9 |
+| 12816 | 540017e2  |   b.hs E_BOUNDS | b.cs 0x350c  // b.hs, b.nlast |
+| 12820 | f9000be2  |   str.x x2 sp 2 | str x2, [sp, #16] |
+| 12824 | 97fffd53  |   bl ALLOC | bl 0x2764 |
+| 12828 | f9000fe0  |   str.x x0 sp 3 | str x0, [sp, #24] |
+| 12832 | f9400be1  |   ldr.x x1 sp 2 | ldr x1, [sp, #16] |
+| 12836 | 97fffc54  |   bl MATCONST | bl 0x2374 |
+| 12840 | 1400001a  |   b EA_B | b 0x3290 |
+| 12844 | f9000fe2  |   str.x x2 sp 3 | str x2, [sp, #24] |
+| 12848 | b9401001  |   ldr.w w1 x0 4 | ldr w1, [x0, #16] |
+| 12852 | d281ffe9  |   movz.x x9 4095 0 | movz x9, #0xfff |
+| 12856 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 12860 | 540000c8  |   b.hi EA_BIG | b.hi 0x3254  // b.pmore |
+| 12864 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 12868 | f2be2000  |   movk.x x0 0xf100 1  | movk x0, #0xf100, lsl #16 |
+| 12872 | d376d421  |   ubfm.x x1 x1 54 53 | ubfm x1, x1, #54, #53 |
+| 12876 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12880 | 14000009  |   b EA_C | b 0x3274 |
+| 12884 | 97fffd44  |   bl ALLOC | bl 0x2764 |
+| 12888 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 12892 | 97fffc46  |   bl MATCONST | bl 0x2374 |
+| 12896 | d28003e0  |   movz.x x0 0x001f 0 | movz x0, #0x1f |
+| 12900 | f2bd6000  |   movk.x x0 0xeb00 1  | movk x0, #0xeb00, lsl #16 |
+| 12904 | f94013e1  |   ldr.x x1 sp 4 | ldr x1, [sp, #32] |
+| 12908 | d370bc21  |   ubfm.x x1 x1 48 47 | ubfm x1, x1, #48, #47 |
+| 12912 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12916 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 12920 | d37be821  |   ubfm.x x1 x1 59 58 | ubfm x1, x1, #59, #58 |
+| 12924 | aa010000  |   orr.x x0 x0 x1 | orr x0, x0, x1 |
+| 12928 | 97fffd43  |   bl EMIT | bl 0x278c |
+| 12932 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 12936 | d2800061  |   movz.x x1 3 0 | movz x1, #0x3 |
+| 12940 | 97fffd4b  |   bl TRAPC | bl 0x27b8 |
+| 12944 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 12948 | b940152a  |   ldr.w w10 x9 5 | ldr w10, [x9, #20] |
+| 12952 | f100115f  |   cmp.x.i x10 4 | subs xzr, x10, #0x4 |
+| 12956 | 54000062  |   b.hs EA_A | b.cs 0x32a8  // b.hs, b.nlast |
+| 12960 | b9400920  |   ldr.w w0 x9 2 | ldr w0, [x9, #8] |
+| 12964 | 14000007  |   b EA_X | b 0x32c0 |
+| 12968 | 97fffd2f  |   bl ALLOC | bl 0x2764 |
+| 12972 | f90013e0  |   str.x x0 sp 4 | str x0, [sp, #32] |
+| 12976 | f94007e9  |   ldr.x x9 sp 1 | ldr x9, [sp, #8] |
+| 12980 | f9400d21  |   ldr.x x1 x9 3 | ldr x1, [x9, #24] |
+| 12984 | 97fffc2f  |   bl MATCONST | bl 0x2374 |
+| 12988 | f94013e0  |   ldr.x x0 sp 4 | ldr x0, [sp, #32] |
+| 12992 | f9400fe1  |   ldr.x x1 sp 3 | ldr x1, [sp, #24] |
+| 12996 | f84307fe  |   ldr.x.post x30 sp 48 | ldr x30, [sp], #48 |
+| 13000 | d65f03c0  |   ret | ret  |
+| 13004 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 13008 | 97fffc8b  |   bl TOK | bl 0x24fc |
+| 13012 | b4ffab40  |   cbz.x x0 E_FEW | cbz x0, 0x283c |
+| 13016 | f1000c1f  |   cmp.x.i x0 3 | subs xzr, x0, #0x3 |
+| 13020 | 54ffab00  |   b.eq E_FEW | b.eq 0x283c  // b.none |
+| 13024 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 13028 | 54ffadc1  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 13032 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 13036 | 54ffacc8  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 13040 | 94000013  |   bl FINDNAME | bl 0x333c |
+| 13044 | b4ffaa00  |   cbz.x x0 E_UNDEF | cbz x0, 0x2834 |
+| 13048 | b9401409  |   ldr.w w9 x0 5 | ldr w9, [x0, #20] |
+| 13052 | b4ffaac9  |   cbz.x x9 E_TYPE | cbz x9, 0x2854 |
+| 13056 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 13060 | d65f03c0  |   ret | ret  |
+| 13064 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 13068 | 97fffc7c  |   bl TOK | bl 0x24fc |
+| 13072 | f100041f  |   cmp.x.i x0 1 | subs xzr, x0, #0x1 |
+| 13076 | 54ffac41  |   b.ne E_SYNTAX | b.ne 0x289c  // b.any |
+| 13080 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 13084 | 54ffab48  |   b.hi E_LONG | b.hi 0x2884  // b.pmore |
+| 13088 | aa0103ec  |   mov.x x12 x1 | orr x12, xzr, x1 |
+| 13092 | 97fffcf1  |   bl KW | bl 0x26e8 |
+| 13096 | b5ffaba0  |   cbnz.x x0 E_SYNTAX | cbnz x0, 0x289c |
+| 13100 | aa0c03e1  |   mov.x x1 x12 | orr x1, xzr, x12 |
+| 13104 | 9400009c  |   bl NEWNAME | bl 0x35a0 |
+| 13108 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 13112 | d65f03c0  |   ret | ret  |
+| 13116 | d2a03009  |   movz.x x9 0x180 1 | movz x9, #0x180, lsl #16 |
+| 13120 | d280000a  |   movz.x x10 0 0 | movz x10, #0x0 |
+| 13124 | eb17015f  |   cmp.x x10 x23 | subs xzr, x10, x23 |
+| 13128 | 540000e2  |   b.hs FD0 | b.cs 0x3364  // b.hs, b.nlast |
+| 13132 | f940012b  |   ldr.x x11 x9 0 | ldr x11, [x9] |
+| 13136 | eb01017f  |   cmp.x x11 x1 | subs xzr, x11, x1 |
+| 13140 | 540000c0  |   b.eq FDF | b.eq 0x336c  // b.none |
+| 13144 | 91008129  |   add.x.i x9 x9 32 | add x9, x9, #0x20 |
+| 13148 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 13152 | 17fffff9  |   b FD1 | b 0x3344 |
+| 13156 | d2800000  |   movz.x x0 0 0 | movz x0, #0x0 |
+| 13160 | d65f03c0  |   ret | ret  |
+| 13164 | aa0903e0  |   mov.x x0 x9 | orr x0, xzr, x9 |
+| 13168 | d65f03c0  |   ret | ret  |
+| 13172 | f11002ff  |   cmp.x.i x23 1024 | subs xzr, x23, #0x400 |
+| 13176 | 54ffa8a2  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 13180 | d2a03009  |   movz.x x9 0x180 1 | movz x9, #0x180, lsl #16 |
+| 13184 | d37beaea  |   ubfm.x x10 x23 59 58 | ubfm x10, x23, #59, #58 |
+| 13188 | 8b0a0129  |   add.x x9 x9 x10 | add x9, x9, x10 |
+| 13192 | f9000121  |   str.x x1 x9 0 | str x1, [x9] |
+| 13196 | b9000922  |   str.w w2 x9 2 | str w2, [x9, #8] |
+| 13200 | b9000d23  |   str.w w3 x9 3 | str w3, [x9, #12] |
+| 13204 | b9001124  |   str.w w4 x9 4 | str w4, [x9, #16] |
+| 13208 | b9001525  |   str.w w5 x9 5 | str w5, [x9, #20] |
+| 13212 | f9000d26  |   str.x x6 x9 3 | str x6, [x9, #24] |
+| 13216 | 910006f7  |   add.x.i x23 x23 1 | add x23, x23, #0x1 |
+| 13220 | d65f03c0  |   ret | ret  |
+| 13224 | d2a03049  |   movz.x x9 0x182 1 | movz x9, #0x182, lsl #16 |
+| 13228 | eb09033f  |   cmp.x x25 x9 | subs xzr, x25, x9 |
+| 13232 | 54ffa6e2  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 13236 | f9000321  |   str.x x1 x25 0 | str x1, [x25] |
+| 13240 | f9000720  |   str.x x0 x25 1 | str x0, [x25, #8] |
+| 13244 | f9000b22  |   str.x x2 x25 2 | str x2, [x25, #16] |
+| 13248 | f9000f23  |   str.x x3 x25 3 | str x3, [x25, #24] |
+| 13252 | f9001324  |   str.x x4 x25 4 | str x4, [x25, #32] |
+| 13256 | f9001725  |   str.x x5 x25 5 | str x5, [x25, #40] |
+| 13260 | f9001b26  |   str.x x6 x25 6 | str x6, [x25, #48] |
+| 13264 | f9001f3f  |   str.x xzr x25 7 | str xzr, [x25, #56] |
+| 13268 | 91020339  |   add.x.i x25 x25 128 | add x25, x25, #0x80 |
+| 13272 | d65f03c0  |   ret | ret  |
+| 13276 | f100081f  |   cmp.x.i x0 2 | subs xzr, x0, #0x2 |
+| 13280 | 54ffa423  |   b.lo E_SUBSET | b.cc 0x2864  // b.lo, b.ul, b.last |
+| 13284 | d65f03c0  |   ret | ret  |
+| 13288 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13292 | f9402d29  |   ldr.x x9 x9 11 | ldr x9, [x9, #88] |
+| 13296 | b5000969  |   cbnz.x x9 E_TOOBIG | cbnz x9, 0x351c |
+| 13300 | f100043f  |   cmp.x.i x1 1 | subs xzr, x1, #0x1 |
+| 13304 | 54ffa32b  |   b.lt E_RANGE | b.lt 0x285c  // b.tstop |
+| 13308 | d2a02009  |   movz.x x9 0x100 1 | movz x9, #0x100, lsl #16 |
+| 13312 | eb09003f  |   cmp.x x1 x9 | subs xzr, x1, x9 |
+| 13316 | 540008c8  |   b.hi E_TOOBIG | b.hi 0x351c  // b.pmore |
+| 13320 | d65f03c0  |   ret | ret  |
+| 13324 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 13328 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13332 | f9401121  |   ldr.x x1 x9 4 | ldr x1, [x9, #32] |
+| 13336 | 94000006  |   bl SPADD | bl 0x3430 |
+| 13340 | d2807800  |   movz.x x0 0x03c0 0 | movz x0, #0x3c0 |
+| 13344 | f2bacbe0  |   movk.x x0 0xd65f 1  | movk x0, #0xd65f, lsl #16 |
+| 13348 | 97fffcda  |   bl EMIT | bl 0x278c |
+| 13352 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 13356 | d65f03c0  |   ret | ret  |
+| 13360 | d2b22002  |   movz.x x2 0x9100 1 | movz x2, #0x9100, lsl #16 |
+| 13364 | 14000002  |   b SPOP | b 0x343c |
+| 13368 | d2ba2002  |   movz.x x2 0xd100 1 | movz x2, #0xd100, lsl #16 |
+| 13372 | f81e0ffe  |   str.x.pre x30 sp -32 | str x30, [sp, #-32]! |
+| 13376 | f90007e1  |   str.x x1 sp 1 | str x1, [sp, #8] |
+| 13380 | f9000be2  |   str.x x2 sp 2 | str x2, [sp, #16] |
+| 13384 | d3402c23  |   ubfm.x x3 x1 0 11 | ubfm x3, x1, #0, #11 |
+| 13388 | b40000c3  |   cbz.x x3 SPO1 | cbz x3, 0x3464 |
+| 13392 | d2807fe9  |   movz.x x9 0x03ff 0 | movz x9, #0x3ff |
+| 13396 | aa090040  |   orr.x x0 x2 x9 | orr x0, x2, x9 |
+| 13400 | d376d463  |   ubfm.x x3 x3 54 53 | ubfm x3, x3, #54, #53 |
+| 13404 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 13408 | 97fffccb  |   bl EMIT | bl 0x278c |
+| 13412 | f94007e1  |   ldr.x x1 sp 1 | ldr x1, [sp, #8] |
+| 13416 | d34c5c23  |   ubfm.x x3 x1 12 23 | ubfm x3, x1, #12, #23 |
+| 13420 | b4000103  |   cbz.x x3 SPO2 | cbz x3, 0x348c |
+| 13424 | f9400be2  |   ldr.x x2 sp 2 | ldr x2, [sp, #16] |
+| 13428 | d2807fe9  |   movz.x x9 0x03ff 0 | movz x9, #0x3ff |
+| 13432 | f2a00809  |   movk.x x9 0x0040 1 | movk x9, #0x40, lsl #16 |
+| 13436 | aa090040  |   orr.x x0 x2 x9 | orr x0, x2, x9 |
+| 13440 | d376d463  |   ubfm.x x3 x3 54 53 | ubfm x3, x3, #54, #53 |
+| 13444 | aa030000  |   orr.x x0 x0 x3 | orr x0, x0, x3 |
+| 13448 | 97fffcc1  |   bl EMIT | bl 0x278c |
+| 13452 | f84207fe  |   ldr.x.post x30 sp 32 | ldr x30, [sp], #32 |
+| 13456 | d65f03c0  |   ret | ret  |
+| 13460 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13464 | f940192a  |   ldr.x x10 x9 6 | ldr x10, [x9, #48] |
+| 13468 | b400012a  |   cbz.x x10 SK1 | cbz x10, 0x34c0 |
+| 13472 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 13476 | d28c7fe0  |   movz.x x0 0x63ff 0 | movz x0, #0x63ff |
+| 13480 | f2bd6780  |   movk.x x0 0xeb3c 1  | movk x0, #0xeb3c, lsl #16 |
+| 13484 | 97fffcb8  |   bl EMIT | bl 0x278c |
+| 13488 | d2800060  |   movz.x x0 3 0 | movz x0, #0x3 |
+| 13492 | d28000c1  |   movz.x x1 6 0 | movz x1, #0x6 |
+| 13496 | 97fffcc0  |   bl TRAPC | bl 0x27b8 |
+| 13500 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 13504 | d65f03c0  |   ret | ret  |
+| 13508 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13512 | d280002a  |   movz.x x10 1 0 | movz x10, #0x1 |
+| 13516 | f900152a  |   str.x x10 x9 5 | str x10, [x9, #40] |
+| 13520 | d65f03c0  |   ret | ret  |
+| 13524 | d2a03009  |   movz.x x9 0x180 1 | movz x9, #0x180, lsl #16 |
+| 13528 | eb09029f  |   cmp.x x20 x9 | subs xzr, x20, x9 |
+| 13532 | 54ff9d82  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 13536 | 39000280  |   strb w0 x20 0 | strb w0, [x20] |
+| 13540 | 91000694  |   add.x.i x20 x20 1 | add x20, x20, #0x1 |
+| 13544 | d65f03c0  |   ret | ret  |
+| 13548 | d2800220  |   movz.x x0 17 0 | movz x0, #0x11 |
+| 13552 | 1400000d  |   b FAIL | b 0x3524 |
+| 13556 | d2800240  |   movz.x x0 18 0 | movz x0, #0x12 |
+| 13560 | 1400000b  |   b FAIL | b 0x3524 |
+| 13564 | d2800260  |   movz.x x0 19 0 | movz x0, #0x13 |
+| 13568 | 14000009  |   b FAIL | b 0x3524 |
+| 13572 | d2800280  |   movz.x x0 20 0 | movz x0, #0x14 |
+| 13576 | 14000007  |   b FAIL | b 0x3524 |
+| 13580 | d28002a0  |   movz.x x0 21 0 | movz x0, #0x15 |
+| 13584 | 14000005  |   b FAIL | b 0x3524 |
+| 13588 | d28002c0  |   movz.x x0 22 0 | movz x0, #0x16 |
+| 13592 | 14000003  |   b FAIL | b 0x3524 |
+| 13596 | d28002e0  |   movz.x x0 23 0 | movz x0, #0x17 |
+| 13600 | 14000001  |   b FAIL | b 0x3524 |
+| 13604 | aa0003ec  |   mov.x x12 x0 | orr x12, xzr, x0 |
+| 13608 | d2a03069  |   movz.x x9 0x183 1 | movz x9, #0x183, lsl #16 |
+| 13612 | 10fe7c2a  |   adr x10 MSG1 | adr x10, 0x4b0 |
+| 13616 | d280014b  |   movz.x x11 10 0 | movz x11, #0xa |
+| 13620 | 94000013  |   bl COPYN | bl 0x3580 |
+| 13624 | aa1603e0  |   mov.x x0 x22 | orr x0, xzr, x22 |
+| 13628 | 97fffcda  |   bl PUTDEC | bl 0x28a4 |
+| 13632 | 10fe7bea  |   adr x10 MSG2 | adr x10, 0x4bc |
+| 13636 | d280010b  |   movz.x x11 8 0 | movz x11, #0x8 |
+| 13640 | 9400000e  |   bl COPYN | bl 0x3580 |
+| 13644 | aa0c03e0  |   mov.x x0 x12 | orr x0, xzr, x12 |
+| 13648 | 97fffcd5  |   bl PUTDEC | bl 0x28a4 |
+| 13652 | d2800140  |   movz.x x0 10 0 | movz x0, #0xa |
+| 13656 | 39000120  |   strb w0 x9 0 | strb w0, [x9] |
+| 13660 | 91000529  |   add.x.i x9 x9 1 | add x9, x9, #0x1 |
+| 13664 | d2800040  |   movz.x x0 2 0 | movz x0, #0x2 |
+| 13668 | d2a03061  |   movz.x x1 0x183 1 | movz x1, #0x183, lsl #16 |
+| 13672 | cb010122  |   sub.x x2 x9 x1 | sub x2, x9, x1 |
+| 13676 | d2800808  |   movz.x x8 64 0 | movz x8, #0x40 |
+| 13680 | d4000001  |   svc 0 | svc #0x0 |
+| 13684 | aa0c03e0  |   mov.x x0 x12 | orr x0, xzr, x12 |
+| 13688 | d2800ba8  |   movz.x x8 93 0 | movz x8, #0x5d |
+| 13692 | d4000001  |   svc 0 | svc #0x0 |
+| 13696 | b40000eb  |   cbz.x x11 CN1 | cbz x11, 0x359c |
+| 13700 | 3940014d  |   ldrb w13 x10 0 | ldrb w13, [x10] |
+| 13704 | 3900012d  |   strb w13 x9 0 | strb w13, [x9] |
+| 13708 | 91000529  |   add.x.i x9 x9 1 | add x9, x9, #0x1 |
+| 13712 | 9100054a  |   add.x.i x10 x10 1 | add x10, x10, #0x1 |
+| 13716 | d100056b  |   sub.x.i x11 x11 1 | sub x11, x11, #0x1 |
+| 13720 | 17fffffa  |   b COPYN | b 0x3580 |
+| 13724 | d65f03c0  |   ret | ret  |
+| 13728 | f81f0ffe  |   str.x.pre x30 sp -16 | str x30, [sp, #-16]! |
+| 13732 | f90007e1  |   str.x x1 sp 1 | str x1, [sp, #8] |
+| 13736 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 13740 | 54000068  |   b.hi NN1 | b.hi 0x35b8  // b.pmore |
+| 13744 | 97ffff63  |   bl FINDNAME | bl 0x333c |
+| 13748 | b5ff95c0  |   cbnz.x x0 E_TWICE | cbnz x0, 0x286c |
+| 13752 | f94007e1  |   ldr.x x1 sp 1 | ldr x1, [sp, #8] |
+| 13756 | 94000005  |   bl FINDFN | bl 0x35d0 |
+| 13760 | b5ff9560  |   cbnz.x x0 E_TWICE | cbnz x0, 0x286c |
+| 13764 | f94007e1  |   ldr.x x1 sp 1 | ldr x1, [sp, #8] |
+| 13768 | f84107fe  |   ldr.x.post x30 sp 16 | ldr x30, [sp], #16 |
+| 13772 | d65f03c0  |   ret | ret  |
+| 13776 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13780 | f940092a  |   ldr.x x10 x9 2 | ldr x10, [x9, #16] |
+| 13784 | d2a03089  |   movz.x x9 0x184 1 | movz x9, #0x184, lsl #16 |
+| 13788 | b4ffec4a  |   cbz.x x10 FD0 | cbz x10, 0x3364 |
+| 13792 | f940012b  |   ldr.x x11 x9 0 | ldr x11, [x9] |
+| 13796 | eb01017f  |   cmp.x x11 x1 | subs xzr, x11, x1 |
+| 13800 | 540002a1  |   b.ne FF2 | b.ne 0x363c  // b.any |
+| 13804 | b940792b  |   ldr.w w11 x9 30 | ldr w11, [x9, #120] |
+| 13808 | f100205f  |   cmp.x.i x2 8 | subs xzr, x2, #0x8 |
+| 13812 | 54000088  |   b.hi FF_LONG | b.hi 0x3604  // b.pmore |
+| 13816 | f100217f  |   cmp.x.i x11 8 | subs xzr, x11, #0x8 |
+| 13820 | 54ffeb89  |   b.ls FDF | b.ls 0x336c  // b.plast |
+| 13824 | 1400000f  |   b FF2 | b 0x363c |
+| 13828 | eb02017f  |   cmp.x x11 x2 | subs xzr, x11, x2 |
+| 13832 | 540001a1  |   b.ne FF2 | b.ne 0x363c  // b.any |
+| 13836 | b9407d2f  |   ldr.w w15 x9 31 | ldr w15, [x9, #124] |
+| 13840 | d2a01010  |   movz.x x16 0x80 1 | movz x16, #0x80, lsl #16 |
+| 13844 | 8b1001ef  |   add.x x15 x15 x16 | add x15, x15, x16 |
+| 13848 | d2800110  |   movz.x x16 8 0 | movz x16, #0x8 |
+| 13852 | eb02021f  |   cmp.x x16 x2 | subs xzr, x16, x2 |
+| 13856 | 54ffea62  |   b.hs FDF | b.cs 0x336c  // b.hs, b.nlast |
+| 13860 | 387069f1  |   ldrb.r w17 x15 x16 | ldrb w17, [x15, x16] |
+| 13864 | 3870686b  |   ldrb.r w11 x3 x16 | ldrb w11, [x3, x16] |
+| 13868 | eb0b023f  |   cmp.x x17 x11 | subs xzr, x17, x11 |
+| 13872 | 54000061  |   b.ne FF2 | b.ne 0x363c  // b.any |
+| 13876 | 91000610  |   add.x.i x16 x16 1 | add x16, x16, #0x1 |
+| 13880 | 17fffff9  |   b FF3 | b 0x361c |
+| 13884 | 91020129  |   add.x.i x9 x9 128 | add x9, x9, #0x80 |
+| 13888 | d100054a  |   sub.x.i x10 x10 1 | sub x10, x10, #0x1 |
+| 13892 | 17ffffe6  |   b FF1 | b 0x35dc |
+| 13896 | b4ff91fb  |   cbz.x x27 E_LONG | cbz x27, 0x2884 |
+| 13900 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13904 | f940152a  |   ldr.x x10 x9 5 | ldr x10, [x9, #40] |
+| 13908 | b5fff4ca  |   cbnz.x x10 E_DEAD | cbnz x10, 0x34ec |
+| 13912 | cb020263  |   sub.x x3 x19 x2 | sub x3, x19, x2 |
+| 13916 | 97ffffdd  |   bl FINDFN | bl 0x35d0 |
+| 13920 | b4ff9120  |   cbz.x x0 E_LONG | cbz x0, 0x2884 |
+| 13924 | b9401009  |   ldr.w w9 x0 4 | ldr w9, [x0, #16] |
+| 13928 | f100293f  |   cmp.x.i x9 10 | subs xzr, x9, #0xa |
+| 13932 | 54ff8f41  |   b.ne E_TYPE | b.ne 0x2854  // b.any |
+| 13936 | d2801fe1  |   movz.x x1 255 0 | movz x1, #0xff |
+| 13940 | 97fffdb9  |   bl CALL | bl 0x2d58 |
+| 13944 | 97fffc34  |   bl EOL | bl 0x2748 |
+| 13948 | 17fff442  |   b STMT | b 0x784 |
+| 13952 | aa0403e1  |   mov.x x1 x4 | orr x1, xzr, x4 |
+| 13956 | aa0503e2  |   mov.x x2 x5 | orr x2, xzr, x5 |
+| 13960 | cb050263  |   sub.x x3 x19 x5 | sub x3, x19, x5 |
+| 13964 | 97ffffd1  |   bl FINDFN | bl 0x35d0 |
+| 13968 | b4ff8fa0  |   cbz.x x0 E_LONG | cbz x0, 0x2884 |
+| 13972 | 17fff89d  |   b VT_FN2 | b 0x1908 |
+| 13976 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
+| 13980 | f940312a  |   ldr.x x10 x9 12 | ldr x10, [x9, #96] |
+| 13984 | d2a030cb  |   movz.x x11 0x186 1 | movz x11, #0x186, lsl #16 |
+| 13988 | d280000c  |   movz.x x12 0 0 | movz x12, #0x0 |
+| 13992 | eb0a019f  |   cmp.x x12 x10 | subs xzr, x12, x10 |
+| 13996 | 54000182  |   b.hs RS_GRAPH | b.cs 0x36dc  // b.hs, b.nlast |
+| 14000 | f9400160  |   ldr.x x0 x11 0 | ldr x0, [x11] |
+| 14004 | f9400561  |   ldr.x x1 x11 1 | ldr x1, [x11, #8] |
+| 14008 | f9400421  |   ldr.x x1 x1 1 | ldr x1, [x1, #8] |
+| 14012 | cb000021  |   sub.x x1 x1 x0 | sub x1, x1, x0 |
+| 14016 | d3426c21  |   ubfm.x x1 x1 2 27 | ubfm x1, x1, #2, #27 |
+| 14020 | d2b28002  |   movz.x x2 0x9400 1 | movz x2, #0x9400, lsl #16 |
+| 14024 | aa020021  |   orr.x x1 x1 x2 | orr x1, x1, x2 |
+| 14028 | b9000001  |   str.w w1 x0 0 | str w1, [x0] |
+| 14032 | 9100616b  |   add.x.i x11 x11 24 | add x11, x11, #0x18 |
+| 14036 | 9100058c  |   add.x.i x12 x12 1 | add x12, x12, #0x1 |
+| 14040 | 17fffff4  |   b RS_PATCH | b 0x36a8 |
+| 14044 | f9401920  |   ldr.x x0 x9 6 | ldr x0, [x9, #48] |
+| 14048 | b5000560  |   cbnz.x x0 RS_DONE | cbnz x0, 0x378c |
+| 14052 | f9400921  |   ldr.x x1 x9 2 | ldr x1, [x9, #16] |
+| 14056 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
+| 14060 | d2a033c3  |   movz.x x3 0x19e 1 | movz x3, #0x19e, lsl #16 |
+| 14064 | d2a03084  |   movz.x x4 0x184 1 | movz x4, #0x184, lsl #16 |
+| 14068 | eb01005f  |   cmp.x x2 x1 | subs xzr, x2, x1 |
+| 14072 | 540003c2  |   b.hs RS_CHECK | b.cs 0x3770  // b.hs, b.nlast |
+| 14076 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |
+| 14080 | eb0100bf  |   cmp.x x5 x1 | subs xzr, x5, x1 |
+| 14084 | 54000322  |   b.hs RS_NEXT | b.cs 0x3768  // b.hs, b.nlast |
+| 14088 | 38656860  |   ldrb.r w0 x3 x5 | ldrb w0, [x3, x5] |
+| 14092 | b50002a0  |   cbnz.x x0 RS_FNEXT | cbnz x0, 0x3760 |
+| 14096 | d379e0a6  |   ubfm.x x6 x5 57 56 | ubfm x6, x5, #57, #56 |
+| 14100 | 8b0400c6  |   add.x x6 x6 x4 | add x6, x6, x4 |
+| 14104 | d2800007  |   movz.x x7 0 0 | movz x7, #0x0 |
+| 14108 | d2a030cb  |   movz.x x11 0x186 1 | movz x11, #0x186, lsl #16 |
+| 14112 | eb0a00ff  |   cmp.x x7 x10 | subs xzr, x7, x10 |
+| 14116 | 54000182  |   b.hs RS_MARK | b.cs 0x3754  // b.hs, b.nlast |
+| 14120 | f9400960  |   ldr.x x0 x11 2 | ldr x0, [x11, #16] |
+| 14124 | eb06001f  |   cmp.x x0 x6 | subs xzr, x0, x6 |
+| 14128 | 540000c1  |   b.ne RS_ENEXT | b.ne 0x3748  // b.any |
+| 14132 | f9400560  |   ldr.x x0 x11 1 | ldr x0, [x11, #8] |
+| 14136 | cb040000  |   sub.x x0 x0 x4 | sub x0, x0, x4 |
+| 14140 | d347fc00  |   ubfm.x x0 x0 7 63 | ubfm x0, x0, #7, #63 |
+| 14144 | 38606860  |   ldrb.r w0 x3 x0 | ldrb w0, [x3, x0] |
+| 14148 | b40000e0  |   cbz.x x0 RS_FNEXT | cbz x0, 0x3760 |
+| 14152 | 910004e7  |   add.x.i x7 x7 1 | add x7, x7, #0x1 |
+| 14156 | 9100616b  |   add.x.i x11 x11 24 | add x11, x11, #0x18 |
+| 14160 | 17fffff4  |   b RS_EDGE | b 0x3720 |
+| 14164 | d2800020  |   movz.x x0 1 0 | movz x0, #0x1 |
+| 14168 | 8b050066  |   add.x x6 x3 x5 | add x6, x3, x5 |
+| 14172 | 390000c0  |   strb w0 x6 0 | strb w0, [x6] |
+| 14176 | 910004a5  |   add.x.i x5 x5 1 | add x5, x5, #0x1 |
+| 14180 | 17ffffe7  |   b RS_FN | b 0x3700 |
+| 14184 | 91000442  |   add.x.i x2 x2 1 | add x2, x2, #0x1 |
+| 14188 | 17ffffe2  |   b RS_PASS | b 0x36f4 |
+| 14192 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |
+| 14196 | eb0100bf  |   cmp.x x5 x1 | subs xzr, x5, x1 |
+| 14200 | 540000a2  |   b.hs RS_DONE | b.cs 0x378c  // b.hs, b.nlast |
+| 14204 | 38656860  |   ldrb.r w0 x3 x5 | ldrb w0, [x3, x5] |
+| 14208 | b4ff8720  |   cbz.x x0 E_SUBSET | cbz x0, 0x2864 |
+| 14212 | 910004a5  |   add.x.i x5 x5 1 | add x5, x5, #0x1 |
+| 14216 | 17fffffb  |   b RS_CHECK1 | b 0x3774 |
+| 14220 | d65f03c0  |   ret | ret  |
+
+AUDIT2 instructions=3170 data_bytes=1544 mismatch=0

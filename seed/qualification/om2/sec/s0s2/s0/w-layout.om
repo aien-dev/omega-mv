@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 14: the OM-2 words are recognised only in OM-2 units. This OM-1 unit uses
+note layout NAME SIZE (5 line 153); it keeps its OM-1 verdict (C1, line 17), the pinned error and line.
+layout s 8
+field a uint 1 at 0 little
+end
+fn main to int
+ret 0
+end

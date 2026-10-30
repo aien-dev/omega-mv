@@ -1,0 +1,26 @@
+global g qty 4
+fn identity x qty to qty
+ret x
+end
+fn literal to qty
+ret 5
+end
+fn main to int
+a = new qty 4 0
+put a 1 5
+put g 1 5
+q = qty 1
+if ne get a q qty 5
+ret 1
+end
+if ne get g q qty 5
+ret 2
+end
+if ne identity 5 literal
+ret 3
+end
+if ne identity qty 5 literal
+ret 4
+end
+ret 0
+end

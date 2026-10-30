@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* binary64 evaluation of the AT-1 quantities (AT1_RESULT_V1 section 3) from the exact kernel.
  *
  *   |t_k>  = N^(-1/2) sum_j exp(-2 pi i E_j k tau) |E_j>      turn count E_j k tau reduced

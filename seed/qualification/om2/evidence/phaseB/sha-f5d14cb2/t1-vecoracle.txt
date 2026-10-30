@@ -1,0 +1,3 @@
+$ /usr/bin/python3 /home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/oracle/sha/vecoracle.py /home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/fixtures/sha256-vectors.txt
+PASS vecoracle rows=158 agree=158 disagree=0
+EXIT 0

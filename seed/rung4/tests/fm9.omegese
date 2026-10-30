@@ -1,0 +1,6 @@
+fn m a short b short to short
+c = div a b
+d = rem a b
+e = shl c 1
+ret add e d
+end

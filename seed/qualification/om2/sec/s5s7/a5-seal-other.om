@@ -1,0 +1,17 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract lines 133-135: the exact body inside a function NOT named dup32mk is
+note error 28 (the constructor is identified by name, not by body).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn other x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = other 5
+puth open d
+ret 0
+end

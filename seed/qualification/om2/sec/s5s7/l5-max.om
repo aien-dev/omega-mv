@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 155: SIZE 4096 and COUNT 4096 are the upper bounds and are accepted.
+om2
+layout big4k 4096
+field a uchar 4096 at 0 little
+end
+fn main to int
+ret 0
+end
