@@ -427,6 +427,15 @@ ir_multi void_fall 'fn sink a uint to void\nend\nfn f to uint\nsink uint 1\nret 
 ir_multi for_reuse 'fn f to uint\ns = uint 0\nfor i uint 3\ns = add s i\nend\nfor i uint 2\ns = add s i\nend\nret s\nend'
 ir_multi scope_reuse 'fn f a uint to uint\nif gt a 1\ny = add a 1\nret y\nend\ny = add a 2\nret y\nend'
 ir_multi call_long_prefix 'fn increment_one a uint to uint\nret add a uint 1\nend\nfn increment_two a uint to uint\nret add a uint 2\nend\nfn f to uint\nret increment_two uint 4\nend'
+# A call nested in a later argument must not overwrite the outer call's earlier arguments (the batch 2
+# compiler passed 4, not 30, as add2's first argument here).
+ir_multi call_nested_arg 'fn add2 a uint b uint to uint\nret sub a b\nend\nfn f to uint\nret add2 uint 30 add2 uint 4 uint 5\nend'
+# Capacity: 100 distinct literals and 40 if blocks in one function (the batch 2 compiler stopped at 32
+# literals or 32 blocks with error 14). The format's 480 registers stay the limit.
+cap=$(awk 'BEGIN { printf "fn f a ulong to ulong\\nv = a\\n"; for (i = 1; i <= 100; i++) printf "v = add v %d\\n", i; for (i = 1; i <= 40; i++) printf "if eq v %d\\nv = add v 1\\nend\\n", i; printf "ret v\\nend" }')
+ir_multi capacity_100_literals "$cap"
+cap=$(awk 'BEGIN { print "ir"; print "fn f a ulong to ulong"; print "v = a"; for (i = 1; i <= 481; i++) print "v = add v " i; print "ret v"; print "end" }')
+ir_refuse capacity_481_literals 14 "$cap"
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -478,5 +487,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 27 refusals + 11 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'

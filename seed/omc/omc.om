@@ -11608,34 +11608,36 @@ end
 note ---- R6 IR. A leading line `ir` writes OSC IR version 1. The AArch64 path is not taken.
 note Worksheet ir_match.py matched omega_emit on the 10 dev programs; this is that algorithm.
 
-global ir_rty uchar 64
+note IR v1 producer capacities are the format's own (spec/one-layer-format.md section 5): per function 480
+note registers (literals included), 512 blocks and 4096 instructions; 480 names in scope; 64 open blocks.
+global ir_rty uchar 480
 global ir_nreg ulong 1
-global ir_nm ulong 32
-global ir_nrr uchar 32
+global ir_nm ulong 480
+global ir_nrr ulong 480
 global ir_nn ulong 1
-global ir_cty uchar 32
-global ir_cm ulong 32
-global ir_cr uchar 32
+global ir_cty uchar 480
+global ir_cm ulong 480
+global ir_cr ulong 480
 global ir_nc ulong 1
-global ir_bord ulong 32
+global ir_bord ulong 512
 global ir_nord ulong 1
 global ir_cur ulong 1
 global ir_dead ulong 1
 global ir_nb ulong 1
-global ir_ok uchar 256
-global ir_oa ulong 256
-global ir_ob ulong 256
-global ir_oc ulong 256
-global ir_od ulong 256
-global ir_obl ulong 256
+global ir_ok uchar 4096
+global ir_oa ulong 4096
+global ir_ob ulong 4096
+global ir_oc ulong 4096
+global ir_od ulong 4096
+global ir_obl ulong 4096
 global ir_no ulong 1
-global ir_bf ulong 32
-global ir_bc ulong 32
-global ir_fk uchar 8
-global ir_fa ulong 8
-global ir_fb ulong 8
-global ir_fc ulong 8
-global ir_fd ulong 8
+global ir_bf ulong 512
+global ir_bc ulong 512
+global ir_fk uchar 64
+global ir_fa ulong 64
+global ir_fb ulong 64
+global ir_fc ulong 64
+global ir_fd ulong 64
 global ir_nf ulong 1
 global ir_ret ulong 1
 global ir_npar ulong 1
@@ -11657,12 +11659,14 @@ global irf_ret uchar 32
 global irf_pt uchar 192
 global irf_n ulong 1
 global ir_args ulong 6
-global ir_oarg ulong 1536
+global ir_astk ulong 384
+global ir_asp ulong 1
+global ir_oarg ulong 24576
 global ir_miss ulong 1
 global ir_cl ulong 1
 global ir_cs ulong 1
 note per open block frame, the local count when it opened (names bound inside go out of scope at else / end)
-global ir_fnn ulong 8
+global ir_fnn ulong 64
 note ir_bbig: tbig of the bare number in ir_bare, for the range check once its type is known (error 8).
 global ir_bbig ulong 1
 
@@ -11715,7 +11719,7 @@ end
 
 fn ir_newreg ty ulong to ulong
 r = get ir_nreg 0
-if ge r 64
+if ge r 480
 fail 14
 end
 put ir_rty r uchar ty
@@ -11725,7 +11729,7 @@ end
 
 fn ir_block to ulong
 b = get ir_nb 0
-if ge b 32
+if ge b 512
 fail 14
 end
 put ir_bord b 65535
@@ -11745,7 +11749,7 @@ if ne get ir_dead 0 0
 fail 17
 end
 n = get ir_no 0
-if ge n 256
+if ge n 4096
 fail 14
 end
 put ir_ok n uchar k
@@ -11762,17 +11766,17 @@ i = ulong 0
 n = get ir_nc 0
 while lt i n
 if and eq ulong get ir_cty i ty eq get ir_cm i mag
-ret ulong get ir_cr i
+ret get ir_cr i
 end
 i = add i 1
 end
-if ge n 32
+if ge n 480
 fail 14
 end
 r = ir_newreg ty
 put ir_cty n uchar ty
 put ir_cm n mag
-put ir_cr n uchar r
+put ir_cr n r
 put ir_nc 0 add n 1
 ret r
 end
@@ -11795,11 +11799,11 @@ end
 
 fn ir_bind w ulong r ulong to void
 n = get ir_nn 0
-if ge n 32
+if ge n 480
 fail 14
 end
 put ir_nm n w
-put ir_nrr n uchar r
+put ir_nrr n r
 put ir_nn 0 add n 1
 end
 
@@ -11876,7 +11880,7 @@ end
 
 fn ir_push k ulong a ulong b ulong c ulong d ulong to void
 n = get ir_nf 0
-if ge n 8
+if ge n 64
 fail 14
 end
 put ir_fk n uchar k
@@ -11940,7 +11944,7 @@ fn ir_wconst to void
 i = ulong 0
 while lt i get ir_nc 0
 emitb 1
-ir_w16 ulong get ir_cr i
+ir_w16 get ir_cr i
 ir_w64 get ir_cm i
 i = add i 1
 end
@@ -12144,7 +12148,7 @@ if ne get ir_dead 0 0
 fail 17
 end
 n = get ir_no 0
-if ge n 256
+if ge n 4096
 fail 14
 end
 put ir_ok n 11
@@ -12160,6 +12164,12 @@ j = add j 1
 end
 put ir_no 0 add n 1
 end
+
+note Call arguments: the argument registers of a call being parsed live on the stack ir_astk from slot
+note b = ir_asp, so a call nested in an argument (g m p 3) cannot overwrite the outer call's earlier
+note arguments; they are copied to ir_args only once every argument is parsed, and ir_asp returns to b.
+note At most 384 pending arguments (error 14). Written inline at the two call sites (ir_val's call
+note branch and ir_stmtcall), not as functions: om4 builds at most 512 functions and omc is at that limit.
 
 fn ir_name to void
 e = ir_find get tw 0 get tl 0
@@ -12181,7 +12191,7 @@ end
 put ir_miss 0 1
 ret
 end
-r = ulong get ir_nrr sub e 1
+r = get ir_nrr sub e 1
 ir_set 65534 r ulong get ir_rty r
 end
 
@@ -12388,6 +12398,11 @@ if eq rtv 76
 fail 7
 end
 np = get irf_np j
+b = get ir_asp 0
+if gt add b np 384
+fail 14
+end
+put ir_asp 0 add b np
 i = ulong 0
 while lt i np
 ty = ulong get irf_pt add mul j 6 i
@@ -12395,9 +12410,15 @@ ir_val 65534 ty
 if ne get ir_vt 0 ty
 fail 7
 end
-put ir_args i get ir_rr 0
+put ir_astk add b i get ir_rr 0
 i = add i 1
 end
+i = ulong 0
+while lt i np
+put ir_args i get ir_astk add b i
+i = add i 1
+end
+put ir_asp 0 b
 r = dst
 if or eq dst 65534 eq dst 65535
 r = ir_newreg rtv
@@ -12624,6 +12645,11 @@ if ne get irf_ret j 76
 fail 7
 end
 np = get irf_np j
+b = get ir_asp 0
+if gt add b np 384
+fail 14
+end
+put ir_asp 0 add b np
 i = ulong 0
 while lt i np
 ty = ulong get irf_pt add mul j 6 i
@@ -12631,9 +12657,15 @@ ir_val 65534 ty
 if ne get ir_vt 0 ty
 fail 7
 end
-put ir_args i get ir_rr 0
+put ir_astk add b i get ir_rr 0
 i = add i 1
 end
+i = ulong 0
+while lt i np
+put ir_args i get ir_astk add b i
+i = add i 1
+end
+put ir_asp 0 b
 ir_callop 65535 j np
 eol
 end
@@ -12656,7 +12688,7 @@ end
 end
 e = ir_find w l
 if ne e 0
-r = ulong get ir_nrr sub e 1
+r = get ir_nrr sub e 1
 ir_val r ulong get ir_rty r
 if ne get ir_vt 0 ulong get ir_rty r
 fail 7

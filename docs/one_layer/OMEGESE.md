@@ -992,7 +992,11 @@ native path. `gate-ir.sh` checks all three against the C encoder and checker2.
 Arithmetic (`add` through `rem`) and shifts of booleans remain error 7.
 
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
-parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
+parameters; per function at most 480 registers (each distinct literal takes one), 512 blocks, 4096
+instructions, 480 names in scope and 64 open blocks, the format's own section 5 limits (error 14 over
+them; the batch 2 compiler stopped at 64 registers, 32 literals, 32 blocks and 256 instructions). A
+call nested in a call's argument (`g m p 3`) keeps the outer call's earlier arguments; the batch 2
+compiler overwrote them (gate-ir `call_nested_arg`). IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
 float word, a host word, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
 declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
 C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
