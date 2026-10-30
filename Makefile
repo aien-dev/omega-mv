@@ -116,20 +116,28 @@ $(OUT_DIR):
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# The physics-built objects must be rebuilt when PHYSICS_DIR points somewhere else (#488), not only
-# when a file there is newer. The stamp records the resolved PHYSICS_DIR and its git HEAD, and is
-# rewritten only when that text changes, so an unchanged PHYSICS_DIR rebuilds nothing.
+# Objects that read the physics tree: the two compiled from it, and the sources that include
+# m16_native.h or nvrm.h from it (directly or through src/*.h; `gcc -MM` lists a $(PHYSICS_DIR)
+# path for exactly these). They must be rebuilt when PHYSICS_DIR points at another tree, not only
+# when a file there is newer, and none may compile before check-physics-lock passes (#488).
+# The stamp records the resolved PHYSICS_DIR and its git HEAD and is rewritten only when that
+# text changes, so an unchanged PHYSICS_DIR rebuilds nothing. Its phony prerequisite runs the
+# lock check first: when the check refuses, the stamp is not made and no physics object compiles.
+# The other objects take nothing from PHYSICS_DIR and are shared with physics-free builds
+# (crumbline-learner, omega, test-program-id), so they stay ungated.
 PHYSICS_STAMP = $(OUT_DIR)/physics.stamp
-.PHONY: FORCE
-FORCE:
-$(PHYSICS_STAMP): FORCE | $(OUT_DIR)
+PHYSICS_OBJS = $(addprefix $(OUT_DIR)/,m16_native.o nvrm.o omegatool.o omega_accelerator_world.o \
+	omega_blackwell_submit.o omega_blackwell_engine.o omega_blackwell_gates.o \
+	omega_gpu_platform_linux.o omega_world_gates.o omega_evidence.o)
+$(PHYSICS_STAMP): check-physics-lock | $(OUT_DIR)
 	@new="$$(cd '$(PHYSICS_DIR)' 2>/dev/null && pwd -P || echo '$(PHYSICS_DIR)') $$(git -C '$(PHYSICS_DIR)' rev-parse HEAD 2>/dev/null || echo nogit)"; \
 	if [ "$$(cat $@ 2>/dev/null)" != "$$new" ]; then printf '%s\n' "$$new" > $@; fi
+$(PHYSICS_OBJS): $(PHYSICS_STAMP)
 
-$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c $(PHYSICS_STAMP) | $(OUT_DIR)
+$(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c $(PHYSICS_STAMP) | $(OUT_DIR)
+$(OUT_DIR)/nvrm.o: $(PHYSICS_DIR)/nvrm/nvrm.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
