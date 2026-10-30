@@ -6,12 +6,12 @@ text tslc "FAIL Q7_Q9_SLICE\n"
 text texh "FAIL Q2_EXACT_ORACLE\n"
 text tpass "PASS Q1-Q9 runtime; Q2 widths1..8 pairs87380 operations262140\n"
 
-fn qsent out edit qty to void
+fn qsent out edit bqty to void
 put out val ulong 17
 put out cap ulong 19
 end
 
-fn qcheck out view qty rc int want int value ulong cap ulong to bool
+fn qcheck out view bqty rc int want int value ulong cap ulong to bool
 if ne rc want
 ret bool 0
 end
@@ -22,9 +22,9 @@ ret eq get out cap cap
 end
 
 fn testadd to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 18446744073709551608 ulong 18446744073709551615
-b = new qty ulong 16 ulong 18446744073709551615
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 18446744073709551608 ulong 18446744073709551615
+b = new bqty ulong 16 ulong 18446744073709551615
 if ne add get a val get b val ulong 8
 ret bool 0
 end
@@ -33,9 +33,9 @@ ret qcheck out rc int 3 ulong 17 ulong 19
 end
 
 fn testmul to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 18446744073709551615 ulong 18446744073709551615
-b = new qty ulong 2 ulong 18446744073709551615
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 18446744073709551615 ulong 18446744073709551615
+b = new bqty ulong 2 ulong 18446744073709551615
 rc = qmul out a b
 if not qcheck out rc int 3 ulong 17 ulong 19
 ret bool 0
@@ -66,9 +66,9 @@ ret qcheck out rc int 0 ulong 0 ulong 18446744073709551615
 end
 
 fn edges to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 18446744073709551615 ulong 18446744073709551615
-b = new qty ulong 0 ulong 18446744073709551615
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 18446744073709551615 ulong 18446744073709551615
+b = new bqty ulong 0 ulong 18446744073709551615
 rc = qnext out a
 if not qcheck out rc int 3 ulong 17 ulong 19
 ret bool 0
@@ -167,8 +167,8 @@ end
 
 fn slices to bool
 out = new qslic ulong 91 ulong 92 ulong 93 ulong 94
-off = new qty ulong 6 ulong 8
-count = new qty ulong 3 ulong 8
+off = new bqty ulong 6 ulong 8
+count = new bqty ulong 3 ulong 8
 expect = new qobj ulong 5 ulong 7 ulong 8
 current = new qobj ulong 5 ulong 7 ulong 8
 rc = qtyslice out off count expect current
@@ -251,7 +251,7 @@ end
 
 note Oracle uses signed 64-bit exact arithmetic only on operands0..255.
 note Its results are at most65025; it neither uses nor repeats the guarded algorithms.
-fn oracle out view qty rc int exact long cap ulong to bool
+fn oracle out view bqty rc int exact long cap ulong to bool
 if or lt exact long 0 gt exact long cap
 ret qcheck out rc int 3 ulong 17 ulong 19
 end
@@ -259,9 +259,9 @@ ret qcheck out rc int 0 ulong exact cap
 end
 
 fn pairs cap ulong to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 0 cap
-b = new qty ulong 0 cap
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 0 cap
+b = new bqty ulong 0 cap
 rc = int 0
 for x ulong add cap ulong 1
 put a val x
@@ -288,8 +288,8 @@ ret bool 1
 end
 
 fn unary cap ulong to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 0 cap
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 0 cap
 rc = int 0
 for x ulong add cap ulong 1
 qsent out

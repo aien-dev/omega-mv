@@ -4,20 +4,22 @@ Implementation plan: (1) freeze API and fixtures, (2) implement checked operatio
 
 ## Frozen API
 
-`struct qty val ulong cap ulong end`; `struct qobj ident ulong ver ulong extent ulong end`; `struct qslic ident ulong ver ulong off ulong count ulong end`.
+`struct bqty val ulong cap ulong end`; `struct qobj ident ulong ver ulong extent ulong end`; `struct qslic ident ulong ver ulong off ulong count ulong end`.
+
+The library struct was first frozen as `struct qty`. Since #909/#914 the seeded compiler has a native `qty` type keyword (spec/quantities-and-modular.md section 6, Phase 1), so `struct qty` is refused with error 16. The struct is renamed `bqty` (bounded quantity) with identical fields and semantics; this is the Phase 2 nominal library type, layered on top of the native Phase 1 `qty`, not a replacement for it. The native `qty` traps on overflow; `bqty` carries a nominal cap and returns status codes. Receipts recorded before the rename used the old name and compiler 734f0a39; the post-rename replay is a separate receipt.
 
 All functions return int: 0 success, 1 invalid operand (`val > cap`), 2 domain mismatch (different caps, negative signed ingress, widening via narrow), 3 overflow/underflow or extent violation, 4 object/version mismatch. Checks precede arithmetic and output stores. Every refusal leaves the complete output unchanged. Output must be a distinct struct from each input (seed alias rule).
 
-- `qword(out edit qty, raw ulong, cap ulong)` and `qsigned(out edit qty, raw long, cap ulong)` validate original ingress, then write value/cap.
-- `qadd/qsub/qmul(out edit qty, a view qty, b view qty)`: validate both operands, require equal caps, then checked arithmetic within that cap. Subtraction refuses b>a. Zero multiplication succeeds.
-- `qnarrow(out edit qty, a view qty, cap ulong)`: validate a, refuse cap>a.cap as domain mismatch, refuse a.val>cap as overflow; no scalar cast before validation.
-- `qnext(out edit qty, a view qty)`: validate a and refuse a.val==a.cap; increment without wrap.
-- `qtyslice(out edit qslic, off view qty, count view qty, expect view qobj, current view qobj)`: compare all expected/current identity, version and extent fields, validate operands and require both caps equal current.extent, then check off<=extent and count<=extent-off. Writes binding plus offset/count, never forms an unchecked end address.
+- `qword(out edit bqty, raw ulong, cap ulong)` and `qsigned(out edit bqty, raw long, cap ulong)` validate original ingress, then write value/cap.
+- `qadd/qsub/qmul(out edit bqty, a view bqty, b view bqty)`: validate both operands, require equal caps, then checked arithmetic within that cap. Subtraction refuses b>a. Zero multiplication succeeds.
+- `qnarrow(out edit bqty, a view bqty, cap ulong)`: validate a, refuse cap>a.cap as domain mismatch, refuse a.val>cap as overflow; no scalar cast before validation.
+- `qnext(out edit bqty, a view bqty)`: validate a and refuse a.val==a.cap; increment without wrap.
+- `qtyslice(out edit qslic, off view bqty, count view bqty, expect view qobj, current view qobj)`: compare all expected/current identity, version and extent fields, validate operands and require both caps equal current.extent, then check off<=extent and count<=extent-off. Writes binding plus offset/count, never forms an unchecked end address.
 
 Raw words, struct construction, field writes and extraction are trusted boundaries, not sealing or provenance. In particular qword(add raw_a raw_b) cannot detect a prior wrap. Consumers must recompute from validated original operands at the effect boundary. A `ulong` identity is an owner-assigned nonreused object identifier, not an fd; the owner supplies the trusted current version/extent. Reusing both identity and version cannot be detected here. This library has no authentication, storage, parser, address dereference or service integration.
 
 Equal caps are not physical units: two counts from different application domains
-still have type `qty`. The consumer owns that domain distinction. To revalidate
+still have type `bqty`. The consumer owns that domain distinction. To revalidate
 a serialized slice, reconstruct distinct checked offset/count values from its
 original fields and the trusted current extent, construct the expected object
 from its recorded identity/version, then call `qtyslice` against the current
@@ -25,7 +27,7 @@ object immediately before the effect. Never treat a raw `qslic` as validated.
 
 ## Frozen expectations before implementation
 
-Q1: `(18446744073709551608 + 16) mod 2^64 = 8`; checked add returns3 and leaves sentinel output unchanged. Q2: exhaustive widths1..8, all pairs in0..(2^w-1), compare add/sub/mul with independent exact arithmetic oracle within u64. Q3: u64 zero/max, malformed operands, domain mismatch. Q4: max*2 returns3 before multiplication; zero*max succeeds. Q5: signed -1 returns2 unchanged; signed max succeeds under u64 max. Q6: 256 narrowed to255 returns3 unchanged; 255 narrowed to255 succeeds; widening refuses2. Q7: zero and exact extent slices succeed, extent+1 refuses3. Q8: scalar passed to qty and qty passed to scalar are compiler error7; ordinary crypto-style unsigned wrap stays accepted. Q9: epoch max refuses3; stale version and reused identity with changed version refuse4; identity or extent mismatch refuses4. Every runtime refusal checks output preservation.
+Q1: `(18446744073709551608 + 16) mod 2^64 = 8`; checked add returns3 and leaves sentinel output unchanged. Q2: exhaustive widths1..8, all pairs in0..(2^w-1), compare add/sub/mul with independent exact arithmetic oracle within u64. Q3: u64 zero/max, malformed operands, domain mismatch. Q4: max*2 returns3 before multiplication; zero*max succeeds. Q5: signed -1 returns2 unchanged; signed max succeeds under u64 max. Q6: 256 narrowed to255 returns3 unchanged; 255 narrowed to255 succeeds; widening refuses2. Q7: zero and exact extent slices succeed, extent+1 refuses3. Q8: scalar passed to bqty and bqty passed to scalar are compiler error7; ordinary crypto-style unsigned wrap stays accepted. Q9: epoch max refuses3; stale version and reused identity with changed version refuse4; identity or extent mismatch refuses4. Every runtime refusal checks output preservation.
 
 Mutation controls must compile and reach the named Q1_ADD_GUARD and Q4_MUL_GUARD assertions, with normal exit1. Build failures or signals do not count.
 
@@ -40,7 +42,7 @@ Run from repository root on Linux AArch64. The only production unit is `quantity
 ```sh
 nice -n 19 sh seed/omega-from-seed.sh
 sha256sum seed/out/omc
-# Required compiler hash: 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+# Required compiler hash: 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
 mkdir -p /tmp/security756-replay
 cat om/quantity/quantity.om om/quantity/tests.om | nice -n 19 seed/out/omc > /tmp/security756-replay/tests
 chmod +x /tmp/security756-replay/tests
@@ -81,7 +83,13 @@ Object-to-quantity and slice-to-quantity fixtures also refuse with compiler7.
 These are boundary checks, not exhaustive u64 proof. The finite signed oracle
 shares the compiler with the library; it is algorithmically independent, not
 an independently compiled translation referee. Original evidence remains immutable;
-review additions and final clean replay have separate receipts.
+review additions and final clean replay have separate receipts. The replay after
+the `qty` -> `bqty` rename on main's compiler 62775d2a is the additive receipt
+`evidence/main-omc-rename-replay.json`: tests, demo and crypto exit0, the four
+mixed fixtures compile7, both mutants exit1 at their named guards, an invalid
+transformer mode exits2, and the exporter stdout equals the retained corpus byte
+for byte. The earlier receipts, recorded with compiler 734f0a39 and the old name,
+are unchanged.
 
 `oracle-export.om` emits actual helper results, with no reference arithmetic in
 the program: width1..8, a0..cap, b0..cap, then add/sub/mul, three little-endian

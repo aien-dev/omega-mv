@@ -2,7 +2,7 @@ note Emit actual quantity outcomes for an independently implemented external ora
 note Order width1..8, a0..cap, b0..cap, add/sub/mul. Record three LEu64: status,val,cap.
 note Refusals retain sentinel17/19. No oracle arithmetic is used in this program.
 global qxbuf uchar 24
-fn qxemit rc int out view qty to int
+fn qxemit rc int out view bqty to int
 for k ulong 8
 put qxbuf k uchar and shr ulong rc mul k 8 255
 put qxbuf add k 8 uchar and shr get out val mul k 8 255
@@ -19,9 +19,9 @@ end
 ret 0
 end
 fn main to int
-out = new qty ulong 17 ulong 19
-a = new qty ulong 0 ulong 0
-b = new qty ulong 0 ulong 0
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 0 ulong 0
+b = new bqty ulong 0 ulong 0
 for w ulong 8
 cap = sub shl ulong 1 add w 1 1
 for av ulong add cap 1

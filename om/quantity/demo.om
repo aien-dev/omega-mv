@@ -4,9 +4,9 @@ text dm "PASS multiply status3 narrow status3 negative status2 unchanged output\
 text da "PASS reused object identity changed version status4 unchanged slice\n"
 
 fn demoadd to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 18446744073709551608 ulong 18446744073709551615
-b = new qty ulong 16 ulong 18446744073709551615
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 18446744073709551608 ulong 18446744073709551615
+b = new bqty ulong 16 ulong 18446744073709551615
 effects = int 0
 rc = qadd out a b
 if eq rc int 0
@@ -25,9 +25,9 @@ ret and eq get out val ulong 17 eq get out cap ulong 19
 end
 
 fn demomul to bool
-out = new qty ulong 17 ulong 19
-a = new qty ulong 18446744073709551615 ulong 18446744073709551615
-b = new qty ulong 2 ulong 18446744073709551615
+out = new bqty ulong 17 ulong 19
+a = new bqty ulong 18446744073709551615 ulong 18446744073709551615
+b = new bqty ulong 2 ulong 18446744073709551615
 rc = qmul out a b
 if ne rc int 3
 ret bool 0
@@ -51,8 +51,8 @@ end
 
 fn demoaba to bool
 out = new qslic ulong 91 ulong 92 ulong 93 ulong 94
-off = new qty ulong 0 ulong 8
-count = new qty ulong 1 ulong 8
+off = new bqty ulong 0 ulong 8
+count = new bqty ulong 1 ulong 8
 expect = new qobj ulong 5 ulong 7 ulong 8
 current = new qobj ulong 5 ulong 8 ulong 8
 rc = qtyslice out off count expect current
