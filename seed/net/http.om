@@ -72,6 +72,9 @@ const HFINAL ulong 50
 const HFRM ulong 51
 const HFRMAX ulong 52
 const HBSC ulong 53
+note HXDL: absolute monotonic deadline of the whole exchange for the transport (0 = none); set by
+note htlsdl (seed/net/https.om) after hinit; plain TCP does not read it
+const HXDL ulong 54
 note header i (0 <= i < HHN): cs[HHX+4i] name offset, +1 name length, +2 value offset, +3 value length
 const HHX ulong 64
 const HHSLOTS ulong 64

@@ -15,15 +15,21 @@ note Client use (hinit first, no I/O before htlsinit):
 note   fd = hdial a tmo                  TCP
 note   r  = hinit cs io int fd 0
 note   r  = htlsinit cs io host          lay out the transport region, SNI and certificate name
-note   r  = htlsconn cs io st            handshake (tls_connect) under the handshake budget
+note   r  = htlsconn cs io st            handshake (tls_connect) under the wait policy of cs
 note   ... hreqst / hhend / hwfin / hrsprd / hbodyrd as over TCP ...
 note   htlsend cs io                     close_notify, wipe the keys, close fd
 note Results: TLS error code e (tls_errname) is returned as HETLS - e (-601 .. -629);
 note TLS_ERR_TIMEOUT is HETIME. A TCP end of stream without close_notify is an error (HETLS - 4,
 note truncation), never a clean end; only close_notify gives 0 from the reads.
 note
-note Timeouts: before each TLS read or write the http.om wait policy (HIDLE single-wait limit and
-note the HDL deadline) is given to tls_deadline, so the bounds of seed/net/README.md hold over TLS.
+note Timeouts: before the handshake and before each TLS read or write the http.om wait policy
+note (HIDLE single-wait limit and the HDL deadline) and the exchange deadline HXDL (htlsdl) are
+note given to tls_deadline, so one monotonic deadline bounds handshake, write and read together
+note and the bounds of seed/net/README.md hold over TLS. With no limit set at all, tls_connect
+note keeps its own handshake budget.
+note Refusals: a certificate the trust store, the clock or the name does not accept is
+note HETLS - 17 (TLS_ERR_CERT) before any application byte is written; htlsdet gives the x509
+note reason (x509_errname). There is no fallback to plain HTTP on any TLS error.
 
 const HETLS long -600
 const HTLBUF ulong 16384
@@ -60,11 +66,12 @@ ret 0
 end
 
 note htlsconn: the TLS handshake on the connection's fd with trust store st (tls_store or
-note tls_storef); 0, HETIME or HETLS - e
+note tls_storef) under the wait policy of cs (htlsarm); 0, HETIME or HETLS - e
 fn htlsconn cs edit ulong * io edit uchar * st view uchar * to long
 if ne get cs HXPORT 1
 ret HEINVAL
 end
+htlsarm cs io
 b = get cs HTB
 e = tls_connect part io b TLCSZ st int get cs HFD
 ret htlsmap long e
@@ -81,7 +88,8 @@ end
 ret sub HETLS e
 end
 
-note htlsarm: give the TLS state the wait policy of cs (min of idle and the deadline), 0 = none
+note htlsarm: give the TLS state the wait policy of cs (the earliest of now + idle, the deadline HDL
+note and the exchange deadline HXDL), 0 = none
 fn htlsarm cs edit ulong * io edit uchar * to void
 b = get cs HTB
 dl = get cs HDL
@@ -92,7 +100,29 @@ if or eq dl 0 lt t dl
 dl = t
 end
 end
+x = get cs HXDL
+if and ne x 0 or eq dl 0 lt x dl
+dl = x
+end
 tls_deadline part io b TLCSZ long dl
+end
+
+note htlsdl: one deadline for the whole exchange, iv ns from now (0 or negative = none); call after
+note hinit (which clears it); it bounds the handshake, every TLS write and every TLS read
+fn htlsdl cs edit ulong * iv long to void
+put cs HXDL 0
+if gt iv 0
+put cs HXDL add ulong monons ulong iv
+end
+end
+
+note htlsdet: why the last TLS operation failed; for HETLS - 17 the x509 reject code (x509_errname:
+note 2 expired, 3 not yet valid, 4 name mismatch, 5 unknown issuer, ...); 0 without TLS
+fn htlsdet cs view ulong * io view uchar * to ulong
+if ne get cs HXPORT 1
+ret 0
+end
+ret tls_detail part io get cs HTB TLCSZ
 end
 
 note htlsrecv: at most n bytes into io[off, off+n) through TLS; count, 0 at close_notify, or

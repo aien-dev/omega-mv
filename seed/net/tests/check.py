@@ -994,20 +994,52 @@ def ossl(work, *args):
         raise Fail("openssl %s rc=%d %s" % (" ".join(args), p.returncode, p.stderr.decode(errors="replace").strip()))
 
 
+HTTPS_CA_CNF = """[ca]
+default_ca = c
+[c]
+database = index.txt
+new_certs_dir = issued
+serial = serial
+default_md = sha256
+policy = p
+copy_extensions = copy
+unique_subject = no
+[p]
+commonName = supplied
+"""
+
+
 def https_pki(work):
-    """root -> leaf for localhost (EC P-256), a leaf for another name, and an unrelated root's leaf."""
+    """root -> leaf for localhost (EC P-256); a leaf for another name; an unrelated root's leaf;
+    leaves of root that expired (2025) or are not valid yet (2048); a self-signed localhost leaf."""
     d = os.path.join(work, "pki")
-    os.makedirs(d, exist_ok=True)
+    os.makedirs(os.path.join(d, "issued"), exist_ok=True)
     ca_ext = ["-addext", "basicConstraints=critical,CA:true", "-addext", "keyUsage=critical,keyCertSign,cRLSign"]
+    leaf_ext = ["-addext", "basicConstraints=critical,CA:false", "-addext", "keyUsage=critical,digitalSignature",
+                "-addext", "extendedKeyUsage=serverAuth"]
     for root in ("root", "other"):
         ossl(d, "genpkey", "-algorithm", "EC", "-pkeyopt", "ec_paramgen_curve:P-256", "-out", root + ".key")
         ossl(d, "req", "-x509", "-new", "-key", root + ".key", "-subj", "/CN=http-check-" + root, "-days", "30",
              "-sha256", *ca_ext, "-out", root + ".pem")
-    for name, san, root in (("leaf", "localhost", "root"), ("wrong", "other.example", "root"), ("stray", "localhost", "other")):
+    with open(os.path.join(d, "ca.cnf"), "w") as f:
+        f.write(HTTPS_CA_CNF)
+    open(os.path.join(d, "index.txt"), "w").close()
+    with open(os.path.join(d, "serial"), "w") as f:
+        f.write("1000\n")
+    for name, san, root in (("leaf", "localhost", "root"), ("wrong", "other.example", "root"), ("stray", "localhost", "other"),
+                            ("expired", "localhost", "root"), ("notyet", "localhost", "root"), ("self", "localhost", None)):
         ossl(d, "genpkey", "-algorithm", "EC", "-pkeyopt", "ec_paramgen_curve:P-256", "-out", name + ".key")
+        if root is None:
+            ossl(d, "req", "-x509", "-new", "-key", name + ".key", "-subj", "/CN=" + san, "-addext", "subjectAltName=DNS:" + san,
+                 *leaf_ext, "-days", "10", "-sha256", "-out", name + ".pem")
+            continue
         ossl(d, "req", "-new", "-key", name + ".key", "-subj", "/CN=" + san, "-addext", "subjectAltName=DNS:" + san,
-             "-addext", "basicConstraints=critical,CA:false", "-addext", "keyUsage=critical,digitalSignature",
-             "-addext", "extendedKeyUsage=serverAuth", "-out", name + ".csr")
+             *leaf_ext, "-out", name + ".csr")
+        if name in ("expired", "notyet"):
+            start, end = ("250101000000Z", "250201000000Z") if name == "expired" else ("480101000000Z", "490101000000Z")
+            ossl(d, "ca", "-batch", "-config", "ca.cnf", "-cert", root + ".pem", "-keyfile", root + ".key", "-in", name + ".csr",
+                 "-startdate", start, "-enddate", end, "-notext", "-out", name + ".pem")
+            continue
         ossl(d, "x509", "-req", "-in", name + ".csr", "-CA", root + ".pem", "-CAkey", root + ".key", "-CAcreateserial",
              "-days", "10", "-copy_extensions", "copy", "-out", name + ".pem")
     return d
@@ -1015,11 +1047,16 @@ def https_pki(work):
 
 HTTPS_BIG = bytes((i * 7 + 3) & 255 for i in range(307200))
 HTTPS_CHUNKS = [1, 17, 4096, 16384, 16385, 3, 60000, 100]
+HTTPS_FRAG = [1, 2, 3, 5, 7, 11]
+HTTPS_SEEN = {}        # Python TLS server name -> request heads it received
+HTTPS_PLAIN_SEEN = []  # first bytes each connection brought to the plain HTTP server
 
 
 def https_body(path):
     """(response bytes, body the client must print, close mode) for one path of the Python server.
-    close mode: 'notify' = close_notify then close, 'raw' = close the socket without close_notify."""
+    close mode: 'notify' = close_notify then close, 'raw' = close the socket without close_notify,
+    'frag' = the response in TLS records of 1..11 bytes, 'partial' = an incomplete TLS record after the
+    head then a raw close, 'dribble' = the body one byte every 250 ms, 'silent' = no answer."""
     if path == "/small":
         return b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nhello\n", b"hello\n", "notify"
     if path == "/big":
@@ -1036,16 +1073,27 @@ def https_body(path):
             i += 1
         out.append(b"0\r\n\r\n")
         return b"".join(out), body, "notify"
+    if path == "/frag":
+        body = HTTPS_BIG[:3000]
+        return b"HTTP/1.1 200 OK\r\nContent-Length: 3000\r\nConnection: close\r\n\r\n" + body, body, "frag"
     if path == "/close":
         return b"HTTP/1.0 200 OK\r\n\r\n" + HTTPS_BIG[:50000], HTTPS_BIG[:50000], "notify"
+    if path == "/closeraw":
+        return b"HTTP/1.0 200 OK\r\n\r\n" + HTTPS_BIG[:5000], HTTPS_BIG[:5000], "raw"
     if path == "/trunc":
         return b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\n0123456789", b"0123456789", "raw"
+    if path == "/partial":
+        return b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\n", b"", "partial"
+    if path == "/bighead":
+        return b"HTTP/1.1 200 OK\r\nX-Pad: " + b"a" * 20000 + b"\r\nContent-Length: 0\r\n\r\n", b"", "notify"
+    if path == "/dribble":
+        return b"HTTP/1.1 200 OK\r\nContent-Length: 40\r\nConnection: close\r\n\r\n" + b"d" * 40, b"d" * 40, "dribble"
     if path == "/silent":
         return b"", b"", "silent"
     return b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n", b"", "notify"
 
 
-def https_serve(conn):
+def https_serve(conn, name):
     """One connection of the Python TLS server: read a request head, answer by path."""
     import ssl
     try:
@@ -1056,15 +1104,33 @@ def https_serve(conn):
             if not b:
                 return
             head += b
+        HTTPS_SEEN[name] = HTTPS_SEEN.get(name, 0) + 1
         path = head.split(b" ", 2)[1].decode()
         resp, _, mode = https_body(path)
         if mode == "silent":
             time.sleep(4)
             conn.close()
             return
-        conn.sendall(resp)
-        if mode == "raw":
+        if mode == "frag":
+            pos = i = 0
+            while pos < len(resp):
+                n = HTTPS_FRAG[i % len(HTTPS_FRAG)]
+                conn.sendall(resp[pos:pos + n])
+                pos += n
+                i += 1
+        elif mode == "dribble":
+            k = resp.index(b"\r\n\r\n") + 4
+            conn.sendall(resp[:k])
+            for j in range(k, len(resp)):
+                time.sleep(0.25)
+                conn.sendall(resp[j:j + 1])
+        else:
+            conn.sendall(resp)
+        if mode in ("raw", "partial"):
             fd = conn.detach()
+            if mode == "partial":
+                # an application_data record header announcing 100 bytes, then only 10 of them
+                os.write(fd, b"\x17\x03\x03\x00\x64" + b"\x00" * 10)
             os.close(fd)
             return
         try:
@@ -1079,14 +1145,9 @@ def https_serve(conn):
             pass
 
 
-def https_server(pki, cert, stop):
-    """A TLS 1.3 listener on 127.0.0.1 (ephemeral port) in a thread; returns (port, thread)."""
-    import ssl
+def https_listen(stop, on_conn):
+    """A listener on 127.0.0.1 (ephemeral port) in a thread; on_conn(socket) per connection in its own thread."""
     import threading
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    ctx.minimum_version = ssl.TLSVersion.TLSv1_3
-    ctx.load_cert_chain(os.path.join(pki, cert + ".pem"), os.path.join(pki, cert + ".key"))
-    ctx.set_alpn_protocols(["http/1.1"])
     ls = socket.socket()
     ls.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     ls.bind(("127.0.0.1", 0))
@@ -1102,56 +1163,144 @@ def https_server(pki, cert, stop):
                 continue
             except OSError:
                 break
-            try:
-                tc = ctx.wrap_socket(c, server_side=True)
-            except (OSError, ssl.SSLError):
-                c.close()
-                continue
-            threading.Thread(target=https_serve, args=(tc,), daemon=True).start()
+            threading.Thread(target=on_conn, args=(c,), daemon=True).start()
         ls.close()
-    t = threading.Thread(target=loop, daemon=True)
-    t.start()
-    return port, t
+    threading.Thread(target=loop, daemon=True).start()
+    return port
 
 
-def https_run(binary, host, port, store, path, connect="127.0.0.1", idle=None, timeout=20):
-    """Run tests/https.om; (exit, body, status or None, HTTPSERR code or None)."""
+def https_plain(c):
+    """The plain HTTP server: record what the client sent first, answer in cleartext, close."""
+    try:
+        c.settimeout(5)
+        first = c.recv(4096)
+        HTTPS_PLAIN_SEEN.append(first)
+        c.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nhello\n")
+    except OSError:
+        pass
+    c.close()
+
+
+def https_hsilent(c):
+    """A TCP peer that accepts and never answers the ClientHello."""
+    time.sleep(6)
+    c.close()
+
+
+def https_server(pki, cert, stop):
+    """A Python TLS 1.3 server with certificate cert on 127.0.0.1; returns its port."""
+    import ssl
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_3
+    ctx.load_cert_chain(os.path.join(pki, cert + ".pem"), os.path.join(pki, cert + ".key"))
+    ctx.set_alpn_protocols(["http/1.1"])
+
+    def on_conn(c):
+        try:
+            c.settimeout(10)
+            tc = ctx.wrap_socket(c, server_side=True)
+        except (OSError, ssl.SSLError):
+            c.close()
+            return
+        https_serve(tc, cert)
+    return https_listen(stop, on_conn)
+
+
+def https_ossl(pki, cert):
+    """openssl s_server -www -tls1_3 with certificate cert; returns (port, process)."""
+    # openssl s_server cannot report a kernel-chosen port: pick a free one and bind it
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    p = subprocess.Popen(["openssl", "s_server", "-accept", "127.0.0.1:%d" % port, "-cert", os.path.join(pki, cert + ".pem"),
+                          "-key", os.path.join(pki, cert + ".key"), "-www", "-tls1_3"],
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    for _ in range(50):
+        try:
+            socket.create_connection(("127.0.0.1", port), timeout=0.2).close()
+            break
+        except OSError:
+            time.sleep(0.1)
+    return port, p
+
+
+def https_run(binary, host, port, store, path, connect="127.0.0.1", idle=None, total=None, spare=None, timeout=20):
+    """Run tests/https.om; (exit, body, status or None, HTTPSERR code or None, TLSDETAIL or None)."""
     args = [binary, host, str(port), store, path, connect]
-    if idle is not None:
-        args.append(str(idle))
+    for opt in (idle, total, spare):
+        if opt is None:
+            break
+        args.append(str(opt))
+    if spare is not None and total is None:
+        raise Fail("https_run: IOSPARE needs TOTALMS (positional)")
     try:
         p = subprocess.run(NICE + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
     except subprocess.TimeoutExpired:
-        return "timeout", b"", None, None
-    st = err = None
+        return "timeout", b"", None, None, None
+    st = err = det = None
     for l in p.stderr.decode(errors="replace").splitlines():
         if l.startswith("status "):
             st = int(l[7:])
         if l.startswith("HTTPSERR "):
             err = int(l[9:])
-    return p.returncode, p.stdout, st, err
+        if l.startswith("TLSDETAIL "):
+            det = int(l[10:])
+    return p.returncode, p.stdout, st, err, det
 
 
 HETLS = -600
 HETIME = -110
+HEINVAL = -22
+HEHEAD = -431
+X5EEXP, X5ENYV, X5ENAME, X5EUNK = 2, 3, 4, 5   # om/tls/x509.om reject codes (x509_errname)
+
+
+def R(name, path, srv, rc, err=None, det=None, idle=None, total=None, spare=None, status=None, noreq=False, timeout=20):
+    """One row: server srv (a Python TLS server by certificate, 'o:<cert>' = openssl s_server -www,
+    'plain' = cleartext HTTP, 'hsilent' = TCP peer that never answers), expected exit, HTTPSERR,
+    TLSDETAIL, status; noreq = the server must not receive a request (refused before any app byte)."""
+    return dict(name=name, path=path, srv=srv, rc=rc, err=err, det=det, idle=idle, total=total, spare=spare,
+                status=status, noreq=noreq, timeout=timeout)
+
+
 HTTPS_ROWS = [
-    # (name, path, cert, expected exit, expected HTTPSERR, idle ms)
-    ("small body", "/small", "leaf", 0, None, None),
-    ("300 KiB Content-Length body", "/big", "leaf", 0, None, None),
-    ("chunked body", "/chunked", "leaf", 0, None, None),
-    ("close-delimited body (close_notify ends it)", "/close", "leaf", 0, None, None),
-    ("truncation: TCP close without close_notify is an error", "/trunc", "leaf", 4, HETLS - 4, None),
-    ("silent server: idle limit through tls_deadline", "/silent", "leaf", 4, HETIME, 500),
-    ("wrong name in the certificate", "/small", "wrong", 4, HETLS - 17, None),
-    ("leaf of an untrusted root", "/small", "stray", 4, HETLS - 17, None),
+    R("small body", "/small", "leaf", 0),
+    R("300 KiB Content-Length body", "/big", "leaf", 0),
+    R("chunked body", "/chunked", "leaf", 0),
+    R("fragmented: response in TLS records of 1..11 bytes", "/frag", "leaf", 0),
+    R("close-delimited body (close_notify ends it)", "/close", "leaf", 0),
+    R("smallest io (TLCSZ + 512): chunked body", "/chunked", "leaf", 0, idle=30000, total=0, spare=512),
+    R("io below TLCSZ + 512: htlsinit refuses", "/small", "leaf", 4, HEINVAL, idle=30000, total=0, spare=511, noreq=True),
+    R("response head over the head limit", "/bighead", "leaf", 4, HEHEAD),
+    R("truncation: TCP close without close_notify is an error", "/trunc", "leaf", 4, HETLS - 4, status=200),
+    R("close-delimited body ended by TCP close, no close_notify", "/closeraw", "leaf", 4, HETLS - 4, status=200),
+    R("incomplete TLS record then TCP close", "/partial", "leaf", 4, HETLS - 4, status=200),
+    R("silent server: idle limit through tls_deadline", "/silent", "leaf", 4, HETIME, idle=500, timeout=10),
+    R("one deadline: body dribble cut at TOTALMS 1500", "/dribble", "leaf", 4, HETIME, idle=2000, total=1500, status=200, timeout=15),
+    R("silent handshake: idle limit bounds tls_connect", "/small", "hsilent", 4, HETIME, idle=500, timeout=10),
+    R("silent handshake: TOTALMS bounds tls_connect", "/small", "hsilent", 4, HETIME, idle=30000, total=800, timeout=10),
+    R("plain HTTP server: bad record (TLEREC), no cleartext fallback", "/small", "plain", 4, HETLS - 5),
+    R("wrong name in the certificate", "/small", "wrong", 4, HETLS - 17, X5ENAME, noreq=True),
+    R("leaf of an untrusted root", "/small", "stray", 4, HETLS - 17, X5EUNK, noreq=True),
+    R("expired leaf", "/small", "expired", 4, HETLS - 17, X5EEXP, noreq=True),
+    R("leaf not valid yet", "/small", "notyet", 4, HETLS - 17, X5ENYV, noreq=True),
+    R("self-signed leaf", "/small", "self", 4, HETLS - 17, X5EUNK, noreq=True),
+    R("openssl s_server -www (HTTP/1.0, close-delimited)", "/openssl-www", "o:leaf", 0),
+    R("openssl s_server: wrong name", "/openssl-www", "o:wrong", 4, HETLS - 17, X5ENAME),
+    R("openssl s_server: untrusted root", "/openssl-www", "o:stray", 4, HETLS - 17, X5EUNK),
+    R("openssl s_server: expired leaf", "/openssl-www", "o:expired", 4, HETLS - 17, X5EEXP),
 ]
+HTTPS_PY_CERTS = ("leaf", "wrong", "stray", "expired", "notyet", "self")
+HTTPS_OSSL_CERTS = ("leaf", "wrong", "stray", "expired")
 
 
-def https_compose(src_lines, notls=False):
-    """The library source in front of tests/https.om or tests/nosup.om."""
+def https_compose(src_lines, notls=False, over=None):
+    """The library source in front of tests/https.om or tests/nosup.om; over = (unit, text) replaces one om/tls unit."""
     if notls:
         return src_lines
-    units = b"".join(open(os.path.join(TLSDIR, u + ".om"), "rb").read() for u in TLS_UNITS)
+    units = b"".join(over[1].encode() if over and over[0] == u else open(os.path.join(TLSDIR, u + ".om"), "rb").read()
+                     for u in TLS_UNITS)
     return units + src_lines
 
 
@@ -1171,24 +1320,38 @@ def https_mutate(text, fn, old, new):
     return "\n".join(lines), hits[0] + 1
 
 
-def https_rows(binary, pki, port, oport, log, label):
-    """All rows against the Python server (port) and openssl s_server -www (oport); the row that fails or None."""
+def https_row(binary, pki, port, row):
+    """Run one row; (ok, rc, status, err, detail, body length)."""
     root = os.path.join(pki, "root.pem")
-    for name, path, cert, want_rc, want_err, idle in HTTPS_ROWS:
-        rc, body, st, err = https_run(binary, "localhost", port[cert], root, path, idle=idle)
-        _, want_body, _ = https_body(path)
-        ok = rc == want_rc and err == want_err
-        if want_rc == 0:
-            ok = ok and st == 200 and body == want_body
-        log("%s row %-52s rc=%s status=%s err=%s body=%d -> %s" % (label, name, rc, st, err, len(body), "ok" if ok else "MISMATCH"))
+    srv = row["srv"]
+    seen = HTTPS_SEEN.get(srv, 0)
+    plain0 = len(HTTPS_PLAIN_SEEN)
+    rc, body, st, err, det = https_run(binary, "localhost", port[srv], root, row["path"], idle=row["idle"],
+                                       total=row["total"], spare=row["spare"], timeout=row["timeout"])
+    ok = rc == row["rc"] and err == row["err"] and det == row["det"]
+    if row["rc"] == 0:
+        if srv.startswith("o:"):
+            ok = ok and st == 200 and b"Ciphers supported in s_server binary" in body and body.rstrip(b"\r\n").endswith(b"</HTML>")
+        else:
+            ok = ok and st == 200 and body == https_body(row["path"])[1]
+    if row["status"] is not None:
+        ok = ok and st == row["status"]
+    if row["noreq"]:
+        ok = ok and HTTPS_SEEN.get(srv, 0) == seen
+    if srv == "plain":
+        # what reached the cleartext server must be a TLS handshake record, never an HTTP request
+        got = HTTPS_PLAIN_SEEN[plain0:]
+        ok = ok and len(got) == 1 and got[0][:2] == b"\x16\x03" and b"GET" not in got[0]
+    return ok, rc, st, err, det, len(body)
+
+
+def https_rows(binary, pki, port, log, label):
+    """All rows; the name of the first row that fails, or None."""
+    for row in HTTPS_ROWS:
+        ok, rc, st, err, det, n = https_row(binary, pki, port, row)
+        log("%s row %-58s rc=%s status=%s err=%s detail=%s body=%d -> %s" % (label, row["name"], rc, st, err, det, n, "ok" if ok else "MISMATCH"))
         if not ok:
-            return name
-    if oport:
-        rc, body, st, err = https_run(binary, "localhost", oport, root, "/openssl-www")
-        ok = rc == 0 and st == 200 and b"Ciphers supported in s_server binary" in body and body.rstrip(b"\r\n").endswith(b"</HTML>")
-        log("%s row %-52s rc=%s status=%s body=%d -> %s" % (label, "openssl s_server -www (HTTP/1.0, close-delimited)", rc, st, len(body), "ok" if ok else "MISMATCH"))
-        if not ok:
-            return "openssl s_server -www"
+            return row["name"]
     return None
 
 
@@ -1199,6 +1362,14 @@ HTTPS_MUTANTS = [
     ("https.om: body truncation taken as end of stream", "https", "htlsrecvd", "ret htlsmap neg r", "ret 0"),
     ("https.om: http.om wait policy not given to TLS", "https", "htlsarm", "tls_deadline part io b TLCSZ long dl", "tls_deadline part io b TLCSZ 0"),
     ("https.om: records not written", "https", "htlswr", "r = tls_write part io get cs HTB TLCSZ part bb 0 k", "r = long 0"),
+    ("https.om: handshake not under the wait policy", "https", "htlsconn", "htlsarm cs io", "b = get cs HTB"),
+    ("https.om: exchange deadline HXDL ignored", "https", "htlsarm", "dl = x", "x = ulong 0"),
+    ("https.om: io minimum not enforced", "https", "htlsinit", "if lt len io add TLCSZ 512", "if lt len io TLCSZ"),
+    ("https.om: refusal reason lost", "https", "htlsdet", "ret tls_detail part io get cs HTB TLCSZ", "ret 0"),
+    ("tls.om: chain verification result ignored", "tls", "tls_chain", "if ne r 0", "if eq r 999999"),
+    ("x509.om: notAfter not checked", "x509", "chain_time", "ret X5EEXP", "ret 0"),
+    ("x509.om: notBefore not checked", "x509", "chain_time", "ret X5ENYV", "ret 0"),
+    ("x509.om: host name not checked", "x509", "chain_host", "ret X5ENAME", "ret 0"),
 ]
 
 
@@ -1230,49 +1401,47 @@ def stage_https(omc, work, http_src, notls_src, log):
     log("https.src=%s https.bin=%s https.om sha256=%s" % (ssrc, sbin, sha(https_src)))
     stop = threading.Event()
     port = {}
-    for cert in ("leaf", "wrong", "stray"):
-        port[cert], _ = https_server(pki, cert, stop)
-    # openssl s_server cannot report a kernel-chosen port: pick a free one and bind it
-    s = socket.socket()
-    s.bind(("127.0.0.1", 0))
-    oport = s.getsockname()[1]
-    s.close()
-    osrv = subprocess.Popen(["openssl", "s_server", "-accept", "127.0.0.1:%d" % oport, "-cert", os.path.join(pki, "leaf.pem"),
-                             "-key", os.path.join(pki, "leaf.key"), "-www", "-tls1_3"],
-                            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for cert in HTTPS_PY_CERTS:
+        port[cert] = https_server(pki, cert, stop)
+    port["plain"] = https_listen(stop, https_plain)
+    port["hsilent"] = https_listen(stop, https_hsilent)
+    osrv = []
     try:
-        for _ in range(50):
-            try:
-                socket.create_connection(("127.0.0.1", oport), timeout=0.2).close()
-                break
-            except OSError:
-                time.sleep(0.1)
-        bad = https_rows(hbin, pki, port, oport, log, "https")
+        for cert in HTTPS_OSSL_CERTS:
+            p, proc = https_ossl(pki, cert)
+            osrv.append(proc)
+            port["o:" + cert] = p
+        bad = https_rows(hbin, pki, port, log, "https")
         if bad:
             raise Fail("https row %r" % bad)
-        log("HTTPS-ROWS PASS rows=%d" % (len(HTTPS_ROWS) + 1))
+        log("HTTPS-ROWS PASS rows=%d" % len(HTTPS_ROWS))
         mbin = os.path.join(work, "https-mutant")
         for name, unit, fn, old, new in HTTPS_MUTANTS:
+            over = None
             if unit == "http":
                 mt, ln = https_mutate(http_src.decode(), fn, old, new)
                 lib = mt.encode() + https_src
-            else:
+            elif unit == "https":
                 mt, ln = https_mutate(https_src.decode(), fn, old, new)
                 lib = http_src + mt.encode()
+            else:
+                mt, ln = https_mutate(open(os.path.join(TLSDIR, unit + ".om"), "rb").read().decode(), fn, old, new)
+                lib = http_src + https_src
+                over = (unit, mt)
             try:
-                compile_unit(omc, mbin, https_compose(lib), "tests/https.om")
+                compile_unit(omc, mbin, https_compose(lib, over=over), "tests/https.om")
             except Fail as e:
                 raise Fail("https mutant %r does not compile (invalid mutant): %s" % (name, e))
-            bad = https_rows(mbin, pki, port, None, lambda s: None, "mutant")
+            bad = https_rows(mbin, pki, port, lambda s: None, "mutant")
             if bad is None:
                 raise Fail("https mutant %r SURVIVED every row" % name)
             log("https mutant killed: %s (%s.om line %d, by row %r)" % (name, unit, ln, bad))
         log("HTTPS-MUTANTS PASS killed=%d/%d" % (len(HTTPS_MUTANTS), len(HTTPS_MUTANTS)))
         if os.environ.get("TLS_NET") == "1":
             for host, path, needle in (("www.example.com", "/", b"Example Domain"), ("api.github.com", "/licenses/mit", b'"key":"mit"')):
-                rc, body, st, err = https_run(hbin, host, 443, "-", path, connect=host, timeout=60)
+                rc, body, st, err, det = https_run(hbin, host, 443, "-", path, connect=host, timeout=60)
                 ok = rc == 0 and st == 200 and needle in body
-                log("https live %s%s rc=%s status=%s err=%s body=%d sha256=%s -> %s" % (host, path, rc, st, err, len(body), sha(body), "ok" if ok else "MISMATCH"))
+                log("https live %s%s rc=%s status=%s err=%s detail=%s body=%d sha256=%s -> %s" % (host, path, rc, st, err, det, len(body), sha(body), "ok" if ok else "MISMATCH"))
                 if not ok:
                     raise Fail("https live GET %s%s" % (host, path))
             log("HTTPS-LIVE PASS rows=2")
@@ -1280,8 +1449,9 @@ def stage_https(omc, work, http_src, notls_src, log):
             log("HTTPS-LIVE NOT_RUN (set TLS_NET=1 for two live read-only GETs)")
     finally:
         stop.set()
-        osrv.kill()
-        osrv.wait()
+        for proc in osrv:
+            proc.kill()
+            proc.wait()
     log("HTTPS PASS")
 
 

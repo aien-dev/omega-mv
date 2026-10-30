@@ -20,7 +20,7 @@ only: no hardware or deployment claim.
 | `examples/sse_client.om` | An incremental SSE client that prints one line per event. |
 | `tests/parse.om` | Memory-mode parser driver for the corpus. |
 | `tests/live.om` | Loopback socket tests: bodies, keep-alive, pipelining, SSE, malformed requests, deadlines, descriptor leaks. |
-| `tests/https.om` | HTTPS GET through `https.om`: `https HOST PORT STOREFILE PATH [CONNECTHOST [IDLEMS]]`, body to stdout, `status N` / `HTTPSERR r` to stderr. |
+| `tests/https.om` | HTTPS GET through `https.om`: `https HOST PORT STOREFILE PATH [CONNECTHOST [IDLEMS [TOTALMS [IOSPARE]]]]`, body to stdout, `status N` / `HTTPSERR r` / `TLSDETAIL d` to stderr. |
 | `tests/nosup.om` | A program without TLS must refuse every byte on a non-TCP transport. |
 | `tests/check.py` | Host referee: builds everything, runs the corpus, the mutants, `live.om` and the curl / http.client end-to-end check. |
 
@@ -180,6 +180,14 @@ then work unchanged; `htlsend cs io` sends close_notify, wipes the keys and clos
 descriptor (`hclose` alone closes the socket without either). A TLS result `e` comes back as
 `HETLS - e` (-601 .. -629, names in `tls_errname`), a TLS deadline as `HETIME`. A TCP end of
 stream without close_notify is `HETLS - 4` (truncation), never a clean end of a body.
+The handshake runs under the same wait policy as every later read: `htlsconn` hands
+min(now + idle, `HDL`, `HXDL`) to `tls_deadline` before `tls_connect` (with all three 0,
+tls_connect keeps its own 30 s budget). `htlsdl cs ms` (after `hinit`, before `htlsconn`) sets
+`HXDL` (cs slot 54), one monotonic deadline `ms` from now over handshake, request write and
+response read; 0 clears it, and plain TCP ignores it. A certificate refusal (`HETLS - 17`)
+carries its X.509 reason in `htlsdet cs io` (`X5EEXP` 2 expired, `X5ENYV` 3 not yet valid,
+`X5ENAME` 4 wrong name, `X5EUNK` 5 unknown issuer), which survives `htlsend`; no request byte is
+sent before the chain, time and name checks pass. There is no fallback to cleartext.
 `tests/https.om` is the reference caller.
 
 ## Server-sent events
@@ -265,15 +273,24 @@ Stages:
    name, leaf of an unrelated root), three Python `ssl` TLS 1.3 servers and one
    `openssl s_server -www`, all on 127.0.0.1 ephemeral ports. `tests/nosup.om` (built with
    `notls.om`) must refuse every byte on `HXPORT 1`, and its stub mutated to return 0 must
-   fail. `tests/https.om` (built with om/tls and `https.om`) runs nine rows: 6-byte,
-   300 KiB Content-Length, chunked (chunk sizes 1 .. 60000) and close-delimited bodies
-   compared byte for byte, a server that closes TCP without close_notify (`HETLS - 4`), a
-   silent server under a 500 ms idle limit (`HETIME`), a wrong-name certificate and an
-   untrusted issuer (`HETLS - 17`), and the openssl page. Five mutants (read dispatch gone,
-   head read error or body truncation taken as end of stream, wait policy not handed to
-   TLS, records not written) must each fail a row. With `TLS_NET=1` two live read-only GETs
-   (`www.example.com/`, `api.github.com/licenses/mit`) must return 200 with the expected
-   text; without it that part is `NOT_RUN`.
+   fail. `tests/https.om` (built with om/tls and `https.om`) runs 25 rows: 6-byte,
+   300 KiB Content-Length, chunked (chunk sizes 1 .. 60000), fragmented (TLS records of
+   1 .. 11 bytes) and close-delimited bodies compared byte for byte; the smallest `io`
+   (`TLCSZ + 512`) passing and one byte less refused with `HEINVAL` before any request; a
+   head over the limit (`HEHEAD`); TCP close without close_notify after a Content-Length
+   head, on a close-delimited body, and inside an incomplete record (each `HETLS - 4`); a
+   silent server and a silent handshake under a 500 ms idle limit, a silent handshake
+   and a 1-byte-per-250 ms body under a total deadline (`HETIME`); a cleartext HTTP server
+   (`HETLS - 5`; it must receive a TLS record, never `GET`); wrong name, untrusted issuer,
+   expired, not yet valid and self-signed leaves (`HETLS - 17` with the X.509 detail, and
+   the server must receive no request); and four `openssl s_server -www` rows (page, wrong
+   name, untrusted issuer, expired). Thirteen mutants (read dispatch gone, head read error
+   or body truncation taken as end of stream, wait policy not handed to TLS, records not
+   written, handshake not armed, `HXDL` ignored, `io` minimum not enforced, detail lost,
+   chain result ignored, validity window or host name not checked) must each fail a row.
+   With `TLS_NET=1` two live read-only GETs (`www.example.com/`,
+   `api.github.com/licenses/mit`) through the system CA bundle must return 200 with the
+   expected text; without it that part is `NOT_RUN`.
 
 Every socket in the checks is 127.0.0.1 with a port chosen by the kernel. Nothing contacts port
 18091; outside hosts are contacted only by the two `TLS_NET=1` rows.
