@@ -75,10 +75,11 @@ not a new operator, adapter or hardware backend. Before an authorized device run
 freeze one manifest containing the Core source and executable hashes, this Omega
 source, `cudapp.lock`, staged source/archive hashes, all generated-unit identities,
 compiler and bridge pins, model/config/tokenizer/weight/scale content identities,
-exact command/environment, admission records and workload inputs. The capacity
-repair CUDApp #173 and command-lifetime repair #174 are candidate prerequisites;
-pending source is not merged source and historical component receipts are not
-qualification of that manifest.
+exact command/environment, admission records and workload inputs. The pinned
+CUDApp revision `6bfd376` contains the LDG MMIO repair (#172, `27bce88`), the
+capacity repair (#173, landed as `a25fb9f`) and the command-list lifetime and
+grouped host-acceptance repairs (#174/#175, landed as `8717565`). Merged source
+and historical component receipts are not qualification of that manifest.
 
 Build the canonical archive through `check-cudapp`, then build the existing Core
 35B consumer against that exact archive without an alternate GPU implementation.
