@@ -1,0 +1,11 @@
+fn factorial_u32 n uint to uint
+if ge n 34
+ret 0
+end
+res = uint 1
+count = ulong n
+for i ulong count
+res = mul res (uint add i 1)
+end
+ret res
+end

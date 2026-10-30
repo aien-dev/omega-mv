@@ -99,10 +99,10 @@ feature anyone may want", and it never means hardware qualification beyond the t
    `aien-math`; a local unpublished x86 branch raises to 1024), 16 registers with no spilling (error 12),
    6 parameter slots, 8-character local names (error 13). These are implementation limits, not language
    rules, and each needs a decision before 1.0 freezes them.
-7. **A second target exists only off GitHub.** omega-harness#9 cites commit `7eca2ac3f` ("x86-64 Linux and
-   UEFI back ends", 2,043 lines added to `omc.om`) on branch `feat/allen-imac-competition`; that commit is
-   not on `aien-dev/omega-mv` (GitHub returns 422 for it). Reported IMPLEMENTED in omega-harness#9;
-   not independently verified by this audit, unreviewed and unpublished.
+7. **A second target is in draft integration, not qualified.** FR-9 integrates the historical
+   `7eca2ac3f` backend into canonical base `6999fa9e6`; [X86-LINUX.md](X86-LINUX.md) records
+   the design and actual unsupported paths. Implementation and execution evidence are pending.
+   The earlier off-GitHub observation is not a current publication check or a completion claim.
 8. **No contracts in the forward compiler.** omc has no `requires`, `ensures` or `assert`; the only
    contract syntax is in the legacy C front end, and OSC IR carries contract text as metadata.
 9. **Efficiency is not measured against an optimizing baseline.** The only filed comparison
@@ -294,7 +294,8 @@ Acceptance:
 | WebAssembly MVP via OSC IR v1 (`irwasm`) | MERGED, scalar subset; host EXERCISED by authors | Gate wired (RM1); scope decision: stay scalar-only for 1.0, or add linear memory, text and globals with IR v2+ |
 | SPIR-V 1.0 OpenCL Kernel via OSC IR v1 (`irspirv`) | IMPLEMENTED and CPU EXERCISED in [#804](https://github.com/aien-dev/omega-mv/pull/804); [ABI, parity and toolchain](SPIRV.md) | Standalone `seed/spirv/gate-irspirv.sh`: full irwasm scalar corpus, exact trap/result parity on PoCL CPU, validator, determinism, mutant and refusals. Manifest wiring needs operator authorization; GPU and DPC++ integration NOT_RUN. |
 | StableHLO MLIR text via OSC IR v1/v7 (`irstablehlo`, Google TPU path) | IMPLEMENTED; EXERCISED on IREE 3.13 llvm-cpu and XLA CPU PJRT (jaxlib 0.12.0.1) interop oracles, see [seed/stablehlo](../seed/stablehlo/README.md) | Standalone `seed/stablehlo/gate-irstablehlo.sh`: elementwise one-block functions, exact results on both oracles, Omega-native integer cross-check, wrong-op, wrong-expected, malformed-module and refusal controls. Signed overflow trap NOT preserved. TPU (closed libtpu) NOT_RUN. |
-| x86-64 Linux ELF and x86-64 UEFI PE32+ | Reported IMPLEMENTED in omega-harness#9 on unpublished commit `7eca2ac3f`; not independently verified here | Published PR; default AArch64 output byte-identical (C2 manifest); differential against AArch64 on the full fixture set; trap codes equal; QEMU run labelled EMULATED; physical x86 hardware NOT_RUN unless tested |
+| x86-64 Linux static ELF | DRAFT integration pending implementation/evidence on canonical base `6999fa9e6`, using historical `7eca2ac3f`; [design and unsupported paths](X86-LINUX.md) | Published PR; default AArch64 output byte-identical (C2 manifest); full existing fixture differential with equal trap codes; independent objdump oracle and wrong-encoding mutants; all NOT_RUN for this draft; QEMU labelled EMULATED, physical x86 NOT_RUN unless tested |
+| x86-64 UEFI PE32+ | Historical implementation in `7eca2ac3f`; removed from the Linux-only FR-9 draft | Outside this integration; separate firmware/PE32+ acceptance and evidence required; Linux execution does not establish firmware or physical x86 qualification |
 | RISC-V RV64GC (#630), other ISAs (#629, #628) | PROPOSED | Out of 1.0 unless a decision adds it |
 | GB10 sm_121 device code (`seed/sm121`, device/mapping words) | IMPLEMENTED encodings and host-side device words; no GPU launcher | Chip gate BLOCKED_OPERATOR; host and simulator results are never cited as GPU qualification |
 

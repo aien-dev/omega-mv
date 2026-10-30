@@ -1,0 +1,8 @@
+global g qty 4
+fn main to int
+put g 0 qty 7
+x = get g 0
+y = ulong 1
+y = x
+ret int 0
+end
