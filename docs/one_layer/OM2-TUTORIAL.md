@@ -5,10 +5,12 @@ specification: `spec/omegese-om2.md` and `spec/omegese-om2-errata.md` are normat
 `docs/one_layer/OMEGESE.md` §9.13 says what `omc` implements of them. Where this document disagrees
 with those, they win, and this document is stale.
 
-Estate at the time of writing: OM-2 is on the compiler stack `om2/compiler-s4` @ `f6a6492fd`
-(PRs #750, #753, #754, #764) and the SHA-256 cutover `om2/sha-cutover` (PR #776), all **draft and
-unmerged**. `main` compiles OM-1 only. Nothing here is hardware-qualified: every result is HOST on
-Linux AArch64.
+Estate when this was written: OM-2 was on the compiler stack `om2/compiler-s4` @ `f6a6492fd`
+(PRs #750, #753, #754, #764) and the SHA-256 cutover `om2/sha-cutover` (PR #776), then draft. All of
+them have since merged, with the qualification harness #752 (2026-10-25/26 UTC); `main` compiles OM-1 and
+OM-2. The pins below are those of the measurements and stay as recorded; `main`'s compiler pin has
+moved since (at `3364a1dfd` it is `befb8199...8a1d`, after #786 changed IR-mode boolean typing).
+Nothing here is hardware-qualified: every result is HOST on Linux AArch64.
 
 ## 1. Pins
 

@@ -1,0 +1,144 @@
+note Native Linux-arm64 network primitives. Runs only in a private scratch directory.
+text npth "netdata.sock"
+text nmsg "native sendmsg"
+text nok "PASS native peercred pollfds sendmsg allowlist\n"
+global na uchar 110
+global nb uchar 64
+global nc uchar 16
+global np uchar 24
+global nv uchar 4
+global nlarge uchar 1048576
+fn ncheck yes bool to void
+if not yes
+exit 1
+end
+end
+fn nget32 off ulong to ulong
+v = ulong 0
+for i ulong 4
+v = or v shl ulong get nc add off i mul i 8
+end
+ret v
+end
+fn nfdput off ulong fd long to void
+for i ulong 4
+put np add off i uchar and shr ulong fd mul i 8 255
+end
+put np add off 4 1
+end
+fn nopts fd int to void
+put nv 0 1
+ncheck eq sockopt fd 1 2 nv 0 4 0
+ncheck eq sockopt fd 1 15 nv 0 4 0
+ncheck eq sockopt fd 1 9 nv 0 4 0
+ncheck eq sockopt fd 1 7 nv 0 4 0
+ncheck eq sockopt fd 1 8 nv 0 4 0
+ncheck eq sockopt fd 1 16 nv 0 4 neg long 92
+ncheck eq sockopt fd 999 2 nv 0 4 neg long 92
+ncheck eq sockopt fd 1 2 nv 0 3 neg long 22
+ncheck eq sockopt neg int 1 1 2 nv 0 4 neg long 9
+end
+fn ntraps to int
+ncheck eq argread 1 nb 0 1 1
+if eq get nb 0 49
+ret int peercred neg int 1 nc 0 11
+end
+if eq get nb 0 50
+ret int pollfds np 0 7 0
+end
+if eq get nb 0 51
+ret int sendmsg neg int 1 nb 18446744073709551615 1 0
+end
+ret 90
+end
+fn nexchange a long b long to void
+nfdput 0 a
+nfdput 8 b
+ncheck eq pollfds np 0 16 0 0
+ncheck eq pollfds np 0 0 1000000 0
+ncheck eq sendmsg int b nmsg 0 len nmsg 0 long len nmsg
+ncheck eq pollfds np 0 16 1000000000 1
+ncheck ne and get np 6 1 0
+ncheck eq get np 14 0
+ncheck eq recv int a nb 1 len nmsg 0 long len nmsg
+for i ulong len nmsg
+ncheck eq get nb add i 1 get nmsg i
+end
+ncheck eq peercred int a nc 2 12 0
+ncheck eq nget32 2 ulong getpid
+ncheck eq nget32 6 ulong getuid
+ncheck eq nget32 10 ulong getgid
+ncheck eq peercred neg int 1 nc 0 12 neg long 9
+end
+note MSG_DONTWAIT=64 forces a short send into a deliberately small kernel send buffer.
+fn nshort a long b long to void
+for i ulong 4
+put nv i 0
+end
+put nv 1 16
+ncheck eq sockopt int b 1 7 nv 0 4 0
+n = sendmsg int b nlarge 0 len nlarge 64
+ncheck gt n 0
+ncheck lt n long len nlarge
+ncheck le n 65536
+left = n
+while gt left 0 bound 65536
+take = ulong left
+if gt take len nb
+take = len nb
+end
+r = recv int a nb 0 take 0
+ncheck gt r 0
+left = sub left r
+end
+end
+fn nleaks to void
+first = socknew 1 524289 0
+ncheck ge first 0
+ncheck eq fclose int first 0
+for i ulong 64
+fd = socknew 1 524289 0
+ncheck eq fd first
+ncheck eq fclose int fd 0
+end
+start = monons
+ncheck ge start 0
+ncheck eq pollfds np 0 0 1000000 0
+finish = monons
+ncheck ge sub finish start 1000000
+end
+fn main to int
+if eq argcnt 2
+ret ntraps
+end
+put na 0 1
+for i ulong len npth
+put na add i 2 get npth i
+end
+s = socknew 1 524289 0
+ncheck ge s 0
+ncheck eq bind int s na 0 len na 0
+ncheck eq listen int s 1 0
+c = socknew 1 524289 0
+ncheck ge c 0
+ncheck eq connect int c na 0 len na 0
+a = accept int s 524288
+ncheck ge a 0
+nexchange a c
+nshort a c
+ncheck eq fclose int a 0
+ncheck eq sendmsg int a nmsg 0 len nmsg 0 neg long 9
+ncheck eq sendmsg int c nmsg 0 len nmsg 0 neg long 32
+ncheck eq fclose int c 0
+ncheck eq fclose int s 0
+ncheck eq unlink npth 0 len npth 0
+t = socknew 2 524289 0
+ncheck ge t 0
+nopts int t
+ncheck eq sockopt int t 6 1 nv 0 4 0
+ncheck eq sockopt int t 6 2 nv 0 4 neg long 92
+ncheck eq fclose int t 0
+nleaks
+ncheck eq write 1 nok 0 len nok long len nok
+ret 0
+end

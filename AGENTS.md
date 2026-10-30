@@ -82,6 +82,7 @@ Gates whose manifest lists `gb10` under `requires:` (for example the `*-silicon`
 - `README.md`: current state, standing rules and the legacy build commands.
 - `seed/README.md`: the seed ladder rung by rung, and the seeded compiler's checks.
 - `docs/one_layer/OMEGESE.md`, `docs/one_layer/OM_COMPLETION.md`: the language and its completeness audit.
+- `docs/ROADMAP-1.0.md`: the Omega 1.0 readiness audit, milestones RM1..RM11 and their acceptance gates (live status stays with aien-architecture).
 - `docs/migration/C-TO-OM-INVENTORY.md`: remaining C to replace.
 - `docs/PIPELINE.md`: how a pull request is tested on the Spark.
 - `CONTRIBUTORS.md`: who built what.

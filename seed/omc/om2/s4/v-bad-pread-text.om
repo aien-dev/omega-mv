@@ -1,0 +1,7 @@
+note S4: pread writes its array, so pread into a text is error 20 (as read).
+om2
+text t "ABC"
+fn main to int
+r = pread 0 t 0 3 0
+ret 0
+end

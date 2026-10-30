@@ -18,13 +18,18 @@ bookkeeping and the punctuation. Its words are chosen from the writer model's ow
 
 ## 2. Design rules
 
-1. **One word, one token.** Every fixed word (ops, types, keywords) is exactly one token of the
-   target tokenizer when written with its leading space (Qwen3; the 8B, 30B and 4B tokenizers share
-   one vocabulary). `make test-omegese` checks this when given a tokenizer (section 6). There is no
-   punctuation besides `=` (also one token, and optional) and the optional brackets `( )`; no
-   commas, no indentation. Values nest in prefix order (every op takes a fixed number of values), so
-   brackets are never needed. Numbers cost one token for the space plus one per digit (Qwen3 splits
-   digits).
+1. **Efficiency metric: verified programs per unit of inference cost.** Language design optimizes
+   for verified programs produced per unit of inference cost (measured on held-out tasks by
+   first-attempt correctness, successful compilation, verified behavior, completion time, and total
+   compute cost), rather than treating single-token vocabulary as a rigid language rule.
+   Fitting fixed words into single tokens under a specific tokenizer (e.g. Qwen3 where ops, types,
+   and keywords were verified as single tokens with a leading space) is an empirical token-cost
+   consideration, not a binding constraint on the language definition. The compiler-guided interface
+   must remain portable across models and tokenizers.
+   There is no punctuation besides `=` (also one token, and optional) and the optional brackets `( )`;
+   no commas, no indentation. Values nest in prefix order (every op takes a fixed number of values),
+   so brackets are never needed. Numbers cost one token for the space plus one per digit under tokenizers
+   that split digits.
 2. **Types are inferred.** Only parameters, the return type, conversions, typed numbers
    (`uint 5`) and new arrays name a type. A value's type comes from the op that makes it, bottom-up
    through nested values; a number takes the type of the other value in its op. This removes the
@@ -326,8 +331,9 @@ out; a `ret` whose value moves the array into a call is not tried by the witness
   word it belongs to) and `complete` must finish the prefix into a program `emit` accepts;
 - loop guard negative control: the dev04 op list without the hidden counter increment passes
   omega_emit and is REJECTED by checker2 (`C2-LOOP-UNBOUNDED`);
-- tokenizer gate, when `OMEGESE_TOKCOUNT` (a counter: `<tool> <tokenizer.json> words <word>...`
-  printing the token count of " word" first) and `OMEGESE_TOKENIZER` are set.
+- tokenizer measurement: when `OMEGESE_TOKCOUNT` (a counter: `<tool> <tokenizer.json> words <word>...`
+  printing the token count of " word" first) and `OMEGESE_TOKENIZER` are set, records empirical token
+  efficiency across candidate vocabularies (an observational cost consideration rather than a language rule).
 
 The same suite then runs again on a build with AddressSanitizer and UndefinedBehaviorSanitizer
 (memory and undefined-behaviour checks), with 10 walks and one mutant per program; every sanitizer
@@ -406,6 +412,19 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
   calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
 
+An initial line `target x86linux` selects the candidate FR-9 native x86-64 Linux backend.
+Without it, the existing AArch64 output remains unchanged. Whole-program output is a
+static ELF64 image with Linux x86-64 syscalls. A bare x86 unit has six-byte
+`JMP rel32`/`NOP` entry slots and uses omc's private frame ABI; it is not a SysV
+C-callable object. In bare mode, physical R14 points to an immutable runtime
+entry table: a trap places its code in ESI and jumps through entry 2, whose
+landing pad recovers the wrapper stack through R12 without storing a result.
+This is not the AArch64 register ABI. Whole-program traps still terminate with
+`100 + code`. Explicit raw AArch64 `emit` is refused on x86 (error 25).
+OS flag values remain target-native.
+See [the backend design and evidence](../X86-LINUX.md) for the register map,
+syscall adaptation, seed-chain boundaries and qualification status.
+
 ### 9.2 Functions and calls
 
 - `fn` may appear many times. A names pass reads every signature before any code is written, so a call
@@ -420,7 +439,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 - `to void` makes a void function; `ret` with no value returns from it, and so does reaching its `end`.
   A function with a return type whose `end` can be reached is error 18. (s.6 t_void, s.7)
 - Arguments are read left to right, each fully before the next. (s.5 fm5)
-- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7)
+- Function names may have up to 63 characters; other names up to 8 (error 13). (s.4 dev01, s.7) A
+  function name longer than 8 characters is never a keyword, even when its first 8 spell one
+  (`continue_x`, `truncate_number`); a name that is exactly a keyword is error 16. (s1 kw-long-names)
 - A function has at most 6 parameters; a seventh is error 9. `main` has none (error 9). A new name
   may not reuse a name already in scope, a function or a struct: error 10.
 - In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
@@ -456,7 +477,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   Program mode only (error 9). (s.6 echo, bytecopy, s.7)
 - `text NAME "bytes"`: a read-only array of uchar holding the bytes between the quotes, with its
   length; `\n` is 10, `\t` is 9, `\\` is 92, `\"` is 34; any other escape, or a quote missing its end,
-  is error 22. Program mode only. (s.7)
+  is error 22. An empty text `""` is a sized array of length 0: `len` is 0, a number index is error 21,
+  a run-time index or `part`/`write` past 0 traps 3, and as a `view` argument its count is 0. Program
+  mode only. (s.7)
 - `NAME = new T N v`: a local array of N elements, each v, on the stack, given back when the function
   returns. Only in a function's outermost block (error 9); at most 4 MiB of local arrays (error 23).
   There is no `free`: nothing is given back by hand (decision 24), and the word is refused (error 9).
@@ -480,7 +503,9 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   moved, or minus the Linux error number. They trap 3 unless n <= len A and off <= len A - n, before the
   call. `read` needs a writable array (error 20). A must be an array of uchar for the counts to be bytes.
   `pread fd A off n pos` / `pwrite fd A off n pos` (pos long) do the same at an explicit file position
-  without changing the descriptor's offset, with the same slice checks and result. (s.6 echo, bytecopy, t_rw)
+  without changing the descriptor's offset, with the same slice checks and result. Like `read`, `pread`
+  needs a writable array (error 20); `pwrite`, like `write`, also takes a text or a view. (s.6 echo,
+  bytecopy, t_rw; s4 v-bad-pread-text, v-pwrite-text)
 - `exit v` (v int) ends the program with status v modulo 256. Like `ret`, it ends the path: a line after
   it in the same block is error 17. (s.6 t_exit, s.7)
 - `note ...` is a line the translator does not read beyond its first word. (s.6 sort, fib)
@@ -489,7 +514,14 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
 
 Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
 writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
-blocks. A function that needs more than the 16 registers it hands out is error 12.
+blocks. A function that needs more than the 16 registers it hands out is error 12. omc keeps the same
+input, output, nesting, trap-site and block limits but holds 8192 names in scope, 4096 functions and
+524288 call sites per unit (`seed/omc/gate12.sh`, `gate15.sh`), so whole programs such as an
+interpreter fit in one unit; om4 itself keeps its own smaller tables.
+The candidate `target x86linux` backend has a 16 MiB output pool because native
+x86 instruction sequences can require more bytes than their AArch64 counterparts.
+The AArch64 output ceiling remains 8 MiB; input and frontend limits are unchanged.
+An exhausted target output pool still refuses with error 14.
 
 ### 9.7 Structs (omc only, rung 6)
 
@@ -571,11 +603,16 @@ conversion is error 7.
   (gate8 intrinsics, neg_intr_*)
 - Conversions `<type> value` handle int<->float, f32<->f64 and float->int. Int to float is SCVTF/UCVTF
   (round to nearest even); float to int is FCVTZS/FCVTZU (truncate, saturate, NaN -> 0); f32<->f64 is
-  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64) without
-  changing its bits; any other width or a bool is error 7. (gate8 convert)
-- Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields; the same
-  8-byte cell rule as for structs applies (an f32 field or array element still occupies an 8-byte
-  cell, with the 32-bit pattern in its low half). A float cannot index an array or be a `for` count
+  FCVT. `bitcast T value` reinterprets a value of the same width (f32/i32/u32, f64/i64/u64, and
+  i8/u8, i16/u16 between integers) without changing its bits; any other width or a bool is error 7.
+  The result is an ordinary value of T: `bitcast int uint 4294967295` equals -1 and
+  `bitcast uint int -1` equals 4294967295; an 8/16/32-bit integer or f32 is extended again for T into
+  a new register, so the source name keeps its value (omc 2c824805 kept the source's extension).
+  (gate8 convert, bitcast_int, neg_bitcast_width)
+- Floats are allowed in `global` pools, `new` arrays, parameters, returns and struct fields.
+  Arrays are packed by element type: f32 occupies four bytes and f64 eight (`tlog` and `sa_arr`
+  in `seed/omc/omc.om`). Struct fields retain eight-byte cells, including f32 in the low half.
+  A float cannot index an array or be a `for` count
   (error 7), `read`/`write` still need a uchar array (error 7), and IR mode refuses float words
   (error 3). (gate8 arrays, globals, params, structs, neg_*)
 
@@ -610,6 +647,13 @@ be assigned (error 7). In IR mode an integer constant is folded to its literal, 
 `trap` code, a `while` bound, or a `for` count; a float constant there is refused (error 9), as are
 struct/global/text declarations. Definitions are sequential, so a
 constant defined after a function is not visible to that function.
+
+A constant needs no program image, so it is also accepted in function mode (a unit without
+`fn main`): every read folds to the typed number, and the function words are byte for byte those of
+the same unit written with the literal (gate16 `fm_*`: value, negative value, parameter and `new`
+length, `while` bound, `trap` code, `for` count, two functions, f64). A `global` or `text` in a
+function-mode unit is still error 9 at the end of the input, with or without constants beside it,
+and a host word is still error 9 at its line (gate16 `fm_global`, `fm_text`, `fm_host_word`).
 
 An integer constant is also accepted as an array length in `new`, `global`, a parameter declaration
 (`view T N` / `edit T N`) and a struct field length (1..64, error 14); a float constant used as a
@@ -767,7 +811,7 @@ These operations do not form a sandbox: they operate with the process's
 existing permissions. They expose no pointer values and no arbitrary syscall.
 
 In signatures, `fd`, `flags`, `mode`, `pid`, `signal`, `events`, `domain`,
-`kind`, `protocol`, `backlog`, `target`, `options`, `level`, `option` and `whence` are `int`.
+`kind`, `protocol`, `backlog`, `target`, `options`, `level`, `option`, `whence` and `op` are `int`.
 Offsets, byte counts, capacities and argument indices are `ulong`. File offsets
 and time intervals are `long`. `A` is a `uchar` array. Every slice checks
 `n <= len A` and `off <= len A - n` before kernel access, otherwise trap 3
@@ -793,6 +837,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `getsid pid` | Session id of `pid` (0 = self). |
 | `syncfs fd` | Sync the filesystem containing an open descriptor. |
 | `shutdown fd how` | Shut down part of a connected socket. |
+| `flock fd op` | Advisory whole-file lock (Linux `flock`, ARM64 syscall 32; keyword id 197). `op` is passed unchanged: 1 `LOCK_SH`, 2 `LOCK_EX`, 8 `LOCK_UN`, plus 4 `LOCK_NB` for no wait. Returns 0 or -errno: -11 when a `LOCK_NB` request is held by another open file, -22 for any other op, -9 for a closed fd. The lock belongs to the open file, so it is released when the last descriptor sharing that open file is closed. Fixture `seed/host/tests/flock.om`. |
 | `setpgid pid pgid` | Set a process's group (0 = self/own pid). |
 | `umask mask` | Set the file-mode mask; return the previous mask. |
 | `fseek fd offset whence` | Seek and return the resulting signed file offset. |
@@ -820,10 +865,13 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `listen fd backlog` | Listen for connections. |
 | `accept fd flags` | Accept a connection with `accept4`; return descriptor, without peer-address output. |
 | `sockname fd A off n` | Write socket address bytes; return the full address length, which may exceed capacity when truncated. |
-| `sockopt fd level option A off n` | Set a socket option from a readonly byte slice. Option values and layouts follow the Linux ARM64 interface. |
+| `sockopt fd level option A off n` | Set one allowlisted scalar transport option from a readonly four-byte slice; see the allowlist below. |
 | `recv fd A off n flags` | Receive into a writable slice. |
 | `send fd A off n flags` | Send a slice with `MSG_NOSIGNAL` added, so a closed peer returns an error. |
 | `waitio fd events interval` | Poll one descriptor. Return readiness bits, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. Events outside 0..65535 trap 3. |
+| `peercred fd A off capacity` | Read Linux `SO_PEERCRED` into a writable slice of at least 12 bytes: little-endian 32-bit PID, UID, GID; return zero or negative errno. |
+| `pollfds A off n interval` | Poll a writable slice of packed eight-byte Linux `pollfd` records. `n` is bytes, a multiple of eight, at most 8192. Return ready-entry count, zero on timeout, or negative errno. Interval is nanoseconds; negative means infinite. |
+| `sendmsg fd A off n flags` | Send one checked payload using a private `msghdr` and single `iovec`, without ancillary data or destination-address override. Adds `MSG_NOSIGNAL`; returns a possibly partial byte count or negative errno. |
 | `fork` | Copy the current process: zero in the child, child PID in the parent, negative errno on failure. |
 | `getpid` | Return the current process ID. |
 | `killpid pid signal` | Send a signal; zero signal checks existence/permission. |
@@ -851,8 +899,32 @@ the kernel writes the output, so overlapping path and output slices are safe.
 `cwd` requires writable bytes. It preserves the kernel's count convention:
 the returned count includes its trailing zero byte. `readlnk` never appends a
 zero byte. These operations are Linux `getcwd` and `readlinkat(AT_FDCWD)`.
-`sockopt` is Linux `setsockopt`; it accepts readonly option bytes and does not
-provide pointer values or arbitrary system-call access.
+`sockopt` is Linux `setsockopt`, restricted to `SOL_SOCKET` (level 1)
+`SO_REUSEADDR` (2), `SO_REUSEPORT` (15), `SO_KEEPALIVE` (9), `SO_SNDBUF` (7),
+`SO_RCVBUF` (8), and `IPPROTO_TCP` (level 6) `TCP_NODELAY` (1).
+Each value is exactly four little-endian bytes. An unlisted level/option returns
+`-92` (`ENOPROTOOPT`) without invoking the kernel; an allowed option with a
+different length returns `-22` (`EINVAL`). Kernel errors for listed operations
+are preserved, including `-9` (`EBADF`) and `-95` (`EOPNOTSUPP`) when a socket
+family does not support a listed option. No pointer-bearing option is exposed.
+
+`peercred` is kernel-attested local peer identity, not application authorization.
+Use it only on a connected Unix socket and compare the returned identity with
+the service's explicit policy. Unavailable or unexpected credentials must fail
+closed. Capacity below 12 traps 3 before the syscall; extra capacity is untouched.
+
+Each `pollfds` record is `fd:int32`, `events:uint16`, `revents:uint16`, in
+little-endian byte order. The kernel updates `revents` in place. Misaligned byte
+lengths and lengths above 8192 trap 3. A zero-length slice is a timed sleep.
+Applications must inspect error/hangup bits and every syscall result.
+
+Networking errors use the existing stable Linux-arm64 negative-errno contract:
+`-4` interrupted, `-11` would block, `-32` broken pipe, `-110` timeout,
+`-111` refused, and `-115` connect in progress. `read`, `write`, `send`, `recv`,
+and `sendmsg` may complete partially. The library must advance by the actual
+count, distinguish EOF from errors, retry interruptions within a monotonic
+deadline, and wait for readiness on nonblocking sockets rather than spin.
+Never retry `fclose` after an error: the descriptor may already be released.
 
 A packed list is a little-endian `u16` count followed by that many records,
 each a little-endian `u16` byte length and those bytes. There is no padding or
@@ -895,10 +967,25 @@ value-returning call composes as a value, a void call is a statement, and using 
 is needed is error 7. Argument types are checked at compile time (error 7). `break` lowers to a
 `BR` to the innermost loop's exit and marks the path dead; `continue` is still refused (error 3).
 
+The producer validates complete statement lines rather than discarding
+trailing words (error 5); missing operands are error 4 and untyped bare
+expressions error 11. Locals and loop counters obey block scope, including
+the `else` boundary; redeclaring an in-scope name is error 10, and reading
+an out-of-scope name is error 3. Locals and parameters retain the native
+eight-byte name limit (13), while function names retain full matching up
+to 63 bytes. A reachable non-void function end is error 18; a void end
+emits an implicit return. Missing function `end` is error 15. Unsupported
+float parameter/result types are refused with error 9 before serialization.
+Typed literals are range-checked (8). Parentheses remain unsupported in
+this scalar IR checkpoint, rather than being silently discarded.
+
 `seed/omc/gate-ir.sh` compares 10 dev programs, nine hand-written multi-function call units and 30
 randomized two-function call units byte-for-byte with the C-built `omegese` + `omega_emit` oracle, requires `checker2` to ACCEPT every unit, requires
-a mul-to-add mutant to differ, and pins 14 refusal cases. Those C tools are referees only; they
-never write omc's bytes.
+a mul-to-add mutant to differ, and pins refusal cases. Its validation regressions
+cover trailing/missing words, scopes, scalar types, literal bounds and name
+limits; positive controls include implicit void returns, sequential `for`
+counters, scope reuse and functions sharing a name prefix. Those C tools
+are referees only; they never write omc's bytes.
 
 Boolean `and`, `or` and `xor` lower to the IR bitwise sub-operations, just as on the
 native path. `gate-ir.sh` checks all three against the C encoder and checker2.
@@ -998,3 +1085,147 @@ Numeric bounds were checked with WolframLanguageEvaluator:
 the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
+
+### 11.2 Memory profile contract (IR v2 milestone)
+
+This is a specification for the next seeded producer/backend extension, not
+an assertion that the binaries above implement it. The authoritative wire
+allocation and validation rules are in `spec/one-layer-format.md` section 10.
+The milestone name does not repurpose OSC wire version 2.
+
+The source spelling reuses native arrays:
+
+```
+global pixels uint 4096
+text palette "RGBX"
+fn frame phase uint to uint
+scratch = new uint 4 phase
+put pixels 0 get scratch 0
+ret get pixels 0
+end
+```
+
+`global` creates mutable per-instance storage; `text` creates a read-only
+byte table; `new` creates a function-local fixed-size array whose initializer
+is evaluated once at its declaration and copied to every element on each
+invocation. `len` is a compile-time element count. A one-element global is
+the scalar-state spelling. Mutable globals start at zero and persist
+between exported calls. Local storage never exposes a previous call.
+
+`get` and `put` retain exact element typing and bounds behavior: a constant
+out-of-range index is error 21, a dynamic negative or high index is trap 3,
+and writing text is error 20. All accesses are checked before address
+arithmetic; there is no unchecked form. Integer indices do not become valid
+by wrapping to a wasm32 address. Elements are naturally aligned and packed
+at their scalar width; struct-cell layout is a separate contract.
+Type/context/capacity refusals remain errors 7/9/14/23 respectively.
+
+The first memory profile names globals directly from functions. It does not
+add array parameters, raw pointers, dynamic allocation or GPU synchronization.
+Function/Workgroup storage distinctions are wire contracts, not permission
+to lower persistent state to per-work-item temporary storage.
+The wasm ABI exports `memory`, original scalar function names, and immutable
+`region.NAME` offset globals for module regions. JavaScript can form a typed
+framebuffer view and invoke `frame` explicitly; Omega does not install a
+browser loop or import JavaScript services. A read-only source table is not
+protected from a JavaScript caller that holds the exported memory.
+
+## 12. Executable native contracts, version 1 (OM-2 extension)
+
+This section extends the seeded native compiler, not the OSC v1 metadata in
+section 11.1. `om2` and `om2 debug` check contracts. `om2 release` erases their
+runtime evaluation after the same syntax, scope, type and purity checks.
+`om2 diag debug` and `om2 diag release` combine the policy with diagnostic
+records. `om2 fmt` keeps its existing canonical profile and checks contracts.
+OM-1 does not reserve any new words. No environment variable selects policy.
+
+```
+om2
+fn step x uint to uint
+requires lt x 10
+ensures eq result add x 1
+ret add x 1
+end
+fn main to int
+i = uint 0
+while lt i 3
+invariant le i 3
+i = step i
+end
+ret int sub i 3
+end
+```
+
+### Declaration and observation points
+
+`requires BOOL` and `ensures BOOL` form a function's prefix, before its first
+executable statement. Blanks and `note` lines may separate clauses. A function
+has at most 64 prefix clauses. Preconditions execute in declaration order on
+entry, after parameter binding, including inline calls.
+
+Postconditions execute in declaration order on **every normal return**:
+explicit value/void `ret`, implicit void fallthrough, and inline returns.
+They do not execute on `exit`, a trap or abnormal process termination. The
+return expression is evaluated exactly once and preserved while checks run.
+The read-only name `result` is available only in value postconditions. It has
+the declared return type. The caller receives that same value after the checks.
+
+Function predicates bind globals and parameters visible at their declaration,
+not names introduced later in the body. A parameter in a postcondition means
+its **current value at return**; array reads likewise observe current contents.
+There is no implicit entry snapshot and no `old` operator. Reads of `fresh`
+output arrays are checked for definite initialization at every return.
+
+`invariant BOOL` forms the prefix of a `while` or `for` body, before any body
+statement. There are at most 64 clauses per loop. It sees loop-entry names and,
+for `for`, its counter. Clauses run at the **loop head**, before the condition:
+on entry even for zero trips, on every backedge, and before the final false
+condition. `continue` reaches that head; `for` increments first. `break`
+bypasses the next check and makes no promise about the break-exit state. A
+return from inside a loop runs function postconditions, not an extra invariant.
+Unrolled loops preserve these observation points, including their final
+counter value. Their diagnostic `iter` can therefore equal the loop limit.
+
+### Purity, proofs and failure
+
+Predicates have type `bool`. Their bounded, recursive expression grammar
+permits integer/bool literals and names, integer/bool operations and checked
+conversions, grouping, `len`, and ordinary checked array/struct/layout reads.
+It excludes user calls (including inline calls), floats and abstract values,
+host operations, mapped-device operations, allocation, writes and ownership
+operations. The exclusion is recursive, including in release and under a
+constant expression. `and` and `or` remain eager, never short-circuit bounds
+guards.
+
+The checker proves literal `true` and safely folded constant predicates using
+the existing checked integer folder. A proof erases evaluation only when the
+whole predicate is known to return true without trapping. It does not assume
+that arbitrary reflexive expressions are safe. Constant false remains a
+runtime failure in debug; release erases it by policy, not by proof.
+
+False `requires` uses existing trap **9** (program exit **109**); false
+`ensures` or `invariant` uses existing trap **10** (exit **110**).
+Function-mode callers receive those same trap codes through `OscRt.trap`.
+An arithmetic, conversion or bounds failure while evaluating a predicate
+retains its original trap code. Compiler error **30** means misplaced
+contract syntax, unavailable `result`, or a forbidden predicate operation.
+Existing type, unknown-name, initialization and capacity errors retain their
+codes. Diagnostic trap sites name the predicate's source line.
+Error 30 has diagnostic obligation `contract`. Each emitted contract site also
+has an `omc-check 1 kept|erased line=N rule=RULE kind=KIND` record in diagnostic
+mode: `runtime` for kept checks, `constant-true` for a proof, or `release` for
+policy erasure; KIND is `requires`, `ensures` or `invariant`. Deferred
+postconditions are reported at their actual return sites, not during entry
+validation.
+
+Release erasure removes predicate instructions, trap records and diagnostic
+sites, and restores temporary allocation and branch bookkeeping. It never
+uses the predicate as an optimizer assumption and never erases the body's
+arithmetic, bounds, initialization, stack or loop-fuel protection. Contract
+sources still must fit the compiler's validation capacities in release.
+
+Fixtures and exact expected outcomes are in
+`seed/omc/contracts/contracts.cases`, using the existing pinned
+`seed/qualification/om2/gate.om` conductor. The example above is exercised by
+`seed/omc/contracts/ok.om`; release/erased and proved/plain pairs require
+byte-identical output, not just equal exit statuses.
