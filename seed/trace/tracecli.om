@@ -617,7 +617,8 @@ end
 end
 ret same
 end
-note same: the two records are byte-equal.
+note same: recdiff's answer once all 64 bytes matched, so always false (no difference). It is a separate
+note function only so that "ret same" is a unique compare-mutant site for cli-gate.sh (mutant: ret true).
 fn same to bool
 ret false
 end
