@@ -1,0 +1,14 @@
+om2
+note an inline function recursive through a non-inline function is error 9 (D-S2-1)
+fn f x int to int inline
+if lt x 1
+ret 0
+end
+ret g sub x 1
+end
+fn g x int to int
+ret f x
+end
+fn main to int
+ret g 3
+end

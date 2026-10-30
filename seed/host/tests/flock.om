@@ -1,0 +1,76 @@
+note flock fd op (Linux flock, ARM64 syscall 32): an exclusive lock held on one open file blocks a
+note LOCK_EX|LOCK_NB from a second open of the same file in a child (-EWOULDBLOCK, 11); after LOCK_UN
+note the child gets it; shared locks coexist; an unknown op is -EINVAL (22); a closed fd is -EBADF (9).
+text path "flock.tmp"
+global status uchar 4
+fn child want long to int
+fd = fopen path 0 len path 524290 0
+if lt fd 0
+ret 50
+end
+r = flock int fd 6
+if ne r want
+ret 51
+end
+ret 0
+end
+fn waitkid want long to int
+pid = fork
+if lt pid 0
+ret 40
+end
+if eq pid 0
+exit child want
+end
+r = waitpid int pid status 0 len status 0
+if ne r pid
+ret 41
+end
+if or ne get status 0 0 ne get status 1 0
+ret int add 60 ulong get status 1
+end
+ret 0
+end
+fn main to int
+fd = fopen path 0 len path 524866 384
+if lt fd 0
+ret 1
+end
+r = flock int fd 6
+if ne r 0
+ret 2
+end
+k = waitkid neg long 11
+if ne k 0
+ret k
+end
+r = flock int fd 8
+if ne r 0
+ret 3
+end
+k = waitkid 0
+if ne k 0
+ret k
+end
+r = flock int fd 1
+if ne r 0
+ret 4
+end
+s = fopen path 0 len path 524290 0
+r = flock int s 5
+if ne r 0
+ret 5
+end
+r = flock int fd 3
+if ne r neg long 22
+ret 6
+end
+c = fclose int s
+c = fclose int fd
+r = flock int fd 2
+if ne r neg long 9
+ret 7
+end
+r = unlink path 0 len path
+ret int r
+end

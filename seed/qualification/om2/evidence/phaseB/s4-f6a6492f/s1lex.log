@@ -1,0 +1,44 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s1/s1-lexmutants.cases scratch=build/om2-qual/qf6a6492f-s1lex
+IDENTITY omc /tmp/zl/omc-f6a6492f sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+SUBST seed/qualification/om2/candidates/s1/mutants/hex-upper.from seed/qualification/om2/candidates/s1/mutants/hex-upper.to
+  MUTATE exact-once substitution at byte 29417
+COMPILER build/om2-qual/qf6a6492f-s1lex/7.elf sha256=c1236767be1f21251c2bb1c24e92d7289f7f3cce61b9c29765012d4b50f95458 source line=7
+VERDICT ctl-hex-upper-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT hex-upper-s1-d-hexupper FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s1-d-hexupper-plain FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-upper FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-mixed FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-upper-ulong FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s1/mutants/hex-17.from seed/qualification/om2/candidates/s1/mutants/hex-17.to
+  MUTATE exact-once substitution at byte 29285
+COMPILER build/om2-qual/qf6a6492f-s1lex/17.elf sha256=7a00754eac9c3d2e23ed03ce8da6e018ffa70e186b738326d9dc958d2d3179d7 source line=17
+VERDICT ctl-hex-17-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT hex-17-s1-d-longtok PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT hex-17-s2-r6-17small FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-17-s2-r6-17big FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s1/mutants/diag-col0.from seed/qualification/om2/candidates/s1/mutants/diag-col0.to
+  MUTATE exact-once substitution at byte 10044
+COMPILER build/om2-qual/qf6a6492f-s1lex/25.elf sha256=2ec63b69d4423178e110216f7264dd18e78af8d9d712539c7c22d77e507c3a71 source line=25
+VERDICT ctl-diag-col0-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT diag-col0-s1-d-left FAIL compile exit=5 expected=5 stdout=match stderr differs at byte 61
+VERDICT diag-col0-s1-d-eof-left FAIL compile exit=5 expected=5 stdout=match stderr differs at byte 61
+VERDICT diag-col0-s1-d-hexrange FAIL compile exit=8 expected=8 stdout=match stderr differs at byte 60
+VERDICT diag-col0-s1-d-unknown-fn FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 62
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s1/mutants/fmt-note.from seed/qualification/om2/candidates/s1/mutants/fmt-note.to
+  MUTATE exact-once substitution at byte 27871
+COMPILER build/om2-qual/qf6a6492f-s1lex/34.elf sha256=9fb925d05fa4932c05356e4d0e5e3ed22d641ad291af5ebfcc0b9c5fb4f06e10 source line=34
+VERDICT ctl-fmt-note-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fmt-note-s2-fmt-x1 FAIL compile exit=0 expected=0 stdout differs at byte 46 stderr=match
+VERDICT fmt-note-s2-fmt-x3 FAIL compile exit=0 expected=0 stdout differs at byte 135 stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+SUBST seed/qualification/om2/candidates/s1/mutants/fmt-text.from seed/qualification/om2/candidates/s1/mutants/fmt-text.to
+  MUTATE exact-once substitution at byte 28226
+COMPILER build/om2-qual/qf6a6492f-s1lex/41.elf sha256=a26725225bed08bc0572ed924b42674e80972e59affdb45c0f4bd4efa0f84e5c source line=41
+VERDICT ctl-fmt-text-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fmt-text-s2-fmt-x1 FAIL compile exit=0 expected=0 stdout differs at byte 239 stderr=match
+VERDICT fmt-text-s2-fmt-x5 FAIL compile exit=0 expected=0 stdout differs at byte 143 stderr=match
+COMPILER /tmp/zl/omc-f6a6492f
+OM2GATE FAIL cases=21 pass=6 fail=15 invalid=0 not_run=0

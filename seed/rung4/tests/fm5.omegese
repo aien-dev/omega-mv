@@ -1,0 +1,8 @@
+fn sq a ulong to ulong
+ret mul a a
+end
+fn hyp a ulong b ulong to ulong
+x = add sq a sq b
+y = sq x
+ret sub y sq sq a
+end

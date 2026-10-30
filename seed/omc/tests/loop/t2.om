@@ -1,0 +1,8 @@
+note a trap inside if exits 107; the path after the if stays live through the other branch
+fn main to int
+x = ulong 1
+if eq x 1
+trap 7
+end
+ret 0
+end

@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: Apache-2.0
+# Rotate-lowering mutants of candidate S1 (aien-dev/om2/compiler-s1 @ a5927895, omc 31342447...f049f).
+# Run with OMC = the S1 omc born from that commit; first copy that commit's seed/omc/omc.om to
+# build/om2-qual/cand-s1/omc.om (sha256 recorded in candidates/s1/RESULTS.txt). Each block: subst into a scratch
+# copy, cc (built by the S1 omc), a control (OM-1 SHA abc and a rotate-free OM-2 run must still
+# pass), the kill rows of sec/s3s4/mutant-kills.cases, cc pinned. The first block rebuilds the
+# unmutated source: its printed sha256 must equal 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f.
+cc build/om2-qual/cand-s1/omc.om
+ctl-s1-rebuilt-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+correct-rot-values run seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+cc pinned
+# --- mutant rot-imm-plus1
+# --- mutant rot-imm-plus1
+subst seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.from seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-rot-imm-plus1-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+rot-imm-plus1-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+cc pinned
+# --- mutant rot-imm-wminusn
+subst seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.from seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-rot-imm-wminusn-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+rot-imm-wminusn-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+cc pinned
+# --- mutant rol-imm-as-ror
+subst seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-rol-imm-as-ror-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+rol-imm-as-ror-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+cc pinned
+# --- mutant rol-reg-as-ror
+subst seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-rol-reg-as-ror-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+rol-reg-as-ror-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+cc pinned
+# --- mutant rot-nocheck
+subst seed/qualification/om2/candidates/s1/mutants/rot-nocheck.from seed/qualification/om2/candidates/s1/mutants/rot-nocheck.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-rot-nocheck-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+rot-nocheck-kill-rot-trap-A kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-A.out - 0
+rot-nocheck-kill-rot-trap-B kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-B.out - 0
+rot-nocheck-kill-rot-trap-C kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-C.out - 0
+rot-nocheck-kill-rot-trap-D kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-D.out - 0
+rot-nocheck-kill-rot-trap-E kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-E.out - 0
+rot-nocheck-kill-rot-trap-F kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-F.out - 0
+rot-nocheck-kill-rot-trap-G kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-G.out - 0
+rot-nocheck-kill-rot-trap-H kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-H.out - 0
+rot-nocheck-kill-rot-trap-I kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-I.out - 0
+rot-nocheck-kill-rot-trap-J kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:74:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-J.out - 0
+rot-nocheck-kill-rot-trap-K kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:75:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-K.out - 0
+rot-nocheck-kill-rot-trap-L kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:76:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-L.out - 0
+rot-nocheck-kill-rot-trap-M kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:77:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-M.out - 0
+rot-nocheck-kill-rot-trap-N kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:78:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-N.out - 0
+rot-nocheck-kill-rot-trap-O kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:79:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-O.out - 0
+cc pinned

@@ -1,0 +1,156 @@
+; vecadd.s2 -- the chip-proven GB10 vector add (out[i] = a[i] + b[i], 32-bit), written by hand in asm2's
+; language with the names of sm121.tbl. Four lines per GPU instruction (its four 32-bit words).
+; The referee is src/omega_blackwell_encoder.c VECADD_INSTRUCTIONS (the words the existing launcher runs);
+; gate6.sh requires asm2's bytes to equal omega_blackwell_encode_vecadd's bytes.
+; Launcher contract (src/omega_blackwell_engine.c, VECTOR_1D): c[0x0][0x358] memory descriptor,
+; 0x360 block size, 0x37c stack top, 0x380 a, 0x388 b, 0x390 out, 0x398 n.
+; LDC R1, c[0x0][0x37c]                 (offset 0x37c / 4 = 223)
+  ldc.0 1
+  ldc.1 223
+  ldc.2
+  ldc.3
+; S2R R9, SR_CTAID.X                    (special register 0x25)
+  s2r.0 9
+  s2r.1
+  s2r.2 0x25
+  s2r.3
+; LDCU UR4, c[0x0][0x360]               (0x360 / 8 = 108)
+  ldcu.0 4
+  ldcu.1 108
+  ldcu.2
+  ldcu.3
+; S2R R0, SR_TID.X                      (special register 0x21)
+  s2r.0 0
+  s2r.1
+  s2r.2 0x21
+  s2r.3
+; LDCU UR5, c[0x0][0x398]               (0x398 / 8 = 115)
+  ldcu.0 5
+  ldcu.1 115
+  ldcu.2
+  ctl 0x000e6200
+; IMAD R9, R9, UR4, R0                  i = block * blocksize + thread
+  imad.u.0 9 9
+  imad.u.1 4
+  imad.u.2 0
+  imad.u.3
+; ISETP.GE.U32.AND P0, PT, R9, UR5, PT
+  isetp.ge.u.0 0 9
+  isetp.ge.u.1 5
+  isetp.ge.u.2
+  isetp.ge.u.3
+; @P0 EXIT                              threads past n stop
+  exit.p0.0
+  z.1
+  exit.2
+  exit.3
+; LDC.64 R2, c[0x0][0x380]              a (0x380 / 4 = 224)
+  ldc.64.0 2
+  ldc.64.1 224
+  ldc.64.2
+  ldc.64.3
+; LDCU.64 UR4, c[0x0][0x358]            memory descriptor (0x358 / 8 = 107)
+  ldcu.64.0 4
+  ldcu.64.1 107
+  ldcu.64.2
+  ldcu.64.3
+; LDC.64 R4, c[0x0][0x388]              b (226)
+  ldc.64.0 4
+  ldc.64.1 226
+  ldc.64.2
+  ctl 0x000eb000
+; LDC.64 R6, c[0x0][0x390]              out (228)
+  ldc.64.0 6
+  ldc.64.1 228
+  ldc.64.2
+  ctl 0x000ee200
+; IMAD.WIDE.U32 R2, R9, 0x4, R2         &a[i]
+  imad.wide.0 2 9
+  imad.wide.1 4
+  imad.wide.2 2
+  imad.wide.3
+; LDG.E R2, desc[UR4][R2.64]
+  ldg.0 2 2
+  ldg.1 4
+  ldg.2
+  ctl 0x002f2200
+; IMAD.WIDE.U32 R4, R9, 0x4, R4         &b[i]
+  imad.wide.0 4 9
+  imad.wide.1 4
+  imad.wide.2 4
+  ctl 0x004fcc00
+; LDG.E R5, desc[UR4][R4.64]
+  ldg.0 5 4
+  ldg.1 4
+  ldg.2
+  ldg.3
+; IMAD.WIDE.U32 R6, R9, 0x4, R6         &out[i]
+  imad.wide.0 6 9
+  imad.wide.1 4
+  imad.wide.2 6
+  ctl 0x008fe200
+; IADD3 R9, PT, PT, R2, R5, RZ          a + b
+  iadd3.0 9 2
+  r.1 5
+  iadd3.2
+  iadd3.3
+; STG.E desc[UR4][R6.64], R9            out[i] = a + b
+  stg.0 6
+  stg.1 9 0
+  stg.2 4
+  stg.3
+; EXIT
+  exit.0
+  z.1
+  exit.2
+  exit.3
+; BRA to itself (never reached; stops a runaway warp): distance 0, so d = -1: low bits 63, rest -1
+  bra.0 7 63
+  bra.1 -1
+  bra.back.2
+  bra.self.3
+; padding to 32 instructions with NOP (11 of them)
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3

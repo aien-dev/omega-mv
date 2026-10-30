@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* gpu_gpr_boundary_test: host-only audit of the declared-register rule (OWN-30B, 2026-10-13).
  * Rule (omega_blackwell_codegen.h): declared = peak + 2 rounded up to a multiple of 8. A fp8 grouped GEMM kernel with
  * peak 103 declared 104 (the old peak + 1 rule) hung the chip; the same program declared 112 ran.
@@ -45,7 +61,7 @@ int main(void) {
     /* every buildable fp8 GEMV variant */
     { unsigned bad = 0, n = 0;
       for (unsigned k = 256; k <= 8192; k += 256) for (unsigned lb = 8; lb <= 16; lb += 8) for (unsigned rows = 1; rows <= 8; rows *= 2) for (unsigned w = 1; w <= 32; w *= 2) for (unsigned dp = 0; dp <= 8; dp += dp ? dp : 1) {
-          OmegaFp8GemvSpec s = { k, lb, rows, w, dp, 0 }; uint32_t peak = 0, decl = 0;
+          OmegaFp8GemvSpec s = { .k = k, .lane_bytes = lb, .rows = rows, .warps = w, .depth = dp, .mutant = 0 }; uint32_t peak = 0, decl = 0;
           if (omega_fp8_gemv_prog_stats(&s, NULL, &peak) != 0) continue;
           n++; (void)omega_gpu_fp8_kernel_fits(&s, &decl);
           if (!omega_bw_gpr_declared_ok(decl, peak) && decl != 0) bad++;
@@ -57,11 +73,11 @@ int main(void) {
         CHECK(omega_bw_gpr_declared_ok(decl, peak), "bf16 gemv k%u: peak %u declared %u", ks[i], peak, decl); } }
     /* fp8 grouped GEMM (all shapes we launch) */
     { unsigned ks[] = { 2048, 768, 4096 }, mts[] = { 4, 8 }; for (unsigned i = 0; i < 3; i++) for (unsigned j = 0; j < 2; j++) {
-        OmegaFp8GemmSpec s = { ks[i], ks[i] % 512 ? 8u : 16u, mts[j], 16, 0 }; uint32_t peak = 0, decl = 0;
+        OmegaFp8GemmSpec s = { ks[i], ks[i] % 512 ? 8u : 16u, mts[j], 16, 0, 0 }; uint32_t peak = 0, decl = 0;
         CHECK(omega_fp8gemm_prog_stats(&s, NULL, &peak) == 0, "gemm k%u mt%u builds", ks[i], mts[j]); (void)omega_gpu_fp8gemm_kernel_fits(&s, &decl);
         CHECK(omega_bw_gpr_declared_ok(decl, peak), "gemm k%u mt%u: peak %u declared %u", ks[i], mts[j], peak, decl); } }
     /* router and decode attention: the launcher uses omega_bw_gpr_declared(peak) (static), so check the helper on the real peak */
-    { OmegaRouterSpec s = { OMEGA_GPU_ROUTER_WARPS, OMEGA_GPU_ROUTER_DEPTH, 0 }; uint32_t peak = 0;
+    { OmegaRouterSpec s = { .warps = OMEGA_GPU_ROUTER_WARPS, .depth = OMEGA_GPU_ROUTER_DEPTH }; uint32_t peak = 0;
       CHECK(omega_router_prog_stats(&s, NULL, &peak) == 0 && omega_bw_gpr_declared_ok(omega_bw_gpr_declared(peak), peak), "router peak %u", peak); printf("router peak %u -> declared %u\n", peak, omega_bw_gpr_declared(peak)); }
     { OmegaDecodeAttnSpec s = { OMEGA_GPU_DATTN_DEPTH, 0 }; uint32_t peak = 0;
       CHECK(omega_decode_attn_prog_stats(&s, NULL, &peak) == 0 && omega_bw_gpr_declared_ok(omega_bw_gpr_declared(peak), peak), "decode attn peak %u", peak); printf("decode attn peak %u -> declared %u\n", peak, omega_bw_gpr_declared(peak)); }
