@@ -1,0 +1,3 @@
+fn absdiff_i32 a int b int to ulong
+ret ulong sub a b
+end
