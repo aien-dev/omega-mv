@@ -23,7 +23,7 @@ if [ "$(uname -m)" = aarch64 ]; then
 else
   sha=tests/dagsim/sha256_host.c
 fi
-$CC $cflags -o "$tmp/unit" tests/dagsim/dagsim_unit.c "$tmp/dagsim.o" "$tmp/rx_costmodel.o" "$sha" -lm
+$CC $cflags -o "$tmp/unit" tests/dagsim/dagsim_unit.c "$tmp/dagsim.o" "$tmp/rx_costmodel.o" "$sha" -Wl,--wrap=rx_cm_predict -lm
 set +e
 "$tmp/unit" > "$tmp/out" 2>&1
 rc=$?

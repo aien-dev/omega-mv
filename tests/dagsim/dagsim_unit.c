@@ -26,6 +26,29 @@ static int g_checks, g_fail;
     } while (0)
 #define NEAR(a, b, tol) (fabs((a) - (b)) <= (tol))
 
+/* The real predict never sets known on a refusal. These cases do, so a caller
+ * that only looks at p.known will certify a time. 0 calls the real function.
+ * 1: RX_CM_ERR_UNSUPPORTED with known set and refused clear.
+ * 2: RX_CM_OK with refused set and known set. */
+static int g_predict_fault;
+
+extern int __real_rx_cm_predict(const RxCostModel *m, const RxCmFeatures *f,
+                                uint32_t arm, RxCmPrediction *out);
+
+int __wrap_rx_cm_predict(const RxCostModel *m, const RxCmFeatures *f,
+                         uint32_t arm, RxCmPrediction *out) {
+    if (g_predict_fault == 0) return __real_rx_cm_predict(m, f, arm, out);
+    memset(out, 0, sizeof *out);
+    out->known = 1;
+    out->n = 32;
+    out->mean_log2_ps = 20.0;
+    out->sd_log2 = 0.0;
+    out->dof = 1.0;
+    if (g_predict_fault == 1) return RX_CM_ERR_UNSUPPORTED;
+    out->refused = 1;
+    return RX_CM_OK;
+}
+
 static const char *HDR =
     "oev version=1\n"
     "machine id=t soc=t cores=4 mem_bytes=1000 prov=specified src=test\n"
@@ -405,6 +428,42 @@ static void test_costmodel_reuse(void) {
     CHECK(rc == DS_REFUSED_UNKNOWN, "unobserved arm refuses, got %s", ds_status_name(rc));
 }
 
+/* #934: an unsupported id is refused, and that refusal is not a known cell.
+ * The two fault cases set known anyway. They must still refuse. */
+static void test_predict_refusal(void) {
+    RxCostModel cm; rx_cm_init(&cm, 1);
+    RxCmFeatures f; memset(&f, 0, sizeof f);
+    f.op = RX_CM_OPS; f.M = 64; f.N = 16; f.core = 0;
+    RxCmPrediction p;
+    int st = rx_cm_predict(&cm, &f, 0, &p);
+    CHECK(st == RX_CM_ERR_UNSUPPORTED && p.refused && !p.known && p.n == 0,
+          "real predict refuses an unsupported op, st=%d refused=%d known=%d n=%u",
+          st, p.refused, p.known, p.n);
+
+    ds_model m; ds_result r; char text[4096], err[256];
+    snprintf(text, sizeof text, "%s%s", HDR,
+        "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+        "op id=mv kind=matvec engine=cpu M=64 N=16 core=0 arm=0 prov=fitted src=rx_costmodel\n");
+    CHECK(ds_parse_text(text, &m, err, sizeof err) == DS_OK, "parse: %s", err);
+    ds_opts o; memset(&o, 0, sizeof o);
+    o.asof_day = ds_day_from_date("2026-10-20"); o.interval_q = 0.9;
+    o.costmodel = &cm;
+
+    g_predict_fault = 1;
+    int rc = ds_eval(&m, &o, &r);
+    g_predict_fault = 0;
+    CHECK(rc == DS_REFUSED_UNKNOWN && r.makespan_ns == 0.0,
+          "predict_unsupported_despite_known: got %s makespan %.3f (%s)",
+          ds_status_name(rc), r.makespan_ns, r.reason);
+
+    g_predict_fault = 2;
+    rc = ds_eval(&m, &o, &r);
+    g_predict_fault = 0;
+    CHECK(rc == DS_REFUSED_UNKNOWN && r.makespan_ns == 0.0,
+          "predict_refused_despite_known: got %s makespan %.3f (%s)",
+          ds_status_name(rc), r.makespan_ns, r.reason);
+}
+
 static void test_counterfactual(void) {
     ds_model m; ds_result r;
     int rc = eval_text(
@@ -587,6 +646,7 @@ int main(void) {
     test_energy();
     test_parse_and_cycles();
     test_costmodel_reuse();
+    test_predict_refusal();
     test_counterfactual();
     test_minimum_work_diff();
     test_inverted_lifetimes();

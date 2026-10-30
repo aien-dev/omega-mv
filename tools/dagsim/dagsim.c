@@ -396,6 +396,12 @@ static int refuse_msg(ds_result *r, int status, const char *msg) {
     return status;
 }
 
+/* An unsupported operation and a refused prediction are the same as an
+ * unknown cell: no certificate. known alone is not enough. */
+static int predict_unusable(int st, const RxCmPrediction *p) {
+    return st == RX_CM_ERR_UNSUPPORTED || p->refused || !p->known || p->n == 0; /* PREDICT_REFUSAL_CHECK */
+}
+
 static int resolve(const ds_model *m, const ds_opts *o, ds_num *num, ds_result *r) {
     int any_cal = 0;
     for (int i = 0; i < m->n_res; i++) {
@@ -417,8 +423,9 @@ static int resolve(const ds_model *m, const ds_opts *o, ds_num *num, ds_result *
             f.op = RX_CM_OP_MATVEC; f.M = op->M; f.N = op->N;
             f.state_bytes = ((uint64_t)op->M * op->N + op->M + op->N) * 8u;
             f.cache_bytes = 1u << 20; f.core = op->core; f.eligible = 1u << op->arm; f.current_arm = op->arm;
-            RxCmPrediction p; rx_cm_predict(cm, &f, op->arm, &p);
-            if (!p.known || p.n == 0) return refuse(r, DS_REFUSED_UNKNOWN, "op %s: rx_costmodel has no known cell for this (op, core, pressure) and arm; measure it first%s", op->id, "");
+            RxCmPrediction p;
+            int st = rx_cm_predict(cm, &f, op->arm, &p);
+            if (predict_unusable(st, &p)) return refuse(r, DS_REFUSED_UNKNOWN, "op %s: rx_costmodel has no known cell for this (op, core, pressure) and arm; measure it first%s", op->id, "");
             double q = o->interval_q > 0 && o->interval_q < 1 ? o->interval_q : 0.9;
             double k = rx_cm_t_quantile(q, p.dof);
             double l2 = p.mean_log2_ps + (o->mode < 0 ? k * p.sd_log2 : o->mode > 0 ? -k * p.sd_log2 : 0);
