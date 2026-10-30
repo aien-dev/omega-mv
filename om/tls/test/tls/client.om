@@ -9,15 +9,18 @@ note               handshake on the same connection, EHLO and QUIT inside TLS
 note CONNECTHOST (default HOST) is the name resolved for TCP; HOST is the TLS name (SNI and
 note certificate check), so a local server can be checked against a chosen name.
 note STOREFILE (default, or "-", the system bundle) is a PEM bundle of trust anchors.
-note OPTS (tests) is "REC,HSMS,SPLIT,PAUSEMS": REC > 0 lowers the per-key record limit (tls_reclimit),
+note OPTS (tests) is "REC,HSMS,SPLIT,PAUSEMS,FLAGS": REC > 0 lowers the per-key record limit (tls_reclimit),
 note HSMS > 0 sets the whole-handshake budget in ms (tls_hslimit), SPLIT = 1 sends the GET request
 note one byte per record, PAUSEMS > 0 sleeps that long after tls_close before exiting (the stack
 note residue check reads the process then). No deadline is set by the client: the library's
-note handshake budget applies.
+note handshake budget applies. FLAGS is a bit set: 1 = approved-only mode (tls_init flag 4; the
+note APPROVED option of audit/tls-fips-approved), 2 = no x25519 key share in ClientHello1 (tls_init
+note flag 2), so the server must ask for it with a HelloRetryRequest; 4 = mode get also checks that
+note a zero-length tls_read is refused without ending the connection.
 note Exit 0 on success; on a TLS failure exit 10 + code and print "TLSERR <name> detail <n>".
 note Exit 2 for a usage error, 3 for a DNS/connect failure.
 
-text cusage "usage: client HOST PORT get|smtp|hs|tsmtp [CONNECTHOST [STOREFILE [PATH [REC,HSMS,SPLIT,PAUSEMS]]]]\n"
+text cusage "usage: client HOST PORT get|smtp|hs|tsmtp [CONNECTHOST [STOREFILE [PATH [REC,HSMS,SPLIT,PAUSEMS,FLAGS]]]]\n"
 text cterr "TLSERR "
 text cdet " detail "
 text cnl "\n"
@@ -30,6 +33,7 @@ text cquit "QUIT\n"
 text cstls "STARTTLS\n"
 text cslash "/"
 text cnf "CLOSE_NOT_FAILED "
+text czr "ZERO_READ_NOT_REFUSED\n"
 
 fn cl_arg i ulong arg edit uchar * to ulong
 n = argread i arg 0 len arg
@@ -288,7 +292,7 @@ end
 ret cl_drain cs io
 end
 
-note OPTS "REC,HSMS,SPLIT,PAUSEMS" from w[1536..1536+n): v[7..10]; 1 on a bad option
+note OPTS "REC,HSMS,SPLIT,PAUSEMS,FLAGS" from w[1536..1536+n): v[7..11]; 1 on a bad option
 fn cl_opts w view uchar * n ulong v edit ulong * to ulong
 k = ulong 7
 x = ulong 0
@@ -298,7 +302,7 @@ if eq ch 44
 put v k x
 k = add k 1
 x = 0
-if gt k 10
+if gt k 11
 ret 1
 end
 continue
@@ -378,9 +382,12 @@ end
 
 note TLS name, test options and request; v[6] = request length; 0 or a TLS code
 fn cl_prep cs edit uchar * w edit uchar * v edit ulong * to ulong
-fl = ulong 0
+fl = and get v 11 2
 if eq get v 4 103
-fl = 1
+fl = or fl 1
+end
+if ne and get v 11 1 0
+fl = or fl 4
 end
 e = tls_init cs part w 0 get v 0 fl
 if and eq e 0 ne get v 7 0
@@ -390,7 +397,7 @@ if and eq e 0 ne get v 8 0
 e = tls_hslimit cs mul get v 8 1000000
 end
 put v 6 0
-if eq fl 1
+if eq and fl 1 1
 put v 6 cl_req w get v 0 get v 2
 end
 ret e
@@ -420,12 +427,27 @@ end
 if eq e 0
 e = tls_connect cs st int fd
 end
+if and eq e 0 ne and get v 11 4 0
+e = cl_zread cs
+end
 md = get v 4
 if ne get v 9 0
 md = or md 128
 end
 md = add md shl get v 10 16
 ret cl_go cs int fd part w 8192 get v 6 add md shl e 8
+end
+
+note a zero-length tls_read must be -TLS_ERR_ARGUMENT (never 0, which means close_notify) and must
+note leave the connection usable; 0 or TLS_ERR_ARGUMENT after printing ZERO_READ_NOT_REFUSED
+fn cl_zread cs edit uchar * to ulong
+z = new uchar 1 0
+r = tls_read cs part z 0 0
+if eq r neg long 1
+ret 0
+end
+w = write 2 czr 0 len czr
+ret 1
 end
 
 note mode in bits 0..7, the handshake result above. After a failure the connection must stay
@@ -457,7 +479,7 @@ ret 0
 end
 
 fn main to int
-cs = new uchar 119296 0
+cs = new uchar TLCSZ 0
 st = new uchar 262144 0
 w = new uchar 16384 0
 ret cl_main cs st w

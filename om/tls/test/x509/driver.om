@@ -16,6 +16,8 @@ note   F NAME COUNT NOW HOST STORE CERT...   COUNT deterministic mutations of th
 note                                          each must return (any code); counts rejections
 note   P NAME EXPECT CERT                    x509_parse of the single DER file CERT (any size up to
 note                                          the 262144-byte list buffer; no chain, no policy)
+note   D NAME EXPECT ANCHOR NOTBEFORE        chain_dist (Mozilla distrust, M1) of the DER anchor
+note                                          ANCHOR for a leaf notBefore NOTBEFORE (unix seconds)
 note EXPECT for C/V/H is a code name (X509_OK, X509_ERR_...). Prints "MISMATCH line L NAME got G want
 note W" per failure, "fuzz NAME n=N rejected=R" per F record, then "x509 driver: C checks, F failed".
 note Exit 0 when F is 0 and C > 0, 1 otherwise, 2 when input cannot be read.
@@ -43,6 +45,9 @@ text DRSYS "SYS"
 text DRBAD "BAD"
 text DRERR "ERR"
 text DRIO "x509 driver: cannot read input\n"
+text DRRES "RESULT "
+text DRSTF "STORE\n"
+text DRLSF "LIST\n"
 
 note ds: 0 input length, 1 cursor, 2 line number, 3 checks, 4 failures, 5 store bytes (0 = none),
 note 6 name length, 7 store name length
@@ -233,7 +238,7 @@ end
 note certificate_list from the remaining DER file tokens of the line into cl; its length (0 bad)
 fn drv_list cl edit uchar * tk edit uchar * to ulong
 p = ulong 0
-while true bound 64
+while true bound 4096
 n = drv_tok tk
 if eq n 0
 break
@@ -293,6 +298,40 @@ c = drv_crun cl st hq
 drv_code c view part w 0 wn
 end
 
+note R record (x509-limbo): R NAME NOW HOST STORE CERT... runs x509_chain_verify like C and prints
+note "RESULT NAME CODE" (CODE the x509_errname, STORE when the store does not load, LIST when a
+note certificate file is missing); the expectation is judged outside (test/x509/limbo.py)
+fn drv_r st edit uchar * cl edit uchar * tk edit uchar * to void
+hq = new uchar 300 0
+drv_name
+hn = drv_now hq tk
+n = drv_tok tk
+put ds 3 add get ds 3 1
+r = write 1 DRRES 0 len DRRES
+r = write 1 nm 0 get ds 6
+r = write 1 DRSP 0 1
+if ne drv_store st view part tk 0 n 0
+r = write 1 DRSTF 0 len DRSTF
+ret
+end
+k = drv_list cl tk
+if eq k 0
+r = write 1 DRLSF 0 len DRLSF
+ret
+end
+put ds 11 hn
+put ds 12 k
+drv_rout drv_crun cl st hq
+end
+
+note R record result: the code name and a line end
+fn drv_rout c ulong to void
+b = new uchar 64 0
+m = x509_errname c b
+r = write 1 b 0 m
+r = write 1 DRNL 0 1
+end
+
 note P record
 fn drv_p cl edit uchar * tk edit uchar * to void
 r = new ulong 32 0
@@ -307,6 +346,25 @@ ret
 end
 c = x509_parse part cl 0 ulong k edit r
 drv_code c view part w 0 wn
+end
+
+note D record
+fn drv_d cl edit uchar * tk edit uchar * to void
+w = new ulong X5WSZ 0
+drv_name
+e = new uchar 64 0
+en = drv_tok edit e
+n = drv_tok tk
+k = drv_file view part tk 0 n cl
+if lt k 1
+drv_code 98 view part e 0 en
+ret
+end
+n = drv_tok tk
+t = drv_num view part tk 0 n
+put w X5WLNB add t mul x509_days 1970 1 1 86400
+c = chain_dist view part cl 0 ulong k view w
+drv_code c view part e 0 en
 end
 
 note V record
@@ -572,6 +630,9 @@ end
 if eq c 86
 drv_v cl ms tk
 end
+if eq c 82
+drv_r st cl tk
+end
 if eq c 77
 drv_m tk hb
 end
@@ -592,6 +653,9 @@ drv_f st cl tk
 end
 if eq c 80
 drv_p cl tk
+end
+if eq c 68
+drv_d cl tk
 end
 if ne c 10
 drv_eol
