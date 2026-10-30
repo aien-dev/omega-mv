@@ -19,10 +19,12 @@
  * Written from docs/osc/OSC-{1,2,3}-DESIGN.md, OSC-EXT-BYTES-DESIGN.md and the osc_ir.h comments
  * only. Rules, in the order applied:
  *   unit tables  -> per-function types -> CFG shape -> per-instruction typing -> calls ->
- *   handle disciplines -> definite assignment -> loop bounds (termination) -> ownership flow.
- * The ownership flow is a may-analysis that rejects only DEFINITE errors (a state that holds on
- * every path), so it cannot reject a correct program through imprecision; drop-flag guarded
- * releases (OSC-3 item 3) are therefore never refused by it. */
+ *   handle disciplines -> definite assignment -> loop bounds (termination) -> ownership flow ->
+ *   mutable-borrow exclusivity.
+ * The ownership flow is a may-analysis. Uses after a release or move are refused when they hold on
+ * every path; an object still held at a return or at an overwrite is refused when it is held on
+ * SOME non-trapping path (omega#465). Drop-flag guarded releases (OSC-3 item 3) are tracked per
+ * value of their flag, so the code oscc emits for them is not refused through that imprecision. */
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -148,6 +150,8 @@ static int btest(const Bits *b, unsigned i) { return (int)((b->w[i >> 6] >> (i &
 static void ball(Bits *b) { memset(b, 0xff, sizeof *b); }
 static void band(Bits *d, const Bits *s) { for (int i = 0; i < BSW; i++) d->w[i] &= s->w[i]; }
 static int beq(const Bits *a, const Bits *b) { return memcmp(a, b, sizeof *a) == 0; }
+static void bor(Bits *d, const Bits *s) { for (int i = 0; i < BSW; i++) d->w[i] |= s->w[i]; }
+static void bclr(Bits *b, unsigned i) { b->w[i >> 6] &= ~(1ull << (i & 63)); }
 
 typedef struct {
     const C2Unit *u;
@@ -672,12 +676,24 @@ static int check_loops(Fx *x)
 
 /* May-states of a reference-owner register: bit 0 not yet holding, bit 1 live, bit 2 dead
  * (released, moved or its arena destroyed). Handles: bit 0 not opened, bit 1 open, bit 2 closed.
- * Only a state that excludes "live" on every path is an error. */
+ * A use, release, move or close is an error only when it excludes "live" on every path; holding an
+ * object at a return, or when the register is written again, is an error when it is possible on
+ * some path (omega#465): every non-trapping path must release, move or close what it holds.
+ *
+ * Drop flags (OSC-3 item 3): a release guarded by a bool register (CBR c -> block starting with
+ * RELEASE r) is correlated with c. The state of such an owner has two components, bits 0-2 for the
+ * paths on which c is 0 and bits 3-5 for those on which c is 1; CONST k into c gathers every path
+ * into component k, any other write of c spreads them over both, and each CBR edge on c keeps only
+ * its own component (an edge that leaves an owner no state is taken by no path and propagates
+ * nothing). An owner without a flag keeps the same state in both components. */
 enum { ST_U = 1, ST_L = 2, ST_D = 4 };
+#define ANY(s) ((uint8_t)(((s) | ((s) >> 3)) & 7))
 
 typedef struct {
     int arena_obj[C2_MAX_VREGS];   /* defined by AALLOC: its handle register, else -1 */
     int origin[C2_MAX_VREGS];      /* borrow -> root owner register; -1 none/external; -2 mixed */
+    int flag_of[C2_MAX_VREGS];     /* owner -> bool register guarding its release, else -1 */
+    uint8_t isflag[C2_MAX_VREGS];
     uint8_t in[C2_MAX_BLOCKS][C2_MAX_VREGS];
 } Own;
 
@@ -687,14 +703,17 @@ static int tracked(const Fx *x, int r)
     return (t->s == S_REF && t->kind == K_OWN);
 }
 
+/* state v in every component that some path occupies */
+static uint8_t st_set(uint8_t s, uint8_t v) { return (uint8_t)(((s & 7) ? v : 0) | ((s & 070) ? v << 3 : 0)); }
+
 #define OF(rule, ...) do { if (!x->quiet) return fail(x->v, rule, x->fi, (int)i, __VA_ARGS__); } while (0)
 
 static int own_use(const Fx *x, const Own *o, const uint8_t *st, uint32_t i, int r)
 {
-    if (tracked(x, r) && !(st[r] & ST_L)) /* GUARD:own-use-dead */
+    if (tracked(x, r) && !(ANY(st[r]) & ST_L)) /* GUARD:own-use-dead */
         OF("C2-OWN-USE-DEAD", "owner v%d used after it was released or moved (every path)", r);
     int g = o->origin[r];
-    if (g >= 0 && !(st[g] & ST_L)) /* GUARD:borrow-outlives */
+    if (g >= 0 && !(ANY(st[g]) & ST_L)) /* GUARD:borrow-outlives */
         OF("C2-BORROW-OUTLIVES-OWNER", "borrow v%d used after its owner v%d is gone (every path)", r, g);
     return 0;
 }
@@ -702,16 +721,21 @@ static int own_use(const Fx *x, const Own *o, const uint8_t *st, uint32_t i, int
 static int own_kill(const Fx *x, uint8_t *st, uint32_t i, int r, const char *what)
 {
     (void)what;
-    if (!(st[r] & ST_L)) OF("C2-OWN-USE-DEAD", "owner v%d moved after it was released or moved (every path)", r); /* GUARD:own-move-dead */
-    st[r] = ST_D;
+    if (!(ANY(st[r]) & ST_L)) OF("C2-OWN-USE-DEAD", "owner v%d moved after it was released or moved (every path)", r); /* GUARD:own-move-dead */
+    st[r] = st_set(st[r], ST_D);
     return 0;
 }
 
-static int own_birth(const Fx *x, uint8_t *st, uint32_t i, int r)
+/* An arena object's memory goes back with its arena (ADESTROY), so rebinding one that may still be
+ * live loses nothing; it keeps the every-path rule, as at RET where arena objects are not judged. */
+static int own_birth(const Fx *x, const Own *o, uint8_t *st, uint32_t i, int r)
 {
-    if (st[r] == ST_L) /* GUARD:own-overwrite */
-        OF("C2-OWN-LEAK", "owner v%d overwritten while it still holds an object (every path)", r);
-    st[r] = ST_L;
+    uint8_t s = ANY(st[r]);
+    int heap = o->arena_obj[r] < 0; /* arena objects keep the every-path rule: ADESTROY reclaims them */
+    if ((s & ST_L) && heap) s = ST_L; /* GUARD:overwrite-some-path */
+    if (s == ST_L) /* GUARD:own-overwrite */
+        OF("C2-OWN-LEAK", "owner v%d overwritten while it may still hold an object (on some path)", r);
+    st[r] = st_set(st[r], ST_L);
     return 0;
 }
 
@@ -721,14 +745,14 @@ static int own_step(const Fx *x, const Own *o, uint8_t *st, uint32_t i)
     const C2Insn *in = &f->in[i];
     switch (in->op) {
     case C2_ALLOC:
-        return own_birth(x, st, i, in->dst);
+        return own_birth(x, o, st, i, in->dst);
     case C2_AALLOC:
-        if (!(st[in->b] & ST_L)) OF("C2-ARENA-DEAD", "allocation from arena v%d after it was destroyed (every path)", in->b); /* GUARD:arena-alloc-dead */
-        return own_birth(x, st, i, in->dst);
+        if (!(ANY(st[in->b]) & ST_L)) OF("C2-ARENA-DEAD", "allocation from arena v%d after it was destroyed (every path)", in->b); /* GUARD:arena-alloc-dead */
+        return own_birth(x, o, st, i, in->dst);
     case C2_RELEASE:
         if (o->arena_obj[in->a] >= 0) OF("C2-OWN-RELEASE-ARENA", "release of arena object v%d", in->a); /* GUARD:release-arena */
-        if (!(st[in->a] & ST_L)) OF("C2-OWN-DOUBLE-RELEASE", "v%d released when it holds nothing (every path)", in->a); /* GUARD:double-release */
-        st[in->a] = ST_D;
+        if (!(ANY(st[in->a]) & ST_L)) OF("C2-OWN-DOUBLE-RELEASE", "v%d released when it holds nothing (every path)", in->a); /* GUARD:double-release */
+        st[in->a] = st_set(st[in->a], ST_D);
         return 0;
     case C2_MOV:
         if (tracked(x, in->a)) {
@@ -736,7 +760,7 @@ static int own_step(const Fx *x, const Own *o, uint8_t *st, uint32_t i)
                 if (o->arena_obj[in->a] >= 0 || o->arena_obj[in->dst] >= 0)
                     OF("C2-OWN-ARENA-MOVE", "move involving arena object"); /* GUARD:arena-move */
                 if (own_kill(x, st, i, in->a, "move")) return -1;
-                return own_birth(x, st, i, in->dst);
+                return own_birth(x, o, st, i, in->dst);
             }
             return own_use(x, o, st, i, in->a);
         }
@@ -757,30 +781,50 @@ static int own_step(const Fx *x, const Own *o, uint8_t *st, uint32_t i)
         return 0;
     }
     case C2_AOPEN: case C2_POPEN:
-        if (st[in->dst] & ST_L) OF("C2-HANDLE-REOPEN", "handle v%d reopened while open", in->dst);
-        st[in->dst] = ST_L;
+        if (ANY(st[in->dst]) & ST_L) OF("C2-HANDLE-REOPEN", "handle v%d reopened while open", in->dst);
+        st[in->dst] = st_set(st[in->dst], ST_L);
         return 0;
     case C2_ADESTROY: case C2_PCLOSE:
-        if (!(st[in->a] & ST_L)) OF("C2-HANDLE-DOUBLE-CLOSE", "handle v%d closed when not open (every path)", in->a); /* GUARD:double-close */
-        st[in->a] = ST_D;
+        if (!(ANY(st[in->a]) & ST_L)) OF("C2-HANDLE-DOUBLE-CLOSE", "handle v%d closed when not open (every path)", in->a); /* GUARD:double-close */
+        st[in->a] = st_set(st[in->a], ST_D);
         if (in->op == C2_ADESTROY)
-            for (int r = 0; r < f->nvregs; r++)
-                if (o->arena_obj[r] == in->a && st[r] != ST_U) st[r] = ST_D;
+            for (int r = 0; r < f->nvregs; r++) {
+                if (o->arena_obj[r] != in->a) continue;
+                uint8_t lo = st[r] & 7, hi = (st[r] >> 3) & 7;
+                if (lo && lo != ST_U) lo = ST_D;
+                if (hi && hi != ST_U) hi = ST_D;
+                st[r] = (uint8_t)(lo | hi << 3);
+            }
         return 0;
     case C2_HALLOC: case C2_HGEN: case C2_HFREE: case C2_HLOAD: case C2_HSTORE: {
         int h = in->op == C2_HALLOC ? in->b : in->a;
-        if (!(st[h] & ST_L)) OF("C2-HANDLE-DEAD", "pool v%d used when not open (every path)", h); /* GUARD:pool-dead */
+        if (!(ANY(st[h]) & ST_L)) OF("C2-HANDLE-DEAD", "pool v%d used when not open (every path)", h); /* GUARD:pool-dead */
         return 0;
     }
     case C2_RET:
         for (int r = 0; r < f->nvregs; r++) {
             int handle = x->def_insn[r] >= 0 && (f->in[x->def_insn[r]].op == C2_AOPEN || f->in[x->def_insn[r]].op == C2_POPEN);
-            if (st[r] == ST_L && (handle || (tracked(x, r) && o->arena_obj[r] < 0))) /* GUARD:leak */
-                OF(handle ? "C2-HANDLE-LEAK" : "C2-OWN-LEAK", "v%d still %s at return (every path)", r, handle ? "open" : "owns an object");
+            uint8_t s = ANY(st[r]);
+            if (s & ST_L) s = ST_L; /* GUARD:leak-some-path */
+            if (s == ST_L && (handle || (tracked(x, r) && o->arena_obj[r] < 0))) /* GUARD:leak */
+                OF(handle ? "C2-HANDLE-LEAK" : "C2-OWN-LEAK", "v%d may still %s at return (on some path)", r, handle ? "be open" : "own an object");
         }
         return 0;
     default:
         return 0;
+    }
+}
+
+/* a write of a drop flag re-sorts the paths of the owners it guards */
+static void own_flag_def(const Fx *x, const Own *o, uint8_t *st, uint32_t i)
+{
+    const C2Insn *in = &x->f->in[i];
+    int c = defines(in);
+    if (c < 0 || !o->isflag[c]) return;
+    for (int r = 0; r < x->f->nvregs; r++) {
+        if (o->flag_of[r] != c) continue;
+        uint8_t s = ANY(st[r]);
+        st[r] = in->op == C2_CONST ? (uint8_t)(in->imm ? s << 3 : s) : (uint8_t)(s | s << 3);
     }
 }
 
@@ -789,7 +833,7 @@ static int check_ownership(Fx *x)
     const C2Func *f = x->f;
     Own *o = malloc(sizeof *o);
     if (!o) return fail(x->v, "C2-RESOURCE", x->fi, -1, "out of memory");
-    for (int r = 0; r < f->nvregs; r++) { o->arena_obj[r] = -1; o->origin[r] = -1; }
+    for (int r = 0; r < f->nvregs; r++) { o->arena_obj[r] = -1; o->origin[r] = -1; o->flag_of[r] = -1; o->isflag[r] = 0; }
     for (uint32_t i = 0; i < f->ninsns; i++) {
         const C2Insn *in = &f->in[i];
         if (in->op == C2_AALLOC) o->arena_obj[in->dst] = in->b;
@@ -800,6 +844,18 @@ static int check_ownership(Fx *x)
             (in->op == C2_AALLOC && o->arena_obj[in->dst] != in->b)) {
             free(o);
             return fail(x->v, "C2-OWN-ARENA-MOVE", x->fi, (int)i, "register v%d holds both arena and pool objects", in->dst);
+        }
+    }
+    /* drop flags: the condition of a CBR one of whose two targets starts by releasing an owner */
+    for (uint32_t i = 0; i < f->ninsns; i++) {
+        const C2Insn *in = &f->in[i];
+        if (in->op != C2_CBR || in->t == in->f) continue;
+        for (int k = 0; k < 2; k++) {
+            const C2Insn *h = &f->in[f->blk[k ? in->f : in->t].first];
+            if (h->op == C2_RELEASE && tracked(x, h->a) && o->flag_of[h->a] < 0) {
+                o->flag_of[h->a] = in->a;
+                o->isflag[in->a] = 1;
+            }
         }
     }
     /* borrow origins: flow-insensitive, single root owner or unknown */
@@ -825,7 +881,7 @@ static int check_ownership(Fx *x)
     static int live[C2_MAX_BLOCKS];
     memset(o->in, 0, sizeof o->in);
     memset(live, 0, sizeof live);
-    for (int r = 0; r < f->nvregs; r++) o->in[0][r] = (r < f->nparams && tracked(x, r)) ? ST_L : ST_U;
+    for (int r = 0; r < f->nvregs; r++) o->in[0][r] = (r < f->nparams && tracked(x, r)) ? ST_L | ST_L << 3 : ST_U | ST_U << 3;
     live[0] = 1;
     x->quiet = 1;
     changed = 1;
@@ -838,21 +894,29 @@ static int check_ownership(Fx *x)
             int trapped = 0;
             for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count && !trapped; i++) {
                 if (f->in[i].op == C2_TRAP) trapped = 1;
-                else (void)own_step(x, o, st, i);
+                else { (void)own_step(x, o, st, i); own_flag_def(x, o, st, i); }
             }
             if (trapped) continue;
+            const C2Insn *t = &f->in[f->blk[b].first + f->blk[b].count - 1];
+            int c = t->op == C2_CBR && t->t != t->f && o->isflag[t->a] ? t->a : -1;
             for (int k = 0; k < x->nsucc[b]; k++) {
                 int s = x->succ[b][k];
+                uint8_t keep = 077;
+                if (c >= 0) keep = s == t->t ? 070 : 007; /* GUARD:drop-flag-edge */
+                int taken = 1;
+                for (int r = 0; r < f->nvregs && taken; r++)
+                    if (c >= 0 && o->flag_of[r] == c && !(st[r] & keep)) taken = 0;
+                if (!taken) continue;
                 if (!live[s]) { live[s] = 1; changed = 1; }
                 for (int r = 0; r < f->nvregs; r++) {
-                    uint8_t m = o->in[s][r] | st[r];
+                    uint8_t m = o->in[s][r] | (c >= 0 && o->flag_of[r] == c ? st[r] & keep : st[r]);
                     if (m != o->in[s][r]) { o->in[s][r] = m; changed = 1; }
                 }
             }
         }
     }
     x->quiet = 0;
-    /* report the first definite error */
+    /* report the first error */
     for (int b = 0; b < f->nblocks; b++) {
         if (!live[b]) continue;
         uint8_t st[C2_MAX_VREGS];
@@ -860,10 +924,140 @@ static int check_ownership(Fx *x)
         for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count; i++) {
             if (f->in[i].op == C2_TRAP) break;
             if (own_step(x, o, st, i)) { free(o); return -1; }
+            own_flag_def(x, o, st, i);
         }
     }
     free(o);
     return 0;
+}
+
+/* ------------------------------------------------------------------ mutable borrows are exclusive */
+
+/* OSC-1 section 3.1: while a mutable borrow is live, nothing else may reach its object. A mutable
+ * borrow m descends from r when m was bound (MOV) from r, or from a borrow descending from r, and
+ * neither register was written since (forward may-analysis). Reading r -- through a use, a second
+ * borrow, a copy, a call argument or a release -- at an instruction after which such an m is still
+ * live (backward liveness; m not written by that instruction) gives two live paths to one object
+ * and is refused: C2-BORROW-MUT-ALIAS (omega#465). Reading m itself, or a reborrow while its parent
+ * waits, is not such a read. */
+static void live_block(const Fx *x, const Bits *lin, int b, Bits *cur, Bits *after)
+{
+    const C2Func *f = x->f;
+    uint32_t first = f->blk[b].first, end = first + f->blk[b].count;
+    memset(cur, 0, sizeof *cur);
+    for (uint32_t i = first; i < end; i++)
+        if (f->in[i].op == C2_TRAP) end = i; /* a trap ends the path: nothing after it is read */
+    if (end == first + f->blk[b].count)
+        for (int k = 0; k < x->nsucc[b]; k++) bor(cur, &lin[x->succ[b][k]]);
+    for (uint32_t i = end; i-- > first;) {
+        if (after) after[i - first] = *cur;
+        int d = defines(&f->in[i]);
+        if (d >= 0) bclr(cur, (unsigned)d);
+        int16_t us[8];
+        int nu = uses(&f->in[i], us);
+        for (int k = 0; k < nu; k++) bset(cur, (unsigned)us[k]);
+    }
+}
+
+static void alias_def(const Fx *x, const int *mi, int nm, Bits *p, uint32_t i)
+{
+    const C2Insn *in = &x->f->in[i];
+    int d = defines(in);
+    if (d < 0) return;
+    Bits nw;
+    memset(&nw, 0, sizeof nw);
+    if (mi[d] >= 0 && in->op == C2_MOV && is_ref(&x->f->vt[in->a])) {
+        bset(&nw, (unsigned)in->a);
+        if (mi[in->a] >= 0) bor(&nw, &p[mi[in->a]]);
+    }
+    for (int j = 0; j < nm; j++) bclr(&p[j], (unsigned)d);
+    if (mi[d] >= 0) { bclr(&nw, (unsigned)d); p[mi[d]] = nw; }
+}
+
+static int check_mut_alias(Fx *x)
+{
+    const C2Func *f = x->f;
+    int mi[C2_MAX_VREGS], mreg[C2_MAX_VREGS], nm = 0;
+    for (int r = 0; r < f->nvregs; r++) {
+        mi[r] = -1;
+        if (f->vt[r].s == S_REF && f->vt[r].kind == K_MUT) { mi[r] = nm; mreg[nm++] = r; }
+    }
+    if (!nm) return 0;
+    static Bits lin[C2_MAX_BLOCKS];
+    memset(lin, 0, sizeof lin);
+    int changed = 1;
+    while (changed) {
+        changed = 0;
+        for (int b = f->nblocks; b-- > 0;) {
+            if (!x->reach[b]) continue;
+            Bits cur;
+            live_block(x, lin, b, &cur, NULL);
+            if (!beq(&cur, &lin[b])) { lin[b] = cur; changed = 1; }
+        }
+    }
+    Bits *pin = calloc((size_t)f->nblocks * (size_t)nm, sizeof *pin);
+    Bits *p = calloc((size_t)nm, sizeof *p);
+    Bits *after = calloc(f->ninsns, sizeof *after);
+    static int seen[C2_MAX_BLOCKS];
+    int rc = 0;
+    if (!pin || !p || !after) { rc = fail(x->v, "C2-RESOURCE", x->fi, -1, "out of memory"); goto out; }
+    memset(seen, 0, sizeof seen);
+    seen[0] = 1;
+    changed = 1;
+    while (changed) {
+        changed = 0;
+        for (int b = 0; b < f->nblocks; b++) {
+            if (!seen[b]) continue;
+            memcpy(p, &pin[(size_t)b * nm], (size_t)nm * sizeof *p);
+            int trapped = 0;
+            for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count && !trapped; i++) {
+                if (f->in[i].op == C2_TRAP) trapped = 1;
+                else alias_def(x, mi, nm, p, i);
+            }
+            if (trapped) continue;
+            for (int k = 0; k < x->nsucc[b]; k++) {
+                int s = x->succ[b][k];
+                if (!seen[s]) { seen[s] = 1; changed = 1; }
+                for (int j = 0; j < nm; j++) {
+                    Bits m = pin[(size_t)s * nm + j];
+                    bor(&m, &p[j]);
+                    if (!beq(&m, &pin[(size_t)s * nm + j])) { pin[(size_t)s * nm + j] = m; changed = 1; }
+                }
+            }
+        }
+    }
+    for (int b = 0; b < f->nblocks && !rc; b++) {
+        if (!seen[b]) continue;
+        Bits cur;
+        live_block(x, lin, b, &cur, after);
+        memcpy(p, &pin[(size_t)b * nm], (size_t)nm * sizeof *p);
+        for (uint32_t i = f->blk[b].first; i < f->blk[b].first + f->blk[b].count && !rc; i++) {
+            const C2Insn *in = &f->in[i];
+            if (in->op == C2_TRAP) break;
+            int16_t us[8];
+            int nu = uses(in, us), d = defines(in);
+            const Bits *la = &after[i - f->blk[b].first];
+            for (int k = 0; k < nu && !rc; k++) {
+                int r = us[k];
+                if (!is_ref(&f->vt[r])) continue;
+                for (int j = 0; j < nm && !rc; j++) {
+                    int m = mreg[j];
+                    if (m == r || m == d || !btest(la, (unsigned)m)) continue;
+                    int hit = 0;
+                    hit = btest(&p[j], (unsigned)r); /* GUARD:mut-alias */
+                    if (hit)
+                        rc = fail(x->v, "C2-BORROW-MUT-ALIAS", x->fi, (int)i,
+                                  "v%d used while mutable borrow v%d taken from it is still live", r, m);
+                }
+            }
+            alias_def(x, mi, nm, p, i);
+        }
+    }
+out:
+    free(pin);
+    free(p);
+    free(after);
+    return rc;
 }
 
 /* ------------------------------------------------------------------ driver */
@@ -902,6 +1096,7 @@ static int check_func(const C2Unit *u, int fi, C2Verdict *v)
     if (check_defined(x)) goto out;
     if (check_loops(x)) goto out;
     if (check_ownership(x)) goto out;
+    if (check_mut_alias(x)) goto out;
     rc = 0;
 out:
     free(x->blk_of);
