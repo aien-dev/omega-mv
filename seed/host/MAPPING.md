@@ -81,7 +81,9 @@ cannot prevent that kernel behaviour.
 `vfiomap` refuses a size of zero and region flags
 without READ|MMAP; it never requests PROT_WRITE. Host tests use an invalid fd and
 a memfd stand-in; the device path is exercised only in the QEMU bench of
-aien-dev/omega-gpu-driver, not on hardware.
+aien-dev/omega-gpu-driver, not on hardware. Both words are AArch64 only: a
+`target x86linux` program that uses either is refused with error 25, because the
+x86 backend has no VFIO lowering.
 
 Kernel constants/layouts are from Linux asm-generic/unistd.h, mman-common.h and
 linux/mman.h. AArch64 encodings use seed/rung2/table.s2. The device request rule

@@ -33,12 +33,12 @@ cmp -s "$T/chain.pairs" "$T/gen.pairs" || {
     bad "generated keyword packs differ from the committed chain"
 }
 n=$(wc -l < "$T/gen.pairs")
-[ "$n" = 159 ] || bad "compared $n literal pairs, wanted 159"
+[ "$n" = 160 ] || bad "compared $n literal pairs, wanted 160"
 
 grep -q '^ret 133$' seed/omc/omc.om || bad "committed chain lacks readlnk (133)"
 grep -q '^ret 134$' seed/omc/omc.om || bad "committed chain lacks sockopt (134)"
 grep -q 'readlnk:133' seed/omc/genkw.awk || bad "generator lacks readlnk:133"
 grep -q 'sockopt:134' seed/omc/genkw.awk || bad "generator lacks sockopt:134"
 
-printf 'PASS gate18 159 literal packs and both computed entries match the committed chain\n'
+printf 'PASS gate18 160 literal packs and both computed entries match the committed chain\n'
 exit 0

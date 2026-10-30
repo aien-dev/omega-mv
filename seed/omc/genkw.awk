@@ -17,6 +17,6 @@ BEGIN{
   for(k=1;k<=n;k++){ split(a[k],p,":"); printf "if eq w %s\nret %d\nend\n", pack(p[1]), p[2] }
   n=split("vfioctl:178 vfiomap:179", a, " ")
   for(k=1;k<=n;k++){ split(a[k],p,":"); printf "if eq w %s\nret %d\nend\n", pack(p[1]), p[2] }
-  n=split("peercred:220 pollfds:221 sendmsg:222", a, " ")
+  n=split("peercred:220 pollfds:221 sendmsg:222 qty:223", a, " ")
   for(k=1;k<=n;k++){ split(a[k],p,":"); printf "if eq w %s\nret %d\nend\n", pack(p[1]), p[2] }
 }
