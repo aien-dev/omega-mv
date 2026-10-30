@@ -127,6 +127,18 @@ fn arg id ulong to void
 setpath id
 packarg
 end
+note Shift the relative path right by base+1 (from its end), then prefix the cwd and '/'.
+fn absjoin base ulong size ulong to void
+for i ulong get plen 0
+at = sub sub get plen 0 i 1
+put pathbuf add add base 1 at get pathbuf at
+end
+for i ulong base
+put pathbuf i get other i
+end
+put pathbuf base 47
+put plen 0 size
+end
 note Isolated children use the absolute executable path captured before chdir.
 fn abscmd exe ulong to void
 setpath exe
@@ -142,15 +154,7 @@ size = add add base 1 get plen 0
 if gt size len pathbuf
 stop
 end
-for i ulong get plen 0
-at = sub sub get plen 0 i 1
-put pathbuf add add base 1 at get pathbuf at
-end
-for i ulong base
-put pathbuf i get other i
-end
-put pathbuf base 47
-put plen 0 size
+absjoin base size
 put argc 0 0
 put apos 0 2
 packarg

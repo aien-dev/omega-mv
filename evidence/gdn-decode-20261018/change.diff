@@ -1,0 +1,1433 @@
+diff --git a/Makefile b/Makefile
+index 3551fea3..94ed0d8e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -36,6 +36,8 @@ SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
+ SRCS += src/omega_gpu_hostmath.c
+ # OWN-30B cut 8 item 2 (2026-10-13): one-launch MoE router (omega_gpu_router_api.h), new files only
+ SRCS += src/omega_blackwell_codegen_router.c src/omega_gpu_router_api.c
++# Qwen3.8-27B Gated DeltaNet decode step (omega#542, 2026-10-18): one launch per layer (omega_gpu_gdn_api.h), new files only
++SRCS += src/omega_blackwell_codegen_gdn.c src/omega_gpu_gdn_api.c
+ # OWN-30B W-L2 (2026-10-13): decode launch collapse, new files only: command list (N launches, one submit) + glue kernels
+ SRCS += src/omega_gpu_cmdlist.c src/omega_blackwell_codegen_dec.c
+ SRCS += src/omega_gpu_mem_cached.c
+@@ -2498,6 +2500,16 @@ test-gpu-router: $(GPU_ROUTER_TEST)
+ 	./$(GPU_ROUTER_TEST) --host-only
+ 	./$(GPU_ROUTER_TEST) --sim
+ 
++# Qwen3.8-27B Gated DeltaNet decode step (omega#542, 2026-10-18): one launch per layer (omega_gpu_gdn_api.h).
++# test-gpu-gdn is host-only plus the warp simulator over the whole grid; the chip run is ./build/gpu_gdn_test under the GB10 lock.
++.PHONY: test-gpu-gdn
++GPU_GDN_TEST = $(OUT_DIR)/gpu_gdn_test
++$(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h src/omega_gpu_gdn_api.h src/omega_blackwell_codegen_gdn.h $(OUT_DIR)/libomega_gpu.a
++	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
++test-gpu-gdn: $(GPU_GDN_TEST)
++	./$(GPU_GDN_TEST) --host-only
++	./$(GPU_GDN_TEST) --sim
++
+ # OWN-30B (2026-10-13): bf16 streaming GEMV, the lm_head (omega_gpu_bf16_gemv_api.h). test-gpu-bf16-gemv is host-only
+ # (emulation, budgets) plus the warp simulator (bit-identical to the host f32 emulation, mutants 1-3 caught); the chip
+ # gate is tools/run_gpu_bf16_gemv_chip.sh under the GB10 lock.
+diff --git a/src/omega_blackwell_codegen.c b/src/omega_blackwell_codegen.c
+index b09fa1e5..fdf1d4be 100644
+--- a/src/omega_blackwell_codegen.c
++++ b/src/omega_blackwell_codegen.c
+@@ -633,6 +633,14 @@ static int encode_single_insn(const BlackwellIRInsn *insn, const OmegaRegAlloc *
+             w[3] = insn->control ? insn->control : 0x000e2400;
+             break;
+ 
++        case BW_IR_MUFU_LG2:
++            /* MUFU.LG2 Rd, Ra (nvdisasm 13.0 -b SM121 decodes sub-op 0x0c00 as MUFU.LG2) */
++            w[0] = 0x7308U | ((uint32_t)(dst & 0xff) << 16);
++            w[1] = (uint32_t)(src1 & 0xff);
++            w[2] = 0x00000c00;
++            w[3] = insn->control ? insn->control : 0x000e2400;
++            break;
++
+         case BW_IR_MUFU_RSQ:
+             /* MUFU.RSQ Rd, Ra */
+             w[0] = 0x7308U | ((uint32_t)(dst & 0xff) << 16);
+diff --git a/src/omega_blackwell_codegen.h b/src/omega_blackwell_codegen.h
+index cc36e237..c59d1993 100644
+--- a/src/omega_blackwell_codegen.h
++++ b/src/omega_blackwell_codegen.h
+@@ -100,7 +100,10 @@ typedef enum {
+     BW_IR_LDG_E_128,    /* LDG.E.128 Rd..Rd+3, desc[URd][Ra.64+imm] */
+     /* Batched attention loads (2026-10-12). Words matched against nvcc 13.0.88 -arch=sm_121
+      * (omega_blackwell_verify_codegen_fixtures_fragmm). imm = unsigned byte offset < 2^23; dst an aligned quad. */
+-    BW_IR_LDS128        /* LDS.128 Rd..Rd+3, [Ra+imm] */
++    BW_IR_LDS128,       /* LDS.128 Rd..Rd+3, [Ra+imm] */
++    /* Gated DeltaNet softplus (2026-10-18, omega#542): sub-op 0x0c00 checked with nvdisasm 13.0 -b SM121, which decodes
++     * "MUFU.LG2 R2, R4" (EX2 0x0800, RCP 0x1000, RSQ 0x1400 decode the same way). log2(x), approximate. */
++    BW_IR_MUFU_LG2      /* MUFU.LG2 Rd, Ra */
+ } BlackwellIROpcode;
+ 
+ /* Barrier (reconvergence) registers: the sm_121 BSSY/BSYNC words carry a 4-bit barrier id
+diff --git a/src/omega_blackwell_codegen_gdn.c b/src/omega_blackwell_codegen_gdn.c
+new file mode 100644
+index 00000000..235bace7
+--- /dev/null
++++ b/src/omega_blackwell_codegen_gdn.c
+@@ -0,0 +1,356 @@
++/*
++ * omega_blackwell_codegen_gdn.c: the one-launch Gated DeltaNet decode step (see the header). Emitter rules follow
++ * omega_blackwell_codegen_router.c (control words, read barrier on every load) and the held-scoreboard prefetch of
++ * omega_bw_em.h (the state loads are in flight through the conv, norm and scalar phases).
++ */
++#include "omega_blackwell_codegen_gdn.h"
++#include <string.h>
++
++#define CW(stall, wbar, rbar, wait) \
++    (((uint32_t)(stall) << 9) | ((uint32_t)(wbar) << 14) | ((uint32_t)(rbar) << 17) | ((uint32_t)(wait) << 20))
++#define CW_YIELD 0x2000u
++#define SB_NONE 7u
++#define SB_GPR 0u
++#define SB_RD 1u
++#define SB_UGPR 2u
++#define SB_STATE 3u   /* held: the 16 state quads */
++#define SB_GATE 4u    /* held: z and the norm weight */
++#define NOREG (-1)
++
++enum { K_FIXED, K_PRED, K_VAR, K_VAR_MORE, K_UVAR, K_STORE, K_SYNC, K_EXIT, K_BRA, K_BSSY, K_BSYNC };
++
++typedef struct {
++    BlackwellIRProgram *p;
++    uint32_t pending, held;
++    int err;
++} Em;
++
++static void emit(Em *e, BlackwellIRInsn in, int kind) {
++    uint32_t wait = e->pending;
++    switch (kind) {
++    case K_FIXED: in.control = CW(6, SB_NONE, SB_NONE, wait); e->pending = 0; break;
++    case K_PRED:  in.control = CW(14, SB_NONE, SB_NONE, wait); e->pending = 0; break;
++    case K_VAR:   in.control = CW(4, SB_GPR, SB_RD, wait) | CW_YIELD; e->pending = (1u << SB_GPR) | (1u << SB_RD); break;
++    case K_VAR_MORE: in.control = CW(4, SB_GPR, SB_RD, (e->pending & (1u << SB_RD))) | CW_YIELD; e->pending |= (1u << SB_GPR) | (1u << SB_RD); break;
++    case K_UVAR:  in.control = CW(4, SB_UGPR, SB_NONE, wait) | CW_YIELD; e->pending = 1u << SB_UGPR; break;
++    case K_STORE: in.control = CW(4, SB_NONE, SB_RD, wait) | CW_YIELD; e->pending = 1u << SB_RD; break;
++    case K_SYNC:  in.control = CW(6, SB_NONE, SB_NONE, wait); e->pending = 0; break;
++    case K_EXIT:  in.control = CW(5, SB_NONE, SB_NONE, wait); e->pending = in.predicate_p0 ? wait : 0; break;
++    case K_BRA:   in.control = CW(5, SB_NONE, SB_NONE, wait); e->pending = in.predicate_p0 ? wait : 0; break;
++    case K_BSSY:  in.control = CW(1, SB_NONE, SB_NONE, wait) | CW_YIELD; e->pending = 0; break;
++    case K_BSYNC: in.control = CW(5, SB_NONE, SB_NONE, wait) | CW_YIELD; e->pending = 0; break;
++    default: e->err = -1; return;
++    }
++    if (omega_bw_ir_append(e->p, &in) < 0) e->err = -1;
++}
++
++static BlackwellIRInsn I0(BlackwellIROpcode op) {
++    BlackwellIRInsn i; memset(&i, 0, sizeof i);
++    i.op = op; i.dst_vreg = NOREG; i.src1_vreg = NOREG; i.src2_vreg = NOREG; i.src3_vreg = NOREG; i.ureg = NOREG;
++    return i;
++}
++static int V(Em *e) { int v = omega_bw_ir_alloc_vreg(e->p); if (v < 0) e->err = -1; return v; }
++static int V64(Em *e) { int v = omega_bw_ir_alloc_vreg64(e->p); if (v < 0) e->err = -1; return v; }
++static int V128(Em *e) { int v = omega_bw_ir_alloc_vreg128(e->p); if (v < 0) e->err = -1; return v; }
++static int UV64(Em *e) { int v = omega_bw_ir_alloc_uvreg64(e->p); if (v < 0) e->err = -1; return v; }
++static int here(const Em *e) { return (int)e->p->count; }
++
++/* operand with subregister */
++typedef struct { int v; unsigned s; } Op;
++static Op R(int v) { Op o = { v, 0 }; return o; }
++static Op S(int v, unsigned s) { Op o = { v, s }; return o; }
++
++static void ldcu64(Em *e, int ud, uint32_t off) { BlackwellIRInsn i = I0(BW_IR_LDCU64); i.dst_vreg = ud; i.imm = off; i.is_uniform = true; emit(e, i, K_UVAR); }
++static void ldc64(Em *e, int d, uint32_t off) { BlackwellIRInsn i = I0(BW_IR_LDC64); i.dst_vreg = d; i.imm = off; emit(e, i, K_VAR); }
++static void ldc32(Em *e, int d, uint32_t off) { BlackwellIRInsn i = I0(BW_IR_LDC); i.dst_vreg = d; i.imm = off; emit(e, i, K_VAR); }
++static void s2r(Em *e, int d, uint32_t sr) { BlackwellIRInsn i = I0(BW_IR_S2R); i.dst_vreg = d; i.imm = sr; emit(e, i, K_VAR); }
++static void movi(Em *e, int d, uint32_t imm) { BlackwellIRInsn i = I0(BW_IR_MOV_IMM); i.dst_vreg = d; i.imm = imm; emit(e, i, K_FIXED); }
++static void movrz(Em *e, Op d) { BlackwellIRInsn i = I0(BW_IR_MOV_RZ); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; emit(e, i, K_FIXED); }
++/* d = a * imm + c */
++static void imadi(Em *e, Op d, Op a, uint32_t imm, int c) { BlackwellIRInsn i = I0(BW_IR_IMAD); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s; i.imm = imm; i.src3_vreg = c; emit(e, i, K_FIXED); }
++/* d64 = a * imm + c64 */
++static void imadw(Em *e, int d64, int a, uint32_t imm, int c64) { BlackwellIRInsn i = I0(BW_IR_IMAD_WIDE); i.dst_vreg = d64; i.src1_vreg = a; i.imm = imm; i.src3_vreg = c64; emit(e, i, K_FIXED); }
++static void shr(Em *e, int d, int a, uint32_t imm) { BlackwellIRInsn i = I0(BW_IR_SHF_R); i.dst_vreg = d; i.src1_vreg = a; i.imm = imm; emit(e, i, K_FIXED); }
++static void andi(Em *e, Op d, Op a, uint32_t imm) { BlackwellIRInsn i = I0(BW_IR_LOP3_AND); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s; i.imm = imm; emit(e, i, K_FIXED); }
++static void i2fp(Em *e, int d, int a) { BlackwellIRInsn i = I0(BW_IR_I2FP); i.dst_vreg = d; i.src1_vreg = a; emit(e, i, K_FIXED); }
++static void ldg_wide(Em *e, BlackwellIROpcode op, int d, int addr64, uint32_t imm, int udesc, int first) {
++    BlackwellIRInsn i = I0(op); i.dst_vreg = d; i.src1_vreg = addr64; i.imm = imm; i.ureg = udesc; emit(e, i, first ? K_VAR : K_VAR_MORE);
++}
++static void ldg32(Em *e, int d, int addr64, int udesc, int first) { BlackwellIRInsn i = I0(BW_IR_LDG_E); i.dst_vreg = d; i.src1_vreg = addr64; i.ureg = udesc; emit(e, i, first ? K_VAR : K_VAR_MORE); }
++/* A prefetch load: scoreboard `sb` is held, not waited for, until consume() */
++static void ldg_pf(Em *e, int d, int addr64, uint32_t imm, int udesc, unsigned sb) {
++    BlackwellIRInsn in = I0(BW_IR_LDG_E_128); in.dst_vreg = d; in.src1_vreg = addr64; in.imm = imm; in.ureg = udesc;
++    in.control = CW(4, sb, SB_RD, (e->pending & (1u << SB_RD))) | CW_YIELD;
++    e->pending |= 1u << SB_RD; e->held |= 1u << sb;
++    if (omega_bw_ir_append(e->p, &in) < 0) e->err = -1;
++}
++static void consume(Em *e, unsigned sb) { e->pending |= e->held & (1u << sb); e->held &= ~(1u << sb); }
++/* STG.E [addr64 + imm], val (imm: signed 24-bit byte offset) */
++static void stg(Em *e, int addr64, uint32_t imm, Op val, int udesc) { BlackwellIRInsn i = I0(BW_IR_STG_E); i.src1_vreg = addr64; i.src2_vreg = val.v; i.src2_subreg = (uint8_t)val.s; i.imm = imm; i.ureg = udesc; emit(e, i, K_STORE); }
++static void lds128(Em *e, int d128, int addr, uint32_t imm, int first) { BlackwellIRInsn i = I0(BW_IR_LDS128); i.dst_vreg = d128; i.src1_vreg = addr; i.imm = imm; emit(e, i, first ? K_VAR : K_VAR_MORE); }
++static void lds32(Em *e, Op d, int addr, int first) { BlackwellIRInsn i = I0(BW_IR_LDS32); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = addr; emit(e, i, first ? K_VAR : K_VAR_MORE); }
++static void sts32(Em *e, int addr, Op val) { BlackwellIRInsn i = I0(BW_IR_STS32); i.src1_vreg = addr; i.src2_vreg = val.v; i.src2_subreg = (uint8_t)val.s; emit(e, i, K_STORE); }
++static void bar_sync(Em *e) { emit(e, I0(BW_IR_BAR_SYNC), K_SYNC); }
++static void fop(Em *e, BlackwellIROpcode op, Op d, Op a, Op b, Op c) {
++    BlackwellIRInsn i = I0(op); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s;
++    i.src2_vreg = b.v; i.src2_subreg = (uint8_t)b.s; i.src3_vreg = c.v; i.src3_subreg = (uint8_t)c.s; emit(e, i, K_FIXED);
++}
++static void fadd(Em *e, Op d, Op a, Op b) { fop(e, BW_IR_FADD, d, a, b, R(NOREG)); }
++static void fsub(Em *e, Op d, Op a, Op b) { fop(e, BW_IR_FSUB, d, a, b, R(NOREG)); }
++static void fmul(Em *e, Op d, Op a, Op b) { fop(e, BW_IR_FMUL, d, a, b, R(NOREG)); }
++static void ffma(Em *e, Op d, Op a, Op b, Op c) { fop(e, BW_IR_FFMA, d, a, b, c); }
++static void fmaxx(Em *e, Op d, Op a, Op b) { fop(e, BW_IR_FMNMX_MAX, d, a, b, R(NOREG)); }
++static void fminn(Em *e, Op d, Op a, Op b) { fop(e, BW_IR_FMNMX_MIN, d, a, b, R(NOREG)); }
++static void mufu(Em *e, BlackwellIROpcode op, Op d, Op a) { BlackwellIRInsn i = I0(op); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = a.v; i.src1_subreg = (uint8_t)a.s; emit(e, i, K_VAR); }
++static void shfl_down(Em *e, int d, int a, uint32_t off) { BlackwellIRInsn i = I0(BW_IR_SHFL_DOWN); i.dst_vreg = d; i.src1_vreg = a; i.imm = off; emit(e, i, K_VAR); }
++static void isetp_ge_u32(Em *e, int a, int b) { BlackwellIRInsn i = I0(BW_IR_ISETP_GE_U32); i.src1_vreg = a; i.src2_vreg = b; emit(e, i, K_PRED); }
++static int bra_if_p0_fwd(Em *e) { int at = here(e); BlackwellIRInsn i = I0(BW_IR_BRA); i.predicate_p0 = true; i.imm = 1; emit(e, i, K_BRA); return at; }
++static void patch_bra(Em *e, int at, int target) { if (!e->err) e->p->insns[at].imm = (uint32_t)(target - at); }
++static int bssy_fwd(Em *e) { int at = here(e); BlackwellIRInsn i = I0(BW_IR_BSSY); i.bar_reg = 0; i.imm = 2; emit(e, i, K_BSSY); return at; }
++static void bsync(Em *e) { BlackwellIRInsn i = I0(BW_IR_BSYNC); i.bar_reg = 0; emit(e, i, K_BSYNC); }
++static void tail(Em *e) {
++    emit(e, I0(BW_IR_EXIT), K_EXIT);
++    BlackwellIRInsn self = I0(BW_IR_BRA);
++    self.control = 0x000fc000u;
++    if (omega_bw_ir_append(e->p, &self) < 0) e->err = -1;
++}
++
++/* A region only some lanes of a warp execute: BSSY ... @P0 BRA join ... BSYNC. P0 true = skip. */
++typedef struct { int bssy, bra; } Region;
++static Region region_skip_if_p0(Em *e) { Region r; r.bssy = bssy_fwd(e); r.bra = bra_if_p0_fwd(e); return r; }
++static void region_end(Em *e, Region r) { int at = here(e); bsync(e); patch_bra(e, r.bra, at); patch_bra(e, r.bssy, at + 1); }
++/* warp sum: the total lands in lane 0 */
++static void warp_sum(Em *e, int v, int t) { for (uint32_t o = 16; o >= 1; o /= 2) { shfl_down(e, t, v, o); fadd(e, R(v), R(v), R(t)); } }
++/* lane 0 of every warp stores v to shared [addr] */
++static void lane0_sts(Em *e, int lane, int one, int addr, Op v) {
++    isetp_ge_u32(e, lane, one);
++    Region r = region_skip_if_p0(e); sts32(e, addr, v); region_end(e, r);
++}
++/* x = x * sigmoid(x) = x * RCP(1 + EX2(-x * log2 e)); t scratch */
++static void silu(Em *e, Op x, int t, int nlog2e, int fone) {
++    fmul(e, R(t), x, R(nlog2e)); mufu(e, BW_IR_MUFU_EX2, R(t), R(t)); fadd(e, R(t), R(t), R(fone));
++    mufu(e, BW_IR_MUFU_RCP, R(t), R(t)); fmul(e, x, x, R(t));
++}
++static uint32_t fbits(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }
++/* The 8-way cross-warp sum of acc[0..3] (columns 4L..4L+3 of each warp) through shared SM_P: pa = this thread's
++ * partial slot, la = lane * 16. Every warp ends with the same totals, summed in warp order 0..7. */
++static void cross_warp_sum(Em *e, int acc[4], int pa, int one, int la) {
++    int pj = V(e), b0 = V128(e), b1 = V128(e);
++    if (e->err) return;
++    sts32(e, pa, R(acc[0]));
++    for (unsigned j = 1; j < 4; j++) { imadi(e, R(pj), R(one), 4u * j, pa); sts32(e, pj, R(acc[j])); }
++    bar_sync(e);
++    for (unsigned w2 = 0; w2 < 8; w2 += 2) {
++        lds128(e, b0, la, OMEGA_GDN_SM_P + w2 * OMEGA_GDN_HEAD_DIM * 4u, 1);
++        lds128(e, b1, la, OMEGA_GDN_SM_P + (w2 + 1) * OMEGA_GDN_HEAD_DIM * 4u, 0);
++        for (unsigned j = 0; j < 4; j++) {
++            if (w2 == 0) fadd(e, R(acc[j]), S(b0, j), S(b1, j));
++            else { fadd(e, R(acc[j]), R(acc[j]), S(b0, j)); fadd(e, R(acc[j]), R(acc[j]), S(b1, j)); }
++        }
++    }
++}
++
++int omega_blackwell_codegen_gdn_prog(const OmegaGdnSpec *spec, BlackwellIRProgram *prog) {
++    if (!spec || !prog || spec->mutant < 0 || spec->mutant > 4) return -1;
++    const int MUT = spec->mutant;
++    const uint32_t C_LOG2E = fbits(1.44269504f), C_NLOG2E = fbits(-1.44269504f), C_LN2 = fbits(0.693147181f);
++    const uint32_t C_ONE = fbits(1.0f), C_M1 = fbits(-1.0f), C_INV128 = fbits(1.0f / 128.0f);
++    const float qs = 0.0883883476f; /* 1 / sqrt(128) */
++    omega_bw_ir_init(prog);
++    Em em; memset(&em, 0, sizeof em); em.p = prog; Em *e = &em;
++
++    /* ---- identities; the state address ---- */
++    int udesc = UV64(e);
++    int tid = V(e), cx = V(e), cy = V(e), h = V(e), warp = V(e), lane = V(e), one = V(e);
++    int ps = V64(e), sa = V64(e), toff = V(e), sq[16];
++    for (unsigned r = 0; r < 16; r++) sq[r] = V128(e);
++    if (e->err) return -1;
++    ldcu64(e, udesc, 0x358);
++    ldc64(e, ps, OMEGA_GDN_ARG_STATE);
++    s2r(e, tid, BW_SR_TID_X); s2r(e, cx, BW_SR_CTAID_X); s2r(e, cy, BW_SR_CTAID_Y);
++    movi(e, one, 1);
++    imadi(e, R(h), R(cy), 3u, cx);
++    shr(e, warp, tid, 5);
++    andi(e, R(lane), R(tid), 31u);
++    imadi(e, R(toff), R(h), OMEGA_GDN_STATE_HEAD_BYTES, NOREG);
++    imadi(e, R(toff), R(warp), 16u * OMEGA_GDN_HEAD_DIM * 4u, toff);
++    imadi(e, R(toff), R(lane), 16u, toff);
++    imadw(e, sa, toff, 1u, ps);
++
++    /* ---- phase A: conv + SiLU of channel A (q or k) and channel V ---- */
++    int half = V(e), c = V(e), gi = V(e), slv = V(e);
++    int pqkv = V64(e), ppar = V64(e), ptail = V64(e);
++    int axA = V64(e), awA = V64(e), atA = V64(e), axV = V64(e), awV = V64(e), atV = V64(e);
++    int xA = V(e), xV = V(e), wA = V128(e), wV = V128(e), tA = V128(e), tV = V128(e);
++    int insc = V(e), accA = V(e), accV = V(e), t1 = V(e), cnl2e = V(e), fone = V(e);
++    if (e->err) return -1;
++    ldc64(e, pqkv, OMEGA_GDN_ARG_QKV); ldc64(e, ppar, OMEGA_GDN_ARG_PAR); ldc64(e, ptail, OMEGA_GDN_ARG_TAIL);
++    ldc32(e, insc, OMEGA_GDN_ARG_IN_SCALE);
++    shr(e, half, tid, 7);
++    andi(e, R(c), R(tid), 127u);
++    imadi(e, R(gi), R(cy), OMEGA_GDN_HEAD_DIM, tid);              /* q channel hk*128 + t; k channel 2048 + hk*128 + (t - 128) */
++    imadi(e, R(gi), R(half), 2048u - 128u, gi);
++    imadw(e, axA, gi, 4u, pqkv); imadw(e, awA, gi, 16u, ppar);
++    imadi(e, R(gi), R(h), OMEGA_GDN_HEAD_DIM, c);                 /* v channel 4096 + h*128 + c */
++    imadi(e, R(gi), R(one), 2u * OMEGA_GDN_KEY_HEADS * OMEGA_GDN_HEAD_DIM, gi);
++    imadw(e, axV, gi, 4u, pqkv); imadw(e, awV, gi, 16u, ppar);
++    imadw(e, atA, tid, 16u, ptail); imadw(e, atA, h, OMEGA_GDN_TAIL_HEAD_BYTES, atA);
++    imadi(e, R(slv), R(one), 256u, c);
++    imadw(e, atV, slv, 16u, ptail); imadw(e, atV, h, OMEGA_GDN_TAIL_HEAD_BYTES, atV);
++    ldg32(e, xA, axA, udesc, 1);
++    ldg_wide(e, BW_IR_LDG_E_128, wA, awA, 0, udesc, 0);
++    ldg_wide(e, BW_IR_LDG_E_128, tA, atA, 0, udesc, 0);
++    ldg32(e, xV, axV, udesc, 0);
++    ldg_wide(e, BW_IR_LDG_E_128, wV, awV, 0, udesc, 0);
++    ldg_wide(e, BW_IR_LDG_E_128, tV, atV, 0, udesc, 0);
++    fmul(e, R(xA), R(xA), R(insc)); fmul(e, R(xV), R(xV), R(insc));
++    fmul(e, R(accA), S(wA, 0), S(tA, 0)); ffma(e, R(accA), S(wA, 1), S(tA, 1), R(accA));
++    ffma(e, R(accA), S(wA, 2), S(tA, 2), R(accA)); ffma(e, R(accA), S(wA, 3), R(xA), R(accA));
++    fmul(e, R(accV), S(wV, 0), S(tV, 0)); ffma(e, R(accV), S(wV, 1), S(tV, 1), R(accV));
++    ffma(e, R(accV), S(wV, 2), S(tV, 2), R(accV)); ffma(e, R(accV), S(wV, 3), R(xV), R(accV));
++    movi(e, cnl2e, C_NLOG2E); movi(e, fone, C_ONE);
++    silu(e, R(accA), t1, cnl2e, fone);
++    silu(e, R(accV), t1, cnl2e, fone);
++    /* the state prefetch (here, not earlier: the conv phase is the register peak) */
++    for (unsigned r = 0; r < 16; r++) ldg_pf(e, sq[r], sa, r * OMEGA_GDN_HEAD_DIM * 4u, udesc, SB_STATE);
++
++    /* ---- phase B: l2 norms; q|k and v to shared; the tail shift ---- */
++    int sqs = V(e), ts = V(e), ra = V(e);
++    if (e->err) return -1;
++    fmul(e, R(sqs), R(accA), R(accA));
++    warp_sum(e, sqs, ts);
++    imadi(e, R(ra), R(warp), 4u, NOREG); imadi(e, R(ra), R(one), OMEGA_GDN_SM_RED, ra);
++    lane0_sts(e, lane, one, ra, R(sqs));
++    imadi(e, R(ra), R(c), 4u, NOREG); imadi(e, R(ra), R(one), OMEGA_GDN_SM_V, ra);
++    sts32(e, ra, R(accV));
++    bar_sync(e);
++    if (MUT != 4) {
++        stg(e, atA, 0, S(tA, 1), udesc); stg(e, atA, 4, S(tA, 2), udesc); stg(e, atA, 8, R(xA), udesc);
++        stg(e, atV, 0, S(tV, 1), udesc); stg(e, atV, 4, S(tV, 2), udesc); stg(e, atV, 8, R(xV), udesc);
++    }
++    {
++        int rq = V128(e), el2 = V(e), hf = V(e), fq = V(e);
++        if (e->err) return -1;
++        ldc32(e, el2, OMEGA_GDN_ARG_EPS_L2);
++        imadi(e, R(ra), R(half), 16u, NOREG);
++        lds128(e, rq, ra, OMEGA_GDN_SM_RED, 1);
++        fadd(e, R(sqs), S(rq, 0), S(rq, 1)); fadd(e, R(sqs), R(sqs), S(rq, 2)); fadd(e, R(sqs), R(sqs), S(rq, 3));
++        fadd(e, R(sqs), R(sqs), R(el2));
++        mufu(e, BW_IR_MUFU_RSQ, R(sqs), R(sqs));
++        /* q gets 1/sqrt(128) more: factor = qs + half * (1 - qs) */
++        i2fp(e, hf, half);
++        movi(e, fq, fbits(qs)); movi(e, t1, fbits(1.0f - qs));
++        ffma(e, R(fq), R(hf), R(t1), R(fq));
++        fmul(e, R(accA), R(accA), R(sqs)); fmul(e, R(accA), R(accA), R(fq));
++        imadi(e, R(ra), R(tid), 4u, NOREG);                       /* SM_Q = 0, SM_K = SM_Q + 512 */
++        sts32(e, ra, R(accA));
++        bar_sync(e); /* q and k are read across warps in phase D (a zero state hides a missing barrier here: 0 * poison = 0) */
++    }
++
++    /* ---- phase C: scalars ---- */
++    int pab = V64(e), aab = V64(e), asc = V64(e), abq = V64(e), scq = V64(e);
++    int xs = V(e), mn = V(e), sp = V(e), dec = V(e), beta = V(e), cl2e = V(e);
++    if (e->err) return -1;
++    ldc64(e, pab, OMEGA_GDN_ARG_AB);
++    imadw(e, aab, h, 8u, pab); imadw(e, asc, h, 8u, ppar);
++    ldg_wide(e, BW_IR_LDG_E_64, abq, aab, 0, udesc, 1);
++    ldg_wide(e, BW_IR_LDG_E_64, scq, asc, OMEGA_GDN_PAR_SCAL, udesc, 0);
++    /* softplus(x) = max(x, 0) + ln2 * LG2(1 + EX2(-|x| * log2 e)), x = a + dt_bias */
++    fadd(e, R(xs), S(abq, 0), S(scq, 1));
++    movi(e, mn, C_M1); fmul(e, R(mn), R(xs), R(mn)); fminn(e, R(mn), R(xs), R(mn));
++    movi(e, cl2e, C_LOG2E);
++    fmul(e, R(mn), R(mn), R(cl2e)); mufu(e, BW_IR_MUFU_EX2, R(mn), R(mn)); fadd(e, R(mn), R(mn), R(fone));
++    mufu(e, BW_IR_MUFU_LG2, R(mn), R(mn));
++    movrz(e, R(sp)); fmaxx(e, R(sp), R(xs), R(sp));
++    movi(e, t1, C_LN2); ffma(e, R(sp), R(mn), R(t1), R(sp));
++    /* decay = EX2(negA * softplus * log2 e) */
++    if (MUT == 1) movi(e, dec, C_ONE);
++    else { fmul(e, R(dec), S(scq, 0), R(sp)); fmul(e, R(dec), R(dec), R(cl2e)); mufu(e, BW_IR_MUFU_EX2, R(dec), R(dec)); }
++    /* beta = sigmoid(b) */
++    if (MUT == 2) movi(e, beta, C_ONE);
++    else {
++        fmul(e, R(beta), S(abq, 1), R(cnl2e)); mufu(e, BW_IR_MUFU_EX2, R(beta), R(beta));
++        fadd(e, R(beta), R(beta), R(fone)); mufu(e, BW_IR_MUFU_RCP, R(beta), R(beta));
++    }
++
++    /* ---- phase D: the state update (fresh registers per step: a reused name stays live across all its uses) ---- */
++    int aw = V(e), pa = V(e), la = V(e), kq[4], kv[4], dl[4], vq = V128(e);
++    for (unsigned i = 0; i < 4; i++) { kq[i] = V128(e); kv[i] = V(e); dl[i] = V(e); }
++    if (e->err) return -1;
++    imadi(e, R(aw), R(warp), 16u * 4u, NOREG);
++    imadi(e, R(pa), R(warp), OMEGA_GDN_HEAD_DIM * 4u, NOREG); imadi(e, R(pa), R(lane), 16u, pa); imadi(e, R(pa), R(one), OMEGA_GDN_SM_P, pa);
++    imadi(e, R(la), R(lane), 16u, NOREG);
++    consume(e, SB_STATE);
++    for (unsigned r = 0; r < 16; r++) for (unsigned j = 0; j < 4; j++) fmul(e, S(sq[r], j), S(sq[r], j), R(dec));
++    /* kv partial over this warp's 16 rows: kv_j = sum_r S[r][j] k[r], then the 8-way cross-warp sum */
++    for (unsigned i = 0; i < 4; i++) lds128(e, kq[i], aw, OMEGA_GDN_SM_K + i * 16u, i == 0);
++    for (unsigned j = 0; j < 4; j++) fmul(e, R(kv[j]), S(sq[0], j), S(kq[0], 0));
++    for (unsigned r = 1; r < 16; r++) for (unsigned j = 0; j < 4; j++) ffma(e, R(kv[j]), S(sq[r], j), S(kq[r / 4], r % 4), R(kv[j]));
++    cross_warp_sum(e, kv, pa, one, la);
++    /* delta = (v - kv) * beta; S += k (outer) delta; S back to memory */
++    lds128(e, vq, la, OMEGA_GDN_SM_V, 1);
++    for (unsigned j = 0; j < 4; j++) { fsub(e, R(dl[j]), S(vq, j), R(kv[j])); fmul(e, R(dl[j]), R(dl[j]), R(beta)); }
++    {
++        int k2[4];
++        for (unsigned i = 0; i < 4; i++) k2[i] = V128(e);
++        if (e->err) return -1;
++        for (unsigned i = 0; i < 4; i++) lds128(e, k2[i], aw, OMEGA_GDN_SM_K + i * 16u, i == 0);
++        for (unsigned r = 0; r < 16; r++) for (unsigned j = 0; j < 4; j++) ffma(e, S(sq[r], j), S(k2[r / 4], r % 4), R(dl[j]), S(sq[r], j));
++    }
++    for (unsigned r = 0; r < 16; r++) for (unsigned j = 0; j < 4; j++) stg(e, sa, r * OMEGA_GDN_HEAD_DIM * 4u + j * 4u, S(sq[r], j), udesc);
++    /* the gate prefetch: z[h] and the norm weight, consumed in phase E */
++    int pz = V64(e), ppar2 = V64(e), az = V64(e), an = V64(e), zq = V128(e), nq = V128(e);
++    if (e->err) return -1;
++    ldc64(e, pz, OMEGA_GDN_ARG_Z); ldc64(e, ppar2, OMEGA_GDN_ARG_PAR);
++    imadw(e, az, lane, 16u, pz); imadw(e, az, h, OMEGA_GDN_HEAD_DIM * 4u, az);
++    imadw(e, an, lane, 16u, ppar2);
++    ldg_pf(e, zq, az, 0, udesc, SB_GATE);
++    ldg_pf(e, nq, an, OMEGA_GDN_PAR_NORM, udesc, SB_GATE);
++    /* o partial: o_j = sum_r S[r][j] q[r], then the cross-warp sum */
++    int p[4];
++    {
++        int q2[4];
++        for (unsigned i = 0; i < 4; i++) { q2[i] = V128(e); p[i] = V(e); }
++        if (e->err) return -1;
++        for (unsigned i = 0; i < 4; i++) lds128(e, q2[i], aw, OMEGA_GDN_SM_Q + i * 16u, i == 0);
++        for (unsigned j = 0; j < 4; j++) fmul(e, R(p[j]), S(sq[0], j), S(q2[0], 0));
++        for (unsigned r = 1; r < 16; r++) for (unsigned j = 0; j < 4; j++) ffma(e, R(p[j]), S(sq[r], j), S(q2[r / 4], r % 4), R(p[j]));
++    }
++    bar_sync(e); /* every warp has read the kv partials */
++    cross_warp_sum(e, p, pa, one, la);
++
++    /* ---- phase E: gated RMSNorm, the output ---- */
++    int ss = V(e), en = V(e), osc = V(e), pout = V64(e), ao = V64(e), g = V(e);
++    if (e->err) return -1;
++    fmul(e, R(ss), R(p[0]), R(p[0]));
++    for (unsigned j = 1; j < 4; j++) ffma(e, R(ss), R(p[j]), R(p[j]), R(ss));
++    warp_sum(e, ss, ts);
++    imadi(e, R(ra), R(warp), 4u, NOREG); imadi(e, R(ra), R(one), OMEGA_GDN_SM_RED2, ra);
++    lane0_sts(e, lane, one, ra, R(ss));
++    bar_sync(e);
++    ldc32(e, en, OMEGA_GDN_ARG_EPS_NORM); ldc32(e, osc, OMEGA_GDN_ARG_OUT_SCALE); ldc64(e, pout, OMEGA_GDN_ARG_OUT);
++    lds32(e, R(ss), ra, 0);
++    movi(e, t1, C_INV128);
++    ffma(e, R(ss), R(ss), R(t1), R(en));
++    mufu(e, BW_IR_MUFU_RSQ, R(ss), R(ss));
++    imadw(e, ao, lane, 16u, pout); imadw(e, ao, h, OMEGA_GDN_HEAD_DIM * 4u, ao);
++    consume(e, SB_GATE);
++    for (unsigned j = 0; j < 4; j++) {
++        fmul(e, R(g), S(zq, j), R(insc));
++        if (MUT != 3) silu(e, R(g), t1, cnl2e, fone);
++        fmul(e, R(p[j]), R(p[j]), R(ss)); fmul(e, R(p[j]), R(p[j]), S(nq, j));
++        fmul(e, R(p[j]), R(p[j]), R(g)); fmul(e, R(p[j]), R(p[j]), R(osc));
++    }
++    for (unsigned j = 0; j < 4; j++) stg(e, ao, j * 4u, R(p[j]), udesc);
++    tail(e);
++    if (e->err) return -1;
++    return omega_bw_regalloc_solve(prog);
++}
++
++int omega_gdn_prog_stats(const OmegaGdnSpec *spec, uint32_t *insns, uint32_t *gprs) {
++    static BlackwellIRProgram prog;
++    if (omega_blackwell_codegen_gdn_prog(spec, &prog) != 0) return -1;
++    if (insns) *insns = (uint32_t)prog.count;
++    if (gprs) *gprs = prog.regalloc.peak_gpr_usage;
++    return 0;
++}
+diff --git a/src/omega_blackwell_codegen_gdn.h b/src/omega_blackwell_codegen_gdn.h
+new file mode 100644
+index 00000000..10b7079d
+--- /dev/null
++++ b/src/omega_blackwell_codegen_gdn.h
+@@ -0,0 +1,92 @@
++#ifndef OMEGA_BLACKWELL_CODEGEN_GDN_H
++#define OMEGA_BLACKWELL_CODEGEN_GDN_H
++/*
++ * omega_blackwell_codegen_gdn: one decode step of a Gated DeltaNet layer of Qwen3.8-27B in ONE launch (omega#542,
++ * 2026-10-18). The maths is the host reference sc crates/aien-inference-abi/src/qwen38.rs `delta_net`, from the
++ * projections on: the caller runs in_proj_qkv / in_proj_z (FP8 GEMVs) and the stacked a/b rows (bf16 GEMV) first and
++ * out_proj (FP8 GEMV) after. Per value head h (48):
++ *   conv     channels q[hk], k[hk] (128 each, hk = h / 3) and v[h] (128) of the 10240-wide qkv row: causal depthwise
++ *            conv over {tail0, tail1, tail2, x} with the layer's 4 taps, then SiLU; the tail shifts by one.
++ *   l2norm   q and k: x / sqrt(sum x^2 + eps_l2); q also / sqrt(128).
++ *   scalars  beta = sigmoid(b[h]); g = negA[h] * softplus(a[h] + dt_bias[h]), negA = -exp(A_log); decay = exp(g).
++ *   state    S[h] (128 k x 128 v, f32): S *= decay; kv = S^T k; delta = (v - kv) * beta; S += k (outer) delta;
++ *            o = S^T q.
++ *   output   y = o / sqrt(mean(o^2) + eps_norm) * norm_w * silu(z[h]) * out_scale (norm_w shared by the heads).
++ *
++ * Grid 3 x 16 (h = ctaid.y * 3 + ctaid.x, hk = ctaid.y), 256 threads, no host round trip, no atomics. Per CTA:
++ *   prefetch thread (warp w, lane L) owns S[h] rows 16w .. 16w+15, columns 4L .. 4L+3: 16 LDG.128 issued first on a
++ *            held scoreboard, consumed at the state phase (the conv, norm and scalar phases hide the latency).
++ *   phase A  thread t convolves channel A (slot t: q channel t for t < 128, k channel t - 128 above) and channel V
++ *            (slot 256 + (t & 127), computed by both halves alike); taps and tail are one LDG.128 each.
++ *   phase B  sums of squares of q and k per 4-warp half (SHFL + shared), rsqrt, q|k to shared, v to shared; then the
++ *            shifted tails are stored (after the barrier: the two halves read the same v tail slot).
++ *   phase C  every thread: a and b (one LDG.64), negA and dt_bias (one LDG.64), softplus via EX2/LG2, decay, beta.
++ *   phase D  the state update in registers; kv and o are 8-way cross-warp sums through shared memory; S is stored
++ *            back with 64 STG.E per thread (immediate offsets).
++ *   phase E  every warp holds all 128 o values: sum of squares by SHFL, broadcast through shared, gated norm, store.
++ * Branch-free except the lane-0 shared stores (BSSY / BSYNC regions). Ops used: the router's set plus MUFU.LG2
++ * (encoding checked with nvdisasm, omega_blackwell_codegen.h) and I2FP.
++ */
++#include "omega_blackwell_codegen.h"
++#include <stdint.h>
++
++#define OMEGA_GDN_KEY_HEADS 16u
++#define OMEGA_GDN_VALUE_HEADS 48u
++#define OMEGA_GDN_HEAD_DIM 128u                                   /* k and v head dim */
++#define OMEGA_GDN_CONV_DIM 10240u                                 /* q 2048 | k 2048 | v 6144 */
++#define OMEGA_GDN_V_DIM (OMEGA_GDN_VALUE_HEADS * OMEGA_GDN_HEAD_DIM) /* 6144 */
++#define OMEGA_GDN_TAPS 4u
++#define OMEGA_GDN_SLOTS 384u                                      /* conv channels one head reads: q | k | v */
++
++/* per-layer parameter block (bytes): conv taps f32 [10240][4] | {negA, dt_bias} f32 [48][2] | norm_w f32 [128] */
++#define OMEGA_GDN_PAR_CONV 0u
++#define OMEGA_GDN_PAR_SCAL 163840u
++#define OMEGA_GDN_PAR_NORM 164224u
++#define OMEGA_GDN_PAR_BYTES 164736u
++/* per-layer conv tail: f32 [48 heads][384 slots][4] = {x_{t-3}, x_{t-2}, x_{t-1}, unused}; each head keeps its own
++ * copy of the q/k channels of its key head (the three heads of a key head hold equal copies), so no CTA reads a word
++ * another CTA writes */
++#define OMEGA_GDN_TAIL_HEAD_BYTES (OMEGA_GDN_SLOTS * 16u)        /* 6144 */
++#define OMEGA_GDN_TAIL_BYTES (OMEGA_GDN_VALUE_HEADS * OMEGA_GDN_TAIL_HEAD_BYTES)
++/* per-layer state: f32 [48][128 k][128 v], the reference layout */
++#define OMEGA_GDN_STATE_HEAD_BYTES (OMEGA_GDN_HEAD_DIM * OMEGA_GDN_HEAD_DIM * 4u) /* 65536 */
++#define OMEGA_GDN_STATE_BYTES (OMEGA_GDN_VALUE_HEADS * OMEGA_GDN_STATE_HEAD_BYTES)
++
++/* constant bank: addresses at 0x380 + 8n, then the scalars */
++#define OMEGA_GDN_ARG_QKV 0x380u        /* f32 [10240] in_proj_qkv row (times in_scale) */
++#define OMEGA_GDN_ARG_Z 0x388u          /* f32 [6144] in_proj_z row (times in_scale) */
++#define OMEGA_GDN_ARG_AB 0x390u         /* f32 [48][2] {a[h], b[h]}: the bf16 GEMV of in_proj_a / in_proj_b rows interleaved */
++#define OMEGA_GDN_ARG_PAR 0x398u        /* the layer's parameter block */
++#define OMEGA_GDN_ARG_TAIL 0x3a0u       /* the layer's conv tail */
++#define OMEGA_GDN_ARG_STATE 0x3a8u      /* the layer's state */
++#define OMEGA_GDN_ARG_OUT 0x3b0u        /* f32 [6144] y (the out_proj input) */
++#define OMEGA_GDN_ARG_EPS_L2 0x3b8u     /* f32, 1e-6 in the reference */
++#define OMEGA_GDN_ARG_EPS_NORM 0x3bcu   /* f32, rms_norm_eps */
++#define OMEGA_GDN_ARG_IN_SCALE 0x3c0u   /* f32: qkv and z are multiplied by it on read */
++#define OMEGA_GDN_ARG_OUT_SCALE 0x3c4u  /* f32: y is multiplied by it */
++#define OMEGA_GDN_ARGS_WORDS 18u
++
++/* shared memory map (bytes) */
++#define OMEGA_GDN_SM_Q 0u               /* q[128] f32, normalised and / sqrt(128) */
++#define OMEGA_GDN_SM_K 512u             /* k[128] f32 */
++#define OMEGA_GDN_SM_V 1024u            /* v[128] f32 */
++#define OMEGA_GDN_SM_RED 1536u          /* per-warp sums of squares of q|k [8] */
++#define OMEGA_GDN_SM_P 1600u            /* per-warp partials [8][128] f32 (kv, then o) */
++#define OMEGA_GDN_SM_RED2 5696u         /* per-warp sums of squares of o [8] */
++#define OMEGA_GDN_SHARED_BYTES 5728u
++
++#define OMEGA_GDN_THREADS 256u
++#define OMEGA_GDN_GRID_X 3u
++#define OMEGA_GDN_GRID_Y 16u
++
++typedef struct {
++    int mutant; /* TEST ONLY. 0 none; 1 no decay (decay = 1); 2 beta = 1; 3 the output gate is z, not silu(z);
++                 * 4 the conv tail is not shifted (the next step convolves stale history). */
++} OmegaGdnSpec;
++
++/* Builds the register-allocated IR program into *prog. 0 ok, -1 refused. */
++int omega_blackwell_codegen_gdn_prog(const OmegaGdnSpec *spec, BlackwellIRProgram *prog);
++/* Instruction and peak-register counts (host, no device). */
++int omega_gdn_prog_stats(const OmegaGdnSpec *spec, uint32_t *insns, uint32_t *gprs);
++
++#endif
+diff --git a/src/omega_gpu_gdn_api.c b/src/omega_gpu_gdn_api.c
+new file mode 100644
+index 00000000..6df97a82
+--- /dev/null
++++ b/src/omega_gpu_gdn_api.c
+@@ -0,0 +1,310 @@
++/*
++ * omega_gpu_gdn_api.c: resident Gated DeltaNet parameters, tails, states and the one-launch decode step (see the
++ * header). Session use mirrors omega_gpu_router_api.c: every buffer from omega_gpu_session_alloc (GPU-uncached,
++ * host-visible), sync_to_gpu after host writes, sync_to_cpu before host reads, one omega_gpu_session_launch per call.
++ */
++#include "omega_gpu_gdn_api.h"
++#include "omega_gpu_session.h"
++#include "omega_gpu_cmdlist.h"
++#include <math.h>
++#include <stdbool.h>
++#include <string.h>
++
++#define MARKER_TIMEOUT_MS 20000ull
++#define POISON_F32 (-999.0f)
++
++/* the launch buffer: one allocation, fixed offsets (bytes) */
++#define LB_QKV 0u
++#define LB_Z (LB_QKV + OMEGA_GDN_CONV_DIM * 4u)
++#define LB_AB (LB_Z + OMEGA_GDN_V_DIM * 4u)
++#define LB_OUT (LB_AB + OMEGA_GDN_VALUE_HEADS * 8u)
++#define LB_BYTES (LB_OUT + OMEGA_GDN_V_DIM * 4u)
++
++struct OmegaGpuGdn {
++    uint32_t layers;
++    OmegaGpuMem par;   /* [layers][OMEGA_GDN_PAR_BYTES] */
++    OmegaGpuMem tail;  /* [layers][OMEGA_GDN_TAIL_BYTES] */
++    OmegaGpuMem state; /* [layers][OMEGA_GDN_STATE_BYTES] */
++    OmegaGpuMem lb;    /* launch buffer */
++};
++
++typedef struct {
++    bool valid;
++    OmegaGdnSpec spec;
++    OmegaBlackwellKernel kernel;
++    OmegaGpuMem code;
++    uint32_t insns;
++} Slot;
++
++static struct {
++    bool hooked;
++    Slot slot;
++    int mutant;
++} g_k;
++static int g_rec; /* 1 while a record call runs (lock held): kernel_for must not evict */
++
++static void slot_clear_locked(void) { if (g_k.slot.valid) omega_gpu_session_free(&g_k.slot.code); memset(&g_k.slot, 0, sizeof g_k.slot); }
++static void on_session_close(void) { memset(&g_k.slot, 0, sizeof g_k.slot); }
++static OmegaGpuSession *dev_open_locked(void) {
++    if (!g_k.hooked) { (void)omega_gpu_session_on_close(on_session_close); g_k.hooked = true; }
++    return omega_gpu_session_open();
++}
++
++void omega_gpu_gdn_test_set_mutant(int mutant) { omega_gpu_session_lock(); g_k.mutant = mutant; slot_clear_locked(); omega_gpu_session_unlock(); }
++const char *omega_gpu_gdn_last_error(void) { return omega_gpu_session_last_error(); }
++const char *omega_gpu_gdn_rc_name(int rc) {
++    switch (rc) {
++    case OMEGA_GPU_GDN_OK: return "OK";
++    case OMEGA_GPU_GDN_BAD_ARGS: return "BAD_ARGS";
++    case OMEGA_GPU_GDN_TOO_LARGE: return "TOO_LARGE";
++    case OMEGA_GPU_GDN_CODEGEN_FAIL: return "CODEGEN_FAIL";
++    case OMEGA_GPU_GDN_CHIP_FAIL: return "CHIP_FAIL";
++    default: return "?";
++    }
++}
++
++/* ---- host layout ---- */
++/* the qkv channel slot s of value head h reads */
++static uint32_t slot_channel(uint32_t h, uint32_t s) {
++    const uint32_t hk = h / (OMEGA_GDN_VALUE_HEADS / OMEGA_GDN_KEY_HEADS), D = OMEGA_GDN_HEAD_DIM;
++    if (s < D) return hk * D + s;
++    if (s < 2u * D) return OMEGA_GDN_KEY_HEADS * D + hk * D + (s - D);
++    return 2u * OMEGA_GDN_KEY_HEADS * D + h * D + (s - 2u * D);
++}
++
++int omega_gdn_pack_params(const float *conv_w, const float *a_log, const float *dt_bias, const float *norm_w, uint8_t *block) {
++    if (!conv_w || !a_log || !dt_bias || !norm_w || !block) return -1;
++    memcpy(block + OMEGA_GDN_PAR_CONV, conv_w, (size_t)OMEGA_GDN_CONV_DIM * OMEGA_GDN_TAPS * 4u);
++    float *sc = (float *)(block + OMEGA_GDN_PAR_SCAL);
++    for (uint32_t h = 0; h < OMEGA_GDN_VALUE_HEADS; h++) { sc[2 * h] = -expf(a_log[h]); sc[2 * h + 1] = dt_bias[h]; }
++    memcpy(block + OMEGA_GDN_PAR_NORM, norm_w, OMEGA_GDN_HEAD_DIM * 4u);
++    return 0;
++}
++
++void omega_gdn_pack_tail(const float *tail, float *dev) {
++    for (uint32_t h = 0; h < OMEGA_GDN_VALUE_HEADS; h++)
++        for (uint32_t s = 0; s < OMEGA_GDN_SLOTS; s++) {
++            float *d = dev + ((size_t)h * OMEGA_GDN_SLOTS + s) * 4u;
++            const uint32_t ch = slot_channel(h, s);
++            for (uint32_t j = 0; j < 3; j++) d[j] = tail[(size_t)j * OMEGA_GDN_CONV_DIM + ch];
++            d[3] = 0.0f;
++        }
++}
++
++int omega_gdn_unpack_tail(const float *dev, float *tail) {
++    int rc = 0;
++    for (uint32_t h = 0; h < OMEGA_GDN_VALUE_HEADS; h++)
++        for (uint32_t s = 0; s < OMEGA_GDN_SLOTS; s++) {
++            const float *d = dev + ((size_t)h * OMEGA_GDN_SLOTS + s) * 4u;
++            const uint32_t ch = slot_channel(h, s);
++            const bool first = s >= 2u * OMEGA_GDN_HEAD_DIM || h % (OMEGA_GDN_VALUE_HEADS / OMEGA_GDN_KEY_HEADS) == 0;
++            for (uint32_t j = 0; j < 3; j++) {
++                float *t = &tail[(size_t)j * OMEGA_GDN_CONV_DIM + ch];
++                if (first) *t = d[j];
++                else if (memcmp(t, &d[j], 4) != 0) rc = -1;
++            }
++        }
++    return rc;
++}
++
++/* ---- buffers ---- */
++int omega_gpu_gdn_alloc(uint32_t layers, OmegaGpuGdn **out) {
++    if (!out || layers == 0 || layers > OMEGA_GPU_GDN_MAX_LAYERS) return OMEGA_GPU_GDN_BAD_ARGS;
++    *out = NULL;
++    OmegaGpuGdn *g = omega_gpu_host_calloc(1, sizeof *g);
++    if (!g) return OMEGA_GPU_GDN_BAD_ARGS;
++    g->layers = layers;
++    omega_gpu_session_lock();
++    int rc = OMEGA_GPU_GDN_OK;
++    if (!dev_open_locked()) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK && omega_gpu_session_alloc((size_t)layers * OMEGA_GDN_PAR_BYTES, &g->par) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK && omega_gpu_session_alloc((size_t)layers * OMEGA_GDN_TAIL_BYTES, &g->tail) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK && omega_gpu_session_alloc((size_t)layers * OMEGA_GDN_STATE_BYTES, &g->state) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK && omega_gpu_session_alloc(LB_BYTES, &g->lb) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK) {
++        memset(g->par.cpu, 0, (size_t)layers * OMEGA_GDN_PAR_BYTES);
++        memset(g->tail.cpu, 0, (size_t)layers * OMEGA_GDN_TAIL_BYTES);
++        memset(g->state.cpu, 0, (size_t)layers * OMEGA_GDN_STATE_BYTES);
++        memset(g->lb.cpu, 0, LB_BYTES);
++        if (omega_gpu_session_sync_to_gpu(&g->par) != 0 || omega_gpu_session_sync_to_gpu(&g->tail) != 0 ||
++            omega_gpu_session_sync_to_gpu(&g->state) != 0 || omega_gpu_session_sync_to_gpu(&g->lb) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    }
++    omega_gpu_session_unlock();
++    if (rc != OMEGA_GPU_GDN_OK) { omega_gpu_gdn_free(g); return rc; }
++    *out = g;
++    return OMEGA_GPU_GDN_OK;
++}
++
++void omega_gpu_gdn_free(OmegaGpuGdn *g) {
++    if (!g) return;
++    omega_gpu_session_lock();
++    if (g->par.cpu) omega_gpu_session_free(&g->par);
++    if (g->tail.cpu) omega_gpu_session_free(&g->tail);
++    if (g->state.cpu) omega_gpu_session_free(&g->state);
++    if (g->lb.cpu) omega_gpu_session_free(&g->lb);
++    omega_gpu_session_unlock();
++    omega_gpu_host_free(g);
++}
++
++int omega_gpu_gdn_set_layer(OmegaGpuGdn *g, uint32_t layer, const float *conv_w, const float *a_log, const float *dt_bias,
++                            const float *norm_w) {
++    if (!g || layer >= g->layers) return OMEGA_GPU_GDN_BAD_ARGS;
++    omega_gpu_session_lock();
++    int rc = omega_gdn_pack_params(conv_w, a_log, dt_bias, norm_w, (uint8_t *)g->par.cpu + (size_t)layer * OMEGA_GDN_PAR_BYTES) == 0
++                 ? OMEGA_GPU_GDN_OK : OMEGA_GPU_GDN_BAD_ARGS;
++    if (rc == OMEGA_GPU_GDN_OK && omega_gpu_session_sync_to_gpu(&g->par) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    omega_gpu_session_unlock();
++    return rc;
++}
++
++int omega_gpu_gdn_reset(OmegaGpuGdn *g) {
++    if (!g) return OMEGA_GPU_GDN_BAD_ARGS;
++    omega_gpu_session_lock();
++    memset(g->tail.cpu, 0, (size_t)g->layers * OMEGA_GDN_TAIL_BYTES);
++    memset(g->state.cpu, 0, (size_t)g->layers * OMEGA_GDN_STATE_BYTES);
++    int rc = (omega_gpu_session_sync_to_gpu(&g->tail) == 0 && omega_gpu_session_sync_to_gpu(&g->state) == 0) ? OMEGA_GPU_GDN_OK : OMEGA_GPU_GDN_CHIP_FAIL;
++    omega_gpu_session_unlock();
++    return rc;
++}
++
++int omega_gpu_gdn_set_state(OmegaGpuGdn *g, uint32_t layer, const float *tail, const float *state) {
++    if (!g || layer >= g->layers || !tail || !state) return OMEGA_GPU_GDN_BAD_ARGS;
++    omega_gpu_session_lock();
++    omega_gdn_pack_tail(tail, (float *)((uint8_t *)g->tail.cpu + (size_t)layer * OMEGA_GDN_TAIL_BYTES));
++    memcpy((uint8_t *)g->state.cpu + (size_t)layer * OMEGA_GDN_STATE_BYTES, state, OMEGA_GDN_STATE_BYTES);
++    int rc = (omega_gpu_session_sync_to_gpu(&g->tail) == 0 && omega_gpu_session_sync_to_gpu(&g->state) == 0) ? OMEGA_GPU_GDN_OK : OMEGA_GPU_GDN_CHIP_FAIL;
++    omega_gpu_session_unlock();
++    return rc;
++}
++
++int omega_gpu_gdn_get_state(OmegaGpuGdn *g, uint32_t layer, float *tail, float *state) {
++    if (!g || layer >= g->layers || (!tail && !state)) return OMEGA_GPU_GDN_BAD_ARGS;
++    omega_gpu_session_lock();
++    int rc = (omega_gpu_session_sync_to_cpu(&g->tail) == 0 && omega_gpu_session_sync_to_cpu(&g->state) == 0) ? OMEGA_GPU_GDN_OK : OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK && tail &&
++        omega_gdn_unpack_tail((const float *)((const uint8_t *)g->tail.cpu + (size_t)layer * OMEGA_GDN_TAIL_BYTES), tail) != 0) {
++        omega_gpu_session_set_error("gdn: the per-head copies of a key head's conv tail disagree");
++        rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    }
++    if (rc == OMEGA_GPU_GDN_OK && state) memcpy(state, (const uint8_t *)g->state.cpu + (size_t)layer * OMEGA_GDN_STATE_BYTES, OMEGA_GDN_STATE_BYTES);
++    omega_gpu_session_unlock();
++    return rc;
++}
++
++/* ---- kernel ---- */
++static int kernel_for(const OmegaGdnSpec *spec, Slot **out, bool *hit) {
++    Slot *s = &g_k.slot;
++    if (s->valid && memcmp(&s->spec, spec, sizeof *spec) == 0) { *out = s; *hit = true; return OMEGA_GPU_GDN_OK; }
++    if (g_rec && s->valid) { omega_gpu_session_set_error("gdn record: kernel cache miss would evict the resident kernel (warm up before recording)"); return OMEGA_GPU_GDN_TOO_LARGE; }
++    slot_clear_locked();
++    BlackwellIRProgram *prog = omega_gpu_host_calloc(1, sizeof *prog);
++    if (!prog) { omega_gpu_session_set_error("gdn codegen: host memory"); return OMEGA_GPU_GDN_CODEGEN_FAIL; }
++    int cg = omega_blackwell_codegen_gdn_prog(spec, prog);
++    size_t need = cg == 0 ? omega_bw_program_code_bytes(prog) : 0;
++    if (cg != 0 || need == 0) { omega_gpu_host_free(prog); omega_gpu_session_set_error("gdn codegen refused the spec"); return OMEGA_GPU_GDN_CODEGEN_FAIL; }
++    if ((uint64_t)OMEGA_GDN_THREADS * omega_bw_gpr_declared(prog->regalloc.peak_gpr_usage) > 65536u) { omega_gpu_host_free(prog); omega_gpu_session_set_error("gdn: register file"); return OMEGA_GPU_GDN_TOO_LARGE; }
++    const uint32_t insns = (uint32_t)prog->count;
++    OmegaGpuMem code;
++    if (omega_gpu_session_alloc_code(need, &code) != 0) { omega_gpu_host_free(prog); return OMEGA_GPU_GDN_CHIP_FAIL; }
++    OmegaBlackwellKernel kernel;
++    cg = omega_blackwell_kernel_encode_into(prog, code.cpu, need, &kernel);
++    omega_gpu_host_free(prog);
++    if (cg != 0 || !kernel.code || kernel.code_size != need) { omega_gpu_session_free(&code); omega_gpu_session_set_error("gdn encode"); return OMEGA_GPU_GDN_CODEGEN_FAIL; }
++    if (omega_gpu_session_sync_to_gpu(&code) != 0) { omega_gpu_session_free(&code); return OMEGA_GPU_GDN_CHIP_FAIL; }
++    memset(s, 0, sizeof *s);
++    s->valid = true; s->spec = *spec; s->kernel = kernel; s->code = code; s->insns = insns;
++    *out = s; *hit = false;
++    return OMEGA_GPU_GDN_OK;
++}
++
++/* rec non-NULL (record path, caller holds the session lock): the inputs are the device rows dev_*, the launch is
++ * appended to rec instead of submitted, nothing is staged, poisoned or read back. */
++static int gdn_core(OmegaGpuGdn *g, uint32_t layer, const float *qkv, const float *z, const float *ab, float eps_l2,
++                    float eps_norm, float in_scale, float out_scale, float *out, OmegaGpuGdnInfo *info,
++                    OmegaGpuCmdList *rec, uint64_t dev_qkv, uint64_t dev_z, uint64_t dev_ab) {
++    uint64_t t0 = omega_gpu_session_now_ns();
++    if (info) memset(info, 0, sizeof *info);
++    if (!g || layer >= g->layers || (rec ? (!dev_qkv || !dev_z || !dev_ab) : (!qkv || !z || !ab || !out))) return OMEGA_GPU_GDN_BAD_ARGS;
++    if (!isfinite(eps_l2) || !isfinite(eps_norm) || !isfinite(in_scale) || !isfinite(out_scale)) return OMEGA_GPU_GDN_BAD_ARGS;
++    OmegaGdnSpec spec; memset(&spec, 0, sizeof spec);
++    spec.mutant = g_k.mutant;
++
++    if (!rec) omega_gpu_session_lock();
++#define UNLOCK() do { if (!rec) omega_gpu_session_unlock(); } while (0)
++    int rc = OMEGA_GPU_GDN_OK;
++    if (!dev_open_locked()) { UNLOCK(); return OMEGA_GPU_GDN_CHIP_FAIL; }
++    Slot *ks = NULL; bool hit = false;
++    g_rec = rec != NULL;
++    rc = kernel_for(&spec, &ks, &hit);
++    g_rec = 0;
++    if (rc != OMEGA_GPU_GDN_OK) { UNLOCK(); return rc; }
++    uint8_t *b = g->lb.cpu;
++    float *yo = (float *)(b + LB_OUT);
++    if (!rec) {
++        memcpy(b + LB_QKV, qkv, OMEGA_GDN_CONV_DIM * 4u);
++        memcpy(b + LB_Z, z, OMEGA_GDN_V_DIM * 4u);
++        memcpy(b + LB_AB, ab, OMEGA_GDN_VALUE_HEADS * 8u);
++        for (size_t i = 0; i < OMEGA_GDN_V_DIM; i++) yo[i] = POISON_F32;
++        if (omega_gpu_session_sync_to_gpu(&g->lb) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    }
++
++    uint32_t args[OMEGA_GDN_ARGS_WORDS];
++#define A64(i, v) do { args[i] = (uint32_t)(v); args[(i) + 1] = (uint32_t)((v) >> 32); } while (0)
++    A64(0, rec ? dev_qkv : g->lb.va + LB_QKV); A64(2, rec ? dev_z : g->lb.va + LB_Z); A64(4, rec ? dev_ab : g->lb.va + LB_AB);
++    A64(6, g->par.va + (uint64_t)layer * OMEGA_GDN_PAR_BYTES); A64(8, g->tail.va + (uint64_t)layer * OMEGA_GDN_TAIL_BYTES);
++    A64(10, g->state.va + (uint64_t)layer * OMEGA_GDN_STATE_BYTES); A64(12, g->lb.va + LB_OUT);
++#undef A64
++    memcpy(&args[14], &eps_l2, 4); memcpy(&args[15], &eps_norm, 4); memcpy(&args[16], &in_scale, 4); memcpy(&args[17], &out_scale, 4);
++    if (info) {
++        info->layer = layer; info->threads = OMEGA_GDN_THREADS; info->grid_x = OMEGA_GDN_GRID_X; info->grid_y = OMEGA_GDN_GRID_Y;
++        info->insns = ks->insns; info->gprs = ks->kernel.gpr_count;
++        info->state_bytes = 2ull * OMEGA_GDN_STATE_BYTES;
++        info->kernel_cache_hit = hit;
++    }
++    if (rc == OMEGA_GPU_GDN_OK) {
++        OmegaGpuLaunch L = {
++            .code_va = ks->code.va, .gpr_count = omega_bw_gpr_declared(ks->kernel.gpr_count),
++            .threads_x = OMEGA_GDN_THREADS, .threads_y = 1, .grid_x = OMEGA_GDN_GRID_X, .grid_y = OMEGA_GDN_GRID_Y,
++            .num_elements = (size_t)OMEGA_GDN_V_DIM,
++            .args = args, .n_args = OMEGA_GDN_ARGS_WORDS, .timeout_ms = MARKER_TIMEOUT_MS,
++            .shared_bytes = OMEGA_GDN_SHARED_BYTES,
++        };
++        if (!omega_bw_gpr_declared_ok(L.gpr_count, ks->kernel.gpr_count)) { omega_gpu_session_set_error("declared registers below peak + 2: refusing to launch"); rc = OMEGA_GPU_GDN_CHIP_FAIL; }
++        else if (rec) { if (omega_gpu_cmdlist_add(rec, &L) < 0) rc = OMEGA_GPU_GDN_CHIP_FAIL; }
++        else if (omega_gpu_session_launch(&L, info ? &info->elapsed_ns : NULL, info ? &info->completion_marker : NULL) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    }
++    if (rc == OMEGA_GPU_GDN_OK && !rec && omega_gpu_session_sync_to_cpu(&g->lb) != 0) rc = OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK && !rec) {
++        size_t unchanged = 0;
++        for (size_t i = 0; i < OMEGA_GDN_V_DIM; i++) if (yo[i] == POISON_F32) unchanged++;
++        if (unchanged) { omega_gpu_session_set_error("gdn: output poison survived"); rc = OMEGA_GPU_GDN_CHIP_FAIL; }
++        else memcpy(out, yo, OMEGA_GDN_V_DIM * 4u);
++    }
++    UNLOCK();
++#undef UNLOCK
++    if (info) info->call_ns = omega_gpu_session_now_ns() - t0;
++    return rc;
++}
++
++int omega_gpu_gdn_step(OmegaGpuGdn *g, uint32_t layer, const float *qkv, const float *z, const float *ab, float eps_l2,
++                       float eps_norm, float in_scale, float out_scale, float *out, OmegaGpuGdnInfo *info) {
++    return gdn_core(g, layer, qkv, z, ab, eps_l2, eps_norm, in_scale, out_scale, out, info, NULL, 0, 0, 0);
++}
++
++/* Record path (decode graph): see the header. Caller holds omega_gpu_session_lock(). */
++int omega_gpu_gdn_record(OmegaGpuCmdList *cl, OmegaGpuGdn *g, uint32_t layer, uint64_t qkv_va, uint64_t z_va, uint64_t ab_va,
++                         float eps_l2, float eps_norm, float in_scale, float out_scale, uint64_t *out_va) {
++    if (!cl) return OMEGA_GPU_GDN_BAD_ARGS;
++    int rc = gdn_core(g, layer, NULL, NULL, NULL, eps_l2, eps_norm, in_scale, out_scale, NULL, NULL, cl, qkv_va, z_va, ab_va);
++    if (rc == OMEGA_GPU_GDN_OK && out_va) *out_va = g->lb.va + LB_OUT;
++    return rc;
++}
++
++int omega_gpu_gdn_read_out(OmegaGpuGdn *g, float *out) {
++    if (!g || !out) return OMEGA_GPU_GDN_BAD_ARGS;
++    omega_gpu_session_lock();
++    int rc = omega_gpu_session_sync_to_cpu(&g->lb) == 0 ? OMEGA_GPU_GDN_OK : OMEGA_GPU_GDN_CHIP_FAIL;
++    if (rc == OMEGA_GPU_GDN_OK) memcpy(out, (const uint8_t *)g->lb.cpu + LB_OUT, OMEGA_GDN_V_DIM * 4u);
++    omega_gpu_session_unlock();
++    return rc;
++}
+diff --git a/src/omega_gpu_gdn_api.h b/src/omega_gpu_gdn_api.h
+new file mode 100644
+index 00000000..fe387699
+--- /dev/null
++++ b/src/omega_gpu_gdn_api.h
+@@ -0,0 +1,86 @@
++#ifndef OMEGA_GPU_GDN_API_H
++#define OMEGA_GPU_GDN_API_H
++/*
++ * omega_gpu_gdn_api: the Gated DeltaNet decode step of Qwen3.8-27B in one launch per layer (omega#542, 2026-10-18).
++ * The kernel is described in omega_blackwell_codegen_gdn.h; the maths is sc qwen38.rs `delta_net`.
++ *
++ *   int  omega_gpu_gdn_alloc(uint32_t layers, OmegaGpuGdn **out);
++ *        Device-resident per-layer parameters, conv tails and recurrent states (zeroed), plus the launch buffer.
++ *   int  omega_gpu_gdn_set_layer(OmegaGpuGdn *g, uint32_t layer, const float *conv_w, const float *a_log,
++ *                                const float *dt_bias, const float *norm_w);
++ *        conv_w: linear_attn.conv1d.weight [10240][1][4] widened to f32 ([10240][4]); a_log, dt_bias: [48];
++ *        norm_w: linear_attn.norm.weight [128]. negA = -expf(a_log) is computed here (float).
++ *   int  omega_gpu_gdn_set_state / omega_gpu_gdn_get_state(OmegaGpuGdn *g, uint32_t layer, float *tail, float *state);
++ *        The reference layouts: tail [3][10240] (oldest first, qwen38.rs conv_tail), state [48][128 k][128 v].
++ *        get_state refuses (CHIP_FAIL) when the three per-head copies of a key head's q/k tail disagree.
++ *   int  omega_gpu_gdn_reset(OmegaGpuGdn *g);   every layer's tail and state to zero (a new sequence)
++ *   int  omega_gpu_gdn_step(OmegaGpuGdn *g, uint32_t layer, const float *qkv, const float *z, const float *ab,
++ *                           float eps_l2, float eps_norm, float in_scale, float out_scale, float *out,
++ *                           OmegaGpuGdnInfo *info);
++ *        qkv [10240] and z [6144] are the in_proj outputs (times 1 / in_scale: the kernel multiplies them by in_scale);
++ *        ab [48][2] = {a[h], b[h]}: the in_proj_a and in_proj_b rows stacked interleaved (row 2h = a_h, 2h + 1 = b_h)
++ *        give it from one bf16 GEMV. out [6144] = the out_proj input times out_scale. Updates the layer's tail and
++ *        state on the device. eps_l2 is 1e-6 in the reference; eps_norm is rms_norm_eps.
++ *   int  omega_gpu_gdn_record(cl, g, layer, qkv_va, z_va, ab_va, eps_l2, eps_norm, in_scale, out_scale, &out_va);
++ *        The same launch appended to a command list (caller holds omega_gpu_session_lock()); inputs are device
++ *        addresses, out lands in the launch buffer (out_va). A kernel cache miss that would evict is refused.
++ *
++ * Every buffer is GPU-uncached host-visible session memory (nvos.h:1117 rule), launched through
++ * omega_gpu_session_launch like the router. The output is poisoned before the launch; a surviving poison word is
++ * CHIP_FAIL.
++ */
++#include "omega_blackwell_codegen_gdn.h"
++#include <stddef.h>
++#include <stdint.h>
++
++enum {
++    OMEGA_GPU_GDN_OK = 0,
++    OMEGA_GPU_GDN_BAD_ARGS = -1,
++    OMEGA_GPU_GDN_TOO_LARGE = -2,
++    OMEGA_GPU_GDN_CODEGEN_FAIL = -3,
++    OMEGA_GPU_GDN_CHIP_FAIL = -4
++};
++
++#define OMEGA_GPU_GDN_MAX_LAYERS 64u
++#define OMEGA_GPU_GDN_TAIL_FLOATS (3u * OMEGA_GDN_CONV_DIM)                                   /* reference tail */
++#define OMEGA_GPU_GDN_STATE_FLOATS (OMEGA_GDN_VALUE_HEADS * OMEGA_GDN_HEAD_DIM * OMEGA_GDN_HEAD_DIM) /* 786432 */
++
++typedef struct OmegaGpuGdn OmegaGpuGdn;
++
++typedef struct {
++    uint32_t layer, threads, grid_x, grid_y, insns, gprs;
++    uint64_t state_bytes;       /* state bytes read and written: 2 * 48 * 128 * 128 * 4 */
++    uint64_t elapsed_ns;        /* marker-to-marker chip time */
++    uint64_t call_ns;           /* whole call */
++    uint32_t completion_marker;
++    int kernel_cache_hit;
++} OmegaGpuGdnInfo;
++
++int omega_gpu_gdn_alloc(uint32_t layers, OmegaGpuGdn **out);
++void omega_gpu_gdn_free(OmegaGpuGdn *g);
++int omega_gpu_gdn_set_layer(OmegaGpuGdn *g, uint32_t layer, const float *conv_w, const float *a_log, const float *dt_bias,
++                            const float *norm_w);
++int omega_gpu_gdn_reset(OmegaGpuGdn *g);
++int omega_gpu_gdn_set_state(OmegaGpuGdn *g, uint32_t layer, const float *tail, const float *state);
++int omega_gpu_gdn_get_state(OmegaGpuGdn *g, uint32_t layer, float *tail, float *state);
++int omega_gpu_gdn_step(OmegaGpuGdn *g, uint32_t layer, const float *qkv, const float *z, const float *ab, float eps_l2,
++                       float eps_norm, float in_scale, float out_scale, float *out, OmegaGpuGdnInfo *info);
++struct OmegaGpuCmdList;
++int omega_gpu_gdn_record(struct OmegaGpuCmdList *cl, OmegaGpuGdn *g, uint32_t layer, uint64_t qkv_va, uint64_t z_va,
++                         uint64_t ab_va, float eps_l2, float eps_norm, float in_scale, float out_scale, uint64_t *out_va);
++/* Test helper: the out row the last launch wrote to the launch buffer (after a record + submit, for example). */
++int omega_gpu_gdn_read_out(OmegaGpuGdn *g, float *out);
++const char *omega_gpu_gdn_last_error(void);
++const char *omega_gpu_gdn_rc_name(int rc);
++
++/* Host layout helpers (no device; the test's simulator path uses them too). */
++/* The parameter block (OMEGA_GDN_PAR_BYTES) from the checkpoint tensors (see set_layer). -1 on a NULL pointer. */
++int omega_gdn_pack_params(const float *conv_w, const float *a_log, const float *dt_bias, const float *norm_w, uint8_t *block);
++/* reference tail [3][10240] <-> device tail [48][384][4] (unpack: the q/k channels from head 3 * hk; -1 when the
++ * three copies of a key head disagree bit for bit) */
++void omega_gdn_pack_tail(const float *tail, float *dev);
++int omega_gdn_unpack_tail(const float *dev, float *tail);
++
++void omega_gpu_gdn_test_set_mutant(int mutant); /* TEST ONLY: OmegaGdnSpec.mutant; clears the kernel cache */
++
++#endif
+diff --git a/tests/bw_warp_sim_k.h b/tests/bw_warp_sim_k.h
+index 676b2934..53fed2db 100644
+--- a/tests/bw_warp_sim_k.h
++++ b/tests/bw_warp_sim_k.h
+@@ -155,7 +155,8 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
+     case BW_IR_ISETP_GE_U32: l->p0 = a >= b; break;
+     case BW_IR_LDG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t x; memcpy(&x, (const void *)(uintptr_t)ad, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
+     case BW_IR_LDG_E_U16: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 2, pc)) return; uint16_t x; memcpy(&x, (const void *)(uintptr_t)ad, 2); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
+-    case BW_IR_STG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
++    /* STG.E takes the signed 24-bit byte offset the encoder writes (nvdisasm 13.0 -b SM121 decodes "STG.E desc[UR4][R4.64+0x1e0c], R9", omega#542) */
++    case BW_IR_STG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
+     case BW_IR_LDG_E_64: case BW_IR_LDG_E_128: { unsigned n = in->op == BW_IR_LDG_E_64 ? 8u : 16u; uint64_t ad = ws_rd64(l, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; if (!ws_mem_ok(s, ad, n, pc)) { if (getenv("WS_DBG")) fprintf(stderr, "  tid %u cx %u cy %u\n", tid, cx, cy); return; } if (ad & (n - 1)) { ws_fail(s, WS_E_MEM, pc, "wide global load not naturally aligned"); return; } uint32_t x[4]; memcpy(x, (const void *)(uintptr_t)ad, n); for (unsigned i = 0; i < n / 4; i++) ws_wrs(l, in->dst_vreg, i, x[i], p); break; }
+     case BW_IR_LDS128: { uint32_t ad = a + in->imm; if (ad & 15u) { ws_fail(s, WS_E_SMEM, pc, "LDS.128 address not 16-byte aligned"); return; } for (unsigned i = 0; i < 4; i++) { uint32_t *m = ws_smem(s, ad + 4u * i, pc); if (!m) return; ws_wrs(l, in->dst_vreg, i, *m, p); } break; }
+     case BW_IR_LDS32: { uint32_t *m = ws_smem(s, a, pc); if (!m) return; ws_wrs(l, in->dst_vreg, in->dst_subreg, *m, p); break; }
+@@ -170,6 +171,7 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
+     case BW_IR_MUFU_EX2: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(exp2f(ws_u2f(a))), p); break;
+     case BW_IR_MUFU_RCP: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(1.0f / ws_u2f(a)), p); break;
+     case BW_IR_MUFU_RSQ: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(1.0f / sqrtf(ws_u2f(a))), p); break;
++    case BW_IR_MUFU_LG2: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(log2f(ws_u2f(a))), p); break;
+     case BW_IR_LDG_STRONG_SYS: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t x; memcpy(&x, (const void *)(uintptr_t)ad, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
+     case BW_IR_STG_STRONG_SYS: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
+     case BW_IR_ATOMG_ADD_STRONG_SYS: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t old; memcpy(&old, (const void *)(uintptr_t)ad, 4); uint32_t nw = old + b; memcpy((void *)(uintptr_t)ad, &nw, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, old, p); break; }
+diff --git a/tests/gpu_gdn_test.c b/tests/gpu_gdn_test.c
+new file mode 100644
+index 00000000..be60e0bd
+--- /dev/null
++++ b/tests/gpu_gdn_test.c
+@@ -0,0 +1,472 @@
++/*
++ * gpu_gdn_test: the one-launch Gated DeltaNet decode step of Qwen3.8-27B (omega_gpu_gdn_api.h), omega#542.
++ *   --host-only   layout helpers, codegen budgets and refusals, the double oracle's delta-rule property
++ *   --sim         warp-simulator parity over the whole grid (48 CTAs x 256 threads, both fragment orders bit-identical),
++ *                 three chained steps against the double oracle, mutants 1-4 caught
++ *   (default)     the chip: two layers (addressing), five chained steps each against the oracle (output, tail, state),
++ *                 a rerun from the same state bit-identical, reset, mutants 1-4 caught, the record path (two steps in
++ *                 one command list: the second reads the first's state), chip medians (--reps N, --out receipt.json)
++ * The oracle is sc crates/aien-inference-abi/src/qwen38.rs `delta_net` in double, from the projections on.
++ * Verdict line last: "gpu_gdn_test: N checks, F failed: PASS|FAIL".
++ */
++#include "omega_gpu_gdn_api.h"
++#include "omega_gpu_session.h"
++#include "omega_gpu_cmdlist.h"
++#include "bw_warp_sim_k.h"
++#include <inttypes.h>
++#include <math.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <time.h>
++
++static int g_checks, g_failed;
++#define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
++static uint32_t lcg(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
++static float frand(uint32_t *s, float lo, float hi) { return lo + (hi - lo) * ((float)(lcg(s) >> 8) / 16777216.0f); }
++static double now_ms(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1e3 + t.tv_nsec / 1e6; }
++static int cmp_u64(const void *a, const void *b) { uint64_t x = *(const uint64_t *)a, y = *(const uint64_t *)b; return x < y ? -1 : x > y; }
++
++#define CD OMEGA_GDN_CONV_DIM
++#define VH OMEGA_GDN_VALUE_HEADS
++#define KH OMEGA_GDN_KEY_HEADS
++#define HD OMEGA_GDN_HEAD_DIM
++#define VD OMEGA_GDN_V_DIM
++#define NS OMEGA_GPU_GDN_STATE_FLOATS
++#define NT OMEGA_GPU_GDN_TAIL_FLOATS
++static const float EPS_L2 = 1e-6f, EPS_N = 1e-6f;
++/* tolerances, normalised by the largest reference magnitude of the vector (EX2 / RCP / RSQ / LG2 are approximate on
++ * the chip, the oracle is double; the mutants miss by orders of magnitude more, see the receipts) */
++#define TOL_OUT 2e-4
++#define TOL_STATE 2e-5
++#define TOL_TAIL 1e-6
++
++typedef struct {
++    float *conv_w, a_log[VH], dtb[VH], nw[HD];
++    float *tail0, *state0; /* initial state, reference layouts */
++} Layer;
++typedef struct { float *qkv, *z, ab[2 * VH]; } Inp;
++
++static void layer_make(Layer *L, uint32_t seed) {
++    uint32_t s = seed;
++    L->conv_w = malloc((size_t)CD * 4 * 4); L->tail0 = malloc((size_t)NT * 4); L->state0 = malloc((size_t)NS * 4);
++    for (size_t i = 0; i < (size_t)CD * 4; i++) L->conv_w[i] = frand(&s, -0.6f, 0.6f);
++    for (unsigned h = 0; h < VH; h++) { L->a_log[h] = frand(&s, -1.5f, 1.5f); L->dtb[h] = frand(&s, -3.0f, 1.0f); }
++    for (unsigned i = 0; i < HD; i++) L->nw[i] = frand(&s, 0.4f, 1.6f);
++    for (size_t i = 0; i < NT; i++) L->tail0[i] = frand(&s, -2.0f, 2.0f);
++    for (size_t i = 0; i < NS; i++) L->state0[i] = frand(&s, -0.2f, 0.2f);
++}
++static void layer_free(Layer *L) { free(L->conv_w); free(L->tail0); free(L->state0); }
++/* in_scale: the kernel multiplies qkv and z by it, so the stored rows are the true rows / in_scale */
++static void inp_make(Inp *in, uint32_t seed, float in_scale) {
++    uint32_t s = seed;
++    in->qkv = malloc((size_t)CD * 4); in->z = malloc((size_t)VD * 4);
++    for (unsigned i = 0; i < CD; i++) in->qkv[i] = frand(&s, -2.5f, 2.5f) / in_scale;
++    for (unsigned i = 0; i < VD; i++) in->z[i] = frand(&s, -3.0f, 3.0f) / in_scale;
++    for (unsigned h = 0; h < VH; h++) { in->ab[2 * h] = frand(&s, -4.0f, 4.0f); in->ab[2 * h + 1] = frand(&s, -4.0f, 4.0f); }
++    /* a few heads at the softplus threshold and past it, and beta near 0 / 1 */
++    if (!getenv("GDN_NOFORCE")) { in->ab[0] = 25.0f; in->ab[2] = 19.9f; in->ab[4] = -30.0f; in->ab[3] = 12.0f; in->ab[5] = -12.0f; }
++}
++static void inp_free(Inp *in) { free(in->qkv); free(in->z); }
++
++/* ---- the double oracle ---- */
++typedef struct { double *tail, *state; } DState;
++static void dstate_init(DState *d, const Layer *L) {
++    d->tail = malloc((size_t)NT * 8); d->state = malloc((size_t)NS * 8);
++    for (size_t i = 0; i < NT; i++) d->tail[i] = L->tail0[i];
++    for (size_t i = 0; i < NS; i++) d->state[i] = L->state0[i];
++}
++static void dstate_free(DState *d) { free(d->tail); free(d->state); }
++static double sigm(double x) { return 1.0 / (1.0 + exp(-x)); }
++static double softplus_ref(double x) { return x > 20.0 ? x : log1p(exp(x)); }
++static void oracle_step(const Layer *L, DState *d, const Inp *in, float in_scale, float out_scale, double *y) {
++    static double mixed[CD], q[KH * HD], k[KH * HD];
++    for (unsigned ch = 0; ch < CD; ch++) {
++        const double x = (double)(in->qkv[ch] * in_scale); /* the kernel's f32 product */
++        const float *w = &L->conv_w[(size_t)ch * 4];
++        double acc = w[0] * d->tail[ch] + w[1] * d->tail[CD + ch] + w[2] * d->tail[2 * CD + ch] + w[3] * x;
++        mixed[ch] = acc * sigm(acc);
++        d->tail[ch] = d->tail[CD + ch]; d->tail[CD + ch] = d->tail[2 * CD + ch]; d->tail[2 * CD + ch] = x;
++    }
++    for (unsigned hk = 0; hk < KH; hk++) {
++        double sq = 0, sk = 0;
++        for (unsigned i = 0; i < HD; i++) { sq += mixed[hk * HD + i] * mixed[hk * HD + i]; sk += mixed[KH * HD + hk * HD + i] * mixed[KH * HD + hk * HD + i]; }
++        const double iq = 1.0 / sqrt(sq + EPS_L2), ik = 1.0 / sqrt(sk + EPS_L2);
++        for (unsigned i = 0; i < HD; i++) { q[hk * HD + i] = mixed[hk * HD + i] * iq / sqrt((double)HD); k[hk * HD + i] = mixed[KH * HD + hk * HD + i] * ik; }
++    }
++    for (unsigned h = 0; h < VH; h++) {
++        const unsigned hk = h / (VH / KH);
++        const double negA = -(double)expf(L->a_log[h]); /* the API's float negA */
++        const double g = (double)(float)negA * softplus_ref((double)in->ab[2 * h] + L->dtb[h]);
++        const double decay = exp(g), beta = sigm(in->ab[2 * h + 1]);
++        double *S = d->state + (size_t)h * HD * HD, kv[HD], o[HD], dl[HD];
++        const double *kk = &k[hk * HD], *qq = &q[hk * HD], *v = &mixed[2 * KH * HD + h * HD];
++        for (size_t i = 0; i < (size_t)HD * HD; i++) S[i] *= decay;
++        for (unsigned c = 0; c < HD; c++) kv[c] = 0;
++        for (unsigned r = 0; r < HD; r++) for (unsigned c = 0; c < HD; c++) kv[c] += S[r * HD + c] * kk[r];
++        for (unsigned c = 0; c < HD; c++) dl[c] = (v[c] - kv[c]) * beta;
++        for (unsigned r = 0; r < HD; r++) for (unsigned c = 0; c < HD; c++) S[r * HD + c] += kk[r] * dl[c];
++        for (unsigned c = 0; c < HD; c++) o[c] = 0;
++        for (unsigned r = 0; r < HD; r++) for (unsigned c = 0; c < HD; c++) o[c] += S[r * HD + c] * qq[r];
++        double ms = 0; for (unsigned c = 0; c < HD; c++) ms += o[c] * o[c];
++        const double inv = 1.0 / sqrt(ms / HD + EPS_N);
++        for (unsigned c = 0; c < HD; c++) {
++            const double zz = (double)(in->z[h * HD + c] * in_scale);
++            y[h * HD + c] = o[c] * inv * L->nw[c] * (zz * sigm(zz)) * out_scale;
++        }
++    }
++}
++/* max |got - ref| / max |ref| */
++static double nerr(const float *got, const double *ref, size_t n) {
++    double e = 0, m = 1e-30;
++    for (size_t i = 0; i < n; i++) {
++        const double a = fabs((double)got[i] - ref[i]);
++        if (!isfinite(a)) { if (getenv("GDN_DBG")) printf("  non-finite at %zu: got %g ref %g\n", i, (double)got[i], ref[i]); return INFINITY; } /* a NaN or inf on either side never passes */
++        if (a > e) e = a;
++        if (fabs(ref[i]) > m) m = fabs(ref[i]);
++    }
++    return e / m;
++}
++typedef struct { double out, tail, state; } Errs;
++static int errs_ok(const Errs *e) { return e->out <= TOL_OUT && e->tail <= TOL_TAIL && e->state <= TOL_STATE; }
++
++/* ---- host-only ---- */
++static void host_only(void) {
++    /* layout round trip, and the copy check */
++    float *t = malloc((size_t)NT * 4), *t2 = malloc((size_t)NT * 4), *dev = malloc(OMEGA_GDN_TAIL_BYTES);
++    uint32_t s = 5;
++    for (size_t i = 0; i < NT; i++) t[i] = frand(&s, -1, 1);
++    omega_gdn_pack_tail(t, dev);
++    CHECK(omega_gdn_unpack_tail(dev, t2) == 0 && memcmp(t, t2, (size_t)NT * 4) == 0, "tail pack/unpack round trip");
++    dev[(1u * OMEGA_GDN_SLOTS + 7u) * 4u + 1u] += 1.0f; /* head 1 (a second copy of key head 0), q slot 7 */
++    CHECK(omega_gdn_unpack_tail(dev, t2) == -1, "unpack refuses disagreeing copies");
++    free(t); free(t2); free(dev);
++    /* parameter block */
++    Layer L; layer_make(&L, 9);
++    uint8_t *blk = malloc(OMEGA_GDN_PAR_BYTES);
++    CHECK(omega_gdn_pack_params(L.conv_w, L.a_log, L.dtb, L.nw, blk) == 0, "pack params");
++    const float *sc = (const float *)(blk + OMEGA_GDN_PAR_SCAL);
++    CHECK(sc[2 * 5] == -expf(L.a_log[5]) && sc[2 * 5 + 1] == L.dtb[5], "negA and dt_bias interleaved");
++    CHECK(memcmp(blk + OMEGA_GDN_PAR_NORM, L.nw, HD * 4) == 0, "norm weight at its offset");
++    CHECK(omega_gdn_pack_params(NULL, L.a_log, L.dtb, L.nw, blk) == -1, "pack params refuses NULL");
++    free(blk);
++    /* codegen budgets */
++    for (int m = 0; m <= 4; m++) {
++        OmegaGdnSpec sp = { m }; uint32_t ni = 0, ng = 0;
++        int rc = omega_gdn_prog_stats(&sp, &ni, &ng);
++        CHECK(rc == 0 && ni <= BW_MAX_IR_INSNS && ng + 2 <= BW_PHYS_GPR_MAX, "mutant %d codegen: rc %d, %u insns, %u registers", m, rc, ni, ng);
++        if (m == 0) printf("kernel: %u instructions, peak %u registers (%u declared, %u threads)\n", ni, ng, omega_bw_gpr_declared(ng), OMEGA_GDN_THREADS);
++    }
++    OmegaGdnSpec bad = { 5 };
++    CHECK(omega_gdn_prog_stats(&bad, NULL, NULL) == -1, "mutant 5 refused");
++    /* the oracle's delta rule: from S = 0 with beta ~ 1, the step writes v along k, so S^T k = v (|k| = 1) */
++    {
++        DState d; dstate_init(&d, &L);
++        memset(d.state, 0, (size_t)NS * 8);
++        Inp in; inp_make(&in, 77, 1.0f);
++        for (unsigned h = 0; h < VH; h++) in.ab[2 * h + 1] = 40.0f;
++        double *y = malloc((size_t)VD * 8);
++        static double mixed_v[CD];
++        /* the expected v and k: recompute the conv of this step from the oracle's tail before the step */
++        for (unsigned ch = 0; ch < CD; ch++) {
++            const float *w = &L.conv_w[(size_t)ch * 4];
++            double acc = w[0] * d.tail[ch] + w[1] * d.tail[CD + ch] + w[2] * d.tail[2 * CD + ch] + w[3] * (double)in.qkv[ch];
++            mixed_v[ch] = acc * sigm(acc);
++        }
++        oracle_step(&L, &d, &in, 1.0f, 1.0f, y);
++        double worst = 0;
++        for (unsigned h = 0; h < VH; h += 7) {
++            const unsigned hk = h / 3;
++            double nk = 0; for (unsigned i = 0; i < HD; i++) nk += mixed_v[KH * HD + hk * HD + i] * mixed_v[KH * HD + hk * HD + i];
++            nk = sqrt(nk + EPS_L2);
++            for (unsigned c = 0; c < HD; c++) {
++                double kv = 0;
++                for (unsigned r = 0; r < HD; r++) kv += d.state[(size_t)h * HD * HD + r * HD + c] * mixed_v[KH * HD + hk * HD + r] / nk;
++                const double want = mixed_v[2 * KH * HD + h * HD + c];
++                if (fabs(kv - want) > worst) worst = fabs(kv - want);
++            }
++        }
++        CHECK(worst < 1e-6, "oracle delta rule: S^T k = v after one step from zero (worst %.3g)", worst);
++        free(y); inp_free(&in); dstate_free(&d);
++    }
++    layer_free(&L);
++}
++
++/* ---- simulator ---- */
++enum { SB_QKV, SB_Z, SB_AB, SB_PAR, SB_TAIL, SB_STATE, SB_OUT, SB_N };
++static uint64_t g_sim_issues;
++static int sim_run_steps(int mutant, uint32_t steps, float in_scale, float out_scale, Errs *worst, char *msg, size_t n) {
++    static BlackwellIRProgram prog;
++    OmegaGdnSpec spec = { mutant };
++    if (omega_blackwell_codegen_gdn_prog(&spec, &prog) != 0) { snprintf(msg, n, "codegen refused"); return -1; }
++    Layer L; layer_make(&L, 21);
++    DState d; dstate_init(&d, &L);
++    size_t sz[SB_N] = { CD * 4u, VD * 4u, VH * 8u, OMEGA_GDN_PAR_BYTES, OMEGA_GDN_TAIL_BYTES, OMEGA_GDN_STATE_BYTES, VD * 4u };
++    uint8_t *buf[SB_N];
++    for (int i = 0; i < SB_N; i++) buf[i] = aligned_alloc(256, (sz[i] + 255) & ~(size_t)255);
++    omega_gdn_pack_params(L.conv_w, L.a_log, L.dtb, L.nw, buf[SB_PAR]);
++    omega_gdn_pack_tail(L.tail0, (float *)buf[SB_TAIL]);
++    memcpy(buf[SB_STATE], L.state0, OMEGA_GDN_STATE_BYTES);
++    uint8_t *tail_save = malloc(OMEGA_GDN_TAIL_BYTES), *state_save = malloc(OMEGA_GDN_STATE_BYTES), *out_copy = malloc(VD * 4u);
++    uint8_t *tail_copy = malloc(OMEGA_GDN_TAIL_BYTES), *state_copy = malloc(OMEGA_GDN_STATE_BYTES);
++    double *y = malloc((size_t)VD * 8);
++    float *tref = malloc((size_t)NT * 4);
++    int err = 0;
++    memset(worst, 0, sizeof *worst);
++    for (uint32_t st = 0; st < steps && !err; st++) {
++        Inp in; inp_make(&in, 1000 + st, in_scale);
++        memcpy(buf[SB_QKV], in.qkv, sz[SB_QKV]); memcpy(buf[SB_Z], in.z, sz[SB_Z]); memcpy(buf[SB_AB], in.ab, sz[SB_AB]);
++        memcpy(tail_save, buf[SB_TAIL], OMEGA_GDN_TAIL_BYTES); memcpy(state_save, buf[SB_STATE], OMEGA_GDN_STATE_BYTES);
++        for (int order = 0; order < 2 && !err; order++) {
++            if (order == 1) { memcpy(buf[SB_TAIL], tail_save, OMEGA_GDN_TAIL_BYTES); memcpy(buf[SB_STATE], state_save, OMEGA_GDN_STATE_BYTES); }
++            float *yo = (float *)buf[SB_OUT];
++            for (unsigned i = 0; i < VD; i++) yo[i] = -999.0f;
++            WsSim s; memset(&s, 0, sizeof s);
++            s.p = &prog; s.threads = OMEGA_GDN_THREADS; s.order = order;
++            static uint8_t smem[OMEGA_GDN_SHARED_BYTES]; s.smem = smem; s.smem_bytes = OMEGA_GDN_SHARED_BYTES;
++            for (int i = 0; i < SB_N; i++) {
++                const uint64_t a = (uintptr_t)buf[i];
++                s.cbank[(0x380 + 8 * i) / 4] = (uint32_t)a; s.cbank[(0x380 + 8 * i) / 4 + 1] = (uint32_t)(a >> 32);
++                s.ranges[i].lo = (uintptr_t)buf[i]; s.ranges[i].hi = (uintptr_t)buf[i] + sz[i];
++            }
++            s.nranges = SB_N;
++            memcpy(&s.cbank[OMEGA_GDN_ARG_EPS_L2 / 4], &EPS_L2, 4); memcpy(&s.cbank[OMEGA_GDN_ARG_EPS_NORM / 4], &EPS_N, 4);
++            memcpy(&s.cbank[OMEGA_GDN_ARG_IN_SCALE / 4], &in_scale, 4); memcpy(&s.cbank[OMEGA_GDN_ARG_OUT_SCALE / 4], &out_scale, 4);
++            err = ws_run(&s, OMEGA_GDN_GRID_X, OMEGA_GDN_GRID_Y);
++            if (err) { snprintf(msg, n, "step %u order %d: %s (pc %d)", st, order, s.msg, s.err_pc); break; }
++            g_sim_issues += s.warp_issues;
++            size_t unwritten = 0; for (unsigned i = 0; i < VD; i++) if (yo[i] == -999.0f) unwritten++;
++            if (unwritten) { err = -1; snprintf(msg, n, "%zu output words never written", unwritten); break; }
++            if (order == 0) { memcpy(out_copy, yo, VD * 4u); memcpy(tail_copy, buf[SB_TAIL], OMEGA_GDN_TAIL_BYTES); memcpy(state_copy, buf[SB_STATE], OMEGA_GDN_STATE_BYTES); }
++            else if (memcmp(out_copy, yo, VD * 4u) || memcmp(tail_copy, buf[SB_TAIL], OMEGA_GDN_TAIL_BYTES) || memcmp(state_copy, buf[SB_STATE], OMEGA_GDN_STATE_BYTES)) {
++                err = -1; snprintf(msg, n, "step %u: the fragment order changed the result", st);
++            }
++        }
++        if (err) { inp_free(&in); break; }
++        oracle_step(&L, &d, &in, in_scale, out_scale, y);
++        double *ts = malloc((size_t)NT * 8);
++        for (size_t i = 0; i < NT; i++) ts[i] = d.tail[i];
++        Errs e;
++        e.out = nerr((const float *)buf[SB_OUT], y, VD);
++        if (omega_gdn_unpack_tail((const float *)buf[SB_TAIL], tref) != 0) e.tail = INFINITY;
++        else e.tail = nerr(tref, ts, NT);
++        e.state = nerr((const float *)buf[SB_STATE], d.state, NS);
++        free(ts);
++        if (e.out > worst->out) worst->out = e.out;
++        if (e.tail > worst->tail) worst->tail = e.tail;
++        if (e.state > worst->state) worst->state = e.state;
++        inp_free(&in);
++    }
++    for (int i = 0; i < SB_N; i++) free(buf[i]);
++    free(tail_save); free(state_save); free(out_copy); free(tail_copy); free(state_copy); free(y); free(tref);
++    dstate_free(&d); layer_free(&L);
++    return err;
++}
++static void sim_battery(void) {
++    struct { int mutant; uint32_t steps; float in_scale, out_scale; const char *name; } pts[] = {
++        { 0, 3, 1.0f, 1.0f, "3 steps" },
++        { 0, 2, 0.0009765625f, 18446744073709551616.0f, "2 steps, in_scale 2^-10, out_scale 2^64" },
++        { 1, 2, 1.0f, 1.0f, "mutant 1 (no decay)" }, { 2, 2, 1.0f, 1.0f, "mutant 2 (beta 1)" },
++        { 3, 2, 1.0f, 1.0f, "mutant 3 (gate z, not silu z)" }, { 4, 2, 1.0f, 1.0f, "mutant 4 (tail not shifted)" },
++    };
++    for (size_t i = 0; i < sizeof pts / sizeof pts[0]; i++) {
++        char msg[300] = ""; Errs w = { 0, 0, 0 };
++        double t0 = now_ms();
++        int err = sim_run_steps(pts[i].mutant, pts[i].steps, pts[i].in_scale, pts[i].out_scale, &w, msg, sizeof msg);
++        printf("sim %-44s err out %.3g tail %.3g state %.3g (%.0f ms)%s%s\n", pts[i].name, w.out, w.tail, w.state, now_ms() - t0, err ? " ERROR " : "", msg);
++        CHECK(err == 0, "sim %s ran (%s)", pts[i].name, msg);
++        if (pts[i].mutant == 0) CHECK(errs_ok(&w), "sim %s within tolerance", pts[i].name);
++        else CHECK(!errs_ok(&w), "sim %s caught", pts[i].name);
++    }
++    printf("sim warp issues: %" PRIu64 "\n", g_sim_issues);
++}
++
++/* ---- chip ---- */
++static int chip_steps(OmegaGpuGdn *g, uint32_t layer, const Layer *L, DState *d, uint32_t steps, uint32_t seed, float in_scale,
++                      float out_scale, Errs *worst, float *last_out) {
++    float *out = malloc((size_t)VD * 4), *tail = malloc((size_t)NT * 4), *state = malloc((size_t)NS * 4);
++    double *y = malloc((size_t)VD * 8), *td = malloc((size_t)NT * 8);
++    int rc = 0;
++    memset(worst, 0, sizeof *worst);
++    for (uint32_t st = 0; st < steps && rc == 0; st++) {
++        Inp in; inp_make(&in, seed + st, in_scale);
++        rc = omega_gpu_gdn_step(g, layer, in.qkv, in.z, in.ab, EPS_L2, EPS_N, in_scale, out_scale, out, NULL);
++        if (rc == 0) rc = omega_gpu_gdn_get_state(g, layer, tail, state);
++        if (rc == 0) {
++            oracle_step(L, d, &in, in_scale, out_scale, y);
++            for (size_t i = 0; i < NT; i++) td[i] = d->tail[i];
++            Errs e = { nerr(out, y, VD), nerr(tail, td, NT), nerr(state, d->state, NS) };
++            if (e.out > worst->out) worst->out = e.out;
++            if (e.tail > worst->tail) worst->tail = e.tail;
++            if (e.state > worst->state) worst->state = e.state;
++        }
++        inp_free(&in);
++    }
++    if (last_out) memcpy(last_out, out, (size_t)VD * 4);
++    free(out); free(tail); free(state); free(y); free(td);
++    return rc;
++}
++static int chip_run(const char *out_path, uint32_t reps) {
++    FILE *out = out_path ? fopen(out_path, "w") : NULL;
++    if (out_path && !out) { printf("cannot write %s\n", out_path); return 1; }
++    if (out) fprintf(out, "{\"receipt\":\"OMEGA_GPU_GDN_V1\",\"reps\":%u,\"tol\":{\"out\":%g,\"tail\":%g,\"state\":%g},\"points\":[", reps, TOL_OUT, TOL_TAIL, TOL_STATE);
++    OmegaGpuGdn *g = NULL;
++    double t0 = now_ms();
++    int rc = omega_gpu_gdn_alloc(2, &g);
++    printf("gdn alloc (2 layers): rc=%s %.1f ms (%s)\n", omega_gpu_gdn_rc_name(rc), now_ms() - t0, rc ? omega_gpu_gdn_last_error() : "");
++    CHECK(rc == OMEGA_GPU_GDN_OK, "gdn alloc");
++    if (rc) { if (out) fprintf(out, "],\"verdict\":\"FAIL\"}\n"); return 1; }
++    Layer L[2]; layer_make(&L[0], 31); layer_make(&L[1], 32);
++    for (uint32_t l = 0; l < 2; l++) {
++        CHECK(omega_gpu_gdn_set_layer(g, l, L[l].conv_w, L[l].a_log, L[l].dtb, L[l].nw) == 0, "set layer %u", l);
++        CHECK(omega_gpu_gdn_set_state(g, l, L[l].tail0, L[l].state0) == 0, "set state %u", l);
++    }
++    int first = 1;
++#define POINT(name, e, extra) do { if (out) { fprintf(out, "%s{\"name\":\"%s\",\"err_out\":%.6g,\"err_tail\":%.6g,\"err_state\":%.6g%s}", first ? "" : ",", name, (e).out, (e).tail, (e).state, extra); first = 0; } } while (0)
++    /* parity: layer 1 first (addressing), then layer 0 with in/out scales */
++    struct { uint32_t layer, steps, seed; float in_scale, out_scale; const char *name; } pp[] = {
++        { 1, 5, 500, 1.0f, 1.0f, "layer 1, 5 steps" },
++        { 0, 5, 600, 0.0009765625f, 18446744073709551616.0f, "layer 0, 5 steps, in 2^-10 out 2^64" },
++    };
++    float *o1 = malloc((size_t)VD * 4), *o2 = malloc((size_t)VD * 4);
++    for (size_t i = 0; i < 2; i++) {
++        DState d; dstate_init(&d, &L[pp[i].layer]);
++        Errs e;
++        rc = chip_steps(g, pp[i].layer, &L[pp[i].layer], &d, pp[i].steps, pp[i].seed, pp[i].in_scale, pp[i].out_scale, &e, o1);
++        printf("chip %-40s rc=%s err out %.3g tail %.3g state %.3g %s\n", pp[i].name, omega_gpu_gdn_rc_name(rc), e.out, e.tail, e.state, rc ? omega_gpu_gdn_last_error() : "");
++        CHECK(rc == 0 && errs_ok(&e), "chip %s", pp[i].name);
++        POINT(pp[i].name, e, "");
++        dstate_free(&d);
++    }
++    /* rerun from the same state: bit-identical */
++    {
++        Inp in; inp_make(&in, 700, 1.0f);
++        CHECK(omega_gpu_gdn_set_state(g, 1, L[1].tail0, L[1].state0) == 0, "set state for rerun");
++        rc = omega_gpu_gdn_step(g, 1, in.qkv, in.z, in.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o1, NULL);
++        CHECK(omega_gpu_gdn_set_state(g, 1, L[1].tail0, L[1].state0) == 0, "set state for rerun 2");
++        int rc2 = omega_gpu_gdn_step(g, 1, in.qkv, in.z, in.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o2, NULL);
++        CHECK(rc == 0 && rc2 == 0 && memcmp(o1, o2, (size_t)VD * 4) == 0, "rerun from the same state is bit-identical");
++        inp_free(&in);
++    }
++    /* reset: state and tail zero */
++    {
++        float *t = malloc((size_t)NT * 4), *s = malloc((size_t)NS * 4);
++        rc = omega_gpu_gdn_reset(g);
++        int z = rc == 0 && omega_gpu_gdn_get_state(g, 0, t, s) == 0;
++        for (size_t i = 0; z && i < NT; i++) if (t[i] != 0.0f) z = 0;
++        for (size_t i = 0; z && i < NS; i++) if (s[i] != 0.0f) z = 0;
++        CHECK(z, "reset zeroes the tail and the state");
++        free(t); free(s);
++    }
++    /* mutants: each must miss */
++    for (int m = 1; m <= 4; m++) {
++        omega_gpu_gdn_test_set_mutant(m);
++        CHECK(omega_gpu_gdn_set_state(g, 1, L[1].tail0, L[1].state0) == 0, "set state mutant %d", m);
++        DState d; dstate_init(&d, &L[1]);
++        Errs e;
++        rc = chip_steps(g, 1, &L[1], &d, 2, 800, 1.0f, 1.0f, &e, NULL);
++        char nm[32]; snprintf(nm, sizeof nm, "mutant %d", m);
++        printf("chip %-40s rc=%s err out %.3g tail %.3g state %.3g\n", nm, omega_gpu_gdn_rc_name(rc), e.out, e.tail, e.state);
++        CHECK(rc == 0 && !errs_ok(&e), "chip mutant %d caught", m);
++        POINT(nm, e, "");
++        dstate_free(&d);
++    }
++    omega_gpu_gdn_test_set_mutant(0);
++    /* the record path: two chained steps in one command list on layer 0 */
++    {
++        CHECK(omega_gpu_gdn_set_state(g, 0, L[0].tail0, L[0].state0) == 0, "set state for record");
++        Inp in[2]; inp_make(&in[0], 900, 1.0f); inp_make(&in[1], 901, 1.0f);
++        DState d; dstate_init(&d, &L[0]);
++        double *y = malloc((size_t)VD * 8);
++        oracle_step(&L[0], &d, &in[0], 1.0f, 1.0f, y); oracle_step(&L[0], &d, &in[1], 1.0f, 1.0f, y);
++        /* warm the kernel cache outside the record (a miss inside is refused) */
++        float *tmp = malloc((size_t)VD * 4);
++        CHECK(omega_gpu_gdn_step(g, 1, in[0].qkv, in[0].z, in[0].ab, EPS_L2, EPS_N, 1.0f, 1.0f, tmp, NULL) == 0, "warm-up step");
++        OmegaGpuCmdList *cl = NULL; /* create and free take the session lock themselves (omega_gpu_cmdlist.h) */
++        const int cl_ok = omega_gpu_cmdlist_create(4, &cl) == 0;
++        omega_gpu_session_lock();
++        OmegaGpuMem inb[2]; memset(inb, 0, sizeof inb);
++        int ok = cl_ok && omega_gpu_session_open() != NULL;
++        const size_t ib = (size_t)CD * 4 + (size_t)VD * 4 + VH * 8;
++        for (int i = 0; ok && i < 2; i++) {
++            ok = omega_gpu_session_alloc(ib, &inb[i]) == 0;
++            if (ok) {
++                memcpy(inb[i].cpu, in[i].qkv, (size_t)CD * 4); memcpy((uint8_t *)inb[i].cpu + CD * 4, in[i].z, (size_t)VD * 4);
++                memcpy((uint8_t *)inb[i].cpu + CD * 4 + VD * 4, in[i].ab, VH * 8);
++                ok = omega_gpu_session_sync_to_gpu(&inb[i]) == 0;
++            }
++        }
++        uint64_t out_va = 0;
++        for (int i = 0; ok && i < 2; i++)
++            ok = omega_gpu_gdn_record(cl, g, 0, inb[i].va, inb[i].va + CD * 4, inb[i].va + CD * 4 + VD * 4, EPS_L2, EPS_N, 1.0f, 1.0f, &out_va) == 0;
++        OmegaGpuCmdListOpts opts; memset(&opts, 0, sizeof opts);
++        OmegaGpuCmdListStats stc; memset(&stc, 0, sizeof stc);
++        if (ok) ok = omega_gpu_cmdlist_submit(cl, &opts, &stc) == 0;
++        for (int i = 0; i < 2; i++) if (inb[i].cpu) omega_gpu_session_free(&inb[i]);
++        omega_gpu_session_unlock();
++        if (cl) omega_gpu_cmdlist_free(cl);
++        CHECK(ok, "record two steps and submit (%s)", ok ? "" : omega_gpu_gdn_last_error());
++        if (ok) {
++            float *t = malloc((size_t)NT * 4), *s = malloc((size_t)NS * 4), *yo = malloc((size_t)VD * 4);
++            double *td = malloc((size_t)NT * 8);
++            ok = omega_gpu_gdn_get_state(g, 0, t, s) == 0 && omega_gpu_gdn_read_out(g, yo) == 0; /* the second step's output */
++            for (size_t i = 0; i < NT; i++) td[i] = d.tail[i];
++            Errs e = { nerr(yo, y, VD), nerr(t, td, NT), nerr(s, d.state, NS) };
++            printf("chip %-40s err out %.3g tail %.3g state %.3g\n", "record path, 2 chained steps", e.out, e.tail, e.state);
++            CHECK(ok && errs_ok(&e), "record path: two chained steps match the oracle");
++            POINT("record path, 2 chained steps", e, "");
++            free(t); free(s); free(yo); free(td);
++        }
++        free(tmp); free(y); dstate_free(&d); inp_free(&in[0]); inp_free(&in[1]);
++    }
++    /* timing */
++    {
++        Inp in; inp_make(&in, 950, 1.0f);
++        uint64_t *ec = malloc(reps * 8), *ek = malloc(reps * 8);
++        uint32_t done = 0;
++        OmegaGpuGdnInfo info;
++        for (uint32_t r = 0; r < reps; r++) {
++            if (omega_gpu_gdn_step(g, 0, in.qkv, in.z, in.ab, EPS_L2, EPS_N, 1.0f, 1.0f, o1, &info) != 0) break;
++            ek[done] = info.elapsed_ns; ec[done] = info.call_ns; done++;
++        }
++        CHECK(done == reps, "timing reps ran (%u of %u)", done, reps);
++        if (done) {
++            qsort(ek, done, 8, cmp_u64); qsort(ec, done, 8, cmp_u64);
++            const double kus = ek[done / 2] / 1e3, cus = ec[done / 2] / 1e3, gbs = (double)info.state_bytes / (ek[done / 2] * 1e-9) / 1e9;
++            printf("timing (medians of %u): chip %.1f us (state read + write %.2f MB -> %.1f GB/s; 273 GB/s nominal), call %.1f us; %u insns, %u registers\n",
++                   done, kus, info.state_bytes / 1e6, gbs, cus, info.insns, info.gprs);
++            if (out) fprintf(out, "%s{\"name\":\"timing\",\"reps\":%u,\"chip_us_median\":%.3f,\"call_us_median\":%.3f,\"state_bytes\":%" PRIu64 ",\"state_gbs\":%.2f,\"nominal_gbs\":273,\"insns\":%u,\"gprs\":%u}",
++                             first ? "" : ",", done, kus, cus, info.state_bytes, gbs, info.insns, info.gprs);
++            first = 0;
++        }
++        free(ec); free(ek); inp_free(&in);
++    }
++#undef POINT
++    free(o1); free(o2);
++    layer_free(&L[0]); layer_free(&L[1]);
++    omega_gpu_gdn_free(g);
++    if (out) { fprintf(out, "],\"checks\":%d,\"failed\":%d,\"verdict\":\"%s\"}\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS"); fclose(out); }
++    return 0;
++}
++
++int main(int argc, char **argv) {
++    setvbuf(stdout, NULL, _IOLBF, 0); /* a stuck chip run still leaves every finished line in its log */
++    int host = 0, sim = 0; const char *out_path = NULL; uint32_t reps = 0, spin = 2000;
++    for (int i = 1; i < argc; i++) {
++        if (strcmp(argv[i], "--host-only") == 0) host = 1;
++        else if (strcmp(argv[i], "--sim") == 0) sim = 1;
++        else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) out_path = argv[++i];
++        else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) reps = (uint32_t)atoi(argv[++i]);
++        else if (strcmp(argv[i], "--spin-us") == 0 && i + 1 < argc) spin = (uint32_t)atoi(argv[++i]);
++        else { printf("unknown argument %s\n", argv[i]); return 2; }
++    }
++    if (host) host_only();
++    if (sim) sim_battery();
++    if (!host && !sim) {
++        (void)omega_gpu_session_set_spin_us(spin);
++        chip_run(out_path, reps ? reps : 50);
++        omega_gpu_session_close();
++    }
++    printf("gpu_gdn_test: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
++    return g_failed ? 1 : 0;
++}

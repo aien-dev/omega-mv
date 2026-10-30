@@ -1,0 +1,12 @@
+fn main to int
+a = qty 1
+b = add a qty 1
+c = add qty 1 qty 1
+if ne b qty 1
+ret 1
+end
+if ne c b
+ret 2
+end
+ret 0
+end

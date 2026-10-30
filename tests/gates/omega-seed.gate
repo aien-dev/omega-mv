@@ -1,0 +1,24 @@
+# tests/gates/omega-seed.gate
+# The seed-built Omega compiler: rebuild seed0 -> hex1 -> asm2 -> om4 -> omc from the 408-byte loader,
+# then the full qualification (seed/host/check.sh) with the C IR oracles built, so gate-ir runs (no SKIP).
+gate: OMEGA-SEED
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - seed/
+  - docs/one_layer/OMEGESE.md
+  - tests/gates/omega-seed.gate
+  - tools/omegese/
+  - tools/omega_emit/
+  - src/checker2/
+run:
+  exec: tests/gates/run.sh
+  args: ["seed"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 30m
+exactness: EXACT
+cache_scope: machine

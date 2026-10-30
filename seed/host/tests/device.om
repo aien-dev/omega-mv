@@ -1,0 +1,102 @@
+note Host/device composition. No GPU opened. FIONREAD observes real native pipes.
+global ends uchar 8
+global count uchar 12
+global status uchar 4
+text msg "Omega device boundary"
+text zero "/dev/zero"
+fn word32 off ulong to int
+v = uint 0
+for i ulong 4
+v = or v shl uint get ends add off i mul i 8
+end
+ret int v
+end
+fn fault kind int to int
+if eq kind 0
+r = devctl neg int 1 uint 21531 count 0 3
+ret int r
+end
+if eq kind 1
+r = devctl neg int 1 uint 21531 count 0 5
+ret int r
+end
+if eq kind 2
+r = devctl neg int 1 uint 21531 count 9 4
+ret int r
+end
+if eq kind 3
+r = devctl neg int 1 uint 21531 count 18446744073709551615 4
+ret int r
+end
+r = devctl neg int 1 uint 21531 count 0 18446744073709551615
+ret int r
+end
+fn main to int
+if ne pipefds ends 0 8 0 0
+ret 1
+end
+rd = word32 0
+wr = word32 4
+if ne write wr msg 0 len msg long len msg
+ret 2
+end
+for i ulong 12
+put count i 171
+end
+if ne devctl rd uint 21531 count 4 4 0
+ret 3
+end
+if ne get count 4 uchar len msg
+ret 4
+end
+for i ulong 12
+if or lt i 4 ge i 8
+if ne get count i 171
+ret 5
+end
+else
+if and gt i 4 ne get count i 0
+ret 6
+end
+end
+end
+if ne devctl neg int 1 uint 21531 count 4 4 neg long 9
+ret 7
+end
+note Normal file operations and nested native calls retain live values.
+fd = fopen zero 0 len zero 0 0
+if lt fd 0
+ret 8
+end
+if ne add devctl int fd uint 21531 count 4 4 25 0
+ret 9
+end
+if ne fclose int fd 0
+ret 10
+end
+if ne fclose rd 0
+ret 11
+end
+if ne fclose wr 0
+ret 12
+end
+for kind int 5
+pid = fork
+if lt pid 0
+ret 13
+end
+if eq pid 0
+exit fault kind
+end
+if ne waitpid int pid status 0 4 0 pid
+ret 14
+end
+if ne get status 0 0
+ret 15
+end
+if ne get status 1 103
+ret 16
+end
+end
+ret 0
+end

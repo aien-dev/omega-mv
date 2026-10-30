@@ -1,7 +1,7 @@
 note Exact-source qualification transform. Mode0 exposes the real disp19 through a new main.
 note Mode1 weakens the forward limit;mode2 makes close_range unavailable;mode3 admits21-digit numbers.
 note No transformed artifact is a production compiler.
-global src uchar 262144
+global src uchar 1048576
 global used ulong 1
 global mode uchar 8
 global needle uchar 64

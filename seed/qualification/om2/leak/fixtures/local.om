@@ -1,0 +1,9 @@
+note leak fixture (stack rule, README.txt): a local array on the stack (SUB SP, MOV Xb, SP, a fill loop
+note over the constant length 4, a store and a load through the computed base, ADD SP at the return).
+note The depth returns to 0 at RET, the fill loop branch is len and both accesses are public-index.
+note Expected: TRACE-EQUIV-STATIC PASS.
+fn f a view uchar 16 n ulong to ulong
+t = new ulong 4 0
+put t 1 n
+ret get t 1
+end

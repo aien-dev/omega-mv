@@ -1,25 +1,32 @@
-note Native chdir and unlink: change directory, create a file below it, remove the file.
-text dir "chdir-test"
-text file "x"
+note chdir: create a directory, enter it, create a relative file there, return, and refuse a missing path.
+text dsub "sub"
+text dfile "inside"
+text dup ".."
+text dno "nope"
 fn main to int
-if ne makedir dir 0 len dir 448 0
-ret 88
+r = makedir dsub 0 len dsub 493
+if ne r 0
+ret 1
 end
-rc = chdir dir 0 len dir
-if lt rc 0
-ret 89
+r = chdir dsub 0 len dsub
+if ne r 0
+ret 2
 end
-fd = fopen file 0 len file 577 384
+fd = int fopen dfile 0 len dfile 577 420
 if lt fd 0
-ret 90
+ret 3
 end
-n = write int fd file 0 1
-if ne fclose int fd 0
-ret 91
+r = fclose fd
+if ne r 0
+ret 4
 end
-rc = unlink file 0 len file
-if lt rc 0
-ret 92
+r = chdir dup 0 len dup
+if ne r 0
+ret 5
+end
+r = chdir dno 0 len dno
+if ge r 0
+ret 6
 end
 ret 0
 end

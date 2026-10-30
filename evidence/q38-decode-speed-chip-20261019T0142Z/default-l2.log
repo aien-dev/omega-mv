@@ -1,0 +1,36 @@
+model: 2 layers (1 GDN, 1 attention, mask 0x2), vocab 248320
+ok: token 0: graph 119117 == baseline 119117
+ok: token 0: logits max diff 0.000327 <= 1e-04 * 9.13
+ok: token 0: x max diff 0.000126 <= 1e-04 * 2.44
+ok: token 0: 23 launches in 1 submit
+ok: token 1: graph 147744 == baseline 147744
+ok: token 1: logits max diff 6.68e-06 <= 1e-04 * 9.65
+ok: token 1: x max diff 2.03e-06 <= 1e-04 * 2.05
+ok: token 1: 23 launches in 1 submit
+ok: token 2: graph 60455 == baseline 60455
+ok: token 2: logits max diff 7.99e-06 <= 1e-04 * 9.83
+ok: token 2: x max diff 3.16e-06 <= 1e-04 * 2.55
+ok: token 2: 23 launches in 1 submit
+ok: flush_each == one list, bit for bit, all 3 tokens
+ok: mutant 1 (swiglu up half -1) caught
+ok: mutant 2 (gather index +1) caught
+ok: mutant 3 (gate dropped) caught
+ok: mutant 4 (post-norm weight dropped) caught
+timing: 10 reps, median chip 15770.5 us, median total 15774.2 us per token (2 layers)
+ok: timeline 0: 23 stamped launches
+timeline norm       1 launches      16.6 us (min 16.6 max 16.6)
+timeline mix        2 launches     917.1 us (min 917.1 max 917.1)    157286400 weight B  171.5 GB/s
+timeline ab         1 launches       0.6 us (min 0.6 max 0.6)       983040 weight B 1616.8 GB/s
+timeline gdn        1 launches     117.3 us (min 117.3 max 117.3)
+timeline gather     1 launches       4.9 us (min 4.9 max 4.9)
+timeline attn       1 launches      58.3 us (min 58.3 max 58.3)
+timeline gate       1 launches       3.7 us (min 3.7 max 3.7)
+timeline o_proj     2 launches     358.0 us (min 358.0 max 358.0)     62914560 weight B  175.7 GB/s
+timeline res        4 launches      64.5 us (min 64.5 max 64.5)
+timeline gate_up    2 launches    1909.0 us (min 1909.0 max 1909.0)    356515840 weight B  186.8 GB/s
+timeline swiglu     2 launches       7.5 us (min 7.5 max 7.5)
+timeline down       2 launches    1261.8 us (min 1261.8 max 1261.8)    178257920 weight B  141.3 GB/s
+timeline lm_head    1 launches   11708.1 us (min 11708.1 max 11708.1)   2542796800 weight B  217.2 GB/s
+timeline argmax     2 launches      22.0 us (min 22.0 max 22.0)
+timeline span 16449.4 us (median of 1, min 16449.4 max 16449.4)
+gpu_q38_graph_test: 18 checks, 0 failed: PASS

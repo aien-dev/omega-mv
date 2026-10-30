@@ -1,0 +1,66 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 approximation of ce-view.om for the pinned compiler 734f0a39 (OM-1 has no unsized views and
+note no part): each selector copies the same elements of b into a SIZED array and passes it to a sized
+note view; the 5-read loop is rolled, so the index past the end is a run-time value that OM-1 checks
+note (OMEGESE 9.4, trap 3). D reads v[6] through a run-time index. Same expectations as ce-view.om
+note per selector (oracle/s3s4/exp/ce-view-*.out), cross-checking the oracle under OM-1 now.
+fn sumv4 v view ulong 4 to ulong
+s = ulong 0
+for i ulong 5
+s = add s get v i
+pu s
+end
+ret s
+end
+fn sumv5 v view ulong 5 to ulong
+s = ulong 0
+for i ulong 5
+s = add s get v i
+pu s
+end
+ret s
+end
+fn getc4 v view ulong 4 to ulong
+x = ulong 6
+ret get v x
+end
+fn main to int
+sb = new uchar 1 0
+r = read 0 sb 0 1
+k = get sb 0
+b = new ulong 8 0
+a4 = new ulong 4 0
+a5 = new ulong 5 0
+f4 = new ulong 4 0
+p = ulong 1
+for j ulong 8
+put b j p
+p = mul p 10
+end
+for j ulong 4
+put a4 j get b j
+put f4 j get b add j 3
+end
+for j ulong 5
+put a5 j get b j
+end
+if eq k 65
+pu sumv4 a4
+end
+if eq k 66
+pu sumv4 a4
+end
+if eq k 67
+pu sumv4 a4
+end
+if eq k 68
+pu getc4 a4
+end
+if eq k 69
+pu sumv5 a5
+end
+if eq k 70
+pu sumv4 f4
+end
+ret 0
+end

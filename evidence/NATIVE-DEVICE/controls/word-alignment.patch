@@ -1,0 +1,10 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -3112,7 +3112,6 @@
+ matconst 15 sub w 1
+ e3 2315255808 14 0 15
+ mimmed 4043309056 31 14 0
+-trapc 1 3
+ e3 2332033024 13 13 0
+ if eq c 144
+ mload 15 11 3

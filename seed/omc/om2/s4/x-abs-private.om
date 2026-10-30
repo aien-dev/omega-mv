@@ -1,0 +1,10 @@
+note S4 with S3 abstract types: with exports only the exports are entries; a private last function
+note may return an abstract type (accepted).
+om2
+abstract dup32 ulong
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+export fn e x uint to ulong
+ret open dup32mk x
+end

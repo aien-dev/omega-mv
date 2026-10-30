@@ -1,0 +1,63 @@
+# Candidate compiler qualification: §3 rotations and §8 E11/E12/E13 leakage rules.
+deadline 120
+s1-rot-build emit seed/qualification/om2/leak/fixtures/s1-rot.om any - 0
+# BEGIN common scan cases (all sources below are OM-1; C1 applies under an OM-2 candidate).
+# E13 store-poisoned declarations must not suppress DATA branches; unknown store addresses may overlap.
+scan-pub-secret run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-secret.bin file:seed/qualification/om2/leak/expected/pub-secret.out - 2 pub:0:32:8
+scan-pub-unknown run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-unknown.bin file:seed/qualification/om2/leak/expected/pub-unknown.out - 2 pub:0:32:8
+# Proven disjoint store remains allowed; public field load is still explicitly listed.
+scan-pub-outside-store run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-outside-store.bin file:seed/qualification/om2/leak/expected/pub-outside-store.out - 0 pub:0:32:8
+# Native program twins execute the same counterexample with secret input bytes 0 / 1.
+pub-secret-native-zero run seed/qualification/om2/leak/fixtures/pub-secret.om+seed/qualification/om2/leak/fixtures/pub-secret-zero.om - - - 0
+pub-secret-native-one run seed/qualification/om2/leak/fixtures/pub-secret.om+seed/qualification/om2/leak/fixtures/pub-secret-one.om - - - 1
+# §8 length/public loop; declared DATA length converts its loop condition to E12 MANUAL.
+scan-len-loop run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/len-loop.bin file:seed/qualification/om2/leak/expected/len-loop.out - 0
+scan-len-loop-x1 run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/len-loop.bin file:seed/qualification/om2/leak/expected/len-loop-x1.out - 2 x1
+# E12 unproved DATA branches are MANUAL; a DATA indexed address is still listed, never silently passed.
+scan-data-branch run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/data-branch.bin file:seed/qualification/om2/leak/expected/data-branch.out - 2
+scan-data-index run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/data-index.bin file:seed/qualification/om2/leak/expected/data-index.out - 2
+scan-data-index-x0x5 run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/data-index.bin file:seed/qualification/om2/leak/expected/data-index-x0x5.out - 2 x5 x0
+# E12 positive AND-mask proof and negative reachable uint conversion, respectively.
+scan-trap-check run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/trap-check.bin file:seed/qualification/om2/leak/expected/trap-check.out - 0
+scan-reachable-trap run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/reachable-trap.bin file:seed/qualification/om2/leak/expected/reachable-trap.out - 2
+# E12 native-reachability twins: observed HOST process exits, not inferred from trap-tail shape.
+reachable-zero run seed/qualification/om2/leak/fixtures/reachable-zero.om - - - 0
+reachable-big run seed/qualification/om2/leak/fixtures/reachable-big.om - - - 105
+# Call save/restore, return taint, flags replacement, local array addresses.
+scan-call-public run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/call-public.bin file:seed/qualification/om2/leak/expected/call-public.out - 0
+scan-call-data run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/call-data.bin file:seed/qualification/om2/leak/expected/call-data.out - 2
+scan-flags run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/flags.bin file:seed/qualification/om2/leak/expected/flags.out - 2
+scan-local run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/local.bin file:seed/qualification/om2/leak/expected/local.out - 0
+# E11 explicit count range [32,40): public load is auditable; adjacent byte stays DATA.
+scan-public-in run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/public-in.bin file:seed/qualification/om2/leak/expected/public-in.out - 0 pub:0:32:8
+scan-public-out run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/public-out.bin file:seed/qualification/om2/leak/expected/public-out.out - 2 pub:0:32:8
+# §3 lines 76-83: committed S1 rotate artifact, DATA x0,x2; public runtime n gives four len checks.
+scan-s1-rot run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/s1-rot.bin file:seed/qualification/om2/leak/expected/s1-rot.out - 0 x0 x2
+# Unknown/unhandled -> NOT_RUN; malformed input/arguments are refusals.
+scan-svc run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/svc.bin file:seed/qualification/om2/leak/expected/svc.out - 2
+scan-unknown run seed/qualification/om2/leak/leakscan.om rep:255:8 file:seed/qualification/om2/leak/expected/unknown.out - 2
+scan-empty run seed/qualification/om2/leak/leakscan.om - file:seed/qualification/om2/leak/expected/notfm.out - 91
+scan-partial-word run seed/qualification/om2/leak/leakscan.om rep:0:3 file:seed/qualification/om2/leak/expected/notfm.out - 91
+scan-elf run seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/elf.bin file:seed/qualification/om2/leak/expected/notfm.out - 91
+scan-usage-x6 run seed/qualification/om2/leak/leakscan.om - file:seed/qualification/om2/leak/expected/usage.out - 90 x6
+scan-usage-word run seed/qualification/om2/leak/leakscan.om - file:seed/qualification/om2/leak/expected/usage.out - 90 data
+# Scanner adequacy mutants: exact-once source substitutions, expected exit plus different stdout.
+subst seed/qualification/om2/leak/mutants/cbtaint.from seed/qualification/om2/leak/mutants/cbtaint.to
+kill-cbtaint kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/trap-check.bin file:seed/qualification/om2/leak/expected/trap-check.out - 0
+subst seed/qualification/om2/leak/mutants/loadpub.from seed/qualification/om2/leak/mutants/loadpub.to
+kill-loadpub kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/data-branch.bin file:seed/qualification/om2/leak/expected/data-branch.out - 0
+subst seed/qualification/om2/leak/mutants/callexit.from seed/qualification/om2/leak/mutants/callexit.to
+kill-callexit kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/call-data.bin file:seed/qualification/om2/leak/expected/call-data.out - 0
+subst seed/qualification/om2/leak/mutants/slotoff.from seed/qualification/om2/leak/mutants/slotoff.to
+kill-slotoff kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/call-public.bin file:seed/qualification/om2/leak/expected/call-public.out - 2
+subst seed/qualification/om2/leak/mutants/flagsweak.from seed/qualification/om2/leak/mutants/flagsweak.to
+kill-flagsweak kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/flags.bin file:seed/qualification/om2/leak/expected/flags.out - 2
+subst seed/qualification/om2/leak/mutants/nostub.from seed/qualification/om2/leak/mutants/nostub.to
+kill-nostub kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/trap-check.bin file:seed/qualification/om2/leak/expected/trap-check.out - 2
+subst seed/qualification/om2/leak/mutants/pubrange.from seed/qualification/om2/leak/mutants/pubrange.to
+kill-public-boundary kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/public-out.bin file:seed/qualification/om2/leak/expected/public-out.out - 0 pub:0:32:8
+# Omitting E13 revocation recreates the false PASS and must be killed.
+subst seed/qualification/om2/leak/mutants/norevoke.from seed/qualification/om2/leak/mutants/norevoke.to
+kill-no-revocation kill seed/qualification/om2/leak/leakscan.om file:seed/qualification/om2/leak/fixtures/pub-secret.bin file:seed/qualification/om2/leak/expected/pub-secret.out - 0 pub:0:32:8
+# Runtime code for the OM-2 SHA unit remains unavailable to this independent lane.
+sha256-om2-scan notrun OM-2 SHA artifact pending independent qualification
