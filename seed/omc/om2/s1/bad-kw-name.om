@@ -1,0 +1,8 @@
+note S1: a function name that is exactly a keyword (continue) stays error 16.
+om2
+fn continue to long
+ret 1
+end
+fn main to int
+ret 0
+end

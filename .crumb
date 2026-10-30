@@ -47,7 +47,7 @@
           "purpose": "Directory calibration. Purpose not yet described by a human."
         },
         {
-          "digest": "26c2fbf4515e981db72f56dad2fc3fe0667c469551cf6071e28ac50005a36e42",
+          "digest": "7ef7796693f23ad68d9a5bcaaee0f635018f4371139a040ba202d4ce7083ede8",
           "last_commit": "943f5139f",
           "name": "docs",
           "purpose": "Directory docs. Purpose not yet described by a human."
@@ -59,7 +59,7 @@
           "purpose": "Directory doctrine. Purpose not yet described by a human."
         },
         {
-          "digest": "4947c0eb38550826cdfaba5d08384f3ebd284b82ab456ecf276617ce2ef998fd",
+          "digest": "8f0e5cb325040247440527f6b54b65cf72c47ff5adca75b4f32a1ddf2b2d6ade",
           "last_commit": "43f25831b",
           "name": "mk",
           "purpose": "Directory mk. Purpose not yet described by a human."
@@ -71,39 +71,39 @@
           "purpose": "Directory research. Purpose not yet described by a human."
         },
         {
-          "digest": "8bbd5f74b01446007499a9a9be4e9f50f4364af0f578d9cdf26a2afd84e3bb63",
+          "digest": "f765ad87fdddd9b47f690b07298c951a0f7e7675dc5de4ffe44e33a0c14b1986",
           "last_commit": "faebae8c1",
           "name": "spec",
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "f390041dbba29a5707b5652e20e6bffd69e0a1f1ebfc493736ff5266370fa4aa",
+          "digest": "aaf5acb82fd4c720cd60c85fd6087f636c72a98e2f3740c9295dcfa525dc64d7",
           "last_commit": "82a399b9f",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "cd80558f97d3249ef8e2159e8a6e485e19248925e30721041aa591e7bc403fc9",
+          "digest": "5395ff8ff9afceebe8e453788f80a3064b831513cc4cb92fd55869115e06b874",
           "last_commit": "f401f2baa",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
         {
-          "digest": "4e83dea21da137c30076c2dc0ca4f3a488f576f30a94e334558ad5ea523f3a6b",
+          "digest": "308db0e6cf45c0a48f01f5f5f228450f191389de68006915b9ecf9c65b9a2e29",
           "last_commit": "a50c3bd41",
           "name": "tools",
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:534f796d8e0fc81c75e714b05cf9bf36f60f0b5d31d5430fdea52d8bf179e6ea",
-      "compiled_at": "2026-10-30T16:36:22Z",
+      "children_root": "sha256:07bf1706dcffbad66c0353871ff67a6749055da03cee8d8ebdf9a4c91e36bddc",
+      "compiled_at": "2026-10-30T17:09:34Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:f7f69095c6acc82e8019d480f20107470c9c18fdebec2fef5a3987314cf6df5a",
-      "evidence_files": 12540,
-      "evidence_root": "sha256:6062f6d28e72cd253fba9d284ff46c07851db6d7723a20d1e4e8a1e0268c441a",
-      "files": 17523,
-      "generated_at_commit": "b8f99c9068554ffd0ee91554928384eeb862b4a5",
-      "source_tree": "sha256:50bdffb38d04fbbcecd0b366b6c7a70537beb3426b96ecaeca91e3beefc738a9"
+      "digest": "sha256:d21f5a2c1810e95e46a5fc9206ff950fffafee5602b2ac87c548b22a30a012fd",
+      "evidence_files": 12685,
+      "evidence_root": "sha256:a68d4eab5676aac6753d95ae458800bdacc3ebb43cbaa4177d2bfe834f5bd6c0",
+      "files": 18073,
+      "generated_at_commit": "bca40bc04dac739bd2f4bca03272a3c868c92510",
+      "source_tree": "sha256:b6e3a4c8d9cd1a63a94d165a2a916ac6fe6f1eb8e21918b85637ae74b118c8cd"
     },
     "owner_lane": "",
     "provenance": {
