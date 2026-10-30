@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Transparent host dispatch; Rust S2 export computation and hashing run in seeded native Omega (spec/universal/translation-s2-v1.md).
+Usage: rust-i64-export [NAME] < unit.omsb > unit.rs   (NAME rules are checked natively)."""
+from pathlib import Path
+import hashlib,json,subprocess,sys
+root=Path(__file__).resolve().parents[2]
+NAME='rust-i64-export'
+PIN='191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9'
+CLOSURE={'src/source-aware/vendor/sha256.om','src/source-aware/core-v3.om','src/adapters/rust-i64-export.om'}
+name=sys.argv[1].encode() if len(sys.argv)==2 else b''
+if len(sys.argv)>2 or (len(sys.argv)==2 and not 1<=len(name)<=255):
+    print('RUST_EXPORT_BAD_COMMAND: use rust-i64-export [NAME] with the envelope on stdin',file=sys.stderr);raise SystemExit(64)
+try:
+    build=root/'build/S2';m=json.loads((build/'build.json').read_text());exe=build/NAME;a=m['artifacts'][NAME]
+    if a['compiler_sha256']!=PIN:raise ValueError('compiler identity')
+    if set(a['inputs'])!=CLOSURE:raise ValueError('source closure')
+    for rel,digest in a['inputs'].items():
+        if hashlib.sha256((root/rel).read_bytes()).hexdigest()!=digest:raise ValueError('changed source '+rel)
+    if hashlib.sha256(exe.read_bytes()).hexdigest()!=a['binary_sha256']:raise ValueError('changed artifact')
+except (OSError,ValueError,KeyError,TypeError) as exc:
+    print('RUST_EXPORT_STALE_OR_MISSING_BUILD: '+str(exc),file=sys.stderr);raise SystemExit(78)
+# Frame: one name-length byte (0 = default calc), the name bytes, then stdin to EOF.
+r=subprocess.run([str(exe)],input=bytes([len(name)])+name+sys.stdin.buffer.read(),stdout=subprocess.PIPE)
+if r.returncode==0:sys.stdout.buffer.write(r.stdout);sys.stdout.buffer.flush()
+raise SystemExit(r.returncode)
