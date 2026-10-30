@@ -6,13 +6,13 @@
 # omega_codec.c, omega_canonical.c, omega_validate.c, omega_core.c, sha256.c, built with the Makefile
 # CFLAGS) was run once by a driver outside the tree; README.md names it and its rerun command.
 #   usage: sh om/codec/parity/run.sh [--mutants]
-#   OMEGA_OMC  the seed-born omc (default ../omega-seedqual-20261025/seed/out/omc), sha256 pinned below
+#   OMEGA_OMC  the seed-born omc (default seed/out/omc in this checkout), sha256 pinned below
 # Exit 0 PASS, 1 FAIL, 3 NOT_RUN (no pinned omc or no python3).
 set -eu
 OMC_PIN=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
-OMC=${OMEGA_OMC:-$ROOT/../omega-seedqual-20261025/seed/out/omc}
+OMC=${OMEGA_OMC:-$ROOT/seed/out/omc}
 [ -x "$OMC" ] || { echo "NOT_RUN: no omc at $OMC (set OMEGA_OMC)"; exit 3; }
 [ "$(sha256sum < "$OMC" | cut -c1-64)" = "$OMC_PIN" ] || { echo "NOT_RUN: $OMC is not the pinned omc"; exit 3; }
 command -v python3 >/dev/null || { echo "NOT_RUN: python3 missing"; exit 3; }

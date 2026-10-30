@@ -172,9 +172,9 @@ and it must run to completion: a trap does not count as killed. All 21 are kille
 - binary prefix, strtoul overflow, line end, negative hex pair, memcmp sign, v1 effect code, a
   SHA-256 constant.
 
-Reproduce from a fresh clone (with the pinned omc):
+Reproduce from a fresh clone; the default omc is the checkout's `seed/out/omc`, which is the pinned one:
 
-    OMEGA_OMC=/path/to/omc sh om/codec/parity/run.sh --mutants
+    sh om/codec/parity/run.sh --mutants
 
 ## ABI note (bindable functions)
 
