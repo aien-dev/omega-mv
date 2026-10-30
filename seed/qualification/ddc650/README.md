@@ -36,14 +36,15 @@ differs from `BIN`. If it does not, the run is INVALID.
 
 ## Run
 
-From the repository root (host CPU only):
+From the repository root (host CPU only), with a fresh scratch directory on disk:
 
 ```sh
-git show 190130b71d0a59b93f01c515218a5509b149a145:tools/omega_ref/omega_ref.c > /dev/shm/omega_ref.c
-seed/out/omc < seed/qualification/ddc650/ddc.om > /dev/shm/ddc && chmod +x /dev/shm/ddc
-/dev/shm/ddc seed/rung4/om4.bin d0da40e45f1fcc45d9a39c9c52c9d745b545e076970729e51c12d76ef519efab \
-  /usr/bin/gcc /dev/shm/omega_ref.c 52e747096c1d978103432460a2978b21a604cc5d3e961bbe4b253fcc7636290e \
-  seed/omc/omc.om seed/out/omc /dev/shm/ddc-run [stage1|oracle|source|binary|comparator]
+T=$(mktemp -d)
+git show 190130b71d0a59b93f01c515218a5509b149a145:tools/omega_ref/omega_ref.c > "$T/omega_ref.c"
+seed/out/omc < seed/qualification/ddc650/ddc.om > "$T/ddc" && chmod +x "$T/ddc"
+"$T/ddc" seed/rung4/om4.bin d0da40e45f1fcc45d9a39c9c52c9d745b545e076970729e51c12d76ef519efab \
+  /usr/bin/gcc "$T/omega_ref.c" 52e747096c1d978103432460a2978b21a604cc5d3e961bbe4b253fcc7636290e \
+  seed/omc/omc.om seed/out/omc "$T/run" [stage1|oracle|source|binary|comparator]
 ```
 
 Exit codes: 0 PASS, 1 FAIL, 3 INVALID, 4 CONTROL SURVIVED, 90 usage, 91 the scratch directory already
