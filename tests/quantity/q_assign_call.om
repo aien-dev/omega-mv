@@ -1,0 +1,9 @@
+fn f x qty to qty
+ret x
+end
+fn main to int
+a = qty 5
+b = ulong 1
+b = f a
+ret int 0
+end

@@ -1,0 +1,10 @@
+OM2GATE START cases=/home/drakestapleton/work/OmcBatchPin/build/batch3/pr896.cases scratch=build/batch3/scratch-pr896-old
+IDENTITY omc /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f pinned=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f match
+CASE bitcast-int line=1
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr896-old/1.src > build/batch3/scratch-pr896-old/1.elf 2> build/batch3/scratch-pr896-old/1.cerr
+  $ build/batch3/scratch-pr896-old/1.elf < /dev/null > build/batch3/scratch-pr896-old/1.out 2> build/batch3/scratch-pr896-old/1.err
+VERDICT bitcast-int FAIL run exit=1 expected=0 stdout=match stderr=match
+CASE bitcast-width line=2
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr896-old/2.src > build/batch3/scratch-pr896-old/2.elf 2> build/batch3/scratch-pr896-old/2.cerr
+VERDICT bitcast-width PASS compile exit=7 expected=7 refused with the expected error
+OM2GATE FAIL cases=2 pass=1 fail=1 invalid=0 not_run=0
