@@ -1,0 +1,265 @@
+{
+  "schema": 1,
+  "scope": "Exact current diagnostics for byte-pinned fixtures; historical assertions remain separate. x86 records include the target selector line.",
+  "contracts": [
+    {
+      "source_spec": "seed/omc/om2/s3/a-exact-diag.om",
+      "source_sha256": "af6c2faa6087359c0c51bcd5d61d973143f45d4719eb98278370bfb03284a79e",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-check 1 erased line=6 rule=dup32\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-check 1 erased line=7 rule=dup32\nomc-site 1 line=10 iter=-\nomc-site 1 line=10 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/omc/om2/s3/a-kept-diag.om",
+      "source_sha256": "8e1b8605e8d77c792a2aaf6adeb2167a38a538d0857792b006eeafd408d78e94",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-check 1 kept line=6 rule=-\nomc-site 1 line=6 iter=-\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-check 1 kept line=7 rule=-\nomc-site 1 line=7 iter=-\nomc-site 1 line=10 iter=-\nomc-site 1 line=10 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s5s7/a5-exact-diag.om",
+      "source_sha256": "2702ef2f9bcf2fbadd6c9ced8382a13f1939378c024a5c5706d167d98798be13",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-check 1 erased line=9 rule=dup32\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-check 1 erased line=10 rule=dup32\nomc-site 1 line=13 iter=-\nomc-site 1 line=13 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s5s7/a5-kept-diag.om",
+      "source_sha256": "79d2da33312969e14d9cdefe34b19306cce03471d91add08aa1e0285af22cf9c",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-check 1 kept line=8 rule=-\nomc-site 1 line=8 iter=-\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-check 1 kept line=9 rule=-\nomc-site 1 line=9 iter=-\nomc-site 1 line=12 iter=-\nomc-site 1 line=12 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s5s7/a5-swap-diag.om",
+      "source_sha256": "20773907e95cbc9b1e157be91b099dc1ad13ab6ca79d2966e4259a93a8625eff",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-check 1 kept line=8 rule=-\nomc-site 1 line=8 iter=-\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-check 1 kept line=9 rule=-\nomc-site 1 line=9 iter=-\nomc-site 1 line=12 iter=-\nomc-site 1 line=12 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s3s4/unroll-sum-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om",
+      "source_sha256": "a0b4e8837c742a4acc3cd7abe93d5ba8d90cf772ff85d36fa6f1027fd07db826",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-site 1 line=15 iter=-\nomc-site 1 line=20 iter=-\nomc-site 1 line=21 iter=-\nomc-site 1 line=27 iter=0\nomc-site 1 line=27 iter=1\nomc-site 1 line=27 iter=2\nomc-site 1 line=27 iter=3\nomc-site 1 line=27 iter=4\nomc-site 1 line=27 iter=5\nomc-site 1 line=27 iter=6\nomc-site 1 line=27 iter=7\nomc-site 1 line=27 iter=8\nomc-site 1 line=27 iter=9\nomc-site 1 line=27 iter=10\nomc-site 1 line=27 iter=11\nomc-site 1 line=27 iter=12\nomc-site 1 line=27 iter=13\nomc-site 1 line=27 iter=14\nomc-site 1 line=27 iter=15\nomc-site 1 line=27 iter=16\nomc-site 1 line=27 iter=17\nomc-site 1 line=27 iter=18\nomc-site 1 line=27 iter=19\nomc-site 1 line=27 iter=20\nomc-site 1 line=27 iter=21\nomc-site 1 line=27 iter=22\nomc-site 1 line=27 iter=23\nomc-site 1 line=27 iter=24\nomc-site 1 line=27 iter=25\nomc-site 1 line=27 iter=26\nomc-site 1 line=27 iter=27\nomc-site 1 line=27 iter=28\nomc-site 1 line=27 iter=29\nomc-site 1 line=27 iter=30\nomc-site 1 line=27 iter=31\nomc-site 1 line=27 iter=32\nomc-site 1 line=27 iter=33\nomc-site 1 line=27 iter=34\nomc-site 1 line=27 iter=35\nomc-site 1 line=27 iter=36\nomc-site 1 line=27 iter=37\nomc-site 1 line=27 iter=38\nomc-site 1 line=27 iter=39\nomc-site 1 line=27 iter=40\nomc-site 1 line=27 iter=41\nomc-site 1 line=27 iter=42\nomc-site 1 line=27 iter=43\nomc-site 1 line=27 iter=44\nomc-site 1 line=27 iter=45\nomc-site 1 line=27 iter=46\nomc-site 1 line=27 iter=47\nomc-site 1 line=27 iter=48\nomc-site 1 line=27 iter=49\nomc-site 1 line=27 iter=50\nomc-site 1 line=27 iter=51\nomc-site 1 line=27 iter=52\nomc-site 1 line=27 iter=53\nomc-site 1 line=27 iter=54\nomc-site 1 line=27 iter=55\nomc-site 1 line=27 iter=56\nomc-site 1 line=27 iter=57\nomc-site 1 line=27 iter=58\nomc-site 1 line=27 iter=59\nomc-site 1 line=27 iter=60\nomc-site 1 line=27 iter=61\nomc-site 1 line=27 iter=62\nomc-site 1 line=27 iter=63\nomc-site 1 line=29 iter=-\nomc-site 1 line=30 iter=-\nomc-site 1 line=33 iter=-\nomc-site 1 line=35 iter=-\nomc-site 1 line=43 iter=-\nomc-site 1 line=48 iter=-\nomc-site 1 line=49 iter=-\nomc-site 1 line=49 iter=-\nomc-site 1 line=55 iter=-\nomc-site 1 line=55 iter=-\nomc-site 1 line=55 iter=-\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-site 1 line=16 iter=-\nomc-site 1 line=16 iter=-\nomc-site 1 line=21 iter=-\nomc-site 1 line=21 iter=-\nomc-site 1 line=22 iter=-\nomc-site 1 line=28 iter=0\nomc-site 1 line=28 iter=1\nomc-site 1 line=28 iter=2\nomc-site 1 line=28 iter=3\nomc-site 1 line=28 iter=4\nomc-site 1 line=28 iter=5\nomc-site 1 line=28 iter=6\nomc-site 1 line=28 iter=7\nomc-site 1 line=28 iter=8\nomc-site 1 line=28 iter=9\nomc-site 1 line=28 iter=10\nomc-site 1 line=28 iter=11\nomc-site 1 line=28 iter=12\nomc-site 1 line=28 iter=13\nomc-site 1 line=28 iter=14\nomc-site 1 line=28 iter=15\nomc-site 1 line=28 iter=16\nomc-site 1 line=28 iter=17\nomc-site 1 line=28 iter=18\nomc-site 1 line=28 iter=19\nomc-site 1 line=28 iter=20\nomc-site 1 line=28 iter=21\nomc-site 1 line=28 iter=22\nomc-site 1 line=28 iter=23\nomc-site 1 line=28 iter=24\nomc-site 1 line=28 iter=25\nomc-site 1 line=28 iter=26\nomc-site 1 line=28 iter=27\nomc-site 1 line=28 iter=28\nomc-site 1 line=28 iter=29\nomc-site 1 line=28 iter=30\nomc-site 1 line=28 iter=31\nomc-site 1 line=28 iter=32\nomc-site 1 line=28 iter=33\nomc-site 1 line=28 iter=34\nomc-site 1 line=28 iter=35\nomc-site 1 line=28 iter=36\nomc-site 1 line=28 iter=37\nomc-site 1 line=28 iter=38\nomc-site 1 line=28 iter=39\nomc-site 1 line=28 iter=40\nomc-site 1 line=28 iter=41\nomc-site 1 line=28 iter=42\nomc-site 1 line=28 iter=43\nomc-site 1 line=28 iter=44\nomc-site 1 line=28 iter=45\nomc-site 1 line=28 iter=46\nomc-site 1 line=28 iter=47\nomc-site 1 line=28 iter=48\nomc-site 1 line=28 iter=49\nomc-site 1 line=28 iter=50\nomc-site 1 line=28 iter=51\nomc-site 1 line=28 iter=52\nomc-site 1 line=28 iter=53\nomc-site 1 line=28 iter=54\nomc-site 1 line=28 iter=55\nomc-site 1 line=28 iter=56\nomc-site 1 line=28 iter=57\nomc-site 1 line=28 iter=58\nomc-site 1 line=28 iter=59\nomc-site 1 line=28 iter=60\nomc-site 1 line=28 iter=61\nomc-site 1 line=28 iter=62\nomc-site 1 line=28 iter=63\nomc-site 1 line=30 iter=-\nomc-site 1 line=30 iter=-\nomc-site 1 line=31 iter=-\nomc-site 1 line=31 iter=-\nomc-site 1 line=34 iter=-\nomc-site 1 line=36 iter=-\nomc-site 1 line=36 iter=-\nomc-site 1 line=44 iter=-\nomc-site 1 line=49 iter=-\nomc-site 1 line=50 iter=-\nomc-site 1 line=50 iter=-\nomc-site 1 line=56 iter=-\nomc-site 1 line=56 iter=-\nomc-site 1 line=56 iter=-\nomc-site 1 line=56 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s3s4/fold-trap-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om",
+      "source_sha256": "d631015818345853519b160ff387e33a91a899ec5c8917dd963982cd5de55ddc",
+      "aarch64": {
+        "exit": 0,
+        "stderr": "omc-site 1 line=20 iter=-\nomc-site 1 line=23 iter=-\nomc-site 1 line=27 iter=-\nomc-site 1 line=29 iter=-\nomc-site 1 line=29 iter=-\nomc-site 1 line=33 iter=-\nomc-site 1 line=34 iter=-\nomc-site 1 line=34 iter=-\nomc-site 1 line=34 iter=-\nomc-site 1 line=37 iter=-\nomc-site 1 line=39 iter=0\nomc-site 1 line=39 iter=0\nomc-site 1 line=39 iter=1\nomc-site 1 line=39 iter=2\nomc-site 1 line=39 iter=3\nomc-site 1 line=44 iter=0\nomc-site 1 line=44 iter=1\nomc-site 1 line=44 iter=2\nomc-site 1 line=44 iter=2\nomc-site 1 line=44 iter=3\nomc-site 1 line=44 iter=3\nomc-site 1 line=49 iter=0\nomc-site 1 line=49 iter=0\nomc-site 1 line=49 iter=1\nomc-site 1 line=49 iter=1\nomc-site 1 line=49 iter=2\nomc-site 1 line=49 iter=2\nomc-site 1 line=49 iter=3\nomc-site 1 line=49 iter=3\nomc-site 1 line=54 iter=0\nomc-site 1 line=54 iter=1\nomc-site 1 line=54 iter=2\nomc-site 1 line=54 iter=2\nomc-site 1 line=54 iter=3\nomc-site 1 line=54 iter=3\nomc-site 1 line=59 iter=0\nomc-site 1 line=59 iter=1\nomc-site 1 line=59 iter=1\nomc-site 1 line=59 iter=2\nomc-site 1 line=59 iter=2\nomc-site 1 line=59 iter=3\nomc-site 1 line=59 iter=3\nomc-site 1 line=64 iter=0\nomc-site 1 line=64 iter=0\nomc-site 1 line=64 iter=0\nomc-site 1 line=64 iter=1\nomc-site 1 line=64 iter=1\nomc-site 1 line=64 iter=1\nomc-site 1 line=64 iter=1\nomc-site 1 line=64 iter=2\nomc-site 1 line=64 iter=3\nomc-site 1 line=68 iter=-\nomc-site 1 line=70 iter=0\nomc-site 1 line=70 iter=0\nomc-site 1 line=70 iter=1\nomc-site 1 line=70 iter=2\nomc-site 1 line=70 iter=3\nomc-site 1 line=20 iter=-\nomc-site 1 line=74 iter=-\nomc-site 1 line=20 iter=-\nomc-site 1 line=75 iter=-\nomc-site 1 line=23 iter=-\nomc-site 1 line=78 iter=-\nomc-site 1 line=23 iter=-\nomc-site 1 line=79 iter=-\nomc-site 1 line=88 iter=-\nomc-site 1 line=93 iter=-\nomc-site 1 line=94 iter=-\nomc-site 1 line=94 iter=-\nomc-site 1 line=100 iter=-\nomc-site 1 line=100 iter=-\nomc-site 1 line=100 iter=-\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": "omc-site 1 line=21 iter=-\nomc-site 1 line=24 iter=-\nomc-site 1 line=28 iter=-\nomc-site 1 line=28 iter=-\nomc-site 1 line=30 iter=-\nomc-site 1 line=30 iter=-\nomc-site 1 line=30 iter=-\nomc-site 1 line=34 iter=-\nomc-site 1 line=35 iter=-\nomc-site 1 line=35 iter=-\nomc-site 1 line=35 iter=-\nomc-site 1 line=35 iter=-\nomc-site 1 line=38 iter=-\nomc-site 1 line=38 iter=-\nomc-site 1 line=40 iter=0\nomc-site 1 line=40 iter=0\nomc-site 1 line=40 iter=0\nomc-site 1 line=40 iter=1\nomc-site 1 line=40 iter=1\nomc-site 1 line=40 iter=2\nomc-site 1 line=40 iter=2\nomc-site 1 line=40 iter=3\nomc-site 1 line=40 iter=3\nomc-site 1 line=45 iter=0\nomc-site 1 line=45 iter=0\nomc-site 1 line=45 iter=1\nomc-site 1 line=45 iter=1\nomc-site 1 line=45 iter=2\nomc-site 1 line=45 iter=2\nomc-site 1 line=45 iter=2\nomc-site 1 line=45 iter=3\nomc-site 1 line=45 iter=3\nomc-site 1 line=45 iter=3\nomc-site 1 line=50 iter=0\nomc-site 1 line=50 iter=0\nomc-site 1 line=50 iter=0\nomc-site 1 line=50 iter=1\nomc-site 1 line=50 iter=1\nomc-site 1 line=50 iter=1\nomc-site 1 line=50 iter=2\nomc-site 1 line=50 iter=2\nomc-site 1 line=50 iter=2\nomc-site 1 line=50 iter=3\nomc-site 1 line=50 iter=3\nomc-site 1 line=50 iter=3\nomc-site 1 line=55 iter=0\nomc-site 1 line=55 iter=0\nomc-site 1 line=55 iter=1\nomc-site 1 line=55 iter=1\nomc-site 1 line=55 iter=2\nomc-site 1 line=55 iter=2\nomc-site 1 line=55 iter=2\nomc-site 1 line=55 iter=3\nomc-site 1 line=55 iter=3\nomc-site 1 line=55 iter=3\nomc-site 1 line=60 iter=0\nomc-site 1 line=60 iter=0\nomc-site 1 line=60 iter=1\nomc-site 1 line=60 iter=1\nomc-site 1 line=60 iter=1\nomc-site 1 line=60 iter=2\nomc-site 1 line=60 iter=2\nomc-site 1 line=60 iter=2\nomc-site 1 line=60 iter=3\nomc-site 1 line=60 iter=3\nomc-site 1 line=60 iter=3\nomc-site 1 line=65 iter=0\nomc-site 1 line=65 iter=0\nomc-site 1 line=65 iter=0\nomc-site 1 line=65 iter=0\nomc-site 1 line=65 iter=1\nomc-site 1 line=65 iter=1\nomc-site 1 line=65 iter=1\nomc-site 1 line=65 iter=1\nomc-site 1 line=65 iter=1\nomc-site 1 line=65 iter=2\nomc-site 1 line=65 iter=2\nomc-site 1 line=65 iter=3\nomc-site 1 line=65 iter=3\nomc-site 1 line=69 iter=-\nomc-site 1 line=69 iter=-\nomc-site 1 line=71 iter=0\nomc-site 1 line=71 iter=0\nomc-site 1 line=71 iter=0\nomc-site 1 line=71 iter=1\nomc-site 1 line=71 iter=1\nomc-site 1 line=71 iter=2\nomc-site 1 line=71 iter=2\nomc-site 1 line=71 iter=3\nomc-site 1 line=71 iter=3\nomc-site 1 line=21 iter=-\nomc-site 1 line=75 iter=-\nomc-site 1 line=75 iter=-\nomc-site 1 line=21 iter=-\nomc-site 1 line=76 iter=-\nomc-site 1 line=76 iter=-\nomc-site 1 line=24 iter=-\nomc-site 1 line=79 iter=-\nomc-site 1 line=79 iter=-\nomc-site 1 line=24 iter=-\nomc-site 1 line=80 iter=-\nomc-site 1 line=80 iter=-\nomc-site 1 line=89 iter=-\nomc-site 1 line=94 iter=-\nomc-site 1 line=95 iter=-\nomc-site 1 line=95 iter=-\nomc-site 1 line=101 iter=-\nomc-site 1 line=101 iter=-\nomc-site 1 line=101 iter=-\nomc-site 1 line=101 iter=-\n"
+      },
+      "reason": "Exact target-specific runtime trap sites, including call-stack guards."
+    },
+    {
+      "source_spec": "seed/omc/om2/s2/bad-growth.om",
+      "source_sha256": "107518abdf93e4a6d07b2f6d96342e0d91d14a222da2a56f8a27c248280c8829",
+      "aarch64": {
+        "exit": 14,
+        "stderr": "omc: line 6: error 14\n"
+      },
+      "x86_64": {
+        "exit": 14,
+        "stderr": "omc: line 8: error 14\n"
+      },
+      "reason": "Same emitted-storage ceiling; target instruction sizes reach it at different source tokens."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s3s4/unroll-growth.om",
+      "source_sha256": "57e296be9ce8a4bb059e057192829f4efe7172d7ed26401e300c188e73e3c2b1",
+      "aarch64": {
+        "exit": 14,
+        "stderr": "omc: line 23: error 14\n"
+      },
+      "x86_64": {
+        "exit": 14,
+        "stderr": "omc: line 22: error 14\n"
+      },
+      "reason": "Same emitted-storage ceiling; target instruction sizes reach it at different source tokens."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s3s4/unroll-growth-diag.om",
+      "source_sha256": "49fba097cfb5aa54d2ce8001f561bf6c5f2caa29fbaa42a31374e43e1f4e3c5f",
+      "aarch64": {
+        "exit": 14,
+        "stderr": "omc: line 23: error 14\nomc-diag 1 code=14 sev=error line=23 col=17 span=813-814 expect=value found=73 obligation=growth profile=OM-2\n"
+      },
+      "x86_64": {
+        "exit": 14,
+        "stderr": "omc: line 22: error 14\nomc-diag 1 code=14 sev=error line=22 col=17 span=792-794 expect=value found=3131 obligation=growth profile=OM-2\n"
+      },
+      "reason": "Same emitted-storage ceiling; target instruction sizes reach it at different source tokens."
+    },
+    {
+      "source_spec": "pack:seed/qualification/om2/c2/corpus.pack:3254042:49+cyc:seed/qualification/om2/c2/cyc-stmt.txt:3145716+pack:seed/qualification/om2/c2/corpus.pack:3254190:34",
+      "source_sha256": "05d0ee5977dc7991191f0e4fbc35dcc9cc7ec6b7aa321c7703256685884eda65",
+      "reason": "Frozen AArch64 branch-range refusal; x86 has its own checked branch/output limits. Accepted x86 programs require decoded instructions and an explicit execution oracle.",
+      "aarch64": {
+        "exit": 24,
+        "stderr": "omc: line 262148: error 24\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "x86_execution": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source_spec": "pack:seed/qualification/om2/c2/corpus.pack:3254323:49+cyc:seed/qualification/om2/c2/cyc-stmt.txt:6291444+pack:seed/qualification/om2/c2/corpus.pack:3254471:34",
+      "source_sha256": "982ec370ef18a3a5ce391624e2a93073614fbab58df798585d3af8f21fbaa1ad",
+      "reason": "Frozen AArch64 branch-range refusal; x86 has its own checked branch/output limits. Accepted x86 programs require decoded instructions and an explicit execution oracle.",
+      "aarch64": {
+        "exit": 24,
+        "stderr": "omc: line 524292: error 24\n"
+      },
+      "x86_64": {
+        "exit": 14,
+        "stderr": "omc: line 305035: error 14\n"
+      }
+    },
+    {
+      "source_spec": "pack:seed/qualification/om2/c2/corpus.pack:3254604:59+cyc:seed/qualification/om2/c2/cyc-stmt.txt:3600000+pack:seed/qualification/om2/c2/corpus.pack:3254762:38",
+      "source_sha256": "3bacfe18c6a44b1b8909a5119d1ffba1b9b892b3d18c2eeb5673d8d427ca051b",
+      "reason": "Frozen AArch64 branch-range refusal; x86 has its own checked branch/output limits. Accepted x86 programs require decoded instructions and an explicit execution oracle.",
+      "aarch64": {
+        "exit": 24,
+        "stderr": "omc: line 300006: error 24\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "x86_execution": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source_spec": "pack:seed/qualification/om2/c2/corpus.pack:3254899:52+cyc:seed/qualification/om2/c2/cyc-stmt.txt:3600000+pack:seed/qualification/om2/c2/corpus.pack:3255050:34",
+      "source_sha256": "7d7d35a0bc6f8ff99ead211b5253df42114d08e1856bd630576e64cf600b11d9",
+      "reason": "Frozen AArch64 branch-range refusal; x86 has its own checked branch/output limits. Accepted x86 programs require decoded instructions and an explicit execution oracle.",
+      "aarch64": {
+        "exit": 24,
+        "stderr": "omc: line 300005: error 24\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "x86_execution": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source_spec": "pack:seed/qualification/om2/c2/corpus.pack:3255183:51+cyc:seed/qualification/om2/c2/cyc-stmt.txt:3600000+pack:seed/qualification/om2/c2/corpus.pack:3255333:30",
+      "source_sha256": "581b5e09b325a89b32ffb704a5719d90333d9dcbd24d891aa2385b43dd6effac",
+      "reason": "Frozen AArch64 branch-range refusal; x86 has its own checked branch/output limits. Accepted x86 programs require decoded instructions and an explicit execution oracle.",
+      "aarch64": {
+        "exit": 24,
+        "stderr": "omc: line 300008: error 24\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "x86_execution": {
+        "exit": 102,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source_spec": "pack:seed/qualification/om2/c2/corpus.pack:3386578:49+cyc:seed/qualification/om2/c2/cyc-stmt.txt:3145728+pack:seed/qualification/om2/c2/corpus.pack:3386726:34",
+      "source_sha256": "89d80a4da80fbc5a2d0086ad391caea8207c666edac860ff71e93d5ca595ddea",
+      "reason": "Frozen AArch64 branch-range refusal; x86 has its own checked branch/output limits. Accepted x86 programs require decoded instructions and an explicit execution oracle.",
+      "aarch64": {
+        "exit": 24,
+        "stderr": "omc: line 262149: error 24\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "x86_execution": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s3s4/unroll-growth.om+seed/qualification/om2/sec/s3s4/lib-pu.om",
+      "source_sha256": "805349f4597932c31aac59c7985d947c191d8906d9195fead2c0e4bbfa95da2f",
+      "aarch64": {
+        "exit": 14,
+        "stderr": "omc: line 23: error 14\n"
+      },
+      "x86_64": {
+        "exit": 14,
+        "stderr": "omc: line 22: error 14\n"
+      },
+      "reason": "Same emitted-storage ceiling; target instruction sizes reach it at different source tokens."
+    },
+    {
+      "source_spec": "seed/qualification/om2/sec/s3s4/unroll-growth-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om",
+      "source_sha256": "aa923b4c0dfab331d3e664fc3fe4c13751597b0d56201e7fd92552a3a11a2610",
+      "aarch64": {
+        "exit": 14,
+        "stderr": "omc: line 23: error 14\nomc-diag 1 code=14 sev=error line=23 col=17 span=813-814 expect=value found=73 obligation=growth profile=OM-2\n"
+      },
+      "x86_64": {
+        "exit": 14,
+        "stderr": "omc: line 22: error 14\nomc-diag 1 code=14 sev=error line=22 col=17 span=792-794 expect=value found=3131 obligation=growth profile=OM-2\n"
+      },
+      "reason": "Same emitted-storage ceiling; target instruction sizes reach it at different source tokens."
+    }
+  ]
+}
