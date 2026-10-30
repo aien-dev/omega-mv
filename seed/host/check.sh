@@ -67,4 +67,9 @@ if readelf -l -d seed/out/omc | grep -Eq 'INTERP|NEEDED'; then
     echo 'FAIL unexpected compiler runtime dependency' >&2
     exit 1
 fi
+# OMEGA-CRYPTO-REUSE-1 (Refs #639). set -eu: a failing suite exits this script.
+# A no-op tamper in om/tls/test/reuse/run.sh (replacement equal to the site) is not
+# caught, so that suite, and therefore this script, exits nonzero.
+sh om/tls/test/gcmsiv/run.sh seed/out/omc
+sh om/tls/test/reuse/run.sh seed/out/omc
 printf 'PASS native-host qualification; seeded build, C tools are comparison oracles only\n'
