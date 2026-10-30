@@ -862,7 +862,11 @@ service and a missing clock is refused at `STEP_CLOCK_CHECK`). The platform
 contract a native backend programs against is `src/omega_gpu_platform.h`.
 The per-file dependency map, the driver-responsibility table and the cut plan
 live in `docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md`; `make
-test-gpu-engine-freestanding` is the host evidence. Device ownership stays
+test-gpu-engine-freestanding` is the host evidence. The SHA-256 the encoder,
+codegen, matmul and realize files call joins that link as the freestanding
+OM-2 binding `src/omega_om_units_fs.c` (`om/units.sh`, omega-bridge outputs
+`freest` and `fapic`); the hosted binding `src/omega_om_units.c` needs pthread
+TLS, mmap and abort and stays out of it. Device ownership stays
 NOT_RUN until cut B runs on the Spark.
 
 ## 16. Origin

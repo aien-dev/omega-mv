@@ -18,7 +18,10 @@ Claimed (host evidence, `make test-gpu-engine-freestanding`):
   `memset`, `strcmp` and `strlen` undefined: `src/omega_gpu_engine.c`,
   `src/omega_gpu_platform.c`, `src/omega_blackwell_encoder.c`,
   `src/omega_blackwell_codegen.c` and `src/omega_blackwell_matmul.c` (cut A.2),
-  `src/omega_blackwell_qmd.c`, `src/omega_blackwell_realize.c`, `src/sha256.c`.
+  `src/omega_blackwell_qmd.c`, `src/omega_blackwell_realize.c`, and the SHA-256
+  (`src/sha256.c` at cut A; since the OM-2 cutover #747 the freestanding binding
+  `src/omega_om_units_fs.c` that `om/units.sh` generates from `om/sha256/sha256-om2.om`,
+  `make test-sha256-freestanding-parity`).
   No Linux header, no `errno`, no `clock_gettime`, no `printf`, no `malloc`,
   no `pthread_*`, no `nvrm_*`, no `m16_*`. The make target fails on any other
   undefined symbol.
@@ -151,7 +154,7 @@ development-host measurement or gating and is not part of the native product
 | `src/omega_blackwell_encoder.c` | 0 | 0 | none (stdio removed in A) | A | DONE |
 | `src/omega_blackwell_qmd.c` | 0 | 0 | none | A | DONE |
 | `src/omega_blackwell_realize.c` | 0 | 0 | none | A | DONE |
-| `src/sha256.c` | 0 | 0 | none | A | DONE |
+| `src/omega_om_units_fs.c` | 0 | 0 | none (generated, freestanding OM-2 binding) | A | DONE: replaces `src/sha256.c`; the hosted binding `src/omega_om_units.c` needs pthread TLS, mmap and abort and stays out of the link |
 | `src/omega_blackwell_codegen.c` | 0 | 0 | none in the freestanding build (stdio, stdlib only in the hosted build) | A.2 | DONE: caller-provided code buffer (`omega_blackwell_kernel_encode_into`); allocating generators, diagnostics and the printing variation self-test are hosted only |
 | `src/omega_blackwell_matmul.c` | 0 | 0 | none in the freestanding build (stdlib only in the hosted build) | A.2 | DONE: `omega_blackwell_kernel_free` and the dispatcher hosted only; integer bf16 rounding in the freestanding build |
 | `src/omega_gpu_wait.c` | 0 | 0 | none in the freestanding build (time only in the hosted build) | C | DONE (session part): freestanding has no default clock and refuses without `cfg->now_ns` |
