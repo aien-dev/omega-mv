@@ -801,8 +801,15 @@ meaning and, for the C2 manifest, its exact output bytes or error.
 #### 9.13.1 Secret hygiene: `dit` and `scrub` (program mode)
 
 Two value words for code that handles secrets. Both are OM-2 only (reserved as above), program mode only
-(error 9 in function mode and in IR mode), and give a long. The emitted words are fixed, so the output is
-byte-for-byte deterministic. Fixtures: `seed/omc/om2/s5/` (`s5.cases`, `s5-mutants.cases`).
+(error 9 in function mode), AArch64 only (error 25 under `target x86linux`), and give a long. They are
+value-only words: they stand where an expression is read (`k = scrub 16`, an argument, an operand); a bare
+statement `scrub 16` or `dit 1` reads the word as a statement name and is error 16 (keyword used as a
+name). IR mode never reaches them: `ir` together with `om2` is already error 16 in either header order,
+so omc's IR-mode error 9 test for these words is a defensive check that no source exercises. The emitted
+words are fixed, so the output is byte-for-byte deterministic. Fixtures: `seed/omc/om2/s5/` (`s5.cases`,
+`s5-mutants.cases`, both standing gates in `seed/host/check.sh`); `s5-scrub-emit` pins the sha256 of the
+whole output of `scrub-emit.om`, so the exact register-zeroing sequence below is checked, and the
+mutants `m-zpool`, `m-zvec` and `m-movz16` (zeroing words retargeted to X16 or V0) are detected by it.
 
 - **`dit v`** (v int, else error 7) sets PSTATE.DIT (Arm ARM C5.2.4, FEAT_DIT; bit 24 of the DIT
   special-purpose register) and gives the previous bit as 0 or 1. v outside {0, 1} (a negative int too)

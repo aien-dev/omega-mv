@@ -19,3 +19,6 @@ s5-scrub-floor run seed/omc/om2/s5/scrub-floor.om - - - 106
 s5-scrub-fm refuse seed/omc/om2/s5/scrub-fm.om 9
 s5-scrub-type refuse seed/omc/om2/s5/scrub-type.om 7
 s5-scrub-name refuse seed/omc/om2/s5/scrub-name.om 16
+## scrub: the exact emitted sequence (checks, STP XZR loop, MOVZ #0 per free register, MOVI #0 V0-V31)
+s5-scrub-emit emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+s5-scrub-emit-run run seed/omc/om2/s5/scrub-emit.om - - - 0
