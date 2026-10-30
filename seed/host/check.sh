@@ -40,6 +40,20 @@ grep -qx 'VERDICT mutant-requires FAIL run exit=0 expected=109 stdout=match stde
 grep -qx 'VERDICT mutant-proof FAIL run exit=0 expected=109 stdout=match stderr=match' "$run/mutant.log"
 grep -qx 'OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0' "$run/mutant.log"
 echo 'PASS contract-enforcement mutant detected by exact runtime-status mismatch'
+# OM-2 hex literals (#745): every place, decimal twins byte-identical, refusals on the decimal codes.
+"$B/gate" seed/out/omc "$pin" seed/omc/om2/hex/hex.cases "$run/hex" > "$run/hex.log" || { cat "$run/hex.log"; exit 1; }
+grep -qx 'OM2GATE PASS cases=51 pass=51 fail=0 invalid=0 not_run=0' "$run/hex.log"
+if "$B/gate" seed/out/omc "$pin" seed/omc/om2/hex/mutants.cases "$run/hexmut" > "$run/hexmut.log"; then
+    echo 'FAIL hex-literal mutant survived' >&2
+    exit 1
+else
+    status=$?
+    [ "$status" = 1 ] || { cat "$run/hexmut.log"; exit 1; }
+fi
+grep -qx 'OM2GATE FAIL cases=8 pass=3 fail=5 invalid=0 not_run=0' "$run/hexmut.log"
+[ "$(grep -c '^VERDICT ctl-hex-[a-z]*-pairs-dec-run PASS ' "$run/hexmut.log")" = 3 ]
+[ "$(grep -c '^VERDICT hex-[a-z]*-[a-z0-9-]* FAIL ' "$run/hexmut.log")" = 5 ]
+echo 'PASS hex literals (51 cases) and 3 tok_hex mutants killed'
 # Same function-mode contract behavior through the unchanged C referee and OscRt.
 if [ ! -x build/omegese/omegese ] || [ ! -x build/omega_emit/omega_emit ]; then
     echo 'NOT_RUN contract C parity: build the comparison oracles' >&2
