@@ -12,6 +12,19 @@ CFLAGS ?= -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include
 
+# sm_121 instruction encoder (twin of aien-dev/CUDApp#79): om (default) = om/encoder/bw_enc_sm121.om through the
+# generated binding src/omega_om_units.c; c = the migration-pending C encoder, the differential oracle; diff = both on
+# every call, abort on any difference (mk/om-encoder.mk). Use a separate OUT_DIR per value. The macro names keep
+# CUDApp's spelling so src/omega_blackwell_codegen.c stays the same file in both repositories.
+CUDAPP_ENCODER ?= om
+CUDAPP_ENCODER_DEFS_om :=
+CUDAPP_ENCODER_DEFS_c := -DCUDAPP_MIGRATION_PENDING_C_ENCODER
+CUDAPP_ENCODER_DEFS_diff := -DCUDAPP_MIGRATION_PENDING_ENCODER_DIFF
+CUDAPP_ENCODER_DEFS = $(CUDAPP_ENCODER_DEFS_$(CUDAPP_ENCODER))
+ifeq ($(filter om c diff,$(CUDAPP_ENCODER)),)
+$(error CUDAPP_ENCODER must be om, c or diff)
+endif
+
 SRCS = src/omega_om_units.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c \
 	src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_exec.c \
 	src/omega_self_host.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c \
@@ -114,7 +127,7 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CUDAPP_ENCODER_DEFS) -c $< -o $@
 
 $(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
