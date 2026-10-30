@@ -1,0 +1,6 @@
+# gcmtestvectors.zip: NIST CAVP AES-GCM test vectors (CAVS 14.0, generated 2012-08-31), committed unchanged.
+# Source: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
+# Fetched 2026-10-26, sha256 f9fc479e134cde2980b3bb7cddbcb567b2cd96fd753835243ed067699f26a023 (run.sh checks it).
+# License: work of the U.S. Government (NIST), not subject to copyright in the United States.
+# run.sh converts gcmEncryptExtIV{128,192,256}.rsp to E records and gcmDecrypt{128,192,256}.rsp to D records
+# in build/tls/aesgcm/ at test time (7875 vectors per file, 47250 in all; 11908 decrypt vectors expect FAIL).

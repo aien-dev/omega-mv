@@ -8,7 +8,7 @@ BROWNIAN_TPS_MK := 1
 .PHONY: test-brownian-tps
 BRWT_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -O2 -ffp-contract=off -D_POSIX_C_SOURCE=200809L -Isrc -Itools
 BRWT_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-BRWT_SRCS = tools/brownian/brw_tps_adapter.c src/turing/ty_qcont.c src/turing/ty_math.c src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/sha256.c
+BRWT_SRCS = tools/brownian/brw_tps_adapter.c src/turing/ty_qcont.c src/turing/ty_math.c src/turing/tc_pstream.c src/turing/tc_range.c src/turing/tc_rans.c src/omega_om_units.c
 BRWT_HDRS = tools/brownian/brw_tps_adapter.h src/turing/ty_qcont.h src/turing/ty_math.h src/turing/tc_pstream.h src/turing/tc_range.h src/turing/tc_rans.h src/sha256.h
 BRWT_DIR = $(OUT_DIR)/tests-brownian-tps
 

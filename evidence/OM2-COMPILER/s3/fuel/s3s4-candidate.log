@@ -1,0 +1,760 @@
+OM2GATE START cases=seed/qualification/om2/sec/s3s4/candidate.cases scratch=/tmp/om2c/s3/g-s3s4-fuel
+IDENTITY omc omc-fuel sha256=f195e2198f9c9d1a53b1d5006477461d3569a2ac8d5df8039ba894254ae1fa9d pinned=f195e2198f9c9d1a53b1d5006477461d3569a2ac8d5df8039ba894254ae1fa9d match
+DEADLINE 60
+CASE rot-values line=13
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/13.src > /tmp/om2c/s3/g-s3s4-fuel/13.elf 2> /tmp/om2c/s3/g-s3s4-fuel/13.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/13.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/13.out 2> /tmp/om2c/s3/g-s3s4-fuel/13.err
+VERDICT rot-values PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rot-values-om1 line=15
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/15.src > /tmp/om2c/s3/g-s3s4-fuel/15.elf 2> /tmp/om2c/s3/g-s3s4-fuel/15.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/15.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/15.out 2> /tmp/om2c/s3/g-s3s4-fuel/15.err
+VERDICT rot-values-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rot-trap-A line=18
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/18.src > /tmp/om2c/s3/g-s3s4-fuel/18.elf 2> /tmp/om2c/s3/g-s3s4-fuel/18.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/18.elf < /tmp/om2c/s3/g-s3s4-fuel/18.in > /tmp/om2c/s3/g-s3s4-fuel/18.out 2> /tmp/om2c/s3/g-s3s4-fuel/18.err
+VERDICT rot-trap-A PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-B line=19
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/19.src > /tmp/om2c/s3/g-s3s4-fuel/19.elf 2> /tmp/om2c/s3/g-s3s4-fuel/19.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/19.elf < /tmp/om2c/s3/g-s3s4-fuel/19.in > /tmp/om2c/s3/g-s3s4-fuel/19.out 2> /tmp/om2c/s3/g-s3s4-fuel/19.err
+VERDICT rot-trap-B PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-C line=20
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/20.src > /tmp/om2c/s3/g-s3s4-fuel/20.elf 2> /tmp/om2c/s3/g-s3s4-fuel/20.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/20.elf < /tmp/om2c/s3/g-s3s4-fuel/20.in > /tmp/om2c/s3/g-s3s4-fuel/20.out 2> /tmp/om2c/s3/g-s3s4-fuel/20.err
+VERDICT rot-trap-C PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-D line=21
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/21.src > /tmp/om2c/s3/g-s3s4-fuel/21.elf 2> /tmp/om2c/s3/g-s3s4-fuel/21.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/21.elf < /tmp/om2c/s3/g-s3s4-fuel/21.in > /tmp/om2c/s3/g-s3s4-fuel/21.out 2> /tmp/om2c/s3/g-s3s4-fuel/21.err
+VERDICT rot-trap-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-E line=22
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/22.src > /tmp/om2c/s3/g-s3s4-fuel/22.elf 2> /tmp/om2c/s3/g-s3s4-fuel/22.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/22.elf < /tmp/om2c/s3/g-s3s4-fuel/22.in > /tmp/om2c/s3/g-s3s4-fuel/22.out 2> /tmp/om2c/s3/g-s3s4-fuel/22.err
+VERDICT rot-trap-E PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-F line=23
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/23.src > /tmp/om2c/s3/g-s3s4-fuel/23.elf 2> /tmp/om2c/s3/g-s3s4-fuel/23.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/23.elf < /tmp/om2c/s3/g-s3s4-fuel/23.in > /tmp/om2c/s3/g-s3s4-fuel/23.out 2> /tmp/om2c/s3/g-s3s4-fuel/23.err
+VERDICT rot-trap-F PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-G line=24
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/24.src > /tmp/om2c/s3/g-s3s4-fuel/24.elf 2> /tmp/om2c/s3/g-s3s4-fuel/24.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/24.elf < /tmp/om2c/s3/g-s3s4-fuel/24.in > /tmp/om2c/s3/g-s3s4-fuel/24.out 2> /tmp/om2c/s3/g-s3s4-fuel/24.err
+VERDICT rot-trap-G PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-H line=25
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/25.src > /tmp/om2c/s3/g-s3s4-fuel/25.elf 2> /tmp/om2c/s3/g-s3s4-fuel/25.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/25.elf < /tmp/om2c/s3/g-s3s4-fuel/25.in > /tmp/om2c/s3/g-s3s4-fuel/25.out 2> /tmp/om2c/s3/g-s3s4-fuel/25.err
+VERDICT rot-trap-H PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-I line=26
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/26.src > /tmp/om2c/s3/g-s3s4-fuel/26.elf 2> /tmp/om2c/s3/g-s3s4-fuel/26.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/26.elf < /tmp/om2c/s3/g-s3s4-fuel/26.in > /tmp/om2c/s3/g-s3s4-fuel/26.out 2> /tmp/om2c/s3/g-s3s4-fuel/26.err
+VERDICT rot-trap-I PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-J line=27
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/27.src > /tmp/om2c/s3/g-s3s4-fuel/27.elf 2> /tmp/om2c/s3/g-s3s4-fuel/27.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/27.elf < /tmp/om2c/s3/g-s3s4-fuel/27.in > /tmp/om2c/s3/g-s3s4-fuel/27.out 2> /tmp/om2c/s3/g-s3s4-fuel/27.err
+VERDICT rot-trap-J PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-K line=28
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/28.src > /tmp/om2c/s3/g-s3s4-fuel/28.elf 2> /tmp/om2c/s3/g-s3s4-fuel/28.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/28.elf < /tmp/om2c/s3/g-s3s4-fuel/28.in > /tmp/om2c/s3/g-s3s4-fuel/28.out 2> /tmp/om2c/s3/g-s3s4-fuel/28.err
+VERDICT rot-trap-K PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-L line=29
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/29.src > /tmp/om2c/s3/g-s3s4-fuel/29.elf 2> /tmp/om2c/s3/g-s3s4-fuel/29.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/29.elf < /tmp/om2c/s3/g-s3s4-fuel/29.in > /tmp/om2c/s3/g-s3s4-fuel/29.out 2> /tmp/om2c/s3/g-s3s4-fuel/29.err
+VERDICT rot-trap-L PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-M line=30
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/30.src > /tmp/om2c/s3/g-s3s4-fuel/30.elf 2> /tmp/om2c/s3/g-s3s4-fuel/30.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/30.elf < /tmp/om2c/s3/g-s3s4-fuel/30.in > /tmp/om2c/s3/g-s3s4-fuel/30.out 2> /tmp/om2c/s3/g-s3s4-fuel/30.err
+VERDICT rot-trap-M PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-N line=31
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/31.src > /tmp/om2c/s3/g-s3s4-fuel/31.elf 2> /tmp/om2c/s3/g-s3s4-fuel/31.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/31.elf < /tmp/om2c/s3/g-s3s4-fuel/31.in > /tmp/om2c/s3/g-s3s4-fuel/31.out 2> /tmp/om2c/s3/g-s3s4-fuel/31.err
+VERDICT rot-trap-N PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-O line=32
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/32.src > /tmp/om2c/s3/g-s3s4-fuel/32.elf 2> /tmp/om2c/s3/g-s3s4-fuel/32.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/32.elf < /tmp/om2c/s3/g-s3s4-fuel/32.in > /tmp/om2c/s3/g-s3s4-fuel/32.out 2> /tmp/om2c/s3/g-s3s4-fuel/32.err
+VERDICT rot-trap-O PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-P line=33
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/33.src > /tmp/om2c/s3/g-s3s4-fuel/33.elf 2> /tmp/om2c/s3/g-s3s4-fuel/33.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/33.elf < /tmp/om2c/s3/g-s3s4-fuel/33.in > /tmp/om2c/s3/g-s3s4-fuel/33.out 2> /tmp/om2c/s3/g-s3s4-fuel/33.err
+VERDICT rot-trap-P PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rot-trap-om1-A line=34
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/34.src > /tmp/om2c/s3/g-s3s4-fuel/34.elf 2> /tmp/om2c/s3/g-s3s4-fuel/34.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/34.elf < /tmp/om2c/s3/g-s3s4-fuel/34.in > /tmp/om2c/s3/g-s3s4-fuel/34.out 2> /tmp/om2c/s3/g-s3s4-fuel/34.err
+VERDICT rot-trap-om1-A PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-B line=35
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/35.src > /tmp/om2c/s3/g-s3s4-fuel/35.elf 2> /tmp/om2c/s3/g-s3s4-fuel/35.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/35.elf < /tmp/om2c/s3/g-s3s4-fuel/35.in > /tmp/om2c/s3/g-s3s4-fuel/35.out 2> /tmp/om2c/s3/g-s3s4-fuel/35.err
+VERDICT rot-trap-om1-B PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-C line=36
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/36.src > /tmp/om2c/s3/g-s3s4-fuel/36.elf 2> /tmp/om2c/s3/g-s3s4-fuel/36.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/36.elf < /tmp/om2c/s3/g-s3s4-fuel/36.in > /tmp/om2c/s3/g-s3s4-fuel/36.out 2> /tmp/om2c/s3/g-s3s4-fuel/36.err
+VERDICT rot-trap-om1-C PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-D line=37
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/37.src > /tmp/om2c/s3/g-s3s4-fuel/37.elf 2> /tmp/om2c/s3/g-s3s4-fuel/37.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/37.elf < /tmp/om2c/s3/g-s3s4-fuel/37.in > /tmp/om2c/s3/g-s3s4-fuel/37.out 2> /tmp/om2c/s3/g-s3s4-fuel/37.err
+VERDICT rot-trap-om1-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-E line=38
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/38.src > /tmp/om2c/s3/g-s3s4-fuel/38.elf 2> /tmp/om2c/s3/g-s3s4-fuel/38.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/38.elf < /tmp/om2c/s3/g-s3s4-fuel/38.in > /tmp/om2c/s3/g-s3s4-fuel/38.out 2> /tmp/om2c/s3/g-s3s4-fuel/38.err
+VERDICT rot-trap-om1-E PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-F line=39
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/39.src > /tmp/om2c/s3/g-s3s4-fuel/39.elf 2> /tmp/om2c/s3/g-s3s4-fuel/39.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/39.elf < /tmp/om2c/s3/g-s3s4-fuel/39.in > /tmp/om2c/s3/g-s3s4-fuel/39.out 2> /tmp/om2c/s3/g-s3s4-fuel/39.err
+VERDICT rot-trap-om1-F PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-G line=40
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/40.src > /tmp/om2c/s3/g-s3s4-fuel/40.elf 2> /tmp/om2c/s3/g-s3s4-fuel/40.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/40.elf < /tmp/om2c/s3/g-s3s4-fuel/40.in > /tmp/om2c/s3/g-s3s4-fuel/40.out 2> /tmp/om2c/s3/g-s3s4-fuel/40.err
+VERDICT rot-trap-om1-G PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-H line=41
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/41.src > /tmp/om2c/s3/g-s3s4-fuel/41.elf 2> /tmp/om2c/s3/g-s3s4-fuel/41.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/41.elf < /tmp/om2c/s3/g-s3s4-fuel/41.in > /tmp/om2c/s3/g-s3s4-fuel/41.out 2> /tmp/om2c/s3/g-s3s4-fuel/41.err
+VERDICT rot-trap-om1-H PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-I line=42
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/42.src > /tmp/om2c/s3/g-s3s4-fuel/42.elf 2> /tmp/om2c/s3/g-s3s4-fuel/42.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/42.elf < /tmp/om2c/s3/g-s3s4-fuel/42.in > /tmp/om2c/s3/g-s3s4-fuel/42.out 2> /tmp/om2c/s3/g-s3s4-fuel/42.err
+VERDICT rot-trap-om1-I PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-J line=43
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/43.src > /tmp/om2c/s3/g-s3s4-fuel/43.elf 2> /tmp/om2c/s3/g-s3s4-fuel/43.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/43.elf < /tmp/om2c/s3/g-s3s4-fuel/43.in > /tmp/om2c/s3/g-s3s4-fuel/43.out 2> /tmp/om2c/s3/g-s3s4-fuel/43.err
+VERDICT rot-trap-om1-J PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-K line=44
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/44.src > /tmp/om2c/s3/g-s3s4-fuel/44.elf 2> /tmp/om2c/s3/g-s3s4-fuel/44.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/44.elf < /tmp/om2c/s3/g-s3s4-fuel/44.in > /tmp/om2c/s3/g-s3s4-fuel/44.out 2> /tmp/om2c/s3/g-s3s4-fuel/44.err
+VERDICT rot-trap-om1-K PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-L line=45
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/45.src > /tmp/om2c/s3/g-s3s4-fuel/45.elf 2> /tmp/om2c/s3/g-s3s4-fuel/45.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/45.elf < /tmp/om2c/s3/g-s3s4-fuel/45.in > /tmp/om2c/s3/g-s3s4-fuel/45.out 2> /tmp/om2c/s3/g-s3s4-fuel/45.err
+VERDICT rot-trap-om1-L PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-M line=46
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/46.src > /tmp/om2c/s3/g-s3s4-fuel/46.elf 2> /tmp/om2c/s3/g-s3s4-fuel/46.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/46.elf < /tmp/om2c/s3/g-s3s4-fuel/46.in > /tmp/om2c/s3/g-s3s4-fuel/46.out 2> /tmp/om2c/s3/g-s3s4-fuel/46.err
+VERDICT rot-trap-om1-M PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-N line=47
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/47.src > /tmp/om2c/s3/g-s3s4-fuel/47.elf 2> /tmp/om2c/s3/g-s3s4-fuel/47.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/47.elf < /tmp/om2c/s3/g-s3s4-fuel/47.in > /tmp/om2c/s3/g-s3s4-fuel/47.out 2> /tmp/om2c/s3/g-s3s4-fuel/47.err
+VERDICT rot-trap-om1-N PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-O line=48
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/48.src > /tmp/om2c/s3/g-s3s4-fuel/48.elf 2> /tmp/om2c/s3/g-s3s4-fuel/48.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/48.elf < /tmp/om2c/s3/g-s3s4-fuel/48.in > /tmp/om2c/s3/g-s3s4-fuel/48.out 2> /tmp/om2c/s3/g-s3s4-fuel/48.err
+VERDICT rot-trap-om1-O PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-P line=49
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/49.src > /tmp/om2c/s3/g-s3s4-fuel/49.elf 2> /tmp/om2c/s3/g-s3s4-fuel/49.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/49.elf < /tmp/om2c/s3/g-s3s4-fuel/49.in > /tmp/om2c/s3/g-s3s4-fuel/49.out 2> /tmp/om2c/s3/g-s3s4-fuel/49.err
+VERDICT rot-trap-om1-P PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rot-signed-byte line=51
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/51.src > /tmp/om2c/s3/g-s3s4-fuel/51.elf 2> /tmp/om2c/s3/g-s3s4-fuel/51.cerr
+VERDICT rot-signed-byte PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-signed-short line=52
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/52.src > /tmp/om2c/s3/g-s3s4-fuel/52.elf 2> /tmp/om2c/s3/g-s3s4-fuel/52.cerr
+VERDICT rot-signed-short PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-signed-int line=53
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/53.src > /tmp/om2c/s3/g-s3s4-fuel/53.elf 2> /tmp/om2c/s3/g-s3s4-fuel/53.cerr
+VERDICT rot-signed-int PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-signed-long line=54
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/54.src > /tmp/om2c/s3/g-s3s4-fuel/54.elf 2> /tmp/om2c/s3/g-s3s4-fuel/54.cerr
+VERDICT rot-signed-long PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-mixed-uint-ulong line=57
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/57.src > /tmp/om2c/s3/g-s3s4-fuel/57.elf 2> /tmp/om2c/s3/g-s3s4-fuel/57.cerr
+VERDICT rot-mixed-uint-ulong PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-mixed-ulong-uchar line=58
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/58.src > /tmp/om2c/s3/g-s3s4-fuel/58.elf 2> /tmp/om2c/s3/g-s3s4-fuel/58.cerr
+VERDICT rot-mixed-ulong-uchar PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-result-type line=60
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/60.src > /tmp/om2c/s3/g-s3s4-fuel/60.elf 2> /tmp/om2c/s3/g-s3s4-fuel/60.cerr
+VERDICT rot-result-type PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE rot-result-type-om1 line=61
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/61.src > /tmp/om2c/s3/g-s3s4-fuel/61.elf 2> /tmp/om2c/s3/g-s3s4-fuel/61.cerr
+VERDICT rot-result-type-om1 PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE unroll-sum line=65
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/65.src > /tmp/om2c/s3/g-s3s4-fuel/65.elf 2> /tmp/om2c/s3/g-s3s4-fuel/65.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/65.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/65.out 2> /tmp/om2c/s3/g-s3s4-fuel/65.err
+VERDICT unroll-sum PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-sum-rolled line=66
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/66.src > /tmp/om2c/s3/g-s3s4-fuel/66.elf 2> /tmp/om2c/s3/g-s3s4-fuel/66.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/66.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/66.out 2> /tmp/om2c/s3/g-s3s4-fuel/66.err
+VERDICT unroll-sum-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-sum-om1 line=67
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/67.src > /tmp/om2c/s3/g-s3s4-fuel/67.elf 2> /tmp/om2c/s3/g-s3s4-fuel/67.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/67.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/67.out 2> /tmp/om2c/s3/g-s3s4-fuel/67.err
+VERDICT unroll-sum-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-nest line=69
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/69.src > /tmp/om2c/s3/g-s3s4-fuel/69.elf 2> /tmp/om2c/s3/g-s3s4-fuel/69.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/69.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/69.out 2> /tmp/om2c/s3/g-s3s4-fuel/69.err
+VERDICT unroll-nest PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-nest-rolled line=70
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/70.src > /tmp/om2c/s3/g-s3s4-fuel/70.elf 2> /tmp/om2c/s3/g-s3s4-fuel/70.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/70.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/70.out 2> /tmp/om2c/s3/g-s3s4-fuel/70.err
+VERDICT unroll-nest-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-nest-om1 line=71
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/71.src > /tmp/om2c/s3/g-s3s4-fuel/71.elf 2> /tmp/om2c/s3/g-s3s4-fuel/71.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/71.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/71.out 2> /tmp/om2c/s3/g-s3s4-fuel/71.err
+VERDICT unroll-nest-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-write-i line=73
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/73.src > /tmp/om2c/s3/g-s3s4-fuel/73.elf 2> /tmp/om2c/s3/g-s3s4-fuel/73.cerr
+VERDICT unroll-write-i PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE unroll-write-i-nested line=74
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/74.src > /tmp/om2c/s3/g-s3s4-fuel/74.elf 2> /tmp/om2c/s3/g-s3s4-fuel/74.cerr
+VERDICT unroll-write-i-nested PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE unroll-write-i-rolled line=76
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/76.src > /tmp/om2c/s3/g-s3s4-fuel/76.elf 2> /tmp/om2c/s3/g-s3s4-fuel/76.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/76.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/76.out 2> /tmp/om2c/s3/g-s3s4-fuel/76.err
+VERDICT unroll-write-i-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-write-i-rolled-om1 line=77
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/77.src > /tmp/om2c/s3/g-s3s4-fuel/77.elf 2> /tmp/om2c/s3/g-s3s4-fuel/77.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/77.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/77.out 2> /tmp/om2c/s3/g-s3s4-fuel/77.err
+VERDICT unroll-write-i-rolled-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-break line=79
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/79.src > /tmp/om2c/s3/g-s3s4-fuel/79.elf 2> /tmp/om2c/s3/g-s3s4-fuel/79.cerr
+VERDICT unroll-break PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE unroll-continue line=80
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/80.src > /tmp/om2c/s3/g-s3s4-fuel/80.elf 2> /tmp/om2c/s3/g-s3s4-fuel/80.cerr
+VERDICT unroll-continue PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE unroll-break-rolled line=81
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/81.src > /tmp/om2c/s3/g-s3s4-fuel/81.elf 2> /tmp/om2c/s3/g-s3s4-fuel/81.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/81.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/81.out 2> /tmp/om2c/s3/g-s3s4-fuel/81.err
+VERDICT unroll-break-rolled PASS run exit=2 expected=2 stdout=match stderr=match
+CASE unroll-break-om1 line=82
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/82.src > /tmp/om2c/s3/g-s3s4-fuel/82.elf 2> /tmp/om2c/s3/g-s3s4-fuel/82.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/82.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/82.out 2> /tmp/om2c/s3/g-s3s4-fuel/82.err
+VERDICT unroll-break-om1 PASS run exit=2 expected=2 stdout=match stderr=match
+CASE unroll-continue-rolled line=83
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/83.src > /tmp/om2c/s3/g-s3s4-fuel/83.elf 2> /tmp/om2c/s3/g-s3s4-fuel/83.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/83.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/83.out 2> /tmp/om2c/s3/g-s3s4-fuel/83.err
+VERDICT unroll-continue-rolled PASS run exit=3 expected=3 stdout=match stderr=match
+CASE unroll-continue-om1 line=84
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/84.src > /tmp/om2c/s3/g-s3s4-fuel/84.elf 2> /tmp/om2c/s3/g-s3s4-fuel/84.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/84.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/84.out 2> /tmp/om2c/s3/g-s3s4-fuel/84.err
+VERDICT unroll-continue-om1 PASS run exit=3 expected=3 stdout=match stderr=match
+CASE unroll-break-nested line=86
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/86.src > /tmp/om2c/s3/g-s3s4-fuel/86.elf 2> /tmp/om2c/s3/g-s3s4-fuel/86.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/86.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/86.out 2> /tmp/om2c/s3/g-s3s4-fuel/86.err
+VERDICT unroll-break-nested PASS run exit=4 expected=4 stdout=match stderr=match
+CASE unroll-break-nested-rolled line=87
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/87.src > /tmp/om2c/s3/g-s3s4-fuel/87.elf 2> /tmp/om2c/s3/g-s3s4-fuel/87.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/87.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/87.out 2> /tmp/om2c/s3/g-s3s4-fuel/87.err
+VERDICT unroll-break-nested-rolled PASS run exit=4 expected=4 stdout=match stderr=match
+CASE unroll-break-nested-om1 line=88
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/88.src > /tmp/om2c/s3/g-s3s4-fuel/88.elf 2> /tmp/om2c/s3/g-s3s4-fuel/88.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/88.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/88.out 2> /tmp/om2c/s3/g-s3s4-fuel/88.err
+VERDICT unroll-break-nested-om1 PASS run exit=4 expected=4 stdout=match stderr=match
+CASE unroll-continue-nested line=89
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/89.src > /tmp/om2c/s3/g-s3s4-fuel/89.elf 2> /tmp/om2c/s3/g-s3s4-fuel/89.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/89.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/89.out 2> /tmp/om2c/s3/g-s3s4-fuel/89.err
+VERDICT unroll-continue-nested PASS run exit=8 expected=8 stdout=match stderr=match
+CASE unroll-continue-nested-rolled line=90
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/90.src > /tmp/om2c/s3/g-s3s4-fuel/90.elf 2> /tmp/om2c/s3/g-s3s4-fuel/90.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/90.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/90.out 2> /tmp/om2c/s3/g-s3s4-fuel/90.err
+VERDICT unroll-continue-nested-rolled PASS run exit=8 expected=8 stdout=match stderr=match
+CASE unroll-continue-nested-om1 line=91
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/91.src > /tmp/om2c/s3/g-s3s4-fuel/91.elf 2> /tmp/om2c/s3/g-s3s4-fuel/91.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/91.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/91.out 2> /tmp/om2c/s3/g-s3s4-fuel/91.err
+VERDICT unroll-continue-nested-om1 PASS run exit=8 expected=8 stdout=match stderr=match
+CASE unroll-k65 line=94
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/94.src > /tmp/om2c/s3/g-s3s4-fuel/94.elf 2> /tmp/om2c/s3/g-s3s4-fuel/94.cerr
+VERDICT unroll-k65 PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE unroll-k65-diag line=95
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/95.src > /tmp/om2c/s3/g-s3s4-fuel/95.elf 2> /tmp/om2c/s3/g-s3s4-fuel/95.cerr
+VERDICT unroll-k65-diag PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE unroll-k0 line=96
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/96.src > /tmp/om2c/s3/g-s3s4-fuel/96.elf 2> /tmp/om2c/s3/g-s3s4-fuel/96.cerr
+VERDICT unroll-k0 PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE unroll-kvar line=97
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/97.src > /tmp/om2c/s3/g-s3s4-fuel/97.elf 2> /tmp/om2c/s3/g-s3s4-fuel/97.cerr
+VERDICT unroll-kvar PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE unroll-nest-64x2 line=99
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/99.src > /tmp/om2c/s3/g-s3s4-fuel/99.elf 2> /tmp/om2c/s3/g-s3s4-fuel/99.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/99.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/99.out 2> /tmp/om2c/s3/g-s3s4-fuel/99.err
+VERDICT unroll-nest-64x2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-nest-64x2-rolled line=100
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/100.src > /tmp/om2c/s3/g-s3s4-fuel/100.elf 2> /tmp/om2c/s3/g-s3s4-fuel/100.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/100.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/100.out 2> /tmp/om2c/s3/g-s3s4-fuel/100.err
+VERDICT unroll-nest-64x2-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-nest-64x2-om1 line=101
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/101.src > /tmp/om2c/s3/g-s3s4-fuel/101.elf 2> /tmp/om2c/s3/g-s3s4-fuel/101.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/101.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/101.out 2> /tmp/om2c/s3/g-s3s4-fuel/101.err
+VERDICT unroll-nest-64x2-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-growth line=104
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/104.src > /tmp/om2c/s3/g-s3s4-fuel/104.elf 2> /tmp/om2c/s3/g-s3s4-fuel/104.cerr
+VERDICT unroll-growth PASS compile exit=14 expected=14 refused with the expected error
+CASE unroll-growth-diag line=105
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/105.src > /tmp/om2c/s3/g-s3s4-fuel/105.elf 2> /tmp/om2c/s3/g-s3s4-fuel/105.cerr
+VERDICT unroll-growth-diag PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE unroll-growth-rolled line=106
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/106.src > /tmp/om2c/s3/g-s3s4-fuel/106.elf 2> /tmp/om2c/s3/g-s3s4-fuel/106.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/106.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/106.out 2> /tmp/om2c/s3/g-s3s4-fuel/106.err
+VERDICT unroll-growth-rolled PASS run exit=149 expected=149 stdout=match stderr=match
+CASE unroll-growth-om1 line=107
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/107.src > /tmp/om2c/s3/g-s3s4-fuel/107.elf 2> /tmp/om2c/s3/g-s3s4-fuel/107.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/107.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/107.out 2> /tmp/om2c/s3/g-s3s4-fuel/107.err
+VERDICT unroll-growth-om1 PASS run exit=149 expected=149 stdout=match stderr=match
+CASE inline-order-A line=110
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/110.src > /tmp/om2c/s3/g-s3s4-fuel/110.elf 2> /tmp/om2c/s3/g-s3s4-fuel/110.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/110.elf < /tmp/om2c/s3/g-s3s4-fuel/110.in > /tmp/om2c/s3/g-s3s4-fuel/110.out 2> /tmp/om2c/s3/g-s3s4-fuel/110.err
+VERDICT inline-order-A PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-B line=111
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/111.src > /tmp/om2c/s3/g-s3s4-fuel/111.elf 2> /tmp/om2c/s3/g-s3s4-fuel/111.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/111.elf < /tmp/om2c/s3/g-s3s4-fuel/111.in > /tmp/om2c/s3/g-s3s4-fuel/111.out 2> /tmp/om2c/s3/g-s3s4-fuel/111.err
+VERDICT inline-order-B PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-C line=112
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/112.src > /tmp/om2c/s3/g-s3s4-fuel/112.elf 2> /tmp/om2c/s3/g-s3s4-fuel/112.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/112.elf < /tmp/om2c/s3/g-s3s4-fuel/112.in > /tmp/om2c/s3/g-s3s4-fuel/112.out 2> /tmp/om2c/s3/g-s3s4-fuel/112.err
+VERDICT inline-order-C PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-D line=113
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/113.src > /tmp/om2c/s3/g-s3s4-fuel/113.elf 2> /tmp/om2c/s3/g-s3s4-fuel/113.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/113.elf < /tmp/om2c/s3/g-s3s4-fuel/113.in > /tmp/om2c/s3/g-s3s4-fuel/113.out 2> /tmp/om2c/s3/g-s3s4-fuel/113.err
+VERDICT inline-order-D PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-E line=114
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/114.src > /tmp/om2c/s3/g-s3s4-fuel/114.elf 2> /tmp/om2c/s3/g-s3s4-fuel/114.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/114.elf < /tmp/om2c/s3/g-s3s4-fuel/114.in > /tmp/om2c/s3/g-s3s4-fuel/114.out 2> /tmp/om2c/s3/g-s3s4-fuel/114.err
+VERDICT inline-order-E PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-F line=115
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/115.src > /tmp/om2c/s3/g-s3s4-fuel/115.elf 2> /tmp/om2c/s3/g-s3s4-fuel/115.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/115.elf < /tmp/om2c/s3/g-s3s4-fuel/115.in > /tmp/om2c/s3/g-s3s4-fuel/115.out 2> /tmp/om2c/s3/g-s3s4-fuel/115.err
+VERDICT inline-order-F PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-G line=116
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/116.src > /tmp/om2c/s3/g-s3s4-fuel/116.elf 2> /tmp/om2c/s3/g-s3s4-fuel/116.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/116.elf < /tmp/om2c/s3/g-s3s4-fuel/116.in > /tmp/om2c/s3/g-s3s4-fuel/116.out 2> /tmp/om2c/s3/g-s3s4-fuel/116.err
+VERDICT inline-order-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-H line=117
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/117.src > /tmp/om2c/s3/g-s3s4-fuel/117.elf 2> /tmp/om2c/s3/g-s3s4-fuel/117.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/117.elf < /tmp/om2c/s3/g-s3s4-fuel/117.in > /tmp/om2c/s3/g-s3s4-fuel/117.out 2> /tmp/om2c/s3/g-s3s4-fuel/117.err
+VERDICT inline-order-H PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-I line=118
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/118.src > /tmp/om2c/s3/g-s3s4-fuel/118.elf 2> /tmp/om2c/s3/g-s3s4-fuel/118.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/118.elf < /tmp/om2c/s3/g-s3s4-fuel/118.in > /tmp/om2c/s3/g-s3s4-fuel/118.out 2> /tmp/om2c/s3/g-s3s4-fuel/118.err
+VERDICT inline-order-I PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-plain-A line=119
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/119.src > /tmp/om2c/s3/g-s3s4-fuel/119.elf 2> /tmp/om2c/s3/g-s3s4-fuel/119.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/119.elf < /tmp/om2c/s3/g-s3s4-fuel/119.in > /tmp/om2c/s3/g-s3s4-fuel/119.out 2> /tmp/om2c/s3/g-s3s4-fuel/119.err
+VERDICT inline-order-plain-A PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-plain-B line=120
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/120.src > /tmp/om2c/s3/g-s3s4-fuel/120.elf 2> /tmp/om2c/s3/g-s3s4-fuel/120.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/120.elf < /tmp/om2c/s3/g-s3s4-fuel/120.in > /tmp/om2c/s3/g-s3s4-fuel/120.out 2> /tmp/om2c/s3/g-s3s4-fuel/120.err
+VERDICT inline-order-plain-B PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-plain-C line=121
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/121.src > /tmp/om2c/s3/g-s3s4-fuel/121.elf 2> /tmp/om2c/s3/g-s3s4-fuel/121.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/121.elf < /tmp/om2c/s3/g-s3s4-fuel/121.in > /tmp/om2c/s3/g-s3s4-fuel/121.out 2> /tmp/om2c/s3/g-s3s4-fuel/121.err
+VERDICT inline-order-plain-C PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-plain-D line=122
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/122.src > /tmp/om2c/s3/g-s3s4-fuel/122.elf 2> /tmp/om2c/s3/g-s3s4-fuel/122.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/122.elf < /tmp/om2c/s3/g-s3s4-fuel/122.in > /tmp/om2c/s3/g-s3s4-fuel/122.out 2> /tmp/om2c/s3/g-s3s4-fuel/122.err
+VERDICT inline-order-plain-D PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-plain-E line=123
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/123.src > /tmp/om2c/s3/g-s3s4-fuel/123.elf 2> /tmp/om2c/s3/g-s3s4-fuel/123.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/123.elf < /tmp/om2c/s3/g-s3s4-fuel/123.in > /tmp/om2c/s3/g-s3s4-fuel/123.out 2> /tmp/om2c/s3/g-s3s4-fuel/123.err
+VERDICT inline-order-plain-E PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-plain-F line=124
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/124.src > /tmp/om2c/s3/g-s3s4-fuel/124.elf 2> /tmp/om2c/s3/g-s3s4-fuel/124.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/124.elf < /tmp/om2c/s3/g-s3s4-fuel/124.in > /tmp/om2c/s3/g-s3s4-fuel/124.out 2> /tmp/om2c/s3/g-s3s4-fuel/124.err
+VERDICT inline-order-plain-F PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-plain-G line=125
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/125.src > /tmp/om2c/s3/g-s3s4-fuel/125.elf 2> /tmp/om2c/s3/g-s3s4-fuel/125.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/125.elf < /tmp/om2c/s3/g-s3s4-fuel/125.in > /tmp/om2c/s3/g-s3s4-fuel/125.out 2> /tmp/om2c/s3/g-s3s4-fuel/125.err
+VERDICT inline-order-plain-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-plain-H line=126
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/126.src > /tmp/om2c/s3/g-s3s4-fuel/126.elf 2> /tmp/om2c/s3/g-s3s4-fuel/126.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/126.elf < /tmp/om2c/s3/g-s3s4-fuel/126.in > /tmp/om2c/s3/g-s3s4-fuel/126.out 2> /tmp/om2c/s3/g-s3s4-fuel/126.err
+VERDICT inline-order-plain-H PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-plain-I line=127
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/127.src > /tmp/om2c/s3/g-s3s4-fuel/127.elf 2> /tmp/om2c/s3/g-s3s4-fuel/127.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/127.elf < /tmp/om2c/s3/g-s3s4-fuel/127.in > /tmp/om2c/s3/g-s3s4-fuel/127.out 2> /tmp/om2c/s3/g-s3s4-fuel/127.err
+VERDICT inline-order-plain-I PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-om1-A line=128
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/128.src > /tmp/om2c/s3/g-s3s4-fuel/128.elf 2> /tmp/om2c/s3/g-s3s4-fuel/128.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/128.elf < /tmp/om2c/s3/g-s3s4-fuel/128.in > /tmp/om2c/s3/g-s3s4-fuel/128.out 2> /tmp/om2c/s3/g-s3s4-fuel/128.err
+VERDICT inline-order-om1-A PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-om1-B line=129
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/129.src > /tmp/om2c/s3/g-s3s4-fuel/129.elf 2> /tmp/om2c/s3/g-s3s4-fuel/129.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/129.elf < /tmp/om2c/s3/g-s3s4-fuel/129.in > /tmp/om2c/s3/g-s3s4-fuel/129.out 2> /tmp/om2c/s3/g-s3s4-fuel/129.err
+VERDICT inline-order-om1-B PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-C line=130
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/130.src > /tmp/om2c/s3/g-s3s4-fuel/130.elf 2> /tmp/om2c/s3/g-s3s4-fuel/130.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/130.elf < /tmp/om2c/s3/g-s3s4-fuel/130.in > /tmp/om2c/s3/g-s3s4-fuel/130.out 2> /tmp/om2c/s3/g-s3s4-fuel/130.err
+VERDICT inline-order-om1-C PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-om1-D line=131
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/131.src > /tmp/om2c/s3/g-s3s4-fuel/131.elf 2> /tmp/om2c/s3/g-s3s4-fuel/131.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/131.elf < /tmp/om2c/s3/g-s3s4-fuel/131.in > /tmp/om2c/s3/g-s3s4-fuel/131.out 2> /tmp/om2c/s3/g-s3s4-fuel/131.err
+VERDICT inline-order-om1-D PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-om1-E line=132
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/132.src > /tmp/om2c/s3/g-s3s4-fuel/132.elf 2> /tmp/om2c/s3/g-s3s4-fuel/132.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/132.elf < /tmp/om2c/s3/g-s3s4-fuel/132.in > /tmp/om2c/s3/g-s3s4-fuel/132.out 2> /tmp/om2c/s3/g-s3s4-fuel/132.err
+VERDICT inline-order-om1-E PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-F line=133
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/133.src > /tmp/om2c/s3/g-s3s4-fuel/133.elf 2> /tmp/om2c/s3/g-s3s4-fuel/133.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/133.elf < /tmp/om2c/s3/g-s3s4-fuel/133.in > /tmp/om2c/s3/g-s3s4-fuel/133.out 2> /tmp/om2c/s3/g-s3s4-fuel/133.err
+VERDICT inline-order-om1-F PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-G line=134
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/134.src > /tmp/om2c/s3/g-s3s4-fuel/134.elf 2> /tmp/om2c/s3/g-s3s4-fuel/134.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/134.elf < /tmp/om2c/s3/g-s3s4-fuel/134.in > /tmp/om2c/s3/g-s3s4-fuel/134.out 2> /tmp/om2c/s3/g-s3s4-fuel/134.err
+VERDICT inline-order-om1-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-H line=135
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/135.src > /tmp/om2c/s3/g-s3s4-fuel/135.elf 2> /tmp/om2c/s3/g-s3s4-fuel/135.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/135.elf < /tmp/om2c/s3/g-s3s4-fuel/135.in > /tmp/om2c/s3/g-s3s4-fuel/135.out 2> /tmp/om2c/s3/g-s3s4-fuel/135.err
+VERDICT inline-order-om1-H PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-om1-I line=136
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/136.src > /tmp/om2c/s3/g-s3s4-fuel/136.elf 2> /tmp/om2c/s3/g-s3s4-fuel/136.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/136.elf < /tmp/om2c/s3/g-s3s4-fuel/136.in > /tmp/om2c/s3/g-s3s4-fuel/136.out 2> /tmp/om2c/s3/g-s3s4-fuel/136.err
+VERDICT inline-order-om1-I PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth4 line=138
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/138.src > /tmp/om2c/s3/g-s3s4-fuel/138.elf 2> /tmp/om2c/s3/g-s3s4-fuel/138.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/138.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/138.out 2> /tmp/om2c/s3/g-s3s4-fuel/138.err
+VERDICT inline-depth4 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth4-plain line=139
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/139.src > /tmp/om2c/s3/g-s3s4-fuel/139.elf 2> /tmp/om2c/s3/g-s3s4-fuel/139.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/139.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/139.out 2> /tmp/om2c/s3/g-s3s4-fuel/139.err
+VERDICT inline-depth4-plain PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth4-om1 line=140
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/140.src > /tmp/om2c/s3/g-s3s4-fuel/140.elf 2> /tmp/om2c/s3/g-s3s4-fuel/140.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/140.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/140.out 2> /tmp/om2c/s3/g-s3s4-fuel/140.err
+VERDICT inline-depth4-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth6 line=141
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/141.src > /tmp/om2c/s3/g-s3s4-fuel/141.elf 2> /tmp/om2c/s3/g-s3s4-fuel/141.cerr
+VERDICT inline-depth6 PASS compile exit=14 expected=14 refused with the expected error
+CASE inline-depth6-diag line=142
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/142.src > /tmp/om2c/s3/g-s3s4-fuel/142.elf 2> /tmp/om2c/s3/g-s3s4-fuel/142.cerr
+VERDICT inline-depth6-diag PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE inline-depth6-plain line=143
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/143.src > /tmp/om2c/s3/g-s3s4-fuel/143.elf 2> /tmp/om2c/s3/g-s3s4-fuel/143.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/143.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/143.out 2> /tmp/om2c/s3/g-s3s4-fuel/143.err
+VERDICT inline-depth6-plain PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth6-om1 line=144
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/144.src > /tmp/om2c/s3/g-s3s4-fuel/144.elf 2> /tmp/om2c/s3/g-s3s4-fuel/144.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/144.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/144.out 2> /tmp/om2c/s3/g-s3s4-fuel/144.err
+VERDICT inline-depth6-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth5 line=145
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/145.src > /tmp/om2c/s3/g-s3s4-fuel/145.elf 2> /tmp/om2c/s3/g-s3s4-fuel/145.cerr
+VERDICT inline-depth5 PASS compile exit=14 expected=14 refused with the expected error
+CASE inline-new line=148
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/148.src > /tmp/om2c/s3/g-s3s4-fuel/148.elf 2> /tmp/om2c/s3/g-s3s4-fuel/148.cerr
+VERDICT inline-new PASS compile exit=9 expected=9 refused with the expected error
+CASE inline-new-plain line=149
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/149.src > /tmp/om2c/s3/g-s3s4-fuel/149.elf 2> /tmp/om2c/s3/g-s3s4-fuel/149.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/149.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/149.out 2> /tmp/om2c/s3/g-s3s4-fuel/149.err
+VERDICT inline-new-plain PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-new-om1 line=150
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/150.src > /tmp/om2c/s3/g-s3s4-fuel/150.elf 2> /tmp/om2c/s3/g-s3s4-fuel/150.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/150.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/150.out 2> /tmp/om2c/s3/g-s3s4-fuel/150.err
+VERDICT inline-new-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-rec-direct line=151
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/151.src > /tmp/om2c/s3/g-s3s4-fuel/151.elf 2> /tmp/om2c/s3/g-s3s4-fuel/151.cerr
+VERDICT inline-rec-direct PASS compile exit=9 expected=9 refused with the expected error
+CASE inline-rec-mutual line=152
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/152.src > /tmp/om2c/s3/g-s3s4-fuel/152.elf 2> /tmp/om2c/s3/g-s3s4-fuel/152.cerr
+VERDICT inline-rec-mutual PASS compile exit=9 expected=9 refused with the expected error
+CASE inline-rec-mutual1 line=153
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/153.src > /tmp/om2c/s3/g-s3s4-fuel/153.elf 2> /tmp/om2c/s3/g-s3s4-fuel/153.cerr
+VERDICT inline-rec-mutual1 PASS compile exit=9 expected=9 refused with the expected error
+CASE inline-rec-direct-plain line=154
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/154.src > /tmp/om2c/s3/g-s3s4-fuel/154.elf 2> /tmp/om2c/s3/g-s3s4-fuel/154.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/154.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/154.out 2> /tmp/om2c/s3/g-s3s4-fuel/154.err
+VERDICT inline-rec-direct-plain PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-rec-direct-om1 line=155
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/155.src > /tmp/om2c/s3/g-s3s4-fuel/155.elf 2> /tmp/om2c/s3/g-s3s4-fuel/155.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/155.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/155.out 2> /tmp/om2c/s3/g-s3s4-fuel/155.err
+VERDICT inline-rec-direct-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-rec-mutual-plain line=156
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/156.src > /tmp/om2c/s3/g-s3s4-fuel/156.elf 2> /tmp/om2c/s3/g-s3s4-fuel/156.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/156.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/156.out 2> /tmp/om2c/s3/g-s3s4-fuel/156.err
+VERDICT inline-rec-mutual-plain PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-rec-mutual-om1 line=157
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/157.src > /tmp/om2c/s3/g-s3s4-fuel/157.elf 2> /tmp/om2c/s3/g-s3s4-fuel/157.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/157.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/157.out 2> /tmp/om2c/s3/g-s3s4-fuel/157.err
+VERDICT inline-rec-mutual-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-calls-stay-calls line=158
+VERDICT inline-calls-stay-calls NOT_RUN not run: line 98 (calls to non-inline functions stay calls) is not observable through run/emit; needs a disassembly oracle
+CASE fold-guard line=162
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/162.src > /tmp/om2c/s3/g-s3s4-fuel/162.elf 2> /tmp/om2c/s3/g-s3s4-fuel/162.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/162.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/162.out 2> /tmp/om2c/s3/g-s3s4-fuel/162.err
+VERDICT fold-guard PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fold-guard-rolled line=163
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/163.src > /tmp/om2c/s3/g-s3s4-fuel/163.elf 2> /tmp/om2c/s3/g-s3s4-fuel/163.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/163.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/163.out 2> /tmp/om2c/s3/g-s3s4-fuel/163.err
+VERDICT fold-guard-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fold-guard-om1 line=164
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/164.src > /tmp/om2c/s3/g-s3s4-fuel/164.elf 2> /tmp/om2c/s3/g-s3s4-fuel/164.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/164.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/164.out 2> /tmp/om2c/s3/g-s3s4-fuel/164.err
+VERDICT fold-guard-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fold-trap-A line=165
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/165.src > /tmp/om2c/s3/g-s3s4-fuel/165.elf 2> /tmp/om2c/s3/g-s3s4-fuel/165.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/165.elf < /tmp/om2c/s3/g-s3s4-fuel/165.in > /tmp/om2c/s3/g-s3s4-fuel/165.out 2> /tmp/om2c/s3/g-s3s4-fuel/165.err
+VERDICT fold-trap-A PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-B line=166
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/166.src > /tmp/om2c/s3/g-s3s4-fuel/166.elf 2> /tmp/om2c/s3/g-s3s4-fuel/166.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/166.elf < /tmp/om2c/s3/g-s3s4-fuel/166.in > /tmp/om2c/s3/g-s3s4-fuel/166.out 2> /tmp/om2c/s3/g-s3s4-fuel/166.err
+VERDICT fold-trap-B PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-C line=167
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/167.src > /tmp/om2c/s3/g-s3s4-fuel/167.elf 2> /tmp/om2c/s3/g-s3s4-fuel/167.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/167.elf < /tmp/om2c/s3/g-s3s4-fuel/167.in > /tmp/om2c/s3/g-s3s4-fuel/167.out 2> /tmp/om2c/s3/g-s3s4-fuel/167.err
+VERDICT fold-trap-C PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-D line=168
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/168.src > /tmp/om2c/s3/g-s3s4-fuel/168.elf 2> /tmp/om2c/s3/g-s3s4-fuel/168.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/168.elf < /tmp/om2c/s3/g-s3s4-fuel/168.in > /tmp/om2c/s3/g-s3s4-fuel/168.out 2> /tmp/om2c/s3/g-s3s4-fuel/168.err
+VERDICT fold-trap-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE fold-trap-E line=169
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/169.src > /tmp/om2c/s3/g-s3s4-fuel/169.elf 2> /tmp/om2c/s3/g-s3s4-fuel/169.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/169.elf < /tmp/om2c/s3/g-s3s4-fuel/169.in > /tmp/om2c/s3/g-s3s4-fuel/169.out 2> /tmp/om2c/s3/g-s3s4-fuel/169.err
+VERDICT fold-trap-E PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-F line=170
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/170.src > /tmp/om2c/s3/g-s3s4-fuel/170.elf 2> /tmp/om2c/s3/g-s3s4-fuel/170.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/170.elf < /tmp/om2c/s3/g-s3s4-fuel/170.in > /tmp/om2c/s3/g-s3s4-fuel/170.out 2> /tmp/om2c/s3/g-s3s4-fuel/170.err
+VERDICT fold-trap-F PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-G line=171
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/171.src > /tmp/om2c/s3/g-s3s4-fuel/171.elf 2> /tmp/om2c/s3/g-s3s4-fuel/171.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/171.elf < /tmp/om2c/s3/g-s3s4-fuel/171.in > /tmp/om2c/s3/g-s3s4-fuel/171.out 2> /tmp/om2c/s3/g-s3s4-fuel/171.err
+VERDICT fold-trap-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-H line=172
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/172.src > /tmp/om2c/s3/g-s3s4-fuel/172.elf 2> /tmp/om2c/s3/g-s3s4-fuel/172.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/172.elf < /tmp/om2c/s3/g-s3s4-fuel/172.in > /tmp/om2c/s3/g-s3s4-fuel/172.out 2> /tmp/om2c/s3/g-s3s4-fuel/172.err
+VERDICT fold-trap-H PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-I line=173
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/173.src > /tmp/om2c/s3/g-s3s4-fuel/173.elf 2> /tmp/om2c/s3/g-s3s4-fuel/173.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/173.elf < /tmp/om2c/s3/g-s3s4-fuel/173.in > /tmp/om2c/s3/g-s3s4-fuel/173.out 2> /tmp/om2c/s3/g-s3s4-fuel/173.err
+VERDICT fold-trap-I PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-rolled-A line=174
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/174.src > /tmp/om2c/s3/g-s3s4-fuel/174.elf 2> /tmp/om2c/s3/g-s3s4-fuel/174.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/174.elf < /tmp/om2c/s3/g-s3s4-fuel/174.in > /tmp/om2c/s3/g-s3s4-fuel/174.out 2> /tmp/om2c/s3/g-s3s4-fuel/174.err
+VERDICT fold-trap-rolled-A PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-rolled-B line=175
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/175.src > /tmp/om2c/s3/g-s3s4-fuel/175.elf 2> /tmp/om2c/s3/g-s3s4-fuel/175.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/175.elf < /tmp/om2c/s3/g-s3s4-fuel/175.in > /tmp/om2c/s3/g-s3s4-fuel/175.out 2> /tmp/om2c/s3/g-s3s4-fuel/175.err
+VERDICT fold-trap-rolled-B PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-rolled-C line=176
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/176.src > /tmp/om2c/s3/g-s3s4-fuel/176.elf 2> /tmp/om2c/s3/g-s3s4-fuel/176.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/176.elf < /tmp/om2c/s3/g-s3s4-fuel/176.in > /tmp/om2c/s3/g-s3s4-fuel/176.out 2> /tmp/om2c/s3/g-s3s4-fuel/176.err
+VERDICT fold-trap-rolled-C PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-rolled-D line=177
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/177.src > /tmp/om2c/s3/g-s3s4-fuel/177.elf 2> /tmp/om2c/s3/g-s3s4-fuel/177.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/177.elf < /tmp/om2c/s3/g-s3s4-fuel/177.in > /tmp/om2c/s3/g-s3s4-fuel/177.out 2> /tmp/om2c/s3/g-s3s4-fuel/177.err
+VERDICT fold-trap-rolled-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE fold-trap-rolled-E line=178
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/178.src > /tmp/om2c/s3/g-s3s4-fuel/178.elf 2> /tmp/om2c/s3/g-s3s4-fuel/178.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/178.elf < /tmp/om2c/s3/g-s3s4-fuel/178.in > /tmp/om2c/s3/g-s3s4-fuel/178.out 2> /tmp/om2c/s3/g-s3s4-fuel/178.err
+VERDICT fold-trap-rolled-E PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-rolled-F line=179
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/179.src > /tmp/om2c/s3/g-s3s4-fuel/179.elf 2> /tmp/om2c/s3/g-s3s4-fuel/179.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/179.elf < /tmp/om2c/s3/g-s3s4-fuel/179.in > /tmp/om2c/s3/g-s3s4-fuel/179.out 2> /tmp/om2c/s3/g-s3s4-fuel/179.err
+VERDICT fold-trap-rolled-F PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-rolled-G line=180
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/180.src > /tmp/om2c/s3/g-s3s4-fuel/180.elf 2> /tmp/om2c/s3/g-s3s4-fuel/180.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/180.elf < /tmp/om2c/s3/g-s3s4-fuel/180.in > /tmp/om2c/s3/g-s3s4-fuel/180.out 2> /tmp/om2c/s3/g-s3s4-fuel/180.err
+VERDICT fold-trap-rolled-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-rolled-H line=181
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/181.src > /tmp/om2c/s3/g-s3s4-fuel/181.elf 2> /tmp/om2c/s3/g-s3s4-fuel/181.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/181.elf < /tmp/om2c/s3/g-s3s4-fuel/181.in > /tmp/om2c/s3/g-s3s4-fuel/181.out 2> /tmp/om2c/s3/g-s3s4-fuel/181.err
+VERDICT fold-trap-rolled-H PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-rolled-I line=182
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/182.src > /tmp/om2c/s3/g-s3s4-fuel/182.elf 2> /tmp/om2c/s3/g-s3s4-fuel/182.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/182.elf < /tmp/om2c/s3/g-s3s4-fuel/182.in > /tmp/om2c/s3/g-s3s4-fuel/182.out 2> /tmp/om2c/s3/g-s3s4-fuel/182.err
+VERDICT fold-trap-rolled-I PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-om1-A line=183
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/183.src > /tmp/om2c/s3/g-s3s4-fuel/183.elf 2> /tmp/om2c/s3/g-s3s4-fuel/183.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/183.elf < /tmp/om2c/s3/g-s3s4-fuel/183.in > /tmp/om2c/s3/g-s3s4-fuel/183.out 2> /tmp/om2c/s3/g-s3s4-fuel/183.err
+VERDICT fold-trap-om1-A PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-om1-B line=184
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/184.src > /tmp/om2c/s3/g-s3s4-fuel/184.elf 2> /tmp/om2c/s3/g-s3s4-fuel/184.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/184.elf < /tmp/om2c/s3/g-s3s4-fuel/184.in > /tmp/om2c/s3/g-s3s4-fuel/184.out 2> /tmp/om2c/s3/g-s3s4-fuel/184.err
+VERDICT fold-trap-om1-B PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-om1-C line=185
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/185.src > /tmp/om2c/s3/g-s3s4-fuel/185.elf 2> /tmp/om2c/s3/g-s3s4-fuel/185.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/185.elf < /tmp/om2c/s3/g-s3s4-fuel/185.in > /tmp/om2c/s3/g-s3s4-fuel/185.out 2> /tmp/om2c/s3/g-s3s4-fuel/185.err
+VERDICT fold-trap-om1-C PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-om1-D line=186
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/186.src > /tmp/om2c/s3/g-s3s4-fuel/186.elf 2> /tmp/om2c/s3/g-s3s4-fuel/186.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/186.elf < /tmp/om2c/s3/g-s3s4-fuel/186.in > /tmp/om2c/s3/g-s3s4-fuel/186.out 2> /tmp/om2c/s3/g-s3s4-fuel/186.err
+VERDICT fold-trap-om1-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE fold-trap-om1-E line=187
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/187.src > /tmp/om2c/s3/g-s3s4-fuel/187.elf 2> /tmp/om2c/s3/g-s3s4-fuel/187.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/187.elf < /tmp/om2c/s3/g-s3s4-fuel/187.in > /tmp/om2c/s3/g-s3s4-fuel/187.out 2> /tmp/om2c/s3/g-s3s4-fuel/187.err
+VERDICT fold-trap-om1-E PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-om1-F line=188
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/188.src > /tmp/om2c/s3/g-s3s4-fuel/188.elf 2> /tmp/om2c/s3/g-s3s4-fuel/188.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/188.elf < /tmp/om2c/s3/g-s3s4-fuel/188.in > /tmp/om2c/s3/g-s3s4-fuel/188.out 2> /tmp/om2c/s3/g-s3s4-fuel/188.err
+VERDICT fold-trap-om1-F PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-om1-G line=189
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/189.src > /tmp/om2c/s3/g-s3s4-fuel/189.elf 2> /tmp/om2c/s3/g-s3s4-fuel/189.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/189.elf < /tmp/om2c/s3/g-s3s4-fuel/189.in > /tmp/om2c/s3/g-s3s4-fuel/189.out 2> /tmp/om2c/s3/g-s3s4-fuel/189.err
+VERDICT fold-trap-om1-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-om1-H line=190
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/190.src > /tmp/om2c/s3/g-s3s4-fuel/190.elf 2> /tmp/om2c/s3/g-s3s4-fuel/190.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/190.elf < /tmp/om2c/s3/g-s3s4-fuel/190.in > /tmp/om2c/s3/g-s3s4-fuel/190.out 2> /tmp/om2c/s3/g-s3s4-fuel/190.err
+VERDICT fold-trap-om1-H PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-om1-I line=191
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/191.src > /tmp/om2c/s3/g-s3s4-fuel/191.elf 2> /tmp/om2c/s3/g-s3s4-fuel/191.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/191.elf < /tmp/om2c/s3/g-s3s4-fuel/191.in > /tmp/om2c/s3/g-s3s4-fuel/191.out 2> /tmp/om2c/s3/g-s3s4-fuel/191.err
+VERDICT fold-trap-om1-I PASS run exit=102 expected=102 stdout=match stderr=match
+CASE ce-sized line=194
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/194.src > /tmp/om2c/s3/g-s3s4-fuel/194.elf 2> /tmp/om2c/s3/g-s3s4-fuel/194.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/194.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/194.out 2> /tmp/om2c/s3/g-s3s4-fuel/194.err
+VERDICT ce-sized PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ce-sized-rolled line=195
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/195.src > /tmp/om2c/s3/g-s3s4-fuel/195.elf 2> /tmp/om2c/s3/g-s3s4-fuel/195.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/195.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/195.out 2> /tmp/om2c/s3/g-s3s4-fuel/195.err
+VERDICT ce-sized-rolled PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ce-sized-om1 line=196
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/196.src > /tmp/om2c/s3/g-s3s4-fuel/196.elf 2> /tmp/om2c/s3/g-s3s4-fuel/196.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/196.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/196.out 2> /tmp/om2c/s3/g-s3s4-fuel/196.err
+VERDICT ce-sized-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ce-sized-oob line=197
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/197.src > /tmp/om2c/s3/g-s3s4-fuel/197.elf 2> /tmp/om2c/s3/g-s3s4-fuel/197.cerr
+VERDICT ce-sized-oob PASS compile exit=21 expected=21 stdout=match stderr=match
+CASE ce-sized-oob-fold line=198
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/198.src > /tmp/om2c/s3/g-s3s4-fuel/198.elf 2> /tmp/om2c/s3/g-s3s4-fuel/198.cerr
+VERDICT ce-sized-oob-fold PASS compile exit=21 expected=21 stdout=match stderr=match
+CASE ce-sized-oob-rolled line=200
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/200.src > /tmp/om2c/s3/g-s3s4-fuel/200.elf 2> /tmp/om2c/s3/g-s3s4-fuel/200.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/200.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/200.out 2> /tmp/om2c/s3/g-s3s4-fuel/200.err
+VERDICT ce-sized-oob-rolled PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-sized-oob-om1 line=201
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/201.src > /tmp/om2c/s3/g-s3s4-fuel/201.elf 2> /tmp/om2c/s3/g-s3s4-fuel/201.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/201.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/201.out 2> /tmp/om2c/s3/g-s3s4-fuel/201.err
+VERDICT ce-sized-oob-om1 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-sized-oob-fold-rolled line=202
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/202.src > /tmp/om2c/s3/g-s3s4-fuel/202.elf 2> /tmp/om2c/s3/g-s3s4-fuel/202.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/202.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/202.out 2> /tmp/om2c/s3/g-s3s4-fuel/202.err
+VERDICT ce-sized-oob-fold-rolled PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-sized-oob-fold-om1 line=203
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/203.src > /tmp/om2c/s3/g-s3s4-fuel/203.elf 2> /tmp/om2c/s3/g-s3s4-fuel/203.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/203.elf < /dev/null > /tmp/om2c/s3/g-s3s4-fuel/203.out 2> /tmp/om2c/s3/g-s3s4-fuel/203.err
+VERDICT ce-sized-oob-fold-om1 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-A line=206
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/206.src > /tmp/om2c/s3/g-s3s4-fuel/206.elf 2> /tmp/om2c/s3/g-s3s4-fuel/206.cerr
+VERDICT ce-view-A FAIL compile exit=16 expected=0
+CASE ce-view-B line=207
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/207.src > /tmp/om2c/s3/g-s3s4-fuel/207.elf 2> /tmp/om2c/s3/g-s3s4-fuel/207.cerr
+VERDICT ce-view-B FAIL compile exit=16 expected=0
+CASE ce-view-C line=208
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/208.src > /tmp/om2c/s3/g-s3s4-fuel/208.elf 2> /tmp/om2c/s3/g-s3s4-fuel/208.cerr
+VERDICT ce-view-C FAIL compile exit=16 expected=0
+CASE ce-view-D line=209
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/209.src > /tmp/om2c/s3/g-s3s4-fuel/209.elf 2> /tmp/om2c/s3/g-s3s4-fuel/209.cerr
+VERDICT ce-view-D FAIL compile exit=16 expected=0
+CASE ce-view-E line=210
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/210.src > /tmp/om2c/s3/g-s3s4-fuel/210.elf 2> /tmp/om2c/s3/g-s3s4-fuel/210.cerr
+VERDICT ce-view-E FAIL compile exit=16 expected=0
+CASE ce-view-F line=211
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/211.src > /tmp/om2c/s3/g-s3s4-fuel/211.elf 2> /tmp/om2c/s3/g-s3s4-fuel/211.cerr
+VERDICT ce-view-F FAIL compile exit=16 expected=0
+CASE ce-view-plain-A line=212
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/212.src > /tmp/om2c/s3/g-s3s4-fuel/212.elf 2> /tmp/om2c/s3/g-s3s4-fuel/212.cerr
+VERDICT ce-view-plain-A FAIL compile exit=16 expected=0
+CASE ce-view-plain-B line=213
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/213.src > /tmp/om2c/s3/g-s3s4-fuel/213.elf 2> /tmp/om2c/s3/g-s3s4-fuel/213.cerr
+VERDICT ce-view-plain-B FAIL compile exit=16 expected=0
+CASE ce-view-plain-C line=214
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/214.src > /tmp/om2c/s3/g-s3s4-fuel/214.elf 2> /tmp/om2c/s3/g-s3s4-fuel/214.cerr
+VERDICT ce-view-plain-C FAIL compile exit=16 expected=0
+CASE ce-view-plain-D line=215
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/215.src > /tmp/om2c/s3/g-s3s4-fuel/215.elf 2> /tmp/om2c/s3/g-s3s4-fuel/215.cerr
+VERDICT ce-view-plain-D FAIL compile exit=16 expected=0
+CASE ce-view-plain-E line=216
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/216.src > /tmp/om2c/s3/g-s3s4-fuel/216.elf 2> /tmp/om2c/s3/g-s3s4-fuel/216.cerr
+VERDICT ce-view-plain-E FAIL compile exit=16 expected=0
+CASE ce-view-plain-F line=217
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/217.src > /tmp/om2c/s3/g-s3s4-fuel/217.elf 2> /tmp/om2c/s3/g-s3s4-fuel/217.cerr
+VERDICT ce-view-plain-F FAIL compile exit=16 expected=0
+CASE ce-view-om1-A line=218
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/218.src > /tmp/om2c/s3/g-s3s4-fuel/218.elf 2> /tmp/om2c/s3/g-s3s4-fuel/218.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/218.elf < /tmp/om2c/s3/g-s3s4-fuel/218.in > /tmp/om2c/s3/g-s3s4-fuel/218.out 2> /tmp/om2c/s3/g-s3s4-fuel/218.err
+VERDICT ce-view-om1-A PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-B line=219
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/219.src > /tmp/om2c/s3/g-s3s4-fuel/219.elf 2> /tmp/om2c/s3/g-s3s4-fuel/219.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/219.elf < /tmp/om2c/s3/g-s3s4-fuel/219.in > /tmp/om2c/s3/g-s3s4-fuel/219.out 2> /tmp/om2c/s3/g-s3s4-fuel/219.err
+VERDICT ce-view-om1-B PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-C line=220
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/220.src > /tmp/om2c/s3/g-s3s4-fuel/220.elf 2> /tmp/om2c/s3/g-s3s4-fuel/220.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/220.elf < /tmp/om2c/s3/g-s3s4-fuel/220.in > /tmp/om2c/s3/g-s3s4-fuel/220.out 2> /tmp/om2c/s3/g-s3s4-fuel/220.err
+VERDICT ce-view-om1-C PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-D line=221
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/221.src > /tmp/om2c/s3/g-s3s4-fuel/221.elf 2> /tmp/om2c/s3/g-s3s4-fuel/221.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/221.elf < /tmp/om2c/s3/g-s3s4-fuel/221.in > /tmp/om2c/s3/g-s3s4-fuel/221.out 2> /tmp/om2c/s3/g-s3s4-fuel/221.err
+VERDICT ce-view-om1-D PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-E line=222
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/222.src > /tmp/om2c/s3/g-s3s4-fuel/222.elf 2> /tmp/om2c/s3/g-s3s4-fuel/222.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/222.elf < /tmp/om2c/s3/g-s3s4-fuel/222.in > /tmp/om2c/s3/g-s3s4-fuel/222.out 2> /tmp/om2c/s3/g-s3s4-fuel/222.err
+VERDICT ce-view-om1-E PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ce-view-om1-F line=223
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/223.src > /tmp/om2c/s3/g-s3s4-fuel/223.elf 2> /tmp/om2c/s3/g-s3s4-fuel/223.cerr
+  $ /tmp/om2c/s3/g-s3s4-fuel/223.elf < /tmp/om2c/s3/g-s3s4-fuel/223.in > /tmp/om2c/s3/g-s3s4-fuel/223.out 2> /tmp/om2c/s3/g-s3s4-fuel/223.err
+VERDICT ce-view-om1-F PASS run exit=103 expected=103 stdout=match stderr=match
+CASE slots-3v line=227
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/227.src > /tmp/om2c/s3/g-s3s4-fuel/227.elf 2> /tmp/om2c/s3/g-s3s4-fuel/227.cerr
+VERDICT slots-3v FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+CASE slots-3v1s line=228
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/228.src > /tmp/om2c/s3/g-s3s4-fuel/228.elf 2> /tmp/om2c/s3/g-s3s4-fuel/228.cerr
+VERDICT slots-3v1s FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+CASE slots-2v2s line=229
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/229.src > /tmp/om2c/s3/g-s3s4-fuel/229.elf 2> /tmp/om2c/s3/g-s3s4-fuel/229.cerr
+VERDICT slots-2v2s FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+CASE slots-2v3s line=230
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/230.src > /tmp/om2c/s3/g-s3s4-fuel/230.elf 2> /tmp/om2c/s3/g-s3s4-fuel/230.cerr
+VERDICT slots-2v3s FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+CASE slots-1v4x line=231
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/231.src > /tmp/om2c/s3/g-s3s4-fuel/231.elf 2> /tmp/om2c/s3/g-s3s4-fuel/231.cerr
+VERDICT slots-1v4x FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+CASE slots-1v5x line=232
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/232.src > /tmp/om2c/s3/g-s3s4-fuel/232.elf 2> /tmp/om2c/s3/g-s3s4-fuel/232.cerr
+VERDICT slots-1v5x FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+CASE slots-6s line=233
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/233.src > /tmp/om2c/s3/g-s3s4-fuel/233.elf 2> /tmp/om2c/s3/g-s3s4-fuel/233.cerr
+VERDICT slots-6s PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE slots-internal line=234
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/234.src > /tmp/om2c/s3/g-s3s4-fuel/234.elf 2> /tmp/om2c/s3/g-s3s4-fuel/234.cerr
+VERDICT slots-internal FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+CASE slots-out6 line=235
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/235.src > /tmp/om2c/s3/g-s3s4-fuel/235.elf 2> /tmp/om2c/s3/g-s3s4-fuel/235.cerr
+VERDICT slots-out6 FAIL compile exit=16 expected=0 stdout=unchecked stderr differs at byte 0
+CASE slots-out7 line=236
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/236.src > /tmp/om2c/s3/g-s3s4-fuel/236.elf 2> /tmp/om2c/s3/g-s3s4-fuel/236.cerr
+VERDICT slots-out7 FAIL compile exit=16 expected=9 stdout=match stderr differs at byte 19
+CASE slots-6s-om1 line=238
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/238.src > /tmp/om2c/s3/g-s3s4-fuel/238.elf 2> /tmp/om2c/s3/g-s3s4-fuel/238.cerr
+VERDICT slots-6s-om1 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE slots-7p-om1 line=239
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/239.src > /tmp/om2c/s3/g-s3s4-fuel/239.elf 2> /tmp/om2c/s3/g-s3s4-fuel/239.cerr
+VERDICT slots-7p-om1 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE slots-order line=240
+VERDICT slots-order NOT_RUN not run: line 100-101 slot order (pointer then length) is observable only through the bridge (L837), not through omc output
+CASE regs line=243
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/243.src > /tmp/om2c/s3/g-s3s4-fuel/243.elf 2> /tmp/om2c/s3/g-s3s4-fuel/243.cerr
+VERDICT regs PASS compile exit=12 expected=12 refused with the expected error
+CASE regs-diag line=244
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/244.src > /tmp/om2c/s3/g-s3s4-fuel/244.elf 2> /tmp/om2c/s3/g-s3s4-fuel/244.cerr
+VERDICT regs-diag PASS compile exit=12 expected=12 stdout=match stderr=match
+CASE regs-om1 line=245
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/245.src > /tmp/om2c/s3/g-s3s4-fuel/245.elf 2> /tmp/om2c/s3/g-s3s4-fuel/245.cerr
+VERDICT regs-om1 PASS compile exit=12 expected=12 stdout=match stderr=match
+CASE diag-site line=249
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/249.src > /tmp/om2c/s3/g-s3s4-fuel/249.elf 2> /tmp/om2c/s3/g-s3s4-fuel/249.cerr
+VERDICT diag-site PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE diag-site-same line=250
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/250.src.b > /tmp/om2c/s3/g-s3s4-fuel/250.elf.b 2> /tmp/om2c/s3/g-s3s4-fuel/250.cerr.b
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/250.src > /tmp/om2c/s3/g-s3s4-fuel/250.elf 2> /tmp/om2c/s3/g-s3s4-fuel/250.cerr
+VERDICT diag-site-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE diag-site-rolled line=251
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/251.src > /tmp/om2c/s3/g-s3s4-fuel/251.elf 2> /tmp/om2c/s3/g-s3s4-fuel/251.cerr
+VERDICT diag-site-rolled PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE diag-site-rolled-same line=252
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/252.src.b > /tmp/om2c/s3/g-s3s4-fuel/252.elf.b 2> /tmp/om2c/s3/g-s3s4-fuel/252.cerr.b
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/252.src > /tmp/om2c/s3/g-s3s4-fuel/252.elf 2> /tmp/om2c/s3/g-s3s4-fuel/252.cerr
+VERDICT diag-site-rolled-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE diag-site-unroll line=253
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/253.src > /tmp/om2c/s3/g-s3s4-fuel/253.elf 2> /tmp/om2c/s3/g-s3s4-fuel/253.cerr
+VERDICT diag-site-unroll PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE diag-site-unroll-same line=254
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/254.src.b > /tmp/om2c/s3/g-s3s4-fuel/254.elf.b 2> /tmp/om2c/s3/g-s3s4-fuel/254.cerr.b
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/254.src > /tmp/om2c/s3/g-s3s4-fuel/254.elf 2> /tmp/om2c/s3/g-s3s4-fuel/254.cerr
+VERDICT diag-site-unroll-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE diag-site-nest line=256
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/256.src > /tmp/om2c/s3/g-s3s4-fuel/256.elf 2> /tmp/om2c/s3/g-s3s4-fuel/256.cerr
+VERDICT diag-site-nest PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE diag-site-nest-same line=257
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/257.src.b > /tmp/om2c/s3/g-s3s4-fuel/257.elf.b 2> /tmp/om2c/s3/g-s3s4-fuel/257.cerr.b
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/257.src > /tmp/om2c/s3/g-s3s4-fuel/257.elf 2> /tmp/om2c/s3/g-s3s4-fuel/257.cerr
+VERDICT diag-site-nest-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE unroll-sum-diag-same line=258
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/258.src.b > /tmp/om2c/s3/g-s3s4-fuel/258.elf.b 2> /tmp/om2c/s3/g-s3s4-fuel/258.cerr.b
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/258.src > /tmp/om2c/s3/g-s3s4-fuel/258.elf 2> /tmp/om2c/s3/g-s3s4-fuel/258.cerr
+VERDICT unroll-sum-diag-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE fold-trap-diag-same line=259
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/259.src.b > /tmp/om2c/s3/g-s3s4-fuel/259.elf.b 2> /tmp/om2c/s3/g-s3s4-fuel/259.cerr.b
+  $ omc-fuel < /tmp/om2c/s3/g-s3s4-fuel/259.src > /tmp/om2c/s3/g-s3s4-fuel/259.elf 2> /tmp/om2c/s3/g-s3s4-fuel/259.cerr
+VERDICT fold-trap-diag-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE program-site-table line=260
+VERDICT program-site-table NOT_RUN not run: exact site tables of program-mode units depend on which OM-1 trap stubs and checks exist (stack, write slices); not fixed by the contract or E7
+OM2GATE FAIL cases=205 pass=181 fail=21 invalid=0 not_run=3

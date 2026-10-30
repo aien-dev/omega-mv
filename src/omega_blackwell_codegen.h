@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef OMEGA_BLACKWELL_CODEGEN_H
 #define OMEGA_BLACKWELL_CODEGEN_H
 
@@ -10,7 +26,11 @@
 #define BW_MAX_VREGS            256
 #define BW_MAX_UVREGS           32
 #define BW_PHYS_GPR_START       2    /* Reserve R0, R1 */
-#define BW_PHYS_GPR_MAX         128
+#define BW_PHYS_GPR_MAX         128  /* default allocation limit (R2..R127); a program may opt into more (omega_bw_ir_set_gpr_limit) */
+/* Highest limit a program may ask for: the chip allows 255 registers per thread and 64K per block (CUDA Programming
+ * Guide, Compute Capabilities appendix: "per thread is 255"); a peak of 246 declares 248 (peak + 2 rounded up to 8).
+ * The launcher must keep threads * declared <= 65536 (omega#545). */
+#define BW_PHYS_GPR_HW_LIMIT    246
 #define BW_PHYS_UGPR_START      4    /* Reserve UR0-UR3 */
 #define BW_PHYS_UGPR_MAX        32
 
@@ -81,8 +101,12 @@ typedef enum {
                          * truth table over Ra = 0xf0, Rb = 0xcc, Rc = 0xaa (a|b = 0xfc, ~(a|b) = 0x03) */
     BW_IR_SHF_L_U32,    /* SHF.L.U32 Rd, Ra, Rb, RZ: Rd = Ra << Rb, register amount (the form nvcc emits
                          * for PTX shl.b32). Amounts >= 32 are NOT chip-verified: callers keep Rb < 32 */
-    BW_IR_IMAD_HI_U32,  /* IMAD.HI.U32 Rd, Ra, Rb, Rc: Rd = hi32(Ra * Rb) + Rc mod 2^32 (nvcc emits this
-                         * word for __umulhi(a, b) + c) */
+    BW_IR_IMAD_HI_U32,  /* IMAD.HI.U32 Rd, Ra, Rb, Rc: Rd = hi32(Ra * Rb + Rc:Rc+1). Rc is a 64-bit register pair,
+                         * NOT one 32-bit word: nvcc 13.0 zeroes the upper half before using a 32-bit c, puts
+                         * __umulhi(a, b) + c through the pair {0, c}, and emits only even pair bases (R2, R4, UR4
+                         * in evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016). Odd-Rc chip behaviour is unknown until
+                         * the chip probe (omega #492); until then the warp simulators refuse a non-RZ Rc.
+                         * Callers pass Rc = RZ (src3_vreg = -1) */
     /* Structured warp reconvergence (omega #308, 2026-10-05), additive. Words matched against
      * nvcc 13.0.88 -arch=sm_121 output (BSSY.RECONVERGENT / BSYNC.RECONVERGENT; the oracle
      * kernels are listed in docs/gpu-reconvergence-308.md) and the Mesa NAK encoder
@@ -100,7 +124,10 @@ typedef enum {
     BW_IR_LDG_E_128,    /* LDG.E.128 Rd..Rd+3, desc[URd][Ra.64+imm] */
     /* Batched attention loads (2026-10-12). Words matched against nvcc 13.0.88 -arch=sm_121
      * (omega_blackwell_verify_codegen_fixtures_fragmm). imm = unsigned byte offset < 2^23; dst an aligned quad. */
-    BW_IR_LDS128        /* LDS.128 Rd..Rd+3, [Ra+imm] */
+    BW_IR_LDS128,       /* LDS.128 Rd..Rd+3, [Ra+imm] */
+    /* Gated DeltaNet softplus (2026-10-18, omega#542): sub-op 0x0c00 checked with nvdisasm 13.0 -b SM121, which decodes
+     * "MUFU.LG2 R2, R4" (EX2 0x0800, RCP 0x1000, RSQ 0x1400 decode the same way). log2(x), approximate. */
+    BW_IR_MUFU_LG2      /* MUFU.LG2 Rd, Ra */
 } BlackwellIROpcode;
 
 /* Barrier (reconvergence) registers: the sm_121 BSSY/BSYNC words carry a 4-bit barrier id
@@ -160,6 +187,7 @@ typedef struct {
     int uvreg_to_phys[BW_MAX_UVREGS];
     uint32_t peak_gpr_usage;
     uint32_t peak_ugpr_usage;
+    uint32_t gpr_limit;      /* 0: BW_PHYS_GPR_MAX; else the exclusive physical limit, <= BW_PHYS_GPR_HW_LIMIT */
 } OmegaRegAlloc;
 
 /* IR Program */
@@ -192,9 +220,14 @@ int omega_bw_ir_alloc_uvreg64(BlackwellIRProgram *prog);
 
 /* Solves bounded deterministic live-interval register allocation */
 int omega_bw_regalloc_solve(BlackwellIRProgram *prog);
+/* Opt this program into physical registers up to limit - 1 (BW_PHYS_GPR_MAX < limit <= BW_PHYS_GPR_HW_LIMIT); call after
+ * omega_bw_ir_init. Every other program keeps the default, so its allocation is unchanged. 0 ok, -1 out of range. */
+int omega_bw_ir_set_gpr_limit(BlackwellIRProgram *prog, uint32_t limit);
 
 /* Encodes scheduled IR program into 128-bit sm_121 machine code */
 int omega_bw_encode_program(const BlackwellIRProgram *prog, uint8_t *code_buf, size_t max_len, size_t *out_len);
+/* C6 kernel capture: writes code to $OMEGA_KERNEL_DUMP_DIR/<sha16>.bin when that is set; no-op otherwise (see the .c) */
+void omega_kernel_dump(const uint8_t *code, size_t len);
 
 /* ---- native v1 P07 cut A.2: allocation-free code generation (aienos#286) ----------------------------
  * The freestanding build (OMEGA_GPU_NO_POSIX, make gpu-engine-freestanding) has no allocator: the caller

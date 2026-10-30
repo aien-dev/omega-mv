@@ -1,0 +1,161 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/qualification/om2/sec/s3s4/pinned.cases: what runs NOW under the pinned OM-1 compiler 734f0a39
+# (#748, L836, lane QualPhaseB.FixRotUnroll).
+# Part 1: every OM-2 fixture of this directory is refused exactly. Expectation from
+# oracle/s3s4/pinned_rule.py (pinned-refusals.txt): a names pass reads every fn signature first (OMEGESE 9.2),
+# so an OM-2 signature is refused at its line (view T * / out: error 16; to T inline: error 5), otherwise the
+# om2 / om2 diag line is refused with error 16 (contract section 0 lines 13-14). Exact stderr, empty stdout.
+# Part 2: the OM-1 twins compute the candidate expectations with OM-1 words (rotations as shifts, loops rolled,
+# inline removed, sized views): same oracle files as candidate.cases, cross-checking the python oracle now.
+# Run: build/om2-qual/gate-b seed/out/omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 \
+#        seed/qualification/om2/sec/s3s4/pinned.cases build/om2-qual/<new scratch>
+deadline 60
+
+# ---- Part 1: OM-2 fixtures refused by OM-1
+pin-ce-sized-oob-fold-rolled emit seed/qualification/om2/sec/s3s4/ce-sized-oob-fold-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-ce-sized-oob-fold emit seed/qualification/om2/sec/s3s4/ce-sized-oob-fold.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-ce-sized-oob-rolled emit seed/qualification/om2/sec/s3s4/ce-sized-oob-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-ce-sized-oob emit seed/qualification/om2/sec/s3s4/ce-sized-oob.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-ce-sized-rolled emit seed/qualification/om2/sec/s3s4/ce-sized-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-ce-sized emit seed/qualification/om2/sec/s3s4/ce-sized.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-ce-view-plain emit seed/qualification/om2/sec/s3s4/ce-view-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:18:16 16
+pin-ce-view emit seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:16:16 16
+pin-diag-site-nest-plain emit seed/qualification/om2/sec/s3s4/diag-site-nest-plain.om - err:6:16 16
+pin-diag-site-nest emit seed/qualification/om2/sec/s3s4/diag-site-nest.om - err:6:16 16
+pin-diag-site-plain emit seed/qualification/om2/sec/s3s4/diag-site-plain.om - err:6:16 16
+pin-diag-site-rolled-plain emit seed/qualification/om2/sec/s3s4/diag-site-rolled-plain.om - err:6:16 16
+pin-diag-site-rolled emit seed/qualification/om2/sec/s3s4/diag-site-rolled.om - err:6:16 16
+pin-diag-site-unroll-plain emit seed/qualification/om2/sec/s3s4/diag-site-unroll-plain.om - err:6:16 16
+pin-diag-site-unroll emit seed/qualification/om2/sec/s3s4/diag-site-unroll.om - err:6:16 16
+pin-diag-site emit seed/qualification/om2/sec/s3s4/diag-site.om - err:6:16 16
+pin-fold-guard-rolled emit seed/qualification/om2/sec/s3s4/fold-guard-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:10:16 16
+pin-fold-guard emit seed/qualification/om2/sec/s3s4/fold-guard.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:9:5 5
+pin-fold-trap-diag emit seed/qualification/om2/sec/s3s4/fold-trap-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:19:5 5
+pin-fold-trap-rolled emit seed/qualification/om2/sec/s3s4/fold-trap-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:19:16 16
+pin-fold-trap emit seed/qualification/om2/sec/s3s4/fold-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:18:5 5
+pin-inline-depth4-plain emit seed/qualification/om2/sec/s3s4/inline-depth4-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-inline-depth4 emit seed/qualification/om2/sec/s3s4/inline-depth4.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:5 5
+pin-inline-depth5 emit seed/qualification/om2/sec/s3s4/inline-depth5.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:5 5
+pin-inline-depth6-diag emit seed/qualification/om2/sec/s3s4/inline-depth6-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:5 5
+pin-inline-depth6-plain emit seed/qualification/om2/sec/s3s4/inline-depth6-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-inline-depth6 emit seed/qualification/om2/sec/s3s4/inline-depth6.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:5 5
+pin-inline-new-plain emit seed/qualification/om2/sec/s3s4/inline-new-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-inline-new emit seed/qualification/om2/sec/s3s4/inline-new.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:5 5
+pin-inline-order-plain emit seed/qualification/om2/sec/s3s4/inline-order-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:17:16 16
+pin-inline-order emit seed/qualification/om2/sec/s3s4/inline-order.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:16:5 5
+pin-inline-rec-direct-plain emit seed/qualification/om2/sec/s3s4/inline-rec-direct-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-inline-rec-direct emit seed/qualification/om2/sec/s3s4/inline-rec-direct.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:5 5
+pin-inline-rec-mutual-plain emit seed/qualification/om2/sec/s3s4/inline-rec-mutual-plain.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-inline-rec-mutual emit seed/qualification/om2/sec/s3s4/inline-rec-mutual.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:5 5
+pin-inline-rec-mutual1 emit seed/qualification/om2/sec/s3s4/inline-rec-mutual1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:5 5
+pin-regs-diag emit seed/qualification/om2/sec/s3s4/regs-diag.om - err:4:16 16
+pin-regs emit seed/qualification/om2/sec/s3s4/regs.om - err:4:16 16
+pin-rot-mixed-uint-ulong emit seed/qualification/om2/sec/s3s4/rot-mixed-uint-ulong.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+pin-rot-mixed-ulong-uchar emit seed/qualification/om2/sec/s3s4/rot-mixed-ulong-uchar.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+pin-rot-result-type emit seed/qualification/om2/sec/s3s4/rot-result-type.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-rot-signed-byte emit seed/qualification/om2/sec/s3s4/rot-signed-byte.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+pin-rot-signed-int emit seed/qualification/om2/sec/s3s4/rot-signed-int.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+pin-rot-signed-long emit seed/qualification/om2/sec/s3s4/rot-signed-long.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+pin-rot-signed-short emit seed/qualification/om2/sec/s3s4/rot-signed-short.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+pin-rot-trap emit seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-rot-values emit seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:8:16 16
+pin-slots-1v4x emit seed/qualification/om2/sec/s3s4/slots-1v4x.om - err:5:16 16
+pin-slots-1v5x emit seed/qualification/om2/sec/s3s4/slots-1v5x.om - err:5:16 16
+pin-slots-2v2s emit seed/qualification/om2/sec/s3s4/slots-2v2s.om - err:5:16 16
+pin-slots-2v3s emit seed/qualification/om2/sec/s3s4/slots-2v3s.om - err:5:16 16
+pin-slots-3v emit seed/qualification/om2/sec/s3s4/slots-3v.om - err:5:16 16
+pin-slots-3v1s emit seed/qualification/om2/sec/s3s4/slots-3v1s.om - err:5:16 16
+pin-slots-6s emit seed/qualification/om2/sec/s3s4/slots-6s.om - err:4:16 16
+pin-slots-internal emit seed/qualification/om2/sec/s3s4/slots-internal.om - err:6:16 16
+pin-slots-out6 emit seed/qualification/om2/sec/s3s4/slots-out6.om - err:5:16 16
+pin-slots-out7 emit seed/qualification/om2/sec/s3s4/slots-out7.om - err:5:16 16
+pin-unroll-break-nested-rolled emit seed/qualification/om2/sec/s3s4/unroll-break-nested-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-unroll-break-nested emit seed/qualification/om2/sec/s3s4/unroll-break-nested.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-unroll-break-rolled emit seed/qualification/om2/sec/s3s4/unroll-break-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-unroll-break emit seed/qualification/om2/sec/s3s4/unroll-break.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-unroll-continue-nested-rolled emit seed/qualification/om2/sec/s3s4/unroll-continue-nested-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-unroll-continue-nested emit seed/qualification/om2/sec/s3s4/unroll-continue-nested.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-unroll-continue-rolled emit seed/qualification/om2/sec/s3s4/unroll-continue-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-unroll-continue emit seed/qualification/om2/sec/s3s4/unroll-continue.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-unroll-growth-diag emit seed/qualification/om2/sec/s3s4/unroll-growth-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-unroll-growth-rolled emit seed/qualification/om2/sec/s3s4/unroll-growth-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:9:16 16
+pin-unroll-growth emit seed/qualification/om2/sec/s3s4/unroll-growth.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-unroll-k0 emit seed/qualification/om2/sec/s3s4/unroll-k0.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-unroll-k65-diag emit seed/qualification/om2/sec/s3s4/unroll-k65-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-unroll-k65 emit seed/qualification/om2/sec/s3s4/unroll-k65.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-unroll-kvar emit seed/qualification/om2/sec/s3s4/unroll-kvar.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:5:16 16
+pin-unroll-nest-64x2-rolled emit seed/qualification/om2/sec/s3s4/unroll-nest-64x2-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-unroll-nest-64x2 emit seed/qualification/om2/sec/s3s4/unroll-nest-64x2.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-unroll-nest-rolled emit seed/qualification/om2/sec/s3s4/unroll-nest-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-unroll-nest emit seed/qualification/om2/sec/s3s4/unroll-nest.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:6:16 16
+pin-unroll-sum-diag emit seed/qualification/om2/sec/s3s4/unroll-sum-diag.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:9:16 16
+pin-unroll-sum-rolled emit seed/qualification/om2/sec/s3s4/unroll-sum-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:10:16 16
+pin-unroll-sum emit seed/qualification/om2/sec/s3s4/unroll-sum.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:8:16 16
+pin-unroll-write-i-nested emit seed/qualification/om2/sec/s3s4/unroll-write-i-nested.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:4:16 16
+pin-unroll-write-i-rolled emit seed/qualification/om2/sec/s3s4/unroll-write-i-rolled.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:7:16 16
+pin-unroll-write-i emit seed/qualification/om2/sec/s3s4/unroll-write-i.om+seed/qualification/om2/sec/s3s4/lib-pu.om - err:3:16 16
+
+# ---- Part 2: OM-1 twins and controls (C1, contract section 0 line 17)
+rot-values-om1 run seed/qualification/om2/sec/s3s4/rot-values-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
+rot-trap-om1-A run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-A.out - 107
+rot-trap-om1-B run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-B.out - 107
+rot-trap-om1-C run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-C.out - 107
+rot-trap-om1-D run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-D.out - 107
+rot-trap-om1-E run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-E.out - 107
+rot-trap-om1-F run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-F.out - 107
+rot-trap-om1-G run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-G.out - 107
+rot-trap-om1-H run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-H.out - 107
+rot-trap-om1-I run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-I.out - 107
+rot-trap-om1-J run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:74:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-J.out - 107
+rot-trap-om1-K run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:75:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-K.out - 107
+rot-trap-om1-L run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:76:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-L.out - 107
+rot-trap-om1-M run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:77:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-M.out - 107
+rot-trap-om1-N run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:78:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-N.out - 107
+rot-trap-om1-O run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:79:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-O.out - 107
+rot-trap-om1-P run seed/qualification/om2/sec/s3s4/rot-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:80:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-P.out - 0
+rot-result-type-om1 emit seed/qualification/om2/sec/s3s4/rot-result-type-om1.om - err:8:7 7
+unroll-sum-om1 run seed/qualification/om2/sec/s3s4/unroll-sum-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-sum.out - 0
+unroll-nest-om1 run seed/qualification/om2/sec/s3s4/unroll-nest-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-nest.out - 0
+unroll-write-i-rolled-om1 run seed/qualification/om2/sec/s3s4/unroll-write-i-rolled-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-write-i-rolled.out - 0
+unroll-break-om1 run seed/qualification/om2/sec/s3s4/unroll-break-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-break-rolled.out - 2
+unroll-continue-om1 run seed/qualification/om2/sec/s3s4/unroll-continue-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-continue-rolled.out - 3
+unroll-break-nested-om1 run seed/qualification/om2/sec/s3s4/unroll-break-nested-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-break-nested.out - 4
+unroll-continue-nested-om1 run seed/qualification/om2/sec/s3s4/unroll-continue-nested-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-continue-nested.out - 8
+unroll-nest-64x2-om1 run seed/qualification/om2/sec/s3s4/unroll-nest-64x2-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-nest-64x2.out - 0
+unroll-growth-om1 run seed/qualification/om2/sec/s3s4/unroll-growth-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/unroll-growth-rolled.out - 149
+inline-order-om1-A run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-A.out - 0
+inline-order-om1-B run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-B.out - 102
+inline-order-om1-C run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-C.out - 101
+inline-order-om1-D run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-D.out - 101
+inline-order-om1-E run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-E.out - 102
+inline-order-om1-F run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-F.out - 102
+inline-order-om1-G run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-G.out - 102
+inline-order-om1-H run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-H.out - 0
+inline-order-om1-I run seed/qualification/om2/sec/s3s4/inline-order-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/inline-order-I.out - 0
+inline-depth4-om1 run seed/qualification/om2/sec/s3s4/inline-depth4-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/inline-depth4.out - 0
+inline-depth6-om1 run seed/qualification/om2/sec/s3s4/inline-depth6-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/inline-depth6.out - 0
+inline-new-om1 run seed/qualification/om2/sec/s3s4/inline-new-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/inline-new.out - 0
+inline-rec-direct-om1 run seed/qualification/om2/sec/s3s4/inline-rec-direct-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/inline-rec.out - 0
+inline-rec-mutual-om1 run seed/qualification/om2/sec/s3s4/inline-rec-mutual-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/inline-rec.out - 0
+fold-guard-om1 run seed/qualification/om2/sec/s3s4/fold-guard-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/fold-guard.out - 0
+fold-trap-om1-A run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-A.out - 102
+fold-trap-om1-B run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-B.out - 101
+fold-trap-om1-C run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-C.out - 105
+fold-trap-om1-D run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-D.out - 107
+fold-trap-om1-E run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-E.out - 101
+fold-trap-om1-F run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-F.out - 101
+fold-trap-om1-G run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:71:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-G.out - 102
+fold-trap-om1-H run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:72:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-H.out - 105
+fold-trap-om1-I run seed/qualification/om2/sec/s3s4/fold-trap-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:73:1 file:seed/qualification/om2/oracle/s3s4/exp/fold-trap-I.out - 102
+ce-sized-om1 run seed/qualification/om2/sec/s3s4/ce-sized-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/ce-sized.out - 0
+ce-sized-oob-om1 run seed/qualification/om2/sec/s3s4/ce-sized-oob-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - - - 103
+ce-sized-oob-fold-om1 run seed/qualification/om2/sec/s3s4/ce-sized-oob-fold-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om - - - 103
+ce-view-om1-A run seed/qualification/om2/sec/s3s4/ce-view-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-A.out - 103
+ce-view-om1-B run seed/qualification/om2/sec/s3s4/ce-view-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-B.out - 103
+ce-view-om1-C run seed/qualification/om2/sec/s3s4/ce-view-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-C.out - 103
+ce-view-om1-D run seed/qualification/om2/sec/s3s4/ce-view-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-D.out - 103
+ce-view-om1-E run seed/qualification/om2/sec/s3s4/ce-view-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:69:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-E.out - 0
+ce-view-om1-F run seed/qualification/om2/sec/s3s4/ce-view-om1.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-F.out - 103
+slots-6s-om1 emit seed/qualification/om2/sec/s3s4/slots-6s-om1.om any - 0
+slots-7p-om1 emit seed/qualification/om2/sec/s3s4/slots-7p-om1.om - err:5:9 9
+regs-om1 emit seed/qualification/om2/sec/s3s4/regs-om1.om - err:21:12 12

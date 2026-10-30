@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 176 with OMEGESE 9.4: a part of a view is a view; passing it to an edit
+note parameter is error 20.
+om2
+fn w e edit uchar * to void
+put e 0 1
+end
+fn g v view uchar * to void
+w part v 0 1
+end
+fn main to int
+a = new uchar 10 0
+g a
+ret 0
+end

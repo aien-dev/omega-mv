@@ -1,0 +1,11 @@
+note SPDX-License-Identifier: Apache-2.0
+note Alias-violation control for the CURRENT language (OMEGESE 9.4): the arrays of one call must be
+note distinct names, so passing one array as both an edit and a view argument is refused (error 19).
+fn mix a edit uchar 4 b view uchar 4 to void
+put a 0 get b 0
+end
+fn main to int
+x = new uchar 4 0
+mix x x
+ret 0
+end

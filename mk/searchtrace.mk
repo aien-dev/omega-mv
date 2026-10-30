@@ -11,7 +11,7 @@ SEARCHTRACE_MK := 1
 ST_DIR = $(OUT_DIR)/searchtrace
 ST_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc
 ST_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-ST_CORE = src/sha256.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c \
+ST_CORE = src/omega_om_units.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c \
 	src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_realize_synth.c \
 	src/omega_machine.c src/omega_exec.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c \
 	src/omega_library.c
@@ -33,21 +33,21 @@ $(ST_DIR)/test_st_corpus_asan: tests/searchtrace/test_st_corpus.c $(ST_LIB) $(ST
 	@mkdir -p $(ST_DIR)
 	$(CC) $(ST_CFLAGS) $(ST_ASAN) -o $@ tests/searchtrace/test_st_corpus.c $(ST_LIB) $(ST_CORE)
 
-$(ST_DIR)/test_st_holdout: tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/sha256.c $(ST_SIG) $(ST_SIG_HDRS)
+$(ST_DIR)/test_st_holdout: tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/omega_om_units.c $(ST_SIG) $(ST_SIG_HDRS)
 	@mkdir -p $(ST_DIR)
-	$(CC) $(ST_CFLAGS) -o $@ tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/sha256.c $(ST_SIG)
+	$(CC) $(ST_CFLAGS) -o $@ tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/omega_om_units.c $(ST_SIG)
 
-$(ST_DIR)/test_st_holdout_asan: tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/sha256.c $(ST_SIG) $(ST_SIG_HDRS)
+$(ST_DIR)/test_st_holdout_asan: tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/omega_om_units.c $(ST_SIG) $(ST_SIG_HDRS)
 	@mkdir -p $(ST_DIR)
-	$(CC) $(ST_CFLAGS) $(ST_ASAN) -o $@ tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/sha256.c $(ST_SIG)
+	$(CC) $(ST_CFLAGS) $(ST_ASAN) -o $@ tests/searchtrace/test_st_holdout.c src/searchtrace/st_holdout.c src/omega_om_units.c $(ST_SIG)
 
-$(ST_DIR)/test_st_holdout_sig: tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/sha256.c $(ST_SIG) $(ST_SIG_HDRS)
+$(ST_DIR)/test_st_holdout_sig: tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/omega_om_units.c $(ST_SIG) $(ST_SIG_HDRS)
 	@mkdir -p $(ST_DIR)
-	$(CC) $(ST_CFLAGS) -o $@ tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/sha256.c $(ST_SIG)
+	$(CC) $(ST_CFLAGS) -o $@ tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/omega_om_units.c $(ST_SIG)
 
-$(ST_DIR)/test_st_holdout_sig_asan: tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/sha256.c $(ST_SIG) $(ST_SIG_HDRS)
+$(ST_DIR)/test_st_holdout_sig_asan: tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/searchtrace/st_holdout.h src/omega_om_units.c $(ST_SIG) $(ST_SIG_HDRS)
 	@mkdir -p $(ST_DIR)
-	$(CC) $(ST_CFLAGS) $(ST_ASAN) -o $@ tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/sha256.c $(ST_SIG)
+	$(CC) $(ST_CFLAGS) $(ST_ASAN) -o $@ tests/searchtrace/test_st_holdout_sig.c src/searchtrace/st_holdout.c src/omega_om_units.c $(ST_SIG)
 
 searchtrace: $(ST_DIR)/searchtrace
 

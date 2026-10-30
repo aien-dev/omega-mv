@@ -1,0 +1,4 @@
+fn fb_div op ulong ty ulong w ulong sg ulong a ulong b ulong to void
+if eq b 0
+ret
+end

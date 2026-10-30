@@ -1,0 +1,61 @@
+note SPDX-License-Identifier: Apache-2.0
+note Handwritten PD0 stream primitive. See README.md for the bounded byte-tag API.
+note Single stream, explicit global storage; no allocator, C call or implicit wrapping.
+global rngtag uchar 256
+global rngstate ulong 1
+
+note Low 64 bits of addition: each intermediate is less than 2^34.
+fn rngadd a ulong b ulong to ulong
+lo = add and a 4294967295 and b 4294967295
+hi = add add shr a 32 shr b 32 shr lo 32
+ret or shl and hi 4294967295 32 and lo 4294967295
+end
+
+note Low 64 bits of multiplication in base 65536.
+note Each column has at most four 16-bit products plus carry, below 2^35.
+note Only the masked digit is shifted, so every shift fits ulong exactly.
+fn rngmul a ulong b ulong to ulong
+out = ulong 0
+carry = ulong 0
+for k ulong 4
+sum = carry
+for j ulong add k 1
+av = and shr a mul j 16 65535
+bv = and shr b mul sub k j 16 65535
+sum = add sum mul av bv
+end
+out = or out shl and sum 65535 mul k 16
+carry = shr sum 16
+end
+ret out
+end
+
+note Return 2 for capacity or embedded NUL, preserving state on refusal.
+note Valid tags are exactly n nonzero bytes, equivalent to a C tag plus terminator.
+fn rnginit seed ulong n ulong to int
+if gt n len rngtag
+ret 2
+end
+hash = ulong 14695981039346656037
+for i ulong n
+c = get rngtag i
+if eq c uchar 0
+ret 2
+end
+hash = rngmul xor hash ulong c 1099511628211
+end
+put rngstate 0 xor seed hash
+ret 0
+end
+
+fn rngnext to ulong
+state = rngadd get rngstate 0 11400714819323198485
+put rngstate 0 state
+z = rngmul xor state shr state 30 13787848793156543929
+z = rngmul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+
+fn rnguniform to ulong
+ret rem rngnext 1000001
+end
