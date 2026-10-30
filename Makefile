@@ -1248,6 +1248,18 @@ $(RX_CM_UNIT): tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/omega_om_units
 
 test-costmodel: $(RX_CM_UNIT)
 	./$(RX_CM_UNIT)
+	@set -eu; dir=$(OUT_DIR)/costmodel-mutant; rm -rf $$dir; mkdir -p $$dir; \
+	  sed "/CM704:refuse-unsupported-op/c\\    uint32_t op = f && f->op < RX_CM_OPS ? f->op : RX_CM_OPS - 1u; /* CM704:refuse-unsupported-op */" \
+	    src/runtime/rx_costmodel.c > $$dir/rx_costmodel.c; \
+	  if cmp -s src/runtime/rx_costmodel.c $$dir/rx_costmodel.c; then \
+	    echo "mutant restore-op-clamp: sed changed nothing"; exit 1; fi; \
+	  $(CC) $(CFLAGS) -c -o $$dir/rx_costmodel.o $$dir/rx_costmodel.c; \
+	  $(CC) $(CFLAGS) -o $$dir/unit tests/runtime/rx_costmodel_unit.c $$dir/rx_costmodel.o src/omega_om_units.c -lm; \
+	  rc=0; $$dir/unit refuse > $$dir/out.txt 2> $$dir/err.txt || rc=$$?; \
+	  if [ $$rc -eq 0 ] || ! grep -q unsupported-op-not-aliased-to-matvec $$dir/err.txt; then \
+	    echo "mutant restore-op-clamp was not killed by unsupported-op-not-aliased-to-matvec (exit $$rc)"; \
+	    cat $$dir/err.txt; exit 1; fi; \
+	  echo "mutant restore-op-clamp: killed by unsupported-op-not-aliased-to-matvec (exit $$rc)"
 
 # Offline resource-DAG evaluator, imported verbatim from closed PR #590
 # (commit 3bd56731). Host arithmetic on the numbers written in the fixtures.
@@ -1273,7 +1285,7 @@ $(DS_OBJ): tools/dagsim/dagsim.c tools/dagsim/dagsim.h src/runtime/rx_costmodel.
 		rm -f $@; exit 1; fi
 
 $(DS_UNIT): tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -Wl,--wrap=rx_cm_predict -lm
 
 $(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
@@ -1281,6 +1293,8 @@ $(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OU
 test-dagsim: $(DS_UNIT) $(DS_CLI)
 	./$(DS_UNIT)
 	sh tests/dagsim/run_cli.sh $(DS_CLI) $(OUT_DIR)/dagsim-cli-out
+	sh tests/dagsim/mutant_lifetime.sh
+	sh tests/dagsim/mutant_predict.sh
 
 # AArch64 hosts: the gate. Real realizations, training, promotion through the
 # R9 barrier on the native authority, held-out workloads.
@@ -2566,9 +2580,42 @@ $(GPU_L2_STALE_TEST): tests/gpu_l2_stale_test.c src/omega_gpu_fp8_api.h src/omeg
 GPU_DATTN_TEST = $(OUT_DIR)/gpu_decode_attn_test
 $(GPU_DATTN_TEST): tests/gpu_decode_attn_test.c tests/bw_warp_sim_k.h src/omega_gpu_decode_attn_api.h src/omega_blackwell_codegen_attn.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
-test-gpu-decode-attn: $(GPU_DATTN_TEST)
+test-gpu-decode-attn: $(GPU_DATTN_TEST) test-gpu-decode-attn-maxpos
 	$(GPU_DATTN_TEST) --host-only
 	$(GPU_DATTN_TEST) --sim
+
+# omega #535: the 128k position bound (OMEGA_GPU_DATTN_MAX_POS 131072) on a fake platform, no device. A sanitized copy
+# of src/omega_gpu_decode_attn_api.c is linked ahead of the library, so cache writes, the RoPE fill and launch staging
+# are ASan/UBSan checked against the fake's exact-size buffers. Each mutant breaks one bound in a copy of that file;
+# the test must FAIL on it.
+.PHONY: test-gpu-decode-attn-maxpos
+GPU_DATTN_MAXPOS_TEST = $(OUT_DIR)/test_omega_gpu_decode_attn_maxpos
+GPU_DATTN_MAXPOS_MUT = $(OUT_DIR)/dattn_maxpos_mut
+GPU_DATTN_MAXPOS_SAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
+$(GPU_DATTN_MAXPOS_TEST): tests/test_omega_gpu_decode_attn_maxpos.c src/omega_gpu_decode_attn_api.c src/omega_gpu_decode_attn_api.h src/omega_blackwell_codegen_attn.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $@ tests/test_omega_gpu_decode_attn_maxpos.c \
+	  src/omega_gpu_decode_attn_api.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-decode-attn-maxpos: $(GPU_DATTN_MAXPOS_TEST)
+	$(GPU_DATTN_MAXPOS_TEST)
+	@mkdir -p $(GPU_DATTN_MAXPOS_MUT)
+	@set -e; \
+	tmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" src/omega_gpu_decode_attn_api.c > $(GPU_DATTN_MAXPOS_MUT)/$$name.c; \
+	  if cmp -s src/omega_gpu_decode_attn_api.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $(GPU_DATTN_MAXPOS_MUT)/$$name \
+	    tests/test_omega_gpu_decode_attn_maxpos.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm; \
+	  if $(GPU_DATTN_MAXPOS_MUT)/$$name > $(GPU_DATTN_MAXPOS_MUT)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  if ! grep -q '^FAIL ' $(GPU_DATTN_MAXPOS_MUT)/$$name.log; then \
+	    echo "mutant $$name: no FAIL case (did not run?)"; cat $(GPU_DATTN_MAXPOS_MUT)/$$name.log; exit 1; fi; \
+	  echo "mutant $$name killed"; }; \
+	tmut cap-off-by-one 's/max_pos > OMEGA_GPU_DATTN_MAX_POS ||/max_pos >= OMEGA_GPU_DATTN_MAX_POS ||/'; \
+	tmut cap-one-chunk-over 's/max_pos > OMEGA_GPU_DATTN_MAX_POS ||/max_pos > OMEGA_GPU_DATTN_MAX_POS + 256u ||/'; \
+	tmut write-pos-bound 's/kv_head >= 4 || pos >= c->max_pos || count == 0/kv_head >= 4 || count == 0/'; \
+	tmut write-count-bound 's/count > c->max_pos - pos ||/count > c->max_pos - pos + 1u ||/'; \
+	tmut read-pos-bound 's/kv_head >= 4 || pos >= c->max_pos || !k/kv_head >= 4 || pos > c->max_pos || !k/'; \
+	tmut step-pos-bound 's/layer >= c->layers || pos >= c->max_pos || (rec/layer >= c->layers || pos > c->max_pos || (rec/'; \
+	tmut rope-table-short 's/(size_t)max_pos \* OMEGA_DATTN_ROPE_ROW_BYTES/(size_t)(max_pos - 8u) * OMEGA_DATTN_ROPE_ROW_BYTES/'; \
+	echo "test-gpu-decode-attn-maxpos: 7 of 7 mutants killed"
 
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, 24 q / 4 kv heads, partial RoPE by permutation
 # (omega_gpu_decode_attn256_api.h). test-gpu-decode-attn256 is host-only + simulator; the chip gate is
@@ -2660,6 +2707,20 @@ $(GPU_GPR_BOUNDARY_TEST): tests/gpu_gpr_boundary_test.c src/omega_blackwell_code
 test-gpu-gpr-boundary: $(GPU_GPR_BOUNDARY_TEST)
 	$(GPU_GPR_BOUNDARY_TEST)
 
+# omega-mv#554: static scoreboard hazard checker (RAW / WAR / WAW) over the encoded bytes of every kernel the generators
+# build, after the launchers' patch steps. Host only: decoder vs encoder, the pre-#553 attend red receipt
+# (tests/fixtures/bw_hazard), negative controls, then the sweep. test-bw-hazard-nvdisasm adds the decoder cross-check
+# against nvdisasm (offline oracle, /usr/local/cuda/bin) on every distinct kernel: one nvdisasm call per kernel, over
+# ten minutes on the Spark (2026-10-19: 2360 kernels, 1028064 instructions, 0 mismatched).
+.PHONY: test-bw-hazard test-bw-hazard-nvdisasm
+BW_HAZARD_TEST = $(OUT_DIR)/bw_hazard_test
+$(BW_HAZARD_TEST): tests/bw_hazard_test.c src/omega_bw_hazard.c src/omega_bw_hazard.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/bw_hazard_test.c src/omega_bw_hazard.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-bw-hazard: $(BW_HAZARD_TEST)
+	$(BW_HAZARD_TEST)
+test-bw-hazard-nvdisasm: $(BW_HAZARD_TEST)
+	$(BW_HAZARD_TEST) --nvdisasm
+
 # OWN-30B T3 (2026-10-13): HMMA arithmetic probe (host model self-checks; chip run under the GB10 lock).
 GPU_TC_PROBE_TEST = $(OUT_DIR)/gpu_tc_probe_test
 $(GPU_TC_PROBE_TEST): tests/gpu_tc_probe_test.c tests/bw_hmma_model.h src/omega_blackwell_codegen_tc.h $(OUT_DIR)/libomega_gpu.a
@@ -2733,10 +2794,39 @@ test-gpu-isolation: $(GPU_ISOLATION_TEST)
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
 .PHONY: test-gpu-decode-graph
 GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
+GPU_DGRAPH_ABORT_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_abort
 $(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c src/omega_gpu_decode_graph.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
-test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST)
+test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST) $(GPU_DGRAPH_ABORT_TEST) test-gpu-decode-graph-abort-mutants
 	./$(GPU_DECODE_GRAPH_TEST) --host-only
+	./$(GPU_DGRAPH_ABORT_TEST)
+
+# omega #518: lock and token-state recovery of the split API (failed begin_token, abort_token, end_token after a failed
+# record, latched session) on a fake platform whose lock refuses a second acquisition. Host only, opens no device.
+# Each mutant breaks one rule in a copy of omega_gpu_decode_graph.c linked ahead of the library; the test must FAIL on it.
+.PHONY: test-gpu-decode-graph-abort-mutants
+GPU_DGRAPH_MUT_DIR = $(OUT_DIR)/dgraph_mut
+$(GPU_DGRAPH_ABORT_TEST): tests/test_omega_gpu_decode_graph_abort.c src/omega_gpu_decode_graph.h src/omega_gpu_platform.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_abort.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-decode-graph-abort-mutants: $(OUT_DIR)/libomega_gpu.a
+	@mkdir -p $(GPU_DGRAPH_MUT_DIR)
+	@set -e; killed=0; \
+	dmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
+	  if cmp -s src/omega_gpu_decode_graph.c $(GPU_DGRAPH_MUT_DIR)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -c -o $(GPU_DGRAPH_MUT_DIR)/$$name.o $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_MUT_DIR)/$$name tests/test_omega_gpu_decode_graph_abort.c \
+	    $(GPU_DGRAPH_MUT_DIR)/$$name.o $(OUT_DIR)/libomega_gpu.a -lpthread -lm; \
+	  if ./$(GPU_DGRAPH_MUT_DIR)/$$name > $(GPU_DGRAPH_MUT_DIR)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  nfail=$$(grep -c '^FAIL' $(GPU_DGRAPH_MUT_DIR)/$$name.log || true); \
+	  if [ "$$nfail" -eq 0 ]; then echo "mutant $$name: nonzero exit but no FAIL case (did not run?)"; cat $(GPU_DGRAPH_MUT_DIR)/$$name.log; exit 1; fi; \
+	  echo "mutant $$name killed: $$nfail case(s) failed"; killed=$$((killed+1)); }; \
+	dmut begin-fail-keeps-lock 's|    omega_gpu_session_unlock(); /\* begin_fail releases \*/|    ;|'; \
+	dmut begin-fail-stays-in-token 's|    g->in_token = 0; g->failed = 1;|    g->failed = 1;|'; \
+	dmut oneshot-old-bad-args-only 's|if (brc != OMEGA_GPU_DGRAPH_OK) {|if (brc == OMEGA_GPU_DGRAPH_BAD_ARGS) {|'; \
+	dmut abort-keeps-lock 's|g->n_stamp = 0; /\* no timeline for an abandoned token \*/|&\n    return OMEGA_GPU_DGRAPH_OK;|'; \
+	dmut abort-submits 's|^int omega_gpu_decode_graph_abort_token(OmegaGpuDecodeGraph \*g) {$$|&\n    if (g \&\& g->in_token) return omega_gpu_decode_graph_end_token(g, NULL, NULL);|'; \
+	echo "test-gpu-decode-graph-abort-mutants: $$killed of 5 mutants killed"
 
 # OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test

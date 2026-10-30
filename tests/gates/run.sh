@@ -123,7 +123,7 @@ case "$step" in
   searchtrace)        make $NOPHYS test-searchtrace ;;
   estimation)         for t in test-estimation test-est-tools test-estimation-v3 test-est3c-tools; do make $NOPHYS $t; done ;;
   ans)                make $NOPHYS test-inertial-alignment ;;
-  numeric-cpu)        for t in test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc; do make $NOPHYS $t; done ;;
+  numeric-cpu)        for t in test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc test-mufu-ftz; do make $NOPHYS $t; done ;;
   train)              make $NOPHYS test-train ;;
   compiler)           make $NOPHYS test-compiler-quick; make $NOPHYS test-compiler-full ;;
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
@@ -167,8 +167,10 @@ case "$step" in
     ARGUS_STREAMS="$(mktemp -d /tmp/argus-streams.XXXXXX)"; export ARGUS_STREAMS
     make test-argus-runtime test-machine-identity-argus
     ;;
+  bw-hazard)          physics_pin; make test-bw-hazard ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
   tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
+  gpu-decode-graph)   physics_pin; make test-gpu-decode-graph ;;
   # host-suites-3.yml
   numeric-lifecycle)  make $NOPHYS test-numeric-lifecycle ;;
   numeric-transc-digest)
@@ -313,6 +315,7 @@ case "$step" in
   om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
                       # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
                       # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.
+                      # Then the program-mode om/blake3/blake3.om output contract (#726): digest, /dev/full, closed stdout.
     pin omega-bridge omega-bridge "$(lock om/omega-bridge.lock)"
     sh seed/omega-from-seed.sh > build/om-units-seed.log 2>&1 || { tail -3 build/om-units-seed.log; exit 1; }
     export OMEGA_OMC="$ROOT/seed/out/omc" OMEGA_BRIDGE="$PINS/omega-bridge"
@@ -320,6 +323,8 @@ case "$step" in
     sh om/units.sh --check
     sh om/sha256/parity/run.sh
     sh om/blake3/parity/run.sh
+    "$OMEGA_OMC" < om/blake3/blake3.om > build/om-units-blake3 && chmod 700 build/om-units-blake3
+    sh om/blake3/test-output.sh build/om-units-blake3
     ;;
   tilelab)            # omega#906: native .om tile planner and streaming (m,s,p) softmax. omc born from the seed
                       # here, then seed/tilelab/gate.sh (expected output, mutants failing for their own reason).

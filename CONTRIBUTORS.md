@@ -5,6 +5,10 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
+| Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
+| Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
+| Grok 4.7 | Merged current main (`6d482de0e`) into #854. The only conflict was the generated root `.crumb` (compile stamps and source-tree digest). Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
@@ -21,6 +25,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Codex (GPT-6 Astra) | Seeded executable contracts, loop-head invariants, release erasure, purity and runtime refusal controls |
 | Codex (GPT-6.1 Sol) | Corrected boolean bitwise typing in seeded OSC IR output, with C-referee regression cases |
 | Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |
+| OpenAI GPT-6 Astra | Composed security SC1 contracts, ownership reconciliation, independent acceptance review integration and evidence matrix (#625/#673) |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
 | Codex | Current .om front-page status and source-backed C migration inventory |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
@@ -35,7 +40,14 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Claude Fable 5.1 | CodeQL high-severity fixes in the OM-2 oracles: 0600 image creation in offsetof.c, fixture-name allowlist and truncation check in sha_qual.c |
 | Claude Opus 5.5 | Omega 1.0 roadmap: source-pinned readiness audit of the seeded compiler, IR, WebAssembly and bridge paths, milestone acceptance gates, tracking issues #790-#800, OM-2 contract files brought to main byte-identical, and stale status text corrected |
 | Claude Opus 5.5 | Function-mode constants in the seeded compiler (`fnstore`): consts accepted without `fn main`, globals/texts/host words still error 9, gate16 byte-identity fixtures and old-compiler/mutant negative controls |
+| Codex (GPT-6.1 Sol) | Neuralese supplement proposal, bounded native envelope/codebook decoder and existing Omega-conductor host refusal/mutant cases |
+| Codex (GPT-6.1 Sol) | NL4 native numerical payload codec, canonical LTP0 consumer, independent receiver-matched pure execution boundary and host synthetic rejection/mutant qualification (#920) |
 | Codex (GPT-6.1 Sol) | Repaired qty float-domain classification and checked ingress, diagnostic categories and query/output streaming; permanent adversarial regression fixtures for the #909/#911 audit |
+| Claude Opus 5.5 | OSC IR v7 memory oracle: independent decoder, validator and interpreter (`seed/wasm/v7/oracle.js`), separate hand-written fixture writer, hand-written expectations and a mutant-checked self-test |
+| Claude Opus 5.5 | Effect-derived capability manifest (`seed/effects`, M1): host-word manifest, ELF syscall resolution that fails closed, seccomp cBPF output, probe-parity/strace/bwrap gate with negative controls and tool mutants |
+| Claude Opus 5.5 | seed/agent: omagent, a nanobot-style coding agent in seeded Omega (agent loop, four permissioned tools, JSONL session memory, SSE streaming, CLI), its scripted-mock test referee with six mutants, and the paired startup/RSS benchmark against nanobot |
+| Claude Opus 5.5 | Tenstorrent Tensix vecadd (`seed/tensix`): RV32IM asm2 table, hand-written kernel and start code, seeded Omega emitter `irrv32.om` (OSC IR v1 scalar unit -> RV32 elementwise kernel, byte-identical to asm2), hand-written edge disassembly, ttsim WH/BH and qemu interop-oracle gate with negative controls |
+| Claude Opus 5.5 | AWS Trainium/Inferentia backend `seed/nki`: `irnki.om` OSC IR v1 to `nki.isa` vecadd/elementwise emitter, native-Omega reference lanes, NKI CPU simulator interop-oracle gate (trn1/trn2/trn3) with negative controls and refusals, pinned oracle setup |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
@@ -50,3 +62,6 @@ Update this table in the same commit as the work it credits.
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
 | Grok 4.7 | Merged current main (b3dca0f1) into #514. The only conflict was the generated root `.crumb`; regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (089e5b05) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (62d1d0d) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Cost-model refusal of unsupported semantic operation IDs before prediction or learning, with a clamp-restoring mutant (Refs #704) |
