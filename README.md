@@ -9,6 +9,7 @@ Papers: [Omega](https://doi.org/10.5281/zenodo.23547810), [The Token Is the Inst
 
 - [The Omega programme: seed to model](https://github.com/aien-dev/omega-mv/issues/599)
 - [Omega 1.0 roadmap: readiness audit, milestones and acceptance gates](docs/ROADMAP-1.0.md)
+- [One small Omega program, and the identity boundary](docs/TEACH_OMEGA.md): a bounded lesson for issue #619. It uses a historical teaching pin, not the current compiler, and it does not claim the legacy identity machinery covers seeded programs.
 - [Remaining C source/header inventory](docs/migration/C-TO-OM-INVENTORY.md)
 - [Experimental `.om` deterministic-stream successor](seed/physics0/README.md): source/host checks passed; native compilation and execution NOT_RUN.
 - [Neuralese supplement](neuralese/README.md): PROPOSED model-bound representation design, with a bounded native `.om` envelope/codebook candidate and ordinary checked-source boundary. No learned reasoning or model experiment is claimed.
