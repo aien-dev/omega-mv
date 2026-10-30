@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <math.h>
 #include "omega_world_gates.h"
 #include "omega_accelerator_world.h"
@@ -1836,10 +1852,13 @@ static bool test_m19_gate18_receipt(void) {
         if (!candidate || strcmp(candidate, head_sha) != 0 ||
             omega_evidence_tree_dirty()) return false;
     }
+    /* The binary under test is wherever make put it: build/step-<step>/omegatool under
+     * tests/gates/run.sh (omega#511), build/omegatool in a clean clone or by hand. */
+    char self_path[PATH_MAX];
+    if (!omega_evidence_self_binary(self_path, sizeof(self_path))) return false;
     uint8_t digest[32];
     char hex[65];
-    /* The binary actually running (OUT_DIR may put it outside build/). */
-    return compute_file_sha256("/proc/self/exe", digest, hex);
+    return compute_file_sha256(self_path, digest, hex);
 }
 
 int run_m19_gates(void) {

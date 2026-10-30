@@ -1,0 +1,33 @@
+note SPDX-License-Identifier: Apache-2.0
+note Control for inline-depth6.om with every inline removed: an ordinary 6-deep call chain
+note is accepted and runs (expected oracle/s3s4/exp/inline-depth6.out).
+note Contract section 4 lines 109-111: inlining at most 4 levels deep, beyond that error 14
+note (obligation=growth). main calls the inline chain f1 -> ... -> f6: 6 nested inlined bodies,
+note beyond 4 (erratum E7: the call site in main is depth 1).
+om2
+fn f1 a ulong to ulong
+ret add f2 mul a 3 1
+end
+fn f2 a ulong to ulong
+ret add f3 mul a 5 2
+end
+fn f3 a ulong to ulong
+ret add f4 mul a 7 3
+end
+fn f4 a ulong to ulong
+ret add f5 mul a 11 4
+end
+fn f5 a ulong to ulong
+ret add f6 mul a 13 5
+end
+fn f6 a ulong to ulong
+ret add mul a 17 6
+end
+fn id v ulong to ulong
+ret v
+end
+fn main to int
+pu f1 2
+pu f1 id 1000
+ret 0
+end

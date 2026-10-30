@@ -1,0 +1,23 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of a5-allops.om: rotl n is rotr 64-n; 252641535 = 0x0f0f00ff.
+note Expected stdout oracle/s5s7/exp/a5-allops.out (python3).
+fn dupmk x uint to ulong
+ret or shl ulong x 32 ulong x
+end
+fn rr v ulong n ulong to ulong
+if eq n 0
+ret v
+end
+ret or shr v n shl v sub 64 n
+end
+fn main to int
+d = dupmk 2309737967
+e = dupmk 252641535
+puth rr d 56
+puth rr d 24
+puth and d e
+puth or d e
+puth xor d e
+puth rr d 5
+ret 0
+end

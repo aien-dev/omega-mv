@@ -1,0 +1,9 @@
+om2
+note Runtime-valued for bounds must check invariants again at the final false head.
+fn main to int
+n = uint 2
+for i uint n
+invariant lt i n
+end
+ret 0
+end

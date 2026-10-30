@@ -25,51 +25,51 @@
     "generated": {
       "children": [
         {
-          "digest": "9cd3943087595dd868914a23a9fef7bebda3d78b773762c287ac4b7a6c2e2f40",
-          "last_commit": "05ed1a10",
+          "digest": "9f82d33852a7cdcedb210ee1525f42c4d963c18940cae1df7f69d1210de71985",
+          "last_commit": "05ed1a10c",
           "name": "argus",
           "purpose": "Directory tools/argus. Purpose not yet described by a human."
         },
         {
-          "digest": "870928d3974d2e90f8bd2999a69a0e81e8d6026feecc2bd133988da61d8b4bba",
-          "last_commit": "7683eaaa",
+          "digest": "4b3a030252eaa6f1c693105a76092e8a5fccfd340658a982f5bb1130ce9aba33",
+          "last_commit": "7683eaaa6",
           "name": "brownian",
           "purpose": "Directory tools/brownian. Purpose not yet described by a human."
         },
         {
-          "digest": "64fe22fe57fab7e61e65cb7652e73dbde613c260cb8677b05d8b98a067231e83",
-          "last_commit": "00f54b6b",
+          "digest": "1d21e7e466d0fd96abf30d11b2d7e45718bc42ada1784bc8bc2a749f541b3ab7",
+          "last_commit": "00f54b6b1",
           "name": "dual_experiment",
           "purpose": "Runner for the DUAL applicability experiment: runs the pre-registered campaign and writes result"
         },
         {
-          "digest": "11eb4960ad04fe5bd01ee9d2bbb6900712176c0991ecc0b02b3204ac60248eeb",
-          "last_commit": "38a6a569",
+          "digest": "2a1bd46e9c9502d02144e3f76c784863001323c564a22bdae2905c0660a5f7a4",
+          "last_commit": "38a6a569b",
           "name": "estimation",
           "purpose": "Directory tools/estimation. Purpose not yet described by a human."
         },
         {
-          "digest": "b91acbb0b29060651bc17dc79406adeb9376748f4d4a3005175cd307aa52b9c8",
-          "last_commit": "dd67f6bd",
+          "digest": "b3241d8cdc884bbfcca5cf9d5f4ed0aac8f7e2df43d9ab47ca2789432dd49a75",
+          "last_commit": "dd67f6bd7",
           "name": "reservoir",
           "purpose": "Gate 2 tooling for the reservoir (omega#440): in-house zlib inflate and MAT v5 reader, the archi"
         },
         {
-          "digest": "98d1f4d802b90006977d73b14acb92971927f2cf5bdf05d8dc5653a1b10fcf1b",
-          "last_commit": "ae1dd00a",
+          "digest": "f1a1a7f24d51a52f01171d01edbd59e8b15c53b15eeffb97e3c0ffc553e639af",
+          "last_commit": "ae1dd00a2",
           "name": "turing_verify_indep",
           "purpose": "Directory tools/turing_verify_indep. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:e1f826c2beb8604bb0dcba49575f7c6b48cf5488c40b616b212fda2ed70c62ee",
-      "compiled_at": "2026-10-20T03:22:54Z",
+      "children_root": "sha256:8d3d3b952374b3b72e667521f07bf028c4c02bcefff772ad1a71cfff3e5266f2",
+      "compiled_at": "2026-10-30T16:33:41Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:ac24a88d4748aacf2ab972c6f4566ffb1a1cf4bccd98e970e26d90c4458a0d3e",
+      "digest": "sha256:67152d582f1fe37b8f3bfca0ec896682d6b355dc787670c71af3b45c21e6744c",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 285,
-      "generated_at_commit": "707c0cc8b28c1d38e2aef0ed2ec861078f10dc3c",
-      "source_tree": "sha256:70f65e9cc7411f2a7d5e3b3db7cc5ccdf826fd5c599758d25bd1187cb555b45c"
+      "files": 299,
+      "generated_at_commit": "8d591af9c727dbc1dd02c2ec9988c939d59a378b",
+      "source_tree": "sha256:affd4d3c6ea5ccae57128b744cf55597d9c0c3adb445eb18b52f51cd1058f4ec"
     },
     "owner_lane": "",
     "provenance": {

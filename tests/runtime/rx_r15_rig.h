@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * rx_r15_rig.h -- the R13 living body built for an R15 configuration
  * (spec/r15-performance-proof.md §3, §4). Shared by the SEQ parity gate and
@@ -131,6 +147,13 @@ typedef struct {
     uint64_t slot_cps[RX_OMEGA_SLOTS], slot_rps[RX_OMEGA_SLOTS];
 } R15Outcome;
 
+/* The AIEN detector configuration the next r15_start uses (rx_aien_default_config
+ * when none is set; NULL clears it). The SEQ parity gate sets one whose miss streak
+ * cannot fail a prediction within an episode: its stimulus has no drift, so a failed
+ * prediction there can only come from host timing noise in Omega's serve costs, and
+ * it makes one side research the regime because of DRIFT where the other does so
+ * because of the GOAL. G7 and the R15 harness leave the product default. */
+void r15_set_aien_config(const RxAienConfig *cfg);
 int  r15_start(R15Rig *r, R15Config config);
 /* As r15_start, and also enrolls up to RX_CALLER_KEYRING_MAX fixture subjects
  * (harness-only callers) before the world's caller set is bound; their

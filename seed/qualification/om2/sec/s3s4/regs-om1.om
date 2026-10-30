@@ -1,0 +1,24 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of regs.om for the pinned compiler 734f0a39 (OMEGESE 9.6: a function that needs more
+note than 16 registers is error 12). Line numbers equal those of regs.om.
+note OM-1 unit
+fn f a ulong to ulong
+v0 = add a 1
+v1 = add a 2
+v2 = add a 3
+v3 = add a 4
+v4 = add a 5
+v5 = add a 6
+v6 = add a 7
+v7 = add a 8
+v8 = add a 9
+v9 = add a 10
+v10 = add a 11
+v11 = add a 12
+v12 = add a 13
+v13 = add a 14
+v14 = add a 15
+v15 = add a 16
+v16 = add a 17
+ret add add add add add add add add add add add add add add add add add a v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 v16
+end

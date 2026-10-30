@@ -1,0 +1,20 @@
+   0:	d2800002 	movz	x2, #0x0
+   4:	f100003f 	subs	xzr, x1, #0x0
+   8:	54000140 	b.eq	0x30  // b.none
+   c:	f101905f 	subs	xzr, x2, #0x64
+  10:	540001c2 	b.cs	0x48  // b.hs, b.nlast
+  14:	91000442 	add	x2, x2, #0x1
+  18:	b4000141 	cbz	x1, 0x40
+  1c:	9ac10804 	udiv	x4, x0, x1
+  20:	9b018083 	msub	x3, x4, x1, x0
+  24:	aa0103e0 	orr	x0, xzr, x1
+  28:	aa0303e1 	orr	x1, xzr, x3
+  2c:	17fffff6 	b	0x4
+  30:	d65f03c0 	ret
+  34:	aa0703e0 	orr	x0, xzr, x7
+  38:	f94008f0 	ldr	x16, [x7, #16]
+  3c:	d61f0200 	br	x16
+  40:	d2800041 	movz	x1, #0x2
+  44:	17fffffc 	b	0x34
+  48:	d2800081 	movz	x1, #0x4
+  4c:	17fffffa 	b	0x34
