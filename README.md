@@ -49,6 +49,14 @@ The live status is owned by [aien-architecture](https://github.com/aien-spark/ai
 
 ## How this fits with the other repositories
 
+Ownership rule ([ARCH-0042](https://github.com/aien-dev/aien-architecture-mv/pull/342), PROPOSED): Omega owns computation, CUDA++ owns GPU execution, Omega Bridge owns compatibility.
+
+- **This repository** owns the language, its semantics and IR, the seeded compiler (`seed/out/omc`) and the compiler pin other repositories consume, and the declared contract of what a kernel computes.
+- **[CUDA++](https://github.com/aien-dev/CUDApp)** owns GPU execution: the sm_121 encoder and GPU code generators, the cubin writer, the disassembler, the driver client, submission and the GPU runtime.
+- **[Omega Bridge](https://github.com/aien-dev/omega-bridge)** owns compatibility: C and Python emitted from a checked Omega subset, native bindings so foreign callers call compiled Omega (pinned here in `om/omega-bridge.lock`), framework attachments and GPU artifact negotiation. It does not compile Omega for other repositories and does not run kernels.
+
+Not yet true on main: the GPU C under `src/omega_blackwell_*`, `src/omega_gpu_*` and `src/omega_sm121_disasm.c` is a diverged copy of CUDA++ code that is still developed here, and the driver client comes from physics-mv. Existing code stays where it is (Drake, 2026-10-27); new GPU-execution work goes to CUDA++ or a repository connected to it. The copies are recorded in [CUDApp#106](https://github.com/aien-dev/CUDApp/issues/106), [CUDApp#107](https://github.com/aien-dev/CUDApp/issues/107), [CUDApp#108](https://github.com/aien-dev/CUDApp/issues/108) and [CUDApp#10](https://github.com/aien-dev/CUDApp/issues/10). The bridge's own seed bootstrap and front end are [#870](https://github.com/aien-dev/omega-mv/issues/870) and [#871](https://github.com/aien-dev/omega-mv/issues/871).
+
 [aienux](https://github.com/aien-dev/aienux) holds Aienux, the kernel of AienOS, which Omega is meant to run on. [physics](https://github.com/aien-spark/physics) provides FORGE machine realization and the GB10 native path (pinned in `physics.lock`). [aien-architecture](https://github.com/aien-spark/aien-architecture) owns status and sequencing. ARGUS-0/1 (a defensive plane) is implemented in aienux (`native/argus`, pinned by `argus.lock`); Omega only carries the opt-in `RX_ARGUS` hooks (`src/runtime/rx_argus.c`) and receipts in `evidence/ARGUS/`. Physics Zero exists here as a host benchmark apparatus and learner (`src/physics0/`, `tests/physics0/`, `mk/physics0-learner.mk`, `docs/physics0/`, receipts in `evidence/physics0/`), with its specifications in the physics repository. DIRAC-0 is a specification in aien-architecture plus an oracle source in `research/dirac-oracle/` that has never been built or run. The Evolution Arena is a plan only.
 
 ## Standing rules
