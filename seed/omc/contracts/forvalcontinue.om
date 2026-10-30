@@ -1,0 +1,10 @@
+om2
+note Continue increments the runtime-valued for counter before rechecking the head invariant.
+fn main to int
+n = uint 1
+for i uint n
+invariant eq i 0
+continue
+end
+ret 0
+end
