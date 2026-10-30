@@ -1,0 +1,10 @@
+fn main to int
+a = qty 0
+b = add a 1.0
+x = f64 1.0
+z = bitcast ulong x
+if eq ulong b z
+ret 0
+end
+ret 1
+end

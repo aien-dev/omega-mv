@@ -1,0 +1,70 @@
+note SPDX-License-Identifier: Apache-2.0
+note TWIN of ce-view.om with every unroll and inline removed (section 4 lines 91, 97): OM-2 unit,
+note same expectations per selector.
+note Contract section 4 lines 105-108 and section 6 line 170, errata E2: every index into an UNSIZED view
+note keeps its run-time check (trap 3), also when it is a constant after unrolling or inlining. b holds
+note 1 10 100 ... 10^7; the callee sees a part of b (or the 4-element a4 = b[0..4), E2) and reads one
+note element past its length, which in b is a defined neighbour: a compiler that drops the check prints
+note it and exits 0 instead of trapping. One stdin byte selects:
+note   A sumv part b 0 4 (unrolled 5 reads): 1 11 111 1111, trap 3          exit 103
+note   B sumv a4 (sized array to view ulong *, E2): 1 11 111 1111, trap 3   exit 103
+note   C sumi part b 0 4 (sumv inlined): 1 11 111 1111, trap 3               exit 103
+note   D getc part b 0 4 (constant get v 6, no unroll): trap 3               exit 103
+note   E sumv part b 0 5 (in range): 1 11 111 1111 11111, then 11111         exit 0
+note   F sumv part b 3 4: 1000 11000 111000 1111000, trap 3                  exit 103
+note Twin ce-view-plain.om (unroll and inline removed) has the same expectations; OM-1 approximation
+note ce-view-om1.om uses sized views. Expected: oracle/s3s4/exp/ce-view-*.out (python3).
+om2
+fn sumv v view ulong * to ulong
+s = ulong 0
+for i ulong 5
+s = add s get v i
+pu s
+end
+ret s
+end
+fn sumi v view ulong * to ulong
+s = ulong 0
+for i ulong 5
+s = add s get v i
+pu s
+end
+ret s
+end
+fn getc v view ulong * to ulong
+ret get v 6
+end
+fn main to int
+sb = new uchar 1 0
+r = read 0 sb 0 1
+k = get sb 0
+b = new ulong 8 0
+a4 = new ulong 4 0
+p = ulong 1
+for j ulong 8
+put b j p
+p = mul p 10
+end
+for j ulong 4
+put a4 j get b j
+end
+if eq k 65
+pu sumv part b 0 4
+end
+if eq k 66
+pu sumv a4
+end
+if eq k 67
+pu sumi part b 0 4
+end
+if eq k 68
+pu getc part b 0 4
+end
+if eq k 69
+pu sumv part b 0 5
+end
+if eq k 70
+pu sumv part b 3 4
+end
+ret 0
+end

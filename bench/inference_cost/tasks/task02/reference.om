@@ -1,0 +1,9 @@
+fn absdiff_i32 a int b int to ulong
+la = long a
+lb = long b
+d = sub la lb
+if lt d 0
+ret ulong neg d
+end
+ret ulong d
+end

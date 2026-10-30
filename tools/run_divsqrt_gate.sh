@@ -81,7 +81,7 @@ BIN=$RUN/test_omega_divsqrt_gb10
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
     -o "$BIN" tests/test_omega_divsqrt_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
     src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c \
+    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c \
     "$PHYSICS/nvrm/nvrm.c" "$PHYSICS/m16/m16_native.c") > "$RUN/chip-build.log" 2>&1 || { cat "$RUN/chip-build.log"; refuse "chip build failed"; }
 if nm -u "$BIN" | grep -Eq '\b(sqrtf?|expf?|logf?|powf?|fmaf?|sinf?|cosf?|fdiv|divf)\b'; then refuse "libm math symbols in $BIN"; fi
 if nm -u "$BIN" | grep -Eiq 'cuda|cuInit|cuLaunch|nvrtc|cublas'; then refuse "CUDA symbols in $BIN"; fi

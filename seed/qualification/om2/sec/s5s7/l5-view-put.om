@@ -1,0 +1,17 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 156 with OMEGESE 9.4: put through a `view` layout parameter is error 20
+note (confirmed by erratum E8).
+om2
+layout shactx 104
+field state uint 8 at 0 little
+field count ulong at 32 little
+field buf uchar 64 at 40 little
+end
+fn poke c view shactx to void
+put c count 1
+end
+fn main to int
+c = new uchar 104 0
+poke c
+ret 0
+end

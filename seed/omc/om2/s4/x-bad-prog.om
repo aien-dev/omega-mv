@@ -1,0 +1,8 @@
+note S4: export is function mode only; with fn main it is error 9 on the export line.
+om2
+export fn f a ulong to ulong
+ret a
+end
+fn main to int
+ret 0
+end
