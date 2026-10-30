@@ -59,7 +59,8 @@ A program is one or more functions. A line holds one statement; words are separa
 fn <name> (<param> <type>)* to <type> | void      a function; `end` closes it
 <name> = <value>          write a value (a new name, or an existing one of the same type);
 <name> <value>            the same, with `=` left out
-if <cond> / else / end
+if <cond> / else / end   no elif: nest `if` inside `else`. A line starting `elif`, `elsif` or `elseif`
+                          is error 16 (omc; it was read as `<name> <value>` and the chain miscompiled)
 while <cond> [bound N] / end      N 1..999999, default 1000000; past N iterations: trap 4
 for <name> <type> <count> / end   name = 0 .. count-1 (count a number, or a value of that type)
                           (any other count: trap 4 after 1000000 passes, as a while with no bound)
