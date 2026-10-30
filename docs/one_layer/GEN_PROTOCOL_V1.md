@@ -436,3 +436,9 @@ The runner, reducer, corpus builder and custodian scripts are specified by their
   (D's pool) would let D exhaust its pool and is a new revision. The file pins of `OMEGESE.md`, `ola.sh`,
   `reader.sh` and `sampling-gate.sh` re-hashed after main's Apache-2.0 header and OM-2 changes (no protocol
   content changed); `famsig_lib.h` and `genstats.c` re-hashed after bounded-write fixes (CodeQL 537-541).
+- **v1, file pins re-hashed in train r3 (before merge, before any held-out task; revision stays 1):**
+  `OMEGESE.md` re-hashed to `533887c7...` after main's recursion-depth note (#645), the seed/equiv
+  section (#826) and #951's `new` row (omc 1..16777216; the C reference path the reader uses stays
+  1..64, `OSC_MAX_ARRAY_LEN`, as FAMSIG_V1.md requires); none is protocol content: conditions, reader
+  chain, section 5 reference lengths and the decision rule are unchanged. `GEN_PROTOCOL_V1.md`
+  re-hashed for this line. `make test-gen-protocol` re-run at the train head.

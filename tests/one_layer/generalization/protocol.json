@@ -52,8 +52,8 @@
   },
   "record_sets": {"prefix_ids": ["wrap8", "big_pc_small_ds", "gcd_only", "sum_clamped", "even_digsums", "ceil_avg", "sum4_avg", "max4_half", "lcm32", "clamp_sum", "ds2_double", "digcount_nibbles", "digits_both", "avg_double"], "prefix_sha256": "b1a3d7beaae4b1c4220b4bb8f221f31e1ffb87c219119b10449ea2d792c132ef", "raw_manifest_sha256": "d6b8a9a4912640ebda8617110ed9ec2b1960b696535267672c4b4691a5533be0", "abstraction_manifest_sha256": "1fe9af29da784e6af6bf1589e12a68b60be2de12d24cc0904761a34ac6a3cb78", "raw_manifest": "tests/one_layer/generalization/records/C.MANIFEST", "abstraction_manifest": "tests/one_layer/generalization/records/D.MANIFEST"},
   "pins": [
-    {"path": "docs/one_layer/GEN_PROTOCOL_V1.md", "sha256": "48de22945215b2135a9e90f8430d6636f92a89ca3d16fb44ec4daced2f2fcf73"},
-    {"path": "docs/one_layer/OMEGESE.md", "sha256": "9d8795bc55e417b3a0de8ba911359e69e7d4bb5fa2eaaf9508253fe1fa68e28a"},
+    {"path": "docs/one_layer/GEN_PROTOCOL_V1.md", "sha256": "512a7c4cc00b43fd27ca195b470ea7a83be9b63fed28c5a35426a1c6813e8754"},
+    {"path": "docs/one_layer/OMEGESE.md", "sha256": "533887c73d81f89ca0ba32df3e734d2680d1ebd13e1284ab179dcaff1a42457c"},
     {"path": "tests/one_layer/acceptance/HARNESS_INTERFACE_V2.md", "sha256": "a7e38a6faa7cdf7d479891209055f4fe789a55f5d377e4b6e36840aefe7f04c8"},
     {"path": "tests/one_layer/acceptance/ola.sh", "sha256": "f161e2c18eb7b7609fad12e49d3b659470b7892ca75b0aa8ebc555961d9eb667"},
     {"path": "tests/one_layer/generalization/dev/META", "sha256": "1de87149b3c2e0ab80b9ba225bdd1e8b928e7a2c921d18df7dcb804daec6f0b2"},
