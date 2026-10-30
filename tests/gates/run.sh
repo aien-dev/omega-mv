@@ -315,6 +315,7 @@ case "$step" in
   om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
                       # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
                       # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.
+                      # Then the program-mode om/blake3/blake3.om output contract (#726): digest, /dev/full, closed stdout.
     pin omega-bridge omega-bridge "$(lock om/omega-bridge.lock)"
     sh seed/omega-from-seed.sh > build/om-units-seed.log 2>&1 || { tail -3 build/om-units-seed.log; exit 1; }
     export OMEGA_OMC="$ROOT/seed/out/omc" OMEGA_BRIDGE="$PINS/omega-bridge"
@@ -322,6 +323,8 @@ case "$step" in
     sh om/units.sh --check
     sh om/sha256/parity/run.sh
     sh om/blake3/parity/run.sh
+    "$OMEGA_OMC" < om/blake3/blake3.om > build/om-units-blake3 && chmod 700 build/om-units-blake3
+    sh om/blake3/test-output.sh build/om-units-blake3
     ;;
   tilelab)            # omega#906: native .om tile planner and streaming (m,s,p) softmax. omc born from the seed
                       # here, then seed/tilelab/gate.sh (expected output, mutants failing for their own reason).
