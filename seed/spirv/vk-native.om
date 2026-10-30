@@ -1,0 +1,49 @@
+note Native CPU side of gate-vkspirv.sh vector phase: decimal line printer.
+note Appended after vk.unit.om together with a gate-generated main; prints
+note "word word ... \n" rows on fd 1. Exit 90 on a short write.
+global vkobuf uchar 4096
+global vkolen ulong 1
+global vkdig uchar 20
+fn vkflush to void
+n = get vkolen 0
+p = ulong 0
+while lt p n bound 4096
+k = write 1 vkobuf p sub n p
+if le k 0
+exit 90
+end
+p = add p ulong k
+end
+put vkolen 0 0
+end
+fn vkch c ulong to void
+put vkobuf get vkolen 0 uchar c
+put vkolen 0 add get vkolen 0 1
+if ge get vkolen 0 4000
+vkflush
+end
+end
+fn vkdec x ulong to void
+k = ulong 0
+v = x
+while true bound 20
+put vkdig k uchar add 48 rem v 10
+k = add k 1
+v = div v 10
+if eq v 0
+break
+end
+end
+while gt k 0 bound 20
+k = sub k 1
+vkch ulong get vkdig k
+end
+end
+fn vkword x ulong to void
+vkdec x
+vkch 32
+end
+fn vklast x ulong to void
+vkdec x
+vkch 10
+end

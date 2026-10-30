@@ -1,0 +1,39 @@
+# unit export return typed-arguments native-status
+# Vulkan GLCompute regression rows for gate-vkspirv.sh; portlab-* units are gen.om + kernels/<k>.om
+# consumed read-only from PORTLAB_DIR. Commas delimit arguments; colon separates type and decimal value.
+vk	vadd	ulong	ulong:1,ulong:2	0
+vk	vadd	ulong	ulong:18446744073709551615,ulong:2	0
+vk	vadd	ulong	ulong:0,ulong:0	0
+vk	saxpy	long	long:3,long:4,long:5	0
+vk	saxpy	long	long:-3,long:4,long:1	0
+vk	saxpy	long	long:-9223372036854775808,long:1,long:0	0
+vk	saxpy	long	long:4611686018427387904,long:2,long:0	101
+vk	saxpy	long	long:-1,long:-9223372036854775808,long:0	101
+vk	saxpy	long	long:9223372036854775807,long:1,long:1	101
+vk	rsum	ulong	ulong:7,ulong:0,ulong:1000	0
+vk	rsum	ulong	ulong:7,ulong:0,ulong:0	0
+vk	rsum	ulong	ulong:18446744073709551615,ulong:5,ulong:64	0
+portlab-lowp	kf8dh	ulong	ulong:0	0
+portlab-lowp	kf8dh	ulong	ulong:1	0
+portlab-lowp	kf8h	ulong	ulong:7,ulong:1000,ulong:0,ulong:1	0
+portlab-lowp	kf8h	ulong	ulong:7,ulong:1000,ulong:0,ulong:0	0
+portlab-lowp	kf8h	ulong	ulong:7,ulong:1000,ulong:1,ulong:1	0
+portlab-lowp	kf8h	ulong	ulong:7,ulong:1000,ulong:1,ulong:0	0
+portlab-lowp	kmxh	ulong	ulong:3,ulong:40	0
+portlab-lowp	kmxsc	ulong	ulong:3,ulong:5	0
+portlab-reduce	ksumu32	ulong	ulong:1,ulong:1000	0
+portlab-reduce	kmaxi32	ulong	ulong:1,ulong:1000	0
+portlab-scan	kscanh	ulong	ulong:5,ulong:1000	0
+portlab-scan	kscanat	ulong	ulong:5,ulong:1000,ulong:999	0
+portlab-dot	kdoti8	ulong	ulong:9,ulong:1000,ulong:0	0
+portlab-norm	krmsh	ulong	ulong:11,ulong:1000	0
+portlab-norm	krmsat	ulong	ulong:11,ulong:1000,ulong:17	0
+portlab-norm	ksmxh	ulong	ulong:12,ulong:1000	0
+portlab-norm	ksmxat	ulong	ulong:12,ulong:1000,ulong:3	0
+portlab-rope	kropeh	ulong	ulong:13,ulong:50	0
+portlab-rope	kropeat	ulong	ulong:13,ulong:49,ulong:63	0
+portlab-rope	kropeat	ulong	ulong:13,ulong:131071,ulong:0	0
+portlab-quant	kq4h	ulong	ulong:14,ulong:40	0
+portlab-quant	kq4at	ulong	ulong:14,ulong:77	0
+portlab-layout	kperm	ulong	ulong:15,ulong:30,ulong:40	0
+portlab-layout	knull	ulong	ulong:42	0

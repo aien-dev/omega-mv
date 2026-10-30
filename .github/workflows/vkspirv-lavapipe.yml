@@ -1,0 +1,51 @@
+# vkspirv-lavapipe: runs seed/spirv/gate-vkspirv.sh on a GitHub-hosted ubuntu-24.04-arm machine with
+# Mesa lavapipe (Vulkan on CPU) as the only Vulkan driver. The committed seed/out/omc (sha pinned by the
+# gate) builds the translator and the native comparison programs; spirv-val, the Vulkan loader and
+# lavapipe are distro oracles whose versions the gate logs. PortLab kernels are not in this repository,
+# so the job requires exit 3 with the portlab rows as the only NOT_RUN line. CPU evidence only, never GPU
+# qualification. Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
+name: vkspirv-lavapipe
+on:
+  pull_request:
+    paths: ["seed/spirv/**", "seed/wasm/**", "seed/out/omc", "tests/one_layer/omegese/dev/**", ".github/workflows/vkspirv-lavapipe.yml"]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  lavapipe:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: oracles
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends spirv-tools libvulkan-dev mesa-vulkan-drivers
+          dpkg-query -W spirv-tools libvulkan1 libvulkan-dev mesa-vulkan-drivers
+          ls /usr/share/vulkan/icd.d/
+      - name: gate-vkspirv
+        run: |
+          set +e
+          sh seed/spirv/gate-vkspirv.sh > gate.out 2>&1
+          rc=$?
+          set -e
+          cat gate.out
+          test "$rc" = 3
+          test "$(grep -c '^NOT_RUN' gate.out)" = 1
+          grep -q '^NOT_RUN portlab rows=24 ' gate.out
+          grep -q '^SUMMARY modules=' gate.out
+      - name: replay bundle (modules, inputs, native expectations for other Vulkan drivers)
+        run: |
+          cd build/seed/vkspirv
+          { echo replay.tsv; cut -f1,4,5 replay.tsv | tr '\t' '\n'; } | sort -u > replay.files
+          tar cf ../../../vkreplay.tar -T replay.files
+          sha256sum ../../../vkreplay.tar
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vkspirv-lavapipe
+          path: |
+            gate.out
+            build/seed/vkspirv/gate.log
+            vkreplay.tar
