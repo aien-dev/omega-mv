@@ -3,7 +3,7 @@ note All child exits are observed; signal, timeout, failed build, malformed orac
 note GNU objdump is an independent decoder. Hashes identify artifacts and do not prove correctness.
 text scratch "build/security673-native"
 text prefix "build/security673-native/"
-text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\n"
+text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\n3\n"
 text input " < "
 text output " > "
 text errors " 2> "
@@ -314,18 +314,46 @@ fn negative cc ulong gen ulong mode uchar count ulong to void
 src = fixture gen mode count
 elf = compile cc src 24
 end
+note boundaries: the real bdisp through probe cases 0..7 (imm19 and imm26 extremes, accepted with the exact
+note field), 8..15 (one word past each limit, misaligned target or origin: error 24), 16 (the last word below
+note the 8 MiB output ceiling, accepted) and 17 (the first word at it: error 14, the capacity invariant that
+note keeps every B/BL inside imm26). Then the range-free mutant (mode3 then mode0) must answer 81 exactly
+note on the four out-of-range cases: a removed range check is caught by name, alignment cases stay 24.
+fn want669 i ulong to ulong
+if and ge i 8 lt i 16
+ret 24
+end
+if eq i 17
+ret 14
+end
+ret 0
+end
 fn boundaries cc ulong mut ulong to void
 command mut
 argument 11
 src = run 1 0
 probe = compile cc src 0
-for i ulong 8
+for i ulong 18
 p = params uchar i 0 1
 command probe
-want = ulong 0
-if ge i 4
-want = ulong 24
+result = run p want669 i
 end
+end
+fn rangefree cc ulong mut ulong to void
+command mut
+argument 18
+bare = run 1 0
+command mut
+argument 11
+fsrc = run bare 0
+fprobe = compile cc fsrc 0
+for i ulong 18
+p = params uchar i 0 1
+want = want669 i
+if or or eq i 8 eq i 9 or eq i 12 eq i 13
+want = ulong 81
+end
+command fprobe
 result = run p want
 end
 end
@@ -388,6 +416,7 @@ gen = compile cc2 2 0
 mut = compile cc2 3 0
 checker = compile cc2 4 0
 boundaries cc2 mut
+rangefree cc2 mut
 array = compile cc2 15 0
 command array
 result = run 13 0
