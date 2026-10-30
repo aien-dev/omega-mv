@@ -17,8 +17,9 @@
 /*
  * OMEGA-NUMERIC-0 GB10 executor. Every request passes
  * omega_numeric_submit_check before any device is opened: unknown ops,
- * ops without a GB10 encoding (EXP, LOG and the refused variants
- * such as LDS.U8 or SHFL_UP), operand shapes the kernel cannot carry, and a
+ * ops without a GB10 encoding (the refused variants such as LDS.U8 or
+ * SHFL_UP; DIV, SQRT, EXP and LOG run as whole-program kernels,
+ * omega_numeric_op_whole_kernel), operand shapes the kernel cannot carry, and a
  * patch that fails the structural check (shared-memory order and bounds,
  * barriers, reduction order) are refused here with a message on stderr. The
  * structural check runs again on the exact QMD that is submitted. The kernel is the calibrated vecadd with the op's patch words from
@@ -95,11 +96,12 @@ int omega_gb10_execute_simt_op(const char *op_name,
     const OmegaNumericOpInfo *info = omega_numeric_op_find(op_name);
 
     if (omega_numeric_op_whole_kernel(info->op)) {
-        /* DIV/SQRT: the whole-program kernels of src/omega_numeric_divsqrt_gb10.c
-         * (E1 row 7). omega_ds_gb10_run repeats the argument check and checks
-         * the kernel image, its nvdisasm-verified digest and the QMD before it
-         * opens the device. Inputs and outputs travel as bit patterns. */
-        OmegaDsOp dop = info->op == OMEGA_NOP_DIV ? OMEGA_DS_DIV : OMEGA_DS_SQRT;
+        /* DIV/SQRT/EXP/LOG: the whole-program kernels of
+         * src/omega_numeric_divsqrt_gb10.c (E1 rows 7 and 10). omega_ds_gb10_run
+         * repeats the argument check and checks the kernel image, its
+         * nvdisasm-verified digest and the QMD before it opens the device.
+         * Inputs and outputs travel as bit patterns. */
+        OmegaDsOp dop = omega_ds_op_for_numeric(info->op);
         uint32_t *ua = malloc(count * sizeof(uint32_t));
         uint32_t *ub = malloc(count * sizeof(uint32_t));
         uint32_t *uo = malloc(count * sizeof(uint32_t));

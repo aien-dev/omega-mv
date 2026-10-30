@@ -22,7 +22,7 @@
  *                   host model of the body vs omega_math_* and the AArch64
  *                   FDIV/FSQRT on the hard corpus, edge classes and random
  *                   samples. Exit 0 only when every [PASS] holds. No device.
- *   --dump DIR      writes DIR/{div,sqrt,exp2,log2}.bin and .lst (the
+ *   --dump DIR      writes DIR/<op>.bin and .lst (div, sqrt, exp2, ..., exp, log; the
  *                   expected nvdisasm text) for tools/divsqrt_nvdisasm_check.sh
  *   --digest        prints the SHA-256 of each emitted kernel
  *   --host-sqrt-all host model of SQRT on all 2^32 inputs
@@ -325,7 +325,7 @@ static int dump(const char *dir) {
         uint8_t code[OMEGA_DS_MAX_CODE_BYTES];
         size_t len = 0;
         char path[512];
-        static const char *const NM[OMEGA_DS_OP_COUNT] = { "div", "sqrt", "exp2", "log2", "sigmoid", "tanh", "sin", "cos", "erf", "gelu", "rsqrt" };
+        static const char *const NM[OMEGA_DS_OP_COUNT] = { "div", "sqrt", "exp2", "log2", "sigmoid", "tanh", "sin", "cos", "erf", "gelu", "rsqrt", "exp", "log" };
         const char *nm = NM[op];
         if (build((OmegaDsOp)op, code, &len) != 0 || omega_ds_listing((OmegaDsOp)op, lst, sizeof(lst)) != 0) return 1;
         snprintf(path, sizeof(path), "%s/%s.bin", dir, nm);

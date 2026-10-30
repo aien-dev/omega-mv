@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -836,9 +837,95 @@ static int e1_exhaustive(void) {
     printf("E1 exhaustive verdict: %s (%zu ops x 2^32 inputs, %d failed)\n", fails ? "FAIL" : "PASS", nops, fails);
     return fails ? 1 : 0;
 }
+
+/* --ulp-exhaustive EXP|LOG: ulp distance of omega_math_exp / omega_math_log
+ * from the binary128 oracle (or_exp / or_log, rounded once) on every 2^32
+ * input, in OMEGA_ULP_PROCS (default 5) child processes that interleave
+ * 2^16-input blocks. Prints the maxima, the smallest input bit pattern that
+ * reaches each maximum, and a distance histogram; exits 0 only when every
+ * input was visited, NaN classes match and no distance exceeds the declared
+ * bound. Not part of the Gate 5 IDs. */
+typedef struct {
+    uint64_t n, n_norm, n_sub, nan_bad, over, hist[65];
+    uint32_t max_norm, arg_norm, max_sub, arg_sub;
+} UlpCount;
+
+static void ulp_take(uint32_t d, uint32_t x, uint32_t *max, uint32_t *arg) {
+    if (d > *max || (d == *max && x < *arg)) { *max = d; *arg = x; }
+}
+
+static int ulp_exhaustive(const char *name) {
+    OmegaNumericOp op;
+    uint32_t bound;
+    if (strcmp(name, "EXP") == 0) { op = OMEGA_NOP_EXP; bound = NUM_ORACLE_EXP_ULP; }
+    else if (strcmp(name, "LOG") == 0) { op = OMEGA_NOP_LOG; bound = NUM_ORACLE_LOG_ULP; }
+    else { fprintf(stderr, "--ulp-exhaustive: op must be EXP or LOG\n"); return 2; }
+    const char *pe = getenv("OMEGA_ULP_PROCS");
+    int procs = pe ? atoi(pe) : 5;
+    if (procs < 1 || procs > 64) { fprintf(stderr, "OMEGA_ULP_PROCS must be 1..64\n"); return 2; }
+    UlpCount *c = mmap(NULL, sizeof(UlpCount) * (size_t)procs, PROT_READ | PROT_WRITE,
+                       MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (c == MAP_FAILED) { perror("mmap"); return 1; }
+    memset(c, 0, sizeof(UlpCount) * (size_t)procs);
+    pid_t pids[64];
+    fflush(stdout);
+    for (int j = 0; j < procs; j++) {
+        pids[j] = fork();
+        if (pids[j] < 0) { perror("fork"); return 1; }
+        if (pids[j] != 0) continue;
+        UlpCount *k = &c[j];
+        for (uint64_t blk = (uint64_t)j; blk < (1ull << 16); blk += (uint64_t)procs) {
+            for (uint32_t i = 0; i < (1u << 16); i++) {
+                uint32_t x = (uint32_t)(blk << 16) | i;
+                uint32_t want = op == OMEGA_NOP_EXP ? or_exp(x) : or_log(x);
+                uint32_t got = U(op == OMEGA_NOP_EXP ? omega_math_exp(F(x)) : omega_math_log(F(x)));
+                k->n++;
+                if (or_is_nan(want) || or_is_nan(got)) {
+                    if (!(or_is_nan(want) && or_is_nan(got))) k->nan_bad++;
+                    continue;
+                }
+                uint32_t d = or_ulp_distance(want, got);
+                k->hist[d < 64 ? d : 64]++;
+                if (d > bound) k->over++;
+                if ((want & 0x7f800000u) == 0) { k->n_sub++; ulp_take(d, x, &k->max_sub, &k->arg_sub); }
+                else                           { k->n_norm++; ulp_take(d, x, &k->max_norm, &k->arg_norm); }
+            }
+        }
+        _exit(0);
+    }
+    int fails = 0;
+    for (int j = 0; j < procs; j++) {
+        int st = 0;
+        if (waitpid(pids[j], &st, 0) < 0 || !WIFEXITED(st) || WEXITSTATUS(st) != 0) fails++;
+    }
+    UlpCount t;
+    memset(&t, 0, sizeof(t));
+    t.arg_norm = t.arg_sub = 0xffffffffu;
+    for (int j = 0; j < procs; j++) {
+        t.n += c[j].n; t.n_norm += c[j].n_norm; t.n_sub += c[j].n_sub;
+        t.nan_bad += c[j].nan_bad; t.over += c[j].over;
+        for (int h = 0; h < 65; h++) t.hist[h] += c[j].hist[h];
+        if (c[j].n_norm) ulp_take(c[j].max_norm, c[j].arg_norm, &t.max_norm, &t.arg_norm);
+        if (c[j].n_sub) ulp_take(c[j].max_sub, c[j].arg_sub, &t.max_sub, &t.arg_sub);
+    }
+    printf("OMEGA_NUMERIC_ULP_JSON:{\"op\":\"%s\",\"oracle\":\"binary128_series_rounded_once\",\"inputs\":%llu,"
+           "\"bound_ulp\":%u,\"normal_or_inf_results\":%llu,\"max_ulp_normal_or_inf\":%u,\"argmax_normal\":\"0x%08x\","
+           "\"subnormal_or_zero_results\":%llu,\"max_ulp_subnormal_or_zero\":%u,\"argmax_subnormal\":\"0x%08x\","
+           "\"nan_class_mismatches\":%llu,\"over_bound\":%llu,\"hist\":[",
+           name, (unsigned long long)t.n, bound, (unsigned long long)t.n_norm, t.max_norm, t.arg_norm,
+           (unsigned long long)t.n_sub, t.max_sub, t.arg_sub, (unsigned long long)t.nan_bad,
+           (unsigned long long)t.over);
+    for (int h = 0; h < 65; h++) printf("%s%llu", h ? "," : "", (unsigned long long)t.hist[h]);
+    printf("]}\n");
+    bool pass = fails == 0 && t.n == (1ull << 32) && t.nan_bad == 0 && t.over == 0;
+    printf("ULP exhaustive %s verdict: %s\n", name, pass ? "PASS" : "FAIL");
+    return pass ? 0 : 1;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--e1-exhaustive") == 0) return e1_exhaustive();
-    if (argc > 1) { fprintf(stderr, "usage: %s [--e1-exhaustive]\n", argv[0]); return 2; }
+    if (argc == 3 && strcmp(argv[1], "--ulp-exhaustive") == 0) return ulp_exhaustive(argv[2]);
+    if (argc > 1) { fprintf(stderr, "usage: %s [--e1-exhaustive | --ulp-exhaustive EXP|LOG]\n", argv[0]); return 2; }
 #ifdef OMEGA_NUMERIC_CPU_ONLY
     const bool gb10 = false;
 #else
@@ -883,13 +970,13 @@ int main(int argc, char **argv) {
         if (!info->gb10_encoded) continue;
         encoded++;
         if (omega_numeric_op_whole_kernel(info->op)) {
-            /* DIV/SQRT: whole-program kernel, structural check and the
+            /* DIV/SQRT/EXP/LOG: whole-program kernel, structural check and the
              * nvdisasm-verified digest (src/omega_numeric_divsqrt_gb10.c). The
              * vecadd patch path must refuse it. */
             static uint8_t dcode[OMEGA_DS_MAX_CODE_BYTES];
             size_t dlen = 0;
             char derr[256];
-            OmegaDsOp dop = info->op == OMEGA_NOP_DIV ? OMEGA_DS_DIV : OMEGA_DS_SQRT;
+            OmegaDsOp dop = omega_ds_op_for_numeric(info->op);
             OmegaNumericPatchInsn dp[OMEGA_NUMERIC_PATCH_MAX];
             uint8_t pcode[0x200];
             if (omega_ds_build_kernel(dop, dcode, sizeof(dcode), &dlen) != 0 ||
@@ -908,7 +995,7 @@ int main(int argc, char **argv) {
     }
     printf("[*] Provenance entries: %zu, encoded ops: %zu\n", omega_numeric_get_opcode_count(), encoded);
     report("PROVENANCE_MATCHES_EXECUTOR",
-           fixtures_rc == 0 && prov_problems == 0 && build_ok && encoded == 40 &&
+           fixtures_rc == 0 && prov_problems == 0 && build_ok && encoded == 42 &&
            omega_numeric_get_opcode_count() == 52);
 
     /* Refusal before submission: never a silent wrong instruction. */
@@ -932,9 +1019,10 @@ int main(int argc, char **argv) {
             refuse_ok = 0;
         printf("    refused %-14s rc=%d: %s\n", nname, rc, err);
     }
-    /* only EXP LOG remain refused (the 23 E1 scalar ops are encoded, E1 WP-C;
-     * DIV SQRT run the E1 row 7 whole-program kernels) */
-    if (refused_ops != omega_numeric_op_count() - 40) refuse_ok = 0;
+    /* no registry op remains refused (the 23 E1 scalar ops are encoded, E1
+     * WP-C; DIV SQRT run the E1 row 7 and EXP LOG the E1 row 10
+     * whole-program kernels) */
+    if (refused_ops != omega_numeric_op_count() - 42) refuse_ok = 0;
     {
         char err[256];
         fill_c(g_c, 0x3f800000u);

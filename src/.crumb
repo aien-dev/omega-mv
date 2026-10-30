@@ -163,8 +163,8 @@
           "purpose": "Synapse ADR 0003 J1 binary codec port: layout list, generator, syn_codec.osc (A1 WAL records + c"
         },
         {
-          "digest": "9723dd7c18d4e2c22db631680974e1025bccb9c309619424e2f4dfcc43cc7068",
-          "last_commit": "d863780eb",
+          "digest": "74e85b5aba1ca8a2e55d40217219a7dbfcec74538b08dfe14be3eb7c3479fbc5",
+          "last_commit": "0919efc3c",
           "name": "tensor",
           "purpose": "M20 OMEGA_TENSOR: immutable tensor semantic layer, views, generation-checked storage, CPU realiz"
         },
@@ -187,15 +187,15 @@
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:2f729945214be989a74d7c2064ae4ba3c2deb52ebea3f334b459198a7bd032ed",
-      "compiled_at": "2026-10-30T02:49:13Z",
+      "children_root": "sha256:a96520fb8a6e06a052ba6e7ec03269200586434ff4a7e7cf8f52d165f872c03b",
+      "compiled_at": "2026-10-30T16:32:21Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:aaf5acb82fd4c720cd60c85fd6087f636c72a98e2f3740c9295dcfa525dc64d7",
+      "digest": "sha256:89e6b8ef37fe44c68c3f355b0386ed8dada8d6283c52c609e3aab999f40d1507",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 568,
-      "generated_at_commit": "2cb1ccb5d3c1a1ce1cb94a7a3dd3c221395c4e15",
-      "source_tree": "sha256:7f1fef46a27e8baf5cf567bb590d417ede3767c5f07e714d0f0812af0645bb4b"
+      "generated_at_commit": "421259518f758c00ceec76b12705ab0346de291e",
+      "source_tree": "sha256:c0592b2714c39a21ab587d952cd961f653d335cfae5b08cfb64137ccce99e7a8"
     },
     "owner_lane": "",
     "provenance": {

@@ -1,4 +1,4 @@
-# Manifest for tools/chip_run.sh: E1 row 10, GB10 transcendentals (EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT),
+# Manifest for tools/chip_run.sh: E1 row 10, GB10 transcendentals (EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT EXP LOG),
 # every 2^32 input compared bit for bit with the CPU tier. Sourced as shell by chip_run.sh,
 # which provides $HERE (omega root) and $PHYSICS. Forge queue only.
 # Converted from the old tools/run_numeric_transc_gate.sh (origin/main) without changing what
@@ -6,7 +6,8 @@
 # words, same receipt fields in the same order. The old-versus-new differences are listed in
 # the PR and pinned by tests/test_chip_run_transc_manifest.sh.
 # Verdict semantics, from tests/test_omega_numeric_transc_gb10.c:
-#   one "RESULT chip <op> checked=.. exhaustive=.. mismatches=.. unwritten=.. verdict=.." per op,
+#   one "RESULT chip <op> checked=.. exhaustive=.. mismatches=.. unwritten=.. verdict=.. digest=<hex>" per op
+#   (digest: full-domain output digest, the tree of tests/test_omega_transc.c; "none" unless exhaustive),
 #   then "VERDICT PASS|FAIL|NOT_RUN" (line 223); exit 1 unless PASS.
 GATE=E1-TRANSC-GB10
 OWNER="lane2 E1 transcendental GB10 chip run"
@@ -14,7 +15,7 @@ TEST_SOURCE="tests/test_omega_numeric_transc_gb10.c"
 SOURCES="src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
 EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 # The wrapper passes "--chip OP..." itself; this is the old default for direct use.
-RUN_ARGS="--chip EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT"
+RUN_ARGS="--chip EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT EXP LOG"
 # Old verdict: the last "VERDICT <word>" line of the chip log. RESULT lines come before it.
 VERDICT_RE='^RESULT|^VERDICT'
 PASS_LINE='^VERDICT PASS([^A-Z_]|$)'
@@ -42,8 +43,8 @@ echo "== host tier"
 make -s -C . build/test_omega_numeric_transc_gb10_cpu > "$CHIPRUN_RUN_DIR/host-build.log" 2>&1 || { echo "host build failed"; exit 1; }
 echo "== nvdisasm provenance"
 tools/divsqrt_nvdisasm_check.sh > "$CHIPRUN_RUN_DIR/nvdisasm.log" 2>&1; NVD_RC=$?
-grep -E "^\[|^VERDICT|^nvdisasm" "$CHIPRUN_RUN_DIR/nvdisasm.log"
-grep "^nvdisasm" "$CHIPRUN_RUN_DIR/nvdisasm.log" | sed "s/^/HOSTTIER_NVD:/"
+grep -E "^\[|^VERDICT|^disassembler" "$CHIPRUN_RUN_DIR/nvdisasm.log"
+grep -E "^disassembler|^VERDICT" "$CHIPRUN_RUN_DIR/nvdisasm.log" | sed "s/^/HOSTTIER_NVD:/"
 build/test_omega_numeric_transc_gb10_cpu --digest > "$CHIPRUN_RUN_DIR/kdig.txt" || { echo "kernel digest failed"; exit 1; }
 sed "s/^/HOSTTIER_KDIG:/" "$CHIPRUN_RUN_DIR/kdig.txt"
 build/test_omega_numeric_transc_gb10_cpu; HOST_RC=$?
@@ -57,14 +58,14 @@ build/test_omega_numeric_transc_gb10_cpu; HOST_RC=$?
 RECEIPT_EXTRA_JQ='
 def tagged($t): $hostlog | split("\n") | map(select(startswith($t)) | .[($t | length):]);
 def chipword: ([$log | split("\n")[] | capture("^VERDICT (?<w>[A-Z_]*)") | .w] | last) // "";
-def typed($v): if $v == "true" then true elif $v == "false" then false elif ($v | test("^[0-9]")) then ($v | tonumber) else $v end;
+def typed($v): if $v == "true" then true elif $v == "false" then false elif ($v | test("^[0-9]+$")) then ($v | tonumber) else $v end;
 def opsjson: try ([$log | split("\n")[] | select(startswith("RESULT chip ")) | split(" ") | map(select(length > 0)) as $f
   | reduce $f[3:][] as $kv ({op: $f[2]}; ($kv | split("=")) as $p | . + {($p[0]): typed(if ($p | length) > 1 then ($p[1:] | join("=")) else $kv end)})]) catch [];
 . as $r | (chipword) as $cw
 | {
   gate: $r.gate,
   row: "E1 gap table row 10: GB10 transcendentals bit-identical to the frozen CPU sequences",
-  reference: "omega_math_<op> of src/omega_numeric_transc.c (CPU tier), every 32-bit input, bits compared exactly",
+  reference: "omega_math_<op> of src/omega_numeric_transc.c (EXP, LOG: src/omega_numeric.c) (CPU tier), every 32-bit input, bits compared exactly",
   omega_commit: $r.omega_commit,
   omega_tree_clean_before: $r.omega_tree_clean_before,
   omega_tree_clean_after: $r.omega_tree_clean_after,

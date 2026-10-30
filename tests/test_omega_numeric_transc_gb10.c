@@ -16,7 +16,8 @@
 
 /*
  * E1 row 10: GB10 realizations of the frozen transcendental sequences
- * (src/omega_numeric_transc.c), bit-identical to the CPU tier.
+ * (src/omega_numeric_transc.c; natural EXP and LOG: omega_math_exp and
+ * omega_math_log in src/omega_numeric.c), bit-identical to the CPU tier.
  *
  * Modes (one per run):
  *   (none)            host tier: each op's kernel builds, passes the
@@ -31,6 +32,12 @@
  *                     compared bit for bit with omega_math_<op> (NaN results
  *                     included: the CPU tier writes 0x7fc00000). One RESULT
  *                     line per op, then a VERDICT line.
+ * --host-all and --chip also print "<OP> full-domain digest <hex>" over the
+ * outputs they produced (model or chip), with the frozen definition of
+ * tests/test_omega_transc.c: B_c,b = sha256 of the 2^14 FP32 output words
+ * (little-endian) for inputs c*2^24 + b*2^14 .. + 2^14 - 1 in increasing
+ * order, C_c = sha256(B_c,0 .. B_c,1023), D = sha256(C_0 .. C_255). The
+ * chip RESULT line carries it as digest=<hex> (exhaustive runs only).
  * Output lines: [PASS] / [FAIL] ID, RESULT ..., VERDICT ...
  */
 #include "omega_numeric.h"
@@ -44,7 +51,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const OmegaDsOp OPS[] = { OMEGA_DS_EXP2, OMEGA_DS_LOG2, OMEGA_DS_SIGMOID, OMEGA_DS_TANH, OMEGA_DS_SIN, OMEGA_DS_COS, OMEGA_DS_ERF, OMEGA_DS_GELU, OMEGA_DS_RSQRT };
+#include "sha256.h"
+
+static const OmegaDsOp OPS[] = { OMEGA_DS_EXP2, OMEGA_DS_LOG2, OMEGA_DS_SIGMOID, OMEGA_DS_TANH, OMEGA_DS_SIN, OMEGA_DS_COS, OMEGA_DS_ERF, OMEGA_DS_GELU, OMEGA_DS_RSQRT, OMEGA_DS_EXP, OMEGA_DS_LOG };
 #define N_OPS (sizeof(OPS) / sizeof(OPS[0]))
 
 static int g_pass, g_fail;
@@ -66,6 +75,8 @@ static uint32_t want_bits(OmegaDsOp op, uint32_t a) {
     case OMEGA_DS_ERF: r = omega_math_erf(x); break;
     case OMEGA_DS_GELU: r = omega_math_gelu(x); break;
     case OMEGA_DS_RSQRT: r = omega_math_rsqrt(x); break;
+    case OMEGA_DS_EXP: r = omega_math_exp(x); break;
+    case OMEGA_DS_LOG: r = omega_math_log(x); break;
     default: return 0xffffffffu;
     }
     return omega_float_to_bits(r);
@@ -84,6 +95,9 @@ static const uint32_t EDGE_MAG[] = {
     0x42fe0000u, 0x42ffffffu, 0x43000000u, 0x43000001u, 0x43160000u, 0x4316ffffu, 0x43170000u,
     0x43170001u, 0x42fc0000u, 0x42fd0000u, 0x7f7fffffu, 0x7f800000u, 0x7f800001u, 0x7fc00000u,
     0x7fffffffu,
+    /* EXP: the +-104 and 88.722839 cuts, 2^k scaling branches; LOG: sqrt(2) cut */
+    0x42cffffeu, 0x42cfffffu, 0x42d00000u, 0x42d00001u, 0x42b17217u, 0x42b17218u, 0x42b17219u,
+    0x42aeac4fu, 0x42aeac50u, 0x42fc0001u, 0x3fb504f2u, 0x3fb504f5u, 0x3f317217u, 0x3f317218u,
 };
 #define N_EDGE_MAG (sizeof(EDGE_MAG) / sizeof(EDGE_MAG[0]))
 
@@ -161,9 +175,12 @@ static int digests(void) {
 /* ---- exhaustive comparisons (threads) ---------------------------------------- */
 
 #define T 16
+#define BLOCK_BITS 14u                       /* digest block: 2^14 inputs    */
+static uint8_t g_blk[1u << (32u - BLOCK_BITS)][32];   /* B_c,b, indexed by input >> 14 */
+
 typedef struct {
     OmegaDsOp op;
-    uint64_t lo, hi;          /* inputs [lo, hi)                          */
+    uint64_t lo, hi;          /* inputs [lo, hi), 2^14-aligned            */
     const uint32_t *chip;     /* chip outputs for inputs base..; NULL: model */
     uint64_t base;
     uint64_t bad, fill;
@@ -172,9 +189,14 @@ typedef struct {
 
 static void *slice_run(void *p) {
     Slice *s = p;
+    static __thread uint8_t buf[4u << BLOCK_BITS];
     for (uint64_t u = s->lo; u < s->hi; u++) {
         uint32_t got = s->chip ? s->chip[u - s->base] : omega_ds_host_exec(s->op, (uint32_t)u, 0);
         uint32_t want = want_bits(s->op, (uint32_t)u);
+        uint32_t i = (uint32_t)u & ((1u << BLOCK_BITS) - 1u);
+        buf[4 * i] = (uint8_t)got; buf[4 * i + 1] = (uint8_t)(got >> 8);
+        buf[4 * i + 2] = (uint8_t)(got >> 16); buf[4 * i + 3] = (uint8_t)(got >> 24);
+        if (i == (1u << BLOCK_BITS) - 1u) sha256_hash(buf, sizeof(buf), g_blk[u >> BLOCK_BITS]);
         if (got != want) {
             if (s->bad < 4) { s->first_in[s->bad] = (uint32_t)u; s->first_got[s->bad] = got; s->first_want[s->bad] = want; }
             s->bad++;
@@ -182,6 +204,22 @@ static void *slice_run(void *p) {
         }
     }
     return NULL;
+}
+
+static void digest_of(const uint8_t (*dig)[32], uint32_t n, uint8_t out[32]) {
+    sha256_ctx c;
+    sha256_init(&c);
+    for (uint32_t i = 0; i < n; i++) sha256_update(&c, dig[i], 32);
+    sha256_final(&c, out);
+}
+
+/* D over g_blk after a full 2^32 pass, as lowercase hex. */
+static void full_domain_digest(char hex[65]) {
+    static uint8_t ch[256][32];
+    uint8_t d[32];
+    for (uint32_t c = 0; c < 256; c++) digest_of((const uint8_t (*)[32])g_blk[c << (24u - BLOCK_BITS)], 1u << (24u - BLOCK_BITS), ch[c]);
+    digest_of((const uint8_t (*)[32])ch, 256, d);
+    for (int k = 0; k < 32; k++) sprintf(hex + 2 * k, "%02x", d[k]);
 }
 
 /* Compares [lo, hi) with T threads; adds to *bad and *fill. */
@@ -210,9 +248,12 @@ static int compare_range(OmegaDsOp op, uint64_t lo, uint64_t hi, const uint32_t 
 
 static int host_all(OmegaDsOp op) {
     uint64_t bad = 0, fill = 0;
+    char hex[65];
     omega_ds_host_exec(op, 0, 0); /* fill the body cache before threads */
     if (compare_range(op, 0, 1ull << 32, NULL, &bad, &fill, 0) != 0) { printf("[FAIL] threads\n"); return 2; }
+    full_domain_digest(hex);
     printf("RESULT host %s checked=4294967296 mismatches=%" PRIu64 "\n", omega_ds_op_name(op), bad);
+    printf("%s full-domain digest %s\n", omega_ds_op_name(op), hex);
     return bad ? 1 : 0;
 }
 
@@ -237,8 +278,13 @@ static int chip(OmegaDsOp *ops, size_t nops) {
         const char *v = bad ? "FAIL" : (dev_err || checked != (1ull << 32)) ? "NOT_RUN" : "PASS";
         any_fail |= !strcmp(v, "FAIL");
         any_notrun |= !strcmp(v, "NOT_RUN");
-        printf("RESULT chip %s checked=%" PRIu64 " exhaustive=%s mismatches=%" PRIu64 " unwritten=%" PRIu64 " verdict=%s\n",
-               omega_ds_op_name(op), checked, checked == (1ull << 32) ? "true" : "false", bad, fill, v);
+        char hex[65] = "none";
+        if (checked == (1ull << 32)) {
+            full_domain_digest(hex);
+            printf("%s full-domain digest %s\n", omega_ds_op_name(op), hex);
+        }
+        printf("RESULT chip %s checked=%" PRIu64 " exhaustive=%s mismatches=%" PRIu64 " unwritten=%" PRIu64 " verdict=%s digest=%s\n",
+               omega_ds_op_name(op), checked, checked == (1ull << 32) ? "true" : "false", bad, fill, v, hex);
     }
     const char *v = any_fail ? "FAIL" : any_notrun ? "NOT_RUN" : "PASS";
     printf("VERDICT %s\n", v);

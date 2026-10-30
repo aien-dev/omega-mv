@@ -1,0 +1,55 @@
+    EXP batch 16/256 done, mismatches so far 0
+    EXP batch 32/256 done, mismatches so far 0
+    EXP batch 48/256 done, mismatches so far 0
+    EXP batch 64/256 done, mismatches so far 0
+    EXP batch 80/256 done, mismatches so far 0
+    EXP batch 96/256 done, mismatches so far 0
+    EXP batch 112/256 done, mismatches so far 0
+    EXP batch 128/256 done, mismatches so far 0
+    EXP batch 144/256 done, mismatches so far 0
+    EXP batch 160/256 done, mismatches so far 0
+    EXP batch 176/256 done, mismatches so far 0
+    EXP batch 192/256 done, mismatches so far 0
+    EXP batch 208/256 done, mismatches so far 0
+    EXP batch 224/256 done, mismatches so far 0
+    EXP batch 240/256 done, mismatches so far 0
+    EXP batch 256/256 done, mismatches so far 0
+EXP full-domain digest 413c342928951fb078a3f6ecdc56221f26a2a6b19a1b7e099227bf38c1c2829c
+RESULT chip EXP checked=4294967296 exhaustive=true mismatches=0 unwritten=0 verdict=PASS digest=413c342928951fb078a3f6ecdc56221f26a2a6b19a1b7e099227bf38c1c2829c
+    LOG batch 16/256 done, mismatches so far 0
+    LOG batch 32/256 done, mismatches so far 0
+    LOG batch 48/256 done, mismatches so far 0
+    LOG batch 64/256 done, mismatches so far 0
+    LOG batch 80/256 done, mismatches so far 0
+    LOG batch 96/256 done, mismatches so far 0
+    LOG batch 112/256 done, mismatches so far 0
+    LOG batch 128/256 done, mismatches so far 0
+    LOG batch 144/256 done, mismatches so far 0
+    LOG batch 160/256 done, mismatches so far 0
+    LOG batch 176/256 done, mismatches so far 0
+    LOG batch 192/256 done, mismatches so far 0
+    LOG batch 208/256 done, mismatches so far 0
+    LOG batch 224/256 done, mismatches so far 0
+    LOG batch 240/256 done, mismatches so far 0
+    LOG batch 256/256 done, mismatches so far 0
+LOG full-domain digest 05e94f63d078b9d460bc94305389a874216c6cb50d2d462b8d4bd0943c86f51e
+RESULT chip LOG checked=4294967296 exhaustive=true mismatches=0 unwritten=0 verdict=PASS digest=05e94f63d078b9d460bc94305389a874216c6cb50d2d462b8d4bd0943c86f51e
+    EXP2 batch 16/256 done, mismatches so far 0
+    EXP2 batch 32/256 done, mismatches so far 0
+    EXP2 batch 48/256 done, mismatches so far 0
+    EXP2 batch 64/256 done, mismatches so far 0
+    EXP2 batch 80/256 done, mismatches so far 0
+    EXP2 batch 96/256 done, mismatches so far 0
+    EXP2 batch 112/256 done, mismatches so far 0
+    EXP2 batch 128/256 done, mismatches so far 0
+    EXP2 batch 144/256 done, mismatches so far 0
+    EXP2 batch 160/256 done, mismatches so far 0
+    EXP2 batch 176/256 done, mismatches so far 0
+    EXP2 batch 192/256 done, mismatches so far 0
+    EXP2 batch 208/256 done, mismatches so far 0
+    EXP2 batch 224/256 done, mismatches so far 0
+    EXP2 batch 240/256 done, mismatches so far 0
+    EXP2 batch 256/256 done, mismatches so far 0
+EXP2 full-domain digest 227cb65782077d8224121eca527f8beba5d9fc80648ee57c38895466a8345bd8
+RESULT chip EXP2 checked=4294967296 exhaustive=true mismatches=0 unwritten=0 verdict=PASS digest=227cb65782077d8224121eca527f8beba5d9fc80648ee57c38895466a8345bd8
+VERDICT PASS

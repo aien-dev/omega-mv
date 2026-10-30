@@ -24,6 +24,13 @@
  *                the ops the tensor layer submits AND that have a GB10 E1
  *                kernel; every other op is refused with
  *                OMEGA_NUMERIC_ERR_NOT_ENCODED before a device is opened.
+ *   transc       omega_ds_gb10_run (E1 row-10 whole-program kernels,
+ *                src/omega_numeric_divsqrt_gb10.c) for the eleven bounded-
+ *                contract unary ops EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU
+ *                RSQRT EXP LOG, chunks of at most OMEGA_DS_MAX_BATCH elements;
+ *                each kernel is bit-exact with its E1 CPU sequence (E1 chip
+ *                receipts in evidence-out/E1-TRANSC-GB10). Any other unary op
+ *                is refused with OMEGA_NUMERIC_ERR_NOT_ENCODED.
  *   reduce       omega_reduce_gb10 (E1 WP-D), n <= OMEGA_REDUCE_GB10_MAX_N,
  *                after the declared-order strcmp the CPU seam also makes.
  *   reduce_rows  SUM: every tree level of every row in one pass of E1
@@ -47,6 +54,7 @@
 #include <time.h>
 
 #include "omega_numeric.h"
+#include "omega_numeric_divsqrt_gb10.h"
 #include "omega_numeric_reduce.h"
 
 _Static_assert(sizeof(OMEGA_REDUCE_DECLARED_ORDER) == sizeof(OMEGA_TENSOR_REDUCE_DECLARED_ORDER),
@@ -55,8 +63,8 @@ _Static_assert(OMEGA_NUMERIC_MAX_COUNT % 32u == 0, "chunks must be whole warps")
 
 /* Ops the semantic layer submits (omega_tensor.c: unary SQRT, BINARY_MAP,
  * fma FFMA_V, matmul FMUL, cast conversions) -> E1 GB10 op name. Ops that
- * are absent (EXP, LOG, uniform-c FFMA, MUFU seeds, LDS/SHFL, ...) are
- * refused. */
+ * are absent (EXP, LOG: they go through the transc entry below; uniform-c
+ * FFMA, MUFU seeds, LDS/SHFL, ...) are refused. */
 static const char *const GB10_OP_NAME[OMEGA_NOP_COUNT] = {
     [OMEGA_NOP_FADD] = "FADD",               [OMEGA_NOP_FSUB] = "FSUB",
     [OMEGA_NOP_FMUL] = "FMUL",               [OMEGA_NOP_DIV] = "DIV",
@@ -76,6 +84,22 @@ static const char *const GB10_OP_NAME[OMEGA_NOP_COUNT] = {
 const char *omega_tensor_gb10_op_name(OmegaNumericOp op) {
     if ((unsigned)op >= OMEGA_NOP_COUNT) return NULL;
     return GB10_OP_NAME[op];
+}
+
+/* Bounded-contract unary ops -> E1 row-10 whole-program kernel. Entries are
+ * offset by one so an absent op reads 0 (= refused). */
+static const unsigned char GB10_TRANSC_DS1[OMEGA_TU_COUNT] = {
+    [OMEGA_TU_EXP2] = 1 + OMEGA_DS_EXP2,       [OMEGA_TU_LOG2] = 1 + OMEGA_DS_LOG2,
+    [OMEGA_TU_SIGMOID] = 1 + OMEGA_DS_SIGMOID, [OMEGA_TU_TANH] = 1 + OMEGA_DS_TANH,
+    [OMEGA_TU_SIN] = 1 + OMEGA_DS_SIN,         [OMEGA_TU_COS] = 1 + OMEGA_DS_COS,
+    [OMEGA_TU_ERF] = 1 + OMEGA_DS_ERF,         [OMEGA_TU_GELU] = 1 + OMEGA_DS_GELU,
+    [OMEGA_TU_RSQRT] = 1 + OMEGA_DS_RSQRT,
+    [OMEGA_TU_EXP] = 1 + OMEGA_DS_EXP, [OMEGA_TU_LOG] = 1 + OMEGA_DS_LOG,   /* MUT:GB10_TRANSC_EXP_LOG_SWAP */
+};
+
+int omega_tensor_gb10_transc_kernel(OmegaTensorUnaryOp op) {
+    if ((unsigned)op >= OMEGA_TU_COUNT || GB10_TRANSC_DS1[op] == 0) return -1;
+    return GB10_TRANSC_DS1[op] - 1;
 }
 
 /* Launch log (M20 GB10 instrumentation). Every E1 call this table makes gets
@@ -112,6 +136,16 @@ static int gb10_reduce_call(OmegaReduceOp r, const float *x, size_t n, float *ou
     return rc;
 }
 
+static int gb10_ds_call(OmegaDsOp op, const uint32_t *a, uint32_t *out, size_t cnt) {
+    unsigned long idx = ++g_gb10_call_index;
+    struct timespec t0;
+    timespec_get(&t0, TIME_UTC);
+    int rc = omega_ds_gb10_run(op, a, NULL, out, cnt);
+    fprintf(stderr, "GB10_CALL idx=%lu kind=transc op=%s count=%zu rc=%d ms=%.3f%s\n", idx, omega_ds_op_name(op), cnt,
+            rc, gb10_ms_since(&t0), rc == OMEGA_NUMERIC_OK ? "" : " FAILED");
+    return rc;
+}
+
 static int gb10_elementwise(OmegaNumericOp op, const float *a, const float *b, const float *c,
                             float *out, size_t n) {
     const char *name = omega_tensor_gb10_op_name(op);
@@ -122,6 +156,21 @@ static int gb10_elementwise(OmegaNumericOp op, const float *a, const float *b, c
     for (size_t base = 0; base < n; base += OMEGA_NUMERIC_MAX_COUNT) {
         size_t cnt = n - base < OMEGA_NUMERIC_MAX_COUNT ? n - base : OMEGA_NUMERIC_MAX_COUNT;
         int rc = gb10_simt_call(name, a + base, b ? b + base : NULL, c ? c + base : NULL, out + base, cnt);
+        if (rc != OMEGA_NUMERIC_OK) return rc;
+    }
+    return OMEGA_NUMERIC_OK;
+}
+
+_Static_assert(sizeof(float) == sizeof(uint32_t), "f32 bit patterns");
+
+static int gb10_transc(OmegaTensorUnaryOp op, const float *a, float *out, size_t n) {
+    int k = omega_tensor_gb10_transc_kernel(op);
+    if (k < 0) return OMEGA_NUMERIC_ERR_NOT_ENCODED;   /* no silent CPU fallback; MUT:GB10_TRANSC_NO_CPU_FALLBACK */
+    if (!a || !out || n == 0) return OMEGA_NUMERIC_ERR_BAD_ARGS;
+    for (size_t base = 0; base < n; base += OMEGA_DS_MAX_BATCH) {
+        size_t cnt = n - base < OMEGA_DS_MAX_BATCH ? n - base : OMEGA_DS_MAX_BATCH;
+        int rc = gb10_ds_call((OmegaDsOp)k, (const uint32_t *)(const void *)(a + base),
+                              (uint32_t *)(void *)(out + base), cnt);
         if (rc != OMEGA_NUMERIC_OK) return rc;
     }
     return OMEGA_NUMERIC_OK;
@@ -204,6 +253,7 @@ static const OmegaTensorRealization GB10_REALIZATION = {
     .reduce_order = OMEGA_TENSOR_REDUCE_DECLARED_ORDER,
     .elementwise = gb10_elementwise,
     .reduce = gb10_reduce,
+    .transc = gb10_transc,
     .reduce_rows = gb10_reduce_rows,
 };
 
