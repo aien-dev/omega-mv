@@ -162,7 +162,7 @@ every existing host fixture. Reusing AArch64 emitters is not an implementation.
 
 `execprog` (word 124) in `xhpack` calls `close_range(3, ~0U, CLOSE_RANGE_UNSHARE)` (syscall 436)
 before `execve`, and a nonzero result skips the exec and returns that kernel error, matching the
-AArch64 descriptor boundary. `execpure` (word 178) has no x86 strict-profile lowering (Landlock,
+AArch64 descriptor boundary. `execpure` (word 198) has no x86 strict-profile lowering (Landlock,
 seccomp and limits are AArch64-only); `xhost` refuses it with error 25.
 
 A complete host lowering needs a per-word x86 Linux syscall-number and

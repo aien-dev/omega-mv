@@ -805,11 +805,11 @@ put tkb 0 get inlen 0
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus native host words 100..178 and flock 197) ========
+note ======== keyword lookup (original om4 KWTAB plus native host words 100..177, flock 197 and execpure 198) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
 if eq w 7310034270740117605
-ret 178
+ret 198
 end
 if eq w 6584163
 ret 132
@@ -5983,7 +5983,7 @@ emit 3506440357
 e3 3942645760 31 12 5
 trapc 8 3
 note A program path and both rename paths must be nonempty.
-if or eq c 124 eq c 178
+if or eq c 124 eq c 198
 emit 4043309375
 notfirst = get oc 0
 emit 1409286145
@@ -6018,7 +6018,7 @@ patch19 done get oc 0
 emit 4043309247
 trapc 1 3
 emit 4177527167
-if or eq c 124 eq c 178
+if or eq c 124 eq c 198
 note Exec admits only the caller-assigned standard streams. Linux close_range with UNSHARE
 note closes every descriptor >=3 in a private table. Failure returns without executing a child;
 note no guessed descriptor ceiling or permissive fallback. This is not filesystem isolation.
@@ -6030,7 +6030,7 @@ emit 4043309087
 note outer and done are dead after the packet scan; they are reused for the two branch sites here.
 done = get oc 0
 emit 1409286145
-if eq c 178
+if eq c 198
 note execpure strict stdio profile: Linux UAPI layouts in 640 private guest stack bytes, never an
 note exposed native pointer. sock_filter is u16 code,u8 jt,u8 jf,u32 k; sock_fprog has its length at
 note 0 and its pointer at 8 on AArch64. A Landlock path rule is a packed u64 allowed_access plus an
@@ -7015,6 +7015,11 @@ if eq c 197
 hscalar c dst x
 ret
 end
+note execpure 198 is dispatched here, before the ge c 173 mapped-memory range below would claim it.
+if eq c 198
+hpack c dst x
+ret
+end
 if eq c 220
 hpeercr dst x
 ret
@@ -7099,7 +7104,7 @@ if eq c 123
 hwaitio dst x
 ret
 end
-if or or or or eq c 124 eq c 125 eq c 141 eq c 142 eq c 178
+if or or or eq c 124 eq c 125 eq c 141 eq c 142
 hpack c dst x
 ret
 end
@@ -7457,7 +7462,7 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
-if or or and ge c 100 le c 178 eq c 197 and ge c 220 le c 222
+if or or and ge c 100 le c 177 and ge c 197 le c 198 and ge c 220 le c 222
 hostval c dst
 ret
 end
@@ -14873,8 +14878,8 @@ end
 if eq get progmode 0 0
 fail 9
 end
-note execpure (178) has no x86 strict-profile lowering; refuse it rather than run an unconfined exec.
-if eq c 178
+note execpure (198) has no x86 strict-profile lowering; refuse it rather than run an unconfined exec.
+if eq c 198
 fail 25
 end
 x = mul get depth 0 32

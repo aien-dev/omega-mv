@@ -885,7 +885,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `pipefds A off n flags` | Create a pipe with `pipe2`; write two little-endian 32-bit descriptors. Capacity at least eight. |
 | `dupfd fd target flags` | Duplicate onto a chosen descriptor using `dup3`. |
 | `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
-| `execpure A off n` | Word 178, AArch64 only (x86 emission refuses with error 25). As `execprog`, then pin the executable as descriptor 3 and apply the fixed strict stdio profile below before `execveat(AT_EMPTY_PATH)`. Only returns on failure, with the first failing step's negative errno. |
+| `execpure A off n` | Keyword id 198, AArch64 only (x86 emission refuses with error 25). As `execprog`, then pin the executable as descriptor 3 and apply the fixed strict stdio profile below before `execveat(AT_EMPTY_PATH)`. Only returns on failure, with the first failing step's negative errno. |
 | `argcnt` | Return argument count, including the executable name. |
 | `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
 | `envcnt` | Return the number of entries in the process environment (the `envp` the kernel supplied). |
@@ -958,7 +958,7 @@ subprocesses or arbitrary native code. Existing authority/launcher integration i
 still required for those effects. Forked children are independent
 processes and must be reaped; this extension does not add shared-memory threads.
 
-`execpure` (word 178) decodes and closes descriptors exactly as `execprog`, then applies a fixed
+`execpure` (word 198) decodes and closes descriptors exactly as `execprog`, then applies a fixed
 strict stdio profile before entering the program: it opens the executable path `O_PATH|O_CLOEXEC`
 as descriptor 3; creates a Landlock ruleset that handles every ABI-3 filesystem right and allows
 only execute and read-file beneath that inode; sets `PR_SET_NO_NEW_PRIVS`; restricts itself to the
