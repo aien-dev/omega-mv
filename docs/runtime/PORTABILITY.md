@@ -78,8 +78,9 @@ closure link fails with `freestanding GPU link still needs: abort mmap mprotect 
 pthread_setspecific`. All seven come from `src/omega_om_units.c`, the omega-bridge binding that replaced `src/sha256.c`
 in `GPU_FS_SRCS` at the OM-2 cutover (`450bbefd`, #747): it runs Omega code on its own `mmap`ed stack with a
 `pthread` key and calls `abort`. The encoder, codegen, matmul, realize and attention objects need `sha256_*` from it.
-Until the binding has a freestanding form (a caller-supplied stack, no `abort`), `FREESTANDING_PROVEN` means "in
-`GPU_FS_SRCS` and compiled freestanding per file", not "the closure links".
+Until the binding has a freestanding form (a caller-supplied stack, no `abort`; repair in progress on branch
+`w3/gpu-fs-freestanding-units`, not merged), `FREESTANDING_PROVEN` means "in `GPU_FS_SRCS` and compiled freestanding per
+file", not "the closure links".
 
 ## 4. Three ways to reach the GPU
 
