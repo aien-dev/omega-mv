@@ -1,0 +1,20 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/qualification/ddc650/nondet.om: negative-control fixture for ddc.om, not a compiler.
+note Passed as OM4 (with its own SHA-256 as the pin), it writes the ELF magic followed by the
+note monotonic clock, so two "stage1" builds differ and ddc.om must answer INVALID.
+global b uchar 12
+fn main to int
+put b 0 127
+put b 1 69
+put b 2 76
+put b 3 70
+t = monons
+for i ulong 8
+put b add 4 i uchar and shr t mul i 8 255
+end
+r = write 1 b 0 12
+if ne r 12
+ret 1
+end
+ret 0
+end
