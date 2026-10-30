@@ -32,9 +32,11 @@
 #include "omega_gpu_attention_api.h"
 #include "omega_gpu_elementwise_api.h"
 #include "omega_gpu_prefill_attn_api.h"
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int g_checks, g_failed, g_nvdisasm;
 static const char *g_dump_dir; /* --dump DIR: write each distinct kernel with findings as DIR/<family>-<n>.bin (triage) */
@@ -376,7 +378,11 @@ static void sweep_bytes(const char *family, const char *variant, const uint8_t *
     g_findings_total += g_rep.count;
     if (g_dump_dir && g_rep.count) {
         char path[512]; snprintf(path, sizeof path, "%s/%s-%zu.bin", g_dump_dir, family, g_nseen - 1);
-        FILE *f = fopen(path, "wb"); if (f) { fwrite(code, 1, len, f); fclose(f); printf("DUMP %s = %s %s\n", path, family, variant); }
+        /* 0644, not fopen's 0666 & ~umask: a dump is never world-writable */
+        int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+        FILE *f = fd >= 0 ? fdopen(fd, "wb") : NULL;
+        if (fd >= 0 && !f) close(fd);
+        if (f) { fwrite(code, 1, len, f); fclose(f); printf("DUMP %s = %s %s\n", path, family, variant); }
     }
     if (g_nvdisasm) nvdisasm_cross_check(family, variant, code, len);
 }
