@@ -34,5 +34,8 @@ control stable-without-doc   "STABLE entry omega_gpu_session_launch has no"     
 control wrong-quoted-signature "signature quoted in" API.md 's/^uint32_t omega_gpu_session_open_count(void);/uint64_t omega_gpu_session_open_count(void);/'
 control signature-inside-another "signature quoted in" API.md 's/^uint32_t omega_gpu_session_open_count(void);/int32_t omega_gpu_session_open_count(void);/'
 control removed-recover      "header disagrees with manifest: fn omega_gpu_session_recover"     omega_gpu_session.h '/^int omega_gpu_session_recover(void);/d'
+control removed-padding-field "header disagrees with manifest: field OmegaGpuCmdListOpts first_barrier_none" omega_gpu_cmdlist.h '/int first_barrier_none;/,/\*\/$/d'
+control new-header-function  "omega_gpu_session.h declares omega_gpu_session_zzz_new, which is neither" omega_gpu_session.h '$a int omega_gpu_session_zzz_new(void);'
+control internal-unlisted    "omega_gpu_session.h declares omega_gpu_session_set_error, which is neither" API.md 's/^- `omega_gpu_session_set_error` (library code/- (library code/'
 [ $bad = 0 ] && { echo "RESULT: PASS (every negative control was caught)"; exit 0; }
 echo "RESULT: FAIL (a negative control was not caught)"; exit 1
