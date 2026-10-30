@@ -1,0 +1,893 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten bounded Rust 2021 u64 wrapping-expression importer, profile rust-u64-wrapping-pure-v1.
+note No Rust compiler, parser library or host fallback. Spec: spec/universal/rust-u64-v1.md.
+note SHA256 definitions are the unchanged, pinned source-aware vendor core prepended at build.
+global Src uchar 4096
+global Extra uchar 1
+global Out uchar 8192
+global Slen ulong 1
+global Cur ulong 1
+global Tk ulong 1
+global Ts ulong 1
+global Te ulong 1
+global Tv ulong 1
+global Npar ulong 1
+global Poff ulong 6
+global Plen ulong 6
+global Nop ulong 1
+global Beg ulong 64
+global Ends ulong 64
+text Fixed "u64 pub fn where as wrapping_add wrapping_sub wrapping_mul"
+text Keys "as break const continue crate else enum extern false fn for if impl in let loop match mod move mut pub ref return self static struct super trait true type unsafe use where while async await dyn abstract become box do final macro override priv typeof unsized virtual yield try union gen safe raw auto default macro_rules main"
+text Prims "u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize f16 f32 f64 f128 bool char str"
+text Entry "calc omega_"
+text ESyn "RUST_IMPORT_SYNTAX\n"
+text EType "RUST_IMPORT_UNSUPPORTED_TYPE\n"
+text ECap "RUST_IMPORT_LIMIT\n"
+text EArith "RUST_IMPORT_UNSUPPORTED_ARITHMETIC\n"
+text EForm "RUST_IMPORT_UNSUPPORTED_CONSTRUCT\n"
+text EName "RUST_IMPORT_UNKNOWN_IDENTIFIER\n"
+text ESig "RUST_IMPORT_UNSUPPORTED_SIGNATURE\n"
+text ELex "RUST_IMPORT_UNSUPPORTED_SOURCE_FORM\n"
+text EIO "RUST_IMPORT_IO\n"
+
+fn die code ulong to void
+if eq code 65
+w = write 2 ESyn 0 len ESyn
+end
+if eq code 66
+w = write 2 EType 0 len EType
+end
+if eq code 67
+w = write 2 ECap 0 len ECap
+end
+if eq code 68
+w = write 2 EArith 0 len EArith
+end
+if eq code 69
+w = write 2 EForm 0 len EForm
+end
+if eq code 70
+w = write 2 EName 0 len EName
+end
+if eq code 71
+w = write 2 ESig 0 len ESig
+end
+if eq code 72
+w = write 2 ELex 0 len ELex
+end
+if eq code 77
+w = write 2 EIO 0 len EIO
+end
+exit int code
+end
+
+fn alpha c uchar to bool
+ret or or and ge c 65 le c 90 and ge c 97 le c 122 eq c 95
+end
+
+fn digit c uchar to bool
+ret and ge c 48 le c 57
+end
+
+fn ident c uchar to bool
+ret or alpha c digit c
+end
+
+fn srcdig p ulong to bool
+if ge p get Slen 0
+ret false
+end
+ret digit get Src p
+end
+
+fn srcid p ulong to bool
+if ge p get Slen 0
+ret false
+end
+ret ident get Src p
+end
+
+fn srcis p ulong c ulong to bool
+if ge p get Slen 0
+ret false
+end
+ret eq ulong get Src p c
+end
+
+fn notnl p ulong to bool
+if ge p get Slen 0
+ret false
+end
+ret ne get Src p 10
+end
+
+note Strict UTF-8 (no overlong, surrogate or above U+10FFFF) over the whole source.
+fn utf8 to bool
+n = get Slen 0
+pos = ulong 0
+while lt pos n
+c = ulong get Src pos
+pos = add pos 1
+if ge c 128
+extra = ulong 0
+v = ulong 0
+low = ulong 0
+if and ge c 194 le c 223
+extra = 1
+v = and c 31
+low = 128
+end
+if and ge c 224 le c 239
+extra = 2
+v = and c 15
+low = 2048
+end
+if and ge c 240 le c 244
+extra = 3
+v = and c 7
+low = 65536
+end
+if eq extra 0
+ret false
+end
+if gt extra sub n pos
+ret false
+end
+for j ulong extra
+c = ulong get Src pos
+if or lt c 128 gt c 191
+ret false
+end
+v = or shl v 6 and c 63
+pos = add pos 1
+end
+if lt v low
+ret false
+end
+if gt v 1114111
+ret false
+end
+if and ge v 55296 le v 57343
+ret false
+end
+end
+end
+ret true
+end
+
+note Ordinary line comment. Doc comments (/// not followed by /, and //!) are attribute sugar: 72.
+fn linecom to void
+p = get Cur 0
+if srcis add p 2 33
+die 72
+end
+if srcis add p 2 47
+if not srcis add p 3 47
+die 72
+end
+end
+p = add p 2
+while notnl p
+p = add p 1
+end
+put Cur 0 p
+end
+
+note Ordinary block comment; Rust block comments nest. Doc forms /** x and /*! refuse 72.
+fn blockcom to void
+p = get Cur 0
+if srcis add p 2 33
+die 72
+end
+if srcis add p 2 42
+if lt add p 3 get Slen 0
+if not or srcis add p 3 42 srcis add p 3 47
+die 72
+end
+end
+end
+q = add p 2
+depth = ulong 1
+while gt depth 0
+if ge add q 1 get Slen 0
+die 65
+end
+a = get Src q
+b = get Src add q 1
+if and eq a 47 eq b 42
+depth = add depth 1
+q = add q 2
+else
+if and eq a 42 eq b 47
+depth = sub depth 1
+q = add q 2
+else
+q = add q 1
+end
+end
+end
+put Cur 0 q
+end
+
+fn spaces to void
+more = ulong 1
+while eq more 1
+if ge get Cur 0 get Slen 0
+ret
+end
+p = get Cur 0
+c = get Src p
+if or or eq c 32 eq c 9 or eq c 10 eq c 13
+put Cur 0 add p 1
+else
+if and eq c 47 lt add p 1 get Slen 0
+d = get Src add p 1
+if eq d 47
+linecom
+else
+if eq d 42
+blockcom
+else
+more = 0
+end
+end
+else
+more = 0
+end
+end
+end
+end
+
+fn idlex to void
+p = add get Cur 0 1
+while srcid p
+p = add p 1
+end
+put Tk 0 256
+put Cur 0 p
+put Te 0 p
+end
+
+note Decimal literal with exact suffix u64: 0u64 or [1-9][0-9]*u64; no _, prefixes or other suffixes.
+fn numlex to void
+p = get Cur 0
+if eq get Src p 48
+if srcdig add p 1
+die 68
+end
+end
+v = ulong 0
+while srcdig p
+d = sub ulong get Src p 48
+if gt v 1844674407370955161
+die 67
+end
+if and eq v 1844674407370955161 gt d 5
+die 67
+end
+v = add mul v 10 d
+p = add p 1
+end
+if not srcis p 117
+die 68
+end
+if not srcis add p 1 54
+die 68
+end
+if not srcis add p 2 52
+die 68
+end
+p = add p 3
+if srcid p
+die 68
+end
+put Tk 0 257
+put Tv 0 v
+put Cur 0 p
+put Te 0 p
+end
+
+fn punct p ulong c ulong to void
+k = c
+n = ulong 1
+if and eq c 58 srcis add p 1 58
+k = 258
+n = 2
+end
+if and eq c 45 srcis add p 1 62
+k = 259
+n = 2
+end
+put Tk 0 k
+put Cur 0 add p n
+put Te 0 add p n
+end
+
+fn lexnext to void
+spaces
+p = get Cur 0
+put Ts 0 p
+if ge p get Slen 0
+put Tk 0 0
+put Te 0 p
+ret
+end
+c = get Src p
+if alpha c
+idlex
+else
+if digit c
+numlex
+else
+if gt c 127
+die 69
+end
+punct p ulong c
+end
+end
+end
+
+fn word off ulong n ulong to bool
+if or ne get Tk 0 256 ne sub get Te 0 get Ts 0 n
+ret false
+end
+for i ulong n
+if ne get Src add get Ts 0 i get Fixed add off i
+ret false
+end
+end
+ret true
+end
+
+fn keyeq off ulong n ulong to bool
+if ne sub get Te 0 get Ts 0 n
+ret false
+end
+for i ulong n
+if ne get Src add get Ts 0 i get Keys add off i
+ret false
+end
+end
+ret true
+end
+
+fn primeq off ulong n ulong to bool
+if ne sub get Te 0 get Ts 0 n
+ret false
+end
+for i ulong n
+if ne get Src add get Ts 0 i get Prims add off i
+ret false
+end
+end
+ret true
+end
+
+fn keychar p ulong to bool
+if ge p len Keys
+ret false
+end
+ret ne get Keys p 32
+end
+
+fn primchar p ulong to bool
+if ge p len Prims
+ret false
+end
+ret ne get Prims p 32
+end
+
+fn iskey to bool
+if ne get Tk 0 256
+ret false
+end
+p = ulong 0
+while lt p len Keys
+b = p
+while keychar p
+p = add p 1
+end
+if keyeq b sub p b
+ret true
+end
+p = add p 1
+end
+ret false
+end
+
+fn isprim to bool
+if ne get Tk 0 256
+ret false
+end
+p = ulong 0
+while lt p len Prims
+b = p
+while primchar p
+p = add p 1
+end
+if primeq b sub p b
+ret true
+end
+p = add p 1
+end
+ret false
+end
+
+fn entryok to bool
+n = sub get Te 0 get Ts 0
+if eq n 4
+for i ulong 4
+if ne get Src add get Ts 0 i get Entry i
+ret false
+end
+end
+ret true
+end
+if le n 6
+ret false
+end
+for i ulong 6
+if ne get Src add get Ts 0 i get Entry add i 5
+ret false
+end
+end
+ret true
+end
+
+fn nameok to void
+if ne get Tk 0 256
+die 69
+end
+if gt sub get Te 0 get Ts 0 32
+die 71
+end
+c = get Src get Ts 0
+if or lt c 97 gt c 122
+die 71
+end
+if iskey
+die 71
+end
+if isprim
+die 71
+end
+end
+
+fn need k ulong to void
+if ne get Tk 0 k
+die 65
+end
+lexnext
+end
+
+fn badarith to bool
+k = get Tk 0
+if or or eq k 43 eq k 45 eq k 42
+ret true
+end
+if or eq k 47 eq k 37
+ret true
+end
+if or eq k 60 eq k 62
+ret true
+end
+if or or eq k 38 eq k 124 eq k 94
+ret true
+end
+ret word 17 2
+end
+
+note Expect token k; an operator here is unsupported arithmetic (68), a separator or end is syntax (65).
+fn closer k ulong to void
+t = get Tk 0
+if eq t k
+lexnext
+ret
+end
+if badarith
+die 68
+end
+if or or eq t 0 eq t 41 or eq t 44 eq t 125
+die 65
+end
+if or eq t 256 eq t 257
+die 65
+end
+die 69
+end
+
+fn same off ulong count ulong to bool
+if ne count sub get Te 0 get Ts 0
+ret false
+end
+for i ulong count
+if ne get Src add off i get Src add get Ts 0 i
+ret false
+end
+end
+ret true
+end
+
+fn leput off ulong v ulong n ulong to void
+for i ulong n
+put Out add off i uchar and shr v mul i 8 255
+end
+end
+
+fn emitop op ulong a ulong b ulong imm ulong lo ulong hi ulong to ulong
+i = get Nop 0
+if ge i 64
+die 67
+end
+p = add 57 mul i 20
+for j ulong 20
+put Out add p j 0
+end
+put Out p 2
+put Out add p 1 1
+put Out add p 2 uchar op
+put Out add p 3 1
+if ne op 9
+put Out add p 4 1
+end
+if ne op 1
+put Out add p 7 1
+end
+leput add p 8 a 2
+leput add p 10 b 2
+leput add p 12 imm 8
+put Beg i lo
+put Ends i hi
+put Nop 0 add i 1
+ret i
+end
+
+fn methodcode to ulong
+if word 20 12
+ret 2
+end
+if word 33 12
+ret 3
+end
+if word 46 12
+ret 4
+end
+die 68
+ret 0
+end
+
+fn identprim to ulong
+for j ulong get Npar 0
+if same get Poff j get Plen j
+lexnext
+ret j
+end
+end
+if iskey
+die 69
+end
+if isprim
+die 66
+end
+lexnext
+if eq get Tk 0 33
+die 69
+end
+die 70
+ret 0
+end
+
+note u64::wrapping_add(x, y) and the sub/mul forms: same operation, operands in source order.
+fn qualified depth ulong to ulong
+lexnext
+if ne get Tk 0 258
+die 69
+end
+lexnext
+if ne get Tk 0 256
+die 69
+end
+code = methodcode
+lo = get Ts 0
+hi = get Te 0
+lexnext
+if ne get Tk 0 40
+die 69
+end
+lexnext
+a = expr add depth 1
+closer 44
+b = expr add depth 1
+closer 41
+ret emitop code a b 0 lo hi
+end
+
+fn primary depth ulong to ulong
+if gt depth 16
+die 67
+end
+t = get Tk 0
+if eq t 257
+node = emitop 1 65535 65535 get Tv 0 get Ts 0 get Te 0
+lexnext
+ret node
+end
+if eq t 256
+if word 0 3
+ret qualified depth
+end
+ret identprim
+end
+if eq t 40
+lexnext
+node = expr add depth 1
+closer 41
+ret node
+end
+if or or eq t 43 eq t 45 or eq t 42 eq t 33
+die 68
+end
+if or or eq t 0 eq t 41 or eq t 44 eq t 125
+die 65
+end
+die 69
+ret 0
+end
+
+note Postfix chain: receiver.wrapping_add(arg) etc. Receiver is the left operand, argument the right.
+fn expr depth ulong to ulong
+left = primary depth
+while eq get Tk 0 46
+lexnext
+if ne get Tk 0 256
+die 69
+end
+code = methodcode
+lo = get Ts 0
+hi = get Te 0
+lexnext
+if ne get Tk 0 40
+die 69
+end
+lexnext
+right = expr add depth 1
+closer 41
+left = emitop code left right 0 lo hi
+end
+ret left
+end
+
+fn ptype to void
+if not word 0 3
+die 66
+end
+lexnext
+end
+
+fn param to void
+nameok
+j = get Npar 0
+if ge j 6
+die 67
+end
+for k ulong j
+if same get Poff k get Plen k
+die 71
+end
+end
+put Poff j get Ts 0
+put Plen j sub get Te 0 get Ts 0
+x = emitop 9 65535 65535 j get Ts 0 get Te 0
+put Npar 0 add j 1
+lexnext
+need 58
+ptype
+end
+
+fn params to void
+if eq get Tk 0 41
+lexnext
+ret
+end
+more = ulong 1
+while eq more 1
+param
+if eq get Tk 0 44
+lexnext
+if eq get Tk 0 41
+die 65
+end
+else
+more = 0
+end
+end
+need 41
+end
+
+fn header to void
+lexnext
+if word 4 3
+lexnext
+if eq get Tk 0 40
+die 69
+end
+end
+if not word 8 2
+die 69
+end
+lexnext
+nameok
+if not entryok
+die 71
+end
+lexnext
+if eq get Tk 0 60
+die 69
+end
+need 40
+params
+if ne get Tk 0 259
+die 71
+end
+lexnext
+ptype
+if word 11 5
+die 69
+end
+need 123
+end
+
+fn parse to void
+put Cur 0 0
+header
+root = expr 0
+closer 125
+if ne get Tk 0 0
+die 69
+end
+z = emitop 1 65535 65535 0 0 0
+root = emitop 2 root z 0 0 0
+end
+
+fn parent to void
+put Out 25 212
+put Out 26 237
+put Out 27 97
+put Out 28 72
+put Out 29 191
+put Out 30 169
+put Out 31 124
+put Out 32 198
+put Out 33 147
+put Out 34 211
+put Out 35 250
+put Out 36 68
+put Out 37 149
+put Out 38 226
+put Out 39 215
+put Out 40 226
+put Out 41 230
+put Out 42 138
+put Out 43 186
+put Out 44 4
+put Out 45 96
+put Out 46 122
+put Out 47 126
+put Out 48 150
+put Out 49 221
+put Out 50 154
+put Out 51 156
+put Out 52 84
+put Out 53 191
+put Out 54 144
+put Out 55 115
+put Out 56 168
+end
+
+fn envelope to ulong
+n = get Nop 0
+sem = add 44 mul 20 n
+prov = add add 74 mul 8 n get Slen 0
+put Out 0 79
+put Out 1 77
+put Out 2 83
+put Out 3 66
+put Out 4 1
+leput 5 sem 4
+leput 9 prov 4
+put Out 13 79
+put Out 14 77
+put Out 15 83
+put Out 16 65
+put Out 17 1
+put Out 18 2
+put Out 19 2
+put Out 20 1
+put Out 21 0
+put Out 22 1
+leput 23 n 2
+parent
+s = add 13 sem
+put Out s 79
+put Out add s 1 77
+put Out add s 2 83
+put Out add s 3 80
+put Out add s 4 1
+put Out add s 5 1
+leput add s 6 get Slen 0 4
+hinit
+for i ulong sem
+hbyte get Out add 13 i
+end
+finish
+for i ulong 32
+put Out add add s 10 i get Hash i
+end
+hinit
+for i ulong get Slen 0
+hbyte get Src i
+end
+finish
+for i ulong 32
+put Out add add s 42 i get Hash i
+end
+for i ulong n
+leput add add s 74 mul i 8 get Beg i 4
+leput add add s 78 mul i 8 get Ends i 4
+end
+b = add add s 74 mul n 8
+for i ulong get Slen 0
+put Out add b i get Src i
+end
+ret add add 13 sem prov
+end
+
+fn main to int
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 4096
+r = read 0 Src n sub 4096 n
+if lt r 0
+die 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 4096
+r = read 0 Extra 0 1
+if lt r 0
+die 77
+end
+if gt r 0
+die 67
+end
+end
+put Slen 0 n
+for i ulong n
+if eq get Src i 0
+die 65
+end
+end
+if not utf8
+die 72
+end
+if and srcis 0 239 and srcis 1 187 srcis 2 191
+die 72
+end
+constants
+parse
+n = envelope
+sent = ulong 0
+while lt sent n
+r = write 1 Out sent sub n sent
+if le r 0
+die 77
+end
+sent = add sent ulong r
+end
+ret 0
+end

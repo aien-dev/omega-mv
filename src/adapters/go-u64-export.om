@@ -1,0 +1,460 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten S1-family upper-to-Go 1.27 exporter (spec/universal/go-u64-v1.md section 5).
+note Prepended unchanged at build: src/source-aware/vendor/sha256.om and src/source-aware/core-v2.om (decode n).
+note Input: one OMSB envelope to EOF (OMSA version 1 or 2). Output is generated from the OMSA operation
+note records only; the OMSP sidecar is validated by the v2 decoder, never read for output.
+global Gone uchar 1
+global Gout uchar 4096
+global Gl ulong 1
+global Gni ulong 1
+global Gob ulong 1
+global Gpr ulong 64
+global Gdp ulong 64
+global Gcn ulong 64
+global Gwb ulong 64
+global Grc ulong 64
+global Gkc ulong 64
+global Gkv ulong 64
+global Gov ulong 64
+text Ghead "package main\n\nfunc calc("
+text Gpar " uint64"
+text Gret ") uint64 {\n\treturn "
+text Gtail "\n}\n"
+text GMal "GO_EXPORT_MALFORMED\n"
+text GLim "GO_EXPORT_LIMIT\n"
+text GProf "GO_EXPORT_PROFILE_MISMATCH\n"
+text GIO "GO_EXPORT_IO\n"
+
+fn gdie code ulong to void
+if eq code 65
+w = write 2 GMal 0 len GMal
+end
+if eq code 67
+w = write 2 GLim 0 len GLim
+end
+if eq code 68
+w = write 2 GProf 0 len GProf
+end
+if eq code 77
+w = write 2 GIO 0 len GIO
+end
+exit int code
+end
+
+note Every emitted byte is bounded: an export longer than 4096 bytes would not re-import (67).
+fn gbyte c ulong to void
+if ge get Gl 0 4096
+gdie 67
+end
+put Gout get Gl 0 uchar c
+put Gl 0 add get Gl 0 1
+end
+
+fn gdec v ulong to void
+d = new uchar 20 0
+i = ulong 0
+x = v
+put d 0 uchar add rem x 10 48
+x = div x 10
+i = add i 1
+while gt x 0
+put d i uchar add rem x 10 48
+x = div x 10
+i = add i 1
+end
+while gt i 0
+i = sub i 1
+gbyte ulong get d i
+end
+end
+
+note Family membership per translation-compose-v2 section 1, on fields already validated by decode.
+fn gkind i ulong to ulong
+c = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret 68
+end
+if ne get Oal i 0
+ret 68
+end
+if eq c 9
+if or ne get Oat i 0 ne get Oob i 1
+ret 68
+end
+put Gni 0 add get Gni 0 1
+ret 0
+end
+if eq c 1
+if or ne get Oat i 1 ne get Oob i 0
+ret 68
+end
+ret 0
+end
+if or lt c 2 gt c 4
+ret 68
+end
+if or ne get Oat i 1 ne get Oob i get Gob 0
+ret 68
+end
+ret 0
+end
+
+note (OMSA version, language, profile) -> arithmetic obligations; 0 = not a family member.
+fn gmember to ulong
+v = get M 8
+l = get M 0
+p = get M 1
+if eq v 1
+if and eq l 1 eq p 1
+ret 1
+end
+if and eq l 2 eq p 2
+ret 1
+end
+if and eq l 3 eq p 4
+ret 5
+end
+end
+if eq v 2
+if and eq l 5 eq p 7
+ret 1
+end
+if and eq l 6 eq p 8
+ret 1
+end
+if and eq l 7 eq p 9
+ret 1
+end
+end
+ret 0
+end
+
+fn gs1 to ulong
+ob = gmember
+if eq ob 0
+ret 68
+end
+put Gob 0 ob
+if or ne get M 2 0 ne get M 3 1
+ret 68
+end
+put Gni 0 0
+for i ulong get M 4
+if ne gkind i 0
+ret 68
+end
+end
+for j ulong get M 4
+if eq get Oc j 9
+if ge get Oi j get Gni 0
+ret 68
+end
+end
+end
+ret 0
+end
+
+fn gsat v ulong to ulong
+if gt v 1048576
+ret 1048576
+end
+ret v
+end
+
+note Go precedence: operand 6, * 5, + and - 4 (left associative). A left operand is parenthesised iff
+note its precedence is lower than the parent's, a right operand iff lower or equal.
+fn gpa k ulong to ulong
+if lt get Gpr get Oa k get Gpr k
+ret 1
+end
+ret 0
+end
+
+fn gpb k ulong to ulong
+if le get Gpr get Ob k get Gpr k
+ret 1
+end
+ret 0
+end
+
+note Exact untyped-constant evaluation of a constant-only operation: overflow outside 0..2^64-1 sets Gov.
+fn gfold k ulong to void
+c = get Oc k
+x = get Gkv get Oa k
+y = get Gkv get Ob k
+v = ulong 0
+if eq c 2
+v = add x y
+if lt v x
+put Gov k 1
+end
+end
+if eq c 3
+v = sub x y
+if lt x y
+put Gov k 1
+end
+end
+if eq c 4
+v = mul x y
+if ne x 0
+if ne div v x y
+put Gov k 1
+end
+end
+end
+put Gkv k v
+end
+
+note Precedence, parenthesis depth, re-import operation count, gofmt operator classes (1 = has
+note precedence 4, 2 = has precedence 5, over the unparenthesised binary region) and constant folding.
+fn gmetric k ulong to void
+c = get Oc k
+put Gdp k 0
+put Gwb k 0
+put Gov k 0
+put Gkc k 0
+put Gkv k 0
+if eq c 9
+put Gpr k 6
+put Gcn k 0
+ret
+end
+if eq c 1
+put Gpr k 6
+put Gcn k 1
+put Gkc k 1
+put Gkv k get Oi k
+ret
+end
+put Gpr k 4
+put Gwb k 1
+if eq c 4
+put Gpr k 5
+put Gwb k 2
+end
+a = get Oa k
+b = get Ob k
+pa = gpa k
+pb = gpb k
+da = add get Gdp a pa
+db = add get Gdp b pb
+if gt da db
+put Gdp k da
+else
+put Gdp k db
+end
+put Gcn k gsat add add get Gcn a get Gcn b 1
+if and eq pa 0 lt get Gpr a 6
+put Gwb k or get Gwb k get Gwb a
+end
+if and eq pb 0 lt get Gpr b 6
+put Gwb k or get Gwb k get Gwb b
+end
+if and eq get Gkc a 1 eq get Gkc b 1
+put Gkc k 1
+gfold k
+end
+end
+
+note go/printer cutoff for a binary expression at the given depth (no unary operands are ever emitted).
+fn gcut k ulong depth ulong to ulong
+if eq get Gwb k 3
+if eq depth 1
+ret 5
+end
+ret 4
+end
+if eq depth 1
+ret 6
+end
+ret 4
+end
+
+note go/printer layout: blanks around an operator iff its precedence is below the cutoff; a left
+note operand of equal precedence keeps the depth, any other operand gets depth + 1, and a
+note parenthesised operand is printed at that depth minus one.
+fn gemit k ulong depth ulong to void
+c = get Oc k
+if eq c 9
+gbyte 105
+gdec get Oi k
+ret
+end
+if eq c 1
+gdec get Oi k
+ret
+end
+sp = ulong 0
+if lt get Gpr k gcut k depth
+sp = 1
+end
+a = get Oa k
+pa = gpa k
+if eq pa 1
+gbyte 40
+gemit a depth
+gbyte 41
+else
+if eq get Gpr a get Gpr k
+gemit a depth
+else
+gemit a add depth 1
+end
+end
+if eq sp 1
+gbyte 32
+end
+if eq c 2
+gbyte 43
+end
+if eq c 3
+gbyte 45
+end
+if eq c 4
+gbyte 42
+end
+if eq sp 1
+gbyte 32
+end
+if eq gpb k 1
+gbyte 40
+gemit get Ob k depth
+gbyte 41
+else
+gemit get Ob k add depth 1
+end
+end
+
+note translation-v1 section 4: the pre-normalization root of a NORMALIZED unit, else the last result.
+fn groot to ulong
+n = get M 4
+if lt n 3
+ret sub n 1
+end
+z = sub n 2
+y = sub n 1
+if or ne get Oc z 1 ne get Oi z 0
+ret y
+end
+if or ne get Oc y 2 ne get Ob y z
+ret y
+end
+if ge get Oa y z
+ret y
+end
+ret get Oa y
+end
+
+note A constant-only operation reachable from the root must evaluate exactly within 0..2^64-1,
+note otherwise the generated Go is a constant overflow compile error (refuse 67, never unimportable Go).
+fn gconstok root ulong to bool
+for i ulong get M 4
+put Grc i 0
+end
+put Grc root 1
+for j ulong add root 1
+k = sub root j
+if eq get Grc k 1
+if eq get Gov k 1
+ret false
+end
+c = get Oc k
+if and ge c 2 le c 4
+put Grc get Oa k 1
+put Grc get Ob k 1
+end
+end
+end
+ret true
+end
+
+fn gsignature to void
+for i ulong len Ghead
+gbyte ulong get Ghead i
+end
+for s ulong get Gni 0
+if gt s 0
+gbyte 44
+gbyte 32
+end
+gbyte 105
+gdec s
+for t ulong len Gpar
+gbyte ulong get Gpar t
+end
+end
+for u ulong len Gret
+gbyte ulong get Gret u
+end
+end
+
+fn greadunit to ulong
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub ulong 8192 n
+if lt r 0
+gdie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Gone 0 1
+if lt r 0
+gdie 77
+end
+if gt r 0
+gdie 65
+end
+end
+ret n
+end
+
+fn main to int
+constants
+n = greadunit
+code = decode n
+if eq code 68
+gdie 68
+end
+if ne code 0
+gdie 65
+end
+if ne gs1 0
+gdie 68
+end
+for k ulong get M 4
+gmetric k
+end
+root = groot
+if gt get Gdp root 16
+gdie 67
+end
+if gt add add get Gni 0 get Gcn root 2 64
+gdie 67
+end
+if not gconstok root
+gdie 67
+end
+put Gl 0 0
+gsignature
+gemit root 1
+for i ulong len Gtail
+gbyte ulong get Gtail i
+end
+total = get Gl 0
+sent = ulong 0
+while lt sent total
+r = write 1 Gout sent sub total sent
+if le r 0
+gdie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end
