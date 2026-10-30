@@ -1,7 +1,23 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * gpu_prefill_attn_test: the tensor-core causal prefill attention (omega_gpu_prefill_attn_api.h, OWN-30B L1 attention).
- *   --host-only   codegen budgets (instructions <= 1024, declared registers <= 128, placeholders patched against the
- *                 oracle words), refusals, reference sanity. No device.
+ *   --host-only   codegen budgets (instructions <= 1024, declared registers <= 128, native SHFL.BFLY / F2FP.BF16 words
+ *                 against the oracle words), refusals, reference sanity. No device.
  *   --sim         the kernel through tests/bw_warp_sim_pa.h (chip-exact HMMA model; EX2/RSQ/RCP exact): several
  *                 (pos0, m) points incl. two chunks, warps 4 and 8, both fragment orders. Gates: appended K/V rows
  *                 bit-equal to a host emulation of the decode kernel's operation order; outputs within the tolerance

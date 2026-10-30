@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* omega_gpu_fp8_pack.c: host side of the FP8 e4m3 GEMV (OWN-30B Cut 6). See omega_gpu_fp8_api.h.
  *
  * The weight bytes keep the checkpoint's row-major [n][k] order on the device (a warp reads
@@ -7,8 +23,8 @@
 #include "omega_gpu_fp8_api.h"
 #include "omega_blackwell_codegen_moe.h"
 #include "omega_blackwell_matmul.h"
-#include "omega_gpu_hostmath.h" /* omega_hostmath_pow2f: exact 2^e without libm (omega#471) */
-#include <math.h> /* NAN, fabsf, fabs: compiler builtins, no libm reference (checked by test-gpu-libm-free) */
+#include "omega_gpu_hostmath.h"
+#include <math.h>
 #include <string.h>
 
 float omega_fp8_e4m3_ref(uint8_t b) {

@@ -1,0 +1,47 @@
+note sizeof and offsetof are compile-time constants of type ulong; struct fields live in 8-byte cells.
+struct S a uchar b ulong c uchar 3 end
+fn main to int
+if ne sizeof bool 1
+ret 1
+end
+if ne sizeof uchar 1
+ret 2
+end
+if ne sizeof ushort 2
+ret 3
+end
+if ne sizeof uint 4
+ret 4
+end
+if ne sizeof ulong 8
+ret 5
+end
+if ne sizeof int 4
+ret 6
+end
+if ne sizeof long 8
+ret 7
+end
+if ne sizeof f32 4
+ret 8
+end
+if ne sizeof f64 8
+ret 9
+end
+if ne sizeof S 40
+ret 10
+end
+if ne offsetof S a 0
+ret 11
+end
+if ne offsetof S b 8
+ret 12
+end
+if ne offsetof S c 16
+ret 13
+end
+if ne add sizeof S offsetof S b 48
+ret 14
+end
+ret 0
+end

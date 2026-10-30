@@ -1,0 +1,498 @@
+OM2GATE START cases=seed/qualification/om2/sec/s3s4/pinned.cases scratch=build/om2-qual/s3s4-pinned-2
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+DEADLINE 60
+CASE pin-ce-sized-oob-fold-rolled line=15
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/15.src > build/om2-qual/s3s4-pinned-2/15.elf 2> build/om2-qual/s3s4-pinned-2/15.cerr
+VERDICT pin-ce-sized-oob-fold-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-sized-oob-fold line=16
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/16.src > build/om2-qual/s3s4-pinned-2/16.elf 2> build/om2-qual/s3s4-pinned-2/16.cerr
+VERDICT pin-ce-sized-oob-fold PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-sized-oob-rolled line=17
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/17.src > build/om2-qual/s3s4-pinned-2/17.elf 2> build/om2-qual/s3s4-pinned-2/17.cerr
+VERDICT pin-ce-sized-oob-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-sized-oob line=18
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/18.src > build/om2-qual/s3s4-pinned-2/18.elf 2> build/om2-qual/s3s4-pinned-2/18.cerr
+VERDICT pin-ce-sized-oob PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-sized-rolled line=19
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/19.src > build/om2-qual/s3s4-pinned-2/19.elf 2> build/om2-qual/s3s4-pinned-2/19.cerr
+VERDICT pin-ce-sized-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-sized line=20
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/20.src > build/om2-qual/s3s4-pinned-2/20.elf 2> build/om2-qual/s3s4-pinned-2/20.cerr
+VERDICT pin-ce-sized PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-view-plain line=21
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/21.src > build/om2-qual/s3s4-pinned-2/21.elf 2> build/om2-qual/s3s4-pinned-2/21.cerr
+VERDICT pin-ce-view-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-ce-view line=22
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/22.src > build/om2-qual/s3s4-pinned-2/22.elf 2> build/om2-qual/s3s4-pinned-2/22.cerr
+VERDICT pin-ce-view PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-nest-plain line=23
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/23.src > build/om2-qual/s3s4-pinned-2/23.elf 2> build/om2-qual/s3s4-pinned-2/23.cerr
+VERDICT pin-diag-site-nest-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-nest line=24
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/24.src > build/om2-qual/s3s4-pinned-2/24.elf 2> build/om2-qual/s3s4-pinned-2/24.cerr
+VERDICT pin-diag-site-nest PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-plain line=25
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/25.src > build/om2-qual/s3s4-pinned-2/25.elf 2> build/om2-qual/s3s4-pinned-2/25.cerr
+VERDICT pin-diag-site-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-rolled-plain line=26
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/26.src > build/om2-qual/s3s4-pinned-2/26.elf 2> build/om2-qual/s3s4-pinned-2/26.cerr
+VERDICT pin-diag-site-rolled-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-rolled line=27
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/27.src > build/om2-qual/s3s4-pinned-2/27.elf 2> build/om2-qual/s3s4-pinned-2/27.cerr
+VERDICT pin-diag-site-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-unroll-plain line=28
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/28.src > build/om2-qual/s3s4-pinned-2/28.elf 2> build/om2-qual/s3s4-pinned-2/28.cerr
+VERDICT pin-diag-site-unroll-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site-unroll line=29
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/29.src > build/om2-qual/s3s4-pinned-2/29.elf 2> build/om2-qual/s3s4-pinned-2/29.cerr
+VERDICT pin-diag-site-unroll PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-diag-site line=30
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/30.src > build/om2-qual/s3s4-pinned-2/30.elf 2> build/om2-qual/s3s4-pinned-2/30.cerr
+VERDICT pin-diag-site PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-fold-guard-rolled line=31
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/31.src > build/om2-qual/s3s4-pinned-2/31.elf 2> build/om2-qual/s3s4-pinned-2/31.cerr
+VERDICT pin-fold-guard-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-fold-guard line=32
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/32.src > build/om2-qual/s3s4-pinned-2/32.elf 2> build/om2-qual/s3s4-pinned-2/32.cerr
+VERDICT pin-fold-guard PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-fold-trap-diag line=33
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/33.src > build/om2-qual/s3s4-pinned-2/33.elf 2> build/om2-qual/s3s4-pinned-2/33.cerr
+VERDICT pin-fold-trap-diag PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-fold-trap-rolled line=34
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/34.src > build/om2-qual/s3s4-pinned-2/34.elf 2> build/om2-qual/s3s4-pinned-2/34.cerr
+VERDICT pin-fold-trap-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-fold-trap line=35
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/35.src > build/om2-qual/s3s4-pinned-2/35.elf 2> build/om2-qual/s3s4-pinned-2/35.cerr
+VERDICT pin-fold-trap PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-depth4-plain line=36
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/36.src > build/om2-qual/s3s4-pinned-2/36.elf 2> build/om2-qual/s3s4-pinned-2/36.cerr
+VERDICT pin-inline-depth4-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-inline-depth4 line=37
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/37.src > build/om2-qual/s3s4-pinned-2/37.elf 2> build/om2-qual/s3s4-pinned-2/37.cerr
+VERDICT pin-inline-depth4 PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-depth5 line=38
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/38.src > build/om2-qual/s3s4-pinned-2/38.elf 2> build/om2-qual/s3s4-pinned-2/38.cerr
+VERDICT pin-inline-depth5 PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-depth6-diag line=39
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/39.src > build/om2-qual/s3s4-pinned-2/39.elf 2> build/om2-qual/s3s4-pinned-2/39.cerr
+VERDICT pin-inline-depth6-diag PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-depth6-plain line=40
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/40.src > build/om2-qual/s3s4-pinned-2/40.elf 2> build/om2-qual/s3s4-pinned-2/40.cerr
+VERDICT pin-inline-depth6-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-inline-depth6 line=41
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/41.src > build/om2-qual/s3s4-pinned-2/41.elf 2> build/om2-qual/s3s4-pinned-2/41.cerr
+VERDICT pin-inline-depth6 PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-new-plain line=42
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/42.src > build/om2-qual/s3s4-pinned-2/42.elf 2> build/om2-qual/s3s4-pinned-2/42.cerr
+VERDICT pin-inline-new-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-inline-new line=43
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/43.src > build/om2-qual/s3s4-pinned-2/43.elf 2> build/om2-qual/s3s4-pinned-2/43.cerr
+VERDICT pin-inline-new PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-order-plain line=44
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/44.src > build/om2-qual/s3s4-pinned-2/44.elf 2> build/om2-qual/s3s4-pinned-2/44.cerr
+VERDICT pin-inline-order-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-inline-order line=45
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/45.src > build/om2-qual/s3s4-pinned-2/45.elf 2> build/om2-qual/s3s4-pinned-2/45.cerr
+VERDICT pin-inline-order PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-rec-direct-plain line=46
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/46.src > build/om2-qual/s3s4-pinned-2/46.elf 2> build/om2-qual/s3s4-pinned-2/46.cerr
+VERDICT pin-inline-rec-direct-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-inline-rec-direct line=47
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/47.src > build/om2-qual/s3s4-pinned-2/47.elf 2> build/om2-qual/s3s4-pinned-2/47.cerr
+VERDICT pin-inline-rec-direct PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-rec-mutual-plain line=48
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/48.src > build/om2-qual/s3s4-pinned-2/48.elf 2> build/om2-qual/s3s4-pinned-2/48.cerr
+VERDICT pin-inline-rec-mutual-plain PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-inline-rec-mutual line=49
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/49.src > build/om2-qual/s3s4-pinned-2/49.elf 2> build/om2-qual/s3s4-pinned-2/49.cerr
+VERDICT pin-inline-rec-mutual PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-inline-rec-mutual1 line=50
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/50.src > build/om2-qual/s3s4-pinned-2/50.elf 2> build/om2-qual/s3s4-pinned-2/50.cerr
+VERDICT pin-inline-rec-mutual1 PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE pin-regs-diag line=51
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/51.src > build/om2-qual/s3s4-pinned-2/51.elf 2> build/om2-qual/s3s4-pinned-2/51.cerr
+VERDICT pin-regs-diag PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-regs line=52
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/52.src > build/om2-qual/s3s4-pinned-2/52.elf 2> build/om2-qual/s3s4-pinned-2/52.cerr
+VERDICT pin-regs PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-mixed-uint-ulong line=53
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/53.src > build/om2-qual/s3s4-pinned-2/53.elf 2> build/om2-qual/s3s4-pinned-2/53.cerr
+VERDICT pin-rot-mixed-uint-ulong PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-mixed-ulong-uchar line=54
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/54.src > build/om2-qual/s3s4-pinned-2/54.elf 2> build/om2-qual/s3s4-pinned-2/54.cerr
+VERDICT pin-rot-mixed-ulong-uchar PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-result-type line=55
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/55.src > build/om2-qual/s3s4-pinned-2/55.elf 2> build/om2-qual/s3s4-pinned-2/55.cerr
+VERDICT pin-rot-result-type PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-signed-byte line=56
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/56.src > build/om2-qual/s3s4-pinned-2/56.elf 2> build/om2-qual/s3s4-pinned-2/56.cerr
+VERDICT pin-rot-signed-byte PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-signed-int line=57
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/57.src > build/om2-qual/s3s4-pinned-2/57.elf 2> build/om2-qual/s3s4-pinned-2/57.cerr
+VERDICT pin-rot-signed-int PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-signed-long line=58
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/58.src > build/om2-qual/s3s4-pinned-2/58.elf 2> build/om2-qual/s3s4-pinned-2/58.cerr
+VERDICT pin-rot-signed-long PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-signed-short line=59
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/59.src > build/om2-qual/s3s4-pinned-2/59.elf 2> build/om2-qual/s3s4-pinned-2/59.cerr
+VERDICT pin-rot-signed-short PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-trap line=60
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/60.src > build/om2-qual/s3s4-pinned-2/60.elf 2> build/om2-qual/s3s4-pinned-2/60.cerr
+VERDICT pin-rot-trap PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-rot-values line=61
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/61.src > build/om2-qual/s3s4-pinned-2/61.elf 2> build/om2-qual/s3s4-pinned-2/61.cerr
+VERDICT pin-rot-values PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-1v4x line=62
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/62.src > build/om2-qual/s3s4-pinned-2/62.elf 2> build/om2-qual/s3s4-pinned-2/62.cerr
+VERDICT pin-slots-1v4x PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-1v5x line=63
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/63.src > build/om2-qual/s3s4-pinned-2/63.elf 2> build/om2-qual/s3s4-pinned-2/63.cerr
+VERDICT pin-slots-1v5x PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-2v2s line=64
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/64.src > build/om2-qual/s3s4-pinned-2/64.elf 2> build/om2-qual/s3s4-pinned-2/64.cerr
+VERDICT pin-slots-2v2s PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-2v3s line=65
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/65.src > build/om2-qual/s3s4-pinned-2/65.elf 2> build/om2-qual/s3s4-pinned-2/65.cerr
+VERDICT pin-slots-2v3s PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-3v line=66
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/66.src > build/om2-qual/s3s4-pinned-2/66.elf 2> build/om2-qual/s3s4-pinned-2/66.cerr
+VERDICT pin-slots-3v PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-3v1s line=67
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/67.src > build/om2-qual/s3s4-pinned-2/67.elf 2> build/om2-qual/s3s4-pinned-2/67.cerr
+VERDICT pin-slots-3v1s PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-6s line=68
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/68.src > build/om2-qual/s3s4-pinned-2/68.elf 2> build/om2-qual/s3s4-pinned-2/68.cerr
+VERDICT pin-slots-6s PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-internal line=69
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/69.src > build/om2-qual/s3s4-pinned-2/69.elf 2> build/om2-qual/s3s4-pinned-2/69.cerr
+VERDICT pin-slots-internal PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-out6 line=70
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/70.src > build/om2-qual/s3s4-pinned-2/70.elf 2> build/om2-qual/s3s4-pinned-2/70.cerr
+VERDICT pin-slots-out6 PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-slots-out7 line=71
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/71.src > build/om2-qual/s3s4-pinned-2/71.elf 2> build/om2-qual/s3s4-pinned-2/71.cerr
+VERDICT pin-slots-out7 PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-break-nested-rolled line=72
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/72.src > build/om2-qual/s3s4-pinned-2/72.elf 2> build/om2-qual/s3s4-pinned-2/72.cerr
+VERDICT pin-unroll-break-nested-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-break-nested line=73
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/73.src > build/om2-qual/s3s4-pinned-2/73.elf 2> build/om2-qual/s3s4-pinned-2/73.cerr
+VERDICT pin-unroll-break-nested PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-break-rolled line=74
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/74.src > build/om2-qual/s3s4-pinned-2/74.elf 2> build/om2-qual/s3s4-pinned-2/74.cerr
+VERDICT pin-unroll-break-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-break line=75
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/75.src > build/om2-qual/s3s4-pinned-2/75.elf 2> build/om2-qual/s3s4-pinned-2/75.cerr
+VERDICT pin-unroll-break PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-continue-nested-rolled line=76
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/76.src > build/om2-qual/s3s4-pinned-2/76.elf 2> build/om2-qual/s3s4-pinned-2/76.cerr
+VERDICT pin-unroll-continue-nested-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-continue-nested line=77
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/77.src > build/om2-qual/s3s4-pinned-2/77.elf 2> build/om2-qual/s3s4-pinned-2/77.cerr
+VERDICT pin-unroll-continue-nested PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-continue-rolled line=78
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/78.src > build/om2-qual/s3s4-pinned-2/78.elf 2> build/om2-qual/s3s4-pinned-2/78.cerr
+VERDICT pin-unroll-continue-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-continue line=79
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/79.src > build/om2-qual/s3s4-pinned-2/79.elf 2> build/om2-qual/s3s4-pinned-2/79.cerr
+VERDICT pin-unroll-continue PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-growth-diag line=80
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/80.src > build/om2-qual/s3s4-pinned-2/80.elf 2> build/om2-qual/s3s4-pinned-2/80.cerr
+VERDICT pin-unroll-growth-diag PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-growth-rolled line=81
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/81.src > build/om2-qual/s3s4-pinned-2/81.elf 2> build/om2-qual/s3s4-pinned-2/81.cerr
+VERDICT pin-unroll-growth-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-growth line=82
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/82.src > build/om2-qual/s3s4-pinned-2/82.elf 2> build/om2-qual/s3s4-pinned-2/82.cerr
+VERDICT pin-unroll-growth PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-k0 line=83
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/83.src > build/om2-qual/s3s4-pinned-2/83.elf 2> build/om2-qual/s3s4-pinned-2/83.cerr
+VERDICT pin-unroll-k0 PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-k65-diag line=84
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/84.src > build/om2-qual/s3s4-pinned-2/84.elf 2> build/om2-qual/s3s4-pinned-2/84.cerr
+VERDICT pin-unroll-k65-diag PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-k65 line=85
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/85.src > build/om2-qual/s3s4-pinned-2/85.elf 2> build/om2-qual/s3s4-pinned-2/85.cerr
+VERDICT pin-unroll-k65 PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-kvar line=86
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/86.src > build/om2-qual/s3s4-pinned-2/86.elf 2> build/om2-qual/s3s4-pinned-2/86.cerr
+VERDICT pin-unroll-kvar PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-nest-64x2-rolled line=87
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/87.src > build/om2-qual/s3s4-pinned-2/87.elf 2> build/om2-qual/s3s4-pinned-2/87.cerr
+VERDICT pin-unroll-nest-64x2-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-nest-64x2 line=88
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/88.src > build/om2-qual/s3s4-pinned-2/88.elf 2> build/om2-qual/s3s4-pinned-2/88.cerr
+VERDICT pin-unroll-nest-64x2 PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-nest-rolled line=89
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/89.src > build/om2-qual/s3s4-pinned-2/89.elf 2> build/om2-qual/s3s4-pinned-2/89.cerr
+VERDICT pin-unroll-nest-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-nest line=90
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/90.src > build/om2-qual/s3s4-pinned-2/90.elf 2> build/om2-qual/s3s4-pinned-2/90.cerr
+VERDICT pin-unroll-nest PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-sum-diag line=91
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/91.src > build/om2-qual/s3s4-pinned-2/91.elf 2> build/om2-qual/s3s4-pinned-2/91.cerr
+VERDICT pin-unroll-sum-diag PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-sum-rolled line=92
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/92.src > build/om2-qual/s3s4-pinned-2/92.elf 2> build/om2-qual/s3s4-pinned-2/92.cerr
+VERDICT pin-unroll-sum-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-sum line=93
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/93.src > build/om2-qual/s3s4-pinned-2/93.elf 2> build/om2-qual/s3s4-pinned-2/93.cerr
+VERDICT pin-unroll-sum PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-write-i-nested line=94
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/94.src > build/om2-qual/s3s4-pinned-2/94.elf 2> build/om2-qual/s3s4-pinned-2/94.cerr
+VERDICT pin-unroll-write-i-nested PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-write-i-rolled line=95
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/95.src > build/om2-qual/s3s4-pinned-2/95.elf 2> build/om2-qual/s3s4-pinned-2/95.cerr
+VERDICT pin-unroll-write-i-rolled PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE pin-unroll-write-i line=96
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/96.src > build/om2-qual/s3s4-pinned-2/96.elf 2> build/om2-qual/s3s4-pinned-2/96.cerr
+VERDICT pin-unroll-write-i PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE rot-values-om1 line=99
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/99.src > build/om2-qual/s3s4-pinned-2/99.elf 2> build/om2-qual/s3s4-pinned-2/99.cerr
+  $ build/om2-qual/s3s4-pinned-2/99.elf < /dev/null > build/om2-qual/s3s4-pinned-2/99.out 2> build/om2-qual/s3s4-pinned-2/99.err
+VERDICT rot-values-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rot-trap-om1-A line=100
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/100.src > build/om2-qual/s3s4-pinned-2/100.elf 2> build/om2-qual/s3s4-pinned-2/100.cerr
+  $ build/om2-qual/s3s4-pinned-2/100.elf < build/om2-qual/s3s4-pinned-2/100.in > build/om2-qual/s3s4-pinned-2/100.out 2> build/om2-qual/s3s4-pinned-2/100.err
+VERDICT rot-trap-om1-A PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-B line=101
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/101.src > build/om2-qual/s3s4-pinned-2/101.elf 2> build/om2-qual/s3s4-pinned-2/101.cerr
+  $ build/om2-qual/s3s4-pinned-2/101.elf < build/om2-qual/s3s4-pinned-2/101.in > build/om2-qual/s3s4-pinned-2/101.out 2> build/om2-qual/s3s4-pinned-2/101.err
+VERDICT rot-trap-om1-B PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-C line=102
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/102.src > build/om2-qual/s3s4-pinned-2/102.elf 2> build/om2-qual/s3s4-pinned-2/102.cerr
+  $ build/om2-qual/s3s4-pinned-2/102.elf < build/om2-qual/s3s4-pinned-2/102.in > build/om2-qual/s3s4-pinned-2/102.out 2> build/om2-qual/s3s4-pinned-2/102.err
+VERDICT rot-trap-om1-C PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-D line=103
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/103.src > build/om2-qual/s3s4-pinned-2/103.elf 2> build/om2-qual/s3s4-pinned-2/103.cerr
+  $ build/om2-qual/s3s4-pinned-2/103.elf < build/om2-qual/s3s4-pinned-2/103.in > build/om2-qual/s3s4-pinned-2/103.out 2> build/om2-qual/s3s4-pinned-2/103.err
+VERDICT rot-trap-om1-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-E line=104
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/104.src > build/om2-qual/s3s4-pinned-2/104.elf 2> build/om2-qual/s3s4-pinned-2/104.cerr
+  $ build/om2-qual/s3s4-pinned-2/104.elf < build/om2-qual/s3s4-pinned-2/104.in > build/om2-qual/s3s4-pinned-2/104.out 2> build/om2-qual/s3s4-pinned-2/104.err
+VERDICT rot-trap-om1-E PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-F line=105
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/105.src > build/om2-qual/s3s4-pinned-2/105.elf 2> build/om2-qual/s3s4-pinned-2/105.cerr
+  $ build/om2-qual/s3s4-pinned-2/105.elf < build/om2-qual/s3s4-pinned-2/105.in > build/om2-qual/s3s4-pinned-2/105.out 2> build/om2-qual/s3s4-pinned-2/105.err
+VERDICT rot-trap-om1-F PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-G line=106
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/106.src > build/om2-qual/s3s4-pinned-2/106.elf 2> build/om2-qual/s3s4-pinned-2/106.cerr
+  $ build/om2-qual/s3s4-pinned-2/106.elf < build/om2-qual/s3s4-pinned-2/106.in > build/om2-qual/s3s4-pinned-2/106.out 2> build/om2-qual/s3s4-pinned-2/106.err
+VERDICT rot-trap-om1-G PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-H line=107
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/107.src > build/om2-qual/s3s4-pinned-2/107.elf 2> build/om2-qual/s3s4-pinned-2/107.cerr
+  $ build/om2-qual/s3s4-pinned-2/107.elf < build/om2-qual/s3s4-pinned-2/107.in > build/om2-qual/s3s4-pinned-2/107.out 2> build/om2-qual/s3s4-pinned-2/107.err
+VERDICT rot-trap-om1-H PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-I line=108
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/108.src > build/om2-qual/s3s4-pinned-2/108.elf 2> build/om2-qual/s3s4-pinned-2/108.cerr
+  $ build/om2-qual/s3s4-pinned-2/108.elf < build/om2-qual/s3s4-pinned-2/108.in > build/om2-qual/s3s4-pinned-2/108.out 2> build/om2-qual/s3s4-pinned-2/108.err
+VERDICT rot-trap-om1-I PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-J line=109
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/109.src > build/om2-qual/s3s4-pinned-2/109.elf 2> build/om2-qual/s3s4-pinned-2/109.cerr
+  $ build/om2-qual/s3s4-pinned-2/109.elf < build/om2-qual/s3s4-pinned-2/109.in > build/om2-qual/s3s4-pinned-2/109.out 2> build/om2-qual/s3s4-pinned-2/109.err
+VERDICT rot-trap-om1-J PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-K line=110
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/110.src > build/om2-qual/s3s4-pinned-2/110.elf 2> build/om2-qual/s3s4-pinned-2/110.cerr
+  $ build/om2-qual/s3s4-pinned-2/110.elf < build/om2-qual/s3s4-pinned-2/110.in > build/om2-qual/s3s4-pinned-2/110.out 2> build/om2-qual/s3s4-pinned-2/110.err
+VERDICT rot-trap-om1-K PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-L line=111
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/111.src > build/om2-qual/s3s4-pinned-2/111.elf 2> build/om2-qual/s3s4-pinned-2/111.cerr
+  $ build/om2-qual/s3s4-pinned-2/111.elf < build/om2-qual/s3s4-pinned-2/111.in > build/om2-qual/s3s4-pinned-2/111.out 2> build/om2-qual/s3s4-pinned-2/111.err
+VERDICT rot-trap-om1-L PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-M line=112
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/112.src > build/om2-qual/s3s4-pinned-2/112.elf 2> build/om2-qual/s3s4-pinned-2/112.cerr
+  $ build/om2-qual/s3s4-pinned-2/112.elf < build/om2-qual/s3s4-pinned-2/112.in > build/om2-qual/s3s4-pinned-2/112.out 2> build/om2-qual/s3s4-pinned-2/112.err
+VERDICT rot-trap-om1-M PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-N line=113
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/113.src > build/om2-qual/s3s4-pinned-2/113.elf 2> build/om2-qual/s3s4-pinned-2/113.cerr
+  $ build/om2-qual/s3s4-pinned-2/113.elf < build/om2-qual/s3s4-pinned-2/113.in > build/om2-qual/s3s4-pinned-2/113.out 2> build/om2-qual/s3s4-pinned-2/113.err
+VERDICT rot-trap-om1-N PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-O line=114
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/114.src > build/om2-qual/s3s4-pinned-2/114.elf 2> build/om2-qual/s3s4-pinned-2/114.cerr
+  $ build/om2-qual/s3s4-pinned-2/114.elf < build/om2-qual/s3s4-pinned-2/114.in > build/om2-qual/s3s4-pinned-2/114.out 2> build/om2-qual/s3s4-pinned-2/114.err
+VERDICT rot-trap-om1-O PASS run exit=107 expected=107 stdout=match stderr=match
+CASE rot-trap-om1-P line=115
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/115.src > build/om2-qual/s3s4-pinned-2/115.elf 2> build/om2-qual/s3s4-pinned-2/115.cerr
+  $ build/om2-qual/s3s4-pinned-2/115.elf < build/om2-qual/s3s4-pinned-2/115.in > build/om2-qual/s3s4-pinned-2/115.out 2> build/om2-qual/s3s4-pinned-2/115.err
+VERDICT rot-trap-om1-P PASS run exit=0 expected=0 stdout=match stderr=match
+CASE rot-result-type-om1 line=116
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/116.src > build/om2-qual/s3s4-pinned-2/116.elf 2> build/om2-qual/s3s4-pinned-2/116.cerr
+VERDICT rot-result-type-om1 PASS compile exit=7 expected=7 stdout=match stderr=match
+CASE unroll-sum-om1 line=117
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/117.src > build/om2-qual/s3s4-pinned-2/117.elf 2> build/om2-qual/s3s4-pinned-2/117.cerr
+  $ build/om2-qual/s3s4-pinned-2/117.elf < /dev/null > build/om2-qual/s3s4-pinned-2/117.out 2> build/om2-qual/s3s4-pinned-2/117.err
+VERDICT unroll-sum-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-nest-om1 line=118
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/118.src > build/om2-qual/s3s4-pinned-2/118.elf 2> build/om2-qual/s3s4-pinned-2/118.cerr
+  $ build/om2-qual/s3s4-pinned-2/118.elf < /dev/null > build/om2-qual/s3s4-pinned-2/118.out 2> build/om2-qual/s3s4-pinned-2/118.err
+VERDICT unroll-nest-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-write-i-rolled-om1 line=119
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/119.src > build/om2-qual/s3s4-pinned-2/119.elf 2> build/om2-qual/s3s4-pinned-2/119.cerr
+  $ build/om2-qual/s3s4-pinned-2/119.elf < /dev/null > build/om2-qual/s3s4-pinned-2/119.out 2> build/om2-qual/s3s4-pinned-2/119.err
+VERDICT unroll-write-i-rolled-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-break-om1 line=120
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/120.src > build/om2-qual/s3s4-pinned-2/120.elf 2> build/om2-qual/s3s4-pinned-2/120.cerr
+  $ build/om2-qual/s3s4-pinned-2/120.elf < /dev/null > build/om2-qual/s3s4-pinned-2/120.out 2> build/om2-qual/s3s4-pinned-2/120.err
+VERDICT unroll-break-om1 PASS run exit=2 expected=2 stdout=match stderr=match
+CASE unroll-continue-om1 line=121
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/121.src > build/om2-qual/s3s4-pinned-2/121.elf 2> build/om2-qual/s3s4-pinned-2/121.cerr
+  $ build/om2-qual/s3s4-pinned-2/121.elf < /dev/null > build/om2-qual/s3s4-pinned-2/121.out 2> build/om2-qual/s3s4-pinned-2/121.err
+VERDICT unroll-continue-om1 PASS run exit=3 expected=3 stdout=match stderr=match
+CASE unroll-break-nested-om1 line=122
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/122.src > build/om2-qual/s3s4-pinned-2/122.elf 2> build/om2-qual/s3s4-pinned-2/122.cerr
+  $ build/om2-qual/s3s4-pinned-2/122.elf < /dev/null > build/om2-qual/s3s4-pinned-2/122.out 2> build/om2-qual/s3s4-pinned-2/122.err
+VERDICT unroll-break-nested-om1 PASS run exit=4 expected=4 stdout=match stderr=match
+CASE unroll-continue-nested-om1 line=123
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/123.src > build/om2-qual/s3s4-pinned-2/123.elf 2> build/om2-qual/s3s4-pinned-2/123.cerr
+  $ build/om2-qual/s3s4-pinned-2/123.elf < /dev/null > build/om2-qual/s3s4-pinned-2/123.out 2> build/om2-qual/s3s4-pinned-2/123.err
+VERDICT unroll-continue-nested-om1 PASS run exit=8 expected=8 stdout=match stderr=match
+CASE unroll-nest-64x2-om1 line=124
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/124.src > build/om2-qual/s3s4-pinned-2/124.elf 2> build/om2-qual/s3s4-pinned-2/124.cerr
+  $ build/om2-qual/s3s4-pinned-2/124.elf < /dev/null > build/om2-qual/s3s4-pinned-2/124.out 2> build/om2-qual/s3s4-pinned-2/124.err
+VERDICT unroll-nest-64x2-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE unroll-growth-om1 line=125
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/125.src > build/om2-qual/s3s4-pinned-2/125.elf 2> build/om2-qual/s3s4-pinned-2/125.cerr
+  $ build/om2-qual/s3s4-pinned-2/125.elf < /dev/null > build/om2-qual/s3s4-pinned-2/125.out 2> build/om2-qual/s3s4-pinned-2/125.err
+VERDICT unroll-growth-om1 PASS run exit=149 expected=149 stdout=match stderr=match
+CASE inline-order-om1-A line=126
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/126.src > build/om2-qual/s3s4-pinned-2/126.elf 2> build/om2-qual/s3s4-pinned-2/126.cerr
+  $ build/om2-qual/s3s4-pinned-2/126.elf < build/om2-qual/s3s4-pinned-2/126.in > build/om2-qual/s3s4-pinned-2/126.out 2> build/om2-qual/s3s4-pinned-2/126.err
+VERDICT inline-order-om1-A PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-om1-B line=127
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/127.src > build/om2-qual/s3s4-pinned-2/127.elf 2> build/om2-qual/s3s4-pinned-2/127.cerr
+  $ build/om2-qual/s3s4-pinned-2/127.elf < build/om2-qual/s3s4-pinned-2/127.in > build/om2-qual/s3s4-pinned-2/127.out 2> build/om2-qual/s3s4-pinned-2/127.err
+VERDICT inline-order-om1-B PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-C line=128
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/128.src > build/om2-qual/s3s4-pinned-2/128.elf 2> build/om2-qual/s3s4-pinned-2/128.cerr
+  $ build/om2-qual/s3s4-pinned-2/128.elf < build/om2-qual/s3s4-pinned-2/128.in > build/om2-qual/s3s4-pinned-2/128.out 2> build/om2-qual/s3s4-pinned-2/128.err
+VERDICT inline-order-om1-C PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-om1-D line=129
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/129.src > build/om2-qual/s3s4-pinned-2/129.elf 2> build/om2-qual/s3s4-pinned-2/129.cerr
+  $ build/om2-qual/s3s4-pinned-2/129.elf < build/om2-qual/s3s4-pinned-2/129.in > build/om2-qual/s3s4-pinned-2/129.out 2> build/om2-qual/s3s4-pinned-2/129.err
+VERDICT inline-order-om1-D PASS run exit=101 expected=101 stdout=match stderr=match
+CASE inline-order-om1-E line=130
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/130.src > build/om2-qual/s3s4-pinned-2/130.elf 2> build/om2-qual/s3s4-pinned-2/130.cerr
+  $ build/om2-qual/s3s4-pinned-2/130.elf < build/om2-qual/s3s4-pinned-2/130.in > build/om2-qual/s3s4-pinned-2/130.out 2> build/om2-qual/s3s4-pinned-2/130.err
+VERDICT inline-order-om1-E PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-F line=131
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/131.src > build/om2-qual/s3s4-pinned-2/131.elf 2> build/om2-qual/s3s4-pinned-2/131.cerr
+  $ build/om2-qual/s3s4-pinned-2/131.elf < build/om2-qual/s3s4-pinned-2/131.in > build/om2-qual/s3s4-pinned-2/131.out 2> build/om2-qual/s3s4-pinned-2/131.err
+VERDICT inline-order-om1-F PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-G line=132
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/132.src > build/om2-qual/s3s4-pinned-2/132.elf 2> build/om2-qual/s3s4-pinned-2/132.cerr
+  $ build/om2-qual/s3s4-pinned-2/132.elf < build/om2-qual/s3s4-pinned-2/132.in > build/om2-qual/s3s4-pinned-2/132.out 2> build/om2-qual/s3s4-pinned-2/132.err
+VERDICT inline-order-om1-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE inline-order-om1-H line=133
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/133.src > build/om2-qual/s3s4-pinned-2/133.elf 2> build/om2-qual/s3s4-pinned-2/133.cerr
+  $ build/om2-qual/s3s4-pinned-2/133.elf < build/om2-qual/s3s4-pinned-2/133.in > build/om2-qual/s3s4-pinned-2/133.out 2> build/om2-qual/s3s4-pinned-2/133.err
+VERDICT inline-order-om1-H PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-order-om1-I line=134
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/134.src > build/om2-qual/s3s4-pinned-2/134.elf 2> build/om2-qual/s3s4-pinned-2/134.cerr
+  $ build/om2-qual/s3s4-pinned-2/134.elf < build/om2-qual/s3s4-pinned-2/134.in > build/om2-qual/s3s4-pinned-2/134.out 2> build/om2-qual/s3s4-pinned-2/134.err
+VERDICT inline-order-om1-I PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth4-om1 line=135
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/135.src > build/om2-qual/s3s4-pinned-2/135.elf 2> build/om2-qual/s3s4-pinned-2/135.cerr
+  $ build/om2-qual/s3s4-pinned-2/135.elf < /dev/null > build/om2-qual/s3s4-pinned-2/135.out 2> build/om2-qual/s3s4-pinned-2/135.err
+VERDICT inline-depth4-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-depth6-om1 line=136
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/136.src > build/om2-qual/s3s4-pinned-2/136.elf 2> build/om2-qual/s3s4-pinned-2/136.cerr
+  $ build/om2-qual/s3s4-pinned-2/136.elf < /dev/null > build/om2-qual/s3s4-pinned-2/136.out 2> build/om2-qual/s3s4-pinned-2/136.err
+VERDICT inline-depth6-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-new-om1 line=137
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/137.src > build/om2-qual/s3s4-pinned-2/137.elf 2> build/om2-qual/s3s4-pinned-2/137.cerr
+  $ build/om2-qual/s3s4-pinned-2/137.elf < /dev/null > build/om2-qual/s3s4-pinned-2/137.out 2> build/om2-qual/s3s4-pinned-2/137.err
+VERDICT inline-new-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-rec-direct-om1 line=138
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/138.src > build/om2-qual/s3s4-pinned-2/138.elf 2> build/om2-qual/s3s4-pinned-2/138.cerr
+  $ build/om2-qual/s3s4-pinned-2/138.elf < /dev/null > build/om2-qual/s3s4-pinned-2/138.out 2> build/om2-qual/s3s4-pinned-2/138.err
+VERDICT inline-rec-direct-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE inline-rec-mutual-om1 line=139
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/139.src > build/om2-qual/s3s4-pinned-2/139.elf 2> build/om2-qual/s3s4-pinned-2/139.cerr
+  $ build/om2-qual/s3s4-pinned-2/139.elf < /dev/null > build/om2-qual/s3s4-pinned-2/139.out 2> build/om2-qual/s3s4-pinned-2/139.err
+VERDICT inline-rec-mutual-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fold-guard-om1 line=140
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/140.src > build/om2-qual/s3s4-pinned-2/140.elf 2> build/om2-qual/s3s4-pinned-2/140.cerr
+  $ build/om2-qual/s3s4-pinned-2/140.elf < /dev/null > build/om2-qual/s3s4-pinned-2/140.out 2> build/om2-qual/s3s4-pinned-2/140.err
+VERDICT fold-guard-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE fold-trap-om1-A line=141
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/141.src > build/om2-qual/s3s4-pinned-2/141.elf 2> build/om2-qual/s3s4-pinned-2/141.cerr
+  $ build/om2-qual/s3s4-pinned-2/141.elf < build/om2-qual/s3s4-pinned-2/141.in > build/om2-qual/s3s4-pinned-2/141.out 2> build/om2-qual/s3s4-pinned-2/141.err
+VERDICT fold-trap-om1-A PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-om1-B line=142
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/142.src > build/om2-qual/s3s4-pinned-2/142.elf 2> build/om2-qual/s3s4-pinned-2/142.cerr
+  $ build/om2-qual/s3s4-pinned-2/142.elf < build/om2-qual/s3s4-pinned-2/142.in > build/om2-qual/s3s4-pinned-2/142.out 2> build/om2-qual/s3s4-pinned-2/142.err
+VERDICT fold-trap-om1-B PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-om1-C line=143
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/143.src > build/om2-qual/s3s4-pinned-2/143.elf 2> build/om2-qual/s3s4-pinned-2/143.cerr
+  $ build/om2-qual/s3s4-pinned-2/143.elf < build/om2-qual/s3s4-pinned-2/143.in > build/om2-qual/s3s4-pinned-2/143.out 2> build/om2-qual/s3s4-pinned-2/143.err
+VERDICT fold-trap-om1-C PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-om1-D line=144
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/144.src > build/om2-qual/s3s4-pinned-2/144.elf 2> build/om2-qual/s3s4-pinned-2/144.cerr
+  $ build/om2-qual/s3s4-pinned-2/144.elf < build/om2-qual/s3s4-pinned-2/144.in > build/om2-qual/s3s4-pinned-2/144.out 2> build/om2-qual/s3s4-pinned-2/144.err
+VERDICT fold-trap-om1-D PASS run exit=107 expected=107 stdout=match stderr=match
+CASE fold-trap-om1-E line=145
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/145.src > build/om2-qual/s3s4-pinned-2/145.elf 2> build/om2-qual/s3s4-pinned-2/145.cerr
+  $ build/om2-qual/s3s4-pinned-2/145.elf < build/om2-qual/s3s4-pinned-2/145.in > build/om2-qual/s3s4-pinned-2/145.out 2> build/om2-qual/s3s4-pinned-2/145.err
+VERDICT fold-trap-om1-E PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-om1-F line=146
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/146.src > build/om2-qual/s3s4-pinned-2/146.elf 2> build/om2-qual/s3s4-pinned-2/146.cerr
+  $ build/om2-qual/s3s4-pinned-2/146.elf < build/om2-qual/s3s4-pinned-2/146.in > build/om2-qual/s3s4-pinned-2/146.out 2> build/om2-qual/s3s4-pinned-2/146.err
+VERDICT fold-trap-om1-F PASS run exit=101 expected=101 stdout=match stderr=match
+CASE fold-trap-om1-G line=147
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/147.src > build/om2-qual/s3s4-pinned-2/147.elf 2> build/om2-qual/s3s4-pinned-2/147.cerr
+  $ build/om2-qual/s3s4-pinned-2/147.elf < build/om2-qual/s3s4-pinned-2/147.in > build/om2-qual/s3s4-pinned-2/147.out 2> build/om2-qual/s3s4-pinned-2/147.err
+VERDICT fold-trap-om1-G PASS run exit=102 expected=102 stdout=match stderr=match
+CASE fold-trap-om1-H line=148
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/148.src > build/om2-qual/s3s4-pinned-2/148.elf 2> build/om2-qual/s3s4-pinned-2/148.cerr
+  $ build/om2-qual/s3s4-pinned-2/148.elf < build/om2-qual/s3s4-pinned-2/148.in > build/om2-qual/s3s4-pinned-2/148.out 2> build/om2-qual/s3s4-pinned-2/148.err
+VERDICT fold-trap-om1-H PASS run exit=105 expected=105 stdout=match stderr=match
+CASE fold-trap-om1-I line=149
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/149.src > build/om2-qual/s3s4-pinned-2/149.elf 2> build/om2-qual/s3s4-pinned-2/149.cerr
+  $ build/om2-qual/s3s4-pinned-2/149.elf < build/om2-qual/s3s4-pinned-2/149.in > build/om2-qual/s3s4-pinned-2/149.out 2> build/om2-qual/s3s4-pinned-2/149.err
+VERDICT fold-trap-om1-I PASS run exit=102 expected=102 stdout=match stderr=match
+CASE ce-sized-om1 line=150
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/150.src > build/om2-qual/s3s4-pinned-2/150.elf 2> build/om2-qual/s3s4-pinned-2/150.cerr
+  $ build/om2-qual/s3s4-pinned-2/150.elf < /dev/null > build/om2-qual/s3s4-pinned-2/150.out 2> build/om2-qual/s3s4-pinned-2/150.err
+VERDICT ce-sized-om1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ce-sized-oob-om1 line=151
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/151.src > build/om2-qual/s3s4-pinned-2/151.elf 2> build/om2-qual/s3s4-pinned-2/151.cerr
+  $ build/om2-qual/s3s4-pinned-2/151.elf < /dev/null > build/om2-qual/s3s4-pinned-2/151.out 2> build/om2-qual/s3s4-pinned-2/151.err
+VERDICT ce-sized-oob-om1 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-sized-oob-fold-om1 line=152
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/152.src > build/om2-qual/s3s4-pinned-2/152.elf 2> build/om2-qual/s3s4-pinned-2/152.cerr
+  $ build/om2-qual/s3s4-pinned-2/152.elf < /dev/null > build/om2-qual/s3s4-pinned-2/152.out 2> build/om2-qual/s3s4-pinned-2/152.err
+VERDICT ce-sized-oob-fold-om1 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-A line=153
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/153.src > build/om2-qual/s3s4-pinned-2/153.elf 2> build/om2-qual/s3s4-pinned-2/153.cerr
+  $ build/om2-qual/s3s4-pinned-2/153.elf < build/om2-qual/s3s4-pinned-2/153.in > build/om2-qual/s3s4-pinned-2/153.out 2> build/om2-qual/s3s4-pinned-2/153.err
+VERDICT ce-view-om1-A PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-B line=154
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/154.src > build/om2-qual/s3s4-pinned-2/154.elf 2> build/om2-qual/s3s4-pinned-2/154.cerr
+  $ build/om2-qual/s3s4-pinned-2/154.elf < build/om2-qual/s3s4-pinned-2/154.in > build/om2-qual/s3s4-pinned-2/154.out 2> build/om2-qual/s3s4-pinned-2/154.err
+VERDICT ce-view-om1-B PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-C line=155
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/155.src > build/om2-qual/s3s4-pinned-2/155.elf 2> build/om2-qual/s3s4-pinned-2/155.cerr
+  $ build/om2-qual/s3s4-pinned-2/155.elf < build/om2-qual/s3s4-pinned-2/155.in > build/om2-qual/s3s4-pinned-2/155.out 2> build/om2-qual/s3s4-pinned-2/155.err
+VERDICT ce-view-om1-C PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-D line=156
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/156.src > build/om2-qual/s3s4-pinned-2/156.elf 2> build/om2-qual/s3s4-pinned-2/156.cerr
+  $ build/om2-qual/s3s4-pinned-2/156.elf < build/om2-qual/s3s4-pinned-2/156.in > build/om2-qual/s3s4-pinned-2/156.out 2> build/om2-qual/s3s4-pinned-2/156.err
+VERDICT ce-view-om1-D PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ce-view-om1-E line=157
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/157.src > build/om2-qual/s3s4-pinned-2/157.elf 2> build/om2-qual/s3s4-pinned-2/157.cerr
+  $ build/om2-qual/s3s4-pinned-2/157.elf < build/om2-qual/s3s4-pinned-2/157.in > build/om2-qual/s3s4-pinned-2/157.out 2> build/om2-qual/s3s4-pinned-2/157.err
+VERDICT ce-view-om1-E PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ce-view-om1-F line=158
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/158.src > build/om2-qual/s3s4-pinned-2/158.elf 2> build/om2-qual/s3s4-pinned-2/158.cerr
+  $ build/om2-qual/s3s4-pinned-2/158.elf < build/om2-qual/s3s4-pinned-2/158.in > build/om2-qual/s3s4-pinned-2/158.out 2> build/om2-qual/s3s4-pinned-2/158.err
+VERDICT ce-view-om1-F PASS run exit=103 expected=103 stdout=match stderr=match
+CASE slots-6s-om1 line=159
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/159.src > build/om2-qual/s3s4-pinned-2/159.elf 2> build/om2-qual/s3s4-pinned-2/159.cerr
+VERDICT slots-6s-om1 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE slots-7p-om1 line=160
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/160.src > build/om2-qual/s3s4-pinned-2/160.elf 2> build/om2-qual/s3s4-pinned-2/160.cerr
+VERDICT slots-7p-om1 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE regs-om1 line=161
+  $ seed/out/omc < build/om2-qual/s3s4-pinned-2/161.src > build/om2-qual/s3s4-pinned-2/161.elf 2> build/om2-qual/s3s4-pinned-2/161.cerr
+VERDICT regs-om1 PASS compile exit=12 expected=12 stdout=match stderr=match
+OM2GATE PASS cases=145 pass=145 fail=0 invalid=0 not_run=0

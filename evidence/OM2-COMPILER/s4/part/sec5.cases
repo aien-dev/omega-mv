@@ -1,0 +1,60 @@
+l5-shactx run seed/qualification/om2/sec/s5s7/l5-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out - 0
+l5-endian run seed/qualification/om2/sec/s5s7/l5-endian.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-endian.out - 0
+l5-scalar run seed/qualification/om2/sec/s5s7/l5-scalar.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-scalar.out - 0
+l5-scalar-idx refuse seed/qualification/om2/sec/s5s7/l5-scalar-idx.om+seed/qualification/om2/sec/s5s7/pr.om 5
+l5-count1-noidx refuse seed/qualification/om2/sec/s5s7/l5-count1-noidx.om+seed/qualification/om2/sec/s5s7/pr.om 4
+l5-trap run seed/qualification/om2/sec/s5s7/l5-trap.om+seed/qualification/om2/sec/s5s7/pr.om - - - 103
+l5-const-idx refuse seed/qualification/om2/sec/s5s7/l5-const-idx.om+seed/qualification/om2/sec/s5s7/pr.om 21
+l5-fit emit seed/qualification/om2/sec/s5s7/l5-fit.om+seed/qualification/om2/sec/s5s7/pr.om any - 0
+l5-max emit seed/qualification/om2/sec/s5s7/l5-max.om+seed/qualification/om2/sec/s5s7/pr.om any - 0
+l5-overlap emit seed/qualification/om2/sec/s5s7/l5-overlap.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:29 29
+l5-past emit seed/qualification/om2/sec/s5s7/l5-past.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+l5-past1 emit seed/qualification/om2/sec/s5s7/l5-past1.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+l5-count0 emit seed/qualification/om2/sec/s5s7/l5-count0.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+l5-count4097 emit seed/qualification/om2/sec/s5s7/l5-count4097.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+l5-off emit seed/qualification/om2/sec/s5s7/l5-off.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:29 29
+l5-size0 emit seed/qualification/om2/sec/s5s7/l5-size0.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:29 29
+l5-size4097 emit seed/qualification/om2/sec/s5s7/l5-size4097.om+seed/qualification/om2/sec/s5s7/pr.om - err:4:29 29
+l5-after-fn emit seed/qualification/om2/sec/s5s7/l5-after-fn.om+seed/qualification/om2/sec/s5s7/pr.om - err:7:29 29
+l5-view-put refuse seed/qualification/om2/sec/s5s7/l5-view-put.om+seed/qualification/om2/sec/s5s7/pr.om 20
+l5-wrong-size refuse seed/qualification/om2/sec/s5s7/l5-wrong-size.om+seed/qualification/om2/sec/s5s7/pr.om 7
+t-shactx run seed/qualification/om2/sec/s5s7/om1/t-shactx.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out - 0
+t-endian run seed/qualification/om2/sec/s5s7/om1/t-endian.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/l5-endian.out - 0
+f5-branch emit seed/qualification/om2/sec/s5s7/f5-branch.om+seed/qualification/om2/sec/s5s7/pr.om - err:10:27 27
+f5-loop emit seed/qualification/om2/sec/s5s7/f5-loop.om+seed/qualification/om2/sec/s5s7/pr.om - err:9:27 27
+f5-line run seed/qualification/om2/sec/s5s7/f5-line.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-line.out - 0
+f5-unroll-all run seed/qualification/om2/sec/s5s7/f5-unroll-all.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-unroll-all.out - 0
+f5-n64 run seed/qualification/om2/sec/s5s7/f5-n64.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-n64.out - 0
+f5-n65 refuse seed/qualification/om2/sec/s5s7/f5-n65.om+seed/qualification/om2/sec/s5s7/pr.om 14
+f5-partial emit seed/qualification/om2/sec/s5s7/f5-partial.om+seed/qualification/om2/sec/s5s7/pr.om - err:9:27 27
+f5-call emit seed/qualification/om2/sec/s5s7/f5-call.om+seed/qualification/om2/sec/s5s7/pr.om - err:12:27 27
+f5-write emit seed/qualification/om2/sec/s5s7/f5-write.om+seed/qualification/om2/sec/s5s7/pr.om - err:9:27 27
+f5-read emit seed/qualification/om2/sec/s5s7/f5-read.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:27 27
+f5-ifelse run seed/qualification/om2/sec/s5s7/f5-ifelse.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-ifelse.out - 0
+f5-join-diff emit seed/qualification/om2/sec/s5s7/f5-join-diff.om+seed/qualification/om2/sec/s5s7/pr.om - err:12:27 27
+f5-inline run seed/qualification/om2/sec/s5s7/f5-inline.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/f5-inline.out - 0
+a5-exact run seed/qualification/om2/sec/s5s7/a5-exact.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+a5-allops run seed/qualification/om2/sec/s5s7/a5-allops.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-allops.out - 0
+a5-rot64 run seed/qualification/om2/sec/s5s7/a5-rot64.om+seed/qualification/om2/sec/s5s7/pr.om - - - 107
+a5-exact-diag emit seed/qualification/om2/sec/s5s7/a5-exact-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-exact-diag.has 0
+a5-kept run seed/qualification/om2/sec/s5s7/a5-kept.om+seed/qualification/om2/sec/s5s7/pr.om - - - 110
+a5-kept-diag emit seed/qualification/om2/sec/s5s7/a5-kept-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-kept-diag.has 0
+a5-swap run seed/qualification/om2/sec/s5s7/a5-swap.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-swap.out - 0
+a5-swap-diag emit seed/qualification/om2/sec/s5s7/a5-swap-diag.om any has:seed/qualification/om2/sec/s5s7/diag/a5-swap-diag.has 0
+a5-seal-main emit seed/qualification/om2/sec/s5s7/a5-seal-main.om+seed/qualification/om2/sec/s5s7/pr.om - err:11:28 28
+a5-seal-other emit seed/qualification/om2/sec/s5s7/a5-seal-other.om+seed/qualification/om2/sec/s5s7/pr.om - err:11:28 28
+a5-raw-num refuse seed/qualification/om2/sec/s5s7/a5-raw-num.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-raw-arg refuse seed/qualification/om2/sec/s5s7/a5-raw-arg.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-raw-ret refuse seed/qualification/om2/sec/s5s7/a5-raw-ret.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-raw-assign refuse seed/qualification/om2/sec/s5s7/a5-raw-assign.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-op-and refuse seed/qualification/om2/sec/s5s7/a5-op-and.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-op-rotl refuse seed/qualification/om2/sec/s5s7/a5-op-rotl.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-op-add refuse seed/qualification/om2/sec/s5s7/a5-op-add.om+seed/qualification/om2/sec/s5s7/pr.om 7
+a5-pred emit seed/qualification/om2/sec/s5s7/a5-pred.om+seed/qualification/om2/sec/s5s7/pr.om - err:5:28 28
+a5-name-seal emit seed/qualification/om2/sec/s5s7/a5-name-seal.om+seed/qualification/om2/sec/s5s7/pr.om - err:6:16 16
+a5-entry-param refuse seed/qualification/om2/sec/s5s7/a5-entry-param.om 7
+a5-entry-ret refuse seed/qualification/om2/sec/s5s7/a5-entry-ret.om 7
+a5-array refuse seed/qualification/om2/sec/s5s7/a5-array.om+seed/qualification/om2/sec/s5s7/pr.om 7
+t-dup run seed/qualification/om2/sec/s5s7/om1/t-dup.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-exact.out - 0
+t-allops run seed/qualification/om2/sec/s5s7/om1/t-allops.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/a5-allops.out - 0
+t-trap10 run seed/qualification/om2/sec/s5s7/om1/t-trap10.om+seed/qualification/om2/sec/s5s7/pr.om - - - 110

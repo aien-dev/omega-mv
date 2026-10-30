@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* bw_warp_sim.h: host SIMT simulator for the Blackwell IR (omega #308).
  *
  * Models what the earlier per-thread simulators could not: a warp of 32 lanes with an
@@ -28,6 +44,8 @@
  *                      an exit jumped past it, or a target was corrupted)
  *   WS_E_NEVER_JOINED  the warp finished with a barrier still armed
  *   WS_E_SELF_BRANCH, WS_E_PC, WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS
+ *   WS_E_IMADHI_RC     IMAD.HI.U32 with a register Rc: the chip reads Rc as a 64-bit pair (omega #492,
+ *                      nvcc oracle, chip probe pending), so a non-RZ Rc is refused, not modelled
  * Every error names the pc. Memory: global addresses are host pointers (optionally range
  * checked); shared memory is a per-CTA buffer poisoned at CTA start so a read of a word
  * nobody wrote shows up in the oracle comparison.
@@ -42,6 +60,7 @@
  * The simulator runs CTAs one after another, so an atomic counter sees every earlier CTA's add. */
 
 #include "omega_blackwell_codegen.h"
+#include "omega_blackwell_codegen_tc.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -60,12 +79,12 @@
 enum {
     WS_OK = 0, WS_E_SHFL_SPLIT, WS_E_SHFL_EXITED, WS_E_BAR_SPLIT, WS_E_BSYNC_UNARMED, WS_E_BSSY_REARM,
     WS_E_JOIN_MISMATCH, WS_E_NONMEMBER, WS_E_STUCK, WS_E_NEVER_JOINED, WS_E_SELF_BRANCH, WS_E_PC,
-    WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS, WS_E_BAR_TIMEOUT, WS_E_STEPS
+    WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS, WS_E_BAR_TIMEOUT, WS_E_STEPS, WS_E_IMADHI_RC
 };
 static const char *ws_err_name(int e) {
     static const char *const n[] = { "OK", "SHFL_SPLIT", "SHFL_EXITED", "BAR_SPLIT", "BSYNC_UNARMED", "BSSY_REARM",
         "JOIN_MISMATCH", "NONMEMBER", "STUCK", "NEVER_JOINED", "SELF_BRANCH", "PC", "OP", "SHIFT", "MEM", "SMEM",
-        "FRAGS", "BAR_TIMEOUT", "STEPS" };
+        "FRAGS", "BAR_TIMEOUT", "STEPS", "IMADHI_RC" };
     return (e >= 0 && e < (int)(sizeof n / sizeof n[0])) ? n[e] : "?";
 }
 
@@ -90,6 +109,7 @@ typedef struct {
     WsRange ranges[WS_MAX_RANGES]; int nranges; /* when > 0, every global access must fall in one */
     int order;                /* 0 = lowest pc first, 1 = highest pc first */
     int trace;                /* print every issue of warp 0 of CTA (0,0) */
+    uint64_t step_budget;     /* scheduling steps per warp before "step budget" (0 = 2e9); tests of a dropped loop guard set it low */
     /* results */
     int err; int err_pc; char msg[200];
     uint64_t warp_issues;     /* fragment-instruction issues (the chip's cost unit for divergence) */
@@ -113,6 +133,7 @@ static void ws_wr64(WsLane *l, int v, uint64_t x, const BlackwellIRProgram *p) {
 static uint32_t ws_rds(const WsLane *l, int v, unsigned sub, const BlackwellIRProgram *p) { if (v < 0) return 0; int ph = p->regalloc.vreg_to_phys[v]; return ph < 0 ? 0 : l->r[(ph + sub) & 0xff]; }
 static void ws_wrs(WsLane *l, int v, unsigned sub, uint32_t x, const BlackwellIRProgram *p) { if (v < 0) return; int ph = p->regalloc.vreg_to_phys[v]; if (ph >= 0) l->r[(ph + sub) & 0xff] = x; }
 static float ws_u2f(uint32_t u) { float f; memcpy(&f, &u, 4); return f; }
+static uint32_t ws_k_bf16_rn(uint32_t u) { if ((u & 0x7fffffffu) > 0x7f800000u) return 0x7fc0u; return (u + 0x7fffu + ((u >> 16) & 1u)) >> 16; } /* f32 bits -> bf16 bits, round to nearest even (as bw_warp_sim_tc.h) */
 static uint32_t ws_f2u(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }
 static uint32_t ws_lut3(uint32_t lut, uint32_t a, uint32_t b, uint32_t c) {
     uint32_t r = 0;
@@ -145,7 +166,9 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_MOV_RZ: ws_wrs(l, in->dst_vreg, in->dst_subreg, 0, p); break;
     case BW_IR_IMAD: ws_wrs(l, in->dst_vreg, in->dst_subreg, in->src2_vreg >= 0 ? a * b + c : a * in->imm + c, p); break;
     case BW_IR_IMAD_WIDE: ws_wr64(l, in->dst_vreg, (uint64_t)a * in->imm + ws_rd64(l, in->src3_vreg, p), p); break;
-    case BW_IR_IMAD_HI_U32: ws_wrs(l, in->dst_vreg, in->dst_subreg, (uint32_t)(((uint64_t)a * b) >> 32) + c, p); break;
+    case BW_IR_IMAD_HI_U32: /* Rd = hi32(Ra * Rb) with Rc = RZ. The chip reads a register Rc as a 64-bit pair (omega #492): refused until a chip probe pins the model */
+        if (in->src3_vreg >= 0) { ws_fail(s, WS_E_IMADHI_RC, pc, "IMAD.HI.U32 with a register Rc (the chip reads Rc as a 64-bit pair, not chip-probed): use RZ, or SHF.R + IADD3"); return; }
+        ws_wrs(l, in->dst_vreg, in->dst_subreg, (uint32_t)(((uint64_t)a * b) >> 32), p); break;
     case BW_IR_IADD3: ws_wrs(l, in->dst_vreg, in->dst_subreg, a + b, p); break; /* the encoder's IADD3 has Rc = RZ */
     case BW_IR_SHF_R: ws_wrs(l, in->dst_vreg, in->dst_subreg, a >> (in->imm & 31), p); break;
     case BW_IR_SHF_L_U32: if (b >= 32) { ws_fail(s, WS_E_SHIFT, pc, "SHF.L.U32 amount >= 32 (not chip-verified)"); return; } ws_wrs(l, in->dst_vreg, in->dst_subreg, a << b, p); break;
@@ -155,7 +178,8 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_ISETP_GE_U32: l->p0 = a >= b; break;
     case BW_IR_LDG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t x; memcpy(&x, (const void *)(uintptr_t)ad, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
     case BW_IR_LDG_E_U16: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 2, pc)) return; uint16_t x; memcpy(&x, (const void *)(uintptr_t)ad, 2); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
-    case BW_IR_STG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
+    /* STG.E takes the signed 24-bit byte offset the encoder writes (nvdisasm 13.0 -b SM121 decodes "STG.E desc[UR4][R4.64+0x1e0c], R9", omega#542) */
+    case BW_IR_STG_E: { uint64_t ad = ws_rd64(l, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
     case BW_IR_LDG_E_64: case BW_IR_LDG_E_128: { unsigned n = in->op == BW_IR_LDG_E_64 ? 8u : 16u; uint64_t ad = ws_rd64(l, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; if (!ws_mem_ok(s, ad, n, pc)) { if (getenv("WS_DBG")) fprintf(stderr, "  tid %u cx %u cy %u\n", tid, cx, cy); return; } if (ad & (n - 1)) { ws_fail(s, WS_E_MEM, pc, "wide global load not naturally aligned"); return; } uint32_t x[4]; memcpy(x, (const void *)(uintptr_t)ad, n); for (unsigned i = 0; i < n / 4; i++) ws_wrs(l, in->dst_vreg, i, x[i], p); break; }
     case BW_IR_LDS128: { uint32_t ad = a + in->imm; if (ad & 15u) { ws_fail(s, WS_E_SMEM, pc, "LDS.128 address not 16-byte aligned"); return; } for (unsigned i = 0; i < 4; i++) { uint32_t *m = ws_smem(s, ad + 4u * i, pc); if (!m) return; ws_wrs(l, in->dst_vreg, i, *m, p); } break; }
     case BW_IR_LDS32: { uint32_t *m = ws_smem(s, a, pc); if (!m) return; ws_wrs(l, in->dst_vreg, in->dst_subreg, *m, p); break; }
@@ -165,11 +189,13 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_FMUL: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(ws_u2f(a) * ws_u2f(b)), p); break;
     case BW_IR_I2FP: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u((float)(int32_t)a), p); break; /* I2FP.F32.S32, round to nearest */
     case BW_IR_FFMA: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(fmaf(ws_u2f(a), ws_u2f(b), ws_u2f(c))), p); break;
+    case BW_IR_F2FP_BF16_PACK: ws_wrs(l, in->dst_vreg, in->dst_subreg, (ws_k_bf16_rn(a) << 16) | ws_k_bf16_rn(b), p); break; /* F2FP.BF16.F32.PACK_AB (L313 bf16 state) */
     case BW_IR_FMNMX_MAX: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(fmaxf(ws_u2f(a), ws_u2f(b))), p); break;
     case BW_IR_FMNMX_MIN: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(fminf(ws_u2f(a), ws_u2f(b))), p); break;
     case BW_IR_MUFU_EX2: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(exp2f(ws_u2f(a))), p); break;
     case BW_IR_MUFU_RCP: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(1.0f / ws_u2f(a)), p); break;
     case BW_IR_MUFU_RSQ: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(1.0f / sqrtf(ws_u2f(a))), p); break;
+    case BW_IR_MUFU_LG2: ws_wrs(l, in->dst_vreg, in->dst_subreg, ws_f2u(log2f(ws_u2f(a))), p); break;
     case BW_IR_LDG_STRONG_SYS: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t x; memcpy(&x, (const void *)(uintptr_t)ad, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, x, p); break; }
     case BW_IR_STG_STRONG_SYS: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; memcpy((void *)(uintptr_t)ad, &b, 4); break; }
     case BW_IR_ATOMG_ADD_STRONG_SYS: { uint64_t ad = ws_rd64(l, in->src1_vreg, p); if (!ws_mem_ok(s, ad, 4, pc)) return; uint32_t old; memcpy(&old, (const void *)(uintptr_t)ad, 4); uint32_t nw = old + b; memcpy((void *)(uintptr_t)ad, &nw, 4); ws_wrs(l, in->dst_vreg, in->dst_subreg, old, p); break; }
@@ -203,7 +229,7 @@ static int ws_run_warp(WsSim *s, WsWarp *w, uint32_t warp, uint32_t cx, uint32_t
     const uint32_t live_all = 0xffffffffu;
     for (uint64_t guard = 0;; guard++) {
         if (s->err) return -1;
-        if (guard > 2000000000ull) { ws_fail(s, WS_E_STEPS, -1, "step budget"); return -1; }
+        if (guard > (s->step_budget ? s->step_budget : 2000000000ull)) { ws_fail(s, WS_E_STEPS, -1, "step budget"); return -1; }
         int fi = ws_pick(s, w);
         if (fi < 0) {
             /* nothing runnable: parked at the CTA barrier, finished, or lanes waiting at a BSYNC
@@ -269,11 +295,13 @@ static int ws_run_warp(WsSim *s, WsWarp *w, uint32_t warp, uint32_t cx, uint32_t
             }
             break;
         }
-        case BW_IR_SHFL_DOWN: {
+        case BW_IR_SHFL_DOWN: case BW_IR_SHFL_BFLY: {
             if (w->exited) { ws_fail(s, WS_E_SHFL_EXITED, pc, "SHFL on a warp with exited lanes"); return -1; }
             if (mask != live) { ws_fail(s, WS_E_SHFL_SPLIT, pc, "SHFL on a split warp"); return -1; }
             uint32_t src[WS_WARP];
             for (int L = 0; L < WS_WARP; L++) src[L] = ws_rd(&w->lane[L], in->src1_vreg, p);
+            /* SHFL.BFLY: lane L reads L ^ lane */
+            if (in->op == BW_IR_SHFL_BFLY) { for (int L = 0; L < WS_WARP; L++) ws_wr(&w->lane[L], in->dst_vreg, src[L ^ (int)(in->imm & 31)], p); f->pc = pc + 1; break; }
             for (int L = 0; L < WS_WARP; L++) { int from = L + (int)(in->imm & 31); ws_wr(&w->lane[L], in->dst_vreg, from < WS_WARP ? src[from] : src[L], p); }
             f->pc = pc + 1;
             break;

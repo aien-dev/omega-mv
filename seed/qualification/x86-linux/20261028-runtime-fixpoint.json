@@ -1,0 +1,68 @@
+{
+  "execution": "EMULATED",
+  "native_x86": "NOT_RUN",
+  "source_revision": "f633bf986823741f377f1037ebd2171bbfb84178",
+  "source_sha256": "26b93cf3612077802a06d4eaee1a9f618857dbcb1c0cfb9c67474e85e4ce787e",
+  "source_metrics": {
+    "source_lines": 15543,
+    "functions": 512,
+    "aarch64_bytes": 474272,
+    "aarch64_words": 118524,
+    "word_count_calculation": {
+      "tool": "mcp__wolfram_wolframlanguageevaluator",
+      "query": "(474272 - 176)/4",
+      "result": 118524
+    }
+  },
+  "qemu": {
+    "path": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+    "sha256": "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee",
+    "version": "qemu-x86_64 version 10.0.14\nCopyright (c) 2003-2025 Fabrice Bellard and the QEMU Project developers"
+  },
+  "executed_x86_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-omc-x86",
+    "sha256": "c2ddc46436a0ceeb249a95479ee0f2e9d8b4fe9c22a96c214a793e44e357ef63",
+    "build_command": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-omc-aarch64 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/runtime-target-source.om",
+    "build_exit": 0
+  },
+  "checks": [
+    {
+      "target": "aarch64",
+      "execution": "EMULATED",
+      "expected_provenance": {
+        "command": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-omc-aarch64 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/runtime-source.om",
+        "compiler_sha256": "1f0fdef06574ffec782c164941114edcf51f36f9f9cd1e79bc0452dbcebb3322",
+        "exit": 0,
+        "stderr": ""
+      },
+      "command": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64 /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-omc-x86 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/runtime-source.om",
+      "exit": 0,
+      "expected_sha256": "1f0fdef06574ffec782c164941114edcf51f36f9f9cd1e79bc0452dbcebb3322",
+      "observed_sha256": "1f0fdef06574ffec782c164941114edcf51f36f9f9cd1e79bc0452dbcebb3322",
+      "byte_identical": true,
+      "stderr": ""
+    },
+    {
+      "target": "x86linux",
+      "execution": "EMULATED",
+      "expected_provenance": {
+        "command": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-omc-aarch64 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/runtime-target-source.om",
+        "compiler_sha256": "1f0fdef06574ffec782c164941114edcf51f36f9f9cd1e79bc0452dbcebb3322",
+        "exit": 0,
+        "stderr": ""
+      },
+      "command": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64 /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-omc-x86 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/runtime-target-source.om",
+      "exit": 0,
+      "expected_sha256": "c2ddc46436a0ceeb249a95479ee0f2e9d8b4fe9c22a96c214a793e44e357ef63",
+      "observed_sha256": "c2ddc46436a0ceeb249a95479ee0f2e9d8b4fe9c22a96c214a793e44e357ef63",
+      "byte_identical": true,
+      "stderr": ""
+    }
+  ],
+  "self_fixpoint_proof": {
+    "executed_x86_sha256": "c2ddc46436a0ceeb249a95479ee0f2e9d8b4fe9c22a96c214a793e44e357ef63",
+    "regenerated_x86_sha256": "c2ddc46436a0ceeb249a95479ee0f2e9d8b4fe9c22a96c214a793e44e357ef63",
+    "byte_identical": true
+  },
+  "log_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/runtime-fixpoint.json"
+}

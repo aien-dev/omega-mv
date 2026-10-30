@@ -18,7 +18,7 @@ int omega_tgemm_spec_ok(const OmegaTgemmSpec *s) {
     {   /* the pieces of one thread are RJ rows apart: constant load offsets that must stay under the encoder's 2^23 */
         const uint32_t RJ = 32u * s->warps / (s->kc / 4u), nj = 16u * s->rt * (s->kc / 4u) / (32u * s->warps);
         if (RJ % 16u) return 0;
-        if ((uint64_t)(nj - 1u) * RJ * s->k * 2u + (128u / s->kc - 1u) * s->kc * 2u >= (1u << 23)) return 0;
+        if ((uint64_t)(nj - 1u) * RJ * s->k * 2u + (uint64_t)(128u / s->kc - 1u) * s->kc * 2u >= (1u << 23)) return 0;
     }
     if (2u * 16u * s->rt * s->kc * 2u > 16384u) return 0;           /* QMD shared cap */
     if (32u * span > 2u * 16u * s->rt * s->kc * 2u) return 0;         /* an 8-row output pass must fit the staging buffers */

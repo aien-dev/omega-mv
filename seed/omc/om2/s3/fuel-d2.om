@@ -1,0 +1,10 @@
+note S3 E14/E16 fuel: two nested 64-copy unrolls of an empty body cost 64 + 64 * 64 = 4160 of 65536: accepted
+om2
+fn main to int
+for a ulong 64 unroll
+for b ulong 64 unroll
+note empty
+end
+end
+ret 0
+end

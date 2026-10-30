@@ -1,0 +1,12 @@
+task	entry	inputs	c_path_words	seed_words	seed_minus_c
+dev01	clamp_add	8	58	17	-41
+dev02	absdiff	8	48	16	-32
+dev03	popcount	8	80	15	-65
+dev04	gcd	8	71	20	-51
+dev05	checked_mul	8	23	9	-14
+dev06	safe_div	8	21	8	-13
+dev07	isqrt	8	95	29	-66
+dev08	collatz_steps	8	111	28	-83
+dev09	bitrev8	8	73	14	-59
+dev10	to_i8	8	20	8	-12
+total			600	164	-436

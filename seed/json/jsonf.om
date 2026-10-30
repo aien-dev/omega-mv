@@ -1,0 +1,699 @@
+note seed/json/jsonf.om: OPTIONAL exact float conversion for the JSON units (omega-mv #788). Needs json.om and
+note jsonw.om before it. The reader never converts numbers; this unit is only for callers that want an f64.
+note js_f64 is decimal-to-binary64 with round-to-nearest-even, exact for every lexeme (overflow gives
+note +-infinity, underflow +-0). js_fmt64 / js_wf64 write the shortest digits that convert back to the same
+note f64, in Python repr layout. Method: the arbitrary-precision decimal of Go strconv (decimal.go,
+note atof.go floatBits, ftoa.go roundShortest): 800 digits plus a truncation flag, exact shifts by powers of
+note two. It is NOT the serde_json default float parser, which is not correctly rounded.
+note Scratch: a caller `long` array of jsfs cells. Cells 0..2 digit counts, 3..5 decimal points, 6..8
+note truncation flags of decimals 0..2, 9 sign, 10 status (0 exact path, 1 overflow to infinity, 2 not a
+note number lexeme), 11 formatted length; digits of decimal q at 16 + 800q; formatted bytes at 2416.
+
+const jsfs ulong 2464
+const jsfdig ulong 16
+const jsfout ulong 2416
+
+note ======== decimal digits ========
+
+fn js_dget fs edit long jsfs q ulong i ulong to ulong
+ret ulong get fs add add jsfdig mul q 800 i
+end
+
+note js_dput: store digit v at w, or remember a lost nonzero digit beyond 800
+fn js_dput fs edit long jsfs q ulong w ulong v ulong to void
+if lt w 800
+put fs add add jsfdig mul q 800 w long v
+ret
+end
+if ne v 0
+put fs add q 6 1
+end
+end
+
+fn js_dtrim fs edit long jsfs q ulong to void
+nd = ulong get fs q
+while gt nd 0 bound 1000
+if ne js_dget fs q sub nd 1 0
+break
+end
+nd = sub nd 1
+end
+put fs q long nd
+if eq nd 0
+put fs add q 3 0
+end
+end
+
+fn js_dassign fs edit long jsfs q ulong v ulong to void
+tmp = new long 20 0
+k = ulong 0
+x = v
+while gt x 0 bound 21
+put tmp k long rem x 10
+k = add k 1
+x = div x 10
+end
+for i ulong k
+js_dput fs q i ulong get tmp sub sub k 1 i
+end
+put fs q long k
+put fs add q 3 long k
+put fs add q 6 0
+js_dtrim fs q
+end
+
+note js_drsh: divide decimal q by 2^k, 1 <= k <= 60 (Go rightShift); 9 * 2^60 + 2^60 < 2^64
+fn js_drsh fs edit long jsfs q ulong k ulong to void
+nd = ulong get fs q
+r = ulong 0
+n = ulong 0
+while eq shr n k 0 bound 1000
+if ge r nd
+if eq n 0
+put fs q 0
+ret
+end
+while eq shr n k 0 bound 100
+n = mul n 10
+r = add r 1
+end
+break
+end
+n = add mul n 10 js_dget fs q r
+r = add r 1
+end
+put fs add q 3 sub get fs add q 3 sub long r 1
+js_drsh2 fs q k r n
+end
+
+fn js_drsh2 fs edit long jsfs q ulong k ulong r ulong n ulong to void
+nd = ulong get fs q
+mask = sub shl ulong 1 k 1
+w = ulong 0
+x = n
+y = r
+while lt y nd bound 1000
+c = js_dget fs q y
+js_dput fs q w shr x k
+w = add w 1
+x = add mul and x mask 10 c
+y = add y 1
+end
+while gt x 0 bound 1000
+js_dput fs q w shr x k
+if lt w 800
+w = add w 1
+end
+x = mul and x mask 10
+end
+put fs q long w
+js_dtrim fs q
+end
+
+note js_dlsh: multiply decimal q by 2^k, 1 <= k <= 60 (Go leftShift). The first pass finds the number of new
+note leading digits from the final carry instead of Go's leftcheats table.
+fn js_dlsh fs edit long jsfs q ulong k ulong to void
+nd = ulong get fs q
+n = ulong 0
+r = nd
+while gt r 0 bound 1000
+r = sub r 1
+n = div add n shl js_dget fs q r k 10
+end
+del = ulong 0
+while gt n 0 bound 100
+del = add del 1
+n = div n 10
+end
+js_dlsh2 fs q k del
+nd = add nd del
+if gt nd 800
+nd = 800
+end
+put fs q long nd
+put fs add q 3 add get fs add q 3 long del
+js_dtrim fs q
+end
+
+fn js_dlsh2 fs edit long jsfs q ulong k ulong del ulong to void
+r = ulong get fs q
+w = add r del
+n = ulong 0
+while gt r 0 bound 1000
+r = sub r 1
+n = add n shl js_dget fs q r k
+w = sub w 1
+js_dput fs q w rem n 10
+n = div n 10
+end
+while gt n 0 bound 100
+w = sub w 1
+js_dput fs q w rem n 10
+n = div n 10
+end
+end
+
+fn js_dshift fs edit long jsfs q ulong k long to void
+if eq get fs q 0
+ret
+end
+s = k
+while gt s 60 bound 100
+js_dlsh fs q 60
+s = sub s 60
+end
+if gt s 0
+js_dlsh fs q ulong s
+end
+while lt s -60 bound 100
+js_drsh fs q 60
+s = add s 60
+end
+if lt s 0
+js_drsh fs q ulong neg s
+end
+end
+
+note js_dsru: Go shouldRoundUp at digit index i; an exact half rounds to even unless digits were lost
+fn js_dsru fs edit long jsfs q ulong i long to bool
+nd = get fs q
+if or lt i 0 ge i nd
+ret false
+end
+d = js_dget fs q ulong i
+if and eq d 5 eq add i 1 nd
+if ne get fs add q 6 0
+ret true
+end
+if eq i 0
+ret false
+end
+ret eq rem js_dget fs q ulong sub i 1 2 1
+end
+ret ge d 5
+end
+
+fn js_drint fs edit long jsfs q ulong to ulong
+dp = get fs add q 3
+if gt dp 20
+ret 18446744073709551615
+end
+nd = get fs q
+n = ulong 0
+i = long 0
+while and lt i dp lt i nd bound 100
+n = add mul n 10 js_dget fs q ulong i
+i = add i 1
+end
+while lt i dp bound 100
+n = mul n 10
+i = add i 1
+end
+if js_dsru fs q dp
+n = add n 1
+end
+ret n
+end
+
+fn js_drdown fs edit long jsfs q ulong i long to void
+if or lt i 0 ge i get fs q
+ret
+end
+put fs q i
+js_dtrim fs q
+end
+
+fn js_drup fs edit long jsfs q ulong i long to void
+if or lt i 0 ge i get fs q
+ret
+end
+j = i
+while gt j 0 bound 1000
+j = sub j 1
+d = js_dget fs q ulong j
+if lt d 9
+js_dput fs q ulong j add d 1
+put fs q add j 1
+ret
+end
+end
+js_dput fs q 0 1
+put fs q 1
+put fs add q 3 add get fs add q 3 1
+end
+
+fn js_dround fs edit long jsfs q ulong i long to void
+if or lt i 0 ge i get fs q
+ret
+end
+if js_dsru fs q i
+js_drup fs q i
+ret
+end
+js_drdown fs q i
+end
+
+note ======== lexeme to f64 ========
+
+note js_dmant: digits of the mantissa into decimal 0. cnt counts every significant digit, also those past
+note the 800 kept, so the decimal point stays exact; a lost nonzero digit sets the truncation flag.
+fn js_dmant fs edit long jsfs src view uchar * p ulong n ulong to ulong
+q = p
+dot = false
+cnt = ulong 0
+dp = long 0
+while lt q n bound 999999
+c = get src q
+if eq c 46
+if dot
+break
+end
+dot = true
+dp = long cnt
+q = add q 1
+continue
+end
+if or lt c 48 gt c 57
+break
+end
+if and eq c 48 eq cnt 0
+dp = sub dp 1
+q = add q 1
+continue
+end
+if lt cnt 800
+js_dput fs 0 cnt ulong sub c 48
+else
+if ne c 48
+put fs 6 1
+end
+end
+cnt = add cnt 1
+q = add q 1
+end
+if not dot
+dp = long cnt
+end
+nd = cnt
+if gt nd 800
+nd = 800
+end
+put fs 0 long nd
+put fs 3 dp
+ret q
+end
+
+fn js_dexp fs edit long jsfs src view uchar * p ulong n ulong to void
+q = p
+if not or js_isb src q n 101 js_isb src q n 69
+ret
+end
+q = add q 1
+ng = false
+if js_isb src q n 43
+q = add q 1
+else
+if js_isb src q n 45
+ng = true
+q = add q 1
+end
+end
+e = long 0
+while lt q n bound 999999
+c = get src q
+if or lt c 48 gt c 57
+break
+end
+if lt e 10000
+e = add mul e 10 long sub c 48
+end
+q = add q 1
+end
+if ng
+e = neg e
+end
+put fs 3 add get fs 3 e
+end
+
+fn js_fpack fs edit long jsfs m ulong f ulong to ulong
+b = or m shl f 52
+if ne get fs 9 0
+b = or b shl ulong 1 63
+end
+ret b
+end
+
+fn js_fovf fs edit long jsfs to ulong
+put fs 10 1
+ret js_fpack fs 0 2047
+end
+
+fn js_powtab n long to long
+if ge n 9
+ret 27
+end
+if eq n 0
+ret 1
+end
+if eq n 1
+ret 3
+end
+if eq n 2
+ret 6
+end
+if eq n 3
+ret 9
+end
+if eq n 4
+ret 13
+end
+if eq n 5
+ret 16
+end
+if eq n 6
+ret 19
+end
+if eq n 7
+ret 23
+end
+ret 26
+end
+
+fn js_dlow fs edit long jsfs to bool
+if eq get fs 0 0
+ret false
+end
+dp = get fs 3
+if lt dp 0
+ret true
+end
+ret and eq dp 0 lt get fs jsfdig 5
+end
+
+note js_dscale: scale decimal 0 into [0.5, 1) by powers of two; returns the binary exponent
+fn js_dscale fs edit long jsfs to long
+e = long 0
+while gt get fs 3 0 bound 1000
+s = js_powtab get fs 3
+js_dshift fs 0 neg s
+e = add e s
+end
+while js_dlow fs bound 1000
+s = js_powtab neg get fs 3
+js_dshift fs 0 s
+e = sub e s
+end
+ret e
+end
+
+note js_dbits: Go floatBits for binary64 (bias -1023, 52 mantissa bits, 11 exponent bits) on decimal 0
+fn js_dbits fs edit long jsfs to ulong
+if eq get fs 0 0
+ret js_fpack fs 0 0
+end
+dp = get fs 3
+if gt dp 310
+ret js_fovf fs
+end
+if lt dp -330
+ret js_fpack fs 0 0
+end
+e = sub js_dscale fs 1
+if lt e -1022
+js_dshift fs 0 add e 1022
+e = long -1022
+end
+if ge e 1024
+ret js_fovf fs
+end
+js_dshift fs 0 53
+m = js_drint fs 0
+if eq m 9007199254740992
+m = shr m 1
+e = add e 1
+if ge e 1024
+ret js_fovf fs
+end
+end
+if eq and m 4503599627370496 0
+ret js_fpack fs m 0
+end
+ret js_fpack fs and m 4503599627370495 ulong add e 1023
+end
+
+note js_f64: the f64 nearest the number lexeme at src[off] (ties to even). Status js_f64st: 0 finite, 1 the
+note magnitude overflowed to infinity, 2 no number lexeme at off (the result is then a quiet NaN).
+fn js_f64 src view uchar * off ulong fs edit long jsfs to f64
+for i ulong 12
+put fs i 0
+end
+n = js_slim src off
+if eq js_numend src off n jsnone
+put fs 10 2
+ret bitcast f64 ulong 9221120237041090560
+end
+p = off
+if js_atv src p 45
+put fs 9 1
+p = add p 1
+end
+p = js_dmant fs src p n
+js_dexp fs src p n
+js_dtrim fs 0
+ret bitcast f64 js_dbits fs
+end
+
+fn js_f64st fs edit long jsfs to ulong
+ret ulong get fs 10
+end
+
+note ======== shortest f64 text ========
+
+fn js_fdig fs edit long jsfs q ulong i long to long
+if or lt i 0 ge i get fs q
+ret 0
+end
+ret long js_dget fs q ulong i
+end
+
+fn js_fud ud ulong m long u long to ulong
+if and eq ud 0 lt add m 1 u
+ret 2
+end
+if and eq ud 0 ne m u
+ret 1
+end
+if and eq ud 1 or ne m 9 ne u 0
+ret 2
+end
+ret ud
+end
+
+fn js_fokd fs edit long jsfs inc bool ui long m long to bool
+li = add sub ui get fs 4 get fs 5
+if ne js_fdig fs 2 li m
+ret true
+end
+ret and inc eq add li 1 get fs 2
+end
+
+note js_fstep: one digit of Go roundShortest; returns the new upperdelta 0..2, or 3 when d is final
+fn js_fstep fs edit long jsfs inc bool ui long ud ulong to ulong
+mi = add sub ui get fs 4 get fs 3
+if ge mi get fs 0
+ret 3
+end
+m = js_fdig fs 0 mi
+d = js_fud ud m js_fdig fs 1 ui
+okd = js_fokd fs inc ui m
+oku = false
+if gt d 0
+oku = or inc or gt d 1 lt add ui 1 get fs 1
+end
+if and okd oku
+js_dround fs 0 add mi 1
+ret 3
+end
+if okd
+js_drdown fs 0 add mi 1
+ret 3
+end
+if oku
+js_drup fs 0 add mi 1
+ret 3
+end
+ret d
+end
+
+fn js_fwalk fs edit long jsfs inc bool to void
+ud = ulong 0
+ui = long 0
+for k ulong 2000
+r = js_fstep fs inc ui ud
+if ge r 3
+ret
+end
+ud = r
+ui = add ui 1
+end
+end
+
+note js_fshort: Go roundShortest on decimal 0 = mt * 2^(e-52); decimals 1 and 2 hold the upper and lower
+note halfway bounds
+fn js_fshort fs edit long jsfs mt ulong e long to void
+if eq mt 0
+put fs 0 0
+ret
+end
+if gt e -1022
+if ge mul 332 sub get fs 3 get fs 0 mul 100 sub e 52
+ret
+end
+end
+js_dassign fs 1 add mul mt 2 1
+js_dshift fs 1 sub e 53
+if or gt mt 4503599627370496 eq e -1022
+js_dassign fs 2 add mul sub mt 1 2 1
+js_dshift fs 2 sub e 53
+else
+js_dassign fs 2 add mul sub mul mt 2 1 2 1
+js_dshift fs 2 sub e 54
+end
+js_fwalk fs eq and mt 1 0
+end
+
+fn js_fput fs edit long jsfs k ulong c ulong to ulong
+put fs add jsfout k long c
+ret add k 1
+end
+
+fn js_ffix fs edit long jsfs k ulong to ulong
+w = k
+dp = get fs 3
+nd = get fs 0
+if le dp 0
+w = js_fput fs w 48
+w = js_fput fs w 46
+for i ulong ulong neg dp
+w = js_fput fs w 48
+end
+for i ulong ulong nd
+w = js_fput fs w add js_dget fs 0 i 48
+end
+ret w
+end
+if ge dp nd
+for i ulong ulong nd
+w = js_fput fs w add js_dget fs 0 i 48
+end
+for i ulong ulong sub dp nd
+w = js_fput fs w 48
+end
+w = js_fput fs w 46
+w = js_fput fs w 48
+ret w
+end
+for i ulong ulong dp
+w = js_fput fs w add js_dget fs 0 i 48
+end
+w = js_fput fs w 46
+for i ulong ulong sub nd dp
+w = js_fput fs w add js_dget fs 0 add ulong dp i 48
+end
+ret w
+end
+
+fn js_fsci fs edit long jsfs k ulong to ulong
+w = js_fput fs k add js_dget fs 0 0 48
+nd = ulong get fs 0
+if gt nd 1
+w = js_fput fs w 46
+for i ulong sub nd 1
+w = js_fput fs w add js_dget fs 0 add i 1 48
+end
+end
+w = js_fput fs w 101
+x = sub get fs 3 1
+if lt x 0
+w = js_fput fs w 45
+x = neg x
+else
+w = js_fput fs w 43
+end
+if lt x 10
+w = js_fput fs w 48
+end
+if ge x 100
+w = js_fput fs w add ulong div x 100 48
+end
+if ge x 10
+w = js_fput fs w add ulong rem div x 10 10 48
+end
+w = js_fput fs w add ulong rem x 10 48
+ret w
+end
+
+note js_frepr: Python repr layout: fixed when the decimal exponent x is -4 <= x < 16 (".0" added to whole
+note numbers), else d[.ddd]e+XX / e-XX with at least two exponent digits; zero is 0.0 or -0.0.
+fn js_frepr fs edit long jsfs sg bool to ulong
+k = ulong 0
+if sg
+k = js_fput fs k 45
+end
+if eq get fs 0 0
+k = js_fput fs k 48
+k = js_fput fs k 46
+ret js_fput fs k 48
+end
+x = sub get fs 3 1
+if and ge x -4 lt x 16
+ret js_ffix fs k
+end
+ret js_fsci fs k
+end
+
+note js_fmt64: shortest round-trip text of a finite x at fs[jsfout ..]; returns its length, -1 for inf or NaN
+fn js_fmt64 fs edit long jsfs x f64 to long
+bits = bitcast ulong x
+ex = and shr bits 52 2047
+mt = and bits 4503599627370495
+put fs 11 0
+if eq ex 2047
+ret -1
+end
+if eq ex 0
+ex = 1
+else
+mt = or mt 4503599627370496
+end
+e = sub long ex 1023
+js_dassign fs 0 mt
+js_dshift fs 0 sub e 52
+js_fshort fs mt e
+k = js_frepr fs ne shr bits 63 0
+put fs 11 long k
+ret long k
+end
+
+fn js_fmtch fs edit long jsfs i ulong to uchar
+ret uchar get fs add jsfout i
+end
+
+note js_wf64: write a finite f64 as its shortest text; inf and NaN are refused (jswenm), JSON has no form
+fn js_wf64 ob edit uchar * x f64 fs edit long jsfs to void
+if ne get ob jswerr 0
+ret
+end
+k = js_fmt64 fs x
+if lt k 0
+js_wfail ob jswenm
+ret
+end
+if not js_wpre ob
+ret
+end
+for i ulong ulong k
+js_wb ob js_fmtch fs i
+end
+js_wpost ob
+end

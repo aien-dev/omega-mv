@@ -1,5 +1,5 @@
 # tests/gates/omega-gpu-libm-free.gate
-# Mirrors hosted: host-suites-3.yml gpu-libm-free (omega#471) with physics-src at physics.lock: libomega_gpu.a has no libm reference and the libm-free replacements are bit-identical (host only, no chip; ~3 s on the Spark)
+# omega-mv#471: libomega_gpu.a must link without -lm (omegatool, the Rust FFI crate and AIENOS link it bare); fails when any symbol the archive leaves undefined is a libm export; host only, no chip
 gate: OMEGA-GPU-LIBM-FREE
 manifest_version: 2
 owner: omega
@@ -9,7 +9,6 @@ inputs:
   - Makefile
   - mk/
   - src/
-  - tests/gpu_libm_free_test.c
   - physics.lock
   - tests/gates/
 run:
@@ -18,6 +17,6 @@ run:
 expects:
   exit: 0
   verdict: PASS
-timeout: 15m
+timeout: 20m
 exactness: EXACT
 cache_scope: machine

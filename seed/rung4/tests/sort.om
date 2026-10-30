@@ -1,0 +1,63 @@
+note sort 1000 numbers: a local array filled by a fixed generator, sorted by insertion through calls
+note with an edit array, then a checksum line and a sorted-or-not line
+global out uchar 32
+fn gen a edit ulong 1000 to void
+x = ulong 12345
+for i ulong 1000
+x = rem add mul x 1103515245 12345 2147483648
+put a i rem x 100000
+end
+end
+fn isort a edit ulong 1000 to void
+for j ulong 1000
+v = get a j
+k = j
+moving = true
+while and moving gt k 0
+p = get a sub k 1
+if gt p v
+put a k p
+k = sub k 1
+else
+moving = false
+end
+end
+put a k v
+end
+end
+fn putnum v ulong to void
+put out 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put out p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put out p uchar add x 48
+w = write 1 out p sub 32 p
+end
+fn sorted a view ulong 1000 to ulong
+bad = ulong 0
+for i ulong 999
+if gt get a i get a add i 1
+bad = add bad 1
+end
+end
+ret bad
+end
+fn main to int
+a = new ulong 1000 0
+gen a
+isort a
+s = ulong 0
+for i ulong 1000
+s = add s mul get a i add i 1
+end
+putnum s
+putnum sorted a
+putnum get a 0
+putnum get a 999
+ret 0
+end
