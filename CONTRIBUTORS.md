@@ -3,12 +3,15 @@
 This project is built by AI models, orchestrated by Drake Stapleton, who wrote none of the code.
 Every model below did real work. A model is listed only for work it did. The orchestrator checks all output before it merges.
 
+The current development method is [Human-Directed Agentic Engineering (HDAE)](README.md#human-directed-agentic-engineering): human-defined goals, architecture, constraints, acceptance criteria, and stopping points bound agent implementation and checks. Human review owns claims, acceptance, and releases. The README cites Gregory M. Kurtzer's documented method and Ginux case study; that citation does not change the contributor credits below.
+
 | Model | What it did |
 |---|---|
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
 | Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
 | Grok 4.7 | Merged current main (`6d482de0e`) into #854. The only conflict was the generated root `.crumb` (compile stamps and source-tree digest). Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
+| Codex (GPT-6.1 Sol) | Current HDAE development-method wording and Gregory M. Kurtzer citation, preserving source pins and historical evidence |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
