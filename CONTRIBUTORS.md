@@ -7,6 +7,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 
 | Model | What it did |
 |---|---|
+| Claude Opus 5.5 (via omp) | #931: README FR-9 bullet, OM_COMPLETION FR-9 rows and ROADMAP item 7 and x86 row record that the x86 backend merged as a DRAFT (#923) whose last fixture differential ran EMULATED (QEMU) at `62d1d0d6`: 15182 PASS, 0 FAIL, 2 NOT_RUN, 222 EXCLUDED, verdict FAIL, native x86 NOT_RUN. The sm121 rows cite the author chip run in `evidence/SEED-0/sm121/chip/` (load average 61, not an exclusive window) and keep the chip gate BLOCKED_OPERATOR. OM_COMPLETION's next step drops FR-5 as #944 does. Merged main `b5ab3fe94`, keeping its StableHLO row ahead of the x86 row. Docs only. |
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
 | Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
