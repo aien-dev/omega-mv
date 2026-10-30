@@ -1,0 +1,4 @@
+$ /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha_qual ident omega-ident 1 unit=sha256_om2 abi=2 profile=OM-2 src=dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb omc=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec
+PASS ident omega-ident 1 unit=sha256_om2 abi=2 profile=OM-2 src=dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb omc=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec
+TOTAL ident pass=1 fail=0 trap=0
+EXIT 0

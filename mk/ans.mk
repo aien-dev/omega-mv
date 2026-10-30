@@ -11,6 +11,7 @@ ifndef ANS_MK
 ANS_MK := 1
 include mk/estimation.mk
 .PHONY: test-ans ans-purity test-inertial-alignment
+# ANS_CFLAGS inherits EST_CFLAGS, which carries -Wno-pedantic for the generated binding; see mk/estimation.mk.
 ANS_CFLAGS = $(EST_CFLAGS) -Isrc/ans
 ANS_DIR = $(OUT_DIR)/tests-ans
 ANS_SRCS = src/ans/ans.c src/ans/ans_encode.c $(EST_KF_SRCS)

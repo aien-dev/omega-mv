@@ -1,0 +1,1 @@
+Write a function sum_digits_u32(n). The argument n is an unsigned 32-bit integer (u32) and the result is a u32. Return the sum of the decimal digits of n; for example sum_digits_u32(1234) = 10 and sum_digits_u32(0) = 0.

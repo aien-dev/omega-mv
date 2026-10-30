@@ -1,0 +1,39 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout lines 153-165: the SHA context layout of lines 163-164 as corrected by erratum E5
+note (count is a scalar field: COUNT omitted). A 104-byte
+note uchar array is passed as `c edit shactx`, every field is set with put, the bytes are written to
+note stdout, then count and state[7] are read back with get (exit 90/91 on mismatch).
+note stdout = oracle exp/l5-shactx.out (python3 struct; gcc offsetof oracle/s5s7/offsetof.c agrees).
+om2
+layout shactx 104
+field state uint 8 at 0 little
+field count ulong at 32 little
+field buf uchar 64 at 40 little
+end
+fn fill c edit shactx to void
+for i ulong 8
+put c state i add 0x10203040 uint i
+end
+put c count 0x0123456789abcdef
+for j ulong 64
+put c buf j uchar add mul j 3 1
+end
+end
+fn cnt c view shactx to ulong
+ret get c count
+end
+fn st7 c view shactx to uint
+ret get c state 7
+end
+fn main to int
+c = new uchar 104 0
+fill c
+w = write 1 c 0 104
+if ne cnt c 0x0123456789abcdef
+ret 90
+end
+if ne st7 c 0x10203047
+ret 91
+end
+ret 0
+end

@@ -115,17 +115,19 @@ static int run_side(R15Config c, uint64_t target, R15Outcome *o, char *first, si
     return rc;
 }
 
-static void print_side(const char *side, const R15Outcome *o) {
-    printf("    %-5s goal status %llu, plan action %llu reason %llu, epoch %llu, "
+static void print_side_tag(const char *side, const R15Outcome *o, const char *tag) {
+    printf("    %-5s%s goal status %llu, plan action %llu reason %llu, epoch %llu, "
            "selected %016llx (verdict %llu), evidence %llu/%llu trials, belief %llu, "
            "generation %llu -> %llu, in force %016llx; measured: incumbent %llu ns, "
            "selected %llu ps, reference %llu ps, served %llu, crumbs %llu\n",
-           side, U(o->goal_status), U(o->plan_action), U(o->plan_reason), U(o->selection_epoch),
+           side, tag, U(o->goal_status), U(o->plan_action), U(o->plan_reason), U(o->selection_epoch),
            U(o->selection_id[0]), U(o->selected_verdict), U(o->evidence[4]), U(o->evidence[3]),
            U(o->belief[2]), U(o->gen_before), U(o->gen_after), U(o->inforce_id[0]),
            U(o->incumbent_ns), U(o->selected_ps), U(o->reference_ps), U(o->served),
            U(o->crumbs));
 }
+
+static void print_side(const char *side, const R15Outcome *o) { print_side_tag(side, o, ""); }
 
 /* The lost-trigger detector must see a trigger that did not run. With no
  * run slots, a production request (it triggers workload.matvec.serve) is
@@ -236,6 +238,13 @@ int main(void) {
         }
         printf("  pair %d (%s first, target %llu ns)\n", p, res_first ? "RES-1" : "SEQ",
                U(res_first ? res.target_ns : seq.target_ns));
+        /* Print the numbers this pair produced, including the failing side's.
+         * A failure reason with no measurement behind it cannot be diagnosed:
+         * a side that stops early leaves zeroed fields, so its line is tagged. */
+        if (rc_a == 0) print_side("RES-1", &res);
+        else if (res.why[0]) print_side_tag("RES-1", &res, " (at failure)");
+        if (rc_b == 0) print_side("SEQ", &seq);
+        else if (seq.why[0]) print_side_tag("SEQ", &seq, " (at failure)");
         if (rc_a != 0 || rc_b != 0) {
             g_fail++;
             /* The second side runs only if the first completed; say so, or a
@@ -246,8 +255,6 @@ int main(void) {
                     rc_b ? (seq.why[0] ? seq.why : skipped) : "ok");
             continue;
         }
-        print_side("RES-1", &res);
-        print_side("SEQ", &seq);
         check_side(p, "RES-1", &res, lost_res);
         check_side(p, "SEQ", &seq, lost_seq);
         compare(p, &res, &seq);
