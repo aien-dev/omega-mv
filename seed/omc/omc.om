@@ -4397,9 +4397,12 @@ end
 ret 10
 end
 
+note fp_cmp: FCMP Sn, Sm / Dn, Dm (scalar) of v registers va, vb: 0x1E202000 / 0x1E602000 with Rm and Rn
+note zero, so both fields come from va and vb alone (#861: the S word had Rm bit 0 set, and an even vb
+note read the next twin).
 fn fp_cmp op ulong ty ulong va ulong vb ulong to void
 if eq ty 10
-emit or or 505487360 shl vb 16 shl va 5
+emit or or 505421824 shl vb 16 shl va 5
 else
 emit or or 509616128 shl vb 16 shl va 5
 end
