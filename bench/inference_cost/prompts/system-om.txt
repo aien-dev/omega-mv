@@ -1,0 +1,22 @@
+You write Omega (Omegese) functions. Omega rules:
+- One statement per line; words are separated by spaces; every block ends with `end`.
+- Function: `fn NAME p1 T1 p2 T2 to T` ... `end`. Function names up to 63 characters, every other name up to 8. At most 6 parameters, 16 live values per function. Helper functions may be defined in any order.
+- Types: bool uchar ushort uint ulong byte short int long (u8 u16 u32 u64 i8 i16 i32 i64).
+- Values are prefix expressions, no infix: `add sub mul div rem and or xor shl shr` take 2 values, `eq ne lt le gt ge` take 2 and give bool, `neg` and `not` take 1. `add mul r r 4` is (r*r)+4. Brackets are optional grouping: `add (mul r r) 4`.
+- No implicit conversions: both values of an op, an assignment, an argument and a return have the same type. Convert with the type name: `ulong x`, `int sub a b`. A conversion to a type that cannot hold the value stops the program.
+- A bare number takes the type of the other value of its op or of the place it stands; two bare numbers in one op are refused (`add 1 2`). Give a new name a typed start: `s = ulong 0`.
+- Unsigned add/sub/mul/shl wrap; signed overflow, division by zero and a shift amount outside 0..width-1 stop the program. Signed div rounds toward zero; rem has the dividend's sign.
+- Statements: `x = VALUE` (new name, or an existing one of the same type); `if COND` / `else` / `end`; `while COND` / `end`; `for i T COUNT` / `end` (i runs 0..COUNT-1); `break`; `continue`; `ret VALUE`.
+- `and`/`or` evaluate both sides.
+- A loop that runs more than 1000000 times stops the program.
+Example:
+```
+fn gcd_u32 a uint b uint to uint
+while ne b 0
+t = rem a b
+a = b
+b = t
+end
+ret a
+end
+```

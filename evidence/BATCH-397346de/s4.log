@@ -1,0 +1,215 @@
+OM2GATE START cases=seed/omc/om2/s4/s4.cases scratch=build/batch3/scratch-s4
+IDENTITY omc seed/out/omc sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e pinned=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e match
+CASE s4-v-ok line=5
+  $ seed/out/omc < build/batch3/scratch-s4/5.src > build/batch3/scratch-s4/5.elf 2> build/batch3/scratch-s4/5.cerr
+  $ build/batch3/scratch-s4/5.elf < /dev/null > build/batch3/scratch-s4/5.out 2> build/batch3/scratch-s4/5.err
+VERDICT s4-v-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-len line=6
+  $ seed/out/omc < build/batch3/scratch-s4/6.src > build/batch3/scratch-s4/6.elf 2> build/batch3/scratch-s4/6.cerr
+  $ build/batch3/scratch-s4/6.elf < /dev/null > build/batch3/scratch-s4/6.out 2> build/batch3/scratch-s4/6.err
+VERDICT s4-v-len PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-write line=7
+  $ seed/out/omc < build/batch3/scratch-s4/7.src > build/batch3/scratch-s4/7.elf 2> build/batch3/scratch-s4/7.cerr
+  $ build/batch3/scratch-s4/7.elf < /dev/null > build/batch3/scratch-s4/7.out 2> build/batch3/scratch-s4/7.err
+VERDICT s4-v-write PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-trap-get line=8
+  $ seed/out/omc < build/batch3/scratch-s4/8.src > build/batch3/scratch-s4/8.elf 2> build/batch3/scratch-s4/8.cerr
+  $ build/batch3/scratch-s4/8.elf < /dev/null > build/batch3/scratch-s4/8.out 2> build/batch3/scratch-s4/8.err
+VERDICT s4-v-trap-get PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-trap-put line=9
+  $ seed/out/omc < build/batch3/scratch-s4/9.src > build/batch3/scratch-s4/9.elf 2> build/batch3/scratch-s4/9.cerr
+  $ build/batch3/scratch-s4/9.elf < /dev/null > build/batch3/scratch-s4/9.out 2> build/batch3/scratch-s4/9.err
+VERDICT s4-v-trap-put PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-trap-write line=10
+  $ seed/out/omc < build/batch3/scratch-s4/10.src > build/batch3/scratch-s4/10.elf 2> build/batch3/scratch-s4/10.cerr
+  $ build/batch3/scratch-s4/10.elf < /dev/null > build/batch3/scratch-s4/10.out 2> build/batch3/scratch-s4/10.err
+VERDICT s4-v-trap-write PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-fm-entry line=11
+  $ seed/out/omc < build/batch3/scratch-s4/11.src > build/batch3/scratch-s4/11.elf 2> build/batch3/scratch-s4/11.cerr
+VERDICT s4-v-fm-entry PASS compile exit=0 expected=0 sha256=50ddf39453988ba55a1b7d9bbba7f1ae7c5c5c3f7414c859acf17118fa4886b8 stderr=match
+CASE s4-v-slots6 line=12
+  $ seed/out/omc < build/batch3/scratch-s4/12.src > build/batch3/scratch-s4/12.elf 2> build/batch3/scratch-s4/12.cerr
+VERDICT s4-v-slots6 PASS compile exit=0 expected=0 sha256=0dc32d259ec68c039ce68c68655fa59364f0f2a1df61730763adca50b9435bad stderr=match
+CASE s4-v-bad-slots7 line=13
+  $ seed/out/omc < build/batch3/scratch-s4/13.src > build/batch3/scratch-s4/13.elf 2> build/batch3/scratch-s4/13.cerr
+VERDICT s4-v-bad-slots7 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-v-bad-slots-last line=14
+  $ seed/out/omc < build/batch3/scratch-s4/14.src > build/batch3/scratch-s4/14.elf 2> build/batch3/scratch-s4/14.cerr
+VERDICT s4-v-bad-slots-last PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-v-bad-sized line=15
+  $ seed/out/omc < build/batch3/scratch-s4/15.src > build/batch3/scratch-s4/15.elf 2> build/batch3/scratch-s4/15.cerr
+VERDICT s4-v-bad-sized PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-v-bad-type line=16
+  $ seed/out/omc < build/batch3/scratch-s4/16.src > build/batch3/scratch-s4/16.elf 2> build/batch3/scratch-s4/16.cerr
+VERDICT s4-v-bad-type PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-v-bad-viewedit line=17
+  $ seed/out/omc < build/batch3/scratch-s4/17.src > build/batch3/scratch-s4/17.elf 2> build/batch3/scratch-s4/17.cerr
+VERDICT s4-v-bad-viewedit PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-put line=18
+  $ seed/out/omc < build/batch3/scratch-s4/18.src > build/batch3/scratch-s4/18.elf 2> build/batch3/scratch-s4/18.cerr
+VERDICT s4-v-bad-put PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-read line=19
+  $ seed/out/omc < build/batch3/scratch-s4/19.src > build/batch3/scratch-s4/19.elf 2> build/batch3/scratch-s4/19.cerr
+VERDICT s4-v-bad-read PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-pread-text line=20
+  $ seed/out/omc < build/batch3/scratch-s4/20.src > build/batch3/scratch-s4/20.elf 2> build/batch3/scratch-s4/20.cerr
+VERDICT s4-v-bad-pread-text PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-bad-pread-view line=21
+  $ seed/out/omc < build/batch3/scratch-s4/21.src > build/batch3/scratch-s4/21.elf 2> build/batch3/scratch-s4/21.cerr
+VERDICT s4-v-bad-pread-view PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-v-pwrite-text line=22
+  $ seed/out/omc < build/batch3/scratch-s4/22.src > build/batch3/scratch-s4/22.elf 2> build/batch3/scratch-s4/22.cerr
+  $ build/batch3/scratch-s4/22.elf < /dev/null > build/batch3/scratch-s4/22.out 2> build/batch3/scratch-s4/22.err
+VERDICT s4-v-pwrite-text PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-bad-fresh line=23
+  $ seed/out/omc < build/batch3/scratch-s4/23.src > build/batch3/scratch-s4/23.elf 2> build/batch3/scratch-s4/23.cerr
+VERDICT s4-v-bad-fresh PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-bad-local line=24
+  $ seed/out/omc < build/batch3/scratch-s4/24.src > build/batch3/scratch-s4/24.elf 2> build/batch3/scratch-s4/24.cerr
+VERDICT s4-v-bad-local PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-bad-global line=25
+  $ seed/out/omc < build/batch3/scratch-s4/25.src > build/batch3/scratch-s4/25.elf 2> build/batch3/scratch-s4/25.cerr
+VERDICT s4-v-bad-global PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-v-om1 line=26
+  $ seed/out/omc < build/batch3/scratch-s4/26.src > build/batch3/scratch-s4/26.elf 2> build/batch3/scratch-s4/26.cerr
+VERDICT s4-v-om1 PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-v-text-empty line=28
+  $ seed/out/omc < build/batch3/scratch-s4/28.src > build/batch3/scratch-s4/28.elf 2> build/batch3/scratch-s4/28.cerr
+  $ build/batch3/scratch-s4/28.elf < /dev/null > build/batch3/scratch-s4/28.out 2> build/batch3/scratch-s4/28.err
+VERDICT s4-v-text-empty PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-text-empty-loop line=29
+  $ seed/out/omc < build/batch3/scratch-s4/29.src > build/batch3/scratch-s4/29.elf 2> build/batch3/scratch-s4/29.cerr
+  $ build/batch3/scratch-s4/29.elf < /dev/null > build/batch3/scratch-s4/29.out 2> build/batch3/scratch-s4/29.err
+VERDICT s4-v-text-empty-loop PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-v-text-empty-get line=30
+  $ seed/out/omc < build/batch3/scratch-s4/30.src > build/batch3/scratch-s4/30.elf 2> build/batch3/scratch-s4/30.cerr
+  $ build/batch3/scratch-s4/30.elf < /dev/null > build/batch3/scratch-s4/30.out 2> build/batch3/scratch-s4/30.err
+VERDICT s4-v-text-empty-get PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-text-empty-write line=31
+  $ seed/out/omc < build/batch3/scratch-s4/31.src > build/batch3/scratch-s4/31.elf 2> build/batch3/scratch-s4/31.cerr
+  $ build/batch3/scratch-s4/31.elf < /dev/null > build/batch3/scratch-s4/31.out 2> build/batch3/scratch-s4/31.err
+VERDICT s4-v-text-empty-write PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-text-empty line=32
+  $ seed/out/omc < build/batch3/scratch-s4/32.src > build/batch3/scratch-s4/32.elf 2> build/batch3/scratch-s4/32.cerr
+  $ build/batch3/scratch-s4/32.elf < /dev/null > build/batch3/scratch-s4/32.out 2> build/batch3/scratch-s4/32.err
+VERDICT s4-p-text-empty PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-v-bad-text-empty line=33
+  $ seed/out/omc < build/batch3/scratch-s4/33.src > build/batch3/scratch-s4/33.elf 2> build/batch3/scratch-s4/33.cerr
+VERDICT s4-v-bad-text-empty PASS compile exit=21 expected=21 refused with the expected error
+CASE s4-p-ok line=35
+  $ seed/out/omc < build/batch3/scratch-s4/35.src > build/batch3/scratch-s4/35.elf 2> build/batch3/scratch-s4/35.cerr
+  $ build/batch3/scratch-s4/35.elf < /dev/null > build/batch3/scratch-s4/35.out 2> build/batch3/scratch-s4/35.err
+VERDICT s4-p-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-p-wrap line=36
+  $ seed/out/omc < build/batch3/scratch-s4/36.src > build/batch3/scratch-s4/36.elf 2> build/batch3/scratch-s4/36.cerr
+  $ build/batch3/scratch-s4/36.elf < /dev/null > build/batch3/scratch-s4/36.out 2> build/batch3/scratch-s4/36.err
+VERDICT s4-p-wrap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-o line=37
+  $ seed/out/omc < build/batch3/scratch-s4/37.src > build/batch3/scratch-s4/37.elf 2> build/batch3/scratch-s4/37.cerr
+  $ build/batch3/scratch-s4/37.elf < /dev/null > build/batch3/scratch-s4/37.out 2> build/batch3/scratch-s4/37.err
+VERDICT s4-p-o PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-tail line=38
+  $ seed/out/omc < build/batch3/scratch-s4/38.src > build/batch3/scratch-s4/38.elf 2> build/batch3/scratch-s4/38.cerr
+  $ build/batch3/scratch-s4/38.elf < /dev/null > build/batch3/scratch-s4/38.out 2> build/batch3/scratch-s4/38.err
+VERDICT s4-p-tail PASS run exit=103 expected=103 stdout=match stderr=match
+CASE s4-p-order line=39
+  $ seed/out/omc < build/batch3/scratch-s4/39.src > build/batch3/scratch-s4/39.elf 2> build/batch3/scratch-s4/39.cerr
+  $ build/batch3/scratch-s4/39.elf < /dev/null > build/batch3/scratch-s4/39.out 2> build/batch3/scratch-s4/39.err
+VERDICT s4-p-order PASS run exit=102 expected=102 stdout=match stderr=match
+CASE s4-p-om1 line=40
+  $ seed/out/omc < build/batch3/scratch-s4/40.src > build/batch3/scratch-s4/40.elf 2> build/batch3/scratch-s4/40.cerr
+  $ build/batch3/scratch-s4/40.elf < /dev/null > build/batch3/scratch-s4/40.out 2> build/batch3/scratch-s4/40.err
+VERDICT s4-p-om1 PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s4-p-bad-local line=41
+  $ seed/out/omc < build/batch3/scratch-s4/41.src > build/batch3/scratch-s4/41.elf 2> build/batch3/scratch-s4/41.cerr
+VERDICT s4-p-bad-local PASS compile exit=9 expected=9 refused with the expected error
+CASE s4-p-bad-stmt line=42
+  $ seed/out/omc < build/batch3/scratch-s4/42.src > build/batch3/scratch-s4/42.elf 2> build/batch3/scratch-s4/42.cerr
+VERDICT s4-p-bad-stmt PASS compile exit=9 expected=9 refused with the expected error
+CASE s4-p-bad-write line=43
+  $ seed/out/omc < build/batch3/scratch-s4/43.src > build/batch3/scratch-s4/43.elf 2> build/batch3/scratch-s4/43.cerr
+VERDICT s4-p-bad-write PASS compile exit=9 expected=9 refused with the expected error
+CASE s4-p-bad-two line=44
+  $ seed/out/omc < build/batch3/scratch-s4/44.src > build/batch3/scratch-s4/44.elf 2> build/batch3/scratch-s4/44.cerr
+VERDICT s4-p-bad-two PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-p-bad-base line=45
+  $ seed/out/omc < build/batch3/scratch-s4/45.src > build/batch3/scratch-s4/45.elf 2> build/batch3/scratch-s4/45.cerr
+VERDICT s4-p-bad-base PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-p-bad-global line=46
+  $ seed/out/omc < build/batch3/scratch-s4/46.src > build/batch3/scratch-s4/46.elf 2> build/batch3/scratch-s4/46.cerr
+VERDICT s4-p-bad-global PASS compile exit=19 expected=19 refused with the expected error
+CASE s4-p-bad-viewedit line=47
+  $ seed/out/omc < build/batch3/scratch-s4/47.src > build/batch3/scratch-s4/47.elf 2> build/batch3/scratch-s4/47.cerr
+VERDICT s4-p-bad-viewedit PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-p-bad-vieweditkw line=48
+  $ seed/out/omc < build/batch3/scratch-s4/48.src > build/batch3/scratch-s4/48.elf 2> build/batch3/scratch-s4/48.cerr
+VERDICT s4-p-bad-vieweditkw PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-p-bad-sized line=49
+  $ seed/out/omc < build/batch3/scratch-s4/49.src > build/batch3/scratch-s4/49.elf 2> build/batch3/scratch-s4/49.cerr
+VERDICT s4-p-bad-sized PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-p-bad-type line=50
+  $ seed/out/omc < build/batch3/scratch-s4/50.src > build/batch3/scratch-s4/50.elf 2> build/batch3/scratch-s4/50.cerr
+VERDICT s4-p-bad-type PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-p-bad-fresh line=51
+  $ seed/out/omc < build/batch3/scratch-s4/51.src > build/batch3/scratch-s4/51.elf 2> build/batch3/scratch-s4/51.cerr
+VERDICT s4-p-bad-fresh PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE s4-x-two line=53
+  $ seed/out/omc < build/batch3/scratch-s4/53.src > build/batch3/scratch-s4/53.elf 2> build/batch3/scratch-s4/53.cerr
+VERDICT s4-x-two PASS compile exit=0 expected=0 sha256=52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e stderr=match
+CASE s4-x-one line=54
+  $ seed/out/omc < build/batch3/scratch-s4/54.src > build/batch3/scratch-s4/54.elf 2> build/batch3/scratch-s4/54.cerr
+VERDICT s4-x-one PASS compile exit=0 expected=0 sha256=094e9b3eced49340f40b812ef1f472a32e5d065679235a6bf0de9cd8ba16df61 stderr=match
+CASE s4-x-noexport line=55
+  $ seed/out/omc < build/batch3/scratch-s4/55.src > build/batch3/scratch-s4/55.elf 2> build/batch3/scratch-s4/55.cerr
+VERDICT s4-x-noexport PASS compile exit=0 expected=0 sha256=f437a16256e51b0cf9d155535e9ba5a1091a2f576beba4f6c06a34537fce68a6 stderr=match
+CASE s4-x-32 line=56
+  $ seed/out/omc < build/batch3/scratch-s4/56.src > build/batch3/scratch-s4/56.elf 2> build/batch3/scratch-s4/56.cerr
+VERDICT s4-x-32 PASS compile exit=0 expected=0 sha256=3d847a212266eb840d2fea159ca45e5974004fc11593abd5cab7140939d13dd6 stderr=match
+CASE s4-x-abs-private line=57
+  $ seed/out/omc < build/batch3/scratch-s4/57.src > build/batch3/scratch-s4/57.elf 2> build/batch3/scratch-s4/57.cerr
+VERDICT s4-x-abs-private PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE s4-x-om1 line=58
+  $ seed/out/omc < build/batch3/scratch-s4/58.src > build/batch3/scratch-s4/58.elf 2> build/batch3/scratch-s4/58.cerr
+  $ build/batch3/scratch-s4/58.elf < /dev/null > build/batch3/scratch-s4/58.out 2> build/batch3/scratch-s4/58.err
+VERDICT s4-x-om1 PASS run exit=5 expected=5 stdout=match stderr=match
+CASE s4-x-bad-33 line=59
+  $ seed/out/omc < build/batch3/scratch-s4/59.src > build/batch3/scratch-s4/59.elf 2> build/batch3/scratch-s4/59.cerr
+VERDICT s4-x-bad-33 PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE s4-x-bad-prog line=60
+  $ seed/out/omc < build/batch3/scratch-s4/60.src > build/batch3/scratch-s4/60.elf 2> build/batch3/scratch-s4/60.cerr
+VERDICT s4-x-bad-prog PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-x-bad-nofn line=61
+  $ seed/out/omc < build/batch3/scratch-s4/61.src > build/batch3/scratch-s4/61.elf 2> build/batch3/scratch-s4/61.cerr
+VERDICT s4-x-bad-nofn PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-x-bad-body line=62
+  $ seed/out/omc < build/batch3/scratch-s4/62.src > build/batch3/scratch-s4/62.elf 2> build/batch3/scratch-s4/62.cerr
+VERDICT s4-x-bad-body PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-x-bad-abs line=63
+  $ seed/out/omc < build/batch3/scratch-s4/63.src > build/batch3/scratch-s4/63.elf 2> build/batch3/scratch-s4/63.cerr
+VERDICT s4-x-bad-abs PASS compile exit=7 expected=7 refused with the expected error
+CASE s4-o-out line=64
+  $ seed/out/omc < build/batch3/scratch-s4/64.src > build/batch3/scratch-s4/64.elf 2> build/batch3/scratch-s4/64.cerr
+VERDICT s4-o-out PASS compile exit=0 expected=0 sha256=e10bf9cc1b3105512fa139345b7a4501e5953a98a291bd3d6a14f987f4c7285e stderr=match
+CASE s4-o-slots6 line=65
+  $ seed/out/omc < build/batch3/scratch-s4/65.src > build/batch3/scratch-s4/65.elf 2> build/batch3/scratch-s4/65.cerr
+VERDICT s4-o-slots6 PASS compile exit=0 expected=0 sha256=6b6f14b97b7dbd1fbe79c4a5aed8b1be8be73d346e4fc8759e976f91298ecc63 stderr=match
+CASE s4-o-run line=66
+  $ seed/out/omc < build/batch3/scratch-s4/66.src > build/batch3/scratch-s4/66.elf 2> build/batch3/scratch-s4/66.cerr
+  $ build/batch3/scratch-s4/66.elf < /dev/null > build/batch3/scratch-s4/66.out 2> build/batch3/scratch-s4/66.err
+VERDICT s4-o-run PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s4-o-bad-slots7 line=67
+  $ seed/out/omc < build/batch3/scratch-s4/67.src > build/batch3/scratch-s4/67.elf 2> build/batch3/scratch-s4/67.cerr
+VERDICT s4-o-bad-slots7 PASS compile exit=9 expected=9 stdout=match stderr=match
+CASE s4-o-bad-star line=68
+  $ seed/out/omc < build/batch3/scratch-s4/68.src > build/batch3/scratch-s4/68.elf 2> build/batch3/scratch-s4/68.cerr
+VERDICT s4-o-bad-star PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-o-bad-fresh line=69
+  $ seed/out/omc < build/batch3/scratch-s4/69.src > build/batch3/scratch-s4/69.elf 2> build/batch3/scratch-s4/69.cerr
+VERDICT s4-o-bad-fresh PASS compile exit=16 expected=16 refused with the expected error
+CASE s4-o-bad-view line=70
+  $ seed/out/omc < build/batch3/scratch-s4/70.src > build/batch3/scratch-s4/70.elf 2> build/batch3/scratch-s4/70.cerr
+VERDICT s4-o-bad-view PASS compile exit=20 expected=20 refused with the expected error
+CASE s4-o-bad-size line=71
+  $ seed/out/omc < build/batch3/scratch-s4/71.src > build/batch3/scratch-s4/71.elf 2> build/batch3/scratch-s4/71.cerr
+VERDICT s4-o-bad-size PASS compile exit=7 expected=7 refused with the expected error
+OM2GATE PASS cases=64 pass=64 fail=0 invalid=0 not_run=0
