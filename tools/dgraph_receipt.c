@@ -381,7 +381,8 @@ static int check_measurements(const JV *r, Err *e) {
         const JV *g = stages->v[i]; int64_t gl, gn;
         if (g->t != J_OBJ) return rej(e, "stamped_token.stages[%zu] is not an object", i);
         if (!need_s(g, "kind", e) || need_i(g, "launches", 1, &gl, e) || need_i(g, "device_ns", 0, &gn, e)) return -1;
-        ssum += gn; lsum += gl;
+        if (__builtin_add_overflow(ssum, gn, &ssum) || __builtin_add_overflow(lsum, gl, &lsum))
+            return rej(e, "stamped_token.stages overflow a 64-bit sum at stages[%zu]", i);
     }
     if (ssum != sum) return rej(e, "derived stamped_token.stage_sum_ns = %" PRId64 " but the stages add up to %" PRId64, sum, ssum);
     if (sum != span) return rej(e, "stamped_token.stage_sum_ns %" PRId64 " differs from span_ns %" PRId64 " (consecutive stamps must partition the span)", sum, span);
@@ -428,6 +429,9 @@ static int check_receipt(const JV *r, const char *evroot, Err *e) {
     if (!need(r, "workload", J_OBJ, e) || !need_s(r, "workload.model", e) || !need_s(r, "workload.precision", e) || !need_s(r, "workload.mode", e) ||
         need_i(r, "workload.tokens", 1, NULL, e)) return -1;
     if (!need(r, "hardware", J_OBJ, e) || !need_s(r, "hardware.host", e) || !need_s(r, "hardware.gpu", e)) return -1;
+    /* the generator writes none_detected when nvidia-smi found no GPU: such a run measured no chip */
+    if ((!strcmp(status, "VERIFIED") || !strcmp(status, "EXPERIMENTAL")) && !strcmp(need_s(r, "hardware.gpu", e), "none_detected"))
+        return rej(e, "status %s with hardware.gpu none_detected: a run without a detected GPU cannot be %s", status, status);
     if (!need(r, "build", J_OBJ, e) || !need_s(r, "build.runner", e)) return -1;
 
     /* measurements: present for a run, absent (null) for NOT_RUN */

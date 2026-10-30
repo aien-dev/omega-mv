@@ -59,7 +59,8 @@ Quotes are from `src/omega_gpu_decode_graph.h`. The stats are copied from the `-
 
 `VERIFIED | EXPERIMENTAL | HISTORICAL | NOT_RUN | FAIL | SUPERSEDED`. Receipts rebuilt from old
 evidence logs are **HISTORICAL**: the chip was not run to make them. `VERIFIED` needs a clean tree and a
-PASS run. `EXPERIMENTAL` needs a PASS run. `NOT_RUN` carries `per_token: null`, `stamped_token: null` and
+PASS run. `EXPERIMENTAL` needs a PASS run. Neither is allowed with `hardware.gpu` `none_detected` (what the
+generator writes when `nvidia-smi` found no GPU). `NOT_RUN` carries `per_token: null`, `stamped_token: null` and
 a `not_run_reason`, so it holds no numbers.
 
 ## Making a receipt from a run
@@ -90,8 +91,9 @@ Missing fields, wrong types, unknown top-level fields, a schema other than `/1`,
 enum, a commit that is not 40 lowercase hex digits, a non-`OWNER/NAME` repo, placeholder strings
 anywhere (`""`, `TBD`, `unknown`, `TODO`, `N/A`, `none`, ...), zero tokens, derived numbers that do not
 match their inputs (`host_overhead_ns`, `unattributed_ns`, `stage_sum_ns`), stages that do not add up to
-`span_ns`, `span_ns > chip_ns`, `sems_done` neither equal to `launches` nor `null` with a note,
-`VERIFIED` on a dirty tree, measurements on a `NOT_RUN` receipt, absolute or `..` evidence paths, and,
+`span_ns` or whose sums overflow 64 bits, `span_ns > chip_ns`, `sems_done` neither equal to `launches` nor
+`null` with a note, `VERIFIED` on a dirty tree, `VERIFIED` or `EXPERIMENTAL` with no detected GPU,
+measurements on a `NOT_RUN` receipt, absolute or `..` evidence paths, and,
 with `--evidence-root`, evidence paths that do not exist. `make test-dgraph-receipt` proves each rule
 with a fixture in `tests/dgraph_receipt/fixtures/` (table: `tests/dgraph_receipt/negatives.txt`).
 

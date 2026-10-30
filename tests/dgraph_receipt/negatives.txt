@@ -21,3 +21,6 @@ neg-unknown-field.json|good-historical-710d438c-main.json|unknown top-level fiel
 neg-sems-done-wrong.json|good-historical-710d438c-main.json|must equal launches or be null
 neg-notrun-with-measurements.json|good-historical-710d438c-main.json|must carry per_token and stamped_token as null
 neg-invalid-json.json|good-historical-710d438c-main.json|invalid JSON
+neg-verified-no-gpu.json|good-historical-710d438c-main.json|status VERIFIED with hardware.gpu none_detected
+neg-experimental-no-gpu.json|good-historical-710d438c-main.json|status EXPERIMENTAL with hardware.gpu none_detected
+neg-stage-overflow.json|good-historical-710d438c-main.json|stamped_token.stages overflow a 64-bit sum at stages[1]
