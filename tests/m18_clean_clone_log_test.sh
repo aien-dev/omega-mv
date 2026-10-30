@@ -79,7 +79,7 @@ done
 # same: open("/tmp/...") returns EROFS.
 ro_out=$work/ro.out
 set +e
-bwrap --ro-bind / / --bind "$work" "$work" --dev /dev --tmpfs /tmp --ro-bind /tmp /tmp \
+bwrap --ro-bind / / --dev /dev --tmpfs /tmp --ro-bind /tmp /tmp --bind "$work" "$work" \
     --setenv M18_REQUIRE_TMP_UNWRITABLE 1 \
     "$work/good" "$work/run-ro" >"$ro_out" 2>&1
 ro_rc=$?
@@ -107,7 +107,7 @@ END { if (replaced != 1) exit 2 }
 ' "$src" >"$work/mutant.c"
 "$cc" $cflags -o "$work/mutant" "$testc" "$work/mutant.c"
 set +e
-bwrap --ro-bind / / --bind "$work" "$work" --dev /dev --tmpfs /tmp --ro-bind /tmp /tmp \
+bwrap --ro-bind / / --dev /dev --tmpfs /tmp --ro-bind /tmp /tmp --bind "$work" "$work" \
     --setenv M18_REQUIRE_TMP_UNWRITABLE 1 \
     "$work/mutant" "$work/run-mut" >"$work/mut.out" 2>&1
 mut_rc=$?
