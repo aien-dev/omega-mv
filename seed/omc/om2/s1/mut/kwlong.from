@@ -1,0 +1,7 @@
+w = get tw 0
+if le get tl 0 8
+if ne kw w 0
+fail 16
+end
+end
+l = get tl 0

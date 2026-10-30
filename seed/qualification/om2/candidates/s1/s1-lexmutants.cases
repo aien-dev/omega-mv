@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: Apache-2.0
+# Lexer, formatter and diag mutants of candidate S1 (a5927895). Each row is a CORRECT-side row of
+# sec/s0s2/candidate.cases rerun under the mutant: the predicted verdict is FAIL with the reason in
+# MUTANTS.md B19-B21 (a mutant is killed when every listed row FAILs that way). Controls must PASS.
+# --- mutant hex-upper
+subst seed/qualification/om2/candidates/s1/mutants/hex-upper.from seed/qualification/om2/candidates/s1/mutants/hex-upper.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-hex-upper-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+hex-upper-s1-d-hexupper emit seed/qualification/om2/sec/s0s2/s1/d-hexupper.om - file:seed/qualification/om2/sec/s0s2/exp/d-hexupper.err 6
+hex-upper-s1-d-hexupper-plain emit seed/qualification/om2/sec/s0s2/s1/d-hexupper-plain.om - file:seed/qualification/om2/sec/s0s2/exp/d-hexupper-plain.err 6
+hex-upper-s2-r6-upper emit seed/qualification/om2/sec/s0s2/s2hex/r6-upper.om - err:5:6 6
+hex-upper-s2-r6-mixed emit seed/qualification/om2/sec/s0s2/s2hex/r6-mixed.om - err:5:6 6
+hex-upper-s2-r6-upper-ulong emit seed/qualification/om2/sec/s0s2/s2hex/r6-upper-ulong.om - err:5:6 6
+cc pinned
+# --- mutant hex-17
+subst seed/qualification/om2/candidates/s1/mutants/hex-17.from seed/qualification/om2/candidates/s1/mutants/hex-17.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-hex-17-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+hex-17-s1-d-longtok emit seed/qualification/om2/sec/s0s2/s1/d-longtok.om - file:seed/qualification/om2/sec/s0s2/exp/d-longtok.err 6
+hex-17-s2-r6-17small emit seed/qualification/om2/sec/s0s2/s2hex/r6-17small.om - err:5:6 6
+hex-17-s2-r6-17big emit seed/qualification/om2/sec/s0s2/s2hex/r6-17big.om - err:5:6 6
+cc pinned
+# --- mutant diag-col0
+subst seed/qualification/om2/candidates/s1/mutants/diag-col0.from seed/qualification/om2/candidates/s1/mutants/diag-col0.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-diag-col0-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+diag-col0-s1-d-left emit seed/qualification/om2/sec/s0s2/s1/d-left.om - file:seed/qualification/om2/sec/s0s2/exp/d-left.err 5
+diag-col0-s1-d-eof-left emit seed/qualification/om2/sec/s0s2/s1/d-eof-left.om - file:seed/qualification/om2/sec/s0s2/exp/d-eof-left.err 5
+diag-col0-s1-d-hexrange emit seed/qualification/om2/sec/s0s2/s1/d-hexrange.om - file:seed/qualification/om2/sec/s0s2/exp/d-hexrange.err 8
+diag-col0-s1-d-unknown-fn emit seed/qualification/om2/sec/s0s2/s1/d-unknown-fn.om - file:seed/qualification/om2/sec/s0s2/exp/d-unknown-fn.err 3
+cc pinned
+# --- mutant fmt-note
+subst seed/qualification/om2/candidates/s1/mutants/fmt-note.from seed/qualification/om2/candidates/s1/mutants/fmt-note.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-fmt-note-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+fmt-note-s2-fmt-x1 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x1.om file:seed/qualification/om2/sec/s0s2/exp/x1.fmt - 0
+fmt-note-s2-fmt-x3 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x3.om file:seed/qualification/om2/sec/s0s2/exp/x3.fmt - 0
+cc pinned
+# --- mutant fmt-text
+subst seed/qualification/om2/candidates/s1/mutants/fmt-text.from seed/qualification/om2/candidates/s1/mutants/fmt-text.to
+cc build/om2-qual/cand-s1/omc.om
+ctl-fmt-text-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+fmt-text-s2-fmt-x1 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x1.om file:seed/qualification/om2/sec/s0s2/exp/x1.fmt - 0
+fmt-text-s2-fmt-x5 emit seed/qualification/om2/sec/s0s2/s2fmt/hdr.txt+seed/qualification/om2/sec/s0s2/s2fmt/x5.om file:seed/qualification/om2/sec/s0s2/exp/x5.fmt - 0
+cc pinned

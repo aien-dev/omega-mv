@@ -1,0 +1,3 @@
+model: 4 layers (3 GDN, 1 attention, mask 0x8), vocab 248320
+FAIL: baseline token 0
+gpu_q38_graph_test: 1 checks, 1 failed: FAIL

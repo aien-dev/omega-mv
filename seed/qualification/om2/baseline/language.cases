@@ -1,0 +1,82 @@
+# Current-language refusal controls (baseline acb3f15, pinned omc 734f0a39).
+alias-same-array refuse seed/qualification/om2/baseline/alias.om 19
+
+# QTY-1/QTY-2 audit regressions. Expectations describe the language contract,
+# not the incorrect results recorded by the historical audit compiler.
+# Successful fixtures check values; wrong-expectation controls must exit 1.
+qty-literal-exact run tests/quantity/literal_exact.om - - - 0
+qty-literal-bare run tests/quantity/literal_bare.om - - - 0
+qty-constant-integer run tests/quantity/constant_integer.om - - - 0
+qty-ingress-ulong run tests/quantity/ingress_ulong.om - - - 0
+qty-ingress-long run tests/quantity/ingress_long.om - - - 0
+qty-ingress-negative run tests/quantity/ingress_negative.om - - - 105
+qty-roundtrip run tests/quantity/roundtrip.om - - - 0
+qty-contexts run tests/quantity/contexts.om - - - 0
+qty-narrow-controls run tests/quantity/narrow_controls.om - - - 0
+qty-float-domain-control run tests/quantity/float_domain_control.om - - - 0
+qty-literal-wrong-expectation run tests/quantity/literal_wrong_expectation.om - - - 1
+qty-ingress-wrong-expectation run tests/quantity/ingress_wrong_expectation.om - - - 1
+qty-float-add-fixed refuse tests/quantity/float_add_fixed.om 7
+qty-float-add-reverse refuse tests/quantity/float_add_reverse.om 7
+qty-float-compare refuse tests/quantity/float_compare.om 7
+qty-float-compare-reverse refuse tests/quantity/float_compare_reverse.om 7
+qty-float-register refuse tests/quantity/qty_mixed_float_register.om 7
+qty-float-register-reverse refuse tests/quantity/float_register_reverse.om 7
+qty-float-ingress refuse tests/quantity/float_ingress.om 7
+qty-float-literal-f32 refuse tests/quantity/float_literal_f32.om 7
+qty-float-literal-bare refuse tests/quantity/float_literal_bare.om 7
+qty-float-const refuse tests/quantity/float_const_fixed.om 7
+qty-float-const-f32 refuse tests/quantity/float_const_f32.om 7
+qty-negative-float-const refuse tests/quantity/qty_negative_const.om 7
+qty-negative-integer-const refuse tests/quantity/constant_negative.om 8
+qty-fsqrt refuse tests/quantity/qty_sqrt.om 7
+qty-fabs refuse tests/quantity/qty_abs.om 7
+qty-fmin refuse tests/quantity/qty_min.om 7
+qty-fmax refuse tests/quantity/qty_max.om 7
+qty-fmax-order refuse tests/quantity/qty_fmax_order.om 7
+# Checked arithmetic must retain its traps for registers and immediate operands.
+qty-add-overflow run tests/quantity/p_addovf.om - - - 101
+qty-mul-overflow run tests/quantity/p_mulovf.om - - - 101
+qty-sub-underflow run tests/quantity/p_subund.om - - - 101
+qty-add-immediate run tests/quantity/p_addimm.om - - - 101
+qty-add-immediate-reverse run tests/quantity/p_addimm2.om - - - 101
+qty-add-large-immediate run tests/quantity/p_addbigimm.om - - - 101
+qty-mul-immediate run tests/quantity/p_mulimm.om - - - 101
+qty-sub-immediate run tests/quantity/p_subimm.om - - - 101
+qty-sub-large-immediate run tests/quantity/p_subbigimm.om - - - 101
+qty-div-zero run tests/quantity/p_div0.om - - - 102
+qty-rem-zero run tests/quantity/rem_zero.om - - - 102
+qty-self-add run tests/quantity/qty_self_add.om - - - 101
+qty-self-mul run tests/quantity/qty_self_mul.om - - - 101
+qty-self-sub run tests/quantity/qty_self_sub.om - - - 101
+qty-global-overflow run tests/quantity/qty_glob.om - - - 101
+qty-array-overflow run tests/quantity/qty_new.om - - - 101
+qty-div-unsigned run tests/quantity/qty_div_unsigned.om - - - 0
+qty-rem-unsigned run tests/quantity/qty_rem.om - - - 0
+qty-compare-unsigned run tests/quantity/q_cmp_unsigned.om - - - 0
+qty-index-bounds run tests/quantity/q_arr_idx_q_oob.om - - - 103
+qty-narrow-long run tests/quantity/q_narrow_long.om - - - 105
+qty-narrow-uint run tests/quantity/q_narrow_uint.om - - - 105
+qty-narrow-uchar run tests/quantity/q_touchar_bad.om - - - 105
+# Domain boundaries: explicit ingress does not introduce implicit conversions.
+qty-mixed-add refuse tests/quantity/p_mix_add.om 7
+qty-mixed-compare refuse tests/quantity/p_mix_cmp.om 7
+qty-assign-to-ulong refuse tests/quantity/p_assign_q2u.om 7
+qty-assign-from-ulong refuse tests/quantity/p_assign_u2q.om 7
+qty-argument-from-ulong refuse tests/quantity/q_arg_u2q.om 7
+qty-argument-to-ulong refuse tests/quantity/q_arg_q2u.om 7
+qty-return-from-ulong refuse tests/quantity/q_ret_u2q.om 7
+qty-return-to-ulong refuse tests/quantity/q_ret_q2u.om 7
+qty-array-to-ulong refuse tests/quantity/q_arr_put_q.om 7
+qty-array-from-ulong refuse tests/quantity/q_arr_put_u.om 7
+qty-global-from-ulong refuse tests/quantity/q_glob_put_u.om 7
+qty-global-to-ulong refuse tests/quantity/q_glob_put_q2u.om 7
+qty-global-load-type refuse tests/quantity/q_glob_get.om 7
+qty-call-result-type refuse tests/quantity/q_assign_call.om 7
+qty-float-egress refuse tests/quantity/q_tof64.om 7
+qty-bitwise-and refuse tests/quantity/p_and.om 7
+qty-shift refuse tests/quantity/p_shl.om 7
+qty-negate refuse tests/quantity/p_neg.om 7
+qty-complement refuse tests/quantity/p_not.om 7
+qty-float-bits-control refuse tests/quantity/float_bits_control.om 7
+qty-unsupported-rotate refuse tests/quantity/p_rotr.om 3

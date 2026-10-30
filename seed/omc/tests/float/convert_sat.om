@@ -1,0 +1,123 @@
+note float to integer: truncate toward zero, then saturate to the destination type's own range; NaN is 0.
+note Every conversion runs through a function parameter, so it is the run-time path, not constant folding.
+note The expected values are the destination ranges themselves (uchar 0..255, ushort 0..65535, uint 0..2^32-1,
+note ulong 0..2^64-1, byte -128..127, short -32768..32767, int -2^31..2^31-1, long -2^63..2^63-1).
+fn du8 x f64 to uchar
+ret uchar x
+end
+fn du16 x f64 to ushort
+ret ushort x
+end
+fn du32 x f64 to uint
+ret uint x
+end
+fn du64 x f64 to ulong
+ret ulong x
+end
+fn di8 x f64 to byte
+ret byte x
+end
+fn di16 x f64 to short
+ret short x
+end
+fn di32 x f64 to int
+ret int x
+end
+fn di64 x f64 to long
+ret long x
+end
+fn su8 x f32 to uchar
+ret uchar x
+end
+fn su32 x f32 to uint
+ret uint x
+end
+fn si8 x f32 to byte
+ret byte x
+end
+fn si16 x f32 to short
+ret short x
+end
+fn nan to f64
+z = f64 0.0
+ret div z z
+end
+fn main to int
+if ne ulong du8 300.0 255
+ret 1
+end
+if ne ulong du8 -5.0 0
+ret 2
+end
+if ne ulong du8 200.7 200
+ret 3
+end
+if ne ulong du16 70000.0 65535
+ret 4
+end
+if ne ulong du32 -1.0 0
+ret 5
+end
+if ne ulong du32 5000000000.0 4294967295
+ret 6
+end
+if ne du64 -1.0 0
+ret 7
+end
+if ne du64 1.0e20 18446744073709551615
+ret 8
+end
+if ne du64 1.0e19 10000000000000000000
+ret 9
+end
+if ne long di8 200.0 127
+ret 10
+end
+if ne long di8 -200.0 -128
+ret 11
+end
+if ne long di8 -3.7 -3
+ret 12
+end
+if ne long di16 40000.0 32767
+ret 13
+end
+if ne long di16 -40000.0 -32768
+ret 14
+end
+if ne long di32 3000000000.0 2147483647
+ret 15
+end
+if ne long di32 -3000000000.0 -2147483648
+ret 16
+end
+if ne di64 1.0e19 9223372036854775807
+ret 17
+end
+if ne ulong su8 f32 300.0 255
+ret 18
+end
+if ne ulong su32 f32 -2.0 0
+ret 19
+end
+if ne long si8 f32 -300.0 -128
+ret 20
+end
+if ne long si16 f32 1.5 1
+ret 21
+end
+n = nan
+if ne ulong du8 n 0
+ret 22
+end
+if ne long di8 n 0
+ret 23
+end
+if ne ulong du32 n 0
+ret 24
+end
+if ne di64 n 0
+ret 25
+end
+ret 0
+end

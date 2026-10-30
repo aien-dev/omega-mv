@@ -1,0 +1,46 @@
+# baseline acb3f15c  2026-10-25T16:34:15Z  host spark-b87b 7.0.0-1019-nvidia aarch64  cpu6 midr 0x00000000410fd851 max_khz 3900000
+# cc: cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; flags: -std=gnu11 -O2 (both arms)
+# sha256: src/sha256.c ea8ae1c86c225a45  omega_om_units.inc 61d3534427153f13  oracle a8fb8861  bench.c 25ae3a881b93c5d2  small.c a7363a58e7ba7442
+# loadavg before: 5.41 6.72 6.92 7/3033 2321492
+bench run 1
+C 202.7 MB/s  omega 248.5 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 2
+C 202.7 MB/s  omega 248.6 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 3
+C 202.8 MB/s  omega 248.6 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 4
+C 202.6 MB/s  omega 248.7 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 5
+C 202.7 MB/s  omega 248.6 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 6
+C 202.7 MB/s  omega 248.6 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 7
+C 202.7 MB/s  omega 248.7 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 8
+C 202.6 MB/s  omega 248.5 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 9
+C 202.7 MB/s  omega 248.5 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 10
+C 202.7 MB/s  omega 248.2 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+bench run 11
+C 202.6 MB/s  omega 248.6 MB/s  ratio 0.8x
+32-byte hash: C 0.34 us  omega 0.28 us
+small
+MEASURED len    0: omega median 279 ns (279..279)  C median 339 ns (338..339)  omega/C 0.825
+MEASURED len   32: omega median 278 ns (278..278)  C median 340 ns (340..340)  omega/C 0.818
+MEASURED len   55: omega median 277 ns (277..277)  C median 336 ns (336..336)  omega/C 0.823
+MEASURED len   64: omega median 530 ns (530..530)  C median 657 ns (657..658)  omega/C 0.806
+MEASURED len  100: omega median 527 ns (527..527)  C median 657 ns (657..658)  omega/C 0.802
+MEASURED len  200: omega median 1028 ns (1028..1034)  C median 1289 ns (1289..1293)  omega/C 0.798
+MEASURED len 1000: omega median 4029 ns (4028..4030)  C median 5082 ns (5082..5089)  omega/C 0.793
+# loadavg after: 5.93 6.68 6.90 6/3049 2347276

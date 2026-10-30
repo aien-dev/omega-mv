@@ -3,51 +3,51 @@
     "generated": {
       "children": [
         {
-          "digest": "66209b2667bbc2c74e507f89819a0370152e8ef212d4469510d90d3a61690ae0",
-          "last_commit": "30c65a3",
+          "digest": "e46845f369817c78f93a60929d931f29a374f463f4bfa9c20fde0b6f2a681ebe",
+          "last_commit": "dc7c1304",
           "name": "controls",
           "purpose": "PD-0 controls: see docs on physics main"
         },
         {
-          "digest": "28e98322bb2afe9d289b2779ef19db1aa8a96daa7472ba40cc90df364f9d1e72",
-          "last_commit": "30c65a3",
+          "digest": "8bb96a54db63e3af49388c21421872c85065fe846de52bf9606fc6d5d56fb082",
+          "last_commit": "dc7c1304",
           "name": "ladder",
           "purpose": "PD-0 ladder: see docs on physics main"
         },
         {
-          "digest": "0d39d751811b71571c3eda963d7c129f12a6e55f6da70ec001fe36129c631247",
-          "last_commit": "30c65a3",
+          "digest": "7fb40fbc4d5941e789a1b524530446f5f283a765415de02fb46d54525872e180",
+          "last_commit": "dc7c1304",
           "name": "learner",
           "purpose": "PD-0 learner (Physics-0 Discovery Engine D4): fits compact one-step relations over a bounded mon"
         },
         {
-          "digest": "d45d67ce93300f4f942a246336b500f22a259429ab8ad0a17a249b1af2362fea",
-          "last_commit": "e6fd5ee",
+          "digest": "c37f6bb7781c04b757bb32c496c87514f79d37d63f6eae36311ec597388f9ce4",
+          "last_commit": "dc7c1304",
           "name": "learner_v2",
           "purpose": "PD-0 learner v2 (G3): seal-1 learner plus 20-step SELECT rollout ranking, rollout hidden-state f"
         },
         {
-          "digest": "311b692c17bdc10ff1e82b7e5cd82544a83926e0ab0d92b4b286fd91a01f935d",
-          "last_commit": "430df5b",
+          "digest": "e7be466d738393c7b49a15831346df3d334bdb643f97bf08022b0783a3a96d04",
+          "last_commit": "dc7c1304",
           "name": "regime",
           "purpose": "Dev-only PD-0 regime switch: redraws the world constants from the declared ranges at an episode "
         },
         {
-          "digest": "c8f1252406bb1bd1a708833a77da8b0f40bf94559ed5218b78d1eeae1f71bfc8",
-          "last_commit": "30c65a3",
+          "digest": "505461c430bba4ea74e8633af04e240ae640eb4137e27555ff9b52d27e0c4ad2",
+          "last_commit": "dc7c1304",
           "name": "score",
           "purpose": "PD-0 score: see docs on physics main"
         }
       ],
-      "children_root": "sha256:cf8bcbb7c4359aad2e233f7d5e799ac92c6163b8db454fa70a5a357c72856f14",
-      "compiled_at": "2026-10-11T15:21:12Z",
+      "children_root": "sha256:fd7c565793494f5303eb123da82fb9a993db535301f1cca401ec9a98f4169a70",
+      "compiled_at": "2026-10-24T04:15:18Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:8c5cf96997407cff3f8a4c78150ae5294d2ed09a8d9076ae933e426a60792037",
+      "digest": "sha256:e0b91129cc9c188fc0e47b7f3189a3a9a09f9c55eecd018786794571ffc39aad",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 36,
-      "generated_at_commit": "7b4c5827922e7d2632dd631f3d65be82ec4f8b74",
-      "source_tree": "sha256:537839fbacaecf4d49dea93bbb765617ee3669632f288660dae013e0dbed45bf"
+      "generated_at_commit": "dc7c1304c038f49db3b121d5a5e27d7bcab5bf6c",
+      "source_tree": "sha256:a5f70bc215734592ec0b65eb8f2a2bc7acd2b23fa68f65a9d21f9ca38b8b26e9"
     }
   },
   "layer": "src",
