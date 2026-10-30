@@ -1,0 +1,919 @@
+evidence/CODEPAD-PREFETCH-f1d57c5/hd64-regression/omega_gpu_attention_api.c:469	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT4-0d0241a/omega_gpu_elementwise_api.c:353	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT4-ac0d42c/omega_gpu_elementwise_api.c:353	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT4B-0396844/omega_gpu_attention_api.c:389	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT4B-0396844/omega_gpu_elementwise_api.c:352	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT5-HD128-7dd92dc/FB1-CUT5-7dd92dc/omega_gpu_attention_api.c:477	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT5-b016322/omega_gpu_attention_api.c:390	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/FB1-CUT5-cd80bf4/omega_gpu_attention_api.c:410	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/attention/FB1-CUT5-710d438c/omega_gpu_attention_api.c:723	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_attention_api.c:723	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/cut4b/FB1-CUT4B-710d438c/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/elementwise/FB1-CUT4-710d438c/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/omega_blackwell_codegen.c:1233	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/OWN30B-REQUAL-MAIN-710d438c-20261015/gates/reconv/GPU-RECONV-710d438c/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_blackwell_codegen.c:1130	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_blackwell_codegen.c:1426	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_blackwell_codegen.c:1629	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1a-GPU-RECONV-0a1812f/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_blackwell_codegen.c:1130	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_blackwell_codegen.c:1426	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_blackwell_codegen.c:1629	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T1b-GPU-RECONV-0a1812f-observe-dropped-join/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T3/FB1-CUT4-0a1812f/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_attention_api.c:469	hash	kernel->code , kernel->code_size , kernel->code_digest
+evidence/gpu-reconv-308/T3/FB1-CUT4B-0a1812f/omega_gpu_elementwise_api.c:853	hash	kernel->code , kernel->code_size , kernel->code_digest
+om/sha256/parity/bench.c:8	hash	b , n , h
+om/sha256/parity/bench.c:10	hash	b , 32 , h
+om/sha256/parity/every.c:6	hash	b , n , c
+om/sha256/parity/every.c:7	init	&y
+om/sha256/parity/every.c:7	update	&y , b , h
+om/sha256/parity/every.c:7	update	&y , b+h , n-h
+om/sha256/parity/every.c:7	final	&y , e
+om/sha256/parity/par.c:12	hash	buf , n , b
+om/sha256/parity/par.c:13	init	&y
+om/sha256/parity/par.c:14	update	&y , buf+off , k
+om/sha256/parity/par.c:15	update	&y , buf+off , n-off
+om/sha256/parity/par.c:16	final	&y , d
+om/sha256/parity/par.c:20	hash	(const uint8_t*)v[i] , strlen(v[i]) , h
+om/sha256/parity/par.c:21	init	&m
+om/sha256/parity/par.c:21	update	&m , buf , 1000
+om/sha256/parity/par.c:21	final	&m , h
+om/sha256/parity/small.c:23	hash	b , L[j] , h
+research/atemporal/at0/evaluator/src/at0e_text.c:138	hash	data , len , d
+research/atemporal/at0/evaluator/src/at0e_text.c:142	init	&c
+research/atemporal/at0/evaluator/src/at0e_text.c:143	update	&c , (const uint8_t *)domain , strlen(domain)
+research/atemporal/at0/evaluator/src/at0e_text.c:144	update	&c , &z , 1
+research/atemporal/at0/evaluator/src/at0e_text.c:145	update	&c , data , len
+research/atemporal/at0/evaluator/src/at0e_text.c:146	final	&c , d
+research/atemporal/at0/integration/at0_assemble.c:370	init	&c
+research/atemporal/at0/integration/at0_assemble.c:371	update	&c , (const uint8_t *)tag , strlen(tag)
+research/atemporal/at0/integration/at0_assemble.c:371	update	&c , &z , 1
+research/atemporal/at0/integration/at0_assemble.c:372	update	&c , (const uint8_t *)pre , strlen(pre)
+research/atemporal/at0/integration/at0_assemble.c:373	update	&c , (const uint8_t *)body , blen
+research/atemporal/at0/integration/at0_assemble.c:374	final	&c , d
+research/atemporal/at0/integration/at0_assemble.c:452	init	&s
+research/atemporal/at0/integration/at0_assemble.c:452	update	&s , b , k
+research/atemporal/at0/integration/at0_assemble.c:452	final	&s , d
+research/atemporal/at0/model/at0_case.c:430	init	&ctx
+research/atemporal/at0/model/at0_case.c:431	update	&ctx , (const uint8_t *)tag , strlen(tag)
+research/atemporal/at0/model/at0_case.c:432	update	&ctx , &zero , 1
+research/atemporal/at0/model/at0_case.c:433	update	&ctx , (const uint8_t *)text , len
+research/atemporal/at0/model/at0_case.c:434	final	&ctx , d
+research/atemporal/at0/model/at0_case.c:521	init	&ctx
+research/atemporal/at0/model/at0_case.c:521	update	&ctx , bytes , len
+research/atemporal/at0/model/at0_case.c:521	final	&ctx , d
+research/atemporal/at1/model/at1_case.c:76	init	&ctx
+research/atemporal/at1/model/at1_case.c:77	update	&ctx , (const uint8_t *)tag , strlen(tag)
+research/atemporal/at1/model/at1_case.c:78	update	&ctx , &zero , 1
+research/atemporal/at1/model/at1_case.c:79	update	&ctx , (const uint8_t *)data , len
+research/atemporal/at1/model/at1_case.c:80	final	&ctx , d
+research/atemporal/at1/model/at1_case.c:86	hash	data , len , d
+src/ans/ans_encode.c:282	init	&c
+src/ans/ans_encode.c:283	update	&c , (const uint8_t *)domain , strlen(domain)
+src/ans/ans_encode.c:284	update	&c , &zero , 1
+src/ans/ans_encode.c:285	update	&c , enc , len
+src/ans/ans_encode.c:286	final	&c , out->b
+src/ans/ans_encode.c:295	init	&c
+src/ans/ans_encode.c:296	update	&c , (const uint8_t *)ANS_DOMAIN_PROVENANCE , strlen(ANS_DOMAIN_PROVENANCE)
+src/ans/ans_encode.c:297	update	&c , &zero , 1
+src/ans/ans_encode.c:298	update	&c , prev->b , EST_DIGEST_SIZE
+src/ans/ans_encode.c:299	update	&c , (const uint8_t *)tag , strlen(tag)
+src/ans/ans_encode.c:300	update	&c , rec->b , EST_DIGEST_SIZE
+src/ans/ans_encode.c:301	final	&c , r.b
+src/checker2/c2_receipt.c:45	hash	(const uint8_t *)s , sizeof s - 1 , seed
+src/checker2/c2_receipt.c:96	init	&c
+src/checker2/c2_receipt.c:97	update	&c , (const uint8_t *)tag , sizeof tag
+src/checker2/c2_receipt.c:98	update	&c , (const uint8_t *)name , strlen(name)
+src/checker2/c2_receipt.c:99	final	&c , out
+src/checker2/c2_receipt.c:109	init	&c
+src/checker2/c2_receipt.c:110	update	&c , (const uint8_t *)tag , sizeof tag
+src/checker2/c2_receipt.c:111	update	&c , cnt , 4
+src/checker2/c2_receipt.c:112	update	&c , ids[i] , 32
+src/checker2/c2_receipt.c:113	final	&c , out
+src/checker2/c2_receipt.c:177	hash	buf , C2R_SIZE , out
+src/checker2/c2_receipt.c:185	init	&c
+src/checker2/c2_receipt.c:186	update	&c , (const uint8_t *)body_tag , sizeof body_tag
+src/checker2/c2_receipt.c:187	update	&c , buf , C2R_SIGNED_LEN
+src/checker2/c2_receipt.c:189	final	&c , msg + sizeof sig_tag
+src/checker2/c2_receipt.c:214	hash	pk , 32 , r->key_fp
+src/checker2/c2_receipt.c:229	hash	pk , 32 , r->key_fp
+src/checker2/c2_receipt.c:243	hash	set[i] , 32 , h
+src/checker2/checker2_main.c:111	hash	b , n , out
+src/checker2/checker2_main.c:120	init	&c
+src/checker2/checker2_main.c:121	update	&c , (const uint8_t *)C2_CHECKER_VERSION , sizeof C2_CHECKER_VERSION
+src/checker2/checker2_main.c:122	update	&c , (const uint8_t *)C2_SOURCES_SHA256 , strlen(C2_SOURCES_SHA256)
+src/checker2/checker2_main.c:123	final	&c , out
+src/checker2/checker2_main.c:131	hash	b , n , ir_sha
+src/checker2/checker2_main.c:246	hash	p , n , ps
+src/checker2/checker2_main.c:259	hash	(const uint8_t *)text , tn , req
+src/checker2/checker2_main.c:309	hash	c2r_owner_root_pk , 32 , r.key_fp
+src/checker2/checker2_main.c:444	hash	b , n , ir_sha
+src/checker2/checker2_main.c:485	hash	p , n , ps
+src/compiler/osc_ir.c:565	update	w->sha , (const uint8_t *)p , k
+src/compiler/osc_ir.c:749	init	&c
+src/compiler/osc_ir.c:752	final	&c , out
+src/compiler/oscc_main.c:172	hash	code.code , code.len , dig
+src/crumbline/cl_common.c:92	init	&c
+src/crumbline/cl_common.c:93	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/crumbline/cl_common.c:97	update	&c , b , 8
+src/crumbline/cl_common.c:100	final	&c , d
+src/crumbline/cl_common.c:133	init	&c
+src/crumbline/cl_common.c:134	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/crumbline/cl_common.c:135	update	&c , data , len
+src/crumbline/cl_common.c:136	final	&c , out
+src/dual/rx_dual.c:597	init	&ctx
+src/dual/rx_dual.c:598	update	&ctx , (const uint8_t *)domain , strlen(domain)
+src/dual/rx_dual.c:599	update	&ctx , &zero , 1
+src/dual/rx_dual.c:600	update	&ctx , enc , len
+src/dual/rx_dual.c:601	final	&ctx , out->b
+src/dual/rx_dual_replay.c:121	init	&ctx
+src/dual/rx_dual_replay.c:122	update	&ctx , (const uint8_t *)RX_DUAL_DOMAIN_TRACE , strlen(RX_DUAL_DOMAIN_TRACE)
+src/dual/rx_dual_replay.c:123	update	&ctx , &zero , 1
+src/dual/rx_dual_replay.c:125	update	&ctx , hdr , sizeof hdr
+src/dual/rx_dual_replay.c:126	update	&ctx , tick , sizeof tick
+src/dual/rx_dual_replay.c:127	final	&ctx , out->b
+src/dual/rx_dual_replay.c:189	init	&ctx
+src/dual/rx_dual_replay.c:190	update	&ctx , (const uint8_t *)tag , strlen(tag)
+src/dual/rx_dual_replay.c:191	update	&ctx , trace->b , RX_DUAL_DIGEST_SIZE
+src/dual/rx_dual_replay.c:192	update	&ctx , ib , 4
+src/dual/rx_dual_replay.c:193	final	&ctx , out->b
+src/dual/rx_dual_replay.c:238	init	&ctx
+src/dual/rx_dual_replay.c:239	update	&ctx , (const uint8_t *)RX_DUAL_DOMAIN_REPLAY , strlen(RX_DUAL_DOMAIN_REPLAY)
+src/dual/rx_dual_replay.c:240	update	&ctx , &zero , 1
+src/dual/rx_dual_replay.c:241	update	&ctx , out->controller_id.b , RX_DUAL_DIGEST_SIZE
+src/dual/rx_dual_replay.c:242	update	&ctx , out->trace.b , RX_DUAL_DIGEST_SIZE
+src/dual/rx_dual_replay.c:244	update	&ctx , nb , 4
+src/dual/rx_dual_replay.c:245	update	&ctx , out->record[i].b , RX_DUAL_DIGEST_SIZE
+src/dual/rx_dual_replay.c:246	final	&ctx , out->replay.b
+src/dual_experiment/applic_metrics.c:165	init	&c
+src/dual_experiment/applic_metrics.c:166	update	&c , (const uint8_t *)hdr , strlen(hdr)
+src/dual_experiment/applic_metrics.c:167	update	&c , (const uint8_t *)" " , 1
+src/dual_experiment/applic_metrics.c:171	update	&c , (const uint8_t *)line , (size_t)w
+src/dual_experiment/applic_metrics.c:172	update	&c , (const uint8_t *)" " , 1
+src/dual_experiment/applic_metrics.c:174	final	&c , out
+src/dual_experiment/applic_metrics.c:209	hash	(const uint8_t *)buf , w < 0 ? 0u : (size_t)w , out
+src/estimation/est_pred.c:245	init	&c
+src/estimation/est_pred.c:246	update	&c , (const uint8_t *)EST_DOMAIN_ASSUMPTION , strlen(EST_DOMAIN_ASSUMPTION)
+src/estimation/est_pred.c:247	update	&c , &zero , 1
+src/estimation/est_pred.c:248	update	&c , enc , o
+src/estimation/est_pred.c:249	final	&c , out->b
+src/estimation/est_types.c:582	init	&c
+src/estimation/est_types.c:583	update	&c , (const uint8_t *)domain , strlen(domain)
+src/estimation/est_types.c:584	update	&c , &zero , 1
+src/estimation/est_types.c:585	update	&c , enc , len
+src/estimation/est_types.c:586	final	&c , out->b
+src/estimation/est_v4.c:94	init	&c
+src/estimation/est_v4.c:95	update	&c , (const uint8_t *)EST_DOMAIN_V4 , strlen(EST_DOMAIN_V4)
+src/estimation/est_v4.c:96	update	&c , &zero , 1
+src/estimation/est_v4.c:97	update	&c , enc , o
+src/estimation/est_v4.c:98	final	&c , out->b
+src/fabric/fab_hmac.c:33	hash	key , key_len , k
+src/fabric/fab_hmac.c:37	init	&h
+src/fabric/fab_hmac.c:38	update	&h , pad , sizeof pad
+src/fabric/fab_hmac.c:39	update	&h , msg , msg_len
+src/fabric/fab_hmac.c:40	final	&h , inner
+src/fabric/fab_hmac.c:42	init	&h
+src/fabric/fab_hmac.c:43	update	&h , pad , sizeof pad
+src/fabric/fab_hmac.c:44	update	&h , inner , sizeof inner
+src/fabric/fab_hmac.c:45	final	&h , out
+src/fabric/fab_loopback.c:56	update	&l->transcript , hdr , sizeof hdr
+src/fabric/fab_loopback.c:57	update	&l->transcript , msg , len
+src/fabric/fab_loopback.c:77	init	&l->transcript
+src/fabric/fab_loopback.c:108	final	&c , out
+src/fabric/fabric.c:78	update	&n->event_hash , b , sizeof b
+src/fabric/fabric.c:128	hash	rec , len , p
+src/fabric/fabric.c:142	hash	rec , len - 32 , dg
+src/fabric/fabric.c:192	init	&n->event_hash
+src/fabric/fabric.c:498	final	&ev , evd
+src/fabric/fabric.c:499	init	&h
+src/fabric/fabric.c:500	update	&h , (const uint8_t *)" " , 13
+src/fabric/fabric.c:502	update	&h , b , 8
+src/fabric/fabric.c:503	update	&h , evd , 32
+src/fabric/fabric.c:506	update	&h , &m->machine.root , 1
+src/fabric/fabric.c:507	update	&h , m->machine.id , AIEN_MID_ID_BYTES
+src/fabric/fabric.c:508	update	&h , b , 4
+src/fabric/fabric.c:509	update	&h , b , 8
+src/fabric/fabric.c:510	update	&h , b , 8
+src/fabric/fabric.c:511	update	&h , b , 8
+src/fabric/fabric.c:512	update	&h , b , 4
+src/fabric/fabric.c:514	update	&h , b , 4
+src/fabric/fabric.c:515	update	&h , b , 4
+src/fabric/fabric.c:516	update	&h , b , 4
+src/fabric/fabric.c:519	final	&h , out
+src/omega_accelerator.c:99	hash	(const uint8_t *)intent , sizeof(OmegaEffectIntent) , expected_intent_digest
+src/omega_accelerator.c:116	hash	hash_input , 160 , expected_receipt_digest
+src/omega_accelerator_world.c:407	hash	code_bytes , code_size , entry->code_digest
+src/omega_accelerator_world.c:418	hash	rbuf , sizeof(rbuf) , entry->realization_id
+src/omega_accelerator_world.c:641	hash	buf , off , world->rolling_state_digest
+src/omega_accelerator_world.c:672	hash	(const uint8_t *)semantic_words , 5 * sizeof(uint32_t) , semantic_id
+src/omega_accelerator_world.c:675	hash	(const uint8_t *)a_cpu , a_bytes , a_digest
+src/omega_accelerator_world.c:676	hash	(const uint8_t *)b_cpu , b_bytes , b_digest
+src/omega_accelerator_world.c:679	hash	bindings , sizeof(bindings) , bindings_digest
+src/omega_accelerator_world.c:681	hash	(const uint8_t *)c_cpu , c_bytes , result_digest
+src/omega_accelerator_world.c:751	hash	(const uint8_t *)submission->semantic_words , sizeof submission->semantic_words , world->in_flight[world->in_flight_count].semantic_id
+src/omega_accelerator_world.c:755	hash	a->cpu_addr , submission->a_bytes , a_digest
+src/omega_accelerator_world.c:756	hash	b->cpu_addr , submission->b_bytes , b_digest
+src/omega_accelerator_world.c:759	hash	bindings , sizeof bindings , world->in_flight[world->in_flight_count].input_bindings_digest
+src/omega_blackwell_codegen.c:1031	hash	code , len , d
+src/omega_blackwell_codegen.c:1286	hash	kernel->code , kernel->code_size , kernel->code_digest
+src/omega_blackwell_encoder.c:82	init	&ctx
+src/omega_blackwell_encoder.c:83	update	&ctx , code_buf , len
+src/omega_blackwell_encoder.c:84	final	&ctx , out_digest
+src/omega_blackwell_gates.c:824	hash	k_mut.code , k_mut.code_size , k_mut.code_digest
+src/omega_blackwell_gates.c:1038	init	&ctx
+src/omega_blackwell_gates.c:1042	update	&ctx , buf , n
+src/omega_blackwell_gates.c:1045	final	&ctx , digest
+src/omega_blackwell_matmul.c:55	hash	spec_buf , sizeof(spec_buf) , spec->spec_id
+src/omega_blackwell_matmul.c:175	hash	(const uint8_t *)machine_str , strlen(machine_str) , id->machine_id
+src/omega_blackwell_matmul.c:189	hash	bound , sizeof(bound) , id->realization_id
+src/omega_blackwell_realize.c:24	init	&ctx
+src/omega_blackwell_realize.c:26	update	&ctx , (const uint8_t *)machine_str , strlen(machine_str)
+src/omega_blackwell_realize.c:27	final	&ctx , out_machine_id->bytes
+src/omega_blackwell_realize.c:34	init	&ctx
+src/omega_blackwell_realize.c:35	update	&ctx , real->spec_id.bytes , OMEGA_ID_BYTES
+src/omega_blackwell_realize.c:36	update	&ctx , real->machine_id.bytes , OMEGA_ID_BYTES
+src/omega_blackwell_realize.c:37	update	&ctx , real->code_digest , sizeof(real->code_digest)
+src/omega_blackwell_realize.c:38	update	&ctx , (const uint8_t *)&real->sm_architecture , sizeof(real->sm_architecture)
+src/omega_blackwell_realize.c:39	final	&ctx , real->realization_digest
+src/omega_canonical.c:222	hash	canon_buf , canon_len , obj->id.bytes
+src/omega_evidence.c:107	hash	(const uint8_t *)buf , len , d
+src/omega_gpu_attention_api.c:739	hash	kernel->code , kernel->code_size , kernel->code_digest
+src/omega_gpu_elementwise_api.c:869	hash	kernel->code , kernel->code_size , kernel->code_digest
+src/omega_library.c:45	update	ctx , b , sizeof b
+src/omega_library.c:54	init	&ctx
+src/omega_library.c:57	update	&ctx , (const uint8_t *)" " , 4
+src/omega_library.c:65	update	&ctx , e->program.program_id.bytes , OMEGA_ID_BYTES
+src/omega_library.c:66	update	&ctx , e->program.realization.realization_id.bytes , OMEGA_ID_BYTES
+src/omega_library.c:70	update	&ctx , &kind , 1
+src/omega_library.c:74	update	&ctx , e->dependency_ids[d].bytes , OMEGA_ID_BYTES
+src/omega_library.c:76	update	&ctx , e->evidence_receipt_hash , 32
+src/omega_library.c:79	final	&ctx , lib->state_digest
+src/omega_machine.c:116	hash	buffer , pos , mg->machine_id.bytes
+src/omega_matvec.c:60	hash	buffer , pos , spec->spec_id.bytes
+src/omega_program.c:220	hash	buf , pos , out
+src/omega_program.c:243	hash	buf , pos , prog->program_id.bytes
+src/omega_program.c:777	hash	(const uint8_t*)task , sizeof(SynthesisTask) - OMEGA_ID_BYTES , task->task_id.bytes
+src/omega_realize.c:56	hash	buf , pos , real->realization_id.bytes
+src/omega_realize_synth.c:83	init	&ctx
+src/omega_realize_synth.c:84	update	&ctx , buffer , pos
+src/omega_realize_synth.c:85	update	&ctx , real->code_bytes , real->code_len
+src/omega_realize_synth.c:86	final	&ctx , out_id->bytes
+src/omega_resolve.c:420	init	&c
+src/omega_resolve.c:422	update	&c , dom , sizeof dom
+src/omega_resolve.c:424	update	&c , cnt , 4
+src/omega_resolve.c:426	update	&c , e[i].semantic_id , 32
+src/omega_resolve.c:427	update	&c , e[i].receipt_id , 32
+src/omega_resolve.c:428	update	&c , &e[i].admission_kind , 1
+src/omega_resolve.c:430	final	&c , out
+src/omega_resolve.c:493	hash	bb , bl , dg
+src/omega_resolve.c:625	init	&c
+src/omega_resolve.c:627	update	&c , dom , sizeof dom
+src/omega_resolve.c:628	update	&c , ir_digest , 32
+src/omega_resolve.c:630	update	&c , &db , 1
+src/omega_resolve.c:631	update	&c , closure_digest , 32
+src/omega_resolve.c:632	final	&c , out
+src/omega_synthesis.c:115	hash	(const uint8_t*)outputs , sizeof(outputs) , out_hash
+src/omega_vc_bridge.c:191	hash	ir , ir_len , digest
+src/omega_vc_bridge.c:199	hash	buf , sizeof dom + 64 , root
+src/omega_vcstore.c:191	hash	bytes , len , out
+src/omega_vcstore.c:413	update	c , b , 4
+src/omega_vcstore.c:420	init	&ctx
+src/omega_vcstore.c:421	update	&ctx , (const uint8_t *)" " , 4
+src/omega_vcstore.c:425	update	&ctx , o->semantic_id , 32
+src/omega_vcstore.c:427	update	&ctx , &kind , 1
+src/omega_vcstore.c:429	update	&ctx , o->bytes , o->len
+src/omega_vcstore.c:432	final	&ctx , out
+src/omega_vcstore.c:439	init	&ctx
+src/omega_vcstore.c:440	update	&ctx , (const uint8_t *)" " , 4
+src/omega_vcstore.c:446	update	&ctx , (const uint8_t *)nm->name , l
+src/omega_vcstore.c:447	update	&ctx , nm->id , 32
+src/omega_vcstore.c:449	final	&ctx , out
+src/omega_vector.c:34	init	&ctx
+src/omega_vector.c:35	update	&ctx , (const uint8_t *)" " , 16
+src/omega_vector.c:36	update	&ctx , (const uint8_t *)&spec->element_width , sizeof(spec->element_width)
+src/omega_vector.c:37	update	&ctx , (const uint8_t *)&spec->element_count , sizeof(spec->element_count)
+src/omega_vector.c:39	update	&ctx , &ov , sizeof(ov)
+src/omega_vector.c:40	final	&ctx , spec->spec_digest
+src/omega_world_gates.c:89	init	&ctx
+src/omega_world_gates.c:93	update	&ctx , buf , n
+src/omega_world_gates.c:96	final	&ctx , digest
+src/omega_world_gates.c:311	hash	vecadd_buf , vecadd_len , expected_digest
+src/oscv_main.c:186	hash	code.code , code.len , codedig
+src/osh/host/osh_journal.c:67	update	h , b , 8
+src/osh/host/osh_journal.c:74	update	h , (const uint8_t *)s , n
+src/osh/host/osh_journal.c:110	init	&h
+src/osh/host/osh_journal.c:112	final	&h , out
+src/osh/host/osh_journal.c:122	init	h
+src/osh/host/osh_journal.c:123	update	h , pad , sizeof pad
+src/osh/host/osh_journal.c:129	final	h , inner
+src/osh/host/osh_journal.c:132	init	h
+src/osh/host/osh_journal.c:133	update	h , pad , sizeof pad
+src/osh/host/osh_journal.c:134	update	h , inner , sizeof inner
+src/osh/host/osh_journal.c:135	final	h , out
+src/osh/host/osh_journal.c:152	update	&h , msg , n
+src/path/rx_path.c:53	update	e->hash , (const uint8_t *)data , n
+src/path/rx_path.c:345	init	&h
+src/path/rx_path.c:350	final	&h , out->bytes
+src/path/rx_path.c:382	init	&h
+src/path/rx_path.c:391	final	&h , out->bytes
+src/physics0/ladder/pd0_fmt.c:54	hash	out , o , out + o
+src/physics0/ladder/pd0_fmt.c:77	hash	in , o , h
+src/physics0/ladder/pd0_fmt.c:231	hash	out , o , l->law_id
+src/physics0/ladder/pd0_fmt.c:276	hash	tmp , o , h
+src/physics0/ladder/pd0_fmt.c:288	hash	buf , o , out
+src/physics0/ladder/pd0_fmt.c:336	hash	o , PD0_LEDG_HDR + plen + PD0_HASH , o + PD0_LEDG_HDR + plen + PD0_HASH
+src/physics0/ladder/pd0_fmt.c:353	hash	buf + o , PD0_LEDG_HDR + e->payload_len + PD0_HASH , h
+src/physics0/ladder/pd0_ladder.c:346	hash	p->hash , PD0_HASH , id
+src/physics0/ladder/pd0_ladder.c:368	hash	c->bat[b].hash , PD0_HASH , id
+src/physics0/ladder/pd0_ladder.c:370	hash	c->bat[b].hash , PD0_HASH , id
+src/physics0/pd0_relation.c:133	hash	buf , n , out
+src/physics0/pd0_relation.c:266	hash	out , total , l->law_id
+src/physics0/pd0_relation.c:348	hash	copy , len , h
+src/physics0/pd0_wire.c:103	hash	out , n , r->hash
+src/physics0/pd0_wire.c:127	hash	in , (size_t)(p - in) , h
+src/polyglot/omx_bench.c:75	init	&c
+src/polyglot/omx_bench.c:78	update	&c , buf , r
+src/polyglot/omx_bench.c:83	final	&c , d
+src/polyglot/omx_bench.c:107	hash	(const uint8_t *)b + start , end - start , d
+src/reservoir/omega_reservoir.c:178	update	c , b , 4
+src/reservoir/omega_reservoir.c:188	update	c , b , 2
+src/reservoir/omega_reservoir.c:194	init	c
+src/reservoir/omega_reservoir.c:195	update	c , (const uint8_t *)domain , strlen(domain)
+src/reservoir/omega_reservoir.c:196	update	c , &zero , 1
+src/reservoir/omega_reservoir.c:208	update	&c , t->is_ground , t->node_count
+src/reservoir/omega_reservoir.c:216	update	&c , (const uint8_t *)OMEGA_RES_NUMERIC_POLICY , strlen(OMEGA_RES_NUMERIC_POLICY)
+src/reservoir/omega_reservoir.c:217	final	&c , out
+src/reservoir/omega_reservoir.c:610	update	&c , buf , used
+src/reservoir/omega_reservoir.c:612	update	&c , buf , used
+src/reservoir/omega_reservoir.c:613	final	&c , out
+src/reservoir/omega_reservoir.c:623	update	&c , s->config_id , OMEGA_RES_DIGEST_SIZE
+src/reservoir/omega_reservoir.c:631	final	&c , out
+src/reservoir/omega_reservoir.c:649	update	&c , r.config_id , OMEGA_RES_DIGEST_SIZE
+src/reservoir/omega_reservoir.c:650	update	&c , r.input_digest , OMEGA_RES_DIGEST_SIZE
+src/reservoir/omega_reservoir.c:652	update	&c , r.final_state_digest , OMEGA_RES_DIGEST_SIZE
+src/reservoir/omega_reservoir.c:653	final	&c , r.run_id
+src/runtime/aien_machine_id.h:144	init	&h
+src/runtime/aien_machine_id.h:145	update	&h , (const uint8_t *)AIEN_MID_DOMAIN , AIEN_MID_DOMAIN_BYTES
+src/runtime/aien_machine_id.h:146	update	&h , root , len
+src/runtime/aien_machine_id.h:147	final	&h , out->id
+src/runtime/aien_machine_id.h:184	hash	rec , 40 , d
+src/runtime/rx_argus.c:396	init	&h
+src/runtime/rx_argus.c:397	update	&h , (const uint8_t *)" " , 14
+src/runtime/rx_argus.c:398	update	&h , (const uint8_t *)dir , strlen(dir)
+src/runtime/rx_argus.c:399	final	&h , d
+src/runtime/rx_argus.c:654	init	&h
+src/runtime/rx_argus.c:655	update	&h , (const uint8_t *)tag , sizeof tag - 1
+src/runtime/rx_argus.c:656	update	&h , (const uint8_t *)run_id , strlen(run_id)
+src/runtime/rx_argus.c:657	final	&h , g.machine_id
+src/runtime/rx_capq.c:355	update	h , b , 4
+src/runtime/rx_capq.c:370	init	&h
+src/runtime/rx_capq.c:371	update	&h , (const uint8_t *)" " , 21
+src/runtime/rx_capq.c:390	final	&h , out
+src/runtime/rx_capq.c:427	init	&h
+src/runtime/rx_capq.c:428	update	&h , (const uint8_t *)" " , 17
+src/runtime/rx_capq.c:445	final	&h , plan->digest
+src/runtime/rx_capq.c:736	hash	rec , CQ_WIRE_BYTES - 4 , d
+src/runtime/rx_compose.c:1297	init	&h
+src/runtime/rx_compose.c:1304	update	&h , (const uint8_t *)hw , sizeof hw
+src/runtime/rx_compose.c:1314	update	&h , (const uint8_t *)&v , 8
+src/runtime/rx_compose.c:1317	final	&h , out
+src/runtime/rx_contract.c:155	init	&h
+src/runtime/rx_contract.c:160	update	&h , hdr , sizeof hdr
+src/runtime/rx_contract.c:163	update	&h , f , 3
+src/runtime/rx_contract.c:171	update	&h , b , sizeof b
+src/runtime/rx_contract.c:175	update	&h , wt , 4
+src/runtime/rx_contract.c:176	final	&h , c->identity
+src/runtime/rx_contract.c:1154	hash	buf , n , out
+src/runtime/rx_cortex.c:49	update	c , b , 8
+src/runtime/rx_cortex.c:55	init	&c
+src/runtime/rx_cortex.c:56	update	&c , domain , sizeof domain - 1
+src/runtime/rx_cortex.c:67	final	&c , out
+src/runtime/rx_cortex.c:74	hash	buf , sizeof buf , chain
+src/runtime/rx_costmodel.c:487	hash	out , n , out + n
+src/runtime/rx_costmodel.c:495	hash	in , len - 32u , d
+src/runtime/rx_costmodel.c:527	hash	buf , n , out
+src/runtime/rx_fusion.c:36	update	c , &v , 1
+src/runtime/rx_fusion.c:40	update	c , b , 4
+src/runtime/rx_fusion.c:490	init	&c
+src/runtime/rx_fusion.c:491	update	&c , (const uint8_t *)" " , 18
+src/runtime/rx_fusion.c:513	update	&c , m->realization.identity , 32
+src/runtime/rx_fusion.c:514	update	&c , m->reference.signature , 32
+src/runtime/rx_fusion.c:517	update	&c , m->ancestry[i].graph , 32
+src/runtime/rx_fusion.c:521	final	&c , out
+src/runtime/rx_generation.c:173	hash	p , n , out
+src/runtime/rx_generation.c:437	init	&ctx
+src/runtime/rx_generation.c:448	update	&ctx , buf , (size_t)r
+src/runtime/rx_generation.c:453	final	&ctx , got
+src/runtime/rx_generation.c:600	hash	p ? p : (const uint8_t *)"" , n , out
+src/runtime/rx_graph.c:36	update	c , &v , 1
+src/runtime/rx_graph.c:40	update	c , b , 4
+src/runtime/rx_graph.c:113	init	&c
+src/runtime/rx_graph.c:117	final	&c , d
+src/runtime/rx_graph.c:125	init	&c
+src/runtime/rx_graph.c:126	update	&c , n->id , 32
+src/runtime/rx_graph.c:132	final	&c , d
+src/runtime/rx_graph.c:524	init	&c
+src/runtime/rx_graph.c:525	update	&c , (const uint8_t *)" " , 20
+src/runtime/rx_graph.c:554	update	&c , g->nodes[g->data[e[i]].from].id , 32
+src/runtime/rx_graph.c:573	update	&c , g->nodes[g->deps[d[j]].from].id , 32
+src/runtime/rx_graph.c:583	update	&c , g->nodes[p].id , 32
+src/runtime/rx_graph.c:594	final	&c , x->id
+src/runtime/rx_graph.c:608	init	&c
+src/runtime/rx_graph.c:609	update	&c , (const uint8_t *)" " , 21
+src/runtime/rx_graph.c:612	update	&c , ids[i] , 32
+src/runtime/rx_graph.c:634	update	&c , rec[i] , 33
+src/runtime/rx_graph.c:635	final	&c , g->digest
+src/runtime/rx_graph.c:1642	init	&c
+src/runtime/rx_graph.c:1643	update	&c , (const uint8_t *)" " , 25
+src/runtime/rx_graph.c:1645	update	&c , local_id , 32
+src/runtime/rx_graph.c:1650	final	&c , d
+src/runtime/rx_graph.c:1659	init	&c
+src/runtime/rx_graph.c:1660	update	&c , (const uint8_t *)" " , 18
+src/runtime/rx_graph.c:1680	update	&c , p->step[q->in[i].index].local_id , 32
+src/runtime/rx_graph.c:1686	final	&c , q->local_id
+src/runtime/rx_graph.c:1689	init	&c
+src/runtime/rx_graph.c:1690	update	&c , (const uint8_t *)" " , 23
+src/runtime/rx_graph.c:1693	update	&c , p->step[j].local_id , 32
+src/runtime/rx_graph.c:1709	final	&c , p->signature
+src/runtime/rx_graph.c:1716	init	&c
+src/runtime/rx_graph.c:1720	final	&c , d
+src/runtime/rx_graph.c:1886	init	&c
+src/runtime/rx_graph.c:1887	update	&c , (const uint8_t *)" " , 20
+src/runtime/rx_graph.c:1888	update	&c , buf , n < sizeof buf ? n : sizeof buf
+src/runtime/rx_graph.c:1890	final	&c , r->identity
+src/runtime/rx_jspace.c:89	init	&c
+src/runtime/rx_jspace.c:90	update	&c , tag , tag_len
+src/runtime/rx_jspace.c:91	update	&c , a , an
+src/runtime/rx_jspace.c:92	update	&c , b , bn
+src/runtime/rx_jspace.c:93	final	&c , id.b
+src/runtime/rx_jspace.c:108	hash	patch , len , ph
+src/runtime/rx_jspace.c:119	init	&c
+src/runtime/rx_jspace.c:120	update	&c , (const uint8_t *)" " , 9
+src/runtime/rx_jspace.c:121	update	&c , (const uint8_t *)&n , 4
+src/runtime/rx_jspace.c:122	update	&c , b->units[i]->semantic_state_id.b , 32
+src/runtime/rx_jspace.c:123	final	&c , id.b
+src/runtime/rx_jspace.c:905	init	&c
+src/runtime/rx_jspace.c:909	update	&c , buf , n
+src/runtime/rx_jspace.c:911	final	&c , out
+src/runtime/rx_jspace.c:1151	init	&h
+src/runtime/rx_jspace.c:1153	update	&h , (const uint8_t *)JS_DUAL_OBS_DOMAIN , sizeof JS_DUAL_OBS_DOMAIN
+src/runtime/rx_jspace.c:1154	update	&h , enc , len
+src/runtime/rx_jspace.c:1155	final	&h , o.digest
+src/runtime/rx_jspace.c:1662	hash	body.p ? body.p : (const uint8_t *)"" , body.n , h + 64
+src/runtime/rx_jspace.c:1663	hash	h , 96 , h + 96
+src/runtime/rx_jspace.c:1720	hash	f , 96 , d
+src/runtime/rx_jspace.c:1730	hash	p , body_len , d
+src/runtime/rx_living.c:52	init	&c
+src/runtime/rx_living.c:53	update	&c , (const uint8_t *)" " , 17
+src/runtime/rx_living.c:55	update	&c , b , 4
+src/runtime/rx_living.c:58	update	&c , b , 8
+src/runtime/rx_living.c:60	final	&c , out
+src/runtime/rx_omega.c:97	init	&c
+src/runtime/rx_omega.c:101	update	&c , b , 8
+src/runtime/rx_omega.c:104	final	&c , d
+src/runtime/rx_plan.c:188	init	&c
+src/runtime/rx_plan.c:189	update	&c , (const uint8_t *)" " , 22
+src/runtime/rx_plan.c:190	update	&c , buf , n
+src/runtime/rx_plan.c:191	final	&c , t->semantic_id
+src/runtime/rx_plan.c:453	init	&c
+src/runtime/rx_plan.c:454	update	&c , (const uint8_t *)" " , 25
+src/runtime/rx_plan.c:455	update	&c , t->semantic_id , 32
+src/runtime/rx_plan.c:464	update	&c , b8 , 8
+src/runtime/rx_plan.c:467	update	&c , rs->g.digest , 32
+src/runtime/rx_plan.c:472	update	&c , b8 , 8
+src/runtime/rx_plan.c:474	final	&c , out->realization_id
+src/runtime/rx_plan_arrange.c:125	init	&c
+src/runtime/rx_plan_arrange.c:126	update	&c , (const uint8_t *)" " , 27
+src/runtime/rx_plan_arrange.c:128	update	&c , b , 2
+src/runtime/rx_plan_arrange.c:136	update	&c , b , 2
+src/runtime/rx_plan_arrange.c:139	final	&c , g->shape
+src/runtime/rx_projection.c:267	init	&h
+src/runtime/rx_projection.c:284	update	&h , o->digest , 32
+src/runtime/rx_projection.c:287	final	&h , out->src_digest
+src/runtime/rx_route.c:149	init	&c
+src/runtime/rx_route.c:153	update	&c , b , sizeof b
+src/runtime/rx_route.c:155	update	&c , ref , 4
+src/runtime/rx_route.c:157	final	&c , out
+src/runtime/rx_route.c:288	hash	sample_start , (size_t)(rd.end - sample_start) , ev
+src/runtime/rx_route.c:788	hash	model , model_len , evidence
+src/runtime/rx_semantic.c:36	update	c , b , 4
+src/runtime/rx_semantic.c:42	update	c , b , 8
+src/runtime/rx_semantic.c:45	update	c , d->b , 32
+src/runtime/rx_semantic.c:48	update	c , (const uint8_t *)tag , strlen(tag) + 1
+src/runtime/rx_semantic.c:57	init	&c
+src/runtime/rx_semantic.c:62	final	&c , out->b
+src/runtime/rx_semantic.c:66	hash	(const uint8_t *)text , strlen(text) , out->b
+src/runtime/rx_semantic.c:144	init	&c
+src/runtime/rx_semantic.c:150	final	&c , e->fn_derivation[id].b
+src/runtime/rx_semantic.c:182	init	&c
+src/runtime/rx_semantic.c:187	final	&c , d
+src/runtime/rx_semantic.c:460	init	&c
+src/runtime/rx_semantic.c:469	final	&c , out->b
+src/runtime/rx_semantic.c:487	init	&c
+src/runtime/rx_semantic.c:507	final	&c , out->b
+src/runtime/rx_semantic.c:565	init	&c
+src/runtime/rx_semantic.c:577	final	&c , ev->digest.b
+src/runtime/rx_semantic.c:585	init	&c
+src/runtime/rx_semantic.c:597	final	&c , d.b
+src/runtime/rx_semantic.c:640	init	&c
+src/runtime/rx_semantic.c:666	final	&c , inputs_evidence->b
+src/runtime/rx_semcomm.c:626	init	&c
+src/runtime/rx_semcomm.c:627	update	&c , (const uint8_t *)" " , 16
+src/runtime/rx_semcomm.c:632	update	&c , (const uint8_t *)hdr , sizeof hdr
+src/runtime/rx_semcomm.c:636	update	&c , (const uint8_t *)fv , sizeof fv
+src/runtime/rx_semcomm.c:639	update	&c , (const uint8_t *)&v->crumb[id][f] , 8
+src/runtime/rx_semcomm.c:640	update	&c , v->digest[id][f] , 32
+src/runtime/rx_semcomm.c:647	update	&c , (const uint8_t *)dv , sizeof dv
+src/runtime/rx_semcomm.c:649	final	&c , out
+src/runtime/rx_world.c:70	update	c , b , 4
+src/runtime/rx_world.c:80	init	&c
+src/runtime/rx_world.c:81	update	&c , (const uint8_t *)" " , 17
+src/runtime/rx_world.c:84	final	&c , o->digest
+src/runtime/rx_world.c:155	init	&c
+src/runtime/rx_world.c:156	update	&c , (const uint8_t *)" " , 17
+src/runtime/rx_world.c:190	update	&c , w->crumbs[p - 1].digest , 32
+src/runtime/rx_world.c:194	final	&c , out
+src/runtime/rx_world.c:772	init	&c
+src/runtime/rx_world.c:773	update	&c , (const uint8_t *)" " , 17
+src/runtime/rx_world.c:776	update	&c , secret , RX_CALLER_SECRET_LEN
+src/runtime/rx_world.c:777	final	&c , out
+src/runtime/rx_world.c:950	init	&c
+src/runtime/rx_world.c:951	update	&c , (const uint8_t *)buf , len
+src/runtime/rx_world.c:952	final	&c , d
+src/runtime/rx_world.c:2877	init	&c
+src/runtime/rx_world.c:2878	update	&c , (const uint8_t *)" " , 16
+src/runtime/rx_world.c:2884	update	&c , o->digest , 32
+src/runtime/rx_world.c:2886	final	&c , out
+src/runtime/rxc_host_abi.c:341	hash	(const uint8_t *)name , len , s->digest
+src/runtime/rxc_host_abi.c:525	hash	bytes , len , d
+src/runtime/rxc_host_abi.c:640	hash	tail + (keep_n - cut) , (size_t)cut , out->cut_sha256
+src/searchtrace/st_corpus.c:193	hash	(const uint8_t *)data , len , ts->digest
+src/searchtrace/st_corpus.c:369	hash	(const uint8_t *)out->p , out->n , dg
+src/searchtrace/st_corpus.c:476	hash	(const uint8_t *)data , (size_t)(p - data) , dg
+src/searchtrace/st_holdout.c:97	init	&c
+src/searchtrace/st_holdout.c:98	update	&c , (const uint8_t *)ST_HOLDOUT_SALT_DOMAIN , sizeof(ST_HOLDOUT_SALT_DOMAIN)
+src/searchtrace/st_holdout.c:100	update	&c , salt , 32
+src/searchtrace/st_holdout.c:101	final	&c , out
+src/searchtrace/st_holdout.c:114	init	&c
+src/searchtrace/st_holdout.c:115	update	&c , (const uint8_t *)ST_HOLDOUT_DOMAIN , sizeof(ST_HOLDOUT_DOMAIN)
+src/searchtrace/st_holdout.c:117	update	&c , salt , 32
+src/searchtrace/st_holdout.c:118	update	&c , be , sizeof be
+src/searchtrace/st_holdout.c:120	update	&c , t , len
+src/searchtrace/st_holdout.c:121	final	&c , out
+src/searchtrace/st_holdout.c:156	hash	(const uint8_t *)body , (size_t)n , end
+src/searchtrace/st_holdout.c:351	hash	(const uint8_t *)rec , body_len , d
+src/searchtrace/st_holdout.c:356	hash	(const uint8_t *)rec , len , c.record_digest
+src/searchtrace/st_holdout.c:426	hash	(const uint8_t *)body , (size_t)n , end
+src/searchtrace/st_holdout.c:485	hash	pk , 32 , kid
+src/searchtrace/st_holdout.c:507	hash	(const uint8_t *)body , (size_t)n , end
+src/searchtrace/st_holdout.c:592	hash	(const uint8_t *)sig , body_len , d
+src/searchtrace/st_holdout.c:601	hash	pk , 32 , want_kid
+src/searchtrace/st_holdout.c:732	hash	(const uint8_t *)rec , rl , d
+src/searchtrace/st_holdout.c:790	hash	(const uint8_t *)out , ol , d
+src/searchtrace/st_holdout.c:991	hash	rb , rbl , d
+src/searchtrace/st_holdout.c:1021	hash	pk , 32 , d
+src/sha256.c:85	init	&ctx
+src/sha256.c:86	update	&ctx , data , len
+src/sha256.c:87	final	&ctx , digest
+src/tensor/omega_tensor.c:361	update	h , b , 8
+src/tensor/omega_tensor.c:388	init	&h
+src/tensor/omega_tensor.c:389	update	&h , (const uint8_t *)OMEGA_TENSOR_VALUE_ID_DOMAIN , sizeof(OMEGA_TENSOR_VALUE_ID_DOMAIN)
+src/tensor/omega_tensor.c:396	update	&h , b , es
+src/tensor/omega_tensor.c:398	final	&h , id
+src/tensor/omega_tensor.c:436	init	&h
+src/tensor/omega_tensor.c:437	update	&h , (const uint8_t *)OMEGA_TENSOR_VIEW_ID_DOMAIN , sizeof(OMEGA_TENSOR_VIEW_ID_DOMAIN)
+src/tensor/omega_tensor.c:446	final	&h , id
+src/tensor/omega_tensor_store.c:286	hash	buf , n , dig
+src/tensor/omega_tensor_store.c:307	hash	out , HDR_SUM , out + HDR_SUM
+src/tensor/omega_tensor_store.c:322	hash	out , REC_SUM , out + REC_SUM
+src/tensor/omega_tensor_store.c:328	hash	in , REC_SUM , sum
+src/tensor/omega_tensor_store.c:460	hash	st->jbuf , HDR_SUM , sum
+src/tensor/omega_tensor_store.c:603	hash	buf , bytes , r.payload_sha
+src/train/tg_store.c:199	init	&c
+src/train/tg_store.c:200	update	&c , h , GEN_HASHED_HDR
+src/train/tg_store.c:201	update	&c , p , pb
+src/train/tg_store.c:202	update	&c , o , ob
+src/train/tg_store.c:203	final	&c , d
+src/train/tg_store.c:330	init	&c
+src/train/tg_store.c:331	update	&c , prev , TG_DIGEST
+src/train/tg_store.c:332	update	&c , rec , REC_HASHED
+src/train/tg_store.c:333	final	&c , out
+src/turing/field.c:68	init	&c
+src/turing/field.c:71	update	&c , buf , k
+src/turing/field.c:75	final	&c , out->b
+src/turing/field.c:140	init	&c
+src/turing/field.c:141	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/turing/field.c:142	update	&c , buf , n
+src/turing/field.c:143	final	&c , out->b
+src/turing/field.c:315	init	&c
+src/turing/field.c:316	update	&c , (const uint8_t *)TURING_DOMAIN_CITESET , strlen(TURING_DOMAIN_CITESET) + 1
+src/turing/field.c:317	update	&c , sorted[i].b , TURING_DIGEST_BYTES
+src/turing/field.c:318	final	&c , out->b
+src/turing/tc_produce.c:153	init	&c
+src/turing/tc_produce.c:156	update	&c , buf , k
+src/turing/tc_produce.c:160	final	&c , out
+src/turing/tc_pstream.c:104	init	&c
+src/turing/tc_pstream.c:105	update	&c , (const uint8_t *)dom , strlen(dom) + 1
+src/turing/tc_pstream.c:106	update	&c , buf , len
+src/turing/tc_pstream.c:107	final	&c , out
+src/turing/ty_energy.c:258	init	&c
+src/turing/ty_energy.c:259	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/turing/ty_energy.c:260	update	&c , buf , n
+src/turing/ty_energy.c:261	final	&c , out->b
+src/turing/ty_model.c:474	init	&c
+src/turing/ty_model.c:475	update	&c , (const uint8_t *)TY_MODEL_DOMAIN , sizeof TY_MODEL_DOMAIN
+src/turing/ty_model.c:476	update	&c , buf , nbytes
+src/turing/ty_model.c:477	final	&c , out
+src/turing/ty_qrecord.c:104	init	&c
+src/turing/ty_qrecord.c:105	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/turing/ty_qrecord.c:106	update	&c , buf , n
+src/turing/ty_qrecord.c:107	final	&c , out->b
+src/turing/ty_qrecord.c:526	init	&c
+src/turing/ty_qrecord.c:527	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/turing/ty_qrecord.c:528	update	&c , buf , n
+src/turing/ty_qrecord.c:529	final	&c , d.b
+src/turing/ty_qrecord.c:539	hash	(const uint8_t *)buf , len , out->b
+src/turing/ty_record.c:67	init	&c
+src/turing/ty_record.c:74	update	&c , buf , k
+src/turing/ty_record.c:79	final	&c , out->b
+src/turing/ty_record.c:138	init	&c
+src/turing/ty_record.c:139	update	&c , (const uint8_t *)domain , strlen(domain) + 1
+src/turing/ty_record.c:140	update	&c , buf , n
+src/turing/ty_record.c:141	final	&c , out->b
+src/visor/visor_effect_request.c:71	hash	canon , canon_len , digest
+src/visor/visor_evidence.c:416	hash	(const uint8_t *)g_buf , g_len , d
+src/visor/visor_semantic.c:162	hash	buf , p->canonical_len , p->canonical_hash
+tests/algebra/bench_select.c:38	init	&c
+tests/algebra/bench_select.c:40	update	&c , buf , k
+tests/algebra/bench_select.c:43	final	&c , d
+tests/brownian/brw_active_dev0.c:303	init	&c
+tests/brownian/brw_active_dev0.c:304	update	&c , tmp , k
+tests/brownian/brw_active_dev0.c:306	final	&c , d
+tests/brownian/brw_active_dev0.c:414	hash	(const uint8_t *)tab.p , tab.n , dg
+tests/brownian/brw_active_dev0.c:477	hash	(const uint8_t *)tab.p , tab.n , dg
+tests/checker2/producer/osc_emit_ir.c:50	hash	buf , len , h
+tests/checker2/test_c2_receipt.c:63	hash	(const uint8_t *)label , strlen(label) , out
+tests/checker2/test_c2_receipt.c:212	hash	other_pk , 32 , r2.key_fp
+tests/checker2/test_c2_receipt.c:223	hash	c2r_test_pk , 32 , r3.key_fp
+tests/checker2/test_c2_receipt.c:258	hash	c2r_test_pk , 32 , o.key_fp
+tests/checker2/test_c2_receipt.c:286	hash	c2r_owner_root_pk , 32 , f.key_fp
+tests/checker2/test_c2_receipt.c:303	hash	c2r_test_pk , 32 , fp
+tests/compiler/test_osc_ir_decode.c:229	init	&sc
+tests/compiler/test_osc_ir_decode.c:230	update	&sc , g_e1 , n
+tests/compiler/test_osc_ir_decode.c:231	final	&sc , g1
+tests/dual/test_dual_replay.c:260	hash	g_file , n , dig
+tests/effect/test_effect_cap64.c:274	hash	c , clen , h
+tests/effect/test_effect_cap64.c:320	hash	v1 , v1n , old.bytes
+tests/effect/test_effect_cap64.c:323	hash	v1 , v1n , old.bytes
+tests/estimation/test_est_types.c:301	hash	cat , dl + 1 + l , want
+tests/estimation/test_est_types.c:359	init	&c
+tests/estimation/test_est_types.c:359	update	&c , (const uint8_t *)dom[dm] , strlen(dom[dm])
+tests/estimation/test_est_types.c:360	update	&c , &zero , 1
+tests/estimation/test_est_types.c:360	update	&c , eb[k] , el[k]
+tests/estimation/test_est_types.c:360	final	&c , x.b
+tests/estimation/test_est_types.c:387	hash	cat , dl + 65 , want
+tests/fabric/fab_living_phase.h:298	hash	(const uint8_t *)" " , 8 , r->key_a
+tests/fabric/fab_living_phase.h:299	hash	(const uint8_t *)" " , 8 , r->key_b
+tests/fabric/fab_living_phase.h:300	hash	(const uint8_t *)" " , 8 , r->key_x
+tests/fabric/fabric_test.c:100	hash	(const uint8_t *)kr , (size_t)n , h->key[i]
+tests/fabric/fabric_test.c:675	hash	&r1[0][0] , sizeof r1 , all
+tests/gpu_matmul_r4_receipt.c:162	hash	(const uint8_t *)c , cnt * sizeof *c , d
+tests/one_layer/acceptance/ola.c:102	hash	(const uint8_t *)p , n , d
+tests/osh/osh_trace.c:59	hash	p , n , d
+tests/path/test_path_identity.c:54	init	&h
+tests/path/test_path_identity.c:55	update	&h , (const uint8_t *)tag , strlen(tag)
+tests/path/test_path_identity.c:56	update	&h , &zero , 1
+tests/path/test_path_identity.c:57	update	&h , b , n
+tests/path/test_path_identity.c:58	final	&h , out->bytes
+tests/path/test_path_identity.c:235	init	&fold
+tests/path/test_path_identity.c:267	update	&fold , a.bytes , 32
+tests/path/test_path_identity.c:273	final	&fold , f.bytes
+tests/physics0/learner/pd0_harness.c:273	hash	fb , fn , fhash
+tests/physics0/pd1/pd1_run.c:80	hash	rec , 80 , h
+tests/physics0/pd1/pd1_run.c:188	init	&c
+tests/physics0/pd1/pd1_run.c:190	update	&c , (const uint8_t *)line , (size_t)n
+tests/physics0/pd1/pd1_run.c:195	update	&c , (const uint8_t *)line , (size_t)n
+tests/physics0/pd1/pd1_run.c:196	final	&c , out
+tests/physics0/pd1/pd1_run.c:200	init	&c
+tests/physics0/pd1/pd1_run.c:202	update	&c , b , 17
+tests/physics0/pd1/pd1_run.c:203	final	&c , out
+tests/physics0/verify/test_pd0_ladder.c:26	hash	b->buf , b->len , h
+tests/physics0/verify/test_pd0_score.c:29	hash	b , n , h
+tests/physics0/verify/test_pd0_score.c:75	hash	b.buf , b.len , h
+tests/physics0/verify/test_pd0_score.c:87	hash	b.buf , b.len , h
+tests/polyglot/bench_polyglot.c:202	init	&c
+tests/polyglot/bench_polyglot.c:203	update	&c , (const uint8_t *)W , w->m * w->n
+tests/polyglot/bench_polyglot.c:204	update	&c , (const uint8_t *)X , w->n * w->nx
+tests/polyglot/bench_polyglot.c:205	final	&c , d
+tests/program/test_program_id.c:191	hash	buf , pos , v1.bytes
+tests/q36_codegen_hash.c:26	init	&c
+tests/q36_codegen_hash.c:26	update	&c , code , len
+tests/q36_codegen_hash.c:26	final	&c , d
+tests/runtime/aien_machine_id_test.c:167	hash	bad , 40 , dg
+tests/runtime/rx_action_graph.c:583	init	&c
+tests/runtime/rx_action_graph.c:585	update	&c , &r->status[n] , 1
+tests/runtime/rx_action_graph.c:586	update	&c , (const uint8_t *)&r->value[n] , 8
+tests/runtime/rx_action_graph.c:587	update	&c , (const uint8_t *)&r->evidence[n] , 8
+tests/runtime/rx_action_graph.c:591	update	&c , (const uint8_t *)&v , 8
+tests/runtime/rx_action_graph.c:593	final	&c , out
+tests/runtime/rx_action_graph.c:1230	init	&c
+tests/runtime/rx_action_graph.c:1233	update	&c , buf , n
+tests/runtime/rx_action_graph.c:1236	final	&c , d
+tests/runtime/rx_branch_reuse.c:414	hash	state[k] , (size_t)units * UNIT_BYTES , R->digest[k]
+tests/runtime/rx_c4_requal.c:788	hash	m + 128 , bl , m + 64
+tests/runtime/rx_c4_requal.c:789	hash	m , 96 , m + 96
+tests/runtime/rx_capability_query.c:1123	init	&c
+tests/runtime/rx_capability_query.c:1126	update	&c , buf , n
+tests/runtime/rx_capability_query.c:1129	final	&c , d
+tests/runtime/rx_cognitive_routing.c:728	init	&c
+tests/runtime/rx_cognitive_routing.c:731	update	&c , buf , n
+tests/runtime/rx_cognitive_routing.c:734	final	&c , d
+tests/runtime/rx_cognitive_routing.c:949	hash	m , mn , d
+tests/runtime/rx_costmodel_unit.c:434	hash	b , n - 32 , b + n - 32
+tests/runtime/rx_dual_jspace_tap.c:170	init	&h
+tests/runtime/rx_dual_jspace_tap.c:171	update	&h , (const uint8_t *)JS_DUAL_OBS_DOMAIN , sizeof JS_DUAL_OBS_DOMAIN
+tests/runtime/rx_dual_jspace_tap.c:172	update	&h , dst , len
+tests/runtime/rx_dual_jspace_tap.c:173	final	&h , d
+tests/runtime/rx_dual_jspace_tap.c:261	init	&h
+tests/runtime/rx_dual_jspace_tap.c:265	update	&h , (const uint8_t *)&b , 4
+tests/runtime/rx_dual_jspace_tap.c:266	update	&h , (const uint8_t *)&br->n_units , 4
+tests/runtime/rx_dual_jspace_tap.c:271	update	&h , (const uint8_t *)v , sizeof v
+tests/runtime/rx_dual_jspace_tap.c:272	update	&h , r->content , 32
+tests/runtime/rx_dual_jspace_tap.c:273	update	&h , r->semantic_state_id.b , 32
+tests/runtime/rx_dual_jspace_tap.c:276	update	&h , (const uint8_t *)&s->stats , sizeof s->stats
+tests/runtime/rx_dual_jspace_tap.c:277	update	&h , (const uint8_t *)&s->spill_end , sizeof s->spill_end
+tests/runtime/rx_dual_jspace_tap.c:283	update	&h , (const uint8_t *)&rc , sizeof rc
+tests/runtime/rx_dual_jspace_tap.c:284	update	&h , d , 32
+tests/runtime/rx_dual_jspace_tap.c:286	final	&h , out
+tests/runtime/rx_empirical_optimizer.c:156	hash	(const uint8_t *)y , (size_t)M * 8u , d
+tests/runtime/rx_empirical_optimizer.c:1299	init	&c
+tests/runtime/rx_empirical_optimizer.c:1302	update	&c , buf , n
+tests/runtime/rx_empirical_optimizer.c:1305	final	&c , d
+tests/runtime/rx_heartbeat_test.c:2600	init	&c
+tests/runtime/rx_heartbeat_test.c:2603	update	&c , buf , n
+tests/runtime/rx_heartbeat_test.c:2606	final	&c , d
+tests/runtime/rx_jspace_prod.c:828	hash	h , 96 , h + 96
+tests/runtime/rx_jspace_prod.c:885	hash	f + 128 , bl , f + 64
+tests/runtime/rx_jspace_prod.c:886	hash	f , 96 , f + 96
+tests/runtime/rx_plan_reuse.c:1110	init	&c
+tests/runtime/rx_plan_reuse.c:1113	update	&c , buf , n
+tests/runtime/rx_plan_reuse.c:1116	final	&c , d
+tests/runtime/rx_r10_omega.c:582	init	&c
+tests/runtime/rx_r10_omega.c:585	update	&c , buf , n
+tests/runtime/rx_r10_omega.c:588	final	&c , d
+tests/runtime/rx_r11_aien.c:937	init	&c
+tests/runtime/rx_r11_aien.c:940	update	&c , buf , n
+tests/runtime/rx_r11_aien.c:943	final	&c , d
+tests/runtime/rx_r12_resident.c:642	init	&c
+tests/runtime/rx_r12_resident.c:645	update	&c , buf , n
+tests/runtime/rx_r12_resident.c:648	final	&c , d
+tests/runtime/rx_r12_silicon.c:437	init	&c
+tests/runtime/rx_r12_silicon.c:440	update	&c , buf , n
+tests/runtime/rx_r12_silicon.c:443	final	&c , d
+tests/runtime/rx_r13_living.c:1005	init	&c
+tests/runtime/rx_r13_living.c:1006	update	&c , code , (size_t)n
+tests/runtime/rx_r13_living.c:1007	final	&c , h
+tests/runtime/rx_r13_living.c:1822	init	&c
+tests/runtime/rx_r13_living.c:1826	update	&c , block , n
+tests/runtime/rx_r13_living.c:1828	final	&c , digest
+tests/runtime/rx_r14_recovery.c:2193	hash	(const uint8_t *)&pv , sizeof pv , g_fs->hook_prov_sha
+tests/runtime/rx_r14_recovery.c:2280	hash	(const uint8_t *)&pv , sizeof pv , sha
+tests/runtime/rx_r14_recovery.c:2501	init	&c
+tests/runtime/rx_r14_recovery.c:2504	update	&c , block , n
+tests/runtime/rx_r14_recovery.c:2506	final	&c , digest
+tests/runtime/rx_r7_native.c:645	init	&c
+tests/runtime/rx_r7_native.c:648	update	&c , buf , n
+tests/runtime/rx_r7_native.c:651	final	&c , d
+tests/runtime/rx_r8_aegis.c:647	init	&c
+tests/runtime/rx_r8_aegis.c:650	update	&c , buf , n
+tests/runtime/rx_r8_aegis.c:653	final	&c , d
+tests/runtime/rx_r9_barrier.c:718	init	&c
+tests/runtime/rx_r9_barrier.c:721	update	&c , buf , n
+tests/runtime/rx_r9_barrier.c:724	final	&c , d
+tests/runtime/rx_sem_incremental.c:182	hash	(const uint8_t *)seed , sizeof seed , d
+tests/runtime/rx_sem_incremental.c:183	hash	d , 32 , d
+tests/runtime/rx_sem_incremental.c:1326	init	&c
+tests/runtime/rx_sem_incremental.c:1329	update	&c , block , n
+tests/runtime/rx_sem_incremental.c:1331	final	&c , digest
+tests/runtime/rx_semantic_comm.c:1029	init	&c
+tests/runtime/rx_semantic_comm.c:1032	update	&c , buf , n
+tests/runtime/rx_semantic_comm.c:1035	final	&c , d
+tests/runtime/rx_state_projection.c:807	init	&c
+tests/runtime/rx_state_projection.c:810	update	&c , buf , n
+tests/runtime/rx_state_projection.c:813	final	&c , d
+tests/runtime/rx_typed_results.c:1358	init	&c
+tests/runtime/rx_typed_results.c:1361	update	&c , buf , n
+tests/runtime/rx_typed_results.c:1364	final	&c , d
+tests/runtime/rx_workflow_fusion.c:1276	init	&c
+tests/runtime/rx_workflow_fusion.c:1278	update	&c , &r->status[n] , 1
+tests/runtime/rx_workflow_fusion.c:1279	update	&c , (const uint8_t *)&r->value[n] , 8
+tests/runtime/rx_workflow_fusion.c:1280	update	&c , (const uint8_t *)&r->evidence[n] , 8
+tests/runtime/rx_workflow_fusion.c:1281	update	&c , (const uint8_t *)&r->steps[n] , 8
+tests/runtime/rx_workflow_fusion.c:1285	update	&c , (const uint8_t *)&v , 8
+tests/runtime/rx_workflow_fusion.c:1287	final	&c , out
+tests/runtime/rx_workflow_fusion.c:1476	init	&c
+tests/runtime/rx_workflow_fusion.c:1479	update	&c , buf , n
+tests/runtime/rx_workflow_fusion.c:1482	final	&c , d
+tests/searchtrace/test_st_holdout.c:86	hash	(const uint8_t *)body , bl , d
+tests/searchtrace/test_st_holdout.c:321	hash	(const uint8_t *)rc1 , r1 - 69 , d
+tests/searchtrace/test_st_holdout.c:370	hash	(const uint8_t *)rc1 , r1 , d
+tests/searchtrace/test_st_holdout_sig.c:87	hash	(const uint8_t *)label , strlen(label) , sk
+tests/searchtrace/test_st_holdout_sig.c:97	hash	(const uint8_t *)b , body , d
+tests/searchtrace/test_st_holdout_sig.c:224	hash	pk1 , 32 , kid
+tests/searchtrace/test_st_holdout_sig.c:258	hash	pk1 , 32 , kid
+tests/searchtrace/test_st_holdout_sig.c:271	hash	id_pk , 32 , kid
+tests/searchtrace/test_st_holdout_sig.c:301	hash	(const uint8_t *)rec2 , rl2 , d
+tests/synapse/test_syn_codec.c:474	hash	corp , cl - 32 , dig
+tests/synapse/test_syn_codec.c:486	hash	corp , cl , whole
+tests/test_omega_numeric.c:377	init	&ctx
+tests/test_omega_numeric.c:378	update	&ctx , buf , got
+tests/test_omega_numeric.c:380	final	&ctx , dig
+tests/test_omega_resolve.c:715	hash	b.p , b.n , out
+tests/test_omega_resolve.c:723	hash	b.p , b.n , out
+tests/test_omega_tensor_store.c:534	hash	h , 24 , h + 24
+tests/test_omega_tensor_store.c:551	hash	r , 168 , r + 168
+tests/test_omega_tensor_store.c:573	hash	canon , 12 , psha
+tests/test_omega_transc.c:629	hash	buf , nb * 4u , j->dig[item]
+tests/test_omega_transc.c:634	init	&c
+tests/test_omega_transc.c:635	update	&c , dig[i] , 32
+tests/test_omega_transc.c:636	final	&c , out
+tests/test_omega_transc.c:678	hash	buf , sizeof(buf) , j->blk[item]
+tests/test_omega_vcstore.c:602	update	c , b , 8
+tests/test_omega_vcstore.c:610	init	&c
+tests/test_omega_vcstore.c:611	update	&c , (const uint8_t *)" " , 4
+tests/test_omega_vcstore.c:613	update	&c , sorted[i].bytes + 26 , 32
+tests/test_omega_vcstore.c:614	update	&c , &sorted[i].kind , 1
+tests/test_omega_vcstore.c:616	update	&c , sorted[i].bytes , sorted[i].len
+tests/test_omega_vcstore.c:618	final	&c , d1
+tests/test_omega_vcstore.c:620	init	&c
+tests/test_omega_vcstore.c:621	update	&c , (const uint8_t *)" " , 4
+tests/test_omega_vcstore.c:624	update	&c , (const uint8_t *)names[i].name , l
+tests/test_omega_vcstore.c:624	update	&c , names[i].id , 32
+tests/test_omega_vcstore.c:626	final	&c , d2
+tests/turing/test_tc.c:177	hash	cb , cn , dg
+tests/turing/test_tc.c:261	init	&ctx
+tests/turing/test_tc.c:262	update	&ctx , (const uint8_t *)dom , strlen(dom) + 1
+tests/turing/test_tc.c:263	update	&ctx , b , n - 32
+tests/turing/test_tc.c:264	final	&ctx , b + n - 32
+tests/turing/test_turing.c:124	hash	buf , len , raw.b
+tests/turing/test_ty_math.c:420	hash	cat , 64 , p->manifest.b
+tests/vc_fixture.h:55	hash	f->ir , f->ir_len , f->digest
+tests/vc_fixture.h:66	hash	(const uint8_t *)VCFX_SOURCE , sizeof VCFX_SOURCE - 1 , out
+tests/vc_fixture.h:68	hash	(const uint8_t *)VCFX_GARBAGE , sizeof VCFX_GARBAGE - 1 , out
+tools/estimation/est3c_common.c:154	init	&c
+tools/estimation/est3c_common.c:155	update	&c , (const uint8_t *)tag , sizeof tag
+tools/estimation/est3c_common.c:156	update	&c , (const uint8_t *)ln , ll
+tools/estimation/est3c_common.c:158	update	&c , le , 8
+tools/estimation/est3c_common.c:159	final	&c , t.ev.b
+tools/estimation/est3c_common.c:170	hash	(const uint8_t *)ln , ll , t.ev.b
+tools/estimation/est3c_eval.c:321	hash	(const uint8_t *)buf , blen , dg
+tools/estimation/est4.c:687	init	&c
+tools/estimation/est4.c:687	update	&c , (const uint8_t *)buf , blen
+tools/estimation/est4.c:687	final	&c , dg
+tools/estimation/est5.c:723	init	&c
+tools/estimation/est5.c:723	update	&c , (const uint8_t *)buf , blen
+tools/estimation/est5.c:723	final	&c , dg
+tools/estimation/est_replay.c:42	init	&c
+tools/estimation/est_replay.c:44	update	&c , buf , n
+tools/estimation/est_replay.c:48	final	&c , d
+tools/estimation/est_replay.c:186	hash	buf , len , d
+tools/estimation/est_replay.c:313	hash	(const uint8_t *)EST_SOURCE_TEXT , strlen(EST_SOURCE_TEXT) , src
+tools/estimation/est_replay.c:330	hash	(const uint8_t *)ln , ll , ev
+tools/estimation/test_est3c_tools.c:307	hash	(const uint8_t *)rc , rl , dg
+tools/estimation/test_est_json.c:251	hash	(const uint8_t *)b , n , dg
+tools/json_canon.c:555	hash	(const uint8_t *)out.b , out.n , d
+tools/omegatool.c:480	hash	expect_in , p , expect
+tools/omegatool.c:3277	hash	(const uint8_t *)&intent , sizeof(intent) , receipt.intent_digest
+tools/omegatool.c:3285	hash	hash_input , 160 , receipt.receipt_digest
+tools/omegatool.c:3319	hash	(const uint8_t *)&intent , sizeof(intent) , forged_receipt.intent_digest
+tools/omegatool.c:3411	hash	(const uint8_t *)&i1 , sizeof(i1) , r1.intent_digest
+tools/omegatool.c:3414	hash	h1 , 160 , r1.receipt_digest
+tools/omegatool.c:3424	hash	(const uint8_t *)&i2 , sizeof(i2) , r2.intent_digest
+tools/omegatool.c:3427	hash	h2 , 160 , r2.receipt_digest
+tools/omegatool.c:3576	hash	(const uint8_t *)&intent , sizeof(intent) , receipt.intent_digest
+tools/omegatool.c:3584	hash	hash_input , 160 , receipt.receipt_digest
+tools/r15_reduce.c:258	init	&c
+tools/r15_reduce.c:261	update	&c , buf , n
+tools/r15_reduce.c:264	final	&c , d
+tools/reservoir/res_common.c:125	init	&c
+tools/reservoir/res_common.c:128	update	&c , buf , r
+tools/reservoir/res_common.c:133	final	&c , d
+tools/reservoir/res_mat.c:310	hash	buf , n , out->sha256
+tools/turing_cal_eval.c:271	init	&c
+tools/turing_cal_eval.c:274	update	&c , tmp , (size_t)r
+tools/turing_cal_eval.c:276	final	&c , d
+tools/turing_cal_eval.c:301	init	&c
+tools/turing_cal_eval.c:302	update	&c , (const uint8_t *)m , strlen(m)
+tools/turing_cal_eval.c:303	final	&c , d
+tools/turing_cal_eval.c:535	init	&c
+tools/turing_cal_eval.c:536	update	&c , (const uint8_t *)lines[i] , strlen(lines[i])
+tools/turing_cal_eval.c:538	final	&c , d
+tools/turing_cal_eval.c:792	init	&pc
+tools/turing_cal_eval.c:807	update	&pc , (const uint8_t *)pl , strlen(pl)
+tools/turing_cal_eval.c:814	final	&pc , d
+tools/turing_cal_overlap.c:136	final	&blk , d
+tools/turing_cal_overlap.c:139	init	&blk
+tools/turing_cal_overlap.c:148	update	&blk , r , BODY
+tools/turing_cal_overlap.c:151	hash	r , BODY , h
+tools/turing_cal_overlap.c:163	final	&blk , d

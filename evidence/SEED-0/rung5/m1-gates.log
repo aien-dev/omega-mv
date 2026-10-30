@@ -1,0 +1,139 @@
+######################################################################
+SOVEREIGN MACHINE MASTER PLAN — MILESTONE 1 QUALIFICATION RUNNER (ATLAS)
+Target: The Irreducible Bootstrap Seed (atlas.bin) & Dual Verification Seams
+Historical Lineage: Formerly designated Alpha (alpha.bin) in initial bootstrap draft
+Tooling: Sovereign Pure C / POSIX Shell Harness (No Python)
+######################################################################
+
+[*] Step 0: Compiling sovereign host tools from source...
+
+[KAT] Executing NIST FIPS 180-4 SHA-256 Known-Answer Tests...
+  ======================================================================
+  SHA-256 KNOWN-ANSWER TEST (KAT) RUNNER — NIST FIPS 180-4 VECTORS
+  ======================================================================
+    [PASS] NIST Vector 1 (Empty String)
+           Computed: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+           Expected: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    [PASS] NIST Vector 2 ("abc")
+           Computed: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+           Expected: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    [PASS] NIST Vector 3 (56-byte Boundary: "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
+           Computed: 248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+           Expected: 248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+    [PASS] NIST Vector 4 (112-byte Multi-Block)
+           Computed: 59f109d9533b2b70e7c3b814a2bd218f78ea5d3714455bc67987cf0d664399cf
+           Expected: 59f109d9533b2b70e7c3b814a2bd218f78ea5d3714455bc67987cf0d664399cf
+    [PASS] PHYSICS-0 Canonical Staging Payload (256 bytes)
+           Computed: e1d89bb1e0854ebaccd2be5c756c8a2ff8c5ecc8c0f90b4abd461fb7bf98374c
+           Expected: e1d89bb1e0854ebaccd2be5c756c8a2ff8c5ecc8c0f90b4abd461fb7bf98374c
+  ----------------------------------------------------------------------
+  KAT RESULT: ALL NIST VECTORS PASSED
+  ======================================================================
+
+======================================================================
+SEAM 1: INDEPENDENT ARTIFACT-AUDIT SEAM (ATLAS)
+======================================================================
+
+[Audit-1] Checking Canonical Artifact Identity...
+  atlas.bin size:     1480 bytes
+  Computed SHA-256:   f7802501b410a0c19eff7b8fca8865c9ba9c96bfa4f8065ca8f508b67748b9a5
+  Recorded SHA-256:   f7802501b410a0c19eff7b8fca8865c9ba9c96bfa4f8065ca8f508b67748b9a5
+  -> ATLAS_ARTIFACT_IDENTITY_PASS: OK
+
+[Audit-2] Validating Machine Contract Adherence...
+  Contract ID:        CONTRACT-QEMU-VIRT-AARCH64-M1
+  Target Platform:    qemu-virt-aarch64
+  Cryptographic Hash: SHA-256 (Pinned: e1d89bb1e0854eba...)
+  Max Size Bound:     65536 bytes (Actual: 1480 bytes)
+  -> ATLAS_MACHINE_CONTRACT_PASS: OK
+
+[Audit-3] Verifying Exact Byte Accounting & Static Target Proof...
+  Binary Size:            1480 bytes
+  Expected 32-bit Words:  370
+  Audit Ledger Entries:   370
+  Decoded Instructions:   301 (1204 bytes)
+  Read-Only Data Words:   69 (276 bytes)
+  Reconciled Byte Sum:    1480 bytes
+  Exact Discrepancy:      0 bytes (ZERO DELTA)
+
+[Audit-4] Evaluating Static Target Proof for Indirect Handoff ('br x19')...
+  Handoff Branch Instruction: 0x00ac: br x19
+  Target Loader Instruction:  0x00a8: ldr x19, literal @ 0x0160
+  Static Literal Target Val:  0x40200000
+  Contract Physics Base:      0x40200000
+  -> STATIC TARGET PROOF VERIFIED: x19 is provably immutable 0x40200000.
+  -> ATLAS_AUDIT_PASS: OK
+
+[Audit-5] Verifying Disjoint Stack / Boot-Descriptor Partition Proof...
+  Stack Allocation Window:      [0x401f0000, 0x401fc000) (downward growing)
+  Descriptor Allocation Window: [0x401fe000, 0x401fe040)
+  Calculated Guard Gap:         8192 bytes (8 KiB)
+  Contract Stated Guard Gap:    8192 bytes
+  Static SP Loader Value:       0x401fc000
+  -> SP setup matches contract scratchpad stack top exactly.
+  Formal Set Intersection:      Stack Window ∩ Descriptor Window = ∅ (EMPTY_SET)
+  -> ATLAS_STACK_DESCRIPTOR_DISJOINT_PASS: OK
+
+----------------------------------------------------------------------
+SEAM 1 RESULTS: ALL STATIC AUDIT GATES PASSED (ATLAS)
+----------------------------------------------------------------------
+
+======================================================================
+SEAM 2: EXTERNAL EXECUTION SEAM (QEMU AARCH64 VIRT - ATLAS)
+======================================================================
+
+[Exec-1] Executing Clean Golden Boot & Handoff with Cryptographic SHA-256...
+  Emitted Telemetry Stream:
+    | ATLAS: AWAKEN
+    | ATLAS: VERIFY
+    | ATLAS: HANDOFF
+    | PHYSICS-0: AUTHORIZED
+  -> ATLAS_BOOT_QEMU_PASS: OK
+  -> ATLAS_HANDOFF_QEMU_PASS: OK
+
+[Exec-2A] Executing Exhaustive 256-Single-Byte Mutation Sweep (Offsets 0..255)...
+  Tested  64/256 byte offsets: all refused into quiescence cleanly.
+  Tested 128/256 byte offsets: all refused into quiescence cleanly.
+  Tested 192/256 byte offsets: all refused into quiescence cleanly.
+  Tested 256/256 byte offsets: all refused into quiescence cleanly.
+  Exhaustive 256-Offset Sweep completed in 49.73s (Result: PASS)
+
+[Exec-2B] Executing 12 Adversarial Structured Mutation Scenarios...
+  [PASS] MUT_00_FIRST_BYTE    (offset 0     ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_01_COOKIE_BYTE   (offset 8     ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_02_EARLY_INSN    (offset 24    ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_03_MID_INSN      (offset 64    ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_04_LATE_INSN     (offset 128   ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_05_MSG_BYTE      (offset 160   ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_06_MSG_END       (offset 200   ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_07_PENULTIMATE   (offset 254   ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_08_FINAL_BYTE    (offset 255   ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_09_BURST_FLIP    (offset 40-48 ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_10_ALL_ZEROS     (offset ALL   ) -> Refused cleanly, physics isolated.
+  [PASS] MUT_11_ALL_ONES      (offset ALL   ) -> Refused cleanly, physics isolated.
+  -> ATLAS_CORRUPTION_REFUSAL_QEMU_PASS: OK (268/268 total mutations refused: 256 sweep + 12 adversarial)
+
+[Exec-3] Verifying Fail-Closed Quiescence...
+  Quiescence confirmed: execution halted cleanly after REFUSE.
+  Emitted 3 total lines; zero instruction overrun or crash.
+  -> ATLAS_FAIL_CLOSED_QEMU_PASS: OK
+
+----------------------------------------------------------------------
+SEAM 2 RESULTS: ALL EXECUTION GATES PASSED (ATLAS)
+----------------------------------------------------------------------
+
+======================================================================
+MILESTONE 1 QUALIFICATION AUDIT SUMMARY REPORT (ATLAS)
+======================================================================
+  [PASSED]  ATLAS_ARTIFACT_IDENTITY_PASS
+  [PASSED]  ATLAS_MACHINE_CONTRACT_PASS
+  [PASSED]  ATLAS_AUDIT_PASS
+  [PASSED]  ATLAS_STACK_DESCRIPTOR_DISJOINT_PASS
+  [PASSED]  ATLAS_BOOT_QEMU_PASS
+  [PASSED]  ATLAS_HANDOFF_QEMU_PASS
+  [PASSED]  ATLAS_CORRUPTION_REFUSAL_QEMU_PASS
+  [PASSED]  ATLAS_FAIL_CLOSED_QEMU_PASS
+----------------------------------------------------------------------
+Overall Result: MILESTONE 1 QUALIFIED (QEMU) — ALL GATES PASSED
+Execution Duration: 52.78 seconds
+======================================================================

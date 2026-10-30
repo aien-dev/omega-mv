@@ -1,0 +1,6 @@
+note omegese-om2.md 2 line 70: malformed rest (tokens left, OM-1 code 5) is refused, nothing on stdout.
+om2
+fn  main to int
+x = int 5
+ret   add x 2 3
+end

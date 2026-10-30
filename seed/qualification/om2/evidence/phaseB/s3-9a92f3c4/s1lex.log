@@ -1,0 +1,44 @@
+OM2GATE START cases=seed/qualification/om2/candidates/s1/s1-lexmutants.cases scratch=build/om2-qual/s3a-s1lex
+IDENTITY omc /tmp/zl/omc-s3a sha256=20d00b6e5309b90e5de48c3d40c1439610844348aaa49f86436b04182ca4bf87 pinned=20d00b6e5309b90e5de48c3d40c1439610844348aaa49f86436b04182ca4bf87 match
+SUBST seed/qualification/om2/candidates/s1/mutants/hex-upper.from seed/qualification/om2/candidates/s1/mutants/hex-upper.to
+  MUTATE exact-once substitution at byte 25671
+COMPILER build/om2-qual/s3a-s1lex/7.elf sha256=513b4f08b052dcf09be10a32da4e567f946ca7a89daa3387fac5577837912b1e source line=7
+VERDICT ctl-hex-upper-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT hex-upper-s1-d-hexupper FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s1-d-hexupper-plain FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-upper FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-mixed FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-upper-s2-r6-upper-ulong FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+COMPILER /tmp/zl/omc-s3a
+SUBST seed/qualification/om2/candidates/s1/mutants/hex-17.from seed/qualification/om2/candidates/s1/mutants/hex-17.to
+  MUTATE exact-once substitution at byte 25539
+COMPILER build/om2-qual/s3a-s1lex/17.elf sha256=cccbc1bfb2f8d7413bf68b1bea2db016e751b6c06460dadb7a05f31137cf6b66 source line=17
+VERDICT ctl-hex-17-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT hex-17-s1-d-longtok PASS compile exit=6 expected=6 stdout=match stderr=match
+VERDICT hex-17-s2-r6-17small FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+VERDICT hex-17-s2-r6-17big FAIL compile exit=0 expected=6 stdout differs at byte 0 stderr differs at byte 0
+COMPILER /tmp/zl/omc-s3a
+SUBST seed/qualification/om2/candidates/s1/mutants/diag-col0.from seed/qualification/om2/candidates/s1/mutants/diag-col0.to
+  MUTATE exact-once substitution at byte 6359
+COMPILER build/om2-qual/s3a-s1lex/25.elf sha256=b5eea9c155e9d3608842d7dc33b58f903a051fe39c0a96d767cf0160d16ffa88 source line=25
+VERDICT ctl-diag-col0-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT diag-col0-s1-d-left FAIL compile exit=5 expected=5 stdout=match stderr differs at byte 61
+VERDICT diag-col0-s1-d-eof-left FAIL compile exit=5 expected=5 stdout=match stderr differs at byte 61
+VERDICT diag-col0-s1-d-hexrange FAIL compile exit=8 expected=8 stdout=match stderr differs at byte 60
+VERDICT diag-col0-s1-d-unknown-fn FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 62
+COMPILER /tmp/zl/omc-s3a
+SUBST seed/qualification/om2/candidates/s1/mutants/fmt-note.from seed/qualification/om2/candidates/s1/mutants/fmt-note.to
+  MUTATE exact-once substitution at byte 24125
+COMPILER build/om2-qual/s3a-s1lex/34.elf sha256=df42ad696438490c0c42d593f3c4271f8a001b25491891e5324a0b6c78c7571e source line=34
+VERDICT ctl-fmt-note-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fmt-note-s2-fmt-x1 FAIL compile exit=0 expected=0 stdout differs at byte 46 stderr=match
+VERDICT fmt-note-s2-fmt-x3 FAIL compile exit=0 expected=0 stdout differs at byte 135 stderr=match
+COMPILER /tmp/zl/omc-s3a
+SUBST seed/qualification/om2/candidates/s1/mutants/fmt-text.from seed/qualification/om2/candidates/s1/mutants/fmt-text.to
+  MUTATE exact-once substitution at byte 24480
+COMPILER build/om2-qual/s3a-s1lex/41.elf sha256=b44d665235a848b81e3bae0214084f446d53a338c30d1728747c163515cbebcf source line=41
+VERDICT ctl-fmt-text-sha PASS run exit=0 expected=0 stdout=match stderr=match
+VERDICT fmt-text-s2-fmt-x1 FAIL compile exit=0 expected=0 stdout differs at byte 239 stderr=match
+VERDICT fmt-text-s2-fmt-x5 FAIL compile exit=0 expected=0 stdout differs at byte 143 stderr=match
+COMPILER /tmp/zl/omc-s3a
+OM2GATE FAIL cases=21 pass=6 fail=15 invalid=0 not_run=0

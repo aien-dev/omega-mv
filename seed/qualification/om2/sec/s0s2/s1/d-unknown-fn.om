@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 1 lines 36-49, errata E4: call to a function that is not declared: sev=unknown, span = the name foo.
+om2 diag
+fn main to int
+x = int 5
+y = foo x
+ret 0
+end

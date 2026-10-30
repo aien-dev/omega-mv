@@ -1,0 +1,11 @@
+--- a/seed/omc/omc.om
++++ b/seed/omc/omc.om
+@@ -3004,7 +3004,7 @@
+ mstore 13 31 i
+ end
+ mstore 11 31 2
+-emit 3103792108
++note removed parameter size store
+ emit 2432697314
+ hsys 29
+ for i ulong 4

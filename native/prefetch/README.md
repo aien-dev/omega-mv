@@ -87,14 +87,15 @@ fixture generators, executes all53 cases, and compares exact exits and verdict
 bytes. Each child has a30-second deadline. Scratch and child outputs remain
 available for inspection; the shell creates a separate directory on each run.
 
-The required compiler is the corrected mapping profile from OmegaPR676 commit
-`1dffceaeb0dd26fb69ea64d367a49a9950c25a62`, executable9f48f66a. This is an explicit
-integration dependency. The current main-based branch has no seed directory
-and the entry refuses with3 until that dependency is assembled. It does not
-fetch code, accept an arbitrary environment compiler, silently select an older
-profile, or waive missing prerequisites. Qualification here used a private
-combined source snapshot with exact committed compiler/source bytes. This is
-not evidence that the dependency has merged into main.
+The required compiler is main's seeded `seed/out/omc`, executable
+`62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`, built from
+`seed/omc/omc.om` `96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e`
+(both pinned in `compiler.sha256`). The original qualification used the corrected
+mapping profile from Omega PR676 commit `1dffceaeb0dd26fb69ea64d367a49a9950c25a62`,
+executable 9f48f66a; the pin moved to main's compiler when this branch merged main,
+and the gate was rerun with it. The entry refuses with 3 for any other compiler. It
+does not fetch code, accept an arbitrary environment compiler, silently select an
+older profile, or waive missing prerequisites.
 
 Native process supervision reuses the existing gate669 pattern from that
 compiler revision. `gate-child.om` is the existing supervisor control fixture.

@@ -1,0 +1,6 @@
+t = alloc
+matconst t get nm_len sub e 1
+wsum = alloc
+e3 2332033024 wsum ro rn
+emit or or 3942645791 shl wsum 5 shl t 16
+trapc 8 3
