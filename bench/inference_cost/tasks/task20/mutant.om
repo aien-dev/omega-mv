@@ -1,0 +1,3 @@
+fn rot_left_u32 x uint k uint to uint
+ret shl x k
+end

@@ -1,0 +1,267 @@
+{
+  "date": "2026-10-28",
+  "source_revision": "3e66b6744590cc72c623d8e09413b9072bcab36e",
+  "source_sha256": "4b5392fffd25a3a37844ad8bb5138fbaada690be7dae95132614524bdb78a1e0",
+  "native_compiler_sha256": "badedbb0c6287887641fcd7e97301b43b5f82f2d7a2838bbe0d17547873108be",
+  "native_compiler_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-orphan/omc-badedbb0c6287887",
+  "execution": "HOST_TESTED_AARCH64_AND_EMULATED_X86",
+  "seed_fixpoint": {
+    "command": [
+      "sh",
+      "seed/omega-from-seed.sh"
+    ],
+    "exit": 0,
+    "log_path": "build/fr9-20261028-orphan/fixpoint.log",
+    "log_sha256": "17b0e44e6c3e4d5df172b528f763859c168f0c0e0b3da6e465b75f9acb53eba9",
+    "stage1_stage2_stage3_equal": true
+  },
+  "host_checks": [
+    {
+      "command": [
+        "sh",
+        "seed/host/check.sh"
+      ],
+      "exit": 0,
+      "log_path": "build/fr9-20261028-orphan/host-check.log",
+      "log_sha256": "737d105bec94eba4825a29740ed1804f2d4e17779c8c9f24781d8d29d58fb04c"
+    },
+    {
+      "command": [
+        "sh",
+        "seed/omc/gate5.sh"
+      ],
+      "exit": 0,
+      "log_path": "build/fr9-20261028-orphan/gate5.log",
+      "log_sha256": "0fa7d69c3c5b43dbb2d0a823cf53d250bde7f61e329be31921c7978397e222e2"
+    }
+  ],
+  "growth_controls": [
+    {
+      "fixture": "unroll-growth.om",
+      "arm": "candidate",
+      "target": "aarch64",
+      "exit": 14,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "omc: line 23: error 14\n"
+    },
+    {
+      "fixture": "unroll-growth.om",
+      "arm": "candidate",
+      "target": "x86linux",
+      "exit": 14,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "omc: line 22: error 14\n"
+    },
+    {
+      "fixture": "unroll-growth.om",
+      "arm": "guard-removed",
+      "target": "aarch64",
+      "exit": 14,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "omc: line 23: error 14\n"
+    },
+    {
+      "fixture": "unroll-growth.om",
+      "arm": "guard-removed",
+      "target": "x86linux",
+      "exit": 0,
+      "stdout_bytes": 4462186,
+      "stdout_sha256": "7c631924d64344f28d4aeb0de677f6dfee54f8be8225ebb8266acdc0f1603651",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-diag.om",
+      "arm": "candidate",
+      "target": "aarch64",
+      "exit": 14,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "omc: line 23: error 14\nomc-diag 1 code=14 sev=error line=23 col=17 span=813-814 expect=value found=73 obligation=growth profile=OM-2\n"
+    },
+    {
+      "fixture": "unroll-growth-diag.om",
+      "arm": "candidate",
+      "target": "x86linux",
+      "exit": 14,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "omc: line 22: error 14\nomc-diag 1 code=14 sev=error line=22 col=17 span=792-794 expect=value found=3131 obligation=growth profile=OM-2\n"
+    },
+    {
+      "fixture": "unroll-growth-diag.om",
+      "arm": "guard-removed",
+      "target": "aarch64",
+      "exit": 14,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "omc: line 23: error 14\nomc-diag 1 code=14 sev=error line=23 col=17 span=813-814 expect=value found=73 obligation=growth profile=OM-2\n"
+    },
+    {
+      "fixture": "unroll-growth-diag.om",
+      "arm": "guard-removed",
+      "target": "x86linux",
+      "exit": 0,
+      "stdout_bytes": 4462186,
+      "stdout_sha256": "7c631924d64344f28d4aeb0de677f6dfee54f8be8225ebb8266acdc0f1603651",
+      "stderr": "omc-site 1 line=33 iter=-\nomc-site 1 line=33 iter=-\nomc-site 1 line=33 iter=-\n"
+    },
+    {
+      "fixture": "unroll-growth-rolled.om",
+      "arm": "candidate",
+      "target": "aarch64",
+      "exit": 0,
+      "stdout_bytes": 480,
+      "stdout_sha256": "4efaf9113d485f94d699074cde947eda6f416e9ea592c68f28ecdc11859f82fb",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-rolled.om",
+      "arm": "candidate",
+      "target": "x86linux",
+      "exit": 0,
+      "stdout_bytes": 2946,
+      "stdout_sha256": "4abb85f6ad8c47f826ce22b98840cfd801c7a4c4005d74eddb12b91f0b9e509f",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-rolled.om",
+      "arm": "guard-removed",
+      "target": "aarch64",
+      "exit": 0,
+      "stdout_bytes": 480,
+      "stdout_sha256": "4efaf9113d485f94d699074cde947eda6f416e9ea592c68f28ecdc11859f82fb",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-rolled.om",
+      "arm": "guard-removed",
+      "target": "x86linux",
+      "exit": 0,
+      "stdout_bytes": 2946,
+      "stdout_sha256": "4abb85f6ad8c47f826ce22b98840cfd801c7a4c4005d74eddb12b91f0b9e509f",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-om1.om",
+      "arm": "candidate",
+      "target": "aarch64",
+      "exit": 0,
+      "stdout_bytes": 480,
+      "stdout_sha256": "4efaf9113d485f94d699074cde947eda6f416e9ea592c68f28ecdc11859f82fb",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-om1.om",
+      "arm": "candidate",
+      "target": "x86linux",
+      "exit": 0,
+      "stdout_bytes": 2946,
+      "stdout_sha256": "4abb85f6ad8c47f826ce22b98840cfd801c7a4c4005d74eddb12b91f0b9e509f",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-om1.om",
+      "arm": "guard-removed",
+      "target": "aarch64",
+      "exit": 0,
+      "stdout_bytes": 480,
+      "stdout_sha256": "4efaf9113d485f94d699074cde947eda6f416e9ea592c68f28ecdc11859f82fb",
+      "stderr": ""
+    },
+    {
+      "fixture": "unroll-growth-om1.om",
+      "arm": "guard-removed",
+      "target": "x86linux",
+      "exit": 0,
+      "stdout_bytes": 2946,
+      "stdout_sha256": "4abb85f6ad8c47f826ce22b98840cfd801c7a4c4005d74eddb12b91f0b9e509f",
+      "stderr": ""
+    }
+  ],
+  "growth_negative_control": {
+    "mutation": "Remove exact-once x86 per-function emitb growth guard only; all other compiler source bytes unchanged.",
+    "mutant_binary_sha256": "a4162d529b2d8d1e2ef8121a16ac61fa3d23c4919ac97202fe50cb4566a4ea6b",
+    "result": "Candidate refuses14 with empty stdout and growth obligation; guard-removed x86 compiler accepts4462186bytes. Both accept unchanged rolled/OM1 controls. Literal cross-target refusal coordinates still differ and are not waived."
+  },
+  "guide_examples": [
+    {
+      "example": "fnv1a32.om",
+      "source_sha256": "2df1af70ffb48bd4d8e5fc6e75b8a0d21264812cd1dc9bd7a363a18050961ebf",
+      "arm": "original",
+      "target": "aarch64",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "artifact_sha256": "615ed9e3ab3dba7633f23997430f9c61114e756e6977379f0127a524e8e7e466",
+      "exit": 0,
+      "stdout_hex": "0be9471a",
+      "stderr": ""
+    },
+    {
+      "example": "fnv1a32.om",
+      "source_sha256": "2df1af70ffb48bd4d8e5fc6e75b8a0d21264812cd1dc9bd7a363a18050961ebf",
+      "arm": "original",
+      "target": "x86linux",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "artifact_sha256": "b7c59e7b72791a9ceb1b603343292d8124c2eab17e9c9e1db420106b204751a7",
+      "exit": 0,
+      "stdout_hex": "0be9471a",
+      "stderr": ""
+    },
+    {
+      "example": "trap_narrow.om",
+      "source_sha256": "9a63e266b8c91ee75dc9974c889d71944226d2f630d1789467c83bab6e69a395",
+      "arm": "original",
+      "target": "aarch64",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "artifact_sha256": "1a45030aaca71ce1e8a4a24bbb40b2d5b60a09839ae1ca36556d3c2b86e796a7",
+      "exit": 105,
+      "stdout_hex": "",
+      "stderr": ""
+    },
+    {
+      "example": "trap_narrow.om",
+      "source_sha256": "9a63e266b8c91ee75dc9974c889d71944226d2f630d1789467c83bab6e69a395",
+      "arm": "original",
+      "target": "x86linux",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "artifact_sha256": "17a477f8b7e4f399d01aab9bd2c1ace587d463d346fbfc728d6c21a0708804d7",
+      "exit": 105,
+      "stdout_hex": "",
+      "stderr": ""
+    },
+    {
+      "example": "trap_narrow.om",
+      "source_sha256": "9a63e266b8c91ee75dc9974c889d71944226d2f630d1789467c83bab6e69a395",
+      "arm": "unmasked-store-removed",
+      "target": "aarch64",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "artifact_sha256": "a75cd836151dda0e236d06520bb1942d25c3134cfb7ed163ac711d6af0bc612c",
+      "exit": 44,
+      "stdout_hex": "",
+      "stderr": ""
+    },
+    {
+      "example": "trap_narrow.om",
+      "source_sha256": "9a63e266b8c91ee75dc9974c889d71944226d2f630d1789467c83bab6e69a395",
+      "arm": "unmasked-store-removed",
+      "target": "x86linux",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "artifact_sha256": "1580c0bd2d22e8610f80d58efb5ac9d2214b28f14ea8e29ce6fbffae593e81ed",
+      "exit": 44,
+      "stdout_hex": "",
+      "stderr": ""
+    }
+  ],
+  "native_x86": "NOT_RUN",
+  "gpu": "NOT_RUN",
+  "bridge_full_suite": "Parent-owned; separate receipt required",
+  "qualification": "NOT_QUALIFIED; full corpus reported separately; native x86 not exercised"
+}
