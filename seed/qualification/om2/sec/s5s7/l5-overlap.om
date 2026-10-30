@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 160: overlapping fields (bytes 0..3 and 2..5) are error 29.
+om2
+layout ov 8
+field a uint 1 at 0 little
+field b uint 1 at 2 little
+end
+fn main to int
+ret 0
+end

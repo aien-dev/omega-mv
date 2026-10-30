@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of v6-part-empty.om: off = len = 10, n = 0 passes the slice check; write moves 0 bytes
+note and 0 is printed. Expected stdout oracle/s5s7/exp/v6-part-empty.out.
+fn main to int
+a = new uchar 10 46
+r = write 1 a 10 0
+putd ulong r
+ret 0
+end

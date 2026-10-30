@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 line 55-55: uchar max is 255; refused with error 8 on the literal's line.
+om2
+fn main to int
+x = uchar 0x100
+ret 0
+end

@@ -90,7 +90,7 @@ fp8_api.h, `7e3c1779…105a` codegen_moe.h) compiled with
 from `src/omega_blackwell_matmul.c` and built with the same flags. `.text` sha256: hostmath
 `4061ecf7…6e2c`, fp8_pack `1cd43d3f…7cc3`, fmt `d06b83b7…92b7`. A /tmp driver feeds the corpus to
 these objects. `fma` records use the hardware `fmadd` (inline asm), and the fmt records are typed C
-calls that `corpus.py --c-cases` generates. Compiler: omc sha256 `734f0a39…6b61`; `gpumath.om` at this
+calls that `corpus.py --c-cases` generates. Compiler: omc sha256 `62775d2a…712b`; `gpumath.om` at this
 commit compiles to a 29,836-byte program.
 
 | stream | function(s) | inputs | result |

@@ -1,0 +1,5 @@
+note S1: a field name over 8 bytes is error 13 (too long), also when its first 8 bytes spell a keyword.
+struct S continue_x ulong end
+fn main to int
+ret 0
+end

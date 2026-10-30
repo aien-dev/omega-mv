@@ -3,11 +3,12 @@
 set -eu
 cd "$(dirname "$0")/../.."
 root=$PWD
+OMC=${OMC:-"$root/seed/out/omc"}
 mkdir -p build/seed/host
 stage=$(mktemp -d "$root/build/seed/host/run.XXXXXX")
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
 compile() {
-    "$root/seed/out/omc" < "$root/seed/host/tests/$1.om" > "$stage/$1"
+    "$OMC" < "$root/seed/host/tests/$1.om" > "$stage/$1"
     chmod +x "$stage/$1"
 }
 compile files
@@ -43,6 +44,20 @@ printf 'PASS native cwd and readlnk offsets, counts, truncation, errno and priva
 compile sockopt
 (cd "$stage"; timeout 10 ./sockopt)
 printf 'PASS native socket options with independent bind behavior, readonly input and errno\n'
+compile netdata
+(cd "$stage"; timeout 10 ./netdata)
+test ! -e "$stage/netdata.sock"
+for case in 1 2 3; do
+    set +e
+    "$stage/netdata" "$case"
+    rc=$?
+    set -e
+    [ "$rc" = 103 ] || { printf 'FAIL: netdata case %s exit %s, wanted 103\n' "$case" "$rc" >&2; exit 1; }
+done
+printf 'PASS native network slice bounds and poll record-size refusal\n'
+compile netpeer
+(cd "$stage"; timeout 10 ./netpeer)
+test ! -e "$stage/netpeer.sock"
 compile device
 "$stage/device"
 printf 'PASS native checked device ioctl composed with host files and pipes\n'
@@ -59,7 +74,7 @@ compile reserve
 (cd "$stage"; ./reserve)
 test ! -e "$stage/reserve.bin"
 compile memcheck
-(cd "$stage"; ./memcheck "$root/seed/out/omc")
+(cd "$stage"; ./memcheck "$OMC")
 compile structfile
 (cd "$stage"; ./structfile)
 test ! -e "$stage/structfile.tmp"
@@ -113,7 +128,7 @@ for pair in "getuid:$uid" "geteuid:$uid" "getgid:$gid" "getegid:$gid"; do
     val=${pair#*:}
     want=$((val % 256))
     printf 'fn main to int\nret int %s\nend\n' "$word" > "$stage/id.om"
-    "$root/seed/out/omc" < "$stage/id.om" > "$stage/id.bin" 2> "$stage/id.err" || {
+    "$OMC" < "$stage/id.om" > "$stage/id.bin" 2> "$stage/id.err" || {
         printf 'FAIL: %s did not compile: %s\n' "$word" "$(cat "$stage/id.err")" >&2
         exit 1
     }
@@ -138,6 +153,10 @@ printf 'PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refuse
 compile psync
 (cd "$stage"; ./psync)
 printf 'PASS native getsid/syncfs/shutdown: session id, filesystem sync, non-socket refusal\n'
+compile flock
+(cd "$stage"; timeout 10 ./flock)
+test ! -e "$stage/flock.tmp"
+printf 'PASS native flock: exclusive lock blocks a second open (EWOULDBLOCK), unlock, shared, EINVAL, EBADF\n'
 compile pgroup
 (cd "$stage"; ./pgroup)
 printf 'PASS native process groups: getpgid/setpgid, setsid or EPERM\n'

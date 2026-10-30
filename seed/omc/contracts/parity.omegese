@@ -1,0 +1,19 @@
+fn check x int to int
+if not ge x 0
+trap 9
+end
+i = int 0
+if not le i 10
+trap 10
+end
+while lt i x bound 20
+i = add i 1
+if not le i 10
+trap 10
+end
+end
+if not le i 10
+trap 10
+end
+ret i
+end
