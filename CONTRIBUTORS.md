@@ -45,4 +45,4 @@ Update this table in the same commit as the work it credits.
 
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
-| Grok 4.7 | M18 clean-clone log path (omega#526): the gate writes `clean_clone_m18.log` under its own `OUT_DIR/clean-clone` or under `TMPDIR`, prints that path, and reports a failed create as its own error. Host test covers an unwritable `/tmp`, a set `TMPDIR`, and a mutant that puts the fixed path back. |
+| Grokbot | M18 clean-clone log path (omega#526): the gate writes `clean_clone_m18.log` under its own `OUT_DIR/clean-clone` or under `TMPDIR`, prints that path, and reports a failed create as its own error. Host test covers an unwritable `/tmp`, a set `TMPDIR`, and a mutant that puts the fixed path back. |
