@@ -1,0 +1,45 @@
+# om-tls-arm64: independent ARM64 rerun of the om/tls suite (RFC 8448 vectors, DNS unit, DIT probe,
+# interop against openssl s_server and the Python fake server, secret-residue scan, 26 mutants) and
+# of the seed/net HTTP/HTTPS check on a GitHub-hosted ubuntu-24.04-arm machine, with the pinned omc
+# (om/units.sh OMC_PIN). Network stages stay NOT_RUN (TLS_NET unset). Logs are uploaded as artifacts.
+# Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
+name: om-tls-arm64
+on:
+  pull_request:
+    paths: ["om/tls/**", "seed/net/**", "seed/json/**", "seed/out/omc", "om/units.sh", ".github/workflows/om-tls-arm64.yml"]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  om-tls:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: machine and tools
+        run: |
+          uname -a; nproc; openssl version; python3 --version
+          python3 -c 'import cryptography' 2>/dev/null || sudo apt-get install -y -q python3-cryptography
+          python3 -c 'import cryptography; print("cryptography", cryptography.__version__)'
+      - name: omc pin
+        run: |
+          pin=$(sed -n 's/^OMC_PIN=//p' om/units.sh | tr -d '"')
+          got=$(sha256sum seed/out/omc | cut -c1-64)
+          echo "pin $pin"; echo "got $got"
+          [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
+          chmod +x seed/out/omc
+      - name: om/tls suite
+        run: mkdir -p build && sh om/tls/test/tls/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-run.log; test "${PIPESTATUS[0]}" = 0
+      - name: seed/net HTTP and HTTPS check
+        run: python3 seed/net/tests/check.py --keep build/netcheck 2>&1 | tee build/net-check.log; test "${PIPESTATUS[0]}" = 0
+      - name: logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: om-tls-arm64-logs
+          path: |
+            build/om-tls-run.log
+            build/net-check.log
+            build/tls/tls/*.log
+            build/tls/tls/interop-table.txt

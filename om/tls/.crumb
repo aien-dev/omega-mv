@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-30T16:55:04Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:3cff8cc0542c04e0db47b9a3daed0036eac78d03b725779e5a5a7ea39b2e4c9b",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 263,
+      "generated_at_commit": "08627238b84664212d8d5345803835f934e882e2",
+      "source_tree": "sha256:91d8192496a74bc14f1dc578b1c92741d3647abdbbd93b2968184b24b6e1211d"
+    }
+  },
+  "name": "om-tls",
+  "purpose": "TLS 1.3 client (chacha20-poly1305, aes-gcm, x25519, P-256/RSA signatures, X.509 path validation) in seeded Omega with its KAT, DNS, interop and mutant suites",
+  "schema_version": "1.0.0"
+}

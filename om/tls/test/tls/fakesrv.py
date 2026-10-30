@@ -20,7 +20,16 @@
 #   tickets1500 1500 NewSessionTicket messages after the handshake             -> UNEXPECTED_MESSAGE
 #   closehs     encrypted close_notify after EncryptedExtensions               -> ALERT_RECEIVED 0
 #   closepre    plaintext close_notify instead of the ServerHello              -> ALERT_RECEIVED 0
-import hashlib, hmac, os, socket, sys
+# Outside-review fixes (key lifetime and handshake deadline); the client runs with OPTS:
+#   loris       ServerHello trickled one byte per 250 ms for 8 s, then close   -> TIMEOUT (HSMS=2000)
+#   slowsh      ServerHello one byte per 20 ms, then a correct handshake        -> OK (HSMS=10000)
+#   kuexact     3 empty records, reply, close_notify = 5 under one key          -> OK (REC=5)
+#   kuover      4 empty records, reply, close_notify = 6 under one key          -> SEQUENCE_LIMIT (REC=5)
+#   kurot       4 empty, KeyUpdate at sequence 4, reply under the next key      -> OK (REC=5)
+#   kuw:N       reads the request under the client's key following its KeyUpdates; more than N
+#               records under one key, or no KeyUpdate at all, is answered with a fatal alert
+#                                                                               -> OK (REC=N, SPLIT=1)
+import hashlib, hmac, os, socket, sys, time
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -57,6 +66,16 @@ class Keys:
         hdr = b"\x17\x03\x03" + u(len(inner) + 16, 2)
         return hdr + self.aead.encrypt(nonce, inner, hdr)
 
+    def open(self, rec):
+        nonce = bytes(a ^ b for a, b in zip(self.iv, u(self.seq, 12)))
+        self.seq += 1
+        inner = self.aead.decrypt(nonce, rec[5:], rec[:5]).rstrip(b"\x00")
+        return inner[-1], inner[:-1]
+
+
+def next_secret(secret):
+    return expand_label(secret, b"traffic upd", b"", 32)
+
 
 def recv_record(c):
     h = c.recv(5, socket.MSG_WAITALL)
@@ -89,6 +108,18 @@ while p < end:
             q += 4 + kn
     p += 4 + n
 CCS = b"\x14\x03\x03\x00\x01\x01"
+OKMODES = ("ok", "cvbad", "cvkey", "cvskip", "empty1500", "empty50", "tickets1500",
+           "slowsh", "kuexact", "kuover", "kurot")
+kuw = mode.startswith("kuw:")  # kuw:N: the client must rekey before N records under one key
+hold = 0.0
+if mode.startswith("hold:"):   # hold:S: write every secret to $FAKESRV_KEYS, wait S s, then reply
+    hold = float(mode[5:])
+    mode = "hold"
+    OKMODES += ("hold",)
+if kuw:
+    kulimit = int(mode[4:])
+    mode = "kuw"
+    OKMODES += ("kuw",)
 if mode == "closepre":
     c.sendall(b"\x15\x03\x03\x00\x02\x01\x00")
 else:
@@ -100,7 +131,22 @@ else:
     exts = ext(43, b"\x03\x04") + ext(51, b"\x00\x1d\x00\x20" + spub)
     body = b"\x03\x03" + os.urandom(32) + bytes([len(sid)]) + sid + b"\x13\x03\x00" + u(len(exts), 2) + exts
     sh = b"\x02" + u(len(body), 3) + body
-    c.sendall(b"\x16\x03\x03" + u(len(sh), 2) + sh)
+    shrec = b"\x16\x03\x03" + u(len(sh), 2) + sh
+    if mode == "loris":
+        # slow loris: one ServerHello byte every 250 ms, never finishing; the client must give up
+        # on its handshake budget (TLS_ERR_TIMEOUT), not wait for this close (TLS_ERR_EOF)
+        for i in range(32):
+            try:
+                c.sendall(shrec[i:i + 1]); time.sleep(0.25)
+            except OSError:
+                break
+        c.close(); sys.exit(0)
+    if mode == "slowsh":
+        # slow but finishing: the whole ServerHello one byte every 20 ms (about 2 s)
+        for i in range(len(shrec)):
+            c.sendall(shrec[i:i + 1]); time.sleep(0.02)
+    else:
+        c.sendall(shrec)
     c.sendall(CCS)
     if mode == "ccs2":
         c.sendall(CCS)
@@ -111,6 +157,7 @@ else:
     early = extract(bytes(32), bytes(32))
     hs = extract(expand_label(early, b"derived", H(b""), 32), shared)
     s_hs = expand_label(hs, b"s hs traffic", H(tr), 32)
+    c_hs = expand_label(hs, b"c hs traffic", H(tr), 32)
     sw = Keys(s_hs)
     hmsg = lambda t, b: bytes([t]) + u(len(b), 3) + b
     ee = hmsg(8, b"\x00\x00")
@@ -129,7 +176,7 @@ else:
                 c.sendall(sw.seal(22, big[i:i + 1]))
             except OSError:
                 break
-    if mode in ("ok", "cvbad", "cvkey", "cvskip", "empty1500", "empty50", "tickets1500"):
+    if mode in OKMODES:
         der = lambda f: x509.load_pem_x509_certificate(open(f"{d}/{f}", "rb").read()).public_bytes(serialization.Encoding.DER)
         cl = b"".join(u(len(x), 3) + x + b"\x00\x00" for x in (der("good.pem"), der("int.pem")))
         cert = hmsg(11, b"\x00" + u(len(cl), 3) + cl)
@@ -146,23 +193,74 @@ else:
         fin = hmsg(20, hmac.new(expand_label(s_hs, b"finished", b"", 32), H(tr), hashlib.sha256).digest())
         tr += fin
         c.sendall(sw.seal(22, cert) + (sw.seal(22, cv) if cv else b"") + sw.seal(22, fin))
-        if mode in ("ok", "empty1500", "empty50", "tickets1500"):
+        if mode in ("ok", "empty1500", "empty50", "tickets1500", "slowsh", "kuexact", "kuover", "kurot", "kuw", "hold"):
             ms = extract(expand_label(hs, b"derived", H(b""), 32), bytes(32))
-            aw = Keys(expand_label(ms, b"s ap traffic", H(tr), 32))
+            s_ap = expand_label(ms, b"s ap traffic", H(tr), 32)
+            aw = Keys(s_ap)
+            if mode == "hold":
+                c_ap = expand_label(ms, b"c ap traffic", H(tr), 32)
+                keys = {"shared": shared, "early": early, "hs": hs, "c_hs": c_hs, "s_hs": s_hs,
+                        "ms": ms, "c_ap": c_ap, "s_ap": s_ap}
+                for nm, sec in (("c_hs", c_hs), ("s_hs", s_hs), ("c_ap", c_ap), ("s_ap", s_ap)):
+                    keys[nm + "_key"] = expand_label(sec, b"key", b"", 32)
+                    keys[nm + "_iv"] = expand_label(sec, b"iv", b"", 12)
+                keys["c_fin"] = expand_label(c_hs, b"finished", b"", 32)
+                keys["s_fin"] = expand_label(s_hs, b"finished", b"", 32)
+                with open(os.environ["FAKESRV_KEYS"], "w") as f:
+                    for nm, val in keys.items():
+                        f.write("%s %s\n" % (nm, val.hex()))
             c.settimeout(10)
             # client: change_cipher_spec, Finished, then the request
-            for _ in range(3):
+            for _ in range(2 if mode == "kuw" else 3):
                 if recv_record(c) is None:
                     break
             out = b""
-            if mode == "empty1500":
+            if mode == "kuw":
+                # read the request one record at a time under the client's application key,
+                # following its KeyUpdates; refuse more than kulimit records under one key
+                c_ap = expand_label(ms, b"c ap traffic", H(tr), 32)
+                ar = Keys(c_ap)
+                req, used, updates, bad = b"", 0, 0, None
+                while b"\r\n\r\n" not in req:
+                    rec = recv_record(c)
+                    if rec is None:
+                        bad = "eof"; break
+                    used += 1
+                    if used > kulimit:
+                        bad = "limit"; break
+                    t, data = ar.open(rec)
+                    if t == 22 and data[:1] == b"\x18":
+                        c_ap = next_secret(c_ap); ar = Keys(c_ap); used = 0; updates += 1
+                    elif t == 23:
+                        req += data
+                    else:
+                        bad = "type%d" % t; break
+                if bad is None and updates == 0:
+                    bad = "noupdate"
+                print("kuw: updates=%d bad=%s" % (updates, bad), flush=True)
+                if bad is not None:
+                    out = aw.seal(21, b"\x02\x0a")
+            elif mode == "empty1500":
                 out = b"".join(aw.seal(23, b"") for _ in range(1500))
             elif mode == "tickets1500":
                 nst = hmsg(4, u(60, 4) + u(1, 4) + b"\x01\x00" + u(2, 2) + b"tk" + b"\x00\x00")
                 out = b"".join(aw.seal(22, nst) for _ in range(1500))
             elif mode == "empty50":
                 out = b"".join(aw.seal(23, b"") for _ in range(50))
-            if mode in ("ok", "empty50"):
+            elif mode == "kuexact":
+                # with the client's limit at 5: records 0..4 = 3 empty, the reply, close_notify
+                out = b"".join(aw.seal(23, b"") for _ in range(3))
+            elif mode == "kuover":
+                # 4 empty + reply + close_notify = 6 records under one key: the 6th must be refused
+                out = b"".join(aw.seal(23, b"") for _ in range(4))
+            elif mode == "kurot":
+                # 4 empty, then KeyUpdate at the last allowed sequence number, reply under the next key
+                out = b"".join(aw.seal(23, b"") for _ in range(4))
+                out += aw.seal(22, hmsg(24, b"\x00"))
+                s_ap = next_secret(s_ap); aw = Keys(s_ap)
+            if mode == "hold":
+                time.sleep(hold)
+            if mode in ("ok", "empty50", "slowsh", "kuexact", "kuover", "kurot", "hold") or (mode == "kuw" and not out):
                 out += aw.seal(23, b"HTTP/1.0 200 ok\r\ncontent-length: 3\r\n\r\nok\n") + aw.seal(21, b"\x01\x00")
             try:
                 c.sendall(out)
