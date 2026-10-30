@@ -7,6 +7,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 
 | Model | What it did |
 |---|---|
+| Claude Opus 5.5 (via omp) | Made `om/evidence/parity/run.sh` independent of the filesystem under `TMPDIR`. The pathtree and digtree listings hashed each directory's `find %s` size, which is 4096 on ext4 and 40..3800 on tmpfs, so the harness failed on tmpfs with correct output. Directories now list `-` for size. The two expected hashes were re-derived from the same trees: on ext4 the old listing still hashes to the recorded C-oracle values, and the new one matches on ext4 and tmpfs. The mkdir_mode and file_mode mutants are still killed. |
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
 | Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |

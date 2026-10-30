@@ -14,7 +14,8 @@ OMEGA_OMC=/path/to/seed/out/omc [OMEGA_BRIDGE=/path/to/omega-bridge@012860db] sh
 ```
 
 `run.sh` compares the .om output with C oracle hashes recorded in `parity/expected.txt`. The C oracle
-driver is not in the tree. It takes about 6 s on the Spark.
+driver is not in the tree. It takes about 6 s on the Spark. The pathtree and digtree listings omit
+directory sizes, which depend on the filesystem under `TMPDIR` (ext4 and tmpfs differ), so any `TMPDIR` works.
 
 ## What the C files contain, and what is ported
 

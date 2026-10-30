@@ -21,13 +21,15 @@ command -v python3 > /dev/null || { echo "EVIDENCE-PARITY NOT_RUN: python3 missi
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 python3 "$P/corpus.py" "$T/corp" > "$T/counts"
 
-# run BIN STREAM OUT: one stream in a fresh directory; pathtree/digtree list what path/digest left
+# run BIN STREAM OUT: one stream in a fresh directory; pathtree/digtree list what path/digest left.
+# A directory's size (find %s) is the filesystem's, not the program's: 4096 on ext4, 40..3800 on tmpfs,
+# and mktemp follows TMPDIR. So directories list '-' for size; their path, type and mode still count.
 run() {
   case $2 in pathtree) rs=path ;; digtree) rs=digest ;; *) rs=$2 ;; esac
   rm -rf "$T/w"; mkdir "$T/w"
   rc=0; (cd "$T/w" && umask 022 && "$1" $rs < "$T/corp/$rs.txt" > "$T/s.out" 2> /dev/null) || rc=$?
   case $2 in
-    pathtree|digtree) (cd "$T/w" && { find . -printf '%p %y %m %s\n'; find . -type f -exec sha256sum {} +; } | LC_ALL=C sort) > "$3" ;;
+    pathtree|digtree) (cd "$T/w" && { find . \( -type d -printf '%p %y %m -\n' \) -o -printf '%p %y %m %s\n'; find . -type f -exec sha256sum {} +; } | LC_ALL=C sort) > "$3" ;;
     *) cp "$T/s.out" "$3" ;;
   esac
   return $rc
