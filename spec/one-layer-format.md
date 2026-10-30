@@ -229,3 +229,272 @@ build `tests/compiler/test_osc_ir_decode.c` plain and with ASan/UBSan. Measured 
 - **Domain tag string.** Identity is versioned by the magic and version byte inside the hashed
   bytes (section 6), not by a separate `omega.osc.vN` tag string in the style of
   spec/program-identity.md. Adopting such a tag would change every existing OSC unit identity.
+
+## 10. Seeded memory profile: IR v2 milestone, OSC wire v7
+
+**Specification only; producer and backend qualification is separate.** The
+milestone name “IR v2 memory” does not change the meaning of wire version 2,
+which already carries structs. Wire versions 1..5 and their identity bytes
+remain unchanged. Wire version 6 remains reserved by draft PR #525 for its
+numeric-identifier/structured-contract proposal; this profile neither closes
+nor supersedes that proposal. The memory extension uses version 7. A backend
+that has not implemented this profile must refuse it, not ignore its regions.
+
+### 10.1 Header and regions
+
+All fields remain unsigned little-endian integers without wire padding:
+
+```
+magic[7] = "OSC1IR\0"
+version:u8 = 7
+nstructs:u8, structs[nstructs]       existing section 3.2 encoding
+nregions:u16, regions[nregions]
+nfuncs:u16, functions[nfuncs]        existing section 3.3 encoding
+```
+
+The struct table stays before the region table. Supporting this profile does
+not imply supporting structs: a backend may explicitly refuse a nonempty
+struct table. A region has the following encoding:
+
+| Field | Encoding and rule |
+|---|---|
+| name | u8 length, then 1..63 non-NUL ASCII bytes |
+| element | u8 scalar tag: 2..9, 13 f32, or 14 f64 |
+| storage | u8 class from the table below |
+| owner | u16 function index, or 65535 for module scope |
+| count | u32 number of elements |
+| initial length | u32 byte count |
+| initial data | exactly initial-length bytes |
+
+Region IDs are zero-based table indices, not addresses or value registers.
+Table order is source declaration order; names and order participate in
+identity. Names are unique within an owner scope and may not shadow a module
+region in an owning function. The initial profile admits at most 1024 regions.
+Mutable regions have 1..16777216 elements; an empty read-only text is allowed.
+Existing native aggregate capacity limits still apply to source compilation.
+Backends check each element-count multiplication, alignment and aggregate
+addition for overflow before allocating or emitting memory. Source global
+pools retain the native 1 GiB aggregate limit and local arrays the native
+4 MiB aggregate limit. Backend input/output limits remain independently
+enforced; an unsupported size is a capacity refusal, never truncation.
+
+Sections 3 through 7 remain the complete rules for versions 1..5. For
+version 7, this section extends them: tags 13/14 and opcodes 30..33 are
+admitted only in v7. In a v1..5 unit those bytes remain RANGE, exactly as
+before. Version 7 carries the historical tag/opcode set unchanged, but this
+profile's seeded backends refuse references, slices, allocation, arena,
+pool and struct operations (opcodes 7, 8, 16..29 and tags 10..12) with
+UNSUPPORTED_OP or UNSUPPORTED_TAG. A complete v7 input is at most
+8,388,608 bytes, checked before parsing; a backend may set a smaller
+documented input capacity and refuse beyond it.
+
+Reader classes are applied in byte order. An unknown storage class or an
+element tag outside 2..9/13/14 is INVALID; class 3 is UNSUPPORTED_OP. A
+name that is empty, over 63 bytes, contains NUL, is non-ASCII or contains
+a dot is INVALID. Initial data for classes 0/1, a mismatched text length,
+count 0 for a mutable region, a count over 16,777,216, or more than 1024
+regions is INVALID. Owner validity and duplicate/shadowing names are
+checked after the function table is read and are INVALID. Every region or
+register operand outside its table, including 0x8000..0xFFFF, is INVALID.
+An f32 constant or initializer with a nonzero upper half is INVALID.
+
+| Class | Meaning | Owner and initialization |
+|---|---|---|
+| 0 | Module-private mutable global | owner 65535; no initial data; zero-filled once per module instance |
+| 1 | Function-local mutable array | owner is its function; no initial data; fresh logical storage on every invocation |
+| 2 | Read-only text | owner 65535; element u8; initial length equals count; no implicit NUL |
+| 3 | Reserved Workgroup | refused until initialization, synchronization and invocation ownership have a specified extension |
+
+No other class is admitted. Function-local regions are accessible only by
+their owning function. Calls remain restricted to earlier functions, so
+there is no recursive or reentrant invocation within a module call.
+An implementation may reuse physical storage for a function-local region
+between calls, but valid Omega execution cannot observe a previous
+invocation's values. Exported linear memory is not a JavaScript isolation
+or zeroization boundary; a JavaScript holder can inspect physical storage.
+The source initializer is evaluated once, at the `new` declaration, and fills
+every element before the array is accessible. Its value is not a module data
+segment. Input validation must establish that every local-region access is
+dominated by initialization of that region on the current invocation.
+
+Memory-backed scalar state uses a one-element region. Ordinary scalar
+locals remain value registers; this profile does not allocate regions for
+them or introduce a new source spelling for scalar globals.
+
+For a future SPIR-V backend, class 1 maps to Function storage and class 2 to
+read-only constant storage. Class 0 requires an explicitly persistent
+CrossWorkgroup state ABI, or a named refusal: SPIR-V Private storage is
+per-work-item and cannot implement persistence between module calls.
+Class 3 is reserved rather than pretending a CPU global supplies barriers.
+
+### 10.2 Instructions and bounds
+
+Existing opcodes, including reference LOAD/STORE 9/10, retain their meaning.
+The following instructions are appended; every operand below is u16:
+
+| Opcode | Name | Operands |
+|---|---|---|
+| 30 | RLOAD | destination register, region ID, index register |
+| 31 | RSTORE | region ID, index register, source register |
+| 32 | BITCAST | destination register, source register |
+| 33 | RINIT | region ID, initializer register |
+
+Every operand must designate an existing region or register of the stated
+kind. None of these instructions admits a sentinel operand. BITCAST and
+RINIT source registers are definite-assignment uses; RLOAD and BITCAST
+destinations are definitions.
+
+RLOAD's destination and RSTORE's source have exactly the region element type.
+Indices have an integer tag 2..9, never bool or float. Signed negative indices
+and indices greater than or equal to count trap with Omega bounds trap 3
+(native exit 103). Bounds are checked before multiplication, addition,
+pointer formation or narrowing to a wasm32 address. An invalid operation
+does not read or write its target element. Earlier side effects remain,
+including partial writes to module memory before a trap.
+RSTORE into read-only storage is invalid IR, not a silently ignored store.
+Index and source registers participate in definite-assignment validation.
+
+There is no unchecked access mode in this profile. An explicit source bounds
+test can select a nontrapping path, but it does not disable checks on the
+access. The backend may eliminate a check only when it proves the same
+in-bounds condition. Whole-linear-memory wasm bounds checks alone are
+insufficient: crossing into the next region must still trap. Module,
+text and per-function local backing ranges are pairwise disjoint.
+
+Arrays use packed element widths: u8/i8 one byte, u16/i16 two, u32/i32/f32
+four, u64/i64/f64 eight. Each region starts at an address aligned to its
+element width; no padding exists between elements. Region base addresses
+are backend layout, not IR identity. Struct cells retain their separate
+existing layout. Loads/stores preserve little-endian scalar bits.
+
+BITCAST admits any source/destination pair within exactly one of these
+wire-tag sets: {2 u8, 6 i8}, {3 u16, 7 i16},
+{4 u32, 8 i32, 13 f32}, {5 u64, 9 i64, 14 f64}. Same-type pairs are allowed.
+It reinterprets bits without numeric conversion. Bool, void, references,
+and pairs crossing sets are invalid IR.
+Only declared-width bits are reinterpreted. The destination value register
+then uses its canonical representation: narrow signed integers are
+sign-extended; unsigned integers and f32 are zero-extended. These high
+register bits are representation, not additional array-element bytes.
+
+RINIT is valid only for a function-local region owned by the current
+function; its initializer register has exactly the element type and must
+be definitely assigned. It fills every element with that scalar's bits,
+without conversion. An initialization bit for each local region starts
+false at function entry; RINIT sets it true only after the complete fill.
+A local region is initialized at a block exactly when every path from the
+function entry to that block passes RINIT for it. Unreachable blocks are
+still validated, starting with all local-region bits false. Both
+RLOAD and RSTORE require the target local region's bit to be true.
+Thus declaration-time initialization is explicit, and the validator need
+not prove that an arbitrary loop of stores fills the entire region.
+Repeating RINIT is well-defined and resets the whole region; it does not
+allocate a second region or expose previous contents.
+
+### 10.3 Floating-point types and canonical version selection
+
+Wire tags 13 and 14 mean f32 and f64. Tags 10..12 keep their historical
+reference/bytes/cells meanings. The producer must explicitly map its
+internal float tags rather than serialize them as wire tags.
+CONST keeps its eight-byte immediate: f32 occupies the low half with a zero
+upper half; f64 occupies the complete immediate.
+Floats may appear as value registers, region elements, constants, call
+arguments, returns and float-aware BIN/UN/CMP/CAST/BITCAST operands. They
+are not admitted as reference elements or struct fields in this profile.
+Float BIN subcodes 5..10 and UN subcodes 2..3 are invalid.
+
+Existing BIN add/sub/mul/div, UN negation, and CMP eq/ne/lt/le/gt/ge accept
+matching float operands. Float bitwise operations, shifts and remainder
+are invalid. NaN comparisons follow IEEE semantics: only ne is true.
+Arithmetic rounds to nearest, ties to even, retains subnormals, and does
+not contract separate operators into fused operations. Finite arithmetic,
+infinities and signed zeros follow IEEE-754 at the declared width.
+
+CONST, MOV, RLOAD, RSTORE, RINIT and BITCAST preserve all float bits,
+including signed zero and NaN payloads. Float negation toggles only the
+sign bit. A NaN produced by arithmetic or a float-width conversion may
+have any quiet-NaN payload/sign; exact-byte parity does not apply to those
+new NaN bits. This latitude never permits changing a transported NaN's
+bits. Tests compare such arithmetic results by NaN classification while
+separately checking exact payload transport.
+
+CAST has the following complete rules:
+
+- Integer-to-integer conversions retain the existing checked conversion
+  contract: an unrepresentable destination value traps 5.
+- Float-to-integer first truncates toward zero, then saturates to the
+  destination type's own signed or unsigned range, including narrow
+  destinations. Negative-to-unsigned saturates to zero; infinities saturate
+  to the appropriate endpoint; NaN converts to zero. Stored/reloaded and
+  directly returned results have the same canonical integer value.
+- Integer-to-float interprets the source according to its signedness and
+  rounds to the destination width using nearest, ties to even.
+- f64-to-f32 rounds nearest, ties to even, preserves signed zero and
+  subnormals, and overflows to signed infinity. f32-to-f64 is exact for
+  finite values and preserves infinity and signed zero. NaNs follow the
+  quiet-NaN latitude above. Same-type float CAST is a bit-preserving MOV.
+- Bool, void and reference types are excluded from CAST in this profile.
+
+Ordinary trapping wasm float-to-integer conversion alone is not an
+equivalent lowering. Native/backend conversion defects are implementation
+bugs, not alternate definitions of these rules. Floating-point intrinsics
+need separately specified subcodes and are not silently lowered as calls.
+
+Select wire v7 if and only if the unit has a region, a float type, or an
+opcode introduced by this profile. Otherwise retain the existing v1..5
+selection rule. A gratuitous v7 encoding of an old-only unit is refused.
+Old readers remain valid for their declared versions and must refuse v7.
+
+### 10.4 Backend and qualification obligations
+
+The wasm backend exports its memory as `memory` and every function by its
+original unique ASCII name. That name is reserved against a function export
+collision. Read-only initial bytes become active data segments; the source
+read-only property is enforced for generated Omega instructions, not a
+security barrier against a JavaScript holder of exported memory.
+An immutable i32 global named `region.NAME` exports each module region's
+unsigned wasm32 byte offset. JavaScript interprets the i32 global value as
+unsigned before indexing memory. Region bases remain stable for the module
+instance; local arrays have no exported address. Source names cannot
+contain the dot separator. Float parameters and results use wasm f32/f64
+for wire tags 13/14; the existing integer/bool ABI remains unchanged.
+The memory is exported, has the exact page count needed for every
+region's backing, rounded up to whole 64 KiB pages, has the same maximum,
+and is never grown. Its zero-filled class-0 storage persists while the
+instance lives. Region parity compares module regions only through their
+`region.NAME` offsets; local backing is not part of a portable comparison.
+Consumers use a typed view of exported memory and call exported scalar
+functions once per frame. There are no imports, WASI calls, implicit
+rendering loop, or allocation through JavaScript.
+All computed export names must be unique, including `memory`, function
+names and `region.NAME`; a collision is INVALID rather than an invalid wasm
+module emitted for a JavaScript engine to diagnose later.
+
+Wasm traps are `WebAssembly.RuntimeError`; MVP does not preserve numeric
+Omega trap codes. A producer reports ordinary source errors: 7 type
+mismatch, 9 unsupported context, 14 table capacity, 20 write to text/view,
+21 constant index out of bounds and 23 storage capacity. A v7 backend keeps
+the existing named refusal exits and empty stdout on parse/type/capacity
+refusal; unknown storage classes are INVALID, unsupported profile features
+are UNSUPPORTED_OP or UNSUPPORTED_TAG, and unsupported wire versions are
+VERSION. Refusal is not a successful empty module.
+
+Required qualification includes native/wasm scalar and memory parity;
+u8/i32/f32/f64 round trips; text data; local reinitialization on repeated
+calls; region-boundary, negative and wide-index traps; refusal of read-only
+stores and foreign local ownership; deterministic module bytes; an RGBX
+gradient framebuffer checksum comparison; a real pinned renderer primitive
+with a full-buffer pixel comparison; and a changed-store or missing-check
+mutant rejected by those checks. Existing v1 parity and refusal suites must
+remain unchanged and green. Host evidence does not qualify GPU execution.
+The new wire also needs an independent read-only oracle that decodes its
+region table, validates ownership/types/initialization, and executes memory
+instructions. Native/wasm agreement alone is not sufficient if both share a
+producer bug. Hand-encoded valid and malformed units challenge that oracle
+and both backends; the original pinned C renderer remains an independent
+pixel reference rather than a translation of the Omega implementation.
+Required malformed-wire controls include missing or loop-carried local
+initialization, foreign-local access, invalid/sentinel operands and export
+collisions. Repeated-call checks include calls after a trapped invocation.
+Conversion fixtures cover signed, unsigned and narrow destination
+boundaries, float widths, infinities, NaNs and signed zeros.

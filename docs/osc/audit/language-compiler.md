@@ -3,7 +3,7 @@
 # Omega language / IR / encoder / identity audit (OSC-0 / OSC-0B input)
 
 Repo: omega worktree `osc-0` at 193a7e7. Read-only audit plus one throwaway encoder probe
-(`/home/drakestapleton/.claude/jobs/9d0b86f6/tmp/probe.c`). Other docs: aienos ADR 0012 read live
+(`~/.claude/jobs/9d0b86f6/tmp/probe.c`). Other docs: aienos ADR 0012 read live
 from GitHub, aienos main `d39dd5b`; local aien-architecture at `873025c` on branch
 `feat/resident-semantic-store-boundary` (may lag origin). The Seed/Forge ADR 0012 lives in
 **aienos**, not aien-architecture (aien-architecture's 0012 is "shell-dispatch-then-landing").
