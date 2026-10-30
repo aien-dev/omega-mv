@@ -98,7 +98,7 @@ EX_CMD 31                   # command index inside the pipeline
 EX_TOK 32                   # token cursor (the word token while a word is open)
 EX_NVREQ 33                 # variable requests in this pipeline
 EX_OUT 42                   # OUT bytes used
-EX_ANYW 43                  # a non-assignment word was seen in this command
+EX_ANYW 43                  # offset+1 of the first non-assignment word of this command, 0 before it
 EX_A0 44                    # input offset of the word that produced argv[0]
 EX_WM 45                    # word mode: 0 none, 1 argv, 2 assignment value, 3 redirection target
 EX_PH 46                    # 0 raw scan, 1 copying a value, 2 waiting for the host's answer

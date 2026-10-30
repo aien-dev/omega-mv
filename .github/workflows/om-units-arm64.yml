@@ -6,7 +6,7 @@
 name: om-units-arm64
 on:
   pull_request:
-    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "tests/gates/**", ".github/workflows/om-units-arm64.yml"]
+    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "tests/gates/**", "tools/dagsim/**", "tests/dagsim/**", "src/runtime/rx_costmodel.*", ".github/workflows/om-units-arm64.yml"]
   push:
     branches: [main]
 permissions:
@@ -28,6 +28,12 @@ jobs:
         run: uname -a; nproc; cc --version | head -1
       - name: gate om-units
         run: mkdir -p build && bash tests/gates/run.sh om-units
+      # #938: the AArch64 link of the offline DAG evaluator through the seeded
+      # SHA-256 unit src/omega_om_units.c (Makefile DS_SHA_SRC on aarch64).
+      - name: test-dagsim (offline DAG evaluator, aarch64)
+        # shell: bash runs `bash -eo pipefail`, so a failing make fails the step through the tee.
+        shell: bash
+        run: make test-dagsim 2>&1 | tee build/test-dagsim-aarch64.log
       - name: throughput (report only)
         run: |
           cc -std=gnu11 -O2 -D_GNU_SOURCE -Isrc -c src/omega_om_units.c -o /tmp/new.o

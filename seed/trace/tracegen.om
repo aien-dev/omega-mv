@@ -1,0 +1,142 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note seed/trace/tracegen.om: deterministic fixtures for the trace CLI gate (omega-mv #610). Run in an empty
+note scratch directory; it makes fx/ (it must not exist) and writes only through segment.om, plus the
+note fault injection below. Build: cat seed/trace/segment.om seed/trace/tsha.om seed/trace/tracegen.om | seed/out/omc.
+note Record i of the generator has type 1 + i mod 3, length (5 i) mod 53, payload byte j = (7 i + 3 j) mod 256.
+note   fx/a.seg      40 records, clean
+note   fx/b.seg      40 records, record 17 payload byte 0 xor 1 (compare a b: differ at=17)
+note   fx/c.seg      42 records, a plus records 40 and 41 (compare a c: prefix)
+note   fx/crc.seg    a with byte 16 + 64*5 + 8 = 344 (record 5 payload byte 0) xor 1: crc-mismatch at 5
+note   fx/torn.seg   a truncated to 16 + 64*39 + 30 = 2542 bytes: 39 records and a torn tail of 30 bytes
+note   fx/magic.seg  3 records, header byte 0 xor 1 ("@ITR"): refused, code 11
+note   fx/link.seg   symbolic link to a.seg: refused, ELOOP
+note   fx/sub/       empty directory (list reports it as a directory)
+note Regular fixtures are left mode 0400, so any open for writing by the CLI fails (EACCES).
+note Exit status 0, or the number of the step that failed.
+text paths "fx\nfx/a.seg\nfx/b.seg\nfx/c.seg\nfx/crc.seg\nfx/torn.seg\nfx/magic.seg\nfx/link.seg\nfx/sub\n"
+text ltgt "a.seg"
+fn setp k ulong to void
+line = ulong 1
+n = ulong 0
+for i ulong len paths
+b = get paths i
+if eq b 10
+line = add line 1
+else
+if eq line k
+put tpath n b
+n = add n 1
+end
+end
+end
+put tlen 0 n
+end
+note mkseg k n flip: segment k with records 0..n-1; when flip < n, payload byte 0 of record flip is xor 1.
+fn mkseg k ulong n ulong flip ulong to ulong
+setp k
+for i ulong n
+l = fill i flip
+if ne segappend add 1 rem i 3 l 0
+ret 1
+end
+end
+ret 0
+end
+note fill i flip: payload of record i into pay; returns its length.
+fn fill i ulong flip ulong to ulong
+l = rem mul i 5 53
+for j ulong l
+put pay j uchar rem add mul i 7 mul j 3 256
+end
+if eq i flip
+put pay 0 xor get pay 0 1
+end
+ret l
+end
+note xbyte k off: xor byte off of file k with 1, in place (O_RDWR|O_NOFOLLOW).
+fn xbyte k ulong off ulong to ulong
+setp k
+fd = fopen tpath 0 get tlen 0 32770 0
+if lt fd 0
+ret 1
+end
+m = pread int fd trec 0 1 long off
+put trec 0 xor get trec 0 1
+w = pwrite int fd trec 0 1 long off
+shut fd
+if or ne m 1 ne w 1
+ret 1
+end
+ret 0
+end
+fn mklink to ulong
+setp 8
+put tn 0 0
+tput16 2
+tput16 len ltgt
+for i ulong len ltgt
+put tpkt add get tn 0 i get ltgt i
+end
+put tn 0 add get tn 0 len ltgt
+pkttop
+s = symlnk tpkt 0 get tn 0
+if lt s 0
+ret 1
+end
+ret 0
+end
+fn ro k ulong to ulong
+setp k
+r = chmod tpath 0 get tlen 0 256
+if ne r 0
+ret 1
+end
+ret 0
+end
+fn main to int
+setp 1
+if ne makedir tpath 0 get tlen 0 448 0
+ret 1
+end
+if ne mkseg 2 40 40 0
+ret 2
+end
+if ne mkseg 3 40 17 0
+ret 3
+end
+if ne mkseg 4 42 42 0
+ret 4
+end
+if ne mkseg 5 40 40 0
+ret 5
+end
+if ne xbyte 5 344 0
+ret 6
+end
+if ne mkseg 6 40 40 0
+ret 7
+end
+setp 6
+if ne truncate tpath 0 get tlen 0 2542 0
+ret 8
+end
+if ne mkseg 7 3 3 0
+ret 9
+end
+if ne xbyte 7 0 0
+ret 10
+end
+if ne mklink 0
+ret 11
+end
+setp 9
+if ne makedir tpath 0 get tlen 0 448 0
+ret 12
+end
+for k ulong 6
+if ne ro add k 2 0
+ret 13
+end
+end
+ret 0
+end

@@ -1,0 +1,26 @@
+# tests/gates/omega-security758.gate
+# omega#758 (#774): the relational comparison suite (seed/qualification/security673/relational), run from
+# one checkout by the OM-2 case gate rebuilt from gate.om with the committed seed/out/omc. Includes the
+# data-dependent-address FAIL control and the separately reported L4 tripwire. No hosted mirror: local gate only.
+gate: OMEGA-SECURITY758
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - seed/out/omc
+  - seed/out/omc.sha256
+  - seed/qualification/om2/gate.om
+  - seed/qualification/om2/fixtures/
+  - seed/qualification/om2/leak/
+  - seed/qualification/security673/relational/
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["security758"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine

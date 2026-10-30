@@ -1,0 +1,9 @@
+segment version=1 recsize=64 hdrsize=16
+query type=any seq>=0 seq<5
+seq=0 type=1 len=0 crc=3468756871 payload=
+seq=1 type=2 len=5 crc=872128613 payload=070a0d1013
+seq=2 type=3 len=10 crc=918843208 payload=0e1114171a1d20232629
+seq=3 type=1 len=15 crc=3868058784 payload=15181b1e2124272a2d303336393c3f
+seq=4 type=2 len=20 crc=2733421296 payload=1c1f2225282b2e3134373a3d404346494c4f5255
+matched=5 of=40
+verify ok records=40 bytes=2576 lost=0 reason=clean
