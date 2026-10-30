@@ -48,7 +48,7 @@
         },
         {
           "digest": "7ef7796693f23ad68d9a5bcaaee0f635018f4371139a040ba202d4ce7083ede8",
-          "last_commit": "bf54b19fa",
+          "last_commit": "dd39bf71f",
           "name": "docs",
           "purpose": "Directory docs. Purpose not yet described by a human."
         },
@@ -72,38 +72,38 @@
         },
         {
           "digest": "f765ad87fdddd9b47f690b07298c951a0f7e7675dc5de4ffe44e33a0c14b1986",
-          "last_commit": "d94a503f7",
+          "last_commit": "62d1d0d66",
           "name": "spec",
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "c6088e4a500242c2d3f50b3483de2cd5307740188fa60f47d856947aad17c243",
-          "last_commit": "789fa0184",
+          "digest": "ba52ec1579e386eb6e2c898cbf9670e6ccf54f81621d42bdd2c67180adc3223a",
+          "last_commit": "72f918e3c",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
           "digest": "bba9b7940b9c345504894a1fad04a105fdd239cc2af46396fbef305af9363e4c",
-          "last_commit": "789fa0184",
+          "last_commit": "72f918e3c",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
         {
           "digest": "525712c72947533540b1b861dc53bb88f11d9bc388302bf3ee5b14c60ef891f8",
-          "last_commit": "3c96ebb2f",
+          "last_commit": "72f918e3c",
           "name": "tools",
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:f6300e21c4e69b91374360a33eaa6cd49fed785a7ea4e745da8ac322165621a1",
-      "compiled_at": "2026-10-30T14:50:05Z",
+      "children_root": "sha256:eb2bc413d562b65f8a7399ce589be10e23e99de71351a3a4e7d3e38cc3466686",
+      "compiled_at": "2026-10-30T14:53:20Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:215e8af05081c58803f70bb1258c2547a1e53780a31f6f5e6ed28a563e1dada7",
+      "digest": "sha256:9b0c69ed94d80d5864f786f16c4e27887e68ff462cdf43a3ad8125d1de7ffa56",
       "evidence_files": 12622,
       "evidence_root": "sha256:b1a08e2ce56e6feada0d8a31f06fbd7adee57adc1c1ad8dec220293ee5d439f9",
       "files": 17850,
-      "generated_at_commit": "789fa01842b25fe314dc35704e013d13e138ebc4",
-      "source_tree": "sha256:0ecba626497e79c648199a768b32b85b947dfc69bd9a15aae240035237477593"
+      "generated_at_commit": "72f918e3c8e866059313eefcb768406e88fe9ee6",
+      "source_tree": "sha256:76dff9d9329e61baf7c026e8878456d572fbfde07c17c9c467c5d26ab28ee39a"
     },
     "owner_lane": "",
     "provenance": {

@@ -424,7 +424,7 @@ void omega_gpu_decode_graph_set_stamps(OmegaGpuDecodeGraph *g, int on) { if (g &
 
 int omega_gpu_decode_graph_stamps(const OmegaGpuDecodeGraph *g, uint64_t *stamps, uint8_t *kinds, uint32_t cap) {
     if (!g || g->in_token || !stamps || !kinds) return OMEGA_GPU_DGRAPH_BAD_ARGS;
-    if (!g->stamps || g->n_stamp != g->n_kind + 1u) { omega_gpu_session_set_error("decode graph: no timeline for the last token (stamps off or it failed)"); return OMEGA_GPU_DGRAPH_BAD_ARGS; }
+    if (!g->stamps || g->failed || g->n_stamp != g->n_kind + 1u) { omega_gpu_session_set_error("decode graph: no timeline for the last token (stamps off or it failed)"); return OMEGA_GPU_DGRAPH_BAD_ARGS; }
     if (cap < g->n_stamp) { omega_gpu_session_set_error("decode graph: timeline buffers too small"); return OMEGA_GPU_DGRAPH_BAD_ARGS; }
     memcpy(stamps, g->stamp, (size_t)g->n_stamp * sizeof stamps[0]);
     memcpy(kinds, g->kind, (size_t)g->n_kind);

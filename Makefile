@@ -2761,8 +2761,34 @@ test-gpu-isolation: $(GPU_ISOLATION_TEST)
 GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
 $(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c src/omega_gpu_decode_graph.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
-test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST)
+test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST) test-gpu-decode-graph-timeline
 	./$(GPU_DECODE_GRAPH_TEST) --host-only
+
+# omega #456: the per-token timeline (set_stamps) never writes past stamp[]: 4096 stamped launches fill it, the 4097th
+# (flush_each, one submission per launch) fails the token and leaves no timeline. Fake platform that completes every
+# submission; no device. Each mutant breaks one rule in a copy of omega_gpu_decode_graph.c linked ahead of the library;
+# the overflow case must FAIL on it.
+.PHONY: test-gpu-decode-graph-timeline
+GPU_DGRAPH_TL_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_timeline
+GPU_DGRAPH_TL_MUT = $(OUT_DIR)/dgraph_tl_mut
+$(GPU_DGRAPH_TL_TEST): tests/test_omega_gpu_decode_graph_timeline.c src/omega_gpu_decode_graph.h src/omega_gpu_platform.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_timeline.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-decode-graph-timeline: $(GPU_DGRAPH_TL_TEST)
+	./$(GPU_DGRAPH_TL_TEST)
+	@mkdir -p $(GPU_DGRAPH_TL_MUT)
+	@set -e; \
+	tmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_TL_MUT)/$$name.c; \
+	  if cmp -s src/omega_gpu_decode_graph.c $(GPU_DGRAPH_TL_MUT)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_TL_MUT)/$$name tests/test_omega_gpu_decode_graph_timeline.c \
+	    $(GPU_DGRAPH_TL_MUT)/$$name.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm; \
+	  if ./$(GPU_DGRAPH_TL_MUT)/$$name > $(GPU_DGRAPH_TL_MUT)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  if ! grep -q '^FAIL one launch past the timeline' $(GPU_DGRAPH_TL_MUT)/$$name.log; then \
+	    echo "mutant $$name: no FAIL case (did not run?)"; cat $(GPU_DGRAPH_TL_MUT)/$$name.log; exit 1; fi; \
+	  echo "mutant $$name killed"; }; \
+	tmut room-off-by-one 's|(uint32_t)(cnt - from) > room) {|(uint32_t)(cnt - from) > room + 1u) {|'; \
+	tmut timeline-after-failure 's#if (!g->stamps || g->failed || #if (!g->stamps || #'; \
+	echo "test-gpu-decode-graph-timeline: 2 of 2 mutants killed"
 
 # OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
