@@ -1,0 +1,8 @@
+# Disable contract enforcement in the compiler; the valid contract expectation must FAIL.
+subst seed/omc/contracts/mutant-from.txt seed/omc/contracts/mutant-to.txt
+cc seed/omc/omc.om
+mutant-requires run seed/omc/contracts/requires.om - - - 109
+cc pinned
+subst seed/omc/contracts/proof-mutant-from.txt seed/omc/contracts/proof-mutant-to.txt
+cc seed/omc/omc.om
+mutant-proof run seed/omc/contracts/false.om - - - 109

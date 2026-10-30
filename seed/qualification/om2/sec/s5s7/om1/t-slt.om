@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of the section 6 part checks via the OM-1 write slice check (OMEGESE 9.5: write traps 3
+note unless n <= len A and off <= len A - n, before the call): o = len-2 = 8, k = 4 on len 10: k <= len - o fails, trap 3 (exit 103).
+fn main to int
+a = new uchar 10 46
+o = ulong 8
+r = write 1 a o 4
+ret 0
+end

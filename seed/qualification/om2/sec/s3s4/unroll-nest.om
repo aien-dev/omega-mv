@@ -1,0 +1,23 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 87-92 and 105: nested unrolled loops, 8 x 8 = 64 copies of the inner body
+note with i and j bound to constants; the folded index add mul i 8 j into the 64-element array m is a
+note constant in range (no error 21). Removing unroll (twin unroll-nest-rolled.om) changes nothing.
+note Expected stdout: oracle/s3s4/exp/unroll-nest.out (python3, oracle/s3s4/oracle.py).
+om2
+fn main to int
+m = new ulong 64 0
+f = ulong 14695981039346656037
+for i ulong 8 unroll
+for j ulong 8 unroll
+f = mul xor f add mul i 8 j 1099511628211
+put m add mul i 8 j add mul i 1000 j
+end
+end
+pu f
+g = ulong 0
+for k ulong 64
+g = add mul g 3 get m k
+end
+pu g
+ret 0
+end

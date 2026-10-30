@@ -1,0 +1,8 @@
+note S4 out (spec 6, erratum E1): an exported entry with an unsized view, an out of 4 bytes and a scalar
+note (slots x0 s, x1 len s, x2 r, x3 k); r is written element by element (bytes pinned).
+om2
+export fn rev s view uchar * r out uchar 4 k uchar to void
+for i ulong 4
+put r i add k get s sub 3 i
+end
+end

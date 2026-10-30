@@ -1,0 +1,54 @@
+note SPDX-License-Identifier: Apache-2.0
+note ABI v2 test unit for oracle/s5s7/abi/driver.c (contract 6 lines 180-203, errata E1, E3).
+note Function mode, OM-2, exports only. bcnt and vcnt never read an element, so a mutant bridge that
+note skips a status-32 check returns status 0 with result = len instead of touching memory (clean kill).
+om2
+layout pair 16
+field lo ulong at 0 little
+field hi ulong at 8 big
+end
+export fn vsum v view ulong * to ulong
+x = ulong 0
+for i ulong len v
+x = add x get v i
+end
+ret x
+end
+export fn bcnt b view uchar * to ulong
+ret len b
+end
+export fn vcnt v view ulong * to ulong
+ret len v
+end
+export fn ecpy d edit uchar * s view uchar * to ulong
+n = len d
+if lt len s n
+n = len s
+end
+for i ulong n
+put d i get s i
+end
+ret n
+end
+export fn rev s view uchar * r out uchar 4 to void
+for i ulong 4
+put r i get s sub 3 i
+end
+end
+export fn revtrap s view uchar * r out uchar 4 to void
+for i ulong 4
+put r i get s i
+end
+trap 9
+end
+export fn lay p edit pair v ulong to void
+put p lo v
+put p hi v
+end
+export fn spin n ulong to ulong
+x = ulong 0
+for i ulong n
+x = add x i
+end
+ret x
+end

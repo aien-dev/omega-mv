@@ -1,0 +1,39 @@
+note S3 fresh: accepted flows. Straight-line writes, both arms of an if/else, an arm that returns (the
+note join takes the other arm), an unrolled loop covering every element before a run-time get, writes
+note made before a rolled loop kept after it, and an inline callee writing the elements. Exit 0 when
+note every value read back is right, else the failing check's number.
+om2
+fn fill4 t edit uchar 8 b uchar to void inline
+for i ulong 4 unroll
+put t add i 4 add b uchar i
+end
+end
+fn f s edit uchar 8 fresh c ulong k ulong to ulong
+put s 0 1
+if eq c 1
+put s 1 2
+else
+put s 1 3
+end
+if eq c 9
+ret 99
+else
+put s 2 4
+end
+for j ulong 2
+put s 3 5
+end
+fill4 s 10
+put s 3 get s 1
+ret add add ulong get s 2 ulong get s k ulong get s 3
+end
+fn main to int
+a = new uchar 8 0
+if ne f a 1 7 19
+ret 1
+end
+if ne f a 2 0 8
+ret 2
+end
+ret 0
+end
