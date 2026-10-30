@@ -1,0 +1,58 @@
+L836 independent qualification of candidate S1 (#748), 2026-10-25.
+Candidate: aien-dev/om2/compiler-s1 @ a5927895c02a5abe6b5c3a455f5d54303962ebe8 (draft PR #750); slice §0 opt-in,
+§1 diag, §2 hex and fmt, §3 rotr/rotl. The fixtures were pushed (om2/qualification @ 23162b24) before the S1
+diff was read. They were written from spec/omegese-om2.md and errata E1-E9, plus E10 (blank lines are
+skipped like notes), which was ruled during this qualification.
+
+Compiler birth (scratch worktree /tmp/zl/s1, `sh seed/omega-from-seed.sh`): om4 → stage1 = stage2 = stage3,
+"PASS omc fixpoint 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f" (evidence/phaseB/s1/birth.log).
+Its seed/omc/omc.om (sha256 3d7bcf9a…6a1d) was copied to build/om2-qual/cand-s1/omc.om for the mutant builds.
+Gate: build/om2-qual/gate-p = pinned omc(gate.om at 23162b24), sha256 6c8691c2…acefa.
+Command form: build/om2-qual/gate-p /tmp/zl/omc-s1 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f LIST SCRATCH
+
+| section | list | result |
+|---|---|---|
+| C2 | manifest-c2.txt | PASS 5720/5720 (first freeze), then PASS 5876/5876 after the lane OM-1 units were appended (s1-c2.log) |
+| §0-§2 | sec/s0s2/candidate.cases | 159 PASS, 2 FAIL, 2 NOT_RUN (s1-s0s2.log) |
+| §3 | sec/s3s4/candidate.cases rot-* | 42/42 PASS (s1-s3s4.log) |
+| §4 | sec/s3s4/candidate.cases, everything else | not in S1: the 74 FAILs there are unimplemented §4 features, not a verdict |
+| mutants | candidates/s1/s1-mutants.cases, s1-lexmutants.cases | 10/10 killed |
+
+Defects:
+- D1 (FAIL, open, sent to CompilerLane): s1-d-unknown-struct and s1-d-unknown-sparam. Referencing an undeclared
+  struct (`new Pt`, `p view Pt`) gives `sev=error expect=type`. The contract (spec:44-45) requires `sev=unknown`,
+  and E6 requires `expect=name`.
+- The other earlier FAILs were fixture errors, now corrected:
+  - s2-fmt-bad-crtext expected line 3, but the CR is on line 4. The coordinator found the miscount.
+  - s0-blank-first was written to the literal spec:13 reading; it was flipped to E10.
+NOT_RUN: s1-d-mid-short-line (E4/E6 leave line= and expect= open when an LF is the offender) and
+s2-fmt-bad-trailblank-line (E6 (a) does not name the line). Both are also covered by tok:/refuse rows, which pass.
+
+Mutants (scratch copies of the S1 omc.om via subst + cc built by the S1 omc). Each mutant compiler still hashes
+abc correctly (control). An unmutated cc rebuild reproduces 31342447.
+- rot-imm-plus1 (ROR immediate amount n+1 mod w): kill-rot-values differs at byte 0. Killed.
+- rot-imm-wminusn (w-n applied to rotr instead of rotl): byte 4. Killed.
+- rol-imm-as-ror (rotl immediate without w-n): byte 18. Killed.
+- rol-reg-as-ror (rotl register without NEG): byte 47. Killed.
+- rot-nocheck (run-time range check dropped): 15/15 kill-rot-trap rows print a value where trap 7 is expected. Killed.
+- hex-upper (A-F accepted): the 5 uppercase rows compile (exit 0) where error 6 is expected. Killed.
+- hex-17 (17 digits accepted): s2-r6-17small and 17big are accepted. Killed. (s1-d-longtok has more than 17 digits,
+  so it is still refused; expected.)
+- diag-col0 (0-based col): 4 exact diag rows differ in col. Killed.
+- fmt-note (note lines collapsed): s2-fmt-x1 differs at byte 46, x3 at byte 135. Killed.
+- fmt-text (text bytes treated as words): s2-fmt-x1 differs at byte 239, x5 at byte 143. Killed.
+All of these kill bytes match the predictions made before S1 was read (sec/s3s4/mutant-kills.cases, s0s2 README).
+
+Requalification of the fixed head: om2/compiler-s1 @ 874fec3b6603631e05aa5a409e14a9eaa0f32fe9 (fix 8e24ec70).
+Birth (scratch worktree /tmp/zl/qs1b): "PASS omc fixpoint ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019".
+Its omc.om sha256 is 17ad343e…50cf. Evidence: evidence/phaseB/s1-874fec3b/.
+| section | result |
+|---|---|
+| C2 (5876 entries) | PASS 5876/5876 |
+| §0-§2 | 161 PASS, 0 FAIL, 2 NOT_RUN (the same two, still open in E4/E6) |
+| D1 | s1-d-unknown-struct and -sparam now PASS |
+| D2 (corrected fixture) | s2-fmt-bad-crtext PASS (err:4:6) |
+| E10 | s0-blank-first and s0-blank-spaces-first PASS |
+| §3 | rot-* 42/42 PASS |
+| mutants | 10/10 killed again (same anchors, exact once; kill bytes unchanged); an unmutated cc rebuild reproduces ce4facbe |
+Verdict for the S1 slice: PASS on every runnable §0-§3 row and on C2. NOT_RUN: the 2 rows noted above. §4 rows are not in S1.

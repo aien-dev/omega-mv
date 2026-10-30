@@ -1,0 +1,8 @@
+note S3 layout refusal
+om2
+layout z 8
+field a ushort 4 at 0 little
+end
+fn f c view z to void
+put c a 1 7
+end

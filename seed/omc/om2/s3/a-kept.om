@@ -1,0 +1,12 @@
+note S3 abstract: a constructor body that is not exactly the dup32 form keeps the runtime check;
+note here the value breaks the invariant for every x, so the program traps 10 (exit 110)
+om2
+abstract dup32 ulong
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong add x 1
+end
+fn main to int
+d = dup32mk 5
+ret int and open d 1
+end

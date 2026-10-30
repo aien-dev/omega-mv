@@ -1,0 +1,39 @@
+attend: 632 instructions, 172 registers (declared 176, 256 threads -> 45056 of 65536), 12 placeholders
+prep: 330 instructions, 64 registers
+-- chip 1 tokens from 0 (max_pos 256)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 1.094 ms (prep 0.126, attend 0.106)
+   parity: 0 bad, worst ratio 0.000 of the tolerance (0.0 s reference); rows: ok (0 one-ulp k flips, worst token 0)
+   twin: 1 decode calls 0.7 ms; rows k 0 v 0 words differ
+-- chip 37 tokens from 0 (max_pos 256)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 1.839 ms (prep 0.116, attend 0.105)
+   parity: 0 bad, worst ratio 0.245 of the tolerance (0.0 s reference); rows: ok (0 one-ulp k flips, worst token 0)
+   twin: 37 decode calls 7.1 ms; rows k 0 v 0 words differ
+-- chip 19 tokens from 100 (max_pos 512)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 0.444 ms (prep 0.113, attend 0.106)
+   parity: 0 bad, worst ratio 0.088 of the tolerance (0.0 s reference); rows: ok (0 one-ulp k flips, worst token 0)
+   twin: 19 decode calls 3.0 ms; rows k 0 v 0 words differ
+-- chip 141 tokens from 37 (max_pos 512)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 3.421 ms (prep 0.213, attend 0.306)
+   parity: 0 bad, worst ratio 0.133 of the tolerance (0.1 s reference); rows: ok (1 one-ulp k flips, worst token 1)
+   twin: 141 decode calls 29.1 ms; rows k 0 v 0 words differ
+chip prep mutant 1: caught (rc OK, 123588 bad, worst 41.4, rows differ)
+chip prep mutant 3: caught (rc OK, 135824 bad, worst 87.2, rows differ)
+chip attend mutant 1: caught (rc OK, 114019 bad, worst 79.5, rows ok)
+chip attend mutant 2: caught (rc OK, 110706 bad, worst 416.0, rows ok)
+-- chip 2048 tokens from 0 (max_pos 4096)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 51.924 ms (prep 2.138, attend 10.125)
+   parity: 0 bad, worst ratio 0.175 of the tolerance (0.1 s reference); rows: ok (23 one-ulp k flips, worst token 1)
+   twin: 2048 decode calls 521.0 ms; rows k 0 v 0 words differ
+   timing (median of 9): prep 2.136 ms, attend 10.195 ms, call 27.930 ms -> 166079 tokens/s; attend 5.06 TFLOPS useful, 106.1 GB/s K/V streamed
+-- chip 2048 tokens from 6144 (max_pos 8192)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 68.458 ms (prep 2.128, attend 39.808)
+   parity: 0 bad, worst ratio 0.012 of the tolerance (0.4 s reference); rows: ok (24 one-ulp k flips, worst token 1)
+   twin: 2048 decode calls 1553.5 ms; rows k 0 v 0 words differ
+   timing (median of 9): prep 2.385 ms, attend 40.928 ms, call 59.669 ms -> 47283 tokens/s; attend 8.82 TFLOPS useful, 183.8 GB/s K/V streamed
+-- chip 2048 tokens from 30720 (max_pos 32768)
+   prep 330 insns 64 regs, attend 632 insns 172 regs; first call 188.749 ms (prep 2.141, attend 159.442)
+FAIL: 30720+2048: appended rows vs reference: token 961 k[3] slot 150 chip 36f0 ref 36f3
+   parity: 0 bad, worst ratio 0.007 of the tolerance (2.0 s reference); rows: FAIL
+   twin: 2048 decode calls 4677.8 ms; rows k 0 v 0 words differ
+   timing (median of 9): prep 2.045 ms, attend 149.678 ms, call 166.864 ms -> 13498 tokens/s; attend 10.67 TFLOPS useful, 222.4 GB/s K/V streamed
+gpu_prefill_attn256_test: 93 checks, 1 failed: FAIL

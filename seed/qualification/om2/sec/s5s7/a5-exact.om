@@ -1,0 +1,24 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract, lines 131-150: dup32 with the exact constructor body (check erased),
+note open gives the ulong value, rotr is a 64-bit rotation equal to the dup of the 32-bit rotation
+note by n mod 32 (lines 140-141), xor of two dup32 values. stdout oracle exp/a5-exact.out (python3).
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn main to int
+d = dup32mk 0x89abcdef
+puth open d
+puth add open d 1
+puth open rotr d 0
+puth open rotr d 1
+puth open rotr d 8
+puth open rotr d 31
+puth open rotr d 32
+puth open rotr d 33
+puth open rotr d 63
+puth open xor d dup32mk 0x01234567
+ret 0
+end

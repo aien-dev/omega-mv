@@ -1,0 +1,12 @@
+note leak fixture (call rule, README.txt): the helper returns a loaded byte; the caller branches on
+note the returned value. The callee's exit summary carries x0 = data back to the call site, so the
+note caller's branch is data MANUAL under E12. Expected: TRACE-EQUIV-STATIC NOT_RUN.
+fn h a view uchar 16 to ulong
+ret ulong get a 3
+end
+fn f a view uchar 16 to ulong
+if gt h a 9
+ret 2
+end
+ret 5
+end

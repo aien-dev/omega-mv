@@ -1,0 +1,9 @@
+note stat with a 64-byte output must trap 3 before the kernel writes the 128-byte structure.
+text p "short.tmp"
+fn main to int
+fd = int fopen p 0 len p 577 420
+z = fclose fd
+buf = new uchar 64 0
+r = stat p 0 len p buf 0 64
+ret 0
+end

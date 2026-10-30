@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 1 lines 36-49, errata E4: input ends before the function's end: sev=incomplete, empty span at end of input.
+om2 diag
+fn main to int
+ret 0

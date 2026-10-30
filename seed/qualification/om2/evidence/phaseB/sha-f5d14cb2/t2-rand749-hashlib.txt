@@ -1,0 +1,3 @@
+$ sh -c /usr/bin/python3 '/home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/oracle/sha/randcheck.py' < '/home/drakestapleton/workspace/om2-qualification/seed/qualification/om2/evidence/phaseB/sha-f5d14cb2/t2-rand749.txt'
+PASS randcheck hashlib matched=2000 mismatched=0
+EXIT 0

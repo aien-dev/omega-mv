@@ -1,0 +1,14 @@
+om2
+global a int 1
+fn inc to int
+put a 0 add get a 0 1
+ret get a 0
+end
+fn f to int
+ensures eq result 1
+ret inc
+end
+fn main to int
+x = f
+ret sub add x get a 0 2
+end

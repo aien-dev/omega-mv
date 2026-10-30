@@ -1,4 +1,19 @@
 #!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Negative controls for checker2 (omega#446): every line tagged GUARD:<name> in a checker2 source
 # is removed, one at a time, in a scratch copy; the matching test is rebuilt against that copy and
 # MUST fail. A mutant that survives means the test cannot see that check, and this script fails.
@@ -65,7 +80,7 @@ run_family() {
     done
 }
 
-run_family src/checker2/c2_receipt.c tests/checker2/test_c2_receipt.c "src/sha256.c $SIG" tests/checker2/fixtures
+run_family src/checker2/c2_receipt.c tests/checker2/test_c2_receipt.c "src/omega_om_units.c $SIG" tests/checker2/fixtures
 run_family src/checker2/c2_ir.c tests/checker2/test_c2_ir.c src/checker2/c2_check.c "$IRDIR"
 run_family src/checker2/c2_check.c tests/checker2/test_c2_ir.c src/checker2/c2_ir.c "$IRDIR"
 run_family src/checker2/c2_lrat.c tests/checker2/test_c2_lrat.c "" ""
