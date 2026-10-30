@@ -318,6 +318,9 @@ case "$step" in
     obs env_files_found false
     echo "Zero plaintext .env files verified."
     ;;
+  runtime-api)        # omega-mv#594: the Runtime API manifest against the C headers, plus its negative controls.
+                      # Host only (gcc for -aux-info), no GPU, no physics checkout.
+    make $NOPHYS test-runtime-api ;;
   om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
                       # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
                       # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.
