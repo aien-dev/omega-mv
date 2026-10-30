@@ -34,10 +34,11 @@ build seed/effects/effects.om "$E" || { cat "$E.err"; echo "SEMANTIC EFFECTS FAI
 echo "omc $PIN"
 echo "effects sha256 $(sha256sum < "$E" | cut -c1-64)"
 
-# 1. Closure: every keyword with a host code (>= 100, except const) is in the table,
+# 1. Closure: every keyword with a host code (>= 100, except the non-host type/declaration
+#    keywords const and qty) is in the table,
 #    and the table holds nothing else besides read/write.
 sed -n 16,18p seed/omc/genkw.awk | grep -oE '[a-z0-9]+:[0-9]+' \
-    | awk -F: '$2 >= 100 && $1 != "const" { print $1 }' | sort > "$B/kw.txt"
+    | awk -F: '$2 >= 100 && $1 != "const" && $1 != "qty" { print $1 }' | sort > "$B/kw.txt"
 "$E" table | cut -d' ' -f1 | grep -v -x -e read -e write | sort > "$B/tab.txt"
 if cmp -s "$B/kw.txt" "$B/tab.txt"; then ok "closure: $(wc -l < "$B/kw.txt") host keywords == table"
 else bad "closure: host keywords differ from table"; diff "$B/kw.txt" "$B/tab.txt"; fi
