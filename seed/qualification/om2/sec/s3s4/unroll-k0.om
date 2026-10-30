@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 line 87 (K a number 1..64) and erratum E7: K = 0 is error 8, at line 8 (the
+note for line).
+note
+om2
+fn main to int
+s = ulong 0
+for i ulong 0 unroll
+s = add s 1
+end
+ret int s
+end

@@ -2,7 +2,7 @@
 
 # Omega C baseline (commit 193a7e7 export), host-only, CPU-side
 
-Machine: aarch64, 20 cores, NOT quiet (other sessions share it). `test -e /home/drakestapleton/workspace/.spark-quiet` was checked before every build/run loop: never present.
+Machine: aarch64, 20 cores, NOT quiet (other sessions share it). `test -e ~/workspace/.spark-quiet` was checked before every build/run loop: never present.
 uptime at start: `06:43:47 load average: 1.08, 0.95, 0.72`; runs start `06:46:55 load 2.33, 1.62, 1.02`; runs end `07:14:23 load 2.48, 1.92, 1.58`; final `07:14:29 load 2.18, 1.87, 1.56`.
 Compiler: `cc` = gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 (`cc --version`). Flags (Makefile CFLAGS): `-std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc` + physics include dirs + `-DOMEGA_PHYSICS_DIR=...`; test binaries add `-pthread`, most link `-lm` and libaienos_capability.a. No LTO/-march/strip. Binaries are dynamically linked, not stripped (`file build/rx_action_graph_test`).
 

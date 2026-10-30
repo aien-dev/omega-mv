@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 158 with erratum E5: a field declared with COUNT 1 is an array and
+note needs an index; `put x fa v` without one is error 4 (missing index, erratum E8).
+om2
+layout one1 4
+field fa uint 1 at 0 big
+end
+fn fill x edit one1 to void
+put x fa 0x01020304
+end
+fn main to int
+c = new uchar 4 0
+fill c
+ret 0
+end

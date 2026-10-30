@@ -49,7 +49,7 @@ if '--build-only' in sys.argv:
 # the immutable seed/check/runner.c; never a compiler in the seed ancestry.
 p = run(['cc', '-O1', '-Isrc', '-Isrc/compiler', '-o', B/'oracle-runner',
          'seed/check/ir-trap-runner.c',
-         *sorted(x for x in Path('src/compiler').glob('*.c') if x.name != 'oscc_main.c'), 'src/sha256.c'])
+         *sorted(x for x in Path('src/compiler').glob('*.c') if x.name != 'oscc_main.c'), 'src/omega_om_units.c'])
 if p.returncode:
     raise RuntimeError(p.stderr.decode())
 

@@ -2,7 +2,9 @@
 
 Status: 2026-10-23. This file is the audit trail for the objective "complete and evolve the `.om`
 language". It separates work that is implemented and gated from work that is blocked on a decision or
-on an external store. It is not a claim that the language is complete.
+on an external store. It is not a claim that the language is complete. Its counts and pins are those of
+2026-10-23 and are not refreshed here; OM-2 (section 9.13 of OMEGESE.md) has landed since, and the 1.0
+gaps and acceptance gates are planned in `docs/ROADMAP-1.0.md`.
 
 Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/check.sh`, and
 `evidence/SEED-0/`.
@@ -67,12 +69,12 @@ cannot emit them, so there is no reference unit to verify against.
 | FR-6 threads/atomics | absent | decision 37 (disjoint threads) has no chosen design |
 | FR-7 shared objects/C ABI | absent | needs an ABI contract (calling convention, symbols, relocation) |
 | FR-8 kernel words | absent | needs a target kernel interface, not a compiler change |
-| FR-9 x86-64 | absent | second backend; no decision to fund it |
+| FR-9 x86-64 | DRAFT integration pending implementation/evidence, based on historical backend `7eca2ac3f` and canonical base `6999fa9e6`; see [design and unsupported paths](../X86-LINUX.md) | full existing fixture differential, default AArch64 byte preservation, objdump oracle and wrong-encoding mutants NOT_RUN; no completion or qualification claim |
 | decision 24 | no heap, no free | Drake's rule; any allocation model would reverse it |
 | decision 37 | no shared-state threads | design decision pending |
 
 ## 4. Next concrete step
 
 No self-contained compiler feature remains for the supported scalar subset. Next work requires a
-decision (FR-2/3/5/6/7/8/9, decisions 24/37) or a shared target-extension model (IR arrays,
-structs, floats); host-surface polish is optional.
+decision (FR-2/3/5/6/7/8, decisions 24/37) or a shared target-extension model (IR arrays,
+structs, floats); FR-9 has a draft integration described above, not a completed second target.

@@ -1,0 +1,25 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, lines 124 and 127 with 4 lines 93-98: an inline callee that writes every
+note element at constant indexes (after inlining and unrolling) leaves all bits written, and only
+note non-inline calls are error 27. ASSUMPTION (README A3): `to void inline` is valid and the analysis
+note sees through the inlined body. stdout s[5] = 7, then 2+..+9 = 44 (exp/f5-inline.out).
+om2
+fn fill t edit uchar 8 b uchar to void inline
+for i ulong 8 unroll
+put t i add b uchar i
+end
+end
+fn f s edit uchar 8 fresh k ulong to ulong
+fill s 2
+acc = ulong 0
+for j ulong 8
+acc = add acc ulong get s j
+end
+putd ulong get s k
+ret acc
+end
+fn main to int
+a = new uchar 8 0
+putd f a 5
+ret 0
+end
