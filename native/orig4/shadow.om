@@ -198,21 +198,22 @@ end
 if lt hvnarms r 2
 ret -2
 end
-best = ulong 0
+best = ulong 8
 if eq get HV 7 1
 put HV 0 0
 ret long slnear r
 end
-bs = slfwd r 0
-ok = affinite bs
-for k ulong 7
-a = add k 1
+note Seed from the lowest admissible arm, never from arm 0 unchecked (oxchk2 and oxpair2
+note make arm 0 admissible today; this loop does not rely on it).
+bs = ulong 0
+ok = true
+for a ulong 8
 if oxcand r a
 s = slfwd r a
 if not affinite s
 ok = false
 end
-if sllt s bs
+if or eq best 8 sllt s bs
 bs = s
 best = a
 end

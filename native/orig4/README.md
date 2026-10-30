@@ -10,14 +10,17 @@ arms with the ORIG-2 candidate scorer. It changes no decision: output is `SHADOW
 |---|---|
 | `shadow.om` | the advisor unit (admission, per-record advice `hvscore`, cost sums, modes S/G/H); handwritten .om |
 | `shadowmain.om` | `fn main`: mode dispatch, the last file of the program unit |
-| `orig4.pin` | the compiler hash and every pinned source (repo, commit, path, sha256) and candidate image hash |
+| `orig4.pin` | the compiler hash and every pinned source (repo, commit, path, sha256) and candidate image hash; all aien-train units at one aien-train main commit, the omega unit at an ancestor of HEAD |
 | `candidates/` | the immutable ORIG-2 candidates (`SHA256SUMS`), byte-identical to aien-train `evidence/SI19-ORIG2/candidates` |
 
 Unit order (concatenation, no import): add32 mul32 metadata affine fixture world omexp
 omexpfix select (pinned) + `shadow.om` + caller (`shadowmain.om` or
 `tests/orig4/shadow-test.om`). Compiler: this repository's `seed/out/omc`.
 
-Run: `sh tests/orig4/run.sh` (gate `tests/gates/omega-orig4-shadow.gate`, step
-`tests/gates/run.sh orig4-shadow`). Real records: `ORIG4_RECORDS=<file>
+Run: `ORIG4_TRAIN_GIT=<aien-train clone> sh tests/orig4/run.sh` (output under
+`build/orig4`, scratch build directory removed on exit; gate
+`tests/gates/omega-orig4-shadow.gate`, step `tests/gates/run.sh orig4-shadow`, which needs
+the sibling `../aien-train` and checks out the one aien-train main commit `orig4.pin`
+names). Expected stdout of every SYNTHETIC-fixture run: `tests/orig4/expected/`. Real records: `ORIG4_RECORDS=<file>
 ORIG4_ALLOW=<allow-list> OUT=<outside the tree> sh tests/orig4/run.sh`; the owner
 dataset stays local, only its hash and the receipts are public.

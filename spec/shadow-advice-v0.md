@@ -82,6 +82,11 @@ measurements (available only because the tap records every arm; it is printed fo
 cost comparison, never fed back). After the last record one `COST records=N scored=M
 fallback=F adv_cost=A oracle_cost=O incumbent_cost=I` line. Every line is one of
 `SHADOW`, `ADVICE`, `FALLBACK`, `COST`; the gate greps for anything else and fails.
+Over the SYNTHETIC fixture the gate also compares every run's stdout byte for byte with
+`tests/orig4/expected/`, checks that no advised arm is above 4 (the fixture's measured
+arms) and that `adv_cost` and `incumbent_cost` are never below `oracle_cost`, and the
+in-process tests check the advised arm against `oxcand` and the per-record oracle cost
+for both candidate images.
 
 ## Cost
 

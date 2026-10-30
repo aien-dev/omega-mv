@@ -199,7 +199,7 @@
           "purpose": "Simulated M16 driver for numeric resource-lifecycle tests. No device execution or numeric parity"
         },
         {
-          "digest": "d033d9d9e7adad9979ad244155c4ee90e8212574fd9a1b181b93d2673bfe6c0d",
+          "digest": "a4e1544a88e0b71ced2340ed880985b6ceaad797023b74a683d470971a8d47d4",
           "last_commit": "85641e1ea",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advisor tests: shadow-test.om (in-process checks over the SYNTHETIC fixture and th"
@@ -271,8 +271,8 @@
           "purpose": "Reservoir tests (omega#440): Gate 1 simulator and readout checks against an independent binary64"
         },
         {
-          "digest": "58d30d18da486c629bf0fd88c17d72c9d171cf6345eef04648e88c22a698c327",
-          "last_commit": "42254b8a9",
+          "digest": "9b86a205acf8378120f423c8379401b3675a63c291b9ce12aba23f0e0f010e42",
+          "last_commit": "03057d275",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -307,15 +307,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:3b9207f29644fb63732ce2881c52fe427aa30cda0684536511a21e94074d41f8",
-      "compiled_at": "2026-10-30T14:53:53Z",
+      "children_root": "sha256:afb3550bd2199fa094aeb738b637d98b2dc617cf2ad80f0067c4e031fdad0aa0",
+      "compiled_at": "2026-10-30T17:05:07Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:a0fedc157b8bf0a5658e052fcb1160f1397860697b26320e5ab6f0b51f540d1c",
+      "digest": "sha256:ef454bfc8114ebfbfb0557a5141d7f3163716845a8db878cbae1aa0df9e87ad2",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1389,
-      "generated_at_commit": "42254b8a9d085f00dc512a7c3f31c6bed15b9b0c",
-      "source_tree": "sha256:78d9a1db881a0ef34d6ce5868d116c264c7795f936a60599c9e1e2b19b4d3230"
+      "files": 1404,
+      "generated_at_commit": "e611a998a1497da553b38c2ef55f17399a390a31",
+      "source_tree": "sha256:96383deb0749f6454901e7ecabc9e618f7ad884870c7b80430e15618f895a326"
     },
     "owner_lane": "",
     "provenance": {

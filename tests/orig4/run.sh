@@ -30,11 +30,16 @@
 # microseconds land in OUT/<run>.wall_us; the judge computes the overhead from them.
 set -u
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-OUT=${OUT:-$ROOT/evidence/ORIG4-SHADOW/run}
-BUILD=${BUILD:-$(mktemp -d "${TMPDIR:-/tmp}/orig4.XXXXXX")}
+OUT=${OUT:-$ROOT/build/orig4}
+if [ -n "${BUILD:-}" ]; then
+  mkdir -p "$BUILD"
+else
+  BUILD=$(mktemp -d "${TMPDIR:-/tmp}/orig4.XXXXXX")
+  trap 'rm -rf "$BUILD"' EXIT
+fi
 OMC=$ROOT/seed/out/omc
 TRAIN=${ORIG4_TRAIN_GIT:-$ROOT/../aien-train}
-BRIDGE=${ORIG4_BRIDGE_GIT:-$ROOT/../omega-bridge}
+EXPECT=$ROOT/tests/orig4/expected
 PIN=$ROOT/native/orig4/orig4.pin
 CAND=$ROOT/native/orig4/candidates
 N=$ROOT/native/orig4
@@ -62,14 +67,21 @@ OMC_SHA=$1
 [ "$OMC_SHA" = "$(awk '$1 == "omc" {print $2}' "$PIN")" ] || fail "compiler hash $OMC_SHA differs from orig4.pin"
 note "compiler_sha256=$OMC_SHA"
 
-# 2. The pinned units: git show from the pinned object stores, hash against the pin.
+# 2. The pinned units: git show from the pinned object stores, hash against the pin. Every
+# aien-train unit names one commit (the gate step checks out exactly that one), and every
+# omega unit names an ancestor of this checkout.
 LIB=""
+TRAIN_SHA=""
 while read -r kind order repo commit path sha; do
   [ "$kind" = "unit" ] || continue
   case "$repo" in
-    omega) dir=$ROOT ;;
-    aien-train) dir=$TRAIN ;;
-    omega-bridge) dir=$BRIDGE ;;
+    omega)
+      dir=$ROOT
+      git -C "$ROOT" merge-base --is-ancestor "$commit" HEAD 2> /dev/null || fail "omega pin $commit is not an ancestor of HEAD" ;;
+    aien-train)
+      dir=$TRAIN
+      [ -z "$TRAIN_SHA" ] || [ "$TRAIN_SHA" = "$commit" ] || fail "aien-train units pin two commits: $TRAIN_SHA $commit"
+      TRAIN_SHA=$commit ;;
     *) fail "unknown pin repo $repo" ;;
   esac
   f="$BUILD/units/$order-$(basename "$path")"
@@ -131,6 +143,15 @@ shape() {
 }
 # expect NAME RC: the run's exit code.
 expect() { [ "$(cat "$OUT/$1.rc")" -eq "$2" ] || fail "$1 exit $(cat "$OUT/$1.rc"), expected $2"; }
+# armcost NAME: every advised arm is one of the fixture's measured arms 0..4, and the COST
+# line has adv_cost >= oracle_cost and incumbent_cost >= oracle_cost (the oracle is the
+# per-record minimum over admissible arms, so nothing admissible beats it).
+armcost() {
+  [ "$(count '^ADVICE seq=[0-9]+ arm=[5-7] ' "$1")" -eq 0 ] || fail "$1 advised an arm above 4"
+  awk '/^COST / { for (i = 2; i <= NF; i++) { split($i, kv, "="); v[kv[1]] = kv[2] }; n++
+         if (v["adv_cost"] + 0 < v["oracle_cost"] + 0 || v["incumbent_cost"] + 0 < v["oracle_cost"] + 0) bad = 1 }
+       END { exit (n == 1 && !bad) ? 0 : 1 }' "$OUT/$1.stdout" || fail "$1 cost below the oracle"
+}
 # hash FILE: the records' FNV-1a 64 through the advisor's H mode.
 hash() { { printf 'H'; cat "$1"; } | "$SH"; }
 
@@ -181,9 +202,9 @@ FNV=$(hash "$BUILD/fixture.rb")
 printf '%s SYNTHETIC fixture-seed7-780-records\n%s SYNTHETIC fixture-seed7-100-records\n' "$FIXFNV" "$FIX100FNV" > "$BUILD/allow.txt"
 note "records_source=SYNTHETIC fixture seed=$FIXSEED count=$FIXCOUNT fnv=$FNV sha256=$(sha256sum "$BUILD/fixture.rb" | cut -d' ' -f1)"
 
-# 4. In-process tests (the candidate MLP image on stdin).
+# 4. In-process tests (the candidate MLP image, then the affine image, on stdin).
 t0=$(ms)
-"$BUILD/shadow-test.elf" < "$MLP" > "$OUT/shadow-test.stdout" 2> "$OUT/shadow-test.stderr"
+cat "$MLP" "$AFF" | "$BUILD/shadow-test.elf" > "$OUT/shadow-test.stdout" 2> "$OUT/shadow-test.stderr"
 rc=$?; t1=$(ms)
 echo "$rc" > "$OUT/shadow-test.rc"
 note "shadow-test rc=$rc wall_ms=$(( (t1 - t0) / 1000000 )) $(cat "$OUT/shadow-test.stdout")"
@@ -255,9 +276,16 @@ grep -q '^FALLBACK all reason=image-9$' "$OUT/fixture_v2_v1image.stdout" || fail
 run bad_config 1 4096 11560 "$MLP" "$BUILD/fixture.rb" "$BUILD/allow.txt"; expect bad_config 68
 [ ! -s "$OUT/bad_config.stdout" ] || fail bad config printed
 printf 'X' | "$SH" > "$OUT/bad_mode.stdout" 2> "$OUT/bad_mode.stderr"; echo $? > "$OUT/bad_mode.rc"; expect bad_mode 64
-for f in fixture_mlp fixture_affine disabled damaged_image short_image forged_record wrong_profile revoked absent budget10 bad_config bad_mode; do
+for f in fixture_mlp fixture_affine budget10 fixture_v2_near; do armcost "$f"; done
+for f in fixture_mlp fixture_affine disabled damaged_image short_image forged_record wrong_profile revoked absent budget10 fixture_v2_near fixture_v2_v1image bad_config bad_mode shadow-test; do
   [ -s "$OUT/$f.stderr" ] && fail "$f wrote to stderr"
 done
+# Golden output: every run's stdout byte for byte against tests/orig4/expected (the ADVICE
+# incumbent/oracle fields and the COST sums are judged here, not only their shape).
+for f in shadow-test fixture_mlp fixture_affine disabled damaged_image short_image forged_record wrong_profile revoked absent budget10 fixture_v2_near fixture_v2_v1image bad_config bad_mode; do
+  cmp -s "$EXPECT/$f.stdout" "$OUT/$f.stdout" || fail "$f stdout differs from tests/orig4/expected/$f.stdout"
+done
+note "golden: 15 stdout files byte-identical to tests/orig4/expected"
 note "refusals: damaged image-5, truncated image-1, forged records-7, wrong-profile records-9, revoked allow-12, absent allow-13, budget 10/770, config 68, mode 64"
 
 # 8. Default-off proof, static: the tap's environment variable has exactly one reader in the

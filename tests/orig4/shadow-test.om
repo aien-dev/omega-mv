@@ -1,11 +1,13 @@
 note SPDX-License-Identifier: Apache-2.0
 note omega-mv#731 ORIG-4 in-process tests of native/orig4/shadow.om (same unit, this caller
-note in place of main). stdin: the candidate MLP image (11560 bytes). Records: the SYNTHETIC
+note in place of main). stdin: the candidate MLP image (11560 bytes), then the candidate
+note affine image (1816 bytes). Records: the SYNTHETIC
 note fixture sxgen 7 780 (allow-list hash 626048380840256264). Groups: tadmit (the real
 note candidate is admitted, bound_matches=no, and the advice equals selmain E-mode's slpick
 note after slbest for 20 records), trefuse (every refusal class through the same functions
 note the advisor calls, state unchanged), tpred (non-finite score, out-of-distribution and
-note budget predicates), tnarrow (50 records: the advised arm always satisfies oxcand).
+note budget predicates), tnarrow (50 records: the advised arm always satisfies oxcand and
+note costs no less than the oracle), tnaff (the same over 780 records with the affine image).
 global HT ulong 2
 global HI uchar 11560
 text TALW "626048380840256264 SYNTHETIC fixture-seed7-780-records\n"
@@ -197,13 +199,34 @@ tck eq hvnarms 0 5
 end
 
 fn tnarrow to void
-note The advice never widens the candidate set: the advised arm satisfies oxcand.
+note The advice never widens the candidate set: the advised arm satisfies oxcand, and its
+note recorded cost is never below the oracle's.
 slbest
 for r ulong 50
 c = hvscore r
 tck ge c 0
 tck oxcand r ulong c
 tck lt ulong c oxword r 13
+tck ge oxcost r ulong c oxcost r oxbest r
+end
+end
+
+fn tnaff to void
+note tnarrow on the affine candidate (the next 1816 stdin bytes) over all 780 fixture
+note records under v1 admission: every record is scored, the advised arm satisfies oxcand,
+note is one of the fixture's measured arms 0..4, and costs no less than the oracle.
+n = tfix
+tck eq hvrdimg 1816 1816
+tck eq hvimage 1816 0
+tck eq get SS 0 1
+tck eq get SS 15 96
+slbest
+for r ulong 780
+c = hvscore r
+tck ge c 0
+tck oxcand r ulong c
+tck le ulong c 4
+tck ge oxcost r ulong c oxcost r oxbest r
 end
 end
 
@@ -253,6 +276,7 @@ tpred
 tsingle
 tnarrow
 tv2
+tnaff
 w = write 1 TPASS 0 len TPASS
 wnum get HT 0
 w = write 1 TNL 0 1

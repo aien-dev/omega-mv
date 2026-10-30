@@ -138,15 +138,13 @@ case "$step" in
                       sh seed/omc/gate5.sh 2>&1 | tee "$OUT_DIR.seed-gate5.log"
                       tail -1 "$OUT_DIR.seed-gate5.log" | grep -q "^GATE5 PASS" || { echo "OMEGA-SEED: gate5 failed" >&2; exit 1; } ;;
   # omega-mv#731 ORIG-4 (no hosted mirror; host only): the shadow advisor's glue over the
-  # pinned aien-train/omega-bridge units (native/orig4/orig4.pin), materialised under
-  # build/pins from the sibling clones; every verdict is made by the .om units.
+  # pinned aien-train units (native/orig4/orig4.pin, one aien-train main commit), materialised
+  # under build/pins from the sibling clone; every verdict is made by the .om units.
   orig4-shadow)
-    train_sha="$(awk '$1 == "unit" && $3 == "aien-train" && $5 ~ /si19/ {print $4; exit}' native/orig4/orig4.pin)"
-    bridge_sha="$(awk '$1 == "unit" && $3 == "omega-bridge" {print $4; exit}' native/orig4/orig4.pin)"
+    train_sha="$(awk '$1 == "unit" && $3 == "aien-train" {print $4; exit}' native/orig4/orig4.pin)"
     pin aien-train-src aien-train "$train_sha"
-    pin omega-bridge-src omega-bridge "$bridge_sha"
     set -o pipefail
-    OUT="$ROOT/$OUT_DIR/orig4" ORIG4_TRAIN_GIT="$PINS/aien-train-src" ORIG4_BRIDGE_GIT="$PINS/omega-bridge-src" \
+    OUT="$ROOT/$OUT_DIR/orig4" ORIG4_TRAIN_GIT="$PINS/aien-train-src" \
       sh tests/orig4/run.sh | tee "$OUT_DIR.orig4.log"
     grep -q '^ORIG4_SHADOW_RUN_PASS$' "$OUT_DIR.orig4.log"
     obs shadow_test_checks "$(sed -n 's/.*ORIG4_SHADOW_TEST_PASS checks=\([0-9]*\).*/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"

@@ -1248,14 +1248,21 @@ static int promote_phase(const RxCostModel *m, RxCostModel *durable) {
  * phase, n further log-uniform shapes per present core class (M, N in
  * [1, 8192], M N <= MAX_ELEMS, seed 9000 + core) are measured with the same
  * truth table and tapped as family 5. Observation only: no policy, judge,
- * learner or verdict of this harness sees them. Without the tap it does nothing. */
+ * learner or verdict of this harness sees them. Without the tap it does nothing;
+ * n above 640 is capped, a negative or non-numeric n takes no sample. */
 #define COVERAGE_MAX 640u
 
 static uint32_t coverage_count(void) {
     const char *e = getenv("OMEGA_EMPIRICAL_COVERAGE");
     if (g_tap_fd < 0 || !e || !e[0]) return 0;
-    unsigned long v = strtoul(e, NULL, 10);
-    return v > COVERAGE_MAX ? COVERAGE_MAX : (uint32_t)v;
+    char *end;
+    errno = 0;
+    long v = strtol(e, &end, 10);
+    if (errno != 0 || *end != '\0' || v < 0) {
+        fprintf(stderr, "  coverage sample: OMEGA_EMPIRICAL_COVERAGE=%s is not a count >= 0; no sample\n", e);
+        return 0;
+    }
+    return v > (long)COVERAGE_MAX ? COVERAGE_MAX : (uint32_t)v;
 }
 
 static void coverage_sample(uint32_t k, uint32_t count) {
