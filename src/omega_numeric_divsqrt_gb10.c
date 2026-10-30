@@ -56,10 +56,12 @@ const char *const OMEGA_DS_KERNEL_SHA256[OMEGA_DS_OP_COUNT] = {
     "db3a51ff06cc24dc749d98dbf91485f0ceb86ba2bfc8cc55e554f62e6f7edff5", /* ERF, 360 words */
     "94992a5fdbe00a7943dac997d6a59ddd6096ac2fec35d4ff286b6552e8cea36d", /* GELU, 424 words */
     "adb2864a0842a36fb9abf144d6654a69668506e2f8e98ac1c7ecb40ca4a1ff85", /* RSQRT, 344 words */
+    "b0214f4b0c8416411fdd897d640b45b27da16b92e117f57b02c6abb2f1350cb6", /* EXP, 88 words */
+    "be4f782381c34169670e45e500fd1f0afa0cc7bcfcec9f8e6aca8a41b0029a9e", /* LOG, 312 words */
 };
 
 const char *omega_ds_op_name(OmegaDsOp op) {
-    return op == OMEGA_DS_DIV ? "DIV" : op == OMEGA_DS_SQRT ? "SQRT" : op == OMEGA_DS_EXP2 ? "EXP2" : op == OMEGA_DS_LOG2 ? "LOG2" : op == OMEGA_DS_SIGMOID ? "SIGMOID" : op == OMEGA_DS_TANH ? "TANH" : op == OMEGA_DS_SIN ? "SIN" : op == OMEGA_DS_COS ? "COS" : op == OMEGA_DS_ERF ? "ERF" : op == OMEGA_DS_GELU ? "GELU" : op == OMEGA_DS_RSQRT ? "RSQRT" : "?";
+    return op == OMEGA_DS_DIV ? "DIV" : op == OMEGA_DS_SQRT ? "SQRT" : op == OMEGA_DS_EXP2 ? "EXP2" : op == OMEGA_DS_LOG2 ? "LOG2" : op == OMEGA_DS_SIGMOID ? "SIGMOID" : op == OMEGA_DS_TANH ? "TANH" : op == OMEGA_DS_SIN ? "SIN" : op == OMEGA_DS_COS ? "COS" : op == OMEGA_DS_ERF ? "ERF" : op == OMEGA_DS_GELU ? "GELU" : op == OMEGA_DS_RSQRT ? "RSQRT" : op == OMEGA_DS_EXP ? "EXP" : op == OMEGA_DS_LOG ? "LOG" : "?";
 }
 
 /* ---- Forms ---------------------------------------------------------------
@@ -560,6 +562,153 @@ static void body_log2(Bld *B) {
     seli(B, RES, RES, 0x7fc00000u, 0, 1);          /* x < 0, incl. -inf    */
     setp(B, 0, DS_CMP_EQ, 0, 8, RZ);
     seli(B, RES, RES, 0xff800000u, 0, 1);          /* +-0: -inf            */
+    setpi(B, 0, DS_CMP_GT, 0, 8, 0x7f800000u);
+    seli(B, RES, RES, 0x7fc00000u, 0, 1);          /* NaN                  */
+}
+
+/* E1 row 10, natural EXP and LOG: omega_math_exp / omega_math_log of
+ * src/omega_numeric.c. That file is built with -ffp-contract=off, so every C
+ * operator is one unfused binary32 operation: the bodies issue FMUL, FADD and
+ * FSUB (never FFMA) in the order the C writes them. OMEGA_DS_MUTATE=1 or 2
+ * (test builds only) moves the EXP c2 or the LOG c1 coefficient up one ulp,
+ * a mutant the host tier must catch. */
+#ifndef OMEGA_DS_MUTATE
+#define OMEGA_DS_MUTATE 0
+#endif
+static void movc(Bld *B, int d, float v, int mutant) {
+    movi(B, d, omega_float_to_bits(v) + (OMEGA_DS_MUTATE == mutant ? 1u : 0u));
+}
+
+/* omega_math_exp. x in R2. (int32_t)(prod +- 0.5f) truncates toward zero; the
+ * body truncates t (|t| >= 0.5) from its bits: |t| = mant * 2^(be - 150), so
+ * trunc|t| = mant >> (150 - be), exact, with the shift clamped to 31
+ * (mant < 2^24: every shift >= 24, i.e. |t| < 1, gives 0). The CPU picks
+ * prod + 0.5f when prod >= 0; the body picks it when the sign bit of prod is
+ * clear. They differ only at prod = -0, where both give k = 0. */
+static void body_exp(Bld *B) {
+    enum { X = 2, C = 8, PROD = 10, TP = 11, TM = 12, T = 13, BX = 14, MN = 15, SH = 16, V = 17, NV = 18,
+           K = 19, FK = 20, R = 21, U = 22, P = 23, PO = 24, Q = 25, RA = 26, RB = 27, RC = 28 };
+    movf(B, C, 1.4426950408889634f);        /* INV_LN2                      */
+    ffmul(B, PROD, X, C);                   /* prod = x * INV_LN2           */
+    movf(B, C, 0.5f);
+    ffadd(B, TP, PROD, C);                  /* prod + 0.5f                  */
+    ffsub(B, TM, PROD, C);                  /* prod - 0.5f                  */
+    setpi(B, 0, DS_CMP_LT, 1, PROD, 0);     /* sign bit of prod             */
+    sel(B, T, TM, TP, 0, 0);                /* t                            */
+    shri(B, BX, T, 23);
+    lopi(B, BX, BX, 0xffu, LUT_AND);        /* biased exponent of t         */
+    lopi(B, MN, T, 0x007fffffu, LUT_AND);
+    lopi(B, MN, MN, 0x00800000u, LUT_OR);   /* significand of t             */
+    rsubi(B, SH, BX, 150);                  /* 150 - be                     */
+    setpi(B, 1, DS_CMP_GT, 0, SH, 31);
+    seli(B, SH, SH, 31u, 1, 1);             /* clamp the shift to 31        */
+    shrr(B, V, MN, SH);                     /* trunc |t|                    */
+    rsubi(B, NV, V, 0);
+    sel(B, K, NV, V, 0, 0);                 /* k = (int32_t)t               */
+    i2fp(B, FK, K);                         /* fk = (float)k, exact         */
+    movf(B, C, 0.693145751953125f);         /* LN2_HI                       */
+    ffmul(B, U, FK, C);
+    ffsub(B, R, X, U);                      /* x - fk * LN2_HI              */
+    movf(B, C, 1.4286068203094172e-06f);    /* LN2_LO                       */
+    ffmul(B, U, FK, C);
+    ffsub(B, R, R, U);                      /* r = (...) - fk * LN2_LO      */
+    movf(B, C, 0.0083333338f);              /* c5                           */
+    ffmul(B, U, R, C);                      /* r * c5                       */
+    movf(B, C, 0.0416666679f);              /* c4                           */
+    ffadd(B, U, C, U);
+    ffmul(B, P, R, U);                      /* p = r * (c4 + r * c5)        */
+    movf(B, C, 0.1666666716f);              /* c3                           */
+    ffadd(B, U, C, P);
+    ffmul(B, P, R, U);                      /* p = r * (c3 + p)             */
+    movc(B, C, 0.5f, 1);                    /* c2                           */
+    ffadd(B, U, C, P);
+    ffmul(B, P, R, U);                      /* p = r * (c2 + p)             */
+    movf(B, C, 1.0f);
+    ffadd(B, U, C, P);                      /* 1 + p                        */
+    ffmul(B, U, R, U);                      /* r * (1 + p)                  */
+    ffadd(B, PO, C, U);                     /* poly = 1 + r * (1 + p)       */
+    /* scale by 2^k: all three branches, then chosen */
+    iaddi(B, U, K, 127, RZ);
+    shli(B, U, U, 23);
+    ffmul(B, RC, PO, U);                    /* poly * 2^k                   */
+    movi(B, U, 254u << 23);
+    ffmul(B, Q, PO, U);                     /* poly * 2^127                 */
+    shli(B, U, K, 23);
+    ffmul(B, RA, Q, U);                     /*   * bits((k - 127 + 127) << 23) */
+    iaddi(B, U, K, 227, RZ);
+    shli(B, U, U, 23);
+    ffmul(B, Q, PO, U);                     /* poly * 2^(k + 100)           */
+    movi(B, U, 27u << 23);
+    ffmul(B, RB, Q, U);                     /*   * 2^-100                   */
+    setpi(B, 1, DS_CMP_LT, 1, K, (uint32_t)-126);
+    sel(B, RES, RB, RC, 1, 0);
+    setpi(B, 1, DS_CMP_GT, 1, K, 127);
+    sel(B, RES, RA, RES, 1, 0);
+    /* special inputs, lowest priority first (x is not NaN for the first two) */
+    setpi(B, 0, DS_CMP_GT, 0, X, 0xc2d00000u);
+    sel(B, RES, RZ, RES, 0, 0);                    /* x < -104: +0        */
+    setpi(B, 0, DS_CMP_GT, 1, X, omega_float_to_bits(88.722839f));
+    seli(B, RES, RES, 0x7f800000u, 0, 1);          /* x > 88.722839: +inf */
+    lopi(B, U, X, 0x7fffffffu, LUT_AND);
+    setpi(B, 0, DS_CMP_GT, 0, U, 0x7f800000u);
+    seli(B, RES, RES, 0x7fc00000u, 0, 1);          /* NaN                 */
+}
+
+/* omega_math_log. x in R2, kept in R3; e lives in R31 across the division
+ * (div_core writes R8-R27). z = omega_math_div(m - 1, m + 1) is the
+ * correctly rounded DIV body of E1 row 7. */
+static void body_log(Bld *B) {
+    enum { X = 3, Z = 0, NUM = 28, DEN = 29, E = 31 };
+    mov(B, X, A_);
+    /* subnormal: x * 2^23 (exact), e_adjust = -23 */
+    movi(B, 10, 0x4b000000u);
+    ffmul(B, 11, A_, 10);
+    lopi(B, 12, A_, 0x7f800000u, LUT_AND);
+    setp(B, 0, DS_CMP_EQ, 0, 12, RZ);
+    sel(B, 13, 11, A_, 0, 0);                      /* u                    */
+    seli(B, 14, RZ, (uint32_t)-23, 0, 1);          /* e_adjust             */
+    shri(B, 15, 13, 23);
+    lopi(B, 15, 15, 0xffu, LUT_AND);
+    iaddi(B, E, 15, -127, 14);                     /* e                    */
+    lopi(B, 16, 13, 0x007fffffu, LUT_AND);
+    lopi(B, 16, 16, 0x3f800000u, LUT_OR);          /* m in [1, 2)          */
+    setpi(B, 1, DS_CMP_GT, 0, 16, omega_float_to_bits(1.41421356f));
+    movf(B, 17, 0.5f);
+    ffmul(B, 18, 16, 17);
+    sel(B, 16, 18, 16, 1, 0);                      /* m > 1.41421356f: m * 0.5 */
+    seli(B, 19, RZ, 1, 1, 1);
+    iadd(B, E, E, 19, RZ);                         /*                  e + 1   */
+    movf(B, 20, 1.0f);
+    ffsub(B, NUM, 16, 20);                         /* m - 1                */
+    ffadd(B, DEN, 16, 20);                         /* m + 1                */
+    div_core(B, NUM, DEN);                         /* z = div(m - 1, m + 1) */
+    mov(B, Z, RES);
+    ffmul(B, 10, Z, Z);                            /* z2                   */
+    movf(B, 11, 0.142857149f);                     /* c3                   */
+    ffmul(B, 12, 10, 11);                          /* z2 * c3              */
+    movf(B, 11, 0.200000003f);                     /* c2                   */
+    ffadd(B, 12, 11, 12);
+    ffmul(B, 12, 10, 12);                          /* z2 * (c2 + ...)      */
+    movc(B, 11, 0.333333343f, 2);                  /* c1                   */
+    ffadd(B, 12, 11, 12);
+    ffmul(B, 12, 10, 12);                          /* z2 * (c1 + ...)      */
+    movf(B, 11, 1.0f);
+    ffadd(B, 13, 11, 12);                          /* poly                 */
+    movf(B, 11, 2.0f);
+    ffmul(B, 14, 11, Z);                           /* 2 * z                */
+    ffmul(B, 15, 14, 13);                          /* ln_m = 2 * z * poly  */
+    i2fp(B, 16, E);                                /* (float)e, exact      */
+    movf(B, 11, 0.6931471805599453f);              /* LN2                  */
+    ffmul(B, 17, 16, 11);
+    ffadd(B, RES, 17, 15);                         /* e * LN2 + ln_m       */
+    /* special inputs, lowest priority first (omega_math_log order) */
+    lopi(B, 8, X, 0x7fffffffu, LUT_AND);
+    setpi(B, 0, DS_CMP_EQ, 0, X, 0x7f800000u);
+    seli(B, RES, RES, 0x7f800000u, 0, 1);          /* +inf                 */
+    setpi(B, 0, DS_CMP_LT, 1, X, 0);
+    seli(B, RES, RES, 0x7fc00000u, 0, 1);          /* sign bit set         */
+    setp(B, 0, DS_CMP_EQ, 0, 8, RZ);
+    seli(B, RES, RES, 0xff800000u, 0, 1);          /* +-0: -inf (-0 is not < 0) */
     setpi(B, 0, DS_CMP_GT, 0, 8, 0x7f800000u);
     seli(B, RES, RES, 0x7fc00000u, 0, 1);          /* NaN                  */
 }
@@ -1172,6 +1321,8 @@ size_t omega_ds_body(OmegaDsOp op, OmegaDsInsn *out, size_t max) {
     else if (op == OMEGA_DS_ERF) body_erf(&B);
     else if (op == OMEGA_DS_GELU) body_gelu(&B);
     else if (op == OMEGA_DS_RSQRT) body_rsqrt(&B);
+    else if (op == OMEGA_DS_EXP) body_exp(&B);
+    else if (op == OMEGA_DS_LOG) body_log(&B);
     else return 0;
     return B.bad ? 0 : B.n;
 }
@@ -1260,8 +1411,15 @@ uint32_t omega_ds_host_exec(OmegaDsOp op, uint32_t a, uint32_t b) {
 
 uint32_t omega_ds_cpu_semantic(OmegaDsOp op, uint32_t a, uint32_t b) {
     if (op == OMEGA_DS_DIV) return omega_float_to_bits(omega_math_div(omega_bits_to_float(a), omega_bits_to_float(b)));
+    if (op == OMEGA_DS_EXP) return omega_float_to_bits(omega_math_exp(omega_bits_to_float(a)));
+    if (op == OMEGA_DS_LOG) return omega_float_to_bits(omega_math_log(omega_bits_to_float(a)));
     if (op != OMEGA_DS_SQRT) return 0x7fc00000u;
     return omega_float_to_bits(omega_math_sqrt(omega_bits_to_float(a)));
+}
+
+OmegaDsOp omega_ds_op_for_numeric(OmegaNumericOp op) {
+    return op == OMEGA_NOP_DIV ? OMEGA_DS_DIV : op == OMEGA_NOP_SQRT ? OMEGA_DS_SQRT
+         : op == OMEGA_NOP_EXP ? OMEGA_DS_EXP : op == OMEGA_NOP_LOG ? OMEGA_DS_LOG : OMEGA_DS_OP_COUNT;
 }
 
 /* ---- Kernel image ------------------------------------------------------------ */

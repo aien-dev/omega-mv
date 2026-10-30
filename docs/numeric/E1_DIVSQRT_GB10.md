@@ -165,3 +165,39 @@ fixed in 9b5756e before run 3.
 Not done here: the kernels are not yet called from `omega_numeric_gb10.c`
 (owned by another lane), so `omega_numeric` still refuses DIV/SQRT on GB10
 until that wiring lands.
+
+## Row 10: natural EXP and LOG
+
+The same frame and encoder carry two more whole-program kernels: the E1
+`OP_TABLE` ops EXP and LOG, bit-identical to `omega_math_exp` /
+`omega_math_log` of `src/omega_numeric.c` (built with `-ffp-contract=off`, so
+every C operator is one unfused binary32 operation). The bodies are
+`body_exp` / `body_log` in `src/omega_numeric_divsqrt_gb10.c`.
+
+| Op | Words | Kernel sha256 | Float ops (all unfused, in C order) |
+|----|-------|---------------|-------------------------------------|
+| EXP | 88 | b0214f4b0c8416411fdd897d640b45b27da16b92e117f57b02c6abb2f1350cb6 | 13 FMUL, 9 FADD (FSUB as FADD with a negated operand), 1 I2FP |
+| LOG | 312 | be4f782381c34169670e45e500fd1f0afa0cc7bcfcec9f8e6aca8a41b0029a9e | 9 FMUL, 6 FADD, 3 I2FP; z = (m-1)/(m+1) is the row 7 DIV sequence (integer, correctly rounded) |
+
+Neither kernel contains MUFU or FFMA. EXP truncates `prod +/- 0.5` toward
+zero from the float bits (integer shift, exact for every input that reaches
+it), converts k with I2FP (exact for |k| <= 150), and builds 2^k, 2^127,
+2^(k+100) and 2^-100 by writing exponent fields, then selects the branch the C
+takes. LOG splits exponent and mantissa as the C does (subnormals scaled by
+2^23 first) and calls the DIV core for z.
+
+Host evidence (not hardware): the host model of the emitted bodies against
+`omega_math_exp` / `omega_math_log` over all 2^32 inputs, 0 mismatches each
+(`build/test_omega_numeric_transc_gb10_cpu --host-all EXP` / `LOG`).
+Full-domain output digests (tree of `tests/test_omega_transc.c`):
+EXP 413c342928951fb078a3f6ecdc56221f26a2a6b19a1b7e099227bf38c1c2829c,
+LOG 05e94f63d078b9d460bc94305389a874216c6cb50d2d462b8d4bd0943c86f51e.
+`make test-numeric-transc-gb10-mutants` builds EXP with c2 one ulp up and LOG
+with c1 one ulp up; each must fail a host-model check. nvdisasm 13.0.85 and
+sm121dis decode all 88 + 312 words to the encoder's text
+(`tools/divsqrt_nvdisasm_check.sh`). Chip run: `tools/run_numeric_transc_gate.sh`
+(default op list includes EXP and LOG). Chip PASS on the GB10, 2026-10-27,
+omega `cb6d201`, physics `048e5f5`: EXP and LOG each over all 2^32 inputs,
+0 mismatches, 0 unwritten, output digests equal to the host-model digests above
+(receipt `evidence/E1-TRANSC-GB10/b2f4afe91148931db0f10f40edec9b8cce4533db99ec8e7d9733492794fa2b0e.json`,
+chip log `blobs/ea7a32198c71b30b6682f53a556bf01d02d1a765e32c632e970f51330d6c92ef.log`).

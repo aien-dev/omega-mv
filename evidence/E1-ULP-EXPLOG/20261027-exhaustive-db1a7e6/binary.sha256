@@ -1,0 +1,4 @@
+# build/test_omega_numeric_cpu as run (2026-10-27 16:51:32Z-17:34:48Z, OMEGA_ULP_PROCS=5, nice -n 19 taskset -c 5-9)
+# equal to a rebuild at db1a7e6/fc3a6ff3e with the Makefile line (gcc 13.3.0 -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY, NUMERIC_CPU_SRCS)
+aa42c9bdf4e11d5f74dba003d922e2124fc224e78c4acae2b4fd2cb45ba8a0c4  build/test_omega_numeric_cpu
+aa42c9bdf4e11d5f74dba003d922e2124fc224e78c4acae2b4fd2cb45ba8a0c4  rebuild:ulp-rebuild-db1a7e6

@@ -41,8 +41,10 @@ if [ "${1:-}" = "--gb10" ]; then
 src/omega_numeric_divsqrt_gb10.c src/omega_numeric_provenance.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
 src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
 $PHYS/forge/forge_descriptor.c $PHYS/forge/forge_realize.c $PHYS/sha256_clean.c $PHYS/nvrm/nvrm.c $PHYS/m16/m16_native.c"
-    CPU_TIER='\b(omega_numeric_cpu_realize|omega_numeric_reference|omega_numeric_reference_ftz|omega_reduce_cpu|omega_reduce_rows_cpu|omega_reduce_reference|omega_reduce_rows_reference|omega_tensor_seam_reduce_cpu)\b'
+    CPU_TIER='\b(omega_numeric_cpu_realize|omega_numeric_reference|omega_numeric_reference_ftz|omega_reduce_cpu|omega_reduce_rows_cpu|omega_reduce_reference|omega_reduce_rows_reference|omega_tensor_seam_reduce_cpu|omega_tensor_cpu_realization|omega_ds_cpu_semantic|omega_ds_host_exec)\b'
     GB10_MUTATIONS='GB10_NO_CPU_FALLBACK|s/return OMEGA_NUMERIC_ERR_NOT_ENCODED;/return omega_numeric_cpu_realize(op, a, b, c, out, n);/
+GB10_TRANSC_NO_CPU_FALLBACK|s/if (k < 0) return OMEGA_NUMERIC_ERR_NOT_ENCODED;/if (k < 0) return omega_tensor_cpu_realization()->transc(op, a, out, n);/
+GB10_TRANSC_EXP_LOG_SWAP|s/\[OMEGA_TU_EXP\] = 1 + OMEGA_DS_EXP, \[OMEGA_TU_LOG\] = 1 + OMEGA_DS_LOG,/[OMEGA_TU_EXP] = 1 + OMEGA_DS_LOG, [OMEGA_TU_LOG] = 1 + OMEGA_DS_EXP,/
 GB10_REDUCE_MAX_N|s/if (n > OMEGA_REDUCE_GB10_MAX_N) return OMEGA_NUMERIC_ERR_OPERANDS;/(void)0;/
 GB10_ROWS_MAX_N|s/if (n > OMEGA_REDUCE_GB10_MAX_N) return OMEGA_NUMERIC_ERR_OPERANDS;/(void)0;/'
     # gb10_try DIR: 0 if build + host run + nm check all pass, 1 otherwise
