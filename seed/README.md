@@ -12,6 +12,10 @@ The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
 `spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
 See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
 
+To rebuild omc from the 408-byte seed on your own AArch64 Linux machine and check every rung against
+published hashes without touching tracked files, run `sh seed/challenge/run.sh`
+(see [the seed-chain bootstrap challenge](challenge/CHALLENGE.md)).
+
 Think of it as a ladder. Each rung is a small program, written in the language the rung below understands,
 and built by the rung below. Every rung must rebuild itself to the exact same bytes, which proves it reads
 its own language the same way the rung below does.
