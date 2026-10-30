@@ -1,0 +1,100 @@
+OM2GATE START cases=seed/omc/om2/s4/s4-mutants.cases scratch=build/batch3/scratch-s4-mutants
+IDENTITY omc seed/out/omc sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e pinned=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e match
+DEADLINE 60
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/3.src > build/batch3/scratch-s4-mutants/3.elf 2> build/batch3/scratch-s4-mutants/3.cerr
+COMPILER build/batch3/scratch-s4-mutants/3.elf sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e source line=3
+CASE ctl-v-bad-pread-text line=4
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/4.src > build/batch3/scratch-s4-mutants/4.elf 2> build/batch3/scratch-s4-mutants/4.cerr
+VERDICT ctl-v-bad-pread-text PASS compile exit=20 expected=20 refused with the expected error
+CASE ctl-v-ok line=5
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/5.src > build/batch3/scratch-s4-mutants/5.elf 2> build/batch3/scratch-s4-mutants/5.cerr
+  $ build/batch3/scratch-s4-mutants/5.elf < /dev/null > build/batch3/scratch-s4-mutants/5.out 2> build/batch3/scratch-s4-mutants/5.err
+VERDICT ctl-v-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-v-trap-get line=6
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/6.src > build/batch3/scratch-s4-mutants/6.elf 2> build/batch3/scratch-s4-mutants/6.cerr
+  $ build/batch3/scratch-s4-mutants/6.elf < /dev/null > build/batch3/scratch-s4-mutants/6.out 2> build/batch3/scratch-s4-mutants/6.err
+VERDICT ctl-v-trap-get PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ctl-p-ok line=7
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/7.src > build/batch3/scratch-s4-mutants/7.elf 2> build/batch3/scratch-s4-mutants/7.cerr
+  $ build/batch3/scratch-s4-mutants/7.elf < /dev/null > build/batch3/scratch-s4-mutants/7.out 2> build/batch3/scratch-s4-mutants/7.err
+VERDICT ctl-p-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-p-wrap line=8
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/8.src > build/batch3/scratch-s4-mutants/8.elf 2> build/batch3/scratch-s4-mutants/8.cerr
+  $ build/batch3/scratch-s4-mutants/8.elf < /dev/null > build/batch3/scratch-s4-mutants/8.out 2> build/batch3/scratch-s4-mutants/8.err
+VERDICT ctl-p-wrap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ctl-p-o line=9
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/9.src > build/batch3/scratch-s4-mutants/9.elf 2> build/batch3/scratch-s4-mutants/9.cerr
+  $ build/batch3/scratch-s4-mutants/9.elf < /dev/null > build/batch3/scratch-s4-mutants/9.out 2> build/batch3/scratch-s4-mutants/9.err
+VERDICT ctl-p-o PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ctl-x-two line=10
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/10.src > build/batch3/scratch-s4-mutants/10.elf 2> build/batch3/scratch-s4-mutants/10.cerr
+VERDICT ctl-x-two PASS compile exit=0 expected=0 sha256=52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e stderr=match
+CASE ctl-p-bad-base line=11
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/11.src > build/batch3/scratch-s4-mutants/11.elf 2> build/batch3/scratch-s4-mutants/11.cerr
+VERDICT ctl-p-bad-base PASS compile exit=19 expected=19 refused with the expected error
+CASE ctl-v-text-empty line=12
+  $ build/batch3/scratch-s4-mutants/3.elf < build/batch3/scratch-s4-mutants/12.src > build/batch3/scratch-s4-mutants/12.elf 2> build/batch3/scratch-s4-mutants/12.cerr
+  $ build/batch3/scratch-s4-mutants/12.elf < /dev/null > build/batch3/scratch-s4-mutants/12.out 2> build/batch3/scratch-s4-mutants/12.err
+VERDICT ctl-v-text-empty PASS run exit=0 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
+  MUTATE exact-once substitution at byte 67136
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/15.src > build/batch3/scratch-s4-mutants/15.elf 2> build/batch3/scratch-s4-mutants/15.cerr
+COMPILER build/batch3/scratch-s4-mutants/15.elf sha256=1b7542d8fe8c2854eae41576f3ea8953545e9dc5f24b40a6b6ba55c8bf84b029 source line=15
+CASE m-uce line=16
+  $ build/batch3/scratch-s4-mutants/15.elf < build/batch3/scratch-s4-mutants/16.src > build/batch3/scratch-s4-mutants/16.elf 2> build/batch3/scratch-s4-mutants/16.cerr
+  $ build/batch3/scratch-s4-mutants/16.elf < /dev/null > build/batch3/scratch-s4-mutants/16.out 2> build/batch3/scratch-s4-mutants/16.err
+VERDICT m-uce FAIL run exit=0 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/preadwr.from seed/omc/om2/s4/mut/preadwr.to
+  MUTATE exact-once substitution at byte 90306
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/19.src > build/batch3/scratch-s4-mutants/19.elf 2> build/batch3/scratch-s4-mutants/19.cerr
+COMPILER build/batch3/scratch-s4-mutants/19.elf sha256=4d40460f326f04d597eb365429872a5e6d2cac789d8dc313d244e581984ed1a0 source line=19
+CASE m-preadwr line=20
+  $ build/batch3/scratch-s4-mutants/19.elf < build/batch3/scratch-s4-mutants/20.src > build/batch3/scratch-s4-mutants/20.elf 2> build/batch3/scratch-s4-mutants/20.cerr
+VERDICT m-preadwr FAIL compile exit=0 expected=20 refusal wrote compiler output diagnostic does not name the expected error
+SUBST seed/omc/om2/s4/mut/slot.from seed/omc/om2/s4/mut/slot.to
+  MUTATE exact-once substitution at byte 9520
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/23.src > build/batch3/scratch-s4-mutants/23.elf 2> build/batch3/scratch-s4-mutants/23.cerr
+COMPILER build/batch3/scratch-s4-mutants/23.elf sha256=1266ebb791be0a7e0660ba12e90523e2da4aa9a96320b14404198697aff131f6 source line=23
+CASE m-slot line=24
+  $ build/batch3/scratch-s4-mutants/23.elf < build/batch3/scratch-s4-mutants/24.src > build/batch3/scratch-s4-mutants/24.elf 2> build/batch3/scratch-s4-mutants/24.cerr
+  $ build/batch3/scratch-s4-mutants/24.elf < /dev/null > build/batch3/scratch-s4-mutants/24.out 2> build/batch3/scratch-s4-mutants/24.err
+VERDICT m-slot FAIL run exit=10 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/pwrap.from seed/omc/om2/s4/mut/pwrap.to
+  MUTATE exact-once substitution at byte 70781
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/27.src > build/batch3/scratch-s4-mutants/27.elf 2> build/batch3/scratch-s4-mutants/27.cerr
+COMPILER build/batch3/scratch-s4-mutants/27.elf sha256=79e7e24e4132f959d073772ab0f4cc22865ed7102097323fbe7714b8be3462b4 source line=27
+CASE m-pwrap line=28
+  $ build/batch3/scratch-s4-mutants/27.elf < build/batch3/scratch-s4-mutants/28.src > build/batch3/scratch-s4-mutants/28.elf 2> build/batch3/scratch-s4-mutants/28.cerr
+  $ build/batch3/scratch-s4-mutants/28.elf < /dev/null > build/batch3/scratch-s4-mutants/28.out 2> build/batch3/scratch-s4-mutants/28.err
+VERDICT m-pwrap FAIL run exit=4 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/pfirst.from seed/omc/om2/s4/mut/pfirst.to
+  MUTATE exact-once substitution at byte 70781
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/31.src > build/batch3/scratch-s4-mutants/31.elf 2> build/batch3/scratch-s4-mutants/31.cerr
+COMPILER build/batch3/scratch-s4-mutants/31.elf sha256=fed7016cfda7fec86334c0b4049bd8855675e46bf60650f82a4c41dc7fe344a5 source line=31
+CASE m-pfirst line=32
+  $ build/batch3/scratch-s4-mutants/31.elf < build/batch3/scratch-s4-mutants/32.src > build/batch3/scratch-s4-mutants/32.elf 2> build/batch3/scratch-s4-mutants/32.cerr
+  $ build/batch3/scratch-s4-mutants/32.elf < /dev/null > build/batch3/scratch-s4-mutants/32.out 2> build/batch3/scratch-s4-mutants/32.err
+VERDICT m-pfirst FAIL run exit=0 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/p19.from seed/omc/om2/s4/mut/p19.to
+  MUTATE exact-once substitution at byte 70505
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/35.src > build/batch3/scratch-s4-mutants/35.elf 2> build/batch3/scratch-s4-mutants/35.cerr
+COMPILER build/batch3/scratch-s4-mutants/35.elf sha256=e7dddf305baf86e0c2c239cab637fc2f387c21a4cf6b3d7b712a7229576d28a9 source line=35
+CASE m-p19 line=36
+  $ build/batch3/scratch-s4-mutants/35.elf < build/batch3/scratch-s4-mutants/36.src > build/batch3/scratch-s4-mutants/36.elf 2> build/batch3/scratch-s4-mutants/36.cerr
+VERDICT m-p19 FAIL compile exit=0 expected=19 refusal wrote compiler output diagnostic does not name the expected error
+SUBST seed/omc/om2/s4/mut/tramp.from seed/omc/om2/s4/mut/tramp.to
+  MUTATE exact-once substitution at byte 148783
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/39.src > build/batch3/scratch-s4-mutants/39.elf 2> build/batch3/scratch-s4-mutants/39.cerr
+COMPILER build/batch3/scratch-s4-mutants/39.elf sha256=d3906555c28a6e57fb582a451e68ca8ade485cb30918897b7572fd68f06464fd source line=39
+CASE m-tramp line=40
+  $ build/batch3/scratch-s4-mutants/39.elf < build/batch3/scratch-s4-mutants/40.src > build/batch3/scratch-s4-mutants/40.elf 2> build/batch3/scratch-s4-mutants/40.cerr
+VERDICT m-tramp FAIL compile exit=0 expected=0 sha256=fad4f36cd55ffbcd7bb2fef9ebb8fde1863fa87ecc08fdc66e6169661c88a4f4 stdout sha256 differs; expected 52cbef323079618c5e9b7911c9b3dbb4a222e851d9522b97f8b52b4c354a178e stderr=match
+SUBST seed/omc/om2/s4/mut/textlen.from seed/omc/om2/s4/mut/textlen.to
+  MUTATE exact-once substitution at byte 9309
+  $ seed/out/omc < build/batch3/scratch-s4-mutants/43.src > build/batch3/scratch-s4-mutants/43.elf 2> build/batch3/scratch-s4-mutants/43.cerr
+COMPILER build/batch3/scratch-s4-mutants/43.elf sha256=7baadef76ad1e17b790a12ca190e280792d6b68381c4ca2060dcf1279a793fd5 source line=43
+CASE m-textlen line=44
+  $ build/batch3/scratch-s4-mutants/43.elf < build/batch3/scratch-s4-mutants/44.src > build/batch3/scratch-s4-mutants/44.elf 2> build/batch3/scratch-s4-mutants/44.cerr
+  $ build/batch3/scratch-s4-mutants/44.elf < /dev/null > build/batch3/scratch-s4-mutants/44.out 2> build/batch3/scratch-s4-mutants/44.err
+VERDICT m-textlen FAIL run exit=1 expected=0 stdout=match stderr=match
+OM2GATE FAIL cases=17 pass=9 fail=8 invalid=0 not_run=0

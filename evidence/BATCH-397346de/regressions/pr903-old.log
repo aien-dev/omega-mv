@@ -1,0 +1,12 @@
+OM2GATE START cases=/home/drakestapleton/work/OmcBatchPin/build/batch3/pr903.cases scratch=build/batch3/scratch-pr903-old
+IDENTITY omc /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f pinned=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f match
+CASE s4-v-bad-pread-text line=1
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr903-old/1.src > build/batch3/scratch-pr903-old/1.elf 2> build/batch3/scratch-pr903-old/1.cerr
+VERDICT s4-v-bad-pread-text FAIL compile exit=0 expected=20 refusal wrote compiler output diagnostic does not name the expected error
+CASE s4-v-bad-pread-view line=2
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr903-old/2.src > build/batch3/scratch-pr903-old/2.elf 2> build/batch3/scratch-pr903-old/2.cerr
+VERDICT s4-v-bad-pread-view FAIL compile exit=0 expected=20 refusal wrote compiler output diagnostic does not name the expected error
+CASE s4-v-pwrite-text line=3
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr903-old/3.src > build/batch3/scratch-pr903-old/3.elf 2> build/batch3/scratch-pr903-old/3.cerr
+VERDICT s4-v-pwrite-text FAIL compile exit=20 expected=0
+OM2GATE FAIL cases=3 pass=0 fail=3 invalid=0 not_run=0

@@ -1,0 +1,9 @@
+fn hamming_dist_u32 a uint b uint to uint
+diff = xor a b
+c = uint 0
+while gt diff 0
+c = add c (and diff 1)
+diff = shr diff 1
+end
+ret c
+end
