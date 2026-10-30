@@ -1,0 +1,59 @@
+{
+  "execution": "EMULATED",
+  "native_x86": "NOT_RUN",
+  "source_revision": "4f14b2d8f1eeb470836fcd2adf1e6ad5b7608c16",
+  "source_sha256": "e3e323f2bc335d67cde53361b0337738b712e7b18e580cc633690cf3d0d889af",
+  "native_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/index-diagnostic-omc-aarch64",
+    "sha256": "7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316"
+  },
+  "executed_x86_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-omc-x86",
+    "sha256": "1b3818590edafd289dfedb4d125fd8ec0d9a8a3e7ce97124ab94aa4e9029de10",
+    "build_command": [
+      "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/index-diagnostic-omc-aarch64"
+    ],
+    "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-target-source.om"
+  },
+  "qemu": {
+    "path": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+    "sha256": "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee"
+  },
+  "checks": [
+    {
+      "target": "aarch64",
+      "command": [
+        "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+        "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-omc-x86"
+      ],
+      "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-source.om",
+      "exit": 0,
+      "stderr": "",
+      "expected_command": [
+        "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/index-diagnostic-omc-aarch64"
+      ],
+      "expected_sha256": "7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316",
+      "observed_sha256": "7d1739cc46c04bb8b585c5a255690ae58e30e9ffaa329defa19da3375c5fa316",
+      "byte_identical": true,
+      "expected_provenance": "Native Linux AArch64 compiler built from identical final source via seeded fixpoint"
+    },
+    {
+      "target": "x86_64",
+      "command": [
+        "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+        "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-omc-x86"
+      ],
+      "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-target-source.om",
+      "exit": 0,
+      "stderr": "",
+      "expected_command": [
+        "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/index-diagnostic-omc-aarch64"
+      ],
+      "expected_sha256": "1b3818590edafd289dfedb4d125fd8ec0d9a8a3e7ce97124ab94aa4e9029de10",
+      "observed_sha256": "1b3818590edafd289dfedb4d125fd8ec0d9a8a3e7ce97124ab94aa4e9029de10",
+      "byte_identical": true,
+      "expected_provenance": "Native Linux AArch64 compiler built from identical final source via seeded fixpoint"
+    }
+  ],
+  "log_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/final-fixpoint.json"
+}
