@@ -1,0 +1,20 @@
+fn is_prime_u32 n uint to uint
+if lt n 2
+ret 0
+end
+if eq n 2
+ret 1
+end
+if eq (and n 1) 0
+ret 0
+end
+d = ulong 3
+ln = ulong n
+while le (mul d d) ln
+if eq (rem ln d) 0
+ret 0
+end
+d = add d 2
+end
+ret 1
+end
