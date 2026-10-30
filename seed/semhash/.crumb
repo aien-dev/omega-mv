@@ -1,0 +1,42 @@
+{
+  "below": [
+    {
+      "name": "cases",
+      "role": ""
+    }
+  ],
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "5f55ea7a3e99fcfd989575716413593eeb48c328dc597863daa1ac48429af559",
+          "last_commit": "b8b969c68",
+          "name": "cases",
+          "purpose": "Directory cases. Purpose not yet described by a human."
+        }
+      ],
+      "children_root": "sha256:394cd179f66af2db0068ff6d91de8df562dce157b423978099e0fabf12c63f00",
+      "compiled_at": "2026-10-30T02:50:36Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:26224c0036bc324fea2b1366fe43cc90be8a22c6849bb726f319782099c1acf3",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 30,
+      "generated_at_commit": "f06d66b05a11ab683e250808b120fea52968022e",
+      "source_tree": "sha256:4a2ebd46b51bd9e7dbb9df279db936ccfe4eb7ccea9afaaad7e53062f89ac19f"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "README.md",
+        "check.sh",
+        "semhash.om"
+      ],
+      "purpose_auto": "Repository root semhash. Purpose not yet described by a human."
+    }
+  },
+  "layer": "root",
+  "name": "semhash",
+  "purpose": "Repository root semhash. Purpose not yet described by a human.",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,57 @@
+{
+  "above": {
+    "name": "semhash",
+    "path": ".."
+  },
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-26T20:17:56Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:5f55ea7a3e99fcfd989575716413593eeb48c328dc597863daa1ac48429af559",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 27,
+      "generated_at_commit": "7fe70319bced309f59a76a2c49ad95cede6d3886",
+      "source_tree": "sha256:b064045373a21ea61f94e8cfed3b37f62dd1aeabce5d3223140416eef0b5f66a"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "base.om",
+        "inv_alpha.exp",
+        "inv_alpha.om",
+        "inv_notes.exp",
+        "inv_notes.om",
+        "inv_reorder.exp",
+        "inv_reorder.om",
+        "neg_argswap.exp",
+        "neg_argswap.om",
+        "neg_const.exp",
+        "neg_const.om",
+        "neg_cycle.exp",
+        "neg_cycle.om",
+        "neg_fname.exp",
+        "neg_fname.om",
+        "neg_glen.exp",
+        "neg_glen.om",
+        "neg_leaf.exp",
+        "neg_leaf.om",
+        "neg_lfield.exp",
+        "neg_lfield.om",
+        "neg_pswap.exp",
+        "neg_pswap.om",
+        "neg_sfield.exp",
+        "neg_sfield.om",
+        "ren_fn.exp",
+        "ren_fn.om"
+      ],
+      "purpose_auto": "Directory cases. Purpose not yet described by a human."
+    }
+  },
+  "layer": "cases",
+  "name": "cases",
+  "purpose": "Directory cases. Purpose not yet described by a human.",
+  "schema_version": "1.0.0"
+}
