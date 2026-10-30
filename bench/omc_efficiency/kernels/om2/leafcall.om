@@ -1,0 +1,36 @@
+note leafcall: a two-parameter leaf function called 30000000 times from a loop that keeps values
+note live across the call; s = 1 + sum mix(i, 2654435761), t = xor of every running s. Prints s then t.
+note OMC-EFF-2: main writes the nanoseconds between its two monons readings (the computation, without
+note start-up and output) as one decimal line on stderr; stdout is unchanged.
+om2
+global obuf uchar 32
+fn putnum fd int v ulong to void
+put obuf 31 10
+p = ulong 31
+x = v
+while gt x 9
+p = sub p 1
+put obuf p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put obuf p uchar add x 48
+w = write fd obuf p sub 32 p
+end
+fn mix x ulong k ulong to ulong
+ret xor mul x k shr x 5
+end
+fn main to int
+t0 = monons
+s = ulong 1
+t = ulong 0
+for i ulong 30000000
+s = add s mix i 2654435761
+t = xor t s
+end
+t1 = monons
+putnum 2 ulong sub t1 t0
+putnum 1 s
+putnum 1 t
+ret 0
+end
