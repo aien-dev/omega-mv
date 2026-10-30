@@ -1,5 +1,8 @@
 # OMEGA (.om or .omg)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23547810.svg)](https://doi.org/10.5281/zenodo.23547810) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23644702.svg)](https://doi.org/10.5281/zenodo.23644702) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23614483.svg)](https://doi.org/10.5281/zenodo.23614483)
+Papers: [Omega](https://doi.org/10.5281/zenodo.23547810), [The Token Is the Instruction](https://doi.org/10.5281/zenodo.23644702), [A Call to Humanity](https://doi.org/10.5281/zenodo.23614483) · Author: Drake Stapleton <a href="https://orcid.org/0009-0002-6890-7111"><img src="https://orcid.org/assets/vectors/orcid.logo.icon.svg" alt="ORCID iD" width="16" height="16"></a>
+
 **Omega is a systems language and compute platform being implemented in handwritten, seeded `.om`.** Its goal is one inspectable path from a small seed through compiler, runtime and applications to machine execution. Pure computation and authorized effects have distinct contracts; semantic identities identify declared computations, while validation and receipts record what was actually checked.
 
 **Migration is not finished.** This repository's default branch still contains substantial C implementation and build/test tooling. The seeded `.om` compiler, its native host and device/mapping words, the OM-2 profile and the WebAssembly back end are on `main`; an existing C implementation is an outstanding replacement task, not the final language of Omega.
