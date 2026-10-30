@@ -69,6 +69,18 @@ make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-realize
 
 The full omegatool build (`make`) links the `physics` repository at the commit in `physics.lock`. Some older milestone gate scripts rewrite their receipts in place, so do not run them on a clean checkout you mean to keep; prefer the `make test-*` targets above. Targets that touch the GB10 need the DGX Spark, run one at a time, and are never killed mid-run. The M19 clean-clone gate rebuilds the tree in a temporary directory and runs the milestone gates there; when that nested build or nested run fails, it now prints the tail of its own log to stderr, so a failure names its cause instead of reporting a bare FAIL. CI definitions in `.github/workflows/` list the suites that run on every push.
 
+Host checks on the shared Spark judge, whose 1-minute load average is rarely below 2, keep every
+check they had and never turn load into a pass. `tests/runtime/r11_own_hold_test.sh` raises the R11
+load limit for its own runs (`R11_LOAD_LIMIT`, which can only raise it) and judges the quiet-flag hold
+decision the program prints; the living run's speed checks are judged there only when the load
+average is at most 2. The speed checks (the action-graph 2x speedup in
+`tests/runtime/rx_action_graph.c`, workflow fusion) take their median over the repetitions the
+machine did not disturb (run-queue delay from schedstat, `tests/runtime/rx_quiet_reps.h`); when too
+few are undisturbed the check reports `NOT_RUN` with reason `cpu_busy`, and `tests/gates/run.sh`
+reads that refusal from the receipt, runs the rest of the step and ends it NOT_RUN. Omega's serve
+cost is the CPU time of the serving thread (`cost_ns` in `src/runtime/rx_omega.c`), not wall-clock
+time, and the R15 parity rig gives both sides a fixed cost table (`r15_use_cost_model`).
+
 ## Repository layout
 
 `src/` existing core and C compiler awaiting replacement (`src/compiler/`), `src/runtime/` reaction runtime, `src/fabric/` host-only fabric interface, `src/physics0/` Physics Zero apparatus, `spec/` and `docs/` specifications, `tests/` gate suites, `evidence/` content-addressed receipts, `tools/` harnesses, `mk/` make fragments included by the `Makefile`. Also `bench/prime_race/` (Prime Drag Race implementation), `calibration/` (Turing calibration experiments, preregistration and blinding protocol), `research/` (experiments and prototypes) and `doctrine/` (the Milestone 4 doctrine).
