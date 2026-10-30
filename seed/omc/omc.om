@@ -12811,9 +12811,19 @@ fail 9
 end
 fail 16
 end
-note a contract word (requires, ensures, invariant) is not an IR v1 statement: refuse it, never read it as a local (#791)
+note a contract clause (requires, ensures, invariant not followed by =) is not an IR v1 statement: refuse it, never
+note read it as a local (#791). `ensures = v` assigns a local of that name, as the C oracle and native mode accept.
 if ne cp_kind 0
+p = get ts 0
+l = get line 0
+tok
+eqs = and eq get tk 0 1 eq ir_kwt 73
+put cur 0 p
+put line 0 l
+tok
+if not eqs
 fail 30
+end
 end
 ir_assign get tw 0
 ret 0

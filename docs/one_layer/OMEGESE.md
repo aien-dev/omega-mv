@@ -808,7 +808,7 @@ meaning below. `seed/omc/codereg.om` (run by gate15) fails when a `fail`, `nfail
 this table differs from the registry, or when a registry case did not refuse with its code at its
 expected line. Codes 1 and 2 are I/O errors on the compiler's own stdin/stdout (line 0 when the input
 cannot be read). In IR mode (section 11) the same codes apply; a contract line (`requires`,
-`ensures`, `invariant`) is error 30 there. irwasm exit codes are a separate namespace (section 11.1).
+`ensures`, `invariant` not followed by `=`) is error 30 there. irwasm exit codes are a separate namespace (section 11.1).
 
 | Code | Meaning |
 |---|---|
@@ -1040,7 +1040,8 @@ Limits, said plainly: scalar values, calls to earlier functions, at most 32 func
 parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
 float word, a host word, `continue`, `sizeof` or `offsetof` with error 3, and a contract line
 (`requires`, `ensures`, `invariant`; section 12 is native only) with error 30 on that line (#791); it
-never skips a declaration it cannot lower or reads a contract word as a local. `note` lines are
+never skips a declaration it cannot lower or reads a contract clause as a local. A contract word followed
+by `=` (`ensures = ulong 1`) assigns a local of that name, as the C oracle and native mode do. `note` lines are
 skipped. Struct IR remains open. The gate needs the
 C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
 `build/omega_emit/omega_emit` and `build/checker2/checker2` exist, and says `SKIP` otherwise.

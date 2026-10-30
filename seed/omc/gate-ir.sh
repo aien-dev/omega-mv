@@ -443,6 +443,9 @@ ir_multi void_fall 'fn sink a uint to void\nend\nfn f to uint\nsink uint 1\nret 
 ir_multi for_reuse 'fn f to uint\ns = uint 0\nfor i uint 3\ns = add s i\nend\nfor i uint 2\ns = add s i\nend\nret s\nend'
 ir_multi scope_reuse 'fn f a uint to uint\nif gt a 1\ny = add a 1\nret y\nend\ny = add a 2\nret y\nend'
 ir_multi call_long_prefix 'fn increment_one a uint to uint\nret add a uint 1\nend\nfn increment_two a uint to uint\nret add a uint 2\nend\nfn f to uint\nret increment_two uint 4\nend'
+# A contract word followed by = is an assignment to a local of that name, as in the C oracle (only the clause form is error 30).
+ir_multi ensures_assign 'fn f to ulong\nensures = ulong 1\nret ensures\nend'
+ir_multi requires_assign 'fn f to ulong\nx = ulong 1\nrequires = add x x\nrequires = add requires x\nret requires\nend'
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -494,5 +497,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 29 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 29 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 2 contract-name units + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'
