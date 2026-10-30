@@ -72,7 +72,7 @@ feature anyone may want", and it never means hardware qualification beyond the t
 | irwasm differential, mutant, refusals | `seed/wasm/gate-irwasm.sh` | Run by authors; no gate manifest. |
 | SHA-256 and BLAKE3 parity, binding regeneration | `tests/gates/run.sh om-units` (`OMEGA-OM-UNITS`) | Needs `../omega-bridge` at the lock. |
 | Branch displacement (#669) | `seed/qualification/security673/gate669.om` | Branch-form slice on `fix/security673-qualified`; #669 open. |
-| Diverse double compilation | none | #650 open. The fixpoint is a same-lineage consistency check. |
+| Diverse double compilation | `seed/qualification/ddc650/ddc.om` (draft PR #952, not in a manifest) | #650 open. PROPOSED gate, host EXERCISED at `62d1d0d6`: seed om4 route and GCC-built spec-interpreter route both reproduce `seed/out/omc`; controls fail. Same host and project lineage; see its README. The fixpoint alone is a same-lineage consistency check. |
 | GPU words on the chip | `seed/sm121/chip6.sh` | BLOCKED_OPERATOR. |
 
 ### 1.3 Findings
