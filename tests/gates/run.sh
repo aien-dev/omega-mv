@@ -133,7 +133,10 @@ case "$step" in
   seed)               make OUT_DIR=build build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
                       sh seed/omega-from-seed.sh
                       sh seed/host/check.sh 2>&1 | tee "$OUT_DIR.seed-check.log"
-                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi ;;
+                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi
+                      # gate5 checks that seed/omc/size-history.tsv ends with a row for this omc; check.sh does not run it
+                      sh seed/omc/gate5.sh 2>&1 | tee "$OUT_DIR.seed-gate5.log"
+                      tail -1 "$OUT_DIR.seed-gate5.log" | grep -q "^GATE5 PASS" || { echo "OMEGA-SEED: gate5 failed" >&2; exit 1; } ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -317,6 +320,12 @@ case "$step" in
     sh om/units.sh --check
     sh om/sha256/parity/run.sh
     sh om/blake3/parity/run.sh
+    ;;
+  tilelab)            # omega#906: native .om tile planner and streaming (m,s,p) softmax. omc born from the seed
+                      # here, then seed/tilelab/gate.sh (expected output, mutants failing for their own reason).
+    sh seed/omega-from-seed.sh > build/tilelab-seed.log 2>&1 || { tail -3 build/tilelab-seed.log; exit 1; }
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/tilelab/gate.sh
     ;;
   *) echo "run.sh: unknown step '$step'" >&2; exit 2 ;;
 esac
