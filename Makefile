@@ -1249,6 +1249,36 @@ $(RX_CM_UNIT): tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/omega_om_units
 test-costmodel: $(RX_CM_UNIT)
 	./$(RX_CM_UNIT)
 
+# Offline resource-DAG evaluator (omega-mv#583, lifetime refusal omega-mv#705).
+# Host only. The seeded SHA-256 unit is AArch64 machine code; other hosts link
+# tests/dagsim/sha256_host.c, which aborts if a blob digest is actually requested.
+.PHONY: test-dagsim
+DS_OBJ = $(OUT_DIR)/dagsim.o
+DS_UNIT = $(OUT_DIR)/dagsim_unit
+DS_CLI = $(OUT_DIR)/dagsim
+ifeq ($(shell uname -m),aarch64)
+DS_SHA_SRC = src/omega_om_units.c
+else
+DS_SHA_SRC = tests/dagsim/sha256_host.c
+endif
+
+$(DS_OBJ): tools/dagsim/dagsim.c tools/dagsim/dagsim.h src/runtime/rx_costmodel.h | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -c -o $@ tools/dagsim/dagsim.c
+	@if nm -u $@ | grep -E 'cuda|nvrm|gpu_'; then \
+		echo "dagsim.o references an operation an offline evaluator must not have"; \
+		rm -f $@; exit 1; fi
+
+$(DS_UNIT): tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
+
+$(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
+
+test-dagsim: $(DS_UNIT) $(DS_CLI)
+	./$(DS_UNIT)
+	sh tests/dagsim/run_cli.sh $(DS_CLI) $(OUT_DIR)/dagsim-cli-out
+	sh tests/dagsim/mutant_lifetime.sh
+
 # AArch64 hosts: the gate. Real realizations, training, promotion through the
 # R9 barrier on the native authority, held-out workloads.
 RX_EMP_SRCS = src/runtime/rx_generation.c src/omega_om_units.c src/omega_evidence.c \

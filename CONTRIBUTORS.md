@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Grok 4.7 | Offline DAG certificate fix: reject inverted buffer lifetimes before the capacity ledger so a negative live-byte contribution cannot hide a memory overflow (#705). Host regression and a mutant that drops the check. Seeded `.om` replacement of `tools/dagsim` is still outstanding (#599). |
 | Codex (GPT-6.1 Sol) | FR-9 x86-64 Linux backend integration from historical 7eca2ac3f, full-language lowering, contract-loop/output-capacity/dead-branch repairs, division/shift proof-aware diagnostics, original-conductor and historical-mutant qualification repair, independent disassembly and cross-architecture qualification; orphaned-lane recovery, current mutation re-anchoring and x86 OM-2 emitted-storage bound |
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
 | Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
