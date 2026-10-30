@@ -1248,6 +1248,18 @@ $(RX_CM_UNIT): tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/omega_om_units
 
 test-costmodel: $(RX_CM_UNIT)
 	./$(RX_CM_UNIT)
+	@set -eu; dir=$(OUT_DIR)/costmodel-mutant; rm -rf $$dir; mkdir -p $$dir; \
+	  sed "/CM704:refuse-unsupported-op/c\\    uint32_t op = f && f->op < RX_CM_OPS ? f->op : RX_CM_OPS - 1u; /* CM704:refuse-unsupported-op */" \
+	    src/runtime/rx_costmodel.c > $$dir/rx_costmodel.c; \
+	  if cmp -s src/runtime/rx_costmodel.c $$dir/rx_costmodel.c; then \
+	    echo "mutant restore-op-clamp: sed changed nothing"; exit 1; fi; \
+	  $(CC) $(CFLAGS) -c -o $$dir/rx_costmodel.o $$dir/rx_costmodel.c; \
+	  $(CC) $(CFLAGS) -o $$dir/unit tests/runtime/rx_costmodel_unit.c $$dir/rx_costmodel.o src/omega_om_units.c -lm; \
+	  rc=0; $$dir/unit refuse > $$dir/out.txt 2> $$dir/err.txt || rc=$$?; \
+	  if [ $$rc -eq 0 ] || ! grep -q unsupported-op-not-aliased-to-matvec $$dir/err.txt; then \
+	    echo "mutant restore-op-clamp was not killed by unsupported-op-not-aliased-to-matvec (exit $$rc)"; \
+	    cat $$dir/err.txt; exit 1; fi; \
+	  echo "mutant restore-op-clamp: killed by unsupported-op-not-aliased-to-matvec (exit $$rc)"
 
 # Offline resource-DAG evaluator, imported verbatim from closed PR #590
 # (commit 3bd56731). Host arithmetic on the numbers written in the fixtures.
