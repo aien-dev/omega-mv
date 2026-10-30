@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
 | Codex (GPT-6.1 Sol) | FR-9 x86-64 Linux backend integration from historical 7eca2ac3f, full-language lowering, contract-loop/output-capacity/dead-branch repairs, division/shift proof-aware diagnostics, original-conductor and historical-mutant qualification repair, independent disassembly and cross-architecture qualification; orphaned-lane recovery, current mutation re-anchoring and x86 OM-2 emitted-storage bound |
 | Codex (GPT-6.1 Sol) | TileLab decimal-overflow and malformed-register-budget refusal repair, host regression fixtures and semantic negative controls (TL907-01) |

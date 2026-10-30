@@ -482,6 +482,98 @@ static void test_minimum_work_diff(void) {
     CHECK(rc != DS_OK && d.double_counted, "double-counted shared work detected");
 }
 
+static int eval_file(const char *path, ds_model *m, ds_result *r) {
+    char err[256];
+    int rc = ds_parse_file(path, m, err, sizeof err);
+    if (rc != DS_OK) {
+        memset(r, 0, sizeof *r);
+        r->status = rc;
+        snprintf(r->reason, sizeof r->reason, "%s", err);
+        return rc;
+    }
+    ds_opts def; memset(&def, 0, sizeof def);
+    def.asof_day = ds_day_from_date("2026-10-24");
+    def.interval_q = 0.9;
+    return ds_eval(m, &def, r);
+}
+
+static double peak_of(const ds_model *m, const ds_result *r, const char *cap) {
+    int i = ds_find_res(m, cap);
+    return i < 0 ? -1.0 : r->peak_live_bytes[i];
+}
+
+/* Issue #705. An inverted lifetime must not contribute negative live bytes. */
+static void test_inverted_lifetimes(void) {
+    ds_model m; ds_result r, r2;
+    int rc = eval_file("tests/dagsim/fixtures/inverted_masks_overflow.oev", &m, &r);
+    CHECK(rc == DS_REFUSED_LIFETIME
+          && strstr(r.reason, "inverted lifetime for buffer inverted:")
+          && strstr(r.reason, "first=C") && strstr(r.reason, "start_ns=20")
+          && strstr(r.reason, "last=A") && strstr(r.reason, "end_ns=10")
+          && !strstr(r.reason, "went negative"),
+          "inverted_lifetime_masks_overflow: got %s (%s)", ds_status_name(rc), r.reason);
+    CHECK(r.makespan_ns == 0 && r.peak_live_bytes[0] == 0, "refusal carries no capacity certificate");
+    rc = eval_file("tests/dagsim/fixtures/inverted_masks_overflow.oev", &m, &r2);
+    CHECK(rc == r2.status && strcmp(r.reason, r2.reason) == 0, "rejection text is deterministic");
+
+    rc = eval_file("tests/dagsim/fixtures/inverted_lone.oev", &m, &r);
+    CHECK(rc == DS_REFUSED_LIFETIME && strstr(r.reason, "first=C") && strstr(r.reason, "last=A"),
+          "lone inverted lifetime refused, got %s (%s)", ds_status_name(rc), r.reason);
+
+    rc = eval_file("tests/dagsim/fixtures/capacity_two_80.oev", &m, &r);
+    CHECK(rc == DS_REFUSED_CAPACITY && strstr(r.reason, "real1") && strstr(r.reason, "real2"),
+          "two valid 80 B buffers refuse capacity, got %s (%s)", ds_status_name(rc), r.reason);
+
+    rc = eval_file("tests/dagsim/fixtures/valid_disjoint_80.oev", &m, &r);
+    CHECK(rc == DS_OK, "disjoint 80 B pair fits, got %s (%s)", ds_status_name(rc), r.reason);
+    CHECK(NEAR(peak_of(&m, &r, "mem"), 80, 1e-9), "disjoint peak 80, got %.1f", peak_of(&m, &r, "mem"));
+    CHECK(NEAR(r.makespan_ns, 30, 1e-9), "disjoint makespan 30, got %.1f", r.makespan_ns);
+
+    rc = eval_file("tests/dagsim/fixtures/valid_tie_80.oev", &m, &r);
+    CHECK(rc == DS_OK, "completion/allocation tie fits, got %s (%s)", ds_status_name(rc), r.reason);
+    CHECK(NEAR(peak_of(&m, &r, "mem"), 80, 1e-9), "tie peak 80 (not 160), got %.1f", peak_of(&m, &r, "mem"));
+
+    /* zero-duration: empty [start, end), peak 0, and it cannot hide an overlap */
+    rc = eval_text(
+        "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+        "op id=Z kind=compute engine=cpu t_ns=0 prov=measured src=t\n"
+        "buffer id=z bytes=80 cap=mem first=Z last=Z\n", &m, &r, NULL);
+    CHECK(rc == DS_OK, "zero-duration buffer status %s (%s)", ds_status_name(rc), r.reason);
+    CHECK(NEAR(r.peak_live_bytes[0], 0, 1e-9), "zero-duration peak 0, got %.1f", r.peak_live_bytes[0]);
+    rc = eval_text(
+        "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+        "op id=Z kind=compute engine=cpu t_ns=0 prov=measured src=t\n"
+        "op id=B kind=compute engine=cpu t_ns=10 prov=measured src=t\n"
+        "buffer id=z bytes=400 cap=mem first=Z last=Z\n"
+        "buffer id=real1 bytes=600 cap=mem first=B last=B\n"
+        "buffer id=real2 bytes=600 cap=mem first=B last=B\n", &m, &r, NULL);
+    CHECK(rc == DS_REFUSED_CAPACITY, "zero-duration must not hide 1200 B, got %s (%s)", ds_status_name(rc), r.reason);
+
+    /* omitted endpoints stay valid: resident from 0, open end, and both omitted */
+    rc = eval_text(
+        "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+        "op id=A kind=compute engine=cpu t_ns=10 prov=measured src=t\n"
+        "buffer id=no_first bytes=100 cap=mem last=A\n"
+        "buffer id=no_last bytes=50 cap=mem first=A\n"
+        "buffer id=resident bytes=25 cap=mem\n", &m, &r, NULL);
+    CHECK(rc == DS_OK, "omitted endpoints status %s (%s)", ds_status_name(rc), r.reason);
+    CHECK(NEAR(r.peak_live_bytes[0], 175, 1e-9), "omitted endpoints peak 175, got %.1f", r.peak_live_bytes[0]);
+
+    char text[2048], err[256];
+    snprintf(text, sizeof text, "%s%s", HDR, "buffer id=neg bytes=-5 cap=mem\n");
+    CHECK(ds_parse_text(text, &m, err, sizeof err) == DS_PARSE_ERROR && strstr(err, "finite number >= 0"),
+          "negative bytes refused at parse: %s", err);
+    snprintf(text, sizeof text, "%s%s", HDR, "buffer id=inf bytes=inf cap=mem\n");
+    CHECK(ds_parse_text(text, &m, err, sizeof err) == DS_PARSE_ERROR && strstr(err, "finite number >= 0"),
+          "non-finite bytes refused at parse: %s", err);
+    snprintf(text, sizeof text, "%s%s", HDR,
+             "resource id=cpu kind=compute slots=1 prov=specified src=test\n"
+             "op id=A kind=compute engine=cpu t_ns=10 prov=measured src=t\n"
+             "buffer id=ghost bytes=10 cap=mem first=nope last=A\n");
+    CHECK(ds_parse_text(text, &m, err, sizeof err) == DS_PARSE_ERROR && strstr(err, "not an op"),
+          "unknown endpoint refused at parse: %s", err);
+}
+
 int main(void) {
     test_serial_chain();
     test_perfect_overlap();
@@ -497,6 +589,7 @@ int main(void) {
     test_costmodel_reuse();
     test_counterfactual();
     test_minimum_work_diff();
+    test_inverted_lifetimes();
     printf("dagsim_unit: %d checks, %d failed\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }
