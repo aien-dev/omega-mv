@@ -1229,3 +1229,82 @@ Fixtures and exact expected outcomes are in
 `seed/qualification/om2/gate.om` conductor. The example above is exercised by
 `seed/omc/contracts/ok.om`; release/erased and proved/plain pairs require
 byte-identical output, not just equal exit statuses.
+
+## 13. Determinism ban (OSC IR wire v8 kernels, `seed/detcheck/`)
+
+The claim, exactly: **an Omega GPU kernel unit that `seed/detcheck/detcheck` and checker2 both accept
+has no construct whose result can depend on the order in which threads run.** Floating-point
+atomics, order-dependent atomics, unordered reductions and data races are refused on the IR,
+before lowering; detcheck is not yet called by the launch path (see Gate). This is a checker
+property of the IR, not a hardware receipt. The chip side ("the same bits on every run") is D7 in
+aien-dev/CUDApp (`docs/issues/D7-same-bits-chip.md`; draft CUDApp#141: 10 of 10 runs with one
+output hash each for `hello_gpu`, a bf16 matrix-vector product, rmsnorm and decode attention on
+the GB10, receipt `evidence/d7-same-bits-chip/2026-10-27/` there).
+
+Scope. Host functions are single-threaded: Omegese has no shared-memory threads (section 10), so the
+ban concerns kernels. Process-level concurrency through native host words (fork, pipes, memfd) is
+an effect, outside this rule. Traps are already order-free: the lowest trap code wins
+(`docs/omegese/GPU.md` section 7).
+
+**Every source of order dependence, and what refuses it**
+
+| Construct | Why order can change the result | Refused by |
+|---|---|---|
+| Two threads write one buffer element, or one writes while another reads, in one phase | the last writer, or the value read, depends on timing | checker2 C2-GPU-GLOBAL-RACE / C2-GPU-SHARED-RACE (`docs/omegese/GPU.md` section 8) |
+| Float atomic add/min/max (CUDA `atomicAdd(float*)`) | binary32 addition is not associative, so the sum depends on arrival order | detcheck 41 DET-ATOM-FLOAT |
+| Atomic exchange, compare-and-swap, wrapping inc/dec, sub | the stored or returned value depends on which thread came last | detcheck 42 DET-ATOM-OP |
+| An atomic whose old value is used | each thread sees a different prefix of the other threads' updates | detcheck 43 DET-ATOM-RESULT |
+| An atomic target that is also read, written plainly, copied or hit by a second atomic kind in the kernel | mixed operations do not commute (`max` then `add` is not `add` then `max`) | detcheck 44 DET-ATOM-MIXED |
+| A reduction without a declared order | the grouping of the operands changes the rounded result | no such construct exists: there is no reduce opcode. A reduction is written as an in-thread loop, a fixed `down` shuffle tree, or shared memory with `sync`, so the grouping is the program text; any cross-thread accumulation outside that is an atomic or a race and is refused above |
+
+**What is allowed.** Integer atomics with sub ADD (wrapping modulo 2^32), MIN, MAX, AND, OR or XOR
+on u32 elements of an `edit` buffer or a shared array, result discarded, and the target used by
+that one sub only. Each of these operations is associative and commutative on u32, so the final
+value is the same for every interleaving. Checked with Wolfram:
+`Reduce[ForAll[{a,b,c}, Element[{a,b,c}, Integers], Mod[Mod[a+b,m]+c,m] == Mod[a+Mod[b+c,m],m] && Mod[a+b,m]==Mod[b+a,m]]]` with `m = 2^32` -> `True`, and the and/or/xor/max/min/sum of the
+six orderings of `{12345, 4294967295, 2^31+7}` -> one distinct result each. The counterexample for
+floats, binary32 round-to-nearest-even through `r32[x] = u Round[x/u]`, `u = 2^(Floor[Log2[x]]-23)`:
+`(2^24 + 1) + 1 -> 16777216` but `2^24 + (1 + 1) -> 16777218` (the same pair as the E1 gate test
+`NEG_UNORDERED_REDUCTION_DIVERGENCE_CAUGHT`, `docs/numeric/E1_GAP_TABLE.md`). Write SUB as ADD of
+the two's complement. Rule v1 is deliberately conservative: an atomic result can never be read in
+the same kernel, even after a `sync`; a phase-aware rule is PROPOSED.
+
+**The ATOM instruction (op 47, wire v8, PROPOSED in the producer).** `u8 sub, dst, a, b, c`: a is the
+target (a GEDIT buffer register or a BLOCK ref), b the u32 index, c the operand of the target's
+element type, dst the old value or -1. Subs: 1 ADD, 2 MIN, 3 MAX, 4 AND, 5 OR, 6 XOR, 7 EXCH,
+8 CAS, 9 INC, 10 DEC, 11 SUB. No Omegese word, producer or back end emits or lowers ATOM yet;
+checker2 and the GPU back end refuse op 47 as an unknown opcode, so an accepted integer atomic still
+cannot run. detcheck decodes it so the rule exists before the instruction does.
+
+**detcheck exit codes** (stderr `detcheck: NAME function F insn I`, or `vreg V` for 44; acceptance
+prints `detcheck: ACCEPT functions N kernels K atoms A` on stdout and exits 0). These are the exit
+codes of the detcheck program, a separate namespace from omc's compile errors (1 to 30) and trap
+exits (100 and up); omc and `seed/spirv/irspirv.om` assign nothing to 41 to 44, and the
+structural codes 20 to 28 follow irspirv's:
+
+| Exit | Name | Meaning |
+|---|---|---|
+| 20 | MAGIC | not `OSC1IR\0` |
+| 21 | VERSION | wire version other than 8 |
+| 22 | TRUNCATED | input ends inside a field |
+| 23 | CAPACITY | over 1,000,000 bytes, 8192 registers or 10^6 instructions |
+| 24 | UNKNOWN_OP | opcode outside the v8 kernel table |
+| 25 | BAD_TAG | unknown type tag |
+| 26 | INVALID | ATOM outside a kernel, on a `view` buffer, sub outside 1..11, or ill-typed operands |
+| 27 | TRAILING | bytes after the unit |
+| 28 | IO | read or write failed |
+| 41 | DET-ATOM-FLOAT | ATOM on an f32 element |
+| 42 | DET-ATOM-OP | ATOM sub EXCH, CAS, INC, DEC or SUB |
+| 43 | DET-ATOM-RESULT | ATOM result register is not -1 |
+| 44 | DET-ATOM-MIXED | an atomic target is also used by another instruction or another sub |
+
+**Gate.** `sh seed/detcheck/gate-det.sh` builds `detcheck.om` and the fixture writer `mkfix.om` with
+the pinned `seed/out/omc`, then: (1) every kernel the GPU back end is tested on, including the
+fixed-order tree reduction `tests/checker2/kernels/reduce.json`, is accepted by both checkers;
+(2) every race fixture is refused by checker2 with the rule its name carries; (3) each case in
+`seed/detcheck/cases.tsv` gets its exact exit code and name, and checker2 refuses every ATOM unit as
+C2-DECODE-OPCODE; (4) empty, truncated, trailing and version-6 inputs fail closed; (5) four mutants,
+each dropping one rule (41, 42, 43, 44), must produce a wrong verdict. The C omegese, omega_emit and
+checker2 are referees and IR producers there; detcheck's own rules are seeded Omega. Status:
+IMPLEMENTED and EXERCISED on the host (receipt `evidence/determinism-ban/2026-10-27/`); the checker
+is not yet wired into the launch path, so a launch does not run detcheck today.

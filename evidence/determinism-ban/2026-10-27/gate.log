@@ -1,0 +1,62 @@
+SOURCE b5869f00e2a8156f82da17e6b362115d08b4d689 dirty=0
+COMPILER seed/out/omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+REFEREE checker2 sha256=600fcadaac7ad8771fb22dcb0d4803ff3e415a2f3012fe0bd42d84e62b5274f8
+PLATFORM Linux 7.0.0-1019-nvidia aarch64
+DETCHECK sha256=b03f301c5bc0081405dcc2be97197cd37d3c7e340a4abe0a3fb79909987fa2d8
+ACCEPT gate sha256=96c9682b1205dde63b8e0af0e53be8487bbe7c91dc9c297760590d784246a389 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT gemm sha256=0d93aa72760535ed056acab8c92f678afa74ab3dd32a1ddce4919f37e6768092 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT nest16 sha256=f866863654ec0f5e283d23a1c12c4bed87c890aa672d1db4f7337a04221a9361 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT reduce sha256=04f83dbef3ae8764aff7a84de6bd1044670ca0808df7e9b6abb9f86700b1b639 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT vadd sha256=0c83abd2ea5260982ab4846700995758120b32e3a81c0dfdcb1868b437c05421 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT nest16j sha256=13fd9740a650138e2de32089de365085b744fc8b357d01ed32fbf12a04df789c detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT ops_f sha256=38841bbaad7d17bdbeabbf9a2503265eed5d7b1cc57f82c819af584db9409fc1 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT ops_u sha256=bef4edd94c09d67461fc054fdd56528e77e9631778a7dfe57d039fe06b106b00 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT vloop sha256=53bbb62c60e1c51594f0c4b4053a5238dce94055e070de96c3280b643ff76120 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT om_attn sha256=e4590c3e7c243162093e19206ad26dc0b942f2be5c96e161fce330ae69ed134b detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT om_gate sha256=8ae2506e4e0c8feeffb8e2a98d9e0eef54e5d0688437fcea2dcb558ff411342d detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT om_gemm sha256=02b19407743a06fc3886c88cc94e0df4a40b0972f0be3052bdefc9aa60f4af50 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+ACCEPT om_vadd sha256=e2e19c3937fd457356553255656cdb60fc7bc8660cb59928b987749e1208a163 detcheck: ACCEPT functions 1 kernels 1 atoms 0
+REFUSE C2-GPU-GLOBAL-RACE__const_index checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__counter_not_last checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__fixed_mismatch checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__guard_not_dominating checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__guard_two_preds checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__loop_digit_twice checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__loop_outside checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__mixed_index checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__multi_def checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__no_block checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__not_injective checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-GLOBAL-RACE__thread_digits_overlap checker2 C2-GPU-GLOBAL-RACE
+REFUSE C2-GPU-SHARED-RACE__const_index checker2 C2-GPU-SHARED-RACE
+REFUSE C2-GPU-SHARED-RACE__gemm_no_second_sync checker2 C2-GPU-SHARED-RACE
+REFUSE C2-GPU-SHARED-RACE__same_phase checker2 C2-GPU-SHARED-RACE
+CASE u1nn 0 ACCEPT
+CASE u2nn 0 ACCEPT
+CASE u3nn 0 ACCEPT
+CASE u4nn 0 ACCEPT
+CASE u5nn 0 ACCEPT
+CASE u6nn 0 ACCEPT
+CASE s1nn 0 ACCEPT
+CASE s3nn 0 ACCEPT
+CASE f1nn 41 DET-ATOM-FLOAT
+CASE f2nn 41 DET-ATOM-FLOAT
+CASE f3nn 41 DET-ATOM-FLOAT
+CASE h1nn 41 DET-ATOM-FLOAT
+CASE f7rl 41 DET-ATOM-FLOAT
+CASE u7nn 42 DET-ATOM-OP
+CASE u8nn 42 DET-ATOM-OP
+CASE u9nn 42 DET-ATOM-OP
+CASE uann 42 DET-ATOM-OP
+CASE ubnn 42 DET-ATOM-OP
+CASE u1rn 43 DET-ATOM-RESULT
+CASE s3rn 43 DET-ATOM-RESULT
+CASE u1nl 44 DET-ATOM-MIXED
+CASE u1nx 44 DET-ATOM-MIXED
+CASE s1nl 44 DET-ATOM-MIXED
+CASE v1nn 26 INVALID
+MUTANT no_float caught: 5 wrong verdicts
+MUTANT no_op caught: 5 wrong verdicts
+MUTANT no_result caught: 2 wrong verdicts
+MUTANT no_mixed caught: 3 wrong verdicts
+PASS positives=13 races=15 atom_cases=24 mutants_caught=4
