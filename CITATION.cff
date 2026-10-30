@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Omega Systems Core"
+authors:
+  - family-names: Stapleton
+    given-names: Drake
+    orcid: "https://orcid.org/0009-0002-6890-7111"
+repository-code: "https://github.com/aien-dev/omega-mv"
+license: "Apache-2.0"
+doi: "10.5281/zenodo.23547810"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23547810"
+    description: "Omega: A Programming Language Built for Verified Programs"
+  - type: doi
+    value: "10.5281/zenodo.23644702"
+    description: "The Token Is the Instruction: Large Language Models as Programming Languages, and Omega as the Next Substrate"
+  - type: doi
+    value: "10.5281/zenodo.23614483"
+    description: "A Call to Humanity: Breaking the CUDA Stranglehold on the Hardware Market"
+preferred-citation:
+  type: report
+  title: "Omega: A Programming Language Built for Verified Programs"
+  authors:
+    - family-names: Stapleton
+      given-names: Drake
+      orcid: "https://orcid.org/0009-0002-6890-7111"
+  year: 2026
+  doi: "10.5281/zenodo.23547810"
+  publisher:
+    name: "Zenodo"
