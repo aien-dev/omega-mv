@@ -2069,6 +2069,30 @@ test-library: tests/test_omega_library.c src/omega_library.c src/omega_library.h
 	  mp_run build_mutant refuse-deps           dep-null             '    if (dep_count > 0) return -1;'; mp_wait
 	@echo "test-library: PASS (all checks, all mutants killed)"
 
+# omega-mv#574: omega_exec_native_f3 keeps executable pages for the last OMEGA_EXEC_CACHE_SLOTS distinct code
+# byte strings. test-exec-native-cache: reuse (hits), invalidation (same length or same address with new bytes
+# never runs a stale mapping), LRU eviction, capacity. Then each mutant of src/omega_exec.c must make the test fail.
+.PHONY: test-exec-native-cache
+EXECCACHE_CORE = $(filter-out src/omega_exec.c,$(LIBTEST_CORE))
+EXECCACHE_DIR = $(OUT_DIR)/exec-cache-test
+test-exec-native-cache: tests/exec/test_exec_native_cache.c src/omega_exec.c src/omega_exec.h
+	@mkdir -p $(EXECCACHE_DIR)
+	$(CC) $(LIBTEST_FLAGS) -o $(EXECCACHE_DIR)/test_exec_native_cache tests/exec/test_exec_native_cache.c src/omega_exec.c $(EXECCACHE_CORE) -lpthread
+	$(EXECCACHE_DIR)/test_exec_native_cache
+	@set -eu; for m in 'identity-by-length|s/ \&\& memcmp(s->code, real->code_bytes, real->code_len) == 0//' \
+	                 'evict-most-recent|s/s->last_use < lru->last_use/s->last_use > lru->last_use/' \
+	                 'hit-not-touched|/^ *s->last_use = ++g_tick;$$/d'; do \
+	  name=$${m%%|*}; expr=$${m#*|}; mut=$(EXECCACHE_DIR)/mut_$$name.c; \
+	  sed "$$expr" src/omega_exec.c > $$mut; \
+	  if cmp -s src/omega_exec.c $$mut; then echo "mutant $$name: sed changed nothing"; exit 1; fi; \
+	  $(CC) $(LIBTEST_FLAGS) -o $(EXECCACHE_DIR)/mut_$$name tests/exec/test_exec_native_cache.c $$mut $(EXECCACHE_CORE) -lpthread; \
+	  rc=0; $(EXECCACHE_DIR)/mut_$$name > $(EXECCACHE_DIR)/mut_$$name.out 2>&1 || rc=$$?; \
+	  if [ $$rc -ne 1 ] || ! grep -q '^EXEC_NATIVE_CACHE: FAIL' $(EXECCACHE_DIR)/mut_$$name.out; then \
+	    echo "mutant $$name NOT killed (exit $$rc)"; cat $(EXECCACHE_DIR)/mut_$$name.out; exit 1; fi; \
+	  echo "mutant $$name: killed ($$(grep -c '^FAIL' $(EXECCACHE_DIR)/mut_$$name.out) failing checks)"; \
+	done
+	@echo "test-exec-native-cache: PASS (all checks, all mutants killed)"
+
 # VC1-STORE (VC1 stage 3): unit test for the Verified Crumb Store (omega_vcstore): golden
 # vectors from aien-protocols (tests/vcstore/golden, PIN names the commit), immutability,
 # dependency closure, insert-order-independent digest, name index, save/load. Plus a mutation
