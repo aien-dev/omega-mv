@@ -67,8 +67,8 @@ DIGEST_VERIFY=$(sha256sum "$OMEGA_ROOT/src/omega_verify.c" | awk '{print $1}')
 DIGEST_TOOL=$(sha256sum "$TOOL" | awk '{print $1}')
 PARENT_COMMIT="202fa3c9343b793d6635ee0b3d14915d33e8156d"
 SOURCE_PARENT_COMMIT="$PARENT_COMMIT"
-QUALIFIED_COMMIT="${QUALIFIED_IMPLEMENTATION_COMMIT:-d25349e4bf4a820dbcff0dd6a593d1db7b454a0b}"
-RECEIPT_COMMIT="${RECEIPT_COMMIT:-d25349e4bf4a820dbcff0dd6a593d1db7b454a0b}"
+. "$OMEGA_ROOT/tests/receipt_commit.sh"
+receipt_commit_resolve "$OMEGA_ROOT" || exit 1
 
 echo "[*] Step 6: Generating formal qualification receipt: $RECEIPT..."
 cat <<EOF > "$RECEIPT"

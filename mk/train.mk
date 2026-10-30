@@ -17,7 +17,7 @@ TRAIN_MK := 1
 TRAIN_DIR = $(OUT_DIR)/train
 TRAIN_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -ffp-contract=off -Isrc
 TRAIN_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-TRAIN_SRCS = src/train/tg_store.c src/train/tg_sgd.c src/sha256.c
+TRAIN_SRCS = src/train/tg_store.c src/train/tg_sgd.c src/omega_om_units.c
 TRAIN_HDRS = src/train/tg_store.h src/train/tg_sgd.h src/sha256.h
 
 $(TRAIN_DIR)/test_train: tests/train/test_train.c $(TRAIN_SRCS) $(TRAIN_HDRS)

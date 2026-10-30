@@ -1,0 +1,22 @@
+om2
+note Contract section 3 lines 76-83: uint/ulong rotr and rotl, constant and public runtime amounts.
+note Entry x0 and x2 may hold DATA; n (x1), m (x3) public. No message-dependent address or branch.
+note ARM DDI0487M.d C6.2.160 EXTR (p2201), C6.2.349 RORV (p2580), C6.2.295 NEG (p2475).
+fn f x uint n uint y ulong m ulong to ulong
+a = rotr x 7
+r = ulong a
+a = rotl x 11
+r = xor r ulong a
+a = rotr x n
+r = xor r ulong a
+a = rotl x n
+r = xor r ulong a
+b = rotr y 17
+r = xor r b
+b = rotl y 23
+r = xor r b
+b = rotr y m
+r = xor r b
+b = rotl y m
+ret xor r b
+end

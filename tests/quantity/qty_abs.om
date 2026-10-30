@@ -1,0 +1,8 @@
+fn main to int
+a = qty 18446744073709551615
+b = fabs a
+if eq a b
+ret 0
+end
+ret 1
+end

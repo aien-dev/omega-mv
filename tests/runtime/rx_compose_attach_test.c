@@ -493,7 +493,9 @@ static void t_close_waits(void) {
 
 /* ---- close reclaims everything: 2000 rounds -------------------------------- */
 
+#ifndef ROUNDS
 #define ROUNDS 2000u
+#endif
 
 static void cap_ids(const RxCompose *c, uint32_t out[13]) {
     uint32_t n = 0;

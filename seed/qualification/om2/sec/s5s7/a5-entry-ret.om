@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 abstract line 137: dup32 may not be the return type of the entry function.
+note Erratum E8: error 7. Function mode.
+om2
+abstract dup32 ulong ops rotr xor
+holds dup32 dup32
+fn dup32mk x uint to dup32
+ret seal dup32 or shl ulong x 32 ulong x
+end
+fn entry x uint to dup32
+ret dup32mk x
+end

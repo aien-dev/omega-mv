@@ -1,0 +1,32 @@
+note S4 empty text (`text e ""`, length 0) as a `view uchar *` argument (spec 6, erratum E2): its count is
+note the number 0, never a count register. x = 7 is live in the register the old lowering read as the
+note count. Checks: len through a parameter, through an inline parameter, len e itself, part e 0 0 and a
+note 0-byte write. Exit 0 when every check holds, else the failing check's number.
+om2
+text e ""
+fn plen v view uchar * to ulong
+ret len v
+end
+fn ilen v view uchar * to ulong inline
+ret len v
+end
+fn main to int
+x = ulong 7
+if ne plen e 0
+ret 1
+end
+if ne ilen e 0
+ret 2
+end
+if ne len e 0
+ret 3
+end
+if ne plen part e 0 0 0
+ret 4
+end
+n = write int 1 e ulong 0 ulong 0
+if ne n 0
+ret 5
+end
+ret int sub x 7
+end
