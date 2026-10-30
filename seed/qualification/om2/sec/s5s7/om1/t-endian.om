@@ -1,0 +1,45 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of l5-endian.om: big-endian fields stored MSB first, little-endian LSB first, then
+note decoded back from the bytes. Expected stdout oracle/s5s7/exp/l5-endian.out (python3 struct).
+note 168496141 = 0x0a0b0c0d, 72623859790382856 = 0x0102030405060708, 48879 = 0xbeef, 4660 = 0x1234.
+fn stbe c edit uchar 16 o ulong v ulong n ulong to void
+x = v
+for i ulong n
+put c add o sub sub n 1 i uchar and x 255
+x = shr x 8
+end
+end
+fn stle c edit uchar 16 o ulong v ulong n ulong to void
+x = v
+for i ulong n
+put c add o i uchar and x 255
+x = shr x 8
+end
+end
+fn gbe c view uchar 16 o ulong n ulong to ulong
+x = ulong 0
+for i ulong n
+x = or shl x 8 ulong get c add o i
+end
+ret x
+end
+fn gle c view uchar 16 o ulong n ulong to ulong
+x = ulong 0
+for i ulong n
+x = or shl x 8 ulong get c add o sub sub n 1 i
+end
+ret x
+end
+fn main to int
+c = new uchar 16 0
+stbe c 0 168496141 4
+stbe c 4 72623859790382856 8
+stle c 12 48879 2
+stle c 14 4660 2
+w = write 1 c 0 16
+puth gbe c 0 4
+puth gbe c 4 8
+puth gle c 12 2
+puth gle c 14 2
+ret 0
+end

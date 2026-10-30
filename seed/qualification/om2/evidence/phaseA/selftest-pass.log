@@ -1,0 +1,19 @@
+OM2GATE START cases=seed/qualification/om2/selftest/pass.cases scratch=build/om2-qual/selftest-pass
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE cat-seq line=2
+  $ seed/out/omc < build/om2-qual/selftest-pass/2.src > build/om2-qual/selftest-pass/2.elf 2> build/om2-qual/selftest-pass/2.cerr
+  $ build/om2-qual/selftest-pass/2.elf < build/om2-qual/selftest-pass/2.in > build/om2-qual/selftest-pass/2.out 2> build/om2-qual/selftest-pass/2.err
+VERDICT cat-seq PASS run exit=0 expected=0 stdout=match stderr=match
+CASE cat-rnd line=3
+  $ seed/out/omc < build/om2-qual/selftest-pass/3.src > build/om2-qual/selftest-pass/3.elf 2> build/om2-qual/selftest-pass/3.cerr
+  $ build/om2-qual/selftest-pass/3.elf < build/om2-qual/selftest-pass/3.in > build/om2-qual/selftest-pass/3.out 2> build/om2-qual/selftest-pass/3.err
+VERDICT cat-rnd PASS run exit=0 expected=0 stdout=match stderr=match
+CASE cat-rep line=4
+  $ seed/out/omc < build/om2-qual/selftest-pass/4.src > build/om2-qual/selftest-pass/4.elf 2> build/om2-qual/selftest-pass/4.cerr
+  $ build/om2-qual/selftest-pass/4.elf < build/om2-qual/selftest-pass/4.in > build/om2-qual/selftest-pass/4.out 2> build/om2-qual/selftest-pass/4.err
+VERDICT cat-rep PASS run exit=0 expected=0 stdout=match stderr=match
+CASE cat-empty line=5
+  $ seed/out/omc < build/om2-qual/selftest-pass/5.src > build/om2-qual/selftest-pass/5.elf 2> build/om2-qual/selftest-pass/5.cerr
+  $ build/om2-qual/selftest-pass/5.elf < /dev/null > build/om2-qual/selftest-pass/5.out 2> build/om2-qual/selftest-pass/5.err
+VERDICT cat-empty PASS run exit=0 expected=0 stdout=match stderr=match
+OM2GATE PASS cases=4 pass=4 fail=0 invalid=0 not_run=0

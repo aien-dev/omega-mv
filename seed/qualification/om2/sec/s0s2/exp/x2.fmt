@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 2 lines 63-72: already canonical text; fmt returns it unchanged.
+om2
+text hi "hi\n"
+fn main to int
+  r = write 1 hi 0 len hi
+  ret 3
+end

@@ -1,0 +1,443 @@
+note bench/inference_cost/fake_model.om -- a deterministic stand-in for an OpenAI
+note chat-completions endpoint, so driver.sh --self-test can exercise --run-model end to end
+note without a live model.
+note Compose: { printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om seed/net/http.om bench/inference_cost/fake_model.om; } | omc
+note Run: fake_model MODE TASKSDIR [MAXCONN]; it listens on an ephemeral 127.0.0.1 port,
+note prints "PORT n" and serves POST /v1/chat/completions until MAXCONN connections
+note (default 1000) or 30 s without one. The request names its task and language in the
+note headers X-Bench-Task and X-Bench-Lang (1..16 bytes of [a-z0-9]); the body must be a
+note JSON object with a "messages" array. The reply's content is one fenced block holding
+note TASKSDIR/TASK/reference.LANG or TASKSDIR/TASK/mutant.LANG:
+note   good           the reference
+note   bad            the mutant (it compiles and returns wrong results)
+note   bad-then-good  the mutant while the request has fewer than 3 messages, else the
+note                  reference: a retry that carries the failed answer and feedback verifies
+note   refuse         a text that compiles in no language
+note Every reply reports model "fake-omega-bench" and usage 111 / 37 / 148 tokens, so a run's
+note token sums are exact multiples of the call count. Missing or bad headers, a body that
+note is not such an object, or a missing file answer 400 / 404 with an empty body.
+global fkmode ulong 1
+global fkdir uchar 4096
+global fkdirn ulong 1
+global fkpath uchar 4400
+global fkfile uchar 65536
+global fkfilen ulong 1
+global fklang uchar 16
+global fklangn ulong 1
+text fkgood "good"
+text fkbad "bad"
+text fkbtg "bad-then-good"
+text fkrefm "refuse"
+text fkchat "/v1/chat/completions"
+text fkpost "POST"
+text fkhtask "X-Bench-Task"
+text fkhlang "X-Bench-Lang"
+text fkmsgs "messages"
+text fkref "reference."
+text fkmut "mutant."
+text fkslash "/"
+text fkrefus "@@@ not a program @@@\n"
+text fkfence "```"
+text fknl "\n"
+text fkctype "Content-Type"
+text fkjson "application/json"
+text fkid "id"
+text fkidv "fake-omega-bench-1"
+text fkobj "object"
+text fkobjv "chat.completion"
+text fkmodel "model"
+text fkmodv "fake-omega-bench"
+text fkchoic "choices"
+text fkindex "index"
+text fkmessg "message"
+text fkrole "role"
+text fkasst "assistant"
+text fkcont "content"
+text fkfin "finish_reason"
+text fkstop "stop"
+text fkusage "usage"
+text fkptok "prompt_tokens"
+text fkctok "completion_tokens"
+text fkttok "total_tokens"
+text fkportl "PORT "
+
+note fk_text: append the bytes of t to fkpath at p; the new end
+fn fk_text t view uchar * p ulong to ulong
+n = len t
+for i ulong n
+put fkpath add p i get t i
+end
+ret add p n
+end
+
+note fk_namec: c is in [a-z0-9]
+fn fk_namec c uchar to bool
+if and ge c 97 le c 122
+ret true
+end
+ret and ge c 48 le c 57
+end
+
+note fk_hcopy: append header value i (1..16 bytes of [a-z0-9]) to fkpath at p; the new end,
+note or 0 when the value is not such a name
+fn fk_hcopy cs edit ulong * io edit uchar * i ulong p ulong to ulong
+o = hhvoff cs i
+n = hhvlen cs i
+if or eq n 0 gt n 16
+ret 0
+end
+for j ulong n
+c = get io add o j
+if not fk_namec c
+ret 0
+end
+put fkpath add p j c
+end
+ret add p n
+end
+
+note fk_dir: fkpath = DIR/ ; the length
+fn fk_dir to ulong
+p = get fkdirn 0
+for i ulong p
+put fkpath i get fkdir i
+end
+ret fk_text fkslash p
+end
+
+note fk_setlang: fklang = fkpath[s..p)
+fn fk_setlang s ulong p ulong to void
+for i ulong sub p s
+put fklang i get fkpath add s i
+end
+put fklangn 0 sub p s
+end
+
+note fk_path: fkpath = DIR/TASK/(reference.|mutant.)LANG for sel 1 / 0, the language
+note into fklang; the path length or 0 for a missing or bad header
+fn fk_path cs edit ulong * io edit uchar * sel ulong to ulong
+ti = hhfind cs io fkhtask
+if lt ti 0
+ret 0
+end
+p = fk_dir
+p = fk_hcopy cs io ulong ti p
+if eq p 0
+ret 0
+end
+p = fk_text fkslash p
+if eq sel 1
+p = fk_text fkref p
+else
+p = fk_text fkmut p
+end
+li = hhfind cs io fkhlang
+if lt li 0
+ret 0
+end
+s = p
+p = fk_hcopy cs io ulong li p
+if eq p 0
+ret 0
+end
+fk_setlang s p
+ret p
+end
+
+note fk_load: read fkpath[0..n) into fkfile; false when it cannot be read whole
+fn fk_load n ulong to bool
+fd = fopen fkpath 0 n 0 0
+if lt fd 0
+ret false
+end
+got = ulong 0
+note every pass adds at least one byte or leaves the loop
+while lt got 65536 bound 70000
+k = read int fd fkfile got sub 65536 got
+if le k 0
+break
+end
+got = add got ulong k
+end
+c = fclose int fd
+put fkfilen 0 got
+ret lt got 65536
+end
+
+note fk_nmsgs: the element count of the root object's "messages" array, jsnone when absent
+fn fk_nmsgs s view uchar * t view uint * to ulong
+if ne js_type t 0 jsobj
+ret jsnone
+end
+m = js_first t 0
+while ne m jsnone
+if js_streq s js_off t m fkmsgs
+v = add m 1
+if ne js_type t v jsarr
+ret jsnone
+end
+ret js_nkids t v
+end
+m = js_mnext t m
+end
+ret jsnone
+end
+
+fn fk_key ob edit uchar * t view uchar * to void
+js_wsbuf ob t 0 len t
+end
+
+note fk_content: the content string: one fence around fkfile (sel 0 or 1) or the refusal (2)
+fn fk_content ob edit uchar * sel ulong to void
+js_wsbeg ob
+for i ulong len fkfence
+js_wsb ob get fkfence i
+end
+if ne sel 2
+for i ulong get fklangn 0
+js_wsb ob get fklang i
+end
+end
+js_wsb ob 10
+if eq sel 2
+for i ulong len fkrefus
+js_wsb ob get fkrefus i
+end
+else
+for i ulong get fkfilen 0
+js_wsb ob get fkfile i
+end
+end
+for i ulong len fkfence
+js_wsb ob get fkfence i
+end
+js_wsb ob 10
+js_wsend ob
+end
+
+note fk_send: the 200 reply carrying content sel
+fn fk_send cs edit ulong * io edit uchar * sel ulong to long
+ob = new uchar 525328 0
+r = js_winit ob
+if lt r 0
+ret hrsperr cs io 500
+end
+js_wobj ob
+fk_key ob fkid
+fk_key ob fkidv
+fk_key ob fkobj
+fk_key ob fkobjv
+fk_key ob fkmodel
+fk_key ob fkmodv
+fk_key ob fkchoic
+js_warr ob
+js_wobj ob
+fk_key ob fkindex
+js_wulong ob 0
+fk_key ob fkmessg
+js_wobj ob
+fk_key ob fkrole
+fk_key ob fkasst
+fk_key ob fkcont
+fk_content ob sel
+js_wobje ob
+fk_key ob fkfin
+fk_key ob fkstop
+js_wobje ob
+js_warre ob
+fk_key ob fkusage
+js_wobj ob
+fk_key ob fkptok
+js_wulong ob 111
+fk_key ob fkctok
+js_wulong ob 37
+fk_key ob fkttok
+js_wulong ob 148
+js_wobje ob
+js_wobje ob
+jl = js_wdone ob
+if lt jl 0
+ret hrsperr cs io 500
+end
+r = hrspst cs io 200
+r = hfe r hhname cs io fkctype
+r = hfe r hhval cs io fkjson
+r = hfe r hhend cs io 0 ulong jl
+r = hfe r hput cs io view part ob jswh ulong jl
+ret hfe r hwfin cs io
+end
+
+note fk_chat: one POST /v1/chat/completions
+fn fk_chat cs edit ulong * io edit uchar * to long
+body = new uchar 983040 0
+tape = new uint 65536 0
+put cs HBCAP 983040
+n = hbodyall cs io body
+if lt n 0
+if eq n HEBIG
+ret hrsperr cs io 413
+end
+ret hrsperr cs io 400
+end
+if eq n 0
+ret hrsperr cs io 400
+end
+r = js_init tape ulong n 64
+if lt r 0
+ret hrsperr cs io 400
+end
+r = js_parse body tape ulong n
+if lt r 0
+ret hrsperr cs io 400
+end
+nm = fk_nmsgs body tape
+if or eq nm jsnone eq nm 0
+ret hrsperr cs io 400
+end
+md = get fkmode 0
+sel = ulong 1
+if eq md 1
+sel = 0
+end
+if and eq md 2 lt nm 3
+sel = 0
+end
+p = fk_path cs io sel
+if eq p 0
+ret hrsperr cs io 400
+end
+if eq md 3
+ret fk_send cs io 2
+end
+if not fk_load p
+ret hrsperr cs io 404
+end
+ret fk_send cs io sel
+end
+
+fn fk_serve1 lf int cs edit ulong * io edit uchar * to long
+c = haccept lf 30000000000
+if lt c 0
+ret c
+end
+r = hinit cs io int c 1
+if lt r 0
+x = hclose cs
+ret 0
+end
+hsettmo cs 10000000000 10000000000
+hsetbdl cs 20000000000
+for it ulong 100
+r = hreqrd cs io
+if le r 0
+if lt r 0
+x = hreject cs io r
+end
+break
+end
+if hispath cs io fkchat
+if hismeth cs io fkpost
+r = fk_chat cs io
+else
+r = hrsperr cs io 405
+end
+else
+r = hrsperr cs io 404
+end
+if lt r 0
+break
+end
+if eq hnext cs io 0
+break
+end
+end
+r = hclose cs
+ret 0
+end
+
+fn fk_putport v ulong to void
+d = new uchar 32 0
+for i ulong len fkportl
+put d i get fkportl i
+end
+q = new uchar 24 0
+i = ulong 24
+x = v
+for it ulong 21
+i = sub i 1
+put q i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+p = len fkportl
+for j ulong sub 24 i
+put d add p j get q add i j
+end
+p = add p sub 24 i
+put d p 10
+w = write 1 d 0 add p 1
+end
+
+fn main to int
+cs = new ulong 320 0
+io = new uchar 131072 0
+a = new uchar 16 0
+ab = new uchar 32 0
+na = argcnt
+if or lt na 3 gt na 4
+ret 2
+end
+n = argread 1 ab 0 32
+if lt n 0
+ret 2
+end
+md = ulong 9
+if heq view part ab 0 ulong n fkgood
+md = 0
+end
+if heq view part ab 0 ulong n fkbad
+md = 1
+end
+if heq view part ab 0 ulong n fkbtg
+md = 2
+end
+if heq view part ab 0 ulong n fkrefm
+md = 3
+end
+if eq md 9
+ret 2
+end
+put fkmode 0 md
+n = argread 2 fkdir 0 4000
+if or le n 0 ge n 4000
+ret 2
+end
+put fkdirn 0 ulong n
+mc = ulong 1000
+if eq na 4
+n = argread 3 ab 0 32
+if le n 0
+ret 2
+end
+if not hdigits view part ab 0 ulong n
+ret 2
+end
+mc = hdecv view part ab 0 ulong n
+end
+r = haddr4 a 2130706433 0
+lf = hlisten a 16
+if lt lf 0
+ret 3
+end
+fk_putport hport a
+for i ulong mc
+r = fk_serve1 int lf cs io
+if lt r 0
+break
+end
+end
+c = fclose int lf
+ret 0
+end

@@ -18,7 +18,7 @@ PROOF_QUIET      ?= $(HOME)/workspace/.spark-quiet
 PROOF_CFLAGS     ?= -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -Isrc -Itests/model -pthread
 PROOF_MODEL_SRCS = tests/model/world_model.c tests/model/world_explore.c
 PROOF_MODEL_HDRS = tests/model/world_model.h tests/model/world_explore.h
-PROOF_RX_SRCS    = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/sha256.c
+PROOF_RX_SRCS    = src/runtime/rx_caproot.c src/runtime/rx_world.c src/runtime/rx_coherent.c src/omega_om_units.c
 PROOF_RX_HDRS    = src/runtime/rx_world.h src/runtime/rx_caproot.h src/runtime/rx_caller.h \
                    src/runtime/omega_shared_world_abi.h
 

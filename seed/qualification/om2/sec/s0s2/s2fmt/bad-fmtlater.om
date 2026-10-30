@@ -1,0 +1,6 @@
+note errata E6 (f): om2 fmt anywhere but byte 0 of the input is error 16 at that line.
+om2
+om2 fmt
+fn main to int
+ret 0
+end

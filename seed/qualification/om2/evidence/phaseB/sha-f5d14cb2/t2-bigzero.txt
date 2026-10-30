@@ -1,0 +1,5 @@
+$ nice -n 19 /home/drakestapleton/workspace/om2-qualification/build/om2-qual/sha/run/sha_qual bigzero
+PASS bigzero-1 one update of 2^32+3 zero bytes == sha256sum
+PASS bigzero-hash hash of 2^32+3 zero bytes == sha256sum
+TOTAL bigzero pass=2 fail=0 trap=0
+EXIT 0

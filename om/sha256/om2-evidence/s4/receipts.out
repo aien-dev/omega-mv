@@ -1,0 +1,9 @@
+PASS lengths 0..9000: hash and split update equal the C
+PASS 2000 random lengths < 20000: hash and split update equal the C
+PASS hash(d,32,d) x100 equals the C
+PASS hash(d,64,d) (digest overlaps the first 32 bytes) equals the C
+PASS copy of a live context after k = 0..299 updates of 7 bytes, both continued, equals the C
+PASS init/update/final after a final equals a fresh context
+PASS hash(n) equals init/update(0, NULL)/update(n)/update(0)/final, n = 0..299
+ident omega-ident 1 unit=sha256_om2 abi=2 profile=OM-2 src=dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb omc=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec
+PASS omega2_ident_sha256_om2 names the unit and profile

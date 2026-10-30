@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, line 120: N <= 64; N = 65 is outside: error 14 (obligation=init), erratum E8.
+om2
+fn f s edit uchar 65 fresh to ulong
+put s 0 1
+ret ulong get s 0
+end
+fn main to int
+a = new uchar 65 0
+putd f a
+ret 0
+end

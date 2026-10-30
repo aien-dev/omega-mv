@@ -1,0 +1,18 @@
+note SPDX-License-Identifier: Apache-2.0
+note diag-site-nest.om with om2 instead of om2 diag (same artifact expected).
+note
+note
+note
+om2
+fn f a ulong to ulong
+s = div 7 a
+for i ulong 2 unroll
+for j ulong 2 unroll
+s = add s div add i j a
+end
+for k ulong 2
+s = add s div k a
+end
+end
+ret s
+end

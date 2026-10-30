@@ -1,0 +1,514 @@
+OM2GATE START cases=seed/qualification/om2/sec/s0s2/candidate.cases scratch=build/om2-qual/s0s2-candsyntax
+IDENTITY omc seed/out/omc sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 pinned=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61 match
+CASE s0-optin-min line=10
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/10.src > build/om2-qual/s0s2-candsyntax/10.elf 2> build/om2-qual/s0s2-candsyntax/10.cerr
+VERDICT s0-optin-min FAIL compile exit=16 expected=0
+CASE s0-optin-diag line=12
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/12.src > build/om2-qual/s0s2-candsyntax/12.elf 2> build/om2-qual/s0s2-candsyntax/12.cerr
+VERDICT s0-optin-diag FAIL compile exit=16 expected=0
+CASE s0-optin-diag-emit line=14
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/14.src > build/om2-qual/s0s2-candsyntax/14.elf 2> build/om2-qual/s0s2-candsyntax/14.cerr
+VERDICT s0-optin-diag-emit FAIL compile exit=16 expected=0 stdout=unchecked stderr=unchecked
+CASE s0-optin-diag-same line=16
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/16.src.b > build/om2-qual/s0s2-candsyntax/16.elf.b 2> build/om2-qual/s0s2-candsyntax/16.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/16.src > build/om2-qual/s0s2-candsyntax/16.elf 2> build/om2-qual/s0s2-candsyntax/16.cerr
+VERDICT s0-optin-diag-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s0-notfirst line=18
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/18.src > build/om2-qual/s0s2-candsyntax/18.elf 2> build/om2-qual/s0s2-candsyntax/18.cerr
+VERDICT s0-notfirst PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-trail-space line=20
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/20.src > build/om2-qual/s0s2-candsyntax/20.elf 2> build/om2-qual/s0s2-candsyntax/20.cerr
+VERDICT s0-trail-space PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-trail-word line=22
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/22.src > build/om2-qual/s0s2-candsyntax/22.elf 2> build/om2-qual/s0s2-candsyntax/22.cerr
+VERDICT s0-trail-word PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-trail-diagx line=24
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/24.src > build/om2-qual/s0s2-candsyntax/24.elf 2> build/om2-qual/s0s2-candsyntax/24.cerr
+VERDICT s0-trail-diagx PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-double-space line=26
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/26.src > build/om2-qual/s0s2-candsyntax/26.elf 2> build/om2-qual/s0s2-candsyntax/26.cerr
+VERDICT s0-double-space PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-indent line=28
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/28.src > build/om2-qual/s0s2-candsyntax/28.elf 2> build/om2-qual/s0s2-candsyntax/28.cerr
+VERDICT s0-indent PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-upper line=30
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/30.src > build/om2-qual/s0s2-candsyntax/30.elf 2> build/om2-qual/s0s2-candsyntax/30.cerr
+VERDICT s0-upper PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-blank-first line=32
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/32.src > build/om2-qual/s0s2-candsyntax/32.elf 2> build/om2-qual/s0s2-candsyntax/32.cerr
+VERDICT s0-blank-first PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-names-fn line=34
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/34.src > build/om2-qual/s0s2-candsyntax/34.elf 2> build/om2-qual/s0s2-candsyntax/34.cerr
+  $ build/om2-qual/s0s2-candsyntax/34.elf < /dev/null > build/om2-qual/s0s2-candsyntax/34.out 2> build/om2-qual/s0s2-candsyntax/34.err
+VERDICT s0-names-fn PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s0-names-var line=36
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/36.src > build/om2-qual/s0s2-candsyntax/36.elf 2> build/om2-qual/s0s2-candsyntax/36.cerr
+  $ build/om2-qual/s0s2-candsyntax/36.elf < /dev/null > build/om2-qual/s0s2-candsyntax/36.out 2> build/om2-qual/s0s2-candsyntax/36.err
+VERDICT s0-names-var PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s0-om1-crlf line=38
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/38.src > build/om2-qual/s0s2-candsyntax/38.elf 2> build/om2-qual/s0s2-candsyntax/38.cerr
+  $ build/om2-qual/s0s2-candsyntax/38.elf < /dev/null > build/om2-qual/s0s2-candsyntax/38.out 2> build/om2-qual/s0s2-candsyntax/38.err
+VERDICT s0-om1-crlf PASS run exit=5 expected=5 stdout=match stderr=match
+CASE s0-w-unroll line=40
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/40.src > build/om2-qual/s0s2-candsyntax/40.elf 2> build/om2-qual/s0s2-candsyntax/40.cerr
+VERDICT s0-w-unroll PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s0-w-inline line=42
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/42.src > build/om2-qual/s0s2-candsyntax/42.elf 2> build/om2-qual/s0s2-candsyntax/42.cerr
+VERDICT s0-w-inline PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s0-w-fresh line=44
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/44.src > build/om2-qual/s0s2-candsyntax/44.elf 2> build/om2-qual/s0s2-candsyntax/44.cerr
+VERDICT s0-w-fresh PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-w-rotr line=46
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/46.src > build/om2-qual/s0s2-candsyntax/46.elf 2> build/om2-qual/s0s2-candsyntax/46.cerr
+VERDICT s0-w-rotr PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE s0-w-abstract line=48
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/48.src > build/om2-qual/s0s2-candsyntax/48.elf 2> build/om2-qual/s0s2-candsyntax/48.cerr
+VERDICT s0-w-abstract PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-w-layout line=50
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/50.src > build/om2-qual/s0s2-candsyntax/50.elf 2> build/om2-qual/s0s2-candsyntax/50.cerr
+VERDICT s0-w-layout PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-w-export line=52
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/52.src > build/om2-qual/s0s2-candsyntax/52.elf 2> build/om2-qual/s0s2-candsyntax/52.cerr
+VERDICT s0-w-export PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-w-part line=54
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/54.src > build/om2-qual/s0s2-candsyntax/54.elf 2> build/om2-qual/s0s2-candsyntax/54.cerr
+VERDICT s0-w-part PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE s0-w-viewstar line=56
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/56.src > build/om2-qual/s0s2-candsyntax/56.elf 2> build/om2-qual/s0s2-candsyntax/56.cerr
+VERDICT s0-w-viewstar PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-w-out line=58
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/58.src > build/om2-qual/s0s2-candsyntax/58.elf 2> build/om2-qual/s0s2-candsyntax/58.cerr
+VERDICT s0-w-out PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s0-w-hex line=60
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/60.src > build/om2-qual/s0s2-candsyntax/60.elf 2> build/om2-qual/s0s2-candsyntax/60.cerr
+VERDICT s0-w-hex PASS compile exit=6 expected=6 stdout=match stderr=match
+CASE s0-q1-fn-rotr line=62
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/62.src > build/om2-qual/s0s2-candsyntax/62.elf 2> build/om2-qual/s0s2-candsyntax/62.cerr
+VERDICT s0-q1-fn-rotr FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s0-q1-param-part line=64
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/64.src > build/om2-qual/s0s2-candsyntax/64.elf 2> build/om2-qual/s0s2-candsyntax/64.cerr
+VERDICT s0-q1-param-part FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s0-q1-var-fresh line=66
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/66.src > build/om2-qual/s0s2-candsyntax/66.elf 2> build/om2-qual/s0s2-candsyntax/66.cerr
+VERDICT s0-q1-var-fresh FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s0-q1-var-at line=68
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/68.src > build/om2-qual/s0s2-candsyntax/68.elf 2> build/om2-qual/s0s2-candsyntax/68.cerr
+VERDICT s0-q1-var-at FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s0-q1-fn-layout line=70
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/70.src > build/om2-qual/s0s2-candsyntax/70.elf 2> build/om2-qual/s0s2-candsyntax/70.cerr
+VERDICT s0-q1-fn-layout FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s1-d-left line=74
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/74.src > build/om2-qual/s0s2-candsyntax/74.elf 2> build/om2-qual/s0s2-candsyntax/74.cerr
+VERDICT s1-d-left FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s1-d-left-plain line=76
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/76.src > build/om2-qual/s0s2-candsyntax/76.elf 2> build/om2-qual/s0s2-candsyntax/76.cerr
+VERDICT s1-d-left-plain FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s1-d-eof-left line=78
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/78.src > build/om2-qual/s0s2-candsyntax/78.elf 2> build/om2-qual/s0s2-candsyntax/78.cerr
+VERDICT s1-d-eof-left FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s1-d-eof-mid line=80
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/80.src > build/om2-qual/s0s2-candsyntax/80.elf 2> build/om2-qual/s0s2-candsyntax/80.cerr
+VERDICT s1-d-eof-mid FAIL compile exit=16 expected=4 stdout=match stderr differs at byte 10
+CASE s1-d-eof-noend line=82
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/82.src > build/om2-qual/s0s2-candsyntax/82.elf 2> build/om2-qual/s0s2-candsyntax/82.cerr
+VERDICT s1-d-eof-noend FAIL compile exit=16 expected=15 stdout=match stderr differs at byte 10
+CASE s1-d-mid-short line=84
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/84.src > build/om2-qual/s0s2-candsyntax/84.elf 2> build/om2-qual/s0s2-candsyntax/84.cerr
+VERDICT s1-d-mid-short FAIL compile exit=16 expected=4 stdout=match stderr lacks expected line 1
+CASE s1-d-hexupper line=86
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/86.src > build/om2-qual/s0s2-candsyntax/86.elf 2> build/om2-qual/s0s2-candsyntax/86.cerr
+VERDICT s1-d-hexupper FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s1-d-hexupper-plain line=88
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/88.src > build/om2-qual/s0s2-candsyntax/88.elf 2> build/om2-qual/s0s2-candsyntax/88.cerr
+VERDICT s1-d-hexupper-plain FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s1-d-hexrange line=90
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/90.src > build/om2-qual/s0s2-candsyntax/90.elf 2> build/om2-qual/s0s2-candsyntax/90.cerr
+VERDICT s1-d-hexrange FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s1-d-longtok line=92
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/92.src > build/om2-qual/s0s2-candsyntax/92.elf 2> build/om2-qual/s0s2-candsyntax/92.cerr
+VERDICT s1-d-longtok FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s1-d-unknown-fn line=94
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/94.src > build/om2-qual/s0s2-candsyntax/94.elf 2> build/om2-qual/s0s2-candsyntax/94.cerr
+VERDICT s1-d-unknown-fn FAIL compile exit=16 expected=3 stdout=match stderr differs at byte 10
+CASE s1-d-unknown-struct line=96
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/96.src > build/om2-qual/s0s2-candsyntax/96.elf 2> build/om2-qual/s0s2-candsyntax/96.cerr
+VERDICT s1-d-unknown-struct FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s1-d-unknown-sparam line=98
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/98.src > build/om2-qual/s0s2-candsyntax/98.elf 2> build/om2-qual/s0s2-candsyntax/98.cerr
+VERDICT s1-d-unknown-sparam FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 22
+CASE s1-d-unknown-args line=100
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/100.src > build/om2-qual/s0s2-candsyntax/100.elf 2> build/om2-qual/s0s2-candsyntax/100.cerr
+VERDICT s1-d-unknown-args FAIL compile exit=16 expected=3 stdout=match stderr differs at byte 10
+CASE s1-d-mid-short-line line=102
+VERDICT s1-d-mid-short-line NOT_RUN not run: E6 Q2 makes the LF the span, but whether the record's line= (and expect=) is the LF's line or the human line N (one later in OM-1) is not fixed; the tok case checks the rest
+CASE s2-hex-max line=105
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/105.src > build/om2-qual/s0s2-candsyntax/105.elf 2> build/om2-qual/s0s2-candsyntax/105.cerr
+VERDICT s2-hex-max FAIL compile exit=16 expected=0
+CASE s2-dec-max line=107
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/107.src > build/om2-qual/s0s2-candsyntax/107.elf 2> build/om2-qual/s0s2-candsyntax/107.cerr
+  $ build/om2-qual/s0s2-candsyntax/107.elf < /dev/null > build/om2-qual/s0s2-candsyntax/107.out 2> build/om2-qual/s0s2-candsyntax/107.err
+VERDICT s2-dec-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE s2-dec-places line=109
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/109.src > build/om2-qual/s0s2-candsyntax/109.elf 2> build/om2-qual/s0s2-candsyntax/109.cerr
+  $ build/om2-qual/s0s2-candsyntax/109.elf < /dev/null > build/om2-qual/s0s2-candsyntax/109.out 2> build/om2-qual/s0s2-candsyntax/109.err
+VERDICT s2-dec-places PASS run exit=10 expected=10 stdout=match stderr=match
+CASE s2-hex-places line=111
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/111.src > build/om2-qual/s0s2-candsyntax/111.elf 2> build/om2-qual/s0s2-candsyntax/111.cerr
+VERDICT s2-hex-places FAIL compile exit=16 expected=0
+CASE s2-same-hex42 line=113
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/113.src.b > build/om2-qual/s0s2-candsyntax/113.elf.b 2> build/om2-qual/s0s2-candsyntax/113.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/113.src > build/om2-qual/s0s2-candsyntax/113.elf 2> build/om2-qual/s0s2-candsyntax/113.cerr
+VERDICT s2-same-hex42 FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-same-hexmax line=115
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/115.src.b > build/om2-qual/s0s2-candsyntax/115.elf.b 2> build/om2-qual/s0s2-candsyntax/115.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/115.src > build/om2-qual/s0s2-candsyntax/115.elf 2> build/om2-qual/s0s2-candsyntax/115.cerr
+VERDICT s2-same-hexmax FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-r8-uchar line=117
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/117.src > build/om2-qual/s0s2-candsyntax/117.elf 2> build/om2-qual/s0s2-candsyntax/117.cerr
+VERDICT s2-r8-uchar FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-ushort line=119
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/119.src > build/om2-qual/s0s2-candsyntax/119.elf 2> build/om2-qual/s0s2-candsyntax/119.cerr
+VERDICT s2-r8-ushort FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-uint line=121
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/121.src > build/om2-qual/s0s2-candsyntax/121.elf 2> build/om2-qual/s0s2-candsyntax/121.cerr
+VERDICT s2-r8-uint FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-byte line=123
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/123.src > build/om2-qual/s0s2-candsyntax/123.elf 2> build/om2-qual/s0s2-candsyntax/123.cerr
+VERDICT s2-r8-byte FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-short line=125
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/125.src > build/om2-qual/s0s2-candsyntax/125.elf 2> build/om2-qual/s0s2-candsyntax/125.cerr
+VERDICT s2-r8-short FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-int line=127
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/127.src > build/om2-qual/s0s2-candsyntax/127.elf 2> build/om2-qual/s0s2-candsyntax/127.cerr
+VERDICT s2-r8-int FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-long line=129
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/129.src > build/om2-qual/s0s2-candsyntax/129.elf 2> build/om2-qual/s0s2-candsyntax/129.cerr
+VERDICT s2-r8-long FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r8-intffff line=131
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/131.src > build/om2-qual/s0s2-candsyntax/131.elf 2> build/om2-qual/s0s2-candsyntax/131.cerr
+VERDICT s2-r8-intffff FAIL compile exit=16 expected=8 stdout=match stderr differs at byte 10
+CASE s2-r6-upper line=133
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/133.src > build/om2-qual/s0s2-candsyntax/133.elf 2> build/om2-qual/s0s2-candsyntax/133.cerr
+VERDICT s2-r6-upper FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-mixed line=135
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/135.src > build/om2-qual/s0s2-candsyntax/135.elf 2> build/om2-qual/s0s2-candsyntax/135.cerr
+VERDICT s2-r6-mixed FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-upperX line=137
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/137.src > build/om2-qual/s0s2-candsyntax/137.elf 2> build/om2-qual/s0s2-candsyntax/137.cerr
+VERDICT s2-r6-upperX FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-minus line=139
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/139.src > build/om2-qual/s0s2-candsyntax/139.elf 2> build/om2-qual/s0s2-candsyntax/139.cerr
+VERDICT s2-r6-minus FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-empty line=141
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/141.src > build/om2-qual/s0s2-candsyntax/141.elf 2> build/om2-qual/s0s2-candsyntax/141.cerr
+VERDICT s2-r6-empty FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-17small line=143
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/143.src > build/om2-qual/s0s2-candsyntax/143.elf 2> build/om2-qual/s0s2-candsyntax/143.cerr
+VERDICT s2-r6-17small FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-17big line=145
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/145.src > build/om2-qual/s0s2-candsyntax/145.elf 2> build/om2-qual/s0s2-candsyntax/145.cerr
+VERDICT s2-r6-17big FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-under1 line=147
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/147.src > build/om2-qual/s0s2-candsyntax/147.elf 2> build/om2-qual/s0s2-candsyntax/147.cerr
+VERDICT s2-r6-under1 FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-under2 line=149
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/149.src > build/om2-qual/s0s2-candsyntax/149.elf 2> build/om2-qual/s0s2-candsyntax/149.cerr
+VERDICT s2-r6-under2 FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-g line=151
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/151.src > build/om2-qual/s0s2-candsyntax/151.elf 2> build/om2-qual/s0s2-candsyntax/151.cerr
+VERDICT s2-r6-g FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-z line=153
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/153.src > build/om2-qual/s0s2-candsyntax/153.elf 2> build/om2-qual/s0s2-candsyntax/153.cerr
+VERDICT s2-r6-z FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-r6-upper-ulong line=155
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/155.src > build/om2-qual/s0s2-candsyntax/155.elf 2> build/om2-qual/s0s2-candsyntax/155.cerr
+VERDICT s2-r6-upper-ulong FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-d8-uchar line=157
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/157.src > build/om2-qual/s0s2-candsyntax/157.elf 2> build/om2-qual/s0s2-candsyntax/157.cerr
+VERDICT s2-d8-uchar PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-ushort line=159
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/159.src > build/om2-qual/s0s2-candsyntax/159.elf 2> build/om2-qual/s0s2-candsyntax/159.cerr
+VERDICT s2-d8-ushort PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-uint line=161
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/161.src > build/om2-qual/s0s2-candsyntax/161.elf 2> build/om2-qual/s0s2-candsyntax/161.cerr
+VERDICT s2-d8-uint PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-byte line=163
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/163.src > build/om2-qual/s0s2-candsyntax/163.elf 2> build/om2-qual/s0s2-candsyntax/163.cerr
+VERDICT s2-d8-byte PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-short line=165
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/165.src > build/om2-qual/s0s2-candsyntax/165.elf 2> build/om2-qual/s0s2-candsyntax/165.cerr
+VERDICT s2-d8-short PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-int line=167
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/167.src > build/om2-qual/s0s2-candsyntax/167.elf 2> build/om2-qual/s0s2-candsyntax/167.cerr
+VERDICT s2-d8-int PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-long line=169
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/169.src > build/om2-qual/s0s2-candsyntax/169.elf 2> build/om2-qual/s0s2-candsyntax/169.cerr
+VERDICT s2-d8-long PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-d8-intffff line=171
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/171.src > build/om2-qual/s0s2-candsyntax/171.elf 2> build/om2-qual/s0s2-candsyntax/171.cerr
+VERDICT s2-d8-intffff PASS compile exit=8 expected=8 stdout=match stderr=match
+CASE s2-om1-left-typed line=174
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/174.src > build/om2-qual/s0s2-candsyntax/174.elf 2> build/om2-qual/s0s2-candsyntax/174.cerr
+VERDICT s2-om1-left-typed PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s2-om2-left-typed line=176
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/176.src > build/om2-qual/s0s2-candsyntax/176.elf 2> build/om2-qual/s0s2-candsyntax/176.cerr
+VERDICT s2-om2-left-typed FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s2-om1-left-assign line=178
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/178.src > build/om2-qual/s0s2-candsyntax/178.elf 2> build/om2-qual/s0s2-candsyntax/178.cerr
+VERDICT s2-om1-left-assign PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s2-om2-left-assign line=180
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/180.src > build/om2-qual/s0s2-candsyntax/180.elf 2> build/om2-qual/s0s2-candsyntax/180.cerr
+VERDICT s2-om2-left-assign FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s2-om1-left-paren line=182
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/182.src > build/om2-qual/s0s2-candsyntax/182.elf 2> build/om2-qual/s0s2-candsyntax/182.cerr
+VERDICT s2-om1-left-paren PASS compile exit=5 expected=5 stdout=match stderr=match
+CASE s2-om2-left-paren line=184
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/184.src > build/om2-qual/s0s2-candsyntax/184.elf 2> build/om2-qual/s0s2-candsyntax/184.cerr
+VERDICT s2-om2-left-paren FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s2-om1-left-bare line=186
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/186.src > build/om2-qual/s0s2-candsyntax/186.elf 2> build/om2-qual/s0s2-candsyntax/186.cerr
+VERDICT s2-om1-left-bare PASS compile exit=11 expected=11 stdout=match stderr=match
+CASE s2-om2-left-bare line=188
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/188.src > build/om2-qual/s0s2-candsyntax/188.elf 2> build/om2-qual/s0s2-candsyntax/188.cerr
+VERDICT s2-om2-left-bare FAIL compile exit=16 expected=11 stdout=match stderr differs at byte 10
+CASE s2-om1-short-next line=190
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/190.src > build/om2-qual/s0s2-candsyntax/190.elf 2> build/om2-qual/s0s2-candsyntax/190.cerr
+VERDICT s2-om1-short-next PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s2-om2-short-next line=192
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/192.src > build/om2-qual/s0s2-candsyntax/192.elf 2> build/om2-qual/s0s2-candsyntax/192.cerr
+VERDICT s2-om2-short-next FAIL compile exit=16 expected=4 stdout=match stderr differs at byte 10
+CASE s2-om1-short-bare line=194
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/194.src > build/om2-qual/s0s2-candsyntax/194.elf 2> build/om2-qual/s0s2-candsyntax/194.cerr
+VERDICT s2-om1-short-bare PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s2-om2-short-bare line=196
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/196.src > build/om2-qual/s0s2-candsyntax/196.elf 2> build/om2-qual/s0s2-candsyntax/196.cerr
+VERDICT s2-om2-short-bare FAIL compile exit=16 expected=4 stdout=match stderr differs at byte 10
+CASE s2-om1-short-eof line=198
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/198.src > build/om2-qual/s0s2-candsyntax/198.elf 2> build/om2-qual/s0s2-candsyntax/198.cerr
+VERDICT s2-om1-short-eof PASS compile exit=4 expected=4 stdout=match stderr=match
+CASE s2-om2-short-eof line=200
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/200.src > build/om2-qual/s0s2-candsyntax/200.elf 2> build/om2-qual/s0s2-candsyntax/200.cerr
+VERDICT s2-om2-short-eof FAIL compile exit=16 expected=4 stdout=match stderr differs at byte 10
+CASE s2-om1-group-open line=202
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/202.src > build/om2-qual/s0s2-candsyntax/202.elf 2> build/om2-qual/s0s2-candsyntax/202.cerr
+VERDICT s2-om1-group-open PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s2-om2-group-open line=204
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/204.src > build/om2-qual/s0s2-candsyntax/204.elf 2> build/om2-qual/s0s2-candsyntax/204.cerr
+VERDICT s2-om2-group-open FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s2-om1-group-short line=206
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/206.src > build/om2-qual/s0s2-candsyntax/206.elf 2> build/om2-qual/s0s2-candsyntax/206.cerr
+VERDICT s2-om1-group-short PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s2-om2-group-short line=208
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/208.src > build/om2-qual/s0s2-candsyntax/208.elf 2> build/om2-qual/s0s2-candsyntax/208.cerr
+VERDICT s2-om2-group-short FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s2-om1-group-wide line=210
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/210.src > build/om2-qual/s0s2-candsyntax/210.elf 2> build/om2-qual/s0s2-candsyntax/210.cerr
+VERDICT s2-om1-group-wide PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s2-om2-group-wide line=212
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/212.src > build/om2-qual/s0s2-candsyntax/212.elf 2> build/om2-qual/s0s2-candsyntax/212.cerr
+VERDICT s2-om2-group-wide FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s2-om1-bracket line=214
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/214.src > build/om2-qual/s0s2-candsyntax/214.elf 2> build/om2-qual/s0s2-candsyntax/214.cerr
+VERDICT s2-om1-bracket PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE s2-om2-bracket line=216
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/216.src > build/om2-qual/s0s2-candsyntax/216.elf 2> build/om2-qual/s0s2-candsyntax/216.cerr
+VERDICT s2-om2-bracket FAIL compile exit=16 expected=3 stdout=match stderr differs at byte 10
+CASE s2-om1-brace line=218
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/218.src > build/om2-qual/s0s2-candsyntax/218.elf 2> build/om2-qual/s0s2-candsyntax/218.cerr
+VERDICT s2-om1-brace PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE s2-om2-brace line=220
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/220.src > build/om2-qual/s0s2-candsyntax/220.elf 2> build/om2-qual/s0s2-candsyntax/220.cerr
+VERDICT s2-om2-brace FAIL compile exit=16 expected=3 stdout=match stderr differs at byte 10
+CASE s2-om1-g0-run line=222
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/222.src > build/om2-qual/s0s2-candsyntax/222.elf 2> build/om2-qual/s0s2-candsyntax/222.cerr
+  $ build/om2-qual/s0s2-candsyntax/222.elf < /dev/null > build/om2-qual/s0s2-candsyntax/222.out 2> build/om2-qual/s0s2-candsyntax/222.err
+VERDICT s2-om1-g0-run PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s2-om1-g1-run line=224
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/224.src > build/om2-qual/s0s2-candsyntax/224.elf 2> build/om2-qual/s0s2-candsyntax/224.cerr
+  $ build/om2-qual/s0s2-candsyntax/224.elf < /dev/null > build/om2-qual/s0s2-candsyntax/224.out 2> build/om2-qual/s0s2-candsyntax/224.err
+VERDICT s2-om1-g1-run PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s2-om1-g1-same line=226
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/226.src.b > build/om2-qual/s0s2-candsyntax/226.elf.b 2> build/om2-qual/s0s2-candsyntax/226.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/226.src > build/om2-qual/s0s2-candsyntax/226.elf 2> build/om2-qual/s0s2-candsyntax/226.cerr
+VERDICT s2-om1-g1-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s2-om1-g2-run line=228
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/228.src > build/om2-qual/s0s2-candsyntax/228.elf 2> build/om2-qual/s0s2-candsyntax/228.cerr
+  $ build/om2-qual/s0s2-candsyntax/228.elf < /dev/null > build/om2-qual/s0s2-candsyntax/228.out 2> build/om2-qual/s0s2-candsyntax/228.err
+VERDICT s2-om1-g2-run PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s2-om1-g2-same line=230
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/230.src.b > build/om2-qual/s0s2-candsyntax/230.elf.b 2> build/om2-qual/s0s2-candsyntax/230.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/230.src > build/om2-qual/s0s2-candsyntax/230.elf 2> build/om2-qual/s0s2-candsyntax/230.cerr
+VERDICT s2-om1-g2-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s2-om1-g3-run line=232
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/232.src > build/om2-qual/s0s2-candsyntax/232.elf 2> build/om2-qual/s0s2-candsyntax/232.cerr
+  $ build/om2-qual/s0s2-candsyntax/232.elf < /dev/null > build/om2-qual/s0s2-candsyntax/232.out 2> build/om2-qual/s0s2-candsyntax/232.err
+VERDICT s2-om1-g3-run PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s2-om1-g3-same line=234
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/234.src.b > build/om2-qual/s0s2-candsyntax/234.elf.b 2> build/om2-qual/s0s2-candsyntax/234.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/234.src > build/om2-qual/s0s2-candsyntax/234.elf 2> build/om2-qual/s0s2-candsyntax/234.cerr
+VERDICT s2-om1-g3-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s2-om1-g4-run line=236
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/236.src > build/om2-qual/s0s2-candsyntax/236.elf 2> build/om2-qual/s0s2-candsyntax/236.cerr
+  $ build/om2-qual/s0s2-candsyntax/236.elf < /dev/null > build/om2-qual/s0s2-candsyntax/236.out 2> build/om2-qual/s0s2-candsyntax/236.err
+VERDICT s2-om1-g4-run PASS run exit=7 expected=7 stdout=match stderr=match
+CASE s2-om1-g4-same line=238
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/238.src.b > build/om2-qual/s0s2-candsyntax/238.elf.b 2> build/om2-qual/s0s2-candsyntax/238.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/238.src > build/om2-qual/s0s2-candsyntax/238.elf 2> build/om2-qual/s0s2-candsyntax/238.cerr
+VERDICT s2-om1-g4-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s2-om2-g0-run line=240
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/240.src > build/om2-qual/s0s2-candsyntax/240.elf 2> build/om2-qual/s0s2-candsyntax/240.cerr
+VERDICT s2-om2-g0-run FAIL compile exit=16 expected=0
+CASE s2-om2-g1-run line=242
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/242.src > build/om2-qual/s0s2-candsyntax/242.elf 2> build/om2-qual/s0s2-candsyntax/242.cerr
+VERDICT s2-om2-g1-run FAIL compile exit=16 expected=0
+CASE s2-om2-g1-same line=244
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/244.src.b > build/om2-qual/s0s2-candsyntax/244.elf.b 2> build/om2-qual/s0s2-candsyntax/244.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/244.src > build/om2-qual/s0s2-candsyntax/244.elf 2> build/om2-qual/s0s2-candsyntax/244.cerr
+VERDICT s2-om2-g1-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-om2-g2-run line=246
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/246.src > build/om2-qual/s0s2-candsyntax/246.elf 2> build/om2-qual/s0s2-candsyntax/246.cerr
+VERDICT s2-om2-g2-run FAIL compile exit=16 expected=0
+CASE s2-om2-g2-same line=248
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/248.src.b > build/om2-qual/s0s2-candsyntax/248.elf.b 2> build/om2-qual/s0s2-candsyntax/248.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/248.src > build/om2-qual/s0s2-candsyntax/248.elf 2> build/om2-qual/s0s2-candsyntax/248.cerr
+VERDICT s2-om2-g2-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-om2-g3-run line=250
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/250.src > build/om2-qual/s0s2-candsyntax/250.elf 2> build/om2-qual/s0s2-candsyntax/250.cerr
+VERDICT s2-om2-g3-run FAIL compile exit=16 expected=0
+CASE s2-om2-g3-same line=252
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/252.src.b > build/om2-qual/s0s2-candsyntax/252.elf.b 2> build/om2-qual/s0s2-candsyntax/252.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/252.src > build/om2-qual/s0s2-candsyntax/252.elf 2> build/om2-qual/s0s2-candsyntax/252.cerr
+VERDICT s2-om2-g3-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-om2-g4-run line=254
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/254.src > build/om2-qual/s0s2-candsyntax/254.elf 2> build/om2-qual/s0s2-candsyntax/254.cerr
+VERDICT s2-om2-g4-run FAIL compile exit=16 expected=0
+CASE s2-om2-g4-same line=256
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/256.src.b > build/om2-qual/s0s2-candsyntax/256.elf.b 2> build/om2-qual/s0s2-candsyntax/256.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/256.src > build/om2-qual/s0s2-candsyntax/256.elf 2> build/om2-qual/s0s2-candsyntax/256.cerr
+VERDICT s2-om2-g4-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-fmt-x1 line=259
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/259.src > build/om2-qual/s0s2-candsyntax/259.elf 2> build/om2-qual/s0s2-candsyntax/259.cerr
+VERDICT s2-fmt-x1 FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x1-idem line=261
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/261.src > build/om2-qual/s0s2-candsyntax/261.elf 2> build/om2-qual/s0s2-candsyntax/261.cerr
+VERDICT s2-fmt-x1-idem FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x1-same line=263
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/263.src.b > build/om2-qual/s0s2-candsyntax/263.elf.b 2> build/om2-qual/s0s2-candsyntax/263.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/263.src > build/om2-qual/s0s2-candsyntax/263.elf 2> build/om2-qual/s0s2-candsyntax/263.cerr
+VERDICT s2-fmt-x1-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-fmt-x2 line=265
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/265.src > build/om2-qual/s0s2-candsyntax/265.elf 2> build/om2-qual/s0s2-candsyntax/265.cerr
+VERDICT s2-fmt-x2 FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x2-idem line=267
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/267.src > build/om2-qual/s0s2-candsyntax/267.elf 2> build/om2-qual/s0s2-candsyntax/267.cerr
+VERDICT s2-fmt-x2-idem FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x2-same line=269
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/269.src.b > build/om2-qual/s0s2-candsyntax/269.elf.b 2> build/om2-qual/s0s2-candsyntax/269.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/269.src > build/om2-qual/s0s2-candsyntax/269.elf 2> build/om2-qual/s0s2-candsyntax/269.cerr
+VERDICT s2-fmt-x2-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-fmt-x3 line=271
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/271.src > build/om2-qual/s0s2-candsyntax/271.elf 2> build/om2-qual/s0s2-candsyntax/271.cerr
+VERDICT s2-fmt-x3 FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x3-idem line=273
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/273.src > build/om2-qual/s0s2-candsyntax/273.elf 2> build/om2-qual/s0s2-candsyntax/273.cerr
+VERDICT s2-fmt-x3-idem FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x3-same line=275
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/275.src.b > build/om2-qual/s0s2-candsyntax/275.elf.b 2> build/om2-qual/s0s2-candsyntax/275.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/275.src > build/om2-qual/s0s2-candsyntax/275.elf 2> build/om2-qual/s0s2-candsyntax/275.cerr
+VERDICT s2-fmt-x3-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-fmt-x4 line=277
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/277.src > build/om2-qual/s0s2-candsyntax/277.elf 2> build/om2-qual/s0s2-candsyntax/277.cerr
+VERDICT s2-fmt-x4 FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x4-idem line=279
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/279.src > build/om2-qual/s0s2-candsyntax/279.elf 2> build/om2-qual/s0s2-candsyntax/279.cerr
+VERDICT s2-fmt-x4-idem FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x4-same line=281
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/281.src.b > build/om2-qual/s0s2-candsyntax/281.elf.b 2> build/om2-qual/s0s2-candsyntax/281.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/281.src > build/om2-qual/s0s2-candsyntax/281.elf 2> build/om2-qual/s0s2-candsyntax/281.cerr
+VERDICT s2-fmt-x4-same FAIL compile exit=16 expected=0 second compile exit=16
+CASE s2-fmt-x5 line=283
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/283.src > build/om2-qual/s0s2-candsyntax/283.elf 2> build/om2-qual/s0s2-candsyntax/283.cerr
+VERDICT s2-fmt-x5 FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x5-idem line=285
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/285.src > build/om2-qual/s0s2-candsyntax/285.elf 2> build/om2-qual/s0s2-candsyntax/285.cerr
+VERDICT s2-fmt-x5-idem FAIL compile exit=16 expected=0 stdout differs at byte 0 stderr differs at byte 0
+CASE s2-fmt-x5-same line=287
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/287.src.b > build/om2-qual/s0s2-candsyntax/287.elf.b 2> build/om2-qual/s0s2-candsyntax/287.cerr.b
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/287.src > build/om2-qual/s0s2-candsyntax/287.elf 2> build/om2-qual/s0s2-candsyntax/287.cerr
+VERDICT s2-fmt-x5-same PASS compile exit=0 expected=0 second compile exit=0 outputs identical
+CASE s2-fmt-x1-run line=289
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/289.src > build/om2-qual/s0s2-candsyntax/289.elf 2> build/om2-qual/s0s2-candsyntax/289.cerr
+VERDICT s2-fmt-x1-run FAIL compile exit=16 expected=0
+CASE s2-fmt-x1fmt-run line=291
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/291.src > build/om2-qual/s0s2-candsyntax/291.elf 2> build/om2-qual/s0s2-candsyntax/291.cerr
+VERDICT s2-fmt-x1fmt-run FAIL compile exit=16 expected=0
+CASE s2-fmt-x5fmt-run line=293
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/293.src > build/om2-qual/s0s2-candsyntax/293.elf 2> build/om2-qual/s0s2-candsyntax/293.cerr
+  $ build/om2-qual/s0s2-candsyntax/293.elf < /dev/null > build/om2-qual/s0s2-candsyntax/293.out 2> build/om2-qual/s0s2-candsyntax/293.err
+VERDICT s2-fmt-x5fmt-run PASS run exit=9 expected=9 stdout=match stderr=match
+CASE s2-fmt-bad-left line=295
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/295.src > build/om2-qual/s0s2-candsyntax/295.elf 2> build/om2-qual/s0s2-candsyntax/295.cerr
+VERDICT s2-fmt-bad-left FAIL compile exit=16 expected=5 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-hex line=297
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/297.src > build/om2-qual/s0s2-candsyntax/297.elf 2> build/om2-qual/s0s2-candsyntax/297.cerr
+VERDICT s2-fmt-bad-hex FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-short line=299
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/299.src > build/om2-qual/s0s2-candsyntax/299.elf 2> build/om2-qual/s0s2-candsyntax/299.cerr
+VERDICT s2-fmt-bad-short FAIL compile exit=16 expected=4 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-cr line=301
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/301.src > build/om2-qual/s0s2-candsyntax/301.elf 2> build/om2-qual/s0s2-candsyntax/301.cerr
+VERDICT s2-fmt-bad-cr FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-cr1 line=303
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/303.src > build/om2-qual/s0s2-candsyntax/303.elf 2> build/om2-qual/s0s2-candsyntax/303.cerr
+VERDICT s2-fmt-bad-cr1 FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-crtext line=305
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/305.src > build/om2-qual/s0s2-candsyntax/305.elf 2> build/om2-qual/s0s2-candsyntax/305.cerr
+VERDICT s2-fmt-bad-crtext FAIL compile exit=16 expected=6 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-fmtlater line=307
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/307.src > build/om2-qual/s0s2-candsyntax/307.elf 2> build/om2-qual/s0s2-candsyntax/307.cerr
+VERDICT s2-fmt-bad-fmtlater FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE s2-fmt-bad-trailblank line=309
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/309.src > build/om2-qual/s0s2-candsyntax/309.elf 2> build/om2-qual/s0s2-candsyntax/309.cerr
+VERDICT s2-fmt-bad-trailblank FAIL compile exit=16 expected=6 diagnostic does not name the expected error
+CASE s2-fmt-bad-trailblank-nostdout line=311
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/311.src > build/om2-qual/s0s2-candsyntax/311.elf 2> build/om2-qual/s0s2-candsyntax/311.cerr
+VERDICT s2-fmt-bad-trailblank-nostdout FAIL compile exit=16 expected=6 stdout=match stderr=unchecked
+CASE s2-fmt-bad-trailblank-line line=313
+VERDICT s2-fmt-bad-trailblank-line NOT_RUN not run: E6 (a) makes trailing blank lines error 6 but does not say which line the human line names (first or last blank line)
+CASE s2-fmt-notes-before line=315
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/315.src > build/om2-qual/s0s2-candsyntax/315.elf 2> build/om2-qual/s0s2-candsyntax/315.cerr
+VERDICT s2-fmt-notes-before PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE s2-fmt-om2-then-fmt line=317
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/317.src > build/om2-qual/s0s2-candsyntax/317.elf 2> build/om2-qual/s0s2-candsyntax/317.cerr
+VERDICT s2-fmt-om2-then-fmt FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 10
+CASE c2-s0-names-fn line=319
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/319.src > build/om2-qual/s0s2-candsyntax/319.elf 2> build/om2-qual/s0s2-candsyntax/319.cerr
+VERDICT c2-s0-names-fn PASS compile exit=0 expected=0 sha256=8c1e625abb265e5ec2bb1d70bcf70e16f494d5f2d69d21b84d4010f02a4597cd stderr=match
+CASE c2-s0-names-var line=320
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/320.src > build/om2-qual/s0s2-candsyntax/320.elf 2> build/om2-qual/s0s2-candsyntax/320.cerr
+VERDICT c2-s0-names-var PASS compile exit=0 expected=0 sha256=8f809f5336881a5a9a2bc8a47c7577d4d607729bfb0b94d169b072d6acd57a50 stderr=match
+CASE c2-s0-om1-crlf line=321
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/321.src > build/om2-qual/s0s2-candsyntax/321.elf 2> build/om2-qual/s0s2-candsyntax/321.cerr
+VERDICT c2-s0-om1-crlf PASS compile exit=0 expected=0 sha256=38921391cc3b9bfdd733c61f6078165678d1290d0917715a92097e31b7fb33de stderr=match
+CASE c2-s2-dec-max line=322
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/322.src > build/om2-qual/s0s2-candsyntax/322.elf 2> build/om2-qual/s0s2-candsyntax/322.cerr
+VERDICT c2-s2-dec-max PASS compile exit=0 expected=0 sha256=6921d6a044ea452a5b3a1231d8b86fc1a7afd204b26ac3c6b6a68f93dea61de3 stderr=match
+CASE c2-s2-dec-places line=323
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/323.src > build/om2-qual/s0s2-candsyntax/323.elf 2> build/om2-qual/s0s2-candsyntax/323.cerr
+VERDICT c2-s2-dec-places PASS compile exit=0 expected=0 sha256=2e3ab50c6637eb326d446d9940957d98be64e2934193289716ec2c8df0e7f2c4 stderr=match
+CASE c2-s2-om1-g0 line=324
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/324.src > build/om2-qual/s0s2-candsyntax/324.elf 2> build/om2-qual/s0s2-candsyntax/324.cerr
+VERDICT c2-s2-om1-g0 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+CASE c2-s2-om1-g1 line=325
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/325.src > build/om2-qual/s0s2-candsyntax/325.elf 2> build/om2-qual/s0s2-candsyntax/325.cerr
+VERDICT c2-s2-om1-g1 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+CASE c2-s2-om1-g2 line=326
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/326.src > build/om2-qual/s0s2-candsyntax/326.elf 2> build/om2-qual/s0s2-candsyntax/326.cerr
+VERDICT c2-s2-om1-g2 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+CASE c2-s2-om1-g3 line=327
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/327.src > build/om2-qual/s0s2-candsyntax/327.elf 2> build/om2-qual/s0s2-candsyntax/327.cerr
+VERDICT c2-s2-om1-g3 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+CASE c2-s2-om1-g4 line=328
+  $ seed/out/omc < build/om2-qual/s0s2-candsyntax/328.src > build/om2-qual/s0s2-candsyntax/328.elf 2> build/om2-qual/s0s2-candsyntax/328.cerr
+VERDICT c2-s2-om1-g4 PASS compile exit=0 expected=0 sha256=fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce stderr=match
+OM2GATE FAIL cases=162 pass=66 fail=94 invalid=0 not_run=2

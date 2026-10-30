@@ -1,0 +1,30 @@
+OM2GATE START cases=seed/omc/om2/s4/s4-mutants.cases scratch=/tmp/om2c/s4/g-views-s4-mutants
+IDENTITY omc /tmp/om2c/s4/omc-views sha256=f570e23c00266bff901d2d7ee52fd37421566820928288794482a4091cbdc372 pinned=f570e23c00266bff901d2d7ee52fd37421566820928288794482a4091cbdc372 match
+DEADLINE 60
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-mutants/3.src > /tmp/om2c/s4/g-views-s4-mutants/3.elf 2> /tmp/om2c/s4/g-views-s4-mutants/3.cerr
+COMPILER /tmp/om2c/s4/g-views-s4-mutants/3.elf sha256=f570e23c00266bff901d2d7ee52fd37421566820928288794482a4091cbdc372 source line=3
+CASE ctl-v-ok line=4
+  $ /tmp/om2c/s4/g-views-s4-mutants/3.elf < /tmp/om2c/s4/g-views-s4-mutants/4.src > /tmp/om2c/s4/g-views-s4-mutants/4.elf 2> /tmp/om2c/s4/g-views-s4-mutants/4.cerr
+  $ /tmp/om2c/s4/g-views-s4-mutants/4.elf < /dev/null > /tmp/om2c/s4/g-views-s4-mutants/4.out 2> /tmp/om2c/s4/g-views-s4-mutants/4.err
+VERDICT ctl-v-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-v-trap-get line=5
+  $ /tmp/om2c/s4/g-views-s4-mutants/3.elf < /tmp/om2c/s4/g-views-s4-mutants/5.src > /tmp/om2c/s4/g-views-s4-mutants/5.elf 2> /tmp/om2c/s4/g-views-s4-mutants/5.cerr
+  $ /tmp/om2c/s4/g-views-s4-mutants/5.elf < /dev/null > /tmp/om2c/s4/g-views-s4-mutants/5.out 2> /tmp/om2c/s4/g-views-s4-mutants/5.err
+VERDICT ctl-v-trap-get PASS run exit=103 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/uce.from seed/omc/om2/s4/mut/uce.to
+  MUTATE exact-once substitution at byte 64422
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-mutants/8.src > /tmp/om2c/s4/g-views-s4-mutants/8.elf 2> /tmp/om2c/s4/g-views-s4-mutants/8.cerr
+COMPILER /tmp/om2c/s4/g-views-s4-mutants/8.elf sha256=7de6284a642eda1365569b389d7aec8300ea8ba5c725f36b02b40b66731ad863 source line=8
+CASE m-uce line=9
+  $ /tmp/om2c/s4/g-views-s4-mutants/8.elf < /tmp/om2c/s4/g-views-s4-mutants/9.src > /tmp/om2c/s4/g-views-s4-mutants/9.elf 2> /tmp/om2c/s4/g-views-s4-mutants/9.cerr
+  $ /tmp/om2c/s4/g-views-s4-mutants/9.elf < /dev/null > /tmp/om2c/s4/g-views-s4-mutants/9.out 2> /tmp/om2c/s4/g-views-s4-mutants/9.err
+VERDICT m-uce FAIL run exit=0 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s4/mut/slot.from seed/omc/om2/s4/mut/slot.to
+  MUTATE exact-once substitution at byte 8387
+  $ /tmp/om2c/s4/omc-views < /tmp/om2c/s4/g-views-s4-mutants/12.src > /tmp/om2c/s4/g-views-s4-mutants/12.elf 2> /tmp/om2c/s4/g-views-s4-mutants/12.cerr
+COMPILER /tmp/om2c/s4/g-views-s4-mutants/12.elf sha256=84fee74bca0c8c1e76e5162c109286c719aab8c572fd72a6cb9f49bcb1b7444e source line=12
+CASE m-slot line=13
+  $ /tmp/om2c/s4/g-views-s4-mutants/12.elf < /tmp/om2c/s4/g-views-s4-mutants/13.src > /tmp/om2c/s4/g-views-s4-mutants/13.elf 2> /tmp/om2c/s4/g-views-s4-mutants/13.cerr
+  $ /tmp/om2c/s4/g-views-s4-mutants/13.elf < /dev/null > /tmp/om2c/s4/g-views-s4-mutants/13.out 2> /tmp/om2c/s4/g-views-s4-mutants/13.err
+VERDICT m-slot FAIL run exit=10 expected=0 stdout=match stderr=match
+OM2GATE FAIL cases=4 pass=2 fail=2 invalid=0 not_run=0

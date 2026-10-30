@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 fresh, line 127: passing the fresh array to read is error 27.
+om2
+fn f s edit uchar 8 fresh to ulong
+r = read 0 s 0 8
+ret 0
+end
+fn main to int
+a = new uchar 8 0
+putd f a
+ret 0
+end

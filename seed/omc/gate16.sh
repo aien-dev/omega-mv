@@ -1,7 +1,9 @@
 #!/bin/sh
 # gate16.sh -- named integer constants. `const NAME TYPE INTEGER` is a top-level typed value, visible
 # to later functions only (define before use). The first table runs programs and compares exit status;
-# the second requires a compile refusal with the exact code.
+# the second requires a compile refusal with the exact code (including function mode, where a global,
+# a text or a host word stays error 9); the third compiles function-mode units (no `fn main`) with
+# constants and requires words byte-identical to the same unit written with literals.
 set -eu
 R=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
 cd "$R"
@@ -48,8 +50,9 @@ struct_length|32|const N uint 4\nstruct S a uchar N end\nfn main to int\np = new
 const_bound|2|const B ulong 3\nfn main to int\nx = ulong 0\nwhile lt x ulong 2 bound B\nx = add x 1\nend\nret int x\nend
 trap_const|102|const T uint 2\nfn main to int\ntrap T\nend
 for_const|4|const K ulong 4\nfn main to int\nx = ulong 0\nfor i ulong K\nx = add x 1\nend\nret int x\nend
+const_order|12|const kk ulong 4\nfn a fs edit long kk to void\nput fs 0 1\nend\nconst k2 ulong 3\nfn b fs edit long kk gs edit long k2 to long\nput fs 3 7\nput gs 2 5\nret add get fs 3 get gs 2\nend\nfn main to int\nx = new long kk 0\ny = new long k2 0\na x\nret int b x y\nend
 RUN
-[ "$n" = 18 ] || bad "value table ran $n of 18 cases"
+[ "$n" = 19 ] || bad "value table ran $n of 19 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -82,8 +85,47 @@ float_int_literal|16|const H f64 5\nfn main to int\nret 0\nend
 struct_length_big|14|const N uint 65\nstruct S a uchar N end\nfn main to int\nret 0\nend
 float_bound|16|const B f64 0.5\nfn main to int\nwhile eq int 1 int 1 bound B\nend\nret 0\nend
 trap_range|8|const T uint 0\nfn main to int\ntrap T\nend
+fm_global|9|const N ulong 5\nglobal g ulong 4\nfn f a ulong to ulong\nret add a N\nend
+fm_text|9|const N ulong 5\ntext t "hi"\nfn f a ulong to ulong\nret add a N\nend
+fm_global_only|9|global g ulong 4\nfn f a ulong to ulong\nret a\nend
+fm_text_only|9|text t "hi"\nfn f a ulong to ulong\nret a\nend
+fm_host_word|9|const N ulong 5\nfn f a ulong to long\nx = getpid\nret x\nend
+fm_trap_range|8|const T uint 15\nfn f a ulong to ulong\ntrap T\nend
+fm_float_length|16|const H f64 0.1\nfn f a view uchar H to ulong\nret 0\nend
+fm_assign|7|const N ulong 5\nfn f a ulong to ulong\nN = ulong 6\nret a\nend
 REF
-[ "$n" = 19 ] || bad "refusal table ran $n of 19 cases"
+[ "$n" = 27 ] || bad "refusal table ran $n of 27 cases"
 
-say "PASS gate16 18 constant programs and 19 refusals"
+# Function mode (no `fn main`): an integer or float constant folds to its literal, so the bare function
+# words must be byte-identical to the same unit written with literals. Each line: name|const unit|literal unit.
+n=0
+while IFS='|' read -r name csrc lsrc; do
+    [ -n "$name" ] || continue
+    n=$((n + 1))
+    printf '%b\n' "$csrc" > "$T/c.om"
+    printf '%b\n' "$lsrc" > "$T/l.om"
+    set +e
+    "$S" < "$T/c.om" > "$T/c.bin" 2> "$T/c.err"
+    rc=$?
+    "$S" < "$T/l.om" > "$T/l.bin" 2> "$T/l.err"
+    lrc=$?
+    set -e
+    [ "$rc" = 0 ] || bad "$name: const unit compile $rc: $(cat "$T/c.err")"
+    [ "$lrc" = 0 ] || bad "$name: literal unit compile $lrc: $(cat "$T/l.err")"
+    [ -s "$T/c.bin" ] || bad "$name: no function words"
+    cmp -s "$T/c.bin" "$T/l.bin" || bad "$name: const words differ from literal words"
+done <<'FM'
+fm_value|const AB ulong 5\nfn top a ulong to ulong\nret add a AB\nend|fn top a ulong to ulong\nret add a 5\nend
+fm_negative|const M long -3\nfn top a long to long\nret mul a M\nend|fn top a long to long\nret mul a -3\nend
+fm_param_len|const N ulong 4\nfn f a view ulong N to ulong\nret get a sub N 1\nend|fn f a view ulong 4 to ulong\nret get a sub ulong 4 1\nend
+fm_new_len|const N uint 4\nfn f k uint to uint\nb = new uint N k\nret get b 3\nend|fn f k uint to uint\nb = new uint 4 k\nret get b 3\nend
+fm_bound|const B ulong 3\nfn f a ulong to ulong\nx = ulong 0\nwhile lt x a bound B\nx = add x 1\nend\nret x\nend|fn f a ulong to ulong\nx = ulong 0\nwhile lt x a bound 3\nx = add x 1\nend\nret x\nend
+fm_trap|const T uint 5\nfn f a ulong to ulong\nif eq a 1\ntrap T\nend\nret a\nend|fn f a ulong to ulong\nif eq a 1\ntrap 5\nend\nret a\nend
+fm_for|const K ulong 4\nfn f a ulong to ulong\nx = a\nfor i ulong K\nx = add x i\nend\nret x\nend|fn f a ulong to ulong\nx = a\nfor i ulong 4\nx = add x i\nend\nret x\nend
+fm_two_fns|const N ulong 7\nfn g a ulong to ulong\nret add a N\nend\nfn f a ulong to ulong\nret g mul a N\nend|fn g a ulong to ulong\nret add a 7\nend\nfn f a ulong to ulong\nret g mul a 7\nend
+fm_float|const H f64 0.1\nfn f a f64 to f64\nret add a H\nend|fn f a f64 to f64\nret add a f64 0.1\nend
+FM
+[ "$n" = 9 ] || bad "function-mode table ran $n of 9 cases"
+
+say "PASS gate16 19 constant programs, 27 refusals and 9 function-mode units"
 exit 0
