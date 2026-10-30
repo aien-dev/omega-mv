@@ -1,0 +1,364 @@
+{
+  "date": "2026-10-28",
+  "source_revision": "3e66b6744590cc72c623d8e09413b9072bcab36e",
+  "source_sha256": "4b5392fffd25a3a37844ad8bb5138fbaada690be7dae95132614524bdb78a1e0",
+  "native_compiler_sha256": "badedbb0c6287887641fcd7e97301b43b5f82f2d7a2838bbe0d17547873108be",
+  "execution": "EMULATED_X86_AND_HOST_TESTED_AARCH64",
+  "command": [
+    "python3",
+    "-u",
+    "seed/omc/qualify-x86.py",
+    "--compiler",
+    "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-orphan/omc-badedbb0c6287887",
+    "--qemu",
+    "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+    "--bridge",
+    "/home/drakestapleton/work/bridge-orphan-recovery/tools/native",
+    "--bridge-baseline-compiler",
+    "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/bridge-baseline-omc-734f0a39",
+    "--objdump",
+    "/usr/bin/x86_64-linux-gnu-objdump"
+  ],
+  "exit": 1,
+  "summary": {
+    "PASS": 14936,
+    "NOT_RUN": 10,
+    "EXCLUDED": 216,
+    "FAIL": 54
+  },
+  "verdict": "FAIL",
+  "full_log_path": "/home/drakestapleton/handoffs/omega-fr9-20261028-orphan-corpus-3e66b6744-full.jsonl",
+  "full_log_sha256": "493ca297bc59269f077205974db5f074516a5b2db7f4b08ffb5f9f7340e10f6b",
+  "metadata": {
+    "inventory_files": 868,
+    "roots": "tests; seed/*/tests; seed/omc/{om2,contracts}; seed/qualification; tools/exp445/arms/examples",
+    "source_revision_contract": "3e66b6744590cc72c623d8e09413b9072bcab36e",
+    "baseline_revision": "becf5c817bcb7e0846d12ebfc2be91042d8ad89a",
+    "compiler_source_sha256": "4b5392fffd25a3a37844ad8bb5138fbaada690be7dae95132614524bdb78a1e0",
+    "checker_sha256": "7197283b9ab3be543283201f95aa8219a8ca34e5b745280e10bc8ea4b783895d",
+    "driver_sha256": "6b8c868bc16a9262d8a8ae046162b68edc00876c565c6893730b03a576517606",
+    "bridge": "/home/drakestapleton/work/bridge-orphan-recovery/tools/native"
+  },
+  "inventory_preservation": {
+    "prior_log": "/home/drakestapleton/handoffs/omega-fr9-20261028-recovered-corpus-efd15c234.jsonl",
+    "outcome_case_name_multiplicities_identical": true,
+    "prior_outcome_rows": 15216,
+    "current_outcome_rows": 15216
+  },
+  "failures_by_group": {
+    "growth-refusal-source-coordinate-parity": [
+      {
+        "case": "seed/omc/om2/s2/bad-growth.om",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/omc/om2/s2/s2.cases:23:s2-bad-growth",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/candidate.cases:104:unroll-growth",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/candidate.cases:105:unroll-growth-diag",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/pinned.cases:80:pin-unroll-growth-diag:current-differential",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/pinned.cases:82:pin-unroll-growth:current-differential",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/unroll-growth-diag.om",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/unroll-growth.om",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      }
+    ],
+    "literal-diagnostic-parity": [
+      {
+        "case": "seed/omc/om2/s3/a-exact-diag.om",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/omc/om2/s3/a-kept-diag.om",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/omc/om2/s3/s3.cases:57:s3-a-kept-diag",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/omc/om2/s3/s3.cases:58:s3-a-exact-diag",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/candidate.cases:258:unroll-sum-diag-same",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/candidate.cases:259:fold-trap-diag-same",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/pinned.cases:33:pin-fold-trap-diag:current-differential",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/pinned.cases:91:pin-unroll-sum-diag:current-differential",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/a5-exact-diag.om",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/a5-kept-diag.om",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/a5-swap-diag.om",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/candidate.cases:48:a5-exact-diag",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/candidate.cases:52:a5-kept-diag",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/candidate.cases:56:a5-swap-diag",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/pinned.cases:51:pin-a5-exact-diag:current-differential",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/pinned.cases:55:pin-a5-kept-diag:current-differential",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s5s7/pinned.cases:59:pin-a5-swap-diag:current-differential",
+        "reason": "successful compiler diagnostics differ after exact source-coordinate translation"
+      }
+    ],
+    "historical-mutant-obligations": [
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:20:unroll-kplus1-kill-unroll-nest",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT unroll-kplus1-kill-unroll-nest FAIL compile exit=21 expected=0'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:27:fold-div0-kill-fold-trap-B",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-B FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:28:fold-div0-kill-fold-trap-C",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-C FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:29:fold-div0-kill-fold-trap-D",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-D FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:30:fold-div0-kill-fold-trap-E",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-E FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:31:fold-div0-kill-fold-trap-F",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-F FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:33:fold-div0-kill-fold-trap-H",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-H FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/candidates/s2/s2-mutants.cases:34:fold-div0-kill-fold-trap-I",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-I FAIL run exit=102 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:14:kill-unroll-nest",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT unroll-kplus1-kill-unroll-nest FAIL compile exit=21 expected=0'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:60:kill-fold-trap-B",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-B FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:62:kill-fold-trap-C",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-C FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:64:kill-fold-trap-D",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-D FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:66:kill-fold-trap-E",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-E FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:68:kill-fold-trap-F",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-F FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:72:kill-fold-trap-H",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-H FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      },
+      {
+        "case": "seed/qualification/om2/sec/s3s4/mutant-kills.cases:74:kill-fold-trap-I",
+        "reason": "original conductor oracle: expected PASS, observed {'status': 'FAIL', 'line': 'VERDICT fold-div0-kill-fold-trap-I FAIL run exit=102 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill'}"
+      }
+    ],
+    "pre-OM2-refusal-authority": [
+      {
+        "case": "seed/qualification/om2/leak/leak.cases:23:s1-rot-refused",
+        "reason": "compiler stdout differs from oracle -: bytes=128 sha256=4e9c219ba3cd8c8b5615bf2b650345d1836db747f0f75fde982f22ce0ccd3553 prefix=b'\\x04\\x1c\\x80\\x13\\xe5\\x03\\x04\\xaa\\x04T\\x80\\x13\\xa5\\x00\\x04\\xca?\\x80\\x00\\xf1\"\\x03\\x00T\\x04,\\xc1\\x1a\\xa5\\x00\\x04\\xca?\\x80\\x00\\xf1\\xa2\\x02\\x00T\\xe6\\x03\\x01\\xcb\\x04,\\xc6\\x1a\\xa5\\x00\\x04\\xcaFD\\xc2\\x93\\xa5\\x00\\x06\\xcaF\\xa4\\xc2\\x93\\xa5\\x00\\x06\\xca\\x7f\\x00\\x01\\xf1\\x82\\x01\\x00TF,\\xc3\\x9a\\xa5\\x00\\x06\\xca\\x7f\\x00\\x01\\xf1\\x02\\x01\\x00T\\xe8\\x03\\x03\\xcbF,\\xc8\\x9a\\xa0\\x00\\x06\\xca\\xc0\\x03_\\xd6\\xe0\\x03\\x07\\xaa\\xf0\\x08@\\xf9\\x00\\x02\\x1f\\xd6\\xe1\\x00\\x80\\xd2\\xfc\\xff\\xff\\x17'"
+      }
+    ],
+    "frozen-current-C2-contract": [
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:31:c2-00015",
+        "reason": "compiler stdout differs from oracle sha:ac7a50e3b4a708c1c8802a86202970c54968f13f8cee1f3d5328fa4d4ad0a89f: bytes=2812 sha256=782229d287f562e1201e2ba00b3642fa0ca22cdd24bd41be801d0a622d22d4c7 prefix=b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\xfc\\n\\x00\\x00\\x00\\x00\\x00\\x00\\xfc\\n\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:49:c2-00033",
+        "reason": "compiler stdout differs from oracle sha:d5b8dc69a5f038d47bc92b570ca3b72c5bafc1ca0f79a312998f84d4d948acf8: bytes=2872 sha256=6b8c1c709e8904234c4737dfc9df5cbfbaba7d5034a66b2975252d8f99433835 prefix=b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x008\\x0b\\x00\\x00\\x00\\x00\\x00\\x008\\x0b\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:320:c2-00304",
+        "reason": "compiler stdout differs from oracle -: bytes=212 sha256=4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d prefix=b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\xd4\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xd4\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:322:c2-00306",
+        "reason": "compiler stdout differs from oracle -: bytes=4308 sha256=554b483494b4f77079ebe6a0ce10f046e82cbff7276e6b60b0a4127d3c582c4d prefix=b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\xd4\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\xd4\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:691:c2-00675",
+        "reason": "compiler stdout differs from oracle -: bytes=212 sha256=4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d prefix=b'\\x7fELF\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00\\x01\\x00\\x00\\x00\\xb0\\x00@\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x008\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00\\x00\\x00\\x00\\x00\\xd4\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xd4\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x06\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x10\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:744:c2-00728",
+        "reason": "compiler stderr differs from oracle err:4:3: bytes=21 sha256=c54fd1707f4ed28ff87f5144e0e7c9baf942d70079c1b3d67c855d49bbfd4d41 prefix=b'omc: line 3: error 3\\n'"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:5729:c2-05713",
+        "reason": "not a clean compiler refusal"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:5730:c2-05714",
+        "reason": "compile refusal differs after exact source-coordinate translation"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:5731:c2-05715",
+        "reason": "not a clean compiler refusal"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:5732:c2-05716",
+        "reason": "not a clean compiler refusal"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:5733:c2-05717",
+        "reason": "not a clean compiler refusal"
+      },
+      {
+        "case": "seed/qualification/om2/manifest-c2.txt:5735:c2-05719",
+        "reason": "not a clean compiler refusal"
+      }
+    ]
+  },
+  "not_run": [
+    {
+      "case": "seed/host/tests/devcall.om",
+      "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF"
+    },
+    {
+      "case": "seed/host/tests/uvmctl.om",
+      "reason": "EMULATOR_ARTIFACT: exact invalid-fd ioctl returned QEMU ENOTTY instead of native EBADF"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/diag-site-nest.om",
+      "reason": "entryless source f4c545da9cfed4a6884b39634a371c09353139992f0be377dcea2f4e65e9187d has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/diag-site-rolled.om",
+      "reason": "entryless source 06c137ece7a94b3e6f5e19043bd6045fbe5208019b4366a43de9cb7558cee587 has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/diag-site-unroll.om",
+      "reason": "entryless source 035d21b803806853451dc2f408cc29c3490714b7b73081dd8cfe4b283abb2f85 has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/diag-site.om",
+      "reason": "entryless source 1ab250b1d4e7d2f437ee680cce5a8918752cf0ef8efe1d89b490270005ceb294 has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/pinned.cases:24:pin-diag-site-nest:current-differential",
+      "reason": "entryless source f4c545da9cfed4a6884b39634a371c09353139992f0be377dcea2f4e65e9187d has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/pinned.cases:27:pin-diag-site-rolled:current-differential",
+      "reason": "entryless source 06c137ece7a94b3e6f5e19043bd6045fbe5208019b4366a43de9cb7558cee587 has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/pinned.cases:29:pin-diag-site-unroll:current-differential",
+      "reason": "entryless source 035d21b803806853451dc2f408cc29c3490714b7b73081dd8cfe4b283abb2f85 has no reviewed private-ABI caller for its exported/last entry"
+    },
+    {
+      "case": "seed/qualification/om2/sec/s3s4/pinned.cases:30:pin-diag-site:current-differential",
+      "reason": "entryless source 1ab250b1d4e7d2f437ee680cce5a8918752cf0ef8efe1d89b490270005ceb294 has no reviewed private-ABI caller for its exported/last entry"
+    }
+  ],
+  "encoding_mutants": [
+    {
+      "status": "PASS",
+      "case": "negative-invalid-encoding",
+      "reason": "independent disassembler rejected deliberately invalid emitted opcode"
+    },
+    {
+      "status": "PASS",
+      "case": "negative-valid-wrong-encoding",
+      "reason": "disassembler accepts valid changed immediate; behavior oracle rejects it",
+      "expected_exit": 42,
+      "observed_exit": 43
+    }
+  ],
+  "former_fail_now_pass": [
+    "seed/omc/om2/s2/s2-mutants.cases:30:m-idx",
+    "seed/omc/om2/s2/s2-mutants.cases:38:m-cyc",
+    "seed/omc/om2/s3/s3-mutants.cases:46:m-e16-d3",
+    "seed/omc/om2/s3/s3-mutants.cases:49:m-e16-inl",
+    "seed/qualification/om2/sec/s5s7/a5-kept.om",
+    "seed/qualification/om2/sec/s5s7/a5-rot64.om",
+    "seed/qualification/om2/sec/s5s7/pinned.cases:49:pin-a5-rot64:current-differential",
+    "seed/qualification/om2/sec/s5s7/pinned.cases:53:pin-a5-kept:current-differential"
+  ],
+  "former_pass_now_fail": [
+    "seed/omc/om2/s2/bad-growth.om",
+    "seed/omc/om2/s2/s2.cases:23:s2-bad-growth"
+  ],
+  "new_failure_explanation": "Both new FAIL rows are the same S2 bad-growth source: both targets cleanly refuse14, AArch64 reports line6 and prefixed x86 line8. The new mandatory emitted-storage guard reaches the bound before target-neutral fuel at different source tokens. Literal coordinate parity is unchanged, so the rows remain FAIL.",
+  "remaining_gate_decisions": [
+    "Literal cross-target diagnostic equality versus required target-specific bare recovery-stack trap records; no records suppressed and no alternative expectation added.",
+    "Literal cross-target refusal coordinates versus equal emitted-storage ceilings and architecture-specific instruction lengths; bounds not increased to manufacture parity.",
+    "Current candidate frozen-C2 byte/diagnostic/refusal compatibility versus later getppid, socket-option safety and capacity changes, plus backend-specific branch reach; no frozen replay substituted for current checks.",
+    "Historical S2 mutant kill obligations were already unsatisfied in original phaseB logs: unroll-kplus1-nest compile21 instead of required successful compile; fold-div0 B,C,D,E,F,H,I survive the stipulated output kill. No mutant broadened or failure treated as kill.",
+    "Pre-OM2 leak.cases s1-rot-refused requires old line1 error16 although current compiler implements OM2; historical obligation preserved."
+  ],
+  "authority": "Parent explicitly required literal parity and frozen C2 unchanged. This receipt records a completed repair/measurement, not full backend qualification.",
+  "interrupted_attempt": {
+    "log_path": "/home/drakestapleton/handoffs/omega-fr9-20261028-orphan-corpus-3e66b6744.jsonl",
+    "status": "INTERRUPTED; no summary; NOT_RUN as full acceptance",
+    "reason": "A queued Eval cell30second deadline interrupted the running timeout0 cell; no qualifier process remained. Complete acceptance reran to the distinct full log above."
+  },
+  "native_x86": "NOT_RUN",
+  "gpu": "NOT_RUN",
+  "merged": false,
+  "deployed": false
+}

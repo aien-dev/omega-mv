@@ -12,6 +12,8 @@ put u_k n kk
 put u_nn n get nn 0
 put u_held n get held 0
 put fzone 0 add get fzone 0 1
+cp_head get cur 0 get line 0
+cp_skip
 end
 
 note fuelc: charge n to the function's fuel at the construct on line ln, before anything of it expands; a
