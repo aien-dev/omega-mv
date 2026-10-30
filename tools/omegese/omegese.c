@@ -182,7 +182,7 @@ static int nframes;
 
 /* ---- ownership: the may-states of checker2's ownership flow, kept along the path being parsed ----
  * checker2 rejects an own array that is used, moved or freed while it holds nothing on every path to
- * that point, and one that gets a new array or reaches a return while it holds one on every path
+ * that point, and one that gets a new array or reaches a return while it holds one on some path
  * (src/checker2/c2_check.c, C2-OWN-USE-DEAD, C2-OWN-DOUBLE-RELEASE, C2-OWN-LEAK). The same states are
  * kept here so that emit refuses those programs at the line that makes them wrong (OMEGESE.md 6.4).
  * Inside an open loop a state that includes the loop head is not known until the loop ends (a later
@@ -350,8 +350,8 @@ static int own_defer(int kind, int s, Os o) {
     snprintf(e->name, sizeof e->name, "%s", n ? n : "");
     return 0;
 }
-static int needs_array(Os o) { return o.m != 0 && !(o.b & OS_L); }           /* may turn out to hold none */
-static int needs_room(Os o) { return o.m != 0 && !(o.b & (OS_U | OS_D)); }   /* may turn out to hold one */
+static int needs_array(Os o) { return o.m != 0 && !(o.b & OS_L); } /* may turn out to hold none */
+static int needs_room(Os o) { return o.m != 0; } /* the loop head may bring an array back: may hold one */
 /* a use: get, put, edit, view, an argument (C2-OWN-USE-DEAD) */
 static int own_use(int r) {
     int s = own_slot(r);
@@ -371,9 +371,9 @@ static int own_kill(int r) { /* moved away */
 static int own_birth(int r) { /* gets an array (C2-OWN-LEAK when it still holds one) */
     int s = own_slot(r);
     if (s < 0) return 0;
-    if (os_only(ost[s])) {
+    if (ost[s].m == 0 && (ost[s].b & OS_L)) {
         const char *n = own_label(r);
-        return fail("'%s' still holds an array on every path to this line; free it before it gets another", n ? n : "own");
+        return fail("'%s' still holds an array on some path to this line; free it before it gets another", n ? n : "own");
     }
     if (needs_room(ost[s])) TRY(own_defer(OW_BIRTH, s, ost[s]));
     ost[s] = (Os){OS_L, 0};
@@ -405,13 +405,13 @@ static int own_call(const Func *g, const int *args) {
     }
     return 0;
 }
-/* a return: no own array may still hold its array on every path (C2-OWN-LEAK) */
+/* a return: no own array may still hold its array on some path (C2-OWN-LEAK) */
 static int own_ret(void) {
     for (int s = 0; s < nown; s++)
-        if (os_only(ost[s])) {
+        if (ost[s].m == 0 && (ost[s].b & OS_L)) {
             const char *n = own_label(own_reg[s]);
-            if (n) return fail("'%s' still holds its array at this return on every path; free it first", n);
-            return fail("an array whose name is out of scope here still holds its data on every path to this return; free it inside its block, or end this path with trap");
+            if (n) return fail("'%s' still holds its array at this return on some path; free it first", n);
+            return fail("an array whose name is out of scope here still holds its data on some path to this return; free it inside its block, or end this path with trap");
         }
     for (int s = 0; s < nown; s++)
         if (needs_room(ost[s])) TRY(own_defer(OW_RET, s, ost[s]));
@@ -461,10 +461,10 @@ static int own_loop_close(int k) {
                 const char *n = e.name[0] ? e.name : "an array out of scope here";
                 if ((e.kind == OW_USE || e.kind == OW_FREE) && !(e.o.b & OS_L))
                     return fail("'%s' holds no array at line %d on every path, once this loop is closed: it was freed or moved and the loop gives it no new one", n, e.line);
-                if (e.kind == OW_BIRTH && e.o.b == OS_L)
-                    return fail("'%s' still holds an array at line %d on every path, once this loop is closed, where it gets another; free it first", n, e.line);
-                if (e.kind == OW_RET && e.o.b == OS_L)
-                    return fail("'%s' still holds its array at the return on line %d on every path, once this loop is closed; free it first", n, e.line);
+                if (e.kind == OW_BIRTH && (e.o.b & OS_L))
+                    return fail("'%s' still holds an array at line %d on some path, once this loop is closed, where it gets another; free it first", n, e.line);
+                if (e.kind == OW_RET && (e.o.b & OS_L))
+                    return fail("'%s' still holds its array at the return on line %d on some path, once this loop is closed; free it first", n, e.line);
                 continue;
             }
         }
@@ -1775,7 +1775,8 @@ static int run_line(const char *text) {
 }
 /* before the end line of the loop at the top: a check waiting for that loop that would fail there gets
  * the line that settles it, when the name is in scope: an array for a name that needs one at the loop
- * head (x = new ...), or a free for one that would still hold its array there */
+ * head (x = new ...), freed first (free x) when the array may still hold one here, so that the new
+ * array does not leak it; or a free for one that would still hold its array there */
 static int own_repair(char *line, size_t cap) {
     int k = nframes - 1;
     const Frame *fr = &frames[k];
@@ -1788,10 +1789,11 @@ static int own_repair(char *line, size_t cap) {
         const char *n = own_label(r);
         if (o.m || !n || find_name(n)->reg != r) continue;
         if ((e->kind == OW_USE || e->kind == OW_FREE) && !(o.b & OS_L) && !os_only(ost[s])) {
-            snprintf(line, cap, "%s = new %s %d %s", n, GW[regs[r].s], regs[r].len, regs[r].s == T_BOOL ? "false" : "0");
+            if (ost[s].m || (ost[s].b & OS_L)) snprintf(line, cap, "free %s", n);
+            else snprintf(line, cap, "%s = new %s %d %s", n, GW[regs[r].s], regs[r].len, regs[r].s == T_BOOL ? "false" : "0");
             return 1;
         }
-        if ((e->kind == OW_BIRTH || e->kind == OW_RET) && o.b == OS_L && !os_none(ost[s])) {
+        if ((e->kind == OW_BIRTH || e->kind == OW_RET) && (o.b & OS_L) && !os_none(ost[s])) {
             snprintf(line, cap, "free %s", n);
             return 1;
         }
@@ -1799,7 +1801,7 @@ static int own_repair(char *line, size_t cap) {
     return 0;
 }
 /* close everything from a line start: each unread name is read (x = x), at the function's end each own
- * array that holds its array on every path is freed (or the path ends with trap 1 when such an array is
+ * array that holds its array on some path is freed (or the path ends with trap 1 when such an array is
  * out of scope), before a loop ends the lines own_repair finds, a function that owes a value returns one,
  * every block ends, and a function is written if there is none */
 static int close_all(Buf *txt) {
@@ -1815,7 +1817,7 @@ static int close_all(Buf *txt) {
             int o = -1, hidden = 0; /* at the function's end: an own array that would leak (own_ret) */
             if (u < 0 && frames[nframes - 1].kind == F_FN)
                 for (int s = 0; s < nown && o < 0; s++)
-                    if (os_only(ost[s])) { if (own_label(own_reg[s])) o = s; else hidden = 1; }
+                    if (ost[s].b & OS_L) { if (own_label(own_reg[s])) o = s; else hidden = 1; }
             if (u >= 0) snprintf(line, sizeof line, "%s = %s", names[u].name, names[u].name);
             else if (o >= 0) snprintf(line, sizeof line, "free %s", own_label(own_reg[o]));
             else if (hidden) snprintf(line, sizeof line, "trap 1");

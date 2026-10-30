@@ -309,8 +309,8 @@ nxeq 'fn f a uint to uint\nx = new uint 4 0\nfree x\nx = new uint ' 'number: 4..
 nxeq 'fn f a uint to uint\nx = new uint 4 0\nfree x\nx = new uint 4' 'number: 4..4\nwords: ( (space)'
 nxcase 'fn f a uint to uint\nx = new uint 4 0\nfree x\nx = new uint 1' 'REFUSED omegese: line 4: *own uint 1 but the name holds own uint 4*' 'a length no number extends: not refused'
 # ownership (checker2's C2-OWN rules, OMEGESE.md 6.4): no ret while an own array holds its array on
-# every path, no second free; at a line start ret is left out until the array is freed; after a loop
-# that frees and refills it the array still holds one on every path, so complete frees it
+# some path, no second free; at a line start ret is left out until the array is freed; after a loop
+# that frees and refills it the array still holds one on some path, so complete frees it
 nxcase 'fn f a own uint 4 to uint\nret ' "REFUSED omegese: line 2: no text after this prefix*'a' still holds its array*" 'ret while an own array holds its array: not refused'
 nxcase 'fn f a own uint 4 to uint\nfree a\nfree ' "REFUSED omegese: line 3: *freed or moved on every path*" 'a second free: not refused'
 nxk=$((nxk + 1)); got="$(printf 'fn f a own uint 4 to uint\n' > "$T/p"; "$G" next --machine "$T/p")"
@@ -318,13 +318,15 @@ nxk=$((nxk + 1)); got="$(printf 'fn f a own uint 4 to uint\n' > "$T/p"; "$G" nex
 nxk=$((nxk + 1)); got="$(printf 'fn f a own uint 4 n uint to uint\nwhile gt n 0\nfree a\na = new uint 4 n\nn = sub n 1\nend\n' > "$T/p"; "$G" complete "$T/p")"
 [ "$got" = "$(printf 'free a\nret 0\nend')" ] || bad "complete after a loop that refills an own array: got '$got'"
 # a loop's state at its head is known at its end line: a use of an array freed before the loop is
-# refused there unless the body gives it a new one, so end is left out and complete writes that line
+# refused there unless the body gives it a new one, so end is left out and complete writes those lines
+# (free first: the array may hold the one an earlier pass gave it)
 nxeq 'fn f a own uint 4 n uint to uint\nfree a\nwhile gt get a 0 n\nn = add n 1\n' 'assign: a n\nnew-name: any name not in use\nwords: if while for put free'
 nxcase 'fn f a own uint 4 n uint to uint\nfree a\nwhile gt get a 0 n\nn = add n 1\nend\n' "REFUSED omegese: line 5: 'a' holds no array at line 3 on every path, once this loop is closed*" 'end of a loop whose head uses a freed array: not refused'
 nxk=$((nxk + 1)); got="$(printf 'fn f a own uint 4 n uint to uint\nfree a\nwhile gt get a 0 n\nn = add n 1\n' > "$T/p"; "$G" complete "$T/p")"
-[ "$got" = "$(printf 'a = new uint 4 0\nend\nret 0\nend')" ] || bad "complete in a loop whose head uses a freed array: got '$got'"
-nxk=$((nxk + 1)); got="$(printf 'fn f n uint to void\nx = new uint 4 n\nwhile gt n 0\nx = new uint 4 n\n' > "$T/p"; "$G" complete "$T/p")"
-[ "$got" = "$(printf 'free x\nend\nend')" ] || bad "complete in a loop that gives an array a second one: got '$got'"
+[ "$got" = "$(printf 'free a\na = new uint 4 0\nend\nfree a\nret 0\nend')" ] || bad "complete in a loop whose head uses a freed array: got '$got'"
+# a loop that gives an array a second one while it still holds the first leaks on its first pass: no
+# line after it repairs that, so no completion exists
+nxcase 'fn f n uint to void\nx = new uint 4 n\nwhile gt n 0\nx = new uint 4 n\n' "REFUSED omegese: line 5: no text after this prefix*'x' still holds an array at line 4 on some path*" 'a loop that gives an array a second one: not refused'
 # a loop opened at the nesting limit is refused before its head state is set up (no shift past bit 63)
 { echo 'fn f n uint to uint'; for ((i = 0; i < 63; i++)); do echo "if gt n $i"; done; echo 'while gt n 0'; } > "$T/deep.omegese"
 nxk=$((nxk + 1)); got="$("$G" emit "$T/deep.omegese" "$T/x.json" 2>&1 || true)"
@@ -771,7 +773,7 @@ x = total w
 free w
 ret x
 end
-== still holds its array at this return on every path
+== still holds its array at this return on some path
 fn f a own uint 4 to uint
 ret 1
 end
@@ -780,7 +782,7 @@ fn f a own uint 4 to uint
 free a
 ret 1
 end
-== still holds its array at this return on every path
+== still holds its array at this return on some path
 fn f n uint to void
 x = new uint 4 n
 put x 0 n
@@ -823,7 +825,7 @@ x = get a 0
 g own a
 ret x
 end
-== still holds an array on every path to this line
+== still holds an array on some path to this line
 fn f n uint to uint
 x = new uint 4 n
 x = new uint 4 0
@@ -840,7 +842,7 @@ y = get x 0
 free x
 ret y
 end
-== still holds its array at this return on every path
+== still holds its array at this return on some path
 fn f n uint to uint
 x = new uint 4 n
 if gt n 3
@@ -858,7 +860,7 @@ end
 free x
 ret 1
 end
-== out of scope here still holds its data on every path to this return
+== out of scope here still holds its data on some path to this return
 fn f n uint to uint
 if gt n 3
 y = new uint 4 n
@@ -873,6 +875,7 @@ fn f n uint to uint
 if gt n 3
 y = new uint 4 n
 put y 0 n
+free y
 end
 ret 0
 end
@@ -888,9 +891,11 @@ end
 fn f a own uint 4 n uint to uint
 free a
 while gt get a 0 n
+free a
 a = new uint 4 n
 n = add n 1
 end
+free a
 ret n
 end
 == 'a' holds no array at line 4 on every path, once this loop is closed
@@ -909,8 +914,9 @@ free a
 a = new uint 4 n
 n = sub n 1
 end
+free a
 end
-== 'x' still holds an array at line 4 on every path, once this loop is closed
+== 'x' still holds an array at line 4 on some path, once this loop is closed
 fn f n uint to void
 x = new uint 4 n
 while gt n 0
@@ -929,7 +935,7 @@ n = sub n 1
 end
 free x
 end
-== 'x' still holds its array at the return on line 4 on every path, once this loop is closed
+== 'x' still holds its array at the return on line 4 on some path, once this loop is closed
 fn f n uint to uint
 x = new uint 4 n
 while gt n 0
