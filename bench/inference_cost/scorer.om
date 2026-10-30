@@ -25,6 +25,102 @@ note 8 groups (lang * 2 + arm) of 12 counters: 0 tasks (first rows), 1 compiled,
 note 2 verified, 3 first-attempt verified, 4..6 prompt/completion/total tokens,
 note 7 wall ms, 8 rows, 9 present
 global stats ulong 96
+note Exact task identity per group. Open-addressed entries point into immutable inbuf.
+note A row has at least 18 bytes, so the input byte limit cannot fill 65536 entries.
+global taskbeg ulong 65536
+global tasklen ulong 65536
+global taskgrp ulong 65536
+global taskatt ulong 65536
+global taskver ulong 65536
+global rowbeg ulong 1
+global rowlen ulong 1
+
+fn read_task to void
+read_tok
+put rowbeg 0 get tokb 0
+put rowlen 0 sub get pos 0 get tokb 0
+end
+
+fn same_task slot ulong b ulong to bool
+if ne get taskgrp slot b
+ret false
+end
+if ne get tasklen slot get rowlen 0
+ret false
+end
+start = get taskbeg slot
+other = get rowbeg 0
+for i ulong get rowlen 0
+left = get inbuf add start i
+right = get inbuf add other i
+if ne left right
+ret false
+end
+end
+ret true
+end
+
+fn task_slot b ulong to ulong
+h = b
+start = get rowbeg 0
+for i ulong get rowlen 0
+c = ulong get inbuf add start i
+mix = add h shl h 5
+h = rem xor mix c 65536
+end
+for i ulong 65536
+if eq get tasklen h 0
+put taskbeg h get rowbeg 0
+put tasklen h get rowlen 0
+put taskgrp h b
+ret h
+end
+if same_task h b
+ret h
+end
+h = rem add h 1 65536
+end
+fail 2
+ret 0
+end
+
+fn record_task b ulong att ulong first ulong comp ulong ver ulong to void
+if or gt first 1 gt ver 1
+fail 2
+end
+if and ne comp 0 eq ver 1
+fail 2
+end
+s = task_slot b
+prev = get taskatt s
+if ne att add prev 1
+fail 2
+end
+if ne (eq first 1) (eq prev 0)
+fail 2
+end
+if eq get taskver s 1
+fail 2
+end
+if eq prev 0
+bump b 1
+end
+put taskatt s att
+if eq ver 1
+put taskver s 1
+bump add b 2 1
+if eq first 1
+bump add b 3 1
+end
+end
+end
+
+fn require_eof to void
+skip_ws
+if ne get pos 0 get inlen 0
+fail 2
+end
+end
 
 text err "scorer: error\n"
 fn fail code int to void
@@ -261,22 +357,14 @@ att_n = read_uint
 first = read_uint
 comp_rc = read_uint
 ver_ok = read_uint
+record_task b att_n first comp_rc ver_ok
 wms = read_uint
 ptok = read_uint
 ctok = read_uint
 ttok = read_uint
 
-if eq first 1
-bump b 1
-end
 if eq comp_rc 0
 bump add b 1 1
-end
-if eq ver_ok 1
-bump add b 2 1
-if eq first 1
-bump add b 3 1
-end
 end
 bump add b 4 ptok
 bump add b 5 ctok
@@ -424,17 +512,19 @@ att_cnt = read_uint
 
 if eq v 1
 for i ulong att_cnt
-skip_token
+read_task
 parse_row 0
 end
+require_eof
 wtext t_ver
 ret print_group 0 false
 end
 for i ulong att_cnt
-skip_token
+read_task
 lg = lang_idx
 am = arm_idx
 parse_row mul add mul lg 2 am 12
 end
+require_eof
 ret print_v2
 end
