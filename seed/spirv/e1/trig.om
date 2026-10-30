@@ -1,0 +1,82 @@
+note SPDX-License-Identifier: Apache-2.0
+note SIN, COS: omega_math_sin / omega_math_cos of src/omega_numeric_transc.c (sin_poly, cos_poly,
+note sincos_core with the three-part pi/2 reduction).
+fn sinp rh ulong rl ulong to ulong
+r2 = sfmul rh rh
+s = sffma S13 r2 S11
+s = sffma s r2 S9
+s = sffma s r2 S7
+s = sffma s r2 S5
+s = sffma s r2 S3
+t = sfmul rh r2
+rlc = sffma sfmul r2 MHALF rl rl
+ret sfadd rh sffma t s rlc
+end
+fn cosp rh ulong rl ulong to ulong
+r2 = sfmul rh rh
+r2l = sffma rh rh xor r2 SIGN
+c = sffma C14 r2 C12
+c = sffma c r2 C10
+c = sffma c r2 C8
+c = sffma c r2 C6
+c = sffma c r2 C4
+hr = sfmul r2 HALF
+h = sfsub ONE hr
+eh = sfsub sfsub ONE h hr
+c1 = sffma r2l MHALF eh
+c2 = sffma xor rl SIGN rh c1
+r4 = sfmul r2 r2
+ret sfadd h sffma r4 c c2
+end
+fn scc u ulong qoff long to ulong
+ax = and u MAG
+if gt ax INF
+ret ulong QNAN
+end
+if gt ax TRIGMAX
+ret ulong QNAN
+end
+k = long 0
+rh = u
+rl = ulong 0
+if gt ax PIO4
+t = sfadd sfmul u TWOOPI MAGIC
+kf = sfsub t MAGIC
+ta = long t
+k = sub ta 1262485504
+r1 = sffma xor kf SIGN P1 u
+th = sfmul kf P2
+tl = sffma kf P2 xor th SIGN
+a = tsum r1 xor th SIGN
+s1 = and a 4294967295
+e1 = shr a 32
+b = tsum s1 xor tl SIGN
+s2 = and b 4294967295
+e2 = shr b 32
+lo = sfsub sfadd e1 e2 sfmul kf P3
+rh = sfadd s2 lo
+rl = sfsub lo sfsub rh s2
+end
+kq = and add k qoff 3
+q = ulong kq
+r = sinp rh rl
+if eq and q 1 1
+r = cosp rh rl
+end
+if eq and q 2 2
+r = xor r SIGN
+end
+ret r
+end
+fn e1_sin x uint to uint
+u = ulong x
+if eq and u MAG 0
+ret x
+end
+r = scc u 0
+ret uint r
+end
+fn e1_cos x uint to uint
+r = scc ulong x 1
+ret uint r
+end

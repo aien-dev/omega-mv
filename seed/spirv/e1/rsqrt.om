@@ -1,0 +1,79 @@
+note SPDX-License-Identifier: Apache-2.0
+note RSQRT: omega_math_rsqrt of src/omega_numeric_transc.c (correctly rounded). mid_below's 128-bit
+note product N^2 X (< 2^78) is formed as H 2^32 + low word with H < 2^44; L < 2^q iff msb(L) < q.
+fn midb w1 ulong w2 ulong xm ulong ex long to ulong
+m1 = or and w1 FRAC HID
+m2 = or and w2 FRAC HID
+b1 = shr w1 23
+b2 = shr w2 23
+e1 = long b1
+e2 = long b2
+e1 = sub e1 150
+e2 = sub e2 150
+el = e1
+if lt e2 e1
+el = e2
+end
+d1 = sub e1 el
+d2 = sub e2 el
+s1 = ulong d1
+s2 = ulong d2
+n = add shl m1 s1 shl m2 s2
+s = add sub mul el 2 2 ex
+if ge s 0
+ret ulong 0
+end
+q = neg s
+if ge q 127
+ret ulong 1
+end
+n2 = mul n n
+lo = mul and n2 4294967295 xm
+hi = mul shr n2 32 xm
+h = add hi shr lo 32
+b = msb and lo 4294967295
+if ne h 0
+b = add msb h 32
+end
+if lt b q
+ret ulong 1
+end
+ret ulong 0
+end
+fn e1_rsqrt x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+if eq u 0
+ret uint INF
+end
+if eq u SIGN
+ret uint 4286578688
+end
+if ne and u SIGN 0
+ret uint QNAN
+end
+if eq u INF
+ret uint 0
+end
+post = long 0
+if eq and u INF 0
+u = sfmul u TWO24
+post = long 12
+end
+y = sfdiv ONE sfsqrt u
+xm = or and u FRAC HID
+xb = shr u 23
+ex = long xb
+ex = sub ex 150
+w = y
+while eq midb w add w 1 xm ex 1 bound 64
+w = add w 1
+end
+while eq midb sub w 1 w xm ex 0 bound 64
+w = sub w 1
+end
+r = sfmul w pow2i post
+ret uint r
+end

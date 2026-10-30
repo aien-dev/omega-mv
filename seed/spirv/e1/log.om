@@ -1,0 +1,40 @@
+note SPDX-License-Identifier: Apache-2.0
+note LOG: omega_math_log of src/omega_numeric.c, built with -ffp-contract=off (unfused, source order);
+note omega_math_div is the correctly rounded division sfdiv.
+fn e1_log x uint to uint
+u = ulong x
+a = and u MAG
+if gt a INF
+ret uint QNAN
+end
+if ne and u SIGN 0
+if ne a 0
+ret uint QNAN
+end
+end
+if eq a 0
+ret uint 4286578688
+end
+if eq u INF
+ret uint INF
+end
+ea = long 0
+if eq and u INF 0
+u = sfmul u TWO23
+ea = long -23
+end
+eb = and shr u 23 255
+e = long eb
+e = add sub e 127 ea
+m = or and u FRAC ONE
+if gt m NSQ2
+m = sfmul m HALF
+e = add e 1
+end
+z = sfdiv sfsub m ONE sfadd m ONE
+z2 = sfmul z z
+poly = sfadd ONE sfmul z2 sfadd NL1 sfmul z2 sfadd NL2 sfmul z2 NL3
+lnm = sfmul sfmul TWO z poly
+r = sfadd sfmul fint e NLN2 lnm
+ret uint r
+end

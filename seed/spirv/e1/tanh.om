@@ -1,0 +1,35 @@
+note SPDX-License-Identifier: Apache-2.0
+note TANH: omega_math_tanh of src/omega_numeric_transc.c.
+fn e1_tanh x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+sg = and u SIGN
+ax = and u MAG
+r = ulong ONE
+if lt ax X0_5625
+x2 = sfmul ax ax
+p = sffma T21 x2 T19
+p = sffma p x2 T17
+p = sffma p x2 T15
+p = sffma p x2 T13
+p = sffma p x2 T11
+p = sffma p x2 T9
+p = sffma p x2 T7
+p = sffma p x2 T5
+p = sffma p x2 T3
+r = sffma sfmul ax x2 p ax
+end
+if lt ax X9_5
+if ge ax X0_5625
+ah = sfadd ax ax
+k = ek ah
+mm = ecore ah 0 k
+e2 = scale2 and mm 4294967295 k
+r = sfsub ONE sfdiv TWO sfadd e2 ONE
+end
+end
+r = or r sg
+ret uint r
+end
