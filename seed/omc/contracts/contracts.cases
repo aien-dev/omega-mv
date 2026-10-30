@@ -43,3 +43,5 @@ diag-final-head emit seed/omc/contracts/diagunroll.om any has:seed/omc/contracts
 diag-proof emit seed/omc/contracts/diagproof.om any has:seed/omc/contracts/diagproof.want 0
 diag-release emit seed/omc/contracts/diagrelease.om any has:seed/omc/contracts/diagrelease.want 0
 false-check run seed/omc/contracts/false.om - - - 109
+forvalfinal run seed/omc/contracts/forvalfinal.om - - - 110
+forvalcontinue run seed/omc/contracts/forvalcontinue.om - - - 110

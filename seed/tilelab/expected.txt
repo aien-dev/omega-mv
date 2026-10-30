@@ -1,0 +1,97 @@
+$ tilelab 1 1024 1024 1024
+pick cfg rt=2 ct=4 wm=4 wn=4 band=8
+measure cfg rt=2 ct=4 wm=4 wn=4 band=8
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
+rc=0
+$ tilelab 1 4096 4096 4096
+pick cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
+rc=0
+$ tilelab 1 2048 8192 2048
+pick cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=32
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
+rc=0
+$ tilelab 1 100 100 100
+pick cfg rt=2 ct=4 wm=4 wn=4 band=0
+measure cfg rt=2 ct=4 wm=4 wn=4 band=0
+measure cfg rt=2 ct=4 wm=4 wn=4 band=4
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
+rc=0
+$ tilelab 1 8192 8192 8192
+pick cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=4 wn=4 band=16
+measure cfg rt=2 ct=4 wm=4 wn=4 band=8
+measure cfg rt=2 ct=4 wm=2 wn=4 band=8
+rc=0
+$ tilelab 1 64 64 64 20
+refused: no configuration fits the register budget
+rc=2
+$ tilelab 1 0 5 5
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 16385 8 8
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 x 8 8
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 18446744073709551617 8 8
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 8 18446744073709551617 8
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 8 8 18446744073709551617
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 1024 1024 1024 extra
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 18446744073709551616
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 999999999999999999999
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 -1
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 100x
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 2
+smx direct_plus100_e9=99264610583 seq_err_ppt=0 tree_err_ppt=0 one_err_ppt=158400527060 tol_ppt=2000000
+smx OK
+rc=0
+$ tilelab 2 0
+smx direct_plus100_e9=99264610583 seq_err_ppt=0 tree_err_ppt=0 one_err_ppt=158400527060 tol_ppt=2000000
+smx OK
+rc=0
+$ tilelab 2 1
+smx direct_plus100_e9=99264610583 seq_err_ppt=0 tree_err_ppt=0 one_err_ppt=158400527060 tol_ppt=2000000
+smx FAIL
+rc=1
+$ tilelab 2 2
+smx direct_plus100_e9=99264610583 seq_err_ppt=108396641107 tree_err_ppt=108396641107 one_err_ppt=158400527060 tol_ppt=2000000
+smx FAIL
+rc=1
+$ tilelab 2 3
+smx direct_plus100_e9=99264610583 seq_err_ppt=0 tree_err_ppt=1235283119784 one_err_ppt=158400527060 tol_ppt=2000000
+smx FAIL
+rc=1
+$ tilelab 9
+refused: unknown mode
+rc=3
+row 1024 1024 1024: cfg rt=2 ct=4 wm=4 wn=4 band=8 bm=128 bn=128 regs=96 ctas=64 l2_bytes=33554432 dram_bytes=4194304 cost_ns=78359
+row 4096 4096 4096: cfg rt=2 ct=4 wm=4 wn=4 band=32 bm=128 bn=128 regs=96 ctas=1024 l2_bytes=2147483648 dram_bytes=67108864 cost_ns=4908534
+row 2048 8192 2048: cfg rt=2 ct=4 wm=4 wn=4 band=32 bm=128 bn=128 regs=96 ctas=1024 l2_bytes=1073741824 dram_bytes=50331648 cost_ns=2463141
+row 100 100 100: cfg rt=2 ct=4 wm=4 wn=4 band=0 bm=128 bn=128 regs=96 ctas=1 l2_bytes=51200 dram_bytes=51200 cost_ns=123
+row 8192 8192 8192: cfg rt=2 ct=4 wm=4 wn=4 band=16 bm=128 bn=128 regs=96 ctas=4096 l2_bytes=17179869184 dram_bytes=671088640 cost_ns=39339273
