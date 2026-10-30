@@ -54,6 +54,30 @@ network test connects only to its own local server. Process tests reap their
 children. No service is installed or changed. `timeout` only bounds test
 processes; timed operations inside the tests use the emitted native code.
 
+### Packed-list hostile ingress (#671)
+
+`seed/qualification/security673/` feeds runtime packets, not compile-time
+constants, to `execprog`. `packet-corpus.om` writes one packet per mode byte;
+`pkt-consumer.om` reads stdin and passes the bytes, or only the first K bytes
+when given one decimal argument, to `execprog` unchanged. `check.sh` runs
+`packets.cases` through the OM-2 conductor: 16 rows prove each committed fixture
+in `packets/` equals the generator output, 16 rows run the modes (4 valid
+packets, including the 64-record and the exact 4096-byte limits, and 12
+malformed ones: count 0, 65 and 65535, truncated, over-declared and 65535-byte
+records, a trailing byte, an empty first record, zero bytes inside and after the
+path, and a 4097-byte packet), and 28 rows truncate the 27-byte echo packet at
+every length. Expected exits come from the format rules in OMEGESE section 10;
+every malformed packet must trap 3 (exit 103) before any exec.
+
+`packets-mutant.cases` builds three compilers, each without one length check of
+the decoder (`hpack` in `seed/omc/omc.om`): the 4096-byte packet bound, the
+64-record bound, and exact consumption. Each mutant executes the one packet that
+only its check refuses, so `check.sh` requires three exact `FAIL run exit=0
+expected=103` verdicts. Removing the record-length-versus-remaining check is
+not detected by exit status: the zero-byte and exact-consumption checks still
+trap every over-declared record, so that check only bounds how far the decoder
+reads. The x86 decoder (`xhpack`) is not exercised here.
+
 ### Bounded networking additions (#788)
 
 The source adds `peercred` (keyword 220), `pollfds` (221), and `sendmsg` (222).
