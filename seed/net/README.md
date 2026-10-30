@@ -281,3 +281,5 @@ Every socket in the checks is 127.0.0.1 with a port chosen by the kernel. Nothin
 Re-verified 2026-10-26 after refresh onto main `c5d981041` with reseeded `seed/out/omc` `189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54`: `HTTP-CHECK PASS` (same counts).
 
 Re-verified 2026-10-26 on `integ/omc-batch2` with the batch 2 `seed/out/omc` `2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f`: `HTTP-CHECK PASS` (same counts; `HTTP-LIVE-MUTANTS PASS killed=7/7`).
+
+Re-verified 2026-10-27 on `build/omc-batch3-896-897-898-903` with the batch 3 `seed/out/omc` `397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e`: `HTTP-CHECK PASS` (`HTTP-LIVE-MUTANTS PASS killed=7/7`).

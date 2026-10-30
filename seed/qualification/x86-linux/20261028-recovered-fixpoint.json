@@ -1,0 +1,79 @@
+{
+  "execution": "EMULATED",
+  "native_x86": "NOT_RUN",
+  "source_revision": "efd15c234afc584e1e67492e736cbb42806c2a7d",
+  "source_sha256": "e9d70e7cbe1b7026b2fcac5bbf61a64bde931b50a632c954355ba5299954a61c",
+  "native_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc",
+    "sha256": "f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409"
+  },
+  "executed_x86_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-omc-x86",
+    "sha256": "96fae692348f5918dc652530f40effa3da7902cdde34c3a6089e6bfca5795674",
+    "build_command": [
+      "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc"
+    ],
+    "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-target-source.om"
+  },
+  "qemu": {
+    "path": "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+    "sha256": "fd7ae7768c1d698d387893688d28abde90512f1f445d171a1389110eb7c237ee"
+  },
+  "checks": [
+    {
+      "target": "aarch64",
+      "command": [
+        "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+        "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-omc-x86"
+      ],
+      "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-source.om",
+      "exit": 0,
+      "stderr": "",
+      "expected_command": [
+        "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc"
+      ],
+      "expected_sha256": "f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409",
+      "observed_sha256": "f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409",
+      "byte_identical": true,
+      "expected_provenance": "Native Linux AArch64 compiler built by seed ladder from identical source"
+    },
+    {
+      "target": "x86_64",
+      "command": [
+        "/home/drakestapleton/work/bridge-x86/build/qemu-oracle/build/qemu-x86_64",
+        "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-omc-x86"
+      ],
+      "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-target-source.om",
+      "exit": 0,
+      "stderr": "",
+      "expected_command": [
+        "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc"
+      ],
+      "expected_sha256": "96fae692348f5918dc652530f40effa3da7902cdde34c3a6089e6bfca5795674",
+      "observed_sha256": "96fae692348f5918dc652530f40effa3da7902cdde34c3a6089e6bfca5795674",
+      "byte_identical": true,
+      "expected_provenance": "Native Linux AArch64 compiler built by seed ladder from identical source"
+    }
+  ],
+  "negative_control": {
+    "change": "epi x86 ret literal: first \"emitb 201\\nemitb 195\" -> \"emitb 194\" in source stdin (same length)",
+    "stdin_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-recovered/fixpoint-negative-source.om",
+    "stdin_sha256": "6b343521a46c6b1b0513680e483a746c26de1ffbbbdc43d46b28e60fa1f07b38",
+    "exit": 0,
+    "stderr": "",
+    "observed_sha256": "c2c7532cf776c44ee855b8ec19fd79d271ba9174f2bf9692a2fddbcc62f4af37",
+    "expected_sha256": "f7752bc5c800e85c2393a08153786d0a6bc4516c9cea955fe27624228d6d1409",
+    "differs_from_expected": true
+  },
+  "objdump": {
+    "decoder": "seed/omc/qualify-x86.py disassemble(): code spans only, bounded 64 KiB chunks plus 15-byte lookahead, every byte and branch target checked",
+    "objdump": "/usr/bin/x86_64-linux-gnu-objdump",
+    "objdump_sha256": "066f6123c0609d3f8fbd8f9da0bf22001a94260cf7871770b58ce8208f05b3bd",
+    "instructions": 516229,
+    "distinct_mnemonics": 40,
+    "carveouts": 0,
+    "bad_or_unknown": 0,
+    "result": "PASS"
+  },
+  "notes": "A first attempted negative control changed the size declaration \"global xtarget ulong 1\"; that is storage size, not a value, produced identical output, and is not counted. A raw whole-file objdump -b binary decode is not used because it decodes ELF header and data bytes as instructions."
+}

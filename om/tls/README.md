@@ -171,13 +171,13 @@ Not covered, or covered only partly:
   is never taken.
 - **Measurement.** A dudect-style fixed-vs-random Welch t-test (`test/tls/timing.om`, 20000 to 50000
   samples per operation on two cores) found every |t| below 2.5 (flag threshold 4.5) for x25519,
-  ChaCha20-Poly1305, AES-128-GCM and `tls_cteq` on one Spark host, 2026-10-27. That is MEASURED on
+  ChaCha20-Poly1305, AES-128-GCM and `tls_cteq` on one Spark host, 2026-10-26. That is MEASURED on
   one host, not a proof; the raw samples and the Wolfram queries are in the audit evidence bundle
   (`THREAT_MODEL.md` says where). The x25519 figures in its test output are informational.
 
 ## Tests (run from the repository root)
 
-| command | final line observed 2026-10-27 (omc `2c824805`; identical on `189ada82`; `net=PASS` observed 2026-10-26 on both) |
+| command | final line observed 2026-10-26 (omc `2c824805`; identical on `189ada82`; `net=PASS` observed 2026-10-26 on both) |
 |---|---|
 | `sh om/tls/test/sha2/run.sh OMC` | `SHA2 PASS vectors=1777 (wycheproof=774) mutants=5/5` |
 | `sh om/tls/test/x25519/run.sh OMC` | `X25519 PASS vectors=531 (wycheproof=518) mutants=7/7` |
@@ -186,7 +186,7 @@ Not covered, or covered only partly:
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-27) |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=44 residue=PASS net=PASS mutants=27/27` (`net=NOT_RUN` without `TLS_NET`, observed on both compilers 2026-10-26) |
 | `nice -n 19 taskset -c CPU build/tls/tls/timing WHAT N` (`test/tls/timing.om`) | dudect samples, statistics outside; see `THREAT_MODEL.md` |
 
 How the suites are built:
@@ -289,7 +289,7 @@ had 11 findings. Each one is fixed and has a test that fails on the code before 
 | F10 F1-F4 and F7 not exercised | crafted x509 fixtures (`gen_crafted.py`), fake-server rows, DNS unit; a trap is a FAIL in interop | all rows above |
 | F11 info items | `tls_close` keeps a failed connection failed; close_notify in the handshake is `TLS_ERR_ALERT_RECEIVED`; deadline, clock, public-suffix, caller-contract, CertificateRequest and path-building limits documented above | interop `CLOSE_NOT_FAILED` check on every failure row, `closehs`, `closepre`, mutants close revives failed and handshake close_notify unmapped |
 
-Outside review (2026-10-27, `audit/tls-outside-review`): six gaps, each fixed here or stated as a
+Outside review (2026-10-26, `audit/tls-outside-review`): six gaps, each fixed here or stated as a
 limit in `THREAT_MODEL.md`; the audit boundary is `AUDIT_SCOPE.md`. In short: key lifetime
 (KeyUpdate at the record limit, `TLS_ERR_SEQUENCE_LIMIT` fail-closed), HTTPS transport for
 `seed/net/http.om`, a hosted arm64 CI job (`.github/workflows/om-tls-arm64.yml`), the handshake
