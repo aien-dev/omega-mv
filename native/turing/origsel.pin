@@ -1,0 +1,20 @@
+# native/turing/origsel.pin: every input of the ORIGSEL evaluator unit, by hash (Turing-profile-ORIGSEL-v1.1).
+# omc <sha256>: the seeded compiler (omega-mv seed/out/omc, built by sh seed/omega-from-seed.sh).
+# unit <order> <repo> <commit> <path> <sha256>: concatenated in order, then native/turing/origsel_kappa.om,
+#   native/turing/origsel.om and the caller (origselmain.om or a test). Same pins as native/orig4/orig4.pin at 85641e1e.
+# tool turing-coder <commit>: the reference coders (src/turing/tc_tool.c) built from this repository at that commit.
+# harness c2|c3 <commit> <path> <sha256>: the collection harness of profile d_collection_rule (C2: ORIG v2;
+#   C3: branch feat/700-turing-c3-tap, OMEGA_EMPIRICAL_COVERAGE_SEED, used only if C2 starts before E).
+omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+unit 1 omega-bridge 7e1d0d61755ec1a0bbf20941a18379861b5b9d0d native/ref32/add32.om 1de23561202b284e74690034cb07741ebcf9870bc464550b8382c85410478e95
+unit 2 omega-bridge 7e1d0d61755ec1a0bbf20941a18379861b5b9d0d native/ref32/mul32.om 9027090109e2050046c4b71fa51438c97ad94c23626c2ecc277844996b79c22e
+unit 3 omega 3a995ba8dace538c1532c747d829ca6e4a73582d native/ecosystem663/metadata.om f60b6d62c1bf90de42455effae977de66adeca1268669f6144809a3327aec7a4
+unit 4 aien-train c7642d96c0b84b6d176dbb2dc8558b536cabe729 native/ecosystem6/affine.om a3eb5b4a0a94adab8e0a2cfbe154280034d1da26bd9f3123fcd524636583af97
+unit 5 aien-train 692d85104369cf0fc0bec9f35c4ca693cf746012 native/si19/fixture.om 1d834b4048052d97f4f48b4c89f5d60215161c52e59a7ab193bc90d50f03d98d
+unit 6 aien-train 692d85104369cf0fc0bec9f35c4ca693cf746012 native/si19/world.om 7aa317033bcb55e69a0f85fbb75706226a520380bd6ab2a7660b70c2c7ca066e
+unit 7 aien-train 692d85104369cf0fc0bec9f35c4ca693cf746012 native/si19/omexp.om 62bdea1eabbcd36564bd89245143357edfe36f0bc9beb686a62bbc893709b168
+unit 8 aien-train 692d85104369cf0fc0bec9f35c4ca693cf746012 native/si19/omexpfix.om 3eeebf46c0a12f31f7373008b2466b68834cb620a4a1f28ff4522672681109d5
+unit 9 aien-train 692d85104369cf0fc0bec9f35c4ca693cf746012 native/si19/select.om c66f220c2713b973ea0376eb92e7391245fd5d7f0f2a123ddd3ea617818638ce
+tool turing-coder a647b6a9821fffcf52ba9ce813f75afa4b84be62
+harness c2 85641e1ea14b1e4a2d2d5790001aacb0bac41093 tests/runtime/rx_empirical_optimizer.c 74574e191648853fe8190465b7b2e55b7835763e0b911c5e41f68c7ac9d0259c
+harness c3 b922be1a2c8a35e12174e2d43d6ab35114b16ad3 tests/runtime/rx_empirical_optimizer.c d5bd6cc930b4d2012c509502df589aaabb2089e5d6972cdad70ebdd18f262915

@@ -1,0 +1,76 @@
+ORIGSEL v1.1
+admit records=400 admitted=318 train=206 validation=58 heldout=54
+d n=22 burned=24 F=4 fresh=0 v1fam=22 p1r=8
+arm U p1=0 p2=0 dl=51081580 fresh=0 v1fam=51081580 p1r=18575160 rows=-
+arm O0 p1=29 p2=29 dl=88132446 fresh=0 v1fam=88132446 p1r=33776896 rows=13,0,15,0,18
+arm FR p1=49 p2=825 dl=88132446 fresh=0 v1fam=88132446 p1r=33776896 rows=15,13,0,0,18
+arm S p1=43 p2=2763 dl=81434518 fresh=0 v1fam=81434518 p1r=21006376 rows=30,1,9,6,0
+arm R p1=5397 p2=9421 dl=116890823 fresh=0 v1fam=116890823 p1r=43508668 rows=43,2,1,0,0
+arm M1 p1=22621 p2=103685 dl=127583931 fresh=0 v1fam=127583931 p1r=52792968 rows=45,0,1,0,0
+arm M2 p1=22685 p2=104437 dl=98925522 fresh=0 v1fam=98925522 p1r=40354800 rows=14,0,0,0,0;9,0,0,0,0;13,0,1,0,0;9,0,0,0,0
+arm A p1=93 p2=781 dl=98925522 fresh=0 v1fam=98925522 p1r=40354800 rows=0,0,0,0,14;0,0,6,0,3;13,0,0,0,1;0,0,9,0,0
+arm CSH p1=22621 p2=103685 dl=42046325 fresh=0 v1fam=42046325 p1r=16734068 rows=12,6,8,17,3
+arm CUN p1=22621 p2=103685 dl=85198368 fresh=0 v1fam=85198368 p1r=32889317 rows=16,15,0,0,15
+t M1 FR total=-22611451485 lb=-22629054541 ub=-22598773682
+t M1 U total=-22697502351 lb=-22742661919 ub=-22666746522
+t M1 O0 total=-22631451485 lb=-22649054541 ub=-22618773682
+t M1 S total=-22624149413 lb=-22638993778 ub=-22605593339
+t M2 FR total=-22646793076 lb=-22649154992 ub=-22642625124
+t M2 U total=-22732843942 lb=-22761930590 ub=-22712210724
+t M2 O0 total=-22666793076 lb=-22669154992 ub=-22662625124
+t M2 S total=-22659491004 lb=-22678172363 ub=-22643048245
+t A FR total=-54793076 lb=-57154992 ub=-50625124
+t A U total=-140843942 lb=-169930590 ub=-120210724
+t A O0 total=-74793076 lb=-77154992 ub=-70625124
+t A S total=-67491004 lb=-86172363 ub=-51048245
+t R FR total=-5376758377 lb=-5400412391 ub=-5362399196
+t R U total=-5462809243 lb=-5514019769 ub=-5427540944
+t R O0 total=-5396758377 lb=-5420412391 ub=-5382399196
+t R S total=-5389456305 lb=-5405192816 ub=-5372595085
+t CSH FR total=-22525913879 lb=-22545777949 ub=-22495991540
+t CSH U total=-22611964745 lb=-22615545074 ub=-22608170095
+t CSH O0 total=-22545913879 lb=-22565777949 ub=-22515991540
+t CSH S total=-22538611807 lb=-22569578528 ub=-22493542181
+t CUN FR total=-22569065922 lb=-22570043948 ub=-22567870224
+t CUN U total=-22655116788 lb=-22681857779 ub=-22634045165
+t CUN O0 total=-22589065922 lb=-22590043948 ub=-22587870224
+t CUN S total=-22581763850 lb=-22598681142 ub=-22565631588
+dl M1 CSH total=-85537606 lb=-133063001 ub=-55826825
+dl M1 CUN total=-42385563 lb=-60804140 ub=-29109911
+delta M2 M1 total=-35341591 lb=-45464202 ub=-19268671
+tcf M1 FR total=-22611451485 lb=-22648069348 ub=-22578002124
+tcf M2 FR total=-22646793076 lb=-22689580054 ub=-22604007730
+tcf A FR total=-54793076 lb=-97580054 ub=-12007730
+nmin M1 9743
+nmin M2 9770
+nmin A 41
+verdict M1 INCONCLUSIVE(UNDERPOWERED)
+verdict M2 INCONCLUSIVE(UNDERPOWERED)
+verdict A INCONCLUSIVE(UNDERPOWERED)
+experiment INCONCLUSIVE
+h1 U rans rt=1 ideal=match delta=476918420 band=ok
+h1 U range rt=1 ideal=match delta=476918420 band=ok
+h1 O0 rans rt=1 ideal=match delta=479867554 band=ok
+h1 O0 range rt=1 ideal=match delta=479867554 band=ok
+h1 FR rans rt=1 ideal=match delta=479867554 band=ok
+h1 FR range rt=1 ideal=match delta=479867554 band=ok
+h1 S rans rt=1 ideal=match delta=478565482 band=ok
+h1 S range rt=1 ideal=match delta=478565482 band=ok
+h1 R rans rt=1 ideal=match delta=475109177 band=ok
+h1 R range rt=1 ideal=match delta=475109177 band=ok
+h1 M1 rans rt=1 ideal=match delta=472416069 band=ok
+h1 M1 range rt=1 ideal=match delta=472416069 band=ok
+h1 M2 rans rt=1 ideal=match delta=477074478 band=ok
+h1 M2 range rt=1 ideal=match delta=477074478 band=ok
+h1 A rans rt=1 ideal=match delta=477074478 band=ok
+h1 A range rt=1 ideal=match delta=477074478 band=ok
+h1 CSH rans rt=1 ideal=match delta=477953675 band=ok
+h1 CSH range rt=1 ideal=match delta=477953675 band=ok
+h1 CUN rans rt=1 ideal=match delta=474801632 band=ok
+h1 CUN range rt=1 ideal=match delta=474801632 band=ok
+h1t M1 FR rans treal=-22604000000 lbreal=-22621603056 h1=pass compression=no
+h1t M1 FR range treal=-22604000000 lbreal=-22621603056 h1=pass compression=no
+h1t M2 FR rans treal=-22644000000 lbreal=-22646361916 h1=pass compression=no
+h1t M2 FR range treal=-22644000000 lbreal=-22646361916 h1=pass compression=no
+h1t A FR rans treal=-52000000 lbreal=-54361916 h1=pass compression=no
+h1t A FR range treal=-52000000 lbreal=-54361916 h1=pass compression=no

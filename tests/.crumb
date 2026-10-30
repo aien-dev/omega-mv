@@ -122,7 +122,7 @@
         },
         {
           "digest": "7b69a19958c5a5f55bba4fbc33bc6f26423358efd46311b0eacfe83bb665d4c1",
-          "last_commit": "450bbefd4",
+          "last_commit": "d863780eb",
           "name": "brownian",
           "purpose": "Directory tests/brownian. Purpose not yet described by a human."
         },
@@ -134,7 +134,7 @@
         },
         {
           "digest": "088f526f8cae115209dd0162f28669812483ce5c926e41e8810dada1eefcb81a",
-          "last_commit": "450bbefd4",
+          "last_commit": "876d00ff5",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -206,7 +206,7 @@
         },
         {
           "digest": "65e84051bb8dc00b180c6b06bec58103773785eebd6d6c69c9783de5fd0e2ba9",
-          "last_commit": "450bbefd4",
+          "last_commit": "d863780eb",
           "name": "path",
           "purpose": "Directory tests/path. Purpose not yet described by a human."
         },
@@ -266,7 +266,7 @@
         },
         {
           "digest": "10d19641e4bb5b435ec6363d4ea7d3c1596af47d97b86f4de35d6ae57770241e",
-          "last_commit": "45f7d7691",
+          "last_commit": "843424cea",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -289,27 +289,27 @@
           "purpose": "Directory tests/train. Purpose not yet described by a human."
         },
         {
-          "digest": "7679bd1c49c7e89d8c26ccf8dfb91478f4e6e2f584745806fa8d26061dbdbb9c",
-          "last_commit": "d863780eb",
+          "digest": "cbc255c58f79265da66ed9dd7025a33dd1259f8f3d65da180722aaee2ee8764d",
+          "last_commit": "ec863f90a",
           "name": "turing",
           "purpose": "Directory tests/turing. Purpose not yet described by a human."
         },
         {
           "digest": "930fcb9ce348c604424e5380796a77c3586a835b43d42b504325c36b12d166d7",
-          "last_commit": "450bbefd4",
+          "last_commit": "d863780eb",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:0c57282ff8cf1d34e5685e2729755f2978917e66debb5423961033be9d25c902",
-      "compiled_at": "2026-10-30T12:31:50Z",
+      "children_root": "sha256:c93be478290824e08a179ec8ac06af5b21c8c9948fe2765d3be89dc226c4dbeb",
+      "compiled_at": "2026-10-30T16:32:00Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:5395ff8ff9afceebe8e453788f80a3064b831513cc4cb92fd55869115e06b874",
+      "digest": "sha256:f700fda4e16250a92e5c4551efd612f45c12a32923bb285a1c8dc9f3f58683fb",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1386,
-      "generated_at_commit": "52a82f392fa513ebbc2d9d719a0f14c385289b06",
-      "source_tree": "sha256:a3b853bb9c0edfc5f1413ccaa2698cc6ea920f2e8795756121667cc9d37f6679"
+      "files": 1388,
+      "generated_at_commit": "15e1b71cc5024a2be76b7973e12cc4a476efbfca",
+      "source_tree": "sha256:55dd98b4bc8cc3d208ae7a1f15919eb70913dd898ab31efaf3957169f49c22d7"
     },
     "owner_lane": "",
     "provenance": {
