@@ -65,10 +65,14 @@ if command -v openssl > /dev/null 2>&1; then
 	pem pki/iss.der iss
 	pem pki/root.der root
 	pem real/ye2.der ye2
+	# openssl ocsp checks thisUpdate/nextUpdate against the wall clock, not -attime; a tolerance of
+	# (now - attime) seconds makes its expiry test equal to one evaluated at the vectors' attime
+	# (the vectors' nextUpdate is 2026-10-30, so without it every row reads "WARNING" after that)
+	skew=$(( $(date +%s) - 1793059200 )); [ "$skew" -gt 300 ] || skew=300
 	for c in good:good revoked:revoked unknown:unknown deleg:good deleg_revoked:revoked; do
 		f=${c%%:*}; want=${c#*:}
 		oraclen=$((oraclen + 1))
-		got=$(openssl ocsp -respin "$vec/pki/o_$f.der" -issuer "$out/iss.pem" -cert "$vec/pki/leaf.der" -VAfile "$out/iss.pem" -no_nonce -CAfile "$out/root.pem" -attime 1793059200 2>/dev/null | awk -F': ' '$1 ~ /leaf.der$/ { print $2; exit }') || true
+		got=$(openssl ocsp -respin "$vec/pki/o_$f.der" -issuer "$out/iss.pem" -cert "$vec/pki/leaf.der" -VAfile "$out/iss.pem" -no_nonce -CAfile "$out/root.pem" -attime 1793059200 -validity_period "$skew" 2>/dev/null | awk -F': ' '$1 ~ /leaf.der$/ { print $2; exit }') || true
 		if [ "$got" = "$want" ]; then oracle=$((oracle + 1)); else fail "openssl ocsp $f: got '$got' want '$want'"; fi
 	done
 	# openssl crl exits 0 even on "verify failure", so the verdict is its "verify OK" line
