@@ -12165,26 +12165,11 @@ end
 put ir_no 0 add n 1
 end
 
-note ir_argbeg / ir_argend: argument registers of a call being parsed live on the stack ir_astk from slot
-note b, so a call nested in an argument (g m p 3) cannot overwrite the outer call's earlier arguments; they
-note are copied to ir_args only once every argument is parsed. At most 384 pending arguments (error 14).
-fn ir_argbeg np ulong to ulong
-b = get ir_asp 0
-if gt add b np 384
-fail 14
-end
-put ir_asp 0 add b np
-ret b
-end
-
-fn ir_argend b ulong np ulong to void
-i = ulong 0
-while lt i np
-put ir_args i get ir_astk add b i
-i = add i 1
-end
-put ir_asp 0 b
-end
+note Call arguments: the argument registers of a call being parsed live on the stack ir_astk from slot
+note b = ir_asp, so a call nested in an argument (g m p 3) cannot overwrite the outer call's earlier
+note arguments; they are copied to ir_args only once every argument is parsed, and ir_asp returns to b.
+note At most 384 pending arguments (error 14). Written inline at the two call sites (ir_val's call
+note branch and ir_stmtcall), not as functions: om4 builds at most 512 functions and omc is at that limit.
 
 fn ir_name to void
 e = ir_find get tw 0 get tl 0
@@ -12413,7 +12398,11 @@ if eq rtv 76
 fail 7
 end
 np = get irf_np j
-b = ir_argbeg np
+b = get ir_asp 0
+if gt add b np 384
+fail 14
+end
+put ir_asp 0 add b np
 i = ulong 0
 while lt i np
 ty = ulong get irf_pt add mul j 6 i
@@ -12424,7 +12413,12 @@ end
 put ir_astk add b i get ir_rr 0
 i = add i 1
 end
-ir_argend b np
+i = ulong 0
+while lt i np
+put ir_args i get ir_astk add b i
+i = add i 1
+end
+put ir_asp 0 b
 r = dst
 if or eq dst 65534 eq dst 65535
 r = ir_newreg rtv
@@ -12651,7 +12645,11 @@ if ne get irf_ret j 76
 fail 7
 end
 np = get irf_np j
-b = ir_argbeg np
+b = get ir_asp 0
+if gt add b np 384
+fail 14
+end
+put ir_asp 0 add b np
 i = ulong 0
 while lt i np
 ty = ulong get irf_pt add mul j 6 i
@@ -12662,7 +12660,12 @@ end
 put ir_astk add b i get ir_rr 0
 i = add i 1
 end
-ir_argend b np
+i = ulong 0
+while lt i np
+put ir_args i get ir_astk add b i
+i = add i 1
+end
+put ir_asp 0 b
 ir_callop 65535 j np
 eol
 end
