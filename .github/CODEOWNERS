@@ -1,0 +1,20 @@
+# GPU stack: owned by aien-dev/CUDApp (CUDA++), the single source of truth since P0.4 (2026-10-27);
+# ARCH-0042 (aien-architecture-mv docs/adr/0042): Omega owns computation, CUDApp owns GPU execution.
+# Make GPU changes in https://github.com/aien-dev/CUDApp. CUDA++'s drift gate (.github/workflows/drift.yml,
+# tools/extract/drift.sh) fails when omega-mv main changes one of these files after the cutover baseline
+# (omega-mv e5b32567) and CUDA++ does not hold the same bytes.
+# The copies stay in omega-mv; removing them needs a separate decision by Drake (ARCH-0042, decision 7).
+# Any PR touching them requests review from the owner below so the change can be redirected to CUDA++.
+/src/omega_gpu_*        @aien-spark
+/src/omega_blackwell_*  @aien-spark
+/src/omega_bw_*         @aien-spark
+/src/omega_sm121_*      @aien-spark
+/tests/gpu_*            @aien-spark
+/tests/bw_*             @aien-spark
+/tests/test_omega_gpu_* @aien-spark
+/tests/test_omega_blackwell_* @aien-spark
+/tests/fake_m16_native.* @aien-spark
+/mk/omega-gpu-*         @aien-spark
+/mk/sm121dis.mk         @aien-spark
+/tools/sm121dis/        @aien-spark
+/tools/gpu_engine_*     @aien-spark
