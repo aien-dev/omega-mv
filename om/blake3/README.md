@@ -9,7 +9,7 @@ aien-dev/aien-architecture-mv#300 (zero-legacy migration).
 ## Build
 
 ```
-OMC=/path/to/seed/out/omc     # pinned: sha256 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+OMC=/path/to/seed/out/omc     # born by: sh seed/omega-from-seed.sh
 $OMC < om/blake3/blake3.om > blake3 && chmod +x blake3
 ./blake3 FILE          # or:  ./blake3 < FILE
 ```
@@ -31,7 +31,8 @@ sh om/blake3/test-output.sh ./blake3
 
 The fixture compares the complete empty-input digest, including its newline, and
 checks /dev/full and closed-stdout failures. Positive short writes and EINTR are not
-forced by this fixture.
+forced by this fixture. `bash tests/gates/run.sh om-units` compiles `blake3.om` with the
+seed-born omc and runs this fixture, so the om-units CI check covers it.
 
 Native run on the Spark (arm64 host, 2026-10-25), omc 734f0a39…6b61 built by
 `sh seed/omega-from-seed.sh`: this source (sha256 c7c96a26…a150) compiles to an
