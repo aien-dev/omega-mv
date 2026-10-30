@@ -152,7 +152,7 @@ head -3 "$T/cmpB" > "$T/cmpE"; refuse "compare: different task counts" "$FS" com
 # The GEN-3 corpus files that protocol.json pins (corpus META, record-set manifests) arrive with GEN-3's own
 # PR. Until that is merged, they are taken from git at GEN3_COMMIT into a private overlay tree, and the real
 # protocol.json is checked there; once they exist in this tree, this tree is checked directly.
-GEN3_COMMIT=856cc9772f5fbdddb1590f3572a271058cd7bba6
+GEN3_COMMIT=e521e818e42421884d5fd9826426bba56ad10531
 GEN3_FILES="tests/one_layer/generalization/corpus/META tests/one_layer/generalization/records/C.MANIFEST tests/one_layer/generalization/records/D.MANIFEST"
 gen3_into() { # dest-root: copy the GEN-3 files from this tree, else from git at GEN3_COMMIT
   local p ok=1

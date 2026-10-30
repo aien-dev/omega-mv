@@ -108,8 +108,7 @@ its own revision and is never pooled with these results.
   3). Retrieved text appears only in the suffix, after the shared prefix. A and B never call the provider.
 - **Candidate pool:** C's raw-record manifest is the probe-free set: the verified corpus solutions EXCEPT every
   GEN-3 transfer-probe task (`split=probe` in the GEN-3 manifest) and EXCEPT the 14 prefix tasks (already in
-  every B, C, D prompt; retrieving them would waste C's budget), [C POOL COUNT: pending, the count GEN-3
-  reports] records. D's manifest holds the probe-free
+  every B, C, D prompt; retrieving them would waste C's budget): 23 records. D's manifest holds the probe-free
   abstraction records produced by the deterministic GEN-3 tool from the corpus solutions, EXCEPT every
   abstraction whose ancestry lies entirely within the 14 prefix tasks (the same rule as C: nothing the
   prefix already shows). Both are filtered views of the GEN-3 `records/MANIFEST`, written in the genret
@@ -431,3 +430,9 @@ The runner, reducer, corpus builder and custodian scripts are specified by their
   probe-free (GEN-3 `split=probe` filtered out; C pool count pending from GEN-3). The sentence "Every task
   line of corpus META is eligible, GEN-3 transfer-probe tasks included" (probes allowed in the B prefix)
   was added in commit 8d940556; probes stay eligible for the prefix only.
+- **v1, record sets re-pinned to GEN-3 commit e521e818 (before merge, before any held-out task):** C.MANIFEST
+  is the probe-free raw pool, 23 records (sha256 `d6b8a9a4...`); D.MANIFEST 9 records (sha256 `1fe9af29...`);
+  corpus META and records/PREFIX unchanged. Pool sizes bound k: k = 3 is below both pools, and any k above 9
+  (D's pool) would let D exhaust its pool and is a new revision. The file pins of `OMEGESE.md`, `ola.sh`,
+  `reader.sh` and `sampling-gate.sh` re-hashed after main's Apache-2.0 header and OM-2 changes (no protocol
+  content changed); `famsig_lib.h` and `genstats.c` re-hashed after bounded-write fixes (CodeQL 537-541).

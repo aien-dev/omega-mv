@@ -154,8 +154,14 @@ static int decide(int valid, char *const v[4], Decision *r, char *err, size_t er
         r->verdict = "INCONCLUSIVE";
         int k = 0;
         for (int x = 0; x < 3; x++) {
-            if (!r->lift_ok[x]) k += snprintf(r->reasons + k, sizeof r->reasons - (size_t)k, "%slift_%c", k ? "," : "", "ABC"[x]);
-            if (!r->p_ok[x]) k += snprintf(r->reasons + k, sizeof r->reasons - (size_t)k, "%sp_%c", k ? "," : "", "ABC"[x]);
+            int w = 0;
+            if (!r->lift_ok[x]) w = snprintf(r->reasons + k, sizeof r->reasons - (size_t)k, "%slift_%c", k ? "," : "", "ABC"[x]);
+            if (w < 0 || (size_t)w >= sizeof r->reasons - (size_t)k) break;
+            k += w;
+            w = 0;
+            if (!r->p_ok[x]) w = snprintf(r->reasons + k, sizeof r->reasons - (size_t)k, "%sp_%c", k ? "," : "", "ABC"[x]);
+            if (w < 0 || (size_t)w >= sizeof r->reasons - (size_t)k) break;
+            k += w;
         }
     }
     return 0;

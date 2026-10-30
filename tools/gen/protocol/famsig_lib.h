@@ -269,8 +269,9 @@ static int fs_count_ok(const char *s, int *v)
 static int fs_meta_line(const char *line, FsMeta *m, char *err, size_t errn)
 {
     char buf[1024];
-    if (strlen(line) >= sizeof buf) { snprintf(err, errn, "line too long"); return -1; }
-    strcpy(buf, line);
+    size_t len = strlen(line);
+    if (len >= sizeof buf) { snprintf(err, errn, "line too long"); return -1; }
+    memcpy(buf, line, len + 1);
     char *f[10];
     int nf = 0;
     char *s = buf;
@@ -395,7 +396,7 @@ static int fs_read(const char *path, FsSet *set, char *err, size_t errn)
         ln++;
         if (split_file && ln == 2) {
             if (strncmp(line, "salt ", 5) || !fs_hex64_ok(line + 5)) { snprintf(err, errn, "%s:2: must be 'salt <64 lowercase hex>'", path); rc = -1; break; }
-            strcpy(set->salt, line + 5);
+            snprintf(set->salt, sizeof set->salt, "%s", line + 5);
         } else if (!split_file && (line[0] == 0 || line[0] == '#')) {
             /* comment or blank line */
         } else {
@@ -432,7 +433,9 @@ static char *fs_famlist(const FsSet *set, int *nfam)
     int nf = 0;
     for (int i = 0; i < ns; i++) {
         if (i && !strcmp(sig[i], sig[i - 1])) continue;
-        n += snprintf(out + n, cap - (size_t)n, "%s\n", sig[i]);
+        int w = snprintf(out + n, cap - (size_t)n, "%s\n", sig[i]);
+        if (w < 0 || (size_t)w >= cap - (size_t)n) { fprintf(stderr, "famsig: family list overflow\n"); exit(2); }
+        n += w;
         nf++;
     }
     free(sig);
