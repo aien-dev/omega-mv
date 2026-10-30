@@ -1,0 +1,5 @@
+version 2
+name rot_left_u32
+param x u32
+param k u32
+ret u32
