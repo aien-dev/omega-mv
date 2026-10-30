@@ -675,7 +675,7 @@ byte flips now lands on version 6 and is refused DOMAIN):
   re-encodes to exactly those bytes, NONCANONICAL never returned, no crash. The ASan/UBSan build
   runs 231,397 such cases with no sanitizer report;
 - 35 counterexamples (11.8) from an independent writer in the test, whose canonical case is
-  byte-identical to `osc_ir_encode_v6`; with section 7's 22 cases, 57 of 57 as expected and 14 of
+  byte-identical to `osc_ir_encode_v6`; with section 7's 31 cases, 66 of 66 as expected and 14 of
   the 15 classes exhibited (all but the NONCANONICAL backstop);
 - 6 more decoder mutants, each caught: 23 no domain check, 24 no name-table target check, 25 no
   order or empty-entry check, 26 no requirement-object check, 27 no core identifier check, 28 name
