@@ -1,0 +1,14 @@
+kleaf
+note Pure admission only. Kernel effect boundary must revalidate generation under lock.
+fn span extent ulong start ulong count ulong seen ulong expect ulong token ulong to ulong
+if ne seen expect
+trap 9
+end
+if gt start extent
+trap 3
+end
+if gt count sub extent start
+trap 3
+end
+ret token
+end

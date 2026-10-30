@@ -7,7 +7,8 @@ stage=$(mktemp -d build/seed/host/regression.XXXXXX)
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
 # Struct, break, trap, f32 and f64 are omc-only features (OMEGESE 9.7 to 9.9): om4 refuses them by
 # design, and gate6, gate7 and gate8 own those semantics. The strict byte-equality corpus leaves out
-# those fixture directories and keeps everything else under the full comparison.
+# those fixture directories and keeps everything else under the full comparison. A source whose first
+# line is the kleaf directive is omc-only too; seed/omc/kernel-leaf-experiment.py owns that mode.
 : > "$stage/inputs"
 git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp445/arms/examples \
     | grep -vE '^seed/omc/tests/(struct|loop|float|paren|layout|keywords)/' \
@@ -15,6 +16,7 @@ git ls-files seed/rung4/tests seed/omc/tests tests/one_layer/omegese tools/exp44
 while IFS= read -r f; do
     [ -f "$f" ] || continue
     grep -qE '^[[:space:]]*(break|trap|struct)([[:space:]]|$)' "$f" && continue
+    [ "$(sed -n 1p "$f")" = kleaf ] && continue
     grep -q '(' "$f" && continue
     printf '%s\n' "$f" >> "$stage/inputs"
 done < "$stage/all"

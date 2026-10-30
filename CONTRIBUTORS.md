@@ -5,6 +5,8 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Claude (Opus 5.5) | Merged main `62d1d0d66` into #925; folded the PR's own kleaf helpers (klreg, klret, klclear inlined; klprep into xlead) to keep omc at om4's 512-function cap; reseeded omc and bumped its pin |
+| Codex (GPT-6.1 Sol) | Restricted Linux kernel-leaf compiler ABI and Omega bridge envelope experiment, exact-target host/kbuild object controls and reviewed typed kernel-effect proposal; no kernel or GPU execution |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
