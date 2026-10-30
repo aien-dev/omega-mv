@@ -1,0 +1,425 @@
+OM2GATE START cases=/tmp/om2c/s4/s5s7-all.cases scratch=/tmp/om2c/s4/g-export-s5s7-s5s7-all
+IDENTITY omc /tmp/om2c/s4/omc-export sha256=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec pinned=499236398aabc652e2dae27fe4bdc4c5db3d3726314356e0dbef23e3345803ec match
+CASE f5-branch line=12
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/12.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/12.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/12.cerr
+VERDICT f5-branch PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-loop line=14
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/14.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/14.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/14.cerr
+VERDICT f5-loop PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-line line=16
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/16.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/16.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/16.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/16.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/16.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/16.err
+VERDICT f5-line PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f5-unroll-all line=18
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/18.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/18.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/18.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/18.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/18.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/18.err
+VERDICT f5-unroll-all PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f5-n64 line=20
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/20.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/20.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/20.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/20.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/20.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/20.err
+VERDICT f5-n64 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f5-n65 line=22
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/22.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/22.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/22.cerr
+VERDICT f5-n65 PASS compile exit=14 expected=14 refused with the expected error
+CASE f5-partial line=24
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/24.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/24.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/24.cerr
+VERDICT f5-partial PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-call line=26
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/26.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/26.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/26.cerr
+VERDICT f5-call PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-write line=28
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/28.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/28.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/28.cerr
+VERDICT f5-write PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-read line=30
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/30.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/30.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/30.cerr
+VERDICT f5-read PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-part line=32
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/32.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/32.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/32.cerr
+VERDICT f5-part PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-ifelse line=34
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/34.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/34.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/34.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/34.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/34.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/34.err
+VERDICT f5-ifelse PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f5-join-diff line=36
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/36.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/36.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/36.cerr
+VERDICT f5-join-diff PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE f5-inline line=38
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/38.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/38.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/38.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/38.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/38.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/38.err
+VERDICT f5-inline PASS run exit=0 expected=0 stdout=match stderr=match
+CASE a5-exact line=42
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/42.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/42.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/42.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/42.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/42.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/42.err
+VERDICT a5-exact PASS run exit=0 expected=0 stdout=match stderr=match
+CASE a5-allops line=44
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/44.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/44.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/44.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/44.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/44.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/44.err
+VERDICT a5-allops PASS run exit=0 expected=0 stdout=match stderr=match
+CASE a5-rot64 line=46
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/46.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/46.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/46.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/46.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/46.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/46.err
+VERDICT a5-rot64 PASS run exit=107 expected=107 stdout=match stderr=match
+CASE a5-exact-diag line=48
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/48.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/48.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/48.cerr
+VERDICT a5-exact-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE a5-kept line=50
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/50.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/50.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/50.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/50.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/50.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/50.err
+VERDICT a5-kept PASS run exit=110 expected=110 stdout=match stderr=match
+CASE a5-kept-diag line=52
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/52.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/52.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/52.cerr
+VERDICT a5-kept-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE a5-swap line=54
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/54.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/54.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/54.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/54.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/54.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/54.err
+VERDICT a5-swap PASS run exit=0 expected=0 stdout=match stderr=match
+CASE a5-swap-diag line=56
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/56.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/56.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/56.cerr
+VERDICT a5-swap-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE a5-seal-main line=58
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/58.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/58.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/58.cerr
+VERDICT a5-seal-main PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE a5-seal-other line=60
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/60.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/60.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/60.cerr
+VERDICT a5-seal-other PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE a5-raw-num line=62
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/62.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/62.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/62.cerr
+VERDICT a5-raw-num PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-raw-arg line=64
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/64.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/64.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/64.cerr
+VERDICT a5-raw-arg PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-raw-ret line=66
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/66.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/66.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/66.cerr
+VERDICT a5-raw-ret PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-raw-assign line=68
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/68.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/68.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/68.cerr
+VERDICT a5-raw-assign PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-op-and line=70
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/70.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/70.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/70.cerr
+VERDICT a5-op-and PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-op-rotl line=72
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/72.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/72.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/72.cerr
+VERDICT a5-op-rotl PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-op-add line=74
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/74.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/74.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/74.cerr
+VERDICT a5-op-add PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-pred line=76
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/76.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/76.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/76.cerr
+VERDICT a5-pred PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE a5-name-seal line=78
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/78.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/78.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/78.cerr
+VERDICT a5-name-seal PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE a5-entry-param line=80
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/80.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/80.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/80.cerr
+VERDICT a5-entry-param PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-entry-ret line=82
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/82.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/82.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/82.cerr
+VERDICT a5-entry-ret PASS compile exit=7 expected=7 refused with the expected error
+CASE a5-array line=84
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/84.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/84.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/84.cerr
+VERDICT a5-array PASS compile exit=7 expected=7 refused with the expected error
+CASE l5-shactx line=88
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/88.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/88.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/88.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/88.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/88.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/88.err
+VERDICT l5-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+CASE l5-endian line=90
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/90.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/90.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/90.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/90.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/90.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/90.err
+VERDICT l5-endian PASS run exit=0 expected=0 stdout=match stderr=match
+CASE l5-scalar line=92
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/92.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/92.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/92.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/92.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/92.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/92.err
+VERDICT l5-scalar PASS run exit=0 expected=0 stdout=match stderr=match
+CASE l5-scalar-idx line=94
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/94.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/94.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/94.cerr
+VERDICT l5-scalar-idx PASS compile exit=5 expected=5 refused with the expected error
+CASE l5-count1-noidx line=96
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/96.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/96.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/96.cerr
+VERDICT l5-count1-noidx PASS compile exit=4 expected=4 refused with the expected error
+CASE l5-trap line=98
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/98.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/98.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/98.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/98.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/98.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/98.err
+VERDICT l5-trap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE l5-const-idx line=100
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/100.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/100.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/100.cerr
+VERDICT l5-const-idx PASS compile exit=21 expected=21 refused with the expected error
+CASE l5-fit line=102
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/102.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/102.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/102.cerr
+VERDICT l5-fit PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE l5-max line=104
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/104.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/104.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/104.cerr
+VERDICT l5-max PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE l5-overlap line=106
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/106.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/106.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/106.cerr
+VERDICT l5-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-past line=108
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/108.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/108.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/108.cerr
+VERDICT l5-past PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-past1 line=110
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/110.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/110.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/110.cerr
+VERDICT l5-past1 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-count0 line=112
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/112.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/112.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/112.cerr
+VERDICT l5-count0 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-count4097 line=114
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/114.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/114.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/114.cerr
+VERDICT l5-count4097 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-off line=116
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/116.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/116.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/116.cerr
+VERDICT l5-off PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-size0 line=118
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/118.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/118.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/118.cerr
+VERDICT l5-size0 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-size4097 line=120
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/120.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/120.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/120.cerr
+VERDICT l5-size4097 PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-after-fn line=122
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/122.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/122.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/122.cerr
+VERDICT l5-after-fn PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE l5-view-put line=124
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/124.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/124.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/124.cerr
+VERDICT l5-view-put PASS compile exit=20 expected=20 refused with the expected error
+CASE l5-wrong-size line=126
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/126.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/126.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/126.cerr
+VERDICT l5-wrong-size PASS compile exit=7 expected=7 refused with the expected error
+CASE v6-sum line=130
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/130.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/130.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/130.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/130.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/130.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/130.err
+VERDICT v6-sum PASS run exit=0 expected=0 stdout=match stderr=match
+CASE v6-edit line=132
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/132.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/132.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/132.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/132.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/132.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/132.err
+VERDICT v6-edit PASS run exit=0 expected=0 stdout=match stderr=match
+CASE v6-idx line=134
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/134.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/134.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/134.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/134.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/134.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/134.err
+VERDICT v6-idx PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-idx-edit line=136
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/136.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/136.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/136.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/136.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/136.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/136.err
+VERDICT v6-idx-edit PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-wrap line=138
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/138.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/138.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/138.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/138.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/138.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/138.err
+VERDICT v6-part-wrap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-tail line=140
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/140.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/140.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/140.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/140.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/140.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/140.err
+VERDICT v6-part-tail PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-golden-literal line=142
+VERDICT v6-part-golden-literal NOT_RUN not run: unreachable without a 2^64-1-element view; bridge side is abi-golden-wrap (status 32)
+CASE v6-part-empty line=144
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/144.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/144.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/144.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/144.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/144.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/144.err
+VERDICT v6-part-empty PASS run exit=0 expected=0 stdout=match stderr=match
+CASE v6-part-o line=146
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/146.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/146.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/146.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/146.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/146.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/146.err
+VERDICT v6-part-o PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-part-order line=148
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/148.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/148.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/148.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/148.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/148.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/148.err
+VERDICT v6-part-order PASS run exit=102 expected=102 stdout=match stderr=match
+CASE v6-part-local line=150
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/150.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/150.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/150.cerr
+VERDICT v6-part-local PASS compile exit=9 expected=9 refused with the expected error
+CASE v6-part-view-edit line=152
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/152.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/152.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/152.cerr
+VERDICT v6-part-view-edit PASS compile exit=20 expected=20 refused with the expected error
+CASE v6-part-two line=154
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/154.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/154.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/154.cerr
+VERDICT v6-part-two PASS compile exit=19 expected=19 refused with the expected error
+CASE v6-part-base line=156
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/156.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/156.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/156.cerr
+VERDICT v6-part-base PASS compile exit=19 expected=19 refused with the expected error
+CASE v6-name-part line=158
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/158.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/158.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/158.cerr
+VERDICT v6-name-part PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE v6-write line=162
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/162.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/162.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/162.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/162.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/162.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/162.err
+VERDICT v6-write PASS run exit=103 expected=103 stdout=match stderr=match
+CASE v6-slots7 line=164
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/164.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/164.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/164.cerr
+VERDICT v6-slots7 PASS compile exit=9 expected=9 refused with the expected error
+CASE v6-slots6 line=166
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/166.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/166.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/166.cerr
+VERDICT v6-slots6 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE v6-fm-e2 line=168
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/168.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/168.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/168.cerr
+VERDICT v6-fm-e2 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE v6-out line=170
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/170.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/170.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/170.cerr
+VERDICT v6-out PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE m6-export2 line=174
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/174.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/174.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/174.cerr
+VERDICT m6-export2 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE m6-noexport line=176
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/176.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/176.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/176.cerr
+VERDICT m6-noexport PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE m6-export-layout line=178
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/178.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/178.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/178.cerr
+VERDICT m6-export-layout PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE abiv-compiles line=181
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/181.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/181.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/181.cerr
+VERDICT abiv-compiles PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE abiw-compiles line=182
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/182.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/182.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/182.cerr
+VERDICT abiw-compiles PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE abi-vsum-ok line=186
+VERDICT abi-vsum-ok NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-bcnt-ok line=188
+VERDICT abi-bcnt-ok NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-null-len1 line=190
+VERDICT abi-null-len1 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-misaligned line=192
+VERDICT abi-misaligned NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-size-overflow line=194
+VERDICT abi-size-overflow NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-golden-wrap line=196
+VERDICT abi-golden-wrap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-wrap-high line=198
+VERDICT abi-wrap-high NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-null-len0 line=200
+VERDICT abi-null-len0 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-null-len0-ulong line=202
+VERDICT abi-null-len0-ulong NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-bogus-len0 line=204
+VERDICT abi-bogus-len0 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-edit-overlap line=206
+VERDICT abi-edit-overlap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-edit-adjacent line=208
+VERDICT abi-edit-adjacent NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-edit-empty line=210
+VERDICT abi-edit-empty NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-edit-result line=212
+VERDICT abi-edit-result NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-out-overlap line=214
+VERDICT abi-out-overlap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-out-trap line=216
+VERDICT abi-out-trap NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-out-bounds line=218
+VERDICT abi-out-bounds NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-layout line=220
+VERDICT abi-layout NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-layout-null line=222
+VERDICT abi-layout-null NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-null-result line=224
+VERDICT abi-null-result NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-reentry line=226
+VERDICT abi-reentry NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-two-units line=228
+VERDICT abi-two-units NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-ident-abiv line=230
+VERDICT abi-ident-abiv NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-ident-abiw line=232
+VERDICT abi-ident-abiw NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-ident-distinct line=234
+VERDICT abi-ident-distinct NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-v1-absent line=236
+VERDICT abi-v1-absent NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-v1-kept line=238
+VERDICT abi-v1-kept NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-units-stale-source line=240
+VERDICT abi-units-stale-source NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-units-stale-omc line=242
+VERDICT abi-units-stale-omc NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-units-stale-profile line=244
+VERDICT abi-units-stale-profile NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE abi-misaligned-len0 line=246
+VERDICT abi-misaligned-len0 NOT_RUN not run: needs the ABI v2 generator (omega-bridge, AbiLane L837) to bind sec/s5s7/abi/*.om; oracle/s5s7/abi/driver.c case
+CASE sha-empty line=250
+VERDICT sha-empty NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-abc line=252
+VERDICT sha-abc NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-split2 line=254
+VERDICT sha-split2 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-split3-zero line=256
+VERDICT sha-split3-zero NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-bytewise line=258
+VERDICT sha-bytewise NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-update-null0 line=260
+VERDICT sha-update-null0 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-hash-overlap0 line=262
+VERDICT sha-hash-overlap0 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-hash-overlap16 line=264
+VERDICT sha-hash-overlap16 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-hash-overlap-before line=266
+VERDICT sha-hash-overlap-before NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-post-final line=268
+VERDICT sha-post-final NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-no-init-safe line=270
+VERDICT sha-no-init-safe NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-hash-eq-stream line=272
+VERDICT sha-hash-eq-stream NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-ctx-copy line=274
+VERDICT sha-ctx-copy NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-big-1 line=276
+VERDICT sha-big-1 NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-big-split line=278
+VERDICT sha-big-split NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE sha-big-hash line=280
+VERDICT sha-big-hash NOT_RUN not run: needs the OM-2 SHA unit and its bridge-generated header (ShaLane L838); oracle/s5s7/sha/sha_driver.c case
+CASE t-dup line=284
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/284.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/284.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/284.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/284.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/284.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/284.err
+VERDICT t-dup PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-allops line=286
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/286.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/286.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/286.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/286.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/286.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/286.err
+VERDICT t-allops PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-shactx line=288
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/288.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/288.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/288.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/288.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/288.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/288.err
+VERDICT t-shactx PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-endian line=290
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/290.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/290.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/290.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/290.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/290.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/290.err
+VERDICT t-endian PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-sum line=292
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/292.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/292.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/292.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/292.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/292.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/292.err
+VERDICT t-sum PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-edit line=294
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/294.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/294.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/294.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/294.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/294.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/294.err
+VERDICT t-edit PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-sle line=296
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/296.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/296.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/296.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/296.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/296.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/296.err
+VERDICT t-sle PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-names line=298
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/298.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/298.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/298.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/298.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/298.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/298.err
+VERDICT t-names PASS run exit=0 expected=0 stdout=match stderr=match
+CASE t-slw line=300
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/300.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/300.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/300.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/300.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/300.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/300.err
+VERDICT t-slw PASS run exit=103 expected=103 stdout=match stderr=match
+CASE t-slt line=302
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/302.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/302.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/302.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/302.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/302.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/302.err
+VERDICT t-slt PASS run exit=103 expected=103 stdout=match stderr=match
+CASE t-slo line=304
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/304.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/304.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/304.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/304.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/304.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/304.err
+VERDICT t-slo PASS run exit=103 expected=103 stdout=match stderr=match
+CASE t-order line=306
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/306.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/306.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/306.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/306.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/306.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/306.err
+VERDICT t-order PASS run exit=102 expected=102 stdout=match stderr=match
+CASE t-trap10 line=308
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/308.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/308.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/308.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/308.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/308.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/308.err
+VERDICT t-trap10 PASS run exit=110 expected=110 stdout=match stderr=match
+CASE t-shl64 line=310
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/310.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/310.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/310.cerr
+  $ /tmp/om2c/s4/g-export-s5s7-s5s7-all/310.elf < /dev/null > /tmp/om2c/s4/g-export-s5s7-s5s7-all/310.out 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/310.err
+VERDICT t-shl64 PASS run exit=107 expected=107 stdout=match stderr=match
+CASE t-unsized16 line=312
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/312.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/312.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/312.cerr
+VERDICT t-unsized16 PASS compile exit=16 expected=16 stdout=match stderr=match
+CASE abi1-om1 line=314
+  $ /tmp/om2c/s4/omc-export < /tmp/om2c/s4/g-export-s5s7-s5s7-all/314.src > /tmp/om2c/s4/g-export-s5s7-s5s7-all/314.elf 2> /tmp/om2c/s4/g-export-s5s7-s5s7-all/314.cerr
+VERDICT abi1-om1 PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+OM2GATE NOT_RUN cases=144 pass=96 fail=0 invalid=0 not_run=48

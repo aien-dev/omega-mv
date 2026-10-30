@@ -89,6 +89,8 @@ bool omega_evidence_tree_dirty(void);
  * "$OUT_DIR/omegatool" (tests/gates/run.sh builds each step into build/step-<step>/,
  * omega#511; a clean clone builds with OUT_DIR=build), "build/omegatool" when OUT_DIR
  * is unset, else the kernel's record of the running executable (/proc/self/exe).
+ * The file name is taken from /proc/self/exe, never spelled in the code: this file is
+ * linked into production binaries and R16-G3 refuses legacy program names in them.
  * Returns false when no readable file is found. */
 bool omega_evidence_self_binary(char *out, size_t n);
 

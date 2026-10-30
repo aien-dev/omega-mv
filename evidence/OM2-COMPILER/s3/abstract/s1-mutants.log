@@ -1,0 +1,92 @@
+OM2GATE START cases=seed/omc/om2/s1/s1-mutants.cases scratch=g-abstract-s1-mutants
+IDENTITY omc omc-abstract sha256=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 pinned=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 match
+DEADLINE 60
+  $ omc-abstract < g-abstract-s1-mutants/5.src > g-abstract-s1-mutants/5.elf 2> g-abstract-s1-mutants/5.cerr
+COMPILER g-abstract-s1-mutants/5.elf sha256=98cd1621ca4f69c5589641b3437e7e512838596fdfbf2f7775a48de19c284b16 source line=5
+CASE ctl-rot line=6
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/6.src > g-abstract-s1-mutants/6.elf 2> g-abstract-s1-mutants/6.cerr
+  $ g-abstract-s1-mutants/6.elf < /dev/null > g-abstract-s1-mutants/6.out 2> g-abstract-s1-mutants/6.err
+VERDICT ctl-rot PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-rot-trap line=7
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/7.src > g-abstract-s1-mutants/7.elf 2> g-abstract-s1-mutants/7.cerr
+  $ g-abstract-s1-mutants/7.elf < /dev/null > g-abstract-s1-mutants/7.out 2> g-abstract-s1-mutants/7.err
+VERDICT ctl-rot-trap PASS run exit=107 expected=107 stdout=match stderr=match
+CASE ctl-hex-max line=8
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/8.src > g-abstract-s1-mutants/8.elf 2> g-abstract-s1-mutants/8.cerr
+  $ g-abstract-s1-mutants/8.elf < /dev/null > g-abstract-s1-mutants/8.out 2> g-abstract-s1-mutants/8.err
+VERDICT ctl-hex-max PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-hex-upper line=9
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/9.src > g-abstract-s1-mutants/9.elf 2> g-abstract-s1-mutants/9.cerr
+VERDICT ctl-hex-upper PASS compile exit=6 expected=6 refused with the expected error
+CASE ctl-om1-names line=10
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/10.src > g-abstract-s1-mutants/10.elf 2> g-abstract-s1-mutants/10.cerr
+  $ g-abstract-s1-mutants/10.elf < /dev/null > g-abstract-s1-mutants/10.out 2> g-abstract-s1-mutants/10.err
+VERDICT ctl-om1-names PASS run exit=2 expected=2 stdout=match stderr=match
+CASE ctl-fmt line=11
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/11.src > g-abstract-s1-mutants/11.elf 2> g-abstract-s1-mutants/11.cerr
+VERDICT ctl-fmt PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE ctl-diag-unknown line=12
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/12.src > g-abstract-s1-mutants/12.elf 2> g-abstract-s1-mutants/12.cerr
+VERDICT ctl-diag-unknown PASS compile exit=3 expected=3 stdout=match stderr=match
+CASE ctl-diag-newpt line=13
+  $ g-abstract-s1-mutants/5.elf < g-abstract-s1-mutants/13.src > g-abstract-s1-mutants/13.elf 2> g-abstract-s1-mutants/13.cerr
+VERDICT ctl-diag-newpt PASS compile exit=16 expected=16 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rotl.from seed/omc/om2/s1/mut/rotl.to
+  MUTATE exact-once substitution at byte 58119
+  $ omc-abstract < g-abstract-s1-mutants/16.src > g-abstract-s1-mutants/16.elf 2> g-abstract-s1-mutants/16.cerr
+COMPILER g-abstract-s1-mutants/16.elf sha256=5b0e6161df5f719eb7d287b5d9967bb68468b2a592d7d722ba492f7335b95355 source line=16
+CASE m-rotl line=17
+  $ g-abstract-s1-mutants/16.elf < g-abstract-s1-mutants/17.src > g-abstract-s1-mutants/17.elf 2> g-abstract-s1-mutants/17.cerr
+  $ g-abstract-s1-mutants/17.elf < /dev/null > g-abstract-s1-mutants/17.out 2> g-abstract-s1-mutants/17.err
+VERDICT m-rotl FAIL run exit=4 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/rchk.from seed/omc/om2/s1/mut/rchk.to
+  MUTATE exact-once substitution at byte 58040
+  $ omc-abstract < g-abstract-s1-mutants/20.src > g-abstract-s1-mutants/20.elf 2> g-abstract-s1-mutants/20.cerr
+COMPILER g-abstract-s1-mutants/20.elf sha256=6dddfa5e1d66b2dddebd3f44aedbab3317d4bc1445d339589a85c04d86a6b076 source line=20
+CASE m-rchk line=21
+  $ g-abstract-s1-mutants/20.elf < g-abstract-s1-mutants/21.src > g-abstract-s1-mutants/21.elf 2> g-abstract-s1-mutants/21.cerr
+  $ g-abstract-s1-mutants/21.elf < /dev/null > g-abstract-s1-mutants/21.out 2> g-abstract-s1-mutants/21.err
+VERDICT m-rchk FAIL run exit=5 expected=107 stdout=match stderr=match
+SUBST seed/omc/om2/s1/mut/hexd.from seed/omc/om2/s1/mut/hexd.to
+  MUTATE exact-once substitution at byte 28094
+  $ omc-abstract < g-abstract-s1-mutants/24.src > g-abstract-s1-mutants/24.elf 2> g-abstract-s1-mutants/24.cerr
+COMPILER g-abstract-s1-mutants/24.elf sha256=82ea9cfae1a206194c8ef57d220266182b54da556236ccb5f1507b82757e52d2 source line=24
+CASE m-hexd line=25
+  $ g-abstract-s1-mutants/24.elf < g-abstract-s1-mutants/25.src > g-abstract-s1-mutants/25.elf 2> g-abstract-s1-mutants/25.cerr
+VERDICT m-hexd FAIL compile exit=8 expected=0
+SUBST seed/omc/om2/s1/mut/hexU.from seed/omc/om2/s1/mut/hexU.to
+  MUTATE exact-once substitution at byte 28070
+  $ omc-abstract < g-abstract-s1-mutants/28.src > g-abstract-s1-mutants/28.elf 2> g-abstract-s1-mutants/28.cerr
+COMPILER g-abstract-s1-mutants/28.elf sha256=8fd30a7b1abd5db2206208cfb067a8bff95bdb97ef653e5d6ebb84a3d4c1a92d source line=28
+CASE m-hexU line=29
+  $ g-abstract-s1-mutants/28.elf < g-abstract-s1-mutants/29.src > g-abstract-s1-mutants/29.elf 2> g-abstract-s1-mutants/29.cerr
+VERDICT m-hexU FAIL compile exit=8 expected=6 diagnostic does not name the expected error
+SUBST seed/omc/om2/s1/mut/optin.from seed/omc/om2/s1/mut/optin.to
+  MUTATE exact-once substitution at byte 20922
+  $ omc-abstract < g-abstract-s1-mutants/32.src > g-abstract-s1-mutants/32.elf 2> g-abstract-s1-mutants/32.cerr
+COMPILER g-abstract-s1-mutants/32.elf sha256=5bb0aa0a1e0af7e434b48f6f6391ab9f46220e97f10a4416d3f50e858c62a96f source line=32
+CASE m-optin line=33
+  $ g-abstract-s1-mutants/32.elf < g-abstract-s1-mutants/33.src > g-abstract-s1-mutants/33.elf 2> g-abstract-s1-mutants/33.cerr
+VERDICT m-optin FAIL compile exit=16 expected=0
+SUBST seed/omc/om2/s1/mut/paren.from seed/omc/om2/s1/mut/paren.to
+  MUTATE exact-once substitution at byte 26788
+  $ omc-abstract < g-abstract-s1-mutants/36.src > g-abstract-s1-mutants/36.elf 2> g-abstract-s1-mutants/36.cerr
+COMPILER g-abstract-s1-mutants/36.elf sha256=3dcc368cafd43192d8319f09f859fb26314b0936e221f150bfbb0999715be35b source line=36
+CASE m-paren line=37
+  $ g-abstract-s1-mutants/36.elf < g-abstract-s1-mutants/37.src > g-abstract-s1-mutants/37.elf 2> g-abstract-s1-mutants/37.cerr
+VERDICT m-paren FAIL compile exit=0 expected=0 stdout differs at byte 102 stderr=match
+SUBST seed/omc/om2/s1/mut/unk.from seed/omc/om2/s1/mut/unk.to
+  MUTATE exact-once substitution at byte 21967
+  $ omc-abstract < g-abstract-s1-mutants/40.src > g-abstract-s1-mutants/40.elf 2> g-abstract-s1-mutants/40.cerr
+COMPILER g-abstract-s1-mutants/40.elf sha256=dc84c698da8bf4c78e31251d9710f7e973f36be0097b9d560b11da696c84077f source line=40
+CASE m-unk line=41
+  $ g-abstract-s1-mutants/40.elf < g-abstract-s1-mutants/41.src > g-abstract-s1-mutants/41.elf 2> g-abstract-s1-mutants/41.cerr
+VERDICT m-unk FAIL compile exit=3 expected=3 stdout=match stderr differs at byte 43
+SUBST seed/omc/om2/s1/mut/tyunk.from seed/omc/om2/s1/mut/tyunk.to
+  MUTATE exact-once substitution at byte 46644
+  $ omc-abstract < g-abstract-s1-mutants/44.src > g-abstract-s1-mutants/44.elf 2> g-abstract-s1-mutants/44.cerr
+COMPILER g-abstract-s1-mutants/44.elf sha256=149f155ab18a45803ede9dfde54b3d89dbbb50533ee4a786bd127a318842efe1 source line=44
+CASE m-tyunk line=45
+  $ g-abstract-s1-mutants/44.elf < g-abstract-s1-mutants/45.src > g-abstract-s1-mutants/45.elf 2> g-abstract-s1-mutants/45.cerr
+VERDICT m-tyunk FAIL compile exit=16 expected=16 stdout=match stderr differs at byte 45
+OM2GATE FAIL cases=16 pass=8 fail=8 invalid=0 not_run=0

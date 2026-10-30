@@ -62,10 +62,10 @@ rc=$?
 set -e
 [ "$rc" = 12 ] || bad "e12_register_pool: exit $rc, wanted 12 ($(cat "$T/reg.err"))"
 
-# 14: the 1025th global exceeds the name table.
+# 14: the 8193rd global exceeds the name table.
 {
     i=1
-    while [ "$i" -le 1025 ]; do printf 'global g%s uchar 1\n' "$i"; i=$((i + 1)); done
+    while [ "$i" -le 8193 ]; do printf 'global g%s uchar 1\n' "$i"; i=$((i + 1)); done
     printf 'fn main to int\nret 0\nend\n'
 } > "$T/cap.om"
 set +e

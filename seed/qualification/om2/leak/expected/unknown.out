@@ -1,0 +1,6 @@
+LEAKSCAN 1 words=2 entry=@0 data=none
+UNKNOWN @0 0xffffffff
+UNKNOWN @1 0xffffffff
+SUMMARY branches=0 len=0 trap-check=0 data-branch=0 branch-unreached=0 mem=0 const=0 public-index=0 data-index=0 mem-unreached=0 unknown=2 unhandled=0
+MANUAL-ITEMS 2 listed above as UNKNOWN and UNHANDLED lines
+VERDICT TRACE-EQUIV-STATIC NOT_RUN

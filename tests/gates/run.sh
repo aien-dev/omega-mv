@@ -21,7 +21,7 @@
 # step word, so no manifest needs shell expansion (ADR 0028 P6).
 #
 # Pinned sibling sources. The hosted jobs check out aien-spark/physics at physics.lock (rx-host
-# at its own hard-coded commit), aien-spark/aienos at aienos.lock and aien-spark/aienos at
+# at its own hard-coded commit), aien-dev/aienux at aienos.lock and aien-dev/aienux at
 # argus.lock, as physics-src/, aienos-src/ and aienos-argus/ next to the Makefile, and exclude
 # them from git status. Here the same commits are materialised under build/pins/ (build/ is
 # gitignored) from the sibling local clones ../physics and ../aienos, offline.
@@ -133,7 +133,10 @@ case "$step" in
   seed)               make OUT_DIR=build build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
                       sh seed/omega-from-seed.sh
                       sh seed/host/check.sh 2>&1 | tee "$OUT_DIR.seed-check.log"
-                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi ;;
+                      if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi
+                      # gate5 checks that seed/omc/size-history.tsv ends with a row for this omc; check.sh does not run it
+                      sh seed/omc/gate5.sh 2>&1 | tee "$OUT_DIR.seed-gate5.log"
+                      tail -1 "$OUT_DIR.seed-gate5.log" | grep -q "^GATE5 PASS" || { echo "OMEGA-SEED: gate5 failed" >&2; exit 1; } ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -210,8 +213,8 @@ case "$step" in
     pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
     export PHYSICS_COMMIT=6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
     aienos_pin; set -o pipefail; mkdir -p build
-    make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living
-    make test-machine-identity
+    make test-r3 test-r7 test-r16-operator-authority-misuse test-r8 test-r9 test-r12 test-rx-emergency test-action-graph test-state-projection test-capability-query test-capability-graph test-skillroute-compose test-semantic-comm test-cognitive-routing test-sem-incremental test-cortex test-jspace-prod test-composition test-composition-attach-asan test-composition-gate test-fabric test-fabric-living | tee build/rx-host-reference.log
+    make test-machine-identity | tee -a build/rx-host-reference.log
     make test-effect-cap64 | tee build/effect-cap64.log
     grep -q '^OMEGA_EFFECT_CAP64_PASS$' build/effect-cap64.log
     receipt omega_state_projection_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_STATE_PROJECTION_PASS": "PASS"'
@@ -271,8 +274,13 @@ case "$step" in
   # rx-host.yml chip-only-declared and spark-only targets (SKIP on GitHub, never a pass there)
   chip:*|spark:*)
     t="${step#*:}"
-    pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
-    export PHYSICS_DIR="$PINS/physics-src-6d7cf0d"
+    # Chip and spark steps follow physics.lock like every other step. Makefile check-physics-lock
+    # (a prerequisite of omegatool, rx_composition_gate_gpu and libomega_gpu.a) refuses any other
+    # physics commit, and omegatool itself now needs the physics API of the lock (nvrm_channel_n,
+    # L136 via #614). The former hard-coded 6d7cf0d4 failed every such chip gate on the judge once
+    # #614 moved the lock to 048e5f5 (main 18c653b3, 2026-10-25). faculty-arm and rx-host-reference
+    # keep their own pin: they mirror the hosted rx-host job, which checks out that commit itself.
+    physics_pin
     aienos_pin; argus_pin
     make "$t"
     ;;
@@ -301,6 +309,23 @@ case "$step" in
     fi
     obs env_files_found false
     echo "Zero plaintext .env files verified."
+    ;;
+  om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
+                      # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
+                      # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.
+    pin omega-bridge omega-bridge "$(lock om/omega-bridge.lock)"
+    sh seed/omega-from-seed.sh > build/om-units-seed.log 2>&1 || { tail -3 build/om-units-seed.log; exit 1; }
+    export OMEGA_OMC="$ROOT/seed/out/omc" OMEGA_BRIDGE="$PINS/omega-bridge"
+    obs omc_sha256 "\"$(sha256sum < "$OMEGA_OMC" | cut -c1-64)\""
+    sh om/units.sh --check
+    sh om/sha256/parity/run.sh
+    sh om/blake3/parity/run.sh
+    ;;
+  tilelab)            # omega#906: native .om tile planner and streaming (m,s,p) softmax. omc born from the seed
+                      # here, then seed/tilelab/gate.sh (expected output, mutants failing for their own reason).
+    sh seed/omega-from-seed.sh > build/tilelab-seed.log 2>&1 || { tail -3 build/tilelab-seed.log; exit 1; }
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/tilelab/gate.sh
     ;;
   *) echo "run.sh: unknown step '$step'" >&2; exit 2 ;;
 esac

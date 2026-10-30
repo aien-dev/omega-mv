@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 99-101, section 6 line 196: one out (1 slot), two unsized views (4 slots)
+note and two scalars = 7 slots: error 9 at line 5 (the signature).
+om2
+fn f o out uchar 8 a view uchar * b view uchar * y ulong z ulong to void
+put o 0 uchar and add y add z add len a len b 255
+end

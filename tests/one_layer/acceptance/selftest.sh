@@ -203,7 +203,7 @@ for s in $OLA_RUNNER_SRCS; do o="$T/obj/$(echo "$s" | tr / _).o"; $CC $OLA_CFLAG
 mut_ola() { # mut_ola <name> <sed script>
   sed "$2" "$HERE/ola.c" > "$T/mut/$1.c"
   cmp -s "$HERE/ola.c" "$T/mut/$1.c" && { bad "mutant $1: sed changed nothing"; return 1; }
-  $CC ${OLA_CFLAGS/-Werror/} -w -o "$T/mut/$1" "$T/mut/$1.c" src/sha256.c || { bad "mutant $1 does not compile"; return 1; }
+  $CC ${OLA_CFLAGS/-Werror/} -w -o "$T/mut/$1" "$T/mut/$1.c" src/omega_om_units.c || { bad "mutant $1 does not compile"; return 1; }
 }
 mut_runner() {
   sed "$2" "$HERE/ola_runner.c" > "$T/mut/$1.c"

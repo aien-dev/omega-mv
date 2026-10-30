@@ -1,0 +1,7 @@
+om2
+fn f x int to int inline
+ret f x
+end
+fn main to int
+ret f 1
+end

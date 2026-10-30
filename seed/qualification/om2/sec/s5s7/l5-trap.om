@@ -1,0 +1,18 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 5 layout line 159: the field index is checked like an array index; a run-time index 64
+note into buf (COUNT 64) traps 3: exit 103, no stdout.
+om2
+layout shactx 104
+field state uint 8 at 0 little
+field count ulong at 32 little
+field buf uchar 64 at 40 little
+end
+fn poke c edit shactx k ulong to void
+put c buf k 1
+end
+fn main to int
+c = new uchar 104 0
+poke c 64
+w = write 1 c 0 104
+ret 0
+end

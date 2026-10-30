@@ -181,15 +181,26 @@ void omega_evidence_hardware_from_nvrm(const Nvrm *rm, OmegaEvidenceHardware *ou
 
 bool omega_evidence_self_binary(char *out, size_t n) {
     if (!out || n == 0) return false;
-    const char *out_dir = getenv("OUT_DIR");
-    if (!out_dir || !*out_dir) out_dir = "build";
-    int len = snprintf(out, n, "%s/omegatool", out_dir);
-    if (len > 0 && (size_t)len < n && access(out, R_OK) == 0) return true;
-    ssize_t r = readlink("/proc/self/exe", out, n - 1);
+    /* The program name comes from the running executable, never a literal:
+     * this file is linked into production binaries (rx_r13_living_host), and
+     * tools/r16_authpath.sh refuses any legacy program name in their strings. */
+    char self[4096];
+    ssize_t r = readlink("/proc/self/exe", self, sizeof(self) - 1);
     if (r <= 0) {
         out[0] = '\0';
         return false;
     }
-    out[r] = '\0';
+    self[r] = '\0';
+    const char *slash = strrchr(self, '/');
+    const char *name = slash ? slash + 1 : self;
+    const char *out_dir = getenv("OUT_DIR");
+    if (!out_dir || !*out_dir) out_dir = "build";
+    int len = snprintf(out, n, "%s/%s", out_dir, name);
+    if (len > 0 && (size_t)len < n && access(out, R_OK) == 0) return true;
+    len = snprintf(out, n, "%s", self);
+    if (len <= 0 || (size_t)len >= n) {
+        out[0] = '\0';
+        return false;
+    }
     return access(out, R_OK) == 0;
 }

@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of slots-6s.om for the pinned compiler 734f0a39: six sized arrays are accepted.
+note OM-1 unit: this line replaces the om2 line
+note OM-1 unit
+fn f a view uchar 1 b view uchar 2 c view uchar 3 d edit uchar 4 e edit ulong 5 g view uint 6 to ulong
+ret add len a add len b add len c add len d add len e len g
+end

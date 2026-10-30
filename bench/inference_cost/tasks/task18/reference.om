@@ -1,0 +1,9 @@
+fn reverse_digits_u32 n uint to uint
+r = uint 0
+v = n
+while gt v 0
+r = add (mul r 10) (rem v 10)
+v = div v 10
+end
+ret r
+end

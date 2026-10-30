@@ -2,7 +2,7 @@
 # Files: src/checker2/*, tests/checker2/*, spec/one-layer-receipts.md. Picked up by
 # `-include mk/*.mk`; not part of `all` or `test`. checker2 links none of src/compiler/*.c: it
 # includes no compiler header and shares no parser, evaluator or instruction table with oscc.
-# Links only src/sha256.c and the vendored in-house Ed25519 (src/searchtrace/sig, PROVENANCE.txt).
+# Links only src/omega_om_units.c and the vendored in-house Ed25519 (src/searchtrace/sig, PROVENANCE.txt).
 #   make checker2                build/checker2/checker2
 #   make test-checker2           receipt, checker and LRAT tests (plain and ASan/UBSan), corpus +
 #                                black-box differential against oscc, blaster semantics against oscc's
@@ -15,7 +15,7 @@ C2_DIR = $(OUT_DIR)/checker2
 C2_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/checker2
 C2_ASAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
 C2_SIG = src/searchtrace/sig/ed25519.c src/searchtrace/sig/sha512.c src/searchtrace/sig/ct.c
-C2_RECEIPT = src/checker2/c2_receipt.c src/sha256.c $(C2_SIG)
+C2_RECEIPT = src/checker2/c2_receipt.c src/omega_om_units.c $(C2_SIG)
 C2_HDRS = $(wildcard src/checker2/*.h) src/sha256.h src/searchtrace/sig/aienos_sig.h src/searchtrace/sig/sig_internal.h
 
 C2_CORE = src/checker2/c2_ir.c src/checker2/c2_check.c src/checker2/c2_lrat.c src/checker2/c2_blast.c
@@ -48,7 +48,7 @@ $(C2_DIR)/test_c2_ir_asan: tests/checker2/test_c2_ir.c $(C2_CORE) $(C2_HDRS)
 
 # producer side, used only by the differential (links the producer library, never checker2)
 # (own variables: mk/compiler.mk is included after this file, so its variables are empty here)
-C2_PRODUCER_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/sha256.c
+C2_PRODUCER_LIB = $(filter-out src/compiler/oscc_main.c,$(wildcard src/compiler/*.c)) src/omega_om_units.c
 $(C2_DIR)/osc_emit_ir: tests/checker2/producer/osc_emit_ir.c $(C2_PRODUCER_LIB) $(wildcard src/compiler/*.h)
 	@mkdir -p $(C2_DIR)
 	$(CC) $(C2_CFLAGS:-Isrc/checker2=-Isrc/compiler) -o $@ tests/checker2/producer/osc_emit_ir.c $(C2_PRODUCER_LIB)
