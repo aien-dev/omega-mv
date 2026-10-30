@@ -112,7 +112,9 @@ Keyword encoding was checked with the mounted WolframLanguageEvaluator:
 The implementation shares `hbuffer`'s private 32-bit socklen with `sockname`;
 checked byte-array capacities fit that representation. Linux source authority:
 [v6.12 asm-generic syscall table](https://github.com/torvalds/linux/blob/v6.12/include/uapi/asm-generic/unistd.h)
-assigns getpeername 205 and getsockname 204;
+assigns getpeername 205 and getsockname 204; under `target x86linux` the same
+word lowers to x86-64 getpeername 52 (getsockname 51) from
+[v6.17 `syscall_64.tbl`](https://github.com/torvalds/linux/blob/v6.17/arch/x86/entry/syscalls/syscall_64.tbl);
 [`move_addr_to_user`](https://github.com/torvalds/linux/blob/v6.12/net/socket.c)
 copies only the bounded prefix, permits zero capacity, and returns full length.
 The [getpeername manual](https://man7.org/linux/man-pages/man2/getpeername.2.html)
