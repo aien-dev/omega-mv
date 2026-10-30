@@ -6324,9 +6324,15 @@ spadd 80
 hreturn dst x
 end
 
+note Literal accel/ethosu requests (Linux v7.3 include/uapi/drm/ethosu_accel.h, drm.h): the ten
+note DRM_IOCTL_ETHOSU_* _IOWR('d', 0x40 + id) requests, DEV_QUERY .. PERFMON_SET_GLOBAL, and
+note DRM_IOCTL_GEM_CLOSE _IOW('d', 9, 8 bytes). Each value is the C compiler's expansion of the
+note pinned header (aien-dev/omega-npu oracle/dv_oracle.c). No other DRM request is accepted.
+note The list lives in xhreq (c 166), so both native Linux backends accept the same requests.
 note Same bounded ioctl contract as L605 src/device/omc.om at 0dee699.
 note Compose with native host words instead of maintaining a second compiler.
-note Only literal FIONREAD or encoded read/write NVRM F requests, exact writable bytes.
+note Only literal FIONREAD, encoded read/write NVRM F requests or a listed accel/ethosu request
+note (the xhreq 166 allowlist, shared with x86), exact writable bytes.
 fn hdevctl dst ulong x ulong to void
 put fr add x 23 xhreq 166 x
 e = harray x 1
@@ -14540,7 +14546,17 @@ q = get fr add x 13
 n = ulong 4
 if eq c 166
 if ne q 21531
-if ne and q 3221290752 3221243392
+k = ulong 0
+if or eq q 3222299712 or eq q 3222299713 or eq q 3222299714 eq q 3222299715
+k = ulong 1
+end
+if or eq q 3222824004 or eq q 3222299717 or eq q 3222824006 eq q 3221775431
+k = ulong 1
+end
+if or eq q 3222299720 or eq q 3221775433 eq q 1074291721
+k = ulong 1
+end
+if and ne and q 3221290752 3221243392 eq k 0
 fail 9
 end
 n = and shr q 16 16383
