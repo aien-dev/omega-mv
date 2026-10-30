@@ -20,9 +20,9 @@ Evidence lives in `seed/README.md` (rungs), `seed/omc/gate*.sh`, `seed/host/chec
 | Constants | integer and float literals; expressions, calls, array lengths, struct field lengths, trap codes, loop bounds, for counts; integer folding in IR | gate16, gate-ir |
 | Layout | sizeof/offsetof over 8-byte cells; scalar sizes | gate10 |
 | Host words | file/path/metadata, links, permissions/ownership, access, identity, process groups, time, sleep, sockets, poll, fork/exec/wait, pipes, dup, argv/env, random, chdir, fchdir, cwd, truncate/ftrunc, chmod/chown, stat/lstat, memfd, fdatasync, pread/pwrite, getsid/syncfs/shutdown | seed/host/check.sh |
-| Diagnostics | 23 named refusal codes with one minimal case each | gate15 |
+| Diagnostics | 29 emitted compiler codes (1..25, 27..30; 26 unused) in one registry, `seed/omc/error-codes.reg`, each with a minimal case refused at its exact line, and a drift check against omc.om, irwasm.om and OMEGESE §9.14/§11.1 | gate15 (`codereg.om`) |
 | Robustness | 600 deterministic fuzz programs; capacity boundaries; 300-program differential fuzz against the pinned compiler; 30 randomized two-function IR units; keyword generator parity | gate12, gate13, gate17, gate18, gate-ir |
-| IR mode | OSC IR v1 scalar subset: up to 32 functions, calls to earlier functions, integer constants folded, break; arrays/structs/floats out of scope | gate-ir (10/10 dev, 9 call units, 3 break units, 1 shift unit, 1 bool unit, 1 cast unit, 30 fuzz units, 26 refusals) |
+| IR mode | OSC IR v1 scalar subset: up to 32 functions, calls to earlier functions, integer constants folded, break; arrays/structs/floats out of scope | gate-ir (10/10 dev, 9 call units, 3 break units, 1 shift unit, 1 bool unit, 1 cast unit, 30 fuzz units, 29 refusals, including the error-30 contract lines of #791) |
 
 Compiler: 7,208 lines, 251 functions, sha256
 `ef19aa993d210ad20070ef99bce1e2ef02921d9541d7a443f973072c4d6fa6a3` (119,643 bytes).

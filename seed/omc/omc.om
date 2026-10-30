@@ -12811,6 +12811,10 @@ fail 9
 end
 fail 16
 end
+note a contract word (requires, ensures, invariant) is not an IR v1 statement: refuse it, never read it as a local (#791)
+if ne cp_kind 0
+fail 30
+end
 ir_assign get tw 0
 ret 0
 end
@@ -12976,7 +12980,7 @@ ret 0
 end
 
 fn cp_kind to ulong
-if eq get om2 0 0
+if and eq get om2 0 0 eq get irmode 0 0
 ret 0
 end
 if ne get tk 0 1

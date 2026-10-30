@@ -68,6 +68,22 @@ ir_refuse continue_use 3 'ir
 fn main to int
 continue
 end'
+# Contract lines are not IR v1 statements: refuse with 30, never read them as a local (#791).
+ir_refuse requires_line 30 'ir
+fn f x uint to uint
+requires lt x 10
+ret x
+end'
+ir_refuse ensures_line 30 'ir
+fn f x uint to uint
+ensures lt x 10
+ret x
+end'
+ir_refuse invariant_line 30 'ir
+fn f x uint to uint
+invariant lt x 10
+ret x
+end'
 # Integer constants fold to the IR of their literal; float constants are still refused.
 printf 'ir\nconst N uint 5\nfn f to uint\nret N\nend\n' > "$B/c1.om"
 printf 'ir\nfn f to uint\nret uint 5\nend\n' > "$B/c2.om"
@@ -478,5 +494,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 29 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'

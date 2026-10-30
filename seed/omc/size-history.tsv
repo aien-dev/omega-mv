@@ -20,3 +20,4 @@ FR9-x86-mutant-repair	x86 constant index check distinct; re-anchor mutant s2/s3 
 FR9-x86-growth-bound	OM-2 x86 byte emission enforces the existing per-function emitted-storage ceiling; literal diagnostic/refusal parity retained	15574	512	118694	badedbb0c6287887641fcd7e97301b43b5f82f2d7a2838bbe0d17547873108be
 FR9-batch3-current	FR9 on current batch3 and qty/diagnostic audit; Wolfram (477524 - 176)/4 = 119337 words	15618	512	119337	2190b5a37cc4cc73362657766cccd67d65d9eff951c8a3ba9507669af97ac36b
 FR9-acceptance-fixes	FR9 quantity unary refusals and empty text; Wolfram (477612 - 176)/4 = 119359 words	15624	512	119359	62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
+IR-contract-refusal	#791 IR mode refuses requires/ensures/invariant with error 30 instead of reading a local; Wolfram (477732 - 176)/4 = 119389 words	15628	512	119389	ddb320daeb3cb8d5195b8ff34f9f9de17d61677f9a2d78cf2d436d37e44da0dc

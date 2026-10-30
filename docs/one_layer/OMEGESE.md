@@ -798,6 +798,51 @@ meaning and, for the C2 manifest, its exact output bytes or error.
   Without export the OM-1 rule holds (one function: its bare words; more: word 0 is `B` to the last). The
   entry rules of the abstract types apply to each export (to the last function when there is none).
 
+### 9.14 Compiler error codes (omc, registry `seed/omc/error-codes.reg`)
+
+A refusal prints one line, `omc: line L: error C`, on stderr, writes no program and exits with C.
+The single source of the codes is `seed/omc/error-codes.reg` (issue #797): one row per code with its
+status (emitted, io or unused), the `seed/omc/gate15.sh` case that must refuse with it, and the
+meaning below. `seed/omc/codereg.om` (run by gate15) fails when a `fail`, `nfail`, `unkfail`,
+`lenval` or `exit int` site in `omc.om` has no row, when an emitted row has no site, when a row of
+this table differs from the registry, or when a registry case did not refuse with its code at its
+expected line. Codes 1 and 2 are I/O errors on the compiler's own stdin/stdout (line 0 when the input
+cannot be read). In IR mode (section 11) the same codes apply; a contract line (`requires`,
+`ensures`, `invariant`) is error 30 there. irwasm exit codes are a separate namespace (section 11.1).
+
+| Code | Meaning |
+|---|---|
+| omc 1 | the compiler's standard input could not be read |
+| omc 2 | the compiler's standard output could not be written |
+| omc 3 | unknown name or field, or a word this mode does not provide |
+| omc 4 | the line ends where a word or value is needed |
+| omc 5 | extra words after a complete statement |
+| omc 6 | malformed number or token |
+| omc 7 | type mismatch |
+| omc 8 | number out of range for its type or place |
+| omc 9 | word or declaration in a place that does not allow it |
+| omc 10 | duplicate name |
+| omc 11 | bare number without a type from its context |
+| omc 12 | register pool exhausted |
+| omc 13 | name too long (8 bytes, 63 for a function) |
+| omc 14 | capacity exceeded (names, functions, sites, nesting, input or output) |
+| omc 15 | missing end |
+| omc 16 | syntax: unknown or misplaced word |
+| omc 17 | line after ret, break, continue, trap or exit in the same block |
+| omc 18 | a function with a result can reach its end |
+| omc 19 | global passed as an argument, or one array twice in a call |
+| omc 20 | write to a view or a text |
+| omc 21 | constant index outside the array |
+| omc 22 | malformed text literal |
+| omc 23 | size capacity |
+| omc 24 | AArch64 branch displacement out of range |
+| omc 25 | unknown target, or an AArch64-only path on another target |
+| omc 26 | no emitting site |
+| omc 27 | fresh element read before it is definitely written, or fresh array passed on |
+| omc 28 | abstract type: seal outside its constructor, or an unsupported holds |
+| omc 29 | external layout out of bounds or misplaced |
+| omc 30 | contract syntax misplaced or not supported here (IR mode included) |
+
 ## 10. Native host extension (2026-10-23)
 
 Implemented by the Omega-written compiler in `seed/omc/omc.om`. The original
@@ -993,8 +1038,10 @@ Arithmetic (`add` through `rem`) and shifts of booleans remain error 7.
 
 Limits, said plainly: scalar values, calls to earlier functions, at most 32 functions and 6
 parameters. IR mode refuses a `struct`, `global` or `text` declaration with error 9 and refuses a
-float word, a host word, `continue`, `sizeof` or `offsetof` with error 3; it never skips a
-declaration it cannot lower. `note` lines are skipped. Struct IR remains open. The gate needs the
+float word, a host word, `continue`, `sizeof` or `offsetof` with error 3, and a contract line
+(`requires`, `ensures`, `invariant`; section 12 is native only) with error 30 on that line (#791); it
+never skips a declaration it cannot lower or reads a contract word as a local. `note` lines are
+skipped. Struct IR remains open. The gate needs the
 C-built oracles, so `seed/host/check.sh` runs it only when `build/omegese/omegese`,
 `build/omega_emit/omega_emit` and `build/checker2/checker2` exist, and says `SKIP` otherwise.
 
@@ -1056,17 +1103,17 @@ call signatures, constant canonicality and definite assignment are checked.
 Contract text is retained only as input metadata: its executable checks
 must already be present as IR instructions.
 
-| Exit | Named stderr refusal |
+| Code | Named stderr refusal |
 |---|---|
-| 20 | MAGIC |
-| 21 | VERSION (anything except v1) |
-| 22 | TRUNCATED |
-| 23 | CAPACITY |
-| 24 | UNSUPPORTED_OP |
-| 25 | UNSUPPORTED_TAG |
-| 26 | INVALID (typing, register, block, text, or definite assignment) |
-| 27 | TRAILING |
-| 28 | IO |
+| irwasm 20 | MAGIC |
+| irwasm 21 | VERSION (anything except v1) |
+| irwasm 22 | TRUNCATED |
+| irwasm 23 | CAPACITY |
+| irwasm 24 | UNSUPPORTED_OP |
+| irwasm 25 | UNSUPPORTED_TAG |
+| irwasm 26 | INVALID (typing, register, block, text, or definite assignment) |
+| irwasm 27 | TRAILING |
+| irwasm 28 | IO |
 
 Every parse/type/capacity refusal writes no stdout: the module is buffered
 until the complete unit and code generation succeed. As with any stream
