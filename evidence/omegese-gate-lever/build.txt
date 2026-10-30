@@ -1,0 +1,5 @@
+$ quiet-build make PHYSICS_DIR=~/workspace/physics-l386 (6d7cf0d4) OUT_DIR=/tmp/l386g/build -j8 libomega_gpu   (branch omegese/gate-lever da99bf8b, CFLAGS -Wall -Wextra -Werror)
+warnings: 0
+lines naming omega_gpu_q36_graph: 2
+make exit=0
+finished 2026-10-22T00:57:41Z

@@ -1,0 +1,35 @@
+{
+  "cases": [
+    "golden-chat-max-24",
+    "golden-chat-code",
+    "golden-chat-prose2",
+    "golden-chat-chat",
+    "golden-chat-review",
+    "concurrent-32",
+    "turn2",
+    "tool-call"
+  ],
+  "levers": [
+    {
+      "id": "L386",
+      "name": "Omegese decode gate",
+      "present": "yes",
+      "cells": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "verdict": "PASS"
+    }
+  ],
+  "red_controls": {
+    "ran": 0,
+    "ok": 0,
+    "total": 0
+  }
+}

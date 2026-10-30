@@ -1,0 +1,84 @@
+{
+  "about": "C1Lang golden.sh RED: the gate built from a mutated gate.omegese (a*sigmoid(-g)); every golden must differ, and row 0 of 32 together",
+  "model_dir": "qwen3.6-35b-a3b-fp8-95a723d0",
+  "prompts": "evidence/q36-batch-20261021/prompts.txt",
+  "defaults": {
+    "temperature": 0,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "aien_return_token_ids": true
+  },
+  "arms": {
+    "plain": {
+      "about": "the red build, AIEN_OMEGA_Q36_OMEGESE_GATE=1"
+    }
+  },
+  "levers": [
+    {
+      "id": "L386-red",
+      "name": "mutated Omegese gate (control)",
+      "present": {
+        "always": true
+      },
+      "arms": [
+        "plain"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "golden-chat-max-24-red",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-max-24.json",
+      "max_tokens": 24,
+      "user": "Write a C function that returns the larger of two ints.",
+      "about": "gate2-http: the motor's chat golden through the door (host reference, no load needed)",
+      "expect": "red"
+    },
+    {
+      "id": "golden-chat-code-red",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-code.json",
+      "max_tokens": 32,
+      "user": "Write a Rust function that reverses the words in a sentence, keeping the words themselves intact.",
+      "expect": "red"
+    },
+    {
+      "id": "golden-chat-prose2-red",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-prose2.json",
+      "max_tokens": 32,
+      "user": "Write one short paragraph, in plain prose, about a baker opening the shop before dawn on the first cold morning of autumn.",
+      "expect": "red"
+    },
+    {
+      "id": "golden-chat-chat-red",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-chat.json",
+      "max_tokens": 32,
+      "user": "I have a free Saturday and want to go on a day hike with a friend who has never hiked. How should we plan it?",
+      "expect": "red"
+    },
+    {
+      "id": "golden-chat-review-red",
+      "kind": "golden",
+      "golden": "evidence/q36-host-20261020/gen-chat-review.json",
+      "max_tokens": 32,
+      "user": "Review this C function and point out any bugs:\n\nint sum(int *a, int n) {\n    int s;\n    for (int i = 0; i <= n; i++) s += a[i];\n    return s;\n}",
+      "expect": "red"
+    },
+    {
+      "id": "concurrent-32-red",
+      "kind": "together",
+      "ref": "alone",
+      "n": 32,
+      "stagger_ms": 250,
+      "about": "all 32 prompts at once, rows joining and leaving mid-spell; every reply == the same request alone (reference store)",
+      "expect_red": [
+        0
+      ],
+      "others_red_max": 31
+    }
+  ]
+}

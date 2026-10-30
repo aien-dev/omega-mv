@@ -1,0 +1,12 @@
+stamp 20261027T1631Z
+evidence /home/drakestapleton/work/C1Land/golden-20261027T1631Z
+omega-mv c1/gate-lever-reembed 424e1bb168d178902e2dd37a1ecc3af1653cf03f (local), remote 424e1bb168d178902e2dd37a1ecc3af1653cf03f
+lib source omega 2f6561d4b028319ac1aa27bcc7bae669cc2947ad (green), 2f6561d4b028319ac1aa27bcc7bae669cc2947ad + red header (red); sc f0230a59eec985c3290ac78c0cc04322bacf9f0a
+reference 5b726818: 2026-10-21T14:36:32Z build 5b726818 imported from /home/drakestapleton/workspace/sc-q36-batch/evidence/q36-batch-20261021/alone (its stamp: 2026-10-21T02:44:22Z)
+bin-green:
+1e7ab36a3809650d7f829f58dbc0fb2e5805bac664f51643fbeb487095c83e8b  aien-serve-http
+00b51dbe6e23a8c0174a2d6e4e98b56df4bc47892e7f103c09e22883545c1510  libomega_gpu.a
+bin-red:
+21fdc08589c7c0b8eff1ed856601d18d02bca501ba2088faf32dad718bd3e975  aien-serve-http
+ad93a930c1cddbd67f63f66940e7922e1b2e54eb1131a2e99945d5f7966aeb51  libomega_gpu.a
+nvidia-smi compute apps at lock:

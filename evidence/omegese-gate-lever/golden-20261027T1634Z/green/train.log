@@ -1,0 +1,10 @@
+2026-10-27T16:35:51Z suite 8 cases on port 18195, model qwen3.6-35b-a3b-fp8, presence {"L386":"yes"}
+2026-10-27T16:35:51Z arm plain on port 18195 (switches null; this build honors [])
+2026-10-27T16:35:52Z   [plain] golden-chat-max-24: PASS (ids identical to the golden (24 prompt tokens))
+2026-10-27T16:35:53Z   [plain] golden-chat-code: PASS (ids identical to the golden (31 prompt tokens))
+2026-10-27T16:35:54Z   [plain] golden-chat-prose2: PASS (ids identical to the golden (37 prompt tokens))
+2026-10-27T16:35:55Z   [plain] golden-chat-chat: PASS (ids identical to the golden (40 prompt tokens))
+2026-10-27T16:35:56Z   [plain] golden-chat-review: PASS (ids identical to the golden (66 prompt tokens))
+2026-10-27T16:36:13Z   [plain] concurrent-32: PASS (32/32 replies identical to the reference (alone))
+2026-10-27T16:36:14Z   [plain] turn2: PASS (turn 2 identical to alone)
+2026-10-27T16:36:15Z   [plain] tool-call: PASS (reply is a parsed tool call to get_weather ("{\"city\":\"Paris\"}"))

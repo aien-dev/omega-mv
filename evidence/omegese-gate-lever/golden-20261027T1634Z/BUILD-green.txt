@@ -1,0 +1,5 @@
+aien-serve-http C1Lang green build for golden.sh (NOT live, NO aien-test-switches)
+sc f0230a59 (ship/motor-l387, the live bin-19173f9e source), cargo build --release -p aien-serve-http, AIEN_OMEGA_GPU_LIB prebuilt
+omega 2f6561d4b = 6de999da (live lib, rebuilt here to the same sha256 110295ef) + L386 gate lever da99bf8bc edd47302f 2f6561d4b
+1e7ab36a3809650d7f829f58dbc0fb2e5805bac664f51643fbeb487095c83e8b  aien-serve-http
+00b51dbe6e23a8c0174a2d6e4e98b56df4bc47892e7f103c09e22883545c1510  libomega_gpu.a
