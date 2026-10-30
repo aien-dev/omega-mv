@@ -17,7 +17,7 @@ Porting Omega means answering two questions that are easy to mix up:
 2. **Operating system and driver.** Does this file need Linux, the NVIDIA open driver, or a C library?
 
 The table `docs/runtime/portability_table.tsv` answers both, one row per `src/omega_gpu_*`, `src/omega_blackwell_*` and
-`src/omega_bw_*` file (123 rows):
+`src/omega_bw_*` file (128 rows):
 
 | Column | Values | Meaning |
 |---|---|---|
@@ -26,9 +26,12 @@ The table `docs/runtime/portability_table.tsv` answers both, one row per `src/om
 | `os_binding` | `FREESTANDING_PROVEN`, `NO_HOSTED_INCLUDE`, `HOSTED_LIBC`, `LINUX_DRIVER` | `FREESTANDING_PROVEN`: a `.c` file in `GPU_FS_SRCS` (`mk/omega-gpu-engine.mk`), built by `make gpu-engine-freestanding` with no hosted headers. `NO_HOSTED_INCLUDE`: no hosted header by include scan only (a header, or a `.c` outside that build). `HOSTED_LIBC`: includes stdio, stdlib, time, errno, math or pthread. `LINUX_DRIVER`: includes `nvrm.h`, `m16_native.h` or `omega_gpu_platform_linux.h`. |
 
 Totals over the source tree based on omega-mv main 62d1d0d6 (the 102 rows reviewed on a8ffd2b9 plus 21 rows for the
-files that landed on main after it): 113 files are `CHIP_SPECIFIC` and 10 are `PORTABLE`. By `os_binding`: 13
-`FREESTANDING_PROVEN`, 92 `NO_HOSTED_INCLUDE`, 15 `HOSTED_LIBC`, 3 `LINUX_DRIVER`. The small `PORTABLE` count is the honest
-result: almost everything in `src/omega_gpu_*` launches a Blackwell kernel. Command to recount: section 7.
+files that landed on main after it), plus 5 rows added when the trains joined this table with later work
+(`src/omega_bw_hazard.{c,h}`, omega-mv#554, landed by train r1 #971; `src/omega_gpu_fp8_slots.{c,h}` and
+`src/omega_gpu_fp8_internal.h`, #961, in train r2): 118 files are `CHIP_SPECIFIC` and 10 are `PORTABLE`. By
+`os_binding`: 13 `FREESTANDING_PROVEN`, 95 `NO_HOSTED_INCLUDE`, 17 `HOSTED_LIBC`, 3 `LINUX_DRIVER`. The small `PORTABLE`
+count is the honest result: almost everything in `src/omega_gpu_*` launches a Blackwell kernel. Command to recount:
+section 7.
 
 `make test-runtime-portability` (host only, no compiler, no GPU) checks the table against the tree: every file has a row,
 every row names a real file, a `PORTABLE` row's file includes no Linux or NVRM header and no Blackwell header, and the

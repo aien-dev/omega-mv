@@ -57,6 +57,8 @@ src/omega_blackwell_submit.c	CHIP_SPECIFIC	The vector executor: allocates and su
 src/omega_blackwell_submit.h	CHIP_SPECIFIC	Launch constants and executor interface for GB10; includes the realize and matmul headers.	NO_HOSTED_INCLUDE
 src/omega_bw_em.h	CHIP_SPECIFIC	Private IR emitter helpers for the sm_121 tensor-core generators (scheduling rules proven on the chip).	NO_HOSTED_INCLUDE
 src/omega_bw_em_q.h	CHIP_SPECIFIC	Private emitters for the FP8 QMMA placeholders (sm_121).	NO_HOSTED_INCLUDE
+src/omega_bw_hazard.c	CHIP_SPECIFIC	Static scoreboard hazard checker over encoded sm_121 kernel bytes (RAW, WAR, WAW against the Blackwell write and read barriers); decodes the operand positions the encoder writes. Includes stdlib.h.	HOSTED_LIBC
+src/omega_bw_hazard.h	CHIP_SPECIFIC	Interface of the sm_121 scoreboard hazard checker; includes only stddef.h and stdint.h.	NO_HOSTED_INCLUDE
 src/omega_bw_reconv.h	CHIP_SPECIFIC	Warp reconvergence regions (BSSY, BSYNC) for the Blackwell IR emitters.	NO_HOSTED_INCLUDE
 src/omega_gpu_attention_api.c	CHIP_SPECIFIC	Builds and launches its own sm_121 attention kernels (stall counts as nvcc writes them for sm_121) through the session. In the freestanding closure.	FREESTANDING_PROVEN
 src/omega_gpu_attention_api.h	CHIP_SPECIFIC	Attention API; its kernel type OmegaBlackwellKernel comes from omega_blackwell_matmul.h.	NO_HOSTED_INCLUDE
@@ -82,6 +84,9 @@ src/omega_gpu_fp8_api.h	CHIP_SPECIFIC	FP8 GEMV API; includes omega_blackwell_cod
 src/omega_gpu_fp8gemm_api.c	CHIP_SPECIFIC	Launches the FP8 prefill GEMM through the session.	HOSTED_LIBC
 src/omega_gpu_fp8gemm_api.h	CHIP_SPECIFIC	FP8 GEMM API; includes omega_blackwell_codegen_gemm.h.	NO_HOSTED_INCLUDE
 src/omega_gpu_fp8_pack.c	CHIP_SPECIFIC	Packs FP8 weights into the layout the sm_121 GEMV kernels read; host side.	HOSTED_LIBC
+src/omega_gpu_fp8_internal.h	CHIP_SPECIFIC	Library-internal helpers of omega_gpu_fp8_api.c for the slot pool (GPU-UNCACHED FP8 tensor allocation, CPU views of one expert); includes omega_gpu_fp8_api.h.	NO_HOSTED_INCLUDE
+src/omega_gpu_fp8_slots.c	CHIP_SPECIFIC	Versioned replaceable FP8 expert slots backed by one OmegaGpuFp8Tensor; uses the session's platform SYNC and the grouped FP8 GEMV launch. Includes stdlib.h.	HOSTED_LIBC
+src/omega_gpu_fp8_slots.h	CHIP_SPECIFIC	FP8 expert slot pool API (load, pin, entry, evict, grouped GEMV); includes omega_gpu_fp8_api.h.	NO_HOSTED_INCLUDE
 src/omega_gpu_gdn_api.c	CHIP_SPECIFIC	Resident Gated DeltaNet parameters, GPU-cached tails and states (omega_gpu_mem_cached.h) and the one-launch decode step from the Blackwell generator.	HOSTED_LIBC
 src/omega_gpu_gdn_api.h	CHIP_SPECIFIC	Gated DeltaNet API; includes omega_blackwell_codegen_gdn.h.	NO_HOSTED_INCLUDE
 src/omega_gpu_gemm.c	CHIP_SPECIFIC	Matrix multiply of any shape on the GB10 tensor cores (HMMA.16816 BF16, QMMA.16832 E4M3) through the omega_bw_em emitters.	HOSTED_LIBC
