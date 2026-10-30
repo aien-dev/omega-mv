@@ -1,0 +1,10 @@
+fn gcd_u32 a uint b uint to uint
+x = a
+y = b
+while gt y 0
+t = rem x y
+x = y
+y = t
+end
+ret x
+end
