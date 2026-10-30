@@ -99,15 +99,18 @@ named states and returns success or exactly one named failure. EXPERIMENTAL.
   refused, and nothing is returned to the platform.
 - After the latch, every buffer freed through `omega_gpu_session_free` is **parked**: kept allocated, counted by
   `omega_gpu_session_parked`, never released. Handles stay valid for inspection (`omega_gpu_session_is_parked`).
-- Today there is no way back from a latch except ending the process. Recovery is open work (omega-mv#518).
+- Recovery in the same process is EXPERIMENTAL (section 9.1, omega-mv#518): `omega_gpu_session_recover` closes the device
+  (the Linux reference's RM client close destroys this process's channels, then frees every buffer, parked ones included)
+  and only then lifts the latch. Every handle and command list of the old device is stale afterwards. If the close is
+  refused or reports a driver teardown fault the process stays latched for good and must exit (header).
 
 **Threads.** One process-wide lock (the platform LOCK service, lock id `OMEGA_GPU_SESSION_LOCK_ID`, which is 0). A call
 sequence that touches the device (open, alloc, launch, readback) is done between `omega_gpu_session_lock()` and
 `omega_gpu_session_unlock()`. Threads therefore take turns on the one channel. The Linux reference lock is a plain
-(non-recursive) pthread mutex (`locks[id]`, `src/omega_gpu_platform_linux.c:29` and `:119`), so taking it twice from one thread
-deadlocks. These take the lock themselves and must be called without it: `omega_gpu_session_close`, `omega_gpu_cmdlist_create`,
-`omega_gpu_cmdlist_free`, and every library call of section 9.5 (matmul, elementwise, attention, serving).
-`omega_gpu_session_cancel` may be called from any thread without the lock (header). `omega_gpu_session_is_blocked` reads the latch with an atomic load (`src/omega_gpu_session.c:157`), so it is safe without the lock too.
+(non-recursive) pthread mutex (`locks[id]`, `src/omega_gpu_platform_linux.c:45` and `:141`), so taking it twice from one thread
+deadlocks. These take the lock themselves and must be called without it: `omega_gpu_session_close`, `omega_gpu_session_recover`,
+`omega_gpu_cmdlist_create`, `omega_gpu_cmdlist_free`, and every library call of section 9.5 (matmul, elementwise, attention, serving).
+`omega_gpu_session_cancel` may be called from any thread without the lock (header). `omega_gpu_session_is_blocked` reads the latch with an atomic load (`src/omega_gpu_session.c:173`), so it is safe without the lock too.
 `omega_gpu_session_last_error` returns a pointer into one process-wide text buffer: read it under the lock, before the next call.
 
 ### 3.1 A minimal sequence (sketch)
@@ -270,7 +273,7 @@ STABLE: the staging-buffer type the library APIs use.
 A caller-owned staging buffer that grows to its high-water mark: `mem` (an `OmegaGpuMem`), `cap` (usable bytes), `high_water`
 (largest request so far) and `reserved` (a serving reservation is active, see `omega_gpu_session_scratch_reserve`).
 Zero-initialise it before first use. This is required: `omega_gpu_session_scratch` reads `reserved`, `cap`, `mem.cpu` and
-`high_water` before it writes them (`src/omega_gpu_session.c:290-296`).
+`high_water` before it writes them (`src/omega_gpu_session.c:315-321`).
 
 #### `omega_gpu_session_scratch`
 STABLE: used by every library API.
@@ -304,7 +307,7 @@ STABLE: the launch descriptor; chip-proven by every library.
 One launch: a kernel already resident at `code_va`, argument words for constant bank 0 at 0x380 (buffer addresses, then
 parameters), and the grid.
 
-Argument layout and the checks `omega_gpu_session_launch` makes (`src/omega_gpu_session.c:433-446`):
+Argument layout and the checks `omega_gpu_session_launch` makes (`src/omega_gpu_session.c:524-537`):
 - a 64-bit GPU address takes two words, the low word first, then the high word;
 - `n_args` is 1 to `OMEGA_GPU_SESSION_MAX_ARGS`, `args` is not NULL, and `threads_x`, `grid_x` and `grid_y` are not 0 (a
   `threads_y` of 0 means 1); otherwise the launch is refused with "launch arguments" and nothing runs;
@@ -367,10 +370,11 @@ int omega_gpu_session_is_parked(OmegaGpuBufferHandle h);
 
 ## 8. Not in v0 (so nobody assumes it)
 
-Each line is a gap named in `docs/runtime/ROADMAP.md` section 1 (on branch `runtime/roadmap`, not yet merged); none of it is in the manifest.
+Each line is a gap named in `docs/runtime/ROADMAP.md` section 1 (on branch `runtime/roadmap`, not yet merged); the gaps themselves are not in the manifest.
 - A device query (name, SM count, memory): there is no API call for it.
-- More than one device or channel in a process; sharing the GPU between processes (a second channel failed under load: omega-mv#523).
-- Recovery after a latch (omega-mv#518): a single timeout ends GPU use for the whole process.
+- More than one device in a process; sharing the GPU between processes (a second channel failed under load: omega-mv#523).
+  Extra queues on the one device (`omega_gpu_session_extra_queue`, `omega_gpu_cmdlist_submit_pair`) are EXPERIMENTAL (9.1, 9.3).
+- A STABLE recovery contract: `omega_gpu_session_recover` is EXPERIMENTAL in v0 (section 9.1).
 - Async copy, streams, events, host callbacks (omega-mv#580 is building ordering on command lists).
 - Cached read-write buffers; unified memory.
 - Launches with more than the 32 argument words, or an asynchronous single launch.
@@ -388,7 +392,9 @@ checked there. The reason is why each is not STABLE yet.
 | --- | --- |
 | `omega_gpu_session_alloc_cached` | GPU-cached memory is correct only for write-once, never-polled, GPU-read-only weights; the API cannot enforce that (the caller must). |
 | `omega_gpu_session_scratch_reserve`, `omega_gpu_session_scratch_unreserve` | Serving-daemon feature (no driver call after warm-up); one user. |
-| `omega_gpu_session_cancel` | A cancel after submit cannot stop the chip: it latches the process. Semantics may tighten when recovery (#518) lands. |
+| `omega_gpu_session_cancel` | A cancel after submit cannot stop the chip: it latches the process. Semantics may tighten as recovery matures. |
+| `omega_gpu_session_recover`, `omega_gpu_session_recoveries` | C5 recovery after a latch (#518): new on main after this API was first drafted; its device-close path is one backend's (Linux RM client close) behaviour. |
+| `omega_gpu_session_extra_queue` | Queues 1..3 past the session queue, each with its own 64 KB ring; granted only when the device was opened with `AIEN_OMEGA_GPU_CHANNELS` > i. Work on different queues is not ordered. One backend, one user (the command-list pair). |
 | `omega_gpu_session_set_platform`, `omega_gpu_session_platform`, `omega_gpu_session_submit_prefix_words`, `omega_gpu_session_completion_mode`, `omega_gpu_session_now_ns` | Tied to the platform contract, which has one real backend. |
 | `omega_gpu_host_alloc`, `omega_gpu_host_calloc`, `omega_gpu_host_free` | CPU-only memory from the platform HOST_MEM service; the freestanding build needs them, hosted code can use malloc. |
 | `OmegaGpuSession` | The session's own launch buffers; a caller needs none of its fields. |
@@ -411,7 +417,10 @@ GPU-uncached; polling a word is never claimed as interrupt support; a missing se
 Types: `OmegaGpuCmdListOpts`, `OmegaGpuCmdListStats`, the opaque `OmegaGpuCmdList`. Functions: `omega_gpu_cmdlist_create`
 (takes the lock itself), `omega_gpu_cmdlist_free`, `omega_gpu_cmdlist_reset`, `omega_gpu_cmdlist_count`,
 `omega_gpu_cmdlist_add`, `omega_gpu_cmdlist_mark_independent`, `omega_gpu_cmdlist_submit`, `omega_gpu_cmdlist_is_latched`,
-`omega_gpu_cmdlist_stamps`, `omega_gpu_cmdlist_barrier_name`. Up to `OMEGA_GPU_CMDLIST_MAX_LAUNCHES` (2048) launches per list.
+`omega_gpu_cmdlist_stamps`, `omega_gpu_cmdlist_barrier_name`, `omega_gpu_cmdlist_submit_pair` (list a on the session queue
+and list b on extra queue 1, both submitted before either is waited; caller holds the lock), `omega_gpu_cmdlist_wait_for`
+(C4 event: the next launch added waits on the chip for a launch of the other list of the pair). Up to
+`OMEGA_GPU_CMDLIST_MAX_LAUNCHES` (4096) launches per list. A list made before `omega_gpu_session_recover` is refused after it.
 
 Reason: omega-mv#580 is building pipelined and dependency-ordered execution on this module, so the options, statistics
 and barrier modes will grow. The measured extra cost of each launch in a list is about 30 us with a wait-for-idle barrier
@@ -489,13 +498,14 @@ Types are the manifest's Rust spelling (`*const`, `*mut`, `u32`, ...); the heade
 Not in the manifest; may change or vanish without notice.
 - `omega_gpu_session_set_error` (library code names its failure stage through it).
 - `omega_gpu_session_on_close` (lets a library drop its resident kernels before the session closes; up to 8 hooks).
+- `omega_gpu_session_latch_uncertain`, `omega_gpu_session_note_module_latch` (a module such as the command lists tells the session it latched).
 - `omega_gpu_engine_test_reset_block`, `omega_gpu_engine_test_force_block`, `omega_gpu_engine_test_set_clock`: TEST ONLY. A blocked process must stay blocked because the GPU may still be running.
 - Everything else under `src/omega_gpu_*` and `src/omega_blackwell_*` not named above (kernel builder, encoder, per-model APIs, launch helpers).
 
 ## 11. Checking this file
 
 `make test-runtime-api` runs `tools/runtime_api_check.sh` on the real headers and then `tools/runtime_api_negative.sh`, which breaks a
-copy of the headers (or this file) in nine ways and requires the check to fail each time: a removed function, a missing version macro, a
+copy of the headers (or this file) in ten ways and requires the check to fail each time: a removed function (twice: a STABLE one and the EXPERIMENTAL `omega_gpu_session_recover`), a missing version macro, a
 changed function signature, a changed struct, a changed constant, a version line in this file that disagrees with the macro, a quoted signature in this file that no header has, a quoted
 signature that only appears inside a longer one (`int32_t` inside `uint32_t`), and a STABLE entry with no section here. It needs no GPU and no physics checkout. It checks: every manifest function against its header
 with exact types; sizes, offsets and constants against a compiled probe; the version macros against the manifest and this file;

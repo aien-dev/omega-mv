@@ -33,5 +33,6 @@ control version-doc-mismatch "must contain the line \"Omega Runtime API version:
 control stable-without-doc   "STABLE entry omega_gpu_session_launch has no"                    API.md 's/^#### `omega_gpu_session_launch`/#### launch/'
 control wrong-quoted-signature "signature quoted in" API.md 's/^uint32_t omega_gpu_session_open_count(void);/uint64_t omega_gpu_session_open_count(void);/'
 control signature-inside-another "signature quoted in" API.md 's/^uint32_t omega_gpu_session_open_count(void);/int32_t omega_gpu_session_open_count(void);/'
+control removed-recover      "header disagrees with manifest: fn omega_gpu_session_recover"     omega_gpu_session.h '/^int omega_gpu_session_recover(void);/d'
 [ $bad = 0 ] && { echo "RESULT: PASS (every negative control was caught)"; exit 0; }
 echo "RESULT: FAIL (a negative control was not caught)"; exit 1
