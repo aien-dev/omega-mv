@@ -54,3 +54,8 @@ s1-bad-fmt-compile emit seed/omc/om2/s1/bad-fmt-compile.om - err:3:5 5
 s1-diag-newpt emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16
 s1-diag-viewpt emit seed/omc/om2/s1/diag-viewpt.om - file:seed/omc/om2/s1/diag-viewpt.err 16
 s1-bad-fmt-crtext emit seed/omc/om2/s1/bad-fmt-crtext.om - err:4:6 6
+# a name of 9..63 bytes is never a keyword: only its first 8 bytes are packed (continue_x is not continue)
+s1-kw-long-names run seed/omc/om2/s1/kw-long-names.om - - - 0
+s1-kw-long-om1 run seed/omc/om2/s1/kw-long-om1.om - - - 0
+s1-bad-kw-name refuse seed/omc/om2/s1/bad-kw-name.om 16
+s1-bad-kw-field refuse seed/omc/om2/s1/bad-kw-field.om 13

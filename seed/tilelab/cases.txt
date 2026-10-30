@@ -1,0 +1,17 @@
+# one argument vector per line; seed/tilelab/gate.sh runs each and compares with expected.txt
+1 1024 1024 1024
+1 4096 4096 4096
+1 2048 8192 2048
+1 100 100 100
+1 8192 8192 8192
+1 64 64 64 20
+1 0 5 5
+1 16385 8 8
+1 x 8 8
+1 8 8
+2
+2 0
+2 1
+2 2
+2 3
+9

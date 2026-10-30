@@ -1,0 +1,25 @@
+note S1: a function name of 9..63 bytes whose first 8 bytes spell an 8-byte keyword (continue, truncate)
+note is a name, not that keyword: defined, called in a value, called as a statement, two of them told
+note apart in full. Exit 0, else the failing check's number.
+om2
+fn continue_x a long to long
+ret add a 1
+end
+fn continue_y a long to long
+ret add a 2
+end
+fn truncate_it to void
+ret
+end
+fn main to int
+x = continue_x 3
+if ne x 4
+ret 1
+end
+y = continue_y 10
+if ne y 12
+ret 2
+end
+truncate_it
+ret 0
+end
