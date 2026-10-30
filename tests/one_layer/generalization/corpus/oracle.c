@@ -87,7 +87,17 @@ static u task(const char *t, const u *a)
 
 int main(int argc, char **argv)
 {
-    if (argc != 2) { fprintf(stderr, "usage: oracle <task_id> < inputs > expected\n"); return 2; }
+    /* oracle --bound <task_id>: the gabs inputs --max option for generated inputs, `<arg>:<max>`, for the tasks
+     * that loop a[0] times (their 32-bit n would run for hours); empty for every other task */
+    if (argc == 3 && !strcmp(argv[1], "--bound")) {
+        static const char *const loops[] = {"even_digsums", "sum_clamped", "sum_dists", "sum_sat"};
+        u z[8] = {0};
+        (void)task(argv[2], z); /* exits 2 on an unknown task */
+        for (size_t i = 0; i < sizeof loops / sizeof loops[0]; i++)
+            if (!strcmp(argv[2], loops[i])) printf("0:4096\n");
+        return 0;
+    }
+    if (argc != 2) { fprintf(stderr, "usage: oracle <task_id> < inputs > expected | oracle --bound <task_id>\n"); return 2; }
     char line[512];
     while (fgets(line, sizeof line, stdin)) {
         u a[8] = {0};

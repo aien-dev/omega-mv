@@ -5,11 +5,14 @@
  *   gabs split <solution.omegese> <out prefix>
  *       splits a program into its functions: writes <prefix>.<k>.omegese (k = 0, 1, ... in program order) and
  *       prints one line per function "fn <k> <name> <calls> <nlines>", <calls> = the earlier functions its body
- *       names, comma-separated, or "-". Refuses blank lines, tabs, CR and text outside a function.
+ *       names, comma-separated, or "-". Refuses blank lines, tabs, CR and text outside a function. Block depth
+ *       follows the Omegese statement words (tools/omegese/omegese.c): `if`, `while` and `for` open a block,
+ *       `end` closes one; a line starting with any other Omegese keyword that is not a known statement word
+ *       (else break ret trap put free) is refused, so a new block keyword cannot silently misplace a boundary.
  *   gabs canon <in.json> <out.json>
  *       the omegese op list with every function name replaced by fn<k>_ (k in program order) in the "name"
  *       and "func" keys (RECORD_SCHEMA.md section 6)
- *   gabs inputs <count> <type>...
+ *   gabs inputs <count> [--max <arg>:<max>] <type>...
  *       <count> deterministic input lines for parameters of these IR types (bool u8 .. i64): boundary values
  *       first, then a fixed 64-bit LCG mixed over each type's range (small values weighted in)
  *   gabs run <ola_runner> <scratch dir> <ir file> <entry> <ret> <inputs> <expected|-> [<param type>...]
@@ -41,6 +44,16 @@ static void die(const char *m, const char *a)
 {
     fprintf(stderr, "gabs: %s%s%s\n", m, a ? " " : "", a ? a : "");
     exit(2);
+}
+
+/* fopen(path, "wb") with an explicit creation mode 0644 instead of 0666 & umask */
+static FILE *wcreate(const char *path)
+{
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    if (fd < 0) return NULL;
+    FILE *f = fdopen(fd, "wb");
+    if (!f) close(fd);
+    return f;
 }
 
 static char *slurp(const char *p, size_t *n)
@@ -97,15 +110,26 @@ static int split(const char *in, const char *prefix)
         } else if (!open) die("text outside a function in", in);
         /* a function ends at the `end` that closes it: track block depth */
         if (!strncmp(l, "fn ", 3)) { open = 1; continue; }
-        if (!strncmp(l, "if ", 3) || !strncmp(l, "while ", 6) || !strncmp(l, "for ", 4)) open++;
-        else if (!strcmp(l, "end")) open--;
+        char w0[16] = "";
+        if (sscanf(l, "%15s", w0) != 1) die("line without a word in", in);
+        if (!strcmp(w0, "if") || !strcmp(w0, "while") || !strcmp(w0, "for")) open++;
+        else if (!strcmp(w0, "end")) {
+            if (strcmp(l, "end")) die("text after end in", in);
+            open--;
+        } else if (!strcmp(w0, "else") || !strcmp(w0, "break") || !strcmp(w0, "ret") || !strcmp(w0, "trap") ||
+                   !strcmp(w0, "put") || !strcmp(w0, "free")) {
+        } else {
+            static const char *const other_kw[] = {"to", "void", "true", "false", "bound", "="};
+            for (size_t i = 0; i < sizeof other_kw / sizeof other_kw[0]; i++)
+                if (!strcmp(w0, other_kw[i])) die("unknown statement opener (not a split block word) in", in);
+        }
     }
     if (open) die("unclosed function in", in);
     for (int k = 0; k < nf; k++) {
         int a = start[k], b = k + 1 < nf ? start[k + 1] : nl;
         char path[4096];
         snprintf(path, sizeof path, "%s.%d.omegese", prefix, k);
-        FILE *f = fopen(path, "wb");
+        FILE *f = wcreate(path);
         if (!f) die("cannot write", path);
         char calls[1024] = "";
         for (int i = a; i < b; i++) {
@@ -150,7 +174,7 @@ static int canon(const char *in, const char *out)
         nf++;
     }
     if (!nf) die("no function in", in);
-    FILE *f = fopen(out, "wb");
+    FILE *f = wcreate(out);
     if (!f) die("cannot write", out);
     for (char *p = s; *p;) {
         const char *keys[2] = {"\"name\": \"", "\"func\": \""};
@@ -232,7 +256,8 @@ static uint64_t pick(int k, uint64_t r, int line)
         return b[line];
     }
     switch (r % 4) {
-    case 0: case 1: { int64_t v = small[(r >> 8) % 14]; if (ksigned(k) && (r >> 20) & 1) v = -v; return at_width((uint64_t)v, k); }
+    case 0: { int64_t v = small[(r >> 8) % 14]; if (ksigned(k) && (r >> 20) & 1) v = -v; return at_width((uint64_t)v, k); }
+    case 1: { int64_t v = (int64_t)((r >> 8) % 512); if (ksigned(k) && (r >> 20) & 1) v = -v; return at_width((uint64_t)v, k); } /* dense 0..511: every 8- and 9-bit edge */
     case 2: return at_width(r >> 11, k);
     default: { uint64_t v = (r >> 13) % 100000; if (ksigned(k) && (r >> 40) & 1) v = (uint64_t)-(int64_t)v; return at_width(v, k); }
     }
@@ -241,14 +266,29 @@ static uint64_t pick(int k, uint64_t r, int line)
 
 static int inputs(int argc, char **argv)
 {
+    /* --max <arg>:<max> bounds argument <arg> to 0..<max> (value mod max+1), for tasks that loop that many times */
+    int marg = -1;
+    uint64_t mmax = 0;
+    if (argc >= 3 && !strcmp(argv[1], "--max")) {
+        char *e;
+        long a = strtol(argv[2], &e, 10);
+        if (*e != ':' || a < 0 || a > 5) die("--max wants <arg 0..5>:<max>", argv[2]);
+        unsigned long long m = strtoull(e + 1, &e, 10);
+        if (*e || m < 1 || m > 1000000) die("--max wants <arg 0..5>:<max 1..1000000>", argv[2]);
+        marg = (int)a, mmax = m;
+        argv[2] = argv[0], argc -= 2, argv += 2;
+    }
     int count = atoi(argv[0]), np = argc - 1, ks[6];
-    if (count < 1 || count > 4096 || np < 1 || np > 6) die("usage: gabs inputs <count 1..4096> <type 1..6>...", NULL);
+    if (count < 1 || count > 4096 || np < 1 || np > 6) die("usage: gabs inputs <count 1..4096> [--max <arg>:<max>] <type 1..6>...", NULL);
+    if (marg >= np) die("--max names an argument past the last type", NULL);
     for (int i = 0; i < np; i++) if ((ks[i] = kind_of(argv[1 + i])) < 0) die("unknown type", argv[1 + i]);
+    if (marg >= 0 && (ks[marg] == K_BOOL || ksigned(ks[marg]))) die("--max applies to an unsigned argument", NULL);
     uint64_t x = 0x9e3779b97f4a7c15ull;
     for (int l = 0; l < count; l++) {
         for (int i = 0; i < np; i++) {
             x = x * 6364136223846793005ull + 1442695040888963407ull;
             uint64_t v = pick(ks[i], x ^ (x >> 29), l < 4 ? (l + i) % 4 : l);
+            if (i == marg) v %= mmax + 1;
             if (i) putchar(' ');
             put_val(stdout, v, ks[i]);
         }
@@ -403,6 +443,6 @@ int main(int argc, char **argv)
     if (argc == 4 && !strcmp(argv[1], "canon")) return canon(argv[2], argv[3]);
     if (argc >= 4 && !strcmp(argv[1], "inputs")) return inputs(argc - 2, argv + 2);
     if (argc >= 2 && !strcmp(argv[1], "run")) return run(argc - 2, argv + 2);
-    fprintf(stderr, "usage: gabs split <prog> <prefix> | canon <in.json> <out.json> | inputs <count> <type>... | run ...\n");
+    fprintf(stderr, "usage: gabs split <prog> <prefix> | canon <in.json> <out.json> | inputs <count> [--max <arg>:<max>] <type>... | run ...\n");
     return 2;
 }

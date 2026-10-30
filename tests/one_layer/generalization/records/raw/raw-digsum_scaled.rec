@@ -8,7 +8,7 @@ params u32 u32
 ret u32
 signature fn digsum_scaled n uint k uint to uint
 desc decimal digit sum of n times k, with a digsum helper
-receipt 32f6c82d5371235978db834affdee63a08ab03c3d7daa472ee041b45bfda889a
+receipt 296dae8c4ef50f1360076ba82dac7edbc92dd1ce293b2c51067f01fa76babe5e
 validity verified
 ancestry digsum_scaled 503e83d26b00d6dded3bd847a9bcab94b56cedb0fae5ee5bb861e9101740fc79
 source tests/one_layer/generalization/corpus/META 179c34c50f6d843d41b10aabdbd69c425248a3107e107c64630836199e15ab0b

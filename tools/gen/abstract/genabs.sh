@@ -13,9 +13,9 @@ ga_init() {
   GA_B="$1" GA_ROOT="$2" GA_W="$3" GA_ERR=""
   GA_OMEGESE="$GA_B/omegese/omegese" GA_EMIT="$GA_B/omega_emit/omega_emit" GA_X445="$GA_B/omega_emit/x445"
   GA_CHK="$GA_B/checker2/checker2" GA_RUNNER="$GA_B/one_layer/ola_runner" GA_GABS="$GA_B/gen_abstract/gabs"
-  GA_FAMSIG="${GEN_FAMSIG:-$GA_B/gen_abstract/famsig}"
+  GA_ORACLE="$GA_B/gen_abstract/oracle" GA_FAMSIG="${GEN_FAMSIG:-$GA_B/gen_abstract/famsig}"
   local t
-  for t in "$GA_OMEGESE" "$GA_EMIT" "$GA_X445" "$GA_CHK" "$GA_RUNNER" "$GA_GABS" "$GA_FAMSIG"; do
+  for t in "$GA_OMEGESE" "$GA_EMIT" "$GA_X445" "$GA_CHK" "$GA_RUNNER" "$GA_GABS" "$GA_ORACLE" "$GA_FAMSIG"; do
     [ -x "$t" ] || { echo "genabs: missing tool $t (make omegese omega_emit checker2 ola gen-abstract)" >&2; return 2; }
   done
   mkdir -p "$GA_W/scratch"
@@ -23,10 +23,11 @@ ga_init() {
 ga_sha() { sha256sum "$1" | cut -c1-64; }
 ga_shas() { printf '%s' "$1" | sha256sum | cut -c1-64; }
 
-# Tool digests a receipt carries: the extractor's own sources (a change to them changes every receipt).
+# Tool digests a receipt carries: the sources of the extractor, the verifier, the probe runner and the record
+# validator (a change to any of them changes every receipt).
 ga_tool_lines() {
   local f
-  for f in extract genabs.sh gabs.c; do printf 'tool tools/gen/abstract/%s %s\n' "$f" "$(ga_sha "$GA_HERE/$f")"; done
+  for f in extract verify probe genabs.sh gabs.c recheck.c; do printf 'tool tools/gen/abstract/%s %s\n' "$f" "$(ga_sha "$GA_HERE/$f")"; done
 }
 
 # ga_chain <prog.omegese> <base> -- reader chain: omegese emit, omega_emit emit, checker2 check.
@@ -155,18 +156,26 @@ ga_abs_checks() {
   return 0
 }
 
-# ga_raw_checks <id> <task dir> <work prefix> -- reader chain, x445 check against the requirement, and the
-# harness runner on the task's public tests. Receipt text in GA_RCPT.
+# ga_raw_checks <id> <task dir> <work prefix> -- reader chain, x445 check against the requirement, the harness
+# runner on the task's public tests, and the harness runner against the independent C oracle (corpus/oracle.c)
+# on GA_PROPERTY_N generated inputs (`gabs inputs`, the loop count bounded by `oracle --bound`), so a solution
+# that only fits the hand-picked public inputs is not verified. Receipt text in GA_RCPT.
 ga_raw_checks() {
-  local id="$1" d="$2" w="$3" out
+  local id="$1" d="$2" w="$3" out t
   GA_RCPT="gen-receipt 1"$'\n'"record $id"$'\n'"$(ga_tool_lines)"$'\n'
+  GA_RCPT+="oracle $GA_CORPUS/oracle.c $(ga_sha "$GA_ROOT/$GA_CORPUS/oracle.c")"$'\n'
   ga_chain "$d/solution.omegese" "$w.s" || return 1
   GA_RCPT+="solution_ir $(ga_sha "$w.s.ir")"$'\n'"checker2 ACCEPT"$'\n'
   out="$("$GA_X445" check oscir "$w.s.ir" "$d/requirement" 2>&1)" || { GA_ERR="x445 check: $out"; return 1; }
   GA_RCPT+="x445 check oscir $out"$'\n'
-  local p ret
+  local p ret entry bound
   p="$(sed -n 's/^params//p' "$d/requirement")" ret="$(sed -n 's/^ret //p' "$d/requirement")"
-  ga_run "tests" "$w.s.ir" "$(sed -n 's/^entry //p' "$d/requirement")" "$ret" "$d/inputs" "$d/expected" $p || return 1
+  entry="$(sed -n 's/^entry //p' "$d/requirement")" t="$(basename "$d")"
+  ga_run "tests" "$w.s.ir" "$entry" "$ret" "$d/inputs" "$d/expected" $p || return 1
+  bound="$("$GA_ORACLE" --bound "$t")" || { GA_ERR="oracle has no task $t"; return 1; }
+  "$GA_GABS" inputs "$GA_PROPERTY_N" ${bound:+--max "$bound"} $p > "$w.oin" || { GA_ERR="gabs inputs failed"; return 1; }
+  "$GA_ORACLE" "$t" < "$w.oin" > "$w.oexp" || { GA_ERR="oracle failed on the generated inputs"; return 1; }
+  ga_run "oracle${bound:+ bound=$bound}" "$w.s.ir" "$entry" "$ret" "$w.oin" "$w.oexp" $p || return 1
   return 0
 }
 
@@ -174,6 +183,9 @@ ga_raw_checks() {
 # the last). Writes $GA_W/scan (sorted):
 #   S <task> <split corpus|probe> <solution sha256> <solution fingerprint>
 #   H <task> <k> <name> <calls|-> <helper fingerprint|-> <helper file>   (fingerprint "-" for a non-leaf helper)
+# "split" here is the record meaning (RECORD_SCHEMA.md section 2 row 4): probe when the task is named in
+# corpus/PROBES. It is not the FAMSIG meaning of the `split` column of corpus/META, where every corpus task,
+# probe or not, is `corpus` (the side of the dev/corpus family rule).
 ga_scan() {
   local root="$GA_ROOT/$GA_CORPUS" t d split fns line k name calls n fp
   : > "$GA_W/scan.u"

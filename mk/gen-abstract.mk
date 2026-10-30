@@ -14,9 +14,9 @@ GENABS_DIR = $(OUT_DIR)/gen_abstract
 GENABS_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc
 GENABS_FAMSIG_COMMIT = 7eb8534c42304505640013f64753d9c9db40dcf3
 
-$(GENABS_DIR)/recheck: tools/gen/abstract/recheck.c src/sha256.c src/sha256.h
+$(GENABS_DIR)/recheck: tools/gen/abstract/recheck.c src/omega_om_units.c src/sha256.h
 	@mkdir -p $(GENABS_DIR)
-	$(CC) $(GENABS_CFLAGS) -o $@ tools/gen/abstract/recheck.c src/sha256.c
+	$(CC) $(GENABS_CFLAGS) -o $@ tools/gen/abstract/recheck.c src/omega_om_units.c
 
 $(GENABS_DIR)/gabs: tools/gen/abstract/gabs.c
 	@mkdir -p $(GENABS_DIR)
@@ -26,7 +26,8 @@ $(GENABS_DIR)/oracle: tests/one_layer/generalization/corpus/oracle.c
 	@mkdir -p $(GENABS_DIR)
 	$(CC) $(GENABS_CFLAGS) -o $@ tests/one_layer/generalization/corpus/oracle.c
 
-$(GENABS_DIR)/famsig: src/sha256.c src/sha256.h mk/gen-abstract.mk
+$(GENABS_DIR)/famsig: src/omega_om_units.c src/sha256.h mk/gen-abstract.mk \
+  $(wildcard tools/gen/protocol/famsig.c tools/gen/protocol/famsig_lib.h)
 	@mkdir -p $(GENABS_DIR)/famsig-src/tools/gen/protocol
 	@if [ -f tools/gen/protocol/famsig.c ]; then \
 	  cp tools/gen/protocol/famsig.c tools/gen/protocol/famsig_lib.h $(GENABS_DIR)/famsig-src/tools/gen/protocol/; \
@@ -34,7 +35,7 @@ $(GENABS_DIR)/famsig: src/sha256.c src/sha256.h mk/gen-abstract.mk
 	  git show $(GENABS_FAMSIG_COMMIT):tools/gen/protocol/famsig.c > $(GENABS_DIR)/famsig-src/tools/gen/protocol/famsig.c && \
 	  git show $(GENABS_FAMSIG_COMMIT):tools/gen/protocol/famsig_lib.h > $(GENABS_DIR)/famsig-src/tools/gen/protocol/famsig_lib.h; \
 	fi
-	$(CC) -std=gnu11 -Wall -Wextra -Werror -O2 -Isrc -o $@ $(GENABS_DIR)/famsig-src/tools/gen/protocol/famsig.c src/sha256.c
+	$(CC) -std=gnu11 -Wall -Wextra -Werror -O2 -Isrc -o $@ $(GENABS_DIR)/famsig-src/tools/gen/protocol/famsig.c src/omega_om_units.c
 
 gen-abstract: $(GENABS_DIR)/recheck $(GENABS_DIR)/gabs $(GENABS_DIR)/oracle $(GENABS_DIR)/famsig
 

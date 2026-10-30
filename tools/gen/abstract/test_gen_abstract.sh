@@ -93,13 +93,30 @@ done
 [ -z "$cbad" ] && ok "corpus: every task has its files, prompt bytes, >= 8 inputs, and expected == C oracle" || bad "corpus:$cbad"
 sed '1s/^\(.*\)$/9999999/' "$CO/tasks/clamp_sum/inputs" | "$B/gen_abstract/oracle" clamp_sum | cmp -s - "$CO/tasks/clamp_sum/expected" \
   && bad "oracle negative control: a changed input still matched" || ok "  negative control: one changed input changes the oracle output"
+for t in even_digsums sum_clamped sum_dists sum_sat; do
+  [ "$("$B/gen_abstract/oracle" --bound "$t")" = 0:4096 ] || cbad+=" $t/bound"
+done
+[ -z "$cbad" ] && [ -z "$("$B/gen_abstract/oracle" --bound clamp_sum)" ] && ! "$B/gen_abstract/oracle" --bound no_such_task > /dev/null 2>&1 \
+  && ok "oracle --bound: 0:4096 for the four loop-over-n tasks, empty for others, refused for an unknown task" || bad "oracle --bound:$cbad"
+"$B/gen_abstract/gabs" inputs 256 --max 0:4096 u32 u32 | awk '$1 > 4096 { f = 1 } END { exit f }' \
+  && "$B/gen_abstract/gabs" inputs 256 u32 u32 | awk '$1 > 4096 { f = 1 } END { exit !f }' \
+  && ok "gabs inputs --max 0:4096 bounds argument 0 (without --max some values exceed 4096)" || bad "gabs inputs --max does not bound argument 0"
+printf 'fn f a uint to uint\nbound a\nret a\nend\n' > "$T/kw.omegese"
+"$B/gen_abstract/gabs" split "$T/kw.omegese" "$T/kw" > /dev/null 2>&1 && bad "gabs split accepted a line opened by the keyword bound" \
+  || ok "  negative control: gabs split refuses a line opened by an Omegese keyword it does not track (bound)"
 if [ -f "$ROOT/tests/one_layer/generalization/dev/META" ]; then cp "$ROOT/tests/one_layer/generalization/dev/META" "$T/devMETA"
 else git -C "$ROOT" show 7eb8534c42304505640013f64753d9c9db40dcf3:tests/one_layer/generalization/dev/META > "$T/devMETA"; fi
 FS="$B/gen_abstract/famsig"
 FC=7eb8534c42304505640013f64753d9c9db40dcf3
-[ "$(git -C "$ROOT" show "$FC:tests/one_layer/generalization/families/FAMSIG_V1.md" | sha256sum | cut -c1-64)" = dee5b30d9aebfc96b3b9e3418ca3089ab7be2f0f5e02cc4f6cbebe3601db1e76 ] \
-  && cmp -s "$B/gen_abstract/famsig-src/tools/gen/protocol/famsig.c" <(git -C "$ROOT" show "$FC:tools/gen/protocol/famsig.c") \
-  && ok "famsig consumed from gen/protocol 7eb8534c (FAMSIG_V1.md sha256 dee5b30d..., famsig.c as at that commit)" || bad "famsig pin: FAMSIG_V1.md or famsig.c is not the 7eb8534c one"
+if [ -f "$ROOT/tools/gen/protocol/famsig.c" ]; then
+  cmp -s "$B/gen_abstract/famsig-src/tools/gen/protocol/famsig.c" "$ROOT/tools/gen/protocol/famsig.c" \
+    && cmp -s "$B/gen_abstract/famsig-src/tools/gen/protocol/famsig_lib.h" "$ROOT/tools/gen/protocol/famsig_lib.h" \
+    && ok "famsig built from the in-tree tools/gen/protocol (GEN-1 merged)" || bad "famsig-src is not the in-tree tools/gen/protocol source (make gen-abstract)"
+else
+  [ "$(git -C "$ROOT" show "$FC:tests/one_layer/generalization/families/FAMSIG_V1.md" | sha256sum | cut -c1-64)" = dee5b30d9aebfc96b3b9e3418ca3089ab7be2f0f5e02cc4f6cbebe3601db1e76 ] \
+    && cmp -s "$B/gen_abstract/famsig-src/tools/gen/protocol/famsig.c" <(git -C "$ROOT" show "$FC:tools/gen/protocol/famsig.c") \
+    && ok "famsig consumed from gen/protocol 7eb8534c (FAMSIG_V1.md sha256 dee5b30d..., famsig.c as at that commit)" || bad "famsig pin: FAMSIG_V1.md or famsig.c is not the 7eb8534c one"
+fi
 "$FS" rule "$T/devMETA" "$CO/META" > "$T/rule.out" 2>&1 && tail -n 1 "$T/rule.out" | grep -qx 'RULE PASS' \
   && ok "famsig rule dev/META corpus/META: RULE PASS, R1-R7 incl. coarse R6 ($(grep -c . "$CO/META") META lines, $(sed -n 's/^split corpus .*families=//p' "$T/rule.out") corpus families)" \
   || bad "famsig rule: $(tail -n 2 "$T/rule.out")"
@@ -155,9 +172,12 @@ done
 # dpool <prefix file>: abstraction MANIFEST lines with at least one ancestry task outside the prefix
 dpool() { grep ' abstraction/' "$RS/MANIFEST" | while read -r h f; do
   if sed -n '/^body$/q; s/^ancestry \([^ ]*\) .*/\1/p' "$RS/$f" | grep -qvxF -f "$1"; then echo "$h  $f"; fi; done; }
-cmp -s <(grep ' raw/' "$RS/MANIFEST" | grep -vF -f <(sed 's|.*|raw/raw-&.rec|' "$RS/PREFIX")) "$RS/C.MANIFEST" \
-  && [ "$(wc -l < "$RS/C.MANIFEST")" = 35 ] \
-  && ok "C.MANIFEST: the 35 raw records outside the prefix, MANIFEST lines (sha256 $(sha256sum < "$RS/C.MANIFEST" | cut -c1-16)...)" || bad "C.MANIFEST is not MANIFEST raw lines minus the prefix"
+probes="$(grep -v '^#' "$CO/PROBES" | cut -d' ' -f1 | sort -u | sed 's|.*|raw/raw-&.rec|')"
+cmp -s <(grep ' raw/' "$RS/MANIFEST" | grep -vF -f <(sed 's|.*|raw/raw-&.rec|' "$RS/PREFIX") | grep -vF -f <(printf '%s\n' "$probes")) "$RS/C.MANIFEST" \
+  && [ "$(wc -l < "$RS/C.MANIFEST")" = 23 ] \
+  && ok "C.MANIFEST: the 23 raw records of extraction tasks outside the prefix, MANIFEST lines (sha256 $(sha256sum < "$RS/C.MANIFEST" | cut -c1-16)...)" || bad "C.MANIFEST is not MANIFEST raw lines minus the prefix and the probe tasks"
+! awk '{ print $2 }' "$RS/C.MANIFEST" | (cd "$RS" && xargs grep -l '^split probe$') > /dev/null 2>&1 \
+  && ok "  C.MANIFEST lists no split probe record (genret never indexes one)" || bad "C.MANIFEST lists a split probe record"
 cmp -s <(dpool "$RS/PREFIX") "$RS/D.MANIFEST" \
   && ok "D.MANIFEST: the $(wc -l < "$RS/D.MANIFEST") abstraction records with ancestry outside the prefix (sha256 $(sha256sum < "$RS/D.MANIFEST" | cut -c1-16)...)" || bad "D.MANIFEST is not the abstraction lines minus prefix-only ancestry"
 { cat "$RS/PREFIX"; echo avg_inc; } > "$T/pre+"
@@ -225,6 +245,16 @@ sed '1,/^body$/d; s/^fn clamp /fn clamp_only /' "$CL" > "$T/root/tests/one_layer
 vmut "helper identical to a whole corpus solution" "identical to the whole corpus solution of clamp_only" "$CL" --root "$T/root" --receipts "$RS/receipts"
 mkroot; sed -i 's/^ret clamp add a b 10 100$/ret clamp add a b 10 99/' "$T/root/tests/one_layer/generalization/corpus/tasks/clamp_sum/solution.omegese"
 vmut "stale corpus (an ancestor solution changed)" "stale source digest" "$CL" --root "$T/root" --receipts "$RS/receipts"
+# a planted bug the public inputs cannot see (sat_sum saturating at 200, public inputs are <= 3 or >= 255):
+# the record agrees with its corpus copy, so only the oracle check on generated inputs can tell
+mkroot; SP="$T/root/tests/one_layer/generalization/corpus/tasks/sat_sum/solution.omegese"
+sed -i 's/^if gt x 255$/if gt x 200/' "$SP"; nsha="$(sha256sum < "$SP" | cut -c1-64)"
+sed "s|^\(source tests/one_layer/generalization/corpus/tasks/sat_sum/solution.omegese\) .*|\1 $nsha|; s/^ancestry sat_sum .*/ancestry sat_sum $nsha/; /^body$/,\$ s/^if gt x 255\$/if gt x 200/" "$RS/raw/raw-sat_sum.rec" > "$T/v.rec"
+cmp -s <(sed '1,/^body$/d' "$T/v.rec") "$SP" && ok "  planted sat_sum bug: record body equals the planted solution" || bad "planted sat_sum record body is not the planted solution"
+vmut "planted bug invisible to the public tests (sat_sum saturates at 200)" "oracle check failed" "$T/v.rec" --root "$T/root" --receipts "$RS/receipts"
+bash "$X" --root "$T/root" "$B" "$T/rp" > "$T/rp.out" 2>&1 && bad "extract accepted the corpus with the planted sat_sum bug" \
+  || { grep -q "sat_sum fails its own checks: oracle check failed" "$T/rp.out" && ok "  extract refuses the corpus with the planted sat_sum bug (oracle check)" || bad "extract planted bug: $(tail -n 1 "$T/rp.out")"; }
+sed 's/^validity verified$/validity unverified/' "$RW" > "$T/v.rec"; vmut "raw record marked unverified" "validity is not 'verified'" "$T/v.rec" --receipts "$RS/receipts"
 
 echo "test_gen_abstract: $oks ok, $fails failed"
 [ "$fails" = 0 ] || exit 1

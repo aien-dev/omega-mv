@@ -236,6 +236,27 @@ static int safe_path(const char *p)
     return 1;
 }
 
+/* one byte of a name that safe_path or is_hex64 has already accepted; anything else becomes '_' */
+static int name_byte(int c)
+{
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '/' || c == '-' ? c : '_';
+}
+
+/* out = dir "/" name, the name copied byte by byte through name_byte (the path holds only checked bytes).
+   Returns -1 when it does not fit. */
+static int join_path(char *out, size_t cap, const char *dir, const char *name)
+{
+    int r = snprintf(out, cap, "%s/", dir);
+    if (r < 0 || (size_t)r >= cap) return -1;
+    size_t k = (size_t)r;
+    for (size_t i = 0; name[i]; i++) {
+        if (k + 1 >= cap) return -1;
+        out[k++] = (char)name_byte((unsigned char)name[i]);
+    }
+    out[k] = 0;
+    return 0;
+}
+
 static const char *irname(const char *s)
 {
     static const char *const ir[] = {"bool", "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64"};
@@ -307,11 +328,17 @@ static int check(const char *root, const char *rdir)
     if (strcmp(ent, sig.name)) return fail(entl, "entry differs from the signature's function name", NULL);
     {
         char want[512] = "", one[64];
+        size_t wl = 0;
         for (int k = 0; k < sig.np; k++) {
-            if (sig.plen[k]) { char a[8], s[8]; int l; sscanf(sig.ptype[k], "%7s %7s %d", a, s, &l); snprintf(one, sizeof one, "%s %s %d", a, irname(s), l); }
-            else snprintf(one, sizeof one, "%s", irname(sig.ptype[k]));
-            if (k) strcat(want, " ");
-            strcat(want, one);
+            if (sig.plen[k]) {
+                char a[8], s[8];
+                int l;
+                if (sscanf(sig.ptype[k], "%7s %7s %d", a, s, &l) != 3) return fail(sigl, "array parameter type is not '<view|span> <type> <length>'", NULL);
+                snprintf(one, sizeof one, "%s %s %d", a, irname(s), l);
+            } else snprintf(one, sizeof one, "%s", irname(sig.ptype[k]));
+            int r = snprintf(want + wl, sizeof want - wl, "%s%s", k ? " " : "", one);
+            if (r < 0 || (size_t)r >= sizeof want - wl) return fail(entl + 1, "params line too long", NULL);
+            wl += (size_t)r;
         }
         if (strcmp(pars, want)) return fail(entl + 1, "params differ from the signature's parameter types (requirement spelling)", NULL);
         if (strcmp(rt, strcmp(sig.ret, "void") ? irname(sig.ret) : "void")) return fail(entl + 2, "ret differs from the signature's return type (requirement spelling)", NULL);
@@ -357,8 +384,7 @@ static int check(const char *root, const char *rdir)
         if (ns && strcmp(prevp, p) >= 0) return fail(i + 1, "source not strictly ascending by path (or repeated)", NULL);
         if (root) {
             char full[1024], h[65];
-            snprintf(full, sizeof full, "%s/%s", root, p);
-            if (file_sha(full, h)) return fail(i + 1, "source file %s cannot be read", p);
+            if (join_path(full, sizeof full, root, p) || file_sha(full, h)) return fail(i + 1, "source file %s cannot be read", p);
             if (strcmp(h, sp + 1)) return fail(i + 1, "stale source digest for %s", p);
         }
         snprintf(prevp, sizeof prevp, "%s", p);
@@ -421,8 +447,7 @@ static int check(const char *root, const char *rdir)
     /* receipt file */
     if (rdir) {
         char full[1024], h[65];
-        snprintf(full, sizeof full, "%s/%s", rdir, receipt);
-        if (file_sha(full, h)) return fail(11, "receipt file %s is missing", receipt);
+        if (join_path(full, sizeof full, rdir, receipt) || file_sha(full, h)) return fail(11, "receipt file %s is missing", receipt);
         if (strcmp(h, receipt)) return fail(11, "receipt file does not hash to its id (fake or edited receipt)", NULL);
         FILE *f = fopen(full, "rb");
         char l1[64] = "", l2[160] = "", want[160];

@@ -135,7 +135,9 @@ LC_ALL=C sort -k2,2 "$W/manifest" > "$OUT/MANIFEST"
 # ---- 4. the 14-task B prefix and the C/D candidate pools (docs/one_layer/GEN_PROTOCOL_V1.md section 3) ----
 # prefix pick: corpus tasks ordered by family signature (famsig canon, byte order) then task id; walk the
 # families round robin in signature order, taking each family's lowest unused task id, until 14 are taken.
-# C.MANIFEST = the raw records minus the prefix tasks; D.MANIFEST = the abstraction records minus those whose
+# C.MANIFEST = the raw records of the extraction tasks (split corpus) minus the prefix tasks: probe raw records
+# are never eligible for retrieval (RECORD_SCHEMA.md section 2, genret CONTRACT.md section 5), so they are left
+# out of the pool rather than listed and excluded later. D.MANIFEST = the abstraction records minus those whose
 # ancestry lies entirely within the prefix. Both are MANIFEST lines (genret manifest format, same directory).
 grep -v '^#' "$CR/META" | tail -n +2 | while read -r t _ _ _ _ _ _ _ s; do
   echo "$("$GA_FAMSIG" canon "$s") $t"
@@ -145,7 +147,10 @@ awk -v want=14 '{ if (!($1 in n)) fam[nf++] = $1; id[$1, n[$1]++] = $2 }
           for (f = 0; f < nf && got < want; f++) if (r < n[fam[f]]) { print id[fam[f], r]; got++; more = 1 }
           if (!more) break } }' "$W/famorder" > "$OUT/PREFIX"
 [ "$(wc -l < "$OUT/PREFIX")" = 14 ] || die "fewer than 14 corpus tasks for the prefix"
-awk 'NR == FNR { p["raw/raw-" $1 ".rec"] = 1; next } $2 ~ /^raw\// && !($2 in p)' "$OUT/PREFIX" "$OUT/MANIFEST" > "$OUT/C.MANIFEST"
+awk 'NR == FNR { p["raw/raw-" $1 ".rec"] = 1; next } $2 ~ /^raw\// && !($2 in p)' "$OUT/PREFIX" "$OUT/MANIFEST" |
+  while read -r h f; do
+    if [ "$(sed -n '/^body$/q; s/^split //p' "$OUT/$f")" = corpus ]; then echo "$h  $f"; fi
+  done > "$OUT/C.MANIFEST"
 while read -r h f; do
   case "$f" in abstraction/*) ;; *) continue;; esac
   outside="$(sed -n '/^body$/q; s/^ancestry \([^ ]*\) .*/\1/p' "$OUT/$f" | grep -vxF -f "$OUT/PREFIX" || true)"

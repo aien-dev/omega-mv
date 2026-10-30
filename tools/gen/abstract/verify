@@ -6,8 +6,10 @@
 # Receipts are read from --receipts, else from receipts/ next to the record's raw/ or abstraction/ directory.
 # The first failing check is the reason:
 #   1  recheck --root --receipts: the schema, every source digest, the receipt file exists and hashes to its id
+#   2  the record says `validity verified`
 #   raw: the task exists, split and family agree with PROBES and META, params/ret/desc/body are the task's own,
-#        then the reader chain, x445 check and the harness runner on the task's public tests
+#        then the reader chain, x445 check, the harness runner on the task's public tests, and the harness runner
+#        against the C oracle (corpus/oracle.c) on generated inputs
 #   abstraction: the body passes the reader chain (invalid IR), its canonical fingerprint is the stated one,
 #        every ancestry task is an extraction task with that solution digest and contains this helper, the
 #        helper occurs in >= 2 of them (single source), it equals no whole corpus solution, the differs lines
@@ -51,6 +53,7 @@ out="$("$B/gen_abstract/recheck" --root "$ROOT" --receipts "$RD" "$REC" 2>&1)" |
 hdr() { sed '/^body$/q' "$REC" | sed -n "s/^$1 //p"; }
 sed '1,/^body$/d' "$REC" > "$W/body.omegese"
 KIND="$(hdr kind)" RCPT_ID="$(hdr receipt)"
+[ "$(hdr validity)" = verified ] || blocked "validity is not 'verified' (genret indexes only verified records)"
 
 if [ "$KIND" = raw ]; then
   t="${ID#raw-}" d="$CR/tasks/${ID#raw-}"
