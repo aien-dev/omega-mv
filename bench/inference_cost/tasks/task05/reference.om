@@ -1,0 +1,23 @@
+fn isqrt_u32 x uint to uint
+if eq x 0
+ret 0
+end
+lx = ulong x
+lo = ulong 1
+hi = ulong x
+if gt hi 65536
+hi = ulong 65536
+end
+ans = ulong 1
+while le lo hi
+mid = div (add lo hi) 2
+sq = mul mid mid
+if le sq lx
+ans = mid
+lo = add mid 1
+else
+hi = sub mid 1
+end
+end
+ret uint ans
+end
