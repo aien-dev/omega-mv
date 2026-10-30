@@ -76,6 +76,8 @@ jobs:
       # tests/dagsim/sha256_host.c (Makefile DS_SHA_SRC); the AArch64 link
       # through src/omega_om_units.c runs in om-units-arm64.yml.
       - name: test-dagsim (offline DAG evaluator, x86_64)
+        # shell: bash runs `bash -eo pipefail`, so a failing make fails the step through the tee.
+        shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/dagsim"
           make test-dagsim 2>&1 | tee "$RUNNER_TEMP/dagsim/test-dagsim-x86_64.log"
