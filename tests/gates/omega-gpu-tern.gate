@@ -1,0 +1,24 @@
+# tests/gates/omega-gpu-tern.gate
+# Mirrors hosted: pr-smoke.yml smoke job, "KT1 ternary GEMV, host battery and warp simulator (no chip)" with physics-src at physics.lock: make test-gpu-tern, exactly 2 "checks, 0 failed: PASS" lines, no FAIL; host only
+gate: OMEGA-GPU-TERN
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/gpu_tern_test.c
+  - tests/bw_warp_sim_k.h
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["gpu-tern"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine
