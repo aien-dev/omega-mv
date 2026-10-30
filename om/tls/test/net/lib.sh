@@ -4,7 +4,7 @@
 # $out/NAME/bin, exactly as test/tls/run.sh does; accepted only with rc 0 and empty stderr.
 build() {
   mkdir -p "$out/$1"
-  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips; do cp "$tls/$u.om" "$out/$1/"; done
+  for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips; do cp "$tls/$u.om" "$out/$1/"; done
   cp "$2" "$out/$1/tls.om"; cp "$tls/build.sh" "$out/$1/"
   sh "$out/$1/build.sh" "$omc" "$tls/test/tls/client.om" "$out/$1/bin" 2> "$out/$1.err"
   rc=$?

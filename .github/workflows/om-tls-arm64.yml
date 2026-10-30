@@ -1,9 +1,12 @@
 # om-tls-arm64: independent ARM64 rerun of the om/tls ECDH unit suite (CAVP KAS ECC CDH, Wycheproof,
 # edge cases, mutants), the x509 suite, the om/tls suite (RFC 8448 vectors, DNS unit, DIT probe,
-# interop against openssl s_server and the Python fake server, secret-residue scan in default and
-# approved-only mode, mutants), the hostile-server suite (hostile.py, local only, with its mutants) and
+# interop against openssl s_server, OpenSSL 3.5.4 s_server (X25519MLKEM768) and the Python fake server
+# (kyber-py for ML-KEM-768), secret-residue scan in default, approved-only and hybrid mode, mutants),
+# the ML-KEM/SHA-3 suite, the hostile-server suite (hostile.py, local only, with its mutants) and
 # of the seed/net HTTP/HTTPS check on a GitHub-hosted ubuntu-24.04-arm machine, with the pinned omc
-# (om/units.sh OMC_PIN). Network stages stay NOT_RUN (TLS_NET unset). Logs are uploaded as artifacts.
+# (om/units.sh OMC_PIN). Network stages stay NOT_RUN (TLS_NET unset); TLS_PQ=1 makes a missing
+# post-quantum oracle a FAIL. Logs are uploaded as artifacts. workflow_dispatch with kem_mutant=true
+# flips one ML-KEM ciphertext byte before decapsulation in tls.om: that run must go red.
 # Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
 name: om-tls-arm64
 on:
@@ -11,6 +14,12 @@ on:
     paths: ["om/tls/**", "seed/net/**", "seed/json/**", "seed/out/omc", "om/units.sh", ".github/workflows/om-tls-arm64.yml"]
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      kem_mutant:
+        description: "flip a KEM ciphertext byte before decaps (the run must fail)"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -31,6 +40,29 @@ jobs:
           echo "pin $pin"; echo "got $got"
           [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
           chmod +x seed/out/omc
+      - name: X25519MLKEM768 oracles (OpenSSL 3.5.4, kyber-py)
+        uses: actions/cache@v4
+        with:
+          path: ~/openssl-3.5.4
+          key: openssl-3.5.4-967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99-${{ runner.os }}-${{ runner.arch }}-v1
+      - name: build or reuse OpenSSL 3.5.4, install kyber-py
+        run: |
+          sh om/tls/test/tls/openssl35.sh "$HOME/openssl-3.5.4"
+          python3 -m venv --system-site-packages "$HOME/pqpy"
+          "$HOME/pqpy/bin/pip" install -q --require-hashes -r om/tls/test/tls/pq-requirements.txt
+          "$HOME/pqpy/bin/python" -c 'import kyber_py.ml_kem, cryptography; print("kyber-py ok")'
+          echo "OPENSSL35=$HOME/openssl-3.5.4/bin/openssl" >> "$GITHUB_ENV"
+          echo "FAKESRV_PY=$HOME/pqpy/bin/python" >> "$GITHUB_ENV"
+          echo "TLS_PQ=1" >> "$GITHUB_ENV"
+      - name: apply KEM ciphertext mutant (this run must fail)
+        if: github.event_name == 'workflow_dispatch' && inputs.kem_mutant
+        run: |
+          cp om/tls/tls.om /tmp/tls.om.orig
+          sed -i '/^r = mlkem_decaps part c TLKDK 2400 ct ss$/i put ct 7 uchar xor ulong get ct 7 1' om/tls/tls.om
+          ! cmp -s om/tls/tls.om /tmp/tls.om.orig || { echo "mutation did not apply"; exit 1; }
+          diff /tmp/tls.om.orig om/tls/tls.om || true
+      - name: om/tls ML-KEM and SHA-3 suite
+        run: mkdir -p build && sh om/tls/test/mlkem/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-mlkem.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls ECDH unit suite
         run: mkdir -p build && sh om/tls/test/ecdh/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-ecdh.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls DRBG unit suite
@@ -41,6 +73,8 @@ jobs:
         run: mkdir -p build && sh om/tls/test/integrity/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-integrity.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls x509 suite
         run: mkdir -p build && sh om/tls/test/x509/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-x509.log; test "${PIPESTATUS[0]}" = 0
+      - name: om/tls revocation (rev) suite
+        run: mkdir -p build && sh om/tls/test/rev/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-rev.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls suite
         run: mkdir -p build && sh om/tls/test/tls/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-run.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls hostile-server suite
@@ -54,11 +88,13 @@ jobs:
           name: om-tls-arm64-logs
           path: |
             build/om-tls-run.log
+            build/om-tls-mlkem.log
             build/om-tls-ecdh.log
             build/om-tls-drbg.log
             build/om-tls-fips.log
             build/om-tls-integrity.log
             build/om-tls-x509.log
+            build/om-tls-rev.log
             build/om-tls-hostile.log
             build/net-check.log
             build/tls/tls/*.log

@@ -16,7 +16,8 @@ note residue check reads the process then). No deadline is set by the client: th
 note handshake budget applies. FLAGS is a bit set: 1 = approved-only mode (tls_init flag 4; the
 note APPROVED option of audit/tls-fips-approved), 2 = no x25519 key share in ClientHello1 (tls_init
 note flag 2), so the server must ask for it with a HelloRetryRequest; 4 = mode get also checks that
-note a zero-length tls_read is refused without ending the connection.
+note a zero-length tls_read is refused without ending the connection; 8 = revocation (tls_init flag 8:
+note status_request offered, stapled OCSP checked, must-staple enforced).
 note Exit 0 on success; on a TLS failure exit 10 + code and print "TLSERR <name> detail <n>".
 note Exit 2 for a usage error, 3 for a DNS/connect failure.
 
@@ -382,7 +383,7 @@ end
 
 note TLS name, test options and request; v[6] = request length; 0 or a TLS code
 fn cl_prep cs edit uchar * w edit uchar * v edit ulong * to ulong
-fl = and get v 11 2
+fl = and get v 11 10
 if eq get v 4 103
 fl = or fl 1
 end

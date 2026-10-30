@@ -74,6 +74,18 @@ q openssl req -x509 -new -key other.key -subj /CN=other-root -days 30 -addext ba
 q openssl req -new -key good.key -subj /CN=localhost -addext subjectAltName=DNS:localhost -out stray.csr
 q openssl x509 -req -in stray.csr -CA other.pem -CAkey other.key -CAcreateserial -days 10 -copy_extensions copy -out stray.pem
 cp good.key stray.key
+# revocation: a leaf to revoke, a must-staple leaf (RFC 7633 tlsfeature), and OCSP responses
+# signed by the intermediate (openssl ocsp in responder mode over index.txt, nextUpdate +1 day)
+cp good.key revd.key; cp good.key must.key
+leaf revd DNS:localhost -days 10
+q openssl req -new -key must.key -subj /CN=must -addext subjectAltName=DNS:localhost -addext tlsfeature=status_request -out must.csr
+q openssl ca -batch -config ca.cnf -cert int.pem -keyfile int.key -extensions v3leaf -days 10 -in must.csr -out must.pem -notext
+q openssl ca -config ca.cnf -cert int.pem -keyfile int.key -revoke revd.pem
+ocsp() {
+  q openssl ocsp -issuer int.pem -cert "$1.pem" -no_nonce -reqout "$1.oreq"
+  q openssl ocsp -index index.txt -rsigner int.pem -rkey int.key -CA int.pem -reqin "$1.oreq" -ndays 1 -respout "$1.ocsp"
+}
+ocsp good; ocsp revd; ocsp must
 
 # Ports: concurrent runs on one host (other worktrees, mutant runs) must not test each other's
 # servers. The default base differs per run (15400 + 100 * (pid mod 170), below the ephemeral
@@ -109,15 +121,21 @@ row() {
   while [ $n -lt 5 ]; do
     nextport
     # shellcheck disable=SC2086
-    openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
+    "${OSSL:-openssl}" s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
     sp=$!
     owns "$sp" "$port" && break
     drop "$sp"; n=$((n + 1))
   done
   timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${ROWOPTS:-${ropts:-0}}" > "c$port.out" 2> "c$port.err"
   rc=$?
+  # $rowgroup (with s_server -trace): the group of the last key_share the server sent must be it
+  if [ -n "${rowgroup:-}" ]; then i=0; while [ $i -lt 50 ] && kill -0 "$sp" 2> /dev/null; do sleep 0.1; i=$((i + 1)); done; fi
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
+  if [ "$got" = OK ] && [ -n "${rowgroup:-}" ]; then
+    g=$(sed -n 's/^ *NamedGroup: \([^ ]*\) .*/\1/p' "s$port.log" | tail -n 1)
+    [ "$g" = "$rowgroup" ] || got="GROUP ${g:-none} (server log s$port.log)"
+  fi
   case "$got" in
   "$expect"*) v=PASS ;;
   *) v=FAIL; fail=1 ;;
@@ -151,6 +169,21 @@ row "approved: RSA leaf (rsa_pss)" OK                                           
 row "approved: unrestricted srv"  OK                                                   good int.pem -tls1_3
 row "approved: chacha-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -ciphersuites TLS_CHACHA20_POLY1305_SHA256
 row "approved: X25519-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups X25519
+ropts=
+
+# revocation (tls_init flag 8, rev.om): the client offers status_request and checks the leaf's
+# stapled OCSP response (s_server -status_file); a must-staple (RFC 7633) leaf served without a
+# staple is refused. Without flag 8 the same servers are accepted (the controls).
+ropts=0,0,0,0,8
+row "rev: good staple"            OK                                                   good int.pem -tls1_3 -status_file good.ocsp
+row "rev: revoked staple"         "TLSERR TLS_ERR_CERTIFICATE detail 32"               revd int.pem -tls1_3 -status_file revd.ocsp
+row "rev: staple for other cert"  "TLSERR TLS_ERR_CERTIFICATE detail 33"               good int.pem -tls1_3 -status_file revd.ocsp
+row "rev: no staple, plain leaf"  OK                                                   good int.pem -tls1_3
+row "rev: must-staple, staple"    OK                                                   must int.pem -tls1_3 -status_file must.ocsp
+row "rev: must-staple, no staple" "TLSERR TLS_ERR_CERTIFICATE detail 35"               must int.pem -tls1_3
+ropts=0
+row "no rev: revoked staple"      OK                                                   revd int.pem -tls1_3 -status_file revd.ocsp
+row "no rev: must-staple, none"   OK                                                   must int.pem -tls1_3
 ropts=
 
 # crafted ServerHellos (fakesh.py): the client's own refusals
@@ -272,6 +305,48 @@ fi
 fsrv ap-ok       OK                                                      0,0,0,0,1
 fsrv ap-cvbad    "TLSERR TLS_ERR_CERTIFICATE_VERIFY"                     0,0,0,0,1
 
+# X25519MLKEM768 (0x11EC, draft-ietf-tls-ecdhe-mlkem): ClientHello1 carries the hybrid share and an
+# x25519 share (tls_init flag 2: the hybrid share only). Two oracles independent of om/tls:
+# fakesrv.py with kyber-py (FAKESRV_PY must import kyber_py) and OpenSSL 3.5 s_server (OPENSSL35,
+# built by openssl35.sh; -trace names the group of the server's key_share). A missing oracle leaves
+# its rows NOT_RUN; TLS_PQ=1 (CI) makes a missing oracle a FAIL.
+pqmiss=""
+if ${FAKESRV_PY:-python3} -c 'import kyber_py.ml_kem' 2> /dev/null; then
+  fsrv hyb       OK
+  fsrv hyb       OK                                                      0,0,0,0,2
+  fsrv hybx      OK
+  fsrv hybshort  "TLSERR TLS_ERR_KEY_SHARE"
+  fsrv hybzero   "TLSERR TLS_ERR_ZERO_SHARED_SECRET"
+  fsrv hybct     "TLSERR TLS_ERR_BAD_RECORD_MAC"
+else
+  pqmiss="$pqmiss kyber-py"
+fi
+if [ -n "${OPENSSL35:-}" ] && "$OPENSSL35" list -kem-algorithms 2> /dev/null | grep -q ML-KEM-768; then
+  OSSL=$OPENSSL35
+  rowgroup=X25519MLKEM768
+  row "ossl35: hybrid-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
+  row "ossl35: default groups"      OK                                                   good int.pem -tls1_3 -trace
+  ropts=0,0,0,0,2
+  row "ossl35: FLAGS 2, hybrid srv" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
+  rowgroup=ecdh_x25519
+  row "ossl35: FLAGS 2, HRR x25519" OK                                                   good int.pem -tls1_3 -groups X25519 -trace
+  ropts=
+  row "ossl35: X25519-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519 -trace
+  ropts=0,0,0,0,1
+  rowgroup=secp256r1
+  row "ossl35: approved, no hybrid" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768:P-256 -ciphersuites TLS_AES_128_GCM_SHA256 -trace
+  ropts=
+  rowgroup=
+  row "ossl35: MLKEM768-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups MLKEM768
+  OSSL=
+else
+  pqmiss="$pqmiss openssl-3.5"
+fi
+if [ -n "$pqmiss" ]; then
+  if [ "${TLS_PQ:-0}" = 1 ]; then v=FAIL; fail=1; else v=NOT_RUN; fi
+  printf '%s | %-28s | missing oracle:%s\n' "$v" "X25519MLKEM768 rows" "$pqmiss"
+fi
+
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac
 rows=$((rows + 1)); n=0
@@ -294,5 +369,6 @@ got="$(tr -d '\n' < "c$port.err") (exit $rc)"
 case "$got" in "TLSERR TLS_ERR_BAD_RECORD_MAC"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
 printf '%s | %-28s | expect %-60s | got %s\n' "$v" "tampered record (proxy)" "TLSERR TLS_ERR_BAD_RECORD_MAC" "$got"
 
-if [ $fail = 0 ]; then echo "INTEROP PASS rows=$rows"; else echo "INTEROP FAIL rows=$rows"; fi
+if [ -n "$pqmiss" ]; then pq="NOT_RUN($(echo $pqmiss | tr ' ' ,))"; else pq=PASS; fi
+if [ $fail = 0 ]; then echo "INTEROP PASS rows=$rows pq=$pq"; else echo "INTEROP FAIL rows=$rows pq=$pq"; fi
 exit $fail

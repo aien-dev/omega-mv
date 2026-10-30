@@ -1,0 +1,3 @@
+# Test oracle only (fakesrv.py hyb* modes, residue.py --hybrid): pure-Python ML-KEM-768 (FIPS 203).
+# pip install --require-hashes -r om/tls/test/tls/pq-requirements.txt
+kyber-py==1.2.0 --hash=sha256:517f4c8f5009f5b4dfb8f4bfd0f6d631bf56e0cad3f709282e6450e5d8eda6aa

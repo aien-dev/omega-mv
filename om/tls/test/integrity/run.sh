@@ -58,7 +58,7 @@ poke "$out/ver.slot" $(( $(slot "$out/ver") + 63 )) "$nd"
 expect slot-last-digit "$out/ver.slot" 16 3
 
 # the tool alone (build.sh's integrity step): compose it exactly as build.sh does
-{ printf 'om2\n'; for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do cat "$lib/$u.om"; done
+{ printf 'om2\n'; for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls; do cat "$lib/$u.om"; done
   printf 'fn main to int\nret fips_itool\nend\n'; } > "$out/itool.om"
 "$omc" < "$out/itool.om" > "$out/itool" && chmod +x "$out/itool"
 tool() { "$out/itool" "$@" > /dev/null 2>&1; echo $?; }
@@ -78,7 +78,7 @@ else fail "tool: repatch differs from build.sh output"; fi
 mk=0; mbad=0
 mutant() {
 	d=$out/m-$1; mkdir -p "$d"
-	for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do cp "$lib/$u.om" "$d/"; done
+	for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls; do cp "$lib/$u.om" "$d/"; done
 	cp "$lib/build.sh" "$d/"
 	sed -i "$2" "$d/fips.om"
 	if cmp -s "$d/fips.om" "$lib/fips.om"; then mbad=$((mbad + 1)); say "FAIL mutant $1: sed changed nothing"; return; fi

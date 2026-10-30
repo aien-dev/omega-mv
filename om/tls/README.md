@@ -22,6 +22,8 @@ state (a FIPS 140-3 module error state must cover every connection of the proces
 | `hkdf.om` | HMAC-SHA-256/384/512 (RFC 2104), HKDF extract/expand (RFC 5869) | 8 |
 | `drbg.om` | HMAC_DRBG with SHA-256 (SP 800-90A Rev. 1 section 10.1.2), reseed counter, continuous test | 14 |
 | `x25519.om` | X25519 (RFC 7748), constant-time Montgomery ladder, radix 2^25.5 | 15 |
+| `sha3.om` | SHA3-256/512, SHAKE128/256 (FIPS 202), Keccak-f[1600] | 20 |
+| `mlkem.om` | ML-KEM-768 (FIPS 203): key generation from a seed, encapsulation, decapsulation with implicit rejection | 43 |
 | `chacha.om` | ChaCha20, Poly1305, ChaCha20-Poly1305 AEAD (RFC 8439) | 19 |
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
 | `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
@@ -29,9 +31,9 @@ state (a FIPS 140-3 module error state must cover every connection of the proces
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
 | `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
 | `fips.om` | self-tests (KATs), SP 800-90B health tests on getrandom, approved-mode DRBG wiring, X25519 pairwise consistency test, module error state | 27 |
-| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect, approved-only mode | 125 |
+| `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect, approved-only mode, X25519MLKEM768 hybrid key exchange | 148 |
 
-The total is 418 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
+The listed units total 504 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
 the ec, rsa and x509 suites check) allows 4095 functions per unit, as `189ada82` did.
 
 ## Client API (`tls.om`)
@@ -46,7 +48,7 @@ All buffers are owned by the caller. `c` is the connection state, at least `TLCS
 
 ```
 e  = tls_store st                        load /etc/ssl/certs/ca-certificates.crt
-e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; 4: approved mode (HMAC_DRBG);
+e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; 4: approved mode (HMAC_DRBG); 8: stapled OCSP + must-staple (rev.om);
                                          the name is SNI and the checked name
 fd = tls_dial hostname port              DNS A + TCP (IPv4; a dotted literal skips DNS); fd or -code
 tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait
@@ -169,7 +171,12 @@ been submitted to a laboratory, there is no CMVP certificate, and nothing here i
   body is not 2 bytes is `TLS_ERR_DECODE`. There is no TLS 1.2 code, no fallback and no insecure
   switch.
 - Cipher suites: TLS_CHACHA20_POLY1305_SHA256 (preferred) and TLS_AES_128_GCM_SHA256.
-  Key exchange: x25519 (offered in `supported_groups` and shared in ClientHello1).
+  Key exchange: X25519MLKEM768 (0x11EC, draft-ietf-tls-ecdhe-mlkem; ML-KEM-768 then x25519,
+  share 1216 bytes, server share ct 1088 ‖ x25519 32, 64-byte (EC)DHE input to HKDF-Extract)
+  and x25519, both offered in `supported_groups` and shared in ClientHello1 (FLAGS 2: the hybrid
+  share only, so an x25519-only server must send a HelloRetryRequest). The ML-KEM key pair is
+  generated before the ClientHello and the decapsulation key is wiped after decapsulation, or
+  when the server chooses x25519.
   HelloRetryRequest (RFC 8446 4.1.4) is handled once: it must carry supported_versions 0x0304,
   each extension at most once and only supported_versions, key_share and cookie (another
   extension of the RFC 8446 4.2 table is `TLS_ERR_ILLEGAL_PARAMETER`, an unknown one
@@ -230,7 +237,7 @@ been submitted to a laboratory, there is no CMVP certificate, and nothing here i
   so is application data arriving while a post-handshake message is only partly received (RFC 8446
   5.1 forbids interleaving).
 - A close_notify received during the handshake is `TLS_ERR_ALERT_RECEIVED` with detail 0.
-- Not implemented: revocation (OCSP, CRL), Certificate Transparency, IPv6, DNSSEC, DNS over TCP,
+- Not implemented: OCSP fetching and CRL fetching (stapled OCSP is checked with flag 8), Certificate Transparency, IPv6, DNSSEC, DNS over TCP,
   RFC 5280 name canonicalisation (issuer names are matched as exact DER bytes), and nameConstraints
   (always refused, see above). Path building commits to the first presented issuer whose
   signature verifies, without backtracking; this fails closed (availability only).
@@ -344,7 +351,9 @@ The interop refusal table (`build/tls/tls/interop-table.txt`):
 | unknown issuer, missing intermediate | `X509_ERR_UNKNOWN_ISSUER` |
 | TLS 1.2-only, AES-256-only, P-256-only server | the server's own alert 70 / 40 / 40 (`TLS_ERR_ALERT_RECEIVED`) |
 | crafted ServerHello: TLS 1.2, HRR with a ServerHello-shaped key_share, AES-256 suite, session id, P-256 share, zero share, duplicate extension, trailing byte | `PROTOCOL_VERSION`, `DECODE`, `CIPHER_SUITE`, `SESSION_ID_ECHO`, `KEY_SHARE`, `ZERO_SHARED_SECRET`, `EXTENSION`, `DECODE` |
-| openssl s_server `-groups X25519`, client withholds its x25519 share (FLAGS 2): real HelloRetryRequest | accepted |
+| openssl s_server `-groups X25519`, client withholds its x25519 share (FLAGS 2, hybrid share only): real HelloRetryRequest | accepted |
+| X25519MLKEM768, `fakesrv.py` with kyber-py 1.2.0 as the ML-KEM oracle: hybrid handshake (default and FLAGS 2); server picks x25519 (`hybx`); share one byte short; zero x25519 half; one ciphertext bit flipped (implicit rejection) | accepted, accepted, `KEY_SHARE`, `ZERO_SHARED_SECRET`, `BAD_RECORD_MAC` |
+| X25519MLKEM768, OpenSSL 3.5.4 `s_server -trace` (`OPENSSL35`, `openssl35.sh`; the group of the server's key_share is checked): hybrid-only, default groups, FLAGS 2 hybrid-only, FLAGS 2 x25519-only (HRR), x25519-only, approved mode (P-256 chosen), pure MLKEM768-only server | accepted ×6, `ALERT_RECEIVED` detail 40 |
 | fake HRR (FLAGS 2): with and without cookie, with CCS after it (`hrrok`, `hrrnock`, `hrrccs`); the server checks ClientHello2's random, session id, single share and cookie echo | accepted |
 | fake HRR: client had already shared x25519; group never offered; second HRR; suite changed in ServerHello; no change requested; early_data extension; unknown extension 0x0a0a; no supported_versions; 12001-byte cookie | `KEY_SHARE`, `KEY_SHARE`, `UNEXPECTED_MESSAGE`, `CIPHER_SUITE`, `HELLO_RETRY`, `ILLEGAL_PARAMETER`, `EXTENSION`, `PROTOCOL_VERSION`, `MESSAGE_TOO_BIG` |
 | NewSessionTicket: well formed; lifetime 604801; empty ticket; trailing byte; extension past the block | accepted, `TICKET`, `DECODE`, `DECODE`, `DECODE` |
@@ -437,11 +446,14 @@ retained under `evidence/om-tls-review-2026-10-26/` with SHA-256 sums.
   compiler-spilled stack slots are not scrubbed (a compiler limit). `test/tls/residue.py` is the
   check: after the handshake none of the twelve handshake-only secrets is in the process memory,
   after `tls_close` none of the eighteen.
-- **Revocation.** Not checked. There is no OCSP, no OCSP stapling (the client sends no
-  `status_request` extension) and no CRL. A revoked but otherwise valid chain verifies. Callers that
-  need revocation must enforce it outside this library (pinning in the trust store, short-lived
-  certificates). OCSP stapling needs a DER OCSP response parser, a second signature check and a
-  freshness policy; it was judged out of this lane's scope rather than built half-way.
+- **Revocation (opt-in, `tls_init` flag 8, `rev.om`).** With flag 8 the client sends
+  `status_request`, checks the leaf's stapled OCSP response (signature by the issuer or a delegated
+  id-kp-OCSPSigning responder, CertID, thisUpdate within 300 s, nextUpdate required) and refuses
+  revoked, unknown and stale answers; a must-staple leaf (RFC 7633) without a staple is refused. A
+  plain leaf without a staple is accepted (no OCSP fetch). Failures are `TLS_ERR_CERTIFICATE` with
+  the rev.om code (32..38, `rev_errname`) as detail. `rev_crl` checks a caller-supplied CRL; the
+  client fetches none. Without flag 8 revocation is not checked and a revoked chain verifies.
+  Tests: `test/rev/run.sh` (unit, openssl oracle, fuzz, mutants) and the `rev:` rows of interop.sh.
 - **Trust.** Only the caller's trust store (`tls_storef`); no system store, no name constraints,
   no CT, as `What it does and refuses` says.
 

@@ -60,6 +60,7 @@
 #   hybshort    hybrid share one byte short                                      -> KEY_SHARE
 #   hybzero     hybrid share whose x25519 half is the all-zero point             -> ZERO_SHARED_SECRET
 #   hybct       one ciphertext bit flipped: implicit rejection, other secret     -> BAD_RECORD_MAC
+#   hybhold:S   hold:S over a hybrid handshake; adds kem_ss, x_ss and H(ek) to the secrets file
 import hashlib, hmac, os, socket, sys, time
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -224,6 +225,9 @@ if mode.startswith("hrr"):
 hyb = mode.startswith("hyb") and mode != "hybx"
 if mode == "hybx":
     mode = "ok"
+if mode.startswith("hybhold:"):  # hybhold:S: hold:S over a hybrid handshake (residue.py --hybrid)
+    mode = mode[3:]
+kem = None
 OKMODES = ("ok", "cvbad", "cvkey", "cvskip", "empty1500", "empty50", "tickets1500",
            "slowsh", "kuexact", "kuover", "kurot", "entryext", "nstok", "nstlife", "nstnotk",
            "nsttrail", "nstext", "sink")
@@ -262,7 +266,9 @@ else:
             kshare = kshare[:-1]
         exts = ext(43, b"\x03\x04") + ext(51, u(4588, 2) + u(len(kshare), 2) + kshare)
         shared = ss + sk.exchange(X25519PublicKey.from_public_bytes(hs4588[1184:]))
-        mode = "ok"
+        kem = (ss, shared[32:], hashlib.sha3_256(hs4588[:1184]).digest())
+        if mode != "hold":
+            mode = "ok"
     else:
         exts = ext(43, b"\x03\x04") + ext(51, (b"\x00\x17" if ap else b"\x00\x1d") + u(len(spub), 2) + spub)
         shared = None
@@ -348,6 +354,10 @@ else:
                     keys[nm + "_iv"] = expand_label(sec, b"iv", b"", 12)
                 keys["c_fin"] = expand_label(c_hs, b"finished", b"", 32)
                 keys["s_fin"] = expand_label(s_hs, b"finished", b"", 32)
+                if kem:
+                    # the ML-KEM and x25519 halves of the hybrid secret, and H(ek) = dk[2336..2368)
+                    # as the marker of the client's decapsulation key
+                    keys["kem_ss"], keys["x_ss"], keys["kem_hek"] = kem
                 with open(os.environ["FAKESRV_KEYS"], "w") as f:
                     for nm, val in keys.items():
                         f.write("%s %s\n" % (nm, val.hex()))

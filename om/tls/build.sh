@@ -3,7 +3,7 @@
 # Compose the om/tls client into one OM-2 unit with a program and compile it.
 # usage: sh om/tls/build.sh OMC PROGRAM.om OUT
 #        sh om/tls/build.sh -p OMC BIN     (only the integrity step, for a program composed elsewhere)
-# The unit is: the line `om2`, then sha2, hkdf, drbg, x25519, chacha, aesgcm, ec, ecdh, rsa, x509, fips, tls (this
+# The unit is: the line `om2`, then sha2, hkdf, drbg, x25519, sha3, mlkem, chacha, aesgcm, ec, ecdh, rsa, x509, rev, fips, tls (this
 # order: each unit calls only units before it), then PROGRAM.om (which has `fn main`). The composed
 # source is kept beside OUT as OUT.unit.om. Exit status is omc's; OUT is executable only on success.
 # Integrity step: the same units with a three-line main calling fips_itool (fips.om) are compiled to
@@ -12,7 +12,7 @@
 # 2 usage, 3 I/O error, 4 no marker, two markers or too large.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
-units() { for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do cat "$here/$u.om"; done; }
+units() { for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls; do cat "$here/$u.om"; done; }
 # integ OMC BIN: compile the integrity tool beside BIN, run it on BIN, remove it
 integ() {
   { printf 'om2\n'; units; printf 'fn main to int\nret fips_itool\nend\n'; } > "$2.itool.om"

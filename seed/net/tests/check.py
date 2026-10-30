@@ -35,7 +35,7 @@ ROOT = os.path.dirname(os.path.dirname(NET))
 LIB = os.path.join(NET, "http.om")
 NOTLS = os.path.join(NET, "notls.om")
 HTTPS = os.path.join(NET, "https.om")
-TLS_UNITS = ["sha2", "hkdf", "drbg", "x25519", "chacha", "aesgcm", "ec", "ecdh", "rsa", "x509", "fips", "tls"]
+TLS_UNITS = ["sha2", "hkdf", "drbg", "x25519", "sha3", "mlkem", "chacha", "aesgcm", "ec", "ecdh", "rsa", "x509", "rev", "fips", "tls"]
 TLSDIR = os.path.join(ROOT, "om", "tls")
 
 HEADMX = 2048      # parse.om: put cs HHEADMX 2048
