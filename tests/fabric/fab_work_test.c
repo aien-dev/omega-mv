@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /*
  * fab_work_test.c -- conformance and negative tests for fab_work.h,
  * fab_auth_ed25519.h and fab_route.h (aienix#6, omega#536).
@@ -20,9 +36,11 @@
 #include "searchtrace/sig/aienos_sig.h"
 #include "sha256.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static int checks, failures;
@@ -52,6 +70,19 @@ static void put16(uint8_t *p, uint16_t v) { p[0] = (uint8_t)(v >> 8); p[1] = (ui
 static uint16_t get16(const uint8_t *p) { return (uint16_t)((p[0] << 8) | p[1]); }
 
 /* ---- 1. PST1 vectors: same verdict line as protocols tools/pst_verify.c ---- */
+/* The vector set is fixed here: expected.txt supplies only verdict lines, and a
+ * file name read from it never becomes a path (an unknown or repeated name fails). */
+static const char *const PST_VECTORS[] = {
+    "ok-request.pst", "ok-accepted-empty.pst", "ok-text-chunk-1024.pst",
+    "ok-resume-request-max-ordinal.pst", "bad-length-short-header.pst",
+    "bad-length-empty-file.pst", "bad-length-over-1024.pst", "bad-magic.pst",
+    "bad-version-unknown.pst", "bad-version-downgrade.pst", "bad-type-zero.pst",
+    "bad-type-unknown.pst", "bad-reserved0.pst", "bad-reserved1.pst",
+    "bad-length-mismatch.pst", "bad-payload-len-over-800.pst", "bad-trailing-byte.pst",
+    "bad-effect-class.pst", "bad-no-cause.pst", "bad-no-task-id.pst",
+    "bad-no-idempotence-key.pst", "bad-request-no-objective.pst", "bad-digest.pst",
+};
+#define N_PST_VECTORS (sizeof PST_VECTORS / sizeof PST_VECTORS[0])
 static void test_pst_vectors(const char *dir) {
     char path[2048];
     snprintf(path, sizeof path, "%s/expected.txt", dir);
@@ -60,6 +91,7 @@ static void test_pst_vectors(const char *dir) {
     if (!f) return;
     char line[1024];
     int n_vec = 0;
+    int seen[N_PST_VECTORS] = {0};
     while (fgets(line, sizeof line, f)) {
         if (line[0] == '#' || line[0] == '\n') continue;
         char *sp = strchr(line, ' ');
@@ -67,7 +99,13 @@ static void test_pst_vectors(const char *dir) {
         *sp = 0;
         char *want = sp + 1;
         want[strcspn(want, "\n")] = 0;
-        snprintf(path, sizeof path, "%s/%s", dir, line);
+        size_t vi = 0;
+        while (vi < N_PST_VECTORS && strcmp(line, PST_VECTORS[vi]) != 0) vi++;
+        CHECK(vi < N_PST_VECTORS, "expected.txt names unknown vector %s", line);
+        if (vi == N_PST_VECTORS) continue;
+        CHECK(seen[vi] == 0, "expected.txt names %s twice", PST_VECTORS[vi]);
+        seen[vi]++;
+        snprintf(path, sizeof path, "%s/%s", dir, PST_VECTORS[vi]);
         FILE *v = fopen(path, "rb");
         CHECK(v != NULL, "open vector %s", path);
         if (!v) continue;
@@ -82,7 +120,7 @@ static void test_pst_vectors(const char *dir) {
         n_vec++;
     }
     fclose(f);
-    CHECK(n_vec == 23, "23 vectors, saw %d", n_vec);
+    CHECK(n_vec == (int)N_PST_VECTORS, "%d vectors, saw %d", (int)N_PST_VECTORS, n_vec);
     printf("pst1 vectors: %d checked against expected.txt\n", n_vec);
 }
 
@@ -143,8 +181,16 @@ static size_t read_file(const char *path, uint8_t *buf, size_t cap) {
     fclose(f);
     return n;
 }
+/* Files this test creates are owner-only (0600), never world-writable. */
+static FILE *fopen_private(const char *path, int flags, const char *mode) {
+    int fd = open(path, flags | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR);
+    if (fd < 0) return NULL;
+    FILE *f = fdopen(fd, mode);
+    if (!f) close(fd);
+    return f;
+}
 static int write_file(const char *path, const uint8_t *b, size_t n) {
-    FILE *f = fopen(path, "wb");
+    FILE *f = fopen_private(path, O_WRONLY | O_TRUNC, "wb");
     if (!f) return -1;
     int ok = fwrite(b, 1, n, f) == n;
     return fclose(f) == 0 && ok ? 0 : -1;
@@ -735,7 +781,7 @@ static int write_frames(FILE *out, const uint8_t *buf, size_t n) {
     return fflush(out);
 }
 static int run_executor(const char *journal_path) {
-    FILE *j = fopen(journal_path, "ab");
+    FILE *j = fopen_private(journal_path, O_WRONLY | O_APPEND, "ab");
     if (!j) { perror(journal_path); return 2; }
     Exec e;
     exec_init(&e, j);
