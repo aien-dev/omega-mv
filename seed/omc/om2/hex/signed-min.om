@@ -1,0 +1,15 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): signed minima are written in decimal (no - before hex); hex
+note operands compare and add with them under the decimal range rule. Exit 0.
+om2
+fn main to int
+x = byte -128
+y = long -9223372036854775808
+if ge int x 0x0
+ret 1
+end
+if ge y 0x0
+ret 2
+end
+ret int add int x 0x80
+end
