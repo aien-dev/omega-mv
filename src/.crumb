@@ -80,7 +80,7 @@
         },
         {
           "digest": "806198eda65f998c287abd251928120d01ab44a1e0f1e05ad2e055212967c80c",
-          "last_commit": "7f9437429",
+          "last_commit": "f5c9bd89a",
           "name": "compiler",
           "purpose": "Directory src/compiler. Purpose not yet described by a human."
         },
@@ -116,7 +116,7 @@
         },
         {
           "digest": "e0eee44045097fd7edf9f542b96bfdfc42813ecf6f27c25bd1c57f7adf985bc4",
-          "last_commit": "d43d19b44",
+          "last_commit": "f5c9bd89a",
           "name": "osh",
           "purpose": "osh (Omega-native shell, arch#158) lexer unit: layout list, generator, osh_lex.osc, C reference "
         },
@@ -145,8 +145,8 @@
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
-          "digest": "43126cdfbfc4a67b3ab8785a1358a861960954e0374b7118781d06f117f9de5c",
-          "last_commit": "b99ffb73f",
+          "digest": "f391c28f8be4ff485e7833fcae23a0c0f33a7b796de07a9a31ac73028fda867a",
+          "last_commit": "d3b0fcad8",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
@@ -163,8 +163,8 @@
           "purpose": "Synapse ADR 0003 J1 binary codec port: layout list, generator, syn_codec.osc (A1 WAL records + c"
         },
         {
-          "digest": "9723dd7c18d4e2c22db631680974e1025bccb9c309619424e2f4dfcc43cc7068",
-          "last_commit": "d863780eb",
+          "digest": "74e85b5aba1ca8a2e55d40217219a7dbfcec74538b08dfe14be3eb7c3479fbc5",
+          "last_commit": "0919efc3c",
           "name": "tensor",
           "purpose": "M20 OMEGA_TENSOR: immutable tensor semantic layer, views, generation-checked storage, CPU realiz"
         },
@@ -182,20 +182,20 @@
         },
         {
           "digest": "e832df528a0a0992e817f879c5b7df52c33b8445f30fc2743e5c0fa5ad6e6b2a",
-          "last_commit": "52c62d6c4",
+          "last_commit": "f5c9bd89a",
           "name": "visor",
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:6ade3e583c9df260fbfc768469dae662b88153725b14f7086431861419cfffe3",
-      "compiled_at": "2026-10-30T18:10:55Z",
+      "children_root": "sha256:a60b87ac432bf98c5f441f27a066006f3be206915c3225910368f5f06c4fc996",
+      "compiled_at": "2026-10-30T22:07:38Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:2e166f32c0d101b4f78705870bd8213809296312aed76cffceae737f9f9d0b86",
+      "digest": "sha256:8d2bd9a3a5c549fa7cd250a83f5f9850e43a02264df49034e4705f942327f383",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 597,
-      "generated_at_commit": "76a6ceeefb359cc68f58f87898f5b3a46c0686fc",
-      "source_tree": "sha256:5795e053419bb7c209584946b5a91354297fe6c02bc73a0aadf31dd964231856"
+      "files": 603,
+      "generated_at_commit": "232e66b602a02b2495ce494d77be039ed0df154f",
+      "source_tree": "sha256:505a5c715a5a1a7053101ef50b580b468deb69022292d907f28e381aefa5dc0f"
     },
     "owner_lane": "",
     "provenance": {

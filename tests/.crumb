@@ -134,7 +134,7 @@
         },
         {
           "digest": "e83c52ffc46da0e9df448bc5d28a70b08a8cbcd6858e8adea7a842791717c024",
-          "last_commit": "7f9437429",
+          "last_commit": "f5c9bd89a",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -200,13 +200,13 @@
         },
         {
           "digest": "a4e1544a88e0b71ced2340ed880985b6ceaad797023b74a683d470971a8d47d4",
-          "last_commit": "81404672e",
+          "last_commit": "f5c9bd89a",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advisor tests: shadow-test.om (in-process checks over the SYNTHETIC fixture and th"
         },
         {
           "digest": "628d85f858a9ed11e4502064192aeb797bf9fe6f73a3932db520d5b9c22d43f1",
-          "last_commit": "d43d19b44",
+          "last_commit": "f5c9bd89a",
           "name": "osh",
           "purpose": "osh lexer host driver, vendored aien-protocols PR#16 draft vectors (5ae5292)"
         },
@@ -271,8 +271,8 @@
           "purpose": "Reservoir tests (omega#440): Gate 1 simulator and readout checks against an independent binary64"
         },
         {
-          "digest": "891ced287901fa14a10e93dce7dae2ada551f7b69752098f957d1471bff4d072",
-          "last_commit": "64942e2df",
+          "digest": "d27bc8fc266c9292f8d0ccb5e8b608fe35fc30054faad1d3b147ffbf56171777",
+          "last_commit": "d00c35b07",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -302,20 +302,20 @@
         },
         {
           "digest": "aad47a6f37231afcd415798fcd7f18cbcb541066bb958c09d44cb755ce385057",
-          "last_commit": "436ceaae8",
+          "last_commit": "f5c9bd89a",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:4e202b52b2c80d88dc93220a0c00cda479e52c2e63f847fbb30b9b1f426294f5",
-      "compiled_at": "2026-10-30T18:10:55Z",
+      "children_root": "sha256:2050f54b576261227db03cbd3acf1ff7bc6f93b5cdcb52075b9b9bfa4837ef8c",
+      "compiled_at": "2026-10-30T22:07:38Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:2fea9ebee3cfe635a960e9622bdf360c4239b5392af803a22bad32e3ba4770d1",
+      "digest": "sha256:302928079b39781f0057812e0d22fd131ec0f1550ca4d28e11f1de16bf63c260",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1504,
-      "generated_at_commit": "76a6ceeefb359cc68f58f87898f5b3a46c0686fc",
-      "source_tree": "sha256:4a84ccb12dec44e1d1cf1885e683615579f3e29d688ae2bdc367d7aa28ef0b4b"
+      "files": 1508,
+      "generated_at_commit": "232e66b602a02b2495ce494d77be039ed0df154f",
+      "source_tree": "sha256:cd7b5398fea47bbab6e2955f5f144af70e511960af3db3920f8fb5e52b9b7a6a"
     },
     "owner_lane": "",
     "provenance": {
