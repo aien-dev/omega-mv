@@ -14,32 +14,42 @@
 #                             static-asserted offsets, defines, prototypes (apih; src/sha256.h includes it)
 #   src/omega_om_units.ident  each unit's identity: source sha256, compiler pin, ABI, profile. An OM-2
 #                             unit also embeds its identity (omega2_ident_<unit>() in omega_om_units.c).
+#   src/omega_om_units_fs.c   the freestanding binding of the FS_UNITS below for the -ffreestanding GPU link
+#                             (mk/omega-gpu-engine.mk GPU_FS_SRCS): output freest (machine code and ABI v2 on
+#                             the caller's stack; no thread-local state, heap, stack mapping or abort; only
+#                             memset and memmove) then output fapic (the same C API as apic, __builtin_trap()
+#                             on a nonzero status). Its declarations are those of omega_api_decl.h.
 # A unit, compiler or profile that changes without regenerating these files fails --check.
 set -eu
 OMC_PIN=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
-NATIVE_PIN=c77a5922f91d53d4a0bbd4e7b1c4703f7098263abc843be2918db1ece7496782
+NATIVE_PIN=a564bf20d99b65b2336c443b7f1e0e00cd866afff9db6b6a73e9488df9e00dd3
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # One generated library for all units: the bindings share one ABI runtime (ombr_enter).
 UNITS="om/sha256/sha256-om2.om om/blake3/b3unit.om"
-OUTS="omega_om_units.c omega_native.h omega_api_decl.h omega_om_units.ident"
+# The units the freestanding GPU link needs (the encoder, codegen, matmul and realize files hash with sha256_*).
+FS_UNITS="om/sha256/sha256-om2.om"
+OUTS="omega_om_units.c omega_native.h omega_api_decl.h omega_om_units.ident omega_om_units_fs.c"
 [ -n "${OMEGA_OMC:-}" ] && [ -n "${OMEGA_BRIDGE:-}" ] || { echo "NOT_RUN: set OMEGA_OMC and OMEGA_BRIDGE"; exit 3; }
 [ "$(sha256sum < "$OMEGA_OMC" | cut -c1-64)" = "$OMC_PIN" ] || { echo "NOT_RUN: omc is not the pinned compiler"; exit 3; }
 [ "$(sha256sum < "$OMEGA_BRIDGE/src/native.om" | cut -c1-64)" = "$NATIVE_PIN" ] || { echo "NOT_RUN: native.om is not the pinned generator"; exit 3; }
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 "$OMEGA_OMC" < "$OMEGA_BRIDGE/src/native.om" > "$T/native"; chmod +x "$T/native"
-: > "$T/units.in"; : > "$T/omega_om_units.ident"
+: > "$T/units.in"; : > "$T/fs.in"; : > "$T/omega_om_units.ident"
 for u in $UNITS; do
   name=$(basename "$u" .om | tr -c 'A-Za-z0-9_\n' '_')
   "$OMEGA_OMC" < "$ROOT/$u" > "$T/u.bin"
   # The profile: OM-2 iff the first line that is neither a note nor blank is exactly om2 (erratum E10).
   if [ "$(sed -n '/^ *note\( \|$\)/d; /^ *$/d; p; q' "$ROOT/$u")" = om2 ]; then abi=2; prof=OM-2; else abi=1; prof=OM-1; fi
   { cat "$ROOT/$u"; printf '\0'; printf '%08d' "$(wc -c < "$T/u.bin")"; cat "$T/u.bin"
-    [ $abi = 1 ] || printf 'omega-unit %s %s\n' "$name" "$OMC_PIN"; } >> "$T/units.in"
+    [ $abi = 1 ] || printf 'omega-unit %s %s\n' "$name" "$OMC_PIN"; } > "$T/u.in"
+  cat "$T/u.in" >> "$T/units.in"
+  case " $FS_UNITS " in *" $u "*) cat "$T/u.in" >> "$T/fs.in";; esac
   echo "omega-ident 1 unit=$name abi=$abi profile=$prof src=$(sha256sum < "$ROOT/$u" | cut -c1-64) omc=$OMC_PIN path=$u" >> "$T/omega_om_units.ident"
 done
 { "$T/native" c < "$T/units.in"; "$T/native" apic < "$T/units.in"; } > "$T/omega_om_units.c"
 "$T/native" h < "$T/units.in" > "$T/omega_native.h"
 "$T/native" apih < "$T/units.in" > "$T/omega_api_decl.h"
+{ "$T/native" freest < "$T/fs.in"; "$T/native" fapic < "$T/fs.in"; } > "$T/omega_om_units_fs.c"
 if [ "${1:-}" = --check ]; then
   bad=0
   for f in $OUTS; do cmp -s "$T/$f" "$ROOT/src/$f" || { echo "FAIL src/$f differs from the pinned tools' output"; bad=1; }; done

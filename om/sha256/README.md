@@ -10,17 +10,19 @@ call sites are unchanged (`om2-evidence/AUDIT-L838.txt`).
 |---|---|
 | `om/sha256/sha256-om2.om` | the implementation: `export fn sha256_init/update/final/hash`; `layout shactx 104`, `fresh` schedule scratch, `for ... unroll` rounds and schedule, `rotr`, hex K/IV from the L836 fixtures, unsized `view uchar *` input, `out uchar 32` digest |
 | `src/omega_om_units.c` | generated: the unit's machine code byte for byte as omc wrote it, its ABI v2 binding (`omega2_sha256_*`, `omega2_ident_sha256_om2`), the BLAKE3 unit's v1 binding, and the C API `sha256_init/update/final/hash`, each calling `omega2_sha256_*` and `abort()` on a nonzero status |
-| `src/omega_native.h`, `src/omega_api_decl.h` | generated: declarations only; `sha256_ctx` from the layout (offsets static-asserted), `SHA256_*` defines, the `sha256_*` prototypes. Including them references no C library function, so a freestanding caller (rx_cortex) still needs only `sha256_*` |
+| `src/omega_om_units_fs.c` | generated: the same unit's freestanding binding for the `-ffreestanding` GPU link (`mk/omega-gpu-engine.mk`): the bridge's output `freest` (ABI v2 on the caller's stack; no thread-local state, heap, stack mapping or `abort`; only `memset` and `memmove`) then output `fapic` (the same C API, `__builtin_trap()` on a nonzero status). `make test-sha256-freestanding-parity` compares its digests with the hosted binding's |
+| `src/omega_native.h`, `src/omega_api_decl.h` | generated: declarations only; `sha256_ctx` from the layout (offsets static-asserted), `SHA256_*` defines, the `sha256_*` prototypes. Including them references no C library function, so a freestanding caller (rx_cortex, and `omega_om_units_fs.c`) still needs only `sha256_*` |
 | `src/omega_om_units.ident` | generated: each unit's source sha256, compiler pin, ABI and profile |
 | `src/sha256.h` | includes `omega_api_decl.h`; no logic |
-| `om/units.sh` | regenerates the four generated files; `--check` proves they are what the pinned tools produce (a stale unit, compiler or profile fails) |
+| `om/units.sh` | regenerates the five generated files; `--check` proves they are what the pinned tools produce (a stale unit, compiler or profile fails) |
 | `om/sha256/parity/` | parity against the replaced C retrieved from git history (`run.sh`), section 7 receipts (`receipts.c`), throughput probes (`bench.c`, `small.c`) |
 | `om/sha256/om2-evidence/` | caller audit, compile log per compiler slice, baseline at acb3f15c, cutover plan, desk check, S4 run |
 
-Pins: omc `befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d`
-(IR boolean typing correction #786, rebuilt by `seed/omega-from-seed.sh`);
-generator `src/native.om` of omega-bridge `431fff0a95f84c0a8bf9d3383f94d7e1f02d913e`
-(`om/omega-bridge.lock`; sha256 `c77a5922f91d53d4a0bbd4e7b1c4703f7098263abc843be2918db1ece7496782`).
+Pins: omc `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`
+(rebuilt by `seed/omega-from-seed.sh`; `om/units.sh` `OMC_PIN`);
+generator `src/native.om` of omega-bridge `2ea57cbed70154b256defbc3bf48c40c9fb00ab4`
+(`om/omega-bridge.lock`; sha256 `a564bf20d99b65b2336c443b7f1e0e00cd866afff9db6b6a73e9488df9e00dd3`),
+whose outputs `freest` and `fapic` generate `src/omega_om_units_fs.c`.
 
 ## Behaviour (spec/omegese-om2.md section 7, errata E3)
 

@@ -1,12 +1,12 @@
 # om-units-arm64: independent ARM64 rerun of tests/gates/run.sh om-units on a GitHub-hosted
 # ubuntu-24.04-arm machine (not the Spark). It births omc from the seed hex on that machine, takes the
 # binding generator from aien-dev/omega-bridge at om/omega-bridge.lock, regenerates
-# src/omega_om_units.c, omega_native.h, omega_api_decl.h and omega_om_units.ident byte for byte, and checks
+# src/omega_om_units.c, omega_om_units_fs.c, omega_native.h, omega_api_decl.h and omega_om_units.ident byte for byte, and checks
 # SHA-256 and BLAKE3 byte parity against the C they replaced plus the BLAKE3 mutants. Advisory, like AIEN Checks: GitHub gates no merge (Alpha does).
 name: om-units-arm64
 on:
   pull_request:
-    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "tests/gates/**", ".github/workflows/om-units-arm64.yml"]
+    paths: ["om/**", "seed/**", "src/sha256.h", "src/omega_api_decl.h", "src/omega_native.h", "src/omega_blake3.*", "src/omega_om_units.*", "src/omega_om_units_fs.c", "mk/omega-gpu-engine.mk", "tests/gates/**", ".github/workflows/om-units-arm64.yml"]
   push:
     branches: [main]
 permissions:
