@@ -11,7 +11,8 @@ files are left unchanged; this note records what each compiler does with the sui
 
 Setup (Linux aarch64 host, no GPU)
 ----------------------------------
-Sibling layout as in README.txt: security673-scanner = commit
+Sibling layout of the README replay before the #774 review fixes (the case files then used
+../security673-relational/ paths; they are now repository-relative): security673-scanner = commit
 155ff3178f35013e405ed40d09a7dd75ede2a403, security673-relational = this branch.
 Gate = evidence/run1/gate.bin (sha256 6c8691c2...6acefa), run from the scanner checkout
 with fresh scratch directories outside the repository.
