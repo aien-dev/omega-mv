@@ -24,7 +24,7 @@ decision after ORIG-3 evidence; it is not part of this specification.
 
 | piece | where | language |
 |---|---|---|
-| record tap, default off | `tests/runtime/rx_empirical_optimizer.c` (`truth_table_tap`, `OMEGA_EMPIRICAL_RECORDS`) | existing C harness, 82 added lines, observation only |
+| record tap, default off | `tests/runtime/rx_empirical_optimizer.c` (`truth_table_tap`, `OMEGA_EMPIRICAL_RECORDS=<fd>`: a descriptor the caller opened for append, e.g. `3>>records.bin`; the harness opens no path named by its environment) | existing C harness, 134 added lines (tap and coverage sample), observation only |
 | record format `omexp-v1`, admission, features, baselines | aien-train `native/si19/omexp.om` (pinned in `native/orig4/orig4.pin`) | handwritten .om |
 | scorer forward and checkpoint admission | aien-train `native/si19/select.om` (pinned) | handwritten .om |
 | shadow advisor | `native/orig4/shadow.om` (+ `shadowmain.om`, the `fn main` dispatch) | handwritten .om |

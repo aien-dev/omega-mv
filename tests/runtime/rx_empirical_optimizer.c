@@ -360,8 +360,11 @@ static uint32_t thermal_c(void) {
 static char g_meter_dir[128];
 
 /* ---- experience record tap (default off; aien-train #24 ORIG-1, omega #731) ----
- * OMEGA_EMPIRICAL_RECORDS=<path> appends one fixed 256-byte little-endian
- * record per cost table: the state the consumer saw and every eligible arm's
+ * OMEGA_EMPIRICAL_RECORDS=<fd> appends one fixed 256-byte little-endian
+ * record per cost table to descriptor fd (3..1023), which the caller opened
+ * for append on a regular file, e.g. OMEGA_EMPIRICAL_RECORDS=3 ... 3>>records.bin.
+ * The harness opens no path named by its environment; any other value leaves
+ * the tap off. Records hold the state the consumer saw and every eligible arm's
  * measured, digest-checked cost. Observation only: no decision, measurement
  * or verdict of this harness reads it. Layout omexp-v1, 32 words of 8 bytes:
  *   0 magic 0x314f4d4558505243 ("CRPXEMO1" LE)  1 version 1
@@ -379,8 +382,18 @@ static uint32_t g_tap_family, g_tap_core, g_tap_pressure;
 static void tap_open(void) {
     const char *p = getenv("OMEGA_EMPIRICAL_RECORDS");
     if (!p || !p[0]) return;
-    g_tap_fd = open(p, O_WRONLY | O_CREAT | O_APPEND, 0600);
-    if (g_tap_fd < 0) fprintf(stderr, "  record tap: cannot open %s\n", p);
+    char *end;
+    errno = 0;
+    long fd = strtol(p, &end, 10);
+    struct stat sb;
+    int fl = -1;
+    if (errno != 0 || *end != '\0' || fd < 3 || fd > 1023 || (fl = fcntl((int)fd, F_GETFL)) < 0 ||
+        (fl & O_ACCMODE) == O_RDONLY || !(fl & O_APPEND) || fstat((int)fd, &sb) != 0 || !S_ISREG(sb.st_mode)) {
+        fprintf(stderr, "  record tap: OMEGA_EMPIRICAL_RECORDS=%s is not a descriptor 3..1023 open for append "
+                        "on a regular file; tap off\n", p);
+        return;
+    }
+    g_tap_fd = (int)fd;
 }
 
 static void tap_ctx(uint32_t family, uint32_t core, uint32_t pressure) {
