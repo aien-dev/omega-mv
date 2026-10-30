@@ -30,7 +30,7 @@ sha=$(git -C "$src" rev-parse HEAD)
 drv=$TMP/driver
 cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -I"$src/src" -I"$PHYSICS_DIR/nvrm" \
     -I"$PHYSICS_DIR/m16" -o "$drv" "$src/tests/test_clean_clone_driver.c" "$src/src/omega_clean_clone.c" \
-    "$src/src/omega_evidence.c" "$src/src/sha256.c" || { echo "FAIL: cannot build driver"; exit 1; }
+    "$src/src/omega_evidence.c" "$src/src/omega_om_units.c" || { echo "FAIL: cannot build driver"; exit 1; }
 run() { (cd "$src" && "$drv" "$@" >"$TMP/out" 2>"$TMP/err"); }
 
 echo "1. OUT_DIR exported like tests/gates/run.sh"
