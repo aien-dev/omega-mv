@@ -1266,6 +1266,8 @@ test-costmodel: $(RX_CM_UNIT)
 # Not a validated cost model and not a hardware measurement.
 # The seeded SHA-256 unit is AArch64 machine code; other hosts link
 # tests/dagsim/sha256_host.c, which aborts if a blob digest is requested.
+# dagsim.o keeps the #590 (3bd56731) nm guard: no generation store, authority,
+# world, or a call that maps or runs code.
 .PHONY: test-dagsim
 DS_OBJ = $(OUT_DIR)/dagsim.o
 DS_UNIT = $(OUT_DIR)/dagsim_unit
@@ -1278,7 +1280,7 @@ endif
 
 $(DS_OBJ): tools/dagsim/dagsim.c tools/dagsim/dagsim.h src/runtime/rx_costmodel.h | $(OUT_DIR)
 	$(CC) $(CFLAGS) -Itools/dagsim -c -o $@ tools/dagsim/dagsim.c
-	@if nm -u $@ | grep -E 'cuda|nvrm|gpu_'; then \
+	@if nm -u $@ | grep -E 'rx_gen_|aienos_cap_|rx_caproot_|rx_capadmin_|rx_world_|mmap|mprotect|fork|exec|dlopen|system' ; then \
 		echo "dagsim.o references an operation an offline evaluator must not have"; \
 		rm -f $@; exit 1; fi
 
