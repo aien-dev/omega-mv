@@ -169,7 +169,7 @@ their fixed bits and the golden word for the backend test in the
 Field layout for every scalar FP data-processing op: Rd bits 4:0, Rn bits 9:5,
 Rm bits 20:16, type bits 23:22 (00 = S, 01 = D). MEASURED (2026-10-16): the words
 below are now backed by `golden/aarch64_fp_golden.md` and `golden/aarch64_fp_golden.h`
-(sibling of this checkout, /home/drakestapleton/workspace/osc4/golden/): 87 forms,
+(sibling of this checkout, ~/workspace/osc4/golden/): 87 forms,
 1365 samples assembled by GNU as 2.42 on this box and disassembled with objdump,
 re-encoded from derived field layouts with 0 mismatches, and a negative control
 (one deliberately corrupted word gives exactly 1 mismatch). FCMP NZCV measured on

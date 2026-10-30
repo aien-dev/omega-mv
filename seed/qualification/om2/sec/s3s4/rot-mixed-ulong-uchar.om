@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 3 lines 76-77: n must have x's type. x ulong, n uchar: error 7 at line 7.
+om2
+fn main to int
+x = ulong 5
+n = uchar 1
+y = rotl x n
+ret 0
+end

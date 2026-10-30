@@ -2,9 +2,9 @@
 # gate5.sh -- the checks of rung 5, omc (seed/README.md). Run from the repo root:  sh seed/omc/gate5.sh
 # Needs seed/rung4/om4.bin (rung 4) and what gate4 needs: build/omegese/omegese and build/omega_emit/omega_emit
 # (the C path), cc for the reference runner, gcc for the C twins. Oracles only, named where used: none of them
-# writes a byte of seed/; omc is built by om4 and then by itself. Results: evidence/SEED-0/omc/.
+# writes a byte of seed/; omc is built by om4 and then by itself. Results: build/seed/r5/evidence/.
 set -eu
-R=seed/omc; R4=seed/rung4; B=build/seed/r5; E=evidence/SEED-0/omc
+R=seed/omc; R4=seed/rung4; B=build/seed/r5; E=build/seed/r5/evidence
 TAB="seed/rung2/table.s2 seed/rung3/table3.s2 $R4/table4.s2"
 mkdir -p "$B" "$E"
 fail=0; cases=0
@@ -75,16 +75,28 @@ g4 $B/cap.sh $B/g4cap $B/g4cape || bad "gate4 (capturing) did not pass: $(grep F
 for f in $(find $R4/tests tests/one_layer/omegese tools/exp445/arms/examples -name '*.om' -o -name '*.omegese' | sort) $R/omc.om; do
   cp $f $C/$(printf '%04d' $(ls $C | wc -l)).in
 done
-same=0; n=0
+#    om4 = stage2 on every input, or the input is a row of $R/tests/om4-superset.tsv: a program using words omc
+#    added beyond om4 (OMEGESE.md section 9), listed by the sha256 of its text with om4's refusal and omc's exit;
+#    the C path (the language oracle) must accept it. An unlisted difference, a listed row that no longer differs,
+#    a listed row the corpus does not reach, or a listed program the C path refuses is a FAIL.
+X=$R/tests/om4-superset.tsv; same=0; ext=0; n=0; seen=""
 for f in $C/*.in; do n=$((n + 1))
   set +e; $R4/om4.bin < $f > $B/c.a 2> $B/c.ae; ra=$?; $S < $f > $B/c.b 2> $B/c.be; rb=$?; set -e
   CODES="$CODES $ra"
   sed -i 's/^om4:/X:/' $B/c.ae; sed -i 's/^omc:/X:/' $B/c.be
+  h=$(sha $f); row=$(grep "^$h[[:space:]]" $X || true)
   if [ $ra = $rb ] && cmp -s $B/c.a $B/c.b && cmp -s $B/c.ae $B/c.be; then same=$((same + 1))
-  else bad "corpus $(basename $f): om4 exit $ra $(cat $B/c.ae), stage2 exit $rb $(cat $B/c.be)"; fi
+    [ -z "$row" ] || bad "om4-superset row $(echo "$row" | cut -f2) no longer differs from om4: drop the row"
+  elif [ -z "$row" ]; then bad "corpus $(basename $f): om4 exit $ra $(cat $B/c.ae), stage2 exit $rb $(cat $B/c.be)"
+  else seen="$seen $h"; src=$(echo "$row" | cut -f2); xa=$(echo "$row" | cut -f4); xe=$(echo "$row" | cut -f5); xb=$(echo "$row" | cut -f6)
+    if [ $ra = $xa ] && [ "$(cat $B/c.ae)" = "X: $xe" ] && [ $rb = $xb ] && [ -s $B/c.b ] && [ ! -s $B/c.be ] && build/omegese/omegese emit $f $B/c.json > /dev/null 2>&1
+    then ext=$((ext + 1)); say "  beyond om4: $src ($(echo "$row" | cut -f3)): om4 $xe, omc exit $xb, the C path accepts it"
+    else bad "om4-superset $src: om4 exit $ra $(cat $B/c.ae) (row: $xa $xe), stage2 exit $rb $(cat $B/c.be) (row: $xb), C path: $(build/omegese/omegese emit $f $B/c.json 2>&1 | head -1)"; fi
+  fi
 done
+for h in $(grep -v '^#' $X | tail -n +2 | cut -f1); do case "$seen" in *" $h"*) ;; *) bad "om4-superset row $h is not in the corpus: stale row";; esac; done
 refused=$(for f in $C/*.in; do $R4/om4.bin < $f > /dev/null 2>&1 || echo x; done | wc -l)
-[ $same = $n ] && say "PASS corpus: om4 = stage2 on $n inputs ($refused of them refused, same error number and line)"
+[ $((same + ext)) = $n ] && say "PASS corpus: om4 = stage2 on $same inputs ($refused of them refused, same error number and line); $ext inputs beyond om4 are listed in seed/omc/tests/om4-superset.tsv, each accepted by omc and the C path"
 cases=$((cases + n))
 
 # 3b. what the corpus does not reach. A program that writes a text with every escape, checked against fixed
@@ -119,7 +131,7 @@ if [ $g4ok = 0 ] || grep -q "^FAIL" $B/g4omc.out; then bad "(c) gate4 with stage
 else say "PASS (c) gate4 with stage2 in om4's place: $(grep -c '^PASS' $B/g4omc.out) checks, 0 FAIL"; fi
 cp $B/g4omce/words.tsv $E/corpus-words.tsv
 sed 's/om4_words/omc_words/' $E/corpus-words.tsv > $B/t && mv $B/t $E/corpus-words.tsv
-say "(c) table: evidence/SEED-0/omc/corpus-words.tsv"; cat $E/corpus-words.tsv >> "$E/gate5.log"
+say "(c) table: $E/corpus-words.tsv"; cat $E/corpus-words.tsv >> "$E/gate5.log"
 cases=$((cases + 1))
 
 # 5. (d) negative controls
@@ -175,27 +187,16 @@ for e in $(seq 1 23); do case "$all" in *" $e "*) ;; *) miss="$miss $e";; esac; 
 [ -z "$miss" ] && say "PASS every error number 1..23 is reached, om4 = stage2 on each" || bad "error numbers never reached:$miss"
 cases=$((cases + 1))
 
-# 7. sizes and speed. omc's size at this self-rewrite; words per function of omc (from compiling each prefix
-#    of omc.om with a 2-word main appended); compile time of stage2 against the C path on the dev tasks
+# 7. sizes and speed. Whole-compiler size and compile time against the C path on the dev tasks.
+# Incomplete source prefixes cannot measure function size when signatures reference later functions.
 lines=$(wc -l < $R/omc.om); nfn=$(grep -c '^fn ' $R/omc.om); bytes=$(stat -c %s $S)
 printf 'rewrite\tbuilt_by\tsource_lines\tfunctions\tbytes\twords\tsha256\n' > $E/size.tsv
 for st in 1 2 3; do by=om4; [ $st -gt 1 ] && by=stage$((st - 1))
   printf 'stage%s\t%s\t%s\t%s\t%s\t%s\t%s\n' $st $by $lines $nfn $(stat -c %s $B/fix/stage$st) $(( ($(stat -c %s $B/fix/stage$st) - 176) / 4 )) $(sha $B/fix/stage$st) >> $E/size.tsv
 done
-say "omc: $lines lines, $nfn functions, $bytes bytes = 176-byte header + $(( (bytes - 176) / 4 )) words (evidence/SEED-0/omc/size.tsv)"
-#     size-history.tsv is kept by hand, one row per self-rewrite; its last row must be this build
-tail -1 $E/size-history.tsv | grep -q "	$(sha $S)\$" && say "PASS size history: its last row is this omc ($(tail -1 $E/size-history.tsv | cut -f1))" || bad "size-history.tsv has no row for this omc: add one"
-printf 'fn main to int\nret 0\nend\n' > $B/m.om; printf 'fn zz to int\nret 0\nend\nfn main to int\nret 0\nend\n' > $B/zm.om
-dm=$(( ($(./$S < $B/zm.om | wc -c) - $(./$S < $B/m.om | wc -c)) / 4 ))
-awk '/^fn /{d=1; name=$2; next} d>0 && /^(if|while|for) /{d++} d>0 && /^end$/{d--; if(d==0) print NR, name}' $R/omc.om > $B/fnends
-printf 'function\twords\n' > $E/omc-words.tsv; prev=$(./$S < $B/m.om | wc -c); start=1
-while read end name; do
-  if [ "$name" = main ]; then sz=$(./$S < $R/omc.om | wc -c); w=$(( (sz - prev) / 4 + dm ))
-  else sz=$(sed -n "1,${end}p" $R/omc.om | cat - $B/m.om | ./$S | wc -c); w=$(( (sz - prev) / 4 )); fi
-  printf '%s\t%s\n' $name $w >> $E/omc-words.tsv; prev=$sz
-done < $B/fnends
-tw=$(awk 'NR>1{s+=$2} END{print s}' $E/omc-words.tsv)
-say "omc words per function: evidence/SEED-0/omc/omc-words.tsv ($nfn functions, $tw words in all, mean $((tw / nfn)))"
+say "omc: $lines lines, $nfn functions, $bytes bytes = 176-byte header + $(( (bytes - 176) / 4 )) words ($E/size.tsv)"
+# The living ledger is maintained before qualification; historical evidence is never rewritten.
+tail -1 "$R/size-history.tsv" | grep -q "	$(sha $S)\$" && say "PASS size history: its last row is this omc ($(tail -1 "$R/size-history.tsv" | cut -f1))" || bad "size-history.tsv has no row for this omc: add one"
 ns() { date +%s%N; }
 N=200; printf 'program\tomc_us\tc_path_us\n' > $E/compile-time.tsv
 for d in $(ls tests/one_layer/omegese/dev/dev*.omegese $R4/tests/fm*.omegese); do p=$(basename $d .omegese)
@@ -206,7 +207,7 @@ for d in $(ls tests/one_layer/omegese/dev/dev*.omegese $R4/tests/fm*.omegese); d
   printf '%s\t%s\t%s\n' $p $(( (t1 - t0) / N / 1000 )) $(( (t2 - t1) / N / 1000 )) >> $E/compile-time.tsv
 done
 N=20; t0=$(ns); i=0; while [ $i -lt $N ]; do $S < $R/omc.om > /dev/null; i=$((i + 1)); done; t1=$(ns)
-say "compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included (evidence/SEED-0/omc/compile-time.tsv); omc compiling itself: $(( (t1 - t0) / N / 1000 )) us"
+say "compile time per program (10 dev tasks, 9 fm), microseconds, 200 runs each, process start included ($E/compile-time.tsv); omc compiling itself: $(( (t1 - t0) / N / 1000 )) us"
 cat $E/compile-time.tsv $E/size.tsv >> "$E/gate5.log"
 
 cp $S $E/omc.elf; sha $S > $E/omc.sha256

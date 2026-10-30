@@ -11,7 +11,7 @@
 GATE=E1-TRANSC-GB10
 OWNER="lane2 E1 transcendental GB10 chip run"
 TEST_SOURCE="tests/test_omega_numeric_transc_gb10.c"
-SOURCES="src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/sha256.c"
+SOURCES="src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
 EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 # The wrapper passes "--chip OP..." itself; this is the old default for direct use.
 RUN_ARGS="--chip EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT"

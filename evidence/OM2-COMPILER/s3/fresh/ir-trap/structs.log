@@ -1,0 +1,31 @@
+PASS fixpoint f3b76f9271bdb1d5d9ca8f210827380c74bc877902eadbe67f2c97ca7f5a5d97
+PASS om4 refuses struct (exit 16)
+PASS t1 exit 42
+PASS t1x exit 20
+PASS t1y exit 22
+PASS t2 exit 6
+PASS t3 exit 15
+PASS t4 exit 17
+PASS t5 exit 10
+PASS t6 exit 21
+PASS t7 exit 1
+PASS t7b exit 9
+PASS t8 exit 1
+PASS t9 exit 1
+PASS bad_field error 3
+PASS after_fn error 9
+PASS dup_struct error 10
+PASS put_view error 20
+PASS fields17 error 14
+PASS idx_hi error 21
+PASS still_free error 9
+PASS field_is_struct error 10
+PASS new_in_if error 9
+PASS no_end error 4
+PASS empty error 16
+PASS dup_field error 10
+PASS missing_val error 4
+PASS mut field-swap exit 22
+PASS gate6 26 cases
+RC=0
+RC=0

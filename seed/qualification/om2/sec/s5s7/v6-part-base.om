@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 177-178: a part counts as its base array, so the array and a part of it in
+note one call are error 19.
+om2
+fn two x view uchar * y view uchar * to ulong
+ret add len x len y
+end
+fn main to int
+a = new uchar 10 0
+putd two a part a 5 2
+ret 0
+end

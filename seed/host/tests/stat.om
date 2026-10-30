@@ -1,0 +1,42 @@
+note stat: path-based metadata without opening the file. st_size is at byte 48 of the ARM64 stat structure.
+text p "stat.tmp"
+text body "abcdefgh"
+text miss "no.such.file"
+fn main to int
+fd = int fopen p 0 len p 577 420
+if lt fd 0
+ret 1
+end
+w = write fd body 0 len body
+if ne w long len body
+ret 2
+end
+r = fclose fd
+if ne r 0
+ret 3
+end
+buf = new uchar 128 0
+r = stat p 0 len p buf 0 128
+if ne r 0
+ret 4
+end
+if ne get buf 48 8
+ret 5
+end
+k = ulong 49
+while lt k 56 bound 8
+if ne get buf k 0
+ret 6
+end
+k = add k 1
+end
+r = stat miss 0 len miss buf 0 128
+if ge r 0
+ret 7
+end
+r = unlink p 0 len p
+if ne r 0
+ret 8
+end
+ret 0
+end

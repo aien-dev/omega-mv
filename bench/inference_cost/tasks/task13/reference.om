@@ -1,0 +1,12 @@
+fn ctz_u32 x uint to uint
+if eq x 0
+ret 32
+end
+count = uint 0
+v = x
+while eq (and v 1) 0
+count = add count 1
+v = shr v 1
+end
+ret count
+end

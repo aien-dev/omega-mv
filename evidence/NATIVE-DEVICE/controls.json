@@ -1,0 +1,114 @@
+[
+  {
+    "name": "devcall-header",
+    "test": "devcall",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "devcall-cap",
+    "test": "devcall",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "devcall-pointer",
+    "test": "devcall",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "devcall-copy",
+    "test": "devcall",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "devcall-size",
+    "test": "devcall",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "uvm-size",
+    "test": "uvmctl",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "word-alignment",
+    "test": "mapio",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "word-rights",
+    "test": "mapio",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "word-truncate",
+    "test": "mapio",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "reserve-limit",
+    "test": "reserve",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "reserve-permissions",
+    "test": "reserve",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "reserve-noreplace",
+    "test": "reserve",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "bind-owner",
+    "test": "reserve",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "bind-retire",
+    "test": "reserve",
+    "exit": 80,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "request-allowlist",
+    "test": "memcheck",
+    "exit": 17,
+    "signal": null,
+    "caught": true
+  },
+  {
+    "name": "width-allowlist",
+    "test": "memcheck",
+    "exit": 29,
+    "signal": null,
+    "caught": true
+  }
+]
