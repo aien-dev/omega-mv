@@ -133,8 +133,8 @@
           "purpose": "Directory tests/canonicalization. Purpose not yet described by a human."
         },
         {
-          "digest": "088f526f8cae115209dd0162f28669812483ce5c926e41e8810dada1eefcb81a",
-          "last_commit": "450bbefd4",
+          "digest": "e83c52ffc46da0e9df448bc5d28a70b08a8cbcd6858e8adea7a842791717c024",
+          "last_commit": "7f9437429",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -199,8 +199,8 @@
           "purpose": "Simulated M16 driver for numeric resource-lifecycle tests. No device execution or numeric parity"
         },
         {
-          "digest": "d958af5413726ddc48a47721800d9766939129f480b26492332ba094577837cb",
-          "last_commit": "d863780eb",
+          "digest": "628d85f858a9ed11e4502064192aeb797bf9fe6f73a3932db520d5b9c22d43f1",
+          "last_commit": "d43d19b44",
           "name": "osh",
           "purpose": "osh lexer host driver, vendored aien-protocols PR#16 draft vectors (5ae5292)"
         },
@@ -295,21 +295,21 @@
           "purpose": "Directory tests/turing. Purpose not yet described by a human."
         },
         {
-          "digest": "930fcb9ce348c604424e5380796a77c3586a835b43d42b504325c36b12d166d7",
-          "last_commit": "450bbefd4",
+          "digest": "aad47a6f37231afcd415798fcd7f18cbcb541066bb958c09d44cb755ce385057",
+          "last_commit": "436ceaae8",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:545723dcb437ee41cde61be01da0fcd83d5e76363b747bef2a2f53e92cf3979c",
-      "compiled_at": "2026-10-30T17:38:28Z",
+      "children_root": "sha256:fed0c3edf5a912c76d12e69d82c5a30cfeb7483c8e3d3ef3fda63d968b9554bc",
+      "compiled_at": "2026-10-30T17:46:42Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:8a74c1c8217abe18d640974791f6a7c5edab662607bf3aa529d71911b2f860fd",
+      "digest": "sha256:44f6ad9d1263b65b89768e3a06c585494501d5913944cde70414c48de4c131e6",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1406,
-      "generated_at_commit": "5c159484b40345f76ad15937305aac155a808bc8",
-      "source_tree": "sha256:064dc3700f2e6cdc1e489097ecd0fff308eb409f3a86e58b122d95cc6312b0e8"
+      "files": 1454,
+      "generated_at_commit": "031b3e6d695d57e054706c27eba023ba2a8c0eab",
+      "source_tree": "sha256:f0c63c7b4d5195eac55196fbe15ff1f6c1dd4ac2495ead1fd9a2eb92715845f7"
     },
     "owner_lane": "",
     "provenance": {
