@@ -36,3 +36,14 @@ view-nocheck-kill-ce-view-C kill seed/qualification/om2/sec/s3s4/ce-view.om+seed
 view-nocheck-kill-ce-view-D kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:68:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-D.out - 0
 view-nocheck-kill-ce-view-F kill seed/qualification/om2/sec/s3s4/ce-view.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:70:1 file:seed/qualification/om2/oracle/s3s4/exp/ce-view-F.out - 0
 cc pinned
+# --- mutant part-order: original witness, k executes before o without swapping their roles
+# Rebuild the unmutated historical S4 compiler for the paired healthy expectation first.
+cc build/om2-qual/cand-s4/omc.om
+part-order-ctl-v6-part-order run seed/qualification/om2/sec/s5s7/v6-part-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 102
+cc pinned
+subst seed/qualification/om2/candidates/s4/mutants/part-order.from seed/qualification/om2/candidates/s4/mutants/part-order.to
+cc build/om2-qual/cand-s4/omc.om
+ctl-part-order-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+part-order-ctl-v6-part-empty run seed/qualification/om2/sec/s5s7/v6-part-empty.om+seed/qualification/om2/sec/s5s7/pr.om - file:seed/qualification/om2/oracle/s5s7/exp/v6-part-empty.out - 0
+part-order-mut-a4-part-order run seed/qualification/om2/sec/s5s7/v6-part-order.om+seed/qualification/om2/sec/s5s7/pr.om - - - 105
+cc pinned

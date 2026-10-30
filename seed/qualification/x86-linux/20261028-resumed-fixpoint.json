@@ -1,0 +1,53 @@
+{
+  "execution": "EMULATED",
+  "native_x86": "NOT_RUN",
+  "source_base_commit": "becf5c817bcb7e0846d12ebfc2be91042d8ad89a",
+  "source_revision": "52f20256e790ced3fd41fe3193de1ff1e0f00d94",
+  "source_sha256": "350227743e67972cdbf1729595daee02b0a668774d7a0e9b999dbd05fee4c2a7",
+  "executed_x86_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/omc-x86",
+    "sha256": "8954c67640817cf098afe4c54f3fd31a9509e70c3fb7e4e9decf01768c2ae41d",
+    "build_command": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/omc-aarch64 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/current-target-source.om",
+    "build_exit": 0
+  },
+  "checks": [
+    {
+      "target": "aarch64",
+      "execution": "EMULATED",
+      "expected_provenance": {
+        "command": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/omc-aarch64 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/current-source.om",
+        "compiler_sha256": "f9dca55a8595f923f06a85bb1b8739d0433d7e2b5e39bb5035a57af1eaf31385",
+        "exit": 0,
+        "stderr": ""
+      },
+      "command": "/usr/bin/qemu-x86_64 /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/omc-x86 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/current-source.om",
+      "exit": 0,
+      "expected_sha256": "f9dca55a8595f923f06a85bb1b8739d0433d7e2b5e39bb5035a57af1eaf31385",
+      "observed_sha256": "f9dca55a8595f923f06a85bb1b8739d0433d7e2b5e39bb5035a57af1eaf31385",
+      "byte_identical": true,
+      "stderr": ""
+    },
+    {
+      "target": "x86linux",
+      "execution": "EMULATED",
+      "expected_provenance": {
+        "command": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/omc-aarch64 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/current-target-source.om",
+        "compiler_sha256": "f9dca55a8595f923f06a85bb1b8739d0433d7e2b5e39bb5035a57af1eaf31385",
+        "exit": 0,
+        "stderr": ""
+      },
+      "command": "/usr/bin/qemu-x86_64 /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/omc-x86 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/current-target-source.om",
+      "exit": 0,
+      "expected_sha256": "8954c67640817cf098afe4c54f3fd31a9509e70c3fb7e4e9decf01768c2ae41d",
+      "observed_sha256": "8954c67640817cf098afe4c54f3fd31a9509e70c3fb7e4e9decf01768c2ae41d",
+      "byte_identical": true,
+      "stderr": ""
+    }
+  ],
+  "self_fixpoint_proof": {
+    "executed_x86_sha256": "8954c67640817cf098afe4c54f3fd31a9509e70c3fb7e4e9decf01768c2ae41d",
+    "regenerated_x86_sha256": "8954c67640817cf098afe4c54f3fd31a9509e70c3fb7e4e9decf01768c2ae41d",
+    "byte_identical": true
+  },
+  "log_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/current-fixpoint.json"
+}

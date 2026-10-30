@@ -1,0 +1,10 @@
+fn max3_i32 a int b int c int to int
+m = a
+if gt b m
+m = b
+end
+if gt c m
+m = c
+end
+ret m
+end
