@@ -5,6 +5,9 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
+| Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
+| Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
 | Codex (GPT-6.1 Sol) | FR-9 x86-64 Linux backend integration from historical 7eca2ac3f, full-language lowering, contract-loop/output-capacity/dead-branch repairs, division/shift proof-aware diagnostics, original-conductor and historical-mutant qualification repair, independent disassembly and cross-architecture qualification; orphaned-lane recovery, current mutation re-anchoring and x86 OM-2 emitted-storage bound |
 | Codex (GPT-6.1 Sol) | TileLab decimal-overflow and malformed-register-budget refusal repair, host regression fixtures and semantic negative controls (TL907-01) |
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
@@ -47,3 +50,4 @@ Update this table in the same commit as the work it credits.
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
 | Grok 4.7 | Merged current main (b3dca0f1) into #514. The only conflict was the generated root `.crumb`; regenerated crumbs with the crumb.lock tool (d0f0b95d). |
 | Grok 4.7 | Merged current main (089e5b05) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (62d1d0d) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
