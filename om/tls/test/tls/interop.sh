@@ -80,6 +80,15 @@ nextport() {
   port=$((port + 1))
   while ss -Hltn "sport = :$port" | grep -q .; do port=$((port + 1)); done
 }
+# listening PORT: wait until a server listens on 127.0.0.1:PORT (at most 15 s). A fixed sleep raced a
+# cold python3 start on a hosted runner: the client connected first and exited 3 (connect failure).
+listening() {
+  n=0
+  until ss -Hltn "sport = :$1" | grep -q .; do
+    n=$((n + 1)); [ "$n" -gt 150 ] && return 1
+    sleep 0.1
+  done
+}
 fail=0; rows=0
 # row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name)
 row() {
@@ -89,7 +98,7 @@ row() {
   # shellcheck disable=SC2086
   openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
   sp=$!
-  sleep 0.4
+  listening "$port"
   timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"
   rc=$?
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
@@ -121,7 +130,7 @@ fake() {
   nextport; rows=$((rows + 1))
   python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
   fp=$!
-  sleep 0.4
+  listening "$port"
   timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   got="$(tr -d '\n' < "c$port.err") (exit $rc)"
@@ -144,7 +153,7 @@ fsrv() {
   nextport; rows=$((rows + 1))
   python3 "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
   fp=$!
-  sleep 0.6
+  listening "$port"
   timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${3:-0}" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
@@ -181,7 +190,7 @@ openssl s_server -accept "127.0.0.1:$bp" -naccept 1 -cert good.pem -key good.key
 sp=$!
 python3 "$here/tamper.py" "$port" "$bp" > "p$port.log" 2>&1 &
 pp=$!
-sleep 0.6
+listening "$bp"; listening "$port"
 timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
 kill "$sp" "$pp" 2> /dev/null; wait "$sp" "$pp" 2> /dev/null
 got="$(tr -d '\n' < "c$port.err") (exit $rc)"
