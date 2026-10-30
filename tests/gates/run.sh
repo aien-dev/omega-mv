@@ -338,6 +338,14 @@ case "$step" in
     obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
     sh seed/tilelab/gate.sh
     ;;
+  trace)              # omega#608: local trace segment (seed/trace/segment.om), built by the committed seed/out/omc
+                      # after its recorded SHA-256 is checked: 71 checks against expected.txt (torn-tail recovery
+                      # keeps N-1 records, CRC/length/sequence damage, header refusals, O_EXCL, O_NOFOLLOW) and
+                      # 4 source mutants (CRC check, torn tail, alignment, O_EXCL) that must each fail their check.
+    sha256sum -c seed/out/omc.sha256
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/trace/gate.sh
+    ;;
   native)             # omega#663/#664: native .om units built by the committed seed/out/omc after its recorded
                       # SHA-256 is checked. The metadata test must pass and each recorded ECOSYSTEM663 mutant must
                       # exit 1; with native/autodiff664 present, its tape suite (test + 3 compiled mutants) and the
