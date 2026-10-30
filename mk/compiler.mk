@@ -80,11 +80,14 @@ $(OSC_DIR)/test_legacy_a64_asan: tests/compiler/test_legacy_a64.c $(OSC_LEGACY_A
 # omega#444 (one-layer stage 2): the strict OSC IR decoder osc_ir_decode against
 # spec/one-layer-format.md. test_osc_ir_decode quick|full|asan (counts in its output).
 # Decoder mutants: OSC_IR_DECODE_MUTANT=k switches off exactly one refusal in
-# src/compiler/osc_ir.c; each must make the test report a FAIL (negative controls).
+# src/compiler/osc_ir.c (23..28: the version-6 checks of omega#451, 28 = identity rule);
+# each must make the test report a FAIL (negative controls).
 # ASan legs run with detect_stack_use_after_return=0: with the fake stack on, every
 # osc_ir_validate call (a 6 KB frame) ran about 50x slower on the Spark (measured
 # 0.012 ms vs 2.6 ms per encode); use-after-return is not what this test probes.
-OSC_DEC_MUTANTS = 1 2 3 4 5 6 7 8
+# Mutants 9..22 (omega#450): 9 every count/length maximum off, 10 unknown opcode admitted,
+# 11..22 one count/length maximum off each (sites listed in src/compiler/osc_ir.c).
+OSC_DEC_MUTANTS = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28
 OSC_DEC_ASAN_ENV = ASAN_OPTIONS=detect_stack_use_after_return=0
 .PHONY: test-osc-ir-decode test-osc-ir-decode-quick test-osc-ir-decode-mutants
 
