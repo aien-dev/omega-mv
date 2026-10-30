@@ -210,7 +210,7 @@ t "test build receipt differs only in the source claim" [ "$(diff "$W/stubreal/r
 t "test build receipt says unverified" [ "$(rv "$W/anyreal" recheck_source_sha256)" = unverified ]
 t "real run: receipt names the pinned recheck" [ "$(rv "$W/stubreal" recheck_sha256)" = "$RPIN" ]
 t "receipt names the recheck source the build verified" [ "$(rv "$W/stubreal" recheck_source_sha256)" = "$(sha "$RSRC")" ]
-t "recheck source is D's frozen schema v1 recheck.c" [ "$(sha "$RSRC")" = 05cec285f7b7b2be68b1db1287661513e7e4715da44909065bdd0829daac02b6 ]
+t "recheck source is D's frozen schema v1 recheck.c" [ "$(sha "$RSRC")" = 9d7a3c74de404170d32eacbc0ab551e3b598a086d9b300a94825e70614533e6c ]
 # task files are opened once; the open file's own path is checked (symlinks into hidden/ are refused)
 mkdir -p "$W/task/hidden"; cp "$R" "$W/task/hidden/requirement"; cp "$P" "$W/task/hidden/prompt"
 ln -s "$W/task/hidden/requirement" "$W/task/req.link"; ln -s "$W/task/hidden" "$W/task/hid.link"

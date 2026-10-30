@@ -465,11 +465,11 @@ static void write_out(const char *dir, outfile *fs, int nf)
     while (dl > 1 && dir[dl - 1] == '/') dl--;
     if (dl + 32 >= sizeof tmp) fatal("write_failed", "--out path too long");
     snprintf(tmp, sizeof tmp, "%.*s.tmp.%ld", (int)dl, dir, (long)getpid());
-    if (mkdir(tmp, 0777) != 0) fatal("write_failed", "cannot create %s", tmp);
+    if (mkdir(tmp, 0755) != 0) fatal("write_failed", "cannot create %s", tmp);
     for (int i = 0; i < nf; i++) {
         char path[PATH_MAX + 32];
         snprintf(path, sizeof path, "%s/%s", tmp, fs[i].name);
-        int fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666);
+        int fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
         size_t n = fs[i].b->n, w = 0;
         const char *p = fs[i].b->p ? fs[i].b->p : "";
         while (fd >= 0 && w < n) {
