@@ -15,6 +15,14 @@ Compiler source SHA-256:
 Authority: `docs/one_layer/OMEGESE.md`, sections 9, 10 and 12, and
 `seed/omc/omc.om` at that baseline. No syntax changes are proposed by this patch.
 
+Current pin after merging main `62d1d0d668f897386a0e311374f8dbcc5c32dde8`
+(2026-10-30): committed `seed/out/omc` SHA-256
+`62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`, compiler
+source SHA-256 `96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e`.
+The gate refuses any other compiler hash, so the reproduction command below uses
+this current pin; the original baseline pin above now yields `OM2GATE INVALID`
+with every case `NOT_RUN` on this tree.
+
 ## Proposed learned-representation envelope
 
 An untrusted producer may submit a learned representation for communication or an
@@ -115,7 +123,7 @@ mkdir -p build
 if seed/out/omc < seed/qualification/om2/gate.om > build/neuralese-gate; then
   chmod +x build/neuralese-gate &&
   build/neuralese-gate seed/out/omc \
-    d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 \
+    62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b \
     neuralese/host.cases build/neuralese-host
 else
   exit 1
@@ -165,6 +173,10 @@ commands and every verdict are in
 [`host-results.287fdc263f7af93107c378ba63c92202a0e6c1479cb1ff6971706b423b0b15fb.json`](host-results.287fdc263f7af93107c378ba63c92202a0e6c1479cb1ff6971706b423b0b15fb.json);
 the unedited conductor transcript is
 [`host-3163bdc1f56d02803df5061439d0a51156443b339e8e08870a93647894e99222.log`](host-3163bdc1f56d02803df5061439d0a51156443b339e8e08870a93647894e99222.log).
+Those files record the baseline-compiler run and are kept unedited. After the
+main merge above, the same unchanged `host.cases` against the current pin
+returned `OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0` on
+2026-10-30 (host CPU, Linux AArch64).
 No model inference, learned representation, GPU, hardware qualification,
 production transport, merge or deployment is claimed.
 
@@ -325,7 +337,10 @@ It is exactly the committed `seed/out/omc` introduced by
 `1fe5976d398646b17acabbf6d9dfae96b017e439`, with the full binary/source hashes in
 the lock. Read-only `git show <revision>:seed/out/omc | sha256sum` resolved the
 older `2c824805...` at82a399b9 and `49923639...` at ec07d25d as different
-historical binaries. No compiler change is part of NL4.
+historical binaries. No compiler change is part of NL4. After the main merge
+recorded at the top of this file, the committed compiler is `62775d2a...`; the
+lock and receipt below keep the `d6290c76...` run unedited, and the command
+below uses the current pin because the conductor refuses any other hash.
 
 From this checkout with separately fetched sibling source repositories:
 
@@ -337,7 +352,7 @@ sha256sum build/nl4-deps/h.om build/nl4-deps/v.om
 # Refuse to continue unless both hashes equal nl4-dependencies.json.
 seed/out/omc < seed/qualification/om2/gate.om > build/nl4-gate
 chmod +x build/nl4-gate
-build/nl4-gate seed/out/omc d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 neuralese/nl4-host.cases build/nl4-host
+build/nl4-gate seed/out/omc 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b neuralese/nl4-host.cases build/nl4-host
 ```
 
 The conductor hashes the compiler itself and requires a previously absent scratch
@@ -360,3 +375,10 @@ The actual receipt is
 the initial compiler/name and lexical-order failures are retained separately,
 not rewritten as success. Representative actual channels are
 `nl4-success.stdout` and `nl4-refusal.stderr`.
+
+Re-run on 2026-10-30 after merging main `62d1d0d668f897386a0e311374f8dbcc5c32dde8`,
+with both staged dependencies matching the lock hashes and compiler
+`62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`: the unchanged
+`nl4-host.cases` returned `OM2GATE PASS cases=63 pass=63 fail=0 invalid=0 not_run=0`
+and the inherited `host.cases` returned `OM2GATE PASS cases=54 pass=54 fail=0
+invalid=0 not_run=0` (host CPU, Linux AArch64).
