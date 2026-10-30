@@ -1153,7 +1153,9 @@ deleted must be caught.
 ### 11.2 Memory profile contract (IR v7)
 
 The backend half of this contract is implemented by `seed/wasm/irwasm.om`
-(section 11.1); the producer half is the omc IR mode. The authoritative wire
+(section 11.1). The producer half (omc's IR mode writing version 7) is separate
+work: on this compiler IR mode still writes version 1 only, so the v7 units the
+gate translates come from the hand writer `seed/wasm/v7/writer.js`. The authoritative wire
 allocation and validation rules are in `spec/one-layer-format.md` section 10.
 The milestone name does not repurpose OSC wire version 2.
 
