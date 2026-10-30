@@ -219,7 +219,13 @@ case "$step" in
     grep -q '^OMEGA_EFFECT_CAP64_PASS$' build/effect-cap64.log
     receipt omega_state_projection_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_STATE_PROJECTION_PASS": "PASS"'
     receipt rx_action_graph_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_ACTION_GRAPH_IR_PASS": "PASS"'
-    receipt omega_incremental_semantics_receipt.json '"OMEGA_INCREMENTAL_SEMANTICS_PASS": "HOST_PASS_ENERGY_UNMEASURED"' '"false_hits": 0,'
+    # omega-mv#404 item 2: PASS means the package energy counter (hwmon aien_spbm, found by the
+    # same name-prefix test rx_sem_incremental uses) measured the work; HOST_PASS_ENERGY_UNMEASURED
+    # means this host has no such counter. The verdict must match this host; PASS_UNBOUND and FAIL
+    # never pass. Which one ran is recorded as an observation.
+    if grep -qs '^aien_spbm' /sys/class/hwmon/*/name; then inc_verdict=PASS; else inc_verdict=HOST_PASS_ENERGY_UNMEASURED; fi
+    receipt omega_incremental_semantics_receipt.json "\"OMEGA_INCREMENTAL_SEMANTICS_PASS\": \"$inc_verdict\"" '"false_hits": 0,'
+    obs incremental_semantics_verdict "\"$inc_verdict\""
     receipt rx_capability_query_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_CAPABILITY_QUERY_PASS": "PASS"'
     receipt rx_semantic_comm_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_SEMANTIC_COMMUNICATION_PASS": "PASS"'
     receipt rx_cognitive_routing_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_COGNITIVE_ROUTING_PASS": "PASS"'
