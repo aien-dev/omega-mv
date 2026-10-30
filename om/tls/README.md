@@ -311,15 +311,18 @@ Not covered, or covered only partly:
 | `sh om/tls/test/aesgcm/run.sh OMC` | `AESGCM PASS vectors=47570 (fips197=4, nist=47250, wycheproof=316) mutants=5/5` |
 | `sh om/tls/test/gcmsiv/run.sh OMC` | `GCMSIV PASS vectors=51 (rfc8452 c1=24 c2=24 c3=2 s8=1) checks=422 mutants=6/6` (2026-10-30, omc `62775d2a`) |
 | `sh om/tls/test/reuse/run.sh OMC` | `REUSE PASS checks=27 mutants=6/6` (2026-10-30, omc `62775d2a`) |
-| `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
-| `sh om/tls/test/ecdh/run.sh OMC` | `ECDH PASS vectors=2458 (cavp=100 wycheproof=2284 edge=74) mutants=9/9` (omc `2c824805`, 2026-10-26) |
+| `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=8754 (wycheproof=3748 cavp=180 edge=56 p256=4770) mutants=14/14` (2026-10-30, omc `62775d2a`, with the P-256 fast field) |
+| `sh om/tls/test/ecdh/run.sh OMC` | `ECDH PASS vectors=2458 (cavp=100 wycheproof=2284 edge=74) mutants=13/13` (2026-10-30, omc `62775d2a`) |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
-| `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
+| `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=106 (openssl-parity=83/106) mutants=26/26` (2026-10-30, omc `62775d2a`) |
 | `sh om/tls/test/drbg/run.sh OMC` | `DRBG PASS vectors=810 (acvp=90, cavp=720) api=23 mutants=13/13` (observed 2026-10-26, omc `2c824805`) |
 | `sh om/tls/test/fips/run.sh OMC` | `FIPS PASS checks=49 drbgerr=50 ecgenerr=52 kat-mutants=14/14 code-mutants=18/18` (observed 2026-10-26, omc `2c824805`, with the approved-only ECDH key generation; same line 2026-10-27 with the integrity test, detail 16) |
 | `sh om/tls/test/integrity/run.sh OMC [OUT]` | `INTEGRITY PASS checks=14 mutants=4` (observed 2026-10-27, omc `2c824805`) |
 | `sh om/tls/test/fips/entropy.sh OMC EA_CPP_DIR` | `ENTROPY PASS ...` with the min-entropy estimates; needs the NIST SP800-90B_EntropyAssessment tool built separately |
-| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | @@GATE-TLS@@ Before the integration: `interop=44 ... mutants=27/27` on audit/tls-suites and `interop=57 ... mutants=34/34` on audit/tls-fips-approved (omc `2c824805`; `net=NOT_RUN` without `TLS_NET`) |
+| `sh om/tls/test/mlkem/run.sh OMC` | `MLKEM PASS vectors=4500 (wycheproof=756 fips203=105) sha3=3632 mutants=9/9` (2026-10-30, omc `62775d2a`) |
+| `sh om/tls/test/rev/run.sh OMC` | `REV PASS cases=86 mutants=17/17` (2026-10-30, omc `62775d2a`) |
+| `sh om/tls/test/net/hostile.sh OMC` | `HOSTILE PASS cases=106 pass=106 fail=0` (2026-10-30, omc `62775d2a`) |
+| `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=99 pq=PASS residue=PASS net=PASS mutants=62/62` (observed 2026-10-30 on the train r3 tree `a00e134c`, omc `62775d2a`, with `TLS_PQ=1`, `OPENSSL35` and `FAKESRV_PY` set). Before the integration: `interop=44 ... mutants=27/27` on audit/tls-suites and `interop=57 ... mutants=34/34` on audit/tls-fips-approved (omc `2c824805`; `net=NOT_RUN` without `TLS_NET`) |
 | `sh om/tls/build.sh OMC om/tls/test/tls/timing.om build/tls/timing` then `nice -n 19 taskset -c CPU build/tls/timing WHAT N` | dudect samples (`CLASS NANOSECONDS` lines), statistics outside; see `THREAT_MODEL.md` |
 
 How the suites are built:
@@ -386,7 +389,7 @@ The interop refusal table (`build/tls/tls/interop-table.txt`):
 The x509 suite runs `openssl verify -x509_strict -purpose sslserver -verify_hostname HOST -attime
 NOW` (OpenSSL 3.0) on every chain case and fails on any difference that
 `test/x509/vectors/openssl-diff.txt` does not list, and on any listed case where OpenSSL agrees.
-18 of the 91 cases differ. In every one this client refuses and OpenSSL accepts: there is no case
+23 of the 106 cases differ. In every one this client refuses and OpenSSL accepts: there is no case
 where this client accepts a chain OpenSSL refuses. The two such cases the review found
 (`store_intermediate_anchor`, `at_not_after`) were closed by making this client stricter (above);
 mutants anchor-self-issued and date-at-not-after reopen them and are caught.
@@ -411,6 +414,10 @@ mutants anchor-self-issued and date-at-not-after reopen them and are caught.
 | `rsa_e_2_32_plus_1_intermediate` | `WEAK_KEY` | same policy for presented intermediates |
 | `rsa_e_even_leaf` | `WEAK_KEY` | even exponent 65536; OpenSSL verify does not check the leaf exponent |
 | `rsa_e_1_leaf` | `WEAK_KEY` | exponent 1; OpenSSL verify does not check the leaf exponent |
+| `serial_zero`, `serial_negative` | `MALFORMED` | RFC 5280 4.1.2.2: serialNumber must be positive (MODEL-REVIEWED I5b, x509-limbo); OpenSSL verify does not check it |
+| `serial_21_octets` | `MALFORMED` | RFC 5280 4.1.2.2: serialNumber at most 20 octets (I5b) |
+| `generalizedtime_before_2050` | `MALFORMED` | RFC 5280 4.1.2.5: dates through 2049 must be UTCTime (I5a); OpenSSL accepts either form |
+| `rsa_2052_bit_leaf` | `WEAK_KEY` | the modulus must be a whole number of octets (2048..4096 in steps of 8), as in the x509-limbo webpki RSA cases |
 
 ## Security review
 
