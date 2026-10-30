@@ -274,6 +274,33 @@ end
 ret 0
 end
 
+note EDR0 (X, Y plain affine) = k*P for the scalar k at EDK and the point at slot p (Montgomery,
+note Z = R mod p); returns 1 when the result is finite, else 0. P-256 (L = 8, public) goes through the
+note constant-time fixed-window p2_smul of ec.om in its own workspace, which is wiped; P-384 through
+note ecd_ladder and ecd_fin. The curve test branches on public data only.
+fn ecd_mult w edit ulong ECWN p ulong to ulong
+if ne get w 0 8
+ecd_ladder w p
+ret ecd_fin w
+end
+v = new ulong P2WN 0
+p2_init v
+ecd_mul w ECCP EDT0 p ECON
+ecd_mul w ECCP EDT1 add p 12 ECON
+for j ulong 8 unroll
+put v add P2K j get w add EDK j
+put v add P2P j get w add EDT0 j
+put v add add P2P 8 j get w add EDT1 j
+end
+f = p2_smul v
+for j ulong 8 unroll
+put w add EDR0 j get v add P2O j
+put w add add EDR0 12 j get v add add P2O 8 j
+end
+p2_wipe v
+ret f
+end
+
 fn ecdh_pub d view uchar * q edit uchar * to ulong
 w = new ulong ECWN 0
 crv = ecd_crv d
@@ -290,8 +317,7 @@ ret rc
 end
 ec_load w EDK d
 ok = ecd_range w
-ecd_ladder w ECG
-fin = ecd_fin w
+fin = ecd_mult w ECG
 put q 0 4
 ecd_out w EDR0 q 1
 ecd_out w add EDR0 12 q add 1 nb
@@ -324,8 +350,7 @@ ret 3
 end
 ec_load w EDK d
 ok = ecd_range w
-ecd_ladder w ECQ
-fin = ecd_fin w
+fin = ecd_mult w ECQ
 ecd_out w EDR0 z 0
 ecd_wipe w
 if eq ok 0
