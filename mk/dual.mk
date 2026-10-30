@@ -13,7 +13,7 @@ include mk/estimation.mk
 .PHONY: test-dual-types test-dual-bind test-dual-update dual-purity test-dual
 DUAL_CFLAGS = $(EST_CFLAGS) -Isrc/dual -Itests/dual
 DUAL_DIR = $(OUT_DIR)/tests-dual
-DUAL_CORE_SRCS = src/dual/rx_dual.c src/sha256.c
+DUAL_CORE_SRCS = src/dual/rx_dual.c src/omega_om_units.c
 DUAL_SRCS = src/dual/rx_dual.c src/dual/rx_dual_bind.c src/dual/rx_dual_update.c $(EST_TYPES_SRCS)
 DUAL_HDRS = src/dual/rx_dual.h src/dual/rx_dual_bind.h src/dual/rx_dual_update.h $(EST_HDRS)
 # A price is information, not authority: no capability, promotion, generation

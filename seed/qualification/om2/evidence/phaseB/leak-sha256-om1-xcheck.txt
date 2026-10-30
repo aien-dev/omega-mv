@@ -1,0 +1,5 @@
+XCHECK oracle='GNU objdump (GNU Binutils for Ubuntu) 2.42' words=5130
+XCHECK branches objdump=83 leakscan=83
+XCHECK mem-non-sp objdump=387 leakscan=387 (sp/x29-only accesses not listed: 773)
+XCHECK undecodable objdump=0 leakscan-unknown=0
+XCHECK AGREE

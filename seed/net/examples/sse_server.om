@@ -1,0 +1,196 @@
+note seed/net/examples/sse_server.om -- an HTTP/1.1 + server-sent events service embedding http.om.
+note Compose: { printf 'om2\n'; cat seed/net/http.om seed/net/examples/sse_server.om; } | omc > sse_server
+note Run: ./sse_server [maxconn]   binds 127.0.0.1 on an ephemeral port (port 0), prints
+note `PORT <n>` on stdout, serves at most maxconn connections (default 8, keep-alive inside each),
+note then exits; it also exits after 30 s without a new connection. Routes:
+note   GET|HEAD /health  200 application/json {"ok":true}
+note   GET /events       200 text/event-stream, three events, then the stream ends
+note   POST /echo        200 application/octet-stream, the request body (at most 1 MiB)
+note   other paths 404, other methods on these paths 405; malformed requests get the status
+note   hreqrd reports (400, 413, 417, 431, 501, 505) and the connection closes.
+text eok "{\"ok\":true}"
+text ejson "application/json"
+text eoct "application/octet-stream"
+text ectype "Content-Type"
+text eheal "/health"
+text eevts "/events"
+text eecho "/echo"
+text eget "GET"
+text epost "POST"
+text ehead "HEAD"
+text ehello "hello from Omega"
+text emulti "line one\nline two"
+text ebye "bye"
+text emname "multi"
+text eid1 "1"
+text eid2 "2"
+text eid3 "3"
+text eport "PORT "
+fn rhealth cs edit ulong 320 io edit uchar 131072 to long
+r = hrspst cs io 200
+r = hfe r hhname cs io ectype
+r = hfe r hhval cs io ejson
+r = hfe r hhend cs io 0 len eok
+r = hfe r hput cs io eok
+ret hfe r hwfin cs io
+end
+fn revents cs edit ulong 320 io edit uchar 131072 to long
+r = hrspsse cs io
+r = hfe r hsseid cs io eid1
+r = hfe r hssedat cs io ehello
+r = hfe r hsseend cs io
+r = hfe r hsseevt cs io emname
+r = hfe r hsseid cs io eid2
+r = hfe r hssedat cs io emulti
+r = hfe r hsseend cs io
+r = hfe r hsseid cs io eid3
+r = hfe r hssedat cs io ebye
+r = hfe r hsseend cs io
+ret hfe r hwfin cs io
+end
+fn recho cs edit ulong 320 io edit uchar 131072 body edit uchar 1048576 to long
+put cs HBCAP 1048576
+n = hbodyall cs io body
+if lt n 0
+if eq n HEBIG
+ret hrsperr cs io 413
+end
+ret hrsperr cs io 400
+end
+r = hrspst cs io 200
+r = hfe r hhname cs io ectype
+r = hfe r hhval cs io eoct
+r = hfe r hhend cs io 0 ulong n
+r = hfe r hput cs io view part body 0 ulong n
+ret hfe r hwfin cs io
+end
+fn route cs edit ulong 320 io edit uchar 131072 body edit uchar 1048576 to long
+if hispath cs io eheal
+if or hismeth cs io eget hismeth cs io ehead
+ret rhealth cs io
+end
+ret hrspempty cs io 405
+end
+if hispath cs io eevts
+if hismeth cs io eget
+ret revents cs io
+end
+ret hrspempty cs io 405
+end
+if hispath cs io eecho
+if hismeth cs io epost
+ret recho cs io body
+end
+ret hrspempty cs io 405
+end
+ret hrspempty cs io 404
+end
+note serve1: one connection, keep-alive, at most 100 requests; negative = no connection came
+fn serve1 lf int cs edit ulong 320 io edit uchar 131072 body edit uchar 1048576 to long
+c = haccept lf 30000000000
+if lt c 0
+ret c
+end
+r = hinit cs io int c 1
+if lt r 0
+x = hclose cs
+ret 0
+end
+hsettmo cs 10000000000 10000000000
+note at most 20 s for one request body plus its response (a 1 MiB echo needs far less)
+hsetbdl cs 20000000000
+for k ulong 100
+r = hreqrd cs io
+if le r 0
+if lt r 0
+x = hreject cs io r
+end
+break
+end
+r = route cs io body
+if lt r 0
+break
+end
+if eq hnext cs io 0
+break
+end
+end
+r = hclose cs
+ret 0
+end
+fn wrout b view uchar * to long
+p = ulong 0
+for it ulong 4096
+if ge p len b
+ret 0
+end
+w = write 1 b p sub len b p
+if le w 0
+ret -5
+end
+p = add p ulong w
+end
+ret -5
+end
+fn argmax ab edit uchar 32 to ulong
+if lt argcnt 2
+ret 8
+end
+n = argread 1 ab 0 32
+if le n 0
+ret 8
+end
+if not hdigits view part ab 0 ulong n
+ret 8
+end
+ret hdecv view part ab 0 ulong n
+end
+fn main to int
+cs = new ulong 320 0
+io = new uchar 131072 0
+body = new uchar 1048576 0
+a = new uchar 16 0
+ab = new uchar 32 0
+mx = argmax ab
+r = haddr4 a 2130706433 0
+lf = hlisten a 16
+if lt lf 0
+ret 2
+end
+for i ulong len eport
+put ab i get eport i
+end
+k = pdec ab len eport hport a
+put ab k 10
+r = wrout view part ab 0 add k 1
+if lt r 0
+ret 3
+end
+for j ulong mx
+r = serve1 int lf cs io body
+if lt r 0
+break
+end
+end
+c = fclose int lf
+ret 0
+end
+fn pdec b edit uchar 32 p ulong v ulong to ulong
+d = new uchar 20 0
+i = ulong 20
+x = v
+for it ulong 20
+i = sub i 1
+put d i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+q = p
+for k ulong sub 20 i
+put b q get d add i k
+q = add q 1
+end
+ret q
+end

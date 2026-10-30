@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 14 + errata E6 Q1: an OM-2 reserved word declared as a name in an OM-2 unit is
+note error 16 at the declaring line.
+om2
+fn rotr x uint n uint to uint
+ret xor x n
+end
+fn main to int
+ret int rotr 5 3
+end

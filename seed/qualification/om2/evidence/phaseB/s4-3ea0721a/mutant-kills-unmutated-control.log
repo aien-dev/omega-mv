@@ -1,0 +1,33 @@
+OM2GATE START cases=seed/qualification/om2/sec/s3s4/mutant-kills.cases scratch=build/om2-qual/s4-mk
+VERDICT kill-unroll-sum FAIL run exit=0 expected=0 mutant survived: stdout equals the oracle stderr=match
+VERDICT kill-unroll-nest FAIL run exit=0 expected=0 mutant survived: stdout equals the oracle stderr=match
+VERDICT kill-rot-values FAIL run exit=0 expected=0 mutant survived: stdout equals the oracle stderr=match
+VERDICT kill-rot-trap-A FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-B FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-C FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-D FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-E FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-F FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-G FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-H FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-I FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-J FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-K FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-L FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-M FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-N FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-rot-trap-O FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-ce-view-A FAIL compile exit=16 expected=0
+VERDICT kill-ce-view-C FAIL compile exit=16 expected=0
+VERDICT kill-ce-view-D FAIL compile exit=16 expected=0
+VERDICT kill-ce-view-F FAIL compile exit=16 expected=0
+VERDICT kill-fold-trap-A FAIL run exit=102 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-B FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-C FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-D FAIL run exit=107 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-E FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-F FAIL run exit=101 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-G FAIL run exit=102 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-H FAIL run exit=105 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+VERDICT kill-fold-trap-I FAIL run exit=102 expected=0 mutant survived: stdout equals the oracle stderr=match; not a meaningful kill
+OM2GATE FAIL cases=31 pass=0 fail=31 invalid=0 not_run=0

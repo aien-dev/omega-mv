@@ -1,0 +1,28 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of s2hex/hex-places.om with decimal literals (pinned check of the oracle values).
+text msg "hex\n"
+fn twice a ulong to ulong
+ret mul a 2
+end
+fn main to int
+a = new uchar 4 0
+put a 1 104
+put a 3 10
+s = ulong 0
+for i ulong 5
+s = add s i
+end
+putu s
+putu twice 21
+putu ulong get a 1
+if eq s 10
+putu 2748
+end
+x = int 16
+y = sub x 32
+if lt y 0
+putu ulong neg y
+end
+r = write 1 msg 0 len msg
+ret int get a 3
+end

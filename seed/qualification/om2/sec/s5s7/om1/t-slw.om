@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of the section 6 part checks via the OM-1 write slice check (OMEGESE 9.5: write traps 3
+note unless n <= len A and off <= len A - n, before the call): the #748 overflow pair o = 2^64-2, k = 4 on len 10: trap 3 (exit 103), no output.
+fn main to int
+a = new uchar 10 46
+o = ulong 18446744073709551614
+r = write 1 a o 4
+ret 0
+end

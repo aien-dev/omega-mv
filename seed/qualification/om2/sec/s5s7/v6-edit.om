@@ -1,0 +1,24 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 lines 172-176: `part a 3 4` of a local array passed to an unsized edit writes elements
+note 3..6 only; inside, `view part e 1 2` turns a part of an edit into a view (line 176), whose len is 2.
+note stdout: 2, the row ...XXXX..., 4 (exp/v6-edit.out, python3).
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn fill e edit uchar * c uchar to ulong
+for i ulong len e
+put e i c
+end
+putd plen view part e 1 2
+ret len e
+end
+fn main to int
+a = new uchar 10 46
+m = fill part a 3 4 88
+nl = new uchar 1 10
+w = write 1 a 0 10
+w = write 1 nl 0 1
+putd m
+ret 0
+end

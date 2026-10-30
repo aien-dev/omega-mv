@@ -1,0 +1,9 @@
+note S4 export: one export that is not the last fn. Word 0 is B to e, not to the last function last,
+note which stays a private helper (bytes pinned).
+om2
+export fn e a ulong to ulong
+ret last a
+end
+fn last a ulong to ulong
+ret add a 7
+end

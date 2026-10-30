@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note errata E6 (f): an OM-2 unit with an om2 fmt line after its om2 line: error 16 there.
+om2
+om2 fmt
+fn main to int
+ret 0
+end
