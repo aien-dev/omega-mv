@@ -1,0 +1,5 @@
+version 2
+name clamp_add_u16
+param a u32
+param b u32
+ret u32

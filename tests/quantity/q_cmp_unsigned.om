@@ -1,0 +1,8 @@
+fn main to int
+a = qty 1
+b = qty 9223372036854775809
+if lt a b
+ret int 0
+end
+ret int 1
+end

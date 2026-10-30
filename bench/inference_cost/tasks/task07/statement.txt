@@ -1,0 +1,1 @@
+Write a function bitrev_u16(x). The argument x is an unsigned 32-bit integer (u32) with x <= 65535 and the result is a u32. Return the 16-bit value of x with its low 16 bits reversed: bit 0 swaps with bit 15, bit 1 with bit 14, and so on.
