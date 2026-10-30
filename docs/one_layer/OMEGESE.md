@@ -446,6 +446,10 @@ syscall adaptation, seed-chain boundaries and qualification status.
   may not reuse a name already in scope, a function or a struct: error 10.
 - In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
   6 before it writes anything. (s.6 t_stack)
+- omc sets no recursion depth limit of its own; only the 8 MiB stack bounds it. A program that takes
+  input-driven recursion bounds it itself, checking the depth before the call, as
+  `seed/omc/tests/recursion/nest.om` does: depth 16 accepted, depth 17 refused with status 40 before
+  any frame for it exists, plus a work bound (fuel, status 42). (`seed/omc/gate-recursion.sh`, #645)
 
 ### 9.3 Numbers (decision 19: one meaning per word and width)
 
