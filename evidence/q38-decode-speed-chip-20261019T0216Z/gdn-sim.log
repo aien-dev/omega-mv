@@ -1,0 +1,16 @@
+kernel: 665 instructions, peak 116 registers (120 declared, 256 threads)
+sim 3 steps                                      err out 2.3e-07 tail 0 state 2.71e-07 (440 ms)
+sim 2 steps, in_scale 2^-10, out_scale 2^64      err out 2.3e-07 tail 0 state 1.67e-07 (291 ms)
+sim mutant 1 (no decay)                          err out 0.561 tail 0 state 0.652 (290 ms)
+sim mutant 2 (beta 1)                            err out 0.886 tail 0 state 1.36 (290 ms)
+sim mutant 3 (gate z, not silu z)                err out 1.27 tail 0 state 1.67e-07 (284 ms)
+sim mutant 4 (tail not shifted)                  err out 0.905 tail 1.8 state 0.773 (288 ms)
+sim warp issues: 6601728
+sim prefill T 37                                 err out 3.31e-07 tail 0 state 2.24e-07 (2694 ms)
+sim prefill T 3                                  err out 1.92e-07 tail 0 state 2.71e-07 (264 ms)
+sim prefill T 17, in 2^-10, out 2^64             err out 3.31e-07 tail 0 state 2.08e-07 (1265 ms)
+sim prefill mutant 1 (no decay)                  err out 0.801 tail 0 state 1.39 (768 ms)
+sim prefill mutant 2 (beta 1)                    err out 0.672 tail 0 state 1.31 (599 ms)
+sim prefill mutant 3 (gate z)                    err out 0.952 tail 0 state 1.98e-07 (596 ms)
+sim prefill mutant 4 (tail kept)                 err out 3.31e-07 tail 1.79 state 1.98e-07 (596 ms)
+gpu_gdn_test: 104 checks, 0 failed: PASS

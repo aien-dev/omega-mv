@@ -22,17 +22,17 @@ OLA_PROG_STACK = src/omega_program_ir.c src/omega_program.c src/omega_canonical.
 	src/omega_exec.c src/omega_verify.c src/omega_realize_synth.c src/omega_machine.c
 OLA_DEPS = $(wildcard src/compiler/*.h) $(wildcard src/*.h)
 
-$(OLA_DIR)/ola: $(OLA_SRC_DIR)/ola.c src/sha256.c src/sha256.h
+$(OLA_DIR)/ola: $(OLA_SRC_DIR)/ola.c src/omega_om_units.c src/sha256.h
 	@mkdir -p $(OLA_DIR)
-	$(CC) $(OLA_CFLAGS) -o $@ $(OLA_SRC_DIR)/ola.c src/sha256.c
+	$(CC) $(OLA_CFLAGS) -o $@ $(OLA_SRC_DIR)/ola.c src/omega_om_units.c
 
-$(OLA_DIR)/ola_runner: $(OLA_SRC_DIR)/ola_runner.c $(OLA_OSC_LIB) $(OLA_PROG_STACK) src/sha256.c $(OLA_DEPS)
+$(OLA_DIR)/ola_runner: $(OLA_SRC_DIR)/ola_runner.c $(OLA_OSC_LIB) $(OLA_PROG_STACK) src/omega_om_units.c $(OLA_DEPS)
 	@mkdir -p $(OLA_DIR)
-	$(CC) $(OLA_CFLAGS) -o $@ $(OLA_SRC_DIR)/ola_runner.c $(OLA_OSC_LIB) $(OLA_PROG_STACK) src/sha256.c
+	$(CC) $(OLA_CFLAGS) -o $@ $(OLA_SRC_DIR)/ola_runner.c $(OLA_OSC_LIB) $(OLA_PROG_STACK) src/omega_om_units.c
 
 one-layer-acceptance-tools: $(OLA_DIR)/ola $(OLA_DIR)/ola_runner
 
 test-one-layer-acceptance: one-layer-acceptance-tools
-	CC="$(CC)" OLA_CFLAGS="$(OLA_CFLAGS)" OLA_RUNNER_SRCS="$(OLA_OSC_LIB) $(OLA_PROG_STACK) src/sha256.c" \
-	  OLA_PROG_SRCS="$(OLA_PROG_STACK) src/sha256.c" bash $(OLA_SRC_DIR)/selftest.sh $(abspath $(OLA_DIR))
+	CC="$(CC)" OLA_CFLAGS="$(OLA_CFLAGS)" OLA_RUNNER_SRCS="$(OLA_OSC_LIB) $(OLA_PROG_STACK) src/omega_om_units.c" \
+	  OLA_PROG_SRCS="$(OLA_PROG_STACK) src/omega_om_units.c" bash $(OLA_SRC_DIR)/selftest.sh $(abspath $(OLA_DIR))
 endif

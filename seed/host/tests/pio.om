@@ -1,0 +1,40 @@
+text p "pio.tmp"
+text body "abcdefgh"
+fn main to int
+fd = int fopen p 0 len p 578 420
+if lt fd 0
+ret 1
+end
+w = write fd body 0 len body
+if ne w long len body
+ret 2
+end
+src = new uchar 2 0
+put src 0 88
+put src 1 89
+r = pwrite fd src 0 2 4
+if ne r 2
+ret 3
+end
+buf = new uchar 8 0
+n = pread fd buf 0 8 0
+if ne n 8
+ret 4
+end
+if ne get buf 4 88
+ret 5
+end
+if ne get buf 5 89
+ret 6
+end
+r = fclose fd
+r = pwrite fd src 0 2 0
+if ge r 0
+ret 7
+end
+r = unlink p 0 len p
+if ne r 0
+ret 8
+end
+ret 0
+end

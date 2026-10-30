@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note contract 6 line 173: len 10, o = len-2 = 8, k = 4: o <= len holds, k <= len - o (4 <= 2) fails,
+note trap 3, exit 103. Isolates the second check: a mutant that drops it prints 4 (exp/v6-part-tail.mutant).
+om2
+fn plen v view uchar * to ulong
+ret len v
+end
+fn main to int
+a = new uchar 10 0
+o = ulong 8
+putd plen part a o 4
+ret 0
+end

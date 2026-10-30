@@ -1,0 +1,11 @@
+om2
+fn f x int to int inline
+requires gt x 0
+ensures eq result add x 1
+ret add x 1
+end
+fn main to int
+x = int 1
+x = f x
+ret sub x 2
+end

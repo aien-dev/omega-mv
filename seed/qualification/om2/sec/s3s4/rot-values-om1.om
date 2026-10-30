@@ -1,0 +1,167 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 twin of rot-values.om (contract section 3 lines 76-83), for the pinned compiler 734f0a39:
+note the same computation with rotations written as OM-1 shifts (tr*/tl* below: n = 0 returns x, else
+note or shr x n shl x w-n; OMEGESE 9.3: unsigned shl wraps modulo 2^w, shift amounts 0..w-1).
+note Same expected stdout as the OM-2 unit: oracle/s3s4/exp/rot-values.out. This cross-checks the
+note python oracle against OM-1 arithmetic now, independent of any OM-2 compiler.
+note (this line replaces the om2 line, so the line numbers equal those of rot-values.om)
+note OM-1 unit
+fn rr8 x uchar n uchar to uchar
+ret tr8 x n
+end
+fn rl8 x uchar n uchar to uchar
+ret tl8 x n
+end
+fn rr16 x ushort n ushort to ushort
+ret tr16 x n
+end
+fn rl16 x ushort n ushort to ushort
+ret tl16 x n
+end
+fn rr32 x uint n uint to uint
+ret tr32 x n
+end
+fn rl32 x uint n uint to uint
+ret tl32 x n
+end
+fn rr64 x ulong n ulong to ulong
+ret tr64 x n
+end
+fn rl64 x ulong n ulong to ulong
+ret tl64 x n
+end
+fn main to int
+a = uchar 177
+pu ulong tr8 a 0
+pu ulong tr8 a 1
+pu ulong tr8 a 3
+pu ulong tr8 a 7
+pu ulong tl8 a 0
+pu ulong tl8 a 1
+pu ulong tl8 a 3
+pu ulong tl8 a 7
+pu ulong rr8 a 0
+pu ulong rr8 a 1
+pu ulong rr8 a 3
+pu ulong rr8 a 7
+pu ulong rl8 a 0
+pu ulong rl8 a 1
+pu ulong rl8 a 3
+pu ulong rl8 a 7
+for n uchar 8
+pu ulong rr8 a n
+pu ulong rl8 a n
+end
+b = ushort 45508
+pu ulong tr16 b 0
+pu ulong tr16 b 1
+pu ulong tr16 b 5
+pu ulong tr16 b 15
+pu ulong tl16 b 0
+pu ulong tl16 b 1
+pu ulong tl16 b 5
+pu ulong tl16 b 15
+pu ulong rr16 b 0
+pu ulong rr16 b 1
+pu ulong rr16 b 5
+pu ulong rr16 b 15
+pu ulong rl16 b 0
+pu ulong rl16 b 1
+pu ulong rl16 b 5
+pu ulong rl16 b 15
+for n ushort 16
+pu ulong rr16 b n
+pu ulong rl16 b n
+end
+c = uint 4041331395
+pu ulong tr32 c 0
+pu ulong tr32 c 1
+pu ulong tr32 c 13
+pu ulong tr32 c 31
+pu ulong tl32 c 0
+pu ulong tl32 c 1
+pu ulong tl32 c 13
+pu ulong tl32 c 31
+pu ulong rr32 c 0
+pu ulong rr32 c 1
+pu ulong rr32 c 13
+pu ulong rr32 c 31
+pu ulong rl32 c 0
+pu ulong rl32 c 1
+pu ulong rl32 c 13
+pu ulong rl32 c 31
+for n uint 32
+pu ulong rr32 c n
+pu ulong rl32 c n
+end
+d = ulong 9305357566071262703
+pu tr64 d 0
+pu tr64 d 1
+pu tr64 d 29
+pu tr64 d 63
+pu tl64 d 0
+pu tl64 d 1
+pu tl64 d 29
+pu tl64 d 63
+pu rr64 d 0
+pu rr64 d 1
+pu rr64 d 29
+pu rr64 d 63
+pu rl64 d 0
+pu rl64 d 1
+pu rl64 d 29
+pu rl64 d 63
+for n ulong 64
+pu rr64 d n
+pu rl64 d n
+end
+ret 0
+end
+fn tr8 x uchar n uchar to uchar
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 8 n
+end
+fn tl8 x uchar n uchar to uchar
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 8 n
+end
+fn tr16 x ushort n ushort to ushort
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 16 n
+end
+fn tl16 x ushort n ushort to ushort
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 16 n
+end
+fn tr32 x uint n uint to uint
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 32 n
+end
+fn tl32 x uint n uint to uint
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 32 n
+end
+fn tr64 x ulong n ulong to ulong
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 64 n
+end
+fn tl64 x ulong n ulong to ulong
+if eq n 0
+ret x
+end
+ret or shl x n shr x sub 64 n
+end

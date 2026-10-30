@@ -1,0 +1,6 @@
+note leak fixture (contract spec/omegese-om2.md section 8, lines 234-235, "every indexed address"): a
+note table lookup indexed by a loaded byte. The index check (B.HS trap 3) is a data-dependent trap
+note check (unproved, E12 MANUAL) and the table load is data-index. Expected: TRACE-EQUIV-STATIC NOT_RUN.
+fn f a view uchar 16 t view uchar 256 to ulong
+ret ulong get t get a 0
+end

@@ -1,0 +1,7 @@
+note an environment index equal to the count must trap 3 (program exit 103).
+fn main to int
+c = ulong envcnt
+a = new uchar 8 0
+n = envread c a 0 8
+ret 0
+end

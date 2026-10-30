@@ -1,0 +1,17 @@
+OM-2 compiler slice S1 fix (L836 finding D1) (L834; #745 #655 #665), evidence class HOST (GB10 host CPU, AArch64 Linux).
+base main acb3f15cdc691b1b046b48b0dad0f9255a12ba4b, base omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+S1 omc ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019 (birth: stage1 == stage2 == stage3, birth.log)
+contract spec/omegese-om2.md 245bb74e940c811ab325e6fabb33f0599ad46aaf6b9064fd2750c43980040881 (om2/contract) + errata E1-E9
+case runner: gate.om of the #748 lane (L836) built as gate-c, sha256 6c8691c21074595312fdd0f22ca30b6fbe48fb88f2fb0a58936f2960056acefa
+C2 manifest: seed/qualification/om2/manifest-c2.txt of the L836 worktree (5720 entries), sha256 3c2762bc8d7f5fc5c04f6ec64bd4fed6630288abd86542d8ccaaf7146becc2b7
+commands (repository root; gate runs from a root where seed/qualification is the L836 tree and seed/omc this tree):
+  sh seed/omega-from-seed.sh                                   -> birth.log RC=0
+  sh seed/host/check.sh                                        -> host-check.log RC=0
+  bash tests/gates/run.sh seed                                 -> run-seed.log RC=0, 0 SKIP
+  sh seed/omc/qualify-ir-trap.sh (gate-ir-trap, mutants 5/5, gate-ir, gate6, gate5 s1-6b) -> qualify-ir-trap.log, ir-trap/
+  bash tests/gates/run.sh om-units (OMC_PIN moved to the S1 omc) -> om-units.log RC=0
+  gate-c OMC SHA seed/qualification/om2/manifest-c2.txt SCRATCH  -> c2-manifest.log OM2GATE PASS 5720/5720
+  gate-c OMC SHA seed/omc/om2/s1/s1.cases SCRATCH                -> s1-cases.log OM2GATE PASS 48/48
+  gate-c OMC SHA seed/omc/om2/s1/s1-mutants.cases SCRATCH        -> s1-mutants.log 8 controls PASS, 8 mutants FAIL (detected)
+  compile time: unchanged code paths; see ../s1/compile-time.txt
+NOT_RUN: gate5 section 7 (timing; needs exclusive quiet admission, as on main).

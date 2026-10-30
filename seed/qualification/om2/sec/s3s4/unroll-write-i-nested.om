@@ -1,0 +1,14 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 line 89: a write to i anywhere in the unrolled body is error 7, here inside a
+note rolled loop nested in it (line 10, the i = add i 1).
+om2
+fn main to int
+s = ulong 0
+for i ulong 4 unroll
+for j ulong 2
+s = add s j
+i = add i 1
+end
+end
+ret int s
+end
