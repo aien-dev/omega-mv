@@ -32,10 +32,12 @@ COUNT` (verification host only, C, migration pending; see its header) launches t
 OMC=build/seed/ir/stage2 IRSPIRV=build/seed/spirv/irspirv seed/spirv/e1/build.sh OUTDIR
 ```
 
-The units need the IR capacity of omega-mv #889 (branch `e1open/omc-ir-capacity`, `2686b5dcb`):
-the pinned batch 2 compiler (`seed/out/omc` sha256 `2c824805…`) stops at 64 registers and 32
-literals per function. Candidate compiler sha256
-`2cf38551eb52db9fb01ca9e6b34578f00100320662cbb2a93a069c9c8a77ea08` (stage1 = stage2 = stage3).
+The units need the IR capacity of omega-mv #889 (branch `e1open/omc-ir-capacity`): main's compiler before
+#889 stops at 64 registers and 32 literals per function. The modules below and the evidence were built
+with #889's source-only candidate (`2686b5dcb`, sha256
+`2cf38551eb52db9fb01ca9e6b34578f00100320662cbb2a93a069c9c8a77ea08`, stage1 = stage2 = stage3). After #889
+was reseeded, `OMC=seed/out/omc` (sha256 `34768ee8f2779347c0cfa49a1b8a82b8d110b14123a7693774d4e1e435c944c6`)
+rebuilt irspirv to the same sha256 and all 10 modules byte for byte (2026-10-30, merge `8c95d5481`).
 `E1_MUTATE=<const>` flips mantissa bit 12 of one `consts.om` constant for negative controls.
 
 Modules at `f26246453`, built 2026-10-27 with that compiler and irspirv sha256
@@ -140,5 +142,5 @@ file and with the GB10 receipts. `chunkdig.py` is verification-only, like `par.c
 
 - No CI job builds or runs this tier; every result above is one run on one host.
 - PoCL's CPU device only. No GPU OpenCL or Vulkan driver has run these modules.
-- The modules need omega-mv #889's compiler. With the pinned compiler (`seed/out/omc`, sha256 `2c824805…`)
-  `build.sh` stops at the first module: `omc: line 258: error 14`, `omc failed on exp2 (rc 14)`.
+- The modules need omega-mv #889's compiler. With a compiler before #889 `build.sh` stops at the first
+  module: `omc: line 258: error 14`, `omc failed on exp2 (rc 14)`.
