@@ -1,0 +1,1 @@
+Write a function power_mod_u32(a, b). The base a and the exponent b are unsigned 32-bit integers (u32) and the result is a u32. Return a to the power b, modulo 2^32. power_mod_u32(a, 0) = 1 for every a.

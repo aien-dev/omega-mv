@@ -1,0 +1,12 @@
+fn clz_u32 x uint to uint
+if eq x 0
+ret 32
+end
+count = uint 0
+mask = uint 2147483648
+while eq (and x mask) 0
+count = add count 1
+mask = shr mask 1
+end
+ret count
+end

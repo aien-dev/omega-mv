@@ -1,0 +1,9 @@
+fn bitrev_u16 x uint to uint
+r = uint 0
+v = x
+for i ulong 16
+r = or (shl r 1) (and v 1)
+v = shr v 1
+end
+ret r
+end
