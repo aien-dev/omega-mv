@@ -17,7 +17,7 @@ Porting Omega means answering two questions that are easy to mix up:
 2. **Operating system and driver.** Does this file need Linux, the NVIDIA open driver, or a C library?
 
 The table `docs/runtime/portability_table.tsv` answers both, one row per `src/omega_gpu_*`, `src/omega_blackwell_*` and
-`src/omega_bw_*` file (102 rows):
+`src/omega_bw_*` file (123 rows):
 
 | Column | Values | Meaning |
 |---|---|---|
@@ -25,9 +25,10 @@ The table `docs/runtime/portability_table.tsv` answers both, one row per `src/om
 | `reason` | text | Why, with the evidence (an include list, a constant, a make target). |
 | `os_binding` | `FREESTANDING_PROVEN`, `NO_HOSTED_INCLUDE`, `HOSTED_LIBC`, `LINUX_DRIVER` | `FREESTANDING_PROVEN`: a `.c` file in `GPU_FS_SRCS` (`mk/omega-gpu-engine.mk`), built by `make gpu-engine-freestanding` with no hosted headers. `NO_HOSTED_INCLUDE`: no hosted header by include scan only (a header, or a `.c` outside that build). `HOSTED_LIBC`: includes stdio, stdlib, time, errno, math or pthread. `LINUX_DRIVER`: includes `nvrm.h`, `m16_native.h` or `omega_gpu_platform_linux.h`. |
 
-Totals over the source tree based on a8ffd2b9, corrected after source review: 93 files are `CHIP_SPECIFIC` and 9 are `PORTABLE`. By `os_binding`: 13 `FREESTANDING_PROVEN`,
-77 `NO_HOSTED_INCLUDE`, 9 `HOSTED_LIBC`, 3 `LINUX_DRIVER`. The small `PORTABLE` count is the honest result: almost everything
-in `src/omega_gpu_*` launches a Blackwell kernel. Command to recount: section 7.
+Totals over the source tree based on omega-mv main 62d1d0d6 (the 102 rows reviewed on a8ffd2b9 plus 21 rows for the
+files that landed on main after it): 113 files are `CHIP_SPECIFIC` and 10 are `PORTABLE`. By `os_binding`: 13
+`FREESTANDING_PROVEN`, 92 `NO_HOSTED_INCLUDE`, 15 `HOSTED_LIBC`, 3 `LINUX_DRIVER`. The small `PORTABLE` count is the honest
+result: almost everything in `src/omega_gpu_*` launches a Blackwell kernel. Command to recount: section 7.
 
 `make test-runtime-portability` (host only, no compiler, no GPU) checks the table against the tree: every file has a row,
 every row names a real file, a `PORTABLE` row's file includes no Linux or NVRM header and no Blackwell header, and the
@@ -62,6 +63,7 @@ stall counts. The platform contract hides the *driver*; it does not hide the *GP
 | Engine state machine | `src/omega_gpu_engine.c`, `.h` | Open, validate, submit, verify, close, with a named failing step. Talks to a backend through a function table (`OmegaGpuBackend`). No chip knowledge. |
 | Bounded wait | `src/omega_gpu_wait.c` | Clock and hooks come from the caller; the freestanding build has no default clock. |
 | Text and host math | `src/omega_gpu_fmt.c`, `src/omega_gpu_hostmath.c` | A bounded formatter and libm-free log, exp, pow. |
+| Scan host reference | `src/omega_gpu_scan_ref.c` | The frozen reduction and prefix-sum order depends only on n and the element index (`docs/numeric/E1_REDUCTION_CONTRACT.md`); plain C additions on the CPU. Its header `omega_gpu_scan.h` is `CHIP_SPECIFIC` and pulls in `omega_blackwell_codegen.h`, so reuse elsewhere needs the reference declarations split out. |
 
 Plain C signatures are not evidence of a chip-neutral contract. The matmul header exposes Blackwell tile macros (16/8/16), the MoE header defines tile-major packing and column alignment, and the session header exposes QMD fields/defaults and the two-marker/L2-flush launch protocol. All three are `CHIP_SPECIFIC`. The platform header also requires review for another chip because its queue contract names GPFIFO and its host-polled rights require the NVIDIA GPU-uncached visibility rule. The serving header describes the GB10 reservation/cache contract; `omega_gpu_serving.c` calls those matmul/attention reservation APIs rather than implementing generic allocation accounting. Both serving files are therefore `CHIP_SPECIFIC`, even though the implementation builds without hosted headers.
 
@@ -70,6 +72,14 @@ A hardware name in an example or historical comment alone is not a machine depen
 What the freestanding build proves, and what it does not, is in `docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md` section 1 and
 section 4: the listed files link with only `memcpy`, `memmove`, `memset`, `memcmp`, `strlen` and `strcmp` undefined, and
 nothing there opens a device. The table adds the other direction: which files are outside that build and why.
+
+Open regression at 62d1d0d6: `make gpu-engine-freestanding` compiles every listed file with `-ffreestanding` but the
+closure link fails with `freestanding GPU link still needs: abort mmap mprotect munmap pthread_key_create pthread_once
+pthread_setspecific`. All seven come from `src/omega_om_units.c`, the omega-bridge binding that replaced `src/sha256.c`
+in `GPU_FS_SRCS` at the OM-2 cutover (`450bbefd`, #747): it runs Omega code on its own `mmap`ed stack with a
+`pthread` key and calls `abort`. The encoder, codegen, matmul, realize and attention objects need `sha256_*` from it.
+Until the binding has a freestanding form (a caller-supplied stack, no `abort`), `FREESTANDING_PROVEN` means "in
+`GPU_FS_SRCS` and compiled freestanding per file", not "the closure links".
 
 ## 4. Three ways to reach the GPU
 
@@ -139,4 +149,5 @@ make test-runtime-portability        # the check plus the negative controls; hos
 awk -F'\t' '!/^#/ && $1!="file" {n[$2]++} END {for (c in n) print c, n[c]}' docs/runtime/portability_table.tsv
 ```
 
-Evidence of the controls and of the freestanding build is in `evidence/RUNTIME-R3-PORT/`.
+Evidence of the controls and of the freestanding build on a8ffd2b9 is in `evidence/RUNTIME-R3-PORT/`; the rerun on
+62d1d0d6 is in `evidence/RUNTIME-R3-PORT-62d1d0d6/`.
