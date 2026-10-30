@@ -40,13 +40,30 @@ int main(void) {
     omega_exec_native_cache_stats(&s1);
     CHECK(s1.hits == 2, "identity is the bytes, not the pointer");
 
-    /* a one-byte change in the code is a different program: must not hit */
-    RealizationObject tweaked = a.realization;
-    tweaked.code_bytes[0] ^= 0x01;
+    /* Invalidation. A program of the same length whose bytes differ (ADD #6 vs ADD #5) must map fresh
+     * pages and compute its own result; a cache keyed by length or address would return a + 5. */
+    OmegaProgram a6;
+    mk(&a6, OP_ADD, 6);
+    CHECK(a6.realization.code_len == a.realization.code_len &&
+          memcmp(a6.realization.code_bytes, a.realization.code_bytes, a.realization.code_len) != 0,
+          "fixture: ADD #6 has the same length as ADD #5 and different bytes");
     omega_exec_native_cache_stats(&s0);
-    (void)omega_exec_native_f3(&tweaked, 1, 0, 0, &y);   /* may fault-free execute garbage or refuse; only the counter matters */
+    CHECK(omega_exec_native_f3(&a6.realization, 5, 0, 0, &y) == 0 && y == 11, "same length, other bytes: own result (got %llu)",
+          (unsigned long long)y);
     omega_exec_native_cache_stats(&s1);
-    CHECK(s1.hits == s0.hits, "changed byte never hits");
+    CHECK(s1.hits == s0.hits && s1.misses == s0.misses + 1, "same length, other bytes: a miss, not a hit");
+
+    /* The same RealizationObject rewritten in place (same address, same length, new bytes) must not run
+     * the stale mapping; rewriting it back to the original bytes hits the mapping still resident. */
+    RealizationObject *ra = &a.realization;
+    mk(&a, OP_ADD, 9);
+    CHECK(ra == &a.realization && omega_exec_native_f3(&a.realization, 5, 0, 0, &y) == 0 && y == 14,
+          "rewritten in place: new code runs (got %llu, stale mapping gives 10)", (unsigned long long)y);
+    mk(&a, OP_ADD, 5);
+    omega_exec_native_cache_stats(&s0);
+    CHECK(omega_exec_native_f3(&a.realization, 5, 0, 0, &y) == 0 && y == 10, "rewritten back: original result");
+    omega_exec_native_cache_stats(&s1);
+    CHECK(s1.hits == s0.hits + 1 && s1.misses == s0.misses, "rewritten back: hit on the resident mapping");
 
     /* fill past capacity: every program still computes right after eviction */
     omega_exec_native_cache_reset();
@@ -57,6 +74,26 @@ int main(void) {
     omega_exec_native_cache_stats(&s1);
     CHECK(s1.resident == OMEGA_EXEC_CACHE_SLOTS, "resident capped at %u (got %llu)", OMEGA_EXEC_CACHE_SLOTS, (unsigned long long)s1.resident);
     CHECK(omega_exec_native_f3(&a.realization, 10, 0, 0, &y) == 0 && y == 15, "a still right after eviction");
+
+    /* LRU victim: fill every slot, touch the oldest, add one more. The second oldest is evicted and
+     * the touched one stays resident. */
+    static OmegaProgram lru[OMEGA_EXEC_CACHE_SLOTS + 1];
+    omega_exec_native_cache_reset();
+    for (unsigned i = 0; i <= OMEGA_EXEC_CACHE_SLOTS; i++) mk(&lru[i], OP_ADD, 2000 + i);
+    for (unsigned i = 0; i < OMEGA_EXEC_CACHE_SLOTS; i++)
+        CHECK(omega_exec_native_f3(&lru[i].realization, 1, 0, 0, &y) == 0 && y == 2001ull + i, "lru fill %u", i);
+    CHECK(omega_exec_native_f3(&lru[0].realization, 1, 0, 0, &y) == 0 && y == 2001, "lru touch oldest");
+    CHECK(omega_exec_native_f3(&lru[OMEGA_EXEC_CACHE_SLOTS].realization, 1, 0, 0, &y) == 0 && y == 2001ull + OMEGA_EXEC_CACHE_SLOTS,
+          "lru one past capacity");
+    omega_exec_native_cache_stats(&s0);
+    CHECK(s0.evictions == 1 && s0.resident == OMEGA_EXEC_CACHE_SLOTS, "lru: exactly one eviction (got %llu)",
+          (unsigned long long)s0.evictions);
+    CHECK(omega_exec_native_f3(&lru[0].realization, 1, 0, 0, &y) == 0 && y == 2001, "lru touched entry result");
+    omega_exec_native_cache_stats(&s1);
+    CHECK(s1.hits == s0.hits + 1 && s1.misses == s0.misses, "lru: the recently touched entry is still resident");
+    CHECK(omega_exec_native_f3(&lru[1].realization, 1, 0, 0, &y) == 0 && y == 2002, "lru evicted entry result");
+    omega_exec_native_cache_stats(&s0);
+    CHECK(s0.misses == s1.misses + 1 && s0.hits == s1.hits, "lru: the least recently used entry was the one evicted");
 
     printf("EXEC_NATIVE_CACHE: %s (%d failures)\n", fails ? "FAIL" : "PASS", fails);
     return fails ? 1 : 0;
