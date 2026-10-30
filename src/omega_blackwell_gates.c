@@ -560,44 +560,71 @@ static bool test_m18_gate5_instruction_sequencing(void) {
 
 /* Host provenance adapter only; authentication policy lives in seeded Omega.
  * Proposed replacement: a bounded .om source scanner plus SHA-256 receipt unit,
- * returning refusal on empty input, read errors, forbidden tokens or pin drift. */
-static bool canonical_stage_path(char *path, size_t capacity, const char *suffix) {
-    const char *stage = getenv("CUDAPP_STAGE");
-    const char *out = getenv("OUT_DIR");
-    char fallback[PATH_MAX];
-    if (!stage || !stage[0]) {
-        int n = snprintf(fallback, sizeof fallback, "%s/cudapp",
-                         out && out[0] ? out : "build");
-        if (n < 0 || (size_t)n >= sizeof fallback) return false;
-        stage = fallback;
-    }
-    int n = snprintf(path, capacity, "%s/%s", stage, suffix);
-    return n >= 0 && (size_t)n < capacity;
+ * returning refusal on empty input, read errors, forbidden tokens or pin drift.
+ *
+ * The stage directory is resolved only by the child shell, with the same
+ * expression the --verify run uses; this file never builds a filesystem path
+ * from the environment. Callers name a stage file by its index in this fixed
+ * table, so no other file can be requested. */
+static const char *const canonical_stage_files[] = {
+    "source/src/omega_blackwell_matmul.h", "source/src/omega_blackwell_matmul.c",
+    "source/src/omega_blackwell_codegen.h", "source/src/omega_blackwell_codegen.c",
+    "source/src/omega_blackwell_qmd.h", "source/src/omega_blackwell_qmd.c",
+    "source/src/omega_blackwell_submit.h", "source/src/omega_blackwell_submit.c",
+    "source/src/omega_blackwell_engine.h", "source/src/omega_blackwell_engine.c",
+    "pin", "observed", "source.tar", "hashes", "build/libcudapp.a"
+};
+#define CANONICAL_STAGE_FILE_COUNT (sizeof canonical_stage_files / sizeof canonical_stage_files[0])
+#define CANONICAL_STAGE_CODEGEN_C 3u
+
+/* Returns a pipe carrying the bytes of one stage file; close it with pclose()
+ * and treat a nonzero status as a read failure. */
+static FILE *canonical_stage_open(size_t index) {
+    if (index >= CANONICAL_STAGE_FILE_COUNT) return NULL;
+    char command[256];
+    int n = snprintf(command, sizeof command,
+                     "cat -- \"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}/%s\"",
+                     canonical_stage_files[index]);
+    if (n < 0 || (size_t)n >= sizeof command) return NULL;
+    return popen(command, "r");
 }
 
-static bool canonical_stage_verified(FILE *receipt) {
+/* Runs the seeded .om stage verifier. On success, when receipt is not NULL,
+ * it holds the verifier's JSON receipt without its trailing newline. */
+static bool canonical_stage_verified(char *receipt, size_t capacity) {
     /* Generic I/O only: the fresh JSON is authored by the seeded .om guard
      * and receipt unit. Never deserialize/recreate its policy here. */
+    if (receipt && capacity == 0) return false;
     FILE *child = popen("sh tools/cudapp-stage.sh --verify cudapp.lock "
                         "\"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\"", "r");
     if (!child) return false;
     unsigned char bytes[4096];
-    size_t n;
+    size_t n, used = 0;
     bool nonempty = false, ok = true;
     while ((n = fread(bytes, 1, sizeof bytes, child)) != 0) {
         nonempty = true;
-        if (receipt && fwrite(bytes, 1, n, receipt) != n) ok = false;
+        if (receipt) {
+            if (n >= capacity - used) {
+                ok = false;
+            } else {
+                memcpy(receipt + used, bytes, n);
+                used += n;
+            }
+        }
     }
     if (ferror(child)) ok = false;
     if (pclose(child) != 0) ok = false;
+    if (receipt) {
+        while (used > 0 && receipt[used - 1] == '\n') used--;
+        receipt[used] = '\0';
+        if (used == 0 || memchr(receipt, '\n', used) != NULL) ok = false;
+    }
     return nonempty && ok;
 }
 
 static bool test_m18_gate6_code_truth(void) {
-    char path[PATH_MAX];
-    if (!canonical_stage_verified(NULL) ||
-        !canonical_stage_path(path, sizeof path, "source/src/omega_blackwell_codegen.c")) return false;
-    FILE *f = fopen(path, "r");
+    if (!canonical_stage_verified(NULL, 0)) return false;
+    FILE *f = canonical_stage_open(CANONICAL_STAGE_CODEGEN_C);
     if (!f) return false;
     char line[512];
     bool has_static_table = false, nonempty = false;
@@ -608,8 +635,10 @@ static bool test_m18_gate6_code_truth(void) {
             break;
         }
     }
+    /* Drain after an early match so the child never dies of SIGPIPE. */
+    while (has_static_table && fread(line, 1, sizeof line, f) != 0) {}
     bool read_ok = !ferror(f);
-    if (fclose(f) != 0) read_ok = false;
+    if (pclose(f) != 0) read_ok = false;
     return nonempty && read_ok && !has_static_table;
 }
 
@@ -1082,9 +1111,8 @@ static bool test_m18_gate17_regression(void) {
     return (run_m17_gates() == 0);
 }
 
-static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[65]) {
-    FILE *f = fopen(path, "rb");
-    if (!f) return false;
+/* Hashes f to EOF; the caller closes f and owns its close status. */
+static bool stream_sha256(FILE *f, uint8_t digest[32], char hex[65]) {
     sha256_ctx ctx;
     sha256_init(&ctx);
     uint8_t buf[4096];
@@ -1092,15 +1120,21 @@ static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[6
     while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
         sha256_update(&ctx, buf, n);
     }
-    bool read_ok = !ferror(f);
-    if (fclose(f) != 0) read_ok = false;
-    if (!read_ok) return false;
+    if (ferror(f)) return false;
     sha256_final(&ctx, digest);
     for (int i = 0; i < 32; i++) {
         sprintf(&hex[i * 2], "%02x", digest[i]);
     }
     hex[64] = 0;
     return true;
+}
+
+static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[65]) {
+    FILE *f = fopen(path, "rb");
+    if (!f) return false;
+    bool read_ok = stream_sha256(f, digest, hex);
+    if (fclose(f) != 0) read_ok = false;
+    return read_ok;
 }
 
 static void bytes_to_hex_str(const uint8_t *bytes, size_t len, char *hex) {
@@ -1213,28 +1247,15 @@ static bool test_m18_gate18_receipt(void) {
     char bin_hex[65] = {0};
     if (!compute_file_sha256(self_path, bin_digest, bin_hex)) return false;
 
-    /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area. */
-    char source_receipt_path[1024];
-    if (omega_evidence_path("CUDAPP-SOURCE.json", source_receipt_path,
-                            sizeof source_receipt_path) != 0) return false;
-    FILE *source_receipt = fopen(source_receipt_path, "w");
-    if (!source_receipt) return false;
-    bool source_verified = canonical_stage_verified(source_receipt);
-    if (fclose(source_receipt) != 0) source_verified = false;
-    if (!source_verified) return false;
-    const char *canonical_files[] = {
-        "source/src/omega_blackwell_matmul.h", "source/src/omega_blackwell_matmul.c",
-        "source/src/omega_blackwell_codegen.h", "source/src/omega_blackwell_codegen.c",
-        "source/src/omega_blackwell_qmd.h", "source/src/omega_blackwell_qmd.c",
-        "source/src/omega_blackwell_submit.h", "source/src/omega_blackwell_submit.c",
-        "source/src/omega_blackwell_engine.h", "source/src/omega_blackwell_engine.c",
-        "pin", "observed", "source.tar", "hashes", "build/libcudapp.a"
-    };
+    /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area.
+     * The verifier's CUDApp source receipt is recorded verbatim in the M18
+     * receipt below (cudapp_source), not in a separate evidence file. */
+    char cudapp_source[4096];
+    if (!canonical_stage_verified(cudapp_source, sizeof cudapp_source)) return false;
     const char *manifest_files[] = {
         "src/omega_blackwell_gates.h",
         "src/omega_blackwell_gates.c",
         "tools/omegatool.c",
-        source_receipt_path,
         self_path
     };
     size_t num_files = sizeof(manifest_files) / sizeof(manifest_files[0]);
@@ -1245,12 +1266,13 @@ static bool test_m18_gate18_receipt(void) {
     FILE *f_sums = fopen(sums_path, "w");
     if (!f_sums) return false;
     bool sums_ok = true;
-    for (size_t i = 0; i < sizeof canonical_files / sizeof canonical_files[0]; i++) {
-        char path[PATH_MAX], h[65];
+    for (size_t i = 0; i < CANONICAL_STAGE_FILE_COUNT; i++) {
+        char h[65];
         uint8_t d[32];
-        if (!canonical_stage_path(path, sizeof path, canonical_files[i]) ||
-            !compute_file_sha256(path, d, h) ||
-            fprintf(f_sums, "%s  cudapp/%s\n", h, canonical_files[i]) < 0) {
+        FILE *stage_file = canonical_stage_open(i);
+        bool hashed = stage_file && stream_sha256(stage_file, d, h);
+        if (stage_file && pclose(stage_file) != 0) hashed = false;
+        if (!hashed || fprintf(f_sums, "%s  cudapp/%s\n", h, canonical_stage_files[i]) < 0) {
             sums_ok = false;
             break;
         }
@@ -1316,6 +1338,7 @@ static bool test_m18_gate18_receipt(void) {
     fprintf(f, "  \"bf16_realization_id\": \"%s\",\n", bf16_real_hex);
     fprintf(f, "  \"binary_sha256\": \"%s\",\n", bin_hex);
     fprintf(f, "  \"evidence_manifest_sha256\": \"%s\",\n", manifest_hex);
+    fprintf(f, "  \"cudapp_source\": %s,\n", cudapp_source);
     fprintf(f, "  \"tested_configurations\": [\n");
     for (size_t i = 0; i < m18_parity_count; i++) {
         m18_print_parity_record(f, &m18_parity[i], i + 1 < m18_parity_count);
