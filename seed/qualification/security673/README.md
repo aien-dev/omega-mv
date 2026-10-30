@@ -45,7 +45,10 @@ forward branch-limit mutant is compiled from a distinct transformed source; its 
 and rejected without execution. The range-free mutant (`branch-mutate 3`, then `0`) must answer 81
 on exactly the four out-of-range cases. Long backward imm19 from source is not reachable through
 `while`/`continue`: the loop-bound trap B.cs at the head is 5 words longer forward than the continue
-is back, so the forward limit refuses first (corpus mode 4; `branch-check 1` decodes its B.AL).
+is back, so the forward limit refuses first. Corpus mode 4 rows: N = 3, 16 and 262127 (the largest
+accepted, continue 262138 words back) compile, decode with `branch-check 1` and exit 0; N = 262128,
+262133 and 262134 are refused with 24. The range-free compiler accepts N = 262134 (continue 2^18 + 1
+words back) and its B.AL decodes to the wrong target (61); that output is never executed.
 
 GNU objdump is outside the seed compiler lineage. The `.om` checker consumes its selected text
 format and rejects the enumerated malformed/missing/duplicate/wrong-target controls. It is not

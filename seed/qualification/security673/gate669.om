@@ -314,6 +314,49 @@ fn negative cc ulong gen ulong mode uchar count ulong to void
 src = fixture gen mode count
 elf = compile cc src 24
 end
+note backward: corpus mode4 (a while whose `continue` is a B.AL back to the loop head, N+11 words from it)
+note compiled, decoded with branch-check 1 (first b.al must hit mov x4, 12345) and run (exit 0, no output).
+fn backward cc ulong gen ulong checker ulong count ulong to void
+src = fixture gen 4 count
+elf = compile cc src 0
+command 5
+argument 6
+argument 7
+argument 8
+argument 9
+argument 10
+argument elf
+decoded = run 13 0
+command checker
+argument 12
+result = run decoded 0
+command elf
+outid = run 13 0
+empty outid
+end
+note backred: N = 262134 puts the continue 2^18 + 1 words back. The correct compiler refuses it with 24
+note (the head's loop-bound B.cs, N+16 words forward, is refused first); the range-free compiler (mode3)
+note accepts it, and its continue decodes to the wrong target (61). That output is never executed.
+fn backred cc ulong gen ulong mut ulong checker ulong to void
+command mut
+argument 18
+bare = run 1 0
+badcc = compile cc bare 0
+sample = fixture gen 4 262134
+elf = compile badcc sample 0
+command 5
+argument 6
+argument 7
+argument 8
+argument 9
+argument 10
+argument elf
+decoded = run 13 0
+command checker
+argument 12
+result = run decoded 61
+refused = compile cc sample 24
+end
 note boundaries: the real bdisp through probe cases 0..7 (imm19 and imm26 extremes, accepted with the exact
 note field), 8..15 (one word past each limit, misaligned target or origin: error 24), 16 (the last word below
 note the 8 MiB output ceiling, accepted) and 17 (the first word at it: error 14, the capacity invariant that
@@ -428,6 +471,13 @@ negative cc2 gen 0 524287
 negative cc2 gen 1 300000
 negative cc2 gen 2 300000
 negative cc2 gen 3 300000
+backward cc2 gen checker 3
+backward cc2 gen checker 16
+backward cc2 gen checker 262127
+negative cc2 gen 4 262128
+negative cc2 gen 4 262133
+negative cc2 gen 4 262134
+backred cc2 gen mut checker
 mutant cc2 gen mut checker
 command checker
 result = run 13 62
