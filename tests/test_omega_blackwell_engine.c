@@ -980,6 +980,27 @@ static void case_vector(void)
     check("sim_vec_works_again", rc == 0 && output_correct(c));
 }
 
+/* Packets in the last submitted pushbuffer that invalidate all shader caches
+ * (subchannel 1, method 0x021c, one data word = OMEGA_BW_INVALIDATE_SHADER_CACHES_ALL).
+ * Walks packet headers like the fake's parser, so a data word never counts as a header. */
+static int pb_shader_invalidates(void)
+{
+    size_t i = 0;
+    int hits = 0;
+    while (i < fk.pb_len) {
+        uint32_t h = fk.pb[i++];
+        uint32_t cnt = (h >> 16) & 0x1fffu;
+        uint32_t subc = (h >> 13) & 7u;
+        uint32_t mthd = (h & 0xfffu) << 2;
+        if (i + cnt > fk.pb_len) return -1;
+        if (subc == 1u && mthd == OMEGA_BW_MTHD_INVALIDATE_SHADER_CACHES && cnt == 1u &&
+            fk.pb[i] == OMEGA_BW_INVALIDATE_SHADER_CACHES_ALL)
+            hits++;
+        i += cnt;
+    }
+    return hits;
+}
+
 /* omega-mv#575: the device and channel stay open between jobs (default). Measured
  * on the Spark: open 7.5 ms + channel 19.2 ms + close 11.3 ms of a 38.8 ms job. */
 static void case_persistent_device(void)
@@ -996,6 +1017,10 @@ static void case_persistent_device(void)
     check("sim_persist_one_open_one_channel_no_close",
           fk.open_calls == 1 && fk.channel_calls == 1 && fk.close_calls == 0 && fk.device_open == 1);
     check("sim_persist_device_reported_open", omega_blackwell_engine_device_is_open() == 1);
+    /* the PROGRAM buffer of the second job can reuse the first job's address on the kept
+     * device, so every launch must invalidate the shader caches (the chip ran stale code
+     * without it, 2026-10-19) */
+    check("sim_persist_pushbuffer_invalidates_shader_caches", pb_shader_invalidates() == 1);
     check("sim_persist_per_job_buffers_still_freed", fk.free_calls == 2 * 8 && fk.double_free == 0);
     check("sim_persist_shutdown_closes", omega_blackwell_engine_shutdown() == 0 && fk.close_calls == 1 &&
           fk.device_open == 0 && omega_blackwell_engine_device_is_open() == 0);
@@ -1012,6 +1037,18 @@ static void case_persistent_device(void)
     memset(outbuf, 0, sizeof outbuf);
     rc3 = run();
     check("sim_persist_recovers_after_fault", rc3 == OMEGA_GPU_ENGINE_OK && output_correct(outbuf));
+    /* a job whose submit faults the driver closes the device; the next job opens a fresh one */
+    fk.submit_fail = 1;
+    fk.submit_faults_device = 1;
+    rc3 = run();
+    check("sim_persist_driver_fault_closes_device", rc3 != OMEGA_GPU_ENGINE_OK && fk.close_calls == 2 &&
+          fk.device_open == 0 && omega_blackwell_engine_device_is_open() == 0);
+    fk.submit_fail = 0;
+    fk.submit_faults_device = 0;
+    memset(outbuf, 0, sizeof outbuf);
+    rc3 = run();
+    check("sim_persist_fresh_open_after_driver_fault", rc3 == OMEGA_GPU_ENGINE_OK && output_correct(outbuf) &&
+          fk.open_calls == 3 && fk.channel_calls == 3);
     (void)omega_blackwell_engine_shutdown();
     setenv("OMEGA_GPU_ENGINE_NO_PERSIST", "1", 1);
 }
