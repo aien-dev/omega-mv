@@ -40,6 +40,30 @@ rc=2
 $ tilelab 1 x 8 8
 refused: dimension zero or above 16384
 rc=2
+$ tilelab 1 18446744073709551617 8 8
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 8 18446744073709551617 8
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 8 8 18446744073709551617
+refused: dimension zero or above 16384
+rc=2
+$ tilelab 1 1024 1024 1024 extra
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 18446744073709551616
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 999999999999999999999
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 -1
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
+$ tilelab 1 8 8 8 100x
+tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
+rc=3
 $ tilelab 1 8 8
 tilelab: usage: tilelab 1 M N K [REGS] | tilelab 2 [MUT]
 rc=3
