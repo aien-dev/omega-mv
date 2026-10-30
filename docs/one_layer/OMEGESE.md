@@ -957,6 +957,28 @@ ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/
 It adds process-local mapped resources while the compiler's own storage remains
 fixed pools. GPU launch and model execution are separate, still-unqualified gates.
 
+### Host CPU ordering words (#939)
+
+| Statement | Meaning |
+|---|---|
+| `cpufence` | Publication barrier (keyword id 178). Every load and store before it completes before any load or store after it. AArch64: `DSB SY` (`d5033f9f`), the barrier `mapget`/`mapset` already bracket their access with. x86-64 (`target x86linux`): `MFENCE` (`0f ae f0`), the fence the x86 `mapget`/`mapset` use. |
+| `cpurelax` | Spin-wait hint, no ordering (keyword id 179). AArch64: `YIELD` (`d503203f`). x86-64: `PAUSE` (`f3 90`). Use it inside a bounded poll loop and pair it with `cpufence` when order matters. |
+
+Both are statements with no operands and no value. Unlike the other host words
+they are accepted in function mode as well as program mode, because they make no
+system call. An operand is error 5, use as a value or outside a function is
+error 16, use as the name on the left of `=` is error 5, and a statement after
+`ret` is error 17. IR mode (`ir` first line) refuses them with error 16.
+`seed/host/cpufence.sh` (run by `seed/host/check.sh`) checks each refusal
+except the IR one, plus a function-mode unit, on the host. The fixture
+`seed/host/tests/cpufence.om` exits 42 natively on AArch64 and under
+qemu-x86_64. GNU objdump, used only as a referee, finds exactly one added
+`dsb sy`/`mfence` per `cpufence` and one `yield`/`pause` per `cpurelax`,
+compared with the same program with the words deleted. The script also checks
+the refusals above and builds a compiler whose `cpufence` emits NOPs. That
+compiler still runs the fixture to exit 42, and the instruction count catches
+it. These are host results only. Ordering against a GPU is not qualified here.
+
 ## 11. OSC IR output (omc only, experimental checkpoint)
 
 A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC IR version 1

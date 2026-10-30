@@ -49,3 +49,4 @@ Update this table in the same commit as the work it credits.
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
 | Grok 4.7 | Merged current main (b3dca0f1) into #514. The only conflict was the generated root `.crumb`; regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Claude Opus 5.5 | Added the host CPU words `cpufence` (DSB SY / MFENCE) and `cpurelax` (YIELD / PAUSE) to omc (#939), with the `seed/host/cpufence.sh` fixture, refusal checks and a nop-fence mutant; reseeded the compiler and regenerated the pinned units. |
