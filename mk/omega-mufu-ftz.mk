@@ -14,6 +14,6 @@ $(OUT_DIR)/test_mufu_ftz_%: tests/bw_mufu_ftz_test.c tests/bw_mufu_ftz.h tests/%
 	@mkdir -p $(OUT_DIR)
 	gcc $(MUFU_FTZ_CFLAGS) -DWS_SIM_HDR='"$*.h"' -o $@ tests/bw_mufu_ftz_test.c -lm
 test-mufu-ftz: $(OUT_DIR)/test_mufu_ftz_helper $(addprefix $(OUT_DIR)/test_mufu_ftz_,$(MUFU_FTZ_SIMS))
-	./$(OUT_DIR)/test_mufu_ftz_helper
-	@for s in $(MUFU_FTZ_SIMS); do ./$(OUT_DIR)/test_mufu_ftz_$$s || exit 1; done
+	$(OUT_DIR)/test_mufu_ftz_helper
+	@for s in $(MUFU_FTZ_SIMS); do $(OUT_DIR)/test_mufu_ftz_$$s || exit 1; done
 	@echo "test-mufu-ftz: PASS (helper + $(words $(MUFU_FTZ_SIMS)) simulators)"

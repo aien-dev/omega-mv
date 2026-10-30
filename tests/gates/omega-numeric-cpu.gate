@@ -1,5 +1,6 @@
 # tests/gates/omega-numeric-cpu.gate
 # Mirrors hosted: host-suites.yml numeric-cpu: test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc test-mufu-ftz (hosted 63 s before test-mufu-ftz)
+# test-mufu-ftz (omega #462) is host-only: the MUFU flush helper and the four warp simulators; no chip runs
 gate: OMEGA-NUMERIC-CPU
 manifest_version: 2
 owner: omega
