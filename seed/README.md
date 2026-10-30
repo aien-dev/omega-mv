@@ -967,6 +967,30 @@ keep their error 9 at the line that uses them.
 - `seed/omc/omc.om`, 11,131 lines and 379 functions. The committed `seed/out/omc` is not refreshed in
   this change; the integration owner reseeds once per batch.
 
+## TileLab planner input refusal (TL907-01)
+
+Build the candidate compiler with `sh seed/omega-from-seed.sh`, then run
+`sh seed/tilelab/gate.sh` from the repository root on an AArch64 Linux host.
+The gate prints the compiler and planner binary SHA256 values before checking
+the exact planner output and process status in `seed/tilelab/expected.txt`.
+
+Planner dimensions remain decimal integers in the documented range. Decimal
+overflow is refused before unsigned multiplication or addition can wrap.
+An optional REGS budget must be a nonempty decimal `ulong`: malformed,
+over-capacity and overflowing input returns usage status 3 without a plan.
+A valid budget too small for any configuration still returns refusal status 2.
+The maximum representable `ulong` budget is valid; parse failure is tracked
+separately rather than interpreting its value as an unlimited budget.
+
+The host gate includes the independent audit's overflowing dimensions and
+malformed REGS input, empty and over-capacity REGS controls, and maximum-value
+acceptance. `seed/tilelab/parser_mutant.om` removes the overflow guard or the
+REGS status check independently. Each mutant must compile, return success
+and emit a plan for the corresponding invalid audit input; compiler failures
+or unrelated runtime failures are not accepted as control evidence.
+These checks qualify host parsing only. They do not access or qualify a GPU,
+alter the empirical scheduling model, or rewrite historical evidence.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

@@ -25,6 +25,13 @@ omega-diag v1
 ```
 (Exits with returncode 0.)
 
+Both `check` and `next` complete their stdout writes before reporting success.
+A failed or zero-progress write exits with compiler output error 2.
+`next` streams completed query records rather than buffering the entire visible
+function/name list; a legal query is not limited by the diagnostic message pool.
+The category, large-query, and `/dev/full` regression controls live in
+`tests/diagnostics/experiment_issue655.sh`.
+
 ### 1.2 Record Line Format
 
 Each diagnostic record occupies exactly one line with whitespace-separated fields:
