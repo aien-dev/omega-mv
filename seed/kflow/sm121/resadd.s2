@@ -1,0 +1,193 @@
+; dec_k2_mo1_s256_m0: 45 instructions (+ NOP padding), listing written by sm121list from the generator's instruction list
+  ldcu.64.0 4
+  ldcu.64.1 107
+  ldcu.64.2
+  ctl 0x000ea800
+  ldc.64.0 2
+  ldc.64.1 224
+  ldc.64.2
+  ctl 0x00422800
+  ldc.64.0 4
+  ldc.64.1 226
+  ldc.64.2
+  ctl 0x00322800
+  ldc.64.0 6
+  ldc.64.1 228
+  ldc.64.2
+  ctl 0x00322800
+  ldc.64.0 6
+  ldc.64.1 230
+  ldc.64.2
+  ctl 0x00322800
+  ldc.64.0 6
+  ldc.64.1 232
+  ldc.64.2
+  ctl 0x00322800
+  ldc.0 6
+  ldc.1 234
+  ldc.2
+  ctl 0x00322800
+  ldc.0 6
+  ldc.1 235
+  ldc.2
+  ctl 0x00322800
+  s2r.0 6
+  s2r.1
+  s2r.2 33
+  ctl 0x00322800
+  mov.i.0 7
+  mov.i.1 0x00000001
+  mov.i.2
+  ctl 0x003fcc00
+  shf.r.hi.0 8
+  n.1 0x00000005
+  shf.r.hi.2 6
+  ctl 0x000fcc00
+  lop3.and.i.0 8 6
+  n.1 0x0000001f
+  lop3.and.i.2
+  ctl 0x000fcc00
+  imad.i.0 8 6
+  imad.i.1 0x00000020
+  imad.i.2 255
+  ctl 0x000fcc00
+  imad.wide.0 10 8
+  imad.wide.1 0x00000001
+  imad.wide.2 2
+  ctl 0x000fcc00
+  ldg.0 12 10
+  ldg.w.1 4 0
+  ldg.128.2
+  ctl 0x00022800
+  ldg.0 16 10
+  ldg.w.1 4 16
+  ldg.128.2
+  ctl 0x00222800
+  imad.wide.0 10 8
+  imad.wide.1 0x00000001
+  imad.wide.2 4
+  ctl 0x003fcc00
+  ldg.0 20 10
+  ldg.w.1 4 0
+  ldg.128.2
+  ctl 0x00022800
+  ldg.0 24 10
+  ldg.w.1 4 16
+  ldg.128.2
+  ctl 0x00222800
+  fadd.0 12 12
+  r.1 20
+  f.2
+  ctl 0x003fcc00
+  fadd.0 13 13
+  r.1 21
+  f.2
+  ctl 0x000fcc00
+  fadd.0 14 14
+  r.1 22
+  f.2
+  ctl 0x000fcc00
+  fadd.0 15 15
+  r.1 23
+  f.2
+  ctl 0x000fcc00
+  fadd.0 16 16
+  r.1 24
+  f.2
+  ctl 0x000fcc00
+  fadd.0 17 17
+  r.1 25
+  f.2
+  ctl 0x000fcc00
+  fadd.0 18 18
+  r.1 26
+  f.2
+  ctl 0x000fcc00
+  fadd.0 19 19
+  r.1 27
+  f.2
+  ctl 0x000fcc00
+  imad.wide.0 4 8
+  imad.wide.1 0x00000001
+  imad.wide.2 2
+  ctl 0x000fcc00
+  stg.0 4
+  stg.1 12 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 13 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 14 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 15 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 16 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 17 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 18 0
+  stg.2 4
+  ctl 0x0003e800
+  imad.wide.0 4 7
+  imad.wide.1 0x00000004
+  imad.wide.2 4
+  ctl 0x002fcc00
+  stg.0 4
+  stg.1 19 0
+  stg.2 4
+  ctl 0x0003e800
+  exit.0
+  z.1
+  exit.2
+  ctl 0x002fca00
+  bra.0 7 63
+  bra.1 -1
+  bra.back.2
+  ctl 0x000fc000
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3
+  nop.0
+  nop.1
+  nop.2
+  nop.3

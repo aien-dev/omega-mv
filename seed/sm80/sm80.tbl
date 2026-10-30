@@ -1,0 +1,162 @@
+; sm80.tbl -- the Ampere (sm_80 / sm_86 / sm_87; Ada sm_89 shares the encoding) instruction table for
+; asm2, readable text, in the format of seed/sm121/sm121.tbl:   = name  0xBASE  field...
+; One listing line = one 32-bit word; a GPU instruction is four lines, words 0..3 (each little-endian):
+;   .0  opcode (bits 0..11, the form in bits 9..11), guard predicate (12..15), destination (16..23),
+;       first source (24..31)
+;   .1  second source: register (r.1), 32-bit number (n.1), uniform register (u.1) or memory fields
+;   .2  modifiers and the third source
+;   c   the scheduling word (word 3); every instruction writes it out with its six fields.
+; Numbers are written as the bits hold them: R5 = 5, RZ = 255, URZ = 63; predicate sources are
+; index | not << 3 (7 = always, 15 = never, 0 = @P0, 8 = @!P0); predicate destinations 0..6, 7 = none.
+;
+; Source of every base word and field: Mesa NAK, src/nouveau/compiler/nak/sm70_encode.rs at mesa
+; 02f13375231bf0a9ed20b09cb21171351053be52 (MIT; Copyright (c) 2022 Collabora, Ltd.), read by hand;
+; line numbers per entry are in that file. No NVIDIA tool was run to write or check this table.
+; The referee is NAK itself: seed/sm80/gate80.sh assembles listings with this table and requires the
+; bytes NAK's encoder writes for the same instructions (nakref, seed/sm80/README.md).
+;
+; ---- common lines ----
+= ctl          0x00000000 i0.32          ; any raw word
+= c            0x00000000 i9.4 i13.1 i14.3 i17.3 i20.6 i26.4 ; set_instr_deps (324): stall, yield, write sb (7 none), read sb, wait mask, reuse
+= z.1          0x00000000                ; word 1 unused
+= z.2          0x00000000                ; word 2 unused
+= r.1          0x00000000 i0.8           ; second source register (encode_alu_base, form 1/4/6: 613-675)
+= n.1          0x00000000 i0.32          ; 32-bit number
+= u.1          0x00000000 i0.6           ; uniform register (6 bits below sm_100)
+= cb.1         0x00000000 i6.16 i22.5    ; constant bank: byte offset (bits 38..53), bank (54..58)
+; ---- NOP, S2R, MOV ----
+= nop.0        0x00000918 i12.4
+= s2r.0        0x00000919 i12.4 i16.8
+= s2r.2        0x00000000 i8.8           ; special register number, bits 72..79
+= mov.0        0x00000202 i12.4 i16.8    ; source in the second-source slot; first source unused
+= mov.i.0      0x00000802 i12.4 i16.8
+= mov.u.0      0x00000c02 i12.4 i16.8
+= mov.2        0x00000000 i8.4           ; quad lane mask, bits 72..75 (15 = all)
+= mov.u.2      0x08000000 i8.4           ; bit 91: second source is uniform
+; ---- LDC / ULDC (ULDC 0xab9 below sm_100; LDCU is sm_100+) ----
+= ldc.0        0x00000b82 i12.4 i16.8 i24.8 ; dst, offset register
+= ldc.2        0x00000000 i9.3 i14.2     ; memory type (73..75), mode (78..79)
+= uldc.0       0x00000ab9 i12.4 i16.6    ; uniform dst
+= uldc.2       0x00000000 i9.3
+; ---- float ALU ----
+= fadd.0       0x00000221 i12.4 i16.8 i24.8
+= fadd.u.0     0x00000e21 i12.4 i16.8 i24.8 ; form 7: uniform source in word 1, RZ in the third slot
+= fadd.i.0     0x00000421 i12.4 i16.8 i24.8 ; form 2: number in word 1, RZ in the third slot
+= fadd.2       0x00000000 i13.1 i14.2 i16.1 ; sat 77, rounding 78..79, ftz 80
+= fadd.u.2     0x080000ff i13.1 i14.2 i16.1
+= fadd.i.2     0x000000ff i13.1 i14.2 i16.1
+= fmul.0       0x00000220 i12.4 i16.8 i24.8
+= fmul.i.0     0x00000820 i12.4 i16.8 i24.8
+= fmul.u.0     0x00000c20 i12.4 i16.8 i24.8
+= fmul.2       0x004000ff i12.1 i13.1 i14.2 i16.1 ; RZ third source, bits 84..86 = 4; dnz, sat, rnd, ftz
+= fmul.u.2     0x084000ff i12.1 i13.1 i14.2 i16.1
+= ffma.0       0x00000223 i12.4 i16.8 i24.8
+= ffma.i.0     0x00000823 i12.4 i16.8 i24.8
+= ffma.u.0     0x00000c23 i12.4 i16.8 i24.8
+= ffma.j.0     0x00000423 i12.4 i16.8 i24.8 ; form 2: the number is the third source, the second goes to word 2
+= ffma.2       0x00000000 i0.8 i12.1 i13.1 i14.2 i16.1 ; third source; dnz, sat, rnd, ftz
+= ffma.u.2     0x08000000 i0.8 i12.1 i13.1 i14.2 i16.1
+= fmnmx.0      0x00000209 i12.4 i16.8 i24.8
+= fmnmx.i.0    0x00000809 i12.4 i16.8 i24.8
+= fmnmx.u.0    0x00000c09 i12.4 i16.8 i24.8
+= fmnmx.2      0x00000000 i16.1 i23.4    ; ftz 80, min predicate 87..90
+= fmnmx.u.2    0x08000000 i16.1 i23.4
+= fsetp.0      0x0000020b i12.4 i24.8    ; no register destination
+= fsetp.i.0    0x0000080b i12.4 i24.8
+= fsetp.u.0    0x00000c0b i12.4 i24.8
+= fsetp.2      0x00700000 i10.2 i12.4 i16.1 i17.3 i23.4 ; set op, cmp, ftz, pdst (81..83), second pdst none, accum
+= fsetp.u.2    0x08700000 i10.2 i12.4 i16.1 i17.3 i23.4
+= mufu.0       0x00000308 i12.4 i16.8    ; source in the second-source slot
+= mufu.i.0     0x00000908 i12.4 i16.8
+= mufu.u.0     0x00000d08 i12.4 i16.8
+= mufu.2       0x00000000 i10.6          ; function 74..79
+= mufu.u.2     0x08000000 i10.6
+; ---- integer ALU ----
+= iadd3.0      0x00000210 i12.4 i16.8 i24.8
+= iadd3.i.0    0x00000810 i12.4 i16.8 i24.8
+= iadd3.u.0    0x00000c10 i12.4 i16.8 i24.8
+= iadd3.2      0x0781e000 i0.8 i17.3 i20.3 ; third source; carry-in predicates PT-false; carry-out pdsts
+= iadd3.u.2    0x0f81e000 i0.8 i17.3 i20.3
+= imad.0       0x00000224 i12.4 i16.8 i24.8
+= imad.i.0     0x00000824 i12.4 i16.8 i24.8
+= imad.u.0     0x00000c24 i12.4 i16.8 i24.8
+= imadw.0      0x00000225 i12.4 i16.8 i24.8 ; IMAD.WIDE: 64-bit destination and third source
+= imadw.i.0    0x00000825 i12.4 i16.8 i24.8
+= imadw.u.0    0x00000c25 i12.4 i16.8 i24.8
+= imad.2       0x000e0000 i0.8 i9.1      ; third source, signed 73; carry-out pdst none
+= imad.u.2     0x080e0000 i0.8 i9.1
+= isetp.0      0x0000020c i12.4 i24.8
+= isetp.i.0    0x0000080c i12.4 i24.8
+= isetp.u.0    0x00000c0c i12.4 i24.8
+= isetp.2      0x00700000 i4.4 i8.1 i9.1 i10.2 i12.3 i17.3 i23.4 ; low-cmp pred, .EX, signed, set op, cmp, pdst, accum
+= isetp.u.2    0x08700000 i4.4 i8.1 i9.1 i10.2 i12.3 i17.3 i23.4
+= lop3.0       0x00000212 i12.4 i16.8 i24.8
+= lop3.i.0     0x00000812 i12.4 i16.8 i24.8
+= lop3.u.0     0x00000c12 i12.4 i16.8 i24.8
+= lop3.2       0x078e0000 i0.8 i8.8      ; third source, LUT 72..79; PT-false 87..90; pdst none
+= lop3.u.2     0x0f8e0000 i0.8 i8.8
+= shf.0        0x00000219 i12.4 i16.8 i24.8 ; dst, low
+= shf.i.0      0x00000819 i12.4 i16.8 i24.8
+= shf.u.0      0x00000c19 i12.4 i16.8 i24.8
+= shf.2        0x00000000 i0.8 i9.2 i11.1 i12.1 i16.1 ; high, type, wrap, right, dst-high
+= shf.u.2      0x08000000 i0.8 i9.2 i11.1 i12.1 i16.1
+= sel.0        0x00000207 i12.4 i16.8 i24.8
+= sel.i.0      0x00000807 i12.4 i16.8 i24.8
+= sel.u.0      0x00000c07 i12.4 i16.8 i24.8
+= sel.2        0x00000000 i23.4          ; condition 87..90
+= sel.u.2      0x08000000 i23.4
+; ---- conversions ----
+= f2fp.0       0x0000023e i12.4 i16.8 i24.8
+= f2fp.i.0     0x0000083e i12.4 i16.8 i24.8
+= f2fp.u.0     0x00000c3e i12.4 i16.8 i24.8
+= f2fp.2       0x000000ff i15.2          ; RZ third source; rounding 79..80
+= f2fp.u.2     0x080000ff i15.2
+= i2f.0        0x00000306 i12.4 i16.8    ; 32-bit-or-narrower; source in the second slot
+= i2f.w.0      0x00000312 i12.4 i16.8    ; a 64-bit side
+= i2f.2        0x00000000 i10.1 i11.2 i14.2 i20.2 ; signed 74, dst size 75..76, rnd 78..79, src size 84..85
+= f2i.0        0x00000305 i12.4 i16.8
+= f2i.w.0      0x00000311 i12.4 i16.8
+= f2i.2        0x00000000 i8.1 i11.2 i14.2 i16.1 i20.2 ; signed 72, dst size, rnd, ftz, src size
+; ---- tensor core (F16 inputs; NAK encodes no BF16/TF32) ----
+= hmma.0       0x0000023c i12.4 i16.8 i24.8
+= hmma.2       0x00000000 i0.8 i11.1 i12.1 i14.1 ; C, size low bit 75, F32 accumulate 76, size high bit 78
+; ---- warp shuffle ----
+= shfl.0       0x00000389 i12.4 i16.8 i24.8 ; lane and clamp registers
+= shfl.li.0    0x00000989 i12.4 i16.8 i24.8 ; lane number
+= shfl.ci.0    0x00000589 i12.4 i16.8 i24.8 ; clamp number
+= shfl.ii.0    0x00000f89 i12.4 i16.8 i24.8 ; both numbers
+= shfl.1       0x00000000 i0.8 i26.2     ; lane register, op 58..59
+= shfl.li.1    0x00000000 i21.5 i26.2    ; lane number 53..57
+= shfl.ci.1    0x00000000 i0.8 i8.13 i26.2 ; lane register, clamp number 40..52
+= shfl.ii.1    0x00000000 i8.13 i21.5 i26.2
+= shfl.2       0x00000000 i0.8 i17.3     ; clamp register, in-bounds pdst
+= shfl.ci.2    0x00000000 i17.3
+; ---- memory ----
+= ldg.0        0x00000981 i12.4 i16.8 i24.8 ; dst, address register
+= ldg.1        0x00000000 i0.6 s8.24     ; uniform address register, signed offset 40..63
+= ldg.2        0x080e0000 i0.4 i8.1 i9.3 i13.4 i20.3 i26.1 ; pred (7 - index | not << 3), .U64, type, order, evict, .A64
+= stg.0        0x00000986 i12.4 i24.8
+= stg.1        0x00000000 i0.8 s8.24     ; data register, signed offset
+= stg.2        0x08000000 i0.6 i8.1 i9.3 i13.4 i20.3 i26.1 ; uniform address, .U64, type, order, evict, .A64
+= lds.0        0x00000984 i12.4 i16.8 i24.8
+= lds.2        0x08000000 i9.3 i14.2     ; type, offset stride 78..79
+= sts.0        0x00000988 i12.4 i24.8
+= sts.2        0x08000000 i0.6 i9.3 i14.2
+= atomg.0      0x000009a8 i12.4 i16.8 i24.8
+= atomg.2      0x080e0000 i0.6 i6.1 i8.1 i9.3 i13.4 i20.3 i23.4 ; ureg, .A64 (70), .U64, type, order, evict, op
+= red.0        0x00ff098e i12.4 i24.8    ; no destination: RZ
+= red.2        0x08000000 i0.6 i8.1 i9.3 i13.4 i20.3 i23.3 i26.1 ; ureg, .U64, type, order, evict, op, .A64
+; ---- barriers and control ----
+= bar.0        0x00000b1d i12.4
+= membar.0     0x00000992 i12.4
+= membar.2     0x00000000 i12.3          ; scope 76..78 (CTA 0, GPU 2, SYS 3)
+= exit.0       0x0000094d i12.4
+= exit.2       0x03800000                ; PT at 87..89
+= bsync.0      0x00000941 i12.4 i16.4    ; barrier register
+= bsync.2      0x00000000 i23.4          ; condition
+= bra.0        0x00000947 i12.4
+= bra.1        0x00000000 i4.28          ; distance in instructions after this one, low 28 bits
+= bra.2        0x00000000 s0.18 i23.4    ; distance bits 28..45; condition
+= bssy.0       0x00000945 i12.4 i16.4
+= bssy.1       0x00000000 s4.28          ; distance in instructions after this one
+= bssy.2       0x00000000 i23.4

@@ -1,0 +1,21 @@
+#	instruction	ours: stall yld wr rd wait	NAK sm80
+0	 r1 = ldc.b32 c[0x0][+0x37c] delay=1 yld	 1 1 7 7 0x00	 1 0 0 7 0x00
+1	 r9 = s2r sr[0x25] delay=1 wr:0 yld	 1 1 0 7 0x00	 1 0 1 7 0x00
+2	 ur4 = ldc.b32 c[0x0][+0x360] delay=1 wr:0 yld	 1 1 0 7 0x00	 1 0 2 7 0x00
+3	 r0 = s2r sr[0x21] delay=1 wr:0 yld	 1 1 0 7 0x00	 1 0 3 7 0x00
+4	 ur5 = ldc.b32 c[0x0][+0x398] delay=1 wr:1 yld	 1 1 1 7 0x00	 1 0 4 7 0x00
+5	 r9 = imad r9 ur4 r0 delay=5 wt=000001	 5 0 7 7 0x01	 5 0 7 7 0x0e
+6	 p0 = isetp.ge.u32 r9 ur5 delay=13 wt=000010	13 0 7 7 0x02	13 0 7 7 0x10
+7	@p0  exit delay=5 yld	 5 1 7 7 0x00	 1 0 7 7 0x01
+8	 r2..4 = ldc.b64 c[0x0][+0x380] delay=1 wr:0 yld	 1 1 0 7 0x00	 1 0 0 7 0x00
+9	 r4..6 = ldc.b64 c[0x0][+0x388] delay=8 wr:2 yld	 8 1 2 7 0x00	 1 0 1 7 0x00
+10	 r6..8 = ldc.b64 c[0x0][+0x390] delay=1 wr:3 yld	 1 1 3 7 0x00	 1 0 2 7 0x00
+11	 r2..4 = imad64 r9 0x4 r2..4 delay=6 wt=000001	 6 0 7 7 0x01	 5 0 7 7 0x01
+12	 r2 = ld.global.a64.strong.gpu.b32 [r2..4+rZ], pT delay=1 wr:4 yld	 1 1 4 7 0x00	 1 0 0 7 0x00
+13	 r4..6 = imad64 r9 0x4 r4..6 delay=6 wt=000100	 6 0 7 7 0x04	 5 0 7 7 0x02
+14	 r5 = ld.global.a64.strong.gpu.b32 [r4..6+rZ], pT delay=1 wr:4 yld	 1 1 4 7 0x00	 1 0 1 7 0x00
+15	 r6..8 = imad64 r9 0x4 r6..8 delay=1 wt=001000 yld	 1 1 7 7 0x08	 1 0 7 7 0x04
+16	 r9 = iadd3 r2 r5 rZ delay=5 wt=010000	 5 0 7 7 0x10	 5 0 7 7 0x03
+17	 st.global.a64.strong.gpu.b32 [r6..8+rZ] r9 delay=2 rd:0 yld	 2 1 7 0 0x00	 2 0 7 0 0x00
+18	 exit delay=5 wt=000001 yld	 5 1 7 7 0x01	 1 0 7 7 0x01
+stall sum: ours 65 NAK 48

@@ -1,0 +1,196 @@
+; resadd.s2 -- Qwen3 decode residual add x[i] += a[i] (f32, 2048 values, one CTA of 256 threads, 8 per
+; thread) for sm_80, written by hand for asm2 with seed/sm80/sm80.tbl. Ported from CUDA++'s sm_121 RES ADD
+; (omega_blackwell_codegen_dec.h, RES words; the asm2 listing dec_k2_mo1_s256_m0.s2) with the dead loads
+; of w/nw/y/eps/scale dropped. Parameters keep CUDA++'s constant bank 0: x 0x380, a 0x388, w 0x390,
+; nw 0x398, y 0x3a0, eps 0x3a8, scale 0x3ac. ULDC is not needed: loads and stores use [R.64] with URZ.
+; Each ";=" line is the instruction text expected from nvdisasm -b SM80 for the next instruction
+; (kflow's intent check). Control words (c stall yield write-sb read-sb wait-mask reuse) are MODELED:
+; scoreboards 0/1 (LDC), 2 (S2R), 3 and 5 (loads, x then a), 4 (load address reads), 0 (store reads).
+; The first prediction of the memory texts said LDG.E.128/STG.E [R.64]; nvdisasm 13.0 prints order 7 as
+; .STRONG.GPU and the URZ address term, the same as NAK's vecadd. The intent lines were corrected to that.
+; Not run on any sm_80 GPU (NOT_RUN); the host emulator kemu is the only behaviour check.
+;= LDC.64 R2, c[0x0][0x380]
+ldc.0 7 2 255
+cb.1 0x380 0
+ldc.2 5 0
+c 1 1 0 7 0 0
+;= LDC.64 R4, c[0x0][0x388]
+ldc.0 7 4 255
+cb.1 0x388 0
+ldc.2 5 0
+c 1 1 1 7 0 0
+;= S2R R6, SR_TID.X
+s2r.0 7 6
+z.1
+s2r.2 0x21
+c 1 1 2 7 0 0
+;= MOV R7, 0x1
+mov.i.0 7 7
+n.1 1
+mov.2 15
+c 1 1 7 7 0 0
+;= IMAD.SHL.U32 R8, R6, 0x20, RZ
+imad.i.0 7 8 6
+n.1 32
+imad.2 255 0
+c 4 1 7 7 4 0
+;= IMAD.WIDE.U32 R10, R8, 0x1, R2
+imadw.i.0 7 10 8
+n.1 1
+imad.2 2 0
+c 4 1 7 7 1 0
+;= LDG.E.128.STRONG.GPU R12, [R10.64+URZ]
+ldg.0 7 12 10
+ldg.1 63 0
+ldg.2 0 1 6 7 1 1
+c 1 1 3 4 0 0
+;= LDG.E.128.STRONG.GPU R16, [R10.64+URZ+0x10]
+ldg.0 7 16 10
+ldg.1 63 16
+ldg.2 0 1 6 7 1 1
+c 1 1 3 4 0 0
+;= IMAD.WIDE.U32 R10, R8, 0x1, R4
+imadw.i.0 7 10 8
+n.1 1
+imad.2 4 0
+c 4 1 7 7 18 0
+;= LDG.E.128.STRONG.GPU R20, [R10.64+URZ]
+ldg.0 7 20 10
+ldg.1 63 0
+ldg.2 0 1 6 7 1 1
+c 1 1 5 7 0 0
+;= LDG.E.128.STRONG.GPU R24, [R10.64+URZ+0x10]
+ldg.0 7 24 10
+ldg.1 63 16
+ldg.2 0 1 6 7 1 1
+c 1 1 5 7 0 0
+;= FADD R12, R12, R20
+fadd.0 7 12 12
+r.1 20
+fadd.2 0 0 0
+c 4 1 7 7 40 0
+;= FADD R13, R13, R21
+fadd.0 7 13 13
+r.1 21
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= FADD R14, R14, R22
+fadd.0 7 14 14
+r.1 22
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= FADD R15, R15, R23
+fadd.0 7 15 15
+r.1 23
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= FADD R16, R16, R24
+fadd.0 7 16 16
+r.1 24
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= FADD R17, R17, R25
+fadd.0 7 17 17
+r.1 25
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= FADD R18, R18, R26
+fadd.0 7 18 18
+r.1 26
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= FADD R19, R19, R27
+fadd.0 7 19 19
+r.1 27
+fadd.2 0 0 0
+c 4 1 7 7 0 0
+;= IMAD.WIDE.U32 R4, R8, 0x1, R2
+imadw.i.0 7 4 8
+n.1 1
+imad.2 2 0
+c 4 1 7 7 0 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R12
+stg.0 7 4
+stg.1 12 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R13
+stg.0 7 4
+stg.1 13 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R14
+stg.0 7 4
+stg.1 14 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R15
+stg.0 7 4
+stg.1 15 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R16
+stg.0 7 4
+stg.1 16 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R17
+stg.0 7 4
+stg.1 17 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R18
+stg.0 7 4
+stg.1 18 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= IMAD.WIDE.U32 R4, R7, 0x4, R4
+imadw.i.0 7 4 7
+n.1 4
+imad.2 4 0
+c 4 1 7 7 1 0
+;= STG.E.STRONG.GPU [R4.64+URZ], R19
+stg.0 7 4
+stg.1 19 0
+stg.2 63 1 4 7 1 1
+c 2 1 7 0 0 0
+;= EXIT
+exit.0 7
+z.1
+exit.2
+c 5 1 7 7 1 0
+;= BRA 0x240
+bra.0 7
+bra.1 0x0fffffff
+bra.2 -1 7
+c 0 0 7 7 0 0
