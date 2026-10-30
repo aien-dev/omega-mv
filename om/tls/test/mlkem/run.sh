@@ -169,7 +169,8 @@ fi
 if comp compose-tls sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls && [ ! -s "$out/compose-tls.err" ]; then
 	echo "PASS compose-tls: ... x509 tls"
 else
-	echo "NOTE compose-tls (tls.om at its current state, owned by the TLS lane): $(cat "$out/compose-tls.err")"
+	echo "FAIL compose-tls: $(cat "$out/compose-tls.err")"
+	fail=1
 fi
 
 # timing (informational): N keygen_seed, N encaps, N decaps calls after one discarded warm-up series

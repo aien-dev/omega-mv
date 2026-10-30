@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # Secret residue check: do handshake secrets survive in the client's memory after the
-# handshake, and do any keys survive tls_close?  usage: residue.py CLIENT PKIDIR [--keep] [--approved]
+# handshake, and do any keys survive tls_close?  usage: residue.py CLIENT PKIDIR [--keep] [--approved|--hybrid]
 # --approved runs the client in approved-only mode (OPTS APPROVED=1) against fakesrv.py ap-hold:S
 # (secp256r1 ECDH, TLS_AES_128_GCM_SHA256): "shared" is then the P-256 Z kept at c[TLECZ].
+# --hybrid runs fakesrv.py hybhold:S (X25519MLKEM768; run with a python that has kyber-py): "shared"
+# is the 64-byte ML-KEM || x25519 secret, kem_ss and x_ss its halves, and kem_hek H(ek), which only
+# the client's decapsulation key dk[2336..2368) holds; all four must be gone after the handshake.
 #
 # fakesrv.py (mode hold:S) completes a handshake, writes every secret it derived to a file,
 # waits S seconds and then answers. During the wait the client is blocked in tls_read with the
@@ -60,13 +63,15 @@ def main():
     client, pki = sys.argv[1], sys.argv[2]
     keep = "--keep" in sys.argv
     approved = "--approved" in sys.argv
+    hybrid = "--hybrid" in sys.argv
+    hs_only = HS_ONLY + (("kem_ss", "x_ss", "kem_hek") if hybrid else ())
     work = tempfile.mkdtemp(prefix="residue-")
     port = free_port()
     keyfile = os.path.join(work, "keys.txt")
     here = os.path.dirname(os.path.abspath(__file__))
     env = dict(os.environ, FAKESRV_KEYS=keyfile)
     srv = subprocess.Popen([sys.executable, os.path.join(here, "fakesrv.py"), str(port), pki,
-                            "ap-hold:4" if approved else "hold:4"],
+                            "ap-hold:4" if approved else "hybhold:4" if hybrid else "hold:4"],
                            stdout=open(os.path.join(work, "srv.log"), "w"), stderr=subprocess.STDOUT, env=env)
     time.sleep(0.6)
     cl = subprocess.Popen([client, "localhost", str(port), "get", "127.0.0.1",
@@ -108,7 +113,7 @@ def main():
     cl.wait(timeout=20)
     srv.wait(timeout=20)
     bad = []
-    for n in HS_ONLY:
+    for n in hs_only:
         if after_hs[n]:
             bad.append("after handshake: %s in %s" % (n, after_hs[n]))
     for n in AP:
@@ -125,7 +130,7 @@ def main():
     if bad:
         print("RESIDUE FAIL\n  " + "\n  ".join(bad))
         return 1
-    print("RESIDUE PASS secrets=%d hs_only=%d" % (len(names), len(HS_ONLY)))
+    print("RESIDUE PASS secrets=%d hs_only=%d" % (len(names), len(hs_only)))
     if not keep:
         subprocess.call(["rm", "-rf", work])
     return 0
