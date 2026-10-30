@@ -3,8 +3,8 @@
 # For every <ir-dir>/kernel_<base>.ir and back-end mutant 0..8: the seeded .om lowering (<gpu>, built from
 # seed/oscgpu) writes the BlackwellIR dump of the unit's first function (the one test_osc_gpu loads), and
 # om_oracle encode (test-only oracle: the C register allocator and encoder) turns it into
-# <out-dir>/<base>__m<mutant>.code and .man. A refused kernel leaves no files. test_osc_gpu reads them with
-# OSC_GPU_OM_DIR=<out-dir> and compares them with the C back end's bytes.
+# <out-dir>/<base>__m<mutant>.code and .man. A refused kernel leaves no files. test_osc_gpu <ir-dir> <out-dir>
+# reads them and compares them with the C back end's bytes.
 set -u
 GPU=$1; ORA=$2; IRD=$3; OUT=$4
 mkdir -p "$OUT"

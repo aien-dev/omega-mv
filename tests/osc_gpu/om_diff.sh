@@ -7,11 +7,11 @@
 #           variant om_oracle makes of each unit (one field changed, still admitted by osc_ir_decode; mutant 0)
 #   encode  where a dump was written: om_oracle encode of the .om's dump gives the .code/.man om_oracle build gives
 #   embed   tests/osc_gpu/omegese/EMBEDDED: the code built from the .om's dump has the sha256 the embedding carries
-#   chip    test_osc_gpu with OSC_GPU_OM_DIR: every kernel it loads has the bytes the .om's dump encodes to
+#   chip    test_osc_gpu <ir-dir> <om-dir>: every kernel it loads has the bytes the .om's dump encodes to
 # Prints OMDIFF PASS n=N same=N diff=0, or OMDIFF FAIL ... and exits 1.
 set -u
 OMC=$1; ORA=$2; TEST=$3; IRD=$4; WORK=$5
-OMC_SHA=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+OMC_SHA=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
 got=$(sha256sum "$OMC" | cut -d' ' -f1)
 [ "$got" = "$OMC_SHA" ] || { echo "OMDIFF FAIL: $OMC has sha256 $got, not the pinned seed $OMC_SHA"; exit 1; }
 rm -rf "$WORK"; mkdir -p "$WORK/var" "$WORK/bad" "$WORK/emb" "$WORK/om"
@@ -97,7 +97,7 @@ while read -r file kname sha where; do
 done < tests/osc_gpu/omegese/EMBEDDED
 # the kernel tests, each kernel loaded from the bytes the .om's dump encodes to
 sh tests/osc_gpu/om_build_all.sh "$GPU" "$ORA" "$IRD" "$WORK/om" || { bad "om_build_all"; }
-out=$(OSC_GPU_OM_DIR=$WORK/om "$TEST" "$IRD" 2>&1); tr=$?
+out=$("$TEST" "$IRD" "$WORK/om" 2>&1); tr=$?
 line=$(printf '%s\n' "$out" | grep '^OMBYTES ')
 n=$((n + 1))
 case "$line" in

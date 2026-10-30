@@ -9,8 +9,8 @@
 #                        bit-exact except exp/inv/root (MUFU), which pass within 2^-20 relative (GPU.md s5).
 #                        Run it inside a chip window (spark-window run); OSC_GPU_MUTANT=n is the red run.
 #   make test-osc-gpu-om host only: the seeded .om lowering (seed/oscgpu, built with the pinned seed/out/omc) against
-#                        the C one, byte for byte (tests/osc_gpu/om_diff.sh); OSC_GPU_OM_DIR=<dir> of
-#                        tests/osc_gpu/om_build_all.sh makes test_osc_gpu (and the chip run) use the .om's bytes
+#                        the C one, byte for byte (tests/osc_gpu/om_diff.sh); test_osc_gpu <ir-dir> <om-dir>, <om-dir> from
+#                        tests/osc_gpu/om_build_all.sh, uses the .om's bytes (the chip run: OSC_GPU_OM_DIR=<om-dir> make test-osc-gpu-chip)
 #   make test-om-ports   host only: all three seeded .om ports against their C oracles (migration pending: the C
 #                        stays the production path and the oracle until the .om replaces it): test-oscir-om
 #                        (seed/oscgpu/oscir.om vs osc_ir_decode/osc_ir_validate, tests/osc_gpu/oscir_diff.sh),
@@ -61,5 +61,5 @@ test-checker2-om: test-checker2-differential test-osc-gpu
 test-om-ports: test-oscir-om test-checker2-om test-osc-gpu-om
 
 test-osc-gpu-chip: $(OSG_DIR)/test_osc_gpu_chip test-osc-gpu
-	$(OSG_DIR)/test_osc_gpu_chip $(OSG_DIR)/ir
+	$(OSG_DIR)/test_osc_gpu_chip $(OSG_DIR)/ir $(OSC_GPU_OM_DIR)
 endif

@@ -18,7 +18,7 @@
 set -u
 OMC=$1
 W=${2:-build/osc_gpu/oscir_diff}
-want_omc=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+want_omc=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
 got=$(sha256sum "$OMC" | cut -d' ' -f1)
 [ "$got" = "$want_omc" ] || { echo "OMDIFF FAIL: omc sha256 $got, want $want_omc"; exit 1; }
 for t in build/omegese/omegese build/omega_emit/omega_emit; do

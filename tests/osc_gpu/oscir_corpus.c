@@ -15,6 +15,8 @@
 #define main test_osc_ir_decode_main
 #include "../compiler/test_osc_ir_decode.c"
 #undef main
+#include <fcntl.h>
+#include <unistd.h>
 
 static const char *g_dir;
 static unsigned g_nout;
@@ -22,7 +24,9 @@ static unsigned g_nout;
 static void out(const char *tag, unsigned k, const uint8_t *b, size_t n) {
     char path[512];
     snprintf(path, sizeof path, "%s/%s-%05u.ir", g_dir, tag, k);
-    FILE *fp = fopen(path, "wb");
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644); /* 0644 before the umask, never 0666 */
+    FILE *fp = fd >= 0 ? fdopen(fd, "wb") : NULL;
+    if (!fp && fd >= 0) close(fd);
     if (!fp || fwrite(b, 1, n, fp) != n) {
         printf("cannot write %s\n", path);
         exit(1);
