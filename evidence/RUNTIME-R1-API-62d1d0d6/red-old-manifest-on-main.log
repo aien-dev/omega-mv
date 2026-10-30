@@ -1,0 +1,12 @@
+$ tools/runtime_api_check.sh <164fb76f manifest> . /dev/shm/r1red/w <164fb76f API.md>   (headers of main 62d1d0d6)
+FAIL: manifest says `struct OmegaGpuHandleTable 17424 8` but the header gives `struct OmegaGpuHandleTable 69648 8`
+FAIL: manifest says `field OmegaGpuHandleTable generation 0 4096` but the header gives `field OmegaGpuHandleTable generation 0 16384`
+FAIL: manifest says `field OmegaGpuHandleTable kind 4096 4096` but the header gives `field OmegaGpuHandleTable kind 16384 16384`
+FAIL: manifest says `field OmegaGpuHandleTable bytes 8192 8192` but the header gives `field OmegaGpuHandleTable bytes 32768 32768`
+FAIL: manifest says `field OmegaGpuHandleTable live 16384 1024` but the header gives `field OmegaGpuHandleTable live 65536 4096`
+FAIL: manifest says `field OmegaGpuHandleTable nlive 17408 4` but the header gives `field OmegaGpuHandleTable nlive 69632 4`
+FAIL: manifest says `field OmegaGpuHandleTable total_bytes 17416 8` but the header gives `field OmegaGpuHandleTable total_bytes 69640 8`
+FAIL: manifest says `const OMEGA_GPU_HANDLE_SLOTS 1024` but the header gives `const OMEGA_GPU_HANDLE_SLOTS 4096`
+FAIL: manifest says `const OMEGA_GPU_CMDLIST_MAX_LAUNCHES 2048` but the header gives `const OMEGA_GPU_CMDLIST_MAX_LAUNCHES 4096`
+RESULT: FAIL (runtime API check)
+exit=1

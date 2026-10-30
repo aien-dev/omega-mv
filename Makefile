@@ -12,6 +12,19 @@ CFLAGS ?= -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm \
 	-I$(PHYSICS_DIR)/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include
 
+# sm_121 instruction encoder (twin of aien-dev/CUDApp#79): om (default) = om/encoder/bw_enc_sm121.om through the
+# generated binding src/omega_om_units.c; c = the migration-pending C encoder, the differential oracle; diff = both on
+# every call, abort on any difference (mk/om-encoder.mk). Use a separate OUT_DIR per value. The macro names keep
+# CUDApp's spelling so src/omega_blackwell_codegen.c stays the same file in both repositories.
+CUDAPP_ENCODER ?= om
+CUDAPP_ENCODER_DEFS_om :=
+CUDAPP_ENCODER_DEFS_c := -DCUDAPP_MIGRATION_PENDING_C_ENCODER
+CUDAPP_ENCODER_DEFS_diff := -DCUDAPP_MIGRATION_PENDING_ENCODER_DIFF
+CUDAPP_ENCODER_DEFS = $(CUDAPP_ENCODER_DEFS_$(CUDAPP_ENCODER))
+ifeq ($(filter om c diff,$(CUDAPP_ENCODER)),)
+$(error CUDAPP_ENCODER must be om, c or diff)
+endif
+
 SRCS = src/omega_om_units.c src/omega_canonical.c src/omega_validate.c src/omega_core.c src/omega_codec.c \
 	src/aarch64_encoder.c src/aarch64_decoder.c src/omega_realize.c src/omega_exec.c \
 	src/omega_self_host.c src/omega_verify.c src/omega_program.c src/omega_synthesis.c \
@@ -30,6 +43,8 @@ SRCS += src/omega_gpu_moe_api.c
 SRCS += src/omega_blackwell_codegen_moe.c src/omega_gpu_fp8_pack.c src/omega_gpu_fp8_api.c
 # OWN-30B W-L2c (2026-10-14): FP8 GEMV variant 2, row-pipelined (omega_blackwell_codegen_moe2.h), selectable, variant 1 untouched
 SRCS += src/omega_blackwell_codegen_moe2.c
+# Expert Ribbon P1 (aienix#4 / omega#533, 2026-10-18): versioned replaceable FP8 expert slots, new files only
+SRCS += src/omega_fp8_slot_table.c src/omega_gpu_fp8_slots.c
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h), new files only
 SRCS += src/omega_blackwell_codegen_attn.c src/omega_gpu_decode_attn_api.c
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, new files only
@@ -114,7 +129,25 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CUDAPP_ENCODER_DEFS) -c $< -o $@
+
+# Objects that read the physics tree: the two compiled from it, and the sources that include
+# m16_native.h or nvrm.h from it (directly or through src/*.h; `gcc -MM` lists a $(PHYSICS_DIR)
+# path for exactly these). They must be rebuilt when PHYSICS_DIR points at another tree, not only
+# when a file there is newer, and none may compile before check-physics-lock passes (#488).
+# The stamp records the resolved PHYSICS_DIR and its git HEAD and is rewritten only when that
+# text changes, so an unchanged PHYSICS_DIR rebuilds nothing. Its phony prerequisite runs the
+# lock check first: when the check refuses, the stamp is not made and no physics object compiles.
+# The other objects take nothing from PHYSICS_DIR and are shared with physics-free builds
+# (crumbline-learner, omega, test-program-id), so they stay ungated.
+PHYSICS_STAMP = $(OUT_DIR)/physics.stamp
+PHYSICS_OBJS = $(addprefix $(OUT_DIR)/,m16_native.o nvrm.o omegatool.o omega_accelerator_world.o \
+	omega_blackwell_submit.o omega_blackwell_engine.o omega_blackwell_gates.o \
+	omega_gpu_platform_linux.o omega_world_gates.o omega_evidence.o)
+$(PHYSICS_STAMP): check-physics-lock | $(OUT_DIR)
+	@new="$$(cd '$(PHYSICS_DIR)' 2>/dev/null && pwd -P || echo '$(PHYSICS_DIR)') $$(git -C '$(PHYSICS_DIR)' rev-parse HEAD 2>/dev/null || echo nogit)"; \
+	if [ "$$(cat $@ 2>/dev/null)" != "$$new" ]; then printf '%s\n' "$$new" > $@; fi
+$(PHYSICS_OBJS): $(PHYSICS_STAMP)
 
 $(OUT_DIR)/m16_native.o: $(PHYSICS_DIR)/m16/m16_native.c | $(OUT_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -2038,6 +2071,30 @@ test-library: tests/test_omega_library.c src/omega_library.c src/omega_library.h
 	  mp_run build_mutant refuse-deps           dep-null             '    if (dep_count > 0) return -1;'; mp_wait
 	@echo "test-library: PASS (all checks, all mutants killed)"
 
+# omega-mv#574: omega_exec_native_f3 keeps executable pages for the last OMEGA_EXEC_CACHE_SLOTS distinct code
+# byte strings. test-exec-native-cache: reuse (hits), invalidation (same length or same address with new bytes
+# never runs a stale mapping), LRU eviction, capacity. Then each mutant of src/omega_exec.c must make the test fail.
+.PHONY: test-exec-native-cache
+EXECCACHE_CORE = $(filter-out src/omega_exec.c,$(LIBTEST_CORE))
+EXECCACHE_DIR = $(OUT_DIR)/exec-cache-test
+test-exec-native-cache: tests/exec/test_exec_native_cache.c src/omega_exec.c src/omega_exec.h
+	@mkdir -p $(EXECCACHE_DIR)
+	$(CC) $(LIBTEST_FLAGS) -o $(EXECCACHE_DIR)/test_exec_native_cache tests/exec/test_exec_native_cache.c src/omega_exec.c $(EXECCACHE_CORE) -lpthread
+	$(EXECCACHE_DIR)/test_exec_native_cache
+	@set -eu; for m in 'identity-by-length|s/ \&\& memcmp(s->code, real->code_bytes, real->code_len) == 0//' \
+	                 'evict-most-recent|s/s->last_use < lru->last_use/s->last_use > lru->last_use/' \
+	                 'hit-not-touched|/^ *s->last_use = ++g_tick;$$/d'; do \
+	  name=$${m%%|*}; expr=$${m#*|}; mut=$(EXECCACHE_DIR)/mut_$$name.c; \
+	  sed "$$expr" src/omega_exec.c > $$mut; \
+	  if cmp -s src/omega_exec.c $$mut; then echo "mutant $$name: sed changed nothing"; exit 1; fi; \
+	  $(CC) $(LIBTEST_FLAGS) -o $(EXECCACHE_DIR)/mut_$$name tests/exec/test_exec_native_cache.c $$mut $(EXECCACHE_CORE) -lpthread; \
+	  rc=0; $(EXECCACHE_DIR)/mut_$$name > $(EXECCACHE_DIR)/mut_$$name.out 2>&1 || rc=$$?; \
+	  if [ $$rc -ne 1 ] || ! grep -q '^EXEC_NATIVE_CACHE: FAIL' $(EXECCACHE_DIR)/mut_$$name.out; then \
+	    echo "mutant $$name NOT killed (exit $$rc)"; cat $(EXECCACHE_DIR)/mut_$$name.out; exit 1; fi; \
+	  echo "mutant $$name: killed ($$(grep -c '^FAIL' $(EXECCACHE_DIR)/mut_$$name.out) failing checks)"; \
+	done
+	@echo "test-exec-native-cache: PASS (all checks, all mutants killed)"
+
 # VC1-STORE (VC1 stage 3): unit test for the Verified Crumb Store (omega_vcstore): golden
 # vectors from aien-protocols (tests/vcstore/golden, PIN names the commit), immutability,
 # dependency closure, insert-order-independent digest, name index, save/load. Plus a mutation
@@ -2512,7 +2569,8 @@ test-gpu-reconv: $(GPU_RECONV_TEST)
 
 # omega #492: IMAD.HI.U32 with a register Rc. The chip reads Rc as a 64-bit register pair (nvcc 13.0
 # sm_121 oracle, evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016; chip probe pending), so the four warp
-# simulators refuse a non-RZ Rc instead of modelling a 32-bit one. One binary per simulator header.
+# simulators model an even Rc as the pair Rc+1:Rc and refuse an odd Rc, and replay the PR #487
+# odd-column pack (it must come out wrong, as on the chip). One binary per simulator header.
 .PHONY: test-gpu-imadhi-rc
 GPU_IMADHI_SIMS = bw_warp_sim bw_warp_sim_tc bw_warp_sim_k bw_warp_sim_pa
 GPU_IMADHI_TESTS = $(GPU_IMADHI_SIMS:%=$(OUT_DIR)/gpu_imadhi_rc_test_%)
@@ -2869,3 +2927,13 @@ $(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_mod
 .PHONY: test-gpu-gemm
 test-gpu-gemm: $(GPU_GEMM_TEST)
 	./$(GPU_GEMM_TEST) --sim
+
+# Expert Ribbon P1 (aienix#4 / omega#533, 2026-10-18): versioned replaceable FP8 expert slots (omega_gpu_fp8_slots.h).
+# test-gpu-fp8-slots is host-only (slot state machine, threaded race, mutant); the chip gate is
+# tools/run_gpu_fp8_slots_chip.sh under the GB10 lock (parity vs resident, churn, reader fence via a command list, negative control).
+.PHONY: test-gpu-fp8-slots
+GPU_FP8_SLOTS_TEST = $(OUT_DIR)/gpu_fp8_slots_test
+$(GPU_FP8_SLOTS_TEST): tests/gpu_fp8_slots_test.c src/omega_gpu_fp8_slots.h src/omega_fp8_slot_table.h src/omega_gpu_fp8_api.h src/omega_gpu_cmdlist.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_fp8_slots_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-fp8-slots: $(GPU_FP8_SLOTS_TEST)
+	./$(GPU_FP8_SLOTS_TEST) --host-only

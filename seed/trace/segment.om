@@ -1,0 +1,424 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note seed/trace/segment.om: local trace segment, format version 1 (omega-mv #608). Library unit with no
+note main: concatenate it before a program that defines main (units concatenate; there is no import).
+note Header, 16 bytes: "AITR", version u16 = 1, record size u16 = 64, header size u32 = 16, reserved
+note u32 = 0. Record, 64 bytes: type u16, payload length u16 (at most 52), sequence u32 (= record index,
+note assigned by the writer), 52 payload bytes (zero past the length), CRC-32 u32 of bytes 0..59.
+note CRC-32 is IEEE 802.3, reflected polynomial 3988292384 (0xEDB88320), initial value and final xor
+note 4294967295. Every integer is little-endian. Single writer. No network, consent, export, index,
+note rotation or retention in this unit. The caller puts the segment path in tpath and its length in
+note tlen; sibling paths are the same path plus ".bad" (quarantine) or ".new" (recovery staging).
+note Opens carry O_NOFOLLOW (32768), so a symbolic link in the last path component is refused.
+global thdr uchar 16
+global trec uchar 64
+global tpath uchar 1024
+global tlen ulong 1
+global opath uchar 1040
+global olen ulong 1
+global tpkt uchar 2100
+global tn ulong 1
+global pay uchar 52
+global scount ulong 1
+global sreason ulong 1
+global stotal ulong 1
+global slost ulong 1
+global sseq ulong 1
+global serrno long 1
+text sbadsfx ".bad"
+text snewsfx ".new"
+note Error codes (function results): 0 ok; 10 open refused (missing, exists on create, symlink:
+note serrno holds -errno); 11 short header or bad magic; 12 close failed; 13 header write/sync failed;
+note 15 unsupported version; 16 bad geometry or nonzero reserved bytes; 17 read error; 20 payload over
+note 52 bytes; 21 append open failed; 22 short record write (a torn tail may now exist); 23 fsync;
+note 24 close; 25 segment length is not header + whole records (torn tail: recover first); 26 segment
+note full (4096 records); 27 seek failed; 30 staging file; 31 copy failed; 32 quarantine link refused
+note (segment.bad already exists or link failed); 33 rename of the staged segment failed.
+note Scan reasons (sreason): 0 clean; 1 torn tail (partial record); 2 payload length over 52;
+note 3 CRC mismatch; 4 sequence is not the record index; 5 more than 4096 records.
+fn shut fd long to void
+c = fclose int fd
+if lt c 0
+put serrno 0 c
+end
+end
+fn sidepath k ulong to void
+n = get tlen 0
+for i ulong n
+put opath i get tpath i
+end
+if eq k 1
+for i ulong len sbadsfx
+put opath add n i get sbadsfx i
+end
+put olen 0 add n len sbadsfx
+else
+for i ulong len snewsfx
+put opath add n i get snewsfx i
+end
+put olen 0 add n len snewsfx
+end
+end
+fn tput16 v ulong to void
+put tpkt get tn 0 uchar and v 255
+put tpkt add get tn 0 1 uchar and shr v 8 255
+put tn 0 add get tn 0 2
+end
+fn pkttop to void
+tput16 get tlen 0
+for i ulong get tlen 0
+put tpkt add get tn 0 i get tpath i
+end
+put tn 0 add get tn 0 get tlen 0
+end
+fn pktoth to void
+tput16 get olen 0
+for i ulong get olen 0
+put tpkt add get tn 0 i get opath i
+end
+put tn 0 add get tn 0 get olen 0
+end
+fn segcrc n ulong to ulong
+c = ulong 4294967295
+for i ulong n
+c = xor c ulong get trec i
+for k ulong 8
+if eq and c 1 1
+c = xor shr c 1 3988292384
+else
+c = shr c 1
+end
+end
+end
+ret xor c 4294967295
+end
+fn ld16 o ulong to ulong
+ret or ulong get trec o shl ulong get trec add o 1 8
+end
+fn ld32 o ulong to ulong
+lo = ld16 o
+hi = ld16 add o 2
+ret or lo shl hi 16
+end
+fn st32 o ulong v ulong to void
+put trec o uchar and v 255
+put trec add o 1 uchar and shr v 8 255
+put trec add o 2 uchar and shr v 16 255
+put trec add o 3 uchar and shr v 24 255
+end
+fn segseal to void
+st32 60 segcrc 60
+end
+fn segpack t ulong n ulong seq ulong to void
+for i ulong 64
+put trec i 0
+end
+put trec 0 uchar and t 255
+put trec 1 uchar and shr t 8 255
+put trec 2 uchar and n 255
+put trec 3 uchar and shr n 8 255
+st32 4 seq
+for i ulong n
+put trec add 8 i get pay i
+end
+segseal
+end
+fn mkheader to void
+for i ulong 16
+put thdr i 0
+end
+put thdr 0 65
+put thdr 1 73
+put thdr 2 84
+put thdr 3 82
+put thdr 4 1
+put thdr 6 64
+put thdr 8 16
+end
+fn hdrcheck to ulong
+if or ne get thdr 0 65 ne get thdr 1 73
+ret 11
+end
+if or ne get thdr 2 84 ne get thdr 3 82
+ret 11
+end
+if or ne get thdr 4 1 ne get thdr 5 0
+ret 15
+end
+if or ne get thdr 6 64 ne get thdr 7 0
+ret 16
+end
+if ne get thdr 8 16
+ret 16
+end
+for i ulong 7
+if ne get thdr add 9 i 0
+ret 16
+end
+end
+ret 0
+end
+note segcreate refuses an existing path (O_EXCL) instead of truncating it: data is never overwritten.
+fn segcreate to ulong
+mkheader
+fd = fopen tpath 0 get tlen 0 32961 384
+if lt fd 0
+put serrno 0 fd
+ret 10
+end
+n = write int fd thdr 0 16
+if ne n 16
+shut fd
+ret 13
+end
+if ne fsync int fd 0
+shut fd
+ret 13
+end
+if ne fclose int fd 0
+ret 12
+end
+ret 0
+end
+note segready creates a missing segment and otherwise requires a valid header; it never recreates one.
+fn segready to ulong
+fd = fopen tpath 0 get tlen 0 32768 0
+if eq fd -2
+ret segcreate
+end
+if lt fd 0
+put serrno 0 fd
+ret 10
+end
+n = read int fd thdr 0 16
+if ne fclose int fd 0
+ret 12
+end
+if lt n 0
+ret 17
+end
+if ne n 16
+ret 11
+end
+ret hdrcheck
+end
+fn segput fd long t ulong n ulong to ulong
+pos = fseek int fd 0 2
+if lt pos 16
+ret 27
+end
+r = sub ulong pos 16
+if ne rem r 64 0
+ret 25
+end
+q = div r 64
+if ge q 4096
+ret 26
+end
+segpack t n q
+put sseq 0 q
+m = write int fd trec 0 64
+if ne m 64
+ret 22
+end
+if ne fsync int fd 0
+ret 23
+end
+ret 0
+end
+note segappend appends one record of type t with payload pay[0..n); the sequence is the record index.
+fn segappend t ulong n ulong to ulong
+if gt n 52
+ret 20
+end
+e = segready
+if ne e 0
+ret e
+end
+fd = fopen tpath 0 get tlen 0 33793 0
+if lt fd 0
+put serrno 0 fd
+ret 21
+end
+e = segput fd t n
+if ne e 0
+shut fd
+ret e
+end
+if ne fclose int fd 0
+ret 24
+end
+ret 0
+end
+fn recok idx ulong to ulong
+if gt ld16 2 52
+ret 2
+end
+want = ld32 60
+if ne want segcrc 60
+ret 3
+end
+if ne ld32 4 idx
+ret 4
+end
+ret 0
+end
+note Each pass reads one record or ends; at most 4097 full records plus the final read: bound 4098.
+fn scanrecs fd long to ulong
+go = true
+while go bound 4098
+m = read int fd trec 0 64
+if lt m 0
+ret 17
+end
+if eq m 0
+go = false
+else
+if lt m 64
+put sreason 0 1
+go = false
+else
+if ge get scount 0 4096
+put sreason 0 5
+go = false
+else
+r = recok get scount 0
+if ne r 0
+put sreason 0 r
+go = false
+else
+put scount 0 add get scount 0 1
+end
+end
+end
+end
+end
+ret 0
+end
+note segscan is read-only. scount = complete valid records before the first damage, sreason = why the
+note scan stopped, stotal = file bytes, slost = bytes after the valid prefix (what recovery quarantines).
+fn segscan to ulong
+put scount 0 0
+put sreason 0 0
+put stotal 0 0
+put slost 0 0
+fd = fopen tpath 0 get tlen 0 32768 0
+if lt fd 0
+put serrno 0 fd
+ret 10
+end
+n = read int fd thdr 0 16
+if ne n 16
+shut fd
+ret 11
+end
+e = hdrcheck
+if ne e 0
+shut fd
+ret e
+end
+pos = fseek int fd 0 2
+p2 = fseek int fd 16 0
+if or lt pos 16 ne p2 16
+shut fd
+ret 27
+end
+put stotal 0 ulong pos
+e = scanrecs fd
+if ne fclose int fd 0
+ret 12
+end
+used = add 16 mul get scount 0 64
+put slost 0 sub get stotal 0 used
+ret e
+end
+fn copyrecs src long dst long to ulong
+mkheader
+w = write int dst thdr 0 16
+if ne w 16
+ret 31
+end
+p = fseek int src 16 0
+if ne p 16
+ret 31
+end
+for i ulong get scount 0
+m = read int src trec 0 64
+if ne m 64
+ret 31
+end
+w2 = write int dst trec 0 64
+if ne w2 64
+ret 31
+end
+end
+if ne fsync int dst 0
+ret 31
+end
+ret 0
+end
+note stage writes header + the valid prefix to segment.new (a stale .new from an interrupted recovery is
+note removed first; the segment itself is untouched until the final rename).
+fn stage to ulong
+sidepath 2
+u = unlink opath 0 get olen 0
+if and lt u 0 ne u -2
+put serrno 0 u
+ret 30
+end
+src = fopen tpath 0 get tlen 0 32768 0
+if lt src 0
+put serrno 0 src
+ret 30
+end
+dst = fopen opath 0 get olen 0 32961 384
+if lt dst 0
+put serrno 0 dst
+shut src
+ret 30
+end
+e = copyrecs src dst
+shut src
+if ne fclose int dst 0
+ret 31
+end
+ret e
+end
+note segrecover: a damaged record area is never repaired in place. The valid prefix is staged, the damaged
+note file is hard-linked to segment.bad (refused if that exists: a quarantine is never overwritten), then
+note the staged file is renamed over the segment. At every step the segment path names either the old
+note damaged file or the complete new one. Returns 0 clean, 1 recovered (slost bytes quarantined), or an
+note error code. A bad header is not recovered automatically (segscan's error is returned).
+fn segrecover to ulong
+e = segscan
+if ne e 0
+ret e
+end
+if eq get sreason 0 0
+ret 0
+end
+e = stage
+if ne e 0
+ret e
+end
+sidepath 1
+put tn 0 0
+tput16 2
+pkttop
+pktoth
+lk = link tpkt 0 get tn 0
+if lt lk 0
+put serrno 0 lk
+ret 32
+end
+sidepath 2
+put tn 0 0
+tput16 2
+pktoth
+pkttop
+rr = renames tpkt 0 get tn 0 0
+if lt rr 0
+put serrno 0 rr
+ret 33
+end
+ret 1
+end

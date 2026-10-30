@@ -1,0 +1,784 @@
+SHADOW records=780 data_fnv=626048380840256264 allow=2
+SHADOW admission=v2 admitted=468 advisor=1
+SHADOW image_fnv=9232652764948363499 kind=2 nparams=705 data_bound=16622604375676129865 bound_matches=no
+ADVICE seq=0 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=1 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=2 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=3 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=4 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=5 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=6 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=7 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=8 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=9 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=10 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=11 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=12 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=13 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=14 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=15 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=16 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=17 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=18 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=19 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=20 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=21 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=22 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=23 arm=4 incumbent=2 oracle=2 score=0
+ADVICE seq=24 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=25 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=26 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=27 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=28 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=29 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=30 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=31 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=32 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=33 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=34 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=35 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=36 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=37 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=38 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=39 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=40 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=41 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=42 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=43 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=44 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=45 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=46 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=47 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=48 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=49 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=50 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=51 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=52 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=53 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=54 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=55 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=56 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=57 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=58 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=59 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=60 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=61 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=62 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=63 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=64 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=65 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=66 arm=0 incumbent=2 oracle=2 score=0
+ADVICE seq=67 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=68 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=69 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=70 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=71 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=72 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=73 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=74 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=75 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=76 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=77 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=78 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=79 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=80 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=81 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=82 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=83 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=84 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=85 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=86 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=87 arm=4 incumbent=3 oracle=0 score=0
+ADVICE seq=88 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=89 arm=4 incumbent=3 oracle=0 score=0
+ADVICE seq=90 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=91 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=92 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=93 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=94 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=95 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=96 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=97 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=98 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=99 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=100 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=101 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=102 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=103 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=104 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=105 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=106 arm=2 incumbent=3 oracle=0 score=0
+ADVICE seq=107 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=108 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=109 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=110 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=111 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=112 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=113 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=114 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=115 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=116 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=117 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=118 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=119 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=120 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=121 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=122 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=123 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=124 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=125 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=126 arm=0 incumbent=3 oracle=4 score=0
+ADVICE seq=127 arm=4 incumbent=3 oracle=0 score=0
+ADVICE seq=128 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=129 arm=4 incumbent=3 oracle=0 score=0
+ADVICE seq=130 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=131 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=132 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=133 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=134 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=135 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=136 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=137 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=138 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=139 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=140 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=141 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=142 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=143 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=144 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=145 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=146 arm=2 incumbent=3 oracle=0 score=0
+ADVICE seq=147 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=148 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=149 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=150 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=151 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=152 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=153 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=154 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=155 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=156 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=157 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=158 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=159 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=160 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=161 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=162 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=163 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=164 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=165 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=166 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=167 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=168 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=169 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=170 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=171 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=172 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=173 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=174 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=175 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=176 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=177 arm=0 incumbent=3 oracle=4 score=0
+ADVICE seq=178 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=179 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=180 arm=2 incumbent=2 oracle=4 score=0
+ADVICE seq=181 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=182 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=183 arm=2 incumbent=2 oracle=4 score=0
+ADVICE seq=184 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=185 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=186 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=187 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=188 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=189 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=190 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=191 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=192 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=193 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=194 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=195 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=196 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=197 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=198 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=199 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=200 arm=2 incumbent=2 oracle=4 score=0
+ADVICE seq=201 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=202 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=203 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=204 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=205 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=206 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=207 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=208 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=209 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=210 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=211 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=212 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=213 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=214 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=215 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=216 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=217 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=218 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=219 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=220 arm=2 incumbent=2 oracle=4 score=0
+ADVICE seq=221 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=222 reason=refused
+ADVICE seq=223 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=224 reason=refused
+ADVICE seq=225 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=226 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=227 reason=refused
+ADVICE seq=228 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=229 reason=refused
+ADVICE seq=230 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=231 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=232 reason=refused
+ADVICE seq=233 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=234 reason=refused
+ADVICE seq=235 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=236 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=237 reason=refused
+ADVICE seq=238 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=239 reason=refused
+ADVICE seq=240 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=241 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=242 reason=refused
+ADVICE seq=243 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=244 reason=refused
+ADVICE seq=245 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=246 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=247 reason=refused
+ADVICE seq=248 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=249 reason=refused
+ADVICE seq=250 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=251 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=252 reason=refused
+ADVICE seq=253 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=254 reason=refused
+ADVICE seq=255 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=256 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=257 reason=refused
+ADVICE seq=258 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=259 reason=refused
+ADVICE seq=260 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=261 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=262 reason=refused
+ADVICE seq=263 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=264 reason=refused
+ADVICE seq=265 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=266 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=267 reason=refused
+ADVICE seq=268 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=269 reason=refused
+ADVICE seq=270 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=271 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=272 reason=refused
+ADVICE seq=273 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=274 reason=refused
+ADVICE seq=275 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=276 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=277 reason=refused
+ADVICE seq=278 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=279 reason=refused
+ADVICE seq=280 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=281 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=282 reason=refused
+ADVICE seq=283 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=284 reason=refused
+ADVICE seq=285 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=286 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=287 reason=refused
+ADVICE seq=288 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=289 reason=refused
+ADVICE seq=290 arm=4 incumbent=2 oracle=4 score=0
+ADVICE seq=291 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=292 reason=refused
+ADVICE seq=293 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=294 reason=refused
+ADVICE seq=295 arm=2 incumbent=2 oracle=2 score=0
+ADVICE seq=296 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=297 reason=refused
+ADVICE seq=298 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=299 reason=refused
+ADVICE seq=300 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=301 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=302 reason=refused
+ADVICE seq=303 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=304 reason=refused
+ADVICE seq=305 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=306 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=307 reason=refused
+ADVICE seq=308 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=309 reason=refused
+ADVICE seq=310 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=311 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=312 reason=refused
+ADVICE seq=313 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=314 reason=refused
+ADVICE seq=315 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=316 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=317 reason=refused
+ADVICE seq=318 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=319 reason=refused
+ADVICE seq=320 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=321 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=322 reason=refused
+ADVICE seq=323 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=324 reason=refused
+ADVICE seq=325 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=326 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=327 reason=refused
+ADVICE seq=328 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=329 reason=refused
+ADVICE seq=330 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=331 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=332 reason=refused
+ADVICE seq=333 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=334 reason=refused
+ADVICE seq=335 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=336 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=337 reason=refused
+ADVICE seq=338 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=339 reason=refused
+ADVICE seq=340 arm=4 incumbent=3 oracle=4 score=0
+ADVICE seq=341 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=342 reason=refused
+ADVICE seq=343 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=344 reason=refused
+ADVICE seq=345 arm=0 incumbent=3 oracle=0 score=0
+ADVICE seq=346 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=347 reason=refused
+ADVICE seq=348 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=349 reason=refused
+ADVICE seq=350 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=351 reason=refused
+FALLBACK seq=352 reason=refused
+ADVICE seq=353 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=354 reason=refused
+ADVICE seq=355 arm=2 incumbent=3 oracle=0 score=0
+FALLBACK seq=356 reason=refused
+FALLBACK seq=357 reason=refused
+ADVICE seq=358 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=359 reason=refused
+ADVICE seq=360 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=361 reason=refused
+FALLBACK seq=362 reason=refused
+ADVICE seq=363 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=364 reason=refused
+ADVICE seq=365 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=366 reason=refused
+FALLBACK seq=367 reason=refused
+ADVICE seq=368 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=369 reason=refused
+ADVICE seq=370 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=371 reason=refused
+FALLBACK seq=372 reason=refused
+ADVICE seq=373 arm=4 incumbent=2 oracle=2 score=0
+FALLBACK seq=374 reason=refused
+ADVICE seq=375 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=376 reason=refused
+FALLBACK seq=377 reason=refused
+ADVICE seq=378 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=379 reason=refused
+ADVICE seq=380 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=381 reason=refused
+FALLBACK seq=382 reason=refused
+ADVICE seq=383 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=384 reason=refused
+ADVICE seq=385 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=386 reason=refused
+FALLBACK seq=387 reason=refused
+ADVICE seq=388 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=389 reason=refused
+ADVICE seq=390 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=391 reason=refused
+FALLBACK seq=392 reason=refused
+ADVICE seq=393 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=394 reason=refused
+ADVICE seq=395 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=396 reason=refused
+FALLBACK seq=397 reason=refused
+ADVICE seq=398 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=399 reason=refused
+ADVICE seq=400 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=401 reason=refused
+FALLBACK seq=402 reason=refused
+ADVICE seq=403 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=404 reason=refused
+ADVICE seq=405 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=406 reason=refused
+FALLBACK seq=407 reason=refused
+ADVICE seq=408 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=409 reason=refused
+ADVICE seq=410 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=411 reason=refused
+FALLBACK seq=412 reason=refused
+ADVICE seq=413 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=414 reason=refused
+ADVICE seq=415 arm=4 incumbent=3 oracle=0 score=0
+FALLBACK seq=416 reason=refused
+FALLBACK seq=417 reason=refused
+ADVICE seq=418 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=419 reason=refused
+ADVICE seq=420 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=421 reason=refused
+FALLBACK seq=422 reason=refused
+ADVICE seq=423 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=424 reason=refused
+ADVICE seq=425 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=426 reason=refused
+FALLBACK seq=427 reason=refused
+ADVICE seq=428 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=429 reason=refused
+ADVICE seq=430 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=431 reason=refused
+FALLBACK seq=432 reason=refused
+ADVICE seq=433 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=434 reason=refused
+ADVICE seq=435 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=436 reason=refused
+FALLBACK seq=437 reason=refused
+ADVICE seq=438 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=439 reason=refused
+ADVICE seq=440 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=441 reason=refused
+FALLBACK seq=442 reason=refused
+ADVICE seq=443 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=444 reason=refused
+ADVICE seq=445 arm=0 incumbent=3 oracle=4 score=0
+FALLBACK seq=446 reason=refused
+FALLBACK seq=447 reason=refused
+ADVICE seq=448 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=449 reason=refused
+ADVICE seq=450 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=451 reason=refused
+FALLBACK seq=452 reason=refused
+ADVICE seq=453 arm=2 incumbent=2 oracle=4 score=0
+FALLBACK seq=454 reason=refused
+ADVICE seq=455 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=456 reason=refused
+FALLBACK seq=457 reason=refused
+ADVICE seq=458 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=459 reason=refused
+ADVICE seq=460 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=461 reason=refused
+FALLBACK seq=462 reason=refused
+ADVICE seq=463 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=464 reason=refused
+ADVICE seq=465 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=466 reason=refused
+FALLBACK seq=467 reason=refused
+ADVICE seq=468 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=469 reason=refused
+ADVICE seq=470 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=471 reason=refused
+FALLBACK seq=472 reason=refused
+ADVICE seq=473 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=474 reason=refused
+ADVICE seq=475 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=476 reason=refused
+FALLBACK seq=477 reason=refused
+ADVICE seq=478 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=479 reason=refused
+ADVICE seq=480 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=481 reason=refused
+FALLBACK seq=482 reason=refused
+ADVICE seq=483 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=484 reason=refused
+ADVICE seq=485 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=486 reason=refused
+FALLBACK seq=487 reason=refused
+ADVICE seq=488 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=489 reason=refused
+ADVICE seq=490 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=491 reason=refused
+FALLBACK seq=492 reason=refused
+ADVICE seq=493 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=494 reason=refused
+ADVICE seq=495 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=496 reason=refused
+FALLBACK seq=497 reason=refused
+ADVICE seq=498 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=499 reason=refused
+ADVICE seq=500 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=501 reason=refused
+FALLBACK seq=502 reason=refused
+ADVICE seq=503 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=504 reason=refused
+ADVICE seq=505 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=506 reason=refused
+FALLBACK seq=507 reason=refused
+ADVICE seq=508 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=509 reason=refused
+ADVICE seq=510 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=511 reason=refused
+FALLBACK seq=512 reason=refused
+ADVICE seq=513 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=514 reason=refused
+ADVICE seq=515 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=516 reason=refused
+FALLBACK seq=517 reason=refused
+ADVICE seq=518 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=519 reason=refused
+ADVICE seq=520 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=521 reason=refused
+FALLBACK seq=522 reason=refused
+ADVICE seq=523 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=524 reason=refused
+ADVICE seq=525 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=526 reason=refused
+FALLBACK seq=527 reason=refused
+ADVICE seq=528 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=529 reason=refused
+ADVICE seq=530 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=531 reason=refused
+FALLBACK seq=532 reason=refused
+ADVICE seq=533 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=534 reason=refused
+ADVICE seq=535 arm=4 incumbent=3 oracle=0 score=0
+FALLBACK seq=536 reason=refused
+FALLBACK seq=537 reason=refused
+ADVICE seq=538 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=539 reason=refused
+ADVICE seq=540 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=541 reason=refused
+FALLBACK seq=542 reason=refused
+ADVICE seq=543 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=544 reason=refused
+ADVICE seq=545 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=546 reason=refused
+FALLBACK seq=547 reason=refused
+ADVICE seq=548 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=549 reason=refused
+ADVICE seq=550 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=551 reason=refused
+FALLBACK seq=552 reason=refused
+ADVICE seq=553 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=554 reason=refused
+ADVICE seq=555 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=556 reason=refused
+FALLBACK seq=557 reason=refused
+ADVICE seq=558 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=559 reason=refused
+ADVICE seq=560 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=561 reason=refused
+FALLBACK seq=562 reason=refused
+ADVICE seq=563 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=564 reason=refused
+ADVICE seq=565 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=566 reason=refused
+FALLBACK seq=567 reason=refused
+ADVICE seq=568 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=569 reason=refused
+ADVICE seq=570 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=571 reason=refused
+FALLBACK seq=572 reason=refused
+ADVICE seq=573 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=574 reason=refused
+ADVICE seq=575 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=576 reason=refused
+FALLBACK seq=577 reason=refused
+ADVICE seq=578 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=579 reason=refused
+ADVICE seq=580 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=581 reason=refused
+FALLBACK seq=582 reason=refused
+ADVICE seq=583 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=584 reason=refused
+ADVICE seq=585 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=586 reason=refused
+FALLBACK seq=587 reason=refused
+ADVICE seq=588 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=589 reason=refused
+ADVICE seq=590 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=591 reason=refused
+FALLBACK seq=592 reason=refused
+ADVICE seq=593 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=594 reason=refused
+ADVICE seq=595 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=596 reason=refused
+FALLBACK seq=597 reason=refused
+ADVICE seq=598 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=599 reason=refused
+ADVICE seq=600 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=601 reason=refused
+FALLBACK seq=602 reason=refused
+ADVICE seq=603 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=604 reason=refused
+ADVICE seq=605 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=606 reason=refused
+FALLBACK seq=607 reason=refused
+ADVICE seq=608 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=609 reason=refused
+ADVICE seq=610 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=611 reason=refused
+FALLBACK seq=612 reason=refused
+ADVICE seq=613 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=614 reason=refused
+ADVICE seq=615 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=616 reason=refused
+FALLBACK seq=617 reason=refused
+ADVICE seq=618 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=619 reason=refused
+ADVICE seq=620 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=621 reason=refused
+FALLBACK seq=622 reason=refused
+ADVICE seq=623 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=624 reason=refused
+ADVICE seq=625 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=626 reason=refused
+FALLBACK seq=627 reason=refused
+ADVICE seq=628 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=629 reason=refused
+ADVICE seq=630 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=631 reason=refused
+FALLBACK seq=632 reason=refused
+ADVICE seq=633 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=634 reason=refused
+ADVICE seq=635 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=636 reason=refused
+FALLBACK seq=637 reason=refused
+ADVICE seq=638 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=639 reason=refused
+ADVICE seq=640 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=641 reason=refused
+FALLBACK seq=642 reason=refused
+ADVICE seq=643 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=644 reason=refused
+ADVICE seq=645 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=646 reason=refused
+FALLBACK seq=647 reason=refused
+ADVICE seq=648 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=649 reason=refused
+ADVICE seq=650 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=651 reason=refused
+FALLBACK seq=652 reason=refused
+ADVICE seq=653 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=654 reason=refused
+ADVICE seq=655 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=656 reason=refused
+FALLBACK seq=657 reason=refused
+ADVICE seq=658 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=659 reason=refused
+ADVICE seq=660 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=661 reason=refused
+FALLBACK seq=662 reason=refused
+ADVICE seq=663 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=664 reason=refused
+ADVICE seq=665 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=666 reason=refused
+FALLBACK seq=667 reason=refused
+ADVICE seq=668 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=669 reason=refused
+ADVICE seq=670 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=671 reason=refused
+FALLBACK seq=672 reason=refused
+ADVICE seq=673 arm=2 incumbent=2 oracle=4 score=0
+FALLBACK seq=674 reason=refused
+ADVICE seq=675 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=676 reason=refused
+FALLBACK seq=677 reason=refused
+ADVICE seq=678 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=679 reason=refused
+ADVICE seq=680 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=681 reason=refused
+FALLBACK seq=682 reason=refused
+ADVICE seq=683 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=684 reason=refused
+ADVICE seq=685 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=686 reason=refused
+FALLBACK seq=687 reason=refused
+ADVICE seq=688 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=689 reason=refused
+ADVICE seq=690 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=691 reason=refused
+FALLBACK seq=692 reason=refused
+ADVICE seq=693 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=694 reason=refused
+ADVICE seq=695 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=696 reason=refused
+FALLBACK seq=697 reason=refused
+ADVICE seq=698 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=699 reason=refused
+ADVICE seq=700 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=701 reason=refused
+FALLBACK seq=702 reason=refused
+ADVICE seq=703 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=704 reason=refused
+ADVICE seq=705 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=706 reason=refused
+FALLBACK seq=707 reason=refused
+ADVICE seq=708 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=709 reason=refused
+ADVICE seq=710 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=711 reason=refused
+FALLBACK seq=712 reason=refused
+ADVICE seq=713 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=714 reason=refused
+ADVICE seq=715 arm=0 incumbent=3 oracle=4 score=0
+FALLBACK seq=716 reason=refused
+FALLBACK seq=717 reason=refused
+ADVICE seq=718 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=719 reason=refused
+ADVICE seq=720 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=721 reason=refused
+FALLBACK seq=722 reason=refused
+ADVICE seq=723 arm=4 incumbent=2 oracle=2 score=0
+FALLBACK seq=724 reason=refused
+ADVICE seq=725 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=726 reason=refused
+FALLBACK seq=727 reason=refused
+ADVICE seq=728 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=729 reason=refused
+ADVICE seq=730 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=731 reason=refused
+FALLBACK seq=732 reason=refused
+ADVICE seq=733 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=734 reason=refused
+ADVICE seq=735 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=736 reason=refused
+FALLBACK seq=737 reason=refused
+ADVICE seq=738 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=739 reason=refused
+ADVICE seq=740 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=741 reason=refused
+FALLBACK seq=742 reason=refused
+ADVICE seq=743 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=744 reason=refused
+ADVICE seq=745 arm=0 incumbent=3 oracle=4 score=0
+FALLBACK seq=746 reason=refused
+FALLBACK seq=747 reason=refused
+ADVICE seq=748 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=749 reason=refused
+ADVICE seq=750 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=751 reason=refused
+FALLBACK seq=752 reason=refused
+ADVICE seq=753 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=754 reason=refused
+ADVICE seq=755 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=756 reason=refused
+FALLBACK seq=757 reason=refused
+ADVICE seq=758 arm=0 incumbent=2 oracle=2 score=0
+FALLBACK seq=759 reason=refused
+ADVICE seq=760 arm=4 incumbent=3 oracle=4 score=0
+FALLBACK seq=761 reason=refused
+FALLBACK seq=762 reason=refused
+ADVICE seq=763 arm=4 incumbent=2 oracle=4 score=0
+FALLBACK seq=764 reason=refused
+ADVICE seq=765 arm=0 incumbent=3 oracle=0 score=0
+FALLBACK seq=766 reason=refused
+FALLBACK seq=767 reason=refused
+ADVICE seq=768 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=769 reason=refused
+FALLBACK seq=770 reason=refused
+FALLBACK seq=771 reason=refused
+FALLBACK seq=772 reason=refused
+ADVICE seq=773 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=774 reason=refused
+FALLBACK seq=775 reason=refused
+FALLBACK seq=776 reason=refused
+FALLBACK seq=777 reason=refused
+ADVICE seq=778 arm=2 incumbent=2 oracle=2 score=0
+FALLBACK seq=779 reason=refused
+COST records=780 scored=468 fallback=312 adv_cost=160052568 oracle_cost=159188962 incumbent_cost=251913687

@@ -1,0 +1,10 @@
+python3 -c 'from pathlib import Path; p=Path("/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/build/L569-reviewed/universal-semantics"); p.mkdir(parents=True, exist_ok=True); (p/"receipt.json").unlink(missing_ok=True)'
+cc -std=gnu11 -Wall -Wextra -Werror -D_GNU_SOURCE -O2 -Isrc -Isrc/compiler -Isrc/compiler/model -o build/L569-reviewed/universal-semantics/osc-oracle tests/universal/osc_probe.c src/compiler/osc_a64.c src/compiler/osc_alloc.c src/compiler/osc_cg.c src/compiler/osc_check.c src/compiler/osc_diag.c src/compiler/osc_front.c src/compiler/osc_interp.c src/compiler/osc_ir.c src/compiler/osc_lex.c src/compiler/osc_lower.c src/compiler/osc_native.c src/compiler/osc_parse.c src/compiler/osc_rt.c src/sha256.c
+python3 tests/universal/test_evidence_lifecycle.py
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.086s
+
+OK
+CC="cc" UNIVERSAL_OUT="/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/build/L569-reviewed/universal-semantics" python3 tests/universal/semantics.py
+PASS rows_per_oracle=412 bigint_counterexamples=373 compiled_mutants=2 evidence=/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/build/L569-reviewed/universal-semantics/receipt.json

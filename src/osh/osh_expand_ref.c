@@ -350,12 +350,12 @@ void osh_xr_pipe(const uint8_t *in, size_t n, const OshRefLex *lx, const OshRefP
                 } else {
                     c.mode = 1;
                     /* export NAME=v: bash expands the argument as an assignment (no splitting) when the command word
-                     * is the plain word export */
-                    if ((tk->flags & 16) && anyw && c.blk[0] > 0 && c.blk[5] == 6 &&
+                     * is the plain word export and is the command's first word (omega#344: `$e export` is not) */
+                    if ((tk->flags & 16) && anyw && (uint64_t)(anyw - 1) == c.a0off && c.blk[0] > 0 && c.blk[5] == 6 &&
                         memcmp(out->out + c.blk[4], "export", 6) == 0 && c.a0off + 6 < n &&
                         memcmp(in + c.a0off, "export", 6) == 0 && (in[c.a0off + 6] == ' ' || in[c.a0off + 6] == '\t'))
                         c.mode = 4;
-                    anyw = 1;
+                    if (!anyw) anyw = (int)tk->start + 1;
                     expand_word(&c, tk->start, tk->start + tk->len);
                 }
                 t++;

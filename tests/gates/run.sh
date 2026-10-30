@@ -128,7 +128,7 @@ case "$step" in
   compiler)           make $NOPHYS test-compiler-quick; make $NOPHYS test-compiler-full ;;
   one-layer-acceptance) make $NOPHYS test-one-layer-acceptance ;;
   physics0)           make $NOPHYS physics0-test ;;
-  chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host; do make $NOPHYS $t; done ;;
+  chip-tool-selftests) for t in test-m19r-qualify test-gate14-combine test-window-lane-guard test-unwritten-trap-host test-ldst-host test-dgraph-receipt; do make $NOPHYS $t; done ;;
   # seed compiler (no hosted mirror; Spark only): rebuild from the loader, full qualification, IR oracles required
   seed)               make OUT_DIR=build build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2
                       sh seed/omega-from-seed.sh
@@ -137,6 +137,19 @@ case "$step" in
                       # gate5 checks that seed/omc/size-history.tsv ends with a row for this omc; check.sh does not run it
                       sh seed/omc/gate5.sh 2>&1 | tee "$OUT_DIR.seed-gate5.log"
                       tail -1 "$OUT_DIR.seed-gate5.log" | grep -q "^GATE5 PASS" || { echo "OMEGA-SEED: gate5 failed" >&2; exit 1; } ;;
+  # omega-mv#731 ORIG-4 (no hosted mirror; host only): the shadow advisor's glue over the
+  # pinned aien-train units (native/orig4/orig4.pin, one aien-train main commit), materialised
+  # under build/pins from the sibling clone; every verdict is made by the .om units.
+  orig4-shadow)
+    train_sha="$(awk '$1 == "unit" && $3 == "aien-train" {print $4; exit}' native/orig4/orig4.pin)"
+    pin aien-train-src aien-train "$train_sha"
+    set -o pipefail
+    OUT="$ROOT/$OUT_DIR/orig4" ORIG4_TRAIN_GIT="$PINS/aien-train-src" \
+      sh tests/orig4/run.sh | tee "$OUT_DIR.orig4.log"
+    grep -q '^ORIG4_SHADOW_RUN_PASS$' "$OUT_DIR.orig4.log"
+    obs shadow_test_checks "$(sed -n 's/.*ORIG4_SHADOW_TEST_PASS checks=\([0-9]*\).*/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"
+    obs cost_wall_ms_mlp "$(sed -n 's/^COST_WALL records=780 ms=\([0-9]*\) image=mlp fixture$/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"
+    ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;
@@ -221,7 +234,13 @@ case "$step" in
     grep -q '^OMEGA_EFFECT_CAP64_PASS$' build/effect-cap64.log
     receipt omega_state_projection_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_STATE_PROJECTION_PASS": "PASS"'
     receipt rx_action_graph_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_ACTION_GRAPH_IR_PASS": "PASS"'
-    receipt omega_incremental_semantics_receipt.json '"OMEGA_INCREMENTAL_SEMANTICS_PASS": "HOST_PASS_ENERGY_UNMEASURED"' '"false_hits": 0,'
+    # omega-mv#404 item 2: PASS means the package energy counter (hwmon aien_spbm, found by the
+    # same name-prefix test rx_sem_incremental uses) measured the work; HOST_PASS_ENERGY_UNMEASURED
+    # means this host has no such counter. The verdict must match this host; PASS_UNBOUND and FAIL
+    # never pass. Which one ran is recorded as an observation.
+    if grep -qs '^aien_spbm' /sys/class/hwmon/*/name; then inc_verdict=PASS; else inc_verdict=HOST_PASS_ENERGY_UNMEASURED; fi
+    receipt omega_incremental_semantics_receipt.json "\"OMEGA_INCREMENTAL_SEMANTICS_PASS\": \"$inc_verdict\"" '"false_hits": 0,'
+    obs incremental_semantics_verdict "\"$inc_verdict\""
     receipt rx_capability_query_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_CAPABILITY_QUERY_PASS": "PASS"'
     receipt rx_semantic_comm_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_SEMANTIC_COMMUNICATION_PASS": "PASS"'
     receipt rx_cognitive_routing_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_COGNITIVE_ROUTING_PASS": "PASS"'
@@ -312,6 +331,9 @@ case "$step" in
     obs env_files_found false
     echo "Zero plaintext .env files verified."
     ;;
+  runtime-api)        # omega-mv#594: the Runtime API manifest against the C headers, plus its negative controls.
+                      # Host only (gcc for -aux-info), no GPU, no physics checkout.
+    make $NOPHYS test-runtime-api ;;
   om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
                       # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
                       # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.
@@ -331,6 +353,44 @@ case "$step" in
     sh seed/omega-from-seed.sh > build/tilelab-seed.log 2>&1 || { tail -3 build/tilelab-seed.log; exit 1; }
     obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
     sh seed/tilelab/gate.sh
+    ;;
+  trace)              # omega#608: local trace segment (seed/trace/segment.om), built by the committed seed/out/omc
+                      # after its recorded SHA-256 is checked: 71 checks against expected.txt (torn-tail recovery
+                      # keeps N-1 records, CRC/length/sequence damage, header refusals, O_EXCL, O_NOFOLLOW) and
+                      # 4 source mutants (CRC check, torn tail, alignment, O_EXCL) that must each fail their check.
+    sha256sum -c seed/out/omc.sha256
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/trace/gate.sh
+    ;;
+  tracecli)           # omega#610: offline read-only trace CLI (seed/trace/tracecli.om), built by the
+                      # committed seed/out/omc after its recorded SHA-256 is checked. Golden stdout and
+                      # exit codes, a mode-0000 refusal, and 4 source mutants (partial exit, compare
+                      # equality, type filter, read-only open flags) that must each fail their own check.
+    sha256sum -c seed/out/omc.sha256
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/trace/cli-gate.sh
+    ;;
+  security758)        # omega#758 (#774): relational comparison suite under seed/qualification/security673/relational,
+                      # run by the OM-2 case gate rebuilt from seed/qualification/om2/gate.om with the committed
+                      # seed/out/omc (sha checked) and the scanner seed/qualification/om2/leak/leakscan.om. Exits
+                      # 0/0/0 for qualification/bindings/consumer, 1 with exactly the two intended FAIL rows for
+                      # binding-negative; the L4 secret-dividend scanner PASS is a separate tripwire, not a total.
+    sha256sum -c seed/out/omc.sha256
+    OMC=seed/out/omc; H="$(cut -c1-64 seed/out/omc.sha256)"
+    obs omc_sha256 "\"$H\""
+    R=seed/qualification/security673/relational
+    sec="$OUT_DIR/security758"; rm -rf "$sec"; mkdir -p "$sec"
+    "$OMC" < seed/qualification/om2/gate.om > "$sec/gate.bin"; chmod 700 "$sec/gate.bin"
+    obs gate_sha256 "\"$(sha256sum < "$sec/gate.bin" | cut -c1-64)\""
+    sec_run() { local rc=0; "$sec/gate.bin" "$OMC" "$H" "$R/$1.cases" "$sec/$1" > "$sec/$1.log" 2>&1 || rc=$?
+      tail -1 "$sec/$1.log"; [ "$rc" = "$2" ] || { echo "SECURITY758 FAIL $1.cases exit=$rc expected=$2" >&2; exit 1; }; }
+    sec_run qualification 0; sec_run bindings 0; sec_run consumer 0; sec_run binding-negative 1
+    grep -qx 'OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0' "$sec/binding-negative.log"
+    grep -q '^VERDICT wrong-source-bytes FAIL ' "$sec/binding-negative.log"
+    grep -q '^VERDICT wrong-checker-bytes FAIL ' "$sec/binding-negative.log"
+    echo "SECURITY758 PASS qualification consumer bindings, binding-negative 2 intended FAIL rows"
+    sec_run l4-tripwire 0
+    echo "SECURITY758 TRIPWIRE L4-division-gap: scanner still PASSES a secret dividend (known false negative, README L4; not a qualification)"
     ;;
   native)             # omega#663/#664: native .om units built by the committed seed/out/omc after its recorded
                       # SHA-256 is checked. The metadata test must pass and each recorded ECOSYSTEM663 mutant must

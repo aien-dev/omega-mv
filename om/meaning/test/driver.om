@@ -1,0 +1,971 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/meaning/test/driver.om: reads om/meaning/test/vectors on stdin and checks om/meaning/meaning.om.
+note Linked after om/tls/sha2.om and om/meaning/meaning.om (run.sh). One record per line, # comments:
+note   D w tok... [; pre ; post]  define program #n (n = 0, 1, ...; tokens x, a number, add sub mul and
+note                              or) and add it to the graph; contract texts default to true / true
+note   C a b      FUNCTION_ID(a) = FUNCTION_ID(b)        N a b   FUNCTION_ID(a) differs from (b)
+note   F a k      FUNCTION_ID class of a is k (1 canonical, 2 intensional fallback)
+note   K a c...   canonical coefficients of a are exactly c_0..c_{K-1} (decimal or 0x hex)
+note   I a hex    program_id v2 of a equals the golden
+note   H a hex    FUNCTION_ID of a equals the golden (goldens: sha256sum of the spec 9.3 preimage, run.sh)
+note   W w k      K(w) = k
+note   V code w tok...  mg_pchk refuses the token list with that code (negative control)
+note   E a b r    exhaustive proof on the body nodes gives r (0 equal, 1 differ); recorded for G
+note   X a b r    witness search gives r (1 witness found, 0 none); recorded for G
+note   Q a c      the equivalence class of a's body node has c members
+note   P a c      a's body node has c provenance edges
+note   R w n s    randomized differential: n random programs at width w, seed s
+note   G          graph checks: verify, store/load/store byte identity, reverse-order rebuild digest,
+note              tamper detection. Rebuilds the graph, so it comes last.
+note Output: FAIL line L code C per failed check, then "meaning driver: N checks, F failed".
+note Exit 0 all pass, 1 a failure, 2 unreadable input.
+
+global inp uchar 1048576
+global st ulong 16
+global ob uchar 32
+global one uchar 1
+global mdw uchar 512
+global mdtk ulong 65536
+global mddf ulong 6144
+global mdtx uchar 65536
+global mdpn ulong 1024
+global mdpr ulong 1024
+global mdpf ulong 3072
+global mdsv uchar 4194304
+text tfail "FAIL line "
+text tcode " code "
+text tsum "meaning driver: "
+text tchk " checks, "
+text tfld " failed\n"
+text tnl "\n"
+text tsp " "
+text trnd "R w="
+text trn " programs="
+text trp " pairs="
+text tre " equal_id_pairs="
+text trc " canonical="
+text tgr "G nodes="
+text tge " edges="
+text tgc " receipts="
+text tgb " bytes="
+text tgt " tampered="
+text tio "meaning driver: cannot read input or input over 1 MiB\n"
+
+note st: 0 input length, 1 position, 2 line, 3 bad, 5 checks, 6 failed, 7 defs, 8 tokens used,
+note 9 text bytes used, 10 proofs recorded, 11 random state
+
+fn mdslurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn mdpeek to ulong
+c = get st 1
+if ge c get st 0
+ret 256
+end
+ret ulong get inp c
+end
+
+fn mdadv to void
+put st 1 add get st 1 1
+end
+
+fn mdprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+fn mdout k ulong to void
+if eq k 0
+r = write 1 tsp 0 len tsp
+end
+if eq k 1
+r = write 1 tnl 0 len tnl
+end
+end
+
+fn mdchk ok bool code ulong to void
+put st 5 add get st 5 1
+if not ok
+put st 6 add get st 6 1
+r = write 1 tfail 0 len tfail
+mdprn get st 2
+r = write 1 tcode 0 len tcode
+mdprn code
+mdout 1
+end
+end
+
+note next word of the line into mdw; 0 at the end of the line (the newline is not consumed)
+fn mdword to ulong
+while true bound 999999
+c = mdpeek
+if ne c 32
+if ne c 9
+break
+end
+end
+mdadv
+end
+n = ulong 0
+while true bound 999999
+c = mdpeek
+if eq c 32
+break
+end
+if eq c 9
+break
+end
+if eq c 10
+break
+end
+if eq c 13
+break
+end
+if eq c 256
+break
+end
+if ge n len mdw
+put st 3 1
+ret n
+end
+put mdw n uchar c
+n = add n 1
+mdadv
+end
+ret n
+end
+
+fn mdeol to void
+while true bound 999999
+c = mdpeek
+if eq c 256
+ret
+end
+mdadv
+if eq c 10
+ret
+end
+end
+end
+
+fn mdhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+ret 16
+end
+
+note the number in mdw[0..n): decimal (at most 20 digits, below 2^64) or 0x hex (at most 16 digits)
+fn mdval n ulong to ulong
+if eq n 0
+put st 3 1
+ret 0
+end
+v = ulong 0
+if gt n 2
+if eq get mdw 1 120
+if gt n 18
+put st 3 1
+ret 0
+end
+for i ulong sub n 2
+d = mdhexv ulong get mdw add i 2
+if gt d 15
+put st 3 1
+ret 0
+end
+v = or shl v 4 d
+end
+ret v
+end
+end
+if gt n 20
+put st 3 1
+ret 0
+end
+for i ulong n
+d = ulong get mdw i
+if lt d 48
+put st 3 1
+ret 0
+end
+if gt d 57
+put st 3 1
+ret 0
+end
+nv = add mul v 10 sub d 48
+if lt nv v
+put st 3 1
+ret 0
+end
+if gt v 1844674407370955161
+put st 3 1
+ret 0
+end
+v = nv
+end
+ret v
+end
+
+fn mdnum to ulong
+ret mdval mdword
+end
+
+note token word in mdw[0..n) -> code (1 x, 2 constant with value in st 12, 3 add 4 sub 5 mul 9 and
+note 10 or), 0 = the ';' separator, 99 = unknown
+fn mdtokc n ulong to ulong
+c = ulong get mdw 0
+if eq n 1
+if eq c 120
+ret 1
+end
+if eq c 59
+ret 0
+end
+end
+if ge c 48
+if le c 57
+put st 12 mdval n
+ret 2
+end
+end
+if eq n 3
+d = ulong get mdw 1
+if eq c 97
+if eq d 100
+ret 3
+end
+if eq d 110
+ret 9
+end
+end
+if eq c 115
+ret 4
+end
+if eq c 109
+ret 5
+end
+end
+if eq n 2
+if eq c 111
+ret 10
+end
+end
+put st 3 1
+ret 99
+end
+
+note read tokens until ';' or the end of the line into mdtk; returns the count. Sets st 13 = 1 when a
+note ';' was read.
+fn mdtoks to ulong
+put st 13 0
+k = ulong 0
+b = get st 8
+while true bound 99999
+n = mdword
+if eq n 0
+break
+end
+c = mdtokc n
+if eq c 0
+put st 13 1
+break
+end
+v = ulong 0
+if eq c 2
+v = get st 12
+end
+if ge add b k 32768
+put st 3 1
+ret k
+end
+put mdtk mul add b k 2 c
+put mdtk add mul add b k 2 1 v
+k = add k 1
+end
+ret k
+end
+
+note the rest of the line, "pre ; post", into mdtx; st 14 pre length, st 15 post length
+fn mdtexts to void
+t = get st 9
+s = t
+while true bound 999999
+c = mdpeek
+if eq c 32
+mdadv
+continue
+end
+break
+end
+while true bound 999999
+c = mdpeek
+if eq c 10
+break
+end
+if eq c 13
+break
+end
+if eq c 256
+break
+end
+if ge t len mdtx
+put st 3 1
+ret
+end
+put mdtx t uchar c
+t = add t 1
+mdadv
+end
+note split at the first " ; "
+cut = MGNONE
+for i ulong sub t s
+j = add s i
+if eq cut MGNONE
+if lt add j 2 t
+if eq get mdtx j 32
+if eq get mdtx add j 1 59
+if eq get mdtx add j 2 32
+cut = j
+end
+end
+end
+end
+end
+end
+if eq cut MGNONE
+put st 3 1
+ret
+end
+put st 14 sub cut s
+put st 15 sub t add cut 3
+note move the post text down over the separator
+for i ulong get st 15
+put mdtx add cut i get mdtx add add cut 3 i
+end
+put st 9 add cut get st 15
+end
+
+fn mdlit to void
+h = get st 9
+put mdtx h 116
+put mdtx add h 1 114
+put mdtx add h 2 117
+put mdtx add h 3 101
+put st 9 add h 4
+end
+
+note build the program of definition d into the pool
+fn mdmkp d ulong to ulong
+b = get mddf mul d 6
+n = get mddf add mul d 6 1
+p = mg_pnew get mddf add mul d 6 2
+for i ulong n
+t = mul add b i 2
+mg_ptok p get mdtk t get mdtk add t 1
+end
+ret p
+end
+
+note build definition d into the pool and the graph; returns the program
+fn mdmk d ulong to ulong
+p = mdmkp d
+q = mul d 6
+tb = get mddf add q 3
+pl = get mddf add q 4
+ql = get mddf add q 5
+po = mg_hpos
+for i ulong add pl ql
+mg_hpush ulong get mdtx add tb i
+end
+put mdpn d mg_addprog p po pl add po pl ql
+put mdpr d p
+ret p
+end
+
+fn mdrecd to void
+d = get st 7
+if ge d 1024
+put st 3 1
+ret
+end
+w = mdnum
+b = get st 8
+n = mdtoks
+put st 8 add b n
+put mddf mul d 6 b
+put mddf add mul d 6 1 n
+put mddf add mul d 6 2 w
+put mddf add mul d 6 3 get st 9
+if eq get st 13 1
+mdtexts
+else
+mdlit
+mdlit
+put st 14 4
+put st 15 4
+end
+put mddf add mul d 6 4 get st 14
+put mddf add mul d 6 5 get st 15
+if ne get st 3 0
+ret
+end
+put st 7 add d 1
+p = mdmk d
+mdchk eq mg_pchk p 0 1
+end
+
+fn mdprog a ulong to ulong
+if ge a get st 7
+put st 3 1
+ret 0
+end
+ret get mdpr a
+end
+
+fn mdbody a ulong to ulong
+ret mg_na get mdpn a
+end
+
+note 1 when FUNCTION_ID(a) = FUNCTION_ID(b)
+fn mdfeq a ulong b ulong to ulong
+k = mg_fid mdprog a 16000
+k = mg_fid mdprog b 16001
+if eq mg_idcmp 16000 16001 0
+ret 1
+end
+ret 0
+end
+
+fn mdreck to void
+a = mdnum
+p = mdprog a
+if ne get st 3 0
+ret
+end
+if eq mg_frag p 0
+mdchk false 2
+ret
+end
+kk = mg_canon p
+for i ulong kk
+c = mdnum
+if ne c get mgc i
+mdchk false 3
+ret
+end
+end
+if ne mdword 0
+mdchk false 4
+ret
+end
+mdchk true 0
+end
+
+fn mdrecv to void
+x = mdnum
+w = mdnum
+b = get st 8
+n = mdtoks
+p = mg_pnew w
+for i ulong n
+t = mul add b i 2
+mg_ptok p get mdtk t get mdtk add t 1
+end
+mdchk eq mg_pchk p x 5
+end
+
+note compare the 32 bytes of mgi slot s with the next word (64 hex digits); failure code c
+fn mdhexs s ulong c ulong to void
+n = mdword
+if ne n 64
+put st 3 1
+ret
+end
+b = mul s 32
+for i ulong 32
+hi = mdhexv ulong get mdw mul i 2
+lo = mdhexv ulong get mdw add mul i 2 1
+if gt or hi lo 15
+put st 3 1
+ret
+end
+if ne ulong get mgi add b i or shl hi 4 lo
+mdchk false c
+ret
+end
+end
+mdchk true 0
+end
+
+fn mdreci to void
+mdhexs mg_ns get mdpn mdnum 6
+end
+
+fn mdrech to void
+k = mg_fid mdprog mdnum 16000
+mdhexs 16000 27
+end
+
+fn mdproof k ulong a ulong b ulong to ulong
+if eq k 0
+ret mg_exh mdbody a mdbody b
+end
+ret mg_wit mdbody a mdbody b
+end
+
+fn mdrecp k ulong to void
+a = mdnum
+b = mdnum
+r = mdnum
+if ne get st 3 0
+ret
+end
+q = get st 10
+if ge q 1024
+put st 3 1
+ret
+end
+put mdpf mul q 3 k
+put mdpf add mul q 3 1 a
+put mdpf add mul q 3 2 b
+put st 10 add q 1
+mdchk eq mdproof k a b r 7
+end
+
+note ---- randomized differential ----
+
+fn mdrnd to ulong
+x = get st 11
+x = xor x shl x 13
+x = xor x shr x 7
+x = xor x shl x 17
+put st 11 x
+ret x
+end
+
+fn mdleaf p ulong w ulong to void
+m = mg_mask w
+r = rem mdrnd 16
+if lt r 8
+mg_ptok p 1 0
+ret
+end
+v = ulong 0
+if eq r 8
+v = 1
+end
+if eq r 9
+v = 2
+end
+if eq r 10
+v = 3
+end
+if eq r 11
+v = m
+end
+if eq r 12
+v = shl ulong 1 sub w 1
+end
+if eq r 13
+v = and sub m 1 m
+end
+if eq r 14
+v = and mdrnd m
+end
+mg_ptok p 2 and v m
+end
+
+fn mdgen w ulong to ulong
+p = mg_pnew w
+nl = add 1 rem mdrnd 6
+l = ulong 0
+d = ulong 0
+while true bound 999
+if ge l nl
+if le d 1
+break
+end
+end
+op = ulong 0
+if ge d 2
+if ge l nl
+op = 1
+else
+op = rem mdrnd 2
+end
+end
+if eq op 0
+mdleaf p w
+l = add l 1
+d = add d 1
+continue
+end
+r = rem mdrnd 16
+o = ulong 3
+if ge r 5
+o = 4
+end
+if ge r 9
+o = 5
+end
+if eq r 14
+o = 9
+end
+if eq r 15
+o = 10
+end
+mg_ptok p o 0
+d = sub d 1
+end
+ret p
+end
+
+note value signature of p: SHA-256 of f at every input (w <= 16) or at the 4096 mg_cand inputs
+note (they include 0..127, which determine every polynomial function for w <= 64)
+fn mdsx p ulong i ulong to ulong
+w = mg_pw p
+if gt w 16
+ret mg_eval p mg_cand i w
+end
+ret mg_eval p i
+end
+
+fn mdp8 a edit uchar * k ulong v ulong to void
+for j ulong 8
+put a add k j uchar and shr v mul sub 7 j 8 255
+end
+end
+
+fn mdsig p ulong s ulong to void
+c = new ulong 40 0
+a = new uchar 4096 0
+o = new uchar 32 0
+sha256_init c
+n = ulong 4096
+if le mg_pw p 16
+n = shl ulong 1 mg_pw p
+end
+k = ulong 0
+for i ulong n
+mdp8 a k mdsx p i
+k = add k 8
+if eq k 4096
+sha256_update c part a 0 k
+k = 0
+end
+end
+if gt k 0
+sha256_update c part a 0 k
+end
+sha256_final c o
+for j ulong 32
+put mgi add mul s 32 j get o j
+end
+end
+
+note reconstruction: sum a_k x(x-1)...(x-k+1) mod 2^w equals f at the 4096 mg_cand inputs
+fn mdrecon p ulong to ulong
+w = mg_pw p
+m = mg_mask w
+kk = mg_canon p
+for i ulong 4096
+x = mg_cand i w
+s = ulong 0
+t = ulong 1
+for k ulong kk
+s = add s mul get mgc k t
+t = mul t sub x k
+end
+if ne and s m mg_eval p x
+ret 0
+end
+end
+ret 1
+end
+
+fn mdrecr to void
+w = mdnum
+n = mdnum
+put st 11 or mdnum 1
+if ne get st 3 0
+ret
+end
+if gt n 2048
+put st 3 1
+ret
+end
+canon = ulong 0
+for i ulong n
+p = mdgen w
+mdchk eq mg_pchk p 0 8
+put mdpf add 1024 i p
+cl = mg_fid p add 16384 i
+if eq cl 1
+canon = add canon 1
+mdchk eq mdrecon p 1 9
+end
+mdsig p add 20480 i
+end
+pairs = ulong 0
+eqid = ulong 0
+for i ulong n
+for j ulong i
+pairs = add pairs 1
+fe = ulong 0
+if eq mg_idcmp add 16384 i add 16384 j 0
+fe = 1
+eqid = add eqid 1
+end
+se = ulong 0
+if eq mg_idcmp add 20480 i add 20480 j 0
+se = 1
+end
+pi = get mdpf add 1024 i
+pj = get mdpf add 1024 j
+both = and mg_frag pi mg_frag pj
+if eq both 1
+mdchk eq fe se 10
+else
+if eq fe 1
+mdchk eq se 1 11
+end
+end
+end
+end
+r = write 1 trnd 0 len trnd
+mdprn w
+r = write 1 trn 0 len trn
+mdprn n
+r = write 1 trp 0 len trp
+mdprn pairs
+r = write 1 tre 0 len tre
+mdprn eqid
+r = write 1 trc 0 len trc
+mdprn canon
+mdout 1
+end
+
+note ---- graph checks ----
+
+fn mdbuild rev ulong to void
+mg_reset
+nd = get st 7
+for i ulong nd
+d = i
+if eq rev 1
+d = sub sub nd 1 i
+end
+p = mdmk d
+end
+nq = get st 10
+for i ulong nq
+q = i
+if eq rev 1
+q = sub sub nq 1 i
+end
+q = mul q 3
+k = get mdpf q
+a = get mdpf add q 1
+r = mdproof k a get mdpf add q 2
+end
+end
+
+fn mdrecg to void
+mdchk eq mg_verify 0 12
+nn = get mgs 3
+ne0 = get mgs 5
+nr = get mgs 4
+n1 = mg_gdig 30000
+for i ulong n1
+put mdsv i get mgo i
+end
+mdchk eq mg_load n1 0 13
+mdchk eq mg_verify 0 14
+n2 = mg_gdig 30001
+mdchk eq n2 n1 15
+mdchk eq mg_idcmp 30000 30001 0 16
+mdbuild 1
+mdchk eq mg_verify 0 17
+n3 = mg_gdig 30002
+mdchk eq n3 n1 18
+mdchk eq mg_idcmp 30000 30002 0 19
+note tamper: flip one bit at every 37th byte and at the last; load or verify must refuse each
+tam = ulong 0
+pos = ulong 0
+while lt pos n1 bound 999999
+for i ulong n1
+put mgo i get mdsv i
+end
+put mgo pos xor get mgo pos 1
+rc = mg_load n1
+bad = ulong 0
+if ne rc 0
+bad = 1
+else
+if ne mg_verify 0
+bad = 1
+end
+end
+mdchk eq bad 1 20
+tam = add tam 1
+if eq pos sub n1 1
+break
+end
+pos = add pos 37
+if ge pos n1
+pos = sub n1 1
+end
+end
+r = write 1 tgr 0 len tgr
+mdprn nn
+r = write 1 tge 0 len tge
+mdprn ne0
+r = write 1 tgc 0 len tgc
+mdprn nr
+r = write 1 tgb 0 len tgb
+mdprn n1
+r = write 1 tgt 0 len tgt
+mdprn tam
+mdout 1
+end
+
+fn mdrec to void
+n = mdword
+if eq n 0
+ret
+end
+c = ulong get mdw 0
+if eq c 35
+ret
+end
+if eq c 68
+mdrecd
+ret
+end
+if eq c 67
+mdchk eq mdfeq mdnum mdnum 1 21
+ret
+end
+if eq c 78
+mdchk eq mdfeq mdnum mdnum 0 22
+ret
+end
+if eq c 70
+a = mdnum
+k = mg_fid mdprog a 16000
+mdchk eq k mdnum 23
+ret
+end
+if eq c 75
+mdreck
+ret
+end
+if eq c 73
+mdreci
+ret
+end
+if eq c 72
+mdrech
+ret
+end
+if eq c 87
+w = mdnum
+mdchk eq mg_kof w mdnum 24
+ret
+end
+if eq c 86
+mdrecv
+ret
+end
+if eq c 69
+mdrecp 0
+ret
+end
+if eq c 88
+mdrecp 1
+ret
+end
+if eq c 81
+a = mdnum
+mdchk eq mg_class mdbody a mdnum 25
+ret
+end
+if eq c 80
+a = mdnum
+mdchk eq mg_prov mdbody a mdnum 26
+ret
+end
+if eq c 82
+mdrecr
+ret
+end
+if eq c 71
+mdrecg
+ret
+end
+put st 3 1
+end
+
+fn main to int
+mg_reset
+if ne mdslurp 0
+r = write 1 tio 0 len tio
+ret 2
+end
+while lt get st 1 get st 0 bound 999999
+put st 2 add get st 2 1
+put st 3 0
+mdrec
+if ne get st 3 0
+mdchk false 99
+end
+mdeol
+end
+r = write 1 tsum 0 len tsum
+mdprn get st 5
+r = write 1 tchk 0 len tchk
+mdprn get st 6
+r = write 1 tfld 0 len tfld
+if ne get st 6 0
+ret 1
+end
+ret 0
+end

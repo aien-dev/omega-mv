@@ -11,9 +11,9 @@ nothing is deployed.
 
 ## Units
 
-Compose them in this order with `sh om/tls/build.sh OMC PROGRAM.om OUT`. Each unit calls only the
-units before it. The composed unit is OM-2 (a leading `om2` line), and the library files have no
-`fn main` and no mutable globals.
+Compose the client units in this order with `sh om/tls/build.sh OMC PROGRAM.om OUT`. Each unit
+calls only the units before it. `gcmsiv.om` is not in that composition. The composed unit is OM-2
+(a leading `om2` line), and the library files have no `fn main` and no mutable globals.
 
 | unit | contents | fns |
 |---|---|---|
@@ -22,12 +22,14 @@ units before it. The composed unit is OM-2 (a leading `om2` line), and the libra
 | `x25519.om` | X25519 (RFC 7748), constant-time Montgomery ladder, radix 2^25.5 | 15 |
 | `chacha.om` | ChaCha20, Poly1305, ChaCha20-Poly1305 AEAD (RFC 8439) | 19 |
 | `aesgcm.om` | AES-128/192/256 bitsliced, GCM (SP 800-38D), AES-128-GCM AEAD for TLS | 37 |
+| `gcmsiv.om` | AES-128/256-GCM-SIV (RFC 8452); calls `aesgcm.om`; not in the TLS client build | 24 |
 | `ec.om` | ECDSA verification on P-256 and P-384 (FIPS 186-4), DER or r‖s | 27 |
 | `rsa.om` | RSASSA-PKCS1-v1_5 and RSASSA-PSS verification (RFC 8017), 1024-8192-bit keys | 32 |
 | `x509.om` | strict DER, X.509 v3, PEM trust store, path validation, CertificateVerify | 70 |
 | `tls.om` | handshake, record layer, key schedule, alerts, DNS A lookup, TCP connect | 105 |
 
-The total is 340 functions. omc at `2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
+The client composition is 340 functions. `gcmsiv.om` adds 24, so the table total is 364. omc at
+`2c824805` (the batch 2 pin, `OMC_PIN` in `om/units.sh`, which
 the ec, rsa and x509 suites check) allows 4095 functions per unit, as `189ada82` did.
 
 ## Client API (`tls.om`)
@@ -123,6 +125,7 @@ Constant time here means that no branch, loop count or memory index depends on a
 | `x25519.om` | scalar, shared secret | yes: fixed-count ladder, masked cswap, masked final reduction and zero check |
 | `chacha.om` | key, keystream, Poly1305 state, tag | yes: ARX only; tag compare ORs all 16 bytes before deciding |
 | `aesgcm.om` | key, round keys, H, data | yes: bitsliced AES (BearSSL `aes_ct64` layout, MIT, T. Pornin; `NOTICE.bearssl`), Boyar-Peralta depth-16 S-box circuit, masked GHASH; no table lookups |
+| `gcmsiv.om` | key, derived keys, H, tag | yes, on the same terms as `aesgcm.om`: bitsliced AES and masked GHASH; tag compare ORs both 64-bit halves; branches only on lengths, key size and the tag-check outcome |
 | `sha2.om`, `hkdf.om` | HMAC keys, PRKs, secrets | yes: branches only on lengths and the algorithm |
 | `tls.om` | traffic secrets, keys, Finished | the key schedule, nonce and Finished compare (`tls_cteq`) are constant time. Branches depend on public values (suite, lengths, content type) |
 | `ec.om`, `rsa.om`, `x509.om` | none (verification of public data) | no, by design. Do not reuse them for signing or ECDH |
@@ -151,6 +154,8 @@ Not covered, or covered only partly:
 | `sh om/tls/test/x25519/run.sh OMC` | `X25519 PASS vectors=531 (wycheproof=518) mutants=7/7` |
 | `sh om/tls/test/chacha/run.sh OMC` | `CHACHA PASS vectors=3087 (wycheproof=339) mutants=5/5` |
 | `sh om/tls/test/aesgcm/run.sh OMC` | `AESGCM PASS vectors=47570 (fips197=4, nist=47250, wycheproof=316) mutants=5/5` |
+| `sh om/tls/test/gcmsiv/run.sh OMC` | `GCMSIV PASS vectors=51 (rfc8452 c1=24 c2=24 c3=2 s8=1) checks=422 mutants=6/6` (2026-10-30, omc `62775d2a`) |
+| `sh om/tls/test/reuse/run.sh OMC` | `REUSE PASS checks=27 mutants=6/6` (2026-10-30, omc `62775d2a`) |
 | `sh om/tls/test/ec/run.sh OMC` | `EC PASS vectors=3984 (wycheproof=3748 cavp=180 edge=56) mutants=6/6` |
 | `sh om/tls/test/rsa/run.sh OMC` | `RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4` |
 | `sh om/tls/test/x509/run.sh OMC` | `X509 PASS cases=91 (openssl-parity=73/91) mutants=12/12` |
@@ -160,8 +165,8 @@ How the suites are built:
 
 - **Wycheproof.** Vectors come from C2SP/wycheproof `d17cc89fa5c8f4f4d378b5385ebf75da5d0926c9`,
   and every test of each in-scope file is run. Each suite prints the files it does not run, and
-  why, as NOT_RUN: SHA-1, SHA-224, SHA-3, SHAKE, other curves, XChaCha20, AES-GCM-SIV, RSA
-  encryption. Wycheproof has no X.509 path vectors.
+  why, as NOT_RUN: SHA-1, SHA-224, SHA-3, SHAKE, other curves, XChaCha20, RSA
+  encryption. AES-GCM-SIV is `gcmsiv.om`; wycheproof `aes_gcm_siv_test.json` is not vendored. Wycheproof has no X.509 path vectors.
 - **Other vectors.** NIST CAVP SHAVS, GCM and ECDSA SigVer; RFC 7748, 8439, 4231, 5869 and 8448.
 - **Mutants.** Each suite has library mutants that must be caught as MISMATCH (exit 1), plus an
   expectation mutant and flip-a-byte negative controls. In the x509 and DNS mutants a runtime trap
