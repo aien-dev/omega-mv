@@ -1,0 +1,62 @@
+{
+  "source_commit": "becf5c817bcb7e0846d12ebfc2be91042d8ad89a",
+  "execution": "EMULATED",
+  "native_x86": "NOT_RUN",
+  "source_sha256": "3a40637bfc11eb4b0c0af80a73bd228a3975c25ef805859f06cb1f6d7fc089f4",
+  "replay_note": "Fresh replay of historical claim after durable worktree move; target-prefixed-source is exact b\"target x86linux\\n\" plus committed source. No historical receipt overwritten.",
+  "checks": [
+    {
+      "target": "aarch64",
+      "command": "/usr/bin/qemu-x86_64 /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-omc-x86 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-source.om",
+      "exit": 0,
+      "expected_sha256": "5f0faab7cd4fc12158cf8e099418098d278df644efc10e4e7e2e5ca6141fca86",
+      "observed_sha256": "5f0faab7cd4fc12158cf8e099418098d278df644efc10e4e7e2e5ca6141fca86",
+      "byte_identical": true,
+      "stderr": ""
+    },
+    {
+      "target": "x86linux",
+      "command": "/usr/bin/qemu-x86_64 /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-omc-x86 < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-target-source.om",
+      "exit": 0,
+      "expected_sha256": "a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc",
+      "observed_sha256": "a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc",
+      "byte_identical": true,
+      "stderr": ""
+    }
+  ],
+  "log_path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-fixpoint.json",
+  "source_materialization": {
+    "command": "git show becf5c817bcb7e0846d12ebfc2be91042d8ad89a:seed/omc/omc.om",
+    "output": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-source.om",
+    "target_source": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-target-source.om",
+    "target_source_construction": "exact target x86linux LF prefix followed by baseline-source.om bytes"
+  },
+  "executed_x86_compiler": {
+    "path": "/home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-omc-x86",
+    "sha256": "a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc",
+    "native_build_command": "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-target-source.om",
+    "native_build_exit": 0,
+    "native_build_stderr": ""
+  },
+  "expected_hash_provenance": {
+    "aarch64": {
+      "command": "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-source.om",
+      "exit": 0,
+      "sha256": "5f0faab7cd4fc12158cf8e099418098d278df644efc10e4e7e2e5ca6141fca86",
+      "stderr": "",
+      "equals_committed_seed_out_omc": true
+    },
+    "x86linux": {
+      "command": "/home/drakestapleton/work/omega-fr9-x86/seed/out/omc < /home/drakestapleton/work/omega-fr9-x86/build/fr9-20261028-resume/baseline-target-source.om",
+      "exit": 0,
+      "sha256": "a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc",
+      "stderr": "",
+      "equals_executed_x86_compiler": true
+    }
+  },
+  "self_fixpoint_proof": {
+    "executed_x86_sha256": "a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc",
+    "regenerated_x86_sha256": "a95de640177954118482f4fab45945e6cdefc8935afe3eb4e0ac0ec314dc78fc",
+    "byte_identical": true
+  }
+}
