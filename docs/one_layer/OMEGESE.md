@@ -952,7 +952,10 @@ loader and shell test coordinator do not implement these operations. No
 foreign-language compiler or runtime is on the new implementation path.
 
 The proposed device/memory extension adds checked `devctl`, `mapnew`,
-`mapdrop`, `mapread` and `mapwrite` to this same compiler. Its exact type,
+`mapdrop`, `mapread` and `mapwrite` to this same compiler, plus the VFIO words
+`vfioctl` (literal allowlisted request, exact size, `argsz` forced) and
+`vfiomap` (read-only shared map of exactly one reported VFIO region); both are AArch64
+only and `target x86linux` refuses them with error 25. Their exact type,
 ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/MAPPING.md).
 It adds process-local mapped resources while the compiler's own storage remains
 fixed pools. GPU launch and model execution are separate, still-unqualified gates.

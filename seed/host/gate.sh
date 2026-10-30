@@ -75,6 +75,11 @@ compile reserve
 test ! -e "$stage/reserve.bin"
 compile memcheck
 (cd "$stage"; ./memcheck "$OMC")
+compile vfio
+"$stage/vfio"
+compile vfiocheck
+(cd "$stage"; ./vfiocheck "$OMC")
+test ! -e "$stage/case.om"
 compile structfile
 (cd "$stage"; ./structfile)
 test ! -e "$stage/structfile.tmp"

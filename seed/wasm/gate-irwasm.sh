@@ -8,7 +8,7 @@ fail() { printf 'FAIL %s\n' "$*"; exit 1; }
 [ "$(uname -m)" = aarch64 ] || { echo 'NOT_RUN requires AArch64 Linux'; exit 3; }
 command -v node >/dev/null || { echo 'NOT_RUN requires Node WebAssembly oracle'; exit 3; }
 OMC=seed/out/omc
-pin=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
+pin=d5d7d1029bf1b7011570d346e320bc793a0f3ee3c227033f7f8d2bbc292c4054
 [ "$(sha256sum "$OMC" | cut -d ' ' -f 1)" = "$pin" ] || fail 'compiler pin differs'
 printf 'SOURCE %s\n' "$(git rev-parse HEAD)"
 printf 'COMPILER %s\n' "$pin"

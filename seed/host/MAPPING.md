@@ -15,6 +15,8 @@ bootstrap and test orchestration remain disclosed development tools.
 | `mapwrite handle offset A off n` | Copy n bytes from byte array A into a writable mapping. Return n as long. Read-only source views/text are accepted. |
 | `devcall fd request H hoff 32 P poff n` | RM_ALLOC or RM_CONTROL only. Binds a checked writable parameter span in a private header, sets its length, and copies back non-pointer fields. Caller pointer bytes must be zero; header and parameter spans must not overlap. Parameter length is at most 16383. |
 | `uvmctl fd command A off n` | Literal Linux UVM request from the explicit ABI580.173.02 allowlist, with its exact writable payload length. |
+| `vfioctl fd request A off n` | Literal VFIO request from the allowlist below, with its exact byte count. Signed Linux ioctl result. `fd` is int; `request` a literal uint; `A` uchar bytes. |
+| `vfiomap fd A off 32` | Read-only shared mapping of one VFIO region. `A off 32` is the `vfio_region_info` returned by `DEVICE_GET_REGION_INFO`; its flags must contain READ and MMAP, and the compiler maps exactly its size at its offset. Returns a mapping handle or negative errno. `mapset`/`mapwrite` through the handle trap. |
 | `mapaddr handle` | The owned live mapping's base address as ulong, for driver address serialization. Does not permit access through an arbitrary integer address. Works on reservations. |
 | `mapget handle offset width` | Aligned uint32 or uint64 load, returned as ulong; width is literal int4 or8. Exactly one load, bracketed by DSB SY. Requires readable memory. |
 | `mapset handle offset width value` | Aligned uint32 or uint64 store from ulong, returning long0; width is literal int4 or8. A uint32 store refuses truncation. Exactly one store, bracketed by DSB SY. Requires writable memory. |
@@ -60,6 +62,28 @@ MAP_EXTERNAL_ALLOCATION33/9264, FREE34/24 and CREATE_EXTERNAL_RANGE73/24.
 Only the Linux ABI from the pinned NVIDIA580.173.02 headers is covered.
 Independent GCC header-layout and GNU assembler instruction oracles were used
 while developing the runtime. They are not linked into the compiler or products.
+
+The VFIO allowlist (`_IO(';', 100+k)`, Linux `include/uapi/linux/vfio.h`) is
+GET_API_VERSION15204/0, CHECK_EXTENSION15205/4, SET_IOMMU15206/4 (value must be
+TYPE1v2 = 3), GROUP_GET_STATUS15207/8, GROUP_SET_CONTAINER15208/4,
+GROUP_GET_DEVICE_FD15210 (nonempty device name without zero bytes, copied with a
+terminator to private stack memory), DEVICE_GET_INFO15211/24 and
+DEVICE_GET_REGION_INFO15212/32. DEVICE_RESET15215 is refused: W0 is approved
+without a device reset, so Omega code cannot request one. For spans of 8 bytes or
+more the compiler writes `argsz = n` before the call, so the kernel copies at most
+n bytes back. CHECK_EXTENSION and SET_IOMMU pass the 4-byte value read from the
+span. Every other request, a non-literal request, a non-uchar span or library
+mode is refused at compile time; a wrong count, a bad SET_IOMMU value or an empty
+device name traps 3 at run time. DMA mapping, IRQ, region writes, reset and migration
+requests are not covered. Note that closing a vfio-pci device fd lets Linux reset the
+function (FLR) or, when every reset method is disabled, the bus (SBR); the allowlist
+cannot prevent that kernel behaviour.
+`vfiomap` refuses a size of zero and region flags
+without READ|MMAP; it never requests PROT_WRITE. Host tests use an invalid fd and
+a memfd stand-in; the device path is exercised only in the QEMU bench of
+aien-dev/omega-gpu-driver, not on hardware. Both words are AArch64 only: a
+`target x86linux` program that uses either is refused with error 25, because the
+x86 backend has no VFIO lowering.
 
 Kernel constants/layouts are from Linux asm-generic/unistd.h, mman-common.h and
 linux/mman.h. AArch64 encodings use seed/rung2/table.s2. The device request rule

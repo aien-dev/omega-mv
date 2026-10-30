@@ -1,0 +1,145 @@
+note Host only: every allowed VFIO request uses an invalid fd, never /dev/vfio. vfiomap maps a memfd.
+global data uchar 64
+global info uchar 32
+global status uchar 4
+text dev "0000:00:01.0"
+text name "vfio-region"
+text msg "PASS bounded native VFIO requests and read-only region maps\n"
+fn ck yes bool to void
+if not yes
+exit int 80
+end
+end
+fn fill v uchar to void
+for i ulong 64
+put data i v
+end
+end
+fn word32 a ulong to ulong
+v = ulong get data add a 3
+v = or shl v 8 ulong get data add a 2
+v = or shl v 8 ulong get data add a 1
+ret or shl v 8 ulong get data a
+end
+fn setinfo flags ulong size ulong offset ulong to void
+for i ulong 32
+put info i uchar 0
+end
+put info 0 uchar 32
+put info 4 uchar and flags 255
+for i ulong 8
+put info add 16 i uchar and shr size mul i 8 255
+put info add 24 i uchar and shr offset mul i 8 255
+end
+end
+fn bad k int fd int to void
+r = long 0
+if eq k 0
+r = vfioctl neg int 1 uint 15207 data 0 9
+end
+if eq k 1
+r = vfioctl neg int 1 uint 15212 data 0 31
+end
+if eq k 2
+put data 0 uchar 8
+put data 1 uchar 0
+put data 2 uchar 0
+put data 3 uchar 0
+r = vfioctl neg int 1 uint 15206 data 0 4
+end
+if eq k 3
+r = vfioctl neg int 1 uint 15210 dev 0 0
+end
+if eq k 4
+fill uchar 0
+put data 0 uchar 48
+r = vfioctl neg int 1 uint 15210 data 0 4
+end
+if eq k 5
+r = vfioctl neg int 1 uint 15204 data 0 4
+end
+if eq k 6
+r = vfioctl neg int 1 uint 15211 data 48 24
+end
+if eq k 7
+setinfo 5 4096 0
+r = vfiomap fd info 0 31
+end
+if eq k 8
+setinfo 3 4096 0
+r = vfiomap fd info 0 32
+end
+if eq k 9
+setinfo 5 4096 0
+h9 = vfiomap fd info 0 32
+ck gt h9 0
+r = mapset h9 0 4 0
+end
+if eq k 10
+setinfo 5 4096 0
+h10 = vfiomap fd info 0 32
+ck gt h10 0
+q = mapget h10 4096 4
+end
+if eq k 11
+setinfo 5 0 0
+r = vfiomap fd info 0 32
+end
+exit int 81
+end
+fn main to int
+fd = int memfd name 0 len name 0
+ck ge fd 0
+ck eq ftrunc fd 4096 0
+put data 0 uchar 239
+put data 1 uchar 190
+put data 2 uchar 173
+put data 3 uchar 222
+ck eq pwrite fd data 0 4 0 4
+ck eq vfioctl neg int 1 uint 15204 data 0 0 neg long 9
+put data 0 uchar 3
+put data 1 uchar 0
+put data 2 uchar 0
+put data 3 uchar 0
+ck eq vfioctl neg int 1 uint 15205 data 0 4 neg long 9
+ck eq vfioctl neg int 1 uint 15206 data 0 4 neg long 9
+fill uchar 255
+ck eq vfioctl neg int 1 uint 15207 data 8 8 neg long 9
+ck eq word32 8 8
+ck eq word32 12 4294967295
+ck eq vfioctl neg int 1 uint 15208 data 0 4 neg long 9
+ck eq vfioctl neg int 1 uint 15210 dev 0 len dev neg long 9
+fill uchar 255
+ck eq vfioctl neg int 1 uint 15211 data 16 24 neg long 9
+ck eq word32 16 24
+ck eq word32 20 4294967295
+ck eq word32 40 4294967295
+fill uchar 255
+ck eq vfioctl neg int 1 uint 15212 data 32 32 neg long 9
+ck eq word32 32 32
+ck eq word32 28 4294967295
+ck eq word32 36 4294967295
+setinfo 5 4096 0
+h = vfiomap fd info 0 32
+ck gt h 0
+ck eq mapget h 0 4 3735928559
+ck eq mapget h 4092 4 0
+ck eq mapdrop h 0
+setinfo 5 4096 1
+ck eq vfiomap fd info 0 32 neg long 22
+setinfo 5 4096 0
+ck eq vfiomap neg int 1 info 0 32 neg long 9
+for k int 12
+p = fork
+ck ge p 0
+if eq p 0
+bad k fd
+exit int 80
+end
+ck eq waitpid int p status 0 4 0 p
+ck eq get status 0 0
+ck eq get status 1 103
+end
+ck eq write 1 msg 0 len msg long len msg
+ret 0
+end
