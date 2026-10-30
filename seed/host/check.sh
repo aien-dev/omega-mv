@@ -54,6 +54,20 @@ grep -qx 'OM2GATE FAIL cases=8 pass=3 fail=5 invalid=0 not_run=0' "$run/hexmut.l
 [ "$(grep -c '^VERDICT ctl-hex-[a-z]*-pairs-dec-run PASS ' "$run/hexmut.log")" = 3 ]
 [ "$(grep -c '^VERDICT hex-[a-z]*-[a-z0-9-]* FAIL ' "$run/hexmut.log")" = 5 ]
 echo 'PASS hex literals (51 cases) and 3 tok_hex mutants killed'
+# OM-2 expression boundaries (#745, spec section 2): missing/extra operand and grouping, both profiles.
+"$B/gate" seed/out/omc "$pin" seed/omc/om2/bnd/bnd.cases "$run/bnd" > "$run/bnd.log" || { cat "$run/bnd.log"; exit 1; }
+grep -qx 'OM2GATE PASS cases=47 pass=47 fail=0 invalid=0 not_run=0' "$run/bnd.log"
+if "$B/gate" seed/out/omc "$pin" seed/omc/om2/bnd/mutants.cases "$run/bndmut" > "$run/bndmut.log"; then
+    echo 'FAIL operand-boundary mutant survived' >&2
+    exit 1
+else
+    status=$?
+    [ "$status" = 1 ] || { cat "$run/bndmut.log"; exit 1; }
+fi
+grep -qx 'OM2GATE FAIL cases=10 pass=2 fail=8 invalid=0 not_run=0' "$run/bndmut.log"
+[ "$(grep -c '^VERDICT ctl-bnd-[a-z]*-g0-run PASS ' "$run/bndmut.log")" = 2 ]
+[ "$(grep -c '^VERDICT bnd-[a-z]*-[a-z0-9-]* FAIL ' "$run/bndmut.log")" = 8 ]
+echo 'PASS expression boundaries (47 cases) and 2 operand mutants killed'
 # Same function-mode contract behavior through the unchanged C referee and OscRt.
 if [ ! -x build/omegese/omegese ] || [ ! -x build/omega_emit/omega_emit ]; then
     echo 'NOT_RUN contract C parity: build the comparison oracles' >&2
