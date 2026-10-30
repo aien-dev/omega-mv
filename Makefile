@@ -1249,6 +1249,39 @@ $(RX_CM_UNIT): tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/omega_om_units
 test-costmodel: $(RX_CM_UNIT)
 	./$(RX_CM_UNIT)
 
+# Offline resource-DAG evaluator, imported verbatim from closed PR #590
+# (commit 3bd56731). Host arithmetic on the numbers written in the fixtures.
+# Not a validated cost model and not a hardware measurement.
+# The seeded SHA-256 unit is AArch64 machine code; other hosts link
+# tests/dagsim/sha256_host.c, which aborts if a blob digest is requested.
+# dagsim.o keeps the #590 (3bd56731) nm guard: no generation store, authority,
+# world, or a call that maps or runs code.
+.PHONY: test-dagsim
+DS_OBJ = $(OUT_DIR)/dagsim.o
+DS_UNIT = $(OUT_DIR)/dagsim_unit
+DS_CLI = $(OUT_DIR)/dagsim
+ifeq ($(shell uname -m),aarch64)
+DS_SHA_SRC = src/omega_om_units.c
+else
+DS_SHA_SRC = tests/dagsim/sha256_host.c
+endif
+
+$(DS_OBJ): tools/dagsim/dagsim.c tools/dagsim/dagsim.h src/runtime/rx_costmodel.h | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -c -o $@ tools/dagsim/dagsim.c
+	@if nm -u $@ | grep -E 'rx_gen_|aienos_cap_|rx_caproot_|rx_capadmin_|rx_world_|mmap|mprotect|fork|exec|dlopen|system' ; then \
+		echo "dagsim.o references an operation an offline evaluator must not have"; \
+		rm -f $@; exit 1; fi
+
+$(DS_UNIT): tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
+
+$(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
+
+test-dagsim: $(DS_UNIT) $(DS_CLI)
+	./$(DS_UNIT)
+	sh tests/dagsim/run_cli.sh $(DS_CLI) $(OUT_DIR)/dagsim-cli-out
+
 # AArch64 hosts: the gate. Real realizations, training, promotion through the
 # R9 barrier on the native authority, held-out workloads.
 RX_EMP_SRCS = src/runtime/rx_generation.c src/omega_om_units.c src/omega_evidence.c \
@@ -2478,6 +2511,17 @@ $(GPU_RECONV_TEST): tests/gpu_reconv_test.c tests/bw_warp_sim.h src/omega_gpu_el
 	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_reconv_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
 test-gpu-reconv: $(GPU_RECONV_TEST)
 	./$(GPU_RECONV_TEST) --host-only
+
+# omega #492: IMAD.HI.U32 with a register Rc. The chip reads Rc as a 64-bit register pair (nvcc 13.0
+# sm_121 oracle, evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016; chip probe pending), so the four warp
+# simulators refuse a non-RZ Rc instead of modelling a 32-bit one. One binary per simulator header.
+.PHONY: test-gpu-imadhi-rc
+GPU_IMADHI_SIMS = bw_warp_sim bw_warp_sim_tc bw_warp_sim_k bw_warp_sim_pa
+GPU_IMADHI_TESTS = $(GPU_IMADHI_SIMS:%=$(OUT_DIR)/gpu_imadhi_rc_test_%)
+$(OUT_DIR)/gpu_imadhi_rc_test_%: tests/gpu_imadhi_rc_test.c tests/%.h $(OUT_DIR)/libomega_gpu.a
+	$(CC) $(CFLAGS) -Itests -DSIM_HEADER='"$*.h"' -o $@ tests/gpu_imadhi_rc_test.c $(OUT_DIR)/libomega_gpu.a -lpthread -lm
+test-gpu-imadhi-rc: $(GPU_IMADHI_TESTS)
+	@for t in $(GPU_IMADHI_TESTS); do ./$$t || exit 1; done
 
 # FB-1 cut 5: native gqa_attention (f32 KV) and paged_attention (bf16 KV, + batch).
 # head_dim 128 (Qwen3-4B): the same battery with --hd 128 through both host simulators; GB10 parity PASS 126/0
