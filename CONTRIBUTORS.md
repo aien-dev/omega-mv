@@ -44,3 +44,4 @@ Update this table in the same commit as the work it credits.
 
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
+| Grok 4.7 | Cost-model refusal of unsupported semantic operation IDs before prediction or learning, with a clamp-restoring mutant (Refs #704) |
