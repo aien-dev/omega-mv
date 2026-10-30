@@ -4,7 +4,9 @@
 # the repo's own vectors, plus a TLS 1.3 server flight built with python3 `cryptography` for the
 # deterministic ClientHello of fz_flight. Nothing here is the implementation under test.
 # usage: gen_seeds.py OUTDIR CHFILE
-#   CHFILE: the ClientHello fz_flight writes with argument 2 (run.sh does this first)
+#   CHFILE: the ClientHello fz_flight writes with argument 2 (`fz_flight seeds/fzstore.pem CHFILE <
+#   any-input`; run.sh has no step for it). Keep a copy as seeds/ch.bin: the flight seeds sign and MAC
+#   exactly that ClientHello, so they must be regenerated whenever tls_mkch's output changes.
 # Writes OUTDIR/<target>/<name> and OUTDIR/fzstore.pem (pki/storeAll.pem + this run's own root).
 # Keys are fresh on every run, so the flight seeds differ byte-wise between runs (run.sh keeps the
 # committed seeds/ directory; regenerate only together with fzstore.pem).
@@ -53,7 +55,9 @@ def extract(salt, ikm): return hmac.new(salt, ikm, hashlib.sha256).digest()
 
 
 def pki():
-    """root -> int -> leaf, P-256, valid 2025..2049, leaf SAN www.example.test"""
+    """root -> int -> leaf, P-256, valid 2025..2049, leaf SAN www.example.test; every certificate
+    carries a subjectKeyIdentifier, and the two that are not self-issued an authorityKeyIdentifier
+    (x509.om chain_xchk refuses a presented certificate without one, RFC 5280 4.2.1.1)"""
     nb = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
     na = datetime.datetime(2049, 12, 31, tzinfo=datetime.timezone.utc)
     keys = [ec.generate_private_key(ec.SECP256R1()) for _ in range(3)]
@@ -70,6 +74,10 @@ def pki():
             digital_signature=not ca, content_commitment=False, key_encipherment=False,
             data_encipherment=False, key_agreement=False, key_cert_sign=ca, crl_sign=ca,
             encipher_only=False, decipher_only=False), critical=True)
+        b = b.add_extension(x509.SubjectKeyIdentifier.from_public_key(keys[i].public_key()), False)
+        if i:
+            b = b.add_extension(
+                x509.AuthorityKeyIdentifier.from_issuer_public_key(keys[i - 1].public_key()), False)
         if not ca:
             b = b.add_extension(x509.SubjectAlternativeName([x509.DNSName(HOST.decode())]), False)
             b = b.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), False)

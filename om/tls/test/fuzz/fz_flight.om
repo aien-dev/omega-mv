@@ -57,8 +57,9 @@ end
 
 note fz_detch: make the ClientHello tls_mkch wrote deterministic, so a seed's CertificateVerify and
 note Finished (which sign or MAC the transcript) stay valid: random = 64..95, legacy_session_id =
-note 96..127, x25519 private key = 1..32 (its public key replaces the old one in key_share). Every
-note other ClientHello byte is tls_mkch's own.
+note 96..127, x25519 private key = 1..32 (its public key replaces the old one in key_share, both in
+note the x25519 entry and as the tail of the X25519MLKEM768 entry), and the hybrid's ML-KEM-768 key
+note pair (fz_detkem). Every other ClientHello byte is tls_mkch's own.
 fn fz_detch c edit uchar * to ulong
 k = new uchar 32 0
 o = new uchar 32 0
@@ -72,14 +73,58 @@ p = fz_find c b n
 if eq p 0
 ret 1
 end
+r = sub add b n add p 32
+q = ulong 0
+if ge r 32
+q = fz_find c add p 32 r
+end
+if and ne get c TLKGEN 0 eq q 0
+ret 1
+end
+if ne fz_detkem c b p 0
+ret 1
+end
 for i ulong 32
 put c add TLEPK i get k i
 put c add TLEPU i get o i
 put c add p i get o i
+if ne q 0
+put c add q i get o i
+end
 end
 fz_fill c add b 6 32 64
 fz_fill c add b 39 32 96
 tls_mov c TLSID add b 39 32
+ret 0
+end
+
+note fz_detkem: while tls_kemset holds an ML-KEM-768 key pair (c[TLKGEN]), the hybrid entry is ek ||
+note x25519 public key, so its ek is the 1184 bytes before p (the first copy of that public key in
+note the ClientHello at c[b..]). The pair is made again from the seed 128..191: dk where tls_kemset
+note keeps it (c[TLKDK], 2400 bytes), the new ek over the old one. 0, or 1 when the bytes before p
+note are not the held ek or the key pair fails.
+fn fz_detkem c edit uchar * b ulong p ulong to ulong
+if eq get c TLKGEN 0
+ret 0
+end
+if lt p add b 1184
+ret 1
+end
+e = sub p 1184
+for i ulong 1184
+if ne get c add e i get c add TLKDK add 1152 i
+ret 1
+end
+end
+s = new uchar 64 0
+fz_fill s 0 64 128
+ek = new uchar 1184 0
+if ne mlkem_keygen_seed s ek part c TLKDK 2400 0
+ret 1
+end
+for i ulong 1184
+put c add e i get ek i
+end
 ret 0
 end
 

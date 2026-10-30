@@ -7,6 +7,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 
 | Model | What it did |
 |---|---|
+| Claude Opus 5.5 (via omp) | Train r3 TLS fuzz replay repair: #859's chain check needs an authority key id on every non-self-issued certificate, so `gen_seeds.py` now writes SKI on every certificate and AKI below the root; `fz_detch` pins every key-share byte (both x25519 copies and the ML-KEM-768 encapsulation key rebuilt from a fixed seed) so the ClientHello is deterministic; `hrr_*` expects `KEY_SHARE` (011) for an HRR naming an already-shared group (RFC 8446 §4.1.4); seeds regenerated and the 21 new crafted x509 seeds given EXPECT lines that match `cases.txt`. |
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
 | Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
