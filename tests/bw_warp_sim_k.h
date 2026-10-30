@@ -44,8 +44,8 @@
  *                      an exit jumped past it, or a target was corrupted)
  *   WS_E_NEVER_JOINED  the warp finished with a barrier still armed
  *   WS_E_SELF_BRANCH, WS_E_PC, WS_E_OP, WS_E_SHIFT, WS_E_MEM, WS_E_SMEM, WS_E_FRAGS
- *   WS_E_IMADHI_RC     IMAD.HI.U32 with a register Rc: the chip reads Rc as a 64-bit pair (omega #492,
- *                      nvcc oracle, chip probe pending), so a non-RZ Rc is refused, not modelled
+ *   WS_E_IMADHI_RC     IMAD.HI.U32 with an odd register Rc. An even Rc is modelled as the 64-bit pair
+ *                      Rc+1:Rc the chip reads (omega #492, nvcc oracle, chip probe pending); odd has no evidence
  * Every error names the pc. Memory: global addresses are host pointers (optionally range
  * checked); shared memory is a per-CTA buffer poisoned at CTA start so a read of a word
  * nobody wrote shows up in the oracle comparison.
@@ -166,9 +166,16 @@ static void ws_lane_exec(WsSim *s, WsLane *l, const BlackwellIRInsn *in, int pc,
     case BW_IR_MOV_RZ: ws_wrs(l, in->dst_vreg, in->dst_subreg, 0, p); break;
     case BW_IR_IMAD: ws_wrs(l, in->dst_vreg, in->dst_subreg, in->src2_vreg >= 0 ? a * b + c : a * in->imm + c, p); break;
     case BW_IR_IMAD_WIDE: ws_wr64(l, in->dst_vreg, (uint64_t)a * in->imm + ws_rd64(l, in->src3_vreg, p), p); break;
-    case BW_IR_IMAD_HI_U32: /* Rd = hi32(Ra * Rb) with Rc = RZ. The chip reads a register Rc as a 64-bit pair (omega #492): refused until a chip probe pins the model */
-        if (in->src3_vreg >= 0) { ws_fail(s, WS_E_IMADHI_RC, pc, "IMAD.HI.U32 with a register Rc (the chip reads Rc as a 64-bit pair, not chip-probed): use RZ, or SHF.R + IADD3"); return; }
-        ws_wrs(l, in->dst_vreg, in->dst_subreg, (uint32_t)(((uint64_t)a * b) >> 32), p); break;
+    case BW_IR_IMAD_HI_U32: { /* Rd = hi32(Ra * Rb + Rc+1:Rc). A register Rc is a 64-bit pair, low word Rc (omega #492, nvcc 13.0
+                               * oracle evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016, not chip-probed); an odd Rc has no evidence: refused */
+        uint64_t c64 = 0;
+        int rc = in->src3_vreg >= 0 ? p->regalloc.vreg_to_phys[in->src3_vreg] : -1;
+        if (rc >= 0) {
+            rc = (rc + in->src3_subreg) & 0xff;
+            if (rc & 1) { ws_fail(s, WS_E_IMADHI_RC, pc, "IMAD.HI.U32 with an odd register Rc (the chip reads a 64-bit pair; nvcc emits only even bases, odd not chip-probed): use RZ or an even pair"); return; }
+            c64 = (uint64_t)l->r[rc] | ((uint64_t)l->r[rc + 1] << 32);
+        }
+        ws_wrs(l, in->dst_vreg, in->dst_subreg, (uint32_t)(((uint64_t)a * b + c64) >> 32), p); break; }
     case BW_IR_IADD3: ws_wrs(l, in->dst_vreg, in->dst_subreg, a + b, p); break; /* the encoder's IADD3 has Rc = RZ */
     case BW_IR_SHF_R: ws_wrs(l, in->dst_vreg, in->dst_subreg, a >> (in->imm & 31), p); break;
     case BW_IR_SHF_L_U32: if (b >= 32) { ws_fail(s, WS_E_SHIFT, pc, "SHF.L.U32 amount >= 32 (not chip-verified)"); return; } ws_wrs(l, in->dst_vreg, in->dst_subreg, a << b, p); break;
