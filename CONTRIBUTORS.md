@@ -40,6 +40,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Claude Opus 5.5 | Omega 1.0 roadmap: source-pinned readiness audit of the seeded compiler, IR, WebAssembly and bridge paths, milestone acceptance gates, tracking issues #790-#800, OM-2 contract files brought to main byte-identical, and stale status text corrected |
 | Claude Opus 5.5 | Function-mode constants in the seeded compiler (`fnstore`): consts accepted without `fn main`, globals/texts/host words still error 9, gate16 byte-identity fixtures and old-compiler/mutant negative controls |
 | Codex (GPT-6.1 Sol) | Neuralese supplement proposal, bounded native envelope/codebook decoder and existing Omega-conductor host refusal/mutant cases |
+| Codex (GPT-6.1 Sol) | NL4 native numerical payload codec, canonical LTP0 consumer, independent receiver-matched pure execution boundary and host synthetic rejection/mutant qualification (#920) |
 | Codex (GPT-6.1 Sol) | Repaired qty float-domain classification and checked ingress, diagnostic categories and query/output streaming; permanent adversarial regression fixtures for the #909/#911 audit |
 | Claude Opus 5.5 | OSC IR v7 memory oracle: independent decoder, validator and interpreter (`seed/wasm/v7/oracle.js`), separate hand-written fixture writer, hand-written expectations and a mutant-checked self-test |
 
