@@ -1,0 +1,16 @@
+om2
+fn a1 x int to int inline
+ret add x 1
+end
+fn a2 x int to int inline
+ret a1 x
+end
+fn a3 x int to int inline
+ret a2 x
+end
+fn a4 x int to int inline
+ret a3 x
+end
+fn main to int
+ret a4 1
+end

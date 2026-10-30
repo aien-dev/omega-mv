@@ -1,0 +1,48 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 lines 14-16: OM-1 keeps every name it has, including variables and struct
+note fields spelled like OM-2 words (fresh, at, part, open, seal, holds, field, layout, ...).
+note Expected stdout: oracle/s0s2/oracle.py (names_var). Used with lib/putu.om.
+struct ctx at ulong open ulong part ulong 2 end
+fn va to void
+fresh = ulong 3
+at = ulong 4
+unroll = ulong 5
+inline = ulong 6
+seal = ulong 7
+open = ulong 8
+part = add fresh at
+export = mul unroll inline
+abstract = sub seal 1
+holds = shl open 2
+putu part
+putu export
+putu abstract
+putu holds
+end
+fn vb to void
+layout = new uchar 4 9
+field = new ulong 2 11
+put layout 1 uchar 42
+put field 0 add get field 1 1
+c = new ctx 1 2 3
+put c at 30
+put c part 1 mul get c open 5
+rotr = uint 9
+rotl = add rotr 1
+om2 = ulong 12
+diag = ulong 13
+fmt = add om2 diag
+putu ulong get layout 1
+putu ulong get layout 3
+putu get field 0
+putu get c at
+putu get c part 0
+putu get c part 1
+putu ulong rotl
+putu fmt
+end
+fn main to int
+va
+vb
+ret 0
+end

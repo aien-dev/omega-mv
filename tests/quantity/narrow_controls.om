@@ -1,0 +1,11 @@
+fn main to int
+a = qty 5
+if ne uchar a uchar 5
+ret 1
+end
+b = qty 9223372036854775807
+if ne long b long 9223372036854775807
+ret 2
+end
+ret 0
+end

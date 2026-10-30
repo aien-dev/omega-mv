@@ -58,7 +58,7 @@ g14_build_canon() {
     G14_TMP=$(mktemp -d "${TMPDIR:-/tmp}/gate14.XXXXXX") || return 1
     JSON_CANON=$G14_TMP/json_canon
     gcc -std=gnu11 -O2 -Wall -Wextra -Werror -I"$G14_OMEGA/src" -o "$JSON_CANON" \
-        "$G14_OMEGA/tools/json_canon.c" "$G14_OMEGA/src/sha256.c" -lm
+        "$G14_OMEGA/tools/json_canon.c" "$G14_OMEGA/src/omega_om_units.c" -lm
 }
 
 # g14_criteria SCHEMA -- the Gate 14 criteria one leg backs.

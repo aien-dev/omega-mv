@@ -1,0 +1,7 @@
+global q qty 2
+fn main to int
+put q 0 qty 18446744073709551615
+put q 1 qty 1
+x = add get q 0 get q 1
+ret 0
+end

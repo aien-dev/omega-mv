@@ -1,0 +1,11 @@
+om2
+fn check x long to long
+requires ge x 0
+ensures le result 10
+i = long 0
+while lt i x bound 20
+invariant le i 10
+i = add i 1
+end
+ret i
+end

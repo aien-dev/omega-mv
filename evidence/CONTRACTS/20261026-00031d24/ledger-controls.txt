@@ -1,0 +1,19 @@
+Source predicate: exact line beginning `tail -1 "$R/size-history.tsv"` from git show 00031d24:seed/omc/gate5.sh; executed with original sha/say/bad semantics and exit "$fail".
+Compiler: 3d2b7411b8a2ba1a3e770e70fd7c9be22100357c51206f2e90a80df826c30fa3
+
+current: observed exit 0; expected 0
+PASS size history: its last row is this omc (RM2-contract-diagnostics)
+
+missing: observed exit 1; expected 1
+FAIL size-history.tsv has no row for this omc: add one
+tail: cannot open '/tmp/omega-ledger-nonexistent/size-history.tsv' for reading: No such file or directory
+
+empty: observed exit 1; expected 1
+FAIL size-history.tsv has no row for this omc: add one
+
+stale-last: observed exit 1; expected 1
+FAIL size-history.tsv has no row for this omc: add one
+The stale-last fixture has the correct compiler digest in its first row and an all-zero digest in its last row. It must not pass by finding a matching historical row.
+
+Historical ledger prefix: byte-identical, 1037 bytes, sha256 cd0c201cd65fc560640be4d27e753d1655556a08e5801ff8f45748c16d0b076a.
+Fresh qualification clone: git diff --exit-code 00031d2456b2fe1e6ecdee6a0245d4c27b6749d2 -- evidence returned 0; git status --porcelain -- evidence printed nothing.

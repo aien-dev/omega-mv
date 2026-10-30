@@ -108,9 +108,9 @@ bstep model-build-asan "$AT0/model" ./build.sh asan || BUILD_OK=0
 bstep oracle-build "$AT0/oracle" ./build.sh || BUILD_OK=0
 bstep evaluator-build "$AT0/evaluator" make -s all || BUILD_OK=0
 bstep evaluator-build-asan "$AT0/evaluator" make -s asan || BUILD_OK=0
-logrun "cc $CF -I src -o at0-assemble at0_assemble.c src/sha256.c"
+logrun "cc $CF -I src -o at0-assemble at0_assemble.c src/omega_om_units.c"
 mkdir -p "$WORK/bin"
-cc $CF -I"$S/src" -o "$WORK/bin/at0-assemble" "$INT/at0_assemble.c" "$S/src/sha256.c" > "$R/integration-build.log" 2>&1 || { BUILD_OK=0; say "BUILD integration FAILED"; }
+cc $CF -I"$S/src" -o "$WORK/bin/at0-assemble" "$INT/at0_assemble.c" "$S/src/omega_om_units.c" > "$R/integration-build.log" 2>&1 || { BUILD_OK=0; say "BUILD integration FAILED"; }
 [ $BUILD_OK = 1 ] || { say "FATAL build failure; see $R/*.log"; gate AT0-G2 FAIL "build" "a build step failed"; gate AT0-G4 NOT_RUN "build" "build failed"; gate AT0-G5 NOT_RUN "build" "build failed"; gate AT0-G6 NOT_RUN "build" "build failed"; exit 1; }
 MODEL="$AT0/model/build/at0-model"; ORACLE="$AT0/oracle/target/at0-oracle"; EVAL="$AT0/evaluator/build/at0-eval"; ASM="$WORK/bin/at0-assemble"
 ( cd "$AT0/model" && ./build/at0-tests tests/cases ) > "$R/model-tests.log" 2>&1; mrc=$?
@@ -122,7 +122,7 @@ ctrl C1-ORACLE-TESTS $( [ $orc -eq 0 ] && echo PASS || echo FAIL ) "oracle/build
 ctrl C1-ORACLE-OWN-ISOLATION $( [ $oisorc -eq 0 ] && echo PASS || echo FAIL ) "oracle/isolation.sh" "Agent 2's own gate rc=$oisorc ($(tail -1 "$R/oracle-isolation-own.log"))"
 
 # ---------- 3. receipts: sources and binaries ----------
-( cd "$S" && git ls-files research/atemporal/at0 src/sha256.c src/sha256.h mk/at0.mk 2>/dev/null | LC_ALL=C sort | while read -r f; do printf '%s  %s\n' "$(sha "$f")" "$f"; done ) > "$R/sources.sha256"
+( cd "$S" && git ls-files research/atemporal/at0 src/omega_om_units.c src/omega_api_decl.h src/omega_native.h src/sha256.h mk/at0.mk 2>/dev/null | LC_ALL=C sort | while read -r f; do printf '%s  %s\n' "$(sha "$f")" "$f"; done ) > "$R/sources.sha256"
 { for b in "$MODEL" "$ORACLE" "$EVAL" "$ASM" "$AT0/model/build/at0-tests" "$AT0/model/build-asan/at0-model" "$AT0/evaluator/build/at0-eval-asan"; do
     [ -f "$b" ] && printf '%s  %s\n' "$(sha "$b")" "${b#$WORK/}"; done; } > "$R/binaries.sha256"
 ENGINE_SHA=$(sha "$MODEL"); ORACLE_SHA=$(sha "$ORACLE")
@@ -232,7 +232,7 @@ mutant_model() { # name sed-script source-file -> builds $WORK/mut/<name>/at0-mo
     cp "$AT0"/model/*.c "$AT0"/model/*.h "$md/"
     sed "$ms" "$AT0/model/$mf" > "$md/$mf"
     if cmp -s "$AT0/model/$mf" "$md/$mf"; then echo "mutation did not change $mf" >&2; return 1; fi
-    ( cd "$md" && cc $CF -I. -I"$S/src" -o at0-model at0_main.c at0_exact.c at0_case.c at0_io.c at0_state.c at0_hamiltonian.c at0_constraint.c at0_povm.c at0_conditional.c at0_observable.c at0_engine.c at0_output.c "$S/src/sha256.c" -lm ) > "$md/build.log" 2>&1
+    ( cd "$md" && cc $CF -I. -I"$S/src" -o at0-model at0_main.c at0_exact.c at0_case.c at0_io.c at0_state.c at0_hamiltonian.c at0_constraint.c at0_povm.c at0_conditional.c at0_observable.c at0_engine.c at0_output.c "$S/src/omega_om_units.c" -lm ) > "$md/build.log" 2>&1
 }
 run_mutant() { # name  -> results under mutants/<name>
     mn=$1; mkdir -p "$OUT/mutants/$mn"
@@ -270,7 +270,7 @@ AXALL=$(awk -F'\t' '$1 ~ /^P1/ && !($4=="NO" && $3=="SCHRODINGER_DEVIATION_EXCEE
 # ---------- 11. isolation (G2) ----------
 ISO="$WORK/iso"; mkdir -p "$ISO/clean" "$ISO/mut"
 ISOOK=1
-for f in "$AT0"/model/at0_*.c "$S/src/sha256.c"; do
+for f in "$AT0"/model/at0_*.c "$S/src/omega_om_units.c"; do
     b=$(basename "$f" .c); [ "$b" = at0_main ] && continue
     cc $CF -I"$AT0/model" -I"$S/src" -c "$f" -o "$ISO/clean/$b.o" >> "$LOG" 2>&1 || ISOOK=0
 done
@@ -287,7 +287,7 @@ cc $CF -I"$AT0/model" -I"$S/src" -c "$ISO/mut/at0_engine_hidden_clock.c" -o "$IS
 sh "$HERE/isolation_check.sh" "$ISO/mut/at0_engine_hidden_clock.o" > "$R/isolation-model-mutant-own.log" 2>&1; m1=$?
 sh "$AT0/evaluator/gates/isolation.sh" "$ISO/mut/at0_engine_hidden_clock.o" > "$R/isolation-model-mutant-evaluator-gate.log" 2>&1; m2=$?
 # a hidden-clock mutant that reads CNTVCT_EL0 or the like is invisible to any symbol scan: recorded as a limit, not tested
-[ $ISOOK = 1 ] && [ $i1 -eq 0 ] && [ $i2 -eq 0 ] && [ $i3 -eq 0 ] && ctrl C7-ISOLATION-MODEL-CLEAN PASS "nm -u over model compute objects (all model .c except at0_main.c and at0_io.c (the thin file-reader layer, D6), plus src/sha256.c, so at0_case.o is scanned strictly): isolation_check.sh and evaluator/gates/isolation.sh; at0_io.o scanned with only fopen/fread/fclose/ferror exempt" "$(echo $CLEANOBJS | wc -w) compute objects clean under both scanners (parser at0_case.o strictly clean); at0_io.o scanned separately (strict scan rc=$i3s: $(head -1 "$R/isolation-model-case-reader-strict.log" | cut -c1-120))" \
+[ $ISOOK = 1 ] && [ $i1 -eq 0 ] && [ $i2 -eq 0 ] && [ $i3 -eq 0 ] && ctrl C7-ISOLATION-MODEL-CLEAN PASS "nm -u over model compute objects (all model .c except at0_main.c and at0_io.c (the thin file-reader layer, D6), plus src/omega_om_units.c, so at0_case.o is scanned strictly): isolation_check.sh and evaluator/gates/isolation.sh; at0_io.o scanned with only fopen/fread/fclose/ferror exempt" "$(echo $CLEANOBJS | wc -w) compute objects clean under both scanners (parser at0_case.o strictly clean); at0_io.o scanned separately (strict scan rc=$i3s: $(head -1 "$R/isolation-model-case-reader-strict.log" | cut -c1-120))" \
     || ctrl C7-ISOLATION-MODEL-CLEAN FAIL "nm -u over model compute objects" "own rc=$i1 evaluator-gate rc=$i2 case-reader rc=$i3: $(head -2 "$R/isolation-model-own.log" | tr '\n' ' ')"
 [ $m1 -eq 1 ] && [ $m2 -ne 0 ] && ctrl C8-ISOLATION-MODEL-HIDDEN-CLOCK-MUTANT PASS "same scanners on at0_engine.c plus a clock_gettime call" "caught by both: $(head -1 "$R/isolation-model-mutant-own.log")" \
     || ctrl C8-ISOLATION-MODEL-HIDDEN-CLOCK-MUTANT FAIL "same scanners on the hidden-clock mutant" "own rc=$m1 evaluator-gate rc=$m2 (both must flag)"

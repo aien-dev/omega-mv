@@ -1,0 +1,20 @@
+note Harness self-test program (correct): copy standard input to standard output unchanged.
+fn main to int
+b = new uchar 4096 0
+go = true
+while go
+r = read 0 b 0 4096
+if lt r 0
+ret 91
+end
+if eq r 0
+go = false
+else
+w = write 1 b 0 ulong r
+if ne w r
+ret 92
+end
+end
+end
+ret 0
+end

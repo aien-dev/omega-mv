@@ -1,0 +1,4 @@
+S3 feature 1 (layout/field, spec 5, errata E5/E8/E9; L834), evidence class HOST. omc 8697fb1ec749faf0a6f266bbfe7a5d8a1ac01dc8cecc7e25b54472450d97fcc3 (birth stage1 == stage2 == stage3). Runner gate-c 6c8691c2...acefa (seed/qualification/om2/gate.om @ om2/qualification 55883322).
+C2 5876/5876; s1 48/48; s1 mutants 8 controls PASS, 8 detected (rotl.from made unique: it matched twice since S2 folding); s2 21/21; s2 mutants 7/7 detected; s3 22/22; s3 mutants 4 controls PASS, 4 detected; s5s7 candidate l5-* and t-shactx/t-endian 22/22.
+birth, seed/host/check.sh, tests/gates/run.sh seed (0 SKIP), om-units (OMC_PIN moved; omega_om_units.inc byte for byte), qualify-ir-trap: RC=0.
+NOT_RUN: gate5 section 7 timing; s5s7 f5-*/a5-* (fresh and abstract not yet implemented in this commit).

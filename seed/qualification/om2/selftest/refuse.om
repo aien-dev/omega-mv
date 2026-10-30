@@ -1,0 +1,5 @@
+note Harness control: two bare numbers in one op have no type; the compiler must refuse the unit.
+fn main to int
+x = add 1 2
+ret 0
+end
