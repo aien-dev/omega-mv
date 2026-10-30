@@ -370,6 +370,28 @@ case "$step" in
     obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
     sh seed/trace/cli-gate.sh
     ;;
+  security758)        # omega#758 (#774): relational comparison suite under seed/qualification/security673/relational,
+                      # run by the OM-2 case gate rebuilt from seed/qualification/om2/gate.om with the committed
+                      # seed/out/omc (sha checked) and the scanner seed/qualification/om2/leak/leakscan.om. Exits
+                      # 0/0/0 for qualification/bindings/consumer, 1 with exactly the two intended FAIL rows for
+                      # binding-negative; the L4 secret-dividend scanner PASS is a separate tripwire, not a total.
+    sha256sum -c seed/out/omc.sha256
+    OMC=seed/out/omc; H="$(cut -c1-64 seed/out/omc.sha256)"
+    obs omc_sha256 "\"$H\""
+    R=seed/qualification/security673/relational
+    sec="$OUT_DIR/security758"; rm -rf "$sec"; mkdir -p "$sec"
+    "$OMC" < seed/qualification/om2/gate.om > "$sec/gate.bin"; chmod 700 "$sec/gate.bin"
+    obs gate_sha256 "\"$(sha256sum < "$sec/gate.bin" | cut -c1-64)\""
+    sec_run() { local rc=0; "$sec/gate.bin" "$OMC" "$H" "$R/$1.cases" "$sec/$1" > "$sec/$1.log" 2>&1 || rc=$?
+      tail -1 "$sec/$1.log"; [ "$rc" = "$2" ] || { echo "SECURITY758 FAIL $1.cases exit=$rc expected=$2" >&2; exit 1; }; }
+    sec_run qualification 0; sec_run bindings 0; sec_run consumer 0; sec_run binding-negative 1
+    grep -qx 'OM2GATE FAIL cases=2 pass=0 fail=2 invalid=0 not_run=0' "$sec/binding-negative.log"
+    grep -q '^VERDICT wrong-source-bytes FAIL ' "$sec/binding-negative.log"
+    grep -q '^VERDICT wrong-checker-bytes FAIL ' "$sec/binding-negative.log"
+    echo "SECURITY758 PASS qualification consumer bindings, binding-negative 2 intended FAIL rows"
+    sec_run l4-tripwire 0
+    echo "SECURITY758 TRIPWIRE L4-division-gap: scanner still PASSES a secret dividend (known false negative, README L4; not a qualification)"
+    ;;
   native)             # omega#663/#664: native .om units built by the committed seed/out/omc after its recorded
                       # SHA-256 is checked. The metadata test must pass and each recorded ECOSYSTEM663 mutant must
                       # exit 1; with native/autodiff664 present, its tape suite (test + 3 compiled mutants) and the

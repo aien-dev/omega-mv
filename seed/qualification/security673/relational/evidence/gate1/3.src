@@ -1,0 +1,43 @@
+note SPDX-License-Identifier: Apache-2.0
+note SC1-L: public pointers a,b; secret contents; only equality result disclosed.
+fn compare32 a view uchar 32 b view uchar 32 to ulong
+d = uchar 0
+for i ulong 32
+d = or d xor get a i get b i
+end
+ret shr sub ulong d 1 63
+end
+note SPDX-License-Identifier: Apache-2.0
+note Concatenate after compare32.om. Test assertions are outside scanned primitive.
+text ok "PASS L1 native: equal, every mismatch position, all256 bytes, paired unequal outputs\n"
+fn main to int
+a = new uchar 32 0
+b = new uchar 32 0
+if ne compare32 a b 1
+ret 11
+end
+for p ulong 32
+for v ulong 256
+put a p uchar v
+put b p uchar v
+if ne compare32 a b 1
+ret 12
+end
+put b p xor uchar v 1
+if ne compare32 a b 0
+ret 13
+end
+put a p xor uchar v 128
+if ne compare32 a b 0
+ret 14
+end
+end
+put a p 0
+put b p 0
+end
+n = write 1 ok 0 len ok
+if ne n long len ok
+ret 15
+end
+ret 0
+end
