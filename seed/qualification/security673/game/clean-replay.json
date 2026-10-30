@@ -1,0 +1,309 @@
+{
+  "profile": "SC1-G-v3 finite offline only",
+  "source_commit": "46c0cd2e200cf136e5f8a2715bc6625e0de0758b",
+  "contract_sha256": "ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496",
+  "model_sha256": "fa062dba15b5b7cccacfa4a5ea4b670d15b9a8c9e764b68b6e53b70dabd0eb19",
+  "compiler_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "target": "linux-aarch64 native host",
+  "clean_checkout": true,
+  "builds": [
+    {
+      "name": "solve0",
+      "composition": [
+        "io.om",
+        "fault0.om",
+        "solve.om"
+      ],
+      "source_sha256": "c21eb7c5dd35f5a191e4cc4d42862d0a77e64f74f521f82991d9cc7e529f6550",
+      "executable_sha256": "5a176142889eb90b286410aa8e4c424045dbf8c1594538204abc46b7c48192fa",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "solve1",
+      "composition": [
+        "io.om",
+        "fault1.om",
+        "solve.om"
+      ],
+      "source_sha256": "544c5f0bc16f4c47dd131ed0f55c98130d0b1098d187679d9e814a455504c11d",
+      "executable_sha256": "b13b7a551cbd7731b30e3ae63ba39b37d60b78b395c09363fd1756fb01efe061",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "solve2",
+      "composition": [
+        "io.om",
+        "fault2.om",
+        "solve.om"
+      ],
+      "source_sha256": "6af2a186cdcf91d3651fd20812496e246d9b41201bcfd11e63fa28047c21cad9",
+      "executable_sha256": "ad565945599af1d40a2e5979f0de004c6602df04df84b7b1d1f106c79a2a3110",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "solve3",
+      "composition": [
+        "io.om",
+        "fault3.om",
+        "solve.om"
+      ],
+      "source_sha256": "d7af7ddd45d34d9314787ede372a80d41e1b03f1b56f6be3fe902a7f5668dcb6",
+      "executable_sha256": "56a61629ddfe14356352cd2f1bb8fbfacc17a433364253e7a623f8db68188496",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "solve4",
+      "composition": [
+        "io.om",
+        "fault4.om",
+        "solve.om"
+      ],
+      "source_sha256": "53ca282b2fb8fb263c88c1765213ef8d4d091c26e1577e271b550961dbcef8b5",
+      "executable_sha256": "e261588e87728293f48cc9a29cb661209624245c675663c0a430738a9f4a2a85",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "solve5",
+      "composition": [
+        "io.om",
+        "fault5.om",
+        "solve.om"
+      ],
+      "source_sha256": "0119a93749371ba9639c31b896bb6bfaf529714733b3b911c61fa95ab275367c",
+      "executable_sha256": "492e2b45ee778233aaab558ed2662b18590da74d861e0a00b81427b82c649ce6",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "solve6",
+      "composition": [
+        "io.om",
+        "fault6.om",
+        "solve.om"
+      ],
+      "source_sha256": "e36e3cb2a5e744b28af752c7908730d9d3748211580700b43d294bd08f1eef68",
+      "executable_sha256": "b42a993d48489632edff4693a2900abbc7f02df7f463a4ca427524fbac4abcfb",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "check0",
+      "composition": [
+        "io.om",
+        "fault0.om",
+        "fixtures-v3.om",
+        "check.om"
+      ],
+      "source_sha256": "bbbd782c171dea89cbdf65258ec6d33f6d881459534b73a933e91092b03aefa1",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "check8",
+      "composition": [
+        "io.om",
+        "fault8.om",
+        "fixtures-v3.om",
+        "check.om"
+      ],
+      "source_sha256": "a3fab44b7353a0728c38457f071d124fdfbcab880e3fca081940f0313ab29672",
+      "executable_sha256": "29bffff73d5046693653b0f6b90e5cdd664a17f2990be321de12ca6cd7f009ca",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "name": "roundtrip",
+      "composition": [
+        "io.om",
+        "roundtrip.om"
+      ],
+      "source_sha256": "a5ee4052ee107cd492ca20c63918bce61ea8a9d4bcd966bce70566d98fc6cd7e",
+      "executable_sha256": "d36ca78deda8acdd30c27455543d0b1d7b87f6cbef4f3ec6bec60793d5e105ac",
+      "exit": 0,
+      "stderr": ""
+    }
+  ],
+  "runs": [
+    {
+      "solver": "solve0",
+      "solver_exit": 0,
+      "corpus_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n1904898\nsolve_ns=\n672759\nstates=\n2593\nedges=\n16002\nwinning=\n1000\nrounds=\n3\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 0,
+      "checker_stdout": "",
+      "checker_stderr": "check_ns=\n8593716\nPASS certified serial witnesses empty-set costs\nstates=\n2593\nedges=\n16002\nwinning=\n1000\nrounds=\n3\narray_bytes=\n28517\ndistinct_hidden_states=\n840\ndistinct_hidden_edges=\n12600\nidentical_zero_states=\n200\nidentical_zero_edges=\n2484\nPASS SC1-G-v3 finite model only\n",
+      "expected_checker_exit": 0
+    },
+    {
+      "solver": "solve1",
+      "solver_exit": 0,
+      "corpus_sha256": "7bfdd3e335b78f14432db0a1b998090bd01bd5bb9a276fced79aa830988d28c6",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n2029956\nsolve_ns=\n1235692\nstates=\n2593\nedges=\n16002\nwinning=\n1020\nrounds=\n2\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 71,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n15\n6\n4\n2592\n2592\nFAIL CLOSURE\nFAIL QUANTIFIER_CLOSURE\n",
+      "expected_checker_exit": 71
+    },
+    {
+      "solver": "solve2",
+      "solver_exit": 0,
+      "corpus_sha256": "a743520c0fcfafcce6ce6e9a65a16632825168df6f00115f08079a41324a00ba",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n1666784\nsolve_ns=\n300227\nstates=\n2593\nedges=\n16002\nwinning=\n1020\nrounds=\n2\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 72,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n15\n6\n4\n2592\n2592\nFAIL CLOSURE\nFAIL OMITTED_DISTURBANCE_CLOSURE\n",
+      "expected_checker_exit": 72
+    },
+    {
+      "solver": "solve3",
+      "solver_exit": 0,
+      "corpus_sha256": "2b9c6199ae0c497474af98c32e055a9b7ed658e405a7ffde93993f05365ea67b",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n1974707\nsolve_ns=\n653639\nstates=\n2593\nedges=\n16002\nwinning=\n1000\nrounds=\n3\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 73,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n7\n6\n3\n335\n2592\nFAIL FRESHNESS_AT_RENAME\n",
+      "expected_checker_exit": 73
+    },
+    {
+      "solver": "solve4",
+      "solver_exit": 0,
+      "corpus_sha256": "a6ea5601aeaefcf7552c2c4c827db00f571c01183bbf1b1c85a4b4b86bb4706a",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n1461967\nsolve_ns=\n367987\nstates=\n2593\nedges=\n16002\nwinning=\n960\nrounds=\n3\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 74,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n11\n7\n6\n17\n2592\nFAIL UNCERTAIN_REFUND\n",
+      "expected_checker_exit": 74
+    },
+    {
+      "solver": "solve5",
+      "solver_exit": 0,
+      "corpus_sha256": "9b62d69b1189021b68817f2ce261b27702504ff9120901b6b5cf20b8a8898388",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n1888467\nsolve_ns=\n671782\nstates=\n2593\nedges=\n16002\nwinning=\n1000\nrounds=\n3\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 75,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n3\n9\n9\n9\n40\nFAIL SELECTED_NOT_SAFE\n",
+      "expected_checker_exit": 75
+    },
+    {
+      "solver": "solve6",
+      "solver_exit": 0,
+      "corpus_sha256": "443756cc11400f7c5b5a3a7f0244f5e86f7163b1305a1967dfed775aa8e9402c",
+      "corpus_bytes": 95140,
+      "solver_stderr": "construct_ns=\n1216300\nsolve_ns=\n247571\nstates=\n2593\nedges=\n16002\nwinning=\n1010\nrounds=\n1\narray_bytes=\n1721554\n",
+      "checker": "check0",
+      "checker_exit": 76,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n16\n9\n0\n15\n15\nFAIL CLOSURE\nFAIL EARLY_STOP_CLOSURE\n",
+      "expected_checker_exit": 76
+    },
+    {
+      "checker": "check8",
+      "corpus_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "checker_exit": 78,
+      "checker_stdout": "",
+      "checker_stderr": "WITNESS source action disturbance raw effective\n20\n18\n9\n3096\n2072\nFAIL PAIRED_PRODUCT\n",
+      "expected_checker_exit": 78
+    }
+  ],
+  "measurements": [
+    {
+      "name": "solve0",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve0",
+        "7"
+      ],
+      "cwd": "clean repository root",
+      "exit": 0,
+      "stdin_sha256": null,
+      "stdout_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "stdout_bytes": 95140,
+      "stdout": null,
+      "stderr": "sample_ns=\n2560025\nsample_ns=\n2099189\nsample_ns=\n2105924\nsample_ns=\n2087396\nsample_ns=\n2082901\nsample_ns=\n2084308\nsample_ns=\n2077924\nsample_ns=\n2094117\nsample_ns=\n2077396\nsample_ns=\n2081620\nsample_ns=\n2077636\nsample_ns=\n2078836\nsample_ns=\n2152437\nsample_ns=\n1292397\nsample_ns=\n1249772\nsample_ns=\n1242460\nsample_ns=\n1238476\nsample_ns=\n1238892\nsample_ns=\n1239548\nsample_ns=\n1239564\nsample_ns=\n1245853\nsample_ns=\n1234860\nsample_ns=\n1235675\nsample_ns=\n1235709\nsample_ns=\n1238812\nsample_ns=\n1234844\nsample_ns=\n1234556\nsample_ns=\n1239868\nsample_ns=\n1239852\nsample_ns=\n1235404\nsample_ns=\n1234060\nsample_ns=\n1234332\nsample_ns=\n1238476\nsample_ns=\n1234252\nsample_ns=\n1235868\nsample_ns=\n1235084\nsample_ns=\n1238204\nsample_ns=\n1249676\nsample_ns=\n1240252\nsample_ns=\n1234492\nsample_ns=\n1236508\nsample_ns=\n1234972\nsample_ns=\n1236012\nsample_ns=\n1235996\nsample_ns=\n1234428\nsample_ns=\n1238700\nsample_ns=\n1236028\nsample_ns=\n1235148\nsample_ns=\n1236748\nsample_ns=\n1238092\nsample_ns=\n1234812\nsample_ns=\n1234812\nsample_ns=\n1246221\nsample_ns=\n1254604\nsample_ns=\n1237932\nsample_ns=\n1240684\nsample_ns=\n1250732\nsample_ns=\n1248220\nsample_ns=\n1247068\nsample_ns=\n1243900\nsample_ns=\n1238652\nsample_ns=\n1238732\nsample_ns=\n1235980\nsample_ns=\n1233436\nsample_ns=\n1234732\nsample_ns=\n1234684\nsample_ns=\n1236429\nsample_ns=\n1235068\nsample_ns=\n1235628\nsample_ns=\n1232556\nsample_ns=\n1235708\nsample_ns=\n1233388\nsample_ns=\n1234460\nsample_ns=\n1234652\nsample_ns=\n1236428\nsample_ns=\n1233948\nsample_ns=\n1233756\nsample_ns=\n1234284\nsample_ns=\n1239164\nsample_ns=\n1237020\nsample_ns=\n1236700\nsample_ns=\n1234972\nsample_ns=\n1234892\nsample_ns=\n1237756\nsample_ns=\n1233500\nsample_ns=\n1232204\nsample_ns=\n1231580\nsample_ns=\n1236300\nsample_ns=\n1234252\nsample_ns=\n1234092\nsample_ns=\n1232508\nsample_ns=\n1234988\nsample_ns=\n1236732\nsample_ns=\n1236588\nsample_ns=\n1235020\nsample_ns=\n1239388\nsample_ns=\n1236332\nsample_ns=\n1255164\nsample_ns=\n1253116\nsample_ns=\n1251181\nsample_ns=\n1238475\np50_ns=\n1236700\np95_ns=\n2087396\np99_ns=\n2152437\n\tCommand being timed: \"build/security760-v3/solve0 7\"\n\tUser time (seconds): 0.13\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.13\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1120\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 321\n\tVoluntary context switches: 1\n\tInvoluntary context switches: 1\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "name": "check0",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0",
+        "7"
+      ],
+      "cwd": "clean repository root",
+      "exit": 90,
+      "stdin_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stdout": "",
+      "stderr": "check_ns=\n8629235\nPASS certified serial witnesses empty-set costs\nstates=\n2593\nedges=\n16002\nwinning=\n1000\nrounds=\n3\narray_bytes=\n28517\ndistinct_hidden_states=\n840\ndistinct_hidden_edges=\n12600\nidentical_zero_states=\n200\nidentical_zero_edges=\n2484\nCommand exited with non-zero status 90\n\tCommand being timed: \"build/security760-v3/check0 7\"\n\tUser time (seconds): 0.00\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 100%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.00\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 192\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21\n\tVoluntary context switches: 0\n\tInvoluntary context switches: 0\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 90\n",
+      "qualification": "INVALID benchmark setup: subprocess input used a pipe; check.om:712 requires seekable stdin for101 rereads. Not a checker negative control."
+    },
+    {
+      "name": "roundtrip",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/roundtrip"
+      ],
+      "cwd": "clean repository root",
+      "exit": 0,
+      "stdin_sha256": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stdout": "",
+      "stderr": "sample_ns=\n13938024\nsample_ns=\n13985976\nsample_ns=\n8670724\nsample_ns=\n12934718\nsample_ns=\n12953214\nsample_ns=\n13935208\nsample_ns=\n9624685\nsample_ns=\n13832679\nsample_ns=\n13934967\nsample_ns=\n10912666\nsample_ns=\n12800525\nsample_ns=\n13935463\nsample_ns=\n10712409\nsample_ns=\n9728494\nsample_ns=\n14178586\nsample_ns=\n12877133\nsample_ns=\n14031785\nsample_ns=\n9677630\nsample_ns=\n7596650\nsample_ns=\n13937543\nsample_ns=\n9651838\nsample_ns=\n9602350\nsample_ns=\n8596899\nsample_ns=\n8569347\nsample_ns=\n11744019\nsample_ns=\n18013407\nsample_ns=\n10618119\nsample_ns=\n8509123\nsample_ns=\n8527891\nsample_ns=\n12777772\nsample_ns=\n13813574\nsample_ns=\n13841175\nsample_ns=\n9578333\nsample_ns=\n13780854\nsample_ns=\n14117226\nsample_ns=\n14040872\nsample_ns=\n12852173\nsample_ns=\n14021496\nsample_ns=\n8771510\nsample_ns=\n7652986\nsample_ns=\n13922696\nsample_ns=\n9716862\nsample_ns=\n7499353\nsample_ns=\n13982792\nsample_ns=\n9803551\nsample_ns=\n9749215\nsample_ns=\n13937752\nsample_ns=\n11878723\nsample_ns=\n8582948\nsample_ns=\n13471379\nsample_ns=\n13946839\nsample_ns=\n13956360\nsample_ns=\n13948504\nsample_ns=\n12881197\nsample_ns=\n14026248\nsample_ns=\n9793744\nsample_ns=\n9754590\nsample_ns=\n8699557\nsample_ns=\n13943528\nsample_ns=\n13893095\nsample_ns=\n14055945\nsample_ns=\n14005896\nsample_ns=\n14014888\nsample_ns=\n13964136\nsample_ns=\n13922839\nsample_ns=\n13981800\nsample_ns=\n8681813\nsample_ns=\n12878973\nsample_ns=\n9809423\nsample_ns=\n11661314\nsample_ns=\n12920365\nsample_ns=\n13992552\nsample_ns=\n9601918\nsample_ns=\n9536861\nsample_ns=\n12795836\nsample_ns=\n13874711\nsample_ns=\n13819750\nsample_ns=\n9635326\nsample_ns=\n8561859\nsample_ns=\n11687778\nsample_ns=\n8521699\nsample_ns=\n9603901\nsample_ns=\n8501123\nsample_ns=\n8558419\nsample_ns=\n13761446\nsample_ns=\n8527011\nsample_ns=\n8520131\nsample_ns=\n13734373\nsample_ns=\n13735958\nsample_ns=\n7481129\nsample_ns=\n11800066\nsample_ns=\n9659278\nsample_ns=\n13808646\nsample_ns=\n13852343\nsample_ns=\n13866855\nsample_ns=\n8746309\nsample_ns=\n7725755\nsample_ns=\n9803600\nsample_ns=\n9862927\nsample_ns=\n7633467\nsample_ns=\n8734469\np50_ns=\n12777772\np95_ns=\n14031785\np99_ns=\n14178586\nPASS SC1-G-v3 finite model only\n\tCommand being timed: \"build/security760-v3/roundtrip\"\n\tUser time (seconds): 0.91\n\tSystem time (seconds): 0.13\n\tPercent of CPU this job got: 90%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.17\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1120\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 33372\n\tVoluntary context switches: 1293\n\tInvoluntary context switches: 61\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 192\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "name": "check0-regular-file-stdin",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0",
+        "7"
+      ],
+      "cwd": "clean repository root",
+      "stdin_file": "build/security760-v3/candidate0.bin",
+      "stdin_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "exit": 0,
+      "stdout": "",
+      "stderr": "check_ns=\n8675556\nPASS certified serial witnesses empty-set costs\nstates=\n2593\nedges=\n16002\nwinning=\n1000\nrounds=\n3\narray_bytes=\n28517\ndistinct_hidden_states=\n840\ndistinct_hidden_edges=\n12600\nidentical_zero_states=\n200\nidentical_zero_edges=\n2484\nsample_ns=\n8497922\nsample_ns=\n8429282\nsample_ns=\n5961002\nsample_ns=\n4970352\nsample_ns=\n4910208\nsample_ns=\n4904095\nsample_ns=\n4895280\nsample_ns=\n4886943\nsample_ns=\n4908528\nsample_ns=\n4885727\nsample_ns=\n4882096\nsample_ns=\n4887055\nsample_ns=\n4887344\nsample_ns=\n4881279\nsample_ns=\n4882127\nsample_ns=\n4875696\nsample_ns=\n4878159\nsample_ns=\n4874895\nsample_ns=\n4870735\nsample_ns=\n4873328\nsample_ns=\n4866127\nsample_ns=\n4873407\nsample_ns=\n4869824\nsample_ns=\n4874863\nsample_ns=\n4872719\nsample_ns=\n4872975\nsample_ns=\n4868608\nsample_ns=\n4870655\nsample_ns=\n4870783\nsample_ns=\n4873792\nsample_ns=\n4873023\nsample_ns=\n4872687\nsample_ns=\n4869935\nsample_ns=\n4875872\nsample_ns=\n4868527\nsample_ns=\n4867375\nsample_ns=\n4867631\nsample_ns=\n4869872\nsample_ns=\n4871615\nsample_ns=\n4872687\nsample_ns=\n4870960\nsample_ns=\n4873391\nsample_ns=\n4874335\nsample_ns=\n4871631\nsample_ns=\n4874752\nsample_ns=\n4872815\nsample_ns=\n4875935\nsample_ns=\n4877280\nsample_ns=\n4872287\nsample_ns=\n4867855\nsample_ns=\n4876672\nsample_ns=\n4873519\nsample_ns=\n4865359\nsample_ns=\n4868687\nsample_ns=\n4865263\nsample_ns=\n4864944\nsample_ns=\n4865423\nsample_ns=\n4865055\nsample_ns=\n4870207\nsample_ns=\n4867664\nsample_ns=\n4872047\nsample_ns=\n4869455\nsample_ns=\n4870543\nsample_ns=\n4870784\nsample_ns=\n4872015\nsample_ns=\n4868447\nsample_ns=\n4871263\nsample_ns=\n4872832\nsample_ns=\n4870943\nsample_ns=\n4872431\nsample_ns=\n4866111\nsample_ns=\n4865328\nsample_ns=\n4863983\nsample_ns=\n4868943\nsample_ns=\n4871839\nsample_ns=\n4865296\nsample_ns=\n4865935\nsample_ns=\n4870063\nsample_ns=\n4868607\nsample_ns=\n4870752\nsample_ns=\n4883039\nsample_ns=\n4874319\nsample_ns=\n4871904\nsample_ns=\n4869055\nsample_ns=\n4868783\nsample_ns=\n4869439\nsample_ns=\n4866624\nsample_ns=\n4866623\nsample_ns=\n4861215\nsample_ns=\n4866271\nsample_ns=\n4869455\nsample_ns=\n4868880\nsample_ns=\n4865599\nsample_ns=\n4868863\nsample_ns=\n4868511\nsample_ns=\n4879040\nsample_ns=\n4870559\nsample_ns=\n4872975\nsample_ns=\n4874960\nsample_ns=\n4869359\nsample_ns=\n4873695\np50_ns=\n4871615\np95_ns=\n4908528\np99_ns=\n8429282\nPASS SC1-G-v3 finite model only\n\tCommand being timed: \"build/security760-v3/check0 7\"\n\tUser time (seconds): 0.50\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.51\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 192\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22\n\tVoluntary context switches: 1\n\tInvoluntary context switches: 4\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    }
+  ],
+  "limits": [
+    "Finite offline model; synthetic costs; no real authority/store/scheduler adoption",
+    "Shared compiler lineage; no formal or diverse-compiler proof",
+    "Native host timing with uncontrolled load; no secrecy or service-throughput claim",
+    "No emulated/GPU or power-loss result"
+  ]
+}

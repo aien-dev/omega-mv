@@ -1,0 +1,231 @@
+note SC1-G transport only. No transition or invariant code is shared.
+global wire uchar 4096
+global pos ulong 1
+global avail ulong 1
+global digits uchar 32
+global samples ulong 101
+text nl "\n"
+text sp " "
+text tags "construct_ns=\nsolve_ns=\ncheck_ns=\nstates=\nedges=\nwinning=\nrounds=\narray_bytes=\nPASS SC1-G-v3 finite model only\nFAIL QUANTIFIER_CLOSURE\nFAIL OMITTED_DISTURBANCE_CLOSURE\nFAIL FRESHNESS_AT_RENAME\nFAIL UNCERTAIN_REFUND\nFAIL SELECTED_NOT_SAFE\nFAIL EARLY_STOP_CLOSURE\nFAIL CERTIFICATE\nPASS certified serial witnesses empty-set costs\nFAIL PAIRED_PRODUCT\ndistinct_hidden_states=\ndistinct_hidden_edges=\nsample_ns=\np50_ns=\np95_ns=\np99_ns=\nidentical_zero_states=\nidentical_zero_edges=\nWITNESS source action disturbance raw effective\nFAIL TRANSITION_CONFORMANCE\nFAIL CLOSURE\nFAIL SOURCE_INVARIANT\nFAIL DISABLED_ACTION\nFAIL EXACTNESS\nFAIL SELECTION_COST\n"
+fn label id uint to void
+p = ulong 0
+n = uint 0
+for j ulong len tags
+if eq get tags j 10
+if eq n id
+r = write 2 tags p add sub j p 1
+if ne r long add sub j p 1
+exit 90
+end
+ret
+end
+n = add n 1
+p = add j 1
+end
+end
+exit 90
+end
+fn number n ulong to void
+p = ulong 0
+while ge n 10 bound 32
+put digits p uchar add rem n 10 48
+n = div n 10
+p = add p 1
+end
+put digits p uchar add n 48
+p = add p 1
+for j ulong p
+r = write 2 digits sub sub p j 1 1
+if ne r 1
+exit 90
+end
+end
+r = write 2 nl 0 1
+if ne r 1
+exit 90
+end
+end
+fn mode to uint
+if eq argcnt 1
+ret 0
+end
+if ne argcnt 2
+exit 90
+end
+if ne argread 1 wire 0 1 1
+exit 90
+end
+m = get wire 0
+if or lt m 48 gt m 56
+exit 90
+end
+ret sub uint m 48
+end
+fn flush to void
+n = get pos 0
+if ne write 1 wire 0 n long n
+exit 90
+end
+put pos 0 0
+end
+fn sendword x uint to void
+for i ulong 4
+p = get pos 0
+put wire p uchar and shr x mul uint i 8 255
+put pos 0 add p 1
+if eq get pos 0 4096
+flush
+end
+end
+end
+fn recvword to uint
+x = uint 0
+for i ulong 4
+if eq get pos 0 get avail 0
+n = read 0 wire 0 len wire
+if le n 0
+exit 90
+end
+put avail 0 ulong n
+put pos 0 0
+end
+p = get pos 0
+x = or x shl uint get wire p mul uint i 8
+put pos 0 add p 1
+end
+ret x
+end
+fn endinput to void
+if ne get pos 0 get avail 0
+exit 90
+end
+if ne read 0 wire 0 len wire 0
+exit 90
+end
+end
+fn percentiles to void
+for i ulong 101
+label 20
+number get samples i
+end
+for i ulong 101
+for j ulong 100
+if gt get samples j get samples add j 1
+t = get samples j
+put samples j get samples add j 1
+put samples add j 1 t
+end
+end
+end
+label 21
+number get samples 50
+label 22
+number get samples 95
+label 23
+number get samples 99
+end
+note Fixed two-child lifecycle measurement using gate669 fork/exec/wait pattern.
+note Not a general runner. Existing compiled solver/checker required; no model code here.
+text solver "build/security760-v3/solve0"
+text checker "build/security760-v3/check0"
+text spool "build/security760-v3/roundtrip.bin"
+text nullpath "/dev/null"
+global argv uchar 256
+global status uchar 4
+fn command c uint to ulong
+put argv 0 1
+put argv 1 0
+n = len solver
+if eq c 1
+n = len checker
+end
+put argv 2 uchar n
+put argv 3 0
+for i ulong n
+if eq c 0
+put argv add i 4 get solver i
+else
+put argv add i 4 get checker i
+end
+end
+ret add n 4
+end
+fn redir fd int dst int to void
+if ne fd dst
+if ne dupfd fd dst 0 long dst
+exit 90
+end
+end
+end
+fn reap pid long to void
+start = monons
+while true bound 60000
+r = waitpid int pid status 0 len status 1
+if eq r pid
+if or ne get status 0 0 ne get status 1 0
+exit 90
+end
+ret
+end
+if or lt r 0 gt sub monons start 30000000000
+r = killpid int pid 9
+r = waitpid int pid status 0 len status 0
+exit 90
+end
+if ne sleepns 1000000 0
+exit 90
+end
+end
+exit 90
+end
+fn child c uint fd int nullfd int to void
+n = command c
+pid = fork
+if lt pid 0
+exit 90
+end
+if eq pid 0
+redir nullfd 2
+if eq c 0
+redir nullfd 0
+redir fd 1
+else
+redir fd 0
+redir nullfd 1
+end
+r = execprog argv 0 n
+exit 90
+end
+reap pid
+end
+fn main to int
+fd = fopen spool 0 len spool 194 384
+if lt fd 0
+ret 90
+end
+nullfd = fopen nullpath 0 len nullpath 2 0
+if lt nullfd 0
+ret 90
+end
+for i ulong 101
+start = monons
+if ne fseek int fd 0 0 0
+ret 90
+end
+child 0 int fd int nullfd
+if ne fseek int fd 0 0 0
+ret 90
+end
+child 1 int fd int nullfd
+put samples i ulong sub monons start
+end
+percentiles
+if ne fclose int fd 0
+ret 90
+end
+if ne fclose int nullfd 0
+ret 90
+end
+label 8
+ret 0
+end

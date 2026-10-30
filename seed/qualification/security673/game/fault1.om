@@ -1,0 +1,4 @@
+note SC1-G-v3 source-fixed experiment 1; no runtime fault selector.
+fn fault to uint
+ret 1
+end

@@ -1,0 +1,21 @@
+SC1-G-v1	initial	0	included
+SC1-G-v1	quantifier	15	locally-valid-losing
+SC1-G-v1	winning-substitute	15	6	4	2592
+SC1-G-v1	winning-revoke	15	7	3	2592
+SC1-G-v1	earlystop	16	removed-after-first-round
+SC1-G-v1	staleepoch	331	6	0	331
+SC1-G-v1	uncertainrefund	11	7	6	11
+SC1-G-v1	capacity-eager	20	10	unavailable
+SC1-G-v1	capacity-serial	32	10	available
+SC1-G-v1	paired-envelope	occupancy1	occupancy2	equal
+SC1-G-v1	cost-evidence	0	refuse
+SC1-G-v1	cost-evidence	2	refuse
+SC1-G-v1	control1	QUANTIFIER	71
+SC1-G-v1	control2	OMITTED_DISTURBANCE	72
+SC1-G-v1	control3	STALE_EPOCH	73
+SC1-G-v1	control4	UNCERTAIN_REFUND	74
+SC1-G-v1	control5	UNSAFE_OPTIMIZER	75
+SC1-G-v1	control6	EARLY_STOP	76
+SC1-G-v1	control8	PAIRED_PRODUCT	78
+SC1-G-v1	paired-product	20	hidden1/hidden2	equal-protected-mask
+SC1-G-v1	paired-baseline	20	hidden1/hidden2	distinct-occupancy-mask

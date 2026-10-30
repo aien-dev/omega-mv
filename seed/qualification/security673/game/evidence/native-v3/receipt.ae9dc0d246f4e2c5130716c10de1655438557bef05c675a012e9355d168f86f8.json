@@ -1,0 +1,698 @@
+{
+  "builds": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "5a176142889eb90b286410aa8e4c424045dbf8c1594538204abc46b7c48192fa",
+      "exit": 0,
+      "name": "solve0",
+      "source_sha256": "c21eb7c5dd35f5a191e4cc4d42862d0a77e64f74f521f82991d9cc7e529f6550",
+      "stderr": "solve0.attempt1.compile.log",
+      "stdin": "solve0.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve0"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 0,
+      "name": "check0",
+      "source_sha256": "bbbd782c171dea89cbdf65258ec6d33f6d881459534b73a933e91092b03aefa1",
+      "stderr": "check0.attempt1.compile.log",
+      "stdin": "check0.attempt1.om",
+      "stdout_artifact": "build/security760-v3/check0"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "d36ca78deda8acdd30c27455543d0b1d7b87f6cbef4f3ec6bec60793d5e105ac",
+      "exit": 0,
+      "name": "roundtrip",
+      "source_sha256": "a5ee4052ee107cd492ca20c63918bce61ea8a9d4bcd966bce70566d98fc6cd7e",
+      "stderr": "roundtrip.attempt1.compile.log",
+      "stdin": "roundtrip.attempt1.om",
+      "stdout_artifact": "build/security760-v3/roundtrip"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "b13b7a551cbd7731b30e3ae63ba39b37d60b78b395c09363fd1756fb01efe061",
+      "exit": 0,
+      "name": "solve1",
+      "source_sha256": "544c5f0bc16f4c47dd131ed0f55c98130d0b1098d187679d9e814a455504c11d",
+      "stderr": "solve1.attempt1.compile.log",
+      "stdin": "solve1.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve1"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "ad565945599af1d40a2e5979f0de004c6602df04df84b7b1d1f106c79a2a3110",
+      "exit": 0,
+      "name": "solve2",
+      "source_sha256": "6af2a186cdcf91d3651fd20812496e246d9b41201bcfd11e63fa28047c21cad9",
+      "stderr": "solve2.attempt1.compile.log",
+      "stdin": "solve2.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve2"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "56a61629ddfe14356352cd2f1bb8fbfacc17a433364253e7a623f8db68188496",
+      "exit": 0,
+      "name": "solve3",
+      "source_sha256": "d7af7ddd45d34d9314787ede372a80d41e1b03f1b56f6be3fe902a7f5668dcb6",
+      "stderr": "solve3.attempt1.compile.log",
+      "stdin": "solve3.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve3"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "e261588e87728293f48cc9a29cb661209624245c675663c0a430738a9f4a2a85",
+      "exit": 0,
+      "name": "solve4",
+      "source_sha256": "53ca282b2fb8fb263c88c1765213ef8d4d091c26e1577e271b550961dbcef8b5",
+      "stderr": "solve4.attempt1.compile.log",
+      "stdin": "solve4.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve4"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "492e2b45ee778233aaab558ed2662b18590da74d861e0a00b81427b82c649ce6",
+      "exit": 0,
+      "name": "solve5",
+      "source_sha256": "0119a93749371ba9639c31b896bb6bfaf529714733b3b911c61fa95ab275367c",
+      "stderr": "solve5.attempt1.compile.log",
+      "stdin": "solve5.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve5"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "b42a993d48489632edff4693a2900abbc7f02df7f463a4ca427524fbac4abcfb",
+      "exit": 0,
+      "name": "solve6",
+      "source_sha256": "e36e3cb2a5e744b28af752c7908730d9d3748211580700b43d294bd08f1eef68",
+      "stderr": "solve6.attempt1.compile.log",
+      "stdin": "solve6.attempt1.om",
+      "stdout_artifact": "build/security760-v3/solve6"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "attempt": 1,
+      "executable_sha256": "29bffff73d5046693653b0f6b90e5cdd664a17f2990be321de12ca6cd7f009ca",
+      "exit": 0,
+      "name": "check8",
+      "source_sha256": "a3fab44b7353a0728c38457f071d124fdfbcab880e3fca081940f0313ab29672",
+      "stderr": "check8.attempt1.compile.log",
+      "stdin": "check8.attempt1.om",
+      "stdout_artifact": "build/security760-v3/check8"
+    }
+  ],
+  "claims": {
+    "GPU": "NOT_RUN",
+    "actual_omnet_policy_correspondence": "BLOCKED",
+    "actual_scheduler_correspondence": "BLOCKED",
+    "diverse_compilation": "NOT_CLAIMED shared seed lineage",
+    "emulated_execution": "NOT_RUN",
+    "finite_model": "PASS modeled monitor/conformance/closure/exactness/selection/product",
+    "formal_proof": "NOT_CLAIMED",
+    "independent_final_source_review": "PENDING parent",
+    "native_execution": "PASS Linux AArch64",
+    "power_loss": "NOT_RUN",
+    "source_fixed_controls": "PASS seven distinct negative variants; witness assertions and exits recorded"
+  },
+  "compiler_binary_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "compiler_source_sha256": "2e35db7d6c2066fb4a20d19b8a9579c44caca9c9937b0594a89422010b673637",
+  "freeze_comment": "https://github.com/aien-dev/omega-mv/issues/760#issuecomment-6402892635",
+  "freeze_commit": "028fc3afb",
+  "governing_SC1_sha256": "ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496",
+  "historical_disclosure": "Prior v1/v2 experiment was reviewed incorrect; claims not inherited. Original f5a038d26bfa65b519038a5882cece3b7b7612a0fbf83017a5e5b1d45afdd057 model recovered and SHA-verified; hidden-label post-run amendment disclosed in MODEL-v3. Historical evidence unchanged.",
+  "measurements": {
+    "check-bench": {
+      "iterations_per_second": 204.44655839936692,
+      "p50_ns": 4882131,
+      "p95_ns": 4924708,
+      "p99_ns": 4985604,
+      "samples": 101,
+      "sum_ns": 494016631
+    },
+    "roundtrip": {
+      "iterations_per_second": 91.72597844770992,
+      "p50_ns": 9919016,
+      "p95_ns": 14000035,
+      "p99_ns": 14094804,
+      "samples": 101,
+      "sum_ns": 1101105725
+    },
+    "solve-bench": {
+      "iterations_per_second": 804.1238144308983,
+      "p50_ns": 1238365,
+      "p95_ns": 1253597,
+      "p99_ns": 1263309,
+      "samples": 101,
+      "sum_ns": 125602548
+    }
+  },
+  "profile": "SC1-G-v3 offline finite experiment",
+  "raw_artifacts_sha256": {
+    "candidate0.bin": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+    "candidate1.bin": "7bfdd3e335b78f14432db0a1b998090bd01bd5bb9a276fced79aa830988d28c6",
+    "candidate2.bin": "a743520c0fcfafcce6ce6e9a65a16632825168df6f00115f08079a41324a00ba",
+    "candidate3.bin": "2b9c6199ae0c497474af98c32e055a9b7ed658e405a7ffde93993f05365ea67b",
+    "candidate4.bin": "a6ea5601aeaefcf7552c2c4c827db00f571c01183bbf1b1c85a4b4b86bb4706a",
+    "candidate5.bin": "9b62d69b1189021b68817f2ce261b27702504ff9120901b6b5cf20b8a8898388",
+    "candidate6.bin": "443756cc11400f7c5b5a3a7f0244f5e86f7163b1305a1967dfed775aa8e9402c",
+    "check-bench.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "check-bench.log": "9a7a460c9210241562b4e73fa1da646c721aa9728de890a1967ec911adb95b08",
+    "check0.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "check0.attempt1.om": "bbbd782c171dea89cbdf65258ec6d33f6d881459534b73a933e91092b03aefa1",
+    "check0.log": "73d4f2c81f541cbfda0fc248f2f279920e5d3887d6f97dec16542feb36283f61",
+    "check0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "check8.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "check8.attempt1.om": "a3fab44b7353a0728c38457f071d124fdfbcab880e3fca081940f0313ab29672",
+    "control1.log": "7d346622b5070a3ac38a711f85125ba8fc0ee443f6806129424a5fe82d9bf0b3",
+    "control1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control2.log": "dfae67a5a1980f66b08e26453eb33f782226a3f491040478db92c83620f753c5",
+    "control2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control3.log": "6cc2202a3116b62680d667fe6ed3a3cd105f0885fec5f427a7f7bb5891e15963",
+    "control3.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control4.log": "5802c73df731895ba1a56fb63cd357b33d1f990ffe15a24e90f9b668b4f23253",
+    "control4.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control5.log": "8254ef03d27c9d29358d6a5d772e5863fc07a40a5feb2cd4b1ada8d81c3c7b78",
+    "control5.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control6.log": "c027a2d446b5f8f8877514bef92e6447591b95c55ca2fa5297aca27e90c76784",
+    "control6.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control8.log": "f1aaafc3a9a9a5b53d7910456acf57bf227da0493d368d33ea5ddf40dd458d84",
+    "control8.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "roundtrip.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "roundtrip.attempt1.om": "a5ee4052ee107cd492ca20c63918bce61ea8a9d4bcd966bce70566d98fc6cd7e",
+    "roundtrip.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "roundtrip.log": "a1e07b79d30164c77c3a37de15ba6748527ea0e950781b0982683b10911ca370",
+    "solve-bench.bin": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+    "solve-bench.log": "9c3b0093ef66c5acf0aa36f88dc5643446b1e19529e4d5fe1e01a2bda1556444",
+    "solve0.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve0.attempt1.om": "c21eb7c5dd35f5a191e4cc4d42862d0a77e64f74f521f82991d9cc7e529f6550",
+    "solve0.log": "f91aa491e816f2e1172772ed1b6b56a632cc0fa2ffac2970669d1a33b702017b",
+    "solve1.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve1.attempt1.om": "544c5f0bc16f4c47dd131ed0f55c98130d0b1098d187679d9e814a455504c11d",
+    "solve1.log": "6ad57c41b39d0e7cf7838d4c2003ccf03123a6a7025606c3f4ad3e59db5dfc66",
+    "solve2.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve2.attempt1.om": "6af2a186cdcf91d3651fd20812496e246d9b41201bcfd11e63fa28047c21cad9",
+    "solve2.log": "7ef51afc7d3a53e54031a034a4465654138161f240ab091eede177888fbc9570",
+    "solve3.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve3.attempt1.om": "d7af7ddd45d34d9314787ede372a80d41e1b03f1b56f6be3fe902a7f5668dcb6",
+    "solve3.log": "b9f4e17e33f3fd05319e33cee2a306daa50427a905f29b71be42d33fdb1840ea",
+    "solve4.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve4.attempt1.om": "53ca282b2fb8fb263c88c1765213ef8d4d091c26e1577e271b550961dbcef8b5",
+    "solve4.log": "b0fba2659c1c60fbee769c4c0a75a21014c3e28fd008ffebf533a41b83c80527",
+    "solve5.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve5.attempt1.om": "0119a93749371ba9639c31b896bb6bfaf529714733b3b911c61fa95ab275367c",
+    "solve5.log": "4ed764ce46b1b0b8bcc078620450ae4aaa3c27de2d405c5d9df6543084f67df5",
+    "solve6.attempt1.compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "solve6.attempt1.om": "e36e3cb2a5e744b28af752c7908730d9d3748211580700b43d294bd08f1eef68",
+    "solve6.log": "cefdaa7edae53a107cdec21d4c4358b97bad93576509e1b0f66cdd7c54b2cb8c"
+  },
+  "results": {
+    "checker_passes": 3,
+    "corpus_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+    "distinct_hidden_certified_edges": 12600,
+    "distinct_hidden_representatives": 840,
+    "identical_zero_certified_edges": 2484,
+    "identical_zero_representatives": 200,
+    "labeled_raw_edges": 16002,
+    "locally_invariant": 1040,
+    "ranking_checked": "every winning state",
+    "serial_witness_checked": "every action certificate member and every successor retained",
+    "solver_passes": 3,
+    "universe": 2593,
+    "winning": 1000
+  },
+  "roundtrip_children": {
+    "checker_argv": [
+      "build/security760-v3/check0"
+    ],
+    "deadline_per_child_ns": 30000000000,
+    "diagnostics": "child logs suppressed during measurement only; positive/control logs retained separately",
+    "final_spool_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+    "iterations": 101,
+    "solver_argv": [
+      "build/security760-v3/solve0"
+    ],
+    "spool": "build/security760-v3/roundtrip.bin",
+    "wait_poll_ns": 1000000
+  },
+  "runs": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "5a176142889eb90b286410aa8e4c424045dbf8c1594538204abc46b7c48192fa",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve0",
+      "stderr": "solve0.log",
+      "stderr_sha256": "f91aa491e816f2e1172772ed1b6b56a632cc0fa2ffac2970669d1a33b702017b",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate0.bin",
+      "stdout_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "check0",
+      "stderr": "check0.log",
+      "stderr_sha256": "73d4f2c81f541cbfda0fc248f2f279920e5d3887d6f97dec16542feb36283f61",
+      "stdin": "candidate0.bin",
+      "stdin_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "stdout": "check0.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve1"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "b13b7a551cbd7731b30e3ae63ba39b37d60b78b395c09363fd1756fb01efe061",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve1",
+      "stderr": "solve1.log",
+      "stderr_sha256": "6ad57c41b39d0e7cf7838d4c2003ccf03123a6a7025606c3f4ad3e59db5dfc66",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate1.bin",
+      "stdout_sha256": "7bfdd3e335b78f14432db0a1b998090bd01bd5bb9a276fced79aa830988d28c6"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 71,
+      "expected_exit": 71,
+      "name": "control1",
+      "stderr": "control1.log",
+      "stderr_sha256": "7d346622b5070a3ac38a711f85125ba8fc0ee443f6806129424a5fe82d9bf0b3",
+      "stdin": "candidate1.bin",
+      "stdin_sha256": "7bfdd3e335b78f14432db0a1b998090bd01bd5bb9a276fced79aa830988d28c6",
+      "stdout": "control1.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve2"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "ad565945599af1d40a2e5979f0de004c6602df04df84b7b1d1f106c79a2a3110",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve2",
+      "stderr": "solve2.log",
+      "stderr_sha256": "7ef51afc7d3a53e54031a034a4465654138161f240ab091eede177888fbc9570",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate2.bin",
+      "stdout_sha256": "a743520c0fcfafcce6ce6e9a65a16632825168df6f00115f08079a41324a00ba"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 72,
+      "expected_exit": 72,
+      "name": "control2",
+      "stderr": "control2.log",
+      "stderr_sha256": "dfae67a5a1980f66b08e26453eb33f782226a3f491040478db92c83620f753c5",
+      "stdin": "candidate2.bin",
+      "stdin_sha256": "a743520c0fcfafcce6ce6e9a65a16632825168df6f00115f08079a41324a00ba",
+      "stdout": "control2.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve3"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "56a61629ddfe14356352cd2f1bb8fbfacc17a433364253e7a623f8db68188496",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve3",
+      "stderr": "solve3.log",
+      "stderr_sha256": "b9f4e17e33f3fd05319e33cee2a306daa50427a905f29b71be42d33fdb1840ea",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate3.bin",
+      "stdout_sha256": "2b9c6199ae0c497474af98c32e055a9b7ed658e405a7ffde93993f05365ea67b"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 73,
+      "expected_exit": 73,
+      "name": "control3",
+      "stderr": "control3.log",
+      "stderr_sha256": "6cc2202a3116b62680d667fe6ed3a3cd105f0885fec5f427a7f7bb5891e15963",
+      "stdin": "candidate3.bin",
+      "stdin_sha256": "2b9c6199ae0c497474af98c32e055a9b7ed658e405a7ffde93993f05365ea67b",
+      "stdout": "control3.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve4"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "e261588e87728293f48cc9a29cb661209624245c675663c0a430738a9f4a2a85",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve4",
+      "stderr": "solve4.log",
+      "stderr_sha256": "b0fba2659c1c60fbee769c4c0a75a21014c3e28fd008ffebf533a41b83c80527",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate4.bin",
+      "stdout_sha256": "a6ea5601aeaefcf7552c2c4c827db00f571c01183bbf1b1c85a4b4b86bb4706a"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 74,
+      "expected_exit": 74,
+      "name": "control4",
+      "stderr": "control4.log",
+      "stderr_sha256": "5802c73df731895ba1a56fb63cd357b33d1f990ffe15a24e90f9b668b4f23253",
+      "stdin": "candidate4.bin",
+      "stdin_sha256": "a6ea5601aeaefcf7552c2c4c827db00f571c01183bbf1b1c85a4b4b86bb4706a",
+      "stdout": "control4.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve5"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "492e2b45ee778233aaab558ed2662b18590da74d861e0a00b81427b82c649ce6",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve5",
+      "stderr": "solve5.log",
+      "stderr_sha256": "4ed764ce46b1b0b8bcc078620450ae4aaa3c27de2d405c5d9df6543084f67df5",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate5.bin",
+      "stdout_sha256": "9b62d69b1189021b68817f2ce261b27702504ff9120901b6b5cf20b8a8898388"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 75,
+      "expected_exit": 75,
+      "name": "control5",
+      "stderr": "control5.log",
+      "stderr_sha256": "8254ef03d27c9d29358d6a5d772e5863fc07a40a5feb2cd4b1ada8d81c3c7b78",
+      "stdin": "candidate5.bin",
+      "stdin_sha256": "9b62d69b1189021b68817f2ce261b27702504ff9120901b6b5cf20b8a8898388",
+      "stdout": "control5.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve6"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "b42a993d48489632edff4693a2900abbc7f02df7f463a4ca427524fbac4abcfb",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve6",
+      "stderr": "solve6.log",
+      "stderr_sha256": "cefdaa7edae53a107cdec21d4c4358b97bad93576509e1b0f66cdd7c54b2cb8c",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "candidate6.bin",
+      "stdout_sha256": "443756cc11400f7c5b5a3a7f0244f5e86f7163b1305a1967dfed775aa8e9402c"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 76,
+      "expected_exit": 76,
+      "name": "control6",
+      "stderr": "control6.log",
+      "stderr_sha256": "c027a2d446b5f8f8877514bef92e6447591b95c55ca2fa5297aca27e90c76784",
+      "stdin": "candidate6.bin",
+      "stdin_sha256": "443756cc11400f7c5b5a3a7f0244f5e86f7163b1305a1967dfed775aa8e9402c",
+      "stdout": "control6.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check8"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "29bffff73d5046693653b0f6b90e5cdd664a17f2990be321de12ca6cd7f009ca",
+      "exit": 78,
+      "expected_exit": 78,
+      "name": "control8",
+      "stderr": "control8.log",
+      "stderr_sha256": "f1aaafc3a9a9a5b53d7910456acf57bf227da0493d368d33ea5ddf40dd458d84",
+      "stdin": "candidate0.bin",
+      "stdin_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "stdout": "control8.stdout",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/solve0",
+        "7"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "5a176142889eb90b286410aa8e4c424045dbf8c1594538204abc46b7c48192fa",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "solve-bench",
+      "stderr": "solve-bench.log",
+      "stderr_sha256": "9c3b0093ef66c5acf0aa36f88dc5643446b1e19529e4d5fe1e01a2bda1556444",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "solve-bench.bin",
+      "stdout_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/check0",
+        "7"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "588e81f9d3a1de0ad76e8ae6b072bfc40550fd0687a19582e931e1ee915b29b9",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "check-bench",
+      "stderr": "check-bench.log",
+      "stderr_sha256": "9a7a460c9210241562b4e73fa1da646c721aa9728de890a1967ec911adb95b08",
+      "stdin": "candidate0.bin",
+      "stdin_sha256": "0af558d845653cb5ed94baa94673adc119c00defe118d36b8d63e2382b66e855",
+      "stdout": "check-bench.bin",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "/usr/bin/time",
+        "-v",
+        "build/security760-v3/roundtrip"
+      ],
+      "cwd": "repository root",
+      "executable_sha256": "d36ca78deda8acdd30c27455543d0b1d7b87f6cbef4f3ec6bec60793d5e105ac",
+      "exit": 0,
+      "expected_exit": 0,
+      "name": "roundtrip",
+      "stderr": "roundtrip.log",
+      "stderr_sha256": "a1e07b79d30164c77c3a37de15ba6748527ea0e950781b0982683b10911ca370",
+      "stdin": null,
+      "stdin_sha256": null,
+      "stdout": "roundtrip.bin",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source_commit": "8554be4ddb0b436260cc7e051e156f1893a3e7b9",
+  "sources_sha256": {
+    "MODEL-v3.md": "fa062dba15b5b7cccacfa4a5ea4b670d15b9a8c9e764b68b6e53b70dabd0eb19",
+    "README.md": "846a6eaeff5be28dcf008292ee8e531c8b363dd8e8913ec36657fed19024fc00",
+    "check.om": "386ba1c14279350f78791d876d1aeeb855bfa8a173f87c4259f8bf01fa461075",
+    "fault0.om": "445158f51aa6cf15ed2678a2bb89e4adc6673e342ff5b3ed565f2785cb65a591",
+    "fault1.om": "df6809ad4ac5abad7139d92a9a44b36387e5e149678d0866446c193680c633ad",
+    "fault2.om": "f135a8cc85451e47b7256a7ed9e4d43a2cc7259d1a8990c20fad32465c84bc21",
+    "fault3.om": "8bed7c45ed27ff084dff0da3d3e26a4737c793d1bd77276a7d609513d3f55304",
+    "fault4.om": "74e18842b71c27709d93a714a9207ab81317d722088d53c49d767bbbe7814b17",
+    "fault5.om": "8b4404e0da4840ceb5094f65ec3a2d4d3a1a1ce6391a614fc7766a94191a989d",
+    "fault6.om": "494b91ee6ad6c7a3efe6c8df5097ca5995ced5b216c6bd3aa9c9359dfe52dc01",
+    "fault8.om": "24113f1ce16db9ce81fa8659a7add90a82f7dfe81e8a863928604a97f98b19dc",
+    "fixtures-v3.om": "aa6b10a9e15fe4e9f3224b2a429499b1aa6d9181a246e6b9a1c2afdbf12082e4",
+    "io.om": "590fac7d1db772adeec539552a39f4193dec8dea080a04f386e833f6bb228315",
+    "roundtrip.om": "c3f21c7061c18255d29998e8f4dc4beee45b0d30fbbdda4644ea34b34cf55d8c",
+    "solve.om": "a2466b4a11510041caf617e123ee179d186fab29e5d91281bdcc83a4f6f077ec"
+  },
+  "target": "Linux 7.0.0-1019-nvidia aarch64 GNU/Linux; ELF64 little endian AArch64 Linux ABI"
+}
