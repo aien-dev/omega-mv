@@ -122,7 +122,7 @@
         },
         {
           "digest": "7b69a19958c5a5f55bba4fbc33bc6f26423358efd46311b0eacfe83bb665d4c1",
-          "last_commit": "d863780eb",
+          "last_commit": "450bbefd4",
           "name": "brownian",
           "purpose": "Directory tests/brownian. Purpose not yet described by a human."
         },
@@ -134,7 +134,7 @@
         },
         {
           "digest": "088f526f8cae115209dd0162f28669812483ce5c926e41e8810dada1eefcb81a",
-          "last_commit": "d863780eb",
+          "last_commit": "450bbefd4",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -206,7 +206,7 @@
         },
         {
           "digest": "65e84051bb8dc00b180c6b06bec58103773785eebd6d6c69c9783de5fd0e2ba9",
-          "last_commit": "d863780eb",
+          "last_commit": "450bbefd4",
           "name": "path",
           "purpose": "Directory tests/path. Purpose not yet described by a human."
         },
@@ -266,7 +266,7 @@
         },
         {
           "digest": "10d19641e4bb5b435ec6363d4ea7d3c1596af47d97b86f4de35d6ae57770241e",
-          "last_commit": "d863780eb",
+          "last_commit": "45f7d7691",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -278,7 +278,7 @@
         },
         {
           "digest": "e69616ad471704066a86bf2796776301179eada5c0aa36a7166b9aca788619f4",
-          "last_commit": "",
+          "last_commit": "ed8de5736",
           "name": "synapse",
           "purpose": "J1 parity driver for syn_codec.osc against the sealed Rust A1 corpus (aien-dev/synapse j1-codec-"
         },
@@ -296,20 +296,20 @@
         },
         {
           "digest": "930fcb9ce348c604424e5380796a77c3586a835b43d42b504325c36b12d166d7",
-          "last_commit": "d863780eb",
+          "last_commit": "450bbefd4",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
       "children_root": "sha256:0c57282ff8cf1d34e5685e2729755f2978917e66debb5423961033be9d25c902",
-      "compiled_at": "2026-10-30T02:45:05Z",
+      "compiled_at": "2026-10-30T03:13:21Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:11df9deee64f9abfd332d04899fa7e633fd6b883a4387a360db021fb91e1cc60",
+      "digest": "sha256:13af33e7fd7817c319f01c0b09eff92438fc560f689eae30acb61acc77338bc3",
       "evidence_files": 16,
       "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1374,
-      "generated_at_commit": "7d8e261d1d6bd920029c1e964970e30edbfbbf93",
-      "source_tree": "sha256:4e87775a0b9e495b792b4076490915f350078aed7e5d3f72419387c758b7c1ba"
+      "files": 1376,
+      "generated_at_commit": "9b044b808e9de1e4be8b4ab4f29e840d65caa876",
+      "source_tree": "sha256:1436783b980832139947a90c714aa2bba15540bf4dccc29a52fadf4d165d3238"
     },
     "owner_lane": "",
     "provenance": {
