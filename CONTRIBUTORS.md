@@ -5,6 +5,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Claude Opus 5.5 (via omp) | #857 residual: IR mode refuses a `for` count that is a number or integer constant outside 0..1000000 (a minus sign included) with error 8, the C oracle's count range; before, `for i ulong 1000001` and `const K ulong 1000001` compiled to an unguarded loop checker2 rejects (C2-LOOP-UNBOUNDED) and `for i long -1`/`-0` compiled where the oracle refuses. gate-ir units for both sides; reseed, omc `0d4c722b…a008`. |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |

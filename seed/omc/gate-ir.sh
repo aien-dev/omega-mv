@@ -142,6 +142,55 @@ x = add x uint 1
 end
 ret x
 end'
+# IR count range = the C oracle's (omegese.c for_line, 0..1000000), so an unguarded loop over a number never
+# counts past what checker2 proves: count 1000000 is emitted identical to the oracle and accepted; 1000001 and a
+# minus sign (-1, -0) are refused by both; an integer constant count is held to the same range (error 8).
+printf 'fn f to ulong\ns = ulong 0\nfor i ulong 1000000\ns = add s i\nend\nret s\nend\n' > "$B/fcmax.omegese"
+build/omegese/omegese emit "$B/fcmax.omegese" "$B/fcmax.json" > /dev/null
+build/omega_emit/omega_emit emit "$B/fcmax.json" "$B/fcmax.oracle" > /dev/null
+{ printf 'ir\n'; cat "$B/fcmax.omegese"; } > "$B/fcmax.om"
+timeout 5 "$B/stage2" < "$B/fcmax.om" > "$B/fcmax.ir"
+cmp -s "$B/fcmax.oracle" "$B/fcmax.ir" || fail 'for_count_max differs from the oracle'
+build/checker2/checker2 check "$B/fcmax.ir" > "$B/fcmax.check"
+grep -q '^checker2=ACCEPT ' "$B/fcmax.check" || fail 'for_count_max checker refusal'
+echo 'PASS for_count_max identical; checker2 ACCEPT'
+for v in 1000001 -1 -0; do
+    printf 'fn f to long\ns = long 0\nfor i long %s\ns = add s i\nend\nret s\nend\n' "$v" > "$B/fcbad.omegese"
+    if build/omegese/omegese emit "$B/fcbad.omegese" "$B/fcbad.json" > /dev/null 2>&1; then fail "oracle accepted for count $v"; fi
+done
+ir_refuse for_count_over 8 'ir
+fn f to ulong
+s = ulong 0
+for i ulong 1000001
+s = add s i
+end
+ret s
+end'
+ir_refuse for_count_neg 8 'ir
+fn f to long
+s = long 0
+for i long -1
+s = add s i
+end
+ret s
+end'
+ir_refuse for_count_negzero 8 'ir
+fn f to long
+s = long 0
+for i long -0
+s = add s i
+end
+ret s
+end'
+ir_refuse for_count_const_over 8 'ir
+const K ulong 1000001
+fn f to ulong
+s = ulong 0
+for i ulong K
+s = add s i
+end
+ret s
+end'
 ir_refuse float_const 9 'ir
 const H f64 0.1
 fn f to f64
@@ -535,5 +584,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 28 refusals + 9 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units + 1 guarded for-bound unit + 2 bound-range pairs (1000000 accepted, 1000001 error 8); validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 28 refusals + 9 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units + 1 guarded for-bound unit + 2 bound-range pairs (1000000 accepted, 1000001 error 8) + 1 count-range set (1000000 identical to the oracle; 1000001, -1, -0, const 1000001 error 8); validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'

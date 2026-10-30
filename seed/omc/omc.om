@@ -12580,8 +12580,10 @@ end
 
 note ir_for: for name type count [bound N]. The counter is bound after the count is read, so the count cannot
 note name it. nc: 1 when the count is a number or an integer constant name (not a local), seen ahead without
-note reading it. Such a count with no bound opens the plain loop (ir_forg with N = 0); any other count, and any
-note count with a bound, opens the guarded loop with N, default 1000000. The counter leaves scope at its end.
+note reading it. Such a count must be 0..1000000 (error 8 otherwise, a minus sign included): the C oracle's
+note count range (omegese.c for_line), so a plain loop never counts past what checker2 proves. Such a count
+note with no bound opens the plain loop (ir_forg with N = 0); any other count, and any count with a bound,
+note opens the guarded loop with N, default 1000000. The counter leaves scope at its end.
 fn ir_for to void
 tok
 if or eq get tk 0 0 eq get tk 0 3
@@ -12604,6 +12606,12 @@ tok
 nc = ulong 0
 if eq get tk 0 2
 nc = ulong 1
+if eq get inp get ts 0 45
+fail 8
+end
+if gt get tw 0 1000000
+fail 8
+end
 end
 if and eq get tk 0 1 le get tl 0 8
 if eq ir_find get tw 0 get tl 0 0
@@ -12611,6 +12619,11 @@ e = findname get tw 0
 if ne e 0
 if eq get nm_kind sub e 1 9
 nc = ulong 1
+if lt get nm_type sub e 1 10
+if gt get nm_addr sub e 1 1000000
+fail 8
+end
+end
 end
 end
 end

@@ -16,7 +16,7 @@
 #                             unit also embeds its identity (omega2_ident_<unit>() in omega_om_units.c).
 # A unit, compiler or profile that changes without regenerating these files fails --check.
 set -eu
-OMC_PIN=bc674961d9f4cd950f200a6bb6c5ce4327e7b5b47d89473f9b4c2cf2dc601292
+OMC_PIN=0d4c722b70a1b94dbf4055aaeb999e09998890cc5a15995e4f23f2fc340ea008
 NATIVE_PIN=c77a5922f91d53d4a0bbd4e7b1c4703f7098263abc843be2918db1ece7496782
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 # One generated library for all units: the bindings share one ABI runtime (ombr_enter).
