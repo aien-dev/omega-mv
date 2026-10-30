@@ -1,5 +1,5 @@
 # tests/gates/omega-numeric-cpu.gate
-# Mirrors hosted: host-suites.yml numeric-cpu: test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc (hosted 63 s)
+# The Spark runs this gate (aien-local-ci; the hosted host-suites.yml was removed in #564): test-numeric-cpu test-numeric-qualify test-e1-combine test-chipwait-campaign test-gpu-wait test-gpu-wait-mutants test-gpu-code-alloc test-q36-om-gate-host
 gate: OMEGA-NUMERIC-CPU
 manifest_version: 2
 owner: omega
@@ -12,6 +12,7 @@ inputs:
   - tests/test_omega_numeric.c
   - tests/numeric_oracle.h
   - tests/run_numeric_gates.sh
+  - tests/test_omega_q36_om_gate.c
   - tools/
   - tests/gates/
 run:

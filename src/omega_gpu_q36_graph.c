@@ -815,8 +815,9 @@ static int record_final_heads(OmegaGpuQ36Graph *g) {
 
 int omega_gpu_q36_graph_end_token(OmegaGpuQ36Graph *g, uint32_t *token, OmegaGpuDecodeGraphStats *st) { return omega_gpu_q36_graph_end_stroke(g, token, st); }
 
-/* After the buf readback: a trap word the Omegese gate stored fails the run (they are zeroed at create and never cleared,
- * so one trap fails every later readback too). */
+/* After a buf readback (end_stroke, prefill, read_head, read_buf): a trap word the Omegese gate stored fails it. The words are
+ * zeroed at create and never written by the host again (buf is one uncached mapping and its sync is a barrier,
+ * omega_gpu_platform_linux.c ref_sync), so one trap fails every later readback too, also after a stroke that failed earlier. */
 static int om_gate_check(OmegaGpuQ36Graph *g) {
     if (!g->om_gate.code.cpu) return OMEGA_GPU_DGRAPH_OK;
     const uint32_t *st = cpu_of(g, g->lo.omst);
@@ -878,6 +879,7 @@ int omega_gpu_q36_graph_read_head(OmegaGpuQ36Graph *g, uint32_t h, float *x, flo
     if (!g || g->in_token || h >= g->heads) return OMEGA_GPU_DGRAPH_BAD_ARGS;
     omega_gpu_session_lock();
     int rc = omega_gpu_session_sync_to_cpu(&g->buf) == 0 ? OMEGA_GPU_DGRAPH_OK : OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    if (rc == OMEGA_GPU_DGRAPH_OK) rc = om_gate_check(g); /* a trap word fails the read too (tests/test_omega_q36_om_gate.c) */
     if (rc == OMEGA_GPU_DGRAPH_OK) {
         if (x) memcpy(x, cpu_of(g, x_of(g, h)), H * 4u);
         if (hidden) memcpy(hidden, cpu_of(g, hidden_of(g, h)), H * 4u);
@@ -913,6 +915,7 @@ int omega_gpu_q36_graph_read_buf(OmegaGpuQ36Graph *g, int which, float *out, uin
         from = g->lo.stage;
     }
     if (rc == OMEGA_GPU_DGRAPH_OK && omega_gpu_session_sync_to_cpu(&g->buf) != 0) rc = OMEGA_GPU_DGRAPH_CHIP_FAIL;
+    if (rc == OMEGA_GPU_DGRAPH_OK) rc = om_gate_check(g);
     if (rc == OMEGA_GPU_DGRAPH_OK) memcpy(out, cpu_of(g, from), (size_t)n * 4u);
     omega_gpu_session_unlock();
     return rc;
