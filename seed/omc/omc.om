@@ -1300,6 +1300,12 @@ end
 if eq w 7959665
 ret 223
 end
+if eq w 7305804402314801251
+ret 178
+end
+if eq w 8674333540260081763
+ret 179
+end
 if eq get om2 0 0
 ret 0
 end
@@ -9735,6 +9741,32 @@ ret 0
 end
 if eq c 87
 s_trap
+ret 0
+end
+note cpufence (keyword 178, a statement without operands): the host CPU publication barrier. AArch64:
+note DSB SY (d5033f9f, the full-system barrier mapget/mapset already bracket their access with). x86-64:
+note MFENCE (0F AE F0), the fence the x86 mapget/mapset use. Every earlier load and store completes before
+note any later one, so a GPU or another CPU that observes a later store also observes the earlier ones.
+note Inline here, not a function: om4 builds omc and holds at most 512 functions, all in use.
+if eq c 178
+eol
+if ne get xtarget 0 0
+xb 15 174 240
+else
+emit 3573759903
+end
+ret 0
+end
+note cpurelax (keyword 179, a statement without operands): spin-wait hint, no ordering. AArch64: YIELD
+note (d503203f). x86-64: PAUSE (F3 90). Use it in a bounded poll loop; pair it with cpufence for order.
+if eq c 179
+eol
+if ne get xtarget 0 0
+emitb 243
+emitb 144
+else
+emit 3573751871
+end
 ret 0
 end
 if eq c 97
