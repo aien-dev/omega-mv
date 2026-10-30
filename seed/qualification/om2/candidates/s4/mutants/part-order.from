@@ -1,0 +1,54 @@
+note arrpart (OM-2, spec 6): `part A o k` as argument pi of function f (index + 1); md 57 / 58 when `view` /
+note `edit` was written before it. A is a name (a global is error 19, a fresh array 27); o, then k, are
+note ulong values. Checks, in this order: o <= len A (CMP Xo, Xlen; B.HI trap 3), then k <= len A - o (SUB,
+note CMP, B.HI trap 3); the wrapped o + k is never formed. The part is a view of A + o * size with count k:
+note an edit when A is writable (local or edit) and no `view` was written, else a view. It goes only to an
+note unsized parameter (error 7). Out as arrarg; rt is A, so for error 19 the part counts as its base.
+fn arrpart f ulong pi ulong md ulong to void
+p = add mul sub f 1 6 pi
+e = arrname
+i = sub e 1
+k = ulong get nm_kind i
+if ge k 6
+fail 7
+end
+if eq k 4
+fail 19
+end
+fz_arg e
+if eq get fn_pk p 3
+if eq md 57
+fail 20
+end
+if and ne k 1 ne k 3
+fail 20
+end
+else
+if eq md 58
+fail 7
+end
+end
+if ne ulong get nm_type i ulong get fn_pt p
+fail 7
+end
+if ne get fn_pl p 0
+fail 7
+end
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+ro = matreg get rk 0 get rv 0 5
+rdval 0 5 255 0
+if ne get rt 0 5
+fail 7
+end
+rn = matreg get rk 0 get rv 0 5
+d = partck i ro rn
+ux = add mul get depth 0 6 pi
+put ul_k ux 1
+put ul_v ux rn
+put rt 0 e
+put rk 0 5
+put rv 0 d
+end

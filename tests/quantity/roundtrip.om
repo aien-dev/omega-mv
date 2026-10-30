@@ -1,0 +1,12 @@
+fn main to int
+a = qty 18446744073709551615
+b = ulong a
+c = qty b
+if ne b ulong 18446744073709551615
+ret 1
+end
+if ne c a
+ret 2
+end
+ret 0
+end
