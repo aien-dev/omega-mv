@@ -1,0 +1,9 @@
+fn parity_u32 x uint to uint
+v = x
+p = uint 0
+while gt v 0
+p = xor p (and v 1)
+v = shr v 1
+end
+ret p
+end

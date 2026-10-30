@@ -1,0 +1,5 @@
+version 2
+name absdiff_i32
+param a i32
+param b i32
+ret u64
