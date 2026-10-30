@@ -47,10 +47,20 @@
  * per word to an int32 total T; a SHFL.DOWN tree (8, 4, 2, 1) sums its half; y = T - KSC * 2^18 (mod 2^32, exact
  * because |y| <= 128 * k < 2^31).
  *
- * Shared memory: the launch descriptor allows at most OMEGA_BW_QMD_MAX_SHARED_BYTES (16 KiB) per CTA, so x is staged
+ * Shared memory: the kernel keeps to OMEGA_TERN_SHARED_MAX (16 KiB) per CTA, the launch descriptor cap when KT1 was
+ * measured (OMEGA_BW_QMD_MAX_SHARED_BYTES is 32 KiB since ce155d47; the budget stays at the measured 16 KiB), so x is staged
  * in chunks of at most OMEGA_TERN_CHUNK_MAX = 8192 columns (k <= 8192: one chunk; 8192 < k <= 16384: two equal chunks,
  * k % 512 == 0). With two chunks each lane l == 0 adds the earlier chunk's int32 y it stored itself (same thread, same
  * address, program order); the f32 epilogue is refused there.
+ *
+ * Output path (single chunk, omega_tern_gemv_coalesced_out): every warp of a CTA works on consecutive units in a round
+ * (unit = CTA * W + warp + round * stride, all warps of a CTA take the same number of rounds; a warp past the last unit
+ * recomputes unit U - 1 and its rows fall at or beyond n_padded, never stored). Lane l == 0 of each half-warp writes the
+ * row's result into a shared slot, one CTA barrier, then warp 0 lanes 0 .. 2 R W - 1 store the round's 2 R W consecutive
+ * rows (those < n) with one coalesced STG. Two slot sets alternate by round so one barrier per round suffices. Measured
+ * reason (investigation 2026-10-16-kt1-speed): the per-row 4-byte GPU-uncached stores cost 9 to 11 us per launch.
+ * Chunked kernels keep the per-row store. Coalescing needs 2 R W <= 32 (warp 0 stores the round), so R = 4 with W = 8
+ * (the block layout's usual shape) keeps the per-row store too; the speed receipts are row-major R = 1.
  *
  * Epilogue:
  *   OMEGA_TERN_EPI_I32 (0): y int32.
@@ -68,10 +78,12 @@
  *   0x3b0 negn u32  -n (store rows < n) 0x3b4, 0x3b8, 0x3bc: -b0, -b1, -b2
  *
  * mutant (tests only): 1 flips the planes (the staged X_j are negated: plus acts as minus, y becomes -y), 2 is host-side only
- * (the API maps segments as ws_idx = r / (n / segments)), 3 drops pair j = 7 (trits 7 and 15 of every word).
+ * (the API maps segments as ws_idx = r / (n / segments)), 3 drops pair j = 7 (trits 7 and 15 of every word), 4 uses one
+ * output slot set (the round race, simulator with a reversed warp order), 5 drops the unit clamp of the coalesced path.
  */
 #include <stdint.h>
 #include "omega_blackwell_codegen.h"
+#include "omega_blackwell_qmd.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,13 +117,17 @@ typedef struct {
     uint32_t warps;  /* 1 .. 32 */
     uint32_t depth;  /* K steps per loop iteration: divides chunk / 256; rows * depth <= 16 */
     uint32_t epi;    /* OMEGA_TERN_EPI_* */
-    int mutant;      /* 0 production; 1, 3 kernel mutants (2 is host-side, kernel identical to 0) */
+    int mutant;      /* 0 production; 1, 3, 4, 5 kernel mutants (2 is host-side, kernel identical to 0) */
 } OmegaTernGemvSpec;
 
 int omega_blackwell_codegen_tern_gemv_prog(const OmegaTernGemvSpec *spec, BlackwellIRProgram *prog);
 int omega_tern_gemv_spec_ok(const OmegaTernGemvSpec *spec);
 uint32_t omega_tern_gemv_steps(const OmegaTernGemvSpec *spec);        /* k / 256 (0 when refused) */
-uint32_t omega_tern_gemv_shared_bytes(const OmegaTernGemvSpec *spec); /* 2 * chunk width */
+uint32_t omega_tern_gemv_shared_bytes(const OmegaTernGemvSpec *spec); /* 2 * chunk width, plus two output slot sets when coalesced */
+int omega_tern_gemv_coalesced_out(const OmegaTernGemvSpec *spec);     /* 1 when the round's rows leave through shared memory in one store */
+uint32_t omega_tern_gemv_out_slot_bytes(const OmegaTernGemvSpec *spec); /* 2 * rows * warps * 4: one slot set */
+#define OMEGA_TERN_SHARED_MAX 16384u /* the measured KT1 budget, at most the launch descriptor cap */
+_Static_assert(OMEGA_TERN_SHARED_MAX <= OMEGA_BW_QMD_MAX_SHARED_BYTES, "the KT1 shared budget must fit the launch descriptor");
 uint32_t omega_tern_gemv_chunks(const OmegaTernGemvSpec *spec);       /* x chunks: 1 for k <= 8192, else 2 */
 int omega_tern_gemv_prog_stats(const OmegaTernGemvSpec *spec, uint32_t *insns, uint32_t *gprs);
 

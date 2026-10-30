@@ -47,7 +47,7 @@ typedef enum {
     BW_IR_IMAD,         /* IMAD Rd, Ra, Rb/imm, Rc (multiply-add) */
     BW_IR_IMAD_WIDE,    /* IMAD.WIDE.U32 Rd:Rd+1, Ra, imm, Rc:Rc+1 */
     BW_IR_ISETP_GE,     /* ISETP.GE P0, PT, Ra, Rb/imm, PT */
-    BW_IR_LDG_E,        /* LDG.E Rd, desc[URd][Ra.64] */
+    BW_IR_LDG_E,        /* LDG.E Rd, desc[URd][Ra.64+imm] */
     BW_IR_STG_E,        /* STG.E desc[URd][Ra.64], Rb */
     BW_IR_STG_EF,       /* STG.E.EF: evict the line so the other side can see it */
     BW_IR_IADD3,        /* IADD3 Rd, PT, PT, Ra, Rb, Rc */

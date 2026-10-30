@@ -757,7 +757,7 @@ static int sim_step(SimThr *t, const BlackwellIRProgram *p, uint32_t tid, uint32
         case BW_IR_LOP3_AND: wrs(t, in->dst_vreg, in->dst_subreg, a & in->imm, p); break;
         case BW_IR_LOP3_XOR: wrs(t, in->dst_vreg, in->dst_subreg, a ^ b, p); break;
         case BW_IR_ISETP_GE_U32: t->p0 = a >= b; break;
-        case BW_IR_LDG_E: { uint32_t x; memcpy(&x, (const void *)(uintptr_t)rd64(t, in->src1_vreg, p), 4); wrs(t, in->dst_vreg, in->dst_subreg, x, p); break; }
+        case BW_IR_LDG_E: { uint32_t x; memcpy(&x, (const void *)(uintptr_t)(rd64(t, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm), 4); wrs(t, in->dst_vreg, in->dst_subreg, x, p); break; }
         case BW_IR_LDG_E_U16: { uint16_t x; memcpy(&x, (const void *)(uintptr_t)rd64(t, in->src1_vreg, p), 2); wrs(t, in->dst_vreg, in->dst_subreg, x, p); break; }
         case BW_IR_STG_E: memcpy((void *)(uintptr_t)rd64(t, in->src1_vreg, p), &b, 4); break;
         case BW_IR_LDG_E_64: case BW_IR_LDG_E_128: { unsigned n = in->op == BW_IR_LDG_E_64 ? 8u : 16u; uint64_t ad = rd64(t, in->src1_vreg, p) + (uint64_t)(int64_t)(int32_t)in->imm; if (ad & (n - 1)) { g_sim_err = 5; t->done = 1; return 0; } uint32_t x[4]; memcpy(x, (const void *)(uintptr_t)ad, n); for (unsigned i = 0; i < n / 4; i++) wrs(t, in->dst_vreg, i, x[i], p); break; }
