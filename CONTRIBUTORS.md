@@ -5,12 +5,14 @@ Every model below did real work. A model is listed only for work it did. The orc
 
 | Model | What it did |
 |---|---|
+| Grok 4.7 | Merged current main (`6d482de0e`) into #854. The only conflict was the generated root `.crumb` (compile stamps and source-tree digest). Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
 | Codex (GPT-6.1 Sol) | FR-9 x86-64 Linux backend integration from historical 7eca2ac3f, full-language lowering, contract-loop/output-capacity/dead-branch repairs, division/shift proof-aware diagnostics, original-conductor and historical-mutant qualification repair, independent disassembly and cross-architecture qualification; orphaned-lane recovery, current mutation re-anchoring and x86 OM-2 emitted-storage bound |
 | Codex (GPT-6.1 Sol) | TileLab decimal-overflow and malformed-register-budget refusal repair, host regression fixtures and semantic negative controls (TL907-01) |
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
+| Codex (GPT-6.1 Sol) | Inference-cost audit F1-F8: fail-closed compiler/runtime sandboxes, hard process deadlines, strict task-identity scoring and adversarial self-tests |
 | Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
 | Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
 | Codex (GPT-6 Astra) | Seeded IR statement/type/scope validation repairs, bootstrap-safe helper splits, and independent C-oracle regression qualification |
