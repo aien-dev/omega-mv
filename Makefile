@@ -2525,7 +2525,8 @@ test-gpu-reconv: $(GPU_RECONV_TEST)
 
 # omega #492: IMAD.HI.U32 with a register Rc. The chip reads Rc as a 64-bit register pair (nvcc 13.0
 # sm_121 oracle, evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016; chip probe pending), so the four warp
-# simulators refuse a non-RZ Rc instead of modelling a 32-bit one. One binary per simulator header.
+# simulators model an even Rc as the pair Rc+1:Rc and refuse an odd Rc, and replay the PR #487
+# odd-column pack (it must come out wrong, as on the chip). One binary per simulator header.
 .PHONY: test-gpu-imadhi-rc
 GPU_IMADHI_SIMS = bw_warp_sim bw_warp_sim_tc bw_warp_sim_k bw_warp_sim_pa
 GPU_IMADHI_TESTS = $(GPU_IMADHI_SIMS:%=$(OUT_DIR)/gpu_imadhi_rc_test_%)
