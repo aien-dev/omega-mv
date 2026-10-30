@@ -321,9 +321,9 @@ static size_t g_nseen, g_variants, g_unchecked, g_findings_total;
  *      the loads only have write barrier 2 and nothing waits on it; the STGs carry no barrier at all (release 0).
  *   C  prime sieve kernels: a second LDG / LDS writes its destination into the first load's address register while
  *      the first load (write barrier 0, no read barrier) is in flight; the pattern of the fp8 GEMV chip hang.
- *   D  RMSNORM: round the loop the IMAD.WIDE / FMUL rewrite registers the STG (read barrier 1) still reads; the IADD3s
- *      that were scheduled to wait on barrier 1 carry the fixed word 3 (wait 0x10) of the #553 encoder bug. Gone with
- *      the encoder fix of PR #553 (checked by applying only that change). */
+ *   D  (gone) RMSNORM: round the loop the IMAD.WIDE / FMUL rewrite registers the STG (read barrier 1) still read; the
+ *      IADD3s scheduled to wait on barrier 1 carried the fixed word 3 (wait 0x10) of the #553 encoder bug. PR #553
+ *      (main b11bd1f6) fixed the encoder and the sweep no longer sees them, so their three entries are removed. */
 #define ANY_PC UINT32_MAX
 typedef struct { const char *family; uint32_t pc; uint8_t kind; uint8_t reg; uint8_t uniform; char cls; int seen; } Known;
 static Known g_known[] = {
@@ -343,9 +343,6 @@ static Known g_known[] = {
     { "elementwise", 26, OMEGA_BW_HZ_WAR, 20, 0, 'C', 0 },   /* PRIME_SIEVE_DIV2 */
     { "elementwise", 27, OMEGA_BW_HZ_WAR, 21, 0, 'C', 0 },
     { "elementwise", 42, OMEGA_BW_HZ_WAR, 19, 0, 'C', 0 },   /* PRIME_SIEVE_SHARED_DIV2 */
-    { "elementwise", 61, OMEGA_BW_HZ_WAR, 22, 0, 'D', 0 },   /* RMSNORM */
-    { "elementwise", 61, OMEGA_BW_HZ_WAR, 23, 0, 'D', 0 },
-    { "elementwise", 63, OMEGA_BW_HZ_WAR, 13, 0, 'D', 0 },
     { NULL, 0, 0, 0, 0, 0, 0 }
 };
 
