@@ -8,7 +8,7 @@
 #   concatenation in <order>, then native/orig4/shadow.om and the caller.
 # image <file> <sha256>: an immutable candidate checkpoint under native/orig4/candidates
 #   (byte-identical to aien-train evidence/SI19-ORIG2/candidates at the pinned commit).
-omc 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+omc 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
 unit 1 omega-bridge 7e1d0d61755ec1a0bbf20941a18379861b5b9d0d native/ref32/add32.om 1de23561202b284e74690034cb07741ebcf9870bc464550b8382c85410478e95
 unit 2 omega-bridge 7e1d0d61755ec1a0bbf20941a18379861b5b9d0d native/ref32/mul32.om 9027090109e2050046c4b71fa51438c97ad94c23626c2ecc277844996b79c22e
 unit 3 omega 3a995ba8dace538c1532c747d829ca6e4a73582d native/ecosystem663/metadata.om f60b6d62c1bf90de42455effae977de66adeca1268669f6144809a3327aec7a4
