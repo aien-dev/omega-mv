@@ -19,7 +19,8 @@ trap 'chmod -R u+w "$work" 2>/dev/null || true; rm -rf "$work"' EXIT INT TERM
 fail=0
 say() { printf '%s\n' "$1"; }
 
-# The implementation sources must not carry the old fixed paths back.
+# The implementation sources must not carry the old fixed paths back,
+# and must not hand a path to a shell.
 if grep -n -e '/tmp/clean_clone_m18.log' -e '/tmp/omega_clean_m18' \
     "$root/src/omega_clean_clone.c" "$root/src/omega_clean_clone.h" \
     "$root/src/omega_blackwell_gates.c"
@@ -28,6 +29,15 @@ then
     fail=1
 else
     say "PASS M18_CLEAN_CLONE_LOG_NOT_FIXED_TMP source"
+fi
+if grep -n -e 'system(' -e 'popen(' -e '/bin/sh' \
+    "$root/src/omega_clean_clone.c" "$root/src/omega_clean_clone.h" \
+    "$root/src/omega_blackwell_gates.c"
+then
+    say "FAIL M18_CLEAN_CLONE_NO_SHELL"
+    fail=1
+else
+    say "PASS M18_CLEAN_CLONE_NO_SHELL source"
 fi
 
 "$cc" $cflags -o "$work/good" "$testc" "$src"
@@ -49,6 +59,7 @@ for name in \
     M18_CLEAN_CLONE_LOG_UNDER_OUT_DIR_INSIDE_REPO \
     M18_CLEAN_CLONE_LOG_CREATE_FAILED_DISTINCT \
     M18_CLEAN_CLONE_COMMAND_USES_LOG \
+    M18_CLEAN_CLONE_HOSTILE_PATH_NOT_A_SHELL \
     M18_CLEAN_CLONE_LOG_KEPT \
     M18_CLEAN_CLONE_LOG_PATH_PRINTED
 do

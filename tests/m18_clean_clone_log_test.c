@@ -24,11 +24,9 @@ static void check(int cond, const char *name) {
     }
 }
 
-static int uses_fixed_tmp(const char *log, const char *cmd) {
+static int uses_fixed_tmp(const char *log) {
     if (log && strstr(log, "/tmp/clean_clone_m18.log")) return 1;
     if (log && strstr(log, "/tmp/omega_clean_m18")) return 1;
-    if (cmd && strstr(cmd, "/tmp/clean_clone_m18.log")) return 1;
-    if (cmd && strstr(cmd, "/tmp/omega_clean_m18")) return 1;
     return 0;
 }
 
@@ -43,17 +41,16 @@ static void write_file(const char *path) {
 }
 
 static int plan(const char *out, const char *tmp, const char *repo, const char *fb,
-                char *checkout, char *log, char *cmd, char *err) {
+                char *checkout, char *log, char *err) {
     memset(checkout, 0, 4096);
     memset(log, 0, 4096);
-    memset(cmd, 0, 16384);
     memset(err, 0, 4608);
     return omega_m18_clean_clone_plan(out, tmp, repo, fb, "/opt/physics",
-                                      checkout, 4096, log, 4096, cmd, 16384, err, 4608);
+                                      checkout, 4096, log, 4096, err, 4608);
 }
 
-static void expect_not_fixed(const char *log, const char *cmd) {
-    check(!uses_fixed_tmp(log, cmd), "M18_CLEAN_CLONE_LOG_NOT_FIXED_TMP");
+static void expect_not_fixed(const char *log) {
+    check(!uses_fixed_tmp(log), "M18_CLEAN_CLONE_LOG_NOT_FIXED_TMP");
 }
 
 int main(int argc, char **argv) {
@@ -86,21 +83,25 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    char checkout[4096], log[4096], cmd[16384], err[4608];
+    char checkout[4096], log[4096], err[4608];
     char cwd[512];
     if (!getcwd(cwd, sizeof cwd)) return 2;
 
     /* TMPDIR set, no OUT_DIR: log and copy live under TMPDIR. */
-    int st = plan(NULL, tmpdir, NULL, NULL, checkout, log, cmd, err);
-    expect_not_fixed(log, cmd);
-    if (!uses_fixed_tmp(log, cmd)) {
+    int st = plan(NULL, tmpdir, NULL, NULL, checkout, log, err);
+    expect_not_fixed(log);
+    if (!uses_fixed_tmp(log)) {
         check(st == OMEGA_M18_CLEAN_CLONE_OK, "M18_CLEAN_CLONE_TMPDIR_OK");
         check(starts_with(log, tmpdir) && strstr(log, "/clean-clone-") &&
               strstr(log, "/clean_clone_m18.log"),
               "M18_CLEAN_CLONE_LOG_UNDER_TMPDIR");
         check(starts_with(checkout, tmpdir), "M18_CLEAN_CLONE_CHECKOUT_UNDER_TMPDIR");
-        check(strstr(cmd, log) != NULL && strstr(cmd, "OMEGA_IN_CLEAN_CLONE=1") != NULL &&
-              strstr(cmd, "--run-m18-gates") != NULL && strstr(cmd, "PHYSICS_DIR='/opt/physics'") != NULL,
+        /* The nested tool name and the environment flag are fixed program
+         * arguments. The log is a file path, not a word in a shell command. */
+        check(st == OMEGA_M18_CLEAN_CLONE_OK && log[0] == '/' && access(log, W_OK) == 0 &&
+              strcmp(OMEGA_M18_CLEAN_CLONE_TOOL, "./build/omegatool") == 0 &&
+              strcmp(OMEGA_M18_CLEAN_CLONE_TOOL_ARG, "--run-m18-gates") == 0 &&
+              strcmp(OMEGA_M18_CLEAN_CLONE_NESTED_ENV, "OMEGA_IN_CLEAN_CLONE") == 0,
               "M18_CLEAN_CLONE_COMMAND_USES_LOG");
         check(access(log, W_OK) == 0, "M18_CLEAN_CLONE_LOG_CREATED");
         char co[4096], nest[4096], marker[4096];
@@ -137,40 +138,41 @@ int main(int argc, char **argv) {
     }
 
     /* OUT_DIR outside the repo wins over TMPDIR. Both the log and the copy sit there. */
-    st = plan(outdir, tmpdir, NULL, NULL, checkout, log, cmd, err);
-    expect_not_fixed(log, cmd);
-    if (!uses_fixed_tmp(log, cmd)) {
+    st = plan(outdir, tmpdir, NULL, NULL, checkout, log, err);
+    expect_not_fixed(log);
+    if (!uses_fixed_tmp(log)) {
         char want[576];
         snprintf(want, sizeof want, "%s/clean-clone/clean_clone_m18.log", outdir);
+        char want_co[576];
+        snprintf(want_co, sizeof want_co, "%s/clean-clone", outdir);
         check(st == OMEGA_M18_CLEAN_CLONE_OK && strcmp(log, want) == 0 && access(log, W_OK) == 0,
               "M18_CLEAN_CLONE_LOG_UNDER_OUT_DIR");
-        check(strstr(checkout, "/clean-clone") != NULL && strstr(cmd, log) != NULL,
-              "M18_CLEAN_CLONE_OUT_DIR_COMMAND");
+        check(strcmp(checkout, want_co) == 0, "M18_CLEAN_CLONE_OUT_DIR_COMMAND");
     }
 
     /* OUT_DIR inside the repo: the log still goes to that output/clean-clone
      * directory, and the copy goes under TMPDIR so it is not copied into itself. */
-    st = plan(inside, tmpdir, repo, NULL, checkout, log, cmd, err);
-    expect_not_fixed(log, cmd);
-    if (!uses_fixed_tmp(log, cmd)) {
+    st = plan(inside, tmpdir, repo, NULL, checkout, log, err);
+    expect_not_fixed(log);
+    if (!uses_fixed_tmp(log)) {
         char want[640];
         snprintf(want, sizeof want, "%s/clean-clone/clean_clone_m18.log", inside);
         check(st == OMEGA_M18_CLEAN_CLONE_OK && strcmp(log, want) == 0,
               "M18_CLEAN_CLONE_LOG_UNDER_OUT_DIR_INSIDE_REPO");
         check(starts_with(checkout, tmpdir) && strstr(checkout, "/clean-clone-") != NULL,
               "M18_CLEAN_CLONE_INSIDE_REPO_CHECKOUT_UNDER_TMPDIR");
-        check(strstr(cmd, log) != NULL && strstr(cmd, checkout) != NULL,
+        check(log[0] == '/' && checkout[0] == '/' && strstr(log, checkout) == NULL,
               "M18_CLEAN_CLONE_INSIDE_REPO_COMMAND");
     }
 
     /* Neither OUT_DIR nor TMPDIR: the log is under build/clean-clone, not a fixed host path. */
     if (chdir(defcwd) != 0) return 2;
-    st = plan(NULL, NULL, NULL, NULL, checkout, log, cmd, err);
-    expect_not_fixed(log, cmd);
-    if (!uses_fixed_tmp(log, cmd)) {
+    st = plan(NULL, NULL, NULL, NULL, checkout, log, err);
+    expect_not_fixed(log);
+    if (!uses_fixed_tmp(log)) {
         check(st == OMEGA_M18_CLEAN_CLONE_OK && log[0] == '/' &&
               strstr(log, "/build/clean-clone/clean_clone_m18.log") != NULL &&
-              strstr(cmd, log) != NULL && access(log, W_OK) == 0,
+              access(log, W_OK) == 0,
               "M18_CLEAN_CLONE_LOG_UNDER_BUILD");
     }
     if (chdir(cwd) != 0) return 2;
@@ -184,26 +186,53 @@ int main(int argc, char **argv) {
         if (bfd < 0) return 2;
         close(bfd);
     }
-    st = plan(blocked, NULL, NULL, NULL, checkout, log, cmd, err);
-    expect_not_fixed(log, cmd);
-    if (!uses_fixed_tmp(log, cmd)) {
+    st = plan(blocked, NULL, NULL, NULL, checkout, log, err);
+    expect_not_fixed(log);
+    if (!uses_fixed_tmp(log)) {
         int distinct = st == OMEGA_M18_CLEAN_CLONE_LOG_CREATE_FAILED &&
                        strncmp(err, "M18_CLEAN_CLONE_LOG_CREATE_FAILED:", 34) == 0 &&
                        strstr(err, "REGRESSION") == NULL &&
-                       strstr(err, log) != NULL &&
-                       cmd[0] == '\0';
+                       strstr(err, log) != NULL;
         check(distinct, "M18_CLEAN_CLONE_LOG_CREATE_FAILED_DISTINCT");
     }
 
-    /* A physics path that would break the shell is refused before any command is built. */
-    memset(cmd, 0, sizeof cmd);
-    memset(err, 0, sizeof err);
-    st = omega_m18_clean_clone_plan(outdir, NULL, NULL, NULL, "bad'path",
-                                    checkout, sizeof checkout, log, sizeof log,
-                                    cmd, sizeof cmd, err, sizeof err);
-    check(st == OMEGA_M18_CLEAN_CLONE_PLAN_FAILED && cmd[0] == '\0' &&
-          strstr(err, "REGRESSION") == NULL,
-          "M18_CLEAN_CLONE_PLAN_REFUSES_QUOTE");
+    /* A directory name with a space, a quote and ';' is a path. cp receives
+     * it as one argument. A shell would have treated the quote as syntax and
+     * run the touch. */
+    {
+        char hostile[768], src[768], hello[800], dest[800], copied[800];
+        char marker_cwd[512], marker_work[768];
+        snprintf(hostile, sizeof hostile, "%s/out x';touch m18_pwned_marker;", work);
+        snprintf(src, sizeof src, "%s/tiny-src", work);
+        snprintf(hello, sizeof hello, "%s/hello", src);
+        snprintf(dest, sizeof dest, "%s/copied", hostile);
+        snprintf(copied, sizeof copied, "%s/hello", dest);
+        if (!getcwd(marker_cwd, sizeof marker_cwd)) return 2;
+        size_t ml = strlen(marker_cwd);
+        if (ml + 20 >= sizeof marker_cwd) return 2;
+        memcpy(marker_cwd + ml, "/m18_pwned_marker", 18);
+        snprintf(marker_work, sizeof marker_work, "%s/m18_pwned_marker", work);
+        unlink(marker_cwd);
+        unlink(marker_work);
+        if (mkdir(hostile, 0755) != 0 || mkdir(src, 0755) != 0) return 2;
+        write_file(hello);
+        st = plan(hostile, NULL, NULL, NULL, checkout, log, err);
+        expect_not_fixed(log);
+        char want[800];
+        snprintf(want, sizeof want, "%s/clean-clone/clean_clone_m18.log", hostile);
+        int copy_rc = omega_m18_clean_clone_copy_tree(src, dest);
+        int literal = st == OMEGA_M18_CLEAN_CLONE_OK && strcmp(log, want) == 0 &&
+                      access(log, W_OK) == 0 && copy_rc == 0 && access(copied, F_OK) == 0 &&
+                      access(marker_cwd, F_OK) != 0 && access(marker_work, F_OK) != 0;
+        char hostile_tmp[768];
+        snprintf(hostile_tmp, sizeof hostile_tmp, "%s/tmp x';touch m18_pwned_marker;", work);
+        if (mkdir(hostile_tmp, 0755) != 0) return 2;
+        int st_tmp = plan(NULL, hostile_tmp, NULL, NULL, checkout, log, err);
+        literal = literal && st_tmp == OMEGA_M18_CLEAN_CLONE_OK &&
+                  starts_with(log, hostile_tmp) && strstr(log, "/clean_clone_m18.log") != NULL &&
+                  access(log, W_OK) == 0 && access(marker_cwd, F_OK) != 0;
+        check(literal, "M18_CLEAN_CLONE_HOSTILE_PATH_NOT_A_SHELL");
+    }
 
     if (getenv("M18_REQUIRE_TMP_UNWRITABLE")) {
         int probe = open("/tmp/m18_clean_clone_ro_probe", O_CREAT | O_WRONLY | O_EXCL, 0644);
@@ -212,8 +241,8 @@ int main(int argc, char **argv) {
             close(probe);
             unlink("/tmp/m18_clean_clone_ro_probe");
         }
-        st = plan(NULL, tmpdir, NULL, NULL, checkout, log, cmd, err);
-        int ok = tmp_blocked && st == OMEGA_M18_CLEAN_CLONE_OK && !uses_fixed_tmp(log, cmd) &&
+        st = plan(NULL, tmpdir, NULL, NULL, checkout, log, err);
+        int ok = tmp_blocked && st == OMEGA_M18_CLEAN_CLONE_OK && !uses_fixed_tmp(log) &&
                  starts_with(log, tmpdir) && access(log, W_OK) == 0;
         check(ok, "M18_CLEAN_CLONE_LOG_TMP_UNWRITABLE_STILL_SELECTS");
     }

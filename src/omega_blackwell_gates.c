@@ -992,25 +992,6 @@ fail:
     return false;
 }
 
-/* Repo this process is running in. The clean-clone copy must not land inside it. */
-static int m18_git_toplevel(char *out, size_t cap) {
-    FILE *p = popen("git rev-parse --show-toplevel 2>/dev/null", "r");
-    if (!p) return -1;
-    if (!fgets(out, (int)cap, p)) {
-        pclose(p);
-        out[0] = '\0';
-        return -1;
-    }
-    int rc = pclose(p);
-    size_t n = strlen(out);
-    while (n && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
-    if (rc != 0 || n == 0) {
-        out[0] = '\0';
-        return -1;
-    }
-    return 0;
-}
-
 static bool test_m18_gate16_clean_clone(void) {
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
         return true;
@@ -1024,7 +1005,9 @@ static bool test_m18_gate16_clean_clone(void) {
      * shared by every account. Sticky permissions made the second user fail
      * before the chip, and the suite reported that as a regression. The log now
      * lives under this gate's OUT_DIR/clean-clone, or under TMPDIR when that is
-     * the directory the gate can use. The path is created first and printed. */
+     * the directory the gate can use. The path is created first and printed.
+     * git, cp and make are started directly. Those paths are arguments or
+     * environment values, not text in a shell command. */
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
@@ -1032,11 +1015,10 @@ static bool test_m18_gate16_clean_clone(void) {
     }
     char repo[PATH_MAX];
     const char *repo_root = NULL;
-    if (m18_git_toplevel(repo, sizeof(repo)) == 0) repo_root = repo;
+    if (omega_m18_git_toplevel(repo, sizeof(repo)) == 0) repo_root = repo;
 
     char checkout_dir[PATH_MAX];
     char log_path[PATH_MAX];
-    char command[PATH_MAX * 4];
     char err[PATH_MAX + 256];
     /* temp_fallback is the C library's temp directory. It is used only for the
      * copy, and only when OUT_DIR sits inside the repo and TMPDIR is unset.
@@ -1045,7 +1027,6 @@ static bool test_m18_gate16_clean_clone(void) {
                                         physics_dir_resolved,
                                         checkout_dir, sizeof(checkout_dir),
                                         log_path, sizeof(log_path),
-                                        command, sizeof(command),
                                         err, sizeof(err));
     if (log_path[0]) omega_m18_clean_clone_print_log_path(log_path);
     if (st == OMEGA_M18_CLEAN_CLONE_LOG_CREATE_FAILED) {
@@ -1056,7 +1037,7 @@ static bool test_m18_gate16_clean_clone(void) {
         fprintf(stderr, "%s\n", err);
         return false;
     }
-    int rc = system(command);
+    int rc = omega_m18_clean_clone_run(checkout_dir, log_path, physics_dir_resolved);
     if (rc != 0) {
         fprintf(stderr, "M18 clean clone failed (rc %d); log: %s\n", rc, log_path);
     }

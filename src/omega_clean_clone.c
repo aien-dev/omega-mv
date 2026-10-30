@@ -23,19 +23,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 static void clear(char *s, size_t n) {
     if (s && n) s[0] = '\0';
 }
 
-/* A path that will be wrapped in single quotes for /bin/sh. */
-static int shell_ok(const char *s) {
+/* A path that fits in the buffers the runner passes to exec. Quotes, spaces
+ * and ';' are ordinary characters: they never go through a shell. */
+static int path_fits(const char *s) {
     if (!s || !s[0]) return 0;
     if (strlen(s) >= 4096) return 0;
-    for (const char *p = s; *p; p++) {
-        if (*p == '\'' || *p == '\n' || *p == '\r') return 0;
-    }
     return 1;
 }
 
@@ -103,8 +102,6 @@ static int copy_path(char *dst, size_t cap, const char *src) {
     return 0;
 }
 
-/* Private directory under parent. On success parent_out holds the real path
- * (the XXXXXX suffix has been replaced). */
 /* One place builds the log file name. A host mutant that puts the old fixed
  * path back is caught by M18_CLEAN_CLONE_LOG_NOT_FIXED_TMP. */
 static int set_log_name(char *log_path, size_t log_cap, const char *dir) {
@@ -138,7 +135,7 @@ static int create_log_file(const char *log_path, char *err, size_t err_cap) {
     return OMEGA_M18_CLEAN_CLONE_OK;
 }
 
-/* The shell cds into the copy before it opens the log. A relative log path
+/* The nested tool runs with its cwd inside the copy. A relative log path
  * would be created in the copy instead of the directory this function just
  * proved it could write. */
 static int make_absolute(char *path, size_t cap) {
@@ -151,22 +148,136 @@ static int make_absolute(char *path, size_t cap) {
     return copy_path(path, cap, joined);
 }
 
-static int build_command(char *command, size_t command_cap, const char *checkout_dir,
-                         const char *log_path, const char *physics_dir, char *err, size_t err_cap) {
-    int n = snprintf(command, command_cap,
-                     "root=$(git rev-parse --show-toplevel) && "
-                     "rm -rf -- '%s/checkout' && "
-                     "cp -r \"$root\" '%s/checkout' && "
-                     "cd '%s/checkout' && "
-                     "make OUT_DIR=build clean >/dev/null 2>&1 && "
-                     "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                     "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >'%s' 2>&1",
-                     checkout_dir, checkout_dir, checkout_dir, physics_dir, log_path);
-    if (n < 0 || (size_t)n >= command_cap) {
-        command[0] = '\0';
-        return fail_plan(err, err_cap, "clean-clone command does not fit");
+/* file is the program name, always a literal at the call. argv may hold
+ * paths. dir, when set, is the child's cwd. log_path receives stdout and
+ * stderr. One environment value is set in the child only. */
+static int run_direct(const char *file, char *const argv[], const char *dir,
+                      const char *log_path, const char *env_name, const char *env_value) {
+    if (!file || !file[0] || !argv || !argv[0]) return -1;
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        if (dir && chdir(dir) != 0) _exit(127);
+        if (env_name && env_value && setenv(env_name, env_value, 1) != 0) _exit(127);
+        if (log_path) {
+            int fd = open(log_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) _exit(127);
+            if (dup2(fd, STDOUT_FILENO) < 0 || dup2(fd, STDERR_FILENO) < 0) _exit(127);
+            if (fd > STDERR_FILENO) close(fd);
+        }
+        execvp(file, argv);
+        _exit(127);
     }
-    return OMEGA_M18_CLEAN_CLONE_OK;
+    int status = 0;
+    for (;;) {
+        pid_t w = waitpid(pid, &status, 0);
+        if (w < 0 && errno == EINTR) continue;
+        if (w < 0) return -1;
+        break;
+    }
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    return -1;
+}
+
+int omega_m18_git_toplevel(char *out, size_t cap) {
+    if (!out || cap < 2) return -1;
+    out[0] = '\0';
+    int fds[2];
+    if (pipe(fds) != 0) return -1;
+    pid_t pid = fork();
+    if (pid < 0) {
+        close(fds[0]);
+        close(fds[1]);
+        return -1;
+    }
+    if (pid == 0) {
+        close(fds[0]);
+        if (dup2(fds[1], STDOUT_FILENO) < 0) _exit(127);
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull >= 0) dup2(devnull, STDERR_FILENO);
+        if (fds[1] != STDOUT_FILENO) close(fds[1]);
+        char *argv[] = {"git", "rev-parse", "--show-toplevel", NULL};
+        execvp("git", argv);
+        _exit(127);
+    }
+    close(fds[1]);
+    size_t n = 0;
+    while (n + 1 < cap) {
+        ssize_t r = read(fds[0], out + n, cap - 1 - n);
+        if (r < 0) {
+            if (errno == EINTR) continue;
+            break;
+        }
+        if (r == 0) break;
+        n += (size_t)r;
+    }
+    close(fds[0]);
+    int status = 0;
+    for (;;) {
+        pid_t w = waitpid(pid, &status, 0);
+        if (w < 0 && errno == EINTR) continue;
+        if (w < 0) {
+            out[0] = '\0';
+            return -1;
+        }
+        break;
+    }
+    while (n && (out[n - 1] == '\n' || out[n - 1] == '\r')) n--;
+    out[n] = '\0';
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0 || n == 0) {
+        out[0] = '\0';
+        return -1;
+    }
+    return 0;
+}
+
+int omega_m18_clean_clone_copy_tree(const char *src, const char *dst) {
+    if (!path_fits(src) || !path_fits(dst)) return -1;
+    char *argv[] = {"cp", "-r", (char *)src, (char *)dst, NULL};
+    return run_direct("cp", argv, NULL, "/dev/null", NULL, NULL);
+}
+
+static int rm_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+    (void)sb;
+    (void)typeflag;
+    (void)ftwbuf;
+    if (remove(fpath) != 0) return -1;
+    return 0;
+}
+
+static int rm_tree(const char *path) {
+    struct stat st;
+    if (lstat(path, &st) != 0) {
+        if (errno == ENOENT) return 0;
+        return -1;
+    }
+    if (nftw(path, rm_cb, 16, FTW_DEPTH | FTW_PHYS) != 0) return -1;
+    return 0;
+}
+
+int omega_m18_clean_clone_run(const char *checkout_dir, const char *log_path,
+                              const char *physics_dir) {
+    if (!path_fits(checkout_dir) || !path_fits(log_path) || !path_fits(physics_dir)) return -1;
+    char root[4096];
+    if (omega_m18_git_toplevel(root, sizeof(root)) != 0) return -1;
+    char dest[4096];
+    int n = snprintf(dest, sizeof(dest), "%s/checkout", checkout_dir);
+    if (n < 0 || (size_t)n >= sizeof(dest)) return -1;
+    if (rm_tree(dest) != 0) return -1;
+    if (omega_m18_clean_clone_copy_tree(root, dest) != 0) return -1;
+    char *clean_argv[] = {"make", "OUT_DIR=build", "clean", NULL};
+    int rc = run_direct("make", clean_argv, dest, "/dev/null", NULL, NULL);
+    if (rc != 0) return rc;
+    char *build_argv[] = {"make", "-j", "OUT_DIR=build", NULL};
+    rc = run_direct("make", build_argv, dest, "/dev/null", "PHYSICS_DIR", physics_dir);
+    if (rc != 0) return rc;
+    char *tool_argv[] = {
+        (char *)OMEGA_M18_CLEAN_CLONE_TOOL,
+        (char *)OMEGA_M18_CLEAN_CLONE_TOOL_ARG,
+        NULL
+    };
+    return run_direct(OMEGA_M18_CLEAN_CLONE_TOOL, tool_argv, dest, log_path,
+                      OMEGA_M18_CLEAN_CLONE_NESTED_ENV, "1");
 }
 
 int omega_m18_clean_clone_plan(const char *out_dir, const char *tmpdir,
@@ -174,27 +285,24 @@ int omega_m18_clean_clone_plan(const char *out_dir, const char *tmpdir,
                                const char *physics_dir,
                                char *checkout_dir, size_t checkout_cap,
                                char *log_path, size_t log_cap,
-                               char *command, size_t command_cap,
                                char *err, size_t err_cap) {
     clear(checkout_dir, checkout_cap);
     clear(log_path, log_cap);
-    clear(command, command_cap);
     clear(err, err_cap);
-    if (!checkout_dir || checkout_cap < 2 || !log_path || log_cap < 2 ||
-        !command || command_cap < 2 || !err || err_cap < 2) {
+    if (!checkout_dir || checkout_cap < 2 || !log_path || log_cap < 2 || !err || err_cap < 2) {
         return OMEGA_M18_CLEAN_CLONE_PLAN_FAILED;
     }
-    if (!shell_ok(physics_dir)) {
-        return fail_plan(err, err_cap, "physics path is empty or not safe to pass to the shell");
+    if (!path_fits(physics_dir)) {
+        return fail_plan(err, err_cap, "physics path is empty or does not fit");
     }
-    if (out_dir && out_dir[0] && !shell_ok(out_dir)) {
-        return fail_plan(err, err_cap, "output directory is not safe to pass to the shell");
+    if (out_dir && out_dir[0] && !path_fits(out_dir)) {
+        return fail_plan(err, err_cap, "output directory path does not fit");
     }
-    if (tmpdir && tmpdir[0] && !shell_ok(tmpdir)) {
-        return fail_plan(err, err_cap, "TMPDIR is not safe to pass to the shell");
+    if (tmpdir && tmpdir[0] && !path_fits(tmpdir)) {
+        return fail_plan(err, err_cap, "TMPDIR path does not fit");
     }
-    if (temp_fallback && temp_fallback[0] && !shell_ok(temp_fallback)) {
-        return fail_plan(err, err_cap, "temp directory is not safe to pass to the shell");
+    if (temp_fallback && temp_fallback[0] && !path_fits(temp_fallback)) {
+        return fail_plan(err, err_cap, "temp directory path does not fit");
     }
 
     int have_out = out_dir && out_dir[0];
@@ -264,10 +372,10 @@ int omega_m18_clean_clone_plan(const char *out_dir, const char *tmpdir,
         if (st != OMEGA_M18_CLEAN_CLONE_OK) return st;
     }
 
-    if (make_absolute(log_path, log_cap) != 0 || !shell_ok(log_path)) {
-        return fail_plan(err, err_cap, "log path is not absolute or not safe to pass to the shell");
+    if (make_absolute(log_path, log_cap) != 0 || !path_fits(log_path)) {
+        return fail_plan(err, err_cap, "log path is not absolute or does not fit");
     }
-    return build_command(command, command_cap, checkout_dir, log_path, physics_dir, err, err_cap);
+    return OMEGA_M18_CLEAN_CLONE_OK;
 }
 
 void omega_m18_clean_clone_print_log_path(const char *log_path) {
@@ -275,25 +383,12 @@ void omega_m18_clean_clone_print_log_path(const char *log_path) {
     fprintf(stderr, "M18 clean-clone log: %s\n", log_path);
 }
 
-static int rm_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
-    (void)sb;
-    (void)typeflag;
-    (void)ftwbuf;
-    if (remove(fpath) != 0) return -1;
-    return 0;
-}
-
 int omega_m18_clean_clone_remove_checkout(const char *checkout_dir, const char *log_path) {
     if (!checkout_dir || !checkout_dir[0]) return 0;
     char path[4096];
     int n = snprintf(path, sizeof(path), "%s/checkout", checkout_dir);
     if (n < 0 || (size_t)n >= sizeof(path)) return -1;
-    struct stat st;
-    if (lstat(path, &st) == 0) {
-        if (nftw(path, rm_cb, 16, FTW_DEPTH | FTW_PHYS) != 0) return -1;
-    } else if (errno != ENOENT) {
-        return -1;
-    }
+    if (rm_tree(path) != 0) return -1;
     size_t cl = strlen(checkout_dir);
     int log_here = log_path && strncmp(log_path, checkout_dir, cl) == 0 &&
                    (log_path[cl] == '/' || log_path[cl] == '\0');
