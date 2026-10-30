@@ -62,7 +62,14 @@ static void stream(const uint8_t *d, size_t len, int fs, uint8_t out[32]) {
 
 static void known(const char *msg, const char *hex) {
     uint8_t want[32], a[32], b[32];
-    for (int i = 0; i < 32; i++) { unsigned v; sscanf(hex + 2 * i, "%2x", &v); want[i] = (uint8_t)v; }
+    for (int i = 0; i < 32; i++) {
+        unsigned v;
+        if (sscanf(hex + 2 * i, "%2x", &v) != 1) {
+            printf("INVALID known-answer digest %s at byte %d\n", hex, i);
+            exit(2);
+        }
+        want[i] = (uint8_t)v;
+    }
     fs_sha256_hash((const uint8_t *)msg, strlen(msg), a);
     sha256_hash((const uint8_t *)msg, strlen(msg), b);
     check("known-answer C", strlen(msg), a, want);
