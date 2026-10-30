@@ -73,14 +73,15 @@ do
 done
 
 # /tmp not writable, TMPDIR set to a directory on this workspace.
+# This kernel denies unprivileged user namespaces
+# (apparmor_restrict_unprivileged_userns = 1), so unshare cannot make the
+# mount. bubblewrap can: it uses the setuid helper. The observable is the
+# same: open("/tmp/...") returns EROFS.
 ro_out=$work/ro.out
 set +e
-unshare --user --map-root-user --mount sh -c '
-        mount -t tmpfs -o ro,nosuid,nodev,mode=0555 none /tmp || exit 77
-        if touch /tmp/m18-ro-probe 2>/dev/null; then exit 78; fi
-        export M18_REQUIRE_TMP_UNWRITABLE=1
-        exec "$1" "$2"
-    ' sh "$work/good" "$work/run-ro" >"$ro_out"
+bwrap --ro-bind / / --bind "$work" "$work" --dev /dev --tmpfs /tmp --ro-bind /tmp /tmp \
+    --setenv M18_REQUIRE_TMP_UNWRITABLE 1 \
+    "$work/good" "$work/run-ro" >"$ro_out" 2>&1
 ro_rc=$?
 set -e
 if [ "$ro_rc" -eq 0 ] && grep -q '^PASS M18_CLEAN_CLONE_LOG_TMP_UNWRITABLE_STILL_SELECTS$' "$ro_out" \
@@ -106,12 +107,9 @@ END { if (replaced != 1) exit 2 }
 ' "$src" >"$work/mutant.c"
 "$cc" $cflags -o "$work/mutant" "$testc" "$work/mutant.c"
 set +e
-unshare --user --map-root-user --mount sh -c '
-        mount -t tmpfs -o ro,nosuid,nodev,mode=0555 none /tmp || exit 77
-        if touch /tmp/m18-ro-probe 2>/dev/null; then exit 78; fi
-        export M18_REQUIRE_TMP_UNWRITABLE=1
-        exec "$1" "$2"
-    ' sh "$work/mutant" "$work/run-mut" >"$work/mut.out"
+bwrap --ro-bind / / --bind "$work" "$work" --dev /dev --tmpfs /tmp --ro-bind /tmp /tmp \
+    --setenv M18_REQUIRE_TMP_UNWRITABLE 1 \
+    "$work/mutant" "$work/run-mut" >"$work/mut.out" 2>&1
 mut_rc=$?
 set -e
 if [ "$mut_rc" -ne 0 ] \

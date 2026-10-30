@@ -104,10 +104,12 @@ int main(int argc, char **argv) {
               strcmp(OMEGA_M18_CLEAN_CLONE_NESTED_ENV, "OMEGA_IN_CLEAN_CLONE") == 0,
               "M18_CLEAN_CLONE_COMMAND_USES_LOG");
         check(access(log, W_OK) == 0, "M18_CLEAN_CLONE_LOG_CREATED");
-        char co[4096], nest[4096], marker[4096];
-        snprintf(co, sizeof co, "%s/checkout", checkout);
-        snprintf(nest, sizeof nest, "%s/nested", co);
-        snprintf(marker, sizeof marker, "%s/keep-me", nest);
+        char co[4200], nest[4200], marker[4200];
+        int nco = snprintf(co, sizeof co, "%s/checkout", checkout);
+        int nn = snprintf(nest, sizeof nest, "%s/nested", co);
+        int nm = snprintf(marker, sizeof marker, "%s/keep-me", nest);
+        check(nco > 0 && (size_t)nco < sizeof co && nn > 0 && (size_t)nn < sizeof nest &&
+              nm > 0 && (size_t)nm < sizeof marker, "M18_CLEAN_CLONE_PATH_FITS");
         check(mkdir(co, 0755) == 0 && mkdir(nest, 0755) == 0, "M18_CLEAN_CLONE_CHECKOUT_SETUP");
         write_file(marker);
         check(omega_m18_clean_clone_remove_checkout(checkout, log) == 0, "M18_CLEAN_CLONE_REMOVE_OK");
@@ -200,13 +202,14 @@ int main(int argc, char **argv) {
      * it as one argument. A shell would have treated the quote as syntax and
      * run the touch. */
     {
-        char hostile[768], src[768], hello[800], dest[800], copied[800];
+        char hostile[768], src[768], hello[800], dest[800], copied[900];
         char marker_cwd[512], marker_work[768];
         snprintf(hostile, sizeof hostile, "%s/out x';touch m18_pwned_marker;", work);
         snprintf(src, sizeof src, "%s/tiny-src", work);
         snprintf(hello, sizeof hello, "%s/hello", src);
         snprintf(dest, sizeof dest, "%s/copied", hostile);
-        snprintf(copied, sizeof copied, "%s/hello", dest);
+        int nc = snprintf(copied, sizeof copied, "%s/hello", dest);
+        check(nc > 0 && (size_t)nc < sizeof copied, "M18_CLEAN_CLONE_COPIED_FITS");
         if (!getcwd(marker_cwd, sizeof marker_cwd)) return 2;
         size_t ml = strlen(marker_cwd);
         if (ml + 20 >= sizeof marker_cwd) return 2;
