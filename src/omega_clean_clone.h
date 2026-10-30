@@ -47,6 +47,9 @@
 #define OMEGA_M18_CLEAN_CLONE_LOG_CREATE_FAILED 1
 #define OMEGA_M18_CLEAN_CLONE_PLAN_FAILED 2
 #define OMEGA_M18_CLEAN_CLONE_CHECKOUT_DIR_FAILED 3
+/* The child never reached exec (chdir, setenv, dup2, or execvp failed).
+ * This is not a waited-for exit status, so it is not make's 127. */
+#define OMEGA_M18_CLEAN_CLONE_EXEC_FAILED (-2)
 
 /* Nested tool, started with cwd set to the checkout. The name is fixed. */
 #define OMEGA_M18_CLEAN_CLONE_TOOL "./build/omegatool"
@@ -63,13 +66,16 @@ int omega_m18_clean_clone_plan(const char *out_dir, const char *tmpdir,
                                char *log_path, size_t log_cap,
                                char *err, size_t err_cap);
 
-/* cp -r src dst. src and dst are arguments. Returns 0 when cp exits 0. */
+/* cp -r src dst. src and dst are arguments. Returns 0 when cp exits 0.
+ * Returns OMEGA_M18_CLEAN_CLONE_EXEC_FAILED when cp cannot be started. */
 int omega_m18_clean_clone_copy_tree(const char *src, const char *dst);
 
 /* Run the clean clone: copy the git toplevel into <checkout_dir>/checkout,
  * make OUT_DIR=build clean, make -j OUT_DIR=build with PHYSICS_DIR set in
  * the environment, then the nested tool with its stdout and stderr in
- * log_path. Returns 0 when every step exits 0. */
+ * log_path. Returns 0 when every step exits 0. A step that ran and failed
+ * returns that process's exit status. A program that could not be started
+ * returns OMEGA_M18_CLEAN_CLONE_EXEC_FAILED, which is not 127. */
 int omega_m18_clean_clone_run(const char *checkout_dir, const char *log_path,
                               const char *physics_dir);
 

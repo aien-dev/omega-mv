@@ -195,24 +195,61 @@ static int make_absolute(char *path, size_t cap) {
     return copy_path(path, cap, joined);
 }
 
+/* Tell the parent that exec did not happen. The write end is close-on-exec,
+ * so a successful exec closes it and the parent sees EOF instead of a byte. */
+static void note_exec_failed(int fd) {
+    unsigned char b = 1;
+    ssize_t w = write(fd, &b, 1);
+    (void)w;
+    _exit(126);
+}
+
 /* file is the program name, always a literal at the call. argv may hold
  * paths. dir, when set, is the child's cwd. out_fd, when >= 0, becomes
- * the child's stdout and stderr. One environment value is set in the child only. */
+ * the child's stdout and stderr. One environment value is set in the child only.
+ * A program that exits does so with its own status (make exits 2 when a
+ * recipe exits 127). A failure before exec is OMEGA_M18_CLEAN_CLONE_EXEC_FAILED. */
 static int run_direct(const char *file, char *const argv[], const char *dir,
                       int out_fd, const char *env_name, const char *env_value) {
     if (!file || !file[0] || !argv || !argv[0]) return -1;
+    int errpipe[2];
+    if (pipe(errpipe) != 0) return -1;
+    if (fcntl(errpipe[0], F_SETFD, FD_CLOEXEC) != 0 ||
+        fcntl(errpipe[1], F_SETFD, FD_CLOEXEC) != 0) {
+        close(errpipe[0]);
+        close(errpipe[1]);
+        return -1;
+    }
     pid_t pid = fork();
-    if (pid < 0) return -1;
+    if (pid < 0) {
+        close(errpipe[0]);
+        close(errpipe[1]);
+        return -1;
+    }
     if (pid == 0) {
-        if (dir && chdir(dir) != 0) _exit(127);
-        if (env_name && env_value && setenv(env_name, env_value, 1) != 0) _exit(127);
+        close(errpipe[0]);
+        if (dir && chdir(dir) != 0) note_exec_failed(errpipe[1]);
+        if (env_name && env_value && setenv(env_name, env_value, 1) != 0) note_exec_failed(errpipe[1]);
         if (out_fd >= 0) {
-            if (dup2(out_fd, STDOUT_FILENO) < 0 || dup2(out_fd, STDERR_FILENO) < 0) _exit(127);
+            if (dup2(out_fd, STDOUT_FILENO) < 0 || dup2(out_fd, STDERR_FILENO) < 0)
+                note_exec_failed(errpipe[1]);
             if (out_fd > STDERR_FILENO) close(out_fd);
         }
         execvp(file, argv);
-        _exit(127);
+        note_exec_failed(errpipe[1]);
     }
+    close(errpipe[1]);
+    int saw_fail = 0;
+    int read_err = 0;
+    for (;;) {
+        unsigned char b = 0;
+        ssize_t got = read(errpipe[0], &b, 1);
+        if (got < 0 && errno == EINTR) continue;
+        if (got < 0) read_err = 1;
+        else if (got == 1) saw_fail = 1;
+        break;
+    }
+    close(errpipe[0]);
     int status = 0;
     for (;;) {
         pid_t w = waitpid(pid, &status, 0);
@@ -220,6 +257,8 @@ static int run_direct(const char *file, char *const argv[], const char *dir,
         if (w < 0) return -1;
         break;
     }
+    if (read_err) return -1;
+    if (saw_fail) return OMEGA_M18_CLEAN_CLONE_EXEC_FAILED;
     if (WIFEXITED(status)) return WEXITSTATUS(status);
     return -1;
 }
@@ -237,13 +276,16 @@ int omega_m18_git_toplevel(char *out, size_t cap) {
     }
     if (pid == 0) {
         close(fds[0]);
-        if (dup2(fds[1], STDOUT_FILENO) < 0) _exit(127);
+        if (dup2(fds[1], STDOUT_FILENO) < 0) _exit(126);
         int devnull = open("/dev/null", O_WRONLY);
         if (devnull >= 0) dup2(devnull, STDERR_FILENO);
         if (fds[1] != STDOUT_FILENO) close(fds[1]);
         char *argv[] = {"git", "rev-parse", "--show-toplevel", NULL};
         execvp("git", argv);
-        _exit(127);
+        /* Setup or exec failed. The parent reports this as "no toplevel"
+         * (-1), not as 127, which is also what a missing recipe command
+         * makes make print. */
+        _exit(126);
     }
     close(fds[1]);
     size_t n = 0;
@@ -313,11 +355,12 @@ int omega_m18_clean_clone_run(const char *checkout_dir, const char *log_path,
     int n = snprintf(dest, sizeof(dest), "%s/checkout", checkout_dir);
     if (n < 0 || (size_t)n >= sizeof(dest)) return -1;
     if (rm_tree(dest) != 0) return -1;
-    if (omega_m18_clean_clone_copy_tree(root, dest) != 0) return -1;
+    int rc = omega_m18_clean_clone_copy_tree(root, dest);
+    if (rc != 0) return rc == OMEGA_M18_CLEAN_CLONE_EXEC_FAILED ? rc : -1;
     int devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
     if (devnull < 0) return -1;
     char *clean_argv[] = {"make", "OUT_DIR=build", "clean", NULL};
-    int rc = run_direct("make", clean_argv, dest, devnull, NULL, NULL);
+    rc = run_direct("make", clean_argv, dest, devnull, NULL, NULL);
     if (rc != 0) {
         close(devnull);
         return rc;

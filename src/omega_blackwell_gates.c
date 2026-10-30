@@ -1038,7 +1038,9 @@ static bool test_m18_gate16_clean_clone(void) {
         return false;
     }
     int rc = omega_m18_clean_clone_run(checkout_dir, log_path, physics_dir_resolved);
-    if (rc != 0) {
+    if (rc == OMEGA_M18_CLEAN_CLONE_EXEC_FAILED) {
+        fprintf(stderr, "M18 clean clone failed to exec; log: %s\n", log_path);
+    } else if (rc != 0) {
         fprintf(stderr, "M18 clean clone failed (rc %d); log: %s\n", rc, log_path);
     }
     if (omega_m18_clean_clone_remove_checkout(checkout_dir, log_path) != 0) {

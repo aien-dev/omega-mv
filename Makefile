@@ -203,6 +203,16 @@ clean:
 test-m19: $(TARGET)
 	./$(TARGET) --run-m19-gates
 
+# Host-only M18 clean-clone log test (omega#526). The script compiles
+# tests/m18_clean_clone_log_test.c and src/omega_clean_clone.c and nothing
+# else. It does not link $(SRCS): src/omega_om_units.c is AArch64 assembly,
+# and an x86 link of omegatool fails. AIEN Checks (ubuntu-latest) does not
+# run this repository's make; it verifies crumbs and the portable secret
+# scan named on origin/main. This target is the x86-runnable piece.
+.PHONY: test-m18-clean-clone-log
+test-m18-clean-clone-log:
+	sh tests/m18_clean_clone_log_test.sh
+
 # Host-only tests of the M19R qualifier (tools/m19r_qualify.sh) and its
 # canonical-JSON helper (tools/json_canon.c). No GPU.
 .PHONY: test-m19r-qualify

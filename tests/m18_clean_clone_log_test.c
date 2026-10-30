@@ -234,6 +234,27 @@ int main(int argc, char **argv) {
         check(literal, "M18_CLEAN_CLONE_HOSTILE_PATH_NOT_A_SHELL");
     }
 
+    /* cp is not on PATH. The failure must be the exec sentinel, not 127,
+     * which is the status make prints when a recipe command is missing
+     * (GNU make itself then exits 2). */
+    {
+        char tiny[768], gone[768];
+        snprintf(tiny, sizeof tiny, "%s/tiny-src", work);
+        snprintf(gone, sizeof gone, "%s/exec-fail-dst", work);
+        const char *old_path = getenv("PATH");
+        char *saved = old_path ? strdup(old_path) : NULL;
+        int set_ok = setenv("PATH", "/no-such-m18-path", 1) == 0;
+        int copy_rc = omega_m18_clean_clone_copy_tree(tiny, gone);
+        if (saved) {
+            setenv("PATH", saved, 1);
+            free(saved);
+        } else {
+            unsetenv("PATH");
+        }
+        check(set_ok && copy_rc == OMEGA_M18_CLEAN_CLONE_EXEC_FAILED && copy_rc != 127,
+              "M18_CLEAN_CLONE_EXEC_FAILED_NOT_127");
+    }
+
     if (getenv("M18_REQUIRE_TMP_UNWRITABLE")) {
         int probe = open("/tmp/m18_clean_clone_ro_probe", O_CREAT | O_WRONLY | O_EXCL, 0644);
         int tmp_blocked = (probe < 0);
