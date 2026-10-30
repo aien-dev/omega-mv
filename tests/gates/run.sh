@@ -137,6 +137,19 @@ case "$step" in
                       # gate5 checks that seed/omc/size-history.tsv ends with a row for this omc; check.sh does not run it
                       sh seed/omc/gate5.sh 2>&1 | tee "$OUT_DIR.seed-gate5.log"
                       tail -1 "$OUT_DIR.seed-gate5.log" | grep -q "^GATE5 PASS" || { echo "OMEGA-SEED: gate5 failed" >&2; exit 1; } ;;
+  # omega-mv#731 ORIG-4 (no hosted mirror; host only): the shadow advisor's glue over the
+  # pinned aien-train units (native/orig4/orig4.pin, one aien-train main commit), materialised
+  # under build/pins from the sibling clone; every verdict is made by the .om units.
+  orig4-shadow)
+    train_sha="$(awk '$1 == "unit" && $3 == "aien-train" {print $4; exit}' native/orig4/orig4.pin)"
+    pin aien-train-src aien-train "$train_sha"
+    set -o pipefail
+    OUT="$ROOT/$OUT_DIR/orig4" ORIG4_TRAIN_GIT="$PINS/aien-train-src" \
+      sh tests/orig4/run.sh | tee "$OUT_DIR.orig4.log"
+    grep -q '^ORIG4_SHADOW_RUN_PASS$' "$OUT_DIR.orig4.log"
+    obs shadow_test_checks "$(sed -n 's/.*ORIG4_SHADOW_TEST_PASS checks=\([0-9]*\).*/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"
+    obs cost_wall_ms_mlp "$(sed -n 's/^COST_WALL records=780 ms=\([0-9]*\) image=mlp fixture$/\1/p' "$OUT_DIR.orig4.log" | head -n 1)"
+    ;;
   # host-suites-2.yml
   visor)              aienos_pin; make $NOPHYS test-visor ;;
   turing)             make $NOPHYS test-turing; make $NOPHYS test-turing-exp001-a test-turing-exp001-coders; make $NOPHYS test-turing-verify-indep; make $NOPHYS test-turing-qcont test-turing-qrecord ;;

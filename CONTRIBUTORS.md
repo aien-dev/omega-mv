@@ -53,6 +53,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 | Claude Opus 5.5 | seed/agent: omagent, a nanobot-style coding agent in seeded Omega (agent loop, four permissioned tools, JSONL session memory, SSE streaming, CLI), its scripted-mock test referee with six mutants, and the paired startup/RSS benchmark against nanobot |
 | Claude Opus 5.5 | Tenstorrent Tensix vecadd (`seed/tensix`): RV32IM asm2 table, hand-written kernel and start code, seeded Omega emitter `irrv32.om` (OSC IR v1 scalar unit -> RV32 elementwise kernel, byte-identical to asm2), hand-written edge disassembly, ttsim WH/BH and qemu interop-oracle gate with negative controls |
 | Claude Opus 5.5 | AWS Trainium/Inferentia backend `seed/nki`: `irnki.om` OSC IR v1 to `nki.isa` vecadd/elementwise emitter, native-Omega reference lanes, NKI CPU simulator interop-oracle gate (trn1/trn2/trn3) with negative controls and refusals, pinned oracle setup |
+| Claude Opus 5.5 (via omp) | ORIG-4 shadow advice (#731): `native/orig4/shadow.om` advisor, pin file, in-process tests, host glue, gate `omega-orig4-shadow` and `spec/shadow-advice-v0.md` |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
