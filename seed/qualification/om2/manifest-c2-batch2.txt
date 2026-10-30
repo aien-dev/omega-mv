@@ -1,0 +1,8 @@
+# Declared C2 delta for omc 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f (batch 2). manifest-c2.txt stays frozen.
+# Under it this compiler fails exactly six rows: the three capacity rows in manifest-c2-capacity.txt (#768) and the three below.
+# c2-00015: getppid now uses arm64 syscall 173 (was 110, timer_settime; #808). The new binary exits 0; the 189ada82 build of the same source exits 7.
+# c2-00033: the sockopt allowlist (#808) adds its option/length checks. The program still exits 0 under both compilers; only code bytes differ.
+# c2-00728: IR mode `continue` outside a loop is still error 3, now reported at the continue line 3 instead of line 4 (#810 IR validation).
+c2-00015 emit pack:seed/qualification/om2/c2/corpus.pack:57323:784 sha:782229d287f562e1201e2ba00b3642fa0ca22cdd24bd41be801d0a622d22d4c7 - 0
+c2-00033 emit pack:seed/qualification/om2/c2/corpus.pack:86523:1009 sha:6b8c1c709e8904234c4737dfc9df5cbfbaba7d5034a66b2975252d8f99433835 - 0
+c2-00728 emit pack:seed/qualification/om2/c2/corpus.pack:520729:31 - err:3:3 3

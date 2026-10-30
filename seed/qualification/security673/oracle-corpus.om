@@ -1,0 +1,66 @@
+note Deliberately synthetic decoder outputs. These test parser refusal, not compiler correctness.
+global mode uchar 1
+global textbuf uchar 256
+text good "b0: b.ne 0xb4\nb4: mov\tx1, #0x3039\n"
+text token "b0: b.ne 0xb4garbage\nb4: bogus #12345oops\n"
+text reg "b0: b.ne 0xb4\nb4: mov\tx8, #0x3039\n"
+text dupl "b0: b.ne 0xb4\nb4: mov\tx1, #0x3039\nb8: mov\tx1, #0x3039\n"
+text missing "b0: b.ne 0xb4\n"
+text wrong "b0: b.ne 0xb8\nb4: mov\tx1, #0x3039\n"
+text prefix "b0: b.ne 0xb4\nb4: notmov\tx1, #0x3039\n"
+fn main to int
+if ne read 0 mode 0 1 1
+ret 90
+end
+m = get mode 0
+if gt m 6
+ret 90
+end
+n = ulong 0
+if eq m 0
+n = len good
+for i ulong n
+put textbuf i get good i
+end
+end
+if eq m 1
+n = len token
+for i ulong n
+put textbuf i get token i
+end
+end
+if eq m 2
+n = len reg
+for i ulong n
+put textbuf i get reg i
+end
+end
+if eq m 3
+n = len dupl
+for i ulong n
+put textbuf i get dupl i
+end
+end
+if eq m 4
+n = len missing
+for i ulong n
+put textbuf i get missing i
+end
+end
+if eq m 5
+n = len wrong
+for i ulong n
+put textbuf i get wrong i
+end
+end
+if eq m 6
+n = len prefix
+for i ulong n
+put textbuf i get prefix i
+end
+end
+if ne write 1 textbuf 0 n long n
+ret 91
+end
+ret 0
+end

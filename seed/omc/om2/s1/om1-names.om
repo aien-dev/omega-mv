@@ -1,0 +1,9 @@
+note an OM-1 unit keeps rotr, fresh and at as user names
+fn rotr x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+fn main to int
+fresh = uint 1
+at = rotr 2 1
+ret int add fresh at
+end

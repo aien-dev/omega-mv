@@ -1,0 +1,5 @@
+fn d32 a int b int to int
+q = div a b
+r = rem a b
+ret sub q r
+end

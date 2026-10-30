@@ -1,0 +1,6 @@
+note 2^63 read as a ulong, in an op with a ulong name: its top 4 bits are 8
+fn main to int
+z = ulong 0
+x = add z 9223372036854775808
+ret int shr x 60
+end

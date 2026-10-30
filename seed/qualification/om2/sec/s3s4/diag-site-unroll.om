@@ -1,0 +1,13 @@
+note SPDX-License-Identifier: Apache-2.0
+note Contract section 4 lines 114-116: the div on line 10 is copied 3 times by unroll; each copy is a
+note run-time trap site (divisor a) recorded as omc-site 1 line=10 iter=k. The contract alone does not fix the
+note numbering; erratum E7 does: 0-based counter values in emission order, so exactly iter=0, 1, 2
+note (exp/diag-site-unroll.err). Same artifact as diag-site-unroll-plain.om.
+om2 diag
+fn f a ulong to ulong
+s = ulong 0
+for i ulong 3 unroll
+s = add s div i a
+end
+ret s
+end
