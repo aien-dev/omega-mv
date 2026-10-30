@@ -6,7 +6,8 @@ are sm_86; Jetson Orin is sm_87) and Ada (RTX 40xx, L4, L40 are sm_89), which sh
 Nothing was compiled to add it. The new part is text, plus a check.
 
 Status: IMPLEMENTED and host-verified against Mesa NAK's encoder. No sm_80/86/87/89 GPU has run any of it
-(NOT_RUN). The hardware needed is listed at the end.
+(NOT_RUN). The hardware needed is listed at the end. `gate80.sh` is a host-only gate: it proves the table writes
+NAK's words, not that an sm_80/86/87/89 chip runs them.
 
 ## What is here
 
@@ -24,6 +25,7 @@ Status: IMPLEMENTED and host-verified against Mesa NAK's encoder. No sm_80/86/87
   each case to its first instruction, form, kind and operands. `vecadd.nak.bin` is NAK's bytes for the vector
   add. `sched80.tsv` holds NAK's own schedule for the vector add, for reference. `SHA256SUMS` covers the
   uncompressed files.
+- `nakref.sha256`: the sha256 of every source file of the referee that wrote `vectors/` (below).
 
 ## Sources
 
@@ -49,9 +51,14 @@ are not emitted: 11,244 were refused and none of them came from a NAK assertion.
 - branch distances 0, 1, 2, 3, 7, 63, 64, 1000, 4095, -2, -3, -64, -1000 and -4096;
 - 64 random valid combinations, using a fixed seed.
 
-The program and its build files are in `/home/drakestapleton/handoffs/CudaArch/nakref` (oracle `main.rs`
-sha256 `6ca07b6da0bfc219e8237c05becfaac24c2a0e09dd4bb355a925ce2526bca6d0`). Whether it should live in this
-repo is open. It is Rust, and seed referees are .om
+The program and its build files are in `/home/drakestapleton/handoffs/CudaArch/nakref` (Spark). They are pinned
+by `nakref.sha256` here: one line per source file of the harness (`sha256sum -c` format, paths relative to the
+harness root; oracle `main.rs` sha256 `5f443516812e855109f5ba99da8735f6164b2615407ea66988c0d3847b039e32`). The
+harness compiles the NAK files of the Mesa clone at `02f13375` (clean) through absolute `#[path]` attributes, and
+its only crate from crates.io is `rustc-hash` 2.1.3 (`Cargo.lock`). Rebuilt from these files on 2026-10-30
+(rustc 1.98.1, `cargo build --offline --locked -p nakref`), it writes `edges`, `cases`, `vecadd` and `sched` for
+sm_80 byte-identical to `vectors/` (`SHA256SUMS`, `sched80.tsv`). `gate80.sh` needs none of this: it reads the
+committed vectors. Whether the harness should live in this repo is open. It is Rust, and seed referees are .om
 or the existing C precedent (`seed/sm121/sm121list.c`).
 
 The same oracle shows that NAK's bytes for all 124,066 instructions, and for the vector add, are identical at

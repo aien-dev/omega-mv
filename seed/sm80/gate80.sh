@@ -12,7 +12,7 @@
 # 4. controls: a wrong register, a wrong offset, an out-of-range register, a wrong table bit and a field in
 #    the wrong place must each change the vector add; a moved field in a form only the edge listing uses must
 #    be caught by the edge check.
-# No NVIDIA tool is run. Results: evidence/SEED-0/sm80/.
+# Host only: no NVIDIA tool and no GPU is run; a pass is not hardware qualification. Results: evidence/SEED-0/sm80/.
 set -eu
 R=seed/sm80; V=$R/vectors; B=build/seed/sm80; E=evidence/SEED-0/sm80
 ASM=seed/rung2/asm2.bin; TAB=$R/sm80.tbl
