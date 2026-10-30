@@ -6,6 +6,8 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Model | What it did |
 |---|---|
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
+| Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
+| Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
@@ -56,3 +58,5 @@ Update this table in the same commit as the work it credits.
 | Grok 4.7 | Merged current main (089e5b05) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
 | Grok 4.7 | Merged current main (62d1d0d) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
 | Grok 4.7 | Cost-model refusal of unsupported semantic operation IDs before prediction or learning, with a clamp-restoring mutant (Refs #704) |
+| Grok 4.7 | Cost-model refusal of unsupported semantic operation IDs before prediction or learning, with a clamp-restoring mutant (Refs #704) |
+| Grok 4.7 | Merged current main (b3dca0f1) into #514. The only conflict was the generated root `.crumb`; regenerated crumbs with the crumb.lock tool (d0f0b95d). |
