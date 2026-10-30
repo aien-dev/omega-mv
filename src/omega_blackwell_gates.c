@@ -34,6 +34,7 @@
 #include <math.h>
 #include <limits.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
 
 static int m17_gate_count = 0;
 static int m17_gate_passed = 0;
@@ -995,28 +996,12 @@ static bool test_m18_gate16_clean_clone(void) {
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
         return true;
     }
-    /* Copy the repo this omegatool runs from (the code under test), not a
-     * hardcoded checkout, and pass the PHYSICS_DIR this process resolves at run time
-     * (omega_physics_dir.h) as an absolute path so the copy in /tmp does not fall back to
-     * the Makefile default ../physics (= /tmp/physics). Mirrors M19. */
-    char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
-    if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
-        fprintf(stderr, "%s\n", physics_err);
-        return false;
-    }
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "root=$(git rev-parse --show-toplevel) && "
-                       "rm -rf /tmp/omega_clean_m18 && "
-                       "cp -r \"$root\" /tmp/omega_clean_m18 && "
-                       "cd /tmp/omega_clean_m18 && "
-                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
-                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
-                       physics_dir_resolved);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
-    int rc = system(command);
-    return (rc == 0);
+    /* Clone the exact revision this omegatool runs from (the code under test)
+     * into a fresh /tmp directory, build it from scratch at the pinned
+     * PHYSICS_DIR and rerun the M18 suite there (omega_clean_clone.h). Mirrors
+     * M19. A dirty tree is refused: a clean clone cannot reproduce it. */
+    char clone_sha[41] = {0};
+    return omega_clean_clone_run("m18", "--run-m18-gates", clone_sha);
 }
 
 
