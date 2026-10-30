@@ -15,7 +15,7 @@ On the GPU, the goal is a stack that does the jobs of CUDA's user-space software
 | **The GPU runtime** | Opens the device, allocates memory, launches kernels, records command lists and runs jobs. It does the job of CUDA's runtime and driver API (libcudart, libcuda). | `src/omega_gpu_session.h`, `omega_gpu_cmdlist.h`, `omega_gpu_engine.h`, `omega_gpu_platform.h` |
 | **The libraries** | Matrix multiply, matrix-vector (BF16, FP8, 4-bit, ternary), attention (decode and prefill), reductions, elementwise. They do the job of cuBLAS and cuDNN. | `src/omega_gpu_*_api.h` |
 
-**Below Omega, and not part of it:** the driver. Omega reaches the GPU through the physics repository's driver client (`nvrm/nvrm.c`, `m16/m16_native.c`). The client talks to NVIDIA's open-source kernel module (`nvidia.ko`, `nvidia-uvm.ko`, version 580.173.02) and the module boots NVIDIA's signed GSP firmware. The kernel module stays NVIDIA's open module. GB10 support and the facts we measure go to the upstream Linux drivers Nova and nouveau, not into a third driver; our own driver branch (L332, aienux#441) is a research harness only. The firmware stays NVIDIA's for a physical reason: the GPU checks its signature and will not boot anything else.
+**Below Omega, and not part of it:** the driver. Omega reaches the GPU through the physics repository's driver client (`nvrm/nvrm.c`, `m16/m16_native.c`). The client talks to NVIDIA's open-source kernel module (`nvidia.ko`, `nvidia-uvm.ko`, version 580.173.02) and the module boots NVIDIA's signed GSP firmware. Aien builds and uses its own GB10 driver to replace that kernel module (aien-dev/omega-gpu-driver, lane OwnDriver, building on aienux#441; L332); it is not hardware-qualified yet. GB10 facts we measure on the way (chip id, boot sequence) still go upstream to the Linux drivers Nova and nouveau as findings. The firmware stays NVIDIA's for a physical reason: the GPU checks its signature and will not boot anything else.
 
 **Prior art we build beside.** Omega's sm_121 encoder is one of several open ones. Mesa's NAK compiler emits SM120 code (MIT, checked against nvdisasm), cubit is an MIT SM120/SM121a assembler and disassembler, blackwell-isa publishes MIT sm121a encoding tables, and nvidia-sass-document collects SASS notes. tinygrad's NVKIface talks to the same open kernel module interface our driver client uses. We cross-check against them and credit them; `THIRD_PARTY.md` in aien-dev/CUDApp lists what we reuse.
 
@@ -36,7 +36,7 @@ On the GPU, the goal is a stack that does the jobs of CUDA's user-space software
 | cuobjdump, nvdisasm | Read machine code back | Omega's own sm_121 disassembler (`build/sm121dis`); `nvdisasm` stays only as the reference it is checked against | PASS, receipts on main (bar C6, `evidence/C6-DISASM/`) |
 | Nsight | Measure | Omega's own ceiling probes (115.14 TFLOPS tensor-core peak, 195.1 GB/s reads; `evidence/OWN30B-T3-TC-PEAK-BW-5faa0f70-20261013T2236Z/`) | PARTIAL: probes exist, no single tool |
 | CUDA samples, docs | Your first kernel | none yet (`runtime/r2-hello`, `runtime/r1-api` are unmerged branches) | MISSING |
-| `nvidia.ko`, `nvidia-uvm.ko` | Kernel driver | not Omega: NVIDIA's open kernel module stays; GB10 support goes upstream to Nova and nouveau (L332 is a research harness) | stays |
+| `nvidia.ko`, `nvidia-uvm.ko` | Kernel driver | not Omega: AIEN's own GB10 driver (aien-dev/omega-gpu-driver, building on aienux#441, L332); findings go upstream to Nova and nouveau | MISSING |
 | GSP firmware | Runs inside the GPU | stays NVIDIA's (signature-checked by the chip) | not replaceable |
 
 ### What is already true, with a receipt
@@ -64,7 +64,7 @@ We say it when every row is PASS, each with a receipt pushed on the exact commit
 
 These are not part of the CUDA claim. They are the rest of what Omega is for, and each has its own bar.
 
-- **NVIDIA's kernel module.** It stays. Rather than grow a third driver beside NVIDIA's open module and Nova, we take GB10 support and the facts we measure to the upstream Nova and nouveau drivers. Our own driver branch (L332, aienux#441) is a research harness for that work, not a product. The GSP firmware stays, as above.
+- **No NVIDIA software at all.** Aien builds and uses its own GB10 driver to replace `nvidia.ko` and `nvidia-uvm.ko` (aien-dev/omega-gpu-driver, lane OwnDriver, building on aienux#441; L332). The bar: Omega's golden tokens identical on our driver and on NVIDIA's, with per-word timing. GB10 facts we learn still go upstream to Nova and nouveau as findings. The GSP firmware stays, as above.
 - **The runtime written in Omega.** The GPU runtime and libraries are C today. The language rule (aien-architecture ADR 0024) keeps C only where hardware, boot, ABI or measurement justifies it, so the runtime moves into Omega once C1 makes that possible.
 - **The CPU.** The OSC and Omegese backends emit AArch64 machine code today (`src/compiler/osc_a64.c`). The live server is still a gcc and Rust build linked against glibc; it moves to Omega-compiled code as the language grows.
 
@@ -114,7 +114,7 @@ Each row PASS needs our receipt and the other system measured by us on this Spar
 | **P1. One conversation.** | Omega's best format beats the best measured CUDA number at one conversation, with golden tokens identical to our host reference. Levers: 4-bit experts, head and trunk in our own format (L284, L355), exact two-pass head (L314), MTP and tree verify (L310, L013). |
 | **P2. Prompt reading.** | Omega prefill beats the best measured CUDA number at 512 and 8k. Levers: general tensor-core GEMM at a high fraction of the 237.5 TFLOPS rate (bar C3), flash-style prefill attention, chunked DeltaNet scan (L369, L017). |
 | **P3. Many conversations.** | Omega total words per second beats the best measured CUDA number at 8 and 32 conversations. Levers: grouped expert GEMM over the expert union, bf16 state (L313), continuous batching on the stroke (L312, L354). |
-| **P4. What CUDA stacks do not do.** | At least one measured win that comes from owning the whole path above the kernel module: one submission per word or a resident whole-model kernel (L272), zero-copy use of the shared memory. |
+| **P4. What CUDA stacks do not do.** | At least one measured win that comes from owning the whole path: one submission per word or a resident whole-model kernel (L272), zero-copy use of the shared memory, our own driver's launch path (L332). |
 
 ### Targets (set 2026-10-22; goals, not results)
 
