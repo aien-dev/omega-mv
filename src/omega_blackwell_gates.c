@@ -34,6 +34,7 @@
 #include <math.h>
 #include <limits.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
 
 static int m17_gate_count = 0;
 static int m17_gate_passed = 0;
@@ -991,31 +992,77 @@ fail:
     return false;
 }
 
+/* Repo this process is running in. The clean-clone copy must not land inside it. */
+static int m18_git_toplevel(char *out, size_t cap) {
+    FILE *p = popen("git rev-parse --show-toplevel 2>/dev/null", "r");
+    if (!p) return -1;
+    if (!fgets(out, (int)cap, p)) {
+        pclose(p);
+        out[0] = '\0';
+        return -1;
+    }
+    int rc = pclose(p);
+    size_t n = strlen(out);
+    while (n && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
+    if (rc != 0 || n == 0) {
+        out[0] = '\0';
+        return -1;
+    }
+    return 0;
+}
+
 static bool test_m18_gate16_clean_clone(void) {
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
         return true;
     }
     /* Copy the repo this omegatool runs from (the code under test), not a
      * hardcoded checkout, and pass the PHYSICS_DIR this process resolves at run time
-     * (omega_physics_dir.h) as an absolute path so the copy in /tmp does not fall back to
-     * the Makefile default ../physics (= /tmp/physics). Mirrors M19. */
+     * (omega_physics_dir.h) as an absolute path so the copy does not fall back to
+     * the Makefile default ../physics. Mirrors M19.
+     *
+     * omega#526: the log used to be one fixed path on the host temp directory,
+     * shared by every account. Sticky permissions made the second user fail
+     * before the chip, and the suite reported that as a regression. The log now
+     * lives under this gate's OUT_DIR/clean-clone, or under TMPDIR when that is
+     * the directory the gate can use. The path is created first and printed. */
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
         return false;
     }
-    char command[4608];
-    int len = snprintf(command, sizeof(command),
-                       "root=$(git rev-parse --show-toplevel) && "
-                       "rm -rf /tmp/omega_clean_m18 && "
-                       "cp -r \"$root\" /tmp/omega_clean_m18 && "
-                       "cd /tmp/omega_clean_m18 && "
-                       "make OUT_DIR=build clean >/dev/null 2>&1 && "
-                       "make -j OUT_DIR=build PHYSICS_DIR='%s' >/dev/null 2>&1 && "
-                       "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1",
-                       physics_dir_resolved);
-    if (len < 0 || (size_t)len >= sizeof(command)) return false;
+    char repo[PATH_MAX];
+    const char *repo_root = NULL;
+    if (m18_git_toplevel(repo, sizeof(repo)) == 0) repo_root = repo;
+
+    char checkout_dir[PATH_MAX];
+    char log_path[PATH_MAX];
+    char command[PATH_MAX * 4];
+    char err[PATH_MAX + 256];
+    /* temp_fallback is the C library's temp directory. It is used only for the
+     * copy, and only when OUT_DIR sits inside the repo and TMPDIR is unset.
+     * The log file is not placed there when OUT_DIR or TMPDIR is set. */
+    int st = omega_m18_clean_clone_plan(getenv("OUT_DIR"), getenv("TMPDIR"), repo_root, P_tmpdir,
+                                        physics_dir_resolved,
+                                        checkout_dir, sizeof(checkout_dir),
+                                        log_path, sizeof(log_path),
+                                        command, sizeof(command),
+                                        err, sizeof(err));
+    if (log_path[0]) omega_m18_clean_clone_print_log_path(log_path);
+    if (st == OMEGA_M18_CLEAN_CLONE_LOG_CREATE_FAILED) {
+        fprintf(stderr, "%s\n", err);
+        return false;
+    }
+    if (st != OMEGA_M18_CLEAN_CLONE_OK) {
+        fprintf(stderr, "%s\n", err);
+        return false;
+    }
     int rc = system(command);
+    if (rc != 0) {
+        fprintf(stderr, "M18 clean clone failed (rc %d); log: %s\n", rc, log_path);
+    }
+    if (omega_m18_clean_clone_remove_checkout(checkout_dir, log_path) != 0) {
+        fprintf(stderr, "M18 clean clone: could not remove checkout under %s\n", checkout_dir);
+    }
     return (rc == 0);
 }
 
