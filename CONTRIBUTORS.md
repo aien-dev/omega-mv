@@ -27,6 +27,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |
 | OpenAI GPT-6 Astra | Composed security SC1 contracts, ownership reconciliation, independent acceptance review integration and evidence matrix (#625/#673) |
 | OpenAI GPT-6 Astra | SC1-Q checked quantities, object-bound slices, exhaustive arithmetic fixtures, compiled negative controls and native evidence (#756/#673) |
+| OpenAI GPT-6 Astra | SC1 conserved reservation vectors, public envelopes, native controls, independent finite edge oracle and helper measurements (#757/#759/#673) |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
 | Codex | Current .om front-page status and source-backed C migration inventory |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
