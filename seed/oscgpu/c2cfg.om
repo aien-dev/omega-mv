@@ -1,0 +1,661 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2cfg.om: the CFG and dataflow rules of src/checker2/c2_check.c, ported line for line:
+note build_cfg, link_cfg, dominates, count_defs, check_handles, check_defined, single_const,
+note loop_guarded, check_loops. Bitsets are 8 words of cbs at a base offset (the C's Bits).
+note Block ends use the C's uint32 arithmetic (first + count wraps modulo 2^32).
+
+text cmlay "block %d is not the next contiguous range"
+text cmnoterm "block %d does not end in a terminator"
+text cminterm "terminator inside block %d"
+text cmcover "blocks cover %u of %u instructions"
+text crlay "C2-CFG-LAYOUT"
+text crterm "C2-CFG-TERMINATOR"
+text crhand "C2-HANDLE-DISCIPLINE"
+text cmhdef "handle v%d defined more than once or a parameter"
+text cmhuse "handle v%d used outside its handle position"
+text cmhao "v%d is not a handle opened by AOPEN"
+text cmhpo "v%d is not a handle opened by POPEN"
+text crpool "C2-TYPE-POOL"
+text cmpool "pool value type"
+text crundef "C2-UNDEFINED-USE"
+text cmundef "v%d may be read before it is written"
+text crirr "C2-CFG-IRREDUCIBLE"
+text cmirr "cycle entered other than through its header (block %d)"
+text crunb "C2-LOOP-UNBOUNDED"
+text cmunb "loop at block %d has no counter guard"
+
+const cmask32 long 4294967295
+
+fn c2_bset base long i long to void
+w = add base shr i 6
+b = shl ulong 1 and i 63
+put cbs w or get cbs w b
+end
+
+fn c2_btest base long i long to bool
+x = shr get cbs add base shr i 6 and i 63
+ret ne and x ulong 1 ulong 0
+end
+
+fn c2_ball base long to void
+for k long 8
+put cbs add base k sub ulong 0 ulong 1
+end
+end
+
+fn c2_bzero base long to void
+for k long 8
+put cbs add base k ulong 0
+end
+end
+
+fn c2_band d long s long to void
+for k long 8
+put cbs add d k and get cbs add d k get cbs add s k
+end
+end
+
+fn c2_bcpy d long s long to void
+for k long 8
+put cbs add d k get cbs add s k
+end
+end
+
+fn c2_beq x long y long to bool
+for k long 8
+if ne get cbs add x k get cbs add y k
+ret false
+end
+end
+ret true
+end
+
+note Block b's end (first + count, uint32) and its last instruction (first + count - 1, uint32).
+fn c2_bend b long to long
+ret and add c2_bfirst b c2_bcount b cmask32
+end
+
+fn c2_blast b long to long
+ret and sub add c2_bfirst b c2_bcount b 1 cmask32
+end
+
+fn c2_dom a long b long to bool
+ret c2_btest add cbdom mul b 8 a
+end
+
+fn c2_bcfg to long
+fi = get cfi 0
+ni = c2_ni
+pos = long 0
+for b long c2_nb
+fs = c2_bfirst b
+bc = c2_bcount b
+e = c2_bend b
+if or or lt bc 1 ne fs pos gt e ni
+c2_a1 b
+ret c2_fail crlay fi -1 cmlay
+end
+if lt c2_bterm b fs e 0
+ret -1
+end
+pos = and add pos bc cmask32
+end
+if ne pos ni
+c2_a2 pos ni
+ret c2_fail crlay fi -1 cmcover
+end
+ret 0
+end
+
+fn c2_bterm b long fs long e long to long
+i = fs
+while lt i e bound 4097
+put cblk i b
+last = eq add i 1 e
+if ne c2_term c2_op i last
+c2_a1 b
+if last
+ret c2_fail crterm get cfi 0 i cmnoterm
+end
+ret c2_fail crterm get cfi 0 i cminterm
+end
+i = add i 1
+end
+ret 0
+end
+
+fn c2_lcfg to void
+nb = c2_nb
+for b long nb
+s = c2_is c2_blast b
+op = get cop s
+n = long 0
+if eq op cqbr
+put csuc mul b 2 get ct s
+n = 1
+end
+if eq op cqcbr
+put csuc mul b 2 get ct s
+n = 1
+if ne get cf s get ct s
+put csuc add mul b 2 1 get cf s
+n = 2
+end
+end
+put cnsu b n
+end
+for b long nb
+put creach b 0
+end
+put creach 0 1
+put cstk 0 0
+sp = long 1
+while gt sp 0 bound 999999
+sp = sub sp 1
+b = get cstk sp
+for k long get cnsu b
+q = get csuc add mul b 2 k
+if eq get creach q 0
+put creach q 1
+put cstk sp q
+sp = add sp 1
+end
+end
+end
+c2_ldom nb
+end
+
+fn c2_ldom nb long to void
+for b long nb
+c2_ball add cbdom mul b 8
+end
+c2_bzero cbdom
+c2_bset cbdom 0
+ch = true
+while ch bound 999999
+ch = false
+for b long nb
+if and gt b 0 ne get creach b 0
+c2_ball cbt0
+c2_predand b nb cbdom
+c2_bset cbt0 b
+if not c2_beq cbt0 add cbdom mul b 8
+c2_bcpy add cbdom mul b 8 cbt0
+ch = true
+end
+end
+end
+end
+end
+
+note cbt0 &= region[p] for every reachable p with an edge p -> b.
+fn c2_predand b long nb long region long to void
+for p long nb
+if ne get creach p 0
+for k long get cnsu p
+if eq get csuc add mul p 2 k b
+c2_band cbt0 add region mul p 8
+end
+end
+end
+end
+end
+
+fn c2_cdefs to void
+np = c2_np
+for r long c2_nv
+put cnd r 0
+if lt r np
+put cnd r 1
+end
+put cdi r -1
+end
+for i long c2_ni
+d = c2_defs i
+if ge d 0
+n = add get cnd d 1
+put cnd d n
+put cdi d -1
+if eq n 1
+put cdi d i
+end
+end
+end
+end
+
+fn c2_hands to long
+ni = c2_ni
+for i long ni
+s = c2_is i
+op = get cop s
+if or eq op cqaopen eq op cqpopen
+h = get cdst s
+if or lt h c2_np ne get cnd h 1
+c2_a1 h
+ret c2_fail crhand get cfi 0 i cmhdef
+end
+if lt c2_huse h op ni 0
+ret -1
+end
+end
+end
+ret c2_horig ni
+end
+
+fn c2_huse h long hop long ni long to long
+for j long ni
+nu = c2_uses j
+for k long nu
+if eq get cus k h
+if not c2_hok j h hop
+c2_a1 h
+ret c2_fail crhand get cfi 0 j cmhuse
+end
+end
+end
+end
+ret 0
+end
+
+fn c2_hok j long h long hop long to bool
+s = c2_is j
+op = get cop s
+a = get ca s
+b = get cb s
+if eq hop cqaopen
+if eq op cqaalloc
+ret and eq b h ne a h
+end
+ret and eq op cqadest eq a h
+end
+if eq op cqpclose
+ret eq a h
+end
+if eq op cqhalloc
+ret and eq b h ne a h
+end
+if not or or eq op cqhgen eq op cqhfree or eq op cqhload eq op cqhstore
+ret false
+end
+if or ne a h eq b h
+ret false
+end
+if eq get cc s h
+ret false
+end
+ret ne get carg mul s 6 h
+end
+
+fn c2_horig ni long to long
+for j long ni
+if lt c2_horig1 j 0
+ret -1
+end
+end
+ret 0
+end
+
+fn c2_horig1 j long to long
+s = c2_is j
+op = get cop s
+h = long -1
+if or eq op cqaalloc eq op cqhalloc
+h = get cb s
+end
+if or or eq op cqadest eq op cqpclose or eq op cqhgen eq op cqhfree
+h = get ca s
+end
+if or eq op cqhload eq op cqhstore
+h = get ca s
+end
+if lt h 0
+ret 0
+end
+di = get cdi h
+want = cqpopen
+if or eq op cqaalloc eq op cqadest
+want = cqaopen
+end
+bad = lt di 0
+if not bad
+bad = ne c2_op di want
+end
+if bad
+c2_a1 h
+if eq want cqaopen
+ret c2_fail crhand get cfi 0 j cmhao
+end
+ret c2_fail crhand get cfi 0 j cmhpo
+end
+es = get csub c2_is di
+r = long -1
+if eq op cqhalloc
+r = get ca s
+end
+if eq op cqhload
+r = get cdst s
+end
+if eq op cqhstore
+r = get carg mul s 6
+end
+if ge r 0
+if ne get cts c2_vs r es
+ret c2_fail crpool get cfi 0 j cmpool
+end
+end
+ret 0
+end
+
+note check_defined. Sets: in cbdin + 8b, out cbdout + 8b, params cbt1, cur cbt0.
+fn c2_cdef to long
+nb = c2_nb
+c2_bzero cbt1
+for r long c2_np
+c2_bset cbt1 r
+end
+for b long nb
+c2_ball add cbdout mul b 8
+end
+ch = true
+while ch bound 999999
+ch = false
+for b long nb
+if ne get creach b 0
+if eq b 0
+c2_bcpy cbt0 cbt1
+c2_predand 0 nb cbdout
+else
+c2_ball cbt0
+c2_predand b nb cbdout
+end
+c2_bcpy add cbdin mul b 8 cbt0
+c2_dflow b
+if not c2_beq cbt0 add cbdout mul b 8
+c2_bcpy add cbdout mul b 8 cbt0
+ch = true
+end
+end
+end
+end
+for b long nb
+if ne get creach b 0
+c2_bcpy cbt0 add cbdin mul b 8
+if lt c2_duse b 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+fn c2_dflow b long to void
+kern = ne get cgk get cfi 0 0
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+if and eq c2_op i cqtrap not kern
+c2_ball cbt0
+ret
+end
+d = c2_defs i
+if ge d 0
+c2_bset cbt0 d
+end
+i = add i 1
+end
+end
+
+fn c2_duse b long to long
+kern = ne get cgk get cfi 0 0
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+if and eq c2_op i cqtrap not kern
+ret 0
+end
+nu = c2_uses i
+for k long nu
+u = get cus k
+if not c2_btest cbt0 u
+c2_a1 u
+ret c2_fail crundef get cfi 0 i cmundef
+end
+end
+d = c2_defs i
+if ge d 0
+c2_bset cbt0 d
+end
+i = add i 1
+end
+ret 0
+end
+
+note single_const: the CONST value of r when r is defined exactly once, by CONST; else the flag is 0.
+fn c2_sconst r long to bool
+if lt r 0
+ret false
+end
+if ne get cnd r 1
+ret false
+end
+di = get cdi r
+if lt di 0
+ret false
+end
+ret eq c2_op di cqconst
+end
+
+fn c2_sval r long to ulong
+ret get cimm c2_is get cdi r
+end
+
+note loop_guarded over cinl (in loop), cwl[0..nl) latches.
+fn c2_lguard nl long to bool
+for g long c2_nb
+if ne get cinl g 0
+if c2_lguard1 g nl
+ret true
+end
+end
+end
+ret false
+end
+
+note |K| <= 1000000 with the C's signed/unsigned reading of K (an unsigned K above 2000000 is cut
+note to 2000000 there, which only matters for the comparison and so is not modelled).
+fn c2_kfits kb long to bool
+kv = c2_sval kb
+if c2_sgn get cts c2_vs kb
+note the C reads K as int64: a value at or above 2^63 is negative, magnitude 2^64 - K
+if ge kv shl ulong 1 63
+ret le sub ulong 0 kv ulong 1000000
+end
+end
+ret le kv ulong 1000000
+end
+
+fn c2_domall a long nl long to bool
+for k long nl
+if not c2_dom a get cwl k
+ret false
+end
+end
+ret true
+end
+
+fn c2_lguard1 g long nl long to bool
+if not c2_domall g nl
+ret false
+end
+t = c2_is c2_blast g
+if ne get cop t cqcbr
+ret false
+end
+ci = get cdi get ca t
+if lt ci 0
+ret false
+end
+if or ne get cblk ci g ne c2_op ci cqcmp
+ret false
+end
+cm = c2_is ci
+sb = get csub cm
+ex = false
+if eq sb 6
+ex = eq get cinl get ct t 0
+else
+if eq sb 3
+ex = eq get cinl get cf t 0
+else
+ret false
+end
+end
+if not ex
+ret false
+end
+kb = get cb cm
+if not c2_sconst kb
+ret false
+end
+if not c2_kfits kb
+ret false
+end
+cr = get ca cm
+if not c2_int get cts c2_vs cr
+ret false
+end
+ret c2_lincs cr nl
+end
+
+fn c2_lincs cr long nl long to bool
+incs = long 0
+for i long c2_ni
+if ne get cinl get cblk i 0
+if eq c2_defs i cr
+if not c2_linc i cr nl
+ret false
+end
+incs = add incs 1
+end
+end
+end
+ret ge incs 1
+end
+
+fn c2_linc i long cr long nl long to bool
+s = c2_is i
+if or ne get cop s cqbin ne get csub s 1
+ret false
+end
+if ne get ca s cr
+ret false
+end
+ob = get cb s
+if not c2_sconst ob
+ret false
+end
+if ne c2_sval ob ulong 1
+ret false
+end
+ret c2_domall get cblk i nl
+end
+
+fn c2_loops to long
+nb = c2_nb
+for b long nb
+put ccol b 0
+end
+put cstk 0 0
+put cidx 0 0
+sp = long 1
+put ccol 0 1
+while gt sp 0 bound 999999
+b = get cstk sub sp 1
+ix = get cidx sub sp 1
+if lt ix get cnsu b
+put cidx sub sp 1 add ix 1
+s = get csuc add mul b 2 ix
+if and eq get ccol s 1 not c2_dom s b
+c2_a1 s
+ret c2_fail crirr get cfi 0 -1 cmirr
+end
+if eq get ccol s 0
+put ccol s 1
+put cstk sp s
+put cidx sp 0
+sp = add sp 1
+end
+else
+put ccol b 2
+sp = sub sp 1
+end
+end
+for h long nb
+if ne get creach h 0
+if lt c2_loop1 h nb 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+fn c2_loop1 h long nb long to long
+nl = long 0
+for p long nb
+if and ne get creach p 0 c2_hassuc p h
+if c2_dom h p
+put cwl nl p
+nl = add nl 1
+end
+end
+end
+if eq nl 0
+ret 0
+end
+for p long nb
+put cinl p 0
+end
+put cinl h 1
+n = long 0
+for k long nl
+q = get cwl k
+if eq get cinl q 0
+put cinl q 1
+put cstk n q
+n = add n 1
+end
+end
+c2_lgrow n nb
+if not c2_lguard nl
+c2_a1 h
+ret c2_fail crunb get cfi 0 c2_bfirst h cmunb
+end
+ret 0
+end
+
+fn c2_lgrow n0 long nb long to void
+n = n0
+while gt n 0 bound 999999
+n = sub n 1
+b = get cstk n
+for p long nb
+if and ne get creach p 0 eq get cinl p 0
+if c2_hassuc p b
+put cinl p 1
+put cstk n p
+n = add n 1
+end
+end
+end
+end
+end
+
+fn c2_hassuc p long b long to bool
+for k long get cnsu p
+if eq get csuc add mul p 2 k b
+ret true
+end
+end
+ret false
+end

@@ -1,0 +1,735 @@
+note seed/oscgpu/gpuir.om: the BlackwellIR builder, the emitter helpers and the dump writer of the .om
+note GPU lowering. Port of omega_bw_ir_alloc_vreg / alloc_vreg64 / alloc_uvreg64 / omega_bw_ir_append
+note (src/omega_blackwell_codegen.c) and of the emitter of src/omega_bw_em.h, exactly. Units are
+note concatenated: cat oscir.om gpuir.om gpulow.om gpumain.om. Globals start with g, functions with
+note gpu_ or bw_. The encoder is not here: it consumes the dump this unit writes.
+
+note ---- the program being built (BlackwellIRProgram)
+global gxop uchar 1024
+global gxd int 1024
+global gx1 int 1024
+global gx2 int 1024
+global gx3 int 1024
+global gxu int 1024
+global gxim uint 1024
+global gxct uint 1024
+global gxun uchar 1024
+global gxp0 uchar 1024
+global gxpn uchar 1024
+global gxbr uchar 1024
+global gcnt int 1
+note vreg intervals: first_def, last_use, bundle size 1 or 2
+global gvfd int 256
+global gvlu int 256
+global gvbs uchar 256
+global gnv int 1
+global gufd int 32
+global gulu int 32
+global gnu int 1
+
+note ---- the emitter (Em): err, pending, loop starts, loop depth
+global gee int 1
+global gpen uint 1
+global glp int 4
+global gld int 1
+note the instruction being formed: op dst src1 src2 src3 ureg uniform bar_reg; and its imm
+global gci int 8
+global gcim uint 1
+
+note ---- the kernel record (OscGpuKernel) as numbers: 0 threads 1 shared_bytes 2 nparams 3 status_off
+note 4 blocks_off 5 batches_off 6 arg_words 7 reads_block 8 reads_batch 9 regions 10 region_bars
+global gkm uint 16
+global gpk uchar 32
+global gpe uchar 32
+global gpo uint 32
+note the kernel function index and the mutant number (osc_gpu_mutant)
+global gfn ulong 1
+global gmut int 1
+
+note ---- failure: first message wins; gsel picks the writer target (0 output, 1 message, 2 discard)
+global gfail uchar 1
+global gerr uchar 256
+global gern ulong 1
+global gsel uchar 1
+global gob uchar 1048576
+global gop ulong 1
+global gtof uint 128
+
+note message pieces; id = line number from 0
+text gtx "bwir 1\nname \nthreads \nshared_bytes \nnparams \nparam \nstatus_off \nblocks_off \nbatches_off \narg_words \nreads_block \nreads_batch \nregions \nregion_bars \ncount \nnum_vregs \nnum_uvregs \nra 0 0 0\nv \nu \ni \nend\nREFUSED decode: \nREFUSED: no function \n in \nREFUSED build: \n: \nnot a kernel\nbad thread count \nblock \n does not end in br, cbr or ret\n: a branch with no post-dominator\n: two joins for one region\nmore than 64 reconvergence regions\n: a varying region entered at two blocks (\n, \n)\n, 0)\n: a varying region nothing enters\na varying region (head block \n) can run after a varying ret; v1 refuses it\ntwo varying regions overlap without nesting\nmore than 16 reconvergence barriers needed at once\ntoo many regions start at block \nedge \n -> \n leaves one region and is inside the next\nbuffer parameter \n without its length\nbuffer of \nparameter \n of type \narguments need \n words; the launcher passes 32\nregister \n: only shared arrays may be references in a kernel\nshared arrays need \n bytes\nmore registers than the builder holds\na branch target was never laid out\na branch to itself\nregion at block \n: its join is laid out before its head\nthe program is longer than the builder holds (1024 instructions)\nthe program is longer than the builder holds\ntoo many branches\nmov of a \nunknown launch value \ntrap code \n outside 1..15\ndown needs a number 1 to 31\nload/store on a non-shared array\ncast \n to \nunary op \n on \ncompare \ncompare on \nfloat op \nbool op \nbinary op on \ndiv/rem need a number other than 0 as the divisor\nuint op \ninstruction \n is not allowed in a kernel\nvoid\nbool\nu8\nu16\nu32\nu64\ni8\ni16\ni32\ni64\nref\nbytes\ncells\nf32\ngview\ngedit\n?\nOK\nARG\nMAGIC\nUNKNOWN_VERSION\nTRUNCATED\nOVERSIZED\nTRAILING\nRANGE\nTEXT\nINVALID\nVERSION_MISMATCH\nNONCANONICAL\n?\nusage: gpu <unit.ir> <kernel> <out.bwir> <mutant 0..8>\ngpu: cannot read the unit\ngpu: cannot write the dump\n"
+
+note ---- writer
+fn gpu_init to void
+k = uint 0
+put gtof 0 0
+p = ulong 0
+n = len gtx
+while lt p n bound 999999
+if ge k 127
+break
+end
+c = get gtx p
+if eq c 10
+k = add k 1
+put gtof k uint add p 1
+end
+p = add p 1
+end
+end
+
+fn gpu_pc c uchar to void
+s = get gsel 0
+if eq s 0
+p = get gop 0
+if lt p 1048576
+put gob p c
+put gop 0 add p 1
+end
+end
+if eq s 1
+n = get gern 0
+if lt n 255
+put gerr n c
+put gern 0 add n 1
+end
+end
+end
+
+note one piece of gtx
+fn gpu_pt id int to void
+p = ulong get gtof id
+while true bound 999999
+c = get gtx p
+if eq c 10
+break
+end
+gpu_pc c
+p = add p 1
+end
+end
+
+fn gpu_pu x ulong to void
+d = new uchar 24 0
+n = int 0
+y = x
+while true bound 30
+put d n uchar add 48 rem y 10
+n = add n 1
+y = div y 10
+if eq y 0
+break
+end
+end
+while gt n 0 bound 30
+n = sub n 1
+gpu_pc get d n
+end
+end
+
+fn gpu_pi x long to void
+if lt x 0
+gpu_pc 45
+gpu_pu ulong neg x
+else
+gpu_pu ulong x
+end
+end
+
+note an int as a C %u of a (uint32_t) conversion
+fn gpu_u32 x int to uint
+if lt x 0
+ret uint add long x 4294967296
+end
+ret uint x
+end
+
+fn gpu_nl to void
+gpu_pc 10
+end
+
+note an OscScalar name (osc_scalar_name)
+fn gpu_ps s uchar to void
+if gt s 15
+gpu_pt 101
+else
+gpu_pt add 85 int s
+end
+end
+
+note the kernel's name bytes
+fn gpu_pname to void
+f = get gfn 0
+n = get fnlen f
+for k ulong ulong n
+gpu_pc get fname add mul f 64 k
+end
+end
+
+note ---- failure (fail of omega_osc_gpu.c): begin with piece id; the caller appends; gpu_fe ends
+fn gpu_fb id int to void
+if ne get gfail 0 0
+put gsel 0 2
+else
+put gsel 0 1
+put gern 0 0
+gpu_pname
+gpu_pt 26
+end
+put gfail 0 1
+gpu_pt id
+end
+
+fn gpu_fe to void
+put gsel 0 0
+end
+
+note fail with one piece and no argument
+fn gpu_f1 id int to int
+gpu_fb id
+gpu_fe
+ret -1
+end
+
+note fail: piece a, number x, piece b (b < 0: none)
+fn gpu_f2 a int x long b int to int
+gpu_fb a
+gpu_pi x
+if ge b 0
+gpu_pt b
+end
+gpu_fe
+ret -1
+end
+
+note ---- builder (omega_bw_ir_alloc_*)
+fn bw_alv sz uchar to int
+v = get gnv 0
+if ge v 256
+put gee 0 -1
+ret -1
+end
+put gnv 0 add v 1
+put gvfd v -1
+put gvlu v -1
+put gvbs v sz
+ret v
+end
+
+fn bw_v to int
+r = bw_alv 1
+ret r
+end
+
+fn bw_v64 to int
+r = bw_alv 2
+ret r
+end
+
+fn bw_uv64 to int
+v = get gnu 0
+if ge v 32
+put gee 0 -1
+ret -1
+end
+put gnu 0 add v 1
+put gufd v -1
+put gulu v -1
+ret v
+end
+
+fn bw_tv v int x int to void
+if ge v 0
+if lt v get gnv 0
+if lt get gvfd v 0
+put gvfd v x
+end
+if gt x get gvlu v
+put gvlu v x
+end
+end
+end
+end
+
+fn bw_tu v int x int to void
+if ge v 0
+if lt v get gnu 0
+if lt get gufd v 0
+put gufd v x
+end
+if gt x get gulu v
+put gulu v x
+end
+end
+end
+end
+
+note omega_bw_ir_append of the instruction in gci/gcim with control ctl and predicate p0/pn
+fn bw_app ctl uint p0 uchar pn uchar to int
+n = get gcnt 0
+if ge n 1024
+ret -1
+end
+put gcnt 0 add n 1
+put gxop n uchar get gci 0
+put gxd n get gci 1
+put gx1 n get gci 2
+put gx2 n get gci 3
+put gx3 n get gci 4
+put gxu n get gci 5
+put gxim n get gcim 0
+put gxct n ctl
+put gxun n uchar get gci 6
+put gxp0 n p0
+put gxpn n pn
+put gxbr n uchar get gci 7
+un = ne get gci 6 0
+if not un
+bw_tv get gci 1 n
+end
+bw_tv get gci 2 n
+bw_tv get gci 3 n
+bw_tv get gci 4 n
+if un
+bw_tu get gci 1 n
+end
+bw_tu get gci 5 n
+ret n
+end
+
+note ---- emitter (omega_bw_em.h)
+note I0: the op, every register -1, everything else 0
+fn bw_i0 op int to void
+put gci 0 op
+put gci 1 -1
+put gci 2 -1
+put gci 3 -1
+put gci 4 -1
+put gci 5 -1
+put gci 6 0
+put gci 7 0
+put gcim 0 0
+end
+
+note dst, src1, src2, src3
+fn bw_f d int a int b int c int to void
+put gci 1 d
+put gci 2 a
+put gci 3 b
+put gci 4 c
+end
+
+fn bw_im x uint to void
+put gcim 0 x
+end
+
+fn bw_cw s uint wb uint rb uint w uint to uint
+ret or or or shl s 9 shl wb 14 shl rb 17 shl w 20
+end
+
+note emit with E's predicate (0 always, 1 @P0, -1 @!P0). kind: 0 FIXED 1 PRED 2 VAR 3 UVAR 4 STORE
+note 5 SYNC 6 EXIT 7 BRA 8 BSSY 9 BSYNC
+fn bw_e kind int pred int to void
+w = get gpen 0
+p0 = uchar 0
+pn = uchar 0
+if ne pred 0
+p0 = 1
+if lt pred 0
+pn = 1
+end
+end
+c = uint 0
+np = uint 0
+if eq kind 0
+c = bw_cw 6 7 7 w
+end
+if eq kind 1
+c = bw_cw 14 7 7 w
+end
+if eq kind 2
+c = or bw_cw 4 0 1 w 8192
+np = 3
+end
+if eq kind 3
+c = or bw_cw 4 2 7 w 8192
+np = 4
+end
+if eq kind 4
+c = or bw_cw 4 7 1 w 8192
+np = 2
+end
+if eq kind 5
+c = bw_cw 6 7 7 w
+end
+if or eq kind 6 eq kind 7
+c = bw_cw 5 7 7 w
+if ne p0 0
+np = w
+end
+end
+if eq kind 8
+c = or bw_cw 1 7 7 w 8192
+end
+if eq kind 9
+c = or bw_cw 5 7 7 w 8192
+end
+put gpen 0 np
+r = bw_app c p0 pn
+if lt r 0
+put gee 0 -1
+end
+end
+
+fn bw_here to int
+ret get gcnt 0
+end
+
+fn bw_ldcu64 d int x uint to void
+bw_i0 7
+bw_f d -1 -1 -1
+bw_im x
+put gci 6 1
+bw_e 3 0
+end
+
+fn bw_ldc64 d int x uint to void
+bw_i0 5
+bw_f d -1 -1 -1
+bw_im x
+bw_e 2 0
+end
+
+fn bw_ldc32 d int x uint to void
+bw_i0 4
+bw_f d -1 -1 -1
+bw_im x
+bw_e 2 0
+end
+
+fn bw_s2r d int sr uint to void
+bw_i0 3
+bw_f d -1 -1 -1
+bw_im sr
+bw_e 2 0
+end
+
+fn bw_imadw d int a int x uint c int to void
+bw_i0 9
+bw_f d a -1 c
+bw_im x
+bw_e 0 0
+end
+
+fn bw_andi d int a int x uint to void
+bw_i0 18
+bw_f d a -1 -1
+bw_im x
+bw_e 0 0
+end
+
+fn bw_sts32 a int v int pred int to void
+bw_i0 50
+bw_f -1 a v -1
+bw_e 4 pred
+end
+
+fn bw_bar to void
+bw_i0 48
+bw_e 5 0
+end
+
+fn bw_shfl d int a int x uint to void
+bw_i0 42
+bw_f d a -1 -1
+bw_im x
+bw_e 2 0
+end
+
+fn bw_bra t int to void
+bw_i0 46
+bw_im gpu_u32 sub t bw_here
+bw_e 7 0
+end
+
+fn bw_patch p int t int to void
+if eq get gee 0 0
+put gxim p gpu_u32 sub t p
+end
+end
+
+fn bw_tail to void
+bw_i0 45
+bw_e 6 0
+bw_i0 46
+r = bw_app 1032192 0 0
+if lt r 0
+put gee 0 -1
+end
+end
+
+fn bw_lbeg to void
+d = get gld 0
+if ge d 4
+put gee 0 -1
+ret
+end
+put glp d bw_here
+put gld 0 add d 1
+end
+
+fn bw_lend to void
+d = get gld 0
+if le d 0
+put gee 0 -1
+ret
+end
+d = sub d 1
+put gld 0 d
+s = get glp d
+e = sub bw_here 1
+n = get gnv 0
+for v int n
+x = get gvfd v
+y = get gvlu v
+if and and ge x 0 lt x s and ge y s lt y e
+put gvlu v e
+end
+end
+end
+
+note ---- the G helpers of omega_osc_gpu.c
+fn bw_mov d int a int pred int to void
+bw_i0 51
+bw_f d a -1 -1
+bw_im 240
+bw_e 0 pred
+end
+
+fn bw_movi d int x uint pred int to void
+bw_i0 2
+bw_f d -1 -1 -1
+bw_im x
+bw_e 0 pred
+end
+
+fn bw_lop d int a int b int lut uint to void
+bw_i0 51
+bw_f d a b -1
+bw_im lut
+bw_e 0 0
+end
+
+fn bw_imad d int a int b int c int to void
+bw_i0 8
+bw_f d a b c
+bw_e 0 0
+end
+
+fn bw_imadi d int a int x uint c int to void
+bw_i0 8
+bw_f d a -1 c
+bw_im x
+bw_e 0 0
+end
+
+fn bw_imadhi d int a int b int to void
+bw_i0 53
+bw_f d a b -1
+bw_e 0 0
+end
+
+fn bw_iadd d int a int b int to void
+bw_i0 14
+bw_f d a b -1
+bw_e 0 0
+end
+
+fn bw_shr d int a int n uint to void
+if eq n 0
+bw_mov d a 0
+ret
+end
+bw_i0 17
+bw_f d a -1 -1
+bw_im n
+bw_e 0 0
+end
+
+fn bw_shl d int a int b int pred int to void
+bw_i0 52
+bw_f d a b -1
+bw_e 0 pred
+end
+
+fn bw_ge a int b int to void
+bw_i0 28
+bw_f -1 a b -1
+bw_e 1 0
+end
+
+fn bw_fsetp a int b int code uint to void
+bw_i0 34
+bw_f -1 a b -1
+bw_im or 66060288 shl code 12
+bw_e 1 0
+end
+
+fn bw_f2 op int d int a int b int to void
+bw_i0 op
+bw_f d a b -1
+bw_e 0 0
+end
+
+fn bw_var1 op int d int a int to void
+bw_i0 op
+bw_f d a -1 -1
+bw_e 2 0
+end
+
+fn bw_bool d int pred int to void
+bw_movi d 0 0
+bw_movi d 1 pred
+end
+
+note ---- the named registers: 0 udesc 1 st 2 a0 3 one 4 zero 5 poison 6..11 T0..T5
+global grg int 12
+
+fn gpu_t i int to int
+ret get grg add 6 i
+end
+
+fn bw_trap code int pred int d int to void
+bw_i0 12
+bw_f -1 get grg 1 get grg 3 -1
+bw_im mul 4 uint code
+put gci 5 get grg 0
+bw_e 4 pred
+bw_movi get grg 5 1 pred
+if ge d 0
+bw_movi d 0 pred
+end
+end
+
+fn bw_branch pred int to int
+p = bw_here
+bw_i0 46
+bw_im 1
+bw_e 7 pred
+ret p
+end
+
+note ---- the dump (om_oracle dump(): the canonical text of a lowering)
+fn gpu_kv id int x uint to void
+gpu_pt id
+gpu_pu ulong x
+gpu_nl
+end
+
+fn gpu_dhead to void
+gpu_pt 0
+gpu_nl
+gpu_pt 1
+gpu_pname
+gpu_nl
+gpu_kv 2 get gkm 0
+gpu_kv 3 get gkm 1
+gpu_kv 4 get gkm 2
+n = get gkm 2
+for i uint n
+gpu_pt 5
+gpu_pu ulong i
+gpu_pc 32
+gpu_pu ulong get gpk i
+gpu_pc 32
+gpu_pu ulong get gpe i
+gpu_pc 32
+gpu_pu ulong get gpo i
+gpu_nl
+end
+gpu_kv 6 get gkm 3
+gpu_kv 7 get gkm 4
+gpu_kv 8 get gkm 5
+gpu_kv 9 get gkm 6
+gpu_kv 10 get gkm 7
+gpu_kv 11 get gkm 8
+gpu_kv 12 get gkm 9
+gpu_kv 13 get gkm 10
+gpu_kv 14 uint get gcnt 0
+gpu_kv 15 uint get gnv 0
+gpu_kv 16 uint get gnu 0
+gpu_pt 17
+gpu_nl
+end
+
+note " x" for a signed number
+fn gpu_sp x long to void
+gpu_pc 32
+gpu_pi x
+end
+
+fn gpu_dregs to void
+n = get gnv 0
+for v int n
+gpu_pt 18
+gpu_pi long v
+gpu_sp long v
+gpu_sp long get gvfd v
+gpu_sp long get gvlu v
+gpu_sp -1
+b = get gvbs v
+gpu_sp long b
+gpu_sp long sub b 1
+gpu_sp 0
+gpu_sp 0
+gpu_sp -1
+gpu_nl
+end
+m = get gnu 0
+for u int m
+gpu_pt 19
+gpu_pi long u
+gpu_sp long u
+gpu_sp long get gufd u
+gpu_sp long get gulu u
+gpu_sp -1
+gpu_sp 0
+gpu_sp 1
+gpu_sp 0
+gpu_sp 0
+gpu_sp -1
+gpu_nl
+end
+end
+
+fn gpu_dinsn to void
+n = get gcnt 0
+for i int n
+gpu_pt 20
+gpu_pi long i
+gpu_sp long get gxop i
+gpu_sp long get gxd i
+gpu_sp long get gx1 i
+gpu_sp long get gx2 i
+gpu_sp long get gx3 i
+gpu_sp long get gxu i
+gpu_sp long get gxim i
+gpu_sp long get gxct i
+gpu_sp long get gxun i
+gpu_sp long get gxp0 i
+gpu_sp long get gxpn i
+gpu_sp 0
+gpu_sp 0
+gpu_sp 0
+gpu_sp 0
+gpu_sp long get gxbr i
+gpu_nl
+end
+gpu_pt 21
+gpu_nl
+end
+
+fn gpu_dump to void
+gpu_dhead
+gpu_dregs
+gpu_dinsn
+end

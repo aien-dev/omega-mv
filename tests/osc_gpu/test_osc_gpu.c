@@ -1,6 +1,6 @@
 /* test_osc_gpu: the Omegese GPU back end (src/omega_osc_gpu.c, L386) on the host. No device.
  *
- *   test_osc_gpu <ir-dir>
+ *   test_osc_gpu <ir-dir> [<om-dir>]
  *
  * <ir-dir> holds kernel_<name>.ir for the accepted kernels of tests/checker2/kernels (made by omega_emit;
  * see mk/omega-osc-gpu.mk). For each kernel: decode, build, then run the machine program on the SIMT warp
@@ -19,6 +19,7 @@
 #endif
 #include <inttypes.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,7 +62,64 @@ static bool near_mufu(float got, float want) { return same_f(got, want); }
 
 static OscUnit g_unit;
 static const char *g_dir;
+static const char *g_om_dir; /* <om-dir>: the second argument, absent = the C build's bytes */
 static const char *g_pre = ""; /* "om_": the Omegese-written kernel of that name */
+
+/* <om-dir> (OSC_GPU_OM_DIR of tests/osc_gpu/om_build_all.sh): <om-dir>/<pre><name>__m<mutant>.code and .man are the kernel
+ * as the seeded .om lowering (seed/oscgpu) builds it, its BlackwellIR dump encoded by tests/osc_gpu/om_oracle. Each kernel
+ * this test loads must have those bytes and that manifest (counted apart from the checks, so a mutant run cannot hide a
+ * difference), and the code it runs is then the .om's. A kernel the C refuses must have no .om files. */
+static int g_om_same, g_om_diff;
+/* appends to b[*w..cap); false (and *w = cap, so every later append fails) when the text does not fit */
+static bool app(char *b, size_t cap, size_t *w, const char *fmt, ...) {
+    if (*w >= cap) return false;
+    va_list ap;
+    va_start(ap, fmt);
+    int r = vsnprintf(b + *w, cap - *w, fmt, ap);
+    va_end(ap);
+    if (r < 0 || (size_t)r >= cap - *w) { *w = cap; return false; }
+    *w += (size_t)r;
+    return true;
+}
+static void om_compare(const char *name, OscGpuKernel *k) {
+    const char *dir = g_om_dir;
+    if (!dir) return;
+    char path[512], want[4096], man[4096];
+    static uint8_t got[1 << 20];
+    snprintf(path, sizeof path, "%s/%s%s__m%d.code", dir, g_pre, name, osc_gpu_mutant);
+    FILE *fp = fopen(path, "rb");
+    if (!k) {
+        if (fp) { fclose(fp); g_om_diff++; printf("OMBYTES differ: %s%s mutant %d: the C refuses it, the .om built it\n", g_pre, name, osc_gpu_mutant); }
+        else g_om_same++;
+        return;
+    }
+    if (!fp) { g_om_diff++; printf("OMBYTES differ: %s%s mutant %d: no %s\n", g_pre, name, osc_gpu_mutant, path); return; }
+    size_t n = fread(got, 1, sizeof got, fp);
+    fclose(fp);
+    int ok = n == k->code_size && memcmp(got, k->code, n) == 0;
+    size_t w = 0;
+    bool fit = app(want, sizeof want, &w, "name %s\nthreads %u\nshared_bytes %u\nnparams %u\n", k->name, k->threads, k->shared_bytes, k->nparams);
+    for (unsigned i = 0; i < k->nparams; i++)
+        fit = app(want, sizeof want, &w, "param %u %u %u %u\n", i, k->params[i].kind, k->params[i].elem, k->params[i].off) && fit;
+    fit = app(want, sizeof want, &w,
+              "status_off %u\nblocks_off %u\nbatches_off %u\narg_words %u\nreads_block %d\nreads_batch %d\nregions %u\nregion_bars %u\n",
+              k->status_off, k->blocks_off, k->batches_off, k->arg_words, k->reads_block, k->reads_batch, k->regions, k->region_bars) && fit;
+    fit = app(want, sizeof want, &w, "code_size %zu\ninsn_count %u\ngpr_count %u\ncode_sha256 ", k->code_size, k->insn_count, k->gpr_count) && fit;
+    for (int i = 0; i < 32; i++) fit = app(want, sizeof want, &w, "%02x", k->code_sha256[i]) && fit;
+    fit = app(want, sizeof want, &w, "\n") && fit;
+    snprintf(path, sizeof path, "%s/%s%s__m%d.man", dir, g_pre, name, osc_gpu_mutant);
+    fp = fopen(path, "rb");
+    size_t mn = fp ? fread(man, 1, sizeof man, fp) : 0;
+    if (fp) fclose(fp);
+    ok = ok && fit && fp && mn == w && memcmp(man, want, mn) == 0;
+    if (ok) { g_om_same++; memcpy(k->code, got, n); } /* the bytes run are the .om's (equal, by the test above) */
+    else { g_om_diff++; printf("OMBYTES differ: %s%s mutant %d%s\n", g_pre, name, osc_gpu_mutant, fit ? "" : " (manifest longer than 4096 bytes)"); }
+}
+static int om_report(void) {
+    if (!g_om_dir) return 0;
+    printf("OMBYTES identical=%d differ=%d\n", g_om_same, g_om_diff);
+    return g_om_diff != 0;
+}
 
 static int load_kernel(const char *name, OscGpuKernel *k) {
     char path[512];
@@ -77,7 +135,8 @@ static int load_kernel(const char *name, OscGpuKernel *k) {
     char err[256];
     rc = osc_gpu_build(&g_unit, 0, k, err, sizeof err);
     CHECK(rc == 0, "%s: build refused: %s", name, err);
-    if (rc) return -1;
+    if (rc) { om_compare(name, NULL); return -1; }
+    om_compare(name, k);
     if (!g_quiet) printf("  %s%-7s %3u instructions, %3u registers, %u threads, %u shared bytes, %u regions on %u barriers, %u argument words\n", g_pre,
            name, k->insn_count, k->gpr_count, k->threads, k->shared_bytes, k->regions, k->region_bars, k->arg_words);
     return 0;
@@ -665,8 +724,9 @@ static void test_refusals(void) {
 /* chip mode: the kernel tests only (the host-only pieces are proven by the host binary). OSC_GPU_MUTANT=n
  * builds every kernel with mutant n, for the red run that shows the chip test can fail. */
 int main(int argc, char **argv) {
-    if (argc != 2) { fprintf(stderr, "usage: test_osc_gpu_chip <ir-dir>\n"); return 2; }
+    if (argc != 2 && argc != 3) { fprintf(stderr, "usage: test_osc_gpu_chip <ir-dir> [<om-dir>]\n"); return 2; }
     g_dir = argv[1];
+    g_om_dir = argc == 3 ? argv[2] : NULL;
     const char *mu = getenv("OSC_GPU_MUTANT");
     osc_gpu_mutant = mu ? atoi(mu) : 0;
     omega_gpu_session_lock();
@@ -685,12 +745,14 @@ int main(int argc, char **argv) {
     omega_gpu_session_close();
     printf("test_osc_gpu_chip: %u chip launches, %.3f ms on the chip in total\n", g_chip_runs, (double)g_chip_ns / 1e6);
     printf("test_osc_gpu_chip: %d checks, %d failed\n", g_checks, g_failed);
-    return g_failed ? 1 : 0;
+    int om = om_report();
+    return g_failed || om ? 1 : 0;
 }
 #else
 int main(int argc, char **argv) {
-    if (argc != 2) { fprintf(stderr, "usage: test_osc_gpu <ir-dir>\n"); return 2; }
+    if (argc != 2 && argc != 3) { fprintf(stderr, "usage: test_osc_gpu <ir-dir> [<om-dir>]\n"); return 2; }
     g_dir = argv[1];
+    g_om_dir = argc == 3 ? argv[2] : NULL;
     CHECK(omega_blackwell_verify_codegen_fixtures_guard() == 0, "guard predicate / conversion words (rc %d)", omega_blackwell_verify_codegen_fixtures_guard());
     test_division();
     kernels();
@@ -698,6 +760,7 @@ int main(int argc, char **argv) {
     test_launch_checks();
     test_mutants();
     printf("test_osc_gpu: %d checks, %d failed\n", g_checks, g_failed);
-    return g_failed ? 1 : 0;
+    int om = om_report();
+    return g_failed || om ? 1 : 0;
 }
 #endif

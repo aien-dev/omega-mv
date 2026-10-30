@@ -8,6 +8,14 @@
 #   make test-osc-gpu-chip   the same kernel tests on the GB10 through omega_kernel_launch (src/omega_osc_launch.c):
 #                        bit-exact except exp/inv/root (MUFU), which pass within 2^-20 relative (GPU.md s5).
 #                        Run it inside a chip window (spark-window run); OSC_GPU_MUTANT=n is the red run.
+#   make test-osc-gpu-om host only: the seeded .om lowering (seed/oscgpu, built with the pinned seed/out/omc) against
+#                        the C one, byte for byte (tests/osc_gpu/om_diff.sh); test_osc_gpu <ir-dir> <om-dir>, <om-dir> from
+#                        tests/osc_gpu/om_build_all.sh, uses the .om's bytes (the chip run: OSC_GPU_OM_DIR=<om-dir> make test-osc-gpu-chip)
+#   make test-om-ports   host only: all three seeded .om ports against their C oracles (migration pending: the C
+#                        stays the production path and the oracle until the .om replaces it): test-oscir-om
+#                        (seed/oscgpu/oscir.om vs osc_ir_decode/osc_ir_validate, tests/osc_gpu/oscir_diff.sh),
+#                        test-checker2-om (seed/oscgpu/c2*.om vs checker2 check, tests/checker2/om_diff.sh) and
+#                        test-osc-gpu-om
 ifndef OMEGA_OSC_GPU_MK
 OMEGA_OSC_GPU_MK := 1
 .PHONY: test-osc-gpu test-osc-gpu-chip
@@ -36,6 +44,22 @@ $(OSG_DIR)/osc_gpu_build: tools/osc_gpu/osc_gpu_build.c $(OSG_SRCS) $(OSG_OSC_LI
 	@mkdir -p $(OSG_DIR)
 	$(CC) $(OSG_CFLAGS) -o $@ tools/osc_gpu/osc_gpu_build.c $(OSG_SRCS) $(OSG_OSC_LIB) -lm
 
+# the seeded .om lowering (seed/oscgpu): om_oracle is the test-only oracle and glue (tests/osc_gpu/om_oracle.c);
+# test-osc-gpu-om builds the .om with the pinned seed/out/omc and compares it with the C back end (tests/osc_gpu/om_diff.sh)
+$(OSG_DIR)/om_oracle: tests/osc_gpu/om_oracle.c $(OSG_SRCS) $(OSG_OSC_LIB) $(OSG_HDRS)
+	@mkdir -p $(OSG_DIR)
+	$(CC) $(OSG_CFLAGS) -o $@ tests/osc_gpu/om_oracle.c $(OSG_SRCS) $(OSG_OSC_LIB) -lm
+.PHONY: test-osc-gpu-om
+test-osc-gpu-om: test-osc-gpu $(OSG_DIR)/om_oracle
+	sh tests/osc_gpu/om_diff.sh seed/out/omc $(OSG_DIR)/om_oracle $(OSG_DIR)/test_osc_gpu $(OSG_DIR)/ir $(OSG_DIR)/om
+
+.PHONY: test-oscir-om test-checker2-om test-om-ports
+test-oscir-om: test-osc-gpu
+	sh tests/osc_gpu/oscir_diff.sh seed/out/omc $(OSG_DIR)/oscir_diff
+test-checker2-om: test-checker2-differential test-osc-gpu
+	sh tests/checker2/om_diff.sh $(OUT_DIR)/checker2/checker2 $(OUT_DIR)/checker2/om $(OUT_DIR)/checker2/differential/ir $(OSG_DIR)/ir
+test-om-ports: test-oscir-om test-checker2-om test-osc-gpu-om
+
 test-osc-gpu-chip: $(OSG_DIR)/test_osc_gpu_chip test-osc-gpu
-	$(OSG_DIR)/test_osc_gpu_chip $(OSG_DIR)/ir
+	$(OSG_DIR)/test_osc_gpu_chip $(OSG_DIR)/ir $(OSC_GPU_OM_DIR)
 endif

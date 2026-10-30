@@ -50,6 +50,13 @@ typedef struct {
 
 /* Builds kernel function fn of u. 0 on success; -1 with a message in err when the kernel is refused. */
 int osc_gpu_build(const OscUnit *u, unsigned fn, OscGpuKernel *k, char *err, size_t errn);
+/* osc_gpu_build in two steps (the .om lowering in seed/oscgpu ports the first; tests/osc_gpu/om_oracle.c joins them).
+ * osc_gpu_lower: kernel fn of u to BlackwellIR in p (live intervals set, registers not yet allocated)
+ * and every field of k except code, code_size, insn_count, gpr_count, code_sha256 and prog.
+ * osc_gpu_encode: the register allocator, the per-thread register cap and the encoder over p; fills
+ * k->code (malloc), code_size, insn_count, gpr_count and code_sha256. Both: 0, or -1 with a message in err. */
+int osc_gpu_lower(const OscUnit *u, unsigned fn, OscGpuKernel *k, BlackwellIRProgram *p, char *err, size_t errn);
+int osc_gpu_encode(OscGpuKernel *k, BlackwellIRProgram *p, char *err, size_t errn);
 void osc_gpu_free(OscGpuKernel *k);
 
 /* The unsigned division the back end emits for a constant divisor d != 0, run on the host with the

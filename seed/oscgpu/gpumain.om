@@ -1,0 +1,177 @@
+note seed/oscgpu/gpumain.om: the driver. gpu <unit.ir> <kernel> <out.bwir> <mutant 0..8>
+note Picks the last function of that name (as osc_gpu_build does), lowers it to BlackwellIR and
+note writes the dump; or prints one REFUSED line. Exit 0 written, 1 refused, 2 usage or I/O.
+note Build: cat seed/oscgpu/oscir.om seed/oscgpu/gpuir.om seed/oscgpu/gpulow.om
+note seed/oscgpu/gpuemit.om seed/oscgpu/gpumain.om | seed/out/omc > gpu
+
+global gkn uchar 4096
+global gkl ulong 1
+global gpth uchar 4096
+global gptl ulong 1
+global gnum uchar 16
+
+note write gob[0..gop) to fd, then empty it; -1 on a short write
+fn gpu_flush fd int to int
+n = get gop 0
+o = ulong 0
+put gop 0 0
+while lt o n bound 999999
+r = write fd gob o sub n o
+if le r 0
+ret -1
+end
+o = add o ulong r
+end
+ret 0
+end
+
+fn gpu_say fd int id int to int
+gpu_pt id
+gpu_nl
+r = gpu_flush fd
+ret r
+end
+
+note the last function whose name is the kernel argument; -1 if none
+fn gpu_find to int
+nf = get unfn 0
+kl = get gkl 0
+fn0 = int -1
+for f uint nf
+n = ulong get fnlen f
+if ne n kl
+continue
+end
+same = true
+for k ulong n
+q = get gkn k
+if ne get fname add mul ulong f 64 k q
+same = false
+end
+end
+if same
+fn0 = int f
+end
+end
+ret fn0
+end
+
+fn gpu_mutarg to int
+n = argread 4 gnum 0 15
+if lt n 1
+ret -1
+end
+if gt n 2
+ret -1
+end
+m = int 0
+for k ulong ulong n
+c = get gnum k
+if or lt c 48 gt c 57
+ret -1
+end
+m = add mul m 10 int sub c 48
+end
+if gt m 8
+ret -1
+end
+ret m
+end
+
+fn gpu_wdump to int
+gpu_dump
+n = argread 3 gpth 0 4095
+if lt n 1
+ret -1
+end
+fl = fopen gpth 0 ulong n 524481 420
+if lt fl 0
+ret -1
+end
+fd = int fl
+r = gpu_flush fd
+c = fclose fd
+if or lt r 0 ne c 0
+ret -1
+end
+ret 0
+end
+
+fn gpu_rdec rc int to void
+gpu_pt 22
+x = neg rc
+if or lt x 0 gt x 11
+gpu_pt 114
+else
+gpu_pt add 102 x
+end
+gpu_nl
+r = gpu_flush 1
+end
+
+fn main to int
+gpu_init
+if ne argcnt 5
+r = gpu_say 2 115
+ret 2
+end
+m = gpu_mutarg
+if lt m 0
+r = gpu_say 2 115
+ret 2
+end
+put gmut 0 m
+kl = argread 2 gkn 0 4095
+pl = argread 1 gpth 0 4095
+if or lt kl 0 lt pl 0
+r = gpu_say 2 115
+ret 2
+end
+put gkl 0 ulong kl
+put gptl 0 ulong pl
+rd = oscir_read_file 1
+if ne rd 0
+r = gpu_say 2 116
+ret 2
+end
+if gt get irlen 0 1048576
+put irlen 0 1048576
+end
+rc = oscir_decode
+if ne rc 0
+gpu_rdec rc
+ret 1
+end
+f = gpu_find
+if lt f 0
+gpu_pt 23
+for k ulong ulong kl
+gpu_pc get gkn k
+end
+gpu_pt 24
+for k ulong ulong pl
+gpu_pc get gpth k
+end
+gpu_nl
+r = gpu_flush 1
+ret 1
+end
+put gfn 0 ulong f
+lw = gpu_lower
+if ne lw 0
+gpu_pt 25
+n = get gern 0
+for k ulong n
+gpu_pc get gerr k
+end
+gpu_nl
+r = gpu_flush 1
+ret 1
+end
+w = gpu_wdump
+if ne w 0
+r = gpu_say 2 117
+ret 2
+end
+ret 0
+end
