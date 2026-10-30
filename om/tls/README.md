@@ -49,7 +49,7 @@ All buffers are owned by the caller. `c` is the connection state, at least `TLCS
 
 ```
 e  = tls_store st                        load /etc/ssl/certs/ca-certificates.crt
-e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; 4: approved mode (HMAC_DRBG);
+e  = tls_init c hostname flags           flags 1: offer ALPN http/1.1; 4: approved mode (HMAC_DRBG); 8: stapled OCSP + must-staple (rev.om);
                                          the name is SNI and the checked name
 fd = tls_dial hostname port              DNS A + TCP (IPv4; a dotted literal skips DNS); fd or -code
 tls_deadline c monotonic_ns              absolute deadline (monons) for every wait; 0 = 30 s per wait
@@ -217,7 +217,7 @@ been submitted to a laboratory, there is no CMVP certificate, and nothing here i
   so is application data arriving while a post-handshake message is only partly received (RFC 8446
   5.1 forbids interleaving).
 - A close_notify received during the handshake is `TLS_ERR_ALERT_RECEIVED` with detail 0.
-- Not implemented: revocation (OCSP, CRL), Certificate Transparency, IPv6, DNSSEC, DNS over TCP,
+- Not implemented: OCSP fetching and CRL fetching (stapled OCSP is checked with flag 8), Certificate Transparency, IPv6, DNSSEC, DNS over TCP,
   RFC 5280 name canonicalisation (issuer names are matched as exact DER bytes), and nameConstraints
   (always refused, see above). Path building commits to the first presented issuer whose
   signature verifies, without backtracking; this fails closed (availability only).
@@ -426,11 +426,14 @@ retained under `evidence/om-tls-review-2026-10-26/` with SHA-256 sums.
   compiler-spilled stack slots are not scrubbed (a compiler limit). `test/tls/residue.py` is the
   check: after the handshake none of the twelve handshake-only secrets is in the process memory,
   after `tls_close` none of the eighteen.
-- **Revocation.** Not checked. There is no OCSP, no OCSP stapling (the client sends no
-  `status_request` extension) and no CRL. A revoked but otherwise valid chain verifies. Callers that
-  need revocation must enforce it outside this library (pinning in the trust store, short-lived
-  certificates). OCSP stapling needs a DER OCSP response parser, a second signature check and a
-  freshness policy; it was judged out of this lane's scope rather than built half-way.
+- **Revocation (opt-in, `tls_init` flag 8, `rev.om`).** With flag 8 the client sends
+  `status_request`, checks the leaf's stapled OCSP response (signature by the issuer or a delegated
+  id-kp-OCSPSigning responder, CertID, thisUpdate within 300 s, nextUpdate required) and refuses
+  revoked, unknown and stale answers; a must-staple leaf (RFC 7633) without a staple is refused. A
+  plain leaf without a staple is accepted (no OCSP fetch). Failures are `TLS_ERR_CERTIFICATE` with
+  the rev.om code (32..38, `rev_errname`) as detail. `rev_crl` checks a caller-supplied CRL; the
+  client fetches none. Without flag 8 revocation is not checked and a revoked chain verifies.
+  Tests: `test/rev/run.sh` (unit, openssl oracle, fuzz, mutants) and the `rev:` rows of interop.sh.
 - **Trust.** Only the caller's trust store (`tls_storef`); no system store, no name constraints,
   no CT, as `What it does and refuses` says.
 

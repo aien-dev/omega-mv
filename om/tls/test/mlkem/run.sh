@@ -166,7 +166,7 @@ else
 	echo "FAIL compose: $(cat "$out/compose.err")"
 	fail=1
 fi
-if comp compose-tls sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 fips tls && [ ! -s "$out/compose-tls.err" ]; then
+if comp compose-tls sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls && [ ! -s "$out/compose-tls.err" ]; then
 	echo "PASS compose-tls: ... x509 tls"
 else
 	echo "NOTE compose-tls (tls.om at its current state, owned by the TLS lane): $(cat "$out/compose-tls.err")"

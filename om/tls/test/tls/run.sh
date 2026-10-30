@@ -29,14 +29,14 @@ out="$root/build/tls/tls"
 rm -rf "$out"; mkdir -p "$out"
 fail=0; mut=0; mutok=0
 echo "omc $(sha256sum "$omc" | cut -c1-64)"
-for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips tls; do echo "$u.om $(sha256sum "$tls/$u.om" | cut -c1-64)"; done
+for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips tls; do echo "$u.om $(sha256sum "$tls/$u.om" | cut -c1-64)"; done
 
 # build NAME TLSFILE PROGRAM: compose with a given tls.om (the real one or a mutant); a non-empty
 # $ecdhsrc replaces ecdh.om (an ecdh.om mutant under the unchanged tls.om)
 ecdhsrc=
 build() {
   mkdir -p "$out/$1"
-  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 fips; do cp "$tls/$u.om" "$out/$1/"; done
+  for u in sha2 hkdf drbg x25519 chacha aesgcm ec ecdh rsa x509 rev fips; do cp "$tls/$u.om" "$out/$1/"; done
   [ -z "$ecdhsrc" ] || cp "$ecdhsrc" "$out/$1/ecdh.om"
   cp "$2" "$out/$1/tls.om"; cp "$tls/build.sh" "$out/$1/"
   sh "$out/$1/build.sh" "$omc" "$3" "$out/$1/bin" 2> "$out/$1.err" || { echo "FAIL build $1: $(cat "$out/$1.err")"; return 1; }
@@ -136,6 +136,9 @@ imut "mutant handshake close_notify unmapped" '/^if eq e TLCLOSE$/{n;s/^ret TLEA
 imut "mutant version not checked"  's/^ret TLEVER$/ret 0/'
 imut "mutant record MAC ignored"   's/^ret TLEMAC$/ret 0/'
 imut "mutant session id not checked" 's/^ret TLESID$/ret 0/'
+# revocation (flag 8, rev.om; rev.om's own mutants are in test/rev/run.sh): the rev rows catch these
+imut "mutant revocation result ignored"  's/^r = tls_rev cb q st b$/r = ulong 0/'
+imut "mutant status_request not offered" 's/^tls_pn c q 5 2$/tls_pn c q 65280 2/'
 # MODEL-REVIEWED fixes: record limit on read and write, proactive KeyUpdate, handshake budget.
 # "KeyUpdate not sent" is caught by the client's own seal limit (SEQUENCE_LIMIT); with both gone
 # the kuw:8 server sees too many records under one key and answers with a fatal alert.

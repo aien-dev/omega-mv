@@ -1025,7 +1025,8 @@ ret add q 22
 end
 
 note supported_versions (TLS 1.3 only), key_share (shares of c[TLGS]), cookie after a
-note HelloRetryRequest, ALPN http/1.1 when flag 1
+note HelloRetryRequest, status_request (ocsp, no responder ids or extensions) when flag 8, ALPN
+note http/1.1 when flag 1
 fn tls_chex2 c edit uchar * p ulong to ulong
 tls_pn c p 43 2
 tls_pn c add p 2 3 2
@@ -1038,6 +1039,13 @@ else
 q = tls_kslist c q
 end
 q = tls_ckext c q
+if ne and get c TLFL 8 0
+tls_pn c q 5 2
+tls_pn c add q 2 5 2
+put c add q 4 1
+tls_pn c add q 5 0 4
+q = add q 9
+end
 if eq and get c TLFL 1 0
 ret q
 end
@@ -1901,7 +1909,130 @@ end
 ret add 8 hl
 end
 
+note ---- revocation (flag 8, rev.om): status_request offered in ClientHello; after the chain verified,
+note the leaf's stapled OCSP response must verify and say good (rev_ocsp) and a must-staple leaf
+note (RFC 7633) without one is refused; the rev.om code is the detail of TLS_ERR_CERTIFICATE ----
+note offset of the staple in the rev_check buffer (leaf at 0, issuer at TLLFSZ, staple at TLRVST)
+const TLRVST ulong 33792
+const TLRVSZ ulong 50688
+
+note tls_stok: the leaf entry's extensions at c[x .. x+2+el) are exactly one status_request (5)
+note holding a CertificateStatus of type ocsp (1) with an OCSPResponse of 1 .. TLLFSZ bytes: its
+note length, else 0
+fn tls_stok c view uchar * x ulong el ulong to ulong
+if lt el 8
+ret 0
+end
+if or ne tls_gn c add x 2 2 5 ne tls_gn c add x 4 2 sub el 4
+ret 0
+end
+if ne get c add x 6 1
+ret 0
+end
+sl = tls_gn c add x 7 3
+if or ne add sl 4 sub el 4 or eq sl 0 gt sl TLLFSZ
+ret 0
+end
+ret sl
+end
+
+note tls_stcp: the leaf entry (q[2] = its certificate length, q[3] = its extensions offset in c) with
+note empty extensions, then the rest of the certificate_list, into cb; q[0] the copy's length
+fn tls_stcp c view uchar * cl ulong cb edit uchar 65536 q edit ulong 4 to void
+l1 = get q 2
+x = get q 3
+el = tls_gn c x 2
+rev_cp part cb 0 add l1 3 c add TLHB 8 add l1 3
+put cb add l1 3 0
+put cb add l1 4 0
+r = sub sub cl add l1 5 el
+rev_cp part cb add l1 5 r c add add x 2 el r
+put q 0 sub cl el
+end
+
+note tls_stap: copy of the certificate_list c[TLHB+8 .. +cl) into cb; when the leaf entry's
+note extensions are one stapled OCSP response (tls_stok) they are left out of the copy and the
+note OCSPResponse goes to b[TLRVST ..). q[0] the copy's length, q[1] the staple's length (0 none).
+note Any other leaf extension stays in the copy, so x509_chain_verify refuses it (X5EEXT). 0 or TLEDEC.
+fn tls_stap c view uchar * cl ulong cb edit uchar 65536 b edit uchar 50688 q edit ulong 4 to ulong
+l1 = tls_gn c add TLHB 8 3
+if gt add l1 5 cl
+ret TLEDEC
+end
+x = add add TLHB 11 l1
+el = tls_gn c x 2
+if gt add add l1 5 el cl
+ret TLEDEC
+end
+sl = tls_stok c x el
+put q 1 sl
+if eq sl 0
+rev_cp part cb 0 cl c add TLHB 8 cl
+put q 0 cl
+ret 0
+end
+put q 2 l1
+put q 3 x
+tls_stcp c cl cb q
+rev_cp part b TLRVST sl c add x 10 sl
+ret 0
+end
+
+note tls_rev: rev_check of the leaf of cb (q[0] bytes) with its issuer (the presented certificates,
+note then the store st) and the staple b[TLRVST .. +q[1]) at the current time; 0 or a rev.om code
+fn tls_rev cb view uchar 65536 q view ulong 4 st view uchar * b edit uchar 50688 to ulong
+p = new ulong 16 0
+l1 = der_u24 cb 0
+rev_cp part b 0 l1 cb 3 l1
+il = rev_issuer part cb 0 get q 0 st part b TLLFSZ TLLFSZ
+if eq il 0
+ret X5EUNK
+end
+now = div realns 1000000000
+put p 0 ulong now
+put p 2 l1
+put p 3 TLLFSZ
+put p 4 il
+put p 5 TLRVST
+put p 6 get q 1
+ret rev_check b p
+end
+
+note tls_cvfy: x509_chain_verify of the copy cb (q[0] bytes) for the connection's host, now
+fn tls_cvfy c view uchar * st view uchar * cb view uchar 65536 q view ulong 4 to ulong
+hq = new uchar 264 0
+n = tls_hq c hq
+ret x509_chain_verify part cb 0 get q 0 st part hq 0 n
+end
+
+note tls_chainr: tls_chain with revocation (flag 8)
+fn tls_chainr c edit uchar * st view uchar * cl ulong to ulong
+cb = new uchar 65536 0
+b = new uchar TLRVSZ 0
+q = new ulong 4 0
+e = tls_stap c cl cb b q
+if ne e 0
+ret e
+end
+r = tls_cvfy c st cb q
+if eq r X5EEXT
+tls_pn c TLDET r 4
+ret TLEEXT
+end
+if eq r 0
+r = tls_rev cb q st b
+end
+if ne r 0
+tls_pn c TLDET r 4
+ret TLECERT
+end
+ret tls_leaf c cl
+end
+
 fn tls_chain c edit uchar * st view uchar * cl ulong to ulong
+if ne and get c TLFL 8 0
+ret tls_chainr c st cl
+end
 hq = new uchar 264 0
 n = tls_hq c hq
 r = x509_chain_verify part c add TLHB 8 cl st part hq 0 n
@@ -2198,7 +2329,9 @@ note ---- public API ----
 note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1,
 note 2 = offer x25519 without a share in ClientHello1 (the server must send a HelloRetryRequest),
 note 4 = approved-only mode (fips.om: HMAC_DRBG with its self-test and health-tested entropy; see the
-note header and README.md; x25519 and the hybrid are then neither offered nor accepted).
+note header and README.md; x25519 and the hybrid are then neither offered nor accepted),
+note 8 = revocation (rev.om): offer status_request, check the leaf's stapled OCSP response and refuse a
+note must-staple leaf without one (tls_chainr).
 note Hostnames are 1..253 bytes of letters, digits, '-' and '.', and not an IPv4 literal.
 fn tls_init c edit uchar * hn view uchar * fl ulong to ulong
 if lt len c TLCSZ
@@ -2222,7 +2355,7 @@ if eq alpha 0
 ret TLEARG
 end
 put c TLHL uchar hl
-put c TLFL uchar and fl 7
+put c TLFL uchar and fl 15
 put c TLGO uchar TLGOFF
 put c TLGS uchar TLGOFF
 if ne and fl 2 0

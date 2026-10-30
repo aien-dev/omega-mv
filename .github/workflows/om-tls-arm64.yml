@@ -39,6 +39,8 @@ jobs:
         run: mkdir -p build && sh om/tls/test/fips/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-fips.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls x509 suite
         run: mkdir -p build && sh om/tls/test/x509/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-x509.log; test "${PIPESTATUS[0]}" = 0
+      - name: om/tls revocation (rev) suite
+        run: mkdir -p build && sh om/tls/test/rev/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-rev.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls suite
         run: mkdir -p build && sh om/tls/test/tls/run.sh "$PWD/seed/out/omc" 2>&1 | tee build/om-tls-run.log; test "${PIPESTATUS[0]}" = 0
       - name: om/tls hostile-server suite
@@ -56,6 +58,7 @@ jobs:
             build/om-tls-drbg.log
             build/om-tls-fips.log
             build/om-tls-x509.log
+            build/om-tls-rev.log
             build/om-tls-hostile.log
             build/net-check.log
             build/tls/tls/*.log

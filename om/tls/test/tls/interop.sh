@@ -74,6 +74,18 @@ q openssl req -x509 -new -key other.key -subj /CN=other-root -days 30 -addext ba
 q openssl req -new -key good.key -subj /CN=localhost -addext subjectAltName=DNS:localhost -out stray.csr
 q openssl x509 -req -in stray.csr -CA other.pem -CAkey other.key -CAcreateserial -days 10 -copy_extensions copy -out stray.pem
 cp good.key stray.key
+# revocation: a leaf to revoke, a must-staple leaf (RFC 7633 tlsfeature), and OCSP responses
+# signed by the intermediate (openssl ocsp in responder mode over index.txt, nextUpdate +1 day)
+cp good.key revd.key; cp good.key must.key
+leaf revd DNS:localhost -days 10
+q openssl req -new -key must.key -subj /CN=must -addext subjectAltName=DNS:localhost -addext tlsfeature=status_request -out must.csr
+q openssl ca -batch -config ca.cnf -cert int.pem -keyfile int.key -extensions v3leaf -days 10 -in must.csr -out must.pem -notext
+q openssl ca -config ca.cnf -cert int.pem -keyfile int.key -revoke revd.pem
+ocsp() {
+  q openssl ocsp -issuer int.pem -cert "$1.pem" -no_nonce -reqout "$1.oreq"
+  q openssl ocsp -index index.txt -rsigner int.pem -rkey int.key -CA int.pem -reqin "$1.oreq" -ndays 1 -respout "$1.ocsp"
+}
+ocsp good; ocsp revd; ocsp must
 
 # Ports: concurrent runs on one host (other worktrees, mutant runs) must not test each other's
 # servers. The default base differs per run (15400 + 100 * (pid mod 170), below the ephemeral
@@ -151,6 +163,21 @@ row "approved: RSA leaf (rsa_pss)" OK                                           
 row "approved: unrestricted srv"  OK                                                   good int.pem -tls1_3
 row "approved: chacha-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -ciphersuites TLS_CHACHA20_POLY1305_SHA256
 row "approved: X25519-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups X25519
+ropts=
+
+# revocation (tls_init flag 8, rev.om): the client offers status_request and checks the leaf's
+# stapled OCSP response (s_server -status_file); a must-staple (RFC 7633) leaf served without a
+# staple is refused. Without flag 8 the same servers are accepted (the controls).
+ropts=0,0,0,0,8
+row "rev: good staple"            OK                                                   good int.pem -tls1_3 -status_file good.ocsp
+row "rev: revoked staple"         "TLSERR TLS_ERR_CERTIFICATE detail 32"               revd int.pem -tls1_3 -status_file revd.ocsp
+row "rev: staple for other cert"  "TLSERR TLS_ERR_CERTIFICATE detail 33"               good int.pem -tls1_3 -status_file revd.ocsp
+row "rev: no staple, plain leaf"  OK                                                   good int.pem -tls1_3
+row "rev: must-staple, staple"    OK                                                   must int.pem -tls1_3 -status_file must.ocsp
+row "rev: must-staple, no staple" "TLSERR TLS_ERR_CERTIFICATE detail 35"               must int.pem -tls1_3
+ropts=0
+row "no rev: revoked staple"      OK                                                   revd int.pem -tls1_3 -status_file revd.ocsp
+row "no rev: must-staple, none"   OK                                                   must int.pem -tls1_3
 ropts=
 
 # crafted ServerHellos (fakesh.py): the client's own refusals
