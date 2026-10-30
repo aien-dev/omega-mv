@@ -1,0 +1,51 @@
+DDC650 diverse double compilation: does BIN equal what two independent routes build from SRC
+input OM4 seed/rung4/om4.bin sha256 d0da40e45f1fcc45d9a39c9c52c9d745b545e076970729e51c12d76ef519efab bytes 14224 pin d0da40e45f1fcc45d9a39c9c52c9d745b545e076970729e51c12d76ef519efab match
+input CC /usr/bin/gcc sha256 a20520ee21543f243d40636a9181a142c45ecd989de31ab86b99a8ea5ada870d bytes 990040
+input ORACLE_SRC /dev/shm/ddc650/omega_ref.c sha256 52e747096c1d978103432460a2978b21a604cc5d3e961bbe4b253fcc7636290e bytes 56012 pin 52e747096c1d978103432460a2978b21a604cc5d3e961bbe4b253fcc7636290e match
+input SRC seed/omc/omc.om sha256 96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e bytes 259939
+input BIN seed/out/omc sha256 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b bytes 477612
+check comparator self-test (equal files, one differing byte, differing length): PASS
+control site found exactly once in seed/omc/omc.om
+  $ seed/rung4/om4.bin < seed/omc/omc.om > /dev/shm/ddc650/runs/base/stage1 2> /dev/shm/ddc650/runs/base/stage1.err
+  exit=0
+  $ seed/rung4/om4.bin < seed/omc/omc.om > /dev/shm/ddc650/runs/base/stage1.b 2> /dev/shm/ddc650/runs/base/stage1.b.err
+  exit=0
+check route S stage1 = OM4(SRC), two builds, exit 0, ELF: PASS
+check route S stage1 deterministic (two builds identical): PASS
+artifact /dev/shm/ddc650/runs/base/stage1 sha256 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b bytes 477612
+  $ /dev/shm/ddc650/runs/base/stage1 < seed/omc/omc.om > /dev/shm/ddc650/runs/base/stage2 2> /dev/shm/ddc650/runs/base/stage2.err
+  exit=0
+  $ /dev/shm/ddc650/runs/base/stage1 < seed/omc/omc.om > /dev/shm/ddc650/runs/base/stage2.b 2> /dev/shm/ddc650/runs/base/stage2.b.err
+  exit=0
+check route S stage2 = stage1(SRC), two builds, exit 0, ELF: PASS
+check route S stage2 deterministic (two builds identical): PASS
+artifact /dev/shm/ddc650/runs/base/stage2 sha256 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b bytes 477612
+  $ /usr/bin/gcc -B/usr/bin/ -O2 -std=gnu11 -Wall -Wextra -Werror -o /dev/shm/ddc650/runs/base/oracle /dev/shm/ddc650/omega_ref.c -lpthread < /dev/null > /dev/shm/ddc650/runs/base/cc.out 2> /dev/shm/ddc650/runs/base/cc.out.err
+  exit=0
+check route I oracle = CC(ORACLE_SRC), exit 0, ELF: PASS
+artifact /dev/shm/ddc650/runs/base/oracle sha256 0b76b36c87e9051c4c7699aa771ddbb0bc9fe8ddb4b10a4be9e16c55e3d345e6 bytes 74688
+  $ /dev/shm/ddc650/runs/base/oracle run seed/omc/omc.om < seed/omc/omc.om > /dev/shm/ddc650/runs/base/ref 2> /dev/shm/ddc650/runs/base/ref.err
+  exit=0
+  $ /dev/shm/ddc650/runs/base/oracle run seed/omc/omc.om < seed/omc/omc.om > /dev/shm/ddc650/runs/base/ref.b 2> /dev/shm/ddc650/runs/base/ref.b.err
+  exit=0
+check route I ref = oracle run SRC < SRC, two runs, exit 0: PASS
+check route I deterministic (two runs identical): PASS
+artifact /dev/shm/ddc650/runs/base/ref sha256 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b bytes 477612
+  $ seed/out/omc < seed/omc/omc.om > /dev/shm/ddc650/runs/base/self 2> /dev/shm/ddc650/runs/base/self.err
+  exit=0
+check subject self = BIN(SRC), exit 0: PASS
+check self-regeneration BIN(SRC) == BIN: PASS
+artifact /dev/shm/ddc650/runs/base/self sha256 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b bytes 477612
+check DDC route S: stage2 == BIN: PASS
+info stage1 == BIN (not required): yes
+check DDC route I: ref == BIN: PASS
+check routes agree: stage2 == ref: PASS
+  $ seed/rung4/om4.bin < /dev/shm/ddc650/runs/base/mutant.om > /dev/shm/ddc650/runs/base/mstage1 2> /dev/shm/ddc650/runs/base/mstage1.err
+  exit=0
+  $ /dev/shm/ddc650/runs/base/mstage1 < seed/omc/omc.om > /dev/shm/ddc650/runs/base/mstage2 2> /dev/shm/ddc650/runs/base/mstage2.err
+  exit=0
+check sensitivity: mstage1 = OM4(SRC with an extra NOP per zero/minus-one constant), mstage2 = mstage1(SRC) != BIN: PASS
+artifact /dev/shm/ddc650/runs/base/mstage1 sha256 0e6657784482a6ebcc41d9a246808b1ab18898cc300a8b64efe4debb0befc6aa bytes 477696
+artifact /dev/shm/ddc650/runs/base/mstage2 sha256 a8d6f6d09ea8b173f46c23c8664e2ea2f4910663dfe626f54ac4b6580e38eeec bytes 492056
+VERDICT DDC650 PASS: BIN equals what route S (seed om4) and route I (CC-built spec interpreter) build from SRC; scope: these SRC, BIN, OM4, ORACLE_SRC, CC and this host only; not a proof that SRC is correct or safe and not a trusting-trust cure
+EXIT=0
