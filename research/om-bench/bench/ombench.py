@@ -181,7 +181,7 @@ def compile_om(src_path, out_path):
             p = subprocess.run([OMC], stdin=fi, stdout=fo, stderr=subprocess.PIPE, timeout=COMPILE_DEADLINE)
         except subprocess.TimeoutExpired:
             return 124, "compile timeout"
-    os.chmod(out_path, 0o755)
+    os.chmod(out_path, 0o700)
     return p.returncode, p.stderr.decode(errors="replace")
 
 

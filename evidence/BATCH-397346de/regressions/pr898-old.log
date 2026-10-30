@@ -1,0 +1,15 @@
+OM2GATE START cases=/home/drakestapleton/work/OmcBatchPin/build/batch3/pr898.cases scratch=build/batch3/scratch-pr898-old
+IDENTITY omc /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc sha256=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f pinned=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f match
+CASE s1-kw-long-names line=1
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr898-old/1.src > build/batch3/scratch-pr898-old/1.elf 2> build/batch3/scratch-pr898-old/1.cerr
+VERDICT s1-kw-long-names FAIL compile exit=16 expected=0
+CASE s1-kw-long-om1 line=2
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr898-old/2.src > build/batch3/scratch-pr898-old/2.elf 2> build/batch3/scratch-pr898-old/2.cerr
+VERDICT s1-kw-long-om1 FAIL compile exit=16 expected=0
+CASE s1-bad-kw-name line=3
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr898-old/3.src > build/batch3/scratch-pr898-old/3.elf 2> build/batch3/scratch-pr898-old/3.cerr
+VERDICT s1-bad-kw-name PASS compile exit=16 expected=16 refused with the expected error
+CASE s1-bad-kw-field line=4
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/old-omc < build/batch3/scratch-pr898-old/4.src > build/batch3/scratch-pr898-old/4.elf 2> build/batch3/scratch-pr898-old/4.cerr
+VERDICT s1-bad-kw-field FAIL compile exit=16 expected=13 diagnostic does not name the expected error
+OM2GATE FAIL cases=4 pass=1 fail=3 invalid=0 not_run=0
