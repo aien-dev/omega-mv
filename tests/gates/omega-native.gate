@@ -1,0 +1,31 @@
+# tests/gates/omega-native.gate
+# omega#663/#664: native .om units under native/ (ecosystem663 tensor metadata admission, autodiff664
+# bounded reverse-mode tape), built by the committed seed/out/omc. No hosted mirror: local gate only.
+gate: OMEGA-NATIVE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - native/
+  - seed/out/omc
+  - seed/out/omc.sha256
+  - tests/ecosystem663/
+  - tests/autodiff664/
+  - tests/fixtures/autodiff664/
+  - tests/test_omega_ad_fixture.c
+  - tests/run_ad_chip.sh
+  - evidence/ECOSYSTEM663/
+  - mk/autodiff.mk
+  - src/autodiff/
+  - src/tensor/
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["native"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine
