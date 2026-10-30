@@ -45,6 +45,7 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Claude Opus 5.5 | OSC IR v7 memory oracle: independent decoder, validator and interpreter (`seed/wasm/v7/oracle.js`), separate hand-written fixture writer, hand-written expectations and a mutant-checked self-test |
 | Claude Opus 5.5 | Effect-derived capability manifest (`seed/effects`, M1): host-word manifest, ELF syscall resolution that fails closed, seccomp cBPF output, probe-parity/strace/bwrap gate with negative controls and tool mutants |
 | Claude Opus 5.5 | seed/agent: omagent, a nanobot-style coding agent in seeded Omega (agent loop, four permissioned tools, JSONL session memory, SSE streaming, CLI), its scripted-mock test referee with six mutants, and the paired startup/RSS benchmark against nanobot |
+| Claude Opus 5.5 | Tenstorrent Tensix vecadd (`seed/tensix`): RV32IM asm2 table, hand-written kernel and start code, seeded Omega emitter `irrv32.om` (OSC IR v1 scalar unit -> RV32 elementwise kernel, byte-identical to asm2), hand-written edge disassembly, ttsim WH/BH and qemu interop-oracle gate with negative controls |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 

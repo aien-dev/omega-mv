@@ -1,0 +1,81 @@
+; rv32im.tbl -- the RV32IM instruction table for asm2 (rung 2, unchanged), readable text, for the
+; Tenstorrent "baby" RISC-V cores (Wormhole B0 and Blackhole A0 Tensix tiles: RISCV B, NC, T0, T1, T2).
+; Same format as rung2/table.s2:   = name  0xBASE  field...
+; Fields: iP.W = unsigned number at bit P, W bits wide; sP.W = signed (two's complement, range checked).
+; Registers are written as numbers 0..31 (x0 = 0, ra = 1, sp = 2, t0..t2 = 5..7, a0..a7 = 10..17,
+; t3..t6 = 28..31), never as asm2's ARM names (asm2 reads "xzr"/"sp" as 31, which is t6 on RISC-V).
+; Operand order on a listing line is the order of the fields below:
+;   R-type   name rd rs1 rs2
+;   I-type   name rd rs1 imm               (loads too: lw rd rs1 imm means rd = mem[rs1+imm])
+;   shifts   name rd rs1 shamt
+;   S-type   name rs2 rs1 imm[11:5] imm[4:0]       (signed high part, unsigned low part)
+;   B-type   name rs1 rs2 imm[12] imm[10:5] imm[4:1] imm[11]   (offset in bytes, split as the word holds it)
+;   U-type   name rd imm[31:12]
+;   J-type   name rd imm[20] imm[10:1] imm[11] imm[19:12]      (offset in bytes, split as the word holds it)
+; Every number is written as the bits hold it; asm2's labels count 32-bit words and cannot scatter
+; the RISC-V branch bits, so branch and jump distances are written as their pieces (README.md).
+; Source of every base word and field: The RISC-V Instruction Set Manual, Volume I: Unprivileged ISA,
+; Version 20191213, chapter 2 (RV32I base, instruction formats), chapter 7 ("M" Standard Extension) and
+; chapter 24 ("RV32/64G Instruction Set Listings"), https://riscv.org/technical/specifications/ ; written
+; from the format layout, then checked word by word by two independent disassemblers (edges.s2 below).
+; Tenstorrent states the baby cores implement RV32I 2.1 + M 2.0 (tt-isa-documentation
+; WormholeB0/TensixTile/BabyRISCV/README.md, BlackholeA0/TensixTile/BabyRISCV/InstructionSet.md,
+; be833101, read 2026-10-26). Referee: riscv64-unknown-elf-objdump and llvm-objdump (gate-tensix.sh).
+;
+; ---- U-type (opcode 0110111 LUI, 0010111 AUIPC) ----
+= lui     0x00000037 i7.5 i12.20
+= auipc   0x00000017 i7.5 i12.20
+; ---- J-type (opcode 1101111) and JALR (I-type, opcode 1100111, funct3 000) ----
+= jal     0x0000006f i7.5 s31.1 i21.10 i20.1 i12.8
+= jalr    0x00000067 i7.5 i15.5 s20.12
+; ---- B-type (opcode 1100011), funct3 at bit 12 ----
+= beq     0x00000063 i15.5 i20.5 s31.1 i25.6 i8.4 i7.1
+= bne     0x00001063 i15.5 i20.5 s31.1 i25.6 i8.4 i7.1
+= blt     0x00004063 i15.5 i20.5 s31.1 i25.6 i8.4 i7.1
+= bge     0x00005063 i15.5 i20.5 s31.1 i25.6 i8.4 i7.1
+= bltu    0x00006063 i15.5 i20.5 s31.1 i25.6 i8.4 i7.1
+= bgeu    0x00007063 i15.5 i20.5 s31.1 i25.6 i8.4 i7.1
+; ---- loads (I-type, opcode 0000011) ----
+= lb      0x00000003 i7.5 i15.5 s20.12
+= lh      0x00001003 i7.5 i15.5 s20.12
+= lw      0x00002003 i7.5 i15.5 s20.12
+= lbu     0x00004003 i7.5 i15.5 s20.12
+= lhu     0x00005003 i7.5 i15.5 s20.12
+; ---- stores (S-type, opcode 0100011) ----
+= sb      0x00000023 i20.5 i15.5 s25.7 i7.5
+= sh      0x00001023 i20.5 i15.5 s25.7 i7.5
+= sw      0x00002023 i20.5 i15.5 s25.7 i7.5
+; ---- OP-IMM (I-type, opcode 0010011) ----
+= addi    0x00000013 i7.5 i15.5 s20.12
+= slti    0x00002013 i7.5 i15.5 s20.12
+= sltiu   0x00003013 i7.5 i15.5 s20.12
+= xori    0x00004013 i7.5 i15.5 s20.12
+= ori     0x00006013 i7.5 i15.5 s20.12
+= andi    0x00007013 i7.5 i15.5 s20.12
+= slli    0x00001013 i7.5 i15.5 i20.5
+= srli    0x00005013 i7.5 i15.5 i20.5
+= srai    0x40005013 i7.5 i15.5 i20.5
+; ---- OP (R-type, opcode 0110011), funct7 at bit 25 ----
+= add     0x00000033 i7.5 i15.5 i20.5
+= sub     0x40000033 i7.5 i15.5 i20.5
+= sll     0x00001033 i7.5 i15.5 i20.5
+= slt     0x00002033 i7.5 i15.5 i20.5
+= sltu    0x00003033 i7.5 i15.5 i20.5
+= xor     0x00004033 i7.5 i15.5 i20.5
+= srl     0x00005033 i7.5 i15.5 i20.5
+= sra     0x40005033 i7.5 i15.5 i20.5
+= or      0x00006033 i7.5 i15.5 i20.5
+= and     0x00007033 i7.5 i15.5 i20.5
+; ---- MISC-MEM and SYSTEM ----
+= fence   0x0000000f i24.4 i20.4                ; fence pred succ (Tenstorrent: executes as a nop on WH)
+= ecall   0x00000073
+= ebreak  0x00100073                            ; on the baby cores: debug pause
+; ---- "M" extension (R-type, opcode 0110011, funct7 0000001) ----
+= mul     0x02000033 i7.5 i15.5 i20.5
+= mulh    0x02001033 i7.5 i15.5 i20.5
+= mulhsu  0x02002033 i7.5 i15.5 i20.5
+= mulhu   0x02003033 i7.5 i15.5 i20.5
+= div     0x02004033 i7.5 i15.5 i20.5
+= divu    0x02005033 i7.5 i15.5 i20.5
+= rem     0x02006033 i7.5 i15.5 i20.5
+= remu    0x02007033 i7.5 i15.5 i20.5
