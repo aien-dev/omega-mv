@@ -1,0 +1,90 @@
+note SPDX-License-Identifier: Apache-2.0
+note Host-only negative control: remove exactly one parser guard from source on stdin.
+note Mode 1 removes overflow refusal; mode 2 removes malformed-REGS propagation.
+om2
+text over "if gt v div sub ulong 0xffffffffffffffff digit 10"
+text status "if ne get argbad 0 0"
+text repl "if false"
+global source uchar 65536
+global arg uchar 1
+fn matches pos ulong mode uchar to bool
+if eq mode 49
+if gt add pos len over len source
+ret false
+end
+for j ulong len over
+if ne get source add pos j get over j
+ret false
+end
+end
+ret true
+end
+if gt add pos len status len source
+ret false
+end
+for j ulong len status
+if ne get source add pos j get status j
+ret false
+end
+end
+ret true
+end
+fn emit off ulong n ulong to void
+pos = ulong 0
+while lt pos n bound 65536
+r = write 1 source add off pos sub n pos
+if le r 0
+exit 4
+end
+pos = add pos ulong r
+end
+end
+fn main to int
+if ne argcnt 2
+ret 2
+end
+r = argread 1 arg 0 1
+if ne r 1
+ret 2
+end
+mode = get arg 0
+if and ne mode 49 ne mode 50
+ret 2
+end
+n = ulong 0
+while lt n len source bound 65536
+r = read 0 source n sub len source n
+if lt r 0
+ret 3
+end
+if eq r 0
+break
+end
+n = add n ulong r
+end
+if eq n len source
+ret 3
+end
+found = ulong 0
+where = ulong 0
+for i ulong n
+if matches i mode
+found = add found 1
+where = i
+end
+end
+if ne found 1
+ret 5
+end
+size = len status
+if eq mode 49
+size = len over
+end
+emit 0 where
+r = write 1 repl 0 len repl
+if ne r long len repl
+ret 4
+end
+emit add where size sub n add where size
+ret 0
+end
