@@ -1,10 +1,11 @@
-note Host only: every allowed VFIO request uses an invalid fd, never /dev/vfio. vfiomap maps a memfd.
+note Host only: every allowed VFIO request uses an invalid fd, never /dev/vfio. vfiomap and vfiomapw map
+note a memfd. MAP_DMA takes a mapping handle in its vaddr field; the compiler substitutes the mapping.
 global data uchar 64
 global info uchar 32
 global status uchar 4
 text dev "0000:00:01.0"
 text name "vfio-region"
-text msg "PASS bounded native VFIO requests and read-only region maps\n"
+text msg "PASS bounded native VFIO requests, DMA map spans and region maps\n"
 fn ck yes bool to void
 if not yes
 exit int 80
@@ -20,6 +21,21 @@ v = ulong get data add a 3
 v = or shl v 8 ulong get data add a 2
 v = or shl v 8 ulong get data add a 1
 ret or shl v 8 ulong get data a
+end
+fn word64 a ulong to ulong
+ret or shl word32 add a 4 32 word32 a
+end
+fn put64 a ulong v ulong to void
+for i ulong 8
+put data add a i uchar and shr v mul i 8 255
+end
+end
+fn dmaspan flags ulong h ulong iova ulong to void
+fill uchar 0
+put data 4 uchar flags
+put64 8 h
+put64 16 iova
+put64 24 12345
 end
 fn setinfo flags ulong size ulong offset ulong to void
 for i ulong 32
@@ -85,6 +101,54 @@ if eq k 11
 setinfo 5 0 0
 r = vfiomap fd info 0 32
 end
+if eq k 12
+h12 = mapnew neg int 1 0 4096 3 34
+dmaspan 3 ulong h12 1048576
+r = vfioctl neg int 1 uint 15217 data 0 31
+end
+if eq k 13
+h13 = mapnew neg int 1 0 4096 3 34
+dmaspan 1 ulong h13 1048576
+r = vfioctl neg int 1 uint 15217 data 0 32
+end
+if eq k 14
+dmaspan 3 1048577 1048576
+r = vfioctl neg int 1 uint 15217 data 0 32
+end
+if eq k 15
+setinfo 5 4096 0
+h15 = vfiomap fd info 0 32
+ck gt h15 0
+dmaspan 3 ulong h15 1048576
+r = vfioctl neg int 1 uint 15217 data 0 32
+end
+if eq k 16
+h16 = mapnew neg int 1 0 4096 1 34
+dmaspan 3 ulong h16 1048576
+r = vfioctl neg int 1 uint 15217 data 0 32
+end
+if eq k 17
+h17 = mapnew neg int 1 0 4096 3 34
+ck eq mapdrop h17 0
+dmaspan 3 ulong h17 1048576
+r = vfioctl neg int 1 uint 15217 data 0 32
+end
+if eq k 18
+dmaspan 0 0 1048576
+r = vfioctl neg int 1 uint 15218 data 0 32
+end
+if eq k 19
+dmaspan 2 0 1048576
+r = vfioctl neg int 1 uint 15218 data 0 24
+end
+if eq k 20
+setinfo 5 4096 0
+r = vfiomapw fd info 0 32
+end
+if eq k 21
+setinfo 7 4096 0
+r = vfiomapw fd info 0 31
+end
 exit int 81
 end
 fn main to int
@@ -125,11 +189,37 @@ ck gt h 0
 ck eq mapget h 0 4 3735928559
 ck eq mapget h 4092 4 0
 ck eq mapdrop h 0
+h = mapnew neg int 1 0 8192 3 34
+ck gt h 0
+dmaspan 3 ulong h 1048576
+ck eq vfioctl neg int 1 uint 15217 data 0 32 neg long 9
+ck eq word32 0 32
+ck eq word32 4 3
+ck eq word64 8 mapaddr h
+ck eq word64 16 1048576
+ck eq word64 24 8192
+ck eq mapdrop h 0
+note UNMAP_DMA layout: iova at 8, size at 16 (vfio_iommu_type1_dma_unmap).
+dmaspan 0 1048576 4096
+ck eq vfioctl neg int 1 uint 15218 data 0 24 neg long 9
+ck eq word32 0 24
+ck eq word64 8 1048576
+ck eq word64 16 4096
+setinfo 7 4096 0
+w = vfiomapw fd info 0 32
+ck gt w 0
+ck eq mapget w 0 4 3735928559
+ck eq mapset w 4 4 305419896 0
+ck eq pread fd data 0 4 4 4
+ck eq word32 0 305419896
+ck eq mapdrop w 0
+setinfo 7 4096 1
+ck eq vfiomapw fd info 0 32 neg long 22
 setinfo 5 4096 1
 ck eq vfiomap fd info 0 32 neg long 22
 setinfo 5 4096 0
 ck eq vfiomap neg int 1 info 0 32 neg long 9
-for k int 12
+for k int 22
 p = fork
 ck ge p 0
 if eq p 0

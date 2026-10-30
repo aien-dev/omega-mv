@@ -2,10 +2,10 @@ note Native compiler refusal driver for VFIO words. argv[1] names the exact comp
 text infile "case.om"
 text outfile "case.elf"
 text errfile "case.err"
-text passed "PASS 15 VFIO compiler refusals\n"
+text passed "PASS 19 VFIO compiler refusals\n"
 text a "global a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15209 a 0 0\nret 0\nend\n"
 text b "global a uchar 32\nfn main to int\nq = uint 15207\nr = vfioctl neg int 1 q a 0 8\nret 0\nend\n"
-text c "global a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15217 a 0 32\nret 0\nend\n"
+text c "global a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15216 a 0 32\nret 0\nend\n"
 text d "text a \"readonly\"\nfn main to int\nr = vfioctl neg int 1 uint 15207 a 0 8\nret 0\nend\n"
 text e "global a uint 32\nfn main to int\nr = vfioctl neg int 1 uint 15212 a 0 32\nret 0\nend\n"
 text f "global a uchar 32\nfn main to int\nr = vfioctl long 1 uint 15207 a 0 8\nret 0\nend\n"
@@ -16,8 +16,12 @@ text k "fn test a edit uchar 32 to long\nret vfiomap neg int 1 a 0 32\nend\n"
 text m "global a uchar 32\nfn main to int\nr = vfiomap long 1 a 0 32\nret 0\nend\n"
 text n "global a uint 32\nfn main to int\nr = vfioctl neg int 1 uint 15210 a 0 8\nret 0\nend\n"
 text o "global a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15215 a 0 0\nret 0\nend\n"
-text p "target x86linux\nglobal a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15207 a 0 8\nret 0\nend\n"
+text p "global a uint 32\nfn main to int\nr = vfiomapw neg int 1 a 0 32\nret 0\nend\n"
+text s "fn test a edit uchar 32 to long\nret vfiomapw neg int 1 a 0 32\nend\n"
+text t "global a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15219 a 0 32\nret 0\nend\n"
+text v "target x86linux\nglobal a uchar 32\nfn main to int\nr = vfioctl neg int 1 uint 15207 a 0 8\nret 0\nend\n"
 text u "target x86linux\nglobal a uchar 32\nfn main to int\nr = vfiomap neg int 1 a 0 32\nret 0\nend\n"
+text w "target x86linux\nglobal a uchar 32\nfn main to int\nr = vfiomapw neg int 1 a 0 32\nret 0\nend\n"
 global packet uchar 4096
 global status uchar 4
 global tmp uchar 1
@@ -77,10 +81,24 @@ r = write fd o 0 len o
 end
 if eq num 13
 r = write fd p 0 len p
-want = 25
+want = 7
 end
 if eq num 14
+r = write fd s 0 len s
+end
+if eq num 15
+r = write fd t 0 len t
+end
+if eq num 16
+r = write fd v 0 len v
+want = 25
+end
+if eq num 17
 r = write fd u 0 len u
+want = 25
+end
+if eq num 18
+r = write fd w 0 len w
 want = 25
 end
 expect gt r 0
@@ -93,7 +111,7 @@ expect and gt size 0 le size 4092
 put packet 0 1
 put packet 2 uchar and size 255
 put packet 3 uchar shr size 8
-for num int 15
+for num int 19
 input = fopen infile 0 len infile 524482 384
 output = fopen outfile 0 len outfile 524482 384
 errors = fopen errfile 0 len errfile 524482 384

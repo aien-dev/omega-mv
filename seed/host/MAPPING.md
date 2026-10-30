@@ -17,6 +17,7 @@ bootstrap and test orchestration remain disclosed development tools.
 | `uvmctl fd command A off n` | Literal Linux UVM request from the explicit ABI580.173.02 allowlist, with its exact writable payload length. |
 | `vfioctl fd request A off n` | Literal VFIO request from the allowlist below, with its exact byte count. Signed Linux ioctl result. `fd` is int; `request` a literal uint; `A` uchar bytes. |
 | `vfiomap fd A off 32` | Read-only shared mapping of one VFIO region. `A off 32` is the `vfio_region_info` returned by `DEVICE_GET_REGION_INFO`; its flags must contain READ and MMAP, and the compiler maps exactly its size at its offset. Returns a mapping handle or negative errno. `mapset`/`mapwrite` through the handle trap. |
+| `vfiomapw fd A off 32` | As `vfiomap`, but the region flags must contain READ, WRITE and MMAP and the mapping is shared read/write, so `mapget`/`mapset` drive device registers (one aligned access each, DSB SY on both sides). |
 | `mapaddr handle` | The owned live mapping's base address as ulong, for driver address serialization. Does not permit access through an arbitrary integer address. Works on reservations. |
 | `mapget handle offset width` | Aligned uint32 or uint64 load, returned as ulong; width is literal int4 or8. Exactly one load, bracketed by DSB SY. Requires readable memory. |
 | `mapset handle offset width value` | Aligned uint32 or uint64 store from ulong, returning long0; width is literal int4 or8. A uint32 store refuses truncation. Exactly one store, bracketed by DSB SY. Requires writable memory. |
@@ -67,22 +68,40 @@ The VFIO allowlist (`_IO(';', 100+k)`, Linux `include/uapi/linux/vfio.h`) is
 GET_API_VERSION15204/0, CHECK_EXTENSION15205/4, SET_IOMMU15206/4 (value must be
 TYPE1v2 = 3), GROUP_GET_STATUS15207/8, GROUP_SET_CONTAINER15208/4,
 GROUP_GET_DEVICE_FD15210 (nonempty device name without zero bytes, copied with a
-terminator to private stack memory), DEVICE_GET_INFO15211/24 and
-DEVICE_GET_REGION_INFO15212/32. DEVICE_RESET15215 is refused: W0 is approved
+terminator to private stack memory), DEVICE_GET_INFO15211/24,
+DEVICE_GET_REGION_INFO15212/32, IOMMU_MAP_DMA15217/32 and IOMMU_UNMAP_DMA15218/24
+(both checked as described under DMA below). DEVICE_RESET15215 is refused: W0 is approved
 without a device reset, so Omega code cannot request one. For spans of 8 bytes or
 more the compiler writes `argsz = n` before the call, so the kernel copies at most
 n bytes back. CHECK_EXTENSION and SET_IOMMU pass the 4-byte value read from the
 span. Every other request, a non-literal request, a non-uchar span or library
 mode is refused at compile time; a wrong count, a bad SET_IOMMU value or an empty
-device name traps 3 at run time. DMA mapping, IRQ, region writes, reset and migration
+device name traps 3 at run time. IRQ, reset and migration
 requests are not covered. Note that closing a vfio-pci device fd lets Linux reset the
 function (FLR) or, when every reset method is disabled, the bus (SBR); the allowlist
 cannot prevent that kernel behaviour.
+
+DMA: IOMMU_MAP_DMA15217/32 (`struct vfio_iommu_type1_dma_map`, vfio.h) never
+takes an address from Omega code. The caller writes an Omega mapping handle into
+the vaddr field (bytes 8..15) and the IOVA into bytes 16..23. The compiler checks
+the handle exactly as `mapget` does (live slot, matching generation), requires a
+read/write mapping and flags exactly READ|WRITE (3), then stores the mapping's own
+base address into vaddr and its whole length into size before the call; any
+failed check traps 3. So only a whole live mapping that the program owns can be
+handed to the IOMMU, and the IOVA is the only free choice. IOMMU_UNMAP_DMA15218/24
+requires flags 0 (no dirty bitmap, no ALL, no VADDR). Request numbers are shared by
+`_IO(';', 113/114)` with VFIO_DEVICE_PCI_HOT_RESET and VFIO_DEVICE_QUERY_GFX_PLANE on a
+device fd: hot reset refuses any non-zero flags with EINVAL (Linux
+drivers/vfio/pci/vfio_pci_core.c, `vfio_pci_ioctl_pci_hot_reset`, `hdr.flags` check),
+and MAP_DMA always passes flags 3; vfio-pci does not implement QUERY_GFX_PLANE.
+Unmapping or dropping an Omega mapping while it is DMA-mapped leaves the pages pinned
+by the kernel until the container is closed; the driver must unmap before dropping.
 `vfiomap` refuses a size of zero and region flags
-without READ|MMAP; it never requests PROT_WRITE. Host tests use an invalid fd and
-a memfd stand-in; the device path is exercised only in the QEMU bench of
-aien-dev/omega-gpu-driver, not on hardware. Both words are AArch64 only: a
-`target x86linux` program that uses either is refused with error 25, because the
+without READ|MMAP; it never requests PROT_WRITE. `vfiomapw` additionally requires
+WRITE and is the only VFIO word that maps device memory writable. Host tests use an
+invalid fd and a memfd stand-in; the device path is exercised only in the QEMU bench
+of aien-dev/omega-gpu-driver, not on hardware. All three words are AArch64 only: a
+`target x86linux` program that uses any of them is refused with error 25, because the
 x86 backend has no VFIO lowering.
 
 Kernel constants/layouts are from Linux asm-generic/unistd.h, mman-common.h and
