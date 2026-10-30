@@ -391,6 +391,7 @@ int omega_blackwell_codegen_tern_gemv_prog(const OmegaTernGemvSpec *spec, Blackw
         uc = V(e); ueff = V(e); um1 = V(e); negU = V(e); okw = V(e); tu = V(e); lg0 = V(e); sbase = V(e); stog = V(e);
         so = V(e); sa = V(e); wl1 = V(e); val = V(e);
         if (e->err) return -1;
+        if (x_bytes & slot_bytes) return -1; /* the XOR toggle of sbase needs disjoint bits: x_bytes % 512 == 0, slot_bytes <= 128 */
         imadi(e, lg0, nzl1, 0, 1, NOREG); imadi(e, lg0, one, 0, 0xffffffffu, lg0); /* (l > 0) */
         imadi(e, um1, one, 0, 0xffffffffu, ureg);     /* U - 1 */
         imadi(e, negU, ureg, 0, 0xffffffffu, NOREG);  /* -U */
