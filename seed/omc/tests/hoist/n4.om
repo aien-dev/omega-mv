@@ -1,0 +1,9 @@
+om2
+note sub 16 i reaches 16 at i = 0, one past the end: C + 1 = 17 > 16 keeps the check
+global a uchar 16
+fn main to int
+for i ulong 16
+put a sub 16 i uchar 1
+end
+ret 0
+end

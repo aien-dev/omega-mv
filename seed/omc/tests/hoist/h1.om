@@ -1,0 +1,25 @@
+om2
+note hoisted loop constants survive a call whose own loop hoists other constants into the same registers
+global a ulong 16
+global b ulong 16
+global c ulong 8
+fn g to ulong
+for j ulong 8
+put c j 5000
+end
+ret get c 7
+end
+fn main to int
+for i ulong 16
+put b i i
+end
+s = ulong 0
+for i ulong 16
+x = g
+put a i add get b i 3
+end
+for i ulong 16
+s = add s get a i
+end
+ret int and s 255
+end

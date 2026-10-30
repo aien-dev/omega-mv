@@ -1,0 +1,10 @@
+om2
+global a uchar 10
+global b uchar 64
+fn main to int
+for i ulong 10
+i = add i 20
+put a i 7
+end
+ret 0
+end

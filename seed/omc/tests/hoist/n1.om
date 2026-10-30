@@ -1,0 +1,13 @@
+om2
+note get a add i 1 is not a bare counter: its check stays and i = 15 traps (exit 103)
+global a ulong 16
+fn main to int
+for i ulong 16
+put a i ulong 1
+end
+s = ulong 0
+for i ulong 16
+s = add s get a add i 1
+end
+ret 0
+end

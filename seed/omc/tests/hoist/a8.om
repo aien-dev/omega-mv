@@ -1,0 +1,18 @@
+om2
+note D1 (program mode): eight hoistable constants in a constant-count loop, then argcnt, which reads
+note argv through x27. Hoisting stops at x26 (hzcap 7), so this exits 1 (argcnt with no arguments)
+fn main to int
+s = ulong 0
+for i ulong 4
+s = add s 10001
+s = add s 10002
+s = add s 10003
+s = add s 10004
+s = add s 10005
+s = add s 10006
+s = add s 10007
+s = add s 10008
+end
+n = argcnt
+ret int add and s 0 ulong n
+end
