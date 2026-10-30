@@ -984,6 +984,17 @@ or unrelated runtime failures are not accepted as control evidence.
 These checks qualify host parsing only. They do not access or qualify a GPU,
 alter the empirical scheduling model, or rewrite historical evidence.
 
+## Local trace segment (omega-mv #608)
+
+`seed/trace/segment.om` is a library unit (no `main`) for a local, append-only trace segment: a
+16-byte header and 64-byte records, each with its sequence number and a CRC-32. It can scan a segment
+read-only, and its recovery keeps the valid prefix and quarantines the damaged file as `<segment>.bad`.
+Run `sh seed/trace/gate.sh` (or `tests/gates/run.sh trace`) from the repository root on an
+AArch64 Linux host. The gate checks `seed/out/omc` against its recorded SHA-256, then requires the 71 checks
+in `seed/trace/segment-test.om` to print exactly `seed/trace/expected.txt`. It also requires four source
+mutants to fail their own checks: CRC comparison removed, torn tail ignored, append alignment guard
+weakened, and create with O_TRUNC in place of O_EXCL. `seed/trace/README.md` describes the format.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C
