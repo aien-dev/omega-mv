@@ -2,8 +2,12 @@
 
 Status 2026-10-01: **M20 NOT QUALIFIED.** The semantic layer and the CPU
 realization exist and pass their CPU tests. E1 (numeric closure) PASSED on
-main 4863803 (receipt merged in omega#177). M20 qualification is blocked on
-GB10 parity, which has not run, crash-safe storage and a receipt.
+main 4863803 (receipt merged in omega#177). M20 qualification was blocked on
+GB10 parity, crash-safe storage and a receipt. Correction 2026-10-27: GB10
+parity ran after this status was written and passed once on the GB10 at merged
+main f633e343 on 2026-10-02 (row "GB10 parity"). Crash-safe storage is PASS
+(CPU) in the table below. No M20 receipt from `tools/m20_receipt.sh` exists
+yet, so M20 stays NOT QUALIFIED; one run on one host is EXERCISED on GB10.
 
 Plan source: `aien-architecture/CURRENT_EXECUTION_PLAN.md`, section
 "E2. M20 OMEGA_TENSOR". "M20" here means OMEGA_TENSOR only; the runtime
@@ -73,8 +77,9 @@ composition program is COMPOSITION-1/2, not M20.
   (elementwise E1 op over dense buffers, reduce over a dense row, declared
   order string). The semantic layer refuses a table whose order string is not
   the declared one. CPU fills it; a GB10 SIMT table
-  (`src/tensor/omega_tensor_gb10.c`, M20 cut gb10) is written but its parity
-  is NOT_RUN; a Tensor Core table would come later. No GB10 code is referenced
+  (`src/tensor/omega_tensor_gb10.c`, M20 cut gb10) is written, and its parity
+  ran once on the GB10 at f633e343 (row "GB10 parity"); a Tensor Core table
+  would come later. No GB10 code is referenced
   by the semantic layer.
 
 ### What "beyond the old narrow kernel" means
@@ -87,7 +92,7 @@ maximum shapes. M20 here: any shape up to 2^30 elements, FP32 with a named
 accumulation order, strided / transposed / sliced / broadcast operands,
 broadcast batches. The GB10 realization of this general matmul (FMUL_RNE
 products + the E1 tree, `src/tensor/omega_tensor_gb10.c`) is written; its
-parity is NOT_RUN at this head.
+parity passed once on the GB10 at f633e343 (row "GB10 parity").
 
 ## Multi-axis reduce and unbroadcast (CR-5)
 
@@ -157,10 +162,10 @@ removed. Order and padding mutations are caught by the E1 WP-D suite.
 | Determinism | PASS (CPU) | repeated run same value id; frozen KAT value id in the test |
 | Test-only hook not in library | PASS (CPU) | `omega_tensor_test_set_storage_generation` exists only under `-DOMEGA_TENSOR_TEST_HOOKS` (test builds in `mk/tensor.mk`); `test-tensor-no-hooks` (run by `test-tensor`) builds the default objects and fails if `nm` shows the symbol |
 | CI | WIRED | `host-suites-2.yml` job `tensor`: `test-tensor` + `test-tensor-mutations` on the AArch64 hosted runner (not the Spark, not a qualification) |
-| GB10 parity | NOT_RUN | GB10 table `src/tensor/omega_tensor_gb10.c` (E1 SIMT elementwise, `omega_reduce_gb10`, matmul = FMUL_RNE products + E1 tree, batched per block) and gate `tests/test_omega_tensor_gb10.c` + `tests/run_tensor_chip.sh` written (branch hive/M20-gb10). NOT_RUN at the rebased head: the host gate and the chip gate are queued, no forge receipt yet. History only: a chip run at the pre-rebase head 898bd05 passed (88 of 88 cases bit-exact, 3 of 3 chip mutants caught, receipt `evidence-out/M20-TENSOR-GB10/797c6972cd2ed4804ee2996abd0a1d6d04ea08b7b753b4699896746921676375.json`, log `LT-M20B-gb10-chip-061802`); that result is VOIDED for the rebased head and does not count. The rebase onto main after #191 (CMP_* ops) and #192 needed one fix: the six CMP_* ops are excluded from the parity cases because the GB10 table refuses them (row "GB10 mask compare / where"), the chip case count stays 88, and a host check requires the refusal |
+| GB10 parity | PASS (GB10, one run) | Receipt `evidence/M20-TENSOR-GB10/dfea667b65a0a955a32b03f6e3ba8c7de3a96cd3777c770a6722a279feb55f8d.json`, at merged main f633e343, host spark-b87b, kernel 7.0.0-1019-nvidia, 2026-10-02T08:53:44Z to 08:58:16Z, trees clean before and after. Chip log blob `evidence/M20-TENSOR-GB10/blobs/9d8fced2f1943ff481a24750b93152956ee31fbe5d4b8b9cae1c9e99d06cd746.log`: `cases: 88`, `TENSOR_GB10_HOST: PASS (29 checks, 0 failed)`, `TENSOR_GB10_PARITY: PASS (88 of 88 cases bit-exact value ids)`, `TENSOR_GB10_MUTANTS: PASS (3 of 3 caught on chip)` (WRONG_REDUCE_ORDER, FFMA_MATMUL, SWAPPED_OPERAND), `M20 Tensor GB10 Verdict: PASS`. An earlier PASS receipt at the rebased branch head 1e41c53c (2026-10-02T07:34:50Z) is also committed. Gate: `tests/test_omega_tensor_gb10.c` + `tests/run_tensor_chip.sh`; GB10 table `src/tensor/omega_tensor_gb10.c` (E1 SIMT elementwise, `omega_reduce_gb10`, matmul = FMUL_RNE products + E1 tree, batched per block). The six CMP_* ops are excluded from the parity cases because the GB10 table refuses them (row "GB10 mask compare / where"), and the multi-axis reduce / sum_to_shape ops have no chip case. History: the pre-rebase head 898bd05 also passed (receipt `797c6972…`), and two receipts at earlier commits 77729522 and 77560d86 are FAIL. One run at one commit is not a qualification; it was not repeated at the current head. Correction 2026-10-27: this row said NOT_RUN after the receipt above existed. |
 | GB10 general matmul (Tensor Core beyond narrow K/tile) | MISSING_IMPLEMENTATION | not built on purpose: MMA accumulates with fused, differently ordered additions, so it cannot give the declared bits; it needs its own declared bounded contract first. The GB10 table uses SIMT FMUL + the E1 tree instead |
 | Crash-safe storage lifetime | PASS (CPU) | host PASS, forge log HIVE-M20-lifetime-light-182200 (`test-tensor-store` 314/0 plain + ASan/UBSan, 6/6 store mutants caught, hook absent from default build). `src/tensor/omega_tensor_store.{c,h}`: content-addressed payloads + checksummed journal, temp/fsync/rename/fsync-dir commit; recovery replays the journal, re-hashes every payload, refuses torn/short/corrupt records (typed errors), keeps generations monotonic; `test-tensor-store` (round trip, fork crash at all 8 commit phases, journal/payload truncated at every byte and bit-flipped, crafted journals) + 6 store mutants in `test-tensor-mutations` |
-| Reproducible receipt | PASS (CPU) | writer implemented and host-tested: `tools/m20_receipt.sh` writes `<evidence-dir>/<sha256>.json` (0444, exclusive, never overwritten), QUALIFIED only with GB10 parity GB10 PASS + matching chip evidence; `test-m20-receipt` + 11 receipt mutants in `test-tensor-mutations`, forge log HIVE-M20-receipt-175835. No real M20 receipt has been written yet because the GB10 parity evidence does not exist. |
+| Reproducible receipt | PASS (CPU) | writer implemented and host-tested: `tools/m20_receipt.sh` writes `<evidence-dir>/<sha256>.json` (0444, exclusive, never overwritten), QUALIFIED only with GB10 parity GB10 PASS + matching chip evidence; `test-m20-receipt` + 11 receipt mutants in `test-tensor-mutations`, forge log HIVE-M20-receipt-175835. No real M20 receipt has been written yet. GB10 parity evidence now exists at f633e343 (row "GB10 parity"), but the writer has not been run against it. |
 | E1 numeric closure | PASS (on main) | E1 PASSED on main 4863803; receipt merged in omega#177 |
 | Placement: embed + concat (CR-4, answers LT-M21 CR-4) | PASS (CPU) | Host PASS, CPU tier: forge log `HIVE-M20-scatter-light-193431` at pre-stack head d99af69; re-run at stacked head queued (job HIVE-M20-scatter). `omega_tensor_embed(ctx, src, rank, out_shape, start, step, out)` is the exact inverse placement of `omega_tensor_slice` (`src/tensor/omega_tensor.h` slice: per axis start < stop <= dim, step >= 1, out dim = ceil((stop-start)/step)). Declared bits: a new dense tensor, all-zero bits (+0.0) everywhere except src element i copied bit for bit (NaN payload and -0 kept, any dtype) to start + i*step per axis; so slice(embed(x), start, start+(n-1)*step+1, step) == x. `omega_tensor_concat(ctx, n, tensors, axis, out)`: parts joined in array order along axis, bit for bit. Both are pure semantic-layer copies (gather + scatter in `src/tensor/omega_tensor.c`), no realization call, no arithmetic. Typed refusals, nothing created: rank mismatch / rank 0 `ERR_RANK`, step 0 `ERR_BAD_ARGS` (as slice), a placed position outside out_shape or start/step overflow `ERR_BOUNDS`, zero dim `ERR_SHAPE`, > MAX_ELEMS `ERR_CAPACITY`, concat dtype mismatch `ERR_DTYPE`, other-axis mismatch `ERR_SHAPE`, axis >= rank `ERR_AXIS`, n = 0 / NULL `ERR_BAD_ARGS`, stale handle `ERR_STALE`. `test-tensor` test_placement: 60 random embed trials vs an independent index-arithmetic reference, slice(embed(x)) == x, embed(slice(y)) zero off the sliced set, transposed / broadcast / F16 sources, 40 random concat trials vs reference and slice recovery, view parts, every refusal. Mutants `EMBED_START`, `EMBED_STEP`, `CONCAT_AXIS_OFFSET` in `test-tensor-mutations`. Gather is OUT OF SCOPE: M20 has no index tensor op, so gather / gather-backward is not provided |
 | GB10 placement (embed, concat) | NOT_RUN | Embed and concat call no E1 op, so the GB10 table (row "GB10 parity") has no kernel for them and no chip gate covers them. CPU tier only in this work |
