@@ -995,6 +995,15 @@ in `seed/trace/segment-test.om` to print exactly `seed/trace/expected.txt`. It a
 mutants to fail their own checks: CRC comparison removed, torn tail ignored, append alignment guard
 weakened, and create with O_TRUNC in place of O_EXCL. `seed/trace/README.md` describes the format.
 
+`seed/trace/tracecli.om` is the offline read-only CLI for that format (omega-mv #610): `version`,
+`verify`, `show`, `events`, `stats`, `export`, `compare` and `list`. Nothing is written except stdout.
+Run `sh seed/trace/cli-gate.sh` (or `tests/gates/run.sh tracecli`) from the repository root on an
+AArch64 Linux host. The gate checks `seed/out/omc` against its recorded SHA-256, pins the generated
+fixture SHA-256 values and the golden stdout, refuses a mode-0000 segment, and requires four source
+mutants to fail their own checks. One of those is a literal scan of the read-only open flags (`32768`;
+a change to `32770`, which is `O_RDWR|O_NOFOLLOW`, must fail the scan). `seed/trace/README.md`
+describes the format and the CLI.
+
 ## How the checks stay honest
 
 - `check/a64check.c` and `check/audit.sh` are reference checks only. They call the repo's existing C

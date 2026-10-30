@@ -61,8 +61,48 @@ The expected sizes and offsets were computed in Wolfram Language:
 `{BitOr[1,1024,32768], BitOr[1,32768], BitOr[1,64,128,32768], BitOr[1,64,512,32768]} -> {33793, 32769,
 32961, 33345}`. The remaining values (errno 2, 17 and 40, and the result codes) are pinned by the source.
 
+## CLI (omega-mv #610)
+
+`tracecli.om` is the offline, read-only inspector. Concatenate it after `segment.om` and `tsha.om`.
+Commands: `version`, `verify`, `show`, `events` (`--type`, `--range`), `stats`, `export`, `compare`,
+`list`. Nothing is written except stdout. Exit status: 0 ok, 1 a compare found a difference, 2 usage,
+3 partial or inconclusive, 4 refused, 5 a stdout write failed. Energy and timing are reported
+unavailable: format v1 carries no typed measurements. There is no `steps` command: format v1 has no
+step index, and `events` is the typed record listing.
+
+`tracegen.om` writes the fixtures (`fx/` in an empty scratch directory; regular files are left mode
+0400). Build it the same way, with `tracegen.om` in place of `tracecli.om`.
+
+`sh seed/trace/cli-gate.sh`, or `tests/gates/run.sh tracecli` (manifest
+`tests/gates/omega-tracecli.gate`). It checks `seed/out/omc` against `seed/out/omc.sha256`, compiles
+both programs, regenerates the fixtures and checks `fixtures.sha256` (plus the `link.seg` target and
+mode 0400), then requires each line of `cli.cases` to match `cli-golden/` and the recorded exit
+status. A copy of `fx/a.seg` made mode 000 must be refused (`refused code=10 errno=13`, exit 4) by
+`verify`, `show`, `events`, `stats` and `export`. The gate refuses to run as root, because mode 000
+would still be readable and the check would pass for the wrong reason.
+
+Four source mutants must each compile and fail their own check:
+
+- `partial`: the unique `ret 3` in `partial` changed to `ret 0`. `verify fx/crc.seg` still prints the
+  partial line and exits 0 (need 3). `lentry`'s directory return is spelled `ret ulong 3` so this
+  site stays unique.
+- `same`: `ret same` changed to `ret true`. `compare fx/a.seg fx/b.seg` prints `differ at=0` (need 17)
+  and exits 1.
+- `qtype`: the type test inverted (`ne` to `eq`). `events fx/a.seg --type 7` prints `matched=40 of=40`
+  (need 0).
+- `ropen`: the flags literal `32768` changed to `32770`. WolframLanguageEvaluator: `BitOr[2,32768] ->
+  32770` (`O_RDWR|O_NOFOLLOW`). The gate scans `tracecli.om` for the exact return line of `ropen`, and
+  this mutant fails that scan. A functional open check does not catch it: `verify` uses `segment.om`'s
+  own open, and an `O_RDWR` open of a mode-0400 file is not a reliable refusal for the owner. The
+  mode-0000 check is the functional refusal, and it runs on the good CLI.
+
+An edited golden must fail the gate on a stdout mismatch.
+
 ## Not in this unit
 
 Issue #608 also lists items this unit does not provide: an index, rotation and retention, an async
 writer, schema migration beyond refusing other versions, export, consent and redaction. Concurrent
 writers are not supported either: there is no lock, and the unit assumes a single writer.
+
+The CLI above is a separate program. It does not add an index, rotation, retention, an async writer,
+consent, redaction, or a query-scaling measurement.

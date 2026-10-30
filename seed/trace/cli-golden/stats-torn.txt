@@ -1,0 +1,8 @@
+segment version=1 recsize=64 hdrsize=16
+query type=any seq>=0 seq<4096
+type=1 records=13 payload-bytes=322
+type=2 records=13 payload-bytes=334
+type=3 records=13 payload-bytes=293
+stats records=39 types=3 payload-bytes=949
+energy=unavailable timing=unavailable (segment format 1 carries no typed measurements)
+verify partial records=39 bytes=2542 lost=30 reason=torn-tail

@@ -1,0 +1,980 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note seed/trace/tracecli.om: offline, read-only trace segment CLI (omega-mv #610), interface version 1.
+note Build: cat seed/trace/segment.om seed/trace/tsha.om seed/trace/tracecli.om | seed/out/omc > tracecli
+note Gate: sh seed/trace/cli-gate.sh. It scans the exact return line of fn ropen; the flags literal must stay 32768.
+note   tracecli version
+note   tracecli verify SEG                                   integrity of one segment
+note   tracecli show SEG                                     every valid record
+note   tracecli events SEG [--type T] [--range FROM TO]      valid records of type T and FROM <= seq < TO
+note   tracecli stats SEG [--type T] [--range FROM TO]       record count and payload bytes per type
+note   tracecli export SEG [--type T] [--range FROM TO]      CSV with the source SHA-256 and the query
+note   tracecli compare SEGA SEGB                            record-by-record comparison
+note   tracecli list DIR                                     verify every entry of a directory, by name
+note Nothing is written except stdout. Segments are opened O_RDONLY|O_NOFOLLOW (32768) and directories
+note O_RDONLY|O_DIRECTORY|O_NOFOLLOW (49152); nothing is created, so a symbolic link is refused (ELOOP).
+note A damaged segment is never silently shortened: the records before the damage are printed, the verify
+note line says "partial" with the reason and the bytes after the valid prefix, and the exit status is 3.
+note Every record printed is read again and re-checked (CRC, length, sequence) after the scan; a record
+note that no longer checks ends the listing with "changed-during-read at=N" and exit 3.
+note Exit status: 0 ok (compare: identical), 1 compare found a difference, 2 usage, 3 partial or
+note inconclusive, 4 refused (missing, symlink, bad header, unreadable file or directory), 5 stdout write failed.
+global obuf uchar 512
+global on ulong 1
+global wbad ulong 1
+global arec uchar 64
+global argb uchar 64
+global acnt ulong 1
+global moff ulong 96
+global mlen ulong 96
+global qtype ulong 1
+global qlo ulong 1
+global qhi ulong 1
+global wfail ulong 1
+global tcnt ulong 65536
+global tbytes ulong 65536
+global dpath uchar 1024
+global dlen ulong 1
+global dbuf uchar 4096
+global names uchar 16384
+global nlens ulong 64
+global ntype ulong 64
+global nnum ulong 1
+global ntrunc ulong 1
+global nord ulong 64
+note msgs: one message per line; message k is printed by omsg k. Lines 52..57 are the scan reasons
+note (sreason 0..5), lines 58..67 the command and option words.
+text msgs "usage: tracecli version | verify SEG | show SEG | events SEG [--type T] [--range FROM TO] | stats SEG [--type T] [--range FROM TO] | export SEG [--type T] [--range FROM TO] | compare SEGA SEGB | list DIR\ntracecli 1 segment-format 1\nsegment version=1 recsize=64 hdrsize=16\nverify \nok\npartial\n records=\n bytes=\n lost=\n reason=\nrefused code=\n errno=\nseq=\n type=\n len=\n crc=\n payload=\nquery type=\nany\n seq>=\n seq<\nmatched=\n of=\nchanged-during-read at=\ntype=\n payload-bytes=\nstats records=\n types=\nenergy=unavailable timing=unavailable (segment format 1 carries no typed measurements)\na: \nb: \ncompare basis=records (segment format 1 carries no machine, build or precision metadata: not a qualified cross-run comparison)\ncompare identical records=\ncompare differ at=\ncompare prefix a=\n b=\ncompare inconclusive\n# tracecli 1 export\n# source sha256=\n# \n# \nseq,type,len,crc,payload_hex\nlist \n: \ndirectory\nlist entries=\n ok=\n partial=\n refused=\n directories=\nlist truncated at 64 entries\nlist refused errno=\nclean\ntorn-tail\nbad-length\ncrc-mismatch\nseq-mismatch\nover-capacity\nversion\nverify\nshow\nevents\nstats\nexport\ncompare\nlist\n--type\n--range\n"
+text hexd "0123456789abcdef"
+const kusage ulong 0
+const kvers ulong 1
+const khdr ulong 2
+const kverify ulong 3
+const kok ulong 4
+const kpart ulong 5
+const krecs ulong 6
+const kbytes ulong 7
+const klost ulong 8
+const kreason ulong 9
+const krefused ulong 10
+const kerrno ulong 11
+const kseq ulong 12
+const ktype ulong 13
+const klen ulong 14
+const kcrc ulong 15
+const kpay ulong 16
+const kquery ulong 17
+const kany ulong 18
+const kseqge ulong 19
+const kseqlt ulong 20
+const kmatched ulong 21
+const kof ulong 22
+const kchanged ulong 23
+const ktypeeq ulong 24
+const kpbytes ulong 25
+const kstats ulong 26
+const ktypes ulong 27
+const kenergy ulong 28
+const ka ulong 29
+const kb ulong 30
+const kbasis ulong 31
+const kident ulong 32
+const kdiffer ulong 33
+const kprefix ulong 34
+const kbn ulong 35
+const kinconc ulong 36
+const kexport ulong 37
+const ksrc ulong 38
+const khash ulong 39
+const kcsvhdr ulong 41
+const klist ulong 42
+const kcolon ulong 43
+const kdir ulong 44
+const kentries ulong 45
+const knok ulong 46
+const knpart ulong 47
+const knref ulong 48
+const kndirs ulong 49
+const ktrunc ulong 50
+const klistref ulong 51
+const kreasons ulong 52
+const wversion ulong 58
+const wverify ulong 59
+const wshow ulong 60
+const wevents ulong 61
+const wstats ulong 62
+const wexport ulong 63
+const wcompare ulong 64
+const wlist ulong 65
+const wtype ulong 66
+const wrange ulong 67
+fn oflush to void
+w = write 1 obuf 0 get on 0
+if ne w long get on 0
+put wbad 0 1
+end
+put on 0 0
+end
+fn obyte b uchar to void
+if ge get on 0 512
+oflush
+end
+put obuf get on 0 b
+put on 0 add get on 0 1
+end
+fn onl to void
+obyte 10
+end
+fn onum v ulong to void
+d = new uchar 20 0
+x = v
+k = ulong 0
+go = true
+while go bound 21
+put d k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+go = false
+end
+end
+while gt k 0 bound 21
+k = sub k 1
+obyte get d k
+end
+end
+fn ohex b ulong to void
+obyte get hexd and shr b 4 15
+obyte get hexd and b 15
+end
+note minit fills moff/mlen with the start and length of every line of msgs (68 lines, 96 slots).
+fn minit to void
+s = ulong 0
+k = ulong 0
+for i ulong len msgs
+if eq get msgs i 10
+put moff k s
+put mlen k sub i s
+k = add k 1
+s = add i 1
+end
+end
+end
+fn omsg k ulong to void
+o = get moff k
+for i ulong get mlen k
+obyte get msgs add o i
+end
+end
+note omnum k v: message k then the decimal v.
+fn omnum k ulong v ulong to void
+omsg k
+onum v
+end
+note argword i: argument i into argb[0..acnt); acnt = 0 when it does not fit.
+fn argword i ulong to void
+put acnt 0 0
+n = argread i argb 0 64
+if ge n 0
+put acnt 0 ulong n
+end
+end
+note isword k: argb[0..acnt) equals message line k.
+fn isword k ulong to bool
+if ne get acnt 0 get mlen k
+ret false
+end
+o = get moff k
+for i ulong get mlen k
+if ne get argb i get msgs add o i
+ret false
+end
+end
+ret true
+end
+note argpath i: argument i becomes the segment path (tpath, tlen); 0 on success, 1 when it is empty
+note or longer than 1024 bytes.
+fn argpath i ulong to ulong
+n = argread i tpath 0 1024
+if le n 0
+ret 1
+end
+put tlen 0 ulong n
+ret 0
+end
+note argnum i: decimal argument i (1 to 5 digits, value at most 65535); 65536 when malformed.
+fn argnum i ulong to ulong
+argword i
+n = get acnt 0
+if or eq n 0 gt n 5
+ret 65536
+end
+v = ulong 0
+for k ulong n
+b = get argb k
+if or lt b 48 gt b 57
+ret 65536
+end
+v = add mul v 10 sub ulong b 48
+end
+if gt v 65535
+ret 65536
+end
+ret v
+end
+note parseq c: options from argument 3 to c-1 into qtype (65536 = any), qlo, qhi (seq range
+note qlo <= seq < qhi; default 0..4096, the whole segment). 0 ok, 1 usage error. A repeated option
+note replaces the earlier one.
+fn parseq c ulong to ulong
+put qtype 0 65536
+put qlo 0 0
+put qhi 0 4096
+i = ulong 3
+while lt i c bound 64
+argword i
+if isword wtype
+i = qopt i c 1
+else
+if isword wrange
+i = qopt i c 2
+else
+ret 1
+end
+end
+if eq i 0
+ret 1
+end
+end
+ret 0
+end
+note qopt i c k: the option at argument i takes k values (1 --type T, 2 --range FROM TO, FROM <= TO);
+note returns the index of the next argument, 0 when the values are missing or malformed.
+fn qopt i ulong c ulong k ulong to ulong
+if ge add i k c
+ret 0
+end
+a = argnum add i 1
+if gt a 65535
+ret 0
+end
+if eq k 1
+put qtype 0 a
+ret add i 2
+end
+b = argnum add i 2
+if or gt b 65535 gt a b
+ret 0
+end
+put qlo 0 a
+put qhi 0 b
+ret add i 3
+end
+fn oquery to void
+omsg kquery
+if eq get qtype 0 65536
+omsg kany
+else
+onum get qtype 0
+end
+omnum kseqge get qlo 0
+omnum kseqlt get qhi 0
+onl
+end
+note qmatch: the record in trec satisfies the query.
+fn qmatch to bool
+t = ld16 0
+s = ld32 4
+if and ne get qtype 0 65536 ne t get qtype 0
+ret false
+end
+ret and ge s get qlo 0 lt s get qhi 0
+end
+fn ousage to void
+put on 0 0
+omsg kusage
+onl
+end
+note orefused e: the refusal for scan result e; serrno (-errno) is reported for open failures (10).
+fn orefused e ulong to void
+omnum krefused e
+if eq e 10
+omnum kerrno ulong neg get serrno 0
+end
+onl
+end
+note overify: the verify line for the last segscan.
+fn overify to void
+omsg kverify
+if eq get sreason 0 0
+omsg kok
+else
+omsg kpart
+end
+omnum krecs get scount 0
+omnum kbytes get stotal 0
+omnum klost get slost 0
+omsg kreason
+omsg add kreasons get sreason 0
+onl
+end
+note vstatus: exit 3 when the scan stopped on damage (sreason not 0), else 0.
+fn vstatus to int
+ret partial get sreason 0
+end
+note partial r: exit 3 when r is not 0 (damage), else 0. The one place the partial exit status is chosen.
+fn partial r ulong to int
+if ne r 0
+ret 3
+end
+ret 0
+end
+fn orecord to void
+omnum kseq ld32 4
+omnum ktype ld16 0
+n = ld16 2
+omnum klen n
+omnum kcrc ld32 60
+omsg kpay
+for i ulong n
+ohex ulong get trec add 8 i
+end
+onl
+end
+fn ocsv to void
+onum ld32 4
+obyte 44
+onum ld16 0
+obyte 44
+n = ld16 2
+onum n
+obyte 44
+onum ld32 60
+obyte 44
+for i ulong n
+ohex ulong get trec add 8 i
+end
+onl
+end
+note ropen: the one open of a segment path by this unit: O_RDONLY|O_NOFOLLOW, nothing created. cli-gate.sh scans this exact return line.
+fn ropen to long
+ret fopen tpath 0 get tlen 0 32768 0
+end
+note rdrec fd i: read record i into trec and check it again (length, CRC, sequence = i).
+fn rdrec fd long i ulong to bool
+m = pread int fd trec 0 64 long add 16 mul i 64
+if ne m 64
+ret false
+end
+ret eq recok i 0
+end
+note tally: stats accumulation for the record in trec.
+fn tally to void
+t = ld16 0
+put tcnt t add get tcnt t 1
+put tbytes t add get tbytes t ld16 2
+end
+note walk m: the valid records (scount of them, after segscan) that match the query; m 0 prints
+note record lines, 1 CSV rows, 2 tallies them. Returns the match count. wfail = index + 1 of the record
+note whose re-read failed (0 none). At most 4096 valid records: bound 4097.
+fn walk m ulong to ulong
+put wfail 0 0
+fd = ropen
+if lt fd 0
+put wfail 0 1
+ret 0
+end
+hit = ulong 0
+n = get scount 0
+i = ulong 0
+while lt i n bound 4097
+if rdrec fd i
+if qmatch
+hit = add hit 1
+wone m
+end
+i = add i 1
+else
+put wfail 0 add i 1
+i = n
+end
+end
+shut fd
+ret hit
+end
+fn wone m ulong to void
+if eq m 0
+orecord
+end
+if eq m 1
+ocsv
+end
+if eq m 2
+tally
+end
+end
+fn ochanged to void
+if ne get wfail 0 0
+omnum kchanged sub get wfail 0 1
+onl
+end
+end
+note seg i: argument i becomes the segment path and is scanned; 0 scanned (clean or partial), 4
+note refused (the refusal is printed), 2 usage.
+fn seg i ulong to int
+if ne argpath i 0
+ret 2
+end
+e = segscan
+if ne e 0
+orefused e
+ret 4
+end
+ret 0
+end
+note endst: exit 3 when a re-read failed or the scan stopped on damage, else 0.
+fn endst to int
+if ne get wfail 0 0
+ret partial 1
+end
+ret vstatus
+end
+fn cmdverify to int
+e = seg 2
+if ne e 0
+ret e
+end
+overify
+ret vstatus
+end
+note cmdrecs m c: show/events (m 0) and export (m 1) after parseq; header, query, records, totals.
+fn cmdrecs m ulong to int
+e = seg 2
+if ne e 0
+ret e
+end
+if eq m 1
+ret cmdexport
+end
+omsg khdr
+onl
+oquery
+hit = walk 0
+omnum kmatched hit
+omnum kof get scount 0
+onl
+ochanged
+overify
+ret endst
+end
+fn cmdexport to int
+omsg kexport
+onl
+if ne hashfile 0
+omnum kchanged 0
+onl
+ret partial 1
+end
+omsg khash
+oquery
+omsg khash
+overify
+omsg kcsvhdr
+onl
+hit = walk 1
+ochanged
+ret endst
+end
+note hashfile: SHA-256 of the first stotal bytes of the segment (the bytes segscan saw), printed as
+note "# source sha256=<hex> bytes=<n>". 0 ok, 1 when the file could not be read back. stotal is at
+note most 16 + 64*4097 + 63 bytes before segscan stops (over-capacity), so at most 66 chunks of 4096:
+note bound 70.
+fn hashfile to ulong
+st = new ulong 9 0
+blk = new uchar 4096 0
+dig = new uchar 32 0
+shainit st
+fd = ropen
+if lt fd 0
+ret 1
+end
+tot = get stotal 0
+off = ulong 0
+bad = ulong 0
+go = true
+while go bound 70
+want = sub tot off
+if gt want 4096
+want = 4096
+end
+m = pread int fd blk 0 want long off
+if ne m long want
+bad = 1
+go = false
+else
+off = add off want
+if lt off tot
+shaupd st blk want
+else
+shafin st blk want dig
+go = false
+end
+end
+end
+shut fd
+if ne bad 0
+ret 1
+end
+omsg ksrc
+for i ulong 32
+ohex ulong get dig i
+end
+omnum kbytes tot
+onl
+ret 0
+end
+fn cmdstats to int
+e = seg 2
+if ne e 0
+ret e
+end
+omsg khdr
+onl
+oquery
+hit = walk 2
+nt = ulong 0
+pb = ulong 0
+for t ulong 65536
+if ne get tcnt t 0
+nt = add nt 1
+pb = add pb get tbytes t
+omnum ktypeeq t
+omnum krecs get tcnt t
+omnum kpbytes get tbytes t
+onl
+end
+end
+omnum kstats hit
+omnum ktypes nt
+omnum kpbytes pb
+onl
+omsg kenergy
+onl
+ochanged
+overify
+ret endst
+end
+note cmpside k: scan argument k (2 = a, 3 = b) and print its prefixed verify line; 0 when the scan
+note completed (clean or partial), else the refusal status.
+fn cmpside k ulong to int
+if eq k 2
+omsg ka
+else
+omsg kb
+end
+e = seg k
+if eq e 2
+ret 2
+end
+if ne e 0
+ret e
+end
+overify
+ret 0
+end
+note firstdiff fa fb n: index of the first of n records that differs between the two files, n if none,
+note n + 1 when a record could not be read back and re-checked.
+fn firstdiff fa long fb long n ulong to ulong
+at = n
+i = ulong 0
+while lt i n bound 4097
+if rdrec fa i
+for j ulong 64
+put arec j get trec j
+end
+if rdrec fb i
+if recdiff
+at = i
+i = n
+else
+i = add i 1
+end
+else
+at = add n 1
+i = n
+end
+else
+at = add n 1
+i = n
+end
+end
+ret at
+end
+note recdiff: the record in arec (side a) and trec (side b) differ in some byte.
+fn recdiff to bool
+for j ulong 64
+if ne get arec j get trec j
+ret true
+end
+end
+ret same
+end
+note same: the two records are byte-equal.
+fn same to bool
+ret false
+end
+note opn i: open argument i read-only (O_RDONLY|O_NOFOLLOW).
+fn opn i ulong to long
+e = argpath i
+if ne e 0
+ret -1
+end
+ret ropen
+end
+fn cmdcompare to int
+omsg kbasis
+onl
+e = cmpside 2
+pa = get sreason 0
+ca = get scount 0
+e2 = cmpside 3
+pb = get sreason 0
+cb = get scount 0
+if or eq e 2 eq e2 2
+ret 2
+end
+if or ne e 0 ne e2 0
+omsg kinconc
+onl
+ret 4
+end
+n = ca
+if lt cb n
+n = cb
+end
+fa = opn 2
+fb = opn 3
+at = add n 1
+if and ge fa 0 ge fb 0
+at = firstdiff fa fb n
+end
+if ge fa 0
+shut fa
+end
+if ge fb 0
+shut fb
+end
+ret cmpout pa ca pb cb at n
+end
+note cmpout: a differing record inside both valid prefixes is a definite difference (1); otherwise
+note damage on either side makes the result inconclusive (3); then unequal lengths differ (1).
+fn cmpout pa ulong ca ulong pb ulong cb ulong at ulong n ulong to int
+if gt at n
+omsg kinconc
+onl
+ret partial 1
+end
+if lt at n
+omnum kdiffer at
+onl
+ret 1
+end
+if or ne pa 0 ne pb 0
+omsg kinconc
+omnum krecs n
+onl
+ret partial 1
+end
+if ne ca cb
+omnum kprefix ca
+omnum kbn cb
+onl
+ret 1
+end
+omnum kident n
+onl
+ret 0
+end
+note dname e: the 2-byte little-endian reclen at dbuf[e+16]; getdents64 record layout d_ino u64,
+note d_off s64, d_reclen u16, d_type u8, d_name NUL-terminated.
+fn dreclen e ulong to ulong
+ret or ulong get dbuf add e 16 shl ulong get dbuf add e 17 8
+end
+note dkeep e r: store the entry at dbuf[e..) (not "." or "..") as name number nnum; ntrunc = 1 when 64
+note names are already stored or the name is longer than 255 bytes (the listing is then inconclusive).
+fn dkeep e ulong r ulong to void
+o = add e 19
+n = dnlen o r
+if dotname o n
+ret
+end
+if or ge get nnum 0 64 gt n 255
+put ntrunc 0 1
+ret
+end
+k = get nnum 0
+dstore k o n
+put ntype k ulong get dbuf add e 18
+put nord k k
+put nnum 0 add k 1
+end
+note dnlen o r: length of the NUL-terminated name at dbuf[o..r), at most 256 bytes are examined.
+fn dnlen o ulong r ulong to ulong
+n = ulong 0
+go = true
+while go bound 257
+if or ge add o n r gt n 255
+go = false
+else
+if eq get dbuf add o n 0
+go = false
+else
+n = add n 1
+end
+end
+end
+ret n
+end
+fn dstore k ulong o ulong n ulong to void
+b = mul k 256
+for i ulong n
+put names add b i get dbuf add o i
+end
+put nlens k n
+end
+fn dotname o ulong n ulong to bool
+if eq n 0
+ret true
+end
+if ne get dbuf o 46
+ret false
+end
+if eq n 1
+ret true
+end
+if eq n 2
+ret eq get dbuf add o 1 46
+end
+ret false
+end
+note dread fd: read every directory entry; 0 ok, else -errno. Every getdnts call that returns more than
+note 0 bytes consumes at least one entry, so the bound 100000 traps (exit 104) only for a directory of
+note more than 100000 entries.
+fn dread fd long to long
+go = true
+while go bound 100000
+r = getdnts int fd dbuf 0 4096
+if lt r 0
+ret r
+end
+if eq r 0
+go = false
+else
+dparse ulong r
+end
+end
+ret 0
+end
+fn dparse r ulong to void
+e = ulong 0
+while lt e r bound 4097
+rl = dreclen e
+if eq rl 0
+e = r
+else
+dkeep e r
+e = add e rl
+end
+end
+end
+note nless a b: name a sorts before name b (bytewise, a proper prefix first).
+fn nless a ulong b ulong to bool
+la = get nlens a
+lb = get nlens b
+m = la
+if lt lb m
+m = lb
+end
+for i ulong m
+x = get names add mul a 256 i
+y = get names add mul b 256 i
+if ne x y
+ret lt x y
+end
+end
+ret lt la lb
+end
+note nsort: insertion sort of nord by name, at most 64 entries.
+fn nsort to void
+n = get nnum 0
+for i ulong n
+j = i
+while gt j 0 bound 64
+p = get nord sub j 1
+q = get nord j
+if nless q p
+put nord j p
+put nord sub j 1 q
+j = sub j 1
+else
+j = 0
+end
+end
+end
+end
+note npath k: tpath = DIR "/" name k; 1 when it does not fit 1024 bytes.
+fn npath k ulong to ulong
+d = get dlen 0
+n = get nlens k
+if gt add add d 1 n 1024
+ret 1
+end
+for i ulong d
+put tpath i get dpath i
+end
+put tpath d 47
+for i ulong n
+put tpath add add d 1 i get names add mul k 256 i
+end
+put tlen 0 add add d 1 n
+ret 0
+end
+fn oname k ulong to void
+for i ulong get nlens k
+obyte get names add mul k 256 i
+end
+omsg kcolon
+end
+note lentry k: one line for name k; returns 0 ok, 1 partial, 2 refused, 3 directory. Spelled ret ulong 3 so the ret 3 in partial stays the unique mutant site.
+fn lentry k ulong to ulong
+oname k
+if eq get ntype k 4
+omsg kdir
+onl
+ret ulong 3
+end
+if ne npath k 0
+orefused 10
+ret 2
+end
+e = segscan
+if ne e 0
+orefused e
+ret 2
+end
+overify
+if ne get sreason 0 0
+ret 1
+end
+ret 0
+end
+fn cmdlist to int
+n = argread 2 dpath 0 1024
+if le n 0
+ret 2
+end
+put dlen 0 ulong n
+fd = fopen dpath 0 get dlen 0 49152 0
+if lt fd 0
+omnum klistref ulong neg fd
+onl
+ret 4
+end
+e = dread fd
+shut fd
+if ne e 0
+omnum klistref ulong neg e
+onl
+ret 4
+end
+nsort
+ret lall
+end
+fn lall to int
+c = new ulong 4 0
+for i ulong get nnum 0
+r = lentry get nord i
+put c r add get c r 1
+end
+omnum kentries get nnum 0
+omnum knok get c 0
+omnum knpart get c 1
+omnum knref get c 2
+omnum kndirs get c 3
+onl
+if ne get ntrunc 0 0
+omsg ktrunc
+onl
+ret partial 1
+end
+if ne add get c 1 get c 2 0
+ret partial 1
+end
+ret 0
+end
+note dispatch: the command word decides the argument count; anything else is usage (2). Nothing is
+note opened before the count and the options are checked.
+fn dispatch to int
+c = ulong argcnt
+if lt c 2
+ret 2
+end
+argword 1
+if isword wversion
+if ne c 2
+ret 2
+end
+omsg kvers
+onl
+ret 0
+end
+if lt c 3
+ret 2
+end
+if isword wcompare
+if ne c 4
+ret 2
+end
+ret cmdcompare
+end
+if ne parseq c 0
+ret 2
+end
+argword 1
+ret disp1 c
+end
+fn disp1 c ulong to int
+if isword wevents
+ret cmdrecs 0
+end
+if isword wexport
+ret cmdrecs 1
+end
+if isword wstats
+ret cmdstats
+end
+if ne c 3
+ret 2
+end
+if isword wverify
+ret cmdverify
+end
+if isword wshow
+ret cmdrecs 0
+end
+if isword wlist
+ret cmdlist
+end
+ret 2
+end
+note main: usage (2) discards any unflushed output and prints the usage line on stdout.
+fn main to int
+minit
+r = dispatch
+if eq r 2
+ousage
+end
+oflush
+if ne get wbad 0 0
+ret 5
+end
+ret r
+end

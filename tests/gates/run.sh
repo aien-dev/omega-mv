@@ -335,6 +335,14 @@ case "$step" in
     obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
     sh seed/trace/gate.sh
     ;;
+  tracecli)           # omega#610: offline read-only trace CLI (seed/trace/tracecli.om), built by the
+                      # committed seed/out/omc after its recorded SHA-256 is checked. Golden stdout and
+                      # exit codes, a mode-0000 refusal, and 4 source mutants (partial exit, compare
+                      # equality, type filter, read-only open flags) that must each fail their own check.
+    sha256sum -c seed/out/omc.sha256
+    obs omc_sha256 "\"$(sha256sum < seed/out/omc | cut -c1-64)\""
+    sh seed/trace/cli-gate.sh
+    ;;
   native)             # omega#663/#664: native .om units built by the committed seed/out/omc after its recorded
                       # SHA-256 is checked. The metadata test must pass and each recorded ECOSYSTEM663 mutant must
                       # exit 1; with native/autodiff664 present, its tape suite (test + 3 compiled mutants) and the
