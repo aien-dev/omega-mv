@@ -1,0 +1,190 @@
+OM2GATE START cases=seed/omc/om2/s3/s3-mutants.cases scratch=/home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants
+IDENTITY omc seed/out/omc sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e pinned=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e match
+DEADLINE 60
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf sha256=397346de169d78e8a5ce53dce6cf9f0ca56a8f527128165bbfb4fb62a335f93e source line=3
+CASE ctl-l-rw line=4
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/4.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/4.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/4.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/4.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/4.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/4.err
+VERDICT ctl-l-rw PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-l-trap line=5
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/5.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/5.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/5.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/5.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/5.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/5.err
+VERDICT ctl-l-trap PASS run exit=103 expected=103 stdout=match stderr=match
+CASE ctl-l-overlap line=6
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/6.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/6.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/6.cerr
+VERDICT ctl-l-overlap PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE ctl-l-past line=7
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/7.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/7.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/7.cerr
+VERDICT ctl-l-past PASS compile exit=29 expected=29 stdout=match stderr=match
+CASE ctl-fuel line=8
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/8.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/8.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/8.cerr
+VERDICT ctl-fuel PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE ctl-fuel-inl line=9
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/9.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/9.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/9.cerr
+VERDICT ctl-fuel-inl PASS compile exit=14 expected=14 stdout=match stderr=match
+CASE ctl-f-ok line=10
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/10.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/10.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/10.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/10.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/10.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/10.err
+VERDICT ctl-f-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-f-join line=11
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/11.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/11.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/11.cerr
+VERDICT ctl-f-join PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE ctl-f-loop line=12
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/12.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/12.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/12.cerr
+VERDICT ctl-f-loop PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE ctl-f-loopc line=13
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/13.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/13.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/13.cerr
+VERDICT ctl-f-loopc PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE ctl-f-call line=14
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/14.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/14.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/14.cerr
+VERDICT ctl-f-call PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE ctl-f-partial line=15
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/15.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/15.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/15.cerr
+VERDICT ctl-f-partial PASS compile exit=27 expected=27 stdout=match stderr=match
+CASE ctl-f-n65 line=16
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/16.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/16.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/16.cerr
+VERDICT ctl-f-n65 PASS compile exit=14 expected=14 refused with the expected error
+CASE ctl-a-ok line=17
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/17.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/17.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/17.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/17.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/17.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/17.err
+VERDICT ctl-a-ok PASS run exit=0 expected=0 stdout=match stderr=match
+CASE ctl-a-kept line=18
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/18.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/18.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/18.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/18.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/18.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/18.err
+VERDICT ctl-a-kept PASS run exit=110 expected=110 stdout=match stderr=match
+CASE ctl-a-kept-diag line=19
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/19.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/19.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/19.cerr
+VERDICT ctl-a-kept-diag PASS compile exit=0 expected=0 stdout=unchecked stderr=match
+CASE ctl-a-sealinl line=20
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/20.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/20.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/20.cerr
+VERDICT ctl-a-sealinl PASS compile exit=28 expected=28 stdout=match stderr=match
+CASE ctl-a-op line=21
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/21.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/21.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/21.cerr
+VERDICT ctl-a-op PASS compile exit=7 expected=7 refused with the expected error
+CASE ctl-a-rawnum line=22
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/3.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/22.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/22.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/22.cerr
+VERDICT ctl-a-rawnum PASS compile exit=7 expected=7 refused with the expected error
+SUBST seed/omc/om2/s3/mut/ovl.from seed/omc/om2/s3/mut/ovl.to
+  MUTATE exact-once substitution at byte 174315
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/25.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/25.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/25.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/25.elf sha256=29640bccdb83104679fc3936ea5fd370b3b5b4bb9a1449b637b44a97b9d148f4 source line=25
+CASE m-l-ovl line=26
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/25.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/26.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/26.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/26.cerr
+VERDICT m-l-ovl FAIL compile exit=0 expected=29 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/rev.from seed/omc/om2/s3/mut/rev.to
+  MUTATE exact-once substitution at byte 177550
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/29.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/29.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/29.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/29.elf sha256=a206053667ed2598665a097d9d5d7a99787f6803e369aa7d9a2eab3723859fed source line=29
+CASE m-l-rev line=30
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/29.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/30.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/30.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/30.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/30.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/30.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/30.err
+VERDICT m-l-rev FAIL run exit=2 expected=0 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/lix.from seed/omc/om2/s3/mut/lix.to
+  MUTATE exact-once substitution at byte 176915
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/33.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/33.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/33.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/33.elf sha256=62fa6ec57e6ae475be00a06812c4156abf95aa2a13cf5d1a477a504561e79672 source line=33
+CASE m-l-lix line=34
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/33.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/34.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/34.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/34.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/34.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/34.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/34.err
+VERDICT m-l-lix FAIL run exit=0 expected=103 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/past.from seed/omc/om2/s3/mut/past.to
+  MUTATE exact-once substitution at byte 174271
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/37.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/37.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/37.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/37.elf sha256=2c7ca3df3b8f2394cb4449ce78957e952bbf4c8c98afa915c74c9f1366d912d9 source line=37
+CASE m-l-past line=38
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/37.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/38.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/38.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/38.cerr
+VERDICT m-l-past FAIL compile exit=0 expected=29 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/fuel.from seed/omc/om2/s3/mut/fuel.to
+  MUTATE exact-once substitution at byte 129455
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/41.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/41.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/41.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/41.elf sha256=0b9d0f1f37a59360e8de51cd666cdc5f9044cacc77ae6f3b261e2e1328956d40 source line=41
+CASE m-fuel line=42
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/41.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/42.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/42.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/42.cerr
+VERDICT m-fuel FAIL compile exit=0 expected=14 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/e16.from seed/omc/om2/s3/mut/e16.to
+  MUTATE exact-once substitution at byte 128967
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/45.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/45.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/45.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/45.elf sha256=facb90d06034e49357fdf557130309c20c5b5e64063d98e850e1b5688858f15b source line=45
+CASE m-e16-d3 line=46
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/45.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/46.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/46.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/46.cerr
+VERDICT m-e16-d3 FAIL compile exit=14 expected=14 stdout=match stderr differs at byte 10
+SUBST seed/omc/om2/s3/mut/e16.from seed/omc/om2/s3/mut/e16.to
+  MUTATE exact-once substitution at byte 128967
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/48.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/48.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/48.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/48.elf sha256=facb90d06034e49357fdf557130309c20c5b5e64063d98e850e1b5688858f15b source line=48
+CASE m-e16-inl line=49
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/48.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/49.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/49.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/49.cerr
+VERDICT m-e16-inl FAIL compile exit=14 expected=14 stdout=match stderr differs at byte 11
+SUBST seed/omc/om2/s3/mut/fzu.from seed/omc/om2/s3/mut/fzu.to
+  MUTATE exact-once substitution at byte 168873
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/52.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/52.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/52.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/52.elf sha256=135d3def429cbbf2ed67590f8455d6c57d00efdca4d095bafe82fc5346e60198 source line=52
+CASE m-fzu line=53
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/52.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/53.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/53.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/53.cerr
+VERDICT m-fzu FAIL compile exit=0 expected=27 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/fzl.from seed/omc/om2/s3/mut/fzl.to
+  MUTATE exact-once substitution at byte 169010
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/56.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/56.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/56.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/56.elf sha256=a9963429e8bf01ccb96fedb19ffaf41a5ecea3da8b531f1ff390fd03b5641435 source line=56
+CASE m-fzl line=57
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/56.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/57.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/57.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/57.cerr
+VERDICT m-fzl FAIL compile exit=0 expected=27 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/fzc.from seed/omc/om2/s3/mut/fzc.to
+  MUTATE exact-once substitution at byte 107255
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/60.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/60.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/60.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/60.elf sha256=0c0682c8868366a3f93d155b21928923daf976c70b5089abc31f82c2b93efcb7 source line=60
+CASE m-fzc line=61
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/60.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/61.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/61.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/61.cerr
+VERDICT m-fzc FAIL compile exit=0 expected=27 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/fzr.from seed/omc/om2/s3/mut/fzr.to
+  MUTATE exact-once substitution at byte 169341
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/64.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/64.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/64.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/64.elf sha256=735188665c2f620f56fc9061fe057ac43b0455b8c6d6ae391d2ebbaefd02029d source line=64
+CASE m-fzr line=65
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/64.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/65.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/65.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/65.cerr
+VERDICT m-fzr FAIL compile exit=0 expected=27 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/fzn.from seed/omc/om2/s3/mut/fzn.to
+  MUTATE exact-once substitution at byte 167454
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/68.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/68.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/68.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/68.elf sha256=edda9ea95c3e1dccdc744b5cb41ee7acefd0a5cf3171f54496d1a2c75b1868a9 source line=68
+CASE m-fzn line=69
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/68.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/69.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/69.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/69.cerr
+VERDICT m-fzn FAIL compile exit=0 expected=14 refusal wrote compiler output diagnostic does not name the expected error
+SUBST seed/omc/om2/s3/mut/aer.from seed/omc/om2/s3/mut/aer.to
+  MUTATE exact-once substitution at byte 163507
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/72.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/72.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/72.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/72.elf sha256=4fe55580c9085b8d57623ad1756255c22c10d43e3c9f52890a37671b9ebd1469 source line=72
+CASE m-aer line=73
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/72.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/73.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/73.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/73.cerr
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/73.elf < /dev/null > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/73.out 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/73.err
+VERDICT m-aer FAIL run exit=0 expected=110 stdout=match stderr=match
+SUBST seed/omc/om2/s3/mut/aex.from seed/omc/om2/s3/mut/aex.to
+  MUTATE exact-once substitution at byte 163455
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/76.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/76.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/76.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/76.elf sha256=a8c7f6b5e5fa3d3e533cb783940208414c9305f68ee83489005b5778d291fce0 source line=76
+CASE m-aex line=77
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/76.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/77.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/77.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/77.cerr
+VERDICT m-aex FAIL compile exit=0 expected=0 stdout=unchecked stderr differs at byte 12
+SUBST seed/omc/om2/s3/mut/act.from seed/omc/om2/s3/mut/act.to
+  MUTATE exact-once substitution at byte 162519
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/80.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/80.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/80.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/80.elf sha256=ee66ddecb25ed9a9ed4b0aa234deae55145227b2f1c28d8a25e3bc1c194beccc source line=80
+CASE m-act line=81
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/80.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/81.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/81.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/81.cerr
+VERDICT m-act FAIL compile exit=0 expected=28 stdout differs at byte 0 stderr differs at byte 0
+SUBST seed/omc/om2/s3/mut/aop.from seed/omc/om2/s3/mut/aop.to
+  MUTATE exact-once substitution at byte 166160
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/84.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/84.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/84.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/84.elf sha256=ef850aa4ce295f40fff8dd5695b0964b1b53c2586e75e1273cca847820d3d620 source line=84
+CASE m-aop line=85
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/84.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/85.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/85.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/85.cerr
+VERDICT m-aop FAIL compile exit=0 expected=7 refusal wrote compiler output diagnostic does not name the expected error
+SUBST seed/omc/om2/s3/mut/araw.from seed/omc/om2/s3/mut/araw.to
+  MUTATE exact-once substitution at byte 166374
+  $ seed/out/omc < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/88.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/88.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/88.cerr
+COMPILER /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/88.elf sha256=df6c16a9a6fd94035b22321636117757b66c18a98904033f1316acbf667d516c source line=88
+CASE m-araw line=89
+  $ /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/88.elf < /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/89.src > /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/89.elf 2> /home/drakestapleton/work/OmcBatchPin/build/batch3/scratch-s3-mutants/89.cerr
+VERDICT m-araw FAIL compile exit=11 expected=7 diagnostic does not name the expected error
+OM2GATE FAIL cases=36 pass=19 fail=17 invalid=0 not_run=0

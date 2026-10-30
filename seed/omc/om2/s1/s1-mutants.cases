@@ -8,6 +8,7 @@ ctl-rot-trap run seed/omc/om2/s1/rot-trap-var.om - - - 107
 ctl-hex-max run seed/omc/om2/s1/hex-max.om - - - 0
 ctl-hex-upper refuse seed/omc/om2/s1/bad-hex-upper.om 6
 ctl-om1-names run seed/omc/om2/s1/om1-names.om - - - 2
+ctl-kw-long-names run seed/omc/om2/s1/kw-long-names.om - - - 0
 ctl-fmt emit seed/omc/om2/s1/fmt-in.om file:seed/omc/om2/s1/fmt-out.txt - 0
 ctl-diag-unknown emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.err 3
 ctl-diag-newpt emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16
@@ -43,3 +44,7 @@ m-unk emit seed/omc/om2/s1/diag-unknown.om - file:seed/omc/om2/s1/diag-unknown.e
 subst seed/omc/om2/s1/mut/tyunk.from seed/omc/om2/s1/mut/tyunk.to
 cc seed/omc/omc.om
 m-tyunk emit seed/omc/om2/s1/diag-newpt.om - file:seed/omc/om2/s1/diag-newpt.err 16
+# fn name: the keyword test applied to the first 8 bytes of a name of 9..63 bytes (continue_x read as continue)
+subst seed/omc/om2/s1/mut/kwlong.from seed/omc/om2/s1/mut/kwlong.to
+cc seed/omc/omc.om
+m-kwlong run seed/omc/om2/s1/kw-long-names.om - - - 0
