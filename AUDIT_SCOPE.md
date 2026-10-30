@@ -36,7 +36,10 @@ current security review.
    `.aien/verify.pub`.
 7. `.github/workflows/aien-verification.yml` (pull request and push, `contents: read`, advisory),
    `evidence-immutable.yml` (pull request, fails on any modification of existing evidence),
-   `om-units-arm64.yml` (hosted ARM64 rerun of the om-units gate, advisory).
+   `om-units-arm64.yml` (hosted ARM64 rerun of the om-units gate, advisory). This branch adds
+   `sbom.yml` (SPDX SBOM artifact, read-only token). `irspirv-intel-cpu.yml` (advisory replay of
+   the irspirv SPIR-V suite on Intel's CPU OpenCL runtime) landed on `main` after the described
+   revision; this branch pins its actions by commit sha like the others.
 8. `tools/` test scripts and C helpers.
 
 AGENTS.md: a head that changes `.aien/`, `tests/gates/`, `.github/workflows/`, `.forgejo/` or
