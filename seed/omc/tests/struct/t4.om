@@ -1,0 +1,8 @@
+struct V a ulong b ulong end
+fn total v view V to ulong
+ret add get v a get v b
+end
+fn main to ulong
+s = new V 10 7
+ret total s
+end

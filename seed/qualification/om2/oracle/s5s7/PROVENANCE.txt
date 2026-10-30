@@ -1,0 +1,51 @@
+OM-2 qualification lane s5s7 (#748, ledger L836): oracle provenance, recorded 2026-10-25
+=========================================================================================
+
+Everything in this directory is an ORACLE: external tools that compute expected values for the
+fixtures in sec/s5s7/. Nothing here is part of the delivered closure, and no value was copied
+from a compiler output (pinned or candidate). Host: Linux 7.0.0-1019-nvidia aarch64 (DGX Spark).
+
+Tools (absolute paths; the shell builtin `sha256sum` 0.8.0 was NOT used):
+  /usr/bin/python3     Python 3.12.3 (hashlib, struct)
+  /usr/bin/gcc         gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+  /usr/bin/sha256sum   GNU coreutils 9.4
+
+Inputs read: /tmp/zl/main/src/sha256.h (main acb3f15, sha256 2e6d4731...879f) and
+/tmp/zl/main/src/sha256.c (driver self-check only). Contract spec/omegese-om2.md sha256 245bb74e...0881,
+errata E1-E5 on omega om2/contract (aa55bce17).
+
+Files and exact commands (run from the worktree root):
+
+1. oracle.py -> exp/* and sha/expected.h
+     /usr/bin/python3 seed/qualification/om2/oracle/s5s7/oracle.py
+   Values: dup32 rotations/xor/and/or (asserts rotr64(dup x, n) == dup(rotr32(x, n mod 32)), contract
+   140-141); shactx and be16 byte images (struct.pack, little/big); view sums, part lengths, fresh
+   outputs; mutant predictions (*.mutant); SHA-256 digests (hashlib) for the section 7 driver,
+   including 2^32+3 zero bytes.
+
+2. offsetof.c -> layout and image check against sha256.h (contract 163-165, erratum E5)
+     gcc -std=c11 -Wall -Wextra -Werror -I/tmp/zl/main/src -o build/om2-qual/s5s7-offsetof \
+         seed/qualification/om2/oracle/s5s7/offsetof.c
+     build/om2-qual/s5s7-offsetof build/om2-qual/s5s7-shactx.bin
+     cmp build/om2-qual/s5s7-shactx.bin seed/qualification/om2/oracle/s5s7/exp/l5-shactx.out
+   Result (evidence/phaseB/s5s7-offsetof.log): sizeof 104; state 0/32 (8 x 4); count 32/8; buffer
+   40/64; little endian; "layout matches contract YES"; gcc image == python image (cmp exit 0).
+
+3. Cross-checks
+     head -c 4294967299 /dev/zero | /usr/bin/sha256sum
+       930fa067940ff8d9f427e3a116b7598503c70ce7380d66ff65f8de33d558f7f3  (== EXP_BIG_ZERO from hashlib)
+     sha/sha_driver.c built against the CURRENT C sha256.c (driver self-check, NOT OM-2 evidence):
+       evidence/phaseB/s5s7-sha-selfcheck.log, 16/16 PASS including the 2^32+3-byte cases.
+     The OM-1 twins (sec/s5s7/om1/*.om) reproduce exp/a5-exact.out, a5-allops.out, l5-shactx.out,
+     l5-endian.out, v6-sum.out, v6-edit.out, v6-part-empty.out and t-names.out byte for byte under the
+     pinned omc 734f0a39 (evidence/phaseB/s5s7-pinned.log): python, gcc and OM-1 arithmetic agree.
+
+4. abi/driver.c, abi/v1link.c, sha/sha_driver.c: C drivers for the ABI v2 and SHA cases. They need
+   the ABI v2 generator (AbiLane L837) and the OM-2 SHA unit (ShaLane L838); see sec/s5s7/README.txt.
+   driver.c compiles (gcc -c, -Werror) today; it cannot link yet.
+
+sha256 of the oracle files at recording time:
+  5307298f57f51ce3dd4a0ac917917471440c97df05c0b2ae04f94abcd4fbe5e6  oracle.py
+  26771c6e1033babb8736dad7751e3a7bd69161779462486e623d91166b4a6495  sha/expected.h
+  8179f0b70205946fd625e73850d89bc96ba5f3bc14df21f2d7685dffc79575d5  exp/l5-shactx.out
+  a3ed38331048dce032621a164284c42bb722b7e7bd643133012f11e723b891f2  exp/a5-exact.out

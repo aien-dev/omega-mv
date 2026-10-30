@@ -1,0 +1,14 @@
+PASS seed0 408 bytes, rebuilds itself
+PASS hex1 776 bytes, born from seed0
+PASS asm2 2464 bytes, born from hex1
+PASS om4 om4.bin 14224 bytes
+PASS omc fixpoint ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019
+PASS fwd exit 0
+PASS fwd runs, exit 7
+PASS mut exit 0
+PASS mut runs, exit 0
+PASS cycle exit 9
+PASS assign exit 7
+RC=0
+rc 0
+ce4facbe194e8909c171f48d7922f9bfa42efc0cf7ab77d860ac6c799e03f019  seed/out/omc

@@ -1,0 +1,10 @@
+# Declared C2 capacity delta for omc 189ada82e00bb440cb41351bd252cc68c54a1b1050051cc42a1df700081c3b54 (#768).
+# manifest-c2.txt stays frozen. Under it this compiler fails exactly three rows, each a unit that the
+# 734f0a39 compiler refused with error 14 at the old 1024-name or 512-function capacity:
+# c2-00304 and c2-00675 declare 1025 names; c2-00306 declares 513 functions.
+# #768 raises the per-unit capacity to 8192 names and 4096 functions, so these units now compile.
+# Their new results are below; gate12 and gate15 pin the new 8192/8193 and 4095/4096 boundaries.
+# Every other frozen C2 row must still pass unchanged.
+c2-00304 emit pack:seed/qualification/om2/c2/corpus.pack:327411:20440 sha:4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d - 0
+c2-00306 emit pack:seed/qualification/om2/c2/corpus.pack:360735:12715 sha:554b483494b4f77079ebe6a0ce10f046e82cbff7276e6b60b0a4127d3c582c4d - 0
+c2-00675 emit pack:seed/qualification/om2/c2/corpus.pack:491737:20443 sha:4c92358502a796e774cc052958c693ec7d2cb949fd62cc67d7ca06cb7bcf252d - 0

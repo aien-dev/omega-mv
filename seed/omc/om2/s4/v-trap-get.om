@@ -1,0 +1,13 @@
+note S4: a number index into an unsized view is checked at run time (spec 4, 6): get v 3 on a view of
+note 3 elements traps 3 (exit 103); it is neither error 21 nor unchecked.
+om2
+fn g v view ulong * to ulong
+ret get v 3
+end
+fn main to int
+a = new ulong 3 7
+if eq g a 7
+ret 1
+end
+ret 0
+end

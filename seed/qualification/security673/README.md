@@ -65,7 +65,7 @@ with error 24 before an artifact is accepted. Unconditional B uses `patch26` and
 
 ## Strict launch profile (#670)
 
-`execpure` (native host word 135) pins one executable as descriptor 3 and then applies a fixed
+`execpure` (native host word 198) pins one executable as descriptor 3 and then applies a fixed
 kernel profile before `execveat(AT_EMPTY_PATH)`: Landlock execute/read only beneath that inode,
 `PR_SET_NO_NEW_PRIVS`, CPU/file/stack/core/process/descriptor/address-space limits, and a seccomp
 filter that allows only stdin read, stdout/stderr write, the pinned exec and exit. Any setup

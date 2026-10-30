@@ -234,6 +234,9 @@ ret -1
 end
 ret 0
 end
+fn cbadcase result ulong want ulong trace ulong to bool
+ret or ne result want or ne get ctrace 0 trace ne get cbad 0 0
+end
 fn main to int
 r = new ulong 32 0
 for writer ulong 2
@@ -271,7 +274,7 @@ end
 if and eq mode 8 eq writer 0
 want = 14
 end
-if or ne result want or ne get ctrace 0 trace ne get cbad 0 0
+if cbadcase result want trace
 put cfails 0 add get cfails 0 1
 end
 end

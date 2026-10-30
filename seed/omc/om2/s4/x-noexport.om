@@ -1,0 +1,8 @@
+note S4: without export the v1 rule holds; word 0 is B to the last fn (bytes pinned).
+om2
+fn helper a ulong to ulong
+ret add a 1
+end
+fn entry a ulong to ulong
+ret helper a
+end

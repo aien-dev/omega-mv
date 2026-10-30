@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+note omegese-om2.md 0 line 14: the OM-2 words are recognised only in OM-2 units. This OM-1 unit uses
+note fn ... to T inline (4 line 93); it keeps its OM-1 verdict (C1, line 17), the pinned error and line.
+fn f a uint to uint inline
+ret a
+end
+fn main to int
+ret 0
+end

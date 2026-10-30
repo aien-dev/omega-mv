@@ -1,0 +1,159 @@
+note dnsunit.om: unit cases for the om/tls DNS answer parser dns_parse (security review of
+note omega-mv #813, finding 8: name skipping never traps, header flags, owner names, CNAME chains).
+note Program mode, composed after tls.om. stdin: vectors/dns.txt from gen_dns.py, one case per line
+note "R IIIIIIII HOST HEX" (# comments): R 0 = dns_parse returns 0 and the address IIIIIIII,
+note R E = it returns TLS_ERR_DNS; HEX is the response to dns_query HOST with id 0x4f4d.
+note Prints "MISMATCH line N" per failure and "dns unit: C checks, F failed"; exit 0 only when F
+note is 0 and C is not 0, 1 on a mismatch, 2 on empty input. "L HOST": dns_a4 HOST must return
+note TLS_ERR_DNS without a query (a name over 253 bytes, security re-review N1).
+
+text dfail "MISMATCH line "
+text dsum "dns unit: "
+text dchk " checks, "
+text dfld " failed\n"
+text dnl "\n"
+
+fn du_hex ch ulong to ulong
+if and ge ch 48 le ch 57
+ret sub ch 48
+end
+if and ge ch 97 le ch 102
+ret sub ch 87
+end
+ret 16
+end
+
+note hex digits of l from p into o; the byte count
+fn du_bytes l view uchar * p0 ulong o edit uchar * to ulong
+p = p0
+n = ulong 0
+while lt du_hex tls_at l p 16 bound 4096
+put o n uchar or shl du_hex tls_at l p 4 du_hex tls_at l add p 1
+n = add n 1
+p = add p 2
+end
+ret n
+end
+
+note 0 when dns_a4 refuses the host name of line l (from byte 2)
+fn du_long l view uchar * to ulong
+ip = new uchar 4 0
+if eq dns_a4 part l 2 sub len l 2 ip TLEDNS
+ret 0
+end
+ret 1
+end
+
+note 0 when one case line l matches
+fn du_case l view uchar * to ulong
+q = new uchar 300 0
+r = new uchar 65536 0
+if eq get l 0 76
+ret du_long l
+end
+p = ulong 11
+while and lt p len l ne tls_at l p 32 bound 300
+p = add p 1
+end
+ql = dns_query q part l 11 sub p 11 0x4f4d
+if eq ql 0
+ret 1
+end
+n = du_bytes l add p 1 r
+ret du_chk l part r 0 n part q 0 ql
+end
+
+note dns_parse the response r for the query q; 0 when the result is what line l expects
+fn du_chk l view uchar * r view uchar * q view uchar * to ulong
+ip = new uchar 4 0
+w = new uchar 4 0
+if ne du_bytes l 2 w 4
+ret 1
+end
+e = dns_parse r q ip
+if ne get l 0 48
+if eq e TLEDNS
+ret 0
+end
+ret 1
+end
+if ne e 0
+ret 1
+end
+x = ulong 0
+for i ulong 4
+x = or x ulong xor get ip i get w i
+end
+ret x
+end
+
+fn du_dec v ulong o edit uchar * to ulong
+t = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put t n uchar add 48 rem x 10
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for i ulong n
+put o i get t sub sub n 1 i
+end
+ret n
+end
+
+note st: 0 checks, 1 failures, 2 line number
+fn du_line l view uchar * st edit ulong * to void
+m = new uchar 24 0
+put st 2 add get st 2 1
+if and gt len l 0 ne tls_at l 0 35
+put st 0 add get st 0 1
+if ne du_case l 0
+put st 1 add get st 1 1
+w = write 1 dfail 0 len dfail
+n = du_dec get st 2 m
+w = write 1 m 0 n
+w = write 1 dnl 0 1
+end
+end
+end
+
+fn du_run in view uchar * to int
+st = new ulong 3 0
+m = new uchar 24 0
+p = ulong 0
+while lt p len in bound 100000
+s = p
+while and lt p len in ne tls_at in p 10 bound 100000
+p = add p 1
+end
+du_line part in s sub p s st
+p = add p 1
+end
+w = write 1 dsum 0 len dsum
+n = du_dec get st 0 m
+w = write 1 m 0 n
+w = write 1 dchk 0 len dchk
+n = du_dec get st 1 m
+w = write 1 m 0 n
+w = write 1 dfld 0 len dfld
+if ne get st 1 0
+ret 1
+end
+if eq get st 0 0
+ret 2
+end
+ret 0
+end
+
+fn main to int
+in = new uchar 262144 0
+n = read 0 in 0 262144
+if le n 0
+ret 2
+end
+ret du_run part in 0 ulong n
+end

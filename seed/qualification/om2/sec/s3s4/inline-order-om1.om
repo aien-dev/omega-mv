@@ -1,0 +1,65 @@
+note SPDX-License-Identifier: Apache-2.0
+note OM-1 TWIN of inline-order.om (inline removed, om2 line made a note) for the pinned compiler
+note 734f0a39: same expectations, so OM-1 semantics cross-check the oracle now.
+note Contract section 4 lines 93-98 (inline) and 102-104 (folding): arguments are evaluated left to
+note right before the body, exactly as for a call; traps, their order and codes are unchanged; removing
+note inline changes nothing (twin inline-order-plain.om). One stdin byte selects a case:
+note   A f (mk 10 1) (mk 3 2): markers 1 then 2, then 11/3 = 3        exit 0
+note   B f (div 1 0) (add 2147483647 1): first argument traps 2      exit 102
+note   C f (add 2147483647 1) (div 1 0): first argument traps 1      exit 101
+note   D f 2147483647 0: body add traps 1 before body div traps 2   exit 101 (constant args: no fold)
+note   E f 5 0: body div by 0 traps 2                               exit 102 (constant args: no fold)
+note   F f (mk 1 1) (div 1 0): marker 1 printed, then trap 2         exit 102
+note   G f (div 1 0) (mk 1 2): trap 2 before the marker              exit 102
+note   H g -5, g 7: early ret inside an inlined body: 0 then 14      exit 0
+note   I g (mk 7 3): an argument used twice in the body is evaluated once: marker 3, then 14
+note Expected stdout: oracle/s3s4/exp/inline-order-*.out (python3, oracle/s3s4/oracle.py).
+note OM-1 unit: this line replaces the om2 line
+fn f a int b int to int
+x = add a 1
+ret div x b
+end
+fn g a int to int
+if lt a 0
+ret 0
+end
+ret mul a 2
+end
+fn mk v int t ulong to int
+pu t
+ret v
+end
+fn main to int
+s = new uchar 1 0
+r = read 0 s 0 1
+k = get s 0
+if eq k 65
+pu ulong f mk 10 1 mk 3 2
+end
+if eq k 66
+pu ulong f div int 1 0 add int 2147483647 1
+end
+if eq k 67
+pu ulong f add int 2147483647 1 div int 1 0
+end
+if eq k 68
+pu ulong f 2147483647 0
+end
+if eq k 69
+pu ulong f 5 0
+end
+if eq k 70
+pu ulong f mk 1 1 div int 1 0
+end
+if eq k 71
+pu ulong f div int 1 0 mk 1 2
+end
+if eq k 72
+pu ulong g -5
+pu ulong g 7
+end
+if eq k 73
+pu ulong g mk 7 3
+end
+ret 0
+end

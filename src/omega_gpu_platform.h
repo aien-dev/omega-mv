@@ -1,3 +1,19 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Drake Stapleton (AIEN / aien-dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* omega_gpu_platform.h -- native platform contract for the Omega GPU engine.
  *
  * Native v1 P07 cut A (aienos#286 cut A, aien-architecture#190). This header
@@ -224,7 +240,9 @@ int omega_gpu_platform_check_buffer(const OmegaGpuBufferDesc *d, const OmegaGpuP
 
 /* ---- handle table (index + generation) ----------------------------------- */
 
-#define OMEGA_GPU_HANDLE_SLOTS 1024u /* 1.1: a serving session holds one buffer per weight tensor (Qwen3-8B: ~260) */
+#define OMEGA_GPU_HANDLE_SLOTS 4096u /* 1.1: a serving session holds one buffer per weight tensor (Qwen3-8B: ~260);
+                                     * speed5/batching: each Qwen3.8 conversation slot adds about 29 (16 KV planes, the
+                                     * DeltaNet state, launch buffers), so 32 slots on top of the 27B weights passed 1024 */
 
 typedef struct {
     uint32_t generation[OMEGA_GPU_HANDLE_SLOTS]; /* next generation to issue for the slot; starts at 1 */
