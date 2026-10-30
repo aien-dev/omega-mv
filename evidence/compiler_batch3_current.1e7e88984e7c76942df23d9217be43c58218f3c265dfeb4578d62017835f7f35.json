@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-28",
+  "repository": "aien-dev/omega-mv",
+  "source_revision": "7bce2a4fddc43268ac2af09cddc4a5a67d78312d",
+  "base_revision": "d94a503f7aae57d09697046405da2e9a5895be6d",
+  "compiler_sha256": "1811d4047f118440cc35e995261af6768b606148cb17e18c42158afd15fcad58",
+  "compiler_source_sha256": "d33ef5cab603f85a5cbcbdfdd55391f2ce0448bfcbc5fecbf0393599b636ef04",
+  "scope": "HOST_TESTED AArch64 Linux; no GPU, native x86 or deployment qualification",
+  "bootstrap": "seed0 -> hex1 -> asm2 -> om4 -> omc; all three compiler stages byte-identical",
+  "size_calculation": "WolframLanguageEvaluator: (341324 - 176)/4 -> 85287 instruction words",
+  "regression_command": "build/compiler-finish/gate OMC SHA evidence/BATCH-397346de/regressions/prNUMBER.cases SCRATCH",
+  "regressions": {
+    "896": {"main_exit": 1, "candidate_exit": 0, "candidate_cases": 2},
+    "897": {"main_exit": 3, "candidate_exit": 0, "candidate_cases": 6},
+    "898": {"main_exit": 1, "candidate_exit": 0, "candidate_cases": 4},
+    "903": {"main_exit": 1, "candidate_exit": 0, "candidate_cases": 3}
+  },
+  "checks": [
+    {"command": "tests/gates/run.sh seed", "exit": 0, "result": "native-host qualification PASS; GATE5 PASS cases=177"},
+    {"command": "OM2 conductor s1/s2/s3/s4.cases", "exit": 0, "result": "52/52, 21/21, 70/70, 64/64 PASS"},
+    {"command": "OM2 conductor s1/s2/s3/s4-mutants.cases", "exit": 1, "result": "Every ctl-* PASS and every m-* FAIL as required; invalid=0 not_run=0"},
+    {"command": "OM2 conductor seed/qualification/om2/baseline/language.cases", "exit": 0, "result": "75/75 PASS"},
+    {"command": "bash tests/diagnostics/experiment_issue655.sh", "exit": 0, "result": "54/54 PASS"},
+    {"command": "tests/gates/run.sh om-units", "exit": 0, "result": "byte-identical regeneration; SHA256-PARITY PASS; BLAKE3-PARITY PASS including source mutants"},
+    {"command": "sh seed/json/tests/gate-json.sh", "exit": 0, "result": "JSONGATE PASS rows=8758 mutants=5"},
+    {"command": "python3 seed/net/tests/check.py", "exit": 0, "result": "HTTP-CHECK PASS"},
+    {"command": "python3 seed/omc/gate-ir-trap.py", "exit": 0, "result": "CHECKS=67 FAILURES=0"},
+    {"command": "python3 seed/omc/mutants-ir-trap.py", "exit": 0, "result": "COMPILED_MUTANTS=5 CAUGHT=5"},
+    {"command": "sh seed/wasm/gate-irwasm.sh", "exit": 0, "result": "IRWASM native parity cases=129 PASS; mutant and refusal checks PASS"},
+    {"command": "sh seed/spirv/gate-irspirv.sh", "exit": 0, "result": "IRSPIRV CPU OpenCL parity cases=129 PASS; configured PoCL CPU oracle only"},
+    {"command": "sh om/tls/test/SUITE/run.sh seed/out/omc", "exit": 0, "result": "tls, aesgcm, chacha, ec, rsa, sha2, x25519, x509 PASS; TLS network parity NOT_RUN"}
+  ],
+  "test_repair": "s2/mut/cyc.from and cyc.to retain the new check/next prelude in s_eof. Before repair: exact-once substitution matches=0, m-cyc NOT_RUN. After repair: the mutated compiler accepts the prohibited recursive-inline input and m-cyc FAIL detects it. Expected case and source defect unchanged.",
+  "frozen_c2": {
+    "command": "OM2 conductor seed/qualification/om2/manifest-c2.txt",
+    "exit": 1,
+    "pass": 5870,
+    "fail": 6,
+    "invalid": 0,
+    "not_run": 0,
+    "failed_cases": ["c2-00015", "c2-00033", "c2-00304", "c2-00306", "c2-00675", "c2-00728"],
+    "disposition": "same six failures recorded by original batch3; frozen assertions preserved; manifest-c2-capacity and manifest-c2-batch2 both exit0 with3/3 PASS"
+  },
+  "exclusions": ["TLS_NET live-internet parity", "GPU/silicon gates", "native x86", "Alpha release qualification", "deployment"],
+  "original_batch_evidence": "evidence/BATCH-397346de/ remains byte-identical to PR904 c837f23d8357847c3be9d684c5354c5e67827bae"
+}
