@@ -20,8 +20,8 @@
 # evidence-immutable.yml, crumb.yml). Manifests under tests/gates/ name this script plus one
 # step word, so no manifest needs shell expansion (ADR 0028 P6).
 #
-# Pinned sibling sources. The hosted jobs check out aien-spark/physics at physics.lock (rx-host
-# at its own hard-coded commit), aien-dev/aienux at aienos.lock and aien-dev/aienux at
+# Pinned sibling sources. The hosted jobs checked out aien-spark/physics at physics.lock,
+# aien-dev/aienux at aienos.lock and aien-dev/aienux at
 # argus.lock, as physics-src/, aienos-src/ and aienos-argus/ next to the Makefile, and exclude
 # them from git status. Here the same commits are materialised under build/pins/ (build/ is
 # gitignored) from the sibling local clones ../physics and ../aienos, offline.
@@ -66,7 +66,7 @@ pin() {
 }
 # Every step that builds against physics takes the commit from physics.lock, never a literal:
 # the Makefile's check-physics-lock refuses any other commit, so a literal here goes red on
-# the next lock bump (it did for the e95e3ed bump, omega#508; omega#523 needs the next bump).
+# the next lock bump (it did for the e95e3ed bump, omega#508, and again for 048e5f5, omega#523).
 physics_pin() { pin physics-src physics "$(lock physics.lock)"; export PHYSICS_DIR="$PINS/physics-src"; }
 aienos_pin()  { pin aienos-src aienos "$(lock aienos.lock)"; export AIENOS_R7_DIR="$PINS/aienos-src"; export AIENOS_COMMIT="$(lock aienos.lock)"; }
 argus_pin()   { pin aienos-argus aienos "$(lock argus.lock)"; export ARGUS_REPO="$PINS/aienos-argus"; }
