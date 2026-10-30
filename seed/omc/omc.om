@@ -26,7 +26,7 @@ global xnaddr ulong 1
 global xasite ulong 65536
 global xavalue ulong 65536
 global xexit ulong 1
-global xexsite ulong 8192
+global xexsite ulong 65536
 global xnexit ulong 1
 global xbss ulong 1
 global xenerr ulong 1
@@ -1397,8 +1397,8 @@ ret 0
 end
 
 note ---- trap list (8192 sites per function): output offset of the branch, trap code ----
-global tsite ulong 8192
-global tcode ulong 8192
+global tsite ulong 65536
+global tcode ulong 65536
 global nt ulong 1
 note ---- block stack (512): kind (1 if, 2 else, 3 while, 4 for), branch to patch, loop head, loop
 note register, its type, names and held pool slots to restore at end, then-part ended (for else) ----
@@ -1524,7 +1524,7 @@ end
 note trapsite: note the place and code of a branch to the trap stub, then emit it. trapc: B.cond, as om4.
 fn trapsite w ulong code ulong to void
 n = get nt 0
-if ge n 8192
+if ge n 65536
 fail 14
 end
 put tsite n get oc 0
@@ -8224,7 +8224,7 @@ end
 
 fn xtrap cc ulong code ulong to void
 n = get nt 0
-if ge n 8192
+if ge n 65536
 fail 14
 end
 put tcode n code
@@ -8762,7 +8762,7 @@ emitb 15
 emitb 5
 else
 n = get xnexit 0
-if ge n 8192
+if ge n 65536
 fail 14
 end
 put xexsite n xbranch 14
