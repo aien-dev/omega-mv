@@ -42,13 +42,13 @@
       "children": [
         {
           "digest": "9f19f11674ca5dfc3c9c3ae35fe6106557aee9583210da13d257e1b9d88e052c",
-          "last_commit": "190ff8912",
+          "last_commit": "d863780eb",
           "name": "calibration",
           "purpose": "Directory calibration. Purpose not yet described by a human."
         },
         {
-          "digest": "d74cddad4fb68d35451857af81f4cb7f69412a595c44af8f3de8baaf602dc1b9",
-          "last_commit": "3a995ba8d",
+          "digest": "7ef7796693f23ad68d9a5bcaaee0f635018f4371139a040ba202d4ce7083ede8",
+          "last_commit": "af2ca28ce",
           "name": "docs",
           "purpose": "Directory docs. Purpose not yet described by a human."
         },
@@ -60,50 +60,50 @@
         },
         {
           "digest": "7b11116b0ac28804701d4dac4aedf7691d82d63c59f04d0936c5ea961755a080",
-          "last_commit": "965fb7627",
+          "last_commit": "8f75d51ec",
           "name": "mk",
           "purpose": "Directory mk. Purpose not yet described by a human."
         },
         {
           "digest": "62b92244c52fa8af6f511012dee2967e98dff162cc1d8bf45d0b2f15cb0adc5f",
-          "last_commit": "5901baa51",
+          "last_commit": "450bbefd4",
           "name": "research",
           "purpose": "Directory research. Purpose not yet described by a human."
         },
         {
-          "digest": "1cef97c8f2d852990d04fe5e791e877015c74a751648a020033a2459e02c5148",
-          "last_commit": "43d8d20da",
+          "digest": "f765ad87fdddd9b47f690b07298c951a0f7e7675dc5de4ffe44e33a0c14b1986",
+          "last_commit": "d94a503f7",
           "name": "spec",
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "199749684598b36b610b14a4c5b59703df5e53bba1db2b5939297c55ac423153",
-          "last_commit": "333091a6f",
+          "digest": "aaf5acb82fd4c720cd60c85fd6087f636c72a98e2f3740c9295dcfa525dc64d7",
+          "last_commit": "bf54b19fa",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "172aceae49d2fdc8cf22a5991e56831224ea5bd51d360d55386999d5a84690b4",
-          "last_commit": "965fb7627",
+          "digest": "ba725907bbfd87b16bbfaa30b7b1e4e234fe2a8f9069157fe861ef77bfa603f5",
+          "last_commit": "8f75d51ec",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
         {
-          "digest": "4e83dea21da137c30076c2dc0ca4f3a488f576f30a94e334558ad5ea523f3a6b",
-          "last_commit": "88e24bdd5",
+          "digest": "308db0e6cf45c0a48f01f5f5f228450f191389de68006915b9ecf9c65b9a2e29",
+          "last_commit": "a50c3bd41",
           "name": "tools",
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:259355b6f45b4affecc11dc5bbee33c1da1eca5696bc006961675cf6ffe54c51",
-      "compiled_at": "2026-10-29T19:09:35Z",
+      "children_root": "sha256:2f6a3db11f57033e1221d1dbc4bd545233c6cb3528a549acf4ccd27424f9cf91",
+      "compiled_at": "2026-10-30T16:34:59Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:92f4997be4c762c6e5ceec9b1dbf758ac36e90826183214bd1567a557d018670",
-      "evidence_files": 12611,
-      "evidence_root": "sha256:9ee1ecc8a32bd724cae4237a844b3cb2e82a8e6af89626fa84c2b5ea77bec79e",
-      "files": 17827,
-      "generated_at_commit": "763eeb76f2c54ab0d4e3b1dca7daff24383fc7eb",
-      "source_tree": "sha256:1f80cc02a4305cd4bfcf5857cdbd925343f7873c678c2cde32ad1d02743d0803"
+      "digest": "sha256:782ffc4b0e1057073b9d61ca201cf437f7468e65ddc68efc093ef28097e97e2a",
+      "evidence_files": 12622,
+      "evidence_root": "sha256:b1a08e2ce56e6feada0d8a31f06fbd7adee57adc1c1ad8dec220293ee5d439f9",
+      "files": 17857,
+      "generated_at_commit": "8f75d51ecc7f9277c6809e67530310b2039b2ce0",
+      "source_tree": "sha256:bfdb818fc984040e017a4b7068078a0a84ebf7e42e4d204e1bc39ca228d595d4"
     },
     "owner_lane": "",
     "provenance": {
