@@ -6,10 +6,16 @@ T624 := build/T624
 # unless OMEGA_NATIVE_OMC names an existing one; either way its sha256 must be 734f0a39.
 T624_SEED_COMMIT := f8588e10ae70ddcb901ebf4fd20618b283a94005
 T624_OMC_SHA256 := 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
-OMEGA_NATIVE_OMC ?= $(CURDIR)/$(T624)/seed/seed/out/omc
+# `export` of an unset variable in an earlier mk/*.mk (cpp-u64, lower, retarget) defines it empty, and
+# `?=` keeps an empty definition; so the defaults below test for empty instead.
+ifeq ($(strip $(OMEGA_NATIVE_OMC)),)
+OMEGA_NATIVE_OMC := $(CURDIR)/$(T624)/seed/seed/out/omc
+endif
 # SA_SEED_REPO: an aien-dev/omega-bridge clone holding seed 0fc7d866 and native.om 012860db. Required
 # (absolute path); there is no host default.
-OMEGA_BRIDGE_REPO ?= $(SA_SEED_REPO)
+ifeq ($(strip $(OMEGA_BRIDGE_REPO)),)
+OMEGA_BRIDGE_REPO = $(SA_SEED_REPO)
+endif
 export OMEGA_NATIVE_OMC SA_SEED_REPO OMEGA_BRIDGE_REPO
 
 translation-omc:
