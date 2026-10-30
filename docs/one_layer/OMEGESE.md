@@ -87,7 +87,7 @@ itself be an op, so no brackets are needed: `add mul r r 4` is add(mul(r, r), 4)
 | `neg` a / `not` a | 1 | negate (signed) / logical not (bool) or bitwise not (number) | un |
 | `<type>` a | 1 | a typed number (`uint 5`) or a conversion (`ulong x`, `ulong add a b`) | const / cast |
 | `get` arr i | 2 | load (arr is an array name) | load |
-| `new` type len init | 3 | a new own array of len (1..64) elements; only as the whole value of `<name> =` | alloc |
+| `new` type len init | 3 | a new own array of len elements (omc: 1..16777216, at most 4 MiB of local arrays, s.9.4; the C reference path through OSC IR: 1..64, `OSC_MAX_ARRAY_LEN`); only as the whole value of `<name> =` | alloc |
 | `own` / `edit` / `view` arr | 1 | move / mutable borrow / shared borrow (arr is an array name) | mov |
 | `<function>` args | its parameter count | call an earlier function | call |
 
