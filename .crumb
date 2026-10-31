@@ -66,13 +66,13 @@
         },
         {
           "digest": "622d98bd2dfcae7f3a0caab34e583cb63659a500afb4eb31264e839ce2529dc3",
-          "last_commit": "d3763c7f2",
+          "last_commit": "e1968fe5e",
           "name": "native",
           "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow adviso"
         },
         {
           "digest": "ef71e3b8758de407b6644ae4d069c6eecea07849c57b7de1ce67ce03386ff2e8",
-          "last_commit": "d3763c7f2",
+          "last_commit": "e1968fe5e",
           "name": "neuralese",
           "purpose": "Bounded untrusted representation envelopes and explicit checked Omega decoding; learned extensio"
         },
@@ -90,7 +90,7 @@
         },
         {
           "digest": "88a9978bc598dbf638845d40cd2e191e1cd1d96d6489c537cc9a9219426994bf",
-          "last_commit": "d3763c7f2",
+          "last_commit": "e1968fe5e",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
@@ -108,14 +108,14 @@
         }
       ],
       "children_root": "sha256:bdb6cc227106936dd76a839f9dbec64cd362ea7edc01f22ca8062cafedfd093d",
-      "compiled_at": "2026-10-31T03:22:28Z",
+      "compiled_at": "2026-10-31T04:09:33Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:f0773c8692fe00ffed1a22f0af9a95f6283523284d0c84daafffa6f64bbf9897",
+      "digest": "sha256:68cc50d210eac96b6c01013eaf397d7c99118d662d917b910c3976609aca6bc1",
       "evidence_files": 14989,
-      "evidence_root": "sha256:c11b4802bd1346888fc0935d3eb4b3d943b8e729af88f984ebc915aa9d7486c3",
+      "evidence_root": "sha256:324e080e7c8c3f9118b579e9a9045a3dc4c1f4e774c128d577635bda41dbd059",
       "files": 23180,
-      "generated_at_commit": "d3763c7f271e123765c88cbbf837030a1ac95c94",
-      "source_tree": "sha256:469cbe26c86c48cd2c2a3a259b0822e0eb9031370b3a88600061be261d2ea760"
+      "generated_at_commit": "4a7e1ef22b4a2497a36eef7f1f5d4cc820528cce",
+      "source_tree": "sha256:5512c8108d4d0fdae0ce18ed55ac92784022e976adf2fe77c180b15f0d6535cc"
     },
     "owner_lane": "",
     "provenance": {

@@ -10,9 +10,9 @@
 # the pinned omega-bridge generator and compiled as C (bindability).
 #   OMEGA_OMC     seed-born omc, sha256 pinned below (exit 3 NOT_RUN without it)
 #   OMEGA_BRIDGE  optional: an aien-dev/omega-bridge checkout whose src/native.om matches the pin
-# The tree listings hash each entry's mode and size as the oracle recorded them on ext4: the stream
-# directory is created 775 whatever the caller's umask, and a TMPDIR whose empty directories are not
-# 4096 bytes (tmpfs reports 40) is NOT_RUN rather than a false FAIL.
+# The tree listings hash each entry's path, type and mode, each file's size and content, and no
+# directory size (filesystem-dependent: ext4 4096, tmpfs 40..3800), so any TMPDIR works; the stream
+# directory is created 775 whatever the caller's umask.
 set -eu
 OMC_PIN=7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de
 NATIVE_PIN=2c2c53f61d4ab302f1a2092c3c32189335dd53f6cf2b388f47a475f99f2c3940
@@ -22,18 +22,17 @@ OM=$P/../evidence.om
 [ "$(sha256sum < "$OMEGA_OMC" | cut -c1-64)" = "$OMC_PIN" ] || { echo "EVIDENCE-PARITY NOT_RUN: omc is not the pinned compiler"; exit 3; }
 command -v python3 > /dev/null || { echo "EVIDENCE-PARITY NOT_RUN: python3 missing"; exit 3; }
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
-mkdir "$T/probe"
-[ "$(stat -c %s "$T/probe")" = 4096 ] || { echo "EVIDENCE-PARITY NOT_RUN: empty directories under $T are not 4096 bytes; set TMPDIR to an ext4 directory"; exit 3; }
-rmdir "$T/probe"
 python3 "$P/corpus.py" "$T/corp" > "$T/counts"
 
-# run BIN STREAM OUT: one stream in a fresh directory; pathtree/digtree list what path/digest left
+# run BIN STREAM OUT: one stream in a fresh directory; pathtree/digtree list what path/digest left.
+# A directory's size (find %s) is the filesystem's, not the program's: 4096 on ext4, 40..3800 on tmpfs,
+# and mktemp follows TMPDIR. So directories list '-' for size; their path, type and mode still count.
 run() {
   case $2 in pathtree) rs=path ;; digtree) rs=digest ;; *) rs=$2 ;; esac
   rm -rf "$T/w"; mkdir -m 775 "$T/w"
   rc=0; (cd "$T/w" && umask 022 && "$1" $rs < "$T/corp/$rs.txt" > "$T/s.out" 2> /dev/null) || rc=$?
   case $2 in
-    pathtree|digtree) (cd "$T/w" && { find . -printf '%p %y %m %s\n'; find . -type f -exec sha256sum {} +; } | LC_ALL=C sort) > "$3" ;;
+    pathtree|digtree) (cd "$T/w" && { find . \( -type d -printf '%p %y %m -\n' \) -o -printf '%p %y %m %s\n'; find . -type f -exec sha256sum {} +; } | LC_ALL=C sort) > "$3" ;;
     *) cp "$T/s.out" "$3" ;;
   esac
   return $rc
