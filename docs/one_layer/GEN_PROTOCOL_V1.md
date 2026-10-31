@@ -448,3 +448,8 @@ The runner, reducer, corpus builder and custodian scripts are specified by their
   calls", which was wrong: the third copy was fixed after CodeQL flagged it, and the remaining `strcpy`
   calls copy derived shape text, not file fields. All inputs are already length-checked (`fs_task_id_ok`
   1..40, `fs_shape` 1..512), so no accepted or refused input changes. `GEN_PROTOCOL_V1.md` re-hashed again.
+- **v1, file pins re-hashed for #946 (before any held-out task; revision stays 1, as in train r3):**
+  `OMEGESE.md` re-hashed after its "Host CPU ordering words" section (`cpufence`/`cpurelax`, omc
+  keyword ids 199/200). The reader chain in `tools/` has no such words; conditions, section 5 reference
+  lengths and the decision rule are unchanged, so no protocol content changed. `GEN_PROTOCOL_V1.md`
+  re-hashed for this line. `make test-gen-protocol` re-run at the #946 head.
