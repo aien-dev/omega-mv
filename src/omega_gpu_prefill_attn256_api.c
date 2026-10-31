@@ -1,9 +1,8 @@
 /*
  * omega_gpu_prefill_attn256_api.c: the two launches of the head_dim 256 prefill attention (omega-mv#545; see the
  * header). The prep kernel is the decode kernel's own program in prep mode (omega_blackwell_codegen_attn256.h), the
- * attend kernel is omega_blackwell_codegen_pattn256.h; it uses the SHFL.BFLY / F2FP placeholders of
- * omega_blackwell_codegen_tc.h, so its code is patched after encoding and the patch count must equal the program's
- * placeholder count. Session use mirrors omega_gpu_prefill_attn_api.c.
+ * attend kernel is omega_blackwell_codegen_pattn256.h (SHFL.BFLY and F2FP.BF16.F32.PACK_AB are native encoder entries
+ * since training R5). Session use mirrors omega_gpu_prefill_attn_api.c.
  */
 #include "omega_gpu_prefill_attn256_api.h"
 #include "omega_blackwell_codegen_tc.h"
@@ -66,16 +65,7 @@ static int prog_of(unsigned kind, const Slot *tmp, BlackwellIRProgram *prog) {
     return kind == KK_PREP ? omega_blackwell_codegen_decode_attn256_prog(&tmp->spec.prep, prog)
                            : omega_blackwell_codegen_prefill_attn256_prog(&tmp->spec.att, prog);
 }
-static uint32_t placeholders_of(const BlackwellIRProgram *prog) {
-    uint32_t n = 0;
-    for (size_t i = 0; i < prog->count; i++) {
-        const BlackwellIRInsn *in = &prog->insns[i];
-        if ((in->op == BW_IR_SHFL_DOWN && (in->imm & OMEGA_TC_MARK_BFLY)) || (in->op == BW_IR_FMNMX_MAX && in->imm == OMEGA_TC_MARK_F2FP)) n++;
-    }
-    return n;
-}
-
-size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap, uint32_t *gprs, int *patched) {
+size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap, uint32_t *gprs) {
     if (kind >= KK_N) return 0;
     Slot tmp; spec_of(kind, NULL, &tmp);
     BlackwellIRProgram *prog = omega_gpu_host_calloc(1, sizeof *prog);
@@ -84,12 +74,9 @@ size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap
     if (prog_of(kind, &tmp, prog) == 0) need = omega_bw_program_code_bytes(prog);
     OmegaBlackwellKernel k;
     if (need == 0 || need > cap || omega_blackwell_kernel_encode_into(prog, code, cap, &k) != 0) { omega_gpu_host_free(prog); return 0; }
-    int np = omega_tc_patch_code(prog, code, need);
     if (gprs) *gprs = k.gpr_count;
-    if (patched) *patched = np;
-    const int ok = np >= 0 && (uint32_t)np == placeholders_of(prog);
     omega_gpu_host_free(prog);
-    return ok ? need : 0;
+    return need;
 }
 
 /* rec: a record call is running (lock held): a miss is refused instead of compiled */
@@ -108,15 +95,13 @@ static int kernel_for(unsigned kind, const uint32_t *sh, int rec, Slot **out, bo
     /* both launches run 256 threads per CTA: the declared registers must fit the 64K register file (CUDA Programming
      * Guide, Compute Capabilities: "maximum number of 32-bit registers per thread block is 64K") */
     if ((uint64_t)OMEGA_PATTN256_THREADS * omega_bw_gpr_declared(prog->regalloc.peak_gpr_usage) > 65536u) { omega_gpu_host_free(prog); omega_gpu_session_set_error("prefill attn256: register file"); return OMEGA_GPU_DATTN_TOO_LARGE; }
-    const uint32_t expect = placeholders_of(prog), insns = (uint32_t)prog->count;
+    const uint32_t insns = (uint32_t)prog->count;
     OmegaGpuMem code;
     if (omega_gpu_session_alloc_code(need, &code) != 0) { omega_gpu_host_free(prog); return OMEGA_GPU_DATTN_CHIP_FAIL; }
     OmegaBlackwellKernel kernel;
     cg = omega_blackwell_kernel_encode_into(prog, code.cpu, need, &kernel);
-    int np = cg == 0 ? omega_tc_patch_code(prog, code.cpu, need) : -1;
     omega_gpu_host_free(prog);
     if (cg != 0 || !kernel.code || kernel.code_size != need) { omega_gpu_session_free(&code); omega_gpu_session_set_error("prefill attn256 encode"); return OMEGA_GPU_DATTN_CODEGEN_FAIL; }
-    if (np < 0 || (uint32_t)np != expect) { omega_gpu_session_free(&code); omega_gpu_session_set_error("prefill attn256: placeholder patch count mismatch"); return OMEGA_GPU_DATTN_CODEGEN_FAIL; }
     if (omega_gpu_session_sync_to_gpu(&code) != 0) { omega_gpu_session_free(&code); return OMEGA_GPU_DATTN_CHIP_FAIL; }
     memset(s, 0, sizeof *s);
     s->valid = true; s->spec = tmp.spec; s->kernel = kernel; s->code = code; s->insns = insns;

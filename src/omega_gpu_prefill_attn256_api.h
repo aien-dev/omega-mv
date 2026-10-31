@@ -56,7 +56,7 @@ void omega_gpu_prefill_attn256_release(void);
 
 /* ---- tests ---- */
 void omega_gpu_prefill_attn256_test_set_mutant(int prep_mutant, int attend_mutant); /* OmegaDecodeAttn256Spec / OmegaPrefillAttn256Spec .mutant */
-/* host: build + encode + patch a kernel (0 prep, 1 attend) into code (cap bytes); returns the code size or 0 */
-size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap, uint32_t *gprs, int *patched);
+/* host: build + encode a kernel (0 prep, 1 attend) into code (cap bytes); returns the code size or 0 */
+size_t omega_gpu_prefill_attn256_encode(unsigned kind, uint8_t *code, size_t cap, uint32_t *gprs);
 
 #endif

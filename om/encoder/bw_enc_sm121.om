@@ -69,6 +69,7 @@ put o 11 and shr f 8 255
 put o 12 pres get ins add b 2
 put o 13 pres get ins add b 3
 d = get ins add b 1
+put o 15 pres d
 if and eq and f 1 1 lt d NEG
 put o 1 get phys add d 256
 end
@@ -462,6 +463,33 @@ end
 ret 1
 end
 
+note ops 60..63 (Training R5): SHFL.BFLY (SHFL.DOWN's words with w1 bit 26), F2FP.BF16.F32.PACK_AB,
+note ATOMG.E.ADD.F32.FTZ.RN.STRONG.SYS and .GPU (no dst vreg encodes RZ, presence slot 15).
+note Constants by Wolfram: FromDigits of 0c001f00 7f89 000e0000 000e2400 723e 10ff 004fc400 79a3 80000000
+note 0c1f5300 0c1ef300 00321e00 base 16 = 201334528 32649 917504 926720 29246 4351 5227520 31139 2147483648
+note 203379456 203354880 3284480.
+fn enc_e o view ulong 16 w edit ulong 4 to ulong
+op = get o 0
+if eq op 60
+put4 w wda o 32649 or 201334528 shl and get o 6 31 21 917504 ctl o 926720
+ret 0
+end
+if eq op 61
+put4 w wda o 29246 rb o 3 4351 ctl o 5227520
+ret 0
+end
+if or eq op 62 eq op 63
+s = ulong 203379456
+if eq op 63
+s = 203354880
+end
+a = or or 31139 shl rz o 1 15 16 shl rb o 2 24
+put4 w a or rb o 3 2147483648 or s rb o 5 ctl o 3284480
+ret 0
+end
+ret 1
+end
+
 fn enc1 o view ulong 16 w edit ulong 4 to ulong
 op = get o 0
 if lt op 15
@@ -473,7 +501,10 @@ end
 if lt op 46
 ret enc_c o w
 end
+if lt op 60
 ret enc_d o w
+end
+ret enc_e o w
 end
 
 note the 16 bytes of instruction i, each word little-endian

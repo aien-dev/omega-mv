@@ -2,7 +2,7 @@
  * gpu_prefill_attn256_test: the head_dim 256 causal prefill attention for Qwen3.8-27B (omega-mv#545,
  * omega_gpu_prefill_attn256_api.h), on the decode attention's cache (omega_gpu_decode_attn256_api.h).
  *   --host-only   codegen budgets of both kernels (instructions <= 1024, registers within the opt-in limit and the
- *                 256-thread register file, attend placeholders patched), refusals, layout constants. No device.
+ *                 256-thread register file, attend SHFL.BFLY / F2FP.BF16 emitted natively), refusals, layout constants. No device.
  *   --sim         both launches through tests/bw_warp_sim_pa.h (no chip): several (pos0, m) points incl. odd starts,
  *                 history, a 256 boundary and full rope; both fragment orders on the small points. Gates: appended K/V
  *                 rows bit-equal to m runs of the DECODE program on a twin cache (the same simulator), outputs within
@@ -210,15 +210,15 @@ static int rows_ok(const Case *c, const uint16_t *kchip, const uint16_t *vchip, 
 /* ------------------------------------------------------------- host only */
 static void host_only(void) {
     for (int m = 0; m <= 2; m++) {
-        OmegaPrefillAttn256Spec s = { .mutant = m ATT_SHAPE }; uint32_t n = 0, gp = 0, ph = 0;
-        int rc = omega_prefill_attn256_prog_stats(&s, &n, &gp, &ph);
+        OmegaPrefillAttn256Spec s = { .mutant = m ATT_SHAPE }; uint32_t n = 0, gp = 0;
+        int rc = omega_prefill_attn256_prog_stats(&s, &n, &gp);
         const uint32_t dec = omega_bw_gpr_declared(gp);
-        CHECK(rc == 0 && n <= BW_MAX_IR_INSNS && gp <= BW_PHYS_GPR_HW_LIMIT && 256u * dec <= 65536u && ph > 0,
-              "attend codegen mutant %d: rc %d insns %u gprs %u (declared %u) placeholders %u", m, rc, n, gp, dec, ph);
-        if (rc == 0 && m == 0) printf("attend: %u instructions, %u registers (declared %u, 256 threads -> %u of 65536), %u placeholders\n", n, gp, dec, 256 * dec, ph);
+        CHECK(rc == 0 && n <= BW_MAX_IR_INSNS && gp <= BW_PHYS_GPR_HW_LIMIT && 256u * dec <= 65536u,
+              "attend codegen mutant %d: rc %d insns %u gprs %u (declared %u)", m, rc, n, gp, dec);
+        if (rc == 0 && m == 0) printf("attend: %u instructions, %u registers (declared %u, 256 threads -> %u of 65536)\n", n, gp, dec, 256 * dec);
     }
-    { OmegaPrefillAttn256Spec s = { .mutant = 3 ATT_SHAPE }; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL, NULL) != 0, "attend mutant 3 refused");
-      s.mutant = -1; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL, NULL) != 0, "attend mutant -1 refused"); }
+    { OmegaPrefillAttn256Spec s = { .mutant = 3 ATT_SHAPE }; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL) != 0, "attend mutant 3 refused");
+      s.mutant = -1; CHECK(omega_prefill_attn256_prog_stats(&s, NULL, NULL) != 0, "attend mutant -1 refused"); }
     static const int pm[3] = { 0, 1, 3 };
     for (unsigned k = 0; k < 3; k++) {
         OmegaDecodeAttn256Spec s = { .depth = OMEGA_GPU_DATTN256_DEPTH, .mutant = pm[k], .prep = 1 SPEC_SHAPE }; uint32_t n = 0, gp = 0;
@@ -229,11 +229,11 @@ static void host_only(void) {
     { OmegaDecodeAttn256Spec s = { .depth = 4, .prep = 2 SPEC_SHAPE }; CHECK(omega_decode_attn256_prog_stats(&s, NULL, NULL) != 0, "prep 2 refused"); }
     static uint8_t code[1 << 17];
     for (unsigned k = 0; k < 2; k++) {
-        uint32_t gp = 0; int np = -1; size_t n = omega_gpu_prefill_attn256_encode(k, code, sizeof code, &gp, &np);
-        CHECK(n > 0 && (k == 0 ? np == 0 : np > 0), "encode %s: %zu bytes, gprs %u, %d placeholders patched", k ? "attend" : "prep", n, gp, np);
+        uint32_t gp = 0; size_t n = omega_gpu_prefill_attn256_encode(k, code, sizeof code, &gp);
+        CHECK(n > 0 && gp > 0, "encode %s: %zu bytes, gprs %u", k ? "attend" : "prep", n, gp);
     }
-    CHECK(omega_gpu_prefill_attn256_encode(2, code, sizeof code, NULL, NULL) == 0, "encode kind 2 refused");
-    CHECK(omega_gpu_prefill_attn256_encode(1, code, 64, NULL, NULL) == 0, "encode into a too-small buffer refused");
+    CHECK(omega_gpu_prefill_attn256_encode(2, code, sizeof code, NULL) == 0, "encode kind 2 refused");
+    CHECK(omega_gpu_prefill_attn256_encode(1, code, 64, NULL) == 0, "encode into a too-small buffer refused");
     CHECK(OMEGA_PATTN256_SHARED_BYTES <= 16384u, "attend shared memory within the QMD cap");
     CHECK(OMEGA_PATTN256_QF_OFF_SHAPE(KVH, QH / KVH, 1, 0, 0, 0, 0) == QFP && OMEGA_PATTN256_QF_OFF_SHAPE(KVH, QH / KVH, 0, KVH - 1, QH / KVH - 1, 15, 3) + 16u == QFP, "QF layout: one token pair is %u bytes, densely packed", QFP);
     CHECK(OMEGA_PATTN256_QF_OFF(1, 0, 0, 0, 0) == OMEGA_PATTN256_QF_PAIR_BYTES, "QF layout: the 27B macro is the 4 x 6 case");

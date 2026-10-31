@@ -216,7 +216,7 @@ static void host_only(void) {
         free(y); inp_free(&in); dstate_free(&d);
     }
     layer_free(&L);
-    /* the prefill kernels encode, and every SHFL.BFLY placeholder is patched (the count kernel_for demands) */
+    /* the prefill kernels encode; the scan and post kernels use native SHFL.BFLY butterflies */
     for (unsigned k = 0; k < 3; k++) {
         static BlackwellIRProgram p;
         OmegaGdnSpec spec = { .ratio = GDN_TEST_RATIO };
@@ -226,11 +226,11 @@ static void host_only(void) {
         uint8_t *code = need ? malloc(need) : NULL;
         OmegaBlackwellKernel kern;
         int enc = code ? omega_blackwell_kernel_encode_into(&p, code, need, &kern) : -1;
-        int np = enc == 0 ? omega_tc_patch_code(&p, code, need) : -1;
-        const uint32_t want = omega_gdn_bfly_count(&p);
+        uint32_t bfly = 0;
+        for (size_t i = 0; i < p.count; i++) if (p.insns[i].op == BW_IR_SHFL_BFLY) bfly++;
         if (getenv("GDN_DUMP") && code && atoi(getenv("GDN_DUMP")) == (int)k) { FILE *f = fopen("gdn_pf.bin", "wb"); if (f) { fwrite(code, 1, need, f); fclose(f); } }
-        CHECK(rc == 0 && enc == 0 && np >= 0 && (uint32_t)np == want && (k == 0 || want > 0),
-              "prefill kernel %u encodes: %zu insns, %u registers, %d of %u butterflies patched", k, p.count, p.regalloc.peak_gpr_usage, np, want);
+        CHECK(rc == 0 && enc == 0 && (k == 0 || bfly > 0),
+              "prefill kernel %u encodes: %zu insns, %u registers, %u butterflies", k, p.count, p.regalloc.peak_gpr_usage, bfly);
         free(code);
     }
 }
@@ -352,9 +352,10 @@ static void sim_bf16_battery(void) {
     OmegaGdnShape sh16;
     CHECK(omega_gdn_shape(&s16, &sh16) == 0 && sh16.state_bytes == T_STATE_BYTES / 2u, "bf16 shape: half the state bytes");
     CHECK(omega_blackwell_codegen_gdn_prog(&s32, &p32) == 0 && omega_blackwell_codegen_gdn_prog(&s16, &p16) == 0, "bf16 codegen");
-    uint32_t f2fp = 0;
-    for (size_t i = 0; i < p16.count; i++) if (p16.insns[i].op == BW_IR_FMNMX_MAX && p16.insns[i].imm == OMEGA_TC_MARK_F2FP) f2fp++;
-    CHECK(f2fp == 32u && omega_gdn_bfly_count(&p16) == omega_gdn_bfly_count(&p32) + 32u, "bf16: 32 F2FP placeholders counted (%u)", f2fp);
+    uint32_t f16 = 0, f32 = 0, b16 = 0, b32 = 0;
+    for (size_t i = 0; i < p16.count; i++) { f16 += p16.insns[i].op == BW_IR_F2FP_BF16_PACK; b16 += p16.insns[i].op == BW_IR_SHFL_BFLY; }
+    for (size_t i = 0; i < p32.count; i++) { f32 += p32.insns[i].op == BW_IR_F2FP_BF16_PACK; b32 += p32.insns[i].op == BW_IR_SHFL_BFLY; }
+    CHECK(f16 == f32 + 32u && b16 == b32, "bf16: 32 more F2FP.BF16 packs than the f32 state, same butterflies (%u vs %u, %u vs %u)", f16, f32, b16, b32);
     Layer L; layer_make(&L, 21);
     size_t sz[SB_N] = { CD * 4u, VD * 4u, VH * 8u, T_PAR_BYTES, T_TAIL_BYTES, T_STATE_BYTES, VD * 4u };
     size_t sz16[SB_N]; memcpy(sz16, sz, sizeof sz); sz16[SB_STATE] = T_STATE_BYTES / 2u;

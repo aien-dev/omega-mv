@@ -1,0 +1,26 @@
+# tests/gates/omega-atomf32-probe-host.gate
+# Mirrors hosted: host-suites-2.yml gpu-engine job, step "f32 global atomic add probe in the warp simulator (host, no device; the chip run is by hand)" with physics-src at physics.lock: make test-atomf32-probe-host; host only
+gate: OMEGA-ATOMF32-PROBE-HOST
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/gpu_atomf32_probe_test.c
+  - tests/bw_warp_sim_tc.h
+  - tests/bw_hmma_model.h
+  - tests/bw_qmma_model.h
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["atomf32-probe-host"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine
