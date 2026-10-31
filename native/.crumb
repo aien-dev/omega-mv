@@ -3,27 +3,27 @@
     "generated": {
       "children": [
         {
-          "digest": "cd33d24e04bf85275b626180565193902db377e0c010f0ec73953933ade47ebb",
+          "digest": "0c9b5a53c2f9cba44ab94f21a068748b308cb792ed4e1858b095437834ec10e5",
           "last_commit": "afc604080",
           "name": "autodiff664",
           "purpose": "Bounded native .om reverse-mode tape (rank 2, f32, 32 nodes) over M20 metadata-v1; E1-tile reduc"
         },
         {
           "digest": "bbc9104d0f8651e2e2a687485cc1d209a006cd8b9c552ab5db336996889e2746",
-          "last_commit": "",
+          "last_commit": "f5c9bd89a",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advice for the matvec arm chooser (omega-mv#731, spec/shadow-advice-v0.md): shadow"
         }
       ],
-      "children_root": "sha256:fbeabae501f988136d1bf3118a35e3d78baaacb9c99b5a93fff8577d7b5c5463",
-      "compiled_at": "2026-10-31T02:29:38Z",
+      "children_root": "sha256:03c569b124d30d2fac3a1d72c7ccbbb530b16b83cd03f82285bd819ff09f4496",
+      "compiled_at": "2026-10-31T02:32:58Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:6aee27d1f4ec4741fc6009e6d68f00378ac0477e1af1ad363dfe1ac1ea57c7dd",
+      "digest": "sha256:52ba7ece4895d04697c7dfc12b56b2fe8c3405e44b79e6078ddc9c00b65a1238",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 10,
-      "generated_at_commit": "97678e347d6bc754beb8fba6532d69eecef622e6",
-      "source_tree": "sha256:3bdff5640002d373d6ade55dce2ddc94b1193f9457ff6d96d41a74dc0a068c4c"
+      "generated_at_commit": "ef4ac790098b8381b5d5323159cf97ed96b639bd",
+      "source_tree": "sha256:09b1d3a974e0097a886cbbae6dd06db1cad6988168c29c28c14f28216eb46b3d"
     }
   },
   "name": "native",

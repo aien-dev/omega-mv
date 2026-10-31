@@ -100,7 +100,8 @@ OMC=<pinned omc> OUT=<scratch> sh tests/autodiff664/run-tape.sh
 - The fixture is 187 u32 words, 748 bytes: a 6-word header, 106 inputs and 75
   expected values. The plan's "179 words" was an arithmetic slip.
 - The GB10 arm is `tests/run_ad_chip.sh` (`GB10_CHIP_RUN=1`,
-  `/tmp/aien-gb10.lock`, physics at `physics.lock`). It ran once on 2026-10-29
+  `/tmp/aien-gb10.lock`, or the lock its `spark-window` already holds when run
+  under `spark-window run`; physics at `physics.lock`). It ran once on 2026-10-29
   at 17:07Z, in a window Drake authorised. Result:
   `AD_FIXTURE_CHIP: exact=75/75 max_ulp=0 verdict=PASS`; the sign-flip control
   exits 1. Receipt: aien-train `evidence/ADTRAIN/gb10/`. This is one fixture on

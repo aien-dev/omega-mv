@@ -14,6 +14,10 @@
 #    with libm math or CUDA symbols.
 # 3. Runs it under /tmp/aien-gb10.lock (waits; no timeout; never killed):
 #    --chip FILE, then --chip --mutant-sign FILE, which must exit 1.
+#    Inside `spark-window run` (SPARK_WINDOW set and AIEN_GB10_LOCK_HELD=1)
+#    the window already holds that lock, shared or exclusive, so the script
+#    takes no lock of its own: an exclusive flock beside the window's shared
+#    hold would wait for its own window. The receipt records which held it.
 # 4. PASS needs exit 0 with "AD_FIXTURE_CHIP: ... verdict=PASS" or
 #    "verdict=PASS_TOL" (max_ulp <= 2; the receipt records which), the
 #    negative control's FAIL, and clean trees with unmoved HEADs after.
@@ -83,13 +87,21 @@ if [ -z "$FAIL_REASON" ]; then
 fi
 STATUS=-1
 MSTATUS=-1
+GB10_LOCK=""
 BIN_SHA_BUILT=""
 [ -z "$FAIL_REASON" ] && { BIN_SHA_BUILT=$(sha256sum "$BIN" | cut -d' ' -f1); [ -n "$BIN_SHA_BUILT" ] || FAIL_REASON="cannot hash binary after build"; }
 if [ -z "$FAIL_REASON" ]; then
     # waits for the lock; no timeout; never killed
-    GB10_CHIP_RUN=1 flock /tmp/aien-gb10.lock "$BIN" --chip "$OUT/fixture.bin" > "$OUT/ad.log" 2> "$OUT/ad.stderr"
+    if [ "${AIEN_GB10_LOCK_HELD:-}" = 1 ] && [ -n "${SPARK_WINDOW:-}" ]; then
+        GB10_LOCK="spark-window $SPARK_WINDOW"
+        gb10() { "$@"; }
+    else
+        GB10_LOCK="flock /tmp/aien-gb10.lock"
+        gb10() { flock /tmp/aien-gb10.lock "$@"; }
+    fi
+    GB10_CHIP_RUN=1 gb10 "$BIN" --chip "$OUT/fixture.bin" > "$OUT/ad.log" 2> "$OUT/ad.stderr"
     STATUS=$?
-    GB10_CHIP_RUN=1 flock /tmp/aien-gb10.lock "$BIN" --chip --mutant-sign "$OUT/fixture.bin" \
+    GB10_CHIP_RUN=1 gb10 "$BIN" --chip --mutant-sign "$OUT/fixture.bin" \
         > "$OUT/ad-mutant.log" 2> "$OUT/ad-mutant.stderr"
     MSTATUS=$?
     [ "$STATUS" = 0 ] || FAIL_REASON="test binary exit status $STATUS"
@@ -145,7 +157,7 @@ jq -n --arg suite AD_FIXTURE_GB10 --arg status "$VERDICT" --arg reason "$FAIL_RE
     --arg exit_status "$STATUS" --arg mexit "$MSTATUS" \
     --arg chip_line "$(line AD_FIXTURE_CHIP: "$OUT/ad.log")" \
     --arg mutant_line "$(line AD_FIXTURE_CHIP: "$OUT/ad-mutant.log")" \
-    --arg host "$(uname -n)" --arg kernel "$(uname -r)" \
+    --arg host "$(uname -n)" --arg kernel "$(uname -r)" --arg gb10_lock "$GB10_LOCK" \
     '{suite:$suite,status:$status,reason:$reason,run_id:$run_id,started_utc:$started,finished_utc:$finished,
       omega_commit:$commit,omega_tree_clean_before:true,omega_tree_clean_after:$clean_after,
       omega_commit_unchanged_after:$head_same,physics_commit:$physics,physics_lock_pin:$pin,
@@ -155,7 +167,7 @@ jq -n --arg suite AD_FIXTURE_GB10 --arg status "$VERDICT" --arg reason "$FAIL_RE
       chip_line:$chip_line,mutant_line:$mutant_line,
       tolerance:"PASS max_ulp 0; PASS_TOL max_ulp <= 2; else FAIL",
       realization:"M20 omega_tensor_gb10_realization under the C M21 tape",
-      quiet_flag:"not used",host:$host,kernel:$kernel}' > "$TMP" || die "receipt json (jq) failed, no receipt written"
+      quiet_flag:"not used",gb10_lock:$gb10_lock,host:$host,kernel:$kernel}' > "$TMP" || die "receipt json (jq) failed, no receipt written"
 [ -s "$TMP" ] || die "empty receipt, not written"
 [ "$VERDICT" != PASS ] || { [ -n "$BIN_SHA" ] && [ -n "$LOG_SHA" ]; } || die "PASS without binary and log digests refused"
 DIG=$(sha256sum "$TMP" | cut -d' ' -f1)
