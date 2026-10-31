@@ -25,9 +25,11 @@
  * unseen. So each leg's disturbed repetitions are counted, and the check is
  * refused (NOT_RUN leg_skew, never a pass) when the leg the check claims is
  * the faster one was disturbed significantly more often than the other leg
- * (rx_pairs_skew_p / rx_legs_skew_p below). Set-aside runs of the other leg
- * only make that leg look faster, which works against the claim, so the
- * test is one-sided.
+ * (rx_pairs_skew_p below) and the claim holds on the kept runs. A claim
+ * that fails on them is judged as it would be without the test: the skew
+ * only set aside more of the claimed-faster leg's runs, which favours the
+ * claim. Set-aside runs of the other leg only make that leg look faster,
+ * which works against the claim, so the test is one-sided.
  *
  * Known limit: the test assumes both legs offer the machine's load the same
  * number of threads to delay. Where one leg keeps several workers on cores
@@ -87,16 +89,12 @@ static inline int rx_quiet_rep(int64_t delay_ns, uint64_t wall_ns) {
 }
 
 /* Leg skew. Under "the machine, not the leg, disturbs runs" a leg's
- * disturbed repetitions are no more frequent than the other leg's. Two exact
- * one-sided tests, both at RX_SKEW_ALPHA:
- *
- * - paired legs (each attempt times both legs back to back, as in
- *   rx_workflow_fusion.c): McNemar's exact test. Among the attempts where
- *   exactly one leg was disturbed, the count where it was the claimed-faster
- *   leg is Binomial(n, 1/2) under the null; p = P(X >= that count).
- * - unpaired legs (each leg timed in its own series): Fisher's exact test.
- *   Given the disturbed total over both legs, the claimed-faster leg's
- *   disturbed count is hypergeometric under the null; p = P(X >= that count).
+ * disturbed repetitions are no more frequent than the other leg's. Legs are
+ * paired (each attempt times both legs back to back, as in
+ * rx_workflow_fusion.c), so the test is McNemar's exact test, one-sided at
+ * RX_SKEW_ALPHA: among the attempts where exactly one leg was disturbed, the
+ * count where it was the claimed-faster leg is Binomial(n, 1/2) under the
+ * null; p = P(X >= that count).
  *
  * A false refusal is a NOT_RUN, never a false FAIL. At RX_SKEW_ALPHA = 1/1000
  * the paired test cannot refuse with fewer than 10 one-leg-disturbed
@@ -107,15 +105,13 @@ static inline int rx_quiet_rep(int64_t delay_ns, uint64_t wall_ns) {
  *   up[10, 10] -> 1/1024 (0.000977), up[10, 9] -> 0.0107
  *   smallest refused count for n = 20, 50, 100, 300, 600, 2460:
  *   18, 37, 66, 178, 339, 1308
- * The functions below are checked against these and against
- * 1 - CDF[HypergeometricDistribution[62, 21, 124], 20] -> 6.185346e-8 and
- * 1 - CDF[HypergeometricDistribution[40, 12, 80], 9] -> 0.01260210
- * in rx_workflow_fusion.c (t_skew_math). */
+ * rx_sign_upper is checked against these in rx_workflow_fusion.c
+ * (t_skew_math). */
 #define RX_SKEW_ALPHA 0.001
 
-/* Both tails below sum pmf weights scaled to 1 at the mode, built by the
- * pmf ratio of neighbours, so nothing overflows and no libm is needed;
- * weights that underflow are below 1e-300 of the total. */
+/* The tail sums pmf weights scaled to 1 at the mode, built by the pmf ratio
+ * of neighbours, so nothing overflows and no libm is needed; weights that
+ * underflow are below 1e-300 of the total. */
 
 /* P(X >= k) for X ~ Binomial(n, 1/2). */
 static inline double rx_sign_upper(uint32_t n, uint32_t k) {
@@ -137,30 +133,6 @@ static inline double rx_sign_upper(uint32_t n, uint32_t k) {
     return tail / total;
 }
 
-/* P(X >= k) for X hypergeometric: `draws` items from `pop` of which `succ`
- * are successes. */
-static inline double rx_hyper_upper(uint32_t pop, uint32_t succ, uint32_t draws, uint32_t k) {
-    uint32_t lo = draws + succ > pop ? draws + succ - pop : 0, hi = draws < succ ? draws : succ;
-    if (k <= lo) return 1.0;
-    if (k > hi) return 0.0;
-    uint32_t m = (uint32_t)((uint64_t)(draws + 1) * (succ + 1) / (pop + 2));
-    if (m < lo) m = lo;
-    if (m > hi) m = hi;
-    double w = 1.0, total = 1.0, tail = m >= k ? 1.0 : 0.0;
-    for (uint32_t x = m; x < hi; x++) {            /* w(x+1) = w(x) (succ-x)(draws-x) / ((x+1)(pop-succ-draws+x+1)) */
-        w *= (double)(succ - x) * (double)(draws - x) / ((double)(x + 1) * (double)(pop - succ - draws + x + 1));
-        total += w;
-        if (x + 1 >= k) tail += w;
-    }
-    w = 1.0;
-    for (uint32_t x = m; x > lo; x--) {            /* w(x-1) = w(x) x (pop-succ-draws+x) / ((succ-x+1)(draws-x+1)) */
-        w *= (double)x * (double)(pop - succ - draws + x) / ((double)(succ - x + 1) * (double)(draws - x + 1));
-        total += w;
-        if (x - 1 >= k) tail += w;
-    }
-    return tail / total;
-}
-
 /* Paired legs: attempts where exactly one leg was disturbed, by leg. */
 typedef struct {
     uint32_t only[2];
@@ -174,12 +146,6 @@ static inline void rx_pairs_note(RxPairs *s, int quiet0, int quiet1) {
  * disturbed more often than the other leg. */
 static inline double rx_pairs_skew_p(const RxPairs *s, int fast) {
     return rx_sign_upper(s->only[0] + s->only[1], s->only[fast ? 1 : 0]);
-}
-
-/* Unpaired legs: the same p from each leg's disturbed and tried counts. */
-static inline double rx_legs_skew_p(uint32_t fast_disturbed, uint32_t fast_tried, uint32_t other_disturbed,
-                                    uint32_t other_tried) {
-    return rx_hyper_upper(fast_tried + other_tried, fast_disturbed + other_disturbed, fast_tried, fast_disturbed);
 }
 
 /* A check that found the machine too busy to time is a refusal, not a

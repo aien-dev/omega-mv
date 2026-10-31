@@ -1065,7 +1065,8 @@ static int cmp_u64(const void *a, const void *b) {
  * run, crumbs per run, median latency, CPU time, outcomes. */
 /* 1 when measured; 0 when the machine was too busy to time it, or the leg
  * the check claims is faster (`fast`: 0 original, 1 fused) was disturbed
- * significantly more often than the other (a refusal, rx_quiet_reps.h):
+ * significantly more often than the other and the claim holds on the kept
+ * runs (a refusal, rx_quiet_reps.h):
  * nothing was measured and nothing that needs it is judged. `q` gets the
  * disturbance counts either way. `skew` 0 skips the leg-skew test: only for
  * legs that keep different numbers of threads on cores, where load alone
@@ -1138,7 +1139,11 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
         printf("one-sided p that the %s leg was disturbed more %.3g\n", fast ? "fused" : "original", q->p);
     else
         printf("leg-skew test not applied: the legs keep different numbers of threads on cores\n");
-    if (skew && delay_known && q->p <= RX_SKEW_ALPHA) {
+    /* Skew sets aside more of the claimed-faster leg's runs, which only
+     * favours the claim: a claim that fails on the kept runs is still judged
+     * (FAIL, as on main); one that holds is refused below. */
+    int skewed = skew && delay_known && q->p <= RX_SKEW_ALPHA;
+    if (skewed && kept < RUNS) {
         rx_skew_refuse(what, q->legs.only[fast ? 1 : 0], q->legs.only[fast ? 0 : 1], q->p);
         pair_stop(p);
         return 0;
@@ -1167,6 +1172,17 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
     ms->reactions_after = p->gf.n_nodes;
     ms->objects_before = p->go.n_nodes + 1;
     ms->objects_after = p->gf.n_nodes + 1;
+    if (skewed) {
+        static AgMetaSkill probe;           /* accept reads only state and the measure */
+        probe.state = AG_MS_VERIFIED;
+        int accepted = rx_fusion_accept_measure(&probe, ms, 50) == 0;
+        if (fast ? accepted : !accepted) {
+            rx_skew_refuse(what, q->legs.only[fast ? 1 : 0], q->legs.only[fast ? 0 : 1], q->p);
+            pair_stop(p);
+            return 0;
+        }
+        printf("    %s: leg skew, but the claim fails even on the kept runs: judged\n", what);
+    }
     if (with_energy) measure_energy(p, ms);
     pair_stop(p);
     printf("    %s: reactions computing per run %.1f -> %.1f, crumbs %.1f -> %.1f, median %.1f -> %.1f us, "
@@ -1181,9 +1197,8 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
     return 1;
 }
 
-/* The leg-skew tails (rx_quiet_reps.h) against WolframLanguageEvaluator,
+/* The leg-skew tail (rx_quiet_reps.h) against WolframLanguageEvaluator,
  * 2026-10-31: up[n_, k_] := 1 - CDF[BinomialDistribution[n, 1/2], k - 1];
- * fu[cd_, ct_, bd_, bt_] := 1 - CDF[HypergeometricDistribution[ct, cd + bd, ct + bt], cd - 1];
  * crit[n_] := Min[Select[Range[0, n + 1], up[n, #] <= 1/1000 &]]. */
 static void t_skew_math(void) {
     printf("[*] leg-skew tails against exact values\n");
@@ -1213,16 +1228,6 @@ static void t_skew_math(void) {
     }
     RxPairs nine = { { 0, 9 } };
     CHECK(rx_pairs_skew_p(&nine, 1) > RX_SKEW_ALPHA, "nine one-leg disturbances alone are never refused");
-    static const struct { uint32_t fd, ft, od, ot; double want; } legs[] = {
-        { 21, 62, 0, 62, 6.185346436928204e-8 },  /* fu[21, 62, 0, 62] */
-        { 10, 40, 2, 40, 0.01260209836760477 },   /* fu[10, 40, 2, 40] */
-        { 8, 30, 7, 30, 0.5 },                    /* fu[8, 30, 7, 30] */
-    };
-    for (size_t i = 0; i < sizeof legs / sizeof legs[0]; i++) {
-        double got = rx_legs_skew_p(legs[i].fd, legs[i].ft, legs[i].od, legs[i].ot);
-        CHECK(fabs(got - legs[i].want) <= 1e-9 * legs[i].want, "Fisher %u/%u vs %u/%u = %.12g, want %.12g",
-              legs[i].fd, legs[i].ft, legs[i].od, legs[i].ot, got, legs[i].want);
-    }
 }
 
 static void t_measure(void) {
