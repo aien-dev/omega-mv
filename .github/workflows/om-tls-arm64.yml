@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: machine and tools
         run: |
           uname -a; nproc; openssl version; python3 --version
@@ -41,7 +41,7 @@ jobs:
           [ "$pin" = "$got" ] || { echo "seed/out/omc does not match OMC_PIN"; exit 1; }
           chmod +x seed/out/omc
       - name: X25519MLKEM768 oracles (OpenSSL 3.5.4, kyber-py)
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/openssl-3.5.4
           key: openssl-3.5.4-967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99-${{ runner.os }}-${{ runner.arch }}-v1
@@ -83,7 +83,7 @@ jobs:
         run: python3 seed/net/tests/check.py --keep build/netcheck 2>&1 | tee build/net-check.log; test "${PIPESTATUS[0]}" = 0
       - name: logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: om-tls-arm64-logs
           path: |

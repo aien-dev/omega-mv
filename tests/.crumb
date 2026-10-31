@@ -121,6 +121,12 @@
           "purpose": "Tests 1-10 for ANS (docs/ans/INERTIAL_ALIGNMENT_SPEC_V1.md): freeze/digest, hostile reference mu"
         },
         {
+          "digest": "2224a2d78038ae3d43c15bcbebe6636cb1327d58384c610d5de4210c002e1d88",
+          "last_commit": "965fb7627",
+          "name": "autodiff664",
+          "purpose": "Native tape tests: differential checks, refusals, no-FMA control, compiled source mutants of nat"
+        },
+        {
           "digest": "7b69a19958c5a5f55bba4fbc33bc6f26423358efd46311b0eacfe83bb665d4c1",
           "last_commit": "450bbefd4",
           "name": "brownian",
@@ -307,15 +313,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:4e202b52b2c80d88dc93220a0c00cda479e52c2e63f847fbb30b9b1f426294f5",
-      "compiled_at": "2026-10-31T08:45:51Z",
+      "children_root": "sha256:a4c6e542ba19bfd59211a478e4861c0024486aeb1de8763032ebece7859261c4",
+      "compiled_at": "2026-10-31T11:09:55Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:52b6d20a3bcf5d1f87ba57298618bbfefea29df48d67e6c7c18f9b65db5c1f01",
+      "digest": "sha256:d27ff866b263e2f96b380fbe3e11166876ff4d7883860d989ac5af1798dae039",
       "evidence_files": 74,
       "evidence_root": "sha256:9aa38bf7dcfa5eb3499356a0a2a1dd7704fedfae2d16822a7c9e1400f3a72723",
-      "files": 2047,
-      "generated_at_commit": "c11e0a66f739f9a810dec0a4ce2ec3a6fe2016ef",
-      "source_tree": "sha256:8ac1eaf198cb82bbd8cde3c8a8cc3b1a7be9466812042730cad83e19b3d1bf51"
+      "files": 2058,
+      "generated_at_commit": "a48add1b6386d74f84a6c8d87353368d957f8ddf",
+      "source_tree": "sha256:6e733e3bed8951c9e646864766bb04e69a39770854b7f04520ec2f40387dc250"
     },
     "owner_lane": "",
     "provenance": {
