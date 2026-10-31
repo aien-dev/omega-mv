@@ -1,0 +1,36 @@
+seed/rung4/om4.bin < seed/omc/omc.om > build/security673-native/1001 2> build/security673-native/501001
+elapsed_ns=2113750
+exit=0 expected=0
+build/security673-native/1001 < seed/omc/omc.om > build/security673-native/1002 2> build/security673-native/501002
+elapsed_ns=2117270
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/hostile-corpus.om > build/security673-native/1003 2> build/security673-native/501003
+elapsed_ns=1060843
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1004 > build/security673-native/1005 2> build/security673-native/501005
+elapsed_ns=1183260
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1005 > build/security673-native/1006 2> build/security673-native/501006
+elapsed_ns=1083227
+exit=0 expected=0
+build/security673-native/1006 < /dev/null > build/security673-native/1007 2> build/security673-native/501007
+elapsed_ns=1090443
+exit=0 expected=0
+build/security673-native/1003 < build/security673-native/1008 > build/security673-native/1009 2> build/security673-native/501009
+elapsed_ns=4480974
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1009 > build/security673-native/1010 2> build/security673-native/501010
+elapsed_ns=2480074
+exit=6 expected=6
+build/security673-native/1003 < build/security673-native/1011 > build/security673-native/1012 2> build/security673-native/501012
+elapsed_ns=2145254
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1012 > build/security673-native/1013 2> build/security673-native/501013
+elapsed_ns=11253509
+exit=6 expected=6
+build/security673-native/1003 < build/security673-native/1014 > build/security673-native/1015 2> build/security673-native/501015
+elapsed_ns=2154278
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1015 > build/security673-native/1016 2> build/security673-native/501016
+elapsed_ns=1079740
+exit=11 expected=0

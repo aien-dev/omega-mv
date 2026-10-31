@@ -1,0 +1,239 @@
+note SPDX-License-Identifier: Apache-2.0
+note common.om: shared helpers of the om/tls fuzz targets (om/tls/test/fuzz/run.sh). Composed by
+note run.sh after the om/tls units, seed/net/http.om and seed/net/https.om, before one target.
+note A target reads its whole input from stdin (at most FZCAP bytes; the rest is ignored), runs the
+note library under test and returns 0. The only failure signal is a runtime trap (exit 100 + code),
+note which is what the fuzzer counts as a crash: "untrusted input must never trap" (om/tls/README.md).
+
+const FZCAP ulong 65536
+text FZHOST "www.example.test"
+
+note fz_read: stdin into b (a target's `in = new uchar FZCAP 0`); the byte count (the rest is not read)
+fn fz_read b edit uchar * to ulong
+t = ulong 0
+while lt t len b bound 70000
+r = read 0 b t sub len b t
+if le r 0
+break
+end
+t = add t ulong r
+end
+ret t
+end
+
+note fz_be2: big-endian 16-bit value at a[p], 0 past the end
+fn fz_be2 a view uchar * p ulong to ulong
+if gt add p 2 len a
+ret 0
+end
+ret or shl ulong get a p 8 ulong get a add p 1
+end
+
+note fz_say: "rc NNN" and a newline on stderr: the library's result code for the input, so a replay
+note (run.sh) can tell how deep a seed got; the fuzzer ignores it (only a trap is a crash)
+fn fz_say e ulong to void
+b = new uchar 7 0
+put b 0 114
+put b 1 99
+put b 2 32
+put b 3 uchar add 48 rem div e 100 10
+put b 4 uchar add 48 rem div e 10 10
+put b 5 uchar add 48 rem e 10
+put b 6 10
+r = write 2 b 0 7
+end
+
+note fz_arg: argument i into o; its length (0 when absent or too long)
+fn fz_arg i ulong o edit uchar * to ulong
+if ge i ulong argcnt
+ret 0
+end
+n = argread i o 0 len o
+if le n 0
+ret 0
+end
+ret ulong n
+end
+
+note fz_store: the PEM bundle named by argument 1 into st; 0 ok, 1 none or unreadable
+fn fz_store st edit uchar * to ulong
+p = new uchar 4096 0
+n = fz_arg 1 p
+if eq n 0
+ret 1
+end
+if ne tls_storef st part p 0 n 0
+ret 1
+end
+ret 0
+end
+
+note fz_pair: a connected AF_UNIX stream pair in one process (abstract name "omfz" + pid):
+note fds[0] the blocking client end (the TLS side), fds[1] the nonblocking server end the target
+note writes the input into. 0 ok, 1 failure (the target then returns without running the library).
+fn fz_pair fds edit ulong * to ulong
+a = new uchar 40 0
+put a 0 1
+put a 3 111
+put a 4 109
+put a 5 102
+put a 6 122
+k = ulong 7
+v = ulong getpid
+d = new uchar 20 0
+m = ulong 0
+while true bound 20
+put d m uchar add 48 rem v 10
+m = add m 1
+v = div v 10
+if eq v 0
+break
+end
+end
+for i ulong m
+put a k get d sub sub m 1 i
+k = add k 1
+end
+l = socknew 1 524289 0
+if lt l 0
+ret 1
+end
+r = bind int l a 0 k
+if eq r 0
+r = listen int l 4
+end
+if ne r 0
+x = fclose int l
+ret 1
+end
+c = socknew 1 524289 0
+if lt c 0
+x = fclose int l
+ret 1
+end
+r = connect int c a 0 k
+s = long -1
+if eq r 0
+s = accept int l 526336
+end
+x = fclose int l
+if lt s 0
+x = fclose int c
+ret 1
+end
+put fds 0 ulong c
+put fds 1 ulong s
+ret 0
+end
+
+note fz_send: as much of b[p, p+n) as the server end accepts (it is nonblocking and nobody reads
+note concurrently, so a full socket buffer ends the feed instead of hanging); 0 all sent, 1 stopped
+fn fz_send fd int b view uchar * p ulong n ulong to ulong
+d = ulong 0
+while lt d n bound 70000
+r = send fd b add p d sub n d 0
+if le r 0
+ret 1
+end
+d = add d ulong r
+end
+ret 0
+end
+
+note fz_feed: the record stream of a target, from in[p] on, written to the server end of the mirror
+note state m (m holds the peer's write key: what the client under test reads with). Chunks:
+note   T L1 L0 bytes[L]   T < 128: one record sealed by tls_wrbuf with inner content type T;
+note                      T >= 128: the bytes sent raw (forged, tampered or plaintext records).
+note L is capped at 16384 and at the input end. A sealed handshake chunk starting with 24
+note (KeyUpdate) also advances m's key like the client's tls_kupd, so later chunks stay readable.
+note 0 when every chunk went out, 1 when the socket buffer filled or sealing refused.
+fn fz_feed m edit uchar * in view uchar * p0 ulong to ulong
+p = p0
+while le add p 3 len in bound 70000
+n = fz_be2 in add p 1
+if gt n sub sub len in p 3
+n = sub sub len in p 3
+end
+if gt n 16384
+n = 16384
+end
+if ne fz_chunk m part in p add n 3 0
+ret 1
+end
+p = add add p n 3
+end
+ret 0
+end
+
+note fz_chunk: one chunk c = T L1 L0 bytes (its length already clipped); 0 sent, 1 stopped
+fn fz_chunk m edit uchar * c view uchar * to ulong
+e = new uchar 1 0
+ty = ulong get c 0
+n = sub len c 3
+if ge ty 128
+ret fz_send tls_fd m c 3 n
+end
+for i ulong n
+put m add add TLWB 5 i get c add 3 i
+end
+if ne tls_wrbuf m ty n 0
+ret 1
+end
+if and eq ty 22 eq tls_at c 3 24
+r = tls_drv m tls_sel TLSAP TLSAP 32 TLIUPD part e 0 0
+r = or r tls_keys m TLSAP 0
+end
+ret 0
+end
+
+note fz_fill: b[o, o+n) = v, v+1, ... (fixed key material shared by a client state and its mirror)
+fn fz_fill b edit uchar * o ulong n ulong v ulong to void
+for i ulong n
+put b add o i uchar and add v i 255
+end
+end
+
+note fz_dnsq: rest = H name[H] response; dns_parse of the response to dns_query(name, id 0x4f4d)
+note (a name dns_query refuses falls back to FZHOST). Shared by fz_dns and the fz_plant control.
+fn fz_dnsq rest view uchar * to void
+q = new uchar 300 0
+ip = new uchar 4 0
+h = tls_at rest 0
+if gt h sub len rest 1
+h = sub len rest 1
+end
+ql = dns_query q part rest 1 h 0x4f4d
+if eq ql 0
+ql = dns_query q FZHOST 0x4f4d
+end
+e = dns_parse part rest add h 1 sub sub len rest h 1 part q 0 ql ip
+end
+
+
+note fz_load: the file named by argument i into o; its length (0 when absent, unreadable or empty)
+fn fz_load i ulong o edit uchar * to ulong
+p = new uchar 4096 0
+k = fz_arg i p
+if eq k 0
+ret 0
+end
+f = fopen p 0 k 524288 0
+if lt f 0
+ret 0
+end
+m = read int f o 0 len o
+x = fclose int f
+if le m 0
+ret 0
+end
+ret ulong m
+end
+
+note fz_hq: hq = now 1792972800 (8 bytes, big-endian) || FZHOST; its length
+fn fz_hq hq edit uchar * to ulong
+tls_pn hq 0 1792972800 8
+for i ulong len FZHOST
+put hq add 8 i get FZHOST i
+end
+ret add 8 len FZHOST
+end

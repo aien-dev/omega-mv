@@ -1,0 +1,26 @@
+omc     sha256 befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+library sha256 64aa4ce05f2ff89b9bc608ae9c0431eb64aad7f1f929ebf5804f65b3fb608fdd (65 functions)
+driver  sha256 044beb49c47ec12631a3aa6bb4e057ecf7e293fc3a97576cd9cf9718cf44e37e
+PASS cases.txt: x509 driver: 159 checks, 0 failed
+PASS fuzz fuzz_rsa n=300 rejected=300
+PASS fuzz fuzz_ec n=300 rejected=300
+PASS fuzz fuzz_pss n=200 rejected=200
+openssl OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)
+DIFF store_intermediate_anchor x509=accept openssl=reject error 2 at 1 depth lookup: unable to get issuer certificate
+DIFF at_not_after x509=accept openssl=reject error 10 at 0 depth lookup: certificate has expired
+DIFF wildcard_partial x509=reject openssl=accept 
+DIFF no_san x509=reject openssl=accept 
+DIFF name_constraints_critical x509=reject openssl=accept 
+DIFF depth_8_intermediates x509=reject openssl=accept 
+DIFF leaf_is_ca x509=reject openssl=accept 
+DIFF leaf_ku_no_digsig x509=reject openssl=accept 
+DIFF rsa_1024_leaf x509=reject openssl=accept 
+DIFF sha1_signed x509=reject openssl=accept 
+DIFF rsassa_pss_key x509=reject openssl=accept 
+DIFF ed25519_key x509=reject openssl=accept 
+PASS mutant name-wildcard-labels detected (2 MISMATCH: wildcard_one_label_parent wild_one_label_parent )
+PASS mutant date-not-after detected (65 MISMATCH: rsa_good rsa_good_apex )
+PASS mutant bc-ca-flag detected (1 MISMATCH: intermediate_not_ca )
+PASS mutant expectation detected
+driver checks=159 fuzz-mutations=800
+X509 PASS cases=78 (openssl-parity=66/78) mutants=4/4

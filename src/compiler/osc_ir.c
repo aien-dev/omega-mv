@@ -635,10 +635,13 @@ static uint8_t unit_version(const OscUnit *u) {
 
 static void encode_unit(const OscUnit *u, W *w) {
     /* format version 1 (OSC-1, no structs) / 2 (OSC-2 structs: struct table
-     * after the magic) / 3 (OSC-2 arenas: AOPEN/AALLOC/ADESTROY present; the
-     * struct count byte and table always follow the magic, even when 0).
-     * A unit without structs or arenas encodes exactly as version 1; one with
-     * structs but no arenas exactly as version 2. */
+     * after the magic) / 3 (OSC-2 arenas: AOPEN/AALLOC/ADESTROY present) /
+     * 4 (OSC-3 pools: an opcode in POPEN..HSTORE present) /
+     * 5 (external byte slices: a BYTES or CELLS register). unit_version above
+     * picks the highest feature used. From version 2 on, the struct count byte
+     * and table always follow the magic, even when 0, and the layout is the
+     * same; only the magic's version byte differs. A unit without structs,
+     * arenas, pools or slices encodes exactly as version 1. */
     uint8_t magic[8] = {'O', 'S', 'C', '1', 'I', 'R', 0, unit_version(u)};
     wbytes(w, magic, sizeof magic);
     if (magic[7] >= 2) { /* struct table present (possibly empty) */
@@ -756,7 +759,11 @@ int osc_ir_digest(const OscUnit *u, uint8_t out[32]) {
 /* ---- strict decoder (omega#444, spec/one-layer-format.md) -------------- */
 /* Negative controls: tests/compiler builds this file with OSC_IR_DECODE_MUTANT = k
  * (k >= 1) to switch off exactly one refusal; the decoder tests must then fail.
- * The default build has no mutant and every check is live. */
+ * The default build has no mutant and every check is live.
+ *   1 trailing bytes   2 version mismatch   3 partial output   4 validation
+ *   5 NUL in text      6 register range     7 input size       8 truncation
+ *   9 every count/length maximum (rcount)   10 unknown opcode admitted
+ *   11..22 one count/length maximum each (the site argument of rcount/rtext below) */
 #ifndef OSC_IR_DECODE_MUTANT
 #define OSC_IR_DECODE_MUTANT 0
 #endif
@@ -785,10 +792,11 @@ static uint64_t rle(R *r, unsigned k) {
     return v;
 }
 static void rfail(R *r, int rc) { if (!r->rc) r->rc = rc; }
-/* a count or length field: refuse OVERSIZED above max (checked before anything is read under it) */
-static uint64_t rcount(R *r, unsigned k, uint64_t max) {
+/* a count or length field: refuse OVERSIZED above max (checked before anything is read under it).
+ * site names the decoder mutant that switches off this one maximum (omega#450). */
+static uint64_t rcount(R *r, unsigned k, uint64_t max, int site) {
     uint64_t v = rle(r, k);
-    if (!r->rc && v > max) rfail(r, OSC_IR_REFUSE_OVERSIZED);
+    if (!r->rc && v > max && !MUTANT(9) && !MUTANT(site)) rfail(r, OSC_IR_REFUSE_OVERSIZED);
     return r->rc ? 0 : v;
 }
 /* a register / block / callee field: u16 two's complement; 0..0x7FFF or 0xFFFF (= -1) */
@@ -805,8 +813,8 @@ static OscScalar rscalar(R *r) {
     return r->rc ? OSC_T_VOID : (OscScalar)v;
 }
 /* text of at most max bytes into dst (dst has room for max + 1); a NUL inside is ambiguous */
-static void rtext(R *r, unsigned lenbytes, size_t max, char *dst) {
-    size_t k = (size_t)rcount(r, lenbytes, max);
+static void rtext(R *r, unsigned lenbytes, size_t max, char *dst, int site) {
+    size_t k = (size_t)rcount(r, lenbytes, max, site);
     if (!rneed(r, k)) return;
     if (memchr(r->p + r->pos, 0, k) && !MUTANT(5)) { rfail(r, OSC_IR_REFUSE_TEXT); return; }
     memcpy(dst, r->p + r->pos, k);
@@ -850,32 +858,32 @@ static void decode_insn(R *r, OscInsn *in) {
     case OSC_I_FSTORE: in->a = rvr(r); in->b = rvr(r); in->c = rvr(r); in->imm = rle(r, 1); break;
     case OSC_I_CALL:
         in->dst = rvr(r); in->callee = rvr(r);
-        in->nargs = (uint8_t)rcount(r, 1, OSC_MAX_PARAMS);
+        in->nargs = (uint8_t)rcount(r, 1, OSC_MAX_PARAMS, 17);
         for (int k = 0; k < in->nargs && !r->rc; k++) in->args[k] = rvr(r);
         break;
     case OSC_I_TRAP: in->imm = rle(r, 1); break;
     case OSC_I_BR: in->blk_t = rvr(r); break;
     case OSC_I_CBR: in->a = rvr(r); in->blk_t = rvr(r); in->blk_f = rvr(r); break;
     case OSC_I_RET: in->a = rvr(r); break;
-    default: rfail(r, OSC_IR_REFUSE_RANGE); break;  /* unknown opcode: its size is unknown */
+    default: if (!MUTANT(10)) rfail(r, OSC_IR_REFUSE_RANGE); break;  /* unknown opcode: its size is unknown */
     }
 }
 
 static void decode_func(R *r, OscFunc *f) {
-    rtext(r, 1, OSC_NAME_MAX - 1, f->name);
+    rtext(r, 1, OSC_NAME_MAX - 1, f->name, 18);
     f->nparams = (uint8_t)rle(r, 1);
     rtype(r, &f->ret);
-    f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS);
+    f->nvregs = (uint16_t)rcount(r, 2, OSC_MAX_VREGS, 14);
     for (int v = 0; v < f->nvregs && !r->rc; v++) rtype(r, &f->vtype[v]);
-    f->nblocks = (uint16_t)rcount(r, 2, OSC_MAX_BLOCKS);
+    f->nblocks = (uint16_t)rcount(r, 2, OSC_MAX_BLOCKS, 15);
     for (int b = 0; b < f->nblocks && !r->rc; b++) {
         f->blocks[b].first = (uint32_t)rle(r, 4);
         f->blocks[b].count = (uint32_t)rle(r, 4);
     }
-    f->ninsns = (uint32_t)rcount(r, 4, OSC_MAX_INSNS);
+    f->ninsns = (uint32_t)rcount(r, 4, OSC_MAX_INSNS, 16);
     for (uint32_t i = 0; i < f->ninsns && !r->rc; i++) decode_insn(r, &f->insns[i]);
-    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->requires_text);
-    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->ensures_text);
+    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->requires_text, 19);
+    rtext(r, 2, OSC_CLAUSE_MAX - 1, f->ensures_text, 20);
 }
 
 static int decode_unit(const uint8_t *buf, size_t len, OscUnit *u) {
@@ -889,22 +897,22 @@ static int decode_unit(const uint8_t *buf, size_t len, OscUnit *u) {
     if (r.rc) return r.rc;
     if (version < 1 || version > OSC_IR_VERSION_MAX) return OSC_IR_REFUSE_UNKNOWN_VERSION;
     if (version >= 2) {
-        u->nstructs = (uint8_t)rcount(&r, 1, OSC_MAX_STRUCTS);
+        u->nstructs = (uint8_t)rcount(&r, 1, OSC_MAX_STRUCTS, 11);
         for (int k = 0; k < u->nstructs && !r.rc; k++) {
             OscStruct *s = &u->structs[k];
-            rtext(&r, 1, OSC_NAME_MAX - 1, s->name);
-            s->nfields = (uint8_t)rcount(&r, 1, OSC_MAX_FIELDS);
+            rtext(&r, 1, OSC_NAME_MAX - 1, s->name, 21);
+            s->nfields = (uint8_t)rcount(&r, 1, OSC_MAX_FIELDS, 12);
             s->ncells = (uint16_t)rle(&r, 2);
             for (int f = 0; f < s->nfields && !r.rc; f++) {
                 OscField *fd = &s->fields[f];
-                rtext(&r, 1, OSC_NAME_MAX - 1, fd->name);
+                rtext(&r, 1, OSC_NAME_MAX - 1, fd->name, 22);
                 fd->s = rscalar(&r);
                 fd->alen = (uint16_t)rle(&r, 2);
                 fd->off = (uint16_t)rle(&r, 2);
             }
         }
     }
-    u->nfuncs = (uint16_t)rcount(&r, 2, OSC_MAX_FUNCS);
+    u->nfuncs = (uint16_t)rcount(&r, 2, OSC_MAX_FUNCS, 13);
     for (int fi = 0; fi < u->nfuncs && !r.rc; fi++) decode_func(&r, &u->funcs[fi]);
     if (r.rc) return r.rc;
     if (r.pos != len && !MUTANT(1)) return OSC_IR_REFUSE_TRAILING;

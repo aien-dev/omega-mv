@@ -1,0 +1,5 @@
+put dexp 0 6
+tok
+k = get tk 0
+if and ne k 0 ne k 3
+fail 5

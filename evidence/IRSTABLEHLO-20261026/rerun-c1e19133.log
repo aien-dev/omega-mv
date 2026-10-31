@@ -1,0 +1,54 @@
+Rerun at c1e1913379009f086e336de8fa3d0a138ca4010d (PJRT oracle platform made selectable; gate pins cpu). Same command. Observed exit: 0
+SOURCE c1e1913379009f086e336de8fa3d0a138ca4010d
+COMPILER 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+ORACLE iree-compile 3.13.0rc20261016 @ 89ece87b89852100c0a4ac3d515e14842d090967
+ORACLE iree-run-module 06ad551b3fd3e1014885cf8134db79d2544e5b290eeb36d10126a3f32af4bb5d
+ORACLE pjrt jax 0.12.0.1 jaxlib 0.12.0.1
+Linux aarch64
+PASS case-1-vaddi32 i32 deterministic, IREE exact match, PJRT bitwise match, native
+PASS case-2-vaddu32 ui32 deterministic, IREE exact match, PJRT bitwise match, native
+PASS case-3-vaddi64 i64 deterministic, IREE exact match, PJRT bitwise match, native
+PASS case-4-madi32 i32 deterministic, IREE exact match, PJRT bitwise match, native
+PASS case-5-biasi32 i32 deterministic, IREE exact match, PJRT bitwise match, native
+PASS case-6-vaddf32 f32 deterministic, IREE exact match, PJRT bitwise match, native NOT_RUN (omc ir has no float words at this pin)
+PASS case-7-vaddf64 f64 deterministic, IREE exact match, PJRT bitwise match, native NOT_RUN (omc ir has no float words at this pin)
+PASS negative wrong op (add->subtract) i32: IREE [FAILED], PJRT MISMATCH
+PASS negative wrong op (add->multiply) f32: IREE [FAILED], PJRT MISMATCH
+PASS negative wrong expected (element 0 = 1) i32: IREE [FAILED], PJRT MISMATCH
+PASS negative wrong expected (element 4 one ulp up) f32: IREE [FAILED], PJRT MISMATCH
+PASS negative malformed (closing brace dropped): iree-compile and PJRT refused
+PASS negative malformed (unknown op stablehlo.addx): iree-compile and PJRT refused
+PASS negative malformed (return type f32 vs i32 value): iree-compile and PJRT refused
+DIVERGENCE signed overflow: Omega native exit 101 (trap); IREE and PJRT return -2147483648 (StableHLO: implementation-defined)
+PASS refusal integer div -> UNSUPPORTED_OP (exit 24)
+PASS refusal integer shl -> UNSUPPORTED_OP (exit 24)
+PASS refusal branches -> UNSUPPORTED_OP (exit 24)
+PASS refusal mixed element types -> UNSUPPORTED_TAG (exit 25)
+PASS refusal bool result -> UNSUPPORTED_TAG (exit 25)
+PASS refusal f32 tag in wire v1 -> UNSUPPORTED_TAG (exit 25)
+PASS refusal unknown function -> NO_FUNCTION (exit 30)
+PASS refusal N zero -> USAGE (exit 29)
+PASS refusal N leading zero -> USAGE (exit 29)
+PASS refusal N above 16777216 -> USAGE (exit 29)
+PASS refusal N not decimal -> USAGE (exit 29)
+PASS refusal missing function argument -> USAGE (exit 29)
+PASS refusal bad magic -> MAGIC (exit 20)
+PASS refusal wire version 2 -> VERSION (exit 21)
+PASS refusal truncated -> TRUNCATED (exit 22)
+PASS refusal trailing byte -> TRAILING (exit 27)
+SHA256 a6834f3d159acb747fa1fb6ff32555c75943efc51ed290da0c4d9fbadef926f1  build/seed/stablehlo/irstablehlo
+SHA256 d7c398cbae781009df96bb6c165de20e33183d09ad03b4b1dbf854e7698b2a4f  build/seed/stablehlo/case-1-vaddi32.again.mlir
+SHA256 d7c398cbae781009df96bb6c165de20e33183d09ad03b4b1dbf854e7698b2a4f  build/seed/stablehlo/case-1-vaddi32.mlir
+SHA256 745f25fa09e9159b60a37aee3ee8a58433b59b15b4fa0c344c4e27d90348ab50  build/seed/stablehlo/case-2-vaddu32.again.mlir
+SHA256 745f25fa09e9159b60a37aee3ee8a58433b59b15b4fa0c344c4e27d90348ab50  build/seed/stablehlo/case-2-vaddu32.mlir
+SHA256 7dfd7e028434d7cdd7d71e95918568c3345df2db836399aa0efd7ff87c992e8d  build/seed/stablehlo/case-3-vaddi64.again.mlir
+SHA256 7dfd7e028434d7cdd7d71e95918568c3345df2db836399aa0efd7ff87c992e8d  build/seed/stablehlo/case-3-vaddi64.mlir
+SHA256 44cce882a97aa3a2a3b50af4ea880acfddee00b0b59541708421d75cf5fb3cb0  build/seed/stablehlo/case-4-madi32.again.mlir
+SHA256 44cce882a97aa3a2a3b50af4ea880acfddee00b0b59541708421d75cf5fb3cb0  build/seed/stablehlo/case-4-madi32.mlir
+SHA256 d1df8369e3eabcb950cf5ee2bcf718780b784d88147a71a777ba0cbac39242f8  build/seed/stablehlo/case-5-biasi32.again.mlir
+SHA256 d1df8369e3eabcb950cf5ee2bcf718780b784d88147a71a777ba0cbac39242f8  build/seed/stablehlo/case-5-biasi32.mlir
+SHA256 b070166afba5c9f4b8b72e5de47e584f9b3594f05725192887ddec76a72c0126  build/seed/stablehlo/case-6-vaddf32.again.mlir
+SHA256 b070166afba5c9f4b8b72e5de47e584f9b3594f05725192887ddec76a72c0126  build/seed/stablehlo/case-6-vaddf32.mlir
+SHA256 ed454c24cab4a2bd3b74ebcf055169f9cb81a925462c7327f415a9678ecaf0e8  build/seed/stablehlo/case-7-vaddf64.again.mlir
+SHA256 ed454c24cab4a2bd3b74ebcf055169f9cb81a925462c7327f415a9678ecaf0e8  build/seed/stablehlo/case-7-vaddf64.mlir
+PASS irstablehlo: 7 cases on two interop oracles (not Omega-native, not hardware), 23 negatives caught

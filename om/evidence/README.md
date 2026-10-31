@@ -14,7 +14,8 @@ OMEGA_OMC=/path/to/seed/out/omc [OMEGA_BRIDGE=/path/to/omega-bridge@012860db] sh
 ```
 
 `run.sh` compares the .om output with C oracle hashes recorded in `parity/expected.txt`. The C oracle
-driver is not in the tree. It takes about 6 s on the Spark.
+driver is not in the tree. It takes about 6 s on the Spark. The pathtree and digtree listings omit
+directory sizes, which depend on the filesystem under `TMPDIR` (ext4 and tmpfs differ), so any `TMPDIR` works.
 
 ## What the C files contain, and what is ported
 
@@ -59,7 +60,7 @@ because it is cached in a static. `physics_commit` reads a real `physics.lock` f
 types, modes, sizes and file sha256). In program mode the harness does the same effects with the same
 flags (`O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC`, mode 0444, directories 0755, umask 022).
 
-omc sha256 `6ad704d1…74f8`. `evidence.om` compiles to a 35,032-byte program.
+omc sha256 `7a8b84fc…b2de` (the previous pins `1578b357…dbe1` and `62775d2a…712b` emit the same bytes). `evidence.om` compiles to a 35,032-byte program.
 
 | stream | function(s) | records | result |
 |---|---|---|---|

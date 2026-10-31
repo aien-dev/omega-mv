@@ -87,7 +87,7 @@ itself be an op, so no brackets are needed: `add mul r r 4` is add(mul(r, r), 4)
 | `neg` a / `not` a | 1 | negate (signed) / logical not (bool) or bitwise not (number) | un |
 | `<type>` a | 1 | a typed number (`uint 5`) or a conversion (`ulong x`, `ulong add a b`) | const / cast |
 | `get` arr i | 2 | load (arr is an array name) | load |
-| `new` type len init | 3 | a new own array of len (1..64) elements; only as the whole value of `<name> =` | alloc |
+| `new` type len init | 3 | a new own array of len elements (omc: 1..16777216, at most 4 MiB of local arrays, s.9.4; the C reference path through OSC IR: 1..64, `OSC_MAX_ARRAY_LEN`); only as the whole value of `<name> =` | alloc |
 | `own` / `edit` / `view` arr | 1 | move / mutable borrow / shared borrow (arr is an array name) | mov |
 | `<function>` args | its parameter count | call an earlier function | call |
 
@@ -411,6 +411,10 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   main's value modulo 256 (Linux keeps the low 8 bits), 0 for a void main. (s.6 t_exit, s.7)
 - A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
   calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
+- A conditional branch (B.cond, CBZ, CBNZ) carries a signed 19-bit word displacement. A block layout
+  that needs more than 2^18 - 1 words forward or 2^18 words back (1,048,572 or 1,048,576 bytes) is
+  refused with error 24 before any output is accepted; it is never silently truncated. Unconditional
+  B uses a 26-bit field, which the 8 MiB output capacity cannot exceed. (gate 669)
 
 An initial line `target x86linux` selects the candidate FR-9 native x86-64 Linux backend.
 Without it, the existing AArch64 output remains unchanged. Whole-program output is a
@@ -446,6 +450,10 @@ syscall adaptation, seed-chain boundaries and qualification status.
   may not reuse a name already in scope, a function or a struct: error 10.
 - In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
   6 before it writes anything. (s.6 t_stack)
+- omc sets no recursion depth limit of its own; only the 8 MiB stack bounds it. A program that takes
+  input-driven recursion bounds it itself, checking the depth before the call, as
+  `seed/omc/tests/recursion/nest.om` does: depth 16 accepted, depth 17 refused with status 40 before
+  any frame for it exists, plus a work bound (fuel, status 42). (`seed/omc/gate-recursion.sh`, #645)
 
 ### 9.3 Numbers (decision 19: one meaning per word and width)
 
@@ -522,6 +530,8 @@ The candidate `target x86linux` backend has a 16 MiB output pool because native
 x86 instruction sequences can require more bytes than their AArch64 counterparts.
 The AArch64 output ceiling remains 8 MiB; input and frontend limits are unchanged.
 An exhausted target output pool still refuses with error 14.
+A single AArch64 conditional branch span is limited to 2^18 - 1 words forward or 2^18 words back
+(section 9.1); a larger span is error 24, even when the input and output pools still fit.
 
 ### 9.7 Structs (omc only, rung 6)
 
@@ -924,6 +934,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `pipefds A off n flags` | Create a pipe with `pipe2`; write two little-endian 32-bit descriptors. Capacity at least eight. |
 | `dupfd fd target flags` | Duplicate onto a chosen descriptor using `dup3`. |
 | `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
+| `execpure A off n` | Keyword id 198, AArch64 only (x86 emission refuses with error 25). As `execprog`, then pin the executable as descriptor 3 and apply the fixed strict stdio profile below before `execveat(AT_EMPTY_PATH)`. Only returns on failure, with the first failing step's negative errno. |
 | `argcnt` | Return argument count, including the executable name. |
 | `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
 | `envcnt` | Return the number of entries in the process environment (the `envp` the kernel supplied). |
@@ -981,10 +992,35 @@ may be empty. `renames` requires exactly two nonempty path records.
 
 The compiler constructs private, bounded pointer lists for the kernel. They
 are never exposed as language values. `execprog` supplies an empty environment,
-preserves the working directory and ordinary inherited descriptors, and does
-not search PATH or invoke a shell. Programs should explicitly request
-close-on-exec descriptors where needed. Forked children are independent
+preserves the working directory and standard streams (descriptors 0, 1 and 2), and does
+not search PATH or invoke a shell. Before execution it closes every descriptor
+at or above 3 using Linux `close_range(3, UINT_MAX, CLOSE_RANGE_UNSHARE)`
+(AArch64 and x86-64 emission alike).
+If that kernel operation fails or is unavailable, execution is refused with
+the kernel's negative error result; no descriptor-loop fallback is used.
+After a successful close, an executable-path failure still leaves those descriptors
+closed. Malformed packets trap before descriptor closure. Callers must explicitly
+bind intended streams before invoking `execprog`; higher-numbered descriptor
+inheritance is unsupported. This prevents accidental descriptor inheritance;
+it does not restrict filesystem paths, network creation, current-directory access,
+subprocesses or arbitrary native code. Existing authority/launcher integration is
+still required for those effects. Forked children are independent
 processes and must be reaped; this extension does not add shared-memory threads.
+
+`execpure` (word 198) decodes and closes descriptors exactly as `execprog`, then applies a fixed
+strict stdio profile before entering the program: it opens the executable path `O_PATH|O_CLOEXEC`
+as descriptor 3; creates a Landlock ruleset that handles every ABI-3 filesystem right and allows
+only execute and read-file beneath that inode; sets `PR_SET_NO_NEW_PRIVS`; restricts itself to the
+ruleset; sets seven `prlimit64` ceilings (CPU 1/2 s, file size 1 MiB, stack 8 MiB, core 0, processes
+0, descriptors 4, address space 128 MiB); installs a seccomp filter that kills the process on a
+non-AArch64 audit architecture and allows only `read` on descriptor 0, `write` on descriptors 1 and
+2, `exit`, `exit_group` and `execveat` on descriptor 3 with flags `AT_EMPTY_PATH`, returning EPERM for
+everything else; and finally calls `execveat(3, "", argv, empty envp, AT_EMPTY_PATH)`. The first step that returns a
+negative value restores the private stack and returns that negative errno without executing.
+There is no weaker fallback. This is a fixed profile, not a general sandbox; output and wall-clock
+budgets still need a trusted supervisor. Qualification is `seed/qualification/security673/gate669.om`
+(`pure-*.om` fixtures). The x86-64 emitter has no strict-profile lowering and refuses the word with
+error 25.
 
 Clock results require nonnegative seconds and a signed nanosecond total;
 values outside that range trap 1. `argread` bounds
@@ -1001,6 +1037,28 @@ The proposed device/memory extension adds checked `devctl`, `mapnew`,
 ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/MAPPING.md).
 It adds process-local mapped resources while the compiler's own storage remains
 fixed pools. GPU launch and model execution are separate, still-unqualified gates.
+
+### Host CPU ordering words (#939)
+
+| Statement | Meaning |
+|---|---|
+| `cpufence` | Publication barrier (keyword id 199). Every load and store before it completes before any load or store after it. AArch64: `DSB SY` (`d5033f9f`), the barrier `mapget`/`mapset` already bracket their access with. x86-64 (`target x86linux`): `MFENCE` (`0f ae f0`), the fence the x86 `mapget`/`mapset` use. |
+| `cpurelax` | Spin-wait hint, no ordering (keyword id 200). AArch64: `YIELD` (`d503203f`). x86-64: `PAUSE` (`f3 90`). Use it inside a bounded poll loop and pair it with `cpufence` when order matters. |
+
+Both are statements with no operands and no value. Unlike the other host words
+they are accepted in function mode as well as program mode, because they make no
+system call. An operand is error 5, use as a value or outside a function is
+error 16, use as the name on the left of `=` is error 5, and a statement after
+`ret` is error 17. IR mode (`ir` first line) refuses them with error 16.
+`seed/host/cpufence.sh` (run by `seed/host/check.sh`) checks each refusal
+except the IR one, plus a function-mode unit, on the host. The fixture
+`seed/host/tests/cpufence.om` exits 42 natively on AArch64 and under
+qemu-x86_64. GNU objdump, used only as a referee, finds exactly one added
+`dsb sy`/`mfence` per `cpufence` and one `yield`/`pause` per `cpurelax`,
+compared with the same program with the words deleted. The script also checks
+the refusals above and builds a compiler whose `cpufence` emits NOPs. That
+compiler still runs the fixture to exit 42, and the instruction count catches
+it. These are host results only. Ordering against a GPU is not qualified here.
 
 ## 11. OSC IR output (omc only, experimental checkpoint)
 
@@ -1133,6 +1191,20 @@ Numeric bounds were checked with WolframLanguageEvaluator:
 the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
+
+### Equivalence of scalar IR functions (seed/equiv, issue 826)
+
+`seed/equiv/irequiv.om` is a seeded-Omega interpreter for the same OSC IR v1 units (its reader is
+irwasm's, copied verbatim). `irequiv check A B` runs both functions on every input of a signature of
+at most 24 bits (all 256 for one uchar, all 65536 for a ushort or two uchars) and prints
+`EQUIV PASS ... checked=N differing=0`, or `EQUIV FAIL ... differing=K first=<input>` with both
+results; equal means the same bits or the same trap code. Wider signatures are only sampled
+(`irequiv sample`), printed as `NOT_A_PROOF` with exit 10. A PASS covers the IR both functions
+lowered to under `src/compiler/osc_interp.c` semantics, not native words. `seed/equiv/gate-irequiv.sh`
+runs the fixture pairs (repo functions js_hexv/hhexv, clamp_add, bitrev8, r8 against refactors and
+single-input mutants), then checks `irequiv eval` against native AArch64 programs on the 140 rows of
+`seed/wasm/cases.tsv`, `seed/spirv/regression.tsv` and `seed/spirv/demo.tsv` (same bits, same trap
+code); `seed/equiv/README.md` has the command line and exit codes.
 
 ### 11.2 Memory profile contract (IR v2 milestone)
 

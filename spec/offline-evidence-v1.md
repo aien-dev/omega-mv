@@ -89,9 +89,19 @@ Semantics the evaluator is allowed to rely on:
   refused. `kind=storage` and `kind=persist` are ops whose `bw` is a storage resource.
 - `dep a b`: b starts after a ends. Cycles are refused.
 - `buffer`: live from the start of `first` to the end of `last`. Missing `first` means
-  live from t=0 (resident state); missing `last` means live until the end. Peak live bytes
+  live from t=0 (resident state); missing `last` means live until the end. The occupied
+  interval is half-open `[start, end)`: live at time t when `start <= t < end`. `start`
+  is the scheduled start of `first` (or 0); `end` is the scheduled end of `last` (or the
+  makespan). `end == start` is empty (a zero-duration operation or buffer): it contributes
+  no live bytes and cannot offset another buffer. `end` earlier than `start` is inverted:
+  the evaluator refuses `REFUSED_LIFETIME` before any capacity certificate or ranking,
+  naming the buffer, both endpoint operations (`omitted` when the field is absent) and the
+  resolved times. At one timestamp, frees of intervals that started earlier are applied
+  before allocations, so a buffer that ends when another starts does not occupy both
+  (completion/allocation tie). An accepted ledger never goes negative. Peak live bytes
   per capacity resource must not exceed `cap`, else `REFUSED_CAPACITY` naming the time
-  and the buffers.
+  and the buffers. No frozen field was added; this is the interval convention for the
+  words already in v1.
 - `sync id=X ops=a,b,...`: declares a barrier op `X` (no cost, no engine) that completes
   when every listed op has completed. Order later work after it with `dep X y`. A barrier
   with a measured cost is written as `op id=X kind=barrier t_ns=... prov=...` plus `dep` lines.

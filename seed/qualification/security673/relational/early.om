@@ -1,0 +1,9 @@
+note SPDX-License-Identifier: Apache-2.0
+fn early a view uchar 32 b view uchar 32 to ulong
+for i ulong 32
+if ne get a i get b i
+ret 0
+end
+end
+ret 1
+end

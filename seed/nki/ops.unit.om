@@ -1,0 +1,25 @@
+note Every BIN subcode irnki lifts for uint32 lanes, plus swapped and repeated operands.
+fn vaddu a uint b uint to uint
+ret add a b
+end
+fn vsubu a uint b uint to uint
+ret sub a b
+end
+fn vsubr a uint b uint to uint
+ret sub b a
+end
+fn vmulu a uint b uint to uint
+ret mul a b
+end
+fn vandu a uint b uint to uint
+ret and a b
+end
+fn voru a uint b uint to uint
+ret or a b
+end
+fn vxoru a uint b uint to uint
+ret xor a b
+end
+fn vdbl a uint b uint to uint
+ret add a a
+end
