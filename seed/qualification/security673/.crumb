@@ -4,20 +4,20 @@
       "children": [
         {
           "digest": "474d06e1d689d1e6f6738a526ab4e5b8927a46349be8493d63d550f1440dcb7e",
-          "last_commit": "f5c9bd89a",
+          "last_commit": "",
           "name": "packets",
           "purpose": "Packed-list fixtures for #671: generated packet bytes (proven equal to packet-corpus.om), expect"
         }
       ],
       "children_root": "sha256:f41d6df2f8ad3022a730e903b841378e27265d8aa2553318ec209b4ede234b2b",
-      "compiled_at": "2026-10-31T03:22:28Z",
+      "compiled_at": "2026-10-31T05:02:42Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:f61b83bd16e26c180bf91e66e9c28095085f3a0756c3fead4a87e09ac3e90b22",
+      "digest": "sha256:500b35c3ae69d8b0be0330abf29d670fb67f8aa037e3909de72bac2317b95cf2",
       "evidence_files": 1320,
       "evidence_root": "sha256:10232d8c64af6b0c77b53ca0d23ccc3a14bcad54b28430e469615b93567f1f96",
       "files": 1432,
-      "generated_at_commit": "d3763c7f271e123765c88cbbf837030a1ac95c94",
-      "source_tree": "sha256:c6c007e80b7b468f58b91d6fcb1b0c4c8f9d10671d2f0d058a2da79ef0eb0831"
+      "generated_at_commit": "595050a01763c94622b2629dbc200fa92fc8fcf2",
+      "source_tree": "sha256:412a10c646ce99dc15c9c588fb38c0d22174947ef13f556dc59d1e171953c1d3"
     }
   },
   "name": "security673",

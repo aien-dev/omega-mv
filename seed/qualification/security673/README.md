@@ -93,12 +93,18 @@ controls. Evidence is `evidence/SECURITY-673/pure3`; the earlier author run is `
 
 ## Bounded source ingress (#671)
 
-With fresh scratch, `build/gate669 3` runs eighteen source cases through the real rebuilt compiler.
+With fresh scratch, `build/gate669 3` runs twenty-two source cases through the real rebuilt compiler.
 The generator is `hostile-corpus.om`; the existing coordinator is reused. The campaign covers
 decimal length, nested values, nested blocks, large literals, function count, invalid control byte,
-oversized pool, unterminated quote, unknown name, long whitespace and input capacity. Eight
-accepted fixed-compiler programs execute with expected exits; ten refused inputs leave empty
-artifacts. Both parities of the nested Boolean expression are exercised.
+oversized pool, unterminated quote, unknown name, long whitespace, input capacity and float literals
+of 1000001 zero digits (fraction, exponent, and an untyped literal typed by the other operand, also at
+70 digits). Twelve accepted fixed-compiler programs execute with expected exits; ten refused inputs
+leave empty artifacts. Both parities of the nested Boolean expression are exercised.
+
+The float cases close #965 findings: before the fix a fraction or exponent of more than 1000000 zero
+digits trapped 4 (exit 104) in the single-loop scans of `fparse`, `fexp` and `fbits`, and an untyped
+literal of 64 or more characters was re-read from the wrong span (`pos*64+len`), so `add 0..01.5 x`
+with `x = 2.0` silently computed 2.
 
 A separately compiled numeric-limit mutant changes the existing20-digit rule to21. It accepts
 the21-zero source, violating the published profile; the fixed compiler refuses6. That mutant's

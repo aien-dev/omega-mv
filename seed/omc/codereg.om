@@ -1,0 +1,599 @@
+note codereg.om -- error-code registry drift check (issue #797), compiled and run by seed/omc/gate15.sh.
+note Arguments: REGISTRY OMC_SOURCE OMEGESE IRWASM_SOURCE RANLOG. Exit 0 agrees; 1 on drift, usage or unreadable input.
+note A REGISTRY row is NS|CODE|STATUS|CASE|MEANING. NS omc and irwasm are separate namespaces: the same
+note number means different things in each. STATUS emitted or io needs at least one emitting site in the
+note namespace's source; unused needs none. Every site needs a row. An omc row names the gate15 case
+note that must have refused with that code (RANLOG lines NAME CODE). OMEGESE must hold exactly one line
+note | NS CODE | MEANING | per row and no other line of that shape.
+global fb uchar 4194304
+global rg uchar 65536
+global pth uchar 4096
+global bars ulong 4
+global st ulong 512
+global mo ulong 512
+global ml ulong 512
+global co ulong 512
+global cl ulong 512
+global sc ulong 512
+global dh ulong 512
+global rh ulong 256
+global ob uchar 512
+global on ulong 1
+text tm "FAIL codereg \nusage: codereg REGISTRY OMC_SOURCE OMEGESE IRWASM_SOURCE RANLOG\ncannot read argument\nmalformed registry row at line\nduplicate registry row\nemitting site without an emitted or io registry row\nemitted or io registry row without an emitting site\nOMEGESE row differs from the registry\nOMEGESE row count is not 1 for\ngate case refused with a code that has no emitted or io registry row\nregistry case did not refuse with its code in the gate\nmalformed OMEGESE registry row at line\nomc\nirwasm\nPASS codereg registry=\n sites=\n omegese=\n cases=\nemitted\nio\nunused\n-\nfail\nnfail\nunkfail\nlenval\nrefuse\nexit int\nnote\n| omc \n| irwasm \n | \n |"
+
+fn ob_b c ulong to void
+n = get on 0
+if lt n 512
+put ob n uchar c
+put on 0 add n 1
+end
+end
+
+fn ob_n v ulong to void
+d = new uchar 20 0
+k = ulong 0
+x = v
+for i ulong 20
+put d k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for j ulong k
+ob_b ulong get d sub sub k j 1
+end
+end
+
+note segat: offset of newline-separated segment k of tm.
+fn segat k ulong to ulong
+seg = ulong 0
+for i ulong len tm
+if eq seg k
+ret i
+end
+if eq get tm i 10
+seg = add seg 1
+end
+end
+ret len tm
+end
+
+fn ob_s k ulong to void
+t = segat k
+for i ulong len tm
+j = add t i
+if ge j len tm
+break
+end
+c = get tm j
+if eq c 10
+break
+end
+ob_b ulong c
+end
+end
+
+fn ob_out fd int to void
+n = get on 0
+w = write fd ob 0 n
+put on 0 0
+end
+
+note die: print FAIL, reason k; a 0 or 1 adds namespace and code b, a 2 adds number b. Exit 1.
+fn die k ulong a ulong b ulong to void
+ob_s 0
+ob_s k
+if lt a 2
+ob_b 32
+ob_s add 12 a
+ob_b 32
+ob_n b
+end
+if eq a 2
+ob_b 32
+ob_n b
+end
+ob_b 10
+ob_out 2
+exit 1
+end
+
+note load: argument idx into fb, at most cap bytes; returns the length.
+fn load idx ulong cap ulong to ulong
+r = argread idx pth 0 4096
+if lt r 1
+die 2 2 idx
+end
+fd = fopen pth 0 ulong r 524288 0
+if lt fd 0
+die 2 2 idx
+end
+n = ulong 0
+note Every pass but the last adds at least one byte, and n = cap stops it: cap + 1 passes suffice.
+for a ulong 4194305
+if eq n cap
+die 2 2 idx
+end
+k = read int fd fb n sub cap n
+if lt k 0
+die 2 2 idx
+end
+if eq k 0
+break
+end
+n = add n ulong k
+end
+c = fclose int fd
+if lt c 0
+die 2 2 idx
+end
+ret n
+end
+
+note prefix: length of segment k of tm when fb[p..e) begins with it, else 0.
+fn prefix p ulong e ulong k ulong to ulong
+t = segat k
+m = ulong 0
+for i ulong len tm
+j = add t i
+if ge j len tm
+break
+end
+c = get tm j
+if eq c 10
+break
+end
+if ge add p i e
+ret 0
+end
+if ne c get fb add p i
+ret 0
+end
+m = add m 1
+end
+ret m
+end
+
+fn wordeq p ulong q ulong k ulong to bool
+m = prefix p q k
+if eq m 0
+ret false
+end
+ret eq m sub q p
+end
+
+note sameat: rg[ro..ro+rl) equals fb[a..b).
+fn sameat ro ulong rl ulong a ulong b ulong to bool
+if ne rl sub b a
+ret false
+end
+for i ulong rl
+if ne get rg add ro i get fb add a i
+ret false
+end
+end
+ret true
+end
+
+fn eol s ulong n ulong to ulong
+i = s
+for a ulong 4194305
+if ge i n
+ret n
+end
+if eq get fb i 10
+ret i
+end
+i = add i 1
+end
+ret n
+end
+
+fn skipws s ulong e ulong to ulong
+i = s
+for a ulong 4194305
+if ge i e
+ret e
+end
+c = get fb i
+if and ne c 32 ne c 9
+ret i
+end
+i = add i 1
+end
+ret e
+end
+
+note lastw: start of the last word in fb[p..e).
+fn lastw p ulong e ulong to ulong
+i = e
+for a ulong 4194305
+if le i p
+ret p
+end
+c = get fb sub i 1
+if or eq c 32 eq c 9
+ret i
+end
+i = sub i 1
+end
+ret i
+end
+
+fn wordend p ulong e ulong to ulong
+i = p
+for a ulong 4194305
+if ge i e
+ret e
+end
+if eq get fb i 32
+ret i
+end
+i = add i 1
+end
+ret e
+end
+
+fn nextbar p ulong e ulong to ulong
+i = p
+for a ulong 65537
+if ge i e
+ret e
+end
+if eq get fb i 124
+ret i
+end
+i = add i 1
+end
+ret e
+end
+
+note numof: decimal 1..3 digits filling fb[p..q), else 0.
+fn numof p ulong q ulong to ulong
+if or ge p q gt sub q p 3
+ret 0
+end
+v = ulong 0
+for i ulong sub q p
+c = get fb add p i
+if or lt c 48 gt c 57
+ret 0
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+
+fn isnote p ulong e ulong to bool
+m = prefix p e 28
+if eq m 0
+ret false
+end
+q = add p m
+if eq q e
+ret true
+end
+c = get fb q
+ret or eq c 32 eq c 9
+end
+
+fn regns s ulong ln ulong to ulong
+b = get bars 0
+if wordeq s b 12
+ret 0
+end
+if wordeq s b 13
+ret 1
+end
+die 3 2 ln
+ret 2
+end
+
+fn regcode ln ulong to ulong
+code = numof add get bars 0 1 get bars 1
+if or eq code 0 gt code 255
+die 3 2 ln
+end
+ret code
+end
+
+fn regsv ln ulong to ulong
+p = add get bars 1 1
+q = get bars 2
+if wordeq p q 18
+ret 1
+end
+if wordeq p q 19
+ret 2
+end
+if wordeq p q 20
+ret 3
+end
+die 3 2 ln
+ret 0
+end
+
+note regcase: unused rows and irwasm rows carry no case; emitted and io omc rows name one.
+fn regcase x ulong ns ulong sv ulong ln ulong to void
+p = add get bars 2 1
+q = get bars 3
+if ge p q
+die 3 2 ln
+end
+dash = wordeq p q 21
+if and eq sv 3 not dash
+die 3 2 ln
+end
+if and eq ns 1 not dash
+die 3 2 ln
+end
+if and and eq ns 0 ne sv 3 dash
+die 3 2 ln
+end
+put co x p
+put cl x sub q p
+end
+
+fn regrow s ulong e ulong ln ulong to void
+p = s
+for i ulong 4
+q = nextbar p e
+if ge q e
+die 3 2 ln
+end
+put bars i q
+p = add q 1
+end
+if lt nextbar p e e
+die 3 2 ln
+end
+if ge p e
+die 3 2 ln
+end
+ns = regns s ln
+code = regcode ln
+x = add mul ns 256 code
+if ne get st x 0
+die 4 ns code
+end
+sv = regsv ln
+regcase x ns sv ln
+put st x sv
+put mo x p
+put ml x sub e p
+end
+
+fn regparse n ulong to ulong
+s = ulong 0
+ln = ulong 0
+rows = ulong 0
+for a ulong 65537
+if ge s n
+break
+end
+e = eol s n
+ln = add ln 1
+if gt e s
+if not isnote s e
+regrow s e ln
+rows = add rows 1
+end
+end
+s = add e 1
+end
+ret rows
+end
+
+note siteof: the code a source line emits. omc: fail, nfail or unkfail N as the whole line, lenval N
+note at the end of a line, exit int N (N not 0). irwasm: refuse N as the whole line. Note lines never.
+fn siteof s ulong e ulong ns ulong to ulong
+p = skipws s e
+if ge p e
+ret 0
+end
+if isnote p e
+ret 0
+end
+lw = lastw p e
+if le lw p
+ret 0
+end
+code = numof lw e
+if or eq code 0 gt code 255
+ret 0
+end
+pe = sub lw 1
+pw = lastw p pe
+if eq ns 1
+if and eq pw p wordeq p pe 26
+ret code
+end
+ret 0
+end
+if eq pw p
+if or or wordeq p pe 22 wordeq p pe 23 wordeq p pe 24
+ret code
+end
+end
+if wordeq pw pe 25
+ret code
+end
+if wordeq p pe 27
+ret code
+end
+ret 0
+end
+
+fn scanln n ulong ns ulong to ulong
+s = ulong 0
+t = ulong 0
+for a ulong 4194305
+if ge s n
+break
+end
+e = eol s n
+c = siteof s e ns
+if ne c 0
+x = add mul ns 256 c
+put sc x add get sc x 1
+t = add t 1
+end
+s = add e 1
+end
+ret t
+end
+
+fn sitechk to void
+for x ulong 512
+v = get st x
+used = or eq v 1 eq v 2
+if and gt get sc x 0 not used
+die 5 div x 256 rem x 256
+end
+if and used eq get sc x 0
+die 6 div x 256 rem x 256
+end
+end
+end
+
+fn docrow s ulong e ulong ln ulong to ulong
+ns = ulong 0
+m = prefix s e 29
+if eq m 0
+ns = 1
+m = prefix s e 30
+end
+if eq m 0
+ret 0
+end
+p = add s m
+q = wordend p e
+code = numof p q
+if or eq code 0 gt code 255
+die 11 2 ln
+end
+r = prefix q e 31
+if eq r 0
+die 11 2 ln
+end
+mb = add q r
+if lt e add mb 2
+die 11 2 ln
+end
+me = sub e 2
+if ne prefix me e 32 2
+die 11 2 ln
+end
+x = add mul ns 256 code
+put dh x add get dh x 1
+if eq get st x 0
+die 7 ns code
+end
+if not sameat get mo x get ml x mb me
+die 7 ns code
+end
+ret 1
+end
+
+fn docscan n ulong to ulong
+s = ulong 0
+ln = ulong 0
+t = ulong 0
+for a ulong 4194305
+if ge s n
+break
+end
+e = eol s n
+ln = add ln 1
+t = add t docrow s e ln
+s = add e 1
+end
+ret t
+end
+
+fn docchk to void
+for x ulong 512
+if and ne get st x 0 ne get dh x 1
+die 8 div x 256 rem x 256
+end
+end
+end
+
+fn ranrow s ulong e ulong to void
+lw = lastw s e
+code = numof lw e
+if or eq code 0 gt code 255
+die 9 3 0
+end
+v = get st code
+if and ne v 1 ne v 2
+die 9 0 code
+end
+if le lw s
+die 9 0 code
+end
+if sameat get co code get cl code s sub lw 1
+put rh code 1
+end
+end
+
+fn ranscan n ulong to ulong
+s = ulong 0
+t = ulong 0
+for a ulong 4194305
+if ge s n
+break
+end
+e = eol s n
+if gt e s
+ranrow s e
+t = add t 1
+end
+s = add e 1
+end
+ret t
+end
+
+fn ranchk to void
+for x ulong 256
+v = get st x
+if and or eq v 1 eq v 2 eq get rh x 0
+die 10 0 x
+end
+end
+end
+
+fn main to int
+if ne argcnt 6
+die 1 3 0
+end
+n = load 1 65536
+rows = regparse n
+for i ulong n
+put rg i get fb i
+end
+n = load 2 4194304
+s0 = scanln n 0
+n = load 4 4194304
+s1 = scanln n 1
+sitechk
+n = load 3 4194304
+d = docscan n
+docchk
+n = load 5 4194304
+c = ranscan n
+ranchk
+ob_s 14
+ob_n rows
+ob_s 15
+ob_n add s0 s1
+ob_s 16
+ob_n d
+ob_s 17
+ob_n c
+ob_b 10
+ob_out 1
+ret 0
+end

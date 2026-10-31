@@ -273,9 +273,13 @@ Acceptance:
 
 ### RM8. Diagnostics and error messages
 
-Current: one human line per refusal, numeric code only. gate15 pins codes 3..23 with one minimal
-program each (21 cases); 27..29 have OM-2 fixtures under `seed/omc/om2/` and 24 the #669 work, none of
-them in gate15. Machine records exist only in OM-2 `diag` mode (#655 owns incremental feedback).
+Current: one human line per refusal, numeric code only. One registry, `seed/omc/error-codes.reg`
+(#797), lists every omc code (1..30; 26 has no site) and the irwasm codes 20..28 as a separate
+namespace. gate15 refuses 33 minimal programs at their exact `omc: line L: error C` (every emitted code
+1..25 and 27..30, 24 with its accept side, 30 including IR-mode contract lines from #791) and runs
+`seed/omc/codereg.om`, which fails on a site without a row, a row without a site, an OMEGESE §9.14 /
+§11.1 row that differs from the registry, or a registry case that did not refuse. Machine records
+exist only in OM-2 `diag` mode (#655 owns incremental feedback).
 
 Acceptance:
 - A code registry in the language doc: every code, its meaning, the obligation, and one minimal
