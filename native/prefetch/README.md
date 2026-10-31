@@ -48,9 +48,14 @@ a passing experiment.
 
 Both input files are bounded to 64 KiB. The log must identify the prefetch
 control, contain all 13 named checks in source order, and end with its matching
-summary. Only the argmax and logits comparisons may fail. Setup, determinism,
-execution, batching, other mutation checks, post-mutation recovery, and timeline
-checks must pass. Child exit, counted failures and summary must agree.
+summary. The control is CAUGHT only when the argmax or logits comparison fails
+(slot 4 or 5). The unordered o_proj race also makes graph output differ between
+runs, so C determinism, B versus C, post-mutation C and timeline (slots 3, 7, 10,
+11) may fail with it; these alone never qualify. Setup, A, B execution, both
+mutation controls and timeline off must pass. Child exit, counted failures and
+summary must agree. Three GB10 red runs (2026-10-14, 2026-10-15, 2026-10-31,
+MEASURED) all fail exactly slots 3, 4, 5, 7, 10 and 11; the first classifier
+version accepted only slots 4 and 5 and refused all three as INVALID.
 
 The receipt must be complete JSON in the consumer's emitted ASCII subset:
 objects, arrays, strings without escapes, and finite decimal numbers. Depth is
@@ -59,7 +64,7 @@ expected kinds, and carry matching check counts, failure count, verdict and
 invocation settings. The logits hash has exactly 16 lowercase hexadecimal
 characters. Nested comparison flags must match the named argmax result; both
 other mutation controls must report successful execution and caught=true,
-and the batching comparison must report identical=true. Unexpected, incomplete, truncated or unsupported output refuses
+and the batching comparison must report identical=false exactly when slot 7 failed. Unexpected, incomplete, truncated or unsupported output refuses
 qualification. This is not a general JSON library or authentication of supplied
 logs. It consumes trusted child output saved by the existing experiment; it
 does not prove that adversarially fabricated numerical data is genuine.

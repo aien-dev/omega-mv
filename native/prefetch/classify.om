@@ -1,6 +1,8 @@
 note SPDX-License-Identifier: AGPL-3.0-only
 note Historical decode-graph prefetch control classifier. argv:exit,log,receipt.
 note Trusted runner output only. Bounded 64KiB files; strict emitted JSON subset.
+note Allowed FAIL slots 3 4 5 7 10 11 (mask 3256): the unordered o_proj race on GB10 fails every
+note graph-vs-graph and A-vs-C check; CAUGHT needs slot 4 or 5 (mask 48), B identical=0 iff slot 7.
 text invalid "PREFETCH_CONTROL: INVALID\n"
 text caught "PREFETCH_CONTROL: CAUGHT\n"
 text missed "PREFETCH_CONTROL: UNCAUGHT\n"
@@ -123,7 +125,7 @@ if not matchtxt add start kind sub size kind count false
 reject
 end
 if eq kind 6
-if and ne count 4 ne count 5
+if eq and shl ulong 1 count 3256 0
 reject
 end
 put badcount 0 add get badcount 0 1
@@ -322,6 +324,9 @@ end
 end
 if and eq owner 18 eq key 22
 slot = 5
+if ne and get badmask 0 128 0
+want = 0
+end
 end
 if lt slot 6
 bit = shl ulong 1 slot
@@ -477,6 +482,9 @@ end
 put mode 0 sub ulong get path 0 48
 n = load 2
 logcheck n
+if and ne get badcount 0 0 eq and get badmask 0 48 0
+reject
+end
 if ne eq get mode 0 0 eq get badcount 0 0
 reject
 end

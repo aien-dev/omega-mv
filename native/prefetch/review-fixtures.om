@@ -1,4 +1,5 @@
 note Independent emitted-shape prefetch classifier fixtures. argv mode L/J.
+note Mode 2 is the GB10 red signature: FAIL slots 3 4 5 7 10 11, receipt B identical 0.
 text lines "A (baseline, host glue) 3 reps ran\nA deterministic over 3 reps (token 1)\nC (one list per token) 3 reps ran: 100 launches in 1 submission(s)\nC deterministic over 3 reps (token 2)\nargmax token identical: A 1, C 2\nlogits A vs C within 1e-03 of max|logit| (max |d| 0.0001, scale 1)\nB (one launch per submission) 3 reps ran: 100 launches in 100 submissions\nB bit-identical to C (x, hidden, logits, token) in every rep\nnegative control: SWIGLU mutant fails the comparison (token 1 vs 2, max |d| 0.2 = 0.2 of scale)\nnegative control: COMBINE mutant fails the comparison (token 1 vs 2, max |d| 0.2 = 0.2 of scale)\nC after the mutants bit-identical to the first C\ntimeline: rc 0, 100 stamps for 100 launches, monotonic 1, span 1.0 us <= chip 2.0 us, token and logits unchanged\ntimeline off: token rc 0, stamps accessor refuses (-1)\n"
 text cline "C deterministic over 3 reps (token 1)\n"
 text argline "argmax token identical: A 1, C 1\n"
@@ -18,7 +19,8 @@ text diff ",\"logit_max_abs\":"
 text tiny "0.0001"
 text large "0.2"
 text tail ",\"logit_scale\":1,\"x_max_rel\":0.001,\"hidden_max_rel\":0.001,\"tol_rel\":0.001},\"mutant1\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":1},\"mutant2\":{\"rc\":0,\"token\":2,\"logit_max_abs\":0.2,\"caught\":1},\"C0_token\":"
-text tailtwo ",\"C0_logits_fnv\":\"0123456789abcdef\",\"timeline\":{\"launches\":100,\"span_ns\":1000,\"chip_ns\":2000,\"per_kind_ns\":{\"ATTN\":[2,1000]}},\"median_ns\":{\"A_total\":3000,\"C_total\":2200,\"C_chip\":2000,\"C_record\":200,\"B_total\":4000,\"B_chip\":2000},\"B\":{\"launches\":100,\"submits\":100,\"identical\":1},\"checks\":13,\"failed\":"
+text tailtwo ",\"C0_logits_fnv\":\"0123456789abcdef\",\"timeline\":{\"launches\":100,\"span_ns\":1000,\"chip_ns\":2000,\"per_kind_ns\":{\"ATTN\":[2,1000]}},\"median_ns\":{\"A_total\":3000,\"C_total\":2200,\"C_chip\":2000,\"C_record\":200,\"B_total\":4000,\"B_chip\":2000},\"B\":{\"launches\":100,\"submits\":100,\"identical\":"
+text tailthr "},\"checks\":13,\"failed\":"
 text verdict ",\"verdict\":"
 text fv "\"FAIL\""
 text pv "\"PASS\""
@@ -73,7 +75,7 @@ end
 m = get mode 0
 bad = ulong 1
 if eq m 50
-bad = 2
+bad = 6
 end
 if eq m 51
 bad = 0
@@ -114,7 +116,7 @@ if eq m 49
 isbad = eq i 5
 end
 if eq m 50
-isbad = or eq i 4 eq i 5
+isbad = ne and shl ulong 1 i 3256 0
 end
 if eq m 51
 isbad = false
@@ -188,6 +190,12 @@ n = 1
 end
 digit n
 r = write 1 tailtwo 0 len tailtwo
+n = 1
+if eq m 50
+n = 0
+end
+digit n
+r = write 1 tailthr 0 len tailthr
 if eq m 54
 bad = 2
 end
