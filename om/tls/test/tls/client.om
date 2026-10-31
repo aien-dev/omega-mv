@@ -1,5 +1,5 @@
 note client.om: test program for om/tls (program mode, composed after every om/tls unit).
-note usage: client HOST PORT MODE [CONNECTHOST [STOREFILE]]
+note usage: client HOST PORT MODE [CONNECTHOST [STOREFILE [PATH [OPTS]]]]
 note   MODE get  : HTTPS GET / (path from env-free arg 6 when given) with "Connection: close",
 note               writes the decrypted response bytes to stdout
 note   MODE smtp : implicit-TLS SMTP: reads the banner, sends EHLO and QUIT, writes the dialogue
@@ -9,10 +9,19 @@ note               handshake on the same connection, EHLO and QUIT inside TLS
 note CONNECTHOST (default HOST) is the name resolved for TCP; HOST is the TLS name (SNI and
 note certificate check), so a local server can be checked against a chosen name.
 note STOREFILE (default, or "-", the system bundle) is a PEM bundle of trust anchors.
+note OPTS (tests) is "REC,HSMS,SPLIT,PAUSEMS,FLAGS": REC > 0 lowers the per-key record limit (tls_reclimit),
+note HSMS > 0 sets the whole-handshake budget in ms (tls_hslimit), SPLIT = 1 sends the GET request
+note one byte per record, PAUSEMS > 0 sleeps that long after tls_close before exiting (the stack
+note residue check reads the process then). No deadline is set by the client: the library's
+note handshake budget applies. FLAGS is a bit set: 1 = approved-only mode (tls_init flag 4; the
+note APPROVED option of audit/tls-fips-approved), 2 = no x25519 key share in ClientHello1 (tls_init
+note flag 2), so the server must ask for it with a HelloRetryRequest; 4 = mode get also checks that
+note a zero-length tls_read is refused without ending the connection; 8 = revocation (tls_init flag 8:
+note status_request offered, stapled OCSP checked, must-staple enforced).
 note Exit 0 on success; on a TLS failure exit 10 + code and print "TLSERR <name> detail <n>".
 note Exit 2 for a usage error, 3 for a DNS/connect failure.
 
-text cusage "usage: client HOST PORT get|smtp|hs [CONNECTHOST [STOREFILE [PATH]]]\n"
+text cusage "usage: client HOST PORT get|smtp|hs|tsmtp [CONNECTHOST [STOREFILE [PATH [REC,HSMS,SPLIT,PAUSEMS,FLAGS]]]]\n"
 text cterr "TLSERR "
 text cdet " detail "
 text cnl "\n"
@@ -25,6 +34,7 @@ text cquit "QUIT\n"
 text cstls "STARTTLS\n"
 text cslash "/"
 text cnf "CLOSE_NOT_FAILED "
+text czr "ZERO_READ_NOT_REFUSED\n"
 
 fn cl_arg i ulong arg edit uchar * to ulong
 n = argread i arg 0 len arg
@@ -255,21 +265,59 @@ end
 ret e
 end
 
-note after the handshake: hs closes, smtp talks, get sends m and copies the response
+note after the handshake: hs closes, smtp talks, get sends m (one record per byte when bit 7 of
+note mode is set) and copies the response
 fn cl_after cs edit uchar * m view uchar * mode ulong to ulong
 io = new uchar 16384 0
-if eq mode 104
+md = and mode 127
+if eq md 104
 tls_close cs
 ret 0
 end
-if or eq mode 115 eq mode 116
-ret cl_smtp cs io mode
+if or eq md 115 eq md 116
+ret cl_smtp cs io md
 end
+if eq and mode 128 0
 r = tls_write cs m
 if lt r 0
 ret ulong neg r
 end
 ret cl_drain cs io
+end
+for i ulong len m
+r = tls_write cs part m i 1
+if lt r 0
+ret ulong neg r
+end
+end
+ret cl_drain cs io
+end
+
+note OPTS "REC,HSMS,SPLIT,PAUSEMS,FLAGS" from w[1536..1536+n): v[7..11]; 1 on a bad option
+fn cl_opts w view uchar * n ulong v edit ulong * to ulong
+k = ulong 7
+x = ulong 0
+for i ulong n
+ch = ulong get w add 1536 i
+if eq ch 44
+put v k x
+k = add k 1
+x = 0
+if gt k 11
+ret 1
+end
+continue
+end
+if or lt ch 48 gt ch 57
+ret 1
+end
+x = add mul x 10 sub ch 48
+if gt x 99999999
+ret 1
+end
+end
+put v k x
+ret 0
 end
 
 note w regions: TLS name 0..256, connect name 256..512, path 512..1536, argument 1536..5632,
@@ -309,6 +357,13 @@ pl = cl_arg 6 part w 1536 1024
 tls_mov w 512 1536 pl
 put v 2 pl
 end
+if ge na 8
+ol = cl_arg 7 part w 1536 4096
+if ne cl_opts w ol v 0
+ret 2
+end
+end
+note the store argument is read last: cl_trust uses it from w[1536] after parsing
 put v 5 0
 if ge na 6
 sl = cl_arg 5 part w 1536 4096
@@ -326,22 +381,31 @@ end
 ret tls_storef st part w 1536 sl
 end
 
-note TLS name and request; v[6] = request length; 0 or a TLS code
+note TLS name, test options and request; v[6] = request length; 0 or a TLS code
 fn cl_prep cs edit uchar * w edit uchar * v edit ulong * to ulong
-fl = ulong 0
+fl = and get v 11 10
 if eq get v 4 103
-fl = 1
+fl = or fl 1
+end
+if ne and get v 11 1 0
+fl = or fl 4
 end
 e = tls_init cs part w 0 get v 0 fl
+if and eq e 0 ne get v 7 0
+e = tls_reclimit cs get v 7
+end
+if and eq e 0 ne get v 8 0
+e = tls_hslimit cs mul get v 8 1000000
+end
 put v 6 0
-if eq fl 1
+if eq and fl 1 1
 put v 6 cl_req w get v 0 get v 2
 end
 ret e
 end
 
 fn cl_main cs edit uchar * st edit uchar * w edit uchar * to int
-v = new ulong 8 0
+v = new ulong 12 0
 if ne cl_parse w v 0
 x = write 2 cusage 0 len cusage
 ret 2
@@ -357,7 +421,6 @@ fd = tls_dial part w 256 get v 1 get v 3
 if lt fd 0
 ret 3
 end
-tls_deadline cs add monons 30000000000
 e = ulong 0
 if eq get v 4 116
 e = cl_starttls int fd
@@ -365,7 +428,27 @@ end
 if eq e 0
 e = tls_connect cs st int fd
 end
-ret cl_go cs int fd part w 8192 get v 6 add get v 4 shl e 8
+if and eq e 0 ne and get v 11 4 0
+e = cl_zread cs
+end
+md = get v 4
+if ne get v 9 0
+md = or md 128
+end
+md = add md shl get v 10 16
+ret cl_go cs int fd part w 8192 get v 6 add md shl e 8
+end
+
+note a zero-length tls_read must be -TLS_ERR_ARGUMENT (never 0, which means close_notify) and must
+note leave the connection usable; 0 or TLS_ERR_ARGUMENT after printing ZERO_READ_NOT_REFUSED
+fn cl_zread cs edit uchar * to ulong
+z = new uchar 1 0
+r = tls_read cs part z 0 0
+if eq r neg long 1
+ret 0
+end
+w = write 2 czr 0 len czr
+ret 1
 end
 
 note mode in bits 0..7, the handshake result above. After a failure the connection must stay
@@ -373,11 +456,17 @@ note failed through tls_close (security review finding 11): tls_read then gives 
 note anything else prints CLOSE_NOT_FAILED before the TLSERR line
 fn cl_go cs edit uchar * fd int m view uchar * me ulong to int
 io = new uchar 16 0
-e = shr me 8
+e = and shr me 8 255
 if eq e 0
 e = cl_after cs m and me 255
 end
+if eq e 0
+tls_close cs
+end
 x = fclose fd
+if ne shr me 16 0
+sl = sleepns long mul shr me 16 1000000
+end
 if ne e 0
 if eq get cs 0 3
 tls_close cs
@@ -391,7 +480,7 @@ ret 0
 end
 
 fn main to int
-cs = new uchar 119296 0
+cs = new uchar TLCSZ 0
 st = new uchar 262144 0
 w = new uchar 16384 0
 ret cl_main cs st w

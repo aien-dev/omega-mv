@@ -1,0 +1,32 @@
+Wolfram receipt for seed/omc/om2/hex (#745). Tool: WolframLanguageEvaluator (agenttools.wolfram.com), 2026-10-30.
+Every fixture spelling and expected value in this directory was produced by these queries and written
+by script from the returned text; none was converted by hand.
+
+== query pairs
+SeedRandom[745];
+ws = {{"uchar",8,0},{"ushort",16,0},{"uint",32,0},{"ulong",64,0},{"byte",8,1},{"short",16,1},{"int",32,1},{"long",64,1}};
+rows = Flatten[Table[With[{t=w[[1]], b=w[[2]], s=w[[3]]},
+  With[{hi = If[s==1, 2^(b-1)-1, 2^b-1]},
+   Map[{t, IntegerString[#,16], IntegerString[#,10], IntegerString[Mod[#,256],10]}&, Join[{0, 1, hi, If[s==1, 2^(b-2), 2^(b-1)]}, RandomInteger[{0,hi},4]]]]], {w, ws}], 1];
+StringRiffle[StringRiffle[#," "]& /@ rows, ";"]
+-> uchar 0 0 0;uchar 1 1 1;uchar ff 255 255;uchar 80 128 128;uchar aa 170 170;uchar 99 153 153;uchar 4b 75 75;uchar 24 36 36;ushort 0 0 0;ushort 1 1 1;ushort ffff 65535 255;ushort 8000 32768 0;ushort 5463 21603 99;ushort 83b4 33716 180;ushort 1e97 7831 151;ushort 958c 38284 140;uint 0 0 0;uint 1 1 1;uint ffffffff 4294967295 255;uint 80000000 2147483648 0;uint 50085ac 83920300 172;uint 59fbb1aa 1509667242 170;uint bbcfd2ed 3150959341 237;uint e9149ee5 3910442725 229;ulong 0 0 0;ulong 1 1 1;ulong ffffffffffffffff 18446744073709551615 255;ulong 8000000000000000 9223372036854775808 0;ulong d3068ea0db75f80d 15205998013390911501 13;ulong e850d7d7b97a6e55 16740117136465882709 85;ulong 1760f0396488474c 1684610389927020364 76;ulong 549e8cdb54a78ed7 6097465819152223959 215;byte 0 0 0;byte 1 1 1;byte 7f 127 127;byte 40 64 64;byte 37 55 55;byte 1 1 1;byte 23 35 35;byte 24 36 36;short 0 0 0;short 1 1 1;short 7fff 32767 255;short 4000 16384 0;short 7316 29462 22;short 49a0 18848 160;short 6f25 28453 37;short 59e2 23010 226;int 0 0 0;int 1 1 1;int 7fffffff 2147483647 255;int 40000000 1073741824 0;int 1d4635b7 491140535 183;int 37d0fc 3657980 252;int 1dc7eab2 499641010 178;int 797c9720 2038208288 32;long 0 0 0;long 1 1 1;long 7fffffffffffffff 9223372036854775807 255;long 4000000000000000 4611686018427387904 0;long 20b9be2d8e53288a 2358124982775785610 138;long 494a37e8475d1f0b 5281094983814553355 11;long 5a29e12b10ae58d6 6496971512538355926 214;long 393a4d64aa1c2c1a 4123693503557151770 26
+
+== query tokens
+StringRiffle[Map[# <> "=" <> IntegerString[FromDigits[#,16],10] &, {"0","0100","1","10","100","1000001","1e","1e5","1f","1f32","1f64","20000000000001","2a","3e8","4","41","5a","5e10","64","7","8","80","8000000000000000","80000001","c8","e","e0f","ef","f","f32","f4240","fe"}], ";"]
+-> 0=0;0100=256;1=1;10=16;100=256;1000001=16777217;1e=30;1e5=485;1f=31;1f32=7986;1f64=8036;20000000000001=9007199254740993;2a=42;3e8=1000;4=4;41=65;5a=90;5e10=24080;64=100;7=7;8=8;80=128;8000000000000000=9223372036854775808;80000001=2147483649;c8=200;e=14;e0f=3599;ef=239;f=15;f32=3890;f4240=1000000;fe=254
+
+== query tokens2
+StringRiffle[Map[# <> "=" <> IntegerString[FromDigits[#,16],10] &, {"3","a","d","ff"}], ";"]
+-> 3=3;a=10;d=13;ff=255
+
+== query places
+rotr[x_,n_,w_]:=BitOr[BitShiftRight[x,n],Mod[BitShiftLeft[x,w-n],2^w]];
+rotl[x_,n_,w_]:=rotr[x,Mod[w-n,w],w];
+f64[v_]:=Round[SetPrecision[N[v,40],40]]; 
+{FromDigits["5a",16], FromDigits["7",16], FromDigits["c8",16], Total[Range[0,FromDigits["4",16]-1]], FromDigits["64",16],
+ rotr[FromDigits["80000001",16], FromDigits["1f",16], 32], rotl[FromDigits["8000000000000000",16], 1, 64],
+ Module[{v=FromDigits["20000000000001",16], e}, e=Floor[Log2[v]]; With[{u=2^(e-52)}, u*Round[v/u]]],
+ Module[{v=FromDigits["1000001",16], e}, e=Floor[Log2[v]]; With[{u=2^(e-23)}, u*Round[v/u]]],
+ BitAnd[FromDigits["64",16], FromDigits["2a",16]],
+ Mod[FromDigits["1f",16]+FromDigits["ef",16], 256], FromDigits["1f",16]+FromDigits["ef",16]}
+-> Out[1]= {90, 7, 200, 6, 100, 3, 1, 9007199254740992, 16777216, 32, 14, 270}

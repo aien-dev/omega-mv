@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): call argument 0x100 for a uchar parameter (no truncation); error 8 on the literal's line.
+om2
+fn f c uchar to ulong
+ret ulong c
+end
+fn main to int
+x = f 0x100
+ret 0
+end
