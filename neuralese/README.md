@@ -15,7 +15,10 @@ Compiler source SHA-256:
 Authority: `docs/one_layer/OMEGESE.md`, sections 9, 10 and 12, and
 `seed/omc/omc.om` at that baseline. No syntax changes are proposed by this patch.
 
-Current pin after the scrub live-float reseed (scrub keeps live float registers, 2026-10-31): committed
+## Active reproduction pin (not historical run evidence)
+
+Current pin after the scrub live-float reseed (#994, 2026-10-31), merged as
+`9920aab1413983c2867d02d75b2276341595adb8`: committed
 `seed/out/omc` SHA-256
 `be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a`, compiler
 source SHA-256 `d4b4b89d8a58cc90d30d15a525b417e4b31e5bfe5288d21d665f1c7958a330f6`.
@@ -31,9 +34,14 @@ the #853 float reseed on main `4722cba587954c3257c7b4de13cfef2ba78d4329`, it was
 merging main `62d1d0d668f897386a0e311374f8dbcc5c32dde8`, it was
 `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b` (source
 `96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e`).
-The gate refuses any other compiler hash, so the reproduction command below uses
-this current pin; the original baseline pin above and the previous pin now yield
-`OM2GATE INVALID` with every case `NOT_RUN` on this tree.
+The conductor compares the supplied hash to the compiler it actually reads and
+refuses a mismatch before case execution. The reproduction commands below use
+the active pin; dated observations below describe earlier runs, not this tree.
+
+On future reseeds, update this active binary/source pair and the reproduction
+commands only. Dated observations below retain the compiler actually used; add a
+new dated result for a new run instead of globally replacing hashes. An active
+pin is a reproduction input, not evidence that either Neuralese suite was rerun.
 
 ## Proposed learned-representation envelope
 
@@ -185,8 +193,9 @@ commands and every verdict are in
 [`host-results.287fdc263f7af93107c378ba63c92202a0e6c1479cb1ff6971706b423b0b15fb.json`](host-results.287fdc263f7af93107c378ba63c92202a0e6c1479cb1ff6971706b423b0b15fb.json);
 the unedited conductor transcript is
 [`host-3163bdc1f56d02803df5061439d0a51156443b339e8e08870a93647894e99222.log`](host-3163bdc1f56d02803df5061439d0a51156443b339e8e08870a93647894e99222.log).
-Those files record the baseline-compiler run and are kept unedited. After the
-main merge above, the same unchanged `host.cases` against the current pin
+Those files record the baseline-compiler run and are kept unedited. After merging
+main `62d1d0d668f897386a0e311374f8dbcc5c32dde8`, the same unchanged `host.cases`
+against compiler `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`
 returned `OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0` on
 2026-10-30 (host CPU, Linux AArch64).
 No model inference, learned representation, GPU, hardware qualification,
@@ -396,8 +405,27 @@ and the inherited `host.cases` returned `OM2GATE PASS cases=54 pass=54 fail=0
 invalid=0 not_run=0` (host CPU, Linux AArch64).
 
 Re-run on 2026-10-30 after the #946 reseed, with the same staged dependencies and
-compiler `469532a50ecb8a0e5ca8e914dd46754bb3fbde7825fb33b7037208caf09779bc`:
+compiler `1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1`:
 `nl4-host.cases` returned `OM2GATE PASS cases=63 pass=63 fail=0 invalid=0 not_run=0`
 and `host.cases` returned `OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0`;
 the same conductor given the previous pin `62775d2a...` returned `OM2GATE INVALID
 cases=54 pass=0 fail=0 invalid=0 not_run=54` (host CPU, Linux AArch64).
+
+### Historical attribution correction (2026-10-31)
+
+Successive reseeds changed the compiler hash in the dated #946 paragraph above;
+at #948 merge `dc0d06e953e4e6729a6ea9d8a18a6fe2e18a4324` it incorrectly
+named `e4d84bc3...`; #875 merge
+`2367874399001efdc7f1ff345fb327469bc1a135` subsequently named `38626559...`,
+#918 merge `2d848d939b102e53049d66ead554a18f56791abb` named `38748442...`,
+and #853 merge `4722cba587954c3257c7b4de13cfef2ba78d4329` named `469532a5...`.
+The paragraph is restored to the compiler recorded in
+[#946 merge `d9461717721856602626c3202751d7653e1aa5f7`](https://github.com/aien-dev/omega-mv/blob/d9461717721856602626c3202751d7653e1aa5f7/neuralese/README.md).
+Read-only `git show d9461717721856602626c3202751d7653e1aa5f7:seed/out/omc | sha256sum`
+independently matches `1578b357...`; the compiler source at that revision hashes
+to `b25079742d1157cd614fe92eeb2dd5e9a5e3b19e978007c7ecb7a6105ab6c65d`.
+The active pin above now names #994's actual binary/source pair separately.
+
+This corrects documentation provenance, not execution: no historical receipt,
+log or fixture has been replaced, and no new Neuralese run is claimed. The
+Oct-30 observations do not establish the same results under later compilers.
