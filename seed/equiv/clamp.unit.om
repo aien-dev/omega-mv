@@ -1,0 +1,20 @@
+note irequiv fixture (issue 826): saturating byte add, two parameters (u16 domain).
+note clamp_add is copied verbatim from tests/one_layer/omegese/dev/dev01.omegese
+note (omega-mv 62d1d0d6). clamp_wrap is a refactor that adds in uchar and
+note detects the wrap instead of widening to ushort.
+fn clamp_add a uchar b uchar to uchar
+x = ushort a
+y = ushort b
+s = add x y
+if gt s 255
+ret 255
+end
+ret uchar s
+end
+fn clamp_wrap a uchar b uchar to uchar
+s = add a b
+if lt s a
+ret 255
+end
+ret s
+end

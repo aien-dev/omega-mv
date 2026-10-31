@@ -1,0 +1,278 @@
+note float locals live in v registers (the twin of their pool register): loop-carried sums, values kept
+note across calls whose callee uses the same twins, float arguments, register pressure, f32, -0.0, NaN,
+note FMOV immediate edge constants and conversions. Expected bit patterns computed outside this compiler.
+fn clob a f64 b f64 to f64
+p = mul a 2.0
+q = add p b
+r = sub q 0.5
+s = mul r r
+ret add s a
+end
+
+fn clob32 a f32 to f32
+p = mul a f32 4.0
+q = sub p a
+ret q
+end
+
+fn sum3 a f64 b f64 c f64 to f64
+ret add add a b c
+end
+
+fn t_loop to int
+s = f64 0.0
+for i ulong 10
+s = add s div f64 i 2.0
+end
+if ne bitcast ulong s bitcast ulong 22.5f64
+ret 1
+end
+v = f64 0.0
+while lt v 3.0
+v = add v 1.0
+end
+if ne bitcast ulong v bitcast ulong 3.0f64
+ret 2
+end
+ret 0
+end
+
+fn t_call to int
+x = f64 1.5
+y = f64 0.25
+z = clob x y
+if ne bitcast ulong x bitcast ulong 1.5f64
+ret 3
+end
+if ne bitcast ulong y bitcast ulong 0.25f64
+ret 4
+end
+if ne bitcast ulong z bitcast ulong 9.0625f64
+ret 5
+end
+w = sum3 x y z
+if ne bitcast ulong w bitcast ulong 10.8125f64
+ret 6
+end
+x = y
+x = x
+if ne bitcast ulong x bitcast ulong 0.25f64
+ret 7
+end
+x = clob y y
+if ne bitcast ulong x bitcast ulong 0.3125f64
+ret 8
+end
+ret 0
+end
+
+fn t_arr to int
+a = new f64 100 0.0
+for i ulong 100
+put a i mul f64 i 0.75
+end
+t = f64 0.0
+for i ulong 100
+t = add t get a i
+end
+if ne bitcast ulong t bitcast ulong 3712.5f64
+ret 9
+end
+b32 = new f32 8 f32 0.0
+acc = f32 0.0
+for i ulong 8
+put b32 i mul f32 i f32 0.5
+end
+for i ulong 8
+acc = add acc get b32 i
+end
+if ne bitcast uint acc 1096810496
+ret 10
+end
+ret 0
+end
+
+fn t_imm64 to int
+c1 = f64 31.0
+c2 = f64 0.125
+c3 = f64 -2.0
+c4 = f64 0.1328125
+if ne bitcast ulong c1 4629418941960159232
+ret 11
+end
+if ne bitcast ulong c2 4593671619917905920
+ret 12
+end
+if ne bitcast ulong c3 13835058055282163712
+ret 13
+end
+if ne bitcast ulong c4 4593953094894616576
+ret 14
+end
+c5 = f64 32.0
+c6 = f64 0.0625
+c7 = f64 -31.0
+c8 = f64 -0.125
+if ne bitcast ulong c5 4629700416936869888
+ret 15
+end
+if ne bitcast ulong c6 4589168020290535424
+ret 16
+end
+if ne bitcast ulong c7 13852790978814935040
+ret 17
+end
+if ne bitcast ulong c8 13817043656772681728
+ret 18
+end
+c9 = f64 0.0078125
+c10 = f64 256.0
+if ne bitcast ulong c9 4575657221408423936
+ret 36
+end
+if ne bitcast ulong c10 4643211215818981376
+ret 37
+end
+ret 0
+end
+
+fn t_imm32 to int
+k1 = f32 31.0
+k2 = f32 0.125
+k3 = f32 -2.0
+k4 = f32 32.0
+k5 = f32 0.0625
+if ne bitcast uint k1 1106771968
+ret 19
+end
+if ne bitcast uint k2 1040187392
+ret 20
+end
+if ne bitcast uint k3 3221225472
+ret 21
+end
+if ne bitcast uint k4 1107296256
+ret 22
+end
+if ne bitcast uint k5 1031798784
+ret 23
+end
+k6 = f32 0.0078125
+if ne bitcast uint k6 1006632960
+ret 38
+end
+ret 0
+end
+
+fn t_special to int
+nz = neg f64 0.0
+if ne bitcast ulong nz 9223372036854775808
+ret 24
+end
+nz2 = f64 -0.0
+if ne bitcast ulong nz2 9223372036854775808
+ret 25
+end
+n = div f64 0.0 f64 0.0
+if eq n n
+ret 26
+end
+if not ne n n
+ret 27
+end
+ret 0
+end
+
+fn t_f32 to int
+f = f32 0.75
+g = clob32 f
+if ne bitcast uint f 1061158912
+ret 28
+end
+if ne bitcast uint g 1074790400
+ret 29
+end
+d = f64 f32 0.1
+e = f32 d
+if ne bitcast uint e bitcast uint f32 0.1
+ret 30
+end
+x = f64 1.5
+m = int mul x 3.0
+if ne m 4
+ret 31
+end
+ret 0
+end
+
+fn t_intr to int
+q = fsqrt f64 6.25
+q = fabs neg q
+q2 = fmin q f64 2.0
+q3 = fmax q f64 2.0
+if ne bitcast ulong q bitcast ulong 2.5f64
+ret 32
+end
+if ne bitcast ulong q2 bitcast ulong 2.0f64
+ret 33
+end
+if ne bitcast ulong q3 bitcast ulong 2.5f64
+ret 34
+end
+ret 0
+end
+
+fn t_press to int
+h1 = f64 1.0
+h2 = f64 2.0
+h3 = f64 3.0
+h4 = f64 4.0
+h5 = f64 5.0
+h6 = f64 6.0
+h7 = f64 7.0
+h8 = f64 8.0
+h9 = clob h1 h2
+hs = add add h1 h2 add h3 h4
+hs = add hs add add h5 h6 add h7 h8
+hs = add hs h9
+if ne bitcast ulong hs bitcast ulong 49.25f64
+ret 35
+end
+ret 0
+end
+
+fn main to int
+r = t_loop
+if ne r 0
+ret r
+end
+r = t_call
+if ne r 0
+ret r
+end
+r = t_arr
+if ne r 0
+ret r
+end
+r = t_imm64
+if ne r 0
+ret r
+end
+r = t_imm32
+if ne r 0
+ret r
+end
+r = t_special
+if ne r 0
+ret r
+end
+r = t_f32
+if ne r 0
+ret r
+end
+r = t_intr
+if ne r 0
+ret r
+end
+ret t_press
+end

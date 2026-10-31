@@ -1,0 +1,12 @@
+note S5 scrub: n = 15 is not a multiple of 16: trap 3 (exit 103). Without the check the stores would run
+note from SP - 15 to SP + 1 and clear byte 0 of the array at SP, and f would give 0.
+om2
+fn f n ulong to int
+a = new uchar 16 255
+k = scrub n
+ret int add k long get a 0
+end
+fn main to int
+r = f 15
+ret r
+end

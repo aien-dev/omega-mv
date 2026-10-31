@@ -1,0 +1,10 @@
+$ sed "s/^- \`omega_gpu_session_set_error\` (library code/- \`omega_gpu_session_set_error\`, \`omega_gpu_zzz_gone\` (library code/" docs/runtime/API.md > API.md; sh tools/runtime_api_check.sh docs/runtime/omega_runtime_api.manifest . work API.md
+FAIL: API.md section 10 names omega_gpu_zzz_gone as INTERNAL but no listed header declares it
+RESULT: FAIL (runtime API check)
+exit=1
+
+$ CC=cc-noaux (a cc wrapper that rejects -aux-info) sh tools/runtime_api_check.sh docs/runtime/omega_runtime_api.manifest . work docs/runtime/API.md
+FAIL: the header declaration scan needs a compiler with -aux-info (gcc; set CC=gcc):
+      cc: error: unrecognized option -aux-info
+RESULT: FAIL (runtime API check)
+exit=1

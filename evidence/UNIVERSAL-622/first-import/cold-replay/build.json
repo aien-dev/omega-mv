@@ -1,0 +1,13 @@
+{
+  "schema": "omega.c-u64-import.build.v1",
+  "compiler_sha256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+  "seed_source_archive": "0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9",
+  "birth_seed": "29b12760",
+  "inputs": {
+    "src/source-aware/vendor/sha256.om": "12d492b5f99b47b1e525067e1660c7cedbf6b414032cfc8b7e174919a28c052c",
+    "src/adapters/c-u64-import.om": "172c8dcce7a1a3925299b8d8dff261e1302079a76e8979d4c4c0cb27a771e91e"
+  },
+  "combined_source_sha256": "d23eead1be92b430c1ef1a044f04e13d3eb2ac1c21d98bcbc989bba6bba126b7",
+  "binary_sha256": "d3cf7793c9ac1118cf770ffb3af57ffedcccf49ea3f3b663757ea99f8619cb01",
+  "host_orchestration": "Python process/filesystem only; no C/Rust/Python parser or compute fallback in native artifact"
+}

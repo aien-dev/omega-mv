@@ -1,0 +1,160 @@
+note om/tls/test/tls/bigsend.om -- htlssend (seed/net/https.om) at the io size limit, for interop.sh.
+note Composed after the om/tls units, seed/net/http.om and seed/net/https.om. Program mode.
+note usage: bigsend PORT STOREFILE   (TLS name localhost, dials 127.0.0.1; fakesrv.py mode sink)
+note 1. htlssend of io[16, 16 + len io), past the end of io, must be HEINVAL with nothing sent
+note    (before the range check it copied past io and trapped);
+note 2. one htlssend of all of io[0, HTB) below the TLS state of a 3.5 MiB io (local arrays of one
+note    function total at most 4 MiB, omc error 23, so no io passed to htlssend is bigger): an 8-byte
+note    big-endian length, then byte i = (7 i) mod 251; the sink checks every byte and answers SINKOK.
+note Prints "BIGSEND OK n" and exits 0; "BIGSEND FAIL step r" and exit 1; 2 usage, 3 connect.
+text bhost "localhost"
+text bdial "127.0.0.1"
+text bok "BIGSEND OK "
+text bfail "BIGSEND FAIL "
+text bsp " "
+text bnl "\n"
+text bsink "SINKOK"
+
+note decimal number from b, or 0
+fn bnum b view uchar * to ulong
+v = ulong 0
+for i ulong len b
+ch = ulong get b i
+if or lt ch 48 gt ch 57
+ret 0
+end
+v = add mul v 10 sub ch 48
+if gt v 65535
+ret 0
+end
+end
+ret v
+end
+
+note signed decimal of v on stdout
+fn bdec v long to void
+b = new uchar 24 0
+k = ulong 24
+n = v
+sg = lt v 0
+if sg
+n = neg v
+end
+u = ulong n
+while or gt u 0 eq k 24 bound 22
+k = sub k 1
+put b k uchar add 48 rem u 10
+u = div u 10
+end
+if sg
+k = sub k 1
+put b k 45
+end
+x = write 1 b k sub 24 k
+end
+
+note "BIGSEND FAIL s r" and 1
+fn bbad s long r long to int
+x = write 1 bfail 0 len bfail
+bdec s
+x = write 1 bsp 0 len bsp
+bdec r
+x = write 1 bnl 0 len bnl
+ret 1
+end
+
+note the 8-byte big-endian length t, then byte i = (7 i) mod 251, into io[0, t), t <= 4 MiB
+note (a `for` over a value count traps 4 past 1000000 passes, so the counts are numbers)
+fn bfill io edit uchar * t ulong to void
+p = ulong 0
+for q ulong 64
+for r ulong 65536
+if lt p t
+put io p uchar rem mul p 7 251
+end
+p = add p 1
+end
+end
+for j ulong 8
+put io j uchar and shr t mul sub 7 j 8 255
+end
+end
+
+note the reply: "SINKOK" then close_notify; 0, 1 for another reply, or a negative result
+fn breply cs edit ulong * io edit uchar * to long
+got = ulong 0
+for it ulong 16
+r = htlsrecv cs io got sub 6 got
+if lt r 0
+ret r
+end
+if eq r 0
+ret 1
+end
+got = add got ulong r
+if ge got 6
+for i ulong 6
+if ne get io i get bsink i
+ret 1
+end
+end
+ret 0
+end
+end
+ret 1
+end
+
+fn main to int
+cs = new ulong 320 0
+io = new uchar 3670016 0
+st = new uchar 262144 0
+w = new uchar 2048 0
+if lt argcnt 3
+ret 2
+end
+pn = argread 1 w 0 6
+sl = argread 2 w 64 1023
+if or le pn 0 le sl 0
+ret 2
+end
+po = bnum part w 0 ulong pn
+if eq po 0
+ret 2
+end
+e = tls_storef st part w 64 ulong sl
+if ne e 0
+ret bbad 1 long e
+end
+fd = tls_dial bdial po
+if lt fd 0
+ret 3
+end
+r = hinit cs io int fd 0
+r = hfe r htlsinit cs io bhost
+r = hfe r htlsconn cs io st
+if lt r 0
+x = htlsend cs io
+ret bbad 2 r
+end
+r = htlssend cs io 16 len io
+if ne r HEINVAL
+x = htlsend cs io
+ret bbad 3 r
+end
+b = get cs HTB
+bfill io b
+r = htlssend cs io 0 b
+if lt r 0
+x = htlsend cs io
+ret bbad 4 r
+end
+r = breply cs io
+x = htlsend cs io
+if ne r 0
+ret bbad 5 r
+end
+x = write 1 bok 0 len bok
+bdec long b
+x = write 1 bnl 0 len bnl
+ret 0
+end

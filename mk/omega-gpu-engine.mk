@@ -3,9 +3,9 @@
 # part of `all` or `test`.
 #   test-gpu-engine-compile  header + core compile, enum names, refusals, no-op backend (A2/A3a)
 #   test-gpu-engine          the engine core against a fake backend (every state and failure)
-#   test-gpu-engine-backend-compile  syntax-checks src/omega_blackwell_engine.c (A3b1): -c only, no link, no device
+#   test-gpu-engine-backend-compile  syntax-checks $(CUDAPP_SOURCE)/src/omega_blackwell_engine.c (A3b1): -c only, no link, no device
 #   test-gpu-engine-prod-build       production build of build/omegatool at the physics pin: links only, opens no device
-#   test-gpu-engine-mutants  removes each protection from src/omega_gpu_engine.c in a scratch
+#   test-gpu-engine-mutants  removes each protection from $(CUDAPP_SOURCE)/src/omega_gpu_engine.c in a scratch
 #                            copy; the host test must fail each one (exit nonzero on a survivor)
 #   test-gpu-engine-sim      (A3b2) the REAL engine core + Blackwell backend + vector wrapper against a simulated driver
 #                            (tests/fake_m16_native.c); host only, no device, no physics C sources
@@ -106,16 +106,19 @@ GPU_FS_CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin
 	-U_FORTIFY_SOURCE -DOMEGA_GPU_NO_POSIX -DOMEGA_NUMERIC_CPU_ONLY $(CUDAPP_HEADER_FLAGS) -Isrc
 # P07 cut C (session part): the persistent session, the matmul and attention APIs, the serving reservation and the
 # bounded wait join the link. Their machine comes from an installed OmegaGpuPlatform; the Linux reference
-# (src/omega_gpu_platform_linux.c) is deliberately NOT in this list. Still outside it: the elementwise API, the
+# ($(CUDAPP_SOURCE)/src/omega_gpu_platform_linux.c) is deliberately NOT in this list. Still outside it: the elementwise API, the
 # numeric launchers, the vector executor, the resident runtime (docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md).
+# SHA-256 here is the migration-pending C of src/omega_sha256_fs.c, not the Omega unit: the omega-bridge binding in
+# src/omega_om_units.c needs pthread, mmap, mprotect and abort (outside GPU_FS_ALLOWED). test-sha256-fs-parity
+# holds the two equal; successor: a freestanding bridge binding with a caller-supplied stack.
 GPU_FS_NAMES = omega_gpu_engine omega_gpu_platform omega_blackwell_encoder omega_blackwell_codegen \
 	omega_blackwell_matmul omega_blackwell_qmd omega_blackwell_realize \
 	omega_gpu_session omega_gpu_fmt omega_gpu_matmul_api omega_gpu_attention_api \
 	omega_gpu_serving omega_gpu_wait cudapp_freest_units
-GPU_FS_SRCS = $(addprefix $(CUDAPP_SOURCE)/src/,$(addsuffix .c,$(GPU_FS_NAMES))) src/omega_om_units.c
+GPU_FS_SRCS = $(addprefix $(CUDAPP_SOURCE)/src/,$(addsuffix .c,$(GPU_FS_NAMES))) src/omega_sha256_fs.c
 GPU_FS_HDRS = $(addprefix $(CUDAPP_SOURCE)/src/,omega_gpu_engine.h omega_gpu_platform.h omega_blackwell_codegen.h omega_blackwell_matmul.h \
 	omega_gpu_session.h omega_gpu_fmt.h omega_gpu_matmul_api.h omega_gpu_attention_api.h omega_gpu_serving.h omega_gpu_wait.h)
-GPU_FS_OBJS = $(addprefix $(GPU_FS_DIR)/,$(addsuffix .o,$(GPU_FS_NAMES))) $(GPU_FS_DIR)/omega_om_units.o
+GPU_FS_OBJS = $(addprefix $(GPU_FS_DIR)/,$(addsuffix .o,$(GPU_FS_NAMES))) $(GPU_FS_DIR)/omega_sha256_fs.o
 GPU_FS_LINK = $(GPU_FS_DIR)/omega_gpu_freestanding.o
 GPU_FS_ALLOWED = memcpy|memmove|memset|memcmp|strlen|strcmp
 
@@ -123,7 +126,7 @@ $(GPU_FS_DIR)/%.o: $(CUDAPP_SOURCE)/src/%.c $(GPU_FS_HDRS) | check-cudapp
 	@mkdir -p $(GPU_FS_DIR)
 	gcc $(GPU_FS_CFLAGS) -c -o $@ $<
 
-$(GPU_FS_DIR)/omega_om_units.o: src/omega_om_units.c $(GPU_FS_HDRS) | check-cudapp
+$(GPU_FS_DIR)/omega_sha256_fs.o: src/omega_sha256_fs.c src/sha256.h $(GPU_FS_HDRS) | check-cudapp
 	@mkdir -p $(GPU_FS_DIR)
 	gcc $(GPU_FS_CFLAGS) -c -o $@ $<
 
@@ -154,7 +157,10 @@ test-gpu-engine-freestanding: $(GPU_FS_LINK) build/test_omega_gpu_engine_freesta
 # nm -u check to refuse it (a check that can never fail proves nothing).
 .PHONY: test-codegen-freestanding test-gpu-fs-allowlist-control
 CODEGEN_FS_TEST_DEPS = tests/test_omega_codegen_freestanding.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(CUDAPP_SOURCE)/src/omega_blackwell_matmul.h
-build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_om_units.c $(CUDAPP_LIB) | check-cudapp
+# The hosted side encodes through CUDApp's canonical .om encoder (om/encoder/bw_enc_sm121.om of the pinned stage,
+# bound in libcudapp.a by cudapp_om_units.c; omega_om_units.c carries only SHA-256 and BLAKE3), the freestanding
+# side through the migration-pending C encoder, so the cmp below is also an .om-vs-C differential.
+build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_om_units.c src/omega_native.h $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -o $@ tests/test_omega_codegen_freestanding.c \
 		src/omega_om_units.c $(CUDAPP_LIB)
@@ -177,6 +183,33 @@ test-gpu-fs-allowlist-control: $(GPU_FS_LINK)
 	@bad=$$(nm -u $(GPU_FS_DIR)/control/with_canary.o | awk '{print $$NF}' | grep -Ev '^(_GLOBAL_OFFSET_TABLE_|($(GPU_FS_ALLOWED)))$$' || true); \
 	if [ "$$bad" != "malloc" ]; then echo "allowlist control: expected exactly malloc refused, got '$$bad'"; exit 1; fi; \
 	echo "allowlist control: a malloc caller is refused by the nm -u check (as required)"
+
+# The freestanding SHA-256 (src/omega_sha256_fs.c, migration-pending C) against the Omega unit of every hosted build
+# (om/sha256/sha256-om2.om via src/omega_om_units.c), tests/test_sha256_fs_parity.c. Controls: the C file refuses a
+# hosted compile, the hosted codegen test calls the Omega binding (omega2_sha256_*), and a copy of the C with one
+# round constant changed must FAIL the parity test.
+.PHONY: test-sha256-fs-parity
+SHA_FS_DIR = build/sha256_fs_parity
+SHA_FS_RENAME = -Dsha256_init=fs_sha256_init -Dsha256_update=fs_sha256_update -Dsha256_final=fs_sha256_final \
+	-Dsha256_hash=fs_sha256_hash
+test-sha256-fs-parity: build/test_codegen_hosted
+	@mkdir -p $(SHA_FS_DIR)
+	gcc $(GPU_FS_CFLAGS) $(SHA_FS_RENAME) -c -o $(SHA_FS_DIR)/fs.o src/omega_sha256_fs.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -pthread -Isrc -o $(SHA_FS_DIR)/parity tests/test_sha256_fs_parity.c \
+		$(SHA_FS_DIR)/fs.o src/omega_om_units.c
+	./$(SHA_FS_DIR)/parity
+	@if gcc -std=gnu11 -Isrc -c -o $(SHA_FS_DIR)/hosted.o src/omega_sha256_fs.c 2> /dev/null; then \
+		echo "CONTROL BROKEN: src/omega_sha256_fs.c compiled hosted"; exit 1; fi
+	@n=$$(nm build/test_codegen_hosted | grep -c ' T omega2_sha256_'); [ "$$n" -ge 4 ] || \
+		{ echo "FAIL: the hosted codegen test does not hash through the Omega binding"; exit 1; }; \
+	echo "control: hosted compile of src/omega_sha256_fs.c refused; hosted codegen test links $$n omega2_sha256_* functions"
+	sed 's/0x428a2f98/0x428a2f99/' src/omega_sha256_fs.c > $(SHA_FS_DIR)/red.c
+	@! cmp -s $(SHA_FS_DIR)/red.c src/omega_sha256_fs.c || { echo "RED MUTANT BROKEN: sed changed nothing"; exit 1; }
+	gcc $(GPU_FS_CFLAGS) $(SHA_FS_RENAME) -c -o $(SHA_FS_DIR)/red.o $(SHA_FS_DIR)/red.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -pthread -Isrc -o $(SHA_FS_DIR)/parity_red tests/test_sha256_fs_parity.c \
+		$(SHA_FS_DIR)/red.o src/omega_om_units.c
+	@if ./$(SHA_FS_DIR)/parity_red > $(SHA_FS_DIR)/red.log; then echo "RED CHECK BROKEN: a wrong round constant passed"; exit 1; \
+	else echo "red check: one changed round constant FAILS the parity test ($$(tail -1 $(SHA_FS_DIR)/red.log))"; fi
 
 # native v1 P07 cut C, session part (aienos#286): the portable session over OmegaGpuPlatform.
 #  - test_omega_gpu_session_platform links the FREESTANDING partial-link object and drives it through a fake

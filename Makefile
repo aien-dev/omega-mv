@@ -22,7 +22,7 @@ SRCS = src/omega_om_units.c src/omega_canonical.c src/omega_validate.c src/omega
 	src/omega_library.c src/omega_discovery.c src/omega_machine.c src/omega_realize_synth.c \
 	src/omega_matvec.c src/omega_accelerator.c src/omega_accelerator_world.c \
 	src/omega_vector.c src/omega_blackwell_gates.c src/omega_world_gates.c \
-	src/omega_evidence.c tools/omegatool.c
+	src/omega_evidence.c src/omega_clean_clone.c tools/omegatool.c
 OBJS = $(patsubst %.c,$(OUT_DIR)/%.o,$(notdir $(SRCS)))
 DEPS = $(OBJS:.o=.d)
 -include $(DEPS)
@@ -65,7 +65,25 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 $(OUT_DIR)/%.o: src/%.c | $(OUT_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CUDAPP_ENCODER_DEFS) -c $< -o $@
+
+# Objects that read the physics tree: the two compiled from it, and the sources that include
+# m16_native.h or nvrm.h from it (directly or through src/*.h; `gcc -MM` lists a $(PHYSICS_DIR)
+# path for exactly these). They must be rebuilt when PHYSICS_DIR points at another tree, not only
+# when a file there is newer, and none may compile before check-physics-lock passes (#488).
+# The stamp records the resolved PHYSICS_DIR and its git HEAD and is rewritten only when that
+# text changes, so an unchanged PHYSICS_DIR rebuilds nothing. Its phony prerequisite runs the
+# lock check first: when the check refuses, the stamp is not made and no physics object compiles.
+# The other objects take nothing from PHYSICS_DIR and are shared with physics-free builds
+# (crumbline-learner, omega, test-program-id), so they stay ungated.
+PHYSICS_STAMP = $(OUT_DIR)/physics.stamp
+PHYSICS_OBJS = $(addprefix $(OUT_DIR)/,m16_native.o nvrm.o omegatool.o omega_accelerator_world.o \
+	omega_blackwell_submit.o omega_blackwell_engine.o omega_blackwell_gates.o \
+	omega_gpu_platform_linux.o omega_world_gates.o omega_evidence.o)
+$(PHYSICS_STAMP): check-physics-lock | $(OUT_DIR)
+	@new="$$(cd '$(PHYSICS_DIR)' 2>/dev/null && pwd -P || echo '$(PHYSICS_DIR)') $$(git -C '$(PHYSICS_DIR)' rev-parse HEAD 2>/dev/null || echo nogit)"; \
+	if [ "$$(cat $@ 2>/dev/null)" != "$$new" ]; then printf '%s\n' "$$new" > $@; fi
+$(PHYSICS_OBJS): $(PHYSICS_STAMP)
 
 $(OUT_DIR)/crumbline/%.o: src/crumbline/%.c | $(OUT_DIR)
 	mkdir -p $(OUT_DIR)/crumbline
@@ -1174,6 +1192,18 @@ $(RX_CM_UNIT): tests/runtime/rx_costmodel_unit.c $(RX_CM_OBJ) src/omega_om_units
 
 test-costmodel: $(RX_CM_UNIT)
 	./$(RX_CM_UNIT)
+	@set -eu; dir=$(OUT_DIR)/costmodel-mutant; rm -rf $$dir; mkdir -p $$dir; \
+	  sed "/CM704:refuse-unsupported-op/c\\    uint32_t op = f && f->op < RX_CM_OPS ? f->op : RX_CM_OPS - 1u; /* CM704:refuse-unsupported-op */" \
+	    src/runtime/rx_costmodel.c > $$dir/rx_costmodel.c; \
+	  if cmp -s src/runtime/rx_costmodel.c $$dir/rx_costmodel.c; then \
+	    echo "mutant restore-op-clamp: sed changed nothing"; exit 1; fi; \
+	  $(CC) $(CFLAGS) -c -o $$dir/rx_costmodel.o $$dir/rx_costmodel.c; \
+	  $(CC) $(CFLAGS) -o $$dir/unit tests/runtime/rx_costmodel_unit.c $$dir/rx_costmodel.o src/omega_om_units.c -lm; \
+	  rc=0; $$dir/unit refuse > $$dir/out.txt 2> $$dir/err.txt || rc=$$?; \
+	  if [ $$rc -eq 0 ] || ! grep -q unsupported-op-not-aliased-to-matvec $$dir/err.txt; then \
+	    echo "mutant restore-op-clamp was not killed by unsupported-op-not-aliased-to-matvec (exit $$rc)"; \
+	    cat $$dir/err.txt; exit 1; fi; \
+	  echo "mutant restore-op-clamp: killed by unsupported-op-not-aliased-to-matvec (exit $$rc)"
 
 # Offline resource-DAG evaluator, imported verbatim from closed PR #590
 # (commit 3bd56731). Host arithmetic on the numbers written in the fixtures.
@@ -1199,7 +1229,7 @@ $(DS_OBJ): tools/dagsim/dagsim.c tools/dagsim/dagsim.h src/runtime/rx_costmodel.
 		rm -f $@; exit 1; fi
 
 $(DS_UNIT): tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
+	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tests/dagsim/dagsim_unit.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -Wl,--wrap=rx_cm_predict -lm
 
 $(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OUT_DIR)
 	$(CC) $(CFLAGS) -Itools/dagsim -o $@ tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) -lm
@@ -1207,6 +1237,8 @@ $(DS_CLI): tools/dagsim/dagsim_cli.c $(DS_OBJ) $(RX_CM_OBJ) $(DS_SHA_SRC) | $(OU
 test-dagsim: $(DS_UNIT) $(DS_CLI)
 	./$(DS_UNIT)
 	sh tests/dagsim/run_cli.sh $(DS_CLI) $(OUT_DIR)/dagsim-cli-out
+	sh tests/dagsim/mutant_lifetime.sh
+	sh tests/dagsim/mutant_predict.sh
 
 # AArch64 hosts: the gate. Real realizations, training, promotion through the
 # R9 barrier on the native authority, held-out workloads.
@@ -1944,6 +1976,30 @@ test-library: tests/test_omega_library.c src/omega_library.c src/omega_library.h
 	  mp_run build_mutant refuse-deps           dep-null             '    if (dep_count > 0) return -1;'; mp_wait
 	@echo "test-library: PASS (all checks, all mutants killed)"
 
+# omega-mv#574: omega_exec_native_f3 keeps executable pages for the last OMEGA_EXEC_CACHE_SLOTS distinct code
+# byte strings. test-exec-native-cache: reuse (hits), invalidation (same length or same address with new bytes
+# never runs a stale mapping), LRU eviction, capacity. Then each mutant of src/omega_exec.c must make the test fail.
+.PHONY: test-exec-native-cache
+EXECCACHE_CORE = $(filter-out src/omega_exec.c,$(LIBTEST_CORE))
+EXECCACHE_DIR = $(OUT_DIR)/exec-cache-test
+test-exec-native-cache: tests/exec/test_exec_native_cache.c src/omega_exec.c src/omega_exec.h
+	@mkdir -p $(EXECCACHE_DIR)
+	$(CC) $(LIBTEST_FLAGS) -o $(EXECCACHE_DIR)/test_exec_native_cache tests/exec/test_exec_native_cache.c src/omega_exec.c $(EXECCACHE_CORE) -lpthread
+	$(EXECCACHE_DIR)/test_exec_native_cache
+	@set -eu; for m in 'identity-by-length|s/ \&\& memcmp(s->code, real->code_bytes, real->code_len) == 0//' \
+	                 'evict-most-recent|s/s->last_use < lru->last_use/s->last_use > lru->last_use/' \
+	                 'hit-not-touched|/^ *s->last_use = ++g_tick;$$/d'; do \
+	  name=$${m%%|*}; expr=$${m#*|}; mut=$(EXECCACHE_DIR)/mut_$$name.c; \
+	  sed "$$expr" src/omega_exec.c > $$mut; \
+	  if cmp -s src/omega_exec.c $$mut; then echo "mutant $$name: sed changed nothing"; exit 1; fi; \
+	  $(CC) $(LIBTEST_FLAGS) -o $(EXECCACHE_DIR)/mut_$$name tests/exec/test_exec_native_cache.c $$mut $(EXECCACHE_CORE) -lpthread; \
+	  rc=0; $(EXECCACHE_DIR)/mut_$$name > $(EXECCACHE_DIR)/mut_$$name.out 2>&1 || rc=$$?; \
+	  if [ $$rc -ne 1 ] || ! grep -q '^EXEC_NATIVE_CACHE: FAIL' $(EXECCACHE_DIR)/mut_$$name.out; then \
+	    echo "mutant $$name NOT killed (exit $$rc)"; cat $(EXECCACHE_DIR)/mut_$$name.out; exit 1; fi; \
+	  echo "mutant $$name: killed ($$(grep -c '^FAIL' $(EXECCACHE_DIR)/mut_$$name.out) failing checks)"; \
+	done
+	@echo "test-exec-native-cache: PASS (all checks, all mutants killed)"
+
 # VC1-STORE (VC1 stage 3): unit test for the Verified Crumb Store (omega_vcstore): golden
 # vectors from aien-protocols (tests/vcstore/golden, PIN names the commit), immutability,
 # dependency closure, insert-order-independent digest, name index, save/load. Plus a mutation
@@ -2358,7 +2414,7 @@ test-vc-bridge: tests/test_omega_vc_bridge.c src/omega_vc_bridge.c src/omega_vc_
 # they compile the physics checkout path into the object (-DOMEGA_PHYSICS_DIR), which made the
 # archive digest depend on where physics was checked out. Without them libomega_gpu.a is
 # byte-identical for any PHYSICS_DIR and any omega checkout directory.
-GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o,$(OBJS))
+GPU_API_OBJS = $(filter-out $(OUT_DIR)/omegatool.o $(OUT_DIR)/omega_blackwell_gates.o $(OUT_DIR)/omega_world_gates.o $(OUT_DIR)/omega_clean_clone.o,$(OBJS))
 GPU_LINK_LIBS = $(OUT_DIR)/libomega_gpu.a $(CUDAPP_LIB)
 GPU_API_TEST = $(OUT_DIR)/gpu_matmul_api_test
 GPU_R4_RECEIPT = $(OUT_DIR)/gpu_matmul_r4_receipt
@@ -2421,7 +2477,8 @@ test-gpu-reconv: $(GPU_RECONV_TEST)
 
 # omega #492: IMAD.HI.U32 with a register Rc. The chip reads Rc as a 64-bit register pair (nvcc 13.0
 # sm_121 oracle, evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016; chip probe pending), so the four warp
-# simulators refuse a non-RZ Rc instead of modelling a 32-bit one. One binary per simulator header.
+# simulators model an even Rc as the pair Rc+1:Rc and refuse an odd Rc, and replay the PR #487
+# odd-column pack (it must come out wrong, as on the chip). One binary per simulator header.
 .PHONY: test-gpu-imadhi-rc
 GPU_IMADHI_SIMS = bw_warp_sim bw_warp_sim_tc bw_warp_sim_k bw_warp_sim_pa
 GPU_IMADHI_TESTS = $(GPU_IMADHI_SIMS:%=$(OUT_DIR)/gpu_imadhi_rc_test_%)
@@ -2489,9 +2546,42 @@ $(GPU_L2_STALE_TEST): tests/gpu_l2_stale_test.c $(CUDAPP_SOURCE)/src/omega_gpu_f
 GPU_DATTN_TEST = $(OUT_DIR)/gpu_decode_attn_test
 $(GPU_DATTN_TEST): tests/gpu_decode_attn_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
 	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
-test-gpu-decode-attn: $(GPU_DATTN_TEST)
+test-gpu-decode-attn: $(GPU_DATTN_TEST) test-gpu-decode-attn-maxpos
 	$(GPU_DATTN_TEST) --host-only
 	$(GPU_DATTN_TEST) --sim
+
+# omega #535: the 128k position bound (OMEGA_GPU_DATTN_MAX_POS 131072) on a fake platform, no device. A sanitized copy
+# of $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c is linked ahead of the library, so cache writes, the RoPE fill and launch staging
+# are ASan/UBSan checked against the fake's exact-size buffers. Each mutant breaks one bound in a copy of that file;
+# the test must FAIL on it.
+.PHONY: test-gpu-decode-attn-maxpos
+GPU_DATTN_MAXPOS_TEST = $(OUT_DIR)/test_omega_gpu_decode_attn_maxpos
+GPU_DATTN_MAXPOS_MUT = $(OUT_DIR)/dattn_maxpos_mut
+GPU_DATTN_MAXPOS_SAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
+$(GPU_DATTN_MAXPOS_TEST): tests/test_omega_gpu_decode_attn_maxpos.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
+	$(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $@ tests/test_omega_gpu_decode_attn_maxpos.c \
+	  $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(GPU_LINK_LIBS) -lpthread -lm
+test-gpu-decode-attn-maxpos: $(GPU_DATTN_MAXPOS_TEST)
+	$(GPU_DATTN_MAXPOS_TEST)
+	@mkdir -p $(GPU_DATTN_MAXPOS_MUT)
+	@set -e; \
+	tmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c > $(GPU_DATTN_MAXPOS_MUT)/$$name.c; \
+	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $(GPU_DATTN_MAXPOS_MUT)/$$name \
+	    tests/test_omega_gpu_decode_attn_maxpos.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c $(GPU_LINK_LIBS) -lpthread -lm; \
+	  if $(GPU_DATTN_MAXPOS_MUT)/$$name > $(GPU_DATTN_MAXPOS_MUT)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  if ! grep -q '^FAIL ' $(GPU_DATTN_MAXPOS_MUT)/$$name.log; then \
+	    echo "mutant $$name: no FAIL case (did not run?)"; cat $(GPU_DATTN_MAXPOS_MUT)/$$name.log; exit 1; fi; \
+	  echo "mutant $$name killed"; }; \
+	tmut cap-off-by-one 's/max_pos > OMEGA_GPU_DATTN_MAX_POS ||/max_pos >= OMEGA_GPU_DATTN_MAX_POS ||/'; \
+	tmut cap-one-chunk-over 's/max_pos > OMEGA_GPU_DATTN_MAX_POS ||/max_pos > OMEGA_GPU_DATTN_MAX_POS + 256u ||/'; \
+	tmut write-pos-bound 's/kv_head >= 4 || pos >= c->max_pos || count == 0/kv_head >= 4 || count == 0/'; \
+	tmut write-count-bound 's/count > c->max_pos - pos ||/count > c->max_pos - pos + 1u ||/'; \
+	tmut read-pos-bound 's/kv_head >= 4 || pos >= c->max_pos || !k/kv_head >= 4 || pos > c->max_pos || !k/'; \
+	tmut step-pos-bound 's/layer >= c->layers || pos >= c->max_pos || (rec/layer >= c->layers || pos > c->max_pos || (rec/'; \
+	tmut rope-table-short 's/(size_t)max_pos \* OMEGA_DATTN_ROPE_ROW_BYTES/(size_t)(max_pos - 8u) * OMEGA_DATTN_ROPE_ROW_BYTES/'; \
+	echo "test-gpu-decode-attn-maxpos: 7 of 7 mutants killed"
 
 # Qwen3.8-27B (omega-mv#544, 2026-10-18): decode attention head_dim 256, 24 q / 4 kv heads, partial RoPE by permutation
 # (omega_gpu_decode_attn256_api.h). test-gpu-decode-attn256 is host-only + simulator; the chip gate is
@@ -2583,6 +2673,20 @@ $(GPU_GPR_BOUNDARY_TEST): tests/gpu_gpr_boundary_test.c $(CUDAPP_SOURCE)/src/ome
 test-gpu-gpr-boundary: $(GPU_GPR_BOUNDARY_TEST)
 	$(GPU_GPR_BOUNDARY_TEST)
 
+# omega-mv#554: static scoreboard hazard checker (RAW / WAR / WAW) over the encoded bytes of every kernel the generators
+# build, after the launchers' patch steps. Host only: decoder vs encoder, the pre-#553 attend red receipt
+# (tests/fixtures/bw_hazard), negative controls, then the sweep. test-bw-hazard-nvdisasm (the name it had when it
+# called nvdisasm) adds the decoder cross-check against Omega's own sm_121 disassembler, in process, on every distinct
+# kernel (bar C6: every check that called nvdisasm calls ours; test-sm121dis checks that disassembler against the oracle).
+.PHONY: test-bw-hazard test-bw-hazard-nvdisasm
+BW_HAZARD_TEST = $(OUT_DIR)/bw_hazard_test
+$(BW_HAZARD_TEST): tests/bw_hazard_test.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.h $(CUDAPP_SOURCE)/src/omega_sm121_disasm.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/bw_hazard_test.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.c $(GPU_LINK_LIBS) -lpthread -lm
+test-bw-hazard: $(BW_HAZARD_TEST)
+	$(BW_HAZARD_TEST)
+test-bw-hazard-nvdisasm: $(BW_HAZARD_TEST)
+	$(BW_HAZARD_TEST) --disasm
+
 # OWN-30B T3 (2026-10-13): HMMA arithmetic probe (host model self-checks; chip run under the GB10 lock).
 GPU_TC_PROBE_TEST = $(OUT_DIR)/gpu_tc_probe_test
 $(GPU_TC_PROBE_TEST): tests/gpu_tc_probe_test.c tests/bw_hmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
@@ -2622,6 +2726,32 @@ $(GPU_QGEMM_TEST): tests/gpu_qgemm_test.c tests/bw_qmma_model.h tests/bw_warp_si
 GPU_PFHOST_TEST = $(OUT_DIR)/gpu_pfhost_test
 $(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_pfhost.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pfhost.h $(GPU_LINK_LIBS)
 	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_pfhost_test.c $(GPU_LINK_LIBS) -lpthread -lm
+# omega#456: the prefill tests above, host model and warp simulator only. Every run names --host-only or --sim, the two
+# modes that never open the device (each test's main returns before its chip part); chip runs stay under the GB10 lock.
+.PHONY: test-gpu-prefill-host
+test-gpu-prefill-host: $(GPU_TC_PROBE_TEST) $(GPU_TCGEMM_TEST) $(GPU_PATTN_TEST) $(GPU_PF_MEM_TEST) $(GPU_PFGEMM_TEST) \
+                       $(GPU_QMMA_PROBE_TEST) $(GPU_QGEMM_TEST) $(GPU_PFHOST_TEST)
+	./$(GPU_TC_PROBE_TEST) --host-only
+	./$(GPU_QMMA_PROBE_TEST) --host-only
+	./$(GPU_PF_MEM_TEST) --host-only
+	./$(GPU_TCGEMM_TEST) --host-only
+	./$(GPU_TCGEMM_TEST) --sim
+	./$(GPU_PATTN_TEST) --host-only
+	./$(GPU_PATTN_TEST) --sim
+	./$(GPU_PFGEMM_TEST) --host-only
+	./$(GPU_PFGEMM_TEST) --sim
+	./$(GPU_QGEMM_TEST) --host-only
+	./$(GPU_QGEMM_TEST) --sim
+	./$(GPU_PFHOST_TEST) --host-only
+	./$(GPU_PFHOST_TEST) --sim
+	@echo "test-gpu-prefill-host: PASS (8 prefill tests, host model + warp simulator, no device)"
+# omega#456: tools/own30b_decode_profile.c is a link-only recorder built by hand on the Spark; compile it with the
+# project's -Werror flags so a warning cannot land unseen.
+.PHONY: check-own30b-decode-profile
+check-own30b-decode-profile: tools/own30b_decode_profile.c | check-cudapp
+	@mkdir -p $(OUT_DIR)
+	$(CC) $(CFLAGS) -c -o $(OUT_DIR)/own30b_decode_profile.o tools/own30b_decode_profile.c
+	@echo "check-own30b-decode-profile: PASS (compiles with -Werror)"
 # OWN-30B W-L2 (2026-10-13): command list (many launches, one submission) + decode glue kernels. test-gpu-cmdlist is
 # host-only + warp simulator; the chip gate is tools/run_gpu_cmdlist_chip.sh under the GB10 lock.
 .PHONY: test-gpu-cmdlist
@@ -2656,10 +2786,65 @@ test-gpu-isolation: $(GPU_ISOLATION_TEST)
 # host-only; the chip gate is tools/run_gpu_decode_graph_chip.sh under the GB10 lock.
 .PHONY: test-gpu-decode-graph
 GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
+GPU_DGRAPH_ABORT_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_abort
 $(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
 	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
-test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST)
+test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST) $(GPU_DGRAPH_ABORT_TEST) test-gpu-decode-graph-abort-mutants test-gpu-decode-graph-timeline
 	./$(GPU_DECODE_GRAPH_TEST) --host-only
+	./$(GPU_DGRAPH_ABORT_TEST)
+
+# omega #518: lock and token-state recovery of the split API (failed begin_token, abort_token, end_token after a failed
+# record, latched session) on a fake platform whose lock refuses a second acquisition. Host only, opens no device.
+# Each mutant breaks one rule in a copy of omega_gpu_decode_graph.c linked ahead of the library; the test must FAIL on it.
+.PHONY: test-gpu-decode-graph-abort-mutants
+GPU_DGRAPH_MUT_DIR = $(OUT_DIR)/dgraph_mut
+$(GPU_DGRAPH_ABORT_TEST): tests/test_omega_gpu_decode_graph_abort.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_platform.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_abort.c $(GPU_LINK_LIBS) -lpthread -lm
+test-gpu-decode-graph-abort-mutants: $(GPU_LINK_LIBS)
+	@mkdir -p $(GPU_DGRAPH_MUT_DIR)
+	@set -e; killed=0; \
+	dmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
+	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c $(GPU_DGRAPH_MUT_DIR)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -c -o $(GPU_DGRAPH_MUT_DIR)/$$name.o $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_MUT_DIR)/$$name tests/test_omega_gpu_decode_graph_abort.c \
+	    $(GPU_DGRAPH_MUT_DIR)/$$name.o $(GPU_LINK_LIBS) -lpthread -lm; \
+	  if ./$(GPU_DGRAPH_MUT_DIR)/$$name > $(GPU_DGRAPH_MUT_DIR)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  nfail=$$(grep -c '^FAIL' $(GPU_DGRAPH_MUT_DIR)/$$name.log || true); \
+	  if [ "$$nfail" -eq 0 ]; then echo "mutant $$name: nonzero exit but no FAIL case (did not run?)"; cat $(GPU_DGRAPH_MUT_DIR)/$$name.log; exit 1; fi; \
+	  echo "mutant $$name killed: $$nfail case(s) failed"; killed=$$((killed+1)); }; \
+	dmut begin-fail-keeps-lock 's|    omega_gpu_session_unlock(); /\* begin_fail releases \*/|    ;|'; \
+	dmut begin-fail-stays-in-token 's|    g->in_token = 0; g->failed = 1;|    g->failed = 1;|'; \
+	dmut oneshot-old-bad-args-only 's|if (brc != OMEGA_GPU_DGRAPH_OK) {|if (brc == OMEGA_GPU_DGRAPH_BAD_ARGS) {|'; \
+	dmut abort-keeps-lock 's|g->n_stamp = 0; /\* no timeline for an abandoned token \*/|&\n    return OMEGA_GPU_DGRAPH_OK;|'; \
+	dmut abort-submits 's|^int omega_gpu_decode_graph_abort_token(OmegaGpuDecodeGraph \*g) {$$|&\n    if (g \&\& g->in_token) return omega_gpu_decode_graph_end_token(g, NULL, NULL);|'; \
+	echo "test-gpu-decode-graph-abort-mutants: $$killed of 5 mutants killed"
+
+# omega #456: the per-token timeline (set_stamps) never writes past stamp[]: 4096 stamped launches fill it, the 4097th
+# (flush_each, one submission per launch) fails the token and leaves no timeline. Fake platform that completes every
+# submission; no device. Each mutant breaks one rule in a copy of omega_gpu_decode_graph.c linked ahead of the library;
+# the overflow case must FAIL on it.
+.PHONY: test-gpu-decode-graph-timeline
+GPU_DGRAPH_TL_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_timeline
+GPU_DGRAPH_TL_MUT = $(OUT_DIR)/dgraph_tl_mut
+$(GPU_DGRAPH_TL_TEST): tests/test_omega_gpu_decode_graph_timeline.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_platform.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_timeline.c $(GPU_LINK_LIBS) -lpthread -lm
+test-gpu-decode-graph-timeline: $(GPU_DGRAPH_TL_TEST)
+	./$(GPU_DGRAPH_TL_TEST)
+	@mkdir -p $(GPU_DGRAPH_TL_MUT)
+	@set -e; \
+	tmut() { name=$$1; script=$$2; \
+	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_TL_MUT)/$$name.c; \
+	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c $(GPU_DGRAPH_TL_MUT)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_TL_MUT)/$$name tests/test_omega_gpu_decode_graph_timeline.c \
+	    $(GPU_DGRAPH_TL_MUT)/$$name.c $(GPU_LINK_LIBS) -lpthread -lm; \
+	  if ./$(GPU_DGRAPH_TL_MUT)/$$name > $(GPU_DGRAPH_TL_MUT)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
+	  if ! grep -q '^FAIL one launch past the timeline' $(GPU_DGRAPH_TL_MUT)/$$name.log; then \
+	    echo "mutant $$name: no FAIL case (did not run?)"; cat $(GPU_DGRAPH_TL_MUT)/$$name.log; exit 1; fi; \
+	  echo "mutant $$name killed"; }; \
+	tmut room-off-by-one 's|(uint32_t)(cnt - from) > room) {|(uint32_t)(cnt - from) > room + 1u) {|'; \
+	tmut timeline-after-failure 's#if (!g->stamps || g->failed || #if (!g->stamps || #'; \
+	echo "test-gpu-decode-graph-timeline: 2 of 2 mutants killed"
 
 # OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
@@ -2702,3 +2887,13 @@ $(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_mod
 .PHONY: test-gpu-gemm
 test-gpu-gemm: $(GPU_GEMM_TEST)
 	./$(GPU_GEMM_TEST) --sim
+
+# Expert Ribbon P1 (aienix#4 / omega#533, 2026-10-18): versioned replaceable FP8 expert slots (omega_gpu_fp8_slots.h).
+# test-gpu-fp8-slots is host-only (slot state machine, threaded race, mutant); the chip gate is
+# tools/run_gpu_fp8_slots_chip.sh under the GB10 lock (parity vs resident, churn, reader fence via a command list, negative control).
+.PHONY: test-gpu-fp8-slots
+GPU_FP8_SLOTS_TEST = $(OUT_DIR)/gpu_fp8_slots_test
+$(GPU_FP8_SLOTS_TEST): tests/gpu_fp8_slots_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_slots.h $(CUDAPP_SOURCE)/src/omega_fp8_slot_table.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_fp8_slots_test.c $(GPU_LINK_LIBS) -lpthread -lm
+test-gpu-fp8-slots: $(GPU_FP8_SLOTS_TEST)
+	./$(GPU_FP8_SLOTS_TEST) --host-only

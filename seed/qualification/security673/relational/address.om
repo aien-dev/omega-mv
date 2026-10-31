@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: Apache-2.0
+note public pointer x0, secret selector x1; equal table words fixture7.
+fn probe a view ulong 2 s ulong to ulong
+ret get a and s 1
+end

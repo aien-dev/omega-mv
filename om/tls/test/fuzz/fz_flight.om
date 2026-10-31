@@ -1,0 +1,211 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_flight.om: fuzz target for the client's whole server-flight path in om/tls/tls.om: the record
+note layer (tls_rdrec: framing, CCS, AEAD open, inner type and padding), handshake reassembly
+note (tls_hsmsg), ServerHello (tls_rdsh) and the encrypted flight (tls_rdenc: EncryptedExtensions,
+note CertificateRequest, Certificate + chain verification, CertificateVerify, Finished), exactly as
+note tls_connect runs them after a real ClientHello (tls_mkch).
+note Input: R1 R0 raw[R] chunks. raw is what the server sends before its keys exist (plaintext
+note ServerHello, CCS, alerts, any forged records). The chunks (common.om fz_feed) follow, sealed
+note under the server handshake key that the input's ServerHello gives this ClientHello.
+note To seal the chunks before the client reads anything, a byte copy m of the client state (same
+note ClientHello, same transcript) first reads raw from its own socket pair, which is shut so it sees
+note the end instead of waiting; when its tls_rdsh succeeds, its read key becomes the sealing key.
+note All the client's input is then in its socket and the write side is shut: no read can block.
+note Arguments: 1 = PEM trust store (om/tls/test/x509/vectors/pki/storeAll.pem).
+
+note fz_fdset: connection fd and a 2 s deadline into a state (no wait can reach it: see above)
+fn fz_fdset c edit uchar * fd ulong to void
+tls_pn c TLFD fd 4
+tls_pn c TLDL add ulong monons 2000000000 8
+end
+
+note fz_mirror: m (after its tls_rdsh) turns into the server's sealing side, writing to fd
+fn fz_mirror m edit uchar * fd ulong to void
+for i ulong 32
+put m add TLWKEY i get m add TLRKEY i
+end
+for i ulong 12
+put m add TLWIV i get m add TLRIV i
+end
+tls_pn m TLWS 0 8
+put m TLWK 1
+tls_pn m TLFD fd 4
+end
+
+note fz_pre: m reads raw from pair a (shut at once); on success, m seals the chunks into the client's
+note pair b. Returns the client's end of b plus 1, or 0 when no socket pair could be made.
+fn fz_pre m edit uchar * th edit ulong 40 x view uchar * r ulong to ulong
+a = new ulong 2 0
+b = new ulong 2 0
+if ne fz_pair a 0
+ret 0
+end
+if ne fz_pair b 0
+ret 0
+end
+fz_fdset m get a 0
+s = fz_send int get a 1 x 2 r
+s = fz_send int get b 1 x 2 r
+z = shutdown int get a 1 1
+if eq tls_rdsh m th 0
+fz_mirror m get b 1
+s = fz_feed m x add 2 r
+end
+z = shutdown int get b 1 1
+ret add get b 0 1
+end
+
+note fz_detch: make the ClientHello tls_mkch wrote deterministic, so a seed's CertificateVerify and
+note Finished (which sign or MAC the transcript) stay valid: random = 64..95, legacy_session_id =
+note 96..127, x25519 private key = 1..32 (its public key replaces the old one in key_share, both in
+note the x25519 entry and as the tail of the X25519MLKEM768 entry), and the hybrid's ML-KEM-768 key
+note pair (fz_detkem). Every other ClientHello byte is tls_mkch's own.
+fn fz_detch c edit uchar * to ulong
+k = new uchar 32 0
+o = new uchar 32 0
+fz_fill k 0 32 1
+if ne x25519_base o k 0
+ret 1
+end
+b = add TLWB 5
+n = add tls_gn c add b 1 3 4
+p = fz_find c b n
+if eq p 0
+ret 1
+end
+r = sub add b n add p 32
+q = ulong 0
+if ge r 32
+q = fz_find c add p 32 r
+end
+if and ne get c TLKGEN 0 eq q 0
+ret 1
+end
+if ne fz_detkem c b p 0
+ret 1
+end
+for i ulong 32
+put c add TLEPK i get k i
+put c add TLEPU i get o i
+put c add p i get o i
+if ne q 0
+put c add q i get o i
+end
+end
+fz_fill c add b 6 32 64
+fz_fill c add b 39 32 96
+tls_mov c TLSID add b 39 32
+ret 0
+end
+
+note fz_detkem: while tls_kemset holds an ML-KEM-768 key pair (c[TLKGEN]), the hybrid entry is ek ||
+note x25519 public key, so its ek is the 1184 bytes before p (the first copy of that public key in
+note the ClientHello at c[b..]). The pair is made again from the seed 128..191: dk where tls_kemset
+note keeps it (c[TLKDK], 2400 bytes), the new ek over the old one. 0, or 1 when the bytes before p
+note are not the held ek or the key pair fails.
+fn fz_detkem c edit uchar * b ulong p ulong to ulong
+if eq get c TLKGEN 0
+ret 0
+end
+if lt p add b 1184
+ret 1
+end
+e = sub p 1184
+for i ulong 1184
+if ne get c add e i get c add TLKDK add 1152 i
+ret 1
+end
+end
+s = new uchar 64 0
+fz_fill s 0 64 128
+ek = new uchar 1184 0
+if ne mlkem_keygen_seed s ek part c TLKDK 2400 0
+ret 1
+end
+for i ulong 1184
+put c add e i get ek i
+end
+ret 0
+end
+
+note fz_find: the offset in c[b, b+n) of the 32-byte public key c[TLEPU..]; 0 when absent
+fn fz_find c view uchar * b ulong n ulong to ulong
+for j ulong sub n 31
+d = ulong 0
+for i ulong 32
+d = or d xor ulong get c add add b j i ulong get c add TLEPU i
+end
+if eq d 0
+ret add b j
+end
+end
+ret 0
+end
+
+note fz_dump: with argument 2, the ClientHello message is written to that file (gen_seeds.py reads it)
+fn fz_dump c view uchar * n ulong to void
+p = new uchar 4096 0
+k = fz_arg 2 p
+if eq k 0
+ret
+end
+f = fopen p 0 k 524865 420
+if lt f 0
+ret
+end
+w = write int f c add TLWB 5 n
+x = fclose int f
+end
+
+fn fz_flrun c edit uchar * m edit uchar * x view uchar * to ulong
+th = new ulong 40 0
+t2 = new ulong 40 0
+st = new uchar TLSTSZ 0
+s = fz_store st
+if ne tls_init c FZHOST 1 0
+ret 0
+end
+sha256_init th
+if ne tls_mkch c 0
+ret 0
+end
+if ne fz_detch c 0
+ret 0
+end
+n = add tls_gn c add TLWB 6 3 4
+fz_dump c n
+sha256_update th part c add TLWB 5 n
+for i ulong TLCSZ
+put m i get c i
+end
+for i ulong 40
+put t2 i get th i
+end
+r = fz_be2 x 0
+if gt r sub len x 2
+r = sub len x 2
+end
+f = fz_pre m t2 x r
+if eq f 0
+ret 0
+end
+fz_fdset c sub f 1
+e = tls_rdsh c th
+if eq e 0
+e = tls_rdenc c st th
+end
+ret e
+end
+
+fn main to int
+c = new uchar TLCSZ 0
+m = new uchar TLCSZ 0
+in = new uchar FZCAP 0
+n = fz_read in
+if lt n 2
+ret 0
+end
+r = fz_flrun c m part in 0 n
+fz_say r
+ret 0
+end

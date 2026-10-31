@@ -33,7 +33,10 @@
 #include <time.h>
 #include <math.h>
 #include <limits.h>
+#include <errno.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
+#include <unistd.h>
 
 static int m17_gate_count = 0;
 static int m17_gate_passed = 0;
@@ -1060,14 +1063,84 @@ fail:
     return false;
 }
 
+/* Remove the built copy a clean-clone gate made under its private folder; the
+ * log beside it stays for the reader. Hundreds of MB per run otherwise pile up
+ * in /tmp (omega#526). */
+static void m18_clean_clone_remove_checkout(const char *clone) {
+    char checkout[PATH_MAX];
+    int n = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    if (n < 0 || (size_t)n >= sizeof(checkout)) return;
+    /* No shell: a file-tree walk that never follows a symlink (omega#565). */
+    if (omega_cc_remove_tree(checkout) != 0) {
+        fprintf(stderr, "M18 clean clone: could not remove %s\n", checkout);
+    }
+}
+
+/* Absolute path of an environment value (or fallback when unset or empty). */
+static bool m18_clean_clone_realpath(const char *name, const char *value, char out[PATH_MAX]) {
+    if (!value || !*value || !realpath(value, out)) {
+        fprintf(stderr, "M18 clean clone: cannot resolve %s (%s)\n", name, value ? value : "unset");
+        return false;
+    }
+    return true;
+}
+
+/* The CUDApp inputs of the nested build, resolved in this process: the stage
+ * (CUDAPP_STAGE, else ${OUT_DIR:-build}/cudapp), the checkout (CUDAPP_DIR, else
+ * the repository the stage recorded) and the pinned tools OMEGA_OMC and
+ * OMEGA_BRIDGE, which tools/cudapp-stage.sh requires. */
+static bool m18_clean_clone_cudapp_inputs(char stage[PATH_MAX], char cudapp[PATH_MAX], char omc[PATH_MAX],
+                                          char bridge[PATH_MAX]) {
+    char fallback[PATH_MAX];
+    const char *value = getenv("CUDAPP_STAGE");
+    if (!value || !*value) {
+        const char *out_dir = getenv("OUT_DIR");
+        int n = snprintf(fallback, sizeof(fallback), "%s/cudapp", out_dir && *out_dir ? out_dir : "build");
+        if (n < 0 || (size_t)n >= sizeof(fallback)) return false;
+        value = fallback;
+    }
+    if (!m18_clean_clone_realpath("CUDAPP_STAGE", value, stage)) return false;
+    value = getenv("CUDAPP_DIR");
+    if (!value || !*value) {
+        char repository[PATH_MAX + 16];
+        int n = snprintf(repository, sizeof(repository), "%s/repository", stage);
+        if (n < 0 || (size_t)n >= sizeof(repository)) return false;
+        FILE *f = fopen(repository, "r");
+        if (!f) {
+            fprintf(stderr, "M18 clean clone: %s: %s\n", repository, strerror(errno));
+            return false;
+        }
+        bool got = fgets(fallback, sizeof(fallback), f) != NULL;
+        fclose(f);
+        if (!got) return false;
+        fallback[strcspn(fallback, "\n")] = '\0';
+        value = fallback;
+    }
+    return m18_clean_clone_realpath("CUDAPP_DIR", value, cudapp) &&
+           m18_clean_clone_realpath("OMEGA_OMC", getenv("OMEGA_OMC"), omc) &&
+           m18_clean_clone_realpath("OMEGA_BRIDGE", getenv("OMEGA_BRIDGE"), bridge);
+}
+
 static bool test_m18_gate16_clean_clone(void) {
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
         return true;
     }
     /* Copy the repo this omegatool runs from (the code under test), not a
      * hardcoded checkout, and pass the PHYSICS_DIR this process resolves at run time
-     * (omega_physics_dir.h) as an absolute path so the copy in /tmp does not fall back to
-     * the Makefile default ../physics (= /tmp/physics). Mirrors M19. */
+     * (omega_physics_dir.h) as an absolute path so the copy does not fall back to
+     * the Makefile default ../physics. Mirrors M19.
+     *
+     * The copy and its log live in a private mkdtemp folder (omega#526). A fixed
+     * /tmp path is shared by every user of the machine, and the sticky /tmp lets
+     * neither the judge user nor the operator remove or overwrite what the other
+     * left behind ("rm: Permission denied", "cannot create ...log: Permission denied"),
+     * so the gate failed for whoever ran second.
+     *
+     * OUT_DIR is unset for the nested build: tests/gates/run.sh exports a per-step
+     * OUT_DIR (omega#511), so `make` in the copy would put the binary at
+     * $OUT_DIR/omegatool and "./build/omegatool" would not exist (sh exit 127 in
+     * the judge run of e466b138, omega#526). The copy is private, so it needs no
+     * per-step build directory. */
     char physics_dir_resolved[PATH_MAX], physics_err[OMEGA_PHYSICS_ERR_SIZE];
     if (!omega_physics_dir_resolve_pinned(physics_dir_resolved, sizeof(physics_dir_resolved), 0, physics_err, sizeof(physics_err))) {
         fprintf(stderr, "%s\n", physics_err);
@@ -1076,26 +1149,65 @@ static bool test_m18_gate16_clean_clone(void) {
     /* Resolve every inherited checkout/tool path before changing directories.
      * The stage repository is the default canonical source, never a retired
      * Omega duplicate or an unrelated sibling checkout. */
-    const char command[] =
-        "root=$(git rev-parse --show-toplevel) && "
-        "PHYSICS_DIR=$(realpath -- \"${PHYSICS_DIR:-../physics}\") && "
-        "CUDAPP_STAGE=$(realpath -- \"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\") && "
-        "if [ -z \"${CUDAPP_DIR:-}\" ]; then "
-        "IFS= read -r CUDAPP_DIR < \"$CUDAPP_STAGE/repository\"; fi && "
-        "CUDAPP_DIR=$(realpath -- \"$CUDAPP_DIR\") && "
-        "OMEGA_OMC=$(realpath -- \"${OMEGA_OMC:?}\") && "
-        "OMEGA_BRIDGE=$(realpath -- \"${OMEGA_BRIDGE:?}\") && "
-        "export PHYSICS_DIR CUDAPP_DIR CUDAPP_STAGE OMEGA_OMC OMEGA_BRIDGE && "
-        "sh tools/cudapp-stage.sh --verify cudapp.lock \"$CUDAPP_STAGE\" >/dev/null && "
-        "rm -rf /tmp/omega_clean_m18 && "
-        "cp -r \"$root\" /tmp/omega_clean_m18 && "
-        "cd /tmp/omega_clean_m18 && "
-        "make OUT_DIR=build clean >/dev/null 2>&1 && "
-        "make -j OUT_DIR=build PHYSICS_DIR=\"$PHYSICS_DIR\" "
-        "CUDAPP_DIR=\"$CUDAPP_DIR\" CUDAPP_STAGE=\"$CUDAPP_STAGE\" "
-        "OMEGA_OMC=\"$OMEGA_OMC\" OMEGA_BRIDGE=\"$OMEGA_BRIDGE\" >/dev/null 2>&1 && "
-        "OMEGA_IN_CLEAN_CLONE=1 ./build/omegatool --run-m18-gates >/tmp/clean_clone_m18.log 2>&1";
-    int rc = system(command);
+    char stage_dir[PATH_MAX], cudapp_dir[PATH_MAX], omc_path[PATH_MAX], bridge_dir[PATH_MAX];
+    if (!m18_clean_clone_cudapp_inputs(stage_dir, cudapp_dir, omc_path, bridge_dir)) return false;
+    const char *tmp = getenv("TMPDIR");
+    if (!tmp || !*tmp) tmp = "/tmp";
+    char clone[PATH_MAX];
+    int cl = snprintf(clone, sizeof(clone), "%s/omega_clean_m18_XXXXXX", tmp);
+    if (cl < 0 || (size_t)cl >= sizeof(clone)) return false;
+    if (!mkdtemp(clone)) {
+        fprintf(stderr, "M18 clean clone: mkdtemp %s: %s\n", clone, strerror(errno));
+        return false;
+    }
+    /* No shell (omega#565): each step is its own program with an argument vector,
+     * so nothing in TMPDIR, PHYSICS_DIR or the CUDApp inputs can change what runs.
+     * Paths outside the plain charset are refused (fail closed); make would also
+     * expand a '$'. */
+    if (!omega_cc_path_is_plain(clone) || !omega_cc_path_is_plain(physics_dir_resolved) ||
+        !omega_cc_path_is_plain(stage_dir) || !omega_cc_path_is_plain(cudapp_dir) ||
+        !omega_cc_path_is_plain(omc_path) || !omega_cc_path_is_plain(bridge_dir)) {
+        fprintf(stderr, "M18 clean clone: refusing a path with characters outside [A-Za-z0-9/._+-]: %s | %s | %s | %s | %s | %s\n",
+                clone, physics_dir_resolved, stage_dir, cudapp_dir, omc_path, bridge_dir);
+        (void)rmdir(clone);
+        return false;
+    }
+    char root[PATH_MAX], checkout[PATH_MAX], log_path[PATH_MAX], physics_arg[PATH_MAX + 16];
+    char cudapp_arg[PATH_MAX + 16], stage_arg[PATH_MAX + 16], omc_arg[PATH_MAX + 16], bridge_arg[PATH_MAX + 16];
+    char *git_top[] = {"git", "rev-parse", "--show-toplevel", NULL};
+    if (!omega_cc_capture_line(NULL, "git", git_top, root, sizeof(root))) {
+        fprintf(stderr, "M18 clean clone: git rev-parse --show-toplevel failed\n");
+        (void)rmdir(clone);
+        return false;
+    }
+    int n1 = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
+    int n2 = snprintf(log_path, sizeof(log_path), "%s/clean_clone_m18.log", clone);
+    int n3 = snprintf(physics_arg, sizeof(physics_arg), "PHYSICS_DIR=%s", physics_dir_resolved);
+    int n4 = snprintf(cudapp_arg, sizeof(cudapp_arg), "CUDAPP_DIR=%s", cudapp_dir);
+    int n5 = snprintf(stage_arg, sizeof(stage_arg), "CUDAPP_STAGE=%s", stage_dir);
+    int n6 = snprintf(omc_arg, sizeof(omc_arg), "OMEGA_OMC=%s", omc_path);
+    int n7 = snprintf(bridge_arg, sizeof(bridge_arg), "OMEGA_BRIDGE=%s", bridge_dir);
+    if (n1 < 0 || (size_t)n1 >= sizeof(checkout) || n2 < 0 || (size_t)n2 >= sizeof(log_path) ||
+        n3 < 0 || (size_t)n3 >= sizeof(physics_arg) || n4 < 0 || (size_t)n4 >= sizeof(cudapp_arg) ||
+        n5 < 0 || (size_t)n5 >= sizeof(stage_arg) || n6 < 0 || (size_t)n6 >= sizeof(omc_arg) ||
+        n7 < 0 || (size_t)n7 >= sizeof(bridge_arg)) {
+        (void)rmdir(clone);
+        return false;
+    }
+    char *verify_argv[] = {"sh", "tools/cudapp-stage.sh", "--verify", "cudapp.lock", stage_dir, NULL};
+    char *cp_argv[] = {"cp", "-r", "--", root, checkout, NULL};
+    char *clean_argv[] = {"make", "clean", NULL};
+    char *make_argv[] = {"make", "-j", physics_arg, cudapp_arg, stage_arg, omc_arg, bridge_arg, NULL};
+    char *run_argv[] = {"./build/omegatool", "--run-m18-gates", NULL};
+    const char *step = "cudapp-stage --verify";
+    int rc = omega_cc_run(root, "sh", verify_argv, NULL, false);
+    if (rc == 0) { step = "cp"; rc = omega_cc_run(NULL, "cp", cp_argv, NULL, false); }
+    if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, "make", clean_argv, NULL, false); }
+    if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, "make", make_argv, NULL, false); }
+    /* The log sits beside the checkout: <clone>/clean_clone_m18.log. */
+    if (rc == 0) { step = "omegatool --run-m18-gates"; rc = omega_cc_run(checkout, "./build/omegatool", run_argv, "../clean_clone_m18.log", true); }
+    if (rc != 0) fprintf(stderr, "M18 clean clone failed at %s (rc %d); log: %s\n", step, rc, log_path);
+    m18_clean_clone_remove_checkout(clone);
     return (rc == 0);
 }
 

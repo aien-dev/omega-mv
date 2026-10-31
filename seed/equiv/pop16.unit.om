@@ -1,0 +1,36 @@
+note irequiv fixture (issue 826): population count of a ushort (u16 domain).
+note pop16 counts bit by bit; pop16s is the SWAR refactor. pop16z and pop16e are
+note deliberate mutants of pop16s that differ at exactly one input: the first
+note (x = 0) and the last (x = 65535) of the enumeration.
+fn pop16 x ushort to ushort
+c = ushort 0
+for i uint 16
+c = add c and x 1
+x = shr x 1
+end
+ret c
+end
+fn pop16s x ushort to ushort
+x = sub x and shr x 1 21845
+x = add and x 13107 and shr x 2 13107
+x = and add x shr x 4 3855
+ret and add x shr x 8 31
+end
+fn pop16z x ushort to ushort
+if eq x 0
+ret 1
+end
+x = sub x and shr x 1 21845
+x = add and x 13107 and shr x 2 13107
+x = and add x shr x 4 3855
+ret and add x shr x 8 31
+end
+fn pop16e x ushort to ushort
+if eq x 65535
+ret 15
+end
+x = sub x and shr x 1 21845
+x = add and x 13107 and shr x 2 13107
+x = and add x shr x 4 3855
+ret and add x shr x 8 31
+end

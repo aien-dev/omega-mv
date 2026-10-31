@@ -1,0 +1,43 @@
+#758 relational suite: replay after merging main 62d1d0d66 (2026-10-30)
+
+Why this note exists
+--------------------
+README.txt, CURRENT-BINDINGS.json and SHA256SUMS bind the suite to compiler
+734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61, which is what
+seed/omega-from-seed.sh produces at this branch's original base 00eb0e7106d2. After
+main was merged, the same bootstrap (and the committed seed/out/omc) produce
+62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b instead. Those
+files are left unchanged; this note records what each compiler does with the suite.
+
+Setup (Linux aarch64 host, no GPU)
+----------------------------------
+Sibling layout of the README replay before the #774 review fixes (the case files then used
+../security673-relational/ paths; they are now repository-relative): security673-scanner = commit
+155ff3178f35013e405ed40d09a7dd75ede2a403, security673-relational = this branch.
+Gate = evidence/run1/gate.bin (sha256 6c8691c2...6acefa), run from the scanner checkout
+with fresh scratch directories outside the repository.
+Pinned compiler: built by `sh seed/omega-from-seed.sh` in a checkout of 10151e71d
+(base 00eb0e7106d2) -> 734f0a39...6b61.
+Current compiler: seed/out/omc of the merged branch -> 62775d2a...712b.
+
+Results
+-------
+cases file              734f0a39 (pinned)            62775d2a (current main)
+qualification.cases     exit0 PASS 56/56              exit0 PASS 56/56
+bindings.cases          exit0 PASS 16/16              exit0 PASS 16/16
+consumer.cases          exit0 PASS 4/4                exit0 PASS 4/4
+binding-negative.cases  exit1 FAIL 2 (intended)       exit1 FAIL 2 (intended)
+
+The two binding-negative FAIL rows are the intended wrong-source-bytes and
+wrong-checker-bytes controls under both compilers. With the compiler path, its hash
+and the scratch path normalized, the gate logs of the two runs are identical, and all
+78 ELFs that the gate compiled across the four case files are byte-identical between
+the two compilers. The derive-* cases compare freshly emitted bytes against the recorded
+scanner inputs, so every recorded input that a derive-* case re-derives is also exactly
+what 62775d2a emits.
+
+Scope
+-----
+This is a replay of the existing suite, not a new qualification. Every limit and
+L4-L7 blocker in README.txt still holds. To replay with the current compiler, pass
+C=<merged checkout>/seed/out/omc and H=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b.

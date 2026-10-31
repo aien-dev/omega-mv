@@ -1,0 +1,13 @@
+note clock: time, identity and randomness; no file, network or process words.
+text ok "clock\n"
+fn main to int
+t = monons
+p = getpid
+b = new uchar 8 0
+r = random b 0 8 0
+if or le t 0 le p 0
+ret 1
+end
+w = write 1 ok 0 len ok
+ret 0
+end

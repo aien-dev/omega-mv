@@ -1,7 +1,7 @@
 note bench/inference_cost/fake_model.om -- a deterministic stand-in for an OpenAI
 note chat-completions endpoint, so driver.sh --self-test can exercise --run-model end to end
 note without a live model.
-note Compose: { printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om seed/net/http.om bench/inference_cost/fake_model.om; } | omc
+note Compose: { printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om seed/net/http.om seed/net/notls.om bench/inference_cost/fake_model.om; } | omc
 note Run: fake_model MODE TASKSDIR [MAXCONN]; it listens on an ephemeral 127.0.0.1 port,
 note prints "PORT n" and serves POST /v1/chat/completions until MAXCONN connections
 note (default 1000) or 30 s without one. The request names its task and language in the

@@ -1,0 +1,366 @@
+note shim.om: BoringSSL BoGo test shim for the om/tls client (program mode, composed after every
+note om/tls unit by om/tls/build.sh). Protocol as in BoringSSL ssl/test/bssl_shim.cc and
+note runner/runner.go at the commit in PINS:
+note   connect to the runner on 127.0.0.1 or, with -ipv6, ::1 at -port, send -shim-id as 8 bytes
+note   little-endian, run a TLS 1.3 client handshake for the name "test" against the PEM root of
+note   -trust-cert, then echo: every byte read is written back XORed with 0xff, until the peer's
+note   close_notify or a clean TCP end.
+note Flags handled: -port N, -shim-id N, -ipv6, -trust-cert PATH, -shim-writes-first ("hello" before
+note the first read), -shim-shuts-down (send close_notify instead of reading), -check-close-notify
+note (the read loop must end with the peer's close_notify), -max-version N (N >= 772),
+note -min-version N (N <= 772), -expect-version 772, -async and -expect-no-session (no effect: the
+note client is blocking and keeps no session cache). -is-handshaker-supported prints "No".
+note Every other flag, server tests included, exits 89 (the runner's "unimplemented").
+note Exit 0 on success; on a TLS failure print "TLSERR <name> detail <n>" on stderr and exit 1;
+note exit 2 for a bad flag value, 3 when the runner cannot be reached.
+
+text sh_port "-port"
+text sh_id "-shim-id"
+text sh_ipv6 "-ipv6"
+text sh_trust "-trust-cert"
+text sh_wf "-shim-writes-first"
+text sh_sd "-shim-shuts-down"
+text sh_ccn "-check-close-notify"
+text sh_maxv "-max-version"
+text sh_minv "-min-version"
+text sh_expv "-expect-version"
+text sh_async "-async"
+text sh_nos "-expect-no-session"
+text sh_hss "-is-handshaker-supported"
+text sh_no "No\n"
+text sh_name "test"
+text sh_hello "hello"
+text sh_err "TLSERR "
+text sh_det " detail "
+text sh_nl "\n"
+text sh_sp " "
+
+note a[0..n) equals text t
+fn sh_is a view uchar * n ulong t view uchar * to bool
+if ne n len t
+ret false
+end
+for i ulong n
+if ne get a i get t i
+ret false
+end
+end
+ret true
+end
+
+note argument i into a; its length, or 0 when it is empty or does not fit
+fn sh_arg i ulong a edit uchar * to ulong
+n = argread i a 0 len a
+if lt n 0
+ret 0
+end
+ret ulong n
+end
+
+note decimal a[0..n) (1..19 digits) into v[k]; 0, or 2 when it is not a number
+fn sh_num a view uchar * n ulong v edit ulong * k ulong to ulong
+if or eq n 0 gt n 19
+ret 2
+end
+x = ulong 0
+for i ulong n
+d = ulong get a i
+if or lt d 48 gt d 57
+ret 2
+end
+x = add mul x 10 sub d 48
+end
+put v k x
+ret 0
+end
+
+fn sh_dec v ulong o edit uchar * to ulong
+t = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 24
+put t n uchar add 48 rem x 10
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for i ulong n
+put o i get t sub sub n 1 i
+end
+ret n
+end
+
+fn sh_fail c view uchar * e ulong to int
+m = new uchar 256 0
+w = write 2 sh_err 0 len sh_err
+n = tls_errname e m
+w = write 2 m 0 n
+w = write 2 sh_det 0 len sh_det
+d = tls_detail c
+n = sh_dec d m
+w = write 2 m 0 n
+if or eq e 17 eq e 19
+n = x509_errname d m
+w = write 2 sh_sp 0 1
+w = write 2 m 0 n
+end
+w = write 2 sh_nl 0 1
+ret 1
+end
+
+note flags into v: 0 port, 1 shim id, 2 ipv6, 3 trust path length (path in p), 4 writes first,
+note 5 shuts down, 6 check close_notify, 7 scratch number; 0, 2 (bad value) or 89 (unimplemented)
+fn sh_parse a edit uchar * p edit uchar * v edit ulong * to ulong
+na = ulong argcnt
+i = ulong 1
+while lt i na bound 4096
+n = sh_arg i a
+i = add i 1
+if sh_is a n sh_ipv6
+put v 2 1
+continue
+end
+if sh_is a n sh_wf
+put v 4 1
+continue
+end
+if sh_is a n sh_sd
+put v 5 1
+continue
+end
+if sh_is a n sh_ccn
+put v 6 1
+continue
+end
+if or sh_is a n sh_async sh_is a n sh_nos
+continue
+end
+k = ulong 99
+if sh_is a n sh_port
+k = 0
+end
+if sh_is a n sh_id
+k = 1
+end
+if or sh_is a n sh_maxv or sh_is a n sh_minv sh_is a n sh_expv
+k = 7
+end
+if sh_is a n sh_trust
+if ge i na
+ret 2
+end
+m = sh_arg i p
+if eq m 0
+ret 2
+end
+put v 3 m
+i = add i 1
+continue
+end
+if eq k 99
+ret 89
+end
+if ge i na
+ret 2
+end
+m = sh_arg i a
+if ne sh_num part a 0 m m v k 0
+ret 2
+end
+i = add i 1
+if eq k 7
+r = get v 7
+if and sh_is a n sh_maxv lt r 772
+ret 89
+end
+if and sh_is a n sh_minv gt r 772
+ret 89
+end
+if and sh_is a n sh_expv ne r 772
+ret 89
+end
+end
+end
+if or eq get v 0 0 gt get v 0 65535
+ret 2
+end
+if and ne get v 5 0 ne get v 6 0
+ret 89
+end
+ret 0
+end
+
+note connect to 127.0.0.1 or ::1 at port (non-blocking connect, 10 s limit); fd or a negative value
+fn sh_open v6 ulong port ulong to long
+ip = new uchar 4 0
+sa = new uchar 28 0
+if eq v6 0
+put ip 0 127
+put ip 3 1
+ret tcp_open4 ip port
+end
+put sa 0 10
+put sa 2 uchar and shr port 8 255
+put sa 3 uchar and port 255
+put sa 23 1
+fd = socknew 10 526337 0
+if lt fd 0
+ret neg long 1
+end
+f = int fd
+r = connect f sa 0 28
+if eq r -115
+w = waitio f 4 10000000000
+if le w 0
+x = fclose f
+ret neg long 1
+end
+r = connect f sa 0 28
+if eq r -106
+r = 0
+end
+end
+if ne r 0
+x = fclose f
+ret neg long 1
+end
+ret fd
+end
+
+note the 8-byte little-endian shim id, all of it or 3
+fn sh_id8 f int id ulong to int
+b = new uchar 8 0
+for i ulong 8
+put b i uchar and shr id mul i 8 255
+end
+o = ulong 0
+while lt o 8 bound 64
+w = waitio f 4 10000000000
+if le w 0
+ret 3
+end
+r = send f b o sub 8 o 0
+if le r 0
+if eq r -11
+continue
+end
+ret 3
+end
+o = add o ulong r
+end
+ret 0
+end
+
+note echo loop: 0, or a TLS code (TLEEOF when -check-close-notify saw no close_notify)
+fn sh_echo c edit uchar * v view ulong * to ulong
+if ne get v 4 0
+r = tls_write c sh_hello
+if lt r 0
+ret ulong neg r
+end
+end
+if ne get v 5 0
+tls_close c
+ret 0
+end
+b = new uchar 512 0
+while true bound 999999
+r = tls_read c b
+if eq r 0
+tls_close c
+ret 0
+end
+if eq r neg long 4
+if ne get v 6 0
+ret 4
+end
+ret 0
+end
+if lt r 0
+ret ulong neg r
+end
+m = ulong r
+for i ulong m
+put b i uchar xor get b i 255
+end
+w = tls_write c part b 0 ulong r
+if lt w 0
+ret ulong neg w
+end
+end
+ret 7
+end
+
+note after an abort: read and discard what the runner already sent (bounded, 200 ms idle) so the
+note close is a FIN, not a TCP RST; an RST over unread data can drop the alert we just sent
+fn sh_drain f int to void
+b = new uchar 4096 0
+for i ulong 256
+w = waitio f 1 200000000
+if le w 0
+ret
+end
+n = recv f b 0 4096 0
+if le n 0
+ret
+end
+end
+end
+
+note handshake and echo on the runner connection; c holds the TLS state, st the trust anchors
+fn sh_run c edit uchar * st edit uchar * v view ulong * to int
+e = tls_init c sh_name 0
+if ne e 0
+ret sh_fail c e
+end
+fd = sh_open get v 2 get v 0
+if lt fd 0
+ret 3
+end
+f = int fd
+if ne sh_id8 f get v 1 0
+x = fclose f
+ret 3
+end
+e = tls_connect c st f
+if eq e 0
+e = sh_echo c v
+end
+if ne e 0
+sh_drain f
+end
+x = fclose f
+if eq e 0
+ret 0
+end
+ret sh_fail c e
+end
+
+fn main to int
+c = new uchar TLCSZ 0
+st = new uchar TLSTSZ 0
+a = new uchar 4096 0
+p = new uchar 4096 0
+v = new ulong 8 0
+if ge argcnt 2
+n = sh_arg 1 a
+if sh_is a n sh_hss
+w = write 1 sh_no 0 len sh_no
+ret 0
+end
+end
+e = sh_parse a p v
+if ne e 0
+ret int e
+end
+if eq get v 3 0
+ret 89
+end
+e = tls_storef st part p 0 get v 3
+if ne e 0
+ret sh_fail c e
+end
+ret sh_run c st v
+end

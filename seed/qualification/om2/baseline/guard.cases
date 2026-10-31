@@ -6,6 +6,6 @@ subst seed/qualification/om2/compiler-mutants/guard-wrapped.from seed/qualificat
 cc seed/omc/omc.om
 witness-guard-mutant kill seed/qualification/om2/baseline/slice-witness.om - - - 0
 witness-guard-mutant-exact run seed/qualification/om2/baseline/slice-witness.om - line:WRAPPED_SLICE_ACCEPTED_4 - 0
-sha-abc-guard-mutant run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+sha-abc-guard-mutant run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 cc pinned
 witness-pinned-again run seed/qualification/om2/baseline/slice-witness.om - - - 103

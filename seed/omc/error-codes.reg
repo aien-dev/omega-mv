@@ -1,0 +1,44 @@
+note Error-code registry for the seeded toolchain (issue #797). Checked by seed/omc/codereg.om in gate15.
+note Row: NS|CODE|STATUS|CASE|MEANING. NS keeps namespaces apart: omc compiler exit codes, irwasm exit codes.
+note STATUS emitted: a refusal site exists; io: compiler I/O, not a language input; unused: no site exists.
+note CASE names the gate15 case that must refuse with exactly that code at its expected line (- for none).
+note MEANING is copied verbatim into docs/one_layer/OMEGESE.md as | NS CODE | MEANING |; the gate fails on drift.
+omc|1|io|e1_input_unreadable|the compiler's standard input could not be read
+omc|2|io|e2_output_unwritable|the compiler's standard output could not be written
+omc|3|emitted|e3_unknown_name|unknown name or field, or a word this mode does not provide
+omc|4|emitted|e4_line_ends|the line ends where a word or value is needed
+omc|5|emitted|e5_extra_words|extra words after a complete statement
+omc|6|emitted|e6_bad_number|malformed number or token
+omc|7|emitted|e7_type_mismatch|type mismatch
+omc|8|emitted|e8_out_of_range|number out of range for its type or place
+omc|9|emitted|e9_break_outside|word or declaration in a place that does not allow it
+omc|10|emitted|e10_duplicate_param|duplicate name
+omc|11|emitted|e11_ambiguous|bare number without a type from its context
+omc|12|emitted|e12_register_pool|register pool exhausted
+omc|13|emitted|e13_long_variable|name too long (8 bytes, 63 for a function)
+omc|14|emitted|e14_capacity|capacity exceeded (names, functions, sites, nesting, input or output)
+omc|15|emitted|e15_missing_end|missing end
+omc|16|emitted|e16_syntax|syntax: unknown or misplaced word
+omc|17|emitted|e17_after_path|line after ret, break, continue, trap or exit in the same block
+omc|18|emitted|e18_missing_ret|a function with a result can reach its end
+omc|19|emitted|e19_global_passed|global passed as an argument, or one array twice in a call
+omc|20|emitted|e20_readonly|write to a view or a text
+omc|21|emitted|e21_const_index|constant index outside the array
+omc|22|emitted|e22_text_literal|malformed text literal
+omc|23|emitted|e23_size_capacity|size capacity
+omc|24|emitted|e24_branch_range|AArch64 branch displacement out of range
+omc|25|emitted|e25_target|unknown target, or an AArch64-only path on another target
+omc|26|unused|-|no emitting site
+omc|27|emitted|e27_fresh_get|fresh element read before it is definitely written, or fresh array passed on
+omc|28|emitted|e28_seal_outside|abstract type: seal outside its constructor, or an unsupported holds
+omc|29|emitted|e29_layout_past|external layout out of bounds or misplaced
+omc|30|emitted|e30_ir_requires|contract syntax misplaced or not supported here (IR mode included)
+irwasm|20|emitted|-|MAGIC
+irwasm|21|emitted|-|VERSION (anything except v1)
+irwasm|22|emitted|-|TRUNCATED
+irwasm|23|emitted|-|CAPACITY
+irwasm|24|emitted|-|UNSUPPORTED_OP
+irwasm|25|emitted|-|UNSUPPORTED_TAG
+irwasm|26|emitted|-|INVALID (typing, register, block, text, or definite assignment)
+irwasm|27|emitted|-|TRAILING
+irwasm|28|emitted|-|IO

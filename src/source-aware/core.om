@@ -1,0 +1,749 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten bounded source-aware layer. Lower OSC and checker2 are external unchanged interfaces.
+global Ib uchar 8192
+global Eb uchar 8192
+global El ulong 1
+global M ulong 8
+global Cp ulong 4
+global Oc ulong 64
+global Ot ulong 64
+global Oat ulong 64
+global Oef ulong 64
+global Oal ulong 64
+global Oob ulong 64
+global Oa ulong 64
+global Ob ulong 64
+global Oi ulong 64
+global Ss ulong 64
+global Se ulong 64
+global Src ulong 3
+text Conhex "d4ed6148bfa97cc693d3fa4495e2d7e2e68aba04607a7e96dd9a9c54bf9073a8"
+text Semdom "omega.source.semantic.v1"
+text Provdom "omega.source.provenance.v1"
+
+fn number off ulong size ulong to ulong
+v = ulong 0
+for i ulong size
+v = or v shl ulong get Ib add off i mul i 8
+end
+ret v
+end
+
+fn magic off ulong val ulong to bool
+ret eq number off 4 val
+end
+
+fn nib c uchar to ulong
+if le c 57
+ret sub ulong c 48
+end
+ret add sub ulong c 97 10
+end
+
+fn contract to bool
+for i ulong 32
+a = nib get Conhex mul i 2
+b = nib get Conhex add mul i 2 1
+if ne ulong get Ib add 25 i add mul a 16 b
+ret false
+end
+end
+ret true
+end
+
+fn part off ulong n ulong to void
+for i ulong n
+hbyte get Ib add off i
+end
+end
+
+fn hashed off ulong n ulong at ulong to bool
+hinit
+part off n
+finish
+for i ulong 32
+if ne get Hash i get Ib add at i
+ret false
+end
+end
+ret true
+end
+
+fn refok a ulong ty ulong i ulong to bool
+if ge a i
+ret false
+end
+ret eq get Ot a ty
+end
+
+fn aliasok a ulong to bool
+if eq a 255
+ret true
+end
+ret and ge a 1 le a 8
+end
+
+fn pureop i ulong to ulong
+if ne get Oef i 0
+ret 71
+end
+if ne get Oal i 0
+ret 71
+end
+ret 0
+end
+
+fn arith i ulong to ulong
+ty = get Ot i
+if gt ty 2
+ret 70
+end
+if ne get Oat i ty
+ret 70
+end
+if eq refok get Oa i ty i false
+ret 70
+end
+if eq refok get Ob i ty i false
+ret 70
+end
+if ne get Oi i 0
+ret 65
+end
+need = ulong 8
+if eq ty 1
+if ne pureop i 0
+ret 71
+end
+need = 1
+if eq get M 1 4
+need = or need 4
+end
+if eq get M 1 6
+need = or need 4
+end
+else
+if ne get Oef i 20
+ret 71
+end
+if ne get Oal i 255
+ret 71
+end
+end
+if eq get Oc i 5
+need = or need 2
+end
+if ne get Oob i need
+ret 72
+end
+ret 0
+end
+
+fn memop i ulong to ulong
+if ne get M 1 6
+ret 68
+end
+if ne get Ot i 1
+ret 70
+end
+if ne get Oat i 4
+ret 70
+end
+if eq refok get Oa i 4 i false
+ret 70
+end
+if eq refok get Ob i 1 i false
+ret 70
+end
+if eq aliasok get Oal i false
+ret 71
+end
+if ne get Oal i get Oal get Oa i
+ret 71
+end
+need = ulong 17
+if eq get Oc i 8
+need = 19
+if eq refok get Oi i 1 i false
+ret 70
+end
+else
+if ne get Oi i 0
+ret 65
+end
+end
+if ne get Oef i need
+ret 71
+end
+if ne get Oob i 24
+ret 72
+end
+ret 0
+end
+
+fn checkop i ulong to ulong
+code = get Oc i
+ty = get Ot i
+if eq ty 0
+ret 70
+end
+if gt ty 4
+ret 70
+end
+if eq get M 1 3
+if ne ty 2
+ret 68
+end
+else
+if ne get M 1 6
+if ne ty 1
+ret 68
+end
+end
+end
+if eq code 0
+ret 69
+end
+if gt code 9
+ret 69
+end
+if eq code 1
+if gt ty 2
+ret 70
+end
+if ne get Oat i ty
+ret 70
+end
+if ne get Oa i 65535
+ret 70
+end
+if ne get Ob i 65535
+ret 70
+end
+if ne get Oob i 0
+ret 72
+end
+ret pureop i
+end
+if le code 5
+ret arith i
+end
+if eq code 6
+if ne get M 1 6
+ret 68
+end
+if ne ty 3
+ret 70
+end
+if ne get Oat i 3
+ret 70
+end
+if eq refok get Oa i 3 i false
+ret 70
+end
+if ne get Ob i 65535
+ret 70
+end
+if ne get Oi i 0
+ret 65
+end
+if ne get Oef i 63
+ret 71
+end
+if ne get Oal i 255
+ret 71
+end
+if ne get Oob i 8
+ret 72
+end
+ret 0
+end
+if le code 8
+ret memop i
+end
+if ne get Oat i 0
+ret 70
+end
+if ne get Oa i 65535
+ret 70
+end
+if ne get Ob i 65535
+ret 70
+end
+if gt get Oi i 5
+ret 67
+end
+for j ulong i
+if eq get Oc j 9
+if eq get Oi j get Oi i
+ret 70
+end
+end
+end
+if ne get Oob i 1
+ret 72
+end
+if ne get Oef i 0
+ret 71
+end
+if eq ty 4
+if eq aliasok get Oal i false
+ret 71
+end
+else
+if ne get Oal i 0
+ret 71
+end
+end
+ret 0
+end
+
+fn profile to ulong
+p = get M 1
+l = get M 0
+r = get M 2
+abi = get M 3
+if eq p 0
+ret 68
+end
+if gt p 6
+ret 68
+end
+if eq p 1
+if ne l 1
+ret 68
+end
+end
+if eq p 2
+if ne l 2
+ret 68
+end
+end
+if eq p 5
+if ne l 4
+ret 68
+end
+end
+if eq p 3
+if ne l 3
+ret 68
+end
+end
+if eq p 4
+if ne l 3
+ret 68
+end
+end
+if eq p 6
+if ne l 3
+ret 68
+end
+end
+if or eq p 3 eq p 6
+if or eq r 0 gt r 2
+ret 68
+end
+if eq p 6
+if ne abi 2
+ret 68
+end
+else
+if ne abi 1
+ret 68
+end
+end
+else
+if ne r 0
+ret 68
+end
+if ne abi 1
+ret 68
+end
+end
+ret 0
+end
+
+fn ops to ulong
+for i ulong get M 4
+off = add 57 mul i 20
+if ne ulong get Ib off get M 0
+ret 68
+end
+if ne get Ib add off 1 1
+ret 66
+end
+put Oc i number add off 2 1
+put Ot i number add off 3 1
+put Oat i number add off 4 1
+put Oef i number add off 5 1
+put Oal i number add off 6 1
+put Oob i number add off 7 1
+put Oa i number add off 8 2
+put Ob i number add off 10 2
+put Oi i number add off 12 8
+code = checkop i
+if ne code 0
+ret code
+end
+end
+ret 0
+end
+
+fn utf8 off ulong n ulong to bool
+pos = ulong 0
+while lt pos n
+c = ulong get Ib add off pos
+pos = add pos 1
+if ge c 128
+extra = ulong 0
+v = ulong 0
+low = ulong 0
+if and ge c 194 le c 223
+extra = 1
+v = and c 31
+low = 128
+end
+if and ge c 224 le c 239
+extra = 2
+v = and c 15
+low = 2048
+end
+if and ge c 240 le c 244
+extra = 3
+v = and c 7
+low = 65536
+end
+if eq extra 0
+ret false
+end
+if gt extra sub n pos
+ret false
+end
+for j ulong extra
+c = ulong get Ib add off pos
+if or lt c 128 gt c 191
+ret false
+end
+v = or shl v 6 and c 63
+pos = add pos 1
+end
+if lt v low
+ret false
+end
+if gt v 1114111
+ret false
+end
+if and ge v 55296 le v 57343
+ret false
+end
+end
+end
+ret true
+end
+
+fn boundary pos ulong to bool
+if eq pos get Src 1
+ret true
+end
+c = ulong get Ib add get Src 0 pos
+ret or lt c 128 gt c 191
+end
+
+fn sidecar to ulong
+off = get M 7
+size = get M 6
+if lt size 74
+ret 65
+end
+if eq magic off 1347636559 false
+ret 65
+end
+if ne get Ib add off 4 1
+ret 66
+end
+enc = number add off 5 1
+if gt enc 1
+ret 76
+end
+n = number add off 6 4
+if gt n 4096
+ret 67
+end
+start = add off add 74 mul get M 4 8
+if ne size add add 74 mul get M 4 8 n
+ret 65
+end
+put Src 0 start
+put Src 1 n
+put Src 2 enc
+if eq hashed 13 get M 5 add off 10 false
+ret 74
+end
+if eq hashed start n add off 42 false
+ret 74
+end
+if eq enc 1
+if eq utf8 start n false
+ret 76
+end
+end
+for i ulong get M 4
+at = add off add 74 mul i 8
+a = number at 4
+b = number add at 4 4
+if or gt a b gt b n
+ret 75
+end
+put Ss i a
+put Se i b
+if eq enc 1
+if eq boundary a false
+ret 75
+end
+if eq boundary b false
+ret 75
+end
+end
+end
+ret 0
+end
+
+fn decode n ulong to ulong
+put El 0 0
+if gt n 8192
+ret 67
+end
+if lt n 13
+ret 65
+end
+if eq magic 0 1112755535 false
+ret 65
+end
+if ne get Ib 4 1
+ret 66
+end
+sn = number 5 4
+pn = number 9 4
+if or gt sn 1324 gt pn 4682
+ret 67
+end
+if ne n add 13 add sn pn
+ret 65
+end
+if lt sn 44
+ret 65
+end
+if eq magic 13 1095978319 false
+ret 65
+end
+if ne get Ib 17 1
+ret 66
+end
+if ne get Ib 20 1
+ret 66
+end
+put M 0 number 18 1
+put M 1 number 19 1
+put M 2 number 21 1
+put M 3 number 22 1
+put M 4 number 23 2
+put M 5 sn
+put M 6 pn
+put M 7 add 13 sn
+if or eq get M 4 0 gt get M 4 64
+ret 67
+end
+if ne sn add 44 mul get M 4 20
+ret 65
+end
+if eq contract false
+ret 78
+end
+code = profile
+if ne code 0
+ret code
+end
+code = ops
+if ne code 0
+ret code
+end
+if ne pn 0
+ret sidecar
+end
+ret 0
+end
+
+fn ebyte v ulong to void
+put Eb get El 0 uchar v
+put El 0 add get El 0 1
+end
+
+fn emitnum v ulong n ulong to void
+for i ulong n
+ebyte and shr v mul i 8 255
+end
+end
+
+fn emitpart off ulong n ulong to void
+for i ulong n
+ebyte ulong get Ib add off i
+end
+end
+
+fn encode to void
+emitnum 1112755535 4
+ebyte 1
+emitnum get M 5 4
+emitnum get M 6 4
+emitnum 1095978319 4
+ebyte 1
+ebyte get M 0
+ebyte get M 1
+ebyte 1
+ebyte get M 2
+ebyte get M 3
+emitnum get M 4 2
+emitpart 25 32
+for i ulong get M 4
+ebyte get M 0
+ebyte 1
+ebyte get Oc i
+ebyte get Ot i
+ebyte get Oat i
+ebyte get Oef i
+ebyte get Oal i
+ebyte get Oob i
+emitnum get Oa i 2
+emitnum get Ob i 2
+emitnum get Oi i 8
+end
+if ne get M 6 0
+emitnum 1347636559 4
+ebyte 1
+ebyte get Src 2
+emitnum get Src 1 4
+emitpart add get M 7 10 64
+for i ulong get M 4
+emitnum get Ss i 4
+emitnum get Se i 4
+end
+emitpart get Src 0 get Src 1
+end
+end
+
+fn digout to void
+finish
+for i ulong 32
+ebyte ulong get Hash i
+end
+end
+
+fn legal i ulong to ulong
+if ne get Cp 2 get M 3
+ret 4
+end
+if ne and get Oef i get Cp 3 get Oef i
+ret 4
+end
+if ne get M 2 0
+if ne get Cp 1 get M 2
+ret 2
+end
+end
+if eq get Cp 0 1
+ret 1
+end
+if or eq get M 1 3 eq get M 1 6
+ret 4
+end
+if ne get Ot i 1
+ret 4
+end
+if le get Oc i 5
+ret 3
+end
+if eq get Oc i 9
+ret 3
+end
+ret 4
+end
+
+fn caps n ulong to ulong
+if lt n 4
+ret 65
+end
+for i ulong 4
+put Cp i number i 1
+end
+if or eq get Cp 0 0 gt get Cp 0 2
+ret 68
+end
+if gt get Cp 1 2
+ret 68
+end
+if or eq get Cp 2 0 gt get Cp 2 2
+ret 68
+end
+if gt get Cp 3 63
+ret 68
+end
+for i ulong sub n 4
+put Ib i get Ib add i 4
+end
+ret 0
+end
+
+fn perform mode ulong n ulong to ulong
+put El 0 0
+if gt n 8192
+ret 67
+end
+if or eq mode 0 gt mode 6
+ret 64
+end
+if eq mode 6
+code = caps n
+if ne code 0
+ret code
+end
+n = sub n 4
+end
+code = decode n
+if ne code 0
+ret code
+end
+if le mode 2
+encode
+ret 0
+end
+if eq mode 3
+hinit
+for i ulong len Semdom
+hbyte get Semdom i
+end
+part 13 get M 5
+digout
+ret 0
+end
+if eq mode 4
+hinit
+for i ulong len Provdom
+hbyte get Provdom i
+end
+part 0 n
+digout
+ret 0
+end
+if eq mode 5
+if eq get M 6 0
+ret 73
+end
+emitpart get Src 0 get Src 1
+ret 0
+end
+for i ulong get M 4
+ebyte legal i
+ebyte get Oob i
+end
+ret 0
+end
