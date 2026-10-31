@@ -66,13 +66,13 @@
         },
         {
           "digest": "45906d60d2c32450d72da35e4c6f4cd53accac5d9aa24d940658f1cdf40f32bb",
-          "last_commit": "1db941627",
+          "last_commit": "afe60dddf",
           "name": "native",
           "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow adviso"
         },
         {
           "digest": "e7924785191cc008568c523f2a2c0021105afa4bf29de6f33507d5b5d2025021",
-          "last_commit": "1db941627",
+          "last_commit": "afe60dddf",
           "name": "neuralese",
           "purpose": "Bounded untrusted representation envelopes and explicit checked Omega decoding; learned extensio"
         },
@@ -90,7 +90,7 @@
         },
         {
           "digest": "8eaa8c7ae3813ee49a88c3d2e2f6cad942c7dd540ca07c4cab3e772e77d01cb3",
-          "last_commit": "1db941627",
+          "last_commit": "afe60dddf",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
@@ -108,14 +108,14 @@
         }
       ],
       "children_root": "sha256:fa08f5f7b5887c365b6f7fd9e786932d99c71df4dd22e2efb70e6f001b8f6ed4",
-      "compiled_at": "2026-10-31T05:04:50Z",
+      "compiled_at": "2026-10-31T05:09:40Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:da173373422813b631dbd6e3d2991b084b52d5eb077e11dbe243357fcfc30eea",
+      "digest": "sha256:3e5e4207f52fca73ff5ec539e7875c5d5cb1b6a235c2a2952154e989f936cf7d",
       "evidence_files": 14989,
       "evidence_root": "sha256:12404dd24b8dd06ce52fe756ca8a353b3589479e96b8b0be3554a8c0ab32dcd8",
       "files": 23184,
-      "generated_at_commit": "bb4a222f53d6e5c89142282377c67487a67122d5",
-      "source_tree": "sha256:8ad80543bfaba6b6f1f47977e1a97427bbeaf025769b6c0698632d18802efd82"
+      "generated_at_commit": "afe60dddf1ca6717211e01e2bf6c641e05fbc1aa",
+      "source_tree": "sha256:e7cf10b35feaf0540c45ad0ba50022868d7988368f71e4673ca9178f9a230999"
     },
     "owner_lane": "",
     "provenance": {
