@@ -1324,7 +1324,8 @@ ret kw2 w
 end
 
 note ======== OM-2 words (spec/omegese-om2.md): reserved only in an OM-2 unit. rotr 59, rotl 60 are
-note binary operators; the rest are statement and declaration words of later sections. ========
+note binary operators; dit 225 and scrub 226 are program-mode value words (OMEGESE 9.13.1); the rest are
+note statement and declaration words of later sections. ========
 fn kw2 w ulong to ulong
 if eq w 1920233330
 ret 59
@@ -1379,6 +1380,12 @@ ret 195
 end
 if eq w 7565423
 ret 196
+end
+if eq w 7629156
+ret 225
+end
+if eq w 422877225843
+ret 226
 end
 ret 0
 end
@@ -7508,6 +7515,87 @@ ret
 end
 if or eq c 77 eq c 193
 fail 9
+end
+if or eq c 225 eq c 226
+if or eq get progmode 0 0 ne get irmode 0 0
+fail 9
+end
+x = mul get depth 0 32
+sl = get nslot 0
+note dit and scrub are emitted inline here, not in helper functions: om4 holds 512 functions and omc.om
+note is at that limit (seed/omc/size-history.tsv).
+if eq c 225
+note dit: OM-2 `dit v` (program mode): v is int, 0 or 1, else trap 3. Sets PSTATE.DIT (Arm ARM
+note C5.2.4: DIT is bit 24 of the special-purpose register; MRS/MSR <Xt>, DIT have op0 3, op1 3, CRn 4,
+note CRm 2, op2 5) and gives the previous bit as a long 0 or 1. CMP Xv, #1 = SUBS XZR (C6.2.464); B.HI
+note trap 3; LSL X16, Xv, #24 = UBFM X16, Xv, #40, #39 (C6.2.487), taken before the destination is
+note written because the destination may be v's own register; MRS Xd, DIT (C6.2.287); MSR DIT, X16
+note (C6.2.289); UBFX Xd, Xd, #24, #1 = UBFM Xd, Xd, #24, #24. Writes to PSTATE are in program order
+note without further synchronization (C5.1), so the next instruction already runs under the new bit.
+harg x 0 8
+r = matreg get fr add x 8 get fr add x 9 8
+emit or 4043310111 shl r 5
+trapc 8 3
+emit or 3546848272 shl r 5
+put nslot 0 sl
+d = destreg dst
+emit or 3577430688 d
+emit 3575333552
+emit or or 3545784320 shl d 5 d
+vdone 1 d 9
+ret
+end
+note scrub: OM-2 `scrub n` (program mode): n is ulong, a multiple of 16 and at most 1048576, else trap 3.
+note TST Xn, #15 = ANDS XZR (C6.2.16, N 1 immr 0 imms 3); B.NE trap 3; X16 = 1048576; CMP Xn, X16 =
+note SUBS XZR (C6.2.465); B.HI trap 3. X16 = SP - n: SUB X16, SP, Xn, UXTX (C6.2.456); CMP X16, X28
+note (C6.2.465); B.LO trap 6, before any store. Loop: CMP SP, X16 = SUBS XZR, SP, X16, UXTX (C6.2.463);
+note B.LS out; STP XZR, XZR, [X16], #16 (C6.2.414, post-index); B back (C6.2.35). Then MOVZ Xr, #0
+note (C6.2.319) for every pool register at index npar + nslot or above (no live value: parameters,
+note locals and the held parts of the expression sit below), X16, and X7, X18-X26, X29, which program
+note mode never names; then MOVI Vd.2D, #0 (C7.2.247) for V0-V31 (floats live in X registers and pass
+note through V0/V1 for one instruction only). Never touched: SP, X27 (the Linux initial stack under
+note args), X28 (the stack floor), X30 (the return address), the live pool registers, NZCV, FPCR,
+note FPSR, and the SVE P registers and FFR. Gives long 0.
+harg x 0 5
+r = matreg get fr add x 8 get fr add x 9 5
+emit or 4064283679 shl r 5
+trapc 1 3
+matconst 16 1048576
+emit or 3943694367 shl r 5
+trapc 8 3
+emit or 3407897584 shl r 16
+emit 3944481311
+trapc 3 6
+top = get oc 0
+emit 3945817087
+at = get oc 0
+emit 1409286153
+emit 2827058719
+back top
+patch19 at get oc 0
+i = add get npar 0 sl
+while lt i 16
+emit or 3531603968 poolc i
+i = add i 1
+end
+emit 3531603984
+emit 3531603975
+i = ulong 18
+while le i 26
+emit or 3531603968 i
+i = add i 1
+end
+emit 3531603997
+i = ulong 0
+while lt i 32
+emit or 1862329344 i
+i = add i 1
+end
+put nslot 0 sl
+d = destreg dst
+matconst d 0
+vdone 1 d 9
+ret
 end
 if or or and ge c 100 le c 177 and ge c 197 le c 198 and ge c 220 le c 222
 hostval c dst

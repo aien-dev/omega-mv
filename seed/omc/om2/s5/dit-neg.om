@@ -1,0 +1,7 @@
+note S5 dit: a negative int is outside {0, 1}: trap 3 (exit 103).
+om2
+fn main to int
+v = int 2
+a = dit sub v 3
+ret int a
+end
