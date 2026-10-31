@@ -1,0 +1,79 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_x509.om: fuzz target for om/tls/x509.om (DER/ASN.1 certificate parsing, chain building and
+note verification, name/SAN/EKU/name-constraint checks, RSA/ECDSA signature verification).
+note Input: M rest, M mod 4 selects:
+note   0 x509_parse of rest as one DER certificate
+note   1 x509_chain_verify of rest as a TLS certificate_list (entries: 3-byte length, DER, 2-byte
+note     extensions length, extensions), now 1792972800, host www.example.test
+note   2 as 1 with rest = T[8] H name[H] list: the verification time and hostname from the input
+note   3 x509_cv_verify: rest = S1 S0 L1 L0 list[L] ms; the leaf of list checks ms = 130-byte signed
+note     content || signature (scheme S), as tls_cv passes it (pki/cv.msg is such a content)
+note Arguments: 1 = PEM trust store (om/tls/test/x509/vectors/pki/storeAll.pem).
+
+note fz_xcv: the list is copied out of x (one array may not be passed twice in one call: error 19)
+fn fz_xcv x view uchar * to ulong
+cl = new uchar 65536 0
+sch = fz_be2 x 0
+l = fz_be2 x 2
+if gt add l 134 len x
+ret 0
+end
+for i ulong l
+put cl i get x add 4 i
+end
+ret x509_cv_verify part cl 0 l sch part x add 4 l sub sub len x 4 l 130
+end
+
+fn fz_xhq x view uchar * st view uchar * to ulong
+hq = new uchar 300 0
+if lt len x 9
+ret 0
+end
+for i ulong 8
+put hq i get x i
+end
+h = ulong get x 8
+if gt h sub len x 9
+h = sub len x 9
+end
+if gt h 255
+h = 255
+end
+for i ulong h
+put hq add 8 i get x add 9 i
+end
+ret x509_chain_verify part x add 9 h sub sub len x 9 h st part hq 0 add 8 h
+end
+
+fn fz_xrun x view uchar * st view uchar * to ulong
+r = new ulong X5RSZ 0
+hq = new uchar 32 0
+md = and ulong get x 0 3
+if eq md 0
+ret x509_parse part x 1 sub len x 1 r
+end
+if eq md 3
+ret fz_xcv part x 1 sub len x 1
+end
+if eq md 2
+ret fz_xhq part x 1 sub len x 1 st
+end
+tls_pn hq 0 1792972800 8
+for i ulong len FZHOST
+put hq add 8 i get FZHOST i
+end
+ret x509_chain_verify part x 1 sub len x 1 st part hq 0 add 8 len FZHOST
+end
+
+fn main to int
+st = new uchar TLSTSZ 0
+in = new uchar FZCAP 0
+n = fz_read in
+if lt n 1
+ret 0
+end
+s = fz_store st
+r = fz_xrun part in 0 n view st
+fz_say r
+ret 0
+end

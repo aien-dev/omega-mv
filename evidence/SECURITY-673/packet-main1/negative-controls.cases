@@ -1,0 +1,4 @@
+neg-gen-wrong-fixture run seed/qualification/security673/packet-corpus.om rep:4:1 file:seed/qualification/security673/packets/p00.bin - 0
+neg-expect-accept-trailing run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p04.bin - - 0
+neg-expect-refuse-valid run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p00.bin - - 103
+neg-echo-wrong-prefix run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin file:seed/qualification/security673/packets/p12.out - 0 26

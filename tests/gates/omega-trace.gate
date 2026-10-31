@@ -1,0 +1,23 @@
+# tests/gates/omega-trace.gate
+# omega#608: local trace segment format v1 in seeded Omega (seed/trace/segment.om): write, scan, torn-tail
+# recovery keeping the valid prefix, CRC-32 per record, and 4 source mutants, built by the committed
+# seed/out/omc. No hosted mirror: local gate only.
+gate: OMEGA-TRACE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - seed/trace/
+  - seed/out/omc
+  - seed/out/omc.sha256
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["trace"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 10m
+exactness: EXACT
+cache_scope: machine

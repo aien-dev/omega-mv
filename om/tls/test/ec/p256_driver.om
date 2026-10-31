@@ -1,0 +1,306 @@
+note SPDX-License-Identifier: Apache-2.0
+note p256_driver.om: test driver for the P-256 p2_* section of om/tls/ec.om (program mode). run.sh
+note writes the line om2, then ec.om, then this file. Reads a vector file on stdin, one case per line; H is 64 lowercase hex
+note digits (a 256-bit number, big-endian), fields separated by one space:
+note   M A B R          p2_mul: A * B mod p must be R
+note   S A R            p2_sqr: A^2 mod p must be R
+note   A A B R          p2_add: A + B mod p must be R (A, B < p)
+note   U A B R          p2_sub: A - B mod p must be R (A, B < p)
+note   I A R            p2_inv: A^(p-2) mod p must be R
+note   K k X Y RX RY F  p2_smul: k * (X, Y) must be (RX, RY) with finite flag F (0 or 1)
+note   D u v X Y RX RY F  p2_smul2: u * G + v * (X, Y) must be (RX, RY) with flag F
+note   T N k X Y        timing: N calls of p2_smul, prints TIME smul n N ns T
+note   W N u v X Y      timing: N calls of p2_smul2, prints TIME smul2 n N ns T
+note   F N A B          timing: N calls of p2_mul, prints TIME mul n N ns T
+note Lines starting with # and empty lines are skipped. Prints one MISMATCH line per wrong result
+note and the summary line: cases C calls V mismatches X. Exit 0 only when at least one checked call
+note ran and none mismatched; 1 otherwise; 65 bad input.
+
+text P2TMIS "MISMATCH line "
+text P2TCASE "cases "
+text P2TCALL " calls "
+text P2TMM " mismatches "
+text P2TTIME "TIME "
+text P2TSM "smul"
+text P2TSM2 "smul2"
+text P2TMUL "mul"
+text P2TN " n "
+text P2TNS " ns "
+text P2TNL "\n"
+text P2TBAD "driver: bad input\n"
+
+global P2IN uchar 16777216
+global P2LEN ulong 1
+global P2OUT uchar 32
+global P2CNT ulong 8
+
+fn p2t_num v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put P2OUT sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 P2OUT sub 32 k k
+end
+
+fn p2t_bad to void
+r = write 2 P2TBAD 0 len P2TBAD
+exit 65
+end
+
+fn p2t_nib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+p2t_bad
+ret 0
+end
+
+note field f (0-based) of the line at p: 64 hex digits at p + 2 + 65 f, then a space or newline,
+note into 8 little-endian 32-bit limbs at a[o..]
+fn p2t_hex a edit ulong * o ulong p ulong f ulong to void
+s = add add p 2 mul f 65
+for j ulong 8
+v = ulong 0
+q = add s mul sub 7 j 8
+for d ulong 8
+c = ulong get P2IN add q d
+v = or shl v 4 p2t_nib c
+end
+put a add o j v
+end
+c = get P2IN add s 64
+if and ne c 32 ne c 10
+p2t_bad
+end
+end
+
+note decimal number at P2IN[o..] up to a space; returns it, position after the space in P2CNT 7
+fn p2t_dec o ulong to ulong
+v = ulong 0
+p = o
+while and ge get P2IN p 48 le get P2IN p 57 bound 20
+v = add mul v 10 sub ulong get P2IN p 48
+p = add p 1
+end
+if or eq p o ne get P2IN p 32
+p2t_bad
+end
+put P2CNT 7 add p 1
+ret v
+end
+
+fn p2t_bump i ulong v ulong to void
+put P2CNT i add get P2CNT i v
+end
+
+note compare n limbs of the workspace at o with x[0..n) and the flags got, want
+fn p2t_check w view ulong P2WN x view ulong 24 o ulong n ulong got ulong want ulong to void
+p2t_bump 2 1
+d = xor got want
+for j ulong n
+d = or d xor get w add o j get x j
+end
+if ne d 0
+p2t_bump 3 1
+r = write 1 P2TMIS 0 len P2TMIS
+p2t_num get P2CNT 0
+r = write 1 P2TNL 0 1
+end
+end
+
+fn p2t_time what view uchar * n ulong t ulong to void
+r = write 1 P2TTIME 0 len P2TTIME
+r = write 1 what 0 len what
+r = write 1 P2TN 0 len P2TN
+p2t_num n
+r = write 1 P2TNS 0 len P2TNS
+p2t_num t
+r = write 1 P2TNL 0 1
+end
+
+note expected width of a line with k hex fields after the op letter
+fn p2t_need p ulong e ulong k ulong to void
+if ne sub e p add 1 mul k 65
+p2t_bad
+end
+end
+
+fn p2t_line p ulong e ulong w edit ulong P2WN x edit ulong 24 to void
+c = get P2IN p
+if or eq e p eq c 35
+ret
+end
+p2t_bump 1 1
+if eq c 77
+p2t_need p e 3
+p2t_hex w 0 p 0
+p2t_hex w 8 p 1
+p2t_hex x 0 p 2
+p2_mul w 16 0 8
+p2t_check w x 16 8 0 0
+ret
+end
+if eq c 83
+p2t_need p e 2
+p2t_hex w 0 p 0
+p2t_hex x 0 p 1
+p2_sqr w 16 0
+p2t_check w x 16 8 0 0
+ret
+end
+if eq c 65
+p2t_need p e 3
+p2t_hex w 0 p 0
+p2t_hex w 8 p 1
+p2t_hex x 0 p 2
+p2_add w 16 0 8
+p2t_check w x 16 8 0 0
+ret
+end
+if eq c 85
+p2t_need p e 3
+p2t_hex w 0 p 0
+p2t_hex w 8 p 1
+p2t_hex x 0 p 2
+p2_sub w 16 0 8
+p2t_check w x 16 8 0 0
+ret
+end
+if eq c 73
+p2t_need p e 2
+p2t_hex w 0 p 0
+p2t_hex x 0 p 1
+p2_inv w 16 0
+p2t_check w x 16 8 0 0
+ret
+end
+if eq c 75
+if ne sub e p 328
+p2t_bad
+end
+p2t_hex w P2K p 0
+p2t_hex w P2P p 1
+p2t_hex w add P2P 8 p 2
+p2t_hex x 0 p 3
+p2t_hex x 8 p 4
+want = p2t_nib ulong get P2IN add p 327
+got = p2_smul w
+p2t_check w x P2O 16 got want
+ret
+end
+if eq c 68
+if ne sub e p 393
+p2t_bad
+end
+p2t_hex w P2K p 0
+p2t_hex w P2U p 1
+p2t_hex w P2Q p 2
+p2t_hex w add P2Q 8 p 3
+p2t_hex x 0 p 4
+p2t_hex x 8 p 5
+want = p2t_nib ulong get P2IN add p 392
+got = p2_smul2 w
+p2t_check w x P2O 16 got want
+ret
+end
+if or or eq c 84 eq c 87 eq c 70
+p2t_bump 1 0
+n = p2t_dec add p 2
+q = sub sub get P2CNT 7 p 2
+if eq c 84
+p2t_need add p q e 3
+p2t_hex w P2K add p q 0
+p2t_hex w P2P add p q 1
+p2t_hex w add P2P 8 add p q 2
+t0 = monons
+for i ulong n
+r = p2_smul w
+end
+p2t_time P2TSM n ulong sub monons t0
+ret
+end
+if eq c 87
+p2t_need add p q e 4
+p2t_hex w P2K add p q 0
+p2t_hex w P2U add p q 1
+p2t_hex w P2Q add p q 2
+p2t_hex w add P2Q 8 add p q 3
+t0 = monons
+for i ulong n
+r = p2_smul2 w
+end
+p2t_time P2TSM2 n ulong sub monons t0
+ret
+end
+p2t_need add p q e 2
+p2t_hex w 0 add p q 0
+p2t_hex w 8 add p q 1
+t0 = monons
+for i ulong n
+p2_mul w 16 0 8
+end
+p2t_time P2TMUL n ulong sub monons t0
+ret
+end
+p2t_bad
+end
+
+fn p2t_slurp to void
+t = ulong 0
+while true bound 999999
+room = sub len P2IN t
+if eq room 0
+p2t_bad
+end
+r = read 0 P2IN t room
+if lt r 0
+p2t_bad
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put P2LEN 0 t
+end
+
+fn main to int
+w = new ulong P2WN 0
+x = new ulong 24 0
+p2_init w
+p2t_slurp
+tot = get P2LEN 0
+if or eq tot 0 ne get P2IN sub tot 1 10
+p2t_bad
+end
+p = ulong 0
+while lt p tot bound 999999
+p2t_bump 0 1
+e = p
+while ne get P2IN e 10 bound 999999
+e = add e 1
+end
+p2t_line p e w x
+p = add e 1
+end
+r = write 1 P2TCASE 0 len P2TCASE
+p2t_num get P2CNT 1
+r = write 1 P2TCALL 0 len P2TCALL
+p2t_num get P2CNT 2
+r = write 1 P2TMM 0 len P2TMM
+p2t_num get P2CNT 3
+r = write 1 P2TNL 0 1
+if or gt get P2CNT 3 0 eq get P2CNT 2 0
+ret 1
+end
+ret 0
+end

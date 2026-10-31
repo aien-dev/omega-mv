@@ -1,0 +1,400 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/ecdh.om: constant-time ECDH (ECC CDH primitive, NIST SP 800-56A Rev. 3 section 5.7.1.2)
+note on NIST P-256 and P-384, for the TLS 1.3 key_share groups secp256r1 (23) and secp384r1 (24).
+note Library unit (no om2 line, no main), composed after ec.om. Module code ECD: functions ecdh_*
+note and ecd_*, consts ED*. Pure: no I/O and no randomness; the caller draws the private scalar.
+note
+note API (nb = 32 for P-256, 48 for P-384; points are SEC1 uncompressed 0x04 || X || Y, 1 + 2 nb bytes):
+note   ecdh_pub d q        q = d*G for the private scalar d (nb big-endian bytes; nb selects the curve)
+note   ecdh_shared d p z   z = x(d*P), nb bytes, after partial public-key validation of P
+note   ecdh_pct d q        pair-wise consistency: q passes full public-key validation and equals d*G
+note Return codes: 0 ok, 1 shared point is the point at infinity (z zeroed), 2 bad buffer length,
+note   3 peer point invalid (encoding other than uncompressed, coordinate >= p, not on the curve),
+note   4 private scalar not in [1, n-1] (q or z zeroed), 5 len d not 32 or 48, 6 pair-wise check failed.
+note Private-key generation: draw nb random bytes (from the approved DRBG in approved mode), call
+note ecdh_pub, and draw again while it returns 4 (FIPS 186-5 Appendix A.2.2, rejection sampling).
+note Peer validation is SP 800-56A Rev. 3 section 5.6.2.3.4 (ECC partial public-key validation):
+note not the point at infinity (an uncompressed encoding cannot express it), both coordinates in
+note [0, p-1], and Y^2 = X^3 - 3X + b. Both curves have cofactor 1, so for them this equals the
+note full validation of section 5.6.2.3.3 (step 4, n*Q = O, holds for every point on the curve).
+note
+note Arithmetic: the 32-bit-limb Montgomery field of ec.om (same workspace layout and constants).
+note Only ec.om helpers without data-dependent branches touch secrets: ec_row, ec_step, ec_sum,
+note ec_copy, ec_pcopy, ec_load, ec_bit (index from the public bit position). ec_csub, ec_mul,
+note ec_add, ec_sub, ec_inv, ec_dbl and ec_padd branch and are used only on public data (setup and
+note peer-point validation, ec_pub). The field operations below replace them on secrets:
+note ecd_csub selects with a mask from the full borrow chain, never a branch.
+note Scalar multiplication: Montgomery ladder over all 32L bits of the scalar (fixed count, leading
+note zero bits included), the swap is an xor with the mask 0 - bit, and each step is R1 = R0 + R1,
+note R0 = R0 + R0 with the complete projective addition formula for a = -3 of Renes, Costello and
+note Batina, "Complete addition formulas for prime order elliptic curves" (EUROCRYPT 2016),
+note Algorithm 4: no exceptional case (infinity, doubling, inverse points), so no branch. R0 starts at
+note the point at infinity (0 : 1 : 0). Affine conversion: Fermat inversion Z^(p-2) by CT
+note multiplication (the exponent is public, so its branch pattern is fixed per curve).
+note Timing caveats: omc emits plain AArch64 (MUL, ADD, SUB, EOR, AND, ORR, LSL/LSR); the DIT bit is
+note not set by this unit. The workspace (scalar, ladder points, temporaries) is overwritten with 0
+note before every return.
+note
+note Workspace w (ECWN cells, layout of ec.om). This unit adds names for slots ec.om uses only during
+note signature verification: EDR0 (ECGQ) and EDR1 (ECR) ladder points, EDK (ECSR) scalar, EDZI (ECSS)
+note inverse, EDAC (ECAC) inversion accumulator, EDT0..EDT4, EDX3, EDY3, EDZ3 formula temporaries
+note (ECA3..ECA9, ECU1). The peer point is ECQ (ec_pub); ECA0..ECA2 stay free for ec_pub.
+
+const EDR0 ulong 204
+const EDR1 ulong 240
+const EDK ulong 276
+const EDZI ulong 288
+const EDAC ulong 468
+const EDT0 ulong 384
+const EDT1 ulong 396
+const EDT2 ulong 408
+const EDT3 ulong 420
+const EDT4 ulong 432
+const EDX3 ulong 444
+const EDY3 ulong 456
+const EDZ3 ulong 312
+
+note o = T - m if T >= m else T (T has L+1 limbs, T < 2m); modulus m at offset c. The borrow of
+note the full chain gives the mask m = 0 (keep T) or all ones (take T - m); no branch on the data.
+fn ecd_csub w edit ulong ECWN c ulong o ulong to void
+n = get w 0
+br = ulong 0
+x = ulong 0
+for j ulong n
+x = sub sub get w add 2 j get w add c j br
+br = shr x 63
+end
+x = sub get w add 2 n br
+mk = sub shr x 63 1
+br = 0
+for j ulong n
+t = get w add 2 j
+x = sub sub t get w add c j br
+br = shr x 63
+put w add o j xor t and mk xor t and x 0xffffffff
+end
+end
+
+note o = a * b * R^-1 mod m (CIOS as ec_mul, constant-time final subtraction). o may alias a or b.
+fn ecd_mul w edit ulong ECWN c ulong o ulong a ulong b ulong to void
+n = get w 0
+for j ulong add n 2
+put w add 2 j 0
+end
+for i ulong n
+ec_step w c a get w add b i
+end
+ecd_csub w c o
+end
+
+note o = a + b mod m (a, b < m)
+fn ecd_add w edit ulong ECWN c ulong o ulong a ulong b ulong to void
+ec_sum w a b
+ecd_csub w c o
+end
+
+note o = a - b mod m (a, b < m): T = a + m - b in (0, 2m), then the constant-time subtraction
+fn ecd_sub w edit ulong ECWN c ulong o ulong a ulong b ulong to void
+ec_sum w a c
+n = get w 0
+br = ulong 0
+x = ulong 0
+for j ulong n
+x = sub sub get w add 2 j get w add b j br
+put w add 2 j and x 0xffffffff
+br = shr x 63
+end
+put w add 2 n sub get w add 2 n br
+ecd_csub w c o
+end
+
+note o = a + b, complete projective addition for a = -3 (RCB 2016 Algorithm 4, 12M + 2 mb + 29a).
+note Points are (X, Y, Z) in three slots; a == b gives the doubling; o may alias a or b (the
+note result is formed in EDX3, EDY3, EDZ3 after the last read of the inputs).
+fn ecd_padd w edit ulong ECWN o ulong a ulong b ulong to void
+ecd_mul w ECCP EDT0 a b
+ecd_mul w ECCP EDT1 add a 12 add b 12
+ecd_mul w ECCP EDT2 add a 24 add b 24
+ecd_add w ECCP EDT3 a add a 12
+ecd_add w ECCP EDT4 b add b 12
+ecd_mul w ECCP EDT3 EDT3 EDT4
+ecd_add w ECCP EDT4 EDT0 EDT1
+ecd_sub w ECCP EDT3 EDT3 EDT4
+ecd_add w ECCP EDT4 add a 12 add a 24
+ecd_add w ECCP EDX3 add b 12 add b 24
+ecd_mul w ECCP EDT4 EDT4 EDX3
+ecd_add w ECCP EDX3 EDT1 EDT2
+ecd_sub w ECCP EDT4 EDT4 EDX3
+ecd_add w ECCP EDX3 a add a 24
+ecd_add w ECCP EDY3 b add b 24
+ecd_mul w ECCP EDX3 EDX3 EDY3
+ecd_add w ECCP EDY3 EDT0 EDT2
+ecd_sub w ECCP EDY3 EDX3 EDY3
+ecd_mul w ECCP EDZ3 ECB EDT2
+ecd_sub w ECCP EDX3 EDY3 EDZ3
+ecd_add w ECCP EDZ3 EDX3 EDX3
+ecd_add w ECCP EDX3 EDX3 EDZ3
+ecd_sub w ECCP EDZ3 EDT1 EDX3
+ecd_add w ECCP EDX3 EDT1 EDX3
+ecd_mul w ECCP EDY3 ECB EDY3
+ecd_add w ECCP EDT1 EDT2 EDT2
+ecd_add w ECCP EDT2 EDT1 EDT2
+ecd_sub w ECCP EDY3 EDY3 EDT2
+ecd_sub w ECCP EDY3 EDY3 EDT0
+ecd_add w ECCP EDT1 EDY3 EDY3
+ecd_add w ECCP EDY3 EDT1 EDY3
+ecd_add w ECCP EDT1 EDT0 EDT0
+ecd_add w ECCP EDT0 EDT1 EDT0
+ecd_sub w ECCP EDT0 EDT0 EDT2
+ecd_mul w ECCP EDT1 EDT4 EDY3
+ecd_mul w ECCP EDT2 EDT0 EDY3
+ecd_mul w ECCP EDY3 EDX3 EDZ3
+ecd_add w ECCP EDY3 EDY3 EDT2
+ecd_mul w ECCP EDX3 EDT3 EDX3
+ecd_sub w ECCP EDX3 EDX3 EDT1
+ecd_mul w ECCP EDZ3 EDT4 EDZ3
+ecd_mul w ECCP EDT1 EDT3 EDT0
+ecd_add w ECCP EDZ3 EDZ3 EDT1
+ec_copy w o EDX3
+ec_copy w add o 12 EDY3
+ec_copy w add o 24 EDZ3
+end
+
+note swap the points EDR0 and EDR1 when m is all ones, keep them when m is 0 (m = 0 - bit)
+fn ecd_cswap w edit ulong ECWN m ulong to void
+for j ulong 36
+x = get w add EDR0 j
+y = get w add EDR1 j
+d = and m xor x y
+put w add EDR0 j xor x d
+put w add EDR1 j xor y d
+end
+end
+
+note EDR0 = k*P for the scalar k at EDK and the point at slot p (Montgomery, Z = R mod p).
+note Fixed count 32L; the swap before each step uses bit xor previous bit, as x25519.om does.
+fn ecd_ladder w edit ulong ECWN p ulong to void
+for j ulong 36
+put w add EDR0 j 0
+end
+ec_copy w add EDR0 12 add ECCP 16
+ec_pcopy w EDR1 p
+nb = mul get w 0 32
+sw = ulong 0
+for k ulong nb
+i = sub sub nb 1 k
+b = ec_bit w EDK i
+sw = xor sw b
+ecd_cswap w sub 0 sw
+sw = b
+ecd_padd w EDR1 EDR0 EDR1
+ecd_padd w EDR0 EDR0 EDR0
+end
+ecd_cswap w sub 0 sw
+end
+
+note o = a^(p-2) mod p with constant-time multiplication; the exponent p - 2 is public
+fn ecd_inv w edit ulong ECWN o ulong a ulong to void
+ec_copy w EDAC add ECCP 16
+nb = mul get w 0 32
+for k ulong nb
+i = sub sub nb 1 k
+ecd_mul w ECCP EDAC EDAC EDAC
+v = get w add ECCP shr i 5
+if eq shr i 5 0
+v = sub v 2
+end
+if eq and shr v and i 31 1 1
+ecd_mul w ECCP EDAC EDAC a
+end
+end
+ec_copy w o EDAC
+end
+
+note 1 when 1 <= k < n for the scalar k at EDK, else 0: full borrow chain of k - n and an OR of
+note the limbs, no branch on k
+fn ecd_range w edit ulong ECWN to ulong
+n = get w 0
+br = ulong 0
+z = ulong 0
+x = ulong 0
+for j ulong n
+v = get w add EDK j
+x = sub sub v get w add ECCN j br
+br = shr x 63
+z = or z v
+end
+ret and br shr or z sub 0 z 63
+end
+
+note EDR0 to affine (X, Y plain, not Montgomery); returns 1 when Z != 0 (finite point), else 0
+fn ecd_fin w edit ulong ECWN to ulong
+n = get w 0
+z = ulong 0
+for j ulong n
+z = or z get w add add EDR0 24 j
+end
+ecd_inv w EDZI add EDR0 24
+ecd_mul w ECCP EDR0 EDR0 EDZI
+ecd_mul w ECCP EDR0 EDR0 ECON
+ecd_mul w ECCP add EDR0 12 add EDR0 12 EDZI
+ecd_mul w ECCP add EDR0 12 add EDR0 12 ECON
+ret shr or z sub 0 z 63
+end
+
+note write the L-limb number at a as 4L big-endian bytes to o[off..]
+fn ecd_out w edit ulong ECWN a ulong o edit uchar * off ulong to void
+nb = mul get w 0 4
+for i ulong nb
+v = shr get w add a shr i 2 mul and i 3 8
+put o add off sub sub nb 1 i uchar and v 255
+end
+end
+
+fn ecd_wipe w edit ulong ECWN to void
+for j ulong ECWN
+put w j 0
+end
+end
+
+fn ecd_zero o edit uchar * to void
+for j ulong len o
+put o j 0
+end
+end
+
+note curve from the private scalar length: 32 bytes P-256, 48 bytes P-384, else 0
+fn ecd_crv d view uchar * to ulong
+if eq len d 32
+ret 256
+end
+if eq len d 48
+ret 384
+end
+ret 0
+end
+
+note EDR0 (X, Y plain affine) = k*P for the scalar k at EDK and the point at slot p (Montgomery,
+note Z = R mod p); returns 1 when the result is finite, else 0. P-256 (L = 8, public) goes through the
+note constant-time fixed-window p2_smul of ec.om in its own workspace, which is wiped; P-384 through
+note ecd_ladder and ecd_fin. The curve test branches on public data only.
+fn ecd_mult w edit ulong ECWN p ulong to ulong
+if ne get w 0 8
+ecd_ladder w p
+ret ecd_fin w
+end
+v = new ulong P2WN 0
+p2_init v
+ecd_mul w ECCP EDT0 p ECON
+ecd_mul w ECCP EDT1 add p 12 ECON
+for j ulong 8 unroll
+put v add P2K j get w add EDK j
+put v add P2P j get w add EDT0 j
+put v add add P2P 8 j get w add EDT1 j
+end
+f = p2_smul v
+for j ulong 8 unroll
+put w add EDR0 j get v add P2O j
+put w add add EDR0 12 j get v add add P2O 8 j
+end
+p2_wipe v
+ret f
+end
+
+fn ecdh_pub d view uchar * q edit uchar * to ulong
+w = new ulong ECWN 0
+crv = ecd_crv d
+if eq crv 0
+ret 5
+end
+nb = len d
+if ne len q add 1 mul nb 2
+ret 2
+end
+rc = ec_setup w crv
+if ne rc 0
+ret rc
+end
+ec_load w EDK d
+ok = ecd_range w
+fin = ecd_mult w ECG
+put q 0 4
+ecd_out w EDR0 q 1
+ecd_out w add EDR0 12 q add 1 nb
+ecd_wipe w
+if eq and ok fin 0
+ecd_zero q
+ret 4
+end
+ret 0
+end
+
+fn ecdh_shared d view uchar * p view uchar * z edit uchar * to ulong
+w = new ulong ECWN 0
+crv = ecd_crv d
+if eq crv 0
+ret 5
+end
+if ne len z len d
+ret 2
+end
+rc = ec_setup w crv
+if ne rc 0
+ret rc
+end
+ecd_zero z
+rc = ec_pub w p
+if ne rc 0
+ecd_wipe w
+ret 3
+end
+ec_load w EDK d
+ok = ecd_range w
+fin = ecd_mult w ECQ
+ecd_out w EDR0 z 0
+ecd_wipe w
+if eq ok 0
+ecd_zero z
+ret 4
+end
+if eq fin 0
+ecd_zero z
+ret 1
+end
+ret 0
+end
+
+note pair-wise consistency (SP 800-56A Rev. 3 section 5.6.2.1.4): q passes full public-key
+note validation (section 5.6.2.3.3; cofactor 1, so ec_pub's checks are the full set) and equals
+note d*G recomputed here, compared without an early exit. 0 ok, 6 failed, 2 or 5 as above.
+fn ecdh_pct d view uchar * q view uchar * to ulong
+w = new ulong ECWN 0
+t = new uchar 97 0
+crv = ecd_crv d
+if eq crv 0
+ret 5
+end
+ql = add 1 mul len d 2
+if ne len q ql
+ret 2
+end
+rc = ec_setup w crv
+if ne rc 0
+ret rc
+end
+rc = ec_pub w q
+ecd_wipe w
+if ne rc 0
+ret 6
+end
+rc = ecdh_pub d part t 0 ql
+acc = ulong 0
+for j ulong ql
+acc = or acc ulong xor get t j get q j
+end
+ecd_zero t
+if or ne rc 0 ne acc 0
+ret 6
+end
+ret 0
+end

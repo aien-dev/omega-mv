@@ -1,0 +1,360 @@
+note SPDX-License-Identifier: Apache-2.0
+note OSC IR v1 scalar uint unit to an RV32IM elementwise kernel for a Tensix baby RISC-V core.
+note Wire authority spec/one-layer-format.md. Encodings: RISC-V unprivileged ISA, RV32I and M.
+note Input: one function of two uint params returning uint, one block, CONST MOV BIN RET only.
+note Output: raw little-endian RV32 words of the loop out[i] = f(a[i], b[i]) for i below n.
+note Kernel ABI: a0 = a, a1 = b, a2 = out, a3 = n (32-bit words), return through ra.
+note Vreg k maps to x5 x6 x7 for k below 3, then x14 x15 x16 x17; at most 7 vregs.
+note Supported BIN: add sub mul and or xor (u32 wraps, as RV32 does). div rem shl shr are
+note refused because Omega traps on zero divisors and shift range and this kernel has no trap path.
+note Buffered output: every refusal happens before any stdout write.
+global input uchar 65536
+global output uchar 4096
+note state slots: 0 input cursor, 1 input size, 2 output size, 3 nvregs, 4 ninsns, 5 defined mask
+global state ulong 8
+global ops ulong 64
+global subs ulong 64
+global dest ulong 64
+global arg0 ulong 64
+global arg1 ulong 64
+global immed ulong 64
+text emagic "irrv32: MAGIC\n"
+text ever "irrv32: VERSION\n"
+text etrunc "irrv32: TRUNCATED\n"
+text ecap "irrv32: CAPACITY\n"
+text eop "irrv32: UNSUPPORTED_OP\n"
+text eshape "irrv32: UNSUPPORTED_SHAPE\n"
+text einval "irrv32: INVALID\n"
+text etrail "irrv32: TRAILING\n"
+text eio "irrv32: IO\n"
+fn refuse code int to void
+k = long 0
+if eq code 20
+k = write 2 emagic 0 len emagic
+end
+if eq code 21
+k = write 2 ever 0 len ever
+end
+if eq code 22
+k = write 2 etrunc 0 len etrunc
+end
+if eq code 23
+k = write 2 ecap 0 len ecap
+end
+if eq code 24
+k = write 2 eop 0 len eop
+end
+if eq code 25
+k = write 2 eshape 0 len eshape
+end
+if eq code 26
+k = write 2 einval 0 len einval
+end
+if eq code 27
+k = write 2 etrail 0 len etrail
+end
+if eq code 28
+k = write 2 eio 0 len eio
+end
+exit code
+end
+fn need ok bool to void
+if not ok
+refuse 26
+end
+end
+fn rd n ulong to ulong
+p = get state 0
+if gt n sub get state 1 p
+refuse 22
+end
+v = ulong 0
+for j ulong n
+v = or v shl ulong get input add p j mul j 8
+end
+put state 0 add p n
+ret v
+end
+fn vr to ulong
+v = rd 2
+need lt v get state 3
+ret v
+end
+fn isdef v ulong to bool
+ret ne and get state 5 shl ulong 1 v 0
+end
+fn def v ulong to void
+put state 5 or get state 5 shl ulong 1 v
+end
+fn reg v ulong to ulong
+if lt v 3
+ret add v 5
+end
+ret add v 11
+end
+fn emitw w ulong to void
+p = get state 2
+if gt add p 4 len output
+refuse 23
+end
+for j ulong 4
+put output add p j uchar and shr w mul j 8 255
+end
+put state 2 add p 4
+end
+note R-type: funct7 rs2 rs1 funct3 rd, opcode 51 (OP).
+fn rtype f7 ulong rs2 ulong rs1 ulong f3 ulong dr ulong to void
+w = or shl f7 25 shl rs2 20
+w = or w or shl rs1 15 shl f3 12
+w = or w or shl dr 7 51
+emitw w
+end
+note I-type: imm is the low 12 bits of the two's-complement immediate (4095 is -1).
+fn itype imm ulong rs1 ulong f3 ulong dr ulong op ulong to void
+w = or shl and imm 4095 20 shl rs1 15
+w = or w or shl f3 12 shl dr 7
+w = or w op
+emitw w
+end
+note S-type: store word rs2 to imm(rs1), opcode 35 (STORE).
+fn stype imm ulong rs2 ulong rs1 ulong f3 ulong to void
+w = or shl shr imm 5 25 shl rs2 20
+w = or w or shl rs1 15 shl f3 12
+w = or w or shl and imm 31 7 35
+emitw w
+end
+note B-type: off is the 13-bit two's-complement byte offset (8192 minus k is -k), opcode 99.
+fn btype off ulong rs1 ulong rs2 ulong f3 ulong to void
+b12 = and shr off 12 1
+b11 = and shr off 11 1
+b10 = and shr off 5 63
+b4 = and shr off 1 15
+w = or shl b12 31 shl b10 25
+w = or w or shl rs2 20 shl rs1 15
+w = or w or shl f3 12 shl b4 8
+w = or w or shl b11 7 99
+emitw w
+end
+note U-type: 20-bit upper immediate, opcode 55 (LUI).
+fn utype imm ulong dr ulong op ulong to void
+emitw or shl and imm 1048575 12 or shl dr 7 op
+end
+fn insn i ulong to void
+op = rd 1
+put ops i op
+known = or or eq op 1 eq op 2 or eq op 3 eq op 15
+if not known
+refuse 24
+end
+if eq op 1
+d = vr
+v = rd 8
+if gt v 4294967295
+refuse 26
+end
+put dest i d
+put immed i v
+def d
+end
+if eq op 2
+d = vr
+a = vr
+need isdef a
+put dest i d
+put arg0 i a
+def d
+end
+if eq op 3
+s = rd 1
+d = vr
+a = vr
+b = vr
+ok = or or eq s 1 eq s 2 eq s 3
+ok = or ok or or eq s 6 eq s 7 eq s 8
+if not ok
+refuse 24
+end
+need isdef a
+need isdef b
+put subs i s
+put dest i d
+put arg0 i a
+put arg1 i b
+def d
+end
+if eq op 15
+a = vr
+need isdef a
+put arg0 i a
+end
+end
+fn skip n ulong to void
+for j ulong n
+k = rd 1
+end
+end
+fn loadfn to void
+skip rd 1
+if ne rd 1 2
+refuse 25
+end
+if ne rd 1 4
+refuse 25
+end
+nv = rd 2
+if gt nv 7
+refuse 23
+end
+need ge nv 2
+put state 3 nv
+for j ulong nv
+if ne rd 1 4
+refuse 25
+end
+end
+if ne rd 2 1
+refuse 24
+end
+bf = rd 4
+bc = rd 4
+ni = rd 4
+if gt ni 64
+refuse 23
+end
+need gt ni 0
+need eq bf 0
+need eq bc ni
+put state 4 ni
+put state 5 3
+for i ulong ni
+insn i
+end
+skip rd 2
+skip rd 2
+for i ulong ni
+isret = eq get ops i 15
+last = eq i sub ni 1
+if ne isret last
+refuse 24
+end
+end
+end
+fn kernel to void
+ni = get state 4
+nl = ulong 0
+for i ulong ni
+op = get ops i
+if eq op 1
+nl = add nl 2
+end
+if or eq op 2 eq op 3
+nl = add nl 1
+end
+end
+note beq a3, x0, done: forward 4 * (9 + body words) bytes
+btype mul 4 add 9 nl 13 0 0
+note lw t0, 0(a0); lw t1, 0(a1): the two params, vregs 0 and 1
+itype 0 10 2 5 3
+itype 0 11 2 6 3
+rv = ulong 0
+for i ulong ni
+op = get ops i
+d = reg get dest i
+if eq op 1
+v = get immed i
+utype shr add v 2048 12 d 55
+itype and v 4095 d 0 d 19
+end
+if eq op 2
+itype 0 reg get arg0 i 0 d 19
+end
+if eq op 3
+s = get subs i
+f7 = ulong 0
+f3 = ulong 0
+if eq s 2
+f7 = ulong 32
+end
+if eq s 3
+f7 = ulong 1
+end
+if eq s 6
+f3 = ulong 7
+end
+if eq s 7
+f3 = ulong 6
+end
+if eq s 8
+f3 = ulong 4
+end
+rtype f7 reg get arg1 i reg get arg0 i f3 d
+end
+if eq op 15
+rv = reg get arg0 i
+end
+end
+note sw result, 0(a2); advance a0 a1 a2 by 4; a3 -= 1; bne a3, x0, loop; jalr x0, 0(ra)
+stype 0 rv 12 2
+itype 4 10 0 10 19
+itype 4 11 0 11 19
+itype 4 12 0 12 19
+itype 4095 13 0 13 19
+btype sub 8192 mul 4 add 7 nl 13 0 1
+itype 0 1 0 0 103
+end
+fn main to int
+n = ulong 0
+for attempt ulong 65536
+if eq n len input
+refuse 23
+end
+k = read 0 input n sub len input n
+if lt k 0
+refuse 28
+end
+if eq k 0
+break
+end
+n = add n ulong k
+end
+if eq n len input
+refuse 23
+end
+put state 1 n
+magic = new uchar 7 0
+put magic 0 79
+put magic 1 83
+put magic 2 67
+put magic 3 49
+put magic 4 73
+put magic 5 82
+for j ulong 7
+v = rd 1
+if ne v ulong get magic j
+refuse 20
+end
+end
+if ne rd 1 1
+refuse 21
+end
+if ne rd 2 1
+refuse 25
+end
+loadfn
+if ne get state 0 n
+refuse 27
+end
+kernel
+p = ulong 0
+for attempt ulong 4096
+if eq p get state 2
+break
+end
+k = write 1 output p sub get state 2 p
+if le k 0
+refuse 28
+end
+p = add p ulong k
+end
+ret 0
+end

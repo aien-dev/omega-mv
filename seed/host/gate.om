@@ -80,6 +80,8 @@ text srcuid "fn main to int\nret int getuid\nend\n"
 text srceuid "fn main to int\nret int geteuid\nend\n"
 text srcgid "fn main to int\nret int getgid\nend\n"
 text srcegid "fn main to int\nret int getegid\nend\n"
+text srcpp1 "fn main to int\nret int rem getppid long 256\nend\n"
+text srcpp2 "fn main to int\nret int rem getppid long 251\nend\n"
 text lprobe "probe.bin"
 text lsock "native.sock"
 text ladir "adir"
@@ -119,6 +121,7 @@ text com "PASS native chown: owner uid kept in st_uid; missing path errno\n"
 text fam "PASS native faccess: existing path accepted, missing path refused\n"
 text idm "PASS native identity: getuid/geteuid/getgid/getegid match /proc/self/status\n"
 text fcm "PASS native fchdir/umask/getppid: directory fd, 0777 under mask 0, parent id\n"
+text ppm "PASS native getppid: parent id equals the gate process pid (mod 256 and mod 251)\n"
 text fdm "PASS native fdsync/memfd: data sync, closed fd refused, anonymous file rw\n"
 text pim "PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refused\n"
 text psm "PASS native getsid/syncfs/shutdown: session id, filesystem sync, non-socket refusal\n"
@@ -779,6 +782,14 @@ comp nfchdir
 run nfchdir
 here lsubdir
 say fcm
+note getppid must name this gate, the direct parent of the forked child that execs id.bin: compare
+note the parent id with getpid modulo 256 and modulo 251. They are coprime, so a wrong id passes only
+note if it is congruent to the gate pid modulo 64256; the child's own pid and constants fail.
+setcur idname
+me = getpid
+idcase srcpp1 ulong rem me long 256
+idcase srcpp2 ulong rem me long 251
+say ppm
 comp nfdsync
 run nfdsync
 say fdm

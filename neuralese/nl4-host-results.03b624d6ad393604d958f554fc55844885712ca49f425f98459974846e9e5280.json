@@ -1,0 +1,72 @@
+{
+  "schema": "nl4-host-synthetic-receipt-1",
+  "status": "PASS",
+  "classification": "HOST_SYNTHETIC",
+  "implementation_commit": "09b1394fe68287eaa10b0d90cf07a9dd00e6cb60",
+  "base_draft_919": "e79566c191ea8ef11888e69ce50d8fadf375d4fd",
+  "clean_implementation_commit": true,
+  "source_lock": "neuralese/nl4-dependencies.json",
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "compiler_origin": "1fe5976d398646b17acabbf6d9dfae96b017e439",
+  "source_sha256": {
+    "neuralese/proposal.om": "2a83bfc17f6897d2d1ed017d57a1cfe9b8e1ed15286d13c27a23b9907628319b",
+    "neuralese/host-proposal.om": "c103f5417d3ae9bf63a13b502da721be673a6bf699c89f98a56e9069b431c665",
+    "neuralese/codec-check.om": "215138b531c813763fa82310526c1c5ea0a80f6b850f536153a26f43b55097c1",
+    "neuralese/nl4-host.cases": "67e27e7972dcb89ecd00f0199307d086f151b1d97249e232dd74dbb480bc029f",
+    "seed/qualification/om2/gate.om": "250361be99ced1246405b2e4a2e2de71373a90d0a0569fb43821ed8b106e045f",
+    "om/tls/sha2.om": "5cf0f98116def6917d3a373f2bd4c3932d46e3ff84d9567bbae9e720366fdb33"
+  },
+  "commands": [
+    "seed/out/omc < seed/qualification/om2/gate.om > build/nl4-gate",
+    "chmod +x build/nl4-gate",
+    "build/nl4-gate seed/out/omc d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 neuralese/nl4-host.cases build/nl4-host-r3",
+    "build/nl4-gate seed/out/omc d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 neuralese/host.cases build/neuralese-host"
+  ],
+  "native_gate": {
+    "exit": 0,
+    "observed": "OM2GATE PASS cases=63 pass=63 fail=0 invalid=0 not_run=0",
+    "codec_oracle_cases": 1,
+    "executed_positive_cases": 24,
+    "deliberate_refusal_cases": 27,
+    "killed_mutants": 9,
+    "ordinary_contract_traps": 2,
+    "log": "neuralese/nl4-host-pass.log",
+    "log_sha256": "572f350531fa4c646475a24b2458abf062332474036d6069ab98de4ae77717d9"
+  },
+  "inherited_gate": {
+    "exit": 0,
+    "observed": "OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0",
+    "log": "neuralese/nl4-inherited-pass.log"
+  },
+  "representative_execution": {
+    "argv": ["build/nl4-host-r3/9.elf", "neuralese/fixtures/nl4-context.bin", "1", "2"],
+    "stdin": "neuralese/fixtures/nl4-1001.wire",
+    "exit": 0,
+    "stdout": "neuralese/nl4-success.stdout",
+    "stdout_sha256": "73f7b44bef21cd50fabb255f6dc2ed7c33b231acee9c1c755753cc5615d79082",
+    "stderr": "empty",
+    "elf_sha256": "6fb7a87f4f069c0097b1f7ffdf146c41571a07b9da6c4900d272f86b7193aea0"
+  },
+  "representative_refusal": {
+    "argv": ["build/nl4-host-r3/35.elf", "neuralese/fixtures/nl4-context.bin", "1", "2"],
+    "stdin": "neuralese/fixtures/nl4-foreign.wire",
+    "exit": 20,
+    "stdout": "empty",
+    "stderr": "neuralese/nl4-refusal.stderr",
+    "stderr_sha256": "457c5dc66b24adf9b92cea82ab6e907ae65914cf431a98d2ac9238c27e36ece4",
+    "meaning": "refused foreign tenant template binding; no operation executed"
+  },
+  "failed_attempts_preserved": [
+    {"source": "d4f61620600b24cd4c22763baa97465ab1efc049", "status": "FAIL", "log": "neuralese/nl4-host-initial-fail.log", "cause": "overlong text name and encoder expression register exhaustion"},
+    {"source_prefix": "1847846", "status": "FAIL", "log": "neuralese/nl4-host-order-fail.log", "cause": "argcnt spelling and lexical global dependency ordering"}
+  ],
+  "independent_oracle": "actual mounted Wolfram tool calls/results in neuralese/nl4-wolfram-*.jsonl; IEEE32 bytes and all arithmetic expected results derived there, native execution checked separately",
+  "production_authority": "NOT_RUN",
+  "durable_reservation": "NOT_RUN",
+  "signed_MJB_MJR_CONTENT_relation": "NOT_RUN",
+  "effectful_execution": "NOT_RUN; every effectful request refused",
+  "learned_channel_campaign": "NOT_RUN",
+  "GPU_or_hardware_qualification": "NOT_RUN",
+  "deployment": "NOT_RUN",
+  "missing_owner_bindings": ["aien-dev/aegis-runtime-mv#79", "aien-dev/aien-protocols-mv#70"]
+}

@@ -9,7 +9,6 @@ note usage: blake3 [FILE]
 
 text tbad "blake3: cannot read input\n"
 text tbig "blake3: input over 16 MiB\n"
-text tnl "\n"
 
 global inp uchar 16777216
 global n ulong 1
@@ -26,7 +25,7 @@ global cvr ulong 8
 global stk ulong 512
 global sp ulong 1
 global name uchar 4096
-global hex uchar 64
+global hex uchar 65
 global tiny uchar 1
 
 const mask ulong 4294967295
@@ -226,7 +225,7 @@ ret uchar add v 87
 end
 
 note little-endian bytes of co 0..7 as 64 hex digits
-fn emit to void
+fn emit to int
 for i ulong 8
 v = get co i
 for k ulong 4
@@ -236,8 +235,16 @@ put hex p hexd shr bt 4
 put hex add p 1 hexd and bt 15
 end
 end
-r = write 1 hex 0 64
-r = write 1 tnl 0 1
+put hex 64 10
+off = ulong 0
+while lt off 65 bound 65
+r = write 1 hex off sub 65 off
+if le r 0
+ret 74
+end
+off = add off ulong r
+end
+ret 0
 end
 
 note read the whole descriptor into inp; 0 ok, 65 read error, 66 over capacity
@@ -325,6 +332,5 @@ r = write 2 tbig 0 len tbig
 ret 66
 end
 hashall
-emit
-ret 0
+ret emit
 end

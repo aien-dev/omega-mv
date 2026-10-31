@@ -1,0 +1,1768 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/rev.om (module RV): certificate revocation for the om/tls client. SHA-1 (FIPS 180-4, only
+note for OCSP CertID and KeyHash, never for a signature), stapled OCSP (RFC 6960 BasicOCSPResponse,
+note RFC 8446 4.4.2.1 status_request in the leaf CertificateEntry), the TLS Feature extension
+note (RFC 7633 must-staple) and CRL validation against a caller-supplied CRL (RFC 5280 5, 6.3).
+note Library unit; compose after x509.om (it reuses der_hdr, der_time, x509_parse, chain_sig,
+note chain_link, chain_time, chain_index, x509_errname). No globals.
+note
+note Inputs (rev_check, rev_ocsp, rev_crl): one buffer b and a descriptor p (ulong 16): p[0] unix now,
+note p[1] p[2] leaf DER offset and length in b, p[3] p[4] the leaf issuer's DER (rev_issuer finds it),
+note p[5] p[6] the stapled OCSPResponse (length 0: none), p[7] p[8] a CRL (length 0: none).
+note
+note Reject codes continue the x509.om table (rev_errname gives the names; 1..21 are x509.om's):
+note  32 REVOKED       the OCSP response or the CRL lists the leaf as revoked
+note  33 STATUS_UNKNOWN the OCSP response says unknown, or has no SingleResponse for the leaf
+note  34 STALE         thisUpdate later than now + RVSKEW, nextUpdate absent, or nextUpdate <= now
+note  35 NO_STAPLE     the leaf carries TLS Feature status_request (must-staple) and no staple came
+note  36 RESPONDER     the OCSP signer is neither the issuer nor a certificate issued by it, valid now,
+note                   with extKeyUsage id-kp-OCSPSigning; or the responderID names nobody presented
+note  37 OCSP_STATUS   responseStatus is not successful (malformedRequest, tryLater, ...)
+note  38 CRL_SCOPE     the CRL does not cover the leaf: issuer name differs, delta CRL, indirect CRL,
+note                   onlyContainsCACerts / onlySomeReasons / onlyContainsAttributeCerts, a relative
+note                   distribution point name, or an issuingDistributionPoint none of whose fullName
+note                   names is in the leaf's cRLDistributionPoints
+note x509.om codes used here: 1 MALFORMED, 6 BAD_SIGNATURE, 9 KEY_USAGE (issuer keyUsage without cRLSign), 11/12 algorithm or key policy
+note (chain_sig), 13 CRITICAL_EXT, 18 ALG_MISMATCH.
+note
+note Policy (rev_check): a staple, when present, must verify and say good; a must-staple leaf without a
+note staple is refused; a CRL, when given, must verify, cover the leaf, be fresh and not list it. With
+note no staple, no must-staple and no CRL the result is 0: revocation was then NOT checked (soft fail
+note open, as every browser does without must-staple), which the caller reports. Nothing here is
+note secret; variable time by design.
+note
+note omc limits shape the code: a call carries at most 6 slots (an unsized array is 2, a sized one 1)
+note and never names one array twice, so the leaf and the issuer are copied into local buffers and
+note intermediate offsets travel in the sized state arrays o (ulong 32), w (ulong 128), ix (uchar 256).
+
+const RVEREV ulong 32
+const RVEUNK ulong 33
+const RVESTALE ulong 34
+const RVENOST ulong 35
+const RVERESP ulong 36
+const RVEOST ulong 37
+const RVESCOPE ulong 38
+note RVSKEW: seconds a thisUpdate may lie in the future (clock skew between responder and client)
+const RVSKEW ulong 300
+note RVANY: rev_exts skips the criticality rule; RVNONE: no extension may be critical / none wanted
+const RVANY ulong 99
+const RVNONE ulong 98
+note RVHIT / RVMISS: "found" (must-staple, serial listed) and "absent / names another certificate"
+note results, distinct from every error code (X5EMAL is 1)
+const RVHIT ulong 97
+const RVMISS ulong 96
+const RVKBUF ulong 16896
+note RVSER: serial number bytes of the leaf live at ix[RVSER ..), at most RVSERX of them
+const RVSER ulong 128
+const RVSERX ulong 128
+
+note RVOIDS: OID content bytes (hex), space separated, 1-based index by rev_oidin:
+note 1 id-pe-tlsfeature 1.3.6.1.5.5.7.1.24 (RFC 7633), 2 cRLDistributionPoints, 3 issuingDistributionPoint,
+note 4 id-kp-OCSPSigning, 5 id-pkix-ocsp-basic, 6 id-sha1 1.3.14.3.2.26, 7 id-sha256, 8 extKeyUsage,
+note 9 cRLNumber, 10 authorityKeyIdentifier, 11 deltaCRLIndicator, 12 freshestCRL, 13 reasonCode,
+note 14 invalidityDate, 15 certificateIssuer, 16 id-pkix-ocsp-nonce, 17 authorityInfoAccess
+text RVOIDS "2b06010505070118 551d1f 551d1c 2b06010505070309 2b0601050507300101 2b0e03021a 608648016503040201 551d25 551d14 551d23 551d1b 551d2e 551d15 551d18 551d1d 2b0601050507300102 2b06010505070101 "
+text RVNAMES "REV_ERR_REVOKED REV_ERR_STATUS_UNKNOWN REV_ERR_STALE REV_ERR_NO_STAPLE REV_ERR_RESPONDER REV_ERR_OCSP_STATUS REV_ERR_CRL_SCOPE "
+
+note ---------------------------------------------------------------- SHA-1 (CertID only)
+
+note sha1_f: round function and constant of SHA-1 step t (FIPS 180-4 4.1.1, 4.2.1), k selects
+fn sha1_f t ulong b uint c uint d uint to uint
+if lt t 20
+ret or and b c and not b d
+end
+if lt t 40
+ret xor xor b c d
+end
+if lt t 60
+ret or or and b c and b d and c d
+end
+ret xor xor b c d
+end
+
+fn sha1_k t ulong to uint
+if lt t 20
+ret 0x5a827999
+end
+if lt t 40
+ret 0x6ed9eba1
+end
+if lt t 60
+ret 0x8f1bbcdc
+end
+ret 0xca62c1d6
+end
+
+note sha1_sched: message schedule w[0 .. 80) of the block m[o .. o+64)
+fn sha1_sched w edit uint 80 m view uchar * o ulong to void
+for t ulong 16
+q = add o mul t 4
+v = or shl uint get m q 24 shl uint get m add q 1 16
+v = or v or shl uint get m add q 2 8 uint get m add q 3
+put w t v
+end
+for t ulong 64
+i = add t 16
+x = xor get w sub i 3 get w sub i 8
+x = xor x get w sub i 14
+x = xor x get w sub i 16
+put w i or shl x 1 shr x 31
+end
+end
+
+note sha1_blk: one SHA-1 compression of m[o .. o+64) into the chaining value h[0 .. 5)
+fn sha1_blk h edit uint 5 m view uchar * o ulong to void
+w = new uint 80 0
+sha1_sched w m o
+a = get h 0
+b = get h 1
+c = get h 2
+d = get h 3
+e = get h 4
+for t ulong 80
+f = sha1_f t b c d
+x = add or shl a 5 shr a 27 f
+x = add x add e sha1_k t
+x = add x get w t
+e = d
+d = c
+c = or shl b 30 shr b 2
+b = a
+a = x
+end
+put h 0 add get h 0 a
+put h 1 add get h 1 b
+put h 2 add get h 2 c
+put h 3 add get h 3 d
+put h 4 add get h 4 e
+end
+
+note sha1_pad: the final block(s) after r tail bytes already in t: 0x80, zeros, the 64-bit bit
+note length of an n-byte message; returns the padded length (64 or 128)
+fn sha1_pad t edit uchar 128 n ulong r ulong to ulong
+put t r 128
+tl = ulong 64
+if ge r 56
+tl = 128
+end
+bits = mul n 8
+for i ulong 8
+q = sub sub tl 1 i
+put t q uchar and shr bits mul i 8 255
+end
+ret tl
+end
+
+note sha1_out: the chaining value h big-endian into o[0 .. 20)
+fn sha1_out h view uint 5 o edit uchar * to void
+for i ulong 5
+v = get h i
+q = mul i 4
+put o q uchar shr v 24
+put o add q 1 uchar and shr v 16 255
+put o add q 2 uchar and shr v 8 255
+put o add q 3 uchar and v 255
+end
+end
+
+note sha1_digest: SHA-1 of m (any length below 2^61 bytes) into o[0 .. 20); returns 20
+fn sha1_digest m view uchar * o edit uchar * to ulong
+h = new uint 5 0
+t = new uchar 128 0
+put h 0 0x67452301
+put h 1 0xefcdab89
+put h 2 0x98badcfe
+put h 3 0x10325476
+put h 4 0xc3d2e1f0
+n = len m
+nb = div n 64
+for i ulong nb
+sha1_blk h m mul i 64
+end
+r = sub n mul nb 64
+for i ulong r
+put t i get m add mul nb 64 i
+end
+tl = sha1_pad t n r
+sha1_blk h t 0
+if eq tl 128
+sha1_blk h t 64
+end
+sha1_out h o
+ret 20
+end
+
+note rev_hash: digest of m with OCSP CertID hash a (6 SHA-1, 7 SHA-256, rev_oidin) into o; length
+fn rev_hash a ulong m view uchar * o edit uchar * to ulong
+if eq a 6
+ret sha1_digest m o
+end
+ret sha2_digest 256 m o
+end
+
+note ---------------------------------------------------------------- DER helpers
+
+note rev_tag: der_hdr of the TLV at d[p] (content by e) whose tag must be g; 0 ok, 1 otherwise
+fn rev_tag d view uchar * p ulong e ulong h edit ulong 3 g ulong to ulong
+if ne der_hdr d p e h 0
+ret 1
+end
+if ne get h 0 g
+ret 1
+end
+ret 0
+end
+
+note rev_oidin: position (1-based) of the OID content d in RVOIDS, 0 when absent
+fn rev_oidin d view uchar * to ulong
+s = ulong 0
+k = ulong 1
+n = len RVOIDS
+while lt s n bound 1000
+j = s
+while lt j n bound 1000
+if eq get RVOIDS j 32
+break
+end
+j = add j 1
+end
+if der_hexeq d part RVOIDS s sub j s
+ret k
+end
+s = add j 1
+k = add k 1
+end
+ret 0
+end
+
+note rev_ext1: one Extension, content c[a .. b) (RFC 5280 4.1): extnID, critical BOOLEAN (0x00 or 0xff,
+note as x509_ext), extnValue. y[0] critical 0/1, y[1] y[2] extnValue content span, y[3] OID index
+note (rev_oidin). 0 ok, 1 malformed.
+fn rev_ext1 c view uchar * a ulong b ulong y edit ulong 4 to ulong
+h = new ulong 3 0
+if ne rev_tag c a b h 6 0
+ret 1
+end
+put y 3 rev_oidin part c get h 1 sub get h 2 get h 1
+put y 0 0
+s = get h 2
+if ne der_hdr c s b h 0
+ret 1
+end
+if eq get h 0 1
+if ne sub get h 2 get h 1 1
+ret 1
+end
+v = ulong get c get h 1
+if and ne v 0 ne v 255
+ret 1
+end
+if eq v 255
+put y 0 1
+end
+s = get h 2
+if ne der_hdr c s b h 0
+ret 1
+end
+end
+if or ne get h 0 4 ne get h 2 b
+ret 1
+end
+put y 1 get h 1
+put y 2 b
+ret 0
+end
+
+note rev_extk: criticality rule for the parsed extension y: x[13] is the one OID index that may be
+note critical (RVNONE: none; RVANY: skip the rule). deltaCRLIndicator and certificateIssuer are
+note RVESCOPE (delta and indirect CRLs are not supported); any other critical extension X5ECRIT.
+fn rev_extk y view ulong 4 x view ulong 16 to ulong
+ok = get x 13
+if or eq ok RVANY eq get y 0 0
+ret 0
+end
+o = get y 3
+if and eq o ok ne o 0
+ret 0
+end
+if or eq o 11 eq o 15
+ret RVESCOPE
+end
+ret X5ECRIT
+end
+
+note rev_exts: Extensions SEQUENCE TLV that is exactly c[a .. b) (1..X5XMAX entries). The extension
+note with OID index x[12] is recorded: x[4] 1, x[5] critical, x[6] x[7] its extnValue content span (a
+note second one is X5EMAL). Criticality per rev_extk.
+fn rev_exts c view uchar * a ulong b ulong x edit ulong 16 to ulong
+h = new ulong 3 0
+y = new ulong 4 0
+put x 4 0
+if ne rev_tag c a b h 0x30 0
+ret X5EMAL
+end
+if or ne get h 2 b eq get h 1 b
+ret X5EMAL
+end
+s = get h 1
+n = ulong 0
+while lt s b bound 100
+n = add n 1
+if gt n X5XMAX
+ret X5EMAL
+end
+if ne rev_tag c s b h 0x30 0
+ret X5EMAL
+end
+s = get h 2
+if ne rev_ext1 c get h 1 s y 0
+ret X5EMAL
+end
+k = rev_extk y x
+if ne k 0
+ret k
+end
+if eq get y 3 get x 12
+if ne get x 4 0
+ret X5EMAL
+end
+put x 4 1
+put x 5 get y 0
+put x 6 get y 1
+put x 7 get y 2
+end
+end
+ret 0
+end
+
+note rev_certx: in the certificate c (record r from x509_parse): its serialNumber INTEGER content span
+note into x[10] x[11], and its Extensions SEQUENCE TLV into x[8] x[9] (both 0 when it has none).
+note 0 ok, X5EMAL.
+fn rev_certx c view uchar * r view ulong * x edit ulong 16 to ulong
+h = new ulong 3 0
+put x 8 0
+put x 9 0
+a = get r X5RTBO
+if ne rev_tag c a len c h 0x30 0
+ret X5EMAL
+end
+b = get h 2
+s = get h 1
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if eq get h 0 0xa0
+s = get h 2
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+end
+if ne get h 0 2
+ret X5EMAL
+end
+put x 10 get h 1
+put x 11 get h 2
+s = get h 2
+while lt s b bound 16
+if ne der_hdr c s b h 0
+ret X5EMAL
+end
+if eq get h 0 0xa3
+s = get h 1
+if ne der_hdr c s get h 2 h 0
+ret X5EMAL
+end
+put x 8 s
+put x 9 get h 2
+ret 0
+end
+s = get h 2
+end
+ret 0
+end
+
+note rev_certext: extension with OID index x[12] of the certificate c (record r): 0 found (x[6] x[7]
+note value span), RVMISS absent, X5EMAL. x509_parse already policed the certificate's criticality.
+fn rev_certext c view uchar * r view ulong * x edit ulong 16 to ulong
+v = rev_certx c r x
+if ne v 0
+ret v
+end
+if eq get x 9 0
+ret RVMISS
+end
+put x 13 RVANY
+v = rev_exts c get x 8 get x 9 x
+if ne v 0
+ret v
+end
+if eq get x 4 0
+ret RVMISS
+end
+ret 0
+end
+
+note ---------------------------------------------------------------- must-staple (RFC 7633)
+
+note rev_mustst: the certificate c: RVHIT when its TLS Feature extension lists status_request (5), 0 when
+note it has none or the list lacks 5, X5EMAL when the certificate or the extension is malformed
+note (Features ::= SEQUENCE OF INTEGER, each 0..65535, at least one)
+fn rev_mustst c view uchar * to ulong
+r = new ulong 32 0
+x = new ulong 16 0
+h = new ulong 3 0
+if ne x509_parse c r 0
+ret X5EMAL
+end
+put x 12 1
+v = rev_certext c r x
+if eq v RVMISS
+ret 0
+end
+if ne v 0
+ret v
+end
+b = get x 7
+if ne rev_tag c get x 6 b h 0x30 0
+ret X5EMAL
+end
+if or ne get h 2 b eq get h 1 b
+ret X5EMAL
+end
+s = get h 1
+m = ulong 0
+while lt s b bound 1000
+if ne rev_tag c s b h 2 0
+ret X5EMAL
+end
+f = der_small part c s sub get h 2 s
+if gt f 65535
+ret X5EMAL
+end
+if eq f 5
+m = RVHIT
+end
+s = get h 2
+end
+ret m
+end
+
+note ---------------------------------------------------------------- shared state and setup
+
+note State o (ulong 32): 0 now (x509 seconds), 1 signed TLV start (ResponseData or tbsCertList), 2 its
+note length, 3 signature algorithm (x509_algid), 4 signature value start, 5 its length. OCSP: 6 7
+note certs content span (0 0 none), 8 responderID tag (0xa1 byName, 0xa2 byKey), 9 10 its content
+note span, 11 12 responses content span, 13 14 responseExtensions span, 16 status (0 good, 1 revoked,
+note 2 unknown), 17 thisUpdate, 18 nextUpdate (X5BIG none), 20 21 BasicOCSPResponse content span, 24
+note 25 26 27 candidate signer subject and key spans, 28 29 CertID content span, 30 31 SingleResponse
+note span. CRL: 11 12 revokedCertificates content span, 13 14 crlExtensions SEQUENCE span, 17 18 as
+note above, 24 25 tbsCertList content span, 26 27 outer signatureAlgorithm TLV start and length, 28 29
+note issuer Name TLV start and length, 30 31 issuingDistributionPoint fullName content span (0 0
+note none). Both: 22 leaf serial length (bytes at ix[RVSER ..)).
+note Workspace w (ulong 128): w[0 .. 32) and w[32 .. 64) are x509 records (leaf or candidate, issuer
+note or signer: the chain_link layout), 64 leaf length, 65 issuer length, 66 now.
+note ix (uchar 256): CertID hashes of the issuer (rev_ids) at 0 .. 104, the leaf serial at RVSER.
+
+note rev_now: unix seconds nw as x509 seconds (x509_chain_verify's scale); X5BIG beyond 9999
+fn rev_now nw ulong to ulong
+if gt nw 253402300799
+ret X5BIG
+end
+ret add nw mul x509_days 1970 1 1 86400
+end
+
+note rev_span: p[i] .. p[i] + p[i+1] lies within b
+fn rev_span b view uchar * p view ulong 16 i ulong to bool
+a = get p i
+if gt a len b
+ret false
+end
+ret le get p add i 1 sub len b a
+end
+
+note rev_load: the certificate p[k] .. p[k] + p[k+1] of b copied into d and parsed into the x509
+note record w[j*32 .. j*32+32) (j = (k-1)/2), its length into w[64+j]. 0 or X5EMAL.
+fn rev_load b view uchar * p view ulong 16 k ulong d edit uchar 16896 w edit ulong 128 to ulong
+if not rev_span b p k
+ret X5EMAL
+end
+l = get p add k 1
+if or eq l 0 gt l RVKBUF
+ret X5EMAL
+end
+a = get p k
+for i ulong l
+put d i get b add a i
+end
+a = mul div sub k 1 2 X5RSZ
+put w add 64 div a X5RSZ l
+if ne x509_parse part d 0 l part w a X5RSZ 0
+ret X5EMAL
+end
+ret 0
+end
+
+note rev_setup: now into w[66]; the leaf and the issuer (p[1 .. 4]) copied into lb and ib and parsed
+note into w[0 .. 32) and w[32 .. 64); their lengths into w[64] w[65]. 0 or X5EMAL.
+fn rev_setup b view uchar * p view ulong 16 lb edit uchar 16896 ib edit uchar 16896 w edit ulong 128 to ulong
+nw = rev_now get p 0
+if eq nw X5BIG
+ret X5EMAL
+end
+put w 66 nw
+if ne rev_load b p 1 lb w 0
+ret X5EMAL
+end
+ret rev_load b p 3 ib w
+end
+
+note rev_serial: the leaf serial (INTEGER content, 1 .. RVSERX bytes) into ix[RVSER ..), length o[22]
+fn rev_serial lb view uchar 16896 w view ulong 128 ix edit uchar 256 o edit ulong 32 to ulong
+x = new ulong 16 0
+v = rev_certx part lb 0 get w 64 part w 0 X5RSZ x
+if ne v 0
+ret v
+end
+a = get x 10
+n = sub get x 11 a
+if or eq n 0 gt n RVSERX
+ret X5EMAL
+end
+for i ulong n
+put ix add RVSER i get lb add a i
+end
+put o 22 n
+ret 0
+end
+
+note rev_sereq: the INTEGER content d[a .. b) is the leaf serial (n bytes at t[RVSER ..))
+fn rev_sereq d view uchar * a ulong b ulong t view uchar 256 n ulong to bool
+if ne sub b a n
+ret false
+end
+for i ulong n
+if ne get d add a i get t add RVSER i
+ret false
+end
+end
+ret true
+end
+
+note rev_sig: the signature over d[o[1] .. +o[2]) (algorithm o[3], value o[4] .. +o[5]) with the key of
+note kd (record w[32 .. 64)); w[0 .. 32) becomes the pseudo-record chain_sig reads. chain_sig applies
+note x509.om's algorithm and key policy. 0, X5ESIG, X5EALG, X5EWEAK.
+fn rev_sig d view uchar * kd view uchar * w edit ulong 128 o view ulong 32 to ulong
+put w X5RALG get o 3
+put w X5RTBO get o 1
+put w X5RTBL get o 2
+put w X5RSGO get o 4
+put w X5RSGL get o 5
+ret chain_sig d kd part w 0 mul X5RSZ 2
+end
+
+note rev_fresh: thisUpdate o[17] <= now + RVSKEW, nextUpdate o[18] present and later than now (RFC 6960
+note 4.2.2.1; RFC 5280 6.3.3 a.1 and a.2); 0 or RVESTALE
+fn rev_fresh o view ulong 32 to ulong
+nw = get o 0
+if gt get o 17 add nw RVSKEW
+ret RVESTALE
+end
+if eq get o 18 X5BIG
+ret RVESTALE
+end
+if le get o 18 nw
+ret RVESTALE
+end
+ret 0
+end
+
+note ---------------------------------------------------------------- OCSP (RFC 6960)
+
+note rev_ids: the CertID hashes of the issuer ib (record w[32 .. 64)) into ix: SHA-1 of its subject
+note Name DER at 0, of its subjectPublicKey bits at 20; SHA-256 of the same at 40 and 72 (RFC 6960 4.1.1)
+fn rev_ids ib view uchar 16896 w view ulong 128 ix edit uchar 256 to void
+d = new uchar 32 0
+for k ulong 2
+a = add ulong 6 k
+n = rev_hash a part ib get w add X5RSZ X5RSBO get w add X5RSZ X5RSBL d
+b = mul k 40
+for i ulong n
+put ix add b i get d i
+end
+n = rev_hash a part ib get w add X5RSZ X5RKO get w add X5RSZ X5RKL d
+b = add b n
+for i ulong n
+put ix add b i get d i
+end
+end
+end
+
+note rev_octeq: the OCTET STRING TLV at d[p] (by e) holds the hash t[q ..) (20 bytes below q = 40,
+note else 32); its end offset when it does, else 0
+fn rev_octeq d view uchar * p ulong e ulong t view uchar 256 q ulong to ulong
+h = new ulong 3 0
+n = ulong 20
+if ge q 40
+n = 32
+end
+if ne rev_tag d p e h 4 0
+ret 0
+end
+if ne sub get h 2 get h 1 n
+ret 0
+end
+s = get h 1
+for i ulong n
+if ne get d add s i get t add q i
+ret 0
+end
+end
+ret get h 2
+end
+
+note rev_hashalg: AlgorithmIdentifier TLV that is exactly rs[a .. s): 6 SHA-1 or 7 SHA-256, parameters
+note absent or NULL; 0 for anything else
+fn rev_hashalg rs view uchar * a ulong s ulong to ulong
+h = new ulong 3 0
+if ne rev_tag rs a s h 0x30 0
+ret 0
+end
+if ne get h 2 s
+ret 0
+end
+if ne rev_tag rs get h 1 s h 6 0
+ret 0
+end
+o = rev_oidin part rs get h 1 sub get h 2 get h 1
+q = get h 2
+if ne q s
+if not der_null rs q s
+ret 0
+end
+end
+if or eq o 6 eq o 7
+ret o
+end
+ret 0
+end
+
+note rev_certid: CertID content rs[o[28] .. o[29]): 0 when it names the leaf (issuer hashes ix, serial
+note ix[RVSER ..)), RVMISS when it names another certificate, X5EMAL
+fn rev_certid rs view uchar * o view ulong 32 ix view uchar 256 to ulong
+h = new ulong 3 0
+a = get o 28
+b = get o 29
+if ne rev_tag rs a b h 0x30 0
+ret X5EMAL
+end
+s = get h 2
+al = rev_hashalg rs a s
+if eq al 0
+ret RVMISS
+end
+q = ulong 0
+r = ulong 20
+if eq al 7
+q = 40
+r = 72
+end
+t = rev_octeq rs s b ix q
+if eq t 0
+ret RVMISS
+end
+t = rev_octeq rs t b ix r
+if eq t 0
+ret RVMISS
+end
+if ne rev_tag rs t b h 2 0
+ret X5EMAL
+end
+if ne get h 2 b
+ret X5EMAL
+end
+if not rev_sereq rs get h 1 b ix get o 22
+ret RVMISS
+end
+ret 0
+end
+
+note rev_rinfo: RevokedInfo content rs[a .. b): revocationTime GeneralizedTime, optional
+note revocationReason [0] EXPLICIT CRLReason (ENUMERATED 0..10, 7 unused). 0 or X5EMAL.
+fn rev_rinfo rs view uchar * a ulong b ulong to ulong
+h = new ulong 3 0
+if ne rev_tag rs a b h 24 0
+ret X5EMAL
+end
+if eq der_time part rs a sub get h 2 a X5BIG
+ret X5EMAL
+end
+s = get h 2
+if eq s b
+ret 0
+end
+if ne rev_tag rs s b h 0xa0 0
+ret X5EMAL
+end
+if ne get h 2 b
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 b h 10 0
+ret X5EMAL
+end
+if or ne get h 2 b ne sub b get h 1 1
+ret X5EMAL
+end
+v = ulong get rs get h 1
+if or gt v 10 eq v 7
+ret X5EMAL
+end
+ret 0
+end
+
+note rev_cstat: certStatus header h of rs: 0 good ([0] IMPLICIT NULL), 1 revoked ([1] RevokedInfo,
+note checked), 2 unknown ([2] IMPLICIT NULL), 3 malformed
+fn rev_cstat rs view uchar * h view ulong 3 to ulong
+g = get h 0
+n = sub get h 2 get h 1
+if eq g 0x80
+if eq n 0
+ret 0
+end
+ret 3
+end
+if eq g 0x82
+if eq n 0
+ret 2
+end
+ret 3
+end
+if eq g 0xa1
+if eq rev_rinfo rs get h 1 get h 2 0
+ret 1
+end
+end
+ret 3
+end
+
+note rev_single: the SingleResponse TLV that is exactly rs[o[30] .. o[31]): certID, certStatus,
+note thisUpdate, optional nextUpdate [0], optional singleExtensions [1] (none critical). RVMISS when
+note its CertID is not the leaf's; 0 when it is, with o[16] status, o[17] thisUpdate, o[18] nextUpdate.
+fn rev_single rs view uchar * ix view uchar 256 o edit ulong 32 to ulong
+h = new ulong 3 0
+x = new ulong 16 0
+b = get o 31
+if ne rev_tag rs get o 30 b h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 b
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 b h 0x30 0
+ret X5EMAL
+end
+put o 28 get h 1
+put o 29 get h 2
+s = get h 2
+v = rev_certid rs o ix
+if ne v 0
+ret v
+end
+if ne der_hdr rs s b h 0
+ret X5EMAL
+end
+v = rev_cstat rs h
+if eq v 3
+ret X5EMAL
+end
+put o 16 v
+s = get h 2
+if ne rev_tag rs s b h 24 0
+ret X5EMAL
+end
+t = der_time part rs s sub get h 2 s
+if eq t X5BIG
+ret X5EMAL
+end
+put o 17 t
+put o 18 X5BIG
+s = get h 2
+if lt s b
+if ne der_hdr rs s b h 0
+ret X5EMAL
+end
+if eq get h 0 0xa0
+e = get h 2
+s = get h 1
+if ne rev_tag rs s e h 24 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+t = der_time part rs s sub e s
+if eq t X5BIG
+ret X5EMAL
+end
+put o 18 t
+s = e
+end
+end
+if lt s b
+if ne rev_tag rs s b h 0xa1 0
+ret X5EMAL
+end
+if ne get h 2 b
+ret X5EMAL
+end
+put x 12 RVNONE
+put x 13 RVNONE
+v = rev_exts rs get h 1 b x
+if ne v 0
+ret v
+end
+s = b
+end
+if ne s b
+ret X5EMAL
+end
+ret 0
+end
+
+note rev_resps: the responses o[11] .. o[12]: the first SingleResponse for the leaf (rev_single); 0
+note found, RVMISS none, else a code. At most 256 SingleResponses.
+fn rev_resps rs view uchar * ix view uchar 256 o edit ulong 32 to ulong
+h = new ulong 3 0
+s = get o 11
+e = get o 12
+n = ulong 0
+while lt s e bound 1000
+n = add n 1
+if gt n 256
+ret X5EMAL
+end
+if ne der_hdr rs s e h 0
+ret X5EMAL
+end
+t = get h 2
+put o 30 s
+put o 31 t
+v = rev_single rs ix o
+if ne v RVMISS
+ret v
+end
+s = t
+end
+ret RVMISS
+end
+
+note rev_ocsp1: OCSPResponse that is exactly rs: responseStatus successful (else RVEOST), responseBytes
+note id-pkix-ocsp-basic; the BasicOCSPResponse content span into o[20] o[21]
+fn rev_ocsp1 rs view uchar * o edit ulong 32 to ulong
+h = new ulong 3 0
+e = len rs
+if ne rev_tag rs 0 e h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 e h 10 0
+ret X5EMAL
+end
+if ne sub get h 2 get h 1 1
+ret X5EMAL
+end
+c = ulong get rs get h 1
+if ne c 0
+if or gt c 6 eq c 4
+ret X5EMAL
+end
+ret RVEOST
+end
+if ne rev_tag rs get h 2 e h 0xa0 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 e h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 e h 6 0
+ret X5EMAL
+end
+if ne rev_oidin part rs get h 1 sub get h 2 get h 1 5
+ret X5EMAL
+end
+if ne rev_tag rs get h 2 e h 4 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 e h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+put o 20 get h 1
+put o 21 e
+ret 0
+end
+
+note rev_basic: BasicOCSPResponse content rs[o[20] .. o[21]): tbsResponseData, signatureAlgorithm,
+note signature BIT STRING (no unused bits), optional certs [0] SEQUENCE OF Certificate
+fn rev_basic rs view uchar * o edit ulong 32 to ulong
+h = new ulong 3 0
+e = get o 21
+s = get o 20
+if ne rev_tag rs s e h 0x30 0
+ret X5EMAL
+end
+put o 1 s
+put o 2 sub get h 2 s
+s = get h 2
+if ne rev_tag rs s e h 0x30 0
+ret X5EMAL
+end
+put o 3 x509_algid part rs s sub get h 2 s
+s = get h 2
+if ne rev_tag rs s e h 3 0
+ret X5EMAL
+end
+q = get h 1
+if or ge q get h 2 ne get rs q 0
+ret X5EMAL
+end
+put o 4 add q 1
+put o 5 sub sub get h 2 q 1
+s = get h 2
+put o 6 0
+put o 7 0
+if eq s e
+ret 0
+end
+if ne rev_tag rs s e h 0xa0 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+if ne rev_tag rs get h 1 e h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+put o 6 get h 1
+put o 7 e
+ret 0
+end
+
+note rev_rdata: ResponseData (RFC 6960 4.2.1) at rs[o[1] .. +o[2]): version absent (v1; an explicit
+note DEFAULT is not DER), responderID [1] or [2], producedAt, responses (at least one), optional
+note responseExtensions [1] with no critical extension
+fn rev_rdata rs view uchar * o edit ulong 32 to ulong
+h = new ulong 3 0
+x = new ulong 16 0
+s = get o 1
+e = add s get o 2
+if ne rev_tag rs s e h 0x30 0
+ret X5EMAL
+end
+s = get h 1
+if ne der_hdr rs s e h 0
+ret X5EMAL
+end
+g = get h 0
+if and ne g 0xa1 ne g 0xa2
+ret X5EMAL
+end
+put o 8 g
+put o 9 get h 1
+put o 10 get h 2
+s = get h 2
+if ne rev_tag rs s e h 24 0
+ret X5EMAL
+end
+if eq der_time part rs s sub get h 2 s X5BIG
+ret X5EMAL
+end
+s = get h 2
+if ne rev_tag rs s e h 0x30 0
+ret X5EMAL
+end
+if eq get h 1 get h 2
+ret X5EMAL
+end
+put o 11 get h 1
+put o 12 get h 2
+s = get h 2
+put o 13 0
+put o 14 0
+if eq s e
+ret 0
+end
+if ne rev_tag rs s e h 0xa1 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+put o 13 get h 1
+put o 14 e
+put x 12 RVNONE
+put x 13 RVNONE
+ret rev_exts rs get h 1 e x
+end
+
+note rev_ridm: the responderID (o[8] tag, o[9] .. o[10] content) names the candidate c whose subject
+note and key spans are o[24] o[25] o[26] o[27]: byName [1] the Name DER equals the subject; byKey [2]
+note the KeyHash OCTET STRING is the SHA-1 of the subjectPublicKey bits (RFC 6960 4.2.1)
+fn rev_ridm rs view uchar * o view ulong 32 c view uchar * to bool
+d = new uchar 256 0
+a = get o 9
+b = get o 10
+if eq get o 8 0xa1
+ret der_same part rs a sub b a part c get o 24 get o 25
+end
+n = sha1_digest part c get o 26 get o 27 d
+if ne n 20
+ret false
+end
+ret eq rev_octeq rs a b d 0 b
+end
+
+note rev_ocspeku: the certificate c (record r) has extKeyUsage with id-kp-OCSPSigning: 0, else 1
+fn rev_ocspeku c view uchar * r view ulong * to ulong
+x = new ulong 16 0
+h = new ulong 3 0
+put x 12 8
+if ne rev_certext c r x 0
+ret 1
+end
+b = get x 7
+if ne rev_tag c get x 6 b h 0x30 0
+ret 1
+end
+s = get h 1
+while lt s b bound 10000
+if ne rev_tag c s b h 6 0
+ret 1
+end
+if eq rev_oidin part c get h 1 sub get h 2 get h 1 4
+ret 0
+end
+s = get h 2
+end
+ret 1
+end
+
+note rev_dchk: the candidate c (record in w[0 .. 32)) is an authorized responder for the issuer is
+note (record in w[32 .. 64)): issued by is (chain_link), valid at o[0], with extKeyUsage
+note id-kp-OCSPSigning. On success its record moves to w[32 .. 64) as the signer. 0 or RVERESP.
+fn rev_dchk c view uchar * is view uchar * w edit ulong 128 o view ulong 32 to ulong
+if ne chain_link c is part w 0 64 0
+ret RVERESP
+end
+if ne chain_time part w 0 X5RSZ get o 0 0
+ret RVERESP
+end
+if ne rev_ocspeku c part w 0 X5RSZ 0
+ret RVERESP
+end
+for i ulong X5RSZ
+put w add X5RSZ i get w i
+end
+ret 0
+end
+
+note rev_cp: s[a .. a+l) into d[0 .. l)
+fn rev_cp d edit uchar * s view uchar * a ulong l ulong to void
+for i ulong l
+put d i get s add a i
+end
+end
+
+note rev_deleg: the certificate among o[6] .. o[7] (the BasicOCSPResponse certs) that the responderID
+note names, copied into kb (length o[23]) with its record in w[0 .. 32). 0, RVERESP when none is
+note named (RFC 6960 4.2.2.2), X5EMAL on bad framing.
+fn rev_deleg rs view uchar * o edit ulong 32 w edit ulong 128 kb edit uchar 16896 to ulong
+h = new ulong 3 0
+s = get o 6
+while lt s get o 7 bound 64
+if ne rev_tag rs s get o 7 h 0x30 0
+ret X5EMAL
+end
+l = sub get h 2 s
+if gt l RVKBUF
+ret X5EMAL
+end
+rev_cp kb rs s l
+s = get h 2
+if ne x509_parse part kb 0 l part w 0 X5RSZ 0
+continue
+end
+put o 23 l
+put o 24 get w X5RSBO
+put o 25 get w X5RSBL
+put o 26 get w X5RKO
+put o 27 get w X5RKL
+if rev_ridm rs o part kb 0 l
+ret 0
+end
+end
+ret RVERESP
+end
+
+note rev_auth: the response signer: the issuer is itself when the responderID names it, else the
+note named delegated responder (rev_deleg) when it is issued by is, valid at o[0] and carries
+note id-kp-OCSPSigning (rev_dchk); then the response signature with the signer's key. w[32 .. 64)
+note holds the record of is on entry.
+fn rev_auth rs view uchar * is view uchar * o edit ulong 32 w edit ulong 128 to ulong
+put o 24 get w add X5RSZ X5RSBO
+put o 25 get w add X5RSZ X5RSBL
+put o 26 get w add X5RSZ X5RKO
+put o 27 get w add X5RSZ X5RKL
+if rev_ridm rs o is
+ret rev_sig rs is w o
+end
+kb = new uchar 16896 0
+v = rev_deleg rs o w kb
+if ne v 0
+ret v
+end
+if ne rev_dchk part kb 0 get o 23 is w o 0
+ret RVERESP
+end
+ret rev_sig rs part kb 0 get o 23 w o
+end
+
+note rev_ocspr: the OCSPResponse rs: framing and responseStatus, ResponseData, the signer and its
+note signature, the leaf's SingleResponse, its status (revoked RVEREV, unknown or missing RVEUNK),
+note then freshness (rev_fresh)
+fn rev_ocspr rs view uchar * ib view uchar 16896 o edit ulong 32 w edit ulong 128 ix view uchar 256 to ulong
+v = rev_ocsp1 rs o
+if eq v 0
+v = rev_basic rs o
+end
+if eq v 0
+v = rev_rdata rs o
+end
+if eq v 0
+v = rev_auth rs part ib 0 get w 65 o w
+end
+if ne v 0
+ret v
+end
+v = rev_resps rs ix o
+if eq v RVMISS
+ret RVEUNK
+end
+if ne v 0
+ret v
+end
+st = get o 16
+if eq st 1
+ret RVEREV
+end
+if eq st 2
+ret RVEUNK
+end
+ret rev_fresh o
+end
+
+note rev_ocsp: the stapled OCSPResponse b[p[5] .. +p[6]) for the leaf p[1 .. 2] issued by p[3 .. 4] at
+note unix time p[0]; 0 = signed by an authorized responder, good and fresh
+fn rev_ocsp b view uchar * p view ulong 16 to ulong
+o = new ulong 32 0
+w = new ulong 128 0
+ix = new uchar 256 0
+lb = new uchar 16896 0
+ib = new uchar 16896 0
+v = rev_setup b p lb ib w
+if ne v 0
+ret v
+end
+put o 0 get w 66
+v = rev_serial lb w ix o
+if ne v 0
+ret v
+end
+rev_ids ib w ix
+if or eq get p 6 0 not rev_span b p 5
+ret X5EMAL
+end
+ret rev_ocspr part b get p 5 get p 6 ib o w ix
+end
+
+note ---------------------------------------------------------------- CRL (RFC 5280 5, 6.3)
+
+note rev_cl1: CertificateList that is exactly cr: tbsCertList, signatureAlgorithm, signatureValue
+note (BIT STRING, no unused bits)
+fn rev_cl1 cr view uchar * o edit ulong 32 to ulong
+h = new ulong 3 0
+e = len cr
+if ne rev_tag cr 0 e h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+s = get h 1
+if ne rev_tag cr s e h 0x30 0
+ret X5EMAL
+end
+put o 1 s
+put o 2 sub get h 2 s
+put o 24 get h 1
+put o 25 get h 2
+s = get h 2
+if ne rev_tag cr s e h 0x30 0
+ret X5EMAL
+end
+put o 3 x509_algid part cr s sub get h 2 s
+put o 26 s
+put o 27 sub get h 2 s
+s = get h 2
+if ne rev_tag cr s e h 3 0
+ret X5EMAL
+end
+if ne get h 2 e
+ret X5EMAL
+end
+q = get h 1
+if or ge q e ne get cr q 0
+ret X5EMAL
+end
+put o 4 add q 1
+put o 5 sub sub e q 1
+ret 0
+end
+
+note rev_times: thisUpdate and optional nextUpdate (UTCTime or GeneralizedTime) at cr[s ..) by e into
+note o[17] o[18] (X5BIG none); the offset after them, 0 when malformed
+fn rev_times cr view uchar * s ulong e ulong o edit ulong 32 to ulong
+h = new ulong 3 0
+if ne der_hdr cr s e h 0
+ret 0
+end
+if and ne get h 0 23 ne get h 0 24
+ret 0
+end
+t = der_time part cr s sub get h 2 s
+if eq t X5BIG
+ret 0
+end
+put o 17 t
+put o 18 X5BIG
+s = get h 2
+if lt s e
+if ne der_hdr cr s e h 0
+ret 0
+end
+if or eq get h 0 23 eq get h 0 24
+t = der_time part cr s sub get h 2 s
+if eq t X5BIG
+ret 0
+end
+put o 18 t
+s = get h 2
+end
+end
+ret s
+end
+
+note rev_tbsl: tbsCertList content cr[o[24] .. o[25]): version v2 (INTEGER 1; required with
+note extensions, RFC 5280 5.1.2.1), signature equal to the outer algorithm (X5EAMIS), issuer (span into
+note o[28] o[29]), thisUpdate, optional nextUpdate, optional revokedCertificates (non-empty when
+note present), optional crlExtensions [0]
+fn rev_tbsl cr view uchar * o edit ulong 32 to ulong
+h = new ulong 3 0
+s = get o 24
+e = get o 25
+vr = ulong 0
+if ne der_hdr cr s e h 0
+ret X5EMAL
+end
+if eq get h 0 2
+if ne der_small part cr s sub get h 2 s 1
+ret X5EMAL
+end
+vr = 1
+s = get h 2
+end
+if ne rev_tag cr s e h 0x30 0
+ret X5EMAL
+end
+if ne sub get h 2 s get o 27
+ret X5EAMIS
+end
+if not der_eqat cr s get o 26 get o 27
+ret X5EAMIS
+end
+s = get h 2
+if ne rev_tag cr s e h 0x30 0
+ret X5EMAL
+end
+put o 28 s
+put o 29 sub get h 2 s
+s = rev_times cr get h 2 e o
+if eq s 0
+ret X5EMAL
+end
+put o 11 0
+put o 12 0
+put o 13 0
+put o 14 0
+if lt s e
+if ne der_hdr cr s e h 0
+ret X5EMAL
+end
+if eq get h 0 0x30
+if eq get h 1 get h 2
+ret X5EMAL
+end
+put o 11 get h 1
+put o 12 get h 2
+s = get h 2
+end
+end
+if lt s e
+if ne rev_tag cr s e h 0xa0 0
+ret X5EMAL
+end
+if or ne get h 2 e eq vr 0
+ret X5EMAL
+end
+put o 13 get h 1
+put o 14 e
+s = e
+end
+if ne s e
+ret X5EMAL
+end
+ret 0
+end
+
+note rev_idp: issuingDistributionPoint value (x[6] .. x[7] of cr; RFC 5280 5.2.5). A distributionPoint
+note must be a fullName [0] (its GeneralNames content span into o[30] o[31]); onlyContainsUserCerts
+note TRUE is accepted (the leaf is an end entity, chain_leaf); nameRelativeToCRLIssuer,
+note onlyContainsCACerts, onlySomeReasons, indirectCRL and onlyContainsAttributeCerts are RVESCOPE.
+fn rev_idp cr view uchar * x view ulong 16 o edit ulong 32 to ulong
+h = new ulong 3 0
+a = get x 6
+b = get x 7
+if ne rev_tag cr a b h 0x30 0
+ret X5EMAL
+end
+if ne get h 2 b
+ret X5EMAL
+end
+s = get h 1
+while lt s b bound 8
+if ne der_hdr cr s b h 0
+ret X5EMAL
+end
+g = get h 0
+t = get h 2
+if eq g 0xa0
+if ne der_hdr cr get h 1 t h 0
+ret X5EMAL
+end
+if or ne get h 0 0xa0 ne get h 2 t
+ret RVESCOPE
+end
+if eq get h 1 t
+ret X5EMAL
+end
+put o 30 get h 1
+put o 31 t
+else
+if ne g 0x81
+if and ge g 0x82 le g 0x85
+ret RVESCOPE
+end
+ret X5EMAL
+end
+g = get h 1
+if ne sub t g 1
+ret X5EMAL
+end
+if ne get cr g 255
+ret X5EMAL
+end
+end
+s = t
+end
+ret 0
+end
+
+note rev_crlx: crlExtensions o[13] .. o[14]: only issuingDistributionPoint may be critical
+note (deltaCRLIndicator RVESCOPE, others X5ECRIT, rev_exts); an IDP is checked by rev_idp
+fn rev_crlx cr view uchar * o edit ulong 32 to ulong
+x = new ulong 16 0
+put o 30 0
+put o 31 0
+if eq get o 14 0
+ret 0
+end
+put x 12 3
+put x 13 3
+v = rev_exts cr get o 13 get o 14 x
+if ne v 0
+ret v
+end
+if eq get x 4 0
+ret 0
+end
+ret rev_idp cr x o
+end
+
+note rev_crlr: the CRL cr: framing, the issuer's signature (ib, record w[32 .. 64)), the issuer's
+note keyUsage includes cRLSign when present (X5EKU), the tbsCertList, issuer Name equal to the
+note issuer's subject DER (RVESCOPE), crlExtensions
+fn rev_crlr cr view uchar * ib view uchar 16896 o edit ulong 32 w edit ulong 128 to ulong
+v = rev_cl1 cr o
+if eq v 0
+v = rev_sig cr part ib 0 get w 65 w o
+end
+if ne v 0
+ret v
+end
+if eq get w add X5RSZ X5RKU 1
+if eq and get w add X5RSZ X5RKUB 2 0
+ret X5EKU
+end
+end
+v = rev_tbsl cr o
+if ne v 0
+ret v
+end
+a = get w add X5RSZ X5RSBO
+n = get w add X5RSZ X5RSBL
+if not der_same part cr get o 28 get o 29 part ib a n
+ret RVESCOPE
+end
+ret rev_crlx cr o
+end
+
+note rev_gnin: the GeneralName TLV lf[g[0] .. g[1]) equals one of the GeneralName TLVs in cr[g[2] .. g[3])
+fn rev_gnin cr view uchar * lf view uchar * g view ulong 8 to bool
+h = new ulong 3 0
+s = get g 2
+b = get g 3
+while lt s b bound 1000
+if ne der_hdr cr s b h 0
+ret false
+end
+e = sub get h 2 s
+a = get g 0
+if der_same part cr s e part lf a sub get g 1 a
+ret true
+end
+s = get h 2
+end
+ret false
+end
+
+note rev_dpone: DistributionPoint content lf[g[4] .. g[5]): its distributionPoint fullName holds a
+note GeneralName that rev_gnin finds in the IDP fullName
+fn rev_dpone lf view uchar * cr view uchar * g edit ulong 8 to bool
+h = new ulong 3 0
+if ne rev_tag lf get g 4 get g 5 h 0xa0 0
+ret false
+end
+if ne rev_tag lf get h 1 get h 2 h 0xa0 0
+ret false
+end
+s = get h 1
+e = get h 2
+while lt s e bound 1000
+if ne der_hdr lf s e h 0
+ret false
+end
+put g 0 s
+put g 1 get h 2
+if rev_gnin cr lf g
+ret true
+end
+s = get h 2
+end
+ret false
+end
+
+note rev_dpmatch: the leaf (lb, length w[64]) has a cRLDistributionPoints fullName name equal to one
+note of the IDP fullName names cr[o[30] .. o[31]) (RFC 5280 6.3.3 b.2.i); 0 yes, RVESCOPE otherwise
+note (also when the leaf has no cRLDistributionPoints)
+fn rev_dpmatch cr view uchar * lb view uchar 16896 w edit ulong 128 o view ulong 32 to ulong
+x = new ulong 16 0
+g = new ulong 8 0
+h = new ulong 3 0
+l = get w 64
+if ne x509_parse part lb 0 l part w 0 X5RSZ 0
+ret X5EMAL
+end
+put x 12 2
+if ne rev_certext part lb 0 l part w 0 X5RSZ x 0
+ret RVESCOPE
+end
+put g 2 get o 30
+put g 3 get o 31
+b = get x 7
+if ne rev_tag part lb 0 l get x 6 b h 0x30 0
+ret RVESCOPE
+end
+s = get h 1
+while lt s b bound 1000
+if ne rev_tag part lb 0 l s b h 0x30 0
+ret RVESCOPE
+end
+put g 4 get h 1
+put g 5 get h 2
+s = get h 2
+if rev_dpone part lb 0 l cr g
+ret 0
+end
+end
+ret RVESCOPE
+end
+
+note rev_listed: revokedCertificates o[11] .. o[12]: every entry {userCertificate, revocationDate,
+note crlEntryExtensions} is framed and its extensions checked (certificateIssuer RVESCOPE: indirect
+note CRLs are not supported; unknown critical X5ECRIT). RVHIT when an entry has the leaf serial (ix),
+note 0 when none has, else a code.
+fn rev_listed cr view uchar * o view ulong 32 ix view uchar 256 to ulong
+h = new ulong 3 0
+x = new ulong 16 0
+t = new ulong 32 0
+put x 12 RVNONE
+put x 13 RVNONE
+s = get o 11
+e = get o 12
+n = get o 22
+hit = ulong 0
+while lt s e bound 999999
+if ne rev_tag cr s e h 0x30 0
+ret X5EMAL
+end
+u = get h 2
+if ne rev_tag cr get h 1 u h 2 0
+ret X5EMAL
+end
+if rev_sereq cr get h 1 get h 2 ix n
+hit = RVHIT
+end
+q = rev_times cr get h 2 u t
+if eq q 0
+ret X5EMAL
+end
+if ne get t 18 X5BIG
+ret X5EMAL
+end
+if lt q u
+v = rev_exts cr q u x
+if ne v 0
+ret v
+end
+end
+s = u
+end
+ret hit
+end
+
+note rev_crl: the CRL b[p[7] .. +p[8]) for the leaf p[1 .. 2] issued by p[3 .. 4] at unix time p[0].
+note Order: signature and keyUsage, tbsCertList, scope (issuer name, crlExtensions, IDP against the
+note leaf's cRLDistributionPoints), the entries (RVEREV when listed), then freshness (rev_fresh).
+fn rev_crl b view uchar * p view ulong 16 to ulong
+o = new ulong 32 0
+w = new ulong 128 0
+ix = new uchar 256 0
+lb = new uchar 16896 0
+ib = new uchar 16896 0
+v = rev_setup b p lb ib w
+if ne v 0
+ret v
+end
+put o 0 get w 66
+v = rev_serial lb w ix o
+if ne v 0
+ret v
+end
+if or eq get p 8 0 not rev_span b p 7
+ret X5EMAL
+end
+v = rev_crlr part b get p 7 get p 8 ib o w
+if ne v 0
+ret v
+end
+if ne get o 31 0
+v = rev_dpmatch part b get p 7 get p 8 lb w o
+if ne v 0
+ret v
+end
+end
+v = rev_listed part b get p 7 get p 8 o ix
+if eq v RVHIT
+ret RVEREV
+end
+if ne v 0
+ret v
+end
+ret rev_fresh o
+end
+
+note ---------------------------------------------------------------- issuer lookup and policy
+
+note rev_isstry: is c (the exact DER of a candidate) the issuer of the leaf lb (length w[64], record
+note w[0 .. 32))? chain_link: its subject is the leaf's issuer and the leaf signature verifies with its
+note key. Copies c into kb and returns its length when it is, else 0.
+fn rev_isstry lb view uchar 16896 c view uchar * w edit ulong 128 kb edit uchar * to ulong
+if gt len c len kb
+ret 0
+end
+if ne x509_parse c part w X5RSZ X5RSZ 0
+ret 0
+end
+if ne chain_link part lb 0 get w 64 c w 0
+ret 0
+end
+for i ulong len c
+put kb i get c i
+end
+ret len c
+end
+
+note rev_isstore: rev_isstry over the entries of the store st (uint24 length, DER: x509_store_load)
+fn rev_isstore lb view uchar 16896 st view uchar * w edit ulong 128 kb edit uchar * to ulong
+p = ulong 0
+while lt add p 3 len st bound 100000
+k = der_u24 st p
+p = add p 3
+if or eq k 0 gt k sub len st p
+ret 0
+end
+m = rev_isstry lb part st p k w kb
+if ne m 0
+ret m
+end
+p = add p k
+end
+ret 0
+end
+
+note rev_prs: x509_parse of d[0 .. l) into the record w[j*32 .. j*32+32)
+fn rev_prs d view uchar 16896 l ulong w edit ulong 128 j ulong to ulong
+a = mul j X5RSZ
+ret x509_parse part d 0 l part w a X5RSZ
+end
+
+note rev_isslist: rev_isstry over the presented certificates after the leaf; the chain_index pairs are
+note in w[96 .. 128), the entry count in w[67]
+fn rev_isslist lb view uchar 16896 cl view uchar * w edit ulong 128 kb edit uchar * to ulong
+n = get w 67
+for j ulong n
+if eq j 0
+continue
+end
+a = add 96 mul j 2
+s = get w a
+l = get w add a 1
+m = rev_isstry lb part cl s l w kb
+if ne m 0
+ret m
+end
+end
+ret 0
+end
+
+note rev_issuer: the issuer of the leaf of the TLS certificate_list cl (chain_index framing), looked
+note for among the presented certificates and then the store st, copied into kb; its length, 0 when
+note none. Run after x509_chain_verify accepted cl: any certificate whose subject is the leaf's issuer
+note and whose key verifies the leaf signature holds the issuing key, which is all OCSP CertID, OCSP
+note signer authorization and CRL signature checks need.
+fn rev_issuer cl view uchar * st view uchar * kb edit uchar * to ulong
+lb = new uchar 16896 0
+w = new ulong 128 0
+n = chain_index cl part w 96 32
+if eq n 0
+ret 0
+end
+put w 67 n
+l = get w 97
+if gt l RVKBUF
+ret 0
+end
+rev_cp lb cl get w 96 l
+put w 64 l
+if ne rev_prs lb l w 0 0
+ret 0
+end
+n = rev_isslist lb cl w kb
+if ne n 0
+ret n
+end
+ret rev_isstore lb st w kb
+end
+
+note rev_check: revocation policy for b and p (see the head of this file). A staple must verify and
+note be good (rev_ocsp); a must-staple leaf without one is RVENOST; a given CRL must verify, cover the
+note leaf and not list it (rev_crl). 0 otherwise, including when nothing was supplied.
+fn rev_check b view uchar * p view ulong 16 to ulong
+if not rev_span b p 1
+ret X5EMAL
+end
+m = rev_mustst part b get p 1 get p 2
+if and ne m 0 ne m RVHIT
+ret m
+end
+if gt get p 6 0
+v = rev_ocsp b p
+if ne v 0
+ret v
+end
+else
+if eq m RVHIT
+ret RVENOST
+end
+end
+if gt get p 8 0
+ret rev_crl b p
+end
+ret 0
+end
+
+note rev_errname: name of code into o (REV_ERR_* for 32 .. 38, else x509_errname); its length
+fn rev_errname code ulong o edit uchar * to ulong
+if or lt code RVEREV gt code RVESCOPE
+ret x509_errname code o
+end
+k = sub code RVEREV
+s = ulong 0
+n = len RVNAMES
+while lt s n bound 100
+j = s
+while lt j n bound 100
+if eq get RVNAMES j 32
+break
+end
+j = add j 1
+end
+if eq k 0
+m = sub j s
+for i ulong m
+if lt i len o
+put o i get RVNAMES add s i
+end
+end
+ret m
+end
+k = sub k 1
+s = add j 1
+end
+ret 0
+end

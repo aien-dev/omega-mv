@@ -1,0 +1,5 @@
+note vecadd: out[i] = a[i] + b[i]. irnki lifts this scalar function to an NKI tile kernel.
+note IR v1 carries uint lanes; `irnki f32` retypes the lanes to float32 (see README.md).
+fn vecadd a uint b uint to uint
+ret add a b
+end

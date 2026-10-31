@@ -1,0 +1,17 @@
+note files: create, stat and remove one file in the current directory.
+text nm "effects.tmp"
+fn main to int
+fd = int fopen nm 0 len nm 578 384
+if lt fd 0
+ret 1
+end
+w = write fd nm 0 len nm
+st = new uchar 128 0
+r = fstat fd st 0 128
+c = fclose fd
+u = unlink nm 0 len nm
+if or ne r 0 ne u 0
+ret 2
+end
+ret 0
+end

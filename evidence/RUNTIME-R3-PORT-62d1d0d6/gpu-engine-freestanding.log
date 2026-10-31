@@ -1,0 +1,18 @@
+# make gpu-engine-freestanding on main 62d1d0d6 tree (2026-10-30T14:48:47Z, aarch64 host): every file compiles -ffreestanding; the closure link fails (see docs/runtime/PORTABILITY.md section 3)
+gcc -r -nostdlib -o build/gpu_fs/omega_gpu_freestanding.o build/gpu_fs/omega_gpu_engine.o build/gpu_fs/omega_gpu_platform.o build/gpu_fs/omega_blackwell_encoder.o build/gpu_fs/omega_blackwell_codegen.o build/gpu_fs/omega_blackwell_matmul.o build/gpu_fs/omega_blackwell_qmd.o build/gpu_fs/omega_blackwell_realize.o build/gpu_fs/omega_om_units.o build/gpu_fs/omega_gpu_session.o build/gpu_fs/omega_gpu_fmt.o build/gpu_fs/omega_gpu_matmul_api.o build/gpu_fs/omega_gpu_attention_api.o build/gpu_fs/omega_gpu_serving.o build/gpu_fs/omega_gpu_wait.o
+freestanding GPU link still needs: abort
+mmap
+mprotect
+munmap
+pthread_key_create
+pthread_once
+pthread_setspecific
+make: *** [mk/omega-gpu-engine.mk:137: build/gpu_fs/omega_gpu_freestanding.o] Error 1
+exit=2
+# where the refused symbols come from, and who needs sha256_* from that object:
+undefined in build/gpu_fs/omega_blackwell_codegen.o: sha256_hash 
+undefined in build/gpu_fs/omega_blackwell_encoder.o: sha256_final sha256_init sha256_update 
+undefined in build/gpu_fs/omega_blackwell_matmul.o: sha256_hash 
+undefined in build/gpu_fs/omega_blackwell_realize.o: sha256_final sha256_init sha256_update 
+undefined in build/gpu_fs/omega_gpu_attention_api.o: sha256_hash 
+undefined in build/gpu_fs/omega_om_units.o: abort mmap mprotect munmap pthread_key_create pthread_once pthread_setspecific 

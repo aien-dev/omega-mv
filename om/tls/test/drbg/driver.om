@@ -1,0 +1,510 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: program-mode test driver for om/tls/drbg.om (run.sh writes om2, then sha2.om, hkdf.om,
+note drbg.om, this file). Reads records from stdin (at most 8 MiB), one per line, fields separated by
+note one space, byte strings in hex ("-" = empty):
+note   D NB EI NONCE PS OP .. OP = RB
+note       drbg_inst(EI || NONCE || PS), then each OP in order, then compare the output of the last
+note       generate with RB (NB bytes). OP is one of
+note         G AI      drbg_gen of NB bytes with additional input AI
+note         R AI EI   drbg_reseed(EI || AI)                        (CAVP pr_false, ACVP reSeed)
+note         P AI EI   prediction resistance: drbg_reseed(EI || AI), then drbg_gen of NB bytes with
+note                   Null additional input (SP 800-90A 9.3.1 step 7; CAVP pr_true, ACVP PR)
+note       Checks: RB matches (1), and the negative control: RB with one byte flipped must not match (1).
+note   S   the API checks below (one check each)
+note Lines that are empty or start with # are skipped. Prints "MISMATCH line L" (wrong result),
+note "STUCK line L" (a call returned 4, the continuous-test error state) or "BAD line L"
+note (malformed record), then "drbg driver: C checks, F failed". Exit 0 only when F is 0 and C > 0;
+note 1 otherwise; 2 when the input cannot be read or exceeds 8 MiB.
+
+global inp uchar 8388608
+global st ulong 8
+global ob uchar 32
+global one uchar 1
+text tfail "MISMATCH line "
+text tstuck "STUCK line "
+text tbad "BAD line "
+text tsum "drbg driver: "
+text tchk " checks, "
+text tfld " failed\n"
+text tnl "\n"
+text tio "drbg driver: cannot read input or input over 8 MiB\n"
+
+note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start, 5 checks, 6 failed
+
+fn drslurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn drpeek to ulong
+c = get st 1
+if ge c get st 0
+ret 256
+end
+ret ulong get inp c
+end
+
+fn dradv to void
+put st 1 add get st 1 1
+end
+
+fn drbad to void
+put st 3 1
+end
+
+fn drhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+if ge c 65
+if le c 70
+ret sub c 55
+end
+end
+ret 16
+end
+
+fn drbyte to uchar
+hi = drhexv drpeek
+dradv
+lo = drhexv drpeek
+dradv
+if gt hi 15
+drbad
+ret 0
+end
+if gt lo 15
+drbad
+ret 0
+end
+ret uchar or shl hi 4 lo
+end
+
+fn drsp to void
+if ne drpeek 32
+drbad
+ret
+end
+dradv
+end
+
+note a decimal number (at most 9 digits) after one space
+fn drnum to ulong
+drsp
+v = ulong 0
+k = ulong 0
+while true bound 10
+c = drpeek
+if lt c 48
+break
+end
+if gt c 57
+break
+end
+v = add mul v 10 sub c 48
+k = add k 1
+dradv
+end
+if eq k 0
+drbad
+end
+if gt k 9
+drbad
+end
+ret v
+end
+
+note one space, then hex bytes into a[0..n) (or "-"); returns n
+fn drhex a edit uchar * to ulong
+drsp
+if eq drpeek 45
+dradv
+ret 0
+end
+n = ulong 0
+while true bound 999999
+if gt drhexv drpeek 15
+break
+end
+if ge n len a
+drbad
+ret n
+end
+put a n drbyte
+n = add n 1
+end
+if eq n 0
+drbad
+end
+ret n
+end
+
+fn dreor to void
+if eq drpeek 13
+dradv
+end
+c = drpeek
+if eq c 10
+dradv
+ret
+end
+if ne c 256
+drbad
+end
+end
+
+fn drskip to void
+while true bound 999999
+c = drpeek
+if eq c 256
+ret
+end
+dradv
+if eq c 10
+ret
+end
+end
+end
+
+fn drprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+note kind 0 MISMATCH, 1 BAD, 2 STUCK
+fn drmsg kind ulong to void
+if eq kind 1
+r = write 1 tbad 0 len tbad
+else
+if eq kind 2
+r = write 1 tstuck 0 len tstuck
+else
+r = write 1 tfail 0 len tfail
+end
+end
+drprn get st 2
+r = write 1 tnl 0 1
+end
+
+note one check: ok 1 passes, anything else fails (and is reported)
+fn drchk ok ulong to void
+put st 5 add get st 5 1
+if ne ok 1
+put st 6 add get st 6 1
+drmsg 0
+end
+end
+
+note 1 when a[0..n) equals b[0..n) (n <= both lengths), else 0
+fn dreq a view uchar * b view uchar * n ulong to ulong
+if gt n len a
+ret 0
+end
+if gt n len b
+ret 0
+end
+d = uchar 0
+for i ulong n
+d = or d xor get a i get b i
+end
+if eq d 0
+ret 1
+end
+ret 0
+end
+
+note sm[n..) gets x; returns n + len x (0 and the record is malformed when it does not fit)
+fn drapp sm edit uchar * n ulong x view uchar * to ulong
+if gt add n len x len sm
+drbad
+ret 0
+end
+for i ulong len x
+put sm add n i get x i
+end
+ret add n len x
+end
+
+note seed material EI || NONCE || PS from the record into sm, then drbg_inst; returns its code
+fn drinit a edit uchar 4096 b edit uchar 4096 sm edit uchar 8192 s edit uchar 128 to ulong
+na = drhex a
+nn = drhex b
+n = drapp sm 0 part a 0 na
+n = drapp sm n part b 0 nn
+na = drhex a
+n = drapp sm n part a 0 na
+ret drbg_inst s part sm 0 n
+end
+
+note reseed OP fields "AI EI": drbg_reseed(EI || AI); returns its code
+fn drres a edit uchar 4096 b edit uchar 4096 sm edit uchar 8192 s edit uchar 128 to ulong
+na = drhex a
+nn = drhex b
+n = drapp sm 0 part b 0 nn
+n = drapp sm n part a 0 na
+ret drbg_reseed s part sm 0 n
+end
+
+note generate nb bytes into o with additional input a[0..na)
+fn drgen a edit uchar 4096 na ulong o edit uchar 65537 s edit uchar 128 nb ulong to ulong
+ret drbg_gen s part o 0 nb part a 0 na
+end
+
+note one OP (after its space): returns the call's code, plus 256 when it generated
+fn drop1 a edit uchar 4096 b edit uchar 4096 sm edit uchar 8192 o edit uchar 65537 s edit uchar 128 nb ulong to ulong
+c = drpeek
+dradv
+if eq c 71
+ret add 256 drgen a drhex a o s nb
+end
+if eq c 82
+ret drres a b sm s
+end
+if eq c 80
+rc = drres a b sm s
+if eq rc 0
+rc = drgen a 0 o s nb
+end
+ret add 256 rc
+end
+drbad
+ret 0
+end
+
+note the OPs up to and including "="; returns bit 0 a call failed, bit 1 a call returned 4 (the
+note continuous-test error state), bit 2 at least one generate ran
+fn drops a edit uchar 4096 b edit uchar 4096 sm edit uchar 8192 o edit uchar 65537 s edit uchar 128 nb ulong to ulong
+f = ulong 0
+while true bound 64
+drsp
+if eq drpeek 61
+dradv
+break
+end
+r = drop1 a b sm o s nb
+if ge r 256
+f = or f 4
+end
+r = and r 255
+if eq r 4
+f = or f 2
+end
+if ne r 0
+f = or f 1
+end
+if eq get st 3 1
+ret f
+end
+end
+ret f
+end
+
+note a D record (after the D); a, b scratch, sm seed material, o output, ex expected, s the DRBG state
+fn drrecd a edit uchar 4096 b edit uchar 4096 sm edit uchar 8192 o edit uchar 65537 ex edit uchar 65536 s edit uchar 128 to void
+nb = drnum
+if gt nb len o
+drbad
+ret
+end
+if eq nb 0
+drbad
+ret
+end
+f = ulong 0
+if ne drinit a b sm s 0
+f = 1
+end
+f = or f drops a b sm o s nb
+nx = drhex ex
+dreor
+if eq get st 3 1
+ret
+end
+if ne nx nb
+drbad
+ret
+end
+if eq and f 4 0
+drbad
+ret
+end
+if ne and f 2 0
+drmsg 2
+end
+ok = dreq part o 0 nb ex nb
+if ne and f 1 0
+ok = 0
+end
+drchk ok
+put ex 0 xor get ex 0 1
+drchk xor dreq part o 0 nb ex nb 1
+drbg_wipe s
+end
+
+note one check that got equals want
+fn drwant got ulong want ulong to void
+ok = ulong 0
+if eq got want
+ok = 1
+end
+drchk ok
+end
+
+note fixed seed material of n bytes (byte i = i + 1) for the API checks
+fn drseed sm edit uchar * n ulong to void
+for i ulong n
+put sm i uchar add i 1
+end
+end
+
+note S record: API checks (each is one check)
+fn drrecs sm edit uchar 8192 o edit uchar 65537 s edit uchar 128 to void
+dreor
+drbg_wipe s
+note generate and reseed before instantiate: 2
+drwant drbg_gen s part o 0 32 part sm 0 0 2
+drseed sm 64
+drwant drbg_reseed s part sm 0 32 2
+note seed material under 48 bytes is refused (3); 48 is accepted
+drwant drbg_inst s part sm 0 47 3
+drwant drbg_inst s part sm 0 48 0
+note reseed material under 32 bytes is refused (3)
+drwant drbg_reseed s part sm 0 31 3
+note request over 65536 bytes is refused (3); 65536 is accepted
+drwant drbg_gen s part o 0 65537 part sm 0 0 3
+drwant drbg_gen s part o 0 65536 part sm 0 0 0
+note reseed interval: limit 2 allows generates with counter 1 and 2, then 1 (reseed required) and
+note no output written; after a reseed generates work again
+drwant drbg_limit s 0 3
+drwant drbg_limit s add DRRSMX 1 3
+drwant drbg_inst s part sm 0 48 0
+drwant drbg_limit s 2 0
+drwant drbg_gen s part o 0 16 part sm 0 0 0
+drwant drbg_gen s part o 0 16 part sm 0 0 0
+for i ulong 16
+put o i 170
+end
+drwant drbg_gen s part o 0 16 part sm 0 0 1
+d = ulong 0
+for i ulong 16
+d = or d xor ulong get o i 170
+end
+drwant d 0
+drwant drbg_reseed s part sm 0 32 0
+drwant drbg_gen s part o 0 16 part sm 0 0 0
+note two generates give different output; the state after wipe is all zero and refuses
+drwant drbg_limit s DRRSMX 0
+drwant drbg_gen s part o 0 32 part sm 0 0 0
+drwant drbg_gen s part o 32 32 part sm 0 0 0
+for i ulong 32
+put sm add 4096 i get o i
+end
+drchk xor dreq part o 32 32 part sm 4096 32 32 1
+drbg_wipe s
+d = ulong 0
+for i ulong len s
+d = or d ulong get s i
+end
+drwant d 0
+drwant drbg_gen s part o 0 16 part sm 0 0 2
+end
+
+fn drrec a edit uchar 4096 b edit uchar 4096 sm edit uchar 8192 o edit uchar 65537 ex edit uchar 65536 s edit uchar 128 to void
+c = drpeek
+dradv
+if eq c 68
+drrecd a b sm o ex s
+ret
+end
+if eq c 83
+drrecs sm o s
+ret
+end
+drbad
+end
+
+fn main to int
+a = new uchar 4096 0
+b = new uchar 4096 0
+sm = new uchar 8192 0
+o = new uchar 65537 0
+ex = new uchar 65536 0
+s = new uchar 128 0
+if ne drslurp 0
+r = write 2 tio 0 len tio
+ret 2
+end
+put st 1 0
+put st 2 0
+put st 5 0
+put st 6 0
+while lt get st 1 get st 0 bound 999999
+put st 2 add get st 2 1
+put st 3 0
+put st 4 get st 1
+c = drpeek
+if eq c 35
+drskip
+else
+if eq c 10
+dradv
+else
+drrec a b sm o ex s
+if eq get st 3 1
+put st 5 add get st 5 1
+put st 6 add get st 6 1
+drmsg 1
+put st 1 get st 4
+drskip
+end
+end
+end
+end
+r = write 1 tsum 0 len tsum
+drprn get st 5
+r = write 1 tchk 0 len tchk
+drprn get st 6
+r = write 1 tfld 0 len tfld
+if ne get st 6 0
+ret 1
+end
+if eq get st 5 0
+ret 1
+end
+ret 0
+end

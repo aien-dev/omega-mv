@@ -117,8 +117,11 @@ GPU_FS_CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin
 # bounded wait join the link. Their machine comes from an installed OmegaGpuPlatform; the Linux reference
 # (src/omega_gpu_platform_linux.c) is deliberately NOT in this list. Still outside it: the elementwise API, the
 # numeric launchers, the vector executor, the resident runtime (docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md).
+# SHA-256 here is the migration-pending C of src/omega_sha256_fs.c, not the Omega unit: the omega-bridge binding in
+# src/omega_om_units.c needs pthread, mmap, mprotect and abort (outside GPU_FS_ALLOWED). test-sha256-fs-parity
+# holds the two equal; successor: a freestanding bridge binding with a caller-supplied stack.
 GPU_FS_SRCS = src/omega_gpu_engine.c src/omega_gpu_platform.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-	src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_om_units.c \
+	src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_sha256_fs.c \
 	src/omega_gpu_session.c src/omega_gpu_fmt.c src/omega_gpu_matmul_api.c src/omega_gpu_attention_api.c \
 	src/omega_gpu_serving.c src/omega_gpu_wait.c
 GPU_FS_HDRS = src/omega_gpu_engine.h src/omega_gpu_platform.h src/omega_blackwell_codegen.h src/omega_blackwell_matmul.h \
@@ -159,14 +162,17 @@ test-gpu-engine-freestanding: $(GPU_FS_LINK) build/test_omega_gpu_engine_freesta
 # nm -u check to refuse it (a check that can never fail proves nothing).
 .PHONY: test-codegen-freestanding test-gpu-fs-allowlist-control
 CODEGEN_FS_TEST_DEPS = tests/test_omega_codegen_freestanding.c src/omega_blackwell_codegen.h src/omega_blackwell_matmul.h
-build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c
+# The hosted side encodes through the .om encoder (om/encoder/bw_enc_sm121.om via src/omega_om_units.c), the
+# freestanding side through the migration-pending C encoder, so the cmp below is also an .om-vs-C differential.
+build/test_codegen_hosted: $(CODEGEN_FS_TEST_DEPS) src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c \
+		src/omega_native.h
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -o $@ tests/test_omega_codegen_freestanding.c \
 		src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_om_units.c
 build/test_codegen_freestanding: $(CODEGEN_FS_TEST_DEPS) $(GPU_FS_LINK)
 	@mkdir -p build
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Isrc -DOMEGA_GPU_NO_POSIX -o $@ tests/test_omega_codegen_freestanding.c \
-		$(GPU_FS_DIR)/omega_blackwell_codegen.o $(GPU_FS_DIR)/omega_blackwell_matmul.o $(GPU_FS_DIR)/omega_om_units.o
+		$(GPU_FS_DIR)/omega_blackwell_codegen.o $(GPU_FS_DIR)/omega_blackwell_matmul.o $(GPU_FS_DIR)/omega_sha256_fs.o
 test-codegen-freestanding: build/test_codegen_hosted build/test_codegen_freestanding test-gpu-fs-allowlist-control
 	./build/test_codegen_hosted --dump > build/codegen_dump_hosted.txt
 	./build/test_codegen_freestanding --dump > build/codegen_dump_freestanding.txt
@@ -182,6 +188,33 @@ test-gpu-fs-allowlist-control: $(GPU_FS_LINK)
 	@bad=$$(nm -u $(GPU_FS_DIR)/control/with_canary.o | awk '{print $$NF}' | grep -Ev '^(_GLOBAL_OFFSET_TABLE_|($(GPU_FS_ALLOWED)))$$' || true); \
 	if [ "$$bad" != "malloc" ]; then echo "allowlist control: expected exactly malloc refused, got '$$bad'"; exit 1; fi; \
 	echo "allowlist control: a malloc caller is refused by the nm -u check (as required)"
+
+# The freestanding SHA-256 (src/omega_sha256_fs.c, migration-pending C) against the Omega unit of every hosted build
+# (om/sha256/sha256-om2.om via src/omega_om_units.c), tests/test_sha256_fs_parity.c. Controls: the C file refuses a
+# hosted compile, the hosted codegen test calls the Omega binding (omega2_sha256_*), and a copy of the C with one
+# round constant changed must FAIL the parity test.
+.PHONY: test-sha256-fs-parity
+SHA_FS_DIR = build/sha256_fs_parity
+SHA_FS_RENAME = -Dsha256_init=fs_sha256_init -Dsha256_update=fs_sha256_update -Dsha256_final=fs_sha256_final \
+	-Dsha256_hash=fs_sha256_hash
+test-sha256-fs-parity: build/test_codegen_hosted
+	@mkdir -p $(SHA_FS_DIR)
+	gcc $(GPU_FS_CFLAGS) $(SHA_FS_RENAME) -c -o $(SHA_FS_DIR)/fs.o src/omega_sha256_fs.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -pthread -Isrc -o $(SHA_FS_DIR)/parity tests/test_sha256_fs_parity.c \
+		$(SHA_FS_DIR)/fs.o src/omega_om_units.c
+	./$(SHA_FS_DIR)/parity
+	@if gcc -std=gnu11 -Isrc -c -o $(SHA_FS_DIR)/hosted.o src/omega_sha256_fs.c 2> /dev/null; then \
+		echo "CONTROL BROKEN: src/omega_sha256_fs.c compiled hosted"; exit 1; fi
+	@n=$$(nm build/test_codegen_hosted | grep -c ' T omega2_sha256_'); [ "$$n" -ge 4 ] || \
+		{ echo "FAIL: the hosted codegen test does not hash through the Omega binding"; exit 1; }; \
+	echo "control: hosted compile of src/omega_sha256_fs.c refused; hosted codegen test links $$n omega2_sha256_* functions"
+	sed 's/0x428a2f98/0x428a2f99/' src/omega_sha256_fs.c > $(SHA_FS_DIR)/red.c
+	@! cmp -s $(SHA_FS_DIR)/red.c src/omega_sha256_fs.c || { echo "RED MUTANT BROKEN: sed changed nothing"; exit 1; }
+	gcc $(GPU_FS_CFLAGS) $(SHA_FS_RENAME) -c -o $(SHA_FS_DIR)/red.o $(SHA_FS_DIR)/red.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -pthread -Isrc -o $(SHA_FS_DIR)/parity_red tests/test_sha256_fs_parity.c \
+		$(SHA_FS_DIR)/red.o src/omega_om_units.c
+	@if ./$(SHA_FS_DIR)/parity_red > $(SHA_FS_DIR)/red.log; then echo "RED CHECK BROKEN: a wrong round constant passed"; exit 1; \
+	else echo "red check: one changed round constant FAILS the parity test ($$(tail -1 $(SHA_FS_DIR)/red.log))"; fi
 
 # native v1 P07 cut C, session part (aienos#286): the portable session over OmegaGpuPlatform.
 #  - test_omega_gpu_session_platform links the FREESTANDING partial-link object and drives it through a fake
