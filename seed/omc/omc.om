@@ -8150,12 +8150,85 @@ end
 xword off
 end
 
-fn xload r ulong s ulong to void
+note Pool slots 0..6 and 8 (pool indices 0..7) live in RBX RSI RDI R8 R9 R10 R12 R13; the rest in the
+note frame. Every slot keeps its frame home [RBP - 8 (s + 1)]; a register slot's home is current only
+note after xspill, which the firmware boundary and the prologue copy rely on. RAX RCX RDX stay scratch,
+note R11 is the shift-check and method scratch, R14 the firmware RSP, R15 the stack limit.
+fn xreg s ulong to ulong
+if eq s 0
+ret 3
+end
+if eq s 1
+ret 6
+end
+if eq s 2
+ret 7
+end
+if lt s 6
+ret add s 5
+end
+if eq s 6
+ret 12
+end
+if eq s 8
+ret 13
+end
+ret 255
+end
+
+fn xloadm r ulong s ulong to void
 xmem 139 r 5 sub ulong 0 mul add s 1 8
 end
 
-fn xstore r ulong s ulong to void
+fn xstorem r ulong s ulong to void
 xmem 137 r 5 sub ulong 0 mul add s 1 8
+end
+
+fn xload r ulong s ulong to void
+g = xreg s
+if eq g 255
+xloadm r s
+ret
+end
+if ne g r
+xrr 137 r g
+end
+end
+
+fn xstore r ulong s ulong to void
+g = xreg s
+if eq g 255
+xstorem r s
+ret
+end
+if ne g r
+xrr 137 g r
+end
+end
+
+note xspill / xfill: the register slots of the n pool entries in use to and from their frame homes.
+fn xspill n ulong to void
+j = ulong 0
+while lt j n
+s = poolc j
+g = xreg s
+if ne g 255
+xstorem g s
+end
+j = add j 1
+end
+end
+
+fn xfill n ulong to void
+j = ulong 0
+while lt j n
+s = poolc j
+g = xreg s
+if ne g 255
+xloadm g s
+end
+j = add j 1
+end
 end
 
 fn xcc cc ulong to ulong
@@ -8362,9 +8435,9 @@ xrr 137 2 0
 if eq op 41
 xb 72 211 224
 if ge ty 6
-xrr 137 8 0
-xb 73 211 248
-xrr 57 8 2
+xrr 137 11 0
+xb 73 211 251
+xrr 57 11 2
 xtrap 1 1
 end
 else
@@ -8486,23 +8559,38 @@ xrr 137 0 4
 xstore 0 r
 end
 
+note The caller's xarg leaves parameter j in slot j: a register parameter is already in place, a frame
+note parameter is copied from the caller's frame home through R11 (no such parameter with eight registers).
 fn xpro np ulong to void
+copy = ulong 0
+j = ulong 0
+while lt j np
+if eq xreg j 255
+copy = ulong 1
+end
+j = add j 1
+end
+if ne copy 0
 xrr 137 11 5
+end
 emitb 85
 xrr 137 5 4
 xb 72 129 236
 xword 256
 j = ulong 0
 while lt j np
+if eq xreg j 255
 xmem 139 0 11 sub ulong 0 mul add j 1 8
-xstore 0 j
+xstorem 0 j
+end
 j = add j 1
 end
 end
 
 note Only the pool slots in use are saved (slot s at [RSP + 8 s], as the arguments read them) and,
-note after the call, restored: the same live set as the AArch64 save/restore. Slots past the pool
-note count are dead at a call: a later allocation writes before it reads.
+note after the call, the register slots among them restored: the same live set as the AArch64
+note save/restore. A frame slot stays in the caller's frame across the call and is not reloaded.
+note Slots past the pool count are dead at a call: a later allocation writes before it reads.
 fn xsave to void
 n = add get npar 0 get nslot 0
 put svn 0 n
@@ -8511,8 +8599,12 @@ xsp 1 256
 j = ulong 0
 while lt j n
 s = poolc j
-xload 0 s
-xmem 137 0 4 mul s 8
+g = xreg s
+if eq g 255
+xloadm 0 s
+g = ulong 0
+end
+xmem 137 g 4 mul s 8
 j = add j 1
 end
 note Reserve the callee's return address, frame pointer and slot area before CALL.
@@ -8528,8 +8620,13 @@ if or eq k 3 eq k 7
 matconst t v
 ret
 end
+g = xreg t
+if eq g 255
 xmem 139 0 4 mul v 8
-xstore 0 t
+xstorem 0 t
+ret
+end
+xmem 139 g 4 mul v 8
 end
 
 fn xrestore d ulong slot ulong res ulong to ulong
@@ -8544,8 +8641,16 @@ j = ulong 0
 while lt j m
 s = poolc j
 if ne s rd
+g = xreg s
+if ne g 255
+xmem 139 g 4 mul s 8
+else
+note A frame slot below 6 is an argument-passing slot that xarg overwrote in this frame.
+if lt s 6
 xmem 139 0 4 mul s 8
-xstore 0 s
+xstorem 0 s
+end
+end
 end
 j = add j 1
 end
@@ -8671,12 +8776,18 @@ xrr 57 1 0
 xtrap 8 3
 end
 
-fn xbase r ulong e ulong to void
+note xbase: register r = the base of array name e: its address, or its slot read from the frame
+note home (home 1, after xspill) or from the call save area (home 0, after xsave).
+fn xbase r ulong e ulong home ulong to void
 i = sub e 1
 if ge get nm_kind i 4
 xaddr r get nm_addr i
 else
-xload r ulong get nm_reg i
+if ne home 0
+xloadm r ulong get nm_reg i
+else
+xmem 139 r 4 mul ulong get nm_reg i 8
+end
 end
 end
 
@@ -8685,7 +8796,7 @@ if ne get xtarget 0 1
 fail 25
 end
 save
-xbase 6 e
+xbase 6 e 0
 xmem 139 0 4 mul ro 8
 xrr 1 6 0
 if eq fk 3
@@ -9220,17 +9331,22 @@ end
 harg x 2 5
 e = harray x 1
 arg = matreg get fr add x 12 get fr add x 13 5
-xload 3 arg
-xbase 12 e
-xload 0 get fr add x 21
+note The firmware sequences and the firmware itself (UEFI 2.3.4.2 volatile RAX RCX RDX R8-R11) clobber
+note every slot register: spill the live ones, read the operands from the homes, reload after.
+n = add get npar 0 get nslot 0
+xspill n
+xloadm 3 arg
+xbase 12 e 1
+xloadm 0 get fr add x 21
 xrr 1 12 0
-xload 13 get fr add x 22
+xloadm 13 get fr add x 22
 put xenerr 0 0
 put xenend 0 0
 xsp 1 80
 xeop op
 xeclose
 xsp 0 80
+xfill n
 put nslot 0 get fr add x 7
 r = destreg dst
 xstore 0 r
