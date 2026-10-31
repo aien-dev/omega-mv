@@ -40,6 +40,7 @@
 #include "runtime/rx_world.h"
 #include "omega_evidence.h"
 #include "sha256.h"
+#include "omega_path_check.h"
 
 #include <dirent.h>
 #include <limits.h>
@@ -814,11 +815,14 @@ static int quiet_flag_is_mine(const char *flag) {
 /* Whose measurement holds the quiet flag? Decided before and apart from the
  * host load, so a loaded machine can never hide this answer: main prints it
  * and tests/runtime/r11_own_hold_test.sh reads it. */
-enum { QUIET_FLAG_NONE, QUIET_FLAG_OWN, QUIET_FLAG_OTHER };
+enum { QUIET_FLAG_NONE, QUIET_FLAG_OWN, QUIET_FLAG_OTHER, QUIET_FLAG_REFUSED };
 static int quiet_flag_state(void) {
-    const char *home = getenv("HOME");
-    char flag[512], real_flag[PATH_MAX], real_home[PATH_MAX];
-    if (!home || !home[0]) return QUIET_FLAG_NONE;
+    const char *h = getenv("HOME");
+    char home[400] = "", flag[512], real_flag[PATH_MAX], real_home[PATH_MAX];
+    if (!h || !h[0]) return QUIET_FLAG_NONE;
+    /* Only a checked HOME (src/omega_path_check.h) names the flag; a refused one
+     * cannot rule a measurement out, so other_load treats it as load. */
+    if (omega_path_copy(home, sizeof home, h) != 0) return QUIET_FLAG_REFUSED;
     snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home);
     /* The flag must resolve to a file inside $HOME (symlinks and ".." are
      * resolved first). A flag that is missing or lies outside home is no flag. */
@@ -848,6 +852,10 @@ static double load_limit(void) {
  * is already loaded, the numbers would describe the other work, so the
  * living run is not started. Same test as rx_plan_reuse.c. */
 static int other_load(int flag_state, char *why, size_t n) {
+    if (flag_state == QUIET_FLAG_REFUSED) {
+        snprintf(why, n, "HOME refused by src/omega_path_check.h");
+        return 1;
+    }
     if (flag_state == QUIET_FLAG_OTHER) {
         snprintf(why, n, "an R15 timed measurement holds ~/workspace/.spark-quiet");
         return 1;
@@ -1103,7 +1111,7 @@ static void binary_digest(char out[65]) {
 static void write_receipt(void) {
     char path[512];
     if (omega_evidence_path("R11/rx_aien_faculty_receipt.json", path, sizeof path) != 0) return;
-    FILE *fp = fopen(path, "w");
+    FILE *fp = omega_evidence_create(path);
     if (!fp) return;
     char commit[41];
     memset(commit, 0, sizeof commit);
@@ -1194,6 +1202,7 @@ int main(void) {
     int flag_state = quiet_flag_state();
     printf("quiet flag: %s\n", flag_state == QUIET_FLAG_NONE ? "none"
            : flag_state == QUIET_FLAG_OWN ? "this run's own hold"
+           : flag_state == QUIET_FLAG_REFUSED ? "HOME refused"
                                           : "another measurement's hold");
     if (g_nx > 0 && g_na > 0 && other_load(flag_state, why, sizeof why)) {
         snprintf(g_b_skip_buf, sizeof g_b_skip_buf, "SKIPPED-LOADED: %s", why);

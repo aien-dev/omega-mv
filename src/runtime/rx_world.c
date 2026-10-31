@@ -21,6 +21,7 @@
 #include "rx_argus.h"
 #include "sha256.h"
 #include "rx_generation.h"   /* RX_GEN_HALT_MARK */
+#include "omega_path_check.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -967,11 +968,15 @@ static int fsync_dir(const char *dir) {
 }
 
 /* Write `buf` to dir/name durably (temporary file, fsync, rename, fsync dir).
- * With excl, an existing dir/name is never replaced (link, not rename). */
+ * With excl, an existing dir/name is never replaced (link, not rename). The
+ * name is one checked component (src/omega_path_check.h, no '/'); dir is
+ * w->halt_dir, checked when it was set. */
 static int durable_write(const char *dir, const char *name, const char *buf, size_t len, bool excl) {
-    char tmp[512], dst[512];
-    if (snprintf(tmp, sizeof tmp, "%s/%s.partial", dir, name) >= (int)sizeof tmp ||
-        snprintf(dst, sizeof dst, "%s/%s", dir, name) >= (int)sizeof dst)
+    char nm[160], tmp[512], dst[512];
+    if (omega_path_copy(nm, sizeof nm, name) != 0 || strchr(nm, '/') || strcmp(nm, ".") == 0)
+        return -EINVAL;
+    if (snprintf(tmp, sizeof tmp, "%s/%s.partial", dir, nm) >= (int)sizeof tmp ||
+        snprintf(dst, sizeof dst, "%s/%s", dir, nm) >= (int)sizeof dst)
         return -ENAMETOOLONG;
     int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) return -errno;
@@ -1062,14 +1067,16 @@ static uint64_t halt_crumb(RxWorld *w, RxCrumbKind kind, RxCapRef cap, int32_t r
 }
 
 int rx_world_set_halt_dir(RxWorld *w, const char *dir) {
-    if (!w || !dir || !dir[0] || strlen(dir) >= sizeof w->halt_dir) return RX_ERR_ARG;
+    /* Only the checked copy (src/omega_path_check.h) is kept and opened. */
+    char checked[sizeof w->halt_dir];
+    if (!w || omega_path_copy(checked, sizeof checked, dir) != 0) return RX_ERR_ARG;
     pthread_mutex_lock(&w->mu);
     pthread_mutex_lock(&w->callers_mu);
-    snprintf(w->halt_dir, sizeof w->halt_dir, "%s", dir);
+    memcpy(w->halt_dir, checked, strlen(checked) + 1);
     RxHaltStatus h;
     char raw[600];
     size_t raw_len = 0;
-    int rc = halt_mark_read(dir, &h, raw, sizeof raw, &raw_len);
+    int rc = halt_mark_read(w->halt_dir, &h, raw, sizeof raw, &raw_len);
     if (rc == 0 && w->halted) {
         w->halt.durable = halt_mark_write(w);   /* a stop taken before the directory was set */
     } else if (rc != 0 && !w->halted) {

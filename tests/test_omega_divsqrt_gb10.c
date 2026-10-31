@@ -37,6 +37,7 @@
 #include "omega_blackwell_encoder.h"
 #include "omega_blackwell_qmd.h"
 
+#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <pthread.h>
@@ -44,6 +45,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
+
+/* 0644, not fopen's 0666 & ~umask: a dumped kernel or listing is never world-writable */
+static FILE *create_0644(const char *path, const char *mode) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    FILE *f = fd >= 0 ? fdopen(fd, mode) : NULL;
+    if (fd >= 0 && !f) close(fd);
+    return f;
+}
 
 static int g_pass, g_fail;
 static void check(int ok, const char *id) {
@@ -329,11 +339,11 @@ static int dump(const char *dir) {
         const char *nm = NM[op];
         if (build((OmegaDsOp)op, code, &len) != 0 || omega_ds_listing((OmegaDsOp)op, lst, sizeof(lst)) != 0) return 1;
         snprintf(path, sizeof(path), "%s/%s.bin", dir, nm);
-        FILE *f = fopen(path, "wb");
+        FILE *f = create_0644(path, "wb");
         if (!f || fwrite(code, 1, len, f) != len) return 1;
         fclose(f);
         snprintf(path, sizeof(path), "%s/%s.lst", dir, nm);
-        f = fopen(path, "w");
+        f = create_0644(path, "w");
         if (!f || fputs(lst, f) < 0) return 1;
         fclose(f);
     }

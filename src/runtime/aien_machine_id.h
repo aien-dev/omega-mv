@@ -247,7 +247,9 @@ static inline int aien_mid_from_text(const char *s, AienMachineId *out) {
 
 /* ---- aien_machine_id.c -------------------------------------------------- */
 
-/* Persist atomically (temp file, fsync, rename, fsync directory). */
+/* Persist atomically (temp file, fsync, rename, fsync directory). A path that
+ * src/omega_path_check.h refuses (a ".." component, a byte outside its set, too
+ * long) is AIEN_MID_E_ARG for both calls, before any file is touched. */
 int aien_mid_store(const char *path, const AienMachineId *m);
 /* Load; any file that is not exactly one valid record is rejected. */
 int aien_mid_load(const char *path, AienMachineId *out);

@@ -2576,7 +2576,7 @@ static int receipt(int tests_ok) {
     struct utsname host;
     memset(&host, 0, sizeof host);
     uname(&host);
-    FILE *f = fopen(path, "w");
+    FILE *f = omega_evidence_create(path);
     if (!f) return 0;
     uint64_t crumbs = 0, holders_max = 0, unexpected = 0;
     uint64_t final_gen = 0;

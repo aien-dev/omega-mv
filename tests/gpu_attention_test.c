@@ -50,6 +50,7 @@
 #include "omega_blackwell_codegen.h"
 #include "omega_sm121_disasm.h" /* C6 (L386): Omega's own disassembler replaces nvdisasm here */
 #include "bw_warp_sim.h" /* omega #308: SIMT warp simulator for --divergent */
+#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
@@ -57,6 +58,14 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+/* 0644, not fopen's 0666 & ~umask: a receipt is never world-writable */
+static FILE *create_0644(const char *path) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    FILE *f = fd >= 0 ? fdopen(fd, "w") : NULL;
+    if (fd >= 0 && !f) close(fd);
+    return f;
+}
 
 static int g_checks, g_failed;
 static int g_sim_mode; /* --sim: the host simulator never opens the device */
@@ -350,7 +359,7 @@ static void batch_single_repeat_checks(const char *name, const BatchCtx *bc, con
 
 
 static int chip(const char *out_path) {
-    FILE *out = out_path ? fopen(out_path, "w") : NULL;
+    FILE *out = out_path ? create_0644(out_path) : NULL;
     if (out_path && !out) { printf("cannot open %s\n", out_path); return 2; }
     if (out) fprintf(out, "{\"schema\":\"OMEGA_GPU_ATTENTION_V1\",\"tolerances\":{\"rel\":2e-4,\"abs\":2e-5,\"large_scores_rel\":1e-3,\"large_scores_abs\":1e-4},\"cases\":[");
     uint32_t seed = 0xfb1c0005u;
@@ -858,7 +867,7 @@ static int cmp_d(const void *a, const void *b) { double x = *(const double *)a, 
  * context falls with more CTAs per (sequence, head) or stays flat (bandwidth bound: the four query heads of a
  * kv head each read its slice). */
 static int split_timing(const char *out_path) {
-    FILE *out = out_path ? fopen(out_path, "w") : NULL;
+    FILE *out = out_path ? create_0644(out_path) : NULL;
     if (out_path && !out) { printf("cannot open %s\n", out_path); return 2; }
     enum { N = 100 };
     const uint32_t hd = g_hd, nqh = 32, nkv = 8, bs = 16, layers = 2, layer = 1;
@@ -912,7 +921,7 @@ static int split_timing(const char *out_path) {
 }
 
 static int timing(const char *out_path) {
-    FILE *out = out_path ? fopen(out_path, "w") : NULL;
+    FILE *out = out_path ? create_0644(out_path) : NULL;
     if (out_path && !out) { printf("cannot open %s\n", out_path); return 2; }
     enum { N = 100 };
     const uint32_t hd = 64, nqh = 32, nkv = 4, seq = 2048;
@@ -968,7 +977,7 @@ static int timing(const char *out_path) {
  * through this path and are reported as unavailable. Under --sim the timings are host-simulator
  * timings and the receipt says so. */
 static int sweep(const char *out_path) {
-    FILE *out = out_path ? fopen(out_path, "w") : NULL;
+    FILE *out = out_path ? create_0644(out_path) : NULL;
     if (out_path && !out) { printf("cannot open %s\n", out_path); return 2; }
     const int N = g_sim_mode ? 1 : 20;
     const uint32_t hd = 64, bs = 16, layers = 1, layer = 0;

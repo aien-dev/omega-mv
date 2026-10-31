@@ -36,11 +36,22 @@
 #include "omega_gpu_cmdlist.h"
 #include "algebra/realize_common.h"
 #include "bw_warp_sim_k.h"
+#include "omega_path_check.h"
+#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+/* 0644, not fopen's 0666 & ~umask: a receipt is never world-writable */
+static FILE *create_0644(const char *path) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    FILE *f = fd >= 0 ? fdopen(fd, "w") : NULL;
+    if (fd >= 0 && !f) close(fd);
+    return f;
+}
 
 #define SPEC_GBS 273.0
 #define PRACTICAL_GBS 237.2
@@ -527,8 +538,10 @@ static void speed_judged_init(void) {
     if (f && !strcmp(f, "1")) { g_speed_judged = 1; snprintf(g_speed_why, sizeof g_speed_why, "forced (AIEN_SPEED_GATE=1)"); return; }
     if (q && *q) { g_speed_judged = 1; snprintf(g_speed_why, sizeof g_speed_why, "quiet hold %.60s", q); return; }
     if (w && *w) {
-        char p[4096], mode[16] = {0}; snprintf(p, sizeof p, "%s/gb10", w);
-        FILE *fp = fopen(p, "r"); if (fp) { if (!fgets(mode, sizeof mode, fp)) mode[0] = 0; fclose(fp); }
+        /* Only a checked SPARK_WINDOW_DIR (src/omega_path_check.h) is read; a refused one is not an exclusive window. */
+        char d[4000], p[4096], mode[16] = {0};
+        if (omega_path_copy(d, sizeof d, w) == 0) snprintf(p, sizeof p, "%s/gb10", d); else p[0] = 0;
+        FILE *fp = p[0] ? fopen(p, "r") : NULL; if (fp) { if (!fgets(mode, sizeof mode, fp)) mode[0] = 0; fclose(fp); }
         if (!strncmp(mode, "exclusive", 9)) { g_speed_judged = 1; snprintf(g_speed_why, sizeof g_speed_why, "exclusive spark-window"); return; }
     }
     g_speed_judged = 0; snprintf(g_speed_why, sizeof g_speed_why, "shared machine: no quiet hold, no exclusive spark-window");
@@ -680,7 +693,7 @@ int main(int argc, char **argv) {
             if (!no_bw) chip_bandwidth(reps);
         }
         RC("  \"checks\": %d, \"failed\": %d, \"verdict\": \"%s\"\n}\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
-        if (out) { FILE *f = fopen(out, "w"); if (f) { fputs(g_rcpt, f); fclose(f); printf("receipt: %s\n", out); } else CHECK(0, "cannot write %s", out); }
+        if (out) { FILE *f = create_0644(out); if (f) { fputs(g_rcpt, f); fclose(f); printf("receipt: %s\n", out); } else CHECK(0, "cannot write %s", out); }
     }
     printf("gpu_tern_test: %d checks, %d failed: %s\n", g_checks, g_failed, g_failed ? "FAIL" : "PASS");
     return g_failed ? 1 : 0;

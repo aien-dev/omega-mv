@@ -48,6 +48,7 @@
 #endif
 #include "omega_evidence.h"
 #include "sha256.h"
+#include "omega_path_check.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -251,10 +252,13 @@ static int rm_one(const char *p, const struct stat *sb, int flag, struct FTW *ft
     return remove(p);
 }
 
-/* A scratch directory under $TMPDIR (default /tmp). */
+/* A scratch directory under $TMPDIR (default /tmp); a TMPDIR that src/omega_path_check.h refuses fails the
+ * caller rather than naming a directory from unchecked bytes. */
 static int scratch_dir(char *out, size_t n, const char *stem) {
-    const char *t = getenv("TMPDIR");
-    if (!t || !t[0]) t = "/tmp";
+    const char *e = getenv("TMPDIR");
+    char t[160];
+    if (!e || !e[0]) e = "/tmp";
+    if (omega_path_copy(t, sizeof t, e) != 0) return -1;
     if ((size_t)snprintf(out, n, "%s/%s-XXXXXX", t, stem) >= n) return -1;
     return mkdtemp(out) ? 0 : -1;
 }
@@ -2111,7 +2115,7 @@ static void receipt(int tests_ok) {
                  "\"activations_cancelled_under_stop\": %llu},\n",
                  (unsigned)RX_OPERATOR_SUBJ, U(g_op_stops), U(g_op_resumes), U(g_op_restored),
                  U(g_op_open), U(g_op_cancelled));
-    FILE *f = fopen(path, "w");
+    FILE *f = omega_evidence_create(path);
     if (!f) return;
     fprintf(f,
         "{\n"

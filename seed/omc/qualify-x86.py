@@ -41,7 +41,7 @@ import struct
 import subprocess
 import tempfile
 
-from x86_corpus_drivers import bare_calls, bridge_plan, bridge_positive_plan, directive_plan, plan_case, prepare_case, select_a64_entry, wrap_bare
+from x86_corpus_drivers import EFFECT_CPU_SECONDS, bare_calls, bridge_plan, bridge_positive_plan, directive_plan, plan_case, prepare_case, select_a64_entry, wrap_bare
 
 ROOT = Path(__file__).resolve().parents[2]
 MAIN = re.compile(rb"(?m)^[ \t]*(?:export[ \t]+)?fn[ \t]+main(?:[ \t]|$)")
@@ -400,6 +400,13 @@ def expanded_cases(files, record):
         case.evidence.update(stdin_bytes=len(case.stdin), stdin_sha256=digest(case.stdin),
                              args=list(case.args), original_case=case.name)
         yield case
+        if plan and case.operation == "differential":
+            for variant in plan.get("variants", ()):
+                yield Case(case.name + ":" + variant["name"], case.source, variant["stdin"], tuple(variant["args"]),
+                           driver=case.driver, expected_exit=variant["expected_exit"],
+                           evidence={**case.evidence, "stdin_bytes": len(variant["stdin"]),
+                                     "stdin_sha256": digest(variant["stdin"]), "args": list(variant["args"]),
+                                     "variant_of": case.name})
         driver = case.driver or HOST_DRIVERS.get(digest(case.source))
         if driver == "network" and not case.args:
             yield Case(case.name + ":gate-host-tcp-loopback", case.source, args=("tcp",), expected_exit=0)
@@ -471,8 +478,11 @@ def conductor_resources(path):
                 return
             data = source_bytes(spec)
             words = host_words(data)
-            if words and digest(data) not in HOST_DRIVERS and not plan_case(ROOT, spec, data):
-                raise Failure(f"original conductor source {spec} has unreviewed effects: {words}")
+            if words and digest(data) not in HOST_DRIVERS:
+                plan = plan_case(ROOT, spec, data)
+                if not plan or "blocker" in plan:
+                    raise Failure(f"original conductor source {spec} has unreviewed effects: {words}"
+                                  + (f"; {plan['blocker']}" if plan else ""))
 
     add(path.relative_to(ROOT).as_posix())
     for constant in ("sha256-k", "sha256-iv"):
@@ -790,23 +800,23 @@ def cases(files, record):
                 record("MISSING_INPUT", name, str(error), conductor_row=line)
 
 
-def limits(cpu_seconds=None):
+def limits(cpu_seconds=None, nofile=256):
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     resource.setrlimit(resource.RLIMIT_FSIZE, (64 * 1024 * 1024, 64 * 1024 * 1024))
-    resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (nofile, nofile))
     if cpu_seconds is not None:
         # Soft limit delivers SIGXCPU; the higher hard limit keeps SIGKILL out of the way.
         resource.setrlimit(resource.RLIMIT_CPU, (cpu_seconds, cpu_seconds + 2))
 
 
-def run(command, data, cwd, timeout, *, extra_env=None, cpu_seconds=None):
+def run(command, data, cwd, timeout, *, extra_env=None, cpu_seconds=None, nofile=256):
     # Regular-file stdin matches seekable-input fixtures; no shell interpolation.
     with tempfile.TemporaryFile() as inp, tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
         inp.write(data)
         inp.seek(0)
         process = subprocess.Popen(command, stdin=inp, stdout=out, stderr=err, cwd=cwd,
                                    env={"LC_ALL": "C", "PATH": os.defpath, "HOME": ".", "OMTEST": "hello", **(extra_env or {})},
-                                   start_new_session=True, preexec_fn=lambda: limits(cpu_seconds))
+                                   start_new_session=True, preexec_fn=lambda: limits(cpu_seconds, nofile))
         try:
             process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -1886,6 +1896,19 @@ def main():
                     for directory in (native, emulated):
                         child = directory / "exec-child"
                         child.write_bytes(helper_image); child.chmod(0o700)
+                elif driver == "effect-scratch" and "native_child" in case.evidence:
+                    spec = case.evidence["native_child"]
+                    child_source = contained(spec["source"]).read_bytes()
+                    if digest(child_source) != spec["source_sha256"]:
+                        raise Failure("reviewed native child source changed: " + spec["source"])
+                    built = run([compiler], child_source, cwd, options.timeout)
+                    if built[0] or built[2]:
+                        raise Failure(f"native child compilation failed: {result_details(built)}")
+                    case.evidence["native_child_sha256"] = digest(built[1])
+                    # Both arms exec the same native AArch64 child; only the parent changes architecture.
+                    for directory in (native, emulated):
+                        child = directory / "exec-child"
+                        child.write_bytes(built[1]); child.chmod(0o700)
                 prepared = [prepare_case(ROOT, directory, driver, compiler, case=case.evidence)
                             for directory in (native, emulated)]
                 if prepared[0] != prepared[1]:
@@ -1911,9 +1934,10 @@ def main():
                 # Both argv[0] strings and initial environments are byte-identical;
                 # filesystem mutations cannot leak between architectures.
                 argv0 = "./" + basename
-                cpu_seconds = 1 if driver == "cpu-limit" else None
-                arun = run([argv0, *args], case.stdin, native, child_timeout, cpu_seconds=cpu_seconds)
-                xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, child_timeout, cpu_seconds=cpu_seconds)
+                cpu_seconds = 1 if driver == "cpu-limit" else EFFECT_CPU_SECONDS if driver == "effect-scratch" else None
+                nofile = case.evidence.get("nofile", 256) if driver == "effect-scratch" else 256
+                arun = run([argv0, *args], case.stdin, native, child_timeout, cpu_seconds=cpu_seconds, nofile=nofile)
+                xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, child_timeout, cpu_seconds=cpu_seconds, nofile=nofile)
                 diagnostics.update(default_run=result_details(arun), x86_run=result_details(xrun))
                 if "required_verdict" in case.evidence:
                     required = ("VERDICT " + case.evidence["required_verdict"]).encode()

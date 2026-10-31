@@ -1264,7 +1264,7 @@ static int judged_pass(void) {
 static void write_receipt(void) {
     char path[512];
     if (omega_evidence_path("ACTION_GRAPH/rx_action_graph_receipt.json", path, sizeof path) != 0) return;
-    FILE *fp = fopen(path, "w");
+    FILE *fp = omega_evidence_create(path);
     if (!fp) return;
     char commit[41];
     memset(commit, 0, sizeof commit);
