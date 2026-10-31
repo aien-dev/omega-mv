@@ -526,6 +526,20 @@ Coverage distinctions must accompany any result:
   ceiling 3 on both targets; the production compiler's ceiling is unchanged.
 - `psync` invokes syncfs on the scratch descriptor and therefore flushes its
   filesystem; a temporary directory does not isolate that kernel effect.
+- `effect-scratch` (`seed/omc/x86_corpus_drivers.py` `effect_plan`) drives the
+  security673 and S5 conductors that launch programs or touch files, each keyed
+  by exact source sha: `pkt-consumer`, `runimage`, `embed`, `scrub-ctl`,
+  `scrub-mem`, `path-consumer`, `renames-consumer`, `exec-parent` and
+  `pure-child`. Inputs are SHA-pinned repository files copied into the private
+  per-architecture scratch; launched programs are the same native AArch64 file
+  in both runs (`exec-child` built natively from pinned `exec-child.om`, the
+  pinned evidence images, or the host `/bin/true`, `/bin/echo` and `/bin/tr`
+  pinned to Ubuntu coreutils 9.4-3ubuntu6.3 arm64, whose mismatch is BLOCKED).
+  Each run gets a 10-second CPU limit; only `exec-parent` raises
+  `RLIMIT_NOFILE` to 65600 because it duplicates a descriptor to 65537.
+  `pure-child` runs outside `execpure`, so it exits 43 at its first fd check;
+  its later arms are not exercised. `gate669.om` at the current revision is
+  not reviewed and stays NOT_RUN.
 
 The disassembly check linearly decodes code bytes, including unreachable code,
 while carving source-matched jump-protected literal spans. A mnemonic inventory
