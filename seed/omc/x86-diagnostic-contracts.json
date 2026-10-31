@@ -260,6 +260,20 @@
         "stderr": "omc: line 22: error 14\nomc-diag 1 code=14 sev=error line=22 col=17 span=792-794 expect=value found=3131 obligation=growth profile=OM-2\n"
       },
       "reason": "Same emitted-storage ceiling; target instruction sizes reach it at different source tokens."
+    },
+    {
+      "source_spec": "tests/one_layer/generalization/corpus/tasks/ceil_avg/solution.omegese",
+      "source_sha256": "c5c7c1400f557bb0c27aeda9d5eff2cb3f6158f15ad534507e228ed7eaf23ac2",
+      "aarch64": {
+        "exit": 12,
+        "stderr": "omc: line 2: error 12\n"
+      },
+      "x86_64": {
+        "exit": 0,
+        "stderr": ""
+      },
+      "x86_execution": "recorded-bare-caller",
+      "reason": "Same 16-register pool ceiling (OMEGESE 9.6, omc.om alloc fail 12); AArch64 rem and 64-bit mul take pool temporaries (bo_div t = alloc, bo_mul), x86 div/rem/mul use RAX/RDX through xdiv/xarith and take none, so only AArch64 reaches the ceiling on this expression. The accepted x86 unit must decode and must return the corpus expected value (oracle.c (a+b+1)/2) for every recorded input."
     }
   ]
 }
