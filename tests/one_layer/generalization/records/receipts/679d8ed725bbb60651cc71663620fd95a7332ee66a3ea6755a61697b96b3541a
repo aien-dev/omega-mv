@@ -1,0 +1,20 @@
+gen-receipt 1
+record abs-1ca006578c5168e0
+tool tools/gen/abstract/extract 356e304abd42e0ae8603252af48b76f7e42c0a70d227a1ea93bc78eea6aa91af
+tool tools/gen/abstract/verify 58f9cac29844b1fd4b9bf50ffd3360357baec5bd9e894ec969502c03ca2f74e6
+tool tools/gen/abstract/probe f4af98512c46a7a00020c79291230c0748a7dde2aadec328e8377de54741cd95
+tool tools/gen/abstract/genabs.sh 68414c1c72b273058a66b74d7801f0ea7fe290c49302aacd34f84b63bb9091d4
+tool tools/gen/abstract/gabs.c 27cc795505a054e6ae92fe14634fe900482094a72f10fde401e61e48a4d58880
+tool tools/gen/abstract/recheck.c 9d7a3c74de404170d32eacbc0ab551e3b598a086d9b300a94825e70614533e6c
+helper_ir 6904ffe66427f8048a754971611e893698d3271914bae4f531bbf2099a44ac75
+checker2 ACCEPT
+pre true
+post and and ge res 1 le res 10 eq lt n 10 eq res 1
+example 12345 -> 5
+property inputs=d06cb95ee431c5d63349ad43b8f495decbd187d8f51001796859c5eadf39a4aa expected=23c04e4d3c8d5abea295504bcdab63f60f7d857852a0fe95e049676f6dfc65e4 ACCEPT n=256
+example inputs=f33ae3bc9a22cd7564990a794789954409977013966fb1a8f43c35776b833a95 expected=f0b5c2c2211c8d67ed15e75e656c7862d086e9245420892a7de62cd9ec582a06 ACCEPT n=1
+occurs digcount_nibbles digcount
+occurs ds_plus_dc digcount
+occurs even_ds_odd_dc digcount
+occurs gcd_or_dc digcount
+occurs pc_times_dc digcount

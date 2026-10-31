@@ -1,0 +1,26 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of floatlike-hex.om (values from Wolfram, wolfram.txt query tokens).
+om2
+fn main to int
+a = ulong 14
+putu a
+a = ulong 15
+putu a
+a = ulong 30
+putu a
+a = ulong 485
+putu a
+a = ulong 7986
+putu a
+a = ulong 8036
+putu a
+a = ulong 3599
+putu a
+a = ulong 24080
+putu a
+a = ulong 3890
+putu a
+a = ulong 254
+putu a
+ret 0
+end

@@ -1,11 +1,16 @@
 note SPDX-License-Identifier: Apache-2.0
 note tls.om: TLS 1.3 client (RFC 8446), DNS A lookup and TCP connect. Library unit: functions,
 note consts and texts only; no main, no mutable globals. Needs sha2.om, hkdf.om, x25519.om,
-note chacha.om, aesgcm.om, ec.om, rsa.om and x509.om composed before it (om/tls/build.sh).
+note chacha.om, aesgcm.om, ec.om, ecdh.om, rsa.om and x509.om composed before it (om/tls/build.sh).
 note
 note TLS 1.3 only: supported_versions offers 0x0304 alone and a ServerHello without it is refused
 note (no TLS 1.2 fallback, no insecure switch). Suites TLS_CHACHA20_POLY1305_SHA256 (preferred)
-note and TLS_AES_128_GCM_SHA256; group x25519 only; SNI always; ALPN http/1.1 when flag 1 is set.
+note and TLS_AES_128_GCM_SHA256; group x25519, one HelloRetryRequest (RFC 8446 4.1.4) accepted and
+note checked; SNI always; ALPN http/1.1 when flag 1 is set.
+note Approved-only mode (flag 4): TLS_AES_128_GCM_SHA256 only, groups secp256r1 and secp384r1 only
+note (ecdh.om, a share for each), signature schemes ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384
+note and rsa_pss_rsae_* only; a ServerHello choosing ChaCha20-Poly1305 is TLS_ERR_CIPHER_SUITE and
+note one choosing x25519 is TLS_ERR_KEY_SHARE. See README.md "Approved-only mode".
 note Server authentication is mandatory: x509_chain_verify (chain, dates, name, constraints) then
 note x509_cv_verify (CertificateVerify) then the Finished HMAC. Any failure: a fatal alert is sent
 note (best effort) and a named error is returned; the connection is unusable afterwards.
@@ -13,7 +18,7 @@ note
 note Connection state c is one caller-owned uchar array of TLCSZ bytes; the trust store st is a
 note separate array filled once by tls_store (x509_store_load). Integers in c are big-endian.
 
-const TLCSZ ulong 119296
+const TLCSZ ulong 121696
 const TLSTSZ ulong 262144
 const TLPH ulong 0
 const TLSU ulong 1
@@ -39,6 +44,9 @@ const TLHF ulong 488
 const TLDET ulong 492
 note change_cipher_spec state: 0 none allowed yet, 1 one allowed (after ServerHello), 2 no more
 const TLCCS ulong 496
+note record limit override (4 bytes, 0 = TLKUREC) and handshake budget in ns (8 bytes, 0 = TLHSNS)
+const TLKUL ulong 500
+const TLHSL ulong 504
 const TLEPK ulong 512
 const TLEPU ulong 544
 const TLSID ulong 576
@@ -46,14 +54,52 @@ const TLHS ulong 608
 const TLCHS ulong 640
 const TLSHS ulong 672
 const TLMS ulong 704
-const TLSS ulong 736
+note c[736..768) is unused since the shared secret grew to 64 bytes (TLSS below)
 const TLCRX ulong 832
+note approved mode (flag 4), c[1088..1536): secp256r1 private (32) and public (65), secp384r1
+note private (48) and public (97), the server's point (up to 97), the shared secret (up to 48) and
+note the group the server chose
+const TLECD2 ulong 1088
+const TLECD3 ulong 1120
+const TLECQ2 ulong 1168
+const TLECQ3 ulong 1233
+const TLECP ulong 1330
+const TLECZ ulong 1427
+const TLGRP ulong 1475
 const TLRB ulong 2048
 const TLWB ulong 19456
 const TLLF ulong 36864
 const TLLFSZ ulong 16896
 const TLHB ulong 53760
 const TLHBSZ ulong 65536
+note ML-KEM-768 decapsulation key (2400 bytes, secret) of the hybrid share, wiped after use
+const TLKDK ulong 119296
+note handshake state for groups and HelloRetryRequest (RFC 8446 4.1.4). Group bits: TLGHYB =
+note X25519MLKEM768 (0x11EC), TLGX25 = x25519; 4 and 8 are reserved for secp256r1 / secp384r1.
+note c[TLGO] offered groups, c[TLGS] groups with a share in the current ClientHello, c[TLHRS] 1
+note after a HelloRetryRequest, c[TLHSU] its suite (TLSU value), c[TLGSEL] the group bit of the
+note ServerHello share, c[TLKGEN] 1 while an ML-KEM key pair is held at c[TLKDK].
+note c[1088..1792) belongs to the approved-mode ECDH and DRBG state (other units).
+const TLKGEN ulong 4
+const TLGO ulong 12
+const TLGS ulong 13
+const TLHRS ulong 14
+const TLGSEL ulong 15
+const TLGHYB ulong 1
+const TLGX25 ulong 2
+const TLGOFF ulong 3
+note shared secret (EC)DHE input: 32 bytes for x25519, 64 (ML-KEM || x25519) for the hybrid
+const TLSS ulong 1792
+note client random (kept for ClientHello2), server share offset in c[TLHB], cookie place/length
+const TLRND ulong 1856
+const TLKSO ulong 1888
+const TLCKO ulong 1892
+const TLCKL ulong 1896
+const TLHSU ulong 1898
+note RFC 8446 section 5.5: at most 2^24.5 = 23726566 records under one AES-GCM key (applied to both
+note suites); the whole handshake must finish within TLHSNS (30 s) unless the caller set a deadline
+const TLKUREC ulong 23726566
+const TLHSNS ulong 30000000000
 
 note error codes (tls_errname gives the names)
 const TLEARG ulong 1
@@ -85,6 +131,12 @@ const TLECONN ulong 26
 const TLEKUPD ulong 27
 const TLESEQ ulong 28
 const TLESTOR ulong 29
+const TLETKT ulong 30
+const TLEILL ulong 31
+note TLESELF was 30 on #855 (audit/tls-fips-approved); renumbered to 32 at the integration base
+const TLESELF ulong 32
+note approved mode (flag 4): HMAC_DRBG state (fips.om, DRSZ bytes) at c[TLDRBG]
+const TLDRBG ulong 1536
 
 text TLN00 "TLS_OK"
 text TLN01 "TLS_ERR_ARGUMENT"
@@ -99,7 +151,7 @@ text TLN09 "TLS_ERR_PROTOCOL_VERSION"
 text TLN10 "TLS_ERR_CIPHER_SUITE"
 text TLN11 "TLS_ERR_KEY_SHARE"
 text TLN12 "TLS_ERR_EXTENSION"
-text TLN13 "TLS_ERR_HELLO_RETRY_UNSUPPORTED"
+text TLN13 "TLS_ERR_HELLO_RETRY"
 text TLN14 "TLS_ERR_SESSION_ID_ECHO"
 text TLN15 "TLS_ERR_ZERO_SHARED_SECRET"
 text TLN16 "TLS_ERR_ALPN"
@@ -116,6 +168,9 @@ text TLN26 "TLS_ERR_CONNECT"
 text TLN27 "TLS_ERR_KEY_UPDATE"
 text TLN28 "TLS_ERR_SEQUENCE_LIMIT"
 text TLN29 "TLS_ERR_TRUST_STORE"
+text TLN30 "TLS_ERR_TICKET"
+text TLN31 "TLS_ERR_ILLEGAL_PARAMETER"
+text TLN32 "TLS_ERR_SELFTEST"
 text TLNUNK "TLS_ERR_UNKNOWN"
 
 note HKDF labels (RFC 8446 section 7.1, 7.2, 7.3); "tls13 " is prepended by tls_info
@@ -132,6 +187,7 @@ text TLLUPD "traffic upd"
 text TLCVC "TLS 1.3, server CertificateVerify"
 text TLALPN "http/1.1"
 text TLRESOLV "/etc/resolv.conf"
+text TLAUXV "/proc/self/auxv"
 text TLNS "nameserver"
 
 note ---- byte helpers (big-endian, n <= 8) ----
@@ -287,6 +343,15 @@ end
 if eq e 29
 n = tls_namecp o TLN29
 end
+if eq e 30
+n = tls_namecp o TLN30
+end
+if eq e 31
+n = tls_namecp o TLN31
+end
+if eq e 32
+n = tls_namecp o TLN32
+end
 if eq n 0
 n = tls_namecp o TLNUNK
 end
@@ -432,10 +497,44 @@ tls_pn c o add sq 1 8
 ret 0
 end
 
-note decrypt the record at c[TLRB] whose body is ln bytes; 0 or TLEMAC
+note the record limit in force: TLKUREC or the lower test-only value set by tls_reclimit
+fn tls_reclim c view uchar * to ulong
+v = tls_gn c TLKUL 4
+if eq v 0
+ret TLKUREC
+end
+ret v
+end
+
+note tls_reclimit: lower the per-key record limit before tls_connect (tests); it cannot be raised
+fn tls_reclimit c edit uchar * n ulong to ulong
+if or ne get c TLPH 0 or eq n 0 ge n TLKUREC
+ret TLEARG
+end
+tls_pn c TLKUL n 4
+ret 0
+end
+
+note tls_hslimit: the whole-handshake budget in ns used when no deadline is set (0 = TLHSNS)
+fn tls_hslimit c edit uchar * ns ulong to ulong
+if ne get c TLPH 0
+ret TLEARG
+end
+tls_pn c TLHSL ns 8
+ret 0
+end
+
+note decrypt the record at c[TLRB] whose body is ln bytes; 0, TLEMAC, or TLESEQ when the peer sent
+note more records under this key than the limit allows without a KeyUpdate (fail closed)
 fn tls_open c edit uchar * ln ulong to ulong
 kn = new uchar 44 0
 ad = new uchar 5 0
+if ge tls_gn c TLRS 8 tls_reclim c
+ret TLESEQ
+end
+if eq fips_bad 1
+ret TLESELF
+end
 for i ulong 5
 put ad i get c add TLRB i
 end
@@ -456,10 +555,17 @@ end
 ret 0
 end
 
-note encrypt c[TLWB+5 .. +n) (inner plaintext incl. type byte), header already at c[TLWB]
+note encrypt c[TLWB+5 .. +n) (inner plaintext incl. type byte), header already at c[TLWB];
+note TLESEQ when the write key reached its record limit (tls_write rekeys before that)
 fn tls_seal c edit uchar * n ulong to ulong
 kn = new uchar 44 0
 ad = new uchar 5 0
+if ge tls_gn c TLWS 8 tls_reclim c
+ret TLESEQ
+end
+if eq fips_bad 1
+ret TLESELF
+end
 for i ulong 5
 put ad i get c add TLWB i
 end
@@ -551,6 +657,9 @@ ret TLEUNEX
 end
 put c TLCCS 2
 if lt ln 17
+ret TLEMAC
+end
+if gt ln 16401
 ret TLEREC
 end
 e = tls_open c ln
@@ -568,9 +677,6 @@ if eq n 0
 ret TLEUNEX
 end
 n = sub n 1
-if gt n 16384
-ret TLEREC
-end
 put c TLRB get c add add TLRB 5 n
 tls_pn c add TLRB 3 n 2
 if eq get c TLRB 20
@@ -758,29 +864,33 @@ fn tls_sel dst ulong src ulong ln ulong lid ulong to ulong
 ret or or dst shl src 16 or shl ln 32 shl lid 48
 end
 
-note c[dst..+32) = HKDF-Extract(salt, ikm); sel = dst | salt << 16 | ikm << 32, where offset 0
-note stands for 32 zero bytes (RFC 8446 "0" input)
+note c[dst..+32) = HKDF-Extract(salt, ikm); sel = dst | salt << 16 | ikm << 32 | ikm length << 48
+note (length 0 means 32, at most 64), where offset 0 stands for 32 zero bytes (RFC 8446 "0" input)
 fn tls_xtr c edit uchar * sel ulong to ulong
-s = new uchar 64 0
+s = new uchar 96 0
 k = new uchar 32 0
 so = and shr sel 16 65535
-io = shr sel 32
+io = and shr sel 32 65535
+il = shr sel 48
+if eq il 0
+il = 32
+end
 if ne so 0
 for i ulong 32
 put s i get c add so i
 end
 end
 if ne io 0
-for i ulong 32
+for i ulong il
 put s add 32 i get c add io i
 end
 end
-r = hkdf_extract 256 s 32 k
+r = hkdf_extract 256 part s 0 add 32 il 32 k
 dst = and sel 65535
 for i ulong 32
 put c add dst i get k i
 end
-tls_zero s 0 64
+tls_zero s 0 96
 tls_zero k 0 32
 if ne r 32
 ret 1
@@ -825,8 +935,68 @@ e = new uchar 1 0
 n = sha2_digest 256 part e 0 0 o
 end
 
+note 1 in approved-only mode (tls_init flag 4), else 0
+fn tls_apm c view uchar * to ulong
+if eq and get c TLFL 4 0
+ret 0
+end
+ret 1
+end
+
+note cipher_suites and legacy_compression_methods at c[p]; returns the next offset. Approved
+note mode offers TLS_AES_128_GCM_SHA256 (SP 800-38D, FIPS 197) alone.
+fn tls_suites c edit uchar * p ulong to ulong
+if eq tls_apm c 1
+tls_pn c p 2 2
+tls_pn c add p 2 4865 2
+put c add p 4 1
+put c add p 5 0
+ret add p 6
+end
+tls_pn c p 4 2
+tls_pn c add p 2 4867 2
+tls_pn c add p 4 4865 2
+put c add p 6 1
+put c add p 7 0
+ret add p 8
+end
+
+note approved mode: supported_groups secp256r1, secp384r1 and signature_algorithms
+note ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384, rsa_pss_rsae_sha256/384/512 at c[q]
+fn tls_apgs c edit uchar * q ulong to ulong
+tls_pn c q 10 2
+tls_pn c add q 2 6 2
+tls_pn c add q 4 4 2
+tls_pn c add q 6 23 2
+tls_pn c add q 8 24 2
+tls_pn c add q 10 13 2
+tls_pn c add q 12 12 2
+tls_pn c add q 14 10 2
+tls_pn c add q 16 1027 2
+tls_pn c add q 18 1283 2
+tls_pn c add q 20 2052 2
+tls_pn c add q 22 2053 2
+tls_pn c add q 24 2054 2
+ret add q 26
+end
+
+note approved mode: key_share with a secp256r1 (65-byte) and a secp384r1 (97-byte) share at c[q]
+fn tls_apks c edit uchar * q ulong to ulong
+tls_pn c q 51 2
+tls_pn c add q 2 172 2
+tls_pn c add q 4 170 2
+tls_pn c add q 6 23 2
+tls_pn c add q 8 65 2
+tls_mov c add q 10 TLECQ2 65
+tls_pn c add q 75 24 2
+tls_pn c add q 77 97 2
+tls_mov c add q 79 TLECQ3 97
+ret add q 176
+end
+
 note ---- ClientHello (RFC 8446 section 4.1.2) built at c[TLWB+5] ----
-note server_name, supported_groups (x25519), signature_algorithms; returns the next offset
+note server_name, supported_groups (offered bits c[TLGO]), signature_algorithms; returns the next
+note offset
 fn tls_chex1 c edit uchar * p ulong to ulong
 hl = ulong get c TLHL
 tls_pn c p 0 2
@@ -836,11 +1006,10 @@ put c add p 6 0
 tls_pn c add p 7 hl 2
 tls_mov c add p 9 TLHOST hl
 q = add add p 9 hl
-tls_pn c q 10 2
-tls_pn c add q 2 4 2
-tls_pn c add q 4 2 2
-tls_pn c add q 6 29 2
-q = add q 8
+if eq tls_apm c 1
+ret tls_apgs c q
+end
+q = tls_grps c q
 tls_pn c q 13 2
 tls_pn c add q 2 18 2
 tls_pn c add q 4 16 2
@@ -855,20 +1024,28 @@ tls_pn c add q 20 1537 2
 ret add q 22
 end
 
-note supported_versions (TLS 1.3 only), key_share (x25519), ALPN http/1.1 when flag 1
+note supported_versions (TLS 1.3 only), key_share (shares of c[TLGS]), cookie after a
+note HelloRetryRequest, status_request (ocsp, no responder ids or extensions) when flag 8, ALPN
+note http/1.1 when flag 1
 fn tls_chex2 c edit uchar * p ulong to ulong
 tls_pn c p 43 2
 tls_pn c add p 2 3 2
 put c add p 4 2
 tls_pn c add p 5 772 2
 q = add p 7
-tls_pn c q 51 2
-tls_pn c add q 2 38 2
-tls_pn c add q 4 36 2
-tls_pn c add q 6 29 2
-tls_pn c add q 8 32 2
-tls_mov c add q 10 TLEPU 32
-q = add q 42
+if eq tls_apm c 1
+q = tls_apks c q
+else
+q = tls_kslist c q
+end
+q = tls_ckext c q
+if ne and get c TLFL 8 0
+tls_pn c q 5 2
+tls_pn c add q 2 5 2
+put c add q 4 1
+tls_pn c add q 5 0 4
+q = add q 9
+end
 if eq and get c TLFL 1 0
 ret q
 end
@@ -880,57 +1057,270 @@ tls_cpy c add q 7 TLALPN
 ret add q 15
 end
 
+note supported_groups extension at c[q] from the offered bits, in preference order; next offset
+fn tls_grps c edit uchar * q ulong to ulong
+go = ulong get c TLGO
+p = add q 6
+if ne and go TLGHYB 0
+tls_pn c p 4588 2
+p = add p 2
+end
+if ne and go TLGX25 0
+tls_pn c p 29 2
+p = add p 2
+end
+n = sub p add q 6
+tls_pn c q 10 2
+tls_pn c add q 2 add n 2 2
+tls_pn c add q 4 n 2
+ret p
+end
+
+note group id to its bit; 0 for a group this client never offers
+fn tls_gbit g ulong to ulong
+if eq g 4588
+ret TLGHYB
+end
+if eq g 29
+ret TLGX25
+end
+ret 0
+end
+
+note key_share extension at c[q]: one entry per bit of c[TLGS] (none is allowed: the server
+note then picks a group with a HelloRetryRequest). The ML-KEM-768 encapsulation key is
+note dk[1152..2336) (FIPS 203 Algorithm 16). Next offset.
+fn tls_kslist c edit uchar * q ulong to ulong
+gs = ulong get c TLGS
+p = add q 6
+if ne and gs TLGHYB 0
+tls_pn c p 4588 2
+tls_pn c add p 2 1216 2
+tls_mov c add p 4 add TLKDK 1152 1184
+tls_mov c add p 1188 TLEPU 32
+p = add p 1220
+end
+if ne and gs TLGX25 0
+tls_pn c p 29 2
+tls_pn c add p 2 32 2
+tls_mov c add p 4 TLEPU 32
+p = add p 36
+end
+n = sub p add q 6
+tls_pn c q 51 2
+tls_pn c add q 2 add n 2 2
+tls_pn c add q 4 n 2
+ret p
+end
+
+note cookie extension (RFC 8446 4.2.2) echoed verbatim from the HelloRetryRequest, which is still
+note at c[TLHB] while ClientHello2 is built; nothing without a cookie. Next offset.
+fn tls_ckext c edit uchar * q ulong to ulong
+cl = tls_gn c TLCKL 2
+if eq cl 0
+ret q
+end
+tls_pn c q 44 2
+tls_pn c add q 2 add cl 2 2
+tls_pn c add q 4 cl 2
+tls_mov c add q 6 tls_gn c TLCKO 4 cl
+ret add add q 6 cl
+end
+
+note random bytes into k: getrandom, or in approved mode (flag 4) the HMAC_DRBG at c[TLDRBG]
+note with prediction resistance (fips.om); 0, TLERAND, or TLESELF (module error state)
+fn tls_rand c edit uchar * k edit uchar * to ulong
+if eq and get c TLFL 4 0
+r = random k 0 len k 0
+if ne ulong r len k
+ret TLERAND
+end
+ret 0
+end
+if ne fips_drbgget part c TLDRBG DRSZ k 0
+ret TLESELF
+end
+ret 0
+end
+
+note 32 random bytes (tls_rand) at c[o]
+fn tls_randc c edit uchar * o ulong to ulong
+t = new uchar 32 0
+r = tls_rand c t
+for i ulong 32
+put c add o i get t i
+end
+tls_zero t 0 32
+ret r
+end
+
+note ML-KEM-768 key pair of the hybrid share (FIPS 203 ML-KEM.KeyGen_internal from 64 random
+note bytes d || z; dk at c[TLKDK], its ek at dk[1152..2336)): generated once while c[TLGS] holds
+note TLGHYB, wiped as soon as it does not (a HelloRetryRequest for x25519). 0 or an error code
+fn tls_kemset c edit uchar * to ulong
+if eq and ulong get c TLGS TLGHYB 0
+tls_zero c TLKDK 2400
+put c TLKGEN 0
+ret 0
+end
+if ne get c TLKGEN 0
+ret 0
+end
+s = new uchar 64 0
+r = tls_rand c s
+if ne r 0
+tls_zero s 0 64
+ret r
+end
+ek = new uchar 1184 0
+k = mlkem_keygen_seed s ek part c TLKDK 2400
+tls_zero s 0 64
+if ne k 0
+tls_zero c TLKDK 2400
+ret TLEARG
+end
+put c TLKGEN 1
+ret 0
+end
 note ephemeral x25519 key pair: private at c[TLEPK], public at c[TLEPU]
 fn tls_ephem c edit uchar * to ulong
 k = new uchar 32 0
 o = new uchar 32 0
-r = random k 0 32 0
-if ne r 32
-ret TLERAND
+r = tls_rand c k
+if ne r 0
+ret r
 end
 e = x25519_base o k
+p = ulong 0
+if eq e 0
+p = fips_pctx k o
+end
 for i ulong 32
 put c add TLEPK i get k i
 put c add TLEPU i get o i
 end
 tls_zero k 0 32
+if ne p 0
+ret TLESELF
+end
 if ne e 0
 ret TLERAND
 end
 ret 0
 end
 
+note approved mode: an ECDH key pair on the curve with nb-byte scalars (32 secp256r1, 48 secp384r1)
+note into c[TLECD2]/c[TLECQ2] or c[TLECD3]/c[TLECQ3]. Private key by rejection sampling (FIPS 186-5
+note A.2.2: draw nb bytes from the approved DRBG (tls_rand), redraw while not in [1, n-1], at most 16
+note draws), then the pair-wise consistency test of SP 800-56A Rev. 3 5.6.2.1.4 (ecdh_pct). A failed
+note test or 16 rejected draws latch the module error state (fips_fail 21) and return
+note TLS_ERR_SELFTEST; a failed DRBG call returns tls_rand's code.
+fn tls_ecgen c edit uchar * nb ulong to ulong
+d = new uchar 48 0
+q = new uchar 97 0
+ql = add 1 mul nb 2
+rc = ulong 4
+for t ulong 16
+r = tls_rand c part d 0 nb
+if ne r 0
+tls_zero d 0 48
+ret r
+end
+rc = ecdh_pub part d 0 nb part q 0 ql
+if ne rc 4
+break
+end
+end
+if eq rc 0
+rc = ecdh_pct part d 0 nb part q 0 ql
+end
+do = TLECD2
+qo = TLECQ2
+if eq nb 48
+do = TLECD3
+qo = TLECQ3
+end
+for i ulong nb
+put c add do i get d i
+end
+for i ulong ql
+put c add qo i get q i
+end
+tls_zero d 0 48
+if ne rc 0
+tls_zero c TLECD2 145
+tls_zero c TLECQ3 97
+r = fips_fail 21
+ret TLESELF
+end
+ret 0
+end
+
+note the ephemeral key pairs for the offered groups: x25519 and the ML-KEM-768 half of the hybrid
+note (default) or secp256r1 and secp384r1
+fn tls_ephall c edit uchar * to ulong
+if eq tls_apm c 0
+e = tls_ephem c
+if ne e 0
+ret e
+end
+ret tls_kemset c
+end
+e = tls_ecgen c 32
+if ne e 0
+ret e
+end
+ret tls_ecgen c 48
+end
+
 note writes the ClientHello handshake message at c[TLWB+5]; 0 or an error code
 fn tls_mkch c edit uchar * to ulong
-e = tls_ephem c
+e = tls_ephall c
 if ne e 0
 ret e
 end
 b = add TLWB 5
 put c b 1
 tls_pn c add b 4 771 2
-r = random c add b 6 32 0
-if ne r 32
-ret TLERAND
+r = tls_randc c add b 6
+if ne r 0
+ret r
 end
 put c add b 38 32
-r = random c add b 39 32 0
-if ne r 32
-ret TLERAND
+r = tls_randc c add b 39
+if ne r 0
+ret r
 end
 tls_mov c TLSID add b 39 32
-p = add b 71
-tls_pn c p 4 2
-tls_pn c add p 2 4867 2
-tls_pn c add p 4 4865 2
-put c add p 6 1
-put c add p 7 0
-x = add p 8
+tls_mov c TLRND add b 6 32
+ret tls_chtail c
+end
+
+note cipher suites (tls_suites), compression and extensions after the session id; fills in the
+note lengths
+fn tls_chtail c edit uchar * to ulong
+b = add TLWB 5
+x = tls_suites c add b 71
 q = tls_chex1 c add x 2
 q = tls_chex2 c q
 tls_pn c x sub sub q x 2 2
 tls_pn c add b 1 sub sub q b 4 3
 ret 0
+end
+
+note ClientHello2 after a HelloRetryRequest: the same random and session id (RFC 8446 4.1.2)
+fn tls_ch2 c edit uchar * to ulong
+e = tls_kemset c
+if ne e 0
+ret e
+end
+b = add TLWB 5
+put c b 1
+tls_pn c add b 4 771 2
+tls_mov c add b 6 TLRND 32
+put c add b 38 32
+tls_mov c add b 39 TLSID 32
+ret tls_chtail c
 end
 
 note ---- ServerHello (RFC 8446 section 4.1.3) at c[TLHB] ----
@@ -965,9 +1355,6 @@ b = add TLHB 4
 if ne tls_gn c b 2 771
 ret TLEVER
 end
-if eq tls_ishrr c add b 2 1
-ret TLEHRR
-end
 if ne get c add b 34 32
 ret TLESID
 end
@@ -985,6 +1372,9 @@ end
 if eq get c TLSU 0
 ret TLECIPH
 end
+if and eq get c TLSU 1 eq tls_apm c 1
+ret TLECIPH
+end
 if ne get c add b 69 0
 ret TLEDEC
 end
@@ -992,10 +1382,135 @@ x = tls_gn c add b 70 2
 if ne add x 72 ln
 ret TLEDEC
 end
+if eq tls_ishrr c add b 2 1
+ret TLEHRR
+end
 ret 0
 end
 
-note ServerHello extensions: exactly supported_versions = 0x0304 and an x25519 key_share
+note 1 when t is an extension type of the RFC 8446 section 4.2 table: one of these in a message
+note the table does not list it for is illegal_parameter (TLS_ERR_ILLEGAL_PARAMETER); an unknown
+note type, or a listed one we did not ask for, is unsupported_extension (TLS_ERR_EXTENSION)
+fn tls_kext t ulong to ulong
+if or le t 1 eq t 5
+ret 1
+end
+if or eq t 10 and ge t 13 le t 16
+ret 1
+end
+if and ge t 18 le t 21
+ret 1
+end
+if and ge t 41 le t 51
+if ne t 46
+ret 1
+end
+end
+ret 0
+end
+
+note 1 when t is in the RFC 8446 4.2 table but the table does not allow it in EncryptedExtensions
+fn tls_eebad t ulong to ulong
+if or le t 1 eq t 10
+ret 0
+end
+if and ge t 14 le t 16
+ret 0
+end
+if or or eq t 19 eq t 20 eq t 42
+ret 0
+end
+ret tls_kext t
+end
+
+note ServerHello key_share entry at c[q..q+l): default mode tls_ksh (a group of c[TLGS], x25519
+note into c[TLSPUB]); approved mode secp256r1 (23, 65 bytes) or secp384r1 (24, 97 bytes) into
+note c[TLECP], the group into c[TLGRP]. Anything else, x25519 in approved mode included, is
+note TLS_ERR_KEY_SHARE.
+fn tls_shks c edit uchar * q ulong l ulong to ulong
+if eq tls_apm c 0
+ret tls_ksh c q l
+end
+if lt l 4
+ret TLEKEYS
+end
+g = tls_gn c q 2
+kl = tls_gn c add q 2 2
+if ne add kl 4 l
+ret TLEKEYS
+end
+ok = ulong 0
+if and eq g 23 eq kl 65
+ok = 1
+end
+if and eq g 24 eq kl 97
+ok = 1
+end
+if eq ok 0
+ret TLEKEYS
+end
+put c TLGRP uchar g
+tls_mov c TLECP add q 4 kl
+ret 0
+end
+
+note approved mode: copy the private key for len d (32 secp256r1 at TLECD2, 48 secp384r1 at TLECD3)
+note and the server point into d and p, then Z = x(d*Q) straight into c[TLECZ]; returns ecdh_shared's code
+fn tls_ecs c edit uchar * d edit uchar * p edit uchar * to ulong
+nb = len d
+for i ulong nb
+put d i get c sub add add TLECD2 mul 2 nb i 64
+end
+for i ulong len p
+put p i get c add TLECP i
+end
+r = ecdh_shared d p part c TLECZ nb
+tls_zero d 0 nb
+ret r
+end
+
+note approved mode: Z = x(d*Q) (ecdh_shared: SP 800-56A Rev. 3 5.7.1.2 after the partial public-key
+note validation of 5.6.2.3.4) for the server's group into c[TLECZ]; both private keys are wiped.
+note An invalid server point is TLS_ERR_KEY_SHARE, an infinity result TLS_ERR_ZERO_SECRET.
+fn tls_ecdhp c edit uchar * to ulong
+d2 = new uchar 32 0
+p2 = new uchar 65 0
+d3 = new uchar 48 0
+p3 = new uchar 97 0
+r = ulong 0
+if eq get c TLGRP 24
+r = tls_ecs c d3 p3
+else
+r = tls_ecs c d2 p2
+end
+tls_zero c TLECD2 80
+if eq r 1
+ret TLEZERO
+end
+if ne r 0
+ret TLEKEYS
+end
+ret 0
+end
+
+note HKDF-Extract selector for the handshake secret: salt c[TLHS], ikm the (EC)DHE shared secret
+note (64 bytes ML-KEM || x25519 for the hybrid, draft-ietf-tls-ecdhe-mlkem)
+fn tls_ikm c view uchar * to ulong
+s = or TLHS shl TLHS 16
+if eq tls_apm c 0
+if eq ulong get c TLGSEL TLGHYB
+ret or s or shl TLSS 32 shl ulong 64 48
+end
+ret or s shl TLSS 32
+end
+l = ulong 32
+if eq get c TLGRP 24
+l = 48
+end
+ret or s or shl TLECZ 32 shl l 48
+end
+
+note ServerHello extensions: exactly supported_versions = 0x0304 and a key_share (tls_shks)
 fn tls_shext c edit uchar * to ulong
 ln = tls_gn c add TLHB 1 3
 q = add TLHB 76
@@ -1012,24 +1527,27 @@ if gt add q l z
 ret TLEDEC
 end
 if eq t 43
-if or ne l 2 ne and seen 1 0
+if ne l 2
+ret TLEDEC
+end
+if ne and seen 1 0
 ret TLEEXT
 end
 if ne tls_gn c q 2 772
-ret TLEVER
+ret TLEILL
 end
 seen = or seen 1
 else
+if and ne t 51 and ne tls_kext t 0 ne t 41
+ret TLEILL
+end
 if or ne t 51 ne and seen 2 0
 ret TLEEXT
 end
-if ne l 36
-ret TLEKEYS
+e = tls_shks c q l
+if ne e 0
+ret e
 end
-if or ne tls_gn c q 2 29 ne tls_gn c add q 2 2 32
-ret TLEKEYS
-end
-tls_mov c TLSPUB add q 4 32
 seen = or seen 2
 end
 q = add q l
@@ -1043,8 +1561,224 @@ end
 ret 0
 end
 
-note shared secret into c[TLSS]; the private key is wiped
+note ServerHello key_share entry (l bytes at c[q]): a group this ClientHello holds a share for and
+note exactly its share length; the x25519 public key (the last 32 bytes) goes to c[TLSPUB], the
+note group bit to c[TLGSEL] and the share offset to c[TLKSO]
+fn tls_ksh c edit uchar * q ulong l ulong to ulong
+g = tls_gbit tls_gn c q 2
+if or eq g 0 eq and ulong get c TLGS g 0
+ret TLEKEYS
+end
+kl = ulong 32
+if eq g TLGHYB
+kl = 1120
+end
+if or ne l add kl 4 ne tls_gn c add q 2 2 kl
+ret TLEKEYS
+end
+put c TLGSEL uchar g
+tls_pn c TLKSO add q 4 4
+tls_mov c TLSPUB add add q 4 sub kl 32 32
+ret 0
+end
+
+note HelloRetryRequest extension type to its seen bit; 0 = not allowed (unsupported_extension)
+fn tls_hrrbit t ulong to ulong
+if eq t 43
+ret 1
+end
+if eq t 51
+ret 2
+end
+if eq t 44
+ret 4
+end
+ret 0
+end
+
+note one HelloRetryRequest extension of type t, l bytes at c[q]. key_share must name a group we
+note offered without a share (illegal_parameter otherwise); a cookie is <1..2^16-1> and is kept
+note in place for ClientHello2 (more than 12000 bytes would not fit one record: TLEBIG)
+fn tls_hrr1 c edit uchar * t ulong q ulong l ulong to ulong
+if eq t 43
+if ne l 2
+ret TLEDEC
+end
+if ne tls_gn c q 2 772
+ret TLEILL
+end
+ret 0
+end
+if eq t 51
+if ne l 2
+ret TLEDEC
+end
+g = tls_gbit tls_gn c q 2
+if or eq g 0 eq and ulong get c TLGO g 0
+ret TLEKEYS
+end
+if ne and ulong get c TLGS g 0
+ret TLEKEYS
+end
+put c TLGS uchar g
+ret 0
+end
+if lt l 3
+ret TLEDEC
+end
+n = tls_gn c q 2
+if or eq n 0 ne add n 2 l
+ret TLEDEC
+end
+if gt n 12000
+ret TLEBIG
+end
+tls_pn c TLCKO add q 2 4
+tls_pn c TLCKL n 2
+ret 0
+end
+
+note HelloRetryRequest extensions (RFC 8446 4.1.4): supported_versions 0x0304 is required, each
+note extension once, and the request must change the ClientHello (key_share or cookie)
+fn tls_hrrext c edit uchar * to ulong
+ln = tls_gn c add TLHB 1 3
+q = add TLHB 76
+z = add add TLHB 4 ln
+seen = ulong 0
+while lt q z bound 64
+if gt add q 4 z
+ret TLEDEC
+end
+t = tls_gn c q 2
+l = tls_gn c add q 2 2
+q = add q 4
+if gt add q l z
+ret TLEDEC
+end
+b = tls_hrrbit t
+if and eq b 0 ne tls_kext t 0
+ret TLEILL
+end
+if or eq b 0 ne and seen b 0
+ret TLEEXT
+end
+e = tls_hrr1 c t q l
+if ne e 0
+ret e
+end
+seen = or seen b
+q = add q l
+end
+if lt q z
+ret TLEDEC
+end
+if eq and seen 1 0
+ret TLEVER
+end
+if eq and seen 6 0
+ret TLEHRR
+end
+ret 0
+end
+
+note HelloRetryRequest at c[TLHB]: check it, restart the transcript as message_hash(254, 00 00 20,
+note SHA-256(ClientHello1)) then the HelloRetryRequest (RFC 8446 4.4.1), send ClientHello2.
+note The server may send its compatibility change_cipher_spec now (RFC 8446 D.4).
+fn tls_hrr c edit uchar * th edit ulong * to ulong
+e = tls_hrrext c
+if ne e 0
+ret e
+end
+put c TLHRS 1
+put c TLHSU get c TLSU
+h = new uchar 36 0
+put h 0 254
+put h 3 32
+tls_th th part h 4 32
+sha256_init th
+sha256_update th h
+ml = add tls_gn c add TLHB 1 3 4
+sha256_update th part c TLHB ml
+e = tls_ch2 c
+if ne e 0
+ret e
+end
+tls_hsdrop c
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
+n = add tls_gn c add TLWB 6 3 4
+sha256_update th part c add TLWB 5 n
+put c TLCCS 1
+ret tls_wrbuf c 22 n
+end
+
+note after a HelloRetryRequest: ClientHello2, then a ServerHello (a second HelloRetryRequest is
+note unexpected_message) whose suite is the one the HelloRetryRequest chose
+fn tls_sh2 c edit uchar * th edit ulong * to ulong
+e = tls_hrr c th
+if ne e 0
+ret e
+end
+e = tls_hsmsg c
+if ne e 0
+ret e
+end
+e = tls_shhead c
+if eq e TLEHRR
+ret TLEUNEX
+end
+if ne e 0
+ret e
+end
+if ne get c TLSU get c TLHSU
+ret TLECIPH
+end
+ret 0
+end
+
+note hybrid decapsulation: the ML-KEM shared secret into c[TLSS..+32) from the server's ciphertext
+note (the first 1088 bytes of its share, still at c[TLKSO]); the decapsulation key is wiped either
+note way. A wrong ciphertext gives the implicit-rejection secret, so the Finished MAC fails. 0 or
+note TLEKEYS
+fn tls_kemdec c edit uchar * to ulong
+r = ulong 0
+ss = new uchar 32 0
+ct = new uchar 1088 0
+o = tls_gn c TLKSO 4
+if eq ulong get c TLGSEL TLGHYB
+for i ulong 1088
+put ct i get c add o i
+end
+r = mlkem_decaps part c TLKDK 2400 ct ss
+for i ulong 32
+put c add TLSS i get ss i
+end
+tls_zero ss 0 32
+end
+tls_zero c TLKDK 2400
+put c TLKGEN 0
+if ne r 0
+ret TLEKEYS
+end
+ret 0
+end
+
+note shared secret into c[TLSS] (hybrid: ML-KEM secret, then x25519 at c[TLSS+32]); the private
+note keys are wiped
 fn tls_ecdh c edit uchar * to ulong
+if eq tls_apm c 1
+ret tls_ecdhp c
+end
+e = tls_kemdec c
+if ne e 0
+tls_zero c TLEPK 32
+ret e
+end
+x = TLSS
+if eq ulong get c TLGSEL TLGHYB
+x = add TLSS 32
+end
 k = new uchar 32 0
 u = new uchar 32 0
 o = new uchar 32 0
@@ -1054,7 +1788,7 @@ put u i get c add TLSPUB i
 end
 r = x25519_scalarmult o k u
 for i ulong 32
-put c add TLSS i get o i
+put c add x i get o i
 end
 tls_zero k 0 32
 tls_zero o 0 32
@@ -1072,30 +1806,35 @@ z = new uchar 32 0
 tls_h0 z
 r = tls_xtr c TLHS
 r = or r tls_drv c tls_sel TLHS TLHS 32 TLIDER z
-r = or r tls_xtr c or TLHS or shl TLHS 16 shl TLSS 32
+r = or r tls_xtr c tls_ikm c
 tls_th th h
 r = or r tls_drv c tls_sel TLCHS TLHS 32 TLICHS h
 r = or r tls_drv c tls_sel TLSHS TLHS 32 TLISHS h
 r = or r tls_drv c tls_sel TLMS TLHS 32 TLIDER z
 r = or r tls_xtr c or TLMS shl TLMS 16
-tls_zero c TLSS 32
+tls_zero c TLSS 64
+tls_zero c TLECZ 48
 r = or r tls_keys c TLSHS 1
 r = or r tls_keys c TLCHS 0
 if ne r 0
 ret TLEARG
 end
 put c TLRK 1
+if eq get c TLCCS 0
 put c TLCCS 1
+end
 ret 0
 end
 
 note read and check ServerHello, send the compatibility change_cipher_spec, derive keys
 fn tls_rdsh c edit uchar * th edit ulong * to ulong
 e = tls_hsmsg c
-if ne e 0
-ret e
-end
+if eq e 0
 e = tls_shhead c
+end
+if eq e TLEHRR
+e = tls_sh2 c th
+end
 if ne e 0
 ret e
 end
@@ -1167,6 +1906,9 @@ ret e
 end
 bit = 4
 end
+if ne tls_eebad t 0
+ret TLEILL
+end
 if or eq bit 0 ne and seen bit 0
 ret TLEEXT
 end
@@ -1230,7 +1972,7 @@ if ne add cl 4 ln
 ret TLEDEC
 end
 if lt cl 5
-ret TLECERT
+ret TLEDEC
 end
 ret tls_chain c st cl
 end
@@ -1246,10 +1988,137 @@ end
 ret add 8 hl
 end
 
+note ---- revocation (flag 8, rev.om): status_request offered in ClientHello; after the chain verified,
+note the leaf's stapled OCSP response must verify and say good (rev_ocsp) and a must-staple leaf
+note (RFC 7633) without one is refused; the rev.om code is the detail of TLS_ERR_CERTIFICATE ----
+note offset of the staple in the rev_check buffer (leaf at 0, issuer at TLLFSZ, staple at TLRVST)
+const TLRVST ulong 33792
+const TLRVSZ ulong 50688
+
+note tls_stok: the leaf entry's extensions at c[x .. x+2+el) are exactly one status_request (5)
+note holding a CertificateStatus of type ocsp (1) with an OCSPResponse of 1 .. TLLFSZ bytes: its
+note length, else 0
+fn tls_stok c view uchar * x ulong el ulong to ulong
+if lt el 8
+ret 0
+end
+if or ne tls_gn c add x 2 2 5 ne tls_gn c add x 4 2 sub el 4
+ret 0
+end
+if ne get c add x 6 1
+ret 0
+end
+sl = tls_gn c add x 7 3
+if or ne add sl 4 sub el 4 or eq sl 0 gt sl TLLFSZ
+ret 0
+end
+ret sl
+end
+
+note tls_stcp: the leaf entry (q[2] = its certificate length, q[3] = its extensions offset in c) with
+note empty extensions, then the rest of the certificate_list, into cb; q[0] the copy's length
+fn tls_stcp c view uchar * cl ulong cb edit uchar 65536 q edit ulong 4 to void
+l1 = get q 2
+x = get q 3
+el = tls_gn c x 2
+rev_cp part cb 0 add l1 3 c add TLHB 8 add l1 3
+put cb add l1 3 0
+put cb add l1 4 0
+r = sub sub cl add l1 5 el
+rev_cp part cb add l1 5 r c add add x 2 el r
+put q 0 sub cl el
+end
+
+note tls_stap: copy of the certificate_list c[TLHB+8 .. +cl) into cb; when the leaf entry's
+note extensions are one stapled OCSP response (tls_stok) they are left out of the copy and the
+note OCSPResponse goes to b[TLRVST ..). q[0] the copy's length, q[1] the staple's length (0 none).
+note Any other leaf extension stays in the copy, so x509_chain_verify refuses it (X5EEXT). 0 or TLEDEC.
+fn tls_stap c view uchar * cl ulong cb edit uchar 65536 b edit uchar 50688 q edit ulong 4 to ulong
+l1 = tls_gn c add TLHB 8 3
+if gt add l1 5 cl
+ret TLEDEC
+end
+x = add add TLHB 11 l1
+el = tls_gn c x 2
+if gt add add l1 5 el cl
+ret TLEDEC
+end
+sl = tls_stok c x el
+put q 1 sl
+if eq sl 0
+rev_cp part cb 0 cl c add TLHB 8 cl
+put q 0 cl
+ret 0
+end
+put q 2 l1
+put q 3 x
+tls_stcp c cl cb q
+rev_cp part b TLRVST sl c add x 10 sl
+ret 0
+end
+
+note tls_rev: rev_check of the leaf of cb (q[0] bytes) with its issuer (the presented certificates,
+note then the store st) and the staple b[TLRVST .. +q[1]) at the current time; 0 or a rev.om code
+fn tls_rev cb view uchar 65536 q view ulong 4 st view uchar * b edit uchar 50688 to ulong
+p = new ulong 16 0
+l1 = der_u24 cb 0
+rev_cp part b 0 l1 cb 3 l1
+il = rev_issuer part cb 0 get q 0 st part b TLLFSZ TLLFSZ
+if eq il 0
+ret X5EUNK
+end
+now = div realns 1000000000
+put p 0 ulong now
+put p 2 l1
+put p 3 TLLFSZ
+put p 4 il
+put p 5 TLRVST
+put p 6 get q 1
+ret rev_check b p
+end
+
+note tls_cvfy: x509_chain_verify of the copy cb (q[0] bytes) for the connection's host, now
+fn tls_cvfy c view uchar * st view uchar * cb view uchar 65536 q view ulong 4 to ulong
+hq = new uchar 264 0
+n = tls_hq c hq
+ret x509_chain_verify part cb 0 get q 0 st part hq 0 n
+end
+
+note tls_chainr: tls_chain with revocation (flag 8)
+fn tls_chainr c edit uchar * st view uchar * cl ulong to ulong
+cb = new uchar 65536 0
+b = new uchar TLRVSZ 0
+q = new ulong 4 0
+e = tls_stap c cl cb b q
+if ne e 0
+ret e
+end
+r = tls_cvfy c st cb q
+if eq r X5EEXT
+tls_pn c TLDET r 4
+ret TLEEXT
+end
+if eq r 0
+r = tls_rev cb q st b
+end
+if ne r 0
+tls_pn c TLDET r 4
+ret TLECERT
+end
+ret tls_leaf c cl
+end
+
 fn tls_chain c edit uchar * st view uchar * cl ulong to ulong
+if ne and get c TLFL 8 0
+ret tls_chainr c st cl
+end
 hq = new uchar 264 0
 n = tls_hq c hq
 r = x509_chain_verify part c add TLHB 8 cl st part hq 0 n
+if eq r X5EEXT
+tls_pn c TLDET r 4
+ret TLEEXT
+end
 if ne r 0
 tls_pn c TLDET r 4
 ret TLECERT
@@ -1503,8 +2372,8 @@ end
 if eq e TLEVER
 ret 70
 end
-if eq e TLEHRR
-ret 40
+if or eq e TLEHRR or eq e TLETKT eq e TLEILL
+ret 47
 end
 if eq e TLEEXT
 ret 110
@@ -1531,14 +2400,18 @@ if ne d 0
 tls_alert c d
 end
 put c TLPH 3
-tls_zero c TLWKEY 96
-tls_zero c TLCAP 64
-tls_zero c TLEPK 320
+tls_wipe c
 ret e
 end
 
 note ---- public API ----
-note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1.
+note tls_init: c (at least TLCSZ bytes) for hostname hn; flags: 1 = offer ALPN http/1.1,
+note 2 = offer x25519 without a share in ClientHello1 (only the X25519MLKEM768 share is sent; a
+note server without the hybrid must send a HelloRetryRequest for x25519),
+note 4 = approved-only mode (fips.om: HMAC_DRBG with its self-test and health-tested entropy; see the
+note header and README.md; x25519 and the hybrid are then neither offered nor accepted),
+note 8 = revocation (rev.om): offer status_request, check the leaf's stapled OCSP response and refuse a
+note must-staple leaf without one (tls_chainr).
 note Hostnames are 1..253 bytes of letters, digits, '-' and '.', and not an IPv4 literal.
 fn tls_init c edit uchar * hn view uchar * fl ulong to ulong
 if lt len c TLCSZ
@@ -1562,7 +2435,16 @@ if eq alpha 0
 ret TLEARG
 end
 put c TLHL uchar hl
-put c TLFL uchar and fl 1
+put c TLFL uchar and fl 15
+put c TLGO uchar TLGOFF
+put c TLGS uchar TLGOFF
+if ne and fl 2 0
+put c TLGS uchar and TLGOFF sub 255 TLGX25
+end
+if ne and fl 4 0
+put c TLGO uchar 0
+put c TLGS uchar 0
+end
 ret 0
 end
 
@@ -1595,7 +2477,34 @@ end
 ret 0
 end
 
-note full handshake on the connected socket fd; 0 or a named error code (tls_errname)
+note the module's show-version service (fips_version): "Omega TLS module (om/tls) version V integrity
+note hmac-sha256:HEX state S\n" into o, returns its length (0 when o is too short)
+fn tls_version o edit uchar * to ulong
+ret fips_version o
+end
+
+note FIPS 140-3 style self-tests (fips.om): the known-answer tests and then the software integrity
+note test (HMAC-SHA-256 of the program file, detail 16) run once per process at first
+note use in every mode; approved mode (flag 4) adds the DRBG self-test and a fresh DRBG at
+note c[TLDRBG]. 0, or TLESELF with the failing test in tls_detail.
+fn tls_fips c edit uchar * to ulong
+ap = ulong and get c TLFL 4
+d = fips_check ap
+if ne d 0
+ret tls_fail c TLESELF d
+end
+if eq ap 0
+ret 0
+end
+if ne fips_drbgnew part c TLDRBG DRSZ 0
+ret tls_fail c TLESELF fips_detail
+end
+ret 0
+end
+
+note full handshake on the connected socket fd; 0 or a named error code (tls_errname).
+note Without a caller deadline (tls_deadline) the whole handshake is bounded by the budget of
+note tls_hslimit (default TLHSNS, 30 s); that deadline is cleared again once connected.
 fn tls_connect c edit uchar * st view uchar * fd int to ulong
 if or ne get c TLPH 0 eq get c TLHL 0
 ret TLESTAT
@@ -1603,7 +2512,20 @@ end
 if lt fd 0
 ret TLEARG
 end
+e = tls_fips c
+if ne e 0
+ret e
+end
 tls_pn c TLFD ulong fd 4
+mine = ulong 0
+if eq tls_gn c TLDL 8 0
+mine = 1
+b = tls_gn c TLHSL 8
+if eq b 0
+b = TLHSNS
+end
+tls_pn c TLDL add ulong monons b 8
+end
 th = new ulong 40 0
 sha256_init th
 e = tls_mkch c
@@ -1628,6 +2550,9 @@ end
 if ne e 0
 ret tls_abort c e
 end
+if eq mine 1
+tls_pn c TLDL 0 8
+end
 put c TLPH 1
 ret 0
 end
@@ -1650,6 +2575,21 @@ e = new uchar 1 0
 r = tls_drv c tls_sel TLSAP TLSAP 32 TLIUPD part e 0 0
 r = or r tls_keys c TLSAP 1
 if eq v 1
+x = tls_kusend c
+if ne x 0
+ret x
+end
+end
+if ne r 0
+ret TLEARG
+end
+ret 0
+end
+
+note send KeyUpdate(update_not_requested) under the current write key, then switch to the next
+note write key (RFC 8446 section 4.6.3 and 7.2); 0 or an error code
+fn tls_kusend c edit uchar * to ulong
+e = new uchar 1 0
 b = add TLWB 5
 put c b 24
 tls_pn c add b 1 1 3
@@ -1658,9 +2598,8 @@ x = tls_wrbuf c 22 5
 if ne x 0
 ret x
 end
-r = or r tls_drv c tls_sel TLCAP TLCAP 32 TLIUPD part e 0 0
+r = tls_drv c tls_sel TLCAP TLCAP 32 TLIUPD part e 0 0
 r = or r tls_keys c TLCAP 0
-end
 if ne r 0
 ret TLEARG
 end
@@ -1688,7 +2627,10 @@ ret 0
 end
 t = ulong get c TLHB
 if eq t 4
-tls_hsdrop c
+e = tls_nst c
+if ne e 0
+ret e
+end
 else
 if ne t 24
 ret TLEUNEX
@@ -1700,6 +2642,48 @@ end
 end
 f = tls_gn c TLHF 4
 end
+ret 0
+end
+
+note NewSessionTicket (RFC 8446 4.6.1) at c[TLHB]: lifetime at most 604800 s (illegal_parameter
+note otherwise), nonce<0..255>, ticket<1..2^16-1>, extensions<0..2^16-2> of well-formed entries,
+note filling the message exactly (decode_error otherwise); then dropped (no resumption)
+fn tls_nst c edit uchar * to ulong
+ln = tls_gn c add TLHB 1 3
+if lt ln 14
+ret TLEDEC
+end
+if gt tls_gn c add TLHB 4 4 604800
+ret TLETKT
+end
+z = add add TLHB 4 ln
+p = add add TLHB 13 ulong get c add TLHB 12
+if gt add p 2 z
+ret TLEDEC
+end
+tl = tls_gn c p 2
+if eq tl 0
+ret TLEDEC
+end
+p = add add p 2 tl
+if gt add p 2 z
+ret TLEDEC
+end
+el = tls_gn c p 2
+p = add p 2
+if ne add p el z
+ret TLEDEC
+end
+while lt p z bound 16384
+if gt add p 4 z
+ret TLEDEC
+end
+p = add add p 4 tls_gn c add p 2 2
+end
+if ne p z
+ret TLEDEC
+end
+tls_hsdrop c
 ret 0
 end
 
@@ -1732,7 +2716,7 @@ if ne ph 1
 ret neg long TLESTAT
 end
 if eq len o 0
-ret 0
+ret neg long TLEARG
 end
 k = ulong 0
 while true bound 999999
@@ -1758,10 +2742,14 @@ end
 ret neg long tls_abort c TLEUNEX
 end
 
-note dispatch one received record after the handshake
+note dispatch one received record after the handshake; application data while a handshake
+note message is partly received is unexpected_message (RFC 8446 5.1: no interleaving)
 fn tls_rdapp c edit uchar * to ulong
 ty = ulong get c TLRB
 if eq ty 23
+if ne tls_gn c TLHF 4 0
+ret TLEUNEX
+end
 tls_pn c TLPO 0 4
 tls_pn c TLPN tls_gn c add TLRB 3 2 4
 ret 0
@@ -1775,13 +2763,21 @@ end
 ret TLEUNEX
 end
 
-note tls_write: send all of m as application data; returns len m or minus an error code
+note tls_write: send all of m as application data; returns len m or minus an error code.
+note Before the write key's last allowed record a KeyUpdate is sent and the key rotated
+note (RFC 8446 section 5.5), so application data never exhausts the record limit.
 fn tls_write c edit uchar * m view uchar * to long
 if ne get c TLPH 1
 ret neg long TLESTAT
 end
 off = ulong 0
 while lt off len m bound 999999
+if ge tls_gn c TLWS 8 sub tls_reclim c 1
+e = tls_kusend c
+if ne e 0
+ret neg long tls_abort c e
+end
+end
 k = sub len m off
 if gt k 16384
 k = 16384
@@ -1798,7 +2794,8 @@ end
 ret long len m
 end
 
-note tls_close: send close_notify (when connected) and wipe the key material. The caller closes fd.
+note tls_close: send close_notify (when connected), wipe the key material and every buffer that
+note held plaintext, records or certificates. The caller closes fd.
 note A failed connection stays failed (later calls give TLS_ERR_STATE).
 fn tls_close c edit uchar * to void
 if eq get c TLPH 1
@@ -1809,9 +2806,65 @@ end
 if ne get c TLPH 3
 put c TLPH 2
 end
+tls_wipe c
+end
+
+note zero the secrets (keys, IVs, traffic secrets, ephemeral key, shared secret, transcript
+note secrets) and the record, write, leaf and handshake buffers; the state words stay
+fn tls_wipe c edit uchar * to void
 tls_zero c TLWKEY 96
 tls_zero c TLCAP 64
 tls_zero c TLEPK 320
+tls_zero c TLSS 112
+tls_zero c TLDRBG DRSZ
+tls_zero c TLECD2 448
+tls_zero c TLRB sub TLCSZ TLRB
+end
+
+note ---- data-independent timing (Arm DIT, DDI0487 C5.2.4) ----
+note tls_hwdit: 1 when the kernel advertises FEAT_DIT in AT_HWCAP (/proc/self/auxv entry 16,
+note bit 24 = HWCAP_DIT), 0 when it does not, -1 when auxv cannot be read. Whether the bit is
+note advertised says nothing about PSTATE.DIT, which Linux starts at 0 for every process and
+note this library cannot set: an `msr DIT, #1` needs a compiler word (see THREAT_MODEL.md).
+fn tls_hwdit to long
+b = new uchar 1024 0
+fd = fopen TLAUXV 0 len TLAUXV 0 0
+if lt fd 0
+ret -1
+end
+n = long 0
+r = long 0
+while lt n 1024 bound 64
+r = read int fd b ulong n sub 1024 ulong n
+if le r 0
+break
+end
+n = add n r
+end
+r = fclose int fd
+if lt n 16
+ret -1
+end
+for i ulong div ulong n 16
+o = mul i 16
+k = tls_gl b o
+if eq k 16
+ret long and shr tls_gl b add o 8 24 1
+end
+if eq k 0
+break
+end
+end
+ret -1
+end
+
+note little-endian 64-bit word at b[o..o+8)
+fn tls_gl b view uchar * o ulong to ulong
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get b add o j mul j 8
+end
+ret v
 end
 
 note ---- DNS A lookup (RFC 1035) over UDP to the first IPv4 nameserver in /etc/resolv.conf ----

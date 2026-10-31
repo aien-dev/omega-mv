@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): unroll count 0x0; error 8 on the literal's line.
+om2
+fn main to int
+for i ulong 0x0 unroll
+end
+ret 0
+end

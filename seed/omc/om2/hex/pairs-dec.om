@@ -1,0 +1,135 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of pairs-hex.om (spellings from Wolfram, wolfram.txt query pairs).
+note Compiles byte-identically to pairs-hex.om.
+om2
+fn main to int
+a = uchar 0
+putu ulong a
+a = uchar 1
+putu ulong a
+a = uchar 255
+putu ulong a
+a = uchar 128
+putu ulong a
+a = uchar 170
+putu ulong a
+a = uchar 153
+putu ulong a
+a = uchar 75
+putu ulong a
+a = uchar 36
+putu ulong a
+b = ushort 0
+putu ulong b
+b = ushort 1
+putu ulong b
+b = ushort 65535
+putu ulong b
+b = ushort 32768
+putu ulong b
+b = ushort 21603
+putu ulong b
+b = ushort 33716
+putu ulong b
+b = ushort 7831
+putu ulong b
+b = ushort 38284
+putu ulong b
+c = uint 0
+putu ulong c
+c = uint 1
+putu ulong c
+c = uint 4294967295
+putu ulong c
+c = uint 2147483648
+putu ulong c
+c = uint 83920300
+putu ulong c
+c = uint 1509667242
+putu ulong c
+c = uint 3150959341
+putu ulong c
+c = uint 3910442725
+putu ulong c
+d = ulong 0
+putu d
+d = ulong 1
+putu d
+d = ulong 18446744073709551615
+putu d
+d = ulong 9223372036854775808
+putu d
+d = ulong 15205998013390911501
+putu d
+d = ulong 16740117136465882709
+putu d
+d = ulong 1684610389927020364
+putu d
+d = ulong 6097465819152223959
+putu d
+e = byte 0
+putu ulong e
+e = byte 1
+putu ulong e
+e = byte 127
+putu ulong e
+e = byte 64
+putu ulong e
+e = byte 55
+putu ulong e
+e = byte 1
+putu ulong e
+e = byte 35
+putu ulong e
+e = byte 36
+putu ulong e
+f = short 0
+putu ulong f
+f = short 1
+putu ulong f
+f = short 32767
+putu ulong f
+f = short 16384
+putu ulong f
+f = short 29462
+putu ulong f
+f = short 18848
+putu ulong f
+f = short 28453
+putu ulong f
+f = short 23010
+putu ulong f
+g = int 0
+putu ulong g
+g = int 1
+putu ulong g
+g = int 2147483647
+putu ulong g
+g = int 1073741824
+putu ulong g
+g = int 491140535
+putu ulong g
+g = int 3657980
+putu ulong g
+g = int 499641010
+putu ulong g
+g = int 2038208288
+putu ulong g
+h = long 0
+putu ulong h
+h = long 1
+putu ulong h
+h = long 9223372036854775807
+putu ulong h
+h = long 4611686018427387904
+putu ulong h
+h = long 2358124982775785610
+putu ulong h
+h = long 5281094983814553355
+putu ulong h
+h = long 6496971512538355926
+putu ulong h
+h = long 4123693503557151770
+putu ulong h
+ret 0
+end

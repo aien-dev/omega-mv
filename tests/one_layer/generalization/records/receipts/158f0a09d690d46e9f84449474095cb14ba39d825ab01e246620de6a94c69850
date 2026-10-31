@@ -1,0 +1,20 @@
+gen-receipt 1
+record abs-48be6e3369c05336
+tool tools/gen/abstract/extract 356e304abd42e0ae8603252af48b76f7e42c0a70d227a1ea93bc78eea6aa91af
+tool tools/gen/abstract/verify 58f9cac29844b1fd4b9bf50ffd3360357baec5bd9e894ec969502c03ca2f74e6
+tool tools/gen/abstract/probe f4af98512c46a7a00020c79291230c0748a7dde2aadec328e8377de54741cd95
+tool tools/gen/abstract/genabs.sh 68414c1c72b273058a66b74d7801f0ea7fe290c49302aacd34f84b63bb9091d4
+tool tools/gen/abstract/gabs.c 27cc795505a054e6ae92fe14634fe900482094a72f10fde401e61e48a4d58880
+tool tools/gen/abstract/recheck.c 9d7a3c74de404170d32eacbc0ab551e3b598a086d9b300a94825e70614533e6c
+helper_ir 2f58f673e627b9620be9384e625e727d037a3716bfcd9388efc680cbe50e1ff4
+checker2 ACCEPT
+pre true
+post and le res 32 eq eq res 0 eq x 0
+example 255 -> 8
+property inputs=d06cb95ee431c5d63349ad43b8f495decbd187d8f51001796859c5eadf39a4aa expected=23c04e4d3c8d5abea295504bcdab63f60f7d857852a0fe95e049676f6dfc65e4 ACCEPT n=256
+example inputs=ce8bafb38615aeb5d44ebbabe78ec14ac35a5de87bdc5ad5ea82a72656024ce4 expected=aa67a169b0bba217aa0aa88a65346920c84c42447c36ba5f7ea65f422c1fe5d8 ACCEPT n=1
+occurs big_pc_small_ds popcnt
+occurs gcd_times_pc popcnt
+occurs pc_times_dc popcnt
+occurs popcnt_odd popcnt
+occurs popcnt_zero popcnt
