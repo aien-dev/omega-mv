@@ -1,0 +1,139 @@
+omc befb8199db8c4bca188a494dfaac2a6f0ee5c36fcea11188c75666c55fce8a1d
+rsa.om a0e6d53ef3aaac082cbada87ace2efcee4aa7fca199403480eed1f48792d57c9
+sha2.om 5cf0f98116def6917d3a373f2bd4c3932d46e3ff84d9567bbae9e720366fdb33
+functions rsa.om 32
+driver 46ca78f0fcb5429cf80151dc71bce48fb58c02e028d7b6e3cdd2963b309eac63
+PASS wycheproof/rsa_pkcs1_1024_sig_gen_test: cases 17 verifies 17 mismatches 0 controls 17 ns 1765250
+PASS wycheproof/rsa_pkcs1_1536_sig_gen_test: cases 24 verifies 24 mismatches 0 controls 24 ns 12286104
+PASS wycheproof/rsa_pkcs1_2048_sig_gen_test: cases 27 verifies 27 mismatches 0 controls 27 ns 23864296
+PASS wycheproof/rsa_pkcs1_3072_sig_gen_test: cases 26 verifies 26 mismatches 0 controls 26 ns 22744092
+PASS wycheproof/rsa_pkcs1_4096_sig_gen_test: cases 24 verifies 24 mismatches 0 controls 24 ns 37131002
+PASS wycheproof/rsa_pss_2048_sha256_mgf1_0_params_test: cases 103 verifies 103 mismatches 0 controls 61 ns 56987868
+PASS wycheproof/rsa_pss_2048_sha256_mgf1_0_test: cases 103 verifies 103 mismatches 0 controls 61 ns 57759714
+PASS wycheproof/rsa_pss_2048_sha256_mgf1_32_params_test: cases 108 verifies 108 mismatches 0 controls 63 ns 58792396
+PASS wycheproof/rsa_pss_2048_sha256_mgf1_32_test: cases 108 verifies 108 mismatches 0 controls 63 ns 41454358
+PASS wycheproof/rsa_pss_2048_sha384_mgf1_48_test: cases 141 verifies 141 mismatches 0 controls 95 ns 72102557
+PASS wycheproof/rsa_pss_2048_sha512_mgf1sha256_32_params_test: cases 178 verifies 178 mismatches 0 controls 132 ns 70070173
+PASS wycheproof/rsa_pss_3072_sha256_mgf1_32_params_test: cases 108 verifies 108 mismatches 0 controls 63 ns 91501616
+PASS wycheproof/rsa_pss_3072_sha256_mgf1_32_test: cases 108 verifies 108 mismatches 0 controls 63 ns 108637345
+PASS wycheproof/rsa_pss_4096_sha256_mgf1_32_test: cases 108 verifies 108 mismatches 0 controls 63 ns 160493148
+PASS wycheproof/rsa_pss_4096_sha384_mgf1_48_test: cases 141 verifies 141 mismatches 0 controls 95 ns 213213102
+PASS wycheproof/rsa_pss_4096_sha512_mgf1_32_params_test: cases 177 verifies 177 mismatches 0 controls 132 ns 293392533
+PASS wycheproof/rsa_pss_4096_sha512_mgf1_32_test: cases 177 verifies 177 mismatches 0 controls 132 ns 281782494
+PASS wycheproof/rsa_pss_4096_sha512_mgf1_64_params_test: cases 179 verifies 179 mismatches 0 controls 132 ns 294832290
+PASS wycheproof/rsa_pss_4096_sha512_mgf1_64_test: cases 179 verifies 179 mismatches 0 controls 132 ns 272763787
+PASS wycheproof/rsa_pss_misc_params_test: cases 54 verifies 54 mismatches 0 controls 54 ns 22328937
+PASS wycheproof/rsa_pss_misc_test: cases 54 verifies 54 mismatches 0 controls 54 ns 21873189
+PASS wycheproof/rsa_signature_2048_sha256_test: cases 259 verifies 259 mismatches 0 controls 9 ns 137111376
+PASS wycheproof/rsa_signature_2048_sha384_test: cases 258 verifies 258 mismatches 0 controls 7 ns 131080475
+PASS wycheproof/rsa_signature_2048_sha512_test: cases 259 verifies 259 mismatches 0 controls 8 ns 129707118
+PASS wycheproof/rsa_signature_3072_sha256_test: cases 259 verifies 259 mismatches 0 controls 8 ns 234007126
+PASS wycheproof/rsa_signature_3072_sha384_test: cases 259 verifies 259 mismatches 0 controls 7 ns 225637917
+PASS wycheproof/rsa_signature_3072_sha512_test: cases 260 verifies 260 mismatches 0 controls 8 ns 253629816
+PASS wycheproof/rsa_signature_4096_sha256_test: cases 258 verifies 258 mismatches 0 controls 7 ns 407754884
+PASS wycheproof/rsa_signature_4096_sha384_test: cases 259 verifies 259 mismatches 0 controls 7 ns 418870482
+PASS wycheproof/rsa_signature_4096_sha512_test: cases 259 verifies 259 mismatches 0 controls 7 ns 425086811
+PASS wycheproof/rsa_signature_8192_sha256_test: cases 258 verifies 258 mismatches 0 controls 7 ns 1594226972
+PASS wycheproof/rsa_signature_8192_sha384_test: cases 259 verifies 259 mismatches 0 controls 7 ns 1596350302
+PASS wycheproof/rsa_signature_8192_sha512_test: cases 259 verifies 259 mismatches 0 controls 7 ns 1607324789
+PASS edge: cases 48 verifies 48 mismatches 0 controls 1 ns 8282161
+PASS pyca_gen: cases 324 verifies 324 mismatches 0 controls 324 ns 1188536475
+PASS fuzz: cases 864 verifies 864 mismatches 0 controls 0 ns 106779407
+NOT_RUN rsa_oaep_2048_sha1_mgf1sha1_test.json tests=36 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha224_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha224_mgf1sha224_test.json tests=35 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha256_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha256_mgf1sha256_test.json tests=37 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha384_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha384_mgf1sha384_test.json tests=34 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha512_224_mgf1sha1_test.json tests=32 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha512_224_mgf1sha512_224_test.json tests=35 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha512_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_2048_sha512_mgf1sha512_test.json tests=33 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_3072_sha256_mgf1sha1_test.json tests=32 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_3072_sha256_mgf1sha256_test.json tests=37 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_3072_sha512_256_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_3072_sha512_256_mgf1sha512_256_test.json tests=37 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_3072_sha512_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_3072_sha512_mgf1sha512_test.json tests=33 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_4096_sha256_mgf1sha1_test.json tests=32 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_4096_sha256_mgf1sha256_test.json tests=37 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_4096_sha512_mgf1sha1_test.json tests=31 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_4096_sha512_mgf1sha512_test.json tests=36 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_oaep_misc_test.json tests=395 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_pkcs1_1024_sig_gen_test.json tests=8 reason: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pkcs1_1024_sig_gen_test.json tests=8 reason: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pkcs1_1536_sig_gen_test.json tests=8 reason: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pkcs1_2048_sig_gen_test.json tests=8 reason: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pkcs1_2048_sig_gen_test.json tests=8 reason: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pkcs1_2048_test.json tests=67 reason: RSAES-PKCS1-v1_5 encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_pkcs1_3072_test.json tests=67 reason: RSAES-PKCS1-v1_5 encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_pkcs1_4096_test.json tests=67 reason: RSAES-PKCS1-v1_5 encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_pss_2048_sha1_mgf1_20_params_test.json tests=88 reason: hash SHA-1 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_2048_sha1_mgf1_20_test.json tests=88 reason: hash SHA-1 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_2048_sha256_mgf1sha1_20_test.json tests=108 reason: hash SHA-256 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_2048_sha512_224_mgf1_28_test.json tests=100 reason: hash SHA-512/224 mgf1 SHA-512/224: SHA-512/224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_2048_sha512_256_mgf1_32_test.json tests=115 reason: hash SHA-512/256 mgf1 SHA-512/256: SHA-512/256: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_2048_shake128_test.json tests=114 reason: hash SHAKE128 mgf SHAKE128: SHAKE (RFC 8702 PSS) not in scope (SHA-256/384/512 with MGF1 only)
+NOT_RUN rsa_pss_2048_shake256_test.json tests=184 reason: hash SHAKE256 mgf SHAKE256: SHAKE (RFC 8702 PSS) not in scope (SHA-256/384/512 with MGF1 only)
+NOT_RUN rsa_pss_3072_shake128_test.json tests=114 reason: hash SHAKE128 mgf SHAKE128: SHAKE (RFC 8702 PSS) not in scope (SHA-256/384/512 with MGF1 only)
+NOT_RUN rsa_pss_3072_shake256_test.json tests=184 reason: hash SHAKE256 mgf SHAKE256: SHAKE (RFC 8702 PSS) not in scope (SHA-256/384/512 with MGF1 only)
+NOT_RUN rsa_pss_4096_shake256_test.json tests=184 reason: hash SHAKE256 mgf SHAKE256: SHAKE (RFC 8702 PSS) not in scope (SHA-256/384/512 with MGF1 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-1 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-1 mgf1 SHA-224: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-1 mgf1 SHA-256: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-1 mgf1 SHA-384: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-1 mgf1 SHA-512: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-224 mgf1 SHA-1: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-224 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-224 mgf1 SHA-256: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-224 mgf1 SHA-384: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-224 mgf1 SHA-512: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-256 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-256 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-384 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-384 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-512 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_params_test.json tests=6 reason: hash SHA-512 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-1 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-1 mgf1 SHA-224: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-1 mgf1 SHA-256: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-1 mgf1 SHA-384: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-1 mgf1 SHA-512: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-224 mgf1 SHA-1: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-224 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-224 mgf1 SHA-256: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-224 mgf1 SHA-384: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-224 mgf1 SHA-512: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-256 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-256 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-384 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-384 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-512 mgf1 SHA-1: SHA-1: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_pss_misc_test.json tests=6 reason: hash SHA-512 mgf1 SHA-224: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha224_test.json tests=258 reason: SHA-224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha3_224_test.json tests=258 reason: SHA3-224: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha3_256_test.json tests=257 reason: SHA3-256: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha3_384_test.json tests=258 reason: SHA3-384: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha3_512_test.json tests=258 reason: SHA3-512: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha512_224_test.json tests=258 reason: SHA-512/224: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_signature_2048_sha512_256_test.json tests=257 reason: SHA-512/256: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_signature_3072_sha3_256_test.json tests=258 reason: SHA3-256: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_3072_sha3_384_test.json tests=259 reason: SHA3-384: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_3072_sha3_512_test.json tests=259 reason: SHA3-512: SHA-3 not in scope (sha2.om provides SHA-256/384/512 only)
+NOT_RUN rsa_signature_3072_sha512_256_test.json tests=258 reason: SHA-512/256: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_signature_4096_sha512_256_test.json tests=258 reason: SHA-512/256: hash not in scope (SHA-256/384/512 only)
+NOT_RUN rsa_three_primes_oaep_2048_sha1_mgf1sha1_test.json tests=36 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_three_primes_oaep_3072_sha224_mgf1sha224_test.json tests=38 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+NOT_RUN rsa_three_primes_oaep_4096_sha256_mgf1sha256_test.json tests=36 reason: RSAES-OAEP encryption/decryption suite: not in scope (signature verification only)
+WYCHEPROOF valid=1556 invalid=3636 acceptable=58 (accepted 46: SmallModulus/SmallPublicKey; refused 12: MissingNull)
+PASS mutant-expectation detected: 1 mismatches, cases 259 verifies 259 mismatches 1 controls 8 ns 130762907
+PASS mutant-mont-carry detected: 9 mismatches, cases 259 verifies 259 mismatches 9 controls 0 ns 129746524
+PASS mutant-digestinfo detected: 10 mismatches, cases 259 verifies 259 mismatches 10 controls 0 ns 102302841
+PASS mutant-mgf1-counter detected: 63 mismatches, cases 108 verifies 108 mismatches 63 controls 0 ns 41005765
+TIME rsa_signature_2048_sha256_test: 100 verifies, 40019110 ns total, 400191 ns per verify (nice 19)
+TIME rsa_signature_4096_sha256_test: 100 verifies, 191659320 ns total, 1916593 ns per verify (nice 19)
+TIME rsa_pss_2048_sha256_mgf1_32_test: 100 verifies, 40987919 ns total, 409879 ns per verify (nice 19)
+TIME rsa_pss_4096_sha256_mgf1_32_test: 100 verifies, 157838815 ns total, 1578388 ns per verify (nice 19)
+CONTROLS flipped-signature-byte controls=1927 (all refused)
+RSA PASS vectors=6486 (wycheproof=5250) mutants=4/4

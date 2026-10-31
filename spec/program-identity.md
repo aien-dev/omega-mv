@@ -213,9 +213,11 @@ The discovered abstraction (lifted, not composed) keeps `52b6059b...`.
 
 ## 8. Non-claims and deferred defects
 
-- Identity is **intensional**: it names the canonical body, not the mathematical function.
-  `x + 1 + 1` and `x + 2` compute the same function and have different ids. Proving
-  extensional equality is out of scope.
+- `SEMANTIC_ID` / `program_id` is **intensional**: it names the canonical body, not the
+  mathematical function. `x + 1 + 1` and `x + 2` compute the same function and have different
+  program ids, and that stays so. The extensional identity is a separate, versioned id,
+  `FUNCTION_ID` (section 9): canonical inside the polynomial fragment only. Equality of
+  arbitrary programs is undecidable, so no id is extensional for every program.
 - Contract clauses are identified by their canonical **text** (`omega_build_constraint_id`);
   two logically equivalent clauses with different text differ.
 - Historical receipts under `evidence/` carry v1 ids and are append-only; they are not
@@ -226,7 +228,150 @@ The discovered abstraction (lifted, not composed) keeps `52b6059b...`.
 - Payload bytes are the existing host-struct canonical payloads (spec/omega-language-v0.md),
   so ids are pinned to the LP64 / 4-byte-enum ABI, as before.
 
-## 9. Qualification
+## 9. FUNCTION_ID (`omega.function.v1`)
+
+```text
+Status:      IMPLEMENTED and EXERCISED on the host (om/meaning/meaning.om, om/meaning/test/run.sh);
+             not wired into the C library, Visor or any receipt; program ids are unchanged
+Domain tag:  "omega.function.v1"
+```
+
+`FUNCTION_ID` names the function a program computes, where that can be decided cheaply. It
+lives beside `omega.program.v2`; it never replaces a program id, never enters a program id
+preimage and never rewrites a receipt.
+
+### 9.1 Programs and the polynomial fragment
+
+A program is a width `w` (1..64) and a postfix list over `x`, constants below `2^w`, `add`,
+`sub`, `mul`, `and`, `or`, with arithmetic modulo `2^w`. The V0 body chain of section 2
+(`x c1 op1 c2 op2 ...`) is one such list. The **polynomial fragment** is decided by an abstract
+evaluation that gives each stack entry the class constant, polynomial or outside:
+
+- `add`, `sub`, `mul` of constants and polynomials are polynomials; `mul` by the constant 0 is the
+  constant 0 (even if the other side is outside).
+- `and`/`or` with a constant side use only exact identities modulo `2^w`: `and` all-ones = the
+  other side, `and 0` = 0, `or 0` = the other side, `or` all-ones = all-ones.
+- Everything else is outside. (So `x and 0xff` at w 64 is outside; `x and 0xff` at w 8 is `x`.)
+
+A program in the fragment computes a polynomial function `Z/2^w -> Z/2^w`.
+
+### 9.2 Canonical form
+
+Every polynomial function `f` modulo `2^w` has exactly one representation
+
+`f(x) = sum_{k<K} a_k x(x-1)...(x-k+1)  (mod 2^w)`, with `0 <= a_k < 2^(w - v2(k!))`,
+
+where `v2` is the 2-adic valuation and `K = K(w)` is the least `k` with `v2(k!) >= w` (the
+falling factorial of degree `>= K` is divisible by `K!`, hence zero modulo `2^w`). This is the
+falling-factorial normal form of Keller and Olson (Counting polynomial functions (mod p^n),
+Duke Math. J. 35, 1968) and Singmaster (On polynomial functions (mod m), J. Number Theory 6,
+1974, 345-352). The coefficients come from the values `f(0..K-1)` alone: the forward
+differences are `d_k = Delta^k f(0) = k! a_k (mod 2^w)`; with `k! = 2^v u`, `u` odd,
+`a_k = (d_k / 2^v) u^-1 mod 2^(w-v)` (Newton inverse modulo `2^64`, five steps from `u`).
+`meaning.om` traps (code 9) if a `d_k` is not divisible by `2^v`, which the fragment check makes
+unreachable.
+
+Wolfram evaluations behind the constants (WolframLanguageEvaluator):
+
+- `K(w)` for `w = 1..64` = `{2,4,4,6,8,8,8,10,12,12,14,16,16,16,16,18,20,20,22,24,24,24,26,28,28,30,32,32,32,32,32,34,36,36,38,40,40,40,42,44,44,46,48,48,48,48,50,52,52,54,56,56,56,58,60,60,62,64,64,64,64,64,64,66}`
+  (least `k` with `IntegerExponent[k!, 2] >= w`; `K(8) = 10`, `K(64) = 66`). The suite checks
+  all 64 values against `mg_kof` (`W` records).
+- The number of polynomial functions is `prod_{k<K} 2^(w - v2(k!))`: `log2` = 50 (w 8), 170
+  (w 16), 2274 (w 64). At w 3, a brute force over all coefficient tuples gives 1024 distinct
+  functions, equal to the product of the bounds, and every canonical tuple round-trips.
+- `canon[x(x+1), 64] = {0, 2, 1, 0, ...}`, `canon[x^2, 64] = {0, 1, 1, 0, ...}`,
+  `canon[3x^3 + 5x + 7, 8] = {7, 8, 9, 3, 0, 0, 0, 0, 0, 0}`,
+  `canon[7x^5 + 200x^2 + 13, 16] = {13, 207, 305, 175, 70, 7, 0, ...}`,
+  `canon[255x^2 + 254, 8] = {254, 255, 127, 0, ...}`; `2^63 x(x-1) = 0 (mod 2^64)` for
+  `x = 0..999`. These are the `K` records of `om/meaning/test/vectors`.
+
+The falling-factorial form is not the only canonical choice: any injective function of
+`f(0..K-1)` would serve. It is used because it is readable and because it gives an independent
+check: the suite rebuilds `sum a_k x^(k)` and compares it with `f` on 4096 inputs.
+
+### 9.3 Preimage
+
+- Inside the fragment (class 1): `SHA256("omega.function.v1" 0x00 || 0x01 || w u16 || K u16 ||
+  a_0 .. a_{K-1} u64)`, all big-endian.
+- Outside (class 2, intensional fallback): `SHA256("omega.function.v1" 0x00 || 0x02 || w u16 ||
+  body SEMANTIC_ID)`.
+
+The class byte is in the preimage, so a fallback id never equals a canonical id except by a
+SHA-256 collision, and the id records which kind it is.
+
+### 9.4 What is claimed
+
+- Two programs of the same width in the fragment get the same `FUNCTION_ID` **if and only if**
+  they compute the same function (up to SHA-256 collisions). Programs of different widths
+  always differ.
+- Outside the fragment, equal ids imply equal functions (same body), **not** conversely:
+  `x and 0x7fffffffffffffff` written two ways gets two ids.
+- Not claimed: anything about contracts (a program's contract does not enter its
+  `FUNCTION_ID`), division, shifts, comparisons, multi-parameter or effectful programs.
+
+## 10. The graph of meaning (`omega.meaning.graph.v1`)
+
+```text
+Status:      IMPLEMENTED and EXERCISED on the host (om/meaning/meaning.om); in-memory library
+             plus a canonical byte format; no service, no persistence path, no consumer yet
+Domain tags: "omega.meaning.graph.v1", "omega.meaning.receipt.v1"
+```
+
+A graph whose nodes are content-addressed meanings and whose edges are typed relations, each
+equivalence backed by a receipt that a reader can recheck without trusting the writer.
+
+### 10.1 Nodes and edges
+
+| node kind | id | content |
+|---|---|---|
+| 1 PROGRAM | program_id v2 (section 2) | body id, w u16, pre length u16, pre, post length u16, post |
+| 2 BODY | body `SEMANTIC_ID` | w u16, token count u16, tokens (op u8; for a constant also u64) |
+| 3 FUNCTION | `FUNCTION_ID` | the section 9.3 preimage |
+
+Edges use the `RelationKind` codes of `src/omega_types.h`:
+
+| rel | edge | receipt |
+|---|---|---|
+| 4 CONTAINS | PROGRAM -> BODY | none (recomputed) |
+| 7 DERIVED_FROM | FUNCTION -> BODY | none (recomputed) |
+| 9 EQUIVALENT_TO | BODY lo -> BODY hi | kind 1 CANON or kind 2 EXHAUSTIVE |
+| 2 NOT_EQUAL | BODY lo -> BODY hi | kind 3 WITNESS |
+
+`lo`/`hi` order the endpoints by id. Adding a program adds its PROGRAM, BODY and FUNCTION nodes
+(deduplicated by id) and, for a canonical FUNCTION, a CANON equivalence to every other body of
+that FUNCTION.
+
+### 10.2 Receipts
+
+Receipt id = `SHA256("omega.meaning.receipt.v1" 0x00 || content)`.
+
+- kind 1 CANON (99 bytes): `01 || lo || hi || w u16 || FUNCTION_ID`. Checked by recomputing both
+  bodies' `FUNCTION_ID`s from the stored body content: both class 1 and both equal to the one
+  recorded.
+- kind 2 EXHAUSTIVE (75 bytes, w <= 32): `02 || lo || hi || w u16 || 2^w u64`. Checked by
+  evaluating both bodies on all `2^w` inputs.
+- kind 3 WITNESS (91 bytes): `03 || lo || hi || w u16 || x u64 || f_lo(x) u64 || f_hi(x) u64`.
+  Checked by evaluating both bodies at `x`.
+
+`mg_verify` recomputes every node id from its content, every receipt id, and every edge's
+receipt; a witness search that finds nothing adds nothing (no witness is not a proof).
+
+### 10.3 Storage
+
+`"omega.meaning.graph.v1" 0x00 || u32 N || N x (id, kind u8, u32 len, content) || u32 R ||
+R x (id, u32 len, content) || u32 E || E x (src id, rel u16, dst id, receipt id or 32 zero
+bytes)`, big-endian, each list strictly increasing (nodes and receipts by id, edges by
+src, rel, dst, receipt). The bytes depend only on the set of nodes, receipts and edges, not on
+insertion order; the graph digest is SHA-256 of these bytes. `mg_load` refuses truncated or
+trailing bytes, a wrong tag, non-increasing order (so duplicates), malformed bodies, dangling
+edges and unknown node kinds.
+
+### 10.4 Queries (OM-2 words)
+
+`mg_nbr n rel` (neighbours over one relation, or any with rel 0), `mg_class n` (closure over
+EQUIVALENT_TO, n first), `mg_prov n` (every edge touching n; its receipts are the provenance).
+
+## 11. Qualification
 
 `make test-program-id` (tests/program/test_program_id.c, physics-free, runs in the CI AArch64
 job) prints five gates:
@@ -243,3 +388,17 @@ job) prints five gates:
 qualification campaign, the omegatool M8-M14 and Crumbline consumers and the non-energy host
 regression suites on the committed clean tree, and writes a content-addressed receipt under
 `evidence/PROGRAM_ID/`.
+
+`sh om/meaning/test/run.sh seed/out/omc` (host only, no C) builds `om/meaning/meaning.om` with
+the pinned compiler and checks sections 9 and 10: must-collapse pairs (`x + 1 + 1` / `x + 2` /
+`2 + x`, `x(x+1)` / `x*x + x` / `x(x+1) + 2^63 x(x-1)`, the 66-factor falling factorial / 0,
+reassociation, commutation, distribution, `x and 255` / `x` at w 8), must-not-collapse pairs
+(constants one bit apart, the 65-factor product / 0 at w 64, the 9-factor product / 0 at w 8),
+Wolfram coefficient vectors, `FUNCTION_ID` goldens that `run.sh` recomputes with `sha256sum`
+from the 9.3 preimage, the two program_id goldens of `tests/language/golden/v0.txt`, the `K(w)`
+table, refused programs, exhaustive and witness proofs, queries, a randomized differential at
+w 1, 3, 8, 16, 64 (ids equal iff value signatures equal for fragment pairs; equal ids imply
+equal signatures otherwise; reconstruction of every canonical form), graph verification,
+store/load/store byte identity, reverse-insertion digest equality and tamper detection, then
+source and expectation mutants that must each go red. Final line: `MEANING PASS checks=N
+mutants=M/M`.

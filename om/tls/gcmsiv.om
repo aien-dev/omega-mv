@@ -1,0 +1,332 @@
+note SPDX-License-Identifier: Apache-2.0
+note gcmsiv.om: AES-GCM-SIV (RFC 8452) for om/tls, module code GS. It reuses the AES block cipher
+note and the masked GF(2^128) multiply of aesgcm.om, which must come before it in the unit.
+note Library unit: no om2 line, no fn main, no mutable globals. Not part of the TLS client build;
+note programs that need it compose `om2`, aesgcm.om, gcmsiv.om, then the program.
+note
+note API (return codes: 0 ok, 1 authentication failure (open only), 2 bad parameters):
+note   aes_gcmsiv_seal kn aad buf / aes_gcmsiv_open kn aad buf
+note     AEAD_AES_128_GCM_SIV and AEAD_AES_256_GCM_SIV (RFC 8452 section 6): kn = key-generating
+note     key (16 or 32 bytes) || nonce (12 bytes), so len kn is 28 or 44.
+note     seal: buf = plaintext || 16 bytes of room; becomes ciphertext || tag. The same key, nonce,
+note     aad and plaintext always give the same output (the scheme is deterministic by design).
+note     open: buf = ciphertext || tag. The ciphertext is decrypted in place, the tag is recomputed
+note     over the result and compared with an or-accumulated comparison of both 64-bit halves; on a
+note     mismatch buf[0 .. n) is zeroed before returning 1, so no unauthenticated plaintext is
+note     released (RFC 8452 section 5).
+note     2 (nothing written) when len kn is not 28 or 44, len buf < 16, or the plaintext or aad is
+note     longer than 2^36 bytes (P_MAX, A_MAX).
+note
+note Construction (RFC 8452 sections 3 to 5):
+note   keys: AES(K, LE32(i) || nonce)[0 .. 8) for i = 0, 1 (authentication key) and 2, 3 (and 4, 5
+note     for AES-256) (encryption key).
+note   POLYVAL through GHASH (RFC 8452 Appendix A): POLYVAL(H, X1 .. Xn) =
+note     ByteReverse(GHASH(mulX_GHASH(ByteReverse(H)), ByteReverse(X1) .. ByteReverse(Xn))), with
+note     gcm_mul of aesgcm.om as the GHASH multiply. Inputs: pad16(aad), pad16(plaintext), then the
+note     length block LE64(8 len aad) || LE64(8 len plaintext).
+note   tag: AES(encryption key, (S ^ nonce) with bit 7 of byte 15 cleared).
+note   CTR: the counter block is the tag with bit 7 of byte 15 set; bytes 0..3 count as a little-endian
+note     32-bit integer that wraps at 2^32.
+note
+note Constant time on the same terms as aesgcm.om: no array is indexed by a secret and every branch
+note and loop count depends only on lengths, the key size and the tag-check outcome. Secret
+note workspaces (round keys, derived keys, H, state) are zeroed before the entry points return.
+note
+note Workspace k (ulong AGKN) cells, beyond those aes_setkey and gcm_mul use (0..120, 121..124):
+note 125,126 POLYVAL result, then the masked value, then the tag; 127 bytes 4..7 of the counter
+note block; 128 bytes 8..15 of the counter block; 129 the 32-bit counter (bytes 0..3, little-endian);
+note 131,132 the message-authentication key; 133,134 the nonce (bytes 0..7, bytes 8..11 then zeros).
+note 128-bit values are two big-endian halves (hi = bytes 0..7), as in aesgcm.om.
+
+note all ones except bit 7 of byte 15 of a 128-bit value (the low byte of its low half)
+const GSMSK ulong 0xffffffffffffff7f
+note 2^36: P_MAX and A_MAX of RFC 8452 section 6
+const GSMAX ulong 0x1000000000
+
+note d[o .. o + 8) read big-endian
+fn siv_be64 d view uchar * o ulong to ulong
+x = ulong 0
+for i ulong 8 unroll
+x = or shl x 8 ulong get d add o i
+end
+ret x
+end
+
+note d[o .. o + 8) read little-endian
+fn siv_le64 d view uchar * o ulong to ulong
+x = ulong 0
+for i ulong 8 unroll
+x = or shl x 8 ulong get d add o sub 7 i
+end
+ret x
+end
+
+note x written big-endian to d[o .. o + 8)
+fn siv_put8 d edit uchar * o ulong x ulong to void
+for i ulong 8 unroll
+put d add o i uchar and shr x sub 56 shl i 3 0xff
+end
+end
+
+note byte order of the low 32 bits of x reversed
+fn siv_bsw32 x ulong to ulong inline
+ret shr aes_bswap x 32
+end
+
+note the key-derivation blocks LE32(c + b) || nonce, b = 0..3, into s[150..158); the nonce is
+note kn[kl .. kl + 12)
+fn siv_dblk s edit ulong AGSN kn view uchar * kl ulong c ulong to void
+h = siv_be64 kn kl
+l = siv_be64 kn add kl 4
+for b ulong 4 unroll
+put s add 150 mul b 2 or shl add c b 56 shr h 32
+put s add 151 mul b 2 l
+end
+end
+
+note derive_keys (RFC 8452 section 4) under the key-generating key kn[0 .. kl): the
+note message-authentication key into k[131], k[132] and the message-encryption key into ek[0 .. kl)
+fn siv_derive k edit ulong AGKN s edit ulong AGSN kn view uchar * kl ulong ek edit uchar 32 to void
+aes_setkey k s part kn 0 kl
+siv_dblk s kn kl 0
+aes_enc4 k s
+put k 131 get s 150
+put k 132 get s 152
+siv_put8 ek 0 get s 154
+siv_put8 ek 8 get s 156
+if eq kl 32
+siv_dblk s kn kl 4
+aes_enc4 k s
+siv_put8 ek 16 get s 150
+siv_put8 ek 24 get s 152
+end
+end
+
+note the GHASH key for POLYVAL (RFC 8452 Appendix A): mulX_GHASH(ByteReverse(authentication key))
+note into k[121], k[122]; multiplying by x in GHASH's bit order is a right shift that folds R back
+note in when the last bit falls out (the reduction is a mask, as in gcm_mul)
+fn siv_hkey k edit ulong AGKN to void
+h = aes_bswap get k 132
+l = aes_bswap get k 131
+m = sub 0 and l 1
+l = or shr l 1 shl h 63
+h = xor shr h 1 and m AGR
+put k 121 h
+put k 122 l
+end
+
+note keys for kn = key(kl) || nonce(12): the derived keys, the message-encryption key schedule in
+note k[0..121), the POLYVAL key and the nonce cells
+fn siv_init k edit ulong AGKN s edit ulong AGSN kn view uchar * kl ulong to void
+ek = new uchar 32 0
+siv_derive k s kn kl ek
+aes_setkey k s part ek 0 kl
+for i ulong 32 unroll
+put ek i 0
+end
+siv_hkey k
+put k 133 siv_be64 kn kl
+put k 134 shl siv_be64 kn add kl 4 32
+end
+
+note absorb the 16 bytes of d at o as one POLYVAL block: its byte reverse into the GHASH state
+fn siv_ablk k edit ulong AGKN d view uchar * o ulong to void
+put k 123 xor get k 123 siv_le64 d add o 8
+put k 124 xor get k 124 siv_le64 d o
+gcm_mul k
+end
+
+note the whole blocks of d (fewer than 2^20)
+fn siv_absrun k edit ulong AGKN d view uchar * to void
+for i ulong shr len d 4
+siv_ablk k d shl i 4
+end
+end
+
+note POLYVAL update with d, the last partial block padded with zeros (runs of 8 MiB keep every
+note rolled loop under its 1000000 passes)
+fn siv_absorb k edit ulong AGKN d view uchar * to void
+p = new uchar 16 0
+n = len d
+q = ulong 0
+for a ulong shr n 23
+siv_absrun k part d q 0x800000
+q = add q 0x800000
+end
+m = sub n and n 15
+siv_absrun k part d q sub m q
+r = sub n m
+if gt r 0
+for i ulong r
+put p i get d add m i
+end
+siv_ablk k p 0
+for i ulong 16 unroll
+put p i 0
+end
+end
+end
+
+note the length block LE64(8a) || LE64(8c), byte-reversed: high half 8c, low half 8a
+fn siv_lens k edit ulong AGKN a ulong c ulong to void
+put k 123 xor get k 123 shl c 3
+put k 124 xor get k 124 shl a 3
+gcm_mul k
+end
+
+note S = POLYVAL(authentication key, pad16(aad) || pad16(d) || length block) into k[125], k[126]
+note (the byte reverse of the GHASH state)
+fn siv_poly k edit ulong AGKN aad view uchar * d view uchar * to void
+put k 123 0
+put k 124 0
+siv_absorb k aad
+siv_absorb k d
+siv_lens k len aad len d
+put k 125 aes_bswap get k 124
+put k 126 aes_bswap get k 123
+put k 123 0
+put k 124 0
+end
+
+note S ^ nonce, then bit 7 of byte 15 cleared, in k[125], k[126]
+fn siv_mask k edit ulong AGKN to void
+put k 125 xor get k 125 get k 133
+put k 126 xor get k 126 get k 134
+put k 126 and get k 126 GSMSK
+end
+
+note the tag: k[125], k[126] encrypted with the message-encryption key, in place
+fn siv_tag k edit ulong AGKN s edit ulong AGSN to void
+put s 150 get k 125
+put s 151 get k 126
+aes_enc4 k s
+put k 125 get s 150
+put k 126 get s 151
+end
+
+note the initial counter block from the tag halves th, tl: bit 7 of byte 15 set, bytes 0..3 as the
+note little-endian 32-bit counter
+fn siv_ctrset k edit ulong AGKN th ulong tl ulong to void
+put k 127 and th 0xffffffff
+put k 128 or tl 0x80
+put k 129 siv_bsw32 shr th 32
+end
+
+note the next four counter blocks into s[150..158); the counter wraps at 2^32 (only its low 32 bits
+note reach the block)
+fn siv_cblk k edit ulong AGKN s edit ulong AGSN to void
+c = get k 129
+h = get k 127
+l = get k 128
+for b ulong 4 unroll
+put s add 150 mul b 2 or shl siv_bsw32 add c b 32 h
+put s add 151 mul b 2 l
+end
+put k 129 and add c 4 0xffffffff
+end
+
+note CTR over d from the stored counter (len d below 2^25 + 64)
+fn siv_ctrrun k edit ulong AGKN s edit ulong AGSN d edit uchar * to void
+n = len d
+for j ulong shr n 6
+siv_cblk k s
+aes_enc4 k s
+gcm_xor64 s d shl j 6
+end
+r = and n 63
+if gt r 0
+siv_cblk k s
+aes_enc4 k s
+gcm_xorn s part d sub n r r
+end
+end
+
+fn siv_ctr k edit ulong AGKN s edit ulong AGSN d edit uchar * to void
+n = len d
+q = ulong 0
+for a ulong shr n 25
+siv_ctrrun k s part d q 0x2000000
+q = add q 0x2000000
+end
+siv_ctrrun k s part d q sub n q
+end
+
+fn siv_seal1 k edit ulong AGKN s edit ulong AGSN aad view uchar * buf edit uchar * to void
+n = sub len buf 16
+siv_poly k aad view part buf 0 n
+siv_mask k
+siv_tag k s
+siv_ctrset k get k 125 get k 126
+siv_ctr k s part buf 0 n
+siv_put8 buf n get k 125
+siv_put8 buf add n 8 get k 126
+end
+
+fn siv_open1 k edit ulong AGKN s edit ulong AGSN aad view uchar * buf edit uchar * to ulong
+n = sub len buf 16
+th = ulong 0
+tl = ulong 0
+for i ulong 8 unroll
+th = or shl th 8 ulong get buf add n i
+tl = or shl tl 8 ulong get buf add n add i 8
+end
+siv_ctrset k th tl
+siv_ctr k s part buf 0 n
+siv_poly k aad view part buf 0 n
+siv_mask k
+siv_tag k s
+d = or xor get k 125 th xor get k 126 tl
+if ne d 0
+gcm_wipe part buf 0 n
+ret 1
+end
+ret 0
+end
+
+note 0 when the lengths are acceptable (see the API note), else 2
+fn siv_chk kb ulong ab ulong bl ulong to ulong
+ok = ulong 0
+if eq kb 28
+ok = 1
+end
+if eq kb 44
+ok = 1
+end
+if eq ok 0
+ret 2
+end
+if lt bl 16
+ret 2
+end
+if gt sub bl 16 GSMAX
+ret 2
+end
+if gt ab GSMAX
+ret 2
+end
+ret 0
+end
+
+fn aes_gcmsiv_seal kn view uchar * aad view uchar * buf edit uchar * to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+if ne siv_chk len kn len aad len buf 0
+ret 2
+end
+siv_init k s kn sub len kn 12
+siv_seal1 k s aad buf
+gcm_clear k s
+ret 0
+end
+
+fn aes_gcmsiv_open kn view uchar * aad view uchar * buf edit uchar * to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+if ne siv_chk len kn len aad len buf 0
+ret 2
+end
+siv_init k s kn sub len kn 12
+r = siv_open1 k s aad buf
+gcm_clear k s
+ret r
+end

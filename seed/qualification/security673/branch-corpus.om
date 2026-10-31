@@ -1,18 +1,22 @@
 note Synthetic source generator for issue669. Reads one mode byte and a 4-byte little-endian repetition
 note count on stdin, then writes one program. Mode0 if over the body, mode1 nested if, mode2 while over
-note the body, mode3 a trap followed by the body. Every program ends with a unique mov x1, 12345 marker
-note whose address is the expected branch target. Only synthetic source is produced.
+note the body, mode3 a trap followed by the body. Modes 0..3 end with a unique mov x1, 12345 marker whose
+note address is the expected forward branch target. Mode4 is a while whose body is the statements and then
+note `if eq z 1` / continue: that continue is a backward B.cond to the loop head, which loads 12345 into
+note x4 (mov x4, 12345); it runs once, so a correct program exits 0. Only synthetic source is produced.
 global arg uchar 5
 global extra uchar 1
 text pre0 "fn main to int\nx = ulong 0\ny = ulong 0\nif eq x 1\n"
 text pre1 "fn main to int\nx = ulong 0\ny = ulong 0\nif eq x 1\nif eq x 2\n"
 text pre2 "fn main to int\nx = ulong 0\ny = ulong 0\nwhile eq x 1\n"
 text pre3 "fn main to int\nx = ulong 1\ny = ulong 0\nz = div x 0\n"
+text pre4 "fn main to int\nx = ulong 0\ny = ulong 0\nz = ulong 0\nwhile lt y 12345\nz = add z 1\n"
 text stmt "x = add x 1\n"
 text post0 "end\ny = ulong 12345\nret int x\nend\n"
 text post1 "end\nend\ny = ulong 12345\nret int x\nend\n"
 text post2 "end\ny = ulong 12345\nret int x\nend\n"
 text post3 "y = ulong 12345\nret int x\nend\n"
+text post4 "if eq z 1\ncontinue\nend\nbreak\nend\nret int sub z 2\nend\n"
 fn main to int
 pos = ulong 0
 while lt pos 5
@@ -23,7 +27,7 @@ end
 pos = add pos ulong r
 end
 mode = ulong get arg 0
-if gt mode 3
+if gt mode 4
 ret 90
 end
 if ne read 0 extra 0 1 0
@@ -57,9 +61,16 @@ if ne r long len pre2
 ret 91
 end
 else
+if eq mode 3
 r = write 1 pre3 0 len pre3
 if ne r long len pre3
 ret 91
+end
+else
+r = write 1 pre4 0 len pre4
+if ne r long len pre4
+ret 91
+end
 end
 end
 end
@@ -86,8 +97,13 @@ if eq mode 2
 r = write 1 post2 0 len post2
 expected = len post2
 else
+if eq mode 3
 r = write 1 post3 0 len post3
 expected = len post3
+else
+r = write 1 post4 0 len post4
+expected = len post4
+end
 end
 end
 end

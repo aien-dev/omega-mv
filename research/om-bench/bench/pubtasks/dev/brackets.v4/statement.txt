@@ -1,0 +1,1 @@
+Read one line made only of ( and ) characters. Scanning left to right, a ) with no open ( before it is unmatched; a ( never closed is unmatched. Print the position (counting from 0) of the first unmatched ) if there is one, otherwise of the leftmost unmatched (, otherwise print none.

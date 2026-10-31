@@ -1,0 +1,18 @@
+
+/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/public-address.bin:     file format binary
+
+
+Disassembly of section .data:
+
+0000000000000000 <.data>:
+   0:	d2800023 	mov	x3, #0x1                   	// #1
+   4:	8a030024 	and	x4, x1, x3
+   8:	f100089f 	cmp	x4, #0x2
+   c:	540000c2 	b.cs	0x24  // b.hs, b.nlast
+  10:	f8647800 	ldr	x0, [x0, x4, lsl #3]
+  14:	d65f03c0 	ret
+  18:	aa0703e0 	mov	x0, x7
+  1c:	f94008f0 	ldr	x16, [x7, #16]
+  20:	d61f0200 	br	x16
+  24:	d2800061 	mov	x1, #0x3                   	// #3
+  28:	17fffffc 	b	0x18

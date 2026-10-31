@@ -1,0 +1,41 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of places-hex.om (values from Wolfram, wolfram.txt query tokens).
+om2
+const KC uchar 200
+global g ulong 16
+fn rd t view uchar 8 to ulong
+ret ulong get t 7
+end
+fn wr s edit uchar 8 fresh to void
+put s 7 90
+end
+fn main to int
+a = new uchar 8 0
+wr a
+putu rd a
+put g 15 7
+putu get g 15
+putu ulong KC
+s = ulong 0
+for i ulong 4 unroll
+s = add s i
+end
+putu s
+k = ulong 0
+while lt k 100 bound 1000
+k = add k 1
+end
+putu k
+r = rotr uint 2147483649 31
+putu ulong r
+q = rotl ulong 9223372036854775808 1
+putu q
+f = f64 9007199254740993
+putu ulong f
+h = f32 16777217
+putu ulong h
+if eq k 0
+trap 14
+end
+ret int and k 42
+end

@@ -1,0 +1,70 @@
+note Synthetic issue #671 packed-list consumer. Hostile stdin bytes reach execprog unchanged.
+note With one decimal argument K, only the first K bytes are passed (truncation at each boundary).
+note A malformed packet traps 3 (exit 103) inside execprog; a valid one replaces this process.
+note Own exits: 90 usage or bad K, 91 read failure or input over 8191 bytes, 95 exec failed.
+global pkt uchar 8192
+global arg uchar 8
+fn rdall to long
+note Every pass but the last adds at least one byte to the 8192-byte buffer: 8193 passes bound it.
+n = ulong 0
+k = long 1
+while gt k 0 bound 8193
+if eq n len pkt
+ret -1
+end
+k = read 0 pkt n sub len pkt n
+if gt k 0
+n = add n ulong k
+end
+end
+if lt k 0
+ret k
+end
+ret long n
+end
+fn argk to long
+r = argread 1 arg 0 len arg
+if lt r 1
+ret -1
+end
+if gt r 5
+ret -1
+end
+v = ulong 0
+for i ulong ulong r
+c = get arg i
+if lt c 48
+ret -1
+end
+if gt c 57
+ret -1
+end
+v = add mul v 10 ulong sub c 48
+end
+ret long v
+end
+fn main to int
+if gt argcnt 2
+ret 90
+end
+t = rdall
+if lt t 0
+ret 91
+end
+k = ulong t
+if eq argcnt 2
+a = argk
+if lt a 0
+ret 90
+end
+if gt a t
+ret 90
+end
+k = ulong a
+end
+r = execprog pkt 0 k
+if ge r 0
+ret 96
+end
+ret 95
+end

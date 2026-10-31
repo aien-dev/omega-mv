@@ -1,0 +1,26 @@
+note DIT probe: prints "hwdit N" (1: FEAT_DIT advertised by the kernel, 0: not, -1: auxv unreadable)
+note and exits 0 when N is 0 or 1, 1 otherwise. The expectation on a GB10 (Cortex-X925 / A725) is 1;
+note dit.sh compares it with /proc/cpuinfo.
+text dmsg "hwdit "
+fn main to int
+o = new uchar 16 0
+v = tls_hwdit
+bad = ulong 0
+if or lt v 0 gt v 1
+bad = 1
+end
+k = ulong 0
+if lt v 0
+put o 0 45
+k = 1
+v = neg v
+end
+put o k add 48 uchar v
+put o add k 1 10
+w = write 1 dmsg 0 len dmsg
+w = write 1 o 0 add k 2
+if eq bad 1
+ret 1
+end
+ret 0
+end

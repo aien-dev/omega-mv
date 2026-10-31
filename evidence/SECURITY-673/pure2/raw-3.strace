@@ -1,0 +1,5 @@
+2504499 openat(AT_FDCWD, "build/security673-pure/raw-3", O_RDONLY|O_CLOEXEC|O_PATH) = 3
+2504499 landlock_restrict_self(4, 0)    = 0
+2504499 seccomp(SECCOMP_SET_MODE_FILTER, 0, {len=27, filter=0x107fddc0}) = 0
+2504499 execveat(3, "", ["build/security673-pure/raw-3"], 0x107fefc8 /* 0 vars */, AT_EMPTY_PATH) = 0
+2504499 mmap(NULL, 1073741824, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = -1 EPERM (Operation not permitted)

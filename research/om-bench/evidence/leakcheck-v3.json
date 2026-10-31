@@ -1,0 +1,85 @@
+{
+ "version": 2,
+ "tasks": 176,
+ "pairs_checked": 15400,
+ "threshold": 0.6,
+ "max_cross_family_similarity": 1.0,
+ "n_flags": 8,
+ "n_flags_cross_split": 4,
+ "flags": [
+  {
+   "a": "fibo.v2",
+   "b": "heldA:e696751122",
+   "word": 0.733,
+   "content_overlap": 1.0,
+   "char5": 0.559,
+   "cross_split": true,
+   "review": "template: shared input/output wording, different computation; the public solution does not solve the sealed task (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "fibo.v2",
+   "b": "heldA:08ee899ecb",
+   "word": 0.647,
+   "content_overlap": 0.875,
+   "char5": 0.472,
+   "cross_split": true,
+   "review": "template: shared input/output wording, different computation (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "extrema.v2",
+   "b": "heldA:c938a70d0f",
+   "word": 0.476,
+   "content_overlap": 1.0,
+   "char5": 0.275,
+   "cross_split": true,
+   "review": "template: related computation (the public task is a special case of the sealed one); recorded as near-transfer risk, not a duplicate (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "multiples.v2",
+   "b": "heldA:f2673d2296",
+   "word": 0.625,
+   "content_overlap": 0.875,
+   "char5": 0.488,
+   "cross_split": true,
+   "review": "template: shared counting wording, different computation (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "heldA:96513da511",
+   "b": "heldA:98006827aa",
+   "word": 1.0,
+   "content_overlap": 1.0,
+   "char5": 1.0,
+   "cross_split": false,
+   "review": "same-split-overlap: two sealed families share one computation pattern; merged into one cluster for statistics (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "heldA:b8a9b7a8eb",
+   "b": "heldA:98006827aa",
+   "word": 1.0,
+   "content_overlap": 1.0,
+   "char5": 1.0,
+   "cross_split": false,
+   "review": "same-split-overlap: merged cluster (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "heldA:a6403c91e7",
+   "b": "heldA:98006827aa",
+   "word": 0.667,
+   "content_overlap": 1.0,
+   "char5": 0.593,
+   "cross_split": false,
+   "review": "same-split-overlap: merged cluster (OmegaEval, 2026-10-26)"
+  },
+  {
+   "a": "heldA:d2184ef2bc",
+   "b": "heldA:98006827aa",
+   "word": 0.667,
+   "content_overlap": 1.0,
+   "char5": 0.593,
+   "cross_split": false,
+   "review": "same-split-overlap: merged cluster (OmegaEval, 2026-10-26)"
+  }
+ ],
+ "plant1_flagged": true,
+ "plant2_flagged": false
+}

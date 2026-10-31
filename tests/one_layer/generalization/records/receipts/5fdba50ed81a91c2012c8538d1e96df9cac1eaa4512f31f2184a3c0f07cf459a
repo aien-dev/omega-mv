@@ -1,0 +1,17 @@
+gen-receipt 1
+record abs-363362ee46871b32
+tool tools/gen/abstract/extract 356e304abd42e0ae8603252af48b76f7e42c0a70d227a1ea93bc78eea6aa91af
+tool tools/gen/abstract/verify 58f9cac29844b1fd4b9bf50ffd3360357baec5bd9e894ec969502c03ca2f74e6
+tool tools/gen/abstract/probe f4af98512c46a7a00020c79291230c0748a7dde2aadec328e8377de54741cd95
+tool tools/gen/abstract/genabs.sh 68414c1c72b273058a66b74d7801f0ea7fe290c49302aacd34f84b63bb9091d4
+tool tools/gen/abstract/gabs.c 27cc795505a054e6ae92fe14634fe900482094a72f10fde401e61e48a4d58880
+tool tools/gen/abstract/recheck.c 9d7a3c74de404170d32eacbc0ab551e3b598a086d9b300a94825e70614533e6c
+helper_ir 43b889882065248ef26df0164e00b59eaebddb56b088f19d99dacd4b882a2392
+checker2 ACCEPT
+pre true
+post eq ulong res div add ulong a ulong b 2
+example 7 8 -> 7
+property inputs=e35d985194144dce2f6eefb31da5fc8d5e0fd38cb8557b2ac7fdcbaf19e0dfe6 expected=23c04e4d3c8d5abea295504bcdab63f60f7d857852a0fe95e049676f6dfc65e4 ACCEPT n=256
+example inputs=eb54f1b8b2b5e5ab093f576b682ed59cc1ee3dc397f31f5209616ae155cc3471 expected=10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58 ACCEPT n=1
+occurs avg_double avg2
+occurs avg_inc avg2

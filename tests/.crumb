@@ -133,8 +133,8 @@
           "purpose": "Directory tests/canonicalization. Purpose not yet described by a human."
         },
         {
-          "digest": "088f526f8cae115209dd0162f28669812483ce5c926e41e8810dada1eefcb81a",
-          "last_commit": "450bbefd4",
+          "digest": "e83c52ffc46da0e9df448bc5d28a70b08a8cbcd6858e8adea7a842791717c024",
+          "last_commit": "f5c9bd89a",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -199,8 +199,14 @@
           "purpose": "Simulated M16 driver for numeric resource-lifecycle tests. No device execution or numeric parity"
         },
         {
-          "digest": "d958af5413726ddc48a47721800d9766939129f480b26492332ba094577837cb",
-          "last_commit": "d863780eb",
+          "digest": "a4e1544a88e0b71ced2340ed880985b6ceaad797023b74a683d470971a8d47d4",
+          "last_commit": "f5c9bd89a",
+          "name": "orig4",
+          "purpose": "ORIG-4 shadow advisor tests: shadow-test.om (in-process checks over the SYNTHETIC fixture and th"
+        },
+        {
+          "digest": "628d85f858a9ed11e4502064192aeb797bf9fe6f73a3932db520d5b9c22d43f1",
+          "last_commit": "f5c9bd89a",
           "name": "osh",
           "purpose": "osh lexer host driver, vendored aien-protocols PR#16 draft vectors (5ae5292)"
         },
@@ -265,8 +271,8 @@
           "purpose": "Reservoir tests (omega#440): Gate 1 simulator and readout checks against an independent binary64"
         },
         {
-          "digest": "10d19641e4bb5b435ec6363d4ea7d3c1596af47d97b86f4de35d6ae57770241e",
-          "last_commit": "45f7d7691",
+          "digest": "891ced287901fa14a10e93dce7dae2ada551f7b69752098f957d1471bff4d072",
+          "last_commit": "f5c9bd89a",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -295,21 +301,21 @@
           "purpose": "Directory tests/turing. Purpose not yet described by a human."
         },
         {
-          "digest": "930fcb9ce348c604424e5380796a77c3586a835b43d42b504325c36b12d166d7",
-          "last_commit": "450bbefd4",
+          "digest": "aad47a6f37231afcd415798fcd7f18cbcb541066bb958c09d44cb755ce385057",
+          "last_commit": "f5c9bd89a",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:0c57282ff8cf1d34e5685e2729755f2978917e66debb5423961033be9d25c902",
-      "compiled_at": "2026-10-30T12:31:50Z",
+      "children_root": "sha256:4e202b52b2c80d88dc93220a0c00cda479e52c2e63f847fbb30b9b1f426294f5",
+      "compiled_at": "2026-10-31T05:27:18Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:5395ff8ff9afceebe8e453788f80a3064b831513cc4cb92fd55869115e06b874",
-      "evidence_files": 16,
-      "evidence_root": "sha256:96d08097822ad95f4e562c19e0ba5df5a035774c48632f1832912c40a27bd27a",
-      "files": 1386,
-      "generated_at_commit": "52a82f392fa513ebbc2d9d719a0f14c385289b06",
-      "source_tree": "sha256:a3b853bb9c0edfc5f1413ccaa2698cc6ea920f2e8795756121667cc9d37f6679"
+      "digest": "sha256:afc0a615167640374b02c58f5e579653b8b828c16c8ccf6b56a8dc061a399c8a",
+      "evidence_files": 74,
+      "evidence_root": "sha256:9aa38bf7dcfa5eb3499356a0a2a1dd7704fedfae2d16822a7c9e1400f3a72723",
+      "files": 2047,
+      "generated_at_commit": "1db941627f637312ce60e49872dcdd18b49a54b7",
+      "source_tree": "sha256:bd43c51d15c9f611728acbc8632a3045f0224523ff0d7c49de0f2d4100915f57"
     },
     "owner_lane": "",
     "provenance": {
