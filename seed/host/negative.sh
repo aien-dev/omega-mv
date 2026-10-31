@@ -408,4 +408,42 @@ fn probe buf view uchar 16 to long
 ret sendmsg 0 buf 0 8 0
 end
 OM
+compile_error peername-readonly 20 <<'OM'
+text buf "abcdefghijklmnop"
+fn main to int
+ret int peername 0 buf 0 16
+end
+OM
+compile_error peername-array-type 7 <<'OM'
+global buf uint 4
+fn main to int
+ret int peername 0 buf 0 4
+end
+OM
+compile_error peername-descriptor-type 7 <<'OM'
+global buf uchar 16
+fn main to int
+ret int peername ulong 0 buf 0 16
+end
+OM
+compile_error peername-offset-type 7 <<'OM'
+global buf uchar 16
+fn main to int
+ret int peername 0 buf int 0 16
+end
+OM
+compile_error peername-view 20 <<'OM'
+fn probe buf view uchar 16 to long
+ret peername 0 buf 0 16
+end
+fn main to int
+buf = new uchar 16 0
+ret int probe buf
+end
+OM
+compile_error peername-function-mode 9 <<'OM'
+fn probe buf edit uchar 16 to long
+ret peername 0 buf 0 16
+end
+OM
 printf 'PASS %s total host negative controls, including cwd, readlnk, sockopt, flock and network\n' "$count"

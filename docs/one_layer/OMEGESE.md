@@ -954,6 +954,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `listen fd backlog` | Listen for connections. |
 | `accept fd flags` | Accept a connection with `accept4`; return descriptor, without peer-address output. |
 | `sockname fd A off n` | Write socket address bytes; return the full address length, which may exceed capacity when truncated. |
+| `peername fd A off n` | Query the connected peer of an existing descriptor into a writable byte slice; return full peer-address length, or negative errno. A result greater than `n` truthfully indicates truncation. |
 | `sockopt fd level option A off n` | Set one allowlisted scalar transport option from a readonly four-byte slice; see the allowlist below. |
 | `recv fd A off n flags` | Receive into a writable slice. |
 | `send fd A off n flags` | Send a slice with `MSG_NOSIGNAL` added, so a closed peer returns an error. |
@@ -997,6 +998,19 @@ Each value is exactly four little-endian bytes. An unlisted level/option returns
 different length returns `-22` (`EINVAL`). Kernel errors for listed operations
 are preserved, including `-9` (`EBADF`) and `-95` (`EOPNOTSUPP`) when a socket
 family does not support a listed option. No pointer-bearing option is exposed.
+
+`peername` uses Linux AArch64 `getpeername` (syscall 205), not `getsockname`
+(204); under `target x86linux` it uses x86-64 `getpeername` (52), not
+`getsockname` (51). It shares `sockname`'s checked writable slice and private 32-bit
+length convention. Zero capacity is allowed, including at the array end;
+success still returns the full address length without writing address bytes.
+The checked array capacity fits the kernel's signed 32-bit length. No descriptor
+is created or connected. The descriptor is an existing process descriptor;
+callers must control its lifetime, including close/reuse races.
+Consume output only after success and after checking length and address family.
+The native Linux sockaddr describes the transport endpoint, not an authenticated
+user or an original client behind a proxy. Forwarding headers gain no authority.
+Existing trusted-proxy policy remains a separate caller responsibility.
 
 `peercred` is kernel-attested local peer identity, not application authorization.
 Use it only on a connected Unix socket and compare the returned identity with

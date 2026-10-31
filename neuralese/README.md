@@ -17,11 +17,11 @@ Authority: `docs/one_layer/OMEGESE.md`, sections 9, 10 and 12, and
 
 ## Active reproduction pin (not historical run evidence)
 
-Current pin after the `dit`/`scrub` reseed (#875, 2026-10-31), merged as
-`2367874399001efdc7f1ff345fb327469bc1a135`: committed
+Current pin after the `peername` reseed (#918, 2026-10-31), merged as
+`2d848d939b102e53049d66ead554a18f56791abb`: committed
 `seed/out/omc` SHA-256
-`3862655902e3bb9f502ebca2e1e5e5edb6175bf512be731a63c700a6dce8d355`, compiler
-source SHA-256 `4f401ba65eb33e8ba7696ed9310bb22317cc21e9264303abc82d7a1db6228e94`.
+`3874844226c7f29a9b015d30098030ad7a9fcd769eccc2395511de57f7a37a28`, compiler
+source SHA-256 `fb095990d0e6a8459bac89024b13f0ad5f8495a2c2ccceb72bae13440a52d637`.
 An earlier pin, after merging main `62d1d0d668f897386a0e311374f8dbcc5c32dde8`,
 was `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b` (source
 `96d51b63c8f451661ac715395078e04f39195e50c9e8fe37746cda121e4d7a1e`).
@@ -134,7 +134,7 @@ mkdir -p build
 if seed/out/omc < seed/qualification/om2/gate.om > build/neuralese-gate; then
   chmod +x build/neuralese-gate &&
   build/neuralese-gate seed/out/omc \
-    3862655902e3bb9f502ebca2e1e5e5edb6175bf512be731a63c700a6dce8d355 \
+    3874844226c7f29a9b015d30098030ad7a9fcd769eccc2395511de57f7a37a28 \
     neuralese/host.cases build/neuralese-host
 else
   exit 1
@@ -350,7 +350,7 @@ It is exactly the committed `seed/out/omc` introduced by
 the lock. Read-only `git show <revision>:seed/out/omc | sha256sum` resolved the
 older `2c824805...` at82a399b9 and `49923639...` at ec07d25d as different
 historical binaries. No compiler change is part of NL4. After the reseed
-recorded at the top of this file, the committed compiler is `38626559...`; the
+recorded at the top of this file, the committed compiler is `38748442...`; the
 lock and receipt below keep the `d6290c76...` run unedited, and the command
 below uses the current pin because the conductor refuses any other hash.
 
@@ -364,7 +364,7 @@ sha256sum build/nl4-deps/h.om build/nl4-deps/v.om
 # Refuse to continue unless both hashes equal nl4-dependencies.json.
 seed/out/omc < seed/qualification/om2/gate.om > build/nl4-gate
 chmod +x build/nl4-gate
-build/nl4-gate seed/out/omc 3862655902e3bb9f502ebca2e1e5e5edb6175bf512be731a63c700a6dce8d355 neuralese/nl4-host.cases build/nl4-host
+build/nl4-gate seed/out/omc 3874844226c7f29a9b015d30098030ad7a9fcd769eccc2395511de57f7a37a28 neuralese/nl4-host.cases build/nl4-host
 ```
 
 The conductor hashes the compiler itself and requires a previously absent scratch
@@ -407,13 +407,14 @@ cases=54 pass=0 fail=0 invalid=0 not_run=54` (host CPU, Linux AArch64).
 Successive reseeds changed the compiler hash in the dated #946 paragraph above;
 at #948 merge `dc0d06e953e4e6729a6ea9d8a18a6fe2e18a4324` it incorrectly
 named `e4d84bc3...`; #875 merge
-`2367874399001efdc7f1ff345fb327469bc1a135` subsequently named `38626559...`.
+`2367874399001efdc7f1ff345fb327469bc1a135` subsequently named `38626559...`,
+and #918 merge `2d848d939b102e53049d66ead554a18f56791abb` named `38748442...`.
 The paragraph is restored to the compiler recorded in
 [#946 merge `d9461717721856602626c3202751d7653e1aa5f7`](https://github.com/aien-dev/omega-mv/blob/d9461717721856602626c3202751d7653e1aa5f7/neuralese/README.md).
 Read-only `git show d9461717721856602626c3202751d7653e1aa5f7:seed/out/omc | sha256sum`
 independently matches `1578b357...`; the compiler source at that revision hashes
 to `b25079742d1157cd614fe92eeb2dd5e9a5e3b19e978007c7ecb7a6105ab6c65d`.
-The active pin above now names #875's actual binary/source pair separately.
+The active pin above now names #918's actual binary/source pair separately.
 
 This corrects documentation provenance, not execution: no historical receipt,
 log or fixture has been replaced, and no new Neuralese run is claimed. The

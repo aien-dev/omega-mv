@@ -48,6 +48,7 @@ text nloc "location"
 text nsockopt "sockopt"
 text nnetdata "netdata"
 text nnetpeer "netpeer"
+text npeernm "peername"
 text ndevice "device"
 text ndevcall "devcall"
 text nuvmctl "uvmctl"
@@ -705,6 +706,17 @@ say ndm
 comp nnetpeer
 runt nnetpeer
 gone lnetpeer
+comp npeernm
+runt npeernm
+astart npeernm
+aadd c1
+go 103 10000000000
+astart npeernm
+aadd c2
+go 103 10000000000
+astart npeernm
+aadd c3
+go 103 10000000000
 comp ndevice
 run ndevice
 say dvm
