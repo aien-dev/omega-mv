@@ -36,12 +36,19 @@ negative controls for unexpected exit7, signal9, and a45-second child exceeding 
 deadline. Each must fail with99; the latter two log the raw low wait-status byte9. They never
 print the success line. An unexpected gate crash is INVALID, never a passing negative control.
 
-The actual compiler encoder is exposed by an exact-once source transform, not copied into a
-test implementation. The branch-limit mutant is compiled from a distinct transformed source.
-Its incorrect output is decoded and rejected without execution. The current backward B.LO
-caller initializes a local array with a short fixed loop; long backward source reachability is
-not claimed from direct encoder probes. The imm26 capacity argument is inspection: all positions
-are aligned within an8MiB output pool, below its signed128MiB reach.
+The actual compiler encoder `bdisp` (every B.cond/CBZ/CBNZ imm19 and every B/BL imm26 site) is
+exposed by an exact-once source transform, not copied into a test implementation. Probe cases 0..7
+accept the imm19 and imm26 extremes with the exact field, 8..15 refuse one word past each limit and
+misaligned ends with error 24, 16..17 show the 8 MiB output ceiling (error 14) that keeps every B/BL
+inside its signed 128 MiB reach, so imm26 error 24 is a defence that no legal program reaches. The
+forward branch-limit mutant is compiled from a distinct transformed source; its output is decoded
+and rejected without execution. The range-free mutant (`branch-mutate 7`, then `0`) must answer 81
+on exactly the four out-of-range cases. Long backward imm19 from source is not reachable through
+`while`/`continue`: the loop-bound trap B.cs at the head is 5 words longer forward than the continue
+is back, so the forward limit refuses first. Corpus mode 4 rows: N = 3, 16 and 262127 (the largest
+accepted, continue 262138 words back) compile, decode with `branch-check 1` and exit 0; N = 262128,
+262133 and 262134 are refused with 24. The range-free compiler accepts N = 262134 (continue 2^18 + 1
+words back) and its B.AL decodes to the wrong target (61); that output is never executed.
 
 GNU objdump is outside the seed compiler lineage. The `.om` checker consumes its selected text
 format and rejects the enumerated malformed/missing/duplicate/wrong-target controls. It is not

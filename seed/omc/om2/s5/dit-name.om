@@ -1,0 +1,6 @@
+note S5 dit: reserved in an OM-2 unit, so a local named dit is error 16.
+om2
+fn main to int
+dit = int 1
+ret dit
+end
