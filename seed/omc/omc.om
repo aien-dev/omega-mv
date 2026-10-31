@@ -824,7 +824,7 @@ put tkb 0 get inlen 0
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus native host words 100..177, flock 197 and execpure 198) ========
+note ======== keyword lookup (original om4 KWTAB plus native host words 100..179, flock 197 and execpure 198) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
 if eq w 7310034270740117605
@@ -979,6 +979,12 @@ ret 176
 end
 if eq w 28268896573219181
 ret 177
+end
+if eq w 30527267904513654
+ret 178
+end
+if eq w 31632320040101494
+ret 179
 end
 if eq w 461229747302
 ret 197
@@ -6793,6 +6799,100 @@ spadd 80
 hreturn dst x
 end
 
+note Checked device ioctls, one helper for devctl (c 166) and vfioctl (c 178); they share the span checks,
+note the argument loads and the system call.
+note devctl: same bounded ioctl contract as L605 src/device/omc.om at 0dee699.
+note Compose with native host words instead of maintaining a second compiler.
+note Only literal FIONREAD or encoded read/write NVRM F requests, exact writable bytes.
+note vfioctl: VFIO container, group and device requests: _IO(';', 100 + k) from linux/vfio.h, exact allowlist
+note and shapes. GET_API_VERSION 15204 takes no argument (n 0). DEVICE_RESET 15215 is not allowed: W0 never
+note resets the device from Omega (Drake: W0a only, no FLR). CHECK_EXTENSION 15205 and
+note SET_IOMMU 15206 pass the 4-byte little-endian value in the span; SET_IOMMU accepts only TYPE1v2 (3).
+note GROUP_SET_CONTAINER 15208 points at a 4-byte fd. GROUP_GET_STATUS 15207 (8), DEVICE_GET_INFO 15211
+note (24) and DEVICE_GET_REGION_INFO 15212 (32) point at the span after the compiler itself stores
+note argsz = n, so the kernel copies at most n bytes. GROUP_GET_DEVICE_FD 15210 passes a private zero-
+note terminated copy of a non-empty span (at most 4095 bytes, no embedded zero).
+fn hdevctl c ulong dst ulong x ulong to void
+q = ulong 0
+n = ulong 99
+if eq c 178
+harg x 4 8
+harg x 2 4
+if ne get fr add x 12 3
+fail 9
+end
+q = get fr add x 13
+if eq q 15210
+e = harray x 0
+hpathcp x
+emit 4043309247
+trapc 0 3
+hload x 4 3
+hcopy
+e3 2852126720 0 31 3
+e3 2852126720 2 31 1
+matconst 1 15210
+hsys 29
+spadd 4096
+hreturn dst x
+ret
+end
+if eq q 15204
+n = ulong 0
+end
+if or or eq q 15205 eq q 15206 eq q 15208
+n = ulong 4
+end
+if eq q 15207
+n = ulong 8
+end
+if eq q 15211
+n = ulong 24
+end
+if eq q 15212
+n = ulong 32
+end
+if eq n 99
+fail 9
+end
+put fr add x 23 n
+else
+put fr add x 23 xhreq 166 x
+end
+e = harray x 1
+t = alloc
+matconst t get fr add x 23
+e3 3942645760 31 get fr add x 22 t
+trapc 1 3
+save
+hload x 4 0
+if eq c 178
+matconst 1 q
+else
+hload x 2 1
+end
+basearg 2 e
+loadarg 16 1 get fr add x 21
+e3 2332033024 2 2 16
+if eq c 178
+if ge n 8
+matconst 16 n
+mimmed 3103784960 16 2 0
+end
+if or eq q 15205 eq q 15206
+mimmed 3107979264 2 2 0
+end
+if eq q 15206
+mimmed 4043309056 31 2 3
+trapc 1 3
+end
+if eq n 0
+matconst 2 0
+end
+end
+hsys 29
+hreturn dst x
+end
 note Bounded mapping table belongs to the emitted program, not the compiler process.
 note 128 slots of address, byte length, generation, access. Only owned spans are accessible.
 fn mtinit to void
@@ -6849,9 +6949,21 @@ end
 
 note mapnew fd:int offset:ulong bytes:ulong access:int mode:int -> long handle/errno.
 note Access 1 or 3 and modes 1/2/33/34 must be literal. No fixed address or executable map.
+note vfiomap fd:int A off n -> long handle/errno: n must be 32, a struct vfio_region_info the kernel
+note filled. Its flags need READ|MMAP (1|4); size and offset come from the span. Always read-only shared.
 fn mnew c ulong dst ulong x ulong to void
 acc = ulong 0
 mode = ulong 1048610
+if eq c 179
+harg x 4 8
+put fr add x 20 harray x 0
+put fr add x 23 alloc
+matconst get fr add x 23 32
+e3 3942645760 31 get fr add x 22 get fr add x 23
+trapc 1 3
+acc = ulong 1
+mode = ulong 1
+end
 if eq c 167
 harg x 0 8
 harg x 1 5
@@ -6869,12 +6981,27 @@ end
 if and and and ne mode 1 ne mode 2 ne mode 33 ne mode 34
 fail 9
 end
-else
+end
+if eq c 176
 harg x 1 5
 harg x 2 5
 end
 save
+if eq c 179
+basearg 6 get fr add x 20
+loadarg 16 1 get fr add x 21
+e3 2332033024 6 6 16
+mimmed 3107979264 15 6 1
+matconst 14 5
+e3 2315255808 15 15 14
+mimmed 4043309056 31 15 5
+trapc 1 3
+mload 1 6 2
+hload x 4 4
+mload 5 6 3
+else
 hload x 2 1
+end
 mimmed 4043309056 31 1 0
 trapc 0 3
 matconst 15 68719476736
@@ -6890,7 +7017,8 @@ trapc 1 3
 mimmed 4043309056 31 5 0
 trapc 1 3
 end
-else
+end
+if eq c 176
 hload x 1 0
 note Reservations are page aligned and bounded below the 40-bit GPU command limit.
 matconst 15 65536
@@ -6930,10 +7058,10 @@ matconst 0 18446744073709551592
 full = get oc 0
 emit 335544320
 patch19 vacant get oc 0
-if eq c 167
-matconst 0 0
-else
+if eq c 176
 hload x 1 0
+else
+matconst 0 0
 end
 matconst 2 acc
 matconst 3 mode
@@ -7252,6 +7380,15 @@ if eq c 224
 hbuffer c dst x
 ret
 end
+if eq c 178
+hdevctl c dst x
+ret
+end
+if eq c 179
+mtinit
+mnew c dst x
+ret
+end
 if eq c 176
 mtinit
 mnew c dst x
@@ -7316,23 +7453,7 @@ mcopy c dst x
 ret
 end
 if eq c 166
-note Same bounded ioctl contract as L605 src/device/omc.om at 0dee699.
-note Compose with native host words instead of maintaining a second compiler.
-note Only literal FIONREAD or encoded read/write NVRM F requests, exact writable bytes.
-put fr add x 23 xhreq 166 x
-e = harray x 1
-t = alloc
-matconst t get fr add x 23
-e3 3942645760 31 get fr add x 22 t
-trapc 1 3
-save
-hload x 4 0
-hload x 2 1
-basearg 2 e
-loadarg 16 1 get fr add x 21
-e3 2332033024 2 2 16
-hsys 29
-hreturn dst x
+hdevctl c dst x
 ret
 end
 if eq c 132
@@ -7889,7 +8010,7 @@ matconst d 0
 vdone 1 d 9
 ret
 end
-if or or and ge c 100 le c 177 and ge c 197 le c 198 and ge c 220 le c 222
+if or or and ge c 100 le c 179 and ge c 197 le c 198 and ge c 220 le c 222
 hostval c dst
 ret
 end
@@ -15460,8 +15581,9 @@ end
 if eq get progmode 0 0
 fail 9
 end
-note execpure (198) has no x86 strict-profile lowering; refuse it rather than run an unconfined exec.
-if eq c 198
+note execpure (198), vfioctl (178) and vfiomap (179) have no x86 lowering; refuse them rather than run an
+note unconfined exec or reach xhscalar.
+if or or eq c 198 eq c 178 eq c 179
 fail 25
 end
 x = mul get depth 0 32
