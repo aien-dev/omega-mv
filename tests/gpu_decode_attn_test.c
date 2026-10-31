@@ -33,12 +33,22 @@
 #include "omega_gpu_session.h"
 #include "omega_gpu_hostmath.h"
 #include "bw_warp_sim_k.h"
+#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+
+/* 0644, not fopen's 0666 & ~umask: a receipt is never world-writable */
+static FILE *create_0644(const char *path) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    FILE *f = fd >= 0 ? fdopen(fd, "w") : NULL;
+    if (fd >= 0 && !f) close(fd);
+    return f;
+}
 
 static int g_checks, g_failed;
 #define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
@@ -334,7 +344,7 @@ static int fill_history(OmegaGpuDecodeAttnCache *cache, const Case *c) {
     return OMEGA_GPU_DATTN_OK;
 }
 static int chip_run(const char *out_path, uint32_t reps) {
-    FILE *out = out_path ? fopen(out_path, "w") : NULL;
+    FILE *out = out_path ? create_0644(out_path) : NULL;
     if (out_path && !out) { printf("cannot write %s\n", out_path); return 1; }
     if (out) fprintf(out, "{\"receipt\":\"OMEGA_GPU_DECODE_ATTN_V1\",\"reps\":%u,\"evict\":%d,\"points\":[", reps, g_evict);
     const uint32_t MAXP = OMEGA_GPU_DATTN_MAX_POS;
@@ -432,7 +442,7 @@ static int geometry_refusal(uint32_t qh, uint32_t kvh, uint32_t hd, const char *
     for (int i = 0; i < nw; i++) printf("  reason %d: %s\n", i + 1, why[i]);
     printf("  needed: a decode attention kernel for this geometry (ternary engine design KT3)\n");
     if (out_path) {
-        FILE *f = fopen(out_path, "w");
+        FILE *f = create_0644(out_path);
         if (f) {
             fprintf(f, "{\"test\":\"gpu_decode_attn_test\",\"q_heads\":%u,\"kv_heads\":%u,\"head_dim\":%u,\"kernel_q_heads\":%u,\"kernel_kv_heads\":%u,\"reasons\":[",
                     qh, kvh, hd, OMEGA_GPU_DATTN_Q_HEADS, OMEGA_GPU_DATTN_KV_HEADS);

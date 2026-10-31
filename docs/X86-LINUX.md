@@ -538,8 +538,21 @@ Coverage distinctions must accompany any result:
   Each run gets a 10-second CPU limit; only `exec-parent` raises
   `RLIMIT_NOFILE` to 65600 because it duplicates a descriptor to 65537.
   `pure-child` runs outside `execpure`, so it exits 43 at its first fd check;
-  its later arms are not exercised. `gate669.om` at the current revision is
-  not reviewed and stays NOT_RUN.
+  its later arms are not exercised. `gate669.om` (sha `1f0e7222`) runs as the
+  x86 parent in a repository-shaped scratch: its 21 compiled, executed or
+  copied repository inputs (security673 corpora and consumers, the six
+  `seed/authority` gates, `effect-ok`, `seed/trace/sha256-gate.om`) are
+  SHA-pinned, `seed/rung4/om4.bin` is a copy of the operator compiler, and
+  `seed/omc/omc.om`, the source the gate rebuilds twice and compares, is copied
+  with its sha recorded. Its host children `/usr/bin/objdump` (binutils
+  2.42-4ubuntu2.10 arm64) with its shared objects and loader, and `/bin/true`,
+  are pinned; any pin mismatch is BLOCKED. The full run and argument `3`
+  (#671 hostile ingress) must exit 0; arguments `0`, `1` and `2` are the gate's
+  own fail-closed controls (child exit 7, self-SIGKILL, 30-second deadline
+  overrun) and must exit 99. Only whole `elapsed_ns=<digits>` stdout lines, the
+  gate's wall-clock observations, are masked before the native/x86 comparison;
+  their count and every other byte and scratch file must match. Each arm has a
+  300-second deadline.
 
 The disassembly check linearly decodes code bytes, including unreachable code,
 while carving source-matched jump-protected literal spans. A mnemonic inventory
