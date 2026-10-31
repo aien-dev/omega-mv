@@ -123,7 +123,10 @@ Run each command only after its predecessor succeeds. Expected output is
 The test deliberately has no dependency on the new EOF-probe scratch buffer, so the old-source
 control remains a valid compilation unit. Failed compilation, signals and timeouts are INVALID.
 Run the existing store, dispatch, dispatcher-order and complete security gates as regressions.
-This standalone gate is not yet wired into `gate669`; all compiled runs remain NOT_RUN.
+This standalone gate is not yet wired into `gate669`. Native run (2026-10-31, Linux AArch64,
+seed/out/omc 7a8b84fc): positive `store exact checks=4 fails=0`, exit 0; negative controls with
+`store.om` from main 1db94162 and from a35697e9 each printed both `FAIL store trailing-...` lines,
+exit 1. Store (77), dispatch (37), dispatcher-order (3) and lock (5) gates pass on this revision.
 
 `store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
 also lacked the already-existing `sgerr` generation-error interface; it now tests the current
