@@ -144,6 +144,21 @@ compile fchdir
 (cd "$stage"; ./fchdir)
 test -f "$stage/subdir/inside"
 printf 'PASS native fchdir/umask/getppid: directory fd, 0777 under mask 0, parent id\n'
+# getppid must name this shell, the direct parent of a simple command: compare the parent id
+# with $$ modulo 256 and modulo 251. They are coprime, so a wrong id passes only if it is
+# congruent to $$ modulo 64256; getpid (the child, a few ids above $$) and constants fail.
+for m in 256 251; do
+    printf 'fn main to int\nret int rem getppid long %s\nend\n' "$m" > "$stage/ppid.om"
+    "$OMC" < "$stage/ppid.om" > "$stage/ppid.bin"
+    chmod +x "$stage/ppid.bin"
+    set +e
+    "$stage/ppid.bin"
+    got=$?
+    set -e
+    want=$(($$ % m))
+    [ "$got" = "$want" ] || { printf 'FAIL: getppid mod %s exit %s, wanted %s (shell pid %s)\n' "$m" "$got" "$want" "$$" >&2; exit 1; }
+done
+printf 'PASS native getppid: parent id equals the gate shell pid (mod 256 and mod 251)\n'
 compile fdsync
 (cd "$stage"; ./fdsync)
 printf 'PASS native fdsync/memfd: data sync, closed fd refused, anonymous file rw\n'

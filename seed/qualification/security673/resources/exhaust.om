@@ -1,0 +1,98 @@
+note Finite differential stock test: 7 capacities x8 first q x8 second q =448.
+note All eight dimensions equal in this enumeration; heterogeneous rollback is in demo.
+text pass "PASS conservation finite differential 448 cases; conservative restart/fuel\n"
+text fail "FAIL conservation_or_retention\n"
+fn onecase cap ulong first ulong second ulong to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 first
+old = new ulong 64 0
+if ne setup s cap 0
+ret false
+end
+token t 0 1 1
+copy64 old s
+r = rv_reserve s t q 1
+if le first cap
+if ne r 0
+ret false
+end
+else
+if or ne r 3 not same s old
+ret false
+end
+end
+left = cap
+if eq r 0
+left = sub left first
+end
+token t 1 get s 56 1
+for d ulong 8
+put q d second
+end
+copy64 old s
+r = rv_reserve s t q 1
+if le second left
+if ne r 0
+ret false
+end
+else
+if or ne r 3 not same s old
+ret false
+end
+end
+ret eq rv_valid s 0
+end
+fn retained to bool
+s = new ulong 64 0
+t = new ulong 8 0
+q = new ulong 8 4
+z = new ulong 8 0
+old = new ulong 64 0
+if ne setup s 6 0
+ret false
+end
+token t 0 1 1
+if ne rv_reserve s t q 100 0
+ret false
+end
+if ne rv_uncertain s t 4
+ret false
+end
+copy64 old s
+if ne rv_recover s z 0
+ret false
+end
+if not same s old
+ret false
+end
+token t 1 2 1
+for d ulong 8
+put q d 1
+end
+if ne rv_reserve s t q 1 3
+ret false
+end
+if not same s old
+ret false
+end
+ret eq rv_valid s 0
+end
+fn main to int
+for cap ulong 7
+for first ulong 8
+for second ulong 8
+if not onecase cap first second
+n = write 1 fail 0 len fail
+ret 1
+end
+end
+end
+end
+if not retained
+n = write 1 fail 0 len fail
+ret 2
+end
+n = write 1 pass 0 len pass
+ret 0
+end

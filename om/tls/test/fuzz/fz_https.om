@@ -1,0 +1,95 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_https.om: fuzz target for an HTTPS response read through seed/net/https.om: http.om's
+note response parser (hrsprd, hbodyall) over the TLS transport (htlsrecv, htlsrecvd), so the TLS
+note record layer and the post-handshake path of om/tls/tls.om (tls_read, tls_rdapp, tls_rdrec,
+note tls_ralert, tls_post: NewSessionTicket, KeyUpdate) see the same bytes as the HTTP parser.
+note The connection starts as already established (fixed application keys, as after tls_connect):
+note the handshake itself is fz_flight's target.
+note Input: M chunks. M bit 0: response to HEAD; bit 1: suite (0 = TLS_CHACHA20_POLY1305_SHA256,
+note 1 = TLS_AES_128_GCM_SHA256). The chunks (common.om fz_feed) are sealed under the server's
+note application key and are all in the socket, its write side shut, before the client reads.
+
+note fz_tset: an established client state t on fd with suite su and fixed keys
+fn fz_tset t edit uchar * fd ulong su ulong to void
+tls_pn t TLFD fd 4
+put t TLPH 1
+put t TLSU uchar su
+put t TLWK 1
+put t TLRK 1
+put t TLCCS 2
+fz_fill t TLSAP 32 65
+fz_fill t TLCAP 32 97
+fz_fill t TLWKEY 32 129
+fz_fill t TLWIV 12 161
+fz_fill t TLRKEY 32 173
+fz_fill t TLRIV 12 205
+end
+
+note fz_mirc: m = the server side of t: it seals with t's read key and traffic secret, writing to fd
+fn fz_mirc m edit uchar * t view uchar * fd ulong to void
+for i ulong 32
+put m add TLWKEY i get t add TLRKEY i
+put m add TLSAP i get t add TLSAP i
+end
+for i ulong 12
+put m add TLWIV i get t add TLRIV i
+end
+put m TLSU get t TLSU
+put m TLWK 1
+tls_pn m TLFD fd 4
+end
+
+note fz_sconn: client cs/io on a socket pair, TLS established, every chunk of x sealed into it and
+note the server's write side shut; 0 ok, negative when the setup failed
+fn fz_sconn cs edit ulong 320 io edit uchar 262144 m edit uchar * x view uchar * to long
+fds = new ulong 2 0
+if ne fz_pair fds 0
+ret -1
+end
+r = hinit cs io int get fds 0 0
+if lt r 0
+ret r
+end
+r = htlsinit cs io FZHOST
+if lt r 0
+ret r
+end
+b = get cs HTB
+su = add 1 and shr ulong get x 0 1 1
+fz_tset part io b TLCSZ get fds 0 su
+fz_mirc m view part io b TLCSZ get fds 1
+s = fz_feed m x 1
+z = shutdown int get fds 1 1
+ret 0
+end
+
+fn fz_srun cs edit ulong 320 io edit uchar 262144 m edit uchar * x view uchar * to long
+aux = new uchar 65536 0
+r = fz_sconn cs io m x
+if lt r 0
+ret r
+end
+put cs HHEADMX 2048
+put cs HHMAX 16
+put cs HBCAP 4096
+put cs HFRMAX 1024
+put cs HISHEAD and ulong get x 0 1
+r = hrsprd cs io
+if le r 0
+ret r
+end
+ret hbodyall cs io part aux 0 65536
+end
+
+fn main to int
+cs = new ulong 320 0
+io = new uchar 262144 0
+m = new uchar TLCSZ 0
+in = new uchar FZCAP 0
+n = fz_read in
+if lt n 1
+ret 0
+end
+r = fz_srun cs io m part in 0 n
+ret 0
+end

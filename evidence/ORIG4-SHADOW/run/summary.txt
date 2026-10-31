@@ -1,0 +1,24 @@
+build_dir=/tmp/orig4.oVX3qn
+source_commit=345cbdc01ff6ceddd3cda65e61f669287ef1a51c
+host=Linux 7.0.0-1019-nvidia aarch64
+compiler_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+units_pinned=9
+binaries_sha256 shadow=a472fc2dc1fd5638 shadow-test=38e8421f0a82be0e
+records_source=SYNTHETIC fixture seed=7 count=780 fnv=626048380840256264 sha256=cffe6349af5d9146fd0e04b9c5e6ce4d0fc5f22c6b3405db3fe20fe5eed7997c
+shadow-test rc=0 wall_ms=21 ORIG4_SHADOW_TEST_PASS checks=265
+fixture_mlp rc=0 wall_ms=96 lines=783 COST records=780 scored=780 fallback=0 adv_cost=293570399 oracle_cost=281955502 incumbent_cost=445397764
+COST_WALL records=780 ms=96 image=mlp fixture
+fixture_affine rc=0 wall_ms=42 lines=783 COST records=780 scored=780 fallback=0 adv_cost=289927680 oracle_cost=281955502 incumbent_cost=445397764
+COST_WALL records=780 ms=42 image=affine fixture
+disabled rc=0 wall_ms=35 lines=1 SHADOW disabled
+damaged_image rc=0 wall_ms=36 lines=2 FALLBACK all reason=image-5
+short_image rc=0 wall_ms=37 lines=2 FALLBACK all reason=image-1
+forged_record rc=66 wall_ms=34 lines=1 FALLBACK all reason=records-7
+wrong_profile rc=66 wall_ms=34 lines=1 FALLBACK all reason=records-9
+revoked rc=67 wall_ms=34 lines=1 FALLBACK all reason=allow-12
+absent rc=67 wall_ms=35 lines=1 FALLBACK all reason=allow-13
+budget10 rc=0 wall_ms=38 lines=783 COST records=780 scored=10 fallback=770 adv_cost=28571 oracle_cost=26969 incumbent_cost=42405
+bad_config rc=68 wall_ms=34 lines=0 
+refusals: damaged image-5, truncated image-1, forged records-7, wrong-profile records-9, revoked allow-12, absent allow-13, budget 10/770, config 68, mode 64
+default_off: tap readers = tests/runtime/rx_empirical_optimizer.c only; src/ references to omexp|orig4|shadow.om|hvscore|shadow-advice = none
+ORIG4_SHADOW_RUN_PASS

@@ -1,0 +1,85 @@
+note probes.txt: word|expression. check.sh wraps each expression in a minimal program
+note (arrays a 8, b 64, c 128 bytes) and compares the compiled syscalls with effects table.
+read|read 0 b 0 8
+write|write 1 a 0 1
+fopen|fopen a 0 1 0 0
+fclose|fclose 3
+fsync|fsync 3
+fdsync|fdsync 3
+memfd|memfd a 0 1 0
+fchmod|fchmod 3 0
+chmod|chmod a 0 1 0
+chown|chown a 0 1 0 0
+faccess|faccess a 0 1 0
+getuid|getuid
+geteuid|geteuid
+getgid|getgid
+getegid|getegid
+fchdir|fchdir 3
+getppid|getppid
+setsid|setsid
+getpgid|getpgid 0
+getsid|getsid 0
+syncfs|syncfs 3
+shutdown|shutdown 3 0
+flock|flock 3 1
+setpgid|setpgid 0 0
+umask|umask 0
+fseek|fseek 3 long 0 0
+ftrunc|ftrunc 3 long 0
+truncate|truncate a 0 1 long 0
+unlink|unlink a 0 1
+makedir|makedir a 0 1 0
+rmdir|rmdir a 0 1
+cwd|cwd a 0 64
+chdir|chdir a 0 1
+readlnk|readlnk a 0 1 b 0 64
+getdnts|getdnts 3 b 0 64
+fstat|fstat 3 c 0 128
+stat|stat a 0 1 c 0 128
+lstat|lstat a 0 1 c 0 128
+renames|renames a 0 1 0
+link|link a 0 1
+symlnk|symlnk a 0 1
+monons|monons
+realns|realns
+sleepns|sleepns long 0
+socknew|socknew 1 1 0
+bind|bind 3 a 0 1
+connect|connect 3 a 0 1
+listen|listen 3 1
+accept|accept 3 0
+sockname|sockname 3 b 0 64
+sockopt|sockopt 3 1 2 a 0 4
+recv|recv 3 b 0 64 0
+send|send 3 a 0 1 0
+waitio|waitio 3 1 long 0
+peercred|peercred 3 b 0 64
+pollfds|pollfds b 0 8 long 0
+sendmsg|sendmsg 3 a 0 1 0
+fork|fork
+getpid|getpid
+killpid|killpid 0 0
+waitpid|waitpid 0 b 0 8 0
+pipefds|pipefds b 0 8 0
+dupfd|dupfd 3 4 0
+execprog|execprog a 0 1
+argcnt|argcnt
+argread|argread 0 b 0 64
+envcnt|envcnt
+envread|envread 0 b 0 64
+random|random b 0 8 0
+pread|pread 3 b 0 8 long 0
+pwrite|pwrite 3 a 0 1 long 0
+devctl|devctl 3 21531 b 0 4
+mapnew|mapnew 3 0 4096 1 1
+mapdrop|mapdrop long 1
+mapread|mapread long 1 0 b 0 8
+mapwrite|mapwrite long 1 0 a 0 1
+mapaddr|long mapaddr long 1
+mapget|long mapget long 1 0 8
+mapset|mapset long 1 0 8 0
+maphold|maphold 65536 4096
+mapbind|mapbind long 1 3 0 1
+devcall|devcall neg int 1 uint 3223340587 c 0 32 b 0 0
+uvmctl|uvmctl neg int 1 uint 75 c 0 8

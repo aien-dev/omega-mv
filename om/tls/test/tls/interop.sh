@@ -1,12 +1,14 @@
 #!/bin/sh
 # SPDX-License-Identifier: Apache-2.0
 # Interop and refusal table for the om/tls client against local `openssl s_server` instances.
-# usage: sh om/tls/test/tls/interop.sh CLIENT    (CLIENT = a build of test/tls/client.om)
+# usage: sh om/tls/test/tls/interop.sh CLIENT [BIGSEND]   (CLIENT = a build of test/tls/client.om,
+#        BIGSEND = a build of test/tls/bigsend.om after seed/net/http.om and https.om)
 # A throwaway PKI is generated with the openssl CLI (test tooling) under build/tls/interop/.
 # Every server listens on 127.0.0.1 only. Each row prints the expected and observed outcome;
 # exit 0 only when every row matches. Needs openssl (3.x) and python3 (the tamper proxy).
 set -u
 client=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+big=; [ -z "${2:-}" ] || big=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../../../.." && pwd)
 d="$root/build/tls/interop"
@@ -72,28 +74,68 @@ q openssl req -x509 -new -key other.key -subj /CN=other-root -days 30 -addext ba
 q openssl req -new -key good.key -subj /CN=localhost -addext subjectAltName=DNS:localhost -out stray.csr
 q openssl x509 -req -in stray.csr -CA other.pem -CAkey other.key -CAcreateserial -days 10 -copy_extensions copy -out stray.pem
 cp good.key stray.key
+# revocation: a leaf to revoke, a must-staple leaf (RFC 7633 tlsfeature), and OCSP responses
+# signed by the intermediate (openssl ocsp in responder mode over index.txt, nextUpdate +1 day)
+cp good.key revd.key; cp good.key must.key
+leaf revd DNS:localhost -days 10
+q openssl req -new -key must.key -subj /CN=must -addext subjectAltName=DNS:localhost -addext tlsfeature=status_request -out must.csr
+q openssl ca -batch -config ca.cnf -cert int.pem -keyfile int.key -extensions v3leaf -days 10 -in must.csr -out must.pem -notext
+q openssl ca -config ca.cnf -cert int.pem -keyfile int.key -revoke revd.pem
+ocsp() {
+  q openssl ocsp -issuer int.pem -cert "$1.pem" -no_nonce -reqout "$1.oreq"
+  q openssl ocsp -index index.txt -rsigner int.pem -rkey int.key -CA int.pem -reqin "$1.oreq" -ndays 1 -respout "$1.ocsp"
+}
+ocsp good; ocsp revd; ocsp must
 
-port=15400
-# nextport: the next port above $port with no listener on 127.0.0.1 (another process may hold one;
-# connecting to it would test that process instead of this row's server)
+# Ports: concurrent runs on one host (other worktrees, mutant runs) must not test each other's
+# servers. The default base differs per run (15400 + 100 * (pid mod 170), below the ephemeral
+# range); INTEROP_PORT fixes it. Every server must be seen listening on its port under its own
+# pid (owns) before the client connects; otherwise the next free port is tried.
+port=${INTEROP_PORT:-$((15400 + 100 * ($$ % 170)))}
+# nextport: the next port above $port with no listener on 127.0.0.1
 nextport() {
   port=$((port + 1))
   while ss -Hltn "sport = :$port" | grep -q .; do port=$((port + 1)); done
 }
+# owns PID PORT: PID listens on 127.0.0.1:PORT within 5 s (0), else 1 (it died, e.g. the port was
+# taken between nextport and bind, or another process holds the port)
+owns() {
+  i=0
+  while [ $i -lt 50 ]; do
+    if ss -Hltnp "sport = :$2" | grep -q "pid=$1,"; then return 0; fi
+    kill -0 "$1" 2> /dev/null || return 1
+    sleep 0.1; i=$((i + 1))
+  done
+  return 1
+}
+# drop PID: stop a server that did not get its port
+drop() { kill "$1" 2> /dev/null; wait "$1" 2> /dev/null; }
 fail=0; rows=0
-# row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name)
+# row LABEL EXPECT CERT CHAIN SERVER-ARGS... : EXPECT is OK or the TLS error name (and x509 name).
+# When $ropts is set the client gets PATH / and OPTS $ropts (0,0,0,0,1 = approved-only mode).
 row() {
   label=$1; expect=$2; cert=$3; chain=$4; shift 4
-  nextport; rows=$((rows + 1))
+  rows=$((rows + 1))
   if [ "$chain" = - ]; then ch=""; else ch="-cert_chain $chain"; fi
-  # shellcheck disable=SC2086
-  openssl s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
-  sp=$!
-  sleep 0.4
-  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"
+  n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    # shellcheck disable=SC2086
+    "${OSSL:-openssl}" s_server -accept "127.0.0.1:$port" -naccept 1 -cert "$cert.pem" -key "$cert.key" $ch -www "$@" > "s$port.log" 2>&1 &
+    sp=$!
+    owns "$sp" "$port" && break
+    drop "$sp"; n=$((n + 1))
+  done
+  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${ROWOPTS:-${ropts:-0}}" > "c$port.out" 2> "c$port.err"
   rc=$?
+  # $rowgroup (with s_server -trace): the group of the last key_share the server sent must be it
+  if [ -n "${rowgroup:-}" ]; then i=0; while [ $i -lt 50 ] && kill -0 "$sp" 2> /dev/null; do sleep 0.1; i=$((i + 1)); done; fi
   kill "$sp" 2> /dev/null; wait "$sp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
+  if [ "$got" = OK ] && [ -n "${rowgroup:-}" ]; then
+    g=$(sed -n 's/^ *NamedGroup: \([^ ]*\) .*/\1/p' "s$port.log" | tail -n 1)
+    [ "$g" = "$rowgroup" ] || got="GROUP ${g:-none} (server log s$port.log)"
+  fi
   case "$got" in
   "$expect"*) v=PASS ;;
   *) v=FAIL; fail=1 ;;
@@ -115,40 +157,86 @@ row "missing intermediate"      "TLSERR TLS_ERR_CERTIFICATE detail 5"           
 row "TLS 1.2 only server"       "TLSERR TLS_ERR_ALERT_RECEIVED detail 70"              good int.pem -tls1_2
 row "AES-256 suite only"        "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"              good int.pem -tls1_3 -ciphersuites TLS_AES_256_GCM_SHA384
 row "P-256 group only"          "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"              good int.pem -tls1_3 -groups P-256
+# OpenSSL answers a ClientHello without an x25519 share (FLAGS=2) with a HelloRetryRequest
+ROWOPTS=0,0,0,0,2 row "openssl HelloRetryRequest" OK                                good int.pem -tls1_3 -groups X25519
+
+# approved-only mode (tls_init flag 4): the client offers TLS_AES_128_GCM_SHA256 only, key shares for
+# secp256r1 and secp384r1 only, and ECDSA P-256/P-384 and RSA-PSS signatures only
+ropts=0,0,0,0,1
+row "approved: P-256, aes128gcm"  OK                                                   good int.pem -tls1_3 -groups P-256 -ciphersuites TLS_AES_128_GCM_SHA256
+row "approved: P-384, aes128gcm"  OK                                                   good int.pem -tls1_3 -groups P-384 -ciphersuites TLS_AES_128_GCM_SHA256
+row "approved: RSA leaf (rsa_pss)" OK                                                  rsa  int.pem -tls1_3 -groups P-256
+row "approved: unrestricted srv"  OK                                                   good int.pem -tls1_3
+row "approved: chacha-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -ciphersuites TLS_CHACHA20_POLY1305_SHA256
+row "approved: X25519-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups X25519
+ropts=
+
+# revocation (tls_init flag 8, rev.om): the client offers status_request and checks the leaf's
+# stapled OCSP response (s_server -status_file); a must-staple (RFC 7633) leaf served without a
+# staple is refused. Without flag 8 the same servers are accepted (the controls).
+ropts=0,0,0,0,8
+row "rev: good staple"            OK                                                   good int.pem -tls1_3 -status_file good.ocsp
+row "rev: revoked staple"         "TLSERR TLS_ERR_CERTIFICATE detail 32"               revd int.pem -tls1_3 -status_file revd.ocsp
+row "rev: staple for other cert"  "TLSERR TLS_ERR_CERTIFICATE detail 33"               good int.pem -tls1_3 -status_file revd.ocsp
+row "rev: no staple, plain leaf"  OK                                                   good int.pem -tls1_3
+row "rev: must-staple, staple"    OK                                                   must int.pem -tls1_3 -status_file must.ocsp
+row "rev: must-staple, no staple" "TLSERR TLS_ERR_CERTIFICATE detail 35"               must int.pem -tls1_3
+ropts=0
+row "no rev: revoked staple"      OK                                                   revd int.pem -tls1_3 -status_file revd.ocsp
+row "no rev: must-staple, none"   OK                                                   must int.pem -tls1_3
+ropts=
 
 # crafted ServerHellos (fakesh.py): the client's own refusals
 fake() {
-  nextport; rows=$((rows + 1))
-  python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
-  fp=$!
-  sleep 0.4
-  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  rows=$((rows + 1)); n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    python3 "$here/fakesh.py" "$port" "$1" > "f$port.log" 2>&1 &
+    fp=$!
+    owns "$fp" "$port" && break
+    drop "$fp"; n=$((n + 1))
+  done
+  timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${3:-0}" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   got="$(tr -d '\n' < "c$port.err") (exit $rc)"
   case "$got" in "$2"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
-  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fake ServerHello: $1" "$2" "$got"
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fake ServerHello: $1${3:+ [$3]}" "$2" "$got"
 }
 fake tls12  "TLSERR TLS_ERR_PROTOCOL_VERSION"
-fake hrr    "TLSERR TLS_ERR_HELLO_RETRY_UNSUPPORTED"
+fake hrr    "TLSERR TLS_ERR_DECODE"
 fake suite  "TLSERR TLS_ERR_CIPHER_SUITE"
 fake sid    "TLSERR TLS_ERR_SESSION_ID_ECHO"
 fake group  "TLSERR TLS_ERR_KEY_SHARE"
 fake zero   "TLSERR TLS_ERR_ZERO_SHARED_SECRET"
 fake dupext "TLSERR TLS_ERR_EXTENSION"
 fake trail  "TLSERR TLS_ERR_DECODE"
+# approved-only mode: a server choosing ChaCha or X25519 anyway, or sending an off-curve point
+fake apchacha "TLSERR TLS_ERR_CIPHER_SUITE"  0,0,0,0,1
+fake apx25519 "TLSERR TLS_ERR_KEY_SHARE"     0,0,0,0,1
+fake apbad256 "TLSERR TLS_ERR_KEY_SHARE"     0,0,0,0,1
+fake apbad384 "TLSERR TLS_ERR_KEY_SHARE"     0,0,0,0,1
+# control: default mode takes the ChaCha suite and refuses only the secp256r1 share it never offered
+fake apchacha "TLSERR TLS_ERR_KEY_SHARE"
 
 # full handshakes from fakesrv.py (security review of omega-mv #813): CCS policy, record-count caps,
 # CertificateVerify refusals, close_notify during the handshake. EXPECT OK needs exit 0 and the reply.
+# fsrv MODE EXPECT [OPTS]: OPTS is the client's "REC,HSMS,SPLIT,PAUSEMS,FLAGS" (record limit,
+# handshake ms, split, pause ms, FLAGS bits: 1 approved-only mode, 2 no x25519 share in
+# ClientHello1, 4 zero-length read check)
 fsrv() {
-  nextport; rows=$((rows + 1))
-  python3 "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
-  fp=$!
-  sleep 0.6
-  timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  rows=$((rows + 1)); n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" "$1" > "f$port.log" 2>&1 &
+    fp=$!
+    owns "$fp" "$port" && break
+    drop "$fp"; n=$((n + 1))
+  done
+  timeout 60 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" / "${3:-0}" > "c$port.out" 2> "c$port.err"; rc=$?
   kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
   if [ "$rc" = 0 ] && grep -q '^HTTP/1.0 200 ok' "c$port.out"; then got=OK; else got="$(tr -d '\n' < "c$port.err") (exit $rc)"; fi
   case "$got" in "$2"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
-  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: $1" "$2" "$got"
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: $1${3:+ [$3]}" "$2" "$got"
 }
 fsrv ok          OK
 fsrv empty50     OK
@@ -165,20 +253,122 @@ fsrv empty1500   "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
 fsrv tickets1500 "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"
 fsrv closehs     "TLSERR TLS_ERR_ALERT_RECEIVED detail 0 (exit 31)"
 fsrv closepre    "TLSERR TLS_ERR_ALERT_RECEIVED detail 0 (exit 31)"
+# key lifetime (RFC 8446 section 5.5) with the test-only record limit, and the handshake budget
+fsrv kuexact     OK                                                      5,0,0
+fsrv kuover      "TLSERR TLS_ERR_SEQUENCE_LIMIT detail 0 (exit 38)"      5,0,0
+fsrv kurot       OK                                                      5,0,0
+fsrv kuw:8       OK                                                      8,0,1
+fsrv loris       "TLSERR TLS_ERR_TIMEOUT detail 0 (exit 13)"             0,2000,0
+fsrv slowsh      OK                                                      0,10000,0
+# HelloRetryRequest (RFC 8446 4.1.4); OPTS FLAGS=2 withholds the x25519 share from ClientHello1
+fsrv hrrok       OK                                                      0,0,0,0,2
+fsrv hrrok       "TLSERR TLS_ERR_KEY_SHARE detail 0 (exit 21)"
+fsrv hrrnock     OK                                                      0,0,0,0,2
+fsrv hrrccs      OK                                                      0,0,0,0,2
+fsrv hrrbadgrp   "TLSERR TLS_ERR_KEY_SHARE detail 0 (exit 21)"           0,0,0,0,2
+fsrv hrr2        "TLSERR TLS_ERR_UNEXPECTED_MESSAGE detail 0 (exit 17)"  0,0,0,0,2
+fsrv hrrsuite    "TLSERR TLS_ERR_CIPHER_SUITE detail 0 (exit 20)"        0,0,0,0,2
+fsrv hrrnochg    "TLSERR TLS_ERR_HELLO_RETRY detail 0 (exit 23)"         0,0,0,0,2
+fsrv hrrunk      "TLSERR TLS_ERR_ILLEGAL_PARAMETER detail 0 (exit 41)"   0,0,0,0,2
+fsrv hrrunk2     "TLSERR TLS_ERR_EXTENSION detail 0 (exit 22)"           0,0,0,0,2
+fsrv hrrsv       "TLSERR TLS_ERR_PROTOCOL_VERSION detail 0 (exit 19)"    0,0,0,0,2
+fsrv hrrbigck    "TLSERR TLS_ERR_MESSAGE_TOO_BIG detail 0 (exit 32)"     0,0,0,0,2
+# NewSessionTicket syntax (RFC 8446 4.6.1), CertificateEntry extensions, zero-length tls_read
+fsrv nstok       OK
+fsrv nstlife     "TLSERR TLS_ERR_TICKET detail 0 (exit 40)"
+fsrv nstnotk     "TLSERR TLS_ERR_DECODE"
+fsrv nsttrail    "TLSERR TLS_ERR_DECODE"
+fsrv nstext      "TLSERR TLS_ERR_DECODE"
+fsrv entryext    "TLSERR TLS_ERR_EXTENSION detail 21"
+fsrv ok          OK                                                      0,0,0,0,4
+
+# htlssend (seed/net/https.om) with BIGSEND (a build of test/tls/bigsend.om, 2nd argument): a send
+# past the end of io is HEINVAL, not a trap; then one send of the whole io below the TLS state,
+# which fakesrv.py sink checks byte for byte
+if [ -n "$big" ]; then
+  rows=$((rows + 1)); n=0
+  while [ $n -lt 5 ]; do
+    nextport
+    ${FAKESRV_PY:-python3} "$here/fakesrv.py" "$port" "$d" sink > "f$port.log" 2>&1 &
+    fp=$!
+    owns "$fp" "$port" && break
+    drop "$fp"; n=$((n + 1))
+  done
+  timeout 120 "$big" "$port" "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
+  kill "$fp" 2> /dev/null; wait "$fp" 2> /dev/null
+  got="$(tr -d '\n' < "c$port.out") (exit $rc)"
+  case "$got" in "BIGSEND OK "*"(exit 0)") v=PASS ;; *) v=FAIL; fail=1 ;; esac
+  printf '%s | %-28s | expect %-60s | got %s\n' "$v" "fakesrv: sink (htlssend)" "BIGSEND OK (exit 0)" "$got"
+fi
+# approved-only mode against python cryptography (secp256r1 ECDH, TLS_AES_128_GCM_SHA256): an
+# oracle independent of openssl for the P-256 shared secret, and a CertificateVerify refusal
+fsrv ap-ok       OK                                                      0,0,0,0,1
+fsrv ap-cvbad    "TLSERR TLS_ERR_CERTIFICATE_VERIFY"                     0,0,0,0,1
+
+# X25519MLKEM768 (0x11EC, draft-ietf-tls-ecdhe-mlkem): ClientHello1 carries the hybrid share and an
+# x25519 share (tls_init flag 2: the hybrid share only). Two oracles independent of om/tls:
+# fakesrv.py with kyber-py (FAKESRV_PY must import kyber_py) and OpenSSL 3.5 s_server (OPENSSL35,
+# built by openssl35.sh; -trace names the group of the server's key_share). A missing oracle leaves
+# its rows NOT_RUN; TLS_PQ=1 (CI) makes a missing oracle a FAIL.
+pqmiss=""
+if ${FAKESRV_PY:-python3} -c 'import kyber_py.ml_kem' 2> /dev/null; then
+  fsrv hyb       OK
+  fsrv hyb       OK                                                      0,0,0,0,2
+  fsrv hybx      OK
+  fsrv hybshort  "TLSERR TLS_ERR_KEY_SHARE"
+  fsrv hybzero   "TLSERR TLS_ERR_ZERO_SHARED_SECRET"
+  fsrv hybct     "TLSERR TLS_ERR_BAD_RECORD_MAC"
+else
+  pqmiss="$pqmiss kyber-py"
+fi
+if [ -n "${OPENSSL35:-}" ] && "$OPENSSL35" list -kem-algorithms 2> /dev/null | grep -q ML-KEM-768; then
+  OSSL=$OPENSSL35
+  rowgroup=X25519MLKEM768
+  row "ossl35: hybrid-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
+  row "ossl35: default groups"      OK                                                   good int.pem -tls1_3 -trace
+  ropts=0,0,0,0,2
+  row "ossl35: FLAGS 2, hybrid srv" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768 -trace
+  rowgroup=ecdh_x25519
+  row "ossl35: FLAGS 2, HRR x25519" OK                                                   good int.pem -tls1_3 -groups X25519 -trace
+  ropts=
+  row "ossl35: X25519-only srv"     OK                                                   good int.pem -tls1_3 -groups X25519 -trace
+  ropts=0,0,0,0,1
+  rowgroup=secp256r1
+  row "ossl35: approved, no hybrid" OK                                                   good int.pem -tls1_3 -groups X25519MLKEM768:P-256 -ciphersuites TLS_AES_128_GCM_SHA256 -trace
+  ropts=
+  rowgroup=
+  row "ossl35: MLKEM768-only srv"   "TLSERR TLS_ERR_ALERT_RECEIVED detail 40"            good int.pem -tls1_3 -groups MLKEM768
+  OSSL=
+else
+  pqmiss="$pqmiss openssl-3.5"
+fi
+if [ -n "$pqmiss" ]; then
+  if [ "${TLS_PQ:-0}" = 1 ]; then v=FAIL; fail=1; else v=NOT_RUN; fi
+  printf '%s | %-28s | missing oracle:%s\n' "$v" "X25519MLKEM768 rows" "$pqmiss"
+fi
 
 # record tamper: a proxy flips one bit in the first server application-data record after the
 # handshake (the 5th server record); the client must refuse it with bad_record_mac
-nextport; rows=$((rows + 1)); lp=$port; nextport; bp=$port; port=$lp
-openssl s_server -accept "127.0.0.1:$bp" -naccept 1 -cert good.pem -key good.key -cert_chain int.pem -www -tls1_3 > "s$bp.log" 2>&1 &
-sp=$!
-python3 "$here/tamper.py" "$port" "$bp" > "p$port.log" 2>&1 &
-pp=$!
-sleep 0.6
+rows=$((rows + 1)); n=0
+while [ $n -lt 5 ]; do
+  nextport; bp=$port
+  openssl s_server -accept "127.0.0.1:$bp" -naccept 1 -cert good.pem -key good.key -cert_chain int.pem -www -tls1_3 > "s$bp.log" 2>&1 &
+  sp=$!
+  if owns "$sp" "$bp"; then
+    nextport
+    python3 "$here/tamper.py" "$port" "$bp" > "p$port.log" 2>&1 &
+    pp=$!
+    owns "$pp" "$port" && break
+    drop "$pp"
+  fi
+  drop "$sp"; n=$((n + 1))
+done
 timeout 30 "$client" localhost "$port" get 127.0.0.1 "$d/root.pem" > "c$port.out" 2> "c$port.err"; rc=$?
 kill "$sp" "$pp" 2> /dev/null; wait "$sp" "$pp" 2> /dev/null
 got="$(tr -d '\n' < "c$port.err") (exit $rc)"
 case "$got" in "TLSERR TLS_ERR_BAD_RECORD_MAC"*) v=PASS ;; *) v=FAIL; fail=1 ;; esac
 printf '%s | %-28s | expect %-60s | got %s\n' "$v" "tampered record (proxy)" "TLSERR TLS_ERR_BAD_RECORD_MAC" "$got"
 
-if [ $fail = 0 ]; then echo "INTEROP PASS rows=$rows"; else echo "INTEROP FAIL rows=$rows"; fi
+if [ -n "$pqmiss" ]; then pq="NOT_RUN($(echo $pqmiss | tr ' ' ,))"; else pq=PASS; fi
+if [ $fail = 0 ]; then echo "INTEROP PASS rows=$rows pq=$pq"; else echo "INTEROP FAIL rows=$rows pq=$pq"; fi
 exit $fail

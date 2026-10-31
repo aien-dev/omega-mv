@@ -1,0 +1,24 @@
+note seed/net/tests/nosup.om -- a program built without TLS (http.om + notls.om) must refuse
+note every byte on a connection whose transport is not plain TCP (HXPORT 1): the three
+note transport functions return HENOSUP. Exit 0 = all three refused; 1..3 name the one that did not.
+fn main to int
+cs = new ulong 320 0
+io = new uchar 4096 0
+d = new uchar 64 0
+r = hinit cs io 0 0
+if ne r 0
+ret 9
+end
+put cs HXPORT 1
+if ne hrecvio cs io 0 16 HENOSUP
+ret 1
+end
+if ne hrecvd cs io d HENOSUP
+ret 2
+end
+if ne hsendio cs io get cs HWB 1 HENOSUP
+ret 3
+end
+put cs HOPEN 0
+ret 0
+end

@@ -1,0 +1,6 @@
+note plain: stdout only; manifest must be class io, syscalls 64 and exit 93.
+text hi "plain\n"
+fn main to int
+r = write 1 hi 0 len hi
+ret 0
+end

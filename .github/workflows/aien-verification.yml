@@ -72,6 +72,24 @@ jobs:
       - name: Crumbs must be exactly what the compiler produces now
         run: crumb verify .
 
+      # #938: the offline DAG evaluator (#936) on x86_64. This host links
+      # tests/dagsim/sha256_host.c (Makefile DS_SHA_SRC); the AArch64 link
+      # through src/omega_om_units.c runs in om-units-arm64.yml.
+      - name: test-dagsim (offline DAG evaluator, x86_64)
+        # shell: bash runs `bash -eo pipefail`, so a failing make fails the step through the tee.
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/dagsim"
+          make test-dagsim 2>&1 | tee "$RUNNER_TEMP/dagsim/test-dagsim-x86_64.log"
+
+      - name: Keep the test-dagsim log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-dagsim-x86_64
+          path: ${{ runner.temp }}/dagsim/
+          if-no-files-found: ignore
+
       - name: Install Stable Rust Toolchain (for the pinned aien-test build)
         uses: dtolnay/rust-toolchain@stable
         if: steps.anchors.outputs.enrolled == 'true'

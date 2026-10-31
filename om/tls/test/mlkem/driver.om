@@ -1,0 +1,594 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/sha3.om and om/tls/mlkem.om (program mode). run.sh writes the
+note line om2, then sha3.om, mlkem.om and this file. Reads a vector file on stdin, one case per line,
+note fields separated by one space, byte strings in lowercase hex, - for an empty or unchecked field:
+note   H A MSG OUT            one-shot hash: A 1 SHA3-256, 2 SHA3-512, 3 SHAKE128, 4 SHAKE256 (len OUT bytes)
+note   S A MSG OUT            the same through init / absorb / squeeze in varying chunk sizes
+note   K D Z EK DK            mlkem_keygen d z must return 0 and write EK, DK
+note   Q R SEED EK DK         mlkem_keygen_seed seed must return R; when R = 0 it must write EK, DK
+note   E R EK M C K           mlkem_encaps ek m must return R; R = 0: writes C, K; else ct, ss all zero
+note   D R DK C K             mlkem_decaps dk c must return R; R = 0: writes K; else ss all zero
+note   C R1 SEED EK C R2 K    keygen_seed seed returns R1 (EK when 0); then decaps dk c returns R2 (K when 0)
+note   L                      length checks: six calls with one wrong-sized buffer must return 2
+note   T N                    timing: N keygen, N encaps, N decaps calls; prints TIME line L OP n N ns T
+note An unchecked field (-) of an output is skipped; an empty input field (-) is zero bytes.
+note Lines starting with # and empty lines are skipped. Prints one MISMATCH line per wrong result
+note and the summary line: cases C calls V mismatches X ns T (T = ns spent in checked calls).
+note Exit 0 only when at least one checked call ran and none mismatched; 1 otherwise; 65 bad input.
+
+text MTTMIS "MISMATCH line "
+text MTTGOT " got rc "
+text MTTWANT " want rc "
+text MTTBYTE " bytes "
+text MTTCASE "cases "
+text MTTCALL " calls "
+text MTTMM " mismatches "
+text MTTNS " ns "
+text MTTTIME "TIME line "
+text MTTKG " keygen"
+text MTTEN " encaps"
+text MTTDE " decaps"
+text MTTN " n "
+text MTTNL "\n"
+text MTTBAD "driver: bad input\n"
+
+const MTBUF ulong 65536
+
+global MTIN uchar 16777216
+global MTLEN ulong 1
+global MTOUT uchar 32
+global MTCNT ulong 8
+global MTOK ulong 32
+
+fn mlkemt_num v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put MTOUT sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 MTOUT sub 32 k k
+end
+
+fn mlkemt_say t view uchar * to void
+r = write 1 t 0 len t
+end
+
+fn mlkemt_bad to void
+r = write 2 MTTBAD 0 len MTTBAD
+exit 65
+end
+
+fn mlkemt_nib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+mlkemt_bad
+ret 0
+end
+
+fn mlkemt_bump i ulong v ulong to void
+put MTCNT i add get MTCNT i v
+end
+
+note split MTIN[p..e) at single spaces into MTOK (start, end pairs); n fields required
+fn mlkemt_tok p ulong e ulong n ulong to void
+k = ulong 0
+s = p
+q = p
+while le q e bound 999999
+if or eq q e eq get MTIN q 32
+if or eq q s ge k 16
+mlkemt_bad
+end
+put MTOK mul k 2 s
+put MTOK add mul k 2 1 q
+k = add k 1
+s = add q 1
+end
+q = add q 1
+end
+if ne k n
+mlkemt_bad
+end
+end
+
+note 1 when field k is the single character -
+fn mlkemt_dash k ulong to ulong
+s = get MTOK mul k 2
+if and eq sub get MTOK add mul k 2 1 s 1 eq get MTIN s 45
+ret 1
+end
+ret 0
+end
+
+note byte length of hex field k (0 for -)
+fn mlkemt_tl k ulong to ulong
+if eq mlkemt_dash k 1
+ret 0
+end
+n = sub get MTOK add mul k 2 1 get MTOK mul k 2
+if ne and n 1 0
+mlkemt_bad
+end
+ret shr n 1
+end
+
+note decimal field k
+fn mlkemt_dec k ulong to ulong
+s = get MTOK mul k 2
+e = get MTOK add mul k 2 1
+v = ulong 0
+for i ulong sub e s
+c = ulong get MTIN add s i
+if or or lt c 48 gt c 57 ge i 9
+mlkemt_bad
+end
+v = add mul v 10 sub c 48
+end
+ret v
+end
+
+note hex field k into all of a (its byte length must be len a)
+fn mlkemt_hex a edit uchar * k ulong to void
+if ne mlkemt_tl k len a
+mlkemt_bad
+end
+s = get MTOK mul k 2
+for i ulong len a
+hi = mlkemt_nib ulong get MTIN add s mul i 2
+lo = mlkemt_nib ulong get MTIN add add s mul i 2 1
+put a i uchar or shl hi 4 lo
+end
+end
+
+note 0 when o equals hex field k (or k is -), else 1
+fn mlkemt_cmp o view uchar * k ulong to ulong
+if eq mlkemt_dash k 1
+ret 0
+end
+if ne mlkemt_tl k len o
+ret 1
+end
+s = get MTOK mul k 2
+d = ulong 0
+for i ulong len o
+hi = mlkemt_nib ulong get MTIN add s mul i 2
+lo = mlkemt_nib ulong get MTIN add add s mul i 2 1
+d = or d xor ulong get o i or shl hi 4 lo
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+note 0 when every byte of o is zero, else 1
+fn mlkemt_zero o view uchar * to ulong
+d = ulong 0
+for i ulong len o
+d = or d ulong get o i
+end
+if ne d 0
+ret 1
+end
+ret 0
+end
+
+note counters in MTCNT: 0 line, 1 cases, 2 calls, 3 mismatches, 4 ns
+fn mlkemt_check got ulong want ulong d ulong to void
+mlkemt_bump 2 1
+if or ne got want ne d 0
+mlkemt_bump 3 1
+mlkemt_say MTTMIS
+mlkemt_num get MTCNT 0
+mlkemt_say MTTGOT
+mlkemt_num got
+mlkemt_say MTTWANT
+mlkemt_num want
+mlkemt_say MTTBYTE
+mlkemt_num d
+mlkemt_say MTTNL
+end
+end
+
+fn mlkemt_lap t0 long to void
+mlkemt_bump 4 ulong sub monons t0
+end
+
+note one-shot hash of m into o by algorithm a
+fn mlkemt_hash a ulong m view uchar * o edit uchar * to void
+if eq a 1
+sha3_256 m o
+ret
+end
+if eq a 2
+sha3_512 m o
+ret
+end
+if eq a 3
+sha3_shake128 m o
+ret
+end
+sha3_shake256 m o
+end
+
+note the same hash through the streaming API: absorb chunks 1 + (37 i mod 211), squeeze chunks
+note 1 + (53 i mod 199) bytes
+fn mlkemt_strm a ulong m view uchar * o edit uchar * to void
+c = new ulong S3CN 0
+sha3_shake256_init c
+if eq a 1
+sha3_256_init c
+end
+if eq a 2
+sha3_512_init c
+end
+if eq a 3
+sha3_shake128_init c
+end
+q = ulong 0
+i = ulong 0
+while lt q len m bound 999999
+k = add 1 rem mul i 37 211
+if gt k sub len m q
+k = sub len m q
+end
+sha3_absorb c part m q k
+q = add q k
+i = add i 1
+end
+q = 0
+while lt q len o bound 999999
+k = add 1 rem mul i 53 199
+if gt k sub len o q
+k = sub len o q
+end
+sha3_squeeze c part o q k
+q = add q k
+i = add i 1
+end
+end
+
+fn mlkemt_h p ulong e ulong st ulong to void
+m = new uchar MTBUF 0
+o = new uchar 4096 0
+mlkemt_tok p e 4
+a = mlkemt_dec 1
+n = mlkemt_tl 2
+w = mlkemt_tl 3
+if or lt a 1 gt a 4
+mlkemt_bad
+end
+if or gt n MTBUF gt w 4096
+mlkemt_bad
+end
+if and eq a 1 ne w 32
+mlkemt_bad
+end
+if and eq a 2 ne w 64
+mlkemt_bad
+end
+mlkemt_hex part m 0 n 2
+t0 = monons
+if eq st 0
+mlkemt_hash a part m 0 n part o 0 w
+else
+mlkemt_strm a part m 0 n part o 0 w
+end
+mlkemt_lap t0
+mlkemt_check 0 0 mlkemt_cmp part o 0 w 3
+end
+
+fn mlkemt_k to void
+d = new uchar 32 0
+z = new uchar 32 0
+ek = new uchar MKEKSZ 0
+dk = new uchar MKDKSZ 0
+mlkemt_hex d 1
+mlkemt_hex z 2
+t0 = monons
+r = mlkem_keygen d z ek dk
+mlkemt_lap t0
+mlkemt_check r 0 or mlkemt_cmp ek 3 mlkemt_cmp dk 4
+end
+
+fn mlkemt_q to void
+s = new uchar 128 0
+ek = new uchar MKEKSZ 0
+dk = new uchar MKDKSZ 0
+w = mlkemt_dec 1
+n = mlkemt_tl 2
+if gt n 128
+mlkemt_bad
+end
+mlkemt_hex part s 0 n 2
+t0 = monons
+r = mlkem_keygen_seed part s 0 n ek dk
+mlkemt_lap t0
+d = ulong 0
+if eq w 0
+d = or mlkemt_cmp ek 3 mlkemt_cmp dk 4
+end
+mlkemt_check r w d
+end
+
+fn mlkemt_e to void
+ek = new uchar 4096 0
+m = new uchar 32 0
+ct = new uchar MKCTSZ 0
+ss = new uchar 32 0
+w = mlkemt_dec 1
+n = mlkemt_tl 2
+if gt n 4096
+mlkemt_bad
+end
+mlkemt_hex part ek 0 n 2
+mlkemt_hex m 3
+for i ulong MKCTSZ
+put ct i 0xa5
+end
+t0 = monons
+r = mlkem_encaps part ek 0 n m ct ss
+mlkemt_lap t0
+d = ulong 0
+if eq w 0
+d = or mlkemt_cmp ct 4 mlkemt_cmp ss 5
+else
+d = or mlkemt_zero ct mlkemt_zero ss
+end
+mlkemt_check r w d
+end
+
+note decaps of field kd (dk bytes from buffer dk) and field kc into ss, want rc w, K at field kk
+fn mlkemt_dec2 dk view uchar * kc ulong w ulong kk ulong to void
+c = new uchar 4096 0
+ss = new uchar 32 0
+n = mlkemt_tl kc
+if gt n 4096
+mlkemt_bad
+end
+mlkemt_hex part c 0 n kc
+for i ulong 32
+put ss i 0xa5
+end
+t0 = monons
+r = mlkem_decaps dk part c 0 n ss
+mlkemt_lap t0
+d = ulong 0
+if eq w 0
+d = mlkemt_cmp ss kk
+else
+d = mlkemt_zero ss
+end
+mlkemt_check r w d
+end
+
+fn mlkemt_d to void
+dk = new uchar 4096 0
+n = mlkemt_tl 2
+if gt n 4096
+mlkemt_bad
+end
+mlkemt_hex part dk 0 n 2
+mlkemt_dec2 part dk 0 n 3 mlkemt_dec 1 4
+end
+
+fn mlkemt_c to void
+s = new uchar 128 0
+ek = new uchar MKEKSZ 0
+dk = new uchar MKDKSZ 0
+w = mlkemt_dec 1
+n = mlkemt_tl 2
+if gt n 128
+mlkemt_bad
+end
+mlkemt_hex part s 0 n 2
+t0 = monons
+r = mlkem_keygen_seed part s 0 n ek dk
+mlkemt_lap t0
+d = ulong 0
+if eq w 0
+d = mlkemt_cmp ek 3
+end
+mlkemt_check r w d
+if and eq w 0 eq r 0
+mlkemt_dec2 dk 4 mlkemt_dec 5 6
+end
+end
+
+note seven calls: six with one wrong-sized buffer must return 2, one well-sized keygen_seed 0
+fn mlkemt_l1 to void
+d = new uchar 32 0
+z = new uchar 32 0
+ek = new uchar 1185 0
+dk = new uchar 2401 0
+r = mlkem_keygen d z part ek 0 1183 part dk 0 2400
+mlkemt_check r 2 0
+r = mlkem_keygen d z part ek 0 1184 dk
+mlkemt_check r 2 0
+end
+
+fn mlkemt_l2 to void
+s = new uchar 64 0
+ek = new uchar 1184 0
+dk = new uchar 2400 0
+r = mlkem_keygen_seed part s 0 63 ek dk
+mlkemt_check r 2 0
+r = mlkem_keygen_seed s ek dk
+mlkemt_check r 0 0
+end
+
+fn mlkemt_l3 to void
+dk = new uchar 2400 0
+ct = new uchar 1088 0
+ss = new uchar 33 0
+r = mlkem_decaps dk ct part ss 0 31
+mlkemt_check r 2 0
+r = mlkem_decaps dk ct ss
+mlkemt_check r 2 0
+end
+
+fn mlkemt_l to void
+mlkemt_l1
+mlkemt_l2
+mlkemt_l3
+m = new uchar 32 0
+ek = new uchar 1184 0
+ct = new uchar 1089 0
+ss = new uchar 32 0
+r = mlkem_encaps ek m part ct 0 1087 ss
+mlkemt_check r 2 0
+end
+
+fn mlkemt_time op view uchar * n ulong dt ulong to void
+mlkemt_say MTTTIME
+mlkemt_num get MTCNT 0
+mlkemt_say op
+mlkemt_say MTTN
+mlkemt_num n
+mlkemt_say MTTNS
+mlkemt_num dt
+mlkemt_say MTTNL
+end
+
+fn mlkemt_t to void
+s = new uchar 64 0
+m = new uchar 32 0
+ek = new uchar MKEKSZ 0
+dk = new uchar MKDKSZ 0
+ct = new uchar MKCTSZ 0
+ss = new uchar 32 0
+n = mlkemt_dec 1
+acc = ulong 0
+t0 = monons
+for i ulong n
+put s 0 uchar and i 255
+acc = or acc mlkem_keygen_seed s ek dk
+end
+mlkemt_time MTTKG n ulong sub monons t0
+t0 = monons
+for i ulong n
+put m 0 uchar and i 255
+acc = or acc mlkem_encaps ek m ct ss
+end
+mlkemt_time MTTEN n ulong sub monons t0
+t0 = monons
+for i ulong n
+put ct 0 uchar and i 255
+acc = or acc mlkem_decaps dk ct ss
+end
+mlkemt_time MTTDE n ulong sub monons t0
+mlkemt_check acc 0 0
+end
+
+fn mlkemt_slurp to void
+t = ulong 0
+while true bound 999999
+room = sub len MTIN t
+if eq room 0
+mlkemt_bad
+end
+r = read 0 MTIN t room
+if lt r 0
+mlkemt_bad
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put MTLEN 0 t
+end
+
+note the case on MTIN[p..e), e at its newline
+fn mlkemt_line p ulong e ulong to void
+c = get MTIN p
+if or eq e p eq c 35
+ret
+end
+mlkemt_bump 1 1
+if eq c 72
+mlkemt_h p e 0
+ret
+end
+if eq c 83
+mlkemt_h p e 1
+ret
+end
+if eq c 75
+mlkemt_tok p e 5
+mlkemt_k
+ret
+end
+if eq c 81
+mlkemt_tok p e 5
+mlkemt_q
+ret
+end
+if eq c 69
+mlkemt_tok p e 6
+mlkemt_e
+ret
+end
+if eq c 68
+mlkemt_tok p e 5
+mlkemt_d
+ret
+end
+if eq c 67
+mlkemt_tok p e 7
+mlkemt_c
+ret
+end
+if eq c 76
+mlkemt_tok p e 1
+mlkemt_l
+ret
+end
+if eq c 84
+mlkemt_bump 1 0
+mlkemt_tok p e 2
+mlkemt_t
+ret
+end
+mlkemt_bad
+end
+
+fn main to int
+mlkemt_slurp
+tot = get MTLEN 0
+if or eq tot 0 ne get MTIN sub tot 1 10
+mlkemt_bad
+end
+p = ulong 0
+while lt p tot bound 999999
+mlkemt_bump 0 1
+e = p
+while ne get MTIN e 10 bound 999999
+e = add e 1
+end
+mlkemt_line p e
+p = add e 1
+end
+mlkemt_say MTTCASE
+mlkemt_num get MTCNT 1
+mlkemt_say MTTCALL
+mlkemt_num get MTCNT 2
+mlkemt_say MTTMM
+mlkemt_num get MTCNT 3
+mlkemt_say MTTNS
+mlkemt_num get MTCNT 4
+mlkemt_say MTTNL
+if or gt get MTCNT 3 0 eq get MTCNT 2 0
+ret 1
+end
+ret 0
+end

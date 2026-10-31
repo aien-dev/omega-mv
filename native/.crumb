@@ -1,0 +1,32 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "cd33d24e04bf85275b626180565193902db377e0c010f0ec73953933ade47ebb",
+          "last_commit": "afc604080",
+          "name": "autodiff664",
+          "purpose": "Bounded native .om reverse-mode tape (rank 2, f32, 32 nodes) over M20 metadata-v1; E1-tile reduc"
+        },
+        {
+          "digest": "bbc9104d0f8651e2e2a687485cc1d209a006cd8b9c552ab5db336996889e2746",
+          "last_commit": "",
+          "name": "orig4",
+          "purpose": "ORIG-4 shadow advice for the matvec arm chooser (omega-mv#731, spec/shadow-advice-v0.md): shadow"
+        }
+      ],
+      "children_root": "sha256:fbeabae501f988136d1bf3118a35e3d78baaacb9c99b5a93fff8577d7b5c5463",
+      "compiled_at": "2026-10-31T02:29:38Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:6aee27d1f4ec4741fc6009e6d68f00378ac0477e1af1ad363dfe1ac1ea57c7dd",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 10,
+      "generated_at_commit": "97678e347d6bc754beb8fba6532d69eecef622e6",
+      "source_tree": "sha256:3bdff5640002d373d6ade55dce2ddc94b1193f9457ff6d96d41a74dc0a068c4c"
+    }
+  },
+  "name": "native",
+  "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow advisor (native/orig4).",
+  "schema_version": "1.0.0"
+}

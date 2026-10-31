@@ -1,0 +1,66 @@
+# Packed-list hostile ingress (#671), run by the OM-2 conductor (seed/qualification/om2/gate.om).
+# Each fixture is first proven byte-identical to packet-corpus.om for its mode; then the compiled
+# consumer pkt-consumer.om passes the fixture bytes from stdin to execprog. Expected exits come from
+# the packed-list rules in OMEGESE.md: 0 or the exec'd program's output for a valid packet, trap 3
+# (exit 103) for every malformed one. The trunc rows pass only the first K bytes of the 27-byte echo
+# packet; every prefix shorter than 27 lacks a whole record and must be refused.
+gen00-valid-one run seed/qualification/security673/packet-corpus.om rep:0:1 file:seed/qualification/security673/packets/p00.bin - 0
+gen01-count-zero run seed/qualification/security673/packet-corpus.om rep:1:1 file:seed/qualification/security673/packets/p01.bin - 0
+gen02-count-65-bare run seed/qualification/security673/packet-corpus.om rep:2:1 file:seed/qualification/security673/packets/p02.bin - 0
+gen03-record-truncated run seed/qualification/security673/packet-corpus.om rep:3:1 file:seed/qualification/security673/packets/p03.bin - 0
+gen04-trailing-byte run seed/qualification/security673/packet-corpus.om rep:4:1 file:seed/qualification/security673/packets/p04.bin - 0
+gen05-first-empty run seed/qualification/security673/packet-corpus.om rep:5:1 file:seed/qualification/security673/packets/p05.bin - 0
+gen06-embedded-zero run seed/qualification/security673/packet-corpus.om rep:6:1 file:seed/qualification/security673/packets/p06.bin - 0
+gen07-record-overdeclared run seed/qualification/security673/packet-corpus.om rep:7:1 file:seed/qualification/security673/packets/p07.bin - 0
+gen08-valid-64 run seed/qualification/security673/packet-corpus.om rep:8:1 file:seed/qualification/security673/packets/p08.bin - 0
+gen09-count-65-records run seed/qualification/security673/packet-corpus.om rep:9:1 file:seed/qualification/security673/packets/p09.bin - 0
+gen10-size-4097 run seed/qualification/security673/packet-corpus.om rep:10:1 file:seed/qualification/security673/packets/p10.bin - 0
+gen11-size-4096 run seed/qualification/security673/packet-corpus.om rep:11:1 file:seed/qualification/security673/packets/p11.bin - 0
+gen12-echo-argv run seed/qualification/security673/packet-corpus.om rep:12:1 file:seed/qualification/security673/packets/p12.bin - 0
+gen13-zero-after-path run seed/qualification/security673/packet-corpus.om rep:13:1 file:seed/qualification/security673/packets/p13.bin - 0
+gen14-count-65535 run seed/qualification/security673/packet-corpus.om rep:14:1 file:seed/qualification/security673/packets/p14.bin - 0
+gen15-length-65535 run seed/qualification/security673/packet-corpus.om rep:15:1 file:seed/qualification/security673/packets/p15.bin - 0
+p00-valid-one run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p00.bin - - 0
+p01-count-zero run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p01.bin - - 103
+p02-count-65-bare run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p02.bin - - 103
+p03-record-truncated run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p03.bin - - 103
+p04-trailing-byte run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p04.bin - - 103
+p05-first-empty run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p05.bin - - 103
+p06-embedded-zero run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p06.bin - - 103
+p07-record-overdeclared run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p07.bin - - 103
+p08-valid-64 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p08.bin - - 0
+p09-count-65-records run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p09.bin - - 103
+p10-size-4097 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p10.bin - - 103
+p11-size-4096 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p11.bin - - 0
+p12-echo-argv run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin file:seed/qualification/security673/packets/p12.out - 0
+p13-zero-after-path run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p13.bin - - 103
+p14-count-65535 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p14.bin - - 103
+p15-length-65535 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p15.bin - - 103
+trunc00 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 0
+trunc01 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 1
+trunc02 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 2
+trunc03 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 3
+trunc04 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 4
+trunc05 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 5
+trunc06 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 6
+trunc07 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 7
+trunc08 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 8
+trunc09 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 9
+trunc10 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 10
+trunc11 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 11
+trunc12 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 12
+trunc13 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 13
+trunc14 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 14
+trunc15 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 15
+trunc16 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 16
+trunc17 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 17
+trunc18 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 18
+trunc19 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 19
+trunc20 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 20
+trunc21 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 21
+trunc22 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 22
+trunc23 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 23
+trunc24 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 24
+trunc25 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 25
+trunc26 run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin - - 103 26
+trunc27-whole run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p12.bin file:seed/qualification/security673/packets/p12.out - 0 27
