@@ -51,6 +51,7 @@ text nnetpeer "netpeer"
 text npeernm "peername"
 text ndevice "device"
 text ndevcall "devcall"
+text ndrmctl "drmctl"
 text nuvmctl "uvmctl"
 text nmapping "mapping"
 text nmapio "mapio"
@@ -111,6 +112,7 @@ text lm "PASS native cwd and readlnk offsets, counts, truncation, errno and priv
 text sm "PASS native socket options with independent bind behavior, readonly input and errno\n"
 text ndm "PASS native network slice bounds and poll record-size refusal\n"
 text dvm "PASS native checked device ioctl composed with host files and pipes\n"
+text drmm "PASS native listed accel/ethosu requests: EBADF, ENOTTY on /dev/null, exact-size traps\n"
 text sfm "PASS struct values and native file operations in one program\n"
 text rdm "PASS native random: exact count, non-zero, two calls differ, invalid flags refused\n"
 text evm "PASS native environment: count, entry bytes, short-buffer refusal\n"
@@ -723,6 +725,9 @@ go 103 10000000000
 comp ndevice
 run ndevice
 say dvm
+comp ndrmctl
+run ndrmctl
+say drmm
 comp ndevcall
 run ndevcall
 comp nuvmctl

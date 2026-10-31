@@ -446,4 +446,26 @@ fn probe buf edit uchar 16 to long
 ret peername 0 buf 0 16
 end
 OM
+compile_error drm-unlisted-version 9 <<'OM'
+global b uchar 64
+fn main to int
+r = devctl neg int 1 uint 3225445376 b 0 64
+ret 0
+end
+OM
+compile_error drm-unlisted-ethosu-next 9 <<'OM'
+global b uchar 16
+fn main to int
+r = devctl neg int 1 uint 3222299722 b 0 16
+ret 0
+end
+OM
+compile_error drm-listed-request-name 9 <<'OM'
+global b uchar 16
+fn main to int
+q = uint 3222299712
+r = devctl neg int 1 q b 0 16
+ret 0
+end
+OM
 printf 'PASS %s total host negative controls, including cwd, readlnk, sockopt, flock and network\n' "$count"

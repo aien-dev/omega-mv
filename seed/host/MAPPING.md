@@ -8,7 +8,7 @@ bootstrap and test orchestration remain disclosed development tools.
 
 | Expression | Result and contract |
 | --- | --- |
-| `devctl fd request A off n` | Signed Linux ioctl result. `fd` is int; `request` is a literal uint; `A` is writable bytes; offsets/counts are ulong. Exact encoded size, checked range. Accepts FIONREAD or encoded read/write NVRM F requests, matching the reviewed L605 device boundary. |
+| `devctl fd request A off n` | Signed Linux ioctl result. `fd` is int; `request` is a literal uint; `A` is writable bytes; offsets/counts are ulong. Exact encoded size, checked range. Accepts FIONREAD or encoded read/write NVRM F requests, matching the reviewed L605 device boundary, and eleven listed accel/ethosu requests: the ten `DRM_IOCTL_ETHOSU_*` of Linux v7.3 `include/uapi/drm/ethosu_accel.h` (3222299712..3222299715, 3222824004, 3222299717, 3222824006, 3221775431, 3222299720, 3221775433) and `DRM_IOCTL_GEM_CLOSE` (1074291721). Any other DRM request is error 9. `seed/host/tests/drmctl.om` checks EBADF, ENOTTY on /dev/null and exact-size traps without opening an accel device. |
 | `mapnew fd offset bytes access mode` | Positive long handle or negative Linux errno. fd is int, offset/bytes ulong, access/mode literal ints. Access 1 means read, 3 read/write. Modes 1/2 mean shared/private file; 33/34 shared/private anonymous. Anonymous mappings require fd -1 and offset zero. |
 | `mapdrop handle` | Unmap the entire owned mapping. Zero on success or negative errno. Retires the slot on success; the next mapping gets a different generation. |
 | `mapread handle offset A off n` | Copy n bytes from the mapping into writable byte array A. Return n as long. |
