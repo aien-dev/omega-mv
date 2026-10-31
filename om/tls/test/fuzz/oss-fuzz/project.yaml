@@ -1,0 +1,9 @@
+# DRAFT (never submitted). Fields per https://google.github.io/oss-fuzz/getting-started/new-project-guide/
+homepage: "https://github.com/aien-dev/omega-mv"
+language: c
+primary_contact: "aien@aienos.com"
+main_repo: "https://github.com/aien-dev/omega-mv"
+fuzzing_engines:
+  - libfuzzer
+sanitizers:
+  - address

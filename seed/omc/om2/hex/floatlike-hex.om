@@ -1,0 +1,27 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): hex digits e and f are digits, never the float exponent
+note or suffix markers of the decimal path: 0x1e is 30, 0x1f32 is 7986. Values from Wolfram (wolfram.txt).
+om2
+fn main to int
+a = ulong 0xe
+putu a
+a = ulong 0xf
+putu a
+a = ulong 0x1e
+putu a
+a = ulong 0x1e5
+putu a
+a = ulong 0x1f32
+putu a
+a = ulong 0x1f64
+putu a
+a = ulong 0xe0f
+putu a
+a = ulong 0x5e10
+putu a
+a = ulong 0xf32
+putu a
+a = ulong 0xfe
+putu a
+ret 0
+end
