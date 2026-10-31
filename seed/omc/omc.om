@@ -8910,10 +8910,20 @@ ret at
 end
 
 note sf_num: for i T K with K a number: i = 0 (MOVZ, C6.2.285); head: CMP Xi, #K or Xk; B.HS/B.GE exit.
-note om4 SF_NUM .. SF_PUSH.
+note With `bound N` a hidden counter c = 0 is checked after the exit test, as in s_while. om4 SF_NUM .. SF_PUSH.
+note The optional `bound N` before the line's end: N a number or an integer constant, 1 ..
+note 9223372036854775807 (error 8, as s_while; 4 when N is missing); bn = 0 when no bound is written.
 fn sf_num w ulong t ulong kk ulong sn ulong sh ulong to void
+bn = ulong 0
+if eq peekw 70
+tok
+bn = lenval 4
+if ge sub bn 1 9223372036854775807
+fail 8
+end
+end
 if ne get xtarget 0 0
-xfornum w t kk sn sh
+xfornum w t kk sn sh bn
 ret
 end
 eol
@@ -8921,6 +8931,12 @@ i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
 emit or 3531603968 i
+c = ulong 0
+if ne bn 0
+c = alloc
+put held 0 get nslot 0
+emit or 3531603968 c
+end
 hd = get oc 0
 cp_head get cur 0 get line 0
 if le kk 4095
@@ -8931,16 +8947,28 @@ matconst k kk
 emit or or 3942645791 shl i 5 shl k 16
 end
 br = sf_br t
+if ne bn 0
+lpcnt c bn
+end
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
 end
 
 note sf_val: for i T K with K a value of type T in register kr: i = 0; the hidden counter c = 0; head: CMP
-note Xi, Xk; B.HS/B.GE exit; the counter guard of a while with no bound. om4 SF_VAL.
+note Xi, Xk; B.HS/B.GE exit; the counter guard of a while: `bound N` (read as in sf_num), else 1000000.
+note om4 SF_VAL.
 fn sf_val w ulong t ulong kr ulong sn ulong sh ulong to void
+n = ulong 1000000
+if eq peekw 70
+tok
+n = lenval 4
+if ge sub n 1 9223372036854775807
+fail 8
+end
+end
 if ne get xtarget 0 0
-xforval w t kr sn sh
+xforval w t kr sn sh n
 ret
 end
 eol
@@ -8955,18 +8983,15 @@ hd = get oc 0
 cp_head get cur 0 get line 0
 emit or or 3942645791 shl kr 16 shl i 5
 br = sf_br t
-m = alloc
-matconst m 1000000
-emit or or 3942645791 shl c 5 shl m 16
-trapc 2 4
-emit or or 2432697344 c shl c 5
+lpcnt c n
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
 end
 
-note s_for: for i T K: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number, or a
-note value of type T: a name is read at every pass, another value once before the loop. om4 S_FOR.
+note s_for: for i T K [bound N]: i = 0; head: not i < K -> exit; body; latch i = add i 1; B head. K a number,
+note or a value of type T: a name is read at every pass, another value once before the loop. More than N
+note passes (default 1000000 for a value K, no limit for a number K) trap 4. om4 S_FOR.
 fn s_for to void
 sn = get nn 0
 sh = get held 0
@@ -13134,16 +13159,18 @@ end
 eol
 end
 
+note ir_bound: the rest of a while or for line: `bound N` (1 .. 1000000, error 8: the C oracle's range,
+note omegese.c, and the guard range checker2 proves) -> N, or 0 when the line ends there.
 fn ir_bound to ulong
 tok
 if or eq get tk 0 0 eq get tk 0 3
-ret 1000000
+ret 0
 end
 if or ne get tk 0 1 ne ir_kwt 70
 fail 5
 end
 bnd = lenval 4
-if ge sub bnd 1 9223372036854775807
+if ge sub bnd 1 1000000
 fail 8
 end
 eol
@@ -13167,7 +13194,11 @@ ir_val 65534 1
 if ne get ir_vt 0 1
 fail 7
 end
-lim = ir_lit ir_bound 5
+lim = ir_bound
+if eq lim 0
+lim = ulong 1000000
+end
+lim = ir_lit lim 5
 ir_op 14 get ir_rr 0 g ex 0
 ir_start g
 ger = ir_newreg 1
@@ -13182,8 +13213,12 @@ ir_op 3 1 cnt cnt one
 ir_push 2 h ex cnt 0
 end
 
-note ir_for: for name type count. The counter is bound after the count is read, so the count cannot
-note name it; ir_forb opens the loop, and the counter leaves scope at its end.
+note ir_for: for name type count [bound N]. The counter is bound after the count is read, so the count cannot
+note name it. nc: 1 when the count is a number or an integer constant name (not a local), seen ahead without
+note reading it. Such a count must be 0..1000000 (error 8 otherwise, a minus sign included): the C oracle's
+note count range (omegese.c for_line), so a plain loop never counts past what checker2 proves. Such a count
+note with no bound opens the plain loop (ir_forg with N = 0); any other count, and any count with a bound,
+note opens the guarded loop with N, default 1000000. The counter leaves scope at its end.
 fn ir_for to void
 tok
 if or eq get tk 0 0 eq get tk 0 3
@@ -13198,33 +13233,109 @@ ty = ir_type 0
 if eq ty 1
 fail 7
 end
+c0 = get cur 0
+l0 = get line 0
+a0 = get tka 0
+b0 = get tkb 0
+tok
+nc = ulong 0
+if eq get tk 0 2
+nc = ulong 1
+if eq get inp get ts 0 45
+fail 8
+end
+if gt get tw 0 1000000
+fail 8
+end
+end
+if and eq get tk 0 1 le get tl 0 8
+if eq ir_find get tw 0 get tl 0 0
+e = findname get tw 0
+if ne e 0
+if eq get nm_kind sub e 1 9
+nc = ulong 1
+if lt get nm_type sub e 1 10
+if gt get nm_addr sub e 1 1000000
+fail 8
+end
+end
+end
+end
+end
+end
+put cur 0 c0
+put line 0 l0
+put tka 0 a0
+put tkb 0 b0
+if eq nc 1
 z = ir_lit 0 ty
+end
 ir_val 65534 ty
 if ne get ir_vt 0 ty
 fail 7
 end
-eol
-bnd = get ir_rr 0
-uu = ir_lit 1 ty
-ctr = ir_newreg ty
-ir_bind w ctr
-ir_op 2 ctr z 0 0
-ir_forb ctr bnd
+kr = get ir_rr 0
+bn = ir_bound
+if and eq bn 0 eq nc 0
+bn = ulong 1000000
+end
+ir_forg w ty kr bn
 end
 
-fn ir_forb ctr ulong bnd ulong to void
+note ir_forg: the for loop over counter ctr = 0 below kr. N = 0: the plain loop, head: lt ctr kr -> body | exit.
+note Else the guarded loop, the C oracle's shape (omegese.c guarded_loop): a ulong counter cnt = 0 as well; head:
+note lt ctr kr -> guard | exit; guard: ge cnt N -> trap 4 | body; body starts with cnt = add cnt 1. Literals and
+note blocks are made in the oracle's order (literals are shared). The latch adds 1 to ctr (ir_end kind 3). The
+note for frame (kind 3: head h, exit ex, counter ctr): the counter, bound last, leaves scope at the end.
+note The literals 0 and 1 are made first (shared; ir_lit returns the same register again), then the counters.
+note om4 holds 16 registers per function, so the guard blocks reuse names already dead: ty is the guard block
+note and w the trap block (both after ir_bind); cnt is 0 only in the plain loop (two literals precede it).
+fn ir_forg w ulong ty ulong kr ulong bn ulong to void
+cnt = ulong 0
+if ne bn 0
+cnt = ir_lit 0 5
+cnt = ir_lit 1 5
+cnt = ir_newreg 5
+end
+ctr = ir_lit 0 ty
+ctr = ir_lit 1 ty
+ctr = ir_newreg ty
+ir_op 2 ctr ir_lit 0 ty 0 0
+ir_bind w ctr
 h = ir_block
+if ne bn 0
+ir_op 2 cnt ir_lit 0 5 0 0
+ty = ir_block
+w = ir_block
+end
 body = ir_block
 ex = ir_block
 ir_op 13 h 0 0 0
 put ir_dead 0 1
 ir_start h
 c = ir_newreg 1
-ir_op 5 3 c ctr bnd
+ir_op 5 3 c ctr kr
+if eq bn 0
 ir_op 14 c body ex 0
-ir_push 3 h ex ctr 0
-put ir_fnn sub get ir_nf 0 1 sub get ir_nn 0 1
+else
+bn = ir_lit bn 5
+ir_op 14 c ty ex 0
+ir_start ty
+c = ir_newreg 1
+ir_op 5 6 c cnt bn
+ir_op 14 c w body 0
+ir_start w
+ir_op 12 4 0 0 0
+ir_op 13 ex 0 0 0
+put ir_dead 0 1
+end
 ir_start body
+if ne cnt 0
+ir_op 3 1 cnt cnt ir_lit 1 5
+end
+ir_push 3 h ex ctr 0
+kr = sub get ir_nf 0 1
+put ir_fnn kr sub get ir_nn 0 1
 end
 
 note ir_stmtcall: a void call as a statement; f is the table index + 1.
@@ -16127,22 +16238,33 @@ blo lp
 addname w r t n 1 0
 end
 
-fn xfornum w ulong t ulong k ulong sn ulong sh ulong to void
+note xfornum / xforval: the x86 sf_num / sf_val. bn and n come from sf_num / sf_val, which parse the bound
+note themselves (sf_val: 1000000 when no bound is written); bn = 0 leaves a number count unguarded, as on Arm.
+fn xfornum w ulong t ulong k ulong sn ulong sh ulong bn ulong to void
 eol
 i = alloc
 put held 0 get nslot 0
 addname w i t 0 0 0
 matconst i 0
+c = ulong 0
+if ne bn 0
+c = alloc
+put held 0 get nslot 0
+matconst c 0
+end
 hd = get oc 0
 cp_head get cur 0 get line 0
 xcmp i k 1
 br = sf_br t
+if ne bn 0
+lpcnt c bn
+end
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
 end
 
-fn xforval w ulong t ulong kr ulong sn ulong sh ulong to void
+fn xforval w ulong t ulong kr ulong sn ulong sh ulong n ulong to void
 eol
 i = alloc
 put held 0 get nslot 0
@@ -16155,7 +16277,7 @@ hd = get oc 0
 cp_head get cur 0 get line 0
 xcmp i kr 0
 br = sf_br t
-lpcnt c 1000000
+lpcnt c n
 pushb br 4 hd i t
 pushnh sn sh
 cp_skip
