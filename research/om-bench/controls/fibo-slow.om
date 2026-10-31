@@ -1,0 +1,60 @@
+note Read unsigned decimal numbers separated by spaces or newlines from stdin; print their sum.
+global inb uchar 65536
+global outb uchar 32
+fn readall to ulong
+n = ulong 0
+while lt n 65536 bound 65537
+k = read 0 inb n sub 65536 n
+if lt k 0
+exit 2
+end
+if eq k 0
+break
+end
+n = add n ulong k
+end
+ret n
+end
+fn printu v ulong to void
+i = ulong 31
+put outb i 10
+x = v
+while true bound 21
+i = sub i 1
+put outb i uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+off = i
+k = write 1 outb off sub 32 off
+if ne k long sub 32 off
+exit 3
+end
+end
+fn main to int
+n = readall
+v = ulong 0
+for i ulong n
+c = get inb i
+if and ge c 48 le c 57
+v = add mul v 10 ulong sub c 48
+end
+end
+a = ulong 0
+b = ulong 1
+for i ulong v
+t = add a b
+a = b
+b = t
+end
+s = ulong 0
+for i ulong 999999
+for j ulong 999999
+s = add s j
+end
+end
+printu s
+ret 0
+end
