@@ -72,7 +72,7 @@
         },
         {
           "digest": "9e193e949b4b4e98ad8bf7da65ace090d289bd9e8a12f978a72e4227b73acd9c",
-          "last_commit": "64751676",
+          "last_commit": "03508d1b",
           "name": "neuralese",
           "purpose": "Bounded untrusted representation envelopes and explicit checked Omega decoding; learned extensio"
         },
@@ -95,7 +95,7 @@
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "4e7251847298392c2e24591e45747e2b214c48f66a636063fbd7b3ab32a55a6d",
+          "digest": "afc0a615167640374b02c58f5e579653b8b828c16c8ccf6b56a8dc061a399c8a",
           "last_commit": "d9461717",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
@@ -107,15 +107,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:b108a4449c329c4fb7187ffbbb494f50d86312bcf3642626312afe57b10480b0",
-      "compiled_at": "2026-10-31T07:01:18Z",
+      "children_root": "sha256:8791d2f7ca1d53b675d69720677f7ab6ec0639b64810fd184291ce2f9dc7ca72",
+      "compiled_at": "2026-10-31T07:03:30Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:03086970a620ef4688aa6fc75867cbc6e925eb7b8250ed108e0e6da6eb8223a3",
+      "digest": "sha256:bdfe3ec7bba75d9c512205bf3f38ec80ddfdac6c60b36007669d047a0e1fe8f5",
       "evidence_files": 14989,
       "evidence_root": "sha256:69b37cac708300e920a939718510a36d2198911e210aa883216be553698086f3",
       "files": 23184,
-      "generated_at_commit": "64751676dcd11d5a8ae3f7fe37ad32a6f8c30db2",
-      "source_tree": "sha256:23a079dbc81ec06788cf2c3825773ada1ef9f241559f3aa050a386aad5be1924"
+      "generated_at_commit": "03508d1b7a1ce4e752dd937fb9903162ced2f996",
+      "source_tree": "sha256:bed3e0aed416cc2daa1f51c30bca9875b844ea6b073baac93cff06274c2c4add"
     },
     "owner_lane": "",
     "provenance": {
