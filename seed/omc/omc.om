@@ -12589,16 +12589,33 @@ lty = get ir_vt 0
 ir_bin_r left lty c dst
 end
 
+note ir_cast: TYPE v. The operand keeps its own type (as native rdval reads it, exp 0); a bare number is
+note checked against TYPE (8). bool converts to and from numbers only by comparison (9, as vt_conv).
+note Only a constant of TYPE is the value itself; any other same-type value is a mov, as the C oracle.
 fn ir_cast c ulong dst ulong to void
-ir_val 65534 c
+ir_val 65534 0
 if ne get ir_isb 0 0
+range get ir_bare 0 c get ir_bbig 0
 r = ir_lit get ir_bare 0 c
 ir_set dst r c
 ret
 end
 src = get ir_rr 0
 sty = get ir_vt 0
+if xor eq sty 1 eq c 1
+fail 9
+end
+k = ulong 0
 if and eq sty c eq dst 65534
+i = ulong 0
+while lt i get ir_nc 0
+if eq ulong get ir_cr i src
+k = ulong 1
+end
+i = add i 1
+end
+end
+if ne k 0
 put ir_rr 0 src
 put ir_vt 0 c
 put ir_isb 0 0

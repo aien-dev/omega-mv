@@ -10,6 +10,12 @@ decision or an external store) is `docs/one_layer/OM_COMPLETION.md`.
 
 The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
 `spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
+IR mode casts (`TYPE value`) read the operand at its own type and convert it, the same as the
+AArch64 path, so `ret ulong sub c 48` with `c` a `uchar` compiles. A bare number in the cast is
+range-checked against the cast's type (error 8) and a bool converts to or from a number only by
+comparison (error 9). `seed/omc/gate-ir.sh` pins 21 cast units against the C oracle plus 6 cast
+refusals; reverting the operand read to the cast's type makes the gate fail.
+
 See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
 
 To rebuild omc from the 408-byte seed on your own AArch64 Linux machine and check every rung against
