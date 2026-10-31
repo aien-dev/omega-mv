@@ -1,0 +1,26 @@
+# mkfix selector, expected detcheck exit, expected word (docs/one_layer/OMEGESE.md 12)
+# selector letters: target (u f v s h), sub-op (1..9 a b), result (r n), extra (n l x)
+u1nn	0	ACCEPT
+u2nn	0	ACCEPT
+u3nn	0	ACCEPT
+u4nn	0	ACCEPT
+u5nn	0	ACCEPT
+u6nn	0	ACCEPT
+s1nn	0	ACCEPT
+s3nn	0	ACCEPT
+f1nn	41	DET-ATOM-FLOAT
+f2nn	41	DET-ATOM-FLOAT
+f3nn	41	DET-ATOM-FLOAT
+h1nn	41	DET-ATOM-FLOAT
+f7rl	41	DET-ATOM-FLOAT
+u7nn	42	DET-ATOM-OP
+u8nn	42	DET-ATOM-OP
+u9nn	42	DET-ATOM-OP
+uann	42	DET-ATOM-OP
+ubnn	42	DET-ATOM-OP
+u1rn	43	DET-ATOM-RESULT
+s3rn	43	DET-ATOM-RESULT
+u1nl	44	DET-ATOM-MIXED
+u1nx	44	DET-ATOM-MIXED
+s1nl	44	DET-ATOM-MIXED
+v1nn	26	INVALID

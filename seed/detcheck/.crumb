@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-27T08:27:10Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:019857a72e005959b282c8902b083caa2dbc3aacaa252ae85f63a5bcabde5743",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 4,
+      "generated_at_commit": "26e4f5567a4b90d03f74b6ba2907001cb7992333",
+      "source_tree": "sha256:f989ff26e448c75e09e5a1f93bd756351e4455411b3ae289ac891fb80d555e21"
+    }
+  },
+  "layer": "seed",
+  "name": "detcheck",
+  "purpose": "Seeded Omega determinism checker for GPU kernel IR: refuses float and order-dependent atomics (DET-ATOM-*), fixture writer and gate",
+  "schema_version": "1.0.0"
+}

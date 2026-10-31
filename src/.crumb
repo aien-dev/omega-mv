@@ -80,7 +80,7 @@
         },
         {
           "digest": "06b8f79212bd4eafa9e568da588189b0c7d119782c510e7cf573a7697e43cb1e",
-          "last_commit": "f5c9bd89a",
+          "last_commit": "98a6131eb",
           "name": "compiler",
           "purpose": "Directory src/compiler. Purpose not yet described by a human."
         },
@@ -188,13 +188,13 @@
         }
       ],
       "children_root": "sha256:582be8c72262b08d6e3ac6cb69cdb15200fbc6a50ff0c6af28ed64d8abc1b2fe",
-      "compiled_at": "2026-10-31T11:03:33Z",
+      "compiled_at": "2026-10-31T11:04:00Z",
       "compiler": "crumb-compile/1",
       "digest": "sha256:15b591ae33fa01d0f955ec8bc2cb897770113cedfa10811ace4788423a9e997e",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 611,
-      "generated_at_commit": "1043f49d2cb0867cf1a1f89ed356b1fb1c7f1cf0",
+      "generated_at_commit": "98a6131eb47c0fdf8ae6e9ed6c16882bf7cbfdea",
       "source_tree": "sha256:a32c9ff4578554f6bfafd0ab8756d57f1b1b37e05345595ec9ad22528326404d"
     },
     "owner_lane": "",
