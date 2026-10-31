@@ -441,4 +441,7 @@ The runner, reducer, corpus builder and custodian scripts are specified by their
   section (#826) and #951's `new` row (omc 1..16777216; the C reference path the reader uses stays
   1..64, `OSC_MAX_ARRAY_LEN`, as FAMSIG_V1.md requires); none is protocol content: conditions, reader
   chain, section 5 reference lengths and the decision rule are unchanged. `GEN_PROTOCOL_V1.md`
-  re-hashed for this line. `make test-gen-protocol` re-run at the train head.
+  re-hashed for this line. `make test-gen-protocol` re-run at the train head. `famsig_lib.h` re-hashed
+  after its last two `strcpy` calls (task id, shape) became `snprintf` into the same buffers (CodeQL
+  "unbounded write" on #979); both inputs are already length-checked (`fs_task_id_ok` 1..40,
+  `fs_shape` 1..512), so no accepted or refused input changes. `GEN_PROTOCOL_V1.md` re-hashed again.

@@ -287,7 +287,7 @@ static int fs_meta_line(const char *line, FsMeta *m, char *err, size_t errn)
     for (int i = 0; i < nf; i++) if (!*f[i]) { snprintf(err, errn, "empty field %d (fields are separated by exactly one space)", i + 1); return -1; }
     memset(m, 0, sizeof *m);
     if (!fs_task_id_ok(f[0])) { snprintf(err, errn, "task id '%s' is not [a-z0-9_-]{1,40}", f[0]); return -1; }
-    strcpy(m->id, f[0]);
+    snprintf(m->id, sizeof m->id, "%s", f[0]);
     m->split = -1;
     for (int k = 0; k < FS_NSPLIT; k++) if (!strcmp(f[1], fs_split[k])) m->split = k;
     if (m->split < 0) { snprintf(err, errn, "split '%s' is not corpus, dev or heldout", f[1]); return -1; }
@@ -297,7 +297,7 @@ static int fs_meta_line(const char *line, FsMeta *m, char *err, size_t errn)
     if (fs_shape(f[8], &sh)) { snprintf(err, errn, "shape: %s", sh.err); return -1; }
     for (int k = 0; k < FS_NPRIM; k++)
         if (sh.count[k] != m->count[k]) { snprintf(err, errn, "declared %s=%d but the shape has %d", fs_prim[k], m->count[k], sh.count[k]); return -1; }
-    strcpy(m->shape, f[8]);
+    snprintf(m->shape, sizeof m->shape, "%s", f[8]);
     snprintf(m->sig, sizeof m->sig, "gs1:%s", sh.canon);
     fs_coarse(&sh, m->coarse);
     for (int k = 0; k < FS_NPRIM; k++) if (m->count[k]) m->distinct++;
