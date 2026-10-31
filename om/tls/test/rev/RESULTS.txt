@@ -1,0 +1,28 @@
+omc     sha256 2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
+library sha256 7fb2a1ff6a6ae2b1336ae0486a2ac404270bb6babf25d0f5ffb5f7b234d909a8 (61 functions)
+driver  sha256 028ac013e88439d9b9166cfebca914ab21585e0b32fb24ae0d50bb2847cd2a46
+PASS cases.txt: rev driver: 90 checks, 0 failed
+PASS fuzz fuzz_le_crl n=200 rejected=200
+PASS fuzz fuzz_staple_good n=400 rejected=400
+PASS fuzz fuzz_staple_deleg n=400 rejected=400
+PASS fuzz fuzz_crl_revoked n=400 rejected=400
+PASS openssl oracle 10/10
+PASS mutant fresh-next-update detected (4 MISMATCH: ocsp_stale ocsp_next_update_equals_now )
+PASS mutant fresh-skew detected (2 MISMATCH: ocsp_future_301s crl_future )
+PASS mutant signature-skipped detected (7 MISMATCH: ocsp_bad_sig ocsp_wrong_key )
+PASS mutant serial-bytes detected (9 MISMATCH: ocsp_other_serial must_staple_wrong_staple )
+PASS mutant certid-hash detected (1 MISMATCH: ocsp_delegated_bykey )
+PASS mutant cert-status detected (6 MISMATCH: ocsp_revoked ocsp_revoked_beats_stale )
+PASS mutant must-staple detected (2 MISMATCH: must_staple_missing must_staple_missing_crl_clean )
+PASS mutant responder-eku detected (1 MISMATCH: ocsp_delegated_no_eku )
+PASS mutant responder-issuer detected (2 MISMATCH: ocsp_delegated_by_root fuzz_staple_deleg )
+PASS mutant responder-validity detected (1 MISMATCH: ocsp_delegated_expired )
+PASS mutant crl-issuer-name detected (1 MISMATCH: crl_wrong_issuer_name )
+PASS mutant crl-sign-ku detected (1 MISMATCH: crl_issuer_without_crlsign )
+PASS mutant crl-idp-scope detected (3 MISMATCH: crl_idp_other_dp crl_idp_leaf_without_dp )
+PASS mutant crl-delta-indirect detected (2 MISMATCH: crl_delta crl_entry_cert_issuer )
+PASS mutant revoked-verdict detected (16 MISMATCH: ocsp_revoked ocsp_revoked_beats_stale )
+PASS mutant sha1-constant detected (25 MISMATCH: ocsp_good ocsp_good_bykey )
+PASS mutant expectation detected
+driver checks=90
+REV PASS cases=86 mutants=17/17

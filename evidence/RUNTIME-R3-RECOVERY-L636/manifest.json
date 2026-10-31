@@ -1,0 +1,21 @@
+{
+  "source_commit": "92cd9145766ef9ef93baa15ad4e7a044b7865f67",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "command": "TMPDIR=$HOME/.hermes/cache/scratch make test-runtime-portability",
+  "exit": 0,
+  "log_raw_sha256": "f53b478c2f9e352c5bc0b271d245c15713b3c5bf13c6453efac03255dbf9d57b",
+  "table_rows": 102,
+  "classes": {
+    "CHIP_SPECIFIC": 87,
+    "PORTABLE": 15
+  },
+  "hashes": {
+    "docs/runtime/PORTABILITY.md": "f1681b29d01e921e4b18808c347793c4d4091c257db4c24254e96f679cc90f88",
+    "docs/runtime/portability_table.tsv": "0c74bb82e94ac8526a5bba861c00fcc1c2e5f65263e0df7d4a9f69d5c579c5fc",
+    "tools/runtime_portability_check.sh": "30c2b2a7a93ea18afc40d6d1141d73dd5e1cab15c6e74d952ffb6366d1391179",
+    "tools/runtime_portability_controls.sh": "5ceed96d86daff90aab951cc156ceb4040622da7e602e1418ff2897f81b008f5",
+    "mk/runtime-r3.mk": "dc5236b8c221f3e2caeec11e89248ae41e6ea8e1997e73172d548046a83b08a9",
+    "mk/omega-gpu-engine.mk": "3bde57c53befb3454ea6876170eceff055c8815c96d317ed671713c115fe8b27"
+  },
+  "scope": "Host source-table consistency and refusal controls, no compiler/GPU/timing/WSL/native qualification"
+}

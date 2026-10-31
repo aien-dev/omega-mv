@@ -132,7 +132,7 @@ by `fopen`; the strict launch profile is the confined path. Legacy manifest, rec
 trace and device parsers remain NOT_RUN.
 
 
-## Authority regression integration (source-reviewed only)
+## Authority regression integration (source-reviewed, host-run)
 
 The existing `authority` campaign now includes `dispatch-order-gate.om`,
 `store-exact-gate.om` and `store-cleanup-gate.om` after the existing action,
@@ -168,7 +168,10 @@ new tests do not intentionally launch an effect child on their expected paths.
 Their negative controls remain separate replay procedures, not coordinator runs.
 
 Source composition, path construction, identifier limits and fail-closed control
-flow were checked without executing Omega binaries. This wiring is NOT native
-qualification: compiler acceptance, full coordinator execution and the existing
-negative controls remain NOT_RUN until approved Linux AArch64 replay. Existing
+flow were first checked without executing Omega binaries. Native run (2026-10-31,
+Linux AArch64, seed/out/omc 7a8b84fc): the full coordinator `gate669.om` exits 0
+with `GATE669 PASS`; the dispatch-order, store-exact and store-cleanup steps each
+log `exit=0 expected=0` for compile and run in their own `cwd=` directories. The
+three negative controls were replayed separately (see `seed/authority/README.md`)
+and each exits 1. This is host execution, not hardware qualification. Existing
 L408 compiler integration and Renda review ownership are unchanged.

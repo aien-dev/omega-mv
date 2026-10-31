@@ -1,0 +1,278 @@
+OM2GATE START cases=neuralese/nl4-host.cases scratch=build/nl4-host-r3
+IDENTITY omc seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match
+DEADLINE 20
+CASE codec-oracle line=3
+  $ seed/out/omc < build/nl4-host-r3/3.src > build/nl4-host-r3/3.elf 2> build/nl4-host-r3/3.cerr
+  $ build/nl4-host-r3/3.elf < neuralese/fixtures/nl4-oracle-payloads.bin > build/nl4-host-r3/3.out 2> build/nl4-host-r3/3.err
+VERDICT codec-oracle PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-double0 line=4
+  $ seed/out/omc < build/nl4-host-r3/4.src > build/nl4-host-r3/4.elf 2> build/nl4-host-r3/4.cerr
+  $ build/nl4-host-r3/4.elf neuralese/fixtures/nl4-context.bin 2 0 < neuralese/fixtures/nl4-0100.wire > build/nl4-host-r3/4.out 2> build/nl4-host-r3/4.err
+VERDICT f32-double0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-double2 line=5
+  $ seed/out/omc < build/nl4-host-r3/5.src > build/nl4-host-r3/5.elf 2> build/nl4-host-r3/5.cerr
+  $ build/nl4-host-r3/5.elf neuralese/fixtures/nl4-context.bin 2 2 < neuralese/fixtures/nl4-0101.wire > build/nl4-host-r3/5.out 2> build/nl4-host-r3/5.err
+VERDICT f32-double2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-double1 line=6
+  $ seed/out/omc < build/nl4-host-r3/6.src > build/nl4-host-r3/6.elf 2> build/nl4-host-r3/6.cerr
+  $ build/nl4-host-r3/6.elf neuralese/fixtures/nl4-context.bin 2 1 < neuralese/fixtures/nl4-0110.wire > build/nl4-host-r3/6.out 2> build/nl4-host-r3/6.err
+VERDICT f32-double1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-double3 line=7
+  $ seed/out/omc < build/nl4-host-r3/7.src > build/nl4-host-r3/7.elf 2> build/nl4-host-r3/7.cerr
+  $ build/nl4-host-r3/7.elf neuralese/fixtures/nl4-context.bin 2 3 < neuralese/fixtures/nl4-0111.wire > build/nl4-host-r3/7.out 2> build/nl4-host-r3/7.err
+VERDICT f32-double3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-inc0 line=8
+  $ seed/out/omc < build/nl4-host-r3/8.src > build/nl4-host-r3/8.elf 2> build/nl4-host-r3/8.cerr
+  $ build/nl4-host-r3/8.elf neuralese/fixtures/nl4-context.bin 1 0 < neuralese/fixtures/nl4-1000.wire > build/nl4-host-r3/8.out 2> build/nl4-host-r3/8.err
+VERDICT f32-inc0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-inc2 line=9
+  $ seed/out/omc < build/nl4-host-r3/9.src > build/nl4-host-r3/9.elf 2> build/nl4-host-r3/9.cerr
+  $ build/nl4-host-r3/9.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/9.out 2> build/nl4-host-r3/9.err
+VERDICT f32-inc2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-inc1 line=10
+  $ seed/out/omc < build/nl4-host-r3/10.src > build/nl4-host-r3/10.elf 2> build/nl4-host-r3/10.cerr
+  $ build/nl4-host-r3/10.elf neuralese/fixtures/nl4-context.bin 1 1 < neuralese/fixtures/nl4-1010.wire > build/nl4-host-r3/10.out 2> build/nl4-host-r3/10.err
+VERDICT f32-inc1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-inc3 line=11
+  $ seed/out/omc < build/nl4-host-r3/11.src > build/nl4-host-r3/11.elf 2> build/nl4-host-r3/11.cerr
+  $ build/nl4-host-r3/11.elf neuralese/fixtures/nl4-context.bin 1 3 < neuralese/fixtures/nl4-1011.wire > build/nl4-host-r3/11.out 2> build/nl4-host-r3/11.err
+VERDICT f32-inc3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-id0 line=12
+  $ seed/out/omc < build/nl4-host-r3/12.src > build/nl4-host-r3/12.elf 2> build/nl4-host-r3/12.cerr
+  $ build/nl4-host-r3/12.elf neuralese/fixtures/nl4-context.bin 3 0 < neuralese/fixtures/nl4-1100.wire > build/nl4-host-r3/12.out 2> build/nl4-host-r3/12.err
+VERDICT f32-id0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-id2 line=13
+  $ seed/out/omc < build/nl4-host-r3/13.src > build/nl4-host-r3/13.elf 2> build/nl4-host-r3/13.cerr
+  $ build/nl4-host-r3/13.elf neuralese/fixtures/nl4-context.bin 3 2 < neuralese/fixtures/nl4-1101.wire > build/nl4-host-r3/13.out 2> build/nl4-host-r3/13.err
+VERDICT f32-id2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-id1 line=14
+  $ seed/out/omc < build/nl4-host-r3/14.src > build/nl4-host-r3/14.elf 2> build/nl4-host-r3/14.cerr
+  $ build/nl4-host-r3/14.elf neuralese/fixtures/nl4-context.bin 3 1 < neuralese/fixtures/nl4-1110.wire > build/nl4-host-r3/14.out 2> build/nl4-host-r3/14.err
+VERDICT f32-id1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE f32-id3 line=15
+  $ seed/out/omc < build/nl4-host-r3/15.src > build/nl4-host-r3/15.elf 2> build/nl4-host-r3/15.cerr
+  $ build/nl4-host-r3/15.elf neuralese/fixtures/nl4-context.bin 3 3 < neuralese/fixtures/nl4-1111.wire > build/nl4-host-r3/15.out 2> build/nl4-host-r3/15.err
+VERDICT f32-id3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-double0 line=16
+  $ seed/out/omc < build/nl4-host-r3/16.src > build/nl4-host-r3/16.elf 2> build/nl4-host-r3/16.cerr
+  $ build/nl4-host-r3/16.elf neuralese/fixtures/nl4-context-i8.bin 2 0 < neuralese/fixtures/nl4-i8-0100.wire > build/nl4-host-r3/16.out 2> build/nl4-host-r3/16.err
+VERDICT i8-double0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-double2 line=17
+  $ seed/out/omc < build/nl4-host-r3/17.src > build/nl4-host-r3/17.elf 2> build/nl4-host-r3/17.cerr
+  $ build/nl4-host-r3/17.elf neuralese/fixtures/nl4-context-i8.bin 2 2 < neuralese/fixtures/nl4-i8-0101.wire > build/nl4-host-r3/17.out 2> build/nl4-host-r3/17.err
+VERDICT i8-double2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-double1 line=18
+  $ seed/out/omc < build/nl4-host-r3/18.src > build/nl4-host-r3/18.elf 2> build/nl4-host-r3/18.cerr
+  $ build/nl4-host-r3/18.elf neuralese/fixtures/nl4-context-i8.bin 2 1 < neuralese/fixtures/nl4-i8-0110.wire > build/nl4-host-r3/18.out 2> build/nl4-host-r3/18.err
+VERDICT i8-double1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-double3 line=19
+  $ seed/out/omc < build/nl4-host-r3/19.src > build/nl4-host-r3/19.elf 2> build/nl4-host-r3/19.cerr
+  $ build/nl4-host-r3/19.elf neuralese/fixtures/nl4-context-i8.bin 2 3 < neuralese/fixtures/nl4-i8-0111.wire > build/nl4-host-r3/19.out 2> build/nl4-host-r3/19.err
+VERDICT i8-double3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-inc0 line=20
+  $ seed/out/omc < build/nl4-host-r3/20.src > build/nl4-host-r3/20.elf 2> build/nl4-host-r3/20.cerr
+  $ build/nl4-host-r3/20.elf neuralese/fixtures/nl4-context-i8.bin 1 0 < neuralese/fixtures/nl4-i8-1000.wire > build/nl4-host-r3/20.out 2> build/nl4-host-r3/20.err
+VERDICT i8-inc0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-inc2 line=21
+  $ seed/out/omc < build/nl4-host-r3/21.src > build/nl4-host-r3/21.elf 2> build/nl4-host-r3/21.cerr
+  $ build/nl4-host-r3/21.elf neuralese/fixtures/nl4-context-i8.bin 1 2 < neuralese/fixtures/nl4-i8-1001.wire > build/nl4-host-r3/21.out 2> build/nl4-host-r3/21.err
+VERDICT i8-inc2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-inc1 line=22
+  $ seed/out/omc < build/nl4-host-r3/22.src > build/nl4-host-r3/22.elf 2> build/nl4-host-r3/22.cerr
+  $ build/nl4-host-r3/22.elf neuralese/fixtures/nl4-context-i8.bin 1 1 < neuralese/fixtures/nl4-i8-1010.wire > build/nl4-host-r3/22.out 2> build/nl4-host-r3/22.err
+VERDICT i8-inc1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-inc3 line=23
+  $ seed/out/omc < build/nl4-host-r3/23.src > build/nl4-host-r3/23.elf 2> build/nl4-host-r3/23.cerr
+  $ build/nl4-host-r3/23.elf neuralese/fixtures/nl4-context-i8.bin 1 3 < neuralese/fixtures/nl4-i8-1011.wire > build/nl4-host-r3/23.out 2> build/nl4-host-r3/23.err
+VERDICT i8-inc3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-id0 line=24
+  $ seed/out/omc < build/nl4-host-r3/24.src > build/nl4-host-r3/24.elf 2> build/nl4-host-r3/24.cerr
+  $ build/nl4-host-r3/24.elf neuralese/fixtures/nl4-context-i8.bin 3 0 < neuralese/fixtures/nl4-i8-1100.wire > build/nl4-host-r3/24.out 2> build/nl4-host-r3/24.err
+VERDICT i8-id0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-id2 line=25
+  $ seed/out/omc < build/nl4-host-r3/25.src > build/nl4-host-r3/25.elf 2> build/nl4-host-r3/25.cerr
+  $ build/nl4-host-r3/25.elf neuralese/fixtures/nl4-context-i8.bin 3 2 < neuralese/fixtures/nl4-i8-1101.wire > build/nl4-host-r3/25.out 2> build/nl4-host-r3/25.err
+VERDICT i8-id2 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-id1 line=26
+  $ seed/out/omc < build/nl4-host-r3/26.src > build/nl4-host-r3/26.elf 2> build/nl4-host-r3/26.cerr
+  $ build/nl4-host-r3/26.elf neuralese/fixtures/nl4-context-i8.bin 3 1 < neuralese/fixtures/nl4-i8-1110.wire > build/nl4-host-r3/26.out 2> build/nl4-host-r3/26.err
+VERDICT i8-id1 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE i8-id3 line=27
+  $ seed/out/omc < build/nl4-host-r3/27.src > build/nl4-host-r3/27.elf 2> build/nl4-host-r3/27.cerr
+  $ build/nl4-host-r3/27.elf neuralese/fixtures/nl4-context-i8.bin 3 3 < neuralese/fixtures/nl4-i8-1111.wire > build/nl4-host-r3/27.out 2> build/nl4-host-r3/27.err
+VERDICT i8-id3 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE reserved-op0 line=28
+  $ seed/out/omc < build/nl4-host-r3/28.src > build/nl4-host-r3/28.elf 2> build/nl4-host-r3/28.cerr
+  $ build/nl4-host-r3/28.elf neuralese/fixtures/nl4-context.bin 1 0 < neuralese/fixtures/nl4-0000.wire > build/nl4-host-r3/28.out 2> build/nl4-host-r3/28.err
+VERDICT reserved-op0 PASS run exit=48 expected=48 stdout=match stderr=match
+CASE refuse-effect line=29
+  $ seed/out/omc < build/nl4-host-r3/29.src > build/nl4-host-r3/29.elf 2> build/nl4-host-r3/29.cerr
+  $ build/nl4-host-r3/29.elf neuralese/fixtures/nl4-context-effect.bin 1 2 < neuralese/fixtures/nl4-effect.wire > build/nl4-host-r3/29.out 2> build/nl4-host-r3/29.err
+VERDICT refuse-effect PASS run exit=43 expected=43 stdout=match stderr=match
+CASE refuse-live-profile line=30
+  $ seed/out/omc < build/nl4-host-r3/30.src > build/nl4-host-r3/30.elf 2> build/nl4-host-r3/30.cerr
+  $ build/nl4-host-r3/30.elf neuralese/fixtures/nl4-context-native.bin 1 2 < neuralese/fixtures/nl4-native.wire > build/nl4-host-r3/30.out 2> build/nl4-host-r3/30.err
+VERDICT refuse-live-profile PASS run exit=41 expected=41 stdout=match stderr=match
+CASE refuse-stale line=31
+  $ seed/out/omc < build/nl4-host-r3/31.src > build/nl4-host-r3/31.elf 2> build/nl4-host-r3/31.cerr
+  $ build/nl4-host-r3/31.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-stale.wire > build/nl4-host-r3/31.out 2> build/nl4-host-r3/31.err
+VERDICT refuse-stale PASS run exit=18 expected=18 stdout=match stderr=match
+CASE refuse-future line=32
+  $ seed/out/omc < build/nl4-host-r3/32.src > build/nl4-host-r3/32.elf 2> build/nl4-host-r3/32.cerr
+  $ build/nl4-host-r3/32.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-future.wire > build/nl4-host-r3/32.out 2> build/nl4-host-r3/32.err
+VERDICT refuse-future PASS run exit=18 expected=18 stdout=match stderr=match
+CASE refuse-replay line=33
+  $ seed/out/omc < build/nl4-host-r3/33.src > build/nl4-host-r3/33.elf 2> build/nl4-host-r3/33.cerr
+  $ build/nl4-host-r3/33.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-replay.wire > build/nl4-host-r3/33.out 2> build/nl4-host-r3/33.err
+VERDICT refuse-replay PASS run exit=19 expected=19 stdout=match stderr=match
+CASE refuse-nonce line=34
+  $ seed/out/omc < build/nl4-host-r3/34.src > build/nl4-host-r3/34.elf 2> build/nl4-host-r3/34.cerr
+  $ build/nl4-host-r3/34.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-nonce.wire > build/nl4-host-r3/34.out 2> build/nl4-host-r3/34.err
+VERDICT refuse-nonce PASS run exit=20 expected=20 stdout=match stderr=match
+CASE refuse-foreign-tenant line=35
+  $ seed/out/omc < build/nl4-host-r3/35.src > build/nl4-host-r3/35.elf 2> build/nl4-host-r3/35.cerr
+  $ build/nl4-host-r3/35.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-foreign.wire > build/nl4-host-r3/35.out 2> build/nl4-host-r3/35.err
+VERDICT refuse-foreign-tenant PASS run exit=20 expected=20 stdout=match stderr=match
+CASE refuse-consent-root line=36
+  $ seed/out/omc < build/nl4-host-r3/36.src > build/nl4-host-r3/36.elf 2> build/nl4-host-r3/36.cerr
+  $ build/nl4-host-r3/36.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-withdrawn.wire > build/nl4-host-r3/36.out 2> build/nl4-host-r3/36.err
+VERDICT refuse-consent-root PASS run exit=20 expected=20 stdout=match stderr=match
+CASE refuse-decoder line=37
+  $ seed/out/omc < build/nl4-host-r3/37.src > build/nl4-host-r3/37.elf 2> build/nl4-host-r3/37.cerr
+  $ build/nl4-host-r3/37.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-unknown-decoder.wire > build/nl4-host-r3/37.out 2> build/nl4-host-r3/37.err
+VERDICT refuse-decoder PASS run exit=20 expected=20 stdout=match stderr=match
+CASE refuse-model line=38
+  $ seed/out/omc < build/nl4-host-r3/38.src > build/nl4-host-r3/38.elf 2> build/nl4-host-r3/38.cerr
+  $ build/nl4-host-r3/38.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-wrong-model.wire > build/nl4-host-r3/38.out 2> build/nl4-host-r3/38.err
+VERDICT refuse-model PASS run exit=20 expected=20 stdout=match stderr=match
+CASE refuse-shape line=39
+  $ seed/out/omc < build/nl4-host-r3/39.src > build/nl4-host-r3/39.elf 2> build/nl4-host-r3/39.cerr
+  $ build/nl4-host-r3/39.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-shape.wire > build/nl4-host-r3/39.out 2> build/nl4-host-r3/39.err
+VERDICT refuse-shape PASS run exit=14 expected=14 stdout=match stderr=match
+CASE refuse-alias-stride line=40
+  $ seed/out/omc < build/nl4-host-r3/40.src > build/nl4-host-r3/40.elf 2> build/nl4-host-r3/40.cerr
+  $ build/nl4-host-r3/40.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-alias.wire > build/nl4-host-r3/40.out 2> build/nl4-host-r3/40.err
+VERDICT refuse-alias-stride PASS run exit=14 expected=14 stdout=match stderr=match
+CASE refuse-nonfinite line=41
+  $ seed/out/omc < build/nl4-host-r3/41.src > build/nl4-host-r3/41.elf 2> build/nl4-host-r3/41.cerr
+  $ build/nl4-host-r3/41.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-nonfinite.wire > build/nl4-host-r3/41.out 2> build/nl4-host-r3/41.err
+VERDICT refuse-nonfinite PASS run exit=21 expected=21 stdout=match stderr=match
+CASE refuse-integrity line=42
+  $ seed/out/omc < build/nl4-host-r3/42.src > build/nl4-host-r3/42.elf 2> build/nl4-host-r3/42.cerr
+  $ build/nl4-host-r3/42.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-integrity.wire > build/nl4-host-r3/42.out 2> build/nl4-host-r3/42.err
+VERDICT refuse-integrity PASS run exit=22 expected=22 stdout=match stderr=match
+CASE refuse-reserved line=43
+  $ seed/out/omc < build/nl4-host-r3/43.src > build/nl4-host-r3/43.elf 2> build/nl4-host-r3/43.cerr
+  $ build/nl4-host-r3/43.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-reserved.wire > build/nl4-host-r3/43.out 2> build/nl4-host-r3/43.err
+VERDICT refuse-reserved PASS run exit=16 expected=16 stdout=match stderr=match
+CASE refuse-zero-cap-ref line=44
+  $ seed/out/omc < build/nl4-host-r3/44.src > build/nl4-host-r3/44.elf 2> build/nl4-host-r3/44.cerr
+  $ build/nl4-host-r3/44.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-no-capability.wire > build/nl4-host-r3/44.out 2> build/nl4-host-r3/44.err
+VERDICT refuse-zero-cap-ref PASS run exit=17 expected=17 stdout=match stderr=match
+CASE refuse-no-resource line=45
+  $ seed/out/omc < build/nl4-host-r3/45.src > build/nl4-host-r3/45.elf 2> build/nl4-host-r3/45.cerr
+  $ build/nl4-host-r3/45.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-no-resource.wire > build/nl4-host-r3/45.out 2> build/nl4-host-r3/45.err
+VERDICT refuse-no-resource PASS run exit=17 expected=17 stdout=match stderr=match
+CASE refuse-version line=46
+  $ seed/out/omc < build/nl4-host-r3/46.src > build/nl4-host-r3/46.elf 2> build/nl4-host-r3/46.cerr
+  $ build/nl4-host-r3/46.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-version.wire > build/nl4-host-r3/46.out 2> build/nl4-host-r3/46.err
+VERDICT refuse-version PASS run exit=11 expected=11 stdout=match stderr=match
+CASE refuse-scale line=47
+  $ seed/out/omc < build/nl4-host-r3/47.src > build/nl4-host-r3/47.elf 2> build/nl4-host-r3/47.cerr
+  $ build/nl4-host-r3/47.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-bad-scale.wire > build/nl4-host-r3/47.out 2> build/nl4-host-r3/47.err
+VERDICT refuse-scale PASS run exit=13 expected=13 stdout=match stderr=match
+CASE refuse-truncated line=48
+  $ seed/out/omc < build/nl4-host-r3/48.src > build/nl4-host-r3/48.elf 2> build/nl4-host-r3/48.cerr
+  $ build/nl4-host-r3/48.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-truncated.wire > build/nl4-host-r3/48.out 2> build/nl4-host-r3/48.err
+VERDICT refuse-truncated PASS run exit=15 expected=15 stdout=match stderr=match
+CASE refuse-oversized line=49
+  $ seed/out/omc < build/nl4-host-r3/49.src > build/nl4-host-r3/49.elf 2> build/nl4-host-r3/49.cerr
+  $ build/nl4-host-r3/49.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-oversized.wire > build/nl4-host-r3/49.out 2> build/nl4-host-r3/49.err
+VERDICT refuse-oversized PASS run exit=10 expected=10 stdout=match stderr=match
+CASE refuse-ambiguous line=50
+  $ seed/out/omc < build/nl4-host-r3/50.src > build/nl4-host-r3/50.elf 2> build/nl4-host-r3/50.cerr
+  $ build/nl4-host-r3/50.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-ambiguous.wire > build/nl4-host-r3/50.out 2> build/nl4-host-r3/50.err
+VERDICT refuse-ambiguous PASS run exit=47 expected=47 stdout=match stderr=match
+CASE refuse-signflip line=51
+  $ seed/out/omc < build/nl4-host-r3/51.src > build/nl4-host-r3/51.elf 2> build/nl4-host-r3/51.cerr
+  $ build/nl4-host-r3/51.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-signflip.wire > build/nl4-host-r3/51.out 2> build/nl4-host-r3/51.err
+VERDICT refuse-signflip PASS run exit=47 expected=47 stdout=match stderr=match
+CASE refuse-wrongscale line=52
+  $ seed/out/omc < build/nl4-host-r3/52.src > build/nl4-host-r3/52.elf 2> build/nl4-host-r3/52.cerr
+  $ build/nl4-host-r3/52.elf neuralese/fixtures/nl4-context-wrongscale.bin 1 2 < neuralese/fixtures/nl4-wrongscale.wire > build/nl4-host-r3/52.out 2> build/nl4-host-r3/52.err
+VERDICT refuse-wrongscale PASS run exit=47 expected=47 stdout=match stderr=match
+CASE refuse-wrong-op line=53
+  $ seed/out/omc < build/nl4-host-r3/53.src > build/nl4-host-r3/53.elf 2> build/nl4-host-r3/53.cerr
+  $ build/nl4-host-r3/53.elf neuralese/fixtures/nl4-context.bin 2 2 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/53.out 2> build/nl4-host-r3/53.err
+VERDICT refuse-wrong-op PASS run exit=49 expected=49 stdout=match stderr=match
+CASE refuse-wrong-operand line=54
+  $ seed/out/omc < build/nl4-host-r3/54.src > build/nl4-host-r3/54.elf 2> build/nl4-host-r3/54.cerr
+  $ build/nl4-host-r3/54.elf neuralese/fixtures/nl4-context.bin 1 3 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/54.out 2> build/nl4-host-r3/54.err
+VERDICT refuse-wrong-operand PASS run exit=49 expected=49 stdout=match stderr=match
+SUBST neuralese/fixtures/nl4-effect.from neuralese/fixtures/nl4-false.to
+CASE kill-effect line=56
+  MUTATE exact-once substitution at byte 5418
+  $ seed/out/omc < build/nl4-host-r3/56.src > build/nl4-host-r3/56.elf 2> build/nl4-host-r3/56.cerr
+  $ build/nl4-host-r3/56.elf neuralese/fixtures/nl4-context-effect.bin 1 2 < neuralese/fixtures/nl4-effect.wire > build/nl4-host-r3/56.out 2> build/nl4-host-r3/56.err
+VERDICT kill-effect PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-expiry.from neuralese/fixtures/nl4-false.to
+CASE kill-expiry line=58
+  MUTATE exact-once substitution at byte 10430
+  $ seed/out/omc < build/nl4-host-r3/58.src > build/nl4-host-r3/58.elf 2> build/nl4-host-r3/58.cerr
+  $ build/nl4-host-r3/58.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-stale.wire > build/nl4-host-r3/58.out 2> build/nl4-host-r3/58.err
+VERDICT kill-expiry PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-sequence.from neuralese/fixtures/nl4-false.to
+CASE kill-sequence line=60
+  MUTATE exact-once substitution at byte 10514
+  $ seed/out/omc < build/nl4-host-r3/60.src > build/nl4-host-r3/60.elf 2> build/nl4-host-r3/60.cerr
+  $ build/nl4-host-r3/60.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-replay.wire > build/nl4-host-r3/60.out 2> build/nl4-host-r3/60.err
+VERDICT kill-sequence PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-context.from neuralese/fixtures/nl4-false.to
+CASE kill-tenant-binding line=62
+  MUTATE exact-once substitution at byte 10616
+  $ seed/out/omc < build/nl4-host-r3/62.src > build/nl4-host-r3/62.elf 2> build/nl4-host-r3/62.cerr
+  $ build/nl4-host-r3/62.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-foreign.wire > build/nl4-host-r3/62.out 2> build/nl4-host-r3/62.err
+VERDICT kill-tenant-binding PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-context.from neuralese/fixtures/nl4-false.to
+CASE kill-consent-binding line=64
+  MUTATE exact-once substitution at byte 10616
+  $ seed/out/omc < build/nl4-host-r3/64.src > build/nl4-host-r3/64.elf 2> build/nl4-host-r3/64.cerr
+  $ build/nl4-host-r3/64.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-withdrawn.wire > build/nl4-host-r3/64.out 2> build/nl4-host-r3/64.err
+VERDICT kill-consent-binding PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-integrity.from neuralese/fixtures/nl4-false.to
+CASE kill-integrity line=66
+  MUTATE exact-once substitution at byte 10679
+  $ seed/out/omc < build/nl4-host-r3/66.src > build/nl4-host-r3/66.elf 2> build/nl4-host-r3/66.cerr
+  $ build/nl4-host-r3/66.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-integrity.wire > build/nl4-host-r3/66.out 2> build/nl4-host-r3/66.err
+VERDICT kill-integrity PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-shape.from neuralese/fixtures/nl4-false.to
+CASE kill-shape-alias line=68
+  MUTATE exact-once substitution at byte 10209
+  $ seed/out/omc < build/nl4-host-r3/68.src > build/nl4-host-r3/68.elf 2> build/nl4-host-r3/68.cerr
+  $ build/nl4-host-r3/68.elf neuralese/fixtures/nl4-context-alias.bin 1 2 < neuralese/fixtures/nl4-alias.wire > build/nl4-host-r3/68.out 2> build/nl4-host-r3/68.err
+VERDICT kill-shape-alias PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-match.from neuralese/fixtures/nl4-false.to
+CASE kill-wrong-objective line=70
+  MUTATE exact-once substitution at byte 2835
+  $ seed/out/omc < build/nl4-host-r3/70.src > build/nl4-host-r3/70.elf 2> build/nl4-host-r3/70.cerr
+  $ build/nl4-host-r3/70.elf neuralese/fixtures/nl4-context.bin 2 2 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/70.out 2> build/nl4-host-r3/70.err
+VERDICT kill-wrong-objective PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/nl4-operation.from neuralese/fixtures/nl4-operation.to
+CASE kill-wrong-operation line=72
+  MUTATE exact-once substitution at byte 364
+  $ seed/out/omc < build/nl4-host-r3/72.src > build/nl4-host-r3/72.elf 2> build/nl4-host-r3/72.cerr
+  $ build/nl4-host-r3/72.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/72.out 2> build/nl4-host-r3/72.err
+VERDICT kill-wrong-operation PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 24 stderr=match
+SUBST neuralese/fixtures/nl4-pre.from neuralese/fixtures/nl4-pre.to
+CASE ordinary-precondition line=74
+  MUTATE exact-once substitution at byte 2086
+  $ seed/out/omc < build/nl4-host-r3/74.src > build/nl4-host-r3/74.elf 2> build/nl4-host-r3/74.cerr
+  $ build/nl4-host-r3/74.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/74.out 2> build/nl4-host-r3/74.err
+VERDICT ordinary-precondition PASS run exit=109 expected=109 stdout=match stderr=match
+SUBST neuralese/fixtures/nl4-operation.from neuralese/fixtures/nl4-post.to
+CASE ordinary-postcondition line=76
+  MUTATE exact-once substitution at byte 364
+  $ seed/out/omc < build/nl4-host-r3/76.src > build/nl4-host-r3/76.elf 2> build/nl4-host-r3/76.cerr
+  $ build/nl4-host-r3/76.elf neuralese/fixtures/nl4-context.bin 1 2 < neuralese/fixtures/nl4-1001.wire > build/nl4-host-r3/76.out 2> build/nl4-host-r3/76.err
+VERDICT ordinary-postcondition PASS run exit=110 expected=110 stdout=match stderr=match
+OM2GATE PASS cases=63 pass=63 fail=0 invalid=0 not_run=0

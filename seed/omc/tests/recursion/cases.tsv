@@ -1,0 +1,34 @@
+# cases for nest.om, run by seed/omc/gate-recursion.sh. Fields are separated by one TAB:
+#   name  input  exit  stdout
+# input: a literal line, or nest:N:X (N open parentheses, X, N closing ones), or open:N:X (N open
+# parentheses and X, never closed), or sum:N (N ones joined by +). Each input is followed by one newline.
+# Values were computed independently with Wolfram (WolframLanguageEvaluator, 2026-10-30):
+#   Mod[18446744073709551615 + 1, 2^64] -> 0      Mod[4294967296*4294967296, 2^64] -> 0
+#   Mod[99999999999999999999, 2^64] -> 7766279631452241919   Mod[(2^32+3)*(2^32+5), 2^64] -> 34359738383
+#   ((1+2)*(3+4))+((5*6)+(7*(8+9))) -> 170   2+3*4 -> 14   (2+3)*4 -> 20   2*3+4*5 -> 26
+#   Total[ConstantArray[1,64]] -> 64
+depth0	7	0	value 7 depth 0 fuel 1
+depth1	(7)	0	value 7 depth 1 fuel 2
+depth15	nest:15:7	0	value 7 depth 15 fuel 16
+depth16	nest:16:7	0	value 7 depth 16 fuel 17
+depth17	nest:17:7	40	refused depth
+depth100	nest:100:7	40	refused depth
+depth2000	nest:2000:7	40	refused depth
+depth16sum	nest:16:1+2*3	0	value 7 depth 16 fuel 19
+depth17open	open:17:7	40	refused depth
+depth16open	open:16:7	41	refused syntax
+fuel64	sum:64	0	value 64 depth 0 fuel 64
+fuel65	sum:65	42	refused fuel
+order1	2+3*4	0	value 14 depth 0 fuel 3
+order2	(2+3)*4	0	value 20 depth 1 fuel 4
+order3	2*3+4*5	0	value 26 depth 0 fuel 4
+tree	((1+2)*(3+4))+((5*6)+(7*(8+9)))	0	value 170 depth 3 fuel 16
+wrapadd	18446744073709551615+1	0	value 0 depth 0 fuel 2
+wrapmul	4294967296*4294967296	0	value 0 depth 0 fuel 2
+wrapmul2	(4294967296+3)*(4294967296+5)	0	value 34359738383 depth 1 fuel 6
+wrapdig	99999999999999999999	0	value 7766279631452241919 depth 0 fuel 1
+nobase	()	41	refused syntax
+noclose	(7	41	refused syntax
+empty		41	refused syntax
+trailing	7)	41	refused syntax
+badop	7-1	41	refused syntax

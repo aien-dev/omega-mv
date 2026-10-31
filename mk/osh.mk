@@ -9,7 +9,7 @@
 #   make test-osh-parse   check + parser driver (lexer + parser units, reference tokenizer + parser), plain and ASan/UBSan
 ifndef OSH_MK
 OSH_MK := 1
-.PHONY: osh-gen osh-gen-check test-osh-lex test-osh-parse test-osh-expand osh test-osh-e2e osh-bash-verify
+.PHONY: osh-gen osh-gen-check test-osh-lex test-osh-parse test-osh-expand osh test-osh-e2e osh-bash-verify osh-bash-diff
 OSH_DIR = $(OUT_DIR)/osh
 OSH_FUZZ ?= 100000
 OSH_GEN = src/osh/osh_gen.sh
@@ -115,6 +115,12 @@ test-osh-e2e: osh-gen-check $(OSH_DIR)/osh $(OSH_DIR)/argprint $(OSH_DIR)/test_o
 	rm -rf $(abspath $(OSH_DIR))/state; XDG_STATE_HOME=$(abspath $(OSH_DIR))/state $(abspath $(OSH_DIR)/test_osh_e2e) $(abspath $(OSH_DIR)/osh) $(abspath $(OSH_DIR)/argprint) > $(OSH_DIR)/e2e.out
 	@tail -3 $(OSH_DIR)/e2e.out; tail -1 $(OSH_DIR)/e2e.out | grep -q '^OSH_E2E_PASS$$'
 	@echo "test-osh-e2e: PASS"
+
+# omega#344: osh against /usr/bin/bash case by case (stdout, stderr, status, files), then the negative control
+# (every expectation corrupted must be detected). Needs bash 5.2 at /usr/bin/bash.
+osh-bash-diff: $(OSH_DIR)/osh
+	bash tests/osh/bashdiff/bashdiff.sh $(abspath $(OSH_DIR)/osh) tests/osh/bashdiff/cases.txt
+	BASHDIFF_NEGCTL=1 bash tests/osh/bashdiff/bashdiff.sh $(abspath $(OSH_DIR)/osh) tests/osh/bashdiff/cases.txt
 
 # Core-only step trace (OSH-AIENOS-0): the lexer, parser and expander run over fixture scripts through osh_core_call, nothing
 # is executed. `make osh-trace` runs every tests/osh/trace/*.sh native AND interpreted, requires the two traces to be

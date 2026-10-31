@@ -1,0 +1,26 @@
+SC1 revision2 fixture repair expectations, frozen from independent RelationalReview before replay.
+Contract ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496.
+Historical FROZEN.txt/BINDINGS.json/CONSUMER-BINDINGS.json remain draft records at4883943.
+Current IDs below replace draft L1-L8 labels without relabeling historical outputs.
+
+L1 nondeterminism:4 ordinary inclusions;2 faulty same-choice pairs differ;2 correct pairs equal.
+L2 compare: for every position0..31, base byte0..255, mismatch mask1..255, both the original
+and complemented pair return0; equal baseline returns1. Identical nonzero flips at positions0/1
+and at all32 positions must return0, including complemented all32. XOR instead of OR accumulator
+must compile with the SAME paired checker and normally reach assertion16 (two-position cancel).
+L3 emitted controls: actual branch/address modified raw and ELF retain output7 for both secrets;
+existing scanner reports DATA observation NOT_RUN, not UNKNOWN-as-kill. Re-derive every scanned
+raw artifact and native patch base from source before scans; reproduce patch outputs exact bytes.
+L4: secret divisor zero-check, helper and trap controls retain expected DATA refusal. Constant7
+secret dividend with xor(q,q) return0 must expose current scanner PASS. Stronger division policy
+refuses/unqualifies that artifact, so L4 division remains BLOCKED on scanner-owner extension or
+reviewed division-free admission. Never count the current PASS as a successful secrecy kill.
+L5: wrong-image candidate is2184bytes (>776 raw) and must fail the actual containment search.
+A real scanner-source33->34 fixpoint-pass bound mutation must compile then fail its output hash
+binding; a substitute unrelated program is not checker-binding coverage. General target/model/
+disclosure binding remains BLOCKED #623/#624. All emitted-input source links must be re-derived.
+L6: whole primitive embedded in test harness is only a mechanical witness. Daemon call/return/
+observation and emitted-word correspondence remain BLOCKED; no production scan is inferred.
+L7: captured dseqhash baseline audit only. Full closure and changed consumer proposal are unqualified.
+Audit inputs include working-tree HEAD6eb49ccf while SC1 base is1e075776; adapter differs although
+captured helpers comparison bytes agree. Do not call the mixed input a qualification of either base.

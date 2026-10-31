@@ -1,0 +1,17 @@
+gen-receipt 1
+record abs-04ce4511e6da3b97
+tool tools/gen/abstract/extract 356e304abd42e0ae8603252af48b76f7e42c0a70d227a1ea93bc78eea6aa91af
+tool tools/gen/abstract/verify 58f9cac29844b1fd4b9bf50ffd3360357baec5bd9e894ec969502c03ca2f74e6
+tool tools/gen/abstract/probe f4af98512c46a7a00020c79291230c0748a7dde2aadec328e8377de54741cd95
+tool tools/gen/abstract/genabs.sh 68414c1c72b273058a66b74d7801f0ea7fe290c49302aacd34f84b63bb9091d4
+tool tools/gen/abstract/gabs.c 27cc795505a054e6ae92fe14634fe900482094a72f10fde401e61e48a4d58880
+tool tools/gen/abstract/recheck.c 9d7a3c74de404170d32eacbc0ab551e3b598a086d9b300a94825e70614533e6c
+helper_ir e8359d1aa2bc966a74051162437ce872d19fd819912f9b152e06bf5ba12f8843
+checker2 ACCEPT
+pre true
+post and and and and ge res get v 0 ge res get v 1 ge res get v 2 ge res get v 3 or or or eq res get v 0 eq res get v 1 eq res get v 2 eq res get v 3
+example 2 9 9 1 -> 9
+property inputs=bba3d986d30f84957a89097f51c85102dbfd3e5b299bd601f9c70c34a7c16eac expected=23c04e4d3c8d5abea295504bcdab63f60f7d857852a0fe95e049676f6dfc65e4 ACCEPT n=256
+example inputs=4dd82f3a6592f818338dfd44a0515022491d811cfc232e4768a0be1c34e00f4a expected=2e6d31a5983a91251bfae5aefa1c0a19d8ba3cf601d0e8a706b4cfa9661a6b8a ACCEPT n=1
+occurs max4_half max4
+occurs max4_inc max4

@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-31T03:22:28Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:a3f917cdffb24692964e96e9dff03a6e72cb8507b857dc7c517a4ce6b9672bfe",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 9,
+      "generated_at_commit": "d3763c7f271e123765c88cbbf837030a1ac95c94",
+      "source_tree": "sha256:b6609361b5aef8d8b0fa25e2ce9e74e105d99674abde3f150a0360122619fcca"
+    }
+  },
+  "layer": "seed",
+  "name": "equiv",
+  "purpose": "Seeded Omega exhaustive u8/u16 equivalence checker for OSC IR v1 scalar functions (issue 826)",
+  "schema_version": "1.0.0"
+}

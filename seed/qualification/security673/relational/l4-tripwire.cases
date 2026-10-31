@@ -1,0 +1,6 @@
+# L4 tripwire, reported apart from the qualification PASS totals. The scanner is EXPECTED to PASS
+# a secret dividend (known false negative under SC1 revision2, README L4). If this file ever stops
+# passing, the scanner gained division enforcement or changed: revisit L4, do not just re-pin.
+deadline 30
+derive-secret-dividend emit seed/qualification/security673/relational/dividend.om file:seed/qualification/security673/relational/evidence/run4/dividend.bin - 0
+L4-division-gap run seed/qualification/om2/leak/leakscan.om file:seed/qualification/security673/relational/evidence/run4/dividend.bin file:seed/qualification/security673/relational/evidence/run4/dividend.scan - 0 x0

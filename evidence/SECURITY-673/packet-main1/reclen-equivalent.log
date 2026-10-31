@@ -1,0 +1,91 @@
+OM2GATE START cases=evidence/SECURITY-673/packet-main1/reclen-equivalent.cases scratch=/dev/shm/pl671/run-reclen-equivalent
+IDENTITY omc seed/out/omc sha256=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b pinned=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b match
+SUBST evidence/SECURITY-673/packet-main1/mut-reclen-from.txt evidence/SECURITY-673/packet-main1/mut-reclen-to.txt
+  MUTATE exact-once substitution at byte 104072
+  $ seed/out/omc < /dev/shm/pl671/run-reclen-equivalent/2.src > /dev/shm/pl671/run-reclen-equivalent/2.elf 2> /dev/shm/pl671/run-reclen-equivalent/2.cerr
+COMPILER /dev/shm/pl671/run-reclen-equivalent/2.elf sha256=037f8221e0d6c3cb8711b87784ac2544f83e0f1e275b485100ceb54418c2d3fa source line=2
+CASE reclen-p03 line=3
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/3.src > /dev/shm/pl671/run-reclen-equivalent/3.elf 2> /dev/shm/pl671/run-reclen-equivalent/3.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/3.elf < seed/qualification/security673/packets/p03.bin > /dev/shm/pl671/run-reclen-equivalent/3.out 2> /dev/shm/pl671/run-reclen-equivalent/3.err
+VERDICT reclen-p03 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-p07 line=4
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/4.src > /dev/shm/pl671/run-reclen-equivalent/4.elf 2> /dev/shm/pl671/run-reclen-equivalent/4.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/4.elf < seed/qualification/security673/packets/p07.bin > /dev/shm/pl671/run-reclen-equivalent/4.out 2> /dev/shm/pl671/run-reclen-equivalent/4.err
+VERDICT reclen-p07 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-p15 line=5
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/5.src > /dev/shm/pl671/run-reclen-equivalent/5.elf 2> /dev/shm/pl671/run-reclen-equivalent/5.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/5.elf < seed/qualification/security673/packets/p15.bin > /dev/shm/pl671/run-reclen-equivalent/5.out 2> /dev/shm/pl671/run-reclen-equivalent/5.err
+VERDICT reclen-p15 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc2 line=6
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/6.src > /dev/shm/pl671/run-reclen-equivalent/6.elf 2> /dev/shm/pl671/run-reclen-equivalent/6.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/6.elf 2 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/6.out 2> /dev/shm/pl671/run-reclen-equivalent/6.err
+VERDICT reclen-trunc2 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc3 line=7
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/7.src > /dev/shm/pl671/run-reclen-equivalent/7.elf 2> /dev/shm/pl671/run-reclen-equivalent/7.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/7.elf 3 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/7.out 2> /dev/shm/pl671/run-reclen-equivalent/7.err
+VERDICT reclen-trunc3 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc4 line=8
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/8.src > /dev/shm/pl671/run-reclen-equivalent/8.elf 2> /dev/shm/pl671/run-reclen-equivalent/8.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/8.elf 4 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/8.out 2> /dev/shm/pl671/run-reclen-equivalent/8.err
+VERDICT reclen-trunc4 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc5 line=9
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/9.src > /dev/shm/pl671/run-reclen-equivalent/9.elf 2> /dev/shm/pl671/run-reclen-equivalent/9.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/9.elf 5 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/9.out 2> /dev/shm/pl671/run-reclen-equivalent/9.err
+VERDICT reclen-trunc5 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc6 line=10
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/10.src > /dev/shm/pl671/run-reclen-equivalent/10.elf 2> /dev/shm/pl671/run-reclen-equivalent/10.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/10.elf 6 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/10.out 2> /dev/shm/pl671/run-reclen-equivalent/10.err
+VERDICT reclen-trunc6 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc12 line=11
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/11.src > /dev/shm/pl671/run-reclen-equivalent/11.elf 2> /dev/shm/pl671/run-reclen-equivalent/11.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/11.elf 12 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/11.out 2> /dev/shm/pl671/run-reclen-equivalent/11.err
+VERDICT reclen-trunc12 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc13 line=12
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/12.src > /dev/shm/pl671/run-reclen-equivalent/12.elf 2> /dev/shm/pl671/run-reclen-equivalent/12.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/12.elf 13 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/12.out 2> /dev/shm/pl671/run-reclen-equivalent/12.err
+VERDICT reclen-trunc13 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc14 line=13
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/13.src > /dev/shm/pl671/run-reclen-equivalent/13.elf 2> /dev/shm/pl671/run-reclen-equivalent/13.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/13.elf 14 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/13.out 2> /dev/shm/pl671/run-reclen-equivalent/13.err
+VERDICT reclen-trunc14 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc15 line=14
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/14.src > /dev/shm/pl671/run-reclen-equivalent/14.elf 2> /dev/shm/pl671/run-reclen-equivalent/14.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/14.elf 15 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/14.out 2> /dev/shm/pl671/run-reclen-equivalent/14.err
+VERDICT reclen-trunc15 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc16 line=15
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/15.src > /dev/shm/pl671/run-reclen-equivalent/15.elf 2> /dev/shm/pl671/run-reclen-equivalent/15.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/15.elf 16 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/15.out 2> /dev/shm/pl671/run-reclen-equivalent/15.err
+VERDICT reclen-trunc16 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc17 line=16
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/16.src > /dev/shm/pl671/run-reclen-equivalent/16.elf 2> /dev/shm/pl671/run-reclen-equivalent/16.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/16.elf 17 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/16.out 2> /dev/shm/pl671/run-reclen-equivalent/16.err
+VERDICT reclen-trunc17 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc20 line=17
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/17.src > /dev/shm/pl671/run-reclen-equivalent/17.elf 2> /dev/shm/pl671/run-reclen-equivalent/17.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/17.elf 20 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/17.out 2> /dev/shm/pl671/run-reclen-equivalent/17.err
+VERDICT reclen-trunc20 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc21 line=18
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/18.src > /dev/shm/pl671/run-reclen-equivalent/18.elf 2> /dev/shm/pl671/run-reclen-equivalent/18.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/18.elf 21 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/18.out 2> /dev/shm/pl671/run-reclen-equivalent/18.err
+VERDICT reclen-trunc21 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc22 line=19
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/19.src > /dev/shm/pl671/run-reclen-equivalent/19.elf 2> /dev/shm/pl671/run-reclen-equivalent/19.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/19.elf 22 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/19.out 2> /dev/shm/pl671/run-reclen-equivalent/19.err
+VERDICT reclen-trunc22 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc23 line=20
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/20.src > /dev/shm/pl671/run-reclen-equivalent/20.elf 2> /dev/shm/pl671/run-reclen-equivalent/20.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/20.elf 23 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/20.out 2> /dev/shm/pl671/run-reclen-equivalent/20.err
+VERDICT reclen-trunc23 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc24 line=21
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/21.src > /dev/shm/pl671/run-reclen-equivalent/21.elf 2> /dev/shm/pl671/run-reclen-equivalent/21.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/21.elf 24 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/21.out 2> /dev/shm/pl671/run-reclen-equivalent/21.err
+VERDICT reclen-trunc24 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc25 line=22
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/22.src > /dev/shm/pl671/run-reclen-equivalent/22.elf 2> /dev/shm/pl671/run-reclen-equivalent/22.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/22.elf 25 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/22.out 2> /dev/shm/pl671/run-reclen-equivalent/22.err
+VERDICT reclen-trunc25 PASS run exit=103 expected=103 stdout=match stderr=match
+CASE reclen-trunc26 line=23
+  $ /dev/shm/pl671/run-reclen-equivalent/2.elf < /dev/shm/pl671/run-reclen-equivalent/23.src > /dev/shm/pl671/run-reclen-equivalent/23.elf 2> /dev/shm/pl671/run-reclen-equivalent/23.cerr
+  $ /dev/shm/pl671/run-reclen-equivalent/23.elf 26 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-reclen-equivalent/23.out 2> /dev/shm/pl671/run-reclen-equivalent/23.err
+VERDICT reclen-trunc26 PASS run exit=103 expected=103 stdout=match stderr=match
+OM2GATE PASS cases=21 pass=21 fail=0 invalid=0 not_run=0

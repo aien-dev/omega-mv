@@ -44,10 +44,10 @@ deleted legacy code and qualified consumers; a plan or a passing unit test is no
    the effect (37 checks, including /bin/true and a static strict-profile exec). Real-effect dispatch, a cross-process lock and consumer cutover are next;
    the C owner remains active.
 3. **Trace and privacy (#607)**: `rx_argus`, trace producers and the Open Humanity consent lane.
-   Status: the local `.om` segment writer (`seed/trace/segment.om`) is qualified with 117 checks:
-   header, append+fsync, complete-record scan, short-tail quarantine and fresh-segment recovery.
-   A `.om` SHA-256 implementation passes five standard vectors (`seed/trace/sha256.om`) and runs in
-   the qualification gate.
+   Status: the local `.om` segment writer (`seed/trace/segment.om`, #608) is qualified by
+   `seed/trace/gate.sh` (71 checks and four source mutants: CRC, torn tail, alignment, exclusive
+   create; quarantine and recovery). A one-shot `.om` SHA-256 (`seed/trace/sha256.om`) passes five
+   standard vectors and runs in the security673 qualification gate.
    Exact-byte consent/export and the receiver contract remain `NOT_RUN`: the Open Humanity receiver
    contract is not in this repository, and no second wire contract is invented here.
 4. **Evaluation and promotion (spark-rsi #67)**: replace the Rust promotion/evaluator gate with the
