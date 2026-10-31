@@ -28,7 +28,11 @@
 #    build/tensor-runs/<run-id>/, and refuses a binary with libm math or CUDA
 #    symbols.
 # 3. Runs it with --chip under /tmp/aien-gb10.lock (waits for the lock; no
-#    timeout; the chip test is never killed).
+#    timeout; the chip test is never killed). Inside `spark-window run`
+#    (SPARK_WINDOW set and AIEN_GB10_LOCK_HELD=1) the window already holds
+#    that lock, shared or exclusive, so the script takes no lock of its own:
+#    an exclusive flock beside the window's shared one would wait on its own
+#    window forever. The receipt records which lock was held (gb10_lock).
 # 4. PASS needs exit status 0 and the lines "TENSOR_GB10_HOST: PASS",
 #    "TENSOR_GB10_PARITY: PASS", "TENSOR_GB10_MUTANTS: PASS" and
 #    "M20 Tensor GB10 Verdict: PASS", and clean trees with unmoved HEADs after.
@@ -91,10 +95,18 @@ if [ -z "$FAIL_REASON" ]; then
 fi
 STATUS=-1
 BIN_SHA_BUILT=""
+GB10_LOCK=""
 [ -z "$FAIL_REASON" ] && { BIN_SHA_BUILT=$(sha256sum "$BIN" | cut -d' ' -f1); [ -n "$BIN_SHA_BUILT" ] || FAIL_REASON="cannot hash binary after build"; }
 if [ -z "$FAIL_REASON" ]; then
     # waits for the lock; no timeout; never killed
-    GB10_CHIP_RUN=1 flock /tmp/aien-gb10.lock "$BIN" --chip > "$OUT/tensor.log" 2> "$OUT/tensor.stderr"
+    if [ "${AIEN_GB10_LOCK_HELD:-}" = 1 ] && [ -n "${SPARK_WINDOW:-}" ]; then
+        GB10_LOCK="spark-window $SPARK_WINDOW"
+        gb10() { "$@"; }
+    else
+        GB10_LOCK="flock /tmp/aien-gb10.lock"
+        gb10() { flock /tmp/aien-gb10.lock "$@"; }
+    fi
+    GB10_CHIP_RUN=1 gb10 "$BIN" --chip > "$OUT/tensor.log" 2> "$OUT/tensor.stderr"
     STATUS=$?
     echo "$STATUS" > "$OUT/tensor.status"
     [ "$STATUS" = 0 ] || FAIL_REASON="test binary exit status $STATUS"
@@ -156,7 +168,7 @@ jq -n --arg suite M20_TENSOR_GB10_PARITY --arg status "$VERDICT" --arg reason "$
     --arg host_line "$(line TENSOR_GB10_HOST:)" --arg parity "$(line TENSOR_GB10_PARITY:)" \
     --arg mutants "$(line TENSOR_GB10_MUTANTS:)" --arg cases "$(line 'cases:')" \
     --arg verdict_line "$(line 'M20 Tensor GB10 Verdict:')" \
-    --arg host "$(uname -n)" --arg kernel "$(uname -r)" \
+    --arg host "$(uname -n)" --arg kernel "$(uname -r)" --arg gb10_lock "$GB10_LOCK" \
     '{suite:$suite,status:$status,reason:$reason,run_id:$run_id,started_utc:$started,finished_utc:$finished,
       omega_commit:$commit,omega_tree_clean_before:true,omega_tree_clean_after:$clean_after,
       omega_commit_unchanged_after:$head_same,physics_commit:$physics,physics_lock_pin:$pin,
@@ -169,7 +181,7 @@ jq -n --arg suite M20_TENSOR_GB10_PARITY --arg status "$VERDICT" --arg reason "$
         reduce:"E1 omega_reduce_gb10 (MEAN final division is its declared host step)",
         reduce_rows_sum:"E1 REDUCE_SUM warp kernel via omega_gb10_execute_simt_op, all rows per level",
         matmul:"FMUL_RNE products + E1 tree; no Tensor Core, no FFMA"},
-      mutants:["WRONG_REDUCE_ORDER","FFMA_MATMUL","SWAPPED_OPERAND"],quiet_flag:"not used",
+      mutants:["WRONG_REDUCE_ORDER","FFMA_MATMUL","SWAPPED_OPERAND"],quiet_flag:"not used",gb10_lock:$gb10_lock,
       host:$host,kernel:$kernel}' > "$TMP" || die "receipt json (jq) failed, no receipt written"
 [ -s "$TMP" ] || die "empty receipt, not written"
 [ "$VERDICT" != PASS ] || { [ -n "$BIN_SHA" ] && [ -n "$LOG_SHA" ]; } || die "PASS without binary and log digests refused"
