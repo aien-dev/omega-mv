@@ -140,6 +140,23 @@ CONDUCTOR_FAILURES = {
     "seed/qualification/om2/candidates/s4/s4-part-mutants.cases": "",
     "seed/qualification/om2/baseline/guard.cases": "",
     "seed/qualification/om2/baseline/transform.cases": "",
+    # Headers fix ctl PASS / kill FAIL in advance (s5: "ctl-* PASS, m-* FAIL";
+    # bnd: "pass=2 fail=8"; hex: "pass=3 fail=5"); seed/host/check.sh runs each.
+    "seed/omc/om2/s5/s5-mutants.cases": "m-msr m-stp m-live m-tst m-zpool m-zvec m-movz16 m-twinall m-twinnone",
+    "seed/omc/om2/bnd/mutants.cases":
+        "bnd-extra-om1-left-typed bnd-extra-om2-left-typed bnd-extra-om1-left-assign bnd-extra-om2-left-assign "
+        "bnd-missing-om1-short-next bnd-missing-om2-short-next bnd-missing-om1-short-bare bnd-missing-om2-short-bare",
+    "seed/omc/om2/hex/mutants.cases":
+        "hex-tbig-pairs-run hex-tbig-places-run hex-nolimit-r6-17trunc hex-digit-pairs-run hex-digit-floatlike-run",
+    # Header: "These cases must produce OM2GATE FAIL, not a qualification PASS." Each row
+    # substitutes wrong bytes into a pinned emit source, so its oracle digest must differ.
+    "seed/qualification/security673/relational/binding-negative.cases": "wrong-source-bytes wrong-checker-bytes",
+    # Header: "The expectation stays the correct one (trap 3, exit 103), so every row must FAIL: the
+    # mutant executes /bin/true (exit 0)." seed/host/check.sh requires exactly these FAIL verdicts.
+    "seed/qualification/security673/packets-mutant.cases": "mutant-size mutant-count mutant-exact",
+}
+NEGATIVE_CONDUCTOR_MANIFESTS = {
+    "seed/qualification/security673/relational/binding-negative.cases": "stdout sha256 differs",
 }
 HISTORICAL_COMPILERS = {
     "build/om2-qual/cand-s1/omc.om": ("a5927895c02a5abe6b5c3a455f5d54303962ebe8", "3d7bcf9afdaa36fc42b862e0af39c524a14e85204bd5f40ee74107db40ce6a1d"),
@@ -432,7 +449,10 @@ def conductor_resources(path):
             revision, sha = HISTORICAL_COMPILERS[name]
             resources[name] = {"path": name, "sha256": sha,
                                "git_revision": revision, "git_path": "seed/omc/omc.om"}
-        elif name == "seed/omc/omc.om" and path.relative_to(ROOT).as_posix().startswith("seed/qualification/om2/baseline/"):
+        elif (name == "seed/omc/omc.om" and path.relative_to(ROOT).as_posix().startswith("seed/qualification/om2/baseline/")
+              and path.relative_to(ROOT).as_posix() != "seed/qualification/om2/baseline/guard.cases"):
+            # guard.cases mutates the CURRENT compiler (its header); f56a372ae (#971) moved
+            # guard-wrapped.from to the current vs_chk text, which acb3f15's omc.om lacks.
             resources[name] = dict(ORIGINAL_SOURCE)
         elif name == "om/sha256/sha256.om":
             resources[name] = {"path": name, "sha256": "7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21",
@@ -529,7 +549,11 @@ def conductor_case(path, name, line, alternate, compiler_subst):
                 f"run exit={code} expected=0 mutant survived: stdout equals the oracle "
                 "stderr=match; not a meaningful kill")
         if original_name in failures:
-            if digest(path.read_bytes()) != "0ac554e4497232cc1ba99caca4e07cb12c62b5e3dd1c4af027864a31b29fbc64":
+            # f56a372ae (#971) moved only the four ctl-*-sha control sources from the deleted
+            # om/sha256/sha256.om to seed/qualification/om2/baseline/sha256-om1.om, whose sha256
+            # 7f034814...4e21 equals the acb3f15 source pinned below; kill and failure rows unchanged.
+            # Previous manifest sha256 0ac554e4497232cc1ba99caca4e07cb12c62b5e3dd1c4af027864a31b29fbc64.
+            if digest(path.read_bytes()) != "69eb3687c3f0a108c4aab3a7989ded6de0e46b118b4e2856ebfbacbaec3cc90c":
                 raise Failure("historical S2 failure contract manifest changed")
             historical_failure = {
                 "original_expected": expected, "original_observed": "FAIL",
@@ -546,7 +570,7 @@ def conductor_case(path, name, line, alternate, compiler_subst):
                     "manifest": rel, "resources": resources, "conductor_row": line,
                     "alternate_compiler": alternate, "compiler_substitution": compiler_subst,
                     "child_compiler_identity": "pinned" if old_om2_refusal else conductor_identity(rel),
-                    "expected_failure_reason": "mutant survived" if adequacy else None,
+                    "expected_failure_reason": "mutant survived" if adequacy else NEGATIVE_CONDUCTOR_MANIFESTS.get(rel),
                     "control_kind": "supervisor_verdict_control" if selftest else ("compiler_mutant" if expected == "FAIL" else "compiler_control"),
                     "expected_overall_exit": selftest_expectations(path)[1] if selftest else None,
                     "expected_original_conductor": expected, "original_case_name": original_name,
@@ -559,7 +583,8 @@ def current_c2_contract(fields):
     """Use the already accepted deltas, retaining the frozen replay separately."""
     for relative in ("seed/qualification/om2/manifest-c2-capacity.txt",
                      "seed/qualification/om2/manifest-c2-batch2.txt",
-                     "seed/qualification/om2/manifest-c2-fpvreg.txt"):
+                     "seed/qualification/om2/manifest-c2-fpvreg.txt",
+                     "seed/qualification/om2/manifest-c2-closerange.txt"):
         path = ROOT / relative
         for line in path.read_text().splitlines():
             replacement = line.split()
@@ -705,6 +730,10 @@ def cases(files, record):
                     record("BLOCKED" if reason.startswith("BLOCKED_ON ") else "NOT_RUN",
                            name, reason, evidence=evidence, conductor_row=line)
                 continue
+            if rel in NEGATIVE_CONDUCTOR_MANIFESTS:
+                yield conductor_case(path, name, line, None, None)
+                subst = None
+                continue
             if alternate:
                 try:
                     yield conductor_case(path, name, line, alternate, compiler_subst)
@@ -723,7 +752,8 @@ def cases(files, record):
                     fields, replacement = current_c2_contract(fields)
                     if replacement:
                         evidence["accepted_current_contract"] = replacement
-                if "om/sha256/sha256.om" in fields[2]:
+                if ("om/sha256/sha256.om" in fields[2] or
+                        "seed/qualification/om2/baseline/sha256-om1.om" in fields[2]):
                     evidence["historical_source"] = {
                         "path": "om/sha256/sha256.om", "revision": "acb3f15",
                         "packed_spec": "pack:seed/qualification/om2/c2/corpus.pack:12540:35333",
@@ -760,20 +790,23 @@ def cases(files, record):
                 record("MISSING_INPUT", name, str(error), conductor_row=line)
 
 
-def limits():
+def limits(cpu_seconds=None):
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     resource.setrlimit(resource.RLIMIT_FSIZE, (64 * 1024 * 1024, 64 * 1024 * 1024))
     resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
+    if cpu_seconds is not None:
+        # Soft limit delivers SIGXCPU; the higher hard limit keeps SIGKILL out of the way.
+        resource.setrlimit(resource.RLIMIT_CPU, (cpu_seconds, cpu_seconds + 2))
 
 
-def run(command, data, cwd, timeout, *, extra_env=None):
+def run(command, data, cwd, timeout, *, extra_env=None, cpu_seconds=None):
     # Regular-file stdin matches seekable-input fixtures; no shell interpolation.
     with tempfile.TemporaryFile() as inp, tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
         inp.write(data)
         inp.seek(0)
         process = subprocess.Popen(command, stdin=inp, stdout=out, stderr=err, cwd=cwd,
                                    env={"LC_ALL": "C", "PATH": os.defpath, "HOME": ".", "OMTEST": "hello", **(extra_env or {})},
-                                   start_new_session=True, preexec_fn=limits)
+                                   start_new_session=True, preexec_fn=lambda: limits(cpu_seconds))
         try:
             process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -1177,6 +1210,31 @@ def exercise_bare(case, default, x86, qemu, cwd, timeout):
                          "expected_exit": expected_exit, "observed": result_details(runs[0]),
                          "oracle": "independent full-width/array oracle" if "expected_stdout" in spec else "native differential",
                          "wrapper_sha256": dict(zip(("aarch64", "x86_64"), wrappers))})
+    return outcomes
+
+
+def exercise_bare_target(case, x86, qemu, cwd, timeout):
+    """x86-only private-ABI calls for an entryless unit that only x86 accepts (a reviewed per-target
+    limit). There is no native arm to compare, so every call must meet a recorded independent result."""
+    specs = bare_calls(ROOT, case.name.split(":", 1)[0], case.source)
+    if not specs or any("expected_stdout" not in spec or spec.get("expected_exit") is None for spec in specs):
+        raise Failure("target-limit bare caller requires recorded independent results for every call")
+    outcomes = []
+    for number, spec in enumerate(specs):
+        work = cwd / f"target-limit-caller-{number}"
+        work.mkdir()
+        wrapped = wrap_bare(x86, case.source, "x86_64", spec)
+        binary = work / "caller"
+        binary.write_bytes(wrapped)
+        binary.chmod(0o700)
+        observed = run([qemu, "-0", "./caller", "./caller"], case.stdin, work, timeout)
+        if observed[0] != spec["expected_exit"] or observed[1] != spec["expected_stdout"]:
+            raise Failure(f"target-limit bare caller {spec['name']} differs from recorded result: "
+                          f"expected exit {spec['expected_exit']} stdout {spec['expected_stdout']!r}; "
+                          f"x86={result_details(observed)}")
+        outcomes.append({"name": spec["name"], "evidence": spec.get("evidence", {}),
+                         "slots": spec.get("slots", []), "expected_exit": spec["expected_exit"],
+                         "observed": result_details(observed), "wrapper_sha256": digest(wrapped)})
     return outcomes
 
 
@@ -1635,17 +1693,21 @@ def main():
                         expected = diagnostic_contract["x86_execution"]
                         mnemonics, instructions, carveouts = disassemble(
                             x86[1], target, objdump, llvm, cwd, child_timeout)
-                        binary = cwd / "target-limit-control"
-                        binary.write_bytes(x86[1])
-                        binary.chmod(0o700)
-                        observed = run([qemu, str(binary)], b"", cwd, child_timeout)
-                        if observed != (expected["exit"], expected["stdout"].encode(), expected["stderr"].encode()):
-                            raise Failure("target-specific limit execution oracle differs: " + str(result_details(observed)))
+                        if expected == "recorded-bare-caller":
+                            observed = exercise_bare_target(case, x86[1], qemu, cwd, child_timeout)
+                        else:
+                            binary = cwd / "target-limit-control"
+                            binary.write_bytes(x86[1])
+                            binary.chmod(0o700)
+                            observed = run([qemu, str(binary)], b"", cwd, child_timeout)
+                            if observed != (expected["exit"], expected["stdout"].encode(), expected["stderr"].encode()):
+                                raise Failure("target-specific limit execution oracle differs: " + str(result_details(observed)))
+                            observed = result_details(observed)
                         templates.update(mnemonics)
                         record("PASS", case.name, "exact per-target limit contract and independent x86 execution oracle",
                                source_sha256=key, evidence=case.evidence,
                                default_compile=result_details(default), x86_compile=result_details(x86),
-                               x86_execution=result_details(observed), instructions=len(instructions))
+                               x86_execution=observed, instructions=len(instructions))
                         continue
                     if not diagnostic_contract and refusal(default, 0) != refusal(x86, 0 if frontend_mode else 1):
                         raise Failure("compile refusal differs after exact source-coordinate translation")
@@ -1849,8 +1911,9 @@ def main():
                 # Both argv[0] strings and initial environments are byte-identical;
                 # filesystem mutations cannot leak between architectures.
                 argv0 = "./" + basename
-                arun = run([argv0, *args], case.stdin, native, child_timeout)
-                xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, child_timeout)
+                cpu_seconds = 1 if driver == "cpu-limit" else None
+                arun = run([argv0, *args], case.stdin, native, child_timeout, cpu_seconds=cpu_seconds)
+                xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, child_timeout, cpu_seconds=cpu_seconds)
                 diagnostics.update(default_run=result_details(arun), x86_run=result_details(xrun))
                 if "required_verdict" in case.evidence:
                     required = ("VERDICT " + case.evidence["required_verdict"]).encode()
@@ -1862,9 +1925,10 @@ def main():
                 if native_files != x86_files:
                     raise Failure("persistent scratch filesystem effects differ (type/mode/contents/symlink target)")
                 if arun[0] < 0 or xrun[0] < 0:
-                    if not (driver == "supervisor-self-signal" and case.operation == "differential" and
-                            case.evidence.get("required_conductor_verdict") == "INVALID signal" and
-                            arun[0] == xrun[0] == case.expected_exit == -9):
+                    if not ((driver == "supervisor-self-signal" and case.operation == "differential" and
+                             case.evidence.get("required_conductor_verdict") == "INVALID signal" and
+                             arun[0] == xrun[0] == case.expected_exit == -9) or
+                            (driver == "cpu-limit" and arun[0] == xrun[0] == case.expected_exit == -signal.SIGXCPU)):
                         raise Failure(f"runtime signal: default={arun[0]} x86={xrun[0]}")
                 if arun != xrun:
                     artifact = ioctl_emulator_artifact(case, driver, arun, xrun, qemu, argv0,
