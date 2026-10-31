@@ -34,7 +34,7 @@ omc|28|emitted|e28_seal_outside|abstract type: seal outside its constructor, or 
 omc|29|emitted|e29_layout_past|external layout out of bounds or misplaced
 omc|30|emitted|e30_ir_requires|contract syntax misplaced or not supported here (IR mode included)
 irwasm|20|emitted|-|MAGIC
-irwasm|21|emitted|-|VERSION (anything except v1)
+irwasm|21|emitted|-|VERSION (anything except v1 and v7; v7 with no v7 feature)
 irwasm|22|emitted|-|TRUNCATED
 irwasm|23|emitted|-|CAPACITY
 irwasm|24|emitted|-|UNSUPPORTED_OP
