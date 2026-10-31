@@ -37,6 +37,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 | Codex (GPT-6 Astra) | Seeded memory-profile wire specification, preserving historical OSC versions and explicit backend qualification boundaries |
 | Codex (GPT-6 Astra) | Seeded Omega OSC IR v1 to OpenCL Kernel SPIR-V backend, CPU differential gate, demo and CFG/trap review fixes |
 | Codex (GPT-6 Astra) | Seeded executable contracts, loop-head invariants, release erasure, purity and runtime refusal controls |
+| Codex (GPT-6.1 Sol) | Fail-closed secret and host-qualification gates, fixed original-fixture/status baseline, offline negative controls and current pipeline documentation |
 | Codex (GPT-6.1 Sol) | Corrected boolean bitwise typing in seeded OSC IR output, with C-referee regression cases |
 | Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |
 | OpenAI GPT-6 Astra | Composed security SC1 contracts, ownership reconciliation, independent acceptance review integration and evidence matrix (#625/#673) |

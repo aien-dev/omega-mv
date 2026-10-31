@@ -2,13 +2,13 @@
 # Entire host-extension qualification uses the seed chain and Omega programs.
 set -eu
 cd "$(dirname "$0")/../.."
-sh seed/omega-from-seed.sh
-if [ -x build/omegese/omegese ] && [ -x build/omega_emit/omega_emit ] && [ -x build/checker2/checker2 ]; then
-    sh seed/omc/gate-ir.sh
-else
-    printf 'SKIP gate-ir: C oracles not built\n'
-    printf '  make build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2\n'
+if [ ! -x build/omegese/omegese ] || [ ! -x build/omega_emit/omega_emit ] || [ ! -x build/checker2/checker2 ]; then
+    printf 'NOT_RUN gate-ir: required C oracles not built\n' >&2
+    printf '  make build/omegese/omegese build/omega_emit/omega_emit build/checker2/checker2\n' >&2
+    exit 3
 fi
+sh seed/omega-from-seed.sh
+sh seed/omc/gate-ir.sh
 sh seed/omc/gate7.sh
 sh seed/omc/gate8.sh
 sh seed/omc/gate9.sh
