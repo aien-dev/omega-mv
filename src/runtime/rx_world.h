@@ -836,6 +836,8 @@ int  rx_world_caller_check_fn(void *world, uint32_t subject, const RxCallerCred 
                                            capability may also pause the world */
 #define RX_HALT_ALREADY       1   /* stop: already stopped, nothing changed */
 #define RX_HALT_NOT_STOPPED   2   /* resume: not stopped, nothing changed */
+/* A dir that src/omega_path_check.h refuses (a ".." component, a byte outside
+ * its set, too long) is RX_ERR_ARG, and the world's halt directory is unchanged. */
 int  rx_world_set_halt_dir(RxWorld *w, const char *dir);
 int  rx_world_emergency_stop(RxWorld *w, uint32_t subject, const RxCallerCred *cred,
                              RxCapRef cap, int32_t reason, RxHaltStatus *out);
