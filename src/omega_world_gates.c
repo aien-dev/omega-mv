@@ -36,6 +36,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include "omega_physics_dir.h"
+#include "omega_clean_clone.h"
 
 static int m19_gate_count = 0;
 static int m19_gate_passed = 0;
@@ -56,17 +57,13 @@ static bool m19_fault_zero_device_reset = false;
 
 /* Resolve the full 40-hex revision of a working tree via git. */
 static bool m19_git_head(const char *repo_dir, char out[41]) {
-    char cmd[512];
-    int n = snprintf(cmd, sizeof(cmd), "git -C %s rev-parse HEAD 2>/dev/null", repo_dir);
-    if (n < 0 || (size_t)n >= sizeof(cmd)) return false;
-    FILE *p = popen(cmd, "r");
-    if (!p) return false;
-    char *got = fgets(out, 41, p);
-    pclose(p);
-    if (!got) return false;
-    size_t len = strlen(out);
-    while (len > 0 && (out[len - 1] == '\n' || out[len - 1] == '\r')) out[--len] = '\0';
-    return (len == 40);
+    /* No shell (omega#565): git gets the directory as an argument. */
+    char line[64];
+    char *argv[] = {"git", "-C", (char *)repo_dir, "rev-parse", "HEAD", NULL};
+    if (!omega_cc_capture_line(NULL, "git", argv, line, sizeof(line))) return false;
+    if (strlen(line) != 40) return false;
+    memcpy(out, line, 41);
+    return true;
 }
 
 static const uint32_t WORLD_SETUP_WORDS[18] = {
@@ -1830,6 +1827,15 @@ static void m19_echo_log_tail(const char *dir) {
     if (buf[got - 1] != '\n') fputc('\n', stderr);
 }
 
+/* Remove the built copy under the private clone folder; qualification.log stays
+ * beside it (omega#526: five such copies per day filled /tmp). */
+static void m19_clean_clone_remove_checkout(const char *checkout) {
+    /* No shell: a file-tree walk that never follows a symlink (omega#565). */
+    if (omega_cc_remove_tree(checkout) != 0) {
+        fprintf(stderr, "M19 clean clone: could not remove %s\n", checkout);
+    }
+}
+
 /* Gate 16: OMEGA_ACCEL_RESIDENT_CLEAN_CLONE_PASS */
 static bool test_m19_gate16_clean_clone(void) {
     char src_sha[41] = {0};
@@ -1898,13 +1904,15 @@ static bool test_m19_gate16_clean_clone(void) {
          * Echo the tail to stderr, which the gate runner captures into the evidence record. */
         fprintf(stderr, "M19 gate 16: nested build or nested run failed; tail of %s:\n", log_path);
         m19_echo_log_tail(clone);
+        m19_clean_clone_remove_checkout(checkout);
         return false;
     }
 
     /* The built checkout must be exactly the named candidate revision. */
     char clone_sha[41] = {0};
-    if (!m19_git_head(checkout, clone_sha)) return false;
-    if (strcmp(clone_sha, src_sha) != 0) return false;
+    bool same = m19_git_head(checkout, clone_sha) && strcmp(clone_sha, src_sha) == 0;
+    m19_clean_clone_remove_checkout(checkout);
+    if (!same) return false;
 
     memcpy(m19_candidate_commit, src_sha, sizeof(m19_candidate_commit));
     return true;
