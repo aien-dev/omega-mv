@@ -243,6 +243,7 @@ typedef struct {
 
 static CoreClass g_class[RX_CM_CORES];
 static char g_cpus_desc[256];
+static cpu_set_t g_allowed;   /* the affinity mask the test started with: the only cpus it may use */
 
 static void discover(void) {
     g_class[RX_CM_CORE_X925] = (CoreClass){ .name = "Cortex-X925", .meter = "cpu_p",
@@ -251,8 +252,12 @@ static void discover(void) {
                                             .cache_bytes = 512u << 10 };
     g_class[RX_CM_CORE_OTHER] = (CoreClass){ .name = "other", .meter = NULL,
                                              .cache_bytes = 1u << 20 };
+    CPU_ZERO(&g_allowed);
+    if (sched_getaffinity(0, sizeof g_allowed, &g_allowed) != 0)
+        for (int c = 0; c < 64; c++) CPU_SET(c, &g_allowed);
     long n = sysconf(_SC_NPROCESSORS_CONF);
     for (long c = 0; c < n && c < 64; c++) {
+        if (!CPU_ISSET((int)c, &g_allowed)) continue;   /* taskset/cgroup: not ours to time on */
         char path[128];
         snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%ld/regs/identification/midr_el1", c);
         FILE *fp = fopen(path, "r");
@@ -520,7 +525,7 @@ static void pressure_on(int timed) {
     long n = sysconf(_SC_NPROCESSORS_CONF);
     g_press_n = 0;
     for (long c = n - 1; c >= 0 && g_press_n < PRESS_THREADS; c--) {
-        if ((int)c == timed) continue;
+        if ((int)c == timed || !CPU_ISSET((int)c, &g_allowed)) continue;
         g_press_arg[g_press_n] = (PressArg){ (int)c, g_press_n };
         if (pthread_create(&g_press[g_press_n], NULL, press_main, &g_press_arg[g_press_n]) == 0)
             g_press_n++;
@@ -725,14 +730,42 @@ static RxCmFeatures features(const Job *j, uint32_t core, uint32_t pressure, uin
 typedef struct {
     uint64_t measures, selects, fallbacks, touched_ineligible;
     uint64_t explore_ps;
-    uint64_t max_extra_ps;      /* largest single exploration charge */
 } LearnStats;
 
+/* The online exploration budget, audited per core class over H1, H2 and H3:
+ * the online model's counters run across all three. The rule the learner
+ * spends by: a measurement starts only while spent exploration is under
+ * explore_frac of chosen work plus the allowance. */
+typedef struct {
+    uint64_t started_over;    /* measurements started at or over the line */
+    uint64_t last_extra_ps;   /* the latest exploration charge since the counters were reset */
+} BudgetAudit;
+
+static double budget_line(const RxCostModel *m, const RxCmPolicy *p) {
+    return p->explore_frac * (double)m->work_ps + (double)p->explore_allow_ps;
+}
+
+/* Before a measurement runs, with the counters the policy decided on. */
+static void audit_start(BudgetAudit *a, const RxCostModel *m, const RxCmPolicy *p) {
+    if ((double)m->explore_ps >= budget_line(m, p)) a->started_over++;
+}
+
+/* After a group of jobs. Every measurement started under the line and the
+ * line only grows with chosen work, so spent exploration minus the latest
+ * charge is still under it: the total exceeds the line by less than that one
+ * charge. A group that measured nothing is held to the charge that last
+ * crossed the line, which an earlier group may have made. */
+static int audit_over(const BudgetAudit *a, const RxCostModel *m, const RxCmPolicy *p) {
+    return a->started_over != 0 || m->explore_ps < a->last_extra_ps ||
+           (double)(m->explore_ps - a->last_extra_ps) >= budget_line(m, p);
+}
+
 /* One job for an online learner: decide, run what it decided, learn from
- * those runs only. Returns the policy's cost in table terms (ps). */
+ * those runs only. Returns the policy's cost in table terms (ps). `audit`
+ * is NULL where the budget is not judged (training). */
 static double learner_job(RxCostModel *m, const RxCmPolicy *p, const Job *j, uint32_t core,
                           uint32_t pressure, uint32_t *current, const uint64_t *table,
-                          LearnStats *s) {
+                          LearnStats *s, BudgetAudit *audit) {
     RxCmFeatures f = features(j, core, pressure, *current);
     RxCmDecision d;
     rx_cm_decide(m, p, &f, 1, &d);
@@ -745,12 +778,13 @@ static double learner_job(RxCostModel *m, const RxCmPolicy *p, const Job *j, uin
          * quarter of the calls. The probe is the exploration cost. */
         uint32_t a = d.measure[0], b = d.measure[1];
         uint32_t probe = j->calls / 4u < 3u ? 3u : j->calls / 4u;
+        if (audit) audit_start(audit, m, p);
         uint64_t ta = time_arm_chunked(a, j, j->calls), tb = time_arm_chunked(b, j, probe);
         RxCmObservation oa = { ta, ta == 0 }, ob = { tb, tb == 0 };
         rx_cm_observe(m, &f, a, &oa);
         rx_cm_observe(m, &f, b, &ob);
         rx_cm_charge(m, ta * j->calls, tb * probe);
-        if (tb * probe > s->max_extra_ps) s->max_extra_ps = tb * probe;
+        if (audit) audit->last_extra_ps = tb * probe;
         *current = ta <= tb ? a : b;
         s->measures++;
         s->explore_ps += table[b] * probe;
@@ -764,6 +798,50 @@ static double learner_job(RxCostModel *m, const RxCmPolicy *p, const Job *j, uin
     if (d.action == RX_CM_SELECT) s->selects++;
     else s->fallbacks++;
     return (double)table[d.arm] * j->calls;
+}
+
+/* The audit on a fixed sequence through the cost model's own decisions, no
+ * timing: H1 measures until its last probe ends over the line, H2 is refused
+ * every measurement and runs chosen work only, so it measures nothing while
+ * the total is still over the line. Neither is a violation; a measurement
+ * started over the line and exploration charged without a measurement are. */
+static void budget_audit_selftest(const RxCmPolicy *p) {
+    RxCostModel m;
+    rx_cm_init(&m, N_ARMS);
+    Job j = { 64, 64, 1, 1, 0 };
+    RxCmFeatures f = features(&j, 0, 0, ARM_REF);
+    f.eligible = (1u << ARM_REF) | (1u << ARM_U2);
+    const uint64_t work = 100000000ull, extra = 400000000ull;   /* 0.1 ms chosen, 0.4 ms probed */
+    BudgetAudit a = { 0, 0 };
+    uint32_t measured = 0;
+    for (uint32_t i = 0; i < 8; i++) {
+        RxCmDecision d;
+        rx_cm_decide(&m, p, &f, 1, &d);
+        if (d.action != RX_CM_MEASURE) break;
+        audit_start(&a, &m, p);
+        rx_cm_charge(&m, work, extra);
+        a.last_extra_ps = extra;
+        measured++;
+    }
+    CHECK(measured > 0 && (double)m.explore_ps >= budget_line(&m, p),
+          "budget self-test: H1 measured %u and ends over the line", measured);
+    CHECK(!audit_over(&a, &m, p), "budget self-test: H1 within its budget");
+    uint32_t h2_measured = 0;
+    for (uint32_t i = 0; i < 4; i++) {
+        RxCmDecision d;
+        rx_cm_decide(&m, p, &f, 1, &d);
+        if (d.action == RX_CM_MEASURE) h2_measured++;
+        rx_cm_charge(&m, work, 0);
+    }
+    CHECK(h2_measured == 0 && (double)m.explore_ps >= budget_line(&m, p),
+          "budget self-test: H2 measured %u and stays over the line", h2_measured);
+    CHECK(!audit_over(&a, &m, p), "budget self-test: a group that measured nothing is held to the last charge");
+    BudgetAudit over = a;
+    audit_start(&over, &m, p);
+    CHECK(audit_over(&over, &m, p), "budget self-test: a measurement started over the line is caught");
+    RxCostModel unmeasured = m;
+    rx_cm_charge(&unmeasured, 0, extra / 2u);
+    CHECK(audit_over(&a, &unmeasured, p), "budget self-test: exploration charged with no measurement is caught");
 }
 
 static uint32_t frozen_choice(const RxCostModel *m, const RxCmPolicy *p, const Job *j,
@@ -921,7 +999,7 @@ static void train_class(RxCostModel *m, uint32_t k) {
             truth_table_tap(&jobs[i], table);
             for (uint32_t a = 0; a < N_ARMS; a++)
                 if (g_eligible & (1u << a)) R.train_cost[k][a] += (double)table[a] * jobs[i].calls;
-            learner_job(m, &g_train_policy, &jobs[i], k, 0, &current, table, &s);
+            learner_job(m, &g_train_policy, &jobs[i], k, 0, &current, table, &s, NULL);
         }
     }
     R.train_jobs[k] = 2 * n;
@@ -1292,13 +1370,12 @@ static int cmp_d(const void *a, const void *b) {
 }
 
 static void heldout(const RxCostModel *durable, uint32_t k, uint32_t dist, Job *jobs, uint32_t n,
-                    RxCostModel *online) {
+                    RxCostModel *online, BudgetAudit *audit) {
     DistResult *D = &R.d[k][dist];
     uint32_t pressure = dist == D_H3 ? 1u : 0u;
     LearnStats s;
     memset(&s, 0, sizeof s);
     uint32_t current = ARM_REF;
-    uint64_t explore_before = online->explore_ps, work_before = online->work_ps;
     double contention[MAX_JOBS];
     uint32_t n_cont = 0;
     if (pressure) pressure_on(g_class[k].timed);
@@ -1318,7 +1395,7 @@ static void heldout(const RxCostModel *durable, uint32_t k, uint32_t dist, Job *
         uint32_t choice[4] = { dispatch_rule(j->N), ARM_REF, R.best_static[k], fz };
         for (uint32_t p = 0; p < 4; p++) D->cost[p] += (double)table[choice[p]] * j->calls;
         D->cost[P_ORACLE] += (double)table[oracle] * j->calls;
-        D->cost[P_ONLINE] += learner_job(online, &g_online_policy, j, k, pressure, &current, table, &s);
+        D->cost[P_ONLINE] += learner_job(online, &g_online_policy, j, k, pressure, &current, table, &s, audit);
         if (dist < D_H3)
             for (uint32_t p = 0; p < 4; p++) g_choice[k][dist][p][i] = choice[p];
         coverage(durable, j, k, pressure, table, &D->cov_n, &D->cov_in80, &D->cov_in95);
@@ -1331,14 +1408,7 @@ static void heldout(const RxCostModel *durable, uint32_t k, uint32_t dist, Job *
     D->fallbacks = s.fallbacks;
     D->explore_ps = s.explore_ps;
     R.touched_ineligible += s.touched_ineligible;
-    (void)explore_before;
-    (void)work_before;
-    /* The rule the learner spends by: a measurement starts only while spent
-     * exploration is under explore_frac of chosen work plus the allowance, so
-     * the total can exceed that line by at most one measurement. */
-    double line = g_online_policy.explore_frac * (double)online->work_ps +
-                  (double)g_online_policy.explore_allow_ps;
-    if ((double)online->explore_ps > line + (double)s.max_extra_ps) R.explore_budget_violations++;
+    if (audit_over(audit, online, &g_online_policy)) R.explore_budget_violations++;
     if (n_cont) {
         qsort(contention, n_cont, sizeof(double), cmp_d);
         D->contention_median = contention[n_cont / 2];
@@ -1650,6 +1720,7 @@ int main(void) {
     g_train_policy.explore_allow_ps = 200000000000ull;
     g_online_policy.explore_frac = 0.05;                /* held-out: 5% of chosen work */
     g_online_policy.explore_allow_ps = 500000000ull;    /* plus 0.5 ms to get started */
+    budget_audit_selftest(&g_online_policy);
 
     printf("[*] arms: synthesize, verify in a forked child\n");
     setup_arms();
@@ -1686,13 +1757,14 @@ int main(void) {
         place_quiet(k);
         RxCostModel online = durable;
         online.explore_ps = online.work_ps = 0;
+        BudgetAudit audit = { 0, 0 };   /* runs with the online counters, across H1, H2, H3 */
         uint32_t n1 = unseen_shapes(g_h1, 60, 7000u + k);
         uint32_t n2 = thin_mix(g_h2, 60, 8000u + k);
-        heldout(&durable, k, D_H1, g_h1, n1, &online);
+        heldout(&durable, k, D_H1, g_h1, n1, &online, &audit);
         place_quiet(k);
-        heldout(&durable, k, D_H2, g_h2, n2, &online);
+        heldout(&durable, k, D_H2, g_h2, n2, &online, &audit);
         place_quiet(k);
-        heldout(&durable, k, D_H3, g_h1, n1, &online);
+        heldout(&durable, k, D_H3, g_h1, n1, &online, &audit);
         if (g_class[k].n) {
             place_quiet(k);
             replay(k, D_H1, g_h1, n1);
