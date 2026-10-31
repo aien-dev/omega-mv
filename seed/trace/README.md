@@ -106,3 +106,20 @@ writers are not supported either: there is no lock, and the unit assumes a singl
 
 The CLI above is a separate program. It does not add an index, rotation, retention, an async writer,
 consent, redaction, or a query-scaling measurement.
+
+## One-shot SHA-256 digest (security673)
+
+`sha256.om` is a one-shot FIPS 180-4 SHA-256 over at most 4096 input bytes. It holds 32-bit words
+in `ulong`, masks every addition, and writes 32 big-endian output bytes. `sha256-test.om` checks the
+empty, `abc`, 56-byte, 112-byte and 1000-byte vectors. It is separate from `tsha.om` (the streaming
+copy of `om/evidence/evidence.om` that `tracecli.om` uses).
+
+```
+seed/out/omc < seed/trace/sha256-gate.om > build/sha256-gate
+chmod +x build/sha256-gate
+./build/sha256-gate
+```
+
+Expected: `sha256 vectors=5 fails=0`, exit 0. The same gate is compiled and run by
+`seed/qualification/security673/gate669.om`. The segment writer is qualified by `gate.sh` above,
+not by `gate669`.

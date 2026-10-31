@@ -17,7 +17,7 @@ Authority: `docs/one_layer/OMEGESE.md`, sections 9, 10 and 12, and
 
 Current pin after the `cpufence`/`cpurelax` reseed (#946, 2026-10-30): committed
 `seed/out/omc` SHA-256
-`1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1`, compiler
+`7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de`, compiler
 source SHA-256 `b25079742d1157cd614fe92eeb2dd5e9a5e3b19e978007c7ecb7a6105ab6c65d`.
 The previous pin, after merging main `62d1d0d668f897386a0e311374f8dbcc5c32dde8`,
 was `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b` (source
@@ -126,7 +126,7 @@ mkdir -p build
 if seed/out/omc < seed/qualification/om2/gate.om > build/neuralese-gate; then
   chmod +x build/neuralese-gate &&
   build/neuralese-gate seed/out/omc \
-    1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1 \
+    7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de \
     neuralese/host.cases build/neuralese-host
 else
   exit 1
@@ -341,7 +341,7 @@ It is exactly the committed `seed/out/omc` introduced by
 the lock. Read-only `git show <revision>:seed/out/omc | sha256sum` resolved the
 older `2c824805...` at82a399b9 and `49923639...` at ec07d25d as different
 historical binaries. No compiler change is part of NL4. After the reseed
-recorded at the top of this file, the committed compiler is `1578b357...`; the
+recorded at the top of this file, the committed compiler is `7a8b84fc...`; the
 lock and receipt below keep the `d6290c76...` run unedited, and the command
 below uses the current pin because the conductor refuses any other hash.
 
@@ -355,7 +355,7 @@ sha256sum build/nl4-deps/h.om build/nl4-deps/v.om
 # Refuse to continue unless both hashes equal nl4-dependencies.json.
 seed/out/omc < seed/qualification/om2/gate.om > build/nl4-gate
 chmod +x build/nl4-gate
-build/nl4-gate seed/out/omc 1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1 neuralese/nl4-host.cases build/nl4-host
+build/nl4-gate seed/out/omc 7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de neuralese/nl4-host.cases build/nl4-host
 ```
 
 The conductor hashes the compiler itself and requires a previously absent scratch
@@ -387,7 +387,7 @@ and the inherited `host.cases` returned `OM2GATE PASS cases=54 pass=54 fail=0
 invalid=0 not_run=0` (host CPU, Linux AArch64).
 
 Re-run on 2026-10-30 after the #946 reseed, with the same staged dependencies and
-compiler `1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1`:
+compiler `7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de`:
 `nl4-host.cases` returned `OM2GATE PASS cases=63 pass=63 fail=0 invalid=0 not_run=0`
 and `host.cases` returned `OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0`;
 the same conductor given the previous pin `62775d2a...` returned `OM2GATE INVALID

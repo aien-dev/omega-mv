@@ -1,0 +1,85 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Store checks: exact read/write, torn file refusal, generation mismatch and atomic replace.
+global checks ulong 1
+global fails ulong 1
+global report uchar 64
+text title "store checks="
+text dir "build/authority-store"
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+fn fill r edit ulong 32 seed ulong gen ulong to void
+for i ulong 32
+put r i add seed i
+end
+put r 0 1
+put r 1 1
+put r 3 8
+put r 4 gen
+end
+fn summary to int
+for i ulong len title
+put report i get title i
+end
+n = get checks 0
+at = len title
+put report at uchar add 48 div n 100
+put report add at 1 uchar add 48 rem div n 10 10
+put report add at 2 uchar add 48 rem n 10
+put report add at 3 32
+put report add at 4 uchar add 48 div get fails 0 100
+put report add at 5 uchar add 48 rem div get fails 0 10 10
+put report add at 6 uchar add 48 rem get fails 0 10
+put report add at 7 10
+w = write 1 report 0 add at 8
+if ne w long add at 8
+ret 2
+end
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end
+fn main to int
+if ne makedir dir 0 len dir 448 0
+put sb 0 0
+end
+r = new ulong 32 0
+q = new ulong 32 0
+fill r 100 1
+check writerec r 0
+fill q 0 0
+check readrec q 0
+for i ulong 32
+check get q i get r i
+end
+check storevalid q 1 0
+check writegen 1 0
+check readgen 1
+check storevalid q 2 52
+setrec
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+check 0 1
+else
+n = write int fd sb 0 3
+if ne fclose int fd 0
+check 0 1
+end
+check readrec q 22
+end
+check writerec r 0
+check writegen 2 0
+check readgen 2
+fill r 200 2
+check writerec r 0
+check readrec q 0
+for i ulong 32
+check get q i get r i
+end
+check storevalid q 2 0
+ret summary
+end
