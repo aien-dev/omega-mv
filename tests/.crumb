@@ -134,7 +134,7 @@
         },
         {
           "digest": "e83c52ffc46da0e9df448bc5d28a70b08a8cbcd6858e8adea7a842791717c024",
-          "last_commit": "450bbefd4",
+          "last_commit": "f5c9bd89a",
           "name": "compiler",
           "purpose": "Directory tests/compiler. Purpose not yet described by a human."
         },
@@ -200,13 +200,13 @@
         },
         {
           "digest": "a4e1544a88e0b71ced2340ed880985b6ceaad797023b74a683d470971a8d47d4",
-          "last_commit": "",
+          "last_commit": "f5c9bd89a",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advisor tests: shadow-test.om (in-process checks over the SYNTHETIC fixture and th"
         },
         {
           "digest": "628d85f858a9ed11e4502064192aeb797bf9fe6f73a3932db520d5b9c22d43f1",
-          "last_commit": "d863780eb",
+          "last_commit": "f5c9bd89a",
           "name": "osh",
           "purpose": "osh lexer host driver, vendored aien-protocols PR#16 draft vectors (5ae5292)"
         },
@@ -272,7 +272,7 @@
         },
         {
           "digest": "891ced287901fa14a10e93dce7dae2ada551f7b69752098f957d1471bff4d072",
-          "last_commit": "45f7d7691",
+          "last_commit": "f5c9bd89a",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -302,20 +302,20 @@
         },
         {
           "digest": "aad47a6f37231afcd415798fcd7f18cbcb541066bb958c09d44cb755ce385057",
-          "last_commit": "450bbefd4",
+          "last_commit": "f5c9bd89a",
           "name": "visor",
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
       "children_root": "sha256:4e202b52b2c80d88dc93220a0c00cda479e52c2e63f847fbb30b9b1f426294f5",
-      "compiled_at": "2026-10-31T02:29:45Z",
+      "compiled_at": "2026-10-31T02:31:03Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:2a4b44e087879249c5539785ebd76c43b93470d6c2a97df199501c3b502e573e",
+      "digest": "sha256:d955ee2001202410e7154145157877fbfe8039ba62a25aae8a6ccbbba8b9a2a1",
       "evidence_files": 74,
       "evidence_root": "sha256:9aa38bf7dcfa5eb3499356a0a2a1dd7704fedfae2d16822a7c9e1400f3a72723",
       "files": 2048,
-      "generated_at_commit": "961cb878cb7d7eb06d192c9b1099a9325935e795",
-      "source_tree": "sha256:9c0c3db64adee01268c50e56b929cc15ab4a5fdbfe2713a921e06502b18de0fd"
+      "generated_at_commit": "499107a25c38adedba88275c3cfeaeb8a7f58b93",
+      "source_tree": "sha256:2771f09fce797424a58cb2c977b4ea31bb65bcfe0a0d915f69c652c3f7f3fd6f"
     },
     "owner_lane": "",
     "provenance": {
