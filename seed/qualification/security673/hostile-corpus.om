@@ -21,6 +21,14 @@ text fnpost " to int\nret 0\nend\n"
 text array "global data uchar 16777217\nfn main to int\nret 0\nend\n"
 text quote "text data \"abc"
 text unknown "fn main to int\nret unknown\nend\n"
+note Float literals of n zero digits (#965): fraction (underflows to 0.0), exponent (1.5e0..01 is 15), and an
+note untyped literal whose type comes from the other operand (deferred span; 2.0 + 0..01.5 truncates to 3).
+text fracpre "fn main to int\nx = f64 0."
+text fracend "1f64\nif eq x 0.0f64\nret 0\nend\nret 1\nend\n"
+text exppre "fn main to int\nx = f64 1.5e"
+text expend "1f64\nret int x\nend\n"
+text defpre "fn main to int\nx = f64 2.0\ny = add "
+text defend "1.5 x\nret int y\nend\n"
 fn fill b uchar count ulong to void
 for i ulong len buf
 put buf i b
@@ -119,6 +127,35 @@ if ne write 1 done 0 len done long len done
 exit 91
 end
 end
+fn floats m uchar n ulong to void
+if eq m 11
+if ne write 1 fracpre 0 len fracpre long len fracpre
+exit 91
+end
+fill 48 n
+if ne write 1 fracend 0 len fracend long len fracend
+exit 91
+end
+end
+if eq m 12
+if ne write 1 exppre 0 len exppre long len exppre
+exit 91
+end
+fill 48 n
+if ne write 1 expend 0 len expend long len expend
+exit 91
+end
+end
+if eq m 13
+if ne write 1 defpre 0 len defpre long len defpre
+exit 91
+end
+fill 48 n
+if ne write 1 defend 0 len defend long len defend
+exit 91
+end
+end
+end
 fn main to int
 p = ulong 0
 while lt p 5
@@ -132,7 +169,7 @@ if ne read 0 extra 0 1 0
 ret 90
 end
 m = get args 0
-if gt m 10
+if gt m 13
 ret 90
 end
 n = ulong 0
@@ -184,7 +221,7 @@ if ne write 1 unknown 0 len unknown long len unknown
 ret 91
 end
 end
-if ge m 9
+if and ge m 9 le m 10
 fill 32 n
 if ne write 1 mainpre 0 len mainpre long len mainpre
 ret 91
@@ -192,6 +229,9 @@ end
 if ne write 1 done 0 len done long len done
 ret 91
 end
+end
+if ge m 11
+floats m n
 end
 ret 0
 end

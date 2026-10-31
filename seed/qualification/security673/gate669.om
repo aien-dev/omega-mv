@@ -406,6 +406,10 @@ ingresscase cc gen 7 0 22 0
 ingresscase cc gen 8 0 3 0
 ingresscase cc gen 9 1000001 0 0
 ingresscase cc gen 10 8388608 14 0
+ingresscase cc gen 11 1000001 0 0
+ingresscase cc gen 12 1000001 0 15
+ingresscase cc gen 13 70 0 3
+ingresscase cc gen 13 1000001 0 3
 mut = compile cc 3 0
 command mut
 argument 19
