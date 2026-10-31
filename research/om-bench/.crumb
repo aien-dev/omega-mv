@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-30T16:37:58Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:973ae926903a77a8e8deb166aed41fdd40e37a5ae1f9872eb2811bfe33b49590",
+      "evidence_files": 4,
+      "evidence_root": "sha256:1e8ed614a4d48ad6a9bb360f300dcf68e23a26797d587ac15485a168254f70dd",
+      "files": 1086,
+      "generated_at_commit": "ca05a32b32f11426444db6e691df8c7e40f3701a",
+      "source_tree": "sha256:03d401a5a7ee6e5e80817fff2decd0cefdbe47d2bc3063083bd4bc33082d2062"
+    }
+  },
+  "layer": "research/om-bench",
+  "name": "om-bench",
+  "purpose": "om-bench (#653): frozen measurement contract, family-disjoint task splits, oracles, controls and runner for agent-written Omega",
+  "schema_version": "1.0.0"
+}

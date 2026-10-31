@@ -1,0 +1,867 @@
+note effects: effect-derived capability manifest for seeded-Omega programs.
+note A unit can reach the kernel only through the closed set of keyword operations in
+note OMEGESE section 10 (no raw syscall, no address-to-pointer), so the set of host
+note words in its source is a complete, finite statement of its OS effects.
+note Modes:
+note   effects src [allow=C,..] < unit.om      host words, classes, Linux syscalls
+note   effects elf < binary                    syscalls the omc ELF can issue (fail closed)
+note   effects verify SRC BIN [allow=C,..]     ELF syscalls must be within the source set
+note   effects bpf [launch] < unit.om          seccomp cBPF allow-list (bwrap --seccomp)
+note   effects table                           the word table, for the probe parity test
+note Exit: 0 pass, 1 refused/undeclared, 2 usage, 3 invalid or unresolvable input, 4 read.
+
+global inb uchar 8388612
+global mk uchar 2097156
+global ob uchar 1048576
+global obn ulong 1
+global dig uchar 24
+global ab uchar 4096
+global wn ulong 128
+global wc ulong 128
+global ws1 ulong 128
+global ws2 ulong 128
+global wl ulong 128
+global wk ulong 128
+global nw ulong 1
+global cn ulong 16
+global ncl ulong 1
+global sy uchar 512
+global se uchar 512
+global cu uchar 16
+global al uchar 16
+global st ulong 16
+global ef ulong 8
+
+note word class syscall1 syscall2 ('-' none). Kept equal to the pinned omc by check.sh,
+note which compiles one probe per word and reads the syscalls back out of the ELF.
+text tab "read io 63 -\nwrite io 64 -\nfclose fd 57 -\nfsync fd 82 -\nfdsync fd 83 -\nfseek fd 62 -\nftrunc fd 46 -\nfchmod fd 52 -\nfchdir fd 50 -\nsyncfs fd 267 -\nflock fd 32 -\ngetdnts fd 61 -\nfstat fd 80 -\npread fd 67 -\npwrite fd 68 -\ndupfd fd 24 -\npipefds fd 59 -\nwaitio fd 73 -\npollfds fd 73 -\nmemfd fd 279 -\nfopen path 56 -\nchmod path 53 -\nchown path 54 -\nfaccess path 48 -\ntruncate path 45 -\nunlink path 35 -\nmakedir path 34 -\nrmdir path 35 -\ncwd path 17 -\nchdir path 49 -\nreadlnk path 78 -\nstat path 79 -\nlstat path 79 -\nrenames path 276 -\nlink path 37 -\nsymlnk path 36 -\nsocknew net 198 -\nbind net 200 -\nconnect net 203 -\nlisten net 201 -\naccept net 242 -\nsockname net 204 -\nsockopt net 208 -\nrecv net 207 -\nsend net 206 -\npeercred net 209 -\nsendmsg net 211 -\nshutdown net 210 -\nfork proc 220 -\nexecprog proc 221 -\nkillpid proc 129 -\nwaitpid proc 260 -\nsetsid proc 157 -\nsetpgid proc 154 -\numask proc 166 -\ngetpid ident 172 -\ngetppid ident 173 -\ngetuid ident 174 -\ngeteuid ident 175 -\ngetgid ident 176 -\ngetegid ident 177 -\ngetpgid ident 155 -\ngetsid ident 156 -\nmonons time 113 -\nrealns time 113 -\nsleepns time 101 -\nargcnt env - -\nargread env - -\nenvcnt env - -\nenvread env - -\nrandom random 278 -\ndevctl device 29 -\ndevcall device 29 -\nuvmctl device 29 -\nmapnew device 222 -\nmapdrop device 215 -\nmaphold device 215 222\nmapbind device 215 222\nmapread device - -\nmapwrite device - -\nmapaddr device - -\nmapget device - -\nmapset device - -\n"
+text cls "io\nfd\npath\nnet\nproc\nident\ntime\nenv\nrandom\ndevice\n"
+text kwn "note allow= launch src elf verify bpf table "
+text msg "EFFECT \n class=\n syscalls=\n uses=\n line=\nEFFECTS 1 words=\n classes=\nEFFECTS REFUSED word=\nEFFECTS PASS\nEFFECTS REFUSED n=\nELF 1 words=\n svc=\nELF UNRESOLVED at=\n reason=prev-not-movz-x8\n reason=branch-target\n reason=indirect-branch\nELF INVALID\nVERIFY PASS syscalls=\nVERIFY FAIL undeclared=\n unused=\nusage: effects src [allow=C,..] < unit.om | elf < binary | verify SRC BIN [allow=C,..] | bpf [launch] < unit.om | table\neffects: cannot read input\n-\n,\n \nELF REFUSED wx-segment\nEFFECTS REFUSED unknown-class\n reason=nr-range\nELF REFUSED no-exec-segment\n"
+
+note ---- output ----
+fn obf to void
+n = get obn 0
+o = ulong 0
+while lt o n
+r = write 1 ob o sub n o
+if le r 0
+exit 4
+end
+o = add o ulong r
+end
+put obn 0 0
+end
+fn ob1 b uchar to void
+n = get obn 0
+if ge n 1048000
+obf
+n = ulong 0
+end
+put ob n b
+put obn 0 add n 1
+end
+fn onl to void
+ob1 10
+end
+fn say id ulong to void
+k = ulong 0
+s = ulong 0
+for i ulong len msg
+if eq get msg i 10
+if eq k id
+for j ulong sub i s
+ob1 get msg add s j
+end
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+end
+fn od v ulong to void
+x = v
+n = ulong 0
+while ge x 10
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+n = add n 1
+for i ulong n
+ob1 get dig sub sub n i 1
+end
+end
+fn pw w ulong to void
+x = w
+for i ulong 8
+if eq x 0
+ret
+end
+ob1 uchar and x 255
+x = shr x 8
+end
+end
+
+note ---- tables ----
+fn kwp id ulong to ulong
+k = ulong 0
+w = ulong 0
+s = ulong 0
+for i ulong len kwn
+c = get kwn i
+if eq c 32
+if eq k id
+ret w
+end
+k = add k 1
+w = ulong 0
+s = ulong 0
+else
+w = or w shl ulong c s
+s = add s 8
+end
+end
+ret 0
+end
+fn clsid w ulong to ulong
+for i ulong get ncl 0
+if eq get cn i w
+ret i
+end
+end
+ret 99
+end
+fn tinit to void
+w = ulong 0
+s = ulong 0
+r = ulong 0
+for i ulong len cls
+c = get cls i
+if eq c 10
+put cn r w
+r = add r 1
+w = ulong 0
+s = ulong 0
+else
+w = or w shl ulong c s
+s = add s 8
+end
+end
+put ncl 0 r
+dash = ulong 45
+r = ulong 0
+f = ulong 0
+w = ulong 0
+s = ulong 0
+d = ulong 0
+for i ulong len tab
+c = get tab i
+if or eq c 32 eq c 10
+if eq f 0
+put wn r w
+end
+if eq f 1
+put wc r clsid w
+end
+if eq f 2
+if eq w dash
+put ws1 r 65535
+else
+put ws1 r d
+end
+end
+if eq f 3
+if eq w dash
+put ws2 r 65535
+else
+put ws2 r d
+end
+end
+f = add f 1
+if eq c 10
+r = add r 1
+f = ulong 0
+end
+w = ulong 0
+s = ulong 0
+d = ulong 0
+else
+w = or w shl ulong c s
+s = add s 8
+d = add mul d 10 sub ulong c 48
+end
+end
+put nw 0 r
+end
+
+note ---- input ----
+fn rdfd fd int to ulong
+n = ulong 0
+for i ulong 8388608
+r = read fd inb n sub 8388612 n
+if lt r 0
+ret 8388613
+end
+if eq r 0
+ret n
+end
+n = add n ulong r
+if ge n 8388612
+ret 8388613
+end
+end
+ret 8388613
+end
+fn rdarg ix ulong to ulong
+m = argread ix ab 0 4095
+if le m 0
+ret 8388613
+end
+fd = int fopen ab 0 ulong m 0 0
+if lt fd 0
+ret 8388613
+end
+n = rdfd fd
+c = fclose fd
+ret n
+end
+fn argw ix ulong to ulong
+m = argread ix ab 0 4095
+if or le m 0 gt m 8
+ret 0
+end
+w = ulong 0
+for i ulong ulong m
+w = or w shl ulong get ab i mul i 8
+end
+ret w
+end
+note allow=C1,C2 in argument ix; returns false on an unknown class name
+fn parsal ix ulong to bool
+m = argread ix ab 0 4095
+if le m 0
+ret false
+end
+if lt m 6
+ret false
+end
+pfx = ulong 0
+for i ulong 6
+pfx = or pfx shl ulong get ab i mul i 8
+end
+if ne pfx kwp 1
+ret false
+end
+put ef 0 1
+w = ulong 0
+s = ulong 0
+for i ulong sub ulong m 5
+j = add i 6
+c = uchar 44
+if lt j ulong m
+c = get ab j
+end
+if eq c 44
+if gt s 0
+k = clsid w
+if eq k 99
+ret false
+end
+put al k 1
+end
+w = ulong 0
+s = ulong 0
+else
+if ge s 64
+ret false
+end
+w = or w shl ulong c s
+s = add s 8
+end
+end
+ret true
+end
+
+note ---- source scan: every host word occurrence outside notes and text literals ----
+fn hit w ulong ln ulong to void
+for r ulong get nw 0
+if eq get wn r w
+put wk r add get wk r 1
+if eq get wl r 0
+put wl r ln
+end
+put cu get wc r 1
+a = get ws1 r
+if lt a 512
+put sy a 1
+end
+b = get ws2 r
+if lt b 512
+put sy b 1
+end
+ret
+end
+end
+end
+note st: 0 packed word, 1 word length, 2 line, 3 skip-to-eol, 4 in quote, 5 escape, 6 first word on line
+fn fin to void
+l = get st 1
+if eq l 0
+ret
+end
+w = get st 0
+if and eq get st 6 1 and eq l 4 eq w kwp 0
+put st 3 1
+else
+if le l 8
+hit w get st 2
+end
+end
+put st 6 0
+put st 0 0
+put st 1 0
+end
+fn scansrc n ulong to void
+put st 0 0
+put st 1 0
+put st 2 1
+put st 3 0
+put st 4 0
+put st 5 0
+put st 6 1
+put sy 93 1
+for i ulong 8388608
+if ge i n
+break
+end
+c = get inb i
+if eq c 10
+fin
+put st 2 add get st 2 1
+put st 3 0
+put st 4 0
+put st 5 0
+put st 6 1
+continue
+end
+if eq get st 3 1
+continue
+end
+if eq get st 4 1
+if eq get st 5 1
+put st 5 0
+else
+if eq c 92
+put st 5 1
+end
+if eq c 34
+put st 4 0
+end
+end
+continue
+end
+if or or eq c 32 eq c 9 or eq c 13 or eq c 40 eq c 41
+fin
+continue
+end
+if eq c 34
+fin
+put st 4 1
+put st 6 0
+continue
+end
+l = get st 1
+if lt l 8
+put st 0 or get st 0 shl ulong c mul l 8
+end
+put st 1 add l 1
+end
+fin
+end
+fn plist a ulong to void
+note a 0: source set, 1: elf set, 2: elf minus source, 3: source minus elf
+k = ulong 0
+for i ulong 512
+x = get sy i
+y = get se i
+p = false
+if eq a 0
+p = eq x 1
+end
+if eq a 1
+p = eq y 1
+end
+if eq a 2
+p = and eq y 1 eq x 0
+end
+if eq a 3
+p = and eq x 1 eq y 0
+end
+if p
+if gt k 0
+say 23
+end
+od i
+k = add k 1
+end
+end
+if eq k 0
+say 22
+end
+end
+fn psys r ulong to void
+a = get ws1 r
+b = get ws2 r
+if ge a 512
+say 22
+ret
+end
+od a
+if lt b 512
+say 23
+od b
+end
+end
+fn report to int
+u = ulong 0
+for r ulong get nw 0
+if gt get wk r 0
+u = add u 1
+say 0
+pw get wn r
+say 1
+pw get cn get wc r
+say 2
+psys r
+say 3
+od get wk r
+say 4
+od get wl r
+onl
+end
+end
+say 5
+od u
+say 6
+k = ulong 0
+for i ulong get ncl 0
+if eq get cu i 1
+if gt k 0
+say 23
+end
+pw get cn i
+k = add k 1
+end
+end
+if eq k 0
+say 22
+end
+say 2
+plist 0
+onl
+ret refuse
+end
+fn refuse to int
+if eq get ef 0 0
+ret 0
+end
+bad = ulong 0
+for r ulong get nw 0
+if and gt get wk r 0 eq get al get wc r 0
+bad = add bad 1
+say 7
+pw get wn r
+say 1
+pw get cn get wc r
+say 4
+od get wl r
+onl
+end
+end
+if eq bad 0
+say 8
+onl
+ret 0
+end
+say 9
+od bad
+onl
+ret 1
+end
+
+note ---- ELF scan of an omc static AArch64 binary ----
+fn r8 o ulong to ulong
+ret ulong get inb o
+end
+fn r16 o ulong to ulong
+ret or r8 o shl r8 add o 1 8
+end
+fn r32 o ulong to ulong
+ret or r16 o shl r16 add o 2 16
+end
+fn r64 o ulong to ulong
+ret or r32 o shl r32 add o 4 32
+end
+fn bad3 id ulong to int
+say id
+onl
+ret 3
+end
+fn unres at ulong why ulong to int
+say 12
+od at
+say why
+onl
+ret 3
+end
+note branch target of word w at index j, or 4294967295 if w is not a direct branch
+fn btgt w ulong j ulong to ulong
+o = ulong 0
+m = ulong 0
+if eq and w 2080374784 335544320
+o = and w 67108863
+m = 67108864
+end
+if or eq and w 4278190096 1409286144 eq and w 2113929216 872415232
+o = and shr w 5 524287
+m = 524288
+end
+if eq and w 2113929216 905969664
+o = and shr w 5 16383
+m = 16384
+end
+if eq m 0
+ret 4294967295
+end
+if ge o div m 2
+b = sub m o
+if gt b j
+ret 4294967294
+end
+ret sub j b
+end
+ret add j o
+end
+fn scantext off ulong fsz ulong to int
+nwd = div fsz 4
+if gt nwd 2097152
+ret bad3 16
+end
+for j ulong 2097152
+if ge j nwd
+break
+end
+put mk j 0
+end
+for j ulong 2097152
+if ge j nwd
+break
+end
+w = r32 add off mul j 4
+if or eq and w 4294966303 3592355840 eq and w 4294966303 3594452992
+ret unres j 15
+end
+if eq and w 4292870175 3556769793
+put ef 1 add get ef 1 1
+put mk j 1
+if eq j 0
+ret unres j 13
+end
+p = r32 add off mul sub j 1 4
+if ne and p 4292870175 3531603976
+ret unres j 13
+end
+nr = and shr p 5 65535
+if ge nr 512
+ret unres j 29
+end
+put se nr 1
+end
+end
+for j ulong 2097152
+if ge j nwd
+break
+end
+t = btgt r32 add off mul j 4 j
+if lt t nwd
+if eq get mk t 1
+ret unres t 14
+end
+end
+end
+put ef 2 add get ef 2 nwd
+ret 0
+end
+note one program header: -1 not an executable load, 0 scanned, >0 exit code
+fn seg p ulong n ulong to int
+t = r32 p
+f = r32 add p 4
+if ne t 1
+ret -1
+end
+if and ne and f 1 0 ne and f 2 0
+say 25
+onl
+ret 3
+end
+if eq and f 1 0
+ret -1
+end
+off = r64 add p 8
+fsz = r64 add p 32
+if or ne rem off 4 0 gt add off fsz n
+ret bad3 16
+end
+ret scantext off fsz
+end
+fn scanelf n ulong to int
+if lt n 64
+ret bad3 16
+end
+if or ne r32 0 1179403647 ne r16 18 183
+ret bad3 16
+end
+ph = r64 32
+pe = r16 54
+pn = r16 56
+if or ne pe 56 gt add ph mul pn 56 n
+ret bad3 16
+end
+nx = ulong 0
+for i ulong pn
+v = seg add ph mul i 56 n
+if gt v 0
+ret v
+end
+if eq v 0
+nx = add nx 1
+end
+end
+if eq nx 0
+say 30
+onl
+ret 3
+end
+ret 0
+end
+fn elfrep to void
+say 10
+od get ef 2
+say 11
+od get ef 1
+say 2
+plist 1
+onl
+end
+
+note ---- seccomp cBPF: arch check, one JEQ per allowed nr, kill otherwise ----
+fn binst code ulong jt ulong jf ulong k ulong to void
+ob1 uchar and code 255
+ob1 uchar shr code 8
+ob1 uchar jt
+ob1 uchar jf
+ob1 uchar and k 255
+ob1 uchar and shr k 8 255
+ob1 uchar and shr k 16 255
+ob1 uchar shr k 24
+end
+fn bpfout to void
+m = ulong 0
+for i ulong 512
+if eq get sy i 1
+m = add m 1
+end
+end
+binst 32 0 0 4
+binst 21 1 0 3221225655
+binst 6 0 0 2147483648
+binst 32 0 0 0
+t = ulong 0
+for i ulong 512
+if eq get sy i 1
+binst 21 sub m t 0 i
+t = add t 1
+end
+end
+binst 6 0 0 2147483648
+binst 6 0 0 2147418112
+end
+
+fn ptable to void
+for r ulong get nw 0
+pw get wn r
+ob1 32
+pw get cn get wc r
+ob1 32
+a = get ws1 r
+if lt a 512
+od a
+else
+say 22
+end
+ob1 32
+b = get ws2 r
+if lt b 512
+od b
+else
+say 22
+end
+onl
+end
+end
+
+fn main to int
+tinit
+ac = argcnt
+if lt ac 2
+say 20
+onl
+obf
+ret 2
+end
+md = argw 1
+if eq md kwp 7
+ptable
+obf
+ret 0
+end
+if eq md kwp 3
+if gt ac 3
+say 20
+onl
+obf
+ret 2
+end
+if eq ac 3
+if not parsal 2
+say 26
+onl
+obf
+ret 2
+end
+end
+n = rdfd 0
+if gt n 8388612
+say 21
+onl
+obf
+ret 4
+end
+scansrc n
+v = report
+obf
+ret v
+end
+if eq md kwp 4
+if ne ac 2
+say 20
+onl
+obf
+ret 2
+end
+n = rdfd 0
+if gt n 8388612
+say 21
+onl
+obf
+ret 4
+end
+v = scanelf n
+if eq v 0
+elfrep
+end
+obf
+ret v
+end
+if eq md kwp 6
+lw = ulong 0
+if eq ac 3
+lw = argw 2
+end
+if or gt ac 3 and eq ac 3 ne lw kwp 2
+say 20
+onl
+obf
+ret 2
+end
+n = rdfd 0
+if gt n 8388612
+say 21
+onl
+obf
+ret 4
+end
+scansrc n
+if eq ac 3
+put sy 221 1
+end
+bpfout
+obf
+ret 0
+end
+if eq md kwp 5
+if or lt ac 4 gt ac 5
+say 20
+onl
+obf
+ret 2
+end
+if eq ac 5
+if not parsal 4
+say 26
+onl
+obf
+ret 2
+end
+end
+n = rdarg 2
+if gt n 8388612
+say 21
+onl
+obf
+ret 4
+end
+scansrc n
+v = report
+n = rdarg 3
+if gt n 8388612
+say 21
+onl
+obf
+ret 4
+end
+e = scanelf n
+if ne e 0
+obf
+ret e
+end
+elfrep
+k = ulong 0
+for i ulong 512
+if and eq get se i 1 eq get sy i 0
+k = add k 1
+end
+end
+if gt k 0
+say 18
+plist 2
+onl
+obf
+ret 1
+end
+say 17
+plist 1
+say 19
+plist 3
+onl
+obf
+ret v
+end
+say 20
+onl
+obf
+ret 2
+end

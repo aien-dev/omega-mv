@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of r8-cmp.om (value from Wolfram, wolfram.txt query tokens): same line, same error.
+om2
+fn main to int
+c = uchar 1
+if eq c 256
+ret 1
+end
+ret 0
+end

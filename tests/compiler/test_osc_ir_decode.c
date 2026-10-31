@@ -411,6 +411,41 @@ static void build(Buf *b, const Knobs *k) {
     p16(b, 0);                       /* ensures text */
 }
 
+/* One count or length field above its maximum, with nothing written after it (omega#450).
+ * The decoder must refuse OVERSIZED on the field itself; if that one maximum were off, it
+ * would read on and refuse TRUNCATED instead, without writing past any array. The prefix
+ * is the hand-built unit above up to the field named by `site`. */
+enum { OV_NSTRUCTS, OV_STRUCT_NAME, OV_NFIELDS, OV_FIELD_NAME, OV_NFUNCS, OV_NBLOCKS, OV_NINSNS, OV_NARGS, OV_ENSURES };
+static void build_oversized(Buf *b, int site) {
+    static const uint8_t magic[7] = {'O', 'S', 'C', '1', 'I', 'R', 0};
+    b->n = 0;
+    pbytes(b, magic, 7);
+    if (site <= OV_FIELD_NAME) {
+        p8(b, 2);                                  /* version 2: struct table follows */
+        if (site == OV_NSTRUCTS) { p8(b, OSC_MAX_STRUCTS + 1); return; }
+        p8(b, 1);                                  /* nstructs */
+        if (site == OV_STRUCT_NAME) { p8(b, OSC_NAME_MAX); return; }
+        p8(b, 1); p8(b, 'S');                      /* struct name */
+        if (site == OV_NFIELDS) { p8(b, OSC_MAX_FIELDS + 1); return; }
+        p8(b, 1); p16(b, 1);                       /* nfields, ncells */
+        p8(b, OSC_NAME_MAX);                       /* OV_FIELD_NAME: field name length */
+        return;
+    }
+    p8(b, 1);                                      /* version 1 */
+    if (site == OV_NFUNCS) { p16(b, OSC_MAX_FUNCS + 1); return; }
+    p16(b, 1);
+    p8(b, 1); p8(b, 'f'); p8(b, 0); p8(b, OSC_T_U8); /* name, nparams, ret type */
+    p16(b, 1); p8(b, OSC_T_U8);                    /* one vreg */
+    if (site == OV_NBLOCKS) { p16(b, OSC_MAX_BLOCKS + 1); return; }
+    p16(b, 1); p32(b, 0); p32(b, 1);               /* one block */
+    if (site == OV_NINSNS) { p32(b, OSC_MAX_INSNS + 1); return; }
+    p32(b, 1);
+    if (site == OV_NARGS) { p8(b, OSC_I_CALL); p16(b, 0); p16(b, 0); p8(b, OSC_MAX_PARAMS + 1); return; }
+    p8(b, OSC_I_RET); p16(b, 0);
+    p16(b, 0);                                     /* requires text */
+    p16(b, OSC_CLAUSE_MAX);                        /* OV_ENSURES: ensures text length */
+}
+
 static int expect_class(const uint8_t *buf, size_t len, int want, const char *what) {
     int rc = osc_ir_decode(buf, len, g_dec);
     CHECK(rc == want, "counterexample %s: got %s, want %s", what, osc_ir_refusal_name(rc), osc_ir_refusal_name(want));
@@ -450,6 +485,17 @@ static void test_classes(void) {
     EXPECT(m.b, m.n, OSC_IR_REFUSE_OVERSIZED, "481 vregs");
     k = knobs_default(); k.req_len = OSC_CLAUSE_MAX; build(&m, &k);
     EXPECT(m.b, m.n, OSC_IR_REFUSE_OVERSIZED, "requires text of 256 bytes");
+    {   /* every other count/length maximum, one field each (omega#450: decoder mutants 11..22) */
+        static const struct { int site; const char *what; } ov[] = {
+            {OV_NSTRUCTS, "17 structs"}, {OV_STRUCT_NAME, "struct name of 64 bytes"}, {OV_NFIELDS, "17 fields"},
+            {OV_FIELD_NAME, "field name of 64 bytes"}, {OV_NFUNCS, "33 functions"}, {OV_NBLOCKS, "513 blocks"},
+            {OV_NINSNS, "4097 instructions"}, {OV_NARGS, "call with 7 arguments"}, {OV_ENSURES, "ensures text of 256 bytes"},
+        };
+        for (size_t i = 0; i < sizeof ov / sizeof ov[0]; i++) {
+            build_oversized(&m, ov[i].site);
+            EXPECT(m.b, m.n, OSC_IR_REFUSE_OVERSIZED, ov[i].what);
+        }
+    }
     {
         size_t big = (size_t)OSC_IR_ENCODED_MAX + 1;
         uint8_t *x = calloc(1, big);
@@ -489,7 +535,12 @@ static void test_classes(void) {
 /* ---- 5. malformed sweep ------------------------------------------------- */
 static unsigned long g_cases, g_admitted, g_class[OSC_IR_REFUSAL_COUNT + 1];
 
-/* The oracle for one case: NULL if the decoder's answer is allowed, else why not. */
+/* The oracle for one case: NULL if the decoder's answer is allowed, else why not.
+ * An admitted case is checked in two halves, and only the first is independent of the decoder's
+ * own canonical check. Validity: osc_ir_encode refuses an invalid unit (osc_ir_validate). Byte
+ * identity: the re-encoding is made by the same encode_unit that the decoder's NONCANONICAL
+ * backstop compares against, so a defect in encode_unit would be self-consistent here and pass.
+ * The independent writer in test_classes (build) is the cross-check on encode_unit's bytes. */
 static const char *judge(const uint8_t *m, size_t mlen, int rc, const OscUnit *out) {
     if (rc == OSC_IR_OK) {
         size_t n = 0;  /* osc_ir_encode validates first: an invalid unit does not encode */

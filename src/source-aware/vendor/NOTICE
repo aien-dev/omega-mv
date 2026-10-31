@@ -1,0 +1,23 @@
+AIEN TRN1 native verifier
+Copyright 2026 Drake Stapleton and AIEN Contributors
+
+Native Omega port of the complete TRN1 schema-1 verification utility in
+AIEN Sovereign Core, crates/aien-replay/src/lib.rs at
+754c07b118f41ad899607b60329bd851b1ccb13e.
+Original source SHA-256: 8824370f30573dea68a011ec457e55470eb4d688483a1de0fec96ffcb5757aeb.
+Original author: Drake Stapleton <aien@aienos.com>.
+Original repository: https://github.com/aien-dev/aien-sovereign-core-mv
+
+This product includes software developed by Drake Stapleton in cognitive
+partnership with AIEN (Autonomous Cognitive Architecture operating on the
+Atlas Framework).
+
+Licensed under GNU Affero General Public License v3.0 or later
+(SPDX-License-Identifier: AGPL-3.0-or-later). LICENSE contains the full,
+unmodified license text from the pinned original repository.
+
+The implementation has been rewritten in native Omega. The framed command
+interface is new; the original Rust library ABI is not provided.
+SHA-256, record validation and comparison execute inside the seeded Omega
+executable. Rust/C/Python are used only by the separate test infrastructure.
+No model weights or third-party model implementation are included here.

@@ -68,6 +68,22 @@ ir_refuse continue_use 3 'ir
 fn main to int
 continue
 end'
+# Contract lines are not IR v1 statements: refuse with 30, never read them as a local (#791).
+ir_refuse requires_line 30 'ir
+fn f x uint to uint
+requires lt x 10
+ret x
+end'
+ir_refuse ensures_line 30 'ir
+fn f x uint to uint
+ensures lt x 10
+ret x
+end'
+ir_refuse invariant_line 30 'ir
+fn f x uint to uint
+invariant lt x 10
+ret x
+end'
 # Integer constants fold to the IR of their literal; float constants are still refused.
 printf 'ir\nconst N uint 5\nfn f to uint\nret N\nend\n' > "$B/c1.om"
 printf 'ir\nfn f to uint\nret uint 5\nend\n' > "$B/c2.om"
@@ -361,7 +377,30 @@ fn f to uint
 ret uint -1
 end'
 # Locals, parameters and for counters are at most 8 bytes (13, as native); a word over 8 bytes is never a
-# local, even when its first 8 bytes spell one. Function names up to 63 bytes compare in full.
+ir_refuse cast_lit_range 8 'ir
+fn f to uchar
+ret uchar 256
+end'
+ir_refuse cast_opnd_range 8 'ir
+fn f c uchar to ulong
+ret ulong sub c 300
+end'
+ir_refuse cast_signed_range 8 'ir
+fn f c byte to long
+ret long sub c -129
+end'
+ir_refuse cast_bool_num 9 'ir
+fn f c uchar to bool
+ret bool c
+end'
+ir_refuse cast_num_bool 9 'ir
+fn f b bool to ulong
+ret ulong b
+end'
+ir_refuse cast_cmp_bool 9 'ir
+fn f a uint b uint to ulong
+ret ulong eq a b
+end'
 ir_refuse long_local 13 'ir
 fn f n uint to uint
 counterxy = add n uint 1
@@ -420,6 +459,30 @@ ir_multi break_nested 'fn f to uint\nx = uint 0\nwhile lt x uint 5 bound 20\ny =
 ir_multi shift_mixed 'fn f to ulong\nret shl ulong 1 uint 3\nend'
 ir_multi cmp_assign 'fn f to bool\nx = lt uint 1 uint 2\nx = eq uint 1 uint 1\nret x\nend'
 ir_multi cast_ret 'fn f to uchar\nret uchar uint 1\nend'
+ir_multi cast_wide 'fn f c uchar to ulong\nret ulong sub c 48\nend'
+ir_multi cast_left 'fn f c uchar to ulong\nret ulong sub 255 c\nend'
+ir_multi cast_u2s 'fn f c uchar to long\nret long sub c 48\nend'
+ir_multi cast_s2s 'fn f c byte to long\nret long add c 1\nend'
+ir_multi cast_s2u 'fn f c byte to ulong\nret ulong sub c 1\nend'
+ir_multi cast_narrow 'fn f x ulong to uchar\nret uchar sub x 1\nend'
+ir_multi cast_narrow_s 'fn f x long to byte\nret byte add x 1\nend'
+ir_multi cast_same_ty 'fn f x uint to uint\nret uint add x 1\nend'
+ir_multi cast_un 'fn f c uchar to ulong\nret ulong not c\nend'
+ir_multi cast_call 'fn g a uchar to uchar\nret add a 1\nend\nfn f c uchar to ulong\nret ulong g c\nend'
+ir_multi cast_assign 'fn f c uchar to ulong\nx = ulong sub c 48\nret x\nend'
+ir_multi cast_nested 'fn f c uchar to ulong\nret ulong uint mul c 2\nend'
+ir_multi cast_arg 'fn g a ulong to ulong\nret add a 1\nend\nfn f c uchar to ulong\nret g ulong sub c 48\nend'
+ir_multi cast_lit_var 'fn f to uint\nx = uint 5\nret uint x\nend'
+ir_multi cast_nest_var 'fn f x uint to uint\nret uint uint x\nend'
+ir_multi cast_same_assign 'fn f x uint to uint\ny = uint x\nret y\nend'
+ir_multi cast_same_param 'fn f x uint to uint\nret uint x\nend'
+ir_multi cast_neg_lit 'fn f c byte to long\nret long sub c -128\nend'
+ir_multi cast_ulong_max 'fn f to ulong\nret ulong 18446744073709551615\nend'
+ir_multi cast_cond 'fn f c uchar to uint\nif lt ulong c 10\nret 1\nend\nret 0\nend'
+# A same-type cast of an integer or bool constant is the constant itself (the oracle's konst rule), not a mov.
+ir_multi cast_same_konst 'fn f to uint\nret uint uint 5\nend'
+ir_multi cast_same_bool 'fn f to bool\nret bool true\nend'
+ir_multi cast_same_arg 'fn g a ulong to ulong\nret add a 1\nend\nfn f to ulong\nret g ulong ulong 7\nend'
 ir_multi bool_and 'fn f a bool b bool to bool\nret and a b\nend'
 ir_multi bool_or 'fn f a bool b bool to bool\nret or a b\nend'
 ir_multi bool_xor 'fn f a bool b bool to bool\nret xor a b\nend'
@@ -427,6 +490,9 @@ ir_multi void_fall 'fn sink a uint to void\nend\nfn f to uint\nsink uint 1\nret 
 ir_multi for_reuse 'fn f to uint\ns = uint 0\nfor i uint 3\ns = add s i\nend\nfor i uint 2\ns = add s i\nend\nret s\nend'
 ir_multi scope_reuse 'fn f a uint to uint\nif gt a 1\ny = add a 1\nret y\nend\ny = add a 2\nret y\nend'
 ir_multi call_long_prefix 'fn increment_one a uint to uint\nret add a uint 1\nend\nfn increment_two a uint to uint\nret add a uint 2\nend\nfn f to uint\nret increment_two uint 4\nend'
+# A contract word followed by = is an assignment to a local of that name, as in the C oracle (only the clause form is error 30).
+ir_multi ensures_assign 'fn f to ulong\nensures = ulong 1\nret ensures\nend'
+ir_multi requires_assign 'fn f to ulong\nx = ulong 1\nrequires = add x x\nrequires = add requires x\nret requires\nend'
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -478,5 +544,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 26 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 1 cast unit + 30 fuzz units; validation: 32 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 29 refusals + 9 multi-call units + 3 break units + 1 shift unit + 4 bool units + 24 cast units + 2 contract-name units + 30 fuzz units; validation: 38 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'

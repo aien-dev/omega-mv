@@ -1,0 +1,64 @@
+
+build/security673-pure/raw-1:     file format binary
+
+
+Disassembly of section .data:
+
+0000000000000000 <.data>:
+   0:	464c457f 	.inst	0x464c457f ; undefined
+   4:	00010102 	.inst	0x00010102 ; undefined
+	...
+  10:	00b70002 	.inst	0x00b70002 ; undefined
+  14:	00000001 	udf	#1
+  18:	004000b0 	.inst	0x004000b0 ; undefined
+  1c:	00000000 	udf	#0
+  20:	00000040 	udf	#64
+	...
+  34:	00380040 	.inst	0x00380040 ; NYI
+  38:	00000002 	udf	#2
+  3c:	00000000 	udf	#0
+  40:	00000001 	udf	#1
+  44:	00000005 	udf	#5
+	...
+  50:	00400000 	.inst	0x00400000 ; undefined
+  54:	00000000 	udf	#0
+  58:	00400000 	.inst	0x00400000 ; undefined
+  5c:	00000000 	udf	#0
+  60:	00000200 	udf	#512
+  64:	00000000 	udf	#0
+  68:	00000200 	udf	#512
+  6c:	00000000 	udf	#0
+  70:	00001000 	udf	#4096
+  74:	00000000 	udf	#0
+  78:	00000001 	udf	#1
+  7c:	00000006 	udf	#6
+	...
+  88:	10000000 	adr	x0, 0x88
+  8c:	00000000 	udf	#0
+  90:	10000000 	adr	x0, 0x90
+	...
+  a0:	00800000 	.inst	0x00800000 ; undefined
+  a4:	00000000 	udf	#0
+  a8:	00001000 	udf	#4096
+  ac:	00000000 	udf	#0
+  b0:	d2800000 	mov	x0, #0x0                   	// #0
+  b4:	d1019000 	sub	x0, x0, #0x64
+  b8:	d2802801 	mov	x1, #0x140                 	// #320
+  bc:	f2a00801 	movk	x1, #0x40, lsl #16
+  c0:	d2800002 	mov	x2, #0x0                   	// #0
+  c4:	d2800003 	mov	x3, #0x0                   	// #0
+  c8:	d2800708 	mov	x8, #0x38                  	// #56
+  cc:	d4000001 	svc	#0x0
+  d0:	b100041f 	cmn	x0, #0x1
+  d4:	54000060 	b.eq	0xe0  // b.none
+  d8:	d28008e0 	mov	x0, #0x47                  	// #71
+  dc:	14000002 	b	0xe4
+  e0:	d2800000 	mov	x0, #0x0                   	// #0
+  e4:	d2800ba8 	mov	x8, #0x5d                  	// #93
+  e8:	d4000001 	svc	#0x0
+	...
+ 140:	7273752f 	.inst	0x7273752f ; undefined
+ 144:	6e69622f 	rsubhn2	v15.8h, v17.4s, v9.4s
+ 148:	7572742f 	.inst	0x7572742f ; undefined
+ 14c:	00000065 	udf	#101
+	...

@@ -1,0 +1,32 @@
+{
+  "schema": "omega.universal.semantics.v1",
+  "contract_sha256": "d4ed6148bfa97cc693d3fa4495e2d7e2e68aba04607a7e96dd9a9c54bf9073a8",
+  "fidelity": [
+    "EXACT_SOURCE_REPLAY",
+    "PROVEN_EQUIVALENCE",
+    "PROVEN_REFINEMENT",
+    "BOUNDED_VALIDATION",
+    "DIFFERENTIAL_COMPATIBILITY",
+    "RUNTIME_INTEROPERABILITY",
+    "EXPLICIT_APPROXIMATION",
+    "UNSUPPORTED",
+    "UNKNOWN"
+  ],
+  "non_success": [
+    "FAIL",
+    "UNKNOWN",
+    "TIMEOUT",
+    "UNSUPPORTED",
+    "UB",
+    "MISSING_RUNTIME",
+    "NOT_RUN"
+  ],
+  "profiles": [
+    "c17-uint64-pure-v1",
+    "rust-u64-wrapping-pure-v1",
+    "cpython-int-pure-v1",
+    "python-explicit-u64-pure-v1",
+    "osc-v5-u64-pure-v1"
+  ],
+  "adapters_implemented_by_this_change": []
+}

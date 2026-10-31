@@ -1,0 +1,117 @@
+{
+ "checkout": "12e6d8218",
+ "note": "post-rename replay (struct qty -> bqty) on main compiler; earlier receipts are kept unchanged",
+ "compiler_sha256": "62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b",
+ "records": [
+  {
+   "name": "tests",
+   "source_sha256": "7a4d2fc9b6601ce246bcafdcbb6358dff0d6635078f5635065841a57d12fcb76",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "cc328b083385ae3e2bc695f2a66d52bb8e0b31101005cc894fb7b4636c5dc6ad",
+   "exit": 0,
+   "stdout_sha256": "4813f7f491aca7d4ccf35e8e7c2676211d9c68f30a161f34b545547e899d729b",
+   "stdout_bytes": 62,
+   "stderr": "",
+   "stdout": "PASS Q1-Q9 runtime; Q2 widths1..8 pairs87380 operations262140\n"
+  },
+  {
+   "name": "demo",
+   "source_sha256": "84262281675903e412bddbb4850644dbe644aaf588682773b354f71c5d1c279f",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "fde488154d9806c49e57b27b6affbe51f2037d43569b2a87fe64b595a6d02fdb",
+   "exit": 0,
+   "stdout_sha256": "662d1da493c9e96cb4d2b3b7778dea1ec80e5953c41d59eeafa88837f0882431",
+   "stdout_bytes": 208,
+   "stderr": "",
+   "stdout": "PASS modular baseline8 checked add status3 unchanged output effects0\nPASS multiply status3 narrow status3 negative status2 unchanged output\nPASS reused object identity changed version status4 unchanged slice\n"
+  },
+  {
+   "name": "crypto",
+   "source_sha256": "92c32dd28633f6351dd2f8f053d5cccf29b97deb325da9a3bf19cb35dfe7e5fe",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "6178e84856c15364c07299ee581478b44b2e7fc1f794c36e4c1c52290277a219",
+   "exit": 0,
+   "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "stdout_bytes": 0,
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "name": "export",
+   "source_sha256": "f7d758098b6874cc72d95dffc448fa5435fcb787300d4a77d615bfc950489bbb",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "06af414693ec76840f541ee584cd7877f0400af703012d3d7a715ea070abfdc6",
+   "exit": 0,
+   "stdout_sha256": "0841c3b0714b36b46e09a83d036243989b0295b5aa3af68650fa24eca9886bd9",
+   "stdout_bytes": 6291360,
+   "stderr": "",
+   "independent_corpus": "all6291360bytes equal"
+  },
+  {
+   "name": "mixed-scalar",
+   "source_sha256": "1b2d8b526477e45c1e06bb247421e5cfcec1f5689e2aaa2f5dd90beb437d0ffe",
+   "compile_exit": 7,
+   "compile_stderr": "omc: line 148: error 7\n"
+  },
+  {
+   "name": "mixed-quantity",
+   "source_sha256": "4983a6d507cb8d0484cb7443ec8b8ce4e10eae855c97f10cdd9a2da341d07d43",
+   "compile_exit": 7,
+   "compile_stderr": "omc: line 149: error 7\n"
+  },
+  {
+   "name": "mixed-object",
+   "source_sha256": "792045eeb2e39fa5dcc42c9f0b036318b6f84ae73c028cd6e5e36b07beb70600",
+   "compile_exit": 7,
+   "compile_stderr": "omc: line 148: error 7\n"
+  },
+  {
+   "name": "mixed-slice",
+   "source_sha256": "8fc52c4b3bffadb0621341f8b13ed9cf0573d07dae0031202afdafda79f62c30",
+   "compile_exit": 7,
+   "compile_stderr": "omc: line 148: error 7\n"
+  },
+  {
+   "name": "mutate",
+   "source_sha256": "c4e7bf75938e6a4ae22c5b405773984465efa646d1a4b08521505b93904471c5",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "8078ac96be29235c0a4ff878575afa38bc9619e8c06434d4878cca728a5f4542"
+  },
+  {
+   "name": "mutant-a",
+   "source_sha256": "cb98155fc210b875e216e217da1b13b765e1650d149fbb0a1908541d97108555",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "51185d80447455201cfbc44afae292df7904818d9d9d753b8edc9281b8728f4a",
+   "transform_exit": 0,
+   "exit": 1,
+   "stdout_sha256": "04799d328894b1edb9f33866fa6b905ed4f557b594d0637f08f1bd1bf3d82794",
+   "stdout_bytes": 18,
+   "stderr": "",
+   "stdout": "FAIL Q1_ADD_GUARD\n"
+  },
+  {
+   "name": "mutant-m",
+   "source_sha256": "a277a422d05467fbf861352f0e617b86ddcfcb79c042904e4fa072a5b04f2a42",
+   "compile_exit": 0,
+   "compile_stderr": "",
+   "binary_sha256": "c59af673d93018a6f1122d24c3ef90f1d4ee5d86e3da5fa6aab4cf8029aa1776",
+   "transform_exit": 0,
+   "exit": 1,
+   "stdout_sha256": "c5dea7a05c40f75d4257311c5fa814b9286bdc4582eb1d70c462b6bd3a0b307c",
+   "stdout_bytes": 18,
+   "stderr": "",
+   "stdout": "FAIL Q4_MUL_GUARD\n"
+  },
+  {
+   "name": "mutate-invalid-mode",
+   "exit": 2
+  }
+ ],
+ "verdict": "PASS"
+}

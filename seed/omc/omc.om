@@ -592,6 +592,8 @@ end
 note tok_num: the word at [ts,cur) is [-]decimal, at most 20 digits, from -2^63 to 2^64 - 1 (error 6
 note bad number, 8 out of range). tw = its raw 64 bits (a negative one as two's complement); tbig = 1
 note when it is 2^63 or more (only a ulong holds it), else 0. As om4's TK_NUM.
+note The float-marker scan walks the word in chunks of at most 999999 bytes: a single loop's hidden
+note 1000000-pass guard trapped 4 on a decimal word of 1000001 digits, which must refuse with error 6 (#671).
 fn tok_num to void
 if ne get om2 0 0
 if ne tok_hex 0
@@ -600,14 +602,20 @@ end
 end
 p = get ts 0
 e = get cur 0
-i = p
 fl = false
+i = p
 while lt i e
-b = get inp i
+c = sub e i
+if gt c 999999
+c = ulong 999999
+end
+for k ulong c
+b = get inp add i k
 if or or or eq b 46 eq b 101 eq b 69 eq b 102
 fl = true
 end
-i = add i 1
+end
+i = add i c
 end
 if fl
 put tk 0 5
@@ -805,9 +813,12 @@ put tkb 0 get inlen 0
 put tk 0 3
 end
 
-note ======== keyword lookup (original om4 KWTAB plus native host words 100..177 and flock 197) ========
+note ======== keyword lookup (original om4 KWTAB plus native host words 100..177, flock 197 and execpure 198) ========
 note genkw.awk describes the original om4 table only; retain the native host extension on regeneration.
 fn kw w ulong to ulong
+if eq w 7310034270740117605
+ret 198
+end
 if eq w 6584163
 ret 132
 end
@@ -1300,6 +1311,12 @@ end
 if eq w 7959665
 ret 223
 end
+if eq w 7305804402314801251
+ret 199
+end
+if eq w 8674333540260081763
+ret 200
+end
 if eq w 7308604897285727600
 ret 224
 end
@@ -1310,7 +1327,8 @@ ret kw2 w
 end
 
 note ======== OM-2 words (spec/omegese-om2.md): reserved only in an OM-2 unit. rotr 59, rotl 60 are
-note binary operators; the rest are statement and declaration words of later sections. ========
+note binary operators; dit 225 and scrub 226 are program-mode value words (OMEGESE 9.13.1); the rest are
+note statement and declaration words of later sections. ========
 fn kw2 w ulong to ulong
 if eq w 1920233330
 ret 59
@@ -1365,6 +1383,12 @@ ret 195
 end
 if eq w 7565423
 ret 196
+end
+if eq w 7629156
+ret 225
+end
+if eq w 422877225843
+ret 226
 end
 ret 0
 end
@@ -1894,6 +1918,8 @@ end
 note fparse: read the literal text inp[pos, pos+len) into fsgn, fnd, fp10, fsuf (0 none, 1 f32, 2 f64).
 note Grammar: [-]digits[.digits][(e|E)[+|-]digits][f32|f64]. At most 2^63-1 significant digits
 note (error 8), a dot with no digit after it is error 6, |exponent| <= 999 (error 8).
+note The digit scans here and in fexp and the decimal steps in fbits run as nested 999999-pass loops: a
+note literal of more than 1000000 zero digits trapped 4 in a single loop's hidden 1000000-pass guard (#965).
 fn fparse pos ulong ln ulong to void
 p = pos
 e = add pos ln
@@ -1907,15 +1933,21 @@ put fsgn 0 1
 p = add p 1
 end
 go = true
-while and go lt p e
-b = get inp p
-d = sub ulong b 48
+while go
+pos = ulong 0
+while and go lt pos 999999
+if ge p e
+go = false
+else
+d = sub ulong get inp p 48
 if le d 9
 if gt get fnd 0 922337203685477580
 fail 8
 end
-if and eq get fnd 0 922337203685477580 gt d 7
+if eq get fnd 0 922337203685477580
+if gt d 7
 fail 8
+end
 end
 put fnd 0 add mul get fnd 0 10 d
 if ne get fg_seen 0 0
@@ -1923,12 +1955,17 @@ put fg_fl 0 add get fg_fl 0 1
 end
 p = add p 1
 else
-if and eq b 46 eq get fg_seen 0 0
+go = false
+if eq get inp p 46
+if eq get fg_seen 0 0
 put fg_seen 0 1
 p = add p 1
-else
-go = false
+go = true
 end
+end
+end
+end
+pos = add pos 1
 end
 end
 if and ne get fg_seen 0 0 eq get fg_fl 0 0
@@ -1959,17 +1996,26 @@ end
 end
 put fg_ed 0 0
 go = true
-while and go lt p e
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p e
+go = false
+else
 d = sub ulong get inp p 48
 if gt d 9
 go = false
 else
-put fg_ex 0 add mul get fg_ex 0 10 long d
+put fg_ex 0 mul get fg_ex 0 10
+put fg_ex 0 add get fg_ex 0 long d
 if gt get fg_ex 0 999
 fail 8
 end
 put fg_ed 0 add get fg_ed 0 1
 p = add p 1
+end
+end
+m = add m 1
 end
 end
 if eq get fg_ed 0 0
@@ -2154,8 +2200,14 @@ if lt p 0
 i = ulong 0
 n = ulong sub 0 p
 while lt i n
+c = sub n i
+if gt c 999999
+c = ulong 999999
+end
+for k ulong c
 fdiv10
-i = add i 1
+end
+i = add i c
 end
 end
 end
@@ -2207,9 +2259,10 @@ off = ulong get sf_off sub f 1
 vdone 3 mul off 8 5
 end
 
-note fspan: a deferred literal stored as pos*64+len.
+note fspan: a deferred literal stored as pos*16777216+len. Input stays below 2^23 bytes, so neither part
+note overflows its field; the old pos*64+len read a literal of 64 or more characters from the wrong span (#965).
 fn fspan ty ulong packed ulong to ulong
-fparse div packed 64 rem packed 64
+fparse div packed 16777216 rem packed 16777216
 ret fbits ty
 end
 
@@ -2908,17 +2961,21 @@ put out add at 2 uchar and shr w 16 255
 put out add at 3 uchar and shr w 24 255
 end
 
-note disp19: the checked word distance for a B.cond / CBZ / CBNZ: the target must be word aligned and
-note at most 2^18 - 1 words forward or 2^18 words back, else error 24 before any artifact is accepted
-fn disp19 at ulong target ulong to ulong
+note bdisp: the checked word distance from a branch at `at` to `target` for its signed w-bit word field:
+note w 19 for B.cond / CBZ / CBNZ (C6.2.34, C6.2.78, C6.2.77), w 26 for B (C6.2.35) and BL. The
+note target must be word aligned and at most 2^(w-1) - 1 words forward or 2^(w-1) words back (w 19: 1048572
+note bytes forward, 1048576 back; w 26: 134217724 forward, 134217728 back), else error 24 before any
+note artifact is accepted. Returns the distance masked to w bits.
+fn bdisp at ulong target ulong w ulong to ulong
 diff = sub target at
 if ne and diff 3 0
 fail 24
 end
-if and gt diff 1048572 lt diff 18446744073708503040
+span = shl ulong 1 add w 1
+if and gt diff sub span 4 lt diff sub ulong 0 span
 fail 24
 end
-ret and shr diff 2 524287
+ret and shr diff 2 sub shl ulong 1 w 1
 end
 
 note patch19: the word distance from a B.cond / CBZ / CBNZ at `at` to `target`, into bits 5..23
@@ -2930,16 +2987,16 @@ put tgoc 0 target
 end
 ret
 end
-d = disp19 at target
+d = bdisp at target 19
 wrword at or rdword at shl d 5
 if eq target get oc 0
 put tgoc 0 target
 end
 end
 
-note patch26: the word distance from a B at `at` to `target`, into bits 0..25. No range check is needed:
-note the output pool is 8 MiB = 2^23 bytes, below the 2^25-word reach, and every position in it is a
-note word boundary, so the displacement is aligned and inside the signed 26-bit field by construction.
+note patch26: the word distance from a B at `at` to `target`, into bits 0..25, checked by bdisp. The AArch64
+note output stops at 8 MiB = 2^23 bytes (emit, error 14), inside the 2^27-byte reach, so no legal program
+note reaches error 24 here; the check keeps a wrong B from ever being written if that ceiling changes.
 fn patch26 at ulong target ulong to void
 if ne get xtarget 0 0
 xpatch at target
@@ -2948,7 +3005,7 @@ put tgoc 0 target
 end
 ret
 end
-d = and shr sub target at 2 67108863
+d = bdisp at target 26
 wrword at or rdword at d
 if eq target get oc 0
 put tgoc 0 target
@@ -2962,7 +3019,7 @@ p = xbranch 14
 xpatch p addr
 ret
 end
-emit or 335544320 and shr sub addr get oc 0 2 67108863
+emit or 335544320 bdisp get oc 0 addr 26
 end
 
 note matconst: put a 64-bit value in register r: MOVZ (C6.2.285) or, for a value with the top bit set,
@@ -4689,7 +4746,7 @@ if ne get xtarget 0 0
 emitb 232
 xword 0
 else
-emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
+emit or 2483027968 bdisp get oc 0 get fn_addr sub f 1 26
 end
 end
 
@@ -5939,6 +5996,8 @@ note A packed argument list is u16 count followed by count (u16 length, bytes) r
 note Byte order is little-endian. The packet is at most 4096 bytes and 64 records.
 note The decoder constructs kernel pointers only in private stack memory.
 fn hpack c ulong dst ulong x ulong to void
+errs = new ulong 16 0
+tbl = new ulong 27 0
 e = harray x 0
 if eq c 125
 harg x 2 8
@@ -5985,7 +6044,7 @@ emit 3506440357
 e3 3942645760 31 12 5
 trapc 8 3
 note A program path and both rename paths must be nonempty.
-if eq c 124
+if or eq c 124 eq c 198
 emit 4043309375
 notfirst = get oc 0
 emit 1409286145
@@ -6020,11 +6079,204 @@ patch19 done get oc 0
 emit 4043309247
 trapc 1 3
 emit 4177527167
-if eq c 124
+if or eq c 124 eq c 198
+note Exec admits only the caller-assigned standard streams. Linux close_range with UNSHARE
+note closes every descriptor >=3 in a private table. Failure returns without executing a child;
+note no guessed descriptor ceiling or permissive fallback. This is not filesystem isolation.
+matconst 0 3
+matconst 1 4294967295
+matconst 2 2
+hsys 436
+emit 4043309087
+note outer and done are dead after the packet scan; they are reused for the two branch sites here.
+done = get oc 0
+emit 1409286145
+if eq c 198
+note execpure strict stdio profile: Linux UAPI layouts in 640 private guest stack bytes, never an
+note exposed native pointer. sock_filter is u16 code,u8 jt,u8 jf,u32 k; sock_fprog has its length at
+note 0 and its pointer at 8 on AArch64. A Landlock path rule is a packed u64 allowed_access plus an
+note s32 parent_fd; prlimit64 takes two u64s. Each step that returns a negative value branches (B.LT)
+note to the common restore with the kernel error in x0. ADD x16,SP,#k then STR x0,[x16] stores a word.
+n = ulong 0
+spsub 640
+stkchk
+mimmed 2432697312 16 0 632
+e3 4177526784 11 16 0
+note Extra descriptors are already closed in a private table. Pin the executable as descriptor 3.
+matconst 0 18446744073709551516
+mimmed 2432697312 1 0 640
+matconst 2 2621440
+matconst 3 0
+hsys 56
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+note ABI3 rights through TRUNCATE are all handled, with only read/execute of that one inode allowed.
+matconst 0 32767
+mimmed 2432697312 16 0 0
+e3 4177526784 0 16 0
+mimmed 2432697312 0 0 0
+matconst 1 8
+matconst 2 0
+hsys 444
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+matconst 0 5
+mimmed 2432697312 16 0 16
+e3 4177526784 0 16 0
+matconst 0 3
+mimmed 2432697312 16 0 24
+e3 4177526784 0 16 0
+matconst 0 4
+matconst 1 1
+mimmed 2432697312 2 0 16
+matconst 3 0
+hsys 445
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+matconst 0 38
+matconst 1 1
+matconst 2 0
+matconst 3 0
+matconst 4 0
+hsys 167
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+matconst 0 4
+matconst 1 0
+hsys 446
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+matconst 0 4
+hsys 57
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+note Per-process ceilings as (resource, soft, hard): CPU, FSIZE, STACK, CORE, NPROC, NOFILE, AS.
+note Pipe-output and wall budgets additionally require the trusted supervisor.
+put tbl 1 1
+put tbl 2 2
+put tbl 3 1
+put tbl 4 1048576
+put tbl 5 1048576
+put tbl 6 3
+put tbl 7 8388608
+put tbl 8 8388608
+put tbl 9 4
+put tbl 12 6
+put tbl 15 7
+put tbl 16 4
+put tbl 17 4
+put tbl 18 9
+put tbl 19 134217728
+put tbl 20 134217728
+for i ulong 7
+matconst 0 get tbl add mul i 3 1
+mimmed 2432697312 16 0 48
+e3 4177526784 0 16 0
+matconst 0 get tbl add mul i 3 2
+mimmed 2432697312 16 0 56
+e3 4177526784 0 16 0
+matconst 0 0
+matconst 1 get tbl mul i 3
+mimmed 2432697312 2 0 48
+matconst 3 0
+hsys 261
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+end
+note Validate architecture, then read only 0, write only 1/2, exit/exit_group. Everything else is EPERM.
+note execveat is restricted to descriptor 3 and AT_EMPTY_PATH; Landlock also binds execution to inode 3.
+note The inode rule is essential: an absolute execveat path otherwise ignores its dirfd argument.
+note Entry i = code | jt<<16 | jf<<24 | k<<32, stored at SP+128+8i. (code jt jf k) rows in order:
+note (32 0 0 4) (21 1 0 3221225655) (6 0 0 2147483648) (32 0 0 0) (21 0 3 63) (32 0 0 16) (21 0 1 0) (6 0 0 2147418112) (32 0 0 0)
+note (21 0 4 64) (32 0 0 16) (21 1 0 1) (21 0 1 2) (6 0 0 2147418112) (32 0 0 0) (21 0 1 93) (6 0 0 2147418112) (21 0 1 94)
+note (6 0 0 2147418112) (32 0 0 0) (21 0 5 281) (32 0 0 16) (21 0 3 3) (32 0 0 48) (21 0 1 4096) (6 0 0 2147418112) (6 0 0 327681)
+put tbl 0 ulong 17179869216
+put tbl 1 ulong 13835058841261244437
+put tbl 2 ulong 9223372036854775814
+put tbl 3 ulong 32
+put tbl 4 ulong 270633271317
+put tbl 5 ulong 68719476768
+put tbl 6 ulong 16777237
+put tbl 7 ulong 9223090561878065158
+put tbl 8 ulong 32
+put tbl 9 ulong 274945015829
+put tbl 10 ulong 68719476768
+put tbl 11 ulong 4295032853
+put tbl 12 ulong 8606711829
+put tbl 13 ulong 9223090561878065158
+put tbl 14 ulong 32
+put tbl 15 ulong 399448735765
+put tbl 16 ulong 9223090561878065158
+put tbl 17 ulong 403743703061
+put tbl 18 ulong 9223090561878065158
+put tbl 19 ulong 32
+put tbl 20 ulong 1206969696277
+put tbl 21 ulong 68719476768
+put tbl 22 ulong 12935233557
+put tbl 23 ulong 206158430240
+put tbl 24 ulong 17592202821653
+put tbl 25 ulong 9223090561878065158
+put tbl 26 ulong 1407379178520582
+for i ulong 27
+matconst 0 get tbl i
+mimmed 2432697312 16 0 add 128 mul i 8
+e3 4177526784 0 16 0
+end
+matconst 0 27
+mimmed 2432697312 16 0 80
+e3 4177526784 0 16 0
+mimmed 2432697312 0 0 128
+mimmed 2432697312 16 0 88
+e3 4177526784 0 16 0
+matconst 0 1
+matconst 1 0
+mimmed 2432697312 2 0 80
+hsys 277
+emit 4043309087
+put errs n get oc 0
+emit 1409286155
+n = add n 1
+note Restore the original packet stack before entering the pinned executable. Descriptor 3 is CLOEXEC.
+mimmed 2432697312 16 0 632
+e3 4181721088 11 16 0
+spadd 640
+matconst 0 3
+e3 2852126720 1 31 11
+emit 2436892642
+e3 2852126720 3 31 11
+matconst 4 4096
+hsys 281
+outer = get oc 0
+emit 335544320
+while gt n 0
+n = sub n 1
+patch19 get errs n get oc 0
+end
+mimmed 2432697312 16 0 632
+e3 4181721088 11 16 0
+spadd 640
+patch26 outer get oc 0
+else
 emit 2432697312
 emit 2436892641
 e3 2852126720 2 31 11
 hsys 221
+end
+patch19 done get oc 0
 else
 if eq c 125
 emit 2436892656
@@ -6824,6 +7076,11 @@ if eq c 197
 hscalar c dst x
 ret
 end
+note execpure 198 is dispatched here, before the ge c 173 mapped-memory range below would claim it.
+if eq c 198
+hpack c dst x
+ret
+end
 if eq c 220
 hpeercr dst x
 ret
@@ -7041,7 +7298,7 @@ fparse get ts 0 get tl 0
 t = ulong 0
 if eq get fsuf 0 0
 if eq exp 0
-vdone 6 add mul get ts 0 64 get tl 0 ulong 0
+vdone 6 add mul get ts 0 16777216 get tl 0 ulong 0
 ret
 end
 if eq isfloat exp 0
@@ -7270,7 +7527,92 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
-if or or or and ge c 100 le c 177 eq c 197 and ge c 220 le c 222 eq c 224
+if or eq c 225 eq c 226
+if or eq get progmode 0 0 ne get irmode 0 0
+fail 9
+end
+x = mul get depth 0 32
+sl = get nslot 0
+note dit and scrub are emitted inline here, not in helper functions: om4 holds 512 functions and omc.om
+note is at that limit (seed/omc/size-history.tsv).
+if eq c 225
+note dit: OM-2 `dit v` (program mode): v is int, 0 or 1, else trap 3. Sets PSTATE.DIT (Arm ARM
+note C5.2.4: DIT is bit 24 of the special-purpose register; MRS/MSR <Xt>, DIT have op0 3, op1 3, CRn 4,
+note CRm 2, op2 5) and gives the previous bit as a long 0 or 1. CMP Xv, #1 = SUBS XZR (C6.2.464); B.HI
+note trap 3; LSL X16, Xv, #24 = UBFM X16, Xv, #40, #39 (C6.2.487), taken before the destination is
+note written because the destination may be v's own register; MRS Xd, DIT (C6.2.287); MSR DIT, X16
+note (C6.2.289); UBFX Xd, Xd, #24, #1 = UBFM Xd, Xd, #24, #24. Writes to PSTATE are in program order
+note without further synchronization (C5.1), so the next instruction already runs under the new bit.
+harg x 0 8
+r = matreg get fr add x 8 get fr add x 9 8
+emit or 4043310111 shl r 5
+trapc 8 3
+emit or 3546848272 shl r 5
+put nslot 0 sl
+d = destreg dst
+emit or 3577430688 d
+emit 3575333552
+emit or or 3545784320 shl d 5 d
+vdone 1 d 9
+ret
+end
+note scrub: OM-2 `scrub n` (program mode): n is ulong, a multiple of 16 and at most 1048576, else trap 3.
+note TST Xn, #15 = ANDS XZR (C6.2.16, N 1 immr 0 imms 3); B.NE trap 3; X16 = 1048576; CMP Xn, X16 =
+note SUBS XZR (C6.2.465); B.HI trap 3. X16 = SP - n: SUB X16, SP, Xn, UXTX (C6.2.456); CMP X16, X28
+note (C6.2.465); B.LO trap 6, before any store. Loop: CMP SP, X16 = SUBS XZR, SP, X16, UXTX (C6.2.463);
+note B.LS out; STP XZR, XZR, [X16], #16 (C6.2.414, post-index); B back (C6.2.35). Then MOVZ Xr, #0
+note (C6.2.319) for every pool register at index npar + nslot or above (no live value: parameters,
+note locals and the held parts of the expression sit below), X16, and X7, X18-X26, X29, which program
+note mode never names; then MOVI Vd.2D, #0 (C7.2.247) for V0-V31 (floats live in X registers and pass
+note through V0/V1 for one instruction only). Never touched: SP, X27 (the Linux initial stack under
+note args), X28 (the stack floor), X30 (the return address), the live pool registers, NZCV, FPCR,
+note FPSR, and the SVE P registers and FFR. Gives long 0.
+harg x 0 5
+r = matreg get fr add x 8 get fr add x 9 5
+emit or 4064283679 shl r 5
+trapc 1 3
+matconst 16 1048576
+emit or 3943694367 shl r 5
+trapc 8 3
+emit or 3407897584 shl r 16
+emit 3944481311
+trapc 3 6
+top = get oc 0
+emit 3945817087
+at = get oc 0
+emit 1409286153
+emit 2827058719
+back top
+patch19 at get oc 0
+i = add get npar 0 sl
+while lt i 16
+emit or 3531603968 poolc i
+i = add i 1
+end
+emit 3531603984
+emit 3531603975
+i = ulong 18
+while le i 26
+emit or 3531603968 i
+i = add i 1
+end
+emit 3531603997
+i = ulong 0
+while lt i 32
+emit or 1862329344 i
+i = add i 1
+end
+put nslot 0 sl
+d = destreg dst
+matconst d 0
+vdone 1 d 9
+ret
+end
+if or or and ge c 100 le c 177 and ge c 197 le c 198 and ge c 220 le c 222
+hostval c dst
+ret
+end
+if eq c 224
 hostval c dst
 ret
 end
@@ -7527,7 +7869,7 @@ p = xbranch 3
 xpatch p at
 ret
 end
-d = disp19 get oc 0 at
+d = bdisp get oc 0 at 19
 emit or 1409286147 shl d 5
 end
 
@@ -9425,7 +9767,7 @@ end
 if ne get fn_np sub f 1 0
 fail 9
 end
-wrword 176 or 335544320 and shr sub get oc 0 176 2 67108863
+wrword 176 or 335544320 bdisp 176 get oc 0 26
 if ne get hostargs 0 0
 note Preserve Linux's initial argument stack privately before installing Omega's bounded stack.
 emit 2432697339
@@ -9433,7 +9775,7 @@ end
 emit 3533832220
 emit 3533836304
 emit 2432696863
-emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
+emit or 2483027968 bdisp get oc 0 get fn_addr sub f 1 26
 if eq get fn_ret sub f 1 12
 emit 3531603968
 end
@@ -9460,7 +9802,7 @@ f = sub get callto i 1
 if ne get xtarget 0 0
 wrword add s 1 sub get fn_addr f add s 5
 else
-wrword s or 2483027968 and shr sub get fn_addr f s 2 67108863
+wrword s or 2483027968 bdisp s get fn_addr f 26
 end
 i = add i 1
 end
@@ -9600,7 +9942,7 @@ if eq get nf 0 1
 writeout 180
 end
 a = get fn_addr sub get lastfn 0 1
-wrword 176 or 335544320 and shr sub a 176 2 67108863
+wrword 176 or 335544320 bdisp 176 a 26
 writeout 176
 end
 
@@ -9622,7 +9964,7 @@ at = ulong 176
 f = ulong 0
 while lt f get nf 0
 if ne get fn_exp f 0
-wrword at or 335544320 and shr sub get fn_addr f at 2 67108863
+wrword at or 335544320 bdisp at get fn_addr f 26
 at = add at 4
 end
 f = add f 1
@@ -9746,6 +10088,32 @@ ret 0
 end
 if eq c 87
 s_trap
+ret 0
+end
+note cpufence (keyword 199, a statement without operands): the host CPU publication barrier. AArch64:
+note DSB SY (d5033f9f, the full-system barrier mapget/mapset already bracket their access with). x86-64:
+note MFENCE (0F AE F0), the fence the x86 mapget/mapset use. Every earlier load and store completes before
+note any later one, so a GPU or another CPU that observes a later store also observes the earlier ones.
+note Inline here, not a function: om4 builds omc and holds at most 512 functions, all in use.
+if eq c 199
+eol
+if ne get xtarget 0 0
+xb 15 174 240
+else
+emit 3573759903
+end
+ret 0
+end
+note cpurelax (keyword 200, a statement without operands): spin-wait hint, no ordering. AArch64: YIELD
+note (d503203f). x86-64: PAUSE (F3 90). Use it in a bounded poll loop; pair it with cpufence for order.
+if eq c 200
+eol
+if ne get xtarget 0 0
+emitb 243
+emitb 144
+else
+emit 3573751871
+end
 ret 0
 end
 if eq c 97
@@ -11677,13 +12045,29 @@ global ir_fnn ulong 8
 note ir_bbig: tbig of the bare number in ir_bare, for the range check once its type is known (error 8).
 global ir_bbig ulong 1
 
+note ir_lead: 1 when the first line is "ir" (after blanks). Both scans run as nested 999999-pass loops,
+note so more than 1000000 leading blanks or first-line bytes are read, not trapped 4 (#671).
 fn ir_lead to ulong
 p = ulong 0
-while and lt p get inlen 0 le get inp p 32
-if eq get inp p 10
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p get inlen 0
+go = false
+else
+c = get inp p
+if gt c 32
+go = false
+else
+if eq c 10
 ret 0
 end
 p = add p 1
+end
+end
+m = add m 1
+end
 end
 if ge add p 3 get inlen 0
 ret 0
@@ -11698,8 +12082,21 @@ if gt get inp add p 2 32
 ret 0
 end
 q = add p 2
-while and lt q get inlen 0 ne get inp q 10
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge q get inlen 0
+go = false
+else
+if eq get inp q 10
+go = false
+else
 q = add q 1
+end
+end
+m = add m 1
+end
 end
 if lt q get inlen 0
 q = add q 1
@@ -12299,16 +12696,33 @@ lty = get ir_vt 0
 ir_bin_r left lty c dst
 end
 
+note ir_cast: TYPE v. The operand keeps its own type (as native rdval reads it, exp 0); a bare number is
+note checked against TYPE (8). bool converts to and from numbers only by comparison (9, as vt_conv).
+note Only a constant of TYPE is the value itself; any other same-type value is a mov, as the C oracle.
 fn ir_cast c ulong dst ulong to void
-ir_val 65534 c
+ir_val 65534 0
 if ne get ir_isb 0 0
+range get ir_bare 0 c get ir_bbig 0
 r = ir_lit get ir_bare 0 c
 ir_set dst r c
 ret
 end
 src = get ir_rr 0
 sty = get ir_vt 0
+if xor eq sty 1 eq c 1
+fail 9
+end
+k = ulong 0
 if and eq sty c eq dst 65534
+i = ulong 0
+while lt i get ir_nc 0
+if eq ulong get ir_cr i src
+k = ulong 1
+end
+i = add i 1
+end
+end
+if ne k 0
 put ir_rr 0 src
 put ir_vt 0 c
 put ir_isb 0 0
@@ -12822,6 +13236,20 @@ fail 9
 end
 fail 16
 end
+note a contract clause (requires, ensures, invariant not followed by =) is not an IR v1 statement: refuse it, never
+note read it as a local (#791). `ensures = v` assigns a local of that name, as the C oracle and native mode accept.
+if ne cp_kind 0
+p = get ts 0
+l = get line 0
+tok
+eqs = and eq get tk 0 1 eq ir_kwt 73
+put cur 0 p
+put line 0 l
+tok
+if not eqs
+fail 30
+end
+end
 ir_assign get tw 0
 ret 0
 end
@@ -12987,7 +13415,7 @@ ret 0
 end
 
 fn cp_kind to ulong
-if eq get om2 0 0
+if and eq get om2 0 0 eq get irmode 0 0
 ret 0
 end
 if ne get tk 0 1
@@ -14194,10 +14622,19 @@ xtrap 1 3
 ximm 0 0
 xmem 137 0 12 0
 if eq c 124
+note As on AArch64: close_range(3, ~0U, CLOSE_RANGE_UNSHARE) first; a nonzero result skips execve
+note and returns that kernel error. RDI/RSI/RDX are reloaded after the call; R12 holds the argv end.
+ximm 7 3
+ximm 6 4294967295
+ximm 2 2
+xhcall 436
+xrr 133 0 0
+p = xbranch 1
 xmem 139 7 4 4096
 xmem 141 6 4 4096
 xrr 137 2 12
 xhcall 59
+xpatch p get oc 0
 else
 xmem 139 6 4 4096
 xmem 139 10 4 4104
@@ -14684,6 +15121,10 @@ fail 25
 end
 if eq get progmode 0 0
 fail 9
+end
+note execpure (198) has no x86 strict-profile lowering; refuse it rather than run an unconfined exec.
+if eq c 198
+fail 25
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0

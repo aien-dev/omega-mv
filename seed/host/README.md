@@ -27,11 +27,15 @@ On a machine without the Spark build coordinator, run the script directly.
 The script rebuilds the seed chain, proves compiler self-reproduction, runs
 native Omega fixtures, rejects malformed inputs, and compares the original
 fixture corpus against the original native parent. It does not run the older
-C-reference gate scripts.
+C-reference gate scripts. The fixture gate itself is `seed/host/gate.om`,
+compiled by `seed/out/omc`; the remaining shell step only builds and launches
+it.
 
 Verified on the Spark on 2026-10-23:
 
 - Native file create/read/write/seek/sync/chmod/close/unlink and errno checks.
+- Current-directory change, file creation below it and unlink through the
+  native `chdir` word.
 - Monotonic nanoseconds, realtime nanoseconds and a measured native sleep.
 - Argument copying, including empty arguments, spaces, UTF-8 bytes, and refusal
   of short output buffers without modifying them.
@@ -54,6 +58,30 @@ network test connects only to its own local server. Process tests reap their
 children. No service is installed or changed. `timeout` only bounds test
 processes; timed operations inside the tests use the emitted native code.
 
+### Packed-list hostile ingress (#671)
+
+`seed/qualification/security673/` feeds runtime packets, not compile-time
+constants, to `execprog`. `packet-corpus.om` writes one packet per mode byte;
+`pkt-consumer.om` reads stdin and passes the bytes, or only the first K bytes
+when given one decimal argument, to `execprog` unchanged. `check.sh` runs
+`packets.cases` through the OM-2 conductor: 16 rows prove each committed fixture
+in `packets/` equals the generator output, 16 rows run the modes (4 valid
+packets, including the 64-record and the exact 4096-byte limits, and 12
+malformed ones: count 0, 65 and 65535, truncated, over-declared and 65535-byte
+records, a trailing byte, an empty first record, zero bytes inside and after the
+path, and a 4097-byte packet), and 28 rows truncate the 27-byte echo packet at
+every length. Expected exits come from the format rules in OMEGESE section 10;
+every malformed packet must trap 3 (exit 103) before any exec.
+
+`packets-mutant.cases` builds three compilers, each without one length check of
+the decoder (`hpack` in `seed/omc/omc.om`): the 4096-byte packet bound, the
+64-record bound, and exact consumption. Each mutant executes the one packet that
+only its check refuses, so `check.sh` requires three exact `FAIL run exit=0
+expected=103` verdicts. Removing the record-length-versus-remaining check is
+not detected by exit status: the zero-byte and exact-consumption checks still
+trap every over-declared record, so that check only bounds how far the decoder
+reads. The x86 decoder (`xhpack`) is not exercised here.
+
 ### Bounded networking additions (#788)
 
 The source adds `peercred` (keyword 220), `pollfds` (221), and `sendmsg` (222).
@@ -75,7 +103,7 @@ negative error. The lowering and positive-PID assertion are corrected here.
 Run the candidate host gate without replacing the committed compiler:
 
 ```sh
-OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/gate.sh
+nice -n 19 ionice -c3 sh -c 'seed/out/omc < seed/host/gate.om > build/seed/host/gate && chmod +x build/seed/host/gate && build/seed/host/gate /absolute/path/to/candidate-omc'
 OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/negative.sh
 nice -n 19 ionice -c3 python3 seed/host/net-mutant.py
 nice -n 19 ionice -c3 sh seed/omc/gate18.sh
@@ -87,9 +115,9 @@ or hardware qualification. Compiler integration owns the batch reseed.
 wrong-word source through the committed seed (or `OMC` override), then requires
 the real fixture to pass the original and exit 1 for the mutant. Its controls
 restore the wrong `getppid` syscall and turn an option refusal into success.
-The host gate's `OMC` selector applies to every compilation, including nested
-device/mapping refusal programs and generated identity fixtures; early
-candidate-only logs from before that correction contain mixed-compiler evidence.
+The host gate's compiler argument (`gate.om` argv[1]) applies to every compilation,
+including nested device/mapping refusal programs and generated identity fixtures;
+early candidate-only logs from before that correction contain mixed-compiler evidence.
 The Linux interface authorities are `asm-generic/unistd.h` (`ppoll` 73,
 `getsockopt` 209, `sendmsg` 211), `asm-generic/socket.h`, and `linux/tcp.h`.
 Instruction emission uses the existing Arm ARM forms; `STR` unsigned-offset

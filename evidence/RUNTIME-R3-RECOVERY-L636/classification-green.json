@@ -1,0 +1,50 @@
+[
+  {
+    "file": "src/omega_gpu_matmul_api.h",
+    "source_anchor": "OMEGA_GPU_MATMUL_TILE_M 16",
+    "expected_class": "CHIP_SPECIFIC",
+    "actual_class": "CHIP_SPECIFIC",
+    "reason_anchor": "tile",
+    "pass_check": true
+  },
+  {
+    "file": "src/omega_gpu_moe_api.h",
+    "source_anchor": "col0 % 8 == 0",
+    "expected_class": "CHIP_SPECIFIC",
+    "actual_class": "CHIP_SPECIFIC",
+    "reason_anchor": "packing",
+    "pass_check": true
+  },
+  {
+    "file": "src/omega_gpu_platform.h",
+    "source_anchor": "one GPFIFO entry",
+    "expected_class": "CHIP_SPECIFIC",
+    "actual_class": "CHIP_SPECIFIC",
+    "reason_anchor": "GPFIFO",
+    "pass_check": true
+  },
+  {
+    "file": "src/omega_gpu_session.h",
+    "source_anchor": "QMD default (1024)",
+    "expected_class": "CHIP_SPECIFIC",
+    "actual_class": "CHIP_SPECIFIC",
+    "reason_anchor": "QMD",
+    "pass_check": true
+  },
+  {
+    "file": "src/omega_gpu_serving.h",
+    "source_anchor": "GB10 serving buffers",
+    "expected_class": "CHIP_SPECIFIC",
+    "actual_class": "CHIP_SPECIFIC",
+    "reason_anchor": "GB10",
+    "pass_check": true
+  },
+  {
+    "file": "src/omega_gpu_serving.c",
+    "source_anchor": "omega_gpu_matmul_reserve",
+    "expected_class": "CHIP_SPECIFIC",
+    "actual_class": "CHIP_SPECIFIC",
+    "reason_anchor": "omega_gpu_matmul_reserve",
+    "pass_check": true
+  }
+]

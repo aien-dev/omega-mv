@@ -149,4 +149,5 @@ check "no receipts is a usage error" '"$COMBINE" > /dev/null 2>&1; [ $? = 2 ]'
 check "short expected candidate is a usage error" '"$COMBINE" --omega-candidate 62f5ba5 "$M" > /dev/null 2>&1; [ $? = 2 ]'
 
 echo "Gate 14 combiner tests: $passes passed, $fails failed"
+printf 'TOTAL GATES: %d | PASSED: %d | FAILED: %d\n' "$((passes + fails))" "$passes" "$fails"
 [ "$fails" -eq 0 ]

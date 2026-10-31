@@ -1,5 +1,7 @@
 note Consume independently decoded GNU objdump output, not machine words from the compiler.
-note Exit61 target mismatch;62 invalid input. Only the first b.ne and unique mov marker are selected.
+note Exit61 target mismatch;62 invalid input;90 usage. Only the first branch mnemonic and unique mov marker
+note are selected: with no argument the first b.ne and mov x1, 12345 (forward corpus modes 0..3); with
+note argument 1 the first b.al and mov x4, 12345 (mode4, the backward continue to the loop head).
 global linebuf uchar 512
 global chunk uchar 4096
 global cursor ulong 1
@@ -7,8 +9,15 @@ global branch ulong 1
 global marker ulong 1
 global bcount ulong 1
 global mcount ulong 1
-text mn "b.ne"
-text label "mov\tx1, #0x3039"
+global form uchar 8
+global mn uchar 8
+global mnl ulong 1
+global label uchar 32
+global labl ulong 1
+text mnf "b.ne"
+text labf "mov\tx1, #0x3039"
+text mnb "b.al"
+text labb "mov\tx4, #0x3039"
 fn hexval b uchar to ulong
 if and ge b 48 le b 57
 ret sub ulong b 48
@@ -43,34 +52,34 @@ put cursor 0 p
 ret value
 end
 fn hasmn i ulong n ulong to bool
-if or eq i 0 ge add i len mn n
+if or eq i 0 ge add i get mnl 0 n
 ret false
 end
 if and ne get linebuf sub i 1 9 ne get linebuf sub i 1 32
 ret false
 end
-for j ulong len mn
+for j ulong get mnl 0
 if ne get linebuf add i j get mn j
 ret false
 end
 end
-v = get linebuf add i len mn
+v = get linebuf add i get mnl 0
 ret or eq v 9 eq v 32
 end
 fn hasmark i ulong n ulong to bool
-if or eq i 0 gt add i len label n
+if or eq i 0 gt add i get labl 0 n
 ret false
 end
 if and ne get linebuf sub i 1 9 ne get linebuf sub i 1 32
 ret false
 end
-for j ulong len label
+for j ulong get labl 0
 if ne get linebuf add i j get label j
 ret false
 end
 end
-if lt add i len label n
-v = get linebuf add i len label
+if lt add i get labl 0 n
+v = get linebuf add i get labl 0
 if and ne v 32 ne v 9
 ret false
 end
@@ -78,7 +87,7 @@ end
 ret true
 end
 fn target i ulong n ulong to ulong
-p = add i len mn
+p = add i get mnl 0
 while lt p n
 v = get linebuf p
 if and ne v 32 ne v 9
@@ -135,6 +144,37 @@ p = add p 1
 end
 end
 fn main to int
+back = false
+if eq argcnt 2
+r = argread 1 form 0 len form
+if or ne r 1 ne get form 0 49
+ret 90
+end
+back = true
+else
+if ne argcnt 1
+ret 90
+end
+end
+if back
+put mnl 0 len mnb
+for j ulong len mnb
+put mn j get mnb j
+end
+put labl 0 len labb
+for j ulong len labb
+put label j get labb j
+end
+else
+put mnl 0 len mnf
+for j ulong len mnf
+put mn j get mnf j
+end
+put labl 0 len labf
+for j ulong len labf
+put label j get labf j
+end
+end
 n = ulong 0
 go = true
 while go

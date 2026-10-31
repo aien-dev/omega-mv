@@ -1,0 +1,68 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note SEM-1 research smoke only. 256-bit root from codebook-v0.txt, untrusted caller.
+note This source does not validate the canonical program IDs, signatures, or capabilities.
+note A 16-bit return is 0x00vv for a successful u8 result, or 0xffNN for refusal.
+note First-party executable syntax is seeded Omega .om, not legacy .osc.
+
+struct Root a ulong b ulong c ulong d ulong end
+
+fn dispatch root view Root code uchar epoch uchar x uchar p uchar to ushort
+if ne get root a 6739245970865574820
+ret 65283
+end
+if ne get root b 9146405468906863133
+ret 65283
+end
+if ne get root c 2389306260950466872
+ret 65283
+end
+if ne get root d 17559557173790906796
+ret 65283
+end
+if ne epoch 9
+ret 65281
+end
+if gt code 2
+ret 65282
+end
+if eq code 0
+ret ushort add x 1
+end
+if eq code 1
+ret ushort mul x 2
+end
+ret ushort add mul x 2 p
+end
+
+fn main to int
+root = new Root 6739245970865574820 9146405468906863133 2389306260950466872 17559557173790906796
+if ne dispatch root 0 9 41 0 42
+ret 1
+end
+if ne dispatch root 1 9 21 0 42
+ret 2
+end
+if ne dispatch root 2 9 20 2 42
+ret 3
+end
+if ne dispatch root 0 9 255 0 0
+ret 4
+end
+if ne dispatch root 1 9 128 0 0
+ret 5
+end
+if ne dispatch root 2 9 127 2 0
+ret 6
+end
+if ne dispatch root 0 8 41 0 65281
+ret 7
+end
+if ne dispatch root 3 9 41 0 65282
+ret 8
+end
+bad = new Root 6739245970865574820 9146405468906863133 2389306260950466872 17559557173790906797
+if ne dispatch bad 0 9 41 0 65283
+ret 9
+end
+ret 0
+end

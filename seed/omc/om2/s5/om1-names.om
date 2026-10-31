@@ -1,0 +1,6 @@
+note S5: in an OM-1 unit dit and scrub stay ordinary names; exit 0.
+fn main to int
+dit = int 3
+scrub = int 4
+ret sub add dit scrub 7
+end

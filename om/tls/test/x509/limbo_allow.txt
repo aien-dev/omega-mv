@@ -1,0 +1,61 @@
+# x509-limbo (C2SP/x509-limbo 1080e565) cases where om/tls/x509.om disagrees with the expected result,
+# each with the reason. Format: accept|reject ID-GLOB CODE|* reason. limbo.py fails on any disagreement
+# not listed here and on any line here that matches nothing.
+#
+# --- accepted although limbo expects FAILURE ---------------------------------------------------------
+# No revocation checking (stated limit, om/tls/THREAT_MODEL.md): every CRL case that needs a CRL to refuse.
+accept crl::* X509_OK no revocation (CRL/OCSP) checking; stated limit
+# Chain depth is fixed (X5MAXD 8 non-anchor certificates); there is no per-call max-depth parameter.
+accept pathlen::max-chain-depth-*-exhausted X509_OK fixed depth limit 8, no caller-set depth
+# Certificate policies are not processed (WebPKI clients: Chrome, rustls-webpki ignore policy trees).
+accept rfc5280::pc::ica-noncritical-pc X509_OK policy constraints not processed
+# Trust anchors are a name + key + validity + cA TRUE (chain_aok). Other anchor fields are not policed:
+# the Debian bundle carries a root without SKI and one with a non-critical basicConstraints.
+accept rfc5280::ski::root-missing-ski X509_OK anchor extensions beyond BC/validity not policed (a real root lacks SKI)
+accept rfc5280::root-non-critical-basic-constraints X509_OK a real root (Chunghwa ePKI) has non-critical BC
+accept webpki::aki::root-with-aki-* X509_OK anchor AKI not policed
+accept webpki::eku::root-has-eku X509_OK anchor EKU not policed
+accept webpki::forbidden-rsa-not-divisible-by-8-in-root X509_OK anchor key policy is >= 2048 bits only
+# Subject CN is never used for name matching (RFC 9525 6.3); CN/SAN consistency is a CA/B issuance rule.
+accept webpki::cn::* X509_OK CN ignored (RFC 9525); CABF issuance rule
+# CA/Browser Forum issuance rules that relying parties (Chrome, OpenSSL) do not enforce.
+accept webpki::eku::ee-anyeku X509_OK leaf has serverAuth; anyEKU alongside is a CABF issuance rule
+accept webpki::eku::ee-critical-eku X509_OK EKU criticality is a CABF issuance rule
+accept webpki::eku::ee-without-eku X509_OK absent EKU = unrestricted (RFC 5280 4.2.1.12); CABF issuance rule
+accept webpki::san::san-critical-with-nonempty-subject X509_OK RFC 5280 4.2.1.6 SHOULD, not MUST
+# No public suffix list: a wildcard over a public suffix (*.co.uk) matches.
+accept webpki::san::public-suffix-*-wildcard-san X509_OK no public suffix list; residual risk
+# The AIA extension is not used (no AIA chasing), so its content is not parsed.
+accept webpki::malformed-aia X509_OK AIA unused, content not parsed
+#
+# --- refused although limbo expects SUCCESS (fail closed by design) ---------------------------------
+# IP-address hosts are refused (X5EIP): the client connects by DNS name only.
+reject * X509_ERR_IP_HOST IP-address hosts unsupported by design
+# Any nameConstraints extension is refused (X5ENC): constraint processing is not implemented, fail closed.
+reject bettertls::nameconstraints::* X509_ERR_NAME_CONSTRAINTS nameConstraints refused by design
+reject rfc5280::nc::* X509_ERR_NAME_CONSTRAINTS nameConstraints refused by design
+reject webpki::nc::* X509_ERR_NAME_CONSTRAINTS nameConstraints refused by design
+reject bettertls::pathbuilding::* X509_ERR_NAME_CONSTRAINTS nameConstraints refused by design
+# The only name-matching issuer carries nameConstraints and is refused, so no issuer is left.
+reject rfc5280::nc::* X509_ERR_UNKNOWN_ISSUER the only issuer has nameConstraints (refused)
+reject webpki::nc::* X509_ERR_UNKNOWN_ISSUER the only issuer has nameConstraints (refused)
+# At most X5MAXC (16) entries in a certificate_list (denial-of-service bound); tc61-68 present 36.
+reject bettertls::pathbuilding::tc6[1-8] X509_ERR_MALFORMED more than 16 presented certificates
+# Path building is greedy (first issuer that verifies, no backtracking): valid alternate paths behind a
+# dead-end issuer are refused. Availability gap, never an acceptance; residual risk in the report.
+reject bettertls::pathbuilding::* X509_ERR_UNKNOWN_ISSUER greedy path building, no backtracking
+reject bettertls::pathbuilding::* X509_ERR_EKU greedy path building, no backtracking
+reject bettertls::pathbuilding::* X509_ERR_NOT_CA greedy path building, no backtracking
+reject bettertls::pathbuilding::* X509_ERR_UNSUPPORTED_ALG greedy path building, no backtracking
+reject cve::cve-2024-0567 X509_ERR_UNKNOWN_ISSUER greedy path building, no backtracking
+# A store entry that is not self-issued is not an anchor (no partial chains, like OpenSSL's default).
+reject rfc5280::root-and-intermediate-swapped X509_ERR_UNKNOWN_ISSUER intermediate in the store is not an anchor
+# A leaf with basicConstraints cA TRUE is refused (CA/B BR 7.1.2.7.8; OpenSSL -x509_strict agrees).
+reject rfc5280::ca-as-leaf X509_ERR_LEAF_IS_CA leaf with cA TRUE refused
+reject pathlen::validation-ignores-pathlen-in-leaf X509_ERR_LEAF_IS_CA leaf with cA TRUE refused
+# Self-issued intermediates count toward pathLenConstraint (stricter than RFC 5280 6.1.4 l).
+reject pathlen::self-issued-certs-pathlen X509_ERR_PATH_LENGTH self-issued certificates counted
+# notAfter itself counts as expired (OpenSSL behaviour; RFC 5280 4.1.2.5 includes it): 1 second stricter.
+reject rfc5280::validity::notafter-* X509_ERR_EXPIRED notAfter exclusive, like OpenSSL
+# ML-DSA certificate signatures (RFC 9881) are not supported.
+reject rfc9881::ml-dsa-* X509_ERR_UNSUPPORTED_ALG ML-DSA signatures not supported

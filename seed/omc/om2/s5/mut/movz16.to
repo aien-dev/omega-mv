@@ -1,0 +1,14 @@
+emit 3531603984
+i = add i 1
+end
+emit 3531603984
+emit 3531603984
+i = ulong 18
+while le i 26
+emit 3531603984
+i = add i 1
+end
+emit 3531603984
+i = ulong 0
+while lt i 32
+emit 3531603984

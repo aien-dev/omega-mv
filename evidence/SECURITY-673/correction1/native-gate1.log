@@ -1,0 +1,40 @@
+seed/rung4/om4.bin < seed/omc/omc.om > build/security673-native/1001 2> build/security673-native/501001
+exit=0 expected=0
+build/security673-native/1001 < seed/omc/omc.om > build/security673-native/1002 2> build/security673-native/501002
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/branch-corpus.om > build/security673-native/1003 2> build/security673-native/501003
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/branch-mutate.om > build/security673-native/1004 2> build/security673-native/501004
+exit=0 expected=0
+build/security673-native/1002 < seed/qualification/security673/branch-check.om > build/security673-native/1005 2> build/security673-native/501005
+exit=0 expected=0
+build/security673-native/1004 0 < seed/omc/omc.om > build/security673-native/1006 2> build/security673-native/501006
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1006 > build/security673-native/1007 2> build/security673-native/501007
+exit=0 expected=0
+build/security673-native/1007 < build/security673-native/1008 > build/security673-native/1009 2> build/security673-native/501009
+exit=0 expected=0
+build/security673-native/1007 < build/security673-native/1010 > build/security673-native/1011 2> build/security673-native/501011
+exit=0 expected=0
+build/security673-native/1007 < build/security673-native/1012 > build/security673-native/1013 2> build/security673-native/501013
+exit=0 expected=0
+build/security673-native/1007 < build/security673-native/1014 > build/security673-native/1015 2> build/security673-native/501015
+exit=0 expected=0
+build/security673-native/1007 < build/security673-native/1016 > build/security673-native/1017 2> build/security673-native/501017
+exit=24 expected=24
+build/security673-native/1007 < build/security673-native/1018 > build/security673-native/1019 2> build/security673-native/501019
+exit=24 expected=24
+build/security673-native/1007 < build/security673-native/1020 > build/security673-native/1021 2> build/security673-native/501021
+exit=24 expected=24
+build/security673-native/1007 < build/security673-native/1022 > build/security673-native/1023 2> build/security673-native/501023
+exit=24 expected=24
+build/security673-native/1003 < build/security673-native/1024 > build/security673-native/1025 2> build/security673-native/501025
+exit=0 expected=0
+build/security673-native/1002 < build/security673-native/1025 > build/security673-native/1026 2> build/security673-native/501026
+exit=0 expected=0
+/usr/bin/objdump -D -b binary -m aarch64 build/security673-native/1026 < /dev/null > build/security673-native/1027 2> build/security673-native/501027
+exit=0 expected=0
+build/security673-native/1005 < build/security673-native/1027 > build/security673-native/1028 2> build/security673-native/501028
+exit=0 expected=0
+build/security673-native/1026 < /dev/null > build/security673-native/1029 2> build/security673-native/501029
+exit=0 expected=0
