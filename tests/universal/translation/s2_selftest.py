@@ -5,7 +5,9 @@ Three directions, each exercised through its public command and checked against 
   c-import   tools/adapters/c-i64-import; every unit is evaluated by this file's bigint reference and
              compared with the C source compiled by gcc -O0 -fsanitize=signed-integer-overflow
              -fno-sanitize-recover=all (one fork per vector; a sanitizer exit is the error outcome)
-  rust       tools/adapters/rust-i64-export; rustc debug build (overflow-checks on), panic = error
+  rust       tools/adapters/rust-i64-export; rustc build-setting matrix (section 6): D debug (overflow-checks
+             on, panic = error), R release (opt-level 3, overflow-checks off: attribute 6 overflow wraps, a
+             REFINEMENT of the C error), RC release with overflow-checks on (panic = error)
   native     tools/adapters/lower-s2 -> pinned omc 734f0a39 (function mode) -> pinned omega-bridge generator
              -> C caller (ABI v1: an i64 travels as its uint64_t two's-complement bits); status 1 = error
 plus the v3 codec (v1/v2 decode byte-identical with the v2 codec build/L832/sa over a mutated corpus, v3
@@ -32,6 +34,15 @@ GCC_ORACLE = ['-std=c17', '-O0', '-fsanitize=signed-integer-overflow', '-fno-san
               '-Wall', '-Wextra', '-Werror', '-Wno-unused-parameter']
 RUSTC = ['--edition', '2021', '-C', 'opt-level=0', '-C', 'debug-assertions=on', '-C', 'overflow-checks=on',
          '-A', 'warnings']
+# Build-setting matrix (translation-s2-v1 section 6). R spells rustc's release defaults explicitly so the
+# default is never assumed.
+RUST_SETTINGS = {
+    'D': RUSTC,
+    'R': ['--edition', '2021', '-C', 'opt-level=3', '-C', 'debug-assertions=off', '-C', 'overflow-checks=off',
+          '-A', 'warnings'],
+    'RC': ['--edition', '2021', '-C', 'opt-level=3', '-C', 'overflow-checks=on', '-A', 'warnings'],
+}
+MATRIX = ('D', 'R', 'RC')
 
 
 class NotRun(Exception):
@@ -64,9 +75,10 @@ class Trap(Exception):
     pass
 
 
-def evaluate(ops, args, cov=None):
+def evaluate(ops, args, cov=None, wrap6=False):
     """Demand-driven bigint evaluation (translation-s2-v1 section 3, amendment A2): select evaluates its
-    condition and only the chosen arm; attribute 6 i64 overflow is the error outcome. -> (status, bits)."""
+    condition and only the chosen arm; attribute 6 i64 overflow is the error outcome, or with wrap6 (the
+    rustc overflow-checks=off build) the result reduced mod 2^64. -> (status, bits)."""
     memo = {}
 
     def ev(k):
@@ -88,7 +100,9 @@ def evaluate(ops, args, cov=None):
                 v = s64(e)
             else:
                 if not MIN <= e <= MAX:
-                    raise Trap()
+                    if not wrap6:
+                        raise Trap()
+                    e = s64(e)
                 v = e
         elif 10 <= op <= 15:
             a, b = ev(r['a']), ev(r['b'])
@@ -337,13 +351,13 @@ class Ctx:
         self.oracle_cache[key] = res
         return res
 
-    def rust_run(self, rs_text, types, rtype, vs):
-        d = self.tmp('rust')
+    def rust_run(self, rs_text, types, rtype, vs, setting='D'):
+        d = self.tmp('rust-' + setting)
         n = len(types)
         args = ', '.join(('v[%d] as i64' if t == 5 else 'v[%d]') % i for i, t in enumerate(types))
         bits = {1: 'x', 5: 'x as u64', 6: 'x as u64'}[rtype]
         (d / 'unit.rs').write_text(rs_text + RUST_DRIVER % {'k': n, 'args': args, 'bits': bits})
-        return self.compile_run([self.a.rustc] + RUSTC + [d / 'unit.rs', '-o', d / 'run'], d, vs, n)
+        return self.compile_run([self.a.rustc] + RUST_SETTINGS[setting] + [d / 'unit.rs', '-o', d / 'run'], d, vs, n)
 
     def native(self, om_text, n, vs, sym='omega_calc'):
         d = self.tmp('native')
@@ -566,7 +580,35 @@ def rust_call(tool, env, name=None, raw=False):
     return V.run(tool + ([name] if name is not None else []), env)
 
 
-def rust_check(ctx, tool, units, quick=False, raw=False):
+def has_attr6(ops):
+    return any(r['op'] in (2, 3, 4) and r['t'] == 5 and r['at'] == 6 for r in ops)
+
+
+def matrix_rows(R_, uid, ops, vs, got, setting, expect_r_error=False):
+    """Check one setting's rows against the reference. D/RC: attribute 6 overflow is the error. R: the
+    two's-complement wrapped value (rows where the checked reference errors are counted as REFINEMENT).
+    expect_r_error is the mutated-expectation control: it demands the error from R as well."""
+    bad = None
+    refine = 0
+    for v, g in zip(vs, got):
+        chk = evaluate(ops, v)
+        ref = evaluate(ops, v, wrap6=(setting == 'R' and not expect_r_error))
+        if not same(ref, g):
+            bad = (v, ref, g)
+            break
+        if setting == 'R' and chk[0] == 1:
+            refine += 1
+    errs = sum(g[0] for g in got)
+    R_.counts['rows:' + setting] = R_.counts.get('rows:' + setting, 0) + len(got)
+    R_.counts['error:' + setting] = R_.counts.get('error:' + setting, 0) + errs
+    if refine:
+        R_.counts['refinement:' + setting] = R_.counts.get('refinement:' + setting, 0) + refine
+    cls = '%s:%s' % (setting, 'overflow' if errs or refine else 'boundary')
+    return R_.check(cls, bad is None, '%s %s vector %s reference %s rust %s' % (
+        (setting, uid) + bad if bad else (setting, uid, 0, 0, 0)))
+
+
+def rust_check(ctx, tool, units, quick=False, raw=False, settings=('D',)):
     R_ = Run('rust')
     results = {}
     for uid, env, ops, vs in units:
@@ -578,20 +620,19 @@ def rust_check(ctx, tool, units, quick=False, raw=False):
         text = rs.decode()
         if uid in RUST_GOLDEN:
             R_.check('golden', text == RUST_GOLDEN[uid], '%s text %r' % (uid, text))
-        got, why = ctx.rust_run(text, ptypes(ops), ops[-1]['t'], vs)
-        if not R_.check('positive', got is not None, '%s rustc: %s' % (uid, why)):
-            if quick:
-                return R_, results
-            continue
-        bad = None
-        for v, g in zip(vs, got):
-            ref = evaluate(ops, v)
-            if not same(ref, g):
-                bad = (v, ref, g)
-                break
-        cls = 'overflow' if any(g[0] for g in got) else 'boundary'
-        R_.check(cls, bad is None, '%s vector %s reference %s rust %s' % ((uid,) + bad if bad else (uid, 0, 0, 0)))
-        results[uid] = got
+        per = {}
+        for s in settings:
+            got, why = ctx.rust_run(text, ptypes(ops), ops[-1]['t'], vs, s)
+            if not R_.check('positive', got is not None, '%s %s rustc: %s' % (s, uid, why)):
+                continue
+            matrix_rows(R_, uid, ops, vs, got, s)
+            per[s] = got
+        if len(settings) > 1 and not has_attr6(ops) and len(per) == len(settings):
+            # Attribute 5 (wrapping_*) and comparison-only units: the build setting must not matter.
+            R_.check('attr5-identical', all(per[s] == per[settings[0]] for s in settings),
+                     '%s differs across %s' % (uid, settings))
+        if 'D' in per:
+            results[uid] = per
         if quick and R_.fail:
             return R_, results
     for rid, env, want in export_refusals():
@@ -666,16 +707,55 @@ def lower_check(ctx, tool, units, quick=False):
     return R_
 
 
-def compose_check(ctx, cunits, rust_results):
-    """C -> c-i64-import -> rust-i64-export -> rustc equals the C oracle on every vector."""
+def compose_check(ctx, cunits, rust_results, settings=MATRIX):
+    """C -> c-i64-import -> rust-i64-export -> rustc against the C oracle, per build setting. D and RC equal
+    the oracle on every vector (UBSan error = panic). R equals it wherever C is defined; where the C oracle
+    reports signed overflow (undefined behaviour in C17) R must return exactly the wrapped reference value:
+    a REFINEMENT, counted separately, never an equality with the C error."""
     R_ = Run('compose')
     for cid, (env, ops, vs, orc, src) in cunits.items():
-        got = rust_results.get(cid)
-        if not R_.check('composition', got is not None, '%s no Rust result' % cid):
-            continue
-        bad = next(((v, o, g) for v, o, g in zip(vs, orc, got) if not same(o, g)), None)
-        R_.check('composition', bad is None, '%s vector %s C %s Rust %s' % ((cid,) + bad if bad else (cid, 0, 0, 0)))
+        per = rust_results.get(cid, {})
+        for s in settings:
+            got = per.get(s)
+            if not R_.check('%s:composition' % s, got is not None, '%s %s no Rust result' % (s, cid)):
+                continue
+            bad = None
+            for v, o, g in zip(vs, orc, got):
+                if s == 'R' and o[0] == 1:
+                    w = evaluate(ops, v, wrap6=True)
+                    if g != w:
+                        bad = (v, o, g)
+                        break
+                    R_.counts['R:refinement'] = R_.counts.get('R:refinement', 0) + 1
+                elif not same(o, g):
+                    bad = (v, o, g)
+                    break
+            R_.check('%s:composition' % s, bad is None,
+                     '%s %s vector %s C %s Rust %s' % ((s, cid) + bad if bad else (s, cid, 0, 0, 0)))
     return R_
+
+
+def control_check(ctx, tool, units):
+    """Negative controls; each must FAIL its check. (i) mutated expectation: R is required to report the
+    attribute 6 error. (ii) mutated unit: attribute 6 exported as wrapping_add, checked under D and RC."""
+    out = []
+    byid = {u[0]: u for u in units}
+    uid, env, ops, vs = byid['add']
+    rc, rs, _ = rust_call(tool, env)
+    text = rs.decode() if rc == 0 else ''
+    got, why = ctx.rust_run(text, ptypes(ops), ops[-1]['t'], vs, 'R')
+    probe = Run('control')
+    ok = got is not None and matrix_rows(probe, uid, ops, vs, got, 'R', expect_r_error=True)
+    out.append({'control': 'R-reports-error-expectation', 'observed': 'PASS' if ok else 'FAIL',
+                'by': probe.fail[:1] or [why]})
+    mut = text.replace('i0 + i1', 'i0.wrapping_add(i1)')
+    for s in ('D', 'RC'):
+        probe = Run('control')
+        got, why = ctx.rust_run(mut, ptypes(ops), ops[-1]['t'], vs, s)
+        ok = mut != text and got is not None and matrix_rows(probe, uid, ops, vs, got, s)
+        out.append({'control': 'attr6-as-wrapping_add-%s' % s, 'observed': 'PASS' if ok else 'FAIL',
+                    'by': probe.fail[:1] or [why]})
+    return out
 
 
 # ------------------------------------------------------------------ codec (v1/v2 differential, v3 rows)
@@ -914,10 +994,11 @@ def main():
     rc_run, cunits = c_import_check(ctx, tools['c-i64-import'], out=extra)
     runs.append(rc_run)
     units = all_units(ctx, cunits)
-    rr, rust_results = rust_check(ctx, tools['rust-i64-export'], units)
+    rr, rust_results = rust_check(ctx, tools['rust-i64-export'], units, settings=MATRIX)
     runs.append(rr)
     runs.append(lower_check(ctx, tools['lower-s2'], units))
     runs.append(compose_check(ctx, cunits, rust_results))
+    controls = control_check(ctx, tools['rust-i64-export'], units)
     muts = run_mutants(ctx, cunits, units)
     fails = [f for r in runs for f in r.fail]
     per = {}
@@ -928,11 +1009,21 @@ def main():
     for tool, (n, k) in per.items():
         if n < 8 or k != n:
             fails.append('mutants %s: %d/%d killed (need all, >= 8)' % (tool, k, n))
+    for c in controls:
+        if c['observed'] != 'FAIL':
+            fails.append('negative control %s passed (must fail)' % c['control'])
+    matrix = {}
+    for r in (rr, runs[-1]):
+        for k, v in r.counts.items():
+            if ':' in k:
+                s = k.split(':')[1] if k.split(':')[0] in ('rows', 'error', 'refinement') else k.split(':')[0]
+                matrix.setdefault(s, {})['%s.%s' % (r.label, k)] = v
     rep.update({
         'status': 'PASS' if not fails else 'FAIL',
         'checks': {r.label: {'ok': r.ok, 'failed': len(r.fail), 'by_class': r.counts} for r in runs},
         'c_import': extra, 'units': len(units), 'c_fixtures': len(cunits), 'hand_units': len(HAND),
         'mutants': muts, 'mutant_summary': {k: {'total': n, 'killed': kk} for k, (n, kk) in per.items()},
+        'rust_settings': {s: RUST_SETTINGS[s] for s in MATRIX}, 'rust_matrix': matrix, 'controls': controls,
         'failures': fails[:50], 'seconds': round(time.time() - t0, 1),
     })
     text = json.dumps(rep, indent=2) + '\n'
@@ -944,6 +1035,10 @@ def main():
         print('%-9s ok %5d failed %3d %s' % (r.label, r.ok, len(r.fail), json.dumps(r.counts, sort_keys=True)))
     for tool, (n, k) in sorted(per.items()):
         print('mutants %-16s %d/%d killed' % (tool, k, n))
+    for s in MATRIX:
+        print('rust-setting %-2s %s' % (s, json.dumps(matrix.get(s, {}), sort_keys=True)))
+    for c in controls:
+        print('control %-32s observed %s %s' % (c['control'], c['observed'], (c['by'] or [''])[0]))
     for f in fails[:30]:
         print('FAIL', f)
     print('TRANSLATION-S2 %s receipt %s' % (rep['status'], out / 'receipt.json'))
