@@ -17,6 +17,12 @@ run() {
         echo "VERDICT FAIL: corpus producer failed: $*" >&2
         exit "$rc"
     fi
+    # src/omega_blackwell_codegen.c omega_kernel_dump: a kernel that could not be written whole is missing from the corpus
+    if grep -q '^omega_kernel_dump: ' "$K/producer.log"; then
+        grep '^omega_kernel_dump: ' "$K/producer.log" >&2
+        echo "VERDICT FAIL: kernels not captured whole: $*" >&2
+        exit 1
+    fi
     rm -f "$K/producer.log"
 }
 for t in gpu_matmul_api_test gpu_elementwise_test gpu_reconv_test gpu_attention_test gpu_moe_window_test gpu_fp8_api_test \
@@ -33,6 +39,9 @@ for t in gpu_scan_test gpu_gemm_test gpu_streams_test; do
     run "$OUT/$t" --host-only; run "$OUT/$t" --sim
 done
 run "$OUT/gpu_isolation_test" --host-only
+# the hazard checker's sweep (every generator over its accepted shapes, patched as the launchers do): bw_hazard_test
+# --disasm reads each of these kernels through our disassembler, so each is compared with nvdisasm here
+run "$OUT/bw_hazard_test"
 mkdir -p "$K/numeric"
 run build/test_omega_divsqrt_gb10_cpu --dump "$K/numeric"
 run build/test_omega_ldst_gb10_cpu --dump "$K/numeric"
