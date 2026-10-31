@@ -1167,7 +1167,7 @@ $(RX_ROUTE_OBJ): src/runtime/rx_route.c src/runtime/rx_route.h src/runtime/rx_ge
 
 $(RX_ROUTE_TEST): $(RX_ROUTE_SRCS) $(RX_ROUTE_OBJ) tests/runtime/rx_cog_engines.h \
 	src/runtime/aienos_cap.h $(AIENOS_CAP_LIB) | $(OUT_DIR)
-	$(CC) $(CFLAGS) -Itests -o $@ $(RX_ROUTE_SRCS) $(RX_ROUTE_OBJ) $(AIENOS_CAP_LIB) -lm
+	$(CC) $(CFLAGS) -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(RX_ROUTE_SRCS) $(RX_ROUTE_OBJ) $(AIENOS_CAP_LIB) -lm
 
 test-cognitive-routing: $(RX_ROUTE_TEST)
 	./$(RX_ROUTE_TEST)
@@ -2226,7 +2226,7 @@ RESOLVE_HDRS += src/omega_genesis.h src/omega_vcstore_priv.h src/omega_program_i
 .PHONY: test-genesis
 GENESIS_DIR = $(OUT_DIR)/genesis-test
 GENESIS_STACK = src/omega_receipt.c src/omega_blake3.c src/omega_om_units.c $(RESOLVE_PROGRAM_STACK)
-GENESIS_CFLAGS = $(RESOLVE_FLAGS) -I$(GENESIS_DIR) -Itests
+GENESIS_CFLAGS = $(RESOLVE_FLAGS) -I$(GENESIS_DIR) -I$(CUDAPP_SOURCE)/tests -Itests
 test-genesis: tests/test_omega_genesis_set.c tests/genesis_variant/member.inc src/omega_vcstore.c src/omega_resolve.c src/omega_genesis.h $(RESOLVE_HDRS)
 	@set -eu; mkdir -p $(GENESIS_DIR)/genesis_variant; \
 	sed -e 's|^#define OMEGA_GENESIS_1_COUNT 0u|#define OMEGA_GENESIS_1_COUNT 1u|' -e 's|^#define OMEGA_GENESIS_SET_NAME "VC-GENESIS-1"|#define OMEGA_GENESIS_SET_NAME "VC-GENESIS-1-TEST-VARIANT"|' src/omega_genesis.h \
@@ -2432,8 +2432,8 @@ test-gpu-libm-free: $(GPU_LINK_LIBS)
 	awk '{print $$2}' $(OUT_DIR)/gpu-undefined.raw | sort -u | comm -12 - $(OUT_DIR)/libm.syms > $(OUT_DIR)/libm-refs.txt; \
 	n=$$(wc -l < $(OUT_DIR)/libm-refs.txt); echo "libm-free: $$n libm symbols referenced by the adapter plus canonical GPU archives ($$(wc -l < $(OUT_DIR)/libm.syms) libm exports checked)"; \
 	if [ "$$n" -ne 0 ]; then sed 's/^/  /' $(OUT_DIR)/libm-refs.txt; echo "FAIL: adapter plus canonical GPU archives are not libm-free"; exit 1; fi; echo "PASS: adapter plus canonical GPU archives are libm-free"
-$(GPU_API_TEST): tests/gpu_matmul_api_test.c $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_api_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_API_TEST): $(CUDAPP_SOURCE)/tests/gpu_matmul_api_test.c $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/gpu_matmul_api_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
 	./$(GPU_API_TEST) --host-only
 	./$(GPU_R4_RECEIPT) --host-only
@@ -2441,8 +2441,8 @@ test-gpu-matmul-api: $(GPU_API_TEST) $(GPU_R4_RECEIPT)
 # omega #473 R4: the sealed CTA-budget receipt (full-output comparison at the training shapes,
 # every budget, repeats, I42 stale-output check, negative controls). Host-only self-test above; the
 # chip receipt is `quietlock run -- ./build/gpu_matmul_r4_receipt --out receipt.json`.
-$(GPU_R4_RECEIPT): tests/gpu_matmul_r4_receipt.c $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/gpu_matmul_r4_receipt.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_R4_RECEIPT): $(CUDAPP_SOURCE)/tests/gpu_matmul_r4_receipt.c $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/gpu_matmul_r4_receipt.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # FB-1 cut 4: native rmsnorm / rope / swiglu (+ EX2 and shared-exchange probes).
 # test-gpu-elementwise is host-only (refusals, codegen, word fixtures, nvdisasm
@@ -2450,8 +2450,8 @@ $(GPU_R4_RECEIPT): tests/gpu_matmul_r4_receipt.c $(CUDAPP_SOURCE)/src/omega_gpu_
 # through the heavy queue. -ffp-contract=off keeps the f32 oracle free of FMA.
 .PHONY: test-gpu-elementwise
 GPU_EW_TEST = $(OUT_DIR)/gpu_elementwise_test
-$(GPU_EW_TEST): tests/gpu_elementwise_test.c $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_elementwise_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_EW_TEST): $(CUDAPP_SOURCE)/tests/gpu_elementwise_test.c $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_elementwise_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-elementwise: $(GPU_EW_TEST)
 	./$(GPU_EW_TEST) --host-only
 
@@ -2459,19 +2459,19 @@ test-gpu-elementwise: $(GPU_EW_TEST)
 # into instruction word 3. Host only; the golden-word checks compare words 0..2, so this is the check for word 3.
 .PHONY: test-bw-encode-control
 BW_ENCODE_CONTROL_TEST = $(OUT_DIR)/bw_encode_control_test
-$(BW_ENCODE_CONTROL_TEST): tests/bw_encode_control_test.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/bw_encode_control_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(BW_ENCODE_CONTROL_TEST): $(CUDAPP_SOURCE)/tests/bw_encode_control_test.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/bw_encode_control_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-bw-encode-control: $(BW_ENCODE_CONTROL_TEST)
 	./$(BW_ENCODE_CONTROL_TEST)
 
 # omega #308: structured warp reconvergence (BSSY/BSYNC regions). test-gpu-reconv is
 # host-only (encoder goldens, region bookkeeping, refusals, nvdisasm listing, every probe
-# kernel through the SIMT warp simulator tests/bw_warp_sim.h against the oracle, mutation
+# kernel through the SIMT warp simulator $(CUDAPP_SOURCE)/tests/bw_warp_sim.h against the oracle, mutation
 # controls); the chip gate is tools/run_gpu_reconv_chip.sh.
 .PHONY: test-gpu-reconv
 GPU_RECONV_TEST = $(OUT_DIR)/gpu_reconv_test
-$(GPU_RECONV_TEST): tests/gpu_reconv_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(CUDAPP_SOURCE)/src/omega_bw_reconv.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_reconv_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_RECONV_TEST): $(CUDAPP_SOURCE)/tests/gpu_reconv_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(CUDAPP_SOURCE)/src/omega_bw_reconv.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_reconv_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-reconv: $(GPU_RECONV_TEST)
 	./$(GPU_RECONV_TEST) --host-only
 
@@ -2482,8 +2482,8 @@ test-gpu-reconv: $(GPU_RECONV_TEST)
 .PHONY: test-gpu-imadhi-rc
 GPU_IMADHI_SIMS = bw_warp_sim bw_warp_sim_tc bw_warp_sim_k bw_warp_sim_pa
 GPU_IMADHI_TESTS = $(GPU_IMADHI_SIMS:%=$(OUT_DIR)/gpu_imadhi_rc_test_%)
-$(OUT_DIR)/gpu_imadhi_rc_test_%: tests/gpu_imadhi_rc_test.c tests/%.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -Itests -DSIM_HEADER='"$*.h"' -o $@ tests/gpu_imadhi_rc_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(OUT_DIR)/gpu_imadhi_rc_test_%: $(CUDAPP_SOURCE)/tests/gpu_imadhi_rc_test.c tests/%.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -I$(CUDAPP_SOURCE)/tests -Itests -DSIM_HEADER='"$*.h"' -o $@ $(CUDAPP_SOURCE)/tests/gpu_imadhi_rc_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-imadhi-rc: $(GPU_IMADHI_TESTS)
 	@for t in $(GPU_IMADHI_TESTS); do ./$$t || exit 1; done
 
@@ -2496,8 +2496,8 @@ test-gpu-imadhi-rc: $(GPU_IMADHI_TESTS)
 # (tools/run_gpu_attention_chip.sh). -ffp-contract=off keeps the oracle free of FMA.
 .PHONY: test-gpu-attention
 GPU_ATTN_TEST = $(OUT_DIR)/gpu_attention_test
-$(GPU_ATTN_TEST): tests/gpu_attention_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_attention_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_attention_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_ATTN_TEST): $(CUDAPP_SOURCE)/tests/gpu_attention_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_attention_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_attention_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-attention: $(GPU_ATTN_TEST)
 	./$(GPU_ATTN_TEST) --host-only
 	./$(GPU_ATTN_TEST) --sim
@@ -2507,15 +2507,15 @@ test-gpu-attention: $(GPU_ATTN_TEST)
 	./$(GPU_ATTN_TEST) --hd 128 --divergent --sim
 
 # FB-1 cut 4b: fresh-process device-open probe (flake investigation, tools/probe_gpu_open.sh)
-$(OUT_DIR)/gpu_session_probe: tests/gpu_session_probe.c $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/gpu_session_probe.c $(GPU_LINK_LIBS) -lpthread -lm
+$(OUT_DIR)/gpu_session_probe: $(CUDAPP_SOURCE)/tests/gpu_session_probe.c $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/gpu_session_probe.c $(GPU_LINK_LIBS) -lpthread -lm
 
-# OWN-30B cut 2: window matmul gate (tests/gpu_moe_window_test.c). test-gpu-moe-window runs the host-only
+# OWN-30B cut 2: window matmul gate ($(CUDAPP_SOURCE)/tests/gpu_moe_window_test.c). test-gpu-moe-window runs the host-only
 # refusals and the packed-window byte rule; the chip gate is `./build/gpu_moe_window_test --out r.json`
 # under /tmp/aien-gb10.lock (equivalence to the whole-tensor columns, mutants, window timing).
 GPU_MOE_TEST = $(OUT_DIR)/gpu_moe_window_test
-$(GPU_MOE_TEST): tests/gpu_moe_window_test.c $(CUDAPP_SOURCE)/src/omega_gpu_moe_api.h $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/gpu_moe_window_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_MOE_TEST): $(CUDAPP_SOURCE)/tests/gpu_moe_window_test.c $(CUDAPP_SOURCE)/src/omega_gpu_moe_api.h $(CUDAPP_SOURCE)/src/omega_gpu_matmul_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/gpu_moe_window_test.c $(GPU_LINK_LIBS) -lpthread -lm
 .PHONY: test-gpu-moe-window
 test-gpu-moe-window: $(GPU_MOE_TEST)
 	./$(GPU_MOE_TEST) --host-only
@@ -2526,8 +2526,8 @@ test-gpu-moe-window: $(GPU_MOE_TEST)
 # -ffp-contract=off keeps the double oracle free of FMA.
 .PHONY: test-gpu-fp8
 GPU_FP8_TEST = $(OUT_DIR)/gpu_fp8_api_test
-$(GPU_FP8_TEST): tests/gpu_fp8_api_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_moe.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_fp8_api_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_FP8_TEST): $(CUDAPP_SOURCE)/tests/gpu_fp8_api_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_moe.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_fp8_api_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-fp8: $(GPU_FP8_TEST)
 	./$(GPU_FP8_TEST) --host-only
 	AIEN_OMEGA_FP8_COAL=0 ./$(GPU_FP8_TEST) --coal-default
@@ -2537,15 +2537,15 @@ test-gpu-fp8: $(GPU_FP8_TEST)
 # omega #457 (2026-10-15): host rewrite of a GPU-cached buffer must be visible to the next launch. Chip only; the gate
 # is tools/run_gpu_l2_stale_chip.sh.
 GPU_L2_STALE_TEST = $(OUT_DIR)/gpu_l2_stale_test
-$(GPU_L2_STALE_TEST): tests/gpu_l2_stale_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_stale_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_L2_STALE_TEST): $(CUDAPP_SOURCE)/tests/gpu_l2_stale_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_l2_stale_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B cut 8 (2026-10-13): one-launch decode attention (omega_gpu_decode_attn_api.h). test-gpu-decode-attn is
 # host-only + simulator; the chip gate is tools/run_gpu_decode_attn_chip.sh.
 .PHONY: test-gpu-decode-attn
 GPU_DATTN_TEST = $(OUT_DIR)/gpu_decode_attn_test
-$(GPU_DATTN_TEST): tests/gpu_decode_attn_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_DATTN_TEST): $(CUDAPP_SOURCE)/tests/gpu_decode_attn_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_decode_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-attn: $(GPU_DATTN_TEST) test-gpu-decode-attn-maxpos
 	$(GPU_DATTN_TEST) --host-only
 	$(GPU_DATTN_TEST) --sim
@@ -2558,8 +2558,8 @@ test-gpu-decode-attn: $(GPU_DATTN_TEST) test-gpu-decode-attn-maxpos
 GPU_DATTN_MAXPOS_TEST = $(OUT_DIR)/test_omega_gpu_decode_attn_maxpos
 GPU_DATTN_MAXPOS_MUT = $(OUT_DIR)/dattn_maxpos_mut
 GPU_DATTN_MAXPOS_SAN = -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
-$(GPU_DATTN_MAXPOS_TEST): tests/test_omega_gpu_decode_attn_maxpos.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
-	$(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $@ tests/test_omega_gpu_decode_attn_maxpos.c \
+$(GPU_DATTN_MAXPOS_TEST): $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_attn_maxpos.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn.h $(GPU_LINK_LIBS)
+	$(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $@ $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_attn_maxpos.c \
 	  $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-attn-maxpos: $(GPU_DATTN_MAXPOS_TEST)
 	$(GPU_DATTN_MAXPOS_TEST)
@@ -2569,7 +2569,7 @@ test-gpu-decode-attn-maxpos: $(GPU_DATTN_MAXPOS_TEST)
 	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c > $(GPU_DATTN_MAXPOS_MUT)/$$name.c; \
 	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn_api.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
 	  $(CC) $(filter-out -MMD -MP -O2,$(CFLAGS)) $(GPU_DATTN_MAXPOS_SAN) -o $(GPU_DATTN_MAXPOS_MUT)/$$name \
-	    tests/test_omega_gpu_decode_attn_maxpos.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c $(GPU_LINK_LIBS) -lpthread -lm; \
+	    $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_attn_maxpos.c $(GPU_DATTN_MAXPOS_MUT)/$$name.c $(GPU_LINK_LIBS) -lpthread -lm; \
 	  if $(GPU_DATTN_MAXPOS_MUT)/$$name > $(GPU_DATTN_MAXPOS_MUT)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
 	  if ! grep -q '^FAIL ' $(GPU_DATTN_MAXPOS_MUT)/$$name.log; then \
 	    echo "mutant $$name: no FAIL case (did not run?)"; cat $(GPU_DATTN_MAXPOS_MUT)/$$name.log; exit 1; fi; \
@@ -2588,8 +2588,8 @@ test-gpu-decode-attn-maxpos: $(GPU_DATTN_MAXPOS_TEST)
 # tools/run_gpu_decode_attn256_chip.sh.
 .PHONY: test-gpu-decode-attn256
 GPU_DATTN256_TEST = $(OUT_DIR)/gpu_decode_attn256_test
-$(GPU_DATTN256_TEST): tests/gpu_decode_attn256_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_decode_attn256_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_DATTN256_TEST): $(CUDAPP_SOURCE)/tests/gpu_decode_attn256_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_decode_attn256_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 	$(GPU_DATTN256_TEST) --host-only
 	$(GPU_DATTN256_TEST) --sim
@@ -2598,8 +2598,8 @@ test-gpu-decode-attn256: $(GPU_DATTN256_TEST)
 # (oracle, budgets) plus the warp simulator; the chip gate is tools/run_gpu_router_chip.sh under the GB10 lock.
 .PHONY: test-gpu-router
 GPU_ROUTER_TEST = $(OUT_DIR)/gpu_router_test
-$(GPU_ROUTER_TEST): tests/gpu_router_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_router_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_router.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_router_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_ROUTER_TEST): $(CUDAPP_SOURCE)/tests/gpu_router_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_router_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_router.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_router_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-router: $(GPU_ROUTER_TEST)
 	./$(GPU_ROUTER_TEST) --host-only
 	./$(GPU_ROUTER_TEST) --sim
@@ -2608,15 +2608,15 @@ test-gpu-router: $(GPU_ROUTER_TEST)
 # test-gpu-gdn is host-only plus the warp simulator over the whole grid; the chip run is ./build/gpu_gdn_test under the GB10 lock.
 .PHONY: test-gpu-gdn
 GPU_GDN_TEST = $(OUT_DIR)/gpu_gdn_test
-$(GPU_GDN_TEST): tests/gpu_gdn_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_gdn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gdn.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_GDN_TEST): $(CUDAPP_SOURCE)/tests/gpu_gdn_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_gdn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gdn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_gdn_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # L369: the multi-token GDN decode == T decode steps bit for bit (--sim: simulator; default: the chip, under the GB10 lock)
 GPU_GDN_MULTI_TEST = $(OUT_DIR)/gpu_gdn_multi_test
-$(GPU_GDN_MULTI_TEST): tests/gpu_gdn_multi_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_gdn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gdn.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gdn_multi_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_GDN_MULTI_TEST): $(CUDAPP_SOURCE)/tests/gpu_gdn_multi_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_gdn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gdn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_gdn_multi_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_DATTN256_MULTI_TEST = $(OUT_DIR)/gpu_dattn256_multi_test
-$(GPU_DATTN256_MULTI_TEST): tests/gpu_dattn256_multi_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -Itests -o $@ tests/gpu_dattn256_multi_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_DATTN256_MULTI_TEST): $(CUDAPP_SOURCE)/tests/gpu_dattn256_multi_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_dattn256_multi_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-gdn: $(GPU_GDN_TEST)
 	./$(GPU_GDN_TEST) --host-only
 	./$(GPU_GDN_TEST) --sim
@@ -2626,8 +2626,8 @@ test-gpu-gdn: $(GPU_GDN_TEST)
 # gate is tools/run_gpu_bf16_gemv_chip.sh under the GB10 lock.
 .PHONY: test-gpu-bf16-gemv
 GPU_BF16_TEST = $(OUT_DIR)/gpu_bf16_gemv_test
-$(GPU_BF16_TEST): tests/gpu_bf16_gemv_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_bf16.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_bf16_gemv_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_BF16_TEST): $(CUDAPP_SOURCE)/tests/gpu_bf16_gemv_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_bf16.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_bf16_gemv_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 	$(GPU_BF16_TEST) --host-only
 	$(GPU_BF16_TEST) --sim
@@ -2637,30 +2637,30 @@ test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 # epilogue, mutants 1-3 caught); the chip gate is tools/run_gpu_tern_chip.sh with the quiet flag held.
 .PHONY: test-gpu-tern
 GPU_TERN_TEST = $(OUT_DIR)/gpu_tern_test
-$(GPU_TERN_TEST): tests/gpu_tern_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_tern_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off $(OMA_RZ_ARCH) -Itests -o $@ tests/gpu_tern_test.c $(OMA_RZ_SRCS) $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_TERN_TEST): tests/gpu_tern_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_tern_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off $(OMA_RZ_ARCH) -I$(CUDAPP_SOURCE)/tests -Itests -o $@ tests/gpu_tern_test.c $(OMA_RZ_SRCS) $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-tern: $(GPU_TERN_TEST)
 	$(GPU_TERN_TEST) --host-only
 	$(GPU_TERN_TEST) --sim
 
 # OWN-30B (2026-10-13): report-only lm_head study, fp8 vs bf16 argmax agreement on the real checkpoint (chip, GB10 lock).
-$(OUT_DIR)/gpu_lmhead_fp8_study: tests/gpu_lmhead_fp8_study.c $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -O2 -o $@ tests/gpu_lmhead_fp8_study.c $(GPU_LINK_LIBS) -lpthread -lm
+$(OUT_DIR)/gpu_lmhead_fp8_study: $(CUDAPP_SOURCE)/tests/gpu_lmhead_fp8_study.c $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -O2 -o $@ $(CUDAPP_SOURCE)/tests/gpu_lmhead_fp8_study.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B prefill (2026-10-13): FP8 grouped GEMM (omega_gpu_fp8gemm_api.h). test-gpu-fp8gemm is host-only (emulation,
 # permutation, budgets) plus the warp simulator (512 threads); the chip gate is tools/run_gpu_fp8gemm_chip.sh under the GB10 lock.
 .PHONY: test-gpu-fp8gemm
 GPU_FP8GEMM_TEST = $(OUT_DIR)/gpu_fp8gemm_test
-$(GPU_FP8GEMM_TEST): tests/gpu_fp8gemm_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8gemm_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gemm.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_fp8gemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_FP8GEMM_TEST): $(CUDAPP_SOURCE)/tests/gpu_fp8gemm_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8gemm_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_gemm.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_fp8gemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # Qwen3.6-35B (sc L306 / L312) host-only simulator checks of the decode glue kernels, and the codegen hash pin
 Q36_DEC_SIM_TEST = $(OUT_DIR)/q36_dec_sim_test
-$(Q36_DEC_SIM_TEST): tests/q36_dec_sim_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/q36_dec_sim_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(Q36_DEC_SIM_TEST): tests/q36_dec_sim_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ tests/q36_dec_sim_test.c $(GPU_LINK_LIBS) -lpthread -lm
 Q36_CODEGEN_HASH = $(OUT_DIR)/q36_codegen_hash
 $(Q36_CODEGEN_HASH): tests/q36_codegen_hash.c $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -Itests -o $@ tests/q36_codegen_hash.c $(GPU_LINK_LIBS) -lpthread -lm
+	$(CC) $(CFLAGS) -I$(CUDAPP_SOURCE)/tests -Itests -o $@ tests/q36_codegen_hash.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-fp8gemm: $(GPU_FP8GEMM_TEST)
 	$(GPU_FP8GEMM_TEST) --host-only
 	$(GPU_FP8GEMM_TEST) --sim
@@ -2668,8 +2668,8 @@ test-gpu-fp8gemm: $(GPU_FP8GEMM_TEST)
 # OWN-30B (2026-10-13): host-only audit that every launcher declares peak + 2 registers (the chip hung at peak + 1).
 .PHONY: test-gpu-gpr-boundary
 GPU_GPR_BOUNDARY_TEST = $(OUT_DIR)/gpu_gpr_boundary_test
-$(GPU_GPR_BOUNDARY_TEST): tests/gpu_gpr_boundary_test.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/gpu_gpr_boundary_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_GPR_BOUNDARY_TEST): $(CUDAPP_SOURCE)/tests/gpu_gpr_boundary_test.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/gpu_gpr_boundary_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-gpr-boundary: $(GPU_GPR_BOUNDARY_TEST)
 	$(GPU_GPR_BOUNDARY_TEST)
 
@@ -2680,8 +2680,8 @@ test-gpu-gpr-boundary: $(GPU_GPR_BOUNDARY_TEST)
 # kernel (bar C6: every check that called nvdisasm calls ours; test-sm121dis checks that disassembler against the oracle).
 .PHONY: test-bw-hazard test-bw-hazard-nvdisasm
 BW_HAZARD_TEST = $(OUT_DIR)/bw_hazard_test
-$(BW_HAZARD_TEST): tests/bw_hazard_test.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.h $(CUDAPP_SOURCE)/src/omega_sm121_disasm.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/bw_hazard_test.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.c $(GPU_LINK_LIBS) -lpthread -lm
+$(BW_HAZARD_TEST): $(CUDAPP_SOURCE)/tests/bw_hazard_test.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.h $(CUDAPP_SOURCE)/src/omega_sm121_disasm.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/bw_hazard_test.c $(CUDAPP_SOURCE)/src/omega_bw_hazard.c $(GPU_LINK_LIBS) -lpthread -lm
 test-bw-hazard: $(BW_HAZARD_TEST)
 	$(BW_HAZARD_TEST)
 test-bw-hazard-nvdisasm: $(BW_HAZARD_TEST)
@@ -2689,43 +2689,43 @@ test-bw-hazard-nvdisasm: $(BW_HAZARD_TEST)
 
 # OWN-30B T3 (2026-10-13): HMMA arithmetic probe (host model self-checks; chip run under the GB10 lock).
 GPU_TC_PROBE_TEST = $(OUT_DIR)/gpu_tc_probe_test
-$(GPU_TC_PROBE_TEST): tests/gpu_tc_probe_test.c tests/bw_hmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_tc_probe_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_TC_PROBE_TEST): $(CUDAPP_SOURCE)/tests/gpu_tc_probe_test.c $(CUDAPP_SOURCE)/tests/bw_hmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_tc_probe_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 GPU_TCGEMM_TEST = $(OUT_DIR)/gpu_tcgemm_test
-$(GPU_TCGEMM_TEST): tests/gpu_tcgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tcgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_TCGEMM_TEST): $(CUDAPP_SOURCE)/tests/gpu_tcgemm_test.c $(CUDAPP_SOURCE)/tests/bw_hmma_model.h $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_tcgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 GPU_TC_PEAK_TEST = $(OUT_DIR)/gpu_tc_peak_test
-$(GPU_TC_PEAK_TEST): tests/gpu_tc_peak_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_tc_peak_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_TC_PEAK_TEST): $(CUDAPP_SOURCE)/tests/gpu_tc_peak_test.c $(CUDAPP_SOURCE)/tests/bw_hmma_model.h $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_tc_peak_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # OWN-30B L1 attention (2026-10-13): tensor-core causal prefill attention. --host-only and --sim are host proofs;
 # the chip gate is tools/run_gpu_prefill_attn_chip.sh.
 GPU_PATTN_TEST = $(OUT_DIR)/gpu_prefill_attn_test
-$(GPU_PATTN_TEST): tests/gpu_prefill_attn_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pattn.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_PATTN_TEST): $(CUDAPP_SOURCE)/tests/gpu_prefill_attn_test.c $(CUDAPP_SOURCE)/tests/bw_hmma_model.h $(CUDAPP_SOURCE)/tests/bw_warp_sim_pa.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill_attn_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pattn.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_prefill_attn_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # Qwen3.8-27B (omega-mv#545, 2026-10-18): head_dim 256 prefill attention on the decode cache. --host-only and --sim
 # are host proofs; the chip run is the default mode (under the GB10 lock).
 GPU_PATTN256_TEST = $(OUT_DIR)/gpu_prefill_attn256_test
-$(GPU_PATTN256_TEST): tests/gpu_prefill_attn256_test.c tests/bw_hmma_model.h tests/bw_warp_sim_pa.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pattn256.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -Itests -o $@ tests/gpu_prefill_attn256_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_PATTN256_TEST): $(CUDAPP_SOURCE)/tests/gpu_prefill_attn256_test.c $(CUDAPP_SOURCE)/tests/bw_hmma_model.h $(CUDAPP_SOURCE)/tests/bw_warp_sim_pa.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill_attn256_api.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pattn256.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_attn256.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=256 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_prefill_attn256_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # OWN-30B T3b (2026-10-13): device-resident prefill module tests (host sim first; chip parts under the GB10 lock)
 GPU_PF_MEM_TEST = $(OUT_DIR)/gpu_pf_mem_test
-$(GPU_PF_MEM_TEST): tests/gpu_pf_mem_test.c tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pf.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pf_mem_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_PF_MEM_TEST): $(CUDAPP_SOURCE)/tests/gpu_pf_mem_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pf.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_pf_mem_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_PFGEMM_TEST = $(OUT_DIR)/gpu_pfgemm_test
-$(GPU_PFGEMM_TEST): tests/gpu_pfgemm_test.c tests/bw_hmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc2.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -Itests -o $@ tests/gpu_pfgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_PFGEMM_TEST): $(CUDAPP_SOURCE)/tests/gpu_pfgemm_test.c $(CUDAPP_SOURCE)/tests/bw_hmma_model.h $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_tc2.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=512 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_pfgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_QMMA_PROBE_TEST = $(OUT_DIR)/gpu_qmma_probe_test
-$(GPU_QMMA_PROBE_TEST): tests/gpu_qmma_probe_test.c tests/bw_qmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_qmma.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_qmma_probe_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_QMMA_PROBE_TEST): $(CUDAPP_SOURCE)/tests/gpu_qmma_probe_test.c $(CUDAPP_SOURCE)/tests/bw_qmma_model.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_qmma.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_qmma_probe_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_QGEMM_TEST = $(OUT_DIR)/gpu_qgemm_test
-$(GPU_QGEMM_TEST): tests/gpu_qgemm_test.c tests/bw_qmma_model.h tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_qg.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_qgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_QGEMM_TEST): $(CUDAPP_SOURCE)/tests/gpu_qgemm_test.c $(CUDAPP_SOURCE)/tests/bw_qmma_model.h $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_prefill.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_qg.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_qgemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 GPU_PFHOST_TEST = $(OUT_DIR)/gpu_pfhost_test
-$(GPU_PFHOST_TEST): tests/gpu_pfhost_test.c tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_pfhost.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pfhost.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -Itests -o $@ tests/gpu_pfhost_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_PFHOST_TEST): $(CUDAPP_SOURCE)/tests/gpu_pfhost_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/src/omega_gpu_pfhost.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_pfhost.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -DWS_MAX_THREADS=1024 -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_pfhost_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # omega#456: the prefill tests above, host model and warp simulator only. Every run names --host-only or --sim, the two
 # modes that never open the device (each test's main returns before its chip part); chip runs stay under the GB10 lock.
 .PHONY: test-gpu-prefill-host
@@ -2756,8 +2756,8 @@ check-own30b-decode-profile: tools/own30b_decode_profile.c | check-cudapp
 # host-only + warp simulator; the chip gate is tools/run_gpu_cmdlist_chip.sh under the GB10 lock.
 .PHONY: test-gpu-cmdlist
 GPU_CMDLIST_TEST = $(OUT_DIR)/gpu_cmdlist_test
-$(GPU_CMDLIST_TEST): tests/gpu_cmdlist_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_cmdlist_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_CMDLIST_TEST): $(CUDAPP_SOURCE)/tests/gpu_cmdlist_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_cmdlist_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 	./$(GPU_CMDLIST_TEST) --host-only
 	./$(GPU_CMDLIST_TEST) --sim
@@ -2767,8 +2767,8 @@ test-gpu-cmdlist: $(GPU_CMDLIST_TEST)
 # with no flag, under the GB10 lock (timings need an exclusive window).
 .PHONY: test-gpu-streams
 GPU_STREAMS_TEST = $(OUT_DIR)/gpu_streams_test
-$(GPU_STREAMS_TEST): tests/gpu_streams_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(CUDAPP_SOURCE)/src/omega_bw_em.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_streams_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_STREAMS_TEST): $(CUDAPP_SOURCE)/tests/gpu_streams_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(CUDAPP_SOURCE)/src/omega_bw_em.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_streams_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-streams: $(GPU_STREAMS_TEST)
 	./$(GPU_STREAMS_TEST) --sim
 
@@ -2777,8 +2777,8 @@ test-gpu-streams: $(GPU_STREAMS_TEST)
 # the chip tier is "$(GPU_ISOLATION_TEST)" with no flag, under the GB10 lock.
 .PHONY: test-gpu-isolation
 GPU_ISOLATION_TEST = $(OUT_DIR)/gpu_isolation_test
-$(GPU_ISOLATION_TEST): tests/gpu_isolation_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(CUDAPP_SOURCE)/src/omega_bw_em.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_isolation_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_ISOLATION_TEST): $(CUDAPP_SOURCE)/tests/gpu_isolation_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(CUDAPP_SOURCE)/src/omega_bw_em.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_isolation_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-isolation: $(GPU_ISOLATION_TEST)
 	./$(GPU_ISOLATION_TEST) --host-only
 
@@ -2787,8 +2787,8 @@ test-gpu-isolation: $(GPU_ISOLATION_TEST)
 .PHONY: test-gpu-decode-graph
 GPU_DECODE_GRAPH_TEST = $(OUT_DIR)/gpu_decode_graph_test
 GPU_DGRAPH_ABORT_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_abort
-$(GPU_DECODE_GRAPH_TEST): tests/gpu_decode_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_decode_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_DECODE_GRAPH_TEST): $(CUDAPP_SOURCE)/tests/gpu_decode_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_decode_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST) $(GPU_DGRAPH_ABORT_TEST) test-gpu-decode-graph-abort-mutants test-gpu-decode-graph-timeline
 	./$(GPU_DECODE_GRAPH_TEST) --host-only
 	./$(GPU_DGRAPH_ABORT_TEST)
@@ -2798,8 +2798,8 @@ test-gpu-decode-graph: $(GPU_DECODE_GRAPH_TEST) $(GPU_DGRAPH_ABORT_TEST) test-gp
 # Each mutant breaks one rule in a copy of omega_gpu_decode_graph.c linked ahead of the library; the test must FAIL on it.
 .PHONY: test-gpu-decode-graph-abort-mutants
 GPU_DGRAPH_MUT_DIR = $(OUT_DIR)/dgraph_mut
-$(GPU_DGRAPH_ABORT_TEST): tests/test_omega_gpu_decode_graph_abort.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_platform.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_abort.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_DGRAPH_ABORT_TEST): $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_graph_abort.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_platform.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_graph_abort.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-graph-abort-mutants: $(GPU_LINK_LIBS)
 	@mkdir -p $(GPU_DGRAPH_MUT_DIR)
 	@set -e; killed=0; \
@@ -2807,7 +2807,7 @@ test-gpu-decode-graph-abort-mutants: $(GPU_LINK_LIBS)
 	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
 	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c $(GPU_DGRAPH_MUT_DIR)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
 	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -c -o $(GPU_DGRAPH_MUT_DIR)/$$name.o $(GPU_DGRAPH_MUT_DIR)/$$name.c; \
-	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_MUT_DIR)/$$name tests/test_omega_gpu_decode_graph_abort.c \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_MUT_DIR)/$$name $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_graph_abort.c \
 	    $(GPU_DGRAPH_MUT_DIR)/$$name.o $(GPU_LINK_LIBS) -lpthread -lm; \
 	  if ./$(GPU_DGRAPH_MUT_DIR)/$$name > $(GPU_DGRAPH_MUT_DIR)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
 	  nfail=$$(grep -c '^FAIL' $(GPU_DGRAPH_MUT_DIR)/$$name.log || true); \
@@ -2827,8 +2827,8 @@ test-gpu-decode-graph-abort-mutants: $(GPU_LINK_LIBS)
 .PHONY: test-gpu-decode-graph-timeline
 GPU_DGRAPH_TL_TEST = $(OUT_DIR)/test_omega_gpu_decode_graph_timeline
 GPU_DGRAPH_TL_MUT = $(OUT_DIR)/dgraph_tl_mut
-$(GPU_DGRAPH_TL_TEST): tests/test_omega_gpu_decode_graph_timeline.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_platform.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -o $@ tests/test_omega_gpu_decode_graph_timeline.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_DGRAPH_TL_TEST): $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_graph_timeline.c $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.h $(CUDAPP_SOURCE)/src/omega_gpu_platform.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_graph_timeline.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-decode-graph-timeline: $(GPU_DGRAPH_TL_TEST)
 	./$(GPU_DGRAPH_TL_TEST)
 	@mkdir -p $(GPU_DGRAPH_TL_MUT)
@@ -2836,7 +2836,7 @@ test-gpu-decode-graph-timeline: $(GPU_DGRAPH_TL_TEST)
 	tmut() { name=$$1; script=$$2; \
 	  sed -e "$$script" $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c > $(GPU_DGRAPH_TL_MUT)/$$name.c; \
 	  if cmp -s $(CUDAPP_SOURCE)/src/omega_gpu_decode_graph.c $(GPU_DGRAPH_TL_MUT)/$$name.c; then echo "mutant $$name: pattern not found"; exit 1; fi; \
-	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_TL_MUT)/$$name tests/test_omega_gpu_decode_graph_timeline.c \
+	  $(CC) $(filter-out -MMD -MP,$(CFLAGS)) -o $(GPU_DGRAPH_TL_MUT)/$$name $(CUDAPP_SOURCE)/tests/test_omega_gpu_decode_graph_timeline.c \
 	    $(GPU_DGRAPH_TL_MUT)/$$name.c $(GPU_LINK_LIBS) -lpthread -lm; \
 	  if ./$(GPU_DGRAPH_TL_MUT)/$$name > $(GPU_DGRAPH_TL_MUT)/$$name.log 2>&1; then echo "mutant $$name SURVIVED"; exit 1; fi; \
 	  if ! grep -q '^FAIL one launch past the timeline' $(GPU_DGRAPH_TL_MUT)/$$name.log; then \
@@ -2846,34 +2846,34 @@ test-gpu-decode-graph-timeline: $(GPU_DGRAPH_TL_TEST)
 	tmut timeline-after-failure 's#if (!g->stamps || g->failed || #if (!g->stamps || #'; \
 	echo "test-gpu-decode-graph-timeline: 2 of 2 mutants killed"
 
-# OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list (tests/gpu_launch_cost_test.c, chip only, GB10 lock).
+# OWN-30B W-L2c (2026-10-14): per-launch fixed cost inside a command list ($(CUDAPP_SOURCE)/tests/gpu_launch_cost_test.c, chip only, GB10 lock).
 GPU_LAUNCH_COST_TEST = $(OUT_DIR)/gpu_launch_cost_test
-$(GPU_LAUNCH_COST_TEST): tests/gpu_launch_cost_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_launch_cost_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_LAUNCH_COST_TEST): $(CUDAPP_SOURCE)/tests/gpu_launch_cost_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_launch_cost_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
-# OWN-30B W-L2d (2026-10-14): L2 reuse of FP8 GEMV weights between two launches of one list (tests/gpu_l2_reuse_test.c, chip only, GB10 lock).
+# OWN-30B W-L2d (2026-10-14): L2 reuse of FP8 GEMV weights between two launches of one list ($(CUDAPP_SOURCE)/tests/gpu_l2_reuse_test.c, chip only, GB10 lock).
 GPU_L2_REUSE_TEST = $(OUT_DIR)/gpu_l2_reuse_test
-$(GPU_L2_REUSE_TEST): tests/gpu_l2_reuse_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_l2_reuse_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_L2_REUSE_TEST): $(CUDAPP_SOURCE)/tests/gpu_l2_reuse_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_l2_reuse_test.c $(GPU_LINK_LIBS) -lpthread -lm
 
 # sc #642 (2026-10-18): Qwen3.8-27B decode graph (one token = one command list), chip test vs the APIs one call at a time
 .PHONY: test-gpu-q38-graph-host
 GPU_Q38_GRAPH_TEST = $(OUT_DIR)/gpu_q38_graph_test
-$(GPU_Q38_GRAPH_TEST): tests/gpu_q38_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_q38_graph.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_q38_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_Q38_GRAPH_TEST): $(CUDAPP_SOURCE)/tests/gpu_q38_graph_test.c $(CUDAPP_SOURCE)/src/omega_gpu_q38_graph.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_q38_graph_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-q38-graph-host: $(GPU_Q38_GRAPH_TEST)
 	./$(GPU_Q38_GRAPH_TEST) --host-only
 
 # HUM L314 exact two-pass lm_head (XBOUND simulator proofs; the chip run comes with the export)
 GPU_EXACT_HEAD_TEST = $(OUT_DIR)/gpu_exact_head_test
-$(GPU_EXACT_HEAD_TEST): tests/gpu_exact_head_test.c tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_exact_head_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_EXACT_HEAD_TEST): $(CUDAPP_SOURCE)/tests/gpu_exact_head_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_k.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen_dec.h $(CUDAPP_SOURCE)/src/omega_gpu_bf16_gemv_api.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_exact_head_test.c $(GPU_LINK_LIBS) -lpthread -lm
 # C3 (docs/OMEGA.md): sum, max, min and prefix sum of any length 1..2^28, bit-exact against the frozen order.
 # test-gpu-scan: host refusals, codegen, references vs exact sums and vs the E1 reference, then the warp simulator
 # (both orders, mutants caught). The chip tier is "$(GPU_SCAN_TEST)" with no flag, under the GB10 lock.
 GPU_SCAN_TEST = $(OUT_DIR)/gpu_scan_test
-$(GPU_SCAN_TEST): tests/gpu_scan_test.c tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_scan.h src/omega_numeric_reduce.c src/omega_numeric.c $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_scan_test.c src/omega_numeric_reduce.c src/omega_numeric.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_SCAN_TEST): $(CUDAPP_SOURCE)/tests/gpu_scan_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_SOURCE)/src/omega_gpu_scan.h src/omega_numeric_reduce.c src/omega_numeric.c $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(CUDAPP_SOURCE)/tests/gpu_scan_test.c src/omega_numeric_reduce.c src/omega_numeric.c $(GPU_LINK_LIBS) -lpthread -lm
 .PHONY: test-gpu-scan
 test-gpu-scan: $(GPU_SCAN_TEST)
 	./$(GPU_SCAN_TEST) --sim
@@ -2881,9 +2881,11 @@ test-gpu-scan: $(GPU_SCAN_TEST)
 # C3 (docs/OMEGA.md): matrix multiply of any shape, BF16 and FP8 (e4m3), both layouts, on the tensor cores; bit-exact
 # against the chip-measured tensor-core model. test-gpu-gemm: host refusals and codegen, then the warp simulator.
 # The chip tier is "$(GPU_GEMM_TEST)" with no flag (>= 200 shapes up to 8192, speed vs the measured ceiling), under the GB10 lock.
+# The test and its tensor-core models are CUDApp's ($(CUDAPP_SOURCE)/tests), the owner of omega_gpu_gemm.h.
 GPU_GEMM_TEST = $(OUT_DIR)/gpu_gemm_test
-$(GPU_GEMM_TEST): tests/gpu_gemm_test.c tests/bw_warp_sim_tc.h tests/bw_hmma_model.h tests/bw_qmma_model.h $(CUDAPP_SOURCE)/src/omega_gpu_gemm.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -Itests -o $@ tests/gpu_gemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_GEMM_TEST): $(CUDAPP_SOURCE)/tests/gpu_gemm_test.c $(CUDAPP_SOURCE)/tests/bw_warp_sim_tc.h $(CUDAPP_SOURCE)/tests/bw_hmma_model.h \
+	$(CUDAPP_SOURCE)/tests/bw_qmma_model.h $(CUDAPP_SOURCE)/src/omega_gpu_gemm.h $(GPU_LINK_LIBS) | check-cudapp
+	$(CC) $(CFLAGS) -ffp-contract=off -I"$(CUDAPP_SOURCE)/tests" -o $@ $(CUDAPP_SOURCE)/tests/gpu_gemm_test.c $(GPU_LINK_LIBS) -lpthread -lm
 .PHONY: test-gpu-gemm
 test-gpu-gemm: $(GPU_GEMM_TEST)
 	./$(GPU_GEMM_TEST) --sim
@@ -2893,7 +2895,7 @@ test-gpu-gemm: $(GPU_GEMM_TEST)
 # tools/run_gpu_fp8_slots_chip.sh under the GB10 lock (parity vs resident, churn, reader fence via a command list, negative control).
 .PHONY: test-gpu-fp8-slots
 GPU_FP8_SLOTS_TEST = $(OUT_DIR)/gpu_fp8_slots_test
-$(GPU_FP8_SLOTS_TEST): tests/gpu_fp8_slots_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_slots.h $(CUDAPP_SOURCE)/src/omega_fp8_slot_table.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
-	$(CC) $(CFLAGS) -ffp-contract=off -o $@ tests/gpu_fp8_slots_test.c $(GPU_LINK_LIBS) -lpthread -lm
+$(GPU_FP8_SLOTS_TEST): $(CUDAPP_SOURCE)/tests/gpu_fp8_slots_test.c $(CUDAPP_SOURCE)/src/omega_gpu_fp8_slots.h $(CUDAPP_SOURCE)/src/omega_fp8_slot_table.h $(CUDAPP_SOURCE)/src/omega_gpu_fp8_api.h $(CUDAPP_SOURCE)/src/omega_gpu_cmdlist.h $(GPU_LINK_LIBS)
+	$(CC) $(CFLAGS) -ffp-contract=off -o $@ $(CUDAPP_SOURCE)/tests/gpu_fp8_slots_test.c $(GPU_LINK_LIBS) -lpthread -lm
 test-gpu-fp8-slots: $(GPU_FP8_SLOTS_TEST)
 	./$(GPU_FP8_SLOTS_TEST) --host-only

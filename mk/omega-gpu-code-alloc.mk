@@ -5,12 +5,12 @@
 CODE_ALLOC_SCAN_SRC = $(wildcard $(CUDAPP_SOURCE)/src/*.c src/runtime/*.c)
 CODE_ALLOC_SCAN_RE := code_size \+ 0x[fF]{3}|session_alloc\([^,]*code_size|alloc[a-z_]*\([^,]*, *(0x[0-9a-fA-F]+|OMEGA_DS_MAX_CODE_BYTES), *&[a-z_>.-]*code_mem\)
 .PHONY: test-gpu-code-alloc test-gpu-code-alloc-scan
-build/test_omega_gpu_code_alloc: tests/test_omega_gpu_code_alloc.c $(CUDAPP_SOURCE)/src/omega_gpu_code_alloc.h | check-cudapp
+build/test_omega_gpu_code_alloc: $(CUDAPP_SOURCE)/tests/test_omega_gpu_code_alloc.c $(CUDAPP_SOURCE)/src/omega_gpu_code_alloc.h | check-cudapp
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -o $@ tests/test_omega_gpu_code_alloc.c
+	gcc -std=gnu11 -O2 -Wall -Wextra -Werror $(CUDAPP_HEADER_FLAGS) -Isrc -o $@ $(CUDAPP_SOURCE)/tests/test_omega_gpu_code_alloc.c
 test-gpu-code-alloc: build/test_omega_gpu_code_alloc
 	./build/test_omega_gpu_code_alloc
-	@gcc -std=gnu11 -O2 -Wall -Wextra -Werror -DOMEGA_GPU_CODE_ALLOC_MUTANT_NO_TAIL $(CUDAPP_HEADER_FLAGS) -Isrc -o build/test_omega_gpu_code_alloc_no_tail tests/test_omega_gpu_code_alloc.c
+	@gcc -std=gnu11 -O2 -Wall -Wextra -Werror -DOMEGA_GPU_CODE_ALLOC_MUTANT_NO_TAIL $(CUDAPP_HEADER_FLAGS) -Isrc -o build/test_omega_gpu_code_alloc_no_tail $(CUDAPP_SOURCE)/tests/test_omega_gpu_code_alloc.c
 	@if ./build/test_omega_gpu_code_alloc_no_tail >build/test_omega_gpu_code_alloc_no_tail.log 2>&1; then echo "MUTANT SURVIVED: NO_TAIL"; exit 1; fi
 	@echo "NO_TAIL mutant: killed ($$(grep -c '^FAIL:' build/test_omega_gpu_code_alloc_no_tail.log) failing checks)"
 	@$(MAKE) --no-print-directory test-gpu-code-alloc-scan

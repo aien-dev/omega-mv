@@ -39,9 +39,9 @@ $(GB_LABEL_STAMP): PRIME_RACE_FORCE
 	@mkdir -p $(GB_BUILD)
 	@echo '$(GB_SRC_COMMIT)' > $@.tmp; cmp -s $@.tmp $@ && rm $@.tmp || mv $@.tmp $@
 
-$(GB_BUILD)/gb10_sieve_host_test: $(GB_DIR)/tests/gb10_sieve_host_test.c $(GB_DIR)/prime_race_impl.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h tests/bw_warp_sim.h $(CUDAPP_LIB) | check-cudapp
+$(GB_BUILD)/gb10_sieve_host_test: $(GB_DIR)/tests/gb10_sieve_host_test.c $(GB_DIR)/prime_race_impl.h $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(CUDAPP_SOURCE)/tests/bw_warp_sim.h $(CUDAPP_LIB) | check-cudapp
 	@mkdir -p $(GB_BUILD)
-	$(CC) $(CFLAGS) -I$(GB_DIR) -Itests -o $@ $(GB_DIR)/tests/gb10_sieve_host_test.c -lpthread -lm $(CUDAPP_LIB)
+	$(CC) $(CFLAGS) -I$(GB_DIR) -I$(CUDAPP_SOURCE)/tests -Itests -o $@ $(GB_DIR)/tests/gb10_sieve_host_test.c -lpthread -lm $(CUDAPP_LIB)
 prime-race-gb10-host-test: $(GB_BUILD)/gb10_sieve_host_test
 	./$(GB_BUILD)/gb10_sieve_host_test
 $(GB_BUILD)/gb10_launch_cost: $(GB_DIR)/tests/gb10_launch_cost.c $(CUDAPP_SOURCE)/src/omega_blackwell_codegen.h $(CUDAPP_SOURCE)/src/omega_gpu_elementwise_api.h $(CUDAPP_SOURCE)/src/omega_gpu_session.h $(CUDAPP_LIB) | check-cudapp

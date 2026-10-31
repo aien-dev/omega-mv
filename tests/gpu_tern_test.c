@@ -110,10 +110,11 @@ static uint32_t rand_word(uint32_t *st, int mode) {
 }
 /* Independent stall checker (a different walk from the generator's pass): for every fixed-latency write, scan forward
  * summing stalls; any instruction that touches one of its registers, any control instruction and any branch target
- * reached before OMEGA_TERN_FIXED_LAT cycles is a violation. */
+ * reached before OMEGA_TERN_FIXED_LAT cycles is a violation. I2FP is not fixed latency on consumer Blackwell (CUDApp
+ * bc16eab, Sass#4: it writes scoreboard 0 and its readers wait); its readers are judged by omega_tern_i2fp_violations. */
 static int chk_fixed(BlackwellIROpcode op) {
     return op == BW_IR_IMAD || op == BW_IR_IMAD_WIDE || op == BW_IR_SHF_R || op == BW_IR_LOP3_AND || op == BW_IR_MOV_IMM ||
-           op == BW_IR_MOV_RZ || op == BW_IR_FMUL || op == BW_IR_I2FP;
+           op == BW_IR_MOV_RZ || op == BW_IR_FMUL;
 }
 static int chk_overlap(const BlackwellIRProgram *p, int a, int b) {
     if (a < 0 || b < 0) return 0;
@@ -215,6 +216,7 @@ static void host_battery(void) {
             const int ok = rc == 0 && omega_blackwell_codegen_tern_gemv_prog(&sp, &cp) == 0;
             const long v = ok ? stall_violations(&cp, &cyc) : -1;
             CHECK(v == 0, "stall distances k %u layout %d epi %d: %ld users closer than %u cycles to a fixed-latency write", sp.k, lay, epi, v, OMEGA_TERN_FIXED_LAT);
+            CHECK(ok && omega_tern_i2fp_violations(&cp) == 0, "I2FP readers k %u layout %d epi %d wait on its scoreboard or sit >= %u cycles behind", sp.k, lay, epi, OMEGA_TERN_I2FP_LAT);
             /* negative control: a fixed-latency stall above 1 is binding by construction, so shortening it must be caught */
             size_t at = cp.count;
             for (size_t q = 0; ok && q < cp.count; q++) if (chk_fixed(cp.insns[q].op) && ((cp.insns[q].control >> 9) & 0xfu) > 1u) { at = q; break; }
@@ -248,7 +250,7 @@ static int sim_run(const OmegaTernGemvSpec *spec, uint32_t n, const int8_t *w, c
                    float a, uint32_t grid_x, int order, uint32_t *y_out, char *msg, size_t msgn) {
     static BlackwellIRProgram prog;
     if (omega_blackwell_codegen_tern_gemv_prog(spec, &prog) != 0) { snprintf(msg, msgn, "codegen refused"); return -1; }
-    if (stall_violations(&prog, NULL) != 0) { snprintf(msg, msgn, "stall distance violation"); return -1; }
+    if (stall_violations(&prog, NULL) != 0 || omega_tern_i2fp_violations(&prog) != 0) { snprintf(msg, msgn, "stall distance violation"); return -1; }
     const uint32_t k = spec->k, np = omega_gpu_tern_padded_rows(n);
     const size_t wbytes = (size_t)np * k / 4u;
     uint32_t *pk = aligned_alloc(16, wbytes);
