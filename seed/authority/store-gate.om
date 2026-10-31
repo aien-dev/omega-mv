@@ -1,15 +1,18 @@
 note SPDX-License-Identifier: AGPL-3.0-only
 note Durable 32-word authority record store. Caller supplies the record and generation.
 note Writes a temporary 256-byte file, fsyncs it, then atomically renames it into place.
-note Reads require exactly 256 bytes; a short or torn file is refused. No lock is claimed.
+note Reads require exactly 256 bytes; a short or torn file is refused. Store calls do not lock; the
+note dispatcher holds lock.om around its read-check-persist window.
 text recp "build/authority-store/rec"
 text tmpp "build/authority-store/tmp"
 text genp "build/authority-store/gen"
 global sb uchar 256
+global stail uchar 1
 global spkt uchar 256
 global sn ulong 1
 global spath uchar 128
 global splen ulong 1
+global sgerr ulong 1
 fn put16 v ulong to void
 put spkt get sn 0 uchar and v 255
 put spkt add get sn 0 1 uchar shr v 8
@@ -97,27 +100,39 @@ if lt fd 0
 ret 20
 end
 n = read int fd sb 0 256
+extra = long -1
+if eq n 256
+extra = read int fd stail 0 1
+end
 if ne fclose int fd 0
 ret 21
 end
-if ne n 256
+if or ne n 256 ne extra 0
 ret 22
 end
 dv = dec r
 ret 0
 end
 fn readgen to ulong
+put sgerr 0 0
 setgen
 fd = fopen spath 0 get splen 0 0 0
 if lt fd 0
-ret 30
+put sgerr 0 30
+ret 0
 end
 n = read int fd sb 0 8
-if ne fclose int fd 0
-ret 31
+extra = long -1
+if eq n 8
+extra = read int fd stail 0 1
 end
-if ne n 8
-ret 32
+if ne fclose int fd 0
+put sgerr 0 31
+ret 0
+end
+if or ne n 8 ne extra 0
+put sgerr 0 32
+ret 0
 end
 v = ulong 0
 for j ulong 8
