@@ -1,0 +1,308 @@
+note SC1-R pure serial transitions. No authentication, locking, persistence or allocator.
+note Fresh implementation; old AGPL action/delegate/reuse contracts read, not copied.
+note State64: B[0:8], U[8:16], slot charges[16:32], slot metadata[32:56].
+note Metadata12: id,phase,request,owner,grant,object,version,epoch, four zero words.
+note Phase0 idle,1 reserved,2 uncertain,3 committed attributable used stock.
+note Header56: next-id,spent-fuel,fuel-bound,request-highwater0/1,owner0/1,format1.
+note Token8: slot,id,request,owner,grant,object,version,epoch. IDs/requests never wrap.
+note Owners are fixed public partitions. Per-owner request sequence must strictly increase.
+note Caller validates originals and trusted identities inside existing serialized writer.
+note Zero return success; 1 invalid state/input,2 binding/replay,3 capacity,4 unknown.
+note Arrays passed to one operation must not alias. Snapshot state is authoritative, not a client copy.
+note Local subtraction guards implement SC1-Q boundary rule without struct provenance claims.
+
+fn rv_meta slot ulong to ulong
+ret add 32 mul slot 12
+end
+fn rv_charge slot ulong to ulong
+ret add 16 mul slot 8
+end
+fn rv_phase s view ulong 64 slot ulong to ulong
+ret get s add rv_meta slot 1
+end
+fn rv_valid s view ulong 64 to ulong
+if ne get s 63 1
+ret 1
+end
+if or eq get s 56 0 gt get s 57 get s 58
+ret 1
+end
+if or eq get s 61 0 or eq get s 62 0 eq get s 61 get s 62
+ret 1
+end
+for j ulong 2
+m = rv_meta j
+p = get s add m 1
+if gt p 3
+ret 1
+end
+for k ulong 4
+if ne get s add m add 8 k 0
+ret 1
+end
+end
+if ne p 0
+if or eq get s m 0 ge get s m get s 56
+ret 1
+end
+if ne get s add m 3 get s add 61 j
+ret 1
+end
+if ne get s add m 2 get s add 59 j
+ret 1
+end
+for k ulong 6
+if eq get s add m add 2 k 0
+ret 1
+end
+end
+else
+for k ulong 12
+if ne get s add m k 0
+ret 1
+end
+end
+end
+end
+if and ne rv_phase s 0 0 ne rv_phase s 1 0
+if eq get s 32 get s 44
+ret 1
+end
+end
+for d ulong 8
+left = get s d
+used = get s add 8 d
+if gt used left
+ret 1
+end
+left = sub left used
+for j ulong 2
+q = get s add rv_charge j d
+p = rv_phase s j
+if eq p 0
+if ne q 0
+ret 1
+end
+end
+if or eq p 1 eq p 2
+if gt q left
+ret 1
+end
+left = sub left q
+end
+if eq p 3
+if gt q used
+ret 1
+end
+used = sub used q
+end
+end
+end
+ret 0
+end
+fn rv_init s edit ulong 64 b view ulong 8 owners view ulong 2 fuel ulong to ulong
+for i ulong 64
+if ne get s i 0
+ret 1
+end
+end
+if eq get owners 0 0
+ret 1
+end
+if eq get owners 1 0
+ret 1
+end
+if eq get owners 0 get owners 1
+ret 1
+end
+for i ulong 8
+put s i get b i
+end
+put s 56 1
+put s 58 fuel
+put s 61 get owners 0
+put s 62 get owners 1
+put s 63 1
+ret 0
+end
+fn rv_bind s view ulong 64 t view ulong 8 to ulong
+if ne rv_valid s 0
+ret 1
+end
+if gt get t 0 1
+ret 2
+end
+m = rv_meta get t 0
+if eq get s add m 1 0
+ret 2
+end
+if ne get s m get t 1
+ret 2
+end
+for i ulong 6
+if ne get s add m add 2 i get t add 2 i
+ret 2
+end
+end
+ret 0
+end
+fn rv_room s view ulong 64 d ulong to ulong
+left = sub get s d get s add 8 d
+for j ulong 2
+p = rv_phase s j
+if or eq p 1 eq p 2
+left = sub left get s add rv_charge j d
+end
+end
+ret left
+end
+fn rv_reserve s edit ulong 64 t view ulong 8 q view ulong 8 fuel ulong to ulong
+if ne rv_valid s 0
+ret 1
+end
+if gt get t 0 1
+ret 2
+end
+j = get t 0
+if ne rv_phase s j 0
+ret 2
+end
+if or ne get t 1 get s 56 eq get s 56 18446744073709551615
+ret 2
+end
+if ne get t 3 get s add 61 j
+ret 2
+end
+if le get t 2 get s add 59 j
+ret 2
+end
+for i ulong 6
+if eq get t add i 2 0
+ret 2
+end
+end
+if gt fuel sub get s 58 get s 57
+ret 3
+end
+for d ulong 8
+if gt get q d rv_room s d
+ret 3
+end
+end
+note Mutation begins only after all eight stocks and all bindings validate.
+for d ulong 8
+put s add rv_charge j d get q d
+end
+m = rv_meta j
+put s m get t 1
+put s add m 1 1
+for i ulong 6
+put s add m add 2 i get t add 2 i
+end
+put s add 59 j get t 2
+put s 56 add get s 56 1
+put s 57 add get s 57 fuel
+ret 0
+end
+fn rv_uncertain s edit ulong 64 t view ulong 8 to ulong
+r = rv_bind s t
+if ne r 0
+ret r
+end
+if eq rv_phase s get t 0 3
+ret 4
+end
+put s add rv_meta get t 0 1 2
+ret 4
+end
+fn rv_clear s edit ulong 64 slot ulong to void
+for i ulong 8
+put s add rv_charge slot i 0
+end
+for i ulong 12
+put s add rv_meta slot i 0
+end
+end
+note quiet and public are authoritative adapter facts, never client flags.
+note No completion/cancel/error calls this until actual effects and public release permit.
+fn rv_commit s edit ulong 64 t view ulong 8 actual view ulong 8 quiet bool public bool to ulong
+r = rv_bind s t
+if ne r 0
+ret r
+end
+j = get t 0
+if eq rv_phase s j 3
+ret 2
+end
+if not and quiet public
+ret 4
+end
+for d ulong 8
+if gt get actual d get s add rv_charge j d
+ret 3
+end
+end
+for d ulong 8
+put s add 8 d add get s add 8 d get actual d
+put s add rv_charge j d get actual d
+end
+put s add rv_meta j 1 3
+ret 0
+end
+note Internal apply helper requires rv_reclaim preflight; not an admission API.
+fn rv_reclaimed s edit ulong 64 gone view ulong 8 j ulong to void
+bits = ulong 0
+for d ulong 8
+q = sub get s add rv_charge j d get gone d
+put s add rv_charge j d q
+put s add 8 d sub get s add 8 d get gone d
+bits = or bits q
+end
+if eq bits 0
+rv_clear s j
+end
+end
+note Reclaim vector denotes stock actually reclaimed with required durability.
+note Stock is attributable to this slot; cannot release somebody else's used charge.
+fn rv_reclaim s edit ulong 64 t view ulong 8 gone view ulong 8 durable bool public bool to ulong
+r = rv_bind s t
+if ne r 0
+ret r
+end
+j = get t 0
+if ne rv_phase s j 3
+ret 2
+end
+if not and durable public
+ret 4
+end
+for d ulong 8
+if gt get gone d get s add rv_charge j d
+ret 3
+end
+end
+rv_reclaimed s gone j
+ret 0
+end
+note Recovery raises used to max(ledger,observed), never discounts missing evidence.
+note Caller supplies authoritative complete retained+temporary physical stock census.
+note Reservations stay charged; inconsistent capacity leaves snapshot untouched and refuses admission.
+fn rv_recover s edit ulong 64 actual view ulong 8 to ulong
+if ne rv_valid s 0
+ret 1
+end
+for d ulong 8
+old = get s add 8 d
+if gt get actual d old
+if gt sub get actual d old rv_room s d
+ret 3
+end
+end
+end
+for d ulong 8
+if gt get actual d get s add 8 d
+put s add 8 d get actual d
+end
+end
+ret 0
+end

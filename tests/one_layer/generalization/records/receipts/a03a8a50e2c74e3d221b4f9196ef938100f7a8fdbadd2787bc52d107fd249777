@@ -1,0 +1,18 @@
+gen-receipt 1
+record abs-306dac1d01a6a4d6
+tool tools/gen/abstract/extract 356e304abd42e0ae8603252af48b76f7e42c0a70d227a1ea93bc78eea6aa91af
+tool tools/gen/abstract/verify 58f9cac29844b1fd4b9bf50ffd3360357baec5bd9e894ec969502c03ca2f74e6
+tool tools/gen/abstract/probe f4af98512c46a7a00020c79291230c0748a7dde2aadec328e8377de54741cd95
+tool tools/gen/abstract/genabs.sh 68414c1c72b273058a66b74d7801f0ea7fe290c49302aacd34f84b63bb9091d4
+tool tools/gen/abstract/gabs.c 27cc795505a054e6ae92fe14634fe900482094a72f10fde401e61e48a4d58880
+tool tools/gen/abstract/recheck.c 9d7a3c74de404170d32eacbc0ab551e3b598a086d9b300a94825e70614533e6c
+helper_ir f8cefb4fc1e7b8060d21c36f22728862788102cc70bb6f3062fddf191e39231d
+checker2 ACCEPT
+pre true
+post and and and and ge res ulong get v 0 ge res ulong get v 1 ge res ulong get v 2 ge res ulong get v 3 le res 17179869180
+example 1 2 3 4 -> 10
+property inputs=bba3d986d30f84957a89097f51c85102dbfd3e5b299bd601f9c70c34a7c16eac expected=23c04e4d3c8d5abea295504bcdab63f60f7d857852a0fe95e049676f6dfc65e4 ACCEPT n=256
+example inputs=243c6d67d2657ddfb7607f3d2e161f9aa8d7b8f58d0856c665d9883860c457f6 expected=917df3320d778ddbaa5c5c7742bc4046bf803c36ed2b050f30844ed206783469 ACCEPT n=1
+occurs sum4_avg sum4
+occurs sum4_low sum4
+occurs sum4_mod sum4

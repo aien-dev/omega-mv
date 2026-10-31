@@ -1,0 +1,8 @@
+fn dseqhash s view uchar 65536 p ulong h view uchar 32 to ulong
+for k ulong 32
+if ne get h k get s add p k
+ret 0
+end
+end
+ret 1
+end

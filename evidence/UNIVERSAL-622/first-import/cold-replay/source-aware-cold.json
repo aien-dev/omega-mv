@@ -1,0 +1,1778 @@
+{
+  "schema": "omega.source-aware.development.v1",
+  "fidelity": "DIFFERENTIAL_COMPATIBILITY",
+  "host": "HOST_NATIVE",
+  "seed": 102827380,
+  "run": "build/L574/runs/2026-10-22T23-05-17.656Z",
+  "sourceHEAD": "50f75da28845f21b118bcf8e3499b96c35ddb587",
+  "base625": "69790fb4ad1e803ca79245430745b96129d1dcf4",
+  "review": "PENDING",
+  "signed": false,
+  "notRun": [
+    "full local judge",
+    "independent API/core review",
+    "translation proof",
+    "general language adapters",
+    "GPU/hardware targets"
+  ],
+  "steps": [
+    "structural",
+    "legality/identity/edges/public/direct",
+    "mutants",
+    "lower compatibility"
+  ],
+  "toolchain": {
+    "compilerSHA256": "191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+    "compilerSourceSHA256": "8608fa11f6a2cf1c50db22d871eef16b00d5bc719bc1a222cc3e456984ac5ebf",
+    "bridgeCommit": "0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9",
+    "seedCommit": "29b12760f4c962606411d6bf25032aedef063301",
+    "imports": "a69187fd4ee9f72d0094b11ff8c00dbe73b9adb1c95e162e08ae6b6c0ce21729",
+    "nativeSourceSHA256": "ce518dd9bdd9693059757b5cfcf088e648caa7c3a03d0376dc255cdfb9fd2aeb",
+    "nativeBinarySHA256": "1a127bf032e403b103d12d3140f27e74ab490e9a8b7af46b70233c6f3aaa60ce",
+    "oracle": "Node v24.21.0 Buffer, TextDecoder and OpenSSL SHA256"
+  },
+  "batch": {
+    "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/batch",
+    "sourceSHA256": "bbd0dd6adf8395be20103af7ae9fe02fd5b20673f3f3e9ca9e86521e03739fe7",
+    "binarySHA256": "9784ff4f829aa069a936922ae12667430c6a8bceab5a130c1447eed500aa6a3e",
+    "compileStatus": 0
+  },
+  "structural": {
+    "requested": 131000,
+    "executed": 131000,
+    "executedCategories": {
+      "valid roundtrip": 10000,
+      "valid semantic identity": 10000,
+      "valid replay": 10000,
+      "valid provenance identity": 1000,
+      "envelope-magic": 2703,
+      "semantic-magic": 2703,
+      "sidecar-magic": 2703,
+      "envelope-version": 2703,
+      "semantic-version": 2703,
+      "dialect-version": 2703,
+      "op-version": 2703,
+      "sidecar-version": 2703,
+      "unknown-operation": 2703,
+      "unknown-type": 2703,
+      "profile-language": 2703,
+      "unknown-profile": 2703,
+      "runtime-profile": 2703,
+      "ABI-profile": 2703,
+      "effect-set": 2703,
+      "alias-set": 2703,
+      "obligation": 2703,
+      "forward-operand": 2703,
+      "contract-pin": 2703,
+      "semantic-association": 2703,
+      "source-association": 2703,
+      "source-span-order": 2703,
+      "source-span-bound": 2703,
+      "source-oversized": 2703,
+      "unknown-encoding": 2703,
+      "length-oversized": 2703,
+      "length-mismatch": 2702,
+      "trailing-byte": 2702,
+      "truncated-source": 2702,
+      "zero-operations": 2702,
+      "oversized-operations": 2702,
+      "malformed-UTF8": 2702,
+      "UTF8-span-boundary": 2702,
+      "UTF8-overlong": 2702,
+      "UTF8-surrogate": 2702,
+      "UTF8-too-large": 2702,
+      "rawbyte-corruption": 2702
+    },
+    "mismatches": 0,
+    "requestStreamSHA256": "b5342f4191f4ac23e0de75fca07b42e78912efbef78bc9e8217eda83962b9f8e",
+    "responseStreamSHA256": "72f348050953bc6532a8e3b99cffbeb8708806f7560bfdd0405e9c3c24979b48",
+    "status": 0,
+    "sampleFailures": [],
+    "validUnits": 10000,
+    "uniqueValid": 10000,
+    "malformedUnits": 100000,
+    "uniqueMalformed": 100000,
+    "categoryCounts": {
+      "envelope-magic": 2703,
+      "semantic-magic": 2703,
+      "sidecar-magic": 2703,
+      "envelope-version": 2703,
+      "semantic-version": 2703,
+      "dialect-version": 2703,
+      "op-version": 2703,
+      "sidecar-version": 2703,
+      "unknown-operation": 2703,
+      "unknown-type": 2703,
+      "profile-language": 2703,
+      "unknown-profile": 2703,
+      "runtime-profile": 2703,
+      "ABI-profile": 2703,
+      "effect-set": 2703,
+      "alias-set": 2703,
+      "obligation": 2703,
+      "forward-operand": 2703,
+      "contract-pin": 2703,
+      "semantic-association": 2703,
+      "source-association": 2703,
+      "source-span-order": 2703,
+      "source-span-bound": 2703,
+      "source-oversized": 2703,
+      "unknown-encoding": 2703,
+      "length-oversized": 2703,
+      "length-mismatch": 2702,
+      "trailing-byte": 2702,
+      "truncated-source": 2702,
+      "zero-operations": 2702,
+      "oversized-operations": 2702,
+      "malformed-UTF8": 2702,
+      "UTF8-span-boundary": 2702,
+      "UTF8-overlong": 2702,
+      "UTF8-surrogate": 2702,
+      "UTF8-too-large": 2702,
+      "rawbyte-corruption": 2702
+    },
+    "validCorpusSHA256": "7d19a84295a5853f1281464058b6df4a4418ba04b75c7785143ce61a98ee6153",
+    "malformedCorpusSHA256": "7e3b3e4430fbabe275960db08960a5758d7398d59b02d2592e90e501092abf8a",
+    "perRequestConsumedSHA256Checked": true,
+    "validRoundtripExecuted": 10000,
+    "semanticDigestsIndependentlyChecked": 10000,
+    "exactReplayExecuted": 10000,
+    "provenanceDigestsIndependentlyChecked": 1000
+  },
+  "legality": {
+    "requested": 2166,
+    "executed": 2166,
+    "executedCategories": {
+      "other": 2166
+    },
+    "mismatches": 0,
+    "requestStreamSHA256": "9f772b7af7f6c1f27c15677201d57afaad9c8f472b1408b05ebb8fe8c34c4b00",
+    "responseStreamSHA256": "df1520bc2bb2db9bdbab283e9053ef0f0725a07153fa2fc6ac1e9996e8329102",
+    "status": 0,
+    "sampleFailures": []
+  },
+  "edges": {
+    "requested": 2406,
+    "executed": 2406,
+    "executedCategories": {
+      "other": 2406
+    },
+    "mismatches": 0,
+    "requestStreamSHA256": "2c0bf3ced42d6b6430f794cdea59e74b06f7e26e9fe68ee385d1a0416fae7fa0",
+    "responseStreamSHA256": "7275fd118bf3888af3ae216706231eda948b232be50a74b833d584a1f3ab7d93",
+    "status": 0,
+    "sampleFailures": []
+  },
+  "directCore": {
+    "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/direct",
+    "sourceSHA256": "b14f1a6bc2e81c0473d198d5601386d2b49564c0c8d605a96f2da96993db0de0",
+    "binarySHA256": "c691c06ddc7fab3c03f0f25fa6727dfe4fa7ead9fcf3ee635e8854a5560a0cce",
+    "compileStatus": 0
+  },
+  "publicCommands": {
+    "requested": 85,
+    "executed": 85,
+    "rows": [
+      {
+        "name": "encode",
+        "status": 0,
+        "bytes": 415
+      },
+      {
+        "name": "decode",
+        "status": 0,
+        "bytes": 415
+      },
+      {
+        "name": "identity",
+        "status": 0,
+        "bytes": 32
+      },
+      {
+        "name": "provenance",
+        "status": 0,
+        "bytes": 32
+      },
+      {
+        "name": "replay",
+        "status": 0,
+        "bytes": 256
+      },
+      {
+        "name": "decode",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 66,
+        "status": 66,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 69,
+        "status": 69,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 69,
+        "status": 69,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 70,
+        "status": 70,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 70,
+        "status": 70,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 68,
+        "status": 68,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 71,
+        "status": 71,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 71,
+        "status": 71,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 71,
+        "status": 71,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 71,
+        "status": 71,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 72,
+        "status": 72,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 72,
+        "status": 72,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 70,
+        "status": 70,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 70,
+        "status": 70,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 78,
+        "status": 78,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 78,
+        "status": 78,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 74,
+        "status": 74,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 74,
+        "status": 74,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 74,
+        "status": 74,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 74,
+        "status": 74,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 75,
+        "status": 75,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 75,
+        "status": 75,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 75,
+        "status": 75,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 75,
+        "status": 75,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 65,
+        "status": 65,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 67,
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 75,
+        "status": 75,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 75,
+        "status": 75,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 76,
+        "status": 76,
+        "bytes": 0
+      },
+      {
+        "name": "decode",
+        "expectedCode": 74,
+        "status": 74,
+        "bytes": 0
+      },
+      {
+        "name": "replay",
+        "expectedCode": 74,
+        "status": 74,
+        "bytes": 0
+      },
+      {
+        "name": "PROVENANCE_MISSING",
+        "status": 73,
+        "bytes": 0
+      },
+      {
+        "name": "LIMIT",
+        "status": 67,
+        "bytes": 0
+      },
+      {
+        "name": "BAD_COMMAND",
+        "status": 64
+      },
+      {
+        "name": "BAD_COMMAND",
+        "status": 64
+      },
+      {
+        "name": "BAD_COMMAND",
+        "status": 64
+      },
+      {
+        "name": "legality",
+        "status": 0
+      }
+    ]
+  },
+  "failureLifecycle": {
+    "actualBuildFailureStatus": 13,
+    "partialExecutableAbsent": true,
+    "staleExecutableAbsent": true,
+    "stalePASSAbsent": true
+  },
+  "mutants": [
+    {
+      "name": "profile-identity",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-profile-identity",
+      "sourceSHA256": "5ce19e3000d746ccc5baec1860cd7c7263a5ba5f45e12a6284cd8593d130853b",
+      "binarySHA256": "41f48b267b29afa524523ab07df247a355e24ab4bad3228b1e42a6b3d3fcb89a",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 83,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "90b3e9a3ba4cc3d716bda65fec01c1ab264cf460a79c1b4cf3ba99402e946318",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 5,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 8,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 11,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 14,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 17,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 23,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 26,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        },
+        {
+          "i": 29,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 32
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "bigint-wrapped-legality",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-bigint-wrapped-legality",
+      "sourceSHA256": "d330d966e732609fba5b7e0d336ec2c9d78c70d94412c7372b521183007d31f4",
+      "binarySHA256": "5930de1213111b1813e5750df990d4d7fac7277161752bcd3fcbd69e3a11e1ff",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 60,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "2bcd1439148b8c84a0c1a73370952047334fd23eba6021bdee69ce213aa4471f",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 2849,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 2850,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 2851,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 2966,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 2967,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 2968,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 3065,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        },
+        {
+          "i": 3066,
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 12,
+          "bytes": 12
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "source-hash-bypass",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-source-hash-bypass",
+      "sourceSHA256": "225c955a892f2186f18d2c7446d79a85aa3caf8ac92af32f4c64c6f28125f343",
+      "binarySHA256": "9489b855539cc7a40eb4afe5647e058e139d6a34537a10ac58391e5a097202ca",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 26,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "55179a752f282df2ca698a8e99edcfbfd34c2a6410d4e61187471d71d8f7ef3f",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 919,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 29
+        },
+        {
+          "i": 1037,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 46
+        },
+        {
+          "i": 1092,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 81
+        },
+        {
+          "i": 1210,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 29
+        },
+        {
+          "i": 1238,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 54
+        },
+        {
+          "i": 1293,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 79
+        },
+        {
+          "i": 1393,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 29
+        },
+        {
+          "i": 1448,
+          "expectedCode": 74,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 98
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "span-bound-bypass",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-span-bound-bypass",
+      "sourceSHA256": "beab90f5dbc98623205bb48a687aefc35c7f2fe65cb128ff89b2301e78177290",
+      "binarySHA256": "972a7f76fb9b13515c7e52482d17804bc1579bada8e061ab6e33f598becdf3b0",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 2,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "6ca274638092251a3cf211c3297c2e899ebdad3c9e54b5a7c028616f7d3f00a5",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 2737,
+          "expectedCode": 75,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 164
+        },
+        {
+          "i": 2738,
+          "expectedCode": 75,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 164
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "constant-effects-bypass",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-constant-effects-bypass",
+      "sourceSHA256": "0abd825392bfd95cea425ca01c325c2a00e99d8fcc95c366256e4059b41af7a7",
+      "binarySHA256": "068f87f80a17dab744e9eebea8faef1bf934c5f6c1e17bee222965939ccf2b35",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 50,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "b92618d9c5f5f9f4c5fdea28460fff57de03c1c19364dd094660abf27706fcbf",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 355,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 356,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 932,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 933,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 1050,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 1051,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 1105,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        },
+        {
+          "i": 1106,
+          "expectedCode": 71,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "output-reset-missing",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-output-reset-missing",
+      "sourceSHA256": "655c4de7d4429a2bb622ed7139ce42c2c9c855229edceb6624595541530027e3",
+      "binarySHA256": "b157073c60b5f4f38d83fa3327143e506c9145dfb1b087e2119363c118801f7b",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 42,
+      "executedCategories": {
+        "valid roundtrip": 14,
+        "valid semantic identity": 13,
+        "valid replay": 13,
+        "valid provenance identity": 2
+      },
+      "mismatches": 43,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "56f9c2aa06e0257b9c23b5d7e9185873ac0566234622510d133c44a1d9c63ae5",
+      "status": 103,
+      "sampleFailures": [
+        {
+          "i": 1,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 1984
+        },
+        {
+          "i": 2,
+          "category": "valid replay",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 29,
+          "bytes": 2013
+        },
+        {
+          "i": 3,
+          "category": "valid provenance identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 2045
+        },
+        {
+          "i": 4,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 541,
+          "bytes": 2586
+        },
+        {
+          "i": 5,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 2618
+        },
+        {
+          "i": 6,
+          "category": "valid replay",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 46,
+          "bytes": 2664
+        },
+        {
+          "i": 7,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 380,
+          "bytes": 3044
+        },
+        {
+          "i": 8,
+          "category": "valid semantic identity",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 32,
+          "bytes": 3076
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "dropped-obligation-encoding",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-dropped-obligation-encoding",
+      "sourceSHA256": "b1f9e87345f63155eb7399f2953adab23946ac7ed4c1412929a2d7600c7cc9d1",
+      "binarySHA256": "ca91daefbf8de18bfc24fca2eed38625c89d505c3642a6293df407749a0c0ca7",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 100,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "31a65eddf0f72d58fa196b35fe0ee207d00c8c7e0b45231dbf372b2a22b4f1f2",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 0,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 1952,
+          "bytes": 1952
+        },
+        {
+          "i": 4,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 541,
+          "bytes": 541
+        },
+        {
+          "i": 7,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 380,
+          "bytes": 380
+        },
+        {
+          "i": 10,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 524,
+          "bytes": 524
+        },
+        {
+          "i": 13,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 269,
+          "bytes": 269
+        },
+        {
+          "i": 16,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 378,
+          "bytes": 378
+        },
+        {
+          "i": 19,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 468,
+          "bytes": 468
+        },
+        {
+          "i": 22,
+          "category": "valid roundtrip",
+          "expectedCode": 0,
+          "code": 0,
+          "expectedBytes": 397,
+          "bytes": 397
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "unknown-version-admitted",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-unknown-version-admitted",
+      "sourceSHA256": "78fbd05f0a2482c97696459387d54d00fb26cc7950e30c96f82d71c451a72f60",
+      "binarySHA256": "eb7a759c7312cc019311d3b1c657db255f899d638ac35c4c96677273c5d0120f",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 1,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "b262810e3cad2ef3e1f8114840a3c105335cd3c134e7bab01faf8bb1084b6b6b",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 2720,
+          "expectedCode": 66,
+          "code": 74,
+          "expectedBytes": 0,
+          "bytes": 0
+        }
+      ],
+      "caught": true
+    },
+    {
+      "name": "UTF8-overlong-admitted",
+      "exe": "build/L574/runs/2026-10-22T23-05-17.656Z/mutant-UTF8-overlong-admitted",
+      "sourceSHA256": "44747abbb8ca10ed503ff77e7b67837f7271e7f155d378143bc91d8476c4bfad",
+      "binarySHA256": "119f1c3bafbd8d6b9a72543fb4a89b2d73c20aec14b6202f49a44dc45a0f996d",
+      "compileStatus": 0,
+      "requested": 4919,
+      "executed": 4919,
+      "executedCategories": {
+        "valid roundtrip": 100,
+        "valid semantic identity": 100,
+        "valid replay": 100,
+        "valid provenance identity": 10,
+        "other": 4609
+      },
+      "mismatches": 1,
+      "requestStreamSHA256": "d23c23dc3fe67281514ebd1275e775c697aa9e05112811e7e74159c6b5b31d82",
+      "responseStreamSHA256": "fe5818213615ee693920e3f9a8d8c0c2e8c89c16b83de3852a84c96ce856e36e",
+      "status": 0,
+      "sampleFailures": [
+        {
+          "i": 2749,
+          "expectedCode": 76,
+          "code": 0,
+          "expectedBytes": 0,
+          "bytes": 162
+        }
+      ],
+      "caught": true
+    }
+  ],
+  "legacy": {
+    "base": "69790fb4ad1e803ca79245430745b96129d1dcf4",
+    "externalTestOnly": true,
+    "orchestration": "Node + independent host C API adapter, no production runtime",
+    "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "requested": 60,
+    "executed": 60,
+    "rows": [
+      {
+        "source": "tests/compiler/progs/arena_basic.osc",
+        "bytes": 712,
+        "irSHA256": "c1cbf604876cbc775f118dd68b867836197a9fd82ea133aacbea3672b8016f3e",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/arena_borrows.osc",
+        "bytes": 630,
+        "irSHA256": "b2b2737fd79346c4881c63053eeb7c8a493ece93c733b254986f1b88ac39c4b3",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/arena_dtor.osc",
+        "bytes": 334,
+        "irSHA256": "0853cf1d750b7aa7f89bedce30bab8abed21b7c03688b3ec1d149ed6a4ff1ecc",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/arena_full.osc",
+        "bytes": 528,
+        "irSHA256": "2095deb65522e3782d66abeb601a02fd4f16d76d05bfec32345931f970c0f3bc",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/arena_nested.osc",
+        "bytes": 449,
+        "irSHA256": "0d910fe9717796b0f1a3afe70e3ad8af94bb9d43675bbc3568635b0f175ec81d",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/arena_structs.osc",
+        "bytes": 477,
+        "irSHA256": "f9029fbc626e4a06b12f928b60ec3739c935c0d6afbafe0df9daba7580312bfc",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/arrays.osc",
+        "bytes": 810,
+        "irSHA256": "3c3b6e50085dd82cde7ec97d2feb580d38b714f8cb4f60db35b9a4f36530df0d",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/bitrev.osc",
+        "bytes": 460,
+        "irSHA256": "e3aa5e5e5c58fbc686025370e8c87eceb5c4805b2a9d21d55bfbf7bfdba6cc36",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/bounds.osc",
+        "bytes": 273,
+        "irSHA256": "7e7bb041550f9a5a4445c0e028650f6e0cf9afcea61819a95e29b92eca13d966",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/calls.osc",
+        "bytes": 609,
+        "irSHA256": "9d50bea67d3928a457201dfe35541b912b9acfbdaf97e901e7ea2e0f3185524d",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/casts.osc",
+        "bytes": 282,
+        "irSHA256": "cc35e86f43ba0ebe29ea6906c0af5e01fa30964c75b0a69b05370c4100ae80b3",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/collatz.osc",
+        "bytes": 391,
+        "irSHA256": "fdf94380724fa0994a074cbed2cf789c3ed4dfeb14450e648b9144ada4e57edd",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/contracts_basic.osc",
+        "bytes": 537,
+        "irSHA256": "94f2e0f6c9c8c15630725d5105007a7ecdb26212c898219b4d99be340d027ede",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/contracts_ensures.osc",
+        "bytes": 873,
+        "irSHA256": "c2a7c5cca6ffd933c90d89d20e0b8dcb5c56fbf831fd9b882ad729de1efefa9f",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/contracts_requires.osc",
+        "bytes": 1004,
+        "irSHA256": "16bc4b6267ee1d4a75cc60d35514baf10cc3f326b3a3e47222ca271587c9dac3",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_both.osc",
+        "bytes": 345,
+        "irSHA256": "c60595587bc1053a89710e2f1af9fe57fd16389922e32823c9832669d8496541",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_conditional_move.osc",
+        "bytes": 223,
+        "irSHA256": "dfb4897d4ad5b56655df1484747a62d7b51f63b3672584edc13010c704894ab5",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_else.osc",
+        "bytes": 330,
+        "irSHA256": "5b63373b25b61efed48a7c3bc373de7e54f1ef076f9c0a291ee927ed883c6fcf",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_nested.osc",
+        "bytes": 1062,
+        "irSHA256": "c32d1d301a84b0bbdfe340fbc02c0a4f382e08b3e6148b8fb239cd9cfdd5ca1a",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_order.osc",
+        "bytes": 749,
+        "irSHA256": "9755f0b22cc5b28c93f34b202eeab8558a3f826e60cad281c685531b9d4975c9",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_struct.osc",
+        "bytes": 1097,
+        "irSHA256": "2779ddefa16b23586844f5b5ee6de2ba556549642343277626f6324612c35b09",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/df_then.osc",
+        "bytes": 623,
+        "irSHA256": "ee98cabdbe1f26ff8987c24fcefa040913e717a1d5ea4537dc61044b54ee025a",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/factorial.osc",
+        "bytes": 511,
+        "irSHA256": "cc36ae8edf9a203d4f82bd1b351b92f2df818427d26239ae8c6542e175674700",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/fib.osc",
+        "bytes": 757,
+        "irSHA256": "bfe54f4d1502277153becb83faa0fd2975496a1875837fa8e8aa72431aa0ad00",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/gcd.osc",
+        "bytes": 656,
+        "irSHA256": "5d649066a565d7e7ab680ea6b2827306701714da7b23755836814da7cccfa328",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/handles_basic.osc",
+        "bytes": 434,
+        "irSHA256": "8e0b9bc0345de5061f67a07795953d77b1104d797f1afafde65b28173f1e7e58",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/handles_exhaust.osc",
+        "bytes": 934,
+        "irSHA256": "633d35faff6c5f6e73fbedc4633116650c197e68e0441097d83be8928f76434e",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/handles_stale.osc",
+        "bytes": 604,
+        "irSHA256": "3dd7da141b54dd7cf647eb265b89ba8532bc07259b3e2dc6e077107307c01663",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/ifchain.osc",
+        "bytes": 714,
+        "irSHA256": "2323f2753d8e2eb269d65db1b8e9a6006b0e09ed98e0f3f74268143cf870342d",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/isort.osc",
+        "bytes": 1202,
+        "irSHA256": "fe5d0090baeb54d9afd33a9745b7a60136e513aaca0c03f5275d5efab4de3091",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/loopbound.osc",
+        "bytes": 626,
+        "irSHA256": "d5994fccb2c93ba53d8e3a73222aa54f28f2159509f992167c8e77e779734db2",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/minmax.osc",
+        "bytes": 924,
+        "irSHA256": "a5ee50c4f631cfda3282c6a6a42842f20986ae4129fa4e22656ea836c8a01543",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/nested.osc",
+        "bytes": 836,
+        "irSHA256": "94e13f928a06a8d2ddff59030bb412cfcb5e4888570f9b7fc44786c135415c04",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/oom.osc",
+        "bytes": 2415,
+        "irSHA256": "6ce4fcbb5b507668183dd67678a93dad7fe11d7b3f02c2466815712fb300116c",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/ops.osc",
+        "bytes": 1355,
+        "irSHA256": "9742eb592d1cfcd72c622d2ab28fe1dd1fa921f14cd3418662f303be851e1162",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/popcount.osc",
+        "bytes": 791,
+        "irSHA256": "15aa9536feb7cbbe9cd03efcf2517321964bb479c0331f45610225c64af186ac",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/prefix.osc",
+        "bytes": 593,
+        "irSHA256": "6feaa9af48e493a02a3de461aeae3b88b1c813c9011a462537e88c661704ee63",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/reborrow.osc",
+        "bytes": 688,
+        "irSHA256": "34086f590aeaec09669b9656cfca7db57beffb67a59d7e1ba22548336de146b2",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/scopes.osc",
+        "bytes": 1018,
+        "irSHA256": "81e996a3c8c6515d57375609aba9ae7c6c5822626b1a8da9cd0943b70db4a1ed",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/shifts.osc",
+        "bytes": 349,
+        "irSHA256": "7d2e542f2241ccfacbd6a812c1671733dda94410ede4e3847b43c0955a6f69b3",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/shortcircuit.osc",
+        "bytes": 647,
+        "irSHA256": "863365c4653fb44aac42316b1cde491107ad739d58b7af5b4b55e3a2774c5d41",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/sixparams.osc",
+        "bytes": 408,
+        "irSHA256": "176dee2ab6b66ff28dc04f095964c51f59dcda5518a9696a95a9c588dd78083e",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/structs_contracts.osc",
+        "bytes": 584,
+        "irSHA256": "06b233f9e16e229fc606c8bda44b24e43473a2cd376053341e6ee644e124fe99",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/structs_dtor.osc",
+        "bytes": 382,
+        "irSHA256": "c7b4d22c623f0b1c4d004474c532ca74cbf23911cdcd299ad81843f4ef9a27df",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/structs_fields.osc",
+        "bytes": 574,
+        "irSHA256": "865a9a09510cf16363e38345c47544ac1c9b48f7eddec67729f7e1ca40d03461",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/structs_owner.osc",
+        "bytes": 908,
+        "irSHA256": "11dd47aca0387de3b7fc3f546272b165c9f2d2675626dda03a255a4dd4942807",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/progs/types.osc",
+        "bytes": 805,
+        "irSHA256": "f623556285814fbd02241fe4f24025bf93811581655beab6073e8d867b42b3a5",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/contracts.osc",
+        "bytes": 219,
+        "irSHA256": "feb597bd89bdfc238a81d0a82a7a449b244bc457b818e40f87114ade601e29cb",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/copy_cells.osc",
+        "bytes": 785,
+        "irSHA256": "85a228c0573fa9d98c600838c043c432e94819e303e7345f67339b03efc905a9",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/ensures_len.osc",
+        "bytes": 97,
+        "irSHA256": "609b21bf8121e5b5c7ac0bf92ab1ad925a18660fc03410d68c4970e0c42a1995",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/find_byte.osc",
+        "bytes": 686,
+        "irSHA256": "cc7567d006de273bdb0a8d014725d123aa27a1bb37666e7d7b2ea10787e0dda5",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/pass_down.osc",
+        "bytes": 773,
+        "irSHA256": "b4b2d3d7de5e4edec8fe0a5c602c07da06341b71a84864c6c37a7255341d307d",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/sum_bytes.osc",
+        "bytes": 492,
+        "irSHA256": "7190bcd38f7f5897980c8c323f5df0bf41b5eab868ce9d1956bf980207eba051",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/zz_misc.osc",
+        "bytes": 355,
+        "irSHA256": "3ee0193e88be4fc53c135926407a08bd9ba06b6f5edcdb53427853e75a320ac7",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/compiler/slices/zz_narrow_idx.osc",
+        "bytes": 376,
+        "irSHA256": "c337e707bec5d8f98c08dc578ecf48d09b3d682d96399e46f0cef83ea66b70df",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/physics0/osc/pd0_helpers.osc",
+        "bytes": 836,
+        "irSHA256": "d2dfb5d5ef6e94c14bb3acc0ab867ec952382881d70f2e1ab48319c05e02fbb3",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "src/osh/osh_expand.osc",
+        "bytes": 26445,
+        "irSHA256": "137da257a00dc74c4957391e7f3611c6e39d40b5f8acae391f287ce85334dbe8",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "src/osh/osh_lex.osc",
+        "bytes": 25862,
+        "irSHA256": "d3ef8c74ecb78a47f03a24ffb2fe2b03684cbc0e51a328bf1e2efb25dcff8e02",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "src/osh/osh_parse.osc",
+        "bytes": 9876,
+        "irSHA256": "1c4c29bed050fe05d63c0064ad68f5b31345d44d66baffa200cded627cff491a",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      },
+      {
+        "source": "tests/universal/arithmetic.osc",
+        "bytes": 170,
+        "irSHA256": "9a576df65190fcf7ca91a9f056eb9312f0163cd2e96c1807a5ad87c9621b9397",
+        "byteIdenticalToBase": true,
+        "strictDecodeReencode": true,
+        "checker2Accepted": true
+      }
+    ]
+  },
+  "fixtureFiles": {
+    "spec/universal/source-aware-v1.md": "e0efbc717b61976614c1a1e9eee543284bcfb5410922d23b4ad70cb6a99615ec",
+    "src/source-aware/core.om": "24c0837d05990fcb1daaafec13d2408d4359ae4fa6c9866307b73c5132c8b7eb",
+    "src/source-aware/main.om": "d6c5b7cd0fda311fd3796ca78f01a458254bbfbe8f1e570e3f16844418de16f9",
+    "tests/universal/source-aware/fixtures.mjs": "e3aae4d5ef6391674863bcf402e5f3b2bd73d371bf8c416a1bd6236c70420e3e",
+    "tests/universal/source-aware/reference.mjs": "9fb0fc35c80ae7ebece458b2401066977bbcef54de3f74e43137f68d7ab7c113",
+    "tests/universal/source-aware/corpus.mjs": "c05c3bbc22920f0d385758ebc9dcf53498e57093c13498345d3dacb9ab4b33d8",
+    "tests/universal/source-aware/batch.om": "2d5da6ddbb91eea8f7f2b427c9a0be42225c300d4b51678ccb1241344b940ce2",
+    "tests/universal/source-aware/gate.mjs": "4ba5b290f826df5affd0f07ca01083283f71b7c7983ff6fe66c48a0607417d37",
+    "tests/universal/source-aware/legacy.c": "9b5fd28247ac206672d72523d3a82d96d397330844f7194c859da1faf937bfc9",
+    "tests/universal/source-aware/legacy.mjs": "e58745b3944ad6acc36b4ff713d4a14ef28bababfab7a97e369869ec65377e40"
+  },
+  "verdict": "PASS"
+}

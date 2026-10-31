@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <unistd.h>
 
 #include "osh_layout.h"
@@ -126,8 +127,12 @@ static int append(OshShell *sh, const uint8_t *p, size_t n)
 
 /* Interactive only: ^C at the prompt abandons the line being typed (bash prints a new prompt, $? = 130); the shell
  * itself ignores ^\ ^Z and background tty signals. osh_exec installs its own handling around each pipeline and puts
- * these back afterwards. The SIGINT handler has no SA_RESTART, so the blocked read() returns EINTR. */
+ * these back afterwards. While osh reads and parses input SIGINT stays blocked and is only let in by the pselect
+ * that waits for the next byte, so a ^C that lands between two reads (while the core lexes or parses) is pending
+ * and wakes that pselect instead of being lost or noticed one line late (omega#344). It is unblocked again while a
+ * list runs. The embedder's dispositions and mask are saved on entry and restored when run_src returns. */
 static volatile sig_atomic_t g_prompt_int;
+static sigset_t g_prompt_wait; /* the mask pselect waits with: the entry mask without SIGINT */
 
 static void on_prompt_int(int sig)
 {
@@ -135,18 +140,33 @@ static void on_prompt_int(int sig)
     g_prompt_int = 1;
 }
 
-static void prompt_signals(void)
+static const int k_prompt_sigs[] = {SIGINT, SIGQUIT, SIGTSTP, SIGTTIN, SIGTTOU};
+#define NPROMPT ((int)(sizeof k_prompt_sigs / sizeof k_prompt_sigs[0]))
+
+typedef struct {
+    struct sigaction old[NPROMPT];
+    sigset_t mask, blocked; /* the entry mask; the entry mask plus SIGINT */
+} PromptSigs;
+
+static void prompt_signals(PromptSigs *ps)
 {
     struct sigaction sa;
     memset(&sa, 0, sizeof sa);
     sigemptyset(&sa.sa_mask);
-    sa.sa_handler = on_prompt_int;
-    sigaction(SIGINT, &sa, NULL);
-    sa.sa_handler = SIG_IGN;
-    sigaction(SIGQUIT, &sa, NULL);
-    sigaction(SIGTSTP, &sa, NULL);
-    sigaction(SIGTTIN, &sa, NULL);
-    sigaction(SIGTTOU, &sa, NULL);
+    sigprocmask(SIG_SETMASK, NULL, &ps->mask);
+    ps->blocked = ps->mask;
+    sigaddset(&ps->blocked, SIGINT);
+    g_prompt_wait = ps->mask; /* without SIGINT unless the embedder itself blocks it, which then stays a block */
+    for (int i = 0; i < NPROMPT; i++) {
+        sa.sa_handler = k_prompt_sigs[i] == SIGINT ? on_prompt_int : SIG_IGN;
+        sigaction(k_prompt_sigs[i], &sa, &ps->old[i]);
+    }
+}
+
+static void prompt_restore(const PromptSigs *ps)
+{
+    for (int i = 0; i < NPROMPT; i++) sigaction(k_prompt_sigs[i], &ps->old[i], NULL);
+    sigprocmask(SIG_SETMASK, &ps->mask, NULL);
 }
 
 /* Append one line (with its newline) to the list buffer. A last line with no newline gets one, except
@@ -171,6 +191,17 @@ static int read_line(OshShell *sh, LineSrc *src)
     }
     for (;;) {
         uint8_t c;
+        if (sh->interactive) { /* SIGINT is blocked here; only this wait lets it in (see prompt_signals) */
+            if (src->fd >= FD_SETSIZE) return -1;
+            fd_set rf;
+            FD_ZERO(&rf);
+            FD_SET(src->fd, &rf);
+            if (pselect(src->fd + 1, &rf, NULL, NULL, NULL, &g_prompt_wait) < 0) {
+                if (errno != EINTR) return -1;
+                if (g_prompt_int) return -2;
+                continue;
+            }
+        }
         ssize_t r = read(src->fd, &c, 1);
         if (r < 0 && errno == EINTR) {
             if (g_prompt_int) return -2;
@@ -241,7 +272,8 @@ static void refusal(OshShell *sh, uint64_t code, int syntax)
     sh->refused++;
 }
 
-/* expand and run the parsed list. Returns 1 when the shell must stop (exit builtin, interrupted, fault). */
+/* expand and run the parsed list. Returns 1 when the shell must stop (exit builtin, interrupted, fault), 2 when
+ * `exit` with too many arguments dropped the rest of the list. */
 static int run_list(OshShell *sh)
 {
     uint64_t *w = sh->w;
@@ -258,7 +290,7 @@ static int run_list(OshShell *sh)
             w[OSH_S_LAST_STATUS] = (uint64_t)(unsigned)sh->s.last_status;
             if (sh->s.exit_requested) return 1;
             if (res.killed_by_int) return 0;
-            if (sh->s.abort_list) { sh->s.abort_list = 0; return 0; }
+            if (sh->s.abort_list) { sh->s.abort_list = 0; return 2; }
             continue;
         }
         case ST_COMPLETE: return 0;
@@ -272,9 +304,8 @@ static int run_list(OshShell *sh)
     return 1;
 }
 
-static int run_src(OshShell *sh, LineSrc *src)
+static int run_loop(OshShell *sh, LineSrc *src, const PromptSigs *ps)
 {
-    if (sh->interactive) prompt_signals();
     for (;;) {
         reset_list(sh);
         g_prompt_int = 0;
@@ -307,7 +338,13 @@ static int run_src(OshShell *sh, LineSrc *src)
             /* an empty list at end of input: nothing to run */
         } else if (st == 0) {
             sh->lists++;
-            if (run_list(sh)) return sh->s.exit_requested ? sh->s.exit_status : sh->s.last_status;
+            if (ps) sigprocmask(SIG_SETMASK, &ps->mask, NULL); /* children and osh_exec see the entry mask */
+            int rl = run_list(sh);
+            if (ps) sigprocmask(SIG_SETMASK, &ps->blocked, NULL);
+            if (rl == 1) return sh->s.exit_requested ? sh->s.exit_status : sh->s.last_status;
+            /* bash: in a -c string the failed exit discards the whole rest of the string (status 1); a script file,
+             * stdin and the interactive prompt go on with the next line (omega#344) */
+            if (rl == 2 && src->exact_end) return sh->s.last_status;
         } else {
             if (st >= 200 && st != OSH_CORE_FAULT) refusal(sh, st, 1);
             else { fprintf(stderr, "osh: syntax error: unexpected end of input\n"); sh->s.last_status = 2; }
@@ -315,6 +352,17 @@ static int run_src(OshShell *sh, LineSrc *src)
         }
         if (eof) return sh->s.last_status;
     }
+}
+
+static int run_src(OshShell *sh, LineSrc *src)
+{
+    if (!sh->interactive) return run_loop(sh, src, NULL);
+    PromptSigs ps;
+    prompt_signals(&ps);
+    sigprocmask(SIG_SETMASK, &ps.blocked, NULL);
+    int rc = run_loop(sh, src, &ps);
+    prompt_restore(&ps);
+    return rc;
 }
 
 int osh_shell_run_string(OshShell *sh, const char *text, size_t len)

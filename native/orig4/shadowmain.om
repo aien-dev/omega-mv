@@ -1,0 +1,21 @@
+note SPDX-License-Identifier: Apache-2.0
+note omega-mv#731 ORIG-4 advisor entry point: the last file of the shadow program unit
+note (after shadow.om). First stdin byte: S shadow advice (hvrun), G fixture (hvgen),
+note H record hash (hvhash); anything else exits 64.
+fn main to int
+r = read 0 HM 0 1
+if ne r 1
+ret 64
+end
+m = get HM 0
+if eq m 83
+ret hvrun
+end
+if eq m 71
+ret hvgen
+end
+if eq m 72
+ret hvhash
+end
+ret 64
+end
