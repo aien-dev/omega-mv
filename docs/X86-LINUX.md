@@ -462,8 +462,8 @@ receipt is unchanged. This measurement is EXERCISED, not QUALIFIED, MERGED or
 DEPLOYED.
 
 The current integration preserves every frozen manifest and historical receipt.
-Current acceptance applies the already declared `manifest-c2-capacity.txt` and
-`manifest-c2-batch2.txt` deltas to their named rows, while separately replaying
+Current acceptance applies the already declared `manifest-c2-capacity.txt`,
+`manifest-c2-batch2.txt` and `manifest-c2-fpvreg.txt` deltas to their named rows, while separately replaying
 the original rows against their pinned historical compiler. The old OM-1
 `s1-rot-refused` assertion likewise remains a historical replay; the current
 assertion comes from `leak/candidate.cases` and requires OM-2 acceptance.

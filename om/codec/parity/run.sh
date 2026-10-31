@@ -9,7 +9,7 @@
 #   OMEGA_OMC  the seed-born omc (default seed/out/omc in this checkout), sha256 pinned below
 # Exit 0 PASS, 1 FAIL, 3 NOT_RUN (no pinned omc or no python3).
 set -eu
-OMC_PIN=3874844226c7f29a9b015d30098030ad7a9fcd769eccc2395511de57f7a37a28
+OMC_PIN=469532a50ecb8a0e5ca8e914dd46754bb3fbde7825fb33b7037208caf09779bc
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
 OMC=${OMEGA_OMC:-$ROOT/seed/out/omc}
