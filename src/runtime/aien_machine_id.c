@@ -19,6 +19,7 @@
  * canonical machine identity. The codec is in aien_machine_id.h.
  */
 #include "aien_machine_id.h"
+#include "omega_path_check.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -40,18 +41,21 @@ int aien_mid_store(const char *path, const AienMachineId *m) {
     int rc = aien_mid_encode(m, rec);
     if (rc != AIEN_MID_OK) return rc;
 
+    /* The caller's path, checked (src/omega_path_check.h), is the only path opened or renamed. */
+    char p[4091];
+    if (omega_path_copy(p, sizeof p, path) != 0) return AIEN_MID_E_ARG;
     char tmp[4096];
-    if ((size_t)snprintf(tmp, sizeof tmp, "%s.tmp", path) >= sizeof tmp) return AIEN_MID_E_ARG;
+    if ((size_t)snprintf(tmp, sizeof tmp, "%s.tmp", p) >= sizeof tmp) return AIEN_MID_E_ARG;
     int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     if (fd < 0) return AIEN_MID_E_IO;
     if (write_all(fd, rec, sizeof rec) != 0 || fsync(fd) != 0) {
         close(fd); unlink(tmp); return AIEN_MID_E_IO;
     }
-    if (close(fd) != 0 || rename(tmp, path) != 0) { unlink(tmp); return AIEN_MID_E_IO; }
+    if (close(fd) != 0 || rename(tmp, p) != 0) { unlink(tmp); return AIEN_MID_E_IO; }
 
     /* fsync the directory so the rename survives a crash */
     char dir[4096];
-    snprintf(dir, sizeof dir, "%s", path);
+    snprintf(dir, sizeof dir, "%s", p);
     char *slash = strrchr(dir, '/');
     if (slash == dir) dir[1] = 0;
     else if (slash) *slash = 0;
@@ -63,7 +67,9 @@ int aien_mid_store(const char *path, const AienMachineId *m) {
 
 int aien_mid_load(const char *path, AienMachineId *out) {
     if (!path || !out) return AIEN_MID_E_ARG;
-    int fd = open(path, O_RDONLY | O_CLOEXEC);
+    char p[4096];
+    if (omega_path_copy(p, sizeof p, path) != 0) return AIEN_MID_E_ARG;
+    int fd = open(p, O_RDONLY | O_CLOEXEC);
     if (fd < 0) return AIEN_MID_E_IO;
     uint8_t buf[AIEN_MID_RECORD_BYTES + 1];
     size_t got = 0;
