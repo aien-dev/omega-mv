@@ -197,6 +197,8 @@ static void golden_fixtures(void) {
     CHECK(omega_blackwell_verify_codegen_fixtures_intops() == 0, "intops golden words");
     CHECK(omega_blackwell_verify_codegen_fixtures_fragmm() == 0, "fragmm golden words");
     CHECK(omega_blackwell_verify_codegen_fixtures_reconv() == 0, "reconv golden words");
+    CHECK(omega_blackwell_verify_codegen_fixtures_guard() == 0, "guard golden words (rc %d)",
+          omega_blackwell_verify_codegen_fixtures_guard());
     CHECK(omega_blackwell_test_regalloc_bounds() == 0, "regalloc bounds");
 }
 

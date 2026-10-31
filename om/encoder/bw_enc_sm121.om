@@ -14,7 +14,8 @@ note     or dst_subreg shl 16 or src1_subreg shl 24 or src2_subreg shl 32 or src
 note phys: vreg_to_phys 0..255 then uvreg_to_phys at 256..287 (C int, two's complement).
 note pad 1: omega_bw_encode_program (pad to the multiple of 8, at least 32); pad 0: exactly n instructions.
 note Result: the bytes written, or 0 when an instruction is refused (unknown op, an offset outside its
-note field, a BSSY delta below 2, a barrier register above 15) or n is above 1024.
+note field, a BSSY delta below 2, a barrier register above 15, a guard on a form whose w0 bits 12..15
+note are not 7) or n is above 1024.
 note Every constant is the decimal form of the C encoder's hex word (conversions by Wolfram,
 note evidence/CUDAPP-OM-ENCODER/wolfram-constants.txt).
 
@@ -347,11 +348,7 @@ put4 w wa o 29576 rb o 3 and imm 65535 ctl o 1040896
 ret 0
 end
 if eq op 45
-a = ulong 31053
-if ne get o 9 0
-a = 2381
-end
-put4 w a 0 58720256 ctl o 1042944
+put4 w 31053 0 58720256 ctl o 1042944
 ret 0
 end
 ret 1
@@ -379,7 +376,7 @@ put4 w a and shl s 2 4294967295 c d
 ret 0
 end
 
-note ops 46..59: branches, reconvergence, barriers, wide shared loads, three-source integer ops
+note ops 46..61: branches, reconvergence, barriers, wide shared loads, three-source integer ops, unsigned conversions
 fn enc_d o view ulong 16 w edit ulong 4 to ulong
 op = get o 0
 imm = get o 6
@@ -459,21 +456,55 @@ if eq op 59
 put4 w wd o 29448 rb o 2 3072 ctl o 926720
 ret 0
 end
+if eq op 60
+put4 w wd o 29253 rb o 2 2101248 ctl o 5235200
+ret 0
+end
+if eq op 61
+put4 w wd o 29445 rb o 2 2158592 ctl o 5120512
+ret 0
+end
 ret 1
+end
+
+note the guard predicate on every op but BRA, BSSY, BSYNC and STG.STRONG.SYS (which set it in their own
+note cases): w0 bits 12..15 become 0 (@P0) or 8 (@!P0). An op whose form does not leave 7 there is refused.
+fn guard o view ulong 16 w edit ulong 4 to ulong
+op = get o 0
+if eq get o 9 0
+ret 0
+end
+if or or eq op 46 eq op 54 or eq op 55 eq op 22
+ret 0
+end
+a = get w 0
+if ne and shr a 12 15 7
+ret 1
+end
+put w 0 or and a 4294905855 shl pred o 12
+ret 0
 end
 
 fn enc1 o view ulong 16 w edit ulong 4 to ulong
 op = get o 0
+r = ulong 1
 if lt op 15
-ret enc_a o w
-end
+r = enc_a o w
+else
 if lt op 30
-ret enc_b o w
-end
+r = enc_b o w
+else
 if lt op 46
-ret enc_c o w
+r = enc_c o w
+else
+r = enc_d o w
 end
-ret enc_d o w
+end
+end
+if ne r 0
+ret r
+end
+ret guard o w
 end
 
 note the 16 bytes of instruction i, each word little-endian

@@ -6,8 +6,9 @@
  * see mk/omega-osc-gpu.mk). For each kernel: decode, build, then run the machine program on the SIMT warp
  * simulator (tests/bw_warp_sim.h: divergence, BSSY/BSYNC reconvergence, SHFL and BAR.SYNC participation)
  * under both fragment orders, against a host reference. Every comparison is bit-exact: the simulator's
- * EX2 and RCP are exact functions and the reference uses the same ones (the chip's are approximate; the
- * chip run states its own tolerance). Also: the guard-predicate encoder words, the division sequence
+ * EX2, RCP and RSQ are the correctly rounded IEEE functions with the chip's subnormal flush (bw_mufu_ftz.h)
+ * and the reference uses the same rule (the chip's are approximate; the chip run states its own
+ * tolerance). Also: the guard-predicate encoder words, the division sequence
  * against n / d, the trap path (status word, poison, no stores after a trap) and the refusals. */
 #include "omega_osc_gpu.h"
 #include "omega_osc_launch.h"
@@ -41,7 +42,9 @@ static bool same_f(float x, float y) { return (x != x && y != y) || fbits(x) == 
  * and root are the fast function unit, which treats a denormal input as zero and is not correctly
  * rounded. A result passes when it equals the reference bit for bit (NaN equal to NaN), or when the
  * reference is finite and not zero and |got - want| <= 2^-20 |want|. On the host the simulator's
- * EX2/RCP/RSQ are exact, so there the test stays bit for bit and mufu_in leaves the input alone.
+ * EX2/RCP/RSQ are the correctly rounded IEEE value with the subnormal input and result flush of
+ * bw_mufu_ftz.h (omega #462), so there mufu_in flushes the same way and the test stays bit for bit,
+ * a denormal reference passing only against the flushed zero of the same sign.
  * Amended 2026-10-27, after a chip run, and labelled as such: the 2026-10-22 run (d1ac019e,
  * evidence/omegese-gpu/chip-20261027/README.md) measured RCP(0x7f7fffff) = +0 where 1/x is the denormal
  * 0x00200000, so the unit flushes a denormal RESULT to zero as well. A denormal reference therefore also
@@ -56,8 +59,8 @@ static bool near_mufu(float got, float want) {
     return fabsf(got - want) <= MUFU_REL * fabsf(want);
 }
 #else
-static float mufu_in(float x) { return x; }
-static bool near_mufu(float got, float want) { return same_f(got, want); }
+static float mufu_in(float x) { return ws_mufu_ftz(x); }
+static bool near_mufu(float got, float want) { return same_f(got, want) || same_f(got, ws_mufu_ftz(want)); }
 #endif
 
 static OscUnit g_unit;
