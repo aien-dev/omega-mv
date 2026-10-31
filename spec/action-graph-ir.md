@@ -172,7 +172,7 @@ chain. The effect object holds count, last value, an order chain
 | Claim | How |
 |---|---|
 | same semantic result as sequential reference | every run: status, value and evidence of every node, outcome, effect chain |
-| lower critical path for parallel graphs | 1 vs 4 workers, same lowered graph, median of 15 runs, pinned to one core class |
+| lower critical path for parallel graphs | 1 vs 4 workers, same lowered graph, median of 15 runs the machine did not disturb (run-queue delay from schedstat, `tests/runtime/rx_quiet_reps.h`), pinned to one core class |
 | zero authority bypass | every commit to a boundary target comes from a lowered boundary reaction; stolen, revoked, forged and tampered cases blocked; compile mints nothing |
 | zero missing evidence | every evidence node of every successful run has its word |
 | same causal ancestry | per node, crumb parents inside the run's episode reach exactly the graph's ancestors and the run token |

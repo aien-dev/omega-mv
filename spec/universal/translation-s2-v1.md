@@ -101,3 +101,43 @@ report the error); malformed; unsupported feature (each excluded construct in se
 exit code); mutation (attr 5 <-> 6, signed <-> unsigned compare, select arm swap, operand swap of
 non-commutative ops, constant sign flip). Oracles: REFERENCE on Python bigints; DIFFERENTIAL against gcc
 13.3.0, rustc 1.98.1, CPython 3.12.3, g++ 13.3.0, Zig 0.17.0, Go 1.27.3.
+
+## 7. Amendments (universal/624-s2-impl, BabelS2, 2026-10-26)
+
+Marked amendments made while implementing this profile. Each is the smallest choice consistent with the
+text above; the self-test `tests/universal/translation/s2_selftest.py` (`mk/s2.mk test-translation-s2`)
+exercises every one.
+
+- **A1 (corrects section 5).** The pinned omc 734f0a39 does NOT wrap `long` add/sub/mul: a signed
+  overflow at run time exits with trap status 1 (observed on the native caller). `lower-s2` therefore
+  computes every attr 5 and attr 6 operation with wrapping `ulong` arithmetic on the two's-complement bits,
+  and keeps a poison bit per value: an attr 6 op ORs its own overflow predicate into poison, a select ORs
+  its condition's poison with the chosen arm's poison, and a poisoned root executes `trap 1`. attr 6 is
+  thus realized exactly (trap iff the C/Rust oracle reports overflow on the demanded path), not refined.
+- **A2.** Select is demand-driven, as C `?:` and Rust `if`: overflow in the arm not taken is not an
+  error. The reference evaluator, the importer, the exporter and the lowering all follow this.
+- **A3 (records attributes and obligations).** i64 and bool constants attr 0, u64 constants attr 1;
+  compare, select and not attr 0 with obligations 0; inputs attr 0 with obligations 1; attr 5 ops
+  obligations 1; attr 6 ops obligations 33.
+- **A4 (C importer grammar, section 3).** Parameters and result are `int64_t` only (`uint64_t`, `int`
+  and other types refuse 66). Literals are `0LL` or `[1-9][0-9]*LL` up to 2^63-1 (larger refuses 67).
+  Unary minus, `!`, casts, a comparison outside a `?:` condition, chained comparisons and `<<`/`>>`
+  refuse 68; a lone `=` refuses 69.
+- **A5.** An imported result that would otherwise be a bare input is normalized by the pair const 0
+  (type 5, attr 0) followed by add (type 5, attr 5, obligations 1); exporters strip the pair.
+- **A6 (corrects section 5, bindings).** No bridge change: ABI v1 passes an i64 argument and result as its
+  `uint64_t` two's-complement bits, and a bool root is returned as `uint64_t` 0/1. The C caller converts.
+- **A7.** Oracle versions as run: rustc 1.98.1 (48a229cea 2026-09-01); gcc 13.3.0
+  (Ubuntu 13.3.0-6ubuntu2~24.04.1).
+- **A8 (function names, requested by consumer aien-dev/babel).** The function name is not part of the
+  semantic unit (identity is unchanged by it); it appears only in the provenance source text.
+  - `c-i64-import`: the function may have any C identifier of at most 63 bytes that is not a C keyword
+    (C17 and C23, plus `int64_t`, `uint64_t`, `main`), not a C17 7.1.3 reserved identifier (`__x`, `_X`),
+    not a `*_t` typedef name and not an all-upper-case `*_MAX`/`*_MIN`/`*_WIDTH`/`*_C` `<stdint.h>` macro
+    name; otherwise 71. Parameter names keep the section 3 rule.
+  - `rust-i64-export [NAME]`: optional NAME, default `calc`; a C identifier of at most 63 bytes that is
+    not a Rust keyword (strict, reserved or 2024 edition `gen`) nor `_`; otherwise 64. The dispatcher
+    frames it exactly as `c-export` does (one length byte, the name, then the envelope).
+  - `lower-s2 [NAME]`: optional NAME with the S1 `lower` rule (not an Omegese reserved word); otherwise
+    64. The bridge symbol becomes `omega_<NAME>`.
+  S1 tools are unchanged.

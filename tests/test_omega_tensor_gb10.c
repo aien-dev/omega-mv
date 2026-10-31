@@ -32,7 +32,9 @@
  * values), reductions with n across warp/tile edges (31, 32, 33, 1023, 1024,
  * 1025, 32769) for SUM/MAX/MIN/MEAN, multi-row reductions along both axes,
  * elementwise binary/unary/fma/cast over a grid of specials (NaN, -0, inf,
- * subnormals) plus random bit patterns, broadcast elementwise and one call
+ * subnormals) plus random bit patterns, the eleven bounded-contract unary ops
+ * of the transc entry (EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT EXP LOG)
+ * over the same grid, broadcast elementwise and one call
  * longer than a launch chunk. The six CMP_* mask compare ops (CR-3) are NOT
  * parity cases: the GB10 table has no compare entry, so a host self check
  * requires it to refuse each with OMEGA_TENSOR_ERR_REALIZATION (nothing made,
@@ -50,6 +52,7 @@
 #include <string.h>
 
 #include "omega_numeric.h"
+#include "omega_numeric_divsqrt_gb10.h"
 #include "omega_numeric_reduce.h"
 #include "omega_tensor.h"
 
@@ -84,7 +87,7 @@ static float rand_mod(void) {
 }
 
 /* ---- cases ----------------------------------------------------------------- */
-typedef enum { K_MM, K_MM_T, K_RED, K_BIN, K_UN, K_FMA, K_CAST, K_BCAST_ADD, K_BCAST_FMA, K_BIG_ADD } Kind;
+typedef enum { K_MM, K_MM_T, K_RED, K_BIN, K_UN, K_FMA, K_CAST, K_BCAST_ADD, K_BCAST_FMA, K_BIG_ADD, K_TRANSC } Kind;
 enum { MUT_ORDER = 1u, MUT_FFMA = 2u, MUT_SWAP = 4u };
 
 typedef struct {
@@ -126,6 +129,16 @@ static const char *BIN_NAME[OMEGA_TB_CMP_EQ] = {
     "ADD", "SUB", "MUL", "DIV", "MIN", "MAX", "SEL_GE", "SEL_LT", "SEL_LE", "SEL_GT", "SEL_EQ", "SEL_NE",
     "SEL_NUM", "SEL_NAN", "SEL_LTU", "SEL_LEU", "SEL_GTU", "SEL_GEU", "SEL_EQU", "SEL_NEU",
 };
+
+/* The bounded-contract unary ops the GB10 transc entry serves, listed
+ * independently of the table, with the E1 row-10 kernel name each must run. */
+static const struct { OmegaTensorUnaryOp op; const char *name; } TRANSC_OPS[] = {
+    { OMEGA_TU_EXP2, "EXP2" }, { OMEGA_TU_LOG2, "LOG2" }, { OMEGA_TU_SIGMOID, "SIGMOID" },
+    { OMEGA_TU_TANH, "TANH" }, { OMEGA_TU_SIN, "SIN" },   { OMEGA_TU_COS, "COS" },
+    { OMEGA_TU_ERF, "ERF" },   { OMEGA_TU_GELU, "GELU" }, { OMEGA_TU_RSQRT, "RSQRT" },
+    { OMEGA_TU_EXP, "EXP" },   { OMEGA_TU_LOG, "LOG" },
+};
+#define NTRANSC (sizeof(TRANSC_OPS) / sizeof(TRANSC_OPS[0]))
 
 static void build_cases(void) {
     char nm[64];
@@ -174,6 +187,10 @@ static void build_cases(void) {
         c->op = op;
     }
     add_case("un_SQRT", K_UN, 0);
+    for (size_t k = 0; k < NTRANSC; k++) {
+        snprintf(nm, sizeof(nm), "un_%s", TRANSC_OPS[k].name);
+        add_case(nm, K_TRANSC, 0)->op = TRANSC_OPS[k].op;
+    }
     add_case("fma_FFMA_V", K_FMA, 0);
     static const char *CAST_NAME[4] = { "cast_F32_TO_F16", "cast_F32_TO_BF16", "cast_F16_TO_F32", "cast_BF16_TO_F32" };
     for (int k = 0; k < 4; k++) add_case(CAST_NAME[k], K_CAST, 0)->op = k;
@@ -223,7 +240,7 @@ static int run_body(OmegaTensorCtx *ctx, const Case *c, OmegaTensor *out) {
     case K_RED:
         rc = mk(ctx, c->ra, c->sa, c->dist, &a);
         return rc ? rc : omega_tensor_reduce(ctx, (OmegaTensorReduceOp)c->op, a, c->axis, false, out);
-    case K_BIN: case K_UN: case K_FMA: {
+    case K_BIN: case K_UN: case K_FMA: case K_TRANSC: {
         float *va = malloc(ELEM_N * sizeof(float)), *vb = malloc(ELEM_N * sizeof(float)),
               *vc = malloc(ELEM_N * sizeof(float));
         OmegaTensor tc = { 0, 0 };
@@ -237,6 +254,7 @@ static int run_body(OmegaTensorCtx *ctx, const Case *c, OmegaTensor *out) {
         if (rc) return rc;
         if (c->kind == K_BIN) return omega_tensor_binary(ctx, (OmegaTensorBinaryOp)c->op, a, b, out);
         if (c->kind == K_UN) return omega_tensor_unary(ctx, OMEGA_TU_SQRT, a, out);
+        if (c->kind == K_TRANSC) return omega_tensor_unary(ctx, (OmegaTensorUnaryOp)c->op, a, out);
         return omega_tensor_fma(ctx, a, b, tc, out);
     }
     case K_CAST: {
@@ -574,6 +592,59 @@ static const char *mut_map_uniform_ffma(OmegaNumericOp op) {
     return op == OMEGA_NOP_FFMA_V ? "FFMA" : omega_tensor_gb10_op_name(op);
 }
 
+/* The transc map is right iff every listed op names its own row-10 kernel and
+ * that kernel's host model (omega_ds_host_exec, the instruction list the chip
+ * runs) equals the CPU table's transc result bit for bit on the specials and
+ * 512 random patterns, and every other unary op is unmapped. Returns the
+ * number of problems. Opens no device. */
+static int check_transc_map(int (*kernel_of)(OmegaTensorUnaryOp), bool verbose) {
+    enum { NIN = NSPECIAL + 512 };
+    static float in[NIN], want[NIN];
+    uint64_t saved = g_rng;
+    g_rng = seed_of("transc_map");
+    for (size_t i = 0; i < NIN; i++) in[i] = i < NSPECIAL ? omega_bits_to_float(SPECIALS[i]) : rand_f32();
+    g_rng = saved;
+    const OmegaTensorRealization *cpu = omega_tensor_cpu_realization();
+    int bad = 0;
+    for (int op = 0; op < OMEGA_TU_COUNT; op++) {
+        int k = kernel_of((OmegaTensorUnaryOp)op);
+        const char *want_name = NULL;
+        for (size_t t = 0; t < NTRANSC; t++) if ((int)TRANSC_OPS[t].op == op) want_name = TRANSC_OPS[t].name;
+        if (!want_name) {
+            if (k >= 0) { bad++; if (verbose) printf("  transc map: unary op %d not served but mapped to kernel %d\n", op, k); }
+            continue;
+        }
+        if (k < 0 || k >= OMEGA_DS_OP_COUNT || strcmp(omega_ds_op_name((OmegaDsOp)k), want_name) != 0) {
+            bad++;
+            if (verbose) printf("  transc map: %s -> kernel %d is not its own row-10 kernel\n", want_name, k);
+            continue;
+        }
+        if (cpu->transc((OmegaTensorUnaryOp)op, in, want, NIN) != OMEGA_NUMERIC_OK) {
+            bad++; if (verbose) printf("  transc map: CPU table refused %s\n", want_name);
+            continue;
+        }
+        size_t diff = 0, first = 0;
+        for (size_t i = 0; i < NIN; i++) {
+            uint32_t h = omega_ds_host_exec((OmegaDsOp)k, omega_float_to_bits(in[i]), 0);
+            if (h != omega_float_to_bits(want[i]) && diff++ == 0) first = i;
+        }
+        if (diff) {
+            bad++;
+            if (verbose)
+                printf("  transc map: %s kernel host model differs from the CPU table on %zu of %u inputs (first 0x%08x)\n",
+                       want_name, diff, (unsigned)NIN, omega_float_to_bits(in[first]));
+        }
+    }
+    return bad;
+}
+static int mut_transc_exp_log(OmegaTensorUnaryOp op) {
+    return op == OMEGA_TU_EXP ? omega_tensor_gb10_transc_kernel(OMEGA_TU_LOG)
+         : op == OMEGA_TU_LOG ? omega_tensor_gb10_transc_kernel(OMEGA_TU_EXP) : omega_tensor_gb10_transc_kernel(op);
+}
+static int mut_transc_relu(OmegaTensorUnaryOp op) {
+    return op == OMEGA_TU_RELU ? (int)OMEGA_DS_SQRT : omega_tensor_gb10_transc_kernel(op);
+}
+
 /* CR-3 mask compare ops. The GB10 table has no compare entry, so the semantic
  * layer must refuse each CMP_* op with OMEGA_TENSOR_ERR_REALIZATION before it
  * gathers anything or calls the table: no tensor or storage slot is made, the
@@ -633,7 +704,7 @@ static int cmp_stub(OmegaNumericOp sel_op, const float *a, const float *b, float
 
 static void host_checks(void) {
     const OmegaTensorRealization *g = omega_tensor_gb10_realization();
-    CHECK(g && g->name && g->elementwise && g->reduce && g->reduce_rows && g->reduce_order,
+    CHECK(g && g->name && g->elementwise && g->reduce && g->reduce_rows && g->reduce_order && g->transc,
           "GB10 table incomplete");
     CHECK(g && strcmp(g->reduce_order, OMEGA_TENSOR_REDUCE_DECLARED_ORDER) == 0 &&
           strcmp(g->reduce_order, OMEGA_REDUCE_DECLARED_ORDER) == 0, "GB10 table order string");
@@ -650,11 +721,12 @@ static void host_checks(void) {
     /* op map, and its counterexamples */
     CHECK(check_map(omega_tensor_gb10_op_name, true) == 0, "GB10 op map");
     CHECK(check_map(mut_map_wrong_op, false) > 0, "map check missed FSUB->FADD");
-    CHECK(check_map(mut_map_exp, false) > 0, "map check missed EXP (no GB10 kernel)");
+    CHECK(check_map(mut_map_exp, false) > 0, "map check missed EXP (not an elementwise op of the tensor layer)");
     CHECK(check_map(mut_map_uniform_ffma, false) > 0, "map check missed FFMA_V->FFMA (uniform c)");
 
-    /* refusals before any device is opened: ops without a GB10 kernel (or not
-     * used by the tensor layer) and sizes past OMEGA_REDUCE_GB10_MAX_N */
+    /* refusals before any device is opened: ops the tensor layer's elementwise
+     * table does not submit (EXP and LOG go through the transc entry) and sizes
+     * past OMEGA_REDUCE_GB10_MAX_N */
     static const OmegaNumericOp REFUSED[] = { OMEGA_NOP_EXP, OMEGA_NOP_LOG, OMEGA_NOP_FFMA, OMEGA_NOP_MUFU_RCP,
                                               OMEGA_NOP_LDS_STS, OMEGA_NOP_SHFL_DOWN, OMEGA_NOP_REDUCE_SUM };
     float a[4] = { 1.0f, 2.0f, 3.0f, 4.0f }, b[4] = { 1.0f, 1.0f, 1.0f, 1.0f }, o[4];
@@ -671,6 +743,20 @@ static void host_checks(void) {
           "reduce_rows past OMEGA_REDUCE_GB10_MAX_N not refused as OPERANDS");
     CHECK(g->reduce((OmegaTensorReduceOp)OMEGA_TR_COUNT, a, 4, &r1) == OMEGA_NUMERIC_ERR_BAD_ARGS,
           "unknown reduce op not refused");
+
+    /* transc entry: map vs the kernels' host models, its counterexamples, and
+     * refusals of the unary ops it does not serve (before any device call) */
+    CHECK(check_transc_map(omega_tensor_gb10_transc_kernel, true) == 0, "GB10 transc map");
+    CHECK(check_transc_map(mut_transc_exp_log, false) > 0, "transc map check missed EXP<->LOG");
+    CHECK(check_transc_map(mut_transc_relu, false) > 0, "transc map check missed RELU mapped to a kernel");
+    static const OmegaTensorUnaryOp TU_REFUSED[] = { OMEGA_TU_SQRT, OMEGA_TU_RELU, OMEGA_TU_NEG };
+    for (size_t i = 0; i < sizeof(TU_REFUSED) / sizeof(TU_REFUSED[0]); i++) {
+        int rc = g->transc(TU_REFUSED[i], a, o, 4);
+        CHECK(rc == OMEGA_NUMERIC_ERR_NOT_ENCODED, "GB10 transc did not refuse unary op %d (rc %d)", TU_REFUSED[i], rc);
+    }
+    CHECK(g->transc((OmegaTensorUnaryOp)OMEGA_TU_COUNT, a, o, 4) == OMEGA_NUMERIC_ERR_NOT_ENCODED,
+          "GB10 transc did not refuse an out-of-range op");
+    CHECK(g->transc(OMEGA_TU_EXP, NULL, o, 4) == OMEGA_NUMERIC_ERR_BAD_ARGS, "GB10 transc took a NULL input");
 
     /* CR-3 compare: no compare entry, each CMP_* op refused with ERR_REALIZATION,
      * nothing made, no device call; and the counterexample: the same table with

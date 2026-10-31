@@ -105,10 +105,9 @@ static int list_insn(FILE *f, const BlackwellIRInsn *in, const OmegaRegAlloc *ra
         else { L(f, "imad.i.0 %d %d", o.d, o.a); L(f, "imad.i.1 0x%08x", in->imm); L(f, "imad.i.2 %d", o.c); ctl(f, in, "imad.i.3"); }
         break;
     case BW_IR_IMAD_WIDE: L(f, "imad.wide.0 %d %d", o.d, o.a); L(f, "imad.wide.1 0x%08x", in->imm); L(f, "imad.wide.2 %d", o.c); ctl(f, in, "imad.wide.3"); break;
-    case BW_IR_ISETP_GE:
-        if (in->control) note(k, i, "ISETP.GE: the C encoder ignores the given control word");
-        if (in->is_uniform && in->ureg >= 0) { L(f, "isetp.ge.u.0 %d %d", o.d, o.a); L(f, "isetp.ge.u.1 %d", o.u); L(f, "isetp.ge.u.2"); L(f, "isetp.ge.u.3"); }
-        else { L(f, "isetp.ge.i.0 %d %d", o.d, o.a); L(f, "isetp.ge.i.1 0x%08x", in->imm); L(f, "isetp.ge.i.2"); L(f, "isetp.ge.i.3"); }
+    case BW_IR_ISETP_GE:   /* keeps a scheduled control word since omega-mv#545 (e3a26848) */
+        if (in->is_uniform && in->ureg >= 0) { L(f, "isetp.ge.u.0 %d %d", o.d, o.a); L(f, "isetp.ge.u.1 %d", o.u); L(f, "isetp.ge.u.2"); ctl(f, in, "isetp.ge.u.3"); }
+        else { L(f, "isetp.ge.i.0 %d %d", o.d, o.a); L(f, "isetp.ge.i.1 0x%08x", in->imm); L(f, "isetp.ge.i.2"); ctl(f, in, "isetp.ge.i.3"); }
         break;
     case BW_IR_LDG_E: case BW_IR_LDG_E_U16: case BW_IR_LDG_STRONG_SYS: case BW_IR_LDG_MMIO: {
         const char *w2 = in->op == BW_IR_LDG_E ? "ldg.2" : in->op == BW_IR_LDG_E_U16 ? "ldg.u16.2" : in->op == BW_IR_LDG_STRONG_SYS ? "ldg.strong.sys.2" : "ldg.mmio.2";
@@ -132,10 +131,9 @@ static int list_insn(FILE *f, const BlackwellIRInsn *in, const OmegaRegAlloc *ra
         L(f, "%s %d", in->op == BW_IR_ATOMG_ADD_STRONG_SYS ? "atomg.add.2" : "atomg.exch.2", o.u); ctl(f, in, "atomg.3");
         break;
     case BW_IR_ISETP_GE_U32: L(f, "isetp.ge.u32.0 %d", o.a); L(f, "r.1 %d", o.b); L(f, "isetp.ge.u32.2"); ctl(f, in, "isetp.ge.u32.3"); break;
-    case BW_IR_IADD3:
-        if (in->control) note(k, i, "IADD3: the C encoder ignores the given control word");
+    case BW_IR_IADD3:   /* keeps a scheduled control word since omega-mv#545 (e3a26848) */
         if (in->src3_vreg >= 0) note(k, i, "IADD3: the C encoder ignores the third source (always RZ)");
-        L(f, "iadd3.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "iadd3.2"); L(f, "iadd3.3");
+        L(f, "iadd3.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "iadd3.2"); ctl(f, in, "iadd3.3");
         break;
     case BW_IR_HMMA_F16: case BW_IR_HMMA_BF16:
         if (patched && omega_qmma_is_mark(in)) { L(f, "qmma.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "qmma.2 %d", o.c); }
@@ -189,10 +187,9 @@ static int list_insn(FILE *f, const BlackwellIRInsn *in, const OmegaRegAlloc *ra
     case BW_IR_LDS128: L(f, "lds.0 %d %d", o.d, o.a); L(f, "lds.128.1 %u", in->imm); L(f, "lds.128.2"); ctl(f, in, "lds.128.3"); break;
     case BW_IR_LDS32: L(f, "lds.0 %d %d", o.d, o.a); L(f, "lds.32.1"); L(f, "lds.32.2"); ctl(f, in, "lds.32.3"); break;
     case BW_IR_STS32: L(f, "sts.32.0 %d", o.a); L(f, "r.1 %d", o.b); L(f, "sts.32.2"); ctl(f, in, "w.3"); break;
-    case BW_IR_EXIT:
-        if (in->control) note(k, i, "EXIT: the C encoder ignores the given control word");
+    case BW_IR_EXIT:   /* the C encoder keeps a scheduled control word on EXIT (omega-mv#545, e3a26848) */
         if (in->predicate_p0 && in->predicate_not) note(k, i, "EXIT: @!P0 asked, the C encoder writes @P0");
-        L(f, "%s", in->predicate_p0 ? "exit.p0.0" : "exit.0"); L(f, "z.1"); L(f, "exit.2"); L(f, "exit.3");
+        L(f, "%s", in->predicate_p0 ? "exit.p0.0" : "exit.0"); L(f, "z.1"); L(f, "exit.2"); ctl(f, in, "exit.3");
         break;
     case BW_IR_BRA: {
         int32_t delta = (int32_t)in->imm, rel = delta - 1;
@@ -438,8 +435,7 @@ static void edges(void) {
                 in.is_uniform = (ui & 1) != 0 && r < BW_MAX_UVREGS;   /* a uniform destination indexes the 32 uniform registers */
                 in.bar_reg = (uint8_t)(ri & 15);
                 if (op == BW_IR_IMAD && ui == 3) in.src2_vreg = -1;            /* reach the uniform and immediate forms */
-                if (op == BW_IR_IADD3 || op == BW_IR_EXIT) in.src3_vreg = -1, in.control = 0;
-                if (op == BW_IR_ISETP_GE) in.control = 0;
+                if (op == BW_IR_IADD3 || op == BW_IR_EXIT) in.src3_vreg = -1;
                 if (op == BW_IR_HMMA_F16 || op == BW_IR_HMMA_BF16) in.imm = ni == 5 ? OMEGA_QMMA_MARK : 0;
                 for (int pi = 0; pi < 3; pi++) {
                     if (pi && op != BW_IR_BRA && op != BW_IR_BSSY && op != BW_IR_BSYNC && op != BW_IR_STG_STRONG_SYS && op != BW_IR_EXIT) break;

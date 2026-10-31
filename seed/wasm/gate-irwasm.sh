@@ -132,4 +132,88 @@ refuse trailing 27 TRAILING
 dd if=/dev/zero of="$B/oversized.ir" bs=2620252 count=1 status=none
 refuse oversized 23 CAPACITY
 printf 'PASS IRWASM native parity cases=%s deterministic mutant refusals\n' "$i"
+# OSC IR v7 (spec 10): regions, f32/f64, RLOAD/RSTORE/BITCAST/RINIT. Units come
+# from the independent hand writer seed/wasm/v7/writer.js and seed/wasm/v7cases.js;
+# expected verdicts and outputs come from the independent oracle seed/wasm/v7/oracle.js.
+V="$B/v7"
+rm -rf "$V"
+mkdir -p "$V/fx" "$V/rc"
+[ -f seed/wasm/v7/oracle.js ] && [ -f seed/wasm/v7/writer.js ] || fail 'v7 oracle or writer missing'
+node seed/wasm/v7/writer.js "$V/fx" > /dev/null
+node seed/wasm/v7cases.js "$V/rc" > /dev/null
+code() {
+    case $1 in
+    MAGIC) echo 20 ;; VERSION) echo 21 ;; TRUNCATED) echo 22 ;; CAPACITY) echo 23 ;;
+    UNSUPPORTED_OP) echo 24 ;; UNSUPPORTED_TAG) echo 25 ;; INVALID) echo 26 ;; TRAILING) echo 27 ;;
+    *) fail "oracle class $1" ;;
+    esac
+}
+accepts=0
+refusals=0
+for unit in "$V"/fx/*.unit "$V"/rc/*.unit; do
+    id=${unit%.unit}
+    set +e
+    verdict=$(node seed/wasm/v7/oracle.js check "$unit")
+    "$B/irwasm" < "$unit" > "$id.wasm" 2> "$id.err"
+    rc=$?
+    set -e
+    case $verdict in
+    ACCEPT*)
+        [ "$rc" = 0 ] || fail "v7 $id refused ($(cat "$id.err")) but oracle: $verdict"
+        "$B/irwasm" < "$unit" > "$id.again.wasm"
+        cmp "$id.wasm" "$id.again.wasm" || fail "v7 $id nondeterministic"
+        node -e 'new WebAssembly.Module(require("fs").readFileSync(process.argv[1]))' "$id.wasm" ||
+            fail "v7 $id invalid wasm"
+        accepts=$((accepts + 1)) ;;
+    REFUSE*)
+        class=$(printf '%s\n' "$verdict" | cut -d ' ' -f 2)
+        [ "$rc" = "$(code "$class")" ] || fail "v7 $id exit $rc, oracle: $verdict"
+        [ ! -s "$id.wasm" ] || fail "v7 $id emitted partial module"
+        printf 'irwasm: %s\n' "$class" > "$V/expected.err"
+        cmp "$V/expected.err" "$id.err" || fail "v7 $id wrong refusal name"
+        refusals=$((refusals + 1)) ;;
+    *) fail "v7 $id oracle verdict: $verdict" ;;
+    esac
+done
+[ "$accepts" -gt 0 ] && [ "$refusals" -gt 0 ] || fail 'v7 fixture set empty'
+echo "PASS v7 verdict parity accepts=$accepts (valid, deterministic) refusals=$refusals (class, exit, stdout=empty)"
+runs=0
+for script in "$V"/rc/*.script; do
+    id=${script%.script}
+    node seed/wasm/v7/oracle.js run "$id.unit" "$script" > "$id.oracle"
+    node seed/wasm/v7run.js "$id.wasm" "$script" > "$id.out"
+    [ -s "$id.oracle" ] || fail "v7 $id oracle printed nothing"
+    diff "$id.oracle" "$id.out" || fail "v7 $id run differs from oracle"
+    runs=$((runs + 1))
+done
+lines=$(cat "$V"/rc/*.oracle | wc -l)
+traps=$(cat "$V"/rc/*.oracle | grep -c ' TRAP$')
+echo "PASS v7 run parity cases=$runs lines=$lines traps=$traps"
+# RGBX gradient: the framebuffer bytes after fill() hash the same in wasm and the
+# oracle, and a one-channel mutant and a channel-order mutant hash differently.
+fbsum() {
+    sed -n '3p' "$1" | grep '^region fb ' | cut -d ' ' -f 3 |
+        node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const b=Buffer.from(s.trim(),"hex");if(b.length!==512)process.exit(1);console.log(require("crypto").createHash("sha256").update(b).digest("hex"))})'
+}
+rgbx=$(fbsum "$V/rc/rgbx.out") || fail 'rgbx framebuffer line'
+[ "$rgbx" = "$(fbsum "$V/rc/rgbx.oracle")" ] || fail 'rgbx framebuffer hash differs'
+for m in rgbx_mut_b rgbx_mut_order; do
+    [ "$(fbsum "$V/rc/$m.out")" != "$rgbx" ] || fail "$m not distinguished"
+done
+echo "PASS v7 RGBX framebuffer sha256=$rgbx; channel and order mutants differ"
+# Out-of-bounds: index == count, count + 1, negative and wide indexes trap in
+# both (case oob above). A translator with the bounds check removed must differ.
+[ "$(grep -c '^boundchk ' seed/wasm/irwasm.om)" = 2 ] || fail 'bounds check call sites changed'
+sed '/^boundchk /d' seed/wasm/irwasm.om > "$V/nobound.om"
+nice -n 19 "$OMC" < "$V/nobound.om" > "$V/nobound" 2> "$V/nobound.err"
+[ ! -s "$V/nobound.err" ] || fail 'bounds mutant compile stderr'
+chmod +x "$V/nobound"
+"$V/nobound" < "$V/rc/oob.unit" > "$V/nobound.wasm"
+node seed/wasm/v7run.js "$V/nobound.wasm" "$V/rc/oob.script" > "$V/nobound.out"
+if diff "$V/rc/oob.oracle" "$V/nobound.out" > "$V/nobound.diff"; then
+    fail 'bounds-check mutant not caught'
+fi
+grep -q '^< .* TRAP$' "$V/nobound.diff" || fail 'bounds mutant differs for an unrelated reason'
+echo "PASS v7 OOB traps=$(grep -c ' TRAP$' "$V/rc/oob.oracle"); no-bounds mutant caught ($(grep -c '^>' "$V/nobound.diff") differing lines)"
+sha256sum seed/wasm/v7cases.js seed/wasm/v7run.js seed/wasm/v7/oracle.js seed/wasm/v7/writer.js
 sha256sum seed/wasm/irwasm.om "$B/irwasm" seed/wasm/cases.tsv

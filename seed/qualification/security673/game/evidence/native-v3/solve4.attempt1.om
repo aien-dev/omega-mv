@@ -1,0 +1,606 @@
+note SC1-G transport only. No transition or invariant code is shared.
+global wire uchar 4096
+global pos ulong 1
+global avail ulong 1
+global digits uchar 32
+global samples ulong 101
+text nl "\n"
+text sp " "
+text tags "construct_ns=\nsolve_ns=\ncheck_ns=\nstates=\nedges=\nwinning=\nrounds=\narray_bytes=\nPASS SC1-G-v3 finite model only\nFAIL QUANTIFIER_CLOSURE\nFAIL OMITTED_DISTURBANCE_CLOSURE\nFAIL FRESHNESS_AT_RENAME\nFAIL UNCERTAIN_REFUND\nFAIL SELECTED_NOT_SAFE\nFAIL EARLY_STOP_CLOSURE\nFAIL CERTIFICATE\nPASS certified serial witnesses empty-set costs\nFAIL PAIRED_PRODUCT\ndistinct_hidden_states=\ndistinct_hidden_edges=\nsample_ns=\np50_ns=\np95_ns=\np99_ns=\nidentical_zero_states=\nidentical_zero_edges=\nWITNESS source action disturbance raw effective\nFAIL TRANSITION_CONFORMANCE\nFAIL CLOSURE\nFAIL SOURCE_INVARIANT\nFAIL DISABLED_ACTION\nFAIL EXACTNESS\nFAIL SELECTION_COST\n"
+fn label id uint to void
+p = ulong 0
+n = uint 0
+for j ulong len tags
+if eq get tags j 10
+if eq n id
+r = write 2 tags p add sub j p 1
+if ne r long add sub j p 1
+exit 90
+end
+ret
+end
+n = add n 1
+p = add j 1
+end
+end
+exit 90
+end
+fn number n ulong to void
+p = ulong 0
+while ge n 10 bound 32
+put digits p uchar add rem n 10 48
+n = div n 10
+p = add p 1
+end
+put digits p uchar add n 48
+p = add p 1
+for j ulong p
+r = write 2 digits sub sub p j 1 1
+if ne r 1
+exit 90
+end
+end
+r = write 2 nl 0 1
+if ne r 1
+exit 90
+end
+end
+fn mode to uint
+if eq argcnt 1
+ret 0
+end
+if ne argcnt 2
+exit 90
+end
+if ne argread 1 wire 0 1 1
+exit 90
+end
+m = get wire 0
+if or lt m 48 gt m 56
+exit 90
+end
+ret sub uint m 48
+end
+fn flush to void
+n = get pos 0
+if ne write 1 wire 0 n long n
+exit 90
+end
+put pos 0 0
+end
+fn sendword x uint to void
+for i ulong 4
+p = get pos 0
+put wire p uchar and shr x mul uint i 8 255
+put pos 0 add p 1
+if eq get pos 0 4096
+flush
+end
+end
+end
+fn recvword to uint
+x = uint 0
+for i ulong 4
+if eq get pos 0 get avail 0
+n = read 0 wire 0 len wire
+if le n 0
+exit 90
+end
+put avail 0 ulong n
+put pos 0 0
+end
+p = get pos 0
+x = or x shl uint get wire p mul uint i 8
+put pos 0 add p 1
+end
+ret x
+end
+fn endinput to void
+if ne get pos 0 get avail 0
+exit 90
+end
+if ne read 0 wire 0 len wire 0
+exit 90
+end
+end
+fn percentiles to void
+for i ulong 101
+label 20
+number get samples i
+end
+for i ulong 101
+for j ulong 100
+if gt get samples j get samples add j 1
+t = get samples j
+put samples j get samples add j 1
+put samples add j 1 t
+end
+end
+end
+label 21
+number get samples 50
+label 22
+number get samples 95
+label 23
+number get samples 99
+end
+note SC1-G-v3 source-fixed experiment 4; no runtime fault selector.
+fn fault to uint
+ret 4
+end
+note SC1-G-v3 synchronous greatest fixed point over monitored raw transitions.
+global moves uint 2593
+global cert uint 2593
+global chosen uint 2593
+global edges uint 420066
+global keep uchar 2593
+global next uchar 2593
+global mut uint 1
+global totals ulong 4
+fn phase s uint c uint to uint
+if eq c 0
+ret rem s 18
+end
+ret rem div s 18 18
+end
+fn replace s uint c uint p uint to uint
+old = phase s c
+if eq c 0
+ret add sub s old p
+end
+ret add sub s mul old 18 mul p 18
+end
+fn epoch s uint to uint
+ret rem div s 324 2
+end
+fn object s uint to uint
+ret rem div s 648 2
+end
+fn charge p uint to uint
+if lt p 2
+ret 0
+end
+if and ge p 12 le p 14
+ret 1
+end
+ret 2
+end
+fn invariant s uint to bool
+if ge s 2592
+ret false
+end
+a = phase s 0
+b = phase s 1
+if or eq a 17 eq b 17
+ret false
+end
+if gt add charge a charge b 3
+ret false
+end
+if or or eq a 15 eq a 16 or eq b 15 eq b 16
+ret eq rem div s 324 4 0
+end
+ret true
+end
+fn enabled s uint u uint to bool
+if not invariant s
+ret false
+end
+if ge s 1296
+ret eq u 1
+end
+if eq u 1
+ret false
+end
+if eq u 0
+ret and or eq phase s 0 0 eq phase s 0 14 or eq phase s 1 0 eq phase s 1 14
+end
+c = div sub u 2 8
+k = rem sub u 2 8
+p = phase s c
+if eq k 0
+ret and eq p 1 le add charge phase s 0 charge phase s 1 1
+end
+if eq k 1
+ret and ge p 1 le p 10
+end
+if eq k 2
+ret eq p 2
+end
+if or eq k 3 eq k 7
+if and ge p 3 le p 6
+if eq k 7
+ret eq rem div s 324 4 0
+end
+ret true
+end
+ret and eq k 7 eq p 16
+end
+if eq k 4
+ret or and ge p 7 le p 10 eq p 15
+end
+if eq k 5
+ret or eq p 11 eq p 15
+end
+ret or eq p 12 eq p 13
+end
+fn environment s uint d uint to uint
+if eq d 1
+if eq phase s 0 0
+ret add s 1
+end
+end
+if eq d 2
+if eq phase s 1 0
+ret add s 18
+end
+end
+if eq d 3
+ret add s mul sub uint 1 epoch s 324
+end
+if eq d 4
+ret add s mul sub uint 1 object s 648
+end
+ret s
+end
+fn clean p uint to uint
+if and ge p 2 le p 10
+ret 0
+end
+if eq p 11
+ret 12
+end
+ret p
+end
+fn recover s uint to uint
+if or ge phase s 0 15 ge phase s 1 15
+ret 2592
+end
+s = replace s 0 clean phase s 0
+s = replace s 1 clean phase s 1
+ret rem s 1296
+end
+fn split s uint c uint k uint d uint to uint
+p = phase s c
+if eq d 7
+ret s
+end
+if eq d 5
+ret add replace s c 0 1296
+end
+if eq p 15
+if or and eq k 4 eq d 4 and eq k 5 eq d 3
+ret 2592
+end
+if or eq d 3 eq d 4
+ret environment replace s c 0 d
+end
+if eq d 6
+ret s
+end
+ret environment replace s c 14 d
+end
+if or eq d 3 eq d 4
+ret environment replace s c 0 d
+end
+ret environment replace s c 15 d
+end
+fn client s uint c uint k uint d uint to uint
+p = phase s c
+if eq k 0
+ret replace s c 2
+end
+if eq k 1
+ret replace s c 0
+end
+if eq k 2
+p = add uint 3 add epoch s mul object s 2
+ret replace s c p
+end
+if eq k 3
+if eq d 6
+ret s
+end
+ret replace s c add p 4
+end
+if eq k 4
+tag = sub p 7
+if ne get mut 0 3
+if ne tag rem div s 324 4
+ret s
+end
+end
+ret replace s c 11
+end
+if eq k 5
+if eq d 6
+if eq get mut 0 4
+ret replace s c 17
+end
+ret s
+end
+if eq d 8
+ret replace s c 13
+end
+ret replace s c 12
+end
+if eq k 6
+if eq d 8
+ret replace s c 13
+end
+ret replace s c 14
+end
+if ne rem div s 324 4 0
+ret s
+end
+ret replace s c 16
+end
+fn step s uint u uint d uint to uint
+if not enabled s u
+ret 2592
+end
+if ge u 2
+c = div sub u 2 8
+p = phase s c
+if or eq p 15 eq p 16
+if lt s 1296
+ret split s c rem sub u 2 8 d
+end
+end
+end
+if eq d 5
+ret add rem s 1296 1296
+end
+if eq d 7
+ret s
+end
+s = environment s d
+if eq u 0
+ret s
+end
+if eq u 1
+ret recover s
+end
+ret client s div sub u 2 8 rem sub u 2 8 d
+end
+fn index s uint u uint d uint to uint
+ret add mul add mul s 18 u 9 d
+end
+fn monitored s uint u uint d uint raw uint to uint
+if or lt u 2 ge raw 2592
+ret raw
+end
+c = div sub u 2 8
+p = phase s c
+q = phase raw c
+if and eq p 11 eq q 17
+ret 2592
+end
+if and eq rem sub u 2 8 4 eq q 11
+if and ge p 7 le p 10
+now = environment s d
+if ne sub p 7 rem div now 324 4
+ret 2592
+end
+end
+end
+ret raw
+end
+fn destination s uint u uint d uint to uint
+ret monitored s u d get edges index s u d
+end
+fn construct to void
+for i uint 4
+put totals i 0
+end
+for s uint 2593
+put keep s 0
+if invariant s
+put keep s 1
+end
+m = uint 0
+for u uint 18
+if enabled s u
+m = or m shl uint 1 u
+for d uint 9
+put edges index s u d step s u d
+put totals 0 add get totals 0 1
+end
+end
+end
+put moves s m
+end
+end
+fn safe s uint u uint to bool
+if eq and get moves s shl uint 1 u 0
+ret false
+end
+for d uint 9
+if not and eq get mut 0 2 eq d 4
+if eq get keep destination s u d 0
+ret false
+end
+end
+end
+ret true
+end
+fn existsaction s uint to bool
+for u uint 18
+if safe s u
+ret true
+end
+end
+ret false
+end
+fn swapped s uint to bool
+for d uint 9
+found = false
+for u uint 18
+if ne and get moves s shl uint 1 u 0
+if ne get keep destination s u d 0
+found = true
+end
+end
+end
+if not found
+ret false
+end
+end
+ret true
+end
+fn solve to void
+changed = true
+while changed bound 2594
+changed = false
+put totals 1 add get totals 1 1
+for s uint 2593
+v = false
+if ne get keep s 0
+if eq get mut 0 1
+v = swapped s
+else
+v = existsaction s
+end
+end
+put next s 0
+if v
+put next s 1
+end
+if ne get next s get keep s
+changed = true
+end
+end
+for s uint 2593
+put keep s get next s
+end
+if eq get mut 0 6
+ret
+end
+end
+end
+fn certificate to void
+for s uint 2593
+m = uint 0
+if ne get keep s 0
+put totals 2 add get totals 2 1
+for u uint 18
+if safe s u
+m = or m shl uint 1 u
+end
+end
+if or eq get mut 0 1 eq get mut 0 6
+if eq m 0
+m = get moves s
+end
+end
+end
+put cert s m
+end
+end
+fn select s uint identity uint to uint
+if ne identity 1
+ret 18
+end
+m = get cert s
+if eq m 0
+ret 18
+end
+if eq get mut 0 5
+m = get moves s
+end
+best = uint 18
+price = uint 99
+for u uint 18
+if ne and m shl uint 1 u 0
+p = uint 2
+if lt u 2
+p = 1
+else
+k = rem sub u 2 8
+if eq k 7
+p = 0
+end
+if eq k 1
+p = 4
+end
+end
+if lt p price
+price = p
+best = u
+end
+end
+end
+ret best
+end
+fn selections to void
+for s uint 2593
+put chosen s select s 1
+end
+end
+fn output to void
+sendword 1396912455
+sendword 3
+sendword 2593
+sendword get mut 0
+for s uint 2593
+sendword get moves s
+sendword get cert s
+sendword get chosen s
+for u uint 18
+if ne and get moves s shl uint 1 u 0
+for d uint 9
+sendword get edges index s u d
+end
+end
+end
+end
+flush
+end
+fn benchmark to void
+if ne get mut 0 0
+exit 90
+end
+for i ulong 101
+start = monons
+construct
+solve
+certificate
+selections
+put samples i ulong sub monons start
+end
+percentiles
+end
+fn main to int
+put mut 0 fault
+m = mode
+if eq m 7
+benchmark
+output
+ret 0
+end
+if or ne m 0 gt get mut 0 6
+ret 90
+end
+start = monons
+construct
+label 0
+number ulong sub monons start
+start = monons
+solve
+certificate
+selections
+label 1
+number ulong sub monons start
+label 3
+number 2593
+label 4
+number get totals 0
+label 5
+number get totals 2
+label 6
+number get totals 1
+label 7
+number 1721554
+output
+ret 0
+end

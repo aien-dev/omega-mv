@@ -21,6 +21,21 @@ second table. Nothing new was compiled to do it: the new part is text.
   program those generators can make, it writes the program as a text listing in `asm2`'s language and, next
   to it, the bytes the C code made. It never writes a byte under `seed/`.
 
+## Build
+
+`gate6.sh` needs the reference tool at `build/seed/r6/sm121list`. Build it from the repository root, then run
+the gate:
+
+```sh
+mkdir -p build/seed/r6
+gcc -O1 -Isrc -o build/seed/r6/sm121list seed/sm121/sm121list.c src/omega_blackwell_codegen*.c \
+  src/omega_blackwell_matmul.c src/omega_blackwell_encoder.c src/omega_gpu_fmt.c src/omega_om_units.c -lm
+sh seed/sm121/gate6.sh
+```
+
+The gate rewrites its result files in `evidence/SEED-0/sm121/`. If the run is only a check, put the tracked
+copies back afterwards with `git checkout -- evidence/SEED-0/sm121`.
+
 ## How the checks work
 
 The C code generator is the referee, never an input to the table: I read its source and wrote the table by

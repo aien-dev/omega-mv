@@ -1,0 +1,71 @@
+om2
+note semhash fixture: the base unit every case is diffed against
+const lim ulong 7
+global buf uchar 17
+struct pt px uint py uint end
+layout lay 8
+field fa uchar at 0 little
+field fb ushort at 1 little
+end
+fn leaf a ulong b ulong to ulong
+ret add a b
+end
+fn mid x ulong to ulong
+y = leaf x 3
+ret mul y 2
+end
+fn top n ulong to ulong
+r = mid n
+ret add r 1
+end
+fn other s ulong to ulong
+ret xor s 5
+end
+fn psub a ulong b ulong to ulong
+ret sub a b
+end
+fn useconst v ulong to ulong
+ret add v lim
+end
+fn useglob i ulong to ulong
+put buf 0 uchar i
+ret len buf
+end
+fn callargs u ulong to ulong
+ret psub u 2
+end
+fn rdlay c view lay i ulong to ulong
+ret ulong get c i
+end
+fn sumpt p view pt to ulong
+q = ulong get p px
+ret add q ulong get p py
+end
+fn iseven n ulong to bool
+if eq n 0
+ret true
+end
+ret isodd sub n 1
+end
+fn isodd n ulong to bool
+if eq n 0
+ret false
+end
+ret iseven sub n 1
+end
+fn main to int
+c = new uchar 8 0
+put c 1 9
+p = new pt 3 4
+t = add top 1 other 2
+t = add t psub 9 4
+t = add t useconst 1
+t = add t useglob 2
+t = add t callargs 5
+t = add t rdlay c 1
+t = add t sumpt p
+if iseven t
+t = add t 64
+end
+ret int rem t 251
+end

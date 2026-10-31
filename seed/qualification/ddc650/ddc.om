@@ -1,0 +1,1089 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/qualification/ddc650/ddc.om: diverse double compilation conductor for issue #650.
+note Handwritten seeded Omega, program mode, Linux AArch64, modelled on security673/gate669.om and
+note om2/gate.om. README.md in this directory states the trust argument, scope and limitations.
+note
+note Run from the repository root:
+note   ddc OM4 OM4_SHA256 CC ORACLE_SRC ORACLE_SRC_SHA256 SRC BIN SCRATCH [CONTROL]
+note   OM4          seed-born om4 compiler (route S trusted compiler); refused unless its SHA-256 is OM4_SHA256
+note   CC           host C compiler, absolute path; it builds the oracle (route I) with fixed flags
+note   ORACLE_SRC   interpreter source written from the spec; refused unless its SHA-256 is ORACLE_SRC_SHA256
+note   SRC          the claimed compiler source (seed/omc/omc.om)
+note   BIN          the compiler binary under test (seed/out/omc)
+note   SCRATCH      evidence directory; must not exist (exit 91), created 0700, never overwritten
+note   CONTROL      optional injected difference; a control run never passes:
+note     stage1     route S stage 1 is built from SRC with one codegen mutation (expected FAIL)
+note     oracle     route I oracle is built from ORACLE_SRC with one semantic mutation (expected FAIL)
+note     source     SRC is replaced by the codegen-mutated source for every step (expected FAIL)
+note     binary     BIN is replaced by a copy with byte 1000 xor 1 (expected FAIL)
+note     comparator the byte comparator answers "equal" for everything (expected INVALID)
+note
+note Route S: stage1 = OM4 < SRC, stage2 = stage1 < SRC (each built twice, copies must be equal).
+note Route I: oracle = CC -B/usr/bin/ -O2 -std=gnu11 -Wall -Wextra -Werror -o oracle ORACLE_SRC
+note          -lpthread; ref = oracle run SRC < SRC (run twice, outputs must be equal).
+note Subject: self = BIN < SRC must equal BIN (self-regeneration precondition).
+note DDC: stage2 == BIN, ref == BIN and stage2 == ref, byte for byte. stage1 == BIN is printed and
+note not required. Sensitivity: stage 1 built from SRC with an extra NOP before each zero or
+note minus-one constant must give a stage 2 that differs from BIN; if it does not, the run is INVALID.
+note Exit: PASS 0, FAIL 1 (a comparison or the subject failed), INVALID 3 (no evidence: identity
+note mismatch, comparator self-test, trusted route refused, nondeterminism, signal, deadline, I/O),
+note CONTROL SURVIVED 4, usage 90, existing scratch 91. Children run with the caller's permissions
+note and an empty environment; this is not a sandbox and only trusted inputs belong here.
+text words "stage1\nstage1.b\nstage2\nstage2.b\noracle\nref\nref.b\nself\nmutant.om\nmstage1\nmstage2\ncmp.a\ncmp.b\ncmp.c\ncmp.d\nseed/qualification/om2/fixtures/sha256-k.dec\nseed/qualification/om2/fixtures/sha256-iv.dec\nrun\n-B/usr/bin/\n-O2\n-std=gnu11\n-Wall\n-Wextra\n-Werror\n-o\n-lpthread\n.err\nbin\nmutant.c\nstage1\noracle\nsource\nbinary\ncomparator\n/dev/null\ncc.out\n"
+text msg "DDC650 diverse double compilation: does BIN equal what two independent routes build from SRC\ninput OM4 \ninput CC \ninput ORACLE_SRC \ninput SRC \ninput BIN \n sha256 \n pin \n match\n MISMATCH\n  $\n < \n > \n 2> \n  exit=\n unreadable\nartifact \n bytes \ncheck \n PASS\n FAIL\n INVALID\ncomparator self-test (equal files, one differing byte, differing length):\nroute S stage1 = OM4(SRC), two builds, exit 0, ELF:\nroute S stage1 deterministic (two builds identical):\nroute S stage2 = stage1(SRC), two builds, exit 0, ELF:\nroute S stage2 deterministic (two builds identical):\nroute I oracle = CC(ORACLE_SRC), exit 0, ELF:\nroute I ref = oracle run SRC < SRC, two runs, exit 0:\nroute I deterministic (two runs identical):\nsubject self = BIN(SRC), exit 0:\nself-regeneration BIN(SRC) == BIN:\nDDC route S: stage2 == BIN:\nDDC route I: ref == BIN:\nroutes agree: stage2 == ref:\nsensitivity: mstage1 = OM4(SRC with an extra NOP per zero/minus-one constant), mstage2 = mstage1(SRC) != BIN:\ninfo stage1 == BIN (not required): \nyes\nno\ncontrol \ncontrol site found exactly once in \nVERDICT DDC650 PASS: BIN equals what route S (seed om4) and route I (CC-built spec interpreter) build from SRC; scope: these SRC, BIN, OM4, ORACLE_SRC, CC and this host only; not a proof that SRC is correct or safe and not a trusting-trust cure\nVERDICT DDC650 FAIL: correspondence between SRC and BIN is not shown\nVERDICT DDC650 INVALID: no evidence either way\nCONTROL SURVIVED: the injected difference was not detected\nCONTROL CAUGHT: the injected difference stopped a PASS\nusage: ddc OM4 OM4_SHA256 CC ORACLE_SRC ORACLE_SRC_SHA256 SRC BIN SCRATCH [stage1|oracle|source|binary|comparator]\nscratch exists or cannot be created\nSHA-256 constants unreadable\n  child signal or deadline exceeded; wait low byte=\n  child exec or redirect failed (exit 127)\nINVALID scratch I/O, argument or capacity failure\ncontrol site not found exactly once in \n (route not run)\n"
+text site1 "\nemit or mop r\n"
+text rep1 "\nemit 3573751839\nemit or mop r\n"
+text site2 "return canon(t, x << s);"
+text rep2 "return canon(t, (x << s) ^ (s == 3));"
+global pb uchar 4096
+global pn ulong 1
+global scr uchar 4096
+global scn ulong 1
+global av uchar 4096
+global ap ulong 2
+global big uchar 16777216
+global bgn ulong 1
+global buf uchar 65536
+global oth uchar 65536
+global dig uchar 32
+global stb uchar 4
+global gst ulong 2
+global rok ulong 2
+global ctl ulong 1
+global srcp ulong 1
+global binp ulong 1
+global osp ulong 1
+global spos ulong 2
+global pin uchar 64
+global hexd uchar 64
+global nums ulong 64
+global kk uint 64
+global ivs uint 8
+global hv uint 8
+global ws uint 64
+global st uint 8
+global blk uchar 64
+global bk ulong 2
+global hsz ulong 1
+note ---- output -------------------------------------------------------------------------------
+fn say id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len msg
+if eq get msg i 10
+if eq k id
+r = write 1 msg s sub i s
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn newline to void
+put dig 0 10
+r = write 1 dig 0 1
+end
+fn space to void
+put dig 0 32
+r = write 1 dig 0 1
+end
+fn decimal v ulong to ulong
+x = v
+n = ulong 0
+while ge x 10
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+ret add n 1
+end
+fn num v ulong to void
+n = decimal v
+for i ulong n
+r = write 1 dig sub sub n i 1 1
+end
+end
+fn abort to void
+newline
+say 52
+newline
+exit 3
+end
+note ---- paths: code 1..99 is SCRATCH/<word>, 101..109 is argument code-100, 201.. is <word code-200>
+fn pclear to void
+put pn 0 0
+end
+fn pbyte b uchar to void
+n = get pn 0
+if ge n 4095
+abort
+end
+put pb n b
+put pn 0 add n 1
+end
+fn pword id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len words
+if eq get words i 10
+if eq k id
+for j ulong sub i s
+pbyte get words add s j
+end
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn setp c ulong to void
+pclear
+if ge c 200
+pword sub c 200
+ret
+end
+if ge c 100
+r = argread sub c 100 pb 0 4095
+if lt r 1
+abort
+end
+put pn 0 ulong r
+ret
+end
+for i ulong get scn 0
+pbyte get scr i
+end
+pword c
+end
+fn showpb to void
+r = write 1 pb 0 get pn 0
+end
+fn popen fl int to int
+r = fopen pb 0 get pn 0 fl 384
+if lt r 0
+abort
+end
+ret int r
+end
+fn fclo fd int to void
+if ge fd 0
+r = fclose fd
+end
+end
+note ---- children ----------------------------------------------------------------------------
+fn apb to void
+n = get pn 0
+p = get ap 0
+if or gt add add p n 2 len av ge get ap 1 64
+abort
+end
+put av p uchar and n 255
+put av add p 1 uchar shr n 8
+p = add p 2
+for i ulong n
+put av add p i get pb i
+end
+put ap 0 add p n
+put ap 1 add get ap 1 1
+space
+showpb
+end
+fn cmd c ulong to void
+put ap 0 2
+put ap 1 0
+say 11
+setp c
+apb
+end
+fn arg c ulong to void
+setp c
+apb
+end
+fn redir s int d int to void
+if ne s d
+if ne dupfd s d 0 long d
+exit 127
+end
+end
+end
+fn reap pid int to ulong
+t0 = monons
+while true
+r = waitpid pid stb 0 len stb 1
+if eq r long pid
+if ne get stb 0 0
+say 50
+num ulong get stb 0
+newline
+ret 256
+end
+x = ulong get stb 1
+if eq x 127
+say 51
+newline
+end
+ret x
+end
+if lt r 0
+abort
+end
+now = monons
+if or lt now t0 gt sub now t0 300000000000
+r = killpid pid 9
+r = waitpid pid stb 0 len stb 0
+say 50
+num ulong get stb 0
+newline
+ret 257
+end
+if ne sleepns 1000000 0
+abort
+end
+end
+exit 99
+end
+note run the command in av with stdin from path code ic, stdout to SCRATCH/<oc>, stderr to .err
+fn spawn ic ulong oc ulong to ulong
+say 12
+setp ic
+showpb
+fi = popen 524288
+say 13
+setp oc
+showpb
+fo = popen 524481
+say 14
+setp oc
+pword 27
+showpb
+fe = popen 524481
+newline
+put av 0 uchar and get ap 1 255
+put av 1 uchar shr get ap 1 8
+pid = fork
+if lt pid 0
+abort
+end
+if eq pid 0
+redir fi 0
+redir fo 1
+redir fe 2
+r = execprog av 0 get ap 0
+exit 127
+end
+fclo fi
+fclo fo
+fclo fe
+x = reap int pid
+say 15
+num x
+newline
+ret x
+end
+note make SCRATCH/<c> or BIN executable after checking its ELF magic; false when it is not ELF
+fn enable c ulong to bool
+setp c
+fd = popen 524288
+r = read fd buf 0 4
+ok = true
+if ne r 4
+ok = false
+else
+if or ne get buf 0 127 ne get buf 1 69
+ok = false
+end
+if or ne get buf 2 76 ne get buf 3 70
+ok = false
+end
+end
+if ok
+if ne fchmod fd 448 0
+abort
+end
+end
+fclo fd
+ret ok
+end
+note ---- byte comparator ---------------------------------------------------------------------
+fn rfa fd int to long
+n = ulong 0
+while lt n len buf
+r = read fd buf n sub len buf n
+if lt r 0
+ret r
+end
+if eq r 0
+ret long n
+end
+n = add n ulong r
+end
+ret long n
+end
+fn rfb fd int to long
+n = ulong 0
+while lt n len oth
+r = read fd oth n sub len oth n
+if lt r 0
+ret r
+end
+if eq r 0
+ret long n
+end
+n = add n ulong r
+end
+ret long n
+end
+fn cmpfd fa int fb int to bool
+while true
+ra = rfa fa
+rb = rfb fb
+if or lt ra 0 lt rb 0
+abort
+end
+if ne ra rb
+ret false
+end
+if eq ra 0
+ret true
+end
+for i ulong ulong ra
+if ne get buf i get oth i
+ret false
+end
+end
+end
+ret false
+end
+fn same a ulong b ulong to bool
+if eq get ctl 0 5
+ret true
+end
+setp a
+fa = popen 524288
+setp b
+fb = popen 524288
+eqv = cmpfd fa fb
+fclo fa
+fclo fb
+ret eqv
+end
+note ---- SHA-256 (FIPS 180-4), copied from seed/qualification/om2/gate.om; artifact identity only
+fn rotr x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+fn shasched to void
+for i ulong 16
+b = mul i 4
+v = shl uint get blk b 24
+v = or v shl uint get blk add b 1 16
+v = or v shl uint get blk add b 2 8
+v = or v uint get blk add b 3
+put ws i v
+end
+for j ulong 48
+q = add j 16
+x = get ws sub q 15
+y = get ws sub q 2
+s0 = xor xor rotr x 7 rotr x 18 shr x 3
+s1 = xor xor rotr y 17 rotr y 19 shr y 10
+put ws q add add add get ws sub q 16 s0 get ws sub q 7 s1
+end
+end
+fn shat1 i ulong to uint
+e = get st 4
+s1 = xor xor rotr e 6 rotr e 11 rotr e 25
+ch = xor and e get st 5 and not e get st 6
+ret add add add add get st 7 s1 ch get kk i get ws i
+end
+fn shat2 to uint
+a = get st 0
+b = get st 1
+c = get st 2
+s0 = xor xor rotr a 2 rotr a 13 rotr a 22
+mj = xor xor and a b and a c and b c
+ret add s0 mj
+end
+fn shacomp to void
+shasched
+for i ulong 8
+put st i get hv i
+end
+for i ulong 64
+t1 = shat1 i
+t2 = shat2
+put st 7 get st 6
+put st 6 get st 5
+put st 5 get st 4
+put st 4 add get st 3 t1
+put st 3 get st 2
+put st 2 get st 1
+put st 1 get st 0
+put st 0 add t1 t2
+end
+for i ulong 8
+put hv i add get hv i get st i
+end
+end
+fn shabyte b uchar to void
+n = get bk 0
+put blk n b
+n = add n 1
+if eq n 64
+shacomp
+n = ulong 0
+end
+put bk 0 n
+put bk 1 add get bk 1 1
+end
+fn hexch v uint to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+fn shafinal to void
+bits = mul get bk 1 8
+shabyte 128
+while ne get bk 0 56 bound 64
+shabyte 0
+end
+for i ulong 8
+shabyte uchar and shr bits mul sub 7 i 8 255
+end
+for i ulong 8
+v = get hv i
+for j ulong 8
+put hexd add mul i 8 j hexch and shr v mul sub 7 j 4 15
+end
+end
+end
+note hash the file named by path code c into hexd; false when it cannot be read; bk[1] = bytes
+fn hashp c ulong to bool
+setp c
+r = fopen pb 0 get pn 0 524288 384
+if lt r 0
+ret false
+end
+fd = int r
+for i ulong 8
+put hv i get ivs i
+end
+put bk 0 0
+put bk 1 0
+while true
+n = rfa fd
+if lt n 0
+fclo fd
+ret false
+end
+if eq n 0
+fclo fd
+put hsz 0 get bk 1
+shafinal
+ret true
+end
+for i ulong ulong n
+shabyte get buf i
+end
+end
+ret false
+end
+fn parsenum n ulong want ulong to bool
+m = ulong not uint 0
+k = ulong 0
+v = ulong 0
+nd = ulong 0
+for i ulong n
+c = get buf i
+if and ge c 48 le c 57
+if ge nd 10
+ret false
+end
+v = add mul v 10 ulong sub c 48
+nd = add nd 1
+else
+if or ne c 10 eq nd 0
+ret false
+end
+if ge k want
+ret false
+end
+if gt v m
+ret false
+end
+put nums k v
+k = add k 1
+v = ulong 0
+nd = ulong 0
+end
+end
+ret and eq nd 0 eq k want
+end
+fn loadnums c ulong want ulong to bool
+setp c
+r = fopen pb 0 get pn 0 524288 384
+if lt r 0
+ret false
+end
+fd = int r
+n = rfa fd
+fclo fd
+if or le n 0 ge n long len buf
+ret false
+end
+ret parsenum ulong n want
+end
+fn loadconst to bool
+if not loadnums 216 64
+ret false
+end
+for i ulong 64
+put kk i uint get nums i
+end
+if not loadnums 217 8
+ret false
+end
+for i ulong 8
+put ivs i uint get nums i
+end
+ret true
+end
+note ---- checks and identities ---------------------------------------------------------------
+note res 0 PASS, 1 FAIL, 2 INVALID
+fn check m ulong res ulong to void
+say 19
+say m
+if eq res 0
+say 20
+end
+if eq res 1
+say 21
+put gst 0 1
+end
+if eq res 2
+say 22
+put gst 1 1
+end
+newline
+end
+fn notrun m ulong to void
+say 19
+say m
+say 22
+say 54
+newline
+put gst 1 1
+end
+fn showhash to void
+say 7
+r = write 1 hexd 0 64
+say 18
+num get hsz 0
+end
+fn art c ulong to void
+say 17
+setp c
+showpb
+if hashp c
+showhash
+else
+say 16
+put gst 1 1
+end
+newline
+end
+note print an input, its digest and, when pinarg is not 0, its pin; 0 when readable and pinned
+fn ident m ulong c ulong pinarg ulong to ulong
+say m
+setp c
+showpb
+if not hashp c
+say 16
+newline
+ret 2
+end
+showhash
+if eq pinarg 0
+newline
+ret 0
+end
+say 8
+r = argread sub pinarg 100 pin 0 64
+if ne r 64
+say 10
+newline
+ret 2
+end
+q = write 1 pin 0 64
+for i ulong 64
+if ne get hexd i get pin i
+say 10
+newline
+ret 2
+end
+end
+say 9
+newline
+ret 0
+end
+fn inputs to void
+bad = ident 2 101 102
+bad = or bad ident 3 103 0
+bad = or bad ident 4 104 105
+bad = or bad ident 5 106 0
+bad = or bad ident 6 107 0
+if ne bad 0
+put gst 1 1
+end
+end
+note ---- comparator self-test ----------------------------------------------------------------
+fn wfile c ulong n ulong b0 uchar b1 uchar to void
+setp c
+fd = popen 524481
+put oth 0 b0
+put oth 1 b1
+r = write fd oth 0 n
+if ne r long n
+abort
+end
+fclo fd
+end
+fn selftest to void
+wfile 12 1 120 0
+wfile 13 1 120 0
+wfile 14 1 121 0
+wfile 15 2 120 121
+ok = same 12 13
+ok = and ok not same 12 14
+ok = and ok not same 12 15
+ok = and ok not same 15 12
+res = ulong 2
+if ok
+res = ulong 0
+end
+check 23 res
+end
+note ---- mutants: exact-once byte substitution of site w in the file at path code c ----------
+fn loadbig c ulong to void
+setp c
+fd = popen 524288
+n = ulong 0
+while lt n len big
+r = read fd big n sub len big n
+if lt r 0
+abort
+end
+if eq r 0
+fclo fd
+put bgn 0 n
+ret
+end
+n = add n ulong r
+end
+abort
+end
+fn sitelen w ulong to ulong
+if eq w 1
+ret len site1
+end
+ret len site2
+end
+fn siteb w ulong i ulong to uchar
+if eq w 1
+ret get site1 i
+end
+ret get site2 i
+end
+fn replen w ulong to ulong
+if eq w 1
+ret len rep1
+end
+ret len rep2
+end
+fn repb w ulong i ulong to uchar
+if eq w 1
+ret get rep1 i
+end
+ret get rep2 i
+end
+fn matchat w ulong p ulong to bool
+n = sitelen w
+if gt add p n get bgn 0
+ret false
+end
+for i ulong n
+if ne get big add p i siteb w i
+ret false
+end
+end
+ret true
+end
+note count occurrences of site w in big; spos[0] = count, spos[1] = last position
+fn findsite w ulong to void
+put spos 0 0
+for p ulong get bgn 0
+if matchat w p
+put spos 0 add get spos 0 1
+put spos 1 p
+end
+end
+end
+fn wbig fd int o ulong n ulong to void
+if gt n 0
+r = write fd big o n
+if ne r long n
+abort
+end
+end
+end
+fn mutate w ulong sc ulong dc ulong to bool
+loadbig sc
+findsite w
+if ne get spos 0 1
+say 53
+setp sc
+showpb
+newline
+ret false
+end
+say 41
+setp sc
+showpb
+newline
+setp dc
+fd = popen 524481
+p = get spos 1
+wbig fd 0 p
+for i ulong replen w
+put oth i repb w i
+end
+r = write fd oth 0 replen w
+if ne r long replen w
+abort
+end
+e = add p sitelen w
+wbig fd e sub get bgn 0 e
+fclo fd
+ret true
+end
+fn flipbin to bool
+loadbig 107
+if le get bgn 0 1000
+ret false
+end
+put big 1000 xor get big 1000 1
+setp 28
+fd = popen 524481
+wbig fd 0 get bgn 0
+fclo fd
+ret enable 28
+end
+fn prepare to void
+if not mutate 1 106 9
+put gst 1 1
+ret
+end
+c = get ctl 0
+if eq c 2
+if not mutate 2 104 29
+put gst 1 1
+ret
+end
+put osp 0 29
+end
+if eq c 3
+put srcp 0 9
+end
+if eq c 4
+if not flipbin
+put gst 1 1
+ret
+end
+put binp 0 28
+end
+end
+note ---- routes ------------------------------------------------------------------------------
+fn exe c ulong ic ulong oc ulong to ulong
+cmd c
+ret spawn ic oc
+end
+fn pair c ulong ic ulong o1 ulong o2 ulong to ulong
+x = exe c ic o1
+y = exe c ic o2
+if or ne x 0 ne y 0
+ret 2
+end
+ret 0
+end
+fn verdict2 ok bool to ulong
+if ok
+ret 0
+end
+ret 2
+end
+fn routes to void
+s = get srcp 0
+in1 = s
+if eq get ctl 0 1
+in1 = ulong 9
+end
+r = pair 101 in1 1 2
+if eq r 0
+r = verdict2 and enable 1 enable 2
+end
+check 24 r
+if ne r 0
+notrun 26
+ret
+end
+d = verdict2 same 1 2
+check 25 d
+art 1
+if ne d 0
+notrun 26
+ret
+end
+r = pair 1 s 3 4
+if eq r 0
+r = verdict2 and enable 3 enable 4
+end
+check 26 r
+if ne r 0
+ret
+end
+d = verdict2 same 3 4
+check 27 d
+art 3
+if eq d 0
+put rok 0 1
+end
+end
+fn oracle to void
+cmd 103
+for i ulong 6
+arg add 219 i
+end
+arg 225
+arg 5
+arg get osp 0
+arg 226
+x = spawn 235 36
+r = ulong 2
+if eq x 0
+r = verdict2 enable 5
+end
+check 28 r
+if ne r 0
+notrun 29
+ret
+end
+art 5
+s = get srcp 0
+cmd 5
+arg 218
+arg s
+x = spawn s 6
+cmd 5
+arg 218
+arg s
+y = spawn s 7
+r = ulong 0
+if or ne x 0 ne y 0
+r = ulong 2
+end
+check 29 r
+if ne r 0
+ret
+end
+d = verdict2 same 6 7
+check 30 d
+art 6
+if eq d 0
+put rok 1 1
+end
+end
+fn fail1 eqv bool to ulong
+if eqv
+ret 0
+end
+ret 1
+end
+fn subject to void
+b = get binp 0
+x = exe b get srcp 0 8
+r = ulong 0
+if ne x 0
+r = ulong 1
+end
+check 31 r
+if eq r 0
+check 32 fail1 same 8 b
+art 8
+else
+check 32 1
+end
+end
+fn ddc to void
+b = get binp 0
+if ne get rok 0 0
+check 33 fail1 same 3 b
+say 37
+if same 1 b
+say 38
+else
+say 39
+end
+newline
+else
+notrun 33
+end
+if ne get rok 1 0
+check 34 fail1 same 6 b
+else
+notrun 34
+end
+if and ne get rok 0 0 ne get rok 1 0
+check 35 fail1 same 3 6
+else
+notrun 35
+end
+end
+fn sense to void
+x = exe 101 9 10
+r = ulong 2
+if eq x 0
+if enable 10
+r = ulong 0
+end
+end
+if eq r 0
+y = exe 10 get srcp 0 11
+if ne y 0
+r = ulong 2
+else
+if same 11 get binp 0
+r = ulong 2
+end
+end
+end
+check 36 r
+art 10
+art 11
+end
+fn verdict to int
+code = int 0
+if ne get gst 1 0
+say 44
+code = 3
+else
+if ne get gst 0 0
+say 43
+code = 1
+else
+say 42
+end
+end
+newline
+if ne get ctl 0 0
+if eq code 0
+say 45
+newline
+ret 4
+end
+say 46
+newline
+end
+ret code
+end
+note ---- main --------------------------------------------------------------------------------
+fn control to bool
+r = argread 9 oth 0 4095
+if lt r 1
+ret false
+end
+n = ulong r
+for k ulong 5
+pclear
+pword add 30 k
+hit = eq get pn 0 n
+if hit
+for i ulong n
+if ne get pb i get oth i
+hit = false
+end
+end
+end
+if hit
+put ctl 0 add k 1
+ret true
+end
+end
+ret false
+end
+fn usage to int
+say 47
+newline
+ret 90
+end
+fn main to int
+if and ne argcnt 9 ne argcnt 10
+ret usage
+end
+r = argread 8 scr 0 4094
+if lt r 1
+ret usage
+end
+n = ulong r
+if eq argcnt 10
+if not control
+ret usage
+end
+end
+if ne makedir scr 0 n 448 0
+say 48
+newline
+ret 91
+end
+put scr n 47
+put scn 0 add n 1
+put srcp 0 106
+put binp 0 107
+put osp 0 104
+if not loadconst
+say 49
+newline
+ret 3
+end
+say 1
+newline
+if ne get ctl 0 0
+say 40
+pclear
+pword add 29 get ctl 0
+showpb
+newline
+end
+inputs
+if ne get gst 1 0
+ret verdict
+end
+selftest
+if ne get gst 1 0
+ret verdict
+end
+prepare
+if ne get gst 1 0
+ret verdict
+end
+routes
+oracle
+subject
+ddc
+sense
+ret verdict
+end

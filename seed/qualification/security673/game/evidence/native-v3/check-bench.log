@@ -1,0 +1,253 @@
+check_ns=
+5153190
+PASS certified serial witnesses empty-set costs
+states=
+2593
+edges=
+16002
+winning=
+1000
+rounds=
+3
+array_bytes=
+28517
+distinct_hidden_states=
+840
+distinct_hidden_edges=
+12600
+identical_zero_states=
+200
+identical_zero_edges=
+2484
+sample_ns=
+4967108
+sample_ns=
+4924708
+sample_ns=
+4902675
+sample_ns=
+4908547
+sample_ns=
+4909956
+sample_ns=
+4895795
+sample_ns=
+4898484
+sample_ns=
+4898835
+sample_ns=
+4892579
+sample_ns=
+4898179
+sample_ns=
+4908932
+sample_ns=
+4896099
+sample_ns=
+4915844
+sample_ns=
+4902771
+sample_ns=
+4883571
+sample_ns=
+4979540
+sample_ns=
+5053301
+sample_ns=
+4899492
+sample_ns=
+4918035
+sample_ns=
+4912276
+sample_ns=
+4894531
+sample_ns=
+4892499
+sample_ns=
+4913828
+sample_ns=
+4985604
+sample_ns=
+4908931
+sample_ns=
+4892740
+sample_ns=
+4887715
+sample_ns=
+4935395
+sample_ns=
+4901140
+sample_ns=
+4876755
+sample_ns=
+4894547
+sample_ns=
+4903204
+sample_ns=
+4889635
+sample_ns=
+4878195
+sample_ns=
+4884915
+sample_ns=
+4875171
+sample_ns=
+4871635
+sample_ns=
+4878355
+sample_ns=
+4880051
+sample_ns=
+4890212
+sample_ns=
+4870851
+sample_ns=
+4877715
+sample_ns=
+4875587
+sample_ns=
+4887891
+sample_ns=
+4881587
+sample_ns=
+4881523
+sample_ns=
+4896804
+sample_ns=
+4908675
+sample_ns=
+4876675
+sample_ns=
+4880579
+sample_ns=
+4870787
+sample_ns=
+4871907
+sample_ns=
+4873300
+sample_ns=
+4872467
+sample_ns=
+4877043
+sample_ns=
+4888483
+sample_ns=
+4900691
+sample_ns=
+4910164
+sample_ns=
+4896995
+sample_ns=
+4880211
+sample_ns=
+4868307
+sample_ns=
+4870707
+sample_ns=
+4874067
+sample_ns=
+4875571
+sample_ns=
+4873715
+sample_ns=
+4880739
+sample_ns=
+4903524
+sample_ns=
+4904563
+sample_ns=
+4875843
+sample_ns=
+4906228
+sample_ns=
+4899443
+sample_ns=
+4887987
+sample_ns=
+4873651
+sample_ns=
+4882659
+sample_ns=
+4882803
+sample_ns=
+4871140
+sample_ns=
+4872739
+sample_ns=
+4873299
+sample_ns=
+4870659
+sample_ns=
+4872483
+sample_ns=
+4876387
+sample_ns=
+4897667
+sample_ns=
+4870259
+sample_ns=
+4873587
+sample_ns=
+4868819
+sample_ns=
+4873283
+sample_ns=
+4875683
+sample_ns=
+4874307
+sample_ns=
+4875123
+sample_ns=
+4877203
+sample_ns=
+4875764
+sample_ns=
+4882867
+sample_ns=
+4879891
+sample_ns=
+4874547
+sample_ns=
+4882131
+sample_ns=
+4879987
+sample_ns=
+4881235
+sample_ns=
+4874179
+sample_ns=
+4873651
+sample_ns=
+4875507
+sample_ns=
+4872707
+p50_ns=
+4882131
+p95_ns=
+4924708
+p99_ns=
+4985604
+PASS SC1-G-v3 finite model only
+	Command being timed: "build/security760-v3/check0 7"
+	User time (seconds): 0.49
+	System time (seconds): 0.00
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.49
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 192
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 21
+	Voluntary context switches: 1
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

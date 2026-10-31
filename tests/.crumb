@@ -271,8 +271,8 @@
           "purpose": "Reservoir tests (omega#440): Gate 1 simulator and readout checks against an independent binary64"
         },
         {
-          "digest": "2abedd856b822c40ceaffa3570f5ff27d9befbdf54c5f00e81f7f77cba5e15b2",
-          "last_commit": "60e149b47",
+          "digest": "a067987d66d69fef035af10165d33f225b8b7c78e97e0258320592167c467399",
+          "last_commit": "2a34c0ac8",
           "name": "runtime",
           "purpose": "Directory tests/runtime. Purpose not yet described by a human."
         },
@@ -307,15 +307,15 @@
           "purpose": "Directory tests/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:7a051f9379a1e960c4a0a7d8c261286e5f78eba68a9501d6249842cfa721bd50",
-      "compiled_at": "2026-10-31T14:53:15Z",
+      "children_root": "sha256:34eedcbe65fe0fef66899897af05406fe544163f31bf5eb9f0c8ddf7d31debc6",
+      "compiled_at": "2026-10-31T15:09:31Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:9ea58b159330ed3c4e74b95f1fa62f470df588ae7036ad5a5a3abb3dc47005ac",
+      "digest": "sha256:a7d6ccf7aa16bcbe1a5691851cfc14111c6f3cb4f629f51c44ab15d7d324f0d2",
       "evidence_files": 74,
       "evidence_root": "sha256:9aa38bf7dcfa5eb3499356a0a2a1dd7704fedfae2d16822a7c9e1400f3a72723",
-      "files": 2048,
-      "generated_at_commit": "60e149b471d940e7a15cc8a44b5e463a9f4b3be5",
-      "source_tree": "sha256:b9c73a06ffb9a893696c949565bd887bc63e2f15a35621c1b2337e9a2e202c93"
+      "files": 2050,
+      "generated_at_commit": "4737815af0b3e2354afb8135286abe1f7ac926a2",
+      "source_tree": "sha256:462955ca1ea8ac7c9c69237b4f211aaf475169a5be61e98b174c6bf322b9556f"
     },
     "owner_lane": "",
     "provenance": {

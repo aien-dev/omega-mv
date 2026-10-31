@@ -1,0 +1,887 @@
+note SC1-G transport only. No transition or invariant code is shared.
+global wire uchar 4096
+global pos ulong 1
+global avail ulong 1
+global digits uchar 32
+global samples ulong 101
+text nl "\n"
+text sp " "
+text tags "construct_ns=\nsolve_ns=\ncheck_ns=\nstates=\nedges=\nwinning=\nrounds=\narray_bytes=\nPASS SC1-G-v3 finite model only\nFAIL QUANTIFIER_CLOSURE\nFAIL OMITTED_DISTURBANCE_CLOSURE\nFAIL FRESHNESS_AT_RENAME\nFAIL UNCERTAIN_REFUND\nFAIL SELECTED_NOT_SAFE\nFAIL EARLY_STOP_CLOSURE\nFAIL CERTIFICATE\nPASS certified serial witnesses empty-set costs\nFAIL PAIRED_PRODUCT\ndistinct_hidden_states=\ndistinct_hidden_edges=\nsample_ns=\np50_ns=\np95_ns=\np99_ns=\nidentical_zero_states=\nidentical_zero_edges=\nWITNESS source action disturbance raw effective\nFAIL TRANSITION_CONFORMANCE\nFAIL CLOSURE\nFAIL SOURCE_INVARIANT\nFAIL DISABLED_ACTION\nFAIL EXACTNESS\nFAIL SELECTION_COST\n"
+fn label id uint to void
+p = ulong 0
+n = uint 0
+for j ulong len tags
+if eq get tags j 10
+if eq n id
+r = write 2 tags p add sub j p 1
+if ne r long add sub j p 1
+exit 90
+end
+ret
+end
+n = add n 1
+p = add j 1
+end
+end
+exit 90
+end
+fn number n ulong to void
+p = ulong 0
+while ge n 10 bound 32
+put digits p uchar add rem n 10 48
+n = div n 10
+p = add p 1
+end
+put digits p uchar add n 48
+p = add p 1
+for j ulong p
+r = write 2 digits sub sub p j 1 1
+if ne r 1
+exit 90
+end
+end
+r = write 2 nl 0 1
+if ne r 1
+exit 90
+end
+end
+fn mode to uint
+if eq argcnt 1
+ret 0
+end
+if ne argcnt 2
+exit 90
+end
+if ne argread 1 wire 0 1 1
+exit 90
+end
+m = get wire 0
+if or lt m 48 gt m 56
+exit 90
+end
+ret sub uint m 48
+end
+fn flush to void
+n = get pos 0
+if ne write 1 wire 0 n long n
+exit 90
+end
+put pos 0 0
+end
+fn sendword x uint to void
+for i ulong 4
+p = get pos 0
+put wire p uchar and shr x mul uint i 8 255
+put pos 0 add p 1
+if eq get pos 0 4096
+flush
+end
+end
+end
+fn recvword to uint
+x = uint 0
+for i ulong 4
+if eq get pos 0 get avail 0
+n = read 0 wire 0 len wire
+if le n 0
+exit 90
+end
+put avail 0 ulong n
+put pos 0 0
+end
+p = get pos 0
+x = or x shl uint get wire p mul uint i 8
+put pos 0 add p 1
+end
+ret x
+end
+fn endinput to void
+if ne get pos 0 get avail 0
+exit 90
+end
+if ne read 0 wire 0 len wire 0
+exit 90
+end
+end
+fn percentiles to void
+for i ulong 101
+label 20
+number get samples i
+end
+for i ulong 101
+for j ulong 100
+if gt get samples j get samples add j 1
+t = get samples j
+put samples j get samples add j 1
+put samples add j 1 t
+end
+end
+end
+label 21
+number get samples 50
+label 22
+number get samples 95
+label 23
+number get samples 99
+end
+note SC1-G-v3 source-fixed experiment 0; no runtime fault selector.
+fn fault to uint
+ret 0
+end
+note SC1-G-v3 frozen fixture IDs, compiled into the checker and used by witnesses.
+note 0 initial,1 losing,2 early,3 stale,4 uncertain,5 eager,6 serialized,7 final,8 BAD.
+fn fixture id uint to uint
+if eq id 0
+ret 0
+end
+if eq id 1
+ret 15
+end
+if eq id 2
+ret 16
+end
+if eq id 3
+ret 331
+end
+if eq id 4
+ret 11
+end
+if eq id 5
+ret 20
+end
+if eq id 6
+ret 32
+end
+if eq id 7
+ret 266
+end
+if eq id 8
+ret 2592
+end
+exit 90
+end
+note Independent SC1-G-v3 enumerator and rename safety monitor.
+note Reverse-order in-place losing attractor, versus synchronous solver bitmaps.
+global fields uint 5
+global costs uint 18
+global rules uint 18
+global submit uint 2593
+global chosen uint 2593
+global alive uchar 2593
+global counts ulong 3
+global pairs ulong 4
+global variant uint 1
+global claim uint 1
+fn refuse id uint to void
+if eq id 8
+label 17
+exit 78
+end
+label add id 8
+exit add int id 70
+end
+fn witness s uint u uint d uint raw uint effect uint to void
+label 26
+number ulong s
+number ulong u
+number ulong d
+number ulong raw
+number ulong effect
+end
+fn unpack s uint to void
+put fields 0 rem s 18
+put fields 1 rem div s 18 18
+put fields 2 and div s 324 1
+put fields 3 and div s 648 1
+put fields 4 div s 1296
+end
+fn pack to uint
+n = get fields 4
+n = add mul n 2 get fields 3
+n = add mul n 2 get fields 2
+n = add mul n 18 get fields 1
+ret add mul n 18 get fields 0
+end
+fn localok s uint to bool
+if eq s 2592
+ret false
+end
+x = rem s 18
+y = rem div s 18 18
+if or eq x 17 eq y 17
+ret false
+end
+if gt add get costs x get costs y 3
+ret false
+end
+if ne rem div s 324 4 0
+if and ge x 15 le x 16
+ret false
+end
+if and ge y 15 le y 16
+ret false
+end
+end
+ret true
+end
+fn actions s uint to uint
+if not localok s
+ret 0
+end
+if ge s 1296
+ret 2
+end
+x = rem s 18
+y = rem div s 18 18
+m = shl get rules x 2
+m = or m shl get rules y 10
+if gt add get costs x get costs y 1
+m = and m not uint 1028
+end
+if ne rem div s 324 4 0
+m = and m not uint 131584
+end
+if and or eq x 0 eq x 14 or eq y 0 eq y 14
+m = or m 1
+end
+ret m
+end
+fn init to void
+for p uint 18
+put costs p 2
+end
+put costs 0 0
+put costs 1 0
+put costs 12 1
+put costs 13 1
+put costs 14 1
+put rules 1 3
+put rules 2 6
+for p uint 4
+put rules add p 3 138
+put rules add p 7 18
+end
+put rules 11 32
+put rules 12 64
+put rules 13 64
+put rules 15 48
+put rules 16 128
+for s uint 2593
+put alive s 0
+if localok s
+put alive s 1
+end
+end
+end
+fn disturb d uint to void
+if eq d 4
+put fields 3 1
+end
+if eq d 3
+put fields 2 1
+end
+if eq d 2
+if eq get fields 1 0
+put fields 1 1
+end
+end
+if eq d 1
+if eq get fields 0 0
+put fields 0 1
+end
+end
+end
+fn special c uint k uint d uint to uint
+p = get fields c
+if or eq d 7 and eq p 15 eq d 6
+ret pack
+end
+if eq d 5
+put fields c 0
+put fields 4 1
+ret pack
+end
+if or eq d 3 eq d 4
+if eq p 15
+if eq add k d 8
+ret 2592
+end
+end
+put fields c 0
+disturb d
+ret pack
+end
+if eq p 16
+put fields c 15
+else
+put fields c 14
+end
+disturb d
+ret pack
+end
+fn reconc to uint
+for c uint 2
+p = get fields c
+if ge p 15
+ret 2592
+end
+if and ge p 2 lt p 11
+put fields c 0
+end
+if eq p 11
+put fields c 12
+end
+end
+put fields 4 0
+ret pack
+end
+fn enact c uint k uint d uint to uint
+p = get fields c
+q = p
+if eq k 7
+if eq add get fields 2 get fields 3 0
+q = 16
+end
+end
+if eq k 6
+q = 14
+if eq d 8
+q = 13
+end
+end
+if eq k 5
+if ne d 6
+q = 12
+if eq d 8
+q = 13
+end
+end
+end
+if eq k 4
+t = add get fields 2 mul get fields 3 2
+if eq sub p 7 t
+q = 11
+end
+end
+if eq k 3
+if ne d 6
+q = add p 4
+end
+end
+if eq k 2
+q = add uint 3 add get fields 2 mul get fields 3 2
+end
+if eq k 1
+q = 0
+end
+if eq k 0
+q = 2
+end
+put fields c q
+ret pack
+end
+fn oracle s uint u uint d uint to uint
+if eq and actions s shl uint 1 u 0
+ret 2592
+end
+unpack s
+if ge u 2
+c = uint 0
+if ge u 10
+c = 1
+end
+p = get fields c
+if and ge p 15 le p 16
+ret special c rem sub u 2 8 d
+end
+end
+if eq d 7
+ret s
+end
+if eq d 5
+put fields 4 1
+ret pack
+end
+disturb d
+if eq u 1
+ret reconc
+end
+if eq u 0
+ret pack
+end
+ret enact div sub u 2 8 rem sub u 2 8 d
+end
+fn clientphase s uint c uint to uint
+if eq c 1
+s = div s 18
+end
+ret rem s 18
+end
+fn monitor s uint u uint d uint got uint to uint
+if or lt u 2 ge got 2592
+ret 0
+end
+c = div sub u 2 8
+p = clientphase s c
+q = clientphase got c
+if and eq p 11 eq q 17
+ret 4
+end
+if ne rem sub u 2 8 4
+ret 0
+end
+if or lt p 7 gt p 10
+ret 0
+end
+if ne q 11
+ret 0
+end
+e = and div s 324 1
+v = and div s 648 1
+if eq d 3
+e = 1
+end
+if eq d 4
+v = 1
+end
+if ne sub p 7 add e mul v 2
+ret 3
+end
+ret 0
+end
+fn readstate s uint to void
+m = recvword
+if ne m actions s
+refuse 7
+end
+put submit s recvword
+put chosen s recvword
+for u uint 18
+if ne and m shl uint 1 u 0
+for d uint 9
+got = recvword
+if ge got 2593
+refuse 7
+end
+bad = monitor s u d got
+if ne bad 0
+witness s u d got 2592
+refuse bad
+end
+want = oracle s u d
+put counts 0 add get counts 0 1
+if ne got want
+witness s u d got want
+label 27
+exit 79
+end
+end
+end
+end
+end
+fn allwithin s uint u uint nd uint to bool
+if or eq nd 0 gt nd 9
+ret false
+end
+if eq and actions s shl uint 1 u 0
+ret false
+end
+d = nd
+while gt d 0 bound 9
+d = sub d 1
+y = oracle s u d
+if eq get alive y 0
+ret false
+end
+end
+ret true
+end
+fn allsafe s uint u uint to bool
+ret allwithin s u 9
+end
+fn actionmask s uint to uint
+m = uint 0
+u = uint 18
+while gt u 0 bound 18
+u = sub u 1
+if allsafe s u
+m = or m shl uint 1 u
+end
+end
+ret m
+end
+fn attractor to void
+change = true
+while change bound 2594
+change = false
+put counts 1 add get counts 1 1
+s = uint 2593
+while gt s 0 bound 2593
+s = sub s 1
+if ne get alive s 0
+if eq actionmask s 0
+put alive s 0
+change = true
+end
+end
+end
+end
+end
+fn closurefail s uint u uint d uint y uint to void
+witness s u d y y
+label 28
+note Untrusted experiment label annotates an observed closure violation, not its inferred cause.
+v = get claim 0
+if or eq v 1 or eq v 2 eq v 6
+refuse v
+end
+exit 80
+end
+fn closeone s uint to void
+m = get submit s
+if eq m 0
+ret
+end
+if not localok s
+witness s 18 9 s s
+label 29
+exit 81
+end
+if ne and m not actions s 0
+witness s 18 9 m actions s
+label 30
+exit 82
+end
+for u uint 18
+if ne and m shl uint 1 u 0
+for d uint 9
+y = oracle s u d
+if eq get submit y 0
+closurefail s u d y
+end
+end
+end
+end
+end
+fn validate to void
+if eq get submit fixture 0 0
+refuse 7
+end
+for s uint 2593
+closeone s
+end
+for s uint 2593
+m = uint 0
+if ne get alive s 0
+m = actionmask s
+put counts 2 add get counts 2 1
+end
+if ne get submit s m
+witness s 18 9 get submit s m
+label 31
+exit 83
+end
+end
+end
+fn require b bool to void
+if not b
+refuse 7
+end
+end
+fn rank s uint identity uint to uint
+if ne identity 1
+ret 18
+end
+best = uint 18
+price = uint 99
+for u uint 18
+if ne and get submit s shl uint 1 u 0
+p = uint 2
+if lt u 2
+p = 1
+else
+k = rem sub u 2 8
+if eq k 7
+p = 0
+end
+if eq k 1
+p = 4
+end
+end
+if lt p price
+price = p
+best = u
+end
+end
+end
+ret best
+end
+fn selections to void
+for s uint 2593
+u = get chosen s
+if eq get submit s 0
+require eq u 18
+else
+if ge u 18
+witness s u 9 2592 2592
+refuse 5
+end
+if eq and get submit s shl uint 1 u 0
+witness s u 9 u get submit s
+refuse 5
+end
+if ne u rank s 1
+witness s u 9 u rank s 1
+label 32
+exit 84
+end
+if ge u 2
+require ne rem sub u 2 8 7
+end
+require eq rank s 0 18
+require eq rank s 2 18
+end
+end
+end
+fn serial s uint u uint d uint to uint
+require ne get submit s 0
+require ne and get submit s shl uint 1 u 0
+y = oracle s u d
+require ne get submit y 0
+ret y
+end
+fn observation secret uint protect bool to uint
+used = secret
+if protect
+used = 2
+end
+note Public envelope size2 within public capacity3 and fixed release identity1.
+ret add sub uint 3 used 16
+end
+fn witnesses to void
+require localok fixture 1
+require eq get alive fixture 1 0
+require eq get alive fixture 2 0
+require eq oracle fixture 1 6 4 fixture 8
+require eq oracle fixture 1 7 3 fixture 8
+require eq oracle fixture 3 6 0 fixture 3
+require eq oracle fixture 4 7 6 fixture 4
+require eq and actions fixture 5 shl uint 1 10 0
+require ne and actions fixture 6 shl uint 1 10 0
+note Every step uses the submitted safe certificate, not only the transition relation.
+s = serial fixture 0 0 1
+s = serial s 2 2
+require eq s fixture 5
+s = serial s 4 0
+s = serial s 5 0
+s = serial s 6 0
+s = serial s 7 0
+s = serial s 8 0
+require eq s fixture 6
+s = serial s 10 0
+s = serial s 12 0
+s = serial s 13 0
+s = serial s 14 0
+s = serial s 15 0
+s = serial s 16 0
+require eq s fixture 7
+require eq add get costs rem s 18 get costs rem div s 18 18 2
+require eq actions fixture 8 0
+require eq oracle fixture 8 0 0 fixture 8
+require eq oracle fixture 0 0 0 fixture 0
+require not allwithin 0 0 0
+require not allwithin 0 0 10
+require eq observation 1 true observation 2 true
+require ne observation 1 false observation 2 false
+label 16
+end
+fn envelope s uint to bool
+if ge s 2592
+ret false
+end
+ret or eq get costs rem s 18 2 eq get costs rem div s 18 18 2
+end
+fn hidden s uint h uint to bool
+if envelope s
+ret or eq h 1 eq h 2
+end
+ret eq h 0
+end
+fn pairmask s uint h uint to uint
+if not hidden s h
+refuse 8
+end
+m = actions s
+note Negative baseline incorrectly uses physical hidden occupancy instead of full reservation.
+if and eq get variant 0 8 eq h 1
+if eq rem s 18 1
+m = or m 4
+end
+if eq rem div s 18 18 1
+m = or m 1024
+end
+end
+ret m
+end
+fn pairnext s uint u uint d uint h uint to uint
+if not hidden s h
+refuse 8
+end
+note Actual game relation, independently compared to every submitted solver edge.
+ret oracle s u d
+end
+fn publicob s uint h uint to uint
+if not hidden s h
+refuse 8
+end
+if eq s 2592
+ret 2592
+end
+q = add get costs rem s 18 get costs rem div s 18 18
+if gt q 3
+ret 2592
+end
+note Available public capacity plus whole-service ready/recovery class.
+ret add sub uint 3 q mul div s 1296 4
+end
+fn newlabel s uint old uint to uint
+if envelope s
+if eq old 0
+ret 1
+end
+ret old
+end
+ret 0
+end
+fn pairselect s uint h uint to uint
+m = pairmask s h
+if ne and get submit s not m 0
+witness s 18 9 get submit s m
+refuse 8
+end
+ret get chosen s
+end
+fn pairrun s uint h1 uint h2 uint to void
+m = pairmask s h1
+if ne m pairmask s h2
+witness s 18 9 m pairmask s h2
+refuse 8
+end
+if ne pairselect s h1 pairselect s h2
+refuse 8
+end
+m = get submit s
+if ne publicob s h1 publicob s h2
+refuse 8
+end
+for u uint 18
+if ne and m shl uint 1 u 0
+for d uint 9
+x = pairnext s u d h1
+y = pairnext s u d h2
+if ne x y
+refuse 8
+end
+if eq get submit x 0
+refuse 8
+end
+if ne publicob x newlabel x h1 publicob y newlabel y h2
+refuse 8
+end
+if eq h1 h2
+put pairs 3 add get pairs 3 1
+else
+put pairs 1 add get pairs 1 1
+end
+end
+end
+end
+end
+fn product to void
+for s uint 2593
+if localok s
+if envelope s
+put pairs 0 add get pairs 0 1
+pairrun s 1 2
+else
+put pairs 2 add get pairs 2 1
+pairrun s 0 0
+end
+end
+end
+end
+fn checkonce to void
+for i ulong 3
+put counts i 0
+end
+for i ulong 4
+put pairs i 0
+end
+init
+if ne recvword 1396912455
+refuse 7
+end
+if ne recvword 3
+refuse 7
+end
+if ne recvword 2593
+refuse 7
+end
+put claim 0 recvword
+if gt get claim 0 6
+refuse 7
+end
+for s uint 2593
+readstate s
+end
+endinput
+attractor
+validate
+selections
+product
+end
+fn main to int
+m = mode
+if and ne m 0 ne m 7
+ret 90
+end
+put variant 0 fault
+start = monons
+checkonce
+label 2
+number ulong sub monons start
+witnesses
+label 3
+number 2593
+label 4
+number get counts 0
+label 5
+number get counts 2
+label 6
+number get counts 1
+label 7
+number 28517
+label 18
+number get pairs 0
+label 19
+number get pairs 1
+label 24
+number get pairs 2
+label 25
+number get pairs 3
+if eq m 7
+for i ulong 101
+if ne fseek 0 0 0 0
+ret 90
+end
+put pos 0 0
+put avail 0 0
+start = monons
+checkonce
+put samples i ulong sub monons start
+end
+percentiles
+end
+label 8
+ret 0
+end

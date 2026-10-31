@@ -145,8 +145,8 @@
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
-          "digest": "7cbe4137297afac5dbf4062a5727be580be8cd1461785b1791d4781d2a0b1986",
-          "last_commit": "79a475666",
+          "digest": "8a9052aedc9605f3705fcb75325f1afd06aa4c764cb799aef2906caf9ba37b60",
+          "last_commit": "d3b0fcad8",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
@@ -163,8 +163,8 @@
           "purpose": "Synapse ADR 0003 J1 binary codec port: layout list, generator, syn_codec.osc (A1 WAL records + c"
         },
         {
-          "digest": "9723dd7c18d4e2c22db631680974e1025bccb9c309619424e2f4dfcc43cc7068",
-          "last_commit": "d863780eb",
+          "digest": "74e85b5aba1ca8a2e55d40217219a7dbfcec74538b08dfe14be3eb7c3479fbc5",
+          "last_commit": "0919efc3c",
           "name": "tensor",
           "purpose": "M20 OMEGA_TENSOR: immutable tensor semantic layer, views, generation-checked storage, CPU realiz"
         },
@@ -187,15 +187,15 @@
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:85eaf778bf3ab98a260da21c06a6b2c60b3b1ca7c798df744060dbe2f3311a5a",
-      "compiled_at": "2026-10-31T14:02:07Z",
+      "children_root": "sha256:ccbb68bf69b8c3ac3ff611a1b4ddba682f25bdafaa95371d4392503aeac956db",
+      "compiled_at": "2026-10-31T14:51:45Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:fd1213241c865c525cdbb1d84e9dbe42ed3f33056db94d08157617a88722e0a9",
+      "digest": "sha256:71b7fd24a305239e90292137f2b8655150144cec28622d03b7e3f6866efe34b1",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 600,
-      "generated_at_commit": "79a4756660da249ec53c0438069ecec8174e6620",
-      "source_tree": "sha256:d34ce1a6ce129f2d2ab6a2b12bb0cf47eae80390621b560159a4739712483432"
+      "files": 604,
+      "generated_at_commit": "5074dfd928bfa6946fa8f331987d1b995fdcf155",
+      "source_tree": "sha256:410ac8126a5de8febce300823b332db1ab1baa63f74e2a4d0576bea3fc2f55b1"
     },
     "owner_lane": "",
     "provenance": {

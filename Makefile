@@ -253,6 +253,12 @@ test-chipwait-campaign:
 test-gate14-combine:
 	tools/test_gate14_combine.sh
 
+# Host-only self-test of the gate physics pins (omega#523): every tests/gates/run.sh step
+# that builds against physics takes physics.lock, and its gate lists physics.lock as an input.
+.PHONY: test-gate-physics-pin
+test-gate-physics-pin:
+	tools/test_gate_physics_pin.sh
+
 # Host-only self-test of the E1 closure combiner (tools/e1_combine.sh): good
 # synthetic constituent set accepted, every hostile mutant refused. No GPU.
 .PHONY: test-e1-combine
@@ -1981,20 +1987,36 @@ test-divsqrt-nvdisasm:
 test-divsqrt-sweep:
 	tools/divsqrt_check_sweep.sh
 
-# E1 row 10: GB10 realizations of the frozen transcendental sequences (EXP2,
-# LOG2), bit-identical to src/omega_numeric_transc.c. Kernels live in
+# E1 row 10: GB10 realizations of the frozen transcendental sequences (EXP2
+# LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT, bit-identical to
+# src/omega_numeric_transc.c; natural EXP and LOG, bit-identical to
+# omega_math_exp / omega_math_log of src/omega_numeric.c). Kernels live in
 # src/omega_numeric_divsqrt_gb10.c (same frame as DIV/SQRT; nvdisasm
 # provenance via test-divsqrt-nvdisasm). Host tier needs no device; the chip
 # run (all 2^32 inputs per op) is tools/run_numeric_transc_gate.sh only.
+# test-numeric-transc-gb10-mutants: OMEGA_DS_MUTATE=1 (EXP c2 +1 ulp) and 2
+# (LOG c1 +1 ulp) must each fail a host-model check, not only the digest one.
 TRANSC_GB10_SRCS = tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divsqrt_gb10.c \
                    src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c \
                    $(NUMERIC_BW_SRCS)
-.PHONY: test-numeric-transc-gb10-host
+TRANSC_GB10_CC = gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -Isrc -DOMEGA_NUMERIC_CPU_ONLY -pthread
+TRANSC_GB10_MUTANTS = 1:EXP 2:LOG
+.PHONY: test-numeric-transc-gb10-host test-numeric-transc-gb10-mutants
 build/test_omega_numeric_transc_gb10_cpu: $(TRANSC_GB10_SRCS) $(DIVSQRT_HDRS) src/omega_numeric_transc.h
 	@mkdir -p build
-	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -Isrc -DOMEGA_NUMERIC_CPU_ONLY -pthread -o $@ $(TRANSC_GB10_SRCS)
+	$(TRANSC_GB10_CC) -o $@ $(TRANSC_GB10_SRCS)
 test-numeric-transc-gb10-host: build/test_omega_numeric_transc_gb10_cpu
 	./build/test_omega_numeric_transc_gb10_cpu
+test-numeric-transc-gb10-mutants: $(TRANSC_GB10_SRCS) $(DIVSQRT_HDRS) src/omega_numeric_transc.h
+	@mkdir -p build
+	@for mo in $(TRANSC_GB10_MUTANTS); do m=$${mo%%:*}; op=$${mo#*:}; \
+	  $(TRANSC_GB10_CC) -DOMEGA_DS_MUTATE=$$m -o build/test_omega_numeric_transc_gb10_mut$$m $(TRANSC_GB10_SRCS) || exit 1; \
+	  ./build/test_omega_numeric_transc_gb10_mut$$m > build/test_omega_numeric_transc_gb10_mut$$m.log 2>&1; \
+	  if grep -q "^\[FAIL\] TG_$${op}_HOST_MODEL_" build/test_omega_numeric_transc_gb10_mut$$m.log; then \
+	    echo "mutant $$m ($$op) killed: $$(grep -m1 "^\[FAIL\] TG_$${op}_HOST_MODEL_" build/test_omega_numeric_transc_gb10_mut$$m.log)"; \
+	  else echo "MUTANT $$m ($$op) SURVIVED (no host-model check failed)"; exit 1; fi; \
+	done
+	@echo "test-numeric-transc-gb10-mutants: PASS (all $(words $(TRANSC_GB10_MUTANTS)) mutants killed)"
 
 # C3: host-only detector for the intermittent unwritten-output event, with its
 # own unit test on synthetic buffers. The GB10 harness is
@@ -2726,7 +2748,7 @@ test-gpu-bf16-gemv: $(GPU_BF16_TEST)
 
 # Ternary engine T0 (2026-10-15): KT1 W2A8 ternary GEMV (omega_gpu_tern_api.h). test-gpu-tern is host-only (word
 # arithmetic, packing, segments, budgets, refusals) plus the warp simulator (bit-equal to oma_rz_oracle, f32 segment
-# epilogue, mutants 1-3 caught); the chip gate is tools/run_gpu_tern_chip.sh with the quiet flag held.
+# epilogue, three warp orders, mutants 1 to 5 caught); the chip gate is tools/run_gpu_tern_chip.sh with the quiet flag held.
 .PHONY: test-gpu-tern
 GPU_TERN_TEST = $(OUT_DIR)/gpu_tern_test
 $(GPU_TERN_TEST): tests/gpu_tern_test.c tests/bw_warp_sim_k.h src/omega_gpu_tern_api.h src/omega_blackwell_codegen_tern.h $(OMA_RZ_SRCS) $(OMA_RZ_HDRS) $(OUT_DIR)/libomega_gpu.a
