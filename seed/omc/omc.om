@@ -8500,14 +8500,19 @@ j = add j 1
 end
 end
 
+note Only the pool slots in use are saved (slot s at [RSP + 8 s], as the arguments read them) and,
+note after the call, restored: the same live set as the AArch64 save/restore. Slots past the pool
+note count are dead at a call: a later allocation writes before it reads.
 fn xsave to void
-put svn 0 add get npar 0 get nslot 0
+n = add get npar 0 get nslot 0
+put svn 0 n
 put sva 0 256
 xsp 1 256
 j = ulong 0
-while lt j 18
-xload 0 j
-xmem 137 0 4 mul j 8
+while lt j n
+s = poolc j
+xload 0 s
+xmem 137 0 4 mul s 8
 j = add j 1
 end
 note Reserve the callee's return address, frame pointer and slot area before CALL.
@@ -8534,11 +8539,13 @@ if ne res 0
 rd = destreg d
 xstore 0 rd
 end
+m = add get npar 0 slot
 j = ulong 0
-while lt j 18
-if ne j rd
-xmem 139 0 4 mul j 8
-xstore 0 j
+while lt j m
+s = poolc j
+if ne s rd
+xmem 139 0 4 mul s 8
+xstore 0 s
 end
 j = add j 1
 end
