@@ -258,3 +258,9 @@ above describe their original preparation; this replay supersedes them only for
 these four positive fixtures and these four controls. The full coordinator,
 production revocation fencing, stale-pid ABA exclusion, actual concurrent
 effects, power loss and durable aggregate accounting remain unqualified here.
+
+Replay on 2026-10-31 with the current seed compiler `7a8b84fc` after merging
+#688 at 101823e5 reproduced every source and executable SHA-256, exit and stdout
+of that replay, including the error 12 for the pre-`cbadcase` gate; see
+`../qualification/security673/repairs/replay-7a8b84fc.json`. Host execution
+only; hardware security qualification remains NOT_RUN.

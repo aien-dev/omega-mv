@@ -7,10 +7,22 @@ The corrected cleanup fixture checks the identical result, trace and descriptor
 assertions through a register-bounded helper.
 
 Use an otherwise clean disposable Linux AArch64 checkout of this branch. Rebuild
-with the existing `sh seed/omega-from-seed.sh`; require the compiler SHA-256
-`66b4cf34e5cd2c8ff003bd142e7309f52178b66c2380f78ac313b6eb8b67471b`.
-Never repin a consumer to this old compiler: omnet's self-exec descriptor protocol
-requires its own newer compiler.
+with the existing `sh seed/omega-from-seed.sh`; require the compiler SHA-256 that
+the seed pins on this branch, currently
+`7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de`.
+The original replay used the older reconstructed compiler
+`66b4cf34e5cd2c8ff003bd142e7309f52178b66c2380f78ac313b6eb8b67471b`; never repin a
+consumer to that old compiler: omnet's self-exec descriptor protocol requires its
+own newer compiler.
+
+`replay-7a8b84fc.json` records the 2026-10-31 replay with the current compiler
+after merging #688 at 101823e5: every gate, mutant and mutator source and
+executable SHA-256, exit and stdout equals `native.json`. The pre-`cbadcase`
+cleanup gate from 08bd7aa7 still fails with `omc: line 274: error 12`, so the
+register-bounded helper remains required. The mutator also refused, exit 93 with
+no output, an unexpected gate, an already-mutated cleanup gate and an
+already-mutated dispatch-order gate, and an unknown mode with exit 90. The full
+coordinator `gate669.om` was run separately at that head: exit 0, `GATE669 PASS`.
 
 For each row, compile the gate using `seed/out/omc`, require compiler exit 0,
 mark the resulting executable, and run it in a separate empty working directory.
