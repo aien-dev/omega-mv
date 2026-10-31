@@ -184,8 +184,7 @@ int omega_blackwell_codegen_gdn_copy_prog(const OmegaGdnSpec *spec, BlackwellIRP
 int omega_blackwell_codegen_gdn_prep_prog(const OmegaGdnSpec *spec, BlackwellIRProgram *prog);
 int omega_blackwell_codegen_gdn_scan_prog(const OmegaGdnSpec *spec, BlackwellIRProgram *prog);
 int omega_blackwell_codegen_gdn_post_prog(const OmegaGdnSpec *spec, BlackwellIRProgram *prog);
-/* SHFL.BFLY placeholders in a built program; prefill stats: kind 0 prep, 1 scan, 2 post. */
-uint32_t omega_gdn_bfly_count(const BlackwellIRProgram *prog);
+/* prefill stats: kind 0 prep, 1 scan, 2 post. */
 int omega_gdn_pf_prog_stats(unsigned kind, const OmegaGdnSpec *spec, uint32_t *insns, uint32_t *gprs);
 
 #endif

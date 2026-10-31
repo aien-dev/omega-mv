@@ -1,0 +1,39 @@
+{
+  "compiler_pr": 676,
+  "compiler_head": "1dffceaeb0dd26fb69ea64d367a49a9950c25a62",
+  "compiler_source": "078455c9c1862b9145ef892dfba68676204a38da",
+  "compiler_sha256": "9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4",
+  "builds": [
+    {
+      "name": "prefetch",
+      "repository": "omega-prefetch-640",
+      "source_files": [
+        {
+          "path": "native/prefetch/classify.om",
+          "sha256": "0eb1fa54b044b041da650c825270bbffe959348ad2edc7c75a2b998fc7bcbfc7"
+        }
+      ],
+      "source_sha256": "0eb1fa54b044b041da650c825270bbffe959348ad2edc7c75a2b998fc7bcbfc7",
+      "compile_exit": 0,
+      "binary_sha256": "7b8eef8dc2055a1b9b67f44246ab5de592365e10f290e6e401b0fb6a316ce892",
+      "previous_binary_sha256": "7b8eef8dc2055a1b9b67f44246ab5de592365e10f290e6e401b0fb6a316ce892",
+      "identical": true
+    }
+  ],
+  "replays": [
+    {
+      "name": "prefetch-caught",
+      "status": 0,
+      "signal": null,
+      "stdout": "PREFETCH_CONTROL: CAUGHT"
+    },
+    {
+      "name": "prefetch-invalid",
+      "status": 65,
+      "signal": null,
+      "stdout": "PREFETCH_CONTROL: INVALID"
+    }
+  ],
+  "gpu": false,
+  "full_model": false
+}

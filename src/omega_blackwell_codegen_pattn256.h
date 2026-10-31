@@ -71,7 +71,7 @@ int omega_pattn256_shape(const OmegaPrefillAttn256Spec *spec, OmegaPattn256Shape
 int omega_pattn256_spec_ok(const OmegaPrefillAttn256Spec *spec);
 /* Builds the register-allocated IR program. 0 ok, -1 refused or over BW_MAX_IR_INSNS / BW_MAX_VREGS / the registers. */
 int omega_blackwell_codegen_prefill_attn256_prog(const OmegaPrefillAttn256Spec *spec, BlackwellIRProgram *prog);
-/* Instruction, peak-register and placeholder counts (host, no device). */
-int omega_prefill_attn256_prog_stats(const OmegaPrefillAttn256Spec *spec, uint32_t *insns, uint32_t *gprs, uint32_t *placeholders);
+/* Instruction and peak-register counts (host, no device). */
+int omega_prefill_attn256_prog_stats(const OmegaPrefillAttn256Spec *spec, uint32_t *insns, uint32_t *gprs);
 
 #endif

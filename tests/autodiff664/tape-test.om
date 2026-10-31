@@ -1,0 +1,438 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Native tape tests. Expected values come from separate test code paths:
+note a test-local E1 tile, a sequential sum, an f64 widening reference and
+note IEEE identities. No expected value is a hand-entered constant.
+global QC ulong 1
+global QD uchar 24
+global QR ulong 1
+global QL f32 32
+global QF f32 4
+text QPASS "NATIVE_TAPE_PASS checks="
+text QFAIL "NATIVE_TAPE_FAIL check="
+text QNL "\n"
+
+fn qnum n ulong to void
+if eq n 0
+put QD 0 48
+w = write 1 QD 0 1
+ret
+end
+p = ulong 24
+while gt n 0 bound 24
+p = sub p 1
+put QD p uchar add 48 rem n 10
+n = div n 10
+end
+w = write 1 QD p sub 24 p
+if ne w long sub 24 p
+exit 90
+end
+end
+
+fn qck ok bool to void
+put QC 0 add get QC 0 1
+if not ok
+w = write 1 QFAIL 0 len QFAIL
+qnum get QC 0
+w = write 1 QNL 0 1
+exit 1
+end
+end
+
+fn qbits x f32 to uint
+ret bitcast uint x
+end
+
+fn qeq x f32 y f32 to bool
+ret eq qbits x qbits y
+end
+
+fn qnext to ulong
+x = get QR 0
+x = xor x shl x 13
+x = xor x shr x 7
+x = xor x shl x 17
+put QR 0 x
+ret x
+end
+
+note Random binary32 in +-[1,2) with a random 23-bit fraction, so products round.
+fn qrand to f32
+r = qnext
+one = qbits 1.0f32
+mask = sub shl ulong 1 23 ulong 1
+b = or one uint and r mask
+if ne and r 4294967296 0
+b = or b shl uint 1 31
+end
+ret bitcast f32 b
+end
+
+fn qpos to f32
+ret fabs qrand
+end
+
+note Test-local E1 tile over QL[0..n).
+fn qtree n ulong to f32
+for i ulong sub 32 n
+put QL add n i neg 0.0f32
+end
+w = ulong 32
+for s ulong 5
+w = shr w 1
+for i ulong w
+put QL i add get QL i get QL add i w
+end
+end
+ret get QL 0
+end
+
+fn qseq n ulong to f32
+s = neg 0.0f32
+for i ulong n
+s = add s get QL i
+end
+ret s
+end
+
+fn qfill id int to void
+n = ulong id
+for i ulong mul tprows n tpcols n
+st = tpset n i qrand
+end
+end
+
+fn qfillp id int to void
+n = ulong id
+for i ulong mul tprows n tpcols n
+st = tpset n i qpos
+end
+end
+
+note L = sum0(sum1(x * s)): seeds grad(x) with s exactly.
+fn qloss x int s int to int
+m = tpmul ulong x ulong s
+r = tpsum ulong m 1
+ret tpsum ulong r 0
+end
+
+fn trefuse to void
+tpreset
+a = tpleaf 2 3 1
+b = tpleaf 3 2 1
+qck eq a 0
+qck eq b 1
+qck eq tpadd ulong a ulong b -32
+qck eq tpmm ulong a ulong a -32
+qck eq tpleaf 5 13 1 -30
+qck eq tpleaf 0 3 1 -30
+qck eq tpsum ulong a 2 -32
+qck eq tpbcast ulong a 4 -32
+qck eq tpset ulong a 6 1.0f32 -32
+qck eq tpset 9 0 1.0f32 -32
+qck eq get TK 0 2
+k1 = tpleaf 1 33 1
+k2 = tpleaf 33 1 1
+qck eq tpmm ulong k1 ulong k2 -30
+qck eq get TK 0 4
+end
+
+fn tcap to void
+tpreset
+for i ulong 32
+qck eq tpleaf 1 1 1 int i
+end
+qck eq tpleaf 1 1 1 -30
+qck eq get TK 0 32
+end
+
+note An op on a node whose allocator snapshot is not live fails in M20 emcheck.
+fn tstale to void
+tpreset
+a = tpleaf 1 2 1
+b = tpleaf 1 2 1
+put TS mul ulong b 8 0
+st = tpadd ulong a ulong b
+qck lt st 0
+qck ne st -32
+qck eq get TK 0 2
+put TS mul ulong b 8 1
+qck eq tpadd ulong a ulong b 2
+end
+
+fn qmmref a ulong b ulong i ulong j ulong to f32
+k = tpcols a
+nn = tpcols b
+for q ulong k
+x = tpval a add mul i k q
+y = tpval b add mul q nn j
+put QL q mul x y
+end
+ret qtree k
+end
+
+fn qgaref s ulong b ulong i ulong q ulong to f32
+nn = tpcols s
+for j ulong nn
+x = tpval s add mul i nn j
+y = tpval b add mul q nn j
+put QL j mul x y
+end
+ret qtree nn
+end
+
+fn qgbref a ulong s ulong q ulong j ulong to f32
+k = tpcols a
+nn = tpcols s
+for i ulong tprows a
+x = tpval a add mul i k q
+y = tpval s add mul i nn j
+put QL i mul x y
+end
+ret qtree tprows a
+end
+
+fn tmm to void
+tpreset
+a = ulong tpleaf 3 5 1
+b = ulong tpleaf 5 4 1
+s = ulong tpleaf 3 4 0
+qfill int a
+qfill int b
+qfill int s
+p = ulong tpmm a b
+root = qloss int p int s
+qck ge root 0
+qck eq tpback ulong root 0
+for i ulong 3
+for j ulong 4
+qck qeq tpval p add mul i 4 j qmmref a b i j
+end
+end
+for i ulong 3
+for q ulong 5
+qck qeq tpgrad a add mul i 5 q qgaref s b i q
+end
+end
+for q ulong 5
+for j ulong 4
+qck qeq tpgrad b add mul q 4 j qgbref a s q j
+end
+end
+qck not tphasg s
+end
+
+note The tape's dot product must follow the E1 tile, not a sequential sum.
+fn torder to void
+differ = ulong 0
+for t ulong 64
+tpreset
+a = ulong tpleaf 1 20 0
+b = ulong tpleaf 20 1 0
+qfill int a
+qfill int b
+p = ulong tpmm a b
+for q ulong 20
+put QL q mul tpval a q tpval b q
+end
+want = qtree 20
+for q ulong 20
+put QL q mul tpval a q tpval b q
+end
+seq = qseq 20
+qck qeq tpval p 0 want
+if not qeq want seq
+differ = add differ 1
+end
+end
+qck gt differ 0
+end
+
+fn qnan to f32
+ret bitcast f32 or shl uint 255 23 shl uint 1 22
+end
+
+fn trelu to void
+tpreset
+x = ulong tpleaf 1 5 1
+s = ulong tpleaf 1 5 0
+qfillp int s
+st = tpset x 0 neg 1.0f32
+st = tpset x 1 neg 0.0f32
+st = tpset x 2 0.0f32
+st = tpset x 3 1.0f32
+st = tpset x 4 qnan
+r = ulong tprelu x
+root = qloss int r int s
+qck eq tpback ulong root 0
+for i ulong 5
+if eq i 3
+qck qeq tpval r i 1.0f32
+qck qeq tpgrad x i tpval s i
+else
+qck eq qbits tpval r i 0
+qck eq qbits tpgrad x i 0
+end
+end
+end
+
+fn tbcast to void
+tpreset
+b = ulong tpleaf 1 3 1
+s = ulong tpleaf 4 3 0
+qfill int b
+qfill int s
+bb = ulong tpbcast b 4
+for i ulong 4
+for j ulong 3
+qck qeq tpval bb add mul i 3 j tpval b j
+end
+end
+root = qloss int bb int s
+qck eq tpback ulong root 0
+for j ulong 3
+for i ulong 4
+put QL i tpval s add mul i 3 j
+end
+qck qeq tpgrad b j qtree 4
+end
+end
+
+note x*x and x+x: second contribution is added to the stored first one.
+fn tfanin to void
+tpreset
+x = ulong tpleaf 2 2 1
+qfill int x
+m = ulong tpmul x x
+r = ulong tpsum m 1
+root = ulong tpsum r 0
+qck eq tpback root 0
+for i ulong 4
+v = tpval x i
+qck qeq tpgrad x i add v v
+end
+tpreset
+y = ulong tpleaf 1 3 1
+s = ulong tpleaf 1 3 0
+qfill int y
+st = tpset s 0 neg 0.0f32
+st = tpset s 1 qrand
+st = tpset s 2 qrand
+d = ulong tpadd y y
+root = ulong qloss int d int s
+qck eq tpback root 0
+for i ulong 3
+w = tpval s i
+qck qeq tpgrad y i add w w
+end
+qck eq qbits tpgrad y 0 qbits neg 0.0f32
+end
+
+fn tsub to void
+tpreset
+a = ulong tpleaf 2 3 1
+b = ulong tpleaf 2 3 1
+s = ulong tpleaf 2 3 0
+qfill int a
+qfill int b
+qfill int s
+d = ulong tpsub a b
+for i ulong 6
+qck qeq tpval d i sub tpval a i tpval b i
+end
+root = ulong qloss int d int s
+qck eq tpback root 0
+for i ulong 6
+qck qeq tpgrad a i tpval s i
+qck qeq tpgrad b i neg tpval s i
+end
+end
+
+fn tsums to void
+tpreset
+x = ulong tpleaf 3 4 0
+qfill int x
+r1 = ulong tpsum x 1
+c1 = ulong tpsum r1 0
+c0 = ulong tpsum x 0
+r0 = ulong tpsum c0 1
+for i ulong 3
+for j ulong 4
+put QL j tpval x add mul i 4 j
+end
+put QF i qtree 4
+end
+for i ulong 3
+qck qeq tpval r1 i get QF i
+put QL i get QF i
+end
+qck qeq tpval c1 0 qtree 3
+for j ulong 4
+for i ulong 3
+put QL i tpval x add mul i 4 j
+end
+qck qeq tpval c0 j qtree 3
+end
+for j ulong 4
+put QL j tpval c0 j
+end
+qck qeq tpval r0 0 qtree 4
+end
+
+fn tstate to void
+tpreset
+x = ulong tpleaf 1 2 1
+qck eq tpback x -33
+tpreset
+z = ulong tpleaf 1 1 0
+qck eq tpback z -33
+tpreset
+y = ulong tpleaf 1 1 1
+qck eq tpback y 0
+qck eq tpback y -31
+qck eq tpleaf 1 1 1 -31
+qck qeq tpgrad y 0 1.0f32
+end
+
+note No contraction: a*b + c with c = -round(a*b) is exactly +0 unfused,
+note while the f64 widening of the exact product leaves the rounding error.
+fn qfma a f32 b f32 c f32 to f32
+ret add mul a b c
+end
+
+fn tnofma to void
+seen = ulong 0
+for t ulong 64
+a = qrand
+b = qrand
+put QF 0 mul a b
+c = neg get QF 0
+got = qfma a b c
+wide = f32 add mul f64 a f64 b f64 c
+qck eq qbits got 0
+if ne qbits wide 0
+seen = add seen 1
+end
+end
+qck gt seen 0
+end
+
+fn main to int
+put QR 0 88172645463325252
+trefuse
+tcap
+tstale
+tmm
+torder
+trelu
+tbcast
+tfanin
+tsub
+tsums
+tstate
+tnofma
+w = write 1 QPASS 0 len QPASS
+qnum get QC 0
+w = write 1 QNL 0 1
+ret 0
+end

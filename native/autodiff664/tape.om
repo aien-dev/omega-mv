@@ -1,0 +1,666 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Bounded native reverse-mode tape over M20 metadata-v1 (omega-mv #664).
+note Values are IEEE binary32. Rank 2 only, at most 32 nodes, 64 elements per node.
+note Every reduced axis is at most 32 long: one E1 tile, lanes padded with -0.0,
+note lane deltas 16,8,4,2,1 (src/omega_numeric_reduce.c cpu_sum_like order).
+note Backward mirrors src/autodiff/omega_autodiff.c: nodes in decreasing order,
+note in0 before in1, first contribution stored, later ones added as grad + contrib.
+note TN node words: 0 op,1 in0,2 in1,3 rows,4 cols,5 offset,6 spare,7 rg,8 hasgrad,9 axis.
+note TK: 0 count,1 backward done,2 failed,3 next arena offset.
+global TN ulong 512
+global TV f32 2048
+global TG f32 2048
+global TD ulong 768
+global TS ulong 256
+global TK ulong 4
+global TL f32 32
+
+fn tnget n ulong f ulong to ulong
+ret get TN add mul n 16 f
+end
+
+fn tnput n ulong f ulong v ulong to void
+put TN add mul n 16 f v
+end
+
+fn tprows n ulong to ulong
+ret tnget n 3
+end
+
+fn tpcols n ulong to ulong
+ret tnget n 4
+end
+
+fn tpoff n ulong to ulong
+ret tnget n 5
+end
+
+fn tpok n ulong to bool
+ret lt n get TK 0
+end
+
+note E1 tile sum of TL[0..n), 1 <= n <= 32.
+fn e1tree n ulong to f32
+for i ulong sub 32 n
+put TL add n i neg 0.0f32
+end
+d = ulong 16
+for s ulong 5
+for i ulong d
+put TL i add get TL i get TL add i d
+end
+d = shr d 1
+end
+ret get TL 0
+end
+
+fn tpdesc n ulong r ulong c ulong to void
+b = mul n 24
+for i ulong 24
+put TD add b i 0
+end
+put TD b 1
+put TD add b 1 1
+put TD add b 2 2
+put TD add b 3 mul r c
+put TD add b 5 add n 1
+put TD add b 6 1
+put TD add b 8 r
+put TD add b 9 c
+put TD add b 16 c
+put TD add b 17 1
+s = mul n 8
+put TS s 1
+put TS add s 1 0
+put TS add s 2 add n 1
+put TS add s 3 1
+put TS add s 4 1
+put TS add s 5 mul r c
+put TS add s 6 0
+put TS add s 7 0
+end
+
+note Admit one node through the M20 emcheck, then the tape's own layout rules.
+fn tpadmit n ulong to int
+for i ulong 24
+put ED i get TD add mul n 24 i
+end
+for i ulong 8
+put ES i get TS add mul n 8 i
+end
+st = emcheck
+if ne st 0
+ret st
+end
+if or ne get ED 1 1 ne get ED 4 0
+ret -32
+end
+if or ne get ED 2 2 ne get ED 5 add n 1
+ret -32
+end
+ret 0
+end
+
+fn tpadm2 a ulong b ulong to int
+st = tpadmit a
+if ne st 0
+ret st
+end
+ret tpadmit b
+end
+
+fn tprg a ulong b ulong to ulong
+if or ne tnget a 7 0 ne tnget b 7 0
+ret 1
+end
+ret 0
+end
+
+note Record a node. Nothing is recorded on refusal.
+fn tpnew op ulong a ulong b ulong r ulong c ulong rg ulong to int
+if ne get TK 1 0
+ret -31
+end
+n = get TK 0
+if ge n 32
+ret -30
+end
+if or eq r 0 eq c 0
+ret -30
+end
+if or gt r 64 gt c 64
+ret -30
+end
+if gt mul r c 64
+ret -30
+end
+off = get TK 3
+if gt add off mul r c 2048
+ret -30
+end
+tpdesc n r c
+st = tpadmit n
+if ne st 0
+ret st
+end
+for f ulong 16
+tnput n f 0
+end
+tnput n 0 op
+tnput n 1 a
+tnput n 2 b
+tnput n 3 r
+tnput n 4 c
+tnput n 5 off
+tnput n 7 rg
+put TK 0 add n 1
+put TK 3 add off mul r c
+ret int n
+end
+
+fn tpleaf r ulong c ulong rg ulong to int
+id = tpnew 0 0 0 r c rg
+if lt id 0
+ret id
+end
+o = tpoff ulong id
+for i ulong mul r c
+put TV add o i 0.0f32
+end
+ret id
+end
+
+fn tpset n ulong i ulong v f32 to int
+if not tpok n
+ret -32
+end
+if or ne tnget n 0 0 ge i mul tprows n tpcols n
+ret -32
+end
+put TV add tpoff n i v
+ret 0
+end
+
+fn tpval n ulong i ulong to f32
+if or not tpok n ge i mul tprows n tpcols n
+exit 97
+end
+ret get TV add tpoff n i
+end
+
+fn tphasg n ulong to bool
+if not tpok n
+ret false
+end
+ret ne tnget n 8 0
+end
+
+fn tpgrad n ulong i ulong to f32
+if or not tphasg n ge i mul tprows n tpcols n
+exit 97
+end
+ret get TG add tpoff n i
+end
+
+fn tpreset to void
+for i ulong 4
+put TK i 0
+end
+end
+
+fn tpbinf n ulong to void
+op = tnget n 0
+o = tpoff n
+oa = tpoff tnget n 1
+ob = tpoff tnget n 2
+for i ulong mul tprows n tpcols n
+x = get TV add oa i
+y = get TV add ob i
+if eq op 1
+put TV add o i add x y
+end
+if eq op 2
+put TV add o i sub x y
+end
+if eq op 3
+put TV add o i mul x y
+end
+end
+end
+
+fn tpbin op ulong a ulong b ulong to int
+if not and tpok a tpok b
+ret -32
+end
+r = tprows a
+c = tpcols a
+if or ne r tprows b ne c tpcols b
+ret -32
+end
+st = tpadm2 a b
+if ne st 0
+ret st
+end
+id = tpnew op a b r c tprg a b
+if lt id 0
+ret id
+end
+tpbinf ulong id
+ret id
+end
+
+fn tpadd a ulong b ulong to int
+ret tpbin 1 a b
+end
+
+fn tpsub a ulong b ulong to int
+ret tpbin 2 a b
+end
+
+fn tpmul a ulong b ulong to int
+ret tpbin 3 a b
+end
+
+note One matmul output: products A[i,q]*B[q,j] in q order, then the E1 tile.
+fn tpmmo n ulong i ulong j ulong to f32
+k = tpcols tnget n 1
+oa = add tpoff tnget n 1 mul i k
+ob = add tpoff tnget n 2 j
+nn = tpcols n
+for q ulong k
+x = get TV add oa q
+y = get TV add ob mul q nn
+put TL q mul x y
+end
+ret e1tree k
+end
+
+fn tpmmf n ulong to void
+nn = tpcols n
+o = tpoff n
+for i ulong tprows n
+for j ulong nn
+put TV add o add mul i nn j tpmmo n i j
+end
+end
+end
+
+fn tpmm a ulong b ulong to int
+if not and tpok a tpok b
+ret -32
+end
+m = tprows a
+k = tpcols a
+nn = tpcols b
+if ne k tprows b
+ret -32
+end
+if or gt k 32 or gt m 32 gt nn 32
+ret -30
+end
+st = tpadm2 a b
+if ne st 0
+ret st
+end
+id = tpnew 4 a b m nn tprg a b
+if lt id 0
+ret id
+end
+tpmmf ulong id
+ret id
+end
+
+fn tprluf n ulong to void
+o = tpoff n
+oa = tpoff tnget n 1
+for i ulong mul tprows n tpcols n
+x = get TV add oa i
+if gt x 0.0f32
+put TV add o i x
+else
+put TV add o i 0.0f32
+end
+end
+end
+
+fn tprelu a ulong to int
+if not tpok a
+ret -32
+end
+st = tpadmit a
+if ne st 0
+ret st
+end
+id = tpnew 5 a a tprows a tpcols a tnget a 7
+if lt id 0
+ret id
+end
+tprluf ulong id
+ret id
+end
+
+fn tpbcf n ulong to void
+c = tpcols n
+o = tpoff n
+oa = tpoff tnget n 1
+for i ulong tprows n
+for j ulong c
+x = get TV add oa j
+put TV add o add mul i c j x
+end
+end
+end
+
+fn tpbcast a ulong rows ulong to int
+if not tpok a
+ret -32
+end
+if ne tprows a 1
+ret -32
+end
+if or eq rows 0 gt rows 32
+ret -30
+end
+st = tpadmit a
+if ne st 0
+ret st
+end
+id = tpnew 6 a a rows tpcols a tnget a 7
+if lt id 0
+ret id
+end
+tpbcf ulong id
+ret id
+end
+
+note Axis-0 output j: column j of the input in row order, then the E1 tile.
+fn tpsc n ulong j ulong to f32
+a = tnget n 1
+c = tpcols a
+oa = add tpoff a j
+for i ulong tprows a
+put TL i get TV add oa mul i c
+end
+ret e1tree tprows a
+end
+
+note Axis-1 output i: row i of the input in column order, then the E1 tile.
+fn tpsr n ulong i ulong to f32
+a = tnget n 1
+c = tpcols a
+oa = add tpoff a mul i c
+for j ulong c
+put TL j get TV add oa j
+end
+ret e1tree c
+end
+
+fn tpsumf n ulong to void
+o = tpoff n
+if eq tnget n 9 0
+for j ulong tpcols n
+put TV add o j tpsc n j
+end
+else
+for i ulong tprows n
+put TV add o i tpsr n i
+end
+end
+end
+
+fn tpsum a ulong axis ulong to int
+if not tpok a
+ret -32
+end
+if gt axis 1
+ret -32
+end
+r = tprows a
+c = tpcols a
+if eq axis 0
+if gt r 32
+ret -30
+end
+r = 1
+else
+if gt c 32
+ret -30
+end
+c = 1
+end
+st = tpadmit a
+if ne st 0
+ret st
+end
+id = tpnew 7 a a r c tnget a 7
+if lt id 0
+ret id
+end
+tnput ulong id 9 axis
+tpsumf ulong id
+ret id
+end
+
+note Accumulate one contribution element: store when first, else grad + contrib.
+fn tpacc d ulong e ulong v f32 first bool to void
+p = add tpoff d e
+if first
+put TG p v
+else
+put TG p add get TG p v
+end
+end
+
+note in0 of ADD/SUB/MUL: g, g, g*value(in1).
+fn tpbewa n ulong to void
+a = tnget n 1
+f = eq tnget a 8 0
+og = tpoff n
+ob = tpoff tnget n 2
+mulop = eq tnget n 0 3
+for i ulong mul tprows n tpcols n
+v = get TG add og i
+if mulop
+v = mul v get TV add ob i
+end
+tpacc a i v f
+end
+tnput a 8 1
+end
+
+note in1 of ADD/SUB/MUL: g, neg g, g*value(in0).
+fn tpbewb n ulong to void
+b = tnget n 2
+f = eq tnget b 8 0
+og = tpoff n
+oa = tpoff tnget n 1
+op = tnget n 0
+for i ulong mul tprows n tpcols n
+w = get TG add og i
+if eq op 2
+w = neg w
+end
+if eq op 3
+w = mul w get TV add oa i
+end
+tpacc b i w f
+end
+tnput b 8 1
+end
+
+fn tpbew n ulong to void
+if ne tnget tnget n 1 7 0
+tpbewa n
+end
+if ne tnget tnget n 2 7 0
+tpbewb n
+end
+end
+
+note gA[i,q]: products g[i,j]*B[q,j] in j order (g @ B^T), then the E1 tile.
+fn tpgao n ulong i ulong q ulong to f32
+nn = tpcols n
+og = add tpoff n mul i nn
+ob = add tpoff tnget n 2 mul q nn
+for j ulong nn
+x = get TG add og j
+y = get TV add ob j
+put TL j mul x y
+end
+ret e1tree nn
+end
+
+note gB[q,j]: products A[i,q]*g[i,j] in i order (A^T @ g), then the E1 tile.
+fn tpgbo n ulong q ulong j ulong to f32
+k = tpcols tnget n 1
+oa = add tpoff tnget n 1 q
+nn = tpcols n
+og = add tpoff n j
+for i ulong tprows n
+x = get TV add oa mul i k
+y = get TG add og mul i nn
+put TL i mul x y
+end
+ret e1tree tprows n
+end
+
+fn tpbmma n ulong to void
+a = tnget n 1
+k = tpcols a
+f = eq tnget a 8 0
+for i ulong tprows n
+for q ulong k
+tpacc a add mul i k q tpgao n i q f
+end
+end
+tnput a 8 1
+end
+
+fn tpbmmb n ulong to void
+b = tnget n 2
+nn = tpcols n
+f = eq tnget b 8 0
+for q ulong tprows b
+for j ulong nn
+tpacc b add mul q nn j tpgbo n q j f
+end
+end
+tnput b 8 1
+end
+
+fn tpbmm n ulong to void
+if ne tnget tnget n 1 7 0
+tpbmma n
+end
+if ne tnget tnget n 2 7 0
+tpbmmb n
+end
+end
+
+fn tpbrelu n ulong to void
+a = tnget n 1
+if eq tnget a 7 0
+ret
+end
+f = eq tnget a 8 0
+for i ulong mul tprows n tpcols n
+v = 0.0f32
+x = get TV add tpoff a i
+if gt x 0.0f32
+v = get TG add tpoff n i
+end
+tpacc a i v f
+end
+tnput a 8 1
+end
+
+note Unbroadcast column j of g over rows, then the E1 tile.
+fn tpbcg n ulong j ulong to f32
+c = tpcols n
+og = add tpoff n j
+for i ulong tprows n
+put TL i get TG add og mul i c
+end
+ret e1tree tprows n
+end
+
+fn tpbbc n ulong to void
+a = tnget n 1
+if eq tnget a 7 0
+ret
+end
+f = eq tnget a 8 0
+for j ulong tpcols n
+tpacc a j tpbcg n j f
+end
+tnput a 8 1
+end
+
+fn tpbsum n ulong to void
+a = tnget n 1
+if eq tnget a 7 0
+ret
+end
+f = eq tnget a 8 0
+c = tpcols a
+og = tpoff n
+col = eq tnget n 9 0
+for i ulong tprows a
+for j ulong c
+g = get TG add og i
+if col
+g = get TG add og j
+end
+tpacc a add mul i c j g f
+end
+end
+tnput a 8 1
+end
+
+fn tpbnode n ulong to void
+op = tnget n 0
+if and ge op 1 le op 3
+tpbew n
+end
+if eq op 4
+tpbmm n
+end
+if eq op 5
+tpbrelu n
+end
+if eq op 6
+tpbbc n
+end
+if eq op 7
+tpbsum n
+end
+end
+
+note Reverse pass from a [1,1] root with seed 1.0. Runs once per tape.
+fn tpback root ulong to int
+if or ne get TK 1 0 ne get TK 2 0
+ret -31
+end
+if not tpok root
+ret -32
+end
+if or ne tprows root 1 ne tpcols root 1
+ret -33
+end
+if eq tnget root 7 0
+ret -33
+end
+put TK 1 1
+for i ulong get TK 0
+tnput i 8 0
+end
+put TG tpoff root 1.0f32
+tnput root 8 1
+for s ulong add root 1
+i = sub root s
+if and ne tnget i 8 0 ne tnget i 0 0
+tpbnode i
+end
+end
+ret 0
+end

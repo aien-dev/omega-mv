@@ -22,32 +22,32 @@
       "children": [
         {
           "digest": "59d4ea65a193fbac1696fdd89626b42d310f40cf8319fa62912976014d863ed0",
-          "last_commit": "450bbefd4",
+          "last_commit": "6d7b8838",
           "name": "atemporal",
           "purpose": "AT-0 Clock-Free Universe research program: relational (Page-Wootters) quantum models with no ext"
         },
         {
           "digest": "87db1defc5aade980a964c2be7856312f9fd5ef77e40b9d8690d51232b3e14e5",
-          "last_commit": "d863780eb",
+          "last_commit": "6d7b8838",
           "name": "dirac-oracle",
           "purpose": "Directory research/dirac-oracle. Purpose not yet described by a human."
         },
         {
-          "digest": "973ae926903a77a8e8deb166aed41fdd40e37a5ae1f9872eb2811bfe33b49590",
-          "last_commit": "ca05a32b3",
+          "digest": "a3ada58b1856d7ba0f6a1f79ef44e8bfd37d5a378aa2de2a9f74082e8fa23443",
+          "last_commit": "613765d2",
           "name": "om-bench",
           "purpose": "om-bench (#653): frozen measurement contract, family-disjoint task splits, oracles, controls and"
         }
       ],
-      "children_root": "sha256:2dba2cba139eec405acf7a78c21077a968dfb76c86352db859892728b0152a74",
-      "compiled_at": "2026-10-30T16:37:58Z",
+      "children_root": "sha256:1d78520928ae7f1f2758b79102bf73663e64582b2a75bf51779802fbd2b936b9",
+      "compiled_at": "2026-10-31T02:57:25Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:c73d74e9c743c8b541ec2418e815095d748e2e15d0b89857d683dbd5b76b3bf9",
+      "digest": "sha256:16bd56102894984869d56d0ee92a56ccc51adf6d28ce2be40c39b3b35a3dd0c1",
       "evidence_files": 4,
       "evidence_root": "sha256:1e8ed614a4d48ad6a9bb360f300dcf68e23a26797d587ac15485a168254f70dd",
       "files": 1624,
-      "generated_at_commit": "ca05a32b32f11426444db6e691df8c7e40f3701a",
-      "source_tree": "sha256:68e9d0c074e400c9a926ab9c556eb0ce7df34b2b5cd75ffe6793c8ddb013f23d"
+      "generated_at_commit": "613765d2b75383212c50520ff7a7295bff01f1bb",
+      "source_tree": "sha256:d1bba3b43e05564e72b2d98bff7e6d2348cf3b1d899f46ff0a7249a6977a6019"
     },
     "owner_lane": "",
     "provenance": {

@@ -6,6 +6,101 @@ set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 BENCH=$HERE/../bench
 REPO=${OMB_REPO:-$(cd "$HERE/../../.." && pwd)}
+# Host-only driver regressions use synthetic subprocesses and in-memory tasks.
+# They never compile or execute a candidate, call a model, or read sealed data.
+# Usage: run-controls.sh --host-only (no Spark/compiler required)
+if [ "${1:-}" = "--host-only" ]; then
+  PYTHONDONTWRITEBYTECODE=1 python3 - "$REPO" <<'PY_HOST_CONTROLS'
+import contextlib, importlib.util, io, json, os, pathlib, subprocess, sys, tempfile
+ROOT = pathlib.Path(sys.argv[1]).resolve()
+SCRIPT = ROOT / 'research/om-bench/run-arms.sh'
+MOD = ROOT / 'research/om-bench/bench/ombench.py'
+checks = 0
+
+def check(ok, name):
+    global checks
+    assert ok, name
+    checks += 1
+    print('PASS', name)
+
+# Exercise actual shell script with fake python3 and gate, never candidate/compiler execution.
+with tempfile.TemporaryDirectory() as tmp:
+    t = pathlib.Path(tmp); bin = t/'bin'; bin.mkdir(); run=t/'run'; run.mkdir()
+    (bin/'python3').write_text('''#!/bin/sh
+stage=$2
+echo "$stage" >> "$TRACE"
+if [ "$stage" = "$FAIL_STAGE" ]; then exit 17; fi
+exit 0
+'''); (bin/'python3').chmod(0o755)
+    (run/'gate').write_text('''#!/bin/sh
+echo gate >> "$TRACE"
+echo "OM2GATE FAIL cases=1 pass=0 fail=1 invalid=0 not_run=0"
+exit "$GATE_RC"
+'''); (run/'gate').chmod(0o755)
+    for stage, gate_rc, want_rc, want_trace in [
+        ('gen',0,17,['gen']),('judge',0,17,['gen','judge']),
+        ('gatelist',0,17,['gen','judge','gatelist']),
+        ('',91,91,['gen','judge','gatelist','gate']),
+        ('crosscheck',0,17,['gen','judge','gatelist','gate','crosscheck']),
+        ('summary',0,17,['gen','judge','gatelist','gate','crosscheck','summary']),
+        *[('',rc,0,['gen','judge','gatelist','gate','crosscheck','summary']) for rc in (0,1,2,3)],
+    ]:
+        trace=t/'trace'; trace.write_text('')
+        env=dict(os.environ, PATH=str(bin)+':'+os.environ['PATH'], TRACE=str(trace),FAIL_STAGE=stage,GATE_RC=str(gate_rc),OMB_REPO=str(t))
+        r=subprocess.run(['sh',str(SCRIPT),str(run),'dev','a'],env=env,capture_output=True,text=True)
+        check(r.returncode==want_rc and trace.read_text().splitlines()==want_trace, f'shell {stage or "completed gate"} rc={gate_rc}: exit={r.returncode}')
+        if want_rc:
+            check(f'rc={want_rc}' in (run/'a-dev/status.txt').read_text(), 'child failure logged')
+    (run/'a-dev/summary-dev.json').write_text('prior summary')
+    trace.write_text('')
+    r=subprocess.run(['sh',str(SCRIPT),str(run),'dev','a'],env=env,capture_output=True,text=True)
+    check(r.returncode==1 and trace.read_text()=='' and (run/'a-dev/summary-dev.json').read_text()=='prior summary','runner refuses stale summary without touching it')
+    trace.write_text(''); env.update(FAIL_STAGE='',GATE_RC='91')
+    r=subprocess.run(['sh',str(SCRIPT),str(run),'dev','fpy'],env=env,capture_output=True,text=True)
+    check(r.returncode==0 and trace.read_text().splitlines()==['gen','judge','summary'], 'foreign arm does not cross-judge')
+
+# Import functions only, with sealed path pointed to an empty temporary directory.
+with tempfile.TemporaryDirectory() as tmp:
+    t=pathlib.Path(tmp); os.environ['OMB_SEALED']=str(t/'no-sealed-data')
+    spec=importlib.util.spec_from_file_location('ombench', MOD); mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    check(mod.system_prompt('om').endswith((ROOT/'research/om-bench/REFERENCE-CARD.md').read_text()), 'Omega prompt loads unchanged public card')
+    check(mod.system_prompt('py')=='You write complete Python 3 programs.', 'foreign prompt unchanged')
+    mod.task_dirs=lambda split: (str(t),['ctl-synthetic'])
+    mod.load_task=lambda split,tid: {'tid':tid,'family':'ctl-synthetic','cases':[{'n':0}]}
+    row={'tid':'ctl-synthetic','family':'ctl-synthetic','code_sha256':'synthetic','class':'pass','cases':[{'n':0,'status':'pass'}]}
+    vp=t/'verdicts-dev.jsonl'; log=t/'gate.log'
+    def report(body, cls='pass', status='pass', code='synthetic'):
+        row.update({'class':cls,'cases':[{'n':0,'status':status}],'code_sha256':code});vp.write_text(json.dumps(row)+'\n');log.write_text(body)
+    good='VERDICT ctl-synthetic.00 PASS\nOM2GATE PASS cases=1 pass=1 fail=0 invalid=0 not_run=0\n'
+    def cross():
+        with contextlib.redirect_stdout(io.StringIO()): return mod.crosscheck(str(t),'dev',str(log))
+    report(good);check(cross()==0,'completed matching gate accepted')
+    report('VERDICT ctl-synthetic.00 FAIL\nOM2GATE FAIL cases=1 pass=0 fail=1 invalid=0 not_run=0\n','wrong_output','wrong_output');check(cross()==0,'wrong candidate remains failure in denominator')
+    report('VERDICT ctl-synthetic.nocode NOT_RUN\nOM2GATE NOT_RUN cases=1 pass=0 fail=0 invalid=0 not_run=1\n','no_code','',None);check(cross()==0,'no-code result retained')
+    report('VERDICT ctl-synthetic.00 INVALID\nOM2GATE INVALID cases=1 pass=0 fail=0 invalid=1 not_run=0\n','runtime_mechanical','timeout');check(cross()==0,'candidate timeout remains mechanical outcome')
+    for body in ['',good.replace('OM2GATE PASS','OM2GATE FAIL'),good.replace('cases=1','cases=2'),good.replace('pass=1','pass=0'),good.replace('VERDICT ctl-synthetic.00 PASS\n','VERDICT ctl-synthetic.00 PASS\nVERDICT ctl-synthetic.00 PASS\n'),good.split('OM2GATE')[0],good.replace('PASS\n','FAIL\n',1),good+'garbage\n','IDENTITY MISMATCH: every case is NOT_RUN\n'+good]:
+        report(body);check(cross()!=0,'incomplete/disagreeing/mismatched gate rejected')
+        try:
+            with contextlib.redirect_stdout(io.StringIO()): mod.summary(str(t),'dev','a')
+        except SystemExit: pass
+        else: raise AssertionError('summary accepted invalid gate')
+        check(not (t/'summary-dev.json').exists(),'standalone summary refuses invalid gate')
+    report('OM2GATE NOT_RUN cases=1 pass=0 fail=0 invalid=0 not_run=1\n','no_code','',None)
+    check(cross()!=0, 'all-no-code missing verdict refused')
+    report(good)
+    with contextlib.redirect_stdout(io.StringIO()): mod.summary(str(t),'dev','a')
+    check(json.loads((t/'summary-dev.json').read_text())['totals']['classes']=={'pass':1},'valid summary still works')
+    prior=(t/'summary-dev.json').read_bytes()
+    report('')
+    try:
+        mod.summary(str(t),'dev','a')
+    except SystemExit: pass
+    else: raise AssertionError('summary overwrote existing artifact')
+    check((t/'summary-dev.json').read_bytes()==prior,'summary preserves existing artifact on refusal')
+print('PASS synthetic host controls:',checks)
+PY_HOST_CONTROLS
+  exit $?
+fi
 OMC=$REPO/seed/out/omc
 SHA=2c82480596bbdc50cda9626866209ef662d5834f278f839ff4ce0250c495029f
 OUT=$1
@@ -60,7 +155,7 @@ expect "$R" ctl-fibo-nocode no_code
 "$OMC" < "$REPO/seed/qualification/om2/gate.om" > "$OUT/gate" && chmod +x "$OUT/gate" || bad "gate build"
 python3 "$BENCH/ombench.py" gatelist --run "$R" --split ctl > /dev/null
 (cd "$REPO" && "$OUT/gate" "$OMC" "$SHA" "$R/gate-ctl.cases" "$OUT/gate-scratch" > "$OUT/gate-ctl.log" 2>&1)
-echo "gate rc=$?" >> "$OUT/gate-ctl.log"
+echo "gate rc=$?" > "$OUT/gate-ctl.status"
 grep -q '^OM2GATE ' "$OUT/gate-ctl.log" && ok "gate final line present" || bad "gate final line missing"
 python3 "$BENCH/ombench.py" crosscheck --run "$R" --split ctl --gate-log "$OUT/gate-ctl.log" > "$OUT/crosscheck.txt" 2>&1
 rc=$?

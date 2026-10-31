@@ -1,7 +1,7 @@
 /* omega_bw_hazard.c: static scoreboard hazard checker over encoded sm_121 kernel bytes (omega-mv#554). See the header.
  *
- * Every form decoded below is a form src/omega_blackwell_codegen.c (encode_single_insn) or a post-encode patch
- * (omega_tc_patch_code, omega_qmma_patch_code) writes. The operand positions are the encoder's: Rd = word 0 bits 16..23,
+ * Every form decoded below is a form src/omega_blackwell_codegen.c (encode_single_insn) or the post-encode patch
+ * omega_qmma_patch_code writes. The operand positions are the encoder's: Rd = word 0 bits 16..23,
  * Ra = word 0 bits 24..31, Rb = word 1 bits 0..7, Rc = word 2 bits 0..7. tests/bw_hazard_test.c checks the decoder
  * against the encoder for every IR op and against nvdisasm on every kernel. */
 #include "omega_bw_hazard.h"

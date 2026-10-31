@@ -387,12 +387,11 @@ static void sweep_bytes(const char *family, const char *variant, const uint8_t *
     if (g_disasm) disasm_cross_check(family, variant, code, len);
 }
 
-/* encode + the launcher's patch steps */
-enum { P_NONE = 0, P_TC = 1, P_QMMA = 2 };
+/* encode + the launcher's patch step (SHFL.BFLY and F2FP.BF16 are native encoder words since training R5; only QMMA is patched) */
+enum { P_NONE = 0, P_QMMA = 1 };
 static void sweep_prog(const char *family, const char *variant, int patch) {
     size_t len = 0;
     if (omega_bw_encode_program(&g_prog, g_code, sizeof g_code, &len) != 0) { CHECK(0, "%s %s: encode failed", family, variant); return; }
-    if ((patch & P_TC) && omega_tc_patch_code(&g_prog, g_code, len) < 0) { CHECK(0, "%s %s: tc patch failed", family, variant); return; }
     if ((patch & P_QMMA) && omega_qmma_patch_code(&g_prog, g_code, len) < 0) { CHECK(0, "%s %s: qmma patch failed", family, variant); return; }
     sweep_bytes(family, variant, g_code, len);
 }
@@ -460,10 +459,10 @@ static void sweep(void) {
           OmegaTcGemmSpec s = { ks[a], rt, ct, w, 0 }; snprintf(v, sizeof v, "k%u rt%u ct%u warps%u", ks[a], rt, ct, w);
           if (BUILD(omega_blackwell_codegen_tcgemm_prog(&s, &g_prog))) sweep_prog("tcgemm", v, P_NONE);
       } }
-    if (BUILD(omega_blackwell_codegen_tc_probe_prog(0, &g_prog))) sweep_prog("tc_probe", "mutant0", P_TC);
+    if (BUILD(omega_blackwell_codegen_tc_probe_prog(0, &g_prog))) sweep_prog("tc_probe", "mutant0", P_NONE);
     for (unsigned ch = 1; ch <= 16; ch *= 2) for (unsigned st = 1; st <= 4; st++) {
         snprintf(v, sizeof v, "iters5 chains%u stall%u threads64", ch, st);
-        if (BUILD(omega_blackwell_codegen_tc_peak_prog(5, ch, st, 64, &g_prog))) sweep_prog("tc_peak", v, P_TC);
+        if (BUILD(omega_blackwell_codegen_tc_peak_prog(5, ch, st, 64, &g_prog))) sweep_prog("tc_peak", v, P_NONE);
         snprintf(v, sizeof v, "iters64 chains%u stall%u threads128", ch, st);
         if (BUILD(omega_blackwell_codegen_qmma_peak_prog(64, ch, st, 128, &g_prog))) sweep_prog("qmma_peak", v, P_QMMA);
     }
@@ -476,41 +475,41 @@ static void sweep(void) {
         if (BUILD(omega_blackwell_codegen_qmma_probe_prog(0, nops, &g_prog))) sweep_prog("qmma_probe", v, P_QMMA);
     }
     if (BUILD(omega_blackwell_codegen_f2e4_probe_prog(&g_prog))) sweep_prog("f2e4_probe", "-", P_QMMA);
-    /* prefill module kernels (omega_gpu_prefill.c applies both patches to every one of them) */
+    /* prefill module kernels (omega_gpu_prefill.c applies the QMMA patch to every one of them) */
     { unsigned ks[] = { 128, 768, 2048, 4096, 16384 };
       for (unsigned a = 0; a < 5; a++) for (unsigned rt = 2; rt <= 8; rt *= 2) for (unsigned w = 4; w <= 16; w *= 2) for (unsigned aq = 1; aq <= 2; aq++)
       for (unsigned epi = 0; epi <= 1; epi++) for (unsigned dir = 0; dir <= 1; dir++) {
           OmegaTc2Spec s = { ks[a], rt, 2, w, aq, epi, dir, 0, 0 };
           s.n = 4u * w * 8u * 2u; if (epi) s.n *= 2u;
           snprintf(v, sizeof v, "k%u rt%u warps%u aqn%u epi%u direct%u n%u", ks[a], rt, w, aq, epi, dir, s.n);
-          if (BUILD(omega_blackwell_codegen_tc2_prog(&s, &g_prog))) sweep_prog("tc2", v, P_TC | P_QMMA);
+          if (BUILD(omega_blackwell_codegen_tc2_prog(&s, &g_prog))) sweep_prog("tc2", v, P_QMMA);
       }
       for (unsigned a = 0; a < 5; a++) for (unsigned w = 8; w <= 16; w *= 2) for (unsigned epi = 0; epi <= 1; epi++) for (unsigned dir = 0; dir <= 1; dir++)
       for (unsigned wt = 0; wt <= 120; wt += 60) {
           OmegaQgSpec s = { ks[a], 4, w, epi, dir, 512, wt, 0 };
           snprintf(v, sizeof v, "k%u warps%u epi%u direct%u n512 wait%u", ks[a], w, epi, dir, wt);
-          if (BUILD(omega_blackwell_codegen_qgemm_prog(&s, &g_prog))) sweep_prog("qgemm", v, P_TC | P_QMMA);
+          if (BUILD(omega_blackwell_codegen_qgemm_prog(&s, &g_prog))) sweep_prog("qgemm", v, P_QMMA);
       }
       for (unsigned a = 0; a < 4; a++) for (unsigned it = 0; it <= 2; it++) {
           OmegaPqSpec s = { .k = ks[a], .in_type = it }; snprintf(v, sizeof v, "k%u in_type%u", ks[a], it);
-          if (BUILD(omega_blackwell_codegen_pq_prog(&s, &g_prog))) sweep_prog("pq", v, P_TC | P_QMMA);
+          if (BUILD(omega_blackwell_codegen_pq_prog(&s, &g_prog))) sweep_prog("pq", v, P_QMMA);
       } }
     { unsigned ks[] = { 768, 2048, 4096 }, es[] = { 8, 64, 128 }, ts[] = { 1, 16, 128, 1024 };
       for (unsigned a = 0; a < 3; a++) for (unsigned b = 0; b < 3; b++) for (unsigned c = 0; c < 4; c++) {
           OmegaRlSpec s = { ks[a], es[b], ts[c], 0 }; snprintf(v, sizeof v, "k%u e%u t%u", ks[a], es[b], ts[c]);
-          if (BUILD(omega_blackwell_codegen_rl_prog(&s, &g_prog))) sweep_prog("rl", v, P_TC | P_QMMA);
+          if (BUILD(omega_blackwell_codegen_rl_prog(&s, &g_prog))) sweep_prog("rl", v, P_QMMA);
       }
       unsigned hs[] = { 768, 2048, 4096 };
       for (unsigned a = 0; a < 3; a++) for (unsigned tk = 1; tk <= 8; tk *= 2) {
           OmegaMcSpec s = { hs[a], tk, 0 }; snprintf(v, sizeof v, "h%u top_k%u", hs[a], tk);
-          if (BUILD(omega_blackwell_codegen_mc_prog(&s, &g_prog))) sweep_prog("mc", v, P_TC | P_QMMA);
+          if (BUILD(omega_blackwell_codegen_mc_prog(&s, &g_prog))) sweep_prog("mc", v, P_QMMA);
       } }
-    if (BUILD(omega_blackwell_codegen_pf_copy_prog(&g_prog))) sweep_prog("pf_copy", "-", P_TC | P_QMMA);
-    /* prefill attention: the API's own host encode (build + encode + tc patch) */
+    if (BUILD(omega_blackwell_codegen_pf_copy_prog(&g_prog))) sweep_prog("pf_copy", "-", P_QMMA);
+    /* prefill attention: the API's own host encode (build + encode) */
     for (unsigned w = 4; w <= 8; w *= 2) for (unsigned md = 0; md <= 2; md++) for (unsigned mir = 0; mir <= 1; mir++) {
         OmegaPrefillAttnSpec s = { w, 0, md, mir };
-        static uint8_t pa[OMEGA_BW_CODE_CAP_MAX + 4096]; uint32_t gp = 0; int np = 0;
-        size_t len = omega_gpu_prefill_attn_encode(&s, pa, sizeof pa, &gp, &np);
+        static uint8_t pa[OMEGA_BW_CODE_CAP_MAX + 4096]; uint32_t gp = 0;
+        size_t len = omega_gpu_prefill_attn_encode(&s, pa, sizeof pa, &gp);
         snprintf(v, sizeof v, "warps%u mode%u mirror%u", w, md, mir);
         if (len) sweep_bytes("prefill_attn", v, pa, len);
     }

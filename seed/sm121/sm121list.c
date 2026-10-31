@@ -79,7 +79,7 @@ static void ctl(FILE *f, const BlackwellIRInsn *in, const char *dflt) {
 }
 static int pred_of(const BlackwellIRInsn *in) { return in->predicate_p0 ? (in->predicate_not ? 8 : 0) : 7; }
 
-/* patched: 1 when the program went through omega_tc_patch_code / omega_qmma_patch_code */
+/* patched: 1 when the program went through omega_qmma_patch_code */
 static int list_insn(FILE *f, const BlackwellIRInsn *in, const OmegaRegAlloc *ra, int patched, const char *k, size_t i) {
     Ops o = ops_of(in, ra);
     switch (in->op) {
@@ -167,23 +167,20 @@ static int list_insn(FILE *f, const BlackwellIRInsn *in, const OmegaRegAlloc *ra
     case BW_IR_FSEL: L(f, "fsel.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "fsel.2 %d", o.c & (in->src3_vreg >= 0 ? 0xff : 7)); ctl(f, in, "fsel.3"); break;
     case BW_IR_FMNMX_MIN: L(f, "fmnmx.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "fmnmx.min.2"); ctl(f, in, "f.3"); break;
     case BW_IR_FMNMX_MAX:
-        if (patched && in->imm == OMEGA_TC_MARK_F2FP) { L(f, "f2fp.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "f2fp.bf16.2"); }
-        else if (patched && in->imm == OMEGA_QMMA_MARK_F2E4) { L(f, "f2fp.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "f2fp.e4m3.2"); }
+        if (patched && in->imm == OMEGA_QMMA_MARK_F2E4) { L(f, "f2fp.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "f2fp.e4m3.2"); }
         else { L(f, "fmnmx.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "fmnmx.max.2"); }
         ctl(f, in, "f.3");
         break;
+    case BW_IR_F2FP_BF16_PACK: L(f, "f2fp.0 %d %d", o.d, o.a); L(f, "r.1 %d", o.b); L(f, "f2fp.bf16.2"); ctl(f, in, "f.3"); break;
     case BW_IR_I2FP: L(f, "i2fp.0 %d", o.d); L(f, "r.1 %d", o.a); L(f, "i2fp.2"); ctl(f, in, "i2fp.3"); break;
     case BW_IR_F2I: L(f, "f2i.0 %d", o.d); L(f, "r.1 %d", o.a); L(f, "f2i.2"); ctl(f, in, "f2i.3"); break;
     case BW_IR_MUFU_RCP: case BW_IR_MUFU_RSQ: case BW_IR_MUFU_EX2:
         L(f, "mufu.0 %d", o.d); L(f, "r.1 %d", o.a);
         L(f, "%s", in->op == BW_IR_MUFU_RCP ? "mufu.rcp.2" : in->op == BW_IR_MUFU_RSQ ? "mufu.rsq.2" : "mufu.ex2.2"); ctl(f, in, "mufu.3");
         break;
-    case BW_IR_SHFL_DOWN: {
-        int bfly = patched && (in->imm & OMEGA_TC_MARK_BFLY);
-        uint32_t lane = in->imm & ~OMEGA_TC_MARK_BFLY;   /* the mark is a flag for the patch step, not part of the word */
-        L(f, "shfl.0 %d %d", o.d, o.a); L(f, "%s %u", bfly ? "shfl.bfly.1" : "shfl.down.1", lane); L(f, "shfl.2"); ctl(f, in, "shfl.3");
+    case BW_IR_SHFL_DOWN: case BW_IR_SHFL_BFLY:
+        L(f, "shfl.0 %d %d", o.d, o.a); L(f, "%s %u", in->op == BW_IR_SHFL_BFLY ? "shfl.bfly.1" : "shfl.down.1", in->imm & 31u); L(f, "shfl.2"); ctl(f, in, "shfl.3");
         break;
-    }
     case BW_IR_LDS: L(f, "lds.0 %d %d", o.d, o.a); L(f, "z.1"); L(f, "lds.u8.2 %u", in->imm); ctl(f, in, "w.3"); break;
     case BW_IR_STS: L(f, "sts.u8.0 %d", o.a); L(f, "r.1 %d", o.b); L(f, "sts.u8.2 %u", in->imm); ctl(f, in, "w.3"); break;
     case BW_IR_LDS128: L(f, "lds.0 %d %d", o.d, o.a); L(f, "lds.128.1 %u", in->imm); L(f, "lds.128.2"); ctl(f, in, "lds.128.3"); break;
@@ -226,8 +223,8 @@ static FILE *g_tsv;
 static void dump(const char *name, const BlackwellIRProgram *p) {
     size_t len = 0;
     if (omega_bw_encode_program(p, g_code, sizeof g_code, &len) != 0) { note(name, 0, "C encoder refused the program"); return; }
-    int nt = omega_tc_patch_code(p, g_code, len), nq = omega_qmma_patch_code(p, g_code, len);
-    if (nt < 0 || nq < 0) { note(name, 0, "patch step refused the program"); return; }
+    int nq = omega_qmma_patch_code(p, g_code, len);
+    if (nq < 0) { note(name, 0, "patch step refused the program"); return; }
     uint64_t h = fnv(g_code, len) ^ (uint64_t)len;
     for (size_t i = 0; i < g_nseen; i++) if (g_seen[i] == h) { g_dups++; return; }
     if (g_nseen < NSEEN) g_seen[g_nseen++] = h;
@@ -240,7 +237,7 @@ static void dump(const char *name, const BlackwellIRProgram *p) {
     if (padded < 32) padded = 32;
     for (size_t i = 0; i < padded; i++) {
         if (i < p->count) {
-            if (list_insn(f, &p->insns[i], &p->regalloc, nt > 0 || nq > 0, name, i) != 0) { note(name, i, "opcode the listing writer does not know"); }
+            if (list_insn(f, &p->insns[i], &p->regalloc, nq > 0, name, i) != 0) { note(name, i, "opcode the listing writer does not know"); }
         } else { L(f, "nop.0"); L(f, "nop.1"); L(f, "nop.2"); L(f, "nop.3"); }
     }
     fclose(f);
@@ -248,7 +245,7 @@ static void dump(const char *name, const BlackwellIRProgram *p) {
     f = private_output(path, "wb");
     if (!f || fwrite(g_code, 1, len, f) != len) { perror(path); exit(2); }
     fclose(f);
-    fprintf(g_tsv, "%s\t%zu\t%zu\t%d\t%d\n", name, p->count, len, nt, nq);
+    fprintf(g_tsv, "%s\t%zu\t%zu\t%d\n", name, p->count, len, nq);
     g_kernels++; g_insns += p->count;
 }
 
@@ -392,10 +389,10 @@ static void edge(BlackwellIRInsn in) {
     for (int i = 0; i < BW_MAX_UVREGS; i++) p.regalloc.uvreg_to_phys[i] = i;
     p.insns[0] = in; p.count = 1;
     uint8_t *b = (uint8_t *)w;   /* host is little-endian AArch64, the encoder's byte order */
-    int nt = omega_tc_patch_code(&p, b, 16), nq = omega_qmma_patch_code(&p, b, 16);
-    if (nt < 0 || nq < 0) return;
+    int nq = omega_qmma_patch_code(&p, b, 16);
+    if (nq < 0) return;
     char k[32]; snprintf(k, sizeof k, "edge%lu", g_edges);
-    if (list_insn(g_es2, &in, &p.regalloc, nt > 0 || nq > 0, k, 0) != 0) { note(k, 0, "opcode the listing writer does not know"); return; }
+    if (list_insn(g_es2, &in, &p.regalloc, nq > 0, k, 0) != 0) { note(k, 0, "opcode the listing writer does not know"); return; }
     fwrite(w, 4, 4, g_ebin);
     g_edges++;
 }
@@ -417,7 +414,7 @@ static void edges(void) {
         for (int vi = 0; vi < 2; vi++) {            /* vi 1: absent sources (-1) where the form allows */
             int a = vi ? -1 : s, b = vi ? -1 : t, c = vi ? -1 : r;
             for (int ni = 0; ni < 6; ni++) {
-                uint32_t imm = N32[ni];
+                uint32_t imm = N32[ni]; int eop = op;   /* eop: SHFL.BFLY / F2FP.BF16 ride the SHFL / FMNMX rows */
                 switch (op) {   /* numbers kept inside each field's range (the C refusal or masking is a separate note) */
                 case BW_IR_S2R: imm &= 0xffu; break;
                 case BW_IR_LDC: case BW_IR_LDC64: imm = (imm & 0xffffu) << 2; break;
@@ -425,14 +422,14 @@ static void edges(void) {
                 case BW_IR_STG_E: case BW_IR_LDG_E_64: case BW_IR_LDG_E_128: imm = (uint32_t)((int32_t)(imm << 8) >> 8); break;
                 case BW_IR_LDS128: imm &= 0x7fffffu; break;
                 case BW_IR_LDS: case BW_IR_STS: imm &= 0xffffu; break;
-                case BW_IR_SHFL_DOWN: imm &= 0x1fu; if (ni == 3) imm |= OMEGA_TC_MARK_BFLY; break;
+                case BW_IR_SHFL_DOWN: imm &= 0x1fu; if (ni == 3) eop = BW_IR_SHFL_BFLY; break;
                 case BW_IR_LOP3_LUT: imm &= 0xffu; break;
-                case BW_IR_FMNMX_MAX: if (ni == 4) imm = OMEGA_TC_MARK_F2FP; else if (ni == 5) imm = OMEGA_QMMA_MARK_F2E4; break;
+                case BW_IR_FMNMX_MAX: if (ni == 4) { eop = BW_IR_F2FP_BF16_PACK; imm = 0; } else if (ni == 5) imm = OMEGA_QMMA_MARK_F2E4; break;
                 case BW_IR_BSSY: imm = ni == 0 ? 2u : ni == 1 ? 3u : ni == 2 ? 0x10000000u : ni == 3 ? 64u : ni == 4 ? 65u : 1000u; break;
                 case BW_IR_BRA: { static const int32_t D[] = { 0, 1, -1, 64, -63, 0x7fffffff }; imm = (uint32_t)D[ni]; break; }
                 default: break;
                 }
-                BlackwellIRInsn in = I((BlackwellIROpcode)op, (op == BW_IR_FSETP && r > 7) ? r & 7 : r, a, b, op == BW_IR_FSEL && c > 7 ? -1 : c,
+                BlackwellIRInsn in = I((BlackwellIROpcode)eop, (op == BW_IR_FSETP && r > 7) ? r & 7 : r, a, b, op == BW_IR_FSEL && c > 7 ? -1 : c,
                                        U[ui], imm);
                 in.control = CTL[ci];
                 in.is_uniform = (ui & 1) != 0 && r < BW_MAX_UVREGS;   /* a uniform destination indexes the 32 uniform registers */
@@ -463,7 +460,7 @@ int main(int argc, char **argv) {
         snprintf(path, sizeof path, "%s/kernels.tsv", g_dir);
         g_tsv = private_output(path, "w");
         if (!g_tsv) { perror(path); return 2; }
-        fprintf(g_tsv, "kernel\tinstructions\tcode_bytes\ttc_patched\tqmma_patched\n");
+        fprintf(g_tsv, "kernel\tinstructions\tcode_bytes\tqmma_patched\n");
         kernels();
         ew_kernels();
         { uint8_t va[OMEGA_BW_VECADD_CODE_SIZE]; size_t vl = 0;   /* the chip-proven vector add, the rung-6 chip kernel */

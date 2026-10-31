@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-31T11:12:09Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:8f1f95943e54e84656739b85a8d3735c5521d16ca223879d842bfa730ce64f01",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 2,
+      "generated_at_commit": "6f7aa08e9c8c4b58ba57e0389456defd49ac81db",
+      "source_tree": "sha256:a461bc25290fddc7ea0e75b319bff04091563d2c3c98d5635f1b3f3f335c4d1e"
+    }
+  },
+  "layer": "native/autodiff664",
+  "name": "native/autodiff664",
+  "purpose": "Bounded native .om reverse-mode tape (rank 2, f32, 32 nodes) over M20 metadata-v1; E1-tile reductions and C M21 accumulation order (#664, not qualified)",
+  "schema_version": "1.0.0"
+}
