@@ -19,7 +19,7 @@ fail() { say "FAIL $*"; exit 1; }
 notrun() { say "NOT_RUN $*"; exit 3; }
 [ "$(uname -m)" = aarch64 ] || notrun 'requires AArch64 Linux (seed/out/omc emits AArch64)'
 OMC=${OMC:-seed/out/omc}
-pin=2aec185d4ed6d7a6a5779ed656b4e56904742bde5551b02893fb5f73916ad8d5
+pin=92c22a9163d4c53aa91a9fe785208390c170a8d21390040a0c45a30d5d6561f1
 [ -f "$OMC" ] || fail "compiler $OMC missing"
 [ "$(sha256sum "$OMC" | cut -d ' ' -f 1)" = "$pin" ] || fail 'compiler pin differs'
 D=${NKI_ORACLE_DIR:-}
