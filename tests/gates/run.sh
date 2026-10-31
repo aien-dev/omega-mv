@@ -83,12 +83,15 @@ receipt() {
 gates_pass() { grep -E 'TOTAL GATES: [0-9]+ \| PASSED: [0-9]+ \| FAILED: 0' "$1" && ! grep -E 'FAILED: [1-9]' "$1"; }
 
 # speed <make target> <receipt file> <gate word>: a speed test (tests/runtime/rx_quiet_reps.h) that found
-# the machine too busy to time ends with `AIEN-OBS not_run_reason "cpu_busy"` and exit 77; make reports
+# the machine too busy to time, or a leg it claims faster disturbed significantly more often than the
+# other leg, ends with `AIEN-OBS not_run_reason "cpu_busy"` (or "leg_skew") and exit 77; make reports
 # any failing recipe as 2, so the refusal is read from the test's own receipt for this step: "failures": 0
 # and the gate word NOT_RUN, which the test writes only when nothing it judged failed. Then the step goes
-# on, so every other check is still judged, and ends NOT_RUN (exit 77) only if nothing else failed.
+# on, so every other check is still judged, and ends NOT_RUN (exit 77) only if nothing else failed, with
+# reason leg_skew when any refused receipt says so, else cpu_busy.
 # Anything else is the failure it was. A passing run gets the receipt check it always had.
 BUSY=0
+BUSY_REASON=cpu_busy
 speed() {
   local target="$1" file="$2" word="$3" rc=0 r f bad=1
   make "$target" || rc=$?
@@ -103,10 +106,11 @@ speed() {
     while IFS= read -r f; do
       grep -q '"failures": 0,' "$f" && grep -q '"candidate_bound": true,' "$f" &&
         grep -q "\"$word\": \"NOT_RUN\"" "$f" || bad=1
+      if grep -q '"not_run_reason": "leg_skew"' "$f"; then BUSY_REASON=leg_skew; fi
     done <<< "$r"
   fi
   if [ "$bad" = 0 ]; then
-    echo "run.sh: $target: machine too busy to time (cpu_busy); not judged, the rest of the step runs" >&2
+    echo "run.sh: $target: refused to time ($BUSY_REASON; the test's NOT RUN lines say why); not judged, the rest of the step runs" >&2
     printf '%s\n' "$r" | xargs sha256sum
     BUSY=1
     return 0
@@ -289,7 +293,7 @@ case "$step" in
     tools/rx_host_receipts.sh heartbeat "$r"
     tools/rx_host_receipts.sh native "$native" "$OMEGA_CANDIDATE_COMMIT"
     tools/rx_host_receipts.sh generation "$generation" "$OMEGA_CANDIDATE_COMMIT"
-    if [ "$BUSY" = 1 ]; then obs not_run_reason '"cpu_busy"'; exit 77; fi
+    if [ "$BUSY" = 1 ]; then obs not_run_reason "\"$BUSY_REASON\""; exit 77; fi
     ;;
   faculty-arm)
     pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf

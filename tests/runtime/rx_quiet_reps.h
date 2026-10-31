@@ -17,6 +17,17 @@
  * undisturbed within the attempt budget the check is refused and says why
  * (rx_busy_refuse below: NOT_RUN cpu_busy, never a pass). Where schedstat is missing every
  * repetition counts (the old behaviour) and the output says so.
+ *
+ * The delay is summed over the whole process, so it cannot tell the
+ * machine's load from contention the code under test makes itself. A leg
+ * that intermittently makes its own threads wait (one run in three, say)
+ * would have exactly those slow runs set aside, and its slowdown would pass
+ * unseen. So each leg's disturbed repetitions are counted, and the check is
+ * refused (NOT_RUN leg_skew, never a pass) when the leg the check claims is
+ * the faster one was disturbed significantly more often than the other leg
+ * (rx_pairs_skew_p / rx_legs_skew_p below). Set-aside runs of the other leg
+ * only make that leg look faster, which works against the claim, so the
+ * test is one-sided.
  */
 #ifndef RX_QUIET_REPS_H
 #define RX_QUIET_REPS_H
@@ -64,16 +75,119 @@ static inline int rx_quiet_rep(int64_t delay_ns, uint64_t wall_ns) {
     return (uint64_t)delay_ns <= RX_QUIET_FLOOR_NS + wall_ns * RX_QUIET_PERMILLE / 1000ull;
 }
 
+/* Leg skew. Under "the machine, not the leg, disturbs runs" a leg's
+ * disturbed repetitions are no more frequent than the other leg's. Two exact
+ * one-sided tests, both at RX_SKEW_ALPHA:
+ *
+ * - paired legs (each attempt times both legs back to back, as in
+ *   rx_workflow_fusion.c): McNemar's exact test. Among the attempts where
+ *   exactly one leg was disturbed, the count where it was the claimed-faster
+ *   leg is Binomial(n, 1/2) under the null; p = P(X >= that count).
+ * - unpaired legs (each leg timed in its own series): Fisher's exact test.
+ *   Given the disturbed total over both legs, the claimed-faster leg's
+ *   disturbed count is hypergeometric under the null; p = P(X >= that count).
+ *
+ * A false refusal is a NOT_RUN, never a false FAIL. At RX_SKEW_ALPHA = 1/1000
+ * the paired test cannot refuse with fewer than 10 one-leg-disturbed
+ * attempts, so a quiet machine (a handful of disturbed attempts) is never
+ * refused. Thresholds (WolframLanguageEvaluator, 2026-10-31, with
+ * up[n_, k_] := 1 - CDF[BinomialDistribution[n, 1/2], k - 1]):
+ *   Min[Select[Range[1, 40], up[#, #] <= 1/1000 &]] -> 10
+ *   up[10, 10] -> 1/1024 (0.000977), up[10, 9] -> 0.0107
+ *   smallest refused count for n = 20, 50, 100, 300, 600, 2460:
+ *   18, 37, 66, 178, 339, 1308
+ * The functions below are checked against these and against
+ * 1 - CDF[HypergeometricDistribution[62, 21, 124], 20] -> 6.185346e-8 and
+ * 1 - CDF[HypergeometricDistribution[40, 12, 80], 9] -> 0.01260210
+ * in rx_workflow_fusion.c (t_skew_math). */
+#define RX_SKEW_ALPHA 0.001
+
+/* Both tails below sum pmf weights scaled to 1 at the mode, built by the
+ * pmf ratio of neighbours, so nothing overflows and no libm is needed;
+ * weights that underflow are below 1e-300 of the total. */
+
+/* P(X >= k) for X ~ Binomial(n, 1/2). */
+static inline double rx_sign_upper(uint32_t n, uint32_t k) {
+    if (k == 0) return 1.0;
+    if (k > n) return 0.0;
+    uint32_t m = n / 2;
+    double w = 1.0, total = 1.0, tail = m >= k ? 1.0 : 0.0;
+    for (uint32_t i = m + 1; i <= n; i++) {        /* w(i) = w(i-1) (n-i+1) / i */
+        w *= (double)(n - i + 1) / (double)i;
+        total += w;
+        if (i >= k) tail += w;
+    }
+    w = 1.0;
+    for (uint32_t i = m; i-- > 0;) {               /* w(i) = w(i+1) (i+1) / (n-i) */
+        w *= (double)(i + 1) / (double)(n - i);
+        total += w;
+        if (i >= k) tail += w;
+    }
+    return tail / total;
+}
+
+/* P(X >= k) for X hypergeometric: `draws` items from `pop` of which `succ`
+ * are successes. */
+static inline double rx_hyper_upper(uint32_t pop, uint32_t succ, uint32_t draws, uint32_t k) {
+    uint32_t lo = draws + succ > pop ? draws + succ - pop : 0, hi = draws < succ ? draws : succ;
+    if (k <= lo) return 1.0;
+    if (k > hi) return 0.0;
+    uint32_t m = (uint32_t)((uint64_t)(draws + 1) * (succ + 1) / (pop + 2));
+    if (m < lo) m = lo;
+    if (m > hi) m = hi;
+    double w = 1.0, total = 1.0, tail = m >= k ? 1.0 : 0.0;
+    for (uint32_t x = m; x < hi; x++) {            /* w(x+1) = w(x) (succ-x)(draws-x) / ((x+1)(pop-succ-draws+x+1)) */
+        w *= (double)(succ - x) * (double)(draws - x) / ((double)(x + 1) * (double)(pop - succ - draws + x + 1));
+        total += w;
+        if (x + 1 >= k) tail += w;
+    }
+    w = 1.0;
+    for (uint32_t x = m; x > lo; x--) {            /* w(x-1) = w(x) x (pop-succ-draws+x) / ((succ-x+1)(draws-x+1)) */
+        w *= (double)x * (double)(pop - succ - draws + x) / ((double)(succ - x + 1) * (double)(draws - x + 1));
+        total += w;
+        if (x - 1 >= k) tail += w;
+    }
+    return tail / total;
+}
+
+/* Paired legs: attempts where exactly one leg was disturbed, by leg. */
+typedef struct {
+    uint32_t only[2];
+} RxPairs;
+
+static inline void rx_pairs_note(RxPairs *s, int quiet0, int quiet1) {
+    if (quiet0 != quiet1) s->only[quiet0 ? 1 : 0]++;
+}
+
+/* One-sided p that leg `fast` (the one the check claims is faster) was
+ * disturbed more often than the other leg. */
+static inline double rx_pairs_skew_p(const RxPairs *s, int fast) {
+    return rx_sign_upper(s->only[0] + s->only[1], s->only[fast ? 1 : 0]);
+}
+
+/* Unpaired legs: the same p from each leg's disturbed and tried counts. */
+static inline double rx_legs_skew_p(uint32_t fast_disturbed, uint32_t fast_tried, uint32_t other_disturbed,
+                                    uint32_t other_tried) {
+    return rx_hyper_upper(fast_tried + other_tried, fast_disturbed + other_disturbed, fast_tried, fast_disturbed);
+}
+
 /* A check that found the machine too busy to time is a refusal, not a
  * failure: nothing was measured, so nothing is judged, and the checks that
  * need that measurement are not judged either. The program then ends with
  * the local judge's "could not run" contract (aien-test SELF_NOT_RUN_EXIT):
- * stdout line `AIEN-OBS not_run_reason "cpu_busy"` and exit 77, a retryable
+ * stdout line `AIEN-OBS not_run_reason "<reason>"` and exit 77, a retryable
  * NOT_RUN, never a pass. Any real failure anywhere in the run wins: the exit
- * is then 1, whatever was refused. */
+ * is then 1, whatever was refused. The reason is "cpu_busy", or "leg_skew"
+ * when a leg-skew refusal (rx_skew_refuse) happened: then the timing could
+ * not be trusted because of the code under test, not the machine. */
 #define RX_NOT_RUN_EXIT 77
 
 static inline unsigned *rx_busy_refusals(void) {
+    static unsigned n;
+    return &n;
+}
+
+static inline unsigned *rx_skew_refusals(void) {
     static unsigned n;
     return &n;
 }
@@ -84,13 +198,31 @@ static inline void rx_busy_refuse(const char *what) {
     fprintf(stderr, "  NOT RUN %s (cpu_busy): checks that need this measurement are not judged\n", what);
 }
 
+/* Record a leg-skew refusal: the leg the check claims is faster was disturbed
+ * in `fast_disturbed` attempts, the other leg in `other_disturbed`, one-sided
+ * p = `p` <= RX_SKEW_ALPHA. */
+static inline void rx_skew_refuse(const char *what, uint32_t fast_disturbed, uint32_t other_disturbed, double p) {
+    (*rx_busy_refusals())++;
+    (*rx_skew_refusals())++;
+    fprintf(stderr,
+            "  NOT RUN %s (leg_skew): the leg claimed faster was disturbed in %u attempts, the other leg in %u "
+            "(one-sided p %.3g <= %g): its set-aside runs may hide a slowdown it causes itself; checks that need "
+            "this measurement are not judged\n",
+            what, fast_disturbed, other_disturbed, p, RX_SKEW_ALPHA);
+}
+
+/* The not_run_reason of this run's refusals. */
+static inline const char *rx_busy_reason(void) {
+    return *rx_skew_refusals() ? "leg_skew" : "cpu_busy";
+}
+
 /* The program's exit status from its failure count and `pass`, everything
  * else its receipt judges: a refusal never covers a check judged false. */
 static inline int rx_busy_exit(int failures, int pass) {
     if (failures) return 1;
     if (*rx_busy_refusals()) {
         if (!pass) return 1;
-        printf("AIEN-OBS not_run_reason \"cpu_busy\"\n");
+        printf("AIEN-OBS not_run_reason \"%s\"\n", rx_busy_reason());
         fflush(stdout);
         return RX_NOT_RUN_EXIT;
     }

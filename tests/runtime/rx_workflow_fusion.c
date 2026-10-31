@@ -84,8 +84,18 @@ enum { MS_COMPILED = 101, MS_HYBRID, MS_LEARNED, MS_HARDWARE, MS_POISONED, MS_PA
 
 static int g_checks;
 static int g_fail;
-/* Measurements refused as too busy to time (rx_quiet_reps.h). */
+/* Measurements refused as too busy to time, or for leg skew (rx_quiet_reps.h). */
 static int g_untimed_compiled, g_untimed_parallel, g_untimed_poisoned;
+
+/* One measurement's disturbance: attempts, undisturbed pairs, attempts where
+ * only one leg was disturbed, and the one-sided skew p for the leg the check
+ * claims is faster. */
+typedef struct {
+    RxPairs legs;
+    uint32_t tried, kept;
+    int known, fast;
+    double p;
+} Quiet;
 
 #define CHECK(cond, ...) do {                                            \
         g_checks++;                                                      \
@@ -126,6 +136,7 @@ static struct {
     uint32_t unpublished_refusals, unpublished_digest_equal;
     /* measurement */
     AgFusionMeasure m_compiled, m_hybrid, m_parallel;
+    Quiet q_compiled, q_hybrid, q_parallel;
     uint32_t parallel_state, hybrid_state;
     /* canary */
     uint32_t canary_runs, canary_divergences, poisoned_state, poisoned_verified, poisoned_promote_refused;
@@ -1052,9 +1063,13 @@ static int cmp_u64(const void *a, const void *b) {
 
 /* 41 interleaved runs per leg at 4 workers: reactions that computed per
  * run, crumbs per run, median latency, CPU time, outcomes. */
-/* 1 when measured; 0 when the machine was too busy to time it (a refusal,
- * rx_quiet_reps.h): nothing was measured and nothing that needs it is judged. */
-static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what) {
+/* 1 when measured; 0 when the machine was too busy to time it, or the leg
+ * the check claims is faster (`fast`: 0 original, 1 fused) was disturbed
+ * significantly more often than the other (a refusal, rx_quiet_reps.h):
+ * nothing was measured and nothing that needs it is judged. `q` gets the
+ * disturbance counts either way. */
+static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what, int fast,
+                   Quiet *q) {
     Pair *p = &g_pair;
     CHECK(pair_start(p, goal, m, 4) == 0, "%s: pair", what);
     memset(ms, 0, sizeof *ms);
@@ -1068,6 +1083,8 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
     uint64_t ns_o[RUNS], ns_f[RUNS], cpu_o = 0, cpu_f = 0, cr_o = 0, cr_f = 0, cm_o = 0, cm_f = 0;
     uint32_t kept = 0, tried = 0;
     int delay_known = 1;
+    memset(q, 0, sizeof *q);
+    q->fast = fast;
     for (uint64_t i = 0; i < ATTEMPTS && kept < RUNS; i++) {
         uint64_t id = 10 + i, a = a_value(id), t_o = 0, t_f = 0;
         set_inputs(&p->o, a, id);
@@ -1088,8 +1105,10 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
         tried++;
         CHECK(ro.outcome == rf.outcome, "%s: attempt %u: outcomes differ", what, tried);
         if (d0 < 0 || d1 < 0 || d2 < 0 || d3 < 0) delay_known = 0;
-        if (!rx_quiet_rep(delay_known ? d1 - d0 : -1, t_o) ||
-            !rx_quiet_rep(delay_known ? d3 - d2 : -1, t_f))
+        int quiet_o = rx_quiet_rep(delay_known ? d1 - d0 : -1, t_o);
+        int quiet_f = rx_quiet_rep(delay_known ? d3 - d2 : -1, t_f);
+        rx_pairs_note(&q->legs, quiet_o, quiet_f);
+        if (!quiet_o || !quiet_f)
             continue;
         ns_o[kept] = t_o;
         ns_f[kept] = t_f;
@@ -1105,8 +1124,19 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
         ms->ok_after += rf.outcome == AG_RUN_SUCCESS;
         ms->failed_after += rf.outcome == AG_RUN_FAILURE;
     }
-    printf("    %s: undisturbed pairs %u of %u (%s)\n", what, kept, tried,
-           delay_known ? "run-queue delay from schedstat" : "schedstat missing: every pair counts");
+    q->tried = tried;
+    q->kept = kept;
+    q->known = delay_known;
+    q->p = rx_pairs_skew_p(&q->legs, fast);
+    printf("    %s: undisturbed pairs %u of %u (%s); only original disturbed %u, only fused disturbed %u, "
+           "one-sided p that the %s leg was disturbed more %.3g\n", what, kept, tried,
+           delay_known ? "run-queue delay from schedstat" : "schedstat missing: every pair counts",
+           q->legs.only[0], q->legs.only[1], fast ? "fused" : "original", q->p);
+    if (delay_known && q->p <= RX_SKEW_ALPHA) {
+        rx_skew_refuse(what, q->legs.only[fast ? 1 : 0], q->legs.only[fast ? 0 : 1], q->p);
+        pair_stop(p);
+        return 0;
+    }
     if (kept < RUNS) {
         fprintf(stderr, "  %s: machine too busy to time: %u of %u undisturbed pairs in %u attempts\n",
                 what, kept, RUNS, (unsigned)ATTEMPTS);
@@ -1145,25 +1175,72 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
     return 1;
 }
 
+/* The leg-skew tails (rx_quiet_reps.h) against WolframLanguageEvaluator,
+ * 2026-10-31: up[n_, k_] := 1 - CDF[BinomialDistribution[n, 1/2], k - 1];
+ * fu[cd_, ct_, bd_, bt_] := 1 - CDF[HypergeometricDistribution[ct, cd + bd, ct + bt], cd - 1];
+ * crit[n_] := Min[Select[Range[0, n + 1], up[n, #] <= 1/1000 &]]. */
+static void t_skew_math(void) {
+    printf("[*] leg-skew tails against exact values\n");
+    static const struct { uint32_t n, k; double want; } sign[] = {
+        { 10, 10, 0.0009765625 },                 /* up[10, 10] -> 1/1024 */
+        { 10, 9, 0.0107421875 },                  /* up[10, 9] */
+        { 21, 21, 4.76837158203125e-7 },          /* up[21, 21] */
+        { 40, 30, 0.00111071688661468 },          /* up[40, 30] */
+        { 40, 29, 0.00321328804784571 },          /* up[40, 29] */
+        { 600, 340, 0.000620253095612713 },       /* up[600, 340] */
+        { 2460, 1300, 0.00253021285261641 },      /* up[2460, 1300] */
+        { 7, 0, 1.0 }, { 7, 8, 0.0 },
+    };
+    for (size_t i = 0; i < sizeof sign / sizeof sign[0]; i++) {
+        double got = rx_sign_upper(sign[i].n, sign[i].k);
+        CHECK(fabs(got - sign[i].want) <= 1e-9 * sign[i].want + 1e-300, "P(Bin(%u, 1/2) >= %u) = %.12g, want %.12g",
+              sign[i].n, sign[i].k, got, sign[i].want);
+    }
+    /* crit[n] for n = 10, 20, 30, 50, 100, 300, 600, 1000, 2460 */
+    static const uint32_t crit[][2] = { { 10, 10 }, { 20, 18 }, { 30, 24 }, { 50, 37 }, { 100, 66 },
+                                        { 300, 178 }, { 600, 339 }, { 1000, 550 }, { 2460, 1308 } };
+    for (size_t i = 0; i < sizeof crit / sizeof crit[0]; i++) {
+        RxPairs s = { { crit[i][0] - crit[i][1], crit[i][1] } };
+        RxPairs t = { { crit[i][0] - crit[i][1] + 1, crit[i][1] - 1 } };
+        CHECK(rx_pairs_skew_p(&s, 1) <= RX_SKEW_ALPHA && rx_pairs_skew_p(&t, 1) > RX_SKEW_ALPHA,
+              "n %u: smallest refused count %u", crit[i][0], crit[i][1]);
+    }
+    RxPairs nine = { { 0, 9 } };
+    CHECK(rx_pairs_skew_p(&nine, 1) > RX_SKEW_ALPHA, "nine one-leg disturbances alone are never refused");
+    static const struct { uint32_t fd, ft, od, ot; double want; } legs[] = {
+        { 21, 62, 0, 62, 6.185346436928204e-8 },  /* fu[21, 62, 0, 62] */
+        { 10, 40, 2, 40, 0.01260209836760477 },   /* fu[10, 40, 2, 40] */
+        { 8, 30, 7, 30, 0.5 },                    /* fu[8, 30, 7, 30] */
+    };
+    for (size_t i = 0; i < sizeof legs / sizeof legs[0]; i++) {
+        double got = rx_legs_skew_p(legs[i].fd, legs[i].ft, legs[i].od, legs[i].ot);
+        CHECK(fabs(got - legs[i].want) <= 1e-9 * legs[i].want, "Fisher %u/%u vs %u/%u = %.12g, want %.12g",
+              legs[i].fd, legs[i].ft, legs[i].od, legs[i].ot, got, legs[i].want);
+    }
+}
+
 static void t_measure(void) {
     printf("[*] measurement: original and fused side by side\n");
     if (MC.state != AG_MS_VERIFIED) return;
     unpublished_refused(&MC, "verified");
-    /* A refused measurement (machine too busy to time) leaves its MetaSkill
-     * verified and unmeasured: the acceptance below, and for the compiled one
-     * the canary, promotion and use that follow it, are not judged. */
-    g_untimed_compiled = !measure(&MC, GOAL_EFFECT, &R.m_compiled, 1, "compiled");
+    /* A refused measurement (machine too busy to time, or leg skew) leaves its
+     * MetaSkill verified and unmeasured: the acceptance below, and for the
+     * compiled one the canary, promotion and use that follow it, are not
+     * judged. The leg each check claims is faster is the one tested for skew:
+     * the fused leg where it must be accepted, the original where the
+     * parallel fragment must be refused as slower. */
+    g_untimed_compiled = !measure(&MC, GOAL_EFFECT, &R.m_compiled, 1, "compiled", 1, &R.q_compiled);
     if (!g_untimed_compiled)
         CHECK(rx_fusion_accept_measure(&MC, &R.m_compiled, 50) == 0 && MC.state == AG_MS_MEASURED,
               "compiled accepted: fewer reactions, not slower, same outcomes");
     R.m_compiled = MC.measure;
-    if (measure(&MH, GOAL_EFFECT, &R.m_hybrid, 0, "hybrid")) {
+    if (measure(&MH, GOAL_EFFECT, &R.m_hybrid, 0, "hybrid", 1, &R.q_hybrid)) {
         rx_fusion_accept_measure(&MH, &R.m_hybrid, 50);
         CHECK(MH.state == AG_MS_MEASURED, "hybrid accepted");
     }
     R.m_hybrid = MH.measure;
     R.hybrid_state = MH.state;
-    g_untimed_parallel = !measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel");
+    g_untimed_parallel = !measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel", 0, &R.q_parallel);
     if (!g_untimed_parallel) {
         CHECK(rx_fusion_accept_measure(&MP, &R.m_parallel, 50) != 0 && MP.state == AG_MS_SLOWER,
               "parallel fragment refused: fusing it serializes independent work (%.0f -> %.0f us)",
@@ -1215,7 +1292,8 @@ static void t_canary(void) {
     R.poisoned_verified = MQ.state == AG_MS_VERIFIED;
     CHECK(MQ.state == AG_MS_VERIFIED, "poisoned hybrid passes verification (the entry is never generated)");
     AgFusionMeasure mq;
-    g_untimed_poisoned = !measure(&MQ, GOAL_EFFECT, &mq, 0, "poisoned hybrid");
+    Quiet qq;
+    g_untimed_poisoned = !measure(&MQ, GOAL_EFFECT, &mq, 0, "poisoned hybrid", 1, &qq);
     if (g_untimed_poisoned) {           /* unmeasured: its canary and quarantine are not judged */
         unpublished_refused(&MC, "canary-passed");
         return;
@@ -1260,7 +1338,7 @@ static char g_store_dir[64];
 static void t_promote(void) {
     printf("[*] promotion through the generation barrier, then publication\n");
     if (g_untimed_compiled) {           /* never measured, so never canary-passed */
-        printf("    not judged: the compiled MetaSkill was not measured (cpu_busy)\n");
+        printf("    not judged: the compiled MetaSkill was not measured (refused, see NOT RUN above)\n");
         return;
     }
     static Env e;
@@ -1545,7 +1623,7 @@ static void binary_digest(char out[65]) {
     hex(d, out);
 }
 
-static void measure_json(FILE *fp, const char *name, const AgFusionMeasure *m, int last) {
+static void measure_json(FILE *fp, const char *name, const AgFusionMeasure *m, const Quiet *q, int last) {
     fprintf(fp,
             "    \"%s\": {\"runs_per_leg\": %u, \"reactions_computing_per_run_before\": %.2f, "
             "\"reactions_computing_per_run_after\": %.2f,\n"
@@ -1564,6 +1642,12 @@ static void measure_json(FILE *fp, const char *name, const AgFusionMeasure *m, i
             (unsigned long long)m->cpu_ns_after, m->reactions_before, m->reactions_after,
             m->objects_before, m->objects_after, m->ok_before, m->failed_before, m->ok_after,
             m->failed_after);
+    fprintf(fp,
+            ",\n      \"disturbance\": {\"run_queue_delay_known\": %s, \"attempts\": %u, \"undisturbed_pairs\": %u, "
+            "\"only_original_disturbed\": %u, \"only_fused_disturbed\": %u, \"claimed_faster_leg\": \"%s\", "
+            "\"skew_p_one_sided\": %.6g, \"skew_alpha\": %g}",
+            q->known ? "true" : "false", q->tried, q->kept, q->legs.only[0], q->legs.only[1],
+            q->fast ? "fused" : "original", q->p, RX_SKEW_ALPHA);
     if (m->energy_available) {
         double dp = fabs(m->energy_uj_before - m->energy_uj_after), dc = fabs(cpu_mean(0) - cpu_mean(1));
         fprintf(fp,
@@ -1654,9 +1738,9 @@ static void write_receipt(void) {
             "  \"measurement\": {\n",
             R.tamper_cases, R.tamper_caught, R.tamper_names, R.coherent_rewrite_sites, R.unpublished_refusals,
             R.unpublished_digest_equal, R.refused_after_publish);
-    measure_json(fp, "compiled", &R.m_compiled, 0);
-    measure_json(fp, "hybrid", &R.m_hybrid, 0);
-    measure_json(fp, "parallel_fragment", &R.m_parallel, 1);
+    measure_json(fp, "compiled", &R.m_compiled, &R.q_compiled, 0);
+    measure_json(fp, "hybrid", &R.m_hybrid, &R.q_hybrid, 0);
+    measure_json(fp, "parallel_fragment", &R.m_parallel, &R.q_parallel, 1);
     fprintf(fp,
             "  },\n"
             "  \"promotion\": {\"parallel_fragment\": \"%s\", \"hybrid\": \"%s\",\n"
@@ -1677,6 +1761,7 @@ static void write_receipt(void) {
             "                        \"fused_authority_exactly_steps\": %u},\n"
             "  \"gates\": {\n"
             "    \"OMEGA_WORKFLOW_FUSION_PASS\": \"%s\",\n"
+            "    \"not_run_reason\": \"%s\",\n"
             "    \"not_claimed\": [\"a hardware realization (the kind is in the contract; none is built)\", "
             "\"a neural learned module (the learned realization is a table of verified observations)\", "
             "\"machine code (the compiled realization is a typed step program run in one reaction)\", "
@@ -1694,7 +1779,8 @@ static void write_receipt(void) {
             R.fused_nodes_before, R.fused_nodes_after, R.eq_runs, R.eq_nodes, R.eq_mismatch, R.cross_runs,
             R.cross_mismatch, R.steps_checked, R.steps_mismatch, R.evidence_checked, R.evidence_missing,
             R.ancestry_nodes, R.ancestry_mismatch, R.det_mismatch, R.bypass, R.n3_blocked_original,
-            R.n3_blocked_fused, R.n3_meta_auth_exact, rx_busy_verdict(judged_pass()));
+            R.n3_blocked_fused, R.n3_meta_auth_exact, rx_busy_verdict(judged_pass()),
+            *rx_busy_refusals() ? rx_busy_reason() : "none");
     fclose(fp);
     printf("receipt: %s\n", path);
 }
@@ -1706,6 +1792,7 @@ int main(void) {
     build_templates();
     t_observe();
     t_verify();
+    t_skew_math();
     t_measure();
     t_canary();
     t_promote();
