@@ -12,7 +12,7 @@ art-flags emit seed/qualification/om2/leak/fixtures/flags.om sha:0e89dcd1284414e
 art-local emit seed/qualification/om2/leak/fixtures/local.om sha:b79fd23b5bf7f6a00fb7f4b6058ec436c4ba7cb81b244159086cb575cfc3ef51 - 0
 art-svc emit seed/qualification/om2/leak/fixtures/svc.om sha:b363a48acf9c0a8c6769cda57251e07200ee18884d3f3f87c154182d5a3f2735 - 0
 art-elf emit seed/qualification/om2/leak/fixtures/elf.om sha:4caebbb143d76413098649f9569eadc495aad8ca744a91ba7b29fe1bad4c7471 - 0
-art-sha256-om1 emit om/sha256/sha256.om sha:3b0ee1ffd7247514b1fd685b5cd48e83ccda4d1ded40e18a4237e81eb44bc97f - 0
+art-sha256-om1 emit seed/qualification/om2/baseline/sha256-om1.om sha:3b0ee1ffd7247514b1fd685b5cd48e83ccda4d1ded40e18a4237e81eb44bc97f - 0
 art-public-in emit seed/qualification/om2/leak/fixtures/public-in.om sha:cbe9a0ca26df3fe76fbc1391916bae2e149142bcb5a3516fda247970886ce09e - 0
 art-public-out emit seed/qualification/om2/leak/fixtures/public-out.om sha:4f2b4c9a3b45fddcab74ae8dfb09311fe95c5ba6104eca05d2864e70897064a2 - 0
 art-reachable emit seed/qualification/om2/leak/fixtures/reachable-trap.om sha:be21c3c9b2edbd4c68bc43a79aea4427eb9d8639d08166381474e39efff74b3b - 0

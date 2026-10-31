@@ -1,0 +1,5 @@
+LEAKSCAN 1 words=9 entry=@0 data=x0
+BRANCH @1 cbz ->@7 data MANUAL trap=2
+MEM @5 ldr imm base=x7 index=- const trap-tail
+SUMMARY branches=1 len=0 trap-check=0 data-branch=1 branch-unreached=0 mem=1 const=1 public-index=0 data-index=0 mem-unreached=0 unknown=0 unhandled=0
+VERDICT TRACE-EQUIV-STATIC NOT_RUN

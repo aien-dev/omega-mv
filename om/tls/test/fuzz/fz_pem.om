@@ -1,0 +1,31 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_pem.om: fuzz target for the PEM trust-store loader of om/tls/x509.om (pem_decode: armour
+note scanning, base64, per-certificate parsing into store entries) and for chain verification against
+note the store it builds. Input: a PEM bundle (as /etc/ssl/certs/ca-certificates.crt would hold).
+note Argument 1 (optional): a certificate_list file (3-byte length, DER, 2-byte zero, per entry, as
+note run.sh writes from om/tls/test/x509/vectors/pki/lR.der + intR.der) checked against the store
+note when pem_decode accepted it, at now 1792972800 and host www.example.test.
+
+fn fz_pchain st view uchar * to ulong
+cl = new uchar 16384 0
+hq = new uchar 32 0
+m = fz_load 1 cl
+if eq m 0
+ret 0
+end
+h = fz_hq hq
+ret x509_chain_verify part cl 0 m st part hq 0 h
+end
+
+fn main to int
+st = new uchar TLSTSZ 0
+n = fz_read st
+if lt n 1
+ret 0
+end
+r = pem_decode st n
+if gt r 0
+v = fz_pchain view st
+end
+ret 0
+end

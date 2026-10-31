@@ -1,0 +1,59 @@
+OM2GATE START cases=seed/qualification/security673/relational/bindings.cases scratch=/tmp/prfix/Fix774-work/s758/bindings
+IDENTITY omc seed/out/omc sha256=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b pinned=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b match
+CASE derive-paired line=2
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/2.src > /tmp/prfix/Fix774-work/s758/bindings/2.elf 2> /tmp/prfix/Fix774-work/s758/bindings/2.cerr
+VERDICT derive-paired PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-wrong-image line=3
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/3.src > /tmp/prfix/Fix774-work/s758/bindings/3.elf 2> /tmp/prfix/Fix774-work/s758/bindings/3.cerr
+VERDICT derive-wrong-image PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-public-branch line=4
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/4.src > /tmp/prfix/Fix774-work/s758/bindings/4.elf 2> /tmp/prfix/Fix774-work/s758/bindings/4.cerr
+VERDICT derive-public-branch PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-public-address line=5
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/5.src > /tmp/prfix/Fix774-work/s758/bindings/5.elf 2> /tmp/prfix/Fix774-work/s758/bindings/5.cerr
+VERDICT derive-public-address PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-branch-native line=6
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/6.src > /tmp/prfix/Fix774-work/s758/bindings/6.elf 2> /tmp/prfix/Fix774-work/s758/bindings/6.cerr
+VERDICT derive-branch-native PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-address-native line=7
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/7.src > /tmp/prfix/Fix774-work/s758/bindings/7.elf 2> /tmp/prfix/Fix774-work/s758/bindings/7.cerr
+VERDICT derive-address-native PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE raw-pin line=8
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/8.src > /tmp/prfix/Fix774-work/s758/bindings/8.elf 2> /tmp/prfix/Fix774-work/s758/bindings/8.cerr
+VERDICT raw-pin PASS compile exit=0 expected=0 sha256=df0d1193b9555f3d6a4a1c5bc0e5d04605397000a22d8175e9b9f28965bdb162 stderr=match
+CASE checker-pin line=9
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/9.src > /tmp/prfix/Fix774-work/s758/bindings/9.elf 2> /tmp/prfix/Fix774-work/s758/bindings/9.cerr
+VERDICT checker-pin PASS compile exit=0 expected=0 sha256=aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633 stderr=match
+CASE embed-primitive line=10
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/10.src > /tmp/prfix/Fix774-work/s758/bindings/10.elf 2> /tmp/prfix/Fix774-work/s758/bindings/10.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/10.elf seed/qualification/security673/relational/evidence/run3/compare32.bin seed/qualification/security673/relational/evidence/run4/paired.bin < /dev/null > /tmp/prfix/Fix774-work/s758/bindings/10.out 2> /tmp/prfix/Fix774-work/s758/bindings/10.err
+VERDICT embed-primitive PASS run exit=0 expected=0 stdout=match stderr=match
+CASE embed-wrong-image-assert61 line=11
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/11.src > /tmp/prfix/Fix774-work/s758/bindings/11.elf 2> /tmp/prfix/Fix774-work/s758/bindings/11.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/11.elf seed/qualification/security673/relational/evidence/run3/compare32.bin seed/qualification/security673/relational/evidence/run3/embed.bin < /dev/null > /tmp/prfix/Fix774-work/s758/bindings/11.out 2> /tmp/prfix/Fix774-work/s758/bindings/11.err
+VERDICT embed-wrong-image-assert61 PASS run exit=61 expected=61 stdout=match stderr=match
+CASE embed-branch-mut line=12
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/12.src > /tmp/prfix/Fix774-work/s758/bindings/12.elf 2> /tmp/prfix/Fix774-work/s758/bindings/12.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/12.elf seed/qualification/security673/relational/evidence/run2/public-branch-mut.bin seed/qualification/security673/relational/evidence/run2/public-branch-native-mut.bin < /dev/null > /tmp/prfix/Fix774-work/s758/bindings/12.out 2> /tmp/prfix/Fix774-work/s758/bindings/12.err
+VERDICT embed-branch-mut PASS run exit=0 expected=0 stdout=match stderr=match
+CASE patch-public-branch line=13
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/13.src > /tmp/prfix/Fix774-work/s758/bindings/13.elf 2> /tmp/prfix/Fix774-work/s758/bindings/13.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/13.elf 4043309087 4043309119 < seed/qualification/security673/relational/evidence/run1/public-branch.bin > /tmp/prfix/Fix774-work/s758/bindings/13.out 2> /tmp/prfix/Fix774-work/s758/bindings/13.err
+VERDICT patch-public-branch PASS run exit=0 expected=0 stdout=match stderr=match
+CASE patch-public-branch-native line=14
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/14.src > /tmp/prfix/Fix774-work/s758/bindings/14.elf 2> /tmp/prfix/Fix774-work/s758/bindings/14.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/14.elf 4043309087 4043309119 < seed/qualification/security673/relational/evidence/run1/public-branch-native.bin > /tmp/prfix/Fix774-work/s758/bindings/14.out 2> /tmp/prfix/Fix774-work/s758/bindings/14.err
+VERDICT patch-public-branch-native PASS run exit=0 expected=0 stdout=match stderr=match
+CASE patch-public-address line=15
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/15.src > /tmp/prfix/Fix774-work/s758/bindings/15.elf 2> /tmp/prfix/Fix774-work/s758/bindings/15.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/15.elf 2315452452 2315452484 < seed/qualification/security673/relational/evidence/run1/public-address.bin > /tmp/prfix/Fix774-work/s758/bindings/15.out 2> /tmp/prfix/Fix774-work/s758/bindings/15.err
+VERDICT patch-public-address PASS run exit=0 expected=0 stdout=match stderr=match
+CASE patch-public-address-native line=16
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/16.src > /tmp/prfix/Fix774-work/s758/bindings/16.elf 2> /tmp/prfix/Fix774-work/s758/bindings/16.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/16.elf 2315452452 2315452484 < seed/qualification/security673/relational/evidence/run1/public-address-native.bin > /tmp/prfix/Fix774-work/s758/bindings/16.out 2> /tmp/prfix/Fix774-work/s758/bindings/16.err
+VERDICT patch-public-address-native PASS run exit=0 expected=0 stdout=match stderr=match
+CASE patch-missing-assert93 line=17
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/bindings/17.src > /tmp/prfix/Fix774-work/s758/bindings/17.elf 2> /tmp/prfix/Fix774-work/s758/bindings/17.cerr
+  $ /tmp/prfix/Fix774-work/s758/bindings/17.elf 0 1 < seed/qualification/security673/relational/evidence/run1/public-branch.bin > /tmp/prfix/Fix774-work/s758/bindings/17.out 2> /tmp/prfix/Fix774-work/s758/bindings/17.err
+VERDICT patch-missing-assert93 PASS run exit=93 expected=93 stdout=match stderr=match
+OM2GATE PASS cases=16 pass=16 fail=0 invalid=0 not_run=0

@@ -1,0 +1,24 @@
+# S5 fixtures for the OM-2 words dit and scrub (OMEGESE 9.13.1). Run by seed/qualification/om2/gate.om
+# from the repository root:  gate OMC OMC_SHA256 seed/omc/om2/s5/s5.cases SCRATCH
+deadline 60
+## dit: PSTATE.DIT round trip, range traps, refusals
+s5-dit-ok run seed/omc/om2/s5/dit-ok.om - - - 0
+s5-dit-two run seed/omc/om2/s5/dit-two.om - - - 103
+s5-dit-neg run seed/omc/om2/s5/dit-neg.om - - - 103
+s5-dit-fm refuse seed/omc/om2/s5/dit-fm.om 9
+s5-dit-type refuse seed/omc/om2/s5/dit-type.om 7
+s5-dit-name refuse seed/omc/om2/s5/dit-name.om 16
+s5-om1-names run seed/omc/om2/s5/om1-names.om - - - 0
+## scrub: the dead stack below SP is zeroed (with its negative control), live values survive, traps
+s5-scrub-mem run seed/omc/om2/s5/scrub-mem.om - - - 0
+s5-scrub-ctl run seed/omc/om2/s5/scrub-ctl.om - - - 10
+s5-scrub-live run seed/omc/om2/s5/scrub-live.om - - - 0
+s5-scrub-odd run seed/omc/om2/s5/scrub-odd.om - - - 103
+s5-scrub-big run seed/omc/om2/s5/scrub-big.om - - - 103
+s5-scrub-floor run seed/omc/om2/s5/scrub-floor.om - - - 106
+s5-scrub-fm refuse seed/omc/om2/s5/scrub-fm.om 9
+s5-scrub-type refuse seed/omc/om2/s5/scrub-type.om 7
+s5-scrub-name refuse seed/omc/om2/s5/scrub-name.om 16
+## scrub: the exact emitted sequence (checks, STP XZR loop, MOVZ #0 per free register, MOVI #0 V0-V31)
+s5-scrub-emit emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+s5-scrub-emit-run run seed/omc/om2/s5/scrub-emit.om - - - 0

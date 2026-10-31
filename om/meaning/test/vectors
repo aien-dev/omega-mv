@@ -1,0 +1,230 @@
+# om/meaning/test/vectors: input of om/meaning/test/driver.om (record formats in the driver header).
+# Expected values: K table, coefficient lines (K) and the counting argument come from Wolfram Language
+# evaluations quoted in spec/program-identity.md section 9; program_id goldens (I) are the C goldens of
+# tests/language/golden/v0.txt lines 24 and 27. Programs are numbered in order of their D lines.
+#
+# 0..3 x+1+1, x+2, 2+x, x+3 (w 64)
+D 64 x 1 add 1 add
+D 64 x 2 add
+D 64 2 x add
+D 64 x 3 add
+# 4..7 x(x+1), x*x+x, x(x+1) + 2^63 x(x-1) (2^63 x(x-1) is a null polynomial mod 2^64), x^2
+D 64 x x 1 add mul
+D 64 x x mul x add
+D 64 x x 1 add mul 0x8000000000000000 x mul x 1 sub mul add
+D 64 x x mul
+# 8 x(x-1)...(x-65) (66 factors: divisible by 66!, v2(66!) = 64), 9 the constant 0,
+# 10 x(x-1)...(x-64) (65 factors: v2(65!) = 63, nonzero at x = 65)
+D 64 x x 1 sub mul x 2 sub mul x 3 sub mul x 4 sub mul x 5 sub mul x 6 sub mul x 7 sub mul x 8 sub mul x 9 sub mul x 10 sub mul x 11 sub mul x 12 sub mul x 13 sub mul x 14 sub mul x 15 sub mul x 16 sub mul x 17 sub mul x 18 sub mul x 19 sub mul x 20 sub mul x 21 sub mul x 22 sub mul x 23 sub mul x 24 sub mul x 25 sub mul x 26 sub mul x 27 sub mul x 28 sub mul x 29 sub mul x 30 sub mul x 31 sub mul x 32 sub mul x 33 sub mul x 34 sub mul x 35 sub mul x 36 sub mul x 37 sub mul x 38 sub mul x 39 sub mul x 40 sub mul x 41 sub mul x 42 sub mul x 43 sub mul x 44 sub mul x 45 sub mul x 46 sub mul x 47 sub mul x 48 sub mul x 49 sub mul x 50 sub mul x 51 sub mul x 52 sub mul x 53 sub mul x 54 sub mul x 55 sub mul x 56 sub mul x 57 sub mul x 58 sub mul x 59 sub mul x 60 sub mul x 61 sub mul x 62 sub mul x 63 sub mul x 64 sub mul x 65 sub mul
+D 64 0
+D 64 x x 1 sub mul x 2 sub mul x 3 sub mul x 4 sub mul x 5 sub mul x 6 sub mul x 7 sub mul x 8 sub mul x 9 sub mul x 10 sub mul x 11 sub mul x 12 sub mul x 13 sub mul x 14 sub mul x 15 sub mul x 16 sub mul x 17 sub mul x 18 sub mul x 19 sub mul x 20 sub mul x 21 sub mul x 22 sub mul x 23 sub mul x 24 sub mul x 25 sub mul x 26 sub mul x 27 sub mul x 28 sub mul x 29 sub mul x 30 sub mul x 31 sub mul x 32 sub mul x 33 sub mul x 34 sub mul x 35 sub mul x 36 sub mul x 37 sub mul x 38 sub mul x 39 sub mul x 40 sub mul x 41 sub mul x 42 sub mul x 43 sub mul x 44 sub mul x 45 sub mul x 46 sub mul x 47 sub mul x 48 sub mul x 49 sub mul x 50 sub mul x 51 sub mul x 52 sub mul x 53 sub mul x 54 sub mul x 55 sub mul x 56 sub mul x 57 sub mul x 58 sub mul x 59 sub mul x 60 sub mul x 61 sub mul x 62 sub mul x 63 sub mul x 64 sub mul
+# 11 fn mask(x: u64) -> u64 { x & 0xff }; 12 fn transform requires true ensures result >= 1 { x * 2 + 1 }
+D 64 x 255 and
+D 64 x 2 mul 1 add ; true ; result >= 1
+# 13 the same body without the contract, 14 2(x+1) - 1
+D 64 x 2 mul 1 add
+D 64 x 1 add 2 mul 1 sub
+# 15..18 w 8: x and 255, x, x(x-1)...(x-8) (9 factors, v2(9!) = 7 < 8: zero on 0..8, 8! at 9... nonzero), 0
+D 8 x 255 and
+D 8 x
+D 8 x x 1 sub mul x 2 sub mul x 3 sub mul x 4 sub mul x 5 sub mul x 6 sub mul x 7 sub mul x 8 sub mul
+D 8 0
+# 19..21 coefficient vectors computed by Wolfram
+D 8 x x mul x mul 3 mul x 5 mul add 7 add
+D 16 x x mul x mul x mul x mul 7 mul x x mul 200 mul add 13 add
+D 8 x x mul 255 mul 254 add
+# 22..24 w 8: x+2, x+1+1, x+3 (exhaustive proofs)
+D 8 x 2 add
+D 8 x 1 add 1 add
+D 8 x 3 add
+# 25..28 w 64: x and (2^63-1) (outside the fragment), x and all-ones, x, x-1+1
+D 64 x 0x7fffffffffffffff and
+D 64 x 0xffffffffffffffff and
+D 64 x
+D 64 x 1 sub 1 add
+# 29, 30 w 16: x^2, x(x-1)+x
+D 16 x x mul
+D 16 x x 1 sub mul x add
+# 31..33 one-bit constant differences: x + 2^63 vs x; 2^62 x vs 3 2^62 x
+D 64 x 0x8000000000000000 add
+D 64 x 0x4000000000000000 mul
+D 64 x 0xc000000000000000 mul
+# 34..37 reassociation and commutation of add: (x+3)+5, x+(5+3), 3+(x+5), x+8
+D 64 x 3 add 5 add
+D 64 x 5 3 add add
+D 64 3 x 5 add add
+D 64 x 8 add
+# 38, 39 (x x) x vs x (x x); 40, 41 (x+3) 5 vs 5x + 15
+D 64 x x mul x mul
+D 64 x x x mul mul
+D 64 x 3 add 5 mul
+D 64 x 5 mul 15 add
+# 42, 43 w 64 or: x or 0 = x; and 0 = 0
+D 64 x 0 or
+D 64 x 0 and
+# 44 the outside program 25 with its operands swapped (another body: the fallback id differs),
+# 45, 46 x and 1 (not a polynomial function for w >= 2: outside the fragment)
+D 64 0x7fffffffffffffff x and
+D 64 x 1 and
+D 8 x 1 and
+#
+# must collapse
+C 0 1
+C 0 2
+C 1 2
+C 4 5
+C 4 6
+C 5 6
+C 8 9
+C 12 14
+C 15 16
+C 26 27
+C 27 28
+C 29 30
+C 34 35
+C 34 36
+C 34 37
+C 38 39
+C 40 41
+C 42 27
+C 43 9
+C 22 23
+# must not collapse (one-bit constant differences and near misses)
+N 1 3
+N 31 27
+N 32 33
+N 10 9
+N 17 18
+N 4 7
+N 25 27
+N 11 27
+N 22 24
+N 15 22
+N 16 27
+N 25 44
+N 45 27
+# the same body twice: same FUNCTION_ID (12 and 13 differ only in the contract)
+C 12 13
+# classes
+F 0 1
+F 8 1
+F 11 2
+F 25 2
+F 15 1
+F 26 1
+F 42 1
+F 43 1
+F 44 2
+F 45 2
+F 46 2
+# canonical coefficients (Wolfram)
+K 4 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+K 7 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+K 6 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+K 8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+K 19 7 8 9 3 0 0 0 0 0 0
+K 20 13 207 305 175 70 7 0 0 0 0 0 0 0 0 0 0 0 0
+K 21 254 255 127 0 0 0 0 0 0 0
+# program_id v2 goldens (tests/language/golden/v0.txt)
+I 11 e180baf4807d890dc1ba22472e847da76e877ee04d59b0762f6dfc26b2af62ff
+I 12 83bd39597742d3bb83e5140c662532c0a2ecb59e5f868e38be16276981644543
+# FUNCTION_ID goldens: sha256sum of the section 9.3 preimage built byte by byte in run.sh
+H 0 11b8858ec5c305c0160d84eb2f30786c9429731bc6a88516d530ecefc819bef2
+H 2 11b8858ec5c305c0160d84eb2f30786c9429731bc6a88516d530ecefc819bef2
+H 8 96cb6ace92436b94aa6f49967d967b900f069c6c34b9cf73f7ce2d7d773cc1fa
+H 9 96cb6ace92436b94aa6f49967d967b900f069c6c34b9cf73f7ce2d7d773cc1fa
+H 19 89877bca66e566c52e7dbc92df7fc3bacb25542066df417a3641f504e1d216eb
+# K(w) for w = 1..64 (Wolfram: least k with IntegerExponent[k!, 2] >= w)
+W 1 2
+W 2 4
+W 3 4
+W 4 6
+W 5 8
+W 6 8
+W 7 8
+W 8 10
+W 9 12
+W 10 12
+W 11 14
+W 12 16
+W 13 16
+W 14 16
+W 15 16
+W 16 18
+W 17 20
+W 18 20
+W 19 22
+W 20 24
+W 21 24
+W 22 24
+W 23 26
+W 24 28
+W 25 28
+W 26 30
+W 27 32
+W 28 32
+W 29 32
+W 30 32
+W 31 32
+W 32 34
+W 33 36
+W 34 36
+W 35 38
+W 36 40
+W 37 40
+W 38 40
+W 39 42
+W 40 44
+W 41 44
+W 42 46
+W 43 48
+W 44 48
+W 45 48
+W 46 48
+W 47 50
+W 48 52
+W 49 52
+W 50 54
+W 51 56
+W 52 56
+W 53 56
+W 54 58
+W 55 60
+W 56 60
+W 57 62
+W 58 64
+W 59 64
+W 60 64
+W 61 64
+W 62 64
+W 63 64
+W 64 66
+# refused programs (negative controls): constant not below 2^w, missing operand, two results, widths
+V 4 8 x 256 add
+V 5 8 x add
+V 7 8 x x
+V 1 0 x
+V 1 65 x
+V 4 1 x 2 add
+# graph proofs: exhaustive equal (w 8 and 16), exhaustive differ, witness found, no witness
+E 22 23 0
+E 29 30 0
+E 22 24 1
+X 1 3 1
+X 25 27 1
+X 26 27 0
+X 4 7 1
+# queries: class of x+1+1 is {x+1+1, x+2, 2+x}; class of w 8 x+2 is {x+2, x+1+1}
+Q 0 3
+Q 22 2
+Q 9 3
+Q 11 1
+P 0 4
+P 3 3
+# randomized differential: FUNCTION_ID equal iff value signatures equal (both in the fragment)
+R 1 64 3
+R 3 300 5
+R 8 300 12345
+R 16 120 777
+R 64 300 99
+G

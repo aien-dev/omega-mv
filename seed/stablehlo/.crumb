@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-31T07:37:58Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:87bf6f128d9433e6e9baafec4a3f35fa5c06348a5712a9fc35c151afad3d8765",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 7,
+      "generated_at_commit": "04d8cf85dafee43b6f2dbebe66087f855d2adcf7",
+      "source_tree": "sha256:8659077c3f903b05fb4506e35f34049067d665c607a28f17fff34a66b1fae423"
+    }
+  },
+  "layer": "seed",
+  "name": "stablehlo",
+  "purpose": "Seeded Omega OSC IR scalar unit to StableHLO MLIR, verified on IREE and XLA CPU PJRT interop oracles (Google TPU path)",
+  "schema_version": "1.0.0"
+}

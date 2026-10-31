@@ -1,15 +1,31 @@
-note Exact-source qualification transform. Mode0 exposes the real disp19 through a new main.
-note Mode1 weakens the forward limit by two instructions. No transformed artifact is a production compiler.
-global src uchar 524288
+note Exact-source qualification transform: argv1 picks one exact-once substitution in stdin, written to stdout.
+note Mode0 renames the real main and appends a probe main that calls the real bdisp and emit. Mode1 weakens
+note the forward limit by two instructions; mode2 makes close_range unavailable; mode3 admits 21-digit numbers;
+note mode4 and mode5 bypass the exec filter and fence words; mode6 weakens the backward limit by two; mode7
+note removes the range test (alignment kept). Modes compose: mode7 then mode0 probes the range-free encoder.
+note No transformed artifact is a production compiler.
+global src uchar 1048576
 global used ulong 1
+global rlen ulong 1
 global mode uchar 8
 global needle uchar 64
 global repl uchar 64
 text entry "fn main to int"
 text renamed "fn prev to int"
-text limit "gt diff 1048572"
-text weak "gt diff 1048580"
-text probe "\nfn main to int\nn = read 0 msg 0 1\nif ne n 1\nret 90\nend\nm = get msg 0\na = ulong 0\nt = ulong 0\ne = ulong 0\nif eq m 0\nt = ulong 1048572\ne = ulong 262143\nend\nif eq m 1\na = ulong 1048576\ne = ulong 262144\nend\nif eq m 2\na = ulong 1024\ne = ulong 524032\nend\nif eq m 3\na = ulong 1028\ne = ulong 524031\nend\nif eq m 4\nt = ulong 1048576\nend\nif eq m 5\na = ulong 1048580\nend\nif eq m 6\nt = ulong 2\nend\nif eq m 7\na = ulong 2\nend\nv = disp19 a t\nif ge m 4\nret 81\nend\nif ne v e\nret 82\nend\nret 0\nend\n"
+text fwd "gt diff sub span 4"
+text fwdweak "gt diff add span 4"
+text bwd "lt diff sub ulong 0 span"
+text bwdweak "lt diff sub ulong 0 add span 8"
+text range "if and gt diff sub span 4 lt diff sub ulong 0 span"
+text norange "if false"
+text seal "hsys 436"
+text noseal "hsys 999"
+text digits "if gt ndig 20"
+text longer "if gt ndig 21"
+text filter "hsys 277"
+text fence "hsys 446"
+text bypass "hsys 172"
+text probe "\nfn main to int\nn = read 0 msg 0 1\nif ne n 1\nret 90\nend\nm = get msg 0\nif ge m 18\nret 90\nend\nif ge m 16\nput oc 0 8388604\nif eq m 17\nput oc 0 8388608\nend\nemit 0\nif eq m 17\nret 81\nend\nret 0\nend\na = ulong 0\nt = ulong 0\ne = ulong 0\nwd = ulong 19\nif ne and m 4 0\nwd = ulong 26\nend\nif eq m 0\nt = ulong 1048572\ne = ulong 262143\nend\nif eq m 1\na = ulong 1048576\ne = ulong 262144\nend\nif eq m 2\na = ulong 1024\ne = ulong 524032\nend\nif eq m 3\na = ulong 1028\ne = ulong 524031\nend\nif eq m 4\nt = ulong 134217724\ne = ulong 33554431\nend\nif eq m 5\na = ulong 134217728\ne = ulong 33554432\nend\nif eq m 6\na = ulong 1024\ne = ulong 67108608\nend\nif eq m 7\na = ulong 1028\ne = ulong 67108607\nend\nif eq m 8\nt = ulong 1048576\nend\nif eq m 9\na = ulong 1048580\nend\nif eq m 10\nt = ulong 2\nend\nif eq m 11\na = ulong 2\nend\nif eq m 12\nt = ulong 134217728\nend\nif eq m 13\na = ulong 134217732\nend\nif eq m 14\nt = ulong 2\nend\nif eq m 15\na = ulong 2\nend\nv = bdisp a t wd\nif ge m 8\nret 81\nend\nif ne v e\nret 82\nend\nret 0\nend\n"
 fn matches i ulong to bool
 for j ulong get used 0
 if ne get src add i j get needle j
@@ -18,9 +34,33 @@ end
 end
 ret true
 end
-fn replace i ulong to void
-for j ulong get used 0
-put src add i j get repl j
+fn srcout p ulong n ulong to void
+while lt p n
+r = write 1 src p sub n p
+if le r 0
+exit 94
+end
+p = add p ulong r
+end
+end
+fn replout to void
+p = ulong 0
+while lt p get rlen 0
+r = write 1 repl p sub get rlen 0 p
+if le r 0
+exit 94
+end
+p = add p ulong r
+end
+end
+fn probeout to void
+p = ulong 0
+while lt p len probe
+r = write 1 probe p sub len probe p
+if le r 0
+exit 94
+end
+p = add p ulong r
 end
 end
 fn main to int
@@ -32,20 +72,77 @@ if ne r 1
 ret 90
 end
 m = get mode 0
-if and ne m 48 ne m 49
+if or lt m 48 gt m 55
 ret 90
 end
 if eq m 48
 put used 0 len entry
+put rlen 0 len renamed
 for i ulong len entry
 put needle i get entry i
 put repl i get renamed i
 end
-else
-put used 0 len limit
-for i ulong len limit
-put needle i get limit i
-put repl i get weak i
+end
+if eq m 49
+put used 0 len fwd
+put rlen 0 len fwdweak
+for i ulong len fwd
+put needle i get fwd i
+end
+for i ulong len fwdweak
+put repl i get fwdweak i
+end
+end
+if eq m 50
+put used 0 len seal
+put rlen 0 len noseal
+for i ulong len seal
+put needle i get seal i
+put repl i get noseal i
+end
+end
+if eq m 51
+put used 0 len digits
+put rlen 0 len longer
+for i ulong len digits
+put needle i get digits i
+put repl i get longer i
+end
+end
+if eq m 52
+put used 0 len filter
+put rlen 0 len bypass
+for i ulong len filter
+put needle i get filter i
+put repl i get bypass i
+end
+end
+if eq m 53
+put used 0 len fence
+put rlen 0 len bypass
+for i ulong len fence
+put needle i get fence i
+put repl i get bypass i
+end
+end
+if eq m 54
+put used 0 len bwd
+put rlen 0 len bwdweak
+for i ulong len bwd
+put needle i get bwd i
+end
+for i ulong len bwdweak
+put repl i get bwdweak i
+end
+end
+if eq m 55
+put used 0 len range
+put rlen 0 len norange
+for i ulong len range
+put needle i get range i
+end
+for i ulong len norange
+put repl i get norange i
 end
 end
 n = ulong 0
@@ -65,34 +162,23 @@ n = add n ulong r
 end
 end
 found = ulong 0
+at = ulong 0
 for i ulong n
 if le get used 0 sub n i
 if matches i
 found = add found 1
-replace i
+at = i
 end
 end
 end
 if ne found 1
 ret 93
 end
-p = ulong 0
-while lt p n
-r = write 1 src p sub n p
-if le r 0
-ret 94
-end
-p = add p ulong r
-end
+srcout 0 at
+replout
+srcout add at get used 0 n
 if eq m 48
-p = ulong 0
-while lt p len probe
-r = write 1 probe p sub len probe p
-if le r 0
-ret 94
-end
-p = add p ulong r
-end
+probeout
 end
 ret 0
 end

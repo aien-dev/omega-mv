@@ -109,6 +109,8 @@ static int canon(const char *in, char *out, size_t cap)
     return 0;
 }
 
+/* The logical working directory: $PWD when it names ".", else getcwd. When the directory was removed getcwd fails
+ * (ENOENT) and bash keeps using the directory it remembered, so an absolute $PWD is used then (omega#344). */
 static int logical_pwd(const OshSession *s, char *out, size_t cap)
 {
     const char *p = osh_var_get(s, "PWD");
@@ -118,7 +120,21 @@ static int logical_pwd(const OshSession *s, char *out, size_t cap)
         strcpy(out, p);
         return 0;
     }
-    return getcwd(out, cap) ? 0 : -1;
+    if (getcwd(out, cap)) return 0;
+    if (errno == ENOENT && p && p[0] == '/' && strlen(p) < cap) {
+        strcpy(out, p);
+        return 0;
+    }
+    return -1;
+}
+
+/* bash's message when getcwd cannot name a removed directory; printed without the shell-name prefix, as bash does. */
+static void getcwd_error(int fd, const char *who)
+{
+    char buf[256];
+    int n = snprintf(buf, sizeof buf, "%s: error retrieving current directory: getcwd: cannot access parent directories: %s\n",
+                     who, strerror(errno));
+    (void)osh_write_all(fd, buf, (size_t)n);
 }
 
 static int bi_cd(OshSession *s, const OshCmd *c, const int io[3], int in_parent)
@@ -131,7 +147,7 @@ static int bi_cd(OshSession *s, const OshCmd *c, const int io[3], int in_parent)
         for (const char *o = c->argv[i] + 1; *o; o++) {
             if (*o == 'L') physical = 0;
             else if (*o == 'P') physical = 1;
-            else { osh_diag(io[2], "cd: -%c: invalid option\ncd: usage: cd [-L|-P] [dir]", *o); return 2; }
+            else { osh_diag(io[2], "cd: -%c: invalid option\ncd: usage: cd [-L|[-P [-e]] [-@]] [dir]", *o); return 2; }
         }
     }
     if (c->nargv - i > 1) { osh_diag(io[2], "cd: too many arguments"); return 1; }
@@ -188,15 +204,18 @@ static int bi_pwd(OshSession *s, const OshCmd *c, const int io[3])
 {
     int physical = 0, i = 1;
     for (; i < c->nargv && c->argv[i][0] == '-' && c->argv[i][1]; i++) {
-        if (strcmp(c->argv[i], "-P") == 0) physical = 1;
-        else if (strcmp(c->argv[i], "-L") == 0) physical = 0;
-        else if (strcmp(c->argv[i], "--") == 0) { i++; break; }
-        else { osh_diag(io[2], "pwd: %s: invalid option", c->argv[i]); return 2; }
+        if (strcmp(c->argv[i], "--") == 0) break;
+        for (const char *o = c->argv[i] + 1; *o; o++) {
+            if (*o == 'P') physical = 1;
+            else if (*o == 'L') physical = 0;
+            else { osh_diag(io[2], "pwd: -%c: invalid option\npwd: usage: pwd [-LP]", *o); return 2; }
+        }
     }
-    if (i < c->nargv) { osh_diag(io[2], "pwd: too many arguments"); return 1; }
+    /* bash 5.2 ignores operands of pwd */
     char p[PATH_MAX + 1];
     if (physical ? !getcwd(p, PATH_MAX) : logical_pwd(s, p, PATH_MAX)) {
-        osh_diag(io[2], "pwd: %s", strerror(errno));
+        if (errno == ENOENT) getcwd_error(io[2], "pwd");
+        else osh_diag(io[2], "pwd: %s", strerror(errno));
         return 1;
     }
     strcat(p, "\n");
@@ -447,12 +466,18 @@ static int bi_printf(const OshCmd *c, const int io[3])
 {
     int ai = 1;
     if (ai < c->nargv && strcmp(c->argv[ai], "--") == 0) ai++;
-    /* bash takes any other leading -x as an option (-v sets a variable); none is supported, so none is printed */
+    /* bash takes any other leading -x as an option: -v sets a variable and is refused here (not supported); any other
+     * letter is bash's "invalid option" with the usage line, status 2. Nothing is printed in either case. */
     else if (ai < c->nargv && c->argv[ai][0] == '-' && c->argv[ai][1]) {
-        osh_diag(io[2], "printf: %s: option not supported", c->argv[ai]);
+        if (c->argv[ai][1] == 'v') osh_diag(io[2], "printf: %s: option not supported", c->argv[ai]);
+        else osh_diag(io[2], "printf: -%c: invalid option\nprintf: usage: printf [-v var] format [arguments]", c->argv[ai][1]);
         return 2;
     }
-    if (ai >= c->nargv) { osh_diag(io[2], "printf: usage: printf format [arguments]"); return 2; } /* bash: 2 */
+    if (ai >= c->nargv) { /* bash: the bare usage line, no shell-name prefix, status 2 */
+        static const char u[] = "printf: usage: printf [-v var] format [arguments]\n";
+        (void)osh_write_all(io[2], u, sizeof u - 1);
+        return 2;
+    }
     const char *fmt = c->argv[ai++];
     int first = ai, nargs = 0; /* arguments one pass over the format consumes */
     /* Validate EVERY conversion before anything is printed. The scan and the print loop below agree on what a
@@ -639,10 +664,10 @@ static int bi_export(OshSession *s, const OshCmd *c, const int io[3])
         char name[256];
         size_t nl = eq ? (size_t)(eq - a) : strlen(a);
         if (fn) { osh_diag(io[2], "export: %s: not a function", a); status = 1; continue; }
-        if (nl == 0 || nl >= sizeof name) { osh_diag(io[2], "export: '%s': not a valid identifier", a); status = 1; continue; }
+        if (nl == 0 || nl >= sizeof name) { osh_diag(io[2], "export: `%s': not a valid identifier", a); status = 1; continue; }
         memcpy(name, a, nl);
         name[nl] = 0;
-        if (!osh_name_valid(name)) { osh_diag(io[2], "export: '%s': not a valid identifier", a); status = 1; continue; }
+        if (!osh_name_valid(name)) { osh_diag(io[2], "export: `%s': not a valid identifier", a); status = 1; continue; }
         if (unexport) {
             if (eq && osh_var_set(s, name, eq + 1)) { osh_diag(io[2], "export: out of memory"); status = 1; continue; }
             osh_var_unexport(s, name);
@@ -657,7 +682,7 @@ static int bi_unset(OshSession *s, const OshCmd *c, const int io[3])
     for (; i < c->nargv && c->argv[i][0] == '-' && c->argv[i][1]; i++) {
         if (strcmp(c->argv[i], "-v") == 0) continue;
         if (strcmp(c->argv[i], "--") == 0) { i++; break; }
-        osh_diag(io[2], "unset: %s: invalid option", c->argv[i]);
+        osh_diag(io[2], "unset: -%c: invalid option\nunset: usage: unset [-f] [-v] [-n] [name ...]", c->argv[i][1]);
         return 2;
     }
     for (; i < c->nargv; i++) {

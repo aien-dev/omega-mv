@@ -1,0 +1,66 @@
+om2 debug
+note SPDX-License-Identifier: AGPL-3.0-only
+note Test entry composed with proposal.om and pinned NL1 Hadamard source.
+text codecok "NL4 codec independent IEEE32 oracle PASS\n"
+fn main to int
+oracle = new uchar 513 0
+features = new f64 4 0.0f64
+wire = new uchar 32 0
+p = new uint 16 99
+frame = new uchar 1056 0
+n = read 0 oracle 0 513
+if ne n 512
+ret 1
+end
+for row ulong 16
+for j ulong 4
+put features j f64 and shr row sub ulong 3 j 1
+end
+if ne nlencode features wire 0
+ret 2
+end
+for k ulong 32
+if ne get wire k get oracle add mul row 32 k
+ret 3
+end
+end
+end
+put features 0 bitcast f64 ulong 0x7ff8000000000000
+if ne nlencode features wire 50
+ret 4
+end
+for k ulong 32
+if ne get wire k get oracle add ulong 480 k
+ret 5
+end
+end
+if ne nlproposal part frame 0 4 p 40
+ret 6
+end
+for k ulong 16
+if ne get p k 99
+ret 7
+end
+end
+put frame 5 1
+put frame 10 1
+put frame 11 1
+put frame 19 32
+put frame 23 8
+put frame 27 8
+put frame 101 1
+put frame 107 1
+if ne nlproposal frame p 43
+ret 8
+end
+for k ulong 16
+if ne get p k 99
+ret 9
+end
+end
+n = write 1 codecok 0 len codecok
+if ne n long len codecok
+ret 10
+end
+ret 0
+end

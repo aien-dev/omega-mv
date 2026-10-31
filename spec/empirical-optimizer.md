@@ -83,6 +83,15 @@ model is a fixed 28,112-byte blob, well under the 64 KiB generation limit.
   √(σ²(1 + φ'Λ⁻¹φ)) × `sd_scale`. The leverage term widens the spread away
   from the training data. σ² has a floor of 0.03² (about 2%).
 - **A cell** needs 12 observations (`RX_CM_MIN_OBS`) before it predicts.
+- **An unknown semantic operation** is not a cell. `rx_cm_cell` returns
+  `RX_CM_CELL_NONE`, which is never used as an index. Prediction, decision
+  and observation refuse it (`RX_CM_ERR_UNSUPPORTED`, decision `RX_CM_REFUSE`)
+  and do not read or write another family's statistics. An unknown core class
+  is still the OTHER bucket, and pressure past the last bucket still saturates.
+  Those are declared buckets, not a catch-all operation. Adding a family
+  widens `RX_CM_OPS`, changes `RX_CM_CELLS`, and bumps the blob version. A
+  blob whose version, basis size, cell count, arm cap or core count disagrees
+  is refused.
 - **Pressure cells** do not refit the whole curve. They hold a two-number
   correction over the quiet cell of the same core class: log2 cost under
   pressure = quiet prediction + a + b × (doublings past cache). Four

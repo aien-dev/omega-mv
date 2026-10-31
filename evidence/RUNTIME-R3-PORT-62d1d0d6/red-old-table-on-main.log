@@ -1,0 +1,25 @@
+# red: the recovered 102-row table (0dbed9c1) against main 62d1d0d6
+$ sh tools/runtime_portability_check.sh . <table at 0dbed9c1> mk/omega-gpu-engine.mk
+FAIL: no row in the table for src/omega_gpu_decode_attn256_api.c
+FAIL: no row in the table for src/omega_gpu_decode_attn256_api.h
+FAIL: no row in the table for src/omega_gpu_gdn_api.c
+FAIL: no row in the table for src/omega_gpu_gdn_api.h
+FAIL: no row in the table for src/omega_gpu_gemm.c
+FAIL: no row in the table for src/omega_gpu_gemm.h
+FAIL: no row in the table for src/omega_gpu_prefill_attn256_api.c
+FAIL: no row in the table for src/omega_gpu_prefill_attn256_api.h
+FAIL: no row in the table for src/omega_gpu_q36_graph.c
+FAIL: no row in the table for src/omega_gpu_q36_graph.h
+FAIL: no row in the table for src/omega_gpu_q38_graph.c
+FAIL: no row in the table for src/omega_gpu_q38_graph.h
+FAIL: no row in the table for src/omega_gpu_scan.c
+FAIL: no row in the table for src/omega_gpu_scan.h
+FAIL: no row in the table for src/omega_gpu_scan_ref.c
+FAIL: no row in the table for src/omega_blackwell_codegen_attn256.c
+FAIL: no row in the table for src/omega_blackwell_codegen_attn256.h
+FAIL: no row in the table for src/omega_blackwell_codegen_gdn.c
+FAIL: no row in the table for src/omega_blackwell_codegen_gdn.h
+FAIL: no row in the table for src/omega_blackwell_codegen_pattn256.c
+FAIL: no row in the table for src/omega_blackwell_codegen_pattn256.h
+FAIL: portability table does not match the tree
+exit=1

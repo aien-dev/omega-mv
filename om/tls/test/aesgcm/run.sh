@@ -193,7 +193,7 @@ else
 	run_detect mutant-expect "$out/mut-expect.txt" "$out/driver" 1
 fi
 
-say "NOT_RUN wycheproof aes_gcm_siv_test.json: AES-GCM-SIV (RFC 8452) is not implemented"
+say "NOT_RUN wycheproof aes_gcm_siv_test.json: not vendored; AES-GCM-SIV is om/tls/gcmsiv.om"
 say "NOT_RUN wycheproof aria_gcm_test.json, seed_gcm_test.json, sm4_gcm_test.json: other block ciphers"
 say "NOT_RUN wycheproof c2sp_chunked_encryption_aes_{128,256}_gcm_test.json: chunked-encryption construction, not raw AES-GCM"
 

@@ -1,0 +1,4 @@
+segment version=1 recsize=64 hdrsize=16
+query type=7 seq>=0 seq<4096
+matched=0 of=40
+verify ok records=40 bytes=2576 lost=0 reason=clean
