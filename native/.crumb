@@ -3,21 +3,21 @@
     "generated": {
       "children": [
         {
-          "digest": "a0c58e76c0819d44a5b4e1cdfd93f9cfcad46b397964ff1d17b8db56720aabf6",
-          "last_commit": "5f8019777",
+          "digest": "800118e50b659b0651a6fae12d53b5fc878b3787806e8e8488f40470abb4a265",
+          "last_commit": "",
           "name": "orig4",
           "purpose": "ORIG-4 shadow advice for the matvec arm chooser (omega-mv#731, spec/shadow-advice-v0.md): shadow"
         }
       ],
-      "children_root": "sha256:a2fda5c7343996fb9960a49d67a842f3b8b86783e18cea3e244a093ddfac265c",
-      "compiled_at": "2026-10-31T08:20:54Z",
+      "children_root": "sha256:760475ac96f84c549e89afa15e792a6938cdab724230193c585c682fa1adfe75",
+      "compiled_at": "2026-10-31T08:53:01Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:7371b8d80ca0c26fb260e3af7e1b063eebd040c925aa57580942e4174bf9f578",
+      "digest": "sha256:9df503eba85384d7e7a5f587f2278b64308061badf729858bb6f9eca6cd42d33",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 8,
-      "generated_at_commit": "5f8019777b703034d0e4d28783087c5d8994efe3",
-      "source_tree": "sha256:c87fb4fe4fed0d493f6ccf0d58751122cf6cd35bbb568119345f2e2473603794"
+      "generated_at_commit": "f58bb1f480353dbf87d91f861401b2d5143c2099",
+      "source_tree": "sha256:9ed5e111835a2fee73f7640cd957289da65d595760da1edc648886d02b157993"
     }
   },
   "name": "native",

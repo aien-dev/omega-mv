@@ -51,8 +51,11 @@ const_bound|2|const B ulong 3\nfn main to int\nx = ulong 0\nwhile lt x ulong 2 b
 trap_const|102|const T uint 2\nfn main to int\ntrap T\nend
 for_const|4|const K ulong 4\nfn main to int\nx = ulong 0\nfor i ulong K\nx = add x 1\nend\nret int x\nend
 const_order|12|const kk ulong 4\nfn a fs edit long kk to void\nput fs 0 1\nend\nconst k2 ulong 3\nfn b fs edit long kk gs edit long k2 to long\nput fs 3 7\nput gs 2 5\nret add get fs 3 get gs 2\nend\nfn main to int\nx = new long kk 0\ny = new long k2 0\na x\nret int b x y\nend
+big_bound|54|const B ulong 3000000\nfn main to int\nx = ulong 0\nwhile lt x 2000000 bound B\nx = add x 1\nend\nret int rem x 97\nend
+big_bound_trap|104|fn main to int\nx = ulong 0\nwhile lt x 2000000 bound 1500000\nx = add x 1\nend\nret 0\nend
+max_bound|5|fn main to int\nx = ulong 0\nwhile lt x 5 bound 9223372036854775807\nx = add x 1\nend\nret int x\nend
 RUN
-[ "$n" = 19 ] || bad "value table ran $n of 19 cases"
+[ "$n" = 22 ] || bad "value table ran $n of 22 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -93,8 +96,10 @@ fm_host_word|9|const N ulong 5\nfn f a ulong to long\nx = getpid\nret x\nend
 fm_trap_range|8|const T uint 15\nfn f a ulong to ulong\ntrap T\nend
 fm_float_length|16|const H f64 0.1\nfn f a view uchar H to ulong\nret 0\nend
 fm_assign|7|const N ulong 5\nfn f a ulong to ulong\nN = ulong 6\nret a\nend
+bound_zero|8|fn main to int\nwhile eq int 1 int 1 bound 0\nend\nret 0\nend
+bound_over|8|fn main to int\nwhile eq int 1 int 1 bound 9223372036854775808\nend\nret 0\nend
 REF
-[ "$n" = 27 ] || bad "refusal table ran $n of 27 cases"
+[ "$n" = 29 ] || bad "refusal table ran $n of 29 cases"
 
 # Function mode (no `fn main`): an integer or float constant folds to its literal, so the bare function
 # words must be byte-identical to the same unit written with literals. Each line: name|const unit|literal unit.
@@ -127,5 +132,5 @@ fm_float|const H f64 0.1\nfn f a f64 to f64\nret add a H\nend|fn f a f64 to f64\
 FM
 [ "$n" = 9 ] || bad "function-mode table ran $n of 9 cases"
 
-say "PASS gate16 19 constant programs, 27 refusals and 9 function-mode units"
+say "PASS gate16 22 constant programs, 29 refusals and 9 function-mode units"
 exit 0

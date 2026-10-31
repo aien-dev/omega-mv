@@ -39,7 +39,7 @@ hex-r8-const-dec emit seed/omc/om2/hex/ref/r8-const-dec.om - err:4:8 8
 hex-r8-global0 emit seed/omc/om2/hex/ref/r8-global0.om - err:4:8 8
 # decimal twin of r8-global0
 hex-r8-global0-dec emit seed/omc/om2/hex/ref/r8-global0-dec.om - err:4:8 8
-# while bound 0xf4240 = 1000000 past 999999
+# while bound 0x8000000000000000 = 2^63 past 2^63-1 (#848; was 0xf4240 past 999999)
 hex-r8-bound emit seed/omc/om2/hex/ref/r8-bound.om - err:6:8 8
 # decimal twin of r8-bound
 hex-r8-bound-dec emit seed/omc/om2/hex/ref/r8-bound-dec.om - err:6:8 8
