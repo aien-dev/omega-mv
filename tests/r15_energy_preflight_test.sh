@@ -42,9 +42,14 @@ mk() { # case: a complete, valid-looking reader tree (static counters)
     i=1; for l in $EL; do echo "$l" > "$H/energy${i}_label"; echo 5000000000 > "$H/energy${i}_input"; echo 0 > "$H/energy${i}_overflow_raw"; i=$((i + 1)); done
     i=1; for l in $PL; do echo "$l" > "$H/power${i}_label"; echo 20000000 > "$H/power${i}_input"; i=$((i + 1)); done
 }
-# advance <case> <start-uJ>: package counter rises 0.5 J then 1 J in the background while the preflight samples
+# tick <case> <channel> <start-uJ> <step-uJ>: a background writer moves hwmon1/energy<channel>_input by <step>
+# every 10 ms from <start> until untick <case>, so the counter keeps moving through the preflight's whole
+# sampling window however late the preflight starts. (A writer on a fixed schedule could finish before the
+# first sample under load; all three samples then saw one value and the valid case reported 'did not advance'.)
 put() { echo "$2" > "$1.tmp" && mv "$1.tmp" "$1"; } # atomic, so the preflight never reads a half-written file
-advance() { ( sleep 0.05; put "$W/$1/hwmon1/energy1_input" $(( $2 + 500000 )); sleep 0.1; put "$W/$1/hwmon1/energy1_input" $(( $2 + 1000000 )) ) & }
+tick() { ( v=$3; while [ ! -e "$W/$1.untick" ]; do v=$((v + $4)); put "$W/$1/hwmon1/energy$2_input" $v; sleep 0.01; done ) & }
+untick() { : > "$W/$1.untick"; wait; }
+advance() { tick "$1" 1 "$2" 500000; } # advance <case> <start-uJ>: package counter rises 0.5 J per tick
 mkdir -p "$W/absent/hwmon0"; echo acpitz > "$W/absent/hwmon0/name"; check absent 5 "reason=absent"
 mkdir -p "$W/empty"; check empty 5 "reason=absent"
 mk substitute; echo nvml > "$W/substitute/hwmon1/name"; check substitute 5 "reason=absent"
@@ -67,24 +72,22 @@ mk lowhead; echo 4294967000000000 > "$W/lowhead/hwmon1/energy3_input"; check low
 # less than the planned run (2400 s x 100 W = 240 kJ), so a wrap could land mid-run
 mk shortrun; echo 4094967295000 > "$W/shortrun/hwmon1/energy1_input"
 advance shortrun 4094967295000
-R15_ENERGY_PREFLIGHT_SLEEP=0.08 check shortrun 5 "planned run"; wait
+R15_ENERGY_PREFLIGHT_SLEEP=0.08 check shortrun 5 "planned run"; untick shortrun
 # wrapped / reset counter: uptime 200000 s but only 1 kJ on the counter (floor 10 W x 200000 s = 2 MJ)
 mk wrapped; echo 1000000000 > "$W/wrapped/hwmon1/energy1_input"; printf "200000.00 1.00\n" > "$W/wrapped-uptime"
 advance wrapped 1000000000
-R15_UPTIME_FILE="$W/wrapped-uptime" R15_ENERGY_PREFLIGHT_SLEEP=0.08 check wrapped 5 "wrapped or was reset"; wait
-mk nouptime; advance nouptime 5000000000; R15_UPTIME_FILE="$W/does-not-exist" R15_ENERGY_PREFLIGHT_SLEEP=0.08 check nouptime 5 "uptime"; wait
+R15_UPTIME_FILE="$W/wrapped-uptime" R15_ENERGY_PREFLIGHT_SLEEP=0.08 check wrapped 5 "wrapped or was reset"; untick wrapped
+mk nouptime; advance nouptime 5000000000; R15_UPTIME_FILE="$W/does-not-exist" R15_ENERGY_PREFLIGHT_SLEEP=0.08 check nouptime 5 "uptime"; untick nouptime
 # a decrease on any channel (not only package) invalidates the reader
 mk decr3; echo 5000000000 > "$W/decr3/hwmon1/energy1_input"
-( k=0; while [ $k -lt 60 ]; do put "$W/decr3/hwmon1/energy3_input" $((5000000000 - k * 1000)); k=$((k + 1)); sleep 0.01; done ) &  # steadily falling cpu_p counter
+tick decr3 3 5000000000 -1000  # steadily falling cpu_p counter
 advance decr3 5000000000
 R15_ENERGY_PREFLIGHT_SLEEP=0.08 check decr3 5 "energy3 counter went backwards"
-wait
+untick decr3
 # valid: package counter advances between samples
 mk valid
-put "$W/valid/hwmon1/energy1_input" 5000100000
 advance valid 5000100000
-R15_ENERGY_PREFLIGHT_SLEEP=0.08 check valid 0 "energy preflight ok"
-wait
+R15_ENERGY_PREFLIGHT_SLEEP=0.08 check valid 0 "energy preflight ok"; untick valid
 # blocked run: receipt refuses (exit 4), writes nothing
 R=$W/blocked; mkdir -p "$R"; printf 'BLOCKED_INSTRUMENT\nINSTRUMENT_UNAVAILABLE reason=absent\n' > "$R/instrument-unavailable.txt"
 out=$(tools/r15_receipt.sh "$R" "$W/receipt-out" 2>&1); rc=$?
