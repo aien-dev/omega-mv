@@ -207,11 +207,11 @@
 | 2368 | 94000b18  |   bl NEWNAME | bl 0x35a0 |
 | 2372 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
 | 2376 | f940092a  |   ldr.x x10 x9 2 | ldr x10, [x9, #16] |
-| 2380 | f108015f  |   cmp.x.i x10 512 | subs xzr, x10, #0x200 |
-| 2384 | 5400f9e2  |   b.hs E_FULL | b.cs 0x288c  // b.hs, b.nlast |
+| 2380 | f13ffd5f  |   cmp.x.i x10 4095 | subs xzr, x10, #0xfff |
+| 2384 | 5400f9e8  |   b.hi E_FULL | b.hi 0x288c  // b.pmore |
 | 2388 | 9100054b  |   add.x.i x11 x10 1 | add x11, x10, #0x1 |
 | 2392 | f900092b  |   str.x x11 x9 2 | str x11, [x9, #16] |
-| 2396 | d2a0308b  |   movz.x x11 0x184 1 | movz x11, #0x184, lsl #16 |
+| 2396 | d2a033eb  |   movz.x x11 0x19f 1 | movz x11, #0x19f, lsl #16 |
 | 2400 | d379e14a  |   ubfm.x x10 x10 57 56 | ubfm x10, x10, #57, #56 |
 | 2404 | 8b0a016b  |   add.x x11 x11 x10 | add x11, x11, x10 |
 | 2408 | f9000d2b  |   str.x x11 x9 3 | str x11, [x9, #24] |
@@ -3058,7 +3058,7 @@
 | 13772 | d65f03c0  |   ret | ret  |
 | 13776 | d2a030a9  |   movz.x x9 0x185 1 | movz x9, #0x185, lsl #16 |
 | 13780 | f940092a  |   ldr.x x10 x9 2 | ldr x10, [x9, #16] |
-| 13784 | d2a03089  |   movz.x x9 0x184 1 | movz x9, #0x184, lsl #16 |
+| 13784 | d2a033e9  |   movz.x x9 0x19f 1 | movz x9, #0x19f, lsl #16 |
 | 13788 | b4ffec4a  |   cbz.x x10 FD0 | cbz x10, 0x3364 |
 | 13792 | f940012b  |   ldr.x x11 x9 0 | ldr x11, [x9] |
 | 13796 | eb01017f  |   cmp.x x11 x1 | subs xzr, x11, x1 |
@@ -3128,7 +3128,7 @@
 | 14052 | f9400921  |   ldr.x x1 x9 2 | ldr x1, [x9, #16] |
 | 14056 | d2800002  |   movz.x x2 0 0 | movz x2, #0x0 |
 | 14060 | d2a033c3  |   movz.x x3 0x19e 1 | movz x3, #0x19e, lsl #16 |
-| 14064 | d2a03084  |   movz.x x4 0x184 1 | movz x4, #0x184, lsl #16 |
+| 14064 | d2a033e4  |   movz.x x4 0x19f 1 | movz x4, #0x19f, lsl #16 |
 | 14068 | eb01005f  |   cmp.x x2 x1 | subs xzr, x2, x1 |
 | 14072 | 540003c2  |   b.hs RS_CHECK | b.cs 0x3770  // b.hs, b.nlast |
 | 14076 | d2800005  |   movz.x x5 0 0 | movz x5, #0x0 |

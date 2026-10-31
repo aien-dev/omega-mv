@@ -169,6 +169,22 @@ else bad "r5b_fwd_fm: forward call did not land (see $B/r5b_fwd_fm.dis)"; fi
 
 cases=$((cases + 3))
 
+# 7b. function table capacity (OMEGESE 9.6): 4096 functions accepted, the 4097th error 14. The unit is a
+#     function-mode chain (g_k returns g_(k-1)), so the call graph check also runs at full size. Control:
+#     an om4 whose limit is one lower must refuse the 4096-function unit.
+fnchain() { awk -v n=$1 'BEGIN{for(i=0;i<n;i++){printf "fn g%d to int\n", i; if(i==0) print "ret 7"; else printf "ret g%d\n", i-1; print "end"}}'; }
+fnchain 4096 > $B/fn4096.om; fnchain 4097 > $B/fn4097.om
+set +e; $R/om4.bin < $B/fn4096.om > $B/fn4096.bin 2> $B/fn4096.err; r1=$?
+$R/om4.bin < $B/fn4097.om > $B/fn4097.bin 2> $B/fn4097.err; r2=$?; set -e
+[ "$r1" = 0 ] && say "PASS 4096 functions accepted" || bad "4096 functions: exit $r1 ($(cat $B/fn4096.err))"
+[ "$r2" = 14 ] && grep -q 'line 12289: error 14' $B/fn4097.err && say "PASS 4097th function (line 12289) error 14" || bad "4097 functions: exit $r2 ($(cat $B/fn4097.err))"
+sed 's/^  cmp.x.i x10 4095$/  cmp.x.i x10 4094/' $R/om4.s > $B/cap.s
+cmp -s $B/cap.s $R/om4.s && bad "capacity control edit did nothing"
+cat $TAB $B/cap.s | seed/rung2/asm2.bin > $B/cap.bin; chmod +x $B/cap.bin
+set +e; $B/cap.bin < $B/fn4096.om > /dev/null 2>&1; r3=$?; set -e
+[ "$r3" = 14 ] && say "PASS capacity control: om4 with limit 4095 refuses 4096 functions (error 14)" || bad "capacity control not caught: exit $r3"
+cases=$((cases + 3))
+
 # 8. negative control on the corpus: an om4 with one word changed (signed division made unsigned) must
 #    change a result
 sed 's/^  movz.x x0 0x0c00 0$/  movz.x x0 0x0800 0/' $R/om4.s > $B/mut.s

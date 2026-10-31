@@ -1,0 +1,23 @@
+== program mode: omc.om (495 fns) + k
+k=0 total=495 old:[rc=0 ] new:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+k=17 total=512 old:[rc=0 ] new:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+k=18 total=513 old:[rc=14 om4: line 16484: error 14] new:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+k=100 total=595 old:[rc=14 om4: line 16484: error 14] new:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+k=3601 total=4096 old:[rc=14 om4: line 16484: error 14] new:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+k=3602 total=4097 old:[rc=14 om4: line 16484: error 14] new:[rc=14 om4: line 27236: error 14] omc:[rc=14 omc: line 27236: error 14] new-vs-omc:same
+== grown compiler (k=100) birth: om4new -> g1 -> g2 -> g3
+fcc7481fe443a75e
+fcc7481fe443a75e
+fcc7481fe443a75e
+== function mode chains
+fn-mode up n=512 new:[rc=0 ] .003941941s old:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+fn-mode up n=513 new:[rc=0 ] .003933702s old:[rc=14 om4: line 1537: error 14] omc:[rc=0 ] new-vs-omc:same
+fn-mode up n=4096 new:[rc=0 ] .079042421s old:[rc=14 om4: line 1537: error 14] omc:[rc=0 ] new-vs-omc:same
+fn-mode up n=4097 new:[rc=14 om4: line 12289: error 14] .022013443s old:[rc=14 om4: line 1537: error 14] omc:[rc=14 omc: line 12289: error 14] new-vs-omc:same
+fn-mode down n=512 new:[rc=0 ] .018282383s old:[rc=0 ] omc:[rc=0 ] new-vs-omc:same
+fn-mode down n=1024 new:[rc=0 ] .120810533s old:[rc=14 om4: line 1537: error 14] omc:[rc=0 ] new-vs-omc:same
+fn-mode down n=2048 new:[rc=0 ] .913333574s old:[rc=14 om4: line 1537: error 14] omc:[rc=0 ] new-vs-omc:same
+fn-mode down n=4096 new:[rc=0 ] 7.159480467s old:[rc=14 om4: line 1537: error 14] omc:[rc=0 ] new-vs-omc:same
+== function mode cycle, 4096 functions (g_k calls g_(k+1) mod 4096)
+cycle seed/rung4/om4.bin [rc=9 om4: line 12289: error 9] 21.270225382s
+cycle seed/out/omc [rc=9 omc: line 12289: error 9] 43.948664627s

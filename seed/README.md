@@ -147,6 +147,10 @@ it came from.
   about 4,000 lines in asm2's language, built by asm2 (14,224 bytes, `rung4/om4.bin`); `rung4/table4.s2`
   adds 3 instruction lines for om4's own use, each naming its manual section; `rung4/mk4.sh` writes the
   file's own size into its header (asm2 cannot add up sizes).
+- Function table: 4096 entries of 128 bytes at 0x19f0000, past the call records, so om4 holds the same
+  4096 functions as omc (the 4097th is error 14, `gate4.sh` section 7b). Through om4 `d0da40e4` the
+  table had 512 entries at 0x1840000, and `omc.om` itself had to stay within them. The move changes
+  five instruction words and the `p_memsz` word, not the file size; the omc that om4 births is byte-identical.
 - What it adds, and why each one is needed (every new word is used by the Omega compiler of rung R5 or
   by the test programs):
   - many functions, and a names pass so a call may name any function in the unit, earlier or

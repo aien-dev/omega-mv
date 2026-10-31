@@ -243,7 +243,8 @@ Adding x86 output does not replace the AArch64 seed ladder or authorize editing
 handwritten bootstrap rungs. The source remains within om4's unchanged
 512-function table: two one-use ELF/relocation helpers were inlined after a
 514-function candidate correctly failed bootstrap error 14. No bootstrap gate,
-table capacity, seed0, hex1, asm2 or om4 was weakened or replaced.
+table capacity, seed0, hex1, asm2 or om4 was weakened or replaced. (That table is om4 `d0da40e4`;
+the `feat/om4-fn-table` draft proposes 4096 entries with unchanged omc bytes.)
 
 ### Historical baseline at `becf5c817bcb7e0846d12ebfc2be91042d8ad89a`
 

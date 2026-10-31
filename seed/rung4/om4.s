@@ -42,13 +42,15 @@
 ; Memory: input 0x800000 (under 8 MiB), output 0x1000000 (8 MiB: 176-byte file header, 1 entry word, then
 ; text bytes and functions), names 0x1800000 (32 bytes: packed name 8, register 4, type 4, length 4, kind
 ; 4, address 8), blocks 0x1810000 (128 bytes), trap list 0x1820000 (8 bytes: site, code), message
-; 0x1830000, functions 0x1840000 (128 bytes: name 8, address 8, return type 4, parameter count 4, then per
-; parameter 16 bytes: type 4, length 4, kind 4), state 0x1850000 (8-byte slots: 1 globals and texts in the
-; name table, 2 functions, 4 stack bytes of local arrays, 5 the path has ended, 6 program mode, 7 global
-; pool bytes, 9 last function, 10 value nesting depth, 11 a number written as 2^63 or more, 12 recorded
-; calls, 13 namescan phase: 0 not started, 1 collecting signatures, 2 emitting). Call records, 24 bytes
-; each (site, callee entry, caller entry), sit at 0x1860000, 65536 of them. Function-mode cycle marks,
-; one byte per function, sit at 0x19e0000. Both are past the file and zeroed with the rest of the mapping.
+; 0x1830000, 0x1840000 unused (the 512-entry function table until it moved), state 0x1850000 (8-byte
+; slots: 1 globals and texts in the name table, 2 functions, 4 stack bytes of local arrays, 5 the path
+; has ended, 6 program mode, 7 global pool bytes, 9 last function, 10 value nesting depth, 11 a number
+; written as 2^63 or more, 12 recorded calls, 13 namescan phase: 0 not started, 1 collecting signatures,
+; 2 emitting). Call records, 24 bytes each (site, callee entry, caller entry), sit at 0x1860000, 65536 of
+; them. Function-mode cycle marks, one byte per function, sit at 0x19e0000. Functions, 4096 entries of
+; 128 bytes (name 8, address 8, return type 4, parameter count 4, then per parameter 16 bytes: type 4,
+; length 4, kind 4), sit at 0x19f0000 up to 0x1a70000. All three are past the file and zeroed with the
+; rest of the mapping.
 ; Name kinds: 0 scalar, 1 local array, 2 view parameter, 3 edit parameter, 4 global array, 5 text.
 ; Errors: "om4: line N: error E" on stderr, exit E: 1 read, 2 write, 3 unknown name, 4 line ends too
 ; early, 5 extra words, 6 bad number, 7 type mismatch, 8 number out of range for its type, 9 not in the
@@ -86,7 +88,7 @@
   .w 0x00000000
   .w 0x00003790 ; p_filesz = the size of om4.bin, 14224 bytes (asm2 has no size arithmetic; gate4.sh checks it)
   .w 0x00000000
-  .w 0x015f0000 ; p_memsz: through call fixups and graph marks at 0x19e0000
+  .w 0x01670000 ; p_memsz: through the function table at 0x19f0000, which ends at 0x1a70000
   .w 0x00000000
   .w 0x00001000
   .w 0x00000000
@@ -765,11 +767,11 @@
   movz.x x9 0x185 1
   ldr.x x10 x9 2
 
-  cmp.x.i x10 512
-  b.hs E_FULL
+  cmp.x.i x10 4095
+  b.hi E_FULL
   add.x.i x11 x10 1
   str.x x11 x9 2
-  movz.x x11 0x184 1
+  movz.x x11 0x19f 1
   ubfm.x x10 x10 57 56
   add.x x11 x11 x10
   str.x x11 x9 3
@@ -4080,7 +4082,7 @@
 :FINDFN
   movz.x x9 0x185 1
   ldr.x x10 x9 2
-  movz.x x9 0x184 1
+  movz.x x9 0x19f 1
 :FF1
   cbz.x x10 FD0
   ldr.x x11 x9 0
@@ -4163,7 +4165,7 @@
   ldr.x x1 x9 2
   movz.x x2 0 0
   movz.x x3 0x19e 1
-  movz.x x4 0x184 1
+  movz.x x4 0x19f 1
 :RS_PASS
   cmp.x x2 x1
   b.hs RS_CHECK

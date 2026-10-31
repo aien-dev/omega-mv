@@ -530,11 +530,13 @@ syscall adaptation, seed-chain boundaries and qualification status.
 ### 9.6 Capacities (decision 23)
 
 Input over a capacity is refused with error 14, never overrun: om4 reads at most 8 MiB - 1 bytes and
-writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 512 functions, 8192 trap sites per function, 512 nested
+writes at most 8 MiB, 1024 names in scope, values nested 1024 deep, 4096 functions, 8192 trap sites per function, 512 nested
 blocks. A function that needs more than the 16 registers it hands out is error 12. omc keeps the same
-input, output, nesting, trap-site and block limits but holds 8192 names in scope, 4096 functions and
+input, output, nesting, trap-site, block and function limits but holds 8192 names in scope and
 524288 call sites per unit (`seed/omc/gate12.sh`, `gate15.sh`), so whole programs such as an
-interpreter fit in one unit; om4 itself keeps its own smaller tables.
+interpreter fit in one unit; om4 itself keeps its own smaller name and call tables. om4's function
+table (512 entries through om4 `d0da40e4`) bounds `seed/omc/omc.om` itself, which om4 must compile;
+`seed/rung4/gate4.sh` section 7b checks 4096 accepted and the 4097th error 14.
 The candidate `target x86linux` backend has a 16 MiB output pool because native
 x86 instruction sequences can require more bytes than their AArch64 counterparts.
 The AArch64 output ceiling remains 8 MiB; input and frontend limits are unchanged.

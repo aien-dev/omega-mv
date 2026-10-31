@@ -95,8 +95,8 @@ feature anyone may want", and it never means hardware qualification beyond the t
    27..29 exist (25 and 26 are unused). In `omc.om`, error 7 is raised from 109 sites, 16 from 72 and 9
    from 58, so one number names many different mistakes. `om2 diag` adds machine records
    (`omc-diag 1 ...`) only in OM-2 units.
-6. **Capacity and naming limits block real programs.** 512 functions per unit (PR #768 raises to 4096 for
-   `aien-math`; a local unpublished x86 branch raises to 1024), 16 registers with no spilling (error 12),
+6. **Capacity and naming limits block real programs.** omc holds 4096 functions per unit; om4, which
+   must compile `omc.om`, held 512 (raised to 4096 by the `feat/om4-fn-table` draft), 16 registers with no spilling (error 12),
    6 parameter slots, 8-character local names (error 13). These are implementation limits, not language
    rules, and each needs a decision before 1.0 freezes them.
 7. **A second target is merged as a draft, not qualified.** FR-9 (#923) integrates the historical
@@ -240,7 +240,7 @@ Acceptance:
 Current: no `import`; units compose by concatenation. OM-2 adds `export fn` (up to 32 entries) and
 links separately compiled units only through bridge symbols that embed source sha256, omc pin and
 profile. FR-3 (imports by digest) is blocked on the OSC content-addressed unit store. Capacity:
-512 functions per unit on main; PR #768 proposes 4096. Owners: #621, #648, #631.
+omc: 4096 functions per unit; om4 (compiles `omc.om`): 512 on main, 4096 proposed on `feat/om4-fn-table`. Owners: #621, #648, #631.
 
 Acceptance:
 - A decided module form: digest-addressed import (source sha256 plus compiler pin), with a stated
