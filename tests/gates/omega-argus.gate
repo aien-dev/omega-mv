@@ -18,6 +18,7 @@ inputs:
   - src/omega_evidence.c
   - src/omega_evidence.h
   - physics.lock
+  - cudapp.lock
   - aienos.lock
   - argus.lock
   - tests/gates/

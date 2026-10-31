@@ -13,6 +13,7 @@ inputs:
   - tools/
   - tests/gates/
   - physics.lock
+  - cudapp.lock
 run:
   exec: tests/gates/run.sh
   args: ["base"]
