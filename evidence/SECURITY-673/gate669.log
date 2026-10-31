@@ -1,0 +1,19 @@
+gate669 2026-10-23T23:01:07Z
+source_head f0499f415571bdd7496b6de391096915e78f7556
+omc_source sha256 35cab5e41fc2c020903f1318c1ff8d83f8701255b41b5ca8ef5395f706c015a4
+compiler build/security673/fix/stage2 sha256 2c189f308c78e64e1b51ac86b139e8a662d5e622b764674f068b07e178fab0e9
+decoder GNU objdump (GNU Binutils for Ubuntu) 2.42
+generator sha256 1cb80b66340e0deb2fbb04c49389884217b828677e745abf16f763464b6405ba
+built generator with compiler: cc57b2528e46cc581252de10a4fd015993a1956415950f9c1a4009bde079c5e2
+PASS sanity: N=16 exit 0, branch at 0x10 targets 0x54 = marker, displacement 17 words
+PASS exact maximum: displacement 262143 words = 1048572 bytes, exit 0, objdump target = marker
+PASS one beyond: rc 24, empty stdout, stderr 'omc: line 262148: error 24'
+PASS signed range: N=524287 (would wrap inside 19 bits) refused: omc: line 524292: error 24
+PASS nested-if: 300000 statements refused before an artifact: omc: line 300006: error 24
+PASS while-exit: 300000 statements refused before an artifact: omc: line 300005: error 24
+PASS trap-site: 300000 statements refused before an artifact: omc: line 300008: error 24
+mutant compiler sha256 f5472f0a1b943349a712152e720657fc1960e8123b9872092b27db2af619b1da
+PASS mutant caught by independent decoder: target 0xfffffffffff00014 != marker 0x100014 (program exit 139; exit status alone is not the oracle)
+PASS fixed compiler refuses the mutant case: omc: line 262149: error 24
+cases run: 9
+GATE669 PASS

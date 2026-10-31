@@ -1,0 +1,9 @@
+note One write to a disposable regular output file must stop at the installed one-MiB file limit.
+global bytes uchar 1048577
+fn main to int
+n = write 1 bytes 0 len bytes
+if ne n 1048576
+ret 82
+end
+ret 0
+end

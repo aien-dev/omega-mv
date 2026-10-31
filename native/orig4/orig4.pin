@@ -11,7 +11,7 @@
 #   on aien-train main (evidence/ECOSYSTEM6/ref32-review/source, SHA256SUMS there).
 # image <file> <sha256>: an immutable candidate checkpoint under native/orig4/candidates
 #   (byte-identical to aien-train evidence/SI19-ORIG2/candidates at the pinned commit).
-omc 1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1
+omc 92c22a9163d4c53aa91a9fe785208390c170a8d21390040a0c45a30d5d6561f1
 unit 1 aien-train 5901724a6031718951d8c5d18514e8002f94e644 evidence/ECOSYSTEM6/ref32-review/source/native/ref32/add32.om 1de23561202b284e74690034cb07741ebcf9870bc464550b8382c85410478e95
 unit 2 aien-train 5901724a6031718951d8c5d18514e8002f94e644 evidence/ECOSYSTEM6/ref32-review/source/native/ref32/mul32.om 9027090109e2050046c4b71fa51438c97ad94c23626c2ecc277844996b79c22e
 unit 3 omega dcccc02119dab1a2077cf1277cd21913850c626a native/ecosystem663/metadata.om f60b6d62c1bf90de42455effae977de66adeca1268669f6144809a3327aec7a4
