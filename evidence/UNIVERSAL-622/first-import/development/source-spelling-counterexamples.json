@@ -1,0 +1,29 @@
+[
+  {
+    "case": "octal",
+    "source_hex": "23696e636c756465203c737464696e742e683e0a75696e7436345f742063616c6328766f6964297b72657475726e20303130554c4c3b7d0a",
+    "native_C": 8,
+    "imported_upper": 10,
+    "source_sha256": "63c6c0e5a63a0e43418354b5226498e27b1bba084490b8720f66b765366ecf01",
+    "result": "REPRODUCED_WRONG_SEMANTICS",
+    "compiler_stderr": ""
+  },
+  {
+    "case": "line-splice",
+    "source_hex": "23696e636c756465203c737464696e742e683e0a75696e7436345f742063616c6328766f6964297b72657475726e2031554c4c202f2f20636f6d6d656e74205c0a202b32554c4c0a3b7d0a",
+    "native_C": 1,
+    "imported_upper": 3,
+    "source_sha256": "b93c5f6322fd0886fc64cb58e057805c788b0447d9dad6e2e8e550710250cac0",
+    "result": "REPRODUCED_WRONG_SEMANTICS",
+    "compiler_stderr": ""
+  },
+  {
+    "case": "trigraph-splice",
+    "source_hex": "23696e636c756465203c737464696e742e683e0a75696e7436345f742063616c6328766f6964297b72657475726e2031554c4c202f2f20636f6d6d656e74203f3f2f0a202b32554c4c0a3b7d0a",
+    "native_C": 1,
+    "imported_upper": 3,
+    "source_sha256": "06b9d1e675bcf5e680b9d2f81443983c92ab0435cfdcb0c6a8b2cfccbb04b51b",
+    "result": "REPRODUCED_WRONG_SEMANTICS",
+    "compiler_stderr": ""
+  }
+]

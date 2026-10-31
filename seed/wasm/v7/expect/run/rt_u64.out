@@ -1,0 +1,6 @@
+set = void
+get = 18446744073709551615
+geti TRAP code=3
+geti = 18446744073709551615
+geti TRAP code=3
+region g 0000000000000000ffffffffffffffff

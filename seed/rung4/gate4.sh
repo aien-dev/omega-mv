@@ -1,7 +1,7 @@
 #!/bin/sh
 # gate4.sh -- the checks of rung 4 (seed/README.md). Run from the repo root:  sh seed/rung4/gate4.sh
 # Needs build/omegese/omegese and build/omega_emit/omega_emit (the C path, built by make through
-# quiet-build), cc for the reference runner and gcc for the C twins of the program tests. Oracles only:
+# quiet-build), cc for the reference runner and committed expected outputs for the program tests. Oracles only:
 # none of them writes a byte of seed/; om4.bin is made by asm2 alone. Results: evidence/SEED-0/rung4/.
 set -eu
 R=seed/rung4; B=build/seed/r4; E=evidence/SEED-0/rung4; X=$R/tests
@@ -72,19 +72,18 @@ for f in fm1 fm2 fm3 fm4 fm5 fm6 fm7 fm8 fm9; do
 done
 cat "$tab" >> "$E/gate4.log"
 
-# 6. program mode (hand-laid ELF, no linker) against gcc-built C twins (gcc = oracle, named here):
+# 6. program mode (hand-laid ELF, no linker) against committed expected outputs:
 #    recursive fib, a 1000-entry sort, echo stdin -> stdout, byte copy (reversed)
 for p in fib sort echo bytecopy; do $R/om4.bin < $X/$p.om > $B/$p; chmod +x $B/$p; done
-head -c 50000 /dev/urandom > $B/in.bin
-for p in fib sort bytecopy; do gcc -O1 -o $B/$p.ref $X/$p.c; done
-./$B/fib > $B/fib.out; ./$B/fib.ref > $B/fib.ref.out
-cmp -s $B/fib.out $B/fib.ref.out && say "PASS fib (recursion): 26 lines = gcc twin" || bad "fib differs from its gcc twin"
-./$B/sort > $B/sort.out; ./$B/sort.ref > $B/sort.ref.out
-cmp -s $B/sort.out $B/sort.ref.out && say "PASS sort 1000: checksum, sorted count, first, last = gcc twin ($(tr '\n' ' ' < $B/sort.out))" || bad "sort differs"
+cp $X/in.bin $B/in.bin
+./$B/fib > $B/fib.out
+cmp -s $B/fib.out $X/fib.want && say "PASS fib (recursion): 26 lines = expected output" || bad "fib differs from expected output"
+./$B/sort > $B/sort.out
+cmp -s $B/sort.out $X/sort.want && say "PASS sort 1000: checksum, sorted count, first, last = expected output ($(tr '\n' ' ' < $B/sort.out))" || bad "sort differs"
 ./$B/echo < $B/in.bin > $B/echo.out
-cmp -s $B/in.bin $B/echo.out && say "PASS echo: 50000 random bytes stdin -> stdout unchanged" || bad "echo"
-./$B/bytecopy < $B/in.bin > $B/bc.out; ./$B/bytecopy.ref < $B/in.bin > $B/bc.ref.out
-cmp -s $B/bc.out $B/bc.ref.out && say "PASS byte copy: 50000 bytes reversed = gcc twin" || bad "bytecopy"
+cmp -s $B/in.bin $B/echo.out && say "PASS echo: 50000 fixture bytes stdin -> stdout unchanged" || bad "echo"
+./$B/bytecopy < $B/in.bin > $B/bc.out
+cmp -s $B/bc.out $X/bytecopy.want && say "PASS byte copy: 50000 bytes reversed = expected output" || bad "bytecopy"
 cases=$((cases + 4))
 for p in fib sort echo bytecopy; do cp $B/$p $E/$p.elf; done
 #    program-mode traps and exit: status 100 + trap code, or the exit value

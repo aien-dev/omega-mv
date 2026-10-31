@@ -1,0 +1,115 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Cross-process lock for the authority store. A lock is an O_EXCL file containing the owner pid.
+note A contending process retries with a bounded sleep; a lock whose pid is gone is reclaimed.
+note This serializes the read-check-persist window. It does not serialize the effect itself.
+global lb uchar 8
+text lpath "build/authority-store/lock"
+
+fn lpid p ulong to void
+put lb 0 uchar and p 255
+put lb 1 uchar and shr p 8 255
+put lb 2 uchar and shr p 16 255
+put lb 3 uchar and shr p 24 255
+put lb 4 uchar and shr p 32 255
+put lb 5 uchar and shr p 40 255
+put lb 6 uchar and shr p 48 255
+put lb 7 uchar shr p 56
+end
+
+fn lget to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong get lb i mul i 8
+end
+ret v
+end
+
+fn ltake p ulong to ulong
+fd = fopen lpath 0 len lpath 193 384
+if lt fd 0
+if eq fd -17
+ret 20
+end
+ret 40
+end
+lpid p
+n = write int fd lb 0 8
+if ne n 8
+if ne fclose int fd 0
+ret 30
+end
+ret 31
+end
+if ne fclose int fd 0
+ret 31
+end
+ret 0
+end
+
+fn lread to ulong
+fd = fopen lpath 0 len lpath 0 0
+if lt fd 0
+ret 32
+end
+n = read int fd lb 0 8
+if ne fclose int fd 0
+ret 33
+end
+if ne n 8
+ret 34
+end
+ret lget
+end
+
+fn lrm to ulong
+r = unlink lpath 0 len lpath
+if lt r 0
+ret 0
+end
+ret 0
+end
+
+fn ltry p ulong to ulong
+r = ltake p
+if eq r 0
+ret 0
+end
+if ne r 20
+ret r
+end
+q = lread
+if or eq q 32 or eq q 33 eq q 34
+ret 40
+end
+k = killpid int q 0
+if ne k -3
+ret 20
+end
+r = lrm
+if ne r 0
+ret 41
+end
+ret ltake p
+end
+
+fn lacq p ulong tries ulong to ulong
+i = ulong 0
+while lt i tries
+r = ltry p
+if eq r 0
+ret 0
+end
+if ne r 20
+ret r
+end
+if ne sleepns 1000000 0
+ret 42
+end
+i = add i 1
+end
+ret 22
+end
+
+fn lrel to ulong
+ret lrm
+end

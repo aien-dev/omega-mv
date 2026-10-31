@@ -1,0 +1,14 @@
+diff --git a/ssl/test/runner/certs.go b/ssl/test/runner/certs.go
+index 100e360..7071dd5 100644
+--- a/ssl/test/runner/certs.go
++++ b/ssl/test/runner/certs.go
+@@ -355,6 +355,9 @@ func (issuer *X509ChainBuilder) Issue(subject X509Info) *X509ChainBuilder {
+ 			if len(subject.DNSNames) != 0 {
+ 				exts.AddASN1(cbasn1.SEQUENCE, func(ext *cryptobyte.Builder) {
+ 					ext.AddASN1ObjectIdentifier(oidSubjectAltName)
++					if len(subject.Name.ToRDNSequence()) == 0 {
++						ext.AddASN1Boolean(true) // critical: RFC 5280 4.2.1.6, empty subject
++					}
+ 					ext.AddASN1(cbasn1.OCTET_STRING, func(extVal *cryptobyte.Builder) {
+ 						extVal.AddASN1(cbasn1.SEQUENCE, func(names *cryptobyte.Builder) {
+ 							for _, dns := range subject.DNSNames {

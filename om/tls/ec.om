@@ -604,6 +604,528 @@ ec_load w ECSS part hs add h nb nb
 ret 0
 end
 
+note ---- P-256 specialised field and group arithmetic (module code P2: functions p2_*, consts P2*),
+note used by ec_core for P-256 verification and by ecdh.om for P-256 ECDH. Pure: no I/O, no randomness.
+note
+note API (all values in the workspace w, P2WN ulong cells, 32-bit limbs little-endian, 8 per element):
+note   p2_init w            load p, b and G; call once per fresh workspace
+note   p2_smul w            P2O = k*P for the secret scalar k at P2K (k < 2^256) and the affine point
+note                        P at P2P (X, Y); constant time; returns 1 when the result is finite, else 0
+note   p2_smul2 w           P2O = u1*G + u2*Q for the public scalars u1 at P2K, u2 at P2U and the
+note                        affine point Q at P2Q; not constant time (public data only); returns 1 when
+note                        the result is finite, else 0
+note   p2_wipe w            overwrite the whole workspace with 0
+note The output P2O is the affine (x, y), plain (not Montgomery) and fully reduced, both 0 when the
+note result is the point at infinity. Inputs must be on the curve with coordinates < p (the callers
+note validate public keys in ec.om, ec_pub); scalars are not reduced here.
+note
+note Field: p = 2^256 - 2^224 + 2^192 + 2^96 - 1. Elements are 8 limbs < 2^32, value in [0, p).
+note Multiplication: the 16-limb product by operand scanning, each 64-bit partial product split into
+note its low and high 32-bit halves accumulated in their own columns (a column takes at most 16 halves,
+note < 2^36), one carry pass to 32-bit words c0..c15, then the fast reduction of FIPS 186-4 Appendix
+note D.2.3 (Solinas): with c = (c15, ..., c0),
+note   r = T + 2 S1 + 2 S2 + S3 + S4 - D1 - D2 - D3 - D4 (mod p), per 32-bit word j:
+note   w0 = c0 + c8 + c9 - c11 - c12 - c13 - c14        w4 = c4 + 2 c12 + 2 c13 + c14 - c9 - c10
+note   w1 = c1 + c9 + c10 - c12 - c13 - c14 - c15       w5 = c5 + 2 c13 + 2 c14 + c15 - c10 - c11
+note   w2 = c2 + c10 + c11 - c13 - c14 - c15            w6 = c6 + c13 + 3 c14 + 2 c15 - c8 - c9
+note   w3 = c3 + 2 c11 + 2 c12 + c13 - c8 - c9 - c15    w7 = c7 + c8 + 3 c15 - c10 - c11 - c12 - c13
+note The words are formed in wrapping ulong arithmetic (two's complement); |w_j| < 2^35, so a signed
+note carry (arithmetic shift right by 32 through bitcast long) is exact. The carry f out of word 7 is
+note in [-4, 6] and folds back as f 2^256 = f (2^224 - 2^192 - 2^96 + 1) mod p (+f at word 0, -f at
+note words 3 and 6, +f at word 7). Two carry-and-fold rounds leave a value in [0, 2^256) (the second
+note carry is -1, 0 or 1 and its fold cannot carry again); 2^256 < 2p, so one masked subtraction of p
+note gives [0, p). Addition and subtraction: carry or borrow chains with a masked correction by p.
+note Inversion: Fermat a^(p-2) by a fixed addition chain (255 squarings, 12 multiplications).
+note Checked with the Wolfram Language evaluator (2026-10-26, queries in test/ec/wolfram.txt): the
+note Solinas word identity, the fold identity, 2^256 < 2p, the inversion chain exponent.
+note
+note Group: projective (X : Y : Z), the point at infinity is (0 : 1 : 0). Addition and doubling use
+note the complete formula for a = -3 of Renes, Costello and Batina, "Complete addition formulas for
+note prime order elliptic curves" (EUROCRYPT 2016), Algorithm 4 (also used by ecdh.om): no exceptional
+note case, so no branch. Scalar multiplication: fixed 4-bit window, the table 0P .. 15P (0P the point
+note at infinity), 63 rounds of 4 doublings and one addition after the top window; every table read
+note for a secret scalar goes through p2_sel, which reads all 16 entries and keeps one by an AND mask
+note computed without a branch ((j xor v) - 1) >> 63. Window digits come from fixed bit positions.
+note
+note Constant time (p2_smul): no branch, loop count or memory index depends on the scalar, the point
+note or any intermediate value; all carries are shifts. The verification path p2_smul2 picks table
+note entries by direct index (public scalars only). Caveats as in ecdh.om: omc emits plain AArch64
+note (MUL, ADD, SUB, EOR, AND, ORR, LSL/LSR/ASR); PSTATE.DIT is not set by this unit; register and
+note spill contents are not scrubbed. Local scratch arrays holding limbs are zeroed before return and
+note p2_wipe clears the workspace.
+
+note workspace layout (ulong offsets): two 16-entry point tables, points, field temporaries, constants
+const P2WN ulong 1072
+const P2TA ulong 0
+const P2TB ulong 384
+const P2R ulong 768
+const P2S ulong 792
+const P2P ulong 816
+const P2Q ulong 840
+const P2T0 ulong 864
+const P2T1 ulong 872
+const P2T2 ulong 880
+const P2T3 ulong 888
+const P2T4 ulong 896
+const P2X3 ulong 904
+const P2Y3 ulong 912
+const P2Z3 ulong 920
+const P2I0 ulong 928
+const P2I1 ulong 936
+const P2I2 ulong 944
+const P2I3 ulong 952
+const P2I4 ulong 960
+const P2I5 ulong 968
+const P2K ulong 976
+const P2U ulong 984
+const P2PM ulong 992
+const P2B ulong 1000
+const P2GX ulong 1008
+const P2GY ulong 1016
+const P2O ulong 1024
+const P2ZI ulong 1040
+const P2M32 ulong 0xffffffff
+
+note p, b, G (FIPS 186-4 D.1.2.3, the values ec_p256 in ec.om loads), limbs little-endian
+fn p2_init w edit ulong P2WN to void
+note p = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
+put w 992 0xffffffff
+put w 993 0xffffffff
+put w 994 0xffffffff
+put w 995 0x0
+put w 996 0x0
+put w 997 0x0
+put w 998 0x1
+put w 999 0xffffffff
+note b = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
+put w 1000 0x27d2604b
+put w 1001 0x3bce3c3e
+put w 1002 0xcc53b0f6
+put w 1003 0x651d06b0
+put w 1004 0x769886bc
+put w 1005 0xb3ebbd55
+put w 1006 0xaa3a93e7
+put w 1007 0x5ac635d8
+note gx = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+put w 1008 0xd898c296
+put w 1009 0xf4a13945
+put w 1010 0x2deb33a0
+put w 1011 0x77037d81
+put w 1012 0x63a440f2
+put w 1013 0xf8bce6e5
+put w 1014 0xe12c4247
+put w 1015 0x6b17d1f2
+note gy = 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+put w 1016 0x37bf51f5
+put w 1017 0xcbb64068
+put w 1018 0x6b315ece
+put w 1019 0x2bce3357
+put w 1020 0x7c0f9e16
+put w 1021 0x8ee7eb4a
+put w 1022 0xfe1a7f9b
+put w 1023 0x4fe342e2
+end
+
+note r (8 words, each < 2^32 + 7 as wrapping two's complement; value in (-2^259, 2^259)) to the
+note words in [0, 2^32) and the signed carry out of word 7 (arithmetic shift, no branch)
+fn p2_carry r edit ulong 8 to ulong inline
+cr = ulong 0
+for k ulong 8 unroll
+z = add get r k cr
+put r k and z P2M32
+cr = bitcast ulong shr bitcast long z 32
+end
+ret cr
+end
+
+note fold the signed carry f: f 2^256 = f (2^224 - 2^192 - 2^96 + 1) mod p
+fn p2_fold r edit ulong 8 f ulong to void inline
+put r 0 add get r 0 f
+put r 3 sub get r 3 f
+put r 6 sub get r 6 f
+put r 7 add get r 7 f
+end
+
+note w[o] = r mod p for r in [0, 2^256) (2^256 < 2p): one masked subtraction of p, no branch;
+note r and the scratch are zeroed
+fn p2_csub w edit ulong P2WN o ulong r edit ulong 8 to void
+d = new ulong 8 0
+br = ulong 0
+for k ulong 8 unroll
+z = sub sub get r k get w add P2PM k br
+put d k and z P2M32
+br = shr z 63
+end
+mk = sub br 1
+for k ulong 8 unroll
+x = get r k
+put w add o k xor x and mk xor x get d k
+put d k 0
+put r k 0
+end
+end
+
+note w[o] = the 16 product columns t (t[k] < 2^37) mod p: carry pass, Solinas words, two
+note carry-and-fold rounds, the masked subtraction. t and the scratch are zeroed.
+fn p2_red w edit ulong P2WN o ulong t edit ulong 16 to void
+cr = ulong 0
+for k ulong 16 unroll
+z = add get t k cr
+put t k and z P2M32
+cr = shr z 32
+end
+r = new ulong 8 0
+s = add add get t 0 get t 8 get t 9
+put r 0 sub sub sub sub s get t 11 get t 12 get t 13 get t 14
+s = add add get t 1 get t 9 get t 10
+put r 1 sub sub sub sub s get t 12 get t 13 get t 14 get t 15
+s = add add get t 2 get t 10 get t 11
+put r 2 sub sub sub s get t 13 get t 14 get t 15
+s = add add get t 3 shl add get t 11 get t 12 1 get t 13
+put r 3 sub sub sub s get t 8 get t 9 get t 15
+s = add add get t 4 shl add get t 12 get t 13 1 get t 14
+put r 4 sub sub s get t 9 get t 10
+s = add add get t 5 shl add get t 13 get t 14 1 get t 15
+put r 5 sub sub s get t 10 get t 11
+s = add add add get t 6 get t 13 mul get t 14 3 shl get t 15 1
+put r 6 sub sub s get t 8 get t 9
+s = add add get t 7 get t 8 mul get t 15 3
+put r 7 sub sub sub sub s get t 10 get t 11 get t 12 get t 13
+for k ulong 16 unroll
+put t k 0
+end
+f = p2_carry r
+p2_fold r f
+f = p2_carry r
+p2_fold r f
+f = p2_carry r
+p2_csub w o r
+end
+
+note w[o] = w[a] * w[b] mod p (o may equal a or b)
+fn p2_mul w edit ulong P2WN o ulong a ulong b ulong to void
+x = new ulong 8 0
+y = new ulong 8 0
+t = new ulong 16 0
+for i ulong 8 unroll
+put x i get w add a i
+put y i get w add b i
+end
+for i ulong 8 unroll
+xi = get x i
+for j ulong 8 unroll
+p = mul xi get y j
+put t add i j add get t add i j and p P2M32
+put t add add i j 1 add get t add add i j 1 shr p 32
+end
+end
+for i ulong 8 unroll
+put x i 0
+put y i 0
+end
+p2_red w o t
+end
+
+note w[o] = w[a]^2 mod p: the 28 cross products once and doubled, the 8 squares (o may equal a)
+fn p2_sqr w edit ulong P2WN o ulong a ulong to void
+x = new ulong 8 0
+t = new ulong 16 0
+for i ulong 8 unroll
+put x i get w add a i
+end
+for i ulong 8 unroll
+xi = get x i
+for j ulong 8 unroll
+if lt i j
+p = mul xi get x j
+put t add i j add get t add i j and p P2M32
+put t add add i j 1 add get t add add i j 1 shr p 32
+end
+end
+end
+for k ulong 16 unroll
+put t k shl get t k 1
+end
+for i ulong 8 unroll
+xi = get x i
+p = mul xi xi
+put t add i i add get t add i i and p P2M32
+put t add add i i 1 add get t add add i i 1 shr p 32
+put x i 0
+end
+p2_red w o t
+end
+
+note w[o] = w[a] + w[b] mod p (a, b < p; o may equal a or b)
+fn p2_add w edit ulong P2WN o ulong a ulong b ulong to void
+s = new ulong 8 0
+c = ulong 0
+for k ulong 8 unroll
+z = add add get w add a k get w add b k c
+put s k and z P2M32
+c = shr z 32
+end
+br = ulong 0
+d = new ulong 8 0
+for k ulong 8 unroll
+z = sub sub get s k get w add P2PM k br
+put d k and z P2M32
+br = shr z 63
+end
+z = sub c br
+br = shr z 63
+mk = sub br 1
+for k ulong 8 unroll
+x = get s k
+put w add o k xor x and mk xor x get d k
+put s k 0
+put d k 0
+end
+end
+
+note w[o] = w[a] - w[b] mod p (a, b < p; o may equal a or b): borrow chain, then + (p AND mask)
+fn p2_sub w edit ulong P2WN o ulong a ulong b ulong to void
+d = new ulong 8 0
+br = ulong 0
+for k ulong 8 unroll
+z = sub sub get w add a k get w add b k br
+put d k and z P2M32
+br = shr z 63
+end
+mk = sub 0 br
+c = ulong 0
+for k ulong 8 unroll
+z = add add get d k and mk get w add P2PM k c
+put w add o k and z P2M32
+c = shr z 32
+put d k 0
+end
+end
+
+fn p2_copy w edit ulong P2WN o ulong a ulong to void
+for k ulong 8 unroll
+put w add o k get w add a k
+end
+end
+
+note w[o] = w[a]^(2^n), n >= 1 (n public)
+fn p2_sqn w edit ulong P2WN o ulong a ulong n ulong to void
+p2_sqr w o a
+for i ulong sub n 1
+p2_sqr w o o
+end
+end
+
+note w[o] = w[a]^(p - 2) = 1 / w[a] (0 for 0). p - 2 = 0xffffffff 00000001 0^96 ffffffff ffffffff
+note fffffffd: x2 = a^(2^2-1), x3, x6, x12, x15, x30, x32 (xk = a^(2^k - 1)), then
+note (((x32 2^32 + 1) 2^128 + x32) 2^32 + x32) 2^30 + x30) 2^2 + 1 in the exponent. Uses P2I0..P2I5;
+note o and a must be other slots.
+fn p2_inv w edit ulong P2WN o ulong a ulong to void
+p2_sqr w P2I0 a
+p2_mul w P2I0 P2I0 a
+p2_sqr w P2I1 P2I0
+p2_mul w P2I1 P2I1 a
+p2_sqn w P2I2 P2I1 3
+p2_mul w P2I2 P2I2 P2I1
+p2_sqn w P2I3 P2I2 6
+p2_mul w P2I3 P2I3 P2I2
+p2_sqn w P2I3 P2I3 3
+p2_mul w P2I3 P2I3 P2I1
+p2_sqn w P2I4 P2I3 15
+p2_mul w P2I4 P2I4 P2I3
+p2_sqn w P2I5 P2I4 2
+p2_mul w P2I5 P2I5 P2I0
+p2_sqn w P2I3 P2I5 32
+p2_mul w P2I3 P2I3 a
+p2_sqn w P2I3 P2I3 128
+p2_mul w P2I3 P2I3 P2I5
+p2_sqn w P2I3 P2I3 32
+p2_mul w P2I3 P2I3 P2I5
+p2_sqn w P2I3 P2I3 30
+p2_mul w P2I3 P2I3 P2I4
+p2_sqn w P2I3 P2I3 2
+p2_mul w o P2I3 a
+end
+
+note o = a + b, complete projective addition for a = -3 (RCB 2016 Algorithm 4, 12M + 2 mb + 29a,
+note the sequence of ecdh.om ecd_padd). a == b gives the doubling; o may alias a or b (the result is
+note formed in P2X3, P2Y3, P2Z3 after the last read of the inputs).
+fn p2_padd w edit ulong P2WN o ulong a ulong b ulong to void
+p2_mul w P2T0 a b
+p2_mul w P2T1 add a 8 add b 8
+p2_mul w P2T2 add a 16 add b 16
+p2_add w P2T3 a add a 8
+p2_add w P2T4 b add b 8
+p2_mul w P2T3 P2T3 P2T4
+p2_add w P2T4 P2T0 P2T1
+p2_sub w P2T3 P2T3 P2T4
+p2_add w P2T4 add a 8 add a 16
+p2_add w P2X3 add b 8 add b 16
+p2_mul w P2T4 P2T4 P2X3
+p2_add w P2X3 P2T1 P2T2
+p2_sub w P2T4 P2T4 P2X3
+p2_add w P2X3 a add a 16
+p2_add w P2Y3 b add b 16
+p2_mul w P2X3 P2X3 P2Y3
+p2_add w P2Y3 P2T0 P2T2
+p2_sub w P2Y3 P2X3 P2Y3
+p2_mul w P2Z3 P2B P2T2
+p2_sub w P2X3 P2Y3 P2Z3
+p2_add w P2Z3 P2X3 P2X3
+p2_add w P2X3 P2X3 P2Z3
+p2_sub w P2Z3 P2T1 P2X3
+p2_add w P2X3 P2T1 P2X3
+p2_mul w P2Y3 P2B P2Y3
+p2_add w P2T1 P2T2 P2T2
+p2_add w P2T2 P2T1 P2T2
+p2_sub w P2Y3 P2Y3 P2T2
+p2_sub w P2Y3 P2Y3 P2T0
+p2_add w P2T1 P2Y3 P2Y3
+p2_add w P2Y3 P2T1 P2Y3
+p2_add w P2T1 P2T0 P2T0
+p2_add w P2T0 P2T1 P2T0
+p2_sub w P2T0 P2T0 P2T2
+p2_mul w P2T1 P2T4 P2Y3
+p2_mul w P2T2 P2T0 P2Y3
+p2_mul w P2Y3 P2X3 P2Z3
+p2_add w P2Y3 P2Y3 P2T2
+p2_mul w P2X3 P2T3 P2X3
+p2_sub w P2X3 P2X3 P2T1
+p2_mul w P2Z3 P2T4 P2Z3
+p2_mul w P2T1 P2T3 P2T0
+p2_add w P2Z3 P2Z3 P2T1
+p2_copy w o P2X3
+p2_copy w add o 8 P2Y3
+p2_copy w add o 16 P2Z3
+end
+
+note copy the 24-cell point at a to o
+fn p2_pcopy w edit ulong P2WN o ulong a ulong to void
+for k ulong 24 unroll
+put w add o k get w add a k
+end
+end
+
+note the table t[j] = j P (j = 0..15) for the projective point at p; t[0] = (0 : 1 : 0)
+fn p2_tab w edit ulong P2WN t ulong p ulong to void
+for k ulong 24 unroll
+put w add t k 0
+end
+put w add t 8 1
+p2_pcopy w add t 24 p
+for j ulong 14
+p2_padd w add t mul add j 2 24 add t mul add j 1 24 p
+end
+end
+
+note o = t[v] for the secret digit v in 0..15: all 16 entries are read, each AND a mask that is all
+note ones only for j = v (m = 0 - (((j xor v) - 1) >> 63)), and ORed together; no branch, no index
+note from v
+fn p2_sel w edit ulong P2WN o ulong t ulong v ulong to void
+s = new ulong 24 0
+for j ulong 16
+m = sub 0 shr sub xor j v 1 63
+e = add t mul j 24
+for k ulong 24 unroll
+put s k or get s k and m get w add e k
+end
+end
+for k ulong 24 unroll
+put w add o k get s k
+put s k 0
+end
+end
+
+note digit i (0..63, public) of the 4-bit windows of the scalar at k: bits 4i .. 4i + 3
+fn p2_dig w edit ulong P2WN k ulong i ulong to ulong
+ret and shr get w add k shr i 3 mul and i 7 4 15
+end
+
+note the affine point at a (X, Y; 16 cells) to projective (X : Y : 1) at o
+fn p2_proj w edit ulong P2WN o ulong a ulong to void
+for k ulong 16 unroll
+put w add o k get w add a k
+end
+for k ulong 8 unroll
+put w add add o 16 k 0
+end
+put w add o 16 1
+end
+
+note P2O = P2R in affine coordinates; returns 1 when Z != 0, else 0 (and P2O = (0, 0) since
+note Z^(p-2) = 0); the Z test is an OR of the limbs and ((z | -z) >> 63), no branch
+fn p2_aff w edit ulong P2WN to ulong
+z = ulong 0
+for k ulong 8 unroll
+z = or z get w add add P2R 16 k
+end
+p2_inv w P2ZI add P2R 16
+p2_mul w P2O P2R P2ZI
+p2_mul w add P2O 8 add P2R 8 P2ZI
+ret shr or z sub 0 z 63
+end
+
+fn p2_smul w edit ulong P2WN to ulong
+p2_proj w P2Q P2P
+p2_tab w P2TA P2Q
+p2_sel w P2R P2TA p2_dig w P2K 63
+for n ulong 63
+i = sub 62 n
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R P2R
+p2_sel w P2S P2TA p2_dig w P2K i
+p2_padd w P2R P2R P2S
+end
+ret p2_aff w
+end
+
+fn p2_smul2 w edit ulong P2WN to ulong
+p2_proj w P2S P2GX
+p2_tab w P2TA P2S
+p2_proj w P2S P2Q
+p2_tab w P2TB P2S
+p2_pcopy w P2R add P2TA mul p2_dig w P2K 63 24
+p2_padd w P2R P2R add P2TB mul p2_dig w P2U 63 24
+for n ulong 63
+i = sub 62 n
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R P2R
+p2_padd w P2R P2R add P2TA mul p2_dig w P2K i 24
+p2_padd w P2R P2R add P2TB mul p2_dig w P2U i 24
+end
+ret p2_aff w
+end
+
+fn p2_wipe w edit ulong P2WN to void
+for j ulong P2WN
+put w j 0
+end
+end
+
+note P-256: ECA9 = x(u1 G + u2 Q) plain, by p2_smul2 in its own workspace; returns 1 when the
+note point is finite, else 0. Q is taken out of the Montgomery domain (times plain 1).
+fn ec_smul256 w edit ulong ECWN to ulong
+v = new ulong P2WN 0
+p2_init v
+ec_mul w ECCP ECA0 ECQ ECON
+ec_mul w ECCP ECA1 add ECQ 12 ECON
+for j ulong 8 unroll
+put v add P2K j get w add ECU1 j
+put v add P2U j get w add ECU2 j
+put v add P2Q j get w add ECA0 j
+put v add add P2Q 8 j get w add ECA1 j
+end
+f = p2_smul2 v
+for j ulong 8 unroll
+put w add ECA9 j get v add P2O j
+end
+ret f
+end
+
 note r, s in [1, n-1], then u1 = e s^-1, u2 = r s^-1 mod n, R = u1 G + u2 Q, accept iff R is
 note finite and x(R) mod n == r. digest = hs[0..hlen).
 fn ec_core w edit ulong ECWN hs view uchar * hlen ulong to ulong
@@ -629,6 +1151,11 @@ ec_mul w ECCN ECSI ECSS add ECCN 28
 ec_inv w ECCN ECSI ECSI
 ec_mul w ECCN ECU1 ECE ECSI
 ec_mul w ECCN ECU2 ECSR ECSI
+if eq get w 0 8
+if eq ec_smul256 w 0
+ret 1
+end
+else
 ec_smul w
 if eq ec_cmp w add ECR 24 ECZ 0
 ret 1
@@ -637,6 +1164,7 @@ ec_inv w ECCP ECA8 add ECR 24
 ec_mul w ECCP ECA9 ECA8 ECA8
 ec_mul w ECCP ECA9 ECA9 ECR
 ec_mul w ECCP ECA9 ECA9 ECON
+end
 ec_add w ECCN ECA9 ECA9 ECZ
 if eq ec_cmp w ECA9 ECSR 0
 ret 0

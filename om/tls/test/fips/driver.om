@@ -1,0 +1,264 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/fips.om (program mode, built with om/tls/build.sh after the
+note whole library). usage: driver [drbgerr]
+note   1. pre-operational self-tests: fips_check 0 (KATs), fips_check 1 (DRBG KAT); state words
+note   2. entropy input: 4096 health-tested getrandom bytes; the start-up test ran; every drawn
+note      sample entered the APT window (1024 + 4096 + 32 samples leave its position at 32)
+note   3. health-test controls on fips_ht: a run of 7 equal samples passes and 8 trip the RCT
+note      (cut-off 8); a window with 34 copies of its first sample passes and 35 trip the APT
+note      (W 512, cut-off 35)
+note   4. approved-mode DRBG: instantiate, two prediction-resistant requests (64 and 32 bytes) whose
+note      first 32 bytes differ; the reseed counter shows a reseed before each request
+note   5. X25519 pairwise consistency test on a good key pair; tls_rand in both modes; tls_wipe
+note      zeroes the approved-mode DRBG state in c
+note   6. the latch: a wrong public key fails the PCT (detail 21) or, with drbgerr, a DRBG in its
+note      error state fails the request (detail 20); afterwards entropy, DRBG, fips_check,
+note      tls_connect (TLS_ERR_SELFTEST, before any I/O), tls_seal and tls_open all refuse
+note When a self-test fails in step 1 the driver prints "REFUSED detail D", runs the refusal
+note checks of step 6 and exits 3 when they hold. Otherwise prints "FAIL check N got G want W" per
+note failed check and "fips driver: C checks, F failed"; exit 0 only when F is 0.
+
+global fdob uchar 32
+global fdst ulong 4
+text fdtf "FAIL check "
+text fdtg " got "
+text fdtw " want "
+text fdtr "REFUSED detail "
+text fdts "fips driver: "
+text fdtc " checks, "
+text fdtx " failed\n"
+text fdtnl "\n"
+text fdhost "fips.example"
+note "TLS_ERR_SELFTEST" and "drbgerr" as hex (fips_cmp compares against hex texts)
+text fdhexn "544c535f4552525f53454c4654455354"
+text fdhexm "64726267657272"
+text fdhexe "656367656e657272"
+
+fn fdprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put fdob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 fdob sub 32 k k
+end
+
+note one check: id, got, want
+fn fdt id ulong got ulong want ulong to void
+put fdst 0 add get fdst 0 1
+if ne got want
+put fdst 1 add get fdst 1 1
+r = write 1 fdtf 0 len fdtf
+fdprn id
+r = write 1 fdtg 0 len fdtg
+fdprn got
+r = write 1 fdtw 0 len fdtw
+fdprn want
+r = write 1 fdtnl 0 1
+end
+end
+
+note 1 when a holds a nonzero byte
+fn fdnz a view uchar * to ulong
+d = ulong 0
+for i ulong len a
+d = or d ulong get a i
+end
+if eq d 0
+ret 0
+end
+ret 1
+end
+
+note 1 when a and b (same length) differ
+fn fddiff a view uchar * b view uchar * to ulong
+d = ulong 0
+for i ulong len a
+d = or d xor ulong get a i ulong get b i
+end
+if eq d 0
+ret 0
+end
+ret 1
+end
+
+note reset the health-test state (not the start-up flag)
+fn fdhr to void
+for i ulong 6
+put FPST add 3 i 0
+end
+end
+
+note feed n copies of sample x, then one sample y
+fn fdrun x ulong n ulong y ulong to ulong
+fdhr
+for i ulong n
+fips_ht x
+end
+fips_ht y
+ret get FPST 8
+end
+
+note one APT window: sample 0x41 at the multiples of 15 below 15n (n copies spread over the
+note whole 512-sample window; n = 35 puts the last at 510), 0x80 + (i % 64) elsewhere (no runs)
+fn fdapt n ulong to ulong
+fdhr
+for i ulong 512
+if eq and lt i mul 15 n eq rem i 15 0 1
+fips_ht 65
+else
+fips_ht add 128 and i 63
+end
+end
+ret get FPST 8
+end
+
+note refusal checks once the module is in its error state (id base 60)
+fn fdref c edit uchar * to void
+z = new uchar 16 0
+n = new uchar 64 0
+fdt 60 fips_bad 1
+fdt 61 tls_init c fdhost 0 0
+fdt 62 tls_connect c z 0 TLESELF
+fdt 63 ulong get c TLPH 3
+k = tls_errname TLESELF n
+fdt 64 fips_cmp part n 0 k fdhexn 0
+fdt 65 tls_seal c 0 TLESELF
+fdt 66 tls_open c 0 TLESELF
+end
+
+note approved-mode ECDH key generation draws from the DRBG at c[TLDRBG]: its state must change
+fn fdecg c edit uchar * b edit uchar * to void
+for i ulong DRSZ
+put b i get c add TLDRBG i
+end
+fdt 44 tls_ecgen c 32 0
+fdt 45 fddiff part c TLDRBG DRSZ part b 0 DRSZ 1
+fdt 46 tls_ecgen c 48 0
+fdt 47 fdnz part c TLECQ3 97 1
+end
+
+note ecgenerr: a key generation that cannot succeed (nb 40) latches the error state with detail 21
+fn fdecx c edit uchar * to void
+fdt 76 tls_init c fdhost 4 0
+fdt 77 fips_drbgnew part c TLDRBG DRSZ 0
+fdt 70 tls_ecgen c 40 TLESELF
+fdt 71 fips_detail 21
+fdt 72 fdnz part c TLECD2 145 0
+end
+
+note steps 2-5 (id base 10)
+fn fdpos c edit uchar TLCSZ st edit uchar 128 b edit uchar 4096 k edit uchar 32 q edit uchar 32 to void
+fdt 10 fips_entropy b 0
+fdt 11 get FPST 9 1
+fdt 12 get FPST 8 0
+fdt 13 fdnz b 1
+fdt 14 fips_entropy k 0
+fdt 15 get FPST 7 32
+fdt 20 fdrun 66 7 67 0
+fdt 21 fdrun 66 8 67 1
+fdt 23 fdapt 34 0
+fdt 24 fdapt 35 2
+fdhr
+fdt 25 fips_bad 0
+fdt 30 fips_drbgnew st 0
+fdt 31 ulong get st DRFL 1
+fdt 32 fips_drbgget st part b 0 64 0
+fdt 33 fips_drbgget st q 0
+fdt 34 fddiff part b 0 32 q 1
+fdt 35 fdnz part b 0 64 1
+fdt 36 drbg_rd st DRCTR 2
+fdt 40 fips_entropy k 0
+fdt 41 x25519_base q k 0
+fdt 42 fips_pctx k q 0
+fdt 43 fips_bad 0
+fdt 50 tls_init c fdhost 4 0
+fdt 51 fips_drbgnew part c TLDRBG DRSZ 0
+fdt 52 tls_rand c k 0
+fdt 53 fdnz k 1
+fdecg c b
+fdt 57 drbg_rd part c TLDRBG DRSZ DRCTR 2
+tls_wipe c
+fdt 58 fdnz part c TLDRBG DRSZ 0
+fdt 54 tls_init c fdhost 0 0
+fdt 55 tls_rand c k 0
+fdt 56 fdnz k 1
+end
+
+note the driver mode from argv[1]: 0 none, 1 drbgerr, 2 ecgenerr
+fn fdmode to ulong
+a = new uchar 16 0
+if lt argcnt 2
+ret 0
+end
+l = argread 1 a 0 16
+if eq l 7
+if eq fips_cmp part a 0 7 fdhexm 0
+ret 1
+end
+end
+if eq l 8
+if eq fips_cmp part a 0 8 fdhexe 0
+ret 2
+end
+end
+ret 0
+end
+
+fn main to int
+c = new uchar TLCSZ 0
+st = new uchar 128 0
+b = new uchar 4096 0
+k = new uchar 32 0
+q = new uchar 32 0
+mode = fdmode
+d = fips_check 0
+if eq d 0
+d = fips_check 1
+end
+if ne d 0
+r = write 1 fdtr 0 len fdtr
+fdprn d
+r = write 1 fdtnl 0 1
+fdref c
+if eq get fdst 1 0
+ret 3
+end
+ret 1
+end
+fdt 1 get FPST 0 1
+fdt 2 get FPST 2 1
+fdpos c st b k q
+if eq mode 0
+put q 0 uchar xor ulong get q 0 1
+fdt 70 fips_pctx k q 1
+fdt 71 fips_detail 21
+end
+if eq mode 2
+fdecx c
+end
+if eq mode 1
+put st DRERR 1
+fdt 70 fips_drbgget st part b 0 32 1
+fdt 71 fips_detail 20
+fdt 72 fdnz part b 0 32 0
+end
+fdt 73 fips_entropy part b 0 32 1
+fdt 74 fips_drbgget st part b 0 32 1
+fdt 75 fips_check 0 fips_detail
+fdref c
+r = write 1 fdts 0 len fdts
+fdprn get fdst 0
+r = write 1 fdtc 0 len fdtc
+fdprn get fdst 1
+r = write 1 fdtx 0 len fdtx
+if and gt get fdst 0 0 eq get fdst 1 0
+ret 0
+end
+ret 1
+end

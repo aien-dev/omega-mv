@@ -1,0 +1,16 @@
+; boot-tt.s2 -- start-up words for RISCV B of one Tensix tile (Wormhole B0 / Blackhole A0), placed at L1
+; address 0x0000, the reset pc of RISCV B (tt-isa-documentation */TensixTile/SoftReset.md). The host
+; writes this stub followed by vecadd.s2 to L1, writes the argument block, then releases RISCV B from
+; soft reset. No tt-metal firmware is involved: this is the bare-metal launch the firmware would do.
+; Argument block at L1 0x1000: +0 a, +4 b, +8 out, +12 n words, +16 done word.
+; When vecadd returns, the stub writes 0x0600d000 to the done word and spins on itself.
+; 9 instructions (36 bytes); vecadd follows at byte 36.
+  lui 28 1              ; t3 = 0x1000, the argument block
+  lw 10 28 0            ; a0 = a
+  lw 11 28 4            ; a1 = b
+  lw 12 28 8            ; a2 = out
+  lw 13 28 12           ; a3 = n
+  jal 1 0 8 0 0         ; ra = next, call vecadd: +16 bytes (imm[10:1] = 8), 4 instructions ahead
+  lui 29 0x600d         ; t4 = 0x0600d000, the done mark
+  sw 29 28 0 16         ; done word = t4
+  jal 0 0 0 0 0         ; spin: jump to itself

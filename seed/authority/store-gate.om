@@ -1,0 +1,242 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Durable 32-word authority record store. Caller supplies the record and generation.
+note Writes a temporary 256-byte file, fsyncs it, then atomically renames it into place.
+note Reads require exactly 256 bytes; a short or torn file is refused. No lock is claimed.
+text recp "build/authority-store/rec"
+text tmpp "build/authority-store/tmp"
+text genp "build/authority-store/gen"
+global sb uchar 256
+global spkt uchar 256
+global sn ulong 1
+global spath uchar 128
+global splen ulong 1
+fn put16 v ulong to void
+put spkt get sn 0 uchar and v 255
+put spkt add get sn 0 1 uchar shr v 8
+put sn 0 add get sn 0 2
+end
+fn setrec to void
+put splen 0 len recp
+for i ulong len recp
+put spath i get recp i
+end
+end
+fn settmp to void
+put splen 0 len tmpp
+for i ulong len tmpp
+put spath i get tmpp i
+end
+end
+fn setgen to void
+put splen 0 len genp
+for i ulong len genp
+put spath i get genp i
+end
+end
+fn pack2 to ulong
+put sn 0 0
+put16 2
+put16 len tmpp
+for i ulong len tmpp
+put spkt add get sn 0 i get tmpp i
+end
+put sn 0 add get sn 0 len tmpp
+put16 len recp
+for i ulong len recp
+put spkt add get sn 0 i get recp i
+end
+put sn 0 add get sn 0 len recp
+ret get sn 0
+end
+fn enc r view ulong 32 to void
+for i ulong 32
+v = get r i
+for j ulong 8
+put sb add mul i 8 j uchar and shr v mul j 8 255
+end
+end
+end
+fn dec r edit ulong 32 to ulong
+for i ulong 32
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb add mul i 8 j mul j 8
+end
+put r i v
+end
+ret 0
+end
+fn writerec r view ulong 32 to ulong
+enc r
+settmp
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+ret 10
+end
+n = write int fd sb 0 256
+if ne n 256
+ret 11
+end
+if ne fsync int fd 0
+ret 12
+end
+if ne fclose int fd 0
+ret 13
+end
+pn = pack2
+rr = renames spkt 0 pn 0
+if lt rr 0
+ret 14
+end
+ret 0
+end
+fn readrec r edit ulong 32 to ulong
+setrec
+fd = fopen spath 0 get splen 0 0 0
+if lt fd 0
+ret 20
+end
+n = read int fd sb 0 256
+if ne fclose int fd 0
+ret 21
+end
+if ne n 256
+ret 22
+end
+dv = dec r
+ret 0
+end
+fn readgen to ulong
+setgen
+fd = fopen spath 0 get splen 0 0 0
+if lt fd 0
+ret 30
+end
+n = read int fd sb 0 8
+if ne fclose int fd 0
+ret 31
+end
+if ne n 8
+ret 32
+end
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb j mul j 8
+end
+ret v
+end
+fn writegen v ulong to ulong
+setgen
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+ret 40
+end
+for j ulong 8
+put sb j uchar and shr v mul j 8 255
+end
+n = write int fd sb 0 8
+if ne n 8
+ret 41
+end
+if ne fsync int fd 0
+ret 42
+end
+if ne fclose int fd 0
+ret 43
+end
+ret 0
+end
+fn storevalid r view ulong 32 g ulong to ulong
+if ne get r 0 1
+ret 51
+end
+if ne get r 4 g
+ret 52
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Store checks: exact read/write, torn file refusal, generation mismatch and atomic replace.
+global checks ulong 1
+global fails ulong 1
+global report uchar 64
+text title "store checks="
+text dir "build/authority-store"
+fn check got ulong want ulong to void
+put checks 0 add get checks 0 1
+if ne got want
+put fails 0 add get fails 0 1
+end
+end
+fn fill r edit ulong 32 seed ulong gen ulong to void
+for i ulong 32
+put r i add seed i
+end
+put r 0 1
+put r 1 1
+put r 3 8
+put r 4 gen
+end
+fn summary to int
+for i ulong len title
+put report i get title i
+end
+n = get checks 0
+at = len title
+put report at uchar add 48 div n 100
+put report add at 1 uchar add 48 rem div n 10 10
+put report add at 2 uchar add 48 rem n 10
+put report add at 3 32
+put report add at 4 uchar add 48 div get fails 0 100
+put report add at 5 uchar add 48 rem div get fails 0 10 10
+put report add at 6 uchar add 48 rem get fails 0 10
+put report add at 7 10
+w = write 1 report 0 add at 8
+if ne w long add at 8
+ret 2
+end
+if ne get fails 0 0
+ret 1
+end
+ret 0
+end
+fn main to int
+if ne makedir dir 0 len dir 448 0
+put sb 0 0
+end
+r = new ulong 32 0
+q = new ulong 32 0
+fill r 100 1
+check writerec r 0
+fill q 0 0
+check readrec q 0
+for i ulong 32
+check get q i get r i
+end
+check storevalid q 1 0
+check writegen 1 0
+check readgen 1
+check storevalid q 2 52
+setrec
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+check 0 1
+else
+n = write int fd sb 0 3
+if ne fclose int fd 0
+check 0 1
+end
+check readrec q 22
+end
+check writerec r 0
+check writegen 2 0
+check readgen 2
+fill r 200 2
+check writerec r 0
+check readrec q 0
+for i ulong 32
+check get q i get r i
+end
+check storevalid q 2 0
+ret summary
+end

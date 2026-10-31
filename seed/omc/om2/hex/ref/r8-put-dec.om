@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of r8-put.om (value from Wolfram, wolfram.txt query tokens): same line, same error.
+om2
+fn main to int
+a = new uchar 4 0
+put a 0 256
+ret 0
+end

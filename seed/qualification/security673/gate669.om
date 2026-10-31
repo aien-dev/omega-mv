@@ -1,9 +1,10 @@
 note Native issue669 qualification coordinator. Run from repository root; scratch must not exist.
 note All child exits are observed; signal, timeout, failed build, malformed oracle output fail closed.
 note GNU objdump is an independent decoder. Hashes identify artifacts and do not prove correctness.
+text bd "build"
 text scratch "build/security673-native"
 text prefix "build/security673-native/"
-text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\n3\n"
+text names "seed/omc/omc.om\nseed/qualification/security673/branch-corpus.om\nseed/qualification/security673/branch-mutate.om\nseed/qualification/security673/branch-check.om\n/usr/bin/objdump\n-D\n-b\nbinary\n-m\naarch64\n0\n1\n/dev/null\nseed/rung4/om4.bin\nseed/qualification/security673/array-fill.om\nseed/qualification/security673/oracle-corpus.om\nseed/qualification/security673/gate-child.om\nseed/qualification/security673/hostile-corpus.om\n3\nseed/qualification/security673/branch-forms.om\nseed/qualification/security673/packet-corpus.om\nseed/qualification/security673/pkt-consumer.om\nseed/qualification/security673/renames-corpus.om\nseed/qualification/security673/renames-consumer.om\nseed/qualification/security673/path-consumer.om\nseed/authority/action-gate.om\nseed/authority/delegate-gate.om\nseed/authority/reuse-gate.om\nseed/authority/store-gate.om\nseed/authority/dispatch-gate.om\nseed/trace/sha256-gate.om\nseed/authority/lock-gate.om\n7\n"
 text input " < "
 text output " > "
 text errors " 2> "
@@ -12,6 +13,9 @@ text statusm "exit="
 text expect " expected="
 text signalm "INVALID child wait low-byte="
 text timeoutm "INVALID child deadline exceeded; sent SIGKILL; wait low-byte="
+text elapsedm "elapsed_ns="
+text ingress "GATE671 SOURCE PASS bounded synthetic source families only\n"
+text numred "NEGATIVE CONTROL: compiled numeric-limit bypass admits21 digits; this violates the20-digit profile. Fixed compiler refuses6.\n"
 text passed "GATE669 PASS bounded Linux AArch64 execution and independent decoding only\n"
 text failed "GATE669 FAIL; retain all scratch files and command output\n"
 global pathbuf uchar 4096
@@ -150,6 +154,9 @@ end
 while true
 r = waitpid pid statbuf 0 len statbuf 1
 if eq r long pid
+r = write 1 elapsedm 0 len elapsedm
+num ulong sub monons start
+r = write 1 nl 0 1
 if ne get statbuf 0 0
 r = write 1 signalm 0 len signalm
 num ulong get statbuf 0
@@ -335,11 +342,11 @@ outid = run 13 0
 empty outid
 end
 note backred: N = 262134 puts the continue 2^18 + 1 words back. The correct compiler refuses it with 24
-note (the head's loop-bound B.cs, N+16 words forward, is refused first); the range-free compiler (mode3)
+note (the head's loop-bound B.cs, N+16 words forward, is refused first); the range-free compiler (mode7)
 note accepts it, and its continue decodes to the wrong target (61). That output is never executed.
 fn backred cc ulong gen ulong mut ulong checker ulong to void
 command mut
-argument 18
+argument 33
 bare = run 1 0
 badcc = compile cc bare 0
 sample = fixture gen 4 262134
@@ -360,7 +367,7 @@ end
 note boundaries: the real bdisp through probe cases 0..7 (imm19 and imm26 extremes, accepted with the exact
 note field), 8..15 (one word past each limit, misaligned target or origin: error 24), 16 (the last word below
 note the 8 MiB output ceiling, accepted) and 17 (the first word at it: error 14, the capacity invariant that
-note keeps every B/BL inside imm26). Then the range-free mutant (mode3 then mode0) must answer 81 exactly
+note keeps every B/BL inside imm26). Then the range-free mutant (mode7 then mode0) must answer 81 exactly
 note on the four out-of-range cases: a removed range check is caught by name, alignment cases stay 24.
 fn want669 i ulong to ulong
 if and ge i 8 lt i 16
@@ -384,7 +391,7 @@ end
 end
 fn rangefree cc ulong mut ulong to void
 command mut
-argument 18
+argument 33
 bare = run 1 0
 command mut
 argument 11
@@ -441,9 +448,193 @@ command child
 result = run p 0
 stop
 end
+fn ingresscase cc ulong gen ulong mode uchar count ulong wanted ulong result ulong to void
+src = fixture gen mode count
+elf = compile cc src wanted
+if eq wanted 0
+command elf
+outid = run 13 result
+empty outid
+end
+end
+fn hostile cc ulong to void
+gen = compile cc 18 0
+ingresscase cc gen 0 20 0 0
+ingresscase cc gen 0 21 6 0
+ingresscase cc gen 0 1000001 6 0
+ingresscase cc gen 1 1000 0 0
+ingresscase cc gen 1 1021 0 1
+ingresscase cc gen 1 1022 0 0
+ingresscase cc gen 1 1023 14 0
+ingresscase cc gen 2 512 0 0
+ingresscase cc gen 2 513 14 0
+ingresscase cc gen 3 1000001 0 0
+ingresscase cc gen 4 4095 0 0
+ingresscase cc gen 4 4096 14 0
+ingresscase cc gen 5 0 16 0
+ingresscase cc gen 6 0 23 0
+ingresscase cc gen 7 0 22 0
+ingresscase cc gen 8 0 3 0
+ingresscase cc gen 9 1000001 0 0
+ingresscase cc gen 10 8388608 14 0
+ingresscase cc gen 11 1000001 0 0
+ingresscase cc gen 12 1000001 0 15
+ingresscase cc gen 13 70 0 3
+ingresscase cc gen 13 1000001 0 3
+mut = compile cc 3 0
+command mut
+argument 19
+changed = run 1 0
+badcc = compile cc changed 0
+sample = fixture gen 0 21
+badelf = compile badcc sample 0
+refused = compile cc sample 6
+r = write 1 numred 0 len numred
+if ne r long len numred
+stop
+end
+r = write 1 ingress 0 len ingress
+if ne r long len ingress
+stop
+end
+end
+fn formwant m ulong to ulong
+if eq m 0
+ret 11
+end
+if eq m 1
+ret 12
+end
+if eq m 2
+ret 11
+end
+if eq m 3
+ret 11
+end
+if eq m 4
+ret 11
+end
+if eq m 5
+ret 11
+end
+if eq m 6
+ret 11
+end
+if eq m 7
+ret 12
+end
+if eq m 8
+ret 12
+end
+if eq m 9
+ret 3
+end
+if eq m 10
+ret 3
+end
+if eq m 11
+ret 21
+end
+if eq m 12
+ret 30
+end
+if eq m 13
+ret 107
+end
+if eq m 14
+ret 102
+end
+ret 90
+end
+fn forms cc ulong to void
+gen = compile cc 20 0
+for m ulong 15
+p = params uchar m 0 1
+command gen
+src = run p 0
+elf = compile cc src 0
+command elf
+outid = run 13 formwant m
+empty outid
+end
+end
+fn packetwant m ulong to ulong
+if eq m 0
+ret 0
+end
+if eq m 8
+ret 0
+end
+ret 103
+end
+fn packets cc ulong to void
+gen = compile cc 21 0
+cons = compile cc 22 0
+for m ulong 9
+p = params uchar m 0 1
+command gen
+src = run p 0
+command cons
+outid = run src packetwant m
+empty outid
+end
+end
+fn renameswant m ulong to ulong
+if eq m 0
+ret 0
+end
+ret 103
+end
+fn renamescc cc ulong to void
+gen = compile cc 23 0
+cons = compile cc 24 0
+for m ulong 7
+p = params uchar m 0 1
+command gen
+src = run p 0
+command cons
+outid = run src renameswant m
+empty outid
+end
+end
+fn pathwant m ulong to ulong
+if or or eq m 1 eq m 2 eq m 5
+ret 103
+end
+ret 0
+end
+fn pathcc cc ulong to void
+cons = compile cc 25 0
+for m ulong 7
+p = params uchar m 0 1
+command cons
+argument 1
+outid = run p pathwant m
+empty outid
+end
+end
+fn authone cc ulong id ulong to void
+elf = compile cc id 0
+command elf
+outid = run 13 0
+end
+fn authority cc ulong to void
+authone cc 26
+authone cc 27
+authone cc 28
+authone cc 29
+authone cc 30
+authone cc 31
+authone cc 32
+end
 fn main to int
 if or lt argcnt 1 gt argcnt 2
 ret 90
+end
+mk = makedir bd 0 len bd 448
+if or eq mk 0 eq mk -17
+else
+ret 91
 end
 if ne makedir scratch 0 len scratch 448 0
 ret 91
@@ -452,6 +643,13 @@ cc1 = compile 14 1 0
 cc2 = compile cc1 1 0
 equal cc1 cc2
 if eq argcnt 2
+if ne argread 1 buf 0 1 1
+stop
+end
+if eq get buf 0 51
+hostile cc2
+ret 0
+end
 control cc2
 ret 99
 end
@@ -464,6 +662,11 @@ array = compile cc2 15 0
 command array
 result = run 13 0
 oracle cc2 checker
+forms cc2
+packets cc2
+renamescc cc2
+pathcc cc2
+authority cc2
 positive cc2 gen checker 16
 positive cc2 gen checker 262142
 negative cc2 gen 0 262143

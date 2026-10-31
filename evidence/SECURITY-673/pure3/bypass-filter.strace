@@ -1,0 +1,4 @@
+3082887 landlock_restrict_self(4, 0)    = 0
+3082887 getpid()                        = 3082887
+3082887 execveat(3, "", ["build/security673-pure/raw-2"], 0x107fefc8 /* 0 vars */, AT_EMPTY_PATH) = 0
+3082887 getpid()                        = 3082887

@@ -1,0 +1,29 @@
+# name exit args...  paths are relative to the scratch directory tracegen writes fx/ into.
+version 0 version
+usage 2
+unknown 2 nosuch
+verify-a 0 verify fx/a.seg
+verify-c 0 verify fx/c.seg
+verify-crc 3 verify fx/crc.seg
+verify-torn 3 verify fx/torn.seg
+verify-magic 4 verify fx/magic.seg
+verify-link 4 verify fx/link.seg
+verify-miss 4 verify fx/missing.seg
+verify-dir 4 verify fx/sub
+events-t7 0 events fx/a.seg --type 7
+events-range 0 events fx/a.seg --range 0 5
+events-bad 2 events fx/a.seg --range 9 3
+stats-a 0 stats fx/a.seg
+stats-torn 3 stats fx/torn.seg
+export-a 0 export fx/a.seg
+compare-ab 1 compare fx/a.seg fx/b.seg
+compare-ac 1 compare fx/a.seg fx/c.seg
+compare-aa 0 compare fx/a.seg fx/a.seg
+compare-crc 3 compare fx/a.seg fx/crc.seg
+compare-link 4 compare fx/a.seg fx/link.seg
+list-fx 3 list fx
+list-sub 0 list fx/sub
+list-link 4 list fx/link.seg
+list-miss 4 list fx/missing
+show-a 0 show fx/a.seg
+show-magic 4 show fx/magic.seg

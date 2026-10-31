@@ -120,7 +120,7 @@ jobs:
             seed/spirv/opencl-host.c -o intel-host -Wl,--disable-new-dtags,-rpath,"$OCL_ICD_DIR" -lOpenCL
           ldd intel-host | grep libOpenCL | tee -a runtime.txt | grep -q "$OCL_ICD_DIR/libOpenCL.so.1"
           sha256sum intel-host seed/spirv/opencl-host.c seed/spirv/ocl-vendor-matrix.sh | tee -a runtime.txt
-          ./intel-host build/seed/spirv/demo.spv avgu32 7 10 2>&1 | tee smoke.txt
+          ./intel-host build/seed/spirv/demo.spv avgu32 7 10 2>&1 | tee smoke.txt; test "${PIPESTATUS[0]}" = 0
       - name: host control (a PoCL-pinned build must refuse the Intel library)
         run: |
           cc -std=c11 -O2 "-DIRSPIRV_POCL_LIBRARY=\"$INTEL_LIB\"" seed/spirv/opencl-host.c -o pocl-pinned-host \

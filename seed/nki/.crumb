@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-31T05:54:58Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:6f7ba2eefaea5353be67dc1ce6f59aae1acf25da9d0d58078f64f4d841ac5213",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 7,
+      "generated_at_commit": "257d08eb3b0793b572b3c0f3627d69effd161ca9",
+      "source_tree": "sha256:84337e537f77cbe1879576e71acd4a187971f4102eab194d1806a30eaa8b3021"
+    }
+  },
+  "layer": "seed",
+  "name": "nki",
+  "purpose": "Seeded Omega OSC IR v1 elementwise scalar to AWS NKI (nki.isa) kernel emitter with NKI CPU simulator interop-oracle verification",
+  "schema_version": "1.0.0"
+}

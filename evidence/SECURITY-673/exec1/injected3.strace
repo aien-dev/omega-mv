@@ -1,0 +1,5 @@
+1187747 execve("../exec-parent", ["../exec-parent"], 0xffffdab03a28 /* 40 vars */) = 0
+1187748 close_range(3, 4294967295, CLOSE_RANGE_UNSHARE) = -1 ENOSYS (Function not implemented) (INJECTED)
+1187748 +++ exited with 0 +++
+1187747 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1187748, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1187747 +++ exited with 0 +++

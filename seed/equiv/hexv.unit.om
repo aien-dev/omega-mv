@@ -1,0 +1,65 @@
+note irequiv fixture (issue 826): hex digit value, a real duplicate pair.
+note js_hexv (seed/json/json.om line 582) and hhexv (seed/net/http.om line 332)
+note are identical at omega-mv 62d1d0d6. Their ret ulong sub c K lines are each
+note split into d = sub c K / ret ulong d here, because omc IR mode at that
+note revision refuses a conversion of a computed operand (error 7, ir_cast).
+note hexfold is a refactor: one letter range after or c 32 folds case.
+note hexoff1 is a deliberate mutant (le c 70 became lt c 70): it differs
+note from the others at exactly one input, c = 70 ('F').
+fn js_hexv c uchar to ulong
+if and ge c 48 le c 57
+d = sub c 48
+ret ulong d
+end
+if and ge c 97 le c 102
+d = sub c 87
+ret ulong d
+end
+if and ge c 65 le c 70
+d = sub c 55
+ret ulong d
+end
+ret 16
+end
+fn hhexv c uchar to ulong
+if and ge c 48 le c 57
+d = sub c 48
+ret ulong d
+end
+if and ge c 97 le c 102
+d = sub c 87
+ret ulong d
+end
+if and ge c 65 le c 70
+d = sub c 55
+ret ulong d
+end
+ret 16
+end
+fn hexfold c uchar to ulong
+if and ge c 48 le c 57
+d = sub c 48
+ret ulong d
+end
+l = or c 32
+if and ge l 97 le l 102
+d = sub l 87
+ret ulong d
+end
+ret 16
+end
+fn hexoff1 c uchar to ulong
+if and ge c 48 le c 57
+d = sub c 48
+ret ulong d
+end
+if and ge c 97 le c 102
+d = sub c 87
+ret ulong d
+end
+if and ge c 65 lt c 70
+d = sub c 55
+ret ulong d
+end
+ret 16
+end

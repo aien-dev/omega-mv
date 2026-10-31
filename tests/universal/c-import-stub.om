@@ -1,0 +1,5 @@
+text Msg "C_IMPORT_UNSUPPORTED\n"
+fn main to int
+w = write 2 Msg 0 len Msg
+ret 68
+end

@@ -1,0 +1,19 @@
+note Functions irstablehlo must refuse with an empty stdout.
+fn divi32 a int b int to int
+ret div a b
+end
+fn shlu32 a uint b uint to uint
+ret shl a b
+end
+fn maxi32 a int b int to int
+if gt a b
+ret a
+end
+ret b
+end
+fn widen a uint to ulong
+ret ulong a
+end
+fn isodd a int to bool
+ret ne and a 1 0
+end
