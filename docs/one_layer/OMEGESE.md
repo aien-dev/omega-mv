@@ -87,7 +87,7 @@ itself be an op, so no brackets are needed: `add mul r r 4` is add(mul(r, r), 4)
 | `neg` a / `not` a | 1 | negate (signed) / logical not (bool) or bitwise not (number) | un |
 | `<type>` a | 1 | a typed number (`uint 5`) or a conversion (`ulong x`, `ulong add a b`) | const / cast |
 | `get` arr i | 2 | load (arr is an array name) | load |
-| `new` type len init | 3 | a new own array of len (1..64) elements; only as the whole value of `<name> =` | alloc |
+| `new` type len init | 3 | a new own array of len elements (omc: 1..16777216, at most 4 MiB of local arrays, s.9.4; the C reference path through OSC IR: 1..64, `OSC_MAX_ARRAY_LEN`); only as the whole value of `<name> =` | alloc |
 | `own` / `edit` / `view` arr | 1 | move / mutable borrow / shared borrow (arr is an array name) | mov |
 | `<function>` args | its parameter count | call an earlier function | call |
 
@@ -450,6 +450,10 @@ syscall adaptation, seed-chain boundaries and qualification status.
   may not reuse a name already in scope, a function or a struct: error 10.
 - In program mode the stack is a fixed 8 MiB pool; a call or a local array that would go below it traps
   6 before it writes anything. (s.6 t_stack)
+- omc sets no recursion depth limit of its own; only the 8 MiB stack bounds it. A program that takes
+  input-driven recursion bounds it itself, checking the depth before the call, as
+  `seed/omc/tests/recursion/nest.om` does: depth 16 accepted, depth 17 refused with status 40 before
+  any frame for it exists, plus a work bound (fuel, status 42). (`seed/omc/gate-recursion.sh`, #645)
 
 ### 9.3 Numbers (decision 19: one meaning per word and width)
 
@@ -989,6 +993,28 @@ ownership, range and refusal contract is [seed/host/MAPPING.md](../../seed/host/
 It adds process-local mapped resources while the compiler's own storage remains
 fixed pools. GPU launch and model execution are separate, still-unqualified gates.
 
+### Host CPU ordering words (#939)
+
+| Statement | Meaning |
+|---|---|
+| `cpufence` | Publication barrier (keyword id 199). Every load and store before it completes before any load or store after it. AArch64: `DSB SY` (`d5033f9f`), the barrier `mapget`/`mapset` already bracket their access with. x86-64 (`target x86linux`): `MFENCE` (`0f ae f0`), the fence the x86 `mapget`/`mapset` use. |
+| `cpurelax` | Spin-wait hint, no ordering (keyword id 200). AArch64: `YIELD` (`d503203f`). x86-64: `PAUSE` (`f3 90`). Use it inside a bounded poll loop and pair it with `cpufence` when order matters. |
+
+Both are statements with no operands and no value. Unlike the other host words
+they are accepted in function mode as well as program mode, because they make no
+system call. An operand is error 5, use as a value or outside a function is
+error 16, use as the name on the left of `=` is error 5, and a statement after
+`ret` is error 17. IR mode (`ir` first line) refuses them with error 16.
+`seed/host/cpufence.sh` (run by `seed/host/check.sh`) checks each refusal
+except the IR one, plus a function-mode unit, on the host. The fixture
+`seed/host/tests/cpufence.om` exits 42 natively on AArch64 and under
+qemu-x86_64. GNU objdump, used only as a referee, finds exactly one added
+`dsb sy`/`mfence` per `cpufence` and one `yield`/`pause` per `cpurelax`,
+compared with the same program with the words deleted. The script also checks
+the refusals above and builds a compiler whose `cpufence` emits NOPs. That
+compiler still runs the fixture to exit 42, and the instruction count catches
+it. These are host results only. Ordering against a GPU is not qualified here.
+
 ## 11. OSC IR output (omc only, experimental checkpoint)
 
 A leading line `ir`, before any other line, puts omc in IR mode: it writes OSC IR version 1
@@ -1117,6 +1143,20 @@ Numeric bounds were checked with WolframLanguageEvaluator:
 the unsigned masks are 1, 255, 65535, 4294967295 and
 18446744073709551615. The definite-assignment iteration bound was checked
 with `512*480+1 -> 245761` (a monotone bit-removal fixed point).
+
+### Equivalence of scalar IR functions (seed/equiv, issue 826)
+
+`seed/equiv/irequiv.om` is a seeded-Omega interpreter for the same OSC IR v1 units (its reader is
+irwasm's, copied verbatim). `irequiv check A B` runs both functions on every input of a signature of
+at most 24 bits (all 256 for one uchar, all 65536 for a ushort or two uchars) and prints
+`EQUIV PASS ... checked=N differing=0`, or `EQUIV FAIL ... differing=K first=<input>` with both
+results; equal means the same bits or the same trap code. Wider signatures are only sampled
+(`irequiv sample`), printed as `NOT_A_PROOF` with exit 10. A PASS covers the IR both functions
+lowered to under `src/compiler/osc_interp.c` semantics, not native words. `seed/equiv/gate-irequiv.sh`
+runs the fixture pairs (repo functions js_hexv/hhexv, clamp_add, bitrev8, r8 against refactors and
+single-input mutants), then checks `irequiv eval` against native AArch64 programs on the 140 rows of
+`seed/wasm/cases.tsv`, `seed/spirv/regression.tsv` and `seed/spirv/demo.tsv` (same bits, same trap
+code); `seed/equiv/README.md` has the command line and exit codes.
 
 ### 11.2 Memory profile contract (IR v2 milestone)
 

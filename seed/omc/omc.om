@@ -592,6 +592,8 @@ end
 note tok_num: the word at [ts,cur) is [-]decimal, at most 20 digits, from -2^63 to 2^64 - 1 (error 6
 note bad number, 8 out of range). tw = its raw 64 bits (a negative one as two's complement); tbig = 1
 note when it is 2^63 or more (only a ulong holds it), else 0. As om4's TK_NUM.
+note The float-marker scan walks the word in chunks of at most 999999 bytes: a single loop's hidden
+note 1000000-pass guard trapped 4 on a decimal word of 1000001 digits, which must refuse with error 6 (#671).
 fn tok_num to void
 if ne get om2 0 0
 if ne tok_hex 0
@@ -600,14 +602,20 @@ end
 end
 p = get ts 0
 e = get cur 0
-i = p
 fl = false
+i = p
 while lt i e
-b = get inp i
+c = sub e i
+if gt c 999999
+c = ulong 999999
+end
+for k ulong c
+b = get inp add i k
 if or or or eq b 46 eq b 101 eq b 69 eq b 102
 fl = true
 end
-i = add i 1
+end
+i = add i c
 end
 if fl
 put tk 0 5
@@ -1302,6 +1310,12 @@ ret 222
 end
 if eq w 7959665
 ret 223
+end
+if eq w 7305804402314801251
+ret 199
+end
+if eq w 8674333540260081763
+ret 200
 end
 if eq get om2 0 0
 ret 0
@@ -9940,6 +9954,32 @@ if eq c 87
 s_trap
 ret 0
 end
+note cpufence (keyword 199, a statement without operands): the host CPU publication barrier. AArch64:
+note DSB SY (d5033f9f, the full-system barrier mapget/mapset already bracket their access with). x86-64:
+note MFENCE (0F AE F0), the fence the x86 mapget/mapset use. Every earlier load and store completes before
+note any later one, so a GPU or another CPU that observes a later store also observes the earlier ones.
+note Inline here, not a function: om4 builds omc and holds at most 512 functions, all in use.
+if eq c 199
+eol
+if ne get xtarget 0 0
+xb 15 174 240
+else
+emit 3573759903
+end
+ret 0
+end
+note cpurelax (keyword 200, a statement without operands): spin-wait hint, no ordering. AArch64: YIELD
+note (d503203f). x86-64: PAUSE (F3 90). Use it in a bounded poll loop; pair it with cpufence for order.
+if eq c 200
+eol
+if ne get xtarget 0 0
+emitb 243
+emitb 144
+else
+emit 3573751871
+end
+ret 0
+end
 if eq c 97
 s_cont
 ret 0
@@ -11869,13 +11909,29 @@ global ir_fnn ulong 8
 note ir_bbig: tbig of the bare number in ir_bare, for the range check once its type is known (error 8).
 global ir_bbig ulong 1
 
+note ir_lead: 1 when the first line is "ir" (after blanks). Both scans run as nested 999999-pass loops,
+note so more than 1000000 leading blanks or first-line bytes are read, not trapped 4 (#671).
 fn ir_lead to ulong
 p = ulong 0
-while and lt p get inlen 0 le get inp p 32
-if eq get inp p 10
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge p get inlen 0
+go = false
+else
+c = get inp p
+if gt c 32
+go = false
+else
+if eq c 10
 ret 0
 end
 p = add p 1
+end
+end
+m = add m 1
+end
 end
 if ge add p 3 get inlen 0
 ret 0
@@ -11890,8 +11946,21 @@ if gt get inp add p 2 32
 ret 0
 end
 q = add p 2
-while and lt q get inlen 0 ne get inp q 10
+go = true
+while go
+m = ulong 0
+while and go lt m 999999
+if ge q get inlen 0
+go = false
+else
+if eq get inp q 10
+go = false
+else
 q = add q 1
+end
+end
+m = add m 1
+end
 end
 if lt q get inlen 0
 q = add q 1

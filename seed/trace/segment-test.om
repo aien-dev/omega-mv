@@ -1,102 +1,333 @@
 note SPDX-License-Identifier: AGPL-3.0-only
-note Trace checks: create, append, count, short-tail quarantine, fresh segment and bad header.
+note seed/trace/segment-test.om: checks for segment.om (#608). Concatenate after segment.om and compile.
+note Runs in the current directory under build/trace-test/. Each check prints "<label> <observed>" and,
+note when it differs, " FAIL want=<expected>". The gate compares stdout with expected.txt byte for byte.
+note Exit 0 when every check holds, 1 otherwise, 2 when stdout cannot be written.
 global checks ulong 1
 global fails ulong 1
-global report uchar 64
-text title "trace checks="
-text dir "build/trace-store"
+global obuf uchar 256
+global on ulong 1
+global wbad ulong 1
+text labs "crc-123456789\ncrc-empty\nmissing-scan\nmissing-errno\ncreate\ncreate-again-refused\ncreate-again-errno\nappend-100-errors\nappend-last-seq\nscan\nscan-count\nscan-reason\nscan-total\nscan-lost\nappend-oversize-refused\ntruncate-last-record\ntorn-scan\ntorn-count\ntorn-reason\ntorn-lost\ntorn-append-refused\ntorn-size-unchanged\ntorn-recover\ntorn-recover-lost\nrecovered-scan\nrecovered-count\nrecovered-reason\nrecovered-total\nquarantine-size\nappend-after-recover\nappend-after-seq\nrecover-clean\nclean-count\ncrc-flip-poke\ncrc-scan\ncrc-count\ncrc-reason\ncrc-lost\ncrc-recover-bad-exists\ncrc-segment-unchanged\nunlink-bad\ncrc-recover\ncrc-recovered-scan\ncrc-recovered-count\ncrc-recovered-reason\nlen-raw-append\nlen-scan\nlen-count\nlen-reason\nlen-recover\nseq-raw-append\nseq-scan\nseq-count\nseq-reason\nseq-recover\nversion-poke\nversion-scan\nversion-append-refused\nversion-size-unchanged\nmagic-scan\ngeometry-scan\nreserved-scan\nrestored-scan\nrestored-count\nsymlink-create\nsymlink-scan\nsymlink-errno\nsymlink-append-refused\nsymlink-recover-refused\nfinal-scan\nfinal-count\n"
+text paths "build/trace-test/segment\nbuild/trace-test/link\n"
+text dbuild "build"
+text dtest "build/trace-test"
+text tgt "segment"
+text sfail " FAIL want="
+text sumt "segment-test checks="
+text sumf " fails="
+fn oflush to void
+w = write 1 obuf 0 get on 0
+if ne w long get on 0
+put wbad 0 1
+end
+put on 0 0
+end
+fn obyte b uchar to void
+put obuf get on 0 b
+put on 0 add get on 0 1
+end
+fn onum v ulong to void
+d = new uchar 20 0
+x = v
+k = ulong 0
+go = true
+while go bound 21
+put d k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+go = false
+end
+end
+while gt k 0 bound 21
+k = sub k 1
+obyte get d k
+end
+end
+note label k: emit the k-th newline-terminated line of labs (k from 1).
+fn label k ulong to void
+line = ulong 1
+for i ulong len labs
+b = get labs i
+if eq b 10
+line = add line 1
+else
+if eq line k
+obyte b
+end
+end
+end
+end
 fn check got ulong want ulong to void
 put checks 0 add get checks 0 1
+label get checks 0
+obyte 32
+onum got
 if ne got want
 put fails 0 add get fails 0 1
+for i ulong len sfail
+obyte get sfail i
+end
+onum want
+end
+obyte 10
+oflush
+end
+note setp k: the k-th line of paths (k from 1) becomes the segment path.
+fn setp k ulong to void
+line = ulong 1
+n = ulong 0
+for i ulong len paths
+b = get paths i
+if eq b 10
+line = add line 1
+else
+if eq line k
+put tpath n b
+n = add n 1
 end
 end
-fn summary to int
-for i ulong len title
-put report i get title i
 end
-n = get checks 0
-at = len title
-put report at uchar add 48 div n 100
-put report add at 1 uchar add 48 rem div n 10 10
-put report add at 2 uchar add 48 rem n 10
-put report add at 3 32
-put report add at 4 uchar add 48 div get fails 0 100
-put report add at 5 uchar add 48 rem div get fails 0 10 10
-put report add at 6 uchar add 48 rem get fails 0 10
-put report add at 7 10
-w = write 1 report 0 add at 8
-if ne w long add at 8
+put tlen 0 n
+end
+fn errno to ulong
+ret ulong neg get serrno 0
+end
+fn fsize to ulong
+fd = fopen tpath 0 get tlen 0 32768 0
+if lt fd 0
+ret 0
+end
+pos = fseek int fd 0 2
+shut fd
+if lt pos 0
+ret 0
+end
+ret ulong pos
+end
+fn fsizebad to ulong
+sidepath 1
+fd = fopen opath 0 get olen 0 32768 0
+if lt fd 0
+ret 0
+end
+pos = fseek int fd 0 2
+shut fd
+if lt pos 0
+ret 0
+end
+ret ulong pos
+end
+note poke off v: overwrite one byte of the segment in place (fault injection, not a library path).
+fn poke off ulong v ulong to ulong
+fd = fopen tpath 0 get tlen 0 32769 0
+if lt fd 0
+ret 1
+end
+put trec 0 uchar v
+w = pwrite int fd trec 0 1 long off
+shut fd
+if ne w 1
+ret 1
+end
+ret 0
+end
+note rawapp: append trec as-is, bypassing segappend (fault injection for crafted records).
+fn rawapp to ulong
+fd = fopen tpath 0 get tlen 0 33793 0
+if lt fd 0
+ret 1
+end
+w = write int fd trec 0 64
+shut fd
+if ne w 64
+ret 1
+end
+ret 0
+end
+fn unlbad to ulong
+sidepath 1
+u = unlink opath 0 get olen 0
+if lt u 0
+ret 1
+end
+ret 0
+end
+fn mklink to ulong
+setp 2
+put tn 0 0
+tput16 2
+tput16 len tgt
+for i ulong len tgt
+put tpkt add get tn 0 i get tgt i
+end
+put tn 0 add get tn 0 len tgt
+pkttop
+s = symlnk tpkt 0 get tn 0
+setp 1
+if lt s 0
+ret 1
+end
+ret 0
+end
+fn cleanup to void
+setp 2
+u1 = unlink tpath 0 get tlen 0
+setp 1
+u2 = unlink tpath 0 get tlen 0
+sidepath 1
+u3 = unlink opath 0 get olen 0
+sidepath 2
+u4 = unlink opath 0 get olen 0
+end
+fn crcvec to void
+for i ulong 9
+put trec i uchar add 49 i
+end
+check segcrc 9 3421780262
+check segcrc 0 0
+end
+fn fill100 to void
+bad = ulong 0
+for i ulong 100
+put pay 0 uchar and i 255
+put pay 1 uchar and shr i 8 255
+put pay 2 0
+put pay 3 0
+if ne segappend 1 4 0
+bad = add bad 1
+end
+end
+check bad 0
+check get sseq 0 99
+end
+fn scan5 c ulong r ulong t ulong l ulong to void
+check segscan 0
+check get scount 0 c
+check get sreason 0 r
+check get stotal 0 t
+check get slost 0 l
+end
+fn phase1 to void
+check segscan 10
+check errno 2
+check segcreate 0
+check segcreate 10
+check errno 17
+fill100
+scan5 100 0 6416 0
+check segappend 1 53 20
+check ulong truncate tpath 0 get tlen 0 6382 0
+check segscan 0
+check get scount 0 99
+check get sreason 0 1
+check get slost 0 30
+check segappend 1 4 25
+check fsize 6382
+check segrecover 1
+check get slost 0 30
+check segscan 0
+check get scount 0 99
+check get sreason 0 0
+check get stotal 0 6352
+check fsizebad 6382
+check segappend 1 4 0
+check get sseq 0 99
+check segrecover 0
+e = segscan
+end
+fn phase2 to void
+check get scount 0 100
+check poke 3224 51 0
+check segscan 0
+check get scount 0 50
+check get sreason 0 3
+check get slost 0 3200
+check segrecover 32
+check fsize 6416
+check unlbad 0
+check segrecover 1
+check segscan 0
+check get scount 0 50
+check get sreason 0 0
+end
+fn phase3 to void
+segpack 1 4 50
+put trec 2 60
+segseal
+check rawapp 0
+check segscan 0
+check get scount 0 50
+check get sreason 0 2
+e = unlbad
+check segrecover 1
+segpack 1 4 7
+check rawapp 0
+check segscan 0
+check get scount 0 50
+check get sreason 0 4
+e2 = unlbad
+check segrecover 1
+end
+fn phase4 to void
+check poke 4 2 0
+check segscan 15
+check segappend 1 4 15
+check fsize 3216
+p1 = poke 4 1
+p2 = poke 0 0
+check segscan 11
+p3 = poke 0 65
+p4 = poke 6 32
+check segscan 16
+p5 = poke 6 64
+p6 = poke 12 1
+check segscan 16
+p7 = poke 12 0
+check segscan 0
+check get scount 0 50
+end
+fn phase5 to void
+check mklink 0
+setp 2
+check segscan 10
+check errno 40
+check segappend 1 4 10
+check segrecover 10
+setp 1
+check segscan 0
+check get scount 0 50
+end
+fn summary to void
+for i ulong len sumt
+obyte get sumt i
+end
+onum get checks 0
+for i ulong len sumf
+obyte get sumf i
+end
+onum get fails 0
+obyte 10
+oflush
+end
+fn main to int
+m1 = makedir dbuild 0 len dbuild 448
+m2 = makedir dtest 0 len dtest 448
+cleanup
+setp 1
+crcvec
+phase1
+phase2
+phase3
+phase4
+phase5
+summary
+if ne get wbad 0 0
 ret 2
 end
 if ne get fails 0 0
 ret 1
 end
 ret 0
-end
-fn main to int
-if ne makedir dir 0 len dir 448 0
-put pay 0 0
-end
-check segcreate 0
-for i ulong 100
-put pay 0 uchar and i 255
-put pay 1 uchar and shr i 8 255
-put pay 2 uchar and shr i 16 255
-put pay 3 uchar shr i 24
-check segappend 1 4 i 0
-end
-check segcount 0
-check get scount 0 100
-check get stail 0 0
-setseg
-fd = fopen tpath 0 get tlen 0 1089 384
-if lt fd 0
-check 0 1
-else
-for i ulong 10
-put trec i 0
-end
-n = write int fd trec 0 10
-if ne fclose int fd 0
-check 0 1
-end
-end
-check segcount 0
-check get scount 0 100
-check get stail 0 1
-check segrecover 1
-check segcount 0
-check get scount 0 0
-check get stail 0 0
-setbad
-fd = fopen tpath 0 get tlen 0 0 0
-if ge fd 0
-check 1 1
-if ne fclose int fd 0
-check 0 1
-end
-else
-check 0 1
-end
-put pay 0 7
-check segappend 1 1 200 0
-check segcount 0
-check get scount 0 1
-setseg
-fd = fopen tpath 0 get tlen 0 577 384
-if lt fd 0
-check 0 1
-else
-for i ulong 16
-put thdr i 0
-end
-n = write int fd thdr 0 16
-if ne fclose int fd 0
-check 0 1
-end
-end
-check segcount 11
-check segcreate 0
-ret summary
 end

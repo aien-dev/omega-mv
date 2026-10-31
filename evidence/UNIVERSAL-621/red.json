@@ -1,0 +1,33 @@
+{
+  "phase": "RED",
+  "requested": 5,
+  "executed": 5,
+  "passed": 0,
+  "rows": [
+    {
+      "command": "encode",
+      "status": 2,
+      "ok": false
+    },
+    {
+      "command": "decode",
+      "status": 2,
+      "ok": false
+    },
+    {
+      "command": "identity",
+      "status": 2,
+      "ok": false
+    },
+    {
+      "command": "provenance",
+      "status": 2,
+      "ok": false
+    },
+    {
+      "command": "replay",
+      "status": 2,
+      "ok": false
+    }
+  ]
+}

@@ -1,0 +1,2402 @@
+note seed/agent/agent.om -- omagent: a small coding agent in seeded Omega (program mode).
+note Compose: { printf 'om2\n'; cat seed/json/json.om seed/json/jsonw.om seed/net/http.om seed/agent/agent.om; } | seed/out/omc > omagent
+note Design, safety model, CLI and exit codes: seed/agent/README.md. Tests: seed/agent/tests/check.py.
+note The model is untrusted: every byte it sends is parsed by json.om/http.om under fixed caps, every
+note tool call is checked against permissions the operator gave on the command line, and the API key
+note never reaches stdout, stderr, the session file or a child process (execprog passes no environment).
+
+const QUSED ulong 0
+const QIP ulong 1
+const QPORT ulong 2
+const QTMO ulong 3
+const QCTMO ulong 4
+const QROUND ulong 5
+const QWRITE ulong 6
+const QNCMD ulong 7
+const QNFET ulong 8
+const QSFD ulong 9
+const QHBL ulong 10
+const QNREC ulong 11
+const QRES ulong 12
+const QINL ulong 13
+const QINP ulong 14
+const QINEOF ulong 15
+const QMEML ulong 16
+const QHAVEK ulong 17
+const QSESS ulong 18
+const QTST ulong 19
+const QURL ulong 20
+const QMODEL ulong 21
+const SCLEN ulong 0
+const SNC ulong 1
+const SFIN ulong 3
+const SID ulong 8
+const SNM ulong 16
+const SARG ulong 24
+const IPATH ulong 0
+const IMODEL ulong 1
+const IKEY ulong 2
+const IWORK ulong 3
+const ISESS ulong 4
+const IMEM ulong 5
+const IPROMPT ulong 6
+const IKEYENV ulong 7
+const IHOST ulong 8
+const ICMD ulong 16
+const IFET ulong 32
+const QMAXC ulong 8
+const QRESC ulong 65536
+const QCONC ulong 131072
+const QMSG ulong 262144
+
+global gpool uchar 65536
+global gsof ulong 64
+global gsln ulong 64
+global gnum ulong 32
+global gst ulong 64
+global gcont uchar 131072
+global gtid uchar 2048
+global gtnm uchar 1024
+global gtarg uchar 524288
+global gres uchar 70000
+global gmem uchar 65536
+global gmb ulong 8192
+global gmr uchar 8192
+global gin uchar 65536
+
+text cpre "omagent: "
+text cnl "\n"
+text cver "omagent 0.1.0 (seeded Omega, omega-mv seed/agent)\n"
+text cusage "usage: omagent --url http://IP:PORT/PATH --model NAME [-p PROMPT] [--workdir DIR]\n  [--session FILE] [--memory FILE] [--allow-cmd /ABS/PATH]... [--allow-write]\n  [--allow-fetch HOST:PORT]... [--timeout S] [--cmd-timeout S] [--max-rounds N]\n  [--key-env NAME] | --version | --help\nWithout -p, prompts are read from stdin, one per line. The API key is read from the\nenvironment variable OMAGENT_API_KEY (or --key-env NAME) and sent as a Bearer token.\n"
+text odurl "--url"
+text odmodel "--model"
+text odp "-p"
+text odwork "--workdir"
+text odsess "--session"
+text odmem "--memory"
+text odcmd "--allow-cmd"
+text odwrite "--allow-write"
+text odfetch "--allow-fetch"
+text odtmo "--timeout"
+text odctmo "--cmd-timeout"
+text odround "--max-rounds"
+text odkeyenv "--key-env"
+text odver "--version"
+text odhelp "--help"
+text cdefkey "OMAGENT_API_KEY"
+text chttp "http://"
+text chttps "https://"
+text clocal "localhost"
+text cpost "POST"
+text cget "GET"
+text chost "Host"
+text cctype "Content-Type"
+text cjson "application/json"
+text caccept "Accept"
+text cevst "text/event-stream"
+text cauth "Authorization"
+text cbearer "Bearer "
+text cnctype "content-type"
+text cevs "event-stream"
+text cslash "/"
+text cbody1 "{\"model\":\""
+text cbody2 "\",\"stream\":true,\"tools\":"
+text cbody3 ",\"messages\":["
+text ccomma ","
+text cbody4 "]}"
+text ctools "[{\"type\":\"function\",\"function\":{\"name\":\"read_file\",\"description\":\"Read a text file inside the workspace (at most 64 KiB).\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"path relative to the workspace\"}},\"required\":[\"path\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"write_file\",\"description\":\"Create or replace a file inside the workspace.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\",\"description\":\"path relative to the workspace\"},\"content\":{\"type\":\"string\"}},\"required\":[\"path\",\"content\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"run_command\",\"description\":\"Run an allowlisted program in the workspace. argv[0] is its absolute path; no shell, no environment.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"argv\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"argv\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"http_fetch\",\"description\":\"GET an http:// URL on an allowlisted host:port (at most 64 KiB of body).\",\"parameters\":{\"type\":\"object\",\"properties\":{\"url\":{\"type\":\"string\"}},\"required\":[\"url\"]}}}]"
+text csys "You are omagent, a small coding agent. Answer briefly. Use the tools only when they are needed; file paths are relative to the workspace. A tool result that starts with refused: was blocked by the operator's permissions; do not retry it."
+text cmemh "\n\nMemory file:\n"
+text crole "role"
+text cuser "user"
+text cassist "assistant"
+text ctool "tool"
+text csystem "system"
+text ccontent "content"
+text ctoolc "tool_calls"
+text ctcid "tool_call_id"
+text cid "id"
+text ctype "type"
+text cfunc "function"
+text cname "name"
+text cargs "arguments"
+text cindex "index"
+text cdelta "delta"
+text cmessage "message"
+text cchoices "choices"
+text cfinish "finish_reason"
+text cerror "error"
+text cpath "path"
+text cargv "argv"
+text curl "url"
+text cdone "[DONE]"
+text ccall "call_"
+text tnread "read_file"
+text tnwrite "write_file"
+text tnrun "run_command"
+text tnfetch "http_fetch"
+text cdevnull "/dev/null"
+text ecfg "missing or bad option; see --help"
+text ekeybad "the API key holds bytes outside 0x21..0x7e; refusing it"
+text ework "cannot enter --workdir"
+text esess "cannot open or read --session file"
+text esline "session file line is not a valid message object; refusing to continue"
+text emem "cannot read --memory file"
+text econn "cannot connect to the model server"
+text ewrite "sending the request failed"
+text etmo "the model server timed out"
+text eread "reading the model response failed"
+text estat "the model server answered with status"
+text ebad "malformed model output"
+text ebig "malformed model output: a JSON reply or one SSE event is over 256 KiB"
+text eevj "malformed model output: an event is not a JSON object"
+text eserr "the model server sent an error object"
+text enodone "malformed model output: the stream ended before [DONE] or a finish_reason"
+text emany "malformed model output: more than 8 tool calls, or a bad index"
+text elong "malformed model output: a tool call field is too long"
+text econt "malformed model output: the reply is over 128 KiB"
+text emsg "a message could not be encoded (invalid UTF-8 or over 256 KiB)"
+text efull "the conversation history is full"
+text esave "cannot append to the session file"
+text eround "stopped: tool round limit reached (--max-rounds)"
+text ltool "tool "
+text lok ": ok"
+text lref ": refused"
+text lerr ": error"
+text rnoargs "error: tool arguments are not a JSON object"
+text runknown "refused: unknown tool "
+text rpatharg "error: the path argument must be a string"
+text rpath "refused: the path must be relative to the workspace, without empty, . or .. parts and without symbolic links"
+text ropen "error: cannot open the file, errno "
+text rreadf "error: reading the file failed, errno "
+text rtrunc "\n[truncated at 65536 bytes]"
+text rnowrite "refused: write_file is disabled (the operator did not pass --allow-write)"
+text rcontarg "error: the content argument must be a string under 256 KiB"
+text rwrote "ok: wrote "
+text rbytes " bytes to "
+text rwfail "error: writing the file failed, errno "
+text rnocmd "refused: run_command is disabled (the operator gave no --allow-cmd)"
+text rargv "error: argv must be an array of 1..63 strings"
+text rnotal "refused: the program is not on the --allow-cmd list: "
+text rnul "refused: an argument holds a zero byte"
+text rpack "refused: argv is over 4 KiB"
+text rpipe "error: cannot create a pipe or fork"
+text rexit "\n[exit status "
+text rsig "\n[killed by signal "
+text rtmo "\n[killed: timeout after "
+text rsec " s]"
+text rclose "]"
+text rnofet "refused: http_fetch is disabled (the operator gave no --allow-fetch)"
+text rurlarg "error: the url argument must be a string"
+text rnohttp "refused: only http:// URLs are supported by this build"
+text rurlbad "error: malformed url"
+text rnotfa "refused: the host:port is not on the --allow-fetch list: "
+text rconn "error: cannot connect"
+text rfreq "error: request failed"
+text rftmo "error: timed out"
+text rstatus "status="
+
+note ======== output and small helpers
+
+fn agwr fd int b view uchar * o ulong n ulong to bool
+p = ulong 0
+while lt p n bound 999999
+w = write fd b add o p sub n p
+if le w 0
+ret false
+end
+p = add p ulong w
+end
+ret true
+end
+
+fn agdec v ulong d edit uchar 24 to ulong
+t = new uchar 24 0
+k = ulong 0
+x = v
+for i ulong 21
+put t k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for j ulong k
+put d j get t sub sub k 1 j
+end
+ret k
+end
+
+fn agerr t view uchar * to void
+r = agwr 2 cpre 0 len cpre
+r = agwr 2 t 0 len t
+r = agwr 2 cnl 0 1
+end
+
+fn agerrn t view uchar * v ulong to void
+d = new uchar 24 0
+r = agwr 2 cpre 0 len cpre
+r = agwr 2 t 0 len t
+d2 = new uchar 1 32
+r = agwr 2 d2 0 1
+n = agdec v d
+r = agwr 2 d 0 n
+r = agwr 2 cnl 0 1
+end
+
+note ======== string pool for configuration (ids I*), filled once from argv and the environment
+
+fn agstash id ulong a view uchar * to bool
+u = get gnum QUSED
+n = len a
+if gt n sub 65536 u
+ret false
+end
+for i ulong n
+put gpool add u i get a i
+end
+put gsof id u
+put gsln id n
+put gnum QUSED add u n
+ret true
+end
+
+fn agsget id ulong d edit uchar * to ulong
+n = get gsln id
+if gt n len d
+ret 0
+end
+o = get gsof id
+for i ulong n
+put d i get gpool add o i
+end
+ret n
+end
+
+fn agseq id ulong a view uchar * to bool
+n = get gsln id
+if ne n len a
+ret false
+end
+o = get gsof id
+for i ulong n
+if ne get gpool add o i get a i
+ret false
+end
+end
+ret true
+end
+
+note ======== tool result buffer gres[0, QRES), status QTST 0 ok, 1 refused, 2 error
+
+fn agradd t view uchar * to void
+r = get gnum QRES
+for i ulong len t
+if ge r 69000
+break
+end
+put gres r get t i
+r = add r 1
+end
+put gnum QRES r
+end
+
+fn agrset st ulong t view uchar * to void
+put gnum QRES 0
+put gnum QTST st
+agradd t
+end
+
+fn agrnum v ulong to void
+d = new uchar 24 0
+n = agdec v d
+agradd view part d 0 n
+end
+
+fn agrerr t view uchar * e long to void
+agrset 2 t
+x = ulong 0
+if lt e 0
+x = ulong neg e
+end
+agrnum x
+end
+
+note agu8fix: replace every byte of gres that is not part of well-formed UTF-8 by '?', so the
+note JSON writer (which validates UTF-8) always accepts a tool result
+fn agu8fix to void
+n = get gnum QRES
+i = ulong 0
+while lt i n bound 999999
+c = get gres i
+if lt c 128
+i = add i 1
+continue
+end
+k = ulong 0
+lo = uchar 128
+hi = uchar 191
+if and ge c 194 le c 223
+k = 1
+end
+if and ge c 224 le c 239
+k = 2
+end
+if and ge c 240 le c 244
+k = 3
+end
+if eq c 224
+lo = 160
+end
+if eq c 237
+hi = 159
+end
+if eq c 240
+lo = 144
+end
+if eq c 244
+hi = 143
+end
+ok = and gt k 0 lt add i k n
+if ok
+b = get gres add i 1
+if or lt b lo gt b hi
+ok = false
+end
+end
+if ok
+for j ulong sub k 1
+b2 = get gres add add i 2 j
+if or lt b2 128 gt b2 191
+ok = false
+end
+end
+end
+if ok
+i = add add i k 1
+else
+put gres i 63
+i = add i 1
+end
+end
+end
+
+note ======== URLs: http://HOST[:PORT][/PATH]; HOST is a dotted IPv4 address or localhost
+note r: 0 ip, 1 port, 2 authority offset, 3 authority length, 4 path offset, 5 path length, 6 host length
+
+fn agip4 u view uchar * o ulong n ulong to long
+v = ulong 0
+part4 = ulong 0
+dig = ulong 0
+cnt = ulong 0
+for i ulong n
+c = get u add o i
+if eq c 46
+if or eq dig 0 gt part4 255
+ret -1
+end
+v = or shl v 8 part4
+cnt = add cnt 1
+part4 = 0
+dig = 0
+continue
+end
+if or lt c 48 gt c 57
+ret -1
+end
+part4 = add mul part4 10 ulong sub c 48
+dig = add dig 1
+if gt dig 3
+ret -1
+end
+end
+if or or eq dig 0 gt part4 255 ne cnt 3
+ret -1
+end
+ret long or shl v 8 part4
+end
+
+fn agurl u view uchar * r edit ulong 8 to long
+n = len u
+if and ge n 8 heq view part u 0 8 chttps
+ret -1
+end
+if or lt n 8 not heq view part u 0 7 chttp
+ret -1
+end
+a = ulong 7
+e = a
+while lt e n bound 999999
+if eq get u e 47
+break
+end
+e = add e 1
+end
+if eq e a
+ret -2
+end
+hl = sub e a
+port = ulong 80
+for i ulong sub e a
+if eq get u add a i 58
+hl = i
+pd = add add a i 1
+if or eq pd e gt sub e pd 5
+ret -2
+end
+if not hdigits view part u pd sub e pd
+ret -2
+end
+port = hdecv view part u pd sub e pd
+break
+end
+end
+if or eq port 0 gt port 65535
+ret -2
+end
+ip = long 0
+if heq view part u a hl clocal
+ip = 2130706433
+else
+ip = agip4 u a hl
+end
+if lt ip 0
+ret -2
+end
+for j ulong sub n e
+c = get u add e j
+if or le c 32 ge c 127
+ret -2
+end
+end
+put r 0 ulong ip
+put r 1 port
+put r 2 a
+put r 3 sub e a
+put r 4 e
+put r 5 sub n e
+put r 6 hl
+ret 0
+end
+
+note ======== command line
+
+fn agnamech c uchar to bool
+if and ge c 97 le c 122
+ret true
+end
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+ret or or or eq c 46 eq c 95 or eq c 58 eq c 47 or or eq c 45 eq c 64 eq c 43
+end
+
+fn agsetnum ab view uchar 65536 n ulong slot ulong mul1 ulong to bool
+if not hdigits view part ab 0 n
+ret false
+end
+v = hdecv view part ab 0 n
+if or eq v 0 gt v 86400
+ret false
+end
+put gnum slot mul v mul1
+ret true
+end
+
+fn agseturl ab view uchar 65536 n ulong to bool
+r = new ulong 8 0
+rc = agurl view part ab 0 n r
+if lt rc 0
+ret false
+end
+put gnum QIP get r 0
+put gnum QPORT get r 1
+put gnum QURL 1
+if eq get r 5 0
+if not agstash IPATH cslash
+ret false
+end
+else
+if not agstash IPATH view part ab get r 4 get r 5
+ret false
+end
+end
+ret agstash IHOST view part ab get r 2 get r 3
+end
+
+fn agsetmodel ab view uchar 65536 n ulong to bool
+if or eq n 0 gt n 200
+ret false
+end
+for i ulong n
+if not agnamech get ab i
+ret false
+end
+end
+put gnum QMODEL 1
+ret agstash IMODEL view part ab 0 n
+end
+
+note agopt1: one option that takes a value; ab holds the value, n its length
+fn agopt1 op ulong ab view uchar 65536 n ulong to bool
+if eq op 1
+ret agseturl ab n
+end
+if eq op 2
+ret agsetmodel ab n
+end
+if eq op 3
+if eq n 0
+ret false
+end
+ret agstash IPROMPT view part ab 0 n
+end
+if eq op 4
+ret and gt n 0 agstash IWORK view part ab 0 n
+end
+if eq op 5
+ret and gt n 0 agstash ISESS view part ab 0 n
+end
+if eq op 6
+ret and gt n 0 agstash IMEM view part ab 0 n
+end
+if eq op 7
+k = get gnum QNCMD
+if or or ge k 16 lt n 2 ne get ab 0 47
+ret false
+end
+put gnum QNCMD add k 1
+ret agstash add ICMD k view part ab 0 n
+end
+if eq op 8
+k2 = get gnum QNFET
+if or ge k2 16 eq n 0
+ret false
+end
+put gnum QNFET add k2 1
+ret agstash add IFET k2 view part ab 0 n
+end
+if eq op 9
+ret agsetnum ab n QTMO 1000000000
+end
+if eq op 10
+ret agsetnum ab n QCTMO 1000000000
+end
+if eq op 11
+if not agsetnum ab n QROUND 1
+ret false
+end
+ret le get gnum QROUND 64
+end
+if eq op 12
+ret and gt n 0 agstash IKEYENV view part ab 0 n
+end
+ret false
+end
+
+fn agoptid ab view uchar 65536 n ulong to ulong
+if heq view part ab 0 n odurl
+ret 1
+end
+if heq view part ab 0 n odmodel
+ret 2
+end
+if heq view part ab 0 n odp
+ret 3
+end
+if heq view part ab 0 n odwork
+ret 4
+end
+if heq view part ab 0 n odsess
+ret 5
+end
+if heq view part ab 0 n odmem
+ret 6
+end
+if heq view part ab 0 n odcmd
+ret 7
+end
+if heq view part ab 0 n odfetch
+ret 8
+end
+if heq view part ab 0 n odtmo
+ret 9
+end
+if heq view part ab 0 n odctmo
+ret 10
+end
+if heq view part ab 0 n odround
+ret 11
+end
+if heq view part ab 0 n odkeyenv
+ret 12
+end
+if heq view part ab 0 n odwrite
+ret 20
+end
+if heq view part ab 0 n odver
+ret 21
+end
+if heq view part ab 0 n odhelp
+ret 22
+end
+ret 0
+end
+
+note agargs: 0 ready, 1 printed --version/--help (exit 0), 2 usage error
+fn agargs to int
+ab = new uchar 65536 0
+c = ulong argcnt
+put gnum QTMO 120000000000
+put gnum QCTMO 10000000000
+put gnum QROUND 8
+ok = agstash IKEYENV cdefkey
+i = ulong 1
+while lt i c bound 9999
+n = argread i ab 0 65536
+if lt n 0
+agerr ecfg
+ret 2
+end
+op = agoptid ab ulong n
+if eq op 0
+agerr ecfg
+ret 2
+end
+if eq op 20
+put gnum QWRITE 1
+i = add i 1
+continue
+end
+if eq op 21
+ok = agwr 1 cver 0 len cver
+ret 1
+end
+if eq op 22
+ok = agwr 1 cusage 0 len cusage
+ret 1
+end
+if ge add i 1 c
+agerr ecfg
+ret 2
+end
+n2 = argread add i 1 ab 0 65536
+if lt n2 0
+agerr ecfg
+ret 2
+end
+if not agopt1 op ab ulong n2
+agerr ecfg
+ret 2
+end
+i = add i 2
+end
+if or eq get gnum QURL 0 eq get gnum QMODEL 0
+agerr ecfg
+ok = agwr 2 cusage 0 len cusage
+ret 2
+end
+ret 0
+end
+
+fn agkeyok eb view uchar 8192 o ulong n ulong to bool
+if or eq n 0 gt n 4000
+ret false
+end
+for j ulong n
+c = get eb add o j
+if or lt c 33 gt c 126
+ret false
+end
+end
+ret true
+end
+
+note agkeyload: find KEYENV=VALUE in the environment; the value goes to the pool only
+fn agkeyload to int
+eb = new uchar 8192 0
+kn = new uchar 256 0
+k = agsget IKEYENV kn
+if eq k 0
+ret 0
+end
+rc = int 0
+for i ulong ulong envcnt
+n = envread i eb 0 8192
+if le n long k
+continue
+end
+if ne get eb k 61
+continue
+end
+if not heq view part eb 0 k view part kn 0 k
+continue
+end
+vl = sub ulong n add k 1
+if agkeyok eb add k 1 vl
+ok = agstash IKEY view part eb add k 1 vl
+put gnum QHAVEK 1
+else
+agerr ekeybad
+rc = 2
+end
+break
+end
+for z ulong 8192
+put eb z 0
+end
+ret rc
+end
+
+note agmemload: --memory FILE (read before chdir) into gmem, at most 65535 bytes, UTF-8 repaired
+fn agmemload to int
+if eq get gsln IMEM 0
+ret 0
+end
+pb = new uchar 4096 0
+pn = agsget IMEM pb
+if eq pn 0
+agerr emem
+ret 8
+end
+fd = fopen pb 0 pn 524288 0
+if lt fd 0
+agerr emem
+ret 8
+end
+got = ulong 0
+while lt got 65535 bound 999999
+r = read int fd gres got sub 65535 got
+if lt r 0
+agerr emem
+ret 8
+end
+if eq r 0
+break
+end
+got = add got ulong r
+end
+r2 = fclose int fd
+put gnum QRES got
+agu8fix
+for i ulong got
+put gmem i get gres i
+end
+put gnum QMEML got
+put gnum QRES 0
+ret 0
+end
+
+note ======== conversation history: hb holds the message objects joined by commas; gmb/gmr
+note record each object's offset and role (1 user, 2 assistant, 3 tool, 4 system, 5 assistant
+note with tool_calls). The session file holds the same objects, one per line.
+
+fn agkey src view uchar 262144 tp view uint 65536 obj ulong key view uchar * to ulong
+if ne js_type tp obj jsobj
+ret jsnone
+end
+k = js_first tp obj
+while ne k jsnone bound 999999
+if js_streq src js_off tp k key
+ret add k 1
+end
+k = js_mnext tp k
+end
+ret jsnone
+end
+
+fn agrole src view uchar 262144 tp view uint 65536 to ulong
+if ne js_type tp 0 jsobj
+ret 0
+end
+r = agkey src tp 0 crole
+if eq r jsnone
+ret 0
+end
+if ne js_type tp r jsstr
+ret 0
+end
+o = js_off tp r
+if js_streq src o cuser
+ret 1
+end
+if js_streq src o cassist
+if ne agkey src tp 0 ctoolc jsnone
+ret 5
+end
+ret 2
+end
+if js_streq src o ctool
+ret 3
+end
+if js_streq src o csystem
+ret 4
+end
+ret 0
+end
+
+note agfront: drop the records before index k (k may equal the count: drop all)
+fn agfront hb edit uchar 1048576 k ulong to void
+n = get gnum QNREC
+h = get gnum QHBL
+if eq k 0
+ret
+end
+if ge k n
+put gnum QNREC 0
+put gnum QHBL 0
+ret
+end
+off = get gmb k
+hmove hb 0 off sub h off
+for j ulong sub n k
+put gmb j sub get gmb add j k off
+put gmr j get gmr add j k
+end
+put gnum QNREC sub n k
+put gnum QHBL sub h off
+end
+
+note agtrim: an interrupted turn (history ending in user, tool, or assistant with tool_calls)
+note is dropped back to before its user message
+fn agtrim to void
+n = get gnum QNREC
+if eq n 0
+ret
+end
+last = get gmr sub n 1
+if eq last 2
+ret
+end
+u = n
+for i ulong n
+j = sub sub n 1 i
+if eq get gmr j 1
+u = j
+break
+end
+end
+if eq u n
+put gnum QNREC 0
+put gnum QHBL 0
+ret
+end
+put gnum QNREC u
+if eq u 0
+put gnum QHBL 0
+else
+put gnum QHBL sub get gmb u 1
+end
+end
+
+note agcompact: before a turn, keep the newest whole turns within 512 KiB and 4096 records
+fn agcompact hb edit uchar 1048576 to void
+n = get gnum QNREC
+h = get gnum QHBL
+if and le h 524288 le n 4096
+ret
+end
+k = n
+for i ulong n
+if eq get gmr i 1
+if le sub h get gmb i 524288
+if le sub n i 4096
+k = i
+break
+end
+end
+end
+end
+agfront hb k
+end
+
+fn agappend wb edit uchar 263184 hb edit uchar 1048576 role ulong to int
+r = js_wdone wb
+if lt r 0
+agerr emsg
+ret 9
+end
+m = ulong r
+if gt m QMSG
+agerr emsg
+ret 9
+end
+h = get gnum QHBL
+k = get gnum QNREC
+if or gt add add h m 1 1048576 ge k 8192
+agerr efull
+ret 9
+end
+if gt h 0
+put hb h 44
+h = add h 1
+end
+for i ulong m
+put hb add h i get wb add 1040 i
+end
+put gmb k h
+put gmr k uchar role
+put gnum QNREC add k 1
+put gnum QHBL add h m
+if eq get gnum QSESS 1
+fd = int get gnum QSFD
+ok = agwr fd wb 1040 m
+ok2 = agwr fd cnl 0 1
+if not and ok ok2
+agerr esave
+ret 8
+end
+end
+ret 0
+end
+
+note agsread: open --session FILE (O_RDWR|O_CREAT|O_APPEND|O_CLOEXEC, mode 0600) and read its
+note last 768 KiB into hb, starting at a line boundary; returns the byte count or -1
+fn agsread hb edit uchar 1048576 to long
+pb = new uchar 4096 0
+st = new uchar 128 0
+pn = agsget ISESS pb
+fd = fopen pb 0 pn 525378 384
+if lt fd 0
+ret -1
+end
+put gnum QSFD ulong fd
+put gnum QSESS 1
+r = fstat int fd st 0 128
+if lt r 0
+ret -1
+end
+sz = ulong 0
+for b ulong 8
+sz = or shl sz 8 ulong get st sub 55 b
+end
+start = ulong 0
+if gt sz 786432
+start = sub sz 786432
+end
+got = ulong 0
+while lt got sub sz start bound 999999
+r = pread int fd hb got sub sub sz start got long add start got
+if lt r 0
+ret -1
+end
+if eq r 0
+break
+end
+got = add got ulong r
+end
+if eq start 0
+ret long got
+end
+p = ulong 0
+while lt p got bound 999999
+if eq get hb p 10
+break
+end
+p = add p 1
+end
+if ge p got
+ret 0
+end
+hmove hb 0 add p 1 sub got add p 1
+ret long sub got add p 1
+end
+
+note agsrec: check one session line hb[p, p+ln) and append it at w; returns the role or 0
+fn agsrec hb edit uchar 1048576 p ulong ln ulong w ulong to ulong
+lb = new uchar 262144 0
+tp = new uint 65536 0
+if gt ln 262144
+ret 0
+end
+ri = js_init tp 262144 64
+for i ulong ln
+put lb i get hb add p i
+end
+pr = js_parse lb tp ln
+if lt pr 0
+ret 0
+end
+ro = agrole lb tp
+if ne ro 0
+hmove hb w p ln
+end
+ret ro
+end
+
+note agsload: rebuild hb, gmb and gmr from the session file; every line must be a message object
+fn agsload hb edit uchar 1048576 to int
+if eq get gsln ISESS 0
+ret 0
+end
+got = agsread hb
+if lt got 0
+agerr esess
+ret 8
+end
+n = ulong got
+p = ulong 0
+w = ulong 0
+k = ulong 0
+while lt p n bound 999999
+e = p
+while lt e n bound 999999
+if eq get hb e 10
+break
+end
+e = add e 1
+end
+if gt e p
+if gt w 0
+put hb w 44
+w = add w 1
+end
+ro = ulong 0
+if lt k 8192
+ro = agsrec hb p sub e p w
+end
+if eq ro 0
+agerr esline
+ret 8
+end
+put gmb k w
+put gmr k uchar ro
+k = add k 1
+w = add w sub e p
+end
+p = add e 1
+end
+put gnum QNREC k
+put gnum QHBL w
+agtrim
+u = get gnum QNREC
+for i ulong u
+if eq get gmr i 1
+u = i
+break
+end
+end
+agfront hb u
+ret 0
+end
+
+note ======== messages written with the JSON writer (wb: 1040 state bytes + 262144 text bytes)
+
+fn agwstr wb edit uchar 263184 t view uchar * to void
+js_wsbuf wb t 0 len t
+end
+
+fn agsysmsg wb edit uchar 263184 to long
+r = js_winit wb
+js_wobj wb
+agwstr wb crole
+agwstr wb csystem
+agwstr wb ccontent
+js_wsbeg wb
+for i ulong len csys
+js_wsb wb get csys i
+end
+ml = get gnum QMEML
+if gt ml 0
+for j ulong len cmemh
+js_wsb wb get cmemh j
+end
+for k ulong ml
+js_wsb wb get gmem k
+end
+end
+js_wsend wb
+js_wobje wb
+ret js_wdone wb
+end
+
+fn agwuser wb edit uchar 263184 ub view uchar 65536 un ulong to void
+r = js_winit wb
+js_wobj wb
+agwstr wb crole
+agwstr wb cuser
+agwstr wb ccontent
+js_wsbuf wb ub 0 un
+js_wobje wb
+end
+
+note agwg: write one JSON string from a global: 0 gtid, 1 gtnm, 2 gtarg, 3 gcont, 4 gres
+fn agwg wb edit uchar 263184 sel ulong off ulong n ulong to void
+js_wsbeg wb
+for i ulong n
+c = uchar 0
+if eq sel 0
+c = get gtid add off i
+end
+if eq sel 1
+c = get gtnm add off i
+end
+if eq sel 2
+c = get gtarg add off i
+end
+if eq sel 3
+c = get gcont add off i
+end
+if eq sel 4
+c = get gres add off i
+end
+js_wsb wb c
+end
+js_wsend wb
+end
+
+fn agwcall wb edit uchar 263184 c ulong to void
+js_wobj wb
+agwstr wb cid
+agwg wb 0 mul c 256 get gst add SID c
+agwstr wb ctype
+agwstr wb cfunc
+agwstr wb cfunc
+js_wobj wb
+agwstr wb cname
+agwg wb 1 mul c 128 get gst add SNM c
+agwstr wb cargs
+agwg wb 2 mul c 65536 get gst add SARG c
+js_wobje wb
+js_wobje wb
+end
+
+fn agwasst wb edit uchar 263184 to void
+r = js_winit wb
+js_wobj wb
+agwstr wb crole
+agwstr wb cassist
+agwstr wb ccontent
+nc = get gst SNC
+if and eq get gst SCLEN 0 gt nc 0
+js_wnull wb
+else
+agwg wb 3 0 get gst SCLEN
+end
+if gt nc 0
+agwstr wb ctoolc
+js_warr wb
+for c ulong nc
+agwcall wb c
+end
+js_warre wb
+end
+js_wobje wb
+end
+
+fn agwtool wb edit uchar 263184 c ulong to void
+r = js_winit wb
+js_wobj wb
+agwstr wb crole
+agwstr wb ctool
+agwstr wb ctcid
+agwg wb 0 mul c 256 get gst add SID c
+agwstr wb ccontent
+agwg wb 4 0 get gnum QRES
+js_wobje wb
+end
+
+note agfixids: a call without an id gets call_N, so its tool message can name it
+fn agfixids to void
+for c ulong get gst SNC
+if eq get gst add SID c 0
+for i ulong len ccall
+put gtid add mul c 256 i get ccall i
+end
+put gtid add mul c 256 len ccall uchar add 48 c
+put gst add SID c add len ccall 1
+end
+end
+end
+
+note ======== model response: SSE events or one JSON body; both carry choices[0].delta|message
+
+note agapp: append dc[0, n) to field sel (0 id, 1 name, 2 arguments) of tool call ix
+fn agapp sel ulong ix ulong dc view uchar 262144 n ulong to bool
+slot = add SID ix
+cap = ulong 255
+if eq sel 1
+slot = add SNM ix
+cap = 127
+end
+if eq sel 2
+slot = add SARG ix
+cap = 65535
+end
+l = get gst slot
+if gt n sub cap l
+ret false
+end
+b = add mul ix add cap 1 l
+if eq sel 0
+for i ulong n
+put gtid add b i get dc i
+end
+end
+if eq sel 1
+for j ulong n
+put gtnm add b j get dc j
+end
+end
+if eq sel 2
+for k ulong n
+put gtarg add b k get dc k
+end
+end
+put gst slot add l n
+ret true
+end
+
+note agtcstr: field sel of call ix from value v (absent: nothing; a string: decoded and appended;
+note an object as arguments: its raw JSON text appended)
+fn agtcstr src view uchar 262144 tp view uint 65536 v ulong sel ulong ix ulong dc edit uchar 262144 to int
+if eq v jsnone
+ret 0
+end
+t = js_type tp v
+if eq t jsnull
+ret 0
+end
+if eq t jsstr
+n = js_sget src js_off tp v dc
+if lt n 0
+agerr ebad
+ret 6
+end
+if not agapp sel ix dc ulong n
+agerr elong
+ret 6
+end
+ret 0
+end
+if and eq sel 2 eq t jsobj
+o = js_off tp v
+sp = js_span tp v
+for i ulong sp
+put dc i get src add o i
+end
+if not agapp sel ix dc sp
+agerr elong
+ret 6
+end
+ret 0
+end
+agerr ebad
+ret 6
+end
+
+fn agtcix src view uchar 262144 tp view uint 65536 e ulong pos ulong to ulong
+xi = agkey src tp e cindex
+if eq xi jsnone
+ret pos
+end
+if ne js_type tp xi jsnum
+ret QMAXC
+end
+if not js_isu src js_off tp xi
+ret QMAXC
+end
+ret js_tou src js_off tp xi
+end
+
+fn agtcdelta src view uchar 262144 tp view uint 65536 e ulong pos ulong dc edit uchar 262144 to int
+if ne js_type tp e jsobj
+agerr ebad
+ret 6
+end
+ix = agtcix src tp e pos
+if ge ix QMAXC
+agerr emany
+ret 6
+end
+if ge ix get gst SNC
+put gst SNC add ix 1
+end
+id = agkey src tp e cid
+if ne id jsnone
+put gst add SID ix 0
+end
+rc = agtcstr src tp id 0 ix dc
+if ne rc 0
+ret rc
+end
+fu = agkey src tp e cfunc
+if eq fu jsnone
+ret 0
+end
+if ne js_type tp fu jsobj
+agerr ebad
+ret 6
+end
+rc = agtcstr src tp agkey src tp fu cname 1 ix dc
+if ne rc 0
+ret rc
+end
+ret agtcstr src tp agkey src tp fu cargs 2 ix dc
+end
+
+fn agdelta src view uchar 262144 tp view uint 65536 d ulong dc edit uchar 262144 to int
+if ne js_type tp d jsobj
+agerr ebad
+ret 6
+end
+c = agkey src tp d ccontent
+if and ne c jsnone eq js_type tp c jsstr
+n = js_sget src js_off tp c dc
+if lt n 0
+agerr ebad
+ret 6
+end
+l = get gst SCLEN
+nn = ulong n
+if gt nn sub QCONC l
+agerr econt
+ret 6
+end
+for i ulong nn
+put gcont add l i get dc i
+end
+put gst SCLEN add l nn
+ok = agwr 1 dc 0 nn
+end
+tc = agkey src tp d ctoolc
+if eq tc jsnone
+ret 0
+end
+if eq js_type tp tc jsnull
+ret 0
+end
+if ne js_type tp tc jsarr
+agerr ebad
+ret 6
+end
+e = js_first tp tc
+pos = ulong 0
+while ne e jsnone bound 999999
+rc = agtcdelta src tp e pos dc
+if ne rc 0
+ret rc
+end
+e = js_enext tp e
+pos = add pos 1
+end
+ret 0
+end
+
+note agchunk: one parsed JSON object (an SSE event or a whole body) of n bytes in src
+fn agchunk src view uchar 262144 tp edit uint 65536 n ulong dc edit uchar 262144 to int
+pr = js_parse src tp n
+if lt pr 0
+agerr eevj
+ret 6
+end
+if ne js_type tp 0 jsobj
+agerr eevj
+ret 6
+end
+if ne agkey src tp 0 cerror jsnone
+agerr eserr
+ret 6
+end
+ch = agkey src tp 0 cchoices
+if eq ch jsnone
+ret 0
+end
+if ne js_type tp ch jsarr
+agerr ebad
+ret 6
+end
+c0 = js_first tp ch
+if eq c0 jsnone
+ret 0
+end
+if ne js_type tp c0 jsobj
+agerr ebad
+ret 6
+end
+fr = agkey src tp c0 cfinish
+if ne fr jsnone
+if eq js_type tp fr jsstr
+put gst SFIN 1
+end
+end
+d = agkey src tp c0 cdelta
+if eq d jsnone
+d = agkey src tp c0 cmessage
+end
+if eq d jsnone
+ret 0
+end
+ret agdelta src tp d dc
+end
+
+fn agrderr n long to int
+if eq n HETIME
+agerr etmo
+ret 5
+end
+if eq n HEBIG
+agerr ebig
+ret 6
+end
+agerr eread
+ret 5
+end
+
+note agevent: one ready SSE event in lb; 1 at [DONE], 0 to go on, else an exit code
+fn agevent ss edit ulong 16 lb view uchar 262400 eb edit uchar 262144 tp edit uint 65536 dc edit uchar 262144 to int
+dl = get ss HSDLEN
+hssenext ss
+if eq dl 6
+if heq view part lb 128 6 cdone
+ret 1
+end
+end
+if gt dl 262144
+agerr ebig
+ret 6
+end
+if eq dl 0
+ret 0
+end
+for i ulong dl
+put eb i get lb add 128 i
+end
+ret agchunk eb tp dl dc
+end
+
+note agfeed: feed src[0, gst 40) to the SSE parser; 1 at [DONE], 0 to read on, else an exit code
+fn agfeed ss edit ulong 16 lb edit uchar 262400 src view uchar 4096 eb edit uchar 262144 tp edit uint 65536 dc edit uchar 262144 to int
+off = ulong 0
+while lt off get gst 40 bound 999999
+c = hssefeed ss lb view part src off sub get gst 40 off
+if lt c 0
+agerr ebad
+ret 6
+end
+off = add off ulong c
+if eq get ss HSRDY 0
+if eq c 0
+agerr ebad
+ret 6
+end
+continue
+end
+rc = agevent ss lb eb tp dc
+if ne rc 0
+ret rc
+end
+end
+ret 0
+end
+
+note agsse: read the SSE body until [DONE] (or the end of the body after a finish_reason)
+fn agsse cs edit ulong 320 io edit uchar 131072 eb edit uchar 262144 tp edit uint 65536 dc edit uchar 262144 to int
+ss = new ulong 16 0
+lb = new uchar 262400 0
+src = new uchar 4096 0
+r = hsseinit ss
+for it ulong 16777216
+n = hbodyrd cs io src
+if lt n 0
+ret agrderr n
+end
+if eq n 0
+break
+end
+put gst 40 ulong n
+rc = agfeed ss lb src eb tp dc
+if eq rc 1
+ret 0
+end
+if ne rc 0
+ret rc
+end
+end
+if eq get gst SFIN 0
+agerr enodone
+ret 6
+end
+ret 0
+end
+
+fn agjsonbody cs edit ulong 320 io edit uchar 131072 eb edit uchar 262144 tp edit uint 65536 dc edit uchar 262144 to int
+n = hbodyall cs io eb
+if lt n 0
+ret agrderr n
+end
+ret agchunk eb tp ulong n dc
+end
+
+fn agresp cs edit ulong 320 io edit uchar 131072 sse bool to int
+eb = new uchar 262144 0
+tp = new uint 65536 0
+dc = new uchar 262144 0
+ri = js_init tp 262144 64
+if sse
+ret agsse cs io eb tp dc
+end
+ret agjsonbody cs io eb tp dc
+end
+
+fn agissse cs edit ulong 320 io edit uchar 131072 to bool
+i = hhfind cs io cnctype
+if lt i 0
+ret false
+end
+vo = hhvoff cs ulong i
+vl = hhvlen cs ulong i
+m = len cevs
+if lt vl m
+ret false
+end
+for s ulong add sub vl m 1
+if heq view part io add vo s m cevs
+ret true
+end
+end
+ret false
+end
+
+fn agstatus cs edit ulong 320 io edit uchar 131072 st long to int
+agerrn estat ulong st
+b = new uchar 512 0
+n = hbodyrd cs io b
+if gt n 0
+for i ulong ulong n
+c = get b i
+if or lt c 32 gt c 126
+put b i 32
+end
+end
+ok = agwr 2 cpre 0 len cpre
+ok = agwr 2 b 0 ulong n
+ok = agwr 2 cnl 0 1
+end
+r = hclose cs
+ret 4
+end
+
+note agconn: connect to ip:port (5 s connect limit) and set idle and body deadlines t (ns)
+fn agconn cs edit ulong 320 io edit uchar 131072 ip ulong port ulong t long to long
+a = new uchar 16 0
+r = haddr4 a uint ip port
+fd = hdial a 5000000000
+if lt fd 0
+ret fd
+end
+r = hinit cs io int fd 0
+hsettmo cs t t
+hsetbdl cs t
+ret 0
+end
+
+note agauth: the Authorization header, built in a local that is zeroed before return
+fn agauth cs edit ulong 320 io edit uchar 131072 r long to long
+if eq get gnum QHAVEK 0
+ret r
+end
+kb = new uchar 4200 0
+for i ulong len cbearer
+put kb i get cbearer i
+end
+ko = get gsof IKEY
+kl = get gsln IKEY
+for j ulong kl
+put kb add len cbearer j get gpool add ko j
+end
+x = hfe r hhname cs io cauth
+x = hfe x hhval cs io view part kb 0 add len cbearer kl
+for z ulong 4200
+put kb z 0
+end
+ret x
+end
+
+fn aghead cs edit ulong 320 io edit uchar 131072 sn ulong to long
+pb = new uchar 8192 0
+hh = new uchar 256 0
+pn = agsget IPATH pb
+hl = agsget IHOST hh
+r = hreqst cs io cpost
+r = hfe r hreqtg cs io view part pb 0 pn
+r = hfe r hhname cs io chost
+r = hfe r hhval cs io view part hh 0 hl
+r = hfe r hhname cs io cctype
+r = hfe r hhval cs io cjson
+r = hfe r hhname cs io caccept
+r = hfe r hhval cs io cevst
+r = agauth cs io r
+c = add add len cbody1 get gsln IMODEL add len cbody2 len ctools
+c = add c add add len cbody3 sn add 1 len cbody4
+c = add c get gnum QHBL
+ret hfe r hhend cs io 0 c
+end
+
+fn agbody cs edit ulong 320 io edit uchar 131072 hb view uchar 1048576 wb view uchar 263184 sn ulong r long to long
+mb = new uchar 256 0
+mn = agsget IMODEL mb
+r = hfe r hput cs io cbody1
+r = hfe r hput cs io view part mb 0 mn
+r = hfe r hput cs io cbody2
+r = hfe r hput cs io ctools
+r = hfe r hput cs io cbody3
+r = hfe r hput cs io view part wb 1040 sn
+r = hfe r hput cs io ccomma
+r = hfe r hput cs io view part hb 0 get gnum QHBL
+r = hfe r hput cs io cbody4
+ret hfe r hwfin cs io
+end
+
+note agreq: one chat-completions request (stream: true) over a fresh connection
+fn agreq cs edit ulong 320 io edit uchar 131072 hb edit uchar 1048576 wb edit uchar 263184 to int
+sr = agsysmsg wb
+if lt sr 0
+agerr emsg
+ret 9
+end
+r = agconn cs io get gnum QIP get gnum QPORT long get gnum QTMO
+if lt r 0
+agerr econn
+ret 3
+end
+r = aghead cs io ulong sr
+r = agbody cs io hb wb ulong sr r
+if lt r 0
+x = hclose cs
+if eq r HETIME
+agerr etmo
+ret 5
+end
+agerr ewrite
+ret 3
+end
+st = hrsprd cs io
+if lt st 0
+x = hclose cs
+ret agrderr st
+end
+if ne st 200
+ret agstatus cs io st
+end
+rc = agresp cs io agissse cs io
+x = hclose cs
+ret rc
+end
+
+note ======== tools
+
+fn agargstr src view uchar 262144 tp view uint 65536 key view uchar * d edit uchar * to long
+v = agkey src tp 0 key
+if eq v jsnone
+ret -1
+end
+if ne js_type tp v jsstr
+ret -1
+end
+n = js_sget src js_off tp v d
+if lt n 0
+ret -2
+end
+ret n
+end
+
+note agpathok: relative, every part nonempty and not . or .., no control bytes, and no part
+note (checked with lstat, prefix by prefix) is a symbolic link
+note agcomp: the part p[s, i) is not empty, . or .., and the prefix p[0, i) is not a symbolic link
+fn agcomp p view uchar * s ulong i ulong to bool
+cl = sub i s
+if eq cl 0
+ret false
+end
+if eq get p s 46
+if eq cl 1
+ret false
+end
+if eq cl 2
+if eq get p add s 1 46
+ret false
+end
+end
+end
+st = new uchar 128 0
+r = lstat p 0 i st 0 128
+if lt r 0
+ret true
+end
+md = or ulong get st 16 shl ulong get st 17 8
+ret ne and md 61440 40960
+end
+
+fn agpathok p view uchar * to bool
+n = len p
+if or eq n 0 gt n 4095
+ret false
+end
+if eq get p 0 47
+ret false
+end
+s = ulong 0
+for i ulong add n 1
+c = uchar 47
+if lt i n
+c = get p i
+if or lt c 32 eq c 127
+ret false
+end
+end
+if eq c 47
+if not agcomp p s i
+ret false
+end
+s = add i 1
+end
+end
+ret true
+end
+
+fn agtread ab view uchar 262144 tp view uint 65536 to void
+pb = new uchar 4096 0
+one = new uchar 1 0
+n = agargstr ab tp cpath pb
+if lt n 0
+agrset 2 rpatharg
+ret
+end
+pn = ulong n
+if not agpathok view part pb 0 pn
+agrset 1 rpath
+ret
+end
+fd = fopen pb 0 pn 557056 0
+if lt fd 0
+agrerr ropen fd
+ret
+end
+put gnum QTST 0
+got = ulong 0
+while lt got QRESC bound 999999
+r = read int fd gres got sub QRESC got
+if lt r 0
+r2 = fclose int fd
+agrerr rreadf r
+ret
+end
+if eq r 0
+break
+end
+got = add got ulong r
+end
+put gnum QRES got
+if eq got QRESC
+r3 = read int fd one 0 1
+if gt r3 0
+agradd rtrunc
+end
+end
+r4 = fclose int fd
+end
+
+fn agtwrite ab view uchar 262144 tp view uint 65536 to void
+if eq get gnum QWRITE 0
+agrset 1 rnowrite
+ret
+end
+pb = new uchar 4096 0
+cb = new uchar 262144 0
+n = agargstr ab tp cpath pb
+if lt n 0
+agrset 2 rpatharg
+ret
+end
+pn = ulong n
+if not agpathok view part pb 0 pn
+agrset 1 rpath
+ret
+end
+cn = agargstr ab tp ccontent cb
+if lt cn 0
+agrset 2 rcontarg
+ret
+end
+fd = fopen pb 0 pn 557633 420
+if lt fd 0
+agrerr ropen fd
+ret
+end
+p = ulong 0
+m = ulong cn
+while lt p m bound 999999
+w = write int fd cb p sub m p
+if le w 0
+r = fclose int fd
+agrerr rwfail w
+ret
+end
+p = add p ulong w
+end
+r2 = fclose int fd
+agrset 0 rwrote
+agrnum m
+agradd rbytes
+agradd view part pb 0 pn
+end
+
+fn agallowed base ulong cnt ulong a view uchar * to bool
+for k ulong cnt
+if agseq add base k a
+ret true
+end
+end
+ret false
+end
+
+note agspawn: fork and run the packed argv with stdout and stderr on a close-on-exec pipe and stdin
+note on /dev/null; returns the child pid (the pipe's read end in gnum 22) or a negative errno
+fn agspawn pk view uchar 4096 pn ulong to long
+pf = new uchar 8 0
+r = pipefds pf 0 8 524288
+if lt r 0
+ret r
+end
+rfd = int or ulong get pf 0 shl ulong get pf 1 8
+wfd = int or ulong get pf 4 shl ulong get pf 5 8
+dn = fopen cdevnull 0 len cdevnull 524288 0
+pid = fork
+if eq pid 0
+r = dupfd wfd 1 0
+r = dupfd wfd 2 0
+if ge dn 0
+r = dupfd int dn 0 0
+end
+r = execprog pk 0 pn
+exit 127
+end
+r = fclose wfd
+if ge dn 0
+r = fclose int dn
+end
+if lt pid 0
+r = fclose rfd
+ret pid
+end
+put gnum 22 ulong rfd
+ret pid
+end
+
+note agdrain: read the child's output into gres (at most 64 KiB kept) until end of file or the
+note --cmd-timeout deadline; true on timeout
+fn agdrain rfd int to bool
+buf = new uchar 4096 0
+put gnum QRES 0
+dl = add ulong monons get gnum QCTMO
+for it ulong 999999
+now = ulong monons
+if ge now dl
+ret true
+end
+wv = waitio rfd 1 long sub dl now
+if eq wv 0
+ret true
+end
+n = read rfd buf 0 4096
+if eq n 0
+ret false
+end
+if lt n 0
+if or eq n -4 eq n -11
+continue
+end
+ret false
+end
+for i ulong ulong n
+if lt get gnum QRES QRESC
+put gres get gnum QRES get buf i
+put gnum QRES add get gnum QRES 1
+end
+end
+end
+ret true
+end
+
+note agexec: run the packed argv, collect its output, kill it (SIGKILL) at the deadline, reap it
+fn agexec pk view uchar 4096 pn ulong to void
+ws = new uchar 4 0
+pid = agspawn pk pn
+if lt pid 0
+agrset 2 rpipe
+ret
+end
+rfd = int get gnum 22
+put gnum QTST 0
+tmo = agdrain rfd
+if tmo
+r = killpid int pid 9
+end
+r = waitpid int pid ws 0 4 0
+r = fclose rfd
+if ge get gnum QRES QRESC
+agradd rtrunc
+end
+if tmo
+put gnum QTST 2
+agradd rtmo
+agrnum div get gnum QCTMO 1000000000
+agradd rsec
+ret
+end
+wst = or ulong get ws 0 shl ulong get ws 1 8
+if ne and wst 127 0
+put gnum QTST 2
+agradd rsig
+agrnum and wst 127
+agradd rclose
+ret
+end
+agradd rexit
+agrnum and shr wst 8 255
+agradd rclose
+end
+
+fn agtrun ab view uchar 262144 tp view uint 65536 to void
+nc = get gnum QNCMD
+if eq nc 0
+agrset 1 rnocmd
+ret
+end
+av = agkey ab tp 0 cargv
+if eq av jsnone
+agrset 2 rargv
+ret
+end
+if ne js_type tp av jsarr
+agrset 2 rargv
+ret
+end
+nel = js_nkids tp av
+if or eq nel 0 gt nel 63
+agrset 2 rargv
+ret
+end
+pk = new uchar 4096 0
+e1 = new uchar 4096 0
+w = ulong 2
+e = js_first tp av
+for k ulong nel
+if ne js_type tp e jsstr
+agrset 2 rargv
+ret
+end
+n = js_sget ab js_off tp e e1
+if lt n 0
+agrset 1 rpack
+ret
+end
+w = agpack pk w e1 ulong n k
+if eq w 0
+ret
+end
+e = js_enext tp e
+end
+put pk 0 uchar nel
+put pk 1 0
+agexec pk w
+end
+
+note agpack: append argument k (e1[0, m)) to the packed list at w; the new end, or 0 with the
+note refusal already in gres
+fn agpack pk edit uchar 4096 w ulong e1 view uchar 4096 m ulong k ulong to ulong
+for z ulong m
+if eq get e1 z 0
+agrset 1 rnul
+ret 0
+end
+end
+if eq k 0
+if or eq m 0 not agallowed ICMD get gnum QNCMD view part e1 0 m
+agrset 1 rnotal
+agradd view part e1 0 m
+ret 0
+end
+end
+if gt add add w 2 m 4096
+agrset 1 rpack
+ret 0
+end
+put pk w uchar and m 255
+put pk add w 1 uchar shr m 8
+b = add w 2
+for j ulong m
+put pk add b j get e1 j
+end
+ret add b m
+end
+
+fn agtfetch ab view uchar 262144 tp view uint 65536 to void
+nf = get gnum QNFET
+if eq nf 0
+agrset 1 rnofet
+ret
+end
+ub = new uchar 4096 0
+n = agargstr ab tp curl ub
+if lt n 0
+agrset 2 rurlarg
+ret
+end
+un = ulong n
+r = new ulong 8 0
+rc = agurl view part ub 0 un r
+if eq rc -1
+agrset 1 rnohttp
+ret
+end
+if lt rc 0
+agrset 2 rurlbad
+ret
+end
+cn = new uchar 300 0
+cl = agcanon ub r cn
+if not agallowed IFET nf view part cn 0 cl
+agrset 1 rnotfa
+agradd view part cn 0 cl
+ret
+end
+agfetch1 ub r
+end
+
+note agcanon: HOST:PORT of a parsed url (the port always written), for the --allow-fetch check
+fn agcanon ub view uchar 4096 r view ulong 8 cn edit uchar 300 to ulong
+d = new uchar 24 0
+hl = get r 6
+if gt hl 255
+hl = 255
+end
+b = get r 2
+for i ulong hl
+put cn i get ub add b i
+end
+put cn hl 58
+dn = agdec get r 1 d
+b = add hl 1
+for j ulong dn
+put cn add b j get d j
+end
+ret add b dn
+end
+
+note agfreq: send GET for the parsed url and read the status line and headers
+fn agfreq cs edit ulong 320 io edit uchar 131072 ub view uchar 4096 r view ulong 8 to long
+x = agconn cs io get r 0 get r 1 long get gnum QCTMO
+if lt x 0
+ret -1000
+end
+x = hreqst cs io cget
+if eq get r 5 0
+x = hfe x hreqtg cs io cslash
+else
+x = hfe x hreqtg cs io view part ub get r 4 get r 5
+end
+x = hfe x hhname cs io chost
+x = hfe x hhval cs io view part ub get r 2 get r 3
+x = hfe x hhend cs io 0 0
+x = hfe x hwfin cs io
+if lt x 0
+ret x
+end
+ret hrsprd cs io
+end
+
+note agfbody: append the response body to gres (64 KiB kept)
+fn agfbody cs edit ulong 320 io edit uchar 131072 to void
+b = new uchar 4096 0
+for it ulong 999999
+n = hbodyrd cs io b
+if le n 0
+if eq n HETIME
+put gnum QTST 2
+agradd rftmo
+end
+ret
+end
+for i ulong ulong n
+if lt get gnum QRES QRESC
+put gres get gnum QRES get b i
+put gnum QRES add get gnum QRES 1
+end
+end
+if ge get gnum QRES QRESC
+agradd rtrunc
+ret
+end
+end
+end
+
+fn agfetch1 ub view uchar 4096 r view ulong 8 to void
+cs = new ulong 320 0
+io = new uchar 131072 0
+st = agfreq cs io ub r
+if eq st -1000
+agrset 2 rconn
+ret
+end
+if lt st 0
+y = hclose cs
+if eq st HETIME
+agrset 2 rftmo
+ret
+end
+agrset 2 rfreq
+ret
+end
+agrset 0 rstatus
+agrnum ulong st
+agradd cnl
+agfbody cs io
+y = hclose cs
+end
+
+fn agtoolid nm view uchar * to ulong
+if heq nm tnread
+ret 1
+end
+if heq nm tnwrite
+ret 2
+end
+if heq nm tnrun
+ret 3
+end
+if heq nm tnfetch
+ret 4
+end
+ret 0
+end
+
+note agcall: run tool call c; its result is left in gres/QRES (valid UTF-8), its status in QTST.
+note stderr names the tool and the status only, never arguments or results.
+fn agcall c ulong to void
+ab = new uchar 262144 0
+tp = new uint 65536 0
+nm = new uchar 128 0
+ri = js_init tp 262144 64
+nl = get gst add SNM c
+for j ulong nl
+put nm j get gtnm add mul c 128 j
+end
+an = get gst add SARG c
+for i ulong an
+put ab i get gtarg add mul c 65536 i
+end
+put gnum QRES 0
+which = agtoolid view part nm 0 nl
+if eq which 0
+agrset 1 runknown
+agradd view part nm 0 nl
+else
+pr = js_parse ab tp an
+if or lt pr 0 ne js_type tp 0 jsobj
+agrset 2 rnoargs
+else
+if eq which 1
+agtread ab tp
+end
+if eq which 2
+agtwrite ab tp
+end
+if eq which 3
+agtrun ab tp
+end
+if eq which 4
+agtfetch ab tp
+end
+end
+end
+agu8fix
+ok = agwr 2 cpre 0 len cpre
+ok = agwr 2 ltool 0 len ltool
+ok = agwr 2 nm 0 nl
+s = get gnum QTST
+if eq s 0
+ok = agwr 2 lok 0 len lok
+end
+if eq s 1
+ok = agwr 2 lref 0 len lref
+end
+if eq s 2
+ok = agwr 2 lerr 0 len lerr
+end
+ok = agwr 2 cnl 0 1
+end
+
+note ======== the agent loop
+
+fn agturn ub view uchar 65536 un ulong hb edit uchar 1048576 wb edit uchar 263184 cs edit ulong 320 io edit uchar 131072 to int
+agtrim
+agcompact hb
+agwuser wb ub un
+rc = agappend wb hb 1
+if ne rc 0
+ret rc
+end
+mr = get gnum QROUND
+for k ulong mr
+for i ulong 64
+put gst i 0
+end
+rc = agreq cs io hb wb
+if ne rc 0
+if gt get gst SCLEN 0
+ok = agwr 1 cnl 0 1
+end
+ret rc
+end
+agfixids
+agwasst wb
+nc = get gst SNC
+role = ulong 2
+if gt nc 0
+role = 5
+end
+rc = agappend wb hb role
+if ne rc 0
+ret rc
+end
+if eq nc 0
+ok2 = agwr 1 cnl 0 1
+ret 0
+end
+if gt get gst SCLEN 0
+ok3 = agwr 1 cnl 0 1
+end
+for c ulong nc
+agcall c
+agwtool wb c
+rc = agappend wb hb 3
+if ne rc 0
+ret rc
+end
+end
+end
+agerr eround
+ret 7
+end
+
+note agline: the next stdin line (CR LF or LF) into ub; -1 at the end of input, -2 too long
+fn agline ub edit uchar 65536 to long
+for it ulong 999999
+l = get gnum QINL
+p = get gnum QINP
+for i ulong sub l p
+if eq get gin add p i 10
+n = i
+if and gt n 0 eq get gin add p sub n 1 13
+n = sub n 1
+end
+for j ulong n
+put ub j get gin add p j
+end
+put gnum QINP add add p i 1
+ret long n
+end
+end
+if eq get gnum QINEOF 1
+if eq p l
+ret -1
+end
+n2 = sub l p
+for j2 ulong n2
+put ub j2 get gin add p j2
+end
+put gnum QINP l
+ret long n2
+end
+if gt p 0
+for m ulong sub l p
+put gin m get gin add p m
+end
+put gnum QINL sub l p
+put gnum QINP 0
+end
+l2 = get gnum QINL
+if ge l2 65535
+ret -2
+end
+r = read 0 gin l2 sub 65535 l2
+if le r 0
+put gnum QINEOF 1
+else
+put gnum QINL add l2 ulong r
+end
+end
+ret -1
+end
+
+fn agchdir to int
+if eq get gsln IWORK 0
+ret 0
+end
+pb = new uchar 4096 0
+pn = agsget IWORK pb
+c = chdir pb 0 pn
+if lt c 0
+agerr ework
+ret 2
+end
+ret 0
+end
+
+fn main to int
+cs = new ulong 320 0
+io = new uchar 131072 0
+hb = new uchar 1048576 0
+wb = new uchar 263184 0
+ub = new uchar 65536 0
+r = agargs
+if eq r 1
+ret 0
+end
+if ne r 0
+ret r
+end
+r = agkeyload
+if ne r 0
+ret r
+end
+r = agmemload
+if ne r 0
+ret r
+end
+r = agsload hb
+if ne r 0
+ret r
+end
+r = agchdir
+if ne r 0
+ret r
+end
+if gt get gsln IPROMPT 0
+un = agsget IPROMPT ub
+ret agturn ub un hb wb cs io
+end
+for it ulong 999999
+n = agline ub
+if eq n -1
+ret 0
+end
+if eq n -2
+agerr emsg
+ret 9
+end
+if gt n 0
+rc = agturn ub ulong n hb wb cs io
+if ne rc 0
+ret rc
+end
+end
+end
+ret 0
+end

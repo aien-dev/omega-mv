@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of r8-unroll0.om (value from Wolfram, wolfram.txt query tokens): same line, same error.
+om2
+fn main to int
+for i ulong 0 unroll
+end
+ret 0
+end

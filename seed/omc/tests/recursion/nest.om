@@ -1,0 +1,208 @@
+note nest.om: a bounded recursive-descent evaluator in seeded Omegese (issue #645). It is the
+note teaching fixture for direct and mutual recursion under explicit bounds, checked by
+note seed/omc/gate-recursion.sh. The grammar over stdin (one trailing newline is ignored):
+note   expr = term { + term }    term = primary { * primary }    primary = digits | ( expr )
+note Arithmetic is ulong, wrapping mod 2^64. Evaluation is left to right.
+note Two bounds, each checked before the call or frame it would admit:
+note   depth: an open parenthesis that would make the nesting deeper than DMAX is refused before
+note          any frame for it exists (depth 16 is accepted, depth 17 is refused).
+note   fuel:  every primary costs one unit of FUEL; the primary that finds no fuel left is refused.
+note The depth bound limits frames (at most 3 calls per level plus main); the fuel bound limits work.
+note The first refusal wins and ends the evaluation; a refused input prints no value.
+note Exit status and stdout (statuses stay below 100 so they never look like a trap):
+note   0  "value V depth D fuel F"  accepted; D deepest nesting reached, F primaries evaluated
+note   40 "refused depth"           nesting over DMAX
+note   41 "refused syntax"          not in the grammar (incl. empty input, missing base case "()")
+note   42 "refused fuel"            more than FUEL primaries
+note   43 "refused input"           stdin unreadable or over 4096 bytes
+
+const DMAX ulong 16
+const FUEL ulong 64
+global Src uchar 4096
+global St ulong 5
+global Out uchar 32
+global One uchar 1
+text tval "value "
+text tdep " depth "
+text tfue " fuel "
+text tnl "\n"
+text rdep "refused depth\n"
+text rsyn "refused syntax\n"
+text rfue "refused fuel\n"
+text rinp "refused input\n"
+
+note St: 0 cursor, 1 input length, 2 status (0 while evaluating), 3 fuel left, 4 deepest depth
+
+fn peek to ulong
+p = get St 0
+if ge p get St 1
+ret 256
+end
+ret ulong get Src p
+end
+
+fn skip to void
+put St 0 add get St 0 1
+end
+
+fn stop code ulong to void
+if eq get St 2 0
+put St 2 code
+end
+end
+
+fn ok to bool
+ret eq get St 2 0
+end
+
+fn number to ulong
+v = ulong 0
+n = ulong 0
+c = peek
+while and ge c 48 le c 57 bound 4096
+v = add mul v 10 sub c 48
+skip
+n = add n 1
+c = peek
+end
+if eq n 0
+stop 41
+end
+ret v
+end
+
+note the only place a frame deeper than the caller's is admitted: the depth check precedes the call
+fn primary depth ulong to ulong
+if eq get St 3 0
+stop 42
+ret 0
+end
+put St 3 sub get St 3 1
+if ne peek 40
+ret number
+end
+nd = add depth 1
+if gt nd DMAX
+stop 40
+ret 0
+end
+if gt nd get St 4
+put St 4 nd
+end
+skip
+inner = expr nd
+if not ok
+ret 0
+end
+if ne peek 41
+stop 41
+ret 0
+end
+skip
+ret inner
+end
+
+fn term depth ulong to ulong
+v = primary depth
+while ok bound 4096
+if ne peek 42
+break
+end
+skip
+r = primary depth
+v = mul v r
+end
+ret v
+end
+
+fn expr depth ulong to ulong
+v = term depth
+while ok bound 4096
+if ne peek 43
+break
+end
+skip
+r = term depth
+v = add v r
+end
+ret v
+end
+
+fn putnum v ulong to void
+p = ulong 32
+x = v
+while true bound 20
+p = sub p 1
+put Out p uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+w = write 1 Out p sub 32 p
+end
+
+fn slurp to ulong
+t = ulong 0
+while true bound 4097
+room = sub len Src t
+if eq room 0
+r = read 0 One 0 1
+if ne r 0
+ret 4097
+end
+break
+end
+r = read 0 Src t room
+if lt r 0
+ret 4097
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+ret t
+end
+
+fn main to int
+t = slurp
+if gt t 4096
+w = write 1 rinp 0 len rinp
+ret 43
+end
+if gt t 0
+if eq get Src sub t 1 10
+t = sub t 1
+end
+end
+put St 1 t
+put St 3 FUEL
+v = expr 0
+if ok
+if ne get St 0 t
+stop 41
+end
+end
+s = get St 2
+if eq s 40
+w = write 1 rdep 0 len rdep
+ret 40
+end
+if eq s 41
+w = write 1 rsyn 0 len rsyn
+ret 41
+end
+if eq s 42
+w = write 1 rfue 0 len rfue
+ret 42
+end
+w = write 1 tval 0 len tval
+putnum v
+w = write 1 tdep 0 len tdep
+putnum get St 4
+w = write 1 tfue 0 len tfue
+putnum sub FUEL get St 3
+w = write 1 tnl 0 len tnl
+ret 0
+end

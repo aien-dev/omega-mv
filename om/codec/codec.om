@@ -1,0 +1,3053 @@
+note SPDX-License-Identifier: Apache-2.0
+note codec.om: seeded Omega port of src/omega_codec.c, src/omega_canonical.c and src/omega_validate.c
+note (aien-dev/omega-mv#726), with the parts of src/omega_core.c they call (effect payload decode and
+note the four builders omega_graph_parse_text uses). Parity is on bytes and status codes against the C
+note as the product builds it (gcc -std=gnu11 -O2, the Makefile CFLAGS, aarch64). See README.md.
+note
+note A graph is two arrays: W, the OMGG wire image it was decoded from (uchar, WCAP bytes), and X,
+note an index of ulongs (XLEN). The C OmegaGraph (6,648,836 bytes) is never materialised: every
+note OmegaObject field is a function of W and X, and sbyte below gives any byte of the C struct image
+note (the C reads past an object's 1024-byte payload in format_text and in the cycle walk).
+note   X 0              object count
+note   X ob(j) + 0..13  cbuf offset, clen, kind, attr count, rel count, first rel offset,
+note                    const count, payload_len, payload offset, has_id, id as 4 big-endian ulongs
+note   X ob(j) + 14..45 offset of attribute a's key bytes (klen is the byte before)
+note   X ob(j) + 46..77 offset of constraint c's record (kind, payload_len, payload)
+note
+note Exported functions (omega-bridge native call ABI v1: ulong scalars, fixed-length uchar/ulong
+note arrays, long result):
+note   cdecode w n x          omega_graph_deserialize_binary: 0, -1 as the C; -2 = needs a byte past WCAP
+note   cserial w x mx o       omega_graph_serialize_binary: the length written, or -1
+note   cvalid w x e           omega_validate_graph: 0 or -1, message + NUL in e as the C's snprintf
+note   cvobject w x j e       omega_validate_object of object j: 0 or -1, message as cvalid
+note   cformat w x cap t      omega_graph_format_text: 0 or -1, t as the C leaves it
+note   cparse s n w x         omega_graph_parse_text: 0 (-2: n > SCAP); the graph is left in w, x
+note   ccanon w x j cb        omega_canonical_encode of object j with max_len 4096: length or -1
+note   chexparse h o          omega_parse_hex_semantic_id on the first 65 bytes of the C string
+note   chexid i o             omega_hex_semantic_id: 64 hex digits and a NUL
+note   cidcmp a b             omega_compare_semantic_id: -1, 0, 1 (glibc aarch64 memcmp gives the sign)
+note   cobjver k              omega_canonical_object_version
+note   cchkhdr v k            omega_canonical_check_header
+
+note Fixed sizes (written as numbers: the pinned omc refuses `const` in function mode, error 9):
+note   2097152 W, the wire image (WCAP)        20544 X, the index: 64 + 80 * 256 (XLEN)
+note   1049606 serialize output: 6 + 256 * (4 + 4096), the most omega_graph_serialize_binary writes
+note   65536 format_text buffer (TCAP)         262144 parse_text input (SCAP)
+note   256 error message / text line           4294967295 the 32-bit mask in SHA-256
+
+note ---- small helpers ----
+
+fn ob j ulong to ulong
+ret add 64 mul j 80
+end
+
+fn be16 w view uchar 2097152 i ulong to ulong
+ret or shl ulong get w i 8 ulong get w add i 1
+end
+
+fn be32 w view uchar 2097152 i ulong to ulong
+v = be16 w i
+ret or shl v 16 be16 w add i 2
+end
+
+fn be64 w view uchar 2097152 i ulong to ulong
+v = be32 w i
+ret or shl v 32 be32 w add i 4
+end
+
+fn cobjver k ulong to ulong
+if eq k 8
+ret 2
+end
+ret 1
+end
+
+fn cchkhdr v ulong k ulong to long
+if and eq k 8 eq v 1
+ret -2
+end
+if ne v cobjver k
+ret -1
+end
+ret 0
+end
+
+note ---- the C struct image (aarch64 LP64 offsets, measured with offsetof) ----
+note OmegaObject 25972 bytes: id 0, has_id 32, kind 36, attr_count 40, attributes 42 (578 each:
+note key 64, value 512, val_len 576), rel_count 18538, relations 18540 (34 each), const_count
+note 20716, constraints 20718 (132 each), payload_len 24944, payload 24948. Host order little-endian.
+
+note payload byte p (< 1024) of the object at X base b; 0 past payload_len (the decoder memsets)
+fn plb w view uchar 2097152 x view ulong 20544 b ulong p ulong to ulong
+if lt p get x add b 7
+ret ulong get w add get x add b 8 p
+end
+ret 0
+end
+
+fn sattr w view uchar 2097152 x view ulong 20544 b ulong q ulong to ulong
+a = div q 578
+r = rem q 578
+if ge a get x add b 3
+ret 0
+end
+o = get x add add b 14 a
+kl = ulong get w sub o 1
+if lt r 64
+if lt r kl
+ret ulong get w add o r
+end
+ret 0
+end
+vl = be16 w add o kl
+if lt r 576
+v = sub r 64
+if lt v vl
+ret ulong get w add add o kl add 2 v
+end
+ret 0
+end
+if eq r 576
+ret and vl 255
+end
+ret shr vl 8
+end
+
+fn srel w view uchar 2097152 x view ulong 20544 b ulong q ulong to ulong
+r = div q 34
+s = rem q 34
+if ge r get x add b 4
+ret 0
+end
+o = add get x add b 5 mul r 34
+if eq s 0
+ret ulong get w add o 1
+end
+if eq s 1
+ret ulong get w o
+end
+ret ulong get w add o s
+end
+
+fn sconst w view uchar 2097152 x view ulong 20544 b ulong q ulong to ulong
+c = div q 132
+s = rem q 132
+if ge c get x add b 6
+ret 0
+end
+o = get x add add b 46 c
+if lt s 4
+if eq s 0
+ret ulong get w add o 1
+end
+if eq s 1
+ret ulong get w o
+end
+if eq s 2
+ret ulong get w add o 3
+end
+ret ulong get w add o 2
+end
+p = sub s 4
+if lt p be16 w add o 2
+ret ulong get w add add o 4 p
+end
+ret 0
+end
+
+note byte o of OmegaObject j as the C holds it; objects at or past the count are zero (memset, and the
+note oracle's graph has zero bytes after it: see README "Reads past the object")
+fn sbyte w view uchar 2097152 x view ulong 20544 j ulong o ulong to ulong
+if ge j get x 0
+ret 0
+end
+b = ob j
+if lt o 32
+q = get x add add b 10 div o 8
+ret and shr q mul sub 7 rem o 8 8 255
+end
+if eq o 32
+ret get x add b 9
+end
+if eq o 36
+ret get x add b 2
+end
+if eq o 40
+ret and get x add b 3 255
+end
+if eq o 41
+ret shr get x add b 3 8
+end
+if lt o 42
+ret 0
+end
+if lt o 18538
+ret sattr w x b sub o 42
+end
+if eq o 18538
+ret and get x add b 4 255
+end
+if eq o 18539
+ret shr get x add b 4 8
+end
+if lt o 20716
+ret srel w x b sub o 18540
+end
+if eq o 20716
+ret and get x add b 6 255
+end
+if eq o 20717
+ret shr get x add b 6 8
+end
+if lt o 24942
+ret sconst w x b sub o 20718
+end
+if lt o 24944
+ret 0
+end
+if lt o 24948
+ret and shr get x add b 7 mul sub o 24944 8 255
+end
+ret plb w x b sub o 24948
+end
+
+note payload byte p of object j, also past the 1024-byte payload (into the following objects)
+fn pbyte w view uchar 2097152 x view ulong 20544 j ulong p ulong to ulong
+if lt p 1024
+ret plb w x ob j p
+end
+g = add 24948 p
+ret sbyte w x add j div g 25972 rem g 25972
+end
+
+note 8 payload bytes from p, big-endian (an id word)
+fn pw64 w view uchar 2097152 x view ulong 20544 j ulong p ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or shl v 8 pbyte w x j add p i
+end
+ret v
+end
+
+fn pu16 w view uchar 2097152 x view ulong 20544 b ulong p ulong to ulong
+ret or plb w x b p shl plb w x b add p 1 8
+end
+
+fn pu32 w view uchar 2097152 x view ulong 20544 b ulong p ulong to ulong
+v = pu16 w x b add p 2
+ret or shl v 16 pu16 w x b p
+end
+
+note ---- SHA-256 (FIPS 180-4; from tools/zero-legacy/sha256.om, state in arrays) ----
+
+fn shak k edit ulong 64 to void
+put k 0 1116352408
+put k 1 1899447441
+put k 2 3049323471
+put k 3 3921009573
+put k 4 961987163
+put k 5 1508970993
+put k 6 2453635748
+put k 7 2870763221
+put k 8 3624381080
+put k 9 310598401
+put k 10 607225278
+put k 11 1426881987
+put k 12 1925078388
+put k 13 2162078206
+put k 14 2614888103
+put k 15 3248222580
+put k 16 3835390401
+put k 17 4022224774
+put k 18 264347078
+put k 19 604807628
+put k 20 770255983
+put k 21 1249150122
+put k 22 1555081692
+put k 23 1996064986
+put k 24 2554220882
+put k 25 2821834349
+put k 26 2952996808
+put k 27 3210313671
+put k 28 3336571891
+put k 29 3584528711
+put k 30 113926993
+put k 31 338241895
+put k 32 666307205
+put k 33 773529912
+put k 34 1294757372
+put k 35 1396182291
+put k 36 1695183700
+put k 37 1986661051
+put k 38 2177026350
+put k 39 2456956037
+put k 40 2730485921
+put k 41 2820302411
+put k 42 3259730800
+put k 43 3345764771
+put k 44 3516065817
+put k 45 3600352804
+put k 46 4094571909
+put k 47 275423344
+put k 48 430227734
+put k 49 506948616
+put k 50 659060556
+put k 51 883997877
+put k 52 958139571
+put k 53 1322822218
+put k 54 1537002063
+put k 55 1747873779
+put k 56 1955562222
+put k 57 2024104815
+put k 58 2227730452
+put k 59 2361852424
+put k 60 2428436474
+put k 61 2756734187
+put k 62 3204031479
+put k 63 3329325298
+end
+
+fn shainit h edit ulong 8 to void
+put h 0 1779033703
+put h 1 3144134277
+put h 2 1013904242
+put h 3 2773480762
+put h 4 1359893119
+put h 5 2600822924
+put h 6 528734635
+put h 7 1541459225
+end
+
+fn rotr x ulong r ulong to ulong
+ret and or shr x r shl x sub 32 r 4294967295
+end
+
+fn bsig0 x ulong to ulong
+ret xor rotr x 2 xor rotr x 13 rotr x 22
+end
+
+fn bsig1 x ulong to ulong
+ret xor rotr x 6 xor rotr x 11 rotr x 25
+end
+
+fn ssig0 x ulong to ulong
+ret xor rotr x 7 xor rotr x 18 shr x 3
+end
+
+fn ssig1 x ulong to ulong
+ret xor rotr x 17 xor rotr x 19 shr x 10
+end
+
+fn shach x ulong y ulong z ulong to ulong
+ret xor and x y and and not x 4294967295 z
+end
+
+fn shamaj x ulong y ulong z ulong to ulong
+ret xor and x y xor and x z and y z
+end
+
+fn shard st edit ulong 8 ki ulong wi ulong to void
+a = get st 0
+e = get st 4
+t1 = add get st 7 bsig1 e
+t1 = add t1 shach e get st 5 get st 6
+t1 = and add add t1 ki wi 4294967295
+t2 = and add bsig0 a shamaj a get st 1 get st 2 4294967295
+put st 7 get st 6
+put st 6 get st 5
+put st 5 e
+put st 4 and add get st 3 t1 4294967295
+put st 3 get st 2
+put st 2 get st 1
+put st 1 a
+put st 0 and add t1 t2 4294967295
+end
+
+fn shablk h edit ulong 8 m view uchar 64 k view ulong 64 to void
+w = new ulong 64 0
+for i ulong 16
+o = mul i 4
+v = ulong get m o
+v = or shl v 8 ulong get m add o 1
+v = or shl v 8 ulong get m add o 2
+v = or shl v 8 ulong get m add o 3
+put w i v
+end
+for j ulong 48
+i = add j 16
+s = add ssig1 get w sub i 2 get w sub i 7
+s = add s ssig0 get w sub i 15
+s = add s get w sub i 16
+put w i and s 4294967295
+end
+st = new ulong 8 0
+for i ulong 8
+put st i get h i
+end
+for i ulong 64
+shard st get k i get w i
+end
+for i ulong 8
+put h i and add get h i get st i 4294967295
+end
+end
+
+note pad block m (r message bytes already in it) and finish; shaget gives the digest as 4 big-endian ulongs
+fn shafin h edit ulong 8 m edit uchar 64 k view ulong 64 r ulong n ulong to void
+put m r 128
+for i ulong 64
+if gt i r
+put m i 0
+end
+end
+if ge r 56
+shablk h m k
+for i ulong 64
+put m i 0
+end
+end
+bits = mul n 8
+for i ulong 8
+sh = mul sub 7 i 8
+put m add 56 i uchar and shr bits sh 255
+end
+shablk h m k
+end
+
+fn shaget h view ulong 8 d edit ulong 4 to void
+for i ulong 4
+put d i or shl get h mul i 2 32 get h add mul i 2 1
+end
+end
+
+fn sha4k b view uchar 4096 n ulong d edit ulong 4 to void
+k = new ulong 64 0
+shak k
+h = new ulong 8 0
+shainit h
+m = new uchar 64 0
+nb = div n 64
+for bi ulong nb
+o = mul bi 64
+for i ulong 64
+put m i get b add o i
+end
+shablk h m k
+end
+tb = mul nb 64
+r = sub n tb
+for i ulong r
+put m i get b add tb i
+end
+shafin h m k r n
+shaget h d
+end
+
+note ---- decode (omega_graph_deserialize_binary) ----
+
+note the C's check `cpos + k > clen` (-1), then the port's capacity: a byte at or past WCAP (-2)
+fn cneed cp ulong k ulong cl ulong c2 ulong to long
+if gt add cp k cl
+ret -1
+end
+if gt add cp k c2
+ret -2
+end
+ret 0
+end
+
+fn cap2 cs ulong cl ulong to ulong
+r = sub 2097152 cs
+if lt cl r
+ret cl
+end
+ret r
+end
+
+fn dattrs w view uchar 2097152 x edit ulong 20544 b ulong cs ulong cl ulong to long
+c2 = cap2 cs cl
+cp = ulong 6
+r = cneed cp 2 cl c2
+if ne r 0
+ret r
+end
+na = be16 w add cs cp
+cp = add cp 2
+if gt na 32
+ret -1
+end
+put x add b 3 na
+for a ulong na
+r = cneed cp 1 cl c2
+if ne r 0
+ret r
+end
+kl = ulong get w add cs cp
+cp = add cp 1
+if ge kl 64
+ret -1
+end
+r = cneed cp add kl 2 cl c2
+if ne r 0
+ret r
+end
+put x add add b 14 a add cs cp
+cp = add cp kl
+vl = be16 w add cs cp
+cp = add cp 2
+if gt vl 512
+ret -1
+end
+r = cneed cp vl cl c2
+if ne r 0
+ret r
+end
+cp = add cp vl
+end
+ret long cp
+end
+
+fn drels w view uchar 2097152 x edit ulong 20544 b ulong cs ulong cl ulong cp ulong to long
+c2 = cap2 cs cl
+r = cneed cp 2 cl c2
+if ne r 0
+ret r
+end
+nr = be16 w add cs cp
+cp = add cp 2
+if gt nr 64
+ret -1
+end
+put x add b 4 nr
+put x add b 5 add cs cp
+for i ulong nr
+r = cneed cp 34 cl c2
+if ne r 0
+ret r
+end
+cp = add cp 34
+end
+ret long cp
+end
+
+fn dconsts w view uchar 2097152 x edit ulong 20544 b ulong cs ulong cl ulong cp ulong to long
+c2 = cap2 cs cl
+r = cneed cp 2 cl c2
+if ne r 0
+ret r
+end
+nc = be16 w add cs cp
+cp = add cp 2
+if gt nc 32
+ret -1
+end
+put x add b 6 nc
+for c ulong nc
+r = cneed cp 4 cl c2
+if ne r 0
+ret r
+end
+put x add add b 46 c add cs cp
+pl = be16 w add add cs cp 2
+cp = add cp 4
+if gt pl 128
+ret -1
+end
+r = cneed cp pl cl c2
+if ne r 0
+ret r
+end
+cp = add cp pl
+end
+ret long cp
+end
+
+fn dpay w view uchar 2097152 x edit ulong 20544 b ulong cs ulong cl ulong cp ulong to long
+c2 = cap2 cs cl
+r = cneed cp 4 cl c2
+if ne r 0
+ret r
+end
+pl = be32 w add cs cp
+cp = add cp 4
+if gt pl 1024
+ret -1
+end
+r = cneed cp pl cl c2
+if ne r 0
+ret r
+end
+put x add b 7 pl
+put x add b 8 add cs cp
+ret long add cp pl
+end
+
+note omega_effect_read of a KIND_EFFECT object (omega_core.c): 0 or OMEGA_EFFECT_ERR_*
+fn effchk w view uchar 2097152 x view ulong 20544 b ulong to long
+pl = get x add b 7
+if eq pl 176
+ret -3
+end
+if ne pl 178
+ret -2
+end
+res = or shl plb w x b 0 8 plb w x b 1
+if eq res 0
+ret -4
+end
+prm = or shl plb w x b 48 8 plb w x b 49
+if gt prm 128
+ret -5
+end
+for i ulong 128
+if ge i prm
+if ne plb w x b add 50 i 0
+ret -6
+end
+end
+end
+ret 0
+end
+
+note omega_compute_semantic_id: sha256 of the canonical encoding in a 4096-byte buffer; a longer
+note encoding leaves has_id 0 and the id zero
+fn semid w view uchar 2097152 x edit ulong 20544 j ulong to void
+cb = new uchar 4096 0
+n = ccanon w view x j cb
+if lt n 0
+ret
+end
+d = new ulong 4 0
+sha4k cb ulong n d
+b = ob j
+put x add b 9 1
+for i ulong 4
+put x add add b 10 i get d i
+end
+end
+
+fn dobj w view uchar 2097152 x edit ulong 20544 j ulong cs ulong cl ulong to long
+b = ob j
+put x 0 add j 1
+c2 = cap2 cs cl
+if lt c2 6
+ret -2
+end
+if or ne get w cs 79 ne get w add cs 1 77
+ret -1
+end
+if or ne get w add cs 2 71 ne get w add cs 3 48
+ret -1
+end
+k = ulong get w add cs 5
+if ne cchkhdr ulong get w add cs 4 k 0
+ret -1
+end
+put x b cs
+put x add b 1 cl
+put x add b 2 k
+r = dattrs w x b cs cl
+if lt r 0
+ret r
+end
+r = drels w x b cs cl ulong r
+if lt r 0
+ret r
+end
+r = dconsts w x b cs cl ulong r
+if lt r 0
+ret r
+end
+r = dpay w x b cs cl ulong r
+if lt r 0
+ret r
+end
+if eq k 8
+if ne effchk w view x b 0
+ret -1
+end
+end
+semid w x j
+ret 0
+end
+
+fn cdecode w view uchar 2097152 n ulong x edit ulong 20544 to long
+if lt n 6
+ret -1
+end
+if or ne get w 0 79 ne get w 1 77
+ret -1
+end
+if or ne get w 2 71 ne get w 3 71
+ret -1
+end
+cnt = be16 w 4
+if gt cnt 256
+ret -1
+end
+for i ulong 20544
+put x i 0
+end
+pos = ulong 6
+for i ulong cnt
+if gt add pos 4 n
+ret -1
+end
+if gt add pos 4 2097152
+ret -2
+end
+cl = be32 w pos
+pos = add pos 4
+if or gt add pos cl n lt cl 6
+ret -1
+end
+r = dobj w x i pos cl
+if ne r 0
+ret r
+end
+pos = add pos cl
+end
+ret 0
+end
+
+note ---- canonical encoding (omega_canonical_encode) ----
+
+note strlen of attribute key at offset o, klen bytes stored (the C key ends at its first NUL)
+fn ekl w view uchar 2097152 o ulong kl ulong to ulong
+for i ulong kl
+if eq get w add o i 0
+ret i
+end
+end
+ret kl
+end
+
+fn canlen w view uchar 2097152 x view ulong 20544 b ulong to ulong
+n = ulong 8
+na = get x add b 3
+for a ulong na
+o = get x add add b 14 a
+kl = ulong get w sub o 1
+n = add n add add 3 ekl w o kl be16 w add o kl
+end
+n = add n add 4 mul 34 get x add b 4
+nc = get x add b 6
+for c ulong nc
+o = get x add add b 46 c
+n = add n add 4 be16 w add o 2
+end
+ret add n add 4 get x add b 7
+end
+
+note strcmp sign of attribute keys i and j (unsigned bytes; a key ends at klen or its first NUL)
+fn acmp w view uchar 2097152 x view ulong 20544 b ulong i ulong j ulong to long
+oi = get x add add b 14 i
+oj = get x add add b 14 j
+ki = ulong get w sub oi 1
+kj = ulong get w sub oj 1
+for t ulong 65
+ci = ulong 0
+if lt t ki
+ci = ulong get w add oi t
+end
+cj = ulong 0
+if lt t kj
+cj = ulong get w add oj t
+end
+if lt ci cj
+ret -1
+end
+if gt ci cj
+ret 1
+end
+if eq ci 0
+ret 0
+end
+end
+ret 0
+end
+
+fn memcmpw w view uchar 2097152 a ulong c ulong n ulong to long
+for i ulong n
+p = ulong get w add a i
+q = ulong get w add c i
+if lt p q
+ret -1
+end
+if gt p q
+ret 1
+end
+end
+ret 0
+end
+
+fn rcmp w view uchar 2097152 x view ulong 20544 b ulong i ulong j ulong to long
+rb = get x add b 5
+oi = add rb mul i 34
+oj = add rb mul j 34
+ki = be16 w oi
+kj = be16 w oj
+if lt ki kj
+ret -1
+end
+if gt ki kj
+ret 1
+end
+ret memcmpw w add oi 2 add oj 2 32
+end
+
+fn ccmp w view uchar 2097152 x view ulong 20544 b ulong i ulong j ulong to long
+oi = get x add add b 46 i
+oj = get x add add b 46 j
+ki = be16 w oi
+kj = be16 w oj
+if lt ki kj
+ret -1
+end
+if gt ki kj
+ret 1
+end
+li = be16 w add oi 2
+lj = be16 w add oj 2
+m = li
+if lt lj li
+m = lj
+end
+r = memcmpw w add oi 4 add oj 4 m
+if ne r 0
+ret r
+end
+if lt li lj
+ret -1
+end
+if gt li lj
+ret 1
+end
+ret 0
+end
+
+note the C's insertion sorts (stable): kind 0 attributes (strcmp), 1 relations, 2 constraints
+fn cmpk w view uchar 2097152 x view ulong 20544 b ulong t ulong i ulong j ulong to long
+if eq t 0
+ret acmp w x b i j
+end
+if eq t 1
+ret rcmp w x b i j
+end
+ret ccmp w x b i j
+end
+
+fn isort w view uchar 2097152 x view ulong 20544 b ulong t ulong ix edit ulong 64 n ulong to void
+for i ulong n
+put ix i i
+end
+for u ulong n
+if gt u 0
+key = get ix u
+j = sub long u 1
+while ge j 0 bound 64
+if le cmpk w x b t get ix j key 0
+break
+end
+put ix add j 1 get ix j
+j = sub j 1
+end
+put ix add j 1 key
+end
+end
+end
+
+fn put16 cb edit uchar 4096 p ulong v ulong to ulong
+put cb p uchar shr v 8
+put cb add p 1 uchar and v 255
+ret add p 2
+end
+
+note copy n wire bytes from o to cb at p; returns p + n
+fn wcopy w view uchar 2097152 cb edit uchar 4096 p ulong o ulong n ulong to ulong
+for t ulong n
+put cb add p t get w add o t
+end
+ret add p n
+end
+
+fn canone w view uchar 2097152 x view ulong 20544 b ulong cb edit uchar 4096 p ulong a ulong to ulong
+o = get x add add b 14 a
+kl = ulong get w sub o 1
+ek = ekl w o kl
+put cb p uchar ek
+p = wcopy w cb add p 1 o ek
+vl = be16 w add o kl
+p = put16 cb p vl
+ret wcopy w cb p add add o kl 2 vl
+end
+
+fn canattr w view uchar 2097152 x view ulong 20544 b ulong cb edit uchar 4096 p ulong to ulong
+ix = new ulong 64 0
+na = get x add b 3
+isort w x b 0 ix na
+p = put16 cb p na
+for i ulong na
+p = canone w x b cb p get ix i
+end
+ret p
+end
+
+fn canrel w view uchar 2097152 x view ulong 20544 b ulong cb edit uchar 4096 p ulong to ulong
+ix = new ulong 64 0
+nr = get x add b 4
+isort w x b 1 ix nr
+p = put16 cb p nr
+rb = get x add b 5
+for i ulong nr
+p = wcopy w cb p add rb mul get ix i 34 34
+end
+ret p
+end
+
+fn cancon w view uchar 2097152 x view ulong 20544 b ulong cb edit uchar 4096 p ulong to ulong
+ix = new ulong 64 0
+nc = get x add b 6
+isort w x b 2 ix nc
+p = put16 cb p nc
+for i ulong nc
+o = get x add add b 46 get ix i
+p = wcopy w cb p o add 4 be16 w add o 2
+end
+ret p
+end
+
+fn ccanon w view uchar 2097152 x view ulong 20544 j ulong cb edit uchar 4096 to long
+b = ob j
+n = canlen w x b
+if gt n 4096
+ret -1
+end
+k = get x add b 2
+put cb 0 79
+put cb 1 77
+put cb 2 71
+put cb 3 48
+put cb 4 uchar cobjver k
+put cb 5 uchar k
+p = canattr w x b cb 6
+p = canrel w x b cb p
+p = cancon w x b cb p
+pl = get x add b 7
+p = put16 cb p shr pl 16
+p = put16 cb p and pl 65535
+ret long wcopy w cb p get x add b 8 pl
+end
+
+note ---- serialize (omega_graph_serialize_binary) ----
+
+note one record: u32 big-endian length, then the canonical bytes; returns the new position
+fn serone o edit uchar 1049606 pos ulong cb view uchar 4096 n ulong to ulong
+for t ulong 4
+sh = mul sub 3 t 8
+put o add pos t uchar and shr n sh 255
+end
+p = add pos 4
+for t ulong n
+put o add p t get cb t
+end
+ret add p n
+end
+
+fn cserial w view uchar 2097152 x view ulong 20544 mx ulong o edit uchar 1049606 to long
+if gt 6 mx
+ret -1
+end
+put o 0 79
+put o 1 77
+put o 2 71
+put o 3 71
+cnt = get x 0
+put o 4 uchar shr cnt 8
+put o 5 uchar and cnt 255
+pos = ulong 6
+cb = new uchar 4096 0
+for i ulong cnt
+n = ccanon w x i cb
+if lt n 0
+ret -1
+end
+L = ulong n
+if gt add add pos 4 L mx
+ret -1
+end
+pos = serone o pos cb L
+end
+ret long pos
+end
+
+note ---- message and line texts (each note quotes the bytes it writes) ----
+
+note "Invalid semantic kind tag 0x"
+fn mkind l edit uchar 256 p ulong to ulong
+p = sput l p 2334106421097295433 8
+p = sput l p 7163384699739268467 8
+p = sput l p 7022273334698666784 8
+p = sput l p 2016419943 4
+ret p
+end
+
+note "Empty attribute key at index "
+fn mattr l edit uchar 256 p ulong to ulong
+p = sput l p 8386019687157230917 8
+p = sput l p 2334400029372543604 8
+p = sput l p 7575182533742650731 8
+p = sput l p 139458864238 5
+ret p
+end
+
+note "Invalid relation kind 0x"
+fn mrelk l edit uchar 256 p ulong to ulong
+p = sput l p 2334106421097295433 8
+p = sput l p 7957695015158572402 8
+p = sput l p 8660457699154684704 8
+ret p
+end
+
+note " at index "
+fn matidx l edit uchar 256 p ulong to ulong
+p = sput l p 7306085893296906528 8
+p = sput l p 8312 2
+ret p
+end
+
+note "Dangling relation target reference "
+fn mdang l edit uchar 256 p ulong to ulong
+p = sput l p 7453010347657421124 8
+p = sput l p 8028075772543857184 8
+p = sput l p 8387223622006349934 8
+p = sput l p 7954890096655036960 8
+p = sput l p 2123107 3
+ret p
+end
+
+note "Invalid constraint kind 0x"
+fn mconk l edit uchar 256 p ulong to ulong
+p = sput l p 2334106421097295433 8
+p = sput l p 7593476291201757027 8
+p = sput l p 2334111905932670062 8
+p = sput l p 30768 2
+ret p
+end
+
+note "Type payload length too short ("
+fn mtshort l edit uchar 256 p ulong to ulong
+p = sput l p 8746395235773348180 8
+p = sput l p 7954883203198709612 8
+p = sput l p 2337209276179182695 8
+p = sput l p 11294683576625267 7
+ret p
+end
+
+note " bytes)"
+fn mbytes l edit uchar 256 p ulong to ulong
+p = sput l p 11667353628140064 7
+ret p
+end
+
+note "Invalid type tag 0x"
+fn mtag l edit uchar 256 p ulong to ulong
+p = sput l p 2334106421097295433 8
+p = sput l p 7449362941137156468 8
+p = sput l p 7876640 3
+ret p
+end
+
+note "Unsigned integer width "
+fn muint l edit uchar 256 p ulong to ulong
+p = sput l p 7234309766870429269 8
+p = sput l p 8243108378414311712 8
+p = sput l p 9122048364869408 7
+ret p
+end
+
+note " out of bounds [1..256]"
+fn mob1 l edit uchar 256 p ulong to ulong
+p = sput l p 2334675642021670688 8
+p = sput l p 6566375131893296994 8
+p = sput l p 26236774937144881 7
+ret p
+end
+
+note "Signed integer width "
+fn msint l edit uchar 256 p ulong to ulong
+p = sput l p 7575164960043919699 8
+p = sput l p 8583986669620130926 8
+p = sput l p 139191411817 5
+ret p
+end
+
+note " out of bounds [2..256]"
+fn mob2 l edit uchar 256 p ulong to ulong
+p = sput l p 2334675642021670688 8
+p = sput l p 6566375131893296994 8
+p = sput l p 26236774937144882 7
+ret p
+end
+
+note "FP32 width "
+fn mfp32 l edit uchar 256 p ulong to ulong
+p = sput l p 7235445256512294982 8
+p = sput l p 2123892 3
+ret p
+end
+
+note " is not 32"
+fn mnot32 l edit uchar 256 p ulong to ulong
+p = sput l p 2338616625293650208 8
+p = sput l p 12851 2
+ret p
+end
+
+note "Bitvector width "
+fn mbitv l edit uchar 256 p ulong to ulong
+p = sput l p 8031153322938624322 8
+p = sput l p 2335244381406568562 8
+ret p
+end
+
+note "Sequence length "
+fn mseql l edit uchar 256 p ulong to ulong
+p = sput l p 7305804402566194515 8
+p = sput l p 2335244394374196256 8
+ret p
+end
+
+note " exceeds 65535"
+fn mexc l edit uchar 256 p ulong to ulong
+p = sput l p 8314882298167715104 8
+p = sput l p 58494052283936 6
+ret p
+end
+
+note "Sequence element type unresolved or not KIND_TYPE"
+fn mseqe l edit uchar 256 p ulong to ulong
+p = sput l p 7305804402566194515 8
+p = sput l p 8389754676365255968 8
+p = sput l p 7959303536498013216 8
+p = sput l p 7234318584538948978 8
+p = sput l p 2338616625293586208 8
+p = sput l p 5789751564106090827 8
+p = sput l p 69 1
+ret p
+end
+
+note "Value payload length too short ("
+fn mvshort l edit uchar 256 p ulong to ulong
+p = sput l p 7021147439204426070 8
+p = sput l p 7308251910818983033 8
+p = sput l p 8029764343165118318 8
+p = sput l p 2891438995616068384 8
+ret p
+end
+
+note "Value type_id unresolved or not KIND_TYPE"
+fn mvtype l edit uchar 256 p ulong to ulong
+p = sput l p 8751655596021539158 8
+p = sput l p 7959303532083897712 8
+p = sput l p 7234318584538948978 8
+p = sput l p 2338616625293586208 8
+p = sput l p 5789751564106090827 8
+p = sput l p 69 1
+ret p
+end
+
+note "Value byte length "
+fn mvlen1 l edit uchar 256 p ulong to ulong
+p = sput l p 8746589046440747350 8
+p = sput l p 8387794212885652852 8
+p = sput l p 8296 2
+ret p
+end
+
+note " does not match declared type width "
+fn mvlen2 l edit uchar 256 p ulong to ulong
+p = sput l p 8029390865643299872 8
+p = sput l p 2335225758293500020 8
+p = sput l p 7234314139196417380 8
+p = sput l p 7599578516261794848 8
+p = sput l p 543716452 4
+ret p
+end
+
+note " (expected "
+fn mvlen3 l edit uchar 256 p ulong to ulong
+p = sput l p 8386658464824633376 8
+p = sput l p 2122853 3
+ret p
+end
+
+note "Invalid opcode 0x"
+fn mopc l edit uchar 256 p ulong to ulong
+p = sput l p 2334106421097295433 8
+p = sput l p 3467883195115204719 8
+p = sput l p 120 1
+ret p
+end
+
+note "Operation overflow policy not explicitly declared"
+fn movf l edit uchar 256 p ulong to ulong
+p = sput l p 8028075772644520015 8
+p = sput l p 7811056383824961646 8
+p = sput l p 7163375908187830127 8
+p = sput l p 8675375941656911993 8
+p = sput l p 8749496172062272624 8
+p = sput l p 7310012263327687712 8
+p = sput l p 100 1
+ret p
+end
+
+note "Apply op_id unresolved or not KIND_OPERATION"
+fn mapop l edit uchar 256 p ulong to ulong
+p = sput l p 8101729960545251393 8
+p = sput l p 7310026594509416799 8
+p = sput l p 8007510524406034291 8
+p = sput l p 5281350672479821938 8
+p = sput l p 4706900771786933326 8
+p = sput l p 1313818964 4
+ret p
+end
+
+note "Apply operand "
+fn maparg l edit uchar 256 p ulong to ulong
+p = sput l p 8101729960545251393 8
+p = sput l p 35615720698469 6
+ret p
+end
+
+note " unresolved or invalid kind"
+fn maparg2 l edit uchar 256 p ulong to ulong
+p = sput l p 7813590758059832608 8
+p = sput l p 7575180394847561078 8
+p = sput l p 7719280165265700462 8
+p = sput l p 6581865 3
+ret p
+end
+
+note "Effect payload refused: "
+fn meff l edit uchar 256 p ulong to ulong
+p = sput l p 8079585701754463813 8
+p = sput l p 8223683289222510945 8
+p = sput l p 2322278944754460261 8
+ret p
+end
+
+note " ("
+fn mparen l edit uchar 256 p ulong to ulong
+p = sput l p 10272 2
+ret p
+end
+
+note "effect payload length is not 178 bytes"
+fn mefflen l edit uchar 256 p ulong to ulong
+p = sput l p 8079585701754463845 8
+p = sput l p 7791337724994943329 8
+p = sput l p 8316213819917954661 8
+p = sput l p 4050760405305224736 8
+p = sput l p 126879583003168 6
+ret p
+end
+
+note "legacy v1 effect payload (32-bit generation) refused"
+fn meffv1 l edit uchar 256 p ulong to ulong
+p = sput l p 8511936763473126764 8
+p = sput l p 8386658421572968497 8
+p = sput l p 7233184988217307168 8
+p = sput l p 8388343727209523232 8
+p = sput l p 8386109761109976864 8
+p = sput l p 7378429046976049001 8
+p = sput l p 1684370293 4
+ret p
+end
+
+note "effect resource class is 0 (invalid resource)"
+fn meffres l edit uchar 256 p ulong to ulong
+p = sput l p 8223700889830319717 8
+p = sput l p 2334381325109130085 8
+p = sput l p 8316213867145423971 8
+p = sput l p 7022922066854686752 8
+p = sput l p 8030874101375854956 8
+p = sput l p 177794675317 5
+ret p
+end
+
+note "effect param_len exceeds 128"
+fn meffprm l edit uchar 256 p ulong to ulong
+p = sput l p 8079585701754463845 8
+p = sput l p 7954883473932644961 8
+p = sput l p 8314882298167715104 8
+p = sput l p 942813472 4
+ret p
+end
+
+note "effect parameter padding is not zero"
+fn meffpad l edit uchar 256 p ulong to ulong
+p = sput l p 8079585701754463845 8
+p = sput l p 8243122671947182689 8
+p = sput l p 7453010313246502944 8
+p = sput l p 2338616625293650208 8
+p = sput l p 1869768058 4
+ret p
+end
+
+note "unknown effect error"
+fn meffunk l edit uchar 256 p ulong to ulong
+p = sput l p 2336936577129475701 8
+p = sput l p 7286952167337256549 8
+p = sput l p 1919906418 4
+ret p
+end
+
+note "Empty graph (0 objects)"
+fn mempty l edit uchar 256 p ulong to ulong
+p = sput l p 8243593348941638981 8
+p = sput l p 8007453086365282401 8
+p = sput l p 11667417766128226 7
+ret p
+end
+
+note "Structural cycle detected involving "
+fn mcyc l edit uchar 256 p ulong to ulong
+p = sput l p 8247626263119950931 8
+p = sput l p 7308325668320734305 8
+p = sput l p 7310577382524806176 8
+p = sput l p 8533317948409454692 8
+p = sput l p 543649385 4
+ret p
+end
+
+note "relation target at object index "
+fn mcycr l edit uchar 256 p ulong to ulong
+p = sput l p 7957695015158572402 8
+p = sput l p 2338605601487156256 8
+p = sput l p 7162247753406379105 8
+p = sput l p 2339731488442490996 8
+ret p
+end
+
+note "operand target at object index "
+fn mcyco l edit uchar 256 p ulong to ulong
+p = sput l p 2334111871694893167 8
+p = sput l p 6998721799809818996 8
+p = sput l p 8386658438686384244 8
+p = sput l p 9139576126728480 7
+ret p
+end
+
+note "// OMEGA NON-CANONICAL TEXTUAL FORM\n// Objects: "
+fn fhead1 l edit uchar 256 p ulong to ulong
+p = sput l p 4703804534154080047 8
+p = sput l p 5638862070310981152 8
+p = sput l p 6061928941626150479 8
+p = sput l p 5053122625397872709 8
+p = sput l p 5701609007333855823 8
+p = sput l p 2322295501583903330 8
+ret p
+end
+
+note "\n\n"
+fn fnl2 l edit uchar 256 p ulong to ulong
+p = sput l p 2570 2
+ret p
+end
+
+note "; // id="
+fn fidsuf l edit uchar 256 p ulong to ulong
+p = sput l p 4423776320936157243 8
+ret p
+end
+
+note "type U"
+fn ftypu l edit uchar 256 p ulong to ulong
+p = sput l p 93597629184372 6
+ret p
+end
+
+note " = UNSIGNED_INTEGER("
+fn ftypu2 l edit uchar 256 p ulong to ulong
+p = sput l p 5136728445893492000 8
+p = sput l p 4995703963698611534 8
+p = sput l p 676480327 4
+ret p
+end
+
+note ")"
+fn fparsc l edit uchar 256 p ulong to ulong
+p = sput l p 41 1
+ret p
+end
+
+note "type Bool = BOOL"
+fn ftbool l edit uchar 256 p ulong to ulong
+p = sput l p 8029709367533140340 8
+p = sput l p 5498700815469977708 8
+ret p
+end
+
+note "type Tag"
+fn ftag l edit uchar 256 p ulong to ulong
+p = sput l p 7449327756765067636 8
+ret p
+end
+
+note "val v_"
+fn fval l edit uchar 256 p ulong to ulong
+p = sput l p 104960954753398 6
+ret p
+end
+
+note " = "
+fn feq l edit uchar 256 p ulong to ulong
+p = sput l p 2112800 3
+ret p
+end
+
+note "op "
+fn fop l edit uchar 256 p ulong to ulong
+p = sput l p 2125935 3
+ret p
+end
+
+note "[WRAP]"
+fn fwrap l edit uchar 256 p ulong to ulong
+p = sput l p 102599274682203 6
+ret p
+end
+
+note "apply app_"
+fn fapply l edit uchar 256 p ulong to ulong
+p = sput l p 8097789310871302241 8
+p = sput l p 24432 2
+ret p
+end
+
+note "object kind="
+fn fobj l edit uchar 256 p ulong to ulong
+p = sput l p 7719297731565085295 8
+p = sput l p 1029992041 4
+ret p
+end
+
+note ---- text building in a 256-byte line (messages and format_text lines) ----
+
+note k (<= 8) bytes of the little-endian packed word v at p; returns p + k
+fn sput l edit uchar 256 p ulong v ulong k ulong to ulong
+for i ulong k
+put l add p i uchar and shr v mul i 8 255
+end
+ret add p k
+end
+
+fn sdec l edit uchar 256 p ulong v ulong to ulong
+d = new uchar 20 0
+n = ulong 0
+while true bound 21
+put d n uchar add rem v 10 48
+n = add n 1
+v = div v 10
+if eq v 0
+break
+end
+end
+for i ulong n
+put l add p i get d sub sub n 1 i
+end
+ret add p n
+end
+
+fn hexdig v ulong to ulong
+if lt v 10
+ret add v 48
+end
+ret add v 87
+end
+
+note %0<m>x
+fn shex l edit uchar 256 p ulong v ulong m ulong to ulong
+n = ulong 1
+while lt n 16 bound 16
+if eq shr v mul n 4 0
+break
+end
+n = add n 1
+end
+if lt n m
+n = m
+end
+for i ulong n
+sh = mul sub sub n 1 i 4
+put l add p i uchar hexdig and shr v sh 15
+end
+ret add p n
+end
+
+note 64 hex digits of the id of the object at X base b (zero when it has none)
+fn sid l edit uchar 256 p ulong x view ulong 20544 b ulong to ulong
+for i ulong 4
+v = get x add add b 10 i
+for t ulong 16
+sh = mul sub 15 t 4
+put l add p t uchar hexdig and shr v sh 15
+end
+p = add p 16
+end
+ret p
+end
+
+note 64 hex digits of 32 wire bytes at o
+fn swhex l edit uchar 256 p ulong w view uchar 2097152 o ulong to ulong
+for i ulong 32
+c = ulong get w add o i
+put l p uchar hexdig shr c 4
+put l add p 1 uchar hexdig and c 15
+p = add p 2
+end
+ret p
+end
+
+fn snul l edit uchar 256 p ulong to void
+put l p 0
+end
+
+note ---- validate (omega_validate_object / omega_validate_graph) ----
+
+note find_object_by_id: the first object with has_id whose id is t; -1 when none
+fn findid x view ulong 20544 t0 ulong t1 ulong t2 ulong t3 ulong to long
+n = get x 0
+for j ulong n
+b = ob j
+if eq get x add b 9 1
+if eq get x add b 10 t0
+if eq get x add b 11 t1
+if eq get x add b 12 t2
+if eq get x add b 13 t3
+ret long j
+end
+end
+end
+end
+end
+end
+ret -1
+end
+
+note find by the id stored in the payload of object j at byte p (C reads it through the payload struct)
+fn findp w view uchar 2097152 x view ulong 20544 j ulong p ulong to long
+t0 = pw64 w x j p
+t1 = pw64 w x j add p 8
+t2 = pw64 w x j add p 16
+t3 = pw64 w x j add p 24
+ret findid x t0 t1 t2 t3
+end
+
+fn findw w view uchar 2097152 x view ulong 20544 o ulong to long
+t0 = be64 w o
+t1 = be64 w add o 8
+t2 = be64 w add o 16
+t3 = be64 w add o 24
+ret findid x t0 t1 t2 t3
+end
+
+note kind of the found object; 256 when not found (and/or evaluate both sides, so callers test f < 0
+note and the kind in one condition)
+fn kindof x view ulong 20544 f long to ulong
+if lt f 0
+ret 256
+end
+ret get x add ob ulong f 2
+end
+
+fn vfail e edit uchar 256 p ulong to long
+snul e p
+ret -1
+end
+
+fn vattr w view uchar 2097152 x view ulong 20544 b ulong e edit uchar 256 to long
+na = get x add b 3
+for i ulong na
+o = get x add add b 14 i
+if eq ekl w o ulong get w sub o 1 0
+p = mattr e 0
+ret vfail e sdec e p i
+end
+end
+ret 0
+end
+
+fn vrels w view uchar 2097152 x view ulong 20544 b ulong e edit uchar 256 to long
+nr = get x add b 4
+for i ulong nr
+o = add get x add b 5 mul i 34
+k = be16 w o
+if or eq k 0 gt k 9
+p = mrelk e 0
+p = shex e p k 4
+p = matidx e p
+ret vfail e sdec e p i
+end
+if lt findw w x add o 2 0
+p = mdang e 0
+ret vfail e swhex e p w add o 2
+end
+end
+ret 0
+end
+
+fn vcons w view uchar 2097152 x view ulong 20544 b ulong e edit uchar 256 to long
+nc = get x add b 6
+for i ulong nc
+k = be16 w get x add add b 46 i
+if or eq k 0 gt k 9
+p = mconk e 0
+p = shex e p k 4
+p = matidx e p
+ret vfail e sdec e p i
+end
+end
+ret 0
+end
+
+note "<pre>%u<post>" for a width message: 0 unsigned, 1 signed, 2 bitvector, 3 fp32, 4 sequence length
+fn vwmsg e edit uchar 256 t ulong v ulong to long
+p = ulong 0
+if eq t 0
+p = muint e 0
+end
+if eq t 1
+p = msint e 0
+end
+if eq t 2
+p = mbitv e 0
+end
+if eq t 3
+p = mfp32 e 0
+end
+if eq t 4
+p = mseql e 0
+end
+p = sdec e p v
+if eq t 1
+p = mob2 e p
+end
+if eq t 3
+p = mnot32 e p
+end
+if eq t 4
+p = mexc e p
+end
+if or eq t 0 eq t 2
+p = mob1 e p
+end
+ret vfail e p
+end
+
+fn vtype w view uchar 2097152 x view ulong 20544 j ulong e edit uchar 256 to long
+b = ob j
+pl = get x add b 7
+if lt pl 44
+p = mtshort e 0
+p = sdec e p pl
+ret vfail e mbytes e p
+end
+tag = pu32 w x b 0
+if or eq tag 0 gt tag 14
+p = mtag e 0
+ret vfail e shex e p tag 2
+end
+wd = pu16 w x b 4
+if and eq tag 3 or lt wd 1 gt wd 256
+ret vwmsg e 0 wd
+end
+if and eq tag 4 or lt wd 2 gt wd 256
+ret vwmsg e 1 wd
+end
+if and eq tag 14 ne wd 32
+ret vwmsg e 3 wd
+end
+if and eq tag 5 or lt wd 1 gt wd 256
+ret vwmsg e 2 wd
+end
+if eq tag 7
+ln = pu32 w x b 8
+if gt ln 65535
+ret vwmsg e 4 ln
+end
+f = findp w x j 12
+if or lt f 0 ne kindof x f 2
+p = mseqe e 0
+ret vfail e p
+end
+end
+ret 0
+end
+
+fn vvalue w view uchar 2097152 x view ulong 20544 j ulong e edit uchar 256 to long
+b = ob j
+pl = get x add b 7
+if lt pl 98
+p = mvshort e 0
+p = sdec e p pl
+ret vfail e mbytes e p
+end
+f = findp w x j 0
+if or lt f 0 ne kindof x f 2
+p = mvtype e 0
+ret vfail e p
+end
+tb = ob ulong f
+tag = pu32 w x tb 0
+if or or eq tag 3 eq tag 4 eq tag 5
+wd = pu16 w x tb 4
+ex = div add wd 7 8
+bl = pu16 w x b 32
+if ne bl ex
+p = mvlen1 e 0
+p = sdec e p bl
+p = mvlen2 e p
+p = sdec e p wd
+p = mvlen3 e p
+p = sdec e p ex
+ret vfail e mbytes e p
+end
+end
+ret 0
+end
+
+fn voper w view uchar 2097152 x view ulong 20544 j ulong e edit uchar 256 to long
+b = ob j
+pl = get x add b 7
+if ge pl 204
+opc = pu32 w x b 0
+if or eq opc 0 gt opc 16
+p = mopc e 0
+ret vfail e shex e p opc 2
+end
+ov = pu32 w x b 4
+if or eq ov 0 gt ov 3
+p = movf e 0
+ret vfail e p
+end
+ret 0
+end
+if lt pl 161
+ret 0
+end
+f = findp w x j 0
+if or lt f 0 ne kindof x f 3
+p = mapop e 0
+ret vfail e p
+end
+n = plb w x b 32
+for i ulong n
+f = findp w x j add 33 mul i 32
+if lt f 0
+p = maparg e 0
+p = sdec e p i
+ret vfail e maparg2 e p
+end
+k = kindof x f
+if and ne k 1 ne k 3
+p = maparg e 0
+p = sdec e p i
+ret vfail e maparg2 e p
+end
+end
+ret 0
+end
+
+fn veff w view uchar 2097152 x view ulong 20544 j ulong e edit uchar 256 to long
+b = ob j
+r = effchk w x b
+if eq r 0
+ret 0
+end
+p = meff e 0
+if eq r -2
+p = mefflen e p
+end
+if eq r -3
+p = meffv1 e p
+end
+if eq r -4
+p = meffres e p
+end
+if eq r -5
+p = meffprm e p
+end
+if eq r -6
+p = meffpad e p
+end
+p = mparen e p
+p = sdec e p get x add b 7
+ret vfail e mbytes e p
+end
+
+fn vobj w view uchar 2097152 x view ulong 20544 j ulong e edit uchar 256 to long
+b = ob j
+k = get x add b 2
+if or eq k 0 gt k 11
+p = mkind e 0
+ret vfail e shex e p k 2
+end
+r = vattr w x b e
+if ne r 0
+ret r
+end
+r = vrels w x b e
+if ne r 0
+ret r
+end
+r = vcons w x b e
+if ne r 0
+ret r
+end
+if eq k 2
+ret vtype w x j e
+end
+if eq k 1
+ret vvalue w x j e
+end
+if eq k 3
+ret voper w x j e
+end
+if eq k 8
+ret veff w x j e
+end
+ret 0
+end
+
+note target of step a of the walk from object i into fr 1280..1283: phase 0 relation a, phase 1
+note apply operand a (read through the 161-byte ApplyPayload view, past the payload when a > 29).
+note false when that phase has no step a.
+fn dtgt w view uchar 2097152 x view ulong 20544 i ulong ph ulong a ulong fr edit ulong 1284 to bool
+b = ob i
+if eq ph 0
+if ge a get x add b 4
+ret false
+end
+o = add add get x add b 5 mul a 34 2
+for t ulong 4
+put fr add 1280 t be64 w add o mul t 8
+end
+ret true
+end
+if or ne get x add b 2 3 lt get x add b 7 161
+ret false
+end
+if ge a plb w x b 32
+ret false
+end
+p = add 33 mul a 32
+for t ulong 4
+put fr add 1280 t pw64 w x i add p mul t 8
+end
+ret true
+end
+
+note the first j >= j0 whose id equals the target in fr 1280..1283; -1 when none
+fn dscan x view ulong 20544 fr view ulong 1284 j0 ulong to long
+n = get x 0
+j = j0
+while lt j n bound 257
+b = ob j
+if eq get x add b 9 1
+if eq get x add b 10 get fr 1280
+if eq get x add b 11 get fr 1281
+if eq get x add b 12 get fr 1282
+if eq get x add b 13 get fr 1283
+ret long j
+end
+end
+end
+end
+end
+j = add j 1
+end
+ret -1
+end
+
+note one step of check_cycle_dfs without recursion. fr: frames (object, phase, step, next j) at
+note 4 per depth, object states at 1024 + i (0 unvisited, 1 on the stack, 2 done), the target at
+note 1280. Returns the new depth, or -(1 + 2 * j + phase) for a cycle through object j. Matches
+note already done (state 2) are skipped inside one step, so the caller's loop runs at most
+note 512 + 256 * 321 steps.
+fn dstep w view uchar 2097152 x view ulong 20544 fr edit ulong 1284 sp ulong to long
+f = mul sub sp 1 4
+i = get fr f
+ph = get fr add f 1
+a = get fr add f 2
+if not dtgt w x i ph a fr
+if eq ph 0
+put fr add f 1 1
+put fr add f 2 0
+put fr add f 3 0
+ret long sp
+end
+put fr add 1024 i 2
+ret long sub sp 1
+end
+r = dscan x fr get fr add f 3
+while ge r 0 bound 257
+if ne get fr add 1024 ulong r 2
+break
+end
+r = dscan x fr add ulong r 1
+end
+if lt r 0
+put fr add f 2 add a 1
+put fr add f 3 0
+ret long sp
+end
+j = ulong r
+put fr add f 3 add j 1
+s = get fr add 1024 j
+if eq s 0
+put fr add 1024 j 1
+g = mul sp 4
+put fr g j
+put fr add g 1 0
+put fr add g 2 0
+put fr add g 3 0
+ret long add sp 1
+end
+ret neg long add add mul j 2 ph 1
+end
+
+fn dfs w view uchar 2097152 x view ulong 20544 root ulong fr edit ulong 1284 e edit uchar 256 to long
+put fr add 1024 root 1
+put fr 0 root
+put fr 1 0
+put fr 2 0
+put fr 3 0
+sp = ulong 1
+while gt sp 0 bound 999999
+r = dstep w x fr sp
+if lt r 0
+c = sub ulong neg r 1
+p = mcyc e 0
+if eq rem c 2 0
+p = mcycr e p
+else
+p = mcyco e p
+end
+ret vfail e sdec e p div c 2
+end
+sp = ulong r
+end
+ret 0
+end
+
+note omega_validate_object for object j of the graph (the C also takes an object outside any graph;
+note here the object is always X's object j)
+fn cvobject w view uchar 2097152 x view ulong 20544 j ulong e edit uchar 256 to long
+ret vobj w x j e
+end
+
+fn cvalid w view uchar 2097152 x view ulong 20544 e edit uchar 256 to long
+n = get x 0
+if eq n 0
+p = mempty e 0
+ret vfail e p
+end
+for i ulong n
+r = vobj w x i e
+if ne r 0
+ret r
+end
+end
+fr = new ulong 1284 0
+for i ulong n
+if eq get fr add 1024 i 0
+r = dfs w x i fr e
+if ne r 0
+ret r
+end
+end
+end
+ret 0
+end
+
+note ---- format_text (omega_graph_format_text, NON-CANONICAL text) ----
+
+fn fsuf l edit uchar 256 p ulong x view ulong 20544 b ulong to ulong
+p = fidsuf l p
+p = sid l p x b
+ret sput l p 10 1
+end
+
+fn fopname l edit uchar 256 p ulong opc ulong to ulong
+if eq opc 3
+ret sput l p 4473921 3
+end
+if eq opc 4
+ret sput l p 4347219 3
+end
+ret sput l p 20559 2
+end
+
+note one object line into l: its length, or -1 when the C writes nothing (an OPERATION payload
+note shorter than ApplyPayload leaves w as the previous line's length)
+fn fline w view uchar 2097152 x view ulong 20544 i ulong l edit uchar 256 to long
+b = ob i
+k = get x add b 2
+p = ulong 0
+if eq k 2
+tag = pu32 w x b 0
+if eq tag 3
+wd = pu16 w x b 4
+p = ftypu l 0
+p = sdec l p wd
+p = ftypu2 l p
+p = sdec l p wd
+p = fparsc l p
+ret long fsuf l p x b
+end
+if eq tag 2
+p = ftbool l 0
+ret long fsuf l p x b
+end
+p = ftag l 0
+p = sdec l p tag
+ret long fsuf l p x b
+end
+if eq k 1
+bl = pu16 w x b 32
+s = ulong 0
+if gt bl 8
+s = sub bl 8
+end
+v = ulong 0
+while lt s bl bound 9
+v = or shl v 8 pbyte w x i add 34 s
+s = add s 1
+end
+p = fval l 0
+p = sdec l p i
+p = feq l p
+p = sdec l p v
+ret long fsuf l p x b
+end
+if eq k 3
+pl = get x add b 7
+if ge pl 204
+opc = pu32 w x b 0
+p = fop l 0
+p = fopname l p opc
+p = feq l p
+p = fopname l p opc
+p = fwrap l p
+ret long fsuf l p x b
+end
+if ge pl 161
+p = fapply l 0
+p = sdec l p i
+ret long fsuf l p x b
+end
+ret -1
+end
+p = fobj l 0
+p = sdec l p k
+ret long fsuf l p x b
+end
+
+note snprintf(t + pos, cap - pos, line) then the C's check: -1 when the line did not fit
+fn femit t edit uchar 65536 cap ulong pos ulong l view uchar 256 n ulong to long
+room = sub cap pos
+m = n
+if ge n room
+m = sub room 1
+end
+for i ulong m
+put t add pos i get l i
+end
+put t add pos m 0
+if ge n room
+ret -1
+end
+ret 0
+end
+
+fn cformat w view uchar 2097152 x view ulong 20544 cap ulong t edit uchar 65536 to long
+if or eq cap 0 gt cap 65536
+ret -1
+end
+l = new uchar 256 0
+cnt = get x 0
+p = fhead1 l 0
+p = sdec l p cnt
+p = fnl2 l p
+if lt femit t cap 0 l p 0
+ret -1
+end
+pos = p
+wv = p
+for i ulong cnt
+m = fline w x i l
+if ge m 0
+wv = ulong m
+if lt femit t cap pos l wv 0
+ret -1
+end
+else
+if ge wv sub cap pos
+ret -1
+end
+end
+pos = add pos wv
+end
+ret 0
+end
+
+note ---- parse_text (omega_graph_parse_text) and the omega_core.c builders it calls ----
+note sv: 0 u32 type, 1 val a, 2 val b, 3 op add, 4 op sub (object index + 1, 0 = NULL),
+note 5 object count, 6 wire write position; ids: 4 big-endian ulongs per object
+
+fn sch s view uchar 262144 sl ulong i ulong to ulong
+if lt i sl
+ret ulong get s i
+end
+ret 0
+end
+
+note isspace in the C locale
+fn isspc c ulong to bool
+ret or eq c 32 and ge c 9 le c 13
+end
+
+note the pattern bytes: 0 type, 1 val, 2 op, 3 apply, 4 UNSIGNED_INTEGER(32), 5 ADD, 6 SUB; length
+fn setpat pt edit uchar 24 c ulong to ulong
+l = new uchar 256 0
+n = ulong 0
+if eq c 0
+n = sput l 0 1701869940 4
+end
+if eq c 1
+n = sput l 0 7102838 3
+end
+if eq c 2
+n = sput l 0 28783 2
+end
+if eq c 3
+n = sput l 0 521510350945 5
+end
+if eq c 4
+n = sput l 0 4919424236051975765 8
+n = sput l n 5928222847595858271 8
+n = sput l n 691155752 4
+end
+if eq c 5
+n = sput l 0 4473921 3
+end
+if eq c 6
+n = sput l 0 4347219 3
+end
+for i ulong n
+put pt i get l i
+end
+ret n
+end
+
+note strncmp(s + i, pattern, n) == 0 (the string ends at sl)
+fn smat s view uchar 262144 sl ulong i ulong pt view uchar 24 n ulong to bool
+for t ulong n
+if ne sch s sl add i t ulong get pt t
+ret false
+end
+end
+ret true
+end
+
+note strstr(s + i, pattern) != NULL
+fn sfind s view uchar 262144 sl ulong i ulong pt view uchar 24 n ulong to bool
+while le add i n sl bound 999999
+if smat s sl i pt n
+ret true
+end
+i = add i 1
+end
+ret false
+end
+
+fn seol s view uchar 262144 sl ulong i ulong to ulong
+while lt i sl bound 999999
+if eq get s i 10
+ret i
+end
+i = add i 1
+end
+ret i
+end
+
+fn digv c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 122
+ret sub c 87
+end
+if and ge c 65 le c 90
+ret sub c 55
+end
+ret 99
+end
+
+note glibc 2.39 strtoul(s + i, NULL, 0) under _GNU_SOURCE is __isoc23_strtoul: 0b/0B is binary.
+note spref: skip spaces, sign and prefix; returns i | base << 40 | negative << 48
+fn spref s view uchar 262144 sl ulong i ulong to ulong
+while isspc sch s sl i bound 999999
+i = add i 1
+end
+ng = ulong 0
+c = sch s sl i
+if eq c 45
+ng = 1
+i = add i 1
+else
+if eq c 43
+i = add i 1
+end
+end
+bs = ulong 10
+if eq sch s sl i 48
+c = sch s sl add i 1
+if or eq c 120 eq c 88
+bs = 16
+i = add i 2
+else
+if or eq c 98 eq c 66
+bs = 2
+i = add i 2
+else
+bs = 8
+end
+end
+end
+ret or i or shl bs 40 shl ng 48
+end
+
+note the digits into r: r 0 the value, r 1 = 1 on overflow (glibc then returns ULONG_MAX whatever the sign)
+fn sdig s view uchar 262144 sl ulong i ulong bs ulong r edit ulong 2 to void
+cut = div 18446744073709551615 bs
+lim = rem 18446744073709551615 bs
+v = ulong 0
+while lt digv sch s sl i bs bound 999999
+d = digv sch s sl i
+if or gt v cut and eq v cut gt d lim
+put r 1 1
+else
+v = add mul v bs d
+end
+i = add i 1
+end
+put r 0 v
+end
+
+fn stoul s view uchar 262144 sl ulong i ulong to ulong
+q = spref s sl i
+r = new ulong 2 0
+sdig s sl and q 1099511627775 and shr q 40 255 r
+if eq get r 1 1
+ret 18446744073709551615
+end
+if eq shr q 48 1
+ret neg get r 0
+end
+ret get r 0
+end
+
+fn putid w edit uchar 2097152 o ulong ids view ulong 1024 k ulong to void
+for t ulong 32
+q = get ids add mul k 4 div t 8
+sh = mul sub 7 rem t 8 8
+put w add o t uchar and shr q sh 255
+end
+end
+
+note omega_graph_add_object + record header: the payload's wire offset (payload zeroed), 0 when full
+fn bstart w edit uchar 2097152 sv edit ulong 8 kind ulong pl ulong to ulong
+if ge get sv 5 256
+ret 0
+end
+o = get sv 6
+cl = add 16 pl
+for t ulong 4
+sh = mul sub 3 t 8
+put w add o t uchar and shr cl sh 255
+end
+put w add o 4 79
+put w add o 5 77
+put w add o 6 71
+put w add o 7 48
+put w add o 8 1
+put w add o 9 uchar kind
+for t ulong 6
+put w add add o 10 t 0
+end
+put w add o 16 uchar shr pl 24
+put w add o 17 uchar and shr pl 16 255
+put w add o 18 uchar and shr pl 8 255
+put w add o 19 uchar and pl 255
+for t ulong pl
+put w add add o 20 t 0
+end
+ret add o 20
+end
+
+note omega_compute_semantic_id of the record just written: sha256 of its bytes after the length
+fn bfin w edit uchar 2097152 sv edit ulong 8 ids edit ulong 1024 to ulong
+o = get sv 6
+cl = be32 view w o
+cb = new uchar 4096 0
+for t ulong cl
+put cb t get w add add o 4 t
+end
+d = new ulong 4 0
+sha4k cb cl d
+n = get sv 5
+for t ulong 4
+put ids add mul n 4 t get d t
+end
+put sv 5 add n 1
+put sv 6 add add o 4 cl
+ret add n 1
+end
+
+fn btype w edit uchar 2097152 sv edit ulong 8 ids edit ulong 1024 to ulong
+o = bstart w sv 2 44
+if eq o 0
+ret 0
+end
+put w o 3
+put w add o 4 32
+ret bfin w sv ids
+end
+
+fn bval w edit uchar 2097152 sv edit ulong 8 ids edit ulong 1024 v ulong to ulong
+o = bstart w sv 1 98
+if eq o 0
+ret 0
+end
+putid w o ids sub get sv 0 1
+put w add o 32 4
+for t ulong 4
+sh = mul sub 3 t 8
+put w add add o 34 t uchar and shr v sh 255
+end
+ret bfin w sv ids
+end
+
+fn bop w edit uchar 2097152 sv edit ulong 8 ids edit ulong 1024 opc ulong to ulong
+o = bstart w sv 3 204
+if eq o 0
+ret 0
+end
+k = sub get sv 0 1
+put w o uchar opc
+put w add o 4 1
+putid w add o 8 ids k
+put w add o 40 2
+putid w add o 41 ids k
+putid w add o 73 ids k
+putid w add o 169 ids k
+ret bfin w sv ids
+end
+
+fn bapply w edit uchar 2097152 sv edit ulong 8 ids edit ulong 1024 op ulong to ulong
+o = bstart w sv 3 161
+if eq o 0
+ret 0
+end
+putid w o ids sub op 1
+put w add o 32 2
+putid w add o 33 ids sub get sv 1 1
+putid w add o 65 ids sub get sv 2 1
+ret bfin w sv ids
+end
+
+note one line whose first word starts at i (after the C's whitespace skip)
+fn pline s view uchar 262144 sl ulong i ulong w edit uchar 2097152 sv edit ulong 8 ids edit ulong 1024 to void
+pt = new uchar 24 0
+n = setpat pt 0
+if smat s sl i pt n
+n = setpat pt 4
+if sfind s sl i pt n
+put sv 0 btype w sv ids
+end
+ret
+end
+n = setpat pt 1
+if smat s sl i pt n
+q = ulong 0
+while lt add i q sl bound 999999
+if eq get s add i q 61
+break
+end
+q = add q 1
+end
+if and lt add i q sl ne get sv 0 0
+v = stoul s sl add add i q 1
+if eq get sv 1 0
+put sv 1 bval w sv ids v
+else
+if eq get sv 2 0
+put sv 2 bval w sv ids v
+end
+end
+end
+ret
+end
+n = setpat pt 2
+if smat s sl i pt n
+n = setpat pt 5
+if and sfind s sl i pt n ne get sv 0 0
+put sv 3 bop w sv ids 3
+ret
+end
+n = setpat pt 6
+if and sfind s sl i pt n ne get sv 0 0
+put sv 4 bop w sv ids 4
+end
+ret
+end
+n = setpat pt 3
+if smat s sl i pt n
+ok = and ne get sv 1 0 ne get sv 2 0
+if and ok ne get sv 3 0
+r = bapply w sv ids get sv 3
+ret
+end
+if and ok ne get sv 4 0
+r = bapply w sv ids get sv 4
+end
+end
+end
+
+fn cparse s view uchar 262144 n ulong w edit uchar 2097152 x edit ulong 20544 to long
+if gt n 262144
+ret -2
+end
+sl = n
+for i ulong n
+if eq get s i 0
+sl = i
+break
+end
+end
+sv = new ulong 8 0
+ids = new ulong 1024 0
+put sv 6 6
+p = ulong 0
+while lt p sl bound 999999
+while and lt p sl isspc sch s sl p bound 999999
+p = add p 1
+end
+if ge p sl
+break
+end
+if and eq get s p 47 eq sch s sl add p 1 47
+p = seol s sl p
+continue
+end
+pline s sl p w sv ids
+p = seol s sl p
+end
+put w 0 79
+put w 1 77
+put w 2 71
+put w 3 71
+c = get sv 5
+put w 4 uchar shr c 8
+put w 5 uchar and c 255
+r = cdecode view w get sv 6 x
+if ne r 0
+trap 9
+end
+ret 0
+end
+
+note ---- ids as text (omega_canonical.c) ----
+
+note strtol({c0, c1, 0}, &end, 16) consuming both characters: the byte value, or -1
+fn hx2 c0 ulong c1 ulong to long
+i = ulong 0
+if isspc c0
+i = 1
+end
+c = c0
+if eq i 1
+c = c1
+end
+ng = false
+if and eq i 0 or eq c 45 eq c 43
+ng = eq c 45
+i = 1
+c = c1
+end
+if eq i 1
+if gt digv c 15
+ret -1
+end
+v = long digv c
+if ng
+ret and neg v 255
+end
+ret v
+end
+if or gt digv c0 15 gt digv c1 15
+ret -1
+end
+if and eq c0 48 or eq c1 120 eq c1 88
+ret -1
+end
+ret long or shl digv c0 4 digv c1
+end
+
+fn chexparse h view uchar 65 o edit uchar 32 to long
+for i ulong 64
+if eq get h i 0
+ret -1
+end
+end
+if ne get h 64 0
+ret -1
+end
+for i ulong 32
+v = hx2 ulong get h mul i 2 ulong get h add mul i 2 1
+if lt v 0
+ret -1
+end
+put o i uchar v
+end
+ret 0
+end
+
+fn chexid a view uchar 32 o edit uchar 65 to void
+for i ulong 32
+c = ulong get a i
+put o mul i 2 uchar hexdig shr c 4
+put o add mul i 2 1 uchar hexdig and c 15
+end
+put o 64 0
+end
+
+fn cidcmp a view uchar 32 c view uchar 32 to long
+for i ulong 32
+p = get a i
+q = get c i
+if lt p q
+ret -1
+end
+if gt p q
+ret 1
+end
+end
+ret 0
+end
+
+note ==== parity harness: program mode only; everything above this line is the library ====
+note usage: codec decode|text|hexid < PACK, or codec header. Writes the stream files into the current
+note directory in exactly the C oracle's line formats (see parity/run.sh).
+
+text tdec "decode.out"
+text tval "validate.out"
+text tser "serialize.out"
+text tfmt "format.out"
+text tpar "parse.out"
+text thex "hexid.out"
+text thdr "header.out"
+text tuse "usage: codec decode|text|hexid < PACK | codec header\n"
+text tbad "codec: cannot open an output file\n"
+
+global ib uchar 1048576
+global ist ulong 2
+global obuf uchar 4194304
+global obn ulong 4
+global ofd long 4
+global arg uchar 64
+
+fn inb to ulong
+p = get ist 0
+if ge p get ist 1
+r = read 0 ib 0 1048576
+if le r 0
+ret 256
+end
+put ist 1 ulong r
+p = 0
+end
+put ist 0 add p 1
+ret ulong get ib p
+end
+
+note u32 little-endian record length; 2^32 at end of input
+fn rdlen to ulong
+c = inb
+if eq c 256
+ret 4294967296
+end
+v = c
+for i ulong 3
+v = or v shl inb mul add i 1 8
+end
+ret v
+end
+
+note n record bytes into a (the first 2097152; the rest is read and dropped). A `for` with a
+note counted value traps 4 past 1000000 passes, so long runs go in pieces of at most 4096.
+fn rdw a edit uchar 2097152 n ulong to void
+i = ulong 0
+while lt i n bound 999999
+m = sub n i
+if gt m 4096
+m = 4096
+end
+for t ulong m
+c = inb
+if lt add i t 2097152
+put a add i t uchar c
+end
+end
+i = add i m
+end
+end
+
+fn rds a edit uchar 262144 n ulong to void
+i = ulong 0
+while lt i n bound 999999
+m = sub n i
+if gt m 4096
+m = 4096
+end
+for t ulong m
+c = inb
+if lt add i t 262144
+put a add i t uchar c
+end
+end
+i = add i m
+end
+end
+
+fn ohexs f ulong o view uchar 1049606 n ulong to void
+i = ulong 0
+while lt i n bound 999999
+m = sub n i
+if gt m 4096
+m = 4096
+end
+for t ulong m
+ohexb f ulong get o add i t
+end
+i = add i m
+end
+end
+
+fn oflush f ulong to void
+n = get obn f
+if gt n 0
+r = write int get ofd f obuf mul f 1048576 n
+end
+put obn f 0
+end
+
+fn ob1 f ulong c ulong to void
+n = get obn f
+if ge n 1048576
+oflush f
+n = 0
+end
+put obuf add mul f 1048576 n uchar c
+put obn f add n 1
+end
+
+fn odec f ulong v ulong to void
+d = new uchar 20 0
+n = ulong 0
+while true bound 21
+put d n uchar add rem v 10 48
+n = add n 1
+v = div v 10
+if eq v 0
+break
+end
+end
+for i ulong n
+ob1 f ulong get d sub sub n 1 i
+end
+end
+
+fn osdec f ulong v long to void
+if lt v 0
+ob1 f 45
+odec f ulong neg v
+ret
+end
+odec f ulong v
+end
+
+fn ohexb f ulong c ulong to void
+ob1 f hexdig shr c 4
+ob1 f hexdig and c 15
+end
+
+fn ohexw f ulong v ulong to void
+for t ulong 16
+sh = mul sub 15 t 4
+ob1 f hexdig and shr v sh 15
+end
+end
+
+fn oopen f ulong name view uchar 32 n ulong to bool
+fd = fopen name 0 n 577 420
+if lt fd 0
+ret false
+end
+put ofd f fd
+ret true
+end
+
+fn opn f ulong c ulong to bool
+nm = new uchar 32 0
+if eq c 0
+for i ulong len tdec
+put nm i get tdec i
+end
+ret oopen f nm len tdec
+end
+if eq c 1
+for i ulong len tval
+put nm i get tval i
+end
+ret oopen f nm len tval
+end
+if eq c 2
+for i ulong len tser
+put nm i get tser i
+end
+ret oopen f nm len tser
+end
+if eq c 3
+for i ulong len tfmt
+put nm i get tfmt i
+end
+ret oopen f nm len tfmt
+end
+if eq c 4
+for i ulong len tpar
+put nm i get tpar i
+end
+ret oopen f nm len tpar
+end
+if eq c 5
+for i ulong len thex
+put nm i get thex i
+end
+ret oopen f nm len thex
+end
+for i ulong len thdr
+put nm i get thdr i
+end
+ret oopen f nm len thdr
+end
+
+fn shaout b view uchar 1049606 n ulong d edit ulong 4 to void
+k = new ulong 64 0
+shak k
+h = new ulong 8 0
+shainit h
+m = new uchar 64 0
+nb = div n 64
+for bi ulong nb
+o = mul bi 64
+for i ulong 64
+put m i get b add o i
+end
+shablk h m k
+end
+tb = mul nb 64
+r = sub n tb
+for i ulong r
+put m i get b add tb i
+end
+shafin h m k r n
+shaget h d
+end
+
+note " <count> <has_id>:<id> ..." as the oracle's ids()
+fn oids f ulong x view ulong 20544 to void
+n = get x 0
+ob1 f 32
+odec f n
+for j ulong n
+b = ob j
+ob1 f 32
+odec f get x add b 9
+ob1 f 58
+for t ulong 4
+ohexw f get x add add b 10 t
+end
+end
+end
+
+fn gval w view uchar 2097152 x view ulong 20544 e edit uchar 256 f ulong k ulong to void
+r = cvalid w x e
+odec f k
+ob1 f 32
+osdec f r
+if ne r 0
+ob1 f 32
+for i ulong 256
+c = get e i
+if eq c 0
+break
+end
+ob1 f ulong c
+end
+end
+ob1 f 10
+end
+
+fn gser w view uchar 2097152 x view ulong 20544 o edit uchar 1049606 f ulong k ulong to void
+d = new ulong 4 0
+r = cserial w x 1049606 o
+odec f k
+if ge r 0
+ob1 f 32
+ob1 f 48
+ob1 f 32
+n = ulong r
+odec f n
+ob1 f 32
+ohexs f o n
+ob1 f 32
+shaout o n d
+for i ulong 4
+ohexw f get d i
+end
+else
+ob1 f 32
+osdec f r
+end
+r = cserial w x 8192 o
+ob1 f 32
+if ge r 0
+ob1 f 48
+ob1 f 32
+odec f ulong r
+else
+osdec f r
+end
+ob1 f 10
+end
+
+fn otxt f ulong t view uchar 65536 to void
+for i ulong 65536
+c = get t i
+if eq c 0
+ret
+end
+ohexb f ulong c
+end
+end
+
+fn gfmt w view uchar 2097152 x view ulong 20544 t edit uchar 65536 f ulong k ulong to void
+r = cformat w x 4096 t
+odec f k
+ob1 f 32
+osdec f r
+ob1 f 32
+otxt f t
+r = cformat w x 200 t
+ob1 f 32
+osdec f r
+ob1 f 32
+otxt f t
+ob1 f 10
+end
+
+fn dodec to int
+w = new uchar 2097152 0
+x = new ulong 20544 0
+o = new uchar 1049606 0
+t = new uchar 65536 0
+e = new uchar 256 0
+for f ulong 4
+if not opn f f
+ret 2
+end
+end
+k = ulong 0
+while true bound 999999
+n = rdlen
+if eq n 4294967296
+break
+end
+rdw w n
+r = cdecode w n x
+odec 0 k
+ob1 0 32
+osdec 0 r
+if eq r 0
+oids 0 x
+gval w x e 1 k
+gser w x o 2 k
+gfmt w x t 3 k
+end
+ob1 0 10
+k = add k 1
+end
+for f ulong 4
+oflush f
+end
+ret 0
+end
+
+fn dotext to int
+s = new uchar 262144 0
+w = new uchar 2097152 0
+x = new ulong 20544 0
+o = new uchar 1049606 0
+t = new uchar 65536 0
+e = new uchar 256 0
+if not opn 0 4
+ret 2
+end
+k = ulong 0
+while true bound 999999
+n = rdlen
+if eq n 4294967296
+break
+end
+rds s n
+r = cparse s n w x
+odec 0 k
+ob1 0 32
+osdec 0 r
+oids 0 x
+ob1 0 10
+gval w x e 0 k
+gser w x o 0 k
+gfmt w x t 0 k
+k = add k 1
+end
+oflush 0
+ret 0
+end
+
+fn dohex to int
+h = new uchar 65 0
+a = new uchar 32 0
+c = new uchar 32 0
+o = new uchar 32 0
+hx = new uchar 65 0
+a2 = new uchar 32 0
+if not opn 0 5
+ret 2
+end
+k = ulong 0
+while true bound 999999
+n = rdlen
+if eq n 4294967296
+break
+end
+if ne n 129
+ret 3
+end
+for i ulong 65
+put h i uchar inb
+end
+for i ulong 32
+put a i uchar inb
+end
+for i ulong 32
+put c i uchar inb
+end
+for i ulong 32
+put a2 i get a i
+end
+for i ulong 32
+put o i 0
+end
+r = chexparse h o
+odec 0 k
+ob1 0 32
+osdec 0 r
+ob1 0 32
+for i ulong 32
+ohexb 0 ulong get o i
+end
+ob1 0 32
+chexid a hx
+for i ulong 64
+ob1 0 ulong get hx i
+end
+ob1 0 32
+osdec 0 cidcmp a c
+ob1 0 32
+osdec 0 cidcmp a a2
+ob1 0 10
+k = add k 1
+end
+oflush 0
+ret 0
+end
+
+fn dohdr to int
+if not opn 0 6
+ret 2
+end
+for v ulong 256
+for k ulong 256
+odec 0 v
+ob1 0 32
+odec 0 k
+ob1 0 32
+odec 0 cobjver k
+ob1 0 32
+osdec 0 cchkhdr v k
+ob1 0 10
+end
+end
+oflush 0
+ret 0
+end
+
+fn main to int
+if lt argcnt 2
+r = write 2 tuse 0 len tuse
+ret 2
+end
+n = argread 1 arg 0 63
+if lt n 4
+r = write 2 tuse 0 len tuse
+ret 2
+end
+c0 = get arg 0
+c2 = get arg 2
+rc = int 9
+if eq c0 100
+rc = dodec
+end
+if eq c0 116
+rc = dotext
+end
+if and eq c0 104 eq c2 120
+rc = dohex
+end
+if and eq c0 104 eq c2 97
+rc = dohdr
+end
+if eq rc 9
+r = write 2 tuse 0 len tuse
+ret 2
+end
+if eq rc 2
+r = write 2 tbad 0 len tbad
+end
+ret rc
+end

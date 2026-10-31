@@ -1,0 +1,222 @@
+OM2GATE START cases=seed/qualification/security673/relational/qualification.cases scratch=/tmp/prfix/Fix774-work/m-qual
+IDENTITY omc seed/out/omc sha256=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b pinned=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b match
+DEADLINE 30
+CASE derive-compare line=4
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/4.src > /tmp/prfix/Fix774-work/m-qual/4.elf 2> /tmp/prfix/Fix774-work/m-qual/4.cerr
+VERDICT derive-compare PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-paired line=5
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/5.src > /tmp/prfix/Fix774-work/m-qual/5.elf 2> /tmp/prfix/Fix774-work/m-qual/5.cerr
+VERDICT derive-paired PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-early line=6
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/6.src > /tmp/prfix/Fix774-work/m-qual/6.elf 2> /tmp/prfix/Fix774-work/m-qual/6.cerr
+VERDICT derive-early PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-branch line=7
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/7.src > /tmp/prfix/Fix774-work/m-qual/7.elf 2> /tmp/prfix/Fix774-work/m-qual/7.cerr
+VERDICT derive-branch PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-helper line=8
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/8.src > /tmp/prfix/Fix774-work/m-qual/8.elf 2> /tmp/prfix/Fix774-work/m-qual/8.cerr
+VERDICT derive-helper PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-error line=9
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/9.src > /tmp/prfix/Fix774-work/m-qual/9.elf 2> /tmp/prfix/Fix774-work/m-qual/9.cerr
+VERDICT derive-error PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-division line=10
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/10.src > /tmp/prfix/Fix774-work/m-qual/10.elf 2> /tmp/prfix/Fix774-work/m-qual/10.cerr
+VERDICT derive-division PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-address line=11
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/11.src > /tmp/prfix/Fix774-work/m-qual/11.elf 2> /tmp/prfix/Fix774-work/m-qual/11.cerr
+VERDICT derive-address PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-public-branch line=12
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/12.src > /tmp/prfix/Fix774-work/m-qual/12.elf 2> /tmp/prfix/Fix774-work/m-qual/12.cerr
+VERDICT derive-public-branch PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-public-address line=13
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/13.src > /tmp/prfix/Fix774-work/m-qual/13.elf 2> /tmp/prfix/Fix774-work/m-qual/13.cerr
+VERDICT derive-public-address PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-branch-native line=14
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/14.src > /tmp/prfix/Fix774-work/m-qual/14.elf 2> /tmp/prfix/Fix774-work/m-qual/14.cerr
+VERDICT derive-branch-native PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-address-native line=15
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/15.src > /tmp/prfix/Fix774-work/m-qual/15.elf 2> /tmp/prfix/Fix774-work/m-qual/15.cerr
+VERDICT derive-address-native PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE derive-branch-mut line=16
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/16.src > /tmp/prfix/Fix774-work/m-qual/16.elf 2> /tmp/prfix/Fix774-work/m-qual/16.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/16.elf 4043309087 4043309119 < seed/qualification/security673/relational/evidence/run1/public-branch.bin > /tmp/prfix/Fix774-work/m-qual/16.out 2> /tmp/prfix/Fix774-work/m-qual/16.err
+VERDICT derive-branch-mut PASS run exit=0 expected=0 stdout=match stderr=match
+CASE derive-branch-native-mut line=17
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/17.src > /tmp/prfix/Fix774-work/m-qual/17.elf 2> /tmp/prfix/Fix774-work/m-qual/17.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/17.elf 4043309087 4043309119 < seed/qualification/security673/relational/evidence/run1/public-branch-native.bin > /tmp/prfix/Fix774-work/m-qual/17.out 2> /tmp/prfix/Fix774-work/m-qual/17.err
+VERDICT derive-branch-native-mut PASS run exit=0 expected=0 stdout=match stderr=match
+CASE derive-address-mut line=18
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/18.src > /tmp/prfix/Fix774-work/m-qual/18.elf 2> /tmp/prfix/Fix774-work/m-qual/18.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/18.elf 2315452452 2315452484 < seed/qualification/security673/relational/evidence/run1/public-address.bin > /tmp/prfix/Fix774-work/m-qual/18.out 2> /tmp/prfix/Fix774-work/m-qual/18.err
+VERDICT derive-address-mut PASS run exit=0 expected=0 stdout=match stderr=match
+CASE derive-address-native-mut line=19
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/19.src > /tmp/prfix/Fix774-work/m-qual/19.elf 2> /tmp/prfix/Fix774-work/m-qual/19.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/19.elf 2315452452 2315452484 < seed/qualification/security673/relational/evidence/run1/public-address-native.bin > /tmp/prfix/Fix774-work/m-qual/19.out 2> /tmp/prfix/Fix774-work/m-qual/19.err
+VERDICT derive-address-native-mut PASS run exit=0 expected=0 stdout=match stderr=match
+CASE derive-address-nobounds line=21
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/21.src > /tmp/prfix/Fix774-work/m-qual/21.elf 2> /tmp/prfix/Fix774-work/m-qual/21.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/21.elf 1409286338 3573751839 < seed/qualification/security673/relational/evidence/run1/address.bin > /tmp/prfix/Fix774-work/m-qual/21.out 2> /tmp/prfix/Fix774-work/m-qual/21.err
+VERDICT derive-address-nobounds PASS run exit=0 expected=0 stdout=match stderr=match
+CASE dividend-zero line=22
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/22.src > /tmp/prfix/Fix774-work/m-qual/22.elf 2> /tmp/prfix/Fix774-work/m-qual/22.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/22.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/22.out 2> /tmp/prfix/Fix774-work/m-qual/22.err
+VERDICT dividend-zero PASS run exit=0 expected=0 stdout=match stderr=match
+CASE dividend-one line=23
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/23.src > /tmp/prfix/Fix774-work/m-qual/23.elf 2> /tmp/prfix/Fix774-work/m-qual/23.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/23.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/23.out 2> /tmp/prfix/Fix774-work/m-qual/23.err
+VERDICT dividend-one PASS run exit=0 expected=0 stdout=match stderr=match
+CASE paired line=24
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/24.src > /tmp/prfix/Fix774-work/m-qual/24.elf 2> /tmp/prfix/Fix774-work/m-qual/24.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/24.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/24.out 2> /tmp/prfix/Fix774-work/m-qual/24.err
+VERDICT paired PASS run exit=0 expected=0 stdout=match stderr=match
+CASE nondeterminism line=25
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/25.src > /tmp/prfix/Fix774-work/m-qual/25.elf 2> /tmp/prfix/Fix774-work/m-qual/25.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/25.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/25.out 2> /tmp/prfix/Fix774-work/m-qual/25.err
+VERDICT nondeterminism PASS run exit=0 expected=0 stdout=match stderr=match
+CASE branch-zero line=26
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/26.src > /tmp/prfix/Fix774-work/m-qual/26.elf 2> /tmp/prfix/Fix774-work/m-qual/26.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/26.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/26.out 2> /tmp/prfix/Fix774-work/m-qual/26.err
+VERDICT branch-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE branch-one line=27
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/27.src > /tmp/prfix/Fix774-work/m-qual/27.elf 2> /tmp/prfix/Fix774-work/m-qual/27.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/27.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/27.out 2> /tmp/prfix/Fix774-work/m-qual/27.err
+VERDICT branch-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE helper-zero line=28
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/28.src > /tmp/prfix/Fix774-work/m-qual/28.elf 2> /tmp/prfix/Fix774-work/m-qual/28.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/28.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/28.out 2> /tmp/prfix/Fix774-work/m-qual/28.err
+VERDICT helper-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE helper-one line=29
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/29.src > /tmp/prfix/Fix774-work/m-qual/29.elf 2> /tmp/prfix/Fix774-work/m-qual/29.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/29.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/29.out 2> /tmp/prfix/Fix774-work/m-qual/29.err
+VERDICT helper-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE address-zero line=30
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/30.src > /tmp/prfix/Fix774-work/m-qual/30.elf 2> /tmp/prfix/Fix774-work/m-qual/30.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/30.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/30.out 2> /tmp/prfix/Fix774-work/m-qual/30.err
+VERDICT address-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE address-one line=31
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/31.src > /tmp/prfix/Fix774-work/m-qual/31.elf 2> /tmp/prfix/Fix774-work/m-qual/31.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/31.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/31.out 2> /tmp/prfix/Fix774-work/m-qual/31.err
+VERDICT address-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE division-zero line=32
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/32.src > /tmp/prfix/Fix774-work/m-qual/32.elf 2> /tmp/prfix/Fix774-work/m-qual/32.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/32.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/32.out 2> /tmp/prfix/Fix774-work/m-qual/32.err
+VERDICT division-zero PASS run exit=102 expected=102 stdout=match stderr=match
+CASE division-one line=33
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/33.src > /tmp/prfix/Fix774-work/m-qual/33.elf 2> /tmp/prfix/Fix774-work/m-qual/33.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/33.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/33.out 2> /tmp/prfix/Fix774-work/m-qual/33.err
+VERDICT division-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE error-zero line=34
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/34.src > /tmp/prfix/Fix774-work/m-qual/34.elf 2> /tmp/prfix/Fix774-work/m-qual/34.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/34.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/34.out 2> /tmp/prfix/Fix774-work/m-qual/34.err
+VERDICT error-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE error-one line=35
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/35.src > /tmp/prfix/Fix774-work/m-qual/35.elf 2> /tmp/prfix/Fix774-work/m-qual/35.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/35.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/35.out 2> /tmp/prfix/Fix774-work/m-qual/35.err
+VERDICT error-one PASS run exit=106 expected=106 stdout=match stderr=match
+CASE early-zero line=36
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/36.src > /tmp/prfix/Fix774-work/m-qual/36.elf 2> /tmp/prfix/Fix774-work/m-qual/36.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/36.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/36.out 2> /tmp/prfix/Fix774-work/m-qual/36.err
+VERDICT early-zero PASS run exit=1 expected=1 stdout=match stderr=match
+CASE early-one line=37
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/37.src > /tmp/prfix/Fix774-work/m-qual/37.elf 2> /tmp/prfix/Fix774-work/m-qual/37.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/37.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/37.out 2> /tmp/prfix/Fix774-work/m-qual/37.err
+VERDICT early-one PASS run exit=0 expected=0 stdout=match stderr=match
+CASE public-branch-zero line=38
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/38.src > /tmp/prfix/Fix774-work/m-qual/38.elf 2> /tmp/prfix/Fix774-work/m-qual/38.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/38.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/38.out 2> /tmp/prfix/Fix774-work/m-qual/38.err
+VERDICT public-branch-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE public-branch-one line=39
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/39.src > /tmp/prfix/Fix774-work/m-qual/39.elf 2> /tmp/prfix/Fix774-work/m-qual/39.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/39.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/39.out 2> /tmp/prfix/Fix774-work/m-qual/39.err
+VERDICT public-branch-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE public-address-zero line=40
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/40.src > /tmp/prfix/Fix774-work/m-qual/40.elf 2> /tmp/prfix/Fix774-work/m-qual/40.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/40.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/40.out 2> /tmp/prfix/Fix774-work/m-qual/40.err
+VERDICT public-address-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE public-address-one line=41
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/41.src > /tmp/prfix/Fix774-work/m-qual/41.elf 2> /tmp/prfix/Fix774-work/m-qual/41.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/41.elf one < /dev/null > /tmp/prfix/Fix774-work/m-qual/41.out 2> /tmp/prfix/Fix774-work/m-qual/41.err
+VERDICT public-address-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE scan-compare32 line=42
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/42.src > /tmp/prfix/Fix774-work/m-qual/42.elf 2> /tmp/prfix/Fix774-work/m-qual/42.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/42.elf < seed/qualification/security673/relational/evidence/run3/compare32.bin > /tmp/prfix/Fix774-work/m-qual/42.out 2> /tmp/prfix/Fix774-work/m-qual/42.err
+VERDICT scan-compare32 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-early line=43
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/43.src > /tmp/prfix/Fix774-work/m-qual/43.elf 2> /tmp/prfix/Fix774-work/m-qual/43.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/43.elf < seed/qualification/security673/relational/evidence/run1/early.bin > /tmp/prfix/Fix774-work/m-qual/43.out 2> /tmp/prfix/Fix774-work/m-qual/43.err
+VERDICT scan-early PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-branch line=44
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/44.src > /tmp/prfix/Fix774-work/m-qual/44.elf 2> /tmp/prfix/Fix774-work/m-qual/44.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/44.elf x0 < seed/qualification/security673/relational/evidence/run1/branch.bin > /tmp/prfix/Fix774-work/m-qual/44.out 2> /tmp/prfix/Fix774-work/m-qual/44.err
+VERDICT scan-branch PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-helper line=45
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/45.src > /tmp/prfix/Fix774-work/m-qual/45.elf 2> /tmp/prfix/Fix774-work/m-qual/45.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/45.elf x0 < seed/qualification/security673/relational/evidence/run1/helper.bin > /tmp/prfix/Fix774-work/m-qual/45.out 2> /tmp/prfix/Fix774-work/m-qual/45.err
+VERDICT scan-helper PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-error line=46
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/46.src > /tmp/prfix/Fix774-work/m-qual/46.elf 2> /tmp/prfix/Fix774-work/m-qual/46.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/46.elf x0 < seed/qualification/security673/relational/evidence/run1/error.bin > /tmp/prfix/Fix774-work/m-qual/46.out 2> /tmp/prfix/Fix774-work/m-qual/46.err
+VERDICT scan-error PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-division line=47
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/47.src > /tmp/prfix/Fix774-work/m-qual/47.elf 2> /tmp/prfix/Fix774-work/m-qual/47.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/47.elf x0 < seed/qualification/security673/relational/evidence/run1/division.bin > /tmp/prfix/Fix774-work/m-qual/47.out 2> /tmp/prfix/Fix774-work/m-qual/47.err
+VERDICT scan-division PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-address line=48
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/48.src > /tmp/prfix/Fix774-work/m-qual/48.elf 2> /tmp/prfix/Fix774-work/m-qual/48.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/48.elf x1 pub:0:0:16 < seed/qualification/security673/relational/evidence/run1/address.bin > /tmp/prfix/Fix774-work/m-qual/48.out 2> /tmp/prfix/Fix774-work/m-qual/48.err
+VERDICT scan-address PASS run exit=2 expected=2 stdout=match stderr=match
+CASE scan-address-nobounds line=50
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/50.src > /tmp/prfix/Fix774-work/m-qual/50.elf 2> /tmp/prfix/Fix774-work/m-qual/50.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/50.elf x1 pub:0:0:16 < seed/qualification/security673/relational/evidence/run5/address-nobounds.bin > /tmp/prfix/Fix774-work/m-qual/50.out 2> /tmp/prfix/Fix774-work/m-qual/50.err
+VERDICT scan-address-nobounds FAIL run exit=0 expected=1 stdout differs at byte 324 stderr=match
+CASE scan-public-branch line=51
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/51.src > /tmp/prfix/Fix774-work/m-qual/51.elf 2> /tmp/prfix/Fix774-work/m-qual/51.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/51.elf x1 < seed/qualification/security673/relational/evidence/run1/public-branch.bin > /tmp/prfix/Fix774-work/m-qual/51.out 2> /tmp/prfix/Fix774-work/m-qual/51.err
+VERDICT scan-public-branch PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-public-address line=52
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/52.src > /tmp/prfix/Fix774-work/m-qual/52.elf 2> /tmp/prfix/Fix774-work/m-qual/52.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/52.elf x2 pub:0:0:16 < seed/qualification/security673/relational/evidence/run1/public-address.bin > /tmp/prfix/Fix774-work/m-qual/52.out 2> /tmp/prfix/Fix774-work/m-qual/52.err
+VERDICT scan-public-address PASS run exit=0 expected=0 stdout=match stderr=match
+CASE scan-public-branch-mut line=53
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/53.src > /tmp/prfix/Fix774-work/m-qual/53.elf 2> /tmp/prfix/Fix774-work/m-qual/53.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/53.elf x1 < seed/qualification/security673/relational/evidence/run2/public-branch-mut.bin > /tmp/prfix/Fix774-work/m-qual/53.out 2> /tmp/prfix/Fix774-work/m-qual/53.err
+VERDICT scan-public-branch-mut PASS run exit=2 expected=2 stdout=match stderr=match
+CASE execute-public-branch-mut-zero line=54
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/54.src > /tmp/prfix/Fix774-work/m-qual/54.elf 2> /tmp/prfix/Fix774-work/m-qual/54.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/54.elf seed/qualification/security673/relational/evidence/run2/public-branch-native-mut.bin < /dev/null > /tmp/prfix/Fix774-work/m-qual/54.out 2> /tmp/prfix/Fix774-work/m-qual/54.err
+VERDICT execute-public-branch-mut-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE execute-public-branch-mut-one line=55
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/55.src > /tmp/prfix/Fix774-work/m-qual/55.elf 2> /tmp/prfix/Fix774-work/m-qual/55.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/55.elf seed/qualification/security673/relational/evidence/run2/public-branch-native-mut.bin one < /dev/null > /tmp/prfix/Fix774-work/m-qual/55.out 2> /tmp/prfix/Fix774-work/m-qual/55.err
+VERDICT execute-public-branch-mut-one PASS run exit=7 expected=7 stdout=match stderr=match
+CASE scan-public-address-mut line=56
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/56.src > /tmp/prfix/Fix774-work/m-qual/56.elf 2> /tmp/prfix/Fix774-work/m-qual/56.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/56.elf x2 pub:0:0:16 < seed/qualification/security673/relational/evidence/run2/public-address-mut.bin > /tmp/prfix/Fix774-work/m-qual/56.out 2> /tmp/prfix/Fix774-work/m-qual/56.err
+VERDICT scan-public-address-mut PASS run exit=2 expected=2 stdout=match stderr=match
+CASE execute-public-address-mut-zero line=57
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/57.src > /tmp/prfix/Fix774-work/m-qual/57.elf 2> /tmp/prfix/Fix774-work/m-qual/57.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/57.elf seed/qualification/security673/relational/evidence/run2/public-address-native-mut.bin < /dev/null > /tmp/prfix/Fix774-work/m-qual/57.out 2> /tmp/prfix/Fix774-work/m-qual/57.err
+VERDICT execute-public-address-mut-zero PASS run exit=7 expected=7 stdout=match stderr=match
+CASE execute-public-address-mut-one line=58
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/58.src > /tmp/prfix/Fix774-work/m-qual/58.elf 2> /tmp/prfix/Fix774-work/m-qual/58.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/58.elf seed/qualification/security673/relational/evidence/run2/public-address-native-mut.bin one < /dev/null > /tmp/prfix/Fix774-work/m-qual/58.out 2> /tmp/prfix/Fix774-work/m-qual/58.err
+VERDICT execute-public-address-mut-one PASS run exit=7 expected=7 stdout=match stderr=match
+SUBST seed/qualification/security673/relational/compare.from seed/qualification/security673/relational/compare.to
+CASE compare-mutant-assert13 line=60
+  MUTATE exact-once substitution at byte 1144
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/60.src > /tmp/prfix/Fix774-work/m-qual/60.elf 2> /tmp/prfix/Fix774-work/m-qual/60.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/60.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/60.out 2> /tmp/prfix/Fix774-work/m-qual/60.err
+VERDICT compare-mutant-assert13 PASS run exit=13 expected=13 stdout=match stderr=match
+SUBST seed/qualification/security673/relational/nondeterminism.from seed/qualification/security673/relational/nondeterminism.to
+CASE nondeterminism-mutant-assert83 line=62
+  MUTATE exact-once substitution at byte 321
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/62.src > /tmp/prfix/Fix774-work/m-qual/62.elf 2> /tmp/prfix/Fix774-work/m-qual/62.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/62.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/62.out 2> /tmp/prfix/Fix774-work/m-qual/62.err
+VERDICT nondeterminism-mutant-assert83 PASS run exit=83 expected=83 stdout=match stderr=match
+SUBST seed/qualification/security673/relational/xoraccum.from seed/qualification/security673/relational/xoraccum.to
+CASE compare-xoraccum-assert16 line=64
+  MUTATE exact-once substitution at byte 201
+  $ seed/out/omc < /tmp/prfix/Fix774-work/m-qual/64.src > /tmp/prfix/Fix774-work/m-qual/64.elf 2> /tmp/prfix/Fix774-work/m-qual/64.cerr
+  $ /tmp/prfix/Fix774-work/m-qual/64.elf < /dev/null > /tmp/prfix/Fix774-work/m-qual/64.out 2> /tmp/prfix/Fix774-work/m-qual/64.err
+VERDICT compare-xoraccum-assert16 PASS run exit=16 expected=16 stdout=match stderr=match
+OM2GATE FAIL cases=56 pass=55 fail=1 invalid=0 not_run=0

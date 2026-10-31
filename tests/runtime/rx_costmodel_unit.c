@@ -20,7 +20,10 @@
  * Any host. Checks fit, calibration of the predictive intervals on held-out
  * points, the decision rules (select, measure when unsure, frozen, budget,
  * eligibility, failures, fallback, latency/energy budgets) and the canonical
- * blob (round trip, tamper, truncation, version).
+ * blob (round trip, tamper, truncation, version, cell count). An unsupported
+ * semantic operation is refused. `make test-costmodel` restores the old
+ * matvec clamp in a mutant; that binary must fail
+ * unsupported-op-not-aliased-to-matvec.
  */
 #include "runtime/rx_costmodel.h"
 #include "sha256.h"
@@ -108,8 +111,19 @@ static void t_basis(void) {
     CHECK(phi[5] == 1.0 && phi[6] == 1.0 && fabs(phi[7] - 2.0) < 1e-12, "basis indicators");
     CHECK(rx_cm_cell(&f) == 1u * RX_CM_PRESSURE + 1u, "cell index");
     f.core = 99;
+    f.pressure = 0;
+    CHECK(rx_cm_cell(&f) == (RX_CM_OP_MATVEC * RX_CM_CORES + RX_CM_CORE_OTHER) * RX_CM_PRESSURE,
+          "out-of-range core is the OTHER class");
+    f.core = RX_CM_CORE_A725;
     f.pressure = 99;
-    CHECK(rx_cm_cell(&f) < RX_CM_CELLS, "out-of-range features clamp into a cell");
+    CHECK(rx_cm_cell(&f) == (RX_CM_OP_MATVEC * RX_CM_CORES + RX_CM_CORE_A725) * RX_CM_PRESSURE +
+                                (RX_CM_PRESSURE - 1u),
+          "out-of-range pressure saturates to the last bucket");
+    f.op = RX_CM_OPS;
+    CHECK(rx_cm_cell(&f) == RX_CM_CELL_NONE && RX_CM_CELL_NONE >= RX_CM_CELLS,
+          "first unsupported op is not a cell index");
+    f.op = UINT32_MAX;
+    CHECK(rx_cm_cell(&f) == RX_CM_CELL_NONE, "UINT32_MAX op is not a cell index");
 }
 
 static void t_fit_and_calibration(int exact, double *cov80, double *cov95, double *rmse) {
@@ -312,7 +326,8 @@ static void t_eligibility_property(void) {
     for (int i = 0; i < 400; i++) rx_cm_observe(&m, &f, 0, &bad);
     f.eligible = 0x1;
     rx_cm_decide(&m, &pol, &f, 1, &d);
-    CHECK(d.action == RX_CM_FALLBACK && d.arm == 0, "the fallback stays available");
+    CHECK(d.action == RX_CM_FALLBACK && d.arm == 0 && d.why == RX_CM_WHY_NO_ELIGIBLE,
+          "the fallback stays available");
 }
 
 static void t_budgets(void) {
@@ -433,20 +448,262 @@ static void t_blob(void) {
     b[4] = 9;   /* version */
     sha256_hash(b, n - 32, b + n - 32);
     CHECK(rx_cm_deserialize(&r, b, n) == RX_CM_ERR_FORMAT, "unknown version refused");
+    memcpy(b, a, n);
+    /* Header.cells is the fifth uint32. A wider operation family changes it. */
+    uint32_t cells = 0;
+    memcpy(&cells, b + 16, sizeof cells);
+    cells += 1u;
+    memcpy(b + 16, &cells, sizeof cells);
+    sha256_hash(b, n - 32, b + n - 32);
+    CHECK(rx_cm_deserialize(&r, b, n) == RX_CM_ERR_FORMAT, "cell-count mismatch refused");
     free(a);
     free(b);
 }
 
-int main(void) {
-    double c80, c95, rmse;
-    t_basis();
-    t_fit_and_calibration(1, &c80, &c95, &rmse);
-    t_fit_and_calibration(0, &c80, &c95, &rmse);
-    t_decide();
-    t_eligibility_property();
-    t_budgets();
-    t_calibrate();
-    t_blob();
+/* Issue 704: an unsupported semantic operation used to clamp onto matvec, so a
+ * learned matvec prediction was reported for it and its observations trained
+ * that cell. `make test-costmodel` rebuilds rx_costmodel.c with that clamp
+ * restored; the named assertion unsupported-op-not-aliased-to-matvec must fail.
+ * Decision modes for a supported operation are asserted here without the shared
+ * rng. t_decide, t_budgets and t_eligibility cover the same modes on the
+ * synthetic fit. */
+static RxCmFeatures repro_features(uint32_t op) {
+    RxCmFeatures f;
+    memset(&f, 0, sizeof f);
+    f.op = op;
+    f.M = 64;
+    f.N = 64;
+    f.state_bytes = (64ull * 64ull + 64ull + 64ull) * 8ull;
+    f.cache_bytes = 1048576ull;
+    f.core = RX_CM_CORE_X925;
+    f.eligible = 1;
+    f.need_evidence = 1;
+    return f;
+}
+
+static void t_refuse_unsupported_op(void) {
+    RxCostModel m;
+    rx_cm_init(&m, 1);
+    RxCmFeatures good = repro_features(RX_CM_OP_MATVEC);
+    RxCmObservation seen = { 1000000ull, 0 };
+    for (int i = 0; i < 20; i++)
+        CHECK(rx_cm_observe(&m, &good, 0, &seen) == RX_CM_OK, "matvec observation accepted");
+    m.explore_ps = 42;
+    m.work_ps = 99;
+
+    RxCmPrediction learned;
+    int lr = rx_cm_predict(&m, &good, 0, &learned);
+    CHECK(lr == RX_CM_OK && learned.known && !learned.refused && learned.n == 20 &&
+              learned.mean_log2_ps > 19.0 && learned.mean_log2_ps < 21.0,
+          "valid matvec prediction is learned (rc %d known %d n %u mean %.6f)", lr, learned.known,
+          learned.n, learned.mean_log2_ps);
+
+    RxCmFeatures bad = good;
+    bad.op = UINT32_MAX;
+    RxCmPrediction aliased;
+    int ur = rx_cm_predict(&m, &bad, 0, &aliased);
+    RxCostModel snap = m;
+    RxCmObservation failed = { 1000000ull, 1 };
+    RxCmObservation zero_fail = { 0, 1 };
+    int orc = rx_cm_observe(&m, &bad, 0, &seen);
+    int frc = rx_cm_observe(&m, &bad, 0, &failed);
+    int zrc = rx_cm_observe(&m, &bad, 0, &zero_fail);
+    CHECK(ur == RX_CM_ERR_UNSUPPORTED && aliased.refused && !aliased.known && !aliased.borrowed &&
+              aliased.mean_log2_ps == 0.0 && aliased.n == 0 && aliased.fail_p == 0.0 &&
+              rx_cm_cell(&bad) == RX_CM_CELL_NONE &&
+              orc == RX_CM_ERR_UNSUPPORTED && frc == RX_CM_ERR_UNSUPPORTED &&
+              zrc == RX_CM_ERR_UNSUPPORTED && memcmp(&m, &snap, sizeof m) == 0 &&
+              m.cell[0][0].n == 20 && m.cell[0][0].trials == 20 && m.cell[0][0].failures == 0,
+          "unsupported-op-not-aliased-to-matvec");
+
+    size_t blob_n = rx_cm_blob_size(), got = 0;
+    uint8_t *blob0 = malloc(blob_n), *blob1 = malloc(blob_n);
+    CHECK(blob0 && blob1 && rx_cm_serialize(&snap, blob0, blob_n, &got) == RX_CM_OK && got == blob_n,
+          "serialize before rejected observations");
+    CHECK(blob0 && blob1 && rx_cm_serialize(&m, blob1, blob_n, &got) == RX_CM_OK &&
+              memcmp(blob0, blob1, blob_n) == 0,
+          "frozen model serialization identical after rejected observations");
+    free(blob0);
+    free(blob1);
+
+    bad.op = RX_CM_OPS;
+    RxCmPrediction first;
+    int fr = rx_cm_predict(&m, &bad, 0, &first);
+    snap = m;
+    orc = rx_cm_observe(&m, &bad, 0, &seen);
+    frc = rx_cm_observe(&m, &bad, 0, &failed);
+    CHECK(fr == RX_CM_ERR_UNSUPPORTED && first.refused && !first.known &&
+              rx_cm_cell(&bad) == RX_CM_CELL_NONE && orc == RX_CM_ERR_UNSUPPORTED &&
+              frc == RX_CM_ERR_UNSUPPORTED && memcmp(&m, &snap, sizeof m) == 0,
+          "first unsupported id RX_CM_OPS is refused");
+
+    /* A supported observation still trains matvec after the refusals. */
+    CHECK(rx_cm_observe(&m, &good, 0, &seen) == RX_CM_OK && m.cell[0][0].n == 21,
+          "supported matvec observation still trains");
+
+    RxCmPolicy pol;
+    rx_cm_default_policy(&pol);
+    RxCmDecision d;
+    bad.op = UINT32_MAX;
+    rx_cm_decide(&m, &pol, &bad, 1, &d);
+    CHECK(d.action == RX_CM_REFUSE && d.why == RX_CM_WHY_UNSUPPORTED_OP && d.arm == m.n_arms &&
+              d.measure[0] == m.n_arms && d.measure[1] == m.n_arms && d.expected_improvement == 0.0 &&
+              d.pred[0].refused && !d.pred[0].known && !d.pred[0].borrowed &&
+              d.pred[0].mean_log2_ps == 0.0,
+          "decide refuses UINT32_MAX without ranking");
+    rx_cm_decide(&m, &pol, &bad, 0, &d);
+    CHECK(d.action == RX_CM_REFUSE && d.why == RX_CM_WHY_UNSUPPORTED_OP,
+          "frozen decide refuses UINT32_MAX");
+    bad.op = RX_CM_OPS;
+    rx_cm_decide(&m, &pol, &bad, 1, &d);
+    CHECK(d.action == RX_CM_REFUSE && d.why == RX_CM_WHY_UNSUPPORTED_OP && d.pred[0].refused,
+          "decide refuses RX_CM_OPS");
+
+    /* Pressure on a real matvec is still a residual. Unsupported pressure is not. */
+    RxCostModel quiet;
+    rx_cm_init(&quiet, 1);
+    RxCmFeatures qf = repro_features(RX_CM_OP_MATVEC);
+    RxCmObservation exact = { (uint64_t)exp2(20.0), 0 };
+    for (int i = 0; i < 16; i++) rx_cm_observe(&quiet, &qf, 0, &exact);
+    RxCmFeatures unseen = qf;
+    unseen.pressure = 2;
+    RxCmPrediction pq, p0;
+    rx_cm_predict(&quiet, &qf, 0, &p0);
+    rx_cm_predict(&quiet, &unseen, 0, &pq);
+    CHECK(pq.borrowed && !pq.refused && pq.mean_log2_ps == p0.mean_log2_ps,
+          "unseen matvec pressure borrows the quiet prediction");
+    RxCmFeatures pressed = qf;
+    pressed.pressure = 1;
+    RxCostModel bare;
+    rx_cm_init(&bare, 1);
+    CHECK(rx_cm_observe(&bare, &pressed, 0, &exact) == RX_CM_SKIPPED &&
+              bare.cell[rx_cm_cell(&pressed)][0].trials == 1 &&
+              bare.cell[rx_cm_cell(&pressed)][0].n == 0,
+          "valid matvec pressure without a quiet model is skipped");
+    pressed.op = RX_CM_OPS;
+    RxCostModel bare_snap = bare;
+    CHECK(rx_cm_observe(&bare, &pressed, 0, &exact) == RX_CM_ERR_UNSUPPORTED &&
+              memcmp(&bare, &bare_snap, sizeof bare) == 0,
+          "unsupported op under pressure is refused, not skipped into a bucket");
+    pressed = qf;
+    pressed.pressure = 1;
+    RxCmObservation slow = { (uint64_t)exp2(21.0), 0 };
+    for (int i = 0; i < 6; i++)
+        CHECK(rx_cm_observe(&quiet, &pressed, 0, &slow) == RX_CM_OK, "pressure residual accepted");
+    uint64_t residual_n = quiet.cell[rx_cm_cell(&pressed)][0].n;
+    CHECK(residual_n == 6, "pressure residual has its own samples");
+    rx_cm_predict(&quiet, &pressed, 0, &pq);
+    CHECK(pq.known && !pq.borrowed && !pq.refused && fabs(pq.mean_log2_ps - (p0.mean_log2_ps + 1.0)) < 0.25,
+          "pressure correction learned (%.3f vs %.3f)", pq.mean_log2_ps, p0.mean_log2_ps + 1.0);
+    pressed.op = UINT32_MAX;
+    snap = quiet;
+    CHECK(rx_cm_observe(&quiet, &pressed, 0, &slow) == RX_CM_ERR_UNSUPPORTED &&
+              memcmp(&quiet, &snap, sizeof quiet) == 0,
+          "unsupported op does not train the pressure residual");
+
+    /* OTHER core and a saturated pressure bucket stay real cells. */
+    RxCostModel other_m;
+    rx_cm_init(&other_m, 1);
+    RxCmFeatures other = qf;
+    other.core = 99;
+    other.pressure = 0;
+    uint32_t oc = rx_cm_cell(&other);
+    CHECK(oc < RX_CM_CELLS && oc != rx_cm_cell(&qf), "OTHER core is a real cell");
+    CHECK(rx_cm_observe(&other_m, &other, 0, &exact) == RX_CM_OK && other_m.cell[oc][0].n == 1 &&
+              other_m.cell[0][0].n == 0,
+          "OTHER core observation stays out of the matvec X925 cell");
+    other.pressure = 99;
+    uint32_t pc = rx_cm_cell(&other);
+    CHECK(pc < RX_CM_CELLS && pc != oc && pc != RX_CM_CELL_NONE,
+          "saturated pressure on OTHER is its own bucket");
+
+    /* Each decision mode on a supported matvec, then refusal beside them. */
+    RxCostModel empty;
+    rx_cm_init(&empty, 2);
+    RxCmFeatures g = feat(16, 16, RX_CM_CORE_X925, 0);
+    g.eligible = 0x3;
+    rx_cm_decide(&empty, &pol, &g, 1, &d);
+    CHECK(d.action == RX_CM_MEASURE && d.why == RX_CM_WHY_UNKNOWN_ARM, "empty model measures");
+    rx_cm_decide(&empty, &pol, &g, 0, &d);
+    CHECK(d.action == RX_CM_FALLBACK && d.arm == 0 && d.why == RX_CM_WHY_UNKNOWN_ARM,
+          "empty frozen model falls back");
+    RxCostModel one;
+    rx_cm_init(&one, 1);
+    rx_cm_decide(&one, &pol, &g, 1, &d);
+    CHECK(d.action == RX_CM_FALLBACK && d.why == RX_CM_WHY_NO_ELIGIBLE, "only the fallback is eligible");
+
+    RxCostModel tight;
+    rx_cm_init(&tight, 2);
+    RxCmObservation hi = { (uint64_t)exp2(22.0), 0 };
+    for (int i = 0; i < 40; i++) {
+        rx_cm_observe(&tight, &g, 0, &exact);
+        rx_cm_observe(&tight, &g, 1, &hi);
+    }
+    rx_cm_decide(&tight, &pol, &g, 1, &d);
+    CHECK(d.action == RX_CM_SELECT && d.arm == 0 && d.why == RX_CM_WHY_CONFIDENT,
+          "separated arms select confidently (action %d arm %u why %u)", d.action, d.arm, d.why);
+    g.latency_budget_ps = 1000;
+    rx_cm_decide(&tight, &pol, &g, 0, &d);
+    CHECK(d.action == RX_CM_SELECT && d.why == RX_CM_WHY_OVER_BUDGET, "no arm fits the latency budget");
+    g.latency_budget_ps = 0;
+
+    RxCostModel equal;
+    rx_cm_init(&equal, 2);
+    for (int i = 0; i < 40; i++) {
+        rx_cm_observe(&equal, &g, 0, &exact);
+        rx_cm_observe(&equal, &g, 1, &exact);
+    }
+    rx_cm_decide(&equal, &pol, &g, 1, &d);
+    CHECK(d.action == RX_CM_SELECT && d.why == RX_CM_WHY_CONFIDENT,
+          "equal and tight: not worth a run (action %d ei %.3f)", d.action, d.expected_improvement);
+    RxCmFeatures gp = g;
+    gp.pressure = 1;
+    rx_cm_decide(&equal, &pol, &gp, 1, &d);
+    CHECK(d.action == RX_CM_MEASURE && d.why == RX_CM_WHY_WORTH_MEASURING,
+          "unseen pressure is worth measuring (action %d why %u ei %.3f)", d.action, d.why,
+          d.expected_improvement);
+    rx_cm_charge(&equal, 0, pol.explore_allow_ps + 1);
+    rx_cm_decide(&equal, &pol, &gp, 1, &d);
+    CHECK(d.action == RX_CM_SELECT && d.why == RX_CM_WHY_BUDGET_SPENT,
+          "spent exploration budget selects (action %d why %u)", d.action, d.why);
+    rx_cm_charge(&equal, (uint64_t)((double)(pol.explore_allow_ps + 1) / pol.explore_frac) * 2, 0);
+    rx_cm_decide(&equal, &pol, &gp, 1, &d);
+    CHECK(d.action == RX_CM_MEASURE && d.why == RX_CM_WHY_WORTH_MEASURING,
+          "budget refills as chosen work accrues");
+    gp.op = RX_CM_OPS;
+    rx_cm_decide(&equal, &pol, &gp, 1, &d);
+    CHECK(d.action == RX_CM_REFUSE && d.why == RX_CM_WHY_UNSUPPORTED_OP && d.pred[0].refused &&
+              d.pred[1].refused && !d.pred[0].known && !d.pred[1].borrowed,
+          "unsupported op is not ranked in any decision mode");
+
+    RxCmFeatures cal[16];
+    uint32_t carm[16];
+    uint64_t cps[16];
+    for (int i = 0; i < 16; i++) {
+        cal[i] = repro_features(i & 1 ? UINT32_MAX : RX_CM_OPS);
+        carm[i] = 0;
+        cps[i] = (uint64_t)exp2(30.0);
+    }
+    double scale_before = equal.sd_scale;
+    double scale = rx_cm_calibrate(&equal, cal, carm, cps, 16, 0.80);
+    CHECK(scale == 0.0 && equal.sd_scale == scale_before,
+          "unsupported calibration points do not change the scale");
+}
+
+int main(int argc, char **argv) {
+    int only_refuse = argc > 1 && strcmp(argv[1], "refuse") == 0;
+    if (!only_refuse) {
+        double c80, c95, rmse;
+        t_basis();
+        t_fit_and_calibration(1, &c80, &c95, &rmse);
+        t_fit_and_calibration(0, &c80, &c95, &rmse);
+        t_decide();
+        t_eligibility_property();
+        t_budgets();
+        t_calibrate();
+        t_blob();
+    }
+    t_refuse_unsupported_op();
     printf("checks %d failures %d\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
 }

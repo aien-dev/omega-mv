@@ -1,0 +1,34 @@
+[
+  {
+    "name": "paired",
+    "exit": 0,
+    "sources": [
+      "seed/qualification/security673/relational/compare32.om",
+      "seed/qualification/security673/relational/paired.om"
+    ],
+    "source_sha256": "07d46fec574ff1c10eb88cea9ad0bc722a5e8f7d9984f205dec40bfd94134b1f",
+    "binary_sha256": "686096547cda0cbbdf789c67bdc9f7aa7066ee36023af9c2353a262d2e313711",
+    "stderr": ""
+  },
+  {
+    "name": "dividend",
+    "exit": 0,
+    "sources": [
+      "seed/qualification/security673/relational/dividend.om"
+    ],
+    "source_sha256": "7d1893482efd5cc9ebd2831a46b2d0277b54da4f5e75133842640e1b6cc13f75",
+    "binary_sha256": "8f72b2a1d614e88631adfbed1d5383d8907826c38d35a7de76824373e0eaddd8",
+    "stderr": ""
+  },
+  {
+    "name": "dividend-native",
+    "exit": 0,
+    "sources": [
+      "seed/qualification/security673/relational/dividend.om",
+      "seed/qualification/security673/relational/unary-main.om"
+    ],
+    "source_sha256": "f65bb1573f1c0aba571ab4d48b819886f0095a647571a7ed0df3903717f8121c",
+    "binary_sha256": "f6c646d37bf305d9fd9b8bd4b0e49515da6d9b1782e6e158b075817590839cd5",
+    "stderr": ""
+  }
+]
