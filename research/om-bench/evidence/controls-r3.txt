@@ -1,0 +1,23 @@
+CONTROL PASS ctl-fibo-ref -> pass
+CONTROL PASS ctl-brk-ref -> pass
+CONTROL PASS ctl-fibo-mut -> wrong_output
+CONTROL PASS ctl-brk-mut -> wrong_output
+CONTROL PASS ctl-fibo-empty -> runtime_mechanical
+CONTROL PASS ctl-fibo-trap -> runtime_mechanical
+CONTROL PASS ctl-fibo-slow -> runtime_mechanical
+CONTROL PASS ctl-fibo-e13 -> compile_refused
+CONTROL PASS ctl-fibo-authz -> authz_violation
+CONTROL PASS ctl-fibo-nocode -> no_code
+CONTROL PASS gate final line present
+CONTROL PASS gate.om and comparator agree
+CONTROL PASS wrong omc sha -> INVALID
+CONTROL PASS missing candidates -> NOT_RUN 9 of 10, rc=2
+CONTROL PASS empty task -> CORPUS FAULT
+CONTROL PASS missing expected output -> CORPUS FAULT
+CONTROL PASS ctl-fibo-ref -> pass
+CONTROL PASS ctl-fibo-wrong -> wrong_output
+CONTROL PASS ctl-fibo-authz -> authz_violation
+CONTROL PASS ctl-fibo-ref -> pass
+CONTROL PASS ctl-fibo-wrong -> wrong_output
+CONTROL PASS ctl-fibo-authz -> authz_violation
+CONTROLS FAILS=0
