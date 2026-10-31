@@ -39,9 +39,18 @@ Arithmetic attributes for i64 (new):
 - 5 = wrapping: the result is the exact result reduced to -2^63..2^63-1 modulo 2^64. Total.
 - 6 = overflow-is-error: defined only when the exact result is in range; obligation 32
   (no-signed-overflow) is attached. Outside the range the source language's behavior is an error (C/C++
-  undefined behavior; Rust panic in debug and wrap in release; Zig checked illegal behavior). Any total
-  realization that equals the exact result whenever it is in range is a REFINEMENT of attr 6 and is
-  labelled PROVEN_REFINEMENT only with a proof, BOUNDED_VALIDATION otherwise.
+  undefined behavior; Zig checked illegal behavior). Rust's plain operators carry the error contract only
+  when overflow checks are on: rustc 1.98.1 panics with `-C overflow-checks=on` (the debug default, and
+  settable in release) and, with overflow checks off (the release default), returns the result reduced
+  modulo 2^64; the Rust Reference permits either panic or wrap when checks are off, so the wrap is the
+  measured behavior of the pinned rustc, not a language guarantee. The exported Rust source is the same in
+  every setting; the setting is part of the realization and section 6 qualifies all three (D, R, RC). A
+  Rust crate that needs the error contract in a release build must set `overflow-checks = true` in the
+  profile of the ROOT package or workspace manifest: Cargo ignores `[profile]` settings in dependencies.
+  Any total realization that equals the exact result whenever it is in range is a REFINEMENT of attr 6 and
+  is labelled PROVEN_REFINEMENT only with a proof, BOUNDED_VALIDATION otherwise. Release wrapping is such a
+  REFINEMENT of C17 signed overflow (undefined behavior); it is never reported as equal to the C error, and
+  debug panic results are never promoted to a release guarantee.
 
 No signed/unsigned mixing, casts, division, remainder, shifts, bitwise operators, short-circuit `&&`/`||`
 (they are selects and come with S2.1), loops, early returns or statements other than the single return
@@ -69,7 +78,7 @@ effects 0, alias 0; op 16 B/immediate rule as in section 1. Profiles (one per la
 | language | i64 attr 5 (wrapping) | i64 attr 6 (overflow-is-error) | compare / select |
 |---|---|---|---|
 | C17 | `(int64_t)((uint64_t)a + (uint64_t)b)` exact shape (GCC 13 pinned: conversion is modulo 2^64, implementation-defined in C17) | `a + b` on two `int64_t` | `a < b` etc. only as the condition of `?:`; `c ? x : y` |
-| Rust | `a.wrapping_add(b)` | `a + b` on `i64` | `if c { x } else { y }`; comparison operators |
+| Rust | `a.wrapping_add(b)` | `a + b` on `i64`; the error outcome requires overflow-checks on (section 1) | `if c { x } else { y }`; comparison operators |
 | Python | `((a + b + 2**63) & (2**64-1)) - 2**63` exact shape | `_ck(a + b)` with the profile's range-check helper | `x if c else y` |
 | C++17 | as C with `std::int64_t` and `static_cast` | as C | as C |
 | Zig | `a +% b` on `i64` | `a + b` on `i64` | `if (c) x else y` |
@@ -96,11 +105,24 @@ a bridge change (ABI v1 has `uint64_t` only), owned by the bridge lane.
 
 Positive; boundary (i64 -2^63, -1, 0, 1, 2^63-1 per input, all compare outcomes, both select arms);
 overflow (attr 5 wraps; attr 6 at exactly the boundary and one past it, where the C oracle is built with
-`-fsanitize=signed-integer-overflow -fno-sanitize-recover` and the Rust oracle in debug, both must
-report the error); malformed; unsupported feature (each excluded construct in section 1 refuses with its
-exit code); mutation (attr 5 <-> 6, signed <-> unsigned compare, select arm swap, operand swap of
-non-commutative ops, constant sign flip). Oracles: REFERENCE on Python bigints; DIFFERENTIAL against gcc
-13.3.0, rustc 1.98.1, CPython 3.12.3, g++ 13.3.0, Zig 0.17.0, Go 1.27.3.
+`-fsanitize=signed-integer-overflow -fno-sanitize-recover` and must report the error); malformed;
+unsupported feature (each excluded construct in section 1 refuses with its exit code); mutation (attr 5
+<-> 6, signed <-> unsigned compare, select arm swap, operand swap of non-commutative ops, constant sign
+flip). Oracles: REFERENCE on Python bigints; DIFFERENTIAL against gcc 13.3.0, rustc 1.98.1, CPython
+3.12.3, g++ 13.3.0, Zig 0.17.0, Go 1.27.3.
+
+Rust build-setting matrix (rustc 1.98.1). Every exported Rust unit and every C -> Omega -> Rust
+composition is compiled and run in three settings, each with its flags spelled out:
+
+| setting | rustc flags | attr 6 one past the boundary | in range, attr 5, compare/select |
+|---|---|---|---|
+| D | `-C opt-level=0 -C debug-assertions=on -C overflow-checks=on` | panic, caught = error (equals the C UBSan error) | equal to the reference / C oracle |
+| R | `-C opt-level=3 -C debug-assertions=off -C overflow-checks=off` | the two's-complement wrapped value, asserted exactly (bigint reference reduced modulo 2^64); classified REFINEMENT, never ERROR | equal |
+| RC | `-C opt-level=3 -C overflow-checks=on` | panic, caught = error | equal |
+
+Units with no attr 6 operation must give identical rows in D, R and RC. Two negative controls run in every
+self-test and must be observed failing: an expectation that R reports the attr 6 error, and the `add` unit
+with attr 6 exported as `wrapping_add` checked against the D and RC error expectation.
 
 ## 7. Amendments (universal/624-s2-impl, BabelS2, 2026-10-26)
 
