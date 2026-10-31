@@ -1,0 +1,28 @@
+text yes "yes\n"
+text no "no\n"
+fn main to int
+n = readall
+d = long 0
+ok = true
+for i ulong n
+c = get inb i
+if eq c 40
+d = add d 1
+end
+if eq c 41
+d = sub d 1
+if lt d 0
+ok = false
+end
+end
+end
+if ne d 0
+ok = false
+end
+if ok
+k = write 1 yes 0 len yes
+else
+k = write 1 no 0 len no
+end
+ret 0
+end
