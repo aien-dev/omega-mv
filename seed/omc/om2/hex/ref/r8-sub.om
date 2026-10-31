@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): sub operand 0x80 for byte (no two s-complement reinterpretation); error 8 on the literal's line.
+om2
+fn main to int
+x = byte 1
+y = sub x 0x80
+ret 0
+end

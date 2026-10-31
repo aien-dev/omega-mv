@@ -1,0 +1,10 @@
+cavp_cdh.txt is converted (by ../gen_vectors.py) from the [P-256] and [P-384] sections of
+KAS_ECC_CDH_PrimitiveTest.txt (CAVS 14.1, ECC CDH primitive, SP 800-56A section 5.7.1.2) in the NIST
+Cryptographic Algorithm Validation Program file ecccdhtestvectors.zip,
+https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/components/ecccdhtestvectors.zip
+(sha256 5fff092551f2d72e89a3d9362711878708f9a14b502f0dfae819649105b0ea39, fetched 2026-10-26).
+Each CAVP record gives two lines: the shared secret ZIUT from (dIUT, QCAVS) and the public key QIUT
+from dIUT. The ACVP-Server sample files (usnistgov/ACVP-Server 975de31e, KAS-ECC-SSC-Sp800-56Ar3,
+KAS-ECC-CDH-Component, KAS-ECC-Sp800-56Ar3, KAS-ECC-1.0) hold no P-256 or P-384 groups, so they are
+not used. NIST test vectors are works of the U.S. Government and are not subject to copyright
+protection in the United States (17 U.S.C. 105).

@@ -1,0 +1,14 @@
+note seed/net/notls.om -- the transport hooks of http.om for a program built without TLS.
+note Library unit: no `om2` line, no `fn main`, no globals. Compose it right after http.om:
+note   { printf 'om2\n'; cat seed/net/http.om seed/net/notls.om app.om; } | seed/out/omc > app
+note Every hook refuses with HENOSUP, so a connection whose HXPORT is not 0 cannot move bytes;
+note seed/net/https.om is the implementation that plugs om/tls into these three names.
+fn htlsrecv cs edit ulong * io edit uchar * off ulong n ulong to long
+ret HENOSUP
+end
+fn htlsrecvd cs edit ulong * io edit uchar * d edit uchar * to long
+ret HENOSUP
+end
+fn htlssend cs edit ulong * io edit uchar * off ulong n ulong to long
+ret HENOSUP
+end
