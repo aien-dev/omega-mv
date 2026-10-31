@@ -27,12 +27,22 @@
 #include "omega_gpu_bf16_gemv_api.h"
 #include "omega_gpu_session.h"
 #include "bw_warp_sim_k.h"
+#include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+
+/* 0644, not fopen's 0666 & ~umask: a receipt is never world-writable */
+static FILE *create_0644(const char *path) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    FILE *f = fd >= 0 ? fdopen(fd, "w") : NULL;
+    if (fd >= 0 && !f) close(fd);
+    return f;
+}
 
 static int g_checks, g_failed;
 #define CHECK(cond, ...) do { g_checks++; if (!(cond)) { g_failed++; printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } while (0)
@@ -319,7 +329,7 @@ static void evict_host_caches(void) {
 static double med(uint64_t *v, uint32_t n) { qsort(v, n, 8, cmp_u64); return (double)v[n / 2]; }
 
 static int chip_run(const char *out_path, uint32_t reps, uint32_t N, uint32_t K) {
-    FILE *out = out_path ? fopen(out_path, "w") : NULL;
+    FILE *out = out_path ? create_0644(out_path) : NULL;
     if (out_path && !out) { printf("cannot write %s\n", out_path); return 1; }
     if (out) fprintf(out, "{\"receipt\":\"OMEGA_GPU_BF16_GEMV_V1\",\"n\":%u,\"k\":%u,\"reps\":%u,\"evict\":%d,\"spin_us\":%u,\"points\":[", N, K, reps, g_evict, omega_gpu_session_spin_us());
     uint16_t *w = make_w((size_t)N * K, 90001); float *x = make_x(K, 90002);

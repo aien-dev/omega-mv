@@ -42,8 +42,9 @@ static bool popen_read_line(const char *cmd, char *out, size_t n) {
     bool got = (fgets(buf, sizeof(buf), p) != NULL);
     pclose(p);
     if (!got || !trim_line(buf)) return false;
-    if (strlen(buf) >= n) return false;
-    strcpy(out, buf);
+    size_t len = strlen(buf);
+    if (len >= n) return false;
+    memcpy(out, buf, len + 1);
     return true;
 }
 
@@ -183,8 +184,9 @@ bool omega_evidence_physics_commit(char *out, size_t n) {
     bool got = (fgets(buf, sizeof(buf), f) != NULL);
     fclose(f);
     if (!got || !trim_line(buf)) return false;
-    if (strlen(buf) >= n) return false;
-    strcpy(out, buf);
+    size_t len = strlen(buf);
+    if (len >= n) return false;
+    memcpy(out, buf, len + 1);
     return true;
 }
 
