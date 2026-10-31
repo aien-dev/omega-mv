@@ -4,20 +4,20 @@
       "children": [
         {
           "digest": "df1e86f20b9581b3504b71b24ba57057dcf0a8072d13ff432bf9b807426a1b7b",
-          "last_commit": "f56a372ae",
+          "last_commit": "6d7b8838",
           "name": "fixtures",
           "purpose": "Independent SHA-256 envelope fixtures and exact decoded-source oracles for the native Omega host"
         }
       ],
       "children_root": "sha256:28401713f198d1dcce005e957b4337a0f1342e25cda0fcfc9a4377534b9c340d",
-      "compiled_at": "2026-10-31T10:16:13Z",
+      "compiled_at": "2026-10-31T10:52:10Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:35d870c193e34b6a8d8f809ed1bb539f6c147e434fd6ef27113f38abf75bb1ec",
+      "digest": "sha256:cd4b85a7affc81e19b0ff45eb80ba33534d9f6aee672a3afdd6480e0dbb7f77f",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 181,
-      "generated_at_commit": "7715c4e792abc9d99496d4e1ecfe8bccc79a5c17",
-      "source_tree": "sha256:10a1dbd31ae7d3d64712102941e9a4c4e28621521eb8d99cbf35fe6a5b5d7cee"
+      "generated_at_commit": "f09ab0a8710d9497f749cee1226c8fef031105ab",
+      "source_tree": "sha256:881bd87d6963f85880f168b6d40af675ec01c28c325211c68da1d1eda4785978"
     }
   },
   "layer": "supplement",
