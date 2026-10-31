@@ -1,0 +1,607 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note OM-CONTROL-659 action contract v1. See ../README.md for the trusted-caller boundary.
+note No I/O, authority minting or persistence. Caller serializes and durably commits transitions.
+note Record words 0..7: version,state,attempt,limit,generation,epoch,expiry,reserved.
+note Words 8..31: operation,request,scope,provider,policy,grant identities, four words each.
+note State 1 ready,2 in-flight,3 unknown,4 performed. No timeout implies not performed.
+
+fn actvalid r view ulong 32 to ulong
+if ne get r 0 1
+ret 11
+end
+if or lt get r 1 1 gt get r 1 4
+ret 12
+end
+if or eq get r 3 0 gt get r 3 1024
+ret 12
+end
+if gt get r 2 get r 3
+ret 12
+end
+if and ne get r 1 1 eq get r 2 0
+ret 12
+end
+if or eq get r 4 0 eq get r 5 0
+ret 12
+end
+if or eq get r 6 0 ne get r 7 0
+ret 12
+end
+for g ulong 6
+bits = ulong 0
+for j ulong 4
+bits = or bits get r add 8 add mul g 4 j
+end
+if eq bits 0
+ret 12
+end
+end
+ret 0
+end
+
+fn actbind r view ulong 32 c view ulong 32 to ulong
+for g ulong 6
+diff = ulong 0
+for j ulong 4
+at = add 8 add mul g 4 j
+diff = or diff xor get r at get c at
+end
+if ne diff 0
+ret add 40 g
+end
+end
+ret 0
+end
+
+fn actauth r view ulong 32 c view ulong 32 to ulong
+if ne get c 0 1
+ret 11
+end
+if or ne get c 3 0 or ne get c 6 0 ne get c 7 0
+ret 12
+end
+if ne get c 1 1
+ret 30
+end
+if ne get r 4 get c 4
+ret 31
+end
+if ne get r 5 get c 5
+ret 32
+end
+if ge get c 2 get r 6
+ret 33
+end
+ret actbind r c
+end
+
+fn actstart r edit ulong 32 c view ulong 32 to ulong
+err = actvalid r
+if ne err 0
+ret err
+end
+if eq get r 1 3
+ret 21
+end
+if eq get r 1 4
+ret 22
+end
+if ne get r 1 1
+ret 20
+end
+if ge get r 2 get r 3
+ret 23
+end
+err = actauth r c
+if ne err 0
+ret err
+end
+put r 2 add get r 2 1
+put r 1 2
+ret 0
+end
+
+fn actlost r edit ulong 32 to ulong
+err = actvalid r
+if ne err 0
+ret err
+end
+if eq get r 1 3
+ret 0
+end
+if ne get r 1 2
+ret 20
+end
+put r 1 3
+ret 0
+end
+
+note A trusted receipt maps outcome 0 unknown,1 definitely not performed,2 performed.
+note Not-found or timeout is outcome 0 unless the provider proves absence and quiescence.
+note Receipt words 2/3: exact attempt and verification=1. Words 6/7 must be zero.
+note Recording an observed outcome is permitted after expiry; another attempt is not.
+fn actrecon r edit ulong 32 s view ulong 32 to ulong
+err = actvalid r
+if ne err 0
+ret err
+end
+if not or eq get r 1 2 eq get r 1 3
+ret 20
+end
+if ne get s 0 1
+ret 11
+end
+if or gt get s 1 2 or ne get s 6 0 ne get s 7 0
+ret 12
+end
+if ne get s 3 1
+ret 36
+end
+if ne get s 2 get r 2
+ret 35
+end
+if ne get s 4 get r 4
+ret 31
+end
+if ne get s 5 get r 5
+ret 32
+end
+err = actbind r s
+if ne err 0
+ret err
+end
+if eq get s 1 0
+put r 1 3
+ret 21
+end
+if eq get s 1 1
+put r 1 1
+else
+put r 1 4
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Durable 32-word authority record store. Caller supplies the record and generation.
+note Writes a temporary 256-byte file, fsyncs it, then atomically renames it into place.
+note Reads require exactly 256 bytes; a short or torn file is refused. Store calls do not lock; the
+note dispatcher holds lock.om around its read-check-persist window.
+text recp "build/authority-store/rec"
+text tmpp "build/authority-store/tmp"
+text genp "build/authority-store/gen"
+global sb uchar 256
+global spkt uchar 256
+global sn ulong 1
+global spath uchar 128
+global splen ulong 1
+global sgerr ulong 1
+fn put16 v ulong to void
+put spkt get sn 0 uchar and v 255
+put spkt add get sn 0 1 uchar shr v 8
+put sn 0 add get sn 0 2
+end
+fn setrec to void
+put splen 0 len recp
+for i ulong len recp
+put spath i get recp i
+end
+end
+fn settmp to void
+put splen 0 len tmpp
+for i ulong len tmpp
+put spath i get tmpp i
+end
+end
+fn setgen to void
+put splen 0 len genp
+for i ulong len genp
+put spath i get genp i
+end
+end
+fn pack2 to ulong
+put sn 0 0
+put16 2
+put16 len tmpp
+for i ulong len tmpp
+put spkt add get sn 0 i get tmpp i
+end
+put sn 0 add get sn 0 len tmpp
+put16 len recp
+for i ulong len recp
+put spkt add get sn 0 i get recp i
+end
+put sn 0 add get sn 0 len recp
+ret get sn 0
+end
+fn enc r view ulong 32 to void
+for i ulong 32
+v = get r i
+for j ulong 8
+put sb add mul i 8 j uchar and shr v mul j 8 255
+end
+end
+end
+fn dec r edit ulong 32 to ulong
+for i ulong 32
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb add mul i 8 j mul j 8
+end
+put r i v
+end
+ret 0
+end
+fn writerec r view ulong 32 to ulong
+enc r
+settmp
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+ret 10
+end
+n = write int fd sb 0 256
+if ne n 256
+ret 11
+end
+if ne fsync int fd 0
+ret 12
+end
+if ne fclose int fd 0
+ret 13
+end
+pn = pack2
+rr = renames spkt 0 pn 0
+if lt rr 0
+ret 14
+end
+ret 0
+end
+fn readrec r edit ulong 32 to ulong
+setrec
+fd = fopen spath 0 get splen 0 0 0
+if lt fd 0
+ret 20
+end
+n = read int fd sb 0 256
+if ne fclose int fd 0
+ret 21
+end
+if ne n 256
+ret 22
+end
+dv = dec r
+ret 0
+end
+fn readgen to ulong
+put sgerr 0 0
+setgen
+fd = fopen spath 0 get splen 0 0 0
+if lt fd 0
+put sgerr 0 30
+ret 0
+end
+n = read int fd sb 0 8
+if ne fclose int fd 0
+put sgerr 0 31
+ret 0
+end
+if ne n 8
+put sgerr 0 32
+ret 0
+end
+v = ulong 0
+for j ulong 8
+v = or v shl ulong get sb j mul j 8
+end
+ret v
+end
+fn writegen v ulong to ulong
+setgen
+fd = fopen spath 0 get splen 0 577 384
+if lt fd 0
+ret 40
+end
+for j ulong 8
+put sb j uchar and shr v mul j 8 255
+end
+n = write int fd sb 0 8
+if ne n 8
+ret 41
+end
+if ne fsync int fd 0
+ret 42
+end
+if ne fclose int fd 0
+ret 43
+end
+ret 0
+end
+fn storevalid r view ulong 32 g ulong to ulong
+if ne get r 0 1
+ret 51
+end
+if ne get r 4 g
+ret 52
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Single-effect dispatcher over the action contract and durable store.
+note The state is persisted in-flight before the effect. A generation change during the effect
+note marks the operation unknown; a duplicate or performed record is refused. The effect here is
+note a synthetic fork child: mode '1' writes generation2, mode '2' exits1, mode '0' exits0.
+global dstat uchar 4
+global dpkt uchar 256
+global dn ulong 1
+global dpath uchar 128
+global dplen ulong 1
+global dpid ulong 1
+text truep "/bin/true"
+text strictp "seed/authority/effect-ok"
+fn dput16 v ulong to void
+put dpkt get dn 0 uchar and v 255
+put dpkt add get dn 0 1 uchar shr v 8
+put dn 0 add get dn 0 2
+end
+fn dcopy to void
+for i ulong get dplen 0
+put dpkt add get dn 0 i get dpath i
+end
+put dn 0 add get dn 0 get dplen 0
+end
+fn packtrue to ulong
+put dn 0 0
+dput16 1
+dput16 len truep
+for i ulong len truep
+put dpkt add get dn 0 i get truep i
+end
+put dn 0 add get dn 0 len truep
+ret get dn 0
+end
+fn doreceipt r view ulong 32 s edit ulong 32 outcome ulong to void
+for i ulong 32
+put s i 0
+end
+put s 0 1
+put s 1 outcome
+put s 2 get r 2
+put s 3 1
+put s 4 get r 4
+put s 5 get r 5
+for i ulong 24
+put s add 8 i get r add 8 i
+end
+end
+fn dispatch r edit ulong 32 c view ulong 32 mode uchar to ulong
+err = lacq get dpid 0 1000
+if ne err 0
+ret 80
+end
+err = readrec r
+if ne err 0
+lk = lrel
+ret 70
+end
+g = readgen
+if ne get sgerr 0 0
+lk = lrel
+ret 71
+end
+err = storevalid r g
+if ne err 0
+lk = lrel
+ret err
+end
+err = actstart r c
+if ne err 0
+lk = lrel
+ret err
+end
+err = writerec r
+if ne err 0
+lk = lrel
+ret 72
+end
+lk = lrel
+if ne lk 0
+ret 78
+end
+pid = fork
+if lt pid 0
+ret 73
+end
+if eq pid 0
+if eq mode 49
+e = writegen 2
+if ne e 0
+exit int 97
+end
+end
+if eq mode 50
+exit int 1
+end
+if eq mode 51
+n = packtrue
+rr = execprog dpkt 0 n
+exit int 98
+end
+if eq mode 52
+put dn 0 0
+dput16 1
+dput16 get dplen 0
+dcopy
+rx = execpure dpkt 0 get dn 0
+exit int 98
+end
+exit int 0
+end
+wr = waitpid int pid dstat 0 len dstat 0
+if ne wr long pid
+ret 74
+end
+sig = ulong get dstat 0
+code = ulong get dstat 1
+g2 = readgen
+if ne get sgerr 0 0
+ret 75
+end
+if ne g2 g
+err = lacq get dpid 0 1000
+if ne err 0
+ret 80
+end
+err = actlost r
+err = writerec r
+lk = lrel
+ret 60
+end
+err = lacq get dpid 0 1000
+if ne err 0
+ret 80
+end
+s = new ulong 32 0
+outcome = ulong 0
+if and eq sig 0 eq code 0
+outcome = ulong 2
+end
+doreceipt r s outcome
+err = actrecon r s
+if ne err 0
+err = writerec r
+lk = lrel
+ret 76
+end
+err = writerec r
+lk = lrel
+if ne err 0
+ret 77
+end
+if eq outcome 0
+ret 61
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Deterministic lock-acquisition schedule, not a qualification of the real pid lock.
+note Link action.om, store.om, dispatch.om and this file, WITHOUT lock.om.
+note The acquisition double commits another owner's performed record before returning.
+note Production dispatch must read that record after acquisition and refuse a duplicate.
+global schedrec ulong 32
+global acqmode ulong 1
+global releases ulong 1
+global acquired ulong 1
+global failures ulong 1
+text orderdir "build/authority-store"
+text ordbuild "build"
+text stalechk "FAIL dispatch acquired-record refusal\n"
+text relcheck "FAIL dispatch read-error release\n"
+text acqcheck "FAIL dispatch acquisition-error refusal\n"
+text okorder "dispatch order checks=3 fails=0\n"
+fn lacq p ulong tries ulong to ulong
+put acquired 0 add get acquired 0 1
+if eq get acqmode 0 2
+ret 22
+end
+if eq get acqmode 0 1
+r = unlink recp 0 len recp
+if ne r 0
+ret 40
+end
+ret 0
+end
+localrec = new ulong 32 0
+for i ulong 32
+put localrec i get schedrec i
+end
+ret writerec localrec
+end
+fn lrel to ulong
+put releases 0 add get releases 0 1
+ret 0
+end
+fn orderfail mode ulong to void
+put failures 0 add get failures 0 1
+if eq mode 0
+w = write 1 stalechk 0 len stalechk
+if ne w long len stalechk
+exit 90
+end
+end
+if eq mode 1
+w = write 1 relcheck 0 len relcheck
+if ne w long len relcheck
+exit 90
+end
+end
+if eq mode 2
+w = write 1 acqcheck 0 len acqcheck
+if ne w long len acqcheck
+exit 90
+end
+end
+end
+fn main to int
+mk = makedir ordbuild 0 len ordbuild 448
+if not or eq mk 0 eq mk -17
+ret 91
+end
+mk = makedir orderdir 0 len orderdir 448
+if not or eq mk 0 eq mk -17
+ret 92
+end
+put dpid 0 ulong getpid
+r = new ulong 32 0
+c = new ulong 32 0
+put r 0 1
+put r 1 1
+put r 3 3
+put r 4 1
+put r 5 9
+put r 6 100
+put c 0 1
+put c 1 1
+put c 2 50
+put c 4 1
+put c 5 9
+for i ulong 24
+put r add i 8 add i 100
+put c add i 8 add i 100
+end
+for i ulong 32
+put schedrec i get r i
+end
+put schedrec 1 4
+put schedrec 2 1
+if ne writegen 1 0
+ret 93
+end
+if ne writerec r 0
+ret 94
+end
+result = dispatch r c 48
+if or ne result 22 or ne get acquired 0 1 ne get releases 0 1
+orderfail 0
+end
+put acqmode 0 1
+put acquired 0 0
+put releases 0 0
+result = dispatch r c 48
+if or ne result 70 or ne get acquired 0 1 ne get releases 0 1
+orderfail 1
+end
+put acqmode 0 2
+put acquired 0 0
+put releases 0 0
+result = dispatch r c 48
+if or ne result 80 or ne get acquired 0 1 ne get releases 0 0
+orderfail 2
+end
+if ne get failures 0 0
+ret 1
+end
+w = write 1 okorder 0 len okorder
+if ne w long len okorder
+ret 95
+end
+ret 0
+end
