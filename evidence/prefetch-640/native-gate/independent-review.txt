@@ -1,0 +1,58 @@
+Independent native prefetch gate qualification, 2026-10-23
+PASS:53-case normal run reproduced; all six refusal/control runs behaved
+as required. No product files changed. No unexpected findings.
+
+Qualified identities
+Compiler /tmp/L793-corrected-compiler/omc SHA256:
+9f48f66a9ee9f6a166df615a7ab9c48bf5b06ac2ba544ac51e52e9a3d290a6c4
+Gate source SHA256:
+8dec394f5719ae02e6eb90304dc76d6c8d2d5b1fb73a915ad08e191212d6f842
+Independent gate binary SHA256:
+cd4782ba1d41424273e96ec927c2728d314c7d2c5a9bd5e57d7ea142818c921b
+Gate-child source SHA256:
+459a60da8e660ee1f433a9679bb41467074fda45997e5168e23e92ebad0d570b
+Gate product source rechecked after tests, unchanged and matching frozen copy.
+Copied classifier and fixture hashes are included in SHA256SUMS.
+
+Executed results
+pass:exit0; exact final observation prefetch_cases53 and gate PASS.
+pass repeated in same scratch:exit91; no new qualification or PASS.
+wrongexit optional argument0:child exits7, gate exits99.
+signal optional argument1:child wait signal9, gate exits99.
+timeout optional argument2:30-second deadline reached; SIGKILL issued;
+child reaped with wait signal9; gate exits99.
+verdict:copied classifier CAUGHT text changed to same-length BOUGHT;
+classifier compiles and exits0, output is PREFETCH_CONTROL: BOUGHT;
+gate rejects exact-byte mismatch and exits99.
+compilefail:invalid Omega source appended to copied classifier; compiler
+exits16, gate exits99. Compiler diagnostic and all scratch retained.
+No negative/control run prints the gate PASS marker.
+
+Evidence
+results.txt; each named case directory contains native source copies,
+stdout.txt,stderr.txt and build/prefetch-native-gate artifacts. timeout
+also contains status.txt. Mutation output is verdict/build/prefetch-native-gate/1006.
+Compile diagnostic is compilefail/build/prefetch-native-gate/501001.
+
+Commands
+Work directory /tmp/prefetch-gate-review. Each case initially received a
+fresh copy of native/prefetch and an empty build directory.
+  /tmp/L793-corrected-compiler/omc < gate.om > gate.elf 2> compile.log
+  chmod 700 gate.elf
+In pass directory:
+  ../gate.elf /tmp/L793-corrected-compiler/omc > stdout.txt 2> stderr.txt
+Repeat that invocation in same directory to observe91.
+In wrongexit/signal/timeout fresh directories, append argument0/1/2
+respectively. Each captures its own stdout and stderr.
+In verdict copy only, replace PREFETCH_CONTROL: CAUGHT with
+PREFETCH_CONTROL: BOUGHT in native/prefetch/classify.om, then run the gate.
+In compilefail copy only, append the invalid source line:
+  this is deliberately invalid omega source
+Then run the gate. The gate performs each copied-source compilation itself.
+
+Boundaries
+All executed qualification logic is existing/new native .om; shell merely
+copies, compiles, starts processes and captures outputs/status. Source
+mutations are private test controls. No Python, new C/Rust, GPU, serving,
+publication, compiler/runtime edits or product changes. This is supervisor
+and exact-verdict qualification, not a GPU prefetch correctness claim.

@@ -1,0 +1,262 @@
+seed/out/omc: OK
+seed/omc/omc.om: OK
+/tmp/L793-native-gate/combined/seed/out/omc < native/prefetch/classify.om > build/prefetch-native-gate/1001 2> build/prefetch-native-gate/501001
+exit=0 expected=0
+/tmp/L793-native-gate/combined/seed/out/omc < native/prefetch/review-fixtures.om > build/prefetch-native-gate/1002 2> build/prefetch-native-gate/501002
+exit=0 expected=0
+/tmp/L793-native-gate/combined/seed/out/omc < native/prefetch/review-nested.om > build/prefetch-native-gate/1003 2> build/prefetch-native-gate/501003
+exit=0 expected=0
+build/prefetch-native-gate/1002 0 L < /dev/null > build/prefetch-native-gate/1004 2> build/prefetch-native-gate/501004
+exit=0 expected=0
+build/prefetch-native-gate/1002 0 J < /dev/null > build/prefetch-native-gate/1005 2> build/prefetch-native-gate/501005
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1004 build/prefetch-native-gate/1005 < /dev/null > build/prefetch-native-gate/1006 2> build/prefetch-native-gate/501006
+exit=0 expected=0
+build/prefetch-native-gate/1002 1 L < /dev/null > build/prefetch-native-gate/1007 2> build/prefetch-native-gate/501007
+exit=0 expected=0
+build/prefetch-native-gate/1002 1 J < /dev/null > build/prefetch-native-gate/1008 2> build/prefetch-native-gate/501008
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1007 build/prefetch-native-gate/1008 < /dev/null > build/prefetch-native-gate/1009 2> build/prefetch-native-gate/501009
+exit=0 expected=0
+build/prefetch-native-gate/1002 2 L < /dev/null > build/prefetch-native-gate/1010 2> build/prefetch-native-gate/501010
+exit=0 expected=0
+build/prefetch-native-gate/1002 2 J < /dev/null > build/prefetch-native-gate/1011 2> build/prefetch-native-gate/501011
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1010 build/prefetch-native-gate/1011 < /dev/null > build/prefetch-native-gate/1012 2> build/prefetch-native-gate/501012
+exit=0 expected=0
+build/prefetch-native-gate/1002 3 L < /dev/null > build/prefetch-native-gate/1013 2> build/prefetch-native-gate/501013
+exit=0 expected=0
+build/prefetch-native-gate/1002 3 J < /dev/null > build/prefetch-native-gate/1014 2> build/prefetch-native-gate/501014
+exit=0 expected=0
+build/prefetch-native-gate/1001 0 build/prefetch-native-gate/1013 build/prefetch-native-gate/1014 < /dev/null > build/prefetch-native-gate/1015 2> build/prefetch-native-gate/501015
+exit=1 expected=1
+build/prefetch-native-gate/1002 4 L < /dev/null > build/prefetch-native-gate/1016 2> build/prefetch-native-gate/501016
+exit=0 expected=0
+build/prefetch-native-gate/1002 4 J < /dev/null > build/prefetch-native-gate/1017 2> build/prefetch-native-gate/501017
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1016 build/prefetch-native-gate/1017 < /dev/null > build/prefetch-native-gate/1018 2> build/prefetch-native-gate/501018
+exit=65 expected=65
+build/prefetch-native-gate/1002 5 L < /dev/null > build/prefetch-native-gate/1019 2> build/prefetch-native-gate/501019
+exit=0 expected=0
+build/prefetch-native-gate/1002 5 J < /dev/null > build/prefetch-native-gate/1020 2> build/prefetch-native-gate/501020
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1019 build/prefetch-native-gate/1020 < /dev/null > build/prefetch-native-gate/1021 2> build/prefetch-native-gate/501021
+exit=65 expected=65
+build/prefetch-native-gate/1002 6 L < /dev/null > build/prefetch-native-gate/1022 2> build/prefetch-native-gate/501022
+exit=0 expected=0
+build/prefetch-native-gate/1002 6 J < /dev/null > build/prefetch-native-gate/1023 2> build/prefetch-native-gate/501023
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1022 build/prefetch-native-gate/1023 < /dev/null > build/prefetch-native-gate/1024 2> build/prefetch-native-gate/501024
+exit=65 expected=65
+build/prefetch-native-gate/1002 7 L < /dev/null > build/prefetch-native-gate/1025 2> build/prefetch-native-gate/501025
+exit=0 expected=0
+build/prefetch-native-gate/1002 7 J < /dev/null > build/prefetch-native-gate/1026 2> build/prefetch-native-gate/501026
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1025 build/prefetch-native-gate/1026 < /dev/null > build/prefetch-native-gate/1027 2> build/prefetch-native-gate/501027
+exit=65 expected=65
+build/prefetch-native-gate/1002 8 L < /dev/null > build/prefetch-native-gate/1028 2> build/prefetch-native-gate/501028
+exit=0 expected=0
+build/prefetch-native-gate/1002 8 J < /dev/null > build/prefetch-native-gate/1029 2> build/prefetch-native-gate/501029
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1028 build/prefetch-native-gate/1029 < /dev/null > build/prefetch-native-gate/1030 2> build/prefetch-native-gate/501030
+exit=65 expected=65
+build/prefetch-native-gate/1002 9 L < /dev/null > build/prefetch-native-gate/1031 2> build/prefetch-native-gate/501031
+exit=0 expected=0
+build/prefetch-native-gate/1002 9 J < /dev/null > build/prefetch-native-gate/1032 2> build/prefetch-native-gate/501032
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1031 build/prefetch-native-gate/1032 < /dev/null > build/prefetch-native-gate/1033 2> build/prefetch-native-gate/501033
+exit=65 expected=65
+build/prefetch-native-gate/1002 A L < /dev/null > build/prefetch-native-gate/1034 2> build/prefetch-native-gate/501034
+exit=0 expected=0
+build/prefetch-native-gate/1002 A J < /dev/null > build/prefetch-native-gate/1035 2> build/prefetch-native-gate/501035
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1034 build/prefetch-native-gate/1035 < /dev/null > build/prefetch-native-gate/1036 2> build/prefetch-native-gate/501036
+exit=65 expected=65
+build/prefetch-native-gate/1002 B L < /dev/null > build/prefetch-native-gate/1037 2> build/prefetch-native-gate/501037
+exit=0 expected=0
+build/prefetch-native-gate/1002 B J < /dev/null > build/prefetch-native-gate/1038 2> build/prefetch-native-gate/501038
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1037 build/prefetch-native-gate/1038 < /dev/null > build/prefetch-native-gate/1039 2> build/prefetch-native-gate/501039
+exit=65 expected=65
+build/prefetch-native-gate/1002 C L < /dev/null > build/prefetch-native-gate/1040 2> build/prefetch-native-gate/501040
+exit=0 expected=0
+build/prefetch-native-gate/1002 C J < /dev/null > build/prefetch-native-gate/1041 2> build/prefetch-native-gate/501041
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1040 build/prefetch-native-gate/1041 < /dev/null > build/prefetch-native-gate/1042 2> build/prefetch-native-gate/501042
+exit=65 expected=65
+build/prefetch-native-gate/1002 D L < /dev/null > build/prefetch-native-gate/1043 2> build/prefetch-native-gate/501043
+exit=0 expected=0
+build/prefetch-native-gate/1002 D J < /dev/null > build/prefetch-native-gate/1044 2> build/prefetch-native-gate/501044
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1043 build/prefetch-native-gate/1044 < /dev/null > build/prefetch-native-gate/1045 2> build/prefetch-native-gate/501045
+exit=65 expected=65
+build/prefetch-native-gate/1002 E L < /dev/null > build/prefetch-native-gate/1046 2> build/prefetch-native-gate/501046
+exit=0 expected=0
+build/prefetch-native-gate/1002 E J < /dev/null > build/prefetch-native-gate/1047 2> build/prefetch-native-gate/501047
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1046 build/prefetch-native-gate/1047 < /dev/null > build/prefetch-native-gate/1048 2> build/prefetch-native-gate/501048
+exit=65 expected=65
+build/prefetch-native-gate/1002 F L < /dev/null > build/prefetch-native-gate/1049 2> build/prefetch-native-gate/501049
+exit=0 expected=0
+build/prefetch-native-gate/1002 F J < /dev/null > build/prefetch-native-gate/1050 2> build/prefetch-native-gate/501050
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1049 build/prefetch-native-gate/1050 < /dev/null > build/prefetch-native-gate/1051 2> build/prefetch-native-gate/501051
+exit=65 expected=65
+build/prefetch-native-gate/1002 G L < /dev/null > build/prefetch-native-gate/1052 2> build/prefetch-native-gate/501052
+exit=0 expected=0
+build/prefetch-native-gate/1002 G J < /dev/null > build/prefetch-native-gate/1053 2> build/prefetch-native-gate/501053
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1052 build/prefetch-native-gate/1053 < /dev/null > build/prefetch-native-gate/1054 2> build/prefetch-native-gate/501054
+exit=65 expected=65
+build/prefetch-native-gate/1002 H L < /dev/null > build/prefetch-native-gate/1055 2> build/prefetch-native-gate/501055
+exit=0 expected=0
+build/prefetch-native-gate/1002 H J < /dev/null > build/prefetch-native-gate/1056 2> build/prefetch-native-gate/501056
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1055 build/prefetch-native-gate/1056 < /dev/null > build/prefetch-native-gate/1057 2> build/prefetch-native-gate/501057
+exit=65 expected=65
+build/prefetch-native-gate/1002 I L < /dev/null > build/prefetch-native-gate/1058 2> build/prefetch-native-gate/501058
+exit=0 expected=0
+build/prefetch-native-gate/1002 I J < /dev/null > build/prefetch-native-gate/1059 2> build/prefetch-native-gate/501059
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1058 build/prefetch-native-gate/1059 < /dev/null > build/prefetch-native-gate/1060 2> build/prefetch-native-gate/501060
+exit=65 expected=65
+build/prefetch-native-gate/1002 J L < /dev/null > build/prefetch-native-gate/1061 2> build/prefetch-native-gate/501061
+exit=0 expected=0
+build/prefetch-native-gate/1002 J J < /dev/null > build/prefetch-native-gate/1062 2> build/prefetch-native-gate/501062
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1061 build/prefetch-native-gate/1062 < /dev/null > build/prefetch-native-gate/1063 2> build/prefetch-native-gate/501063
+exit=65 expected=65
+build/prefetch-native-gate/1002 K L < /dev/null > build/prefetch-native-gate/1064 2> build/prefetch-native-gate/501064
+exit=0 expected=0
+build/prefetch-native-gate/1002 K J < /dev/null > build/prefetch-native-gate/1065 2> build/prefetch-native-gate/501065
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1064 build/prefetch-native-gate/1065 < /dev/null > build/prefetch-native-gate/1066 2> build/prefetch-native-gate/501066
+exit=65 expected=65
+build/prefetch-native-gate/1002 0 L < /dev/null > build/prefetch-native-gate/1067 2> build/prefetch-native-gate/501067
+exit=0 expected=0
+build/prefetch-native-gate/1002 0 J < /dev/null > build/prefetch-native-gate/1068 2> build/prefetch-native-gate/501068
+exit=0 expected=0
+build/prefetch-native-gate/1001 0 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1069 2> build/prefetch-native-gate/501069
+exit=65 expected=65
+build/prefetch-native-gate/1001 2 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1070 2> build/prefetch-native-gate/501070
+exit=65 expected=65
+build/prefetch-native-gate/1001 124 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1071 2> build/prefetch-native-gate/501071
+exit=65 expected=65
+build/prefetch-native-gate/1001 137 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1072 2> build/prefetch-native-gate/501072
+exit=65 expected=65
+build/prefetch-native-gate/1001 139 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1073 2> build/prefetch-native-gate/501073
+exit=65 expected=65
+build/prefetch-native-gate/1001 -1 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1074 2> build/prefetch-native-gate/501074
+exit=65 expected=65
+build/prefetch-native-gate/1001 01 build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1075 2> build/prefetch-native-gate/501075
+exit=65 expected=65
+build/prefetch-native-gate/1001  build/prefetch-native-gate/1067 build/prefetch-native-gate/1068 < /dev/null > build/prefetch-native-gate/1076 2> build/prefetch-native-gate/501076
+exit=65 expected=65
+build/prefetch-native-gate/1002 3 L < /dev/null > build/prefetch-native-gate/1077 2> build/prefetch-native-gate/501077
+exit=0 expected=0
+build/prefetch-native-gate/1002 3 J < /dev/null > build/prefetch-native-gate/1078 2> build/prefetch-native-gate/501078
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1077 build/prefetch-native-gate/1078 < /dev/null > build/prefetch-native-gate/1079 2> build/prefetch-native-gate/501079
+exit=65 expected=65
+build/prefetch-native-gate/1002 0 J < /dev/null > build/prefetch-native-gate/1080 2> build/prefetch-native-gate/501080
+exit=0 expected=0
+build/prefetch-native-gate/1002 1 J < /dev/null > build/prefetch-native-gate/1081 2> build/prefetch-native-gate/501081
+exit=0 expected=0
+build/prefetch-native-gate/1002 L L < /dev/null > build/prefetch-native-gate/1082 2> build/prefetch-native-gate/501082
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1082 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1083 2> build/prefetch-native-gate/501083
+exit=65 expected=65
+build/prefetch-native-gate/1002 M L < /dev/null > build/prefetch-native-gate/1084 2> build/prefetch-native-gate/501084
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1084 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1085 2> build/prefetch-native-gate/501085
+exit=65 expected=65
+build/prefetch-native-gate/1002 N L < /dev/null > build/prefetch-native-gate/1086 2> build/prefetch-native-gate/501086
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1086 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1087 2> build/prefetch-native-gate/501087
+exit=65 expected=65
+build/prefetch-native-gate/1002 O L < /dev/null > build/prefetch-native-gate/1088 2> build/prefetch-native-gate/501088
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1088 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1089 2> build/prefetch-native-gate/501089
+exit=65 expected=65
+build/prefetch-native-gate/1002 P L < /dev/null > build/prefetch-native-gate/1090 2> build/prefetch-native-gate/501090
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1090 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1091 2> build/prefetch-native-gate/501091
+exit=0 expected=0
+build/prefetch-native-gate/1002 Q L < /dev/null > build/prefetch-native-gate/1092 2> build/prefetch-native-gate/501092
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1092 build/prefetch-native-gate/1081 < /dev/null > build/prefetch-native-gate/1093 2> build/prefetch-native-gate/501093
+exit=0 expected=0
+build/prefetch-native-gate/1002 R L < /dev/null > build/prefetch-native-gate/1094 2> build/prefetch-native-gate/501094
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1094 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1095 2> build/prefetch-native-gate/501095
+exit=65 expected=65
+build/prefetch-native-gate/1002 S L < /dev/null > build/prefetch-native-gate/1096 2> build/prefetch-native-gate/501096
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1096 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1097 2> build/prefetch-native-gate/501097
+exit=65 expected=65
+build/prefetch-native-gate/1002 T L < /dev/null > build/prefetch-native-gate/1098 2> build/prefetch-native-gate/501098
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1098 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1099 2> build/prefetch-native-gate/501099
+exit=65 expected=65
+build/prefetch-native-gate/1002 U L < /dev/null > build/prefetch-native-gate/1100 2> build/prefetch-native-gate/501100
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1100 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1101 2> build/prefetch-native-gate/501101
+exit=65 expected=65
+build/prefetch-native-gate/1002 V L < /dev/null > build/prefetch-native-gate/1102 2> build/prefetch-native-gate/501102
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1102 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1103 2> build/prefetch-native-gate/501103
+exit=65 expected=65
+build/prefetch-native-gate/1002 W L < /dev/null > build/prefetch-native-gate/1104 2> build/prefetch-native-gate/501104
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1104 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1105 2> build/prefetch-native-gate/501105
+exit=65 expected=65
+build/prefetch-native-gate/1002 X L < /dev/null > build/prefetch-native-gate/1106 2> build/prefetch-native-gate/501106
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1106 build/prefetch-native-gate/1080 < /dev/null > build/prefetch-native-gate/1107 2> build/prefetch-native-gate/501107
+exit=65 expected=65
+build/prefetch-native-gate/1002 0 L < /dev/null > build/prefetch-native-gate/1108 2> build/prefetch-native-gate/501108
+exit=0 expected=0
+build/prefetch-native-gate/1002 0 J < /dev/null > build/prefetch-native-gate/1109 2> build/prefetch-native-gate/501109
+exit=0 expected=0
+build/prefetch-native-gate/1003 0 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1110 2> build/prefetch-native-gate/501110
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1110 < /dev/null > build/prefetch-native-gate/1111 2> build/prefetch-native-gate/501111
+exit=65 expected=65
+build/prefetch-native-gate/1003 1 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1112 2> build/prefetch-native-gate/501112
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1112 < /dev/null > build/prefetch-native-gate/1113 2> build/prefetch-native-gate/501113
+exit=65 expected=65
+build/prefetch-native-gate/1003 2 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1114 2> build/prefetch-native-gate/501114
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1114 < /dev/null > build/prefetch-native-gate/1115 2> build/prefetch-native-gate/501115
+exit=65 expected=65
+build/prefetch-native-gate/1003 3 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1116 2> build/prefetch-native-gate/501116
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1116 < /dev/null > build/prefetch-native-gate/1117 2> build/prefetch-native-gate/501117
+exit=65 expected=65
+build/prefetch-native-gate/1003 4 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1118 2> build/prefetch-native-gate/501118
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1118 < /dev/null > build/prefetch-native-gate/1119 2> build/prefetch-native-gate/501119
+exit=65 expected=65
+build/prefetch-native-gate/1003 5 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1120 2> build/prefetch-native-gate/501120
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1120 < /dev/null > build/prefetch-native-gate/1121 2> build/prefetch-native-gate/501121
+exit=65 expected=65
+build/prefetch-native-gate/1003 6 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1122 2> build/prefetch-native-gate/501122
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1122 < /dev/null > build/prefetch-native-gate/1123 2> build/prefetch-native-gate/501123
+exit=65 expected=65
+build/prefetch-native-gate/1003 7 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1124 2> build/prefetch-native-gate/501124
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1124 < /dev/null > build/prefetch-native-gate/1125 2> build/prefetch-native-gate/501125
+exit=65 expected=65
+build/prefetch-native-gate/1003 8 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1126 2> build/prefetch-native-gate/501126
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1126 < /dev/null > build/prefetch-native-gate/1127 2> build/prefetch-native-gate/501127
+exit=65 expected=65
+build/prefetch-native-gate/1003 9 < build/prefetch-native-gate/1109 > build/prefetch-native-gate/1128 2> build/prefetch-native-gate/501128
+exit=0 expected=0
+build/prefetch-native-gate/1001 1 build/prefetch-native-gate/1108 build/prefetch-native-gate/1128 < /dev/null > build/prefetch-native-gate/1129 2> build/prefetch-native-gate/501129
+exit=65 expected=65
+AIEN-OBS prefetch_cases 53
+PREFETCH_NATIVE_GATE: PASS

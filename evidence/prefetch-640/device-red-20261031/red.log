@@ -1,0 +1,21 @@
+dgraph prefetch 1 (red 1)
+fp8 knobs: variant 1 barrier 0 (wfi+inval_all) cta_budget 0 shape 0/0/0 cached 1
+model built in 3.4 s (layers 2, vocab 151936, pos 300)
+ok: A (baseline, host glue) 3 reps ran
+ok: A deterministic over 3 reps (token 62700)
+A: token 62700 logit 5.820572, runner-up 107672 logit 5.779164 (gap 0.0414)
+ok: C (one list per token) 3 reps ran: 24 launches in 1 submission(s)
+FAIL: C deterministic over 3 reps (token 70886)
+A vs C: token 62700 vs 70886, logits max |d| 1.5 (scale 6.03, rel 0.249, tol 1e-04), x max rel 0.329, hidden max rel 0.3
+FAIL: argmax token identical: A 62700, C 70886
+FAIL: logits A vs C within 1e-04 of max|logit| (max |d| 1.5, scale 6.03)
+ok: B (one launch per submission) 3 reps ran: 24 launches in 24 submissions
+FAIL: B bit-identical to C (x, hidden, logits, token) in every rep
+ok: negative control: SWIGLU mutant fails the comparison (token 107672 vs 62700, max |d| 1.37 = 0.227 of scale)
+ok: negative control: COMBINE mutant fails the comparison (token 31346 vs 62700, max |d| 0.367 = 0.0608 of scale)
+FAIL: C after the mutants bit-identical to the first C
+FAIL: timeline: rc 0, 24 stamps for 24 launches, monotonic 1, span 6460.7 us <= chip 8196.7 us, token and logits unchanged
+TIMELINE (2 layers, pos 300): norm x1 8.6 us qkv x2 133.9 us attn x4 1.6 us o_proj x2 293.1 us res_add x2 7.7 us router x2 53.6 us gate_up x2 332.1 us swiglu x2 6.3 us down x2 158.5 us combine_norm x2 19.0 us lm_head x1 5428.5 us argmax x2 17.7 us
+ok: timeline off: token rc 0, stamps accessor refuses (-1)
+PER TOKEN (median of 3, 2 layers): A host-glue 13 launches 37765.5 us | C one list 24 launches 8783.7 us (chip 8753.0 us, record 26.8 us) | B per-launch submits 24 launches 62776.8 us (chip sum 62653.8 us)
+chip: 13 checks, 6 failed: FAIL
