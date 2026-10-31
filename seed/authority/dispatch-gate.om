@@ -170,6 +170,7 @@ text recp "build/authority-store/rec"
 text tmpp "build/authority-store/tmp"
 text genp "build/authority-store/gen"
 global sb uchar 256
+global stail uchar 1
 global spkt uchar 256
 global sn ulong 1
 global spath uchar 128
@@ -262,10 +263,14 @@ if lt fd 0
 ret 20
 end
 n = read int fd sb 0 256
+extra = long -1
+if eq n 256
+extra = read int fd stail 0 1
+end
 if ne fclose int fd 0
 ret 21
 end
-if ne n 256
+if or ne n 256 ne extra 0
 ret 22
 end
 dv = dec r
@@ -280,11 +285,15 @@ put sgerr 0 30
 ret 0
 end
 n = read int fd sb 0 8
+extra = long -1
+if eq n 8
+extra = read int fd stail 0 1
+end
 if ne fclose int fd 0
 put sgerr 0 31
 ret 0
 end
-if ne n 8
+if or ne n 8 ne extra 0
 put sgerr 0 32
 ret 0
 end
