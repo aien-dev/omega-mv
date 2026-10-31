@@ -1,0 +1,5 @@
+note no-random.om: random stays outside the OM-2 function-mode host words: error 9 on line 4.
+om2
+fn bad p edit uchar 8 to long
+ret random p 0 8 0
+end

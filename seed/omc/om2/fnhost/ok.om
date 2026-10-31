@@ -1,0 +1,34 @@
+note ok.om: an OM-2 function unit (no fn main) using every function-mode host word: getuid geteuid
+note getgid getegid, stat lstat fopen fstat fclose, and read. Compiles (exit 0) since the om2 function-mode
+note host-word subset; the same unit without the om2 line is error 9 (om1.om).
+om2
+fn ids to ulong
+a = ulong getuid
+b = ulong geteuid
+c = ulong getgid
+e = ulong getegid
+ret add add a b add c e
+end
+fn peek p view uchar * to long
+s = new uchar 128 0
+r = lstat p 0 len p s 0 128
+if ne r 0
+ret r
+end
+r = stat p 0 len p s 0 128
+if ne r 0
+ret r
+end
+fd = fopen p 0 len p 559104 0
+if lt fd 0
+ret fd
+end
+b = new uchar 16 0
+k = fstat int fd s 0 128
+n = read int fd b 0 16
+z = fclose int fd
+if ne k 0
+ret k
+end
+ret n
+end

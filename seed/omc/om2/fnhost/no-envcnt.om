@@ -1,0 +1,5 @@
+note no-envcnt.om: envcnt stays outside the OM-2 function-mode host words: error 9 on line 4.
+om2
+fn bad p view uchar 8 to long
+ret envcnt
+end

@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/omc/om2/fnhost/mutants.cases: each omc.om mutant of the function-mode host-word check must be
+# detected (its case FAIL); the ctl- case shows the mutant compiler still builds and compiles ok.om or om1.om as
+# the unmutated one would where the mutation does not reach. Expected: OM2GATE FAIL, 4 mutant cases FAIL.
+deadline 60
+subst seed/omc/om2/fnhost/mutants/fn-om1.from seed/omc/om2/fnhost/mutants/fn-om1.to
+cc seed/omc/omc.om
+ctl-fn-om1 emit seed/omc/om2/fnhost/ok.om sha:53fc2c0c8b7d1d507b3481bfb7cff0e955dfa7906a430243554280068ae5cbbf - 0
+fn-om1 refuse seed/omc/om2/fnhost/om1.om 9
+cc pinned
+subst seed/omc/om2/fnhost/mutants/fn-high.from seed/omc/om2/fnhost/mutants/fn-high.to
+cc seed/omc/omc.om
+ctl-fn-high refuse seed/omc/om2/fnhost/om1.om 9
+fn-high refuse seed/omc/om2/fnhost/no-getppid.om 9
+cc pinned
+subst seed/omc/om2/fnhost/mutants/fn-low.from seed/omc/om2/fnhost/mutants/fn-low.to
+cc seed/omc/omc.om
+ctl-fn-low refuse seed/omc/om2/fnhost/om1.om 9
+fn-low refuse seed/omc/om2/fnhost/no-getpid.om 9
+cc pinned
+subst seed/omc/om2/fnhost/mutants/fn-narrow.from seed/omc/om2/fnhost/mutants/fn-narrow.to
+cc seed/omc/omc.om
+ctl-fn-narrow refuse seed/omc/om2/fnhost/no-getppid.om 9
+fn-narrow emit seed/omc/om2/fnhost/ok.om sha:53fc2c0c8b7d1d507b3481bfb7cff0e955dfa7906a430243554280068ae5cbbf - 0
+cc pinned

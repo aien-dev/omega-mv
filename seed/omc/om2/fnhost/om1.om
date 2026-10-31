@@ -1,0 +1,5 @@
+note om1.om: the OM-1 profile keeps every host word out of function mode: error 9 on line 3.
+fn ids to ulong
+b = ulong geteuid
+ret b
+end

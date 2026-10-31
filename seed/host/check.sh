@@ -97,6 +97,20 @@ grep -qx 'OM2GATE FAIL cases=10 pass=2 fail=8 invalid=0 not_run=0' "$run/bndmut.
 [ "$(grep -c '^VERDICT ctl-bnd-[a-z]*-g0-run PASS ' "$run/bndmut.log")" = 2 ]
 [ "$(grep -c '^VERDICT bnd-[a-z]*-[a-z0-9-]* FAIL ' "$run/bndmut.log")" = 8 ]
 echo 'PASS expression boundaries (47 cases) and 2 operand mutants killed'
+# OM-2 function-mode host words (OMEGESE 10): the subset compiles, everything else stays error 9, 4 mutants.
+"$B/gate" seed/out/omc "$pin" seed/omc/om2/fnhost/fnhost.cases "$run/fnhost" > "$run/fnhost.log" || { cat "$run/fnhost.log"; exit 1; }
+grep -qx 'OM2GATE PASS cases=10 pass=10 fail=0 invalid=0 not_run=0' "$run/fnhost.log"
+if "$B/gate" seed/out/omc "$pin" seed/omc/om2/fnhost/mutants.cases "$run/fnhostmut" > "$run/fnhostmut.log"; then
+    echo 'FAIL function-mode host-word mutant survived' >&2
+    exit 1
+else
+    status=$?
+    [ "$status" = 1 ] || { cat "$run/fnhostmut.log"; exit 1; }
+fi
+grep -qx 'OM2GATE FAIL cases=8 pass=4 fail=4 invalid=0 not_run=0' "$run/fnhostmut.log"
+[ "$(grep -c '^VERDICT ctl-fn-[a-z0-9]* PASS ' "$run/fnhostmut.log")" = 4 ]
+[ "$(grep -c '^VERDICT fn-[a-z0-9]* FAIL ' "$run/fnhostmut.log")" = 4 ]
+echo 'PASS function-mode host words (10 cases) and 4 omc.om mutants killed'
 # Same function-mode contract behavior through the unchanged C referee and OscRt.
 if [ ! -x build/omegese/omegese ] || [ ! -x build/omega_emit/omega_emit ]; then
     echo 'NOT_RUN contract C parity: build the comparison oracles' >&2

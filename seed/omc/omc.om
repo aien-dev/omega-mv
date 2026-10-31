@@ -7222,8 +7222,29 @@ end
 if ne get xtarget 0 0
 fail 25
 end
+note Function mode (no program image: no argv in x27, no x28 stack floor, no globals) refuses host
+note words with error 9, except in an OM-2 unit the file and identity subset that needs none of the
+note image: fclose 100, fopen 110, fstat 117, stat 140, getuid 145, geteuid 146, getgid 147, getegid 148,
+note lstat 149 (OMEGESE.md 10, spec/omegese-om2.md). Each is save, inline svc, restore; x7 and x19..x28
+note are never written, so a bridged call (omega-bridge NATIVE-ABI) keeps its frame.
 if eq get progmode 0 0
+if eq get om2 0 0
 fail 9
+end
+if gt c 149
+fail 9
+end
+if lt c 145
+if ne c 100
+if ne c 110
+if ne c 117
+if ne c 140
+fail 9
+end
+end
+end
+end
+end
 end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0

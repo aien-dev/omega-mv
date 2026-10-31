@@ -1,0 +1,5 @@
+note no-getppid.om: getppid (154, above the subset) stays outside the OM-2 function-mode host words: error 9 on line 4.
+om2
+fn bad to long
+ret getppid
+end

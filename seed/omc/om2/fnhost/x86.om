@@ -1,0 +1,7 @@
+target x86linux
+note x86.om: the x86-64 back end keeps every host word out of function mode, OM-2 included: error 9 on line 5.
+om2
+fn ids to ulong
+b = ulong geteuid
+ret b
+end

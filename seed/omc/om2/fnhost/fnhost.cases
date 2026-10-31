@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/omc/om2/fnhost/fnhost.cases: the OM-2 function-mode host words (OMEGESE.md 10, spec/omegese-om2.md).
+# An OM-2 function unit may use fclose fopen fstat stat lstat getuid geteuid getgid getegid (plus the base
+# read/write); the exact words are pinned by sha256. OM-1 function units, every other host word (below,
+# inside and above the subset's code range) and the x86-64 back end stay error 9. Run from the repository
+# root by seed/qualification/om2/gate.om (seed/host/check.sh).
+deadline 60
+fnhost-ok emit seed/omc/om2/fnhost/ok.om sha:53fc2c0c8b7d1d507b3481bfb7cff0e955dfa7906a430243554280068ae5cbbf - 0
+fnhost-om1 refuse seed/omc/om2/fnhost/om1.om 9
+fnhost-x86 refuse seed/omc/om2/fnhost/x86.om 9
+fnhost-no-argcnt refuse seed/omc/om2/fnhost/no-argcnt.om 9
+fnhost-no-envcnt refuse seed/omc/om2/fnhost/no-envcnt.om 9
+fnhost-no-getpid refuse seed/omc/om2/fnhost/no-getpid.om 9
+fnhost-no-random refuse seed/omc/om2/fnhost/no-random.om 9
+fnhost-no-unlink refuse seed/omc/om2/fnhost/no-unlink.om 9
+fnhost-no-chmod refuse seed/omc/om2/fnhost/no-chmod.om 9
+fnhost-no-getppid refuse seed/omc/om2/fnhost/no-getppid.om 9
