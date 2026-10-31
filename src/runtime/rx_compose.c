@@ -25,6 +25,7 @@
 #include "rx_compose.h"
 #include "rx_cortex_record.h"
 #include "sha256.h"
+#include "omega_path_check.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -872,7 +873,10 @@ static int open_home(RxCompose *c, const char *dir, const AienMachineId *self, u
     c->router = router;
     c->contract = contract;
     c->admin = admin;
-    if (mkdir(dir, 0700) && errno != EEXIST) return RX_ERR_ARG;
+    /* Check before mkdir (src/omega_path_check.h): a refused dir is an argument error and creates nothing. */
+    char checked[sizeof c->dir];
+    if (omega_path_copy(checked, sizeof checked, dir) != 0) return RX_ERR_ARG;
+    if (mkdir(checked, 0700) && errno != EEXIST) return RX_ERR_ARG;
 
     char p[256];
     path_in(p, sizeof p, dir, "machine.id");

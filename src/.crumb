@@ -145,8 +145,8 @@
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
-          "digest": "7cbe4137297afac5dbf4062a5727be580be8cd1461785b1791d4781d2a0b1986",
-          "last_commit": "a1667d594",
+          "digest": "6470cebae8f02c9d58cd4e8c388fbced451845e86f79407c5a14ba7a283f7fbd",
+          "last_commit": "159c4b51f",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
@@ -187,15 +187,15 @@
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:85eaf778bf3ab98a260da21c06a6b2c60b3b1ca7c798df744060dbe2f3311a5a",
-      "compiled_at": "2026-10-31T15:08:34Z",
+      "children_root": "sha256:735c91bbe2dff04f1d052401690595862dbdf4366611084fd97adf3143caccc1",
+      "compiled_at": "2026-10-31T15:59:27Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:8fd8f63c5ded617704f24bfe5b9468dd31df789dda1435b1a7606fddb79a0276",
+      "digest": "sha256:7fe15f310334744a70fe070087efafdae311d623cddee79d64fa439a46142dfb",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 600,
-      "generated_at_commit": "a1667d594929da0a37f92f265b3105a7347055cf",
-      "source_tree": "sha256:1a5f870700419c79a984827a2ce474e05ca1918ecf76c4af74220a0ed6d06798"
+      "generated_at_commit": "829cf68321a46418e039a70f48ae538505c37a0e",
+      "source_tree": "sha256:7e48abe10ddacc5d8d00d318755beeb84502f0a9644aded7f2e71a7507917102"
     },
     "owner_lane": "",
     "provenance": {

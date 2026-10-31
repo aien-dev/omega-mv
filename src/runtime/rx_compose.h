@@ -260,7 +260,8 @@ typedef struct RxCompose {
  * reopened (a torn journal tail is repaired, then the chain is verified), the
  * World is built with `n_workers` (the composition owns it; see
  * rx_compose_attach to run inside an existing World), state is recovered
- * OLD-or-NEW. */
+ * OLD-or-NEW. `dir` must pass src/omega_path_check.h (omega_path_copy) and
+ * be under 168 bytes; otherwise RX_ERR_ARG and nothing is created. */
 int  rx_compose_open(RxCompose *c, const char *dir, const AienMachineId *self, uint64_t session,
                      const SrRouter *router, RxcContract contract, AienosCapAdmin *admin,
                      AienosCapView *view, uint32_t n_workers);

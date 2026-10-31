@@ -35,6 +35,7 @@
 #include "runtime/rx_graph.h"
 #include "runtime/rx_skillroute.h"
 #include "sha256.h"
+#include "omega_path_check.h"
 
 #include <fcntl.h>
 #include <errno.h>
@@ -263,7 +264,10 @@ int rxc_host_open(const char *dir, uint32_t root_kind, const uint8_t *root, size
     memset(&inf, 0, sizeof inf);
     inf.abi_version = RXC_HOST_ABI_VERSION;
     fill_identity(&inf, &self);
-    if (mkdir(dir, 0700) && errno != EEXIST) return RXC_HOST_E_ARG;
+    /* Check before mkdir (src/omega_path_check.h): a refused dir is an argument error and creates nothing. */
+    char checked[200];
+    if (omega_path_copy(checked, sizeof checked, dir) != 0) return RXC_HOST_E_ARG;
+    if (mkdir(checked, 0700) && errno != EEXIST) return RXC_HOST_E_ARG;
 
     /* Identity first (rx_compose_open checks it again). */
     char p[256];
