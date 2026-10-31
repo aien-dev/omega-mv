@@ -9179,6 +9179,14 @@ if eq k 4
 a = ulong 5398063699126244139
 b = ulong 4839848993530975643
 end
+if eq k 5
+a = ulong 1284199179690597154
+b = ulong 4283602510276475278
+end
+if eq k 6
+a = ulong 1284253093421855137
+b = ulong 4283602510276476814
+end
 xword a
 xword shr a 32
 xword b
@@ -9325,7 +9333,7 @@ end
 x = mul get depth 0 32
 put fr add x 7 get nslot 0
 op = lenval 4
-if gt op 10
+if gt op 11
 fail 25
 end
 harg x 2 5
@@ -9702,6 +9710,258 @@ ximm 0 0
 xpatch bad2 get oc 0
 end
 
+note OP11 ARG: sub-operation bits0..7, volume index bits8..15. Sub 0 counts the Simple
+note File System volumes (UEFI 13.4) and finds the one the image was loaded from
+note (UEFI 9.1 LoadedImage.DeviceHandle): result count | index<<8, index 255 when none.
+note Sub 1 reads \EFI\BOOT\BOOTX64.EFI of volume k into A (result: bytes); sub 2 writes
+note A's N bytes as that file (an existing file is deleted first; result: bytes). Volume
+note handles are copied into the private area (at most 64) and the firmware buffer is
+note freed at once; file and root handles are closed on every path (UEFI 13.5).
+fn xefch c ulong to void
+emitb uchar c
+emitb 0
+end
+
+fn xefpath to ulong
+br = xbranch 14
+p = get oc 0
+xefch 92
+xefch 69
+xefch 70
+xefch 73
+xefch 92
+xefch 66
+xefch 79
+xefch 79
+xefch 84
+xefch 92
+xefch 66
+xefch 79
+xefch 79
+xefch 84
+xefch 88
+xefch 54
+xefch 52
+xefch 46
+xefch 69
+xefch 70
+xefch 73
+xefch 0
+xpatch br get oc 0
+ret add p 4194304
+end
+
+fn xefvols to void
+g = xeguid 5
+ximm 1 2
+xaddr 2 g
+ximm 8 0
+xpriv 9 512
+xpriv 0 520
+xmem 137 0 4 32
+xboot 312
+xrr 133 0 0
+xeerr 1 16
+xpget 1 512
+ximm 0 64
+xrr 57 1 0
+small = xbranch 3
+ximm 1 64
+xpatch small get oc 0
+xpset 1 512
+xpget 6 520
+xpriv 7 1024
+emitb 252
+emitb 243
+emitb 72
+emitb 165
+xpget 1 520
+xboot 72
+xrr 133 0 0
+xeerr 1 17
+end
+
+fn xefopen mode ulong code ulong cleanup ulong to void
+p = xefpath
+xpriv 2 552
+xaddr 8 p
+ximm 9 mode
+ximm 0 0
+xmem 137 0 4 32
+xmethod 544 8
+xrr 133 0 0
+ximm 7 code
+bad = xbranch 1
+xpatch bad cleanup
+end
+
+fn xefxfer off ulong code ulong cleanup ulong to void
+xpset 13 560
+xpriv 2 560
+xrr 137 8 12
+xmethod 552 off
+xrr 133 0 0
+ximm 7 code
+bad = xbranch 1
+xpatch bad cleanup
+end
+
+fn xefile to void
+xrr 137 0 3
+ximm 2 255
+xrr 33 0 2
+ximm 2 2
+xrr 57 0 2
+xeerr 8 15
+ximm 0 0
+xpset 0 544
+xpset 0 552
+skip = xbranch 14
+cleanup = get oc 0
+xpget 1 552
+xrr 133 1 1
+nofile = xbranch 0
+xmethod 552 16
+xpatch nofile get oc 0
+xpget 1 544
+xrr 133 1 1
+noroot = xbranch 0
+xmethod 544 16
+xpatch noroot get oc 0
+xrr 133 7 7
+good = xbranch 0
+ximm 0 9223372036854775808
+xrr 9 0 7
+xedone
+xpatch good get oc 0
+xpget 0 568
+xedone
+xpatch skip get oc 0
+xefvols
+xrr 137 6 3
+ximm 2 255
+xrr 33 6 2
+xrr 137 7 3
+xb 72 193 239
+emitb 8
+xrr 33 7 2
+xrr 133 6 6
+notzero = xbranch 1
+xefboot
+xpatch notzero get oc 0
+xpget 0 512
+xrr 57 7 0
+xeerr 2 19
+xeminc 1
+xpriv 1 1024
+xrr 137 0 7
+xb 72 193 224
+emitb 3
+xrr 1 1 0
+xmem 139 1 1 0
+g = xeguid 5
+xaddr 2 g
+xpriv 8 536
+xboot 152
+xrr 133 0 0
+xeerr 1 21
+xpriv 2 544
+xmethod 536 8
+xrr 133 0 0
+xeerr 1 22
+ximm 0 1
+xrr 57 6 0
+wr = xbranch 1
+xefread cleanup
+xpatch wr get oc 0
+xefwrite cleanup
+end
+
+fn xefboot to void
+g = xeguid 6
+xpget 1 8
+xaddr 2 g
+xpriv 8 528
+xboot 152
+xrr 133 0 0
+xeerr 1 18
+xpget 0 528
+xmem 139 0 0 24
+xpget 6 512
+xpriv 7 1024
+ximm 2 0
+loop = get oc 0
+xrr 57 2 6
+nomatch = xbranch 2
+xmem 139 1 7 0
+xrr 57 1 0
+found = xbranch 0
+xb 72 131 199
+emitb 8
+xb 72 255 194
+back loop
+xpatch nomatch get oc 0
+ximm 2 255
+xpatch found get oc 0
+xrr 137 0 6
+xb 72 193 226
+emitb 8
+xrr 9 0 2
+xedone
+end
+
+fn xefread cleanup ulong to void
+xefopen 1 23 cleanup
+xefxfer 32 25 cleanup
+xpget 0 560
+xpset 0 568
+ximm 0 1
+xpset 0 560
+xpriv 2 560
+xpriv 8 576
+xmethod 552 32
+xrr 133 0 0
+ximm 7 25
+bad = xbranch 1
+xpatch bad cleanup
+xpget 0 560
+xrr 133 0 0
+ximm 7 24
+more = xbranch 1
+xpatch more cleanup
+ximm 7 0
+fin = xbranch 14
+xpatch fin cleanup
+end
+
+fn xefwrite cleanup ulong to void
+xefopen 3 26 cleanup
+xmethod 552 24
+ximm 2 0
+xpset 2 552
+xrr 133 0 0
+ximm 7 27
+bad = xbranch 1
+xpatch bad cleanup
+xefopen 9223372036854775811 28 cleanup
+xefxfer 40 29 cleanup
+xpget 0 560
+xrr 57 0 13
+ximm 7 30
+less = xbranch 1
+xpatch less cleanup
+xmethod 552 80
+xrr 133 0 0
+ximm 7 31
+bad2 = xbranch 1
+xpatch bad2 cleanup
+xpget 0 560
+xpset 0 568
+ximm 7 0
+fin = xbranch 14
+xpatch fin cleanup
+end
+
 fn xeop op ulong to void
 if eq op 0
 xeinfo
@@ -9738,6 +9998,9 @@ if eq op 10
 xeminc 8
 xelazy
 xetimeup
+end
+if eq op 11
+xefile
 end
 end
 
