@@ -1,0 +1,2698 @@
+note SPDX-License-Identifier: Apache-2.0
+note receipt.om: seeded Omega port of src/omega_receipt.c (+ omega_receipt.h), the reader of the
+note aien-proof EvidenceReceiptV1 wire contract: strict JSON parse (serde shape rules, deny unknown
+note fields), every canonical_bytes validation, the canonical byte encoding and id = BLAKE3(canonical).
+note Part of aien-dev/omega-mv#726, aien-dev/aien-architecture-mv#300 and #316.
+note
+note Library (everything above the parity-harness marker) uses no globals and no text, so each entry
+note point can be cut into a function-mode unit for the omega-bridge native call ABI v1:
+note   rcparse js n wk            0 ok, -1 refused (reason in wk 0..2)
+note   rccanon js n wk out pos    after rcparse returned 0: total canonical length; canonical bytes
+note                              [pos, pos + 1048576) into out 0.., id = BLAKE3(canonical) into out 1049600..
+note   rcverify js n wk out       parse, recompute, require the id field to equal it (any hex case)
+note   rctier s n wk              tier rank of the bytes s[0..n), -1 unknown
+note   rcsat need have            the aien-proof tier_satisfies rule
+note js is the receipt JSON (n bytes, at most 4 MiB, the C OMEGA_RECEIPT_MAX_BYTES).
+note A refusal is a reason code (wk 0), a field-name index (wk 1, for messages that name a field) and a
+note byte offset (wk 2, for JSON syntax messages). The parity harness renders the exact C message text.
+note There is no DOM: pass 1 checks the JSON syntax exactly as the C reader does (same errors, same
+note byte offsets); pass 2 reads fields by walking the validated text; strings are decoded on the fly.
+note
+note wk layout (ulong 65536): 0 code, 1 field, 2 byte offset, 3 n, 4 root offset, 5..7 sort scratch,
+note 8..10 canonical emitter (bytes emitted, window start, chunk fill), 16+k value offset of top-level
+note key k (0 absent), 64+k string content offset of top-level key k (0 = absent, reads as ""),
+note 100 version, 101 timestamp, 102 dirty, 103 result, 104 tier rank, 105 declared mutation,
+note 106 observed mutation, 107 has ledger, 108 ledger index, 109 ledger hash, 110 has lease,
+note 111 lease hold_id, 112 lease resource, 113 assertion count, 114+j count of list j
+note (0 input_artifacts, 1 output_artifacts, 2 dependencies, 3 external_refs, 4 required_features),
+note 128.. name table (65 entries of 5 words: length, then up to 32 bytes packed little endian),
+note 512..959 BLAKE3 chaining-value stack (952 depth, 953 chunks absorbed),
+note 1024 + 4096 j list j string offsets, 21504 + 6 i assertion i (id expected observed pass source note),
+note 46080 sort area, 50176 merge scratch.
+note out layout (uchar 1049632): 0..1048575 canonical window, 1048576..1049599 BLAKE3 chunk,
+note 1049600..1049631 computed id.
+
+note Array lengths are literal numbers: function-mode units refuse `const` (error 9).
+
+note ---- BLAKE3: copied from om/blake3/b3unit.om (no import in Omegese). Changes: the chaining-value
+note ---- stack lives in wk at 512 (depth 952, count 953), the chunk is read from out at 1048576, and
+note ---- the root bytes go to out at 1049600. The compression code is unchanged.
+fn initw w edit ulong 128 to void
+put w 83 1779033703
+put w 84 3144134277
+put w 85 1013904242
+put w 86 2773480762
+put w 87 1359893119
+put w 88 2600822924
+put w 89 528734635
+put w 90 1541459225
+put w 91 2
+put w 92 6
+put w 93 3
+put w 94 10
+put w 95 7
+put w 96 0
+put w 97 4
+put w 98 13
+put w 99 1
+put w 100 11
+put w 101 12
+put w 102 5
+put w 103 9
+put w 104 14
+put w 105 15
+put w 106 8
+end
+
+note the G mixing function on state words a b c d with message words 2j and 2j+1
+fn g w edit ulong 128 a ulong b ulong c ulong d ulong j ulong to void
+x = get w add 16 mul j 2
+t = add get w a get w b
+put w a and add t x 4294967295
+t = xor get w d get w a
+put w d and or shr t 16 shl t 16 4294967295
+put w c and add get w c get w d 4294967295
+t = xor get w b get w c
+put w b and or shr t 12 shl t 20 4294967295
+x = get w add 17 mul j 2
+t = add get w a get w b
+put w a and add t x 4294967295
+t = xor get w d get w a
+put w d and or shr t 8 shl t 24 4294967295
+put w c and add get w c get w d 4294967295
+t = xor get w b get w c
+put w b and or shr t 7 shl t 25 4294967295
+end
+
+fn round w edit ulong 128 to void
+g w 0 4 8 12 0
+g w 1 5 9 13 1
+g w 2 6 10 14 2
+g w 3 7 11 15 3
+g w 0 5 10 15 4
+g w 1 6 11 12 5
+g w 2 7 8 13 6
+g w 3 4 9 14 7
+end
+
+fn permute w edit ulong 128 to void
+for i ulong 16
+put w add 32 i get w add 16 get w add 91 i
+end
+for i ulong 16
+put w add 16 i get w add 32 i
+end
+end
+
+note the 16 little-endian words of blk into m
+fn loadm w edit ulong 128 blk edit uchar 64 to void
+for i ulong 16
+o = mul i 4
+v = ulong get blk add o 3
+v = or shl v 8 ulong get blk add o 2
+v = or shl v 8 ulong get blk add o 1
+v = or shl v 8 ulong get blk o
+put w add 16 i v
+end
+end
+
+note compress (input chaining value, blk, block length, counter, flags) into the output words
+fn compress w edit ulong 128 blk edit uchar 64 to void
+loadm w blk
+for i ulong 8
+put w i get w add 48 i
+put w add i 8 get w add 83 i
+end
+put w 12 and get w 73 4294967295
+put w 13 and shr get w 73 32 4294967295
+put w 14 get w 72
+put w 15 get w 74
+for r ulong 7
+round w
+permute w
+end
+for i ulong 8
+put w add 56 i xor get w i get w add i 8
+put w add 64 i xor get w add i 8 get w add 48 i
+end
+end
+
+note compress, then the node chaining value is the first 8 output words
+fn nodecv w edit ulong 128 blk edit uchar 64 to void
+compress w blk
+for i ulong 8
+put w add 75 i get w add 56 i
+end
+end
+
+note copy cnt bytes of b from offset o into blk, zero the rest
+fn loadblk blk edit uchar 64 b edit uchar 1049632 o ulong cnt ulong to void
+for i ulong 64
+if lt i cnt
+put blk i get b add 1048576 add o i
+else
+put blk i 0
+end
+end
+end
+
+fn setnb w edit ulong 128 bl ulong ctr ulong fl ulong to void
+put w 72 bl
+put w 73 ctr
+put w 74 fl
+end
+
+note chunk ctr holding b[0..cnt): every block but the last compressed, the last left set up
+fn chunk w edit ulong 128 blk edit uchar 64 b edit uchar 1049632 cnt ulong ctr ulong to void
+for i ulong 8
+put w add 48 i get w add 83 i
+end
+nblk = ulong 1
+if gt cnt 0
+nblk = div add cnt 63 64
+end
+k = ulong 0
+while lt add k 1 nblk bound 16
+loadblk blk b mul k 64 64
+fl = ulong 0
+if eq k 0
+fl = 1
+end
+setnb w 64 ctr fl
+compress w blk
+for i ulong 8
+put w add 48 i get w add 56 i
+end
+k = add k 1
+end
+bo = mul sub nblk 1 64
+loadblk blk b bo sub cnt bo
+fl = ulong 2
+if eq nblk 1
+fl = 3
+end
+setnb w sub cnt bo ctr fl
+end
+
+note parent node of stack row r (left) and the node chaining value (right), set up to compress
+fn parentn w edit ulong 128 blk edit uchar 64 st edit ulong 65536 r ulong to void
+for i ulong 8
+put w add 48 i get w add 83 i
+end
+for i ulong 8
+l = get st add 512 add mul r 8 i
+v = get w add 75 i
+for k ulong 4
+sh = mul k 8
+q = add mul i 4 k
+put blk q uchar and shr l sh 255
+put blk add 32 q uchar and shr v sh 255
+end
+end
+setnb w 64 0 4
+end
+
+fn push w edit ulong 128 st edit ulong 65536 to void
+p = get st 952
+for i ulong 8
+put st add 512 add mul p 8 i get w add 75 i
+end
+put st 952 add p 1
+end
+
+note a whole chunk that is not the last: merge completed subtrees, then push its chaining value
+fn midchk w edit ulong 128 blk edit uchar 64 st edit ulong 65536 b edit uchar 1049632 to void
+ctr = get st 953
+chunk w blk b 1024 ctr
+nodecv w blk
+tot = add ctr 1
+while eq and tot 1 0 bound 64
+d = sub get st 952 1
+put st 952 d
+parentn w blk st d
+nodecv w blk
+tot = shr tot 1
+end
+push w st
+put st 953 add ctr 1
+end
+
+note the last chunk: fold the stack into the root and write its 32 little-endian bytes into b at 1049600
+fn lastchk w edit ulong 128 blk edit uchar 64 st edit ulong 65536 b edit uchar 1049632 n ulong to void
+chunk w blk b n get st 953
+while gt get st 952 0 bound 64
+nodecv w blk
+d = sub get st 952 1
+put st 952 d
+parentn w blk st d
+end
+put w 74 or get w 74 8
+compress w blk
+outle w b
+end
+
+note the first 8 output words, little endian, into o at 1049600 (the id slot)
+fn outle w edit ulong 128 o edit uchar 1049632 to void
+for i ulong 8
+v = get w add 56 i
+for k ulong 4
+q = add mul i 4 k
+put o add 1049600 q uchar and shr v mul k 8 255
+end
+end
+end
+
+note ---- name table: the strings the C compares against, packed 8 bytes per word
+fn nminit wk edit ulong 65536 to void
+note 0 schema
+put wk 128 6
+put wk 129 107122480669555
+note 1 version
+put wk 133 7
+put wk 134 31084746137298294
+note 2 id
+put wk 138 2
+put wk 139 25705
+note 3 kind
+put wk 143 4
+put wk 144 1684957547
+note 4 tier
+put wk 148 4
+put wk 149 1919248756
+note 5 result
+put wk 153 6
+put wk 154 128009175786866
+note 6 timestamp
+put wk 158 9
+put wk 159 7881708861846808948
+put wk 160 112
+note 7 repo
+put wk 163 4
+put wk 164 1869636978
+note 8 commit
+put wk 168 6
+put wk 169 127996156276579
+note 9 dirty
+put wk 173 5
+put wk 174 521644697956
+note 10 toolchain
+put wk 178 9
+put wk 179 7593465222953660276
+put wk 180 110
+note 11 procedure
+put wk 183 9
+put wk 184 8247608679221654128
+put wk 185 101
+note 12 machine
+put wk 188 7
+put wk 189 28550371649741165
+note 13 env_class
+put wk 193 9
+put wk 194 8314045561161805413
+put wk 195 115
+note 14 input_artifacts
+put wk 198 15
+put wk 199 8241973746855865961
+put wk 200 32497592506411380
+note 15 output_artifacts
+put wk 203 16
+put wk 204 7016454792213198191
+put wk 205 8319383681641313394
+note 16 assertions
+put wk 208 10
+put wk 209 8028075845441778529
+put wk 210 29550
+note 17 dependencies
+put wk 213 12
+put wk 214 7954874742130894180
+put wk 215 1936025955
+note 18 declared_mutation
+put wk 218 17
+put wk 219 7234314139196417380
+put wk 220 8028075772679122271
+put wk 221 110
+note 19 observed_mutation
+put wk 223 17
+put wk 224 7234318610140979823
+put wk 225 8028075772679122271
+put wk 226 110
+note 20 authority
+put wk 228 9
+put wk 229 8388361603773658465
+put wk 230 121
+note 21 output_digest
+put wk 233 13
+put wk 234 7232627574326981999
+put wk 235 500152231785
+note 22 external_refs
+put wk 238 13
+put wk 239 7809644666444609637
+put wk 240 495639163487
+note 23 ledger
+put wk 243 6
+put wk 244 125779851896172
+note 24 lease
+put wk 248 5
+put wk 249 435727459692
+note 25 required_features
+put wk 253 17
+put wk 254 7234314173708068210
+put wk 255 7310034287886427743
+put wk 256 115
+note 26 reserved
+put wk 258 8
+put wk 259 7234318610140980594
+note 27 id
+put wk 263 2
+put wk 264 25705
+note 28 expected
+put wk 268 8
+put wk 269 7234316346693023845
+note 29 observed
+put wk 273 8
+put wk 274 7234318610140979823
+note 30 pass
+put wk 278 4
+put wk 279 1936941424
+note 31 source
+put wk 283 6
+put wk 284 111477796466547
+note 32 note
+put wk 288 4
+put wk 289 1702129518
+note 33 index
+put wk 293 5
+put wk 294 517097156201
+note 34 hash
+put wk 298 4
+put wk 299 1752392040
+note 35 hold_id
+put wk 303 7
+put wk 304 28263356098703208
+note 36 resource
+put wk 308 8
+put wk 309 7305808869231650162
+note 37 TEST_ONLY_TRUST
+put wk 313 15
+put wk 314 5498419465921185108
+put wk 315 23735523962281817
+note 38 HOST_TEST
+put wk 318 9
+put wk 319 6000294846954426184
+put wk 320 84
+note 39 QEMU
+put wk 323 4
+put wk 324 1431127377
+note 40 QEMU_SECURITY
+put wk 328 13
+put wk 329 4847372242852332881
+put wk 330 383666180693
+note 41 MACHINE1_READ_ONLY
+put wk 333 18
+put wk 334 3550329957903450445
+put wk 335 5642833604875997791
+put wk 336 22860
+note 42 MACHINE1_ATTENDED
+put wk 338 17
+put wk 339 3550329957903450445
+put wk 340 4991200346707870047
+put wk 341 68
+note 43 MACHINE1_MUTATING
+put wk 343 17
+put wk 344 3550329957903450445
+put wk 345 5641132647822740831
+put wk 346 71
+note 44 PRODUCTION
+put wk 348 10
+put wk 349 5283922296309764688
+put wk 350 20047
+note 45 PASS
+put wk 353 4
+put wk 354 1397965136
+note 46 FAIL
+put wk 358 4
+put wk 359 1279869254
+note 47 BLOCKED
+put wk 363 7
+put wk 364 19216487970458690
+note 48 INCOMPLETE
+put wk 368 10
+put wk 369 4993454379819552329
+put wk 370 17748
+note 49 SKIPPED
+put wk 373 7
+put wk 374 19216509663005523
+note 50 NONE
+put wk 378 4
+put wk 379 1162760014
+note 51 VOLATILE_ONLY
+put wk 383 13
+put wk 384 4993446713068638038
+put wk 385 383532289887
+note 52 REMOVABLE_MEDIA_ONLY
+put wk 388 20
+put wk 389 5495026334298883410
+put wk 390 6863847864658648901
+put wk 391 1498173007
+note 53 ONE_TIME_BOOT_SELECTION
+put wk 393 23
+put wk 394 4993728188548206159
+put wk 395 4995441227396498015
+put wk 396 22042224548332876
+note 54 BOUNDED_TEST_REGION_WRITE
+put wk 398 25
+put wk 399 6864687891693784898
+put wk 400 5135601519476032852
+put wk 401 6073476107700424521
+put wk 402 69
+note 55 BOOT_CONFIGURATION_CHANGE
+put wk 403 25
+put wk 404 5642802934833958722
+put wk 405 5283920084686293318
+put wk 406 5138116003500084815
+put wk 407 69
+note 56 TRUST_ROOT_CHANGE
+put wk 408 17
+put wk 409 5715735692866572884
+put wk 410 5138116003500086351
+put wk 411 69
+note 57 TPM_POLICY_CHANGE
+put wk 413 17
+put wk 414 5281683669613629524
+put wk 415 5138116003500087619
+put wk 416 69
+note 58 DESTRUCTIVE_STORAGE
+put wk 418 19
+put wk 419 6071790534715983172
+put wk 420 5931051951327630921
+put wk 421 4540225
+note 59 EvidenceReceiptV1
+put wk 423 17
+put wk 424 7305804402280461893
+put wk 425 6229727782535128402
+put wk 426 49
+note 60 v1-base
+put wk 428 7
+put wk 429 28555834743927158
+note 61 AIEN_EVIDENCE_RECEIPT_V1
+put wk 433 24
+put wk 434 5284487488403228993
+put wk 435 4995159687793886532
+put wk 436 3555133771584456003
+note 62 blake3
+put wk 438 6
+put wk 439 56510686260322
+note 63 sha256
+put wk 443 6
+put wk 444 59602106411123
+note 64 sha512
+put wk 448 6
+put wk 449 55186930362483
+end
+
+fn fail wk edit ulong 65536 code ulong pos ulong to long
+put wk 0 code
+put wk 2 pos
+ret -1
+end
+
+fn failk wk edit ulong 65536 code ulong key ulong to long
+put wk 0 code
+put wk 1 key
+ret -1
+end
+
+fn hexv c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+if and ge c 65 le c 70
+ret sub c 55
+end
+ret 16
+end
+
+fn isws b uchar to bool
+ret or or eq b 32 eq b 9 or eq b 10 eq b 13
+end
+
+fn isdig b uchar to bool
+ret and ge b 48 le b 57
+end
+
+fn umin a ulong b ulong to ulong
+if lt a b
+ret a
+end
+ret b
+end
+
+note ---- string decoder (input already validated by pass 1); cursor c: 0 next byte, 1 pending count,
+note ---- 2..4 pending UTF-8 bytes, 5 done. dnext gives a byte, or 256 at the closing quote.
+fn dinit c edit ulong 8 so ulong to void
+put c 0 so
+put c 1 0
+put c 5 0
+if eq so 0
+put c 5 1
+end
+end
+
+fn hex4v js view uchar 4194304 p ulong to ulong
+v = hexv ulong get js p
+v = or shl v 4 hexv ulong get js add p 1
+v = or shl v 4 hexv ulong get js add p 2
+v = or shl v 4 hexv ulong get js add p 3
+ret v
+end
+
+fn descv e uchar to ulong
+if eq e 98
+ret 8
+end
+if eq e 102
+ret 12
+end
+if eq e 110
+ret 10
+end
+if eq e 114
+ret 13
+end
+if eq e 116
+ret 9
+end
+ret ulong e
+end
+
+fn dutf c edit ulong 8 cp ulong to ulong
+if lt cp 128
+ret cp
+end
+if lt cp 2048
+put c 2 or 128 and cp 63
+put c 1 1
+ret or 192 shr cp 6
+end
+if lt cp 65536
+put c 2 or 128 and shr cp 6 63
+put c 3 or 128 and cp 63
+put c 1 2
+ret or 224 shr cp 12
+end
+put c 2 or 128 and shr cp 12 63
+put c 3 or 128 and shr cp 6 63
+put c 4 or 128 and cp 63
+put c 1 3
+ret or 240 shr cp 18
+end
+
+fn dunic js view uchar 4194304 c edit ulong 8 to ulong
+p = get c 0
+cp = hex4v js p
+put c 0 add p 4
+if and ge cp 55296 le cp 56319
+lo = hex4v js add p 6
+put c 0 add p 10
+cp = add 65536 add shl sub cp 55296 10 sub lo 56320
+end
+ret dutf c cp
+end
+
+fn dnext js view uchar 4194304 c edit ulong 8 to ulong
+k = get c 1
+if gt k 0
+v = get c 2
+put c 2 get c 3
+put c 3 get c 4
+put c 1 sub k 1
+ret v
+end
+if eq get c 5 1
+ret 256
+end
+p = get c 0
+b = get js p
+if eq b 34
+put c 5 1
+ret 256
+end
+if ne b 92
+put c 0 add p 1
+ret ulong b
+end
+e = get js add p 1
+put c 0 add p 2
+if eq e 117
+ret dunic js c
+end
+ret descv e
+end
+
+note strcmp order: the end of a string sorts before every byte
+fn dkey v ulong to ulong
+if eq v 256
+ret 0
+end
+ret add v 1
+end
+
+note strcmp of the decoded strings at content offsets x and y: -1, 0, 1
+fn dcmp js view uchar 4194304 x ulong y ulong to long
+ca = new ulong 8 0
+cb = new ulong 8 0
+dinit ca x
+dinit cb y
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+u = dkey dnext js ca
+v = dkey dnext js cb
+if ne u v
+if lt u v
+ret -1
+end
+ret 1
+end
+if eq u 0
+ret 0
+end
+k = add k 1
+end
+end
+trap 4
+end
+
+note byte i of name-table entry whose length word is at wk b
+fn nmbyte wk edit ulong 65536 b ulong i ulong to ulong
+w = get wk add add b 1 shr i 3
+sh = shl and i 7 3
+ret and shr w sh 255
+end
+
+note decoded string at so equals name-table entry k
+fn nameq js view uchar 4194304 wk edit ulong 65536 so ulong k ulong to bool
+c = new ulong 8 0
+dinit c so
+b = add 128 mul k 5
+nl = get wk b
+i = ulong 0
+while true bound 64
+v = dnext js c
+if eq v 256
+ret eq i nl
+end
+if ge i nl
+ret false
+end
+if ne v nmbyte wk b i
+ret false
+end
+i = add i 1
+end
+ret false
+end
+
+note the raw bytes s[0..n) equal name-table entry k (tier lookup by C string)
+fn rawname s view uchar 4194304 n ulong wk edit ulong 65536 k ulong to bool
+b = add 128 mul k 5
+if ne n get wk b
+ret false
+end
+for i ulong n
+if ne ulong get s i nmbyte wk b i
+ret false
+end
+end
+ret true
+end
+
+note statistics of one decoded string: 0 length, 1 index of the first ':', 2 non-hex bytes,
+note 3 non-hex bytes after the first ':', 4 bytes outside [0-9a-f], 5 bytes that are not JSON
+note whitespace, 6 first 8 bytes packed, 7 last 8 bytes lowercased, 8 holds test-only/test_only/testonly,
+note 10 a ':' was seen
+fn sstep a edit ulong 16 v ulong to void
+i = get a 0
+if eq hexv v 16
+put a 2 add get a 2 1
+if eq get a 10 1
+put a 3 add get a 3 1
+end
+end
+if not or and ge v 48 le v 57 and ge v 97 le v 102
+put a 4 add get a 4 1
+end
+if not or or eq v 32 eq v 9 or eq v 10 eq v 13
+put a 5 add get a 5 1
+end
+if lt i 8
+put a 6 or get a 6 shl v shl i 3
+end
+if and eq v 58 eq get a 10 0
+put a 10 1
+put a 1 i
+end
+lc = v
+if and ge v 65 le v 90
+lc = add v 32
+end
+top = shr get a 7 56
+w = or shl get a 7 8 lc
+put a 7 w
+if eq w 8387236824970325113
+put a 8 1
+end
+if and eq top 116 or eq w 7310314358644305017 eq w 7310314573392669817
+put a 8 1
+end
+put a 0 add i 1
+end
+
+fn sstat js view uchar 4194304 so ulong a edit ulong 16 to void
+for i ulong 16
+put a i 0
+end
+c = new ulong 8 0
+dinit c so
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+v = dnext js c
+if eq v 256
+ret
+end
+sstep a v
+k = add k 1
+end
+end
+trap 4
+end
+
+note raw "" is the only JSON string that decodes empty (\u0000 is refused)
+fn isempty js view uchar 4194304 so ulong to bool
+if eq so 0
+ret true
+end
+ret eq get js so 34
+end
+
+fn hex32ok js view uchar 4194304 so ulong to bool
+a = new ulong 16 0
+sstat js so a
+ret and eq get a 0 64 eq get a 2 0
+end
+
+note ---- pass 1: the JSON syntax of the C reader (jvalue/jcontainer/jstring), iterative, same errors
+note ---- and byte offsets. Codes 2..19 are its messages; nesting deeper than 6 is refused.
+fn skipws js view uchar 4194304 n ulong p ulong to ulong
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+if ge p n
+ret p
+end
+if not isws get js p
+ret p
+end
+p = add p 1
+k = add k 1
+end
+end
+ret p
+end
+
+fn iscont js view uchar 4194304 p ulong to bool
+ret eq and get js p 192 128
+end
+
+fn u3cp js view uchar 4194304 p ulong to ulong
+a = shl and ulong get js p 15 12
+b = shl and ulong get js add p 1 63 6
+ret or or a b and ulong get js add p 2 63
+end
+
+fn u4cp js view uchar 4194304 p ulong to ulong
+a = shl and ulong get js p 7 18
+b = shl and ulong get js add p 1 63 12
+c = shl and ulong get js add p 2 63 6
+ret or or a b or c and ulong get js add p 3 63
+end
+
+note utf8_len: bytes of one valid UTF-8 sequence at p, 0 when invalid
+fn utf8l js view uchar 4194304 n ulong p ulong to ulong
+s = ulong get js p
+if lt s 128
+ret 1
+end
+av = sub n p
+if and and ge s 194 le s 223 ge av 2
+if iscont js add p 1
+ret 2
+end
+end
+if and and ge s 224 le s 239 ge av 3
+if and iscont js add p 1 iscont js add p 2
+cp = u3cp js p
+if and ge cp 2048 not and ge cp 55296 le cp 57343
+ret 3
+end
+end
+end
+if and and ge s 240 le s 244 ge av 4
+if and and iscont js add p 1 iscont js add p 2 iscont js add p 3
+cp = u4cp js p
+if and ge cp 65536 le cp 1114111
+ret 4
+end
+end
+end
+ret 0
+end
+
+note hex4 with its bounds check: the value, or 65536 when bad
+fn hex4c js view uchar 4194304 n ulong p ulong to ulong
+if gt add p 4 n
+ret 65536
+end
+v = ulong 0
+for k ulong 4
+h = hexv ulong get js add p k
+if eq h 16
+ret 65536
+end
+v = or shl v 4 h
+end
+ret v
+end
+
+note \u escape, p just past the u: new offset or -1
+fn junic js view uchar 4194304 n ulong wk edit ulong 65536 p ulong to long
+cp = hex4c js n p
+if eq cp 65536
+ret fail wk 5 p
+end
+p = add p 4
+if and ge cp 55296 le cp 56319
+if gt add p 2 n
+ret fail wk 6 p
+end
+if or ne get js p 92 ne get js add p 1 117
+ret fail wk 6 p
+end
+p = add p 2
+lo = hex4c js n p
+if eq lo 65536
+ret fail wk 7 p
+end
+if or lt lo 56320 gt lo 57343
+ret fail wk 7 add p 4
+end
+ret long add p 4
+end
+if and ge cp 56320 le cp 57343
+ret fail wk 6 p
+end
+if eq cp 0
+ret fail wk 8 p
+end
+ret long p
+end
+
+fn simpesc e uchar to bool
+x = or or eq e 34 eq e 92 or eq e 47 eq e 98
+y = or or eq e 102 eq e 110 or eq e 114 eq e 116
+ret or x y
+end
+
+note escape, p just past the backslash: new offset or -1
+fn jesc js view uchar 4194304 n ulong wk edit ulong 65536 p ulong to long
+if ge p n
+ret fail wk 4 p
+end
+e = get js p
+p = add p 1
+if simpesc e
+ret long p
+end
+if ne e 117
+ret fail wk 4 p
+end
+ret junic js n wk p
+end
+
+note jstring, p just past the opening quote: offset after the closing quote, or -1
+fn jstr js view uchar 4194304 n ulong wk edit ulong 65536 p ulong to long
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+if ge p n
+ret fail wk 2 p
+end
+c = get js p
+if eq c 34
+ret long add p 1
+end
+if lt c 32
+ret fail wk 3 p
+end
+if eq c 92
+r = jesc js n wk add p 1
+if lt r 0
+ret r
+end
+p = ulong r
+else
+l = utf8l js n p
+if eq l 0
+ret fail wk 9 p
+end
+p = add p l
+end
+k = add k 1
+end
+end
+trap 4
+end
+
+fn skipdig js view uchar 4194304 n ulong p ulong to ulong
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+if ge p n
+ret p
+end
+if not isdig get js p
+ret p
+end
+p = add p 1
+k = add k 1
+end
+end
+ret p
+end
+
+fn isnx c uchar to bool
+x = or isdig c or eq c 43 eq c 45
+y = or or eq c 101 eq c 69 eq c 46
+ret or x y
+end
+
+note the C number tail after '.', 'e' or 'E': digits + - e E .
+fn skipnx js view uchar 4194304 n ulong p ulong to ulong
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+if ge p n
+ret p
+end
+c = get js p
+if not isnx c
+ret p
+end
+p = add p 1
+k = add k 1
+end
+end
+ret p
+end
+
+fn lit4 js view uchar 4194304 p ulong a uchar b uchar c uchar d uchar to bool
+x = and eq get js p a eq get js add p 1 b
+y = and eq get js add p 2 c eq get js add p 3 d
+ret and x y
+end
+
+note null / true / false at p: the offset after it, 0 when none
+fn jlit js view uchar 4194304 n ulong p ulong to ulong
+r = sub n p
+if ge r 4
+if lit4 js p 110 117 108 108
+ret add p 4
+end
+if lit4 js p 116 114 117 101
+ret add p 4
+end
+end
+if ge r 5
+if lit4 js p 102 97 108 115
+if eq get js add p 4 101
+ret add p 5
+end
+end
+end
+ret 0
+end
+
+note parser state st: 0 offset, 1 depth, 2 next step (0 value, 1 member, 2 after a value),
+note 8+d container kind at depth d (1 object), 16+d content offset of that object's first key
+fn jnum js view uchar 4194304 n ulong wk edit ulong 65536 st edit ulong 32 p ulong to long
+q = p
+if eq get js q 45
+q = add q 1
+end
+d0 = q
+q = skipdig js n q
+if eq q d0
+ret fail wk 16 q
+end
+if eq get js d0 48
+if gt sub q d0 1
+ret fail wk 17 q
+end
+end
+if lt q n
+c = get js q
+if or eq c 46 or eq c 101 eq c 69
+q = skipnx js n add q 1
+end
+end
+put st 0 q
+ret 0
+end
+
+fn jopen js view uchar 4194304 n ulong wk edit ulong 65536 st edit ulong 32 p ulong to long
+d = add get st 1 1
+put st 1 d
+q = add p 1
+if gt d 6
+ret fail wk 10 q
+end
+cl = uchar 93
+put st add 8 d 0
+if eq get js p 123
+cl = 125
+put st add 8 d 1
+end
+put st add 16 d 0
+q = skipws js n q
+if lt q n
+if eq get js q cl
+put st 0 add q 1
+put st 1 sub d 1
+put st 2 2
+ret 0
+end
+end
+put st 0 q
+put st 2 1
+ret 0
+end
+
+fn jval js view uchar 4194304 n ulong wk edit ulong 65536 st edit ulong 32 to long
+p = skipws js n get st 0
+if ge p n
+ret fail wk 15 p
+end
+c = get js p
+if or eq c 123 eq c 91
+ret jopen js n wk st p
+end
+put st 2 2
+if eq c 34
+r = jstr js n wk add p 1
+if lt r 0
+ret r
+end
+put st 0 ulong r
+ret 0
+end
+q = jlit js n p
+if gt q 0
+put st 0 q
+ret 0
+end
+if or eq c 45 isdig c
+ret jnum js n wk st p
+end
+ret fail wk 18 p
+end
+
+note ---- skipping over text pass 1 has already accepted
+fn skipstr js view uchar 4194304 q ulong to ulong
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+b = get js q
+if eq b 34
+ret add q 1
+end
+if eq b 92
+q = add q 2
+else
+q = add q 1
+end
+k = add k 1
+end
+end
+trap 4
+end
+
+fn skipbox js view uchar 4194304 q ulong to ulong
+d = ulong 0
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+b = get js q
+if eq b 34
+q = skipstr js add q 1
+else
+if or eq b 123 eq b 91
+d = add d 1
+end
+if or eq b 125 eq b 93
+d = sub d 1
+if eq d 0
+ret add q 1
+end
+end
+q = add q 1
+end
+k = add k 1
+end
+end
+trap 4
+end
+
+fn skipval js view uchar 4194304 n ulong v ulong to ulong
+c = get js v
+if eq c 34
+ret skipstr js add v 1
+end
+if or eq c 123 eq c 91
+ret skipbox js v
+end
+ret skipsc js n v
+end
+
+note a number or literal: up to the next whitespace, ',', ']' or '}'
+fn skipsc js view uchar 4194304 n ulong v ulong to ulong
+q = v
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+if ge q n
+ret q
+end
+c = get js q
+if or or isws c eq c 44 or eq c 93 eq c 125
+ret q
+end
+q = add q 1
+k = add k 1
+end
+end
+ret q
+end
+
+note content offset of the key after the key at content offset q (both in one object)
+fn nextkey js view uchar 4194304 n ulong q ulong to ulong
+e = skipstr js q
+e = skipws js n e
+e = skipws js n add e 1
+e = skipval js n e
+e = skipws js n e
+e = skipws js n add e 1
+ret add e 1
+end
+
+note an earlier key of the object (first key at content offset f) equals the key at k
+fn dupkey js view uchar 4194304 n ulong f ulong k ulong to bool
+q = f
+for o ulong 16
+i = ulong 0
+while lt i 500000 bound 999999
+if eq q k
+ret false
+end
+if eq dcmp js q k 0
+ret true
+end
+q = nextkey js n q
+i = add i 1
+end
+end
+trap 4
+end
+
+fn jmem js view uchar 4194304 n ulong wk edit ulong 65536 st edit ulong 32 to long
+p = skipws js n get st 0
+d = get st 1
+if eq get st add 8 d 0
+put st 0 p
+put st 2 0
+ret 0
+end
+if ge p n
+ret fail wk 11 p
+end
+if ne get js p 34
+ret fail wk 11 p
+end
+k = add p 1
+r = jstr js n wk k
+if lt r 0
+ret r
+end
+e = ulong r
+f = get st add 16 d
+if eq f 0
+put st add 16 d k
+else
+if dupkey js n f k
+ret fail wk 12 e
+end
+end
+q = skipws js n e
+if ge q n
+ret fail wk 13 q
+end
+if ne get js q 58
+ret fail wk 13 q
+end
+put st 0 add q 1
+put st 2 0
+ret 0
+end
+
+fn jaft js view uchar 4194304 n ulong wk edit ulong 65536 st edit ulong 32 to long
+d = get st 1
+if eq d 0
+ret 1
+end
+p = skipws js n get st 0
+if lt p n
+c = get js p
+if eq c 44
+put st 0 add p 1
+put st 2 1
+ret 0
+end
+cl = uchar 93
+if eq get st add 8 d 1
+cl = 125
+end
+if eq c cl
+put st 0 add p 1
+put st 1 sub d 1
+put st 2 2
+ret 0
+end
+end
+ret fail wk 14 p
+end
+
+fn jcheck js view uchar 4194304 n ulong wk edit ulong 65536 to long
+st = new ulong 32 0
+for o ulong 32
+k = ulong 0
+while lt k 500000 bound 999999
+s = get st 2
+r = long 0
+if eq s 0
+r = jval js n wk st
+else
+if eq s 1
+r = jmem js n wk st
+else
+r = jaft js n wk st
+end
+end
+if lt r 0
+ret r
+end
+if eq r 1
+p = skipws js n get st 0
+if ne p n
+ret fail wk 19 p
+end
+ret 0
+end
+k = add k 1
+end
+end
+trap 4
+end
+
+note ---- pass 2: walking validated containers
+fn objfirst js view uchar 4194304 n ulong o ulong to ulong
+q = skipws js n add o 1
+if eq get js q 125
+ret 0
+end
+ret q
+end
+
+note value offset of the member whose key quote is at q
+fn keyvalp js view uchar 4194304 n ulong q ulong to ulong
+e = skipstr js add q 1
+e = skipws js n e
+ret skipws js n add e 1
+end
+
+fn objnext js view uchar 4194304 n ulong q ulong to ulong
+e = skipval js n keyvalp js n q
+e = skipws js n e
+if eq get js e 44
+ret skipws js n add e 1
+end
+ret 0
+end
+
+fn arrfirst js view uchar 4194304 n ulong o ulong to ulong
+q = skipws js n add o 1
+if eq get js q 93
+ret 0
+end
+ret q
+end
+
+fn arrnext js view uchar 4194304 n ulong v ulong to ulong
+e = skipws js n skipval js n v
+if eq get js e 44
+ret skipws js n add e 1
+end
+ret 0
+end
+
+note index of the name in [lo, hi) equal to the key whose quote is at q, 999 when none
+fn keyidx js view uchar 4194304 wk edit ulong 65536 q ulong lo ulong hi ulong to ulong
+k = lo
+while lt k hi bound 64
+if nameq js wk add q 1 k
+ret k
+end
+k = add k 1
+end
+ret 999
+end
+
+note number of array elements at v, stopping once past 4096
+fn arrcnt js view uchar 4194304 n ulong v ulong to ulong
+m = ulong 0
+e = arrfirst js n v
+while gt e 0 bound 4098
+m = add m 1
+if gt m 4096
+ret m
+end
+e = arrnext js n e
+end
+ret m
+end
+
+fn topscan js view uchar 4194304 n ulong wk edit ulong 65536 to long
+r = get wk 4
+if ne get js r 123
+ret failk wk 21 0
+end
+for k ulong 27
+put wk add 16 k 0
+end
+q = objfirst js n r
+while gt q 0 bound 64
+k = keyidx js wk q 0 27
+if eq k 999
+ret failk wk 22 0
+end
+put wk add 16 k keyvalp js n q
+q = objnext js n q
+end
+ret 0
+end
+
+note ---- the C want_* readers
+fn wstr js view uchar 4194304 wk edit ulong 65536 v ulong key ulong req bool slot ulong to long
+if eq v 0
+if req
+ret failk wk 23 key
+end
+put wk slot 0
+ret 0
+end
+if ne get js v 34
+ret failk wk 24 key
+end
+put wk slot add v 1
+ret 0
+end
+
+fn wbool js view uchar 4194304 wk edit ulong 65536 v ulong key ulong slot ulong to long
+if eq v 0
+ret failk wk 23 key
+end
+c = get js v
+if and ne c 116 ne c 102
+ret failk wk 28 key
+end
+put wk slot 0
+if eq c 116
+put wk slot 1
+end
+ret 0
+end
+
+fn vnum c uchar to bool
+ret not or or or eq c 34 eq c 123 or eq c 91 eq c 110 or eq c 116 eq c 102
+end
+
+note want_u64: a plain number (no sign, fraction or exponent) of at most 20 digits below 2^64
+fn wu64 js view uchar 4194304 n ulong wk edit ulong 65536 v ulong key ulong slot ulong to long
+if eq v 0
+ret failk wk 23 key
+end
+c = get js v
+if or not vnum c eq c 45
+ret failk wk 29 key
+end
+q = v
+while lt q n bound 64
+if or not isdig get js q gt sub q v 21
+break
+end
+q = add q 1
+end
+if lt q n
+c = get js q
+if or eq c 46 or eq c 101 eq c 69
+ret failk wk 29 key
+end
+end
+if gt sub q v 20
+ret failk wk 29 key
+end
+x = ulong 0
+i = v
+while lt i q bound 64
+dg = ulong sub get js i 48
+if gt x div sub 18446744073709551615 dg 10
+ret failk wk 29 key
+end
+x = add mul x 10 dg
+i = add i 1
+end
+put wk slot x
+ret 0
+end
+
+note want_strlist into list j (key names it); external_refs and required_features may be absent
+fn wlist js view uchar 4194304 n ulong wk edit ulong 65536 v ulong key ulong j ulong to long
+put wk add 114 j 0
+if eq v 0
+if or eq key 22 eq key 25
+ret 0
+end
+ret failk wk 23 key
+end
+if ne get js v 91
+ret failk wk 25 key
+end
+m = arrcnt js n v
+if gt m 4096
+ret failk wk 26 key
+end
+b = add 1024 mul j 4096
+i = ulong 0
+e = arrfirst js n v
+while gt e 0 bound 4097
+if ne get js e 34
+ret failk wk 27 key
+end
+put wk add b i add e 1
+i = add i 1
+e = arrnext js n e
+end
+put wk add 114 j m
+ret 0
+end
+
+note want_mut: the mutation's table index into slot
+fn wmut js view uchar 4194304 wk edit ulong 65536 v ulong key ulong slot ulong to long
+r = wstr js wk v key true slot
+if lt r 0
+ret r
+end
+so = get wk slot
+k = ulong 50
+while lt k 59 bound 16
+if nameq js wk so k
+put wk slot sub k 50
+ret 0
+end
+k = add k 1
+end
+ret failk wk 30 key
+end
+
+note the C want chain, in its order
+fn fields1 js view uchar 4194304 n ulong wk edit ulong 65536 to long
+r = wstr js wk get wk 16 0 true 64
+if lt r 0
+ret r
+end
+r = wu64 js n wk get wk 17 1 100
+if lt r 0
+ret r
+end
+for k ulong 4
+r = wstr js wk get wk add 18 k add 2 k true add 66 k
+if lt r 0
+ret r
+end
+end
+r = wu64 js n wk get wk 22 6 101
+if lt r 0
+ret r
+end
+r = wstr js wk get wk 23 7 true 71
+if lt r 0
+ret r
+end
+r = wstr js wk get wk 24 8 true 72
+if lt r 0
+ret r
+end
+r = wbool js wk get wk 25 9 102
+if lt r 0
+ret r
+end
+for k ulong 4
+r = wstr js wk get wk add 26 k add 10 k true add 74 k
+if lt r 0
+ret r
+end
+end
+r = wlist js n wk get wk 30 14 0
+if lt r 0
+ret r
+end
+r = wlist js n wk get wk 31 15 1
+if lt r 0
+ret r
+end
+r = wlist js n wk get wk 33 17 2
+if lt r 0
+ret r
+end
+ret 0
+end
+
+fn fields2 js view uchar 4194304 n ulong wk edit ulong 65536 to long
+r = wmut js wk get wk 34 18 105
+if lt r 0
+ret r
+end
+r = wmut js wk get wk 35 19 106
+if lt r 0
+ret r
+end
+r = wstr js wk get wk 36 20 false 84
+if lt r 0
+ret r
+end
+r = wstr js wk get wk 37 21 true 85
+if lt r 0
+ret r
+end
+r = wlist js n wk get wk 38 22 3
+if lt r 0
+ret r
+end
+r = wlist js n wk get wk 41 25 4
+if lt r 0
+ret r
+end
+ret wstr js wk get wk 42 26 false 90
+end
+
+note name-table index in [lo, hi) equal to the decoded string at so, 999 when none
+fn nameidx js view uchar 4194304 wk edit ulong 65536 so ulong lo ulong hi ulong to ulong
+k = lo
+while lt k hi bound 64
+if nameq js wk so k
+ret k
+end
+k = add k 1
+end
+ret 999
+end
+
+note check_digest_list, the <algo>:<hex> form (a: sstat of the item)
+fn dgcolon wk edit ulong 65536 a edit ulong 16 key ulong to long
+p6 = and get a 6 281474976710655
+ok = eq p6 get wk 439
+ok = or ok eq p6 get wk 444
+ok = or ok eq p6 get wk 449
+if not and eq get a 1 6 ok
+ret failk wk 44 key
+end
+hl = sub sub get a 0 get a 1 1
+bad = or lt hl 32 ne and hl 1 0
+if or bad ne get a 3 0
+ret failk wk 45 key
+end
+ret 0
+end
+
+note check_digest_list for one item
+fn dgchk js view uchar 4194304 wk edit ulong 65536 so ulong key ulong to long
+a = new ulong 16 0
+sstat js so a
+if eq get a 10 1
+ret dgcolon wk a key
+end
+if and eq get a 0 64 eq get a 2 0
+ret 0
+end
+ret failk wk 46 key
+end
+
+fn dglist js view uchar 4194304 wk edit ulong 65536 j ulong key ulong to long
+b = add 1024 mul j 4096
+for i ulong get wk add 114 j
+r = dgchk js wk get wk add b i key
+if lt r 0
+ret r
+end
+end
+ret 0
+end
+
+note the canonical_bytes validations up to the id, in the C order
+fn checks1 js view uchar 4194304 wk edit ulong 65536 to long
+if gt get wk 100 4294967295
+ret fail wk 31 0
+end
+if not nameq js wk get wk 64 59
+ret fail wk 32 0
+end
+if ne get wk 100 1
+ret fail wk 33 0
+end
+for i ulong get wk 118
+if not nameq js wk get wk add 17408 i 60
+ret fail wk 34 0
+end
+end
+if not isempty js get wk 90
+ret fail wk 35 0
+end
+if isempty js get wk 67
+ret fail wk 36 0
+end
+if isempty js get wk 71
+ret fail wk 37 0
+end
+a = new ulong 16 0
+sstat js get wk 72 a
+if not and or eq get a 0 40 eq get a 0 64 eq get a 4 0
+ret fail wk 38 0
+end
+if isempty js get wk 75
+ret fail wk 39 0
+end
+if isempty js get wk 76
+ret fail wk 40 0
+end
+ret 0
+end
+
+fn checks2 js view uchar 4194304 wk edit ulong 65536 to long
+t = nameidx js wk get wk 68 37 45
+if eq t 999
+ret fail wk 41 0
+end
+put wk 104 sub t 37
+t = nameidx js wk get wk 69 45 50
+if eq t 999
+ret fail wk 42 0
+end
+put wk 103 sub t 45
+if ne dcmp js get wk 77 get wk 68 0
+ret fail wk 43 0
+end
+r = dglist js wk 0 14
+if lt r 0
+ret r
+end
+r = dglist js wk 1 15
+if lt r 0
+ret r
+end
+if not hex32ok js get wk 85
+ret fail wk 47 0
+end
+if not hex32ok js get wk 66
+ret fail wk 48 0
+end
+ret 0
+end
+
+note one assertion object at e, index i
+fn asone js view uchar 4194304 n ulong wk edit ulong 65536 e ulong i ulong to long
+if ne get js e 123
+ret fail wk 50 0
+end
+t = new ulong 8 0
+q = objfirst js n e
+while gt q 0 bound 16
+k = keyidx js wk q 27 33
+if eq k 999
+ret fail wk 51 0
+end
+put t sub k 27 keyvalp js n q
+q = objnext js n q
+end
+b = add 21504 mul i 6
+r = wstr js wk get t 0 27 true b
+if lt r 0
+ret r
+end
+r = wstr js wk get t 1 28 false add b 1
+if lt r 0
+ret r
+end
+r = wstr js wk get t 2 29 false add b 2
+if lt r 0
+ret r
+end
+r = wbool js wk get t 3 30 add b 3
+if lt r 0
+ret r
+end
+r = wstr js wk get t 4 31 false add b 4
+if lt r 0
+ret r
+end
+ret wstr js wk get t 5 32 false add b 5
+end
+
+fn asall js view uchar 4194304 n ulong wk edit ulong 65536 to long
+put wk 113 0
+v = get wk 32
+if eq v 0
+ret failk wk 23 16
+end
+if ne get js v 91
+ret fail wk 49 0
+end
+m = arrcnt js n v
+if gt m 4096
+ret fail wk 49 0
+end
+i = ulong 0
+e = arrfirst js n v
+while gt e 0 bound 4097
+r = asone js n wk e i
+if lt r 0
+ret r
+end
+i = add i 1
+e = arrnext js n e
+end
+put wk 113 m
+if and eq m 0 eq get wk 103 0
+ret fail wk 52 0
+end
+ret asids js wk m
+end
+
+note assertion ids: not empty, no duplicates (each against the earlier ones, as the C)
+fn asids js view uchar 4194304 wk edit ulong 65536 m ulong to long
+for i ulong m
+x = get wk add 21504 mul i 6
+if isempty js x
+ret fail wk 53 0
+end
+for k ulong i
+y = get wk add 21504 mul k 6
+if eq dcmp js y x 0
+ret fail wk 54 0
+end
+end
+end
+ret 0
+end
+
+fn sev k ulong to ulong
+if le k 6
+ret k
+end
+ret sub k 1
+end
+
+fn checks3 js view uchar 4194304 wk edit ulong 65536 to long
+a = new ulong 16 0
+for i ulong get wk 116
+if not hex32ok js get wk add 9216 i
+ret fail wk 55 0
+end
+end
+so = sev get wk 106
+if gt so sev get wk 105
+ret fail wk 56 0
+end
+rk = get wk 104
+mx = ulong 4
+if eq rk 4
+mx = 2
+end
+if eq rk 5
+mx = 5
+end
+if ge rk 6
+mx = 255
+end
+if gt so mx
+ret fail wk 57 0
+end
+if and eq rk 4 ge get wk 106 4
+ret fail wk 58 0
+end
+if eq rk 7
+sstat js get wk 84 a
+if eq get a 5 0
+ret fail wk 59 0
+end
+if eq get a 8 1
+ret fail wk 60 0
+end
+end
+ret 0
+end
+
+fn ledger js view uchar 4194304 n ulong wk edit ulong 65536 to long
+put wk 107 0
+v = get wk 39
+if eq v 0
+ret 0
+end
+if eq get js v 110
+ret 0
+end
+if ne get js v 123
+ret fail wk 61 0
+end
+t = new ulong 4 0
+q = objfirst js n v
+while gt q 0 bound 8
+k = keyidx js wk q 33 35
+if eq k 999
+ret fail wk 62 0
+end
+put t sub k 33 keyvalp js n q
+q = objnext js n q
+end
+r = wu64 js n wk get t 0 33 108
+if lt r 0
+ret r
+end
+r = wstr js wk get t 1 34 true 109
+if lt r 0
+ret r
+end
+if not hex32ok js get wk 109
+ret fail wk 63 0
+end
+put wk 107 1
+ret 0
+end
+
+fn lease js view uchar 4194304 n ulong wk edit ulong 65536 to long
+put wk 110 0
+v = get wk 40
+if eq v 0
+ret 0
+end
+if eq get js v 110
+ret 0
+end
+if ne get js v 123
+ret fail wk 64 0
+end
+t = new ulong 4 0
+q = objfirst js n v
+while gt q 0 bound 8
+k = keyidx js wk q 35 37
+if eq k 999
+ret fail wk 65 0
+end
+put t sub k 35 keyvalp js n q
+q = objnext js n q
+end
+r = wstr js wk get t 0 35 true 111
+if lt r 0
+ret r
+end
+r = wstr js wk get t 1 36 true 112
+if lt r 0
+ret r
+end
+if not hex32ok js get wk 111
+ret fail wk 66 0
+end
+a = new ulong 16 0
+sstat js get wk 112 a
+if eq get a 5 0
+ret fail wk 67 0
+end
+put wk 110 1
+ret 0
+end
+
+note omega_receipt_parse: 0 ok, -1 with the reason in wk 0..2
+fn rcparse js view uchar 4194304 n ulong wk edit ulong 65536 to long
+put wk 0 0
+put wk 1 0
+put wk 2 0
+put wk 107 0
+put wk 110 0
+put wk 113 0
+nminit wk
+if or eq n 0 gt n 4194304
+ret fail wk 20 0
+end
+put wk 3 n
+r = jcheck js n wk
+if lt r 0
+ret r
+end
+put wk 4 skipws js n 0
+r = topscan js n wk
+if lt r 0
+ret r
+end
+r = fields1 js n wk
+if lt r 0
+ret r
+end
+r = fields2 js n wk
+if lt r 0
+ret r
+end
+r = checks1 js wk
+if lt r 0
+ret r
+end
+r = checks2 js wk
+if lt r 0
+ret r
+end
+r = asall js n wk
+if lt r 0
+ret r
+end
+r = checks3 js wk
+if lt r 0
+ret r
+end
+r = ledger js n wk
+if lt r 0
+ret r
+end
+ret lease js n wk
+end
+
+note ---- canonical bytes, streamed: each byte goes to the window (when inside it) and to BLAKE3
+fn b3mid wk edit ulong 65536 out edit uchar 1049632 to void
+w = new ulong 128 0
+blk = new uchar 64 0
+initw w
+midchk w blk wk out
+end
+
+fn b3fin wk edit ulong 65536 out edit uchar 1049632 to void
+w = new ulong 128 0
+blk = new uchar 64 0
+initw w
+lastchk w blk wk out get wk 10
+end
+
+fn eb wk edit ulong 65536 out edit uchar 1049632 v uchar to void
+t = get wk 8
+lo = get wk 9
+if and ge t lo lt t add lo 1048576
+put out sub t lo v
+end
+f = get wk 10
+if eq f 1024
+b3mid wk out
+f = 0
+end
+put out add 1048576 f v
+put wk 10 add f 1
+put wk 8 add t 1
+end
+
+fn eu32 wk edit ulong 65536 out edit uchar 1049632 v ulong to void
+eb wk out uchar and shr v 24 255
+eb wk out uchar and shr v 16 255
+eb wk out uchar and shr v 8 255
+eb wk out uchar and v 255
+end
+
+fn eu64 wk edit ulong 65536 out edit uchar 1049632 v ulong to void
+eu32 wk out shr v 32
+eu32 wk out and v 4294967295
+end
+
+fn dlen js view uchar 4194304 so ulong to ulong
+a = new ulong 16 0
+sstat js so a
+ret get a 0
+end
+
+note u64 length, then the decoded bytes
+fn estr js view uchar 4194304 wk edit ulong 65536 out edit uchar 1049632 so ulong to void
+eu64 wk out dlen js so
+c = new ulong 8 0
+dinit c so
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+v = dnext js c
+if eq v 256
+ret
+end
+eb wk out uchar v
+k = add k 1
+end
+end
+trap 4
+end
+
+note 64 hex digits (any case) as 32 raw bytes
+fn ehex js view uchar 4194304 wk edit ulong 65536 out edit uchar 1049632 so ulong to void
+c = new ulong 8 0
+dinit c so
+for i ulong 32
+h = hexv dnext js c
+l = hexv dnext js c
+eb wk out uchar or shl h 4 l
+end
+end
+
+note sort key of item it: mode wk 7 = 0 the item is a string offset, 1 an assertion index (its id)
+fn skey wk edit ulong 65536 it ulong to ulong
+if eq get wk 7 0
+ret it
+end
+ret get wk add 21504 mul it 6
+end
+
+note take the left run's head next: i in the left run and (j past the right run or key i <= key j)
+fn mleft js view uchar 4194304 wk edit ulong 65536 i ulong j ulong mid ulong hi ulong to bool
+if ge i mid
+ret false
+end
+if ge j hi
+ret true
+end
+s = get wk 5
+x = skey wk get wk add s i
+y = skey wk get wk add s j
+ret le dcmp js x y 0
+end
+
+fn mput wk edit ulong 65536 k ulong from ulong to void
+put wk add get wk 6 k get wk add get wk 5 from
+end
+
+note merge wk[src+lo, src+mid) and wk[src+mid, src+hi) into dst (src wk 5, dst wk 6)
+fn mrg js view uchar 4194304 wk edit ulong 65536 lo ulong mid ulong hi ulong to void
+i = lo
+j = mid
+k = lo
+while lt k hi bound 4097
+if mleft js wk i j mid hi
+mput wk k i
+i = add i 1
+else
+mput wk k j
+j = add j 1
+end
+k = add k 1
+end
+end
+
+note bottom-up merge sort of wk[46080, 46080 + m) by skey, strcmp order
+fn msort js view uchar 4194304 wk edit ulong 65536 m ulong to void
+put wk 5 46080
+put wk 6 50176
+w = ulong 1
+while lt w m bound 16
+i = ulong 0
+while lt i m bound 4097
+mid = umin add i w m
+hi = umin add i mul 2 w m
+mrg js wk i mid hi
+i = add i mul 2 w
+end
+s = get wk 5
+put wk 5 get wk 6
+put wk 6 s
+w = mul w 2
+end
+if ne get wk 5 46080
+for i ulong m
+put wk add 46080 i get wk add 50176 i
+end
+end
+end
+
+note sorted item i differs from item i - 1 (BTreeSet: equal strings kept once)
+fn isnew js view uchar 4194304 wk edit ulong 65536 i ulong to bool
+if eq i 0
+ret true
+end
+x = get wk add 46079 i
+y = get wk add 46080 i
+ret ne dcmp js x y 0
+end
+
+note sort list j into the sort area; the number of distinct strings
+fn lsort js view uchar 4194304 wk edit ulong 65536 j ulong to ulong
+m = get wk add 114 j
+b = add 1024 mul j 4096
+for i ulong m
+put wk add 46080 i get wk add b i
+end
+put wk 7 0
+msort js wk m
+u = ulong 0
+for i ulong m
+if isnew js wk i
+u = add u 1
+end
+end
+ret u
+end
+
+note a sorted string set: u32 count, then each distinct string (hx 1: as 32 raw bytes)
+fn eset js view uchar 4194304 wk edit ulong 65536 out edit uchar 1049632 j ulong hx bool to void
+u = lsort js wk j
+eu32 wk out u
+for i ulong get wk add 114 j
+if isnew js wk i
+if hx
+ehex js wk out get wk add 46080 i
+else
+estr js wk out get wk add 46080 i
+end
+end
+end
+end
+
+fn eassert js view uchar 4194304 wk edit ulong 65536 out edit uchar 1049632 to void
+m = get wk 113
+for i ulong m
+put wk add 46080 i i
+end
+put wk 7 1
+msort js wk m
+eu32 wk out m
+for i ulong m
+b = add 21504 mul get wk add 46080 i 6
+estr js wk out get wk b
+estr js wk out get wk add b 1
+estr js wk out get wk add b 2
+eb wk out uchar get wk add b 3
+estr js wk out get wk add b 4
+estr js wk out get wk add b 5
+end
+end
+
+fn edomain wk edit ulong 65536 out edit uchar 1049632 to void
+for i ulong 24
+eb wk out uchar nmbyte wk 433 i
+end
+end
+
+fn ehead js view uchar 4194304 wk edit ulong 65536 out edit uchar 1049632 to void
+edomain wk out
+eu32 wk out 1
+estr js wk out get wk 67
+estr js wk out get wk 68
+eb wk out uchar get wk 103
+estr js wk out get wk 71
+estr js wk out get wk 72
+eb wk out uchar get wk 102
+estr js wk out get wk 74
+estr js wk out get wk 75
+estr js wk out get wk 76
+estr js wk out get wk 77
+end
+
+fn etail js view uchar 4194304 wk edit ulong 65536 out edit uchar 1049632 to void
+if eq get wk 107 1
+eb wk out 1
+eu64 wk out get wk 108
+ehex js wk out get wk 109
+else
+eb wk out 0
+end
+if eq get wk 110 1
+eb wk out 1
+ehex js wk out get wk 111
+estr js wk out get wk 112
+else
+eb wk out 0
+end
+eu64 wk out get wk 101
+eset js wk out 4 false
+eu32 wk out 0
+end
+
+note omega_receipt_canonical + compute_id, after rcparse returned 0 on the same js and wk
+fn rccanon js view uchar 4194304 n ulong wk edit ulong 65536 out edit uchar 1049632 pos ulong to ulong
+put wk 8 0
+put wk 9 pos
+put wk 10 0
+for i ulong 448
+put wk add 512 i 0
+end
+ehead js wk out
+eset js wk out 0 false
+eset js wk out 1 false
+eassert js wk out
+eset js wk out 2 true
+eb wk out uchar get wk 105
+eb wk out uchar get wk 106
+estr js wk out get wk 84
+ehex js wk out get wk 85
+eset js wk out 3 false
+etail js wk out
+b3fin wk out
+ret get wk 8
+end
+
+note omega_receipt_verify_bytes: parse, recompute, the id field must equal the result (any case)
+fn rcverify js view uchar 4194304 n ulong wk edit ulong 65536 out edit uchar 1049632 to long
+r = rcparse js n wk
+if lt r 0
+ret r
+end
+t = rccanon js n wk out 0
+c = new ulong 8 0
+dinit c get wk 66
+same = true
+for i ulong 32
+h = hexv dnext js c
+h = or shl h 4 hexv dnext js c
+if ne h ulong get out add 1049600 i
+same = false
+end
+end
+if not same
+ret fail wk 69 0
+end
+ret 0
+end
+
+note omega_tier_rank of the C string s[0..n)
+fn rctier s view uchar 4194304 n ulong wk edit ulong 65536 to long
+nminit wk
+for k ulong 8
+if rawname s n wk add 37 k
+ret long k
+end
+end
+ret -1
+end
+
+note omega_tier_satisfies (aien-proof chain.rs tier_satisfies)
+fn rcsat need long have long to long
+if or lt need 0 lt have 0
+ret 0
+end
+if eq have 0
+if eq need 0
+ret 1
+end
+ret 0
+end
+if and ge need 4 lt have 4
+ret 0
+end
+if ge have need
+ret 1
+end
+ret 0
+end
+
+note ==== parity harness (program mode; not part of any unit: unit cutting stops at this line)
+note stdin: records of a 25-byte header (op byte, then length, a, b as 8 decimal digits each) and
+note length payload bytes. One output line per record, the same format as the C oracle driver:
+note   R <parse rc> <message | canonical hex> <id hex | -> <verify rc> <message | id hex>
+note   op R: the payload as is. op M: the payload holds the placeholder id (64 '0'): parse it, compute
+note   the id, write it over the placeholder (b 257: upper case), then apply the mutation (b 1..255:
+note   xor byte a with b; b 256: truncate to a bytes) and print the R line of the result; when the
+note   placeholder is absent or the payload does not parse, the R line of the payload.
+note   op T: T <omega_tier_rank of the payload>. op S: S then omega_tier_satisfies over -3 -1 0..8.
+note Exit 65 on a short record.
+
+text tmsgs "out of memory\nunterminated string\ncontrol character in string\nbad escape\nbad \\u escape\nlone surrogate\nbad surrogate pair\nNUL in string\ninvalid UTF-8\nnesting too deep\nexpected object key\nduplicate key\nexpected ':'\nexpected ',' or closing bracket\nunexpected end\nbad number\nleading zero\nunexpected character\ntrailing bytes after the receipt\nreceipt: empty or oversize input\nreceipt: top level must be an object\nreceipt: unknown field\nreceipt: missing field %\nreceipt: field % must be a string\nreceipt: field % must be a list\nreceipt: field % is too long\nreceipt: list % must hold strings\nreceipt: field % must be true or false\nreceipt: field % must be an unsigned integer\nreceipt: unknown mutation in %\nreceipt: version out of range\nreceipt: unknown receipt schema\nreceipt: unsupported receipt version\nreceipt: unknown required receipt feature\nreceipt: reserved field must be empty\nreceipt: kind must not be empty\nreceipt: repo must not be empty\nreceipt: commit must be 40 or 64 lowercase hex digits\nreceipt: procedure identity must not be empty\nreceipt: machine identity must not be empty\nreceipt: unknown tier\nreceipt: unknown result\nreceipt: env_class contradicts tier\nreceipt: unknown digest algorithm in %\nreceipt: bad digest hex in %\nreceipt: digest must be <algo>:<hex> or 64 hex digits in %\nreceipt: output_digest must be 64 hex digits\nreceipt: id must be 64 hex digits\nreceipt: assertions must be a list\nreceipt: an assertion must be an object\nreceipt: unknown assertion field\nreceipt: PASS receipts must carry at least one assertion\nreceipt: assertion id must not be empty\nreceipt: duplicate assertion id\nreceipt: dependency is not a 64 digit receipt hash\nreceipt: observed mutation exceeds declared mutation\nreceipt: tier cannot claim that observed mutation\nreceipt: a read-only run cannot claim that mutation\nreceipt: PRODUCTION receipts require an authority reference\nreceipt: a TEST_ONLY signer cannot produce a PRODUCTION receipt\nreceipt: ledger must be null or an object\nreceipt: unknown ledger field\nreceipt: ledger hash must be 64 hex digits\nreceipt: lease must be null or an object\nreceipt: unknown lease field\nreceipt: lease hold_id must be 64 hex digits\nreceipt: lease resource must not be empty\nreceipt: cannot compute canonical identity\nreceipt id mismatch: the file claims one id, its canonical bytes hash to another\n"
+text tkeys "schema\nversion\nid\nkind\ntier\nresult\ntimestamp\nrepo\ncommit\ndirty\ntoolchain\nprocedure\nmachine\nenv_class\ninput_artifacts\noutput_artifacts\nassertions\ndependencies\ndeclared_mutation\nobserved_mutation\nauthority\noutput_digest\nexternal_refs\nledger\nlease\nrequired_features\nreserved\nid\nexpected\nobserved\npass\nsource\nnote\nindex\nhash\nhold_id\nresource\n"
+text tjs "receipt JSON: "
+text tat " at byte "
+text ttab "\t"
+text tnl "\n"
+text tdash "-"
+text tr "R"
+text tt "T"
+text ts "S"
+
+fn wkey k ulong to void
+s = ulong 0
+ln = ulong 0
+while lt ln k bound 64
+while ne get tkeys s 10 bound 64
+s = add s 1
+end
+s = add s 1
+ln = add ln 1
+end
+e = s
+while ne get tkeys e 10 bound 64
+e = add e 1
+end
+r = write 1 tkeys s sub e s
+end
+
+note line k of tmsgs, '%' replaced by key name f
+fn wmline k ulong f ulong to void
+s = ulong 0
+ln = ulong 0
+while lt ln k bound 128
+while ne get tmsgs s 10 bound 128
+s = add s 1
+end
+s = add s 1
+ln = add ln 1
+end
+b = s
+while ne get tmsgs s 10 bound 128
+if eq get tmsgs s 37
+r = write 1 tmsgs b sub s b
+wkey f
+b = add s 1
+end
+s = add s 1
+end
+r = write 1 tmsgs b sub s b
+end
+
+fn wdec v ulong to void
+d = new uchar 24 0
+i = ulong 24
+while true bound 24
+i = sub i 1
+put d i uchar add rem v 10 48
+v = div v 10
+if eq v 0
+break
+end
+end
+r = write 1 d i sub 24 i
+end
+
+fn wsdec v long to void
+if lt v 0
+r = write 1 tdash 0 1
+wdec ulong neg v
+ret
+end
+wdec ulong v
+end
+
+fn wtab to void
+r = write 1 ttab 0 1
+end
+
+fn wmsg wk edit ulong 65536 to void
+c = get wk 0
+if le c 19
+r = write 1 tjs 0 len tjs
+wmline sub c 1 0
+r = write 1 tat 0 len tat
+wdec get wk 2
+ret
+end
+wmline sub c 1 get wk 1
+end
+
+fn hexc v ulong up bool to uchar
+if lt v 10
+ret uchar add v 48
+end
+if up
+ret uchar add v 55
+end
+ret uchar add v 87
+end
+
+note out[off, off + cnt) as lower-case hex on stdout
+fn ohex out edit uchar 1049632 off ulong cnt ulong hb edit uchar 65536 to void
+p = off
+e = add off cnt
+while lt p e bound 64
+m = umin sub e p 32768
+for i ulong m
+b = ulong get out add p i
+put hb mul i 2 hexc shr b 4 false
+put hb add mul i 2 1 hexc and b 15 false
+end
+r = write 1 hb 0 mul m 2
+p = add p m
+end
+end
+
+fn rline js view uchar 4194304 n ulong wk edit ulong 65536 out edit uchar 1049632 hb edit uchar 65536 to void
+r = write 1 tr 0 1
+wtab
+pr = rcparse js n wk
+wsdec pr
+wtab
+if lt pr 0
+wmsg wk
+wtab
+r = write 1 tdash 0 1
+else
+t = rccanon js n wk out 0
+ohex out 0 umin t 1048576 hb
+pos = ulong 1048576
+while lt pos t bound 16
+t2 = rccanon js n wk out pos
+ohex out 0 umin sub t pos 1048576 hb
+pos = add pos 1048576
+end
+wtab
+ohex out 1049600 32 hb
+end
+wtab
+vr = rcverify js n wk out
+wsdec vr
+wtab
+if lt vr 0
+wmsg wk
+else
+ohex out 1049600 32 hb
+end
+r = write 1 tnl 0 1
+end
+
+note offset of the first run of 64 '0' bytes, n when none
+fn findz js view uchar 4194304 n ulong to ulong
+if gt n 4194304
+ret n
+end
+run = ulong 0
+i = ulong 0
+for o ulong 16
+k = ulong 0
+while lt k 500000 bound 999999
+if ge i n
+ret n
+end
+if eq get js i 48
+run = add run 1
+if eq run 64
+ret sub i 63
+end
+else
+run = 0
+end
+i = add i 1
+k = add k 1
+end
+end
+ret n
+end
+
+note write the computed id (out 1049600) as hex over the placeholder at z
+fn patchid js edit uchar 4194304 out edit uchar 1049632 z ulong up bool to void
+for i ulong 32
+v = ulong get out add 1049600 i
+q = add z mul i 2
+put js q hexc shr v 4 up
+put js add q 1 hexc and v 15 up
+end
+end
+
+note the mutation of record header (a, b); the new length
+fn mutate js edit uchar 4194304 n ulong a ulong b ulong to ulong
+if ge a n
+ret n
+end
+if and ge b 1 le b 255
+put js a xor get js a uchar b
+end
+if eq b 256
+ret a
+end
+ret n
+end
+
+fn mline js edit uchar 4194304 n ulong wk edit ulong 65536 out edit uchar 1049632 hb edit uchar 65536 to void
+z = findz js n
+pr = long -1
+if lt z n
+pr = rcparse js n wk
+end
+if lt pr 0
+rline js n wk out hb
+ret
+end
+t = rccanon js n wk out 0
+patchid js out z eq get wk 61 257
+m = mutate js n get wk 60 get wk 61
+rline js m wk out hb
+end
+
+fn tval i ulong to long
+if eq i 0
+ret -3
+end
+ret sub long i 2
+end
+
+fn sline to void
+r = write 1 ts 0 1
+for i ulong 11
+for j ulong 11
+wtab
+wsdec rcsat tval i tval j
+end
+end
+r = write 1 tnl 0 1
+end
+
+fn dorec js edit uchar 4194304 n ulong op uchar a ulong b ulong to void
+wk = new ulong 65536 0
+out = new uchar 1049632 0
+hb = new uchar 65536 0
+if eq op 84
+r = write 1 tt 0 1
+wtab
+wsdec rctier js n wk
+r = write 1 tnl 0 1
+ret
+end
+if eq op 83
+sline
+ret
+end
+if eq op 77
+put wk 60 a
+put wk 61 b
+mline js n wk out hb
+ret
+end
+rline js n wk out hb
+end
+
+fn dec8 hd edit uchar 32 o ulong to ulong
+v = ulong 0
+for i ulong 8
+v = add mul v 10 ulong sub get hd add o i 48
+end
+ret v
+end
+
+note read exactly n bytes into js; the count read
+fn rdjs js edit uchar 4194304 n ulong to ulong
+t = ulong 0
+while lt t n bound 999999
+r = read 0 js t sub n t
+if le r 0
+ret t
+end
+t = add t ulong r
+end
+ret t
+end
+
+fn rdhd hd edit uchar 32 to ulong
+t = ulong 0
+while lt t 25 bound 64
+r = read 0 hd t sub 25 t
+if le r 0
+ret t
+end
+t = add t ulong r
+end
+ret t
+end
+
+fn drain n ulong to ulong
+bf = new uchar 65536 0
+t = ulong 0
+while lt t n bound 999999
+r = read 0 bf 0 umin sub n t 65536
+if le r 0
+ret t
+end
+t = add t ulong r
+end
+ret t
+end
+
+note one record: 0 done, 1 end of input, 2 short record
+fn onerec js edit uchar 4194304 to ulong
+hd = new uchar 32 0
+h = rdhd hd
+if eq h 0
+ret 1
+end
+if ne h 25
+ret 2
+end
+n = dec8 hd 1
+if le n 4194304
+if ne rdjs js n n
+ret 2
+end
+else
+if ne drain n n
+ret 2
+end
+end
+dorec js n get hd 0 dec8 hd 9 dec8 hd 17
+ret 0
+end
+
+fn main to int
+js = new uchar 4194304 0
+while true bound 999999
+s = onerec js
+if eq s 1
+ret 0
+end
+if eq s 2
+ret 65
+end
+end
+ret 0
+end

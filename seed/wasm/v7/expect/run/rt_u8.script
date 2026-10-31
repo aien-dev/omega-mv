@@ -1,0 +1,8 @@
+call set 0 255
+call set 3 7
+call get 0
+call get 3
+call get 4
+call set -1 1
+call get 1
+region g

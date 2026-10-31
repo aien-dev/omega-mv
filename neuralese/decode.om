@@ -1,0 +1,134 @@
+note SPDX-License-Identifier: Apache-2.0
+note Concatenate before om/tls/sha2.om. No learned producer is implemented.
+note NLE1: ten metadata bytes, four payload bytes, lowercase hex SHA-256 of those bytes.
+note Unknown identities and representations have no executable interpretation.
+om2 debug
+text magic "NLE1"
+text hexdigs "0123456789abcdef"
+text prefix "om2 debug\nfn apply x uint to uint\nrequires le x 16\nensures le result 32\n"
+text incop "ret add x 1\n"
+text dblop "ret mul x 2\n"
+text idop "ret x\n"
+text suffix "end\nfn main to int\nret int apply uint "
+text tail "\nend\n"
+fn hashok a view uchar 79 to bool
+msgbuf = new uchar 14 0
+digest = new uchar 32 0
+ctx = new ulong 40 0
+for i ulong 14
+put msgbuf i get a i
+end
+sha256_init ctx
+sha256_update ctx msgbuf
+sha256_final ctx digest
+for i ulong 32
+offset = add mul i 2 14
+value = get digest i
+if ne get a offset get hexdigs shr value 4
+ret false
+end
+offset = add offset 1
+if ne get a offset get hexdigs and value 15
+ret false
+end
+end
+ret true
+end
+fn validate a view uchar 79 n ulong to int
+if gt n 78
+ret 10
+end
+if lt n 78
+ret 16
+end
+for i ulong 4
+if ne get a i get magic i
+ret 11
+end
+end
+note This registry pair denotes a hand-authored fixture, not a trained model.
+if or ne get a 4 1 ne get a 5 1
+ret 12
+end
+if ne get a 6 4
+ret 13
+end
+if ne get a 7 1
+ret 14
+end
+if ne get a 8 1
+ret 15
+end
+if ne get a 9 4
+ret 20
+end
+if not hashok a
+ret 17
+end
+if or ne get a 12 0 ne get a 13 0
+ret 18
+end
+if or lt get a 10 1 gt get a 10 3
+ret 19
+end
+ret 0
+end
+fn output b view uchar * to void
+p = ulong 0
+while lt p len b bound 256
+r = write 1 b p sub len b p
+if le r 0
+exit 81
+end
+p = add p ulong r
+end
+end
+fn number v uchar to void
+b = new uchar 3 0
+n = ulong 0
+if ge v 100
+put b n add uchar 48 div v 100
+n = add n 1
+end
+if ge v 10
+put b n add uchar 48 rem div v 10 10
+n = add n 1
+end
+put b n add uchar 48 rem v 10
+n = add n 1
+output part b 0 n
+end
+fn main to int
+a = new uchar 79 0
+n = ulong 0
+note Every successful read increases n, so at most seventy-nine iterations occur.
+while lt n 79 bound 79
+r = read 0 a n sub 79 n
+if lt r 0
+ret 80
+end
+if eq r 0
+break
+end
+n = add n ulong r
+end
+status = validate a n
+if ne status 0
+ret status
+end
+note Emission happens only after complete validation. No payload is ever execprog input.
+output prefix
+if eq get a 10 1
+output incop
+end
+if eq get a 10 2
+output dblop
+end
+if eq get a 10 3
+output idop
+end
+output suffix
+number get a 11
+output tail
+ret 0
+end

@@ -10,8 +10,11 @@
 # the pinned omega-bridge generator and compiled as C (bindability).
 #   OMEGA_OMC     seed-born omc, sha256 pinned below (exit 3 NOT_RUN without it)
 #   OMEGA_BRIDGE  optional: an aien-dev/omega-bridge checkout whose src/native.om matches the pin
+# The tree listings hash each entry's path, type and mode, each file's size and content, and no
+# directory size (filesystem-dependent: ext4 4096, tmpfs 40..3800), so any TMPDIR works; the stream
+# directory is created 775 whatever the caller's umask.
 set -eu
-OMC_PIN=00386bf9ec7bd5718891e92367653593ac70a30554daf601decd48f8d8065aa7
+OMC_PIN=3862655902e3bb9f502ebca2e1e5e5edb6175bf512be731a63c700a6dce8d355
 NATIVE_PIN=2c2c53f61d4ab302f1a2092c3c32189335dd53f6cf2b388f47a475f99f2c3940
 P=$(cd "$(dirname "$0")" && pwd)
 OM=$P/../evidence.om
@@ -21,13 +24,15 @@ command -v python3 > /dev/null || { echo "EVIDENCE-PARITY NOT_RUN: python3 missi
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 python3 "$P/corpus.py" "$T/corp" > "$T/counts"
 
-# run BIN STREAM OUT: one stream in a fresh directory; pathtree/digtree list what path/digest left
+# run BIN STREAM OUT: one stream in a fresh directory; pathtree/digtree list what path/digest left.
+# A directory's size (find %s) is the filesystem's, not the program's: 4096 on ext4, 40..3800 on tmpfs,
+# and mktemp follows TMPDIR. So directories list '-' for size; their path, type and mode still count.
 run() {
   case $2 in pathtree) rs=path ;; digtree) rs=digest ;; *) rs=$2 ;; esac
-  rm -rf "$T/w"; mkdir "$T/w"
+  rm -rf "$T/w"; mkdir -m 775 "$T/w"
   rc=0; (cd "$T/w" && umask 022 && "$1" $rs < "$T/corp/$rs.txt" > "$T/s.out" 2> /dev/null) || rc=$?
   case $2 in
-    pathtree|digtree) (cd "$T/w" && { find . -printf '%p %y %m %s\n'; find . -type f -exec sha256sum {} +; } | LC_ALL=C sort) > "$3" ;;
+    pathtree|digtree) (cd "$T/w" && { find . \( -type d -printf '%p %y %m -\n' \) -o -printf '%p %y %m %s\n'; find . -type f -exec sha256sum {} +; } | LC_ALL=C sort) > "$3" ;;
     *) cp "$T/s.out" "$3" ;;
   esac
   return $rc

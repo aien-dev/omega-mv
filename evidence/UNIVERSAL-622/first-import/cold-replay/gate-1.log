@@ -1,0 +1,5 @@
+tools/source-aware/build
+node tests/universal/source-aware/gate.mjs
+Generated and independently classified 10000 unique valid and 100000 unique malformed units. Running native core.
+Structural, capabilities, public commands and direct transactional checks passed. Compiling semantic mutants.
+{"verdict":"PASS","valid":10000,"malformed":100000,"requests":131000,"mutants":9,"run":"build/L574/runs/2026-10-22T23-05-17.656Z"}

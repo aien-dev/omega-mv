@@ -1,0 +1,96 @@
+diff --git a/include/forkserver.h b/include/forkserver.h
+index 80713ea..1cdc8fc 100644
+--- a/include/forkserver.h
++++ b/include/forkserver.h
+@@ -177,6 +177,7 @@ typedef struct afl_forkserver {
+ 
+   bool uses_crash_exitcode;             /* Custom crash exitcode specified? */
+   u8   crash_exitcode;                  /* The crash exitcode specified     */
++  u8   crash_exitcode_hi;               /* Upper end of an exitcode range   */
+ 
+   u32 *shmem_fuzz_len;                  /* length of the fuzzing test case  */
+ 
+diff --git a/src/afl-forkserver.c b/src/afl-forkserver.c
+index ee20b9f..ade1d8a 100644
+--- a/src/afl-forkserver.c
++++ b/src/afl-forkserver.c
+@@ -359,6 +359,7 @@ void afl_fsrv_init_dup(afl_forkserver_t *fsrv_to, afl_forkserver_t *from) {
+   fsrv_to->allow_cores = from->allow_cores;
+   fsrv_to->uses_crash_exitcode = from->uses_crash_exitcode;
+   fsrv_to->crash_exitcode = from->crash_exitcode;
++  fsrv_to->crash_exitcode_hi = from->crash_exitcode_hi;
+   fsrv_to->child_kill_signal = from->child_kill_signal;
+   fsrv_to->fsrv_kill_signal = from->fsrv_kill_signal;
+   fsrv_to->debug = from->debug;
+@@ -2397,8 +2398,9 @@ fsrv_run_result_t __attribute__((hot)) afl_fsrv_run_target(
+           ((fsrv->uses_asan & 2) &&
+            WEXITSTATUS(fsrv->child_status) == LSAN_ERROR) ||
+           /* the custom crash_exitcode was returned by the target */
+-          (fsrv->uses_crash_exitcode &&
+-           WEXITSTATUS(fsrv->child_status) == fsrv->crash_exitcode))) {
++          (fsrv->uses_crash_exitcode && WIFEXITED(fsrv->child_status) &&
++           WEXITSTATUS(fsrv->child_status) >= fsrv->crash_exitcode &&
++           WEXITSTATUS(fsrv->child_status) <= fsrv->crash_exitcode_hi))) {
+ 
+     /* For a proper crash, set last_kill_signal to WTERMSIG, else set it to 0 */
+     fsrv->last_kill_signal =
+diff --git a/src/afl-fuzz.c b/src/afl-fuzz.c
+index 2e0af7a..6ab1255 100644
+--- a/src/afl-fuzz.c
++++ b/src/afl-fuzz.c
+@@ -1990,7 +1990,22 @@ int main(int argc, char **argv_orig, char **envp) {
+ 
+   if (afl->afl_env.afl_crash_exitcode) {
+ 
+-    long exitcode = strtol(afl->afl_env.afl_crash_exitcode, NULL, 10);
++    char *range_end = NULL;
++    long  exitcode = strtol(afl->afl_env.afl_crash_exitcode, &range_end, 10);
++    long  exitcode_hi = exitcode;
++    /* omega-mv om/tls/test/fuzz patch: "LO-HI" makes every exit code in
++       [LO, HI] a crash (Omega program-mode traps exit 100 + code 1..14) */
++    if (range_end && *range_end == '-') {
++
++      exitcode_hi = strtol(range_end + 1, NULL, 10);
++      if (exitcode_hi < exitcode || exitcode_hi > 255) {
++
++        FATAL("Invalid crash exitcode range %s", afl->afl_env.afl_crash_exitcode);
++
++      }
++
++    }
++
+     if ((!exitcode && (errno == EINVAL || errno == ERANGE)) ||
+         exitcode < -127 || exitcode > 128) {
+ 
+@@ -2002,6 +2017,7 @@ int main(int argc, char **argv_orig, char **envp) {
+     afl->fsrv.uses_crash_exitcode = true;
+     // WEXITSTATUS is 8 bit unsigned
+     afl->fsrv.crash_exitcode = (u8)exitcode;
++    afl->fsrv.crash_exitcode_hi = (u8)exitcode_hi;
+ 
+   }
+ 
+diff --git a/src/afl-showmap.c b/src/afl-showmap.c
+index d35d9dd..c303258 100644
+--- a/src/afl-showmap.c
++++ b/src/afl-showmap.c
+@@ -1721,6 +1721,7 @@ int main(int argc, char **argv_orig, char **envp) {
+     fsrv->uses_crash_exitcode = true;
+     // WEXITSTATUS is 8 bit unsigned
+     fsrv->crash_exitcode = (u8)exitcode;
++    fsrv->crash_exitcode_hi = (u8)exitcode;
+ 
+   }
+ 
+diff --git a/src/afl-tmin.c b/src/afl-tmin.c
+index 1711e63..597cc4b 100644
+--- a/src/afl-tmin.c
++++ b/src/afl-tmin.c
+@@ -1476,6 +1476,7 @@ int main(int argc, char **argv_orig, char **envp) {
+     fsrv->uses_crash_exitcode = true;
+     // WEXITSTATUS is 8 bit unsigned
+     fsrv->crash_exitcode = (u8)exitcode;
++    fsrv->crash_exitcode_hi = (u8)exitcode;
+ 
+   }
+ 

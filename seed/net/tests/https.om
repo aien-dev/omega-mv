@@ -1,0 +1,224 @@
+note seed/net/tests/https.om -- HTTPS GET through http.om + https.om (om/tls) for tests/check.py.
+note Composed after the om/tls units, http.om and https.om (see https.om). Program mode.
+note usage: https HOST PORT STOREFILE PATH [CONNECTHOST [IDLEMS [TOTALMS [IOSPARE]]]]
+note   HOST is the TLS name (SNI, certificate check) and the Host header; CONNECTHOST (default
+note   HOST) is what is resolved and dialled; STOREFILE "-" is the system trust store; IDLEMS
+note   (default 30000) is the longest single wait and the head deadline in ms (hsettmo);
+note   TOTALMS (default 0 = none) is one deadline over handshake, request and response (htlsdl);
+note   IOSPARE (default 0 = all 262144 bytes) gives the connection an io of TLCSZ + IOSPARE bytes.
+note Writes the decoded body bytes to stdout and "status N" (the final status) to stderr, then
+note closes with close_notify. On any negative http.om result r it prints "TLSDETAIL d" (htlsdet,
+note when not 0) and "HTTPSERR r" to stderr and exits 4 (HETLS - e for a TLS code e, HETIME at a
+note deadline, HETRUNC on a short body). Exit 2 usage, 3 DNS or connect failure.
+text uusage "usage: https HOST PORT STOREFILE PATH [CONNECTHOST [IDLEMS [TOTALMS [IOSPARE]]]]\n"
+text udet "TLSDETAIL "
+text uerr "HTTPSERR "
+text ustat "status "
+text unl "\n"
+text uget "GET"
+text uhost "Host"
+text uuan "User-Agent"
+text uuav "omega-http-check/1"
+
+note decimal number from b, or 0
+fn unum b view uchar * to ulong
+v = ulong 0
+for i ulong len b
+ch = ulong get b i
+if or lt ch 48 gt ch 57
+ret 0
+end
+v = add mul v 10 sub ch 48
+if gt v 65535
+ret 0
+end
+end
+ret v
+end
+
+note signed decimal of v after the text t on stderr
+fn umsg t view uchar * v long to void
+b = new uchar 24 0
+x = write 2 t 0 len t
+k = ulong 23
+n = v
+sg = lt v 0
+if sg
+n = neg v
+end
+u = ulong n
+put b k 10
+while or gt u 0 eq k 23 bound 22
+k = sub k 1
+put b k uchar add 48 rem u 10
+u = div u 10
+end
+if sg
+k = sub k 1
+put b k 45
+end
+x = write 2 b k sub 24 k
+end
+
+note ubody: the decoded body to stdout; 0 at its end or a negative result
+fn ubody cs edit ulong * io edit uchar * to long
+d = new uchar 16384 0
+for it ulong 999999
+n = hbodyrd cs io d
+if le n 0
+ret n
+end
+x = write 1 d 0 ulong n
+end
+ret HEBIG
+end
+
+note ureq: the request and the response; hp = host length << 16 | path length; 0 or negative
+fn ureq cs edit ulong * io edit uchar * w view uchar 4096 hp ulong to long
+r = hreqst cs io uget
+r = hfe r hreqtg cs io part w 1344 and hp 65535
+r = hfe r hhname cs io uhost
+r = hfe r hhval cs io part w 0 shr hp 16
+r = hfe r hhname cs io uuan
+r = hfe r hhval cs io uuav
+r = hfe r hhend cs io 0 0
+r = hfe r hwfin cs io
+if lt r 0
+ret r
+end
+r = hrsprd cs io
+if lt r 0
+ret r
+end
+umsg ustat r
+ret ubody cs io
+end
+
+note w: host 0..256, port 256..320, store 320..1344, path 1344..2368, connect host 2368..2624
+note v: 0 host length, 1 path length, 2 store path length, 3 port, 4 connect host length, 5 idle ns
+fn uargs w edit uchar 4096 v edit ulong 8 to int
+if lt argcnt 5
+x = write 2 uusage 0 len uusage
+ret 2
+end
+hl = argread 1 w 0 255
+pl = argread 4 w 1344 1023
+sl = argread 3 w 320 1023
+pn = argread 2 w 256 6
+if or or or le hl 0 le pl 0 le sl 0 le pn 0
+ret 2
+end
+po = unum part w 256 ulong pn
+if eq po 0
+ret 2
+end
+put v 0 ulong hl
+put v 1 ulong pl
+put v 2 ulong sl
+put v 3 po
+tls_mov w 2368 0 ulong hl
+if ge argcnt 6
+hl = argread 5 w 2368 255
+if le hl 0
+ret 2
+end
+end
+put v 4 ulong hl
+put v 5 30000000000
+if ne uopt w v 6 5 1000000 0
+ret 2
+end
+if ne uopt w v 7 6 1000000 0
+ret 2
+end
+if ne uopt w v 8 7 1 0
+ret 2
+end
+ret 0
+end
+
+note uopt: optional argument i, a decimal, times m into v[j]; 0, or 2 when it is malformed
+fn uopt w edit uchar 4096 v edit ulong 8 i ulong j ulong m ulong to int
+if le argcnt long i
+ret 0
+end
+hl = argread i w 2624 8
+if le hl 0
+ret 2
+end
+put v j mul unum part w 2624 ulong hl m
+ret 0
+end
+
+note ustore: the trust store from STOREFILE ("-" = system); 0 or HETLS - e
+fn ustore st edit uchar 262144 w view uchar 4096 sl ulong to long
+e = ulong 0
+if and eq sl 1 eq get w 320 45
+e = tls_store st
+else
+e = tls_storef st part w 320 sl
+end
+if ne e 0
+ret sub HETLS long e
+end
+ret 0
+end
+
+note uconn: dial and the TLS setup (hinit, htlsinit); 0, -1000 (connect) or a negative result
+fn uconn cs edit ulong * io edit uchar * w view uchar 4096 v view ulong 8 to long
+fd = tls_dial part w 2368 get v 4 get v 3
+if lt fd 0
+ret -1000
+end
+r = hinit cs io int fd 0
+hsettmo cs long get v 5 long get v 5
+htlsdl cs long get v 6
+ret hfe r htlsinit cs io part w 0 get v 0
+end
+
+note urun: connect, handshake, request and response on io, then the TLS detail of a failure and
+note close_notify; 0, -1000 (connect) or a negative result
+fn urun cs edit ulong 320 io edit uchar * st view uchar 262144 w view uchar 4096 v view ulong 8 to long
+r = uconn cs io w v
+if ge r 0
+r = htlsconn cs io st
+end
+if ge r 0
+r = ureq cs io w or shl get v 0 16 get v 1
+end
+dt = htlsdet cs io
+if and lt r 0 ne dt 0
+umsg udet long dt
+end
+x = htlsend cs io
+ret r
+end
+
+fn main to int
+cs = new ulong 320 0
+io = new uchar 262144 0
+st = new uchar 262144 0
+w = new uchar 4096 0
+v = new ulong 8 0
+e = uargs w v
+if ne e 0
+ret e
+end
+r = ustore st w get v 2
+if ge r 0
+k = get v 7
+if eq k 0
+r = urun cs io st w v
+else
+r = urun cs part io 0 add TLCSZ k st w v
+end
+end
+if eq r -1000
+ret 3
+end
+if lt r 0
+umsg uerr r
+ret 4
+end
+ret 0
+end

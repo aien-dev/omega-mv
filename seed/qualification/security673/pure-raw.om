@@ -1,0 +1,153 @@
+note Fixed hostile native fixtures, emitted as data by seeded Omega. Not a general source translator.
+note Input is the identified212-byte minimal seeded ELF. Only its176-byte ELF header is retained.
+note Modes0 absolute execveat to unassigned inode;1 raw openat;2 raw getpid;3 raw mmap.
+global image uchar 512
+global mode uchar 8
+global pos ulong 1
+global target uchar 192
+text path "/usr/bin/true"
+fn set64 off ulong value ulong to void
+for i ulong 8
+put image add off i uchar and shr value mul i 8 255
+end
+end
+fn word value ulong to void
+p = get pos 0
+for i ulong 4
+put image add p i uchar and shr value mul i 8 255
+end
+put pos 0 add p 4
+end
+fn mov reg ulong value ulong to void
+word or or 3531603968 reg shl value 5
+end
+fn pathptr to void
+mov 1 320
+note MOVK x1,#64,LSL16, giving the fixed RX mapping address0x400140.
+word 4070574081
+end
+fn execraw to void
+mov 0 3
+pathptr
+mov 2 0
+mov 3 0
+mov 4 4096
+mov 8 281
+end
+fn openraw to void
+mov 0 0
+note SUB x0,x0,#100, AT_FDCWD.
+word 3506540544
+pathptr
+mov 2 0
+mov 3 0
+mov 8 56
+end
+fn mmapraw to void
+mov 0 0
+note MOVZ x1,#16384,LSL16 gives1GiB; MAP_PRIVATE|MAP_ANONYMOUS with no file.
+word 3534225409
+mov 2 3
+mov 3 34
+note MOVN x4,#0 gives descriptor-1.
+word 2457862148
+mov 5 0
+mov 8 222
+end
+fn main to int
+if and ne argcnt 2 ne argcnt 3
+ret 90
+end
+if ne argread 1 mode 0 len mode 1
+ret 90
+end
+m = get mode 0
+if or lt m 48 gt m 51
+ret 90
+end
+n = ulong 0
+more = true
+while more
+if eq n len image
+ret 92
+end
+r = read 0 image n sub len image n
+if lt r 0
+ret 91
+end
+if eq r 0
+if ne n 212
+ret 92
+end
+more = false
+else
+n = add n ulong r
+end
+end
+if or ne get image 0 127 ne get image 1 69
+ret 92
+end
+if or ne get image 2 76 ne get image 3 70
+ret 92
+end
+if or ne get image 18 183 ne get image 56 2
+ret 92
+end
+for i ulong 336
+put image add 176 i 0
+end
+set64 96 512
+set64 104 512
+put pos 0 176
+if eq m 48
+execraw
+end
+if eq m 49
+openraw
+end
+if eq m 50
+mov 8 172
+end
+if eq m 51
+mmapraw
+end
+word 3556769793
+want = ulong 1
+if eq m 48
+want = ulong 13
+end
+note CMN x0,#wanted errno; branch to exit0 only for the exact expected refusal.
+word or 2969567263 shl want 10
+word 1409286240
+mov 0 71
+word 335544322
+mov 0 0
+mov 8 93
+word 3556769793
+sz = ulong len path
+for i ulong sz
+put target i get path i
+end
+if eq argcnt 3
+t = argread 2 target 0 len target
+if or le t 0 ge t long len target
+ret 94
+end
+if ne get target 0 47
+ret 94
+end
+sz = ulong t
+end
+for i ulong sz
+put image add 320 i get target i
+end
+p = ulong 0
+while lt p len image
+r = write 1 image p sub len image p
+if le r 0
+ret 93
+end
+p = add p ulong r
+end
+ret 0
+end

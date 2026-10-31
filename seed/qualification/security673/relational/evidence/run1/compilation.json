@@ -1,0 +1,297 @@
+[
+  {
+    "name": "early",
+    "sources": [
+      "seed/qualification/security673/relational/early.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "0df468f548a0931718ad1219a24f1f9eec7ff96ad8b5eeb5db629c590e814075",
+    "output_sha256": "fb97d70a7fd2b8ced51ef6fcfecf9e7071482b62633a285cf17870f62a1c5e37"
+  },
+  {
+    "name": "patchword",
+    "sources": [
+      "seed/qualification/security673/relational/patchword.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "096a43ece18688dfb1efcbb68e9e61f7b5820699569e737ad116d34553e2e730",
+    "output_sha256": "2aafc6f0a2a85fd13c8bb6eca0fd58e4580ac1de210def16ced215f98dfa4a61"
+  },
+  {
+    "name": "nondeterminism",
+    "sources": [
+      "seed/qualification/security673/relational/nondeterminism.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 7,
+    "stderr": "omc: line 36: error 7\n",
+    "source_sha256": "f0f2cd0516f2aff2794479ebb43580798203db08922cf0480cbff4887d9cd67b",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "address",
+    "sources": [
+      "seed/qualification/security673/relational/address.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "385a94645ecfa33d95b34a06ee84b645c81e90f30cf54737b09255ef68a96bfd",
+    "output_sha256": "a99252996654a7121c20ef2dc7bb551fd2a06a86b4ee10e067d7744d9ee4d42d"
+  },
+  {
+    "name": "error",
+    "sources": [
+      "seed/qualification/security673/relational/error.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "8fbd4b6c45395ab22e74af94acc18f9fde1806c83484880bda8a0acc9d11d29e",
+    "output_sha256": "8c53785a526af46af7bd19c2c9386fc7edc3609075c453f8cca44aa727ad69ae"
+  },
+  {
+    "name": "public-branch",
+    "sources": [
+      "seed/qualification/security673/relational/public-branch.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "015995067ab75ee67d2c8010d5cc53894946933e22a3211d78afcfad879f1048",
+    "output_sha256": "3271943c86c14c092e0b79e1019bbace2b4cd6b8182f7ebae69fe50cea5a9ef5"
+  },
+  {
+    "name": "public-address",
+    "sources": [
+      "seed/qualification/security673/relational/public-address.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "db1a4df108de0b547ba6ede9cc581de0123494c8bd9bd8c8f342bf144b8369bd",
+    "output_sha256": "18d245ec4bcc5485b4cd0044868e02cfab25343624e7c212323e41bd3440c233"
+  },
+  {
+    "name": "helper",
+    "sources": [
+      "seed/qualification/security673/relational/helper.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "81c82a28bd7e77419fb286e45b12901b3d5fc9e4a2d553c5fb628a7842a08684",
+    "output_sha256": "2191d20857315479929fb09259a2e6bd626646918db28f911fbcf0098254c48b"
+  },
+  {
+    "name": "compare32",
+    "sources": [
+      "seed/qualification/security673/relational/compare32.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 9,
+    "stderr": "omc: line 8: error 9\n",
+    "source_sha256": "872c90b47ac80260af2f379f108b1d18f0e31a08ce8bfd20f54f2a4592c85239",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "division",
+    "sources": [
+      "seed/qualification/security673/relational/division.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "518317ae9b8a5ce2709ab6c3d241cb09b885a1f3eb809c2fc2a7df59f6d38af1",
+    "output_sha256": "727925782462d8f2799140359cdde13308215f6ecb03b947bd004fdf1a349eba"
+  },
+  {
+    "name": "branch",
+    "sources": [
+      "seed/qualification/security673/relational/branch.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "edcd256af38d73e0f3b694970a15ebdcca60bc3bc4eafe8cfced8efcca537dd6",
+    "output_sha256": "3271943c86c14c092e0b79e1019bbace2b4cd6b8182f7ebae69fe50cea5a9ef5"
+  },
+  {
+    "name": "paired",
+    "sources": [
+      "seed/qualification/security673/relational/compare32.om",
+      "seed/qualification/security673/relational/paired.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 9,
+    "stderr": "omc: line 8: error 9\n",
+    "source_sha256": "a8ceba6281097db03b420233ff17f413a728820bf5988198cd436133b576fd76",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "leakscan",
+    "sources": [
+      "/home/drakestapleton/workspace/security673-scanner/seed/qualification/om2/leak/leakscan.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "6b14fd9bb6f174de4a87e14b5ae38c9984de48c91a0b18c468bb1197adb2c82c",
+    "output_sha256": "aa60061ea85184d98f8fed41ad5b0ab2335d3697aba00a1eca80ba33b910e633"
+  },
+  {
+    "name": "gate",
+    "sources": [
+      "/home/drakestapleton/workspace/security673-scanner/seed/qualification/om2/gate.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "250361be99ced1246405b2e4a2e2de71373a90d0a0569fb43821ed8b106e045f",
+    "output_sha256": "6c8691c21074595312fdd0f22ca30b6fbe48fb88f2fb0a58936f2960056acefa"
+  },
+  {
+    "name": "branch-native",
+    "sources": [
+      "seed/qualification/security673/relational/branch.om",
+      "seed/qualification/security673/relational/unary-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "d961f5dac5accec28d62adb566cf82c2233a1efb1fa74d1b32094e0430b8678c",
+    "output_sha256": "360bbe45cc98891c9a36b2f6ff96d33772e09bc3f6e9e887c21297656df9252f"
+  },
+  {
+    "name": "helper-native",
+    "sources": [
+      "seed/qualification/security673/relational/helper.om",
+      "seed/qualification/security673/relational/unary-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "426603dad522d3bf9ec27e0d2889ffd2a8c42d9e4b72f4adc27938cbd3b7c916",
+    "output_sha256": "627599db48045dcd03111a8bebc3658be83e51cc2d0c9a83bb57fa1d4e9aec58"
+  },
+  {
+    "name": "error-native",
+    "sources": [
+      "seed/qualification/security673/relational/error.om",
+      "seed/qualification/security673/relational/unary-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "84898596e12b84d7b4064fa1d385af930410997819e1a6bf9abf4403ac275c16",
+    "output_sha256": "33a33b00bc41e4e67c94641366b7b5992ba4942bf43ef54ba06994cf646b30ba"
+  },
+  {
+    "name": "division-native",
+    "sources": [
+      "seed/qualification/security673/relational/division.om",
+      "seed/qualification/security673/relational/unary-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "72bc954db0cf75f2a9945b11a8c2b2d04db7881a0413a3a00b8314dd1876356e",
+    "output_sha256": "ea0958a00bf639b66389e2d02b9c2109b2d303a25812ded8366c08193e954154"
+  },
+  {
+    "name": "address-native",
+    "sources": [
+      "seed/qualification/security673/relational/address.om",
+      "seed/qualification/security673/relational/address-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "65ffbb4487925c87c9fb7847be8e35f29bcf8b1e39c08f6e929d9a29afcb414f",
+    "output_sha256": "5a75c5e72c3aee2c64400d63fc409c9c8088615efc33e1960cbe406ac13b78fc"
+  },
+  {
+    "name": "public-branch-native",
+    "sources": [
+      "seed/qualification/security673/relational/public-branch.om",
+      "seed/qualification/security673/relational/public-branch-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "70cd0788cae3c02dbe804084c7df6eabea71eb35a1e7e54b6a80839e1cb7d74c",
+    "output_sha256": "68120f22f092c790c28427dd9b9bb05964544569487caf15029080be5f2f3f25"
+  },
+  {
+    "name": "public-address-native",
+    "sources": [
+      "seed/qualification/security673/relational/public-address.om",
+      "seed/qualification/security673/relational/public-address-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "dd7f3ff86a96d31ba7e48ec1822187709282d5b9c66b4dbc51ff81d673aa7e18",
+    "output_sha256": "774ff28ed641c9a81a166644f11916db3fd4538eff5a8829a3da113c3f2f8a71"
+  },
+  {
+    "name": "early-native",
+    "sources": [
+      "seed/qualification/security673/relational/early.om",
+      "seed/qualification/security673/relational/early-main.om"
+    ],
+    "command": [
+      "/home/drakestapleton/workspace/security673-relational/seed/out/omc"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "source_sha256": "b7f6ea256cfdfef97ea6915487cc5a86777902116ad190d0af8cb536e68f1b64",
+    "output_sha256": "cd3fbd06cd8bb300e24fea0941ec1d0c90098761629647b6df16e734906f17ea"
+  }
+]

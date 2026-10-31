@@ -1,0 +1,24 @@
+# tests/gates/omega-gpu-decode-graph.gate
+# Host-only decode-graph suite (omega #518): make test-gpu-decode-graph (decode graph test, abort/lock-recovery test, 5 mutants). No device.
+gate: OMEGA-GPU-DECODE-GRAPH
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/
+  - tools/
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["gpu-decode-graph"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 20m
+exactness: EXACT
+cache_scope: machine

@@ -1,0 +1,215 @@
+OM2GATE START cases=neuralese/nl4-host.cases scratch=build/nl4-host-r2
+IDENTITY omc seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match
+DEADLINE 20
+CASE codec-oracle line=3
+  $ seed/out/omc < build/nl4-host-r2/3.src > build/nl4-host-r2/3.elf 2> build/nl4-host-r2/3.cerr
+VERDICT codec-oracle FAIL compile exit=3 expected=0
+CASE f32-double0 line=4
+  $ seed/out/omc < build/nl4-host-r2/4.src > build/nl4-host-r2/4.elf 2> build/nl4-host-r2/4.cerr
+VERDICT f32-double0 FAIL compile exit=3 expected=0
+CASE f32-double2 line=5
+  $ seed/out/omc < build/nl4-host-r2/5.src > build/nl4-host-r2/5.elf 2> build/nl4-host-r2/5.cerr
+VERDICT f32-double2 FAIL compile exit=3 expected=0
+CASE f32-double1 line=6
+  $ seed/out/omc < build/nl4-host-r2/6.src > build/nl4-host-r2/6.elf 2> build/nl4-host-r2/6.cerr
+VERDICT f32-double1 FAIL compile exit=3 expected=0
+CASE f32-double3 line=7
+  $ seed/out/omc < build/nl4-host-r2/7.src > build/nl4-host-r2/7.elf 2> build/nl4-host-r2/7.cerr
+VERDICT f32-double3 FAIL compile exit=3 expected=0
+CASE f32-inc0 line=8
+  $ seed/out/omc < build/nl4-host-r2/8.src > build/nl4-host-r2/8.elf 2> build/nl4-host-r2/8.cerr
+VERDICT f32-inc0 FAIL compile exit=3 expected=0
+CASE f32-inc2 line=9
+  $ seed/out/omc < build/nl4-host-r2/9.src > build/nl4-host-r2/9.elf 2> build/nl4-host-r2/9.cerr
+VERDICT f32-inc2 FAIL compile exit=3 expected=0
+CASE f32-inc1 line=10
+  $ seed/out/omc < build/nl4-host-r2/10.src > build/nl4-host-r2/10.elf 2> build/nl4-host-r2/10.cerr
+VERDICT f32-inc1 FAIL compile exit=3 expected=0
+CASE f32-inc3 line=11
+  $ seed/out/omc < build/nl4-host-r2/11.src > build/nl4-host-r2/11.elf 2> build/nl4-host-r2/11.cerr
+VERDICT f32-inc3 FAIL compile exit=3 expected=0
+CASE f32-id0 line=12
+  $ seed/out/omc < build/nl4-host-r2/12.src > build/nl4-host-r2/12.elf 2> build/nl4-host-r2/12.cerr
+VERDICT f32-id0 FAIL compile exit=3 expected=0
+CASE f32-id2 line=13
+  $ seed/out/omc < build/nl4-host-r2/13.src > build/nl4-host-r2/13.elf 2> build/nl4-host-r2/13.cerr
+VERDICT f32-id2 FAIL compile exit=3 expected=0
+CASE f32-id1 line=14
+  $ seed/out/omc < build/nl4-host-r2/14.src > build/nl4-host-r2/14.elf 2> build/nl4-host-r2/14.cerr
+VERDICT f32-id1 FAIL compile exit=3 expected=0
+CASE f32-id3 line=15
+  $ seed/out/omc < build/nl4-host-r2/15.src > build/nl4-host-r2/15.elf 2> build/nl4-host-r2/15.cerr
+VERDICT f32-id3 FAIL compile exit=3 expected=0
+CASE i8-double0 line=16
+  $ seed/out/omc < build/nl4-host-r2/16.src > build/nl4-host-r2/16.elf 2> build/nl4-host-r2/16.cerr
+VERDICT i8-double0 FAIL compile exit=3 expected=0
+CASE i8-double2 line=17
+  $ seed/out/omc < build/nl4-host-r2/17.src > build/nl4-host-r2/17.elf 2> build/nl4-host-r2/17.cerr
+VERDICT i8-double2 FAIL compile exit=3 expected=0
+CASE i8-double1 line=18
+  $ seed/out/omc < build/nl4-host-r2/18.src > build/nl4-host-r2/18.elf 2> build/nl4-host-r2/18.cerr
+VERDICT i8-double1 FAIL compile exit=3 expected=0
+CASE i8-double3 line=19
+  $ seed/out/omc < build/nl4-host-r2/19.src > build/nl4-host-r2/19.elf 2> build/nl4-host-r2/19.cerr
+VERDICT i8-double3 FAIL compile exit=3 expected=0
+CASE i8-inc0 line=20
+  $ seed/out/omc < build/nl4-host-r2/20.src > build/nl4-host-r2/20.elf 2> build/nl4-host-r2/20.cerr
+VERDICT i8-inc0 FAIL compile exit=3 expected=0
+CASE i8-inc2 line=21
+  $ seed/out/omc < build/nl4-host-r2/21.src > build/nl4-host-r2/21.elf 2> build/nl4-host-r2/21.cerr
+VERDICT i8-inc2 FAIL compile exit=3 expected=0
+CASE i8-inc1 line=22
+  $ seed/out/omc < build/nl4-host-r2/22.src > build/nl4-host-r2/22.elf 2> build/nl4-host-r2/22.cerr
+VERDICT i8-inc1 FAIL compile exit=3 expected=0
+CASE i8-inc3 line=23
+  $ seed/out/omc < build/nl4-host-r2/23.src > build/nl4-host-r2/23.elf 2> build/nl4-host-r2/23.cerr
+VERDICT i8-inc3 FAIL compile exit=3 expected=0
+CASE i8-id0 line=24
+  $ seed/out/omc < build/nl4-host-r2/24.src > build/nl4-host-r2/24.elf 2> build/nl4-host-r2/24.cerr
+VERDICT i8-id0 FAIL compile exit=3 expected=0
+CASE i8-id2 line=25
+  $ seed/out/omc < build/nl4-host-r2/25.src > build/nl4-host-r2/25.elf 2> build/nl4-host-r2/25.cerr
+VERDICT i8-id2 FAIL compile exit=3 expected=0
+CASE i8-id1 line=26
+  $ seed/out/omc < build/nl4-host-r2/26.src > build/nl4-host-r2/26.elf 2> build/nl4-host-r2/26.cerr
+VERDICT i8-id1 FAIL compile exit=3 expected=0
+CASE i8-id3 line=27
+  $ seed/out/omc < build/nl4-host-r2/27.src > build/nl4-host-r2/27.elf 2> build/nl4-host-r2/27.cerr
+VERDICT i8-id3 FAIL compile exit=3 expected=0
+CASE reserved-op0 line=28
+  $ seed/out/omc < build/nl4-host-r2/28.src > build/nl4-host-r2/28.elf 2> build/nl4-host-r2/28.cerr
+VERDICT reserved-op0 FAIL compile exit=3 expected=0
+CASE refuse-effect line=29
+  $ seed/out/omc < build/nl4-host-r2/29.src > build/nl4-host-r2/29.elf 2> build/nl4-host-r2/29.cerr
+VERDICT refuse-effect FAIL compile exit=3 expected=0
+CASE refuse-live-profile line=30
+  $ seed/out/omc < build/nl4-host-r2/30.src > build/nl4-host-r2/30.elf 2> build/nl4-host-r2/30.cerr
+VERDICT refuse-live-profile FAIL compile exit=3 expected=0
+CASE refuse-stale line=31
+  $ seed/out/omc < build/nl4-host-r2/31.src > build/nl4-host-r2/31.elf 2> build/nl4-host-r2/31.cerr
+VERDICT refuse-stale FAIL compile exit=3 expected=0
+CASE refuse-future line=32
+  $ seed/out/omc < build/nl4-host-r2/32.src > build/nl4-host-r2/32.elf 2> build/nl4-host-r2/32.cerr
+VERDICT refuse-future FAIL compile exit=3 expected=0
+CASE refuse-replay line=33
+  $ seed/out/omc < build/nl4-host-r2/33.src > build/nl4-host-r2/33.elf 2> build/nl4-host-r2/33.cerr
+VERDICT refuse-replay FAIL compile exit=3 expected=0
+CASE refuse-nonce line=34
+  $ seed/out/omc < build/nl4-host-r2/34.src > build/nl4-host-r2/34.elf 2> build/nl4-host-r2/34.cerr
+VERDICT refuse-nonce FAIL compile exit=3 expected=0
+CASE refuse-foreign-tenant line=35
+  $ seed/out/omc < build/nl4-host-r2/35.src > build/nl4-host-r2/35.elf 2> build/nl4-host-r2/35.cerr
+VERDICT refuse-foreign-tenant FAIL compile exit=3 expected=0
+CASE refuse-consent-root line=36
+  $ seed/out/omc < build/nl4-host-r2/36.src > build/nl4-host-r2/36.elf 2> build/nl4-host-r2/36.cerr
+VERDICT refuse-consent-root FAIL compile exit=3 expected=0
+CASE refuse-decoder line=37
+  $ seed/out/omc < build/nl4-host-r2/37.src > build/nl4-host-r2/37.elf 2> build/nl4-host-r2/37.cerr
+VERDICT refuse-decoder FAIL compile exit=3 expected=0
+CASE refuse-model line=38
+  $ seed/out/omc < build/nl4-host-r2/38.src > build/nl4-host-r2/38.elf 2> build/nl4-host-r2/38.cerr
+VERDICT refuse-model FAIL compile exit=3 expected=0
+CASE refuse-shape line=39
+  $ seed/out/omc < build/nl4-host-r2/39.src > build/nl4-host-r2/39.elf 2> build/nl4-host-r2/39.cerr
+VERDICT refuse-shape FAIL compile exit=3 expected=0
+CASE refuse-alias-stride line=40
+  $ seed/out/omc < build/nl4-host-r2/40.src > build/nl4-host-r2/40.elf 2> build/nl4-host-r2/40.cerr
+VERDICT refuse-alias-stride FAIL compile exit=3 expected=0
+CASE refuse-nonfinite line=41
+  $ seed/out/omc < build/nl4-host-r2/41.src > build/nl4-host-r2/41.elf 2> build/nl4-host-r2/41.cerr
+VERDICT refuse-nonfinite FAIL compile exit=3 expected=0
+CASE refuse-integrity line=42
+  $ seed/out/omc < build/nl4-host-r2/42.src > build/nl4-host-r2/42.elf 2> build/nl4-host-r2/42.cerr
+VERDICT refuse-integrity FAIL compile exit=3 expected=0
+CASE refuse-reserved line=43
+  $ seed/out/omc < build/nl4-host-r2/43.src > build/nl4-host-r2/43.elf 2> build/nl4-host-r2/43.cerr
+VERDICT refuse-reserved FAIL compile exit=3 expected=0
+CASE refuse-zero-cap-ref line=44
+  $ seed/out/omc < build/nl4-host-r2/44.src > build/nl4-host-r2/44.elf 2> build/nl4-host-r2/44.cerr
+VERDICT refuse-zero-cap-ref FAIL compile exit=3 expected=0
+CASE refuse-no-resource line=45
+  $ seed/out/omc < build/nl4-host-r2/45.src > build/nl4-host-r2/45.elf 2> build/nl4-host-r2/45.cerr
+VERDICT refuse-no-resource FAIL compile exit=3 expected=0
+CASE refuse-version line=46
+  $ seed/out/omc < build/nl4-host-r2/46.src > build/nl4-host-r2/46.elf 2> build/nl4-host-r2/46.cerr
+VERDICT refuse-version FAIL compile exit=3 expected=0
+CASE refuse-scale line=47
+  $ seed/out/omc < build/nl4-host-r2/47.src > build/nl4-host-r2/47.elf 2> build/nl4-host-r2/47.cerr
+VERDICT refuse-scale FAIL compile exit=3 expected=0
+CASE refuse-truncated line=48
+  $ seed/out/omc < build/nl4-host-r2/48.src > build/nl4-host-r2/48.elf 2> build/nl4-host-r2/48.cerr
+VERDICT refuse-truncated FAIL compile exit=3 expected=0
+CASE refuse-oversized line=49
+  $ seed/out/omc < build/nl4-host-r2/49.src > build/nl4-host-r2/49.elf 2> build/nl4-host-r2/49.cerr
+VERDICT refuse-oversized FAIL compile exit=3 expected=0
+CASE refuse-ambiguous line=50
+  $ seed/out/omc < build/nl4-host-r2/50.src > build/nl4-host-r2/50.elf 2> build/nl4-host-r2/50.cerr
+VERDICT refuse-ambiguous FAIL compile exit=3 expected=0
+CASE refuse-signflip line=51
+  $ seed/out/omc < build/nl4-host-r2/51.src > build/nl4-host-r2/51.elf 2> build/nl4-host-r2/51.cerr
+VERDICT refuse-signflip FAIL compile exit=3 expected=0
+CASE refuse-wrongscale line=52
+  $ seed/out/omc < build/nl4-host-r2/52.src > build/nl4-host-r2/52.elf 2> build/nl4-host-r2/52.cerr
+VERDICT refuse-wrongscale FAIL compile exit=3 expected=0
+CASE refuse-wrong-op line=53
+  $ seed/out/omc < build/nl4-host-r2/53.src > build/nl4-host-r2/53.elf 2> build/nl4-host-r2/53.cerr
+VERDICT refuse-wrong-op FAIL compile exit=3 expected=0
+CASE refuse-wrong-operand line=54
+  $ seed/out/omc < build/nl4-host-r2/54.src > build/nl4-host-r2/54.elf 2> build/nl4-host-r2/54.cerr
+VERDICT refuse-wrong-operand FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-effect.from neuralese/fixtures/nl4-false.to
+CASE kill-effect line=56
+  MUTATE exact-once substitution at byte 4528
+  $ seed/out/omc < build/nl4-host-r2/56.src > build/nl4-host-r2/56.elf 2> build/nl4-host-r2/56.cerr
+VERDICT kill-effect FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-expiry.from neuralese/fixtures/nl4-false.to
+CASE kill-expiry line=58
+  MUTATE exact-once substitution at byte 10428
+  $ seed/out/omc < build/nl4-host-r2/58.src > build/nl4-host-r2/58.elf 2> build/nl4-host-r2/58.cerr
+VERDICT kill-expiry FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-sequence.from neuralese/fixtures/nl4-false.to
+CASE kill-sequence line=60
+  MUTATE exact-once substitution at byte 10512
+  $ seed/out/omc < build/nl4-host-r2/60.src > build/nl4-host-r2/60.elf 2> build/nl4-host-r2/60.cerr
+VERDICT kill-sequence FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-context.from neuralese/fixtures/nl4-false.to
+CASE kill-tenant-binding line=62
+  MUTATE exact-once substitution at byte 10614
+  $ seed/out/omc < build/nl4-host-r2/62.src > build/nl4-host-r2/62.elf 2> build/nl4-host-r2/62.cerr
+VERDICT kill-tenant-binding FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-context.from neuralese/fixtures/nl4-false.to
+CASE kill-consent-binding line=64
+  MUTATE exact-once substitution at byte 10614
+  $ seed/out/omc < build/nl4-host-r2/64.src > build/nl4-host-r2/64.elf 2> build/nl4-host-r2/64.cerr
+VERDICT kill-consent-binding FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-integrity.from neuralese/fixtures/nl4-false.to
+CASE kill-integrity line=66
+  MUTATE exact-once substitution at byte 10677
+  $ seed/out/omc < build/nl4-host-r2/66.src > build/nl4-host-r2/66.elf 2> build/nl4-host-r2/66.cerr
+VERDICT kill-integrity FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-shape.from neuralese/fixtures/nl4-false.to
+CASE kill-shape-alias line=68
+  MUTATE exact-once substitution at byte 10207
+  $ seed/out/omc < build/nl4-host-r2/68.src > build/nl4-host-r2/68.elf 2> build/nl4-host-r2/68.cerr
+VERDICT kill-shape-alias FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-match.from neuralese/fixtures/nl4-false.to
+CASE kill-wrong-objective line=70
+  MUTATE exact-once substitution at byte 2833
+  $ seed/out/omc < build/nl4-host-r2/70.src > build/nl4-host-r2/70.elf 2> build/nl4-host-r2/70.cerr
+VERDICT kill-wrong-objective FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-operation.from neuralese/fixtures/nl4-operation.to
+CASE kill-wrong-operation line=72
+  MUTATE exact-once substitution at byte 364
+  $ seed/out/omc < build/nl4-host-r2/72.src > build/nl4-host-r2/72.elf 2> build/nl4-host-r2/72.cerr
+VERDICT kill-wrong-operation FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-pre.from neuralese/fixtures/nl4-pre.to
+CASE ordinary-precondition line=74
+  MUTATE exact-once substitution at byte 2086
+  $ seed/out/omc < build/nl4-host-r2/74.src > build/nl4-host-r2/74.elf 2> build/nl4-host-r2/74.cerr
+VERDICT ordinary-precondition FAIL compile exit=3 expected=0
+SUBST neuralese/fixtures/nl4-operation.from neuralese/fixtures/nl4-post.to
+CASE ordinary-postcondition line=76
+  MUTATE exact-once substitution at byte 364
+  $ seed/out/omc < build/nl4-host-r2/76.src > build/nl4-host-r2/76.elf 2> build/nl4-host-r2/76.cerr
+VERDICT ordinary-postcondition FAIL compile exit=3 expected=0
+OM2GATE FAIL cases=63 pass=0 fail=63 invalid=0 not_run=0

@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Transparent host dispatch; parsing and hashing run in seeded native Omega."""
+from pathlib import Path
+import hashlib,json,os,sys
+root=Path(__file__).resolve().parents[2]
+if len(sys.argv)!=1:
+    print('C_IMPORT_BAD_COMMAND: use stdin source; no arguments',file=sys.stderr);raise SystemExit(64)
+try:
+    build=root/'build/L589';m=json.loads((build/'build.json').read_text());exe=build/'c-import'
+    if m['compiler_sha256']!='191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9':raise ValueError('compiler identity')
+    for rel,digest in m['inputs'].items():
+        if rel not in ['src/source-aware/vendor/sha256.om','src/adapters/c-u64-import.om']:raise ValueError('source closure')
+        if hashlib.sha256((root/rel).read_bytes()).hexdigest()!=digest:raise ValueError('changed source')
+    if set(m['inputs'])!={'src/source-aware/vendor/sha256.om','src/adapters/c-u64-import.om'}:raise ValueError('missing source')
+    if hashlib.sha256(exe.read_bytes()).hexdigest()!=m['binary_sha256']:raise ValueError('changed artifact')
+except (OSError,ValueError,KeyError) as exc:
+    print('C_IMPORT_STALE_OR_MISSING_BUILD: '+str(exc),file=sys.stderr);raise SystemExit(78)
+os.execv(exe,[str(exe)])

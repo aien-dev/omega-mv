@@ -1,0 +1,1057 @@
+{
+  "schema": "security673-resources-review-repair-v2",
+  "source_commit": "7a17375ceec875571f409d8e64193ef92fef5bf2",
+  "contract_sha256": "ced61decef1ff4efbf5bc81598db648aa810be434e373e9bc1563dbcb4523496",
+  "historical_receipt": "receipt.946b6219f9e203ce78c643781906a5fbe7f20b022e73f6fe3599a8a7ae5dcd1b.json",
+  "historical_scope": "Draft contract only; controls did not qualify same-checker rev2 obligations. Not retroactively relabeled.",
+  "target": {
+    "machine": "aarch64",
+    "sysname": "Linux",
+    "release": "7.0.0-1019-nvidia",
+    "abi": "Linux AArch64 ELF64 native"
+  },
+  "compiler": {
+    "source_sha256": "2e35db7d6c2066fb4a20d19b8a9579c44caca9c9937b0594a89422010b673637",
+    "executable_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+    "argv": [
+      "nice",
+      "-n",
+      "19",
+      "seed/out/omc"
+    ],
+    "cwd": "repository worktree at source_commit; only explicitly hashed source files used",
+    "stdin": "concatenated sources in listed order",
+    "stdout": "ELF bytes saved as the named executable under execution cwd"
+  },
+  "fixture_sha256": "72409ad8eb02191c91db1c6b2a5aade5f68dd8911e2752364c0ab8ee4e39430c",
+  "builds": {
+    "demo": {
+      "source_paths": [
+        "seed/authority/reserve.om",
+        "seed/authority/envelope.om",
+        "seed/qualification/security673/resources/checks.om",
+        "seed/qualification/security673/resources/demo.om"
+      ],
+      "sources_sha256": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+        "seed/qualification/security673/resources/demo.om": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3"
+      },
+      "stdin_sha256": "027ab88439289d30701f5fbf89e0e07a06f3c9c19816a11df620841d736bdac7",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "executable_sha256": "588ad6e76ee79b9517c361bbf1b8302c32cc1ece518c231ab69e755cadd7c0be",
+      "executable_bytes": 22136,
+      "output_file": "/tmp/sc1-resources-rev2/demo"
+    },
+    "exhaust": {
+      "source_paths": [
+        "seed/authority/reserve.om",
+        "seed/authority/envelope.om",
+        "seed/qualification/security673/resources/checks.om",
+        "seed/qualification/security673/resources/exhaust.om"
+      ],
+      "sources_sha256": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+        "seed/qualification/security673/resources/exhaust.om": "1929828a17a813b3bf54afe72f3187e3b512f9be1815bbbf6c7e679fc4323e46"
+      },
+      "stdin_sha256": "b6405e2032823698e4268c9859054834c7d79db72babe96d942ee079586ee488",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "executable_sha256": "dc7904bb2fae0f344a09d57e599961fe4b197eff7c12b774000e96f73ac662a8",
+      "executable_bytes": 23192,
+      "output_file": "/tmp/sc1-resources-rev2/exhaust"
+    },
+    "measure": {
+      "source_paths": [
+        "seed/authority/reserve.om",
+        "seed/authority/envelope.om",
+        "seed/qualification/security673/resources/checks.om",
+        "seed/qualification/security673/resources/measure.om"
+      ],
+      "sources_sha256": {
+        "seed/authority/reserve.om": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+        "seed/authority/envelope.om": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+        "seed/qualification/security673/resources/checks.om": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+        "seed/qualification/security673/resources/measure.om": "429cf7c089b60bd05d2fed38092d8c05f2561dce587bbbcb95a21efbbb998e69"
+      },
+      "stdin_sha256": "5eb8fbf042b6497a3b4f3c7d2999cf165cacf85474823a395a8871282fc74f87",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "executable_sha256": "34bd18944533b8fa6055890db9bd2dd493de4aaf7c5f995061e743f4a0787e4e",
+      "executable_bytes": 23812,
+      "output_file": "/tmp/sc1-resources-rev2/measure"
+    },
+    "negative": {
+      "source_paths": [
+        "seed/qualification/security673/resources/negative.om"
+      ],
+      "sources_sha256": {
+        "seed/qualification/security673/resources/negative.om": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec"
+      },
+      "stdin_sha256": "39364ac59ed1bcbe77665c072d811d142d789ec12cc506f43e40ef8838bba1ec",
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "executable_bytes": 2888,
+      "output_file": "/tmp/sc1-resources-rev2/negative"
+    }
+  },
+  "runs": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "./demo"
+      ],
+      "cwd": "/tmp/sc1-resources-rev2",
+      "executable_sha256": "588ad6e76ee79b9517c361bbf1b8302c32cc1ece518c231ab69e755cadd7c0be",
+      "exit": 0,
+      "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nPASS E1-E6 paired_admission events release restart\n",
+      "stderr": "",
+      "name": "demo",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "./exhaust"
+      ],
+      "cwd": "/tmp/sc1-resources-rev2",
+      "executable_sha256": "dc7904bb2fae0f344a09d57e599961fe4b197eff7c12b774000e96f73ac662a8",
+      "exit": 0,
+      "stdout": "PASS conservation finite differential 448 cases; conservative restart/fuel\n",
+      "stderr": "",
+      "name": "exhaust",
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "./measure"
+      ],
+      "cwd": "/tmp/sc1-resources-rev2",
+      "executable_sha256": "34bd18944533b8fa6055890db9bd2dd493de4aaf7c5f995061e743f4a0787e4e",
+      "exit": 0,
+      "stdout": "RAW paired samples: baseline_ns then checked_ns, 63 pairs in execution order\n2144\n58625\n1152\n54208\n1152\n54257\n1136\n58240\n1152\n54129\n1152\n54144\n1136\n54545\n1152\n54272\n1136\n54353\n1152\n54448\n1152\n54225\n1136\n54320\n1152\n53937\n1152\n53888\n1136\n54273\n1120\n54400\n1152\n54385\n1136\n54448\n1152\n54257\n1152\n54064\n1136\n54353\n1152\n57008\n1136\n54145\n1152\n54384\n1136\n54017\n1152\n54304\n1136\n54193\n1136\n54352\n1152\n54225\n1136\n54320\n1136\n54113\n1136\n54192\n1136\n54017\n1152\n54224\n1168\n54177\n1136\n54176\n1136\n54033\n1136\n54160\n1104\n57553\n1136\n54192\n1152\n54177\n1152\n54496\n1152\n54401\n1136\n53984\n1136\n54193\n1152\n54320\n1136\n54273\n1136\n54320\n1136\n54145\n1136\n54144\n1136\n54417\n1152\n54384\n1168\n53905\n1152\n54048\n1152\n54193\n1152\n54144\n1136\n58401\n1136\n54000\n1136\n54385\n1136\n54192\n1136\n54321\n1152\n54032\n1136\n54129\nMEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n1136\n1152\n2144\n54225\n57553\n58625\n",
+      "stderr": "",
+      "name": "measure",
+      "expected_exit": 0,
+      "measurement": {
+        "units": "nanoseconds per100 cycles",
+        "raw_pairs_baseline_then_checked": [
+          [
+            2144,
+            58625
+          ],
+          [
+            1152,
+            54208
+          ],
+          [
+            1152,
+            54257
+          ],
+          [
+            1136,
+            58240
+          ],
+          [
+            1152,
+            54129
+          ],
+          [
+            1152,
+            54144
+          ],
+          [
+            1136,
+            54545
+          ],
+          [
+            1152,
+            54272
+          ],
+          [
+            1136,
+            54353
+          ],
+          [
+            1152,
+            54448
+          ],
+          [
+            1152,
+            54225
+          ],
+          [
+            1136,
+            54320
+          ],
+          [
+            1152,
+            53937
+          ],
+          [
+            1152,
+            53888
+          ],
+          [
+            1136,
+            54273
+          ],
+          [
+            1120,
+            54400
+          ],
+          [
+            1152,
+            54385
+          ],
+          [
+            1136,
+            54448
+          ],
+          [
+            1152,
+            54257
+          ],
+          [
+            1152,
+            54064
+          ],
+          [
+            1136,
+            54353
+          ],
+          [
+            1152,
+            57008
+          ],
+          [
+            1136,
+            54145
+          ],
+          [
+            1152,
+            54384
+          ],
+          [
+            1136,
+            54017
+          ],
+          [
+            1152,
+            54304
+          ],
+          [
+            1136,
+            54193
+          ],
+          [
+            1136,
+            54352
+          ],
+          [
+            1152,
+            54225
+          ],
+          [
+            1136,
+            54320
+          ],
+          [
+            1136,
+            54113
+          ],
+          [
+            1136,
+            54192
+          ],
+          [
+            1136,
+            54017
+          ],
+          [
+            1152,
+            54224
+          ],
+          [
+            1168,
+            54177
+          ],
+          [
+            1136,
+            54176
+          ],
+          [
+            1136,
+            54033
+          ],
+          [
+            1136,
+            54160
+          ],
+          [
+            1104,
+            57553
+          ],
+          [
+            1136,
+            54192
+          ],
+          [
+            1152,
+            54177
+          ],
+          [
+            1152,
+            54496
+          ],
+          [
+            1152,
+            54401
+          ],
+          [
+            1136,
+            53984
+          ],
+          [
+            1136,
+            54193
+          ],
+          [
+            1152,
+            54320
+          ],
+          [
+            1136,
+            54273
+          ],
+          [
+            1136,
+            54320
+          ],
+          [
+            1136,
+            54145
+          ],
+          [
+            1136,
+            54144
+          ],
+          [
+            1136,
+            54417
+          ],
+          [
+            1152,
+            54384
+          ],
+          [
+            1168,
+            53905
+          ],
+          [
+            1152,
+            54048
+          ],
+          [
+            1152,
+            54193
+          ],
+          [
+            1152,
+            54144
+          ],
+          [
+            1136,
+            58401
+          ],
+          [
+            1136,
+            54000
+          ],
+          [
+            1136,
+            54385
+          ],
+          [
+            1136,
+            54192
+          ],
+          [
+            1136,
+            54321
+          ],
+          [
+            1152,
+            54032
+          ],
+          [
+            1136,
+            54129
+          ]
+        ],
+        "quantiles_ns": {
+          "baseline": [
+            1136,
+            1152,
+            2144
+          ],
+          "checked": [
+            54225,
+            57553,
+            58625
+          ]
+        },
+        "rank_indices_zero_based": [
+          31,
+          59,
+          62
+        ],
+        "p99_is_sample_maximum": true
+      }
+    }
+  ],
+  "source_mutants": [
+    {
+      "mode": 1,
+      "fixture": "E2",
+      "event": "completion",
+      "original_module": "seed/authority/envelope.om",
+      "original_module_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./negative",
+          "1"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+        "exit": 0,
+        "stdout": "note SC1-E pure public partition helper, not a scheduler or secrecy proof.\nnote Record8: format,owner,reservation-id,public-boundary,active,capacity,partition,zero.\nnote Open once before any secret work. Owner/id refer to existing writer reservation.\nnote Fixed public partition must cover descendants, cleanup and supervisor work too.\nnote Failure leaves record unchanged. State and boundary are trusted writer inputs.\nnote Copies do not mint authority: only the single serialized owner may mutate live state.\nfn ep_valid e view ulong 8 to ulong\nif ne get e 0 1\nret 1\nend\nif or eq get e 1 0 or eq get e 2 0 eq get e 3 0\nret 1\nend\nif or gt get e 4 1 ne get e 7 0\nret 1\nend\nif or eq get e 6 0 gt get e 6 get e 5\nret 1\nend\nret 0\nend\nfn ep_open e edit ulong 8 owner ulong id ulong boundary ulong cap ulong part ulong to ulong\nfor i ulong 8\nif ne get e i 0\nret 1\nend\nend\nif or eq owner 0 or eq id 0 eq boundary 0\nret 1\nend\nif or eq part 0 gt part cap\nret 1\nend\nput e 0 1\nput e 1 owner\nput e 2 id\nput e 3 boundary\nput e 4 1\nput e 5 cap\nput e 6 part\nret 0\nend\nfn ep_available e view ulong 8 to ulong\nif ne ep_valid e 0\nret 0\nend\nif eq get e 4 0\nret get e 5\nend\nret sub get e 5 get e 6\nend\nnote event1 completion,2 cancellation,3 error,4 supervisor-work. None refunds.\nfn ep_event e edit ulong 8 event ulong to ulong\nif ne ep_valid e 0\nret 1\nend\nif or lt event 1 gt event 4\nret 1\nend\nif eq event 1\nput e 4 0\nend\nret 0\nend\nnote Unknown quiescence returns4 and retains. Do not certify secret-dependent release delay.\nnote Boundary is a public schedule identity, not a secret-selected completion timestamp.\nfn ep_release e edit ulong 8 boundary ulong quiet bool to ulong\nif ne ep_valid e 0\nret 1\nend\nif ne boundary get e 3\nret 2\nend\nif not quiet\nret 4\nend\nput e 4 0\nret 0\nend\n",
+        "stderr": ""
+      },
+      "mutator_stdin_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_stdout_module_sha256": "5abde8f52f6a7678b9ccf11a9d05d602f1bb8040f66b0c5e2f1f654a693792b8",
+      "mutator_stdout_module_bytes": 1766,
+      "mutator_stdout_semantics": "Exact emitted mutated Omega module bytes decoded as UTF-8, also bound by hash.",
+      "unchanged_checks_sha256": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+      "unchanged_demo_sha256": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3",
+      "compile_argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "compile_stdin_sha256": "afe077518644917faa5639706205d2537aaa87e4bde8c27986f87d03badebdc3",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "executable_sha256": "57c081d91a2ef25637d37bc8ba5ba42488370b27372c41e1352dfbb41ddc045d",
+      "execution": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./mutant1"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "57c081d91a2ef25637d37bc8ba5ba42488370b27372c41e1352dfbb41ddc045d",
+        "exit": 7,
+        "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+        "stderr": ""
+      },
+      "expected_exit": 7,
+      "expected_final_assertion": "FAIL E1-E6 paired_admission events release restart"
+    },
+    {
+      "mode": 2,
+      "fixture": "E3",
+      "event": "cancel",
+      "original_module": "seed/authority/envelope.om",
+      "original_module_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./negative",
+          "2"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+        "exit": 0,
+        "stdout": "note SC1-E pure public partition helper, not a scheduler or secrecy proof.\nnote Record8: format,owner,reservation-id,public-boundary,active,capacity,partition,zero.\nnote Open once before any secret work. Owner/id refer to existing writer reservation.\nnote Fixed public partition must cover descendants, cleanup and supervisor work too.\nnote Failure leaves record unchanged. State and boundary are trusted writer inputs.\nnote Copies do not mint authority: only the single serialized owner may mutate live state.\nfn ep_valid e view ulong 8 to ulong\nif ne get e 0 1\nret 1\nend\nif or eq get e 1 0 or eq get e 2 0 eq get e 3 0\nret 1\nend\nif or gt get e 4 1 ne get e 7 0\nret 1\nend\nif or eq get e 6 0 gt get e 6 get e 5\nret 1\nend\nret 0\nend\nfn ep_open e edit ulong 8 owner ulong id ulong boundary ulong cap ulong part ulong to ulong\nfor i ulong 8\nif ne get e i 0\nret 1\nend\nend\nif or eq owner 0 or eq id 0 eq boundary 0\nret 1\nend\nif or eq part 0 gt part cap\nret 1\nend\nput e 0 1\nput e 1 owner\nput e 2 id\nput e 3 boundary\nput e 4 1\nput e 5 cap\nput e 6 part\nret 0\nend\nfn ep_available e view ulong 8 to ulong\nif ne ep_valid e 0\nret 0\nend\nif eq get e 4 0\nret get e 5\nend\nret sub get e 5 get e 6\nend\nnote event1 completion,2 cancellation,3 error,4 supervisor-work. None refunds.\nfn ep_event e edit ulong 8 event ulong to ulong\nif ne ep_valid e 0\nret 1\nend\nif or lt event 1 gt event 4\nret 1\nend\nif eq event 2\nput e 4 0\nend\nret 0\nend\nnote Unknown quiescence returns4 and retains. Do not certify secret-dependent release delay.\nnote Boundary is a public schedule identity, not a secret-selected completion timestamp.\nfn ep_release e edit ulong 8 boundary ulong quiet bool to ulong\nif ne ep_valid e 0\nret 1\nend\nif ne boundary get e 3\nret 2\nend\nif not quiet\nret 4\nend\nput e 4 0\nret 0\nend\n",
+        "stderr": ""
+      },
+      "mutator_stdin_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_stdout_module_sha256": "6a7ad4fe7c7e0b0e963a918051ed0bf4db33a72f4d953b939210d646338bc9cc",
+      "mutator_stdout_module_bytes": 1766,
+      "mutator_stdout_semantics": "Exact emitted mutated Omega module bytes decoded as UTF-8, also bound by hash.",
+      "unchanged_checks_sha256": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+      "unchanged_demo_sha256": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3",
+      "compile_argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "compile_stdin_sha256": "d676ac413724f84de3d357cf1b2632a10ffae861faa262f7e8909f7c9990c8bf",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "executable_sha256": "f94598c4203a0327c47af243f2e6fd35fa7d176454663c1e9823f8118116f613",
+      "execution": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./mutant2"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "f94598c4203a0327c47af243f2e6fd35fa7d176454663c1e9823f8118116f613",
+        "exit": 7,
+        "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+        "stderr": ""
+      },
+      "expected_exit": 7,
+      "expected_final_assertion": "FAIL E1-E6 paired_admission events release restart"
+    },
+    {
+      "mode": 3,
+      "fixture": "E4",
+      "event": "error",
+      "original_module": "seed/authority/envelope.om",
+      "original_module_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./negative",
+          "3"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+        "exit": 0,
+        "stdout": "note SC1-E pure public partition helper, not a scheduler or secrecy proof.\nnote Record8: format,owner,reservation-id,public-boundary,active,capacity,partition,zero.\nnote Open once before any secret work. Owner/id refer to existing writer reservation.\nnote Fixed public partition must cover descendants, cleanup and supervisor work too.\nnote Failure leaves record unchanged. State and boundary are trusted writer inputs.\nnote Copies do not mint authority: only the single serialized owner may mutate live state.\nfn ep_valid e view ulong 8 to ulong\nif ne get e 0 1\nret 1\nend\nif or eq get e 1 0 or eq get e 2 0 eq get e 3 0\nret 1\nend\nif or gt get e 4 1 ne get e 7 0\nret 1\nend\nif or eq get e 6 0 gt get e 6 get e 5\nret 1\nend\nret 0\nend\nfn ep_open e edit ulong 8 owner ulong id ulong boundary ulong cap ulong part ulong to ulong\nfor i ulong 8\nif ne get e i 0\nret 1\nend\nend\nif or eq owner 0 or eq id 0 eq boundary 0\nret 1\nend\nif or eq part 0 gt part cap\nret 1\nend\nput e 0 1\nput e 1 owner\nput e 2 id\nput e 3 boundary\nput e 4 1\nput e 5 cap\nput e 6 part\nret 0\nend\nfn ep_available e view ulong 8 to ulong\nif ne ep_valid e 0\nret 0\nend\nif eq get e 4 0\nret get e 5\nend\nret sub get e 5 get e 6\nend\nnote event1 completion,2 cancellation,3 error,4 supervisor-work. None refunds.\nfn ep_event e edit ulong 8 event ulong to ulong\nif ne ep_valid e 0\nret 1\nend\nif or lt event 1 gt event 4\nret 1\nend\nif eq event 3\nput e 4 0\nend\nret 0\nend\nnote Unknown quiescence returns4 and retains. Do not certify secret-dependent release delay.\nnote Boundary is a public schedule identity, not a secret-selected completion timestamp.\nfn ep_release e edit ulong 8 boundary ulong quiet bool to ulong\nif ne ep_valid e 0\nret 1\nend\nif ne boundary get e 3\nret 2\nend\nif not quiet\nret 4\nend\nput e 4 0\nret 0\nend\n",
+        "stderr": ""
+      },
+      "mutator_stdin_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_stdout_module_sha256": "8f9946fa9d1e6e1c438e7b198eb84f03d13b88818270132dd34f7c4f4199dfa1",
+      "mutator_stdout_module_bytes": 1766,
+      "mutator_stdout_semantics": "Exact emitted mutated Omega module bytes decoded as UTF-8, also bound by hash.",
+      "unchanged_checks_sha256": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+      "unchanged_demo_sha256": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3",
+      "compile_argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "compile_stdin_sha256": "b76d855aeebc9af396cb998ea25e877bf4db0bb2518a2ae6c942169217b11a2f",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "executable_sha256": "e148a69740cc880ec3ae61f9460506e47bdfc4eaf70085a6b547e1904c6675f6",
+      "execution": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./mutant3"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "e148a69740cc880ec3ae61f9460506e47bdfc4eaf70085a6b547e1904c6675f6",
+        "exit": 7,
+        "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+        "stderr": ""
+      },
+      "expected_exit": 7,
+      "expected_final_assertion": "FAIL E1-E6 paired_admission events release restart"
+    },
+    {
+      "mode": 4,
+      "fixture": "E5",
+      "event": "supervisor-work",
+      "original_module": "seed/authority/envelope.om",
+      "original_module_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./negative",
+          "4"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+        "exit": 0,
+        "stdout": "note SC1-E pure public partition helper, not a scheduler or secrecy proof.\nnote Record8: format,owner,reservation-id,public-boundary,active,capacity,partition,zero.\nnote Open once before any secret work. Owner/id refer to existing writer reservation.\nnote Fixed public partition must cover descendants, cleanup and supervisor work too.\nnote Failure leaves record unchanged. State and boundary are trusted writer inputs.\nnote Copies do not mint authority: only the single serialized owner may mutate live state.\nfn ep_valid e view ulong 8 to ulong\nif ne get e 0 1\nret 1\nend\nif or eq get e 1 0 or eq get e 2 0 eq get e 3 0\nret 1\nend\nif or gt get e 4 1 ne get e 7 0\nret 1\nend\nif or eq get e 6 0 gt get e 6 get e 5\nret 1\nend\nret 0\nend\nfn ep_open e edit ulong 8 owner ulong id ulong boundary ulong cap ulong part ulong to ulong\nfor i ulong 8\nif ne get e i 0\nret 1\nend\nend\nif or eq owner 0 or eq id 0 eq boundary 0\nret 1\nend\nif or eq part 0 gt part cap\nret 1\nend\nput e 0 1\nput e 1 owner\nput e 2 id\nput e 3 boundary\nput e 4 1\nput e 5 cap\nput e 6 part\nret 0\nend\nfn ep_available e view ulong 8 to ulong\nif ne ep_valid e 0\nret 0\nend\nif eq get e 4 0\nret get e 5\nend\nret sub get e 5 get e 6\nend\nnote event1 completion,2 cancellation,3 error,4 supervisor-work. None refunds.\nfn ep_event e edit ulong 8 event ulong to ulong\nif ne ep_valid e 0\nret 1\nend\nif or lt event 1 gt event 4\nret 1\nend\nif eq event 4\nput e 4 0\nend\nret 0\nend\nnote Unknown quiescence returns4 and retains. Do not certify secret-dependent release delay.\nnote Boundary is a public schedule identity, not a secret-selected completion timestamp.\nfn ep_release e edit ulong 8 boundary ulong quiet bool to ulong\nif ne ep_valid e 0\nret 1\nend\nif ne boundary get e 3\nret 2\nend\nif not quiet\nret 4\nend\nput e 4 0\nret 0\nend\n",
+        "stderr": ""
+      },
+      "mutator_stdin_sha256": "f557529582693bab99f84a84f999793f04509b35c92962fdc19c73fd63b3c00e",
+      "mutator_stdout_module_sha256": "2978e0fd6ad46dfbf85556185908fcc1c3da15aade740feac8640021d53db93d",
+      "mutator_stdout_module_bytes": 1766,
+      "mutator_stdout_semantics": "Exact emitted mutated Omega module bytes decoded as UTF-8, also bound by hash.",
+      "unchanged_checks_sha256": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+      "unchanged_demo_sha256": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3",
+      "compile_argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "compile_stdin_sha256": "c03480d3ef9911cd041f7eca4e1af43d8a1e55d7a97abf1c5560d2dd56ba5e47",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "executable_sha256": "338f7f98a8a910fec6c93d7cd3a6191b9a31c93fec05ec8a7b7464feeb3fb045",
+      "execution": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./mutant4"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "338f7f98a8a910fec6c93d7cd3a6191b9a31c93fec05ec8a7b7464feeb3fb045",
+        "exit": 7,
+        "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nPASS R2 all-or-nothing eight stocks\nPASS R2 u64 extrema and id exhaustion\nPASS R4 durable60 ledger40 refuses60\nFAIL E1-E6 paired_admission events release restart\n",
+        "stderr": ""
+      },
+      "expected_exit": 7,
+      "expected_final_assertion": "FAIL E1-E6 paired_admission events release restart"
+    },
+    {
+      "mode": 5,
+      "fixture": "R2",
+      "event": "partial-vector",
+      "original_module": "seed/authority/reserve.om",
+      "original_module_sha256": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+      "mutator": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./negative",
+          "5"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+        "exit": 0,
+        "stdout": "note SC1-R pure serial transitions. No authentication, locking, persistence or allocator.\nnote Fresh implementation; old AGPL action/delegate/reuse contracts read, not copied.\nnote State64: B[0:8], U[8:16], slot charges[16:32], slot metadata[32:56].\nnote Metadata12: id,phase,request,owner,grant,object,version,epoch, four zero words.\nnote Phase0 idle,1 reserved,2 uncertain,3 committed attributable used stock.\nnote Header56: next-id,spent-fuel,fuel-bound,request-highwater0/1,owner0/1,format1.\nnote Token8: slot,id,request,owner,grant,object,version,epoch. IDs/requests never wrap.\nnote Owners are fixed public partitions. Per-owner request sequence must strictly increase.\nnote Caller validates originals and trusted identities inside existing serialized writer.\nnote Zero return success; 1 invalid state/input,2 binding/replay,3 capacity,4 unknown.\nnote Arrays passed to one operation must not alias. Snapshot state is authoritative, not a client copy.\nnote Local subtraction guards implement SC1-Q boundary rule without struct provenance claims.\n\nfn rv_meta slot ulong to ulong\nret add 32 mul slot 12\nend\nfn rv_charge slot ulong to ulong\nret add 16 mul slot 8\nend\nfn rv_phase s view ulong 64 slot ulong to ulong\nret get s add rv_meta slot 1\nend\nfn rv_valid s view ulong 64 to ulong\nif ne get s 63 1\nret 1\nend\nif or eq get s 56 0 gt get s 57 get s 58\nret 1\nend\nif or eq get s 61 0 or eq get s 62 0 eq get s 61 get s 62\nret 1\nend\nfor j ulong 2\nm = rv_meta j\np = get s add m 1\nif gt p 3\nret 1\nend\nfor k ulong 4\nif ne get s add m add 8 k 0\nret 1\nend\nend\nif ne p 0\nif or eq get s m 0 ge get s m get s 56\nret 1\nend\nif ne get s add m 3 get s add 61 j\nret 1\nend\nif ne get s add m 2 get s add 59 j\nret 1\nend\nfor k ulong 6\nif eq get s add m add 2 k 0\nret 1\nend\nend\nelse\nfor k ulong 12\nif ne get s add m k 0\nret 1\nend\nend\nend\nend\nif and ne rv_phase s 0 0 ne rv_phase s 1 0\nif eq get s 32 get s 44\nret 1\nend\nend\nfor d ulong 8\nleft = get s d\nused = get s add 8 d\nif gt used left\nret 1\nend\nleft = sub left used\nfor j ulong 2\nq = get s add rv_charge j d\np = rv_phase s j\nif eq p 0\nif ne q 0\nret 1\nend\nend\nif or eq p 1 eq p 2\nif gt q left\nret 1\nend\nleft = sub left q\nend\nif eq p 3\nif gt q used\nret 1\nend\nused = sub used q\nend\nend\nend\nret 0\nend\nfn rv_init s edit ulong 64 b view ulong 8 owners view ulong 2 fuel ulong to ulong\nfor i ulong 64\nif ne get s i 0\nret 1\nend\nend\nif eq get owners 0 0\nret 1\nend\nif eq get owners 1 0\nret 1\nend\nif eq get owners 0 get owners 1\nret 1\nend\nfor i ulong 8\nput s i get b i\nend\nput s 56 1\nput s 58 fuel\nput s 61 get owners 0\nput s 62 get owners 1\nput s 63 1\nret 0\nend\nfn rv_bind s view ulong 64 t view ulong 8 to ulong\nif ne rv_valid s 0\nret 1\nend\nif gt get t 0 1\nret 2\nend\nm = rv_meta get t 0\nif eq get s add m 1 0\nret 2\nend\nif ne get s m get t 1\nret 2\nend\nfor i ulong 6\nif ne get s add m add 2 i get t add 2 i\nret 2\nend\nend\nret 0\nend\nfn rv_room s view ulong 64 d ulong to ulong\nleft = sub get s d get s add 8 d\nfor j ulong 2\np = rv_phase s j\nif or eq p 1 eq p 2\nleft = sub left get s add rv_charge j d\nend\nend\nret left\nend\nfn rv_reserve s edit ulong 64 t view ulong 8 q view ulong 8 fuel ulong to ulong\nif ne rv_valid s 0\nret 1\nend\nif gt get t 0 1\nret 2\nend\nj = get t 0\nif ne rv_phase s j 0\nret 2\nend\nif or ne get t 1 get s 56 eq get s 56 18446744073709551615\nret 2\nend\nif ne get t 3 get s add 61 j\nret 2\nend\nif le get t 2 get s add 59 j\nret 2\nend\nfor i ulong 6\nif eq get t add i 2 0\nret 2\nend\nend\nif gt fuel sub get s 58 get s 57\nret 3\nend\nfor d ulong 8\nif gt get q d rv_room s d\nret 3\nend\nput s add rv_charge j d get q d\nend\nnote Mutation begins only after all eight stocks and all bindings validate.\nfor d ulong 8\nput s add rv_charge j d get q d\nend\nm = rv_meta j\nput s m get t 1\nput s add m 1 1\nfor i ulong 6\nput s add m add 2 i get t add 2 i\nend\nput s add 59 j get t 2\nput s 56 add get s 56 1\nput s 57 add get s 57 fuel\nret 0\nend\nfn rv_uncertain s edit ulong 64 t view ulong 8 to ulong\nr = rv_bind s t\nif ne r 0\nret r\nend\nif eq rv_phase s get t 0 3\nret 4\nend\nput s add rv_meta get t 0 1 2\nret 4\nend\nfn rv_clear s edit ulong 64 slot ulong to void\nfor i ulong 8\nput s add rv_charge slot i 0\nend\nfor i ulong 12\nput s add rv_meta slot i 0\nend\nend\nnote quiet and public are authoritative adapter facts, never client flags.\nnote No completion/cancel/error calls this until actual effects and public release permit.\nfn rv_commit s edit ulong 64 t view ulong 8 actual view ulong 8 quiet bool public bool to ulong\nr = rv_bind s t\nif ne r 0\nret r\nend\nj = get t 0\nif eq rv_phase s j 3\nret 2\nend\nif not and quiet public\nret 4\nend\nfor d ulong 8\nif gt get actual d get s add rv_charge j d\nret 3\nend\nend\nfor d ulong 8\nput s add 8 d add get s add 8 d get actual d\nput s add rv_charge j d get actual d\nend\nput s add rv_meta j 1 3\nret 0\nend\nnote Internal apply helper requires rv_reclaim preflight; not an admission API.\nfn rv_reclaimed s edit ulong 64 gone view ulong 8 j ulong to void\nbits = ulong 0\nfor d ulong 8\nq = sub get s add rv_charge j d get gone d\nput s add rv_charge j d q\nput s add 8 d sub get s add 8 d get gone d\nbits = or bits q\nend\nif eq bits 0\nrv_clear s j\nend\nend\nnote Reclaim vector denotes stock actually reclaimed with required durability.\nnote Stock is attributable to this slot; cannot release somebody else's used charge.\nfn rv_reclaim s edit ulong 64 t view ulong 8 gone view ulong 8 durable bool public bool to ulong\nr = rv_bind s t\nif ne r 0\nret r\nend\nj = get t 0\nif ne rv_phase s j 3\nret 2\nend\nif not and durable public\nret 4\nend\nfor d ulong 8\nif gt get gone d get s add rv_charge j d\nret 3\nend\nend\nrv_reclaimed s gone j\nret 0\nend\nnote Recovery raises used to max(ledger,observed), never discounts missing evidence.\nnote Caller supplies authoritative complete retained+temporary physical stock census.\nnote Reservations stay charged; inconsistent capacity leaves snapshot untouched and refuses admission.\nfn rv_recover s edit ulong 64 actual view ulong 8 to ulong\nif ne rv_valid s 0\nret 1\nend\nfor d ulong 8\nold = get s add 8 d\nif gt get actual d old\nif gt sub get actual d old rv_room s d\nret 3\nend\nend\nend\nfor d ulong 8\nif gt get actual d get s add 8 d\nput s add 8 d get actual d\nend\nend\nret 0\nend\n",
+        "stderr": ""
+      },
+      "mutator_stdin_sha256": "68c7073007ff9225bda89051f307fa1d844d79c2225869ffeec33b081343a308",
+      "mutator_stdout_module_sha256": "aabcdf49a786f0484d962cfc2c34ddaefd315c7781e8f083c6da29118c8baf21",
+      "mutator_stdout_module_bytes": 6137,
+      "mutator_stdout_semantics": "Exact emitted mutated Omega module bytes decoded as UTF-8, also bound by hash.",
+      "unchanged_checks_sha256": "cc0861fad965e6db9ca141f1255c16d677e898fa327fbfbf95732294430c0827",
+      "unchanged_demo_sha256": "b5cd163926815c4abf2b7a4548e59da309ec35e7ddd9cf8ad53aebeff59713c3",
+      "compile_argv": [
+        "nice",
+        "-n",
+        "19",
+        "seed/out/omc"
+      ],
+      "compile_stdin_sha256": "bcff71256c33a167b26bcd2ff9c67c7aa9428d5962550cf0dc6fa403a4addcf8",
+      "compile_exit": 0,
+      "compile_stderr": "",
+      "executable_sha256": "ebb317d299429e7cf9c653fd505f6d3032cf9ff05f677d9efa3b3bd83eb62e8b",
+      "execution": {
+        "argv": [
+          "nice",
+          "-n",
+          "19",
+          "./mutant5"
+        ],
+        "cwd": "/tmp/sc1-resources-rev2",
+        "executable_sha256": "ebb317d299429e7cf9c653fd505f6d3032cf9ff05f677d9efa3b3bd83eb62e8b",
+        "exit": 4,
+        "stdout": "PASS R1 capacity6 requests4\nPASS R2 binding slot/id/request/owner/grant/object/version/epoch\nPASS R2 reserve uncertain commit reclaim replay fuel\nFAIL R2 all-or-nothing eight stocks\n",
+        "stderr": ""
+      },
+      "expected_exit": 4,
+      "expected_final_assertion": "FAIL R2 all-or-nothing eight stocks"
+    }
+  ],
+  "mutator_refusals": [
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "./negative",
+        "1"
+      ],
+      "cwd": "/tmp/sc1-resources-rev2",
+      "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "exit": 4,
+      "stdout": "",
+      "stderr": "",
+      "case": "missing",
+      "stdin_sha256": "049532d3bf88d8abaede42dff6642b402008e141b7635cb1e1f8aca26a5e4ebf",
+      "expected_exit": 4,
+      "expected_stdout": ""
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "19",
+        "./negative",
+        "1"
+      ],
+      "cwd": "/tmp/sc1-resources-rev2",
+      "executable_sha256": "7aad6bb205a05e6b22ad78b09518eb4d212b4307c572b718e872a89e1b08ee73",
+      "exit": 4,
+      "stdout": "",
+      "stderr": "",
+      "case": "duplicate",
+      "stdin_sha256": "e0545c08cd649de53bd7ccba98df8e9f165fb41cde111591e82b1d6f65ed90fe",
+      "expected_exit": 4,
+      "expected_stdout": ""
+    }
+  ],
+  "obligations": {
+    "R1": "VERIFIED pure capacity6/two4 fixture only",
+    "R2": "VERIFIED named native helper fixtures, 448 finite cases and same-checker partial-vector mutant; not a general proof",
+    "R3": "NOT_RECORDED_HERE; Main owns revised complete-edge corpus/replay; no reserve.om correspondence claim",
+    "R4": "VERIFIED pure ledger40/retained60/new60 fixture only",
+    "R5": "BLOCKED actual writer/concurrency/crash/standing temporary reserve integration",
+    "E1": "VERIFIED bounded mutable admission occupancy1/2/public1 pair only",
+    "E2": "VERIFIED completion-specific ep_event source mutant, same checks/demo exit7",
+    "E3": "VERIFIED cancellation-specific ep_event source mutant, same checks/demo exit7",
+    "E4": "VERIFIED error-specific ep_event source mutant, same checks/demo exit7",
+    "E5": "VERIFIED supervisor-specific ep_event source mutant, same checks/demo exit7",
+    "E6_helper": "VERIFIED pure public boundary/quiescence/recovered identity fixture",
+    "E6_scheduler": "BLOCKED actual scheduler/store correspondence",
+    "formal_proof": "NOT_RUN",
+    "process_crashes": "NOT_RUN",
+    "power_loss": "NOT_RUN"
+  },
+  "resource_repeat": {
+    "argv": [
+      "/usr/bin/time",
+      "-v",
+      "nice",
+      "-n",
+      "19",
+      "./measure"
+    ],
+    "cwd": "/tmp/sc1-resources-rev2",
+    "executable_sha256": "34bd18944533b8fa6055890db9bd2dd493de4aaf7c5f995061e743f4a0787e4e",
+    "exit": 0,
+    "stdout": "RAW paired samples: baseline_ns then checked_ns, 63 pairs in execution order\n1824\n57425\n1184\n54032\n1136\n54465\n1136\n54016\n1136\n54385\n1136\n54480\n1136\n54337\n1136\n54400\n1152\n54273\n1152\n61488\n1152\n54257\n1152\n54352\n1121\n54416\n1136\n54817\n1152\n54496\n1152\n54401\n1136\n54160\n1136\n54753\n1152\n54112\n1152\n54481\n1152\n54320\n1136\n54353\n1152\n54368\n1136\n54497\n1152\n54384\n1152\n54545\n1136\n54144\n1136\n57169\n1152\n54160\n1152\n54161\n1136\n54272\n1136\n54145\n1152\n54256\n1152\n54513\n1152\n54128\n1136\n54145\n1136\n54160\n1136\n54081\n1136\n54288\n1136\n54337\n1136\n54496\n1152\n54401\n1152\n54464\n1136\n54353\n1152\n54160\n1136\n55985\n1136\n54592\n1136\n54337\n1136\n54064\n1152\n54417\n1136\n54512\n1136\n54225\n1136\n54048\n1104\n54433\n1136\n53936\n1136\n54433\n1136\n54688\n1152\n54273\n1152\n54352\n1136\n54337\n1136\n54240\n1152\n54161\n1136\n56480\nMEASURE helper cycles=100 samples=63 baseline_ns p50/p95/p99 then checked_ns p50/p95/p99\n1136\n1152\n1824\n54352\n56480\n61488\n",
+    "stderr": "\tCommand being timed: \"nice -n 19 ./measure\"\n\tUser time (seconds): 0.00\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 75%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.00\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1480\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 81\n\tVoluntary context switches: 1\n\tInvoluntary context switches: 0\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "measurement": {
+      "units": "nanoseconds per100 cycles",
+      "raw_pairs_baseline_then_checked": [
+        [
+          1824,
+          57425
+        ],
+        [
+          1184,
+          54032
+        ],
+        [
+          1136,
+          54465
+        ],
+        [
+          1136,
+          54016
+        ],
+        [
+          1136,
+          54385
+        ],
+        [
+          1136,
+          54480
+        ],
+        [
+          1136,
+          54337
+        ],
+        [
+          1136,
+          54400
+        ],
+        [
+          1152,
+          54273
+        ],
+        [
+          1152,
+          61488
+        ],
+        [
+          1152,
+          54257
+        ],
+        [
+          1152,
+          54352
+        ],
+        [
+          1121,
+          54416
+        ],
+        [
+          1136,
+          54817
+        ],
+        [
+          1152,
+          54496
+        ],
+        [
+          1152,
+          54401
+        ],
+        [
+          1136,
+          54160
+        ],
+        [
+          1136,
+          54753
+        ],
+        [
+          1152,
+          54112
+        ],
+        [
+          1152,
+          54481
+        ],
+        [
+          1152,
+          54320
+        ],
+        [
+          1136,
+          54353
+        ],
+        [
+          1152,
+          54368
+        ],
+        [
+          1136,
+          54497
+        ],
+        [
+          1152,
+          54384
+        ],
+        [
+          1152,
+          54545
+        ],
+        [
+          1136,
+          54144
+        ],
+        [
+          1136,
+          57169
+        ],
+        [
+          1152,
+          54160
+        ],
+        [
+          1152,
+          54161
+        ],
+        [
+          1136,
+          54272
+        ],
+        [
+          1136,
+          54145
+        ],
+        [
+          1152,
+          54256
+        ],
+        [
+          1152,
+          54513
+        ],
+        [
+          1152,
+          54128
+        ],
+        [
+          1136,
+          54145
+        ],
+        [
+          1136,
+          54160
+        ],
+        [
+          1136,
+          54081
+        ],
+        [
+          1136,
+          54288
+        ],
+        [
+          1136,
+          54337
+        ],
+        [
+          1136,
+          54496
+        ],
+        [
+          1152,
+          54401
+        ],
+        [
+          1152,
+          54464
+        ],
+        [
+          1136,
+          54353
+        ],
+        [
+          1152,
+          54160
+        ],
+        [
+          1136,
+          55985
+        ],
+        [
+          1136,
+          54592
+        ],
+        [
+          1136,
+          54337
+        ],
+        [
+          1136,
+          54064
+        ],
+        [
+          1152,
+          54417
+        ],
+        [
+          1136,
+          54512
+        ],
+        [
+          1136,
+          54225
+        ],
+        [
+          1136,
+          54048
+        ],
+        [
+          1104,
+          54433
+        ],
+        [
+          1136,
+          53936
+        ],
+        [
+          1136,
+          54433
+        ],
+        [
+          1136,
+          54688
+        ],
+        [
+          1152,
+          54273
+        ],
+        [
+          1152,
+          54352
+        ],
+        [
+          1136,
+          54337
+        ],
+        [
+          1136,
+          54240
+        ],
+        [
+          1152,
+          54161
+        ],
+        [
+          1136,
+          56480
+        ]
+      ],
+      "quantiles_ns": {
+        "baseline": [
+          1136,
+          1152,
+          1824
+        ],
+        "checked": [
+          54352,
+          56480,
+          61488
+        ]
+      },
+      "rank_indices_zero_based": [
+        31,
+        59,
+        62
+      ],
+      "p99_is_sample_maximum": true
+    },
+    "scope": "Whole invocation peak resources; helper cycles only, no service throughput. unsafe unchecked baseline is not a deployable alternative."
+  }
+}
