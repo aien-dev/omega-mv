@@ -93,7 +93,7 @@ NIST documents (downloaded 2026-10-25, not committed; sha256 by /usr/bin/sha256s
 
 4. Case lists derived from sha256-vectors.txt (mechanical transforms, run in seed/qualification/om2):
    baseline/sha256.cases (comment lines omitted here; they are in the file):
-     D=seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om
+     D=seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om
      M=seed/qualification/om2/baseline/mutants
      awk -v D="$D" '{print $1, "run", D, $2, "line:" $4, "-", 0}' fixtures/sha256-vectors.txt
      for c in 1 32 63 64 65 4095; do awk -v D="$D" -v c=$c '$1 ~ /^(seq-(55|56|63|64|65|119|120|128|129|130|1000|4097|8193|65536)|fips-896|rnd-8-100003)$/ {print $1 "-p" c, "run", D, $2, "line:" $4, "-", 0, c}' fixtures/sha256-vectors.txt; done
@@ -108,6 +108,13 @@ NIST documents (downloaded 2026-10-25, not committed; sha256 by /usr/bin/sha256s
    sed -n 2807,2813p and 2058p of seed/omc/omc.om). Each .to file is its .from with one edit:
    a one-digit change, a swap of two constants, deletion of one line, or the replacement shown in
    MUTANTS.md.
+   Re-pin (2026-10-26): 450bbefd (#747) deleted om/sha256/sha256.om, so every case naming it was
+   INVALID (source unreadable). baseline/sha256-om1.om is `git show acb3f15:om/sha256/sha256.om`,
+   byte-identical (sha256 7f034814303a8a40b4bc56383ddd55ab2ae8460291f80793340bc3b0ac024e21), and
+   every .cases file now names it; the sed line numbers above refer to that copy. omc.om's vs_chk
+   changed after the guard mutant was cut, so its .from no longer matched (substitution INVALID);
+   guard-wrapped.from is now omc.om lines 4059-4063 at 0b77e6ea and .to is the same wrapped-sum
+   check (one ADD of ro and rn, one CMP against the length register l).
 
 5. Encodings used by compiler-mutants/guard-wrapped.to: 0x8B000000 = 2332033024 (ADD Xd, Xn, Xm);
    0xCB000000 = 3405774848 (SUB, already in omc.om); 0xEB00001F = 3942645791 (CMP, already in omc.om).

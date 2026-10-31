@@ -1,0 +1,65 @@
+{
+  "schema": "omega.L602.independent-review.v1",
+  "verdict": "PASS_BOUNDED_SCOPE_NO_BLOCKING_FINDINGS",
+  "source_pins": {
+    "omega621": "cd2c41f3c697524629585b2a228e2f0ab5b99c45",
+    "c_import622": "50f75da28845f21b118bcf8e3499b96c35ddb587"
+  },
+  "private_review_root": "/home/drakestapleton/workspace/hermes-desk/universal-L602-review",
+  "build": {
+    "command": "python3 tools/adapters/build-c-import.py",
+    "exit": 0,
+    "importer_sha256": "d3cf7793c9ac1118cf770ffb3af57ffedcccf49ea3f3b663757ea99f8619cb01",
+    "build_manifest_sha256": "4a389fdeee6b834459184aba91ba4078b545a726624505cb4f924bdb3da578e3"
+  },
+  "focused_c_gate": {
+    "command": "python3 tests/universal/c_import_gate.py --importer <private>/build/L589/c-import --out <fresh-private-dir>",
+    "exit": 0,
+    "result": "PASS",
+    "positive_executed": 35,
+    "positive_passed": 35,
+    "negative_executed": 48,
+    "negative_passed": 48,
+    "native_C_observations": 817,
+    "source_aware_requests": 105,
+    "report_sha256": "d0e8ba2e8e0596dc00cb1a0b81fb5a1282815811be545d05006a5d4a77595cd5"
+  },
+  "adversarial_controls": {
+    "command": "python3 tests/universal/c_import_controls.py --out <fresh-private-dir>",
+    "exit": 0,
+    "result": "PASS",
+    "boundary_public_identity_controls": 15,
+    "boundary_results_sha256": "8cdc2385512e76da48ab75e20ab64a8e5f0ef585d8d976caf4c127b98f5b0622",
+    "successfully_compiled_semantic_mutants": 5,
+    "mutant_results_sha256": "26ed4bf76f12a39787a878d8fec49c2521373006813072b8e9964268fb56df0e",
+    "mutants": [
+      {"name": "add-as-sub", "mismatching_programs": 16, "mismatched_rows": 362, "binary_sha256": "29526a865f13944772ffd2b2c10f7385e3f5f50ccb4f17716364da205a418564"},
+      {"name": "sub-as-add", "mismatching_programs": 9, "mismatched_rows": 200, "binary_sha256": "86bc013ff3ca72075aa8f5b85ba29b4d15c4b512b035a959e95592ccf8572dd4"},
+      {"name": "mul-as-add", "mismatching_programs": 18, "mismatched_rows": 429, "binary_sha256": "9121f25a41473597c58b26973d57b0e7f167914412bf1a47e72e0206f3a39c67"},
+      {"name": "literal-digit-offset", "mismatching_programs": 15, "mismatched_rows": 333, "binary_sha256": "d9243c6b7cd517c0a7ef9a477a4d2fd77025186c27e466950ff05641fc7cd1e5"},
+      {"name": "parameter-slot-swap", "mismatching_programs": 22, "mismatched_rows": 520, "binary_sha256": "b2732886fb227fc63c372326cc0b71cc9d282d083ed9ddac1be59863a867a69"}
+    ]
+  },
+  "builder_filesystem_probes": [
+    {"probe": "621-build-link", "exit": 73, "external_sentinel_preserved": true},
+    {"probe": "621-L574-link", "exit": 73, "external_sentinel_preserved": true},
+    {"probe": "621-L574-special", "exit": 73, "external_sentinel_preserved": true},
+    {"probe": "622-build-link", "exit": 1, "stderr": "C_IMPORT_UNSAFE_BUILD_PATH", "external_sentinel_preserved": true},
+    {"probe": "622-L589-link", "exit": 1, "stderr": "C_IMPORT_UNSAFE_BUILD_PATH", "external_sentinel_preserved": true}
+  ],
+  "prior_621_cold_receipt": {
+    "path": "/home/drakestapleton/workspace/hermes-desk/universal-L574-source-aware/build/L574/replay-cd2c41f3/build/L574/PASS.json",
+    "sourceHEAD": "cd2c41f3c697524629585b2a228e2f0ab5b99c45",
+    "verdict": "PASS",
+    "review": "PENDING",
+    "signed": false,
+    "sha256": "6f0e0ada496e38aa541aa319ab127f5607519747efa34d20edc04b222ba7b4e5"
+  },
+  "limits": [
+    "No full 131000-request #621 rerun",
+    "No formal equivalence/proof claim",
+    "#622 remains incomplete: exporter, other widths, control flow, full-program qualification, OSC lowering, checker-bound proof, and Omega CPU backend execution are absent"
+  ],
+  "modified_author_trees": false,
+  "github_or_service_or_gpu_actions": false
+}

@@ -1,0 +1,12 @@
+# Daily coverage stats + crash triage: reproduce natively, dedupe, copy to ~/handoffs/TlsProof/crashes/,
+# one timestamped line on ~/handoffs/BOARD.md.
+[Unit]
+Description=om/tls fuzz daily triage
+
+[Service]
+Type=oneshot
+Environment=OUT=%h/.cache/omtls-fuzz
+ExecStart=/bin/sh %h/.local/lib/omtls-fuzz/run.sh triage
+Nice=19
+IOSchedulingClass=idle
+CPUAffinity=10 11

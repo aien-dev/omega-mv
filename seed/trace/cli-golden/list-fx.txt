@@ -1,0 +1,9 @@
+a.seg: verify ok records=40 bytes=2576 lost=0 reason=clean
+b.seg: verify ok records=40 bytes=2576 lost=0 reason=clean
+c.seg: verify ok records=42 bytes=2704 lost=0 reason=clean
+crc.seg: verify partial records=5 bytes=2576 lost=2240 reason=crc-mismatch
+link.seg: refused code=10 errno=40
+magic.seg: refused code=11
+sub: directory
+torn.seg: verify partial records=39 bytes=2542 lost=30 reason=torn-tail
+list entries=8 ok=3 partial=2 refused=2 directories=1

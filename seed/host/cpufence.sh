@@ -1,5 +1,5 @@
 #!/bin/sh
-# cpufence.sh -- host CPU ordering words (#939): cpufence (keyword 178) and cpurelax (keyword 179).
+# cpufence.sh -- host CPU ordering words (#939): cpufence (keyword 199) and cpurelax (keyword 200).
 # 1. seed/host/tests/cpufence.om runs (exit 42) natively on AArch64 and, with the x86 selector, under
 #    qemu-x86_64.
 # 2. GNU objdump (reference only, never on the seed path) reads each binary back. Against the same program
@@ -80,7 +80,7 @@ printf '%s\n' 'fn f x ulong to ulong' 'cpufence' 'cpurelax' 'ret x' 'end' > "$T/
 printf 'PASS cpufence/cpurelax in a function-mode unit: one dsb sy, one yield\n'
 printf 'PASS cpufence refusals: operand, value use, name, top level, dead code\n'
 
-awk '/^if eq c 178$/{f=1} f && /^emit 3573759903$/{$0="emit 3573751839"} f && /^xb 15 174 240$/{$0="xb 144 144 144"}
+awk '/^if eq c 199$/{f=1} f && /^emit 3573759903$/{$0="emit 3573751839"} f && /^xb 15 174 240$/{$0="xb 144 144 144"}
      f && /^ret 0$/{f=0} {print}' seed/omc/omc.om > "$T/mutant.om"
 cmp -s seed/omc/omc.om "$T/mutant.om" && bad "mutant site not found"
 "$OMC" < "$T/mutant.om" > "$T/omc-mutant"
