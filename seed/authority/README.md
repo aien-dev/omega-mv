@@ -221,7 +221,14 @@ The historical preparation checks in
 remain unchanged as evidence of checks observed then; its removed shell-helper
 commands are not current replay instructions. The manual derivation above and
 committed gate supersede those commands. Current source correspondence, absence
-of unmatched write-side effects, and metadata checks pass; all Omega compilation,
-native positive/negative runs and security qualification remain NOT_RUN. This
-gate is wired into the existing security coordinator with its own fresh child
-working directory; the standalone replay and negative control remain available.
+of unmatched write-side effects, and metadata checks pass. This gate is wired
+into the existing security coordinator with its own fresh child working
+directory; the standalone replay and negative control remain available.
+
+Native run (2026-10-31, Linux AArch64, seed/out/omc 7a8b84fc after `sh seed/omega-from-seed.sh`
+reproduced it): the derivation above applied to this revision's `store.om` plus the test is
+byte-identical to the committed `store-cleanup-gate.om`; positive `store cleanup cases=18 fails=0`,
+exit 0. Negative control with the same derivation applied to `store.om` from 95529421 (differs only
+by the four missing `cleanup = cfclose int fd` lines): compiled, no output, exit 1 (the gate prints
+no per-case lines; exit 1 is its failed-case exit). Security qualification on hardware remains
+NOT_RUN.
