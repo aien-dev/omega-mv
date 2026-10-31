@@ -66,7 +66,7 @@
         },
         {
           "digest": "52ba7ece4895d04697c7dfc12b56b2fe8c3405e44b79e6078ddc9c00b65a1238",
-          "last_commit": "bdcddf9eb",
+          "last_commit": "f3ff18e3e",
           "name": "native",
           "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow adviso"
         },
@@ -95,8 +95,8 @@
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "c62b3400de4d675966bd1c973bda94de17c7c73024ccb8f6401f49fe94eacb57",
-          "last_commit": "ef4ac7900",
+          "digest": "1d49c3abb222c0d837c8e3b990949b4d30aedc33920e7b00af690bdade141b94",
+          "last_commit": "f3ff18e3e",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
@@ -107,15 +107,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:82c4074afd85b45530c9702f7ad0f4551dc9f59f8a0bfb96ce0596300a38d19b",
-      "compiled_at": "2026-10-31T02:32:58Z",
+      "children_root": "sha256:24c47834714c462f39e6f61e6ca3bc7b96aa4a70ee8f73a0232a508f37160c48",
+      "compiled_at": "2026-10-31T02:55:38Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:84bf94592db0d347a736358c5e9359d536e01b2ccac0bd631fada04aff91ac2b",
+      "digest": "sha256:277e2e06e9ceebaf547b5762740765ec62ce5875e21af4041d7478284e21e5d8",
       "evidence_files": 14602,
       "evidence_root": "sha256:f915fb4ec0599ad30874d7adbbb95f142c988f42f3f1b89ce2751909caa5eaf8",
       "files": 21677,
-      "generated_at_commit": "ef4ac790098b8381b5d5323159cf97ed96b639bd",
-      "source_tree": "sha256:70dc25ba4fafc6371015a1c2114d5b0a51cb804d45c54f766c8eaca28786835f"
+      "generated_at_commit": "f3ff18e3e09095b89d6e46ec6b025394740a0913",
+      "source_tree": "sha256:f3a1c3c577d0e28a07155607461645635c8077453b625dc90c6d4dd2f2dc6434"
     },
     "owner_lane": "",
     "provenance": {
