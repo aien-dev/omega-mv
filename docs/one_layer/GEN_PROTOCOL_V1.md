@@ -442,6 +442,9 @@ The runner, reducer, corpus builder and custodian scripts are specified by their
   1..64, `OSC_MAX_ARRAY_LEN`, as FAMSIG_V1.md requires); none is protocol content: conditions, reader
   chain, section 5 reference lengths and the decision rule are unchanged. `GEN_PROTOCOL_V1.md`
   re-hashed for this line. `make test-gen-protocol` re-run at the train head. `famsig_lib.h` re-hashed
-  after its last two `strcpy` calls (task id, shape) became `snprintf` into the same buffers (CodeQL
-  "unbounded write" on #979); both inputs are already length-checked (`fs_task_id_ok` 1..40,
-  `fs_shape` 1..512), so no accepted or refused input changes. `GEN_PROTOCOL_V1.md` re-hashed again.
+  after the three `strcpy` calls that copy metadata-file fields (task id and shape into the parsed line,
+  then the task id into the ascending-order check's previous id) became `snprintf` into the same-size
+  buffers (CodeQL "unbounded write" on #979). The first version of this note said "its last two `strcpy`
+  calls", which was wrong: the third copy was fixed after CodeQL flagged it, and the remaining `strcpy`
+  calls copy derived shape text, not file fields. All inputs are already length-checked (`fs_task_id_ok`
+  1..40, `fs_shape` 1..512), so no accepted or refused input changes. `GEN_PROTOCOL_V1.md` re-hashed again.

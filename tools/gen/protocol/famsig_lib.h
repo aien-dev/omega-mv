@@ -407,7 +407,7 @@ static int fs_read(const char *path, FsSet *set, char *err, size_t errn)
             if (split_file && m.split != FS_HELDOUT) { snprintf(err, errn, "%s:%d: a gen-split file holds heldout lines only", path, ln); rc = -1; break; }
             if (!split_file && m.split == FS_HELDOUT) { snprintf(err, errn, "%s:%d: heldout metadata belongs only in the sealed gen-split file", path, ln); rc = -1; break; }
             if (split_file && !first && strcmp(prev, m.id) >= 0) { snprintf(err, errn, "%s:%d: task ids must be strictly ascending (byte order)", path, ln); rc = -1; break; }
-            strcpy(prev, m.id);
+            snprintf(prev, sizeof prev, "%s", m.id);
             first = 0;
             fs_push(set, &m);
         }
