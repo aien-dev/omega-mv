@@ -2,6 +2,8 @@ note irequiv fixture (issue 826): a 32-bit domain, beyond the exhaustive limit.
 note pop32 and pop32s (SWAR) can only be compared by sampling, which is not a proof;
 note pop32t is a mutant that drops the top bit. spin never returns within the
 note interpreter's fuel (16777216 instructions), so its result is INCONCLUSIVE.
+note spin runs 1000000 x 20 = 20000000 iterations as two loops: IR mode refuses a
+note for count above 1000000 (error 8), the C oracle's range (#857).
 fn pop32 x uint to uint
 c = uint 0
 for i uint 32
@@ -25,8 +27,10 @@ ret shr mul x 16843009 24
 end
 fn spin x uchar to uchar
 y = x
-for i uint 20000000
+for i uint 1000000
+for j uint 20
 y = add y 1
+end
 end
 ret y
 end

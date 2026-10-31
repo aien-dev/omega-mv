@@ -60,10 +60,13 @@ fn <name> (<param> <type>)* to <type> | void      a function; `end` closes it
 <name> = <value>          write a value (a new name, or an existing one of the same type);
 <name> <value>            the same, with `=` left out
 if <cond> / else / end
-while <cond> [bound N] / end      N 1..9223372036854775807 (a number or a ulong const), default
-                          1000000; past N iterations: trap 4
-for <name> <type> <count> / end   name = 0 .. count-1 (count a number, or a value of that type)
-                          (any other count: trap 4 after 1000000 passes, as a while with no bound)
+while <cond> [bound N] / end      N 1..9223372036854775807 (a number or any integer const; IR
+                          mode: 1..1000000), default 1000000; past N iterations: trap 4
+for <name> <type> <count> [bound N] / end   name = 0 .. count-1 (count a number, or a value of that
+                          type; IR mode: a number count 0..1000000); N as for while. With no bound a
+                          number count is not guarded and any other count traps 4 after 1000000
+                          passes; with `bound N` any count traps 4 after N passes (the counter may
+                          be written in the body)
 break                     leave the innermost loop; outside a loop: error 9. Like ret, it ends the
                           path (a later line in the same block is error 17)
 continue                  jump to the next iteration: a while's head, a for's increment. Outside a
@@ -136,9 +139,14 @@ is defined exactly once, as checker2 requires). Blocks are numbered in the order
 
 - `while c bound N`: hidden ulong counter = 0; head: c -> guard | exit; guard: `ge counter N` ->
   trap block (trap 4, br exit) | body; the body starts with `counter = add counter 1`.
-- `for i T K` (K a number): i = 0; head: `lt i K` -> body | exit; latch: `i = add i 1`.
-- `for i T n` (n a name or any value that is not a number): as `while lt i n`, with the hidden guard,
-  plus `i = add i 1` at the latch.
+- `for i T K` (K a number or an integer constant, no bound): i = 0; head: `lt i K` -> body | exit;
+  latch: `i = add i 1`. IR mode refuses a number or integer-constant count outside 0..1000000 (bound
+  or not), a minus sign included, with error 8 (the C oracle's count range), so this unguarded loop
+  is also one checker2 proves.
+- `for i T n` (n a name or any value that is not a number), and any `for ... bound N` (omc's IR mode
+  only): as `while lt i n bound N` (N 1000000 when omitted), with the hidden guard, plus
+  `i = add i 1` at the latch. IR mode refuses N above 1000000 with error 8 (as the C oracle does),
+  so every emitted guard is one checker2 proves.
 - `if c` -> cbr then | else-or-join; a join block exists only if some branch reaches it.
 - Nested values: each op inside a value writes a fresh hidden register (a local with the op's type,
   never a name, so the unread-name rule does not apply), in evaluation order: innermost first, left
@@ -672,9 +680,10 @@ length is error 16. A length token that is a name other than an integer constant
 `arrlen` still enforces 1..16777216 for arrays (errors 8 and 23). Signatures are pre-scanned, so a
 constant used in a parameter length must be defined before that function.
 
-An integer constant is also accepted as a `trap` code (1..14) and as a `while ... bound` count
-(1..9223372036854775807); a `for` count is an ordinary value, so a constant works there too. Out-of-range values
-keep error 8, and a float constant in any of these positions is error 16.
+An integer constant is also accepted as a `trap` code (1..14) and as a `while ... bound` or
+`for ... bound` count (1..9223372036854775807; 1..1000000 in IR mode); a `for` count is an ordinary value, so a constant
+works there too (0..1000000 in IR mode). Out-of-range values keep error 8, and a float constant in any of these positions is
+error 16.
 
 ### 9.13 Profile OM-2 (omc only, `spec/omegese-om2.md`, ledger L834)
 
