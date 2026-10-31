@@ -1,0 +1,2 @@
+red: tests/osc_gpu/test_osc_gpu.c linked with the previous src/compiler/osc_cg.c and osc_interp.c (no kernel refusal), 2026-10-22T00:09Z
+exit 134 (134 = abort: the old interpreter or code generator crashed on a kernel unit instead of refusing it)

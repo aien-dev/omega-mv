@@ -1,0 +1,6 @@
+kernel gate 256 a edit float g view float
+i = add mul block threads thread
+if lt i len a
+put a i mul get a i inv add exp neg get g i 1
+end
+end

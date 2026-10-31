@@ -673,7 +673,7 @@ static int d_func_ret_ref(C2Unit *u)
 }
 static int d_vreg_kind(C2Unit *u)
 {
-    for (int fi = 0; fi < u->nfuncs; fi++) { int r = reg_ref(FN, 0); if (r >= 0) { FN->vt[r].kind = 4; return 1; } }
+    for (int fi = 0; fi < u->nfuncs; fi++) { int r = reg_ref(FN, 0); if (r >= 0) { FN->vt[r].kind = 5; return 1; } }
     return 0;
 }
 static int d_vreg_len0(C2Unit *u)
@@ -812,6 +812,325 @@ static int d_endless_loop(C2Unit *u)
     return 1;
 }
 
+/* GPU kernels (docs/omegese/GPU.md); the kernel units come from tests/checker2/kernels via omega_emit */
+static int kern_fn(const C2Unit *u)
+{
+    for (int fi = 0; fi < u->nfuncs; fi++)
+        if (u->fn[fi].kind == FN_KERNEL) return fi;
+    return -1;
+}
+static int d_kernel_threads(C2Unit *u)
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    FN->threads = 48; /* not a multiple of the warp */
+    return 1;
+}
+static int d_mad_type(C2Unit *u)
+{
+    EACH_INSN(C2_MAD) {
+        int r = reg_val(FN, 0, S_U32, 0, 0);
+        if (r < 0) return 0;
+        FN->in[i].a = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+static int d_shfl_param(C2Unit *u) /* a distance read from a parameter, not one constant */
+{
+    EACH_INSN(C2_SHFL) {
+        for (int r = 0; r < FN->nparams; r++)
+            if (FN->vt[r].s == S_U32) { FN->in[i].b = (int16_t)r; return 1; }
+    }
+    return 0;
+}
+static int d_sync_limit(C2Unit *u)
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    for (int k = 0; k <= C2_MAX_SYNCS; k++) ins(FN, 0, mk(C2_SYNC, -1));
+    return 1;
+}
+/* A trap in the entry block, then a read of a register nothing writes. A kernel thread runs on
+ * after a trap (GPU.md section 7), so the read is of an unset register; a host trap would end
+ * the path and hide it. */
+static int d_kernel_trap_runs_on(C2Unit *u)
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    C2Func *f = FN;
+    int r = newreg(f, (C2Type){S_U32, 0, 0, 0, 0}), d = newreg(f, (C2Type){S_U32, 0, 0, 0, 0});
+    C2Insn t = mk(C2_TRAP, -1);
+    t.imm = 3;
+    ins(f, f->blk[0].first + f->blk[0].count - 1, t);
+    for (uint32_t i = 0; i < f->ninsns; i++)
+        if (f->in[i].op == C2_RET) {
+            C2Insn m = mk(C2_MOV, (int16_t)r);
+            m.dst = (int16_t)d;
+            ins(f, i, m);
+            return 1;
+        }
+    return 0;
+}
+/* first local (not a parameter) register of scalar code s, or -1 */
+static int klocal(const C2Func *f, uint8_t s)
+{
+    for (int r = f->nparams; r < f->nvregs; r++)
+        if (f->vt[r].s == s) return r;
+    return -1;
+}
+static int d_gbuf_write(C2Unit *u) /* a launch value written into a buffer pointer register */
+{
+    EACH_INSN(C2_GPU) {
+        if (FN->kind != FN_KERNEL || FN->vt[0].s != S_GEDIT) continue;
+        IN->dst = 0;
+        return 1;
+    }
+    return 0;
+}
+static int d_gbuf_len_write(C2Unit *u) /* a launch value written into a buffer length register */
+{
+    EACH_INSN(C2_GPU) {
+        if (FN->kind != FN_KERNEL || FN->vt[0].s != S_GEDIT || FN->nparams < 2) continue;
+        IN->dst = 1;
+        return 1;
+    }
+    return 0;
+}
+/* the first f32 add of a kernel, or -1 */
+static int kernel_f32_add(C2Unit *u, int *fip)
+{
+    EACH_INSN(C2_BIN) {
+        if (FN->kind != FN_KERNEL || IN->sub != B_ADD || FN->vt[IN->dst].s != S_F32) continue;
+        *fip = fi;
+        return (int)i;
+    }
+    return -1;
+}
+static int d_minmax_mixed(C2Unit *u) /* max of an f32 and a u32 */
+{
+    int fi, i = kernel_f32_add(u, &fi), r;
+    if (i < 0 || (r = klocal(FN, S_U32)) < 0) return 0;
+    FN->in[i].sub = B_MAX;
+    FN->in[i].b = (int16_t)r;
+    return 1;
+}
+static int d_f32_and(C2Unit *u) /* a bit operation on floats */
+{
+    int fi, i = kernel_f32_add(u, &fi);
+    if (i < 0) return 0;
+    FN->in[i].sub = B_AND;
+    return 1;
+}
+static int d_f32_add_u32(C2Unit *u) /* f32 + u32 */
+{
+    int fi, i = kernel_f32_add(u, &fi), r;
+    if (i < 0 || (r = klocal(FN, S_U32)) < 0) return 0;
+    FN->in[i].b = (int16_t)r;
+    return 1;
+}
+static int d_cast_bool_f32(C2Unit *u) /* bool -> f32 (only u32 <-> f32 involve floats) */
+{
+    EACH_INSN(C2_CAST) {
+        int r;
+        if (FN->kind != FN_KERNEL || FN->vt[IN->dst].s != S_F32 || (r = klocal(FN, S_BOOL)) < 0) continue;
+        IN->a = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+static int d_call_kernel(C2Unit *u) /* a host function calling a kernel */
+{
+    int fi = kern_fn(u);
+    if (fi < 0 || u->nfuncs >= C2_MAX_FUNCS) return 0;
+    C2Func *g = &u->fn[u->nfuncs];
+    memset(g, 0, sizeof *g);
+    strcpy(g->name, "launch_host"); /* no corpus kernel has this name */
+    g->kind = FN_HOST;
+    g->ret.s = S_VOID;
+    g->in = calloc(2, sizeof *g->in);
+    g->blk = calloc(1, sizeof *g->blk);
+    if (!g->in || !g->blk) abort();
+    g->in[0] = mk(C2_CALL, -1);
+    g->in[0].callee = (uint16_t)fi;
+    g->in[1] = mk(C2_RET, -1);
+    g->ninsns = 2;
+    g->nblocks = 1;
+    g->blk[0].count = 2;
+    u->nfuncs++;
+    return 1;
+}
+static int d_gpu_sub(C2Unit *u)
+{
+    EACH_INSN(C2_GPU) {
+        IN->sub = G_LIMIT;
+        return 1;
+    }
+    return 0;
+}
+static int d_gpu_into_f32(C2Unit *u)
+{
+    EACH_INSN(C2_GPU) {
+        int r = klocal(FN, S_F32);
+        if (r < 0) continue;
+        IN->dst = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+static int d_shared_into_u32(C2Unit *u)
+{
+    EACH_INSN(C2_SHARED) {
+        int r = klocal(FN, S_U32);
+        if (r < 0) continue;
+        IN->dst = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+/* a u32 register followed by a u32, whose unused element byte matches the load: the length and
+ * element checks after the pointer check would pass, so only the pointer check refuses it */
+static int d_gload_scalar_stale_elem(C2Unit *u)
+{
+    EACH_INSN(C2_GLOAD) {
+        for (int r = FN->nparams; r + 1 < FN->nvregs; r++) {
+            if (FN->vt[r].s != S_U32 || FN->vt[r + 1].s != S_U32) continue;
+            FN->vt[r].elem = FN->vt[IN->dst].s;
+            IN->a = (int16_t)r;
+            return 1;
+        }
+    }
+    return 0;
+}
+static int d_gload_index_bool(C2Unit *u)
+{
+    EACH_INSN(C2_GLOAD) {
+        int r = klocal(FN, S_BOOL);
+        if (r < 0) continue;
+        IN->b = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+static int d_gload_elem(C2Unit *u) /* an f32 buffer element loaded into a u32 */
+{
+    EACH_INSN(C2_GLOAD) {
+        int r = klocal(FN, S_U32);
+        if (r < 0 || FN->vt[IN->a].elem != S_F32) continue;
+        IN->dst = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+static int d_gstore_view(C2Unit *u)
+{
+    EACH_INSN(C2_GSTORE) {
+        FN->vt[IN->a].s = S_GVIEW;
+        return 1;
+    }
+    return 0;
+}
+static int d_shfl_into_u32(C2Unit *u) /* an f32 shuffled into a u32 */
+{
+    EACH_INSN(C2_SHFL) {
+        int r = klocal(FN, S_U32);
+        if (r < 0 || FN->vt[IN->a].s != S_F32) continue;
+        IN->dst = (int16_t)r;
+        return 1;
+    }
+    return 0;
+}
+static int d_host_sync(C2Unit *u) /* a kernel instruction in a host function */
+{
+    for (int fi = 0; fi < u->nfuncs; fi++) {
+        if (FN->kind != FN_HOST) continue;
+        ins(FN, FN->blk[0].first, mk(C2_SYNC, -1));
+        return 1;
+    }
+    return 0;
+}
+static const C2Type kblock1 = {S_REF, K_BLOCK, S_U32, 0, 1};
+static int d_shared_not_entry(C2Unit *u) /* defined once, but outside the entry block */
+{
+    int fi = kern_fn(u);
+    if (fi < 0 || FN->nblocks < 2) return 0;
+    ins(FN, FN->blk[1].first, mk(C2_SHARED, -1));
+    FN->in[FN->blk[1].first].dst = (int16_t)newreg(FN, kblock1);
+    return 1;
+}
+static int d_shared_twice(C2Unit *u) /* one small array defined twice in the entry block */
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    C2Insn s = mk(C2_SHARED, -1);
+    s.dst = (int16_t)newreg(FN, kblock1);
+    ins(FN, 0, s);
+    ins(FN, 0, s);
+    return 1;
+}
+static int d_shared_over(C2Unit *u) /* two arrays of the largest length: 2 x 49152 bytes */
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    for (int k = 0; k < 2; k++) {
+        C2Insn s = mk(C2_SHARED, -1);
+        s.dst = (int16_t)newreg(FN, (C2Type){S_REF, K_BLOCK, S_F32, 0, C2_MAX_SHARED_LEN});
+        ins(FN, 0, s);
+    }
+    return 1;
+}
+static int d_kernel_div_param(C2Unit *u) /* a u32 multiply turned into a division by a parameter */
+{
+    EACH_INSN(C2_BIN) {
+        if (FN->kind != FN_KERNEL || IN->sub != B_MUL || FN->vt[IN->dst].s != S_U32) continue;
+        for (int r = 0; r < FN->nparams; r++)
+            if (FN->vt[r].s == S_U32) {
+                IN->sub = B_DIV;
+                IN->b = (int16_t)r;
+                return 1;
+            }
+    }
+    return 0;
+}
+static int d_kernel_returns_u32(C2Unit *u)
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    FN->ret = (C2Type){S_U32, 0, 0, 0, 0};
+    return 1;
+}
+static int d_kernel_u64(C2Unit *u)
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    newreg(FN, (C2Type){S_U64, 0, 0, 0, 0});
+    return 1;
+}
+/* the first local, a shared array, becomes a parameter and loses its SHARED (so nothing defines
+ * it twice and only the parameter rule sees it) */
+static int d_block_param(C2Unit *u)
+{
+    for (int fi = 0; fi < u->nfuncs; fi++) {
+        int r = FN->nparams;
+        if (FN->kind != FN_KERNEL || r >= FN->nvregs || r >= C2_MAX_KPARAMS) continue;
+        if (FN->vt[r].s != S_REF || FN->vt[r].kind != K_BLOCK) continue;
+        for (uint32_t i = 0; i < FN->ninsns; i++)
+            if (IN->op == C2_SHARED && IN->dst == r) {
+                del(FN, i);
+                FN->nparams++;
+                return 1;
+            }
+    }
+    return 0;
+}
+static int d_gbuf_local(C2Unit *u) /* a buffer register that is not a parameter */
+{
+    int fi = kern_fn(u);
+    if (fi < 0) return 0;
+    newreg(FN, (C2Type){S_GEDIT, 0, S_F32, 0, 0});
+    return 1;
+}
+
 typedef struct { const char *name, *rule; int (*apply)(C2Unit *); } Defect;
 static const Defect defects[] = {
     {"const-noncanonical", "C2-CONST-CANONICAL", d_const_noncanon},
@@ -892,7 +1211,36 @@ static const Defect defects[] = {
     {"struct-field-reference", "C2-STRUCT-FIELD-TYPE", d_struct_field_ref},
     {"duplicate-function", "C2-FUNC-NAME", d_func_dup_name},
     {"function-returns-reference", "C2-FUNC-RETURN", d_func_ret_ref},
-    {"reference-kind-4", "C2-TYPE-INVALID", d_vreg_kind},
+    {"reference-kind-5", "C2-TYPE-INVALID", d_vreg_kind},
+    {"kernel-threads-48", "C2-GPU-KERNEL", d_kernel_threads},
+    {"mad-u32-operand", "C2-TYPE-GPU", d_mad_type},
+    {"shfl-distance-param", "C2-GPU-SHFL", d_shfl_param},
+    {"sync-64", "C2-GPU-SYNC-LIMIT", d_sync_limit},
+    {"kernel-trap-runs-on", "C2-UNDEFINED-USE", d_kernel_trap_runs_on},
+    {"gpu-into-buffer-pointer", "C2-GPU-BUFFER", d_gbuf_write},
+    {"gpu-into-buffer-length", "C2-GPU-BUFFER", d_gbuf_len_write},
+    {"max-f32-u32", "C2-TYPE-BIN", d_minmax_mixed},
+    {"and-on-f32", "C2-TYPE-BIN", d_f32_and},
+    {"add-f32-u32", "C2-TYPE-BIN", d_f32_add_u32},
+    {"cast-bool-to-f32", "C2-TYPE-CAST", d_cast_bool_f32},
+    {"host-calls-kernel", "C2-GPU-CALL", d_call_kernel},
+    {"gpu-subop", "C2-DECODE-SUBOP", d_gpu_sub},
+    {"gpu-into-f32", "C2-TYPE-GPU", d_gpu_into_f32},
+    {"shared-into-u32", "C2-TYPE-GPU", d_shared_into_u32},
+    {"gload-scalar-register", "C2-TYPE-GPU", d_gload_scalar_stale_elem},
+    {"gload-index-bool", "C2-TYPE-GPU", d_gload_index_bool},
+    {"gload-element-type", "C2-TYPE-GPU", d_gload_elem},
+    {"gstore-into-view", "C2-GPU-STORE-VIEW", d_gstore_view},
+    {"shfl-f32-into-u32", "C2-TYPE-GPU", d_shfl_into_u32},
+    {"sync-in-host", "C2-GPU-OP", d_host_sync},
+    {"shared-outside-entry", "C2-GPU-SHARED", d_shared_not_entry},
+    {"shared-defined-twice", "C2-GPU-SHARED", d_shared_twice},
+    {"shared-over-49152", "C2-GPU-SHARED", d_shared_over},
+    {"kernel-div-by-param", "C2-GPU-DIV", d_kernel_div_param},
+    {"kernel-returns-u32", "C2-GPU-KERNEL", d_kernel_returns_u32},
+    {"kernel-u64-register", "C2-GPU-TYPE", d_kernel_u64},
+    {"shared-array-parameter", "C2-GPU-SHARED", d_block_param},
+    {"buffer-not-parameter", "C2-GPU-BUFFER", d_gbuf_local},
     {"array-length-0", "C2-TYPE-INVALID", d_vreg_len0},
     {"struct-id-out-of-range", "C2-TYPE-INVALID", d_vreg_sid},
     {"seven-parameters", "C2-FUNC-PARAMS", d_params_over},
@@ -934,8 +1282,21 @@ static int byte_defects(void)
     b[0] ^= 1;
     planted += bytes_reject(b, s->n, "C2-DECODE-MAGIC", "bad-magic");
     memcpy(b, s->b, s->n);
-    b[7] = 6;
+    b[7] = 7;
     planted += bytes_reject(b, s->n, "C2-DECODE-VERSION", "unknown-version");
+    /* a kernel unit (version 8, no structs) with function kind 2: the kind byte follows the name */
+    for (int i = 0; i < ncorpus; i++) {
+        const Unit *k = &corpus[i];
+        if (k->n < 13 || k->b[7] != C2_V_KERNEL || k->b[8] != 0) continue;
+        size_t at = 8 + 1 + 2 + 1 + k->b[11];
+        if (at >= k->n || k->b[at] != FN_KERNEL) continue;
+        uint8_t *kb = malloc(k->n);
+        memcpy(kb, k->b, k->n);
+        kb[at] = 2;
+        planted += bytes_reject(kb, k->n, "C2-DECODE-KIND", "kernel-kind-2");
+        free(kb);
+        break;
+    }
     memcpy(b, s->b, s->n);
     b[s->n] = 0;
     planted += bytes_reject(b, s->n + 1, "C2-DECODE-TRAILING", "trailing-byte");
@@ -977,6 +1338,35 @@ int main(int argc, char **argv)
         c2_unit_free(u);
     }
     CHECK(accepted == ncorpus, "accepted %d of %d", accepted, ncorpus);
+
+    /* 1b. kernels that must be refused, each by the rule its file name starts with (<RULE>__<name>.ir,
+     * written by differential.sh from tests/checker2/kernels/neg) */
+    int kneg = 0, kneg_ok = 0;
+    {
+        char kdir[4096];
+        snprintf(kdir, sizeof kdir, "%s/kneg", argv[1]);
+        int base = ncorpus;
+        CHECK(load(kdir) == 0, "no kernel negatives directory %s", kdir);
+        for (int i = base; i < ncorpus; i++) {
+            const char *sep = strstr(corpus[i].name, "__");
+            char rule[64];
+            snprintf(rule, sizeof rule, "%.*s", sep ? (int)(sep - corpus[i].name) : 0, corpus[i].name);
+            kneg++;
+            int d = c2_decode(corpus[i].b, corpus[i].n, u, &v);
+            CHECK(d == 0, "%s: decode refused: %s %s", corpus[i].name, v.rule, v.detail);
+            if (d == 0) {
+                int c = c2_check_unit(u, &v);
+                int ok = c != 0 && strcmp(v.rule, rule) == 0;
+                CHECK(ok, "%s: %s (%s), want %s", corpus[i].name, c ? v.rule : "ACCEPT", c ? v.detail : "", rule);
+                kneg_ok += ok;
+                c2_unit_free(u);
+            }
+            free(corpus[i].b);
+            free(corpus[i].name);
+        }
+        ncorpus = base;
+        CHECK(kneg >= 19, "%d kernel negatives in %s, want >= 19", kneg, kdir);
+    }
 
     /* 2. robustness: truncations refused; bit flips never crash */
     int truncs = 0, flips = 0, flip_rejects = 0;
@@ -1025,8 +1415,8 @@ int main(int argc, char **argv)
     CHECK(planted >= 50, "gate needs >= 50 planted defects refused, got %d", planted);
     free(u);
 
-    printf("test_c2_ir: %d units accepted and re-encoded identically, %d truncations refused, %d bit flips (%d refused), "
-           "%d planted defects refused; %d checks, %d failed\n",
-           accepted, truncs, flips, flip_rejects, planted, checks, fails);
+    printf("test_c2_ir: %d units accepted and re-encoded identically, %d of %d kernel negatives refused by their rule, "
+           "%d truncations refused, %d bit flips (%d refused), %d planted defects refused; %d checks, %d failed\n",
+           accepted, kneg_ok, kneg, truncs, flips, flip_rejects, planted, checks, fails);
     return fails ? 1 : 0;
 }

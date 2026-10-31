@@ -1,0 +1,10 @@
+{"functions": [
+  {"name": "down_after_ret", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["u32", "u32", "bool", "u32", "u32"],
+   "blocks": [
+    [{"op": "thread", "dst": 2}, {"op": "const", "dst": 3, "value": 16}, {"op": "const", "dst": 5, "value": 1}, {"op": "lt", "dst": 4, "a": 2, "b": 3}, {"op": "cbr", "cond": 4, "then": 1, "else": 2}],
+    [{"op": "ret"}],
+    [{"op": "down", "dst": 6, "a": 2, "b": 5}, {"op": "ret"}]
+   ]}
+]}

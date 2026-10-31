@@ -1,0 +1,335 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2gpu.om: kernel_forbidden, kernel_ops and kernel_uniform of src/checker2/c2_check.c.
+
+text crgop "C2-GPU-OP"
+text cmghost "kernel instruction %u in a host function"
+text cmgnot "op %u is not allowed in a kernel"
+text crgsh "C2-GPU-SHARED"
+text cmshent "shared array outside the entry block"
+text cmshonce "shared array v%d defined more than once"
+text cmshby "shared arrays over %u bytes"
+text crgdiv "C2-GPU-DIV"
+text cmgdiv "kernel div/rem needs a nonzero constant divisor"
+text crgshfl "C2-GPU-SHFL"
+text cmgshfl "shuffle distance is not one constant 1..31"
+text crgsyl "C2-GPU-SYNC-LIMIT"
+text cmgsyl "more than %d sync lines"
+text crgnest "C2-GPU-NEST"
+text cmgnest "block %d sits %d varying regions deep (at most %d)"
+text crgsdv "C2-GPU-SYNC-DIVERGENT"
+text cmgsdv "sync or down in block %d, which not every thread reaches"
+
+fn c2_kforb op long to bool
+if or eq op cqalloc eq op cqrel
+ret true
+end
+if or eq op cqaopen eq op cqaalloc
+ret true
+end
+if or eq op cqadest eq op cqpopen
+ret true
+end
+if or eq op cqpclose eq op cqhalloc
+ret true
+end
+if or eq op cqhgen eq op cqhfree
+ret true
+end
+if or eq op cqhload eq op cqhstore
+ret true
+end
+if or eq op cqsload eq op cqsstore
+ret true
+end
+if or eq op cqfload eq op cqfstore
+ret true
+end
+ret eq op cqcall
+end
+
+note BIN MIN/MAX and UN EXP and above are kernel-only sub-ops.
+fn c2_gsub s long to bool
+op = get cop s
+sb = get csub s
+if eq op cqbin
+ret or eq sb 11 eq sb 12
+end
+if eq op cqun
+ret ge sb 4
+end
+ret false
+end
+
+fn c2_kops to long
+kern = ne get cgk get cfi 0 0
+put cxs 0 0
+put cnsy 0 0
+for i long c2_ni
+s = c2_is i
+op = get cop s
+if not kern
+if or and ge op cqgpu le op cqmad c2_gsub s
+c2_a1 op
+ret c2_fail crgop get cfi 0 i cmghost
+end
+else
+if lt c2_kop1 i s op 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+note one kernel instruction; the shared byte total lives in cxs[0], the sync count in cnsy[0].
+fn c2_kop1 i long s long op long to long
+fi = get cfi 0
+if c2_kforb op
+c2_a1 op
+ret c2_fail crgop fi i cmgnot
+end
+if eq op cqshared
+d = get cdst s
+if ne get cblk i 0
+ret c2_fail crgsh fi i cmshent
+end
+if ne get cnd d 1
+c2_a1 d
+ret c2_fail crgsh fi i cmshonce
+end
+tot = add get cxs 0 mul 4 get ctl c2_vs d
+put cxs 0 tot
+if gt tot 49152
+c2_a1 49152
+ret c2_fail crgsh fi i cmshby
+end
+ret 0
+end
+if eq op cqbin
+sb = get csub s
+if or eq sb 4 eq sb 5
+b = get cb s
+bad = lt b c2_np
+if not bad
+bad = not c2_sconst b
+end
+if not bad
+bad = eq c2_sval b ulong 0
+end
+if bad
+ret c2_fail crgdiv fi i cmgdiv
+end
+end
+ret 0
+end
+ret c2_kop2 i s op
+end
+
+fn c2_kop2 i long s long op long to long
+fi = get cfi 0
+if eq op cqshfl
+b = get cb s
+bad = not c2_sconst b
+if not bad
+k = c2_sval b
+bad = or lt k ulong 1 ge k ulong 32
+end
+if bad
+ret c2_fail crgshfl fi i cmgshfl
+end
+ret 0
+end
+if eq op cqsync
+n = add get cnsy 0 1
+put cnsy 0 n
+if gt n 63
+c2_a1 63
+ret c2_fail crgsyl fi i cmgsyl
+end
+end
+ret 0
+end
+
+note kernel_uniform. pdom at cbpdom + 8b, region at cbreg + 8b, divb cdivb, done cdone, vary cvary.
+fn c2_kuni to long
+nb = c2_nb
+for b long nb
+put cdivb b 0
+put cdone b 0
+c2_bzero add cbreg mul b 8
+c2_ball add cbpdom mul b 8
+if eq get cnsu b 0
+c2_bzero add cbpdom mul b 8
+c2_bset add cbpdom mul b 8 b
+end
+end
+for r long c2_nv
+put cvary r 0
+end
+c2_kpdom nb
+ch = true
+while ch bound 999999
+ch = false
+for b long nb
+if ne get creach b 0
+if c2_kvdefs b
+ch = true
+end
+if c2_kdiv b
+ch = true
+end
+end
+end
+end
+for b long nb
+if ne get creach b 0
+if lt c2_knest b nb 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+fn c2_kpdom nb long to void
+ch = true
+while ch bound 999999
+ch = false
+b = sub nb 1
+while ge b 0 bound 513
+if c2_kpd1 b
+ch = true
+end
+b = sub b 1
+end
+end
+end
+
+fn c2_kpd1 b long to bool
+if eq get cnsu b 0
+ret false
+end
+c2_ball cbt0
+for k long get cnsu b
+c2_band cbt0 add cbpdom mul get csuc add mul b 2 k 8
+end
+c2_bset cbt0 b
+if c2_beq cbt0 add cbpdom mul b 8
+ret false
+end
+c2_bcpy add cbpdom mul b 8 cbt0
+ret true
+end
+
+note The vary pass over block b's instructions; true when any register became varying.
+fn c2_kvdefs b long to bool
+ch = false
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+d = c2_defs i
+if ge d 0
+if eq get cvary d 0
+if c2_kvary b i
+put cvary d 1
+ch = true
+end
+end
+end
+i = add i 1
+end
+ret ch
+end
+
+fn c2_kvary b long i long to bool
+if ne get cdivb b 0
+ret true
+end
+s = c2_is i
+op = get cop s
+if and eq op cqgpu eq get csub s 1
+ret true
+end
+if or or eq op cqgload eq op cqshfl eq op cqload
+ret true
+end
+nu = c2_uses i
+for k long nu
+if ne get cvary get cus k 0
+ret true
+end
+end
+ret false
+end
+
+note A CBR on a varying register opens block b's region (once); true when it did.
+fn c2_kdiv b long to bool
+t = c2_is c2_blast b
+if ne get cop t cqcbr
+ret false
+end
+if or eq get cvary get ca t 0 ne get cdone b 0
+ret false
+end
+put cdone b 1
+sp = c2_kpush b 0
+rg = add cbreg mul b 8
+while gt sp 0 bound 999999
+sp = sub sp 1
+c = get cstk sp
+if not c2_btest rg c
+if or eq c b not c2_btest add cbpdom mul b 8 c
+c2_bset rg c
+put cdivb c 1
+sp = c2_kpush c sp
+end
+end
+end
+ret true
+end
+
+fn c2_kpush c long sp0 long to long
+sp = sp0
+for k long get cnsu c
+put cstk sp get csuc add mul c 2 k
+sp = add sp 1
+end
+ret sp
+end
+
+fn c2_knest b long nb long to long
+nest = long 0
+for c long nb
+if ne get cdone c 0
+if c2_btest add cbreg mul c 8 b
+nest = add nest 1
+end
+end
+end
+if ne get cdone b 0
+if not c2_btest add cbreg mul b 8 b
+nest = add nest 1
+end
+end
+fi = get cfi 0
+if gt nest 16
+put cv 0 b
+put cv 1 nest
+put cv 2 16
+ret c2_fail crgnest fi c2_bfirst b cmgnest
+end
+if eq get cdivb b 0
+ret 0
+end
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+op = c2_op i
+if or eq op cqsync eq op cqshfl
+c2_a1 b
+ret c2_fail crgsdv fi i cmgsdv
+end
+i = add i 1
+end
+ret 0
+end

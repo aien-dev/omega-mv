@@ -1,0 +1,290 @@
+note oscirdump.om -- canonical text dump of a decoded OSC IR unit (driver for oscir.om).
+note Build: cat seed/oscgpu/oscir.om seed/oscgpu/oscirdump.om | seed/out/omc > oscirdump
+note Usage: oscirdump <ir-file>. Paired with the test oracle tests/osc_gpu/oscir_dump.c.
+global odb uchar 65536
+global odn ulong 1
+text odhx "0123456789abcdef"
+text odtag "STRUCT\nFIELD\n name=\nFUNC\n req=\n ens=\nVREG\nBLOCK\nINSN\nUNIT nfn=\n nst=\nDECODE rc=\nNVDECODE rc=\nVALIDATE rc=\nREADFAIL\n"
+
+fn oscird_flush to void
+n = get odn 0
+if gt n 0
+w = write 1 odb 0 n
+end
+put odn 0 0
+end
+
+fn oscird_c c uchar to void
+n = get odn 0
+put odb n c
+put odn 0 add n 1
+if ge add n 1 65000
+oscird_flush
+end
+end
+
+fn oscird_s t ulong to void
+if eq t 0
+oscird_c 32
+end
+if eq t 1
+oscird_c 10
+end
+end
+
+fn oscird_u v ulong to void
+d = new uchar 24 0
+n = ulong 0
+x = v
+while true bound 30
+put d n add uchar rem x 10 48
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for k ulong n
+oscird_c get d sub sub n k 1
+end
+end
+
+fn oscird_i v long to void
+if lt v 0
+oscird_c 45
+m = ulong sub 0 add v 1
+oscird_u add m 1
+else
+oscird_u ulong v
+end
+end
+
+note tag id = line of odtag
+fn oscird_t id ulong to void
+k = ulong 0
+j = ulong 0
+while lt j id bound 4096
+if eq get odtag k 10
+j = add j 1
+end
+k = add k 1
+end
+while ne get odtag k 10 bound 64
+oscird_c get odtag k
+k = add k 1
+end
+end
+
+fn oscird_hb c uchar to void
+oscird_c get odhx ulong shr c 4
+oscird_c get odhx ulong and c 15
+end
+
+note hex of a name: src 0 fname 1 osnm 2 osfnm 3 oreq 4 oens
+fn oscird_hex src ulong base ulong n ulong to void
+for k ulong n
+x = add base k
+if eq src 0
+oscird_hb get fname x
+end
+if eq src 1
+oscird_hb get osnm x
+end
+if eq src 2
+oscird_hb get osfnm x
+end
+if eq src 3
+oscird_hb get oreq x
+end
+if eq src 4
+oscird_hb get oens x
+end
+end
+end
+
+fn oscird_si v long to void
+oscird_s 0
+oscird_i v
+end
+
+fn oscird_struct k ulong to void
+oscird_t 0
+oscird_s 0
+oscird_u k
+oscird_t 2
+oscird_hex 1 mul k 64 ulong get osnl k
+oscird_s 0
+oscird_u ulong get osnf k
+oscird_s 0
+oscird_u ulong get osnc k
+oscird_s 1
+nf = ulong get osnf k
+for g ulong nf
+x = add mul k 16 g
+oscird_t 1
+oscird_s 0
+oscird_u k
+oscird_s 0
+oscird_u g
+oscird_t 2
+oscird_hex 2 mul x 64 ulong get osfnl x
+oscird_s 0
+oscird_u ulong get osfs x
+oscird_s 0
+oscird_u ulong get osfal x
+oscird_s 0
+oscird_u ulong get osfof x
+oscird_s 1
+end
+end
+
+fn oscird_func f ulong to void
+oscird_t 3
+oscird_s 0
+oscird_u f
+oscird_s 0
+oscird_u ulong get fkind f
+oscird_s 0
+oscird_u ulong get fthr f
+oscird_s 0
+oscird_u ulong get fnpar f
+oscird_s 0
+oscird_u ulong get fnvr f
+oscird_s 0
+oscird_u ulong get fnin f
+oscird_s 0
+oscird_u ulong get fnbl f
+oscird_t 2
+oscird_hex 0 mul f 64 ulong get fnlen f
+oscird_s 0
+oscird_u ulong get frs f
+oscird_s 0
+oscird_u ulong get frref f
+oscird_s 0
+oscird_u ulong get frel f
+oscird_s 0
+oscird_u ulong get frlen f
+oscird_s 0
+oscird_u ulong get frsid f
+oscird_t 4
+oscird_hex 3 mul f 256 ulong get oreql f
+oscird_t 5
+oscird_hex 4 mul f 256 ulong get oensl f
+oscird_s 1
+nv = ulong get fnvr f
+for v ulong nv
+x = add mul f 480 v
+oscird_t 6
+oscird_s 0
+oscird_u f
+oscird_s 0
+oscird_u v
+oscird_s 0
+oscird_u ulong get vts x
+oscird_s 0
+oscird_u ulong get vtref x
+oscird_s 0
+oscird_u ulong get vtel x
+oscird_s 0
+oscird_u ulong get vtlen x
+oscird_s 0
+oscird_u ulong get vtsid x
+oscird_s 1
+end
+nb = ulong get fnbl f
+for b ulong nb
+x = add mul f 512 b
+oscird_t 7
+oscird_s 0
+oscird_u f
+oscird_s 0
+oscird_u b
+oscird_s 0
+oscird_u ulong get bfst x
+oscird_s 0
+oscird_u ulong get bcnt x
+oscird_s 1
+end
+end
+
+fn oscird_insn f ulong i ulong to void
+s = add mul f 4096 i
+oscird_t 8
+oscird_s 0
+oscird_u f
+oscird_s 0
+oscird_u i
+oscird_s 0
+oscird_u ulong get iop s
+oscird_s 0
+oscird_u ulong get isub s
+oscird_si long get idst s
+oscird_si long get ia s
+oscird_si long get ib s
+oscird_si long get ic s
+oscird_si long get ibt s
+oscird_si long get ibf s
+oscird_si long get icall s
+oscird_s 0
+oscird_u ulong get inarg s
+for k ulong 6
+oscird_si long get iarg add mul s 6 k
+end
+oscird_s 0
+oscird_u get iimm s
+oscird_s 0
+oscird_u ulong get iline s
+oscird_s 1
+end
+
+fn oscird_unit to void
+oscird_t 9
+oscird_u ulong get unfn 0
+oscird_t 10
+oscird_u ulong get unst 0
+oscird_s 1
+ns = ulong get unst 0
+for k ulong ns
+oscird_struct k
+end
+nf = ulong get unfn 0
+for f ulong nf
+oscird_func f
+ni = ulong get fnin f
+for i ulong ni
+oscird_insn f i
+end
+end
+end
+
+fn main to int
+r = oscir_read_file 1
+if ne r 0
+oscird_t 14
+oscird_s 1
+oscird_flush
+ret 2
+end
+put onoval 0 0
+rc = oscir_decode
+oscird_t 11
+oscird_i long rc
+oscird_s 1
+oscird_unit
+put onoval 0 1
+rc = oscir_decode
+oscird_t 12
+oscird_i long rc
+oscird_s 1
+rc = oscir_validate
+oscird_t 13
+oscird_i long rc
+oscird_s 0
+n = get oerrn 0
+for k ulong n
+oscird_c get oerr k
+end
+oscird_s 1
+oscird_flush
+ret 0
+end

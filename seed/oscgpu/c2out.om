@@ -1,0 +1,147 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2out.om: output staging and the verdict formatter (the vsnprintf of c2_check.c fail(), with a
+note 160-byte detail buffer: at most 159 bytes kept). Appenders write into cob up to cocap bytes.
+
+fn c2_oc x uchar to void
+n = get cobn 0
+if lt n get cocap 0
+put cob n x
+put cobn 0 add n 1
+end
+end
+
+fn c2_ot s view uchar * to void
+for i ulong len s
+c2_oc get s i
+end
+end
+
+fn c2_ou v ulong to void
+d = new uchar 24 0
+n = long 0
+x = v
+while true bound 30
+put d n uchar add 48 rem x 10
+n = add n 1
+x = div x 10
+if eq x 0
+break
+end
+end
+while gt n 0 bound 30
+n = sub n 1
+c2_oc get d n
+end
+end
+
+fn c2_od v long to void
+if lt v 0
+c2_oc 45
+c2_ou ulong neg v
+ret
+end
+c2_ou ulong v
+end
+
+note Name references: 0..15 struct k, 100 + k*16 + f field f of struct k, 1000 + fi function fi.
+fn c2_oname r long to void
+if lt r 100
+for i long get csnl r
+c2_oc get csn add mul r 64 i
+end
+ret
+end
+if lt r 1000
+q = sub r 100
+for i long get cfnl q
+c2_oc get cfn add mul q 64 i
+end
+ret
+end
+g = sub r 1000
+for i long get cgnl g
+c2_oc get cgn add mul g 64 i
+end
+end
+
+note Formats fmt with cv (in order for %d %u %zu), cvu (%llu) and cvs (%s) into cob from 0.
+fn c2_fmt fmt view uchar * to void
+k = long 0
+q = long 0
+i = ulong 0
+n = len fmt
+while lt i n bound 999999
+x = get fmt i
+if ne x 37
+c2_oc x
+i = add i 1
+continue
+end
+y = get fmt add i 1
+if eq y 100
+c2_od get cv k
+k = add k 1
+i = add i 2
+continue
+end
+if eq y 117
+c2_ou ulong get cv k
+k = add k 1
+i = add i 2
+continue
+end
+if eq y 122
+c2_ou ulong get cv k
+k = add k 1
+i = add i 3
+continue
+end
+if eq y 115
+c2_oname get cvs q
+q = add q 1
+i = add i 2
+continue
+end
+note %llu
+c2_ou get cvu 0
+i = add i 4
+end
+end
+
+note Record the first failure: rule, function, instruction, formatted detail. Returns -1.
+fn c2_fail rule view uchar * fi long ii long fmt view uchar * to long
+put cfail 0 1
+put cvf 0 fi
+put cvi 0 ii
+for i ulong len rule
+put crul i get rule i
+end
+put crln 0 long len rule
+put cobn 0 0
+put cocap 0 159
+c2_fmt fmt
+n = get cobn 0
+for i long n
+put cdet i get cob i
+end
+put cdtn 0 n
+ret -1
+end
+
+fn c2_a1 x long to void
+put cv 0 x
+end
+
+fn c2_a2 x long y long to void
+put cv 0 x
+put cv 1 y
+end
+
+fn c2_s1 x long to void
+put cvs 0 x
+end
+
+fn c2_s2 x long y long to void
+put cvs 0 x
+put cvs 1 y
+end
