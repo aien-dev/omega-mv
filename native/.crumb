@@ -3,8 +3,8 @@
     "generated": {
       "children": [
         {
-          "digest": "0c9b5a53c2f9cba44ab94f21a068748b308cb792ed4e1858b095437834ec10e5",
-          "last_commit": "f3ff18e3e",
+          "digest": "8f1f95943e54e84656739b85a8d3735c5521d16ca223879d842bfa730ce64f01",
+          "last_commit": "6f7aa08e9",
           "name": "autodiff664",
           "purpose": "Bounded native .om reverse-mode tape (rank 2, f32, 32 nodes) over M20 metadata-v1; E1-tile reduc"
         },
@@ -15,15 +15,15 @@
           "purpose": "ORIG-4 shadow advice for the matvec arm chooser (omega-mv#731, spec/shadow-advice-v0.md): shadow"
         }
       ],
-      "children_root": "sha256:34943e8581a0688d264d8de77752ae61e8031bc1ea3ac9fe45fd8091fa40acfb",
-      "compiled_at": "2026-10-31T11:09:55Z",
+      "children_root": "sha256:f57583e57132979359b5addb7aa64a7903bd6e61eeb713d99678930ae4dddcba",
+      "compiled_at": "2026-10-31T11:12:09Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:d3b3dd2705e61e95e0db24746aef4d2fd28a67ff270058e2b94385e9e64ad87f",
+      "digest": "sha256:4a907d89251abed20c9bba7e97aaf3d488eba3514b0cfd6d10428c276b3754a4",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 19,
-      "generated_at_commit": "a48add1b6386d74f84a6c8d87353368d957f8ddf",
-      "source_tree": "sha256:c5dd60e3a08565ac22b34dd510af0c8e4ade788a8100188c05c173451bcc660f"
+      "generated_at_commit": "6f7aa08e9c8c4b58ba57e0389456defd49ac81db",
+      "source_tree": "sha256:386b9b4761b8f456f038eac05f49db569a8bd4541b681bf58e1d13512f78f9fd"
     }
   },
   "name": "native",

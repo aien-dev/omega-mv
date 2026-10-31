@@ -93,13 +93,13 @@ bytes. Each child has a30-second deadline. Scratch and child outputs remain
 available for inspection; the shell creates a separate directory on each run.
 
 The required compiler is main's seeded `seed/out/omc`, executable
-`1578b35781f8f4eed7bc7fe27eeb333fadba08941d8d014f521684b5a5bcdbe1`, built from
-`seed/omc/omc.om` `b25079742d1157cd614fe92eeb2dd5e9a5e3b19e978007c7ecb7a6105ab6c65d`
-(both pinned in `compiler.sha256`; main d9461717, #946). The original qualification used the corrected
+`be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a`, built from
+`seed/omc/omc.om` `d4b4b89d8a58cc90d30d15a525b417e4b31e5bfe5288d21d665f1c7958a330f6`
+(both pinned in `compiler.sha256`; main 9920aab1, #994). The original qualification used the corrected
 mapping profile from Omega PR676 commit `1dffceaeb0dd26fb69ea64d367a49a9950c25a62`,
-executable 9f48f66a; the pin moved to main's compiler (62775d2a, then 1578b357) each time this
-branch merged main, and the gate was rerun with it. Both main compilers emit the same classifier
-bytes (b527a20c). The entry refuses with 3 for any other compiler. It
+executable 9f48f66a; the pin moved to main's compiler (62775d2a, then 1578b357, then be8c5130) each time
+this branch merged main, and the gate was rerun with it. Each of these main compilers emits the same
+classifier bytes (b527a20c). The entry refuses with 3 for any other compiler. It
 does not fetch code, accept an arbitrary environment compiler, silently select an
 older profile, or waive missing prerequisites.
 

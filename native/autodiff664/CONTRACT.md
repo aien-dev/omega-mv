@@ -70,7 +70,8 @@ A refusal records nothing (the node count is unchanged).
 ## Evidence (host)
 
 The pinned compiler is omega-mv `seed/out/omc`, SHA-256
-`62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`.
+`be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a` (main 9920aab1; the suite
+first passed with `62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`).
 
 ```sh
 OMC=<pinned omc> OUT=<scratch> sh tests/autodiff664/run-tape.sh
