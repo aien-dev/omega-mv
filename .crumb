@@ -83,7 +83,7 @@
           "purpose": "Directory research. Purpose not yet described by a human."
         },
         {
-          "digest": "bbf26066d64b9ec7eaed81cb9fe6fae7d3ef5c6e274b249b459ef8c5981abe6c",
+          "digest": "a242049489d69509b31f11fb24201b86a111cdc27b6282b8ecea4f5d4c6fd243",
           "last_commit": "777144743",
           "name": "spec",
           "purpose": "Directory spec. Purpose not yet described by a human."
@@ -95,7 +95,7 @@
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "5a074b4c8ce46f9eee02de85db0df29acd30158c073d87b60834fdd7fabf3338",
+          "digest": "180d5e8de7ffdee6088dc6faf140ba18ecba975106cb6ea0b847cc381489765c",
           "last_commit": "6328a0a46",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
@@ -107,15 +107,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:01fd5a819a0bb1bde5b17bb3463401d27d4e08893577434b0cc53b7bfe54baa3",
-      "compiled_at": "2026-10-31T12:08:27Z",
+      "children_root": "sha256:0b470541fb8149d8af22787925e4e61c7064b43a79113700d0419be97767b569",
+      "compiled_at": "2026-10-31T12:46:13Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:b64df036bcbe6947068baf78d6a8586d3f62f0bcd0a2c4b332b8b56d31764698",
+      "digest": "sha256:823c371f8bfd53651bfaa105d2ce40fe8459a414acc3c6a0e279e05739059bd9",
       "evidence_files": 15266,
       "evidence_root": "sha256:f2498de104f7892eab5be64b525a55b9a9bd1e986bfcc6661bf743867f6194d6",
       "files": 23582,
-      "generated_at_commit": "5357f2fac529d00ab8f57c39ef55146042195f24",
-      "source_tree": "sha256:914eaef611be58e7f900c5050a3c77403c65bfca1ab10ae7db2b4af7e8306387"
+      "generated_at_commit": "26b1e911f1571da77fb8f3158df0ca46d95ea815",
+      "source_tree": "sha256:78945872d787976d733c2fc6e7f3b9e2c38e46e303b8e62ef3bb4378cfc8cbc0"
     },
     "owner_lane": "",
     "provenance": {
