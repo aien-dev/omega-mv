@@ -391,7 +391,7 @@ def expanded_cases(files, record):
     for case in cases(files, record):
         plan = {} if case.operation in ("conductor", "bridge") else plan_case(ROOT, case.name.split(":", 1)[0], case.source)
         if plan:
-            for key in ("source", "stdin", "args", "expected_exit", "driver", "blocker"):
+            for key in ("source", "stdin", "args", "expected_exit", "driver", "blocker", "deadline"):
                 if key in plan and (case.operation == "differential" or key in ("driver", "blocker")):
                     setattr(case, key, plan[key])
             case.evidence.update(plan.get("evidence", {}))
@@ -403,7 +403,7 @@ def expanded_cases(files, record):
         if plan and case.operation == "differential":
             for variant in plan.get("variants", ()):
                 yield Case(case.name + ":" + variant["name"], case.source, variant["stdin"], tuple(variant["args"]),
-                           driver=case.driver, expected_exit=variant["expected_exit"],
+                           driver=case.driver, expected_exit=variant["expected_exit"], deadline=case.deadline,
                            evidence={**case.evidence, "stdin_bytes": len(variant["stdin"]),
                                      "stdin_sha256": digest(variant["stdin"]), "args": list(variant["args"]),
                                      "variant_of": case.name})
@@ -1938,6 +1938,14 @@ def main():
                 nofile = case.evidence.get("nofile", 256) if driver == "effect-scratch" else 256
                 arun = run([argv0, *args], case.stdin, native, child_timeout, cpu_seconds=cpu_seconds, nofile=nofile)
                 xrun = run([qemu, "-0", argv0, argv0, *args], case.stdin, emulated, child_timeout, cpu_seconds=cpu_seconds, nofile=nofile)
+                volatile = case.evidence.get("volatile_stdout_line") if driver == "effect-scratch" else None
+                if volatile:
+                    # Only whole lines PREFIX<digits> (wall-clock observations) are masked; the line count must match.
+                    pattern = re.compile(rb"(?m)^" + re.escape(volatile.encode()) + rb"[0-9]+$")
+                    counts = len(pattern.findall(arun[1])), len(pattern.findall(xrun[1]))
+                    case.evidence["volatile_stdout_lines_masked"] = list(counts)
+                    arun = (arun[0], pattern.sub(volatile.encode() + b"#", arun[1]), arun[2])
+                    xrun = (xrun[0], pattern.sub(volatile.encode() + b"#", xrun[1]), xrun[2])
                 diagnostics.update(default_run=result_details(arun), x86_run=result_details(xrun))
                 if "required_verdict" in case.evidence:
                     required = ("VERDICT " + case.evidence["required_verdict"]).encode()
