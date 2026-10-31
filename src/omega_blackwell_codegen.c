@@ -921,6 +921,8 @@ _Static_assert(BW_IR_FADD == 30 && BW_IR_FSUB == 31 && BW_IR_FMUL == 32 && BW_IR
                BW_IR_SHF_L_U32 == 52 && BW_IR_IMAD_HI_U32 == 53 && BW_IR_BSSY == 54 && BW_IR_BSYNC == 55 &&
                BW_IR_LDG_E_64 == 56 && BW_IR_LDG_E_128 == 57 && BW_IR_LDS128 == 58 && BW_IR_MUFU_LG2 == 59,
                "bw_enc_sm121.om opcode numbers 30-59");
+_Static_assert(BW_IR_SHFL_BFLY == 60 && BW_IR_F2FP_BF16_PACK == 61 && BW_IR_ATOMG_ADD_F32_STRONG_SYS == 62 &&
+               BW_IR_ATOMG_ADD_F32_STRONG_GPU == 63, "bw_enc_sm121.om opcode numbers 60-63");
 
 /* Encodes n instructions through the .om unit into code (BW_OM_CODE_LEN bytes). pad != 0 is program mode (NOP
  * padding to a multiple of 8, at least 32). Returns the bytes written; 0 = refused. */

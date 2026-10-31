@@ -126,8 +126,12 @@ typedef enum {
     /* Batched attention loads (2026-10-12). Words matched against nvcc 13.0.88 -arch=sm_121
      * (omega_blackwell_verify_codegen_fixtures_fragmm). imm = unsigned byte offset < 2^23; dst an aligned quad. */
     BW_IR_LDS128,       /* LDS.128 Rd..Rd+3, [Ra+imm] */
-    /* Training R5 (2026-10-15), additive: native entries for the two instructions the prefill kernels used to emit as
-     * placeholders patched after encoding. Words: omega_blackwell_verify_codegen_fixtures_bfly_f2fp. */
+    /* Gated DeltaNet softplus (2026-10-18, omega#542): sub-op 0x0c00 checked with nvdisasm 13.0 -b SM121, which decodes
+     * "MUFU.LG2 R2, R4" (EX2 0x0800, RCP 0x1000, RSQ 0x1400 decode the same way). log2(x), approximate. */
+    BW_IR_MUFU_LG2,     /* MUFU.LG2 Rd, Ra */
+    /* Training R5 (2026-10-15), additive (numbers 60..63 after MUFU_LG2, pinned for om/encoder/bw_enc_sm121.om): native
+     * entries for the two instructions the prefill kernels used to emit as placeholders patched after encoding.
+     * Words: omega_blackwell_verify_codegen_fixtures_bfly_f2fp. */
     BW_IR_SHFL_BFLY,    /* SHFL.BFLY PT, Rd, Ra, imm & 31, 0x1f: Rd = Ra of lane (lane ^ imm) */
     BW_IR_F2FP_BF16_PACK, /* F2FP.BF16.F32.PACK_AB Rd, Ra, Rb: Rd = bf16_rn(Ra) << 16 | bf16_rn(Rb) (fixed latency) */
     /* Training R5 part 2 (2026-10-15), additive: f32 global atomic add, the float twins of BW_IR_ATOMG_ADD_STRONG_SYS.
@@ -142,9 +146,6 @@ typedef enum {
      * chip probe: tests/gpu_atomf32_probe_test.c. */
     BW_IR_ATOMG_ADD_F32_STRONG_SYS, /* ATOMG.E.ADD.F32.FTZ.RN.STRONG.SYS PT, Rd|RZ, desc[UR][Ra.64], Rb: Rd = old, mem += Rb */
     BW_IR_ATOMG_ADD_F32_STRONG_GPU, /* ATOMG.E.ADD.F32.FTZ.RN.STRONG.GPU PT, Rd|RZ, desc[UR][Ra.64], Rb: Rd = old, mem += Rb */
-    /* Gated DeltaNet softplus (2026-10-18, omega#542): sub-op 0x0c00 checked with nvdisasm 13.0 -b SM121, which decodes
-     * "MUFU.LG2 R2, R4" (EX2 0x0800, RCP 0x1000, RSQ 0x1400 decode the same way). log2(x), approximate. */
-    BW_IR_MUFU_LG2      /* MUFU.LG2 Rd, Ra */
 } BlackwellIROpcode;
 
 /* Barrier (reconvergence) registers: the sm_121 BSSY/BSYNC words carry a 4-bit barrier id
