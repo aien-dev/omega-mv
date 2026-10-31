@@ -50,7 +50,7 @@ The live status is owned by [aien-architecture-mv](https://github.com/aien-dev/a
 
 ## How this fits with the other repositories
 
-Ownership rule ([ARCH-0042](https://github.com/aien-dev/aien-architecture-mv/pull/342), PROPOSED): Omega owns computation, CUDA++ owns GPU execution, Omega Bridge owns compatibility.
+Ownership rule ([ARCH-0042](https://github.com/aien-dev/aien-architecture-mv/blob/main/docs/adr/0042-omega-cudapp-bridge-ownership.md), Accepted by Drake 2026-10-30, merged as [aien-architecture-mv#342](https://github.com/aien-dev/aien-architecture-mv/pull/342)): Omega owns computation, CUDA++ owns GPU execution, Omega Bridge owns compatibility.
 
 - **This repository** owns the language, its semantics and IR, the seeded compiler (`seed/out/omc`) and the compiler pin other repositories consume, and the declared contract of what a kernel computes.
 - **[CUDA++](https://github.com/aien-dev/CUDApp)** owns GPU execution: the sm_121 encoder and GPU code generators, the cubin writer, the disassembler, the driver client, submission and the GPU runtime.

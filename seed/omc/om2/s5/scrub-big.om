@@ -1,0 +1,6 @@
+note S5 scrub: n = 1048592 is above 1048576: trap 3 (exit 103).
+om2
+fn main to int
+k = scrub 1048592
+ret int k
+end

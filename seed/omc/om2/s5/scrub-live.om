@@ -1,0 +1,61 @@
+note S5 scrub: live values survive. Parameters, register locals, a local array above SP, the held left operand
+note of an expression and an earlier call argument keep their values across scrub. Exit 0, else the check.
+om2
+fn two a ulong b ulong c ulong to ulong
+ret add mul a 100 add mul b 10 c
+end
+fn keep a ulong b ulong c ulong to ulong
+arr = new ulong 4 7
+put arr 3 a
+x = add a b
+y = add x ulong scrub 4096
+if ne y x
+ret 1
+end
+if ne a 11
+ret 2
+end
+if ne b 22
+ret 3
+end
+if ne c 33
+ret 4
+end
+if ne get arr 3 11
+ret 5
+end
+if ne get arr 0 7
+ret 6
+end
+z = add mul a 1000 add b ulong scrub 16
+if ne z 11022
+ret 7
+end
+w = two 4 ulong scrub 1048576 6
+if ne w 406
+ret 8
+end
+if ne x 33
+ret 9
+end
+ret 0
+end
+fn main to int
+p = ulong 5
+q = long 9
+r = keep 11 22 33
+if ne r 0
+ret int r
+end
+k = scrub 64
+if ne p 5
+ret 20
+end
+if ne q 9
+ret 21
+end
+if ne k 0
+ret 22
+end
+ret 0
+end

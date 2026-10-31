@@ -127,6 +127,40 @@ Keyword pack verification used WolframLanguageEvaluator:
 returned `{{"peercred",7234314147887146352},{"pollfds",32480013390212976},{"sendmsg",29118836274783603}}`.
 
 
+## Connected peer metadata
+
+`peername fd A off n` (keyword 224) queries the peer of an existing process
+descriptor. Its types, writable slice validation and negative errno behavior
+match `sockname`; success returns the full native Linux sockaddr length even
+when the supplied slice truncates it. Empty slices are permitted at array end.
+Neither word acquires or connects a socket. `accept` keeps its existing API.
+Keyword encoding was checked with the mounted WolframLanguageEvaluator:
+`FromDigits[Reverse[ToCharacterCode["peername"]],256] -> 7308604897285727600`.
+
+The implementation shares `hbuffer`'s private 32-bit socklen with `sockname`;
+checked byte-array capacities fit that representation. Linux source authority:
+[v6.12 asm-generic syscall table](https://github.com/torvalds/linux/blob/v6.12/include/uapi/asm-generic/unistd.h)
+assigns getpeername 205 and getsockname 204; under `target x86linux` the same
+word lowers to x86-64 getpeername 52 (getsockname 51) from
+[v6.17 `syscall_64.tbl`](https://github.com/torvalds/linux/blob/v6.17/arch/x86/entry/syscalls/syscall_64.tbl);
+[`move_addr_to_user`](https://github.com/torvalds/linux/blob/v6.12/net/socket.c)
+copies only the bounded prefix, permits zero capacity, and returns full length.
+The [getpeername manual](https://man7.org/linux/man-pages/man2/getpeername.2.html)
+defines EBADF, ENOTSOCK and ENOTCONN. Omega preserves raw negative syscall
+errno, rather than libc's -1/errno convention.
+
+`tests/peername.om` compares an accepted TCP peer with the independently queried
+client endpoint on loopback, checks a distinct local endpoint, offset sentinels,
+short/empty slices, closed descriptors, pipes and unconnected sockets.
+The host gate also requires bounds traps; negative.sh covers typing, readonly
+arrays and function mode. net-mutant.py replaces getpeername with getsockname
+and requires the real fixture to reject that compiler.
+
+Transport addresses are not user authentication or an original client identity
+behind a proxy. Consumers must validate length and family, retain descriptor
+lifetime control, and preserve their existing trusted-proxy boundary. This
+compiler change neither activates gateway policy nor trusts forwarding headers.
+
 ## Source authority and limits
 
 Instruction forms come from the existing hand-audited instruction table in

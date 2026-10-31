@@ -1317,6 +1317,9 @@ end
 if eq w 8674333540260081763
 ret 200
 end
+if eq w 7308604897285727600
+ret 224
+end
 if eq get om2 0 0
 ret 0
 end
@@ -1324,7 +1327,8 @@ ret kw2 w
 end
 
 note ======== OM-2 words (spec/omegese-om2.md): reserved only in an OM-2 unit. rotr 59, rotl 60 are
-note binary operators; the rest are statement and declaration words of later sections. ========
+note binary operators; dit 225 and scrub 226 are program-mode value words (OMEGESE 9.13.1); the rest are
+note statement and declaration words of later sections. ========
 fn kw2 w ulong to ulong
 if eq w 1920233330
 ret 59
@@ -1379,6 +1383,12 @@ ret 195
 end
 if eq w 7565423
 ret 196
+end
+if eq w 7629156
+ret 225
+end
+if eq w 422877225843
+ret 226
 end
 ret 0
 end
@@ -2951,17 +2961,21 @@ put out add at 2 uchar and shr w 16 255
 put out add at 3 uchar and shr w 24 255
 end
 
-note disp19: the checked word distance for a B.cond / CBZ / CBNZ: the target must be word aligned and
-note at most 2^18 - 1 words forward or 2^18 words back, else error 24 before any artifact is accepted
-fn disp19 at ulong target ulong to ulong
+note bdisp: the checked word distance from a branch at `at` to `target` for its signed w-bit word field:
+note w 19 for B.cond / CBZ / CBNZ (C6.2.34, C6.2.78, C6.2.77), w 26 for B (C6.2.35) and BL. The
+note target must be word aligned and at most 2^(w-1) - 1 words forward or 2^(w-1) words back (w 19: 1048572
+note bytes forward, 1048576 back; w 26: 134217724 forward, 134217728 back), else error 24 before any
+note artifact is accepted. Returns the distance masked to w bits.
+fn bdisp at ulong target ulong w ulong to ulong
 diff = sub target at
 if ne and diff 3 0
 fail 24
 end
-if and gt diff 1048572 lt diff 18446744073708503040
+span = shl ulong 1 add w 1
+if and gt diff sub span 4 lt diff sub ulong 0 span
 fail 24
 end
-ret and shr diff 2 524287
+ret and shr diff 2 sub shl ulong 1 w 1
 end
 
 note patch19: the word distance from a B.cond / CBZ / CBNZ at `at` to `target`, into bits 5..23
@@ -2973,16 +2987,16 @@ put tgoc 0 target
 end
 ret
 end
-d = disp19 at target
+d = bdisp at target 19
 wrword at or rdword at shl d 5
 if eq target get oc 0
 put tgoc 0 target
 end
 end
 
-note patch26: the word distance from a B at `at` to `target`, into bits 0..25. No range check is needed:
-note the output pool is 8 MiB = 2^23 bytes, below the 2^25-word reach, and every position in it is a
-note word boundary, so the displacement is aligned and inside the signed 26-bit field by construction.
+note patch26: the word distance from a B at `at` to `target`, into bits 0..25, checked by bdisp. The AArch64
+note output stops at 8 MiB = 2^23 bytes (emit, error 14), inside the 2^27-byte reach, so no legal program
+note reaches error 24 here; the check keeps a wrong B from ever being written if that ceiling changes.
 fn patch26 at ulong target ulong to void
 if ne get xtarget 0 0
 xpatch at target
@@ -2991,7 +3005,7 @@ put tgoc 0 target
 end
 ret
 end
-d = and shr sub target at 2 67108863
+d = bdisp at target 26
 wrword at or rdword at d
 if eq target get oc 0
 put tgoc 0 target
@@ -3005,7 +3019,7 @@ p = xbranch 14
 xpatch p addr
 ret
 end
-emit or 335544320 and shr sub addr get oc 0 2 67108863
+emit or 335544320 bdisp get oc 0 addr 26
 end
 
 note matconst: put a 64-bit value in register r: MOVZ (C6.2.285) or, for a value with the top bit set,
@@ -4732,7 +4746,7 @@ if ne get xtarget 0 0
 emitb 232
 xword 0
 else
-emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
+emit or 2483027968 bdisp get oc 0 get fn_addr sub f 1 26
 end
 end
 
@@ -5714,7 +5728,7 @@ end
 fn hbuffer c ulong dst ulong x ulong to void
 harg x 4 8
 wr = ulong 0
-if or or or or eq c 113 eq c 116 eq c 117 eq c 118 eq c 131
+if or or or or or eq c 113 eq c 116 eq c 117 eq c 118 eq c 131 eq c 224
 wr = ulong 1
 end
 e = harray x wr
@@ -5764,13 +5778,17 @@ e3 2852126720 3 3 16
 end
 end
 
-if eq c 131
-note getsockname uses a private 32-bit socklen. Success returns the full address length.
+if or eq c 131 eq c 224
+note Socket-name queries use a private 32-bit socklen and return the full length.
 spsub 16
 stkchk
 emit 3103785954
 emit 2432697314
+if eq c 224
+hsys 205
+else
 hsys 204
+end
 emit 4043309087
 failed = get oc 0
 emit 1409286155
@@ -7075,6 +7093,10 @@ if eq c 222
 hsendmsg dst x
 ret
 end
+if eq c 224
+hbuffer c dst x
+ret
+end
 if eq c 176
 mtinit
 mnew c dst x
@@ -7505,7 +7527,92 @@ end
 if or eq c 77 eq c 193
 fail 9
 end
+if or eq c 225 eq c 226
+if or eq get progmode 0 0 ne get irmode 0 0
+fail 9
+end
+x = mul get depth 0 32
+sl = get nslot 0
+note dit and scrub are emitted inline here, not in helper functions: om4 holds 512 functions and omc.om
+note is at that limit (seed/omc/size-history.tsv).
+if eq c 225
+note dit: OM-2 `dit v` (program mode): v is int, 0 or 1, else trap 3. Sets PSTATE.DIT (Arm ARM
+note C5.2.4: DIT is bit 24 of the special-purpose register; MRS/MSR <Xt>, DIT have op0 3, op1 3, CRn 4,
+note CRm 2, op2 5) and gives the previous bit as a long 0 or 1. CMP Xv, #1 = SUBS XZR (C6.2.464); B.HI
+note trap 3; LSL X16, Xv, #24 = UBFM X16, Xv, #40, #39 (C6.2.487), taken before the destination is
+note written because the destination may be v's own register; MRS Xd, DIT (C6.2.287); MSR DIT, X16
+note (C6.2.289); UBFX Xd, Xd, #24, #1 = UBFM Xd, Xd, #24, #24. Writes to PSTATE are in program order
+note without further synchronization (C5.1), so the next instruction already runs under the new bit.
+harg x 0 8
+r = matreg get fr add x 8 get fr add x 9 8
+emit or 4043310111 shl r 5
+trapc 8 3
+emit or 3546848272 shl r 5
+put nslot 0 sl
+d = destreg dst
+emit or 3577430688 d
+emit 3575333552
+emit or or 3545784320 shl d 5 d
+vdone 1 d 9
+ret
+end
+note scrub: OM-2 `scrub n` (program mode): n is ulong, a multiple of 16 and at most 1048576, else trap 3.
+note TST Xn, #15 = ANDS XZR (C6.2.16, N 1 immr 0 imms 3); B.NE trap 3; X16 = 1048576; CMP Xn, X16 =
+note SUBS XZR (C6.2.465); B.HI trap 3. X16 = SP - n: SUB X16, SP, Xn, UXTX (C6.2.456); CMP X16, X28
+note (C6.2.465); B.LO trap 6, before any store. Loop: CMP SP, X16 = SUBS XZR, SP, X16, UXTX (C6.2.463);
+note B.LS out; STP XZR, XZR, [X16], #16 (C6.2.414, post-index); B back (C6.2.35). Then MOVZ Xr, #0
+note (C6.2.319) for every pool register at index npar + nslot or above (no live value: parameters,
+note locals and the held parts of the expression sit below), X16, and X7, X18-X26, X29, which program
+note mode never names; then MOVI Vd.2D, #0 (C7.2.247) for V0-V31 (floats live in X registers and pass
+note through V0/V1 for one instruction only). Never touched: SP, X27 (the Linux initial stack under
+note args), X28 (the stack floor), X30 (the return address), the live pool registers, NZCV, FPCR,
+note FPSR, and the SVE P registers and FFR. Gives long 0.
+harg x 0 5
+r = matreg get fr add x 8 get fr add x 9 5
+emit or 4064283679 shl r 5
+trapc 1 3
+matconst 16 1048576
+emit or 3943694367 shl r 5
+trapc 8 3
+emit or 3407897584 shl r 16
+emit 3944481311
+trapc 3 6
+top = get oc 0
+emit 3945817087
+at = get oc 0
+emit 1409286153
+emit 2827058719
+back top
+patch19 at get oc 0
+i = add get npar 0 sl
+while lt i 16
+emit or 3531603968 poolc i
+i = add i 1
+end
+emit 3531603984
+emit 3531603975
+i = ulong 18
+while le i 26
+emit or 3531603968 i
+i = add i 1
+end
+emit 3531603997
+i = ulong 0
+while lt i 32
+emit or 1862329344 i
+i = add i 1
+end
+put nslot 0 sl
+d = destreg dst
+matconst d 0
+vdone 1 d 9
+ret
+end
 if or or and ge c 100 le c 177 and ge c 197 le c 198 and ge c 220 le c 222
+hostval c dst
+ret
+end
+if eq c 224
 hostval c dst
 ret
 end
@@ -7762,7 +7869,7 @@ p = xbranch 3
 xpatch p at
 ret
 end
-d = disp19 get oc 0 at
+d = bdisp get oc 0 at 19
 emit or 1409286147 shl d 5
 end
 
@@ -9660,7 +9767,7 @@ end
 if ne get fn_np sub f 1 0
 fail 9
 end
-wrword 176 or 335544320 and shr sub get oc 0 176 2 67108863
+wrword 176 or 335544320 bdisp 176 get oc 0 26
 if ne get hostargs 0 0
 note Preserve Linux's initial argument stack privately before installing Omega's bounded stack.
 emit 2432697339
@@ -9668,7 +9775,7 @@ end
 emit 3533832220
 emit 3533836304
 emit 2432696863
-emit or 2483027968 and shr sub get fn_addr sub f 1 get oc 0 2 67108863
+emit or 2483027968 bdisp get oc 0 get fn_addr sub f 1 26
 if eq get fn_ret sub f 1 12
 emit 3531603968
 end
@@ -9695,7 +9802,7 @@ f = sub get callto i 1
 if ne get xtarget 0 0
 wrword add s 1 sub get fn_addr f add s 5
 else
-wrword s or 2483027968 and shr sub get fn_addr f s 2 67108863
+wrword s or 2483027968 bdisp s get fn_addr f 26
 end
 i = add i 1
 end
@@ -9835,7 +9942,7 @@ if eq get nf 0 1
 writeout 180
 end
 a = get fn_addr sub get lastfn 0 1
-wrword 176 or 335544320 and shr sub a 176 2 67108863
+wrword 176 or 335544320 bdisp 176 a 26
 writeout 176
 end
 
@@ -9857,7 +9964,7 @@ at = ulong 176
 f = ulong 0
 while lt f get nf 0
 if ne get fn_exp f 0
-wrword at or 335544320 and shr sub get fn_addr f at 2 67108863
+wrword at or 335544320 bdisp at get fn_addr f 26
 at = add at 4
 end
 f = add f 1
@@ -13979,6 +14086,9 @@ wr = ulong 0
 if or or or or or eq c 113 eq c 116 eq c 117 eq c 118 eq c 131 eq c 161
 wr = ulong 1
 end
+if eq c 224
+wr = ulong 1
+end
 e = harray x wr
 if or or eq c 116 eq c 118 eq c 119
 harg x 2 8
@@ -14026,11 +14136,16 @@ ximm 0 16384
 xrr 9 10 0
 end
 end
-if eq c 131
+if or eq c 131 eq c 224
+note peername shares the private 32-bit socklen; x86-64 getsockname 51, getpeername 52.
 xsp 1 16
 xhput 2 4 0 4
 xrr 137 2 4
+if eq c 224
+xhcall 52
+else
 xhcall 51
+end
 xrr 133 0 0
 bad = xbranch 11
 xhraw 0 4 0 4
@@ -15070,7 +15185,7 @@ if or or eq c 109 eq c 130 eq c 120
 xhtime c dst x
 ret
 end
-if or or and ge c 113 le c 119 eq c 131 or eq c 161 eq c 162
+if or or or and ge c 113 le c 119 eq c 131 or eq c 161 eq c 162 eq c 224
 xhbuffer c dst x
 ret
 end

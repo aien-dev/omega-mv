@@ -313,7 +313,7 @@ listed is not supported, regardless of what compiles.
 
 Current: birth fixpoint, om4 as referee, `seed/check/audit2.sh` instruction referee, C referees for
 gate-ir, gate17 differential fuzz against the pinned compiler. Open: #650 diverse double compilation,
-#669 branch displacement (long backward reachability not yet established), #725 retiring handwritten
+#669 branch displacement (imm19 and imm26 both checked by bdisp; long backward while/continue refused first by the forward bound-trap limit), #725 retiring handwritten
 seed hex, #726 removing the legacy C compiler only after consumer cutover (drafts #761, #762, #763,
 #765, #751 port parts of it).
 
