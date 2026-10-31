@@ -1,0 +1,294 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten extended-S1 family retarget R(U, M) (translation-compose-v2 section 2). No host compute.
+note Build prepends the unchanged pinned vendor sha256.om and the #621 v2 codec core-v2.om; its `decode`
+note is the full source-aware v1/v2 validation. One envelope per process: the codec is not reentrant.
+note Members m 0..5 = c rust python cpp zig go; columns: OMSA version, language, profile, arithmetic
+note obligations (compose-v2 section 1).
+note Refusals: 64 bad argv; input over 8192 bytes 67 (source-aware-v2 decode order step 1); any nonzero
+note decoder status 65..78 passes through; a decoded unit outside the family (runtime/ABI, member row,
+note op not 1/2/3/4/9, type/attribute/effects/alias/obligations, input slots not a permutation of
+note 0..n-1 as in translation-v1 section 2) 68. Output only after acceptance; R is a semantic-only
+note envelope (sidecar length 0) with the parent-semantics hash, operands and immediates unchanged.
+global Rone uchar 1
+global Rarg uchar 16
+global Rout uchar 1400
+global Rlen ulong 1
+text Rnames "c rust python cpp zig go"
+text Rver "111222"
+text Rlang "123567"
+text Rprof "124789"
+text Robl "115111"
+text R64 "RETARGET_BAD_COMMAND\n"
+text R65 "RETARGET_MALFORMED\n"
+text R66 "RETARGET_UNKNOWN_VERSION\n"
+text R67 "RETARGET_LIMIT\n"
+text R68 "RETARGET_PROFILE_MISMATCH\n"
+text R69 "RETARGET_UNKNOWN_OPERATION\n"
+text R70 "RETARGET_TYPE_MISMATCH\n"
+text R71 "RETARGET_EFFECT_ALIAS_MISMATCH\n"
+text R72 "RETARGET_OBLIGATION_MISMATCH\n"
+text R73 "RETARGET_PROVENANCE_MISSING\n"
+text R74 "RETARGET_PROVENANCE_MISMATCH\n"
+text R75 "RETARGET_SOURCE_SPAN\n"
+text R76 "RETARGET_SOURCE_ENCODING\n"
+text R77 "RETARGET_IO\n"
+text R78 "RETARGET_CONTRACT_MISMATCH\n"
+
+fn rdie code ulong to void
+if eq code 64
+w = write 2 R64 0 len R64
+end
+if eq code 65
+w = write 2 R65 0 len R65
+end
+if eq code 66
+w = write 2 R66 0 len R66
+end
+if eq code 67
+w = write 2 R67 0 len R67
+end
+if eq code 68
+w = write 2 R68 0 len R68
+end
+if eq code 69
+w = write 2 R69 0 len R69
+end
+if eq code 70
+w = write 2 R70 0 len R70
+end
+if eq code 71
+w = write 2 R71 0 len R71
+end
+if eq code 72
+w = write 2 R72 0 len R72
+end
+if eq code 73
+w = write 2 R73 0 len R73
+end
+if eq code 74
+w = write 2 R74 0 len R74
+end
+if eq code 75
+w = write 2 R75 0 len R75
+end
+if eq code 76
+w = write 2 R76 0 len R76
+end
+if eq code 77
+w = write 2 R77 0 len R77
+end
+if eq code 78
+w = write 2 R78 0 len R78
+end
+exit int code
+end
+
+fn mcol t ulong m ulong to ulong
+if eq t 0
+ret sub ulong get Rver m 48
+end
+if eq t 1
+ret sub ulong get Rlang m 48
+end
+if eq t 2
+ret sub ulong get Rprof m 48
+end
+ret sub ulong get Robl m 48
+end
+
+fn rnamechar p ulong to bool
+if ge p len Rnames
+ret false
+end
+ret ne get Rnames p 32
+end
+
+fn rsame b ulong e ulong n ulong to bool
+if ne sub e b n
+ret false
+end
+for i ulong n
+if ne get Rnames add b i get Rarg i
+ret false
+end
+end
+ret true
+end
+
+fn rtarget to ulong
+if ne argcnt 2
+rdie 64
+end
+r = argread 1 Rarg 0 16
+if lt r 1
+rdie 64
+end
+n = ulong r
+p = ulong 0
+m = ulong 0
+while lt p len Rnames
+b = p
+while rnamechar p
+p = add p 1
+end
+if rsame b p n
+ret m
+end
+m = add m 1
+p = add p 1
+end
+rdie 64
+ret 0
+end
+
+fn rmember to ulong
+if or ne get M 2 0 ne get M 3 1
+rdie 68
+end
+v = ulong get Ib 17
+for m ulong 6
+if and eq v mcol 0 m eq get M 0 mcol 1 m
+if eq get M 1 mcol 2 m
+ret m
+end
+end
+end
+rdie 68
+ret 0
+end
+
+fn rop i ulong ob ulong to bool
+code = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret false
+end
+if ne get Oal i 0
+ret false
+end
+if eq code 9
+ret and eq get Oat i 0 eq get Oob i 1
+end
+if eq code 1
+ret and eq get Oat i 1 eq get Oob i 0
+end
+if or lt code 2 gt code 4
+ret false
+end
+ret and eq get Oat i 1 eq get Oob i ob
+end
+
+fn rfamily m ulong to void
+ob = mcol 3 m
+n = ulong 0
+for i ulong get M 4
+if not rop i ob
+rdie 68
+end
+if eq get Oc i 9
+n = add n 1
+end
+end
+for i ulong get M 4
+if eq get Oc i 9
+if ge get Oi i n
+rdie 68
+end
+end
+end
+end
+
+fn rb v ulong to void
+p = get Rlen 0
+put Rout p uchar and v 255
+put Rlen 0 add p 1
+end
+
+fn rle v ulong n ulong to void
+for i ulong n
+rb and shr v mul i 8 255
+end
+end
+
+fn remit t ulong to void
+lang = mcol 1 t
+ob = mcol 3 t
+count = get M 4
+put Rlen 0 0
+rle 1112755535 4
+rb 1
+rle add 44 mul 20 count 4
+rle 0 4
+rle 1095978319 4
+rb mcol 0 t
+rb lang
+rb mcol 2 t
+rb 1
+rb 0
+rb 1
+rle count 2
+for i ulong 32
+rb ulong get Ib add 25 i
+end
+for i ulong count
+code = get Oc i
+rb lang
+rb 1
+rb code
+rb 1
+rb get Oat i
+rb 0
+rb 0
+if and ge code 2 le code 4
+rb ob
+else
+rb get Oob i
+end
+rle get Oa i 2
+rle get Ob i 2
+rle get Oi i 8
+end
+end
+
+fn main to int
+t = rtarget
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub 8192 n
+if lt r 0
+rdie 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+if eq n 8192
+r = read 0 Rone 0 1
+if lt r 0
+rdie 77
+end
+if gt r 0
+rdie 67
+end
+end
+constants
+code = decode n
+if ne code 0
+rdie code
+end
+m = rmember
+rfamily m
+remit t
+sent = ulong 0
+k = get Rlen 0
+while lt sent k
+r = write 1 Rout sent sub k sent
+if le r 0
+rdie 77
+end
+sent = add sent ulong r
+end
+ret 0
+end

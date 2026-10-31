@@ -1,0 +1,19 @@
+# Packed-list bound mutants (#671). Each block removes one length check from the execprog decoder
+# (hpack in seed/omc/omc.om) by an exact-once substitution, builds that compiler with the pinned omc,
+# and reruns the single packets.cases row that only the removed check refuses. The expectation stays
+# the correct one (trap 3, exit 103), so every row must FAIL: the mutant executes /bin/true (exit 0).
+# seed/host/check.sh requires exactly these FAIL verdicts and OM2GATE FAIL cases=3 pass=0 fail=3.
+# Packet length above 4096 bytes: cmp x5, x16 (4096); b.hi trap.
+subst seed/qualification/security673/packets/mut-size-from.txt seed/qualification/security673/packets/mut-size-to.txt
+cc seed/omc/omc.om
+mutant-size run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p10.bin - - 103
+cc pinned
+# Record count above 64: cmp x6, x16 (64); b.hi trap.
+subst seed/qualification/security673/packets/mut-count-from.txt seed/qualification/security673/packets/mut-count-to.txt
+cc seed/omc/omc.om
+mutant-count run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p09.bin - - 103
+cc pinned
+# Exact consumption, no bytes after the last record: cmp x5, #0; b.ne trap.
+subst seed/qualification/security673/packets/mut-exact-from.txt seed/qualification/security673/packets/mut-exact-to.txt
+cc seed/omc/omc.om
+mutant-exact run seed/qualification/security673/pkt-consumer.om file:seed/qualification/security673/packets/p04.bin - - 103

@@ -56,7 +56,8 @@ C no_san X509_ERR_NO_SAN 1792972800 lNoSAN pki/storeR.pem pki/lNoSAN.der pki/int
 C unknown_issuer_no_intermediate X509_ERR_UNKNOWN_ISSUER 1792972800 www.example.test pki/storeR.pem pki/lR.der
 C unknown_issuer_wrong_store X509_ERR_UNKNOWN_ISSUER 1792972800 www.example.test pki/storeX.pem pki/lR.der pki/intR.der
 C ec_wrong_store X509_ERR_UNKNOWN_ISSUER 1792972800 www.example.test pki/storeR.pem pki/lE256.der pki/intE.der
-C self_signed_leaf X509_ERR_UNKNOWN_ISSUER 1792972800 www.example.test pki/storeR.pem pki/lSelf.der
+# lSelf (CA:FALSE) carries keyCertSign, refused first since audit/tls-suites (RFC 5280 4.2.1.9).
+C self_signed_leaf X509_ERR_KEY_USAGE 1792972800 www.example.test pki/storeR.pem pki/lSelf.der
 C bad_signature X509_ERR_BAD_SIGNATURE 1792972800 www.example.test pki/storeR.pem pki/lRbadsig.der pki/intR.der
 C intermediate_not_ca X509_ERR_NOT_CA 1792972800 www.example.test pki/storeR.pem pki/lViaNoCA.der pki/intNoCA.der
 C intermediate_ku_no_certsign X509_ERR_KEY_USAGE 1792972800 www.example.test pki/storeR.pem pki/lViaNoKU.der pki/intNoKU.der
@@ -142,6 +143,35 @@ C rsa_e_2_32_plus_1_intermediate X509_ERR_WEAK_KEY 1792972800 www.example.test c
 V cv_rsa_6144 X509_ERR_WEAK_KEY 2052 crafted/lX6144.der pki/cv.msg crafted/cv_x6144.sig
 V cv_rsa_e_2_32_plus_1 X509_ERR_WEAK_KEY 2052 crafted/lXe32.der pki/cv.msg crafted/cv_x6144.sig
 #
+# --- omega-mv #833 suite audit (x509-limbo cases, MODEL-REVIEWED findings L2 I5; gen_crafted.py)
+C san_bare_star X509_ERR_NAME_MISMATCH 1792972800 www.example.test crafted/storeX.pem crafted/lXsanStar.der
+P dup_known_ext X509_ERR_MALFORMED crafted/lXdupSan.der
+P dup_unknown_ext X509_ERR_MALFORMED crafted/lXdupUnk.der
+P unknown_critical_ext X509_ERR_CRITICAL_EXT crafted/lXunkCrit.der
+C serial_zero X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXser0.der
+C serial_negative X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXserNeg.der
+C serial_21_octets X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXser21.der
+C serial_20_octets X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXser20.der
+C generalizedtime_before_2050 X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXgenTime.der
+P ku_4_octets X509_ERR_MALFORMED crafted/lXku4.der
+P ku_second_octet_bits X509_ERR_MALFORMED crafted/lXku3bad.der
+P ku_decipher_only X509_OK crafted/lXku3ok.der
+C ku_decipher_only_chain X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXku3ok.der
+C ku_keycertsign_leaf X509_ERR_KEY_USAGE 1792972800 www.example.test crafted/storeX.pem crafted/lXkuCertSign.der
+C leaf_no_aki X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXnoAki.der
+C empty_subject_noncritical_san X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lXemptySubj.der
+C empty_subject_critical_san X509_OK 1792972800 www.example.test crafted/storeX.pem crafted/lXemptySubjCrit.der
+C rsa_2052_bit_leaf X509_ERR_WEAK_KEY 1792972800 www.example.test crafted/storeX.pem crafted/lXrsa2052.der
+C intermediate_no_ski X509_ERR_MALFORMED 1792972800 www.example.test crafted/storeX.pem crafted/lViaXnoSki.der crafted/intXnoSki.der
+C anchor_expired X509_ERR_EXPIRED 1792972800 www.example.test crafted/rootXexp.pem crafted/lViarootXexp.der
+C anchor_no_basic_constraints X509_ERR_NOT_CA 1792972800 www.example.test crafted/rootXnoBc.pem crafted/lViarootXnoBc.der
+# Mozilla distrust (M1; distrust/ = roots copied from the Debian ca-certificates 20260601 bundle)
+D izenpe_after_cutoff X509_ERR_UNKNOWN_ISSUER distrust/izenpe.der 1776297600
+D izenpe_at_cutoff X509_OK distrust/izenpe.der 1776297599
+D entrust_2006_removed X509_ERR_UNKNOWN_ISSUER distrust/entrust2006.der 1
+D atos_2011_not_server X509_ERR_UNKNOWN_ISSUER distrust/atos2011.der 1792972800
+D isrg_x1_trusted X509_OK distrust/isrgx1.der 1792972800
+#
 # --- name matching (chain_match: 1 match, 0 no match)
 M exact_case 1 example.test EXAMPLE.test
 M wild_one_label 1 *.example.test a.example.test
@@ -209,7 +239,8 @@ E name_ok X509_OK 0
 E name_expired X509_ERR_EXPIRED 2
 E name_scheme X509_ERR_SCHEME 19
 E name_constraints X509_ERR_NAME_CONSTRAINTS 20
-E name_past_end - 21
+E name_entry_ext X509_ERR_ENTRY_EXT 21
+E name_past_end - 22
 E name_far - 99
 #
 # --- fuzz: deterministic mutations of a valid certificate_list; every run must return a code

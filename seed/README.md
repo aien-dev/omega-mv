@@ -16,6 +16,11 @@ To rebuild omc from the 408-byte seed on your own AArch64 Linux machine and chec
 published hashes without touching tracked files, run `sh seed/challenge/run.sh`
 (see [the seed-chain bootstrap challenge](challenge/CHALLENGE.md)).
 
+At commit `e5b32567` (2026-10-27) the compiler source `omc/omc.om` is 12,040 lines and 208,168 bytes
+(sha256 `7703da00055fc0c7a91fcae43071df76a3f277dbe867cb284a3bdff3bedb7e1b`), and `out/omc` is
+325,524 bytes. The line, function and byte counts given in each rung section below were recorded when
+that rung landed and are not current sizes.
+
 Think of it as a ladder. Each rung is a small program, written in the language the rung below understands,
 and built by the rung below. Every rung must rebuild itself to the exact same bytes, which proves it reads
 its own language the same way the rung below does.
@@ -32,8 +37,8 @@ it came from.
 - What it does: reads text, turns every 8 hex digits into one 32-bit word, writes the words out. It skips
   comments (`#` to the end of the line) and spaces, and stops with an error on anything else.
 - `rung0/seed0.bin`: the program, 408 bytes.
-- The one outside tool: the very first `seed0.bin` was made by `rung0/load0.sh`, a 30-line shell script
-  that uses only the shell's own `printf`. After that first build, seed-0 builds itself.
+- The one outside tool: the very first `seed0.bin` was made by `rung0/load0.sh`, a 24-line (1,048-byte)
+  shell script that uses only the shell's own `printf`. After that first build, seed-0 builds itself.
 - Checks (`rung0/gate0.sh`, results in `evidence/SEED-0/rung0/`):
   - seed-0 reading its own text produces itself, byte for byte;
   - every one of the 72 instructions is read back by two independent decoders (our own, in
@@ -986,6 +991,26 @@ and emit a plan for the corresponding invalid audit input; compiler failures
 or unrelated runtime failures are not accepted as control evidence.
 These checks qualify host parsing only. They do not access or qualify a GPU,
 alter the empirical scheduling model, or rewrite historical evidence.
+
+## Local trace segment (omega-mv #608)
+
+`seed/trace/segment.om` is a library unit (no `main`) for a local, append-only trace segment: a
+16-byte header and 64-byte records, each with its sequence number and a CRC-32. It can scan a segment
+read-only, and its recovery keeps the valid prefix and quarantines the damaged file as `<segment>.bad`.
+Run `sh seed/trace/gate.sh` (or `tests/gates/run.sh trace`) from the repository root on an
+AArch64 Linux host. The gate checks `seed/out/omc` against its recorded SHA-256, then requires the 71 checks
+in `seed/trace/segment-test.om` to print exactly `seed/trace/expected.txt`. It also requires four source
+mutants to fail their own checks: CRC comparison removed, torn tail ignored, append alignment guard
+weakened, and create with O_TRUNC in place of O_EXCL. `seed/trace/README.md` describes the format.
+
+`seed/trace/tracecli.om` is the offline read-only CLI for that format (omega-mv #610): `version`,
+`verify`, `show`, `events`, `stats`, `export`, `compare` and `list`. Nothing is written except stdout.
+Run `sh seed/trace/cli-gate.sh` (or `tests/gates/run.sh tracecli`) from the repository root on an
+AArch64 Linux host. The gate checks `seed/out/omc` against its recorded SHA-256, pins the generated
+fixture SHA-256 values and the golden stdout, refuses a mode-0000 segment, and requires four source
+mutants to fail their own checks. One of those is a literal scan of the read-only open flags (`32768`;
+a change to `32770`, which is `O_RDWR|O_NOFOLLOW`, must fail the scan). `seed/trace/README.md`
+describes the format and the CLI.
 
 ## How the checks stay honest
 

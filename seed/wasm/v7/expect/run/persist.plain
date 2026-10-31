@@ -1,0 +1,10 @@
+bump = 1
+bump = 2
+partial TRAP
+bump = 4
+region c 04000000
+ovf TRAP
+region c 04000000
+ovf = 77
+region c 4d000000
+bump = 78

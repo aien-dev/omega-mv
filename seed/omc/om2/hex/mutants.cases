@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/omc/om2/hex/mutants.cases: tok_hex mutants of seed/omc/omc.om (#745). Each row is a CORRECT-side
+# row of hex.cases rerun under the mutant compiler: a mutant is killed when every listed row FAILs.
+# The ctl row (the decimal twin, no hex literal) must PASS under each mutant. Expected summary: pass=3 fail=5.
+# --- mutant hex-tbig
+subst seed/omc/om2/hex/mutants/hex-tbig.from seed/omc/om2/hex/mutants/hex-tbig.to
+cc seed/omc/omc.om
+ctl-hex-tbig-pairs-dec-run run seed/omc/om2/hex/pairs-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+hex-tbig-pairs-run run seed/omc/om2/hex/pairs-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+hex-tbig-places-run run seed/omc/om2/hex/places-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/places.out - 32
+cc pinned
+# --- mutant hex-nolimit
+subst seed/omc/om2/hex/mutants/hex-nolimit.from seed/omc/om2/hex/mutants/hex-nolimit.to
+cc seed/omc/omc.om
+ctl-hex-nolimit-pairs-dec-run run seed/omc/om2/hex/pairs-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+hex-nolimit-r6-17trunc emit seed/omc/om2/hex/ref/r6-17trunc.om - err:5:6 6
+cc pinned
+# --- mutant hex-digit
+subst seed/omc/om2/hex/mutants/hex-digit.from seed/omc/om2/hex/mutants/hex-digit.to
+cc seed/omc/omc.om
+ctl-hex-digit-pairs-dec-run run seed/omc/om2/hex/pairs-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+hex-digit-pairs-run run seed/omc/om2/hex/pairs-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+hex-digit-floatlike-run run seed/omc/om2/hex/floatlike-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/floatlike.out - 0
+cc pinned

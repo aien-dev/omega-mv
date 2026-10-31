@@ -1,0 +1,8 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): put value 0x100 into a uchar array (no truncation); error 8 on the literal's line.
+om2
+fn main to int
+a = new uchar 4 0
+put a 0 0x100
+ret 0
+end

@@ -1,0 +1,7 @@
+note Nominal qobj is not a bounded bqty even when its words fit.
+fn main to int
+out = new bqty ulong 0 ulong 8
+a = new qobj ulong 1 ulong 0 ulong 8
+b = new bqty ulong 1 ulong 8
+ret qadd out a b
+end

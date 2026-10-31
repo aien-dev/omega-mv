@@ -3,14 +3,27 @@
 This project is built by AI models, orchestrated by Drake Stapleton, who wrote none of the code.
 Every model below did real work. A model is listed only for work it did. The orchestrator checks all output before it merges.
 
+The current development method is [Human-Directed Agentic Engineering (HDAE)](README.md#human-directed-agentic-engineering): human-defined goals, architecture, constraints, acceptance criteria, and stopping points bound agent implementation and checks. Human review owns claims, acceptance, and releases. The README cites Gregory M. Kurtzer's documented method and Ginux case study; that citation does not change the contributor credits below.
+
 | Model | What it did |
 |---|---|
+| Claude Opus 5.5 (via omp) | Train r3 final smoke (every gate rc 0 on `a00e134c`, CPUs 10-19 at nice 19) and the `om/tls/README.md` test table brought to the train tree from those logs: the `TLS_NET=1` row (`interop=99 ... mutants=62/62`, net=PASS), the ec, ecdh and x509 rows, new mlkem, rev and hostile rows, and the `openssl verify` differences (23 of 106 cases, five new refusals from the x509-limbo fixes), omc `62775d2a`. |
+| Claude Opus 5.5 (via omp) | Train r3 GEN-1 protocol pins: #951 and main changed `docs/one_layer/OMEGESE.md`, so `gencheck manifest` failed on #486's pin (`9d8795bc`); re-hashed it to the train content `533887c7` and `GEN_PROTOCOL_V1.md` for a new §15 line (revision stays 1, no protocol content changed), after a consult; `make test-gen-protocol` 159 ok, 0 failed. |
+| Claude Opus 5.5 (via omp) | Train r3 TLS fuzz replay repair: #859's chain check needs an authority key id on every non-self-issued certificate, so `gen_seeds.py` now writes SKI on every certificate and AKI below the root; `fz_detch` pins every key-share byte (both x25519 copies and the ML-KEM-768 encapsulation key rebuilt from a fixed seed) so the ClientHello is deterministic; `hrr_*` expects `KEY_SHARE` (011) for an HRR naming an already-shared group (RFC 8446 §4.1.4); seeds regenerated and the 21 new crafted x509 seeds given EXPECT lines that match `cases.txt`. |
+| Claude Opus 5.5 (via omp) | Repaired the source-aware translation guard after train r2 (#974): the ten legacy files r2 edited (#942 `osc_ir.c`, #963 `src/osh`) are pinned by the SHA-256 of their whole content, so `test-source-aware` passes on main again while any other legacy edit, addition or rename still fails and the 60-fixture IR byte-identity check still runs. Controls 6 of 6, IR decoder mutants 22 of 22 caught. |
+| Claude Opus 5.5 (via omp) | Merged main `d8fc2db3` (#974) into train r3. Conflicts were the generated crumbs (`.crumb`, `tests/.crumb`) and this file (rows kept from both sides); crumbs regenerated with the pinned compiler. |
+| Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
+| Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
+| Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
+| Grok 4.7 | Merged current main (`6d482de0e`) into #854. The only conflict was the generated root `.crumb` (compile stamps and source-tree digest). Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
+| Codex (GPT-6.1 Sol) | Current HDAE development-method wording and Gregory M. Kurtzer citation, preserving source pins and historical evidence |
 | Grok 4.7 | Merged current main (`089e5b053`) into #936. Conflicts were generated crumbs (`.crumb`, `tests/.crumb`); regenerated them with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Restored the offline DAG evaluator's forbidden-symbol guard from #590 (`3bd56731`): generation store, authority, world, and calls that map or run code. |
 | Grok 4.7 | Imported the offline DAG evaluator `tools/dagsim` verbatim from closed PR #590 (`3bd56731`) and wired a host `test-dagsim` target. Analytical fixture checks only. No validated cost claim. |
 | Codex (GPT-6.1 Sol) | FR-9 x86-64 Linux backend integration from historical 7eca2ac3f, full-language lowering, contract-loop/output-capacity/dead-branch repairs, division/shift proof-aware diagnostics, original-conductor and historical-mutant qualification repair, independent disassembly and cross-architecture qualification; orphaned-lane recovery, current mutation re-anchoring and x86 OM-2 emitted-storage bound |
 | Codex (GPT-6.1 Sol) | TileLab decimal-overflow and malformed-register-budget refusal repair, host regression fixtures and semantic negative controls (TL907-01) |
 | Codex (GPT-6.1 Sol) | Corrected qty prefix-query types and capacity-only diagnostic repairability, with exact-record regression controls (#911) |
+| Codex (GPT-6.1 Sol) | Inference-cost audit F1-F8: fail-closed compiler/runtime sandboxes, hard process deadlines, strict task-identity scoring and adversarial self-tests |
 | Codex | Inference-cost driver compiler-failure status repair, host-only refusal regression probes and independent review; native Omega execution NOT_RUN |
 | Codex (GPT-6 Astra) | Bounded native peer credentials, multi-descriptor polling, single-iovec sendmsg, socket-option allowlist and host fixtures (#788) |
 | Codex (GPT-6 Astra) | Seeded IR statement/type/scope validation repairs, bootstrap-safe helper splits, and independent C-oracle regression qualification |
@@ -21,6 +34,10 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Codex (GPT-6.1 Sol) | Fail-closed secret and host-qualification gates, fixed original-fixture/status baseline, offline negative controls and current pipeline documentation |
 | Codex (GPT-6.1 Sol) | Corrected boolean bitwise typing in seeded OSC IR output, with C-referee regression cases |
 | Codex (GPT-6.1 Sol) | Seeded Omega OSC IR v1 to WebAssembly MVP backend, native differential gate, refusal and mutant controls |
+| OpenAI GPT-6 Astra | Composed security SC1 contracts, ownership reconciliation, independent acceptance review integration and evidence matrix (#625/#673) |
+| OpenAI GPT-6 Astra | SC1-Q checked quantities, object-bound slices, exhaustive arithmetic fixtures, compiled negative controls and native evidence (#756/#673) |
+| OpenAI GPT-6 Astra | SC1 conserved reservation vectors, public envelopes, native controls, independent finite edge oracle and helper measurements (#757/#759/#673) |
+| OpenAI GPT-6 Astra | SC1 relational secrecy fixtures, actual emitted-code controls, pinned scanner replay and omnet dependency audit (#758/#673) |
 | Codex | Handwritten bounded PD0 stream primitive and binary consumer in Omega, native tests, and host-reference/source review (native execution NOT_RUN) |
 | Codex | Current .om front-page status and source-backed C migration inventory |
 | Codex | BUILD receipt cleanliness enforcement and optional diagnostic pointer regression fixes |
@@ -35,7 +52,15 @@ Every model below did real work. A model is listed only for work it did. The orc
 | Claude Fable 5.1 | CodeQL high-severity fixes in the OM-2 oracles: 0600 image creation in offsetof.c, fixture-name allowlist and truncation check in sha_qual.c |
 | Claude Opus 5.5 | Omega 1.0 roadmap: source-pinned readiness audit of the seeded compiler, IR, WebAssembly and bridge paths, milestone acceptance gates, tracking issues #790-#800, OM-2 contract files brought to main byte-identical, and stale status text corrected |
 | Claude Opus 5.5 | Function-mode constants in the seeded compiler (`fnstore`): consts accepted without `fn main`, globals/texts/host words still error 9, gate16 byte-identity fixtures and old-compiler/mutant negative controls |
+| Codex (GPT-6.1 Sol) | Neuralese supplement proposal, bounded native envelope/codebook decoder and existing Omega-conductor host refusal/mutant cases |
+| Codex (GPT-6.1 Sol) | NL4 native numerical payload codec, canonical LTP0 consumer, independent receiver-matched pure execution boundary and host synthetic rejection/mutant qualification (#920) |
 | Codex (GPT-6.1 Sol) | Repaired qty float-domain classification and checked ingress, diagnostic categories and query/output streaming; permanent adversarial regression fixtures for the #909/#911 audit |
+| Claude Opus 5.5 | OSC IR v7 memory oracle: independent decoder, validator and interpreter (`seed/wasm/v7/oracle.js`), separate hand-written fixture writer, hand-written expectations and a mutant-checked self-test |
+| Claude Opus 5.5 | Effect-derived capability manifest (`seed/effects`, M1): host-word manifest, ELF syscall resolution that fails closed, seccomp cBPF output, probe-parity/strace/bwrap gate with negative controls and tool mutants |
+| Claude Opus 5.5 | seed/agent: omagent, a nanobot-style coding agent in seeded Omega (agent loop, four permissioned tools, JSONL session memory, SSE streaming, CLI), its scripted-mock test referee with six mutants, and the paired startup/RSS benchmark against nanobot |
+| Claude Opus 5.5 | Tenstorrent Tensix vecadd (`seed/tensix`): RV32IM asm2 table, hand-written kernel and start code, seeded Omega emitter `irrv32.om` (OSC IR v1 scalar unit -> RV32 elementwise kernel, byte-identical to asm2), hand-written edge disassembly, ttsim WH/BH and qemu interop-oracle gate with negative controls |
+| Claude Opus 5.5 | AWS Trainium/Inferentia backend `seed/nki`: `irnki.om` OSC IR v1 to `nki.isa` vecadd/elementwise emitter, native-Omega reference lanes, NKI CPU simulator interop-oracle gate (trn1/trn2/trn3) with negative controls and refusals, pinned oracle setup |
+| Claude Opus 5.5 (via omp) | ORIG-4 shadow advice (#731): `native/orig4/shadow.om` advisor, pin file, in-process tests, host glue, gate `omega-orig4-shadow` and `spec/shadow-advice-v0.md` |
 
 This table starts with the numeric work on this branch. Earlier work in this repository is not yet attributed here; add rows only for work that can be traced to a model.
 
@@ -49,4 +74,10 @@ Update this table in the same commit as the work it credits.
 
 | Codex | Integrated FR-9 with compiler batch 3 and the latest quantity/diagnostic audit; preserved empty text and integer-bitcast behavior on x86 and kept seed bootstrap within its function budget by removing unused helpers and inlining one single-use helper. |
 | Codex | Fixed x86 quantity unary refusals and empty-text emission; added explicit per-target acceptance contracts, preserved historical failed experiments, and exercised missing diagnostic callers and stale-binding controls. |
+| Claude Opus 5.5 | FUNCTION_ID (`omega.function.v1`, canonical falling-factorial form over the polynomial fragment modulo 2^w) and the graph of meaning (`om/meaning/`): receipt-backed equivalence edges, canonical storage, queries, randomized differential and mutant suite, spec sections 9-10 |
 | Grok 4.7 | Merged current main (b3dca0f1) into #514. The only conflict was the generated root `.crumb`; regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (089e5b05) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Merged current main (62d1d0d) into #509. Conflicts were the generated root `.crumb` and `tests/.crumb`. Took main's copies and regenerated crumbs with the crumb.lock tool (d0f0b95d). |
+| Grok 4.7 | Cost-model refusal of unsupported semantic operation IDs before prediction or learning, with a clamp-restoring mutant (Refs #704) |
+| Grok 4.7 | AES-GCM-SIV (RFC 8452) in `om/tls/gcmsiv.om`, the #639 keystream-reuse detector (27 checks, six mutants including a one-line AES-GCM mode swap), and the `seed/host/check.sh` hook whose no-op tamper exits nonzero. Host exercised; not hardware qualified. |
+| Claude Opus 5.5 | Ported the #671 packed-list hostile-ingress campaign (from 9a2b6a5) to main as an OM-2 conductor gate in `seed/host/check.sh`: 60 runtime packet, boundary and truncation cases, with size, count and exact-length mutant compilers each detected, and the record-length mutant documented as undetectable by exit status |

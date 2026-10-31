@@ -25,8 +25,8 @@ HERE=$(cd -P "$(dirname "$0")/.." && pwd)
 m19r_build_canon || { echo "FAIL: cannot build tools/json_canon.c"; exit 1; }
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP" "$M19R_TMP"' EXIT
-fails=0
-ok() { echo "  [PASS] $1"; }
+fails=0 passes=0
+ok() { echo "  [PASS] $1"; passes=$((passes + 1)); }
 bad() { echo "  [FAIL] $1"; fails=$((fails + 1)); }
 check() { if eval "$2"; then ok "$1"; else bad "$1"; fi; }
 
@@ -196,6 +196,7 @@ c=$TMP/c_inv3; mkdir "$c"; mkrun "$c" r1 PASS; mkrun "$c" r2 FAILED; chmod u+w "
 check "INVALID takes precedence over FAIL" '[ "$(verdict "$c" 2)" = INVALID ]'
 check "bad arguments exit 2" '"$CAMP" --campaign-dir "$TMP/nonexistent" --runs 2 > /dev/null 2>&1; [ $? = 2 ]'
 
+printf 'TOTAL GATES: %d | PASSED: %d | FAILED: %d\n' "$((passes + fails))" "$passes" "$fails"
 if [ "$fails" -ne 0 ]; then
     echo "M19R qualifier tests: $fails FAILED"
     exit 1

@@ -1,0 +1,11 @@
+OM2GATE START cases=seed/qualification/security673/relational/l4-tripwire.cases scratch=/tmp/prfix/Fix774-work/s758/l4-tripwire
+IDENTITY omc seed/out/omc sha256=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b pinned=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b match
+DEADLINE 30
+CASE derive-secret-dividend line=5
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/l4-tripwire/5.src > /tmp/prfix/Fix774-work/s758/l4-tripwire/5.elf 2> /tmp/prfix/Fix774-work/s758/l4-tripwire/5.cerr
+VERDICT derive-secret-dividend PASS compile exit=0 expected=0 stdout=match stderr=match
+CASE L4-division-gap line=6
+  $ seed/out/omc < /tmp/prfix/Fix774-work/s758/l4-tripwire/6.src > /tmp/prfix/Fix774-work/s758/l4-tripwire/6.elf 2> /tmp/prfix/Fix774-work/s758/l4-tripwire/6.cerr
+  $ /tmp/prfix/Fix774-work/s758/l4-tripwire/6.elf x0 < seed/qualification/security673/relational/evidence/run4/dividend.bin > /tmp/prfix/Fix774-work/s758/l4-tripwire/6.out 2> /tmp/prfix/Fix774-work/s758/l4-tripwire/6.err
+VERDICT L4-division-gap PASS run exit=0 expected=0 stdout=match stderr=match
+OM2GATE PASS cases=2 pass=2 fail=0 invalid=0 not_run=0
