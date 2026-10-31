@@ -1944,6 +1944,8 @@ def main():
                     pattern = re.compile(rb"(?m)^" + re.escape(volatile.encode()) + rb"[0-9]+$")
                     counts = len(pattern.findall(arun[1])), len(pattern.findall(xrun[1]))
                     case.evidence["volatile_stdout_lines_masked"] = list(counts)
+                    if counts[0] != counts[1]:
+                        raise Failure(f"runtime differential: {volatile} line count default={counts[0]} x86={counts[1]}")
                     arun = (arun[0], pattern.sub(volatile.encode() + b"#", arun[1]), arun[2])
                     xrun = (xrun[0], pattern.sub(volatile.encode() + b"#", xrun[1]), xrun[2])
                 diagnostics.update(default_run=result_details(arun), x86_run=result_details(xrun))
