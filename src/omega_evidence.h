@@ -39,6 +39,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "nvrm.h"
 
 /* ---- (a) run-scoped, non-clobbering evidence paths -------------------- */
@@ -73,6 +74,13 @@ int omega_evidence_path(const char *relpath, char *out, size_t n);
  */
 int omega_evidence_write_digest(const char *relstem, const char *ext, const void *buf,
                                 size_t len, char *out, size_t n);
+
+/*
+ * Open `path` (from omega_evidence_path) for writing, created or truncated
+ * with mode 0644 (not fopen's 0666 & ~umask): a receipt is never
+ * world-writable. NULL on failure.
+ */
+FILE *omega_evidence_create(const char *path);
 
 /* The run_id used by omega_evidence_path(), computed lazily on first use. */
 const char *omega_evidence_run_id(void);
