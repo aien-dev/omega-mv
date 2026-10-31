@@ -131,6 +131,7 @@ exit 1. Store (77), dispatch (37), dispatcher-order (3) and lock (5) gates pass 
 `store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
 also lacked the already-existing `sgerr` generation-error interface; it now tests the current
 implementation rather than preserving that stale copy.
+
 ## Lock release errors
 
 `lrm`/`lrel` return 0 only when unlink succeeds, and 41 on unlink failure (including
@@ -141,6 +142,10 @@ only in disposable test working directories, never against an active store.
 The pre-effect dispatcher release check returns 78 on this failure. Other dispatcher
 cleanup and final-release sites still ignore the release result; this change does not
 claim those paths report it, nor does it redesign stale-lock reclamation.
+
+Native run (2026-10-31, Linux AArch64, seed/out/omc 7a8b84fc): `lock checks=8 fails=0`, exit 0.
+Negative control with `lock.om` from main 1db94162 (`lrm` returns 0 on unlink failure): no pass
+line, exit 1 (the gate's failed-check exit; its setup errors exit 100..102).
 
 ## Fixture source correction (2026-10-24)
 
