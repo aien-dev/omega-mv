@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/omc/om2/bnd/bnd.cases: standing gate for omegese-om2.md section 2 expression boundaries (#745
+# checkbox 2): missing operand (error 4), extra operand (errors 5, 11), grouping (16, and g0..g4 that
+# compile to identical bytes). Rows copied verbatim from the frozen L836 suite
+# seed/qualification/om2/sec/s0s2/candidate.cases (lines 173-257 and its C2 rows for s2bnd); fixtures and
+# expected codes stay there. Run from the repository root by seed/qualification/om2/gate.om.
+# ======== section 2: expression boundaries (lines 59-62), both profiles; OM-1 codes = pinned OM-1 definition
+# lines 59-61: tokens left after the statement's expression (typed operand); OM-1 code pinned (C1 line 17)
+s2-om1-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-typed.om - err:6:5 5
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-typed.om - err:7:5 5
+# lines 59-61: tokens left after an assignment's expression; OM-1 code pinned (C1 line 17)
+s2-om1-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-assign.om - err:6:5 5
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-assign.om - err:7:5 5
+# lines 59-61: a stray ) after a complete expression; OM-1 code pinned (C1 line 17)
+s2-om1-left-paren emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-paren.om - err:6:5 5
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-paren emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-paren.om - err:7:5 5
+# lines 59-61: tokens left after add of two bare numbers (ambiguity is found first); OM-1 code pinned (C1 line 17)
+s2-om1-left-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-bare.om - err:5:11 11
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-left-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-bare.om - err:6:11 11
+# lines 59-61: line ends before an operand is complete, followed by end; OM-1 code pinned (C1 line 17)
+s2-om1-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-next.om - err:7:4 4
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-next.om - err:8:4 4
+# lines 59-61: ret add 1 then end; OM-1 code pinned (C1 line 17)
+s2-om1-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-bare.om - err:6:4 4
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-bare.om - err:7:4 4
+# lines 59-61: input ends (no final LF) before an operand is complete; OM-1 code pinned (C1 line 17)
+s2-om1-short-eof emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-eof.om - err:6:4 4
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-short-eof emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-eof.om - err:7:4 4
+# lines 59-61: a group missing its ) (OMEGESE 9.10); OM-1 code pinned (C1 line 17)
+s2-om1-group-open emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-open.om - err:6:16 16
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-group-open emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-open.om - err:7:16 16
+# lines 59-61: a group closed before its word has all operands; OM-1 code pinned (C1 line 17)
+s2-om1-group-short emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-short.om - err:6:16 16
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-group-short emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-short.om - err:7:16 16
+# lines 59-61: a group holding two values for one operand; OM-1 code pinned (C1 line 17)
+s2-om1-group-wide emit seed/qualification/om2/sec/s0s2/s2bnd/om1-group-wide.om - err:6:16 16
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-group-wide emit seed/qualification/om2/sec/s0s2/s2bnd/om2-group-wide.om - err:7:16 16
+# lines 59-61: [ is not grouping; OM-1 code pinned (C1 line 17)
+s2-om1-bracket emit seed/qualification/om2/sec/s0s2/s2bnd/om1-bracket.om - err:6:3 3
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-bracket emit seed/qualification/om2/sec/s0s2/s2bnd/om2-bracket.om - err:7:3 3
+# lines 59-61: { is not grouping; OM-1 code pinned (C1 line 17)
+s2-om1-brace emit seed/qualification/om2/sec/s0s2/s2bnd/om1-brace.om - err:6:3 3
+# line 59 'both profiles, unchanged' (+ line 62 no new grouping for [ and {): same code in an OM-2 unit, line +1 for the om2 line
+s2-om2-brace emit seed/qualification/om2/sec/s0s2/s2bnd/om2-brace.om - err:7:3 3
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om - - - 7
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g1-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om - - - 7
+# line 61: a group adds no code
+s2-om1-g1-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g2-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om - - - 7
+# line 61: a group adds no code
+s2-om1-g2-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g3-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om - - - 7
+# line 61: a group adds no code
+s2-om1-g3-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om1-g4-run run seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om - - - 7
+# line 61: a group adds no code
+s2-om1-g4-same same seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om - - - 7
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g1-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g1.om - - - 7
+# line 61: a group adds no code
+s2-om2-g1-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g1.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g2-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g2.om - - - 7
+# line 61: a group adds no code
+s2-om2-g2-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g2.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g3-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g3.om - - - 7
+# line 61: a group adds no code
+s2-om2-g3-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g3.om
+# lines 61-62: grouping never changes which operands a word takes
+s2-om2-g4-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g4.om - - - 7
+# line 61: a group adds no code
+s2-om2-g4-same same seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om seed/qualification/om2/sec/s0s2/s2bnd/om2-g4.om
+# C2: OM-1 grouping units compile to the pinned OM-1 (734f0a39) bytes
+c2-s2-om1-g0 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g0.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g1 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g1.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g2 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g2.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g3 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g3.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0
+c2-s2-om1-g4 emit seed/qualification/om2/sec/s0s2/s2bnd/om1-g4.om sha:fd03a4208a3ada5e357c3901042dd1abc2e8f12196725fb3af43b1cd3f2254ce - 0

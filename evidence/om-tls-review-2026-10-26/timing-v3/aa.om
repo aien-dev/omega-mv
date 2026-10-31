@@ -1,0 +1,292 @@
+note A/A CONTROL BUILD (both classes get the fixed pattern; class labels only): dudect-style timing driver (Reparaz, Balasch, Verbauwhede 2016): usage: timing WHAT N
+note WHAT: x25519 (scalar fixed vs random, base point fixed), chacha / aesgcm (key and nonce fixed
+note vs random, 1024-byte plaintext fixed), cteq (32-byte compare: equal vs random second input,
+note 2000 compares per measurement; exit 3 unless class 0 compares equal and class 1 does not),
+note hkdf (HKDF-SHA256 extract with a fixed 32-byte salt and a fixed vs random 32-byte IKM, then
+note expand of the PRK to 32 bytes).
+note Classes are balanced and randomly interleaved: exactly N/2 fixed (class 0) and N - N/2 random
+note (class 1) measurements, the order a uniformly random arrangement drawn sample by sample
+note (selection sampling: class 1 with probability ones-left / total-left, from 8 getrandom bytes).
+note Each measurement prepares its input, times one operation with monons and prints
+note "CLASS NANOSECONDS". Statistics (Welch's t-test) are computed outside the driver.
+note Exit 0; 2 on a usage error; 3 when an operation reports an error.
+text tusage "usage: timing x25519|chacha|aesgcm|cteq|hkdf N\n"
+text tx "x25519"
+text tc "chacha"
+text ta "aesgcm"
+text tq "cteq"
+text th "hkdf"
+
+fn tm_arg i ulong a edit uchar * to ulong
+n = argread i a 0 len a
+if lt n 0
+ret 0
+end
+ret ulong n
+end
+
+fn tm_num a view uchar * n ulong to ulong
+v = ulong 0
+for i ulong n
+d = ulong get a i
+if or lt d 48 gt d 57
+ret 0
+end
+v = add mul v 10 sub d 48
+if gt v 99999999
+ret 0
+end
+end
+ret v
+end
+
+fn tm_is a view uchar * n ulong t view uchar * to ulong
+if ne n len t
+ret 0
+end
+for i ulong n
+if ne get a i get t i
+ret 0
+end
+end
+ret 1
+end
+
+note fixed class: a constant pattern; random class: getrandom bytes. Both classes run the same
+note instructions: getrandom fills b, then every byte is rewritten as (b and mk) or (pattern and nm)
+note with mk all ones for class 1 and nm all ones for class 0, so the code path and the memory
+note traffic before the timed window do not depend on the class.
+fn tm_sel x ulong i ulong mk ulong nm ulong to ulong
+p = add 17 rem mul i 7 211
+ret and or and x mk and p nm 255
+end
+
+fn tm_fill b edit uchar * n ulong cls ulong to ulong
+r = random b 0 n 0
+if ne r long n
+ret 1
+end
+mk = ulong 0
+nm = sub ulong 0 1
+for i ulong n
+x = ulong get b i
+put b i uchar tm_sel x i mk nm
+end
+ret 0
+end
+
+note st[0] fixed measurements left, st[1] random measurements left; tm_pick draws the next class.
+fn tm_init st edit ulong * n ulong to void
+put st 0 shr n 1
+put st 1 sub n shr n 1
+end
+
+fn tm_pick c edit uchar * st edit ulong * to ulong
+r = random c 0 8 0
+v = ulong 0
+for i ulong 8
+v = or shl v 8 ulong get c i
+end
+z = get st 0
+w = get st 1
+t = add z w
+if eq t 0
+ret 0
+end
+cls = ulong 0
+if lt rem v t w
+cls = 1
+end
+put st 1 sub w cls
+put st 0 sub z sub 1 cls
+ret cls
+end
+
+fn tm_line cls ulong ns ulong o edit uchar * to ulong
+put o 0 add 48 uchar cls
+put o 1 32
+k = ulong 2
+d = new uchar 24 0
+m = ulong 0
+v = ns
+while true bound 24
+put d m uchar add 48 rem v 10
+v = div v 10
+m = add m 1
+if eq v 0
+break
+end
+end
+for i ulong m
+put o k get d sub sub m 1 i
+k = add k 1
+end
+put o k 10
+ret add k 1
+end
+
+fn tm_emit cls ulong t0 long t1 long o edit uchar * to void
+m = tm_line cls ulong sub t1 t0 o
+w = write 1 o 0 m
+end
+
+fn tm_x25519 n ulong o edit uchar * to ulong
+k = new uchar 32 0
+u = new uchar 32 0
+s = new uchar 32 0
+c = new uchar 8 0
+st = new ulong 2 0
+tm_init st n
+put u 0 9
+for i ulong n
+cls = tm_pick c st
+if ne tm_fill k 32 cls 0
+ret 3
+end
+t0 = monons
+e = x25519_scalarmult s k u
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn tm_pt buf edit uchar * to void
+for j ulong len buf
+put buf j uchar rem j 251
+end
+end
+
+note which: 0 chacha, 1 aesgcm
+fn tm_one kn view uchar * buf edit uchar * which ulong to ulong
+ad = new uchar 5 0
+if eq which 0
+ret aead_chacha_seal kn ad buf
+end
+ret aead_aes128gcm_seal part kn 0 28 ad buf
+end
+
+fn tm_aead n ulong o edit uchar * which ulong to ulong
+kn = new uchar 44 0
+buf = new uchar 1040 0
+c = new uchar 8 0
+st = new ulong 2 0
+tm_init st n
+for i ulong n
+cls = tm_pick c st
+if ne tm_fill kn 44 cls 0
+ret 3
+end
+tm_pt buf
+t0 = monons
+e = tm_one kn buf which
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn tm_cteq n ulong o edit uchar * to ulong
+a = new uchar 32 0
+b = new uchar 32 0
+c = new uchar 8 0
+st = new ulong 2 0
+tm_init st n
+for i ulong 32
+put a i uchar add 17 rem mul i 7 211
+end
+for i ulong n
+cls = tm_pick c st
+if ne tm_fill b 32 cls 0
+ret 3
+end
+acc = ulong 0
+t0 = monons
+for j ulong 2000
+acc = add acc tls_cteq a b 0 32
+end
+t1 = monons
+if and eq cls 0 ne acc 0
+ret 3
+end
+note class 1 must differ from the pattern (equal by chance with probability 2^-256): this checks
+note that tm_fill really gives class 1 random bytes.
+
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+note HKDF-SHA256: si = salt (32 zero bytes) || IKM (class bytes); PRK = extract, OKM = expand(PRK).
+fn tm_hk si view uchar * pk edit uchar * ok edit uchar * to ulong
+e = hkdf_extract 256 si 32 pk
+if ne e 32
+ret 1
+end
+ret hkdf_expand 256 pk 32 ok
+end
+
+fn tm_hkdf n ulong o edit uchar * to ulong
+k = new uchar 32 0
+si = new uchar 64 0
+pk = new uchar 32 0
+ok = new uchar 32 0
+c = new uchar 8 0
+st = new ulong 2 0
+tm_init st n
+for i ulong n
+cls = tm_pick c st
+if ne tm_fill k 32 cls 0
+ret 3
+end
+for j ulong 32
+put si add 32 j get k j
+end
+t0 = monons
+e = tm_hk si pk ok
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn main to int
+a = new uchar 64 0
+o = new uchar 64 0
+if ne argcnt 3
+w = write 2 tusage 0 len tusage
+ret 2
+end
+wl = tm_arg 1 a
+n = tm_num part a 32 32 tm_arg 2 part a 32 32
+if or eq n 0 eq wl 0
+w = write 2 tusage 0 len tusage
+ret 2
+end
+if eq tm_is a wl tx 1
+ret int tm_x25519 n o
+end
+if eq tm_is a wl tc 1
+ret int tm_aead n o 0
+end
+if eq tm_is a wl ta 1
+ret int tm_aead n o 1
+end
+if eq tm_is a wl tq 1
+ret int tm_cteq n o
+end
+if eq tm_is a wl th 1
+ret int tm_hkdf n o
+end
+w = write 2 tusage 0 len tusage
+ret 2
+end
