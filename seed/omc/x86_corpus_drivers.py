@@ -859,12 +859,166 @@ def directive_plan(root, name):
     return {"blocker":review["reason"],"evidence":evidence}
 
 
+# Reviewed host-effect drivers for rows whose conductors launch programs or touch files.
+# Every effect stays in the runner's private per-architecture cwd under TMPDIR, under the
+# runner's wall deadline and EFFECT_CPU_SECONDS of CPU. qemu-user is not a registered
+# binfmt, so any program either arm launches is the same native AArch64 file in both
+# runs; only the program under test changes architecture. None of these sources has a
+# network word except pure-child.om, whose socknew arm is unreachable (see its review).
+EFFECT_CPU_SECONDS = 10
+# The frozen security673 packets name /bin/true, /bin/echo and /bin/tr by absolute path.
+# The qualification host has no unprivileged user namespace (unshare -r: uid_map EPERM),
+# so they cannot be substituted; the exact host builds (Ubuntu coreutils 9.4-3ubuntu6.3
+# arm64) are pinned and any other build refuses the row as BLOCKED, never PASS.
+HOST_CHILD_PINS = {
+    "/bin/true": "a82c1b5fd392d72148d53992a860224ff3753cb2dc8909e9bdd1620e54ee1b88",
+    "/bin/echo": "a54dbac70bf94d2d3163aee0a43aadeb96c15b29713c1443a0514326660dd205",
+    "/bin/tr": "8921ec5afe3898e9f1dbe2e0f568d36de759332547aa28874ddd03ff3954e92e",
+}
+_S673 = "seed/qualification/security673/"
+_RUNS = _S673 + "relational/evidence/"
+_IMAGES = {  # Pinned evidence images; *-native-mut.bin are AArch64 executables.
+    "branch-native-mut": (_RUNS + "run2/public-branch-native-mut.bin",
+                          "3c534a9224fd8ec81f1af1caa48507adb3b01cfc7ab6fdea709a6ee08c6ba5c1", 0o700),
+    "address-native-mut": (_RUNS + "run2/public-address-native-mut.bin",
+                           "d823b830e66b82b52cf0bc5ee480adacff1957f9a9411413f972ac30f2183417", 0o700),
+    "branch-mut": (_RUNS + "run2/public-branch-mut.bin",
+                   "cb906d54cb4a1d7940202d567367c6e30eeaa099a981fbabc20574e13721de1a", 0o600),
+    "compare32": (_RUNS + "run3/compare32.bin",
+                  "df0d1193b9555f3d6a4a1c5bc0e5d04605397000a22d8175e9b9f28965bdb162", 0o600),
+    "embed": (_RUNS + "run3/embed.bin",
+              "0f65c747d83fbd34f9058142c2dc68a8147365733c56e18abdd24104e944fe50", 0o600),
+    "paired": (_RUNS + "run4/paired.bin",
+               "686096547cda0cbbdf789c67bdc9f7aa7066ee36023af9c2353a262d2e313711", 0o600),
+}
+# renames-corpus.om (sha 9c44348b9cb258195be17e59318d90def4745327baed621b0fc46442f50ad883)
+# output for mode byte m, exactly as gate669.om renamescc feeds renames-consumer.om.
+_REN_SRC = "0020006275696c642f73656375726974793637332d6e61746976652f72656e2d737263"
+_REN_DST = "20006275696c642f73656375726974793637332d6e61746976652f72656e2d647374"
+RENAMES_PACKETS = {
+    0: "02" + _REN_SRC + _REN_DST,
+    1: "01" + _REN_SRC,
+    2: "03" + _REN_SRC + _REN_DST + _REN_DST,
+    3: "020000" + _REN_DST,
+    4: "02" + _REN_SRC + "0000",
+    5: "02" + _REN_SRC + _REN_DST + "00",
+    6: "020020006275696c640073656375726974793637332d6e61746976652f72656e2d737263" + _REN_DST,
+}
+
+
+def host_child_mismatch():
+    for path, sha in HOST_CHILD_PINS.items():
+        try:
+            observed = digest(Path(path).read_bytes())
+        except OSError as error:
+            return f"{path} unreadable: {error}"
+        if observed != sha:
+            return f"{path} sha256 {observed} is not the pinned {sha}"
+    return None
+
+
+def _inputs(*names):
+    return [{"path": _IMAGES[n][0], "sha256": _IMAGES[n][1], "mode": _IMAGES[n][2]} for n in names]
+
+
+def effect_plan(root, rel, sha):
+    """Plan for a reviewed effect-scratch source; {} when the source is not reviewed here."""
+    evidence = {"reviewed_source_sha256": sha}
+    plan = {"driver": "effect-scratch", "evidence": evidence}
+    if sha == "7f0ea5e3a0064457d3f4d12e9e74e664b7f59a4ca90083b8132b779604ff5310":
+        evidence.update(
+            effect_review="reads at most 8191 stdin bytes; execprog only of the packet's absolute path; every frozen "
+                          "packet names /bin/true, /bin/echo or /bin/tr, each pinned in HOST_CHILD_PINS; no file or "
+                          "network words",
+            host_children=dict(HOST_CHILD_PINS),
+            exit_authority=_S673 + "packets.cases p12-echo-argv: exit0, stdout packets/p12.out")
+        mismatch = host_child_mismatch()
+        if mismatch:
+            return {"blocker": "BLOCKED_ON pinned host child: " + mismatch, "evidence": evidence}
+        plan.update(stdin=_pinned(root, _S673 + "packets/p12.bin",
+                                  "10840966be3580d3ca7ce939bc9ce2be664af39fc679f711aa76b7763da10a2f"),
+                    expected_exit=0)
+        return plan
+    if sha == "39ff79d87e1e502cb13caaea6e9791a58e02bc7ecb7c27a754360195786c5138":
+        evidence.update(
+            effect_review="packs argv[1..] and execprogs argv[1]; the only images named are the pinned AArch64 "
+                          "evidence images copied into private scratch (sources public-*-main.om have no host words)",
+            effect_inputs=_inputs("branch-native-mut", "address-native-mut"),
+            exit_authority=_S673 + "relational/qualification.cases execute-public-branch-mut-zero: exit7")
+        plan.update(args=(_IMAGES["branch-native-mut"][0],), expected_exit=7)
+        return plan
+    if sha == "be37db5983ef8b5bda100d1f063be503449fb271c45a87f68084337c1bfe1d86":
+        evidence.update(
+            effect_review="read-only fopen/read/fclose of argv[1] and argv[2]; the manifest names only pinned "
+                          "evidence images, copied into private scratch; stdout write only",
+            effect_inputs=_inputs("compare32", "paired", "embed", "branch-mut", "branch-native-mut"),
+            exit_authority=_S673 + "relational/bindings.cases embed-primitive: exit0, stdout embed.expected")
+        plan.update(args=(_IMAGES["compare32"][0], _IMAGES["paired"][0]), expected_exit=0)
+        return plan
+    if sha in ("e184cdbc0fbe4d4cb2f2d36d4c159ef7f9fe87bd162d3082209fa32f5dc79252",
+               "e125e57d03dbd2dbb23f592e015396b57a1b1277b6b160a91cbb916c38fc7bfa"):
+        control = sha.startswith("e184")
+        evidence.update(
+            effect_review="read-only fopen of /proc/self/mem; pread of this process's own stack pool "
+                          "0x10000000..0x10800000 into a private buffer; fclose; no writes",
+            exit_authority="seed/omc/om2/s5/s5.cases " + ("s5-scrub-ctl: exit10" if control else "s5-scrub-mem: exit0"))
+        plan.update(expected_exit=10 if control else 0)
+        return plan
+    if sha == "9bb5cd0e59d12af8b13de79db7a949b5278263b638309dfc6a86ab77c0382232":
+        evidence.update(
+            effect_review="mode0 creates build/security673-native/path-ok in private scratch; modes1-3 are refused "
+                          "or failing fopens; modes4-6 argread only",
+            effect_dirs=["build/security673-native"],
+            exit_authority=_S673 + "gate669.om pathcc/pathwant: modes1,2,5 exit103, others exit0; argument id1")
+        args = (_S673 + "branch-corpus.om",)
+        plan.update(stdin=b"\0", args=args, expected_exit=0,
+                    variants=[{"name": f"gate669-mode{m}", "stdin": bytes([m]), "args": args,
+                               "expected_exit": 103 if m in (1, 2, 5) else 0} for m in range(1, 7)])
+        return plan
+    if sha == "4fed8e605272e03994b565fd799136a96ab14239ccc8bc7526c819f3148e6c69":
+        evidence.update(
+            effect_review="creates build/security673-native/ren-src in private scratch; renames only names from the "
+                          "pinned renames-corpus packets, all under build/security673-native",
+            effect_dirs=["build/security673-native"],
+            exit_authority=_S673 + "gate669.om renamescc/renameswant: mode0 exit0, modes1-6 exit103")
+        plan.update(stdin=bytes.fromhex(RENAMES_PACKETS[0]), expected_exit=0,
+                    variants=[{"name": f"gate669-mode{m}", "stdin": bytes.fromhex(RENAMES_PACKETS[m]), "args": (),
+                               "expected_exit": 103} for m in range(1, 7)])
+        return plan
+    if sha == "b784dde3b862bfc7784015377447b3fffd4c6f1a37d04680e03960fbabc5a0de":
+        evidence.update(
+            effect_review="creates synthetic-secret.data in private scratch; pipes; forks one child that execprogs "
+                          "./exec-child (exec-child.om built natively from pinned source) or a missing name; waits "
+                          "for that child only; dupfd to 65537 needs RLIMIT_NOFILE above 65537",
+            native_child={"source": _S673 + "exec-child.om",
+                          "source_sha256": "f2519f6be7068cf8af826101febd0f490327916322ac92a648dba9f3380324ec"},
+            nofile=65600,
+            exit_authority=_S673 + "exec-parent.om notes: modes0 success, 1 missing executable, "
+                                   "2 isolate high-descriptor leak; each returns 0 when every assertion holds")
+        plan.update(stdin=b"\0", expected_exit=0,
+                    variants=[{"name": f"mode{m}", "stdin": bytes([m]), "args": (), "expected_exit": 0}
+                              for m in (1, 2)])
+        return plan
+    if sha == "95c63d2aa7d69e6e04752279885496060a4152b5c1604ff75d65b201d48c713b":
+        evidence.update(
+            effect_review="run outside execpure: the runner passes only fds 0-2, so read 3 returns -EBADF, not the "
+                          "-1 the strict profile yields, and the program exits 43 before any write, fopen, socknew, "
+                          "fork or execprog arm; those arms run only under the AArch64 execpure evidence",
+            exit_authority=_S673 + "pure-child.om: read 3 must equal -1 or ret 43")
+        plan.update(stdin=b"public-input", expected_exit=43)
+        return plan
+    return {}
+
+
 def plan_case(root, rel, source):
     if digest(source) == "e08ec033bd7d2e71ae272488029354eb447d8f7eed49d0f89d9d4eaf55518cfb":
         return {"driver":"pwrite-text", "expected_exit":0,
                 "evidence":{"effect_review":"pwrite only to fd1, the runner's private seekable output file; no paths or device access",
                             "source_authority":"seed/omc/om2/s4/v-pwrite-text.om",
                             "result_authority":"s4.cases s4-v-pwrite-text: exact ABC newline output and exit0"}}
+    effect = effect_plan(root, rel, digest(source))
+    if effect:
+        return effect
     sha = digest(source)
     if sha not in REVIEWED_SOURCES:
         return {}
@@ -941,10 +1095,29 @@ def prepare_case(root, work, driver, compiler, *, case=None):
     the caller remains responsible for reviewing every source's host effects.
     """
     root,work,compiler = Path(root),Path(work),Path(compiler)
-    if driver not in ("security673-gate","corpus-gate"):
+    if driver not in ("security673-gate","corpus-gate","effect-scratch"):
         return ()
     if root.resolve()==work.resolve() or root.resolve() in work.resolve().parents:
         raise ValueError("conductor scratch must be outside the source checkout")
+    if driver == "effect-scratch":
+        case = case or {}
+        if "host_children" in case:
+            mismatch = host_child_mismatch()
+            if mismatch or case["host_children"] != HOST_CHILD_PINS:
+                raise ValueError("BLOCKED_ON pinned host child: " + (mismatch or "reviewed pin set changed"))
+        for rel in case.get("effect_dirs", []):
+            if Path(rel).is_absolute() or ".." in Path(rel).parts:
+                raise ValueError("unsafe effect scratch directory")
+            (work/rel).mkdir(parents=True, exist_ok=True)
+        for item in case.get("effect_inputs", []):
+            rel = item["path"]
+            if Path(rel).is_absolute() or ".." in Path(rel).parts:
+                raise ValueError("unsafe effect input path")
+            dest = work/rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(_pinned(root, rel, item["sha256"]))
+            dest.chmod(item["mode"])
+        return ()
     resources = dict(RESOURCE_PINS)
     if driver == "security673-gate":
         resources = {p:s for p,s in resources.items() if p.startswith("seed/qualification/security673/")}
