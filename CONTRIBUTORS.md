@@ -7,6 +7,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 
 | Model | What it did |
 |---|---|
+| Claude Opus 5.5 (via omp) | Repaired the source-aware translation guard after train r2 (#974): the ten legacy files r2 edited (#942 `osc_ir.c`, #963 `src/osh`) are pinned by the SHA-256 of their whole content, so `test-source-aware` passes on main again while any other legacy edit, addition or rename still fails and the 60-fixture IR byte-identity check still runs. Controls 6 of 6, IR decoder mutants 22 of 22 caught. |
 | Grok 4.7 | Merged current main (`62d1d0d66`) into #934. Conflicts were generated crumbs (`.crumb`, `spec/.crumb`, `src/.crumb`, `tests/.crumb`) and CONTRIBUTORS.md. The Makefile kept the test-costmodel mutant block and the test-dagsim block. Regenerated crumbs with the crumb.lock tool (`d0f0b95d`). |
 | Grok 4.7 | Treated an unsupported or refused rx_cm_predict result as an unknown cell in the offline DAG evaluator, including when known is set. Merged #934's predict API to build that check. Host test and a mutant that drops it. |
 | Grok 4.7 | Refused inverted buffer lifetimes in the imported offline DAG evaluator so a negative live-byte ledger cannot hide a capacity overflow (#705). Host fixtures and a mutant that drops the check. |
