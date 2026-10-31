@@ -31,16 +31,18 @@ unless you ask us not to. If an issue is being exploited, we publish sooner.
 
 In scope: everything on `main`. Highest priority:
 
-- `om/tls/` (TLS 1.3 client, X.509 path validation, SHA-2, HKDF, X25519, ChaCha20-Poly1305,
-  AES-GCM, ECDSA/RSA verification) and `seed/net/https.om`: memory safety, certificate validation
+- `om/tls/` (TLS 1.3 client, X.509 path validation, OCSP/CRL revocation, SHA-2, SHA-3, HKDF,
+  HMAC_DRBG, X25519, ML-KEM-768 (X25519MLKEM768), ChaCha20-Poly1305, AES-GCM, AES-GCM-SIV,
+  ECDSA/RSA verification) and `seed/net/https.om`: memory safety, certificate validation
   bypass, handshake state-machine confusion, key or plaintext disclosure, timing leaks on secret data,
   and parser crashes or hangs on network input.
 - The compiler (`seed/out/omc`, `seed/omc/omc.om`) when it emits code that breaks a guarantee the
   language documents (bounds checks, ownership, loop termination).
 
 `om/tls/THREAT_MODEL.md` and `om/tls/AUDIT_SCOPE.md` describe the attacker model and what the client
-deliberately does not implement (server-side TLS, client certificates, session resumption, 0-RTT,
-revocation checking).
+deliberately does not implement (server-side TLS, client certificates, session resumption, 0-RTT).
+Revocation is checked only when the caller opts in (`tls_init` flag 8, `rev.om`: stapled OCSP,
+must-staple, caller-supplied CRL); without it a revoked chain verifies (`om/tls/README.md`, "Policy").
 
 ## Status of the code
 
