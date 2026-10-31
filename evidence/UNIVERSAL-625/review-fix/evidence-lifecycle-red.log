@@ -1,0 +1,25 @@
+FF
+======================================================================
+FAIL: test_missing_compiler_invalidates_prior_pass (__main__.EvidenceLifecycle.test_missing_compiler_invalidates_prior_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 36, in test_missing_compiler_invalidates_prior_pass
+    self.attempt(False)
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 33, in attempt
+    self.assertFalse(receipt.exists(), 'failed attempt retained stale PASS receipt')
+AssertionError: True is not false : failed attempt retained stale PASS receipt
+
+======================================================================
+FAIL: test_stale_contract_invalidates_prior_pass (__main__.EvidenceLifecycle.test_stale_contract_invalidates_prior_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 39, in test_stale_contract_invalidates_prior_pass
+    self.attempt(True)
+  File "/home/drakestapleton/workspace/hermes-desk/universal-L569-omega-mv/tests/universal/test_evidence_lifecycle.py", line 33, in attempt
+    self.assertFalse(receipt.exists(), 'failed attempt retained stale PASS receipt')
+AssertionError: True is not false : failed attempt retained stale PASS receipt
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.045s
+
+FAILED (failures=2)

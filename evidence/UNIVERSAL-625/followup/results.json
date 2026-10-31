@@ -1,0 +1,33 @@
+{
+  "base": {
+    "command": [
+      "make",
+      "-j2",
+      "OUT_DIR=build/L569-pinned",
+      "PHYSICS_DIR=../universal-L569-physics",
+      "test"
+    ],
+    "rc": 0,
+    "log": "base-pinned.log",
+    "physics_sha": "6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf",
+    "rc_source": "parent process proc_35fa0081ba04 stdout PINNED_BASE_RC=0"
+  },
+  "doctrine": {
+    "command": [
+      "bash",
+      "scripts/check_doctrine.sh"
+    ],
+    "rc": 0,
+    "log": "doctrine-corrected.log"
+  },
+  "replay": {
+    "command": [
+      "make",
+      "OUT_DIR=build/fresh",
+      "test-universal-semantics"
+    ],
+    "rc": 0,
+    "log": "arithmetic-replay.log",
+    "source_sha": "f8068d85586779ce19dcd86fd7c1b1faf881f238"
+  }
+}

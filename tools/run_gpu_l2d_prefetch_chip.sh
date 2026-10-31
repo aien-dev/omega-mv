@@ -39,6 +39,7 @@ if [ "${1:-}" = --host-qualification ]; then
   exec "$stage/gate.elf" "$HERE/seed/out/omc"
 fi
 EVID="${1:?evidence dir}"; PHYS="${2:-$HOME/workspace/physics-own30b-k}"
+"$(dirname "$0")/require_physics_pin.sh" "$PHYS" || exit 2  # omega#456: refuse a Physics checkout other than physics.lock
 # Classification is implemented by native/prefetch/classify.om. Require the
 # explicitly built native classifier before any device work; never fall back
 # to accepting a nonzero child exit. An exclusive directory prevents stale

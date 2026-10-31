@@ -1,0 +1,5 @@
+# Actual omnet excerpt, unchanged secret-consuming early-exit comparison.
+derive-consumer emit seed/qualification/security673/relational/evidence/consumer/dseqhash.src file:seed/qualification/security673/relational/evidence/consumer/dseqhash.bin - 0
+consumer-zero run seed/qualification/security673/relational/evidence/consumer/dseqhash.src+seed/qualification/security673/relational/consumer-main.om - - - 1
+consumer-one run seed/qualification/security673/relational/evidence/consumer/dseqhash.src+seed/qualification/security673/relational/consumer-main.om - - - 0 one
+consumer-scan run seed/qualification/om2/leak/leakscan.om file:seed/qualification/security673/relational/evidence/consumer/dseqhash.bin file:seed/qualification/security673/relational/evidence/consumer/dseqhash.scan - 2

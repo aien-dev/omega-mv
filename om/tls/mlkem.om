@@ -1,0 +1,864 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/mlkem.om: ML-KEM-768 (FIPS 203, August 2024) as an OM-2 library unit (no om2 line, no main,
+note no globals). Module code MK; functions mlkem_*. Uses sha3.om (H = SHA3-256, G = SHA3-512,
+note J = SHAKE256 to 32 bytes, PRF = SHAKE256 to 128 bytes, XOF = SHAKE128). Composition: after sha3.
+note
+note API (sizes MKEKSZ 1184, MKDKSZ 2400, MKCTSZ 1088, MKSSZ 32; parameter set k 3, eta1 = eta2 = 2,
+note du 10, dv 4):
+note   mlkem_keygen d view uchar 32 z view uchar 32 ek edit uchar * dk edit uchar *
+note       ML-KEM.KeyGen_internal(d, z) (Alg 16). 0 ok; 2: len ek != 1184 or len dk != 2400.
+note   mlkem_keygen_seed s view uchar * ek edit uchar * dk edit uchar *
+note       s = d || z (64 bytes, the seed form of FIPS 203 / Wycheproof). 0 ok; 2: bad lengths.
+note   mlkem_encaps ek view uchar * m view uchar 32 ct edit uchar * ss edit uchar 32
+note       ML-KEM.Encaps_internal(ek, m) (Alg 17) with the 7.2 input checks first: 2: len ek != 1184
+note       or len ct != 1088; 1: ek fails the modulus check (a 12-bit value of ByteDecode12 >= q).
+note       On a nonzero return ct and ss are zeroed. m is the 32 random bytes (the caller draws them).
+note   mlkem_decaps dk view uchar * ct view uchar * ss edit uchar *
+note       ML-KEM.Decaps_internal(dk, c) (Alg 18) with the 7.3 input checks first: 2: len dk != 2400,
+note       len ct != 1088 or len ss != 32; 3: H(dk[384k .. 768k+32)) != dk[768k+32 .. 768k+64).
+note       0: ss = K' when the re-encryption matches c, else the implicit-rejection key J(z || c).
+note       On a nonzero return ss (if 32 bytes) is zeroed.
+note
+note Arithmetic: coefficients are ulong in [0, q), q = 3329. mlkem_red x = x - q floor(x M / 2^40),
+note M = 330282857 = Ceiling[2^40/3329], exact for every x < 2^28: e = M q - 2^40 = 3177 and
+note 2^28 e < 2^40, so x M / 2^40 - x / q = x e / (q 2^40) < 1/q (Wolfram: M=Ceiling[2^40/3329];
+note e=M 3329-2^40 -> 3177; 2^28 e < 2^40 -> True; Log2[(2^28-1) M] -> 56.3 so x M fits 64 bits; a
+note 200000-sample check Floor[x M/2^40]==Floor[x/3329] for x < 2^28 -> True). Every product and sum
+note reduced here is below 3 q^2 < 2^28. No div or rem instruction touches secret data (KyberSlash).
+note Compress_d(x) = floor((2^d x + 1664) / q) mod 2^d via the same multiply-shift; Wolfram checked it
+note equals Round[2^d x / q] mod 2^d for d in 1, 4, 5, 10, 11 and every x < q (exhaustive -> True), and
+note Decompress_d(y) = (q y + 2^(d-1)) >> d equals Round[q y / 2^d] for every y < 2^d, d 1, 4, 10 -> True.
+note NTT constants: zetas[i] = 17^BitRev7(i) mod q (Wolfram PowerMod[17, br7[i], 3329], i 0..127,
+note MultiplicativeOrder[17, 3329] -> 256); base-case gammas 17^(2 BitRev7(i) + 1) mod q equal
+note zetas[64 + i/2] for even i and q - zetas[64 + i/2] for odd i (Wolfram table compare: g[0] 17,
+note g[1] 3312, g[2] 2761 ...), so no second table. 128^-1 mod q = 3303 (Wolfram PowerMod[128,-1,3329]).
+note
+note Constant time: no branch, loop count or array index depends on d, z, m, sigma, r, s, e, y, the
+note decrypted m', K, K', or the comparison of c with the re-encryption c'. Loop counts and indices
+note depend only on the parameter set, the public matrix seed rho (SampleNTT rejection sampling on
+note SHAKE128(rho || j || i) is public, FIPS 203 3.3) and public lengths. The decaps compare ORs the
+note xor of all 1088 bytes and turns it into an all-ones / zero mask arithmetically; K is selected by
+note mask. The 7.3 hash-check verdict and the 7.2 modulus verdict are returned (they classify the
+note input, as FIPS 203 requires). omc emits plain AArch64 (MUL, ADD, EOR, AND, shifts, no data-
+note dependent instruction choice); the DIT bit is not set. All secret local arrays (seeds, G output,
+note noise and secret polynomials, PRF output, m', K', K-bar, c') are zeroed before return.
+
+const MKEKSZ ulong 1184
+const MKDKSZ ulong 2400
+const MKCTSZ ulong 1088
+const MKSSZ ulong 32
+const MKQ ulong 3329
+const MKM ulong 330282857
+
+note zetas[i] = 17^BitRev7(i) mod 3329, i = 0..127 (Wolfram, see the header)
+fn mlkem_zetas z edit ulong 128 to void
+put z 0 1
+put z 1 1729
+put z 2 2580
+put z 3 3289
+put z 4 2642
+put z 5 630
+put z 6 1897
+put z 7 848
+put z 8 1062
+put z 9 1919
+put z 10 193
+put z 11 797
+put z 12 2786
+put z 13 3260
+put z 14 569
+put z 15 1746
+put z 16 296
+put z 17 2447
+put z 18 1339
+put z 19 1476
+put z 20 3046
+put z 21 56
+put z 22 2240
+put z 23 1333
+put z 24 1426
+put z 25 2094
+put z 26 535
+put z 27 2882
+put z 28 2393
+put z 29 2879
+put z 30 1974
+put z 31 821
+put z 32 289
+put z 33 331
+put z 34 3253
+put z 35 1756
+put z 36 1197
+put z 37 2304
+put z 38 2277
+put z 39 2055
+put z 40 650
+put z 41 1977
+put z 42 2513
+put z 43 632
+put z 44 2865
+put z 45 33
+put z 46 1320
+put z 47 1915
+put z 48 2319
+put z 49 1435
+put z 50 807
+put z 51 452
+put z 52 1438
+put z 53 2868
+put z 54 1534
+put z 55 2402
+put z 56 2647
+put z 57 2617
+put z 58 1481
+put z 59 648
+put z 60 2474
+put z 61 3110
+put z 62 1227
+put z 63 910
+put z 64 17
+put z 65 2761
+put z 66 583
+put z 67 2649
+put z 68 1637
+put z 69 723
+put z 70 2288
+put z 71 1100
+put z 72 1409
+put z 73 2662
+put z 74 3281
+put z 75 233
+put z 76 756
+put z 77 2156
+put z 78 3015
+put z 79 3050
+put z 80 1703
+put z 81 1651
+put z 82 2789
+put z 83 1789
+put z 84 1847
+put z 85 952
+put z 86 1461
+put z 87 2687
+put z 88 939
+put z 89 2308
+put z 90 2437
+put z 91 2388
+put z 92 733
+put z 93 2337
+put z 94 268
+put z 95 641
+put z 96 1584
+put z 97 2298
+put z 98 2037
+put z 99 3220
+put z 100 375
+put z 101 2549
+put z 102 2090
+put z 103 1645
+put z 104 1063
+put z 105 319
+put z 106 2773
+put z 107 757
+put z 108 2099
+put z 109 561
+put z 110 2466
+put z 111 2594
+put z 112 2804
+put z 113 1092
+put z 114 403
+put z 115 1026
+put z 116 1143
+put z 117 2150
+put z 118 2775
+put z 119 886
+put z 120 1722
+put z 121 1212
+put z 122 1874
+put z 123 1029
+put z 124 2110
+put z 125 2935
+put z 126 885
+put z 127 2154
+end
+
+note x mod q for x < 2^28, branch-free (header)
+fn mlkem_red x ulong to ulong inline
+ret sub x mul MKQ shr mul x MKM 40
+end
+
+fn mlkem_pzero f edit ulong 256 to void
+for i ulong 256
+put f i 0
+end
+end
+
+note f = v[256 i .. 256 i + 256)
+fn mlkem_vget f edit ulong 256 v view ulong * i ulong to void
+o = mul i 256
+for j ulong 256
+put f j get v add o j
+end
+end
+
+note v[256 i .. 256 i + 256) = f
+fn mlkem_vput v edit ulong * i ulong f view ulong 256 to void
+o = mul i 256
+for j ulong 256
+put v add o j get f j
+end
+end
+
+note r = r + a mod q
+fn mlkem_padd r edit ulong 256 a view ulong 256 to void
+for i ulong 256
+put r i mlkem_red add get r i get a i
+end
+end
+
+note r = a - r mod q
+fn mlkem_psubr r edit ulong 256 a view ulong 256 to void
+for i ulong 256
+put r i mlkem_red sub add get a i MKQ get r i
+end
+end
+
+note one NTT layer block (Alg 9 steps 5..8): f[x], f[x + n] for x in b .. b + n with zeta w
+fn mlkem_ntblk f edit ulong 256 w ulong b ulong n ulong to void
+for j ulong n
+x = add b j
+t = mul w get f add x n
+t = sub t mul MKQ shr mul t MKM 40
+u = get f x
+v = sub add u MKQ t
+v = sub v mul MKQ shr mul v MKM 40
+put f add x n v
+u = add u t
+u = sub u mul MKQ shr mul u MKM 40
+put f x u
+end
+end
+
+note NTT (Alg 9); the layer, block and zeta index are public loop counters
+fn mlkem_ntt f edit ulong 256 z view ulong 128 to void
+for l ulong 7
+n = shr ulong 128 l
+for s ulong shl ulong 1 l
+mlkem_ntblk f get z add shl ulong 1 l s mul s shl n 1 n
+end
+end
+end
+
+note one NTT^-1 block (Alg 10 steps 5..8)
+fn mlkem_itblk f edit ulong 256 w ulong b ulong n ulong to void
+for j ulong n
+x = add b j
+t = get f x
+u = get f add x n
+v = add t u
+v = sub v mul MKQ shr mul v MKM 40
+put f x v
+v = mul w sub add u MKQ t
+v = sub v mul MKQ shr mul v MKM 40
+put f add x n v
+end
+end
+
+note NTT^-1 (Alg 10): layers len 2 .. 128, zeta index 127 downwards, then times 128^-1 = 3303
+fn mlkem_intt f edit ulong 256 z view ulong 128 to void
+for k ulong 7
+l = sub 6 k
+n = shr ulong 128 l
+for s ulong shl ulong 1 l
+mlkem_itblk f get z sub sub shl ulong 2 l 1 s mul s shl n 1 n
+end
+end
+for i ulong 256
+put f i mlkem_red mul get f i 3303
+end
+end
+
+note r = r + a * b in T_q (MultiplyNTTs, Alg 11 / BaseCaseMultiply Alg 12); pair 2i uses gamma
+note zetas[64 + i/2] (i even) or q - zetas[64 + i/2] (i odd)
+fn mlkem_bmacc r edit ulong 256 a view ulong 256 b view ulong 256 z view ulong 128 to void
+for i ulong 128
+g = get z add 64 shr i 1
+v = add mul and i 1 sub MKQ shl g 1 g
+g = sub v mul MKQ shr mul v MKM 40
+x = shl i 1
+v = mul get a add x 1 get b add x 1
+v = sub v mul MKQ shr mul v MKM 40
+v = add mul get a x get b x mul v g
+v = sub v mul MKQ shr mul v MKM 40
+v = add get r x v
+v = sub v mul MKQ shr mul v MKM 40
+put r x v
+v = mul get a x get b add x 1
+v = add v mul get a add x 1 get b x
+v = sub v mul MKQ shr mul v MKM 40
+v = add get r add x 1 v
+v = sub v mul MKQ shr mul v MKM 40
+put r add x 1 v
+end
+end
+
+note ByteEncode_d (Alg 5) of f (coefficients below 2^d) into o[off .. off + 32 d): a bit
+note accumulator, least-significant bit first; the inner loop count depends on d only
+fn mlkem_benc o edit uchar * off ulong f view ulong 256 d ulong to void
+ac = ulong 0
+nb = ulong 0
+for i ulong 256
+ac = or ac shl get f i nb
+nb = add nb d
+while ge nb 8 bound 2
+put o off uchar and ac 0xff
+off = add off 1
+ac = shr ac 8
+nb = sub nb 8
+end
+end
+end
+
+note ByteDecode_d (Alg 6) of b[off .. off + 32 d) into f; values reduced mod q (matters for d 12)
+fn mlkem_bdec f edit ulong 256 b view uchar * off ulong d ulong to void
+ac = ulong 0
+nb = ulong 0
+mk = sub shl ulong 1 d 1
+for i ulong 256
+while lt nb d bound 2
+ac = or ac shl ulong get b off nb
+off = add off 1
+nb = add nb 8
+end
+put f i mlkem_red and ac mk
+ac = shr ac d
+nb = sub nb d
+end
+end
+
+note Compress_d (4.7): floor((2^d x + 1664) / q) mod 2^d by multiply-shift (header), x < q
+fn mlkem_comp f edit ulong 256 d ulong to void
+mk = sub shl ulong 1 d 1
+for i ulong 256
+x = add shl get f i d 1664
+put f i and shr mul x MKM 40 mk
+end
+end
+
+note Decompress_d (4.8): (q y + 2^(d-1)) >> d
+fn mlkem_dcmp f edit ulong 256 d ulong to void
+h = shl ulong 1 sub d 1
+for i ulong 256
+put f i shr add mul MKQ get f i h d
+end
+end
+
+note SamplePolyCBD_2 (Alg 8): coefficient 2j from the low nibble of b[j], 2j + 1 from the high one
+fn mlkem_cbd f edit ulong 256 b view uchar 128 to void
+for j ulong 128
+x = ulong get b j
+p = add and x 1 and shr x 1 1
+n = add and shr x 2 1 and shr x 3 1
+put f shl j 1 mlkem_red sub add p MKQ n
+p = add and shr x 4 1 and shr x 5 1
+n = add and shr x 6 1 and shr x 7 1
+put f add shl j 1 1 mlkem_red sub add p MKQ n
+end
+end
+
+note f = SamplePolyCBD_2(PRF_2(s, n)), PRF_2(s, n) = SHAKE256(s || n, 128 bytes) (4.1)
+fn mlkem_noise f edit ulong 256 s view uchar 32 n ulong to void
+c = new ulong S3CN 0
+nb = new uchar 1 0
+o = new uchar 128 0
+put nb 0 uchar n
+sha3_shake256_init c
+sha3_absorb c s
+sha3_absorb c nb
+sha3_squeeze c o
+mlkem_cbd f o
+for i ulong S3CN
+put c i 0
+end
+for i ulong 128
+put o i 0
+end
+end
+
+note SampleNTT steps 6..15 for one 168-byte SHAKE128 block o: appends accepted values to f from
+note index n, returns the new count (public data: rejection on the public matrix seed)
+fn mlkem_spar f edit ulong 256 o view uchar 168 n ulong to ulong
+for t ulong 56
+p = mul t 3
+c1 = ulong get o add p 1
+x = add ulong get o p shl and c1 15 8
+y = or shr c1 4 shl ulong get o add p 2 4
+if lt x MKQ
+put f n x
+n = add n 1
+end
+if and lt y MKQ lt n 256
+put f n y
+n = add n 1
+end
+if eq n 256
+break
+end
+end
+ret n
+end
+
+note SampleNTT(rho || j || i) (Alg 7) from SHAKE128 in 168-byte blocks. Public data: the rejection
+note branches and the block count depend on rho only. A block yields 112 candidates accepted with
+note probability 3329/4096; the while bound (999999 blocks) is unreachable short of a SHAKE128 break.
+fn mlkem_sntt f edit ulong 256 rho view uchar 32 i ulong j ulong to void
+c = new ulong S3CN 0
+bb = new uchar 34 0
+o = new uchar 168 0
+for k ulong 32
+put bb k get rho k
+end
+put bb 32 uchar j
+put bb 33 uchar i
+sha3_shake128_init c
+sha3_absorb c bb
+n = ulong 0
+while lt n 256 bound 999999
+sha3_squeeze c o
+n = mlkem_spar f o n
+end
+end
+
+note A-hat (3 x 3 polynomials, entry (i, j) at 256 (3 i + j)) = SampleNTT(rho || j || i)
+fn mlkem_genmat a edit ulong 2304 rho view uchar 32 to void
+f = new ulong 256 0
+for i ulong 3
+for j ulong 3
+mlkem_sntt f rho i j
+mlkem_vput a add mul i 3 j f
+end
+end
+end
+
+note t[i] = sum_j A[i][j] o s[j] (tr 0) or sum_j A[j][i] o s[j] (tr 1), in T_q
+fn mlkem_matvec t edit ulong 768 a view ulong 2304 s view ulong 768 tr ulong z view ulong 128 to void
+r = new ulong 256 0
+x = new ulong 256 0
+y = new ulong 256 0
+for i ulong 3
+mlkem_pzero r
+for j ulong 3
+k = add mul i 3 j
+if eq tr 1
+k = add mul j 3 i
+end
+mlkem_vget x a k
+mlkem_vget y s j
+mlkem_bmacc r x y z
+end
+mlkem_vput t i r
+end
+mlkem_pzero r
+mlkem_pzero y
+end
+
+note r = sum_j t[j] o s[j] in T_q
+fn mlkem_dot r edit ulong 256 t view ulong 768 s view ulong 768 z view ulong 128 to void
+x = new ulong 256 0
+y = new ulong 256 0
+mlkem_pzero r
+for j ulong 3
+mlkem_vget x t j
+mlkem_vget y s j
+mlkem_bmacc r x y z
+end
+mlkem_pzero x
+mlkem_pzero y
+end
+
+note s-hat = NTT(s), e-hat = NTT(e) with s[i] = CBD(PRF(sigma, i)), e[i] = CBD(PRF(sigma, 3 + i))
+fn mlkem_kgse s edit ulong 768 e edit ulong 768 sig view uchar 32 to void
+z = new ulong 128 0
+f = new ulong 256 0
+mlkem_zetas z
+for i ulong 3
+mlkem_noise f sig i
+mlkem_ntt f z
+mlkem_vput s i f
+mlkem_noise f sig add i 3
+mlkem_ntt f z
+mlkem_vput e i f
+end
+mlkem_pzero f
+end
+
+note t = A-hat o s + t (t holds e-hat on entry)
+fn mlkem_kgt t edit ulong 768 a view ulong 2304 s view ulong 768 to void
+z = new ulong 128 0
+u = new ulong 768 0
+f = new ulong 256 0
+x = new ulong 256 0
+mlkem_zetas z
+mlkem_matvec u a s 0 z
+for i ulong 3
+mlkem_vget f u i
+mlkem_vget x t i
+mlkem_padd f x
+mlkem_vput t i f
+end
+for i ulong 768
+put u i 0
+end
+mlkem_pzero f
+mlkem_pzero x
+end
+
+note o[0 .. 384 k) = ByteEncode12 of the three polynomials of v
+fn mlkem_venc o edit uchar * v view ulong 768 to void
+f = new ulong 256 0
+for i ulong 3
+mlkem_vget f v i
+mlkem_benc o mul i 384 f 12
+end
+mlkem_pzero f
+end
+
+note K-PKE.KeyGen core (Alg 13 steps 3..20) from rho and sigma: ek = ByteEncode12(t-hat) || rho,
+note dk[0 .. 1152) = ByteEncode12(s-hat)
+fn mlkem_kgcore rho view uchar 32 sig view uchar 32 ek edit uchar * dk edit uchar * to void
+a = new ulong 2304 0
+s = new ulong 768 0
+t = new ulong 768 0
+mlkem_genmat a rho
+mlkem_kgse s t sig
+mlkem_kgt t a s
+mlkem_venc ek t
+mlkem_venc dk s
+for i ulong 32
+put ek add 1152 i get rho i
+end
+for i ulong 768
+put s i 0
+end
+end
+
+note K-PKE.Encrypt part u (Alg 14 steps 13..19, 21): c1 = ByteEncode10(Compress10(NTT^-1(A^T o y) + e1))
+fn mlkem_encu a view ulong 2304 yh view ulong 768 r view uchar 32 ct edit uchar * to void
+z = new ulong 128 0
+u = new ulong 768 0
+f = new ulong 256 0
+x = new ulong 256 0
+mlkem_zetas z
+mlkem_matvec u a yh 1 z
+for i ulong 3
+mlkem_vget f u i
+mlkem_intt f z
+mlkem_noise x r add i 3
+mlkem_padd f x
+mlkem_comp f 10
+mlkem_benc ct mul i 320 f 10
+end
+for i ulong 768
+put u i 0
+end
+mlkem_pzero f
+mlkem_pzero x
+end
+
+note K-PKE.Encrypt part v (steps 17, 20..23): c2 = ByteEncode4(Compress4(NTT^-1(t^T o y) + e2 + mu)),
+note mu = Decompress1(ByteDecode1(m))
+fn mlkem_encv th view ulong 768 yh view ulong 768 r view uchar 32 m view uchar 32 ct edit uchar * to void
+z = new ulong 128 0
+f = new ulong 256 0
+x = new ulong 256 0
+mlkem_zetas z
+mlkem_dot f th yh z
+mlkem_intt f z
+mlkem_noise x r 6
+mlkem_padd f x
+mlkem_bdec x m 0 1
+mlkem_dcmp x 1
+mlkem_padd f x
+mlkem_comp f 4
+mlkem_benc ct 960 f 4
+mlkem_pzero f
+mlkem_pzero x
+end
+
+note K-PKE.Encrypt(ek, m, r) (Alg 14); ek is 1184 bytes (callers check), ct 1088
+fn mlkem_pkeenc ek view uchar * m view uchar 32 r view uchar 32 ct edit uchar * to void
+z = new ulong 128 0
+a = new ulong 2304 0
+th = new ulong 768 0
+yh = new ulong 768 0
+f = new ulong 256 0
+rho = new uchar 32 0
+mlkem_zetas z
+for i ulong 3
+mlkem_bdec f ek mul i 384 12
+mlkem_vput th i f
+end
+for i ulong 32
+put rho i get ek add 1152 i
+end
+mlkem_genmat a rho
+for i ulong 3
+mlkem_noise f r i
+mlkem_ntt f z
+mlkem_vput yh i f
+end
+mlkem_encu a yh r ct
+mlkem_encv th yh r m ct
+for i ulong 768
+put yh i 0
+end
+mlkem_pzero f
+end
+
+note K-PKE.Decrypt(dk, c) (Alg 15): m = ByteEncode1(Compress1(v' - NTT^-1(s^T o NTT(u'))))
+fn mlkem_pkedec dk view uchar * ct view uchar * m edit uchar 32 to void
+z = new ulong 128 0
+uh = new ulong 768 0
+sh = new ulong 768 0
+f = new ulong 256 0
+w = new ulong 256 0
+mlkem_zetas z
+for i ulong 3
+mlkem_bdec f ct mul i 320 10
+mlkem_dcmp f 10
+mlkem_ntt f z
+mlkem_vput uh i f
+mlkem_bdec f dk mul i 384 12
+mlkem_vput sh i f
+end
+mlkem_dot w sh uh z
+mlkem_intt w z
+mlkem_bdec f ct 960 4
+mlkem_dcmp f 4
+mlkem_psubr w f
+mlkem_comp w 1
+mlkem_benc m 0 w 1
+for i ulong 768
+put sh i 0
+put uh i 0
+end
+mlkem_pzero f
+mlkem_pzero w
+end
+
+note FIPS 203 7.2 modulus check on ek[0 .. 1152) (public): 1 when a 12-bit value is >= q
+fn mlkem_ekchk ek view uchar * to ulong
+bad = ulong 0
+for i ulong 384
+p = mul i 3
+b0 = ulong get ek p
+b1 = ulong get ek add p 1
+b2 = ulong get ek add p 2
+x = or b0 shl and b1 15 8
+y = or shr b1 4 shl b2 4
+bad = or bad shr sub sub MKQ 1 x 63
+bad = or bad shr sub sub MKQ 1 y 63
+end
+ret bad
+end
+
+fn mlkem_keygen d view uchar 32 z view uchar 32 ek edit uchar * dk edit uchar * to ulong
+if or ne len ek MKEKSZ ne len dk MKDKSZ
+ret 2
+end
+gi = new uchar 33 0
+g = new uchar 64 0
+rho = new uchar 32 0
+sig = new uchar 32 0
+for i ulong 32
+put gi i get d i
+end
+put gi 32 3
+sha3_512 gi g
+for i ulong 32
+put rho i get g i
+put sig i get g add i 32
+end
+mlkem_kgcore rho sig ek dk
+for i ulong MKEKSZ
+put dk add 1152 i get ek i
+end
+sha3_256 ek part dk 2336 32
+for i ulong 32
+put dk add 2368 i get z i
+end
+for i ulong 33
+put gi i 0
+end
+for i ulong 64
+put g i 0
+end
+for i ulong 32
+put sig i 0
+end
+ret 0
+end
+
+fn mlkem_keygen_seed s view uchar * ek edit uchar * dk edit uchar * to ulong
+if ne len s 64
+ret 2
+end
+d = new uchar 32 0
+z = new uchar 32 0
+for i ulong 32
+put d i get s i
+put z i get s add i 32
+end
+r = mlkem_keygen d z ek dk
+for i ulong 32
+put d i 0
+put z i 0
+end
+ret r
+end
+
+fn mlkem_zap o edit uchar * to void
+for i ulong len o
+put o i 0
+end
+end
+
+fn mlkem_encaps ek view uchar * m view uchar 32 ct edit uchar * ss edit uchar 32 to ulong
+if or ne len ek MKEKSZ ne len ct MKCTSZ
+mlkem_zap ct
+mlkem_zap ss
+ret 2
+end
+if ne mlkem_ekchk ek 0
+mlkem_zap ct
+mlkem_zap ss
+ret 1
+end
+gi = new uchar 64 0
+g = new uchar 64 0
+r = new uchar 32 0
+for i ulong 32
+put gi i get m i
+end
+sha3_256 ek part gi 32 32
+sha3_512 gi g
+for i ulong 32
+put ss i get g i
+put r i get g add i 32
+end
+mlkem_pkeenc ek m r ct
+for i ulong 64
+put gi i 0
+put g i 0
+end
+for i ulong 32
+put r i 0
+end
+ret 0
+end
+
+note all-ones when a[0 .. 1088) != b, else 0, branch-free over every byte
+fn mlkem_ctmask a view uchar * b view uchar 1088 to ulong
+df = ulong 0
+for i ulong MKCTSZ
+df = or df ulong xor get a i get b i
+end
+mk = sub 0 shr or df sub 0 df 63
+ret mk
+end
+
+note H(ek) check of dk (7.3 step 3): 0 when dk[2336 .. 2368) = SHA3-256(dk[1152 .. 2336))
+fn mlkem_dkchk dk view uchar * to ulong
+h = new uchar 32 0
+sha3_256 part dk 1152 MKEKSZ h
+df = ulong 0
+for i ulong 32
+df = or df ulong xor get h i get dk add 2336 i
+end
+ret df
+end
+
+note (K', r') = G(m' || h), h = dk[2336 .. 2368) (Alg 18 step 7)
+fn mlkem_dgk dk view uchar * mp view uchar 32 g edit uchar 64 to void
+gi = new uchar 64 0
+for i ulong 32
+put gi i get mp i
+put gi add i 32 get dk add 2336 i
+end
+sha3_512 gi g
+for i ulong 64
+put gi i 0
+end
+end
+
+note K-bar = J(z || c) = SHAKE256(z || c, 32), z = dk[2368 .. 2400) (Alg 18 step 8)
+fn mlkem_dj dk view uchar * ct view uchar * kb edit uchar 32 to void
+ji = new uchar 1120 0
+for i ulong 32
+put ji i get dk add 2368 i
+end
+for i ulong MKCTSZ
+put ji add i 32 get ct i
+end
+sha3_shake256 ji kb
+for i ulong 1120
+put ji i 0
+end
+end
+
+note c' = K-PKE.Encrypt(ek_PKE = dk[1152 .. 2336), m', r'), r' = g[32 .. 64) (Alg 18 step 9)
+fn mlkem_reenc dk view uchar * mp view uchar 32 g view uchar 64 cp edit uchar 1088 to void
+rp = new uchar 32 0
+for i ulong 32
+put rp i get g add i 32
+end
+mlkem_pkeenc part dk 1152 MKEKSZ mp rp cp
+for i ulong 32
+put rp i 0
+end
+end
+
+note ss = K' xor (mk and (K' xor K-bar)): K' when mk = 0, K-bar when mk is all ones (steps 10, 11)
+fn mlkem_sel ss edit uchar * g view uchar 64 kb view uchar 32 mk ulong to void
+m8 = and mk 0xff
+for i ulong 32
+k = ulong get g i
+put ss i uchar xor k and m8 xor k ulong get kb i
+end
+end
+
+fn mlkem_decaps dk view uchar * ct view uchar * ss edit uchar * to ulong
+if ne len ss MKSSZ
+mlkem_zap ss
+ret 2
+end
+if or ne len dk MKDKSZ ne len ct MKCTSZ
+mlkem_zap ss
+ret 2
+end
+if ne mlkem_dkchk dk 0
+mlkem_zap ss
+ret 3
+end
+mp = new uchar 32 0
+g = new uchar 64 0
+kb = new uchar 32 0
+cp = new uchar 1088 0
+mlkem_pkedec dk ct mp
+mlkem_dgk dk mp g
+mlkem_dj dk ct kb
+mlkem_reenc dk mp g cp
+mk = mlkem_ctmask ct cp
+mlkem_sel ss g kb mk
+for i ulong 64
+put g i 0
+end
+for i ulong 32
+put mp i 0
+put kb i 0
+end
+for i ulong MKCTSZ
+put cp i 0
+end
+ret 0
+end

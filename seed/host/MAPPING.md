@@ -64,5 +64,5 @@ while developing the runtime. They are not linked into the compiler or products.
 Kernel constants/layouts are from Linux asm-generic/unistd.h, mman-common.h and
 linux/mman.h. AArch64 encodings use seed/rung2/table.s2. The device request rule
 comes from the reviewed L605 src/device/omc.om, source 0dee699. Existing host
-source is f0499f415571bdd7496b6de391096915e78f7556. This remains a proposed
-extension to that branch; main does not yet contain this compiler profile.
+source is f0499f415571bdd7496b6de391096915e78f7556. These device words are on
+main: `hdevctl` is defined in seed/omc/omc.om (verified at main e5b32567).

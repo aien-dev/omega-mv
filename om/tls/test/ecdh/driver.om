@@ -1,0 +1,382 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: test driver for om/tls/ecdh.om (program mode), concatenated after ec.om and ecdh.om.
+note Reads a vector file on stdin (see gen_vectors.py), one case per line:
+note   ID OP RC DHEX PHEX XHEX     ('-' = empty hex field, '#' comment)
+note   OP S: ecdh_shared(d, p, z) with len z = len x; must return exactly RC and write x
+note   OP P: ecdh_pub(d, q) with len q = len x; must return exactly RC and write x (zeros when RC != 0)
+note   OP C: ecdh_pct(d, p); must return exactly RC
+note Controls for every RC 0 case. S: the last byte of p flipped must give exactly 3 (off-curve),
+note d with its last byte xor 1 must not give x, a 1-byte-shorter d must give 5 and a 1-byte-longer
+note z must give 2. P: ecdh_pct(d, x) must give 0 and with the last byte of x flipped exactly 6.
+note Optional argument: repeat count R (timing; each call runs R times). Prints one MISMATCH line
+note per wrong result and the summary line:
+note   cases C calls V controls K mismatches X ns T codes c0 c1 c2 c3 c4 c5 c6
+note Exit 0 only when at least one call ran and none mismatched; 1 otherwise; 65 bad input.
+
+text txmis "MISMATCH line "
+text txgot " got "
+text txwhy " "
+text txctl "control"
+text txver "call"
+text txcase "cases "
+text txvers " calls "
+text txctls " controls "
+text txmm " mismatches "
+text txns " ns "
+text txcod " codes"
+text txpct "pct"
+text txz "bytes"
+text txsp " "
+text txnl "\n"
+text txbad "driver: bad input\n"
+
+global etin uchar 16777216
+global etout uchar 32
+global etarg uchar 32
+note etc: 0 line, 1 cases, 2 calls, 3 mismatches, 4 ns, 5 repeats, 6 pos, 7 controls,
+note 8..14 code counts 0..6, 17 op (83 S, 80 P, 67 C), 18 expected code, 20 d len, 21 p len,
+note 22 x len, 24 id start, 25 id end, 26 input length
+global etc ulong 32
+
+fn etnum v ulong to void
+k = ulong 0
+x = v
+while true bound 30
+put etout sub 31 k uchar add rem x 10 48
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 etout sub 32 k k
+end
+
+fn etdie to void
+r = write 2 txbad 0 len txbad
+exit 65
+end
+
+fn etnib c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+etdie
+ret 0
+end
+
+fn etslurp to void
+t = ulong 0
+while true bound 999999
+room = sub len etin t
+if eq room 0
+etdie
+end
+r = read 0 etin t room
+if lt r 0
+etdie
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put etc 26 t
+end
+
+fn etreps to ulong
+if lt argcnt 2
+ret 1
+end
+l = argread 1 etarg 0 20
+v = ulong 0
+for i ulong ulong l
+v = add mul v 10 sub ulong get etarg i 48
+end
+ret v
+end
+
+note end of the token at the current position (stops at a space or newline); the token must be
+note non-empty
+fn etend to ulong
+p = get etc 6
+e = p
+while lt e get etc 26 bound 999999
+c = get etin e
+if or eq c 32 eq c 10
+break
+end
+e = add e 1
+end
+if eq e p
+etdie
+end
+ret e
+end
+
+note step past the token ending at e and one following space (a newline is left in place)
+fn etnext e ulong to void
+if lt e get etc 26
+if eq get etin e 32
+e = add e 1
+end
+end
+put etc 6 e
+end
+
+fn etdec to ulong
+e = etend
+v = ulong 0
+for i ulong sub e get etc 6
+c = ulong get etin add get etc 6 i
+if or lt c 48 gt c 57
+etdie
+end
+v = add mul v 10 sub c 48
+end
+etnext e
+ret v
+end
+
+fn etbyte p ulong to uchar
+hi = etnib ulong get etin p
+lo = etnib ulong get etin add p 1
+ret uchar or shl hi 4 lo
+end
+
+note hex token into a[0..); returns the byte count ('-' is empty)
+fn ethex a edit uchar * to ulong
+e = etend
+p = get etc 6
+if and eq sub e p 1 eq get etin p 45
+etnext e
+ret 0
+end
+h = sub e p
+if ne and h 1 0
+etdie
+end
+c = div h 2
+if gt c len a
+etdie
+end
+for i ulong c
+put a i etbyte add p mul i 2
+end
+etnext e
+ret c
+end
+
+fn etbump i ulong v ulong to void
+put etc i add get etc i v
+end
+
+fn etmis why view uchar * got ulong to void
+r = write 1 txmis 0 len txmis
+etnum get etc 0
+r = write 1 txsp 0 1
+r = write 1 etin get etc 24 sub get etc 25 get etc 24
+r = write 1 txwhy 0 1
+r = write 1 why 0 len why
+r = write 1 txgot 0 len txgot
+etnum got
+r = write 1 txnl 0 1
+etbump 3 1
+end
+
+
+note one library call for the case's OP (etc 17); the output is z[0..etc 22)
+fn etcall d view uchar * p view uchar * z edit uchar * to ulong
+op = get etc 17
+if eq op 83
+ret ecdh_shared d p part z 0 get etc 22
+end
+if eq op 80
+ret ecdh_pub d part z 0 get etc 22
+end
+ret ecdh_pct d p
+end
+
+note parse one case line into d, p and the expected bytes x
+fn etparse d edit uchar * p edit uchar * x edit uchar * to void
+put etc 24 get etc 6
+e = etend
+put etc 25 e
+etnext e
+e = etend
+if ne sub e get etc 6 1
+etdie
+end
+c = ulong get etin get etc 6
+if and and ne c 83 ne c 80 ne c 67
+etdie
+end
+put etc 17 c
+etnext e
+put etc 18 etdec
+put etc 20 ethex d
+put etc 21 ethex p
+put etc 22 ethex x
+if ne get etin get etc 6 10
+etdie
+end
+end
+
+fn etzero o edit uchar * to void
+for i ulong len o
+put o i 0
+end
+end
+
+note bytes o[0..n) against x[0..n): 0 equal, else 1
+fn etdiff o view uchar * x view uchar * to ulong
+k = ulong 0
+for i ulong len x
+k = or k ulong xor get o i get x i
+end
+if eq k 0
+ret 0
+end
+ret 1
+end
+
+fn etctl got ulong want ulong to void
+etbump 7 1
+if ne got want
+etmis txctl got
+end
+end
+
+note S controls (expected code 0), on views of exact length: peer flipped must give 3, scalar
+note changed must not give x, a short d must give 5, a long z must give 2 
+fn etcs1 d view uchar * p edit uchar * to void
+o = new uchar 64 0
+np = len p
+put p sub np 1 xor get p sub np 1 1
+got = ecdh_shared d p part o 0 len d
+put p sub np 1 xor get p sub np 1 1
+etctl got 3
+end
+
+fn etcs2 d edit uchar * p view uchar * x view uchar * to void
+o = new uchar 64 0
+nd = len d
+put d sub nd 1 xor get d sub nd 1 1
+got = ecdh_shared d p part o 0 nd
+put d sub nd 1 xor get d sub nd 1 1
+etbump 7 1
+if eq got 0
+if eq etdiff part o 0 nd x 0
+etmis txctl 0
+end
+end
+end
+
+fn etcs3 d view uchar * p view uchar * to void
+o = new uchar 64 0
+nd = len d
+got = ecdh_shared part d 0 sub nd 1 p part o 0 nd
+etctl got 5
+got = ecdh_shared d p part o 0 add nd 1
+etctl got 2
+end
+
+note P controls (expected code 0): pct of the expected key passes, a flipped key fails with 6
+fn etcp d view uchar * x edit uchar * to void
+nx = len x
+got = ecdh_pct d x
+etctl got 0
+put x sub nx 1 xor get x sub nx 1 1
+got = ecdh_pct d x
+put x sub nx 1 xor get x sub nx 1 1
+etctl got 6
+end
+
+note run the case R times (etc 5), keeping the last code in etc 19
+fn etrun d view uchar * p view uchar * o edit uchar * to void
+for k ulong get etc 5
+etzero o
+t0 = monons
+put etc 19 etcall d p o
+etbump 4 ulong sub monons t0
+etbump 2 1
+end
+end
+
+fn etchk o view uchar * x view uchar * to void
+got = get etc 19
+if le got 6
+etbump add 8 got 1
+end
+if ne got get etc 18
+etmis txver got
+end
+if eq etdiff o x 1
+etmis txz got
+end
+end
+
+fn etcase d edit uchar * p edit uchar * x edit uchar * to void
+o = new uchar 128 0
+etbump 1 1
+etparse d p x
+etrun part d 0 get etc 20 part p 0 get etc 21 o
+etchk part o 0 get etc 22 part x 0 get etc 22
+if eq get etc 18 0
+nd = get etc 20
+np = get etc 21
+nx = get etc 22
+if eq get etc 17 83
+etcs1 part d 0 nd part p 0 np
+etcs2 part d 0 nd part p 0 np part x 0 nx
+etcs3 part d 0 nd part p 0 np
+end
+if eq get etc 17 80
+etcp part d 0 nd part x 0 nx
+end
+end
+end
+
+fn main to int
+d = new uchar 64 0
+p = new uchar 256 0
+x = new uchar 128 0
+etslurp
+put etc 5 etreps
+tot = get etc 26
+while lt get etc 6 tot bound 999999
+etbump 0 1
+q = get etc 6
+if ne get etin q 35
+etcase d p x
+end
+e = get etc 6
+while and lt e tot ne get etin e 10 bound 999999
+e = add e 1
+end
+put etc 6 add e 1
+end
+r = write 1 txcase 0 len txcase
+etnum get etc 1
+r = write 1 txvers 0 len txvers
+etnum get etc 2
+r = write 1 txctls 0 len txctls
+etnum get etc 7
+r = write 1 txmm 0 len txmm
+etnum get etc 3
+r = write 1 txns 0 len txns
+etnum get etc 4
+r = write 1 txcod 0 len txcod
+for i ulong 7
+r = write 1 txsp 0 1
+etnum get etc add 8 i
+end
+r = write 1 txnl 0 1
+if or gt get etc 3 0 eq get etc 2 0
+ret 1
+end
+ret 0
+end

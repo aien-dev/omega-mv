@@ -1,0 +1,20 @@
+; boot-qemu.s2 -- start-up words for the second oracle, qemu-riscv32 in Linux user mode. Same job as
+; boot-tt.s2, different world: the image is loaded at 0x10000 (code at 0x10100), the argument block is at
+; 0x11000 (+0 a, +4 b, +8 out, +12 n words), and the result leaves through Linux system calls:
+; write(1, out, 4n) (a7 = 64) then exit(0) (a7 = 93), RISC-V Linux syscall numbers.
+; 15 instructions (60 bytes); vecadd follows at byte 60.
+  lui 28 0x11           ; t3 = 0x11000, the argument block
+  lw 10 28 0            ; a0 = a
+  lw 11 28 4            ; a1 = b
+  lw 12 28 8            ; a2 = out
+  lw 13 28 12           ; a3 = n
+  jal 1 0 20 0 0        ; ra = next, call vecadd: +40 bytes (imm[10:1] = 20), 10 instructions ahead
+  addi 10 0 1           ; a0 = 1 (stdout)
+  lw 11 28 8            ; a1 = out
+  lw 12 28 12           ; a2 = n
+  slli 12 12 2          ; a2 = 4n bytes
+  addi 17 0 64          ; a7 = write
+  ecall
+  addi 10 0 0           ; a0 = 0
+  addi 17 0 93          ; a7 = exit
+  ecall

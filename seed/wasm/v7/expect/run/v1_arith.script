@@ -1,0 +1,14 @@
+call addi 2147483647 1
+call addi -5 3
+call addu 200 100
+call divi -9223372036854775808 -1
+call remi -9223372036854775808 -1
+call divi 7 0
+call remi -7 2
+call shl8 64 1
+call shl8 -64 1
+call shl8 1 8
+call shr8 -128 7
+call negu 1
+call memory 0
+call stop

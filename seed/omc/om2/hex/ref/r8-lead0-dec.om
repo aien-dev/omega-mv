@@ -1,0 +1,7 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of r8-lead0.om (value from Wolfram, wolfram.txt query tokens): same line, same error.
+om2
+fn main to int
+x = uchar 256
+ret 0
+end

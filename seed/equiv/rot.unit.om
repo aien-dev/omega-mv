@@ -1,0 +1,27 @@
+note irequiv fixture (issue 826): rotate a byte right, traps included.
+note r8 is copied verbatim from seed/omc/om2/s1/rot.om line 21 (omega-mv 62d1d0d6);
+note for n >= 8 its shr traps 7 (amount at or above the width).
+note r8w is a refactor through a doubled ushort, keeping that trap explicitly.
+note r8m is a deliberate mutant that masks n with 7: same values for n < 8, but
+note a value instead of trap 7 for every n >= 8.
+fn r8 x uchar n uchar to uchar
+if eq n 0
+ret x
+end
+ret or shr x n shl x sub 8 n
+end
+fn r8w x uchar n uchar to uchar
+if ge n 8
+trap 7
+end
+d = or shl ushort x 8 ushort x
+e = and shr d ushort n 255
+ret uchar e
+end
+fn r8m x uchar n uchar to uchar
+k = and n 7
+if eq k 0
+ret x
+end
+ret or shr x k shl x sub 8 k
+end

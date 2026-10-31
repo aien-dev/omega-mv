@@ -1,0 +1,40 @@
+# Wycheproof d17cc89f ecdh_* cases not converted, by file and flag set. Reason: the key is
+# not the standard named-curve SPKI of the file's curve (other curve OID, explicit or
+# missing parameters, compressed point or malformed ASN.1); the SPKI/ASN.1 layer is not in
+# ecdh.om, whose input is the raw TLS key_share point. Other Wycheproof ecdh files (other
+# curves, pem, webcrypto) are not converted: the approved groups are secp256r1 and secp384r1.
+NOT_RUN wycheproof ecdh_secp256r1_test.json CompressedPoint,CompressedPublic: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json CompressedPoint,InvalidCompressedPublic: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json CompressedPoint,WrongCurve: 6
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidAsn: 221
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidEncoding: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,LargeCofactor,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,ModifiedGroup: 2
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,ModifiedPrime,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,NegativeCofactor,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,NoCofactor,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,UnnamedCurve,WeakPublicKey: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json InvalidPublic,UnnamedCurve,WrongOrder: 2
+NOT_RUN wycheproof ecdh_secp256r1_test.json ModifiedCofactor,UnnamedCurve,UnusedParam: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json ModifiedCurveParameter,UnnamedCurve,UnusedParam: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json ModifiedGenerator,UnnamedCurve,UnusedParam: 2
+NOT_RUN wycheproof ecdh_secp256r1_test.json NoCofactor,UnnamedCurve,UnusedParam: 1
+NOT_RUN wycheproof ecdh_secp256r1_test.json UnnamedCurve,UnusedParam,WrongOrder: 2
+NOT_RUN wycheproof ecdh_secp256r1_test.json WrongCurve: 17
+NOT_RUN wycheproof ecdh_secp384r1_test.json CompressedPoint,CompressedPublic: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json CompressedPoint,InvalidCompressedPublic: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidAsn: 221
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidEncoding: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,LargeCofactor,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,ModifiedGroup: 3
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,ModifiedPrime,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,NegativeCofactor,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,NoCofactor,UnnamedCurve: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,UnnamedCurve,WeakPublicKey: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json InvalidPublic,UnnamedCurve,WrongOrder: 2
+NOT_RUN wycheproof ecdh_secp384r1_test.json ModifiedCofactor,UnnamedCurve,UnusedParam: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json ModifiedCurveParameter,UnnamedCurve,UnusedParam: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json ModifiedGenerator,UnnamedCurve,UnusedParam: 2
+NOT_RUN wycheproof ecdh_secp384r1_test.json NoCofactor,UnnamedCurve,UnusedParam: 1
+NOT_RUN wycheproof ecdh_secp384r1_test.json UnnamedCurve,UnusedParam,WrongOrder: 2
+NOT_RUN wycheproof ecdh_secp384r1_test.json WrongCurve: 16

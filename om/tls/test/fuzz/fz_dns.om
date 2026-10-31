@@ -1,0 +1,20 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_dns.om: fuzz target for the DNS code of om/tls/tls.om (dns_query, dns_parse with its name
+note skipping, CNAME chains and owner checks; dns_lines / dns_nsline / dns_ip4, the resolv.conf parser).
+note Input: M rest. M odd: rest is resolv.conf text for dns_lines. M even: rest = H name[H] response,
+note the response to dns_query(name, id 0x4f4d); a name dns_query refuses falls back to FZHOST.
+
+fn main to int
+ip = new uchar 4 0
+in = new uchar FZCAP 0
+n = fz_read in
+if lt n 2
+ret 0
+end
+if eq and get in 0 1 1
+e = dns_lines part in 1 sub n 1 ip
+ret 0
+end
+fz_dnsq part in 1 sub n 1
+ret 0
+end

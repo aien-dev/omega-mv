@@ -31,6 +31,15 @@ sh bench/inference_cost/driver.sh --run-model --endpoint http://127.0.0.1:18091 
   `--out build/inference_cost/run-<utc>-<pid>`.
 - A missing endpoint, a curl failure, a non-200 status, or a body without `usage` (or with an `error`
   member) prints `NOT_RUN: ...` and exits 3. Logs written up to that point are kept.
+- `--out` must be absent or an empty real directory, including hidden files. Symbolic links
+  (including names with trailing slashes) and nonempty directories are refused with exit 2 before
+  any run files change. An atomic, persistent `.inference-cost-owner/` marker allows exactly one
+  invocation to claim the output; a post-claim emptiness check closes concurrent creation races.
+  Completed, interrupted and already-claimed runs are never reused.
+- `--langs` and `--arms` require nonempty comma-separated lists without empty elements.
+- Bubblewrap is mandatory and fails closed: missing `bwrap` or unavailable namespaces give NOT_RUN
+  exit 3, never unsandboxed compilation or execution. GNU `timeout`, system Python, C and Rust
+  toolchains are required for the corresponding self-test paths.
 
 The run directory holds:
 
@@ -65,7 +74,9 @@ sh bench/inference_cost/driver.sh --self-test     # also run by `make test-infer
 1. **Build.** Checks the compiler pin: the sha256 of `seed/out/omc` must equal `seed/out/omc.sha256`,
    otherwise NOT_RUN exit 3. Then builds `scorer`, `chat` and `fake_model` into
    `build/inference_cost/bin`.
-2. **Scorer rejections.** A wrong version gives 3, a truncated wire 2, and an unknown language 2.
+2. **Scorer rejections.** Both wire versions reject trailing rows, contradictory compile/verified
+   flags, nonboolean flags, skipped/repeated attempts, and attempts after a task has verified.
+   Interleaved task identities count once, separately in each language/arm group.
 3. **Chat edge.** An error object, a body without usage, and a non-JSON body each give exit 4.
 4. **`--check-tasks`.**
 5. **Fake-model runs.** `fake_model` listens on an ephemeral 127.0.0.1 port, and every reply reports
@@ -80,6 +91,11 @@ sh bench/inference_cost/driver.sh --self-test     # also run by `make test-infer
 
 6. **NOT_RUN paths.** An unreachable endpoint (the fake is killed first), an HTTP 404, and a missing
    `--endpoint` each give exit 3.
+7. **Adversarial boundaries.** Oracle-reading Python, host writes, C/Rust compile-time oracle reads,
+   a TERM-ignoring process with a descendant, an unavailable sandbox, empty workloads, reused or
+   symlinked output directories, and competing output claimants are permanent shell-driven controls
+   in `audit.sh`. Good, bad, mixed-arm and
+   compiler-refusal runs assert both the group and global PASS/FAIL strings, not only counters.
 
 ## Files
 
@@ -90,6 +106,7 @@ sh bench/inference_cost/driver.sh --self-test     # also run by `make test-infer
 | `fake_model.om` | an OpenAI-compatible fake on `seed/net/http.om`. Modes `good`, `bad`, `bad-then-good` (reference only when the conversation has 3 or more messages) and `refuse`. Uses headers `X-Bench-Task` and `X-Bench-Lang` |
 | `scorer.om` | reads the attempt wire (v1 or v2) and writes the summary |
 | `io.om` | stdin/stdout helpers appended after an Omega candidate |
+| `audit.sh` | permanent F1-F8 adversarial self-test controls, sourced by the driver |
 | `prompts/system-<lang>.txt` | system prompts; the Omega one is a compact language primer |
 | `tasks/taskNN/` | `statement.txt`, `spec.txt`, `inputs.txt`, `expected.txt`, and `reference.<lang>` plus `mutant.<lang>` for om, c, py and rs |
 
@@ -98,10 +115,32 @@ sh bench/inference_cost/driver.sh --self-test     # also run by `make test-infer
 The model writes only the function. The harness appends a stdin driver generated from `spec.txt`: it
 reads `inputs.txt` and prints one decimal per case. A candidate is verified when:
 - it compiles with exit 0;
-- the run exits 0 within 10 s;
+- the run exits 0 within 10 s (TERM at 10 s, hard KILL after a further 1 s);
 - its output equals the cases of `expected.txt` byte for byte.
 
 A compiler refusal is never verified and its output is never run.
+
+Both compilation and execution happen in separate bubblewrap sandboxes with all namespaces
+unshared, no network, a cleared environment, no home/credentials or checkout mount, a fresh `/tmp`,
+and read-only candidate and system runtime mounts. Compiler sandboxes additionally expose system
+headers/tools; Rust exposes only the selected toolchain's compiler and libraries, not its home.
+Inputs enter on stdin and compiler/runtime output leaves on stdout/stderr. The verifier and all
+oracle files remain outside. Compilation has the same bounded deadline as execution. Setup failure
+aborts the run. A trusted shell inside the fully configured sandbox closes all inherited caller
+descriptors except stdin/stdout/stderr and its dedicated readiness descriptor. It emits a readiness
+handshake, closes that descriptor, then executes candidate-controlled code. The host requires that
+handshake for compilation and execution; bubblewrap namespace JSON alone is not readiness evidence
+because it is emitted before mount setup. Permanent tests exercise late compiler/runtime mount
+failures with real bubblewrap and assert NOT_RUN, descriptor closure, and denial of inherited host
+file reads at both compile time and runtime.
+
+The host dependencies exercised here are bubblewrap 0.9.0 (Linux namespaces/mounts), GNU coreutils
+`timeout` 9.4 (host deadline), and Bash 5.2.21 (sandbox-only trusted launcher, mounted as `/usr/bin/sh`).
+The driver itself remains POSIX sh. The launcher needs arbitrary numeric descriptor redirections,
+which dash cannot perform above fd 9; it validates the kernel-provided numeric descriptors before
+closing them. These are isolation/verification infrastructure, not Omega implementations. Their
+Omega replacement would require a qualified namespace/mount, process-tree and descriptor supervisor;
+no such replacement is claimed here.
 
 | lang | assembled as | compile |
 |---|---|---|
@@ -165,6 +204,10 @@ Rejection rules:
 - An unknown version exits 3.
 - A line count different from `attempts <N>`, a non-numeric field, or an unknown lang or arm exits 2.
 - Input of 983040 bytes or more exits 2.
+- `first_attempt` and `verified_flag` must be 0 or 1; a nonzero `compiled_rc` cannot verify.
+- Task identity is exact within each language/arm group. Attempts start at 1, advance by one,
+  mark only attempt 1 as first, and stop on verification. Repeated task successes are invalid,
+  not additional verified programs. The same rules apply to version 1.
 
 ### Summary (`summary.txt`)
 A version-1 input gives the version-1 summary (`version 1`, `tasks_total` ... `status`).

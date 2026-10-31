@@ -1,0 +1,1136 @@
+{
+ "schema": "omega.universal.fixtures.v1",
+ "set": "F2-cpp",
+ "contract": "spec/universal/translation-compose-v2.md",
+ "profile": "spec/universal/cpp-u64-v1.md",
+ "from": "tests/universal/translation/fixtures-f1.json",
+ "note": "Every F1 positive is expressible in cpp17-uint64-pure-v1 (constants rewritten as std::uint64_t{<decimal>ULL}, (void) as ()); not_in_profile is empty. Refusals are new C++-profile fixtures, not F1 refusals.",
+ "positives": [
+  {
+   "id": "F2-cpp-F1-P00",
+   "f1_id": "F1-P00",
+   "f1_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "9cc4681a263d6aa62dcd343489c5de531ab73d1d72cbad8ad27f49fbb697e4d8",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P01",
+   "f1_id": "F1-P01",
+   "f1_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0521e328121989ab5871f3fd14b285bcc9c111937014b57e8c154121e0e5649a",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P02",
+   "f1_id": "F1-P02",
+   "f1_sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "431613eb0b0bc214e203dd1c8c7b5380a4decd0a783f1aa301536764b2b70336",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a+b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P03",
+   "f1_id": "F1-P03",
+   "f1_sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "958480ce724147adb6be81149edc98d0f27e1eb1acaf263ab959559e194c537f",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a-b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P04",
+   "f1_id": "F1-P04",
+   "f1_sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "3d9b81e6d4acd962f2c9aa55580578116d3ade72ac8b4784b7cb72fde0170651",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a*b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P05",
+   "f1_id": "F1-P05",
+   "f1_sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "a7f53970047fa8cdf24b987357d24ac48ed917c937b77ae7d57241005df27563",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (a+b)*(a-b); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P06",
+   "f1_id": "F1-P06",
+   "f1_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "82b58d122f64cef014dc161b11b174922ddc55b6f7cfb17c1ee192487b847012",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a+std::uint64_t{0ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P07",
+   "f1_id": "F1-P07",
+   "f1_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "91a965fc3ef53c19529aeb479c6ee98f82da3475a6c30f895240d749ec3418c2",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a-std::uint64_t{1ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P08",
+   "f1_id": "F1-P08",
+   "f1_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "7294a41349f8709f481b9bc9a533436bfffcd6b197dec116dc199c2a187e1f94",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a*std::uint64_t{2ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P09",
+   "f1_id": "F1-P09",
+   "f1_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "efad455d03e8a94871c5639599cbdcb7589f67fb679b3f42d1edac06790e6fe5",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{0ULL}-a; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P10",
+   "f1_id": "F1-P10",
+   "f1_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "746aee4003baa7bcd1f1821330071abd655011ac63177cf28c7ccdd215c6e7ca",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{18446744073709551615ULL}+a; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P11",
+   "f1_id": "F1-P11",
+   "f1_sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "ad19bae3fdf15b0b7c795c58e2fbd0c570bb806515d0199c9062111eed2f322d",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a*b+std::uint64_t{3ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P12",
+   "f1_id": "F1-P12",
+   "f1_sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "20a96ff6e9a195f1b4f17cbd6ce8b114efade29e6226a3fba9e6010fab0b4040",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a+a+b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P13",
+   "f1_id": "F1-P13",
+   "f1_sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "9a8412b0b4d992f57f3b704e15ec2eb8f7598c6b8c89fb86ce6f36e25777db22",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a+(a+b); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P14",
+   "f1_id": "F1-P14",
+   "f1_sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "1140c84240c5973b3259b3de86f5cabaa31ce4491c5561d1c0c994b71ab4fe02",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a-b-b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P15",
+   "f1_id": "F1-P15",
+   "f1_sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "a7642911f254e6a0c340c3941ef3a1e77114cacbcd2af793e9e6abb79a3fedb3",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a-(b-b); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P16",
+   "f1_id": "F1-P16",
+   "f1_sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "85c4c4d740bec8e0524ab194182afb73f30b3366a77924ee107bc5957dd0d47e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a*b*a; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P17",
+   "f1_id": "F1-P17",
+   "f1_sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "39f12965f2dc12c704b41911a9ccfd77c189e9af7cbb24c6eb65d6f4489ab961",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a*(b*a); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P18",
+   "f1_id": "F1-P18",
+   "f1_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "b64690c922a04e1d8c5774ed2bd821a7ac1a634745dcdea2bbe001c792208f90",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{123ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P19",
+   "f1_id": "F1-P19",
+   "f1_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "0b0319e21ddc6095925c0f3362b9340abc7902eb449a7535b20b89c3bdf83922",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return ((a)); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P20",
+   "f1_id": "F1-P20",
+   "f1_sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "a4020b23fccf3583b98218c178374964f5114a72fb42dc3aed83ce20d5f31f0b",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (a+b)*(b+std::uint64_t{1ULL}); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P21",
+   "f1_id": "F1-P21",
+   "f1_sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "163395cb6968c6fd02188b420cd85f9a412c539fa076a59238a75b0fd159074d",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a+b*std::uint64_t{2ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P22",
+   "f1_id": "F1-P22",
+   "f1_sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "162ac892097ef3f0e48771d4addc36ebf6b293628103f201e0a78ec9593799b5",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (a+b)*std::uint64_t{2ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P23",
+   "f1_id": "F1-P23",
+   "f1_sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "a27601c90d5f7c08d1c0cb808596cf0812ba572dc11c985a07e9bc53cfcfe1db",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a-std::uint64_t{2ULL}*b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P24",
+   "f1_id": "F1-P24",
+   "f1_sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "137314fa804d105c489d5b7646f7c924737f3e716a9994dc2a8263660aa21c6d",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (a-std::uint64_t{2ULL})*b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P25",
+   "f1_id": "F1-P25",
+   "f1_sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "37f622b82922957c35e4e5ce68fecdd10293a0b703c8e4c4d5791eca82181b03",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a+std::uint64_t{18446744073709551615ULL}*b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P26",
+   "f1_id": "F1-P26",
+   "f1_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "e7f9025f19c97ef8426564ab5a264d7773bb2b76b7d55269ae8e066fff1ca47d",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{2ULL}*std::uint64_t{3ULL}+std::uint64_t{4ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P27",
+   "f1_id": "F1-P27",
+   "f1_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "f79b7f2dff21413f83190a06664122f5ec44fe0ec05f0a006103a74be7cfd436",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{2ULL}*(std::uint64_t{3ULL}+std::uint64_t{4ULL}); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P28",
+   "f1_id": "F1-P28",
+   "f1_sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "77b09bf64289b02686dbfd5c778909ae67b6b3c1039181d0f0e3f8d31b617bdb",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a-b+a*b; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P29",
+   "f1_id": "F1-P29",
+   "f1_sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "89065dc10408e57e2184d60a4e65e9820c076fe5af247a5a8b8282211ee90111",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (a+a)*(b+b); }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P30",
+   "f1_id": "F1-P30",
+   "f1_sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+   "name": "calc",
+   "inputs": 0,
+   "sha256": "606fb3fd54167e3ed7790dca996e8dc78bee0cbfd11ce64b190ec937f7352778",
+   "source": "#include <cstdint>\nstd::uint64_t calc() { return std::uint64_t{7ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P31",
+   "f1_id": "F1-P31",
+   "f1_sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+   "name": "calc",
+   "inputs": 1,
+   "sha256": "360694a9e3f32a561ecd7e375a67f6c53df7ce201653a8f57dec28d81f657ad9",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t x) { return x; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P32",
+   "f1_id": "F1-P32",
+   "f1_sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+   "name": "calc",
+   "inputs": 6,
+   "sha256": "dd5c8e1dae6c5fe97506613e17d1e5a03345991adaa2e36267978411910f8e93",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a,std::uint64_t b,std::uint64_t c,std::uint64_t d,std::uint64_t e,std::uint64_t f) { return a+b+c+d+e+f; }\n"
+  },
+  {
+   "id": "F2-cpp-F1-P33",
+   "f1_id": "F1-P33",
+   "f1_sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+   "name": "calc",
+   "inputs": 2,
+   "sha256": "ba8bf09668826d47218b311826a9c1d3b6a4a573a33685bf8749ed3fe109a42f",
+   "source": "#include <cstdint>\n/* α comment retained */\nstd::uint64_t calc(std::uint64_t left,std::uint64_t right) { /* keep */ return left*right; }\r\n"
+  },
+  {
+   "id": "F2-cpp-F1-P34",
+   "f1_id": "F1-P34",
+   "f1_sha256": "7c48737aa01323118ce87f9c95ed39edf11b554cd9fd9e8741b30fa548555dc6",
+   "name": "omega_fold",
+   "inputs": 2,
+   "sha256": "2f4ea48a632fbf59e23197300dd8e980a2da0f95c19931deeb9039bd7c64d2b2",
+   "source": "#include <cstdint>\nstd::uint64_t omega_fold(std::uint64_t a,std::uint64_t b){return a*b+std::uint64_t{42ULL};}\n"
+  }
+ ],
+ "not_in_profile": [],
+ "refusals": [
+  {
+   "id": "F2-cpp-N000",
+   "name": "nul-byte",
+   "status": 65,
+   "reason": "NUL byte in the source",
+   "sha256": "7983926639730171e8641ea746210a76dd85ab333b344a672580dc38bee575f8",
+   "source_hex": "23696e636c756465203c63737464696e743e0a7374643a3a75696e7436345f742063616c63287374643a3a75696e7436345f7420612c207374643a3a75696e7436345f74206229207b2072657475726e20613b207d0a00"
+  },
+  {
+   "id": "F2-cpp-N001",
+   "name": "unterminated-block-comment",
+   "status": 65,
+   "reason": "block comment without */",
+   "sha256": "6432ec0cf2fbf46b43da8854ab9d2d5539c195c5d09c45a3703d0c283a624301",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; } /* open\n"
+  },
+  {
+   "id": "F2-cpp-N002",
+   "name": "missing-semicolon",
+   "status": 65,
+   "reason": "return statement without ;",
+   "sha256": "0f894b64b519c92d97303e14e16dcc29c1e6a61f8082087942779f27b91b5142",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a }\n"
+  },
+  {
+   "id": "F2-cpp-N003",
+   "name": "trailing-comma-params",
+   "status": 65,
+   "reason": "trailing comma in the parameter list (one spelling)",
+   "sha256": "99874449ae0ee7e8a2efd2d09e69c1f62d8475b96efca935129ddb1097645c70",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, ) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N004",
+   "name": "empty-return",
+   "status": 65,
+   "reason": "return without an expression",
+   "sha256": "fbc285673f3e2df0d0aee671ae6582b2748af30f2172abb7c193239d7e6f8f76",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return ; }\n"
+  },
+  {
+   "id": "F2-cpp-N005",
+   "name": "default-argument",
+   "status": 65,
+   "reason": "default arguments are not part of the profile",
+   "sha256": "010858c8671327192f6f41352f34efeabf4258742120151097d3554d57702698",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a = std::uint64_t{1ULL}) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N006",
+   "name": "unbalanced-paren",
+   "status": 65,
+   "reason": "missing )",
+   "sha256": "bd5926a9252dd859c7dd61046b241f3000384236cb8fca7ee4213612f42074d2",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (a + b; }\n"
+  },
+  {
+   "id": "F2-cpp-N007",
+   "name": "unqualified-return-type",
+   "status": 66,
+   "reason": "<cstdint> guarantees only std::uint64_t; global ::uint64_t is unspecified",
+   "sha256": "e6371dd964853a8353701c73b1ef8bc02bc41bc92fe177df7ca4823482450770",
+   "source": "#include <cstdint>\nuint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N008",
+   "name": "unqualified-param-type",
+   "status": 66,
+   "reason": "parameter type spelled uint64_t, not std::uint64_t",
+   "sha256": "a05eea58a9abc4b1eb7ece2a09fce8c7af408189e66a1127994d5a6577449831",
+   "source": "#include <cstdint>\nstd::uint64_t calc(uint64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N009",
+   "name": "int-return",
+   "status": 66,
+   "reason": "int return type",
+   "sha256": "c80165fec89917c98e34d8a6ed52b4e3234addeef26ca596b1f88d3a3651e00c",
+   "source": "#include <cstdint>\nint calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N010",
+   "name": "unsigned-long-long-param",
+   "status": 66,
+   "reason": "unsigned long long is not spelled std::uint64_t (and is a distinct type on LP64)",
+   "sha256": "1c8c1e20371ef301400be7f1c07b236b82c4bb5e13c66b29a1c4edf4bf544139",
+   "source": "#include <cstdint>\nstd::uint64_t calc(unsigned long long a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N011",
+   "name": "int64-param",
+   "status": 66,
+   "reason": "signed std::int64_t",
+   "sha256": "7121427603fb2a470749901d88963cfca8409f7a6dfc57d13d59b385b7e5bcba",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::int64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N012",
+   "name": "uint32-param",
+   "status": 66,
+   "reason": "narrow std::uint32_t would promote",
+   "sha256": "cf240c6d157d586139a1bd343299b21b7544273ee6803f1911f794a359f0ccac",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint32_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N013",
+   "name": "size-t-param",
+   "status": 66,
+   "reason": "std::size_t is a distinct spelling",
+   "sha256": "48d41592e8b0d2a136d4ea5e4e52e54074ff619a439106304cf37db1e1c291c8",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::size_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N014",
+   "name": "auto-return",
+   "status": 66,
+   "reason": "auto return type deduction",
+   "sha256": "8ec11516608ba097e3247191c5eae1a38cd2b996b94e8b37db8f570ec3366b20",
+   "source": "#include <cstdint>\nauto calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N015",
+   "name": "void-params",
+   "status": 66,
+   "reason": "(void) is a second spelling of (); the profile accepts only ()",
+   "sha256": "a5542781a0febfa97c1de322fb53eac3035f2f9169d0134bb52fd06bfd5dd768",
+   "source": "#include <cstdint>\nstd::uint64_t calc(void) { return std::uint64_t{7ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N016",
+   "name": "global-qualified-type",
+   "status": 66,
+   "reason": "::uint64_t is not std::uint64_t",
+   "sha256": "f973dad9720c082d43d163c55b68a8ae725a7085dc04212bf2727f81dd3ae13e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(::uint64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N017",
+   "name": "spaced-qualifier",
+   "status": 66,
+   "reason": "std :: uint64_t with inner whitespace is not the single accepted spelling",
+   "sha256": "4a655ca3279a369ee1a8fdf5f1f9a12bb3a8fce4ab5a465d34e382922158db4e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std :: uint64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N018",
+   "name": "over-source-capacity",
+   "status": 67,
+   "reason": "over 4096 bytes",
+   "sha256": "bdc7c6928acbd9d84e3e7c1e989850cdb14831a6339e9f2a65bb3f8c13866223",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "
+  },
+  {
+   "id": "F2-cpp-N019",
+   "name": "seven-params",
+   "status": 67,
+   "reason": "over 6 parameters",
+   "sha256": "fb8756a9753ba34a04f65688590314d4cee44fd24557a661e3d151c7a2cd84d5",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t pa, std::uint64_t pb, std::uint64_t pc, std::uint64_t pd, std::uint64_t pe, std::uint64_t pf, std::uint64_t pg) { return pa; }\n"
+  },
+  {
+   "id": "F2-cpp-N020",
+   "name": "literal-overflow",
+   "status": 67,
+   "reason": "literal above 2^64-1",
+   "sha256": "4d42e192aede6e6ab840290dd4140307c5c8411996f5e8971c2794c42b3d83a0",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{18446744073709551616ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N021",
+   "name": "depth-17",
+   "status": 67,
+   "reason": "parenthesis depth over 16",
+   "sha256": "fbc8079016c275447d5faaa3cd55a207ce0154a26213cfeb92baee235305c43e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return (((((((((((((((((a))))))))))))))))); }\n"
+  },
+  {
+   "id": "F2-cpp-N022",
+   "name": "over-operation-capacity",
+   "status": 67,
+   "reason": "over 64 upper operations",
+   "sha256": "0ff83f9f75919b1d1bc6a8e29ebecbd9c63e3bb5ef5cbee12c19e5d22a76d3ea",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a; }\n"
+  },
+  {
+   "id": "F2-cpp-N023",
+   "name": "bare-ull-literal",
+   "status": 68,
+   "reason": "1ULL is unsigned long long, not exactly std::uint64_t (mixed type); use std::uint64_t{1ULL}",
+   "sha256": "ff4f254239b8f034b4dc4853973d709a3d5539b95104b8d2b5d04f2e7f04556e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a + 1ULL; }\n"
+  },
+  {
+   "id": "F2-cpp-N024",
+   "name": "int-literal",
+   "status": 68,
+   "reason": "a plain 1 is int; mixed int/std::uint64_t arithmetic refuses",
+   "sha256": "7d63da49bdc96271a8e923bb733a5f0accc360430a782cdf520d8191bed3bf32",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a - 1; }\n"
+  },
+  {
+   "id": "F2-cpp-N025",
+   "name": "int-literal-left",
+   "status": 68,
+   "reason": "1 - a mixes int and std::uint64_t",
+   "sha256": "807c96066559f32a255da0e893666559a5dc98fa43966107a827d18f0cc265fd",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return 1 - a; }\n"
+  },
+  {
+   "id": "F2-cpp-N026",
+   "name": "lowercase-ull",
+   "status": 68,
+   "reason": "ull is a second spelling of ULL",
+   "sha256": "110706d3d3e5626991302656f2448493d2eb7577afc6489d3fec54ec1307c492",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1ull}; }\n"
+  },
+  {
+   "id": "F2-cpp-N027",
+   "name": "ul-suffix",
+   "status": 68,
+   "reason": "UL suffix is not the profile literal",
+   "sha256": "143ac9497cfcde0bc788ee6e478e141ac88c7b0f9837c59fea44a8f31d40aca4",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1UL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N028",
+   "name": "unsuffixed-braced",
+   "status": 68,
+   "reason": "braced literal without ULL (int initializer)",
+   "sha256": "c518c46c33fc135a8ce788ab4b6b1204b41bcb0eb14e043defcae7d7c328a0f0",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1}; }\n"
+  },
+  {
+   "id": "F2-cpp-N029",
+   "name": "u-suffix",
+   "status": 68,
+   "reason": "U suffix",
+   "sha256": "3bdc861e0f8910be0350af4c3b37a35c6947140b502cc6467e90316de87db3d0",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1U}; }\n"
+  },
+  {
+   "id": "F2-cpp-N030",
+   "name": "hex-literal",
+   "status": 68,
+   "reason": "hexadecimal literal",
+   "sha256": "289fd7e6792ef9b54c66c6d0e931a7425fee0a7b32c6e442a469f8412c924283",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{0x1ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N031",
+   "name": "octal-literal",
+   "status": 68,
+   "reason": "leading zero (octal) literal",
+   "sha256": "ea8ffb74cf5f455f11f946621571dbe385c6fb25677cf87caff960abb2e6c46e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{010ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N032",
+   "name": "binary-literal",
+   "status": 68,
+   "reason": "binary literal",
+   "sha256": "812995b1b37e6335e99101bec3d006ea4958581e30854987bb338c2725ab165a",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{0b1ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N033",
+   "name": "digit-separator",
+   "status": 68,
+   "reason": "digit separator '",
+   "sha256": "73101609d7d5222f5d5b498c51793045433186747629fee09b4ab4aee7625607",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1'000ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N034",
+   "name": "user-defined-literal",
+   "status": 68,
+   "reason": "user-defined literal suffix",
+   "sha256": "05111caf75f1e0b6ae87204c3f40e0e89efb3a7cbc57a14787586b676ec11494",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1ULL_x}; }\n"
+  },
+  {
+   "id": "F2-cpp-N035",
+   "name": "division",
+   "status": 68,
+   "reason": "division is outside the family (division by zero is undefined behaviour)",
+   "sha256": "26d98a75414d48630c90c424090b443df5372582d3484ff98c202ce664cb5dd5",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a / b; }\n"
+  },
+  {
+   "id": "F2-cpp-N036",
+   "name": "remainder",
+   "status": 68,
+   "reason": "%",
+   "sha256": "609fde27b62f0b3a6b3fa27327d4202406f9db026483100d6d4e4fc0eada0e56",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a % b; }\n"
+  },
+  {
+   "id": "F2-cpp-N037",
+   "name": "shift",
+   "status": 68,
+   "reason": "<<",
+   "sha256": "19df8d7c08e50592b30caa63fe1fb8cf2433f224aaf06760c747ccda7b5d03c6",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a << b; }\n"
+  },
+  {
+   "id": "F2-cpp-N038",
+   "name": "bitand",
+   "status": 68,
+   "reason": "&",
+   "sha256": "8ab9f66de39ed414492714e011f073dc5ec6268fda9dab96ec41943996038754",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a & b; }\n"
+  },
+  {
+   "id": "F2-cpp-N039",
+   "name": "bitor",
+   "status": 68,
+   "reason": "|",
+   "sha256": "2eacc43f2b75eddc08d5565221dc2727b8e6e3b820992dba8a7b26a2f4ec3d97",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a | b; }\n"
+  },
+  {
+   "id": "F2-cpp-N040",
+   "name": "xor",
+   "status": 68,
+   "reason": "^",
+   "sha256": "10d05e39c25b61603571eeade110874547f6e2c515e7d8a26f9ccefdc57bc76a",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a ^ b; }\n"
+  },
+  {
+   "id": "F2-cpp-N041",
+   "name": "unary-minus",
+   "status": 68,
+   "reason": "unary -",
+   "sha256": "48b5889a5f155a99b89879ee077747e97b116be19fd083adda466c1f31c8a0b0",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return -a; }\n"
+  },
+  {
+   "id": "F2-cpp-N042",
+   "name": "unary-plus",
+   "status": 68,
+   "reason": "unary +",
+   "sha256": "c99eeb6f2f38ce406092ab055337d50bc70daf7123ad773b8a2e01bad4d49a62",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return +a; }\n"
+  },
+  {
+   "id": "F2-cpp-N043",
+   "name": "complement",
+   "status": 68,
+   "reason": "~",
+   "sha256": "2406ac243bb1f805d819c2ca8db89db263616edee3b0ca4aacc35bebc568a52b",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return ~a; }\n"
+  },
+  {
+   "id": "F2-cpp-N044",
+   "name": "logical-not",
+   "status": 68,
+   "reason": "!",
+   "sha256": "91635dbe6c94c0a57b4ceb73e2f120b58ed7e35b895b39521da4f4c8ab61c013",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return !a; }\n"
+  },
+  {
+   "id": "F2-cpp-N045",
+   "name": "alternative-and",
+   "status": 68,
+   "reason": "alternative token and (&&)",
+   "sha256": "c7f97c21dc3d7f8de8256bf9cc72f37a25e9cb2e9a2f049cae4a78cde6251e8a",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a and b; }\n"
+  },
+  {
+   "id": "F2-cpp-N046",
+   "name": "alternative-compl",
+   "status": 68,
+   "reason": "alternative token compl (~)",
+   "sha256": "71b45195766c7206adac2d789d5ba78911064b0b24038ca80ce34641711f3839",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return compl a; }\n"
+  },
+  {
+   "id": "F2-cpp-N047",
+   "name": "comparison",
+   "status": 68,
+   "reason": "<",
+   "sha256": "833ae2e1d9bbb8fad2e1c33c456ad9a847d44c1a68638e1cb298ec43bbd6910e",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a < b; }\n"
+  },
+  {
+   "id": "F2-cpp-N048",
+   "name": "equality",
+   "status": 68,
+   "reason": "==",
+   "sha256": "18a6e2193962e03e505d0e4f4cf7718781993242ee99274306e0f70d619b7e35",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a == b; }\n"
+  },
+  {
+   "id": "F2-cpp-N049",
+   "name": "ternary",
+   "status": 68,
+   "reason": "?:",
+   "sha256": "4d196c799befa3103509c59af5312b236685965e349e57b11e73912408f232cb",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a ? b : a; }\n"
+  },
+  {
+   "id": "F2-cpp-N050",
+   "name": "compound-assignment",
+   "status": 68,
+   "reason": "+=",
+   "sha256": "01377f2344654168bae4ae0a8c7a91ee13e8c28840f814c17b53bac48bd8ef2c",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a += b; }\n"
+  },
+  {
+   "id": "F2-cpp-N051",
+   "name": "increment",
+   "status": 68,
+   "reason": "++",
+   "sha256": "57a81dda7cc307b2917e12966421942272d378bec0a1f2060885da541841b6fb",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a++; }\n"
+  },
+  {
+   "id": "F2-cpp-N052",
+   "name": "constexpr",
+   "status": 69,
+   "reason": "constexpr: one spelling, no specifiers",
+   "sha256": "d557ac379233e0543b3fb771e0adc3cd9824e4fd1b750c0fc3a7b1c3d021dfa5",
+   "source": "#include <cstdint>\nconstexpr std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N053",
+   "name": "inline",
+   "status": 69,
+   "reason": "inline",
+   "sha256": "bc454b38ad0fafe5ae4a08b41ac0a4b2b2e28fef0ef49ee2db5b99bf13d260c6",
+   "source": "#include <cstdint>\ninline std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N054",
+   "name": "static",
+   "status": 69,
+   "reason": "static (internal linkage)",
+   "sha256": "fb299c9147b9a2daf348177d2581c3a7588f90f27453fdaf052dd529ddf7976f",
+   "source": "#include <cstdint>\nstatic std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N055",
+   "name": "nodiscard",
+   "status": 69,
+   "reason": "attributes",
+   "sha256": "e5de27d31d4cd1b82a3a0ae2e50e55db112eef57e660902e90c1571df45e9080",
+   "source": "#include <cstdint>\n[[nodiscard]] std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N056",
+   "name": "noexcept",
+   "status": 69,
+   "reason": "noexcept changes the function type",
+   "sha256": "ad395268861efc647614378f2304109d0343d1962010dea38f00b7b743f3c2c9",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) noexcept { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N057",
+   "name": "template",
+   "status": 69,
+   "reason": "templates",
+   "sha256": "90d51c42e933996915be7a1b36015a6bbe48d7338aad395a72ab7330476c1dc9",
+   "source": "#include <cstdint>\ntemplate <typename T> std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N058",
+   "name": "namespace",
+   "status": 69,
+   "reason": "namespaces",
+   "sha256": "fc36623dcc083e06308a3e28e2fd1d3cdfa8af7dd52d476e8a798e430c45e7d0",
+   "source": "#include <cstdint>\nnamespace n { std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; } }\n"
+  },
+  {
+   "id": "F2-cpp-N059",
+   "name": "using",
+   "status": 69,
+   "reason": "using declarations/aliases",
+   "sha256": "72434916b5c42307f21534df5fee3b874f4999b1fa9a9a675b04eb5da41f7e9b",
+   "source": "#include <cstdint>\nusing u = std::uint64_t;\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N060",
+   "name": "extern-c",
+   "status": 69,
+   "reason": "linkage specification",
+   "sha256": "6c536f2c83fbc38f71791a67b67ce9e3bf84784414d7b89a209039533ac965c5",
+   "source": "#include <cstdint>\nextern \"C\" std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N061",
+   "name": "const-param",
+   "status": 69,
+   "reason": "cv-qualified parameter",
+   "sha256": "451d41d698d387abb4020db0a0b8b9f03e821a5568e7d3aaf06aaa93ead7b796",
+   "source": "#include <cstdint>\nstd::uint64_t calc(const std::uint64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N062",
+   "name": "reference-param",
+   "status": 69,
+   "reason": "references",
+   "sha256": "aa0ee9f237f43e7a5dbacb4cad8e61379d27e78ec8ffce66e312369d5aaa0e62",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t& a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N063",
+   "name": "pointer-param",
+   "status": 69,
+   "reason": "pointers",
+   "sha256": "e4eac594a7d92ad601be13cce3defca1bce11fdd58c06abebc5ddef6cb770140",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t *a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N064",
+   "name": "static-cast",
+   "status": 69,
+   "reason": "casts",
+   "sha256": "dd74dddddc2eecd5e4079f7ccb8a4ada9645ffec9d38ecd0748327ac6d2ce827",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return static_cast<std::uint64_t>(a); }\n"
+  },
+  {
+   "id": "F2-cpp-N065",
+   "name": "functional-cast",
+   "status": 69,
+   "reason": "functional-notation conversion of a non-literal",
+   "sha256": "ffbb260c1b4b7742c55151c0e94939abb3dc7249841eb378a59a8e4e6b1341e5",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t(a); }\n"
+  },
+  {
+   "id": "F2-cpp-N066",
+   "name": "braced-variable",
+   "status": 69,
+   "reason": "braced conversion of a variable (only a ULL literal may be braced)",
+   "sha256": "0f9d8addfb6a44a140ec9cb27e065204f5b13c87481da3b437e95f6a7c23d6c4",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{a}; }\n"
+  },
+  {
+   "id": "F2-cpp-N067",
+   "name": "braced-empty",
+   "status": 69,
+   "reason": "value-initialization std::uint64_t{} is a second spelling of zero",
+   "sha256": "4d8279c1bc68d1d22aa1b674988deb22fecaec7fcd694d8ac4d67b144afb15c0",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{}; }\n"
+  },
+  {
+   "id": "F2-cpp-N068",
+   "name": "braced-expression",
+   "status": 69,
+   "reason": "braced initializer with an expression",
+   "sha256": "f61f7a03b7b84319341cfd71073ebf14a7138aba03c44d3c434354a916a0465f",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::uint64_t{1ULL+2ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N069",
+   "name": "lambda",
+   "status": 69,
+   "reason": "lambdas",
+   "sha256": "ab5aeb602a0db3ee6a87eafe2bca9729b7ca68fe508f1195e23ef868fb7c5bce",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return []{ return std::uint64_t{1ULL}; }(); }\n"
+  },
+  {
+   "id": "F2-cpp-N070",
+   "name": "local-variable",
+   "status": 69,
+   "reason": "statements other than one return",
+   "sha256": "82d24442cff102dd22de46a7cba39c00b7f039f8c2711a78461d7a4e84d57043",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { std::uint64_t c = a; return c; }\n"
+  },
+  {
+   "id": "F2-cpp-N071",
+   "name": "if-statement",
+   "status": 69,
+   "reason": "control flow",
+   "sha256": "2d96e7305cb8a6e2ad0b2bac77adc12b403a4feb0eb8b04612913d772b5ac22c",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { if (a) return a; return b; }\n"
+  },
+  {
+   "id": "F2-cpp-N072",
+   "name": "second-function",
+   "status": 69,
+   "reason": "a second declaration",
+   "sha256": "ba7d885f870f4013a1f274f8a67a5917b8f3d932e204b30d3fb16737d22bca90",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\nstd::uint64_t omega_x(std::uint64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N073",
+   "name": "stray-semicolon",
+   "status": 69,
+   "reason": "an empty declaration after the function",
+   "sha256": "06a17e866d725f8afebc6063b962b29679e1ecc745b4e7662bd0435977d8c2a6",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n;\n"
+  },
+  {
+   "id": "F2-cpp-N074",
+   "name": "non-ascii-identifier",
+   "status": 69,
+   "reason": "non-ASCII outside comments",
+   "sha256": "38d591109373c1007709de92618d7e35e37a13d98cbafbe81e4f52864767d89a",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return aé; }\n"
+  },
+  {
+   "id": "F2-cpp-N075",
+   "name": "const-member-qualifier",
+   "status": 69,
+   "reason": "cv-qualifier after the parameter list",
+   "sha256": "726c34322d7e35609cceb58eebfe0a130ccc614c06cb3e21f4ccc8d1fa9998ae",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) const { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N076",
+   "name": "this-keyword",
+   "status": 69,
+   "reason": "this",
+   "sha256": "c72539115603ced176d29daacd7e31bf8018aed88617465c24701d9553108230",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return this; }\n"
+  },
+  {
+   "id": "F2-cpp-N077",
+   "name": "sizeof",
+   "status": 69,
+   "reason": "sizeof",
+   "sha256": "85d7d0ff4af6b8edce0bc85dfbf5f43c8001b87832f1f5852628047013171e90",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return sizeof(a); }\n"
+  },
+  {
+   "id": "F2-cpp-N078",
+   "name": "unknown-variable",
+   "status": 70,
+   "reason": "identifier that is not a parameter",
+   "sha256": "f8fac4d046aa6b4f1d2c39f162da05b3330c1328311c0de9ecbc1ce52028a165",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return c; }\n"
+  },
+  {
+   "id": "F2-cpp-N079",
+   "name": "std-function",
+   "status": 70,
+   "reason": "std:: name other than the type",
+   "sha256": "babc174ab8d683c9bd92ff76cffbc5adada3355588debeb64dae331d26495869",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return std::max(a, b); }\n"
+  },
+  {
+   "id": "F2-cpp-N080",
+   "name": "unqualified-type-in-expression",
+   "status": 70,
+   "reason": "uint64_t{1ULL} unqualified in an expression",
+   "sha256": "5765fe0316b242db3f88a377d2e67861621319cffa65a2e099825f2f603bb614",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return uint64_t{1ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N081",
+   "name": "name-main",
+   "status": 71,
+   "reason": "main is reserved",
+   "sha256": "7e28ec343faa9851b37f51392e855342438330c98c9c4dd9c936b8f6f80042f5",
+   "source": "#include <cstdint>\nstd::uint64_t main(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N082",
+   "name": "name-other",
+   "status": 71,
+   "reason": "function name must be calc or omega_*",
+   "sha256": "dbb9c8ea9c81f1bf8893f418bc746a582c139b43feb15ea51e016d5d4df8f5c9",
+   "source": "#include <cstdint>\nstd::uint64_t foo(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N083",
+   "name": "name-upper",
+   "status": 71,
+   "reason": "names start with a lowercase letter",
+   "sha256": "dda90f21098ed6738f10fcb0d41f7feb7f321fd661208c20504b7b7ded439519",
+   "source": "#include <cstdint>\nstd::uint64_t Calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N084",
+   "name": "name-double-underscore",
+   "status": 71,
+   "reason": "identifiers containing __ are reserved in C++",
+   "sha256": "e581233010197c153f66f429da53f6e7c07c7238f2c8c246ed22eed51674a1de",
+   "source": "#include <cstdint>\nstd::uint64_t omega__x(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N085",
+   "name": "name-omega-only",
+   "status": 71,
+   "reason": "omega_ needs at least one following byte",
+   "sha256": "1fc70611088df47cb0ef70a67d70650e79eb7610f93060b6f274a3bade50734d",
+   "source": "#include <cstdint>\nstd::uint64_t omega_(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N086",
+   "name": "param-int-prefix",
+   "status": 71,
+   "reason": "int/uint prefixes collide with <cstdint> names",
+   "sha256": "25b255442d067fc6f7420384cf4b11da9c7eb146dba48f1f513047c35666845c",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t int8) { return int8; }\n"
+  },
+  {
+   "id": "F2-cpp-N087",
+   "name": "param-keyword",
+   "status": 71,
+   "reason": "keyword parameter name",
+   "sha256": "958fa837d817384cce059338e07638338d2e123be77ed7c4dcd1fab91ee41a33",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t and) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N088",
+   "name": "param-linux",
+   "status": 71,
+   "reason": "linux is a predefined macro in GNU modes",
+   "sha256": "afa9c1deb87fd5ea7285d8ebf77b138ae1932b80eefe47898214ab3f790323e8",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t linux) { return linux; }\n"
+  },
+  {
+   "id": "F2-cpp-N089",
+   "name": "param-std",
+   "status": 71,
+   "reason": "std is reserved",
+   "sha256": "2f10b974ace9a4a2e4162ce810eee3c483e4968a6882ae5e6e800e451d934007",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t std) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N090",
+   "name": "duplicate-param",
+   "status": 71,
+   "reason": "duplicate parameter",
+   "sha256": "a740d45a4adb223272b94433319783634f95ee8ce58ddca3e0d87d988308c0ff",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t a) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N091",
+   "name": "long-name",
+   "status": 71,
+   "reason": "over 32 bytes",
+   "sha256": "638c96610b9e186c4fb0261f107f70c7037555b1c9e0eb52279839db7d1cf820",
+   "source": "#include <cstdint>\nstd::uint64_t omega_xxxxxxxxxxxxxxxxxxxxxxxxxxx(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N092",
+   "name": "unnamed-param",
+   "status": 69,
+   "reason": "unnamed parameter",
+   "sha256": "db999b432736593708c6e729ba20578575a546643e61a6d636452f75b68f7909",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t) { return std::uint64_t{1ULL}; }\n"
+  },
+  {
+   "id": "F2-cpp-N093",
+   "name": "stdint-h-header",
+   "status": 72,
+   "reason": "only #include <cstdint> is accepted",
+   "sha256": "e3cf1dbcc71769e6b440e949ebe270d8d39c87350afeeee6e7cf5fd5b0359713",
+   "source": "#include <stdint.h>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N094",
+   "name": "missing-header",
+   "status": 72,
+   "reason": "no include",
+   "sha256": "4c7d8269929ccb3b913718b893eb6949e5fc887c08a866f257cdae9dcb974ad6",
+   "source": "std::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N095",
+   "name": "bom",
+   "status": 72,
+   "reason": "byte-order mark",
+   "sha256": "15d1db02f2c82b9fed2013f286e27cd58f9e954b1e22a15ea95ba7f3aa77aa94",
+   "source": "﻿#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N096",
+   "name": "crlf-header",
+   "status": 72,
+   "reason": "header line must end in LF",
+   "sha256": "cd3ef07bf7987fed0e2c44281e40aae570480f55dc02d4df6fd91986842d9fb8",
+   "source": "#include <cstdint>\r\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N097",
+   "name": "second-directive",
+   "status": 72,
+   "reason": "preprocessing beyond the include",
+   "sha256": "9ebba7167631f1b6eb4c33cc8a7708b04278a12e53f57422cfcd4e2ec382ecc8",
+   "source": "#include <cstdint>\n#define X 1\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N098",
+   "name": "digraph-directive",
+   "status": 72,
+   "reason": "%: is the digraph of #",
+   "sha256": "8107315edf6f8fc6a047be9dd224c0cebac32ff63f9023b6e4d4dba0efcedb58",
+   "source": "#include <cstdint>\n%:define X 1\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; }\n"
+  },
+  {
+   "id": "F2-cpp-N099",
+   "name": "line-splice",
+   "status": 72,
+   "reason": "backslash line splice (can extend a // comment)",
+   "sha256": "418cb7242becab9e2f15617ae5d63bb5267b92254a4065db37f88677f55b9a4d",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; // x\\\n}\n"
+  },
+  {
+   "id": "F2-cpp-N100",
+   "name": "trigraph",
+   "status": 72,
+   "reason": "trigraph sequence (refused as in the C profile)",
+   "sha256": "4935b3dbe01342c85c6ed7307bcca63074577218727a0e06aeaa8995fa4368d7",
+   "source": "#include <cstdint>\nstd::uint64_t calc(std::uint64_t a, std::uint64_t b) { return a; /* ??/ */ }\n"
+  }
+ ]
+}
