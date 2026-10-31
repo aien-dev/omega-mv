@@ -1,0 +1,1386 @@
+case	addr	class	instruction
+arith	0xb0	CTRL	b	0x2c0
+arith	0xb4	CONST	mov	x1, #0xa
+arith	0xb8	CONST	mov	x2, #0x1f
+arith	0xbc	CONST	mov	x3, #0x10800000
+arith	0xc0	WORK	strb	w1, [x3, x2]
+arith	0xc4	CONST	mov	x1, #0x1f
+arith	0xc8	WORK	mov	x2, x0
+arith	0xcc	CONST	mov	x3, #0x0
+arith	0xd0	CTRL	cmp	x2, #0x9
+arith	0xd4	CTRL	b.ls	0x124
+arith	0xd8	CONST	mov	x4, #0x4240
+arith	0xdc	CONST	movk	x4, #0xf, lsl #16
+arith	0xe0	GUARD	cmp	x3, x4
+arith	0xe4	GUARD	b.cs	0x1dc
+arith	0xe8	GUARD	add	x3, x3, #0x1
+arith	0xec	WORK	sub	x1, x1, #0x1
+arith	0xf0	CONST	mov	x4, #0xa
+arith	0xf4	WORK	udiv	x6, x2, x4
+arith	0xf8	WORK	msub	x5, x6, x4, x2
+arith	0xfc	WORK	add	x8, x5, #0x30
+arith	0x100	WORK	lsr	x9, x8, #8
+arith	0x104	CTRL	cbnz	x9, 0x1e4
+arith	0x108	BOUNDS	cmp	x1, #0x20
+arith	0x10c	BOUNDS	b.cs	0x1d4
+arith	0x110	CONST	mov	x10, #0x10800000
+arith	0x114	WORK	strb	w8, [x10, x1]
+arith	0x118	CONST	mov	x4, #0xa
+arith	0x11c	WORK	udiv	x2, x2, x4
+arith	0x120	CTRL	b	0xd0
+arith	0x124	WORK	sub	x1, x1, #0x1
+arith	0x128	WORK	add	x3, x2, #0x30
+arith	0x12c	WORK	lsr	x4, x3, #8
+arith	0x130	CTRL	cbnz	x4, 0x1e4
+arith	0x134	BOUNDS	cmp	x1, #0x20
+arith	0x138	BOUNDS	b.cs	0x1d4
+arith	0x13c	CONST	mov	x5, #0x10800000
+arith	0x140	WORK	strb	w3, [x5, x1]
+arith	0x144	CONST	mov	x4, #0x20
+arith	0x148	WORK	sub	x5, x4, x1
+arith	0x14c	CONST	mov	x6, #0x20
+arith	0x150	BOUNDS	cmp	x5, x6
+arith	0x154	BOUNDS	b.hi	0x1d4
+arith	0x158	WORK	sub	x6, x6, x5
+arith	0x15c	BOUNDS	cmp	x1, x6
+arith	0x160	BOUNDS	b.hi	0x1d4
+arith	0x164	CALLSAVE	sub	sp, sp, #0x40
+arith	0x168	CALLSAVE	cmp	sp, x28
+arith	0x16c	CALLSAVE	b.cc	0x1ec
+arith	0x170	CALLSAVE	str	x0, [sp]
+arith	0x174	CALLSAVE	str	x1, [sp, #8]
+arith	0x178	CALLSAVE	str	x2, [sp, #16]
+arith	0x17c	CALLSAVE	str	x3, [sp, #24]
+arith	0x180	CALLSAVE	str	x4, [sp, #32]
+arith	0x184	CALLSAVE	str	x5, [sp, #40]
+arith	0x188	CALLSAVE	str	x6, [sp, #48]
+arith	0x18c	CALLSAVE	str	x30, [sp, #56]
+arith	0x190	CONST	mov	x0, #0x1
+arith	0x194	CONST	mov	x1, #0x10800000
+arith	0x198	CALLSAVE	ldr	x16, [sp, #8]
+arith	0x19c	WORK	add	x1, x1, x16
+arith	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+arith	0x1a4	CONST	mov	x8, #0x40
+arith	0x1a8	WORK	svc	#0x0
+arith	0x1ac	WORK	mov	x3, x0
+arith	0x1b0	CALLSAVE	ldr	x0, [sp]
+arith	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+arith	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+arith	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+arith	0x1c0	CALLSAVE	add	sp, sp, #0x40
+arith	0x1c4	CALL	ret
+arith	0x1c8	WORK	add	x0, x1, #0x64
+arith	0x1cc	CONST	mov	x8, #0x5d
+arith	0x1d0	WORK	svc	#0x0
+arith	0x1d4	CONST	mov	x1, #0x3
+arith	0x1d8	CTRL	b	0x1c8
+arith	0x1dc	CONST	mov	x1, #0x4
+arith	0x1e0	CTRL	b	0x1c8
+arith	0x1e4	CONST	mov	x1, #0x5
+arith	0x1e8	CTRL	b	0x1c8
+arith	0x1ec	CONST	mov	x1, #0x6
+arith	0x1f0	CTRL	b	0x1c8
+arith	0x1f4	CONST	mov	x0, #0x0
+arith	0x1f8	CONST	mov	x1, #0x0
+arith	0x1fc	CONST	mov	x2, #0x0
+arith	0x200	CONST	mov	x3, #0x5a00
+arith	0x204	CONST	movk	x3, #0x262, lsl #16
+arith	0x208	CTRL	cmp	x2, x3
+arith	0x20c	CTRL	b.cs	0x244
+arith	0x210	CONST	mov	x3, #0x1f
+arith	0x214	WORK	mul	x4, x0, x3
+arith	0x218	WORK	add	x0, x4, x2
+arith	0x21c	WORK	mul	x4, x2, x2
+arith	0x220	WORK	lsr	x5, x2, #3
+arith	0x224	WORK	eor	x3, x4, x5
+arith	0x228	CONST	mov	x4, #0x4243
+arith	0x22c	CONST	movk	x4, #0xf, lsl #16
+arith	0x230	WORK	udiv	x6, x3, x4
+arith	0x234	WORK	msub	x5, x6, x4, x3
+arith	0x238	WORK	add	x1, x1, x5
+arith	0x23c	WORK	add	x2, x2, #0x1
+arith	0x240	CTRL	b	0x200
+arith	0x244	CALLSAVE	sub	sp, sp, #0x20
+arith	0x248	CALLSAVE	cmp	sp, x28
+arith	0x24c	CALLSAVE	b.cc	0x2b8
+arith	0x250	CALLSAVE	str	x0, [sp]
+arith	0x254	CALLSAVE	str	x1, [sp, #8]
+arith	0x258	CALLSAVE	str	x30, [sp, #16]
+arith	0x25c	CALLSAVE	ldr	x0, [sp]
+arith	0x260	CALL	bl	0xb4
+arith	0x264	CALLSAVE	ldr	x0, [sp]
+arith	0x268	CALLSAVE	ldr	x1, [sp, #8]
+arith	0x26c	CALLSAVE	ldr	x30, [sp, #16]
+arith	0x270	CALLSAVE	add	sp, sp, #0x20
+arith	0x274	CALLSAVE	sub	sp, sp, #0x20
+arith	0x278	CALLSAVE	cmp	sp, x28
+arith	0x27c	CALLSAVE	b.cc	0x2b8
+arith	0x280	CALLSAVE	str	x0, [sp]
+arith	0x284	CALLSAVE	str	x1, [sp, #8]
+arith	0x288	CALLSAVE	str	x30, [sp, #16]
+arith	0x28c	CALLSAVE	ldr	x0, [sp, #8]
+arith	0x290	CALL	bl	0xb4
+arith	0x294	CALLSAVE	ldr	x0, [sp]
+arith	0x298	CALLSAVE	ldr	x1, [sp, #8]
+arith	0x29c	CALLSAVE	ldr	x30, [sp, #16]
+arith	0x2a0	CALLSAVE	add	sp, sp, #0x20
+arith	0x2a4	CONST	mov	x0, #0x0
+arith	0x2a8	CALL	ret
+arith	0x2ac	WORK	add	x0, x1, #0x64
+arith	0x2b0	CONST	mov	x8, #0x5d
+arith	0x2b4	WORK	svc	#0x0
+arith	0x2b8	CONST	mov	x1, #0x6
+arith	0x2bc	CTRL	b	0x2ac
+arith	0x2c0	CONST	mov	x28, #0x10000000
+arith	0x2c4	CONST	mov	x16, #0x10800000
+arith	0x2c8	WORK	mov	sp, x16
+arith	0x2cc	CALL	bl	0x1f4
+arith	0x2d0	CONST	mov	x8, #0x5d
+arith	0x2d4	WORK	svc	#0x0
+branch	0xb0	CTRL	b	0x300
+branch	0xb4	CONST	mov	x1, #0xa
+branch	0xb8	CONST	mov	x2, #0x1f
+branch	0xbc	CONST	mov	x3, #0x10800000
+branch	0xc0	WORK	strb	w1, [x3, x2]
+branch	0xc4	CONST	mov	x1, #0x1f
+branch	0xc8	WORK	mov	x2, x0
+branch	0xcc	CONST	mov	x3, #0x0
+branch	0xd0	CTRL	cmp	x2, #0x9
+branch	0xd4	CTRL	b.ls	0x124
+branch	0xd8	CONST	mov	x4, #0x4240
+branch	0xdc	CONST	movk	x4, #0xf, lsl #16
+branch	0xe0	GUARD	cmp	x3, x4
+branch	0xe4	GUARD	b.cs	0x1dc
+branch	0xe8	GUARD	add	x3, x3, #0x1
+branch	0xec	WORK	sub	x1, x1, #0x1
+branch	0xf0	CONST	mov	x4, #0xa
+branch	0xf4	WORK	udiv	x6, x2, x4
+branch	0xf8	WORK	msub	x5, x6, x4, x2
+branch	0xfc	WORK	add	x8, x5, #0x30
+branch	0x100	WORK	lsr	x9, x8, #8
+branch	0x104	CTRL	cbnz	x9, 0x1e4
+branch	0x108	BOUNDS	cmp	x1, #0x20
+branch	0x10c	BOUNDS	b.cs	0x1d4
+branch	0x110	CONST	mov	x10, #0x10800000
+branch	0x114	WORK	strb	w8, [x10, x1]
+branch	0x118	CONST	mov	x4, #0xa
+branch	0x11c	WORK	udiv	x2, x2, x4
+branch	0x120	CTRL	b	0xd0
+branch	0x124	WORK	sub	x1, x1, #0x1
+branch	0x128	WORK	add	x3, x2, #0x30
+branch	0x12c	WORK	lsr	x4, x3, #8
+branch	0x130	CTRL	cbnz	x4, 0x1e4
+branch	0x134	BOUNDS	cmp	x1, #0x20
+branch	0x138	BOUNDS	b.cs	0x1d4
+branch	0x13c	CONST	mov	x5, #0x10800000
+branch	0x140	WORK	strb	w3, [x5, x1]
+branch	0x144	CONST	mov	x4, #0x20
+branch	0x148	WORK	sub	x5, x4, x1
+branch	0x14c	CONST	mov	x6, #0x20
+branch	0x150	BOUNDS	cmp	x5, x6
+branch	0x154	BOUNDS	b.hi	0x1d4
+branch	0x158	WORK	sub	x6, x6, x5
+branch	0x15c	BOUNDS	cmp	x1, x6
+branch	0x160	BOUNDS	b.hi	0x1d4
+branch	0x164	CALLSAVE	sub	sp, sp, #0x40
+branch	0x168	CALLSAVE	cmp	sp, x28
+branch	0x16c	CALLSAVE	b.cc	0x1ec
+branch	0x170	CALLSAVE	str	x0, [sp]
+branch	0x174	CALLSAVE	str	x1, [sp, #8]
+branch	0x178	CALLSAVE	str	x2, [sp, #16]
+branch	0x17c	CALLSAVE	str	x3, [sp, #24]
+branch	0x180	CALLSAVE	str	x4, [sp, #32]
+branch	0x184	CALLSAVE	str	x5, [sp, #40]
+branch	0x188	CALLSAVE	str	x6, [sp, #48]
+branch	0x18c	CALLSAVE	str	x30, [sp, #56]
+branch	0x190	CONST	mov	x0, #0x1
+branch	0x194	CONST	mov	x1, #0x10800000
+branch	0x198	CALLSAVE	ldr	x16, [sp, #8]
+branch	0x19c	WORK	add	x1, x1, x16
+branch	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+branch	0x1a4	CONST	mov	x8, #0x40
+branch	0x1a8	WORK	svc	#0x0
+branch	0x1ac	WORK	mov	x3, x0
+branch	0x1b0	CALLSAVE	ldr	x0, [sp]
+branch	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+branch	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+branch	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+branch	0x1c0	CALLSAVE	add	sp, sp, #0x40
+branch	0x1c4	CALL	ret
+branch	0x1c8	WORK	add	x0, x1, #0x64
+branch	0x1cc	CONST	mov	x8, #0x5d
+branch	0x1d0	WORK	svc	#0x0
+branch	0x1d4	CONST	mov	x1, #0x3
+branch	0x1d8	CTRL	b	0x1c8
+branch	0x1dc	CONST	mov	x1, #0x4
+branch	0x1e0	CTRL	b	0x1c8
+branch	0x1e4	CONST	mov	x1, #0x5
+branch	0x1e8	CTRL	b	0x1c8
+branch	0x1ec	CONST	mov	x1, #0x6
+branch	0x1f0	CTRL	b	0x1c8
+branch	0x1f4	CONST	mov	x0, #0x0
+branch	0x1f8	CONST	mov	x1, #0x0
+branch	0x1fc	CONST	mov	x2, #0x0
+branch	0x200	CONST	mov	x3, #0x4240
+branch	0x204	CONST	movk	x3, #0xf, lsl #16
+branch	0x208	CTRL	cmp	x2, x3
+branch	0x20c	CTRL	b.cs	0x27c
+branch	0x210	WORK	add	x3, x2, #0x1
+branch	0x214	CONST	mov	x4, #0x0
+branch	0x218	CONST	mov	x5, #0x0
+branch	0x21c	CTRL	cmp	x3, #0x1
+branch	0x220	CTRL	b.eq	0x264
+branch	0x224	CONST	mov	x6, #0x4240
+branch	0x228	CONST	movk	x6, #0xf, lsl #16
+branch	0x22c	GUARD	cmp	x5, x6
+branch	0x230	GUARD	b.cs	0x2f0
+branch	0x234	GUARD	add	x5, x5, #0x1
+branch	0x238	CONST	mov	x6, #0x1
+branch	0x23c	WORK	and	x8, x3, x6
+branch	0x240	CTRL	cmp	x8, #0x0
+branch	0x244	CTRL	b.ne	0x250
+branch	0x248	WORK	lsr	x3, x3, #1
+branch	0x24c	CTRL	b	0x25c
+branch	0x250	CONST	mov	x6, #0x3
+branch	0x254	WORK	mul	x8, x3, x6
+branch	0x258	WORK	add	x3, x8, #0x1
+branch	0x25c	WORK	add	x4, x4, #0x1
+branch	0x260	CTRL	b	0x21c
+branch	0x264	WORK	add	x0, x0, x4
+branch	0x268	CTRL	cmp	x4, x1
+branch	0x26c	CTRL	b.ls	0x274
+branch	0x270	WORK	mov	x1, x4
+branch	0x274	WORK	add	x2, x2, #0x1
+branch	0x278	CTRL	b	0x200
+branch	0x27c	CALLSAVE	sub	sp, sp, #0x20
+branch	0x280	CALLSAVE	cmp	sp, x28
+branch	0x284	CALLSAVE	b.cc	0x2f8
+branch	0x288	CALLSAVE	str	x0, [sp]
+branch	0x28c	CALLSAVE	str	x1, [sp, #8]
+branch	0x290	CALLSAVE	str	x30, [sp, #16]
+branch	0x294	CALLSAVE	ldr	x0, [sp]
+branch	0x298	CALL	bl	0xb4
+branch	0x29c	CALLSAVE	ldr	x0, [sp]
+branch	0x2a0	CALLSAVE	ldr	x1, [sp, #8]
+branch	0x2a4	CALLSAVE	ldr	x30, [sp, #16]
+branch	0x2a8	CALLSAVE	add	sp, sp, #0x20
+branch	0x2ac	CALLSAVE	sub	sp, sp, #0x20
+branch	0x2b0	CALLSAVE	cmp	sp, x28
+branch	0x2b4	CALLSAVE	b.cc	0x2f8
+branch	0x2b8	CALLSAVE	str	x0, [sp]
+branch	0x2bc	CALLSAVE	str	x1, [sp, #8]
+branch	0x2c0	CALLSAVE	str	x30, [sp, #16]
+branch	0x2c4	CALLSAVE	ldr	x0, [sp, #8]
+branch	0x2c8	CALL	bl	0xb4
+branch	0x2cc	CALLSAVE	ldr	x0, [sp]
+branch	0x2d0	CALLSAVE	ldr	x1, [sp, #8]
+branch	0x2d4	CALLSAVE	ldr	x30, [sp, #16]
+branch	0x2d8	CALLSAVE	add	sp, sp, #0x20
+branch	0x2dc	CONST	mov	x0, #0x0
+branch	0x2e0	CALL	ret
+branch	0x2e4	WORK	add	x0, x1, #0x64
+branch	0x2e8	CONST	mov	x8, #0x5d
+branch	0x2ec	WORK	svc	#0x0
+branch	0x2f0	CONST	mov	x1, #0x4
+branch	0x2f4	CTRL	b	0x2e4
+branch	0x2f8	CONST	mov	x1, #0x6
+branch	0x2fc	CTRL	b	0x2e4
+branch	0x300	CONST	mov	x28, #0x10000000
+branch	0x304	CONST	mov	x16, #0x10800000
+branch	0x308	WORK	mov	sp, x16
+branch	0x30c	CALL	bl	0x1f4
+branch	0x310	CONST	mov	x8, #0x5d
+branch	0x314	WORK	svc	#0x0
+fib	0xb0	CTRL	b	0x2f4
+fib	0xb4	CONST	mov	x1, #0xa
+fib	0xb8	CONST	mov	x2, #0x1f
+fib	0xbc	CONST	mov	x3, #0x10800000
+fib	0xc0	WORK	strb	w1, [x3, x2]
+fib	0xc4	CONST	mov	x1, #0x1f
+fib	0xc8	WORK	mov	x2, x0
+fib	0xcc	CONST	mov	x3, #0x0
+fib	0xd0	CTRL	cmp	x2, #0x9
+fib	0xd4	CTRL	b.ls	0x124
+fib	0xd8	CONST	mov	x4, #0x4240
+fib	0xdc	CONST	movk	x4, #0xf, lsl #16
+fib	0xe0	GUARD	cmp	x3, x4
+fib	0xe4	GUARD	b.cs	0x1dc
+fib	0xe8	GUARD	add	x3, x3, #0x1
+fib	0xec	WORK	sub	x1, x1, #0x1
+fib	0xf0	CONST	mov	x4, #0xa
+fib	0xf4	WORK	udiv	x6, x2, x4
+fib	0xf8	WORK	msub	x5, x6, x4, x2
+fib	0xfc	WORK	add	x8, x5, #0x30
+fib	0x100	WORK	lsr	x9, x8, #8
+fib	0x104	CTRL	cbnz	x9, 0x1e4
+fib	0x108	BOUNDS	cmp	x1, #0x20
+fib	0x10c	BOUNDS	b.cs	0x1d4
+fib	0x110	CONST	mov	x10, #0x10800000
+fib	0x114	WORK	strb	w8, [x10, x1]
+fib	0x118	CONST	mov	x4, #0xa
+fib	0x11c	WORK	udiv	x2, x2, x4
+fib	0x120	CTRL	b	0xd0
+fib	0x124	WORK	sub	x1, x1, #0x1
+fib	0x128	WORK	add	x3, x2, #0x30
+fib	0x12c	WORK	lsr	x4, x3, #8
+fib	0x130	CTRL	cbnz	x4, 0x1e4
+fib	0x134	BOUNDS	cmp	x1, #0x20
+fib	0x138	BOUNDS	b.cs	0x1d4
+fib	0x13c	CONST	mov	x5, #0x10800000
+fib	0x140	WORK	strb	w3, [x5, x1]
+fib	0x144	CONST	mov	x4, #0x20
+fib	0x148	WORK	sub	x5, x4, x1
+fib	0x14c	CONST	mov	x6, #0x20
+fib	0x150	BOUNDS	cmp	x5, x6
+fib	0x154	BOUNDS	b.hi	0x1d4
+fib	0x158	WORK	sub	x6, x6, x5
+fib	0x15c	BOUNDS	cmp	x1, x6
+fib	0x160	BOUNDS	b.hi	0x1d4
+fib	0x164	CALLSAVE	sub	sp, sp, #0x40
+fib	0x168	CALLSAVE	cmp	sp, x28
+fib	0x16c	CALLSAVE	b.cc	0x1ec
+fib	0x170	CALLSAVE	str	x0, [sp]
+fib	0x174	CALLSAVE	str	x1, [sp, #8]
+fib	0x178	CALLSAVE	str	x2, [sp, #16]
+fib	0x17c	CALLSAVE	str	x3, [sp, #24]
+fib	0x180	CALLSAVE	str	x4, [sp, #32]
+fib	0x184	CALLSAVE	str	x5, [sp, #40]
+fib	0x188	CALLSAVE	str	x6, [sp, #48]
+fib	0x18c	CALLSAVE	str	x30, [sp, #56]
+fib	0x190	CONST	mov	x0, #0x1
+fib	0x194	CONST	mov	x1, #0x10800000
+fib	0x198	CALLSAVE	ldr	x16, [sp, #8]
+fib	0x19c	WORK	add	x1, x1, x16
+fib	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+fib	0x1a4	CONST	mov	x8, #0x40
+fib	0x1a8	WORK	svc	#0x0
+fib	0x1ac	WORK	mov	x3, x0
+fib	0x1b0	CALLSAVE	ldr	x0, [sp]
+fib	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+fib	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+fib	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+fib	0x1c0	CALLSAVE	add	sp, sp, #0x40
+fib	0x1c4	CALL	ret
+fib	0x1c8	WORK	add	x0, x1, #0x64
+fib	0x1cc	CONST	mov	x8, #0x5d
+fib	0x1d0	WORK	svc	#0x0
+fib	0x1d4	CONST	mov	x1, #0x3
+fib	0x1d8	CTRL	b	0x1c8
+fib	0x1dc	CONST	mov	x1, #0x4
+fib	0x1e0	CTRL	b	0x1c8
+fib	0x1e4	CONST	mov	x1, #0x5
+fib	0x1e8	CTRL	b	0x1c8
+fib	0x1ec	CONST	mov	x1, #0x6
+fib	0x1f0	CTRL	b	0x1c8
+fib	0x1f4	CTRL	cmp	x0, #0x2
+fib	0x1f8	CTRL	b.cs	0x200
+fib	0x1fc	CALL	ret
+fib	0x200	WORK	sub	x2, x0, #0x1
+fib	0x204	CALLSAVE	sub	sp, sp, #0x20
+fib	0x208	CALLSAVE	cmp	sp, x28
+fib	0x20c	CALLSAVE	b.cc	0x28c
+fib	0x210	CALLSAVE	str	x0, [sp]
+fib	0x214	CALLSAVE	str	x1, [sp, #8]
+fib	0x218	CALLSAVE	str	x2, [sp, #16]
+fib	0x21c	CALLSAVE	str	x30, [sp, #24]
+fib	0x220	CALLSAVE	ldr	x0, [sp, #16]
+fib	0x224	CALL	bl	0x1f4
+fib	0x228	WORK	mov	x1, x0
+fib	0x22c	CALLSAVE	ldr	x0, [sp]
+fib	0x230	CALLSAVE	ldr	x30, [sp, #24]
+fib	0x234	CALLSAVE	add	sp, sp, #0x20
+fib	0x238	WORK	sub	x3, x0, #0x2
+fib	0x23c	CALLSAVE	sub	sp, sp, #0x30
+fib	0x240	CALLSAVE	cmp	sp, x28
+fib	0x244	CALLSAVE	b.cc	0x28c
+fib	0x248	CALLSAVE	str	x0, [sp]
+fib	0x24c	CALLSAVE	str	x1, [sp, #8]
+fib	0x250	CALLSAVE	str	x2, [sp, #16]
+fib	0x254	CALLSAVE	str	x3, [sp, #24]
+fib	0x258	CALLSAVE	str	x30, [sp, #32]
+fib	0x25c	CALLSAVE	ldr	x0, [sp, #24]
+fib	0x260	CALL	bl	0x1f4
+fib	0x264	WORK	mov	x2, x0
+fib	0x268	CALLSAVE	ldr	x0, [sp]
+fib	0x26c	CALLSAVE	ldr	x1, [sp, #8]
+fib	0x270	CALLSAVE	ldr	x30, [sp, #32]
+fib	0x274	CALLSAVE	add	sp, sp, #0x30
+fib	0x278	WORK	add	x0, x1, x2
+fib	0x27c	CALL	ret
+fib	0x280	WORK	add	x0, x1, #0x64
+fib	0x284	CONST	mov	x8, #0x5d
+fib	0x288	WORK	svc	#0x0
+fib	0x28c	CONST	mov	x1, #0x6
+fib	0x290	CTRL	b	0x280
+fib	0x294	CALLSAVE	sub	sp, sp, #0x10
+fib	0x298	CALLSAVE	cmp	sp, x28
+fib	0x29c	CALLSAVE	b.cc	0x2ec
+fib	0x2a0	CALLSAVE	str	x30, [sp]
+fib	0x2a4	CONST	mov	x0, #0x26
+fib	0x2a8	CALL	bl	0x1f4
+fib	0x2ac	CALLSAVE	ldr	x30, [sp]
+fib	0x2b0	CALLSAVE	add	sp, sp, #0x10
+fib	0x2b4	CALLSAVE	sub	sp, sp, #0x10
+fib	0x2b8	CALLSAVE	cmp	sp, x28
+fib	0x2bc	CALLSAVE	b.cc	0x2ec
+fib	0x2c0	CALLSAVE	str	x0, [sp]
+fib	0x2c4	CALLSAVE	str	x30, [sp, #8]
+fib	0x2c8	CALLSAVE	ldr	x0, [sp]
+fib	0x2cc	CALL	bl	0xb4
+fib	0x2d0	CALLSAVE	ldr	x30, [sp, #8]
+fib	0x2d4	CALLSAVE	add	sp, sp, #0x10
+fib	0x2d8	CONST	mov	x0, #0x0
+fib	0x2dc	CALL	ret
+fib	0x2e0	WORK	add	x0, x1, #0x64
+fib	0x2e4	CONST	mov	x8, #0x5d
+fib	0x2e8	WORK	svc	#0x0
+fib	0x2ec	CONST	mov	x1, #0x6
+fib	0x2f0	CTRL	b	0x2e0
+fib	0x2f4	CONST	mov	x28, #0x10000000
+fib	0x2f8	CONST	mov	x16, #0x10800000
+fib	0x2fc	WORK	mov	sp, x16
+fib	0x300	CALL	bl	0x294
+fib	0x304	CONST	mov	x8, #0x5d
+fib	0x308	WORK	svc	#0x0
+leafcall	0xb0	CTRL	b	0x2f0
+leafcall	0xb4	CONST	mov	x1, #0xa
+leafcall	0xb8	CONST	mov	x2, #0x1f
+leafcall	0xbc	CONST	mov	x3, #0x10800000
+leafcall	0xc0	WORK	strb	w1, [x3, x2]
+leafcall	0xc4	CONST	mov	x1, #0x1f
+leafcall	0xc8	WORK	mov	x2, x0
+leafcall	0xcc	CONST	mov	x3, #0x0
+leafcall	0xd0	CTRL	cmp	x2, #0x9
+leafcall	0xd4	CTRL	b.ls	0x124
+leafcall	0xd8	CONST	mov	x4, #0x4240
+leafcall	0xdc	CONST	movk	x4, #0xf, lsl #16
+leafcall	0xe0	GUARD	cmp	x3, x4
+leafcall	0xe4	GUARD	b.cs	0x1dc
+leafcall	0xe8	GUARD	add	x3, x3, #0x1
+leafcall	0xec	WORK	sub	x1, x1, #0x1
+leafcall	0xf0	CONST	mov	x4, #0xa
+leafcall	0xf4	WORK	udiv	x6, x2, x4
+leafcall	0xf8	WORK	msub	x5, x6, x4, x2
+leafcall	0xfc	WORK	add	x8, x5, #0x30
+leafcall	0x100	WORK	lsr	x9, x8, #8
+leafcall	0x104	CTRL	cbnz	x9, 0x1e4
+leafcall	0x108	BOUNDS	cmp	x1, #0x20
+leafcall	0x10c	BOUNDS	b.cs	0x1d4
+leafcall	0x110	CONST	mov	x10, #0x10800000
+leafcall	0x114	WORK	strb	w8, [x10, x1]
+leafcall	0x118	CONST	mov	x4, #0xa
+leafcall	0x11c	WORK	udiv	x2, x2, x4
+leafcall	0x120	CTRL	b	0xd0
+leafcall	0x124	WORK	sub	x1, x1, #0x1
+leafcall	0x128	WORK	add	x3, x2, #0x30
+leafcall	0x12c	WORK	lsr	x4, x3, #8
+leafcall	0x130	CTRL	cbnz	x4, 0x1e4
+leafcall	0x134	BOUNDS	cmp	x1, #0x20
+leafcall	0x138	BOUNDS	b.cs	0x1d4
+leafcall	0x13c	CONST	mov	x5, #0x10800000
+leafcall	0x140	WORK	strb	w3, [x5, x1]
+leafcall	0x144	CONST	mov	x4, #0x20
+leafcall	0x148	WORK	sub	x5, x4, x1
+leafcall	0x14c	CONST	mov	x6, #0x20
+leafcall	0x150	BOUNDS	cmp	x5, x6
+leafcall	0x154	BOUNDS	b.hi	0x1d4
+leafcall	0x158	WORK	sub	x6, x6, x5
+leafcall	0x15c	BOUNDS	cmp	x1, x6
+leafcall	0x160	BOUNDS	b.hi	0x1d4
+leafcall	0x164	CALLSAVE	sub	sp, sp, #0x40
+leafcall	0x168	CALLSAVE	cmp	sp, x28
+leafcall	0x16c	CALLSAVE	b.cc	0x1ec
+leafcall	0x170	CALLSAVE	str	x0, [sp]
+leafcall	0x174	CALLSAVE	str	x1, [sp, #8]
+leafcall	0x178	CALLSAVE	str	x2, [sp, #16]
+leafcall	0x17c	CALLSAVE	str	x3, [sp, #24]
+leafcall	0x180	CALLSAVE	str	x4, [sp, #32]
+leafcall	0x184	CALLSAVE	str	x5, [sp, #40]
+leafcall	0x188	CALLSAVE	str	x6, [sp, #48]
+leafcall	0x18c	CALLSAVE	str	x30, [sp, #56]
+leafcall	0x190	CONST	mov	x0, #0x1
+leafcall	0x194	CONST	mov	x1, #0x10800000
+leafcall	0x198	CALLSAVE	ldr	x16, [sp, #8]
+leafcall	0x19c	WORK	add	x1, x1, x16
+leafcall	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+leafcall	0x1a4	CONST	mov	x8, #0x40
+leafcall	0x1a8	WORK	svc	#0x0
+leafcall	0x1ac	WORK	mov	x3, x0
+leafcall	0x1b0	CALLSAVE	ldr	x0, [sp]
+leafcall	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+leafcall	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+leafcall	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+leafcall	0x1c0	CALLSAVE	add	sp, sp, #0x40
+leafcall	0x1c4	CALL	ret
+leafcall	0x1c8	WORK	add	x0, x1, #0x64
+leafcall	0x1cc	CONST	mov	x8, #0x5d
+leafcall	0x1d0	WORK	svc	#0x0
+leafcall	0x1d4	CONST	mov	x1, #0x3
+leafcall	0x1d8	CTRL	b	0x1c8
+leafcall	0x1dc	CONST	mov	x1, #0x4
+leafcall	0x1e0	CTRL	b	0x1c8
+leafcall	0x1e4	CONST	mov	x1, #0x5
+leafcall	0x1e8	CTRL	b	0x1c8
+leafcall	0x1ec	CONST	mov	x1, #0x6
+leafcall	0x1f0	CTRL	b	0x1c8
+leafcall	0x1f4	WORK	mul	x2, x0, x1
+leafcall	0x1f8	WORK	lsr	x3, x0, #5
+leafcall	0x1fc	WORK	eor	x0, x2, x3
+leafcall	0x200	CALL	ret
+leafcall	0x204	CONST	mov	x0, #0x1
+leafcall	0x208	CONST	mov	x1, #0x0
+leafcall	0x20c	CONST	mov	x2, #0x0
+leafcall	0x210	CONST	mov	x3, #0xc380
+leafcall	0x214	CONST	movk	x3, #0x1c9, lsl #16
+leafcall	0x218	CTRL	cmp	x2, x3
+leafcall	0x21c	CTRL	b.cs	0x274
+leafcall	0x220	CALLSAVE	sub	sp, sp, #0x20
+leafcall	0x224	CALLSAVE	cmp	sp, x28
+leafcall	0x228	CALLSAVE	b.cc	0x2e8
+leafcall	0x22c	CALLSAVE	str	x0, [sp]
+leafcall	0x230	CALLSAVE	str	x1, [sp, #8]
+leafcall	0x234	CALLSAVE	str	x2, [sp, #16]
+leafcall	0x238	CALLSAVE	str	x30, [sp, #24]
+leafcall	0x23c	CALLSAVE	ldr	x0, [sp, #16]
+leafcall	0x240	CONST	mov	x1, #0x79b1
+leafcall	0x244	CONST	movk	x1, #0x9e37, lsl #16
+leafcall	0x248	CALL	bl	0x1f4
+leafcall	0x24c	WORK	mov	x3, x0
+leafcall	0x250	CALLSAVE	ldr	x0, [sp]
+leafcall	0x254	CALLSAVE	ldr	x1, [sp, #8]
+leafcall	0x258	CALLSAVE	ldr	x2, [sp, #16]
+leafcall	0x25c	CALLSAVE	ldr	x30, [sp, #24]
+leafcall	0x260	CALLSAVE	add	sp, sp, #0x20
+leafcall	0x264	WORK	add	x0, x0, x3
+leafcall	0x268	WORK	eor	x1, x1, x0
+leafcall	0x26c	WORK	add	x2, x2, #0x1
+leafcall	0x270	CTRL	b	0x210
+leafcall	0x274	CALLSAVE	sub	sp, sp, #0x20
+leafcall	0x278	CALLSAVE	cmp	sp, x28
+leafcall	0x27c	CALLSAVE	b.cc	0x2e8
+leafcall	0x280	CALLSAVE	str	x0, [sp]
+leafcall	0x284	CALLSAVE	str	x1, [sp, #8]
+leafcall	0x288	CALLSAVE	str	x30, [sp, #16]
+leafcall	0x28c	CALLSAVE	ldr	x0, [sp]
+leafcall	0x290	CALL	bl	0xb4
+leafcall	0x294	CALLSAVE	ldr	x0, [sp]
+leafcall	0x298	CALLSAVE	ldr	x1, [sp, #8]
+leafcall	0x29c	CALLSAVE	ldr	x30, [sp, #16]
+leafcall	0x2a0	CALLSAVE	add	sp, sp, #0x20
+leafcall	0x2a4	CALLSAVE	sub	sp, sp, #0x20
+leafcall	0x2a8	CALLSAVE	cmp	sp, x28
+leafcall	0x2ac	CALLSAVE	b.cc	0x2e8
+leafcall	0x2b0	CALLSAVE	str	x0, [sp]
+leafcall	0x2b4	CALLSAVE	str	x1, [sp, #8]
+leafcall	0x2b8	CALLSAVE	str	x30, [sp, #16]
+leafcall	0x2bc	CALLSAVE	ldr	x0, [sp, #8]
+leafcall	0x2c0	CALL	bl	0xb4
+leafcall	0x2c4	CALLSAVE	ldr	x0, [sp]
+leafcall	0x2c8	CALLSAVE	ldr	x1, [sp, #8]
+leafcall	0x2cc	CALLSAVE	ldr	x30, [sp, #16]
+leafcall	0x2d0	CALLSAVE	add	sp, sp, #0x20
+leafcall	0x2d4	CONST	mov	x0, #0x0
+leafcall	0x2d8	CALL	ret
+leafcall	0x2dc	WORK	add	x0, x1, #0x64
+leafcall	0x2e0	CONST	mov	x8, #0x5d
+leafcall	0x2e4	WORK	svc	#0x0
+leafcall	0x2e8	CONST	mov	x1, #0x6
+leafcall	0x2ec	CTRL	b	0x2dc
+leafcall	0x2f0	CONST	mov	x28, #0x10000000
+leafcall	0x2f4	CONST	mov	x16, #0x10800000
+leafcall	0x2f8	WORK	mov	sp, x16
+leafcall	0x2fc	CALL	bl	0x204
+leafcall	0x300	CONST	mov	x8, #0x5d
+leafcall	0x304	WORK	svc	#0x0
+sieve	0xb0	CTRL	b	0x420
+sieve	0xb4	CONST	mov	x1, #0xa
+sieve	0xb8	CONST	mov	x2, #0x1f
+sieve	0xbc	CONST	mov	x3, #0x10800000
+sieve	0xc0	WORK	strb	w1, [x3, x2]
+sieve	0xc4	CONST	mov	x1, #0x1f
+sieve	0xc8	WORK	mov	x2, x0
+sieve	0xcc	CONST	mov	x3, #0x0
+sieve	0xd0	CTRL	cmp	x2, #0x9
+sieve	0xd4	CTRL	b.ls	0x124
+sieve	0xd8	CONST	mov	x4, #0x4240
+sieve	0xdc	CONST	movk	x4, #0xf, lsl #16
+sieve	0xe0	GUARD	cmp	x3, x4
+sieve	0xe4	GUARD	b.cs	0x1dc
+sieve	0xe8	GUARD	add	x3, x3, #0x1
+sieve	0xec	WORK	sub	x1, x1, #0x1
+sieve	0xf0	CONST	mov	x4, #0xa
+sieve	0xf4	WORK	udiv	x6, x2, x4
+sieve	0xf8	WORK	msub	x5, x6, x4, x2
+sieve	0xfc	WORK	add	x8, x5, #0x30
+sieve	0x100	WORK	lsr	x9, x8, #8
+sieve	0x104	CTRL	cbnz	x9, 0x1e4
+sieve	0x108	BOUNDS	cmp	x1, #0x20
+sieve	0x10c	BOUNDS	b.cs	0x1d4
+sieve	0x110	CONST	mov	x10, #0x10800000
+sieve	0x114	WORK	strb	w8, [x10, x1]
+sieve	0x118	CONST	mov	x4, #0xa
+sieve	0x11c	WORK	udiv	x2, x2, x4
+sieve	0x120	CTRL	b	0xd0
+sieve	0x124	WORK	sub	x1, x1, #0x1
+sieve	0x128	WORK	add	x3, x2, #0x30
+sieve	0x12c	WORK	lsr	x4, x3, #8
+sieve	0x130	CTRL	cbnz	x4, 0x1e4
+sieve	0x134	BOUNDS	cmp	x1, #0x20
+sieve	0x138	BOUNDS	b.cs	0x1d4
+sieve	0x13c	CONST	mov	x5, #0x10800000
+sieve	0x140	WORK	strb	w3, [x5, x1]
+sieve	0x144	CONST	mov	x4, #0x20
+sieve	0x148	WORK	sub	x5, x4, x1
+sieve	0x14c	CONST	mov	x6, #0x20
+sieve	0x150	BOUNDS	cmp	x5, x6
+sieve	0x154	BOUNDS	b.hi	0x1d4
+sieve	0x158	WORK	sub	x6, x6, x5
+sieve	0x15c	BOUNDS	cmp	x1, x6
+sieve	0x160	BOUNDS	b.hi	0x1d4
+sieve	0x164	CALLSAVE	sub	sp, sp, #0x40
+sieve	0x168	CALLSAVE	cmp	sp, x28
+sieve	0x16c	CALLSAVE	b.cc	0x1ec
+sieve	0x170	CALLSAVE	str	x0, [sp]
+sieve	0x174	CALLSAVE	str	x1, [sp, #8]
+sieve	0x178	CALLSAVE	str	x2, [sp, #16]
+sieve	0x17c	CALLSAVE	str	x3, [sp, #24]
+sieve	0x180	CALLSAVE	str	x4, [sp, #32]
+sieve	0x184	CALLSAVE	str	x5, [sp, #40]
+sieve	0x188	CALLSAVE	str	x6, [sp, #48]
+sieve	0x18c	CALLSAVE	str	x30, [sp, #56]
+sieve	0x190	CONST	mov	x0, #0x1
+sieve	0x194	CONST	mov	x1, #0x10800000
+sieve	0x198	CALLSAVE	ldr	x16, [sp, #8]
+sieve	0x19c	WORK	add	x1, x1, x16
+sieve	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+sieve	0x1a4	CONST	mov	x8, #0x40
+sieve	0x1a8	WORK	svc	#0x0
+sieve	0x1ac	WORK	mov	x3, x0
+sieve	0x1b0	CALLSAVE	ldr	x0, [sp]
+sieve	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+sieve	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+sieve	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+sieve	0x1c0	CALLSAVE	add	sp, sp, #0x40
+sieve	0x1c4	CALL	ret
+sieve	0x1c8	WORK	add	x0, x1, #0x64
+sieve	0x1cc	CONST	mov	x8, #0x5d
+sieve	0x1d0	WORK	svc	#0x0
+sieve	0x1d4	CONST	mov	x1, #0x3
+sieve	0x1d8	CTRL	b	0x1c8
+sieve	0x1dc	CONST	mov	x1, #0x4
+sieve	0x1e0	CTRL	b	0x1c8
+sieve	0x1e4	CONST	mov	x1, #0x5
+sieve	0x1e8	CTRL	b	0x1c8
+sieve	0x1ec	CONST	mov	x1, #0x6
+sieve	0x1f0	CTRL	b	0x1c8
+sieve	0x1f4	CONST	mov	x0, #0x0
+sieve	0x1f8	CONST	mov	x1, #0x8481
+sieve	0x1fc	CONST	movk	x1, #0x1e, lsl #16
+sieve	0x200	CTRL	cmp	x0, x1
+sieve	0x204	CTRL	b.cs	0x230
+sieve	0x208	CONST	mov	x1, #0x0
+sieve	0x20c	CONST	mov	x2, #0x8481
+sieve	0x210	CONST	movk	x2, #0x1e, lsl #16
+sieve	0x214	BOUNDS	cmp	x0, x2
+sieve	0x218	BOUNDS	b.cs	0x340
+sieve	0x21c	CONST	mov	x3, #0x20
+sieve	0x220	CONST	movk	x3, #0x1080, lsl #16
+sieve	0x224	WORK	strb	w1, [x3, x0]
+sieve	0x228	WORK	add	x0, x0, #0x1
+sieve	0x22c	CTRL	b	0x1f8
+sieve	0x230	CONST	mov	x0, #0x2
+sieve	0x234	CONST	mov	x1, #0x0
+sieve	0x238	WORK	mul	x2, x0, x0
+sieve	0x23c	CONST	mov	x3, #0x8480
+sieve	0x240	CONST	movk	x3, #0x1e, lsl #16
+sieve	0x244	CTRL	cmp	x2, x3
+sieve	0x248	CTRL	b.hi	0x2e0
+sieve	0x24c	CONST	mov	x4, #0x4240
+sieve	0x250	CONST	movk	x4, #0xf, lsl #16
+sieve	0x254	GUARD	cmp	x1, x4
+sieve	0x258	GUARD	b.cs	0x348
+sieve	0x25c	GUARD	add	x1, x1, #0x1
+sieve	0x260	CONST	mov	x2, #0x8481
+sieve	0x264	CONST	movk	x2, #0x1e, lsl #16
+sieve	0x268	BOUNDS	cmp	x0, x2
+sieve	0x26c	BOUNDS	b.cs	0x340
+sieve	0x270	CONST	mov	x3, #0x20
+sieve	0x274	CONST	movk	x3, #0x1080, lsl #16
+sieve	0x278	WORK	ldrb	w4, [x3, x0]
+sieve	0x27c	CTRL	cmp	x4, #0x0
+sieve	0x280	CTRL	b.ne	0x2d8
+sieve	0x284	WORK	mul	x2, x0, x0
+sieve	0x288	CONST	mov	x3, #0x0
+sieve	0x28c	CONST	mov	x4, #0x8480
+sieve	0x290	CONST	movk	x4, #0x1e, lsl #16
+sieve	0x294	CTRL	cmp	x2, x4
+sieve	0x298	CTRL	b.hi	0x2d8
+sieve	0x29c	CONST	mov	x5, #0x4240
+sieve	0x2a0	CONST	movk	x5, #0xf, lsl #16
+sieve	0x2a4	GUARD	cmp	x3, x5
+sieve	0x2a8	GUARD	b.cs	0x348
+sieve	0x2ac	GUARD	add	x3, x3, #0x1
+sieve	0x2b0	CONST	mov	x4, #0x1
+sieve	0x2b4	CONST	mov	x5, #0x8481
+sieve	0x2b8	CONST	movk	x5, #0x1e, lsl #16
+sieve	0x2bc	BOUNDS	cmp	x2, x5
+sieve	0x2c0	BOUNDS	b.cs	0x340
+sieve	0x2c4	CONST	mov	x6, #0x20
+sieve	0x2c8	CONST	movk	x6, #0x1080, lsl #16
+sieve	0x2cc	WORK	strb	w4, [x6, x2]
+sieve	0x2d0	WORK	add	x2, x2, x0
+sieve	0x2d4	CTRL	b	0x28c
+sieve	0x2d8	WORK	add	x0, x0, #0x1
+sieve	0x2dc	CTRL	b	0x238
+sieve	0x2e0	CONST	mov	x1, #0x0
+sieve	0x2e4	CONST	mov	x2, #0x0
+sieve	0x2e8	CONST	mov	x3, #0x847f
+sieve	0x2ec	CONST	movk	x3, #0x1e, lsl #16
+sieve	0x2f0	CTRL	cmp	x2, x3
+sieve	0x2f4	CTRL	b.cs	0x32c
+sieve	0x2f8	WORK	add	x3, x2, #0x2
+sieve	0x2fc	CONST	mov	x4, #0x8481
+sieve	0x300	CONST	movk	x4, #0x1e, lsl #16
+sieve	0x304	BOUNDS	cmp	x3, x4
+sieve	0x308	BOUNDS	b.cs	0x340
+sieve	0x30c	CONST	mov	x5, #0x20
+sieve	0x310	CONST	movk	x5, #0x1080, lsl #16
+sieve	0x314	WORK	ldrb	w6, [x5, x3]
+sieve	0x318	CTRL	cmp	x6, #0x0
+sieve	0x31c	CTRL	b.ne	0x324
+sieve	0x320	WORK	add	x1, x1, #0x1
+sieve	0x324	WORK	add	x2, x2, #0x1
+sieve	0x328	CTRL	b	0x2e8
+sieve	0x32c	WORK	mov	x0, x1
+sieve	0x330	CALL	ret
+sieve	0x334	WORK	add	x0, x1, #0x64
+sieve	0x338	CONST	mov	x8, #0x5d
+sieve	0x33c	WORK	svc	#0x0
+sieve	0x340	CONST	mov	x1, #0x3
+sieve	0x344	CTRL	b	0x334
+sieve	0x348	CONST	mov	x1, #0x4
+sieve	0x34c	CTRL	b	0x334
+sieve	0x350	CONST	mov	x0, #0x0
+sieve	0x354	CONST	mov	x1, #0x0
+sieve	0x358	CONST	mov	x2, #0x0
+sieve	0x35c	CTRL	cmp	x2, #0x32
+sieve	0x360	CTRL	b.cs	0x3a4
+sieve	0x364	CALLSAVE	sub	sp, sp, #0x20
+sieve	0x368	CALLSAVE	cmp	sp, x28
+sieve	0x36c	CALLSAVE	b.cc	0x418
+sieve	0x370	CALLSAVE	str	x0, [sp]
+sieve	0x374	CALLSAVE	str	x1, [sp, #8]
+sieve	0x378	CALLSAVE	str	x2, [sp, #16]
+sieve	0x37c	CALLSAVE	str	x30, [sp, #24]
+sieve	0x380	CALL	bl	0x1f4
+sieve	0x384	WORK	mov	x1, x0
+sieve	0x388	CALLSAVE	ldr	x0, [sp]
+sieve	0x38c	CALLSAVE	ldr	x2, [sp, #16]
+sieve	0x390	CALLSAVE	ldr	x30, [sp, #24]
+sieve	0x394	CALLSAVE	add	sp, sp, #0x20
+sieve	0x398	WORK	add	x0, x0, x1
+sieve	0x39c	WORK	add	x2, x2, #0x1
+sieve	0x3a0	CTRL	b	0x35c
+sieve	0x3a4	CALLSAVE	sub	sp, sp, #0x20
+sieve	0x3a8	CALLSAVE	cmp	sp, x28
+sieve	0x3ac	CALLSAVE	b.cc	0x418
+sieve	0x3b0	CALLSAVE	str	x0, [sp]
+sieve	0x3b4	CALLSAVE	str	x1, [sp, #8]
+sieve	0x3b8	CALLSAVE	str	x30, [sp, #16]
+sieve	0x3bc	CALLSAVE	ldr	x0, [sp, #8]
+sieve	0x3c0	CALL	bl	0xb4
+sieve	0x3c4	CALLSAVE	ldr	x0, [sp]
+sieve	0x3c8	CALLSAVE	ldr	x1, [sp, #8]
+sieve	0x3cc	CALLSAVE	ldr	x30, [sp, #16]
+sieve	0x3d0	CALLSAVE	add	sp, sp, #0x20
+sieve	0x3d4	CALLSAVE	sub	sp, sp, #0x20
+sieve	0x3d8	CALLSAVE	cmp	sp, x28
+sieve	0x3dc	CALLSAVE	b.cc	0x418
+sieve	0x3e0	CALLSAVE	str	x0, [sp]
+sieve	0x3e4	CALLSAVE	str	x1, [sp, #8]
+sieve	0x3e8	CALLSAVE	str	x30, [sp, #16]
+sieve	0x3ec	CALLSAVE	ldr	x0, [sp]
+sieve	0x3f0	CALL	bl	0xb4
+sieve	0x3f4	CALLSAVE	ldr	x0, [sp]
+sieve	0x3f8	CALLSAVE	ldr	x1, [sp, #8]
+sieve	0x3fc	CALLSAVE	ldr	x30, [sp, #16]
+sieve	0x400	CALLSAVE	add	sp, sp, #0x20
+sieve	0x404	CONST	mov	x0, #0x0
+sieve	0x408	CALL	ret
+sieve	0x40c	WORK	add	x0, x1, #0x64
+sieve	0x410	CONST	mov	x8, #0x5d
+sieve	0x414	WORK	svc	#0x0
+sieve	0x418	CONST	mov	x1, #0x6
+sieve	0x41c	CTRL	b	0x40c
+sieve	0x420	CONST	mov	x28, #0x10000000
+sieve	0x424	CONST	mov	x16, #0x10800000
+sieve	0x428	WORK	mov	sp, x16
+sieve	0x42c	CALL	bl	0x350
+sieve	0x430	CONST	mov	x8, #0x5d
+sieve	0x434	WORK	svc	#0x0
+isort	0xb0	CTRL	b	0x544
+isort	0xb4	CONST	mov	x1, #0xa
+isort	0xb8	CONST	mov	x2, #0x1f
+isort	0xbc	CONST	mov	x3, #0x10800000
+isort	0xc0	WORK	strb	w1, [x3, x2]
+isort	0xc4	CONST	mov	x1, #0x1f
+isort	0xc8	WORK	mov	x2, x0
+isort	0xcc	CONST	mov	x3, #0x0
+isort	0xd0	CTRL	cmp	x2, #0x9
+isort	0xd4	CTRL	b.ls	0x124
+isort	0xd8	CONST	mov	x4, #0x4240
+isort	0xdc	CONST	movk	x4, #0xf, lsl #16
+isort	0xe0	GUARD	cmp	x3, x4
+isort	0xe4	GUARD	b.cs	0x1dc
+isort	0xe8	GUARD	add	x3, x3, #0x1
+isort	0xec	WORK	sub	x1, x1, #0x1
+isort	0xf0	CONST	mov	x4, #0xa
+isort	0xf4	WORK	udiv	x6, x2, x4
+isort	0xf8	WORK	msub	x5, x6, x4, x2
+isort	0xfc	WORK	add	x8, x5, #0x30
+isort	0x100	WORK	lsr	x9, x8, #8
+isort	0x104	CTRL	cbnz	x9, 0x1e4
+isort	0x108	BOUNDS	cmp	x1, #0x20
+isort	0x10c	BOUNDS	b.cs	0x1d4
+isort	0x110	CONST	mov	x10, #0x10800000
+isort	0x114	WORK	strb	w8, [x10, x1]
+isort	0x118	CONST	mov	x4, #0xa
+isort	0x11c	WORK	udiv	x2, x2, x4
+isort	0x120	CTRL	b	0xd0
+isort	0x124	WORK	sub	x1, x1, #0x1
+isort	0x128	WORK	add	x3, x2, #0x30
+isort	0x12c	WORK	lsr	x4, x3, #8
+isort	0x130	CTRL	cbnz	x4, 0x1e4
+isort	0x134	BOUNDS	cmp	x1, #0x20
+isort	0x138	BOUNDS	b.cs	0x1d4
+isort	0x13c	CONST	mov	x5, #0x10800000
+isort	0x140	WORK	strb	w3, [x5, x1]
+isort	0x144	CONST	mov	x4, #0x20
+isort	0x148	WORK	sub	x5, x4, x1
+isort	0x14c	CONST	mov	x6, #0x20
+isort	0x150	BOUNDS	cmp	x5, x6
+isort	0x154	BOUNDS	b.hi	0x1d4
+isort	0x158	WORK	sub	x6, x6, x5
+isort	0x15c	BOUNDS	cmp	x1, x6
+isort	0x160	BOUNDS	b.hi	0x1d4
+isort	0x164	CALLSAVE	sub	sp, sp, #0x40
+isort	0x168	CALLSAVE	cmp	sp, x28
+isort	0x16c	CALLSAVE	b.cc	0x1ec
+isort	0x170	CALLSAVE	str	x0, [sp]
+isort	0x174	CALLSAVE	str	x1, [sp, #8]
+isort	0x178	CALLSAVE	str	x2, [sp, #16]
+isort	0x17c	CALLSAVE	str	x3, [sp, #24]
+isort	0x180	CALLSAVE	str	x4, [sp, #32]
+isort	0x184	CALLSAVE	str	x5, [sp, #40]
+isort	0x188	CALLSAVE	str	x6, [sp, #48]
+isort	0x18c	CALLSAVE	str	x30, [sp, #56]
+isort	0x190	CONST	mov	x0, #0x1
+isort	0x194	CONST	mov	x1, #0x10800000
+isort	0x198	CALLSAVE	ldr	x16, [sp, #8]
+isort	0x19c	WORK	add	x1, x1, x16
+isort	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+isort	0x1a4	CONST	mov	x8, #0x40
+isort	0x1a8	WORK	svc	#0x0
+isort	0x1ac	WORK	mov	x3, x0
+isort	0x1b0	CALLSAVE	ldr	x0, [sp]
+isort	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+isort	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+isort	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+isort	0x1c0	CALLSAVE	add	sp, sp, #0x40
+isort	0x1c4	CALL	ret
+isort	0x1c8	WORK	add	x0, x1, #0x64
+isort	0x1cc	CONST	mov	x8, #0x5d
+isort	0x1d0	WORK	svc	#0x0
+isort	0x1d4	CONST	mov	x1, #0x3
+isort	0x1d8	CTRL	b	0x1c8
+isort	0x1dc	CONST	mov	x1, #0x4
+isort	0x1e0	CTRL	b	0x1c8
+isort	0x1e4	CONST	mov	x1, #0x5
+isort	0x1e8	CTRL	b	0x1c8
+isort	0x1ec	CONST	mov	x1, #0x6
+isort	0x1f0	CTRL	b	0x1c8
+isort	0x1f4	CONST	mov	x0, #0x3039
+isort	0x1f8	CONST	mov	x1, #0x0
+isort	0x1fc	CONST	mov	x2, #0x4e20
+isort	0x200	CTRL	cmp	x1, x2
+isort	0x204	CTRL	b.cs	0x258
+isort	0x208	CONST	mov	x2, #0x4e6d
+isort	0x20c	CONST	movk	x2, #0x41c6, lsl #16
+isort	0x210	WORK	mul	x3, x0, x2
+isort	0x214	CONST	mov	x4, #0x3039
+isort	0x218	WORK	add	x5, x3, x4
+isort	0x21c	CONST	mov	x6, #0x80000000
+isort	0x220	WORK	udiv	x8, x5, x6
+isort	0x224	WORK	msub	x0, x8, x6, x5
+isort	0x228	CONST	mov	x2, #0x86a0
+isort	0x22c	CONST	movk	x2, #0x1, lsl #16
+isort	0x230	WORK	udiv	x4, x0, x2
+isort	0x234	WORK	msub	x3, x4, x2, x0
+isort	0x238	CONST	mov	x5, #0x4e20
+isort	0x23c	BOUNDS	cmp	x1, x5
+isort	0x240	BOUNDS	b.cs	0x268
+isort	0x244	CONST	mov	x6, #0x20
+isort	0x248	CONST	movk	x6, #0x1080, lsl #16
+isort	0x24c	WORK	str	x3, [x6, x1, lsl #3]
+isort	0x250	WORK	add	x1, x1, #0x1
+isort	0x254	CTRL	b	0x1fc
+isort	0x258	CALL	ret
+isort	0x25c	WORK	add	x0, x1, #0x64
+isort	0x260	CONST	mov	x8, #0x5d
+isort	0x264	WORK	svc	#0x0
+isort	0x268	CONST	mov	x1, #0x3
+isort	0x26c	CTRL	b	0x25c
+isort	0x270	CONST	mov	x0, #0x0
+isort	0x274	CONST	mov	x1, #0x4e20
+isort	0x278	CTRL	cmp	x0, x1
+isort	0x27c	CTRL	b.cs	0x334
+isort	0x280	CONST	mov	x2, #0x4e20
+isort	0x284	BOUNDS	cmp	x0, x2
+isort	0x288	BOUNDS	b.cs	0x344
+isort	0x28c	CONST	mov	x3, #0x20
+isort	0x290	CONST	movk	x3, #0x1080, lsl #16
+isort	0x294	WORK	ldr	x1, [x3, x0, lsl #3]
+isort	0x298	WORK	mov	x2, x0
+isort	0x29c	CONST	mov	x3, #0x1
+isort	0x2a0	CONST	mov	x4, #0x0
+isort	0x2a4	CTRL	cmp	x2, #0x0
+isort	0x2a8	WORK	cset	x5, hi
+isort	0x2ac	WORK	and	x6, x3, x5
+isort	0x2b0	CTRL	cbz	x6, 0x314
+isort	0x2b4	CONST	mov	x8, #0x4240
+isort	0x2b8	CONST	movk	x8, #0xf, lsl #16
+isort	0x2bc	GUARD	cmp	x4, x8
+isort	0x2c0	GUARD	b.cs	0x34c
+isort	0x2c4	GUARD	add	x4, x4, #0x1
+isort	0x2c8	WORK	sub	x6, x2, #0x1
+isort	0x2cc	CONST	mov	x8, #0x4e20
+isort	0x2d0	BOUNDS	cmp	x6, x8
+isort	0x2d4	BOUNDS	b.cs	0x344
+isort	0x2d8	CONST	mov	x9, #0x20
+isort	0x2dc	CONST	movk	x9, #0x1080, lsl #16
+isort	0x2e0	WORK	ldr	x5, [x9, x6, lsl #3]
+isort	0x2e4	CTRL	cmp	x5, x1
+isort	0x2e8	CTRL	b.ls	0x30c
+isort	0x2ec	CONST	mov	x6, #0x4e20
+isort	0x2f0	BOUNDS	cmp	x2, x6
+isort	0x2f4	BOUNDS	b.cs	0x344
+isort	0x2f8	CONST	mov	x8, #0x20
+isort	0x2fc	CONST	movk	x8, #0x1080, lsl #16
+isort	0x300	WORK	str	x5, [x8, x2, lsl #3]
+isort	0x304	WORK	sub	x2, x2, #0x1
+isort	0x308	CTRL	b	0x310
+isort	0x30c	CONST	mov	x3, #0x0
+isort	0x310	CTRL	b	0x2a4
+isort	0x314	CONST	mov	x4, #0x4e20
+isort	0x318	BOUNDS	cmp	x2, x4
+isort	0x31c	BOUNDS	b.cs	0x344
+isort	0x320	CONST	mov	x5, #0x20
+isort	0x324	CONST	movk	x5, #0x1080, lsl #16
+isort	0x328	WORK	str	x1, [x5, x2, lsl #3]
+isort	0x32c	WORK	add	x0, x0, #0x1
+isort	0x330	CTRL	b	0x274
+isort	0x334	CALL	ret
+isort	0x338	WORK	add	x0, x1, #0x64
+isort	0x33c	CONST	mov	x8, #0x5d
+isort	0x340	WORK	svc	#0x0
+isort	0x344	CONST	mov	x1, #0x3
+isort	0x348	CTRL	b	0x338
+isort	0x34c	CONST	mov	x1, #0x4
+isort	0x350	CTRL	b	0x338
+isort	0x354	CALLSAVE	sub	sp, sp, #0x10
+isort	0x358	CALLSAVE	cmp	sp, x28
+isort	0x35c	CALLSAVE	b.cc	0x53c
+isort	0x360	CALLSAVE	str	x30, [sp]
+isort	0x364	CALL	bl	0x1f4
+isort	0x368	CALLSAVE	ldr	x30, [sp]
+isort	0x36c	CALLSAVE	add	sp, sp, #0x10
+isort	0x370	CALLSAVE	sub	sp, sp, #0x10
+isort	0x374	CALLSAVE	cmp	sp, x28
+isort	0x378	CALLSAVE	b.cc	0x53c
+isort	0x37c	CALLSAVE	str	x30, [sp]
+isort	0x380	CALL	bl	0x270
+isort	0x384	CALLSAVE	ldr	x30, [sp]
+isort	0x388	CALLSAVE	add	sp, sp, #0x10
+isort	0x38c	CONST	mov	x0, #0x0
+isort	0x390	CONST	mov	x1, #0x0
+isort	0x394	CONST	mov	x2, #0x4e20
+isort	0x398	CTRL	cmp	x1, x2
+isort	0x39c	CTRL	b.cs	0x3cc
+isort	0x3a0	CONST	mov	x2, #0x4e20
+isort	0x3a4	BOUNDS	cmp	x1, x2
+isort	0x3a8	BOUNDS	b.cs	0x534
+isort	0x3ac	CONST	mov	x3, #0x20
+isort	0x3b0	CONST	movk	x3, #0x1080, lsl #16
+isort	0x3b4	WORK	ldr	x4, [x3, x1, lsl #3]
+isort	0x3b8	WORK	add	x5, x1, #0x1
+isort	0x3bc	WORK	mul	x6, x4, x5
+isort	0x3c0	WORK	add	x0, x0, x6
+isort	0x3c4	WORK	add	x1, x1, #0x1
+isort	0x3c8	CTRL	b	0x394
+isort	0x3cc	CONST	mov	x1, #0x0
+isort	0x3d0	CONST	mov	x2, #0x0
+isort	0x3d4	CONST	mov	x3, #0x4e1f
+isort	0x3d8	CTRL	cmp	x2, x3
+isort	0x3dc	CTRL	b.cs	0x428
+isort	0x3e0	CONST	mov	x3, #0x4e20
+isort	0x3e4	BOUNDS	cmp	x2, x3
+isort	0x3e8	BOUNDS	b.cs	0x534
+isort	0x3ec	CONST	mov	x4, #0x20
+isort	0x3f0	CONST	movk	x4, #0x1080, lsl #16
+isort	0x3f4	WORK	ldr	x5, [x4, x2, lsl #3]
+isort	0x3f8	WORK	add	x6, x2, #0x1
+isort	0x3fc	CONST	mov	x8, #0x4e20
+isort	0x400	BOUNDS	cmp	x6, x8
+isort	0x404	BOUNDS	b.cs	0x534
+isort	0x408	CONST	mov	x9, #0x20
+isort	0x40c	CONST	movk	x9, #0x1080, lsl #16
+isort	0x410	WORK	ldr	x10, [x9, x6, lsl #3]
+isort	0x414	CTRL	cmp	x5, x10
+isort	0x418	CTRL	b.ls	0x420
+isort	0x41c	WORK	add	x1, x1, #0x1
+isort	0x420	WORK	add	x2, x2, #0x1
+isort	0x424	CTRL	b	0x3d4
+isort	0x428	CALLSAVE	sub	sp, sp, #0x20
+isort	0x42c	CALLSAVE	cmp	sp, x28
+isort	0x430	CALLSAVE	b.cc	0x53c
+isort	0x434	CALLSAVE	str	x0, [sp]
+isort	0x438	CALLSAVE	str	x1, [sp, #8]
+isort	0x43c	CALLSAVE	str	x30, [sp, #16]
+isort	0x440	CALLSAVE	ldr	x0, [sp]
+isort	0x444	CALL	bl	0xb4
+isort	0x448	CALLSAVE	ldr	x0, [sp]
+isort	0x44c	CALLSAVE	ldr	x1, [sp, #8]
+isort	0x450	CALLSAVE	ldr	x30, [sp, #16]
+isort	0x454	CALLSAVE	add	sp, sp, #0x20
+isort	0x458	CALLSAVE	sub	sp, sp, #0x20
+isort	0x45c	CALLSAVE	cmp	sp, x28
+isort	0x460	CALLSAVE	b.cc	0x53c
+isort	0x464	CALLSAVE	str	x0, [sp]
+isort	0x468	CALLSAVE	str	x1, [sp, #8]
+isort	0x46c	CALLSAVE	str	x30, [sp, #16]
+isort	0x470	CALLSAVE	ldr	x0, [sp, #8]
+isort	0x474	CALL	bl	0xb4
+isort	0x478	CALLSAVE	ldr	x0, [sp]
+isort	0x47c	CALLSAVE	ldr	x1, [sp, #8]
+isort	0x480	CALLSAVE	ldr	x30, [sp, #16]
+isort	0x484	CALLSAVE	add	sp, sp, #0x20
+isort	0x488	CONST	mov	x2, #0x0
+isort	0x48c	CONST	mov	x3, #0x20
+isort	0x490	CONST	movk	x3, #0x1080, lsl #16
+isort	0x494	WORK	ldr	x4, [x3, x2, lsl #3]
+isort	0x498	CALLSAVE	sub	sp, sp, #0x30
+isort	0x49c	CALLSAVE	cmp	sp, x28
+isort	0x4a0	CALLSAVE	b.cc	0x53c
+isort	0x4a4	CALLSAVE	str	x0, [sp]
+isort	0x4a8	CALLSAVE	str	x1, [sp, #8]
+isort	0x4ac	CALLSAVE	str	x2, [sp, #16]
+isort	0x4b0	CALLSAVE	str	x3, [sp, #24]
+isort	0x4b4	CALLSAVE	str	x4, [sp, #32]
+isort	0x4b8	CALLSAVE	str	x30, [sp, #40]
+isort	0x4bc	CALLSAVE	ldr	x0, [sp, #32]
+isort	0x4c0	CALL	bl	0xb4
+isort	0x4c4	CALLSAVE	ldr	x0, [sp]
+isort	0x4c8	CALLSAVE	ldr	x1, [sp, #8]
+isort	0x4cc	CALLSAVE	ldr	x30, [sp, #40]
+isort	0x4d0	CALLSAVE	add	sp, sp, #0x30
+isort	0x4d4	CONST	mov	x2, #0x4e1f
+isort	0x4d8	CONST	mov	x3, #0x20
+isort	0x4dc	CONST	movk	x3, #0x1080, lsl #16
+isort	0x4e0	WORK	ldr	x4, [x3, x2, lsl #3]
+isort	0x4e4	CALLSAVE	sub	sp, sp, #0x30
+isort	0x4e8	CALLSAVE	cmp	sp, x28
+isort	0x4ec	CALLSAVE	b.cc	0x53c
+isort	0x4f0	CALLSAVE	str	x0, [sp]
+isort	0x4f4	CALLSAVE	str	x1, [sp, #8]
+isort	0x4f8	CALLSAVE	str	x2, [sp, #16]
+isort	0x4fc	CALLSAVE	str	x3, [sp, #24]
+isort	0x500	CALLSAVE	str	x4, [sp, #32]
+isort	0x504	CALLSAVE	str	x30, [sp, #40]
+isort	0x508	CALLSAVE	ldr	x0, [sp, #32]
+isort	0x50c	CALL	bl	0xb4
+isort	0x510	CALLSAVE	ldr	x0, [sp]
+isort	0x514	CALLSAVE	ldr	x1, [sp, #8]
+isort	0x518	CALLSAVE	ldr	x30, [sp, #40]
+isort	0x51c	CALLSAVE	add	sp, sp, #0x30
+isort	0x520	CONST	mov	x0, #0x0
+isort	0x524	CALL	ret
+isort	0x528	WORK	add	x0, x1, #0x64
+isort	0x52c	CONST	mov	x8, #0x5d
+isort	0x530	WORK	svc	#0x0
+isort	0x534	CONST	mov	x1, #0x3
+isort	0x538	CTRL	b	0x528
+isort	0x53c	CONST	mov	x1, #0x6
+isort	0x540	CTRL	b	0x528
+isort	0x544	CONST	mov	x28, #0x10000000
+isort	0x548	CONST	mov	x16, #0x10800000
+isort	0x54c	WORK	mov	sp, x16
+isort	0x550	CALL	bl	0x354
+isort	0x554	CONST	mov	x8, #0x5d
+isort	0x558	WORK	svc	#0x0
+matmul	0xb0	CTRL	b	0x4c4
+matmul	0xb4	CONST	mov	x1, #0xa
+matmul	0xb8	CONST	mov	x2, #0x1f
+matmul	0xbc	CONST	mov	x3, #0x10800000
+matmul	0xc0	WORK	strb	w1, [x3, x2]
+matmul	0xc4	CONST	mov	x1, #0x1f
+matmul	0xc8	WORK	mov	x2, x0
+matmul	0xcc	CONST	mov	x3, #0x0
+matmul	0xd0	CTRL	cmp	x2, #0x9
+matmul	0xd4	CTRL	b.ls	0x124
+matmul	0xd8	CONST	mov	x4, #0x4240
+matmul	0xdc	CONST	movk	x4, #0xf, lsl #16
+matmul	0xe0	GUARD	cmp	x3, x4
+matmul	0xe4	GUARD	b.cs	0x1dc
+matmul	0xe8	GUARD	add	x3, x3, #0x1
+matmul	0xec	WORK	sub	x1, x1, #0x1
+matmul	0xf0	CONST	mov	x4, #0xa
+matmul	0xf4	WORK	udiv	x6, x2, x4
+matmul	0xf8	WORK	msub	x5, x6, x4, x2
+matmul	0xfc	WORK	add	x8, x5, #0x30
+matmul	0x100	WORK	lsr	x9, x8, #8
+matmul	0x104	CTRL	cbnz	x9, 0x1e4
+matmul	0x108	BOUNDS	cmp	x1, #0x20
+matmul	0x10c	BOUNDS	b.cs	0x1d4
+matmul	0x110	CONST	mov	x10, #0x10800000
+matmul	0x114	WORK	strb	w8, [x10, x1]
+matmul	0x118	CONST	mov	x4, #0xa
+matmul	0x11c	WORK	udiv	x2, x2, x4
+matmul	0x120	CTRL	b	0xd0
+matmul	0x124	WORK	sub	x1, x1, #0x1
+matmul	0x128	WORK	add	x3, x2, #0x30
+matmul	0x12c	WORK	lsr	x4, x3, #8
+matmul	0x130	CTRL	cbnz	x4, 0x1e4
+matmul	0x134	BOUNDS	cmp	x1, #0x20
+matmul	0x138	BOUNDS	b.cs	0x1d4
+matmul	0x13c	CONST	mov	x5, #0x10800000
+matmul	0x140	WORK	strb	w3, [x5, x1]
+matmul	0x144	CONST	mov	x4, #0x20
+matmul	0x148	WORK	sub	x5, x4, x1
+matmul	0x14c	CONST	mov	x6, #0x20
+matmul	0x150	BOUNDS	cmp	x5, x6
+matmul	0x154	BOUNDS	b.hi	0x1d4
+matmul	0x158	WORK	sub	x6, x6, x5
+matmul	0x15c	BOUNDS	cmp	x1, x6
+matmul	0x160	BOUNDS	b.hi	0x1d4
+matmul	0x164	CALLSAVE	sub	sp, sp, #0x40
+matmul	0x168	CALLSAVE	cmp	sp, x28
+matmul	0x16c	CALLSAVE	b.cc	0x1ec
+matmul	0x170	CALLSAVE	str	x0, [sp]
+matmul	0x174	CALLSAVE	str	x1, [sp, #8]
+matmul	0x178	CALLSAVE	str	x2, [sp, #16]
+matmul	0x17c	CALLSAVE	str	x3, [sp, #24]
+matmul	0x180	CALLSAVE	str	x4, [sp, #32]
+matmul	0x184	CALLSAVE	str	x5, [sp, #40]
+matmul	0x188	CALLSAVE	str	x6, [sp, #48]
+matmul	0x18c	CALLSAVE	str	x30, [sp, #56]
+matmul	0x190	CONST	mov	x0, #0x1
+matmul	0x194	CONST	mov	x1, #0x10800000
+matmul	0x198	CALLSAVE	ldr	x16, [sp, #8]
+matmul	0x19c	WORK	add	x1, x1, x16
+matmul	0x1a0	CALLSAVE	ldr	x2, [sp, #40]
+matmul	0x1a4	CONST	mov	x8, #0x40
+matmul	0x1a8	WORK	svc	#0x0
+matmul	0x1ac	WORK	mov	x3, x0
+matmul	0x1b0	CALLSAVE	ldr	x0, [sp]
+matmul	0x1b4	CALLSAVE	ldr	x1, [sp, #8]
+matmul	0x1b8	CALLSAVE	ldr	x2, [sp, #16]
+matmul	0x1bc	CALLSAVE	ldr	x30, [sp, #56]
+matmul	0x1c0	CALLSAVE	add	sp, sp, #0x40
+matmul	0x1c4	CALL	ret
+matmul	0x1c8	WORK	add	x0, x1, #0x64
+matmul	0x1cc	CONST	mov	x8, #0x5d
+matmul	0x1d0	WORK	svc	#0x0
+matmul	0x1d4	CONST	mov	x1, #0x3
+matmul	0x1d8	CTRL	b	0x1c8
+matmul	0x1dc	CONST	mov	x1, #0x4
+matmul	0x1e0	CTRL	b	0x1c8
+matmul	0x1e4	CONST	mov	x1, #0x5
+matmul	0x1e8	CTRL	b	0x1c8
+matmul	0x1ec	CONST	mov	x1, #0x6
+matmul	0x1f0	CTRL	b	0x1c8
+matmul	0x1f4	CONST	mov	x0, #0x0
+matmul	0x1f8	CTRL	cmp	x0, #0x12c
+matmul	0x1fc	CTRL	b.cs	0x29c
+matmul	0x200	CONST	mov	x1, #0x0
+matmul	0x204	CTRL	cmp	x1, #0x12c
+matmul	0x208	CTRL	b.cs	0x294
+matmul	0x20c	CONST	mov	x2, #0x12c
+matmul	0x210	WORK	mul	x3, x0, x2
+matmul	0x214	WORK	add	x4, x3, x1
+matmul	0x218	CONST	mov	x5, #0x2
+matmul	0x21c	WORK	mul	x6, x1, x5
+matmul	0x220	WORK	add	x8, x0, x6
+matmul	0x224	CONST	mov	x9, #0xd
+matmul	0x228	WORK	udiv	x11, x8, x9
+matmul	0x22c	WORK	msub	x10, x11, x9, x8
+matmul	0x230	CONST	mov	x12, #0x5f90
+matmul	0x234	CONST	movk	x12, #0x1, lsl #16
+matmul	0x238	BOUNDS	cmp	x4, x12
+matmul	0x23c	BOUNDS	b.cs	0x2ac
+matmul	0x240	CONST	mov	x13, #0x20
+matmul	0x244	CONST	movk	x13, #0x1080, lsl #16
+matmul	0x248	WORK	str	x10, [x13, x4, lsl #3]
+matmul	0x24c	CONST	mov	x2, #0x12c
+matmul	0x250	WORK	mul	x3, x0, x2
+matmul	0x254	WORK	add	x4, x3, x1
+matmul	0x258	CONST	mov	x5, #0x3
+matmul	0x25c	WORK	mul	x6, x0, x5
+matmul	0x260	WORK	add	x8, x6, x1
+matmul	0x264	CONST	mov	x9, #0xb
+matmul	0x268	WORK	udiv	x11, x8, x9
+matmul	0x26c	WORK	msub	x10, x11, x9, x8
+matmul	0x270	CONST	mov	x12, #0x5f90
+matmul	0x274	CONST	movk	x12, #0x1, lsl #16
+matmul	0x278	BOUNDS	cmp	x4, x12
+matmul	0x27c	BOUNDS	b.cs	0x2ac
+matmul	0x280	CONST	mov	x13, #0xfca0
+matmul	0x284	CONST	movk	x13, #0x108a, lsl #16
+matmul	0x288	WORK	str	x10, [x13, x4, lsl #3]
+matmul	0x28c	WORK	add	x1, x1, #0x1
+matmul	0x290	CTRL	b	0x204
+matmul	0x294	WORK	add	x0, x0, #0x1
+matmul	0x298	CTRL	b	0x1f8
+matmul	0x29c	CALL	ret
+matmul	0x2a0	WORK	add	x0, x1, #0x64
+matmul	0x2a4	CONST	mov	x8, #0x5d
+matmul	0x2a8	WORK	svc	#0x0
+matmul	0x2ac	CONST	mov	x1, #0x3
+matmul	0x2b0	CTRL	b	0x2a0
+matmul	0x2b4	CONST	mov	x0, #0x0
+matmul	0x2b8	CTRL	cmp	x0, #0x12c
+matmul	0x2bc	CTRL	b.cs	0x368
+matmul	0x2c0	CONST	mov	x2, #0x12c
+matmul	0x2c4	WORK	mul	x1, x0, x2
+matmul	0x2c8	CONST	mov	x2, #0x0
+matmul	0x2cc	CTRL	cmp	x2, #0x12c
+matmul	0x2d0	CTRL	b.cs	0x360
+matmul	0x2d4	CONST	mov	x3, #0x0
+matmul	0x2d8	WORK	mov	x4, x2
+matmul	0x2dc	CONST	mov	x5, #0x0
+matmul	0x2e0	CTRL	cmp	x5, #0x12c
+matmul	0x2e4	CTRL	b.cs	0x338
+matmul	0x2e8	WORK	add	x6, x1, x5
+matmul	0x2ec	CONST	mov	x8, #0x5f90
+matmul	0x2f0	CONST	movk	x8, #0x1, lsl #16
+matmul	0x2f4	BOUNDS	cmp	x6, x8
+matmul	0x2f8	BOUNDS	b.cs	0x378
+matmul	0x2fc	CONST	mov	x9, #0x20
+matmul	0x300	CONST	movk	x9, #0x1080, lsl #16
+matmul	0x304	WORK	ldr	x10, [x9, x6, lsl #3]
+matmul	0x308	CONST	mov	x11, #0x5f90
+matmul	0x30c	CONST	movk	x11, #0x1, lsl #16
+matmul	0x310	BOUNDS	cmp	x4, x11
+matmul	0x314	BOUNDS	b.cs	0x378
+matmul	0x318	CONST	mov	x12, #0xfca0
+matmul	0x31c	CONST	movk	x12, #0x108a, lsl #16
+matmul	0x320	WORK	ldr	x13, [x12, x4, lsl #3]
+matmul	0x324	WORK	mul	x14, x10, x13
+matmul	0x328	WORK	add	x3, x3, x14
+matmul	0x32c	WORK	add	x4, x4, #0x12c
+matmul	0x330	WORK	add	x5, x5, #0x1
+matmul	0x334	CTRL	b	0x2e0
+matmul	0x338	WORK	add	x5, x1, x2
+matmul	0x33c	CONST	mov	x6, #0x5f90
+matmul	0x340	CONST	movk	x6, #0x1, lsl #16
+matmul	0x344	BOUNDS	cmp	x5, x6
+matmul	0x348	BOUNDS	b.cs	0x378
+matmul	0x34c	CONST	mov	x8, #0xf920
+matmul	0x350	CONST	movk	x8, #0x1095, lsl #16
+matmul	0x354	WORK	str	x3, [x8, x5, lsl #3]
+matmul	0x358	WORK	add	x2, x2, #0x1
+matmul	0x35c	CTRL	b	0x2cc
+matmul	0x360	WORK	add	x0, x0, #0x1
+matmul	0x364	CTRL	b	0x2b8
+matmul	0x368	CALL	ret
+matmul	0x36c	WORK	add	x0, x1, #0x64
+matmul	0x370	CONST	mov	x8, #0x5d
+matmul	0x374	WORK	svc	#0x0
+matmul	0x378	CONST	mov	x1, #0x3
+matmul	0x37c	CTRL	b	0x36c
+matmul	0x380	CALLSAVE	sub	sp, sp, #0x10
+matmul	0x384	CALLSAVE	cmp	sp, x28
+matmul	0x388	CALLSAVE	b.cc	0x4bc
+matmul	0x38c	CALLSAVE	str	x30, [sp]
+matmul	0x390	CALL	bl	0x1f4
+matmul	0x394	CALLSAVE	ldr	x30, [sp]
+matmul	0x398	CALLSAVE	add	sp, sp, #0x10
+matmul	0x39c	CALLSAVE	sub	sp, sp, #0x10
+matmul	0x3a0	CALLSAVE	cmp	sp, x28
+matmul	0x3a4	CALLSAVE	b.cc	0x4bc
+matmul	0x3a8	CALLSAVE	str	x30, [sp]
+matmul	0x3ac	CALL	bl	0x2b4
+matmul	0x3b0	CALLSAVE	ldr	x30, [sp]
+matmul	0x3b4	CALLSAVE	add	sp, sp, #0x10
+matmul	0x3b8	CONST	mov	x0, #0x0
+matmul	0x3bc	CONST	mov	x1, #0x0
+matmul	0x3c0	CONST	mov	x2, #0x0
+matmul	0x3c4	CTRL	cmp	x2, #0x12c
+matmul	0x3c8	CTRL	b.cs	0x440
+matmul	0x3cc	CONST	mov	x3, #0x0
+matmul	0x3d0	CTRL	cmp	x3, #0x12c
+matmul	0x3d4	CTRL	b.cs	0x40c
+matmul	0x3d8	CONST	mov	x4, #0x12c
+matmul	0x3dc	WORK	mul	x5, x2, x4
+matmul	0x3e0	WORK	add	x6, x5, x3
+matmul	0x3e4	CONST	mov	x8, #0x5f90
+matmul	0x3e8	CONST	movk	x8, #0x1, lsl #16
+matmul	0x3ec	BOUNDS	cmp	x6, x8
+matmul	0x3f0	BOUNDS	b.cs	0x4b4
+matmul	0x3f4	CONST	mov	x9, #0xf920
+matmul	0x3f8	CONST	movk	x9, #0x1095, lsl #16
+matmul	0x3fc	WORK	ldr	x10, [x9, x6, lsl #3]
+matmul	0x400	WORK	add	x0, x0, x10
+matmul	0x404	WORK	add	x3, x3, #0x1
+matmul	0x408	CTRL	b	0x3d0
+matmul	0x40c	CONST	mov	x3, #0x12d
+matmul	0x410	WORK	mul	x4, x2, x3
+matmul	0x414	WORK	add	x5, x4, #0x0
+matmul	0x418	CONST	mov	x6, #0x5f90
+matmul	0x41c	CONST	movk	x6, #0x1, lsl #16
+matmul	0x420	BOUNDS	cmp	x5, x6
+matmul	0x424	BOUNDS	b.cs	0x4b4
+matmul	0x428	CONST	mov	x8, #0xf920
+matmul	0x42c	CONST	movk	x8, #0x1095, lsl #16
+matmul	0x430	WORK	ldr	x9, [x8, x5, lsl #3]
+matmul	0x434	WORK	add	x1, x1, x9
+matmul	0x438	WORK	add	x2, x2, #0x1
+matmul	0x43c	CTRL	b	0x3c4
+matmul	0x440	CALLSAVE	sub	sp, sp, #0x20
+matmul	0x444	CALLSAVE	cmp	sp, x28
+matmul	0x448	CALLSAVE	b.cc	0x4bc
+matmul	0x44c	CALLSAVE	str	x0, [sp]
+matmul	0x450	CALLSAVE	str	x1, [sp, #8]
+matmul	0x454	CALLSAVE	str	x30, [sp, #16]
+matmul	0x458	CALLSAVE	ldr	x0, [sp]
+matmul	0x45c	CALL	bl	0xb4
+matmul	0x460	CALLSAVE	ldr	x0, [sp]
+matmul	0x464	CALLSAVE	ldr	x1, [sp, #8]
+matmul	0x468	CALLSAVE	ldr	x30, [sp, #16]
+matmul	0x46c	CALLSAVE	add	sp, sp, #0x20
+matmul	0x470	CALLSAVE	sub	sp, sp, #0x20
+matmul	0x474	CALLSAVE	cmp	sp, x28
+matmul	0x478	CALLSAVE	b.cc	0x4bc
+matmul	0x47c	CALLSAVE	str	x0, [sp]
+matmul	0x480	CALLSAVE	str	x1, [sp, #8]
+matmul	0x484	CALLSAVE	str	x30, [sp, #16]
+matmul	0x488	CALLSAVE	ldr	x0, [sp, #8]
+matmul	0x48c	CALL	bl	0xb4
+matmul	0x490	CALLSAVE	ldr	x0, [sp]
+matmul	0x494	CALLSAVE	ldr	x1, [sp, #8]
+matmul	0x498	CALLSAVE	ldr	x30, [sp, #16]
+matmul	0x49c	CALLSAVE	add	sp, sp, #0x20
+matmul	0x4a0	CONST	mov	x0, #0x0
+matmul	0x4a4	CALL	ret
+matmul	0x4a8	WORK	add	x0, x1, #0x64
+matmul	0x4ac	CONST	mov	x8, #0x5d
+matmul	0x4b0	WORK	svc	#0x0
+matmul	0x4b4	CONST	mov	x1, #0x3
+matmul	0x4b8	CTRL	b	0x4a8
+matmul	0x4bc	CONST	mov	x1, #0x6
+matmul	0x4c0	CTRL	b	0x4a8
+matmul	0x4c4	CONST	mov	x28, #0x10000000
+matmul	0x4c8	CONST	mov	x16, #0x10800000
+matmul	0x4cc	WORK	mov	sp, x16
+matmul	0x4d0	CALL	bl	0x380
+matmul	0x4d4	CONST	mov	x8, #0x5d
+matmul	0x4d8	WORK	svc	#0x0
