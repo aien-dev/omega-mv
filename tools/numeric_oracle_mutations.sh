@@ -33,11 +33,14 @@
 # named id is reported; it records the binary's exit status for the legacy line.
 set -u
 HERE=$(cd -P "$(dirname "$0")/.." && pwd)
-TMP=$(mktemp -d)
+TMP=$(mktemp -d) || exit 2
 trap 'rm -rf "$TMP"' EXIT
+WORK=$TMP/source
+bash "$HERE/tools/e1_manifest.sh" --canonical-overlay "$WORK" >/dev/null || exit 2
+cat "$WORK/cudapp-source.json" >&2
 # One line on purpose: $SRCS is interpolated into the runner's -b string, which
 # the runner executes with sh -c, so a newline here would split the gcc command.
-SRCS="tests/test_omega_numeric.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_numeric_divsqrt_gb10.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
+SRCS="tests/test_omega_numeric.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_numeric_divsqrt_gb10.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c"
 
 # id ~ file ~ edit ~ test ID that must FAIL (or UNDECLARED_SKIP)
 cat > "$TMP/rows" <<'ROWS_EOF'
@@ -73,7 +76,7 @@ while IFS='~' read -r name file edit want; do
     printf '%s~%s~%s~%s\n' "$name" "$file" "$edit" "$want" > "$TMP/row"
     # shellcheck disable=SC2086
     ONLY=$name "$HERE/tools/mutation_runner.sh" -k table -m "$TMP/row" \
-        -d "$HERE" -c "src tests/test_omega_numeric.c tests/numeric_oracle.h" \
+        -d "$WORK" -c "src tests/test_omega_numeric.c tests/numeric_oracle.h" \
         -b "gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -Isrc -DOMEGA_NUMERIC_CPU_ONLY -o $TMP/t $SRCS > $TMP/build.log 2>&1" \
         -t "sh $TMP/judge.sh $TMP $want" -o "$TMP/out.json" > /dev/null 2> "$TMP/runner.err" < /dev/null
     status=$(sed -n "s/^$name \([A-Z_]*\)  .*/\1/p" "$TMP/runner.err" | head -1)

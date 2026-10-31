@@ -1,0 +1,29 @@
+# tests/gates/omega-runtime-api-pin.gate
+# The Runtime API checks omega used to run on its own copy (OMEGA-RUNTIME-API before #924), now run by CUDApp's own
+# checker on the CUDApp tree staged at cudapp.lock (make test-runtime-api, mk/runtime-r1.mk): the manifest against
+# API.md and the 22 headers (functions, structs, fields, constants, version, public surface, INTERNAL list) and every
+# negative control. Then omega's consumer tools/own30b_decode_profile.c compiled -Werror against the staged headers.
+# requires: host: sibling clones ../CUDApp, ../omega-bridge and ../physics (pinned under build/pins), gcc (-aux-info);
+# no GPU. Mirrors hosted: none (no omega workflow checks out CUDApp); CUDApp's runtime-api.yml runs the same checker.
+gate: OMEGA-RUNTIME-API-PIN
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - cudapp.lock
+  - physics.lock
+  - Makefile
+  - mk/
+  - tools/cudapp-stage.sh
+  - tools/own30b_decode_profile.c
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["runtime-api-pin"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 30m
+exactness: EXACT
+cache_scope: machine

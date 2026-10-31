@@ -41,20 +41,22 @@
 set -u
 cd "$(dirname "$0")/.." || exit 2
 unset ONLY
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/gpu-backend-canonical.XXXXXX") || exit 2
+trap 'rm -rf "$WORK"' EXIT HUP INT TERM
+bash tools/e1_manifest.sh --canonical-overlay "$WORK" >/dev/null || exit 2
+cat "$WORK/cudapp-source.json" >&2
 
-# The scratch copy lives in /tmp, where ../physics does not resolve, so the physics
-# path is made absolute here (PHYSICS_DIR, default ../physics).
-PHYS=$(cd "${PHYSICS_DIR:-../physics}" 2>/dev/null && pwd -P) || {
-    echo "gpu_engine_backend_mutations: physics directory not found (set PHYSICS_DIR)" >&2
-    exit 2
-}
+# Driver declarations come from the same authenticated closure as the C sources;
+# the fake implementation remains the Omega test oracle, never a live driver.
+STAGE=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+PHYS=$(cd "$STAGE/source" && pwd -P) || exit 2
 TP=$PHYS/third_party/nvidia-open-580.173.02
 INC="-I$PHYS/m16 -I$PHYS/nvrm -I$TP/src/common/sdk/nvidia/inc -I$TP/kernel-open/common/inc -I$TP/kernel-open/nvidia-uvm -I$TP/src/nvidia/arch/nvalloc/unix/include"
-SRCS="src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_core.c src/omega_canonical.c src/omega_om_units.c"
+SRCS="src/omega_blackwell_submit.c src/omega_blackwell_engine.c src/omega_gpu_engine.c src/omega_blackwell_matmul.c src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c src/omega_blackwell_qmd.c src/omega_blackwell_realize.c src/omega_vector.c src/omega_validate.c src/omega_core.c src/omega_canonical.c src/omega_om_units.c src/cudapp_om_units.c"
 BUILD="gcc -std=gnu11 -O2 -Wall -Wextra -Werror -D_GNU_SOURCE -pthread -ffunction-sections -fdata-sections -Isrc -Itests $INC -o .gpu_engine_bt tests/test_omega_blackwell_engine.c tests/fake_m16_native.c $SRCS -Wl,--gc-sections -lm"
 
 OUT=${GPU_ENGINE_BMUT_OUT:-}
-set -- -k table -m - -t ./.gpu_engine_bt -b "$BUILD" \
+set -- -k table -m - -d "$WORK" -t ./.gpu_engine_bt -b "$BUILD" \
     -c "src tests/test_omega_blackwell_engine.c tests/fake_m16_native.c tests/fake_m16_native.h" \
     -f '\[FAIL\]' -B
 [ -z "$OUT" ] || set -- "$@" -o "$OUT"
@@ -127,7 +129,7 @@ BE_FLUSH_OP_DROPPED~src/omega_blackwell_engine.c~R:pb_put(c, 0x10u << 27);@>@pb_
 BE_FLUSH_METHOD_CHANGED~src/omega_blackwell_engine.c~R:pb_put(c, nvrm_mthd(0, 0x0028, 4));@>@pb_put(c, nvrm_mthd(0, 0x002c, 4));~the flush uses the memory-operation method
 BE_WFI_FLAG_RELEASE1~src/omega_blackwell_engine.c~/pb_put(c, OMEGA_BW_MARKER_COMPLETION_PAYLOAD);/,+2 s/0x1u | (1u << 20)/0x1u/~the first release waits for idle (WFI)
 BE_WFI_FLAG_RELEASE2~src/omega_blackwell_engine.c~/pb_put(c, BE_MARKER2_PAYLOAD);/,+2 s/0x1u | (1u << 20)/0x1u/~the second release waits for idle (WFI)
-BE_BARRIER_IN_BUILD~src/omega_blackwell_engine.c~/^static int be_build/,/^}/ s/__asm__ volatile("dsb sy" ::: "memory");/(void)0;/~dsb sy after zeroing the sync words~redundant~a CPU barrier instruction has no effect a host test can observe (the fake driver runs on the same core); it is verified on the chip only (Phase B)
+BE_BARRIER_IN_BUILD~src/omega_blackwell_engine.c~/^static int be_build/,/^}/ s/nvrm_cpu_barrier();/(void)0;/~dsb sy after zeroing the sync words~redundant~a CPU barrier instruction has no effect a host test can observe (the fake driver runs on the same core); it is verified on the chip only (Phase B)
 BE_QMD_RELEASE_CHECK~src/omega_blackwell_engine.c~R:if (qmd1_words[9] != 3u ||@>@if (0 ||~extra QMD1 release-word checks~redundant~the real descriptor builder always produces these words (src/omega_blackwell_qmd.c), so no input makes the check fire; it guards a future change of the builder, which tests/test_omega_blackwell_qmd.c style checks cover
 BE_PB_OVERFLOW~src/omega_blackwell_engine.c~R:if (c->pb_overflow) {@>@if (0) {~pushbuffer word-capacity guard~redundant~the vector pushbuffer is a fixed 492 words against a 1024-word capacity, so it cannot overflow for any job
 # ---- submit, waits, diagnostics ------------------------------------------------------
@@ -188,3 +190,9 @@ WRAP_PROGRAM_LENGTH~src/omega_blackwell_submit.c~/^int omega_blackwell_execute_v
 WRAP_MARKER_CHECK~src/omega_blackwell_submit.c~/^int omega_blackwell_execute_vector/,/^}/ s/if (info.marker != OMEGA_BW_MARKER_COMPLETION_PAYLOAD) return -1;/(void)0;/~second check of the marker payload~redundant~the backend wait_word already refuses any first-marker value other than 0x44444444 (UNKNOWN_STATE), so the engine fails before this line is reached
 WRAP_SEMAPHORE_CHECK~src/omega_blackwell_submit.c~/^int omega_blackwell_execute_vector/,/^}/ s/if (info.semaphore != OMEGA_BW_SEMAPHORE_INTERMEDIATE_DONE) return -1;/(void)0;/~second check of the semaphore value~redundant~the backend wait_word already refuses any semaphore value other than DONE (6), so the engine fails before this line is reached
 ROWS
+rc=$?
+if [ -n "$OUT" ] && [ -s "$OUT" ]; then
+    jq --slurpfile source "$WORK/cudapp-source.json" '. + {canonical_source: $source[0]}' "$OUT" > "$WORK/receipt.json" &&
+        cp "$WORK/receipt.json" "$OUT" || exit 2
+fi
+exit "$rc"

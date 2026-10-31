@@ -561,19 +561,88 @@ static bool test_m18_gate5_instruction_sequencing(void) {
     return valid;
 }
 
+/* Host provenance adapter only; authentication policy lives in seeded Omega.
+ * Proposed replacement: a bounded .om source scanner plus SHA-256 receipt unit,
+ * returning refusal on empty input, read errors, forbidden tokens or pin drift.
+ *
+ * The stage directory is resolved only by the child shell, with the same
+ * expression the --verify run uses; this file never builds a filesystem path
+ * from the environment. Callers name a stage file by its index in this fixed
+ * table, so no other file can be requested. */
+static const char *const canonical_stage_files[] = {
+    "source/src/omega_blackwell_matmul.h", "source/src/omega_blackwell_matmul.c",
+    "source/src/omega_blackwell_codegen.h", "source/src/omega_blackwell_codegen.c",
+    "source/src/omega_blackwell_qmd.h", "source/src/omega_blackwell_qmd.c",
+    "source/src/omega_blackwell_submit.h", "source/src/omega_blackwell_submit.c",
+    "source/src/omega_blackwell_engine.h", "source/src/omega_blackwell_engine.c",
+    "pin", "observed", "source.tar", "hashes", "build/libcudapp.a"
+};
+#define CANONICAL_STAGE_FILE_COUNT (sizeof canonical_stage_files / sizeof canonical_stage_files[0])
+#define CANONICAL_STAGE_CODEGEN_C 3u
+
+/* Returns a pipe carrying the bytes of one stage file; close it with pclose()
+ * and treat a nonzero status as a read failure. */
+static FILE *canonical_stage_open(size_t index) {
+    if (index >= CANONICAL_STAGE_FILE_COUNT) return NULL;
+    char command[256];
+    int n = snprintf(command, sizeof command,
+                     "cat -- \"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}/%s\"",
+                     canonical_stage_files[index]);
+    if (n < 0 || (size_t)n >= sizeof command) return NULL;
+    return popen(command, "r");
+}
+
+/* Runs the seeded .om stage verifier. On success, when receipt is not NULL,
+ * it holds the verifier's JSON receipt without its trailing newline. */
+static bool canonical_stage_verified(char *receipt, size_t capacity) {
+    /* Generic I/O only: the fresh JSON is authored by the seeded .om guard
+     * and receipt unit. Never deserialize/recreate its policy here. */
+    if (receipt && capacity == 0) return false;
+    FILE *child = popen("sh tools/cudapp-stage.sh --verify cudapp.lock "
+                        "\"${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}\"", "r");
+    if (!child) return false;
+    unsigned char bytes[4096];
+    size_t n, used = 0;
+    bool nonempty = false, ok = true;
+    while ((n = fread(bytes, 1, sizeof bytes, child)) != 0) {
+        nonempty = true;
+        if (receipt) {
+            if (n >= capacity - used) {
+                ok = false;
+            } else {
+                memcpy(receipt + used, bytes, n);
+                used += n;
+            }
+        }
+    }
+    if (ferror(child)) ok = false;
+    if (pclose(child) != 0) ok = false;
+    if (receipt) {
+        while (used > 0 && receipt[used - 1] == '\n') used--;
+        receipt[used] = '\0';
+        if (used == 0 || memchr(receipt, '\n', used) != NULL) ok = false;
+    }
+    return nonempty && ok;
+}
+
 static bool test_m18_gate6_code_truth(void) {
-    FILE *f = fopen("src/omega_blackwell_codegen.c", "r");
+    if (!canonical_stage_verified(NULL, 0)) return false;
+    FILE *f = canonical_stage_open(CANONICAL_STAGE_CODEGEN_C);
     if (!f) return false;
     char line[512];
-    bool has_static_table = false;
+    bool has_static_table = false, nonempty = false;
     while (fgets(line, sizeof(line), f)) {
+        nonempty = true;
         if (strstr(line, "MATMUL_INSTRUCTIONS") || strstr(line, "static const uint32_t MATMUL_CODE")) {
             has_static_table = true;
             break;
         }
     }
-    fclose(f);
-    return !has_static_table;
+    /* Drain after an early match so the child never dies of SIGPIPE. */
+    while (has_static_table && fread(line, 1, sizeof line, f) != 0) {}
+    bool read_ok = !ferror(f);
+    if (pclose(f) != 0) read_ok = false;
+    return nonempty && read_ok && !has_static_table;
 }
 
 static bool test_m18_gate7_codegen_variation(void) {
@@ -1007,6 +1076,51 @@ static void m18_clean_clone_remove_checkout(const char *clone) {
     }
 }
 
+/* Absolute path of an environment value (or fallback when unset or empty). */
+static bool m18_clean_clone_realpath(const char *name, const char *value, char out[PATH_MAX]) {
+    if (!value || !*value || !realpath(value, out)) {
+        fprintf(stderr, "M18 clean clone: cannot resolve %s (%s)\n", name, value ? value : "unset");
+        return false;
+    }
+    return true;
+}
+
+/* The CUDApp inputs of the nested build, resolved in this process: the stage
+ * (CUDAPP_STAGE, else ${OUT_DIR:-build}/cudapp), the checkout (CUDAPP_DIR, else
+ * the repository the stage recorded) and the pinned tools OMEGA_OMC and
+ * OMEGA_BRIDGE, which tools/cudapp-stage.sh requires. */
+static bool m18_clean_clone_cudapp_inputs(char stage[PATH_MAX], char cudapp[PATH_MAX], char omc[PATH_MAX],
+                                          char bridge[PATH_MAX]) {
+    char fallback[PATH_MAX];
+    const char *value = getenv("CUDAPP_STAGE");
+    if (!value || !*value) {
+        const char *out_dir = getenv("OUT_DIR");
+        int n = snprintf(fallback, sizeof(fallback), "%s/cudapp", out_dir && *out_dir ? out_dir : "build");
+        if (n < 0 || (size_t)n >= sizeof(fallback)) return false;
+        value = fallback;
+    }
+    if (!m18_clean_clone_realpath("CUDAPP_STAGE", value, stage)) return false;
+    value = getenv("CUDAPP_DIR");
+    if (!value || !*value) {
+        char repository[PATH_MAX + 16];
+        int n = snprintf(repository, sizeof(repository), "%s/repository", stage);
+        if (n < 0 || (size_t)n >= sizeof(repository)) return false;
+        FILE *f = fopen(repository, "r");
+        if (!f) {
+            fprintf(stderr, "M18 clean clone: %s: %s\n", repository, strerror(errno));
+            return false;
+        }
+        bool got = fgets(fallback, sizeof(fallback), f) != NULL;
+        fclose(f);
+        if (!got) return false;
+        fallback[strcspn(fallback, "\n")] = '\0';
+        value = fallback;
+    }
+    return m18_clean_clone_realpath("CUDAPP_DIR", value, cudapp) &&
+           m18_clean_clone_realpath("OMEGA_OMC", getenv("OMEGA_OMC"), omc) &&
+           m18_clean_clone_realpath("OMEGA_BRIDGE", getenv("OMEGA_BRIDGE"), bridge);
+}
+
 static bool test_m18_gate16_clean_clone(void) {
     if (getenv("OMEGA_IN_CLEAN_CLONE") != NULL) {
         return true;
@@ -1032,6 +1146,11 @@ static bool test_m18_gate16_clean_clone(void) {
         fprintf(stderr, "%s\n", physics_err);
         return false;
     }
+    /* Resolve every inherited checkout/tool path before changing directories.
+     * The stage repository is the default canonical source, never a retired
+     * Omega duplicate or an unrelated sibling checkout. */
+    char stage_dir[PATH_MAX], cudapp_dir[PATH_MAX], omc_path[PATH_MAX], bridge_dir[PATH_MAX];
+    if (!m18_clean_clone_cudapp_inputs(stage_dir, cudapp_dir, omc_path, bridge_dir)) return false;
     const char *tmp = getenv("TMPDIR");
     if (!tmp || !*tmp) tmp = "/tmp";
     char clone[PATH_MAX];
@@ -1042,15 +1161,19 @@ static bool test_m18_gate16_clean_clone(void) {
         return false;
     }
     /* No shell (omega#565): each step is its own program with an argument vector,
-     * so nothing in TMPDIR or PHYSICS_DIR can change what runs. Paths outside the
-     * plain charset are refused (fail closed); make would also expand a '$'. */
-    if (!omega_cc_path_is_plain(clone) || !omega_cc_path_is_plain(physics_dir_resolved)) {
-        fprintf(stderr, "M18 clean clone: refusing a path with characters outside [A-Za-z0-9/._+-]: %s | %s\n",
-                clone, physics_dir_resolved);
+     * so nothing in TMPDIR, PHYSICS_DIR or the CUDApp inputs can change what runs.
+     * Paths outside the plain charset are refused (fail closed); make would also
+     * expand a '$'. */
+    if (!omega_cc_path_is_plain(clone) || !omega_cc_path_is_plain(physics_dir_resolved) ||
+        !omega_cc_path_is_plain(stage_dir) || !omega_cc_path_is_plain(cudapp_dir) ||
+        !omega_cc_path_is_plain(omc_path) || !omega_cc_path_is_plain(bridge_dir)) {
+        fprintf(stderr, "M18 clean clone: refusing a path with characters outside [A-Za-z0-9/._+-]: %s | %s | %s | %s | %s | %s\n",
+                clone, physics_dir_resolved, stage_dir, cudapp_dir, omc_path, bridge_dir);
         (void)rmdir(clone);
         return false;
     }
     char root[PATH_MAX], checkout[PATH_MAX], log_path[PATH_MAX], physics_arg[PATH_MAX + 16];
+    char cudapp_arg[PATH_MAX + 16], stage_arg[PATH_MAX + 16], omc_arg[PATH_MAX + 16], bridge_arg[PATH_MAX + 16];
     char *git_top[] = {"git", "rev-parse", "--show-toplevel", NULL};
     if (!omega_cc_capture_line(NULL, "git", git_top, root, sizeof(root))) {
         fprintf(stderr, "M18 clean clone: git rev-parse --show-toplevel failed\n");
@@ -1060,17 +1183,25 @@ static bool test_m18_gate16_clean_clone(void) {
     int n1 = snprintf(checkout, sizeof(checkout), "%s/checkout", clone);
     int n2 = snprintf(log_path, sizeof(log_path), "%s/clean_clone_m18.log", clone);
     int n3 = snprintf(physics_arg, sizeof(physics_arg), "PHYSICS_DIR=%s", physics_dir_resolved);
+    int n4 = snprintf(cudapp_arg, sizeof(cudapp_arg), "CUDAPP_DIR=%s", cudapp_dir);
+    int n5 = snprintf(stage_arg, sizeof(stage_arg), "CUDAPP_STAGE=%s", stage_dir);
+    int n6 = snprintf(omc_arg, sizeof(omc_arg), "OMEGA_OMC=%s", omc_path);
+    int n7 = snprintf(bridge_arg, sizeof(bridge_arg), "OMEGA_BRIDGE=%s", bridge_dir);
     if (n1 < 0 || (size_t)n1 >= sizeof(checkout) || n2 < 0 || (size_t)n2 >= sizeof(log_path) ||
-        n3 < 0 || (size_t)n3 >= sizeof(physics_arg)) {
+        n3 < 0 || (size_t)n3 >= sizeof(physics_arg) || n4 < 0 || (size_t)n4 >= sizeof(cudapp_arg) ||
+        n5 < 0 || (size_t)n5 >= sizeof(stage_arg) || n6 < 0 || (size_t)n6 >= sizeof(omc_arg) ||
+        n7 < 0 || (size_t)n7 >= sizeof(bridge_arg)) {
         (void)rmdir(clone);
         return false;
     }
+    char *verify_argv[] = {"sh", "tools/cudapp-stage.sh", "--verify", "cudapp.lock", stage_dir, NULL};
     char *cp_argv[] = {"cp", "-r", "--", root, checkout, NULL};
     char *clean_argv[] = {"make", "clean", NULL};
-    char *make_argv[] = {"make", "-j", physics_arg, NULL};
+    char *make_argv[] = {"make", "-j", physics_arg, cudapp_arg, stage_arg, omc_arg, bridge_arg, NULL};
     char *run_argv[] = {"./build/omegatool", "--run-m18-gates", NULL};
-    const char *step = "cp";
-    int rc = omega_cc_run(NULL, "cp", cp_argv, NULL, false);
+    const char *step = "cudapp-stage --verify";
+    int rc = omega_cc_run(root, "sh", verify_argv, NULL, false);
+    if (rc == 0) { step = "cp"; rc = omega_cc_run(NULL, "cp", cp_argv, NULL, false); }
     if (rc == 0) { step = "make clean"; rc = omega_cc_run(checkout, "make", clean_argv, NULL, false); }
     if (rc == 0) { step = "make"; rc = omega_cc_run(checkout, "make", make_argv, NULL, false); }
     /* The log sits beside the checkout: <clone>/clean_clone_m18.log. */
@@ -1092,9 +1223,8 @@ static bool test_m18_gate17_regression(void) {
     return (run_m17_gates() == 0);
 }
 
-static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[65]) {
-    FILE *f = fopen(path, "rb");
-    if (!f) return false;
+/* Hashes f to EOF; the caller closes f and owns its close status. */
+static bool stream_sha256(FILE *f, uint8_t digest[32], char hex[65]) {
     sha256_ctx ctx;
     sha256_init(&ctx);
     uint8_t buf[4096];
@@ -1102,13 +1232,21 @@ static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[6
     while ((n = fread(buf, 1, sizeof(buf), f)) > 0) {
         sha256_update(&ctx, buf, n);
     }
-    fclose(f);
+    if (ferror(f)) return false;
     sha256_final(&ctx, digest);
     for (int i = 0; i < 32; i++) {
         sprintf(&hex[i * 2], "%02x", digest[i]);
     }
     hex[64] = 0;
     return true;
+}
+
+static bool compute_file_sha256(const char *path, uint8_t digest[32], char hex[65]) {
+    FILE *f = fopen(path, "rb");
+    if (!f) return false;
+    bool read_ok = stream_sha256(f, digest, hex);
+    if (fclose(f) != 0) read_ok = false;
+    return read_ok;
 }
 
 static void bytes_to_hex_str(const uint8_t *bytes, size_t len, char *hex) {
@@ -1221,18 +1359,12 @@ static bool test_m18_gate18_receipt(void) {
     char bin_hex[65] = {0};
     if (!compute_file_sha256(self_path, bin_digest, bin_hex)) return false;
 
-    /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area. */
+    /* 5. Generate the SHA256SUMS manifest under the run-scoped evidence area.
+     * The verifier's CUDApp source receipt is recorded verbatim in the M18
+     * receipt below (cudapp_source), not in a separate evidence file. */
+    char cudapp_source[4096];
+    if (!canonical_stage_verified(cudapp_source, sizeof cudapp_source)) return false;
     const char *manifest_files[] = {
-        "src/omega_blackwell_matmul.h",
-        "src/omega_blackwell_matmul.c",
-        "src/omega_blackwell_codegen.h",
-        "src/omega_blackwell_codegen.c",
-        "src/omega_blackwell_qmd.h",
-        "src/omega_blackwell_qmd.c",
-        "src/omega_blackwell_submit.h",
-        "src/omega_blackwell_submit.c",
-        "src/omega_blackwell_engine.h",
-        "src/omega_blackwell_engine.c",
         "src/omega_blackwell_gates.h",
         "src/omega_blackwell_gates.c",
         "tools/omegatool.c",
@@ -1245,14 +1377,26 @@ static bool test_m18_gate18_receipt(void) {
 
     FILE *f_sums = fopen(sums_path, "w");
     if (!f_sums) return false;
+    bool sums_ok = true;
+    for (size_t i = 0; i < CANONICAL_STAGE_FILE_COUNT; i++) {
+        char h[65];
+        uint8_t d[32];
+        FILE *stage_file = canonical_stage_open(i);
+        bool hashed = stage_file && stream_sha256(stage_file, d, h);
+        if (stage_file && pclose(stage_file) != 0) hashed = false;
+        if (!hashed || fprintf(f_sums, "%s  cudapp/%s\n", h, canonical_stage_files[i]) < 0) {
+            sums_ok = false;
+            break;
+        }
+    }
     for (size_t i = 0; i < num_files; i++) {
         uint8_t d[32];
         char h[65];
-        if (compute_file_sha256(manifest_files[i], d, h)) {
-            fprintf(f_sums, "%s  %s\n", h, manifest_files[i]);
-        }
+        if (!compute_file_sha256(manifest_files[i], d, h) ||
+            fprintf(f_sums, "%s  %s\n", h, manifest_files[i]) < 0) sums_ok = false;
     }
-    fclose(f_sums);
+    if (fclose(f_sums) != 0) sums_ok = false;
+    if (!sums_ok) return false;
 
     /* 6. Compute manifest digest */
     uint8_t manifest_digest[32];
@@ -1306,6 +1450,7 @@ static bool test_m18_gate18_receipt(void) {
     fprintf(f, "  \"bf16_realization_id\": \"%s\",\n", bf16_real_hex);
     fprintf(f, "  \"binary_sha256\": \"%s\",\n", bin_hex);
     fprintf(f, "  \"evidence_manifest_sha256\": \"%s\",\n", manifest_hex);
+    fprintf(f, "  \"cudapp_source\": %s,\n", cudapp_source);
     fprintf(f, "  \"tested_configurations\": [\n");
     for (size_t i = 0; i < m18_parity_count; i++) {
         m18_print_parity_record(f, &m18_parity[i], i + 1 < m18_parity_count);

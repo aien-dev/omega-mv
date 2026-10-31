@@ -34,6 +34,8 @@ P=${PHYSICS_DIR:-../physics}
 SHA=$(git rev-parse --short HEAD)
 OUT=${1:-$HOME/workspace/evidence-out}/FB1-CUT5-$SHA
 mkdir -p "$OUT"
+bash tools/e1_manifest.sh --canonical-evidence "$OUT" \
+    src/omega_gpu_attention_api.c src/omega_gpu_attention_api.h || exit 2
 if ! make PHYSICS_DIR="$P" build/gpu_attention_test > "$OUT/build.log" 2>&1; then
     echo "FB1-CUT5 BUILD FAIL (see $OUT/build.log)"; exit 1
 fi
@@ -59,8 +61,11 @@ sweep_rc=$?
 timing_rc=$?
 [ "$rc" -eq 0 ] && rc=$sweep_rc
 [ "$rc" -eq 0 ] && rc=$timing_rc
-cp src/omega_gpu_attention_api.c src/omega_gpu_attention_api.h tests/gpu_attention_test.c "$OUT/"
-(cd "$OUT" && sha256sum -- * > SHA256SUMS)
+cp tests/gpu_attention_test.c "$OUT/" || exit 2
+(cd "$OUT" && for file in *; do
+    [ "$file" != SHA256SUMS ] || continue
+    [ -f "$file" ] && sha256sum -- "$file" || exit 2
+done > SHA256SUMS) || exit 2
 tail -1 "$OUT/run.log"; tail -1 "$OUT/sweep.log"; tail -1 "$OUT/timing.log"
 echo "FB1-CUT5 chip gate rc=$rc (sweep rc=$sweep_rc timing rc=$timing_rc) receipt=$OUT/receipt.json sweep=$OUT/sweep.json"
 exit $rc

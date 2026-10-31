@@ -1,18 +1,22 @@
 # tests/gates/omega-runtime-api.gate
 # Mirrors hosted: no dedicated workflow; as a portable gate it runs in the AIEN Checks portable smoke set (aien-verification.yml)
-# requires: portable: the tree plus gcc (-aux-info), make, perl, sed and awk; no GPU, no physics checkout, no sibling repo.
+# Since #924 CUDApp owns the Omega Runtime API (CUDApp gate CUDAPP-RUNTIME-API: manifest against API.md and the headers,
+# with every negative control this gate used to run). This gate checks what omega still owns: the cudapp.lock pin, no
+# second copy of the API in omega, and the consumer recipe in mk/runtime-r1.mk (tools/runtime_api_owner.sh, with its
+# own negative controls). The checker itself runs on the pinned CUDApp tree in OMEGA-RUNTIME-API-PIN (host).
+# requires: portable: the tree plus git, sh, awk, sed and grep; no GPU, no compiler, no sibling repo.
 gate: OMEGA-RUNTIME-API
 manifest_version: 2
 owner: omega
 requires:
   - portable
 inputs:
+  - cudapp.lock
   - docs/runtime/
   - mk/runtime-r1.mk
   - src/
-  - tools/runtime_api_check.sh
-  - tools/runtime_api_negative.sh
-  - tests/gates/
+  - tests/
+  - tools/
 run:
   exec: tests/gates/run.sh
   args: ["runtime-api"]

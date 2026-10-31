@@ -71,17 +71,22 @@ RUN_ID=$(basename "$OUT")
 BIN=$OUT/test_omega_reduce_gb10
 NV=$PHYS/third_party/nvidia-open-580.173.02
 FAIL_REASON=""
-(cd "$OMEGA" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off \
-    -Isrc -I"$PHYS/forge" -I"$PHYS/nvrm" -I"$PHYS/m16" \
-    -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" \
+STAGE=${CUDAPP_STAGE:-$OMEGA/build/cudapp}
+case $STAGE in /*) ;; *) STAGE=$OMEGA/$STAGE;; esac
+(cd "$OMEGA" &&
+    sh tools/cudapp-stage.sh cudapp.lock "${CUDAPP_DIR:-../CUDApp}" "$STAGE" &&
+    CUDAPP_STAGE="$STAGE" bash tools/e1_manifest.sh --canonical-evidence "$OUT/canonical" \
+        src/omega_blackwell_codegen.c src/omega_blackwell_encoder.c \
+        src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c &&
+    gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off \
+    -Isrc -I"$STAGE/source/src" -I"$STAGE/source/m16" -I"$STAGE/source/nvrm" \
+    -I"$PHYS/forge" -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" \
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
     -o "$BIN" tests/test_omega_reduce.c src/omega_numeric_reduce.c src/omega_numeric_reduce_gb10.c \
     src/omega_numeric.c src/omega_numeric_gb10.c src/omega_numeric_divsqrt_gb10.c \
-    src/omega_numeric_provenance.c src/omega_blackwell_codegen.c \
-    src/omega_blackwell_encoder.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c \
-    src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
+    src/omega_numeric_provenance.c src/forge_realization.c src/aegis_verification.c src/omega_om_units.c \
     "$PHYS/forge/forge_descriptor.c" "$PHYS/forge/forge_realize.c" "$PHYS/sha256_clean.c" \
-    "$PHYS/nvrm/nvrm.c" "$PHYS/m16/m16_native.c") > "$OUT/build.log" 2>&1 || FAIL_REASON="build failed"
+    "$STAGE/build/libcudapp.a" -lpthread) > "$OUT/build.log" 2>&1 || FAIL_REASON="build failed"
 if [ -z "$FAIL_REASON" ]; then
     nm -u "$BIN" | grep -Eq '\b(sqrtf?|expf?|logf?|powf?|fmaf?|sinf?|cosf?|roundf?|fabsf?)\b' && FAIL_REASON="libm symbols in binary"
     nm -u "$BIN" | grep -Eq 'libcuda(rt)?\.so|\b(cuInit|cuCtx|cuMem|cuStream|cudaMalloc)\b' && FAIL_REASON="CUDA symbols in binary"

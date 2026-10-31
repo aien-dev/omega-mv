@@ -64,7 +64,28 @@ pin() {
   ) 9>"$PINS/.$name.lock"
   obs "pin_${name//-/_}" "\"$sha\""
 }
-physics_pin() { pin physics-src physics "$(lock physics.lock)"; export PHYSICS_DIR="$PINS/physics-src"; }
+physics_pin() { pin physics-src physics "$(lock physics.lock)"; export PHYSICS_DIR="$PINS/physics-src"; cudapp_pin; }
+# The canonical native GPU source (cudapp.lock, mk/cudapp-consumer.mk, README.md "cudapp.lock"): CUDApp at the lock,
+# staged by tools/cudapp-stage.sh with the seeded compiler of omega e5b32567 (seed/out/omc at that commit, the sha256
+# 2c824805... cudapp-stage.sh demands) and omega-bridge 0c4cb9ff. Every step that pins physics builds native code,
+# which since #924 links the staged CUDApp archive, so physics_pin pins CUDApp too.
+CUDAPP_OMC_COMMIT=e5b32567a7aff3ce594e3254a622a846a6cd190b
+CUDAPP_BRIDGE_COMMIT=0c4cb9ff980af278890b231b994eaede4dc7621c
+cudapp_pin() {
+  pin cudapp-src CUDApp "$(lock cudapp.lock)"; export CUDAPP_DIR="$PINS/cudapp-src"
+  pin cudapp-bridge omega-bridge "$CUDAPP_BRIDGE_COMMIT"; export OMEGA_BRIDGE="$PINS/cudapp-bridge"
+  local dir="$PINS/cudapp-omc"
+  (
+    flock -x 9
+    if [ ! -d "$dir" ] || [ "$(git -C "$dir" rev-parse HEAD 2>/dev/null)" != "$CUDAPP_OMC_COMMIT" ]; then
+      rm -rf "$dir"
+      git clone --quiet --shared --no-checkout "$ROOT" "$dir"
+      git -C "$dir" checkout --quiet --detach "$CUDAPP_OMC_COMMIT"
+    fi
+  ) 9>"$PINS/.cudapp-omc.lock"
+  export OMEGA_OMC="$dir/seed/out/omc"
+  obs pin_cudapp_omc "\"$CUDAPP_OMC_COMMIT\""
+}
 aienos_pin()  { pin aienos-src aienos "$(lock aienos.lock)"; export AIENOS_R7_DIR="$PINS/aienos-src"; export AIENOS_COMMIT="$(lock aienos.lock)"; }
 argus_pin()   { pin aienos-argus aienos "$(lock argus.lock)"; export ARGUS_REPO="$PINS/aienos-argus"; }
 export OMEGA_CANDIDATE_COMMIT="$(git rev-parse HEAD)"
@@ -331,9 +352,17 @@ case "$step" in
     obs env_files_found false
     echo "Zero plaintext .env files verified."
     ;;
-  runtime-api)        # omega-mv#594: the Runtime API manifest against the C headers, plus its negative controls.
-                      # Host only (gcc for -aux-info), no GPU, no physics checkout.
-    make $NOPHYS test-runtime-api ;;
+  runtime-api)        # omega-mv#594, moved to CUDApp by #924 (CUDApp gate CUDAPP-RUNTIME-API owns the manifest
+                      # against API.md and the headers). Portable: what omega still owns (tools/runtime_api_owner.sh):
+                      # the cudapp.lock pin, no second copy of the API in omega, and the consumer recipe that runs
+                      # CUDApp's checker plus its negative controls; with its own negative controls.
+    sh tools/runtime_api_owner.sh ;;
+  runtime-api-pin)    # The manifest against API.md and the 22 headers, plus every negative control, by CUDApp's own
+                      # checker on the CUDApp tree staged at cudapp.lock (mk/runtime-r1.mk); then omega's consumer
+                      # tools/own30b_decode_profile.c compiled -Werror against those staged headers. Host only, no GPU.
+    physics_pin
+    make test-runtime-api
+    make check-own30b-decode-profile ;;
   om-units)           # The C entry points whose algorithm is Omega (om/units.sh): omc born from the seed here,
                       # the generator pinned by om/omega-bridge.lock; regenerated binding, SHA-256 and BLAKE3
                       # byte parity against the C they replaced, and the BLAKE3 mutants. NOT_RUN (3) without tools.

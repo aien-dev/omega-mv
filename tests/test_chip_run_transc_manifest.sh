@@ -15,14 +15,14 @@
 # limitations under the License.
 
 # Host-only check of tools/manifests/numeric_transc.chiprun and its wrapper
-# tools/run_numeric_transc_gate.sh. No GPU, no chip sources, no real build: a fake omega and
-# fake physics (git repos in a temp dir), a tiny fake chip binary and fake host tier, run through
-# the real module via the CHIPRUN_SELFTEST seam (same method as tests/test_chip_run.sh).
+# tools/run_numeric_transc_gate.sh. No GPU or chip execution: authenticated real
+# staged sources, fake omega/physics git repos, a tiny fake chip binary and fake
+# host tier run through the existing CHIPRUN_SELFTEST seam.
 #   tests/test_chip_run_transc_manifest.sh
-# Checks: (1) receipt keys and key order equal the old script's (pinned below; cross-checked with
-# origin/main:tools/run_numeric_transc_gate.sh while main still has the old script); the sorted
-# difference must be empty or listed in tests/chip_run_transc_receipt_allowlist.txt, and no stale
-# allowlist entry may remain; (2) gcc source list equals the old script's; (3) refusal line and
+# Checks: (1) old receipt keys keep their order, followed by authenticated
+# canonical_source; sorted differences must exactly match the explicit allowlist
+# (no stale entries); (2) canonical routing preserves old source order and adds
+# exactly one generated unit; (3) refusal line and
 # exit code for an unknown op and for a missing physics checkout; (4) verdicts, console lines,
 # exit codes, receipt values, quiet flag, host tier refusal, fuser refusal.
 # Each check is also run against a mutated manifest and must fail there.
@@ -35,9 +35,17 @@ FAILS=0
 ok() { echo "PASS $1"; }
 bad() { echo "FAIL $1"; FAILS=$((FAILS + 1)); }
 FAKE_PHYS=/nonexistent-physics-for-test
+# The fake Physics and prebuilt binary remain host fixtures; source provenance
+# always uses the real authenticated stage and the actual seeded .om verifier.
+canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+case $canonical_stage in /*) ;; *) canonical_stage=$HERE/$canonical_stage;; esac
+CUDAPP_STAGE=$(realpath -- "$canonical_stage") || exit 1
+export CUDAPP_STAGE
+EXPECTED_CANONICAL=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$CUDAPP_STAGE") || exit 1
 
 # Pinned from the old script (origin/main before this change): receipt keys in order, gcc sources in order.
 OLD_KEYS="gate row reference omega_commit omega_tree_clean_before omega_tree_clean_after omega_commit_unchanged_after physics_commit physics_lock_pin physics_tree_clean_before physics_tree_clean_after physics_commit_unchanged_after binary_sha256 chip_log_sha256 kernels nvdisasm_check host_tier ops_requested ops chip_exit_status started_utc finished_utc verdict"
+EXPECTED_KEYS="$OLD_KEYS canonical_source"
 OLD_SRCS="tests/test_omega_numeric_transc_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c $FAKE_PHYS/nvrm/nvrm.c $FAKE_PHYS/m16/m16_native.c"
 
 # Cross-check of the pins against the old script, only while origin/main still has it.
@@ -84,6 +92,10 @@ build_world() { # MANIFEST
     git init -q "$OM"
     cp "$HERE/tools/chip_run.sh" "$HERE/tools/run_numeric_transc_gate.sh" "$OM/tools/"
     cp "$1" "$OM/tools/manifests/numeric_transc.chiprun"
+    mkdir -p "$OM/om"
+    cp "$HERE/tools/cudapp-stage.sh" "$HERE/tools/aienos_lock_source.sh" "$OM/tools/" || exit 1
+    cp "$HERE/om/consumer.om" "$HERE/om/consumer_receipt.om" "$OM/om/" || exit 1
+    cp "$HERE/cudapp.lock" "$OM/cudapp.lock" || exit 1
     git -C "$PHYS" rev-parse HEAD > "$OM/physics.lock"
     echo "build/" > "$OM/.gitignore"
     printf '#!/bin/sh\nif [ "$1" = --digest ]; then printf "EXP2 12 aaaa\\nLOG2 34 bbbb\\n"; exit ${FAKE_DIGEST_RC:-0}; fi\necho "[PASS] fake host check"; echo "FAKE_HOST_LAST"; exit ${FAKE_HOST_RC:-0}\n' > "$OM/tools/fakehost.sh"
@@ -119,6 +131,10 @@ suite() {
     has() { grep -Eq -- "$1" "$OUT"; }
     lacks() { ! grep -Eq -- "$1" "$OUT"; }
     rj() { [ -n "${R:-}" ] && jq -e "$1" "$R" > /dev/null 2>&1; }
+    canonical_matches() {
+        [ -n "${R:-}" ] && jq -e --argjson expected "$EXPECTED_CANONICAL" \
+            '.canonical_source == $expected' "$R" > /dev/null 2>&1
+    }
 
     # happy path, default ops through the wrapper
     runw happy -- ; HAPPY_R=$R
@@ -134,12 +150,13 @@ suite() {
     ck happy_nvd rj '.nvdisasm_check == "nvdisasm fake provenance line"'
     ck happy_host_tier rj '.host_tier == "FAKE_HOST_LAST"'
     ck happy_gate_fields rj '.gate == "E1-TRANSC-GB10" and .verdict == "PASS" and .chip_exit_status == 0 and (.row | startswith("E1 gap table row 10")) and (.reference | startswith("omega_math_<op>"))'
+    ck happy_canonical_source canonical_matches
     ck happy_flag_dropped test ! -e "$FLAG"
     ck happy_flag_owner grep -q 'flag=lane2 E1 transcendental GB10 chip run start=' "$W"/ev-happy/blobs/*.log
     ck happy_mode_0444 test "$(stat -c %a "$R" 2>/dev/null)" = 444
-    # (1) receipt keys, ordered, equal the old script's
+    # The historical ordered prefix is unchanged; source provenance is explicit.
     jq -r 'keys_unsorted | join(" ")' "$HAPPY_R" > "$W/newkeys" 2>/dev/null
-    ck keys_ordered test "$(cat "$W/newkeys")" = "$OLD_KEYS"
+    ck keys_ordered test "$(cat "$W/newkeys")" = "$EXPECTED_KEYS"
     # (1b) sorted difference against the allowlist, both directions
     tr ' ' '\n' <<< "$OLD_KEYS" | sort > "$W/ko"; tr ' ' '\n' < "$W/newkeys" | sed '/^$/d' | sort > "$W/kn"
     { comm -13 "$W/ko" "$W/kn" | sed 's/^/+/'; comm -23 "$W/ko" "$W/kn" | sed 's/^/-/'; } | sort > "$W/diff"
@@ -211,15 +228,32 @@ suite() {
 }
 
 # (2) gcc source list
-load_list() { ( PHYSICS=$FAKE_PHYS; . "$1" 2>/dev/null || exit 1; read -ra A <<< "$TEST_SOURCE $SOURCES $EXTRA_BUILD_SOURCES"; echo "${A[*]}" ); }
+load_list() { (
+    PHYSICS=$FAKE_PHYS
+    . "$1" 2>/dev/null || exit 1
+    [ "$PHYSICS" = "$FAKE_PHYS" ] && [ "$GPU_SOURCE_ROOT" = "$canonical_root" ] || exit 1
+    read -ra A <<< "$TEST_SOURCE $SOURCES $EXTRA_BUILD_SOURCES"
+    local_list=(); generated=0; archives=0
+    for s in "${A[@]}"; do
+        case $s in
+            "$canonical_root/src/cudapp_om_units.c") generated=$((generated + 1)); continue;;
+            "$canonical_stage/build/libcudapp.a") archives=$((archives + 1)); continue;;
+            "$canonical_root/src/"*) s=src/${s#"$canonical_root/src/"};;
+            "$canonical_root/nvrm/"*|"$canonical_root/m16/"*) s=$FAKE_PHYS/${s#"$canonical_root/"};;
+        esac
+        local_list+=("$s")
+    done
+    [ "$generated" = 1 ] && [ "$archives" = 1 ] || exit 1
+    echo "${local_list[*]}"
+); }
 
 suite "$MAN" > "$T/suite.out"
 cat "$T/suite.out"; grep -c '^FAIL' "$T/suite.out" > "$T/nfail"; FAILS=$((FAILS + $(cat "$T/nfail")))
 [ "$(grep -c '^PASS' "$T/suite.out")" -ge 45 ] || bad "suite ran fewer than 45 checks"
-[ "$(load_list "$MAN")" = "$OLD_SRCS" ] && ok "2 source list identical to old script" || bad "2 source list: $(load_list "$MAN")"
+[ "$(load_list "$MAN")" = "$OLD_SRCS" ] && ok "2 canonical mapping preserves old source order plus one generated unit" || bad "2 source list: $(load_list "$MAN")"
 
 # every file the manifest names exists in the real tree
-( PHYSICS=$FAKE_PHYS; . "$MAN"; for s in $TEST_SOURCE $SOURCES; do [ -f "$HERE/$s" ] || { echo "missing $s"; exit 1; }; done ) && ok "2b sources exist" || bad "2b a named source is missing"
+( PHYSICS=$FAKE_PHYS; . "$MAN" || exit 1; for s in $TEST_SOURCE $SOURCES; do case $s in /*) ;; *) s=$HERE/$s;; esac; [ -s "$s" ] || { echo "missing $s"; exit 1; }; done ) && ok "2b sources exist" || bad "2b a named source is missing"
 
 # ---------- mutants: each manifest or wrapper change must make a named check fail ----------
 mutant() { # NAME SED-EXPR EXPECTED-FAILING-ID
@@ -247,12 +281,14 @@ mutant nohost "/^HOST_TIER_CMD=/,/^'\$/c\\HOST_TIER_CMD=true" hostfail_refusal
 mutant dirtyok 's/^REFUSE_DIRTY_OMEGA=1/REFUSE_DIRTY_OMEGA=0/' dirty_refusal
 mutant nonvd 's#^tools/divsqrt_nvdisasm_check.sh > #true > #' nvdfail_refusal
 mutant nokdig 's#^build/test_omega_numeric_transc_gb10_cpu --digest > .*#true#' happy_kernels
+mutant missingprovenance '/^RECEIPT_EXTRA_JQ="\$RECEIPT_EXTRA_JQ |/d' happy_canonical_source
+mutant alteredprovenance 's/canonical_source: \$canonical_metadata/canonical_source: null/' happy_canonical_source
 mutant nokdigcheck 's#^build/test_omega_numeric_transc_gb10_cpu --digest > \(.*\) || { echo "kernel digest failed"; exit 1; }$#build/test_omega_numeric_transc_gb10_cpu --digest > \1#' digfail_refusal
 mutant pass_loose "s/^PASS_LINE=.*/PASS_LINE='^VERDICT'/" notrun0_receipt
 sed 's#^SOURCES="src/omega_numeric_divsqrt_gb10.c #SOURCES="#' "$MAN" > "$T/m_dropsrc"
 sed 's#src/omega_om_units.c#src/sha256_nope.c#' "$MAN" > "$T/m_badfile"
 for m in m_dropsrc m_badfile; do [ "$(load_list "$T/$m")" = "$OLD_SRCS" ] && bad "mutant $m passed check 2" || ok "mutant $m fails check 2"; done
-( PHYSICS=$FAKE_PHYS; . "$T/m_badfile"; for s in $TEST_SOURCE $SOURCES; do [ -f "$HERE/$s" ] || exit 1; done ) && bad "mutant badfile passed 2b" || ok "mutant badfile fails 2b"
+( PHYSICS=$FAKE_PHYS; . "$T/m_badfile" || exit 1; for s in $TEST_SOURCE $SOURCES; do case $s in /*) ;; *) s=$HERE/$s;; esac; [ -s "$s" ] || exit 1; done ) && bad "mutant badfile passed 2b" || ok "mutant badfile fails 2b"
 
 [ "$FAILS" = 0 ] && { echo "CHIP_RUN_TRANSC_MANIFEST: PASS"; exit 0; }
 echo "CHIP_RUN_TRANSC_MANIFEST: FAIL ($FAILS)"; exit 1

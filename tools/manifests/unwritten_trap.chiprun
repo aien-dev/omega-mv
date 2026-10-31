@@ -9,7 +9,6 @@ GATE=unwritten_trap
 OWNER=unwritten_trap
 TEST_SOURCE="tests/test_omega_unwritten_trap_gb10.c"
 SOURCES="src/omega_unwritten_trap.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
-EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 # Same default as the old script.
 RUN_ARGS="--chip --repeats 3000"
 # Every line starting with the trap tag is a verdict candidate (this includes NOT_RUN lines);
@@ -37,3 +36,26 @@ REQUIRE_ALL_PASS=0
 # Old script exit codes passed straight through: 0 clean, 1 hits or device error, 2 NOT_RUN
 # printed by the harness (tests/test_omega_unwritten_trap_gb10.c lines 87,104,110,113,123).
 CHILD_EXIT_PASSTHROUGH=1
+canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+case $canonical_stage in /*) ;; *) canonical_stage=$HERE/$canonical_stage;; esac
+canonical_log=$(mktemp) || return 2
+if ! canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage" 2>"$canonical_log"); then
+    cat "$canonical_log" >&2; rm -f -- "$canonical_log"; return 2
+fi
+rm -f -- "$canonical_log" || return 2
+canonical_root=$(cd -P "$canonical_stage/source" && pwd) || return 2
+GPU_SOURCE_ROOT=$canonical_root
+EXTRA_BUILD_SOURCES="$GPU_SOURCE_ROOT/nvrm/nvrm.c $GPU_SOURCE_ROOT/m16/m16_native.c $canonical_stage/build/libcudapp.a"
+canonical_sources=
+for canonical_file in $SOURCES; do
+    case $canonical_file in
+        src/omega_unwritten_trap.c|src/omega_numeric_divsqrt_gb10.c|src/omega_numeric_transc.c|src/omega_numeric_provenance.c|src/omega_om_units.c)
+            canonical_sources="$canonical_sources $canonical_file";;
+        *)
+            [ -s "$canonical_root/$canonical_file" ] || return 2
+            canonical_sources="$canonical_sources $canonical_root/$canonical_file";;
+    esac
+done
+SOURCES="$canonical_sources $canonical_root/src/cudapp_om_units.c"
+CPATH="$canonical_root/src${CPATH:+:$CPATH}"; export CPATH
+RECEIPT_EXTRA_JQ=". + {canonical_source: $canonical_metadata}"

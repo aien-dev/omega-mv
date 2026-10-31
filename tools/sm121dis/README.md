@@ -1,8 +1,9 @@
-# sm121dis: Omega's own GB10 disassembler
+# sm121dis: canonical GB10 disassembler consumer
 
-A disassembler turns the GPU's machine code back into readable instructions. Omega used to borrow NVIDIA's
-`nvdisasm` for that, in every check that reads a kernel back. `sm121dis` is our own (row C6 of `docs/OMEGA.md`):
-the decoder is `src/omega_sm121_disasm.c`, this folder holds the command line and the comparison with NVIDIA's tool.
+A disassembler turns GPU machine code back into readable instructions. This command consumes the
+decoder at `src/omega_sm121_disasm.c` from the exact CUDApp revision in `cudapp.lock`; Omega no longer
+carries a second decoder implementation. This folder retains the command-line adapter and the
+comparison with NVIDIA's independently versioned `nvdisasm` oracle.
 
 ## What it proves
 

@@ -8,6 +8,11 @@ UNVERIFIED. Nothing here was run on a GPU; this slice is read-only analysis plus
 Companion documents, not repeated here: `docs/numeric/OMEGA_GPU_NATIVE_BOUNDARY.md` (which driver call each part makes
 today and which cut removes it) and `docs/numeric/OMEGA_GPU_ENGINE.md` (the engine contract).
 
+Since omega-mv#924 the GPU sources this document describes are CUDApp's, consumed from the exact revision in
+`cudapp.lock`; their table is `docs/runtime/portability_table.tsv` of that revision, and `make test-runtime-portability`
+checks it in the staged source (`$(CUDAPP_SOURCE)`). This repository's table keeps only the rows of the GPU-named files
+Omega still carries (`src/omega_blackwell_gates.{c,h}`). The totals below are the historical review of omega-mv main.
+
 ## 1. Two separate questions
 
 Porting Omega means answering two questions that are easy to mix up:

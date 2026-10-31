@@ -12,6 +12,7 @@ inputs:
   - tests/gpu_attention_test.c
   - tests/bw_warp_sim.h
   - physics.lock
+  - cudapp.lock
   - tests/gates/
 run:
   exec: tests/gates/run.sh

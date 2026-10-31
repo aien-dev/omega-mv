@@ -32,13 +32,16 @@ HERE=$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 LINES="GB10-COMPILE NUMERIC-HOST PROGRAM TRANSC MANIFEST HOSTALL"
 
 run_all() {
-    local L=$1 PHYS=${2:-${PHYSICS_DIR:-}} NV name s r
+    local L=$1 PHYS=${2:-${PHYSICS_DIR:-}} name s r
     [ -n "$PHYS" ] && [ -d "$PHYS/nvrm" ] || { echo "run: need PHYSICS_DIR (a checkout of aien-dev/physics at physics.lock)" >&2; exit 2; }
-    NV=$PHYS/third_party/nvidia-open-580.173.02
+    local stage canonical
+    stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+    case $stage in /*) ;; *) stage=$HERE/$stage;; esac
+    canonical=$(sh "$HERE/tools/cudapp-stage.sh" --source "$HERE/cudapp.lock" "$stage") || exit 2
     mkdir -p "$L"; cd "$HERE" || exit 2
     echo "HEAD $(git rev-parse HEAD) dirty_tracked=$(git status --porcelain --untracked-files=no | wc -l) start $(date -u +%FT%TZ)" > "$L/summary.txt"
     run() { name=$1; shift; s=$(date +%s); if bash -c "$*" > "$L/$name.log" 2>&1; then r=PASS; else r="FAIL(rc=$?)"; fi; echo "$name: $r ($(( $(date +%s) - s ))s)" >> "$L/summary.txt"; }
-    run GB10-COMPILE "D=\$(mktemp -d /tmp/e1r-compile.XXXXXX); rc=0; for v in -DE1N_NONE -DOMEGA_C3_PROTECT_OFF; do for f in tests/test_omega_c3_ab_gb10.c src/omega_numeric_gb10.c src/omega_numeric_reduce_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c; do gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -pthread -Isrc -I$PHYS/nvrm -I$PHYS/m16 -I$NV/src/common/sdk/nvidia/inc -I$NV/kernel-open/common/inc -I$NV/kernel-open/nvidia-uvm -I$NV/src/nvidia/arch/nvalloc/unix/include \$v -c \$f -o \$D/x.o || { echo COMPILE_FAIL \$v \$f; rc=1; }; done; done; rm -rf \$D; test \$rc = 0 && echo GB10_COMPILE_OK; exit \$rc"
+    run GB10-COMPILE "D=\$(mktemp -d /tmp/e1r-compile.XXXXXX); rc=0; for v in -DE1N_NONE -DOMEGA_C3_PROTECT_OFF; do for f in tests/test_omega_c3_ab_gb10.c src/omega_numeric_gb10.c src/omega_numeric_reduce_gb10.c src/omega_numeric_ldst_gb10.c src/omega_numeric_divsqrt_gb10.c; do gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -fno-fast-math -pthread -I\"$canonical/src\" -Isrc -I\"$canonical/nvrm\" -I\"$canonical/m16\" -I\"$canonical/third_party/nvidia-open-580.173.02/src/common/sdk/nvidia/inc\" -I\"$canonical/third_party/nvidia-open-580.173.02/kernel-open/common/inc\" -I\"$canonical/third_party/nvidia-open-580.173.02/kernel-open/nvidia-uvm\" -I\"$canonical/third_party/nvidia-open-580.173.02/src/nvidia/arch/nvalloc/unix/include\" \$v -c \$f -o \$D/x.o || { echo COMPILE_FAIL \$v \$f; rc=1; }; done; done; rm -rf \$D; test \$rc = 0 && echo GB10_COMPILE_OK; exit \$rc"
     run NUMERIC-HOST "make -k PHYSICS_DIR=$PHYS test-numeric-cpu test-numeric-transc-gb10-host test-divsqrt-host test-divsqrt-nvdisasm test-numeric-reduce-cpu test-numeric-reduce-nvdisasm test-ldst-host test-ldst-nvdisasm"
     run PROGRAM "make -k PHYSICS_DIR=$PHYS test-program-fp32 test-program-realize test-program-id test-visor-core"
     run TRANSC "make PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0 test-numeric-transc test-numeric-transc-digest test-numeric-transc-full"

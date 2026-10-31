@@ -31,6 +31,8 @@ OUT=${1:?out dir}; N=${2:-30}
 cd "$(dirname "$0")/.." || exit 2
 P=${PHYSICS_DIR:-../physics}
 mkdir -p "$OUT"
+bash tools/e1_manifest.sh --canonical-evidence "$OUT" \
+    src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c || exit 2
 make PHYSICS_DIR="$P" build/gpu_session_probe > "$OUT/build.log" 2>&1 || { echo "PROBE BUILD FAIL"; exit 1; }
 PR=./build/gpu_session_probe
 LOG="$OUT/probe.log"; : > "$LOG"
@@ -58,7 +60,10 @@ run_variant overlap
 grep -c 'rc=OK' "$LOG" > "$OUT/ok_count.txt"
 grep 'rc=' "$LOG" | grep -v 'rc=OK' | grep -v negative_control > "$OUT/failures.txt"
 echo "end $(date -u +%FT%TZ)" >> "$OUT/device.txt"
-cp tests/gpu_session_probe.c src/omega_gpu_session.c src/omega_gpu_platform.c src/omega_gpu_platform_linux.c tools/probe_gpu_open.sh "$OUT/"
-(cd "$OUT" && sha256sum -- * > SHA256SUMS)
+cp tests/gpu_session_probe.c tools/probe_gpu_open.sh "$OUT/" || exit 2
+(cd "$OUT" && for file in *; do
+    [ "$file" != SHA256SUMS ] || continue
+    [ -f "$file" ] && sha256sum -- "$file" || exit 2
+done > SHA256SUMS) || exit 2
 echo "PROBE_GPU_OPEN: negative_control_exit=$neg_rc first_call_failures=$fails/$total (details $OUT/failures.txt)"
 [ "$neg_rc" != 0 ] || { echo "PROBE_GPU_OPEN: INSTRUMENT FAIL (negative control passed)"; exit 3; }

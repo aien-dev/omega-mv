@@ -10,6 +10,7 @@ inputs:
   - mk/
   - src/
   - physics.lock
+  - cudapp.lock
   - tests/gates/
 run:
   exec: tests/gates/run.sh

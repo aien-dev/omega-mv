@@ -37,6 +37,9 @@ if [ $# -gt 0 ] && [ "$1" = "--" ]; then shift; EXTRA="$*"; fi
 SHA=$(git rev-parse --short HEAD)
 OUT=$OUT_ROOT/GPU-RECONV-$SHA
 mkdir -p "$OUT"
+bash tools/e1_manifest.sh --canonical-evidence "$OUT" \
+    src/omega_gpu_elementwise_api.c src/omega_gpu_elementwise_api.h \
+    src/omega_bw_reconv.h src/omega_blackwell_codegen.c || exit 2
 if ! make PHYSICS_DIR="$P" build/gpu_reconv_test > "$OUT/build.log" 2>&1; then
     echo "GPU-RECONV BUILD FAIL (see $OUT/build.log)"; exit 1
 fi
@@ -50,9 +53,12 @@ fi
 # shellcheck disable=SC2086
 ./build/gpu_reconv_test --out "$OUT/receipt.json" $EXTRA > "$OUT/run.log" 2>&1
 rc=$?
-cp src/omega_gpu_elementwise_api.c src/omega_gpu_elementwise_api.h src/omega_bw_reconv.h src/omega_blackwell_codegen.c \
-   om/encoder/bw_enc_sm121.om src/omega_om_units.ident tests/gpu_reconv_test.c tests/bw_warp_sim.h "$OUT/"
-(cd "$OUT" && sha256sum -- * > SHA256SUMS)
+cp build/cudapp/source/om/encoder/bw_enc_sm121.om build/cudapp/source/src/cudapp_om_units.ident src/omega_om_units.ident \
+    tests/gpu_reconv_test.c tests/bw_warp_sim.h "$OUT/" || exit 2
+(cd "$OUT" && for file in *; do
+    [ "$file" != SHA256SUMS ] || continue
+    [ -f "$file" ] && sha256sum -- "$file" || exit 2
+done > SHA256SUMS) || exit 2
 tail -1 "$OUT/run.log"
 echo "GPU-RECONV chip gate rc=$rc receipt=$OUT/receipt.json"
 exit $rc

@@ -70,6 +70,28 @@ printf '%s\n' "$@" > "$out/sources.txt"
 argus_short=$(head -n 1 argus.lock 2>/dev/null | cut -c1-7)
 [ -n "$argus_short" ] || fail "argus.lock is missing or empty"
 argus_dir="*/argus-src/$argus_short/native/argus"
+# AuthClosureReview: accept authenticated direct children, never a prefix glob.
+stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+sh tools/cudapp-stage.sh --verify cudapp.lock "$stage" > "$out/cudapp-source.json" ||
+    fail "canonical CUDApp stage authentication failed"
+stage=$(cd -P "$stage" && pwd) || fail "canonical stage missing"
+canonical_source() {
+    candidate=$1
+    case $candidate in /*) ;; *) candidate=$PWD/$candidate;; esac
+    case $candidate in */../*|*/./*) return 1;; esac
+    [ -f "$candidate" ] && [ -s "$candidate" ] && [ ! -L "$candidate" ] || return 1
+    [ ! -L "$stage/source" ] && [ ! -L "$stage/source/src" ] &&
+        [ ! -L "$stage/build" ] || return 1
+    parent=$(CDPATH= cd -P "$(dirname "$candidate")" && pwd) || return 1
+    case $parent in
+        "$stage/source/src")
+            case ${candidate##*/} in *.c) return 0;; esac;;
+        "$stage/build")
+            # The archive contains the physical driver closure, not a host seat.
+            [ "$mode" = silicon ] && [ "${candidate##*/}" = libcudapp.a ] && return 0;;
+    esac
+    return 1
+}
 for s in "$@"; do
     case "$s" in
         tools/omegatool.c|*/omegatool.c) fail "source list links omegatool: $s" ;;
@@ -79,10 +101,10 @@ for s in "$@"; do
         *libaienos_capability.a) ;;
         */m16/m16_native.c|*/nvrm/nvrm.c) [ "$mode" = silicon ] || fail "physical seat source in a host build: $s" ;;
         $argus_dir/argus_*.c) ;;  # ARGUS pinned by argus.lock (git archive extract; pattern unquoted on purpose)
-        *) fail "source outside omega src/ and tests/runtime/: $s" ;;
+        *) canonical_source "$s" || fail "source outside authenticated Omega/CUDApp closure: $s" ;;
     esac
 done
-note "sources: $# files, omega, the native AIENOS capability library and ARGUS pinned by argus.lock only"
+note "sources: $# files, Omega, native AIENOS capability, ARGUS and authenticated CUDApp (physical archive silicon-only)"
 
 # 2. link map ----------------------------------------------------------------
 # Rust runtime symbols are rust_* or __rust_*, so "rust_" is matched only at a
@@ -93,15 +115,22 @@ for b in "$r13" "$r14"; do
     [ -x "$b" ] || fail "binary missing: $b"
     n=$(basename "$b")
     nm "$b" > "$out/$n.nm" 2>&1 || fail "nm failed on $b"
-    if awk '{print $NF}' "$out/$n.nm" | grep -Ei "$legacy_sym" > "$out/$n.legacy-symbols"; then
-        fail "$n links legacy orchestrator symbols: $(tr '\n' ' ' < "$out/$n.legacy-symbols")"
-    fi
-    awk '{print $NF}' "$out/$n.nm" | grep -E 'sequential_reference|rx_world_seq_' \
-        > "$out/$n.reference-hooks" || true
+    awk '{print $NF}' "$out/$n.nm" > "$out/$n.symbols" || fail "symbol scanner failed"
+    [ -s "$out/$n.symbols" ] || fail "empty symbol scanner input: $b"
+    grep -Ei "$legacy_sym" "$out/$n.symbols" > "$out/$n.legacy-symbols"; scan=$?
+    case $scan in
+        0) fail "$n links legacy orchestrator symbols: $(tr '\n' ' ' < "$out/$n.legacy-symbols")";;
+        1) ;; *) fail "legacy symbol scanner failed";;
+    esac
+    grep -E 'sequential_reference|rx_world_seq_' "$out/$n.symbols" > "$out/$n.reference-hooks"; scan=$?
+    [ "$scan" -le 1 ] || fail "reference symbol scanner failed"
     ldd "$b" > "$out/$n.ldd" 2>&1 || fail "ldd failed on $b"
-    if grep -vE 'linux-vdso|libc\.so|libm\.so|libpthread\.so|ld-linux|libdl\.so' "$out/$n.ldd" | grep -q .; then
-        fail "$n needs a shared library outside the C runtime: $(grep -vE 'linux-vdso|libc\.so|libm\.so|libpthread\.so|ld-linux|libdl\.so' "$out/$n.ldd" | tr '\n' ' ')"
-    fi
+    [ -s "$out/$n.ldd" ] || fail "empty shared library scanner input: $b"
+    grep -vE 'linux-vdso|libc\.so|libm\.so|libpthread\.so|ld-linux|libdl\.so' "$out/$n.ldd" > "$out/$n.foreign-libraries"; scan=$?
+    case $scan in
+        0) fail "$n needs a shared library outside the C runtime: $(cat "$out/$n.foreign-libraries")";;
+        1) ;; *) fail "shared library scanner failed";;
+    esac
     note "link map $n: no legacy orchestrator symbol; C runtime libraries only; SEQ world hooks present (reference, refused on production worlds): $(wc -l < "$out/$n.reference-hooks")"
 done
 
@@ -116,9 +145,13 @@ note "production program: $(grep -E '^R16 prod: ' "$out/prod-hygiene.out" | head
 legacy_exe='spark-aegis|aegis-runtime|aien-cli|aien-runtime|aien-server|spark-dream|sovereign-core|omegatool'
 for b in "$r13" "$r14"; do
     n=$(basename "$b")
-    if strings -a "$b" | grep -E "$legacy_exe" > "$out/$n.legacy-strings"; then
-        fail "$n embeds a legacy program name: $(head -3 "$out/$n.legacy-strings" | tr '\n' ' ')"
-    fi
+    strings -a "$b" > "$out/$n.strings" || fail "strings scanner failed"
+    [ -s "$out/$n.strings" ] || fail "empty embedded name scanner input: $b"
+    grep -E "$legacy_exe" "$out/$n.strings" > "$out/$n.legacy-strings"; scan=$?
+    case $scan in
+        0) fail "$n embeds a legacy program name: $(cat "$out/$n.legacy-strings")";;
+        1) ;; *) fail "legacy name scanner failed";;
+    esac
 done
 note "strings: no legacy program name embedded"
 

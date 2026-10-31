@@ -55,13 +55,16 @@ PHYS_COMMIT=$(git -C "$PHYSICS" rev-parse HEAD) || refuse "cannot read physics H
 fuser /tmp/aien-gb10.lock >/dev/null 2>&1 && refuse "/tmp/aien-gb10.lock is held"
 
 echo "== host tier"
-make -s -C "$HERE" build/test_omega_divsqrt_gb10_cpu > "$RUN/host-build.log" 2>&1 || refuse "host build failed"
+make -s -C "$HERE" PHYSICS_DIR="$PHYSICS" build/test_omega_divsqrt_gb10_cpu >"$RUN/build-host.log" 2>&1 || refuse "host binary did not build"
 "$HERE/build/test_omega_divsqrt_gb10_cpu" > "$RUN/host.log" 2>&1; HOST_RC=$?
 tail -1 "$RUN/host.log"
 echo "== nvdisasm provenance"
 "$HERE/tools/divsqrt_nvdisasm_check.sh" > "$RUN/nvdisasm.log" 2>&1; NVD_RC=$?
 grep -E '^\[|^VERDICT|^disassembler' "$RUN/nvdisasm.log"
 [ "$HOST_RC" = 0 ] && [ "$NVD_RC" = 0 ] || refuse "host tier ($HOST_RC) or nvdisasm check ($NVD_RC) failed; no chip run"
+# Reuse the authenticated canonical collector; this is source/caller glue only.
+WORK=$RUN/source
+bash "$HERE/tools/e1_manifest.sh" --canonical-overlay "$WORK" || refuse "canonical source verification failed"
 KDIG=$("$HERE/build/test_omega_divsqrt_gb10_cpu" --digest)
 
 START=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -75,13 +78,13 @@ flock -x 9 || refuse "cannot take /tmp/aien-gb10.lock"
 echo "== chip build"
 NV=$PHYSICS/third_party/nvidia-open-580.173.02
 BIN=$RUN/test_omega_divsqrt_gb10
-(cd "$HERE" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -pthread \
+(cd "$WORK" && gcc -std=gnu11 -O2 -Wall -Wextra -Werror -ffp-contract=off -pthread \
     -Isrc -I"$PHYSICS/nvrm" -I"$PHYSICS/m16" \
     -I"$NV/src/common/sdk/nvidia/inc" -I"$NV/kernel-open/common/inc" \
     -I"$NV/kernel-open/nvidia-uvm" -I"$NV/src/nvidia/arch/nvalloc/unix/include" \
     -o "$BIN" tests/test_omega_divsqrt_gb10.c src/omega_numeric_divsqrt_gb10.c src/omega_numeric.c \
     src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c \
-    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c \
+    src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c src/cudapp_om_units.c \
     "$PHYSICS/nvrm/nvrm.c" "$PHYSICS/m16/m16_native.c") > "$RUN/chip-build.log" 2>&1 || { cat "$RUN/chip-build.log"; refuse "chip build failed"; }
 if nm -u "$BIN" | grep -Eq '\b(sqrtf?|expf?|logf?|powf?|fmaf?|sinf?|cosf?|fdiv|divf)\b'; then refuse "libm math symbols in $BIN"; fi
 if nm -u "$BIN" | grep -Eiq 'cuda|cuInit|cuLaunch|nvrtc|cublas'; then refuse "CUDA symbols in $BIN"; fi
@@ -110,6 +113,7 @@ num() { local v; v=$(field "$1" "$2"); echo "${v:-null}"; }
 BODY=$(jq -n --arg gate "E1-DIVSQRT" --arg omega "$OMEGA_COMMIT" --arg phys "$PHYS_COMMIT" --arg pin "$PIN" \
     --argjson oclean true --argjson pclean true --argjson oafter "$OMEGA_CLEAN_AFTER" --argjson pafter "$PHYS_CLEAN_AFTER" \
     --argjson osame "$OMEGA_SAME_AFTER" --argjson psame "$PHYS_SAME_AFTER" \
+    --slurpfile canonical "$WORK/cudapp-source.json" \
     --arg bin "$BIN_SHA" --arg log "$LOG_SHA" --arg kd "$KDIG" --arg start "$START" --arg end "$END" \
     --arg nvd "$(grep '^disassembler' "$RUN/nvdisasm.log")" --arg host "$(tail -1 "$RUN/host.log")" \
     --argjson dchk "$(num DIV checked)" --argjson dedge "$(num DIV edge_and_corpus)" \
@@ -120,6 +124,7 @@ BODY=$(jq -n --arg gate "E1-DIVSQRT" --arg omega "$OMEGA_COMMIT" --arg phys "$PH
     --arg verdict "$VERDICT" --argjson rc "$CHIP_RC" '{
   gate: $gate, row: "E1 gap table row 7: GB10 correctly rounded FP32 DIV and SQRT",
   omega_commit: $omega, omega_tree_clean_before: $oclean, omega_tree_clean_after: $oafter, omega_commit_unchanged_after: $osame,
+  canonical_source: $canonical[0],
   physics_commit: $phys, physics_lock_pin: $pin, physics_tree_clean_before: $pclean, physics_tree_clean_after: $pafter, physics_commit_unchanged_after: $psame,
   binary_sha256: $bin, chip_log_sha256: $log, kernels: ($kd | split("\n") | map(select(length > 0) | split(" ") | {op: .[0], instructions: (.[1] | tonumber), sha256: .[2]})),
   nvdisasm_check: $nvd, host_tier: $host,

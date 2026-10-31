@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Host-only check of tools/manifests/unwritten_trap.chiprun and its wrapper. No GPU, no build.
-#   tests/test_chip_run_trap_manifest.sh
-# Checks: (1) manifest sets every required variable and names only existing sources;
-# (2) its gcc source list equals the old script's, pinned as a literal (git show 2dc9dd8:tools/run_unwritten_trap.sh);
+# Host-only check of tools/manifests/unwritten_trap.chiprun and its wrapper.
+# No GPU or chip build; stage authentication uses the actual seeded .om verifier.
+# Checks: (1) required variables, exact provenance and nonempty sources;
+# (2) canonical routing preserves the pinned old order plus one generated unit;
 # (3) the wrapper with a missing physics dir prints REFUSED and the NOT_RUN line, exit 2;
 # (4) the module gcc flags equal the old script's; (5) the wrapper passes exit 0/1/2 through;
 # (6) the manifest sets CHILD_EXIT_PASSTHROUGH=1 and the old default args.
@@ -30,15 +30,41 @@ FAILS=0
 ok() { echo "PASS $1"; }
 bad() { echo "FAIL $1"; FAILS=$((FAILS + 1)); }
 FAKE_PHYS=/nonexistent-physics-for-test
+# Authentication is real even though the wrapper/device fixtures remain fake.
+canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+case $canonical_stage in /*) ;; *) canonical_stage=$HERE/$canonical_stage;; esac
+CUDAPP_STAGE=$(realpath -- "$canonical_stage") || exit 1
+export CUDAPP_STAGE
+EXPECTED_CANONICAL=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$CUDAPP_STAGE") || exit 1
 
 # Prints "<TEST_SOURCE> <SOURCES> <EXTRA>" as one token per line, or fails.
-load_list() { ( PHYSICS=$FAKE_PHYS; . "$1" 2>/dev/null || exit 1; read -ra A <<< "$TEST_SOURCE $SOURCES $EXTRA_BUILD_SOURCES"; printf '%s\n' "${A[@]}" ); }
+load_list() { (
+    PHYSICS=$FAKE_PHYS
+    . "$1" 2>/dev/null || exit 1
+    [ "$PHYSICS" = "$FAKE_PHYS" ] && [ "$GPU_SOURCE_ROOT" = "$canonical_root" ] || exit 1
+    read -ra A <<< "$TEST_SOURCE $SOURCES $EXTRA_BUILD_SOURCES"
+    generated=0; archives=0
+    for s in "${A[@]}"; do
+        case $s in
+            "$canonical_root/src/cudapp_om_units.c") generated=$((generated + 1)); continue;;
+            "$canonical_stage/build/libcudapp.a") archives=$((archives + 1)); continue;;
+            "$canonical_root/src/"*) s=src/${s#"$canonical_root/src/"};;
+            "$canonical_root/nvrm/"*|"$canonical_root/m16/"*) s=$FAKE_PHYS/${s#"$canonical_root/"};;
+        esac
+        printf '%s\n' "$s"
+    done
+    [ "$generated" = 1 ] && [ "$archives" = 1 ]
+); }
 check_vars() { ( PHYSICS=$FAKE_PHYS; . "$1" 2>/dev/null || exit 1
+    [ "$PHYSICS" = "$FAKE_PHYS" ] && [ "$GPU_SOURCE_ROOT" = "$canonical_root" ] || exit 1
+    actual=$(jq -cn "$RECEIPT_EXTRA_JQ") || exit 1
+    jq -en --argjson actual "$actual" --argjson expected "$EXPECTED_CANONICAL" \
+        '$actual.canonical_source == $expected' > /dev/null || exit 1
     for v in GATE OWNER TEST_SOURCE SOURCES EXTRA_BUILD_SOURCES RUN_ARGS VERDICT_RE PASS_LINE EVIDENCE_DIR REFUSE_VERDICT_LINE REFUSE_EXIT REFUSE_DIRTY_OMEGA; do
         [ -n "${!v:-}" ] || { echo "unset $v"; exit 1; }; done
     [ "$REFUSE_EXIT" = 2 ] && [ "$REFUSE_VERDICT_LINE" = "OMEGA_UNWRITTEN_TRAP: NOT_RUN" ] && [ "$RUN_ARGS" = "--chip --repeats 3000" ] || { echo "old exit/line/args not kept"; exit 1; }
     [ "$EVIDENCE_DIR" = "$HOME/workspace/evidence-out/OMEGA-UNWRITTEN-TRAP" ] && [ "${REQUIRE_ALL_PASS:-}" = 0 ] && [ "${CHILD_EXIT_PASSTHROUGH:-}" = 1 ] || { echo "evidence dir, REQUIRE_ALL_PASS or CHILD_EXIT_PASSTHROUGH wrong"; exit 1; }
-    for s in $TEST_SOURCE $SOURCES; do [ -f "$HERE/$s" ] || { echo "missing $s"; exit 1; }; done ); }
+    for s in $TEST_SOURCE $SOURCES; do case $s in /*) ;; *) s=$HERE/$s;; esac; [ -s "$s" ] || { echo "missing $s"; exit 1; }; done ); }
 # Old script, pinned as literals. Source: git show 2dc9dd8:tools/run_unwritten_trap.sh (the last
 # commit before the wrapper replaced it). origin/main no longer holds it once the wrapper merges.
 OLD_LIST='tests/test_omega_unwritten_trap_gb10.c
@@ -74,9 +100,11 @@ check_list_matches_old() {
     printf '%s\n' "$OLD_LIST" > "$T/old.list"
     load_list "$1" > "$T/new.list" || { echo "manifest failed to load"; return 1; }
     diff "$T/old.list" "$T/new.list" > "$T/diff.out" || { cat "$T/diff.out"; return 1; }; }
-# $1 = a copy of tools/chip_run.sh. Its gcc flags must equal OLD_FLAGS.
+# Compiler options stay fixed; only authenticated source/header routing changes.
 check_flags_match_old() {
-    sed -n '/gcc -std=gnu11/,/-o "\$BIN"/p' "$1" | tr -s ' \\\n' '\n\n\n' | grep -E '^-' | grep -vx -- '-o' > "$T/new.flags"
+    sed -n '/gcc -std=gnu11/,/-o "\$BIN"/p' "$1" | tr -s ' \\\n' '\n\n\n' | grep -E '^-' | grep -vx -- '-o' > "$T/routed.flags"
+    grep -Fx -- '-I"$GPU_SOURCE_ROOT/src"' "$T/routed.flags" > /dev/null || return 1
+    sed '/^-I"\$GPU_SOURCE_ROOT\/src"$/d; s/\$GPU_SOURCE_ROOT/\$PHYSICS/g' "$T/routed.flags" > "$T/new.flags"
     printf '%s\n' "$OLD_FLAGS" > "$T/old.flags"
     [ -s "$T/new.flags" ] || { echo "no gcc line found"; return 1; }
     diff "$T/old.flags" "$T/new.flags" > "$T/diff.out" || { cat "$T/diff.out"; return 1; }; }
@@ -95,15 +123,17 @@ sed 's#^REFUSE_EXIT=2#REFUSE_EXIT=1#' "$MAN" > "$T/m_exit"
 sed "s#evidence-out/OMEGA-UNWRITTEN-TRAP#evidence/unwritten_trap#" "$MAN" > "$T/m_evid"
 sed '/^CHILD_EXIT_PASSTHROUGH=/d' "$MAN" > "$T/m_nopass"
 sed 's#^RUN_ARGS="--chip --repeats 3000"#RUN_ARGS="--chip --repeats 300"#' "$MAN" > "$T/m_args"
+sed '/^RECEIPT_EXTRA_JQ=/d' "$MAN" > "$T/m_noprovenance"
+sed 's/canonical_source: \$canonical_metadata/canonical_source: null/' "$MAN" > "$T/m_badprovenance"
 sed 's#-Werror #-Wno-error #' "$HERE/tools/chip_run.sh" > "$T/cr_noerror"
 sed 's#-O2 #-O3 #' "$HERE/tools/chip_run.sh" > "$T/cr_o3"
 sed 's#-fno-fast-math ##' "$HERE/tools/chip_run.sh" > "$T/cr_fastmath"
 sed 's#^exec \(.*\)$#\1; [ $? = 0 ] || exit 1#' "$HERE/tools/run_unwritten_trap.sh" > "$T/w_map"
 
 check_vars "$MAN" > "$T/o" 2>&1 && ok "1 manifest variables and source files" || { bad "1 manifest variables and source files: $(cat "$T/o")"; }
-check_list_matches_old "$MAN" > "$T/o" 2>&1 && ok "2 source list identical to old script" || bad "2 source list identical to old script: $(cat "$T/o")"
+check_list_matches_old "$MAN" > "$T/o" 2>&1 && ok "2 canonical mapping preserves old source order plus one generated unit" || bad "2 canonical source mapping: $(cat "$T/o")"
 
-for m in m_novar m_badfile m_exit m_evid m_nopass m_args; do check_vars "$T/$m" > /dev/null 2>&1 && bad "mutant $m passed check 1" || ok "mutant $m fails check 1"; done
+for m in m_novar m_badfile m_exit m_evid m_nopass m_args m_noprovenance m_badprovenance; do check_vars "$T/$m" > /dev/null 2>&1 && bad "mutant $m passed check 1" || ok "mutant $m fails check 1"; done
 for m in m_dropsrc m_badfile; do check_list_matches_old "$T/$m" > /dev/null 2>&1 && bad "mutant $m passed check 2" || ok "mutant $m fails check 2"; done
 
 check_flags_match_old "$HERE/tools/chip_run.sh" > "$T/o" 2>&1 && ok "4 module gcc flags identical to old script" || bad "4 module gcc flags identical to old script: $(cat "$T/o")"

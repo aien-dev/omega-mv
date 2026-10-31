@@ -12,7 +12,6 @@ GATE=E1-TRANSC-GB10
 OWNER="lane2 E1 transcendental GB10 chip run"
 TEST_SOURCE="tests/test_omega_numeric_transc_gb10.c"
 SOURCES="src/omega_numeric_divsqrt_gb10.c src/omega_numeric_transc.c src/omega_numeric.c src/omega_numeric_provenance.c src/omega_blackwell_encoder.c src/omega_blackwell_codegen.c src/omega_blackwell_matmul.c src/omega_blackwell_qmd.c src/omega_om_units.c"
-EXTRA_BUILD_SOURCES="$PHYSICS/nvrm/nvrm.c $PHYSICS/m16/m16_native.c"
 # The wrapper passes "--chip OP..." itself; this is the old default for direct use.
 RUN_ARGS="--chip EXP2 LOG2 SIGMOID TANH SIN COS ERF GELU RSQRT"
 # Old verdict: the last "VERDICT <word>" line of the chip log. RESULT lines come before it.
@@ -87,3 +86,26 @@ def opsjson: try ([$log | split("\n")[] | select(startswith("RESULT chip ")) | s
   verdict: (if $r.verdict == "PASS" then "PASS" elif $cw == "PASS" then "FAIL" elif $cw == "" then "NOT_RUN" else $cw end)
 }
 '
+canonical_stage=${CUDAPP_STAGE:-${OUT_DIR:-build}/cudapp}
+case $canonical_stage in /*) ;; *) canonical_stage=$HERE/$canonical_stage;; esac
+canonical_log=$(mktemp) || return 1
+if ! canonical_metadata=$(sh "$HERE/tools/cudapp-stage.sh" --verify "$HERE/cudapp.lock" "$canonical_stage" 2>"$canonical_log"); then
+    cat "$canonical_log" >&2; rm -f -- "$canonical_log"; return 1
+fi
+rm -f -- "$canonical_log" || return 1
+canonical_root=$(cd -P "$canonical_stage/source" && pwd) || return 1
+GPU_SOURCE_ROOT=$canonical_root
+EXTRA_BUILD_SOURCES="$GPU_SOURCE_ROOT/nvrm/nvrm.c $GPU_SOURCE_ROOT/m16/m16_native.c $canonical_stage/build/libcudapp.a"
+canonical_sources=
+for canonical_file in $SOURCES; do
+    case $canonical_file in
+        src/omega_numeric_divsqrt_gb10.c|src/omega_numeric_transc.c|src/omega_numeric_provenance.c|src/omega_om_units.c)
+            canonical_sources="$canonical_sources $canonical_file";;
+        *)
+            [ -s "$canonical_root/$canonical_file" ] || return 1
+            canonical_sources="$canonical_sources $canonical_root/$canonical_file";;
+    esac
+done
+SOURCES="$canonical_sources $canonical_root/src/cudapp_om_units.c"
+CPATH="$canonical_root/src${CPATH:+:$CPATH}"; export CPATH
+RECEIPT_EXTRA_JQ="$RECEIPT_EXTRA_JQ | . + {canonical_source: $canonical_metadata}"

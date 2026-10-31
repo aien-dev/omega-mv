@@ -3,7 +3,7 @@
 # from a clean checkout with PHYSICS_DIR=/nonexistent PHYSICS_LOCK_CHECK=0.
 VISOR_CORE = omega_om_units omega_canonical omega_validate omega_core omega_codec aarch64_encoder aarch64_decoder \
 	omega_realize omega_realize_synth omega_machine omega_exec omega_verify omega_program omega_synthesis omega_library \
-	omega_vector omega_blackwell_qmd omega_blackwell_encoder omega_blackwell_realize
+	omega_vector
 VISOR_CORE_OBJS = $(addprefix $(OUT_DIR)/,$(addsuffix .o,$(VISOR_CORE)))
 VISOR_CFLAGS = -std=gnu11 -Wall -Wextra -Werror -MMD -MP -D_GNU_SOURCE -O2 -Isrc -Isrc/visor -Isrc/language
 VISOR_SRCS = $(wildcard src/visor/*.c)
@@ -26,7 +26,7 @@ $(OUT_DIR)/language/%.o: src/language/%.c | $(OUT_DIR)/language
 $(OUT_DIR)/omega_main.o: tools/omega.c | $(OUT_DIR)
 	$(CC) $(VISOR_CFLAGS) -c $< -o $@
 
-$(OMEGA_BIN): $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) $(OUT_DIR)/omega_main.o
+$(OMEGA_BIN): $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) $(OUT_DIR)/omega_main.o $(CUDAPP_LIB) | check-cudapp
 	$(CC) $(VISOR_CFLAGS) -o $@ $^
 
 .PHONY: omega
@@ -34,11 +34,11 @@ omega: $(OMEGA_BIN)
 	cp $(OMEGA_BIN) ./omega
 
 # Generic rule for lane tests: tests/visor/test_X.c -> build/tests-visor/test_X
-$(OUT_DIR)/tests-visor/%: tests/visor/%.c $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) | $(OUT_DIR)/tests-visor
-	$(CC) $(VISOR_CFLAGS) -Itests/visor -o $@ $< $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS)
+$(OUT_DIR)/tests-visor/%: tests/visor/%.c $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) $(CUDAPP_LIB) | $(OUT_DIR)/tests-visor check-cudapp
+	$(CC) $(VISOR_CFLAGS) -Itests/visor -o $@ $< $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) $(CUDAPP_LIB)
 
-$(OUT_DIR)/tests-language/%: tests/language/%.c $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) | $(OUT_DIR)/tests-language
-	$(CC) $(VISOR_CFLAGS) -Itests/language -o $@ $< $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS)
+$(OUT_DIR)/tests-language/%: tests/language/%.c $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) $(CUDAPP_LIB) | $(OUT_DIR)/tests-language check-cudapp
+	$(CC) $(VISOR_CFLAGS) -Itests/language -o $@ $< $(VISOR_CORE_OBJS) $(VISOR_OBJS) $(LANG_OBJS) $(CUDAPP_LIB)
 
 # ---- aggregate Visor gates (lead-owned) --------------------------------------
 # Physics-free lane tests (no PHYSICS_DIR needed):

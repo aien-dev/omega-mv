@@ -3,5 +3,6 @@
 # One entry per line: "+key reason" (new receipt has a key the old one lacked) or
 # "-key reason" (old key missing from the new receipt). Blank lines and # lines are ignored.
 # tests/test_chip_run_transc_manifest.sh fails on a difference that is not listed here AND on a
-# listed entry that is not a real difference. The manifest rebuilds the old object in the old
-# key order, so the list is empty on purpose: no receipt field was added, removed or renamed.
+# listed entry that is not a real difference. The old object keeps its old key
+# order; its sole intentional extension authenticates source, not qualification.
++canonical_source authenticated staged CUDApp closure from the seeded .om verifier

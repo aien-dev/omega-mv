@@ -19,6 +19,7 @@ inputs:
   - tools/divsqrt_nvdisasm_check.sh
   - tools/ldst_nvdisasm_check.sh
   - physics.lock
+  - cudapp.lock
 run:
   exec: tests/gates/run.sh
   args: ["sm121dis"]
