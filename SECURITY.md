@@ -20,11 +20,13 @@ you can send. Do not send secrets.
 | step | target |
 |---|---|
 | acknowledge the report | 3 working days |
-| first assessment (confirmed / not a vulnerability / need more) | 10 working days |
-| fix or mitigation on `main` for a confirmed issue | 90 days from the report |
-| public advisory, with a CVE requested through GitHub when the issue qualifies | when the fix lands, or at 90 days |
+| triage and severity | 7 days from acknowledgement |
+| fix or mitigation on `main` for a confirmed issue | 30 days for high and critical, 90 days otherwise |
+| status update to the reporter | at least every 14 days until closed |
+| public advisory, with a CVE requested through GitHub when the issue qualifies | when the fix lands on `main`; default embargo 90 days, negotiable |
 
-We follow coordinated disclosure: please give us the 90 days, and we will credit you in the advisory
+These are the aien-dev organization targets (`aien-dev/.github` SECURITY.md). We follow coordinated
+disclosure: please give us the embargo, and we will credit you in the advisory
 unless you ask us not to. If an issue is being exploited, we publish sooner.
 
 ## Scope
