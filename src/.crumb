@@ -79,8 +79,8 @@
           "purpose": "M21 OMEGA_AUTODIFF: reverse-mode tape over M20 tensor CPU ops, caller-owned nodes and scratch, p"
         },
         {
-          "digest": "806198eda65f998c287abd251928120d01ab44a1e0f1e05ad2e055212967c80c",
-          "last_commit": "f5c9bd89a",
+          "digest": "3bd51397fcd28cd54db65c1df72c320883798bc8550779b2b79c8498b28ffb0d",
+          "last_commit": "d863780eb",
           "name": "compiler",
           "purpose": "Directory src/compiler. Purpose not yet described by a human."
         },
@@ -115,8 +115,8 @@
           "purpose": "Directory src/language. Purpose not yet described by a human."
         },
         {
-          "digest": "e0eee44045097fd7edf9f542b96bfdfc42813ecf6f27c25bd1c57f7adf985bc4",
-          "last_commit": "f5c9bd89a",
+          "digest": "cd0551dbfb6fc354741efe9a3ad1808ffaaf6a8d7e9e7345851333d7a721cee0",
+          "last_commit": "d863780eb",
           "name": "osh",
           "purpose": "osh (Omega-native shell, arch#158) lexer unit: layout list, generator, osh_lex.osc, C reference "
         },
@@ -145,8 +145,8 @@
           "purpose": "Ionic-droplet reservoir simulator (omega#440): binary32 fixed-step RK4 of the authors' droplet m"
         },
         {
-          "digest": "43126cdfbfc4a67b3ab8785a1358a861960954e0374b7118781d06f117f9de5c",
-          "last_commit": "f56a372ae",
+          "digest": "f3837db35b3a21d182ccb998f5fe30f0822f9359933ff446ab104d355d0ba39b",
+          "last_commit": "001aa63ad",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
@@ -181,21 +181,21 @@
           "purpose": "Directory src/turing. Purpose not yet described by a human."
         },
         {
-          "digest": "e832df528a0a0992e817f879c5b7df52c33b8445f30fc2743e5c0fa5ad6e6b2a",
-          "last_commit": "f5c9bd89a",
+          "digest": "b2e34b2ea0392059ac30d17e27289b1146e523db60a02ef825edef96036817ab",
+          "last_commit": "d863780eb",
           "name": "visor",
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:6ade3e583c9df260fbfc768469dae662b88153725b14f7086431861419cfffe3",
-      "compiled_at": "2026-10-31T10:16:13Z",
+      "children_root": "sha256:8e88ee11baf819dd1222b233a5edc613b47fa42ba47f627b61f9deaabb3df0b1",
+      "compiled_at": "2026-10-30T02:54:10Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:0b45b3b8037fb89222c06563d9cde31caf762b9751994fafa603e1c84d350d91",
+      "digest": "sha256:2d1af65f8616abd11e18a00641d649e15fff413182928b5f69839f6cac3fbc92",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 599,
-      "generated_at_commit": "7715c4e792abc9d99496d4e1ecfe8bccc79a5c17",
-      "source_tree": "sha256:efcba46d11640ffaa85dc9c407a9dea9d0cbe2b6cc60319505dfd327b4d852d2"
+      "files": 568,
+      "generated_at_commit": "0b73ee4ce74b7bdcf9982fbadf7f704fa2214956",
+      "source_tree": "sha256:cd3b004b62741dba0e9a23de1040544c36e66bf54eb3e68392f4c1de13413a2d"
     },
     "owner_lane": "",
     "provenance": {
