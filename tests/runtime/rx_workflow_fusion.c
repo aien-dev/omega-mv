@@ -88,12 +88,12 @@ static int g_fail;
 static int g_untimed_compiled, g_untimed_parallel, g_untimed_poisoned;
 
 /* One measurement's disturbance: attempts, undisturbed pairs, attempts where
- * only one leg was disturbed, and the one-sided skew p for the leg the check
- * claims is faster. */
+ * only one leg was disturbed, whether the leg-skew test applied, and its
+ * one-sided p for the leg the check claims is faster. */
 typedef struct {
     RxPairs legs;
     uint32_t tried, kept;
-    int known, fast;
+    int known, fast, skew;
     double p;
 } Quiet;
 
@@ -1067,9 +1067,11 @@ static int cmp_u64(const void *a, const void *b) {
  * the check claims is faster (`fast`: 0 original, 1 fused) was disturbed
  * significantly more often than the other (a refusal, rx_quiet_reps.h):
  * nothing was measured and nothing that needs it is judged. `q` gets the
- * disturbance counts either way. */
+ * disturbance counts either way. `skew` 0 skips the leg-skew test: only for
+ * legs that keep different numbers of threads on cores, where load alone
+ * disturbs the wider leg more often (the known limit in rx_quiet_reps.h). */
 static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_energy, const char *what, int fast,
-                   Quiet *q) {
+                   int skew, Quiet *q) {
     Pair *p = &g_pair;
     CHECK(pair_start(p, goal, m, 4) == 0, "%s: pair", what);
     memset(ms, 0, sizeof *ms);
@@ -1085,6 +1087,7 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
     int delay_known = 1;
     memset(q, 0, sizeof *q);
     q->fast = fast;
+    q->skew = skew;
     for (uint64_t i = 0; i < ATTEMPTS && kept < RUNS; i++) {
         uint64_t id = 10 + i, a = a_value(id), t_o = 0, t_f = 0;
         set_inputs(&p->o, a, id);
@@ -1128,11 +1131,14 @@ static int measure(AgMetaSkill *m, uint32_t goal, AgFusionMeasure *ms, int with_
     q->kept = kept;
     q->known = delay_known;
     q->p = rx_pairs_skew_p(&q->legs, fast);
-    printf("    %s: undisturbed pairs %u of %u (%s); only original disturbed %u, only fused disturbed %u, "
-           "one-sided p that the %s leg was disturbed more %.3g\n", what, kept, tried,
-           delay_known ? "run-queue delay from schedstat" : "schedstat missing: every pair counts",
-           q->legs.only[0], q->legs.only[1], fast ? "fused" : "original", q->p);
-    if (delay_known && q->p <= RX_SKEW_ALPHA) {
+    printf("    %s: undisturbed pairs %u of %u (%s); only original disturbed %u, only fused disturbed %u, ", what,
+           kept, tried, delay_known ? "run-queue delay from schedstat" : "schedstat missing: every pair counts",
+           q->legs.only[0], q->legs.only[1]);
+    if (skew)
+        printf("one-sided p that the %s leg was disturbed more %.3g\n", fast ? "fused" : "original", q->p);
+    else
+        printf("leg-skew test not applied: the legs keep different numbers of threads on cores\n");
+    if (skew && delay_known && q->p <= RX_SKEW_ALPHA) {
         rx_skew_refuse(what, q->legs.only[fast ? 1 : 0], q->legs.only[fast ? 0 : 1], q->p);
         pair_stop(p);
         return 0;
@@ -1228,19 +1234,22 @@ static void t_measure(void) {
      * compiled one the canary, promotion and use that follow it, are not
      * judged. The leg each check claims is faster is the one tested for skew:
      * the fused leg where it must be accepted, the original where the
-     * parallel fragment must be refused as slower. */
-    g_untimed_compiled = !measure(&MC, GOAL_EFFECT, &R.m_compiled, 1, "compiled", 1, &R.q_compiled);
+     * parallel fragment must be refused as slower. The parallel check runs no
+     * skew test: its original leg keeps up to four workers on cores and the
+     * fused leg one, so load alone disturbs the original more often (known
+     * limit, rx_quiet_reps.h). */
+    g_untimed_compiled = !measure(&MC, GOAL_EFFECT, &R.m_compiled, 1, "compiled", 1, 1, &R.q_compiled);
     if (!g_untimed_compiled)
         CHECK(rx_fusion_accept_measure(&MC, &R.m_compiled, 50) == 0 && MC.state == AG_MS_MEASURED,
               "compiled accepted: fewer reactions, not slower, same outcomes");
     R.m_compiled = MC.measure;
-    if (measure(&MH, GOAL_EFFECT, &R.m_hybrid, 0, "hybrid", 1, &R.q_hybrid)) {
+    if (measure(&MH, GOAL_EFFECT, &R.m_hybrid, 0, "hybrid", 1, 1, &R.q_hybrid)) {
         rx_fusion_accept_measure(&MH, &R.m_hybrid, 50);
         CHECK(MH.state == AG_MS_MEASURED, "hybrid accepted");
     }
     R.m_hybrid = MH.measure;
     R.hybrid_state = MH.state;
-    g_untimed_parallel = !measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel", 0, &R.q_parallel);
+    g_untimed_parallel = !measure(&MP, GOAL_PARALLEL, &R.m_parallel, 0, "parallel", 0, 0, &R.q_parallel);
     if (!g_untimed_parallel) {
         CHECK(rx_fusion_accept_measure(&MP, &R.m_parallel, 50) != 0 && MP.state == AG_MS_SLOWER,
               "parallel fragment refused: fusing it serializes independent work (%.0f -> %.0f us)",
@@ -1293,7 +1302,7 @@ static void t_canary(void) {
     CHECK(MQ.state == AG_MS_VERIFIED, "poisoned hybrid passes verification (the entry is never generated)");
     AgFusionMeasure mq;
     Quiet qq;
-    g_untimed_poisoned = !measure(&MQ, GOAL_EFFECT, &mq, 0, "poisoned hybrid", 1, &qq);
+    g_untimed_poisoned = !measure(&MQ, GOAL_EFFECT, &mq, 0, "poisoned hybrid", 1, 1, &qq);
     if (g_untimed_poisoned) {           /* unmeasured: its canary and quarantine are not judged */
         unpublished_refused(&MC, "canary-passed");
         return;
@@ -1644,10 +1653,14 @@ static void measure_json(FILE *fp, const char *name, const AgFusionMeasure *m, c
             m->failed_after);
     fprintf(fp,
             ",\n      \"disturbance\": {\"run_queue_delay_known\": %s, \"attempts\": %u, \"undisturbed_pairs\": %u, "
-            "\"only_original_disturbed\": %u, \"only_fused_disturbed\": %u, \"claimed_faster_leg\": \"%s\", "
-            "\"skew_p_one_sided\": %.6g, \"skew_alpha\": %g}",
+            "\"only_original_disturbed\": %u, \"only_fused_disturbed\": %u, \"claimed_faster_leg\": \"%s\", ",
             q->known ? "true" : "false", q->tried, q->kept, q->legs.only[0], q->legs.only[1],
-            q->fast ? "fused" : "original", q->p, RX_SKEW_ALPHA);
+            q->fast ? "fused" : "original");
+    if (q->skew)
+        fprintf(fp, "\"skew_test\": \"applied\", \"skew_p_one_sided\": %.6g, \"skew_alpha\": %g}", q->p,
+                RX_SKEW_ALPHA);
+    else
+        fprintf(fp, "\"skew_test\": \"not_applied_legs_differ_in_parallelism\"}");
     if (m->energy_available) {
         double dp = fabs(m->energy_uj_before - m->energy_uj_after), dc = fabs(cpu_mean(0) - cpu_mean(1));
         fprintf(fp,

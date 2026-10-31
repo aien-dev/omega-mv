@@ -28,6 +28,17 @@
  * (rx_pairs_skew_p / rx_legs_skew_p below). Set-aside runs of the other leg
  * only make that leg look faster, which works against the claim, so the
  * test is one-sided.
+ *
+ * Known limit: the test assumes both legs offer the machine's load the same
+ * number of threads to delay. Where one leg keeps several workers on cores
+ * and the other one (a parallel graph against its serialized fusion), load
+ * alone disturbs the wider leg more often: on the loaded Spark the 4-worker
+ * leg was refused for skew in runs where nothing but load was at work, and
+ * dividing each repetition's delay by its mean number of threads on a core
+ * still left 7 of 25 such runs refused. Checks whose legs differ in
+ * parallelism therefore skip the skew test and say so in their output and
+ * receipt; for them, contention a leg makes itself only intermittently can
+ * still hide in its set-aside runs, as before this test existed.
  */
 #ifndef RX_QUIET_REPS_H
 #define RX_QUIET_REPS_H
