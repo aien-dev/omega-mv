@@ -1,0 +1,48 @@
+note SPDX-License-Identifier: Apache-2.0
+note EXP: omega_math_exp of src/omega_numeric.c, built with -ffp-contract=off: every C operator is one
+note unfused binary32 operation in source order. (int32_t)t truncates toward zero.
+fn e1_exp x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+kx = fkey u
+if lt kx fkey XM104
+ret uint 0
+end
+if gt kx fkey NEXPHI
+ret uint INF
+end
+prod = sfmul u NINVLN2
+t = sfsub prod HALF
+if ge fkey prod 0
+t = sfadd prod HALF
+end
+ta = and t MAG
+tb = shr ta 23
+k = long 0
+if ge tb 127
+mn = or and ta FRAC HID
+v = shr mn sub 150 tb
+k = long v
+if ne and t SIGN 0
+k = neg k
+end
+end
+fk = fint k
+r = sfsub sfsub u sfmul fk NLN2HI sfmul fk NLN2LO
+p = sfmul r sfadd NC4 sfmul r NC5
+p = sfmul r sfadd NC3 p
+p = sfmul r sfadd HALF p
+poly = sfadd ONE sfmul r sfadd ONE p
+if gt k 127
+w = sfmul sfmul poly 2130706432 pow2i sub k 127
+ret uint w
+end
+if lt k -126
+w = sfmul sfmul poly pow2i add k 100 pow2i -100
+ret uint w
+end
+w = sfmul poly pow2i k
+ret uint w
+end

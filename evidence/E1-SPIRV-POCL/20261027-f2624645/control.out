@@ -1,0 +1,21 @@
+built exp: d9559d7055e49253
+MISMATCH exp x=3f000000 cpu=3fd3094b spv=3fd3094c
+MISMATCH exp x=3f000004 cpu=3fd3094e spv=3fd3094f
+MISMATCH exp x=3f00000b cpu=3fd30954 spv=3fd30955
+MISMATCH exp x=3f00000c cpu=3fd30955 spv=3fd30956
+MISMATCH exp x=3f000010 cpu=3fd30958 spv=3fd30959
+exp start=1056964608 n=131072 mismatches=43084
+control exp mut=NC4 rc=1
+built log: aa034a3598df13ac
+log start=1056964608 n=131072 mismatches=0
+control log mut=NL2 rc=0
+built trig: c2e79990b8e78015
+MISMATCH sin x=3f000000 cpu=3ef57744 spv=3ef57748
+MISMATCH sin x=3f000001 cpu=3ef57745 spv=3ef57749
+MISMATCH sin x=3f000002 cpu=3ef57747 spv=3ef5774b
+MISMATCH sin x=3f000003 cpu=3ef57749 spv=3ef5774d
+MISMATCH sin x=3f000004 cpu=3ef5774b spv=3ef5774f
+sin start=1056964608 n=131072 mismatches=131072
+control sin mut=S5 rc=1
+MISMATCH log x=3f40001d cpu=be934ac3 spv=be934ac4
+log start=1061158912 n=131072 mismatches=26037

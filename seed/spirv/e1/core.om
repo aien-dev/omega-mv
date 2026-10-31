@@ -1,0 +1,50 @@
+note SPDX-License-Identifier: Apache-2.0
+note E1 SPIR-V tier, shared cores of src/omega_numeric_transc.c, same operation order.
+note Pairs of binary32 values travel packed in one ulong: low 32 bits first, high 32 bits second.
+note ek: k of exp_core2(ah): t = ah * INVLN2 + MAGIC rounds to an integer; k = bits(t) - bits(MAGIC).
+fn ek ah ulong to long
+t = sfadd sfmul ah INVLN2 MAGIC
+a = long t
+ret sub a 1262485504
+end
+note ecore: exp_core2(ah, al) with k from ek(ah); returns m | ml << 32, e^(ah+al) ~ (m + ml) 2^k.
+fn ecore ah ulong al ulong k long to ulong
+kf = fint k
+nk = xor kf SIGN
+r = sffma nk LN2HI ah
+r = sffma nk LN2LO r
+r = sfadd r al
+p = sffma E8 r E7
+p = sffma p r E6
+p = sffma p r E5
+p = sffma p r E4
+p = sffma p r E3
+p = sffma p r HALF
+p = sffma p r ONE
+m = sffma p r ONE
+ml = sffma p r sfsub ONE m
+ret or m shl ml 32
+end
+note tsum: two_sum(a, b) -> s | e << 32, s + e = a + b exactly.
+fn tsum a ulong b ulong to ulong
+s = sfadd a b
+bv = sfsub s a
+av = sfsub s bv
+e = sfadd sfsub a av sfsub b bv
+ret or s shl e 32
+end
+note erfsm: erf_small(y), 0 <= y < 0.5.
+fn erfsm y ulong to ulong
+y2 = sfmul y y
+q = sffma Q7 y2 Q6
+q = sffma q y2 Q5
+q = sffma q y2 Q4
+q = sffma q y2 Q3
+q = sffma q y2 Q2
+q = sffma q y2 Q1
+w = sfmul y2 q
+a = sfmul y TSPHI
+al = sffma y TSPHI xor a SIGN
+b = sffma y TSPLO al
+ret sfadd a sffma a w b
+end

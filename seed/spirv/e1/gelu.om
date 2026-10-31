@@ -1,0 +1,66 @@
+note SPDX-License-Identifier: Apache-2.0
+note GELU: omega_math_gelu of src/omega_numeric_transc.c (needs erfcxt.om).
+fn e1_gelu x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+kx = fkey u
+if ge kx fkey X8
+ret x
+end
+if lt kx fkey XM15_5
+ret uint SIGN
+end
+a = and u MAG
+if eq a 0
+ret x
+end
+sg = and u SIGN
+if lt a 16777216
+if ne sg 0
+r = or sg shr a 1
+ret uint r
+end
+r = shr add a 1 1
+ret uint r
+end
+y = sfmul u ISQ2
+ay = and y MAG
+hx = sfmul u HALF
+if lt ay HALF
+e = or erfsm ay and y SIGN
+r = or sffma hx e hx sg
+ret uint r
+end
+pp = sfmul u u
+pl = sffma u u xor pp SIGN
+h = sfmul pp HALF
+hl = sfmul pl HALF
+yl = sffma u ISQ2 xor y SIGN
+yl = sffma u ISQ2LO yl
+ayl = yl
+if ne sg 0
+ayl = xor yl SIGN
+end
+nh = xor h SIGN
+k = ek nh
+mm = ecore nh xor hl SIGN k
+me = and mm 4294967295
+mel = shr mm 32
+cc = erfcx ay
+c = and cc 4294967295
+cl = shr cc 32
+dc = sffma sfmul ay TWO c MTSP
+cl = sffma ayl dc cl
+p = sfmul me c
+q = sffma me c xor p SIGN
+q = sffma me cl q
+q = sffma mel c q
+if eq sg 0
+r = sffma xor hx SIGN scale2 p k u
+ret uint r
+end
+r = scale2 sffma hx p sfmul hx q k
+ret uint r
+end
