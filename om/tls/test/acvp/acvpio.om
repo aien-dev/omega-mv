@@ -1,0 +1,244 @@
+note SPDX-License-Identifier: Apache-2.0
+note acvpio.om: record reader and output writer shared by the ACVP drivers (acvp.om, mlkemacvp.om).
+note Composition: acvpio.om, then the driver (which defines drrec a b c), then acvpmain.om (fn main).
+note No library calls here.
+
+global inp uchar 16777216
+global outb uchar 1048576
+global st ulong 16
+global one uchar 1
+text hexd "0123456789ABCDEF"
+text tbad "BAD"
+text tio "acvp: cannot read input or input over 16 MiB\n"
+
+note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start, 5 records,
+note 6 malformed records, 7 output fill
+
+fn drslurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn oflush to void
+n = get st 7
+o = ulong 0
+while lt o n bound 999999
+r = write 1 outb o sub n o
+if le r 0
+break
+end
+o = add o ulong r
+end
+put st 7 0
+end
+
+fn obyte c ulong to void
+if ge get st 7 len outb
+oflush
+end
+put outb get st 7 uchar c
+put st 7 add get st 7 1
+end
+
+fn ohex a view uchar * to void
+obyte 32
+if eq len a 0
+obyte 45
+ret
+end
+for i ulong len a
+v = ulong get a i
+obyte ulong get hexd shr v 4
+obyte ulong get hexd and v 15
+end
+end
+
+fn odec v ulong to void
+b = new uchar 24 0
+x = v
+k = ulong 0
+while true bound 21
+put b sub 23 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for i ulong k
+obyte ulong get b add sub 24 k i
+end
+end
+
+fn ofld v ulong to void
+obyte 32
+odec v
+end
+
+fn drpeek to ulong
+c = get st 1
+if ge c get st 0
+ret 256
+end
+ret ulong get inp c
+end
+
+fn dradv to void
+put st 1 add get st 1 1
+end
+
+fn drbad to void
+put st 3 1
+end
+
+fn isbad to bool
+ret eq get st 3 1
+end
+
+fn drhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+if ge c 65
+if le c 70
+ret sub c 55
+end
+end
+ret 16
+end
+
+fn drbyte to uchar
+hi = drhexv drpeek
+dradv
+lo = drhexv drpeek
+dradv
+if gt hi 15
+drbad
+ret 0
+end
+if gt lo 15
+drbad
+ret 0
+end
+ret uchar or shl hi 4 lo
+end
+
+fn drsp to void
+if ne drpeek 32
+drbad
+ret
+end
+dradv
+end
+
+note a decimal number (at most 19 digits) after one space
+fn drnum to ulong
+drsp
+v = ulong 0
+k = ulong 0
+while true bound 21
+c = drpeek
+if lt c 48
+break
+end
+if gt c 57
+break
+end
+v = add mul v 10 sub c 48
+k = add k 1
+dradv
+end
+if eq k 0
+drbad
+end
+if gt k 19
+drbad
+end
+ret v
+end
+
+note one space, then hex bytes into a[0..n) (or "-"); returns n
+fn drhex a edit uchar * to ulong
+drsp
+if eq drpeek 45
+dradv
+ret 0
+end
+n = ulong 0
+while true bound 999999
+if gt drhexv drpeek 15
+break
+end
+if ge n len a
+drbad
+ret n
+end
+put a n drbyte
+n = add n 1
+end
+if eq n 0
+drbad
+end
+ret n
+end
+
+fn dreor to void
+if eq drpeek 13
+dradv
+end
+c = drpeek
+if eq c 10
+dradv
+ret
+end
+if ne c 256
+drbad
+end
+end
+
+fn drskip to void
+while true bound 999999
+c = drpeek
+if eq c 256
+ret
+end
+dradv
+if eq c 10
+ret
+end
+end
+end
+
+note the record's ID: printed first, kept in st 8 for the BAD line
+fn drid to void
+id = drnum
+put st 8 id
+odec id
+end
+

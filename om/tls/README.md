@@ -324,6 +324,7 @@ Not covered, or covered only partly:
 | `sh om/tls/test/net/hostile.sh OMC` | `HOSTILE PASS cases=106 pass=106 fail=0` (2026-10-30, omc `62775d2a`) |
 | `TLS_NET=1 sh om/tls/test/tls/run.sh OMC` | `TLS PASS vectors=24 (rfc8448) dns=23 dit=1 interop=99 pq=PASS residue=PASS net=PASS mutants=62/62` (observed 2026-10-30 on the train r3 tree `a00e134c`, omc `62775d2a`, with `TLS_PQ=1`, `OPENSSL35` and `FAKESRV_PY` set). Before the integration: `interop=44 ... mutants=27/27` on audit/tls-suites and `interop=57 ... mutants=34/34` on audit/tls-fips-approved (omc `2c824805`; `net=NOT_RUN` without `TLS_NET`) |
 | `sh om/tls/build.sh OMC om/tls/test/tls/timing.om build/tls/timing` then `nice -n 19 taskset -c CPU build/tls/timing WHAT N` | dudect samples (`CLASS NANOSECONDS` lines), statistics outside; see `THREAT_MODEL.md` |
+| `sh om/tls/test/acvp/run.sh OMC` (NIST ACVP-Server sample vectors, pinned `975de31e`; not a CAVP certificate) | `ACVP PARTIAL algos=18 tests=7543 not_applicable=7139 not_run=ML-KEM,hmacDRBG` (exit 3; observed 2026-10-30 on omc `62775d2a`; 18 of 18 negative controls FAIL as required) |
 
 How the suites are built:
 
