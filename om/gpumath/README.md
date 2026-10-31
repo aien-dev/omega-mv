@@ -3,7 +3,7 @@
 The original parity tables, mutant counts, timings, binary size and binding checks below
 are historical [#751](https://github.com/aien-dev/omega-mv/pull/751) host evidence
 under compiler `734f0a39…6b61`, not measurements under the current compiler pin.
-The later #848 compile report and #857 host parity report are recorded separately below.
+The later #848/#994 compile reports and #857 host parity report are recorded separately below.
 
 `gpumath.om` ports three C files of `libomega_gpu.a` to seeded Omega (aien-dev/omega-mv#726,
 aien-dev/aien-architecture-mv#300/#316):
@@ -197,6 +197,21 @@ size/identity and host parity observations, separate from the original #751
 compiler and tables. This correction did not independently rerun the suite,
 inspect those run logs or remeasure the binary; no per-stream counts or binding
 results from the old tables are reassigned to #857, and no GPU result is claimed.
+
+## Later compile report: #994 (2026-10-31, author-reported)
+
+[#994's reseed report](https://github.com/aien-dev/omega-mv/pull/994) explicitly
+states that the README byte-identity claims were remeasured: `gpumath.om`
+compiled to a **29,272-byte** program with identical output under old compiler
+`24caacf463cc29c5413d5b2565ef8f88c76e60a585bbad44d2388cb1ac29abb7` and new compiler
+`be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a`.
+The [README at #994 merge `9920aab1413983c2867d02d75b2276341595adb8`](https://github.com/aien-dev/omega-mv/blob/9920aab1413983c2867d02d75b2276341595adb8/om/gpumath/README.md)
+also retains the earlier `90c8884c…3983` and `469532a5…79bc` byte-identity notes.
+
+This is separately attributed compile-size/identity evidence. It neither
+relabels #751's original parity tables nor turns #857's host parity report
+into a new full-suite run under `be8c5130…`. This documentation correction did
+not independently remeasure or execute the program.
 
 ## Limits
 
