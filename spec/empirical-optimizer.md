@@ -68,7 +68,7 @@ The best choice depends on shape and core class together. A rule of the form
 | failure probability | Beta posterior from verification refusals and wrong results; any failure excludes the arm |
 | verification cost | measured, ns, per arm |
 | recompute cost | synthesis + verification ns |
-| contention | H3 cost over H1 cost for the same job. The quietest core is chosen per phase, so the two tables may come from different cores of the same class |
+| contention | H3 cost over H1 cost for the same job. The quietest core is chosen per phase, so the two tables may come from different cores of the same class. Only cores in the process's affinity mask are candidates; a core class with no allowed core is absent from the run |
 | quality | exact: output digest equal to the reference's |
 | transfer cost | not measured: one shared-memory CPU, no device transfer in this operation |
 
@@ -122,7 +122,13 @@ EI = E[max(0, log2 cost(chosen) − log2 cost(competitor))]
   the fastest of three chunks of that run's calls.
 - **Budget:** exploration may not exceed 5% of chosen work plus 0.5 ms. A
   measurement starts only below that line, so the total can overshoot it by
-  at most one probe. The receipt checks this.
+  at most one probe. The receipt checks this over the whole held-out run of a
+  core class, because H1, H2 and H3 share one online model: no measurement
+  may start at or over the line, and the total may exceed the line by no more
+  than the last charge. A held-out group that measures nothing inherits the
+  previous group's overshoot and is judged against that charge, not against
+  zero. A self-test that does no timing drives `rx_cm_decide` through exactly
+  that sequence on every run.
   The first Spark runs used 10% plus 20 ms, then 10% plus 2 ms. The online
   learner then failed the 5%-under-the-fixed-rule criterion (0.953 of the rule
   on X925 H2), and the budget was tightened to 5% plus 0.5 ms after seeing
