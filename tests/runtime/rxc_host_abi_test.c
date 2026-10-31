@@ -256,6 +256,17 @@ int main(void) {
 
     t_wait_ms(dir);
 
+    /* A dir refused by src/omega_path_check.h is an argument error and creates nothing (Rev1001 on #1006). */
+    {
+        char bad[320];
+        snprintf(bad, sizeof bad, "%s/refused dir", dir);
+        RxcHost *hb = NULL;
+        RxcHostInfo ib;
+        int brc = rxc_host_open(bad, RXC_HOST_ROOT_PROVISIONED, ROOT, sizeof ROOT - 1, 0x5E55ull, 0, &hb, &ib);
+        CHECK(brc == RXC_HOST_E_ARG && !hb, "refused dir -> E_ARG (%d)", brc);
+        CHECK(access(bad, F_OK) != 0, "refused dir not created");
+    }
+
     /* ---- T1 ---- */
     RxcHostInfo i1;
     int rc;
