@@ -59,7 +59,7 @@ because it is cached in a static. `physics_commit` reads a real `physics.lock` f
 types, modes, sizes and file sha256). In program mode the harness does the same effects with the same
 flags (`O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC`, mode 0444, directories 0755, umask 022).
 
-omc sha256 `e342af24…63d7` (the previous pin `62775d2a…712b` emits the same bytes). `evidence.om` compiles to a 35,032-byte program.
+omc sha256 `7a8b84fc…b2de` (the previous pins `1578b357…dbe1` and `62775d2a…712b` emit the same bytes). `evidence.om` compiles to a 35,032-byte program.
 
 | stream | function(s) | records | result |
 |---|---|---|---|

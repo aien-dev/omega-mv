@@ -14,7 +14,7 @@
 # directory is created 775 whatever the caller's umask, and a TMPDIR whose empty directories are not
 # 4096 bytes (tmpfs reports 40) is NOT_RUN rather than a false FAIL.
 set -eu
-OMC_PIN=e342af24f3c2df640991aeff8811f24729964ae9220e8617caf9e49694ae63d7
+OMC_PIN=7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de
 NATIVE_PIN=2c2c53f61d4ab302f1a2092c3c32189335dd53f6cf2b388f47a475f99f2c3940
 P=$(cd "$(dirname "$0")" && pwd)
 OM=$P/../evidence.om
