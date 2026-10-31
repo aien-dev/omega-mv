@@ -123,7 +123,7 @@ LANG = {
 
 def system_prompt(lang):
     if lang == "om":
-        card = open(os.path.join(HERE, "REFERENCE-CARD.md")).read()
+        card = open(os.path.join(HERE, "..", "REFERENCE-CARD.md")).read()
         return ("You write complete Omega programs. Follow this reference card exactly.\n\n" + card)
     return f"You write complete {LANG[lang][0]} programs."
 
@@ -496,20 +496,50 @@ def gatelist(rundir, split):
 
 def crosscheck(rundir, split, gate_log):
     verdict = {}
-    for ln in open(gate_log, errors="replace"):
+    log = open(gate_log, errors="replace").read()
+    # A crash or setup failure can leave no verdicts, or only a passing prefix.
+    # Candidate FAIL/NOT_RUN/INVALID outcomes remain visible, not process success.
+    final = re.search(r"^OM2GATE (PASS|FAIL|INVALID|NOT_RUN) cases=(\d+) pass=(\d+) fail=(\d+) invalid=(\d+) not_run=(\d+)\n?\Z", log, re.M)
+    if final is None or "MISMATCH: every case is NOT_RUN" in log:
+        print("INVALID incomplete gate report or compiler identity mismatch")
+        return 1
+    for ln in log.splitlines():
         m = re.match(r"VERDICT (\S+) (PASS|FAIL|INVALID|NOT_RUN)\b", ln)
         if m:
+            if m.group(1) in verdict:
+                print("INVALID duplicate gate verdict")
+                return 1
             verdict[m.group(1)] = m.group(2)
+    reported = tuple(int(n) for n in final.groups()[1:])
+    actual = (len(verdict), *(sum(v == kind for v in verdict.values())
+                              for kind in ("PASS", "FAIL", "INVALID", "NOT_RUN")))
+    if reported != actual or not verdict:
+        print("INVALID gate report counts do not match verdicts")
+        return 1
+    outcome = ("INVALID" if actual[3] else "FAIL" if actual[2] else
+               "NOT_RUN" if actual[4] else "PASS")
+    if final.group(1) != outcome:
+        print("INVALID gate outcome does not match verdicts")
+        return 1
     rows = [json.loads(l) for l in open(os.path.join(rundir, f"verdicts-{split}.jsonl"))]
     agree = disagree = 0
     bad = []
+    expected = set()
     for r in rows:
         if r["code_sha256"] is None:
+            name = f"{r['tid']}.nocode"
+            expected.add(name)
+            if verdict.get(name) == "NOT_RUN":
+                agree += 1
+            else:
+                disagree += 1
+                bad.append((name, "expected-no-code-NOT_RUN", verdict.get(name)))
             continue
         task = load_task(split, r["tid"])
         byn = {c["n"]: c["status"] for c in r["cases"]}
         for c in task["cases"]:
             name = f"{r['tid']}.{c['n']:02d}"
+            expected.add(name)
             g = verdict.get(name)
             if g is None:
                 bad.append((name, "missing-in-gate", byn.get(c["n"])))
@@ -524,14 +554,22 @@ def crosscheck(rundir, split, gate_log):
             else:
                 disagree += 1
                 bad.append((name, g, byn.get(c["n"])))
+    if set(verdict) - expected:
+        print("INVALID unexpected gate verdicts")
+        return 1
     print(f"crosscheck agree={agree} disagree={disagree}")
     for b_ in bad[:20]:
         print("DISAGREE", *b_)
-    sys.exit(1 if disagree else 0)
+    return 1 if disagree else 0
 
 
 def summary(rundir, split, arm):
     """Publishable aggregate: sealed task and family names only as keyed opaque ids (benchlib.opaque)."""
+    if os.path.exists(os.path.join(rundir, f"summary-{split}.json")):
+        sys.exit("REFUSED existing summary; preserve it and use a new run directory")
+    if arm_lang(arm) == "om":
+        if crosscheck(rundir, split, os.path.join(rundir, "gate.log")):
+            sys.exit("INVALID Omega gate crosscheck; summary not written")
     sys.path.insert(0, HERE)
     from benchlib import opaque
     merge = {}
@@ -605,7 +643,7 @@ def main():
     elif a.cmd == "gatelist":
         gatelist(a.run, a.split)
     elif a.cmd == "crosscheck":
-        crosscheck(a.run, a.split, a.gate_log)
+        sys.exit(crosscheck(a.run, a.split, a.gate_log))
     elif a.cmd == "summary":
         summary(a.run, a.split, a.arm)
     else:
