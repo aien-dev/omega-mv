@@ -1,0 +1,22 @@
+# Host-only native qualification; missing compiler prerequisites fail closed.
+gate: OMEGA-PREFETCH-NATIVE
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - native/prefetch/
+  - tools/run_gpu_l2d_prefetch_chip.sh
+  - seed/omc/
+  - seed/out/
+  - tests/gates/omega-prefetch-native.gate
+run:
+  exec: tools/run_gpu_l2d_prefetch_chip.sh
+  args: ["--host-qualification"]
+expects:
+  exit: 0
+  observe: ["prefetch_cases == 53"]
+  verdict: PASS
+timeout: 5m
+exactness: EXACT
+cache_scope: machine
