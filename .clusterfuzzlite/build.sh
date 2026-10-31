@@ -13,7 +13,9 @@ EOF
 chmod +x "$WORK/omc-qemu"
 for t in fz_flight fz_hs fz_x509 fz_pem fz_dns fz_http fz_https; do
   cat seed/net/http.om seed/net/https.om $F/common.om $F/$t.om > "$WORK/$t.prog.om"
-  sh om/tls/build.sh "$WORK/omc-qemu" "$WORK/$t.prog.om" "$OUT/$t.om.bin"
+  # The integrity tool build.sh compiles is aarch64 too; run it the same way (job 124384893839:
+  # "fz_flight.om.bin.tmp.itool: Exec format error").
+  OMTLS_RUN=qemu-aarch64-static sh om/tls/build.sh "$WORK/omc-qemu" "$WORK/$t.prog.om" "$OUT/$t.om.bin"
   $CC $CFLAGS -c $F/oss-fuzz/omexec_fuzzer.c -o "$WORK/omexec.o"
   $CXX $CXXFLAGS "$WORK/omexec.o" $LIB_FUZZING_ENGINE -o "$OUT/$t"
   case $t in fz_flight|fz_hs|fz_x509) a=fzstore.pem;; fz_pem) a=chain.bin;; *) a=;; esac

@@ -10,6 +10,8 @@
 # a tool that writes HMAC-SHA-256 of the binary into its fips.om FKIH slot; fips_check verifies it at
 # first use (failure code 16). A binary that skips this step fails closed. Tool exit: 0 done,
 # 2 usage, 3 I/O error, 4 no marker, two markers or too large.
+# OMTLS_RUN (optional): command prefix that runs the aarch64 tool on another host, e.g.
+# OMTLS_RUN=qemu-aarch64-static on the amd64 ClusterFuzzLite builder (one word, looked up on PATH).
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 units() { for u in sha2 hkdf drbg x25519 sha3 mlkem chacha aesgcm ec ecdh rsa x509 rev fips tls; do cat "$here/$u.om"; done; }
@@ -20,7 +22,7 @@ integ() {
     rc=$?; cat "$2.itool.err" >&2; rm -f "$2.itool" "$2.itool.om" "$2.itool.err"; return "$rc"
   fi
   chmod +x "$2.itool"
-  rc=0; "$2.itool" "$2" || rc=$?
+  rc=0; ${OMTLS_RUN:+"$OMTLS_RUN"} "$2.itool" "$2" || rc=$?
   rm -f "$2.itool" "$2.itool.om" "$2.itool.err"
   [ "$rc" -eq 0 ] || echo "build.sh: integrity step failed on $2 (tool exit $rc)" >&2
   return "$rc"
