@@ -136,6 +136,7 @@ case "$step" in
                       if grep -q "^SKIP" "$OUT_DIR.seed-check.log"; then echo "OMEGA-SEED: a seed gate was skipped" >&2; exit 1; fi
                       # gate5 checks that seed/omc/size-history.tsv ends with a row for this omc; check.sh does not run it
                       sh seed/omc/gate5.sh 2>&1 | tee "$OUT_DIR.seed-gate5.log"
+                      grep -q "^PASS native-host qualification" "$OUT_DIR.seed-check.log" || { echo "OMEGA-SEED: native-host qualification did not pass" >&2; exit 1; }
                       tail -1 "$OUT_DIR.seed-gate5.log" | grep -q "^GATE5 PASS" || { echo "OMEGA-SEED: gate5 failed" >&2; exit 1; } ;;
   # omega-mv#731 ORIG-4 (no hosted mirror; host only): the shadow advisor's glue over the
   # pinned aien-train units (native/orig4/orig4.pin, one aien-train main commit), materialised
@@ -324,7 +325,24 @@ case "$step" in
     ;;
   zero-disk-secrets)
     echo "Auditing repository for prohibited plaintext secret files..."
-    if find . -maxdepth 4 -name ".env*" -not -path "*/.git/*" -not -path "*/build/*" | grep -q .; then
+    # Inspect every tracked path, including forced additions under generated dirs.
+    # NUL records preserve whitespace/newlines; producer failures are not "no hits".
+    if ! git ls-files -z > "$OUT_DIR/secret-tracked"; then
+      echo "::error::Cannot enumerate tracked paths." >&2; exit 1
+    fi
+    while IFS= read -r -d '' path; do
+      case "${path##*/}" in
+        .env*) echo "::error::Tracked plaintext .env path found."
+               obs env_files_found true; exit 1 ;;
+      esac
+    done < "$OUT_DIR/secret-tracked"
+    # Also catch untracked working-tree secrets. Only root build output and git
+    # metadata are excluded; tracked files in build were already checked above.
+    if ! find . \( -path './.git' -o -path './build' \) -prune -o \
+        -name '.env*' -print -quit > "$OUT_DIR/secret-untracked"; then
+      echo "::error::Cannot complete plaintext secret search." >&2; exit 1
+    fi
+    if [ -s "$OUT_DIR/secret-untracked" ]; then
       echo "::error::Prohibited plaintext .env file found. Use an approved AIEN SecretProvider."
       obs env_files_found true; exit 1
     fi

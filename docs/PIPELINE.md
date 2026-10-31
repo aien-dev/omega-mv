@@ -1,52 +1,64 @@
-# The Spark pipeline: how a pull request gets tested and merged
+# Pull requests, Spark qualification and Alpha verification
 
-Since 2026-10-16 the DGX Spark is the only test judge for this repository (ADR 0033 Decision 11,
-phase 3, agreed by Drake on 2026-10-15). The hosted workflows Omega smoke (omega-smoke), Host suites (1, 2, 3), rx-host and turing-yield no longer run on pull requests or pushes (manual trigger only); their jobs are the Spark gates in `tests/gates/`. evidence-immutable, crumb, reservoir and zig-cc still run hosted (no Spark mirror yet for reservoir and zig-cc).
+This runbook follows `.github/workflows/aien-verification.yml` and `AGENTS.md`.
+The retired signed-bundle-before-every-merge process is not the current contract.
+Source snapshot: `ec07d25d5506d33567adbd4d9b518177b7933bad` (2026-10-26).
 
-## What happens to every pull request
+## Pull request checks
 
-1. The Spark worker (`aien-test worker --github`, aien-sovereign-core `tools/aien-test`) sees the
-   new head, runs the gates in `tests/gates/` that the change touches plus `.aien/always`, inside
-   the Spark sandbox, and signs a bundle with the Spark key. It posts the commit status
-   `AIEN Verification (Spark)`.
-2. The pipeline (`tools/aien-local-ci/pipeline.sh` in aien-sovereign-core, every 2 minutes)
-   checks the bundle against `.aien/verify.pub` on `main` and publishes it to
-   `aien-dev/aien-receipts` at `omega/<sha>/bundle.json`.
-3. It then reruns the `AIEN Verification` workflow on that head. That workflow downloads the
-   bundle and verifies it on GitHub. Until the bundle is published the check is red with
-   `NOT_RUN`; that is expected and clears on the rerun.
+`AIEN Checks` runs on pull requests and pushes to `main`. It verifies crumbs and,
+for repositories enrolled by `.aien/verify.pub` at the base ref, runs the portable
+smoke set selected from the base ref. It does not fetch a signed Spark bundle for
+every pull request. Hosted checks are advisory, not Alpha qualification.
 
-## How to get a pull request merged
+Verifier source revisions are pinned in the workflow. `actions/checkout@v4`,
+`actions/cache@v4` and `dtolnay/rust-toolchain@stable` remain upstream-tracking
+references. The toolchain policy is stable Rust, not an immutable compiler or a
+fully pinned CI execution environment. A verifier source pin must not be described
+as end-to-end immutable supply-chain reproducibility.
 
-Add the label **`ready-to-merge`** when the pull request is finished. The pipeline merges it
-(merge commit) only when all of these hold for the current head:
+## Review and merge
 
-- the label is exactly `ready-to-merge` and the pull request is not a draft;
-- the Spark bundle for that head verifies as PASS, including every gate in `.aien/always`;
-- the published copy in aien-receipts is byte-identical to the Spark's copy;
-- every required check on `main` is green on that head, and no `AIEN Verification` run is pending.
+Open a draft pull request with the exact local commands, observed results and
+limits. External review is expected before merge. Do not add `ready-to-merge`
+while review is pending or without authority. A pull request, a merge, an Alpha
+qualification and a deployed binary are separate states.
 
-Pushing a new commit moves the head; the pipeline tests the new head before it merges anything.
-Without the label nothing is merged. Remove the label to stop a merge.
+The checked-in workflow records Drake's 2026-10-24 policy that no GitHub status
+check gates a merge. Historical references to required `AIEN Verification` and
+`evidence-immutable` checks describe the retired contract, not current branch
+protection. Inspect live repository rules before making an administrative claim;
+this runbook neither configures nor overrides those rules.
 
-To add the label from a terminal use the REST call (`gh pr edit --add-label` can fail on
-repositories with a Projects (classic) error):
-`gh api -X POST repos/aien-spark/omega/issues/<number>/labels -f 'labels[]=ready-to-merge'`.
+## Spark and Alpha
 
-## Changes to the pipeline itself
+The Spark runs the selected gates plus `.aien/always` and signs its evidence.
+The local pipeline publishes bundles under
+<https://github.com/aien-dev/aien-receipts/tree/main/omega> and pushes annotated
+`alpha/YYYYMMDD.N` tags when authorized. `AIEN Alpha` runs only for `alpha/*` tags;
+it requires the tagged commit to be on `main` and verifies the signed Spark bundle
+with `--require-full` against the trust anchors on `origin/main`.
 
-A head that changes `.aien/`, `tests/gates/`, `.github/workflows/`, `.forgejo/` or
-`tools/aien-test/` is `BLOCKED_OPERATOR`: the worker does not run it on its own. The operator runs
-it by hand on the Spark (`aien-local-ci once omega <sha> --operator`); the signed bundle then
-records the operator run and the checks pass.
+Host and emulator checks do not establish GPU qualification. Missing execution is
+`NOT_RUN`, never PASS; hardware gates require the operator's current authorization.
 
-## Where to look
+## Changes to gates or trust infrastructure
 
-- Spark state: `aien-local-ci status`, journal `~/.local/state/aien-local-ci/journal.jsonl`,
-  pipeline journal `~/.local/state/aien-local-ci/pipeline.jsonl`.
-- Published bundles: <https://github.com/aien-dev/aien-receipts/tree/main/omega>.
+A head changing `.aien/`, `tests/gates/`, `.github/workflows/`, `.forgejo/` or
+`tools/aien-test/` is `BLOCKED_OPERATOR`: the worker does not run it autonomously.
+An authorized operator run on the Spark (`aien-local-ci once omega <sha> --operator`)
+is required for its signed bundle. An offline local regression test does not grant
+that authority or remove the operator gate.
 
-## Required checks on main
+The zero-disk-secrets gate scans all tracked paths, including generated directories,
+and untracked paths outside root `.git/` and `build/`. It never reuses another
+commit's absence-of-secrets result. The seed host qualification requires all three
+independent IR oracles and its fixed original-fixture/status manifest; an empty
+selection or missing oracle cannot produce PASS.
 
-Since 2026-10-16 branch protection on `main` requires `AIEN Verification` and `evidence-immutable` (still hosted; `crumb`, `reservoir` and `omega-zig-cc` also stay hosted but are not required). The hosted
-jobs that used to be required run only on `workflow_dispatch`.
+## Operational evidence
+
+- Spark state: `aien-local-ci status`.
+- Worker journal: `~/.local/state/aien-local-ci/journal.jsonl`.
+- Pipeline journal: `~/.local/state/aien-local-ci/pipeline.jsonl`.
+- Published bundles: the `aien-receipts` link above, indexed by exact commit.
