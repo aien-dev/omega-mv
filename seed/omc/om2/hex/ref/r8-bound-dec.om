@@ -3,7 +3,7 @@ note Decimal twin of r8-bound.om (value from Wolfram, wolfram.txt query tokens):
 om2
 fn main to int
 k = ulong 0
-while lt k 1 bound 1000000
+while lt k 1 bound 9223372036854775808
 k = add k 1
 end
 ret 0

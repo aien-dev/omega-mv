@@ -1,8 +1,9 @@
 # om/gpumath: host math, FP8 packing and message formatting in seeded Omega
 
-The parity tables, mutant counts, timings, binary size and binding checks below
+The original parity tables, mutant counts, timings, binary size and binding checks below
 are historical [#751](https://github.com/aien-dev/omega-mv/pull/751) host evidence
 under compiler `734f0a39…6b61`, not measurements under the current compiler pin.
+The later #848 compile report is recorded separately below.
 
 `gpumath.om` ports three C files of `libomega_gpu.a` to seeded Omega (aien-dev/omega-mv#726,
 aien-dev/aien-architecture-mv#300/#316):
@@ -164,6 +165,21 @@ historical evidence; the unsupported current-size/byte-identity claim is removed
 No implementation, expected output hash or receipt is changed. This documentation
 correction performs no native parity rerun and claims no new size, timing, parity
 or hardware result.
+
+## Later compile report: #848 (2026-10-31, author-reported)
+
+The [README at #848 merge `157bab57c67ff80f5b988b91bd39bc1099852915`](https://github.com/aien-dev/omega-mv/blob/157bab57c67ff80f5b988b91bd39bc1099852915/om/gpumath/README.md)
+records a **29,272-byte** program under compiler
+`90c8884c7f6888be47e4aa8e211eb48b776950fc43eef937ea963f96f7083983`,
+with output byte-identical to that under the preceding compiler
+`469532a50ecb8a0e5ca8e914dd46754bb3fbde7825fb33b7037208caf09779bc`.
+[#848's update at `1b9b5b82`](https://github.com/aien-dev/omega-mv/pull/848)
+also reports a compiler-output sweep in which gpumath was unchanged.
+
+This preserves the newer author's compile-size/identity report, not the old
+#751 size or parity attribution. It does not establish that the corpus, mutants
+or binding checks above were rerun under `90c8884c…`. This documentation
+correction did not independently compile or execute that program.
 
 ## Limits
 
