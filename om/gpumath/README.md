@@ -1,5 +1,10 @@
 # om/gpumath: host math, FP8 packing and message formatting in seeded Omega
 
+The original parity tables, mutant counts, timings, binary size and binding checks below
+are historical [#751](https://github.com/aien-dev/omega-mv/pull/751) host evidence
+under compiler `734f0a39…6b61`, not measurements under the current compiler pin.
+The later #848/#994 compile reports and #857 host parity report are recorded separately below.
+
 `gpumath.om` ports three C files of `libomega_gpu.a` to seeded Omega (aien-dev/omega-mv#726,
 aien-dev/aien-architecture-mv#300/#316):
 
@@ -72,12 +77,19 @@ run through those generated bindings. The output was byte-identical to the C ora
 
 ## Parity
 
-Reproduce from a fresh clone (no C oracle needed; the oracle's output is recorded as sha256 in
+To run the parity suite from a fresh clone (no C oracle needed; the oracle's output is recorded as sha256 in
 `parity/expected.txt`):
 
 ```
 OMEGA_OMC=/path/to/seed/out/omc [OMEGA_BRIDGE=/path/to/omega-bridge] sh om/gpumath/parity/run.sh
 ```
+
+The runner's `OMC_PIN` is the active reproduction input. Updating it does not
+relabel the historical results below or establish that the suite was rerun.
+Keep historical compiler identities fixed on future reseeds; add a separately
+dated result for a new run.
+
+### Historical #751 measurements
 
 `parity/corpus.py` regenerates the corpus deterministically (splitmix64, fixed seeds, about 48 MB, never
 committed). The run takes about 12 s on the Spark; the .om harness needs 2.5 s for all streams, the -O2 C
@@ -90,8 +102,12 @@ fp8_api.h, `7e3c1779…105a` codegen_moe.h) compiled with
 from `src/omega_blackwell_matmul.c` and built with the same flags. `.text` sha256: hostmath
 `4061ecf7…6e2c`, fp8_pack `1cd43d3f…7cc3`, fmt `d06b83b7…92b7`. A /tmp driver feeds the corpus to
 these objects. `fma` records use the hardware `fmadd` (inline asm), and the fmt records are typed C
-calls that `corpus.py --c-cases` generates. Compiler: omc sha256 `be8c5130…448a`; `gpumath.om` at this
-commit compiles to a 29,272-byte program, the same bytes as under the previous pins `24caacf4…abb7`, `90c8884c…3983` and `469532a5…79bc`.
+calls that `corpus.py --c-cases` generates. Historical compiler SHA-256:
+`734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61`.
+At [implementation `b7825c174f80905e46f2a5057ac6628bae68f192`](https://github.com/aien-dev/omega-mv/blob/b7825c174f80905e46f2a5057ac6628bae68f192/om/gpumath/README.md),
+`gpumath.om` SHA-256 `b17b6ef0597de79455f1fd94c24dae1e4d55944f18f8efd31028b330c918dcde`
+was recorded as compiling to a 29,836-byte program. This is not a current-compiler
+size or byte-identity claim.
 
 | stream | function(s) | inputs | result |
 |---|---|---|---|
@@ -132,6 +148,70 @@ Fused steps that did not affect any output on this corpus: `exp`'s `- k*ln2lo` s
 `e*ln2hi` step (the product is exact, since ln2hi has 33 significant bits), the last `sincos` step
 (`n*pio2_3t`), and the `log` series step (one `pow` result changes, no `log` result). They stay fused
 because the object fuses them.
+
+## Provenance correction (2026-10-31)
+
+Successive reseeds changed the compiler label on the old size/parity description.
+At main `4722cba587954c3257c7b4de13cfef2ba78d4329`, it incorrectly named
+`469532a5…79bc` and still claimed byte identity with `62775d2a…712b`.
+[#853's update at `f8d78252`](https://github.com/aien-dev/omega-mv/pull/853)
+explicitly lists `om/gpumath/gpumath.om` among the changed AArch64 binaries when
+comparing compilers `38748442…` and `469532a5…`. The author reported equal stdout
+and exit status when those binaries ran with stdin `/dev/null` and a timeout.
+That no-input smoke comparison is not the corpus, mutant or binding parity suite.
+
+The original #751 source, compiler identity and results above are retained as
+historical evidence; the unsupported current-size/byte-identity claim is removed.
+No implementation, expected output hash or receipt is changed. This documentation
+correction performs no native parity rerun and claims no new size, timing, parity
+or hardware result.
+
+## Later compile report: #848 (2026-10-31, author-reported)
+
+The [README at #848 merge `157bab57c67ff80f5b988b91bd39bc1099852915`](https://github.com/aien-dev/omega-mv/blob/157bab57c67ff80f5b988b91bd39bc1099852915/om/gpumath/README.md)
+records a **29,272-byte** program under compiler
+`90c8884c7f6888be47e4aa8e211eb48b776950fc43eef937ea963f96f7083983`,
+with output byte-identical to that under the preceding compiler
+`469532a50ecb8a0e5ca8e914dd46754bb3fbde7825fb33b7037208caf09779bc`.
+[#848's update at `1b9b5b82`](https://github.com/aien-dev/omega-mv/pull/848)
+also reports a compiler-output sweep in which gpumath was unchanged.
+
+This preserves the newer author's compile-size/identity report, not the old
+#751 size or parity attribution. It does not establish that the corpus, mutants
+or binding checks above were rerun under `90c8884c…`. This documentation
+correction did not independently compile or execute that program.
+
+## Later host parity report: #857 (2026-10-31, author-reported)
+
+[#857's measured update at `4670831d8be4a8dd4686062aa5f2bae4f571d14c`](https://github.com/aien-dev/omega-mv/pull/857)
+reports **gpumath parity PASS** on host AArch64 Linux under compiler
+`24caacf463cc29c5413d5b2565ef8f88c76e60a585bbad44d2388cb1ac29abb7`.
+This is a reported parity run, not merely #848's compile sweep or #853's no-input
+smoke comparison. The later integration head `c7cb1137589b385dddb48e3f0589402d38aa222b`
+kept that compiler unchanged, according to the same update.
+
+The [README at #857 merge `3a163bc5eafa5be4b9ca97b7f17046c33f0d9032`](https://github.com/aien-dev/omega-mv/blob/3a163bc5eafa5be4b9ca97b7f17046c33f0d9032/om/gpumath/README.md)
+records a **29,272-byte** program, byte-identical to the outputs under
+`90c8884c…3983` and `469532a5…79bc`. Preserve these as #857's author-reported
+size/identity and host parity observations, separate from the original #751
+compiler and tables. This correction did not independently rerun the suite,
+inspect those run logs or remeasure the binary; no per-stream counts or binding
+results from the old tables are reassigned to #857, and no GPU result is claimed.
+
+## Later compile report: #994 (2026-10-31, author-reported)
+
+[#994's reseed report](https://github.com/aien-dev/omega-mv/pull/994) explicitly
+states that the README byte-identity claims were remeasured: `gpumath.om`
+compiled to a **29,272-byte** program with identical output under old compiler
+`24caacf463cc29c5413d5b2565ef8f88c76e60a585bbad44d2388cb1ac29abb7` and new compiler
+`be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a`.
+The [README at #994 merge `9920aab1413983c2867d02d75b2276341595adb8`](https://github.com/aien-dev/omega-mv/blob/9920aab1413983c2867d02d75b2276341595adb8/om/gpumath/README.md)
+also retains the earlier `90c8884c…3983` and `469532a5…79bc` byte-identity notes.
+
+This is separately attributed compile-size/identity evidence. It neither
+relabels #751's original parity tables nor turns #857's host parity report
+into a new full-suite run under `be8c5130…`. This documentation correction did
+not independently remeasure or execute the program.
 
 ## Limits
 
