@@ -72,7 +72,7 @@
         },
         {
           "digest": "cd4b85a7affc81e19b0ff45eb80ba33534d9f6aee672a3afdd6480e0dbb7f77f",
-          "last_commit": "9920aab14",
+          "last_commit": "474197e4f",
           "name": "neuralese",
           "purpose": "Bounded untrusted representation envelopes and explicit checked Omega decoding; learned extensio"
         },
@@ -89,14 +89,14 @@
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "c039d8724f7276f103f1a40f3f347a2c2df517855c4b9b1a4c0639293df4de48",
-          "last_commit": "a48add1b6",
+          "digest": "2b5a10c26005c4789a6882f51e19dac93a248324115805781da16bb0e65f3046",
+          "last_commit": "dbb1fe689",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "d27ff866b263e2f96b380fbe3e11166876ff4d7883860d989ac5af1798dae039",
-          "last_commit": "a48add1b6",
+          "digest": "ef7436a5cf86ea5c90c19666ab5d75ea5e7a1ad192f84eeec10d3748a089201d",
+          "last_commit": "dbb1fe689",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
@@ -107,15 +107,15 @@
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:0b29c85ed570cf09f98cd25c8988188ac7308500ed4cfcfb83cb931cf0716e56",
-      "compiled_at": "2026-10-31T12:05:56Z",
+      "children_root": "sha256:9cac14342501b658f16ba74d7e8369bc37cd4b40042e8b27a4a91c392e96ad30",
+      "compiled_at": "2026-10-31T12:08:04Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:fff89694be884bf5a5c85a59396fc5bd7e9d60140130e3cdb6c259938d4d15f8",
+      "digest": "sha256:cf5b7a060ff2b660531b35f9135008f118294ae5499da03ebc252dd812a6404f",
       "evidence_files": 15042,
       "evidence_root": "sha256:5b26177de8f879f0c98c70d61f77ac17cbef953b7f3dee9402cbb9c1e3a6b00e",
       "files": 23313,
-      "generated_at_commit": "04974e596648659e9c15f6490e8a2ef7ae2f2e52",
-      "source_tree": "sha256:9db079c547a809eea28e2c9b74c1878eb2d3ed2da4b2e1ba75d77b08919d85f9"
+      "generated_at_commit": "dbb1fe6890516c1f57c06aa8b2f9e2a2c2b50f40",
+      "source_tree": "sha256:dc161a94fe6c3fbed38acc8bae39ebe667bd1e115997659df7075fcce521b5f5"
     },
     "owner_lane": "",
     "provenance": {
