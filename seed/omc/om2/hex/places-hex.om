@@ -1,0 +1,44 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): a hex literal is accepted in every place a decimal one is:
+note const value, global length, view and edit parameter lengths, new length and fill, put index and
+note value, unroll count, while bound, rotr/rotl operands, f64/f32 conversion (rounded as decimal),
+note trap code, and operand. Expected stdout and exit from Wolfram (wolfram.txt query places).
+om2
+const KC uchar 0xc8
+global g ulong 0x10
+fn rd t view uchar 0x8 to ulong
+ret ulong get t 0x7
+end
+fn wr s edit uchar 0x8 fresh to void
+put s 0x7 0x5a
+end
+fn main to int
+a = new uchar 0x8 0x0
+wr a
+putu rd a
+put g 0xf 0x7
+putu get g 0xf
+putu ulong KC
+s = ulong 0x0
+for i ulong 0x4 unroll
+s = add s i
+end
+putu s
+k = ulong 0x0
+while lt k 0x64 bound 0x3e8
+k = add k 0x1
+end
+putu k
+r = rotr uint 0x80000001 0x1f
+putu ulong r
+q = rotl ulong 0x8000000000000000 0x1
+putu q
+f = f64 0x20000000000001
+putu ulong f
+h = f32 0x1000001
+putu ulong h
+if eq k 0x0
+trap 0xe
+end
+ret int and k 0x2a
+end

@@ -1,0 +1,18 @@
+   2a8a0:	d2800061 	mov	x1, #0x3                   	// #3
+   2a8a4:	17fffffc 	b	0x2a894
+   2a8a8:	d2800081 	mov	x1, #0x4                   	// #4
+   2a8ac:	17fffffa 	b	0x2a894
+   2a8b0:	d2800006 	mov	x6, #0x0                   	// #0
+   2a8b4:	d2800008 	mov	x8, #0x0                   	// #0
+   2a8b8:	d2800009 	mov	x9, #0x0                   	// #0
+   2a8bc:	eb05011f 	cmp	x8, x5
+   2a8c0:	54000222 	b.cs	0x2a904  // b.hs, b.nlast
+   2a8c4:	d288480a 	mov	x10, #0x4240                	// #16960
+   2a8c8:	f2a001ea 	movk	x10, #0xf, lsl #16
+   2a8cc:	eb0a013f 	cmp	x9, x10
+   2a8d0:	540002a2 	b.cs	0x2a924  // b.hs, b.nlast
+   2a8d4:	91000529 	add	x9, x9, #0x1
+   2a8d8:	eb01011f 	cmp	x8, x1
+   2a8dc:	54000202 	b.cs	0x2a91c  // b.hs, b.nlast
+   2a8e0:	3868680a 	ldrb	w10, [x0, x8]
+   2a8e4:	8b08008b 	add	x11, x4, x8

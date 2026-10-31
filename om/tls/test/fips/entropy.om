@@ -1,0 +1,63 @@
+note SPDX-License-Identifier: Apache-2.0
+note entropy.om: sample collector for the NIST SP 800-90B entropy assessment (test/fips/run.sh,
+note entropy.sh). Writes N bytes from the `random` word (Linux getrandom, flags 0 = blocking until
+note the kernel pool is ready) to stdout, one 8-bit sample per byte. usage: entropy N (1 .. 16777216).
+note What this grades: the Linux kernel's getrandom output, which the kernel has already
+note conditioned (ChaCha20 CRNG). It is not an Omega noise source; om/tls has none of its own.
+note Exit 0 ok; 2 usage; 3 getrandom error; 4 write error.
+
+global buf uchar 65536
+global ab uchar 16
+
+fn main to int
+if ne argcnt 2
+ret 2
+end
+k = argread 1 ab 0 16
+if le k 0
+ret 2
+end
+if gt k 8
+ret 2
+end
+n = ulong 0
+for i ulong ulong k
+c = ulong get ab i
+if lt c 48
+ret 2
+end
+if gt c 57
+ret 2
+end
+n = add mul n 10 sub c 48
+end
+if eq n 0
+ret 2
+end
+if gt n 16777216
+ret 2
+end
+note every pass writes at least one byte or returns, so n <= 16777216 passes suffice
+done = ulong 0
+while lt done n bound 999999
+m = sub n done
+if gt m 65536
+m = 65536
+end
+r = random buf 0 m 0
+if le r 0
+ret 3
+end
+got = ulong r
+o = ulong 0
+while lt o got bound 999999
+w = write 1 buf o sub got o
+if le w 0
+ret 4
+end
+o = add o ulong w
+end
+done = add done got
+end
+ret 0
+end

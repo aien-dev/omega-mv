@@ -1,0 +1,64 @@
+note SPDX-License-Identifier: Apache-2.0
+note Mechanical whole-artifact byte containment, not translation or policy validation.
+text good "PASS exact raw function occurs once in native ELF\n"
+fn load b edit uchar 1048576 k ulong to ulong
+p = new uchar 4096 0
+z = argread k p 0 4096
+if le z 0
+exit 90
+end
+fd = fopen p 0 ulong z 0 0
+if lt fd 0
+exit 91
+end
+n = ulong 0
+while lt n 1048576 bound 100000
+z = read int fd b n sub 1048576 n
+if lt z 0
+exit 92
+end
+if eq z 0
+break
+end
+n = add n ulong z
+end
+z = fclose int fd
+if or ne z 0 eq n 1048576
+exit 93
+end
+ret n
+end
+fn same a view uchar 1048576 b view uchar 1048576 p ulong n ulong to bool
+for i ulong n
+if ne get a i get b add p i
+ret eq ulong 0 1
+end
+end
+ret eq ulong 0 0
+end
+fn main to int
+if ne argcnt 3
+ret 90
+end
+a = new uchar 1048576 0
+b = new uchar 1048576 0
+an = load a 1
+bn = load b 2
+if or eq an 0 gt an bn
+ret 61
+end
+hits = ulong 0
+for p ulong add div sub bn an 4 1
+if same a b mul p 4 an
+hits = add hits 1
+end
+end
+if ne hits 1
+ret 61
+end
+z = write 1 good 0 len good
+if ne z long len good
+ret 94
+end
+ret 0
+end

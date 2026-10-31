@@ -1,6 +1,6 @@
 # x86-64 Linux backend (FR-9)
 
-Status: **DRAFT; native x86 qualification NOT_RUN**, 2026-10-28.
+Status: **DRAFT; native x86 qualification NOT_RUN**, measured again 2026-10-30.
 The canonical integration base is `aien-dev/omega-mv` commit
 `d94a503f7aae57d09697046405da2e9a5895be6d`, with compiler batch 3 integrated
 at `7bce2a4fddc43268ac2af09cddc4a5a67d78312d`; the historical backend is
@@ -438,6 +438,23 @@ two invalid-fd ioctl fixtures affected by QEMU's ENOTTY versus native EBADF.
 The compiler binary is identical for both runs. Native x86 qualification and
 independent review remain outstanding. The additive acceptance receipt records
 both revisions and the original full-run verdict.
+
+Re-measured at source `62d1d0d668f897386a0e311374f8dbcc5c32dde8` (2026-10-30)
+with the same compiler binary (sha256 `62775d2a…`), the pinned QEMU 10.0.14
+oracle (sha256 `fd7ae776…`) and omega-bridge at `1958a189` (x86 support merged):
+15182 PASS, 0 FAIL, 2 NOT_RUN, 222 EXCLUDED, runner exit 1, aggregate verdict
+FAIL because NOT_RUN is not PASS. The three additional PASS rows against the
+2026-10-28 count are fixtures added since `7ab5fdd0`
+(`seed/omc/contracts/forvalcontinue.om`, `seed/omc/contracts/forvalfinal.om`,
+`tests/ecosystem663/metadata-test.om`). The two NOT_RUN rows are unchanged:
+`seed/host/tests/devcall.om` and `seed/host/tests/uvmctl.om`, both classified
+EMULATOR_ARTIFACT by the runner's own QEMU `-strace` challenge (invalid fd -1,
+requests `0xc020462b` and `0x30000001`, QEMU errno 25 ENOTTY against the native
+requirement of EBADF). x86 execution is EMULATED; AArch64 execution is
+HOST_TESTED. Native x86 execution remains NOT_RUN. The additive receipt is
+`seed/qualification/x86-linux/20261030-main-62d1d0d6.json`; the historical
+receipt is unchanged. This measurement is EXERCISED, not QUALIFIED, MERGED or
+DEPLOYED.
 
 The current integration preserves every frozen manifest and historical receipt.
 Current acceptance applies the already declared `manifest-c2-capacity.txt` and

@@ -1,0 +1,110 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/omc/om2/hex/hex.cases: OM-2 hex literal coverage for #745 (spec/omegese-om2.md section 2,
+# lines 53-58), run by seed/qualification/om2/gate.om. Every expected value comes from Wolfram
+# (wolfram.txt); every expected error is the spec code (6 malformed, 8 range, 23 arrlen as decimal)
+# on the literal's line. seed/host/check.sh requires OM2GATE PASS.
+# ---- values: 64 literals over the eight integer types, decimal twin byte-identical
+# pairs: hex spelling prints the Wolfram decimals, exit 0
+hex-pairs-run run seed/omc/om2/hex/pairs-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+# pairs: decimal spelling prints the same
+hex-pairs-dec-run run seed/omc/om2/hex/pairs-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/pairs.out - 0
+# pairs: line 58 "0x2a and 42 compile identically", for every literal in the file
+hex-pairs-same same seed/omc/om2/hex/pairs-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om seed/omc/om2/hex/pairs-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om
+# floatlike: hex spelling prints the Wolfram decimals, exit 0
+hex-floatlike-run run seed/omc/om2/hex/floatlike-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/floatlike.out - 0
+# floatlike: decimal spelling prints the same
+hex-floatlike-dec-run run seed/omc/om2/hex/floatlike-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/floatlike.out - 0
+# floatlike: line 58 "0x2a and 42 compile identically", for every literal in the file
+hex-floatlike-same same seed/omc/om2/hex/floatlike-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om seed/omc/om2/hex/floatlike-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om
+# places: hex spelling prints the Wolfram decimals, exit 32
+hex-places-run run seed/omc/om2/hex/places-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/places.out - 32
+# places: decimal spelling prints the same
+hex-places-dec-run run seed/omc/om2/hex/places-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om - file:seed/omc/om2/hex/exp/places.out - 32
+# places: line 58 "0x2a and 42 compile identically", for every literal in the file
+hex-places-same same seed/omc/om2/hex/places-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om seed/omc/om2/hex/places-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om
+# function mode: hex in const, new, put, while bound, trap code; byte-identical to decimal
+hex-fnmode-same same seed/omc/om2/hex/fnmode-hex.om seed/omc/om2/hex/fnmode-dec.om
+# x86linux target: the same 64 literals, byte-identical to decimal
+hex-x86-pairs-same same seed/omc/om2/hex/target.txt+seed/omc/om2/hex/pairs-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om seed/omc/om2/hex/target.txt+seed/omc/om2/hex/pairs-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om
+# x86linux target: every place, byte-identical to decimal
+hex-x86-places-same same seed/omc/om2/hex/target.txt+seed/omc/om2/hex/places-hex.om+seed/qualification/om2/sec/s0s2/lib/putu.om seed/omc/om2/hex/target.txt+seed/omc/om2/hex/places-dec.om+seed/qualification/om2/sec/s0s2/lib/putu.om
+# signed minima in decimal against hex operands, exit 0
+hex-signed-min run seed/omc/om2/hex/signed-min.om - - - 0
+# ---- refusals: the hex literal gets the decimal twin's code on the same line (decimal range rule)
+# const value 0x100 outside uchar
+hex-r8-const emit seed/omc/om2/hex/ref/r8-const.om - err:4:8 8
+# decimal twin of r8-const
+hex-r8-const-dec emit seed/omc/om2/hex/ref/r8-const-dec.om - err:4:8 8
+# global length 0x0 (1..16777216)
+hex-r8-global0 emit seed/omc/om2/hex/ref/r8-global0.om - err:4:8 8
+# decimal twin of r8-global0
+hex-r8-global0-dec emit seed/omc/om2/hex/ref/r8-global0-dec.om - err:4:8 8
+# while bound 0xf4240 = 1000000 past 999999
+hex-r8-bound emit seed/omc/om2/hex/ref/r8-bound.om - err:6:8 8
+# decimal twin of r8-bound
+hex-r8-bound-dec emit seed/omc/om2/hex/ref/r8-bound-dec.om - err:6:8 8
+# unroll count 0x41 = 65 past 64
+hex-r8-unroll emit seed/omc/om2/hex/ref/r8-unroll.om - err:5:8 8
+# decimal twin of r8-unroll
+hex-r8-unroll-dec emit seed/omc/om2/hex/ref/r8-unroll-dec.om - err:5:8 8
+# unroll count 0x0
+hex-r8-unroll0 emit seed/omc/om2/hex/ref/r8-unroll0.om - err:5:8 8
+# decimal twin of r8-unroll0
+hex-r8-unroll0-dec emit seed/omc/om2/hex/ref/r8-unroll0-dec.om - err:5:8 8
+# trap code 0xf = 15 past 14
+hex-r8-trap emit seed/omc/om2/hex/ref/r8-trap.om - err:7:8 8
+# decimal twin of r8-trap
+hex-r8-trap-dec emit seed/omc/om2/hex/ref/r8-trap-dec.om - err:7:8 8
+# trap code 0x0
+hex-r8-trap0 emit seed/omc/om2/hex/ref/r8-trap0.om - err:7:8 8
+# decimal twin of r8-trap0
+hex-r8-trap0-dec emit seed/omc/om2/hex/ref/r8-trap0-dec.om - err:7:8 8
+# put value 0x100 into a uchar array (no truncation)
+hex-r8-put emit seed/omc/om2/hex/ref/r8-put.om - err:6:8 8
+# decimal twin of r8-put
+hex-r8-put-dec emit seed/omc/om2/hex/ref/r8-put-dec.om - err:6:8 8
+# new fill 0x100 for uchar (no truncation)
+hex-r8-fill emit seed/omc/om2/hex/ref/r8-fill.om - err:5:8 8
+# decimal twin of r8-fill
+hex-r8-fill-dec emit seed/omc/om2/hex/ref/r8-fill-dec.om - err:5:8 8
+# call argument 0x100 for a uchar parameter (no truncation)
+hex-r8-arg emit seed/omc/om2/hex/ref/r8-arg.om - err:8:8 8
+# decimal twin of r8-arg
+hex-r8-arg-dec emit seed/omc/om2/hex/ref/r8-arg-dec.om - err:8:8 8
+# comparison operand 0x100 against uchar (no truncation)
+hex-r8-cmp emit seed/omc/om2/hex/ref/r8-cmp.om - err:6:8 8
+# decimal twin of r8-cmp
+hex-r8-cmp-dec emit seed/omc/om2/hex/ref/r8-cmp-dec.om - err:6:8 8
+# sub operand 0x80 for byte (no two s-complement reinterpretation)
+hex-r8-sub emit seed/omc/om2/hex/ref/r8-sub.om - err:6:8 8
+# decimal twin of r8-sub
+hex-r8-sub-dec emit seed/omc/om2/hex/ref/r8-sub-dec.om - err:6:8 8
+# 0x0100: leading zeros do not change the value 256, out of uchar
+hex-r8-lead0 emit seed/omc/om2/hex/ref/r8-lead0.om - err:5:8 8
+# decimal twin of r8-lead0
+hex-r8-lead0-dec emit seed/omc/om2/hex/ref/r8-lead0-dec.om - err:5:8 8
+# a - before a hex literal: signed minima have no hex spelling
+hex-r6-negbyte emit seed/omc/om2/hex/ref/r6-negbyte.om - err:5:6 6
+# a - before a hex literal (long minimum)
+hex-r6-neglong emit seed/omc/om2/hex/ref/r6-neglong.om - err:5:6 6
+# 17 digits, error 6 before any truncation to 64 bits
+hex-r6-17trunc emit seed/omc/om2/hex/ref/r6-17trunc.om - err:5:6 6
+# 00x1 is not a hex literal
+hex-r6-lead00x emit seed/omc/om2/hex/ref/r6-lead00x.om - err:5:6 6
+# -0X1: minus and uppercase X
+hex-r6-negX emit seed/omc/om2/hex/ref/r6-negX.om - err:5:6 6
+# 0x1.8: no hex fraction
+hex-r6-dot emit seed/omc/om2/hex/ref/r6-dot.om - err:5:6 6
+# 0x-1: digit outside 0-9a-f
+hex-r6-xneg emit seed/omc/om2/hex/ref/r6-xneg.om - err:5:6 6
+# global length 0x1000001 past 16777216 (arrlen, error 23 as decimal)
+hex-r23-globalbig emit seed/omc/om2/hex/ref/r23-globalbig.om - err:4:23 23
+# decimal twin of r23-globalbig
+hex-r23-globalbig-dec emit seed/omc/om2/hex/ref/r23-globalbig-dec.om - err:4:23 23
+# ---- versioning: no hex literal outside an OM-2 unit (OMEGESE 9.13)
+# an OM-1 unit (no om2 line) has no hex literal: const value
+hex-om1-const emit seed/omc/om2/hex/om1/om1-const.om - err:3:6 6
+# an OM-1 unit has no hex literal, including 0x1e that the decimal path reads as a float
+hex-om1-floatlike emit seed/omc/om2/hex/om1/om1-floatlike.om - err:4:6 6
+# IR mode is OM-1 only: no hex literal
+hex-om1-ir emit seed/omc/om2/hex/om1/om1-ir.om - err:5:6 6

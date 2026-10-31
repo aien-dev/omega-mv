@@ -1,0 +1,17 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): function mode (no fn main) with hex in a const, new length
+note and fill, index, while bound and trap code; fnmode-dec.om is the decimal spelling: same bytes.
+om2
+const KM ulong 0xff
+fn f a ulong to ulong
+b = new uchar 0x10 0x0
+put b 0xf uchar and a KM
+k = ulong 0x0
+while lt k 0x3 bound 0xa
+k = add k 0x1
+end
+if eq k 0x0
+trap 0xd
+end
+ret add ulong get b 0xf k
+end

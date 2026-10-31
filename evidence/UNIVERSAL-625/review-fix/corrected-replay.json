@@ -1,0 +1,80 @@
+{
+  "schema": "omega.universal.semantics.conformance.v1",
+  "classification": "DIFFERENTIAL_COMPATIBILITY",
+  "result": "PASS",
+  "proof": false,
+  "conversion_implemented": false,
+  "source_commit": "c1da86d68fb1d4af20c879a82f373a4556f7e957",
+  "rows_per_oracle": 412,
+  "boundary_rows": 156,
+  "random_rows": 256,
+  "random_seed": 625,
+  "bigint_counterexample_rows": 373,
+  "observations": {
+    "c": {
+      "rows": 412,
+      "sha256": "af6b747d081a439007db4d47ba5047d50b9485cda506f67a7e01426cd629dbd0"
+    },
+    "rust": {
+      "rows": 412,
+      "sha256": "af6b747d081a439007db4d47ba5047d50b9485cda506f67a7e01426cd629dbd0"
+    },
+    "python_explicit_u64": {
+      "rows": 412,
+      "sha256": "af6b747d081a439007db4d47ba5047d50b9485cda506f67a7e01426cd629dbd0"
+    },
+    "osc_interp_native": {
+      "rows": 412,
+      "sha256": "af6b747d081a439007db4d47ba5047d50b9485cda506f67a7e01426cd629dbd0"
+    }
+  },
+  "mutants": [
+    {
+      "name": "c-xor-not-add",
+      "mismatched_rows": 343,
+      "compiled": true
+    },
+    {
+      "name": "rust-saturate-not-wrap",
+      "mismatched_rows": 179,
+      "compiled": true
+    }
+  ],
+  "versions": {
+    "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "host": {
+      "system": "Linux",
+      "node": "spark-b87b",
+      "release": "7.0.0-1019-nvidia",
+      "version": "#19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2",
+      "machine": "aarch64",
+      "processor": "aarch64"
+    }
+  },
+  "inputs": {
+    "spec/universal/semantics.md": "d4ed6148bfa97cc693d3fa4495e2d7e2e68aba04607a7e96dd9a9c54bf9073a8",
+    "spec/universal/profiles.json": "413840e985d7395ad48db8a611661d1ce3d6544bc39010d2af85e18d782613bd",
+    "tests/universal/semantics.py": "1dfbb02ca441ba4574b9f1e63d7934ab4ec96eaaa750ecdcaabaafa7f65627fe",
+    "tests/universal/arithmetic.c": "9600d18a7e859cfc86be32fd4f8333af18212709d5264dc63380ec2eecfa2512",
+    "tests/universal/arithmetic.osc": "a083add1ede170f3b42f024d7b6330672be33b3bc523eebf86aa782a9e119024",
+    "tests/universal/arithmetic.py": "c23058a8c5461d94bfa93cfee1cd07f2f51b967c7226cc056d26dd76a05bc9fe",
+    "tests/universal/arithmetic.rs": "994f3451fceb6beff725b7d026cbd9f3c40ab5dcf1e79a794732f99cd59dc2d9",
+    "tests/universal/osc_probe.c": "88170dc9c322171324776357f5af894055c17578d343db59de968d9691b6fd36",
+    "tests/universal/test_evidence_lifecycle.py": "7d572faa666cbba3e18e60b686ec4949a19eccb2e40c56fbd498ecdd271ce6be",
+    "mk/universal.mk": "481927cc37d8fddc6f74dd2782498bcb1ccad5ece43e3d05d3b016c183d6a481"
+  },
+  "artifacts": {
+    "c-oracle": "143c4cd071873342e0f9ef79d3e9ff2628df9913cba3583c1162062c457622b8",
+    "rust-oracle": "179a75a4a3bdfb31bc07ef1544a9d01e8d341c9958074a584be47a335fa9fc92",
+    "osc-oracle": "8ff0e3e6816b2c6045a7f4f9eed17764a87669eb0cb7e0a7edcd8a7c7f0bea1e"
+  },
+  "not_run": [
+    "x86_64",
+    "RV64GC_QEMU",
+    "GPU",
+    "checker2_translation_proof",
+    "language_import_export"
+  ]
+}
