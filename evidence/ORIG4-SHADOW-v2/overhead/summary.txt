@@ -1,0 +1,50 @@
+build_dir=/tmp/orig4.J2YOhm
+source_commit=85641e1ea14b1e4a2d2d5790001aacb0bac41093
+host=Linux 7.0.0-1019-nvidia aarch64
+compiler_sha256=734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61
+units_pinned=9
+binaries_sha256 shadow=9b54d88afd5fc489 shadow-test=beefe171e9fd1f09
+overhead records fnv=6887491069590809475 bytes=496128 image_sha256=16abb8fc666a44a720f3d0ffe3d6f73cf4be82ffb9c47a246fb73f4b01a2965c
+ovh_disabled_1 rc=0 wall_ms=31 lines=1 SHADOW disabled
+ovh_mlp_1 rc=0 wall_ms=169 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_1 rc=0 wall_ms=152 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=1 wall_us=31291
+OVERHEAD run=mlp rep=1 wall_us=169502
+OVERHEAD run=near rep=1 wall_us=152824
+ovh_disabled_2 rc=0 wall_ms=31 lines=1 SHADOW disabled
+ovh_mlp_2 rc=0 wall_ms=169 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_2 rc=0 wall_ms=129 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=2 wall_us=31562
+OVERHEAD run=mlp rep=2 wall_us=169856
+OVERHEAD run=near rep=2 wall_us=129877
+ovh_disabled_3 rc=0 wall_ms=30 lines=1 SHADOW disabled
+ovh_mlp_3 rc=0 wall_ms=169 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_3 rc=0 wall_ms=146 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=3 wall_us=30416
+OVERHEAD run=mlp rep=3 wall_us=169831
+OVERHEAD run=near rep=3 wall_us=146174
+ovh_disabled_4 rc=0 wall_ms=31 lines=1 SHADOW disabled
+ovh_mlp_4 rc=0 wall_ms=172 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_4 rc=0 wall_ms=141 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=4 wall_us=31657
+OVERHEAD run=mlp rep=4 wall_us=172253
+OVERHEAD run=near rep=4 wall_us=141459
+ovh_disabled_5 rc=0 wall_ms=32 lines=1 SHADOW disabled
+ovh_mlp_5 rc=0 wall_ms=196 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_5 rc=0 wall_ms=141 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=5 wall_us=32147
+OVERHEAD run=mlp rep=5 wall_us=196192
+OVERHEAD run=near rep=5 wall_us=141121
+ovh_disabled_6 rc=0 wall_ms=30 lines=1 SHADOW disabled
+ovh_mlp_6 rc=0 wall_ms=168 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_6 rc=0 wall_ms=128 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=6 wall_us=30330
+OVERHEAD run=mlp rep=6 wall_us=168204
+OVERHEAD run=near rep=6 wall_us=128974
+ovh_disabled_7 rc=0 wall_ms=30 lines=1 SHADOW disabled
+ovh_mlp_7 rc=0 wall_ms=194 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20205474242 oracle_cost=20158904925 incumbent_cost=35923959218
+ovh_near_7 rc=0 wall_ms=127 lines=1942 COST records=1938 scored=1714 fallback=224 adv_cost=20228803236 oracle_cost=20158904925 incumbent_cost=35923959218
+OVERHEAD run=disabled rep=7 wall_us=30128
+OVERHEAD run=mlp rep=7 wall_us=194988
+OVERHEAD run=near rep=7 wall_us=127689
+ORIG4_SHADOW_OVERHEAD_PASS

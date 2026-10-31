@@ -1,0 +1,12 @@
+{
+  "repo": "CUDApp",
+  "source": "232332422bfdc31c8918085b50f13c1e18ab702e",
+  "command": [
+    "make",
+    "-j2",
+    "OUT_DIR=build/L569-baseline",
+    "test"
+  ],
+  "rc": "TIMEOUT",
+  "log": "CUDApp.log"
+}

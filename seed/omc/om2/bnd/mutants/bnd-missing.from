@@ -1,0 +1,5 @@
+if gt get depth 0 1024
+fail 14
+end
+if or eq get tk 0 0 eq get tk 0 3
+fail 4

@@ -1,0 +1,12 @@
+note SPDX-License-Identifier: Apache-2.0
+note x0 public, x1 secret. Binary control substitutes secret for public comparison operand.
+fn probe p ulong s ulong to ulong
+if eq p 0
+ret 7
+end
+ret 7
+end
+note SPDX-License-Identifier: Apache-2.0
+fn main to int
+ret int probe 0 sub ulong argcnt 1
+end

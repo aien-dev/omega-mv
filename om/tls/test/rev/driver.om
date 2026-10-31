@@ -1,0 +1,580 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: program-mode test driver for om/tls/rev.om (composed after sha2 hkdf ec rsa x509 rev).
+note Reads case records from stdin, one per line, tokens separated by single spaces; paths are
+note relative to the working directory (run.sh runs it in vectors/). Records:
+note   O NAME EXPECT NOW LEAF ISSUER STAPLE CRL   rev_check (STAPLE, CRL a DER file or - for none)
+note   U NAME EXPECT CERT                         rev_mustst (EXPECT 0, 1 or a code name)
+note   I NAME WANT STORE CERT...                  rev_issuer of the certificate_list CERT... with the
+note                                              PEM store STORE; WANT the DER file it must return,
+note                                              or - for none
+note   H NAME HEX DIGEST                          sha1_digest of HEX (- empty) equals DIGEST (hex)
+note   A NAME COUNT BYTE DIGEST                   sha1_digest of COUNT bytes of value BYTE
+note   E NAME EXPECT CODE                         rev_errname(CODE) equals EXPECT (- for empty)
+note   F NAME COUNT NOW LEAF ISSUER STAPLE        the unmutated staple is accepted and each of COUNT
+note                                              deterministic mutations of it is refused
+note   G NAME COUNT NOW LEAF ISSUER CRL           the same for a CRL: the unmutated result is kept
+note                                              (revoked) and no mutation returns X509_OK
+note Prints "MISMATCH line L NAME got G want W" per failure, "fuzz NAME n=N rejected=R" per F/G
+note record, then "rev driver: C checks, F failed". Exit 0 when F is 0 and C > 0, 1 otherwise, 2 when
+note input cannot be read.
+
+global inp uchar 1048576
+global ds ulong 16
+note main owns bb (file bytes, uchar 262144) and pp (the rev_check descriptor, ulong 16): a global
+note is never passed as an argument (omc error 19)
+global ob uchar 32
+global nm uchar 64
+global onebyte uchar 1
+text DRSUM "rev driver: "
+text DRCHK " checks, "
+text DRFLD " failed\n"
+text DRMIS "MISMATCH line "
+text DRGOT " got "
+text DRWANT " want "
+text DRFUZ "fuzz "
+text DRFN " n="
+text DRFR " rejected="
+text DRNL "\n"
+text DRSP " "
+text DRBAD "BAD"
+text DRERR "ERR"
+text DRDASH "-"
+text DRYES "1"
+text DRNO "0"
+text DRIO "rev driver: cannot read input\n"
+
+note ds: 0 input length, 1 cursor, 2 line number, 3 checks, 4 failures, 6 name length, 8 bb fill,
+note 10 fuzz region (5 staple, 7 CRL)
+
+fn drv_slurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+ret 2
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put ds 0 t
+ret 0
+end
+
+fn drv_peek to ulong
+c = get ds 1
+if ge c get ds 0
+ret 256
+end
+ret ulong get inp c
+end
+
+note next token into tk (skipping one space before it); its length (0 at the line end)
+fn drv_tok tk edit uchar * to ulong
+if eq drv_peek 32
+put ds 1 add get ds 1 1
+end
+n = ulong 0
+while true bound 999999
+c = drv_peek
+if or or eq c 32 eq c 10 eq c 256
+break
+end
+if lt n len tk
+put tk n uchar c
+end
+n = add n 1
+put ds 1 add get ds 1 1
+end
+if gt n len tk
+ret 0
+end
+ret n
+end
+
+fn drv_eol to void
+while true bound 999999
+c = drv_peek
+if eq c 256
+ret
+end
+put ds 1 add get ds 1 1
+if eq c 10
+ret
+end
+end
+end
+
+fn drv_num t view uchar * to ulong
+v = ulong 0
+for i ulong len t
+v = add mul v 10 sub ulong get t i 48
+end
+ret v
+end
+
+fn drv_prn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+note record a mismatch: got / want as text
+fn drv_mis g view uchar * w view uchar * to void
+put ds 4 add get ds 4 1
+r = write 1 DRMIS 0 len DRMIS
+drv_prn get ds 2
+r = write 1 DRSP 0 1
+r = write 1 nm 0 get ds 6
+r = write 1 DRGOT 0 len DRGOT
+r = write 1 g 0 len g
+r = write 1 DRWANT 0 len DRWANT
+r = write 1 w 0 len w
+r = write 1 DRNL 0 1
+end
+
+note compare code c against the expected name w
+fn drv_code c ulong w view uchar * to void
+b = new uchar 64 0
+put ds 3 add get ds 3 1
+n = rev_errname c b
+if eq n 0
+drv_mis DRBAD w
+ret
+end
+if not der_same part b 0 n w
+drv_mis part b 0 n w
+end
+end
+
+fn drv_name to void
+t = new uchar 64 0
+n = drv_tok t
+for i ulong n
+put nm i get t i
+end
+put ds 6 n
+end
+
+note read the file named p into b; bytes read, or -1 (missing, error, or over len b)
+fn drv_file p view uchar * b edit uchar * to long
+fd = fopen p 0 len p 0 0
+if lt fd 0
+ret -1
+end
+n = ulong 0
+while lt n len b bound 999999
+r = read int fd b n sub len b n
+if le r 0
+break
+end
+n = add n ulong r
+end
+r = read int fd onebyte 0 1
+z = fclose int fd
+if or ne r 0 eq n len b
+ret -1
+end
+ret long n
+end
+
+note the next token, a DER file or -, appended to bb as descriptor slot pp[i], pp[i+1]; 0 ok, 1 failure
+fn drv_add tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 i ulong to ulong
+n = drv_tok tk
+put pp i 0
+put pp add i 1 0
+if and eq n 1 eq get tk 0 45
+ret 0
+end
+f = get ds 8
+r = drv_file part tk 0 n part bb f sub len bb f
+if lt r 1
+ret 1
+end
+put pp i f
+put pp add i 1 ulong r
+put ds 8 add f ulong r
+ret 0
+end
+
+note NOW LEAF ISSUER, then the slots 5 and 7 in the order given by k (5: staple only, 7: CRL only,
+note 0: both); 0 ok, 1 a file failed
+fn drv_load tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 k ulong to ulong
+put ds 8 0
+for i ulong 16
+put pp i 0
+end
+n = drv_tok tk
+put pp 0 drv_num part tk 0 n
+if ne drv_add tk bb pp 1 0
+ret 1
+end
+if ne drv_add tk bb pp 3 0
+ret 1
+end
+if ne k 7
+if ne drv_add tk bb pp 5 0
+ret 1
+end
+end
+if ne k 5
+if ne drv_add tk bb pp 7 0
+ret 1
+end
+end
+ret 0
+end
+
+note O record
+fn drv_o tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 to void
+drv_name
+w = new uchar 64 0
+wn = drv_tok w
+if ne drv_load tk bb pp 0 0
+drv_code 98 part w 0 wn
+ret
+end
+c = rev_check part bb 0 get ds 8 pp
+drv_code c part w 0 wn
+end
+
+note one DER file token into slot 1 (bb restarted); 0 ok
+fn drv_load2 tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 to ulong
+put ds 8 0
+ret drv_add tk bb pp 1
+end
+
+note U record: EXPECT 1 means rev_mustst returns RVHIT, 0 means 0, a name means that code
+fn drv_u tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 to void
+drv_name
+w = new uchar 64 0
+wn = drv_tok w
+if ne drv_load2 tk bb pp 0
+drv_code 98 part w 0 wn
+ret
+end
+c = rev_mustst part bb get pp 1 get pp 2
+if and gt wn 1 ne get w 0 48
+drv_code c part w 0 wn
+ret
+end
+put ds 3 add get ds 3 1
+e = ulong 0
+if eq get w 0 49
+e = RVHIT
+end
+if ne c e
+if eq c RVHIT
+drv_mis DRYES part w 0 wn
+else
+drv_mis DRNO part w 0 wn
+end
+end
+end
+
+note the certificate_list of the remaining file tokens, built at bb[ds[8] ..); its length, 0 on failure
+fn drv_cl tk edit uchar 4096 bb edit uchar 262144 to ulong
+b0 = get ds 8
+p = b0
+while true bound 64
+n = drv_tok tk
+if eq n 0
+break
+end
+q = drv_file part tk 0 n part bb add p 3 sub sub len bb p 5
+if lt q 1
+ret 0
+end
+l = ulong q
+put bb p uchar shr l 16
+put bb add p 1 uchar and shr l 8 255
+put bb add p 2 uchar and l 255
+put bb add add p 3 l 0
+put bb add add p 4 l 0
+p = add add p 5 l
+end
+ret sub p b0
+end
+
+note I record result: rev_issuer of the list bb[pp[10] .. +m) with the store st[0 .. pp[9]) against
+note the expected DER at bb slot 1 (none when slot 1 is empty)
+fn drv_icmp st view uchar 262144 bb view uchar 262144 pp view ulong 16 m ulong to void
+kb = new uchar 16896 0
+k = rev_issuer part bb get pp 10 m part st 0 get pp 9 kb
+if eq get pp 2 0
+if ne k 0
+drv_mis DRBAD DRDASH
+end
+ret
+end
+if eq k 0
+drv_mis DRDASH DRBAD
+ret
+end
+if not der_same part kb 0 k part bb get pp 1 get pp 2
+drv_mis DRERR DRBAD
+end
+end
+
+note I record: the store, then the certificate_list (uint24 length || DER || 2-byte empty
+note extensions) of the remaining files, built in bb after the expected DER (slot 1)
+fn drv_i tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 to void
+st = new uchar 262144 0
+drv_name
+put ds 3 add get ds 3 1
+if ne drv_load2 tk bb pp 0
+drv_mis DRERR DRBAD
+ret
+end
+n = drv_tok tk
+r = x509_store_loadf st part tk 0 n
+if le r 0
+drv_mis DRERR DRBAD
+ret
+end
+put pp 9 ulong r
+put pp 10 get ds 8
+m = drv_cl tk bb
+if eq m 0
+drv_mis DRERR DRBAD
+ret
+end
+drv_icmp st bb pp m
+end
+
+note hex digit value, 99 for a non-hex byte
+fn drv_hx c ulong to ulong
+if and ge c 48 le c 57
+ret sub c 48
+end
+if and ge c 97 le c 102
+ret sub c 87
+end
+ret 99
+end
+
+note hex t (- for empty) into b; byte count
+fn drv_unhex t view uchar * b edit uchar * to ulong
+if and eq len t 1 eq get t 0 45
+ret 0
+end
+n = div len t 2
+for i ulong n
+hi = drv_hx ulong get t mul i 2
+lo = drv_hx ulong get t add mul i 2 1
+put b i uchar add mul hi 16 lo
+end
+ret n
+end
+
+note digest d[0 .. 20) against the hex token t
+fn drv_dig d view uchar 32 t view uchar * to void
+e = new uchar 32 0
+put ds 3 add get ds 3 1
+n = drv_unhex t e
+if ne n 20
+drv_mis DRERR DRBAD
+ret
+end
+for i ulong 20
+if ne get d i get e i
+drv_mis DRERR DRBAD
+ret
+end
+end
+end
+
+note H record
+fn drv_h tk edit uchar 4096 to void
+m = new uchar 4096 0
+d = new uchar 32 0
+drv_name
+n = drv_unhex part tk 0 drv_tok tk m
+k = sha1_digest part m 0 n d
+drv_dig d part tk 0 drv_tok tk
+end
+
+note A record (message built in its own 1 MiB buffer)
+fn drv_a tk edit uchar 4096 to void
+bb = new uchar 1048576 0
+d = new uchar 32 0
+drv_name
+n = drv_num part tk 0 drv_tok tk
+v = drv_num part tk 0 drv_tok tk
+if gt n len bb
+put ds 3 add get ds 3 1
+drv_mis DRERR DRBAD
+ret
+end
+for i ulong n
+put bb i uchar v
+end
+k = sha1_digest part bb 0 n d
+drv_dig d part tk 0 drv_tok tk
+end
+
+note E record
+fn drv_e tk edit uchar 4096 to void
+b = new uchar 64 0
+drv_name
+w = new uchar 64 0
+wn = drv_tok w
+c = drv_num part tk 0 drv_tok tk
+put ds 3 add get ds 3 1
+n = rev_errname c b
+if and eq wn 1 eq get w 0 45
+if ne n 0
+drv_mis part b 0 n DRDASH
+end
+ret
+end
+if not der_same part b 0 n part w 0 wn
+drv_mis part b 0 n part w 0 wn
+end
+end
+
+note mb[q] xor a nonzero value taken from x shifted right by s
+fn drv_flip mb edit uchar 262144 q ulong x ulong s ulong to void
+y = add 1 rem shr x s 255
+v = uchar y
+put mb q xor get mb q v
+end
+
+note mutation k of the region pp[r] .. +pp[r+1] of bb into mb (the whole buffer copied): k mod 3 = 0
+note one byte changed (xor a nonzero value), 1 one byte xor 0x80 in the first 64 bytes of the region
+note (headers), 2 two bytes changed
+fn drv_mut mb edit uchar 262144 bb view uchar 262144 pp view ulong 16 k ulong to void
+for i ulong get ds 8
+put mb i get bb i
+end
+a = get pp get ds 10
+l = get pp add get ds 10 1
+x = add mul k 2654435761 12345
+x = xor x shr x 13
+m = rem k 3
+if eq m 1
+q = add a rem rem x l 64
+put mb q xor get mb q 128
+ret
+end
+q = add a rem x l
+drv_flip mb q x 17
+if eq m 2
+q = add a rem mul add sub q a 1 7 l
+drv_flip mb q x 29
+end
+end
+
+note cnt mutations (drv_mut) through rev_check; how many were refused
+fn drv_fz bb view uchar 262144 pp view ulong 16 cnt ulong to ulong
+mb = new uchar 262144 0
+n = get ds 8
+rj = ulong 0
+for j ulong cnt
+drv_mut mb bb pp j
+if ne rev_check part mb 0 n pp 0
+rj = add rj 1
+end
+end
+ret rj
+end
+
+note F and G records: r = 5 (staple) or 7 (CRL). The unmutated input must give the record's
+note expectation (F: accepted, G: refused); every mutation must be refused (code not 0)
+fn drv_f tk edit uchar 4096 bb edit uchar 262144 pp edit ulong 16 r ulong to void
+drv_name
+cnt = drv_num part tk 0 drv_tok tk
+put ds 3 add get ds 3 1
+if ne drv_load tk bb pp r 0
+drv_mis DRERR DRBAD
+ret
+end
+c0 = rev_check part bb 0 get ds 8 pp
+if and eq r 5 ne c0 0
+drv_mis DRBAD DRNO
+ret
+end
+if and eq r 7 eq c0 0
+drv_mis DRNO DRBAD
+ret
+end
+put ds 10 r
+rj = drv_fz bb pp cnt
+r2 = write 1 DRFUZ 0 len DRFUZ
+r2 = write 1 nm 0 get ds 6
+r2 = write 1 DRFN 0 len DRFN
+drv_prn cnt
+r2 = write 1 DRFR 0 len DRFR
+drv_prn rj
+r2 = write 1 DRNL 0 1
+if ne rj cnt
+drv_mis DRERR DRBAD
+end
+end
+
+fn main to int
+tk = new uchar 4096 0
+bb = new uchar 262144 0
+pp = new ulong 16 0
+if ne drv_slurp 0
+r = write 2 DRIO 0 len DRIO
+ret 2
+end
+while lt get ds 1 get ds 0 bound 999999
+put ds 2 add get ds 2 1
+c = drv_peek
+put ds 1 add get ds 1 1
+if eq c 79
+drv_o tk bb pp
+end
+if eq c 85
+drv_u tk bb pp
+end
+if eq c 73
+drv_i tk bb pp
+end
+if eq c 72
+drv_h tk
+end
+if eq c 65
+drv_a tk
+end
+if eq c 69
+drv_e tk
+end
+if eq c 70
+drv_f tk bb pp 5
+end
+if eq c 71
+drv_f tk bb pp 7
+end
+if ne c 10
+drv_eol
+end
+end
+r = write 1 DRSUM 0 len DRSUM
+drv_prn get ds 3
+r = write 1 DRCHK 0 len DRCHK
+drv_prn get ds 4
+r = write 1 DRFLD 0 len DRFLD
+if ne get ds 4 0
+ret 1
+end
+if eq get ds 3 0
+ret 1
+end
+ret 0
+end

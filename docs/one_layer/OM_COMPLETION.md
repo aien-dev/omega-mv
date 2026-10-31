@@ -65,16 +65,16 @@ cannot emit them, so there is no reference unit to verify against.
 | FR-2 packed structs | structs are 8-byte cells; packed u8/u16/u32/u64 fields are not expressible | needs a layout syntax and alignment rule (decision) |
 | FR-3 imports by digest | no `import`; units concatenate | requires the OSC content-addressed unit store (external) |
 | FR-4 floats | implemented end to end for AArch64 (types, literals, arithmetic, arrays, pools, structs) | IR floats are spec-blocked: OSC-1 scalar tags are integer-only |
-| FR-5 mmap/ioctl | absent | the language exposes no address values; needs an address/pointer escape decision |
+| FR-5 mmap/ioctl | implemented for AArch64 program mode as handle-checked words `devctl devcall uvmctl mapnew mapdrop mapread mapwrite mapaddr mapget mapset maphold mapbind` (ids 166..177, `seed/omc/genkw.awk`; contracts in [`seed/host/MAPPING.md`](../../seed/host/MAPPING.md), tests `seed/host/tests/{mapio,devcall,memcheck,reserve}.om` run by `seed/host/gate.om`) | access through a raw integer address stays refused: `mapaddr` exports a ulong but access requires the live owned handle; no GPU launcher or model execution (MAPPING.md) |
 | FR-6 threads/atomics | absent | decision 37 (disjoint threads) has no chosen design |
 | FR-7 shared objects/C ABI | absent | needs an ABI contract (calling convention, symbols, relocation) |
 | FR-8 kernel words | absent | needs a target kernel interface, not a compiler change |
-| FR-9 x86-64 | DRAFT integration pending implementation/evidence, based on historical backend `7eca2ac3f` and canonical base `6999fa9e6`; see [design and unsupported paths](../X86-LINUX.md) | full existing fixture differential, default AArch64 byte preservation, objdump oracle and wrong-encoding mutants NOT_RUN; no completion or qualification claim |
+| FR-9 x86-64 | DRAFT, merged as #923 from historical backend `7eca2ac3f` on canonical base `6999fa9e6`; see [design and unsupported paths](../X86-LINUX.md) | full existing fixture differential last ran EMULATED (QEMU) at source `62d1d0d6` (`seed/qualification/x86-linux/20261030-main-62d1d0d6.json`): 15182 PASS, 0 FAIL, 2 NOT_RUN (QEMU invalid-fd ioctl artifacts), 222 EXCLUDED, aggregate verdict FAIL because NOT_RUN is not PASS; the same run's objdump invalid-encoding and valid-wrong-encoding controls PASS; native x86 NOT_RUN; default AArch64 byte preservation is not separately recorded in that receipt; no completion or qualification claim |
 | decision 24 | no heap, no free | Drake's rule; any allocation model would reverse it |
 | decision 37 | no shared-state threads | design decision pending |
 
 ## 4. Next concrete step
 
 No self-contained compiler feature remains for the supported scalar subset. Next work requires a
-decision (FR-2/3/5/6/7/8, decisions 24/37) or a shared target-extension model (IR arrays,
-structs, floats); FR-9 has a draft integration described above, not a completed second target.
+decision (FR-2/3/6/7/8, decisions 24/37) or a shared target-extension model (IR arrays,
+structs, floats); FR-9 is merged as a draft (#923) described above, not a completed second target.

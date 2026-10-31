@@ -1,0 +1,119 @@
+# Hostile-server cases for the om/tls client (hostile.py modes). Not duplicated from
+# test/tls/interop.sh (fakesh: tls12 hrr suite sid group zero dupext trail; fakesrv: ccs2 ccsflood
+# ccspre ccslate encccs frag cvbad cvkey cvskip empty1500 empty50 tickets1500 closehs closepre ku*
+# loris slowsh; tamper proxy).
+# columns (tab separated): case, expect, alerts, check, rfc, description
+#   expect  OK            the client completes the GET (exit 0, the reply on stdout)
+#           ABORT         the client fails with any TLSERR (never a hang, trap or exit 0)
+#           ABORT:NAME    the client fails with TLS_ERR_NAME
+#           ABORT_OR_OK   the RFC puts no requirement on the receiver; either outcome passes, no hang
+#   alerts  the alert descriptions the client may send when it aborts (RFC 8446 section 6.2):
+#           a list, "*" any (also none), "-" none expected (the peer already failed the session)
+#   check   extra facts the server or stdout must show ("-" none): key=value from the server's
+#           SRV line, or !out:TEXT (stdout must not contain TEXT)
+sh_dgrd12	ABORT	70,47	-	4.1.3, 4.2.1, D.1	TLS 1.2 ServerHello (no supported_versions), random ends DOWNGRD\x01
+sh_dgrd11	ABORT	70,47	-	4.1.3, D.1	legacy_version 0x0302, no supported_versions, random ends DOWNGRD\x00
+sh_sv0303	ABORT	47	-	4.2.1 (MUST illegal_parameter: selected version prior to TLS 1.3)	supported_versions selects 0x0303
+sh_sv7f	ABORT	47	-	4.2.1 (MUST illegal_parameter: version not offered)	supported_versions selects draft 0x7f1c
+sh_svlen	ABORT	50,47	-	4.2.1, 6.2 decode_error	supported_versions body of 3 bytes
+sh_suite_tls12	ABORT	47	-	4.1.3 (MUST illegal_parameter: suite not offered)	cipher suite 0xc02f (a TLS 1.2 suite)
+sh_comp1	ABORT	47,50	-	4.1.3 legacy_compression_method MUST be 0	compression method 1
+sh_sid33	ABORT	50,47	-	4.1.3 legacy_session_id_echo <0..32>	session id length 33
+sh_extlen	ABORT	50	-	4.1.3, 6.2 decode_error	extensions length 5 bytes beyond the message
+sh_noks	ABORT	109,47	-	4.2.8, 9.2 (missing_extension)	ServerHello without key_share (no PSK offered)
+sh_dupks	ABORT	*	-	4.2 (MUST NOT send two extensions of one type; receiver alert not specified)	key_share twice
+sh_kslen31	ABORT	47,50	-	4.2.8.2 (x25519 share is 32 bytes)	x25519 share of 31 bytes
+sh_ks_lo1	ABORT	47	-	7.4.2 (MUST abort on all-zero shared secret), RFC 7748 6.1	x25519 share u=1 (small order)
+sh_ks_lo8	ABORT	47	-	7.4.2, RFC 7748 6.1	x25519 share of an order-8 point
+sh_ks_hibit	OK	-	-	RFC 7748 5 (receiver MUST mask bit 255)	valid x25519 share with bit 255 set
+sh_ext_unsol	ABORT	110	-	4.2 (MUST unsupported_extension for an unsolicited extension)	unknown extension 0x0a0a in ServerHello
+sh_ext_psk	ABORT	110,47	-	4.2, 4.2.11 (no PSK offered)	pre_shared_key in ServerHello
+sh_ext_sni	ABORT	47	-	4.2 (MUST illegal_parameter: recognised extension not allowed in this message)	server_name in ServerHello
+sh_ext_cookie	ABORT	47,110	-	4.2 (cookie is for HelloRetryRequest only)	cookie in ServerHello
+sh_ext_early	ABORT	47,110	-	4.2 (early_data not allowed in ServerHello)	early_data in ServerHello
+sh_ext_ksalias	ABORT	109,110	-	4.2 (MUST unsupported_extension), 4.2.8 (key_share MUST be present; missing_extension)	no key_share; a valid x25519 key_share body under unknown extension type 0x0a0a
+sh_twice	ABORT	10	-	5.1 (MUST unexpected_message: handshake data spanning a key change)	two ServerHellos in one record
+sh_plus_ee	ABORT	10	-	5.1 (MUST unexpected_message: handshake data spanning a key change)	plaintext EncryptedExtensions behind the ServerHello in its record
+sh_split	OK	-	-	5.1 (handshake messages may be fragmented)	ServerHello split across two records
+sh_rec0301	OK	-	-	5.1 (legacy_record_version MUST be ignored)	ServerHello record with version 0x0301
+sh_hs_zero	ABORT_OR_OK	*	-	5.1 (zero-length handshake fragments MUST NOT be sent; receiver alert not specified)	zero-length handshake record before the ServerHello
+rec_unknown_type	ABORT	10	-	5 (MUST unexpected_message for an unexpected record type)	record type 0x63 before the ServerHello
+rec_appdata_plain	ABORT	10	-	5 (MUST unexpected_message)	plaintext application_data before the ServerHello
+rec_overflow_plain	ABORT	22	-	5.1 (MUST record_overflow above 2^14)	plaintext handshake record of 2^14+1 bytes
+rec_alert_frag	ABORT	50,10	-	5.1 (alerts MUST NOT be fragmented), 6	plaintext alert record of 1 byte
+rec_alert_zero	ABORT	*	-	5.1 (zero-length alert fragments MUST NOT be sent; receiver alert not specified)	plaintext alert record of 0 bytes
+rec_alert_unknown_plain	ABORT:ALERT_RECEIVED	-	-	6 (unknown alert types MUST be treated as error alerts)	plaintext fatal alert 200 before the ServerHello
+ccs_val2	ABORT	10	-	5 (MUST unexpected_message for a change_cipher_spec value other than 0x01)	change_cipher_spec body 0x02
+ccs_len2	ABORT	10,50	-	5 (single byte 0x01 only)	change_cipher_spec body 0x01 0x01
+ccs_zero	ABORT	10,50	-	5	change_cipher_spec of 0 bytes
+ee_ks	ABORT	47	-	4.2 (MUST illegal_parameter: key_share not allowed in EncryptedExtensions)	key_share in EncryptedExtensions
+ee_sv	ABORT	47	-	4.2 (MUST illegal_parameter)	supported_versions in EncryptedExtensions
+ee_psk	ABORT	47,110	-	4.2	pre_shared_key in EncryptedExtensions
+ee_dup	ABORT	*	-	4.2 (MUST NOT send two extensions of one type; receiver alert not specified)	server_name twice in EncryptedExtensions
+ee_unsol	ABORT	110	-	4.2 (MUST unsupported_extension)	unknown extension 0x0a0a in EncryptedExtensions
+ee_mfl	ABORT	110	-	4.2 (MUST unsupported_extension), RFC 6066 4	max_fragment_length not offered
+ee_alpn_other	ABORT	47,120	-	RFC 7301 3.1 (server selects one of the client's protocols)	ALPN selects h2, the client offered http/1.1 only
+ee_alpn_two	ABORT	47,50,120	-	RFC 7301 3.1 (ProtocolNameList MUST contain exactly one name)	ALPN response naming http/1.1 and h2
+ee_trail	ABORT	50	-	4.3.1, 6.2 decode_error	EncryptedExtensions with a trailing byte
+ee_twice	ABORT	10	-	4 (message order), 6.2 unexpected_message	EncryptedExtensions twice
+ee_bigdecl	ABORT	*	-	4 (handshake length 2^24-1; must not wait for or allocate it)	EncryptedExtensions declaring 0xffffff bytes
+ee_zero_frag	ABORT_OR_OK	10,50	-	5.1 (zero-length handshake fragments MUST NOT be sent)	empty protected handshake record before EncryptedExtensions
+order_cert_first	ABORT	10	-	4.4.1, 6.2 unexpected_message	Certificate before EncryptedExtensions
+order_fin_noauth	ABORT	10	-	4.4.2 (server authentication is required without PSK)	EncryptedExtensions then Finished, no Certificate
+order_cv_first	ABORT	10	-	4.4.1	CertificateVerify before Certificate
+cr_hs	OK	-	ccert=empty,cfin=ok	4.3.2, 4.4.2.4 (client MUST send an empty Certificate when it has none)	CertificateRequest in the handshake
+cr_ctx	ABORT_OR_OK	47	-	4.3.2 (context SHALL be zero length in the handshake; sender rule)	CertificateRequest with a 2-byte context in the handshake
+cr_nosigalgs	ABORT_OR_OK	109	-	4.3.2 (signature_algorithms MUST be present; sender rule)	CertificateRequest without signature_algorithms
+cert_ctx	ABORT_OR_OK	47,50	-	4.4.2 (server certificate_request_context SHALL be zero length; sender rule)	server Certificate with a 2-byte context
+cert_empty	ABORT	50	-	4.4.2.4 (MUST decode_error on an empty server Certificate)	Certificate with no entries
+cert_zero_entry	ABORT	50,42	-	4.4.2	Certificate entry of 0 bytes
+cert_list_overrun	ABORT	50	-	4.4.2, 6.2 decode_error	certificate_list length 10 bytes beyond the message
+cert_entry_ext	ABORT	110	-	4.4.2 (entry extensions MUST answer the ClientHello), 4.2 (MUST unsupported_extension)	unknown extension on the leaf CertificateEntry
+cv_pkcs1	ABORT	47,51	-	4.4.3 (RSASSA-PKCS1-v1_5 MUST NOT be used in CertificateVerify)	valid rsa_pkcs1_sha256 signature from an RSA leaf
+cv_unoffered	ABORT	47,51	-	4.4.3 (scheme MUST be one the client offered)	scheme ecdsa_secp521r1_sha512 (not offered) on an ECDSA signature
+cv_keymismatch	ABORT	47,51	-	4.4.3, 4.2.3	scheme rsa_pss_rsae_sha256 with an EC leaf
+cv_ctxclient	ABORT	51	-	4.4.3 (server context string), 6.2 decrypt_error	signature over the client context string
+cv_empty	ABORT	50,51	-	4.4.3	empty signature
+cv_trail	ABORT	50	-	4.4.3, 6.2 decode_error	CertificateVerify with a trailing byte
+cv_twice	ABORT	10	-	4.4.1	CertificateVerify twice
+cv_highs	OK	-	-	RFC 8446 4.4.3, FIPS 186-5 6.4.2 (ECDSA (r, n-s) verifies)	ECDSA signature with s replaced by n-s
+fin_bad	ABORT	51	-	4.4.4 (MUST decrypt_error)	server Finished with one bit flipped
+fin_short	ABORT	50,51	-	4.4.4, 6.2 decode_error	server Finished of 31 bytes
+fin_long	ABORT	50,51	-	4.4.4, 6.2 decode_error	server Finished of 33 bytes
+fin_plus_nst	ABORT	10	-	5.1 (MUST unexpected_message: message after Finished in the same record spans a key change)	NewSessionTicket in the server Finished record
+fin_twice	ABORT	10	-	4.4.4, 4.6	a second Finished after the handshake
+hs_appdata_early	ABORT	10	-	2, 5 (application data before Finished)	protected application_data between EncryptedExtensions and Certificate
+hs_plain_alert	ABORT	*	-	5, 6	plaintext fatal alert 40 after the ServerHello
+hs_frag_ee	OK	-	-	5.1	EncryptedExtensions split across two records
+hs_coalesce	OK	-	-	5.1	EncryptedExtensions, Certificate, CertificateVerify, Finished in one record
+hs_pad_big	OK	-	-	5.4 (padding)	EncryptedExtensions record with 16000 padding bytes
+rec_allzero	ABORT	10	-	5.4 (MUST unexpected_message when the inner plaintext has no non-zero byte)	protected record with an all-zero inner plaintext
+rec_innertype_unk	ABORT	10	-	5 (MUST unexpected_message)	inner content type 0x63
+rec_overflow_cipher	ABORT	22	-	5.2 (MUST record_overflow above 2^14+256)	protected record of 2^14+257 bytes
+rec_overflow_inner	ABORT	22	-	5.4 (full TLSInnerPlaintext MUST NOT exceed 2^14+1), 5.2; tlsfuzzer test_tls13_record_layer_limits.py:272-291 expects record_overflow	inner plaintext of 2^14+2 bytes (small content, large padding)
+rec_short	ABORT	20,50	-	5.2 (MUST bad_record_mac when decryption fails)	protected record of 5 bytes (shorter than the tag)
+rec_replay	ABORT	20	-	5.2, 5.3 (per-record nonce)	the EncryptedExtensions record sent twice
+rec_outer_type22	ABORT	10,20,50	-	5, 5.2 (protected records carry opaque_type 23)	protected record with outer type 22
+ccs_post	ABORT	10	-	5 (change_cipher_spec after the peer's Finished MUST be unexpected_message)	plaintext change_cipher_spec after the handshake
+post_cr	ABORT	10	-	4.6.2 (MUST unexpected_message without post_handshake_auth)	post-handshake CertificateRequest
+post_unknown_hs	ABORT	10	-	4, 6.2 unexpected_message	post-handshake handshake type 99
+post_sh	ABORT	10	-	4, 6.2	ServerHello after the handshake
+post_ku_req	OK	-	-	4.6.3	KeyUpdate(update_requested), then the reply under the next key
+post_ku_bad	ABORT	47	-	4.6.3 (MUST illegal_parameter for another value)	KeyUpdate with request_update = 2
+post_ku_len	ABORT	50	-	4.6.3, 6.2 decode_error	KeyUpdate of 2 bytes
+post_ku_flood	ABORT:UNEXPECTED_MESSAGE	10	-	4.6.3, client policy (1000 records without data)	1001 KeyUpdate(update_requested) records
+post_nst_split	OK	-	-	5.1	NewSessionTicket split across two records
+post_interleave	ABORT	10	-	5.1 (handshake messages MUST NOT be interleaved with other record types)	application data between two NewSessionTicket fragments
+post_nst_trail	ABORT_OR_OK	50	-	4.6.1 (the client does not resume; parsing optional)	NewSessionTicket with a trailing byte
+post_plain_close	ABORT	*	-	5, 6.1 (unprotected close_notify after the handshake)	partial reply, then a plaintext close_notify
+post_trunc	ABORT:EOF	-	-	6.1 (truncation without close_notify)	partial reply (4 of 100 body bytes), TCP FIN
+post_trunc_full	ABORT:EOF	-	-	6.1	whole reply, TCP FIN without close_notify
+post_alert_unknown	ABORT:ALERT_RECEIVED	-	-	6 (unknown alert MUST be treated as an error)	protected fatal alert 200
+post_alert_warn	ABORT:ALERT_RECEIVED	-	-	6 (alerts other than close_notify/user_canceled are fatal whatever the level)	protected bad_certificate with level warning
+post_user_canceled	ABORT_OR_OK	*	-	6.1 (user_canceled is a closure alert)	user_canceled, then the reply
+post_alert_trail	ABORT	50	-	6, 6.2 decode_error	protected alert record of 3 bytes
+post_close_then_data	OK	-	!out:EXTRA-AFTER-CLOSE	6.1 (data after close_notify MUST be ignored)	reply, close_notify, then application data
+post_appdata_max	OK	-	-	5.1, 5.4 (2^14 bytes of plaintext is the maximum allowed)	reply in one record of exactly 2^14 bytes
+post_empty_hs	ABORT_OR_OK	10,50	-	5.1	empty protected handshake record after the handshake
+post_hs_bigdecl	ABORT	*	-	4	NewSessionTicket declaring 0xffffff bytes
+post_appdata_over	ABORT	22	-	5.1, 5.2 (MUST record_overflow above 2^14 plaintext bytes); tlsfuzzer test_tls13_record_layer_limits.py:226-240	application data record carrying 2^14+1 content bytes

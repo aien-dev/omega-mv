@@ -1,0 +1,166 @@
+note Synthetic issue #671 packed-list corpus. Reads one mode byte and writes one packet to stdout.
+note Format (OMEGESE, packed list): u16le count 1..64, then count records of u16le length and
+note bytes; whole packet at most 4096 bytes; first record nonempty; no zero byte; no trailing bytes.
+note Accepted modes 0 8 11 12. Every other mode breaks exactly the rule named beside it and must
+note be refused with trap 3 before any kernel exec. Unknown modes exit 92; I/O failures 90 and 91.
+global pkt uchar 8192
+global n ulong 1
+text path "/bin/true"
+text echo "/bin/echo"
+text word1 "packed"
+text word2 "list"
+fn emitb v uchar to void
+put pkt get n 0 v
+put n 0 add get n 0 1
+end
+fn put16 v ulong to void
+emitb uchar and v 255
+emitb uchar shr v 8
+end
+fn pfill v uchar k ulong to void
+for i ulong k
+emitb v
+end
+end
+fn rawtrue to void
+for i ulong len path
+emitb get path i
+end
+end
+fn rectrue to void
+put16 len path
+rawtrue
+end
+fn rececho to void
+put16 len echo
+for i ulong len echo
+emitb get echo i
+end
+put16 len word1
+for i ulong len word1
+emitb get word1 i
+end
+put16 len word2
+for i ulong len word2
+emitb get word2 i
+end
+end
+fn modea m ulong to void
+note 0 valid single record; 1 count 0; 2 count 65 without records; 3 record declares 5, has 3.
+if eq m 0
+put16 1
+rectrue
+end
+if eq m 1
+put16 0
+end
+if eq m 2
+put16 65
+end
+if eq m 3
+put16 1
+put16 5
+emitb 97
+emitb 98
+emitb 99
+end
+note 4 trailing byte; 5 empty first record; 6 zero byte inside the path.
+if eq m 4
+put16 1
+rectrue
+emitb 0
+end
+if eq m 5
+put16 1
+put16 0
+end
+if eq m 6
+put16 1
+put16 len path
+for i ulong len path
+if eq i 7
+emitb 0
+else
+emitb get path i
+end
+end
+end
+note 7 record declares 4093 bytes and the 4096-byte packet holds 4092.
+if eq m 7
+put16 1
+put16 4093
+pfill 97 4092
+end
+end
+fn modeb m ulong to void
+note 8 valid 64 records (path plus 63 empty arguments); 9 count 65 with 65 well-formed records.
+if eq m 8
+put16 64
+rectrue
+for i ulong 63
+put16 0
+end
+end
+if eq m 9
+put16 65
+rectrue
+for i ulong 64
+put16 0
+end
+end
+note 10 well-formed 4097-byte packet (one byte over); 11 well-formed 4096-byte packet.
+if eq m 10
+put16 2
+rectrue
+put16 4082
+pfill 97 4082
+end
+if eq m 11
+put16 2
+rectrue
+put16 4081
+pfill 97 4081
+end
+note 12 valid echo packet; 13 zero byte after a valid path; 14 count 65535; 15 length 65535.
+if eq m 12
+put16 3
+rececho
+end
+if eq m 13
+put16 1
+put16 11
+rawtrue
+emitb 0
+emitb 120
+end
+if eq m 14
+put16 65535
+end
+if eq m 15
+put16 1
+put16 65535
+emitb 97
+emitb 98
+end
+end
+fn main to int
+if ne read 0 pkt 0 1 1
+ret 90
+end
+m = ulong get pkt 0
+if gt m 15
+ret 92
+end
+put n 0 0
+modea m
+modeb m
+done = ulong 0
+while lt done get n 0 bound 8193
+r = write 1 pkt done sub get n 0 done
+if le r 0
+ret 91
+end
+done = add done ulong r
+end
+ret 0
+end

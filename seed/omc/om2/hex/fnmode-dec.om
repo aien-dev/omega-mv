@@ -1,0 +1,16 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of fnmode-hex.om (values from Wolfram, wolfram.txt queries tokens and tokens2).
+om2
+const KM ulong 255
+fn f a ulong to ulong
+b = new uchar 16 0
+put b 15 uchar and a KM
+k = ulong 0
+while lt k 3 bound 10
+k = add k 1
+end
+if eq k 0
+trap 13
+end
+ret add ulong get b 15 k
+end

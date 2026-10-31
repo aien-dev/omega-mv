@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-31T05:04:50Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:698a5f2809bb22a45bb0e9df22abdd7589da17eb71172abe1fbaaf451f1b9a87",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 19,
+      "generated_at_commit": "bb4a222f53d6e5c89142282377c67487a67122d5",
+      "source_tree": "sha256:fa748d803715934335b4b5d0261d08acd05e4ab0ec8d52bca562815107836dbd"
+    }
+  },
+  "layer": "seed",
+  "name": "tensix",
+  "purpose": "Tenstorrent Tensix RV32IM vecadd: seeded Omega emitter irrv32.om (OSC IR v1 -> RV32) and asm2 table, interop-oracle gate (ttsim WH/BH, qemu, two disassemblers)",
+  "schema_version": "1.0.0"
+}
