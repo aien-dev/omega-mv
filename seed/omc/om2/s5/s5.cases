@@ -22,3 +22,8 @@ s5-scrub-name refuse seed/omc/om2/s5/scrub-name.om 16
 ## scrub: the exact emitted sequence (checks, STP XZR loop, MOVZ #0 per free register, MOVI #0 V0-V31)
 s5-scrub-emit emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
 s5-scrub-emit-run run seed/omc/om2/s5/scrub-emit.om - - - 0
+## scrub with floats: live float locals, held float operands and float arguments survive in their V twins
+## (omc 24caacf4 zeroed them: exit 1); the dead twins are still zeroed (MOVI #0 for all V but the live V18)
+s5-scrub-flive run seed/omc/om2/s5/scrub-flive.om - - - 0
+s5-scrub-femit emit seed/omc/om2/s5/scrub-femit.om sha:3d33c8ebfeff422d2ad746952f32fedab01cc46238097bb64b4b9a0a068c20c8 - 0
+s5-scrub-femit-run run seed/omc/om2/s5/scrub-femit.om - - - 0

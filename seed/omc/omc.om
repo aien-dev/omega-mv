@@ -7834,10 +7834,12 @@ note (C6.2.465); B.LO trap 6, before any store. Loop: CMP SP, X16 = SUBS XZR, SP
 note B.LS out; STP XZR, XZR, [X16], #16 (C6.2.414, post-index); B back (C6.2.35). Then MOVZ Xr, #0
 note (C6.2.319) for every pool register at index npar + nslot or above (no live value: parameters,
 note locals and the held parts of the expression sit below), X16, and X7, X18-X26, X29, which program
-note mode never names; then MOVI Vd.2D, #0 (C7.2.247) for V0-V31 (floats live in X registers and pass
-note through V0/V1 for one instruction only). Never touched: SP, X27 (the Linux initial stack under
-note args), X28 (the stack floor), X30 (the return address), the live pool registers, NZCV, FPCR,
-note FPSR, and the SVE P registers and FFR. Gives long 0.
+note mode never names; then MOVI Vd.2D, #0 (C7.2.247) for V0-V15 and for every twin V16+j except those
+note of a live slot j (below npar + nslot) whose value lives in its twin (vsl: an f32/f64 local name or a
+note held kind 9 float, as save stores it); a twin of a free slot or of a slot whose value is in its x
+note register holds nothing live. V0-V15 carry a float only inside one operation. Never touched: SP, X27
+note (the Linux initial stack under args), X28 (the stack floor), X30 (the return address), the live pool
+note registers and live twins, NZCV, FPCR, FPSR, and the SVE P registers and FFR. Gives long 0.
 harg x 0 5
 r = matreg get fr add x 8 get fr add x 9 5
 emit or 4064283679 shl r 5
@@ -7868,9 +7870,17 @@ emit or 3531603968 i
 i = add i 1
 end
 emit 3531603997
+at = add get npar 0 sl
 i = ulong 0
 while lt i 32
+top = and i 15
+r = ulong get vsl top
+if or lt i 16 ge top at
+r = ulong 0
+end
+if eq r 0
 emit or 1862329344 i
+end
 i = add i 1
 end
 put nslot 0 sl
