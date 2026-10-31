@@ -1,0 +1,90 @@
+note Test-only framed transport. Same production core, per-request consumed mode+input SHA256.
+global Req uchar 5
+global Resp uchar 37
+
+fn sendhd to bool
+sent = ulong 0
+while lt sent 37
+w = write 1 Resp sent sub ulong 37 sent
+if le w 0
+ret false
+end
+sent = add sent ulong w
+end
+ret true
+end
+
+fn answer code ulong to ulong
+put Resp 0 uchar code
+for i ulong 4
+put Resp add i 1 uchar and shr get El 0 mul i 8 255
+end
+if eq sendhd false
+ret 77
+end
+pos = ulong 0
+while lt pos get El 0
+r = write 1 Eb pos sub get El 0 pos
+if le r 0
+ret 77
+end
+pos = add pos ulong r
+end
+ret 0
+end
+
+fn main to int
+constants
+count = ulong 0
+while lt count 200000
+pos = ulong 0
+while lt pos 5
+r = read 0 Req pos sub ulong 5 pos
+if eq r 0
+if eq pos 0
+ret 0
+end
+ret 79
+end
+if lt r 0
+ret 77
+end
+pos = add pos ulong r
+end
+mode = ulong get Req 0
+n = ulong 0
+for i ulong 4
+n = or n shl ulong get Req add i 1 mul i 8
+end
+if gt n 8192
+ret 67
+end
+pos = 0
+while lt pos n
+r = read 0 Ib pos sub n pos
+if le r 0
+ret 77
+end
+pos = add pos ulong r
+end
+hinit
+hbyte uchar mode
+part 0 n
+finish
+for i ulong 32
+put Resp add i 5 get Hash i
+end
+code = perform mode n
+if ne code 0
+if ne get El 0 0
+ret 80
+end
+end
+code = answer code
+if ne code 0
+ret int code
+end
+count = add count 1
+end
+ret 81
+end

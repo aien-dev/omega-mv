@@ -1,0 +1,8 @@
+note S5 scrub: reserved in an OM-2 unit, so a function named scrub is error 16.
+om2
+fn scrub to int
+ret 0
+end
+fn main to int
+ret scrub
+end

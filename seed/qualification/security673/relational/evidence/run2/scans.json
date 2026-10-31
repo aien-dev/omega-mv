@@ -1,0 +1,110 @@
+[
+  {
+    "name": "compare32",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run2/compare32.bin",
+    "exit": 0
+  },
+  {
+    "name": "early",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/early.bin",
+    "exit": 2
+  },
+  {
+    "name": "branch",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x0"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/branch.bin",
+    "exit": 2
+  },
+  {
+    "name": "helper",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x0"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/helper.bin",
+    "exit": 2
+  },
+  {
+    "name": "error",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x0"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/error.bin",
+    "exit": 2
+  },
+  {
+    "name": "division",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x0"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/division.bin",
+    "exit": 2
+  },
+  {
+    "name": "address",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x1",
+      "pub:0:0:16"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/address.bin",
+    "exit": 2
+  },
+  {
+    "name": "public-branch",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x1"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/public-branch.bin",
+    "exit": 0
+  },
+  {
+    "name": "public-address",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/leakscan.bin",
+      "x2",
+      "pub:0:0:16"
+    ],
+    "stdin": "/home/drakestapleton/workspace/security673-relational/seed/qualification/security673/relational/evidence/run1/public-address.bin",
+    "exit": 0
+  }
+]

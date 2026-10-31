@@ -1,0 +1,49 @@
+Notice for the NIST material in this directory:
+  nist-sha3.txt is converted (by gen_vectors.py, 2026-10-26; changes: the Msg / MD / Output fields
+  re-written as one driver record per vector, Msg truncated to Len bits = the CAVP convention for
+  Len 0) from SHA3_256/SHA3_512 ShortMsg and LongMsg and SHAKE128/SHAKE256 ShortMsg, LongMsg and
+  VariableOut .rsp files of
+  https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha-3bytetestvectors.zip
+  (zip sha256 cd07701af2e47f5cc889d642528b4bf11f8b6eb55797c7307a96828ed8d8fc8c) and .../shakebytetestvectors.zip
+  (zip sha256 debfebc3157b3ceea002b84ca38476420389a3bf7e97dc5f53ea4689a16de4c7), fetched 2026-10-26;
+  per-file sha256 in the header of nist-sha3.txt.
+  acvp.txt is converted (same date, same kind of change; ML-KEM-768 groups only, hex lowercased) from
+  https://github.com/usnistgov/ACVP-Server commit 975de31eb83d87039ec88934fdc47d8c312b892d,
+  gen-val/json-files/ML-KEM-keyGen-FIPS203/internalProjection.json and
+  gen-val/json-files/ML-KEM-encapDecap-FIPS203/internalProjection.json (sha256 in its header).
+Source: National Institute of Standards and Technology (NIST).
+
+The statement below is NIST's recommended statement for non-SRD data/works, quoted verbatim from
+"Copyright, Fair Use, and Licensing Statements for SRD, Data, Software, and Technical Series
+Publications", https://www.nist.gov/open/license (as quoted in omnet om/sha512/test/vectors/NIST.NOTICE,
+fetched 2026-10-25):
+
+This data/work was created by employees of the National Institute of Standards and Technology
+(NIST), an agency of the Federal Government. Pursuant to title 17 United States Code Section 105,
+works of NIST employees are not subject to copyright protection in the United States. This
+data/work may be subject to foreign copyright.
+
+The data/work is provided by NIST as a public service and is expressly provided "AS IS." NIST MAKES
+NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED OR STATUTORY, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY.
+NIST does not warrant or make any representations regarding the use of the data or the results
+thereof, including but not limited to the correctness, accuracy, reliability or usefulness of the
+data. NIST SHALL NOT BE LIABLE AND YOU HEREBY RELEASE NIST FROM LIABILITY FOR ANY INDIRECT,
+CONSEQUENTIAL, SPECIAL, OR INCIDENTAL DAMAGES (INCLUDING DAMAGES FOR LOSS OF BUSINESS PROFITS,
+BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION, AND THE LIKE), WHETHER ARISING IN TORT,
+CONTRACT, OR OTHERWISE, ARISING FROM OR RELATING TO THE DATA (OR THE USE OF OR INABILITY TO USE
+THIS DATA), EVEN IF NIST HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+To the extent that NIST may hold copyright in countries other than the United States, you are
+hereby granted the non-exclusive irrevocable and unconditional right to print, publish, prepare
+derivative works and distribute the NIST data, in any medium, or authorize others to do so on your
+behalf, on a royalty-free basis throughout the world.
+
+You may improve, modify, and create derivative works of the data or any portion of the data, and
+you may copy and distribute such modifications or works. Modified works should carry a notice
+stating that you changed the data and should note the date and nature of any such change. Please
+explicitly acknowledge the National Institute of Standards and Technology as the source of the
+data: Data citation recommendations are provided at https://www.nist.gov/open/license.
+
+Permission to use this data is contingent upon your acceptance of the terms of this agreement and
+upon your providing appropriate acknowledgments of NIST's creation of the data/work.

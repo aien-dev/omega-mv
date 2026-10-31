@@ -1,0 +1,10 @@
+[Unit]
+Description=om/tls fuzz daily triage
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

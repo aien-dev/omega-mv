@@ -1,0 +1,31 @@
+{
+  "schema": "nl4-native-source-lock-1",
+  "scope": "HOST_SYNTHETIC closed pure operations; no production authority",
+  "omega_base": "e79566c191ea8ef11888e69ce50d8fadf375d4fd",
+  "compiler_introduced_by": "1fe5976d398646b17acabbf6d9dfae96b017e439",
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "compiler_source_sha256": "3f937160c823d3a90a6b4cc296f00f517f36ede7fd27a06505c998985ec62240",
+  "sources": [
+    {
+      "repository": "https://github.com/aien-dev/aien-train.git",
+      "commit": "0e01c58a41f1a2fb976efa75c1cc554503aa2ee4",
+      "path": "native/neuralese/hadamard.om",
+      "sha256": "da4a1b91fcd72b4f5fa3a70461932626acdbc62a9a8d0b9876433f4a44f6ed20",
+      "staged_path": "build/nl4-deps/h.om",
+      "license": "AGPL-3.0-only",
+      "purpose": "Seeded handwritten fixed Hadamard projection; no learned producer or foreign runtime"
+    },
+    {
+      "repository": "https://github.com/aien-dev/aien-protocols-mv.git",
+      "commit": "6fb728a14781eb4e5262ffbdc9c2e6be64974f36",
+      "path": "specs/latent-payload/validator.om",
+      "sha256": "e85d174839f7d0c3406f783ec0fd69d52ce5576bdcca4892c16b21b09f14b003",
+      "staged_path": "build/nl4-deps/v.om",
+      "license": "Apache-2.0",
+      "purpose": "Canonical LTP0 pure receiver-template validator; not a reservation/capability grant"
+    }
+  ],
+  "host_dependencies": [],
+  "verification_only": ["pinned seed/out/omc", "native OM2GATE conductor", "git source oracle", "sha256sum", "mounted Wolfram evaluator and Alpha", "Node crypto SHA256 binary-fixture oracle; not build or product runtime"],
+  "missing_production_bindings": ["https://github.com/aien-dev/aegis-runtime-mv/issues/79", "https://github.com/aien-dev/aien-protocols-mv/issues/70"]
+}

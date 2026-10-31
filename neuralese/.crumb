@@ -1,0 +1,27 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "df1e86f20b9581b3504b71b24ba57057dcf0a8072d13ff432bf9b807426a1b7b",
+          "last_commit": "",
+          "name": "fixtures",
+          "purpose": "Independent SHA-256 envelope fixtures and exact decoded-source oracles for the native Omega host"
+        }
+      ],
+      "children_root": "sha256:28401713f198d1dcce005e957b4337a0f1342e25cda0fcfc9a4377534b9c340d",
+      "compiled_at": "2026-10-31T08:53:01Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:85e85f7ce6934bddc69a2525dfb13d2e0fc2016c3eb6f27ed13d71dd24194ca1",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 181,
+      "generated_at_commit": "f58bb1f480353dbf87d91f861401b2d5143c2099",
+      "source_tree": "sha256:0e1c7202c4f6a6f153dff13d91559abfbf8abd278b9cee4f254ef19b0c3fba92"
+    }
+  },
+  "layer": "supplement",
+  "name": "neuralese",
+  "purpose": "Bounded untrusted representation envelopes and explicit checked Omega decoding; learned extension remains proposed",
+  "schema_version": "1.0.0"
+}

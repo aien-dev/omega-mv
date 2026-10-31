@@ -51,7 +51,7 @@ fi
 ./build/gpu_reconv_test --out "$OUT/receipt.json" $EXTRA > "$OUT/run.log" 2>&1
 rc=$?
 cp src/omega_gpu_elementwise_api.c src/omega_gpu_elementwise_api.h src/omega_bw_reconv.h src/omega_blackwell_codegen.c \
-   tests/gpu_reconv_test.c tests/bw_warp_sim.h "$OUT/"
+   om/encoder/bw_enc_sm121.om src/omega_om_units.ident tests/gpu_reconv_test.c tests/bw_warp_sim.h "$OUT/"
 (cd "$OUT" && sha256sum -- * > SHA256SUMS)
 tail -1 "$OUT/run.log"
 echo "GPU-RECONV chip gate rc=$rc receipt=$OUT/receipt.json"

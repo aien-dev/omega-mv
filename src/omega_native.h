@@ -15,7 +15,7 @@ extern "C" {
 #define OMEGA_REENTRY 33u
 #define OMEGA_BAD_RT 34u
 #define OMEGA_NO_STACK 35u
-#define OMEGA2_IDENT_sha256_om2 "omega-ident 1 unit=sha256_om2 abi=2 profile=OM-2 src=dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb omc=0d4c722b70a1b94dbf4055aaeb999e09998890cc5a15995e4f23f2fc340ea008"
+#define OMEGA2_IDENT_sha256_om2 "omega-ident 1 unit=sha256_om2 abi=2 profile=OM-2 src=dbf002dd6aa36585632b9d01d98ac3f0bd2fa0f0475082940de53638847994bb omc=90c8884c7f6888be47e4aa8e211eb48b776950fc43eef937ea963f96f7083983"
 const char *omega2_ident_sha256_om2(void);
 /* export fn sha256_init c edit shactx to void */
 uint32_t omega2_sha256_init(uint64_t *result, uint8_t *o_c);
@@ -27,6 +27,8 @@ uint32_t omega2_sha256_final(uint64_t *result, uint8_t *o_c, uint8_t *o_o);
 uint32_t omega2_sha256_hash(uint64_t *result, const uint8_t *o_d, uint64_t o_d_len, uint8_t *o_o);
 /* fn omb3 st edit ulong 448 b view uchar 1024 n ulong fin ulong o edit uchar 32 to void */
 uint32_t omega_omb3(uint64_t *result, void *o_st, uint64_t o_st_len, const void *o_b, uint64_t o_b_len, uint64_t o_n, uint64_t o_fin, void *o_o, uint64_t o_o_len);
+/* fn bw_enc_sm121 ins view ulong 8192 phys view ulong 288 n ulong pad ulong code edit uchar 16384 to ulong */
+uint32_t omega_bw_enc_sm121(uint64_t *result, const void *o_ins, uint64_t o_ins_len, const void *o_phys, uint64_t o_phys_len, uint64_t o_n, uint64_t o_pad, void *o_code, uint64_t o_code_len);
 #ifdef __cplusplus
 }
 #endif

@@ -1,0 +1,14 @@
+note S5 scrub emit: a small unit whose output sha256 (s5.cases s5-scrub-emit) pins the exact scrub sequence:
+note the n checks, the STP XZR loop, MOVZ #0 for the free pool registers (f has one parameter and one
+note local below them), X16, X7, X18-X26, X29, then MOVI #0 for V0-V31. A dropped or retargeted zeroing
+note word changes the output (s5-mutants.cases m-zpool, m-zvec, m-movz16).
+om2
+fn f n ulong to ulong
+a = add n 5
+k = scrub n
+ret add a ulong k
+end
+fn main to int
+r = f 32
+ret int sub r 37
+end

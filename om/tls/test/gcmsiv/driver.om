@@ -1,0 +1,592 @@
+note SPDX-License-Identifier: Apache-2.0
+note driver.om: program-mode test driver for om/tls/gcmsiv.om (concatenated after `om2`,
+note aesgcm.om and gcmsiv.om). Reads records from stdin (at most 16 MiB), one per line, fields
+note separated by one space, hex fields in lowercase or uppercase, "-" for an empty field:
+note   G RFCLINE KEY NONCE AAD PT AUTHKEY ENCKEY POLYVAL MASKED TAG COUNTER RESULT
+note     an RFC 8452 vector (RFCLINE: the line of its "Plaintext" field in the RFC text). Eight
+note     checks, one per stage, each printing "MISMATCH line L stage NAME" on failure:
+note       derive   siv_derive gives AUTHKEY and ENCKEY
+note       polyval  siv_poly gives POLYVAL
+note       mask     siv_mask gives MASKED (S ^ nonce, bit 7 of byte 15 cleared)
+note       tag      siv_tag gives TAG
+note       counter  siv_ctrset on TAG gives the initial counter block COUNTER
+note       seal     aes_gcmsiv_seal(PT) returns 0 and RESULT (ciphertext || tag)
+note       open     aes_gcmsiv_open(RESULT) returns 0 and PT
+note       refuse   aes_gcmsiv_open returns 1 and zeroes the data area for RESULT with the last tag
+note                byte flipped, under the nonce with its first byte flipped, with the first
+note                ciphertext byte flipped (PT not empty) and with the first AAD byte flipped
+note                (AAD not empty)
+note   P KNLEN AADLEN BUFLEN WANT
+note     on zero arrays, aes_gcmsiv_seal returns WANT; for WANT 2 aes_gcmsiv_open returns 2 as well,
+note     for WANT 0 opening the sealed buffer returns 0. One check.
+note Lines that are empty or start with # are skipped; a trailing carriage return is allowed.
+note Prints "MISMATCH line L stage NAME" (wrong result) or "BAD line L" (malformed record) per
+note failure, then "gcmsiv driver: C checks, F failed". Exit 0 only when F is 0 and C is above 0;
+note exit 1 otherwise; exit 2 when the input cannot be read or exceeds 16 MiB.
+
+global inp uchar 16777216
+global st ulong 20
+global ob uchar 32
+global one uchar 1
+text tfail "MISMATCH line "
+text tbad "BAD line "
+text tstg " stage "
+text tsum "gcmsiv driver: "
+text tchk " checks, "
+text tfld " failed\n"
+text tnl "\n"
+text tio "gcmsiv driver: cannot read input or input over 16 MiB\n"
+text tsder "derive"
+text tspol "polyval"
+text tsmsk "mask"
+text tstag "tag"
+text tsctr "counter"
+text tssea "seal"
+text tsope "open"
+text tsref "refuse"
+text tspar "params"
+
+note st: 0 input length, 1 cursor, 2 line number, 3 malformed flag, 4 line start,
+note 5 key || nonce bytes, 6 aad bytes, 7 plaintext bytes, 8 key bytes, 12 checks, 13 failures
+note Expected intermediates xv: 0 AUTHKEY, 16 ENCKEY (16 or 32 bytes), 48 POLYVAL, 64 MASKED,
+note 80 TAG, 96 COUNTER.
+
+fn dslurp to int
+t = ulong 0
+while true bound 999999
+room = sub len inp t
+if eq room 0
+r = read 0 one 0 1
+if ne r 0
+ret 2
+end
+break
+end
+r = read 0 inp t room
+if lt r 0
+ret 2
+end
+if eq r 0
+break
+end
+t = add t ulong r
+end
+put st 0 t
+ret 0
+end
+
+fn dpeek to ulong
+c = get st 1
+if ge c get st 0
+ret 256
+end
+ret ulong get inp c
+end
+
+fn dadv to void
+put st 1 add get st 1 1
+end
+
+fn dbad to void
+put st 3 1
+end
+
+fn dhexv c ulong to ulong
+if ge c 48
+if le c 57
+ret sub c 48
+end
+end
+if ge c 97
+if le c 102
+ret sub c 87
+end
+end
+if ge c 65
+if le c 70
+ret sub c 55
+end
+end
+ret 16
+end
+
+fn dspace to void
+if ne dpeek 32
+dbad
+ret
+end
+dadv
+end
+
+note a decimal number at the cursor (1 to 9 digits)
+fn dnum to ulong
+v = ulong 0
+k = ulong 0
+while true bound 10
+c = dpeek
+if lt c 48
+break
+end
+if gt c 57
+break
+end
+v = add mul v 10 sub c 48
+k = add k 1
+dadv
+end
+if eq k 0
+dbad
+end
+if gt k 9
+dbad
+end
+ret v
+end
+
+note a hex field at the cursor into a[o ..); the byte count ("-" is 0 bytes)
+fn dhexf a edit uchar 65536 o ulong to ulong
+if eq dpeek 45
+dadv
+ret 0
+end
+n = ulong 0
+while true bound 65537
+hi = dhexv dpeek
+if gt hi 15
+break
+end
+dadv
+lo = dhexv dpeek
+if gt lo 15
+dbad
+break
+end
+dadv
+if ge add o n 65536
+dbad
+break
+end
+put a add o n uchar or shl hi 4 lo
+n = add n 1
+end
+if eq n 0
+dbad
+end
+ret n
+end
+
+note a space, then a hex field into a[o ..) that must have exactly want bytes
+fn dhexw a edit uchar 65536 o ulong want ulong to void
+dspace
+if ne dhexf a o want
+dbad
+end
+end
+
+fn deor to void
+if eq dpeek 13
+dadv
+end
+c = dpeek
+if eq c 10
+dadv
+ret
+end
+if ne c 256
+dbad
+end
+end
+
+fn dskip to void
+while true bound 999999
+c = dpeek
+if eq c 256
+ret
+end
+dadv
+if eq c 10
+ret
+end
+end
+end
+
+note 0 when a[ao .. ao + n) = b[bo .. bo + n)
+fn dcmp a view uchar 65536 ao ulong b view uchar 65536 bo ulong n ulong to ulong
+d = ulong 0
+for i ulong n
+if ne get a add ao i get b add bo i
+d = 1
+end
+end
+ret d
+end
+
+note 0 when a[0..n) is all zero
+fn dzero a view uchar 65536 n ulong to ulong
+d = ulong 0
+for i ulong n
+if ne get a i 0
+d = 1
+end
+end
+ret d
+end
+
+fn dcopy a edit uchar 65536 b view uchar 65536 n ulong to void
+for i ulong n
+put a i get b i
+end
+end
+
+note 0 when the 16 bytes a[o .. o + 16) are the big-endian halves h, l
+fn dq128 a view uchar 65536 o ulong h ulong l ulong to ulong
+if ne siv_be64 a o h
+ret 1
+end
+if ne siv_be64 a add o 8 l
+ret 1
+end
+ret 0
+end
+
+fn dprn v ulong to void
+x = v
+k = ulong 0
+while true bound 21
+put ob sub 31 k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+r = write 1 ob sub 32 k k
+end
+
+note the name of stage g (1 derive .. 8 refuse, 9 params)
+fn dsname g ulong to void
+if eq g 1
+r = write 1 tsder 0 len tsder
+end
+if eq g 2
+r = write 1 tspol 0 len tspol
+end
+if eq g 3
+r = write 1 tsmsk 0 len tsmsk
+end
+if eq g 4
+r = write 1 tstag 0 len tstag
+end
+if eq g 5
+r = write 1 tsctr 0 len tsctr
+end
+if eq g 6
+r = write 1 tssea 0 len tssea
+end
+if eq g 7
+r = write 1 tsope 0 len tsope
+end
+if eq g 8
+r = write 1 tsref 0 len tsref
+end
+if eq g 9
+r = write 1 tspar 0 len tspar
+end
+end
+
+note one check of stage g: res 0 passes
+fn dchk res ulong g ulong to void
+put st 12 add get st 12 1
+if ne res 0
+put st 13 add get st 13 1
+r = write 1 tfail 0 len tfail
+dprn get st 2
+r = write 1 tstg 0 len tstg
+dsname g
+r = write 1 tnl 0 1
+end
+end
+
+note a malformed record: one failed check
+fn dmbad to void
+put st 12 add get st 12 1
+put st 13 add get st 13 1
+r = write 1 tbad 0 len tbad
+dprn get st 2
+r = write 1 tnl 0 1
+end
+
+note the derive stage: 0 when siv_derive gives xv[0..16) and xv[16 .. 16 + kl)
+fn dderive kn view uchar 65536 xv view uchar 65536 to ulong
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+ek = new uchar 32 0
+kl = get st 8
+siv_derive k s part kn 0 get st 5 kl ek
+d = dq128 xv 0 get k 131 get k 132
+for i ulong kl
+if ne get ek i get xv add 16 i
+d = 1
+end
+end
+gcm_clear k s
+ret d
+end
+
+note stages polyval, mask, tag and counter through the library internals
+fn dinner kn view uchar 65536 aa view uchar 65536 pt view uchar 65536 xv view uchar 65536 to void
+k = new ulong AGKN 0
+s = new ulong AGSN 0
+siv_init k s part kn 0 get st 5 get st 8
+siv_poly k part aa 0 get st 6 part pt 0 get st 7
+dchk dq128 xv 48 get k 125 get k 126 2
+siv_mask k
+dchk dq128 xv 64 get k 125 get k 126 3
+siv_tag k s
+dchk dq128 xv 80 get k 125 get k 126 4
+siv_ctrset k get k 125 get k 126
+h = or shl siv_bsw32 get k 129 32 get k 127
+dchk dq128 xv 96 h get k 128 5
+gcm_clear k s
+end
+
+note aes_gcmsiv_seal on kn[0..kb), aa[0..ab), buf[0..bb) (a function of its own: the three
+note parts and their lengths are more than a caller with arrays of its own can hold live)
+fn dsx kn view uchar 65536 aa view uchar 65536 buf edit uchar 65536 kb ulong ab ulong bb ulong to ulong
+ret aes_gcmsiv_seal part kn 0 kb part aa 0 ab part buf 0 bb
+end
+
+note aes_gcmsiv_open on kn[0..kb), aa[0..ab), buf[0..bb)
+fn dox kn view uchar 65536 aa view uchar 65536 buf edit uchar 65536 kb ulong ab ulong bb ulong to ulong
+ret aes_gcmsiv_open part kn 0 kb part aa 0 ab part buf 0 bb
+end
+
+note seal pt; 0 when it returns 0 and buf = ex
+fn dseal kn view uchar 65536 aa view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+n = get st 7
+dcopy buf pt n
+r = dsx kn aa buf get st 5 get st 6 add n 16
+if ne r 0
+ret 1
+end
+ret dcmp buf 0 ex 0 add n 16
+end
+
+note open ex; 0 when it returns 0 and buf[0..n) = pt
+fn dopen kn view uchar 65536 aa view uchar 65536 pt view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+n = get st 7
+dcopy buf ex add n 16
+r = dox kn aa buf get st 5 get st 6 add n 16
+if ne r 0
+ret 1
+end
+ret dcmp buf 0 pt 0 n
+end
+
+note open buf under kn, aa; 0 when it returns 1 and the data area is zero
+fn drefd kn view uchar 65536 aa view uchar 65536 buf edit uchar 65536 to ulong
+n = get st 7
+r = dox kn aa buf get st 5 get st 6 add n 16
+if ne r 1
+ret 1
+end
+ret dzero buf n
+end
+
+note open ex with byte o of it flipped under kn, aa; 0 when refused with the data area zeroed
+fn dreft kn view uchar 65536 aa view uchar 65536 ex view uchar 65536 buf edit uchar 65536 o ulong to ulong
+dcopy buf ex add get st 7 16
+put buf o xor get buf o 1
+ret drefd kn aa buf
+end
+
+note open ex under the nonce with its first byte flipped
+fn drefn kn view uchar 65536 aa view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+k2 = new uchar 65536 0
+o = get st 8
+dcopy k2 kn get st 5
+put k2 o xor get k2 o 1
+dcopy buf ex add get st 7 16
+ret drefd k2 aa buf
+end
+
+note open ex with the first aad byte flipped
+fn drefa kn view uchar 65536 aa view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+a2 = new uchar 65536 0
+dcopy a2 aa get st 6
+put a2 0 xor get a2 0 1
+dcopy buf ex add get st 7 16
+ret drefd kn a2 buf
+end
+
+note the refuse stage: tag, nonce, ciphertext and aad tampering each refused
+fn drefuse kn view uchar 65536 aa view uchar 65536 ex view uchar 65536 buf edit uchar 65536 to ulong
+n = get st 7
+d = dreft kn aa ex buf add n 15
+d = or d drefn kn aa ex buf
+if gt n 0
+d = or d dreft kn aa ex buf 0
+end
+if gt get st 6 0
+d = or d drefa kn aa ex buf
+end
+ret d
+end
+
+note G record after the tag
+fn drecg kn edit uchar 65536 aa edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 xv edit uchar 65536 buf edit uchar 65536 to void
+dspace
+put st 9 dnum
+dspace
+kl = dhexf kn 0
+put st 8 kl
+dhexw kn kl 12
+put st 5 add kl 12
+dspace
+put st 6 dhexf aa 0
+dspace
+put st 7 dhexf pt 0
+dhexw xv 0 16
+dhexw xv 16 kl
+dhexw xv 48 16
+dhexw xv 64 16
+dhexw xv 80 16
+dhexw xv 96 16
+dhexw ex 0 add get st 7 16
+deor
+if ne kl 16
+if ne kl 32
+dbad
+end
+end
+if eq get st 3 1
+dmbad
+ret
+end
+dchk dderive kn xv 1
+dinner kn aa pt xv
+dchk dseal kn aa pt ex buf 6
+dchk dopen kn aa pt ex buf 7
+dchk drefuse kn aa ex buf 8
+end
+
+note P record after the tag: 0 when the calls return what the record wants
+fn drecp kn edit uchar 65536 aa edit uchar 65536 buf edit uchar 65536 to ulong
+dspace
+kb = dnum
+dspace
+ab = dnum
+dspace
+bb = dnum
+dspace
+w = dnum
+deor
+if gt kb 64
+dbad
+end
+if gt ab 65536
+dbad
+end
+if gt bb 65536
+dbad
+end
+if eq get st 3 1
+ret 1
+end
+for i ulong 64
+put kn i 0
+end
+for i ulong ab
+put aa i 0
+end
+for i ulong bb
+put buf i 0
+end
+r = dsx kn aa buf kb ab bb
+if ne r w
+ret 1
+end
+r = dox kn aa buf kb ab bb
+if eq w 2
+if ne r 2
+ret 1
+end
+ret 0
+end
+if ne r 0
+ret 1
+end
+ret 0
+end
+
+note one record at the cursor
+fn drec kn edit uchar 65536 aa edit uchar 65536 pt edit uchar 65536 ex edit uchar 65536 xv edit uchar 65536 buf edit uchar 65536 to void
+c = dpeek
+if eq c 35
+dskip
+ret
+end
+if eq c 10
+dadv
+ret
+end
+if eq c 13
+dskip
+ret
+end
+dadv
+if eq c 71
+drecg kn aa pt ex xv buf
+ret
+end
+if eq c 80
+r = drecp kn aa buf
+if eq get st 3 1
+dmbad
+ret
+end
+dchk r 9
+ret
+end
+dbad
+dmbad
+end
+
+fn main to int
+kn = new uchar 65536 0
+aa = new uchar 65536 0
+pt = new uchar 65536 0
+ex = new uchar 65536 0
+xv = new uchar 65536 0
+buf = new uchar 65536 0
+if ne dslurp 0
+r = write 2 tio 0 len tio
+ret 2
+end
+put st 1 0
+put st 2 0
+put st 12 0
+put st 13 0
+while lt get st 1 get st 0 bound 999999
+put st 2 add get st 2 1
+put st 3 0
+put st 4 get st 1
+drec kn aa pt ex xv buf
+if eq get st 3 1
+put st 1 get st 4
+dskip
+end
+end
+r = write 1 tsum 0 len tsum
+dprn get st 12
+r = write 1 tchk 0 len tchk
+dprn get st 13
+r = write 1 tfld 0 len tfld
+if ne get st 13 0
+ret 1
+end
+if eq get st 12 0
+ret 1
+end
+ret 0
+end

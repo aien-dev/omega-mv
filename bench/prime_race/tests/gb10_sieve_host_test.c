@@ -155,7 +155,10 @@ static void sim_thread(const BlackwellIRProgram *p, Thr *tp, uint32_t tid, uint3
         case BW_IR_MOV_RZ: wr(&t, in->dst_vreg, 0, p); break;
         case BW_IR_IMAD: wr(&t, in->dst_vreg, in->src2_vreg >= 0 ? a * b + c : a * in->imm + c, p); break;
         case BW_IR_IMAD_WIDE: wr64(&t, in->dst_vreg, (uint64_t)a * in->imm + rd64(&t, in->src3_vreg, p), p); break;
-        case BW_IR_IMAD_HI_U32: wr(&t, in->dst_vreg, (uint32_t)(((uint64_t)a * b) >> 32) + c, p); break;
+        case BW_IR_IMAD_HI_U32: { /* hi32(a * b + Rc+1:Rc): a register Rc is a 64-bit pair (omega #492, nvcc oracle); odd Rc: err 9 */
+            uint64_t c64 = 0;
+            if (in->src3_vreg >= 0 && p->regalloc.vreg_to_phys[in->src3_vreg] >= 0) { if (p->regalloc.vreg_to_phys[in->src3_vreg] & 1) { g_sim_err = 9; return; } c64 = rd64(&t, in->src3_vreg, p); }
+            wr(&t, in->dst_vreg, (uint32_t)(((uint64_t)a * b + c64) >> 32), p); break; }
         case BW_IR_IADD3: wr(&t, in->dst_vreg, a + b, p); break; /* the encoder's IADD3 has Rc = RZ */
         case BW_IR_SHF_R: wr(&t, in->dst_vreg, a >> (in->imm & 31), p); break;
         case BW_IR_SHF_L_U32: if (b >= 32) { g_sim_err = 8; return; } wr(&t, in->dst_vreg, a << b, p); break;
@@ -492,6 +495,26 @@ int main(int argc, char **argv) {
     /* 1. golden words */
     int fx = omega_blackwell_verify_codegen_fixtures_intops();
     CHECK(fx == 0, "golden words LOP3_LUT / SHF_L_U32 / IMAD_HI_U32 (rc %d)", fx);
+    /* omega #492: this per-thread simulator reads a register Rc of IMAD.HI.U32 as the pair Rc+1:Rc
+     * (nvcc oracle evidence/IMADHI-RC-ORACLE-nvcc13.0-20261016) and refuses an odd Rc (err 9). */
+    {
+        static BlackwellIRProgram ip;
+        memset(&ip, 0, sizeof ip);
+        ip.insns[0] = (BlackwellIRInsn){ .op = BW_IR_IMAD_HI_U32, .dst_vreg = 3, .src1_vreg = 0, .src2_vreg = 1, .src3_vreg = 2, .ureg = -1 };
+        ip.insns[1] = (BlackwellIRInsn){ .op = BW_IR_EXIT, .dst_vreg = -1, .src1_vreg = -1, .src2_vreg = -1, .src3_vreg = -1, .ureg = -1 };
+        ip.count = 2; ip.regalloc.num_vregs = 4;
+        const int ph[4] = { 4, 5, 6, 8 };
+        for (int v = 0; v < 4; v++) ip.regalloc.vreg_to_phys[v] = ph[v];
+        Thr t; memset(&t, 0, sizeof t);
+        t.r[4] = 0xdeadbeefu; t.r[5] = 0x10000u; t.r[6] = 0x56780000u; t.r[7] = 0x3f803f80u;
+        const uint32_t want = (uint32_t)(((uint64_t)0xdeadbeefu * 0x10000u + (((uint64_t)0x3f803f80u << 32) | 0x56780000u)) >> 32);
+        g_sim_err = 0; sim_thread(&ip, &t, 0, 0);
+        CHECK(g_sim_err == 0 && t.done && t.r[8] == want, "IMAD.HI.U32 even Rc: err %d out 0x%08x want pair 0x%08x", g_sim_err, t.r[8], want);
+        ip.regalloc.vreg_to_phys[2] = 7; memset(&t, 0, sizeof t);
+        g_sim_err = 0; sim_thread(&ip, &t, 0, 0);
+        CHECK(g_sim_err == 9, "IMAD.HI.U32 odd Rc not refused (err %d)", g_sim_err);
+        g_sim_err = 0;
+    }
 
     /* The scheduling pass is shared by every elementwise family. This is
      * codegen only: no public launcher or device session is called. */

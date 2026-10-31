@@ -1,0 +1,36 @@
+# S5 compiled mutants of omc.om. Expected verdicts fixed in advance: ctl-* PASS, m-* FAIL (detected).
+deadline 60
+cc seed/omc/omc.om
+ctl-dit-ok run seed/omc/om2/s5/dit-ok.om - - - 0
+ctl-scrub-mem run seed/omc/om2/s5/scrub-mem.om - - - 0
+ctl-scrub-live run seed/omc/om2/s5/scrub-live.om - - - 0
+ctl-scrub-odd run seed/omc/om2/s5/scrub-odd.om - - - 103
+ctl-scrub-emit emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+# dit: MRS X16, DIT emitted where MSR DIT, X16 belongs (the bit is never written)
+subst seed/omc/om2/s5/mut/msr.from seed/omc/om2/s5/mut/msr.to
+cc seed/omc/omc.om
+m-msr run seed/omc/om2/s5/dit-ok.om - - - 0
+# scrub: the zeroing store replaced by ADD X16, X16, #16 (the loop runs to SP, nothing is written)
+subst seed/omc/om2/s5/mut/stp.from seed/omc/om2/s5/mut/stp.to
+cc seed/omc/omc.om
+m-stp run seed/omc/om2/s5/scrub-mem.om - - - 0
+# scrub: register zeroing starts at pool index 0, over the live parameters and locals
+subst seed/omc/om2/s5/mut/live.from seed/omc/om2/s5/mut/live.to
+cc seed/omc/omc.om
+m-live run seed/omc/om2/s5/scrub-live.om - - - 0
+# scrub: the multiple-of-16 check (TST; B.NE trap 3) not emitted
+subst seed/omc/om2/s5/mut/tst.from seed/omc/om2/s5/mut/tst.to
+cc seed/omc/omc.om
+m-tst run seed/omc/om2/s5/scrub-odd.om - - - 103
+# scrub: the free pool registers get MOVZ X16, #0 instead of MOVZ Xr, #0 (their old values survive)
+subst seed/omc/om2/s5/mut/zpool.from seed/omc/om2/s5/mut/zpool.to
+cc seed/omc/omc.om
+m-zpool emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+# scrub: MOVI V0.2D, #0 thirty-two times instead of V0-V31 (V1-V31 survive)
+subst seed/omc/om2/s5/mut/zvec.from seed/omc/om2/s5/mut/zvec.to
+cc seed/omc/omc.om
+m-zvec emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+# scrub: every register-zeroing word replaced by MOVZ X16, #0 (pool, X7, X18-X26, X29, V0-V31 all survive)
+subst seed/omc/om2/s5/mut/movz16.from seed/omc/om2/s5/mut/movz16.to
+cc seed/omc/omc.om
+m-movz16 emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0

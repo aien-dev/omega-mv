@@ -1,0 +1,24 @@
+note A real executed consumer. Extra descriptors must be absent, assigned stdin/stdout must work.
+global data uchar 16
+text input "public-input"
+text output "public-output"
+fn main to int
+if ne read 3 data 0 1 neg long 9
+ret 42
+end
+if ne read 65537 data 0 1 neg long 9
+ret 43
+end
+if ne read 0 data 0 len input long len input
+ret 44
+end
+for i ulong len input
+if ne get data i get input i
+ret 45
+end
+end
+if ne write 1 output 0 len output long len output
+ret 46
+end
+ret 0
+end

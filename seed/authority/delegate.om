@@ -1,0 +1,84 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Attenuation predicate only. A trusted authority must verify the parent and issue the child.
+note Words 0..7: version,rights,memory,fuel,expiry,remaining-depth,reserved,reserved.
+note Words 8..23: exact resource scope,authority root,subject,grant identities, four words each.
+note This profile supports the same resource only. No wildcard, path or network-subnet inference.
+
+fn capvalid p view ulong 24 to ulong
+if ne get p 0 1
+ret 61
+end
+if gt get p 5 64
+ret 62
+end
+if or eq get p 4 0 or ne get p 6 0 ne get p 7 0
+ret 62
+end
+for g ulong 4
+bits = ulong 0
+for j ulong 4
+bits = or bits get p add 8 add mul g 4 j
+end
+if eq bits 0
+ret 62
+end
+end
+ret 0
+end
+
+fn capeq p view ulong 24 c view ulong 24 off ulong to bool
+diff = ulong 0
+for j ulong 4
+at = add off j
+diff = or diff xor get p at get c at
+end
+ret eq diff 0
+end
+
+fn capchild p view ulong 24 c view ulong 24 now ulong to ulong
+err = capvalid p
+if ne err 0
+ret err
+end
+err = capvalid c
+if ne err 0
+ret err
+end
+if ge now get p 4
+ret 64
+end
+if ge now get c 4
+ret 65
+end
+if ne and get c 1 get p 1 get c 1
+ret 66
+end
+if gt get c 2 get p 2
+ret 67
+end
+if gt get c 3 get p 3
+ret 68
+end
+if gt get c 4 get p 4
+ret 69
+end
+if not capeq p c 8
+ret 70
+end
+if not capeq p c 12
+ret 71
+end
+if eq get p 5 0
+ret 72
+end
+if ge get c 5 get p 5
+ret 73
+end
+if capeq p c 16
+ret 74
+end
+if capeq p c 20
+ret 75
+end
+ret 0
+end

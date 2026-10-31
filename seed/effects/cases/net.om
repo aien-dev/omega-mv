@@ -1,0 +1,9 @@
+note net: opens and closes one TCP socket; a policy without net must refuse it.
+fn main to int
+s = socknew 2 1 0
+if lt s 0
+ret 1
+end
+c = fclose int s
+ret 0
+end
