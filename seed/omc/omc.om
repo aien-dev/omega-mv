@@ -1317,6 +1317,9 @@ end
 if eq w 8674333540260081763
 ret 200
 end
+if eq w 7308604897285727600
+ret 224
+end
 if eq get om2 0 0
 ret 0
 end
@@ -5725,7 +5728,7 @@ end
 fn hbuffer c ulong dst ulong x ulong to void
 harg x 4 8
 wr = ulong 0
-if or or or or eq c 113 eq c 116 eq c 117 eq c 118 eq c 131
+if or or or or or eq c 113 eq c 116 eq c 117 eq c 118 eq c 131 eq c 224
 wr = ulong 1
 end
 e = harray x wr
@@ -5775,13 +5778,17 @@ e3 2852126720 3 3 16
 end
 end
 
-if eq c 131
-note getsockname uses a private 32-bit socklen. Success returns the full address length.
+if or eq c 131 eq c 224
+note Socket-name queries use a private 32-bit socklen and return the full length.
 spsub 16
 stkchk
 emit 3103785954
 emit 2432697314
+if eq c 224
+hsys 205
+else
 hsys 204
+end
 emit 4043309087
 failed = get oc 0
 emit 1409286155
@@ -7086,6 +7093,10 @@ if eq c 222
 hsendmsg dst x
 ret
 end
+if eq c 224
+hbuffer c dst x
+ret
+end
 if eq c 176
 mtinit
 mnew c dst x
@@ -7598,6 +7609,10 @@ vdone 1 d 9
 ret
 end
 if or or and ge c 100 le c 177 and ge c 197 le c 198 and ge c 220 le c 222
+hostval c dst
+ret
+end
+if eq c 224
 hostval c dst
 ret
 end
@@ -14071,6 +14086,9 @@ wr = ulong 0
 if or or or or or eq c 113 eq c 116 eq c 117 eq c 118 eq c 131 eq c 161
 wr = ulong 1
 end
+if eq c 224
+wr = ulong 1
+end
 e = harray x wr
 if or or eq c 116 eq c 118 eq c 119
 harg x 2 8
@@ -14118,11 +14136,16 @@ ximm 0 16384
 xrr 9 10 0
 end
 end
-if eq c 131
+if or eq c 131 eq c 224
+note peername shares the private 32-bit socklen; x86-64 getsockname 51, getpeername 52.
 xsp 1 16
 xhput 2 4 0 4
 xrr 137 2 4
+if eq c 224
+xhcall 52
+else
 xhcall 51
+end
 xrr 133 0 0
 bad = xbranch 11
 xhraw 0 4 0 4
@@ -15162,7 +15185,7 @@ if or or eq c 109 eq c 130 eq c 120
 xhtime c dst x
 ret
 end
-if or or and ge c 113 le c 119 eq c 131 or eq c 161 eq c 162
+if or or or and ge c 113 le c 119 eq c 131 or eq c 161 eq c 162 eq c 224
 xhbuffer c dst x
 ret
 end

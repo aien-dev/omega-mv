@@ -49,7 +49,7 @@ MODE = re.compile(rb"^(?:ir(?:[ \t\r\n]|$)|check(?:[ \t\r\n]|$)|next(?:[ \t\r\n]
 TEXT = re.compile(rb'(?m)^[ \t]*text[ \t]+\w+[ \t]+"((?:[^"\\]|\\.)*)"[^\n]*$')
 UNSAFE = set("""
 devctl devcall uvmctl mapnew mapdrop mapget mapset mapread mapwrite mapaddr maphold mapbind
-efi socket socknew bind sockbind connect listen accept send recv sockname sockopt shutdown
+efi socket socknew bind sockbind connect listen accept send recv sockname peername sockopt shutdown
 fork exec execprog waitpid kill killpid clock realns monons sleep sleepns random cwd
 chdir fchdir envcnt envlen envread open openat fopen fclose fseek fsync fdsync fchmod
 chmod chown umask unlink rename renames link symlnk mkdir makedir rmdir stat lstat
@@ -112,6 +112,7 @@ network a8b16320610b79bd0a3e96e303d631c1a9a00b6464d963f3d79c5b4e1ff2d514
 sockopt 0ee354c31e3e33c63da7cd8ade18cdf3f98d6d742adeedbffa506d746b5ff0c1
 netdata 6762de311b8b1cb4f1f9220bc3837b29733fcf382ac3c2cd19e8096c02789f88
 netpeer ed93e15648c6fe304cc28590065fab6d36887db448c253813b8a762ca9c61193
+peername 3052bbfc59647745e2576bb5ffb528ec10f23dc467b2c1b1d55d0a8980f8a728
 process 0c1292a905cb1263a733e26f2e026a2915089d6d6959d16b617c05f446452964
 memcheck 652a4bc9455251bb51d01a75fc5be0ad008ae5e022e4835e43959f073c82413d
 device 375898c6ac071af5ab50bb41fce6aa93ee5796302916cac65df70831c52d3d67
@@ -385,7 +386,7 @@ def expanded_cases(files, record):
         driver = case.driver or HOST_DRIVERS.get(digest(case.source))
         if driver == "network" and not case.args:
             yield Case(case.name + ":gate-host-tcp-loopback", case.source, args=("tcp",), expected_exit=0)
-        elif driver == "netdata" and not case.args:
+        elif driver in ("netdata", "peername") and not case.args:
             for argument in ("1", "2", "3"):
                 yield Case(case.name + ":gate-host-bounds-" + argument, case.source,
                            args=(argument,), expected_exit=103)

@@ -61,6 +61,8 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 | Codex (GPT-6.1 Sol) | Neuralese supplement proposal, bounded native envelope/codebook decoder and existing Omega-conductor host refusal/mutant cases |
 | Codex (GPT-6.1 Sol) | NL4 native numerical payload codec, canonical LTP0 consumer, independent receiver-matched pure execution boundary and host synthetic rejection/mutant qualification (#920) |
 | Codex (GPT-6.1 Sol) | Repaired qty float-domain classification and checked ingress, diagnostic categories and query/output streaming; permanent adversarial regression fixtures for the #909/#911 audit |
+| Codex (GPT-6.1 Sol) | Bounded native peername metadata on existing descriptors, Linux length/errno conventions, and loopback/refusal qualification |
+| Claude Opus 5.5 | peername on the x86-64 Linux backend (getpeername 52, writable socklen buffer), its reviewed x86 qualification pin and bounds cases, and the compiler reseed and pin bump onto current main |
 | Claude Opus 5.5 | OSC IR v7 memory oracle: independent decoder, validator and interpreter (`seed/wasm/v7/oracle.js`), separate hand-written fixture writer, hand-written expectations and a mutant-checked self-test |
 | Claude Opus 5.5 | Effect-derived capability manifest (`seed/effects`, M1): host-word manifest, ELF syscall resolution that fails closed, seccomp cBPF output, probe-parity/strace/bwrap gate with negative controls and tool mutants |
 | Claude Opus 5.5 | seed/agent: omagent, a nanobot-style coding agent in seeded Omega (agent loop, four permissioned tools, JSONL session memory, SSE streaming, CLI), its scripted-mock test referee with six mutants, and the paired startup/RSS benchmark against nanobot |

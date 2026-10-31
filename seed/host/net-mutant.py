@@ -36,6 +36,7 @@ def main():
     mutations = [
         ("parent-pid-wrong-syscall", "netpeer.om", b"if eq c 154\nret 173\n", b"if eq c 154\nret 110\n"),
         ("ignored-option-refusal", "netdata.om", b"matconst 0 sub ulong 0 92\n", b"matconst 0 0\n"),
+        ("peer-local-wrong-syscall", "peername.om", b"if eq c 224\nhsys 205\n", b"if eq c 224\nhsys 204\n"),
     ]
     with tempfile.TemporaryDirectory(prefix="net-mutants-") as scratch:
         for name, fixture, needle, replacement in mutations:
