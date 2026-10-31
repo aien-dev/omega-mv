@@ -1,0 +1,16 @@
+# Declared C2 delta for omc 7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de (1db941627, #970: close_range
+# before exec). manifest-c2.txt stays frozen. Every later pin through omc be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a
+# (main 474197e4) emits the same bytes for these rows; the pin before #970 (omc 1578b357, d94617177) still matches the frozen values.
+# Under be8c5130 the frozen manifest fails exactly these four rows beyond the three earlier declared deltas. Each source calls
+# execprog, whose exec path now closes unintended descriptors (close_range) before execve, so only code bytes change.
+# Behaviour is unchanged: each row's source was compiled by omc 2c824805 (whose binary hash is the frozen manifest-c2.txt value)
+# and by omc be8c5130, both binaries were run with the same inputs, and exit status, stdout and stderr matched:
+#   c2-00025 seed/host/tests/memcheck.om, argv[1] = the compiler: exit 0, "PASS 36 device/mapping compiler refusals"
+#   c2-00029 seed/host/tests/process.om, ./exec-child = native seed/host/tests/args.om build: exit 0, no output
+#   c2-00128 seed/qualification/security673/gate669.om from a 725ca8397 tree: exit 0, "GATE669 PASS ..."
+#   c2-05721 seed/qualification/om2/gate.om from a 725ca8397 tree over selftest controls/emit/fail/pass: exits 3 1 1 0
+# Negative control: the c2-00025 source with "PASS 36" changed to "PASS 37" (built by be8c5130) differs from the old run.
+c2-00025 emit pack:seed/qualification/om2/c2/corpus.pack:71815:6428 sha:672d3b4808ab629b7813c9c6ff41c7c34248ee889acd44f0c70b9ed641c78846 - 0
+c2-00029 emit pack:seed/qualification/om2/c2/corpus.pack:81492:1996 sha:431df072194a4f70d42a6b7fc99646fb8a2365b8156a975ebc78e8ccef93eb5e - 0
+c2-00128 emit pack:seed/qualification/om2/c2/corpus.pack:195762:7593 sha:ff6d8f2cee533dde56d62f4c5e37e305be30d020f7b814ae3b6a9e17b6b45f9f - 0
+c2-05721 emit pack:seed/qualification/om2/c2/corpus.pack:3386857:36494 sha:d08d6399a07adeffb746639aec822cd6c489040fe21a8b6f874a319a7baa4b12 - 0

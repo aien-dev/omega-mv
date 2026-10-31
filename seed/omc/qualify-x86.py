@@ -140,6 +140,14 @@ CONDUCTOR_FAILURES = {
     "seed/qualification/om2/candidates/s4/s4-part-mutants.cases": "",
     "seed/qualification/om2/baseline/guard.cases": "",
     "seed/qualification/om2/baseline/transform.cases": "",
+    # Headers fix ctl PASS / kill FAIL in advance (s5: "ctl-* PASS, m-* FAIL";
+    # bnd: "pass=2 fail=8"; hex: "pass=3 fail=5"); seed/host/check.sh runs each.
+    "seed/omc/om2/s5/s5-mutants.cases": "m-msr m-stp m-live m-tst m-zpool m-zvec m-movz16 m-twinall m-twinnone",
+    "seed/omc/om2/bnd/mutants.cases":
+        "bnd-extra-om1-left-typed bnd-extra-om2-left-typed bnd-extra-om1-left-assign bnd-extra-om2-left-assign "
+        "bnd-missing-om1-short-next bnd-missing-om2-short-next bnd-missing-om1-short-bare bnd-missing-om2-short-bare",
+    "seed/omc/om2/hex/mutants.cases":
+        "hex-tbig-pairs-run hex-tbig-places-run hex-nolimit-r6-17trunc hex-digit-pairs-run hex-digit-floatlike-run",
 }
 HISTORICAL_COMPILERS = {
     "build/om2-qual/cand-s1/omc.om": ("a5927895c02a5abe6b5c3a455f5d54303962ebe8", "3d7bcf9afdaa36fc42b862e0af39c524a14e85204bd5f40ee74107db40ce6a1d"),
@@ -529,7 +537,11 @@ def conductor_case(path, name, line, alternate, compiler_subst):
                 f"run exit={code} expected=0 mutant survived: stdout equals the oracle "
                 "stderr=match; not a meaningful kill")
         if original_name in failures:
-            if digest(path.read_bytes()) != "0ac554e4497232cc1ba99caca4e07cb12c62b5e3dd1c4af027864a31b29fbc64":
+            # f56a372ae (#971) moved only the four ctl-*-sha control sources from the deleted
+            # om/sha256/sha256.om to seed/qualification/om2/baseline/sha256-om1.om, whose sha256
+            # 7f034814...4e21 equals the acb3f15 source pinned below; kill and failure rows unchanged.
+            # Previous manifest sha256 0ac554e4497232cc1ba99caca4e07cb12c62b5e3dd1c4af027864a31b29fbc64.
+            if digest(path.read_bytes()) != "69eb3687c3f0a108c4aab3a7989ded6de0e46b118b4e2856ebfbacbaec3cc90c":
                 raise Failure("historical S2 failure contract manifest changed")
             historical_failure = {
                 "original_expected": expected, "original_observed": "FAIL",
@@ -559,7 +571,8 @@ def current_c2_contract(fields):
     """Use the already accepted deltas, retaining the frozen replay separately."""
     for relative in ("seed/qualification/om2/manifest-c2-capacity.txt",
                      "seed/qualification/om2/manifest-c2-batch2.txt",
-                     "seed/qualification/om2/manifest-c2-fpvreg.txt"):
+                     "seed/qualification/om2/manifest-c2-fpvreg.txt",
+                     "seed/qualification/om2/manifest-c2-closerange.txt"):
         path = ROOT / relative
         for line in path.read_text().splitlines():
             replacement = line.split()
@@ -723,7 +736,8 @@ def cases(files, record):
                     fields, replacement = current_c2_contract(fields)
                     if replacement:
                         evidence["accepted_current_contract"] = replacement
-                if "om/sha256/sha256.om" in fields[2]:
+                if ("om/sha256/sha256.om" in fields[2] or
+                        "seed/qualification/om2/baseline/sha256-om1.om" in fields[2]):
                     evidence["historical_source"] = {
                         "path": "om/sha256/sha256.om", "revision": "acb3f15",
                         "packed_spec": "pack:seed/qualification/om2/c2/corpus.pack:12540:35333",
