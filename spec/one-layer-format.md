@@ -213,10 +213,12 @@ build `tests/compiler/test_osc_ir_decode.c` plain and with ASan/UBSan. Measured 
   the random edits differ because it draws fewer valid variants first) with no sanitizer report;
 - one counterexample per reachable class (section 7), built by an independent writer in the test,
   whose canonical case is byte-identical to `osc_ir_encode`;
-- negative controls: 5 planted defects caught by the test's own checks, and 8 decoder mutants
+- negative controls: 5 planted defects caught by the test's own checks, and 22 decoder mutants
   (`OSC_IR_DECODE_MUTANT` = 1 no trailing check, 2 no version check, 3 no zeroing on refusal,
   4 no validation, 5 no NUL check, 6 no register range check, 7 no total size check, 8 truncation
-  read as zeros) each make the test fail.
+  read as zeros, 9 no count/length maximum anywhere, 10 unknown opcode admitted, 11..22 one
+  count/length maximum off each: nstructs, nfields, nfuncs, nvregs, nblocks, ninsns, call nargs,
+  function name, requires, ensures, struct name, field name) each make the test fail.
 
 ## 9. Open (asked by #444, not in this change)
 

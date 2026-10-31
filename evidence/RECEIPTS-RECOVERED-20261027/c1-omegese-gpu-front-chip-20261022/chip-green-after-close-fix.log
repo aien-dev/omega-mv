@@ -1,0 +1,26 @@
+Thu Oct 22 07:05:50 UTC 2026
+d1ac019ef604982d3dd3456b8d339ab3b78aa1b6
+cb74c2baf46b80bbe20cac6d5165ee0f1e22f98176de1d8724c120e5a2b81e9f  build/osc_gpu/test_osc_gpu_chip
+COMMAND: spark-window run timeout 180 stdbuf -oL -eL env OSC_GPU_MUTANT=0 build/osc_gpu/test_osc_gpu_chip build/osc_gpu/ir
+test_osc_gpu_chip: GB10, mutant 0, MUFU tolerance 2^-20 relative (stated in the source before the run)
+  vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+  gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  gemm    248 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  reduce  192 instructions,  24 registers, 256 threads, 8224 shared bytes, 2 regions on 1 barriers, 12 argument words
+  nest16  112 instructions,  16 registers, 32 threads, 0 shared bytes, 0 regions on 0 barriers, 8 argument words
+  ops_u   624 instructions,  32 registers, 256 threads, 0 shared bytes, 16 regions on 1 barriers, 24 argument words
+  ops_f   208 instructions,  32 registers, 256 threads, 256 shared bytes, 0 regions on 0 barriers, 20 argument words
+FAIL: ops_f op 8 order 0: 1 wrong (first t 31: got 0x00000000 want 0x00200000), status 0
+  nest16j 288 instructions,  16 registers, 32 threads, 0 shared bytes, 16 regions on 16 barriers, 8 argument words
+  vloop    80 instructions,  24 registers, 64 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+  om_vadd     64 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 16 argument words
+FAIL: vadd order 0: 996 wrong words, status 0
+FAIL: vadd short inputs order 0: 896 words wrong (a trapped thread stored, or a good one did not)
+FAIL: vadd short inputs: status code 0, want 3
+  om_gate     72 instructions,  24 registers, 256 threads, 0 shared bytes, 1 regions on 1 barriers, 12 argument words
+FAIL: gate order 0: 939 wrong words
+  om_gemm    256 instructions,  40 registers, 256 threads, 2048 shared bytes, 1 regions on 1 barriers, 16 argument words
+  om_attn    248 instructions,  48 registers, 128 threads, 16 shared bytes, 1 regions on 1 barriers, 22 argument words
+test_osc_gpu_chip: 59 chip launches, 107.251 ms on the chip in total
+test_osc_gpu_chip: 645 checks, 5 failed
+EXIT_CODE=1

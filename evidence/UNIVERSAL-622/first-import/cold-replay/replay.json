@@ -1,0 +1,281 @@
+{
+  "schema": "omega.universal.cold-replay.v1",
+  "source_commit": "50f75da28845f21b118bcf8e3499b96c35ddb587",
+  "upstream_621_source": "cd2c41f3c697524629585b2a228e2f0ab5b99c45",
+  "result": "PASS",
+  "commands": [
+    {
+      "command": [
+        "make",
+        "-f",
+        "mk/c-u64-import.mk",
+        "test-c-u64-import"
+      ],
+      "status": 0,
+      "log_sha256": "ed703633e27d3f0d2eda4ab444fab5c0434a72ff86285eda4b411518a755d784"
+    },
+    {
+      "command": [
+        "make",
+        "PHYSICS_DIR=/home/drakestapleton/workspace/hermes-desk/universal-L569-physics",
+        "test-source-aware"
+      ],
+      "status": 0,
+      "log_sha256": "1aeb1f0bf01e46b03483219fecc2920c5bbfb27bc5dfe7595ebf63f4ed3f3b7f"
+    },
+    {
+      "command": [
+        "make",
+        "-j2",
+        "OUT_DIR=build/L589/foundation",
+        "PHYSICS_DIR=/home/drakestapleton/workspace/hermes-desk/universal-L569-physics",
+        "test"
+      ],
+      "status": 0,
+      "log_sha256": "6622f3c1fd042ca0c85f828cac2f156c86a6d50c5271966dff2c66e545322a13"
+    }
+  ],
+  "input_hashes": {
+    "src/adapters/c-u64-import.om": "172c8dcce7a1a3925299b8d8dff261e1302079a76e8979d4c4c0cb27a771e91e",
+    "src/source-aware/core.om": "24c0837d05990fcb1daaafec13d2408d4359ae4fa6c9866307b73c5132c8b7eb",
+    "src/source-aware/main.om": "d6c5b7cd0fda311fd3796ca78f01a458254bbfbe8f1e570e3f16844418de16f9",
+    "src/source-aware/vendor/sha256.om": "12d492b5f99b47b1e525067e1660c7cedbf6b414032cfc8b7e174919a28c052c",
+    "tools/adapters/build-c-import.py": "0a3f08509732ca4aaf26acf35d4d62d0407e1938175e8abbc7fc33d01e09342a",
+    "tools/adapters/c-import": "4335d9976cab8cf4ca53d3d7735dd298481c57f16dbc08794e517789842241f7",
+    "tools/source-aware/build": "15e2b10a7a39fad1e1a9e61f948f834ff4fd209981a9da32f20469fcbeb8c7fe",
+    "tools/source-aware/sa": "2dc43b683a94e915e0cd89c9d2f4093007531f968f1de2387593375974c84e40",
+    "tests/universal/c_import_gate.py": "aef6a0bed19205e2a4ed96263fccc23b16654d0cf2c1af382e78ed455db6b02b",
+    "tests/universal/c_import_controls.py": "6991dc771d288357d8814c2de44663d0604d5cfebd6cba8d8374fa0aa9cfa652"
+  },
+  "records": {
+    "C": "build/L589/gate-d1a1fcbfa88f43db85ffd4cb244461e1/result.json",
+    "boundaries": "build/L589/controls-181d673a20c34b5eb9a90b4cf2693221/boundaries.json",
+    "mutants": "build/L589/controls-181d673a20c34b5eb9a90b4cf2693221/mutants.json"
+  },
+  "physical_host": "Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux",
+  "cpu": {
+    "lscpu": [
+      {
+        "field": "Architecture:",
+        "data": "aarch64"
+      },
+      {
+        "field": "CPU op-mode(s):",
+        "data": "64-bit"
+      },
+      {
+        "field": "Byte Order:",
+        "data": "Little Endian"
+      },
+      {
+        "field": "CPU(s):",
+        "data": "20"
+      },
+      {
+        "field": "On-line CPU(s) list:",
+        "data": "0-19"
+      },
+      {
+        "field": "Vendor ID:",
+        "data": "ARM"
+      },
+      {
+        "field": "Model name:",
+        "data": "Cortex-X925"
+      },
+      {
+        "field": "Model:",
+        "data": "1"
+      },
+      {
+        "field": "Thread(s) per core:",
+        "data": "1"
+      },
+      {
+        "field": "Core(s) per socket:",
+        "data": "10"
+      },
+      {
+        "field": "Socket(s):",
+        "data": "1"
+      },
+      {
+        "field": "Stepping:",
+        "data": "r0p1"
+      },
+      {
+        "field": "Frequency boost:",
+        "data": "disabled"
+      },
+      {
+        "field": "CPU(s) scaling MHz:",
+        "data": "100%"
+      },
+      {
+        "field": "CPU max MHz:",
+        "data": "3900.0000"
+      },
+      {
+        "field": "CPU min MHz:",
+        "data": "1378.0000"
+      },
+      {
+        "field": "BogoMIPS:",
+        "data": "2000.00"
+      },
+      {
+        "field": "Flags:",
+        "data": "fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm dit uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svepmull svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16 dgh bti ecv afp wfxt"
+      },
+      {
+        "field": "Model name:",
+        "data": "Cortex-A725"
+      },
+      {
+        "field": "Model:",
+        "data": "1"
+      },
+      {
+        "field": "Thread(s) per core:",
+        "data": "1"
+      },
+      {
+        "field": "Core(s) per socket:",
+        "data": "10"
+      },
+      {
+        "field": "Socket(s):",
+        "data": "1"
+      },
+      {
+        "field": "Stepping:",
+        "data": "r0p1"
+      },
+      {
+        "field": "CPU(s) scaling MHz:",
+        "data": "100%"
+      },
+      {
+        "field": "CPU max MHz:",
+        "data": "2808.0000"
+      },
+      {
+        "field": "CPU min MHz:",
+        "data": "338.0000"
+      },
+      {
+        "field": "BogoMIPS:",
+        "data": "2000.00"
+      },
+      {
+        "field": "Flags:",
+        "data": "fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm dit uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svepmull svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16 dgh bti ecv afp wfxt"
+      },
+      {
+        "field": "L1d cache:",
+        "data": "1.3 MiB (20 instances)"
+      },
+      {
+        "field": "L1i cache:",
+        "data": "1.3 MiB (20 instances)"
+      },
+      {
+        "field": "L2 cache:",
+        "data": "25 MiB (20 instances)"
+      },
+      {
+        "field": "L3 cache:",
+        "data": "24 MiB (2 instances)"
+      },
+      {
+        "field": "NUMA node(s):",
+        "data": "1"
+      },
+      {
+        "field": "NUMA node0 CPU(s):",
+        "data": "0-19"
+      },
+      {
+        "field": "Vulnerability Gather data sampling:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Ghostwrite:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Indirect target selection:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Itlb multihit:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability L1tf:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Mds:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Meltdown:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Mmio stale data:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Old microcode:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Reg file data sampling:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Retbleed:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Spec rstack overflow:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Spec store bypass:",
+        "data": "Mitigation; Speculative Store Bypass disabled via prctl"
+      },
+      {
+        "field": "Vulnerability Spectre v1:",
+        "data": "Mitigation; __user pointer sanitization"
+      },
+      {
+        "field": "Vulnerability Spectre v2:",
+        "data": "Mitigation; CSV2, BHB"
+      },
+      {
+        "field": "Vulnerability Srbds:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Tsa:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Tsx async abort:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Vmscape:",
+        "data": "Not affected"
+      }
+    ]
+  },
+  "operating_system": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+  "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "node": "v24.21.0",
+  "scope": "HOST_NATIVE correctness only; no timing, GPU, x86 or RV64 qualification; independent review pending",
+  "signed": false
+}

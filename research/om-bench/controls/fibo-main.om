@@ -1,0 +1,19 @@
+fn main to int
+n = readall
+v = ulong 0
+for i ulong n
+c = get inb i
+if and ge c 48 le c 57
+v = add mul v 10 ulong sub c 48
+end
+end
+a = ulong 0
+b = ulong 1
+for i ulong v
+t = add a b
+a = b
+b = t
+end
+printu a
+ret 0
+end

@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Transparent host dispatch; Go import computation and hashing run in seeded native Omega (#741)."""
+from pathlib import Path
+import hashlib,json,os,sys
+root=Path(__file__).resolve().parents[2]
+NAME='go-import'
+if len(sys.argv)!=1:
+    print('GO_IMPORT_BAD_COMMAND: use stdin; no arguments',file=sys.stderr);raise SystemExit(64)
+try:
+    build=root/'build/L741';m=json.loads((build/'build.json').read_text());exe=build/NAME;a=m['artifacts'][NAME]
+    if m['compiler_sha256']!='191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9':raise ValueError('compiler identity')
+    want={'src/source-aware/vendor/sha256.om','src/adapters/go-u64-import.om'}
+    if set(a['inputs'])!=want:raise ValueError('source closure')
+    for rel,digest in a['inputs'].items():
+        if hashlib.sha256((root/rel).read_bytes()).hexdigest()!=digest:raise ValueError('changed source '+rel)
+    if hashlib.sha256(exe.read_bytes()).hexdigest()!=a['binary_sha256']:raise ValueError('changed artifact')
+except (OSError,ValueError,KeyError,TypeError) as exc:
+    print('GO_IMPORT_STALE_OR_MISSING_BUILD: '+str(exc),file=sys.stderr);raise SystemExit(78)
+os.execv(exe,[str(exe)])

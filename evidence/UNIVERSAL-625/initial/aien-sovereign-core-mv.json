@@ -1,0 +1,15 @@
+{
+  "repo": "aien-sovereign-core-mv",
+  "source": "754c07b118f41ad899607b60329bd851b1ccb13e",
+  "command": [
+    "cargo",
+    "test",
+    "--offline",
+    "-p",
+    "aien-abi-core",
+    "--target-dir",
+    "target/L569-baseline"
+  ],
+  "rc": 0,
+  "log": "aien-sovereign-core-mv.log"
+}

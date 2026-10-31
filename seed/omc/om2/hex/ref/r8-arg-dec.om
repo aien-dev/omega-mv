@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note Decimal twin of r8-arg.om (value from Wolfram, wolfram.txt query tokens): same line, same error.
+om2
+fn f c uchar to ulong
+ret ulong c
+end
+fn main to int
+x = f 256
+ret 0
+end

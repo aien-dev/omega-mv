@@ -205,6 +205,12 @@ measurement and not a quiet-machine R15 qualification.
 | `HOST_PASS_ENERGY_UNMEASURED` | Everything passes on a host with no energy counter, such as CI. |
 | `FAIL` | Anything else. |
 
+The host gate (`tests/gates/run.sh rx-host-reference`) requires the value that
+matches the machine: `PASS` on a host whose hwmon exposes the `aien_spbm`
+package energy counter, `HOST_PASS_ENERGY_UNMEASURED` on a host without it. It
+records which one as the observation `incremental_semantics_verdict`.
+`PASS_UNBOUND` and `FAIL` fail the gate on every host (omega-mv#404 item 2).
+
 ## Limits
 
 - Functions must be pure over their declared inputs. The engine cannot see an

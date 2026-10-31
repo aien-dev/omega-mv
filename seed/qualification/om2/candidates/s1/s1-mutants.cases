@@ -6,38 +6,38 @@
 # pass), the kill rows of sec/s3s4/mutant-kills.cases, cc pinned. The first block rebuilds the
 # unmutated source: its printed sha256 must equal 3134244727189883d317e6813b93d2f55b24f2ca5e236daf6d39ef48412f049f.
 cc build/om2-qual/cand-s1/omc.om
-ctl-s1-rebuilt-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-s1-rebuilt-sha run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 correct-rot-values run seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
 cc pinned
 # --- mutant rot-imm-plus1
 # --- mutant rot-imm-plus1
 subst seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.from seed/qualification/om2/candidates/s1/mutants/rot-imm-plus1.to
 cc build/om2-qual/cand-s1/omc.om
-ctl-rot-imm-plus1-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-rot-imm-plus1-sha run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 rot-imm-plus1-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
 cc pinned
 # --- mutant rot-imm-wminusn
 subst seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.from seed/qualification/om2/candidates/s1/mutants/rot-imm-wminusn.to
 cc build/om2-qual/cand-s1/omc.om
-ctl-rot-imm-wminusn-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-rot-imm-wminusn-sha run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 rot-imm-wminusn-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
 cc pinned
 # --- mutant rol-imm-as-ror
 subst seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-imm-as-ror.to
 cc build/om2-qual/cand-s1/omc.om
-ctl-rol-imm-as-ror-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-rol-imm-as-ror-sha run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 rol-imm-as-ror-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
 cc pinned
 # --- mutant rol-reg-as-ror
 subst seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.from seed/qualification/om2/candidates/s1/mutants/rol-reg-as-ror.to
 cc build/om2-qual/cand-s1/omc.om
-ctl-rol-reg-as-ror-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-rol-reg-as-ror-sha run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 rol-reg-as-ror-kill-rot-values kill seed/qualification/om2/sec/s3s4/rot-values.om+seed/qualification/om2/sec/s3s4/lib-pu.om - file:seed/qualification/om2/oracle/s3s4/exp/rot-values.out - 0
 cc pinned
 # --- mutant rot-nocheck
 subst seed/qualification/om2/candidates/s1/mutants/rot-nocheck.from seed/qualification/om2/candidates/s1/mutants/rot-nocheck.to
 cc build/om2-qual/cand-s1/omc.om
-ctl-rot-nocheck-sha run seed/qualification/om2/baseline/sha256-main.om+om/sha256/sha256.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
+ctl-rot-nocheck-sha run seed/qualification/om2/baseline/sha256-main.om+seed/qualification/om2/baseline/sha256-om1.om file:seed/qualification/om2/fixtures/msg/abc.bin line:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad - 0
 rot-nocheck-kill-rot-trap-A kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:65:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-A.out - 0
 rot-nocheck-kill-rot-trap-B kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:66:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-B.out - 0
 rot-nocheck-kill-rot-trap-C kill seed/qualification/om2/sec/s3s4/rot-trap.om+seed/qualification/om2/sec/s3s4/lib-pu.om rep:67:1 file:seed/qualification/om2/oracle/s3s4/exp/rot-trap-C.out - 0

@@ -1,0 +1,153 @@
+{
+  "profile": "SC1-Q",
+  "source_commit": "ee1b3f8ea1acb45f27fd190049e30ad14e8d3a3b",
+  "base_commit": "00eb0e7106d2f8fc841e5e16eb624fa1bd029111",
+  "contract_sha256": "8bc52be7a480e279fb77673648a2f7775ba6d4841a8b1e6c427531b25d4d1860",
+  "target": "Linux 7.0.0-1019-nvidia aarch64",
+  "abi": "Linux AArch64 seed ELF",
+  "compiler_expected_sha256": "734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61",
+  "source_hashes_raw": "bb0214be78009c9af59e8fb82f22ed84de4eeba94bdc95a4bffd972d5616da97  om/quantity/quantity.om\n33fed09f146cd4eb009bbd6f9134102478fbbfc9c70a41680d29de3649899ff1  om/quantity/tests.om\ndf1723da7d055b2be827374b857bad29cd40413f70c3044b23517253cf73b46a  om/quantity/demo.om\nc4e7bf75938e6a4ae22c5b405773984465efa646d1a4b08521505b93904471c5  om/quantity/mutate.om\ncdb679f250c0b3d5b42f681928fcea5dfb8489a6deb9f2ec268a6c71856f7a46  om/quantity/fixtures/mixed-scalar.om\n59a911bb47db77179df5e8fdb58787c1895175227aa2a40e08ac50d2d99567e1  om/quantity/fixtures/mixed-quantity.om\n92c32dd28633f6351dd2f8f053d5cccf29b97deb325da9a3bf19cb35dfe7e5fe  om/quantity/fixtures/crypto-wrap.om\nac7c2d1177153075c0e56a733770c18856dff157656e9f59493070989e5c5321  om/quantity/README.md\n2e35db7d6c2066fb4a20d19b8a9579c44caca9c9937b0594a89422010b673637  seed/omc/omc.om\n734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61  seed/out/omc\nbaaf081fe6055a768485c5d25d7435681ce00b04cfa80b26c48169f78944e14d  seed/rung0/seed0.hex\n",
+  "bootstrap_command": "nice -n 19 sh seed/omega-from-seed.sh",
+  "bootstrap_exit": 0,
+  "bootstrap_stdout": "PASS seed0 408 bytes, rebuilds itself\nPASS hex1 776 bytes, born from seed0\nPASS asm2 2464 bytes, born from hex1\nPASS om4 om4.bin 14224 bytes\nPASS omc fixpoint 734f0a39319fbfa930bcc62cb30dbf06d47d78e126372b74f5baf478e6126b61\nPASS fwd exit 0\nPASS fwd runs, exit 7\nPASS mut exit 0\nPASS mut runs, exit 0\nPASS cycle exit 9\nPASS assign exit 7\nRC=0\n",
+  "invocation": "Each named source is byte concatenation in README order; nice -n 19 seed/out/omc reads it on stdin, captured stdout becomes executable, chmod0755, then nice -n 19 executable. Mutator reads quantity.om on stdin with argument a/m; its stdout replaces only library input. Python subprocess was orchestration only, not shipped first-party implementation or oracle.",
+  "records": [
+    {
+      "name": "tests",
+      "source_sha256": "7b4875414ca54b7651b1b106de01e82f0483e254e31b4b6f24a1a9136fd1b917",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 12084,
+      "compile_stderr": "",
+      "binary_sha256": "80a07497051b0f061575c4cb31198cdc71699b7467e023d38fbaa3e260433d37",
+      "run_exit": 0,
+      "stdout": "PASS Q1-Q9 runtime; Q2 widths1..8 pairs87380 operations262140\n",
+      "stderr": ""
+    },
+    {
+      "name": "demo",
+      "source_sha256": "4c236ab4dbb0f5374227e8d950af25ded11ae50b0fba0bc25db91b452e22f08d",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 4200,
+      "compile_stderr": "",
+      "binary_sha256": "fde488154d9806c49e57b27b6affbe51f2037d43569b2a87fe64b595a6d02fdb",
+      "run_exit": 0,
+      "stdout": "PASS modular baseline8 checked add status3 unchanged output effects0\nPASS multiply status3 narrow status3 negative status2 unchanged output\nPASS reused object identity changed version status4 unchanged slice\n",
+      "stderr": ""
+    },
+    {
+      "name": "crypto-wrap",
+      "source_sha256": "92c32dd28633f6351dd2f8f053d5cccf29b97deb325da9a3bf19cb35dfe7e5fe",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 268,
+      "compile_stderr": "",
+      "binary_sha256": "6178e84856c15364c07299ee581478b44b2e7fc1f794c36e4c1c52290277a219",
+      "run_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "mixed-scalar",
+      "source_sha256": "d376817f9af22df6f16b0f6185227b80fc8b8ea0e800ff7ab21d015be9892b86",
+      "compile_exit": 16,
+      "compile_stdout_bytes": 0,
+      "compile_stderr": "omc: line 147: error 16\n"
+    },
+    {
+      "name": "mixed-quantity",
+      "source_sha256": "3f9c4e55552dc320cfa5ed8a8e5581ec5fde0dbe0660b6429c085a82eb0c2bd6",
+      "compile_exit": 7,
+      "compile_stdout_bytes": 0,
+      "compile_stderr": "omc: line 149: error 7\n"
+    },
+    {
+      "name": "tests-final",
+      "source_sha256": "c7027a53dcb5a4411e72ccd654c2a0432ff96bbd979fe35311cef66417c38eaa",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 14332,
+      "compile_stderr": "",
+      "binary_sha256": "1abad58b82b17d8d6be57978cb635572c1ee8f4e6462b4dba068131e4d42375f",
+      "run_exit": 0,
+      "stdout": "PASS Q1-Q9 runtime; Q2 widths1..8 pairs87380 operations262140\n",
+      "stderr": ""
+    },
+    {
+      "name": "mixed-scalar-final",
+      "source_sha256": "046e8729e6808b5845941cb2591113411ecc54ff54330b3ad20d9ee7268945c9",
+      "compile_exit": 7,
+      "compile_stdout_bytes": 0,
+      "compile_stderr": "omc: line 148: error 7\n"
+    },
+    {
+      "name": "mutate",
+      "source_sha256": "c4e7bf75938e6a4ae22c5b405773984465efa646d1a4b08521505b93904471c5",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 2100,
+      "compile_stderr": "",
+      "binary_sha256": "8078ac96be29235c0a4ff878575afa38bc9619e8c06434d4878cca728a5f4542"
+    },
+    {
+      "name": "mutation-transform-a",
+      "run_exit": 0,
+      "stderr": "",
+      "output_sha256": "0da2db0c1276eb49e78230726f6e9f40e669ff42468773a8b687c3a3e9e66006"
+    },
+    {
+      "name": "mutant-a",
+      "source_sha256": "0a2f91a0ffb25863a744e42683903f3bb00321b950eb455871f1e2e601bd0a96",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 14288,
+      "compile_stderr": "",
+      "binary_sha256": "1de3a747a8962712300fe3d950b3435450d850b3b746cd8c2bb3112a9ed196a7",
+      "run_exit": 1,
+      "stdout": "FAIL Q1_ADD_GUARD\n",
+      "stderr": ""
+    },
+    {
+      "name": "mutation-transform-m",
+      "run_exit": 0,
+      "stderr": "",
+      "output_sha256": "51d85e0c982b24916450a75f11dd891a5cca00b466af6e29cd5c62eb089b97d7"
+    },
+    {
+      "name": "mutant-m",
+      "source_sha256": "6e0125a241fc3d0aa669642591908e5f6cefdeabcb669fda20245f479b425b2d",
+      "compile_exit": 0,
+      "compile_stdout_bytes": 14260,
+      "compile_stderr": "",
+      "binary_sha256": "7fe74b127a773148067aed483dc6538429495655dfba093ac77ed0c444719764",
+      "run_exit": 1,
+      "stdout": "FAIL Q4_MUL_GUARD\n",
+      "stderr": ""
+    },
+    {
+      "name": "mutation-missing",
+      "run_exit": 4,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "mutation-duplicate",
+      "run_exit": 4,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "mutation-bad-arg",
+      "run_exit": 2,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "claims": {
+    "native_execution": "PASS demo, final runtime suite and modular wrapping control",
+    "finite_differential": "PASS widths1..8; exact signed wider arithmetic oracle; 87380 pairs and262140 binary checks plus unary/narrow cases",
+    "nominal_compile_refusal": "PASS both final fixtures error7",
+    "mutation_sensitivity": "PASS removed add/mul guards compile0 then normal exit1 at named assertion",
+    "formal_proof": "NOT_RUN",
+    "native_translation_proof": "NOT_RUN",
+    "language_wide_sealing": "MISSING_IMPLEMENTATION",
+    "real_consumer_integration": "BLOCKED_OWNER_HANDOFF",
+    "independent_review": "NOT_RUN",
+    "gpu": "NOT_RUN"
+  }
+}

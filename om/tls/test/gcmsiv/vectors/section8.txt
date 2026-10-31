@@ -1,0 +1,6 @@
+# RFC 8452 section 8 "Worked Example" (rfc8452.txt lines 542-592), AEAD_AES_128_GCM_SIV:
+# key, nonce, aad "example", plaintext "Hello world", message-authentication key, message-encryption
+# key, S_s, masked value, tag, initial counter block (the tag; "That doesn't result in a change in
+# this example"), ciphertext || tag.
+# G RFCLINE KEY NONCE AAD PT AUTHKEY ENCKEY POLYVAL MASKED TAG COUNTER RESULT
+G 542 ee8e1ed9ff2540ae8f2ba9f50bc2f27c 752abad3e0afb5f434dc4310 6578616d706c65 48656c6c6f20776f726c64 310728d9911f1f3837b24316c3fab9a0 a4c5ae6249963279c100be4d7e2c6edd ad7fcf0b5169851662672f3c5f95138f d85575d8b1c630e256bb6c2c5f95130f 4fbcdeb7e4793f4a1d7e4faa70100af1 4fbcdeb7e4793f4a1d7e4faa70100af1 5d349ead175ef6b1def6fd4fbcdeb7e4793f4a1d7e4faa70100af1

@@ -1,0 +1,22 @@
+note SPDX-License-Identifier: Apache-2.0
+note Existing qualification gate supplies timeout, exit and output assertions.
+fn main to int
+b = new uchar 4096 0
+cnt = sub ulong argcnt 1
+if or eq cnt 0 gt cnt 63
+ret 90
+end
+put b 0 uchar cnt
+p = ulong 2
+for i ulong cnt
+n = argread add i 1 b add p 2 sub 4096 add p 2
+if or lt n 0 gt n 4090
+ret 91
+end
+put b p uchar and ulong n 255
+put b add p 1 uchar shr ulong n 8
+p = add add p 2 ulong n
+end
+r = execprog b 0 p
+ret 127
+end

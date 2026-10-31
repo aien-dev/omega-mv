@@ -1,0 +1,58 @@
+{
+  "below": [
+    {
+      "name": "bench",
+      "role": ""
+    },
+    {
+      "name": "tests",
+      "role": ""
+    }
+  ],
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "7438334c8bac2ff0a0f5e4ac0db8d33fc1bb02ebd56cdef6dfd294fb2ed55ae2",
+          "last_commit": "5b39ef42",
+          "name": "bench",
+          "purpose": "Test-only equal-work benchmark of omagent against nanobot reduced to the same four tools: script"
+        },
+        {
+          "digest": "d83674abfa647020999dde6f2a4fded1d42576c32fa06a398621d62f72e46f8a",
+          "last_commit": "116c3237",
+          "name": "tests",
+          "purpose": "Directory tests. Purpose not yet described by a human."
+        }
+      ],
+      "children_root": "sha256:3056fbde3eb131e54f3a67106a1ed8e53d889920e987ad0117289615257d9081",
+      "compiled_at": "2026-10-26T21:07:01Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:ceefb1df61f0ff171468dcc0359e11d8d856e64960ab55eba03bcd61d0088daa",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 6,
+      "generated_at_commit": "ef7d78bdd0c5738c7dc9c5e9123f985d6e643950",
+      "source_tree": "sha256:c845b86d94d764c3c6df90c8cab98fcb5188abacb0c49d3c55f78b0683c29b68"
+    },
+    "owner_lane": "",
+    "seed": {
+      "files": [
+        "README.md",
+        "agent.om"
+      ],
+      "purpose_auto": "Repository root agent. Purpose not yet described by a human."
+    }
+  },
+  "invariants": [
+    "Every implementation byte is seeded .om compiled by seed/out/omc; Python under tests/ and bench/ is a test-only referee or mock",
+    "The model is untrusted: its output is parsed by json.om/http.om under fixed caps and a malformed reply runs nothing",
+    "Tool permissions come only from the operator's command line; the default is read_file inside the workspace",
+    "The API key appears only in the Authorization header, never in stdout, stderr, the session file or a child environment",
+    "Tests and benchmarks bind 127.0.0.1 with kernel-chosen ports only and never contact port 18091"
+  ],
+  "layer": "seed",
+  "name": "agent",
+  "purpose": "Seeded Omega coding agent omagent (nanobot-style): agent loop, permissioned tools, JSONL session memory, SSE model streaming, CLI; scripted-mock test referee and nanobot benchmark",
+  "schema_version": "1.0.0"
+}

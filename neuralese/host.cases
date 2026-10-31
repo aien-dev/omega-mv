@@ -1,0 +1,78 @@
+# Native Omega host conductor. Scratch path MUST be build/neuralese-host.
+deadline 20
+decode-positive-1-7 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-1-7.wire file:neuralese/fixtures/positive-1-7.om - 0
+execute-positive-1-7 run build/neuralese-host/3.out - - - 8
+decode-positive-2-7 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-2-7.wire file:neuralese/fixtures/positive-2-7.om - 0
+execute-positive-2-7 run build/neuralese-host/5.out - - - 14
+decode-positive-3-7 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-3-7.wire file:neuralese/fixtures/positive-3-7.om - 0
+execute-positive-3-7 run build/neuralese-host/7.out - - - 7
+decode-positive-1-16 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-1-16.wire file:neuralese/fixtures/positive-1-16.om - 0
+execute-positive-1-16 run build/neuralese-host/9.out - - - 17
+decode-positive-2-16 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-2-16.wire file:neuralese/fixtures/positive-2-16.om - 0
+execute-positive-2-16 run build/neuralese-host/11.out - - - 32
+decode-positive-3-17 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-3-17.wire file:neuralese/fixtures/positive-3-17.om - 0
+execute-positive-3-17 run build/neuralese-host/13.out - - - 109
+decode-positive-3-127 run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-3-127.wire file:neuralese/fixtures/positive-3-127.om - 0
+execute-positive-3-127 run build/neuralese-host/15.out - - - 109
+refuse-oversize run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/oversize.wire - - 10
+refuse-short run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/short.wire - - 16
+refuse-magic run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/magic.wire - - 11
+refuse-producer run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/producer.wire - - 12
+refuse-decoder run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/decoder.wire - - 12
+refuse-dimension run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/dimension.wire - - 13
+refuse-dtype run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/dtype.wire - - 14
+refuse-encoding run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/encoding.wire - - 15
+refuse-payload-length run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/payload-length.wire - - 20
+refuse-checksum-first run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/checksum-first.wire - - 17
+refuse-checksum-last run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/checksum-last.wire - - 17
+refuse-reserved-first run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/reserved-first.wire - - 18
+refuse-reserved-second run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/reserved-second.wire - - 18
+refuse-opcode-low run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/opcode-low.wire - - 19
+refuse-opcode-high run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/opcode-high.wire - - 19
+refuse-empty run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/empty.wire - - 16
+refuse-large run neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/large.wire - - 10
+subst neuralese/fixtures/check-10.from neuralese/fixtures/success.to
+kill-guard-oversize kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/oversize.wire - - 0
+subst neuralese/fixtures/check-16.from neuralese/fixtures/success.to
+kill-guard-short kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/short.wire - - 0
+subst neuralese/fixtures/check-11.from neuralese/fixtures/success.to
+kill-guard-magic kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/magic.wire - - 0
+subst neuralese/fixtures/check-12.from neuralese/fixtures/success.to
+kill-guard-producer kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/producer.wire - - 0
+subst neuralese/fixtures/check-12.from neuralese/fixtures/success.to
+kill-guard-decoder kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/decoder.wire - - 0
+subst neuralese/fixtures/check-13.from neuralese/fixtures/success.to
+kill-guard-dimension kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/dimension.wire - - 0
+subst neuralese/fixtures/check-14.from neuralese/fixtures/success.to
+kill-guard-dtype kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/dtype.wire - - 0
+subst neuralese/fixtures/check-15.from neuralese/fixtures/success.to
+kill-guard-encoding kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/encoding.wire - - 0
+subst neuralese/fixtures/check-20.from neuralese/fixtures/success.to
+kill-guard-payload-length kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/payload-length.wire - - 0
+subst neuralese/fixtures/check-17.from neuralese/fixtures/success.to
+kill-guard-checksum-first kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/checksum-first.wire - - 0
+subst neuralese/fixtures/check-17.from neuralese/fixtures/success.to
+kill-guard-checksum-last kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/checksum-last.wire - - 0
+subst neuralese/fixtures/check-18.from neuralese/fixtures/success.to
+kill-guard-reserved-first kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/reserved-first.wire - - 0
+subst neuralese/fixtures/check-18.from neuralese/fixtures/success.to
+kill-guard-reserved-second kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/reserved-second.wire - - 0
+subst neuralese/fixtures/check-19.from neuralese/fixtures/success.to
+kill-guard-opcode-low kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/opcode-low.wire - - 0
+subst neuralese/fixtures/check-19.from neuralese/fixtures/success.to
+kill-guard-opcode-high kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/opcode-high.wire - - 0
+subst neuralese/fixtures/check-16.from neuralese/fixtures/success.to
+kill-guard-empty kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/empty.wire - - 0
+subst neuralese/fixtures/check-10.from neuralese/fixtures/success.to
+kill-guard-large kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/large.wire - - 0
+subst neuralese/fixtures/codebook.from neuralese/fixtures/codebook.to
+kill-codebook kill neuralese/decode.om+om/tls/sha2.om file:neuralese/fixtures/positive-1-7.wire file:neuralese/fixtures/positive-1-7.om - 0
+execute-wrong-codebook run build/neuralese-host/69.out - - - 14
+subst neuralese/fixtures/contract.from neuralese/fixtures/contract.to
+kill-precondition run build/neuralese-host/13.out - - - 17
+subst neuralese/fixtures/type.from neuralese/fixtures/type.to
+ordinary-type-refusal refuse build/neuralese-host/3.out 7
+subst neuralese/fixtures/contract.from neuralese/fixtures/purity.to
+ordinary-purity-refusal refuse build/neuralese-host/3.out 30
+subst neuralese/fixtures/post.from neuralese/fixtures/post.to
+ordinary-postcondition-refusal run build/neuralese-host/3.out - - - 110
