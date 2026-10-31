@@ -25,5 +25,8 @@ receipt B identical must be 0 exactly when slot 7 failed. Host replays (MEASURED
   fixture carries only race-slot failures with a consistent receipt); adding one changes the case
   count observed by tests/gates/omega-prefetch-native.gate, an operator change.
 
-NOT_RUN: the device run with classifier b527a20c (needs a new shared window). Timings in this run
-were taken in a shared window and are not qualified (timing needs exclusive window; Flint night run).
+Device rerun with classifier b527a20c (rerun-b527a20c/, MEASURED): shared spark-window
+20261031T041753Z-73d343, head 39e848fe, tools/run_gpu_l2d_prefetch_chip.sh rc 0, runs 1-5 PASS
+13/13 with C0_logits_fnv 77e35a29071d8fa7, red control exit 1 (13 checks, 6 failed),
+PREFETCH_CONTROL: CAUGHT, GPU_L2D_PREFETCH_CHIP: PASS. Timings in both runs were taken in a shared
+window and are not qualified (timing needs exclusive window; Flint night run).
