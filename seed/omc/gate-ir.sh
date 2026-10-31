@@ -599,6 +599,15 @@ ir_multi call_long_prefix 'fn increment_one a uint to uint\nret add a uint 1\nen
 # A contract word followed by = is an assignment to a local of that name, as in the C oracle (only the clause form is error 30).
 ir_multi ensures_assign 'fn f to ulong\nensures = ulong 1\nret ensures\nend'
 ir_multi requires_assign 'fn f to ulong\nx = ulong 1\nrequires = add x x\nrequires = add requires x\nret requires\nend'
+# A call nested in a later argument must not overwrite the outer call's earlier arguments (the batch 2
+# compiler passed 4, not 30, as add2's first argument here).
+ir_multi call_nested_arg 'fn add2 a uint b uint to uint\nret sub a b\nend\nfn f to uint\nret add2 uint 30 add2 uint 4 uint 5\nend'
+# Capacity: 100 distinct literals and 40 if blocks in one function (the batch 2 compiler stopped at 32
+# literals or 32 blocks with error 14). The format's 480 registers stay the limit.
+cap=$(awk 'BEGIN { printf "fn f a ulong to ulong\\nv = a\\n"; for (i = 1; i <= 100; i++) printf "v = add v %d\\n", i; for (i = 1; i <= 40; i++) printf "if eq v %d\\nv = add v 1\\nend\\n", i; printf "ret v\\nend" }')
+ir_multi capacity_100_literals "$cap"
+cap=$(awk 'BEGIN { print "ir"; print "fn f a ulong to ulong"; print "v = a"; for (i = 1; i <= 481; i++) print "v = add v " i; print "ret v"; print "end" }')
+ir_refuse capacity_481_literals 14 "$cap"
 # Random two-function programs with a call: differential against the oracle.
 rm -f "$B"/fz*
 awk -v dir="$B" 'BEGIN{
@@ -650,5 +659,5 @@ for f in "$B"/fz*.omegese; do
 done
 [ "$fzn" = 30 ] || fail "fuzz ran $fzn of 30 programs"
 echo "PASS 30 random two-function call units identical; checker2 ACCEPT"
-echo 'SCALAR_IR_CHECKPOINT 10/10 + 31 refusals + 9 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 24 cast units + 2 contract-name units + 30 fuzz units + 1 guarded for-bound unit + 2 bound-range pairs (1000000 accepted, 1000001 error 8) + 1 count-range set (1000000 identical to the oracle; 1000001, -1, -0, const 1000001 error 8); validation: 38 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
+echo 'SCALAR_IR_CHECKPOINT 10/10 + 32 refusals + 11 multi-call units + 3 break units + 2 for-value units + 1 shift unit + 4 bool units + 24 cast units + 2 contract-name units + 30 fuzz units + 1 guarded for-bound unit + 2 bound-range pairs (1000000 accepted, 1000001 error 8) + 1 count-range set (1000000 identical to the oracle; 1000001, -1, -0, const 1000001 error 8); validation: 38 refusals + 1 same-IR pair + 4 scope/fallthrough/long-name units; structs IR spec-blocked'
 echo 'RC=0'
