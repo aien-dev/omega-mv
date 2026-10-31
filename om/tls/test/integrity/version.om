@@ -1,0 +1,41 @@
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/test/integrity/version.om: the show-version service before and after the self-tests.
+note Prints the version line, then "check D" (fips_check 0; 16 = integrity failure), then the line
+note again, then "short N" for a 16-byte buffer (0 expected). Exit 0 when fips_check passed, 3 when
+note it refused.
+text ivchk "check "
+text ivsh "short "
+text ivnl "\n"
+
+fn ivnum x ulong to void
+d = new uchar 20 0
+n = ulong 0
+v = x
+for i ulong 20
+if or eq i 0 ne v 0
+put d sub 19 n uchar add 48 rem v 10
+v = div v 10
+n = add n 1
+end
+end
+r = write 1 d sub 20 n n
+r = write 1 ivnl 0 1
+end
+
+fn main to int
+o = new uchar 256 0
+s = new uchar 16 0
+n = tls_version o
+r = write 1 o 0 n
+d = fips_check 0
+r = write 1 ivchk 0 len ivchk
+ivnum d
+n = tls_version o
+r = write 1 o 0 n
+r = write 1 ivsh 0 len ivsh
+ivnum tls_version s
+if ne d 0
+ret 3
+end
+ret 0
+end

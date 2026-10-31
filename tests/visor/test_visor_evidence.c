@@ -16,8 +16,13 @@
 
 /* Lane 4: visor_evidence tests (fixtures + read-only pass over the real evidence/ tree).
  * Run from the repo root. Prints "PASS n/n" on success. */
+#include <dirent.h>
+#include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "omega_canonical.h"
 #include "visor_evidence.h"
@@ -37,6 +42,126 @@ static const VisorEvidenceRecord *find(const VisorEvidenceView *view, const char
         if (P >= L && strcmp(view->items[i].path + P - L, suffix) == 0) return &view->items[i];
     }
     return NULL;
+}
+
+/* --- omega-mv#404: a tree larger than the old 1024-file cap, built twice with the same
+ * names in opposite creation orders. tmpfs lists entries by creation order (newest first on
+ * Linux 7.0), so the two trees hand the walker opposite readdir orders; the note line prints
+ * where readdir put zzz_last_receipt.json in each. The view must be the same for both. --- */
+#define BIG_TXT 1500
+#define BIG_FILES (BIG_TXT + 2)
+static const char *const big_receipts[2] = {"a_first_receipt.json", "zzz_last_receipt.json"};
+static char receipt_bytes[65536];
+static size_t receipt_len;
+
+static int big_name(int k, char *out, size_t n) {   /* k-th name in ascending order */
+    if (k == 0) return snprintf(out, n, "%s", big_receipts[0]);
+    if (k == BIG_FILES - 1) return snprintf(out, n, "%s", big_receipts[1]);
+    return snprintf(out, n, "f%04d.txt", k - 1);
+}
+
+static int build_big_tree(const char *dir, int descending) {
+    if (mkdir(dir, 0700) != 0) return -1;
+    for (int i = 0; i < BIG_FILES; ++i) {
+        char name[64], p[512];
+        big_name(descending ? BIG_FILES - 1 - i : i, name, sizeof(name));
+        snprintf(p, sizeof(p), "%s/%s", dir, name);
+        /* Owner-only, never through an existing file or link (CodeQL world-writable-file-creation). */
+        int fd = open(p, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+        if (fd < 0) return -1;
+        FILE *f = fdopen(fd, "wb");
+        if (!f) { close(fd); return -1; }
+        int json = strstr(name, ".json") != NULL;
+        size_t w = json ? fwrite(receipt_bytes, 1, receipt_len, f) : fwrite("not a receipt\n", 1, 14, f);
+        if (fclose(f) != 0 || w != (json ? receipt_len : 14)) return -1;
+    }
+    return 0;
+}
+
+static void remove_big_tree(const char *dir) {
+    for (int i = 0; i < BIG_FILES; ++i) {
+        char name[64], p[512];
+        big_name(i, name, sizeof(name));
+        snprintf(p, sizeof(p), "%s/%s", dir, name);
+        unlink(p);
+    }
+    rmdir(dir);
+}
+
+static long readdir_pos(const char *dir, const char *name) {
+    DIR *d = opendir(dir);
+    if (!d) return -1;
+    long i = 0, at = -1;
+    struct dirent *e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] == '.') continue;
+        if (strcmp(e->d_name, name) == 0) at = i;
+        ++i;
+    }
+    closedir(d);
+    return at;
+}
+
+static int same_view(const VisorEvidenceView *a, const VisorEvidenceView *b, size_t ra, size_t rb) {
+    if (a->scanned != b->scanned || a->matched != b->matched || a->count != b->count ||
+        a->unparsed != b->unparsed || a->truncated != b->truncated || a->unparsed_listed != b->unparsed_listed)
+        return 0;
+    for (size_t i = 0; i < a->count; ++i)
+        if (strcmp(a->items[i].path + ra, b->items[i].path + rb) != 0 ||
+            strcmp(a->items[i].receipt_id, b->items[i].receipt_id) != 0) return 0;
+    for (size_t i = 0; i < a->unparsed_listed; ++i)
+        if (strcmp(a->unparsed_paths[i] + ra, b->unparsed_paths[i] + rb) != 0) return 0;
+    return 1;
+}
+
+static void check_large_tree(void) {
+    FILE *f = fopen(FIX "/HOST/host_run_receipt.json", "rb");
+    receipt_len = f ? fread(receipt_bytes, 1, sizeof(receipt_bytes), f) : 0;
+    if (f) fclose(f);
+    CHECK(receipt_len > 0 && receipt_len < sizeof(receipt_bytes), "large tree: receipt fixture read");
+
+    /* Fixed bases only: no directory from the environment reaches the scanner (CodeQL path-injection). */
+    struct stat st;
+    const char *base = stat("/dev/shm", &st) == 0 && S_ISDIR(st.st_mode) && access("/dev/shm", W_OK) == 0
+                           ? "/dev/shm" : "/tmp";
+    char root[512], asc[600], desc[600];
+    snprintf(root, sizeof(root), "%s/visor-evidence-404-XXXXXX", base);
+    if (!mkdtemp(root)) { CHECK(0, "large tree: mkdtemp"); return; }
+    snprintf(asc, sizeof(asc), "%s/asc", root);
+    snprintf(desc, sizeof(desc), "%s/desc", root);
+    CHECK(build_big_tree(asc, 0) == 0 && build_big_tree(desc, 1) == 0, "large tree: built");
+    fprintf(stderr, "note: %s: %s at readdir position %ld (asc) and %ld (desc) of %d\n", base, big_receipts[1],
+            readdir_pos(asc, big_receipts[1]), readdir_pos(desc, big_receipts[1]), BIG_FILES);
+    size_t ra = strlen(asc), rb = strlen(desc);
+
+    /* Default cap: every file is scanned in both trees. */
+    CHECK(visor_evidence_scan(asc, &v) == 0 && visor_evidence_scan(desc, &v2) == 0, "large tree: scan rc");
+    CHECK(v.scanned == BIG_FILES && v.matched == 2 && v.count == 2 && v.unparsed == BIG_TXT && !v.truncated,
+          "large tree: every file scanned, both receipts found, not truncated");
+    CHECK(v.count == 2 && strstr(v.items[0].path, big_receipts[0]) && strstr(v.items[1].path, big_receipts[1]),
+          "large tree: receipts in path order");
+    CHECK(same_view(&v, &v2, ra, rb), "large tree: same view for opposite readdir orders");
+
+    /* The old cap (1024) applied to the same trees: the kept files are the 1024 smallest paths,
+     * so a_first is kept and zzz_last is not, in both orders. */
+    size_t prev = visor_evidence_set_max_files(1024);
+    CHECK(visor_evidence_scan(asc, &v) == 0 && visor_evidence_scan(desc, &v2) == 0, "capped: scan rc");
+    CHECK(v.scanned == 1024 && v.truncated && v.matched == 1 && v.count == 1 && v.unparsed == 1023 &&
+          strstr(v.items[0].path, big_receipts[0]), "capped: smallest 1024 paths kept, truncated");
+    CHECK(v.unparsed_listed == VISOR_EVIDENCE_MAX_UNPARSED_PATHS && strstr(v.unparsed_paths[0], "/f0000.txt") &&
+          strstr(v.unparsed_paths[VISOR_EVIDENCE_MAX_UNPARSED_PATHS - 1], "/f0007.txt"), "capped: first unparsed paths");
+    CHECK(same_view(&v, &v2, ra, rb), "capped: same view for opposite readdir orders");
+    SemanticId aid;
+    memset(aid.bytes, 0xaa, sizeof(aid.bytes));
+    CHECK(visor_evidence_for_id(asc, &aid, &v) == 0 && visor_evidence_for_id(desc, &aid, &v2) == 0 &&
+          v.count == 1 && v.truncated && same_view(&v, &v2, ra, rb), "capped: for_id same view for both orders");
+    visor_evidence_set_max_files(0);
+    CHECK(prev == VISOR_EVIDENCE_MAX_FILES && visor_evidence_set_max_files(0) == VISOR_EVIDENCE_MAX_FILES,
+          "cap restored to default");
+
+    remove_big_tree(asc);
+    remove_big_tree(desc);
+    CHECK(rmdir(root) == 0, "large tree: removed");
 }
 
 int main(void) {
@@ -114,6 +239,8 @@ int main(void) {
     CHECK(strstr(txt_a, "UNPARSED") && strstr(txt_a, "scope      SILICON (from silicon_observed=true)"), "text content");
     CHECK(visor_evidence_format_json(&v, js, sizeof(js)) > 0 && js[0] == '{' && strstr(js, "\"scope\":\"QEMU\""), "json");
     CHECK(visor_evidence_format_text(&v, txt_b, 32) == -1, "truncation fails closed");
+
+    check_large_tree();
 
     /* --- real evidence/ tree, read-only: format coverage and no upgrade --- */
     if (visor_evidence_scan("evidence", &v) == 0) {

@@ -16,3 +16,8 @@ rsa_e_even_leaf x509=reject openssl=accept: an even public exponent (65536) is r
 rsa_e_1_leaf x509=reject openssl=accept: public exponent 1 is refused for server-presented keys; openssl verify does not check the leaf exponent
 rsa_6144_intermediate x509=reject openssl=accept: the RSA policy (2048..4096 bits) applies to presented intermediates too; openssl accepts the 6144-bit issuer
 rsa_e_2_32_plus_1_intermediate x509=reject openssl=accept: the exponent policy (odd, 3..2^32-1) applies to presented intermediates too; openssl accepts e = 2^32+1
+serial_zero x509=reject openssl=accept: RFC 5280 4.1.2.2 serialNumber MUST be a positive integer; refused on presented certificates (MODEL-REVIEWED I5b, x509-limbo); openssl verify does not police it
+serial_negative x509=reject openssl=accept: RFC 5280 4.1.2.2 serialNumber MUST be positive; refused on presented certificates (MODEL-REVIEWED I5b); openssl verify does not police it
+serial_21_octets x509=reject openssl=accept: RFC 5280 4.1.2.2 serialNumber at most 20 octets; refused on presented certificates (MODEL-REVIEWED I5b); openssl verify does not police it
+generalizedtime_before_2050 x509=reject openssl=accept: RFC 5280 4.1.2.5 dates through 2049 MUST be UTCTime; refused on presented certificates (MODEL-REVIEWED I5a); openssl accepts either form
+rsa_2052_bit_leaf x509=reject openssl=accept: RSA moduli must be a whole number of octets (2048..4096 in steps of 8), as in x509-limbo webpki rsa cases; openssl verify does not check the leaf modulus size

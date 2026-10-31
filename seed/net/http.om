@@ -8,7 +8,9 @@ note A connection is two caller-owned arrays:
 note   cs = new ulong HCSLEN 0   state (fd, buffer cursors, deadlines, framing, header index)
 note   io = new uchar N 0        one byte array split by hinit into a read region io[0, HRCAP),
 note                             a write region io[HWB, HWB+HWCAP) and a transport region
-note                             io[HTB, HTB+HTL) (empty for plain TCP; reserved for TLS)
+note                             io[HTB, HTB+HTL) (empty for plain TCP; the TLS state for HTTPS)
+note The transport hooks htlsrecv, htlsrecvd and htlssend (HXPORT 1) come from seed/net/https.om
+note (om/tls) or seed/net/notls.om (HENOSUP); one of the two is composed after this unit.
 note Header and target offsets stored in cs are absolute offsets into io and stay valid until the
 note next hreqrd / hrsprd on the same cs.
 note
@@ -70,6 +72,9 @@ const HFINAL ulong 50
 const HFRM ulong 51
 const HFRMAX ulong 52
 const HBSC ulong 53
+note HXDL: absolute monotonic deadline of the whole exchange for the transport (0 = none); set by
+note htlsdl (seed/net/https.om) after hinit; plain TCP does not read it
+const HXDL ulong 54
 note header i (0 <= i < HHN): cs[HHX+4i] name offset, +1 name length, +2 value offset, +3 value length
 const HHX ulong 64
 const HHSLOTS ulong 64
@@ -383,7 +388,7 @@ if ne get cs HMEM 0
 ret 0
 end
 if ne get cs HXPORT 0
-ret HENOSUP
+ret htlsrecv cs io off n
 end
 fd = int get cs HFD
 for it ulong 4096
@@ -407,7 +412,7 @@ if ne get cs HMEM 0
 ret 0
 end
 if ne get cs HXPORT 0
-ret HENOSUP
+ret htlsrecvd cs io d
 end
 fd = int get cs HFD
 for it ulong 4096
@@ -431,7 +436,7 @@ if ne get cs HMEM 0
 ret -9
 end
 if ne get cs HXPORT 0
-ret HENOSUP
+ret htlssend cs io off n
 end
 fd = int get cs HFD
 e = add off n

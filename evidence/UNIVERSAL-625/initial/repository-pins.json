@@ -1,0 +1,42 @@
+[
+  {
+    "repository": "aien-dev/omega-mv",
+    "audit_main_sha": "a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a",
+    "shared_local_head": "ce42e62f9632b495f494aa8e419a70f4a36c88c0 HEAD -> hive/DEEP2-A3-gpu-engine-impl, origin/hive/DEEP2-A3-gpu-engine-impl",
+    "shared_dirty_count": 127,
+    "fetch_rc": 0,
+    "audit_checkout": "isolated origin/main snapshot; shared changes preserved"
+  },
+  {
+    "repository": "aien-dev/CUDApp",
+    "audit_main_sha": "232332422bfdc31c8918085b50f13c1e18ab702e",
+    "shared_local_head": "8f0b645dbc859f1b63868cec77880621aa70b42d HEAD -> main, carry/attn-hd128-4e9cfbe7",
+    "shared_dirty_count": 1,
+    "fetch_rc": 0,
+    "audit_checkout": "isolated origin/main snapshot; shared changes preserved"
+  },
+  {
+    "repository": "aien-dev/aien-sovereign-core-mv",
+    "audit_main_sha": "754c07b118f41ad899607b60329bd851b1ccb13e",
+    "shared_local_head": "c83eb5b2f96b3d0a36fcb5092fcf0d66af5dd0d0 HEAD -> docs/readme-restructure",
+    "shared_dirty_count": 12,
+    "fetch_rc": 0,
+    "audit_checkout": "isolated origin/main snapshot; shared changes preserved"
+  },
+  {
+    "repository": "aien-dev/aienux",
+    "audit_main_sha": "18e276590424593647cd7c39c6d16c2f9f8d6027",
+    "shared_local_head": "5cfba1bba3f8be2fe439e4310d8fc54b47df3af1 HEAD -> main",
+    "shared_dirty_count": 1,
+    "fetch_rc": 0,
+    "audit_checkout": "isolated origin/main snapshot; shared changes preserved"
+  },
+  {
+    "repository": "aien-dev/aien-architecture-mv",
+    "audit_main_sha": "1a3594340c70969c245554b07062efd8ead8a026",
+    "shared_local_head": "dbc07036878ec519142dbfa70d118a8806d34138 HEAD -> main",
+    "shared_dirty_count": 3,
+    "fetch_rc": 0,
+    "audit_checkout": "isolated origin/main snapshot; shared changes preserved"
+  }
+]

@@ -1,0 +1,262 @@
+OM2GATE START cases=neuralese/host.cases scratch=build/neuralese-host
+IDENTITY omc seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match
+DEADLINE 20
+CASE decode-positive-1-7 line=3
+  $ seed/out/omc < build/neuralese-host/3.src > build/neuralese-host/3.elf 2> build/neuralese-host/3.cerr
+  $ build/neuralese-host/3.elf < neuralese/fixtures/positive-1-7.wire > build/neuralese-host/3.out 2> build/neuralese-host/3.err
+VERDICT decode-positive-1-7 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-1-7 line=4
+  $ seed/out/omc < build/neuralese-host/4.src > build/neuralese-host/4.elf 2> build/neuralese-host/4.cerr
+  $ build/neuralese-host/4.elf < /dev/null > build/neuralese-host/4.out 2> build/neuralese-host/4.err
+VERDICT execute-positive-1-7 PASS run exit=8 expected=8 stdout=match stderr=match
+CASE decode-positive-2-7 line=5
+  $ seed/out/omc < build/neuralese-host/5.src > build/neuralese-host/5.elf 2> build/neuralese-host/5.cerr
+  $ build/neuralese-host/5.elf < neuralese/fixtures/positive-2-7.wire > build/neuralese-host/5.out 2> build/neuralese-host/5.err
+VERDICT decode-positive-2-7 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-2-7 line=6
+  $ seed/out/omc < build/neuralese-host/6.src > build/neuralese-host/6.elf 2> build/neuralese-host/6.cerr
+  $ build/neuralese-host/6.elf < /dev/null > build/neuralese-host/6.out 2> build/neuralese-host/6.err
+VERDICT execute-positive-2-7 PASS run exit=14 expected=14 stdout=match stderr=match
+CASE decode-positive-3-7 line=7
+  $ seed/out/omc < build/neuralese-host/7.src > build/neuralese-host/7.elf 2> build/neuralese-host/7.cerr
+  $ build/neuralese-host/7.elf < neuralese/fixtures/positive-3-7.wire > build/neuralese-host/7.out 2> build/neuralese-host/7.err
+VERDICT decode-positive-3-7 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-3-7 line=8
+  $ seed/out/omc < build/neuralese-host/8.src > build/neuralese-host/8.elf 2> build/neuralese-host/8.cerr
+  $ build/neuralese-host/8.elf < /dev/null > build/neuralese-host/8.out 2> build/neuralese-host/8.err
+VERDICT execute-positive-3-7 PASS run exit=7 expected=7 stdout=match stderr=match
+CASE decode-positive-1-16 line=9
+  $ seed/out/omc < build/neuralese-host/9.src > build/neuralese-host/9.elf 2> build/neuralese-host/9.cerr
+  $ build/neuralese-host/9.elf < neuralese/fixtures/positive-1-16.wire > build/neuralese-host/9.out 2> build/neuralese-host/9.err
+VERDICT decode-positive-1-16 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-1-16 line=10
+  $ seed/out/omc < build/neuralese-host/10.src > build/neuralese-host/10.elf 2> build/neuralese-host/10.cerr
+  $ build/neuralese-host/10.elf < /dev/null > build/neuralese-host/10.out 2> build/neuralese-host/10.err
+VERDICT execute-positive-1-16 PASS run exit=17 expected=17 stdout=match stderr=match
+CASE decode-positive-2-16 line=11
+  $ seed/out/omc < build/neuralese-host/11.src > build/neuralese-host/11.elf 2> build/neuralese-host/11.cerr
+  $ build/neuralese-host/11.elf < neuralese/fixtures/positive-2-16.wire > build/neuralese-host/11.out 2> build/neuralese-host/11.err
+VERDICT decode-positive-2-16 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-2-16 line=12
+  $ seed/out/omc < build/neuralese-host/12.src > build/neuralese-host/12.elf 2> build/neuralese-host/12.cerr
+  $ build/neuralese-host/12.elf < /dev/null > build/neuralese-host/12.out 2> build/neuralese-host/12.err
+VERDICT execute-positive-2-16 PASS run exit=32 expected=32 stdout=match stderr=match
+CASE decode-positive-3-17 line=13
+  $ seed/out/omc < build/neuralese-host/13.src > build/neuralese-host/13.elf 2> build/neuralese-host/13.cerr
+  $ build/neuralese-host/13.elf < neuralese/fixtures/positive-3-17.wire > build/neuralese-host/13.out 2> build/neuralese-host/13.err
+VERDICT decode-positive-3-17 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-3-17 line=14
+  $ seed/out/omc < build/neuralese-host/14.src > build/neuralese-host/14.elf 2> build/neuralese-host/14.cerr
+  $ build/neuralese-host/14.elf < /dev/null > build/neuralese-host/14.out 2> build/neuralese-host/14.err
+VERDICT execute-positive-3-17 PASS run exit=109 expected=109 stdout=match stderr=match
+CASE decode-positive-3-127 line=15
+  $ seed/out/omc < build/neuralese-host/15.src > build/neuralese-host/15.elf 2> build/neuralese-host/15.cerr
+  $ build/neuralese-host/15.elf < neuralese/fixtures/positive-3-127.wire > build/neuralese-host/15.out 2> build/neuralese-host/15.err
+VERDICT decode-positive-3-127 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE execute-positive-3-127 line=16
+  $ seed/out/omc < build/neuralese-host/16.src > build/neuralese-host/16.elf 2> build/neuralese-host/16.cerr
+  $ build/neuralese-host/16.elf < /dev/null > build/neuralese-host/16.out 2> build/neuralese-host/16.err
+VERDICT execute-positive-3-127 PASS run exit=109 expected=109 stdout=match stderr=match
+CASE refuse-oversize line=17
+  $ seed/out/omc < build/neuralese-host/17.src > build/neuralese-host/17.elf 2> build/neuralese-host/17.cerr
+  $ build/neuralese-host/17.elf < neuralese/fixtures/oversize.wire > build/neuralese-host/17.out 2> build/neuralese-host/17.err
+VERDICT refuse-oversize PASS run exit=10 expected=10 stdout=match stderr=match
+CASE refuse-short line=18
+  $ seed/out/omc < build/neuralese-host/18.src > build/neuralese-host/18.elf 2> build/neuralese-host/18.cerr
+  $ build/neuralese-host/18.elf < neuralese/fixtures/short.wire > build/neuralese-host/18.out 2> build/neuralese-host/18.err
+VERDICT refuse-short PASS run exit=16 expected=16 stdout=match stderr=match
+CASE refuse-magic line=19
+  $ seed/out/omc < build/neuralese-host/19.src > build/neuralese-host/19.elf 2> build/neuralese-host/19.cerr
+  $ build/neuralese-host/19.elf < neuralese/fixtures/magic.wire > build/neuralese-host/19.out 2> build/neuralese-host/19.err
+VERDICT refuse-magic PASS run exit=11 expected=11 stdout=match stderr=match
+CASE refuse-producer line=20
+  $ seed/out/omc < build/neuralese-host/20.src > build/neuralese-host/20.elf 2> build/neuralese-host/20.cerr
+  $ build/neuralese-host/20.elf < neuralese/fixtures/producer.wire > build/neuralese-host/20.out 2> build/neuralese-host/20.err
+VERDICT refuse-producer PASS run exit=12 expected=12 stdout=match stderr=match
+CASE refuse-decoder line=21
+  $ seed/out/omc < build/neuralese-host/21.src > build/neuralese-host/21.elf 2> build/neuralese-host/21.cerr
+  $ build/neuralese-host/21.elf < neuralese/fixtures/decoder.wire > build/neuralese-host/21.out 2> build/neuralese-host/21.err
+VERDICT refuse-decoder PASS run exit=12 expected=12 stdout=match stderr=match
+CASE refuse-dimension line=22
+  $ seed/out/omc < build/neuralese-host/22.src > build/neuralese-host/22.elf 2> build/neuralese-host/22.cerr
+  $ build/neuralese-host/22.elf < neuralese/fixtures/dimension.wire > build/neuralese-host/22.out 2> build/neuralese-host/22.err
+VERDICT refuse-dimension PASS run exit=13 expected=13 stdout=match stderr=match
+CASE refuse-dtype line=23
+  $ seed/out/omc < build/neuralese-host/23.src > build/neuralese-host/23.elf 2> build/neuralese-host/23.cerr
+  $ build/neuralese-host/23.elf < neuralese/fixtures/dtype.wire > build/neuralese-host/23.out 2> build/neuralese-host/23.err
+VERDICT refuse-dtype PASS run exit=14 expected=14 stdout=match stderr=match
+CASE refuse-encoding line=24
+  $ seed/out/omc < build/neuralese-host/24.src > build/neuralese-host/24.elf 2> build/neuralese-host/24.cerr
+  $ build/neuralese-host/24.elf < neuralese/fixtures/encoding.wire > build/neuralese-host/24.out 2> build/neuralese-host/24.err
+VERDICT refuse-encoding PASS run exit=15 expected=15 stdout=match stderr=match
+CASE refuse-payload-length line=25
+  $ seed/out/omc < build/neuralese-host/25.src > build/neuralese-host/25.elf 2> build/neuralese-host/25.cerr
+  $ build/neuralese-host/25.elf < neuralese/fixtures/payload-length.wire > build/neuralese-host/25.out 2> build/neuralese-host/25.err
+VERDICT refuse-payload-length PASS run exit=20 expected=20 stdout=match stderr=match
+CASE refuse-checksum-first line=26
+  $ seed/out/omc < build/neuralese-host/26.src > build/neuralese-host/26.elf 2> build/neuralese-host/26.cerr
+  $ build/neuralese-host/26.elf < neuralese/fixtures/checksum-first.wire > build/neuralese-host/26.out 2> build/neuralese-host/26.err
+VERDICT refuse-checksum-first PASS run exit=17 expected=17 stdout=match stderr=match
+CASE refuse-checksum-last line=27
+  $ seed/out/omc < build/neuralese-host/27.src > build/neuralese-host/27.elf 2> build/neuralese-host/27.cerr
+  $ build/neuralese-host/27.elf < neuralese/fixtures/checksum-last.wire > build/neuralese-host/27.out 2> build/neuralese-host/27.err
+VERDICT refuse-checksum-last PASS run exit=17 expected=17 stdout=match stderr=match
+CASE refuse-reserved-first line=28
+  $ seed/out/omc < build/neuralese-host/28.src > build/neuralese-host/28.elf 2> build/neuralese-host/28.cerr
+  $ build/neuralese-host/28.elf < neuralese/fixtures/reserved-first.wire > build/neuralese-host/28.out 2> build/neuralese-host/28.err
+VERDICT refuse-reserved-first PASS run exit=18 expected=18 stdout=match stderr=match
+CASE refuse-reserved-second line=29
+  $ seed/out/omc < build/neuralese-host/29.src > build/neuralese-host/29.elf 2> build/neuralese-host/29.cerr
+  $ build/neuralese-host/29.elf < neuralese/fixtures/reserved-second.wire > build/neuralese-host/29.out 2> build/neuralese-host/29.err
+VERDICT refuse-reserved-second PASS run exit=18 expected=18 stdout=match stderr=match
+CASE refuse-opcode-low line=30
+  $ seed/out/omc < build/neuralese-host/30.src > build/neuralese-host/30.elf 2> build/neuralese-host/30.cerr
+  $ build/neuralese-host/30.elf < neuralese/fixtures/opcode-low.wire > build/neuralese-host/30.out 2> build/neuralese-host/30.err
+VERDICT refuse-opcode-low PASS run exit=19 expected=19 stdout=match stderr=match
+CASE refuse-opcode-high line=31
+  $ seed/out/omc < build/neuralese-host/31.src > build/neuralese-host/31.elf 2> build/neuralese-host/31.cerr
+  $ build/neuralese-host/31.elf < neuralese/fixtures/opcode-high.wire > build/neuralese-host/31.out 2> build/neuralese-host/31.err
+VERDICT refuse-opcode-high PASS run exit=19 expected=19 stdout=match stderr=match
+CASE refuse-empty line=32
+  $ seed/out/omc < build/neuralese-host/32.src > build/neuralese-host/32.elf 2> build/neuralese-host/32.cerr
+  $ build/neuralese-host/32.elf < neuralese/fixtures/empty.wire > build/neuralese-host/32.out 2> build/neuralese-host/32.err
+VERDICT refuse-empty PASS run exit=16 expected=16 stdout=match stderr=match
+CASE refuse-large line=33
+  $ seed/out/omc < build/neuralese-host/33.src > build/neuralese-host/33.elf 2> build/neuralese-host/33.cerr
+  $ build/neuralese-host/33.elf < neuralese/fixtures/large.wire > build/neuralese-host/33.out 2> build/neuralese-host/33.err
+VERDICT refuse-large PASS run exit=10 expected=10 stdout=match stderr=match
+SUBST neuralese/fixtures/check-10.from neuralese/fixtures/success.to
+CASE kill-guard-oversize line=35
+  MUTATE exact-once substitution at byte 1061
+  $ seed/out/omc < build/neuralese-host/35.src > build/neuralese-host/35.elf 2> build/neuralese-host/35.cerr
+  $ build/neuralese-host/35.elf < neuralese/fixtures/oversize.wire > build/neuralese-host/35.out 2> build/neuralese-host/35.err
+VERDICT kill-guard-oversize PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-16.from neuralese/fixtures/success.to
+CASE kill-guard-short line=37
+  MUTATE exact-once substitution at byte 1083
+  $ seed/out/omc < build/neuralese-host/37.src > build/neuralese-host/37.elf 2> build/neuralese-host/37.cerr
+  $ build/neuralese-host/37.elf < neuralese/fixtures/short.wire > build/neuralese-host/37.out 2> build/neuralese-host/37.err
+VERDICT kill-guard-short PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-11.from neuralese/fixtures/success.to
+CASE kill-guard-magic line=39
+  MUTATE exact-once substitution at byte 1134
+  $ seed/out/omc < build/neuralese-host/39.src > build/neuralese-host/39.elf 2> build/neuralese-host/39.cerr
+  $ build/neuralese-host/39.elf < neuralese/fixtures/magic.wire > build/neuralese-host/39.out 2> build/neuralese-host/39.err
+VERDICT kill-guard-magic PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-12.from neuralese/fixtures/success.to
+CASE kill-guard-producer line=41
+  MUTATE exact-once substitution at byte 1259
+  $ seed/out/omc < build/neuralese-host/41.src > build/neuralese-host/41.elf 2> build/neuralese-host/41.cerr
+  $ build/neuralese-host/41.elf < neuralese/fixtures/producer.wire > build/neuralese-host/41.out 2> build/neuralese-host/41.err
+VERDICT kill-guard-producer PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-12.from neuralese/fixtures/success.to
+CASE kill-guard-decoder line=43
+  MUTATE exact-once substitution at byte 1259
+  $ seed/out/omc < build/neuralese-host/43.src > build/neuralese-host/43.elf 2> build/neuralese-host/43.cerr
+  $ build/neuralese-host/43.elf < neuralese/fixtures/decoder.wire > build/neuralese-host/43.out 2> build/neuralese-host/43.err
+VERDICT kill-guard-decoder PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-13.from neuralese/fixtures/success.to
+CASE kill-guard-dimension line=45
+  MUTATE exact-once substitution at byte 1286
+  $ seed/out/omc < build/neuralese-host/45.src > build/neuralese-host/45.elf 2> build/neuralese-host/45.cerr
+  $ build/neuralese-host/45.elf < neuralese/fixtures/dimension.wire > build/neuralese-host/45.out 2> build/neuralese-host/45.err
+VERDICT kill-guard-dimension PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-14.from neuralese/fixtures/success.to
+CASE kill-guard-dtype line=47
+  MUTATE exact-once substitution at byte 1313
+  $ seed/out/omc < build/neuralese-host/47.src > build/neuralese-host/47.elf 2> build/neuralese-host/47.cerr
+  $ build/neuralese-host/47.elf < neuralese/fixtures/dtype.wire > build/neuralese-host/47.out 2> build/neuralese-host/47.err
+VERDICT kill-guard-dtype PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-15.from neuralese/fixtures/success.to
+CASE kill-guard-encoding line=49
+  MUTATE exact-once substitution at byte 1340
+  $ seed/out/omc < build/neuralese-host/49.src > build/neuralese-host/49.elf 2> build/neuralese-host/49.cerr
+  $ build/neuralese-host/49.elf < neuralese/fixtures/encoding.wire > build/neuralese-host/49.out 2> build/neuralese-host/49.err
+VERDICT kill-guard-encoding PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-20.from neuralese/fixtures/success.to
+CASE kill-guard-payload-length line=51
+  MUTATE exact-once substitution at byte 1367
+  $ seed/out/omc < build/neuralese-host/51.src > build/neuralese-host/51.elf 2> build/neuralese-host/51.cerr
+  $ build/neuralese-host/51.elf < neuralese/fixtures/payload-length.wire > build/neuralese-host/51.out 2> build/neuralese-host/51.err
+VERDICT kill-guard-payload-length PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-17.from neuralese/fixtures/success.to
+CASE kill-guard-checksum-first line=53
+  MUTATE exact-once substitution at byte 1394
+  $ seed/out/omc < build/neuralese-host/53.src > build/neuralese-host/53.elf 2> build/neuralese-host/53.cerr
+  $ build/neuralese-host/53.elf < neuralese/fixtures/checksum-first.wire > build/neuralese-host/53.out 2> build/neuralese-host/53.err
+VERDICT kill-guard-checksum-first PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-17.from neuralese/fixtures/success.to
+CASE kill-guard-checksum-last line=55
+  MUTATE exact-once substitution at byte 1394
+  $ seed/out/omc < build/neuralese-host/55.src > build/neuralese-host/55.elf 2> build/neuralese-host/55.cerr
+  $ build/neuralese-host/55.elf < neuralese/fixtures/checksum-last.wire > build/neuralese-host/55.out 2> build/neuralese-host/55.err
+VERDICT kill-guard-checksum-last PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-18.from neuralese/fixtures/success.to
+CASE kill-guard-reserved-first line=57
+  MUTATE exact-once substitution at byte 1439
+  $ seed/out/omc < build/neuralese-host/57.src > build/neuralese-host/57.elf 2> build/neuralese-host/57.cerr
+  $ build/neuralese-host/57.elf < neuralese/fixtures/reserved-first.wire > build/neuralese-host/57.out 2> build/neuralese-host/57.err
+VERDICT kill-guard-reserved-first PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-18.from neuralese/fixtures/success.to
+CASE kill-guard-reserved-second line=59
+  MUTATE exact-once substitution at byte 1439
+  $ seed/out/omc < build/neuralese-host/59.src > build/neuralese-host/59.elf 2> build/neuralese-host/59.cerr
+  $ build/neuralese-host/59.elf < neuralese/fixtures/reserved-second.wire > build/neuralese-host/59.out 2> build/neuralese-host/59.err
+VERDICT kill-guard-reserved-second PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-19.from neuralese/fixtures/success.to
+CASE kill-guard-opcode-low line=61
+  MUTATE exact-once substitution at byte 1484
+  $ seed/out/omc < build/neuralese-host/61.src > build/neuralese-host/61.elf 2> build/neuralese-host/61.cerr
+  $ build/neuralese-host/61.elf < neuralese/fixtures/opcode-low.wire > build/neuralese-host/61.out 2> build/neuralese-host/61.err
+VERDICT kill-guard-opcode-low PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-19.from neuralese/fixtures/success.to
+CASE kill-guard-opcode-high line=63
+  MUTATE exact-once substitution at byte 1484
+  $ seed/out/omc < build/neuralese-host/63.src > build/neuralese-host/63.elf 2> build/neuralese-host/63.cerr
+  $ build/neuralese-host/63.elf < neuralese/fixtures/opcode-high.wire > build/neuralese-host/63.out 2> build/neuralese-host/63.err
+VERDICT kill-guard-opcode-high PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-16.from neuralese/fixtures/success.to
+CASE kill-guard-empty line=65
+  MUTATE exact-once substitution at byte 1083
+  $ seed/out/omc < build/neuralese-host/65.src > build/neuralese-host/65.elf 2> build/neuralese-host/65.cerr
+  $ build/neuralese-host/65.elf < neuralese/fixtures/empty.wire > build/neuralese-host/65.out 2> build/neuralese-host/65.err
+VERDICT kill-guard-empty PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/check-10.from neuralese/fixtures/success.to
+CASE kill-guard-large line=67
+  MUTATE exact-once substitution at byte 1061
+  $ seed/out/omc < build/neuralese-host/67.src > build/neuralese-host/67.elf 2> build/neuralese-host/67.cerr
+  $ build/neuralese-host/67.elf < neuralese/fixtures/large.wire > build/neuralese-host/67.out 2> build/neuralese-host/67.err
+VERDICT kill-guard-large PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST neuralese/fixtures/codebook.from neuralese/fixtures/codebook.to
+CASE kill-codebook line=69
+  MUTATE exact-once substitution at byte 436
+  $ seed/out/omc < build/neuralese-host/69.src > build/neuralese-host/69.elf 2> build/neuralese-host/69.cerr
+  $ build/neuralese-host/69.elf < neuralese/fixtures/positive-1-7.wire > build/neuralese-host/69.out 2> build/neuralese-host/69.err
+VERDICT kill-codebook PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 76 stderr=match
+CASE execute-wrong-codebook line=70
+  $ seed/out/omc < build/neuralese-host/70.src > build/neuralese-host/70.elf 2> build/neuralese-host/70.cerr
+  $ build/neuralese-host/70.elf < /dev/null > build/neuralese-host/70.out 2> build/neuralese-host/70.err
+VERDICT execute-wrong-codebook PASS run exit=14 expected=14 stdout=match stderr=match
+SUBST neuralese/fixtures/contract.from neuralese/fixtures/contract.to
+CASE kill-precondition line=72
+  MUTATE exact-once substitution at byte 34
+  $ seed/out/omc < build/neuralese-host/72.src > build/neuralese-host/72.elf 2> build/neuralese-host/72.cerr
+  $ build/neuralese-host/72.elf < /dev/null > build/neuralese-host/72.out 2> build/neuralese-host/72.err
+VERDICT kill-precondition PASS run exit=17 expected=17 stdout=match stderr=match
+SUBST neuralese/fixtures/type.from neuralese/fixtures/type.to
+CASE ordinary-type-refusal line=74
+  MUTATE exact-once substitution at byte 72
+  $ seed/out/omc < build/neuralese-host/74.src > build/neuralese-host/74.elf 2> build/neuralese-host/74.cerr
+VERDICT ordinary-type-refusal PASS compile exit=7 expected=7 refused with the expected error
+SUBST neuralese/fixtures/contract.from neuralese/fixtures/purity.to
+CASE ordinary-purity-refusal line=76
+  MUTATE exact-once substitution at byte 34
+  $ seed/out/omc < build/neuralese-host/76.src > build/neuralese-host/76.elf 2> build/neuralese-host/76.cerr
+VERDICT ordinary-purity-refusal PASS compile exit=30 expected=30 refused with the expected error
+SUBST neuralese/fixtures/post.from neuralese/fixtures/post.to
+CASE ordinary-postcondition-refusal line=78
+  MUTATE exact-once substitution at byte 51
+  $ seed/out/omc < build/neuralese-host/78.src > build/neuralese-host/78.elf 2> build/neuralese-host/78.cerr
+  $ build/neuralese-host/78.elf < /dev/null > build/neuralese-host/78.out 2> build/neuralese-host/78.err
+VERDICT ordinary-postcondition-refusal PASS run exit=110 expected=110 stdout=match stderr=match
+OM2GATE PASS cases=54 pass=54 fail=0 invalid=0 not_run=0

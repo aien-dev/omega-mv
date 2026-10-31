@@ -1,0 +1,19 @@
+OM2GATE START cases=evidence/SECURITY-673/packet-main1/negative-controls.cases scratch=/dev/shm/pl671/run-negative-controls
+IDENTITY omc seed/out/omc sha256=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b pinned=62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b match
+CASE neg-gen-wrong-fixture line=1
+  $ seed/out/omc < /dev/shm/pl671/run-negative-controls/1.src > /dev/shm/pl671/run-negative-controls/1.elf 2> /dev/shm/pl671/run-negative-controls/1.cerr
+  $ /dev/shm/pl671/run-negative-controls/1.elf < /dev/shm/pl671/run-negative-controls/1.in > /dev/shm/pl671/run-negative-controls/1.out 2> /dev/shm/pl671/run-negative-controls/1.err
+VERDICT neg-gen-wrong-fixture FAIL run exit=0 expected=0 stdout differs at byte 13 stderr=match
+CASE neg-expect-accept-trailing line=2
+  $ seed/out/omc < /dev/shm/pl671/run-negative-controls/2.src > /dev/shm/pl671/run-negative-controls/2.elf 2> /dev/shm/pl671/run-negative-controls/2.cerr
+  $ /dev/shm/pl671/run-negative-controls/2.elf < seed/qualification/security673/packets/p04.bin > /dev/shm/pl671/run-negative-controls/2.out 2> /dev/shm/pl671/run-negative-controls/2.err
+VERDICT neg-expect-accept-trailing FAIL run exit=103 expected=0 stdout=match stderr=match
+CASE neg-expect-refuse-valid line=3
+  $ seed/out/omc < /dev/shm/pl671/run-negative-controls/3.src > /dev/shm/pl671/run-negative-controls/3.elf 2> /dev/shm/pl671/run-negative-controls/3.cerr
+  $ /dev/shm/pl671/run-negative-controls/3.elf < seed/qualification/security673/packets/p00.bin > /dev/shm/pl671/run-negative-controls/3.out 2> /dev/shm/pl671/run-negative-controls/3.err
+VERDICT neg-expect-refuse-valid FAIL run exit=0 expected=103 stdout=match stderr=match
+CASE neg-echo-wrong-prefix line=4
+  $ seed/out/omc < /dev/shm/pl671/run-negative-controls/4.src > /dev/shm/pl671/run-negative-controls/4.elf 2> /dev/shm/pl671/run-negative-controls/4.cerr
+  $ /dev/shm/pl671/run-negative-controls/4.elf 26 < seed/qualification/security673/packets/p12.bin > /dev/shm/pl671/run-negative-controls/4.out 2> /dev/shm/pl671/run-negative-controls/4.err
+VERDICT neg-echo-wrong-prefix FAIL run exit=103 expected=0 stdout differs at byte 0 stderr=match
+OM2GATE FAIL cases=4 pass=0 fail=4 invalid=0 not_run=0

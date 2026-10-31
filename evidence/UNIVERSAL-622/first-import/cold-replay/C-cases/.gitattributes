@@ -1,0 +1,3 @@
+# Byte-exact generated fixtures include a deliberate CRLF C source.
+*.c -text whitespace=cr-at-eol
+*.upper -text -diff

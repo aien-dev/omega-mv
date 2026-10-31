@@ -15,7 +15,8 @@ text ifword "if true\n"
 text endword "end\n"
 text textpre "text data \""
 text textend "\"\nfn main to int\nret 0\nend\n"
-text fnpre "fn f"
+note Function names are g<n>: f32 and f64 are type keywords, so f<n> made the count fixture fail on f32.
+text fnpre "fn g"
 text fnpost " to int\nret 0\nend\n"
 text array "global data uchar 16777217\nfn main to int\nret 0\nend\n"
 text quote "text data \"abc"
@@ -160,7 +161,7 @@ if eq m 3
 literal n
 end
 if eq m 4
-if gt n 1024
+if gt n 4096
 ret 90
 end
 funcs n

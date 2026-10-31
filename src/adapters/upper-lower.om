@@ -1,0 +1,355 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Handwritten S1 upper -> restricted Omegese lowering (translation-v1 section 5). No host compute.
+note Build prepends the unchanged pinned vendor sha256.om and the #621 core.om; `decode` is the full
+note source-aware v1 validation. One envelope per process: the core's globals are not reentrant.
+global One uchar 1
+global Nm uchar 64
+global Nl ulong 1
+global Lo uchar 8192
+global Ln ulong 1
+global Dg uchar 20
+text Words "cwd random envcnt envread chdir ftrunc stat link symlnk chmod faccess getuid geteuid getgid getegid lstat truncate chown const fchdir getppid umask fdsync memfd setsid getpgid setpgid pread pwrite getsid syncfs shutdown devctl mapnew mapdrop mapread mapwrite devcall uvmctl mapaddr mapget mapset maphold mapbind bool uchar u8 ushort u16 uint u32 ulong u64 byte i8 short i16 int i32 long i64 add sub mul div rem and or xor shl shr eq ne lt le gt ge neg not get len read write true false view edit fn to end if else while bound for ret void global text put free exit note new break trap own sockname realns execprog renames rmdir killpid pipefds getpid waitio getdnts connect bind waitpid fstat recv send sleepns argcnt argread fclose fsync fchmod fseek socknew listen accept fork dupfd monons fopen unlink makedir struct f32 f64 bitcast fsqrt fabs fmin fmax sizeof offsetof continue v i0 i1 i2 i3 i4 i5 main"
+text Tnote "note omega.universal.lower.v1 semantic "
+text Tfn "fn "
+text Tpar " ulong"
+text Tto " to ulong\n"
+text Tnew "v = new ulong "
+text Tput "put v "
+text Tget " get v "
+text Tadd "add"
+text Tsub "sub"
+text Tmul "mul"
+text Tret "ret get v "
+text Tend "end\n"
+text Hexd "0123456789abcdef"
+text Dflt "calc"
+text E64 "LOWER_BAD_COMMAND\n"
+text E65 "LOWER_MALFORMED\n"
+text E68 "LOWER_PROFILE_MISMATCH\n"
+text E77 "LOWER_IO\n"
+
+fn die code ulong to void
+if eq code 64
+w = write 2 E64 0 len E64
+end
+if eq code 65
+w = write 2 E65 0 len E65
+end
+if eq code 68
+w = write 2 E68 0 len E68
+end
+if eq code 77
+w = write 2 E77 0 len E77
+end
+exit int code
+end
+
+fn oc c ulong to void
+p = get Ln 0
+if ge p 8192
+die 65
+end
+put Lo p uchar c
+put Ln 0 add p 1
+end
+
+fn olinestart k ulong to void
+for i ulong len Tput
+oc ulong get Tput i
+end
+odec k
+oc 32
+end
+
+fn odec v ulong to void
+n = ulong 0
+x = v
+put Dg 0 48
+if eq x 0
+n = 1
+end
+while ne x 0
+put Dg n uchar add rem x 10 48
+n = add n 1
+x = div x 10
+end
+while gt n 0
+n = sub n 1
+oc ulong get Dg n
+end
+end
+
+fn alnum c ulong to bool
+if and ge c 65 le c 90
+ret true
+end
+if and ge c 97 le c 122
+ret true
+end
+if and ge c 48 le c 57
+ret true
+end
+ret eq c 95
+end
+
+fn wrdchar p ulong to bool
+if ge p len Words
+ret false
+end
+ret ne get Words p 32
+end
+
+fn sameword b ulong e ulong to bool
+if ne sub e b get Nl 0
+ret false
+end
+for i ulong get Nl 0
+if ne get Words add b i get Nm i
+ret false
+end
+end
+ret true
+end
+
+fn reserved to bool
+p = ulong 0
+while lt p len Words
+b = p
+while wrdchar p
+p = add p 1
+end
+if sameword b p
+ret true
+end
+p = add p 1
+end
+ret false
+end
+
+fn takename to void
+c = argcnt
+if eq c 1
+for i ulong len Dflt
+put Nm i get Dflt i
+end
+put Nl 0 len Dflt
+ret
+end
+if ne c 2
+die 64
+end
+r = argread 1 Nm 0 64
+if lt r 1
+die 64
+end
+n = ulong r
+if gt n 63
+die 64
+end
+put Nl 0 n
+f = ulong get Nm 0
+if and ge f 48 le f 57
+die 64
+end
+for i ulong n
+if not alnum ulong get Nm i
+die 64
+end
+end
+if reserved
+die 64
+end
+end
+
+fn s1op i ulong to bool
+code = get Oc i
+if or ne get Ot i 1 ne get Oef i 0
+ret false
+end
+if ne get Oal i 0
+ret false
+end
+if eq code 9
+ret and eq get Oat i 0 eq get Oob i 1
+end
+if eq code 1
+ret and eq get Oat i 1 eq get Oob i 0
+end
+if or lt code 2 gt code 4
+ret false
+end
+ret and eq get Oat i 1 eq get Oob i 1
+end
+
+fn s1 to ulong
+if or ne get M 0 1 ne get M 1 1
+die 68
+end
+if or ne get M 2 0 ne get M 3 1
+die 68
+end
+n = ulong 0
+for i ulong get M 4
+if not s1op i
+die 68
+end
+if eq get Oc i 9
+n = add n 1
+end
+end
+for i ulong get M 4
+if eq get Oc i 9
+if ge get Oi i n
+die 68
+end
+end
+end
+ret n
+end
+
+fn oheader to void
+for i ulong len Tnote
+oc ulong get Tnote i
+end
+hinit
+for i ulong len Semdom
+hbyte get Semdom i
+end
+part 13 get M 5
+finish
+for i ulong 32
+b = ulong get Hash i
+oc ulong get Hexd shr b 4
+oc ulong get Hexd and b 15
+end
+oc 10
+end
+
+fn osig n ulong to void
+for i ulong len Tfn
+oc ulong get Tfn i
+end
+for i ulong get Nl 0
+oc ulong get Nm i
+end
+for s ulong n
+oc 32
+oc 105
+odec s
+for i ulong len Tpar
+oc ulong get Tpar i
+end
+end
+for i ulong len Tto
+oc ulong get Tto i
+end
+for i ulong len Tnew
+oc ulong get Tnew i
+end
+odec get M 4
+oc 32
+oc 48
+oc 10
+end
+
+fn oref a ulong to void
+for i ulong len Tget
+oc ulong get Tget i
+end
+odec a
+end
+
+fn oarith code ulong to void
+for i ulong 3
+if eq code 2
+oc ulong get Tadd i
+end
+if eq code 3
+oc ulong get Tsub i
+end
+if eq code 4
+oc ulong get Tmul i
+end
+end
+end
+
+fn obody to void
+for k ulong get M 4
+olinestart k
+code = get Oc k
+if eq code 9
+oc 105
+odec get Oi k
+end
+if eq code 1
+odec get Oi k
+end
+if and ge code 2 le code 4
+oarith code
+oref get Oa k
+oref get Ob k
+end
+oc 10
+end
+for i ulong len Tret
+oc ulong get Tret i
+end
+odec sub get M 4 1
+oc 10
+for i ulong len Tend
+oc ulong get Tend i
+end
+end
+
+fn main to int
+n = ulong 0
+more = ulong 1
+while and eq more 1 lt n 8192
+r = read 0 Ib n sub 8192 n
+if lt r 0
+die 77
+end
+if eq r 0
+more = 0
+else
+n = add n ulong r
+end
+end
+big = ulong 0
+if eq n 8192
+r = read 0 One 0 1
+if lt r 0
+die 77
+end
+if gt r 0
+big = 1
+end
+end
+takename
+if eq big 1
+die 65
+end
+constants
+code = decode n
+if eq code 68
+die 68
+end
+if ne code 0
+die 65
+end
+k = s1
+put Ln 0 0
+oheader
+osig k
+obody
+sent = ulong 0
+m = get Ln 0
+while lt sent m
+r = write 1 Lo sent sub m sent
+if le r 0
+die 77
+end
+sent = add sent ulong r
+end
+ret 0
+end

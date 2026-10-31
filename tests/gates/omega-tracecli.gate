@@ -1,0 +1,24 @@
+# tests/gates/omega-tracecli.gate
+# omega#610: offline read-only trace CLI (seed/trace/tracecli.om) over the local trace segment
+# format v1. Golden stdout and exit codes, a mode-0000 refusal, and 4 source mutants, built by
+# the committed seed/out/omc. No hosted mirror: local gate only. Depends on the segment format
+# from omega#608 (draft PR #958); this gate does not replace tests/gates/omega-trace.gate.
+gate: OMEGA-TRACECLI
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - seed/trace/
+  - seed/out/omc
+  - seed/out/omc.sha256
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["tracecli"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 10m
+exactness: EXACT
+cache_scope: machine

@@ -81,16 +81,20 @@ Run each command only after its predecessor succeeds; never execute failed compi
 Expected: `dispatch order checks=3 fails=0`, exit 0. Build/run the existing dispatch gate and
 full security gate separately; this standalone regression is not yet wired into `gate669`.
 The negative control is the same compilation unit with only `dispatch.om` restored to the base
-revision's pre-acquisition read. It must print `FAIL dispatch acquired-record refusal` and exit 1;
-a compiler failure, signal, or timeout is INVALID, not a passing control.
+revision's pre-acquisition read. It must exit 1 and print `FAIL dispatch acquired-record refusal`;
+the pre-acquisition read also fails the other two assertions (no release after a failed read,
+and a read before the acquisition error). A compiler failure, signal, or timeout is INVALID,
+not a passing control.
 
 Committed concatenations are the byte-for-byte sequences below (no extra separators):
 
 - `dispatch-gate.om`: action, store, lock, dispatch, dispatch-test.
 - `dispatch-order-gate.om`: action, store, dispatch, dispatch-order-test.
 
-The acquisition-order patch and regression were source-reviewed only on the editing host;
-compiled positive/negative runs remain NOT_RUN until the AArch64 qualification above is performed.
+Native run (2026-10-31, Linux AArch64, seed/out/omc sha256 7a8b84fc, after `sh seed/omega-from-seed.sh`
+reproduced it): positive `dispatch order checks=3 fails=0`, exit 0; negative control with `dispatch.om`
+from main 1db94162 printed all three `FAIL dispatch ...` lines, exit 1. The 37-check `dispatch-gate.om`
+passes on both sources, so it does not detect the read-before-acquire order; this regression does.
 
 ## Exact store-input consumption regression
 
@@ -119,7 +123,10 @@ Run each command only after its predecessor succeeds. Expected output is
 The test deliberately has no dependency on the new EOF-probe scratch buffer, so the old-source
 control remains a valid compilation unit. Failed compilation, signals and timeouts are INVALID.
 Run the existing store, dispatch, dispatcher-order and complete security gates as regressions.
-This standalone gate is not yet wired into `gate669`; all compiled runs remain NOT_RUN.
+This standalone gate is not yet wired into `gate669`. Native run (2026-10-31, Linux AArch64,
+seed/out/omc 7a8b84fc): positive `store exact checks=4 fails=0`, exit 0; negative controls with
+`store.om` from main 1db94162 and from a35697e9 each printed both `FAIL store trailing-...` lines,
+exit 1. Store (77), dispatch (37), dispatcher-order (3) and lock (5) gates pass on this revision.
 
 `store-gate.om` has been regenerated as `store.om` followed by `store-test.om`. Its prior copy
 also lacked the already-existing `sgerr` generation-error interface; it now tests the current
@@ -144,5 +151,5 @@ The exact-store fixture likewise uses global/text names within that limit.
 These correct known source compilation blockers without changing the test
 scenarios or production sources. Declared concatenated gates are regenerated
 from this revision's own component sources. Source review is not compiler
-acceptance: Omega compilation and native positive/negative runs remain NOT_RUN.
+acceptance; the native runs are recorded in the section above.
 Historical evidence is unchanged.

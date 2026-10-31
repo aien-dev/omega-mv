@@ -1,0 +1,45 @@
+#758 relational suite, run5: fixes for the #774 review (Rev774), 2026-10-30
+
+Host: Linux aarch64 (DGX Spark CPU, taskset -c 6-19 nice -n 19 ionice -c3), no GPU.
+Compiler: committed seed/out/omc, sha256 62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b
+(seed/out/omc.sha256). Gate: rebuilt from seed/qualification/om2/gate.om by that compiler, sha256
+6c8691c21074595312fdd0f22ca30b6fbe48fb88f2fb0a58936f2960056acefa (= evidence/run1/gate.bin).
+Scanner: seed/qualification/om2/leak/leakscan.om, blob da9268a0c835e056ddb5ddc39f570bcbc741089a, the
+same at 155ff3178f35, 725ca83978a7 (#752) and main 62d1d0d668f8; compiled sha256 aa60061e...e633.
+
+Changes
+-------
+1. Data-dependent-address FAIL control. address.bin word3 is omc's bounds-check b.cs 540000c2 on the
+   secret index. patchword.om 1409286338 3573751839 (0x540000c2 -> 0xd503201f, NOP) gives
+   address-nobounds.bin; the scanner (x1 pub:0:0:16) reports MEM @4 data-index, branches=0 and
+   VERDICT TRACE-EQUIV-STATIC FAIL, exit1 (address-nobounds.scan). qualification.cases gains
+   derive-address-nobounds (re-derives the patched bytes) and scan-address-nobounds (expects exit1).
+2. L4-division-gap and its derive-secret-dividend moved to l4-tripwire.cases, reported apart as
+   "SECURITY758 TRIPWIRE L4-division-gap". qualification.cases stays 56 cases (-2 L4, +2 nobounds).
+3. All case paths are repository-relative (the ../security673-relational/ prefix is gone); the
+   suite runs from one checkout and as the local gate tests/gates/omega-security758.gate
+   (tests/gates/run.sh security758).
+4. SHA256SUMS now also covers MAIN-REPLAY.txt, initial-clean-replay.json, l4-tripwire.cases and
+   this directory.
+
+Results (logs in this directory; README "by hand" commands)
+-------
+qualification.cases     exit0 OM2GATE PASS cases=56 pass=56
+bindings.cases          exit0 OM2GATE PASS cases=16 pass=16
+consumer.cases          exit0 OM2GATE PASS cases=4 pass=4
+binding-negative.cases  exit1 OM2GATE FAIL cases=2 pass=0 fail=2 (wrong-source-bytes, wrong-checker-bytes; intended)
+l4-tripwire.cases       exit0 OM2GATE PASS cases=2 pass=2 (tripwire: the known L4 false negative still holds)
+tests/gates/run.sh security758: exit0 (run-sh-security758.log).
+
+Negative control (the reviewer's mutant)
+----------------------------------------
+leakscan.om line 1556 "if ne get gv 10 0" -> "if eq get gv 10 999999999" (the scanner never
+returns FAIL for a data-index load), applied to the working tree only and reverted afterwards
+(blob back to da9268a0):
+qualification.cases     exit1 OM2GATE FAIL cases=56 pass=55 fail=1; the one FAIL is
+                        scan-address-nobounds "run exit=0 expected=1" (mutant-gv10-qualification.log)
+tests/gates/run.sh security758: exit1 "SECURITY758 FAIL qualification.cases exit=1 expected=0"
+                        (mutant-gv10-run-sh.log)
+Before this change the same mutant left qualification.cases at 56/56 (Rev774).
+
+Scope: no scanner, compiler, gate or consumer source was changed. L4-L7 blockers are unchanged.

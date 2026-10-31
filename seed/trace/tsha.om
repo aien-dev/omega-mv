@@ -1,0 +1,220 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/trace/tsha.om: SHA-256 (FIPS 180-4) library unit for tracecli (omega-mv #610). Copied unchanged from
+note om/evidence/evidence.om lines 25-239 at b3dca0f1e (functions kinit .. padlen; parity-gated there against
+note the C sha256). Units concatenate and there is no import, so the copy is the reuse mechanism (FR-3).
+note shainit st / shaupd st p n (n a multiple of 64, at most 4096) / shafin st p n dig, st = 9 ulong cells.
+note ---- SHA-256 (FIPS 180-4), tools/zero-legacy/sha256.om with the state in parameters ----
+note st 0..7 the hash words, st 8 the bytes absorbed. 32-bit words live in ulong cells, masked
+note after every add (4294967295).
+
+fn kinit k edit ulong 64 to void
+put k 0 1116352408
+put k 1 1899447441
+put k 2 3049323471
+put k 3 3921009573
+put k 4 961987163
+put k 5 1508970993
+put k 6 2453635748
+put k 7 2870763221
+put k 8 3624381080
+put k 9 310598401
+put k 10 607225278
+put k 11 1426881987
+put k 12 1925078388
+put k 13 2162078206
+put k 14 2614888103
+put k 15 3248222580
+put k 16 3835390401
+put k 17 4022224774
+put k 18 264347078
+put k 19 604807628
+put k 20 770255983
+put k 21 1249150122
+put k 22 1555081692
+put k 23 1996064986
+put k 24 2554220882
+put k 25 2821834349
+put k 26 2952996808
+put k 27 3210313671
+put k 28 3336571891
+put k 29 3584528711
+put k 30 113926993
+put k 31 338241895
+put k 32 666307205
+put k 33 773529912
+put k 34 1294757372
+put k 35 1396182291
+put k 36 1695183700
+put k 37 1986661051
+put k 38 2177026350
+put k 39 2456956037
+put k 40 2730485921
+put k 41 2820302411
+put k 42 3259730800
+put k 43 3345764771
+put k 44 3516065817
+put k 45 3600352804
+put k 46 4094571909
+put k 47 275423344
+put k 48 430227734
+put k 49 506948616
+put k 50 659060556
+put k 51 883997877
+put k 52 958139571
+put k 53 1322822218
+put k 54 1537002063
+put k 55 1747873779
+put k 56 1955562222
+put k 57 2024104815
+put k 58 2227730452
+put k 59 2361852424
+put k 60 2428436474
+put k 61 2756734187
+put k 62 3204031479
+put k 63 3329325298
+end
+
+fn rotr x ulong r ulong to ulong
+ret and or shr x r shl x sub 32 r 4294967295
+end
+
+fn bsig0 x ulong to ulong
+ret xor rotr x 2 xor rotr x 13 rotr x 22
+end
+
+fn bsig1 x ulong to ulong
+ret xor rotr x 6 xor rotr x 11 rotr x 25
+end
+
+fn ssig0 x ulong to ulong
+ret xor rotr x 7 xor rotr x 18 shr x 3
+end
+
+fn ssig1 x ulong to ulong
+ret xor rotr x 17 xor rotr x 19 shr x 10
+end
+
+fn ch x ulong y ulong z ulong to ulong
+ret xor and x y and and not x 4294967295 z
+end
+
+fn maj x ulong y ulong z ulong to ulong
+ret xor and x y xor and x z and y z
+end
+
+note the 16 big-endian words of the block at byte o of p into w, then the schedule
+fn sched p view uchar 4096 o ulong w edit ulong 64 to void
+for i ulong 16
+q = add o mul i 4
+v = ulong get p q
+v = or shl v 8 ulong get p add q 1
+v = or shl v 8 ulong get p add q 2
+v = or shl v 8 ulong get p add q 3
+put w i v
+end
+for j ulong 48
+i = add j 16
+s = add ssig1 get w sub i 2 get w sub i 7
+s = add s ssig0 get w sub i 15
+s = add s get w sub i 16
+put w i and s 4294967295
+end
+end
+
+fn round s edit ulong 8 kw ulong to void
+a = get s 0
+e = get s 4
+t1 = add get s 7 bsig1 e
+t1 = add t1 ch e get s 5 get s 6
+t1 = and add t1 kw 4294967295
+t2 = and add bsig0 a maj a get s 1 get s 2 4294967295
+put s 7 get s 6
+put s 6 get s 5
+put s 5 e
+put s 4 and add get s 3 t1 4294967295
+put s 3 get s 2
+put s 2 get s 1
+put s 1 a
+put s 0 and add t1 t2 4294967295
+end
+
+note compress the block at byte o of p into st
+fn shacmp st edit ulong 9 p view uchar 4096 o ulong to void
+w = new ulong 64 0
+k = new ulong 64 0
+s = new ulong 8 0
+kinit k
+sched p o w
+for i ulong 8
+put s i get st i
+end
+for i ulong 64
+round s add get k i get w i
+end
+for i ulong 8
+put st i and add get st i get s i 4294967295
+end
+end
+
+fn shainit st edit ulong 9 to void
+put st 0 1779033703
+put st 1 3144134277
+put st 2 1013904242
+put st 3 2773480762
+put st 4 1359893119
+put st 5 2600822924
+put st 6 528734635
+put st 7 1541459225
+put st 8 0
+end
+
+note absorb p[0..n): n a multiple of 64, at most 4096 (trap 4 otherwise)
+fn shaupd st edit ulong 9 p view uchar 4096 n ulong to void
+if ne rem n 64 0
+trap 4
+end
+b = ulong 0
+while lt b n bound 65
+shacmp st p b
+b = add b 64
+end
+put st 8 add get st 8 n
+end
+
+note absorb the last n <= 4096 bytes of p, pad, and write the 32-byte digest into dig
+fn shafin st edit ulong 9 p view uchar 4096 n ulong dig edit uchar 32 to void
+full = sub n rem n 64
+shaupd st p full
+t = new uchar 4096 0
+r = sub n full
+for i ulong r
+put t i get p add full i
+end
+put t r 128
+m = ulong 64
+if ge r 56
+m = 128
+end
+padlen t m mul add get st 8 r 8
+shacmp st t 0
+if eq m 128
+shacmp st t 64
+end
+digout st dig
+end
+
+fn digout st edit ulong 9 dig edit uchar 32 to void
+for i ulong 32
+sh = mul sub 3 rem i 4 8
+w = get st div i 4
+put dig i uchar and shr w sh 255
+end
+end
+
+note the 64-bit big-endian bit count at the end of the m-byte padded tail
+fn padlen t edit uchar 4096 m ulong bits ulong to void
+for i ulong 8
+v = and shr bits mul sub 7 i 8 255
+put t add sub m 8 i uchar v
+end
+end

@@ -1,0 +1,21 @@
+; vecadd.s2 -- out[i] = a[i] + b[i] over n 32-bit words (unsigned, wraps mod 2^32), written by hand in
+; asm2's language with the names of seed/tensix/rv32im.tbl. RV32I only (no M, no F, no custom .ttinsn).
+; Calling convention (RISC-V psABI, the same shape as a tt-metal kernel_main call):
+;   a0 (x10) = a, a1 (x11) = b, a2 (x12) = out, a3 (x13) = n words; returns with jalr x0, 0(ra).
+; Clobbers t0..t2 (x5..x7) and a0..a3. 11 instructions, 44 bytes, position independent.
+; Branch offsets are bytes from the branch itself, written as the word splits them:
+;   beq +40  = imm[12]=0, imm[10:5]=1, imm[4:1]=4, imm[11]=0     (40 = 32 + 8)
+;   bne -32  = imm[12]=-1, imm[10:5]=63, imm[4:1]=0, imm[11]=1   (-32 = 0x1fe0 in 13 bits)
+  beq 13 0 0 1 4 0      ; if n == 0 goto done          (+40 bytes: 10 instructions ahead)
+; loop:
+  lw 5 10 0             ; t0 = a[i]
+  lw 6 11 0             ; t1 = b[i]
+  add 7 5 6             ; t2 = t0 + t1  (mod 2^32)
+  sw 7 12 0 0           ; out[i] = t2
+  addi 10 10 4          ; a++
+  addi 11 11 4          ; b++
+  addi 12 12 4          ; out++
+  addi 13 13 -1         ; n--
+  bne 13 0 -1 63 0 1    ; if n != 0 goto loop          (-32 bytes: 8 instructions back)
+; done:
+  jalr 0 1 0            ; return
