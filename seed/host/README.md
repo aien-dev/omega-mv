@@ -27,11 +27,15 @@ On a machine without the Spark build coordinator, run the script directly.
 The script rebuilds the seed chain, proves compiler self-reproduction, runs
 native Omega fixtures, rejects malformed inputs, and compares the original
 fixture corpus against the original native parent. It does not run the older
-C-reference gate scripts.
+C-reference gate scripts. The fixture gate itself is `seed/host/gate.om`,
+compiled by `seed/out/omc`; the remaining shell step only builds and launches
+it.
 
 Verified on the Spark on 2026-10-23:
 
 - Native file create/read/write/seek/sync/chmod/close/unlink and errno checks.
+- Current-directory change, file creation below it and unlink through the
+  native `chdir` word.
 - Monotonic nanoseconds, realtime nanoseconds and a measured native sleep.
 - Argument copying, including empty arguments, spaces, UTF-8 bytes, and refusal
   of short output buffers without modifying them.
@@ -99,7 +103,7 @@ negative error. The lowering and positive-PID assertion are corrected here.
 Run the candidate host gate without replacing the committed compiler:
 
 ```sh
-OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/gate.sh
+nice -n 19 ionice -c3 sh -c 'seed/out/omc < seed/host/gate.om > build/seed/host/gate && chmod +x build/seed/host/gate && build/seed/host/gate /absolute/path/to/candidate-omc'
 OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/negative.sh
 nice -n 19 ionice -c3 python3 seed/host/net-mutant.py
 nice -n 19 ionice -c3 sh seed/omc/gate18.sh
@@ -111,9 +115,9 @@ or hardware qualification. Compiler integration owns the batch reseed.
 wrong-word source through the committed seed (or `OMC` override), then requires
 the real fixture to pass the original and exit 1 for the mutant. Its controls
 restore the wrong `getppid` syscall and turn an option refusal into success.
-The host gate's `OMC` selector applies to every compilation, including nested
-device/mapping refusal programs and generated identity fixtures; early
-candidate-only logs from before that correction contain mixed-compiler evidence.
+The host gate's compiler argument (`gate.om` argv[1]) applies to every compilation,
+including nested device/mapping refusal programs and generated identity fixtures;
+early candidate-only logs from before that correction contain mixed-compiler evidence.
 The Linux interface authorities are `asm-generic/unistd.h` (`ppoll` 73,
 `getsockopt` 209, `sendmsg` 211), `asm-generic/socket.h`, and `linux/tcp.h`.
 Instruction emission uses the existing Arm ARM forms; `STR` unsigned-offset

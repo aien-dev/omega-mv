@@ -1,0 +1,10 @@
+note Deliberate CPU exhaustion. The supervisor expects SIGXCPU from the installed one-second limit.
+global total ulong 1
+fn main to int
+for i ulong 999999
+for j ulong 999999
+put total 0 add get total 0 add i j
+end
+end
+ret 81
+end
