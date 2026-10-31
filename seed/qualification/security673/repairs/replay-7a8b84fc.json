@@ -1,0 +1,140 @@
+{
+ "profile": "SC1 authority repair replay under the current seed compiler",
+ "date": "2026-10-31",
+ "head_merged": "fix/authority-store-write-cleanup 101823e564edae9c3d2102388a22e27cd5238bd5",
+ "compiler_sha256": "7a8b84fcc07808a52e6cbb65aa7450c754b3ad62eeddf9ec64cc0edd0938b2de",
+ "compiler_source": "sh seed/omega-from-seed.sh, exit 0, seed/out unchanged",
+ "target": "Linux AArch64 native host (not hardware qualification)",
+ "records": [
+  {
+   "name": "dispatch-order",
+   "compile_exit": 0,
+   "source_sha256": "ba6e35675f2efdeb9091224d74fd0550f675522fd89a8377ebdf2c4fb96e4baf",
+   "binary_sha256": "b638e460535cdad038eb96300b7cecb162d0ecd1d898dc89f4507b952c361940",
+   "exit": 0,
+   "stdout": "dispatch order checks=3 fails=0\n",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "store-exact",
+   "compile_exit": 0,
+   "source_sha256": "662f9e59d6d6a176b830533953a34fd1a9c1cbec5beb37d1a70c67784ceb0cd1",
+   "binary_sha256": "c2bac93ecee444be1f393dbfb424a709d4d88d2167f1b1abed31690276fadf28",
+   "exit": 0,
+   "stdout": "store exact checks=4 fails=0\n",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "lock",
+   "compile_exit": 0,
+   "source_sha256": "db671123db01a23d28bf5a9ee80a0c5a7bb4d6dba659b16f375ad60115a8ffae",
+   "binary_sha256": "f5b42f3129d0964f928a404effd8a4ccaea4348e6524a9f59ee902046dd9463d",
+   "exit": 0,
+   "stdout": "lock checks=8 fails=0\n",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "store-cleanup",
+   "compile_exit": 0,
+   "source_sha256": "2e6de0feb55fb52279476342d552e9d6f80e53f0c4989fb27d700cef22126692",
+   "binary_sha256": "9e32929ad2500f16cd71a0afdc75bfa67669e427bf0bb07ed33c9b0f41315c42",
+   "exit": 0,
+   "stdout": "store cleanup cases=18 fails=0\n",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "mutate",
+   "compile_exit": 0,
+   "source_sha256": "76e9f8193db513cd1c804e8f3dfff742c59532f20935840588556ab00177edd4",
+   "binary_sha256": "fd45454b486218ca1d5e9d2593763cf75649ce28087b542722d463ba2f809caf",
+   "matches_native_json": true
+  },
+  {
+   "name": "dispatch-order-mutant",
+   "transform_mode": 0,
+   "transform_exit": 0,
+   "compile_exit": 0,
+   "source_sha256": "16d065f24c9d77c6a54a3c3947fcbc8d6b04d4c71780fc54496ab9a854a9a330",
+   "binary_sha256": "c8fd58470cc9c4a90687befaf6ca0d0f97afb63f29a105bdab5746aea6477be5",
+   "exit": 1,
+   "stdout": "FAIL dispatch acquired-record refusal\nFAIL dispatch read-error release\nFAIL dispatch acquisition-error refusal\n",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "store-exact-mutant",
+   "transform_mode": 1,
+   "transform_exit": 0,
+   "compile_exit": 0,
+   "source_sha256": "4681bcbdf2f279fb2fd71bef694fd91df642c97412102acc3eab57fe27988e31",
+   "binary_sha256": "89881522558dd970fbeb55d67c07ce203082a7f5dbbb08d50def682647f1869b",
+   "exit": 1,
+   "stdout": "FAIL store trailing-record refusal\n",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "lock-mutant",
+   "transform_mode": 2,
+   "transform_exit": 0,
+   "compile_exit": 0,
+   "source_sha256": "f37a1a5fe6d64487fd4a97c942c62ef1d706f1cf0f5b6503db94d295d518b060",
+   "binary_sha256": "7da6f68c696fd59ec113ab1376d114352049aeccac778e06cd45dc96616a518f",
+   "exit": 1,
+   "stdout": "",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "store-cleanup-mutant",
+   "transform_mode": 3,
+   "transform_exit": 0,
+   "compile_exit": 0,
+   "source_sha256": "67ae4cbfe18c32d60ec5c63a9666177528d768c1980874d640a2fae405ddb09e",
+   "binary_sha256": "577f3203f1e314bc358b821d09fa13de2cb2ae4615e23adb6ae3873c0942103d",
+   "exit": 1,
+   "stdout": "",
+   "stderr_bytes": 0,
+   "matches_native_json": true
+  },
+  {
+   "name": "presplit-cleanup",
+   "compile_exit": 12,
+   "source_sha256": "2819aee2253a3c966687c7ce8639890e960ae4ed2e5345dc0432b2c7e62ff0d6",
+   "compiler_error": "omc: line 274: error 12\n",
+   "matches_native_json": true
+  }
+ ],
+ "mutator_refusals": [
+  {
+   "case": "mutate mode=3 on dispatch-order-gate",
+   "exit": 93,
+   "stdout_bytes": 0
+  },
+  {
+   "case": "mutate mode=3 on store-cleanup-mutant (0 matches)",
+   "exit": 93,
+   "stdout_bytes": 0
+  },
+  {
+   "case": "mutate mode=0 on dispatch-order-mutant",
+   "exit": 93,
+   "stdout_bytes": 0
+  },
+  {
+   "case": "mutate mode=9",
+   "exit": 90,
+   "stdout_bytes": 0
+  }
+ ],
+ "limits": [
+  "Full coordinator gate669.om run separately at this head: exit 0, GATE669 PASS (host execution only)",
+  "Cleanup uses deterministic fake effects",
+  "No production revocation fence or stale-lock ABA proof",
+  "No power-loss qualification"
+ ]
+}

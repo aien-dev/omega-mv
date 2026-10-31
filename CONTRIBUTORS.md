@@ -7,6 +7,7 @@ The current development method is [Human-Directed Agentic Engineering (HDAE)](RE
 
 | Model | What it did |
 |---|---|
+| OpenAI GPT-6 Astra | Security #673 native authority repair replay, register-bounded cleanup assertion, compiled negative-control producer and evidence |
 | Codex | Seeded authority lock unlink-error reporting and deterministic directory/missing-path regression (source-reviewed; native execution pending) |
 | Claude Opus 5.5 (via omp) | Made `om/evidence/parity/run.sh` independent of the filesystem under `TMPDIR`. The pathtree and digtree listings hashed each directory's `find %s` size, which is 4096 on ext4 and 40..3800 on tmpfs, so the harness failed on tmpfs with correct output. Directories now list `-` for size. The two expected hashes were re-derived from the same trees: on ext4 the old listing still hashes to the recorded C-oracle values, and the new one matches on ext4 and tmpfs. The mkdir_mode and file_mode mutants are still killed. |
 | OpenAI Codex | C6 comparison harness: preserve decoder exit status before normalization; host-only serial and parallel regression controls reject nonzero exits despite identical output. |
