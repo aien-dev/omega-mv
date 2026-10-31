@@ -3,7 +3,7 @@
 The original parity tables, mutant counts, timings, binary size and binding checks below
 are historical [#751](https://github.com/aien-dev/omega-mv/pull/751) host evidence
 under compiler `734f0a39…6b61`, not measurements under the current compiler pin.
-The later #848 compile report is recorded separately below.
+The later #848 compile report and #857 host parity report are recorded separately below.
 
 `gpumath.om` ports three C files of `libomega_gpu.a` to seeded Omega (aien-dev/omega-mv#726,
 aien-dev/aien-architecture-mv#300/#316):
@@ -180,6 +180,23 @@ This preserves the newer author's compile-size/identity report, not the old
 #751 size or parity attribution. It does not establish that the corpus, mutants
 or binding checks above were rerun under `90c8884c…`. This documentation
 correction did not independently compile or execute that program.
+
+## Later host parity report: #857 (2026-10-31, author-reported)
+
+[#857's measured update at `4670831d8be4a8dd4686062aa5f2bae4f571d14c`](https://github.com/aien-dev/omega-mv/pull/857)
+reports **gpumath parity PASS** on host AArch64 Linux under compiler
+`24caacf463cc29c5413d5b2565ef8f88c76e60a585bbad44d2388cb1ac29abb7`.
+This is a reported parity run, not merely #848's compile sweep or #853's no-input
+smoke comparison. The later integration head `c7cb1137589b385dddb48e3f0589402d38aa222b`
+kept that compiler unchanged, according to the same update.
+
+The [README at #857 merge `3a163bc5eafa5be4b9ca97b7f17046c33f0d9032`](https://github.com/aien-dev/omega-mv/blob/3a163bc5eafa5be4b9ca97b7f17046c33f0d9032/om/gpumath/README.md)
+records a **29,272-byte** program, byte-identical to the outputs under
+`90c8884c…3983` and `469532a5…79bc`. Preserve these as #857's author-reported
+size/identity and host parity observations, separate from the original #751
+compiler and tables. This correction did not independently rerun the suite,
+inspect those run logs or remeasure the binary; no per-stream counts or binding
+results from the old tables are reassigned to #857, and no GPU result is claimed.
 
 ## Limits
 

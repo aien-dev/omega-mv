@@ -4,20 +4,20 @@
       "children": [
         {
           "digest": "21f0b4ef1c08b1967d748f68eb35ef18c04a04b6108f2d9b8b116a1eb944ce72",
-          "last_commit": "",
+          "last_commit": "f5c9bd89a",
           "name": "candidates",
           "purpose": "Immutable ORIG-2 candidate checkpoints (aien-train evidence/SI19-ORIG2/candidates, byte-identica"
         }
       ],
       "children_root": "sha256:9b96cd4261084406cb51d282dcb0f09dced193e22d37a5e279005f06baba4969",
-      "compiled_at": "2026-10-31T08:53:01Z",
+      "compiled_at": "2026-10-31T09:31:20Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:800118e50b659b0651a6fae12d53b5fc878b3787806e8e8488f40470abb4a265",
+      "digest": "sha256:f885a2ff833d186f7fdb11ccb96c67b68470156a6e805f7fdefa2ba6b59baf8b",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 7,
-      "generated_at_commit": "f58bb1f480353dbf87d91f861401b2d5143c2099",
-      "source_tree": "sha256:9c03c006142a13a26211e849fcf86d47be7d82f7d3ae3e0606d7e791407ca9dc"
+      "generated_at_commit": "ed741489420ffc6d6616aea763123bc68ec0471b",
+      "source_tree": "sha256:784788d6c648a059a5d2fd0c46cc81775e8eed04a64c6da2aa33412073ab3eb7"
     }
   },
   "name": "orig4",
