@@ -558,7 +558,8 @@ def conductor_case(path, name, line, alternate, compiler_subst):
 def current_c2_contract(fields):
     """Use the already accepted deltas, retaining the frozen replay separately."""
     for relative in ("seed/qualification/om2/manifest-c2-capacity.txt",
-                     "seed/qualification/om2/manifest-c2-batch2.txt"):
+                     "seed/qualification/om2/manifest-c2-batch2.txt",
+                     "seed/qualification/om2/manifest-c2-fpvreg.txt"):
         path = ROOT / relative
         for line in path.read_text().splitlines():
             replacement = line.split()
