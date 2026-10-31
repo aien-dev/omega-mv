@@ -198,4 +198,58 @@ ie32 = rsa_with_e(2048, 4294967297)
 ce = build("intXe32", ie32.public_key(), root, rk, True)
 put("intXe32.der", der(ce))
 put("lViaXe32.der", der(build("lViaXe32", lk.public_key(), ce, ie32, False)))
+
+# omega-mv #833 suite audit (x509-limbo cases and MODEL-REVIEWED findings L2, I5)
+bexts = [c for _, c in parse(parse(exts)[0][1])]
+
+
+def oid_of(e):
+    return parse(e)[0][1][2:]
+
+
+def exts_without(lst, oid_hex):
+    return [e for e in lst if oid_of(e) != bytes.fromhex(oid_hex)]
+
+
+def wrap(lst):
+    return tlv(0xA3, tlv(0x30, b"".join(lst)))
+
+
+put("lXsanStar.der", der(build("lXsanStar", lk.public_key(), root, rk, False, san=("*",))))
+sanx = [e for e in bexts if oid_of(e) == bytes.fromhex("551d11")][0]
+put("lXdupSan.der", resign(base, rk, head + [wrap(bexts + [sanx])]))
+put("lXdupUnk.der", resign(base, rk, head + [wrap(bexts + [ext("2a03", False, b""), ext("2a03", False, b"")])]))
+put("lXunkCrit.der", resign(base, rk, head + [wrap(bexts + [ext("2a03", True, b"")])]))
+for nm, ser in (("lXser0", b"\x00"), ("lXserNeg", b"\xff"), ("lXser21", b"\x01" * 21), ("lXser20", b"\x01" * 20)):
+    put(nm + ".der", resign(base, rk, [tbs[0], tlv(0x02, ser)] + tbs[2:]))
+gt = tlv(0x30, tlv(0x18, b"20260101000000Z") + tlv(0x17, b"270101000000Z"))
+put("lXgenTime.der", resign(base, rk, tbs[:4] + [gt] + tbs[5:]))
+for nm, ku in (("lXku4", b"\x07\x80\x00\x00"), ("lXku3bad", b"\x00\x80\x01"), ("lXku3ok", b"\x07\x80\x80"),
+               ("lXkuCertSign", b"\x02\x84")):
+    put(nm + ".der", resign(base, rk, head + [wrap(exts_without(bexts, "551d0f") + [ext("551d0f", True, tlv(0x03, ku))])]))
+put("lXnoAki.der", resign(base, rk, head + [wrap(exts_without(bexts, "551d23"))]))
+esub = tbs[:5] + [tlv(0x30, b"")] + [tbs[6]]
+sanc = ext("551d11", True, parse(sanx)[-1][1][2:])
+put("lXemptySubj.der", resign(base, rk, esub + [wrap(bexts)]))
+put("lXemptySubjCrit.der", resign(base, rk, esub + [wrap(exts_without(bexts, "551d11") + [sanc])]))
+nodd = (1 << 2051) | int.from_bytes(os.urandom(256), "big") | 1
+put("lXrsa2052.der", resign(base, rk, tbs[:6] + [rsa_spki(nodd, 65537), exts]))
+# intermediate without subjectKeyIdentifier, and a leaf under it
+ink = ec.generate_private_key(ec.SECP256R1())
+cin = der(build("intXnoSki", ink.public_key(), root, rk, True))
+ctbs = [c for _, c in parse(parse(cin)[0][1])]
+cexts = [c for _, c in parse(parse(ctbs[7])[0][1])]
+put("intXnoSki.der", resign(cin, rk, ctbs[:7] + [wrap(exts_without(cexts, "551d0e"))]))
+put("lViaXnoSki.der", der(build("lViaXnoSki", lk.public_key(), x509.load_der_x509_certificate(cin), ink, False)))
+# anchors: expired, and without basicConstraints
+for nm, t1, drop in (("rootXexp", datetime.datetime(2026, 6, 1), None), ("rootXnoBc", R1, "551d13")):
+    k = ec.generate_private_key(ec.SECP256R1())
+    c = der(build(nm, k.public_key(), None, k, True, R0, t1))
+    if drop:
+        rt = [x for _, x in parse(parse(c)[0][1])]
+        re_ = [x for _, x in parse(parse(rt[7])[0][1])]
+        c = resign(c, k, rt[:7] + [wrap(exts_without(re_, drop))])
+    cc = x509.load_der_x509_certificate(c)
+    put(nm + ".pem", cc.public_bytes(serialization.Encoding.PEM))
+    put("lVia" + nm + ".der", der(build("lVia" + nm, lk.public_key(), cc, k, False)))
 print(len(os.listdir(out)), "files in", out, file=sys.stderr)

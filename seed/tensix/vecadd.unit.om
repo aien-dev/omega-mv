@@ -1,0 +1,4 @@
+note Scalar unit lifted by irrv32.om to out[i] = a[i] + b[i] (wraps mod 2^32).
+fn addu a uint b uint to uint
+ret add a b
+end

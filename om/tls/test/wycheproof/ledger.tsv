@@ -1,0 +1,349 @@
+# Wycheproof ledger rows: one per testvectors_v1 file at C2SP/wycheproof d17cc89fa5c8f4f4d378b5385ebf75da5d0926c9 (read by ledger.sh).
+# json	primitive	suite	label	vectors	selector	not_run_file	reason
+a128cbc_hs256_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+a192cbc_hs384_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+a256cbc_hs512_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aead_aes_siv_cmac_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aegis128L_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aegis128_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aegis256_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_cbc_pkcs5_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ccm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_cmac_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_eax_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base10_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base16_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base26_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base32_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base36_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base45_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base62_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base64_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_base85_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix10_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix16_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix255_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix256_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix26_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix32_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix36_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix45_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix62_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix64_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix65535_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix65536_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_ff1_radix85_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_gcm_siv_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_gcm_test.json	AES-GCM	aesgcm	wycheproof	aesgcm/vectors/wycheproof_aes_gcm.txt	^W 	-	-
+aes_gmac_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_kwp_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_siv_cmac_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_wrap_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aes_xts_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aria_cbc_pkcs5_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aria_ccm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aria_cmac_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aria_gcm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aria_kwp_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+aria_wrap_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+ascon128_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+ascon128a_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+ascon80pq_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+ascon_sp800_232_aead128_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+bls_hash_to_g2_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+bls_sig_g2_aggregate_verify_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+bls_sig_g2_basic_verify_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+bls_sig_g2_pop_verify_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+c2sp_chunked_encryption_aes_128_gcm_test.json	AES-GCM-chunked	-	-	-	-	-	C2SP chunked-encryption construction, not raw AES-GCM
+c2sp_chunked_encryption_aes_256_gcm_test.json	AES-GCM-chunked	-	-	-	-	-	C2SP chunked-encryption construction, not raw AES-GCM
+camellia_cbc_pkcs5_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+camellia_ccm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+camellia_cmac_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+camellia_wrap_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+chacha20_counter_test.json	ChaCha20	chacha	wycheproof-chacha20-counter	chacha/vectors/wycheproof-chacha20-counter.txt	^C 	-	XChaCha20 groups (24-byte nonce, HChaCha20): not implemented in chacha.om
+chacha20_poly1305_test.json	ChaCha20-Poly1305	chacha	wycheproof-chacha20-poly1305	chacha/vectors/wycheproof-chacha20-poly1305.txt	^A 	-	-
+dsa_2048_224_sha224_p1363_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_2048_224_sha224_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_2048_224_sha256_p1363_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_2048_224_sha256_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_2048_256_sha256_p1363_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_2048_256_sha256_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_3072_256_sha256_p1363_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+dsa_3072_256_sha256_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+ec_prime_order_curves_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+ecdh_brainpoolP224r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_brainpoolP256r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_brainpoolP320r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_brainpoolP384r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_brainpoolP512r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp224r1_ecpoint_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp224r1_pem_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp224r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp256k1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp256k1_webcrypto_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp256r1_ecpoint_test.json	ECDH-P256	ecdh	wycheproof_secp256r1_ecpoint	ecdh/vectors/wycheproof_secp256r1_ecpoint.txt	.	-	-
+ecdh_secp256r1_pem_test.json	ECDH-P256	-	-	-	-	-	PEM / WebCrypto JWK key encodings: ecdh.om takes the raw TLS key_share point; the same curves run from the ecpoint and SPKI files
+ecdh_secp256r1_test.json	ECDH-P256	ecdh	wycheproof_secp256r1_spki	ecdh/vectors/wycheproof_secp256r1_spki.txt	.	ecdh/vectors/NOT_RUN.txt	-
+ecdh_secp256r1_webcrypto_test.json	ECDH-P256	-	-	-	-	-	PEM / WebCrypto JWK key encodings: ecdh.om takes the raw TLS key_share point; the same curves run from the ecpoint and SPKI files
+ecdh_secp384r1_ecpoint_test.json	ECDH-P384	ecdh	wycheproof_secp384r1_ecpoint	ecdh/vectors/wycheproof_secp384r1_ecpoint.txt	.	-	-
+ecdh_secp384r1_pem_test.json	ECDH-P384	-	-	-	-	-	PEM / WebCrypto JWK key encodings: ecdh.om takes the raw TLS key_share point; the same curves run from the ecpoint and SPKI files
+ecdh_secp384r1_test.json	ECDH-P384	ecdh	wycheproof_secp384r1_spki	ecdh/vectors/wycheproof_secp384r1_spki.txt	.	ecdh/vectors/NOT_RUN.txt	-
+ecdh_secp384r1_webcrypto_test.json	ECDH-P384	-	-	-	-	-	PEM / WebCrypto JWK key encodings: ecdh.om takes the raw TLS key_share point; the same curves run from the ecpoint and SPKI files
+ecdh_secp521r1_ecpoint_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp521r1_pem_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp521r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_secp521r1_webcrypto_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_sect283k1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_sect283r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_sect409k1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_sect409r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_sect571k1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdh_sect571r1_test.json	ECDH-other-curves	-	-	-	-	-	curve not P-256/P-384 (TLS 1.3 groups in om/tls: x25519, secp256r1, secp384r1)
+ecdsa_brainpoolP224r1_sha224_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP224r1_sha224_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP224r1_sha3_224_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP256r1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP256r1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP256r1_sha3_256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP320r1_sha384_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP320r1_sha384_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP320r1_sha3_384_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP384r1_sha384_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP384r1_sha384_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP384r1_sha3_384_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP512r1_sha3_512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP512r1_sha512_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_brainpoolP512r1_sha512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp160k1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp160k1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp160r1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp160r1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp160r2_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp160r2_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp192k1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp192k1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp192r1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp192r1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224k1_sha224_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224k1_sha224_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224k1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224k1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha224_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha224_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha3_224_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha3_256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha3_512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha512_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_sha512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_shake128_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp224r1_shake128_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha256_bitcoin_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha3_256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha3_512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha512_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_sha512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_shake128_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_shake128_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_shake256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256k1_shake256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_sha256_p1363_test.json	ECDSA-P256	ec	wycheproof_secp256r1_sha256_p1363	ec/vectors/wycheproof_secp256r1_sha256_p1363.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_sha256_test.json	ECDSA-P256	ec	wycheproof_secp256r1_sha256	ec/vectors/wycheproof_secp256r1_sha256.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_sha3_256_test.json	ECDSA-P256	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_sha3_512_test.json	ECDSA-P256	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_sha512_p1363_test.json	ECDSA-P256	ec	wycheproof_secp256r1_sha512_p1363	ec/vectors/wycheproof_secp256r1_sha512_p1363.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_sha512_test.json	ECDSA-P256	ec	wycheproof_secp256r1_sha512	ec/vectors/wycheproof_secp256r1_sha512.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_shake128_p1363_test.json	ECDSA-P256	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp256r1_shake128_test.json	ECDSA-P256	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha256_test.json	ECDSA-P384	ec	wycheproof_secp384r1_sha256	ec/vectors/wycheproof_secp384r1_sha256.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha384_p1363_test.json	ECDSA-P384	ec	wycheproof_secp384r1_sha384_p1363	ec/vectors/wycheproof_secp384r1_sha384_p1363.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha384_test.json	ECDSA-P384	ec	wycheproof_secp384r1_sha384	ec/vectors/wycheproof_secp384r1_sha384.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha3_384_test.json	ECDSA-P384	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha3_512_test.json	ECDSA-P384	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha512_p1363_test.json	ECDSA-P384	ec	wycheproof_secp384r1_sha512_p1363	ec/vectors/wycheproof_secp384r1_sha512_p1363.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_sha512_test.json	ECDSA-P384	ec	wycheproof_secp384r1_sha512	ec/vectors/wycheproof_secp384r1_sha512.txt	.	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_shake256_p1363_test.json	ECDSA-P384	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp384r1_shake256_test.json	ECDSA-P384	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp521r1_sha3_512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp521r1_sha512_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp521r1_sha512_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp521r1_shake256_p1363_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ecdsa_secp521r1_shake256_test.json	ECDSA-other-curves	-	-	-	-	ec/vectors/NOT_RUN.txt	-
+ed25519_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+ed25519_to_x25519_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+ed448_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+hkdf_sha1_test.json	HKDF-other-hashes	-	-	-	-	-	SHA-1: hkdf.om is HMAC-SHA-256/384/512 only
+hkdf_sha256_test.json	HKDF-SHA2	sha2	wycheproof-hkdf	sha2/vectors/wycheproof-hkdf.txt	^X 256 	-	-
+hkdf_sha384_test.json	HKDF-SHA2	sha2	wycheproof-hkdf	sha2/vectors/wycheproof-hkdf.txt	^X 384 	-	-
+hkdf_sha512_test.json	HKDF-SHA2	sha2	wycheproof-hkdf	sha2/vectors/wycheproof-hkdf.txt	^X 512 	-	-
+hmac_sha1_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha224_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha256_test.json	HMAC-SHA2	sha2	wycheproof-hmac	sha2/vectors/wycheproof-hmac.txt	^T 256 	-	-
+hmac_sha384_test.json	HMAC-SHA2	sha2	wycheproof-hmac	sha2/vectors/wycheproof-hmac.txt	^T 384 	-	-
+hmac_sha3_224_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha3_256_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha3_384_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha3_512_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha512_224_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha512_256_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+hmac_sha512_test.json	HMAC-SHA2	sha2	wycheproof-hmac	sha2/vectors/wycheproof-hmac.txt	^T 512 	-	-
+hmac_sm3_test.json	HMAC-other-hashes	-	-	-	-	-	hash not SHA-256/384/512: hkdf.om HMAC is SHA-2 (256/384/512) only; sha3.om has no HMAC
+json_web_crypto_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+json_web_encryption_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+json_web_key_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+json_web_signature_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+kmac128_no_customization_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+kmac256_no_customization_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+mldsa_44_sign_noseed_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_44_sign_seed_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_44_verify_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_65_sign_noseed_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_65_sign_seed_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_65_verify_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_87_sign_noseed_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_87_sign_seed_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mldsa_87_verify_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+mlkem_1024_encaps_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_1024_keygen_seed_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_1024_semi_expanded_decaps_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_1024_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_512_encaps_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_512_keygen_seed_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_512_semi_expanded_decaps_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_512_test.json	ML-KEM-512/1024	-	-	-	-	-	parameter set not implemented: mlkem.om is ML-KEM-768 only (TLS X25519MLKEM768)
+mlkem_768_encaps_test.json	ML-KEM-768	mlkem	wycheproof	mlkem/vectors/wycheproof.txt	^E 	-	-
+mlkem_768_keygen_seed_test.json	ML-KEM-768	mlkem	wycheproof	mlkem/vectors/wycheproof.txt	^Q 	-	-
+mlkem_768_semi_expanded_decaps_test.json	ML-KEM-768	mlkem	wycheproof	mlkem/vectors/wycheproof.txt	^D 	-	-
+mlkem_768_test.json	ML-KEM-768	mlkem	wycheproof	mlkem/vectors/wycheproof.txt	^C 	-	-
+morus1280_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+morus640_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+pbes2_hmacsha1_aes_128_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha1_aes_192_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha1_aes_256_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha224_aes_128_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha224_aes_192_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha224_aes_256_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha256_aes_128_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha256_aes_192_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha256_aes_256_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha384_aes_128_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha384_aes_192_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha384_aes_256_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha512_aes_128_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha512_aes_192_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbes2_hmacsha512_aes_256_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbkdf2_hmacsha1_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbkdf2_hmacsha224_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbkdf2_hmacsha256_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbkdf2_hmacsha384_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+pbkdf2_hmacsha512_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+primality_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+ristretto255_scalar_invert_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+rsa_oaep_2048_sha1_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha224_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha224_mgf1sha224_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha256_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha256_mgf1sha256_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha384_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha384_mgf1sha384_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha512_224_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha512_224_mgf1sha512_224_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha512_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_2048_sha512_mgf1sha512_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_3072_sha256_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_3072_sha256_mgf1sha256_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_3072_sha512_256_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_3072_sha512_256_mgf1sha512_256_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_3072_sha512_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_3072_sha512_mgf1sha512_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_4096_sha256_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_4096_sha256_mgf1sha256_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_4096_sha512_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_4096_sha512_mgf1sha512_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_oaep_misc_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_1024_sig_gen_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_pkcs1_1024_sig_gen_test	rsa/vectors/wycheproof/rsa_pkcs1_1024_sig_gen_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_1536_sig_gen_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_pkcs1_1536_sig_gen_test	rsa/vectors/wycheproof/rsa_pkcs1_1536_sig_gen_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_2048_sig_gen_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_pkcs1_2048_sig_gen_test	rsa/vectors/wycheproof/rsa_pkcs1_2048_sig_gen_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_2048_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_3072_sig_gen_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_pkcs1_3072_sig_gen_test	rsa/vectors/wycheproof/rsa_pkcs1_3072_sig_gen_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_3072_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_4096_sig_gen_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_pkcs1_4096_sig_gen_test	rsa/vectors/wycheproof/rsa_pkcs1_4096_sig_gen_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pkcs1_4096_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha1_mgf1_20_params_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha1_mgf1_20_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha256_mgf1_0_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_2048_sha256_mgf1_0_params_test	rsa/vectors/wycheproof/rsa_pss_2048_sha256_mgf1_0_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha256_mgf1_0_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_2048_sha256_mgf1_0_test	rsa/vectors/wycheproof/rsa_pss_2048_sha256_mgf1_0_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha256_mgf1_32_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_2048_sha256_mgf1_32_params_test	rsa/vectors/wycheproof/rsa_pss_2048_sha256_mgf1_32_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha256_mgf1_32_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_2048_sha256_mgf1_32_test	rsa/vectors/wycheproof/rsa_pss_2048_sha256_mgf1_32_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha256_mgf1sha1_20_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha384_mgf1_48_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_2048_sha384_mgf1_48_test	rsa/vectors/wycheproof/rsa_pss_2048_sha384_mgf1_48_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha512_224_mgf1_28_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha512_256_mgf1_32_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_sha512_mgf1sha256_32_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_2048_sha512_mgf1sha256_32_params_test	rsa/vectors/wycheproof/rsa_pss_2048_sha512_mgf1sha256_32_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_shake128_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_2048_shake256_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_3072_sha256_mgf1_32_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_3072_sha256_mgf1_32_params_test	rsa/vectors/wycheproof/rsa_pss_3072_sha256_mgf1_32_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_3072_sha256_mgf1_32_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_3072_sha256_mgf1_32_test	rsa/vectors/wycheproof/rsa_pss_3072_sha256_mgf1_32_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_3072_shake128_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_3072_shake256_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_sha256_mgf1_32_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_4096_sha256_mgf1_32_test	rsa/vectors/wycheproof/rsa_pss_4096_sha256_mgf1_32_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_sha384_mgf1_48_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_4096_sha384_mgf1_48_test	rsa/vectors/wycheproof/rsa_pss_4096_sha384_mgf1_48_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_sha512_mgf1_32_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_4096_sha512_mgf1_32_params_test	rsa/vectors/wycheproof/rsa_pss_4096_sha512_mgf1_32_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_sha512_mgf1_32_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_4096_sha512_mgf1_32_test	rsa/vectors/wycheproof/rsa_pss_4096_sha512_mgf1_32_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_sha512_mgf1_64_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_4096_sha512_mgf1_64_params_test	rsa/vectors/wycheproof/rsa_pss_4096_sha512_mgf1_64_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_sha512_mgf1_64_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_4096_sha512_mgf1_64_test	rsa/vectors/wycheproof/rsa_pss_4096_sha512_mgf1_64_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_4096_shake256_test.json	RSA-PSS	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_misc_params_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_misc_params_test	rsa/vectors/wycheproof/rsa_pss_misc_params_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_pss_misc_test.json	RSA-PSS	rsa	wycheproof/rsa_pss_misc_test	rsa/vectors/wycheproof/rsa_pss_misc_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha224_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha256_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_2048_sha256_test	rsa/vectors/wycheproof/rsa_signature_2048_sha256_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha384_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_2048_sha384_test	rsa/vectors/wycheproof/rsa_signature_2048_sha384_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha3_224_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha3_256_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha3_384_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha3_512_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha512_224_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha512_256_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_2048_sha512_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_2048_sha512_test	rsa/vectors/wycheproof/rsa_signature_2048_sha512_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha256_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_3072_sha256_test	rsa/vectors/wycheproof/rsa_signature_3072_sha256_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha384_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_3072_sha384_test	rsa/vectors/wycheproof/rsa_signature_3072_sha384_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha3_256_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha3_384_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha3_512_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha512_256_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_3072_sha512_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_3072_sha512_test	rsa/vectors/wycheproof/rsa_signature_3072_sha512_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_4096_sha256_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_4096_sha256_test	rsa/vectors/wycheproof/rsa_signature_4096_sha256_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_4096_sha384_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_4096_sha384_test	rsa/vectors/wycheproof/rsa_signature_4096_sha384_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_4096_sha512_256_test.json	RSA-PKCS1v15-sig	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_4096_sha512_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_4096_sha512_test	rsa/vectors/wycheproof/rsa_signature_4096_sha512_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_8192_sha256_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_8192_sha256_test	rsa/vectors/wycheproof/rsa_signature_8192_sha256_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_8192_sha384_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_8192_sha384_test	rsa/vectors/wycheproof/rsa_signature_8192_sha384_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_signature_8192_sha512_test.json	RSA-PKCS1v15-sig	rsa	wycheproof/rsa_signature_8192_sha512_test	rsa/vectors/wycheproof/rsa_signature_8192_sha512_test.txt	.	rsa/vectors/NOT_RUN.txt	-
+rsa_three_primes_oaep_2048_sha1_mgf1sha1_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_three_primes_oaep_3072_sha224_mgf1sha224_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+rsa_three_primes_oaep_4096_sha256_mgf1sha256_test.json	RSA-encryption	-	-	-	-	rsa/vectors/NOT_RUN.txt	-
+seed_ccm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+seed_gcm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+seed_wrap_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+siphash_1_3_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+siphash_2_4_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+siphash_4_8_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+siphashx_2_4_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+siphashx_4_8_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+sm4_ccm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+sm4_gcm_test.json	other-ciphers	-	-	-	-	-	cipher/mode not implemented in om/tls (TLS 1.3 AEADs here: AES-GCM, ChaCha20-Poly1305)
+vmac_128_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+vmac_64_test.json	other-constructions	-	-	-	-	-	construction not implemented or used in om/tls
+x25519_asn_test.json	X25519	-	-	-	-	-	ASN.1 / JWK / PEM key encodings: x25519.om takes raw 32-byte keys (TLS key_share); the same curve runs from x25519_test.json
+x25519_jwk_test.json	X25519	-	-	-	-	-	ASN.1 / JWK / PEM key encodings: x25519.om takes raw 32-byte keys (TLS key_share); the same curve runs from x25519_test.json
+x25519_pem_test.json	X25519	-	-	-	-	-	ASN.1 / JWK / PEM key encodings: x25519.om takes raw 32-byte keys (TLS key_share); the same curve runs from x25519_test.json
+x25519_test.json	X25519	x25519	wycheproof	x25519/vectors/wycheproof.txt	^X 	-	-
+x448_asn_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+x448_jwk_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+x448_pem_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+x448_test.json	other-asymmetric	-	-	-	-	-	algorithm not implemented in om/tls (signatures: ECDSA P-256/P-384, RSA PKCS#1 v1.5/PSS; key exchange: X25519, P-256/P-384, ML-KEM-768)
+xchacha20_poly1305_secretstream_test.json	XChaCha20-Poly1305	-	-	-	-	-	XChaCha20 (24-byte nonce, HChaCha20) not implemented in chacha.om
+xchacha20_poly1305_test.json	XChaCha20-Poly1305	-	-	-	-	-	XChaCha20 (24-byte nonce, HChaCha20) not implemented in chacha.om

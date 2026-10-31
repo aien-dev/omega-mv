@@ -112,5 +112,5 @@ Nothing in this specification alters the semantics of existing modular types:
 ## 6. Implementation Status and Roadmap
 
 - **Phase 1 (This Slice, seed/omc)**: Add the `qty` type to the seeded self-hosting compiler `seed/omc/omc.om`, with checked `add`, `sub`, and `mul` trapping on overflow (`trap 1`), explicit conversion via `qty(...)`, compile-time refusal of implicit mixing with `ulong` (error 7), and slice invariants in `part`.
-- **Phase 2 (Library & Nominals)**: Formalize `struct qty`, `struct qobj`, and `struct qslic` in the standard library (`om/quantity/`) for nominal sub-range capacities and explicit result codes (0 success, 1 invalid operand, 2 domain mismatch, 3 overflow/underflow, 4 object mismatch).
+- **Phase 2 (Library & Nominals)**: Formalize `struct bqty` (named `bqty` because `qty` is the native Phase 1 keyword), `struct qobj`, and `struct qslic` in the standard library (`om/quantity/`) for nominal sub-range capacities and explicit result codes (0 success, 1 invalid operand, 2 domain mismatch, 3 overflow/underflow, 4 object mismatch).
 - **Phase 3 (Substrate Lowering & IR)**: Lower `qty` through intermediate representations with static range analysis and formal proofs for bounds check elimination.

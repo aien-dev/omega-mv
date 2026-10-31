@@ -1,0 +1,26 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "2ba1bb15ec37c0ff2939e64776b61eca380ad13d8c252375724100420a6603db",
+          "last_commit": "",
+          "name": "orig4",
+          "purpose": "ORIG-4 shadow advice for the matvec arm chooser (omega-mv#731, spec/shadow-advice-v0.md): shadow"
+        }
+      ],
+      "children_root": "sha256:f0a878b0b192b1c70ee168065345e9728ee3ec0d079cca64f4fb31d677f4918e",
+      "compiled_at": "2026-10-31T03:15:22Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:52ba132389ea88b6c051cc3a6b5ccc93317941d9ea71a43c42311ab07bceb886",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 8,
+      "generated_at_commit": "bce3daa8f5b2975f01ffe2d57d9946fc16bf0a92",
+      "source_tree": "sha256:47a2fecbfbfd39b54420d9ed3a3eb6497ee4f12c9b2be12cfaf5209c52cd09bc"
+    }
+  },
+  "name": "native",
+  "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow advisor (native/orig4).",
+  "schema_version": "1.0.0"
+}

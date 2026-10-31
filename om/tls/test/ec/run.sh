@@ -5,7 +5,9 @@
 # Builds om2 + sha2.om + ec.om + test/ec/driver.om into build/tls/ec/, runs every vector file
 # (Wycheproof, NIST CAVP SigVer, edge cases), library mutants plus an expectation mutant and a
 # digest-column mutant (each must be detected: exit 1 with MISMATCH lines), a malformed-input
-# corpus (gen_fuzz.py, when python3 is present) and one timing series per curve.
+# corpus (gen_fuzz.py, when python3 is present), the P-256 field and scalar-multiplication vectors of
+# gen_p256.py with eight mutants of the p2_* section (p256_driver.om; python3 required) and one timing
+# series per curve.
 # Exit 0 only when every check passes. Environment: EC_BENCH_N (default 200 verifies per curve),
 # EC_FUZZ_N (default 3000 malformed cases), EC_FUZZ_SEED (default 1).
 set -eu
@@ -112,6 +114,72 @@ libmut mutant-padd 's/^ec_sub w ECCP p p ECA7$/ec_add w ECCP p p ECA7/' wychepro
 libmut mutant-n0 's/^for k ulong 5$/for k ulong 2/' cavp_sigver.txt
 libmut mutant-der 's/^if lt get hs add v 1 128$/if lt get hs add v 1 0/' edge.txt
 
+# P-256 specialised arithmetic (the p2_* section of ec.om): field operations and both scalar
+# multiplications against gen_p256.py (Python integers, textbook affine arithmetic), then source
+# mutants of that section that the same vectors must detect. Without python3 this part is NOT_RUN
+# and the suite fails (no PASS without the P-256 vectors).
+#   p2-red: one Solinas term dropped (word 0 without -c14), the deliberately broken reduction
+#   p2-fold: the fold of the carry at word 3 added instead of subtracted
+#   p2-carry: the signed carry turned into a logical shift (negative words carried wrongly)
+#   p2-csub: the final masked subtraction of p never taken
+#   p2-inv: the inversion chain one squaring short
+#   p2-formula: one subtraction of the complete addition formula turned into an addition
+#   p2-sel: the table-select mask from (j xor v) without the - 1 (always 0, wrong entry)
+#   p2-dig: window digits of 3 bits instead of 4
+p2build() { # p2build SRC_EC OUT_BINARY
+	{ echo om2; cat "$1" "$here/p256_driver.om"; } > "$2.unit.om"
+	if ! $nice "$omc" < "$2.unit.om" > "$2" 2> "$2.err" || [ -s "$2.err" ]; then
+		echo "FAIL build $2: $(cat "$2.err")"
+		return 1
+	fi
+	chmod +x "$2"
+}
+p2mut() { # p2mut LABEL SED_EXPR
+	sed "$2" "$root/om/tls/ec.om" > "$out/$1.om"
+	mutants=$((mutants + 1))
+	if cmp -s "$root/om/tls/ec.om" "$out/$1.om"; then
+		echo "FAIL $1: sed did not change the source"
+		fail=1
+		return
+	fi
+	if ! p2build "$out/$1.om" "$out/$1"; then
+		fail=1
+		return
+	fi
+	rc=0
+	$nice "$out/$1" < "$out/p256.txt" > "$out/$1.log" 2>&1 || rc=$?
+	nm=$(grep -c '^MISMATCH ' "$out/$1.log" || true)
+	if [ "$rc" -eq 1 ] && [ "$nm" -gt 0 ]; then
+		detected=$((detected + 1))
+		echo "PASS $1 detected: $nm mismatches, $(tail -n 1 "$out/$1.log")"
+	else
+		echo "FAIL $1: exit $rc, $nm MISMATCH lines (need exit 1 and at least one): $(tail -n 1 "$out/$1.log")"
+		fail=1
+	fi
+}
+if command -v python3 > /dev/null 2>&1; then
+	python3 "$here/gen_p256.py" "${EC_P256_N:-200}" "${EC_P256_SEED:-1}" > "$out/p256.txt"
+	p256=$(wc -l < "$out/p256.txt")
+	total=$((total + p256))
+	if p2build "$root/om/tls/ec.om" "$out/p256"; then
+		run "$out/p256" "$out/p256.txt" p256
+	else
+		fail=1
+	fi
+	p2mut mutant-p2-red 's/^put r 0 sub sub sub sub s get t 11 get t 12 get t 13 get t 14$/put r 0 sub sub sub s get t 11 get t 12 get t 13/'
+	p2mut mutant-p2-fold 's/^put r 3 sub get r 3 f$/put r 3 add get r 3 f/'
+	p2mut mutant-p2-carry 's/^cr = bitcast ulong shr bitcast long z 32$/cr = shr z 32/'
+	p2mut mutant-p2-csub '0,/^mk = sub br 1$/s//mk = ulong 0/'
+	p2mut mutant-p2-inv 's/^p2_sqn w P2I3 P2I3 30$/p2_sqn w P2I3 P2I3 29/'
+	p2mut mutant-p2-formula '0,/^p2_sub w P2T3 P2T3 P2T4$/s//p2_add w P2T3 P2T3 P2T4/'
+	p2mut mutant-p2-sel 's/^m = sub 0 shr sub xor j v 1 63$/m = sub 0 shr xor j v 63/'
+	p2mut mutant-p2-dig 's/^ret and shr get w add k shr i 3 mul and i 7 4 15$/ret and shr get w add k shr i 3 mul and i 7 4 7/'
+else
+	p256=0
+	echo "NOT_RUN p256 vectors: python3 not found"
+	fail=1
+fi
+
 # digest cross-check control: the hashlib digest column of the first case damaged; the driver's
 # sha2_digest comparison must report it
 awk 'BEGIN { done = 0 } !done && !/^#/ { $9 = (substr($9, 1, 1) == "0" ? "1" : "0") substr($9, 2); done = 1 } { print }' \
@@ -142,7 +210,7 @@ for c in secp256r1_sha256 secp384r1_sha384; do
 done
 
 if [ "$fail" -ne 0 ]; then
-	echo "EC FAIL vectors=$total (wycheproof=$wy cavp=$cavp edge=$edge) mutants=$detected/$mutants"
+	echo "EC FAIL vectors=$total (wycheproof=$wy cavp=$cavp edge=$edge p256=$p256) mutants=$detected/$mutants"
 	exit 1
 fi
-echo "EC PASS vectors=$total (wycheproof=$wy cavp=$cavp edge=$edge) mutants=$detected/$mutants"
+echo "EC PASS vectors=$total (wycheproof=$wy cavp=$cavp edge=$edge p256=$p256) mutants=$detected/$mutants"

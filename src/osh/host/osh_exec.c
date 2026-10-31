@@ -648,7 +648,7 @@ static void run_pipeline(OshSession *s, const OshRequest *r, JCtx *jc, OshResult
                 if (wr >= 0) { close(wr); p.pp[i][1] = -1; }
                 continue;
             }
-            envp = osh_build_envp(s, c->assign, c->nassign);
+            envp = osh_build_envp(s, c->assign, c->nassign, path);
             if (!envp) { launch_failed = 1; set_cmd(&res->cmd[i], 1, OSH_OUT_NOT_STARTED, OSH_E_LIMIT); break; }
         }
 

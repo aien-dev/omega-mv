@@ -1,0 +1,32 @@
+note irequiv fixture (issue 826): a 32-bit domain, beyond the exhaustive limit.
+note pop32 and pop32s (SWAR) can only be compared by sampling, which is not a proof;
+note pop32t is a mutant that drops the top bit. spin never returns within the
+note interpreter's fuel (16777216 instructions), so its result is INCONCLUSIVE.
+fn pop32 x uint to uint
+c = uint 0
+for i uint 32
+c = add c and x 1
+x = shr x 1
+end
+ret c
+end
+fn pop32s x uint to uint
+x = sub x and shr x 1 1431655765
+x = add and x 858993459 and shr x 2 858993459
+x = and add x shr x 4 252645135
+ret shr mul x 16843009 24
+end
+fn pop32t x uint to uint
+x = and x 2147483647
+x = sub x and shr x 1 1431655765
+x = add and x 858993459 and shr x 2 858993459
+x = and add x shr x 4 252645135
+ret shr mul x 16843009 24
+end
+fn spin x uchar to uchar
+y = x
+for i uint 20000000
+y = add y 1
+end
+ret y
+end

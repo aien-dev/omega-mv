@@ -1,0 +1,16 @@
+# Self-pausing watchdog for tlsfuzz.service: checks every 10 s; STATUS + append-only pause/resume log
+# in ~/handoffs/TlsProof/fuzz/.
+[Unit]
+Description=om/tls fuzz watchdog (pause on quiet/window/lock/load/18091 triggers)
+
+[Service]
+Type=simple
+ExecStart=/bin/sh %h/.local/lib/omtls-fuzz/service/fuzz-watchdog.sh run
+Nice=19
+IOSchedulingClass=idle
+CPUAffinity=10 11
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

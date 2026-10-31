@@ -736,9 +736,9 @@ static void test_builtins(void)
     o = t_out(&t);
     CHECK(strcmp(o, "over\n") == 0 && strcmp(osh_var_get(&t.s, "SA"), "one") == 0, "prefix over shell var '%s'", o);
     free(o);
-    /* env is built fresh: exactly the exported table plus the override, nothing from the test process environ */
+    /* env is built fresh: exactly the exported table plus the override plus _ (omega#344), nothing from the test process environ */
     t_clear(&t);
-    int nexp = 0;
+    int nexp = 1;
     for (size_t i = 0; i < t.s.nvars; i++) nexp += t.s.vars[i].exported && t.s.vars[i].value;
     setenv("LEAK_FROM_PROCESS_ENV", "1", 1);
     b = nb(0, 0);
@@ -1544,7 +1544,7 @@ static void test_session_env(void)
     CHECK(osh_var_get(&s, "NOEQ") == NULL && osh_var_get(&s, "9x") == NULL && osh_var_get(&s, "A B") == NULL, "malformed entries are not variables");
     CHECK(osh_var_get(&s, "PWD") != NULL, "PWD set");
     OshAssign ov[2] = {{"A", "9"}, {"Z", "z"}};
-    char **e = osh_build_envp(&s, ov, 2);
+    char **e = osh_build_envp(&s, ov, 2, NULL);
     int a = 0, z = 0, n = 0, raw = 0;
     for (char **p = e; *p; p++) { n++; a += !strcmp(*p, "A=9"); z += !strcmp(*p, "Z=z");
         raw += !strcmp(*p, "9x=1") + !strcmp(*p, "A B=1") + !strcmp(*p, "BASH_FUNC_f%%=() {  echo hi; }"); }
@@ -1559,10 +1559,17 @@ static void test_session_env(void)
     osh_envp_free(e);
     CHECK(osh_var_set(&s, "bad name", "x") < 0 && osh_var_export(&s, "", NULL) < 0, "invalid names refused");
     osh_var_set(&s, "U", "u");
-    e = osh_build_envp(&s, NULL, 0);
+    e = osh_build_envp(&s, NULL, 0, NULL);
     int found = 0;
-    for (char **p = e; *p; p++) found += !strncmp(*p, "U=", 2);
-    CHECK(found == 0, "unexported variable not in envp");
+    for (char **p = e; *p; p++) found += !strncmp(*p, "U=", 2) + !strncmp(*p, "_=", 2);
+    CHECK(found == 0, "unexported variable not in envp; no _ without a program");
+    osh_envp_free(e);
+    /* omega#344: bash gives every program _=<the path it executes>, over an assigned or inherited _ */
+    OshAssign us[1] = {{"_", "/x/y"}};
+    e = osh_build_envp(&s, us, 1, "/usr/bin/env");
+    int u = 0, uok = 0;
+    for (char **p = e; *p; p++) { u += !strncmp(*p, "_=", 2); uok += !strcmp(*p, "_=/usr/bin/env"); }
+    CHECK(u == 1 && uok == 1, "_ is the executed path, once (%d %d)", u, uok);
     osh_envp_free(e);
     osh_session_free(&s);
 }

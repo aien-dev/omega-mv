@@ -1,0 +1,758 @@
+{
+  "schema": "omega.c-u64-import.development.v1",
+  "result": "FAIL",
+  "source_commit": "4d41457466c42ccb52f405915fd95da469a439e3",
+  "classification": "DIFFERENTIAL_COMPATIBILITY",
+  "proof": false,
+  "source_replay_verified": false,
+  "positive_executed": 34,
+  "positive_passed": 23,
+  "negative_executed": 40,
+  "negative_passed": 40,
+  "native_C_observations": 529,
+  "cases": [
+    {
+      "case": 0,
+      "source_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-0.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-0.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 1,
+      "source_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-1.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-1.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return b; }\n      |               ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 2,
+      "source_sha256": "2ab81c70d64699c9afe59cda7d49edcb577e10a57e32f2402af6ad67a0632c3e",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 5,
+      "observations": 24,
+      "upper_sha256": "3cf77e671f16b43fbea060e121f9b64dafd3204fde1071aa311cfba14bbd919e"
+    },
+    {
+      "case": 3,
+      "source_sha256": "ce4e5d1d53ed51443e3b940939a21b8fff9bb35db202438920f398938c0f7fb6",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 5,
+      "observations": 24,
+      "upper_sha256": "0864f2e504a8048791c1a5c7073038d8691483a2e054c70dd0c6d265c67a1956"
+    },
+    {
+      "case": 4,
+      "source_sha256": "78db75440f5b5da2dafb59d0f771b696171c24d2698677f959e2ab430a2ebfd6",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 5,
+      "observations": 24,
+      "upper_sha256": "ae0eeb2e86a087a9e12505826a81d0e8f059d5d45dc81ffe2c01ac17951d6afa"
+    },
+    {
+      "case": 5,
+      "source_sha256": "277232cc9416a0c4f06004c5b00dbaab33952fc411c7e42f505f324026ca1765",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "9a97e43a95bdfbb46890e8f71d25a910cab5a21e48f0f679f70a298a9cfe525e"
+    },
+    {
+      "case": 6,
+      "source_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-6.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-6.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a+0ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 7,
+      "source_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-7.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-7.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a-1ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 8,
+      "source_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-8.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-8.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a*2ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 9,
+      "source_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-9.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-9.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 0ULL-a; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 10,
+      "source_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-10.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-10.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 18446744073709551615ULL+a; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 11,
+      "source_sha256": "83d8dadc4e596492af0bd7c79b865fd5c5cb6b8536370706f95efd5c59f261d5",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "e02ba3fd67e1be308b5a157f07e9ccb637b876a14b47ff6d3b4c704ab213240b"
+    },
+    {
+      "case": 12,
+      "source_sha256": "a23775feb8d8822fc987bc087356a2dec17d4a85dd9a8fceb36606dac6e28572",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 6,
+      "observations": 24,
+      "upper_sha256": "56cf9a1c2bc1568dff514186304dac38c471ac6ab2a2b58991fa2576d92fa0b0"
+    },
+    {
+      "case": 13,
+      "source_sha256": "23bc6a271dbba691f7a87f0f37e15ab125cecf8be229ab965777342266252ad2",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 6,
+      "observations": 24,
+      "upper_sha256": "f589c7101dedab08104a81b92763b544400c3196feab283e90fc1f4a1fb251b0"
+    },
+    {
+      "case": 14,
+      "source_sha256": "11c77e44f631b68afbf893f347a6e94498aae6213af99950deb03eea53f6da05",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 6,
+      "observations": 24,
+      "upper_sha256": "deb99f261958a227982bb16c5afd21cce06eed62ba23015ba9c4615dcdd83ff7"
+    },
+    {
+      "case": 15,
+      "source_sha256": "c5f7c9fdc269761e8ad7a4a3fa9ed0a2a2ccd7115cd2721a503203c778a2da2f",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 6,
+      "observations": 24,
+      "upper_sha256": "932d8c1eaf958fe1bd2afe56d92c325dc9db90a22c2418bd6fbec7958a8d5d6b"
+    },
+    {
+      "case": 16,
+      "source_sha256": "d17614f4cb5234a2234af049027f78f1f49a5f6f03d5f2e5c7c2b4b580f263c5",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 6,
+      "observations": 24,
+      "upper_sha256": "2cc840daae19b1b4e8a8179ee0b56e0ebbbe83201a70ff1c1209b1752fb873b9"
+    },
+    {
+      "case": 17,
+      "source_sha256": "a686cff8ae29e41a88bd4904c479806fec36f691e87d5732de68f59f319c694d",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 6,
+      "observations": 24,
+      "upper_sha256": "62af94f5400600cd8b73425a5768a2e5469cc7ab89901d09375dab3b1b812f24"
+    },
+    {
+      "case": 18,
+      "source_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-18.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-18.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 123ULL; }\n      |               ~~~~~~~~~^\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-18.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 123ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 19,
+      "source_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-19.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-19.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return ((a)); }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 20,
+      "source_sha256": "e83ba5c9beccb2a5639359cbca57afd15b7a508aa86d912ce861d7b14b335d50",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 8,
+      "observations": 24,
+      "upper_sha256": "9bc26f52af9e2dd252a7e0c59ae6e90fe2a353331a7b794019ad9e554889f656"
+    },
+    {
+      "case": 21,
+      "source_sha256": "62ddab9112329da4fb6a45eb8ca1939e51c8bbfe0db85ba3784c4df0b078e757",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "2681a5d478fd2f2a92f14686c258eed4f6b90e3bf7abb3c8aacaac325202a3e8"
+    },
+    {
+      "case": 22,
+      "source_sha256": "f2472d246de322a108e5bc3098e7d7e359e7511b9ca07723c2560130ffc86656",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "aedd338e6856d9d1c222b1c7d0c1fa4948a18d419f8fde51f910d580539d5df8"
+    },
+    {
+      "case": 23,
+      "source_sha256": "6ac071f7821d7d29ca2e3961b90a89471e3f8f1a3150e06b1ab4642183ff6121",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "7b1053ab769148ea9491b016672d63e3fd917577ca697c7f3fa546e996b43eda"
+    },
+    {
+      "case": 24,
+      "source_sha256": "f844f1cd780ee05f2e0218ce28afef6ae528d7d89c570253cdb8d82084784511",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "7214e95cbb77e33f85edd53f60add905708e4d34205632743a3e7bd1534a291a"
+    },
+    {
+      "case": 25,
+      "source_sha256": "e446180a9b2462c5508e23bbd94371e2c0ee409a6b540a219a70026fe15fb568",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "0b5cedcb452dd348a2e81938644a8b34ea8cad9089edcd21deaf8d5779177cbe"
+    },
+    {
+      "case": 26,
+      "source_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-26.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-26.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*3ULL+4ULL; }\n      |               ~~~~~~~~~^\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-26.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*3ULL+4ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 27,
+      "source_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-27.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-27.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*(3ULL+4ULL); }\n      |               ~~~~~~~~~^\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-27.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*(3ULL+4ULL); }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 28,
+      "source_sha256": "e8b386f48e1ae8e8d91a073518e0c792e7c54e1a9cca283b37662aa66f636392",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "3b7f8aa1c32dcf6ca673c61ef6fec2f496d6f248e995149d31855b494e3b90aa"
+    },
+    {
+      "case": 29,
+      "source_sha256": "5ccf53bf81d312f299d2b5e916447830417b61a1e1a696460d7121dabb941106",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 7,
+      "observations": 24,
+      "upper_sha256": "9a6abd514839f421f8524deebe0ce6c8dfaf2db29b9b8b4c8cc50fc6832678cc"
+    },
+    {
+      "case": 30,
+      "source_sha256": "01332f15d4dc15b52bfb8f1ad9ee7c5eeb1e9cbeec229e1ebe790678b28d7963",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 3,
+      "observations": 1,
+      "upper_sha256": "a8f2ffc9d49432ff07f59e9e0a84e760bc5a673be7375592297e5510d5b1dec3"
+    },
+    {
+      "case": 31,
+      "source_sha256": "255692046d239f102f700df892a5519525d7615e3cba14517be1f383e2aa5644",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 3,
+      "observations": 24,
+      "upper_sha256": "c35c56c7580531c2d1842a256e3eb566954c2e3b4cfa33e5f67463a2eabce635"
+    },
+    {
+      "case": 32,
+      "source_sha256": "14daf8acaa708f00035d3d6dcc7bb5ce341a4f859cb9fc89517d6a5a6b18bf5b",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 13,
+      "observations": 24,
+      "upper_sha256": "a3eee3e04705a54f6f2c66e6f7c5c0f01b386902c4eea093adb2d6f78c05539e"
+    },
+    {
+      "case": 33,
+      "source_sha256": "48d398126ae85ad37b7fa9b96acd0d84a3bc980bed9c176843da4dc52ed4b6ef",
+      "exit": 0,
+      "stderr": "",
+      "result": "PASS",
+      "ops": 5,
+      "observations": 24,
+      "upper_sha256": "54e3cb2dc451670673ea901b734286fe28afbef52e505871173b1e904be9614d"
+    }
+  ],
+  "negative_cases": [
+    {
+      "case": 0,
+      "source_sha256": "0af857a0f67e6acf415c878bafe2bbd0f2c2320898b248d9dc93937b50748668",
+      "exit": 66,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_TYPE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 1,
+      "source_sha256": "b7f85d3ebc638e63d292b97a579e69c0bd18d6ea23debe776d639022cff7b1cf",
+      "exit": 66,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_TYPE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 2,
+      "source_sha256": "b592a677ad066137dd54f34f3e5595777a9e0c10c3d645b45b3cbc0ad3ebb883",
+      "exit": 66,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_TYPE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 3,
+      "source_sha256": "f34cf66a07ece18bfc5f03964793728d9dc3887e4b396a5bbbb2d3c97e5815a4",
+      "exit": 69,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_CONSTRUCT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 4,
+      "source_sha256": "cc97f878326c2a792ec650c1045bec27942ff81aa30311f3b42d913e30af1e3c",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 5,
+      "source_sha256": "1ff1952d414b644dbf386ac9d38cfb2f4d41fdb875cc5d0cf0788ffd8c44fa8a",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 6,
+      "source_sha256": "aa50aa7a2f594d313029125cafcf43b612bdb6724c37c6387c8d8f363b12a5e7",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 7,
+      "source_sha256": "f70d2db2175ac95d9989f3520e051e84f1d5b5b8bb2a57ebb4e5f11ce324cd3d",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 8,
+      "source_sha256": "401206ba6aa591ced2d2e35eb189ad4ca949c2fbab4393debbdee0a7e84b14e5",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 9,
+      "source_sha256": "cffd9283681940b6d5ed5093c934235644111d0b4fe20d169def66b80bcecbb9",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 10,
+      "source_sha256": "ba16c74a044c675918400e2b0a1658fb29a3392210965712c883e6de6e1ba3ab",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 11,
+      "source_sha256": "cde185c0aef9fb53b2ae9ab100133d78933ed37cdab46432c6b1456ac405745c",
+      "exit": 65,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_SYNTAX\n",
+      "result": "PASS"
+    },
+    {
+      "case": 12,
+      "source_sha256": "ad7c8d90576a3489ce705d22a3dc50ab820917c8618b3392931f9f49e9c70d39",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 13,
+      "source_sha256": "c27556bf58661fefeda327e8f8ac4e156f8de7291ab5b41714f17e2f8859620c",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 14,
+      "source_sha256": "30a0f71335fef290bcfd0994bddb4eca5a7f74496993a1e1c36e03bb10567163",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 15,
+      "source_sha256": "8e89aba69fbf4d2327bfed5ce076b645f67af60bbb6ac69060be894e3b370577",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 16,
+      "source_sha256": "429631d32bca2d4687d4c51130e2fe1a4e1cb9ed88b9f257db7b043a28afdde1",
+      "exit": 69,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_CONSTRUCT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 17,
+      "source_sha256": "31fb2112ee36cb84ef2ec35d3fe9f6834f69152559d27905392914cb275bf215",
+      "exit": 69,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_CONSTRUCT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 18,
+      "source_sha256": "9916fb95ce6fa2fbf4c44922f5a84e3b5d55080f00667f84e4e6b5d5aabfa584",
+      "exit": 69,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_CONSTRUCT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 19,
+      "source_sha256": "dd7055421edaf673b201f3b07bdc9df2ccb2f1ef57f259ceef52fbe55bc5c911",
+      "exit": 70,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNKNOWN_IDENTIFIER\n",
+      "result": "PASS"
+    },
+    {
+      "case": 20,
+      "source_sha256": "f743171fdbb20d0f5eb2c2c4aa87db8a490bf3c8f53e7341888b98afb095e61c",
+      "exit": 70,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNKNOWN_IDENTIFIER\n",
+      "result": "PASS"
+    },
+    {
+      "case": 21,
+      "source_sha256": "ad52cbd4aa151c29ff4c791b9f875ae6493ec0dd62d52ff3ecf685074ccb864b",
+      "exit": 70,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNKNOWN_IDENTIFIER\n",
+      "result": "PASS"
+    },
+    {
+      "case": 22,
+      "source_sha256": "56405586ad572ddc956354a7660374847d56c58248564010438050d75b900582",
+      "exit": 67,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_LIMIT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 23,
+      "source_sha256": "a605a3603e045d8ae50c47572efc31e3d30591cc22a99498f56695e8b55ae315",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 24,
+      "source_sha256": "60a70999cb2e7186ab1c78b15aa09660ae0e7246089b11aa3ce20bc6ad80a689",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 25,
+      "source_sha256": "fd70868d0f50a589c420bc707d0fe1300aabb95f111b469e182499314f658405",
+      "exit": 70,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNKNOWN_IDENTIFIER\n",
+      "result": "PASS"
+    },
+    {
+      "case": 26,
+      "source_sha256": "18094d214fde2f325782c1ec61b57f04881e7f9b220ec1ad881767efb26c4a42",
+      "exit": 71,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_SIGNATURE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 27,
+      "source_sha256": "c0a171a8edb1cd3d8da116b43828eebb6806fc0f891b6b29dc7787ce840adb80",
+      "exit": 66,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_TYPE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 28,
+      "source_sha256": "4805a98fde58af5ca6a346e61b4278fadc550589d2f1da016f9c0178d1856e34",
+      "exit": 69,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_CONSTRUCT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 29,
+      "source_sha256": "3cb58c15eca27db851c3ad1ac9955515861d57044c88b48229d5022821f8d5c9",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 30,
+      "source_sha256": "f991318e5900cbff7c6626b474b7d1c79be87e3f0c7ed5a1116919f1baaadfc7",
+      "exit": 68,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_ARITHMETIC\n",
+      "result": "PASS"
+    },
+    {
+      "case": 31,
+      "source_sha256": "7a621704091dda4b1b49054643d0119c33368a9104cd538fd679e7c72b064827",
+      "exit": 65,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_SYNTAX\n",
+      "result": "PASS"
+    },
+    {
+      "case": 32,
+      "source_sha256": "40afe4ba815162a82490f6effc31fa65c0b624ce11386c849a32e1f2c380c8c1",
+      "exit": 71,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_SIGNATURE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 33,
+      "source_sha256": "e3a3bfd0b305b96439d1354a1d966c67c89de6245e2fc47212865e699b40e530",
+      "exit": 71,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_SIGNATURE\n",
+      "result": "PASS"
+    },
+    {
+      "case": 34,
+      "source_sha256": "3e428a86b6416815c620ea176f9ebb8123fd1785137c8f7cc35062b2b1297e9f",
+      "exit": 67,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_LIMIT\n",
+      "result": "PASS"
+    },
+    {
+      "case": 35,
+      "source_sha256": "de604de4fae409eba3c200c2c7fd9791a181905337e7b5fc76e70887c8cc6229",
+      "exit": 72,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_PREPROCESSOR\n",
+      "result": "PASS"
+    },
+    {
+      "case": 36,
+      "source_sha256": "19a396f5b5dddbca148a595eb51188a876e3ac924ad4cb24241666d5b419132f",
+      "exit": 72,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_UNSUPPORTED_PREPROCESSOR\n",
+      "result": "PASS"
+    },
+    {
+      "case": 37,
+      "source_sha256": "283997005e59920fdbbcb315a9812bce8bba47920acacba204d1166792c67ada",
+      "exit": 65,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_SYNTAX\n",
+      "result": "PASS"
+    },
+    {
+      "case": 38,
+      "source_sha256": "52c09b4f675fda2330425f44cf0254df0de9dbaf1139065e5b6d3da7ee5993fd",
+      "exit": 65,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_SYNTAX\n",
+      "result": "PASS"
+    },
+    {
+      "case": 39,
+      "source_sha256": "3e97197f4b8d46a893067c94ab15e195e3d97fb5f24eede5ef047b571240d92b",
+      "exit": 67,
+      "stdout_bytes": 0,
+      "stderr": "C_IMPORT_LIMIT\n",
+      "result": "PASS"
+    }
+  ],
+  "failures": [
+    {
+      "case": 0,
+      "source_sha256": "250e3228f00b4c0cd60df70092f50106dce54f081cc77d4f3a24f7d2b5af8c4c",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-0.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-0.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 1,
+      "source_sha256": "cc4a3ac6374b8c68eb99de6540e6896ef4c41aea9eb5fb5c1f0ae4be52662456",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-1.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-1.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return b; }\n      |               ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 6,
+      "source_sha256": "4332e4105d4442afba0b586e9574f1f192d7ed740099228eae26ad15473a5099",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-6.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-6.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a+0ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 7,
+      "source_sha256": "7339bf648758434626305006d637470ca6d97399010515134dd4358940641451",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-7.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-7.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a-1ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 8,
+      "source_sha256": "9bb734b9718ebfbfac521731fa2bbd0ea59b201afc77ca385bcce151fa76a703",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-8.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-8.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return a*2ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 9,
+      "source_sha256": "9d409851a2558cf54315c84c4917ec67d1bee299ff7d371557d707416542b631",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-9.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-9.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 0ULL-a; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 10,
+      "source_sha256": "aa0163f4a11aa259d38605ed3d26a56cbd80b381b32a9a20ffa10f82dbcd68ea",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-10.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-10.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 18446744073709551615ULL+a; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 18,
+      "source_sha256": "262e9b705e8ba8c433e540f49209540cc7406bacb7e3b95c0b1cd5ad869af607",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-18.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-18.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 123ULL; }\n      |               ~~~~~~~~~^\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-18.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 123ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 19,
+      "source_sha256": "0b7ae5fc5fcacdd7b3040571e1838c324ba755ab1e9ecf7ba363e4d05d118511",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-19.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-19.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return ((a)); }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 26,
+      "source_sha256": "26762c67b1d44a63563289ecd4c80ee13655629a93ac95bc727a9d59d74eccf7",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-26.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-26.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*3ULL+4ULL; }\n      |               ~~~~~~~~~^\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-26.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*3ULL+4ULL; }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    },
+    {
+      "case": 27,
+      "source_sha256": "412ea121023c650878fc8e0dc12146e7dc9a083b3c9fde4adf813ace9baec525",
+      "exit": 0,
+      "stderr": "",
+      "result": "FAIL",
+      "failure": "oracle compile failed: /home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-27.c: In function \u2018calc\u2019:\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-27.c:2:24: error: unused parameter \u2018a\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*(3ULL+4ULL); }\n      |               ~~~~~~~~~^\n/home/drakestapleton/workspace/hermes-desk/universal-c-u64-import/build/L589/green-1/oracle-27.c:2:36: error: unused parameter \u2018b\u2019 [-Werror=unused-parameter]\n    2 | uint64_t calc(uint64_t a, uint64_t b) { return 2ULL*(3ULL+4ULL); }\n      |                           ~~~~~~~~~^\ncc1: all warnings being treated as errors\n"
+    }
+  ],
+  "importer_sha256": "ba02df1b694cbc98d3a6ca7997cde3822ee7fb2ee56d76d02899f1c0ad445f3c",
+  "test_sha256": "9ecc614b34e1c6728e835dbe078bc71095a96044745cff59b54fac5c2f542a17",
+  "cc_version": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "upstream_621_qualification": "SEPARATE_REQUIRED_GATE",
+  "not_implemented": [
+    "C exporter",
+    "u8/u16/u32",
+    "control flow",
+    "division",
+    "OSC lowering",
+    "checker-bound translation proof",
+    "x86/RV64 execution"
+  ]
+}
