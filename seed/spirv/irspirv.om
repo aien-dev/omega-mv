@@ -966,9 +966,11 @@ op 1 56
 end
 fn ptrat base ulong index ulong to ulong
 r = fresh
-four 67 5 r base con index
+four 67 5 r base index
 ret r
 end
+note NDRange ABI: work item g reads inputs[g*nparams+j], writes outputs[2g], outputs[2g+1].
+note g = 0 is the original single-work-item ABI. ID 16 is the GlobalInvocationId input.
 fn wrapper fi ulong to void
 four 54 1 get kernels fi 0 6
 inp = fresh
@@ -978,9 +980,14 @@ two 55 5 outp
 label fresh
 status = fresh
 three 59 4 status 7
+gv = fresh
+three 61 14 gv 16
+gid = fresh
+four 81 3 gid gv 0
 two 62 status con 0
+ib = calc 132 gid con get params fi
 for j ulong get params fi
-put callargs j load ptrat inp j
+put callargs j load ptrat inp calc 128 ib con j
 end
 r = fresh
 op add 5 get params fi 57
@@ -991,8 +998,9 @@ word status
 for j ulong get params fi
 word get callargs j
 end
-two 62 outp r
-two 62 ptrat outp 1 load status
+ob = calc 132 gid con 2
+two 62 ptrat outp ob r
+two 62 ptrat outp calc 128 ob con 1 load status
 op 1 253
 op 1 56
 end
@@ -1012,11 +1020,14 @@ for j ulong n
 word 3
 end
 end
+three 23 14 3 3
+three 32 15 1 14
+three 59 15 16 1
 end
 fn entry fi ulong to void
 n = get namelen fi
 nw = div add n 4 4
-op add 3 nw 15
+op add 4 nw 15
 word 6
 word get kernels fi
 for j ulong mul nw 4
@@ -1026,6 +1037,7 @@ v = ulong get input add get names fi j
 end
 emit v
 end
+word 16
 end
 fn module to void
 put sp 0 32
@@ -1050,6 +1062,7 @@ two 14 2 2
 for f ulong get state 7
 entry f
 end
+three 71 16 11 28
 typename
 for j ulong get sp 2
 v = get cvals j

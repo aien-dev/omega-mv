@@ -1,0 +1,18 @@
+{"functions": [
+  {"name": "reduce", "kind": "kernel", "threads": 256,
+   "params": ["gview:f32", "u32", "gedit:f32", "u32"], "ret": "void",
+   "locals": ["block:f32:8", "block:f32:1024", "block:f32:1024", "u32", "u32", "u32", "u32", "u32", "f32", "u32", "u32", "u32", "u32", "u32", "f32", "u32", "u32", "u32", "u32", "bool", "f32", "u32", "bool", "f32", "bool", "u32", "bool", "u32", "u32", "u32", "u32"],
+   "blocks": [
+    [{"op": "shared", "dst": 4}, {"op": "shared", "dst": 5}, {"op": "shared", "dst": 6}, {"op": "thread", "dst": 7}, {"op": "block", "dst": 8}, {"op": "const", "dst": 9, "value": 256}, {"op": "mul", "dst": 10, "a": 8, "b": 9}, {"op": "add", "dst": 11, "a": 10, "b": 7}, {"op": "gload", "dst": 12, "buf": 0, "index": 11}, {"op": "const", "dst": 13, "value": 16}, {"op": "const", "dst": 14, "value": 8}, {"op": "const", "dst": 15, "value": 4}, {"op": "const", "dst": 16, "value": 2}, {"op": "const", "dst": 17, "value": 1}, {"op": "down", "dst": 18, "a": 12, "b": 13}, {"op": "add", "dst": 12, "a": 12, "b": 18}, {"op": "down", "dst": 18, "a": 12, "b": 14}, {"op": "add", "dst": 12, "a": 12, "b": 18}, {"op": "down", "dst": 18, "a": 12, "b": 15}, {"op": "add", "dst": 12, "a": 12, "b": 18}, {"op": "down", "dst": 18, "a": 12, "b": 16}, {"op": "add", "dst": 12, "a": 12, "b": 18}, {"op": "down", "dst": 18, "a": 12, "b": 17}, {"op": "add", "dst": 12, "a": 12, "b": 18}, {"op": "const", "dst": 19, "value": 32}, {"op": "rem", "dst": 20, "a": 7, "b": 19}, {"op": "div", "dst": 21, "a": 7, "b": 19}, {"op": "const", "dst": 22, "value": 0}, {"op": "eq", "dst": 23, "a": 20, "b": 22}, {"op": "cbr", "cond": 23, "then": 1, "else": 2}],
+    [{"op": "store", "arr": 4, "index": 21, "value": 12}, {"op": "br", "to": 2}],
+    [{"op": "sync"}, {"op": "mov", "dst": 29, "a": 22}, {"op": "br", "to": 3}],
+    [{"op": "lt", "dst": 30, "a": 29, "b": 15}, {"op": "cbr", "cond": 30, "then": 4, "else": 5}],
+    [{"op": "mul", "dst": 31, "a": 29, "b": 9}, {"op": "add", "dst": 32, "a": 31, "b": 7}, {"op": "store", "arr": 5, "index": 32, "value": 12}, {"op": "mul", "dst": 33, "a": 7, "b": 15}, {"op": "add", "dst": 34, "a": 33, "b": 29}, {"op": "store", "arr": 6, "index": 34, "value": 12}, {"op": "add", "dst": 29, "a": 29, "b": 17}, {"op": "br", "to": 3}],
+    [{"op": "sync"}, {"op": "cast", "dst": 24, "a": 22}, {"op": "mov", "dst": 25, "a": 22}, {"op": "br", "to": 6}],
+    [{"op": "lt", "dst": 26, "a": 25, "b": 14}, {"op": "cbr", "cond": 26, "then": 7, "else": 8}],
+    [{"op": "load", "dst": 27, "arr": 4, "index": 25}, {"op": "add", "dst": 24, "a": 24, "b": 27}, {"op": "add", "dst": 25, "a": 25, "b": 17}, {"op": "br", "to": 6}],
+    [{"op": "eq", "dst": 28, "a": 7, "b": 22}, {"op": "cbr", "cond": 28, "then": 9, "else": 10}],
+    [{"op": "gstore", "buf": 2, "index": 8, "value": 24}, {"op": "br", "to": 10}],
+    [{"op": "ret"}]
+   ]}
+]}

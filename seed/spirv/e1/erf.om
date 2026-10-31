@@ -1,0 +1,28 @@
+note SPDX-License-Identifier: Apache-2.0
+note ERF: omega_math_erf of src/omega_numeric_transc.c (needs erfcxt.om).
+fn e1_erf x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+sg = and u SIGN
+ax = and u MAG
+r = ulong ONE
+if lt ax HALF
+r = erfsm ax
+end
+if lt ax X4
+if ge ax HALF
+h = sfmul ax ax
+hl = sffma ax ax xor h SIGN
+nh = xor h SIGN
+k = ek nh
+mm = ecore nh xor hl SIGN k
+cc = erfcx ax
+m = sfmul and mm 4294967295 and cc 4294967295
+r = sfsub ONE scale2 m k
+end
+end
+r = or r sg
+ret uint r
+end

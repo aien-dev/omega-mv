@@ -1,0 +1,1714 @@
+note kflow.om -- KernelFlow milestone 1 conductor, seeded Omega (OM-2), built with seed/out/omc.
+note usage (from the omega-mv root): kflow SPEC STATE
+note SPEC lines ('#' starts a comment):
+note   tool NAME PATH          NAME is asm2, nvdisasm, cuobjdump, kemu or kpack; all five are required
+note   tsub LINE OLD NEW       next job only: in the table line whose name is LINE, token OLD becomes NEW
+note   lsub OLD NEW            next job only: in the listing, token OLD becomes NEW (exactly one hit)
+note   nointent                next job only: ignore ';=' intent lines in the listing
+note   job NAME ARCH TABLE LISTING REF HARNESS REGS P...   ARCH 80|121, REF a referee .bin or '-',
+note                           HARNESS a kemu harness or '-', P each p8|1|2|4|8 (kpack parameter sizes)
+note   expect STAGE STATUS     about the job just above; STAGE encode|verify|package|emulate|gpu|cloud|job
+note Stages: encode (asm2), verify (nvdisasm decode + referee bytes or ';=' intent texts), package
+note (kpack cubin, cuobjdump -sass texts must equal the verify texts), emulate (kemu), gpu and cloud
+note (queued job files only). Status is NOT_RUN, INVALID, INCOMPLETE, VALID-UNPROVEN or QUALIFIED;
+note M1 never reaches QUALIFIED. INVALID stops the job. Each stage result is cached under
+note STATE/cache/KEY.* where KEY = sha256(stage, tool sha256, input sha256s, parameters).
+note Exit 0 when every expectation held, 1 when one failed, 2 on a spec or setup error.
+text wd "/cache/\n/work/\n/jobs/\n/queue/gpu/\n/queue/cloud/\n.bin\n.dis\n.cubin\n.cdis\n.emu\n.st\n.in\n.int\n.err\n.receipt\n.job\nkey\nSM\n-b\n-sass\n20261026\n0\n/queue\n.log\nseed/qualification/om2/fixtures/sha256-k.dec\nseed/qualification/om2/fixtures/sha256-iv.dec\n/dev/null\nencode\nverify\npackage\nemulate\ngpu\ncloud\njob\nNOT_RUN\nINVALID\nINCOMPLETE\nVALID-UNPROVEN\nQUALIFIED\nasm2\nnvdisasm\ncuobjdump\nkemu\nkpack\ntool\njob\ntsub\nlsub\nnointent\nexpect\nkflow: \nhit\nmiss\n-\nkflow: spec error at line \nkflow: expect FAIL line \nKFLOW expectations met=\n failed=\n cache=\n key=\nname=\narch=\ncubin=\ncubin_sha256=\nharness=\nseed=\nstatus=NOT_RUN\nparams=\nregs=\nkflow-m1: no stage is QUALIFIED; gpu and cloud are queued job files, not runs\nbin_sha256=\nNOP\nrequires=gpu-window\nrequires=cloud-budget-cap\n got \n jobs=\n/jobs\n/cache\n/work\n/queue/gpu\n/queue/cloud\nkflow: usage: kflow SPEC STATE\n80\n121\n.cerr\nkflow: cannot read the SHA-256 fixtures (run from the omega-mv root)\ncanon INVALID (input unreadable, or tsub/lsub did not hit exactly once)\n/\n=\n \n, expected \n"
+global spc uchar 262144
+global pb uchar 4096
+global pn ulong 1
+global ob uchar 65536
+global on ulong 1
+global fa uchar 1048576
+global fc uchar 1048576
+global cn ulong 1
+global ib uchar 262144
+global inn ulong 1
+global nx uchar 1048576
+global nn ulong 1
+global av uchar 4096
+global ap ulong 2
+global tko ulong 48
+global tkl ulong 48
+global ntk ulong 1
+global tp uchar 1280
+global tpl ulong 8
+global th uchar 320
+global sth uchar 256
+global stl ulong 1
+global md ulong 20
+global sk uchar 512
+global ss ulong 8
+global sh ulong 8
+global jn ulong 4
+global cnt ulong 4
+global hexd uchar 64
+global hb uchar 64
+global hd uchar 64
+global wv ulong 2
+global dig uchar 32
+global stb uchar 4
+global buf uchar 65536
+global kk uint 64
+global ivs uint 8
+global hv uint 8
+global ws uint 64
+global st uint 8
+global blk uchar 64
+global bk ulong 2
+global nums ulong 64
+note md: 0-5 tsub LINE/OLD/NEW (offset,length into spc), 6-9 lsub OLD/NEW, 10 nointent, 11 tsub set,
+note 12 lsub set, 13-16 the active substitution. jn: 1 line number, 3 job status. cnt: 0 met, 1 failed, 2 jobs.
+note ---- words and builders -------------------------------------------------------------------------
+fn wlook id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len wd
+if eq get wd i 10
+if eq k id
+put wv 0 s
+put wv 1 sub i s
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn isbl c uchar to bool
+ret or or eq c 32 eq c 9 eq c 13
+end
+fn pclear to void
+put pn 0 0
+end
+fn pbyte b uchar to void
+n = get pn 0
+if ge n sub len pb 1
+exit 98
+end
+put pb n b
+put pn 0 add n 1
+end
+fn pword id ulong to void
+wlook id
+o = get wv 0
+for i ulong get wv 1
+pbyte get wd add o i
+end
+end
+fn ptok t ulong to void
+o = get tko t
+for i ulong get tkl t
+pbyte get spc add o i
+end
+end
+fn pstate to void
+for i ulong get stl 0
+pbyte get sth i
+end
+end
+fn phex k ulong to void
+for i ulong 64
+pbyte get sk add mul k 64 i
+end
+end
+fn pcache k ulong ext ulong to void
+pclear
+pstate
+pword 1
+phex k
+pword ext
+end
+fn pwork ext ulong to void
+pclear
+pstate
+pword 2
+ptok 1
+pword ext
+end
+fn obyte c uchar to void
+n = get on 0
+if ge n len ob
+exit 96
+end
+put ob n c
+put on 0 add n 1
+end
+fn oword id ulong to void
+wlook id
+o = get wv 0
+for i ulong get wv 1
+obyte get wd add o i
+end
+end
+fn otok t ulong to void
+o = get tko t
+for i ulong get tkl t
+obyte get spc add o i
+end
+end
+fn onl to void
+obyte 10
+end
+fn ohexd to void
+for i ulong 64
+obyte get hexd i
+end
+end
+fn ohb to void
+for i ulong 64
+obyte get hb i
+end
+end
+fn ohd to void
+for i ulong 64
+obyte get hd i
+end
+end
+fn otool k ulong to void
+for i ulong 64
+obyte get th add mul k 64 i
+end
+end
+fn ohex k ulong to void
+for i ulong 64
+obyte get sk add mul k 64 i
+end
+end
+fn opb to void
+for i ulong get pn 0
+obyte get pb i
+end
+end
+fn ostat s ulong to void
+oword add 35 s
+end
+fn onum v ulong to void
+x = v
+n = ulong 0
+while ge x 10 bound 64
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+n = add n 1
+for i ulong n
+obyte get dig sub sub n i 1
+end
+end
+fn sob to void
+r = write 1 ob 0 get on 0
+put on 0 0
+end
+fn say id ulong to void
+put on 0 0
+oword id
+onl
+sob
+end
+fn cbyte c uchar to void
+n = get cn 0
+if ge n len fc
+exit 95
+end
+put fc n c
+put cn 0 add n 1
+end
+fn ibyte c uchar to void
+n = get inn 0
+if ge n len ib
+exit 94
+end
+put ib n c
+put inn 0 add n 1
+end
+fn nbyte c uchar to void
+n = get nn 0
+if ge n len nx
+exit 93
+end
+put nx n c
+put nn 0 add n 1
+end
+note ---- files -------------------------------------------------------------------------------------
+fn ropen to int
+r = fopen pb 0 get pn 0 524288 0
+if lt r 0
+ret -1
+end
+ret int r
+end
+fn wopen to int
+r = fopen pb 0 get pn 0 524865 420
+if lt r 0
+ret -1
+end
+ret int r
+end
+fn fclo fd int to void
+if ge fd 0
+r = fclose fd
+end
+end
+fn rda to long
+fd = ropen
+if lt fd 0
+ret -1
+end
+n = ulong 0
+while true
+r = read fd fa n sub len fa n
+if le r 0
+fclo fd
+if lt r 0
+ret -1
+end
+ret long n
+end
+n = add n ulong r
+if ge n len fa
+fclo fd
+ret -1
+end
+end
+ret -1
+end
+fn rdc to long
+fd = ropen
+if lt fd 0
+ret -1
+end
+n = ulong 0
+while true
+r = read fd fc n sub len fc n
+if le r 0
+fclo fd
+if lt r 0
+ret -1
+end
+ret long n
+end
+n = add n ulong r
+if ge n len fc
+fclo fd
+ret -1
+end
+end
+ret -1
+end
+fn rds to long
+fd = ropen
+if lt fd 0
+ret -1
+end
+n = ulong 0
+while true
+r = read fd spc n sub len spc n
+if le r 0
+fclo fd
+if lt r 0
+ret -1
+end
+ret long n
+end
+n = add n ulong r
+if ge n len spc
+fclo fd
+ret -1
+end
+end
+ret -1
+end
+fn wob to bool
+fd = wopen
+if lt fd 0
+ret false
+end
+w = write fd ob 0 get on 0
+c = fclose fd
+ret and eq w long get on 0 eq c 0
+end
+fn wfc to bool
+fd = wopen
+if lt fd 0
+ret false
+end
+w = write fd fc 0 get cn 0
+c = fclose fd
+ret and eq w long get cn 0 eq c 0
+end
+fn wfi to bool
+fd = wopen
+if lt fd 0
+ret false
+end
+w = write fd ib 0 get inn 0
+c = fclose fd
+ret and eq w long get inn 0 eq c 0
+end
+fn mkd id ulong to void
+pclear
+pstate
+if ne id 0
+pword id
+end
+r = makedir pb 0 get pn 0 493
+end
+note ---- children (pattern from seed/qualification/om2/gate.om) -------------------------------------
+fn aclear to void
+put ap 0 2
+put ap 1 0
+end
+fn ahead n ulong to void
+p = get ap 0
+if or gt add add p n 2 len av ge get ap 1 64
+exit 97
+end
+put av p uchar and n 255
+put av add p 1 uchar shr n 8
+put ap 0 add p 2
+put ap 1 add get ap 1 1
+end
+fn aput c uchar to void
+p = get ap 0
+put av p c
+put ap 0 add p 1
+end
+fn apb to void
+ahead get pn 0
+for i ulong get pn 0
+aput get pb i
+end
+end
+fn atok t ulong to void
+ahead get tkl t
+o = get tko t
+for i ulong get tkl t
+aput get spc add o i
+end
+end
+fn aword id ulong to void
+wlook id
+ahead get wv 1
+o = get wv 0
+for i ulong get wv 1
+aput get wd add o i
+end
+end
+fn atool k ulong to void
+n = get tpl k
+ahead n
+for i ulong n
+aput get tp add mul k 256 i
+end
+end
+fn redir s int d int to void
+if ne s d
+if ne dupfd s d 0 long d
+exit 127
+end
+end
+end
+fn reap pid int to ulong
+t0 = monons
+while true
+r = waitpid pid stb 0 len stb 1
+if eq r long pid
+if ne get stb 0 0
+ret 256
+end
+ret ulong get stb 1
+end
+if lt r 0
+ret 256
+end
+now = monons
+if gt sub now t0 120000000000
+r = killpid pid 9
+r = waitpid pid stb 0 len stb 0
+ret 256
+end
+r = sleepns 1000000
+end
+ret 256
+end
+fn spawn fi int fo int fe int to ulong
+put av 0 uchar and get ap 1 255
+put av 1 uchar shr get ap 1 8
+pid = fork
+if lt pid 0
+fclo fi
+fclo fo
+fclo fe
+ret 256
+end
+if eq pid 0
+redir fi 0
+redir fo 1
+redir fe 2
+r = execprog av 0 get ap 0
+exit 127
+end
+fclo fi
+fclo fo
+fclo fe
+ret reap int pid
+end
+fn nullin to int
+pclear
+pword 27
+ret ropen
+end
+note ---- SHA-256 (FIPS 180-4), copied from seed/qualification/om2/gate.om ---------------------------
+fn rotr x uint n uint to uint
+ret or shr x n shl x sub 32 n
+end
+fn shasched to void
+for i ulong 16
+b = mul i 4
+v = shl uint get blk b 24
+v = or v shl uint get blk add b 1 16
+v = or v shl uint get blk add b 2 8
+v = or v uint get blk add b 3
+put ws i v
+end
+for j ulong 48
+q = add j 16
+x = get ws sub q 15
+y = get ws sub q 2
+s0 = xor xor rotr x 7 rotr x 18 shr x 3
+s1 = xor xor rotr y 17 rotr y 19 shr y 10
+put ws q add add add get ws sub q 16 s0 get ws sub q 7 s1
+end
+end
+fn shat1 i ulong to uint
+e = get st 4
+s1 = xor xor rotr e 6 rotr e 11 rotr e 25
+ch = xor and e get st 5 and not e get st 6
+ret add add add add get st 7 s1 ch get kk i get ws i
+end
+fn shat2 to uint
+a = get st 0
+b = get st 1
+c = get st 2
+s0 = xor xor rotr a 2 rotr a 13 rotr a 22
+mj = xor xor and a b and a c and b c
+ret add s0 mj
+end
+fn shacomp to void
+shasched
+for i ulong 8
+put st i get hv i
+end
+for i ulong 64
+t1 = shat1 i
+t2 = shat2
+put st 7 get st 6
+put st 6 get st 5
+put st 5 get st 4
+put st 4 add get st 3 t1
+put st 3 get st 2
+put st 2 get st 1
+put st 1 get st 0
+put st 0 add t1 t2
+end
+for i ulong 8
+put hv i add get hv i get st i
+end
+end
+fn shabyte b uchar to void
+n = get bk 0
+put blk n b
+n = add n 1
+if eq n 64
+shacomp
+n = ulong 0
+end
+put bk 0 n
+put bk 1 add get bk 1 1
+end
+fn hexch v uint to uchar
+if lt v 10
+ret uchar add v 48
+end
+ret uchar add v 87
+end
+fn shafinal to void
+bits = mul get bk 1 8
+shabyte 128
+while ne get bk 0 56 bound 64
+shabyte 0
+end
+for i ulong 8
+shabyte uchar and shr bits mul sub 7 i 8 255
+end
+for i ulong 8
+v = get hv i
+for j ulong 8
+put hexd add mul i 8 j hexch and shr v mul sub 7 j 4 15
+end
+end
+end
+fn hashfile to bool
+fd = ropen
+if lt fd 0
+ret false
+end
+for i ulong 8
+put hv i get ivs i
+end
+put bk 0 0
+put bk 1 0
+while true
+r = read fd buf 0 len buf
+if lt r 0
+fclo fd
+ret false
+end
+if eq r 0
+fclo fd
+shafinal
+ret true
+end
+for i ulong ulong r
+shabyte get buf i
+end
+end
+ret false
+end
+fn parsenum n ulong want ulong to bool
+m = ulong not uint 0
+k = ulong 0
+v = ulong 0
+nd = ulong 0
+for i ulong n
+c = get buf i
+if and ge c 48 le c 57
+if ge nd 10
+ret false
+end
+v = add mul v 10 ulong sub c 48
+nd = add nd 1
+else
+if or ne c 10 eq nd 0
+ret false
+end
+if ge k want
+ret false
+end
+if gt v m
+ret false
+end
+put nums k v
+k = add k 1
+v = ulong 0
+nd = ulong 0
+end
+end
+ret and eq nd 0 eq k want
+end
+fn loadnums id ulong want ulong to bool
+pclear
+pword id
+fd = ropen
+if lt fd 0
+ret false
+end
+r = read fd buf 0 len buf
+fclo fd
+if or le r 0 ge r long len buf
+ret false
+end
+ret parsenum ulong r want
+end
+fn consts to bool
+if not loadnums 25 64
+ret false
+end
+for i ulong 64
+put kk i uint get nums i
+end
+if not loadnums 26 8
+ret false
+end
+for i ulong 8
+put ivs i uint get nums i
+end
+ret true
+end
+note ---- spec tokens --------------------------------------------------------------------------------
+fn tend i ulong to void
+k = get ntk 0
+put tkl k sub i get tko k
+if lt k 47
+put ntk 0 add k 1
+end
+end
+fn toks s ulong e ulong to void
+put ntk 0 0
+w = false
+for j ulong sub e s
+i = add s j
+c = get spc i
+if eq c 35
+if w
+tend i
+end
+ret
+end
+if isbl c
+if w
+tend i
+w = false
+end
+else
+if not w
+put tko get ntk 0 i
+w = true
+end
+end
+end
+if w
+tend e
+end
+end
+fn tokis t ulong id ulong to bool
+wlook id
+n = get wv 1
+if ne get tkl t n
+ret false
+end
+o = get tko t
+w = get wv 0
+for i ulong n
+if ne get spc add o i get wd add w i
+ret false
+end
+end
+ret true
+end
+fn tfind t ulong base ulong n ulong to ulong
+for k ulong n
+if tokis t add base k
+ret k
+end
+end
+ret n
+end
+note ---- canonical encoder input: table (tsub) + listing (lsub, comments and blank lines removed) ----
+fn tokend i ulong lz ulong to ulong
+j = i
+while and lt j lz not isbl get fa j bound 999999
+j = add j 1
+end
+ret j
+end
+fn skipbl i ulong lz ulong to ulong
+j = i
+while and lt j lz isbl get fa j bound 999999
+j = add j 1
+end
+ret j
+end
+fn eqspan a ulong n ulong so ulong sl ulong to bool
+if ne n sl
+ret false
+end
+for i ulong n
+if ne get fa add a i get spc add so i
+ret false
+end
+end
+ret true
+end
+fn pnew to void
+o = get md 15
+for i ulong get md 16
+cbyte get spc add o i
+end
+end
+fn cpline ls ulong lz ulong sb bool to ulong
+h = ulong 0
+i = ls
+while lt i lz bound 999999
+c = get fa i
+if isbl c
+cbyte c
+i = add i 1
+else
+te = tokend i lz
+if and sb eqspan i sub te i get md 13 get md 14
+pnew
+h = add h 1
+else
+for j ulong sub te i
+cbyte get fa add i j
+end
+end
+i = te
+end
+end
+ret h
+end
+fn sectok ls ulong lz ulong to bool
+a = skipbl ls lz
+b = tokend a lz
+c = skipbl b lz
+d = tokend c lz
+ret eqspan c sub d c get md 0 get md 1
+end
+fn tline ls ulong lz ulong to ulong
+sb = false
+if eq get md 11 1
+sb = sectok ls lz
+end
+ret cpline ls lz sb
+end
+fn ctable n ulong to ulong
+put md 13 get md 2
+put md 14 get md 3
+put md 15 get md 4
+put md 16 get md 5
+h = ulong 0
+s = ulong 0
+for i ulong n
+if eq get fa i 10
+h = add h tline s i
+cbyte 10
+s = add i 1
+end
+end
+if lt s n
+h = add h tline s n
+cbyte 10
+end
+ret h
+end
+fn isint a ulong lz ulong to bool
+if ge add a 1 lz
+ret false
+end
+ret and eq get fa a 59 eq get fa add a 1 61
+end
+fn intent a ulong lz ulong to void
+if ne get md 10 1
+b = add a 2
+for j ulong sub lz b
+ibyte get fa add b j
+end
+ibyte 10
+end
+end
+fn bkbl j ulong a ulong to bool
+if le j a
+ret false
+end
+ret isbl get fa sub j 1
+end
+fn cutsc a ulong lz ulong to ulong
+j = a
+while and lt j lz ne get fa j 59 bound 999999
+j = add j 1
+end
+while bkbl j a bound 999999
+j = sub j 1
+end
+ret j
+end
+fn lline ls ulong lz ulong to ulong
+a = skipbl ls lz
+if isint a lz
+intent a lz
+ret 0
+end
+e = cutsc a lz
+if eq e a
+ret 0
+end
+h = cpline ls e eq get md 12 1
+cbyte 10
+ret h
+end
+fn clist n ulong to ulong
+put md 13 get md 6
+put md 14 get md 7
+put md 15 get md 8
+put md 16 get md 9
+h = ulong 0
+s = ulong 0
+for i ulong n
+if eq get fa i 10
+h = add h lline s i
+s = add i 1
+end
+end
+if lt s n
+h = add h lline s n
+end
+ret h
+end
+fn canon to bool
+put cn 0 0
+put inn 0 0
+pclear
+ptok 3
+n = rda
+if le n 0
+ret false
+end
+h = ctable ulong n
+if and eq get md 11 1 ne h 1
+ret false
+end
+pclear
+ptok 4
+n = rda
+if le n 0
+ret false
+end
+h = clist ulong n
+if and eq get md 12 1 ne h 1
+ret false
+end
+pwork 12
+if not wfc
+ret false
+end
+pwork 13
+ret wfi
+end
+note ---- instruction-text normalization (nvdisasm / cuobjdump / intent lines) into nx -----------------
+fn ishex c uchar to bool
+ret or and ge c 48 le c 57 and ge c 97 le c 102
+end
+fn trl e ulong a ulong to bool
+if le e a
+ret false
+end
+c = get fa sub e 1
+ret or isbl c eq c 59
+end
+fn nemit a ulong b ulong to void
+e = b
+while trl e a bound 999999
+e = sub e 1
+end
+p = false
+y = false
+for j ulong sub e a
+c = get fa add a j
+if isbl c
+p = y
+else
+if p
+nbyte 32
+p = false
+end
+nbyte c
+y = true
+end
+end
+if y
+nbyte 10
+end
+end
+fn opener ls ulong lz ulong to ulong
+for j ulong sub lz ls
+i = add ls j
+if lt add i 2 lz
+o = and eq get fa i 47 eq get fa add i 1 42
+if and o ishex get fa add i 2
+ret i
+end
+end
+end
+ret lz
+end
+fn closer a ulong lz ulong to ulong
+for j ulong sub lz a
+i = add a j
+if lt add i 1 lz
+if and eq get fa i 42 eq get fa add i 1 47
+ret add i 2
+end
+end
+end
+ret lz
+end
+fn nextcm a ulong lz ulong to ulong
+for j ulong sub lz a
+i = add a j
+if lt add i 1 lz
+if and eq get fa i 47 eq get fa add i 1 42
+ret i
+end
+end
+end
+ret lz
+end
+fn nline ls ulong lz ulong dm bool to void
+if not dm
+nemit skipbl ls lz lz
+ret
+end
+p = opener ls lz
+if eq p lz
+ret
+end
+a = closer p lz
+e = nextcm a lz
+nemit skipbl a e e
+end
+fn normz n ulong dm bool to void
+s = ulong 0
+for i ulong n
+if eq get fa i 10
+nline s i dm
+s = add i 1
+end
+end
+if lt s n
+nline s n dm
+end
+end
+note dis = nx[0,m), intent = nx[m,nn): intent must be a nonempty prefix of dis, the rest only NOP lines
+fn isnop o ulong to bool
+if ne get nx o 78
+ret false
+end
+if ne get nx add o 1 79
+ret false
+end
+if ne get nx add o 2 80
+ret false
+end
+ret eq get nx add o 3 10
+end
+fn nopsonly a ulong b ulong to bool
+if ne rem sub b a 4 0
+ret false
+end
+for k ulong div sub b a 4
+o = add a mul k 4
+if not isnop o
+ret false
+end
+end
+ret true
+end
+fn intok m ulong to bool
+il = sub get nn 0 m
+if or eq il 0 gt il m
+ret false
+end
+for i ulong il
+if ne get nx i get nx add m i
+ret false
+end
+end
+ret nopsonly il m
+end
+fn sameh m ulong to bool
+if or eq m 0 ne sub get nn 0 m m
+ret false
+end
+for i ulong m
+if ne get nx i get nx add m i
+ret false
+end
+end
+ret true
+end
+note ---- stage cache ----------------------------------------------------------------------------------
+fn keybeg k ulong to void
+put on 0 0
+oword 34
+oword 90
+oword add 28 k
+onl
+end
+fn mkkey k ulong to void
+pclear
+pstate
+pword 2
+pword 17
+if not wob
+exit 92
+end
+if not hashfile
+exit 92
+end
+for i ulong 64
+put sk add mul k 64 i get hexd i
+end
+end
+fn cached k ulong to bool
+pcache k 11
+fd = ropen
+if lt fd 0
+ret false
+end
+r = read fd dig 0 1
+fclo fd
+if ne r 1
+ret false
+end
+put ss k ulong sub get dig 0 48
+put sh k 1
+ret true
+end
+fn stash k ulong s ulong to ulong
+put ss k s
+put on 0 0
+obyte uchar add 48 s
+pcache k 11
+if not wob
+exit 91
+end
+ret s
+end
+note ---- stages ---------------------------------------------------------------------------------------
+fn senc to ulong
+pwork 12
+if not hashfile
+ret stash 0 1
+end
+keybeg 0
+otool 0
+onl
+ohexd
+onl
+mkkey 0
+if cached 0
+ret get ss 0
+end
+aclear
+atool 0
+pwork 12
+fi = ropen
+pcache 0 6
+fo = wopen
+pcache 0 14
+fe = wopen
+rc = spawn fi fo fe
+s = ulong 1
+if eq rc 0
+pcache 0 6
+n = rda
+if and gt n 0 eq rem n 16 0
+s = ulong 3
+end
+end
+ret stash 0 s
+end
+fn refeq to ulong
+pcache 0 6
+n = rda
+pclear
+ptok 5
+m = rdc
+if or le n 0 ne n m
+ret 1
+end
+for i ulong ulong n
+if ne get fa i get fc i
+ret 1
+end
+end
+ret 3
+end
+fn intchk to ulong
+put nn 0 0
+pcache 1 7
+n = rda
+if le n 0
+ret 1
+end
+normz ulong n true
+m = get nn 0
+pwork 13
+n = rda
+if lt n 0
+ret 1
+end
+normz ulong n false
+if intok m
+ret 3
+end
+ret 1
+end
+fn verkey to bool
+pcache 0 6
+if not hashfile
+exit 90
+end
+for i ulong 64
+put hb i get hexd i
+end
+keybeg 1
+otool 1
+onl
+ohb
+onl
+otok 2
+onl
+r = not tokis 5 54
+if r
+pclear
+ptok 5
+if not hashfile
+ret false
+end
+ohexd
+else
+oword 54
+end
+onl
+if gt get inn 0 0
+pwork 13
+if not hashfile
+exit 90
+end
+ohexd
+else
+oword 54
+end
+onl
+mkkey 1
+ret true
+end
+fn sver to ulong
+if not verkey
+put ss 1 1
+ret 1
+end
+if cached 1
+ret get ss 1
+end
+aclear
+atool 1
+aword 19
+pclear
+pword 18
+ptok 2
+apb
+pcache 0 6
+apb
+fi = nullin
+pcache 1 7
+fo = wopen
+pcache 1 14
+fe = wopen
+rc = spawn fi fo fe
+s = ulong 1
+if eq rc 0
+if not tokis 5 54
+s = refeq
+else
+if gt get inn 0 0
+s = intchk
+else
+s = ulong 2
+end
+end
+end
+ret stash 1 s
+end
+fn cmpdis to ulong
+put nn 0 0
+pcache 1 7
+n = rda
+if le n 0
+ret 1
+end
+normz ulong n true
+m = get nn 0
+pcache 2 9
+n = rda
+if le n 0
+ret 1
+end
+normz ulong n true
+if sameh m
+ret 3
+end
+ret 1
+end
+fn pkgkey to void
+pcache 1 7
+if not hashfile
+exit 90
+end
+for i ulong 64
+put hd i get hexd i
+end
+keybeg 2
+otool 4
+onl
+otool 2
+onl
+ohb
+onl
+ohd
+onl
+for t ulong sub get ntk 0 1
+u = add t 1
+if or lt u 3 gt u 6
+otok u
+obyte 32
+end
+end
+onl
+mkkey 2
+end
+fn sdump to ulong
+aclear
+atool 2
+aword 20
+pcache 2 8
+apb
+fi = nullin
+pcache 2 9
+fo = wopen
+pcache 2 85
+fe = wopen
+rc = spawn fi fo fe
+if ne rc 0
+ret 1
+end
+ret cmpdis
+end
+fn spkg to ulong
+pkgkey
+if cached 2
+ret get ss 2
+end
+aclear
+atool 4
+atok 2
+atok 1
+pcache 0 6
+apb
+pcache 2 8
+apb
+atok 7
+aword 22
+for t ulong sub get ntk 0 8
+atok add t 8
+end
+fi = nullin
+pcache 2 24
+fo = wopen
+pcache 2 14
+fe = wopen
+rc = spawn fi fo fe
+s = ulong 1
+if eq rc 0
+s = sdump
+end
+ret stash 2 s
+end
+fn emumap rc ulong to ulong
+if eq rc 0
+ret 3
+end
+if eq rc 2
+ret 2
+end
+ret 1
+end
+fn semu to ulong
+keybeg 3
+otool 3
+onl
+ohb
+onl
+otok 2
+onl
+otok 6
+onl
+oword 21
+onl
+mkkey 3
+if cached 3
+ret get ss 3
+end
+if tokis 6 54
+ret stash 3 2
+end
+aclear
+atool 3
+atok 2
+pcache 0 6
+apb
+atok 6
+aword 21
+fi = nullin
+pcache 3 10
+fo = wopen
+pcache 3 14
+fe = wopen
+rc = spawn fi fo fe
+ret stash 3 emumap rc
+end
+note ---- queue files, receipt, report -----------------------------------------------------------------
+fn qline id ulong t ulong to void
+oword id
+otok t
+onl
+end
+fn queue k ulong to void
+put on 0 0
+qline 61 1
+qline 62 2
+oword 63
+pcache 2 8
+opb
+onl
+if not hashfile
+exit 90
+end
+oword 64
+ohexd
+onl
+qline 65 6
+oword 66
+oword 21
+onl
+qline 69 7
+oword 68
+for t ulong sub get ntk 0 8
+otok add t 8
+obyte 32
+end
+onl
+oword add 73 sub k 4
+onl
+oword 67
+onl
+pclear
+pstate
+pword k
+ptok 1
+pword 16
+if not wob
+exit 89
+end
+end
+fn hitw k ulong to void
+if ne get sh k 0
+oword 52
+else
+oword 53
+end
+end
+fn overall to ulong
+w = ulong 3
+for k ulong 4
+s = get ss k
+if eq s 1
+ret 1
+end
+if ne s 3
+w = ulong 2
+end
+end
+ret w
+end
+fn rline k ulong to void
+oword add 28 k
+oword 90
+ostat get ss k
+if and lt k 4 ne get ss k 0
+oword 59
+hitw k
+oword 60
+ohex k
+end
+onl
+end
+fn receipt to void
+put on 0 0
+oword 34
+oword 90
+otok 1
+onl
+if eq get jn 2 1
+oword 88
+onl
+end
+if ne get ss 0 0
+oword 71
+ohb
+onl
+end
+for k ulong 6
+rline k
+end
+oword 34
+oword 90
+ostat get jn 3
+onl
+oword 70
+onl
+pclear
+pstate
+pword 3
+ptok 1
+pword 15
+if not wob
+exit 89
+end
+end
+fn show to void
+put on 0 0
+oword 51
+otok 1
+for k ulong 6
+oword 90
+oword add 28 k
+oword 89
+ostat get ss k
+if and lt k 4 ne get ss k 0
+oword 88
+hitw k
+end
+end
+oword 90
+oword 34
+oword 89
+ostat get jn 3
+onl
+sob
+end
+fn dojob to void
+for k ulong 8
+put ss k 0
+put sh k 0
+end
+put jn 2 0
+for i ulong 64
+put hb i 45
+end
+if canon
+s = senc
+if ne s 1
+s = sver
+if ne s 1
+s = spkg
+if ne s 1
+s = semu
+end
+end
+end
+if and eq get ss 2 3 ne get ss 3 1
+queue 4
+queue 5
+end
+else
+put jn 2 1
+put ss 0 1
+end
+put jn 3 overall
+receipt
+show
+end
+note ---- spec lines -----------------------------------------------------------------------------------
+fn dtool to bool
+if ne get ntk 0 3
+ret false
+end
+k = tfind 1 40 5
+n = get tkl 2
+if or eq k 5 gt n 255
+ret false
+end
+o = get tko 2
+for i ulong n
+put tp add mul k 256 i get spc add o i
+end
+put tpl k n
+pclear
+ptok 2
+if not hashfile
+ret false
+end
+for i ulong 64
+put th add mul k 64 i get hexd i
+end
+ret true
+end
+fn djob to bool
+n = get ntk 0
+if or lt n 8 gt n 40
+ret false
+end
+if not or tokis 2 83 tokis 2 84
+ret false
+end
+for k ulong 5
+if eq get tpl k 0
+ret false
+end
+end
+dojob
+for k ulong 20
+put md k 0
+end
+put cnt 2 add get cnt 2 1
+ret true
+end
+fn dtsub to bool
+if ne get ntk 0 4
+ret false
+end
+for k ulong 3
+put md mul k 2 get tko add k 1
+put md add mul k 2 1 get tkl add k 1
+end
+put md 11 1
+ret true
+end
+fn dlsub to bool
+if ne get ntk 0 3
+ret false
+end
+for k ulong 2
+put md add 6 mul k 2 get tko add k 1
+put md add 7 mul k 2 get tkl add k 1
+end
+put md 12 1
+ret true
+end
+fn dexp to bool
+if or ne get ntk 0 3 eq get cnt 2 0
+ret false
+end
+k = tfind 1 28 7
+s = tfind 2 35 5
+if or eq k 7 eq s 5
+ret false
+end
+g = get jn 3
+if lt k 6
+g = get ss k
+end
+if eq g s
+put cnt 0 add get cnt 0 1
+ret true
+end
+put cnt 1 add get cnt 1 1
+put on 0 0
+oword 56
+onum get jn 1
+oword 90
+otok 1
+oword 75
+ostat g
+oword 91
+otok 2
+onl
+sob
+ret true
+end
+fn sline s ulong e ulong to bool
+toks s e
+if eq get ntk 0 0
+ret true
+end
+if tokis 0 45
+ret dtool
+end
+if tokis 0 46
+ret djob
+end
+if tokis 0 47
+ret dtsub
+end
+if tokis 0 48
+ret dlsub
+end
+if tokis 0 49
+put md 10 1
+ret eq get ntk 0 1
+end
+if tokis 0 50
+ret dexp
+end
+ret false
+end
+fn spec n ulong to bool
+s = ulong 0
+put jn 1 1
+for i ulong n
+if eq get spc i 10
+if not sline s i
+ret false
+end
+s = add i 1
+put jn 1 add get jn 1 1
+end
+end
+if lt s n
+ret sline s n
+end
+ret true
+end
+fn main to int
+if ne argcnt 3
+say 82
+ret 2
+end
+if not consts
+say 86
+ret 2
+end
+r = argread 2 sth 0 255
+if lt r 1
+say 82
+ret 2
+end
+put stl 0 ulong r
+r = argread 1 pb 0 4000
+if lt r 1
+say 82
+ret 2
+end
+put pn 0 ulong r
+n = rds
+if le n 0
+say 82
+ret 2
+end
+mkd 0
+mkd 77
+mkd 78
+mkd 79
+mkd 23
+mkd 80
+mkd 81
+if not spec ulong n
+put on 0 0
+oword 55
+onum get jn 1
+onl
+sob
+ret 2
+end
+put on 0 0
+oword 57
+onum get cnt 0
+oword 58
+onum get cnt 1
+oword 76
+onum get cnt 2
+onl
+sob
+if or ne get cnt 1 0 eq get cnt 0 0
+ret 1
+end
+ret 0
+end

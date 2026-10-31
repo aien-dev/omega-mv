@@ -1,0 +1,54 @@
+note SPDX-License-Identifier: Apache-2.0
+note LOG2: omega_math_log2 of src/omega_numeric_transc.c.
+fn e1_log2 x uint to uint
+u = ulong x
+a = and u MAG
+if gt a INF
+ret uint QNAN
+end
+if eq a 0
+ret uint 4286578688
+end
+if ne and u SIGN 0
+ret uint QNAN
+end
+if eq u INF
+ret uint INF
+end
+ea = long 0
+if eq and u INF 0
+u = sfmul u TWO23
+ea = long -23
+end
+eb = and shr u 23 255
+e = long eb
+e = add sub e 127 ea
+m = or and u FRAC ONE
+if gt m SQ2R
+m = sfmul m HALF
+e = add e 1
+end
+num = sfsub m ONE
+dd = tsum m ONE
+den = and dd 4294967295
+dl = shr dd 32
+z = sfdiv num den
+nz = xor z SIGN
+rz = sffma nz den num
+rz = sffma nz dl rz
+zl = sfdiv rz den
+z2 = sfmul z z
+p = sffma L11 z2 L9
+p = sffma p z2 L7
+p = sffma p z2 L5
+p = sffma p z2 L3
+z3 = sfmul z z2
+ph = sfmul z CHI
+pl = sffma z CHI xor ph SIGN
+lo = sffma z3 p sffma z CLO sfmul zl CHI
+ss = tsum fint e ph
+s = and ss 4294967295
+se = shr ss 32
+r = sfadd s sfadd se sfadd pl lo
+ret uint r
+end

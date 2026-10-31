@@ -1,0 +1,450 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2own.om: check_ownership of src/checker2/c2_check.c (own_use, own_kill, own_birth, own_step).
+note May-states: 1 not yet holding / not opened, 2 live / open, 4 dead / closed. coao arena object
+note (its arena handle or -1), coor borrow origin, coin in-states at b*480+r, colv live blocks,
+note cst the current states. In the quiet pass (cquiet[0] = 1) every report is skipped and the
+note transfer goes on, exactly like the C's OF macro.
+
+text crodead "C2-OWN-USE-DEAD"
+text cmouse "owner v%d used after it was released or moved (every path)"
+text cmomove "owner v%d moved after it was released or moved (every path)"
+text crobor "C2-BORROW-OUTLIVES-OWNER"
+text cmobor "borrow v%d used after its owner v%d is gone (every path)"
+text crolk "C2-OWN-LEAK"
+text cmoover "owner v%d overwritten while it still holds an object (every path)"
+text croad "C2-ARENA-DEAD"
+text cmoad "allocation from arena v%d after it was destroyed (every path)"
+text crorel "C2-OWN-RELEASE-ARENA"
+text cmorel "release of arena object v%d"
+text crodbl "C2-OWN-DOUBLE-RELEASE"
+text cmodbl "v%d released when it holds nothing (every path)"
+text croam "C2-OWN-ARENA-MOVE"
+text cmoam "move involving arena object"
+text cmoamp "arena object v%d passed to an own parameter"
+text cmoboth "register v%d holds both arena and pool objects"
+text crhre "C2-HANDLE-REOPEN"
+text cmhre "handle v%d reopened while open"
+text crhdc "C2-HANDLE-DOUBLE-CLOSE"
+text cmhdc "handle v%d closed when not open (every path)"
+text crhdd "C2-HANDLE-DEAD"
+text cmhdd "pool v%d used when not open (every path)"
+text crhlk "C2-HANDLE-LEAK"
+text cmhlk "v%d still open at return (every path)"
+text cmolk "v%d still owns an object at return (every path)"
+
+fn c2_track r long to bool
+x = c2_vs r
+ret and eq get cts x 10 eq get ctk x 1
+end
+
+fn c2_quiet to bool
+ret ne get cquiet 0 0
+end
+
+fn c2_nlive r long to bool
+ret eq and get cst r 2 0
+end
+
+fn c2_ouse i long r long to long
+if and c2_track r c2_nlive r
+if not c2_quiet
+c2_a1 r
+ret c2_fail crodead get cfi 0 i cmouse
+end
+end
+g = get coor r
+if ge g 0
+if c2_nlive g
+if not c2_quiet
+c2_a2 r g
+ret c2_fail crobor get cfi 0 i cmobor
+end
+end
+end
+ret 0
+end
+
+fn c2_okill i long r long to long
+if c2_nlive r
+if not c2_quiet
+c2_a1 r
+ret c2_fail crodead get cfi 0 i cmomove
+end
+end
+put cst r 4
+ret 0
+end
+
+fn c2_obirth i long r long to long
+if eq get cst r 2
+if not c2_quiet
+c2_a1 r
+ret c2_fail crolk get cfi 0 i cmoover
+end
+end
+put cst r 2
+ret 0
+end
+
+fn c2_ostep i long to long
+s = c2_is i
+op = get cop s
+if eq op cqalloc
+ret c2_obirth i get cdst s
+end
+if eq op cqaalloc
+b = get cb s
+if and c2_nlive b not c2_quiet
+c2_a1 b
+ret c2_fail croad get cfi 0 i cmoad
+end
+ret c2_obirth i get cdst s
+end
+if eq op cqrel
+ret c2_orel i get ca s
+end
+if eq op cqmov
+ret c2_omov i s
+end
+if or or eq op cqload eq op cqstore or eq op cqfload eq op cqfstore
+ret c2_ouse i get ca s
+end
+if eq op cqcall
+ret c2_ocall i s
+end
+ret c2_ostep2 i s op
+end
+
+fn c2_orel i long a long to long
+if and ge get coao a 0 not c2_quiet
+c2_a1 a
+ret c2_fail crorel get cfi 0 i cmorel
+end
+if and c2_nlive a not c2_quiet
+c2_a1 a
+ret c2_fail crodbl get cfi 0 i cmodbl
+end
+put cst a 4
+ret 0
+end
+
+fn c2_omov i long s long to long
+a = get ca s
+d = get cdst s
+if c2_track a
+if eq get ctk c2_vs d 1
+if or ge get coao a 0 ge get coao d 0
+if not c2_quiet
+ret c2_fail croam get cfi 0 i cmoam
+end
+end
+if ne c2_okill i a 0
+ret -1
+end
+ret c2_obirth i d
+end
+ret c2_ouse i a
+end
+if c2_isref c2_vs a
+ret c2_ouse i a
+end
+ret 0
+end
+
+fn c2_ocall i long s long to long
+g = get ccal s
+for k long get cnag s
+r = get carg add mul s 6 k
+if c2_isref c2_vs r
+if ne c2_ouse i r 0
+ret -1
+end
+if eq get ctk add mul g 481 k 1
+if ne c2_ocarg i r 0
+ret -1
+end
+end
+end
+end
+ret 0
+end
+
+fn c2_ocarg i long r long to long
+if and ge get coao r 0 not c2_quiet
+c2_a1 r
+ret c2_fail croam get cfi 0 i cmoamp
+end
+ret c2_okill i r
+end
+
+fn c2_ostep2 i long s long op long to long
+if or eq op cqaopen eq op cqpopen
+d = get cdst s
+if and ne and get cst d 2 0 not c2_quiet
+c2_a1 d
+ret c2_fail crhre get cfi 0 i cmhre
+end
+put cst d 2
+ret 0
+end
+if or eq op cqadest eq op cqpclose
+ret c2_oclose i s op
+end
+if or or eq op cqhalloc eq op cqhgen or eq op cqhfree eq op cqhload
+ret c2_opool i s op
+end
+if eq op cqhstore
+ret c2_opool i s op
+end
+if eq op cqret
+ret c2_oret i
+end
+ret 0
+end
+
+fn c2_oclose i long s long op long to long
+a = get ca s
+if and c2_nlive a not c2_quiet
+c2_a1 a
+ret c2_fail crhdc get cfi 0 i cmhdc
+end
+put cst a 4
+if eq op cqadest
+for r long c2_nv
+if and eq get coao r a ne get cst r 1
+put cst r 4
+end
+end
+end
+ret 0
+end
+
+fn c2_opool i long s long op long to long
+h = get ca s
+if eq op cqhalloc
+h = get cb s
+end
+if and c2_nlive h not c2_quiet
+c2_a1 h
+ret c2_fail crhdd get cfi 0 i cmhdd
+end
+ret 0
+end
+
+fn c2_oret i long to long
+for r long c2_nv
+if eq get cst r 2
+if lt c2_oret1 i r 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+fn c2_oret1 i long r long to long
+hd = false
+di = get cdi r
+if ge di 0
+op = c2_op di
+hd = or eq op cqaopen eq op cqpopen
+end
+if c2_quiet
+ret 0
+end
+if hd
+c2_a1 r
+ret c2_fail crhlk get cfi 0 i cmhlk
+end
+if and c2_track r lt get coao r 0
+c2_a1 r
+ret c2_fail crolk get cfi 0 i cmolk
+end
+ret 0
+end
+
+fn c2_own to long
+nv = c2_nv
+for r long nv
+put coao r -1
+put coor r -1
+end
+for i long c2_ni
+s = c2_is i
+if eq get cop s cqaalloc
+put coao get cdst s get cb s
+end
+end
+for i long c2_ni
+if c2_oboth i
+c2_a1 get cdst c2_is i
+ret c2_fail croam get cfi 0 i cmoboth
+end
+end
+c2_origin
+for r long nv
+if eq get coor r -2
+put coor r -1
+end
+end
+c2_oflow
+put cquiet 0 0
+for b long c2_nb
+if ne get colv b 0
+if lt c2_orep b 0
+ret -1
+end
+end
+end
+ret 0
+end
+
+fn c2_oboth i long to bool
+s = c2_is i
+op = get cop s
+d = get cdst s
+if eq op cqalloc
+ret ge get coao d 0
+end
+if eq op cqaalloc
+ret ne get coao d get cb s
+end
+ret false
+end
+
+fn c2_origin to void
+ch = true
+while ch bound 999999
+ch = false
+for i long c2_ni
+if c2_orig1 i
+ch = true
+end
+end
+end
+end
+
+fn c2_orig1 i long to bool
+s = c2_is i
+if ne get cop s cqmov
+ret false
+end
+d = get cdst s
+x = c2_vs d
+if or not c2_isref x eq get ctk x 1
+ret false
+end
+a = get ca s
+root = get coor a
+if eq get ctk c2_vs a 1
+root = a
+end
+cur = get coor d
+nw = long -2
+if and eq cur -1 ge root 0
+nw = root
+else
+if eq cur root
+nw = cur
+end
+end
+if lt d c2_np
+nw = -2
+end
+if and ne nw cur ne cur -2
+put coor d nw
+ret true
+end
+ret false
+end
+
+fn c2_oflow to void
+nv = c2_nv
+nb = c2_nb
+for b long nb
+put colv b 0
+for r long nv
+put coin add mul b 480 r 0
+end
+end
+for r long nv
+put coin r 1
+if lt r c2_np
+if c2_track r
+put coin r 2
+end
+end
+end
+put colv 0 1
+put cquiet 0 1
+ch = true
+while ch bound 999999
+ch = false
+for b long nb
+if ne get colv b 0
+if c2_oblk b
+ch = true
+end
+end
+end
+end
+end
+
+note The quiet transfer of block b; true when a successor's live flag or in-state grew.
+fn c2_oblk b long to bool
+nv = c2_nv
+for r long nv
+put cst r get coin add mul b 480 r
+end
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+if eq c2_op i cqtrap
+ret false
+end
+z = c2_ostep i
+i = add i 1
+end
+ch = false
+for k long get cnsu b
+if c2_omerge get csuc add mul b 2 k nv
+ch = true
+end
+end
+ret ch
+end
+
+fn c2_omerge sc long nv long to bool
+ch = false
+if eq get colv sc 0
+put colv sc 1
+ch = true
+end
+for r long nv
+o = add mul sc 480 r
+m = or get coin o get cst r
+if ne m get coin o
+put coin o m
+ch = true
+end
+end
+ret ch
+end
+
+fn c2_orep b long to long
+for r long c2_nv
+put cst r get coin add mul b 480 r
+end
+i = c2_bfirst b
+e = c2_bend b
+while lt i e bound 4097
+if eq c2_op i cqtrap
+ret 0
+end
+if lt c2_ostep i 0
+ret -1
+end
+i = add i 1
+end
+ret 0
+end

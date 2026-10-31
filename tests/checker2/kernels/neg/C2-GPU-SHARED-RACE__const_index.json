@@ -1,0 +1,8 @@
+{"functions": [
+  {"name": "shared_const", "kind": "kernel", "threads": 32,
+   "params": ["gedit:u32", "u32"], "ret": "void",
+   "locals": ["block:u32:64", "u32", "u32"],
+   "blocks": [
+    [{"op": "shared", "dst": 2}, {"op": "thread", "dst": 3}, {"op": "const", "dst": 4, "value": 0}, {"op": "store", "arr": 2, "index": 4, "value": 3}, {"op": "ret"}]
+   ]}
+]}

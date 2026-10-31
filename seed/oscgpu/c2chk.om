@@ -1,0 +1,395 @@
+note SPDX-License-Identifier: Apache-2.0
+note c2chk.om: type predicates, check_structs, check_type, uses/defines and check_insn of
+note src/checker2/c2_check.c. Types are named by slot (c2glob.om: f*481+v, f*481+480 the return).
+
+fn c2_val s long to bool
+ret and ge s 1 le s 9
+end
+fn c2_int s long to bool
+ret and ge s 2 le s 9
+end
+fn c2_sgn s long to bool
+ret and ge s 6 le s 9
+end
+fn c2_num s long to bool
+ret or c2_val s eq s 13
+end
+fn c2_kv s long to bool
+ret or eq s 4 eq s 13
+end
+fn c2_width s long to long
+if eq s 1
+ret 1
+end
+if or eq s 2 eq s 6
+ret 8
+end
+if or eq s 3 eq s 7
+ret 16
+end
+if or or eq s 4 eq s 8 eq s 13
+ret 32
+end
+if or eq s 5 eq s 9
+ret 64
+end
+ret 0
+end
+
+fn c2_scal x long to bool
+ret c2_num get cts x
+end
+fn c2_gbuf x long to bool
+ret or eq get cts x 14 eq get cts x 15
+end
+fn c2_isblk x long to bool
+ret and eq get cts x 10 eq get ctk x 4
+end
+fn c2_isref x long to bool
+ret eq get cts x 10
+end
+fn c2_isarr x long to bool
+ret and eq get cts x 10 eq get cti x 0
+end
+fn c2_isstr x long to bool
+ret and eq get cts x 10 ne get cti x 0
+end
+fn c2_slice x long to bool
+ret or eq get cts x 11 eq get cts x 12
+end
+fn c2_u64 x long to bool
+ret eq get cts x 5
+end
+
+fn c2_same x long y long to bool
+if ne get cts x get cts y
+ret false
+end
+if c2_gbuf x
+ret eq get cte x get cte y
+end
+if ne get cts x 10
+ret true
+end
+if ne get ctk x get ctk y
+ret false
+end
+ret c2_shape x y
+end
+
+fn c2_shape x long y long to bool
+if not and eq get cts x 10 eq get cts y 10
+ret false
+end
+if ne get cte x get cte y
+ret false
+end
+if ne get ctl x get ctl y
+ret false
+end
+ret eq get cti x get cti y
+end
+
+fn c2_bind tk long fr long to bool
+if or eq tk 4 eq fr 4
+ret false
+end
+if eq fr 1
+ret true
+end
+if eq fr 3
+ret or eq tk 3 eq tk 2
+end
+if eq fr 2
+ret eq tk 2
+end
+ret false
+end
+
+fn c2_canonv s long imm ulong to bool
+w = c2_width s
+if eq s 1
+ret le imm 1
+end
+if eq w 64
+ret true
+end
+if not c2_sgn s
+ret lt imm shl ulong 1 w
+end
+h = shl ulong 1 sub w 1
+ret or lt imm h ge imm sub ulong 0 h
+end
+
+text crsname "C2-STRUCT-NAME"
+text crsftyp "C2-STRUCT-FIELD-TYPE"
+text crsflen "C2-STRUCT-FIELD-LEN"
+text crslay "C2-STRUCT-LAYOUT"
+text cmstwice "struct %s defined twice"
+text cmftwice "field %s.%s twice"
+text cmfqual "%s.%s"
+text cmflen "%s.%s length %u"
+text cmfoff "%s.%s offset %u, prefix sum %u"
+text cmscell "%s cells %u, fields need %u"
+
+note Name equality: struct names (refs 0..15), field names (100 + slot), function names (1000 + fi).
+fn c2_nameq p long q long to bool
+if lt p 100
+if ne get csnl p get csnl q
+ret false
+end
+for i long get csnl p
+x = get csn add mul p 64 i
+y = get csn add mul q 64 i
+if ne x y
+ret false
+end
+end
+ret true
+end
+if lt p 1000
+ret c2_fnameq sub p 100 sub q 100
+end
+ret c2_gnameq sub p 1000 sub q 1000
+end
+
+fn c2_fnameq a long b long to bool
+if ne get cfnl a get cfnl b
+ret false
+end
+for i long get cfnl a
+x = get cfn add mul a 64 i
+y = get cfn add mul b 64 i
+if ne x y
+ret false
+end
+end
+ret true
+end
+
+fn c2_gnameq a long b long to bool
+if ne get cgnl a get cgnl b
+ret false
+end
+for i long get cgnl a
+x = get cgn add mul a 64 i
+y = get cgn add mul b 64 i
+if ne x y
+ret false
+end
+end
+ret true
+end
+
+fn c2_cfield k long f long off long to long
+q = add mul k 16 f
+for g long f
+if c2_nameq add 100 add mul k 16 g add 100 q
+c2_s2 k add 100 q
+ret c2_fail crsname -1 -1 cmftwice
+end
+end
+c2_s2 k add 100 q
+if not c2_val get cfs q
+ret c2_fail crsftyp -1 -1 cmfqual
+end
+if gt get cfal q 64
+c2_a1 get cfal q
+ret c2_fail crsflen -1 -1 cmflen
+end
+if ne get cfof q off
+c2_a2 get cfof q off
+ret c2_fail crslay -1 -1 cmfoff
+end
+ret 0
+end
+
+fn c2_cstructs to long
+for k long get cnst 0
+for j long k
+if c2_nameq j k
+c2_s1 k
+ret c2_fail crsname -1 -1 cmstwice
+end
+end
+off = long 0
+for f long get csnf k
+if ne c2_cfield k f off 0
+ret -1
+end
+al = get cfal add mul k 16 f
+if ne al 0
+off = add off al
+else
+off = add off 1
+end
+end
+if or or ne get csnc k off lt off 1 gt off 64
+c2_s1 k
+c2_a2 get csnc k off
+ret c2_fail crslay -1 -1 cmscell
+end
+end
+ret 0
+end
+
+fn c2_ctype x long to bool
+s = get cts x
+if or ge s 16 eq s 0
+ret false
+end
+if c2_gbuf x
+ret c2_kv get cte x
+end
+if ne s 10
+ret true
+end
+k = get ctk x
+l = get ctl x
+if eq k 4
+ret and and c2_kv get cte x eq get cti x 0 and ge l 1 le l 12288
+end
+if or lt k 1 gt k 3
+ret false
+end
+if eq get cte x 0
+d = get cti x
+if or lt d 1 gt d get cnst 0
+ret false
+end
+ret eq l get csnc sub d 1
+end
+ret and and c2_val get cte x eq get cti x 0 and ge l 1 le l 64
+end
+
+note Current-function accessors.
+fn c2_vs r long to long
+ret add mul get cfi 0 481 r
+end
+fn c2_is i long to long
+ret add mul get cfi 0 4096 i
+end
+fn c2_nv to long
+ret get cgnv get cfi 0
+end
+fn c2_np to long
+ret get cgnp get cfi 0
+end
+fn c2_nb to long
+ret get cgnb get cfi 0
+end
+fn c2_ni to long
+ret get cgni get cfi 0
+end
+fn c2_op i long to long
+ret get cop c2_is i
+end
+fn c2_bfirst b long to long
+ret get cbf add mul get cfi 0 512 b
+end
+fn c2_bcount b long to long
+ret get cbc add mul get cfi 0 512 b
+end
+fn c2_term op long to bool
+ret or or eq op cqbr eq op cqcbr eq op cqret
+end
+
+fn c2_u1 x long to long
+put cus 0 x
+ret 1
+end
+fn c2_u2 x long y long to long
+put cus 0 x
+put cus 1 y
+ret 2
+end
+fn c2_u3 x long y long z long to long
+put cus 0 x
+put cus 1 y
+put cus 2 z
+ret 3
+end
+
+note uses(): the registers instruction i reads, into cus; returns the count. Class cuse (c2_init):
+note 0 none, 1 a, 2 a when a >= 0 (RET), 3 a b, 4 a b c, 5 a b c args0 (HSTORE), 6 a [b] (FLOAD),
+note 7 a [b] c (FSTORE), 8 the call arguments, 9 a a+1 b (GLOAD), 10 a a+1 b c (GSTORE).
+fn c2_uses i long to long
+s = c2_is i
+u = get cuse get cop s
+a = get ca s
+b = get cb s
+if eq u 1
+ret c2_u1 a
+end
+if eq u 2
+if ge a 0
+ret c2_u1 a
+end
+ret 0
+end
+if eq u 3
+ret c2_u2 a b
+end
+if eq u 4
+ret c2_u3 a b get cc s
+end
+ret c2_uses2 s u a b
+end
+
+fn c2_uses2 s long u long a long b long to long
+if eq u 5
+z1 = c2_u3 a b get cc s
+put cus 3 get carg mul s 6
+ret 4
+end
+if eq u 6
+if ge b 0
+ret c2_u2 a b
+end
+ret c2_u1 a
+end
+if eq u 7
+if ge b 0
+ret c2_u3 a b get cc s
+end
+ret c2_u2 a get cc s
+end
+if eq u 8
+n = get cnag s
+for k long n
+put cus k get carg add mul s 6 k
+end
+ret n
+end
+a1 = c2_i16 add a 1
+if eq u 9
+ret c2_u3 a a1 b
+end
+if eq u 10
+z2 = c2_u3 a a1 b
+put cus 3 get cc s
+ret 4
+end
+ret 0
+end
+
+fn c2_i16 v long to long
+if gt v 32767
+ret sub v 65536
+end
+ret v
+end
+
+fn c2_defop op long to bool
+ret ne get cdop op 0
+end
+
+note defines(): the register instruction i writes, or -1.
+fn c2_defs i long to long
+s = c2_is i
+op = get cop s
+if or c2_defop op eq op cqcall
+ret get cdst s
+end
+ret -1
+end

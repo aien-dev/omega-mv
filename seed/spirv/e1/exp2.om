@@ -1,0 +1,30 @@
+note SPDX-License-Identifier: Apache-2.0
+note EXP2: omega_math_exp2 of src/omega_numeric_transc.c.
+fn e1_exp2 x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+kx = fkey u
+if ge kx fkey X128
+ret uint INF
+end
+if lt kx fkey XM151
+ret uint 0
+end
+t = sfadd u MAGIC
+kf = sfsub t MAGIC
+a = long t
+k = sub a 1262485504
+f = sfsub u kf
+p = sffma X2_8 f X2_7
+p = sffma p f X2_6
+p = sffma p f X2_5
+p = sffma p f X2_4
+p = sffma p f X2_3
+p = sffma p f X2_2
+p = sffma p f LN2HI
+m = sffma p f ONE
+r = scale2 m k
+ret uint r
+end

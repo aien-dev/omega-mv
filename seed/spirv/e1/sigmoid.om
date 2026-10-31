@@ -1,0 +1,27 @@
+note SPDX-License-Identifier: Apache-2.0
+note SIGMOID: omega_math_sigmoid of src/omega_numeric_transc.c.
+fn e1_sigmoid x uint to uint
+u = ulong x
+if gt and u MAG INF
+ret uint QNAN
+end
+kx = fkey u
+if ge kx fkey X18
+ret uint ONE
+end
+if le kx fkey XM104
+ret uint 0
+end
+ah = or u SIGN
+k = ek ah
+mm = ecore ah 0 k
+m = and mm 4294967295
+t = scale2 m k
+d = sfadd ONE t
+if eq and u SIGN 0
+r = sfdiv ONE d
+ret uint r
+end
+r = scale2 sfdiv m d k
+ret uint r
+end

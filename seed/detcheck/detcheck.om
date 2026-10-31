@@ -1,0 +1,571 @@
+note SPDX-License-Identifier: Apache-2.0
+note detcheck: the determinism rules of Omega GPU kernels, in seeded Omega.
+note Reads one OSC IR wire-v8 kernel unit (docs/omegese/GPU.md section 9) on stdin.
+note Refuses every atomic read-modify-write whose result can depend on thread order:
+note 41 DET-ATOM-FLOAT, 42 DET-ATOM-OP, 43 DET-ATOM-RESULT, 44 DET-ATOM-MIXED.
+note Races on global and shared memory are checker2's C2-GPU-GLOBAL-RACE and
+note C2-GPU-SHARED-RACE; a kernel is in the ban only when both checkers accept it.
+note Rules and codes: docs/one_layer/OMEGESE.md section 12. Exit 0 ACCEPT.
+global input uchar 1000000
+global msg uchar 256
+note state: 0 cursor, 1 size, 2 nvregs, 3 kind, 4 function, 5 ninsns,
+note 6 atoms, 7 kernels, 8 message length, 9 insn being read
+global state ulong 16
+global vs uchar 8192
+global vel uchar 8192
+global vrf uchar 8192
+global used uchar 8192
+global asub uchar 8192
+text pre "detcheck: "
+text emagic "MAGIC"
+text ever "VERSION"
+text etrunc "TRUNCATED"
+text ecap "CAPACITY"
+text eop "UNKNOWN_OP"
+text etag "BAD_TAG"
+text einval "INVALID"
+text etrail "TRAILING"
+text eio "IO"
+text efloat "DET-ATOM-FLOAT"
+text eaop "DET-ATOM-OP"
+text eres "DET-ATOM-RESULT"
+text emix "DET-ATOM-MIXED"
+text tfn " function "
+text tins " insn "
+text treg " vreg "
+text tacc "ACCEPT functions "
+text tker " kernels "
+text tatm " atoms "
+fn addc c ulong to void
+n = get state 8
+if lt n 255
+put msg n uchar c
+put state 8 add n 1
+end
+end
+fn addn v ulong to void
+d = new uchar 20 0
+k = ulong 0
+x = v
+for j ulong 20
+put d k uchar add 48 rem x 10
+k = add k 1
+x = div x 10
+if eq x 0
+break
+end
+end
+for j ulong k
+addc ulong get d sub sub k j 1
+end
+end
+fn flush fd int to void
+n = get state 8
+p = ulong 0
+for a ulong 64
+if eq p n
+break
+end
+k = write fd msg p sub n p
+if le k 0
+exit 28
+end
+p = add p ulong k
+end
+put state 8 0
+end
+fn word code int to void
+note append the name of refusal `code` to the message
+if eq code 20
+for j ulong len emagic
+addc ulong get emagic j
+end
+end
+if eq code 21
+for j ulong len ever
+addc ulong get ever j
+end
+end
+if eq code 22
+for j ulong len etrunc
+addc ulong get etrunc j
+end
+end
+if eq code 23
+for j ulong len ecap
+addc ulong get ecap j
+end
+end
+if eq code 24
+for j ulong len eop
+addc ulong get eop j
+end
+end
+if eq code 25
+for j ulong len etag
+addc ulong get etag j
+end
+end
+if eq code 26
+for j ulong len einval
+addc ulong get einval j
+end
+end
+if eq code 27
+for j ulong len etrail
+addc ulong get etrail j
+end
+end
+if eq code 28
+for j ulong len eio
+addc ulong get eio j
+end
+end
+if eq code 41
+for j ulong len efloat
+addc ulong get efloat j
+end
+end
+if eq code 42
+for j ulong len eaop
+addc ulong get eaop j
+end
+end
+if eq code 43
+for j ulong len eres
+addc ulong get eres j
+end
+end
+if eq code 44
+for j ulong len emix
+addc ulong get emix j
+end
+end
+end
+fn head code int to void
+put state 8 0
+for j ulong len pre
+addc ulong get pre j
+end
+word code
+end
+fn refuse code int to void
+note structural refusal: code, function and instruction position
+head code
+for j ulong len tfn
+addc ulong get tfn j
+end
+addn get state 4
+for j ulong len tins
+addc ulong get tins j
+end
+addn get state 9
+addc 10
+flush 2
+exit code
+end
+fn need ok bool to void
+if not ok
+refuse 26
+end
+end
+fn rd n ulong to ulong
+p = get state 0
+if gt n sub get state 1 p
+refuse 22
+end
+v = ulong 0
+for j ulong n
+v = or v shl ulong get input add p j mul j 8
+end
+put state 0 add p n
+ret v
+end
+fn skip n ulong to void
+p = get state 0
+if gt n sub get state 1 p
+refuse 22
+end
+put state 0 add p n
+end
+fn vr to ulong
+note a register that the instruction defines; 65535 means none
+v = rd 2
+if ne v 65535
+need lt v get state 2
+end
+ret v
+end
+fn use to ulong
+note a register the instruction reads: marks it as used
+v = rd 2
+if ne v 65535
+need lt v get state 2
+put used v 1
+end
+ret v
+end
+fn typ v ulong to void
+note one wire type; v < 8192 stores it as register v, else it is discarded
+s = rd 1
+if gt s 15
+refuse 25
+end
+e = ulong 0
+r = ulong 0
+if or eq s 14 eq s 15
+e = rd 1
+if gt e 15
+refuse 25
+end
+end
+if eq s 10
+r = rd 1
+need le r 4
+e = rd 1
+if gt e 15
+refuse 25
+end
+skip 2
+if eq e 0
+skip 1
+end
+end
+if lt v 8192
+put vs v uchar s
+put vel v uchar e
+put vrf v uchar r
+put used v 0
+put asub v 0
+end
+end
+fn mixed v ulong to void
+note DET-ATOM-MIXED: the atomic target is also read, written or passed on
+head 44
+for j ulong len tfn
+addc ulong get tfn j
+end
+addn get state 4
+for j ulong len treg
+addc ulong get treg j
+end
+addn v
+addc 10
+flush 2
+exit 44
+end
+fn atom to void
+note op 47: u8 sub, dst, a = target buffer, b = index, c = operand
+s = rd 1
+d = vr
+a = vr
+b = use
+c = use
+need ne a 65535
+need and ne b 65535 ne c 65535
+need eq get state 3 1
+need and ge s 1 le s 11
+t = ulong get vs a
+el = ulong 0
+if eq t 15
+el = ulong get vel a
+else
+need and eq t 10 eq ulong get vrf a 4
+el = ulong get vel a
+end
+if eq el 13
+refuse 41
+end
+need eq el 4
+need eq ulong get vs b 4
+need eq ulong get vs c el
+if gt s 6
+refuse 42
+end
+if ne d 65535
+refuse 43
+end
+o = ulong get asub a
+if eq o 0
+put asub a uchar s
+else
+if ne o s
+put asub a 255
+end
+end
+put state 6 add get state 6 1
+end
+fn insn to void
+o = rd 1
+if eq o 1
+x = vr
+skip 8
+ret
+end
+if or or eq o 2 eq o 6 eq o 7
+x = vr
+x = use
+ret
+end
+if or eq o 3 eq o 5
+skip 1
+x = vr
+x = use
+x = use
+ret
+end
+if eq o 4
+skip 1
+x = vr
+x = use
+ret
+end
+if or or eq o 8 eq o 20 eq o 22
+x = use
+ret
+end
+if or or eq o 9 eq o 28 eq o 42
+x = vr
+x = use
+x = use
+ret
+end
+if or or eq o 10 eq o 29 eq o 43
+x = use
+x = use
+x = use
+ret
+end
+if eq o 11
+x = vr
+skip 2
+n = rd 1
+for j ulong n
+x = use
+end
+ret
+end
+if eq o 12
+skip 1
+ret
+end
+if eq o 13
+skip 2
+ret
+end
+if eq o 14
+x = use
+skip 4
+ret
+end
+if eq o 15
+x = use
+ret
+end
+if eq o 16
+x = vr
+x = use
+x = use
+skip 1
+ret
+end
+if eq o 17
+x = use
+x = use
+x = use
+skip 1
+ret
+end
+if eq o 18
+x = vr
+skip 1
+ret
+end
+if or or eq o 19 eq o 23 eq o 24
+x = vr
+x = use
+x = use
+ret
+end
+if eq o 21
+x = vr
+skip 10
+ret
+end
+if eq o 25
+x = use
+x = use
+x = use
+ret
+end
+if eq o 26
+x = vr
+x = use
+x = use
+x = use
+ret
+end
+if eq o 27
+x = use
+x = use
+x = use
+x = use
+ret
+end
+if eq o 40
+skip 1
+x = vr
+ret
+end
+if eq o 41
+x = vr
+ret
+end
+if eq o 44
+ret
+end
+if eq o 45
+skip 1
+x = vr
+x = use
+x = use
+ret
+end
+if eq o 46
+x = vr
+x = use
+x = use
+x = use
+ret
+end
+if eq o 47
+atom
+ret
+end
+refuse 24
+end
+fn txt to void
+n = rd 2
+skip n
+end
+fn structs to void
+ns = rd 1
+for k ulong ns
+skip rd 1
+nf = rd 1
+skip 2
+for f ulong nf
+skip rd 1
+skip 5
+end
+end
+end
+fn func fi ulong to void
+put state 4 fi
+put state 9 0
+nl = rd 1
+need and ge nl 1 le nl 63
+skip nl
+kd = rd 1
+need le kd 1
+put state 3 kd
+if eq kd 1
+skip 2
+put state 7 add get state 7 1
+end
+skip 1
+typ 8192
+nv = rd 2
+if gt nv 8192
+refuse 23
+end
+put state 2 nv
+for v ulong nv
+typ v
+end
+nb = rd 2
+skip mul nb 8
+ni = rd 4
+if gt ni 1000000
+refuse 23
+end
+for i ulong ni
+put state 9 i
+insn
+end
+put state 9 ni
+for v ulong nv
+s = ulong get asub v
+if ne s 0
+if or eq s 255 ne ulong get used v 0
+mixed v
+end
+end
+end
+txt
+txt
+end
+fn main to int
+n = ulong 0
+for a ulong 1000
+if eq n len input
+refuse 23
+end
+k = read 0 input n sub len input n
+if lt k 0
+refuse 28
+end
+if eq k 0
+break
+end
+n = add n ulong k
+end
+if eq n len input
+refuse 23
+end
+put state 1 n
+magic = new uchar 7 0
+put magic 0 79
+put magic 1 83
+put magic 2 67
+put magic 3 49
+put magic 4 73
+put magic 5 82
+for j ulong 7
+v = rd 1
+if ne v ulong get magic j
+refuse 20
+end
+end
+if ne rd 1 8
+refuse 21
+end
+structs
+nf = rd 2
+need and ge nf 1 le nf 32
+for f ulong nf
+func f
+end
+if ne get state 0 n
+refuse 27
+end
+put state 8 0
+for j ulong len pre
+addc ulong get pre j
+end
+for j ulong len tacc
+addc ulong get tacc j
+end
+addn nf
+for j ulong len tker
+addc ulong get tker j
+end
+addn get state 7
+for j ulong len tatm
+addc ulong get tatm j
+end
+addn get state 6
+addc 10
+flush 1
+ret 0
+end

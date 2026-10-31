@@ -21,7 +21,7 @@ static const uint32_t sentinels[] = {
 
 int main(void) {
     int checked = 0, refused = 0, bad = 0;
-    for (int op = 0; op <= (int)BW_IR_MUFU_LG2; op++) {
+    for (int op = 0; op <= (int)BW_IR_F2I_U32; op++) {
         for (int form = 0; form < 4; form++) {
             const int pred = form & 1, uni = form >> 1;
             int accepted_any = 0;
