@@ -22,7 +22,7 @@
       "children": [
         {
           "digest": "59d4ea65a193fbac1696fdd89626b42d310f40cf8319fa62912976014d863ed0",
-          "last_commit": "992a8e254",
+          "last_commit": "450bbefd4",
           "name": "atemporal",
           "purpose": "AT-0 Clock-Free Universe research program: relational (Page-Wootters) quantum models with no ext"
         },
@@ -31,17 +31,23 @@
           "last_commit": "d863780eb",
           "name": "dirac-oracle",
           "purpose": "Directory research/dirac-oracle. Purpose not yet described by a human."
+        },
+        {
+          "digest": "973ae926903a77a8e8deb166aed41fdd40e37a5ae1f9872eb2811bfe33b49590",
+          "last_commit": "ca05a32b3",
+          "name": "om-bench",
+          "purpose": "om-bench (#653): frozen measurement contract, family-disjoint task splits, oracles, controls and"
         }
       ],
-      "children_root": "sha256:3d0528e1c35285574253e8f4f811346a319a152998f22d959fb4f5f5b7126163",
-      "compiled_at": "2026-10-25T21:57:22Z",
+      "children_root": "sha256:2dba2cba139eec405acf7a78c21077a968dfb76c86352db859892728b0152a74",
+      "compiled_at": "2026-10-30T16:37:58Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:62b92244c52fa8af6f511012dee2967e98dff162cc1d8bf45d0b2f15cb0adc5f",
-      "evidence_files": 0,
-      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 538,
-      "generated_at_commit": "992a8e254658cecb2ca9e1eb74cf42c85d9e6816",
-      "source_tree": "sha256:31d89eae6687641e7ce8f81d99fd049811fe97db7c4555f53c796869a877dbd7"
+      "digest": "sha256:c73d74e9c743c8b541ec2418e815095d748e2e15d0b89857d683dbd5b76b3bf9",
+      "evidence_files": 4,
+      "evidence_root": "sha256:1e8ed614a4d48ad6a9bb360f300dcf68e23a26797d587ac15485a168254f70dd",
+      "files": 1624,
+      "generated_at_commit": "ca05a32b32f11426444db6e691df8c7e40f3701a",
+      "source_tree": "sha256:68e9d0c074e400c9a926ab9c556eb0ce7df34b2b5cd75ffe6793c8ddb013f23d"
     },
     "owner_lane": "",
     "provenance": {

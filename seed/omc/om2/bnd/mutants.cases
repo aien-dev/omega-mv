@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+# seed/omc/om2/bnd/mutants.cases: two omc.om mutants of the operand-boundary checks; each kill row is a
+# correct-side row of bnd.cases and must FAIL; the g0 control must PASS. Expected: pass=2 fail=8.
+# --- mutant bnd-extra
+subst seed/omc/om2/bnd/mutants/bnd-extra.from seed/omc/om2/bnd/mutants/bnd-extra.to
+cc seed/omc/omc.om
+ctl-bnd-extra-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om - - - 7
+bnd-extra-om1-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-typed.om - err:6:5 5
+bnd-extra-om2-left-typed emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-typed.om - err:7:5 5
+bnd-extra-om1-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om1-left-assign.om - err:6:5 5
+bnd-extra-om2-left-assign emit seed/qualification/om2/sec/s0s2/s2bnd/om2-left-assign.om - err:7:5 5
+cc pinned
+# --- mutant bnd-missing
+subst seed/omc/om2/bnd/mutants/bnd-missing.from seed/omc/om2/bnd/mutants/bnd-missing.to
+cc seed/omc/omc.om
+ctl-bnd-missing-g0-run run seed/qualification/om2/sec/s0s2/s2bnd/om2-g0.om - - - 7
+bnd-missing-om1-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-next.om - err:7:4 4
+bnd-missing-om2-short-next emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-next.om - err:8:4 4
+bnd-missing-om1-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om1-short-bare.om - err:6:4 4
+bnd-missing-om2-short-bare emit seed/qualification/om2/sec/s0s2/s2bnd/om2-short-bare.om - err:7:4 4
+cc pinned

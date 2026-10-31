@@ -1,0 +1,210 @@
+note dudect-style timing driver (Reparaz, Balasch, Verbauwhede 2016): usage: timing WHAT N
+note WHAT: x25519 (scalar fixed vs random, base point fixed), chacha / aesgcm (key and nonce fixed
+note vs random, 1024-byte plaintext fixed), cteq (32-byte compare: equal vs random second input,
+note 2000 compares per measurement). Each of the N measurements draws its class from getrandom,
+note prepares the input, then times one operation with monons and prints "CLASS NANOSECONDS".
+note The statistics (Welch's t-test between the classes) are computed outside: timing.py.
+note Exit 0; 2 on a usage error; 3 when an operation reports an error.
+text tusage "usage: timing x25519|chacha|aesgcm|cteq N\n"
+text tx "x25519"
+text tc "chacha"
+text ta "aesgcm"
+text tq "cteq"
+
+fn tm_arg i ulong a edit uchar * to ulong
+n = argread i a 0 len a
+if lt n 0
+ret 0
+end
+ret ulong n
+end
+
+fn tm_num a view uchar * n ulong to ulong
+v = ulong 0
+for i ulong n
+d = ulong get a i
+if or lt d 48 gt d 57
+ret 0
+end
+v = add mul v 10 sub d 48
+if gt v 99999999
+ret 0
+end
+end
+ret v
+end
+
+fn tm_is a view uchar * n ulong t view uchar * to ulong
+if ne n len t
+ret 0
+end
+for i ulong n
+if ne get a i get t i
+ret 0
+end
+end
+ret 1
+end
+
+note fixed class: a constant pattern; random class: getrandom bytes
+fn tm_fill b edit uchar * n ulong cls ulong to ulong
+if eq cls 0
+for i ulong n
+put b i uchar add 17 rem mul i 7 211
+end
+ret 0
+end
+r = random b 0 n 0
+if ne r long n
+ret 1
+end
+ret 0
+end
+
+fn tm_line cls ulong ns ulong o edit uchar * to ulong
+put o 0 add 48 uchar cls
+put o 1 32
+k = ulong 2
+d = new uchar 24 0
+m = ulong 0
+v = ns
+while true bound 24
+put d m uchar add 48 rem v 10
+v = div v 10
+m = add m 1
+if eq v 0
+break
+end
+end
+for i ulong m
+put o k get d sub sub m 1 i
+k = add k 1
+end
+put o k 10
+ret add k 1
+end
+
+fn tm_emit cls ulong t0 long t1 long o edit uchar * to void
+m = tm_line cls ulong sub t1 t0 o
+w = write 1 o 0 m
+end
+
+fn tm_x25519 n ulong o edit uchar * to ulong
+k = new uchar 32 0
+u = new uchar 32 0
+s = new uchar 32 0
+c = new uchar 1 0
+put u 0 9
+for i ulong n
+r = random c 0 1 0
+cls = and ulong get c 0 1
+if ne tm_fill k 32 cls 0
+ret 3
+end
+t0 = monons
+e = x25519_scalarmult s k u
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn tm_pt buf edit uchar * to void
+for j ulong len buf
+put buf j uchar rem j 251
+end
+end
+
+note which: 0 chacha, 1 aesgcm
+fn tm_cls c edit uchar * to ulong
+r = random c 0 1 0
+ret and ulong get c 0 1
+end
+
+fn tm_one kn view uchar * buf edit uchar * which ulong to ulong
+ad = new uchar 5 0
+if eq which 0
+ret aead_chacha_seal kn ad buf
+end
+ret aead_aes128gcm_seal part kn 0 28 ad buf
+end
+
+fn tm_aead n ulong o edit uchar * which ulong to ulong
+kn = new uchar 44 0
+buf = new uchar 1040 0
+c = new uchar 1 0
+for i ulong n
+cls = tm_cls c
+if ne tm_fill kn 44 cls 0
+ret 3
+end
+tm_pt buf
+t0 = monons
+e = tm_one kn buf which
+t1 = monons
+if ne e 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn tm_cteq n ulong o edit uchar * to ulong
+a = new uchar 32 0
+b = new uchar 32 0
+c = new uchar 1 0
+for i ulong 32
+put a i uchar add 17 rem mul i 7 211
+end
+for i ulong n
+r = random c 0 1 0
+cls = and ulong get c 0 1
+if ne tm_fill b 32 cls 0
+ret 3
+end
+acc = ulong 0
+t0 = monons
+for j ulong 2000
+acc = add acc tls_cteq a b 0 32
+end
+t1 = monons
+if and eq cls 0 ne acc 0
+ret 3
+end
+tm_emit cls t0 t1 o
+end
+ret 0
+end
+
+fn main to int
+a = new uchar 64 0
+o = new uchar 64 0
+if ne argcnt 3
+w = write 2 tusage 0 len tusage
+ret 2
+end
+wl = tm_arg 1 a
+n = tm_num part a 32 32 tm_arg 2 part a 32 32
+if or eq n 0 eq wl 0
+w = write 2 tusage 0 len tusage
+ret 2
+end
+if eq tm_is a wl tx 1
+ret int tm_x25519 n o
+end
+if eq tm_is a wl tc 1
+ret int tm_aead n o 0
+end
+if eq tm_is a wl ta 1
+ret int tm_aead n o 1
+end
+if eq tm_is a wl tq 1
+ret int tm_cteq n o
+end
+w = write 2 tusage 0 len tusage
+ret 2
+end

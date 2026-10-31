@@ -80,7 +80,7 @@
         },
         {
           "digest": "806198eda65f998c287abd251928120d01ab44a1e0f1e05ad2e055212967c80c",
-          "last_commit": "7f9437429",
+          "last_commit": "f5c9bd89a",
           "name": "compiler",
           "purpose": "Directory src/compiler. Purpose not yet described by a human."
         },
@@ -116,7 +116,7 @@
         },
         {
           "digest": "e0eee44045097fd7edf9f542b96bfdfc42813ecf6f27c25bd1c57f7adf985bc4",
-          "last_commit": "d43d19b44",
+          "last_commit": "f5c9bd89a",
           "name": "osh",
           "purpose": "osh (Omega-native shell, arch#158) lexer unit: layout list, generator, osh_lex.osc, C reference "
         },
@@ -146,7 +146,7 @@
         },
         {
           "digest": "43126cdfbfc4a67b3ab8785a1358a861960954e0374b7118781d06f117f9de5c",
-          "last_commit": "b99ffb73f",
+          "last_commit": "f56a372ae",
           "name": "runtime",
           "purpose": "Directory src/runtime. Purpose not yet described by a human."
         },
@@ -182,20 +182,20 @@
         },
         {
           "digest": "e832df528a0a0992e817f879c5b7df52c33b8445f30fc2743e5c0fa5ad6e6b2a",
-          "last_commit": "52c62d6c4",
+          "last_commit": "f5c9bd89a",
           "name": "visor",
           "purpose": "Directory src/visor. Purpose not yet described by a human."
         }
       ],
       "children_root": "sha256:6ade3e583c9df260fbfc768469dae662b88153725b14f7086431861419cfffe3",
-      "compiled_at": "2026-10-30T18:10:55Z",
+      "compiled_at": "2026-10-31T02:49:10Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:2e166f32c0d101b4f78705870bd8213809296312aed76cffceae737f9f9d0b86",
+      "digest": "sha256:569046def53c95f65e57dc6ecac3ff2523bf2fe744c802cca7c87ef830d40959",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 597,
-      "generated_at_commit": "76a6ceeefb359cc68f58f87898f5b3a46c0686fc",
-      "source_tree": "sha256:5795e053419bb7c209584946b5a91354297fe6c02bc73a0aadf31dd964231856"
+      "generated_at_commit": "7fd7e5f7f3e02a24887d47223185a6fd3ed36243",
+      "source_tree": "sha256:68e317af63aa90a09d3bfdc9fae3117f47ffd698001af2c20e4d985aff1aefd7"
     },
     "owner_lane": "",
     "provenance": {

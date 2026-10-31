@@ -80,7 +80,7 @@ build_tools() {
     om_build scorer "$SCRIPT_DIR/scorer.om"
     om_build chat "$REPO_DIR/seed/json/json.om" "$REPO_DIR/seed/json/jsonw.om" "$SCRIPT_DIR/chat.om"
     om_build fake_model "$REPO_DIR/seed/json/json.om" "$REPO_DIR/seed/json/jsonw.om" \
-        "$REPO_DIR/seed/net/http.om" "$SCRIPT_DIR/fake_model.om"
+        "$REPO_DIR/seed/net/http.om" "$REPO_DIR/seed/net/notls.om" "$SCRIPT_DIR/fake_model.om"
 }
 
 # ---- task spec (version 2): name, param NAME TYPE lines, ret TYPE; types u32 i32 u64

@@ -1,0 +1,10 @@
+note SPDX-License-Identifier: Apache-2.0
+note spec/omegese-om2.md section 2 lines 53-58 (#745): while bound 0xf4240 = 1000000 past 999999; error 8 on the literal's line.
+om2
+fn main to int
+k = ulong 0
+while lt k 1 bound 0xf4240
+k = add k 1
+end
+ret 0
+end
