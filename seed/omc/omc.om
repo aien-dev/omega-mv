@@ -8851,7 +8851,7 @@ emit or or 2432697344 c shl c 5
 end
 
 note s_while: while cond [bound N]: hidden counter = 0; head: cond false -> exit; counter >= N -> trap 4;
-note counter = counter + 1; body; B head. N is 1 .. 999999 (error 8), 1000000 with no bound. om4 S_WHILE.
+note counter = counter + 1; body; B head. N is 1 .. 9223372036854775807 (error 8), 1000000 with no bound. om4 S_WHILE.
 fn s_while to void
 sn = get nn 0
 sh = get held 0
@@ -8879,7 +8879,7 @@ if ne kw get tw 0 70
 fail 5
 end
 v = lenval 4
-if ge sub v 1 999999
+if ge sub v 1 9223372036854775807
 fail 8
 end
 n = v
@@ -13143,7 +13143,7 @@ if or ne get tk 0 1 ne ir_kwt 70
 fail 5
 end
 bnd = lenval 4
-if ge sub bnd 1 999999
+if ge sub bnd 1 9223372036854775807
 fail 8
 end
 eol
