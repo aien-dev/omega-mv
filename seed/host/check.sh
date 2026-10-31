@@ -103,9 +103,13 @@ sed '1d' "$run/native.out" > "$run/native.rows"
 [ "$(wc -l < "$run/oracle.rows")" = "$(wc -l < seed/omc/contracts/parity.inputs)" ]
 cmp "$run/oracle.rows" "$run/native.rows"
 echo 'PASS contract C parity: exact values, canonical bits and traps'
-sh seed/host/gate.sh
+mkdir -p build/seed/host
+seed/out/omc < seed/host/gate.om > build/seed/host/gate
+chmod +x build/seed/host/gate
+build/seed/host/gate
 sh seed/host/negative.sh
 sh seed/host/regression.sh
+sh seed/host/cpufence.sh
 if readelf -l -d seed/out/omc | grep -Eq 'INTERP|NEEDED'; then
     echo 'FAIL unexpected compiler runtime dependency' >&2
     exit 1

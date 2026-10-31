@@ -1,0 +1,131 @@
+note Synthetic issue669 branch-form corpus. Reads one mode byte on stdin and writes one program.
+note Covers B.cond, CBZ, unconditional B, while/for back edges, a function boundary and trap sites.
+note Every program returns a fixed exit code; the coordinator compares the actual exit.
+global mode uchar 1
+text p0 "fn main to int\nx = ulong 1\nif eq x 1\nret int 11\nend\nret int 12\nend\n"
+text p1 "fn main to int\nx = ulong 1\nif ne x 1\nret int 11\nend\nret int 12\nend\n"
+text p2 "fn main to int\nx = ulong 1\nif lt x 2\nret int 11\nend\nret int 12\nend\n"
+text p3 "fn main to int\nx = ulong 2\nif le x 2\nret int 11\nend\nret int 12\nend\n"
+text p4 "fn main to int\nx = ulong 2\nif gt x 1\nret int 11\nend\nret int 12\nend\n"
+text p5 "fn main to int\nx = ulong 2\nif ge x 2\nret int 11\nend\nret int 12\nend\n"
+text p6 "fn main to int\nx = ulong 0\nif eq x 0\nret int 11\nend\nret int 12\nend\n"
+text p7 "fn main to int\nx = ulong 0\nif ne x 0\nret int 11\nend\nret int 12\nend\n"
+text p8 "fn main to int\nx = ulong 0\nif eq x 1\nret int 11\nend\nret int 12\nend\n"
+text p9 "fn main to int\ni = ulong 0\nwhile lt i 3\ni = add i 1\nend\nret int i\nend\n"
+text p10 "fn main to int\ns = ulong 0\nfor i ulong 3\ns = add s i\nend\nret int s\nend\n"
+text p11 "fn main to int\nx = ulong 1\nif eq x 2\nret int 20\nelse\nret int 21\nend\nend\n"
+text p12 "fn f v ulong to int\nif eq v 7\nret int 30\nend\nret int 31\nend\nfn main to int\nx = ulong 7\nr = f x\nret r\nend\n"
+text p13 "fn main to int\nx = ulong 1\ns = ulong 64\ny = shl x s\nret int 0\nend\n"
+text p14 "fn main to int\nx = ulong 5\ny = ulong 0\nz = div x y\nret int 0\nend\n"
+fn main to int
+if ne read 0 mode 0 1 1
+ret 90
+end
+m = ulong get mode 0
+if eq m 0
+r = write 1 p0 0 len p0
+if ne r long len p0
+ret 91
+end
+ret 0
+end
+if eq m 1
+r = write 1 p1 0 len p1
+if ne r long len p1
+ret 91
+end
+ret 0
+end
+if eq m 2
+r = write 1 p2 0 len p2
+if ne r long len p2
+ret 91
+end
+ret 0
+end
+if eq m 3
+r = write 1 p3 0 len p3
+if ne r long len p3
+ret 91
+end
+ret 0
+end
+if eq m 4
+r = write 1 p4 0 len p4
+if ne r long len p4
+ret 91
+end
+ret 0
+end
+if eq m 5
+r = write 1 p5 0 len p5
+if ne r long len p5
+ret 91
+end
+ret 0
+end
+if eq m 6
+r = write 1 p6 0 len p6
+if ne r long len p6
+ret 91
+end
+ret 0
+end
+if eq m 7
+r = write 1 p7 0 len p7
+if ne r long len p7
+ret 91
+end
+ret 0
+end
+if eq m 8
+r = write 1 p8 0 len p8
+if ne r long len p8
+ret 91
+end
+ret 0
+end
+if eq m 9
+r = write 1 p9 0 len p9
+if ne r long len p9
+ret 91
+end
+ret 0
+end
+if eq m 10
+r = write 1 p10 0 len p10
+if ne r long len p10
+ret 91
+end
+ret 0
+end
+if eq m 11
+r = write 1 p11 0 len p11
+if ne r long len p11
+ret 91
+end
+ret 0
+end
+if eq m 12
+r = write 1 p12 0 len p12
+if ne r long len p12
+ret 91
+end
+ret 0
+end
+if eq m 13
+r = write 1 p13 0 len p13
+if ne r long len p13
+ret 91
+end
+ret 0
+end
+if eq m 14
+r = write 1 p14 0 len p14
+if ne r long len p14
+ret 91
+end
+ret 0
+end
+ret 90
+end
