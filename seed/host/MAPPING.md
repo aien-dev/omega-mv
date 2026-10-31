@@ -20,8 +20,10 @@ bootstrap and test orchestration remain disclosed development tools.
 | `mapset handle offset width value` | Aligned uint32 or uint64 store from ulong, returning long0; width is literal int4 or8. A uint32 store refuses truncation. Exactly one store, bracketed by DSB SY. Requires writable memory. |
 | `maphold address bytes` | Reserve an unused, page-aligned span with PROT_NONE and MAP_FIXED_NOREPLACE. Address is at least64KiB and the whole span is below1TiB. Return an owned handle or errno. A kernel that ignores NOREPLACE is detected by checking the returned address; an unexpected result is unmapped and returns -95. |
 | `mapbind handle fd offset access` | Bind a shared file/device mapping to the entire owned reservation, with literal access1 or3. No existing data mapping may be replaced. Return long0 or errno. A failed bind unmaps the span and retires the handle. |
+| `cpufence` | Statement, keyword 199: a standalone host CPU publication barrier, AArch64 `DSB SY`, x86-64 `MFENCE`. It orders ordinary stores, for example `mapwrite` or plain array stores, before a later `mapset` doorbell or flag. A `mapget`/`mapset` access already carries its own barriers. See OMEGESE §10, "Host CPU ordering words". Proof: `seed/host/cpufence.sh`. |
+| `cpurelax` | Statement, keyword 200: spin-wait hint for a bounded `mapget` poll loop, AArch64 `YIELD`, x86-64 `PAUSE`. It gives no ordering. Proof: `seed/host/cpufence.sh`. |
 
-All words require program mode. A mapping handle is a long. `mapaddr` explicitly
+All words except `cpufence` and `cpurelax` require program mode; those two are also accepted in function mode. A mapping handle is a long. `mapaddr` explicitly
 exports its address as ulong; access still requires the live owned handle.
 Each program has a private fixed 128-slot table. Each slot records address,
 length, generation and access. Exhaustion returns -24 without calling mmap.

@@ -106,6 +106,7 @@ echo 'PASS contract C parity: exact values, canonical bits and traps'
 sh seed/host/gate.sh
 sh seed/host/negative.sh
 sh seed/host/regression.sh
+sh seed/host/cpufence.sh
 if readelf -l -d seed/out/omc | grep -Eq 'INTERP|NEEDED'; then
     echo 'FAIL unexpected compiler runtime dependency' >&2
     exit 1
