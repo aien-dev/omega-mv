@@ -1,0 +1,837 @@
+note Native host fixture gate. Run from the repository root.
+note An optional argv[1] names the candidate compiler (absolute, or relative to the root);
+note the default is seed/out/omc. That compiler builds every fixture and every generated
+note identity program, and the compiler-refusal fixture receives it as its argv[1].
+note Fixtures run in a fresh stage directory: any earlier stage is removed first, each child
+note exit status and timeout is checked, required leftovers are checked, and after a pass the
+note stage is removed. A failure prints the fixture and keeps the stage for inspection.
+note The environment fixture runs as /usr/bin/env OMTEST=hello ./environment because
+note execprog passes an empty environment. Identity fixtures are judged against the real
+note and effective ids that /proc/self/status reports, not against the words under test.
+om2
+
+text omcdef "seed/out/omc"
+text up4 "../../../../"
+text b1 "build"
+text b2 "build/seed"
+text b3 "build/seed/host"
+text stage "build/seed/host/run"
+text slash "/"
+text dotslash "./"
+text tests "seed/host/tests/"
+text dotom ".om"
+text argsbin "build/seed/host/run/args"
+text echild "build/seed/host/run/exec-child"
+text idom "build/seed/host/run/id.om"
+text idbin "build/seed/host/run/id.bin"
+text idname "id.bin"
+text pself "/proc/self/status"
+text kuid "\nUid:\t"
+text kgid "\nGid:\t"
+text envbin "/usr/bin/env"
+text omtest "OMTEST=hello"
+text envfx "./environment"
+text empty ""
+text twowords "two words"
+text pi "π"
+text tcp "tcp"
+text c1 "1"
+text c2 "2"
+text c3 "3"
+text nfiles "files"
+text nargs "args"
+text nnetwork "network"
+text nprocess "process"
+text ndirs "directories"
+text nerrors "errors"
+text nloc "location"
+text nsockopt "sockopt"
+text nnetdata "netdata"
+text nnetpeer "netpeer"
+text ndevice "device"
+text ndevcall "devcall"
+text nuvmctl "uvmctl"
+text nmapping "mapping"
+text nmapio "mapio"
+text nreserve "reserve"
+text nmemchk "memcheck"
+text nstruct "structfile"
+text nrandom "random"
+text nenv "environment"
+text nchdir "chdir"
+text ntrunc "trunc"
+text nstat "stat"
+text nstatsh "stat_short"
+text nlinks "links"
+text nlinksh "links_short"
+text nchmod "chmod"
+text nchown "chown"
+text nfaccess "faccess"
+text nfchdir "fchdir"
+text nfdsync "fdsync"
+text npio "pio"
+text npsync "psync"
+text nflock "flock"
+text npgroup "pgroup"
+text nlstat "lstat"
+text ntrnc "truncate"
+text nenvtrap "environment_trap"
+text srcuid "fn main to int\nret int getuid\nend\n"
+text srceuid "fn main to int\nret int geteuid\nend\n"
+text srcgid "fn main to int\nret int getgid\nend\n"
+text srcegid "fn main to int\nret int getegid\nend\n"
+text srcpp1 "fn main to int\nret int rem getppid long 256\nend\n"
+text srcpp2 "fn main to int\nret int rem getppid long 251\nend\n"
+text lprobe "probe.bin"
+text lsock "native.sock"
+text ladir "adir"
+text lbefore "before"
+text lafter "after"
+text lregular "regular-file"
+text lnetdata "netdata.sock"
+text lnetpeer "netpeer.sock"
+text lmapped "mapped.bin"
+text lreserve "reserve.bin"
+text lstruct "structfile.tmp"
+text lsubin "sub/inside"
+text lsubdir "subdir/inside"
+text lflock "flock.tmp"
+text fm "PASS native files, errno, exclusive creation, permissions, seek, sync and monotonic time\n"
+text am "PASS native argument access, empty arguments, UTF-8 bytes and short-buffer refusal\n"
+text nm "PASS native socket exchange, poll timeout, fork, accept and child reaping\n"
+text tm "PASS native TCP loopback exchange on an OS-assigned port\n"
+text pm "PASS native exec with exact arguments, exec failure, pipes, descriptor duplication, sleep, kill and wait\n"
+text dm "PASS native directory enumeration, file metadata and rename without overwriting\n"
+text em "PASS native syscall errors and nested expression register preservation\n"
+text lm "PASS native cwd and readlnk offsets, counts, truncation, errno and private path copy\n"
+text sm "PASS native socket options with independent bind behavior, readonly input and errno\n"
+text ndm "PASS native network slice bounds and poll record-size refusal\n"
+text dvm "PASS native checked device ioctl composed with host files and pipes\n"
+text sfm "PASS struct values and native file operations in one program\n"
+text rdm "PASS native random: exact count, non-zero, two calls differ, invalid flags refused\n"
+text evm "PASS native environment: count, entry bytes, short-buffer refusal\n"
+text cdm "PASS native chdir: relative file created in the new directory; missing path refused\n"
+text trm "PASS native ftrunc: write, shorten, rewind, read 4 then EOF; closed fd refused\n"
+text stm "PASS native stat: size field, missing path errno, 128-byte structure\n"
+text ssm "PASS native stat: short output traps 3 before the kernel\n"
+text lkm "PASS native link/symlnk: hard link nlink 2, symlink target, unlink\n"
+text lsm "PASS native link: one-record packed list traps 3\n"
+text chm "PASS native chmod: 0600 mode in st_mode; missing path errno\n"
+text com "PASS native chown: owner uid kept in st_uid; missing path errno\n"
+text fam "PASS native faccess: existing path accepted, missing path refused\n"
+text idm "PASS native identity: getuid/geteuid/getgid/getegid match /proc/self/status\n"
+text fcm "PASS native fchdir/umask/getppid: directory fd, 0777 under mask 0, parent id\n"
+text ppm "PASS native getppid: parent id equals the gate process pid (mod 256 and mod 251)\n"
+text fdm "PASS native fdsync/memfd: data sync, closed fd refused, anonymous file rw\n"
+text pim "PASS native pread/pwrite: positioned I/O, bytes intact, closed fd refused\n"
+text psm "PASS native getsid/syncfs/shutdown: session id, filesystem sync, non-socket refusal\n"
+text flm "PASS native flock: exclusive lock blocks a second open (EWOULDBLOCK), unlock, shared, EINVAL, EBADF\n"
+text pgm "PASS native process groups: getpgid/setpgid, setsid or EPERM\n"
+text lstm "PASS native lstat: stat follows the link, lstat reports S_IFLNK\n"
+text tcm "PASS native truncate: path length set to 4; missing path errno\n"
+text etm "PASS native environment: index at the count traps 3\n"
+text failp "GATE-HOST FAIL "
+text fails "; retained stage build/seed/host/run\n"
+text usage "usage: gate [compiler]\n"
+
+global omcp uchar 4096
+global omcn ulong 1
+global cur uchar 64
+global curn ulong 1
+global path uchar 4096
+global pathn ulong 1
+global wpath uchar 4096
+global argv uchar 8192
+global argc ulong 1
+global apos ulong 1
+global alast ulong 1
+global statbuf uchar 4
+global copybuf uchar 4096
+global pst uchar 8192
+global pstn ulong 1
+
+fn stop to void
+r = write 2 failp 0 len failp
+r = write 2 cur 0 get curn 0
+r = write 2 fails 0 len fails
+exit 99
+end
+
+fn setcur t view uchar * to void
+n = len t
+if gt n 64
+n = ulong 64
+end
+for i ulong n
+put cur i get t i
+end
+put curn 0 n
+end
+
+fn setomc to void
+c = argcnt
+if eq c 1
+for i ulong len omcdef
+put omcp i get omcdef i
+end
+put omcn 0 len omcdef
+ret
+end
+if ne c 2
+r = write 2 usage 0 len usage
+exit 2
+end
+n = argread 1 omcp 0 4096
+if le n 0
+r = write 2 usage 0 len usage
+exit 2
+end
+put omcn 0 ulong n
+end
+
+fn mkd t view uchar * to void
+r = makedir t 0 len t 448
+if or eq r 0 eq r -17
+else
+stop
+end
+end
+
+fn pclear to void
+put pathn 0 0
+end
+
+fn pcat t view uchar * to void
+p = get pathn 0
+n = len t
+if gt add p n 4096
+stop
+end
+for i ulong n
+put path add p i get t i
+end
+put pathn 0 add p n
+end
+
+fn spath t view uchar * to void
+pclear
+pcat stage
+pcat slash
+pcat t
+end
+
+fn gone t view uchar * to void
+spath t
+r = unlink path 0 get pathn 0
+if ne r -2
+stop
+end
+end
+
+fn goned t view uchar * to void
+spath t
+r = rmdir path 0 get pathn 0
+if ne r -2
+stop
+end
+end
+
+fn here t view uchar * to void
+spath t
+r = unlink path 0 get pathn 0
+if ne r 0
+stop
+end
+end
+
+fn wname d view uchar * o ulong base ulong to ulong
+k = add o 19
+if eq get d k 46
+if eq get d add k 1 0
+ret 0
+end
+if eq get d add k 1 46
+if eq get d add k 2 0
+ret 0
+end
+end
+end
+put wpath base 47
+p = add base 1
+while ne get d k 0
+if ge p 4095
+stop
+end
+put wpath p get d k
+p = add p 1
+k = add k 1
+end
+ret p
+end
+
+fn wone d view uchar * o ulong base ulong depth ulong to ulong
+rl = or ulong get d add o 16 shl ulong get d add o 17 8
+if eq rl 0
+stop
+end
+q = wname view d o base
+if eq q 0
+ret rl
+end
+r = unlink wpath 0 q
+if eq r -21
+if eq depth 0
+stop
+end
+wipe q sub depth 1
+r = rmdir wpath 0 q
+end
+if ne r 0
+stop
+end
+ret rl
+end
+
+fn wipe base ulong depth ulong to void
+d = new uchar 8192 0
+fd = fopen wpath 0 base 16384 0
+if lt fd 0
+stop
+end
+while true
+n = getdnts int fd d 0 len d
+if lt n 0
+stop
+end
+if eq n 0
+break
+end
+o = ulong 0
+while lt o ulong n
+o = add o wone view d o base depth
+end
+end
+if ne fclose int fd 0
+stop
+end
+end
+
+fn wstage to void
+setcur stage
+for i ulong len stage
+put wpath i get stage i
+end
+wipe len stage 2
+end
+
+fn areset to void
+put argc 0 0
+put apos 0 2
+put argv 0 0
+put argv 1 0
+end
+
+fn afix to void
+p = get apos 0
+q = get alast 0
+m = sub sub p q 2
+if gt m 65535
+stop
+end
+put argv q uchar and m 255
+put argv add q 1 uchar shr m 8
+end
+
+fn anew to void
+p = get apos 0
+if gt add p 2 8192
+stop
+end
+put alast 0 p
+put apos 0 add p 2
+afix
+c = add get argc 0 1
+put argc 0 c
+put argv 0 uchar and c 255
+put argv 1 uchar shr c 8
+end
+
+fn amore t view uchar * to void
+p = get apos 0
+n = len t
+if gt add p n 8192
+stop
+end
+for i ulong n
+put argv add p i get t i
+end
+put apos 0 add p n
+afix
+end
+
+fn aomc rel ulong to void
+anew
+if eq rel 1
+if ne get omcp 0 47
+amore up4
+end
+end
+p = get apos 0
+n = get omcn 0
+if gt add p n 8192
+stop
+end
+for i ulong n
+put argv add p i get omcp i
+end
+put apos 0 add p n
+afix
+end
+
+fn aadd t view uchar * to void
+anew
+amore t
+end
+
+fn astart t view uchar * to void
+areset
+anew
+amore dotslash
+amore t
+end
+
+fn araw t view uchar * to void
+areset
+aadd t
+end
+
+fn waitx pid int want ulong lim long to void
+start = monons
+if lt start 0
+stop
+end
+while true
+r = waitpid pid statbuf 0 4 1
+if eq r long pid
+if ne get statbuf 0 0
+stop
+end
+if ne ulong get statbuf 1 want
+stop
+end
+ret
+end
+if ne r 0
+stop
+end
+now = monons
+if gt sub now start lim
+r = killpid pid 9
+r = waitpid pid statbuf 0 4 0
+stop
+end
+r = sleepns 1000000
+if ne r 0
+stop
+end
+end
+end
+
+fn go want ulong lim long to void
+pid = fork
+if lt pid 0
+stop
+end
+if eq pid 0
+r = chdir stage 0 len stage
+if ne r 0
+stop
+end
+r = execprog argv 0 get apos 0
+exit 98
+end
+waitx int pid want lim
+end
+
+fn run t view uchar * to void
+astart t
+go 0 120000000000
+end
+
+fn runt t view uchar * to void
+astart t
+go 0 10000000000
+end
+
+fn trap3 t view uchar * to void
+astart t
+go 103 120000000000
+end
+
+fn compx sfd int ofd int to void
+areset
+aomc 0
+pid = fork
+if lt pid 0
+stop
+end
+if eq pid 0
+if ne dupfd sfd 0 0 long 0
+stop
+end
+if ne dupfd ofd 1 0 long 1
+stop
+end
+r = execprog argv 0 get apos 0
+exit 98
+end
+if ne fclose sfd 0
+stop
+end
+if ne fclose ofd 0
+stop
+end
+waitx int pid 0 120000000000
+end
+
+fn comp t view uchar * to void
+setcur t
+spath t
+ofd = fopen path 0 get pathn 0 577 448
+if lt ofd 0
+stop
+end
+if ne fchmod int ofd 448 0
+stop
+end
+pclear
+pcat tests
+pcat t
+pcat dotom
+sfd = fopen path 0 get pathn 0 0 0
+if lt sfd 0
+stop
+end
+compx int sfd int ofd
+end
+
+fn copyexec to void
+s = fopen argsbin 0 len argsbin 0 0
+if lt s 0
+stop
+end
+d = fopen echild 0 len echild 577 448
+if lt d 0
+stop
+end
+if ne fchmod int d 448 0
+stop
+end
+while true
+n = read int s copybuf 0 len copybuf
+if lt n 0
+stop
+end
+if eq n 0
+if ne fclose int d 0
+stop
+end
+if ne fclose int s 0
+stop
+end
+ret
+end
+r = write int d copybuf 0 ulong n
+if ne r n
+stop
+end
+end
+end
+
+fn loadst to void
+fd = fopen pself 0 len pself 0 0
+if lt fd 0
+stop
+end
+n = read int fd pst 0 8192
+if le n 0
+stop
+end
+if ge n 8192
+stop
+end
+put pstn 0 ulong n
+if ne fclose int fd 0
+stop
+end
+end
+
+fn idnum p ulong fld ulong to ulong
+q = p
+f = fld
+while gt f 0
+while ne get pst q 9
+q = add q 1
+end
+q = add q 1
+f = sub f 1
+end
+v = ulong 0
+d = ulong 0
+while true
+c = ulong get pst q
+if or lt c 48 gt c 57
+break
+end
+v = add mul v 10 sub c 48
+q = add q 1
+d = add d 1
+end
+if eq d 0
+stop
+end
+ret v
+end
+
+fn idval key view uchar * fld ulong to ulong
+n = get pstn 0
+k = len key
+i = ulong 0
+while le add i k n
+j = ulong 0
+while lt j k
+if ne get pst add i j get key j
+break
+end
+j = add j 1
+end
+if eq j k
+ret and idnum add i k fld 255
+end
+i = add i 1
+end
+stop
+ret 0
+end
+
+fn idcase src view uchar * want ulong to void
+fd = fopen idom 0 len idom 577 384
+if lt fd 0
+stop
+end
+r = write int fd src 0 len src
+if ne r long len src
+stop
+end
+if ne fclose int fd 0
+stop
+end
+sfd = fopen idom 0 len idom 0 0
+if lt sfd 0
+stop
+end
+ofd = fopen idbin 0 len idbin 577 448
+if lt ofd 0
+stop
+end
+if ne fchmod int ofd 448 0
+stop
+end
+compx int sfd int ofd
+astart idname
+go want 120000000000
+end
+
+fn say t view uchar * to void
+r = write 1 t 0 len t
+end
+
+fn part1 to void
+comp nfiles
+run nfiles
+gone lprobe
+say fm
+comp nargs
+astart nargs
+aadd empty
+aadd twowords
+aadd pi
+go 0 120000000000
+copyexec
+say am
+comp nnetwork
+runt nnetwork
+gone lsock
+say nm
+astart nnetwork
+aadd tcp
+go 0 10000000000
+say tm
+comp nprocess
+runt nprocess
+say pm
+comp ndirs
+run ndirs
+goned ladir
+gone lbefore
+gone lafter
+say dm
+comp nerrors
+run nerrors
+say em
+comp nloc
+run nloc
+gone lregular
+say lm
+comp nsockopt
+runt nsockopt
+say sm
+end
+
+fn part2 to void
+comp nnetdata
+runt nnetdata
+gone lnetdata
+astart nnetdata
+aadd c1
+go 103 10000000000
+astart nnetdata
+aadd c2
+go 103 10000000000
+astart nnetdata
+aadd c3
+go 103 10000000000
+say ndm
+comp nnetpeer
+runt nnetpeer
+gone lnetpeer
+comp ndevice
+run ndevice
+say dvm
+comp ndevcall
+run ndevcall
+comp nuvmctl
+run nuvmctl
+comp nmapping
+run nmapping
+gone lmapped
+comp nmapio
+run nmapio
+comp nreserve
+run nreserve
+gone lreserve
+comp nmemchk
+astart nmemchk
+aomc 1
+go 0 120000000000
+comp nstruct
+run nstruct
+gone lstruct
+say sfm
+comp nrandom
+run nrandom
+say rdm
+end
+
+fn part3 to void
+comp nenv
+araw envbin
+aadd omtest
+aadd envfx
+go 0 120000000000
+say evm
+comp nchdir
+run nchdir
+here lsubin
+say cdm
+comp ntrunc
+run ntrunc
+say trm
+comp nstat
+run nstat
+say stm
+comp nstatsh
+trap3 nstatsh
+say ssm
+comp nlinks
+run nlinks
+say lkm
+comp nlinksh
+trap3 nlinksh
+say lsm
+comp nchmod
+run nchmod
+say chm
+comp nchown
+run nchown
+say com
+comp nfaccess
+run nfaccess
+say fam
+end
+
+fn part4 to void
+setcur idname
+loadst
+idcase srcuid idval kuid 0
+idcase srceuid idval kuid 1
+idcase srcgid idval kgid 0
+idcase srcegid idval kgid 1
+say idm
+comp nfchdir
+run nfchdir
+here lsubdir
+say fcm
+note getppid must name this gate, the direct parent of the forked child that execs id.bin: compare
+note the parent id with getpid modulo 256 and modulo 251. They are coprime, so a wrong id passes only
+note if it is congruent to the gate pid modulo 64256; the child's own pid and constants fail.
+setcur idname
+me = getpid
+idcase srcpp1 ulong rem me long 256
+idcase srcpp2 ulong rem me long 251
+say ppm
+comp nfdsync
+run nfdsync
+say fdm
+comp npio
+run npio
+say pim
+comp npsync
+run npsync
+say psm
+comp nflock
+runt nflock
+gone lflock
+say flm
+comp npgroup
+run npgroup
+say pgm
+comp nlstat
+run nlstat
+say lstm
+comp ntrnc
+run ntrnc
+say tcm
+comp nenvtrap
+trap3 nenvtrap
+say etm
+end
+
+fn main to int
+setomc
+mkd b1
+mkd b2
+mkd b3
+mkd stage
+wstage
+part1
+part2
+part3
+part4
+wstage
+r = rmdir stage 0 len stage
+if ne r 0
+stop
+end
+ret 0
+end

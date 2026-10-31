@@ -1,0 +1,51 @@
+note Actual hostile consumer under execpure. Every path and payload here is synthetic.
+global buf uchar 32
+global packet uchar 64
+text input "public-input"
+text output "public-output"
+text private "build/security673-pure/private.data"
+text judge "build/security673-pure/judge.data"
+text other "/usr/bin/true"
+fn main to int
+if ne read 0 buf 0 len input long len input
+ret 41
+end
+for i ulong len input
+if ne get buf i get input i
+ret 42
+end
+end
+if ne read 3 buf 0 1 neg long 1
+ret 43
+end
+if ne write 0 buf 0 1 neg long 1
+ret 44
+end
+if ne read 1 buf 0 1 neg long 1
+ret 45
+end
+if ne fopen private 0 len private 0 0 neg long 1
+ret 46
+end
+if ne fopen judge 0 len judge 513 384 neg long 1
+ret 47
+end
+if ne socknew 2 1 0 neg long 1
+ret 48
+end
+if ne fork neg long 1
+ret 49
+end
+put packet 0 1
+put packet 2 uchar len other
+for i ulong len other
+put packet add i 4 get other i
+end
+if ne execprog packet 0 add 4 len other neg long 1
+ret 50
+end
+if ne write 1 output 0 len output long len output
+ret 51
+end
+ret 0
+end

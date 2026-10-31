@@ -411,6 +411,10 @@ gate that tests it (`seed/rung4/gate4.sh`, section numbers of that script). Deci
   main's value modulo 256 (Linux keeps the low 8 bits), 0 for a void main. (s.6 t_exit, s.7)
 - A trap in program mode ends the program with exit status 100 + the trap code; in function mode it
   calls OscRt.trap as the C path does. (s.6 t_*, s.4-5)
+- A conditional branch (B.cond, CBZ, CBNZ) carries a signed 19-bit word displacement. A block layout
+  that needs more than 2^18 - 1 words forward or 2^18 words back (1,048,572 or 1,048,576 bytes) is
+  refused with error 24 before any output is accepted; it is never silently truncated. Unconditional
+  B uses a 26-bit field, which the 8 MiB output capacity cannot exceed. (gate 669)
 
 An initial line `target x86linux` selects the candidate FR-9 native x86-64 Linux backend.
 Without it, the existing AArch64 output remains unchanged. Whole-program output is a
@@ -526,6 +530,8 @@ The candidate `target x86linux` backend has a 16 MiB output pool because native
 x86 instruction sequences can require more bytes than their AArch64 counterparts.
 The AArch64 output ceiling remains 8 MiB; input and frontend limits are unchanged.
 An exhausted target output pool still refuses with error 14.
+A single AArch64 conditional branch span is limited to 2^18 - 1 words forward or 2^18 words back
+(section 9.1); a larger span is error 24, even when the input and output pools still fit.
 
 ### 9.7 Structs (omc only, rung 6)
 
@@ -883,6 +889,7 @@ Non-byte arrays and mismatched scalar types are error 7.
 | `pipefds A off n flags` | Create a pipe with `pipe2`; write two little-endian 32-bit descriptors. Capacity at least eight. |
 | `dupfd fd target flags` | Duplicate onto a chosen descriptor using `dup3`. |
 | `execprog A off n` | Replace the process using a packed argument list. Only returns on failure. |
+| `execpure A off n` | Keyword id 198, AArch64 only (x86 emission refuses with error 25). As `execprog`, then pin the executable as descriptor 3 and apply the fixed strict stdio profile below before `execveat(AT_EMPTY_PATH)`. Only returns on failure, with the first failing step's negative errno. |
 | `argcnt` | Return argument count, including the executable name. |
 | `argread index A off capacity` | Copy argument bytes without a terminator; return byte length. An invalid index traps 3. Insufficient capacity returns -105 without changing the slice. |
 | `envcnt` | Return the number of entries in the process environment (the `envp` the kernel supplied). |
@@ -940,10 +947,35 @@ may be empty. `renames` requires exactly two nonempty path records.
 
 The compiler constructs private, bounded pointer lists for the kernel. They
 are never exposed as language values. `execprog` supplies an empty environment,
-preserves the working directory and ordinary inherited descriptors, and does
-not search PATH or invoke a shell. Programs should explicitly request
-close-on-exec descriptors where needed. Forked children are independent
+preserves the working directory and standard streams (descriptors 0, 1 and 2), and does
+not search PATH or invoke a shell. Before execution it closes every descriptor
+at or above 3 using Linux `close_range(3, UINT_MAX, CLOSE_RANGE_UNSHARE)`
+(AArch64 and x86-64 emission alike).
+If that kernel operation fails or is unavailable, execution is refused with
+the kernel's negative error result; no descriptor-loop fallback is used.
+After a successful close, an executable-path failure still leaves those descriptors
+closed. Malformed packets trap before descriptor closure. Callers must explicitly
+bind intended streams before invoking `execprog`; higher-numbered descriptor
+inheritance is unsupported. This prevents accidental descriptor inheritance;
+it does not restrict filesystem paths, network creation, current-directory access,
+subprocesses or arbitrary native code. Existing authority/launcher integration is
+still required for those effects. Forked children are independent
 processes and must be reaped; this extension does not add shared-memory threads.
+
+`execpure` (word 198) decodes and closes descriptors exactly as `execprog`, then applies a fixed
+strict stdio profile before entering the program: it opens the executable path `O_PATH|O_CLOEXEC`
+as descriptor 3; creates a Landlock ruleset that handles every ABI-3 filesystem right and allows
+only execute and read-file beneath that inode; sets `PR_SET_NO_NEW_PRIVS`; restricts itself to the
+ruleset; sets seven `prlimit64` ceilings (CPU 1/2 s, file size 1 MiB, stack 8 MiB, core 0, processes
+0, descriptors 4, address space 128 MiB); installs a seccomp filter that kills the process on a
+non-AArch64 audit architecture and allows only `read` on descriptor 0, `write` on descriptors 1 and
+2, `exit`, `exit_group` and `execveat` on descriptor 3 with flags `AT_EMPTY_PATH`, returning EPERM for
+everything else; and finally calls `execveat(3, "", argv, empty envp, AT_EMPTY_PATH)`. The first step that returns a
+negative value restores the private stack and returns that negative errno without executing.
+There is no weaker fallback. This is a fixed profile, not a general sandbox; output and wall-clock
+budgets still need a trusted supervisor. Qualification is `seed/qualification/security673/gate669.om`
+(`pure-*.om` fixtures). The x86-64 emitter has no strict-profile lowering and refuses the word with
+error 25.
 
 Clock results require nonnegative seconds and a signed nanosecond total;
 values outside that range trap 1. `argread` bounds
