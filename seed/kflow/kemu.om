@@ -1,0 +1,805 @@
+note SPDX-License-Identifier: Apache-2.0
+note seed/kflow/kemu.om: kflow's host emulation stage. A SASS interpreter for the instruction
+note subset the M1 kernels use, written in seeded Omega (program mode, Linux AArch64).
+note
+note Run:   kemu ARCH BIN HARNESS SEED
+note   ARCH     80 or 121 (sm_80 / sm_121)
+note   BIN      raw SASS text, 16 bytes per instruction, at most 65536 bytes
+note   HARNESS  vadd (c[i] = a[i] + b[i] as u32, i < n = 1000, 8 CTAs of 128 threads; the
+note            vecadd ABI: a 0x380, b 0x388, c 0x390, n 0x398) or radd (x[i] += a[i] as f32,
+note            2048 values, 1 CTA of 256 threads; the Qwen3 decode RES ADD ABI: x 0x380,
+note            a 0x388, five unused parameters through 0x3ac)
+note   SEED     decimal splitmix64 seed for the inputs
+note
+note The decoder reads fixed field positions of the Volta+ 128-bit encoding (opcode bits 0..11, guard
+note 12..15, destination 16..23, first source 24..31, second source word 1, third source and modifiers
+note word 2), not the asm2 tables, so a wrong table base that still decodes is a different program
+note here. Each modifier the semantics below do not implement is refused (UNSUPPORTED), never
+note ignored, except memory ordering and cache hints, which do not change single-thread results.
+note Threads run one after another to EXIT on an 256 KiB global arena filled with 0xa5. The expected
+note arena is the input arena with the harness reference applied (u32 add; f32 add on the AArch64 FPU,
+note round to nearest even, no flush, finite normal inputs). Every arena byte is compared, so a
+note stray store fails as well as a wrong value.
+note Exit: 0 MATCH, 1 MISMATCH, 2 UNSUPPORTED (incomplete model), 3 usage, unreadable input, a fault
+note (address outside the arena) or a runaway thread. stdout: one line of key=value words.
+om2
+text msg "kemu: usage: kemu ARCH BIN HARNESS SEED\nkemu: arch=\n harness=\n threads=\n insts=\n result=MATCH\n result=MISMATCH arena_offset=\n expected=\n got=\n result=UNSUPPORTED op=\n pc=\n result=FAULT address=\n result=RUNAWAY pc=\nkemu: bin unreadable, empty or not a multiple of 16 bytes\nkemu: unknown harness or arch\n w1=\n w2=\n"
+text hn "vaddradd"
+global code uchar 65536
+global gm uchar 262144
+global ex uchar 262144
+global cb uchar 65536
+global rr uint 256
+global ur uint 256
+global pr uchar 8
+global sv ulong 16
+global ab uchar 256
+global dig uchar 32
+global bad uint 4
+note sv: 0 arch, 1 ntid.x, 2 ctaid.x, 3 tid.x, 4 URZ index, 5 thread state (0 run, 1 exit,
+note 2 unsupported, 3 fault, 4 runaway), 6 instructions, 7 rng state, 8 code bytes, 9 fault address,
+note 10 pc of the stopping instruction. bad: w0 w1 w2 of an unsupported instruction.
+const GB ulong 0x100000000000
+note ---- output ----
+fn say id ulong to void
+k = ulong 1
+s = ulong 0
+for i ulong len msg
+if eq get msg i 10
+if eq k id
+r = write 1 msg s sub i s
+ret
+end
+k = add k 1
+s = add i 1
+end
+end
+exit 99
+end
+fn newline to void
+put dig 0 10
+r = write 1 dig 0 1
+end
+fn num v ulong to void
+x = v
+n = ulong 0
+while ge x 10 bound 64
+put dig n uchar add 48 rem x 10
+x = div x 10
+n = add n 1
+end
+put dig n uchar add 48 x
+n = add n 1
+for i ulong n
+r = write 1 dig sub sub n i 1 1
+end
+end
+fn hexn v ulong to void
+put dig 0 48
+put dig 1 120
+r = write 1 dig 0 2
+s = ulong 60
+z = true
+for i ulong 16
+d = and shr v s 15
+if or ne d 0 or not z eq s 0
+z = false
+c = uchar add 48 d
+if ge d 10
+c = uchar add 87 d
+end
+put dig 0 c
+r = write 1 dig 0 1
+end
+if ne s 0
+s = sub s 4
+end
+end
+end
+note ---- random inputs (splitmix64) ----
+fn rnd to ulong
+s = add get sv 7 11400714819323198485
+put sv 7 s
+z = mul xor s shr s 30 13787848793156543929
+z = mul xor z shr z 27 10723151780598845931
+ret xor z shr z 31
+end
+note a finite normal f32: exponent field 100..163, any sign and fraction
+fn rndf to uint
+v = rnd
+e = add and shr v 23 63 100
+ret uint or or and v 0x807fffff shl e 23 0
+end
+note ---- registers ----
+fn rg r uint to uint
+if eq r 255
+ret 0
+end
+ret get rr r
+end
+fn wr r uint v uint to void
+if ne r 255
+put rr r v
+end
+end
+fn ug r uint to uint
+if eq ulong r get sv 4
+ret 0
+end
+ret get ur r
+end
+fn wu r uint v uint to void
+if ne ulong r get sv 4
+put ur r v
+end
+end
+fn pg g uint to bool
+i = and g 7
+v = true
+if ne i 7
+v = ne get pr i 0
+end
+if ne and g 8 0
+ret not v
+end
+ret v
+end
+note ---- memory ----
+fn cw pc ulong k ulong to uint
+o = add pc mul k 4
+v = uint get code o
+v = or v shl uint get code add o 1 8
+v = or v shl uint get code add o 2 16
+ret or v shl uint get code add o 3 24
+end
+fn cbw o ulong to uint
+v = uint get cb o
+v = or v shl uint get cb add o 1 8
+v = or v shl uint get cb add o 2 16
+ret or v shl uint get cb add o 3 24
+end
+fn cbput o ulong v uint to void
+put cb o uchar and v 255
+put cb add o 1 uchar and shr v 8 255
+put cb add o 2 uchar and shr v 16 255
+put cb add o 3 uchar shr v 24
+end
+fn gmw o ulong v uint to void
+put gm o uchar and v 255
+put gm add o 1 uchar and shr v 8 255
+put gm add o 2 uchar and shr v 16 255
+put gm add o 3 uchar shr v 24
+end
+fn exw o ulong v uint to void
+put ex o uchar and v 255
+put ex add o 1 uchar and shr v 8 255
+put ex add o 2 uchar and shr v 16 255
+put ex add o 3 uchar shr v 24
+end
+fn gmr o ulong to uint
+v = uint get gm o
+v = or v shl uint get gm add o 1 8
+v = or v shl uint get gm add o 2 16
+ret or v shl uint get gm add o 3 24
+end
+fn exr o ulong to uint
+v = uint get ex o
+v = or v shl uint get ex add o 1 8
+v = or v shl uint get ex add o 2 16
+ret or v shl uint get ex add o 3 24
+end
+note arena offset of n bytes at address a; sets the fault state when outside
+fn madr a ulong n ulong to ulong
+if or lt a GB gt add sub a GB n len gm
+put sv 9 a
+put sv 5 3
+ret 0
+end
+ret sub a GB
+end
+note a 64-bit register pair (RZ pair reads 0)
+fn rp r uint to ulong
+if eq r 255
+ret 0
+end
+ret or ulong rg r shl ulong rg add r 1 32
+end
+fn wp r uint v ulong to void
+wr r uint and v 0xffffffff
+if ne r 255
+wr add r 1 uint shr v 32
+end
+end
+fn unsup w0 uint w1 uint w2 uint to void
+put bad 0 w0
+put bad 1 w1
+put bad 2 w2
+put sv 5 2
+end
+note ---- second source by form (bits 9..11): 1 register, 2/4 number, 6/7 uniform register ----
+fn bsrc f uint w1 uint to uint
+if eq f 1
+ret rg and w1 255
+end
+if or eq f 2 eq f 4
+ret w1
+end
+u = and w1 255
+if eq get sv 0 80
+u = and w1 63
+end
+ret ug u
+end
+fn formok f uint to bool
+ret or or eq f 1 or eq f 2 eq f 4 or eq f 6 eq f 7
+end
+fn lut3 a uint b uint c uint l uint to uint
+r = uint 0
+for k uint 8
+if ne and shr l k 1 0
+t = not uint 0
+if ne and k 4 0
+t = and t a
+else
+t = and t not a
+end
+if ne and k 2 0
+t = and t b
+else
+t = and t not b
+end
+if ne and k 1 0
+t = and t c
+else
+t = and t not c
+end
+r = or r t
+end
+end
+ret r
+end
+fn icmp x0 uint y0 uint cm uint sg uint to bool
+x = x0
+y = y0
+if ne sg 0
+x = xor x 0x80000000
+y = xor y 0x80000000
+end
+if eq cm 1
+ret lt x y
+end
+if eq cm 2
+ret eq x y
+end
+if eq cm 3
+ret le x y
+end
+if eq cm 4
+ret gt x y
+end
+if eq cm 5
+ret ne x y
+end
+if eq cm 6
+ret ge x y
+end
+ret eq cm 7
+end
+fn isalu op uint to bool
+if or or eq op 0x24 eq op 0x25 or eq op 0x0c eq op 0x12
+ret true
+end
+ret or or eq op 0x19 eq op 0x10 or eq op 0x21 eq op 0x02
+end
+note ---- integer and float ALU; false when the base opcode is not one of these ----
+fn alu w0 uint w1 uint w2 uint to bool
+op = and w0 0x1ff
+f = shr and w0 0xfff 9
+d = and shr w0 16 255
+a = rg and shr w0 24 255
+if not isalu op
+ret false
+end
+if not formok f
+unsup w0 w1 w2
+ret true
+end
+b = bsrc f w1
+c = rg and w2 255
+if eq op 0x02
+wr d b
+ret true
+end
+if eq op 0x24
+wr d add mul a b c
+ret true
+end
+if eq op 0x25
+imadw w0 w2 a b
+ret true
+end
+if eq op 0x10
+if or not modok f w1 w2 0x80000000 0x900 ne and shr w2 17 63 63
+unsup w0 w1 w2
+ret true
+end
+wr d add add a b c
+ret true
+end
+if eq op 0x12
+wr d lut3 a b c and shr w2 8 255
+ret true
+end
+if eq op 0x19
+shf w0 w1 w2 b
+ret true
+end
+if eq op 0x0c
+isetp w0 w1 w2 a b
+ret true
+end
+if not modok f w1 w2 0xc0000000 0x1e300
+unsup w0 w1 w2
+ret true
+end
+wr d bitcast uint add bitcast f32 a bitcast f32 b
+ret true
+end
+note no word-2 modifier bit in m2, and (register form) no word-1 negate/abs bit in m1
+fn modok f uint w1 uint w2 uint m1 uint m2 uint to bool
+if ne and w2 m2 0
+ret false
+end
+if eq f 1
+ret eq and w1 m1 0
+end
+ret true
+end
+fn imadw w0 uint w2 uint a uint b uint to void
+d = and shr w0 16 255
+x = ulong a
+y = ulong b
+if ne and w2 0x200 0
+if ne and a 0x80000000 0
+x = or x 0xffffffff00000000
+end
+if ne and b 0x80000000 0
+y = or y 0xffffffff00000000
+end
+end
+wp d add mul x y rp and w2 255
+end
+note SHF: only the right funnel shift giving the high word of a U32 pair (type 3, bit 12, bit 16)
+fn shf w0 uint w1 uint w2 uint b uint to void
+if ne and w2 0x11600 0x11600
+unsup w0 w1 w2
+ret
+end
+s = and b 63
+if ne and w2 0x800 0
+s = and b 31
+end
+if gt s 32
+s = uint 32
+end
+v = uint 0
+if lt s 32
+v = shr rg and w2 255 s
+end
+wr and shr w0 16 255 v
+end
+note ISETP: no .EX (bit 8), set operation AND (bits 10..11 = 0)
+fn isetp w0 uint w1 uint w2 uint a uint b uint to void
+if ne and w2 0xd00 0
+unsup w0 w1 w2
+ret
+end
+r = icmp a b and shr w2 12 7 and shr w2 9 1
+r = and r pg and shr w2 23 15
+p = and shr w2 17 7
+if ne p 7
+put pr p uchar 0
+if r
+put pr p uchar 1
+end
+end
+end
+note S2R: TID.X 0x21, CTAID.X 0x25; Y and Z (0x22 0x23 0x26 0x27) are 0 in a 1-D launch
+fn s2r w0 uint w1 uint w2 uint to void
+sr = and shr w2 8 255
+v = uint get sv 3
+if eq sr 0x25
+v = uint get sv 2
+end
+if ne sr 0x21
+if ne sr 0x25
+if lt sr 0x22
+unsup w0 w1 w2
+ret
+end
+if and gt sr 0x23 lt sr 0x26
+unsup w0 w1 w2
+ret
+end
+if gt sr 0x27
+unsup w0 w1 w2
+ret
+end
+v = uint 0
+end
+end
+wr and shr w0 16 255 v
+end
+note ---- constant bank, global memory, control ----
+fn memop pc ulong w0 uint w1 uint w2 uint to bool
+op = and w0 0xfff
+d = and shr w0 16 255
+sz = and shr w2 9 7
+if eq op 0x918
+ret true
+end
+if eq op 0x919
+s2r w0 w1 w2
+ret true
+end
+if eq op 0xb82
+if ne shr w0 24 255
+unsup w0 w1 w2
+ret true
+end
+end
+if eq op 0xb82
+if ne and w1 0x7c00000 0
+unsup w0 w1 w2
+ret true
+end
+if not ldc 0 d and shr w1 6 0xffff sz
+unsup w0 w1 w2
+end
+ret true
+end
+if and eq op 0x7ac eq get sv 0 121
+if not ldc 1 d mul and shr w1 8 0xffff 8 sz
+unsup w0 w1 w2
+end
+ret true
+end
+if and eq op 0xab9 eq get sv 0 80
+if not ldc 1 and d 63 and shr w1 6 0xffff sz
+unsup w0 w1 w2
+end
+ret true
+end
+if or eq op 0x981 eq op 0x986
+gmem w0 w1 w2
+ret true
+end
+if eq op 0x94d
+put sv 5 1
+ret true
+end
+if eq op 0x947
+put sv 10 pc
+put sv 5 4
+ret true
+end
+ret false
+end
+fn ldc un uint d uint o uint sz uint to bool
+if or and ne sz 4 ne sz 5 gt o 0xfff8
+ret false
+end
+v = cbw ulong o
+if eq un 1
+wu d v
+if eq sz 5
+wu add d 1 cbw add ulong o 4
+end
+else
+wr d v
+if eq sz 5
+wr add d 1 cbw add ulong o 4
+end
+end
+ret true
+end
+note LDG/STG with a 64-bit address register (word 2 bit 8). sm_80 adds the uniform register in its
+note uniform-address field; sm_121's uniform field is the memory descriptor and adds nothing.
+fn gmem w0 uint w1 uint w2 uint to void
+sz = and shr w2 9 7
+if or eq and w2 0x100 0 or lt sz 4 gt sz 6
+unsup w0 w1 w2
+ret
+end
+n = shl ulong 1 sub sz 4
+off = ulong shr w1 8
+if ge off 0x800000
+off = or off 0xffffffffff000000
+end
+a = add rp and shr w0 24 255 off
+st = eq and w0 0xfff 0x986
+if eq get sv 0 80
+u = and w1 63
+if st
+u = and w2 63
+end
+a = add a ulong ug u
+end
+o = madr a mul n 4
+if ne get sv 5 0
+ret
+end
+d = and shr w0 16 255
+if st
+d = and w1 255
+end
+xfer st o d n
+end
+fn xfer st bool o ulong d uint n ulong to void
+for i ulong n
+p = add o mul i 4
+r = add d uint i
+if st
+gmw p rg r
+else
+wr r gmr p
+end
+end
+end
+note one instruction at pc; gives the next pc
+fn step pc ulong to ulong
+w0 = cw pc 0
+w1 = cw pc 1
+w2 = cw pc 2
+put sv 6 add get sv 6 1
+if not pg and shr w0 12 15
+ret add pc 16
+end
+if alu w0 w1 w2
+ret add pc 16
+end
+if memop pc w0 w1 w2
+ret add pc 16
+end
+unsup w0 w1 w2
+ret pc
+end
+fn thread to void
+for i ulong 256
+put rr i 0
+put ur i 0
+end
+for i ulong 7
+put pr i 0
+end
+put pr 7 1
+put sv 5 0
+pc = ulong 0
+for k ulong 200000
+if ge pc get sv 8
+put sv 5 4
+end
+if ne get sv 5 0
+break
+end
+put sv 10 pc
+pc = step pc
+end
+if eq get sv 5 0
+put sv 5 4
+end
+end
+note ---- harnesses ----
+fn arena to void
+for i ulong len gm
+put gm i 165
+end
+for i ulong len cb
+put cb i 0
+end
+end
+fn cbp o ulong v ulong to void
+cbput o uint and v 0xffffffff
+cbput add o 4 uint shr v 32
+end
+fn hvadd to void
+cbput 0x360 128
+cbput 0x364 1
+cbput 0x368 1
+cbput 0x37c 0xfffc
+cbp 0x380 add GB 0x10000
+cbp 0x388 add GB 0x20000
+cbp 0x390 add GB 0x30000
+cbput 0x398 1000
+for i ulong 1000
+gmw add 0x10000 mul i 4 uint and rnd 0xffffffff
+gmw add 0x20000 mul i 4 uint and rnd 0xffffffff
+end
+for i ulong len gm
+put ex i get gm i
+end
+for i ulong 1000
+exw add 0x30000 mul i 4 add gmr add 0x10000 mul i 4 gmr add 0x20000 mul i 4
+end
+put sv 1 128
+put sv 11 8
+end
+fn hradd to void
+cbput 0x360 256
+cbput 0x364 1
+cbput 0x368 1
+cbp 0x380 add GB 0x10000
+cbp 0x388 add GB 0x20000
+for i ulong 2048
+gmw add 0x10000 mul i 4 rndf
+gmw add 0x20000 mul i 4 rndf
+end
+for i ulong len gm
+put ex i get gm i
+end
+for i ulong 2048
+x = bitcast f32 gmr add 0x10000 mul i 4
+y = bitcast f32 gmr add 0x20000 mul i 4
+exw add 0x10000 mul i 4 bitcast uint add x y
+end
+put sv 1 256
+put sv 11 1
+end
+note ---- arguments ----
+fn argdec i ulong to ulong
+r = argread i ab 0 20
+if lt r 1
+ret 0xffffffffffffffff
+end
+v = ulong 0
+for k ulong ulong r
+c = get ab k
+if or lt c 48 gt c 57
+ret 0xffffffffffffffff
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+fn harness to ulong
+r = argread 3 ab 0 8
+if ne r 4
+ret 0
+end
+for h ulong 2
+m = true
+for k ulong 4
+if ne get ab k get hn add mul h 4 k
+m = false
+end
+end
+if m
+ret add h 1
+end
+end
+ret 0
+end
+fn loadbin to bool
+r = argread 2 ab 0 255
+if lt r 1
+ret false
+end
+fd = fopen ab 0 ulong r 524288 0
+if lt fd 0
+ret false
+end
+n = ulong 0
+for k ulong 4097
+x = read int fd code n sub len code n
+if le x 0
+break
+end
+n = add n ulong x
+if eq n len code
+break
+end
+end
+y = read int fd ab 0 1
+c = fclose int fd
+put sv 8 n
+ret and and gt n 0 eq rem n 16 0 eq y 0
+end
+fn report to int
+st = get sv 5
+if eq st 2
+say 10
+hexn ulong and get bad 0 0xfff
+say 11
+hexn get sv 10
+say 16
+hexn ulong get bad 1
+say 17
+hexn ulong get bad 2
+newline
+ret 2
+end
+if eq st 3
+say 12
+hexn get sv 9
+say 11
+hexn get sv 10
+newline
+ret 3
+end
+if ne st 1
+say 13
+hexn get sv 10
+newline
+ret 3
+end
+for i ulong len gm
+if ne get gm i get ex i
+say 7
+hexn i
+say 8
+hexn ulong get ex i
+say 9
+hexn ulong get gm i
+newline
+ret 1
+end
+end
+say 6
+newline
+ret 0
+end
+fn main to int
+if ne argcnt 5
+say 1
+newline
+ret 3
+end
+ar = argdec 1
+sd = argdec 4
+h = harness
+if or or eq h 0 eq sd 0xffffffffffffffff and ne ar 80 ne ar 121
+say 15
+newline
+ret 3
+end
+if not loadbin
+say 14
+newline
+ret 3
+end
+put sv 0 ar
+put sv 4 255
+if eq ar 80
+put sv 4 63
+end
+put sv 7 sd
+arena
+if eq h 1
+hvadd
+else
+hradd
+end
+say 2
+num ar
+say 3
+r = write 1 hn mul sub h 1 4 4
+for c ulong get sv 11
+for t ulong get sv 1
+put sv 2 c
+put sv 3 t
+thread
+if ne get sv 5 1
+say 4
+num add mul c get sv 1 t
+say 5
+num get sv 6
+ret report
+end
+end
+end
+say 4
+num mul get sv 11 get sv 1
+say 5
+num get sv 6
+ret report
+end
