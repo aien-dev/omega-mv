@@ -22,6 +22,7 @@
 #include "runtime/rx_generation.h"
 #include "runtime/rx_argus.h"
 #include "sha256.h"
+#include "omega_path_check.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -694,7 +695,8 @@ int rx_gen_open(const char *dir, RxGenStore **out) {
     RxGenStore *store = calloc(1, sizeof(*store));
     if (!store) return RX_GEN_ERR_IO;
     pthread_mutex_init(&store->active_mu, NULL);
-    if (snprintf(store->dir, sizeof store->dir, "%s", dir) >= (int)sizeof store->dir) {
+    /* The caller's directory, checked (src/omega_path_check.h), is the only one this store opens. */
+    if (omega_path_copy(store->dir, sizeof store->dir, dir) != 0) {
         free(store);
         return RX_GEN_ERR_ARG;
     }
@@ -776,8 +778,9 @@ int rx_gen_read_blob(const RxGenStore *store, uint64_t id, const char *name, uin
     if (view.id != id) return RX_GEN_ERR_TORN;
     if (view.lengths[which] > cap) return RX_GEN_ERR_ARG;
     char folder[512], path[512];
+    /* BLOB_NAME[which], not the caller's string: the name opened is the table's, never the input's */
     if (gen_dir(store->dir, id, folder, sizeof folder) != 0 ||
-        path_join(path, sizeof path, folder, name) != 0) return RX_GEN_ERR_IO;
+        path_join(path, sizeof path, folder, BLOB_NAME[which]) != 0) return RX_GEN_ERR_IO;
     rc = file_matches(path, view.digest[which], view.lengths[which]);
     if (rc != RX_GEN_OK) return rc;
     if (view.lengths[which] && read_full(path, buf, (size_t)view.lengths[which]) != 0)
@@ -1255,6 +1258,10 @@ done:
 int rx_gen_recover(const char *dir, RxRecoveryRecord *out) {
     if (!dir || !out) return RX_GEN_ERR_ARG;
     memset(out, 0, sizeof(*out));
+    /* From here dir is the checked copy (src/omega_path_check.h): no other path is opened. */
+    char checked[sizeof ((RxGenStore *)0)->dir];
+    if (omega_path_copy(checked, sizeof checked, dir) != 0) return RX_GEN_ERR_ARG;
+    dir = checked;
     char lock[512];
     if (path_join(lock, sizeof lock, dir, "barrier.lock") == 0) unlink(lock);
 

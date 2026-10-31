@@ -40,6 +40,7 @@
 #include "runtime/rx_world.h"
 #include "omega_evidence.h"
 #include "sha256.h"
+#include "omega_path_check.h"
 
 #include <dirent.h>
 #include <sched.h>
@@ -689,9 +690,14 @@ static int quiet_flag_is_mine(const char *flag) {
  * is already loaded, the numbers would describe the other work, so the
  * living run is not started. Same test as rx_plan_reuse.c. */
 static int other_load(char *why, size_t n) {
-    const char *home = getenv("HOME");
-    char flag[512];
-    snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home ? home : "");
+    /* Only a checked HOME (src/omega_path_check.h) names the flag; a refused one cannot rule a measurement out. */
+    const char *h = getenv("HOME");
+    char home[400] = "", flag[512];
+    if (h && h[0] && omega_path_copy(home, sizeof home, h) != 0) {
+        snprintf(why, n, "HOME refused by src/omega_path_check.h");
+        return 1;
+    }
+    snprintf(flag, sizeof flag, "%s/workspace/.spark-quiet", home);
     if (access(flag, F_OK) == 0 && !quiet_flag_is_mine(flag)) {
         snprintf(why, n, "an R15 timed measurement holds ~/workspace/.spark-quiet");
         return 1;
@@ -947,7 +953,7 @@ static void binary_digest(char out[65]) {
 static void write_receipt(void) {
     char path[512];
     if (omega_evidence_path("R11/rx_aien_faculty_receipt.json", path, sizeof path) != 0) return;
-    FILE *fp = fopen(path, "w");
+    FILE *fp = omega_evidence_create(path);
     if (!fp) return;
     char commit[41];
     memset(commit, 0, sizeof commit);

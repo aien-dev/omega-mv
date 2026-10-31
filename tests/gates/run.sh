@@ -82,6 +82,38 @@ receipt() {
 }
 gates_pass() { grep -E 'TOTAL GATES: [0-9]+ \| PASSED: [0-9]+ \| FAILED: 0' "$1" && ! grep -E 'FAILED: [1-9]' "$1"; }
 
+# speed <make target> <receipt file> <gate word>: a speed test (tests/runtime/rx_quiet_reps.h) that found
+# the machine too busy to time ends with `AIEN-OBS not_run_reason "cpu_busy"` and exit 77; make reports
+# any failing recipe as 2, so the refusal is read from the test's own receipt for this step: "failures": 0
+# and the gate word NOT_RUN, which the test writes only when nothing it judged failed. Then the step goes
+# on, so every other check is still judged, and ends NOT_RUN (exit 77) only if nothing else failed.
+# Anything else is the failure it was. A passing run gets the receipt check it always had.
+BUSY=0
+speed() {
+  local target="$1" file="$2" word="$3" rc=0 r f bad=1
+  make "$target" || rc=$?
+  if [ "$rc" -eq 0 ]; then
+    receipt "$file" '"failures": 0,' '"candidate_bound": true,' "\"$word\": \"PASS\""
+    return
+  fi
+  # Every receipt of that name written during this step must say so; any other one keeps the failure.
+  r="$(find build/qual-runs -name "$file" -type f -newer "$STEP_MARK")"
+  if [ -n "$r" ]; then
+    bad=0
+    while IFS= read -r f; do
+      grep -q '"failures": 0,' "$f" && grep -q '"candidate_bound": true,' "$f" &&
+        grep -q "\"$word\": \"NOT_RUN\"" "$f" || bad=1
+    done <<< "$r"
+  fi
+  if [ "$bad" = 0 ]; then
+    echo "run.sh: $target: machine too busy to time (cpu_busy); not judged, the rest of the step runs" >&2
+    printf '%s\n' "$r" | xargs sha256sum
+    BUSY=1
+    return 0
+  fi
+  return "$rc"
+}
+
 case "$step" in
   crumb-verify)
     # Hosted crumb.yml builds the crumb tool from the aien-architecture commit in crumb.lock.
@@ -244,8 +276,7 @@ case "$step" in
     receipt rx_capability_query_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_CAPABILITY_QUERY_PASS": "PASS"'
     receipt rx_semantic_comm_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_SEMANTIC_COMMUNICATION_PASS": "PASS"'
     receipt rx_cognitive_routing_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_COGNITIVE_ROUTING_PASS": "PASS"'
-    make test-workflow-fusion
-    receipt rx_workflow_fusion_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_WORKFLOW_FUSION_PASS": "PASS"'
+    speed test-workflow-fusion rx_workflow_fusion_receipt.json OMEGA_WORKFLOW_FUSION_PASS
     make test-typed-results
     receipt rx_typed_results_receipt.json '"failures": 0,' '"candidate_bound": true,' '"OMEGA_TYPED_RESULT_CONSTRAINTS_PASS": "PASS"'
     make test-costmodel
@@ -258,6 +289,7 @@ case "$step" in
     tools/rx_host_receipts.sh heartbeat "$r"
     tools/rx_host_receipts.sh native "$native" "$OMEGA_CANDIDATE_COMMIT"
     tools/rx_host_receipts.sh generation "$generation" "$OMEGA_CANDIDATE_COMMIT"
+    if [ "$BUSY" = 1 ]; then obs not_run_reason '"cpu_busy"'; exit 77; fi
     ;;
   faculty-arm)
     pin physics-src-6d7cf0d physics 6d7cf0d4d8eb2cda7b512100ff6058e25dbb3ddf
