@@ -6,7 +6,7 @@ cd "$(dirname "$0")/../../.."
 B=${JSON_BUILD:-build/seed/json}
 OMC=${OMC:-seed/out/omc}
 # Compiler pin recorded independently before any reseed; update together with seed/out/omc.
-PIN=${JSON_OMC_PIN:-9b77c78df67f7ca030dd11de16976d6d0a2371cccda88b27de722b33b94bb545}
+PIN=${JSON_OMC_PIN:-e4d84bc3ff5c91b83ce9a156d262eb28c9563e43374537293129898da093b7a6}
 J=seed/json
 fail() { printf 'JSONGATE FAIL %s\n' "$*"; exit 1; }
 notrun() { printf 'JSONGATE NOT_RUN %s\n' "$*"; exit 3; }

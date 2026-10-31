@@ -1069,6 +1069,12 @@ the AArch64 path is not taken. Every function is encoded in source order. A func
 value-returning call composes as a value, a void call is a statement, and using one where the other
 is needed is error 7. Argument types are checked at compile time (error 7). `break` lowers to a
 `BR` to the innermost loop's exit and marks the path dead; `continue` is still refused (error 3).
+A `TYPE value` cast reads its operand at the operand's own type and converts it, exactly as the
+AArch64 path does: `ret ulong sub c 48` with `c` a `uchar` lowers to a `sub` then a `cast`. A bare
+number in the cast is range-checked against the cast's type (error 8), a bare number inside the
+operand against the operand's type (error 8), and a bool converts to or from a number only by
+comparison (error 9). A same-type cast of a constant is the constant itself; any other same-type
+value is a `mov`.
 
 The producer validates complete statement lines rather than discarding
 trailing words (error 5); missing operands are error 4 and untyped bare
