@@ -1,7 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: Apache-2.0
 # seed/semhash/check.sh: build seed/semhash/semhash.om with the pinned omc and check it.
-#   1 keyword parity   tool's table == genkw.awk lines 16-18 + omc.om fn kw2 (decoded here)
+#   1 keyword parity   tool's table == genkw.awk word:code lists + omc.om fn kw2 (decoded here)
 #   2 oracle           omc(canon(x)) == omc(x) byte for byte, for every unit omc accepts
 #   3 invariance       alpha-renaming, notes/blanks/spaces, reordering: every fn SAME
 #   4 controls         meaning changes report CHANGED where expected (cases/*.exp)
@@ -13,7 +13,7 @@
 set -u
 cd "$(dirname "$0")/../.." || exit 3
 OMC=${OMC:-seed/out/omc}
-PIN=${SEMHASH_OMC_PIN:-62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b}
+PIN=${SEMHASH_OMC_PIN:-be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a}
 W=${SEMHASH_OUT:-build/semhash-check}
 C=seed/semhash/cases
 
@@ -41,9 +41,12 @@ SH=$W/semhash
 printf 'built %s sha256 %s\n' "$SH" "$(sha256sum "$SH" | cut -d ' ' -f 1)"
 
 # ---- 1 keyword parity
-# expected list: genkw.awk lines 16 and 18 (word:code pairs) plus omc.om fn kw2 (packed word -> code)
-awk 'NR==16||NR==18{ s=$0; sub(/^[^"]*"/,"",s); sub(/".*$/,"",s); n=split(s,a," ");
+# expected list: every `n=split("word:code ...")` list of genkw.awk (two today; found by content, not
+# line number, so a longer header comment cannot shift them) plus omc.om fn kw2 (packed word -> code)
+awk '/^[[:space:]]*n=split\("[a-z]/{ s=$0; sub(/^[^"]*"/,"",s); sub(/".*$/,"",s); n=split(s,a," ");
      for(i=1;i<=n;i++){ split(a[i],p,":"); print p[1], p[2] } }' seed/omc/genkw.awk > "$W/kw.exp"
+[ "$(grep -c '^[[:space:]]*n=split("[a-z]' seed/omc/genkw.awk)" = 2 ] ||
+    fail "keyword parity: genkw.awk no longer holds exactly two word:code lists"
 unpack() { # little-endian packed word -> bytes
     v=$1
     while [ "$v" -gt 0 ]; do

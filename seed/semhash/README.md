@@ -21,7 +21,7 @@ mkdir -p build
 ```
 
 `$OMC` is the pinned seed compiler. `check.sh` pins sha256
-`62775d2a391cfef7cde64e387655caa9809a267093112910ec76bfa568f3712b`. A missing or different compiler
+`be8c51301307555254fc59e351d281aae1aa096d91521777e33a41c8b446448a`. A missing or different compiler
 makes it print `SEMHASH NOT_RUN` and exit 3.
 
 ## Modes
@@ -86,7 +86,7 @@ matters only through the `ENTRY` and `EXPORTS` lines and the unit hash.
 
 Run `sh seed/semhash/check.sh` from anywhere. It makes these checks:
 
-1. **Keyword parity**: the tool's table must equal `seed/omc/genkw.awk` lines 16 and 18 plus the
+1. **Keyword parity**: the tool's table must equal the two `word:code` lists of `seed/omc/genkw.awk` plus the
    `fn kw2` table of `seed/omc/omc.om`, decoded in sh.
 2. **Oracle**: for every unit omc accepts, `omc(canon(x))` must be byte-identical to `omc(x)`.
    - The units are rung4, contracts, omc tests, om2, host tests, the json compositions, blake3,
