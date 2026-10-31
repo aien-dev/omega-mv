@@ -32,7 +32,7 @@ run=$(mktemp -d "$B/run.XXXXXX")
 "$B/gate" seed/out/omc "$pin" seed/omc/contracts/contracts.cases "$run/cases"
 # OM-2 dit and scrub (OMEGESE 9.13.1): s5 cases, and every s5 omc.om mutant detected (ctl-* PASS, m-* FAIL).
 "$B/gate" seed/out/omc "$pin" seed/omc/om2/s5/s5.cases "$run/s5" > "$run/s5.log" || { cat "$run/s5.log"; exit 1; }
-grep -qx 'OM2GATE PASS cases=18 pass=18 fail=0 invalid=0 not_run=0' "$run/s5.log"
+grep -qx 'OM2GATE PASS cases=21 pass=21 fail=0 invalid=0 not_run=0' "$run/s5.log"
 if "$B/gate" seed/out/omc "$pin" seed/omc/om2/s5/s5-mutants.cases "$run/s5mut" > "$run/s5mut.log"; then
     echo 'FAIL dit/scrub mutant survived' >&2
     exit 1
@@ -40,10 +40,10 @@ else
     status=$?
     [ "$status" = 1 ] || { cat "$run/s5mut.log"; exit 1; }
 fi
-grep -qx 'OM2GATE FAIL cases=12 pass=5 fail=7 invalid=0 not_run=0' "$run/s5mut.log"
-[ "$(grep -c '^VERDICT ctl-[a-z-]* PASS ' "$run/s5mut.log")" = 5 ]
-[ "$(grep -c '^VERDICT m-[a-z0-9]* FAIL ' "$run/s5mut.log")" = 7 ]
-echo 'PASS dit/scrub (18 cases) and 7 omc.om mutants detected'
+grep -qx 'OM2GATE FAIL cases=16 pass=7 fail=9 invalid=0 not_run=0' "$run/s5mut.log"
+[ "$(grep -c '^VERDICT ctl-[a-z-]* PASS ' "$run/s5mut.log")" = 7 ]
+[ "$(grep -c '^VERDICT m-[a-z0-9]* FAIL ' "$run/s5mut.log")" = 9 ]
+echo 'PASS dit/scrub (21 cases) and 9 omc.om mutants detected'
 if "$B/gate" seed/out/omc "$pin" seed/omc/contracts/mutant.cases "$run/mutant" > "$run/mutant.log"; then
     echo 'FAIL contract-enforcement mutant survived' >&2
     exit 1

@@ -1,0 +1,64 @@
+note S5 scrub: live floats survive. An f32/f64 local name lives in the V twin of its pool slot (v16 + j),
+note a held float operand and an earlier float call argument in twins, a float parameter in its x register
+note (checks 22-24: a regression guard, x registers were already spared). scrub zeroes the dead twins only
+note (OMEGESE 9.13.1). Exit 0, else the check's number. omc 24caacf4 (main after #853 and #875) zeroed
+note V0-V31: exit 1, and each of checks 2, 3, 4 and 21 alone also fails there.
+om2
+fn two a f64 b f64 to f64
+ret add mul a f64 10.0 b
+end
+fn keepf a f64 b f64 to int
+x = add a f64 2.25
+k = scrub 64
+if ne k 0
+ret 20
+end
+if ne x f64 3.75
+ret 21
+end
+if ne a f64 1.5
+ret 22
+end
+b = add b f64 1.0
+k = scrub 16
+if ne b f64 3.5
+ret 23
+end
+if ne add a b f64 5.0
+ret 24
+end
+ret 0
+end
+fn main to int
+f = f64 1.5
+g = f64 2.5
+k = scrub 16
+h = add f g
+if ne h f64 4.0
+ret 1
+end
+s = f32 0.75
+k = scrub 32
+if ne s f32 0.75
+ret 2
+end
+y = add mul f g f64 scrub 32
+if ne y f64 3.75
+ret 3
+end
+w = two mul f g f64 scrub 16
+if ne w f64 37.5
+ret 4
+end
+r = keepf f g
+if ne r 0
+ret r
+end
+if ne f f64 1.5
+ret 5
+end
+if ne g f64 2.5
+ret 6
+end
+ret 0
+end

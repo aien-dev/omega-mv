@@ -6,6 +6,8 @@ ctl-scrub-mem run seed/omc/om2/s5/scrub-mem.om - - - 0
 ctl-scrub-live run seed/omc/om2/s5/scrub-live.om - - - 0
 ctl-scrub-odd run seed/omc/om2/s5/scrub-odd.om - - - 103
 ctl-scrub-emit emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+ctl-scrub-flive run seed/omc/om2/s5/scrub-flive.om - - - 0
+ctl-scrub-femit emit seed/omc/om2/s5/scrub-femit.om sha:3d33c8ebfeff422d2ad746952f32fedab01cc46238097bb64b4b9a0a068c20c8 - 0
 # dit: MRS X16, DIT emitted where MSR DIT, X16 belongs (the bit is never written)
 subst seed/omc/om2/s5/mut/msr.from seed/omc/om2/s5/mut/msr.to
 cc seed/omc/omc.om
@@ -34,3 +36,11 @@ m-zvec emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b
 subst seed/omc/om2/s5/mut/movz16.from seed/omc/om2/s5/mut/movz16.to
 cc seed/omc/omc.om
 m-movz16 emit seed/omc/om2/s5/scrub-emit.om sha:5ba83eaff95e73bdca1584d1d8bcfd083b18af549c7da2777f7a5c03005a04cc - 0
+# scrub: every twin of a live slot spared, also those whose value is in the x register (V16, V17 survive)
+subst seed/omc/om2/s5/mut/twinall.from seed/omc/om2/s5/mut/twinall.to
+cc seed/omc/omc.om
+m-twinall emit seed/omc/om2/s5/scrub-femit.om sha:3d33c8ebfeff422d2ad746952f32fedab01cc46238097bb64b4b9a0a068c20c8 - 0
+# scrub: no twin spared, V0-V31 all zeroed as in omc 24caacf4 (live float locals read back 0)
+subst seed/omc/om2/s5/mut/twinnone.from seed/omc/om2/s5/mut/twinnone.to
+cc seed/omc/omc.om
+m-twinnone run seed/omc/om2/s5/scrub-flive.om - - - 0
