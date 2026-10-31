@@ -27,7 +27,6 @@ typedef struct {
     uint32_t pending, held;
     int err;
     int depth, open_start[MAX_LOOPS];
-    uint32_t placeholders; /* SHFL.BFLY words omega_tc_patch_code must patch */
 } Em;
 
 static void emit(Em *e, BlackwellIRInsn in, int kind) {
@@ -99,11 +98,10 @@ static void ldg_pf64(Em *e, int d, int addr64, uint32_t imm, int udesc, unsigned
 static void consume(Em *e, unsigned sb) { e->pending |= e->held & (1u << sb); e->held &= ~(1u << sb); }
 /* STG.E [addr64 + imm], val (imm: signed 24-bit byte offset) */
 static void stg(Em *e, int addr64, uint32_t imm, Op val, int udesc) { BlackwellIRInsn i = I0(BW_IR_STG_E); i.src1_vreg = addr64; i.src2_vreg = val.v; i.src2_subreg = (uint8_t)val.s; i.imm = imm; i.ureg = udesc; emit(e, i, K_STORE); }
-/* L313 bf16 state. F2FP.BF16.F32.PACK_AB d = bf16_rn(hi) << 16 | bf16_rn(lo) (a placeholder omega_tc_patch_code patches,
- * omega_blackwell_codegen_tc.h; counted by omega_gdn_bfly_count). */
+/* L313 bf16 state. F2FP.BF16.F32.PACK_AB d = bf16_rn(hi) << 16 | bf16_rn(lo) (native encoder entry since training R5) */
 static void f2fp(Em *e, Op d, Op hi, Op lo) {
-    BlackwellIRInsn i = I0(BW_IR_FMNMX_MAX); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = hi.v; i.src1_subreg = (uint8_t)hi.s;
-    i.src2_vreg = lo.v; i.src2_subreg = (uint8_t)lo.s; i.imm = OMEGA_TC_MARK_F2FP; emit(e, i, K_FIXED); e->placeholders++;
+    BlackwellIRInsn i = I0(BW_IR_F2FP_BF16_PACK); i.dst_vreg = d.v; i.dst_subreg = (uint8_t)d.s; i.src1_vreg = hi.v; i.src1_subreg = (uint8_t)hi.s;
+    i.src2_vreg = lo.v; i.src2_subreg = (uint8_t)lo.s; emit(e, i, K_FIXED);
 }
 /* Four f32 (q, a V128) from four bf16 (w, a V64; element 0 in the low half of word 0): the exact widen. */
 static void bf16x4_widen(Em *e, int q, int w) {
@@ -164,8 +162,7 @@ static void loop_end(Em *e) {
     }
 }
 static void mov(Em *e, Op d, Op a) { imadi(e, d, a, 1u, NOREG); }
-/* SHFL.BFLY placeholder (omega_blackwell_codegen_tc.h), patched after encoding */
-static void shfl_bfly(Em *e, int d, int a, uint32_t lanes) { shfl_down(e, d, a, OMEGA_TC_MARK_BFLY | (lanes & 31u)); e->placeholders++; }
+static void shfl_bfly(Em *e, int d, int a, uint32_t lanes) { BlackwellIRInsn i = I0(BW_IR_SHFL_BFLY); i.dst_vreg = d; i.src1_vreg = a; i.imm = lanes & 31u; emit(e, i, K_VAR); }
 /* butterfly sum over lane strides lo, 2 lo .. hi: every lane of a group ends with the same bits (a + b == b + a) */
 static void bfly_sum(Em *e, int v, int t, uint32_t lo, uint32_t hi) { for (uint32_t o = lo; o <= hi; o *= 2) { shfl_bfly(e, t, v, o); fadd(e, R(v), R(v), R(t)); } }
 /* warp sum: the total lands in lane 0 */
@@ -875,15 +872,6 @@ int omega_blackwell_codegen_gdn_post_prog(const OmegaGdnSpec *spec, BlackwellIRP
     tail(e);
     if (e->err) return -1;
     return omega_bw_regalloc_solve(prog);
-}
-
-/* number of placeholders in a program, SHFL.BFLY and (bf16 state, L313) F2FP: what omega_tc_patch_code must report */
-uint32_t omega_gdn_bfly_count(const BlackwellIRProgram *prog) {
-    uint32_t n = 0;
-    for (size_t i = 0; i < prog->count; i++)
-        if ((prog->insns[i].op == BW_IR_SHFL_DOWN && (prog->insns[i].imm & OMEGA_TC_MARK_BFLY))
-            || (prog->insns[i].op == BW_IR_FMNMX_MAX && prog->insns[i].imm == OMEGA_TC_MARK_F2FP)) n++;
-    return n;
 }
 
 int omega_gdn_pf_prog_stats(unsigned kind, const OmegaGdnSpec *spec, uint32_t *insns, uint32_t *gprs) {

@@ -105,6 +105,12 @@ case "$step" in
     grep -E 'TOTAL GATES: ([0-9]+) \| PASSED: \1 \| FAILED: 0' build/base.log
     ! grep -qE 'FAILED: [1-9]|\[FAIL\]|\(FAIL\)' build/base.log
     ;;
+  gpu-tgemm)          # pr-smoke.yml smoke job, "Training GEMM host proofs" step: physics-src at physics.lock;
+                      # budgets and warp simulator, no GPU
+    physics_pin; set -o pipefail; mkdir -p build
+    make test-gpu-tgemm | tee build/tgemm.log
+    test "$(grep -c '^GPU_TGEMM: PASS' build/tgemm.log)" = 2
+    ;;
   language)           # pr-smoke.yml and host-suites-3.yml (same command)
     set -o pipefail; mkdir -p build
     make $NOPHYS test-language | tee build/lang.log
@@ -184,6 +190,9 @@ case "$step" in
   bw-hazard)          physics_pin; make test-bw-hazard ;;
   numeric2)           make $NOPHYS test-numeric-reduce-cpu test-divsqrt-host ;;
   tensor)             make $NOPHYS test-tensor; make $NOPHYS test-tensor-store; make $NOPHYS test-m20-receipt; make $NOPHYS test-tensor-mutations ;;
+  atomf32-probe-host) # host-suites-2.yml gpu-engine job, "f32 global atomic add probe in the warp simulator" step:
+                      # physics-src at physics.lock; host, no device (the chip run is by hand)
+    physics_pin; make test-atomf32-probe-host ;;
   gpu-decode-graph)   physics_pin; make test-gpu-decode-graph ;;
   # host-suites-3.yml
   numeric-lifecycle)  make $NOPHYS test-numeric-lifecycle ;;

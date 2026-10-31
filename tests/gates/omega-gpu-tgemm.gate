@@ -1,0 +1,26 @@
+# tests/gates/omega-gpu-tgemm.gate
+# Mirrors hosted: pr-smoke.yml smoke job, "Training GEMM host proofs (budgets and warp simulator, no GPU)" with physics-src at physics.lock: make test-gpu-tgemm, exactly 2 "GPU_TGEMM: PASS" lines; host only
+gate: OMEGA-GPU-TGEMM
+manifest_version: 2
+owner: omega
+requires:
+  - host
+inputs:
+  - Makefile
+  - mk/
+  - src/
+  - tests/gpu_tgemm_test.c
+  - tests/bw_hmma_model.h
+  - tests/bw_warp_sim_tc.h
+  - tests/bw_qmma_model.h
+  - physics.lock
+  - tests/gates/
+run:
+  exec: tests/gates/run.sh
+  args: ["gpu-tgemm"]
+expects:
+  exit: 0
+  verdict: PASS
+timeout: 15m
+exactness: EXACT
+cache_scope: machine

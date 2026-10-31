@@ -311,16 +311,13 @@ static int kernel_for(unsigned kind, const OmegaGdnSpec *spec, Slot **out, bool 
     size_t need = cg == 0 ? omega_bw_program_code_bytes(prog) : 0;
     if (cg != 0 || need == 0) { omega_gpu_host_free(prog); omega_gpu_session_set_error("gdn codegen refused the spec"); return OMEGA_GPU_GDN_CODEGEN_FAIL; }
     if ((uint64_t)kk_threads[kind] * omega_bw_gpr_declared(prog->regalloc.peak_gpr_usage) > 65536u) { omega_gpu_host_free(prog); omega_gpu_session_set_error("gdn: register file"); return OMEGA_GPU_GDN_TOO_LARGE; }
-    const uint32_t insns = (uint32_t)prog->count, expect = omega_gdn_bfly_count(prog);
+    const uint32_t insns = (uint32_t)prog->count;
     OmegaGpuMem code;
     if (omega_gpu_session_alloc_code(need, &code) != 0) { omega_gpu_host_free(prog); return OMEGA_GPU_GDN_CHIP_FAIL; }
     OmegaBlackwellKernel kernel;
     cg = omega_blackwell_kernel_encode_into(prog, code.cpu, need, &kernel);
-    /* SHFL.BFLY placeholders become real butterflies (omega_blackwell_codegen_tc.h); the count must match */
-    const int np = cg == 0 ? omega_tc_patch_code(prog, code.cpu, need) : -1;
     omega_gpu_host_free(prog);
     if (cg != 0 || !kernel.code || kernel.code_size != need) { omega_gpu_session_free(&code); omega_gpu_session_set_error("gdn encode"); return OMEGA_GPU_GDN_CODEGEN_FAIL; }
-    if (np < 0 || (uint32_t)np != expect) { omega_gpu_session_free(&code); omega_gpu_session_set_error("gdn: butterfly patch count mismatch"); return OMEGA_GPU_GDN_CODEGEN_FAIL; }
     if (omega_gpu_session_sync_to_gpu(&code) != 0) { omega_gpu_session_free(&code); return OMEGA_GPU_GDN_CHIP_FAIL; }
     memset(s, 0, sizeof *s);
     s->valid = true; s->spec = *spec; s->kernel = kernel; s->code = code; s->insns = insns;
