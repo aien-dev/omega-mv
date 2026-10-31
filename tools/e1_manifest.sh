@@ -108,7 +108,10 @@ if [ "${1:-}" = --canonical-overlay ]; then
     # generated CPU declaration header (whose native ABI guard is independent).
     # The unchanged Omega binding remains the linked SHA implementation.
     cp -- "$source/src/sha256.h" "$target/src/sha256.h"
-    cp -R "$root/tests" "$target/"
+    # Same rule for tests: the GPU twin tests were retired to CUDApp, so the
+    # canonical tests come first and Omega's retained tests overlay them.
+    cp -R "$source/tests" "$target/"
+    cp -R "$root/tests/." "$target/tests/"
     # Capture each oracle's version as a checked command, not a command
     # substitution whose failure jq could otherwise mask.
     oracle_version() {
