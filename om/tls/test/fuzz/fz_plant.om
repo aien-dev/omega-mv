@@ -1,0 +1,36 @@
+note SPDX-License-Identifier: Apache-2.0
+note fz_plant.om: NEGATIVE CONTROL, never shipped. fz_dns plus a planted defect: input bytes 1..4
+note equal to "OMFZ" make main write past a 4-byte array, a bounds trap (exit 103). Each byte is its
+note own branch, so a coverage-guided fuzzer climbs to it one byte at a time; a blind fuzzer needs about
+note 2^32 tries. The campaign must report this crash, or its crash detection is not trusted.
+
+fn fz_plt in view uchar * n ulong ip edit uchar * to void
+if lt n 5
+ret
+end
+if eq get in 1 79
+if eq get in 2 77
+if eq get in 3 70
+if eq get in 4 90
+put ip add n 4 0
+end
+end
+end
+end
+end
+
+fn main to int
+ip = new uchar 4 0
+in = new uchar FZCAP 0
+n = fz_read in
+fz_plt view in n ip
+if lt n 2
+ret 0
+end
+if eq and get in 0 1 1
+e = dns_lines part in 1 sub n 1 ip
+ret 0
+end
+fz_dnsq part in 1 sub n 1
+ret 0
+end
