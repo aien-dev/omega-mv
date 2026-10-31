@@ -27,11 +27,15 @@ On a machine without the Spark build coordinator, run the script directly.
 The script rebuilds the seed chain, proves compiler self-reproduction, runs
 native Omega fixtures, rejects malformed inputs, and compares the original
 fixture corpus against the original native parent. It does not run the older
-C-reference gate scripts.
+C-reference gate scripts. The fixture gate itself is `seed/host/gate.om`,
+compiled by `seed/out/omc`; the remaining shell step only builds and launches
+it.
 
 Verified on the Spark on 2026-10-23:
 
 - Native file create/read/write/seek/sync/chmod/close/unlink and errno checks.
+- Current-directory change, file creation below it and unlink through the
+  native `chdir` word.
 - Monotonic nanoseconds, realtime nanoseconds and a measured native sleep.
 - Argument copying, including empty arguments, spaces, UTF-8 bytes, and refusal
   of short output buffers without modifying them.
@@ -99,7 +103,7 @@ negative error. The lowering and positive-PID assertion are corrected here.
 Run the candidate host gate without replacing the committed compiler:
 
 ```sh
-OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/gate.sh
+nice -n 19 ionice -c3 sh -c 'seed/out/omc < seed/host/gate.om > build/seed/host/gate && chmod +x build/seed/host/gate && build/seed/host/gate /absolute/path/to/candidate-omc'
 OMC=/absolute/path/to/candidate-omc nice -n 19 ionice -c3 sh seed/host/negative.sh
 nice -n 19 ionice -c3 python3 seed/host/net-mutant.py
 nice -n 19 ionice -c3 sh seed/omc/gate18.sh
@@ -111,9 +115,9 @@ or hardware qualification. Compiler integration owns the batch reseed.
 wrong-word source through the committed seed (or `OMC` override), then requires
 the real fixture to pass the original and exit 1 for the mutant. Its controls
 restore the wrong `getppid` syscall and turn an option refusal into success.
-The host gate's `OMC` selector applies to every compilation, including nested
-device/mapping refusal programs and generated identity fixtures; early
-candidate-only logs from before that correction contain mixed-compiler evidence.
+The host gate's compiler argument (`gate.om` argv[1]) applies to every compilation,
+including nested device/mapping refusal programs and generated identity fixtures;
+early candidate-only logs from before that correction contain mixed-compiler evidence.
 The Linux interface authorities are `asm-generic/unistd.h` (`ppoll` 73,
 `getsockopt` 209, `sendmsg` 211), `asm-generic/socket.h`, and `linux/tcp.h`.
 Instruction emission uses the existing Arm ARM forms; `STR` unsigned-offset
@@ -122,6 +126,40 @@ Keyword pack verification used WolframLanguageEvaluator:
 `Table[{s,FromDigits[Reverse[ToCharacterCode[s]],256]},{s,{"peercred","pollfds","sendmsg"}}]`
 returned `{{"peercred",7234314147887146352},{"pollfds",32480013390212976},{"sendmsg",29118836274783603}}`.
 
+
+## Connected peer metadata
+
+`peername fd A off n` (keyword 224) queries the peer of an existing process
+descriptor. Its types, writable slice validation and negative errno behavior
+match `sockname`; success returns the full native Linux sockaddr length even
+when the supplied slice truncates it. Empty slices are permitted at array end.
+Neither word acquires or connects a socket. `accept` keeps its existing API.
+Keyword encoding was checked with the mounted WolframLanguageEvaluator:
+`FromDigits[Reverse[ToCharacterCode["peername"]],256] -> 7308604897285727600`.
+
+The implementation shares `hbuffer`'s private 32-bit socklen with `sockname`;
+checked byte-array capacities fit that representation. Linux source authority:
+[v6.12 asm-generic syscall table](https://github.com/torvalds/linux/blob/v6.12/include/uapi/asm-generic/unistd.h)
+assigns getpeername 205 and getsockname 204; under `target x86linux` the same
+word lowers to x86-64 getpeername 52 (getsockname 51) from
+[v6.17 `syscall_64.tbl`](https://github.com/torvalds/linux/blob/v6.17/arch/x86/entry/syscalls/syscall_64.tbl);
+[`move_addr_to_user`](https://github.com/torvalds/linux/blob/v6.12/net/socket.c)
+copies only the bounded prefix, permits zero capacity, and returns full length.
+The [getpeername manual](https://man7.org/linux/man-pages/man2/getpeername.2.html)
+defines EBADF, ENOTSOCK and ENOTCONN. Omega preserves raw negative syscall
+errno, rather than libc's -1/errno convention.
+
+`tests/peername.om` compares an accepted TCP peer with the independently queried
+client endpoint on loopback, checks a distinct local endpoint, offset sentinels,
+short/empty slices, closed descriptors, pipes and unconnected sockets.
+The host gate also requires bounds traps; negative.sh covers typing, readonly
+arrays and function mode. net-mutant.py replaces getpeername with getsockname
+and requires the real fixture to reject that compiler.
+
+Transport addresses are not user authentication or an original client identity
+behind a proxy. Consumers must validate length and family, retain descriptor
+lifetime control, and preserve their existing trusted-proxy boundary. This
+compiler change neither activates gateway policy nor trusts forwarding headers.
 
 ## Source authority and limits
 

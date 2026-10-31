@@ -10,6 +10,12 @@ decision or an external store) is `docs/one_layer/OM_COMPLETION.md`.
 
 The scalar OSC IR backends are `wasm/irwasm.om` (WebAssembly MVP) and
 `spirv/irspirv.om` (SPIR-V 1.0 OpenCL Kernel). Both are compiled by seeded omc.
+IR mode casts (`TYPE value`) read the operand at its own type and convert it, the same as the
+AArch64 path, so `ret ulong sub c 48` with `c` a `uchar` compiles. A bare number in the cast is
+range-checked against the cast's type (error 8) and a bool converts to or from a number only by
+comparison (error 9). `seed/omc/gate-ir.sh` pins 21 cast units against the C oracle plus 6 cast
+refusals; reverting the operand read to the cast's type makes the gate fail.
+
 See [SPIR-V usage, CPU parity gate and OpenCL demo](../docs/SPIRV.md).
 
 To rebuild omc from the 408-byte seed on your own AArch64 Linux machine and check every rung against
@@ -178,8 +184,8 @@ it came from.
   - 9 new programs in the old calling form that the C path can also express (signed divide and
     remainder at their limits, signed shifts, calls, computed loop counts, local arrays, a bad index):
     om4 and the C path give the same result or the same trap on all 69 inputs;
-  - 4 whole programs against twins written in C and built by gcc (gcc as the referee only): recursive
-    Fibonacci, sorting 1,000 numbers, echo of 50,000 random bytes, a byte copy that reverses its input:
+  - 4 whole programs against committed expected outputs (no C twin at runtime): recursive
+    Fibonacci, sorting 1,000 numbers, echo of 50,000 fixture bytes, a byte copy that reverses its input:
     same output every time;
   - 14 whole programs that must stop with a given status or value (among them 2^64 - 1 and 2^63 read as
     ulong numbers, fixed after the independent interpreter L412 found om4 refused them): divide by zero, bad index, read past the end, loop
@@ -295,6 +301,14 @@ it came from.
 - Current size reporting measures the complete compiler only. Compiling incomplete source prefixes
   is not a valid per-function measurement in a compiler with forward references; that old diagnostic
   was removed. All parent, C-referee, wrong-word-mutant, fuzz and refusal checks remain mandatory.
+- The branch-range gate is seeded `.om`, including its coordinator, generator, source mutator
+  and decoder-output checker. See `seed/qualification/security673/README.md` for reconstruction.
+  The compiler accepts the exact forward maximum and refuses larger conditional branches
+  before emitting an executable. Direct probes of the actual encoder cover both signed extrema
+  and misalignment; a local-array fixture exercises the current backward caller. GNU objdump
+  independently decodes accepted forward branches and catches a deliberately weakened limit.
+  Malformed-output controls and supervisor failures are separate from compiler correctness.
+  Corrected evidence is in `evidence/SECURITY-673/correction1/`; earlier evidence is historical.
 - Limits, said plainly: omc has om4's limits, because it copies om4 (names up to 8 characters, 16
   registers per function, values nested up to 1,024 deep, 8 MiB of input).
 
@@ -665,9 +679,11 @@ the length to X1.
 
 ## Rung R30: refusal-code conformance gate (done)
 
-`seed/omc/gate15.sh` pins the compiler's refusal table: one minimal program per code 3..23, each of
-which must exit with exactly that code and print `error N`, plus a valid control. Codes 1 and 2 are
-I/O errors on the compiler's own input/output, not language inputs, and are excluded.
+`seed/omc/gate15.sh` pins the compiler's refusal table. At R30 that was one minimal program per code
+3..23, each of which had to exit with exactly that code and print `error N`, plus a valid control.
+Since #797 the codes live in one registry, `seed/omc/error-codes.reg`, and gate15 covers every emitted
+code 1..25 and 27..30 (33 cases, each checked against its exact `omc: line L: error C`) and runs the
+`seed/omc/codereg.om` drift check with three negative controls; see OMEGESE §9.14.
 
 - The cases are: 3 unknown name, 4 line ends early, 5 extra words, 6 bad number, 7 type mismatch,
   8 out of range, 9 word not allowed, 10 duplicate name, 11 ambiguous literal, 12 register pool,

@@ -242,12 +242,6 @@ test-m19: $(TARGET)
 test-m19r-qualify:
 	tools/test_m19r_qualify.sh
 
-# Host-only tests of the M18/M19 clean-clone reproduction (src/omega_clean_clone.c):
-# OUT_DIR from tests/gates/run.sh, dirty tree, failing nested run, broken candidate. No GPU.
-.PHONY: test-clean-clone
-test-clean-clone:
-	PHYSICS_DIR=$(abspath $(PHYSICS_DIR)) tools/test_clean_clone.sh
-
 # Host-only tests of the chipwait campaign runner (tools/chipwait_campaign.sh)
 # against a stub qualifier. No GPU.
 .PHONY: test-chipwait-campaign

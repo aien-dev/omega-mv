@@ -48,7 +48,9 @@
  * because |y| <= 128 * k < 2^31).
  *
  * Shared memory: the kernel keeps to OMEGA_TERN_SHARED_MAX (16 KiB) per CTA, the launch descriptor cap when KT1 was
- * measured (OMEGA_BW_QMD_MAX_SHARED_BYTES is 32 KiB since ce155d47; the budget stays at the measured 16 KiB), so x is staged
+ * measured (OMEGA_BW_QMD_MAX_SHARED_BYTES is 32 KiB since ce155d47, omega_blackwell_qmd.h; the budget stays at the
+ * measured 16 KiB). x takes 2 bytes per column in shared memory, so one chunk of OMEGA_TERN_CHUNK_MAX columns uses
+ * 16 KiB, and x is staged
  * in chunks of at most OMEGA_TERN_CHUNK_MAX = 8192 columns (k <= 8192: one chunk; 8192 < k <= 16384: two equal chunks,
  * k % 512 == 0). With two chunks each lane l == 0 adds the earlier chunk's int32 y it stored itself (same thread, same
  * address, program order); the f32 epilogue is refused there.

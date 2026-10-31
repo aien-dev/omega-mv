@@ -1,0 +1,61 @@
+note S5 scrub negative control: scrub-mem.om with `scrub 4096` replaced by `long 0`; the same search must find
+note the pattern (exit 10), showing the search can see a dead frame.
+om2
+global buf uchar 1048576
+text mem "/proc/self/mem"
+fn fill to ulong
+a = new ulong 64 0
+for i ulong 64
+put a i 9833440827789222417
+end
+s = ulong 0
+for i ulong 64
+s = add s get a i
+end
+ret s
+end
+fn main to int
+s = fill
+k = long 0
+if ne k 0
+ret 30
+end
+fd = int fopen mem 0 len mem 0 0
+if lt fd 0
+ret 20
+end
+hits = ulong 0
+for c ulong 8
+pos = long add 268435456 mul c 1048576
+r = pread fd buf 0 1048576 pos
+if ne r 1048576
+ret 21
+end
+i = ulong 0
+while lt i 1048576
+if eq get buf i 17
+if eq get buf add i 1 34
+if eq get buf add i 2 51
+if eq get buf add i 3 68
+if eq get buf add i 4 85
+if eq get buf add i 5 102
+if eq get buf add i 6 119
+if eq get buf add i 7 136
+hits = add hits 1
+end
+end
+end
+end
+end
+end
+end
+end
+i = add i 8
+end
+end
+r = fclose fd
+if gt hits 0
+ret 10
+end
+ret 0
+end

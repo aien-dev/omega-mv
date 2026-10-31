@@ -1,0 +1,21 @@
+emit or 3531603968 poolc i
+i = add i 1
+end
+emit 3531603984
+emit 3531603975
+i = ulong 18
+while le i 26
+emit or 3531603968 i
+i = add i 1
+end
+emit 3531603997
+at = add get npar 0 sl
+i = ulong 0
+while lt i 32
+top = and i 15
+r = ulong get vsl top
+if or lt i 16 ge top at
+r = ulong 0
+end
+if eq r 0
+emit or 1862329344 i

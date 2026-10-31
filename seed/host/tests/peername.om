@@ -1,0 +1,93 @@
+note Real TCP loopback endpoints; no external address, proxy claims or policy activation.
+text ok "PASS native peername: accepted peer, truncation, empty slices, errno and bounds\n"
+global server uchar 16
+global client uchar 16
+global output uchar 32
+global pipes uchar 8
+global mode uchar 1
+fn pcheck yes bool to void
+if not yes
+exit 1
+end
+end
+fn pfd off ulong to int
+a = uint get pipes off
+b = shl uint get pipes add off 1 8
+c = shl uint get pipes add off 2 16
+d = shl uint get pipes add off 3 24
+ret int or or or a b c d
+end
+fn main to int
+if eq argcnt 2
+r = argread 1 mode 0 1
+if eq get mode 0 49
+ret int peername neg int 1 output 33 0
+end
+if eq get mode 0 50
+ret int peername neg int 1 output 31 2
+end
+if eq get mode 0 51
+ret int peername neg int 1 output 18446744073709551615 1
+end
+end
+put server 0 2
+put server 4 127
+put server 7 1
+listener = socknew 2 1 0
+pcheck ge listener 0
+pcheck eq bind int listener server 0 16 0
+pcheck eq sockname int listener server 0 16 16
+pcheck eq listen int listener 1 0
+pcheck eq peername int listener output 0 32 neg long 107
+local = socknew 2 1 0
+pcheck ge local 0
+pcheck eq peername int local output 0 32 neg long 107
+pcheck eq connect int local server 0 16 0
+pcheck eq sockname int local client 0 16 16
+pcheck eq waitio int listener 1 1000000000 1
+remote = accept int listener 0
+pcheck ge remote 0
+for i ulong 32
+put output i 165
+end
+pcheck eq peername int remote output 3 16 16
+for i ulong 16
+pcheck eq get output add i 3 get client i
+end
+pcheck eq get output 2 165
+pcheck eq get output 19 165
+if eq get output 5 get server 2
+pcheck ne get output 6 get server 3
+end
+for i ulong 32
+put output i 165
+end
+pcheck eq peername int remote output 4 3 16
+for i ulong 3
+pcheck eq get output add i 4 get client i
+end
+pcheck eq get output 3 165
+pcheck eq get output 7 165
+for i ulong 32
+put output i 165
+end
+pcheck eq peername int remote output 0 0 16
+pcheck eq peername int remote output 32 0 16
+for i ulong 32
+pcheck eq get output i 165
+end
+pcheck eq pipefds pipes 0 8 0 0
+pipefd = pfd 0
+pcheck eq peername pipefd output 0 32 neg long 88
+pcheck eq fclose pipefd 0
+pipefd = pfd 4
+pcheck eq fclose pipefd 0
+pcheck eq fclose int remote 0
+pcheck eq peername int remote output 0 32 neg long 9
+pcheck eq peername neg int 1 output 0 32 neg long 9
+pcheck eq fclose int local 0
+pcheck eq fclose int listener 0
+r = write 1 ok 0 len ok
+pcheck eq r long len ok
+ret 0
+end

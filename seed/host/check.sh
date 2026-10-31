@@ -30,6 +30,20 @@ chmod +x "$B/gate"
 pin=$(sha256sum seed/out/omc | cut -d' ' -f1)
 run=$(mktemp -d "$B/run.XXXXXX")
 "$B/gate" seed/out/omc "$pin" seed/omc/contracts/contracts.cases "$run/cases"
+# OM-2 dit and scrub (OMEGESE 9.13.1): s5 cases, and every s5 omc.om mutant detected (ctl-* PASS, m-* FAIL).
+"$B/gate" seed/out/omc "$pin" seed/omc/om2/s5/s5.cases "$run/s5" > "$run/s5.log" || { cat "$run/s5.log"; exit 1; }
+grep -qx 'OM2GATE PASS cases=21 pass=21 fail=0 invalid=0 not_run=0' "$run/s5.log"
+if "$B/gate" seed/out/omc "$pin" seed/omc/om2/s5/s5-mutants.cases "$run/s5mut" > "$run/s5mut.log"; then
+    echo 'FAIL dit/scrub mutant survived' >&2
+    exit 1
+else
+    status=$?
+    [ "$status" = 1 ] || { cat "$run/s5mut.log"; exit 1; }
+fi
+grep -qx 'OM2GATE FAIL cases=16 pass=7 fail=9 invalid=0 not_run=0' "$run/s5mut.log"
+[ "$(grep -c '^VERDICT ctl-[a-z-]* PASS ' "$run/s5mut.log")" = 7 ]
+[ "$(grep -c '^VERDICT m-[a-z0-9]* FAIL ' "$run/s5mut.log")" = 9 ]
+echo 'PASS dit/scrub (21 cases) and 9 omc.om mutants detected'
 if "$B/gate" seed/out/omc "$pin" seed/omc/contracts/mutant.cases "$run/mutant" > "$run/mutant.log"; then
     echo 'FAIL contract-enforcement mutant survived' >&2
     exit 1
@@ -103,9 +117,13 @@ sed '1d' "$run/native.out" > "$run/native.rows"
 [ "$(wc -l < "$run/oracle.rows")" = "$(wc -l < seed/omc/contracts/parity.inputs)" ]
 cmp "$run/oracle.rows" "$run/native.rows"
 echo 'PASS contract C parity: exact values, canonical bits and traps'
-sh seed/host/gate.sh
+mkdir -p build/seed/host
+seed/out/omc < seed/host/gate.om > build/seed/host/gate
+chmod +x build/seed/host/gate
+build/seed/host/gate
 sh seed/host/negative.sh
 sh seed/host/regression.sh
+sh seed/host/cpufence.sh
 if readelf -l -d seed/out/omc | grep -Eq 'INTERP|NEEDED'; then
     echo 'FAIL unexpected compiler runtime dependency' >&2
     exit 1

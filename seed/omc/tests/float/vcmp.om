@@ -1,0 +1,143 @@
+note float compares of names that live in v registers read both operands from their own twins (#861,
+note finding 1: the f32 FCMP word carried Rm bit 0, so a second operand in an even twin read the next
+note one). Each case leaves a different value in the twin after the second operand: a stale read flips
+note the answer. Expected answers follow from IEEE-754 order, never from this compiler.
+fn c_self to int
+r = ulong 0
+x = f32 2.0
+y = sub mul x x x
+if lt y y
+r = ulong 1
+end
+ret int r
+end
+
+fn c_xy to int
+r = ulong 0
+x = f32 2.0
+y = sub mul x x x
+if lt x y
+r = ulong 1
+end
+ret int r
+end
+
+fn c_ne to int
+r = ulong 0
+x = f32 2.0
+y = sub mul x x x
+if ne y y
+r = ulong 1
+end
+ret int r
+end
+
+fn c_value to int
+r = ulong 0
+x = f32 2.0
+y = sub mul x x x
+w = lt y y
+if w
+r = ulong 1
+end
+ret int r
+end
+
+fn c_while to int
+r = ulong 0
+x = f32 2.0
+y = sub mul x x x
+while lt y y
+r = add r 1
+y = add y 10.0
+if gt r 3
+ret 1
+end
+end
+ret int r
+end
+
+fn c_two to int
+r = ulong 0
+x = f32 2.0
+y = mul x x
+q = mul y y
+if lt y y
+r = ulong 1
+end
+ret int r
+end
+
+fn q32 a f32 b ulong to ulong
+if eq a f32 1.0
+ret b
+end
+ret 0
+end
+
+fn c_true to int
+r = ulong 0
+x = f32 2.0
+y = sub mul x x x
+z = f32 1.0
+if not le y y
+ret 1
+end
+if not eq y y
+ret 1
+end
+if not lt z y
+ret 1
+end
+if not gt y z
+ret 1
+end
+if ne q32 z 1 1
+ret 1
+end
+ret int r
+end
+
+fn c_d64 to int
+r = ulong 0
+x = f64 2.0
+y = sub mul x x x
+if lt y y
+r = ulong 1
+end
+if lt x y
+r = ulong 1
+end
+if ne y y
+r = ulong 1
+end
+ret int r
+end
+
+fn main to int
+if ne c_self 0
+ret 1
+end
+if ne c_xy 0
+ret 2
+end
+if ne c_ne 0
+ret 3
+end
+if ne c_value 0
+ret 4
+end
+if ne c_while 0
+ret 5
+end
+if ne c_two 0
+ret 6
+end
+if ne c_true 0
+ret 7
+end
+if ne c_d64 0
+ret 8
+end
+ret 0
+end

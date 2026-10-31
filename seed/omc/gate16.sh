@@ -1,13 +1,17 @@
 #!/bin/sh
-# gate16.sh -- named integer constants. `const NAME TYPE INTEGER` is a top-level typed value, visible
-# to later functions only (define before use). The first table runs programs and compares exit status;
-# the second requires a compile refusal with the exact code (including function mode, where a global,
-# a text or a host word stays error 9); the third compiles function-mode units (no `fn main`) with
-# constants and requires words byte-identical to the same unit written with literals.
+# gate16.sh -- named integer constants and loop bounds. `const NAME TYPE INTEGER` is a top-level typed
+# value, visible to later functions only (define before use). The first table runs programs and compares
+# exit status; the second requires a compile refusal with the exact code (including function mode, where
+# a global, a text or a host word stays error 9); the third compiles function-mode units (no `fn main`)
+# with constants and requires words byte-identical to the same unit written with literals. The tables
+# also pin `while ... bound N` and `for ... bound N`: N 1 .. 2^63-1 (a number or an integer constant),
+# more passes trap 4 (exit 104), bound 0 and 2^63 are error 8; a for with a value count and no bound
+# keeps the 1000000 default. OMC selects the compiler (default seed/out/omc; a relative path is taken
+# from the repository root).
 set -eu
 R=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
 cd "$R"
-S=seed/out/omc
+S=${OMC:-seed/out/omc}
 [ -x "$S" ] || { printf 'FAIL: %s missing; run sh seed/omega-from-seed.sh first\n' "$S" >&2; exit 1; }
 mkdir -p build/seed/r16
 T=$(mktemp -d build/seed/r16/const.XXXXXX)
@@ -51,8 +55,19 @@ const_bound|2|const B ulong 3\nfn main to int\nx = ulong 0\nwhile lt x ulong 2 b
 trap_const|102|const T uint 2\nfn main to int\ntrap T\nend
 for_const|4|const K ulong 4\nfn main to int\nx = ulong 0\nfor i ulong K\nx = add x 1\nend\nret int x\nend
 const_order|12|const kk ulong 4\nfn a fs edit long kk to void\nput fs 0 1\nend\nconst k2 ulong 3\nfn b fs edit long kk gs edit long k2 to long\nput fs 3 7\nput gs 2 5\nret add get fs 3 get gs 2\nend\nfn main to int\nx = new long kk 0\ny = new long k2 0\na x\nret int b x y\nend
+big_bound|54|const B ulong 3000000\nfn main to int\nx = ulong 0\nwhile lt x 2000000 bound B\nx = add x 1\nend\nret int rem x 97\nend
+big_bound_trap|104|fn main to int\nx = ulong 0\nwhile lt x 2000000 bound 1500000\nx = add x 1\nend\nret 0\nend
+max_bound|5|fn main to int\nx = ulong 0\nwhile lt x 5 bound 9223372036854775807\nx = add x 1\nend\nret int x\nend
+for_bound|54|const B ulong 3000000\nfn main to int\nn = ulong 2000000\nx = ulong 0\nfor i ulong n bound B\nx = add x 1\nend\nret int rem x 97\nend
+for_num_bound|89|const B ulong 3000000\nfn main to int\nx = ulong 0\nfor i ulong 1500000 bound B\nx = add x 1\nend\nret int rem x 97\nend
+for_bound_trap|104|fn main to int\nn = ulong 2000000\nx = ulong 0\nfor i ulong n bound 1500000\nx = add x 1\nend\nret 0\nend
+for_num_bound_trap|104|fn main to int\nx = ulong 0\nfor i ulong 5000 bound 4097\nx = add x 1\nend\nret 0\nend
+for_bound_exact|3|fn main to int\nn = uint 3\nx = ulong 0\nfor i uint n bound 3\nx = add x 1\nend\nret int x\nend
+for_num_bound_exact|7|fn main to int\nx = ulong 0\nfor i ulong 7 bound 7\nx = add x 1\nend\nret int x\nend
+for_max_bound|5|fn main to int\nn = ulong 5\nx = ulong 0\nfor i ulong n bound 9223372036854775807\nx = add x 1\nend\nret int x\nend
+for_default_trap|104|fn main to int\nn = ulong 2000000\nx = ulong 0\nfor i ulong n\nx = add x 1\nend\nret 0\nend
 RUN
-[ "$n" = 19 ] || bad "value table ran $n of 19 cases"
+[ "$n" = 30 ] || bad "value table ran $n of 30 cases"
 
 n=0
 while IFS='|' read -r name want src; do
@@ -93,8 +108,16 @@ fm_host_word|9|const N ulong 5\nfn f a ulong to long\nx = getpid\nret x\nend
 fm_trap_range|8|const T uint 15\nfn f a ulong to ulong\ntrap T\nend
 fm_float_length|16|const H f64 0.1\nfn f a view uchar H to ulong\nret 0\nend
 fm_assign|7|const N ulong 5\nfn f a ulong to ulong\nN = ulong 6\nret a\nend
+bound_zero|8|fn main to int\nwhile eq int 1 int 1 bound 0\nend\nret 0\nend
+bound_over|8|fn main to int\nwhile eq int 1 int 1 bound 9223372036854775808\nend\nret 0\nend
+for_bound_zero|8|fn main to int\nn = ulong 2\nfor i ulong n bound 0\nend\nret 0\nend
+for_num_bound_zero|8|fn main to int\nfor i ulong 2 bound 0\nend\nret 0\nend
+for_bound_over|8|fn main to int\nn = ulong 2\nfor i ulong n bound 9223372036854775808\nend\nret 0\nend
+for_num_bound_over|8|fn main to int\nfor i ulong 2 bound 9223372036854775808\nend\nret 0\nend
+for_bound_missing|4|fn main to int\nn = ulong 2\nfor i ulong n bound\nend\nret 0\nend
+for_bound_local|16|fn main to int\nn = ulong 2\nfor i ulong n bound n\nend\nret 0\nend
 REF
-[ "$n" = 27 ] || bad "refusal table ran $n of 27 cases"
+[ "$n" = 35 ] || bad "refusal table ran $n of 35 cases"
 
 # Function mode (no `fn main`): an integer or float constant folds to its literal, so the bare function
 # words must be byte-identical to the same unit written with literals. Each line: name|const unit|literal unit.
@@ -124,8 +147,10 @@ fm_trap|const T uint 5\nfn f a ulong to ulong\nif eq a 1\ntrap T\nend\nret a\nen
 fm_for|const K ulong 4\nfn f a ulong to ulong\nx = a\nfor i ulong K\nx = add x i\nend\nret x\nend|fn f a ulong to ulong\nx = a\nfor i ulong 4\nx = add x i\nend\nret x\nend
 fm_two_fns|const N ulong 7\nfn g a ulong to ulong\nret add a N\nend\nfn f a ulong to ulong\nret g mul a N\nend|fn g a ulong to ulong\nret add a 7\nend\nfn f a ulong to ulong\nret g mul a 7\nend
 fm_float|const H f64 0.1\nfn f a f64 to f64\nret add a H\nend|fn f a f64 to f64\nret add a f64 0.1\nend
+fm_for_bound|const B ulong 3\nfn f a ulong to ulong\nx = ulong 0\nfor i ulong a bound B\nx = add x 1\nend\nret x\nend|fn f a ulong to ulong\nx = ulong 0\nfor i ulong a bound 3\nx = add x 1\nend\nret x\nend
+fm_for_default|const B ulong 1000000\nfn f a ulong to ulong\nx = ulong 0\nfor i ulong a bound B\nx = add x 1\nend\nret x\nend|fn f a ulong to ulong\nx = ulong 0\nfor i ulong a\nx = add x 1\nend\nret x\nend
 FM
-[ "$n" = 9 ] || bad "function-mode table ran $n of 9 cases"
+[ "$n" = 11 ] || bad "function-mode table ran $n of 11 cases"
 
-say "PASS gate16 19 constant programs, 27 refusals and 9 function-mode units"
+say "PASS gate16 30 constant programs, 35 refusals and 11 function-mode units"
 exit 0

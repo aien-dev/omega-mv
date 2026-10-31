@@ -47,7 +47,7 @@
           "purpose": "Directory calibration. Purpose not yet described by a human."
         },
         {
-          "digest": "d1fc0ebd22da9f1af40e8a0a2ad73f617c230dd9a897dc696f2d68d9167e62e0",
+          "digest": "bc514bde8a186c0e7927ef71a8680bbdb99e2a41e11501d7ca9d7aaf659f4e0a",
           "last_commit": "d8b2471c7",
           "name": "docs",
           "purpose": "Directory docs. Purpose not yet described by a human."
@@ -59,25 +59,25 @@
           "purpose": "Directory doctrine. Purpose not yet described by a human."
         },
         {
-          "digest": "994a74fc779b8f4addca088b96222708d62cbc3454a1c3bf09dd7e1f76ab3ac4",
+          "digest": "7f150e0bec2d71ff7bc815cadb2362bd91cd452fc703170d1aea97d6ce216c17",
           "last_commit": "c7d48ef54",
           "name": "mk",
           "purpose": "Directory mk. Purpose not yet described by a human."
         },
         {
-          "digest": "e3b64c1dcb1f3780099de62f72c818627e4dfea55a7978c84170d0d31126b162",
+          "digest": "91240540c9ee1e700d416b426016045616cbdde56d6ba81d64fedb801fbfdc2d",
           "last_commit": "f5c9bd89a",
           "name": "native",
           "purpose": "Handwritten .om units of omega-mv that are not part of the seed ladder: the ORIG-4 shadow adviso"
         },
         {
-          "digest": "0cf0eba142c8b72205e4a3f002c1899f3961b07e3188815460d8f09673c69b88",
+          "digest": "35d870c193e34b6a8d8f809ed1bb539f6c147e434fd6ef27113f38abf75bb1ec",
           "last_commit": "f56a372ae",
           "name": "neuralese",
           "purpose": "Bounded untrusted representation envelopes and explicit checked Omega decoding; learned extensio"
         },
         {
-          "digest": "62b92244c52fa8af6f511012dee2967e98dff162cc1d8bf45d0b2f15cb0adc5f",
+          "digest": "c73d74e9c743c8b541ec2418e815095d748e2e15d0b89857d683dbd5b76b3bf9",
           "last_commit": "450bbefd4",
           "name": "research",
           "purpose": "Directory research. Purpose not yet described by a human."
@@ -89,33 +89,33 @@
           "purpose": "Directory spec. Purpose not yet described by a human."
         },
         {
-          "digest": "b69469599949ef639f9797c8420b2c625292947c140849eb5c12c3bf6e33065f",
+          "digest": "de1ee7a50d339f54a7ce06690439887331b8ab8fd991ab868393c63ff9918e8b",
           "last_commit": "c7d48ef54",
           "name": "src",
           "purpose": "Directory src. Purpose not yet described by a human."
         },
         {
-          "digest": "f83a09115211215522362f566164699aea9c4204bc403200bceeef77460aeb63",
+          "digest": "5a074b4c8ce46f9eee02de85db0df29acd30158c073d87b60834fdd7fabf3338",
           "last_commit": "c7d48ef54",
           "name": "tests",
           "purpose": "Directory tests. Purpose not yet described by a human."
         },
         {
-          "digest": "e3c8108c354ff179349bc0d5d62696b9f440a75c6d53804a2a47e6ccd4d768f6",
+          "digest": "2d2bea4e7ca88056e9be6a7d65d090d26cf8ba96fca868b2e5f4e98c95bbb152",
           "last_commit": "c7d48ef54",
           "name": "tools",
           "purpose": "Directory tools. Purpose not yet described by a human."
         }
       ],
-      "children_root": "sha256:cf87bc207477250e5906d5716bb1965b6e02eb68a05cf847a716560258e9f342",
-      "compiled_at": "2026-10-31T02:31:50Z",
+      "children_root": "sha256:86f5faed051d8967cd59fe09c98862ebbe0c9b971e7898bf002eda5e2b998fb0",
+      "compiled_at": "2026-10-31T11:00:04Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:e877cf16d5607b00837a0fb38a3f9cda878bfc8b839ffde8bd01804d61cecca4",
-      "evidence_files": 14879,
-      "evidence_root": "sha256:85e366b59d83e822bf99ef69bdfffb9aa5b0a3216b374a3a430b54cac422a797",
-      "files": 22028,
-      "generated_at_commit": "c7d48ef544c8cfc39069630947aa2392748383c6",
-      "source_tree": "sha256:b7e66aab7e797103860cf4cdae377d102d1f8fd68fcaed163959360cb22dd1c3"
+      "digest": "sha256:20331fd7de5b5b047d19aa521139b4778de817727511c6f07fee2122272b82dc",
+      "evidence_files": 15266,
+      "evidence_root": "sha256:f2498de104f7892eab5be64b525a55b9a9bd1e986bfcc6661bf743867f6194d6",
+      "files": 23582,
+      "generated_at_commit": "791324c6e7f98f87a8964c81524d804663f53d67",
+      "source_tree": "sha256:bf98061ff0eaaae18bd0b3c768505ad5661fece89d9dc0d018a39d8d1daeda86"
     },
     "owner_lane": "",
     "provenance": {
