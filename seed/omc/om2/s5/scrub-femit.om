@@ -1,0 +1,19 @@
+note S5 scrub emit with floats: the output sha256 (s5.cases s5-scrub-femit) pins which V registers scrub
+note zeroes when floats are live. f has the f64 parameter a (its value in x register X0, so its twin V16
+note is dead), the parameter n (X1, twin V17 dead) and the f64 local x, which lives in the twin V18 of its
+note slot. scrub zeroes V0-V17 and V19-V31 and spares V18 only: a twin is spared exactly when its slot is
+note live and holds its value there. Sparing every twin of a live slot (V16, V17 too) or none (V18 too,
+note omc 24caacf4) changes the output (s5-mutants.cases m-twinall, m-twinnone).
+om2
+fn f a f64 n ulong to f64
+x = add a f64 1.0
+k = scrub n
+ret add x f64 k
+end
+fn main to int
+r = f f64 2.0 32
+if ne r f64 3.0
+ret 1
+end
+ret 0
+end

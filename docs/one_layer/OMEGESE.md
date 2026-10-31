@@ -830,6 +830,9 @@ words are fixed, so the output is byte-for-byte deterministic. Fixtures: `seed/o
 `s5-mutants.cases`, both standing gates in `seed/host/check.sh`); `s5-scrub-emit` pins the sha256 of the
 whole output of `scrub-emit.om`, so the exact register-zeroing sequence below is checked, and the
 mutants `m-zpool`, `m-zvec` and `m-movz16` (zeroing words retargeted to X16 or V0) are detected by it.
+`s5-scrub-femit` pins the same for a unit with a live float local, so which V registers are spared is
+checked (`m-twinall`, sparing the dead twins of live slots too), and `s5-scrub-flive` reads live float
+locals, a held float operand and a float call argument back after scrub (`m-twinnone`, zeroing V0-V31).
 
 - **`dit v`** (v int, else error 7) sets PSTATE.DIT (Arm ARM C5.2.4, FEAT_DIT; bit 24 of the DIT
   special-purpose register) and gives the previous bit as 0 or 1. v outside {0, 1} (a negative int too)
@@ -844,12 +847,16 @@ mutants `m-zpool`, `m-zvec` and `m-movz16` (zeroing words retargeted to X16 or V
   [X16], #16` (C6.2.414) from SP - n upward: the frames of returned callees, their spilled registers and
   local arrays. Then `MOVZ Xr, #0` for every register that holds no live value: the pool registers at
   index npar + temporaries-in-use and above (the free temporaries and caller-saved registers), X16, and
-  X7, X18-X26, X29 (never used by program-mode code); and `MOVI Vd.2D, #0` (C7.2.247) for V0-V31, which
-  also clears the upper SVE Z bits. Floats live in X registers and pass through V0/V1 for one instruction
-  only, so no V register is live. Not zeroed: SP; X27 (the Linux initial stack when the unit reads its
-  arguments or environment); X28 (the floor); X30 (the return address); the pool registers below the
-  free index (parameters, locals, the held operands of the expression and of an enclosing call); NZCV,
-  FPCR, FPSR, the SVE P registers and FFR; memory above SP, the live frames. The result register is set
+  X7, X18-X26, X29 (never used by program-mode code); and `MOVI Vd.2D, #0` (C7.2.247), which also clears
+  the upper SVE Z bits, for V0-V15 and for every dead twin. Since #853 an f32/f64 local name and a held
+  float value live in the twin V16+j of their pool register (omc.om, "floats in v registers"); the twin
+  is live when slot j is below the free index and its value lives there, and only such twins are
+  spared. The twin of a free slot, or of a slot whose value is in its x register (a float parameter, an
+  integer), is zeroed; V0-V15 carry a float only inside one operation. Not zeroed: SP; X27 (the Linux
+  initial stack when the unit reads its arguments or environment); X28 (the floor); X30 (the return
+  address); the pool registers below the free index (parameters, locals, the held operands of the
+  expression and of an enclosing call) and their live twins; NZCV, FPCR, FPSR, the SVE P registers and
+  FFR; memory above SP, the live frames. The result register is set
   to 0 last.
 
 ### 9.14 Compiler error codes (omc, registry `seed/omc/error-codes.reg`)
