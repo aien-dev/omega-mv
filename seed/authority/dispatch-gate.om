@@ -170,6 +170,7 @@ text recp "build/authority-store/rec"
 text tmpp "build/authority-store/tmp"
 text genp "build/authority-store/gen"
 global sb uchar 256
+global stail uchar 1
 global spkt uchar 256
 global sn ulong 1
 global spath uchar 128
@@ -240,9 +241,11 @@ ret 10
 end
 n = write int fd sb 0 256
 if ne n 256
+cleanup = fclose int fd
 ret 11
 end
 if ne fsync int fd 0
+cleanup = fclose int fd
 ret 12
 end
 if ne fclose int fd 0
@@ -262,10 +265,14 @@ if lt fd 0
 ret 20
 end
 n = read int fd sb 0 256
+extra = long -1
+if eq n 256
+extra = read int fd stail 0 1
+end
 if ne fclose int fd 0
 ret 21
 end
-if ne n 256
+if or ne n 256 ne extra 0
 ret 22
 end
 dv = dec r
@@ -280,11 +287,15 @@ put sgerr 0 30
 ret 0
 end
 n = read int fd sb 0 8
+extra = long -1
+if eq n 8
+extra = read int fd stail 0 1
+end
 if ne fclose int fd 0
 put sgerr 0 31
 ret 0
 end
-if ne n 8
+if or ne n 8 ne extra 0
 put sgerr 0 32
 ret 0
 end
@@ -305,9 +316,11 @@ put sb j uchar and shr v mul j 8 255
 end
 n = write int fd sb 0 8
 if ne n 8
+cleanup = fclose int fd
 ret 41
 end
 if ne fsync int fd 0
+cleanup = fclose int fd
 ret 42
 end
 if ne fclose int fd 0
@@ -390,7 +403,7 @@ end
 fn lrm to ulong
 r = unlink lpath 0 len lpath
 if lt r 0
-ret 0
+ret 41
 end
 ret 0
 end
@@ -488,13 +501,14 @@ put s add 8 i get r add 8 i
 end
 end
 fn dispatch r edit ulong 32 c view ulong 32 mode uchar to ulong
-err = readrec r
-if ne err 0
-ret 70
-end
 err = lacq get dpid 0 1000
 if ne err 0
 ret 80
+end
+err = readrec r
+if ne err 0
+lk = lrel
+ret 70
 end
 g = readgen
 if ne get sgerr 0 0

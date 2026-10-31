@@ -1,6 +1,6 @@
 note SPDX-License-Identifier: AGPL-3.0-only
-note Lock checks: exclusive acquire, busy refusal, release, a forked waiter, and stale-pid reclaim.
-text passm "lock checks=5 fails=0\n"
+note Lock checks: exclusive acquire, busy refusal, release, a forked waiter, stale-pid reclaim, and failed release.
+text passm "lock checks=8 fails=0\n"
 global checks ulong 1
 global fails ulong 1
 global lbuf uchar 8
@@ -89,6 +89,22 @@ end
 u = ltry ulong getpid
 check u 0
 u = lrel
+check u 0
+note A directory cannot be unlinked as a regular file, even when run as root.
+note Refuse a pre-existing fixture rather than replacing anything at this path.
+r = makedir lpath 0 len lpath 448
+if ne r 0
+ret 101
+end
+u = lrel
+check u 41
+r = rmdir lpath 0 len lpath
+if ne r 0
+ret 102
+end
+note Missing-path removal is also a failure, not an idempotent success.
+u = lrel
+check u 41
 if ne get fails 0 0
 ret 1
 end

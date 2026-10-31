@@ -1,0 +1,130 @@
+note SPDX-License-Identifier: Apache-2.0
+note mlkemacvp.om: ACVP ML-KEM (FIPS 203) response engine for om/tls/mlkem.om (ML-KEM-768). The program
+note is acvpio.om || mlkemacvp.om || acvpmain.om, composed after sha3.om and mlkem.om (run.sh does
+note this). Records on stdin, as in acvp.om (hex, "-" = empty, ID echoed first):
+note   Q ID D Z     mlkem_keygen (ML-KEM.KeyGen_internal)            -> ID RC EK DK
+note   P ID EK M    mlkem_encaps (ML-KEM.Encaps_internal, 7.2 checks)  -> ID RC C K
+note   U ID DK C    mlkem_decaps (ML-KEM.Decaps_internal, 7.3 checks)  -> ID RC K
+note   Y ID DK      decapsulation key check: mlkem_decaps on DK and an all-zero 1088-byte ciphertext;
+note                its 7.3 input checks (lengths, H(ek) == h) run before any decapsulation -> ID RC
+note   Z ID EK      encapsulation key check: mlkem_encaps on EK and an all-zero m; its 7.2 input
+note                checks (length, modulus) run first -> ID RC
+note RC is the library's return code (0 ok, 1 modulus check failed, 2 bad length, 3 hash check failed).
+
+note copy a[o..o+32) into d
+fn mkcp a view uchar * o ulong d edit uchar 32 to void
+for i ulong 32
+put d i get a add o i
+end
+end
+
+fn recq a edit uchar * b edit uchar * to void
+d = new uchar 32 0
+z = new uchar 32 0
+drid
+dl = drhex a
+zl = drhex part a 32 32
+dreor
+if ne dl 32
+drbad
+end
+if ne zl 32
+drbad
+end
+if isbad
+ret
+end
+mkcp a 0 d
+mkcp a 32 z
+rc = mlkem_keygen d z part a 0 1184 part b 0 2400
+ofld rc
+ohex part a 0 1184
+ohex part b 0 2400
+end
+
+fn recp a edit uchar * b edit uchar * to void
+m = new uchar 32 0
+ss = new uchar 32 0
+drid
+el = drhex a
+ml = drhex b
+dreor
+if ne ml 32
+drbad
+end
+if isbad
+ret
+end
+mkcp b 0 m
+rc = mlkem_encaps part a 0 el m part b 0 1088 ss
+ofld rc
+ohex part b 0 1088
+ohex ss
+end
+
+fn recu a edit uchar * b edit uchar * to void
+ss = new uchar 32 0
+drid
+dl = drhex a
+cl = drhex b
+dreor
+if isbad
+ret
+end
+rc = mlkem_decaps part a 0 dl part b 0 cl ss
+ofld rc
+ohex ss
+end
+
+fn recy a edit uchar * to void
+ct = new uchar 1088 0
+ss = new uchar 32 0
+drid
+dl = drhex a
+dreor
+if isbad
+ret
+end
+rc = mlkem_decaps part a 0 dl ct ss
+ofld rc
+end
+
+fn recz a edit uchar * to void
+m = new uchar 32 0
+ct = new uchar 1088 0
+ss = new uchar 32 0
+drid
+el = drhex a
+dreor
+if isbad
+ret
+end
+rc = mlkem_encaps part a 0 el m ct ss
+ofld rc
+end
+
+fn drrec a edit uchar * b edit uchar * c edit uchar * to void
+op = drpeek
+dradv
+if eq op 81
+recq a b
+ret
+end
+if eq op 80
+recp a b
+ret
+end
+if eq op 85
+recu a b
+ret
+end
+if eq op 89
+recy a
+ret
+end
+if eq op 90
+recz a
+ret
+end
+drbad
+end
