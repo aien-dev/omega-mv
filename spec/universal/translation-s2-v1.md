@@ -95,9 +95,13 @@ recorded per fixture, not hidden.
 
 ## 5. Lowering and realization
 
-`lower` emits `long` (i64) values in restricted Omegese; the pinned omc realizes 64-bit `long` add, sub
-and mul as wrapping (seed/omc/omc.om at f8588e10, `bo_fix`: type 9 takes no overflow check) and
-compares signed with `lt`/`le`/`gt`/`ge` on `long`. A realization of attr 6 is therefore a REFINEMENT.
+`lower` emits `long` (i64) values in restricted Omegese. The original text of this section said that
+the pinned omc realizes 64-bit `long` add, sub and mul as wrapping (seed/omc/omc.om at f8588e10,
+`bo_fix`: type 9 takes no overflow check). That statement is superseded: amendment A1 (section 7)
+measures that omc 734f0a39 traps on a signed `long` overflow (trap 1), and the overflow log of
+omega-bridge#49 (`evidence/deepinfer-flops-pairs/overflow-measurement.log`) shows the same for
+omc 2c824805. The original conclusion that a realization of attr 6 is a REFINEMENT is superseded too:
+under A1 `lower-s2` realizes attr 6 exactly. Signed compares use `lt`/`le`/`gt`/`ge` on `long`.
 Bindings: omega-bridge tools/native must carry `int64_t` and a `bool`-as-`uint64_t` 0/1 result; that is
 a bridge change (ABI v1 has `uint64_t` only), owned by the bridge lane.
 
