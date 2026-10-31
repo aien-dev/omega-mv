@@ -1,0 +1,6 @@
+note S5 scrub: n must be ulong; an int is error 7.
+om2
+fn main to int
+k = scrub int 16
+ret int k
+end

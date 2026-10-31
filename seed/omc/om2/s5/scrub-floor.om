@@ -1,0 +1,15 @@
+note S5 scrub: three nested frames of 2.5 MiB each leave under 1 MiB of the 8 MiB stack pool, so
+note SP - 1048576 is below the floor X28: trap 6 (exit 106) before any byte is written.
+om2
+fn deep d ulong to long
+a = new uchar 2621440 0
+if lt d 2
+ret add deep add d 1 long get a 0
+end
+k = scrub 1048576
+ret add k long get a 0
+end
+fn main to int
+k = deep 0
+ret int k
+end

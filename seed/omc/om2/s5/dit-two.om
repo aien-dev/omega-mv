@@ -1,0 +1,7 @@
+note S5 dit: v = 2 is outside {0, 1}: trap 3 (exit 103) before PSTATE.DIT is written.
+om2
+fn main to int
+v = int 2
+a = dit v
+ret int a
+end
