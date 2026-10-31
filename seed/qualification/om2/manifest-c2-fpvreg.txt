@@ -1,0 +1,16 @@
+# Declared C2 delta for omc 0d0062075f6e25f94bd8e82dc24688191fdd2e8cba232fb360594213e4bb2553 (floats in v registers).
+# manifest-c2.txt stays frozen. Under it this compiler fails exactly fourteen rows: the six already declared in
+# manifest-c2-capacity.txt and manifest-c2-batch2.txt, and the eight below. Each is a float program whose code
+# bytes change because float locals now live in v registers (FMOV/FADD on d16..d31, STR/LDR D around calls,
+# FMOV immediate constants). Behaviour is unchanged: each row's source was compiled by omc 2c824805 (whose
+# binary hash is the frozen manifest-c2.txt value) and by this omc, both binaries were run, and exit status
+# and stdout matched (old = new: 00041..00063 and 00690 exit 0, 00090 exit 4). Origins: gate8 arith,
+# compare, convert, intrinsics, params, structs; gate9 paren/float; gate16 inline program.
+c2-00041 emit pack:seed/qualification/om2/c2/corpus.pack:160337:371 sha:78dd6cbae91826c5fc67e61d3c91dba84acc7f1114464546646bd8c97141dbc4 - 0
+c2-00043 emit pack:seed/qualification/om2/c2/corpus.pack:161154:490 sha:804f48931dfb84050e51f063f8d3938122871ae043b9b3db23fc49ea496f2797 - 0
+c2-00044 emit pack:seed/qualification/om2/c2/corpus.pack:161739:406 sha:7533eb678ea0475178335a761ed6dd09e5034317cfc2187f05bcc46edc7a3051 - 0
+c2-00048 emit pack:seed/qualification/om2/c2/corpus.pack:164295:565 sha:54d2607981de1f1e8ba6e579ea28ff01985f5fa0727ed249e67d258d10f272a7 - 0
+c2-00062 emit pack:seed/qualification/om2/c2/corpus.pack:166755:291 sha:18918408dd5f86ba618520f5877b20fd5e2a0c872733a6ab6e75b7405490425f - 0
+c2-00063 emit pack:seed/qualification/om2/c2/corpus.pack:167141:451 sha:45b427f3b0731f86349430a6a1ff3eff851baf7f9f96fb7a7cae39e5cecfd083 - 0
+c2-00090 emit pack:seed/qualification/om2/c2/corpus.pack:173713:51 sha:df9786a8116abf11b4cb8d01e11f1f5c8eb78654e7a4e8377c640a78931bd798 - 0
+c2-00690 emit pack:seed/qualification/om2/c2/corpus.pack:514504:85 sha:056e5f5bbc6e1035c77353f7a60272f2dd799f13f84870680ddeb55b052ba2ea - 0

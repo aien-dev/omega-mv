@@ -9,5 +9,16 @@ if eq get nf 0 0
 fail 16
 end
 if ne get om2 0 0
-inlcyc
+note inlcyc (OM-2): an inline function that reaches itself through the whole call graph (the calls made,
+note plus an edge from each function to every inline function expanded in it) is error 9 at the end.
+f = ulong 1
+while le f get nf 0
+if ne get fn_inl sub f 1 0
+if ne reachself f 0
+put dsev 0 3
+fail 9
+end
+end
+f = add f 1
+end
 end
