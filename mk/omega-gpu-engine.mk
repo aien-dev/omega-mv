@@ -205,7 +205,7 @@ test-sha256-fs-parity: build/test_codegen_hosted
 	echo "control: hosted compile of src/omega_sha256_fs.c refused; hosted codegen test links $$n omega2_sha256_* functions"
 	sed 's/0x428a2f98/0x428a2f99/' src/omega_sha256_fs.c > $(SHA_FS_DIR)/red.c
 	@! cmp -s $(SHA_FS_DIR)/red.c src/omega_sha256_fs.c || { echo "RED MUTANT BROKEN: sed changed nothing"; exit 1; }
-	gcc $(GPU_FS_CFLAGS) $(SHA_FS_RENAME) -c -o $(SHA_FS_DIR)/red.o $(SHA_FS_DIR)/red.c
+	gcc $(GPU_FS_CFLAGS) -iquote src $(SHA_FS_RENAME) -c -o $(SHA_FS_DIR)/red.o $(SHA_FS_DIR)/red.c
 	gcc -std=gnu11 -O2 -Wall -Wextra -Werror -pthread -Isrc -o $(SHA_FS_DIR)/parity_red tests/test_sha256_fs_parity.c \
 		$(SHA_FS_DIR)/red.o src/omega_om_units.c
 	@if ./$(SHA_FS_DIR)/parity_red > $(SHA_FS_DIR)/red.log; then echo "RED CHECK BROKEN: a wrong round constant passed"; exit 1; \
