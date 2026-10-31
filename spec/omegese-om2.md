@@ -99,12 +99,6 @@ freeze needs `omegese-om3.md`.
 - **Parameter slots (function mode):** an unsized view or edit takes two of the six parameter slots,
   pointer first and then length; a sized array, layout or `out` takes one slot (its pointer); a scalar
   takes one. More than six slots is error 9. The bridge passes the slots in this order.
-- **Host words (function mode):** an OM-2 function unit may use the host words `fopen`, `fclose`,
-  `fstat`, `stat`, `lstat`, `getuid`, `geteuid`, `getgid` and `getegid` (OMEGESE.md section 10) on
-  AArch64, with their program-mode meaning and machine code. Every other host word in function mode,
-  any host word in an OM-1 function unit, and any host word for another target is error 9. These
-  words do not form a sandbox: a caller that embeds such a unit grants it the file and identity view
-  of its own process, so the omega-bridge refuses a unit that names one unless the caller opts in.
 - **Folding:** only inside unrolled or inlined bodies, an operation whose operands are all constants is
   computed at compile time with exactly OM-1 arithmetic. An operation that would trap is not folded and
   stays the runtime trap, so a guarded `if ne i 0` / `div 100 i` compiles and behaves as before.

@@ -916,7 +916,8 @@ and identity subset `fopen`, `fclose`, `fstat`, `stat`, `lstat`, `getuid`,
 inline `svc` with its arguments saved and restored around it; none reads argv,
 the x28 stack floor or a global, and none writes x7 or x19-x28, so a unit called
 through the omega-bridge native ABI keeps its frame. Every other host word, every OM-1 function unit and every
-other target stay error 9 (gate `seed/omc/om2/fnhost/fnhost.cases`).
+other target stay error 9 (PROPOSED contract `spec/omegese-om3.md` section 1, gate
+`seed/omc/om2/fnhost/fnhost.cases`).
 
 All results below have type `long`. Successful kernel results are nonnegative;
 failures return minus the Linux error number. Programs must check errors.
