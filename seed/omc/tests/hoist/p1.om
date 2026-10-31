@@ -1,0 +1,13 @@
+om2
+note implied checks dropped: counter i < 16 and sub 15 i in 0 .. 15 index a 16-element array; exit 120
+global a ulong 16
+fn main to int
+for i ulong 16
+put a sub 15 i i
+end
+s = ulong 0
+for i ulong 16
+s = add s get a i
+end
+ret int and s 255
+end

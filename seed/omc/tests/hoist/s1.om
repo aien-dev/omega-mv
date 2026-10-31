@@ -1,0 +1,19 @@
+om2
+note hoisted loop constants survive scrub in the loop body: the global addresses of a and b and the
+note number 5000 sit in x20.. while scrub zeroes X18-X26; the body must reload them (exit 168)
+global a ulong 16
+global b ulong 16
+fn main to int
+for i ulong 16
+put b i i
+end
+for i ulong 16
+k = scrub 32
+put a i add get b i 5000
+end
+s = ulong 0
+for i ulong 16
+s = add s sub get a i 5000
+end
+ret int and add s 48 255
+end

@@ -1,0 +1,9 @@
+om2
+note sub 9 i with K = 16 wraps below zero (C < K - 1): the check stays and i = 10 traps
+global a ulong 10
+fn main to int
+for i ulong 16
+put a sub 9 i 1
+end
+ret 0
+end

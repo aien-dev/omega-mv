@@ -1,0 +1,10 @@
+om2
+note the body assigns the counter (fwscan): no implied range; i = 8 + 8 traps
+global a uchar 16
+fn main to int
+for i ulong 16
+i = add i 8
+put a i uchar 1
+end
+ret 0
+end
