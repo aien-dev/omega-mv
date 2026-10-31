@@ -1,0 +1,117 @@
+note SPDX-License-Identifier: AGPL-3.0-only
+note Native source fault injector for native/autodiff664/tape.om.
+note Read one ASCII mode byte then tape.om. Exactly one match is required.
+note Mode 0 drops the SUB in1 negation, 1 uses value(in0) for MUL grad of in0,
+note 2 routes the RELU gradient at x == 0 (gt becomes ge).
+global Input uchar 65536
+global Mode ulong 1
+text SN "w = neg w"
+text SR "w = w"
+text MN "v = mul v get TV add ob i"
+text MR "v = mul v get TV add tpoff a i"
+text RN "if gt x 0.0f32\nv = get TG"
+text RR "if ge x 0.0f32\nv = get TG"
+
+fn size to ulong
+if eq get Mode 0 0
+ret len SN
+end
+if eq get Mode 0 1
+ret len MN
+end
+ret len RN
+end
+
+fn patbyte i ulong to uchar
+if eq get Mode 0 0
+ret get SN i
+end
+if eq get Mode 0 1
+ret get MN i
+end
+ret get RN i
+end
+
+fn emit to void
+if eq get Mode 0 0
+n = write 1 SR 0 len SR
+if ne n long len SR
+exit 74
+end
+ret
+end
+if eq get Mode 0 1
+n = write 1 MR 0 len MR
+if ne n long len MR
+exit 74
+end
+ret
+end
+n = write 1 RR 0 len RR
+if ne n long len RR
+exit 74
+end
+end
+
+fn matches pos ulong to bool
+for i ulong size
+if ne get Input add pos i patbyte i
+ret false
+end
+end
+ret true
+end
+
+fn main to int
+p = ulong 0
+reading = true
+while reading bound 65537
+if eq p 65536
+ret 75
+end
+n = read 0 Input p sub 65536 p
+if eq n 0
+reading = false
+else
+if lt n 0
+ret 74
+end
+p = add p ulong n
+end
+end
+if lt p 2
+ret 75
+end
+m = get Input 0
+if or lt m 48 gt m 50
+ret 75
+end
+put Mode 0 ulong sub m 48
+length = size
+if le p length
+ret 75
+end
+found = ulong 0
+where = ulong 0
+for start ulong sub p length
+pos = add start 1
+if matches pos
+found = add found 1
+where = pos
+end
+end
+if ne found 1
+ret 76
+end
+n = write 1 Input 1 sub where 1
+if ne n long sub where 1
+ret 74
+end
+emit
+tail = add where length
+n = write 1 Input tail sub p tail
+if ne n long sub p tail
+ret 74
+end
+ret 0
+end
