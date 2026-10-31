@@ -1496,13 +1496,20 @@ static void t_revoked(void) {
 
 /* ---- placement and receipt ---- */
 
+/* The Cortex-X925 cores of the affinity mask the test started with: a taskset
+ * or cpuset run is timed only on the cores it was given (as #1002 did for the
+ * empirical optimizer). With no X925 core in the mask it stays unpinned. */
 static void place(void) {
-    cpu_set_t set;
+    cpu_set_t set, allowed;
     CPU_ZERO(&set);
+    CPU_ZERO(&allowed);
+    if (sched_getaffinity(0, sizeof allowed, &allowed) != 0)
+        for (int c = 0; c < CPU_SETSIZE; c++) CPU_SET(c, &allowed);
     int count = 0;
     char *p = R.cpus;
     long n = sysconf(_SC_NPROCESSORS_CONF);
-    for (long c = 0; c < n; c++) {
+    for (long c = 0; c < n && c < CPU_SETSIZE; c++) {
+        if (!CPU_ISSET((int)c, &allowed)) continue;   /* taskset/cgroup: not ours to time on */
         char path[128];
         snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%ld/regs/identification/midr_el1", c);
         FILE *fp = fopen(path, "r");
